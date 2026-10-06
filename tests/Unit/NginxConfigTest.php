@@ -59,7 +59,7 @@ final class NginxConfigTest extends TestCase
         $this->assertSame([], array_slice($diff, 0, 20), 'The two server configurations refuse different files of public/');
     }
 
-    # The block puts the root on public/, sends every upload address and every missing path to the front controller, and runs PHP by its script name
+    # The block puts the root on public/, sends every upload and every missing path to the front controller, a path after a script to that script, and runs PHP by its name
     #[Test]
     public function theServerBlockCarriesTheRootAndTheFrontController(): void
     {
@@ -69,6 +69,10 @@ final class NginxConfigTest extends TestCase
         $this->assertMatchesRegularExpression($upload, $text, 'An upload address does not reach the light path');
         $this->assertLessThan(strpos($text, 'location ~* ^/templates/'), strpos($text, 'location ^~ /uploads/'), 'A regex location precedes the upload prefix');
         $this->assertMatchesRegularExpression('#try_files\s+\$uri\s+\$uri/\s+/index\.php\?\$args;#', $text, 'A missing path does not reach the front controller');
+        $tail = 'location ~ ^(.+?\.php)/ {';
+        $this->assertMatchesRegularExpression('#location\s+~\s+\^\(\.\+\?\\\\\.php\)/\s*\{\s*rewrite\s+\^\(\.\+\?\\\\\.php\)/\s+\$1\s+last;\s*\}#', $text,
+            'A path after a script does not reach that script, so its 301 is lost in the 404 of nginx');
+        $this->assertLessThan(strpos($text, 'location ~ \.php$'), strpos($text, $tail), 'The PHP location takes a path after a script first');
         $this->assertStringContainsString('fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;', $text);
         $this->assertStringContainsString('fastcgi_intercept_errors off;', $text, 'nginx would replace the error page of the site with its own');
         $this->assertStringNotContainsString('.htaccess', preg_replace('/^\s*#.*$/m', '', $text), 'A rule of the block names a guard file, which no folder carries');

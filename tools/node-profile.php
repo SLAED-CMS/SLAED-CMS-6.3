@@ -103,7 +103,7 @@ function setProfileConfig(string $dir, int $port): void {
     setProfileFile($dir.'/global.php', array_replace($glob, ['homeurl' => 'http://127.0.0.1:'.$port, 'close' => '0', 'cache' => '0']));
 }
 
-# Start the guard server: every address below it answers 403, a refusal like the 404 the light path of index.php answers for the folder of a type
+# Start the guard server: every address below it answers 403, a refusal like the 410 the light path of index.php answers for the folder of a type
 function addProfileGuard(string $dir, int $port): mixed {
     file_put_contents($dir.'/guard.php', "<?php\nhttp_response_code(403);\n");
     $log = ['file', $dir.'/guard.log', 'a'];

@@ -2209,6 +2209,9 @@ function getProbeMatText(): array {
     $out['job'] = [$held, $anna->updateNodeText($wait->id, 'body', 'Body before its date', $wait->version)->status->name, getProbeJob($wait->id) === null];
     $out['room'] = getProbeCall(fn(): Node => $anna->updateNodeText($pub->id, 'intro', str_repeat('a', 70000), $again->version));
     $out['attach'] = getProbeCall(fn(): Node => $anna->updateNodeText($pub->id, 'body', 'See [attach=photo-bcdefghijk-3.png align=left title=Photo]', $again->version));
+    $html = $anna->addNode($news, getProbeIn(['cid' => 10, 'body' => '[usehtml]<img src="index.php?go=file&own=node&id=1&key=photo-bcdefghijk-3.png">[/usehtml]']),
+        NodeStatus::Pending);
+    $out['attachhtml'] = [str_contains((string)$html->body, '[usehtml]'), str_contains((string)$html->body, 'key=photo-bcdefghijk-3.png')];
     $own = getProbeCall(fn(): string => $anna->updateNodeText($pub->id, 'body', 'See [attach=photo-abcdefghij-2.png align=left title=Photo]', $again->version)->status->name);
     $out['own'] = $own;
     $cur = getProbeMatNode($pub->id, 'news');
@@ -2457,6 +2460,19 @@ function getProbeMatAttach(): array {
         'far' => $file('far', $news, 0, 'photo-bcdefghijk-3.png'),
         'task' => $file('task', $news, 0, 'photo-abcdefghij-2.png'),
         'text' => $file('anna', $news, 0, 'notes-cdefghijkl-2.txt'),
+    ];
+    $old = getProbeWriter('root')->addNode($news, getProbeIn(['cid' => 10, 'body' => $tag('legacy.png')]), NodeStatus::Published)->id;
+    $addr = fn(int $nid): string => '<img src="index.php?go=file&amp;own=node&amp;id='.$nid.'&amp;key=legacy.png">';
+    $raw = getProbeWriter('root')->addNode($news, getProbeIn(['cid' => 10, 'body' => 'Raw']), NodeStatus::Published);
+    getProbeWriter('root')->updateNodeText($raw->id, 'body', '[usehtml]'.$addr($raw->id).$addr($pub).'[/usehtml]', $raw->version);
+    $loose = getProbeWriter('root')->addNode($news, getProbeIn(['cid' => 10, 'body' => 'Loose']), NodeStatus::Published);
+    getProbeWriter('root')->updateNodeText($loose->id, 'body', 'Outside '.$addr($loose->id), $loose->version);
+    $out['legacy'] = [
+        'tag' => $file('guest', $news, $old, 'legacy.png'),
+        'html' => $file('guest', $news, $raw->id, 'legacy.png'),
+        'foreign' => $file('guest', $news, $pub, 'legacy.png'),
+        'outside' => $file('guest', $news, $loose->id, 'legacy.png'),
+        'preview' => $file('root', $news, 0, 'legacy.png'),
     ];
     $bare = getProbeWriter('root')->addNode($news, getProbeIn(['cid' => 10, 'body' => 'No attachment of its own']), NodeStatus::Published)->id;
     $plain = getProbeWriter('root')->addNode($news, getProbeIn(['cid' => 10, 'body' => 'Neither attachment nor comment']), NodeStatus::Published)->id;

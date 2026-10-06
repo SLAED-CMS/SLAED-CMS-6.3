@@ -185,6 +185,8 @@ Bundled themes currently present in the repository:
 
 Frontend requests are routed from `index.php` by `go`, `name`, `op`, and optional `file` parameters. Standard module requests resolve to `modules/<name>/<file>.php`, while special direct flows include RSS, OpenSearch, XSL, generated CSS, generated JavaScript, and numeric helper endpoints.
 
+The site answers only at its folder and its scripts, and the path is decided before the database connects, at the top of `core/security.php`: a path after a script (`/index.php/index.php?name=sitemap`, `/admin.php/x`) answers 301 to that script with the same query, a bare `/index.php` answers 301 to the folder, and any other path that reaches `index.php`, an old `*.html` address included, gets the 404 page. A request under `uploads/` that the light path does not serve answers 410.
+
 Admin requests enter through `admin.php`, which loads `admin/index.php` and then resolves admin handlers from `admin/modules/*.php` and `modules/*/admin/`.
 
 ### SEO and Head Assembly

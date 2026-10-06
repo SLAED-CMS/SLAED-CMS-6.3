@@ -826,8 +826,7 @@ final class NodeService {
     # A name the stored text already carried is checked for its form alone
     # The owner is the account of the context and, for a guest alone, the token of the session; a local source takes its canonical path and the metadata read here once
     private function checkNodeFiles(NodeType $type, array &$data, ?Node $old): void {
-        $prs = new Parser();
-        $list = fn(string $one, string $two): array => array_values(array_unique(array_merge($prs->getAttachList($one), $prs->getAttachList($two))));
+        $list = fn(string $one, string $two): array => $this->getAttachNames($type, 0, $one, $two);
         $names = $list($data['intro'], $data['body']);
         $fresh = array_values(array_diff($names, $old ? $list($old->intro, (string)$old->body) : []));
         $local = array_filter($data['assets'], fn(array $v): bool => $v['new'] && !$v['link']);
@@ -1446,26 +1445,20 @@ final class NodeService {
         return $done;
     }
 
-    # Resolve one editor attachment of the type to its canonical path for the controlled file answer; every refusal answers the same empty string
-    # The name must be a whole managed name of the upload service with an extension the type still allows, and it lives in the root of the type or, as thumb, in thumb/
-    # A stored material (id above zero) grants a name its own intro or body carries, read with the light text projection, so knowing the name of a file opens nothing
-    # A name a published comment of the material carries is granted the same way, every comment not deleted for a moderator, and only once the material itself is readable
-    # The preview of an unsaved text (id zero) grants a file of the visitor alone - the account, the session token of a guest - unless the context moderates the type
-    # The preview is open to whoever may write the type or upload into its area, because the comment editor of a material uploads into the same area
-    # The original is checked before its thumb in both branches, and nothing here counts, writes or trusts an owner, address or name the request brought besides the key
+    # Resolve one attachment of the type to its path: a stored material grants a name its text or a published comment carries, a preview the visitor's own managed upload
     public function getNodeFile(NodeType $type, int $id, string $key, bool $thumb, Comment $com): string {
         $ext = strtolower(pathinfo($key, PATHINFO_EXTENSION));
         $exts = $type->uploads ? explode(',', $type->uploads['extensions']) : [];
-        $good = $id >= 0 && !$this->ctx->task && strlen($key) <= 255 && $key === basename(str_replace('\\', '/', $key));
+        $good = $id >= 0 && !$this->ctx->task && strlen($key) <= 255 && preg_match('/^[A-Za-z0-9_\-. ]+$/D', $key) && trim($key, '. ') !== '';
         require_once BASE_DIR.'/core/classes/filemanager.php';
-        if (!$good || !FileManager::checkFileName($key) || !in_array($ext, $exts, true) || !in_array($ext, getUploadService()::getSupportedTypes(), true)) return '';
+        if (!$good || ($id === 0 && !FileManager::checkFileName($key)) || !in_array($ext, $exts, true) || !in_array($ext, getUploadService()::getSupportedTypes(), true)) return '';
         $area = new FileManager('editor', UPLOADS_DIR.'/'.getUploadFolder($type->name, true));
         try {
             if ($id > 0) {
                 $node = $this->query->getNodeContent($id, $type);
-                $prs = new Parser();
-                $names = $node ? array_merge($prs->getAttachList($node->intro), $prs->getAttachList((string)$node->body)) : [];
+                $names = $node ? $this->getAttachNames($type, $id, $node->intro, (string)$node->body) : [];
                 if ($node && !in_array($key, $names, true)) {
+                    $prs = new Parser();
                     foreach ($com->getAttachTexts($type->name, $id, $this->checkModer($type)) as $text) $names = array_merge($names, $prs->getAttachList($text));
                 }
                 $row = in_array($key, $names, true) ? $area->getFileData($key) : [];
@@ -1483,6 +1476,22 @@ final class NodeService {
         $one = $thumb ? $area->getFileData($rel) : $row;
         $full = ($one && $one['kind'] !== 'dir' && $one['path'] === $rel) ? realpath(UPLOADS_DIR.'/'.getUploadFolder($type->name, true).'/'.$rel) : false;
         return ($full === false) ? '' : str_replace('\\', '/', $full);
+    }
+
+    # Return the [attach] names of texts of the type and each key of a file address of material $id inside their [usehtml] blocks, of any material for 0
+    private function getAttachNames(NodeType $type, int $id, string ...$texts): array {
+        $prs = new Parser();
+        $mark = '#index\.php\?go=file&(?:amp;)?own=node&(?:amp;)?id=([0-9]+)&(?:amp;)?key=([A-Za-z0-9_.%-]+)#';
+        $out = [];
+        foreach ($texts as $text) {
+            $out = array_merge($out, $prs->getAttachList($text));
+            if (stripos($text, '[usehtml]') === false || !preg_match_all('#\[usehtml\](.*?)\[/usehtml\]#si', $text, $blks)) continue;
+            foreach ($blks[1] as $blk) {
+                if (!preg_match_all($mark, $blk, $mm, PREG_SET_ORDER)) continue;
+                foreach ($mm as $m) if ($id === 0 || intval($m[1]) === $id) $out[] = rawurldecode($m[2]);
+            }
+        }
+        return array_values(array_unique($out));
     }
 
     # Count one allowed start of a download or one external visit of a resource right before the response: the access is checked again and a role of another mode is refused

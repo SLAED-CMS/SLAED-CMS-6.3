@@ -34,7 +34,12 @@ server {
         return 404;
     }
 
-    # A missing file or folder goes to the front controller, as the rewrite of public/.htaccess does
+    # A path after a script, such as /index.php/index.php, runs that script, which answers 301 to its own address
+    location ~ ^(.+?\.php)/ {
+        rewrite ^(.+?\.php)/ $1 last;
+    }
+
+    # A missing file or folder goes to the front controller, as the rewrite of public/.htaccess does; a path that is no address of the site finds its 404 there
     location / {
         try_files $uri $uri/ /index.php?$args;
     }

@@ -42,6 +42,7 @@ if (empty($go) && $op === 'newlang') {
 # The rating vote checks its method before its token and answers both refusals with a status of their own
 # The ajax writes that answer only a POST refuse any other method before the token, so a followed link reads as the wrong method it is and not as a lost token
 # The scheduler releases the session lock so long-running jobs do not block parallel requests of the same visitor
+# The file route serves every uploaded file of a closed owner, Node included, through FileAccess; every refusal is the same not found
 if (empty($go)) {
     Cache::setHeaders();
     if ($conf['alang']) {
@@ -275,4 +276,6 @@ if (empty($go)) {
 } elseif ($go == 'captcha') {
     Cache::setHeaders();
     getCaptchaChallenge(getVar('req', 'act', 'var') ?: 'default');
+} elseif ($go == 'file') {
+    setFileRoute();
 }

@@ -191,6 +191,9 @@ class EditorToastUi implements ContentDriver {
                 'alignno_label' => _EDITOR_ALIGNNO,
                 'alignleft_label' => _EDITOR_ALIGNLEFT,
                 'alignright_label' => _EDITOR_ALIGNRIGHT,
+                'size_label' => _SIZE,
+                'sizethumb_label' => _EDITOR_THUMB,
+                'sizefull_label' => _EDITOR_FULLSIZE,
                 'caption_label' => _EDITOR_CAPTION,
             ]),
             'foot_html' => $tpl->getHtmlFrag('window-foot-insert', [

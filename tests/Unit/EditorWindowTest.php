@@ -168,7 +168,9 @@ final class EditorWindowTest extends TestCase
             foreach (['sl-fm-label', 'sl-fm-as', 'sl-fm-field'] as $part) {
                 $this->assertStringContainsString($part, $insert, 'The insertion options of theme '.$theme.' stopped using '.$part.', so this guard now proves nothing');
             }
+            $this->assertStringContainsString('data-sl-opts="size"', $insert, 'The insertion options of theme '.$theme.' offer no full size beside the thumbnail');
         }
+        $this->assertStringContainsString("' size=full'", $this->getFile('public/plugins/system/filemanager.js'), 'The window never writes the full-size form of an attachment');
         $drv = $this->getFile('public/plugins/editors/toastui/driver.php');
         $this->assertStringContainsString(
             "'win_class' => 'sl-fm-win",

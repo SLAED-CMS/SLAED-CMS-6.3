@@ -208,7 +208,7 @@ function getSearchRows(array $state): array {
 function getSearchSnippet(string $html, string $word, string $mod, bool $safe, bool $trust = false, int $len = 180): string {
     global $prs;
     if ($html === '') return '';
-    $body = (string)preg_replace('#<(script|style)\b[^>]*>.*?</\1\s*>#is', ' ', $prs->filterContent($html, $safe, $mod, 0, '', 0, $trust));
+    $body = (string)preg_replace('#<(script|style)\b[^>]*>.*?</\1\s*>#is', ' ', $prs->filterContent($html, $safe, $mod, 0, '', [], $trust));
     $text = html_entity_decode(strip_tags($body), ENT_QUOTES | ENT_HTML5, 'UTF-8');
     $text = trim((string)preg_replace('/\s+/u', ' ', $text));
     if ($text === '') return '';

@@ -34,7 +34,7 @@ function getUploadRequest(): ?string {
 }
 
 # The light path: answer one request below uploads/ before the core boots, without configuration, database or session, and end the request there
-# Only a file of a public folder is served, a thumb/ copy included; a private folder, a dot segment, a control character, a link out of its folder or a missing file is refused
+# Only a file of a public folder is served, a thumb/ copy included; a private folder, a dot segment, a control character, a link out of its folder or a missing file is gone
 # The type comes from a fixed map of the formats the upload service accepts; getFileStream() sends a type outside its inline list as an attachment, an SVG included
 function setUploadStream(string $rel): never {
     $mime = ['avif' => 'image/avif', 'flac' => 'audio/flac', 'gif' => 'image/gif', 'jpeg' => 'image/jpeg', 'jpg' => 'image/jpeg', 'm4a' => 'audio/mp4', 'mp3' => 'audio/mpeg',
@@ -48,7 +48,7 @@ function setUploadStream(string $rel): never {
     $root = ($root === false) ? '' : rtrim(str_replace('\\', '/', $root), '/').'/';
     $good = $root !== '' && $file !== false && is_file($file) && str_starts_with(str_replace('\\', '/', $file), $root);
     if (!$good) {
-        http_response_code(404);
+        http_response_code(410);
         exit;
     }
     if (!defined('FUNC_FILE')) define('FUNC_FILE', true);

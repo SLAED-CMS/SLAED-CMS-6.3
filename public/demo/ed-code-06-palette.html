@@ -1,0 +1,369 @@
+<!doctype html>
+<html lang="ru" data-theme="auto">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Палитра &middot; CodeMirror — стенд панели администратора SLAED CMS</title>
+  <link rel="stylesheet" href="../templates/admin/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../templates/admin/assets/css/base.css">
+  <link rel="stylesheet" href="../templates/admin/assets/css/theme.css">
+  <!-- The stand is served without Cache-Control; its sheet and script are stamped so an edit is seen at once -->
+  <script>document.write('<link rel="stylesheet" href="assets/demo.css?v=' + Date.now() + '">');</script>
+  <script src="../plugins/system/global-func.js"></script>
+  <script src="../plugins/system/slaed.js"></script>
+  <script src="../templates/admin/assets/js/admin-ui.js"></script>
+  <script src="assets/cm6-demo.bundle.js"></script>
+  <style>
+    /* Лист: theme field, mono face, height from the text, dirty dot after the caption */
+    .v-ed-head {
+      display: flex;
+      align-items: baseline;
+      gap: var(--sl-space-3);
+      margin-bottom: var(--sl-space-2);
+    }
+
+    .v-ed-name {
+      color: var(--sl-text);
+      font-size: var(--sl-font-small);
+      font-weight: var(--sl-weight-semibold);
+    }
+
+    .v-ed-name::after {
+      content: "";
+      display: inline-block;
+      width: var(--sl-space-3);
+      height: var(--sl-space-3);
+      margin-left: var(--sl-space-3);
+      border-radius: var(--sl-radius-circle);
+      background: var(--sl-warning);
+      vertical-align: 1px;
+      transform: scale(0);
+      transition: transform var(--sl-time-base) var(--sl-alert-ease);
+    }
+
+    [data-demo-ed-dirty] .v-ed-name::after {
+      transform: scale(1);
+    }
+
+    .v-ed-size {
+      margin-left: auto;
+      color: var(--sl-text-subtle);
+      font-size: var(--sl-font-micro);
+      opacity: 0;
+      transition: opacity var(--sl-time-base) var(--sl-ease-out);
+    }
+
+    .v-ed:hover .v-ed-size,
+    .v-ed:focus-within .v-ed-size {
+      opacity: 1;
+    }
+
+    .v-ed-code {
+      border: 1px solid var(--sl-field-border);
+      border-radius: var(--sl-radius-2);
+      background: var(--sl-field-bg);
+      box-shadow: var(--sl-field-shadow);
+      transition: border-color var(--sl-time-fast) var(--sl-ease-out), box-shadow var(--sl-time-fast) var(--sl-ease-out);
+    }
+
+    .v-ed-code:hover {
+      border-color: var(--sl-primary-muted);
+    }
+
+    .v-ed-code:focus-within {
+      border-color: var(--sl-primary);
+      box-shadow: var(--sl-shadow-focus);
+    }
+
+    .v-ed-code {
+      overflow: hidden;
+    }
+
+    .v-ed-code .cm-editor .cm-foldGutter {
+      display: none;
+    }
+
+    .v-cmd kbd,
+    .v-pal kbd {
+      display: inline-block;
+      min-width: 1.6ch;
+      padding: 0 var(--sl-space-1);
+      border: 1px solid var(--sl-border-strong);
+      border-radius: var(--sl-radius-1);
+      background: var(--sl-surface);
+      box-shadow: inset 0 -1px 0 var(--sl-border-strong);
+      color: var(--sl-text);
+      font: var(--sl-font-micro) / var(--sl-line-normal) var(--d-mono);
+      text-align: center;
+    }
+
+    /* Палитра: every command in a Ctrl+K palette built on the window canon */
+    .v-cmd-note {
+      color: var(--sl-success);
+      font-size: var(--sl-font-micro);
+    }
+
+    .v-cmd-open {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--sl-space-2);
+      height: var(--sl-size-chip);
+      margin-left: auto;
+      padding: 0 var(--sl-space-2) 0 var(--sl-space-3);
+      border: 1px solid var(--sl-border);
+      border-radius: var(--sl-radius-pill);
+      background: var(--sl-bg);
+      color: var(--sl-text-muted);
+      font: inherit;
+      font-size: var(--sl-font-micro);
+      cursor: pointer;
+      transition: border-color var(--sl-time-fast) var(--sl-ease-out), color var(--sl-time-fast) var(--sl-ease-out);
+    }
+
+    .v-cmd-open:hover,
+    .v-cmd:focus-within .v-cmd-open {
+      border-color: var(--sl-primary);
+      color: var(--sl-primary);
+    }
+
+    dialog.v-pal {
+      margin: 12vh auto auto;
+    }
+
+    .v-pal-bar {
+      gap: var(--sl-space-3);
+      padding: var(--sl-space-3) var(--sl-modal-pad-x);
+    }
+
+    .v-pal-bar > .bi {
+      color: var(--sl-text-subtle);
+    }
+
+    .v-pal .v-pal-find,
+    .v-pal .v-pal-find:focus {
+      flex: 1 1 auto;
+      min-width: 0;
+      height: var(--sl-size-control);
+      padding: 0;
+      border: 0;
+      background: transparent;
+      box-shadow: none;
+      color: var(--sl-text);
+      font: inherit;
+      font-size: var(--sl-font-h4);
+      outline: 0;
+    }
+
+    .v-pal-body {
+      max-height: 50vh;
+      padding: var(--sl-space-2) 0;
+    }
+
+    .v-pal-body > * + * {
+      margin-top: 0;
+    }
+
+    .v-pal-group[hidden],
+    .v-pal-row[hidden] {
+      display: none;
+    }
+
+    .v-pal-cap {
+      padding: var(--sl-space-3) var(--sl-modal-pad-x) var(--sl-space-1);
+      color: var(--sl-text-subtle);
+      font-size: var(--sl-font-micro);
+      font-weight: var(--sl-weight-semibold);
+      letter-spacing: var(--sl-track-wide);
+      text-transform: uppercase;
+    }
+
+    .v-pal-row {
+      display: flex;
+      align-items: center;
+      gap: var(--sl-space-4);
+      box-sizing: border-box;
+      width: 100%;
+      padding: var(--sl-space-2) var(--sl-modal-pad-x);
+      border: 0;
+      background: transparent;
+      color: var(--sl-text);
+      font: inherit;
+      font-size: var(--sl-font-body);
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .v-pal-row > .bi {
+      color: var(--sl-text-muted);
+    }
+
+    .v-pal-name {
+      flex: 1 1 auto;
+      min-width: 0;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+
+    .v-pal-name b {
+      color: var(--sl-primary);
+      font-weight: var(--sl-weight-bold);
+    }
+
+    .v-pal-keys {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--sl-space-1);
+    }
+
+    .v-pal-row:hover {
+      background: var(--sl-bg-subtle);
+    }
+
+    .v-pal-row[aria-selected="true"] {
+      background: var(--sl-tint);
+      box-shadow: inset var(--sl-rail-width) 0 0 var(--sl-primary);
+    }
+
+    .v-pal-row[aria-selected="true"] > .bi {
+      color: var(--sl-primary);
+    }
+
+    .v-pal-row[data-recent] .v-pal-keys::before {
+      content: "недавно";
+      margin-right: var(--sl-space-2);
+      color: var(--sl-text-subtle);
+      font-size: var(--sl-font-micro);
+    }
+
+    .v-pal-empty {
+      margin: 0;
+      padding: var(--sl-space-6) var(--sl-modal-pad-x);
+      color: var(--sl-text-muted);
+      text-align: center;
+    }
+
+    .v-pal-foot {
+      justify-content: flex-start;
+    }
+
+    .v-pal-foot .sl-modal-info {
+      display: flex;
+      align-items: center;
+      gap: var(--sl-space-2);
+      font-size: var(--sl-font-micro);
+    }
+  </style>
+</head>
+<body>
+  <div class="sl-wrapper sl-admin-shell">
+    <div class="sl-wraptop"></div>
+    <div class="sl-wrapmid">
+      <div class="sl-header sl-admin-header">
+        <div class="sl-admin-brand"><h1><a href="//slaed.net" target="_blank" title="Название сайта"><img src="../templates/admin/images/logos/slaed-logo-wordmark-gradient-blue.svg" alt="Название сайта" title="Название сайта"></a></h1></div>
+        <div class="sl-admin-toolbar">
+          <div class="sl-toolbar">
+            <div>
+              <ul class="sl-reset">
+<li><a href="../admin.php" title="Главная"><i class="bi bi-house-door"></i> <b>Главная</b></a></li>
+<li><a href="../admin.php?name=blocks" title="Блоки и баннеры"><i class="bi bi-grid-3x3-gap"></i> <b>Блоки и баннеры</b></a></li>
+<li><a href="../admin.php?name=modules" title="Модули"><i class="bi bi-gpu-card"></i> <b>Модули</b></a></li>
+<li><a href="../admin.php?name=categories" title="Категории"><i class="bi bi-folder"></i> <b>Категории</b></a></li>
+<li class="sl-split-item"><a href="/" title="Сайт"><i class="bi bi-globe2"></i> <b>Сайт</b></a></li>
+<li><a href="../index.php?name=account" title="Профиль"><i class="bi bi-person"></i> <b>Профиль</b></a></li>
+<li class="sl-split-item"><a href="../admin.php?op=logout" title="Выход"><i class="bi bi-box-arrow-right"></i> <b>Выход</b></a></li>
+<li class="sl-set-item"><button type="button" title="Опции"><i class="bi bi-sliders" aria-hidden="true"></i> <b>Опции</b></button></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="sl-admin-main">
+        <aside class="sl-admin-sidebar">
+          <div class="sl-block-sidebar">
+            <h3 title="Свёртывание / Развёртывание" data-sl-toggle-control="sl-block-7" data-sl-toggle-effect="slide" data-sl-toggle-duration="500"><b><i class="bi bi-person-gear"></i>Администрация</b><i class="bi bi-arrows-collapse sl-panel-toggle sl-panel-toggle-open" aria-hidden="true"></i><i class="bi bi-arrows-expand sl-panel-toggle sl-panel-toggle-closed" aria-hidden="true"></i></h3>
+            <div id="sl-block-7" class="sl-block-sidebar-content" data-sl-toggle="sl-block-7">
+              <div class="sl-admin-block-links">
+                <div class="sl-admin-block-link"><a href="../admin.php" title="Панель администратора"><i class="bi bi-house-door"></i> Панель администратора</a></div>
+                <div class="sl-admin-block-link"><a href="../admin.php?op=logout" title="Выход"><i class="bi bi-box-arrow-right"></i> Выход</a></div>
+              </div>
+            </div>
+          </div>
+          <div class="sl-block-sidebar">
+            <h3 title="Свёртывание / Развёртывание" data-sl-toggle-control="sl-block-8" data-sl-toggle-effect="slide" data-sl-toggle-duration="500"><b><i class="bi bi-eye"></i>Наблюдение</b><i class="bi bi-arrows-collapse sl-panel-toggle sl-panel-toggle-open" aria-hidden="true"></i><i class="bi bi-arrows-expand sl-panel-toggle sl-panel-toggle-closed" aria-hidden="true"></i></h3>
+            <div id="sl-block-8" class="sl-block-sidebar-content" data-sl-toggle="sl-block-8">
+              <div class="sl-session-line sl-session-line--icon"><div class="sl-session-icon"><i class="bi bi-person-gear"></i></div><div>Администрация:</div><div class="sl-session-right">1</div></div>
+              <div class="sl-session-line sl-session-line--icon"><div class="sl-session-icon"><i class="bi bi-person"></i></div><div>Пользователей:</div><div class="sl-session-right">0</div></div>
+              <div class="sl-session-line sl-session-line--icon"><div class="sl-session-icon"><i class="bi bi-person-slash"></i></div><div>Гостей:</div><div class="sl-session-right">0</div></div>
+              <div class="sl-session-line sl-session-line--icon"><div class="sl-session-icon"><i class="bi bi-people"></i></div><div>Всего:</div><div class="sl-session-right">1</div></div>
+            </div>
+          </div>
+        </aside>
+        <main class="sl-admin-content"><div class="sl-admin-content-inner">
+          <div class="sl-box">
+            <div class="sl-module-head">
+              <div class="sl-module-head-icon"><i class="bi bi-cloud-arrow-up" title="Загрузки"></i></div>
+              <div class="sl-module-head-body">
+                <h1 class="sl-module-head-title">Загрузки</h1>
+              </div>
+            </div>
+            <ul class="sl-tabs-nav sl-tabs-nav-main">
+<li class="sl-tabs-item"><a href="../admin.php?name=uploads" title="Главная" class="sl-tabs-link">Главная</a></li>
+<li class="sl-tabs-item"><a href="../admin.php?name=uploads&amp;op=sysfiles" title="Системные файлы" class="sl-tabs-link">Системные файлы</a></li>
+<li class="sl-tabs-item"><a href="../admin.php?name=uploads&amp;op=tplconfig" title="Шаблоны" class="sl-tabs-link sl-is-active">Шаблоны</a></li>
+<li class="sl-tabs-item"><a href="../admin.php?name=uploads&amp;op=config" title="Конфигурации" class="sl-tabs-link">Конфигурации</a></li>
+<li class="sl-tabs-item"><a href="../admin.php?name=uploads&amp;op=info" title="Справка" class="sl-tabs-link">Справка</a></li>
+            </ul>
+          </div>
+          <div class="sl-alert sl-alert-info">
+            <div class="sl-alert-body"><b>[src]</b> - Ссылка на файл<br><b>[tsrc]</b> - Ссылка на файл предварительного просмотра<br><b>[width]</b> - Ширина приложения<br><b>[twidth]</b> - Ширина предварительного просмотра<br><b>[height]</b> - Высота приложения<br><b>[theight]</b> - Высота предварительного просмотра<br><b>[align]</b> - Расположение по отношению к содержанию<br><b>[title]</b> - Заголовок приложения<br><b>[quot]</b> - Кавычки<br><b>[rel]</b> - Дополнительный атрибут</div>
+          </div>
+          <div class="sl-box">
+          <form action="#" method="post" class="sl-div-form" onsubmit="return false">
+            <div class="sl-box v-ed v-cmd" data-demo-ed data-demo-ed-name="Шаблон для формата: jpg" data-demo-ed-kind="jpg">
+              <div class="v-ed-head"><span class="v-ed-name">Шаблон для формата: jpg</span><span class="v-cmd-note" data-demo-ed-note></span><button type="button" class="v-cmd-open" data-demo-ed-act="palette" title="Команды редактора"><i class="bi bi-command" aria-hidden="true"></i>Команды<kbd>Ctrl</kbd><kbd>K</kbd></button></div>
+              <div class="d-cm v-ed-code" data-demo-cm="Шаблон для формата: jpg" data-demo-ed-body><textarea name="tmp[]" hidden>&lt;a rel="[rel]" title="[title]" href="[src]" class="sl-attach sl-attach-[align]"&gt;&lt;img src="[tsrc]" style="max-width:[twidth]px" alt="[title]" loading="lazy"&gt;&lt;/a&gt;</textarea></div>
+            </div>
+            <div class="sl-box v-ed v-cmd" data-demo-ed data-demo-ed-name="Шаблон для формата: mp3" data-demo-ed-kind="mp3">
+              <div class="v-ed-head"><span class="v-ed-name">Шаблон для формата: mp3</span><span class="v-cmd-note" data-demo-ed-note></span><button type="button" class="v-cmd-open" data-demo-ed-act="palette" title="Команды редактора"><i class="bi bi-command" aria-hidden="true"></i>Команды<kbd>Ctrl</kbd><kbd>K</kbd></button></div>
+              <div class="d-cm v-ed-code" data-demo-cm="Шаблон для формата: mp3" data-demo-ed-body><textarea name="tmp[]" hidden>&lt;audio controls preload="metadata" src="[src]" title="[title]"&gt;&lt;/audio&gt;</textarea></div>
+            </div>
+            <div class="sl-box v-ed v-cmd" data-demo-ed data-demo-ed-name="Шаблон для формата: pdf" data-demo-ed-kind="pdf">
+              <div class="v-ed-head"><span class="v-ed-name">Шаблон для формата: pdf</span><span class="v-cmd-note" data-demo-ed-note></span><button type="button" class="v-cmd-open" data-demo-ed-act="palette" title="Команды редактора"><i class="bi bi-command" aria-hidden="true"></i>Команды<kbd>Ctrl</kbd><kbd>K</kbd></button></div>
+              <div class="d-cm v-ed-code" data-demo-cm="Шаблон для формата: pdf" data-demo-ed-body><textarea name="tmp[]" hidden>&lt;object data="[src]" type="application/pdf" width="[width]" height="[height]"&gt;&lt;a href="[src]"&gt;[title]&lt;/a&gt;&lt;/object&gt;</textarea></div>
+            </div>
+            <div class="sl-box v-ed v-cmd" data-demo-ed data-demo-ed-name="Шаблон для формата: Полный размер (size=full)" data-demo-ed-kind="full">
+              <div class="v-ed-head"><span class="v-ed-name">Шаблон для формата: Полный размер (size=full)</span><span class="v-cmd-note" data-demo-ed-note></span><button type="button" class="v-cmd-open" data-demo-ed-act="palette" title="Команды редактора"><i class="bi bi-command" aria-hidden="true"></i>Команды<kbd>Ctrl</kbd><kbd>K</kbd></button></div>
+              <div class="d-cm v-ed-code" data-demo-cm="Шаблон для формата: Полный размер (size=full)" data-demo-ed-body><textarea name="tmp[]" hidden>&lt;a rel="[rel]" title="[title]" href="[src]" class="sl-attach sl-attach-[align]"&gt;&lt;img src="[src]" width="[width]" height="[height]" alt="[title]" loading="lazy"&gt;&lt;/a&gt;</textarea></div>
+            </div>
+            <div class="sl-div-actions">
+              <input type="submit" value="Сохранить изменения" class="sl-but-blue">
+            </div>
+          </form>
+          </div>
+          <div class="sl-box" data-demo-about></div>
+          <dialog class="sl-modal v-pal" data-demo-ed-palette aria-label="Команды редактора">
+            <div class="sl-modal-title">
+              <i class="bi bi-command" aria-hidden="true"></i>
+              <span class="sl-modal-cap"><strong>Команды</strong><span class="sl-modal-sub" data-demo-ed-pal-sub></span></span>
+              <span class="sl-modal-acts"><button type="button" class="sl-modal-act sl-modal-act-close" data-sl-close title="Закрыть" aria-label="Закрыть"><i class="bi bi-x-lg" aria-hidden="true"></i></button></span>
+            </div>
+            <div class="sl-modal-bar v-pal-bar"><i class="bi bi-search" aria-hidden="true"></i><input type="search" class="v-pal-find" data-demo-ed-find data-sl-focus placeholder="Что сделать? Например: перенос, src, вернуть" aria-label="Поиск команды" autocomplete="off"></div>
+            <div class="sl-modal-body sl-modal-body-flush v-pal-body" role="listbox" aria-label="Команды">
+<div class="v-pal-group" data-demo-ed-pal-group><div class="v-pal-cap">Правка</div><div class="v-pal-list"><button type="button" role="option" class="v-pal-row" data-demo-ed-cmd="Отменить" data-demo-ed-act="undo"><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i><span class="v-pal-name" data-demo-ed-cmd-name>Отменить</span><span class="v-pal-keys"><kbd>Ctrl</kbd><kbd>Z</kbd></span></button><button type="button" role="option" class="v-pal-row" data-demo-ed-cmd="Повторить" data-demo-ed-act="redo"><i class="bi bi-arrow-clockwise" aria-hidden="true"></i><span class="v-pal-name" data-demo-ed-cmd-name>Повторить</span><span class="v-pal-keys"><kbd>Ctrl</kbd><kbd>Y</kbd></span></button><button type="button" role="option" class="v-pal-row" data-demo-ed-cmd="Выделить всё" data-demo-ed-act="all"><i class="bi bi-cursor-text" aria-hidden="true"></i><span class="v-pal-name" data-demo-ed-cmd-name>Выделить всё</span><span class="v-pal-keys"><kbd>Ctrl</kbd><kbd>A</kbd></span></button><button type="button" role="option" class="v-pal-row" data-demo-ed-cmd="Закомментировать" data-demo-ed-act="comment"><i class="bi bi-chat-square-text" aria-hidden="true"></i><span class="v-pal-name" data-demo-ed-cmd-name>Закомментировать</span><span class="v-pal-keys"><kbd>Ctrl</kbd><kbd>/</kbd></span></button><button type="button" role="option" class="v-pal-row" data-demo-ed-cmd="Разложить: тег на строку" data-demo-ed-act="pretty"><i class="bi bi-text-indent-left" aria-hidden="true"></i><span class="v-pal-name" data-demo-ed-cmd-name>Разложить: тег на строку</span><span class="v-pal-keys"></span></button><button type="button" role="option" class="v-pal-row" data-demo-ed-cmd="Собрать в одну строку" data-demo-ed-act="flat"><i class="bi bi-text-paragraph" aria-hidden="true"></i><span class="v-pal-name" data-demo-ed-cmd-name>Собрать в одну строку</span><span class="v-pal-keys"></span></button><button type="button" role="option" class="v-pal-row" data-demo-ed-cmd="Вернуть исходный текст" data-demo-ed-act="reset"><i class="bi bi-arrow-repeat" aria-hidden="true"></i><span class="v-pal-name" data-demo-ed-cmd-name>Вернуть исходный текст</span><span class="v-pal-keys"></span></button></div></div><div class="v-pal-group" data-demo-ed-pal-group><div class="v-pal-cap">Вид</div><div class="v-pal-list"><button type="button" role="option" class="v-pal-row" data-demo-ed-cmd="Найти и заменить" data-demo-ed-act="search"><i class="bi bi-search" aria-hidden="true"></i><span class="v-pal-name" data-demo-ed-cmd-name>Найти и заменить</span><span class="v-pal-keys"><kbd>Ctrl</kbd><kbd>F</kbd></span></button><button type="button" role="option" class="v-pal-row" data-demo-ed-cmd="Перенос строк" data-demo-ed-act="wrap"><i class="bi bi-text-wrap" aria-hidden="true"></i><span class="v-pal-name" data-demo-ed-cmd-name>Перенос строк</span><span class="v-pal-keys"></span></button><button type="button" role="option" class="v-pal-row" data-demo-ed-cmd="Свернуть всё" data-demo-ed-act="fold"><i class="bi bi-chevron-bar-contract" aria-hidden="true"></i><span class="v-pal-name" data-demo-ed-cmd-name>Свернуть всё</span><span class="v-pal-keys"><kbd>Ctrl</kbd><kbd>Alt</kbd><kbd>[</kbd></span></button><button type="button" role="option" class="v-pal-row" data-demo-ed-cmd="Развернуть всё" data-demo-ed-act="unfold"><i class="bi bi-chevron-bar-expand" aria-hidden="true"></i><span class="v-pal-name" data-demo-ed-cmd-name>Развернуть всё</span><span class="v-pal-keys"><kbd>Ctrl</kbd><kbd>Alt</kbd><kbd>]</kbd></span></button><button type="button" role="option" class="v-pal-row" data-demo-ed-cmd="Редактор на весь экран" data-demo-ed-act="full"><i class="bi bi-arrows-angle-expand" aria-hidden="true"></i><span class="v-pal-name" data-demo-ed-cmd-name>Редактор на весь экран</span><span class="v-pal-keys"></span></button><button type="button" role="option" class="v-pal-row" data-demo-ed-cmd="Копировать шаблон" data-demo-ed-act="copy"><i class="bi bi-copy" aria-hidden="true"></i><span class="v-pal-name" data-demo-ed-cmd-name>Копировать шаблон</span><span class="v-pal-keys"></span></button></div></div><div class="v-pal-group" data-demo-ed-pal-group><div class="v-pal-cap">Вставить переменную</div><div class="v-pal-list"><button type="button" role="option" class="v-pal-row" data-demo-ed-cmd="[src] — Ссылка на файл" data-demo-ed-ins="[src]"><i class="bi bi-braces" aria-hidden="true"></i><span class="v-pal-name" data-demo-ed-cmd-name>[src] — Ссылка на файл</span><span class="v-pal-keys"></span></button><button type="button" role="option" class="v-pal-row" data-demo-ed-cmd="[tsrc] — Ссылка на файл предварительного просмотра" data-demo-ed-ins="[tsrc]"><i class="bi bi-braces" aria-hidden="true"></i><span class="v-pal-name" data-demo-ed-cmd-name>[tsrc] — Ссылка на файл предварительного просмотра</span><span class="v-pal-keys"></span></button><button type="button" role="option" class="v-pal-row" data-demo-ed-cmd="[width] — Ширина приложения" data-demo-ed-ins="[width]"><i class="bi bi-braces" aria-hidden="true"></i><span class="v-pal-name" data-demo-ed-cmd-name>[width] — Ширина приложения</span><span class="v-pal-keys"></span></button><button type="button" role="option" class="v-pal-row" data-demo-ed-cmd="[twidth] — Ширина предварительного просмотра" data-demo-ed-ins="[twidth]"><i class="bi bi-braces" aria-hidden="true"></i><span class="v-pal-name" data-demo-ed-cmd-name>[twidth] — Ширина предварительного просмотра</span><span class="v-pal-keys"></span></button><button type="button" role="option" class="v-pal-row" data-demo-ed-cmd="[height] — Высота приложения" data-demo-ed-ins="[height]"><i class="bi bi-braces" aria-hidden="true"></i><span class="v-pal-name" data-demo-ed-cmd-name>[height] — Высота приложения</span><span class="v-pal-keys"></span></button><button type="button" role="option" class="v-pal-row" data-demo-ed-cmd="[theight] — Высота предварительного просмотра" data-demo-ed-ins="[theight]"><i class="bi bi-braces" aria-hidden="true"></i><span class="v-pal-name" data-demo-ed-cmd-name>[theight] — Высота предварительного просмотра</span><span class="v-pal-keys"></span></button><button type="button" role="option" class="v-pal-row" data-demo-ed-cmd="[align] — Расположение по отношению к содержанию" data-demo-ed-ins="[align]"><i class="bi bi-braces" aria-hidden="true"></i><span class="v-pal-name" data-demo-ed-cmd-name>[align] — Расположение по отношению к содержанию</span><span class="v-pal-keys"></span></button><button type="button" role="option" class="v-pal-row" data-demo-ed-cmd="[title] — Заголовок приложения" data-demo-ed-ins="[title]"><i class="bi bi-braces" aria-hidden="true"></i><span class="v-pal-name" data-demo-ed-cmd-name>[title] — Заголовок приложения</span><span class="v-pal-keys"></span></button><button type="button" role="option" class="v-pal-row" data-demo-ed-cmd="[quot] — Кавычки" data-demo-ed-ins="[quot]"><i class="bi bi-braces" aria-hidden="true"></i><span class="v-pal-name" data-demo-ed-cmd-name>[quot] — Кавычки</span><span class="v-pal-keys"></span></button><button type="button" role="option" class="v-pal-row" data-demo-ed-cmd="[rel] — Дополнительный атрибут" data-demo-ed-ins="[rel]"><i class="bi bi-braces" aria-hidden="true"></i><span class="v-pal-name" data-demo-ed-cmd-name>[rel] — Дополнительный атрибут</span><span class="v-pal-keys"></span></button></div></div>
+              <p class="v-pal-empty" data-demo-ed-pal-empty hidden>Ничего не найдено</p>
+            </div>
+            <div class="sl-modal-foot v-pal-foot"><span class="sl-modal-info"><kbd>↑</kbd><kbd>↓</kbd> выбор · <kbd>Enter</kbd> выполнить · <kbd>Esc</kbd> закрыть</span></div>
+          </dialog>
+        </div></main>
+      </div>
+      <div class="sl-footer sl-admin-footer">
+        <div class="sl-copyright">Генерация: 0.251 сек. и 15 запросов к базе данных за 0.005 сек.<br><a href="https://slaed.net" title="SLAED CMS" target="_blank" rel="noopener noreferrer">SLAED CMS</a> © 2005-2026 Eduard Laas. Released under MIT License.</div>
+        <span><a href="//slaed.net" title="SLAED CMS" class="sl-thide sl-slaed-home" target="_blank" rel="noopener noreferrer">SLAED CMS</a><a href="#" title="Наверх" class="sl-thide" onclick="Upper('html, body', 600); return false;">Наверх</a></span>
+      </div>
+    </div>
+    <div class="sl-wrapfoot"></div>
+  </div>
+  <script>document.write('<script src="assets/demo.js?v=' + Date.now() + '"><\/script>');</script>
+</body>
+</html>

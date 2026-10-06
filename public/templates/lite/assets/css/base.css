@@ -1004,7 +1004,7 @@ blockquote > p:first-child {
   display: inline;
 }
 
-/* Attachments: parser [attach] thumbnails, framing and alignment modifiers */
+/* Attachments: parser [attach] thumbnails and full-size images, framing and alignment modifiers */
 .sl-attach {
   display: inline-block;
   max-width: 100%;
@@ -1013,6 +1013,7 @@ blockquote > p:first-child {
 
 .sl-attach img {
   display: block;
+  max-width: 100%;
   height: auto;
 }
 

@@ -10,12 +10,12 @@ if (!defined('FUNC_FILE')) die('Illegal file access');
 # The mark stands in a wrapper the page always prints, empty while the comment is unedited, because an out-of-band swap can only replace an element already there
 function getCommentBody(array $val, bool $oob = false): array {
     global $conf, $tpl, $prs;
-    $cnid = isset($conf['node']['types'][$val['modul']]) ? intval($val['cid'] ?? 0) : 0;
+    $own = isset($conf['node']['types'][$val['modul']]) ? ['node', intval($val['cid'] ?? 0)] : [];
     $sent = (string)($val['edited'] ?? '');
     $badge = ($sent !== '') ? $tpl->getHtmlFrag('inline-badge', ['title_text' => (string)_COMMENTS_EDITED, 'label' => format_time($sent, _TIMESTRING),
         'is_comment_edit' => true]) : '';
     return [
-        'text' => $prs->filterContent($val['body'], true, $val['modul'], 2, 'breaks', $cnid),
+        'text' => $prs->filterContent($val['body'], true, $val['modul'], 2, 'breaks', $own),
         'mark' => $tpl->getHtmlFrag('quick-edit', ['is_mark' => true, 'is_oob' => $oob, 'mark_id' => 'quick-mark-comment-'.$val['id'], 'mark_html' => $badge]),
     ];
 }

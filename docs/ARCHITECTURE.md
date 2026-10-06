@@ -107,6 +107,7 @@ Frontend helper routing includes:
 | `xsl` | XSL output |
 | `asset` | generated asset output |
 | `captcha` | captcha provider endpoint |
+| `file` | a file of a closed owner, Node included, granted by `FileAccess` (`setFileRoute()`); every refusal is 404 |
 
 ### Admin
 
@@ -267,6 +268,9 @@ Confirmed bootstrap responsibilities:
 - loads configuration through `getConfig()`
 - applies admin theme override when `ADMIN_FILE` is defined
 - loads `core/security.php`
+- `core/security.php` first decides the path: a path after a script or a bare
+  `/index.php` answers 301 to the address of the script, any other path than the
+  folder of the site or its script gets the 404 page
 - `core/security.php` loads `core/classes/pdo.php`, initializes `$db`, and starts
   request security/session handling
 - resolves and loads the active theme hook
@@ -565,7 +569,7 @@ Uploads are stored under:
 - `uploads/`, at the project level and outside the document root. A file of a public
   folder (`getUploadPublic()` in `core/stream.php`) is served at `uploads/<folder>/<name>`
   by the light path of `index.php` before the core boots; any other folder only by the
-  route of its owner. `getUploadUrl()` answers the address, `getFileStream()` sends every byte.
+  route of its owner, and the light path answers its address with 410. `getUploadUrl()` answers the address, `getFileStream()` sends every byte.
 
 Do not treat generated storage contents as source files. Documentation and tests
 should describe the directories and contracts, not specific generated artifacts.

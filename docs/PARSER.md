@@ -23,11 +23,13 @@ Two shapes are worth knowing because they look unusual. An inline element used i
 
 The `Parser` should be instantiated and used dynamically where needed, or invoked via the global context if already bootstrapped. The primary public APIs are:
 
-### `Parser::filterContent(string $src, bool $safe, string $mod, int $hoff = 0, string $fmt = '', int $nid = 0, bool $trust = false): string`
+### `Parser::filterContent(string $src, bool $safe, string $mod, int $hoff = 0, string $fmt = '', array $own = [], bool $trust = false): string`
 The standard rendering pipeline for all modules. It processes Markdown, BBCode, applies safe HTML escaping (if `$safe` is `true`), and **applies module-specific word-replacement rules** (such as automatic censoring or dynamic acronym expansions from `$conf['replace']`).
 
-### `Parser::filterDoc(string $src, bool $safe = true, string $mod = '', int $hoff = 0, string $fmt = '', int $nid = 0, bool $trust = false): string`
+### `Parser::filterDoc(string $src, bool $safe = true, string $mod = '', int $hoff = 0, string $fmt = '', array $own = [], bool $trust = false): string`
 The core parser operation. Processes all markup but **skips** the global search-and-replace rules. Use this for static documents, changelogs, search rendering, or anywhere where automatic keyword replacement could corrupt the output.
+
+The file context `$own` names the owner and the stored target of the text, `['node', $nid]` for a Node material. Every `[attach]` takes the address `FileAccess::getFileUrl()` answers for it; without a context the owner is `public`, the direct link of a public folder.
 
 ## Source Format (`$fmt`)
 
@@ -74,7 +76,7 @@ The `Parser` supports a hybrid composition of Markdown and SLAED BBCode.
 - **Blocks:** `[quote]`, `[hide]` (visible only to admins/auth users), `[tabs]...[tab]`.
 - **Code:** `[code]`, `[php]`, `[code=lang]`.
 - **Media & Assets:** `[url]`, `[mail]`, `[img=align]`.
-- **Local Attachments:** `[attach=file.png align=X width=Y]` - Resolves to local uploaded files, generates thumbs automatically via GD if needed.
+- **Local Attachments:** `[attach=file.png align=X title=Y]`, optionally `width=W height=H`, then `rel=R`, and last `size=full` - Resolves to local uploaded files, generates thumbs automatically via GD if needed; `size=full` renders an image through the `full` template of `config/filetype.php` at its own size and makes no thumb.
 - **Admin/Macros:** `*NN` (Smilies), `[hr]`, `[li]`, `[usehtml]`, `[usephp]` (the last two are super administrator only).
 
 ### Backslash literals

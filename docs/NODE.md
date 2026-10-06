@@ -244,7 +244,7 @@ modules/node/
     └── info/ru.md
 ```
 
-- `modules/node/index.php` routes the public ops `view`, `add`, `asset`, `attach`, `report` and `support`.
+- `modules/node/index.php` routes the public ops `view`, `add`, `asset`, `report` and `support`; an attachment leaves through the file route `go=file` of the core.
 - `modules/node/admin/index.php` routes the admin ops for materials (`show`, `add`, `edit`, `status`,
   `delete`, `report`, `support`, `sync`), types (`types`, `type`, `typestatus`, `typedelete`, `clone`,
   `export`, `import`, `remains`), `config` and `info`.
@@ -885,7 +885,7 @@ public function getNodeView(NodeType $type, Node|NodeTarget $node, string $mode)
 
 Prepares one accessible object for one closed mode without SQL, request reads, HTML building or template calls;
 only `intro_html` and `body_html` carry HTML, rendered by `Parser::filterContent()` in safe mode with the material
-ID, so only `[usehtml]`/`[usephp]` content is trusted and attachments use the controlled `op=attach` route.
+ID, so only `[usehtml]`/`[usephp]` content is trusted and attachments use the controlled file route `go=file`.
 Assets never expose `src`, `reported` or `ruid`. The modes and the exact keys are in
 [Rendering: NodeView](#nodeview-keys).
 
@@ -1860,7 +1860,7 @@ names without a definition are dropped on the next change.
 Upload extensions must be supported by the upload service and unique; `userupload` and `guestupload` are 0 or 1; the
 other limits are whole numbers of at most 18 digits. The rule is the upload place `<name>.attach` and is edited on the
 shared screen `admin.php?name=uploads&op=config`. The directory of a type is `uploads/<name>` with `thumb/` created on
-demand by Parser; direct web access to it is refused and files are served through `op=asset` and `op=attach`.
+demand by Parser; direct web access to it is refused and files are served through `op=asset` and `go=file`.
 
 ### Changing a type
 
@@ -1870,7 +1870,7 @@ Types change only through `NodeService`:
 |---|---|
 | `addNodeType(string $name, NodeTypeInput $input): NodeType` | disabled type of version 1, the four areas, `uploads/<name>` with guard files; an existing directory holding anything but guard files is `INVALID directory` |
 | `updateNodeType(string $name, NodeTypeInput $input, int $version): NodeType` | replaces title, intro, ext, sort and all four areas; version + 1 |
-| `updateNodeTypeStatus(string $name, bool $active, int $version): NodeType` | switching on re-checks everything stored, needs a writable directory and an HTTP probe of `uploads/<name>/index.html` answering 403 or 404; the current state is a no-op |
+| `updateNodeTypeStatus(string $name, bool $active, int $version): NodeType` | switching on re-checks everything stored, needs a writable directory and the self-check of the upload root answering `closed`; the current state is a no-op |
 | `deleteNodeType(string $name, int $version): void` | refused while materials, categories or user files exist; removes the four sections and `node-<name>` from every administrator; the directory stays |
 | `addNodeTypeImport(string $json, string $name = ''): NodeType` | decodes an export and calls `addNodeType()`; import, clone and profiles |
 
@@ -2035,7 +2035,6 @@ drawn from `$conf['module']` for the start page) is a key of `$conf['node']['typ
 | `view` | GET, HEAD | `id` (global `_nodes.id`) | full material |
 | `add` | GET, HEAD, POST | POST: `action` (`preview`/`submit`), `token`, form fields | public form, preview, submission |
 | `asset` | GET, HEAD | `id` (`_node_assets.id`) | one structured resource |
-| `attach` | GET, HEAD | `id`, `key`, optional `thumb=1`; or `key`, `preview=1` | editor attachment of a saved material, or preview of a new upload |
 | `report` | POST | `id` (resource), `token` | broken-resource report |
 | `support` | POST | `id`, `token`, `state`, `version` | owner closes or reopens a request; only for a type with extension `support` |
 
@@ -2051,7 +2050,7 @@ with an `Allow` header. Comments, rating and favorites use their own global rout
 | 302 / 303 | redirect after a write (`setRedirect()` sends 303 for POST); 302 for an external `download`/`link` source |
 | 400 | malformed `cat`/`num`; bad or disabled `let`; `order` unknown, or other than `published` and outside `list.orders`; `dir` not `asc`/`desc`; form `action` not `preview`/`submit` |
 | 403 | guest non-moderator on a `support` list or material; form not open to the visitor; bad token on `add`, `report`, `support`; `support` by a non-owner or to another state; writer `DENIED` |
-| 404 | unknown type or op; `cat` without categories or unreadable; page past the end; missing or malformed `id`; material or resource missing, closed, foreign or unreadable; `add` without `submit`; `attach` outside its two query forms or not granted; report refused |
+| 404 | unknown type or op; `cat` without categories or unreadable; page past the end; missing or malformed `id`; material or resource missing, closed, foreign or unreadable; `add` without `submit`; report refused |
 | 405 | method not in the operation table, with `Allow` |
 | 409 | writer `CONFLICT` (stale ticket version) |
 | 422 | form or field error on `add`; writer `INVALID`; non-numeric `support` state |
@@ -2094,12 +2093,14 @@ Reader refusals map through `getNodeStatus()` (`NOTFOUND` 404, `DENIED` 403, `IN
 - Only a GET of a `download` role or an external `link` visit calls `updateNodeAssetHits()`, right before the 200
   body, a 206 from byte zero or the 302; HEAD, 304, 416 and later ranges count nothing. Point action `download` or
   `visit`.
-- `attach`: the query must be exactly `name`, `op`, `key`, optional `thumb=1` plus `id`, or exactly those plus
-  `preview=1` without `id`; anything else is 404. `key` (at most 255 bytes, its own basename) must pass
-  `FileManager::checkFileName()`, an extension the upload rule of the type still allows and the upload service
-  supports. The saved form grants a name that the `intro` or `body` of the readable material carries
-  (`Parser::getAttachList()`); the preview form grants only the visitor's own new upload (account, or session token of
-  a guest) unless the visitor moderates the type. `thumb=1` serves `thumb/<key>` after the original is granted. Every
+- An attachment is served by the file route of the core, `go=file` (`setFileRoute()`): the query must be exactly `go`,
+  `own=node`, `key`, optional `thumb=1` plus `id`, or `go`, `own=node`, `name=<type>`, `key`, optional `thumb=1` and
+  `preview=1` without `id`; anything else is 404, a method other than GET or HEAD 405. The type of a saved material is
+  read from its row. `key` (at most 255 bytes, a bare name not starting with a dot or a space) must carry an extension
+  the upload rule of the type still allows and the upload service supports. The saved form grants a name that the
+  `intro` or `body` of the readable material carries (`Parser::getAttachList()`); the preview form grants only the
+  visitor's own new upload (account, or session token of a guest) unless the visitor moderates the type. `thumb=1`
+  serves `thumb/<key>` after the original is granted. A type held by a configuration journal grants nothing. Every
   refusal is the same 404; nothing is counted; the preview answer is not cached.
 - `report`: after the token and the session window, `updateNodeAssetReport()` stores the first report once; a role
   without `report` answers 404. The answer returns to the referring page or the material (`_NODE_REPORTED`).
@@ -2237,7 +2238,7 @@ unescaped; URLs are passed in `href`, `ahref`, `chref` and the resource `href`/`
 Resource item (inside `assets[<role>]`): `id`, `kind`, `role`, `href`, `rhref`, `name`, `title`, `intro`, `mime`,
 `size`, `stext` (formatted size), `width`, `height`, `duration`, `hits`, `islink`. `href` is the `op=asset` URL of a
 saved resource; for an external source of mode `image`, `gallery`, `player` or `none` it is the source itself; for an
-unsaved local file it is the `op=attach&preview=1` URL. `rhref` is the `op=report` URL when the role reports. The
+unsaved local file it is the `go=file` preview URL. `rhref` is the `op=report` URL when the role reports. The
 stored `src`, the report state and its author never leave the reader.
 
 Field view entry: `name`, `type`, `label_text`, `hint_text`, `value`, `value_text`, `value_html` (only `textarea`,
@@ -2506,10 +2507,12 @@ registered type, or a type named through its flag, answers `node/<type>`, a modu
   root (or `thumb/`) and must belong to the writer (member: own upload; guest: upload of the current session)
   unless he moderates the type. A new local resource `src` is checked the same way, also when the resource id is
   kept. Checked on preview and again on save; a refusal writes nothing.
-- The parser renders `[attach]` of a stored material as `index.php?name=<type>&op=attach&id=<nid>&key=<name>`
-  (plus `thumb=1` for an existing thumbnail) when it receives `int $nid` in `Parser::filterContent()` or
-  `Parser::filterDoc()`; its cache key includes `nid`. Calls without `nid` are not Node. A comment of a Node type
-  renders with the id of its material, so its attachments take the same route and the rights of the material.
+- The parser renders `[attach]` of a stored material as `index.php?go=file&own=node&id=<nid>&key=<name>`
+  (plus `thumb=1` for an existing thumbnail) when it receives the file context `['node', $nid]` in
+  `Parser::filterContent()` or `Parser::filterDoc()`; the address comes from `FileAccess::getFileUrl()` and the
+  cache key includes the context. Calls without a context are not Node. A comment of a Node type renders with the id
+  of its material, so its attachments take the same route and the rights of the material. The route `go=file`
+  decides through `FileAccess::getFilePath()`, whose `node` adapter is `NodeService::getNodeFile()`.
 
 
 ## Extensions
@@ -2769,13 +2772,15 @@ An address under `uploads/` reaches the light path of `index.php` (`core/stream.
   right, extension scope, active role, one statement) into an immutable `NodeAsset`; no path, name, MIME or URL
   comes from the request. A local `src` is canonical and must resolve by `realpath()` inside `uploads/node/<type>`,
   outside `thumb/`.
-- `op=attach`: the query is exactly `name`, `op`, `key`, optional `thumb=1` and either `id=<nid>` or `preview=1`.
-  `NodeService::getNodeFile(NodeType $type, int $id, string $key, bool $thumb, Comment $com): string` accepts only a whole
-  managed name equal to its own basename (`FileManager::checkFileName()` alone applies `basename()`), an allowed
-  extension and a `realpath()` inside the root; a stored material grants only names its own `intro`/`body` carry
-  (read by `getNodeContent()`, no `LIKE`, no other materials) and its published comments carry (all comments not
-  deleted for a moderator); preview grants only the visitor's own upload unless he moderates the type. Every refusal
-  is the same `404`.
+- `go=file` with `own=node`: the query is exactly `go`, `own`, `key`, optional `thumb=1` and either `id=<nid>` or `name=<type>` with `preview=1`.
+  `NodeService::getNodeFile(NodeType $type, int $id, string $key, bool $thumb, Comment $com): string` accepts only a bare
+  name of the attachment grammar (`[A-Za-z0-9_\-. ]`), an allowed extension and a `realpath()` inside the root; a
+  stored material grants only names its own `intro`/`body` carry, in an `[attach]` or, inside a `[usehtml]` block, as
+  the file address of that same material (read by `getNodeContent()`, no `LIKE`, no other materials), and names its
+  published comments carry in an `[attach]` (all comments not deleted for a moderator), whatever the form of the
+  name; the preview (`id` 0) grants only a whole managed name (`FileManager::checkFileName()`) of the visitor's own
+  upload unless they moderate the type. A writer binding a new name, by tag or by such an address of any material of
+  the type, passes the owner check of `checkNodeFiles()`. Every refusal is the same `404`.
 - Resources have no rights of their own: they inherit material state, main-category read right and extension
   limits.
 - `getFileStream(string $path, string $name, string $mime = 'application/octet-stream', bool $inline = false,
@@ -3439,11 +3444,15 @@ a POST with the token scope `update` runs every step that is not done yet. The o
 | `help` | `help` (`support`) | every request becomes a published material, each reply a comment of its author; open or closed goes to the queue row, which follows the last reply |
 | `content` | `content` without extension | static pages; a feed address is noted, not carried |
 
+The run changes the database and nothing else: it moves, copies and renames no file. The operator moves the upload
+folders of the modules into the folders of their types as UPGRADING.md lists them (`uploads/pages/` becomes
+`uploads/node/docs/`), before the run; the run finds a file there or, not moved yet, in `uploads/<module>/`.
+
 Steps, in this order; the manifest `storage/backup/update/node/manifest.json` records each, so a stopped run
 continues where it stopped:
 
-1. Stash: categories, comments and favorites of a module move to the key `~<module>`, the files of
-   `uploads/<module>` into the manifest directory, so the name check of a new type passes.
+1. Stash: categories, comments and favorites of a module move to the key `~<module>`, so the name check of a new
+   type passes.
 2. Types: a missing type is created from its shipped profile and takes over the upload rule the module left
    (see [Identity rules](#identity-rules)); an existing one only gains the features the data needs.
 3. Counter: `_nodes` continues above the highest old id of every module, so no old address names a new material.
@@ -3452,14 +3461,18 @@ continues where it stopped:
    `old<module>`, which `op=remains` cleans up), the terms of `_rating`, the comment counters and `node-<type>`
    rights instead of the module name. Texts are converted from the trusted HTML the old modules rendered into BB
    and Markdown; blocks the conversion does not know become `[usehtml]` blocks, and a bare relative address of
-   `[img]` or `[url]` gains `./`, the local form the safe parser accepts. An `[attach]` of a comment or a help reply
-   keeps its tag under the managed name and is shown through the attach route of the material; a direct address
-   into a closed module directory is written as `./uploads/archive/<module>/...`.
-5. Outer addresses, once: direct addresses into the closed module directories that the forum, comments,
-   private messages, newsletters, blocks, signatures and polls keep are pointed at `uploads/archive/<module>/`.
-   The mail queue is left as it was written.
-6. Files: the type root `uploads/node/<type>` takes only what the materials use - every `[attach]` file of their texts
-   and comments under its managed name with its thumbnail, and the local file of every resource. A file the site addresses directly moves
-   into the public `uploads/archive/<module>/`; one that is both is copied there. A file nothing uses stays in the
-   working directory `storage/backup/update/node/files/<module>`, outside the site, and the run notes the count.
-7. Activation of every type the run created or switched off.
+   `[img]` or `[url]` gains `./`, the local form the safe parser accepts. A local resource path Node refuses gets a
+   safe spelling, and a note names the file the operator renames to it.
+5. Activation of every type the run created or switched off.
+
+The data step turns a direct address of a file of `uploads/<module>/` in a material, a comment or a help reply into
+an `[attach]` of the type with the name unchanged (`getMigrateAttach()`), whatever the form of the name, when the file
+exists and its extension is one the type allows; the attach route grants it because the text carries it. An `[img]`
+becomes the full-size form with its alignment (`none` without one) and its alternative text as the title, a link
+around the thumb of a file the thumbnail form of that file, a link around another image the full-size form of the
+image alone, and `[url]` an attachment titled by its label. Inside a `[usehtml]` block of a material the raw HTML
+stays and a `src` or `href` becomes the file address of that material
+(`index.php?go=file&own=node&id=<id>&key=<name>`, with `&thumb=1` for a thumb), which
+`NodeService::getNodeFile()` grants as well. An image inside a link to anything else stays, because an attachment is
+a link of its own, and so does every address inside `[code]`, `[php]` and `[usephp]`. Every other address stays as
+written.

@@ -260,6 +260,7 @@ final class NodeServiceTest extends TestCase
         $this->assertSame([true, 'Pending', true], $run['job'], 'The move back left the job of a future publication behind');
         $this->assertInvalid($run['room'], 'intro');
         $this->assertInvalid($run['attach'], 'attach.owner');
+        $this->assertSame([false, true], $run['attachhtml'], 'An author kept a [usehtml] block, whose attach address would grant a file');
         $this->assertSame(['ok' => true, 'value' => 'Pending'], $run['own'], 'An attachment of the author was refused');
         $this->assertSame([true, 1, 'Intro by the moderator'], $run['moder'], 'A moderator edit moved the state or did not take one version step');
         $this->assertSame([true, true, true, true, true, true, true], $run['sets'], 'A quick edit touched what it does not edit');
@@ -610,6 +611,9 @@ final class NodeServiceTest extends TestCase
         foreach (['deleted', 'closed'] as $key) $this->assertSame('', $com[$key], 'The '.$key.' comment granted its file');
         $this->assertSame('|', $com['elsewhere'], 'A comment opened a file of another material or another type');
         $this->assertSame(2, $run['commentsql'], 'A name of a comment costs the reader the type and the text row; the comments are read by the comment class');
+        $old = $run['legacy'];
+        $this->assertSame(['node/news/legacy.png', 'node/news/legacy.png'], [$old['tag'], $old['html']], 'A name without a random part the text carries is refused');
+        foreach (['foreign', 'outside', 'preview'] as $key) $this->assertSame('', $old[$key], 'The name without a random part was granted by '.$key);
     }
 
     # The category screen hands every write of a category of a Node type to the writer and keeps its own SQL for the other modules

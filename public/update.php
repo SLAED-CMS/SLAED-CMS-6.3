@@ -22,7 +22,7 @@ function getMigrateMap(): array {
     ];
 }
 
-# The working directory of the migration under the backup root, which the web server never serves: the manifest and the files of the closed module directories
+# The working directory of the migration under the backup root, which the web server never serves: it holds the manifest
 function getMigrateDir(): string {
     return BACKUP_DIR.'/update/node';
 }
@@ -31,7 +31,7 @@ function getMigrateDir(): string {
 function getMigrateState(): array {
     $file = getMigrateDir().'/manifest.json';
     $data = is_file($file) ? json_decode((string)file_get_contents($file), true) : null;
-    $base = ['version' => 1, 'stash' => [], 'types' => [], 'data' => [], 'outer' => [], 'files' => [], 'active' => [], 'notes' => [], 'counter' => 0];
+    $base = ['version' => 1, 'stash' => [], 'types' => [], 'data' => [], 'active' => [], 'notes' => [], 'counter' => 0];
     return is_array($data) ? $data + $base : $base;
 }
 
@@ -125,53 +125,14 @@ function getMigratePlan(array $state): array {
     return $out;
 }
 
-# List every file below a directory as relative paths with forward slashes
-function getMigrateList(string $dir, string $pre = ''): array {
-    $out = [];
-    foreach (is_dir($dir) ? (scandir($dir) ?: []) : [] as $one) {
-        if ($one === '.' || $one === '..') continue;
-        $path = $dir.'/'.$one;
-        if (is_dir($path) && !is_link($path)) $out = array_merge($out, getMigrateList($path, $pre.$one.'/'));
-        elseif (is_file($path)) $out[] = $pre.$one;
-    }
-    return $out;
+# The path of one file a module left, in the folder of its type the operator moved it into or still in the 6.2 folder of the module, or an empty string
+function getMigratePath(string $mod, string $rel): string {
+    if ($rel === '' || str_contains($rel, "\0") || preg_match('#(?:^|/)\.{0,2}(?:/|$)#', $rel)) return '';
+    foreach ([getUploadFolder(getMigrateMap()[$mod]['type'], true), $mod] as $dir) if (is_file(UPLOADS_DIR.'/'.$dir.'/'.$rel)) return UPLOADS_DIR.'/'.$dir.'/'.$rel;
+    return '';
 }
 
-# The guard files a 6.2 upload folder carries by name with their exact bytes, the shipped index page and the deny rule; 8.0 writes none, so the migration names them itself
-# A file of that name with other bytes is no guard and belongs to the module like any other file
-function getMigrateGuards(): array {
-    $page = '<!DOCTYPE html><html><head><meta charset="utf-8"><title>SLAED CMS</title>';
-    return ['index.html' => $page.'<meta http-equiv="refresh" content="0; url=https://slaed.net"></head><body></body></html>', '.htaccess' => 'deny from all'];
-}
-
-# Move every entry of one directory into another, merging directories; a name of the rename map applies to the files of the root and of thumb/
-# An entry whose target already holds the same bytes is dropped, one whose target differs stays where it is and is answered, and emptied directories are removed
-# A root file named in $skip stays only with the bytes $skip gives it: an older placeholder under a guard name belongs to the module and moves with it
-function setMigrateMove(string $from, string $into, array $skip = [], array $names = [], string $rel = ''): array {
-    $left = [];
-    foreach (is_dir($from) ? (scandir($from) ?: []) : [] as $one) {
-        if ($one === '.' || $one === '..') continue;
-        if ($rel === '' && isset($skip[$one]) && is_file($from.'/'.$one) && file_get_contents($from.'/'.$one) === $skip[$one]) continue;
-        $src = $from.'/'.$one;
-        $dst = $into.'/'.(($rel === '' || $rel === 'thumb/') ? ($names[$one] ?? $one) : $one);
-        if (is_dir($src) && !is_link($src)) {
-            if (!is_dir($dst) && !mkdir($dst, 0755, true) && !is_dir($dst)) {
-                $left[] = $rel.$one;
-                continue;
-            }
-            $left = array_merge($left, setMigrateMove($src, $dst, [], $names, $rel.$one.'/'));
-            if (count(scandir($src) ?: []) === 2) rmdir($src);
-        } elseif (is_file($dst) && sha1_file($src) === sha1_file($dst)) {
-            unlink($src);
-        } elseif (file_exists($dst) || !rename($src, $dst)) {
-            $left[] = $rel.$one;
-        }
-    }
-    return $left;
-}
-
-# Take what every module left under its own key out of the way of the name check of a new type: its categories, comments and favorites move to the key ~<module>
-# The files of its upload directory move into the working directory, the guard files of the release stay; a repeat finds nothing left to move
+# Move the categories, comments and favorites of every module to the key ~<module>, out of the way of the name check of a new type; no file moves
 function setMigrateStash(array $plan, array &$state): void {
     global $db;
     $todo = array_keys(array_filter($plan, fn(array $v): bool => $v['block'] === ''));
@@ -189,16 +150,11 @@ function setMigrateStash(array $plan, array &$state): void {
         $db->setSqlRollback();
         throw $err;
     }
-    foreach ($todo as $mod) deleteCategoryMap($mod);
-    $skip = getMigrateGuards();
     foreach ($todo as $mod) {
-        $dir = getMigrateDir().'/files/'.$mod;
-        if (!is_dir($dir) && !mkdir($dir, 0750, true) && !is_dir($dir)) throw new RuntimeException('The stash directory of '.$mod.' cannot be created');
-        $left = setMigrateMove(UPLOADS_DIR.'/'.$mod, $dir, $skip);
-        if ($left) throw new RuntimeException('Files of uploads/'.$mod.' could not be moved aside: '.implode(', ', array_slice($left, 0, 10)));
+        deleteCategoryMap($mod);
         $state['stash'][$mod] = true;
-        setMigrateState($state);
     }
+    setMigrateState($state);
 }
 
 # Create or adjust the target type of one module: a missing type comes from its shipped profile, an existing one only gains the features the data needs
@@ -237,24 +193,56 @@ function setMigrateType(string $mod, array $one, array &$state): void {
     setMigrateState($state);
 }
 
-# Rewrite the file references of one text: attachment names the migration renames, and direct addresses of a closed module directory, which now point into the public archive
-# A rewritten address reads ./uploads/archive/..., the local form the safe parser accepts, unless a / before it makes it absolute or rooted already
-# Only a file the working directory holds is touched and collected by module into the archive list; every other reference stays exactly as it was
-function getMigrateText(string $text, array $names, array $files, array &$arch): string {
-    if ($names && stripos($text, '[attach=') !== false) {
-        $text = preg_replace_callback('/\[attach=([a-zA-Z0-9_\-\. ]+) align=/', fn(array $m): string => '[attach='.($names[$m[1]] ?? $m[1]).' align=', $text) ?? $text;
-    }
-    if (!$files || stripos($text, 'uploads/') === false) return $text;
-    $mods = implode('|', array_map(fn(string $v): string => preg_quote($v, '#'), array_keys($files)));
-    return preg_replace_callback('#(^|[^A-Za-z0-9_.-])uploads/('.$mods.')/([A-Za-z0-9_./%-]+)#', function (array $mat) use ($files, &$arch): string {
-        $cut = rtrim($mat[3], '.');
-        $rel = rawurldecode($cut);
-        if (!isset($files[$mat[2]][$rel])) return $mat[0];
-        $arch[$mat[2]][$rel] = true;
-        return $mat[1].(($mat[1] === '/') ? '' : './').'uploads/archive/'.$mat[2].'/'.$mat[3];
+# Rewrite direct addresses of files in uploads/$dir into attachments, names unchanged; inside [usehtml] a source becomes the file address of material $nid
+function getMigrateAttach(string $text, string $dir, int $nid, Closure $have): string {
+    global $conf;
+    if (stripos($text, 'uploads/'.$dir.'/') === false) return $text;
+    $host = preg_quote((string)preg_replace('#^www\.#i', '', (string)parse_url((string)($conf['homeurl'] ?? ''), PHP_URL_HOST)), '#');
+    $addr = '(?:\./|/|https?://(?:www\.)?'.$host.'/)?uploads/'.preg_quote($dir, '#').'/([A-Za-z0-9_./%-]+)';
+    $name = function (string $rel) use ($have): string {
+        $one = rawurldecode($rel);
+        $good = preg_match('/^[A-Za-z0-9_\-. ]+$/D', $one) && trim($one, '. ') !== '' && $have($one);
+        return $good ? $one : '';
+    };
+    $tag = function (string $file, string $align, string $title, bool $full): string {
+        $title = trim((string)preg_replace('/\s+/u', ' ', (string)preg_replace('/[^\pL0-9_\-. "]+/u', ' ', $title)));
+        return '[attach='.$file.' align='.($align !== '' ? strtolower($align) : 'none').' title='.($title !== '' ? $title : 'title').($full ? ' size=full' : '').']';
+    };
+    $keep = [];
+    $hide = function (string $src, string $find, ?Closure $when = null) use (&$keep): string {
+        return preg_replace_callback($find, function (array $m) use (&$keep, $when): string {
+            if ($when && !$when($m[0])) return $m[0];
+            $keep[] = $m[0];
+            return "\x01".(count($keep) - 1)."\x01";
+        }, $src) ?? $src;
+    };
+    $text = $hide($text, '#\[(code|php|usehtml|usephp)\b[^\]]*\].*?\[/\1\]#si');
+    $img = '\[img(?:=([a-z]+))?(?: alt=([^\]]*))?\]';
+    $text = preg_replace_callback('#\[url='.$addr.'\]\s*'.$img.$addr.'\[/img\]\s*\[/url\]#i', function (array $m) use ($name, $tag): string {
+        $file = ($m[4] === 'thumb/'.$m[1]) ? $name($m[1]) : '';
+        if ($file !== '') return $tag($file, $m[2], $m[3], false);
+        $file = $name($m[4]);
+        return ($file !== '') ? $tag($file, $m[2], $m[3], true) : $m[0];
+    }, $text) ?? $text;
+    $text = $hide($text, '#\[url(?:=[^\]]*)?\](?:(?!\[/url\]).)*?\[/url\]#si', fn(string $v): bool => stripos($v, '[img') !== false);
+    $text = preg_replace_callback('#'.$img.$addr.'\[/img\]#i', function (array $m) use ($name, $tag): string {
+        $thumb = str_starts_with($m[3], 'thumb/');
+        $file = $name($thumb ? substr($m[3], 6) : $m[3]);
+        return ($file !== '') ? $tag($file, $m[1], $m[2], !$thumb) : $m[0];
+    }, $text) ?? $text;
+    $link = fn(array $m): string => ($name($m[1]) !== '') ? $tag($name($m[1]), '', $m[2] ?? '', false) : $m[0];
+    $text = preg_replace_callback('#\[url='.$addr.'\]([^\[]*)\[/url\]#i', $link, $text) ?? $text;
+    $text = preg_replace_callback('#\[url\]'.$addr.'\[/url\]#i', $link, $text) ?? $text;
+    for ($i = count($keep) - 1; $i >= 0; $i--) $text = str_replace("\x01".$i."\x01", $keep[$i], $text);
+    if ($nid < 1) return $text;
+    return preg_replace_callback('#\[usehtml\].*?\[/usehtml\]#si', function (array $blk) use ($addr, $name, $nid): string {
+        return preg_replace_callback('#((?:src|href)\s*=\s*(?:"|\'|&\#0?34;|&quot;)?)'.$addr.'#i', function (array $m) use ($name, $nid): string {
+            $thumb = str_starts_with($m[2], 'thumb/');
+            $file = $name($thumb ? substr($m[2], 6) : $m[2]);
+            return ($file !== '') ? $m[1].'index.php?go=file&own=node&id='.$nid.'&key='.rawurlencode($file).($thumb ? '&thumb=1' : '') : $m[0];
+        }, $blk[0]) ?? $blk[0];
     }, $text) ?? $text;
 }
-
 # Wrap every block of raw HTML the conversion does not know - tables, divisions, frames, objects, forms, scripts and styles - into a [usehtml] block on its own lines
 # A block is taken up to its balanced closing tag, an unclosed one up to the end of the text; each wrapped block leaves a marker the caller restores last
 function getMigrateBlocks(string $text, array &$keep): string {
@@ -347,43 +335,6 @@ function getMigrateLocal(string $text): string {
     }, $text) ?? $text;
 }
 
-# The new managed names of the attachments of one module whose stored names the file layer does not manage, so the controlled attach route can deliver them
-# The readable stem is kept, the salt of the upload service is added; a name in use in the working directory or the type root is drawn again
-function getMigrateNames(string $name, array $texts, array $files): array {
-    $out = [];
-    foreach ($texts as $text) {
-        if (!preg_match_all('/\[attach=([a-zA-Z0-9_\-\. ]+) align=/', $text, $mm)) continue;
-        foreach ($mm[1] as $one) {
-            if (isset($out[$one]) || !isset($files[$one]) || FileManager::checkFileName($one)) continue;
-            $stem = trim(preg_replace('/[^A-Za-z0-9_]+/', '_', pathinfo($one, PATHINFO_FILENAME)) ?? '', '_') ?: $name;
-            $ext = preg_replace('/[^A-Za-z0-9]/', '', pathinfo($one, PATHINFO_EXTENSION)) ?: 'bin';
-            do {
-                $new = $stem.'-'.getRandomString(FileManager::SALTLEN).'.'.$ext;
-            } while (isset($files[$new]) || in_array($new, $out, true) || file_exists(UPLOADS_DIR.'/'.getUploadFolder($name, true).'/'.$new));
-            $out[$one] = $new;
-        }
-    }
-    return $out;
-}
-
-# The files of one module the new materials take from the type root: every attachment their texts and their comments name with its thumbnail, and every local resource
-# A comment of a material shows its attachments through the attach route of the type as the material does, so its files stay in the closed type root as well
-# The list holds the names of the working directory, so an attachment the migration renames is listed under the old name it is stored under there
-function getMigrateKeep(NodeType $type, array $texts, array $files, array $moves): array {
-    $out = [];
-    foreach ($texts as $text) {
-        if (!preg_match_all('/\[attach=([a-zA-Z0-9_\-\. ]+) align=/', $text, $mm)) continue;
-        foreach ($mm[1] as $one) foreach ([$one, 'thumb/'.$one] as $rel) if (isset($files[$rel])) $out[$rel] = true;
-    }
-    $back = array_flip($moves);
-    $sql = 'SELECT a.src FROM '.PREFIX_DB.'_node_assets AS a INNER JOIN '.PREFIX_DB.'_nodes AS n ON n.id = a.nid WHERE n.tid = :tid';
-    foreach (getMigrateQuery($sql, ['tid' => $type->id])->fetchAll(PDO::FETCH_COLUMN) as $src) {
-        $rel = $back[$src] ?? $src;
-        if (isset($files[$rel])) $out[$rel] = true;
-    }
-    return array_keys($out);
-}
-
 # The material a row of a removed module becomes, in the columns of the node table, plus the extra data the module carried in its own columns
 # The status of help tells an open request from a closed one, which the queue row carries, so every request is published; elsewhere 0 is a submission not yet approved
 function getMigrateNode(string $mod, array $row): array {
@@ -402,9 +353,8 @@ function getMigrateNode(string $mod, array $row): array {
     ];
 }
 
-# The resource a file or link row brings: an external address or a relative path below the type root, the facts of a local file read once from the working directory
-# A local path the Node grammar refuses gets a safe spelling and its file the same one on the files step; an address Node refuses brings nothing and is noted
-function getMigrateAsset(string $mod, array $node, string $role, array $files, array &$moves, array &$miss, array &$state, array &$srcs): ?array {
+# The resource of a file or link row; a local path the Node grammar refuses gets a safe spelling, and the note tells the operator to rename its file
+function getMigrateAsset(string $mod, array $node, string $role, array &$moves, array &$miss, array &$state, array &$srcs): ?array {
     $src = $node['url'];
     $old = $src;
     if ($src === '' || $role === '') return null;
@@ -432,8 +382,11 @@ function getMigrateAsset(string $mod, array $node, string $role, array $files, a
             $ext = pathinfo($src, PATHINFO_EXTENSION);
             $tail = ($ext !== '') ? '.'.$ext : '';
             $stem = substr($src, 0, strlen($src) - strlen($tail));
-            while (isset($files[$src]) || in_array($src, $moves, true)) $src = $stem.'-'.getRandomString(4).$tail;
-            if (isset($files[$old])) $moves[$old] = $src;
+            while (getMigratePath($mod, $src) !== '' || in_array($src, $moves, true)) $src = $stem.'-'.getRandomString(4).$tail;
+            $moves[$old] = $src;
+            if (getMigratePath($mod, $old) !== '') {
+                addMigrateNote($state, $mod, '#'.$node['id'].': rename the file '.$old.' to '.$src.' in uploads/'.getUploadFolder(getMigrateMap()[$mod]['type'], true));
+            }
         }
     }
     $ext = strtolower(pathinfo((string)parse_url($src, PHP_URL_PATH), PATHINFO_EXTENSION));
@@ -444,8 +397,8 @@ function getMigrateAsset(string $mod, array $node, string $role, array $files, a
         in_array($ext, ['mp4', 'webm', 'ogv', 'mov', 'm4v'], true) => 'video',
         default => 'file',
     };
-    $full = $link ? '' : getMigrateDir().'/files/'.$mod.'/'.$old;
-    $size = ($full !== '' && is_file($full)) ? filesize($full) : false;
+    $full = $link ? '' : getMigratePath($mod, $old);
+    $size = ($full !== '') ? filesize($full) : false;
     $mime = null;
     if ($size !== false && function_exists('finfo_open')) {
         $info = finfo_open(FILEINFO_MIME_TYPE);
@@ -476,11 +429,10 @@ function getMigrateFields(NodeType $type, array $node): array {
     return $out;
 }
 
-# Insert the materials of one module and everything that belongs to each: the legacy address, extra categories, the resource, the queue row and the starting rating
-# The texts are rewritten before the insert; the answer is the map of old ids to new ones and, by reference, the archive list and the notes
-# Only a material the old module published gets a legacy address: an unapproved submission had no public page, and its first approval earns the award it never got
-function addMigrateNodes(string $mod, NodeType $type, array $rows, array $names, array $files, array &$arch, array &$moves, array &$state): array {
+# Insert the materials of one module with their legacy address, categories, resource and rating, and answer the map of old ids to new ones
+function addMigrateNodes(string $mod, NodeType $type, array $rows, Closure $have, array &$state): array {
     global $db;
+    $moves = [];
     $now = (string)getMigrateQuery('SELECT NOW()')->fetchColumn();
     $cats = array_map('intval', getMigrateQuery('SELECT id FROM '.PREFIX_DB.'_categories WHERE modul = :name', ['name' => $type->name])->fetchAll(PDO::FETCH_COLUMN));
     $cats = array_flip($cats);
@@ -516,8 +468,8 @@ function addMigrateNodes(string $mod, NodeType $type, array $rows, array $names,
             $node['poll'] = 0;
         }
         $vals = array_values(array_filter(explode('|', $node['field']), fn(string $v): bool => trim($v) !== '' && $v !== '0'));
-        $body = getMigrateHtml(getMigrateText($node['body'], $names, $files, $arch), true).($vals ? "\n\n".implode(' | ', $vals) : '');
-        $intro = getMigrateHtml(getMigrateText($node['intro'], $names, $files, $arch), true);
+        $body = getMigrateAttach(getMigrateHtml($node['body'], true), $mod, 0, $have).($vals ? "\n\n".implode(' | ', $vals) : '');
+        $intro = getMigrateAttach(getMigrateHtml($node['intro'], true), $mod, 0, $have);
         if (strlen($intro) > 65535) {
             $intro = $node['intro'];
             addMigrateNote($state, $mod, '#'.$id.': the rewritten summary would not fit its column, it keeps the old addresses');
@@ -542,12 +494,15 @@ function addMigrateNodes(string $mod, NodeType $type, array $rows, array $names,
         $nid = intval($db->getSqlLastId());
         if ($nid < 1) throw new RuntimeException('The new id of '.$mod.' #'.$id.' cannot be read');
         $map[$id] = $nid;
+        $done = array_map(fn(string $v): string => getMigrateAttach($v, $mod, $nid, $have), ['intro' => $intro, 'body' => $body]);
+        if (strlen($done['intro']) > 65535) $done['intro'] = $intro;
+        if ($done !== ['intro' => $intro, 'body' => $body]) getMigrateQuery('UPDATE '.PREFIX_DB.'_nodes SET intro = :intro, body = :body WHERE id = :id', $done + ['id' => $nid]);
         if ($node['status'] !== 0) getMigrateQuery($back, ['modul' => $mod, 'oid' => $id, 'nid' => $nid]);
         $more =array_diff(array_unique(array_map('intval', explode(',', $node['assoc']))), [0, $node['cid']]);
         foreach ($feat['categories'] ? $more : [] as $cid) {
             if (isset($cats[$cid])) getMigrateQuery('INSERT INTO '.PREFIX_DB.'_node_categories (nid, cid) VALUES (:nid, :cid)', ['nid' => $nid, 'cid' => $cid]);
         }
-        $one = getMigrateAsset($mod, $node, $role, $files[$mod] ?? [], $moves, $miss, $state, $srcs);
+        $one = getMigrateAsset($mod, $node, $role, $moves, $miss, $state, $srcs);
         if ($one !== null) {
             getMigrateQuery($put, ['nid' => $nid, 'kind' => $one['kind'], 'role' => $one['role'], 'src' => $one['src'], 'name' => $one['name'], 'mime' => $one['mime'],
                 'size' => $one['size'], 'width' => $one['width'], 'height' => $one['height'], 'hits' => $one['hits'], 'rep' => $one['reported'] ? $now : null,
@@ -562,7 +517,7 @@ function addMigrateNodes(string $mod, NodeType $type, array $rows, array $names,
 
 # Carry the replies of the requests of the old help module into comments of their new materials, then fill the queue row of each request from its history
 # A reply keeps its author, address and time; a closed request stays closed, an open one waits for the side that did not write last
-function addMigrateReplies(NodeType $type, array $roots, array $map, array $names, array $files, array &$arch): void {
+function addMigrateReplies(NodeType $type, array $roots, array $map, Closure $have): void {
     global $conf;
     $maps = $conf['node']['support'];
     $rows = getMigrateQuery('SELECT id, pid, aid, title, time, body, ip FROM '.PREFIX_DB.'_help WHERE pid > 0 ORDER BY pid, time, id')->fetchAll(PDO::FETCH_ASSOC);
@@ -583,7 +538,7 @@ function addMigrateReplies(NodeType $type, array $roots, array $map, array $name
         $aid = intval($row['aid']);
         $time = $row['time'] ?: date('Y-m-d H:i:s');
         $title = trim((string)$row['title']);
-        $body = getMigrateHtml(getMigrateText(($title !== '' ? '[b]'.$title."[/b]\n\n" : '').$row['body'], $names, $files, $arch), false);
+        $body = getMigrateAttach(getMigrateHtml(($title !== '' ? '[b]'.$title."[/b]\n\n" : '').$row['body'], false), 'help', 0, $have);
         getMigrateQuery($sql, ['cid' => $nid, 'modul' => $type->name, 'time' => $time, 'uid' => $aid, 'name' => mb_substr((string)($users[$aid] ?? ''), 0, 25),
             'ip' => getIpNorm((string)$row['ip']) ?: '', 'body' => $body, 'status' => CommentStatus::Published->value, 'shown' => $time]);
         $last[$nid] = ['aid' => $aid, 'time' => $time];
@@ -598,13 +553,12 @@ function addMigrateReplies(NodeType $type, array $roots, array $map, array $name
     }
 }
 
-# Bind the comments and favorites of the old module to the new materials; rows of a gone material take the key old<module>, which the Node remains list cleans up
-# Comment bodies are rewritten like the materials - renamed attachments, direct addresses into the archive - and the old rating terms become the last votes of the targets
-function setMigrateLinks(string $mod, NodeType $type, array $map, array $names, array $files, array &$arch): void {
+# Bind comments, favorites and rating terms of the old module to the new materials, rows of a gone material under old<module>, comment addresses as attachments
+function setMigrateLinks(string $mod, NodeType $type, array $map, Closure $have): void {
     $key = '~'.$mod;
-    $sql = 'SELECT id, body FROM '.PREFIX_DB.'_comment WHERE modul = :key AND (body LIKE :like OR body LIKE :tag)';
-    foreach (getMigrateQuery($sql, ['key' => $key, 'like' => '%uploads/%', 'tag' => '%[attach=%'])->fetchAll(PDO::FETCH_ASSOC) as $row) {
-        $body = getMigrateText($row['body'], $names, $files, $arch);
+    $sql = 'SELECT id, body FROM '.PREFIX_DB.'_comment WHERE modul = :key AND body LIKE :like';
+    foreach (getMigrateQuery($sql, ['key' => $key, 'like' => '%uploads/'.$mod.'/%'])->fetchAll(PDO::FETCH_ASSOC) as $row) {
+        $body = getMigrateAttach($row['body'], $mod, 0, $have);
         if ($body !== $row['body']) getMigrateQuery('UPDATE '.PREFIX_DB.'_comment SET body = :body WHERE id = :id', ['body' => $body, 'id' => $row['id']]);
     }
     foreach (['_comment' => 'cid', '_favorites' => 'fid'] as $tab => $col) {
@@ -661,27 +615,19 @@ function setMigrateData(string $mod, array $one, array &$state): void {
             return;
         }
     }
-    $files = [];
-    foreach (array_keys(getMigrateMap()) as $key) $files[$key] = array_fill_keys(getMigrateList(getMigrateDir().'/files/'.$key), true);
     $rows = getMigrateQuery('SELECT * FROM '.PREFIX_DB.'_'.$mod.($mod === 'help' ? ' WHERE pid = 0' : '').' ORDER BY id')->fetchAll(PDO::FETCH_ASSOC);
-    $texts = array_merge(array_column($rows, 'intro'), array_column($rows, 'body'));
-    if ($mod === 'help') $texts = array_merge($texts, getMigrateQuery('SELECT body FROM '.PREFIX_DB.'_help WHERE pid > 0')->fetchAll(PDO::FETCH_COLUMN));
-    $sql = 'SELECT body FROM '.PREFIX_DB.'_comment WHERE modul = :key AND body LIKE :tag';
-    $texts = array_merge($texts, getMigrateQuery($sql, ['key' => '~'.$mod, 'tag' => '%[attach=%'])->fetchAll(PDO::FETCH_COLUMN));
-    $names = getMigrateNames($type->name, array_map('strval', $texts), $files[$mod]);
-    $arch = [];
+    $exts = $type->uploads ? explode(',', $type->uploads['extensions']) : [];
+    $have = fn(string $rel): bool => in_array(strtolower(pathinfo($rel, PATHINFO_EXTENSION)), $exts, true) && getMigratePath($mod, $rel) !== '';
     if (!$db->setSqlBegin()) throw new RuntimeException('The transaction of '.$mod.' cannot be started');
     try {
         getMigrateQuery('SELECT id FROM '.PREFIX_DB.'_node_types WHERE id = :id FOR UPDATE', ['id' => $type->id]);
         getMigrateQuery('UPDATE '.PREFIX_DB.'_categories SET modul = :name WHERE modul = :key', ['name' => $type->name, 'key' => '~'.$mod]);
         $state['notes'][$mod] = [];
-        $moves = [];
-        $map = addMigrateNodes($mod, $type, $rows, $names, $files, $arch, $moves, $state);
-        if ($mod === 'help') addMigrateReplies($type, $rows, $map, $names, $files, $arch);
-        setMigrateLinks($mod, $type, $map, $names, $files, $arch);
-        $keep = getMigrateKeep($type, array_map('strval', $texts), $files[$mod], $moves);
-        $state['data'][$mod] = ['state' => 'committing', 'type' => $type->name, 'map' => $map, 'names' => $names, 'moves' => $moves, 'archive' => array_map('array_keys', $arch),
-            'keep' => $keep, 'count' => array_intersect_key($one, array_flip(['rows', 'comments', 'favorites', 'categories']))];
+        $map = addMigrateNodes($mod, $type, $rows, $have, $state);
+        if ($mod === 'help') addMigrateReplies($type, $rows, $map, $have);
+        setMigrateLinks($mod, $type, $map, $have);
+        $state['data'][$mod] = ['state' => 'committing', 'type' => $type->name, 'map' => $map,
+            'count' => array_intersect_key($one, array_flip(['rows', 'comments', 'favorites', 'categories']))];
         setMigrateState($state);
         if (!$db->setSqlCommit()) throw new RuntimeException('The commit of '.$mod.' failed');
     } catch (Throwable $err) {
@@ -693,114 +639,6 @@ function setMigrateData(string $mod, array $one, array &$state): void {
     deleteCategoryMap($type->name);
     $state['data'][$mod]['state'] = 'done';
     setMigrateState($state);
-}
-
-# The text columns outside the removed modules that may address their files directly, as table => text columns; a table or column a site lacks is passed over
-# The mail queue is left out: a queued letter is sent as it was written, and a sent one is history
-function getMigrateOuter(): array {
-    return ['forum' => ['body'], 'comment' => ['body'], 'privat' => ['body'], 'message' => ['body'], 'newsletter' => ['body'], 'blocks' => ['content'], 'users' => ['sig'],
-        'voting' => ['body']];
-}
-
-# Point the direct addresses the rest of the site keeps into the closed module directories at the public archive, as the materials were pointed in their data step
-# It runs once, after the data of every module and before any file leaves the working directory, because only a file still held there is rewritten and archived
-function setMigrateOuter(array &$state): void {
-    global $db;
-    if (!empty($state['outer'])) return;
-    $files = [];
-    foreach (array_keys(getMigrateMap()) as $key) $files[$key] = array_fill_keys(getMigrateList(getMigrateDir().'/files/'.$key), true);
-    $files = array_filter($files);
-    $arch = [];
-    $rows = 0;
-    if (!$db->setSqlBegin()) throw new RuntimeException('The transaction of the outer addresses cannot be started');
-    try {
-        $sql = 'SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = :tab';
-        foreach ($files ? getMigrateOuter() : [] as $tab => $cols) {
-            $have = getMigrateQuery($sql, ['tab' => PREFIX_DB.'_'.$tab])->fetchAll(PDO::FETCH_COLUMN);
-            $cols = array_values(array_intersect($cols, $have));
-            if (!$cols || !in_array('id', $have, true)) continue;
-            $like = implode(' OR ', array_map(fn(string $v): string => '`'.$v.'` LIKE \'%uploads/%\'', $cols));
-            foreach (getMigrateQuery('SELECT id, `'.implode('`, `', $cols).'` FROM '.PREFIX_DB.'_'.$tab.' WHERE '.$like)->fetchAll(PDO::FETCH_ASSOC) as $row) {
-                $sets = [];
-                $pars = ['id' => $row['id']];
-                foreach ($cols as $i => $col) {
-                    $text = getMigrateText((string)$row[$col], [], $files, $arch);
-                    if ($text === (string)$row[$col]) continue;
-                    $sets[] = '`'.$col.'` = :v'.$i;
-                    $pars['v'.$i] = $text;
-                }
-                if (!$sets) continue;
-                getMigrateQuery('UPDATE '.PREFIX_DB.'_'.$tab.' SET '.implode(', ', $sets).' WHERE id = :id', $pars);
-                $rows++;
-            }
-        }
-        $state['outer'] = ['rows' => $rows, 'archive' => array_map('array_keys', $arch)];
-        setMigrateState($state);
-        if (!$db->setSqlCommit()) throw new RuntimeException('The commit of the outer addresses failed');
-    } catch (Throwable $err) {
-        $db->setSqlRollback();
-        unset($state['outer']);
-        setMigrateState($state);
-        throw $err;
-    }
-}
-
-# Remove the directories below and at one path that hold no file any more, deepest first; a directory that still holds something stays
-function deleteMigrateTree(string $dir): void {
-    if (!is_dir($dir) || is_link($dir)) return;
-    foreach (scandir($dir) ?: [] as $one) {
-        if ($one !== '.' && $one !== '..' && is_dir($dir.'/'.$one)) deleteMigrateTree($dir.'/'.$one);
-    }
-    if (count(scandir($dir) ?: []) === 2) rmdir($dir);
-}
-
-# Put one file of the working directory in its place by a move, or by a copy when the working directory still needs it; a place holding the same bytes counts as done
-# A place taken by other bytes answers false and leaves the file where it is
-function setMigrateFile(string $src, string $dst, bool $copy): bool {
-    if (is_file($dst)) {
-        if (sha1_file($src) !== sha1_file($dst)) return false;
-        return $copy || unlink($src);
-    }
-    $sub = dirname($dst);
-    if (!is_dir($sub) && !mkdir($sub, 0755, true) && !is_dir($sub)) throw new RuntimeException('The directory '.$sub.' cannot be created');
-    if (!($copy ? copy($src, $dst) : rename($src, $dst))) throw new RuntimeException('The file '.$src.' cannot be placed at '.$dst);
-    return true;
-}
-
-# Put the files of every module where the new texts expect them: a file the site addresses directly moves into the public archive
-# The files the materials use return to the type root under their managed names, and a file that is both is copied into the archive first
-# The files nothing uses stay in the working directory and are noted
-function setMigrateFiles(array &$state): void {
-    $arch = [];
-    foreach ($state['data'] as $one) foreach ($one['archive'] ?? [] as $mod => $list) $arch[$mod] = array_merge($arch[$mod] ?? [], $list);
-    foreach ($state['outer']['archive'] ?? [] as $mod => $list) $arch[$mod] = array_merge($arch[$mod] ?? [], $list);
-    foreach ($state['data'] as $mod => $one) {
-        if (($one['state'] ?? '') !== 'done' || !empty($state['files'][$mod])) continue;
-        $dir = getMigrateDir().'/files/'.$mod;
-        $keep = array_flip($one['keep'] ?? []);
-        foreach (array_unique($arch[$mod] ?? []) as $rel) {
-            if (!is_file($dir.'/'.$rel)) continue;
-            if (!setMigrateFile($dir.'/'.$rel, UPLOADS_DIR.'/archive/'.$mod.'/'.$rel, isset($keep[$rel]))) {
-                addMigrateNote($state, $mod, 'the file '.$rel.' stays in '.$dir.', its place in the archive is taken');
-            }
-        }
-        $into = UPLOADS_DIR.'/'.getUploadFolder($one['type'], true);
-        $names = $one['names'] ?? [];
-        $moves = $one['moves'] ?? [];
-        foreach (array_keys($keep) as $rel) {
-            $base = basename($rel);
-            $root = in_array(dirname($rel), ['.', 'thumb'], true);
-            $new = $moves[$rel] ?? (($root && isset($names[$base])) ? substr($rel, 0, -strlen($base)).$names[$base] : $rel);
-            if (is_file($dir.'/'.$rel) && !setMigrateFile($dir.'/'.$rel, $into.'/'.$new, false)) {
-                addMigrateNote($state, $mod, 'the file '.$rel.' stays in '.$dir.', its place in '.$into.' is taken');
-            }
-        }
-        $left = array_filter(getMigrateList($dir), fn(string $v): bool => !isset(getMigrateGuards()[basename($v)]));
-        if ($left) addMigrateNote($state, $mod, count($left).' files nothing on the site uses stay in '.$dir.' and are not published');
-        deleteMigrateTree($dir);
-        $state['files'][$mod] = true;
-        setMigrateState($state);
-    }
 }
 
 # Switch on every type the migration created or switched off; a refusal, for example a web server that serves the upload directory, is noted and leaves the type off
@@ -832,7 +670,7 @@ function setMigrateCounter(array $plan, array &$state): void {
     setMigrateState($state);
 }
 
-# Run every step that is not done yet in the fixed order - stash, types, id counter, data, outer addresses, files, activation - and answer the text that stopped the run
+# Run every step that is not done yet in the fixed order - stash, types, id counter, data, activation - and answer the text that stopped the run
 # The map of the old addresses needs its table, which the first stage of this file creates, so a schema without it stops the run before the first write
 function setMigrateRun(): string {
     $state = getMigrateState();
@@ -846,8 +684,6 @@ function setMigrateRun(): string {
         foreach ($todo as $mod => $one) if (empty($state['types'][$mod])) setMigrateType($mod, $one, $state);
         setMigrateCounter($plan, $state);
         foreach ($todo as $mod => $one) setMigrateData($mod, $one, $state);
-        setMigrateOuter($state);
-        setMigrateFiles($state);
         setMigrateActive($state);
     } catch (Throwable $err) {
         Logger::addSite('error', 'Node: the migration of the old modules stopped', ['error' => $err->getMessage()]);
@@ -865,7 +701,7 @@ function setMigratePage(string $fail): void {
     $rows = '';
     $open = false;
     foreach ($plan as $mod => $one) {
-        $done = !empty($state['files'][$mod]);
+        $done = ($state['data'][$mod]['state'] ?? '') === 'done';
         $open = $open || (!$done && $one['block'] === '');
         $one = ($state['data'][$mod]['count'] ?? []) + $one;
         $cells = [$mod.' → '.$one['type'], $one['rows'], $one['comments'], $one['favorites'], $one['categories'], $one['block'] ?: ($done ? _NODE_MIGDONE : _NODE_MIGWAIT)];

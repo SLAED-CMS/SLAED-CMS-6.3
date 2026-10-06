@@ -5,7 +5,7 @@
 # Website: slaed.net
 
 # The web server of the probes, run as the router of the built-in server `php -S` with the scratch root in SLAED_WEB_ROOT; it answers a closed set of paths and nothing else
-# /uploads/<path> runs the light path of core/stream.php over the upload root of SLAED_WEB_UPLOADS: a public folder is served, every other address answers 404
+# /uploads/<path> runs the light path of core/stream.php over the upload root of SLAED_WEB_UPLOADS: a public folder is served, every other address answers 410
 # The file open in the scratch root switches the light path off and serves the file as it is, which is a server whose document root still holds the upload root
 # /stream answers one fixture of <root>/files through the shipped getFileStream() of core/stream.php, and records what the callback and the shutdown saw
 # The directory is served by the stand as well, so anything but the built-in server gets a plain 404 before a single line of it runs

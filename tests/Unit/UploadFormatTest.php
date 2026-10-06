@@ -131,11 +131,14 @@ final class UploadFormatTest extends TestCase
         $this->assertSame('jpg,jpeg,gif,png', $this->getConfig('users')['users']['atypefile'], 'The avatar allowlist was widened, which this migration does not do');
     }
 
-    # The render map has exactly one entry per canonical extension, each rendered through the element of its own family, and the dead screens class is gone
+    # The render map has exactly one entry per canonical extension and the full-size image, each rendered through the element of its own family, and the dead screens class is gone
     #[Test]
     public function theRenderMapMatchesEveryMedium(): void
     {
         $map = $this->getConfig('filetype')['filetype'];
+        $full = $map['full'] ?? '';
+        $this->assertStringContainsString('<img src="[src]" width="[width]" height="[height]"', $full, 'The full-size form of [attach] has no template showing the image');
+        unset($map['full']);
         $keys = array_keys($map);
         sort($keys);
         $this->assertSame($this->getCanonical(), $keys, 'config/filetype.php does not hold exactly one entry per canonical extension');

@@ -128,7 +128,7 @@ final class PublicTreeTest extends TestCase
         $this->assertSame('sandbox', $one['head']['content-security-policy'] ?? null);
     }
 
-    # A private folder, a folder off the public list, a traversal in plain or escaped form, a dot name and a missing name all answer 404 without a byte of the file
+    # A private folder, a folder off the public list, a traversal in plain or escaped form, a dot name and a missing name all answer 410 without a byte of the file
     #[Test]
     public function theLightPathRefusesAnythingButAPublicFile(): void
     {
@@ -136,7 +136,7 @@ final class PublicTreeTest extends TestCase
             '/uploads/presentation/..%2f..%2fsecret.txt', '/uploads/presentation/.hidden', '/uploads/presentation/none.png', '/uploads/presentation', '/uploads/'];
         foreach ($list as $path) {
             $one = $this->getReply($path);
-            $this->assertSame(404, $one['status'], $path.' was not refused');
+            $this->assertSame(410, $one['status'], $path.' was not refused as gone');
             $this->assertStringNotContainsString('secret', $one['body'], $path.' leaked a file outside the upload root');
             $this->assertStringNotContainsString("\x89PNG", $one['body'], $path.' leaked a picture of a closed folder');
         }

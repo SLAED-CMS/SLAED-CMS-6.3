@@ -9,10 +9,23 @@ if (!defined('FUNC_FILE')) die('Illegal file access');
 # Output buffering on — must precede all bootstrap operations
 if (ob_get_level() === 0) ob_start();
 
-# Security: block /index.php/... PATH_INFO abuse to avoid routing bypass and unexpected module execution via malformed URLs
-$uri = $_SERVER['REQUEST_URI'] ?? '';
-if (!empty($_SERVER['PATH_INFO']) || strpos($uri, '/index.php/') !== false) {
-    $_GET['error'] = 404;
+# Retired addresses: a path after the script or a bare index.php goes 301 to the address built from the script name, any other path finds no page
+if (PHP_SAPI !== 'cli') {
+    [$rpath, $rquery] = array_pad(explode('?', (string)($_SERVER['REQUEST_URI'] ?? ''), 2), 2, '');
+    $sname = basename(str_replace('\\', '/', (string)($_SERVER['SCRIPT_NAME'] ?? '')));
+    $sbase = rtrim(str_replace('\\', '/', dirname((string)($_SERVER['SCRIPT_NAME'] ?? '/'))), '/');
+    $rhome = [];
+    foreach (array_unique([$sbase, (string)preg_replace('#/public$#', '', $sbase)]) as $rone) array_push($rhome, $rone.'/', $rone.'/'.$sname);
+    $rdest = '';
+    if (preg_match('#^(.*?/'.preg_quote($sname, '#').')/#', $rpath, $rhit) && in_array($rhit[1], $rhome, true)) $rdest = $rhit[1];
+    if ($rdest === '' && ($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET' && in_array($rpath, $rhome, true)) $rdest = $rpath;
+    if ($rquery === '' && str_ends_with($rdest, '/index.php')) $rdest = substr($rdest, 0, -9);
+    if ($rdest !== '' && $rdest !== $rpath) {
+        header('Location: '.$rdest.(($rquery !== '') ? '?'.$rquery : ''), true, 301);
+        exit;
+    }
+    if (!in_array($rpath, $rhome, true) && !isset($_GET['error'])) $_GET['error'] = 404;
+    unset($rpath, $rquery, $sname, $sbase, $rhome, $rdest, $rone, $rhit);
 }
 
 # Ensure configuration exists when this file is analyzed or included directly
@@ -31,12 +44,6 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET' && (!empty($conf['forcessl']
         header('Location: '.$scheme.'://'.$target.((string)($_SERVER['REQUEST_URI'] ?? '/')), true, 301);
         exit;
     }
-}
-
-# SEO: consolidate the bare /index.php to its directory root to avoid a duplicate homepage URL
-if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET' && preg_match('#^(.*/)index\.php$#', (string)($_SERVER['REQUEST_URI'] ?? ''), $path)) {
-    header('Location: '.$path[1], true, 301);
-    exit;
 }
 
 # Set the default timezone
@@ -189,7 +196,7 @@ function setErrorOut(string $detail = ''): void {
     static $busy = false;
     if ($busy) return;
     $busy = true;
-    if (in_array((string)($_REQUEST['go'] ?? ''), ['1', '3', '4', '5', 'captcha', 'rss', 'xsl'], true) || headers_sent()) {
+    if (in_array((string)($_REQUEST['go'] ?? ''), ['1', '3', '4', '5', 'captcha', 'file', 'rss', 'xsl'], true) || headers_sent()) {
         if (!headers_sent()) http_response_code(500);
         return;
     }

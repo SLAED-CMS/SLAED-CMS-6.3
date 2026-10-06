@@ -336,7 +336,7 @@ function checkNodeRows(string $ajar, string $gjar): void {
     checkMatrixRow('a moderator publishes into the place of the type '.$type, (bool)($res['ok'] ?? false) && $new !== [], implode(', ', $new));
     $list = json_decode(getHttpReply($ajar, '/index.php?go=4&op=editorFiles&place='.$type.'.attach&token='.getScopeToken($ajar, 'ajax'))['body'], true);
     $rows = is_array($list['files'] ?? null) ? $list['files'] : [];
-    $pre = 'index.php?name='.$type.'&op=attach&key=';
+    $pre = 'index.php?go=file&own=node&name='.$type.'&key=';
     $good = $rows !== [];
     foreach ($rows as $one) {
         $good = $good && str_starts_with((string)$one['url'], $pre) && str_ends_with((string)$one['url'], '&preview=1') && ($one['bytag'] ?? false) === true
@@ -351,7 +351,7 @@ function checkNodeRows(string $ajar, string $gjar): void {
     $guest = getHttpReply($gjar, $path)['code'];
     checkMatrixRow('a guest does not read a file no material binds', $guest !== 200, (string)$guest);
     $raw = getHttpReply($gjar, '/uploads/node/'.$type.'/'.rawurlencode($name))['code'];
-    checkMatrixRow('the light path refuses the directory of the type', in_array($raw, [403, 404], true), (string)$raw);
+    checkMatrixRow('the light path refuses the directory of the type', in_array($raw, [403, 410], true), (string)$raw);
 }
 
 # A field place permits the listing route alone, and the routes its window never offers are refused by the server rather than by an interface that draws no button

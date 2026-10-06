@@ -57,7 +57,7 @@ final class FieldViewTest extends TestCase
     private static function getParser(): Parser
     {
         return new class () extends Parser {
-            public function filterContent(string $src, bool $safe, string $mod, int $hoff = 0, string $fmt = '', int $nid = 0, bool $trust = false): string
+            public function filterContent(string $src, bool $safe, string $mod, int $hoff = 0, string $fmt = '', array $own = [], bool $trust = false): string
             {
                 return '<p data-safe="'.(int)$safe.'" data-mod="'.$mod.'">'.htmlspecialchars($src).'</p>';
             }

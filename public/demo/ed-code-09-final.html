@@ -1,0 +1,1122 @@
+<!doctype html>
+<html lang="ru" data-theme="auto">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Фокус · финал &middot; CodeMirror — стенд панели администратора SLAED CMS</title>
+  <link rel="stylesheet" href="../templates/admin/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../templates/admin/assets/css/base.css">
+  <link rel="stylesheet" href="../templates/admin/assets/css/theme.css">
+  <!-- The stand is served without Cache-Control; its sheet and script are stamped so an edit is seen at once -->
+  <script>document.write('<link rel="stylesheet" href="assets/demo.css?v=' + Date.now() + '">');</script>
+  <script src="../plugins/system/global-func.js"></script>
+  <script src="../plugins/system/slaed.js"></script>
+  <script src="../templates/admin/assets/js/admin-ui.js"></script>
+  <script src="assets/cm6-demo.bundle.js"></script>
+  <style>
+    .v-full .bi-arrows-angle-contract,
+    .v-full[aria-pressed="true"] .bi-arrows-angle-expand {
+      display: none;
+    }
+
+    .v-full[aria-pressed="true"] .bi-arrows-angle-contract {
+      display: inline;
+    }
+
+    .v-cmd kbd,
+    .v-pal kbd {
+      display: inline-block;
+      min-width: 1.6ch;
+      padding: 0 var(--sl-space-1);
+      border: 1px solid var(--sl-border-strong);
+      border-radius: var(--sl-radius-1);
+      background: var(--sl-surface);
+      box-shadow: inset 0 -1px 0 var(--sl-border-strong);
+      color: var(--sl-text);
+      font: var(--sl-font-micro) / var(--sl-line-normal) var(--d-mono);
+      text-align: center;
+    }
+
+    /* Палитра: every command in a Ctrl+K palette built on the window canon */
+    .v-cmd-note {
+      color: var(--sl-success);
+      font-size: var(--sl-font-micro);
+    }
+
+    .v-cmd-open {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--sl-space-2);
+      height: var(--sl-size-chip);
+      margin-left: auto;
+      padding: 0 var(--sl-space-2) 0 var(--sl-space-3);
+      border: 1px solid var(--sl-border);
+      border-radius: var(--sl-radius-pill);
+      background: var(--sl-bg);
+      color: var(--sl-text-muted);
+      font: inherit;
+      font-size: var(--sl-font-micro);
+      cursor: pointer;
+      transition: border-color var(--sl-time-fast) var(--sl-ease-out), color var(--sl-time-fast) var(--sl-ease-out);
+    }
+
+    .v-cmd-open:hover,
+    .v-cmd:focus-within .v-cmd-open {
+      border-color: var(--sl-primary);
+      color: var(--sl-primary);
+    }
+
+    dialog.v-pal {
+      margin: 12vh auto auto;
+    }
+
+    .v-pal-bar {
+      gap: var(--sl-space-3);
+      padding: var(--sl-space-3) var(--sl-modal-pad-x);
+    }
+
+    .v-pal-bar > .bi {
+      color: var(--sl-text-subtle);
+    }
+
+    .v-pal .v-pal-find,
+    .v-pal .v-pal-find:focus {
+      flex: 1 1 auto;
+      min-width: 0;
+      height: var(--sl-size-control);
+      padding: 0;
+      border: 0;
+      background: transparent;
+      box-shadow: none;
+      color: var(--sl-text);
+      font: inherit;
+      font-size: var(--sl-font-h4);
+      outline: 0;
+    }
+
+    .v-pal-body {
+      max-height: 50vh;
+      padding: var(--sl-space-2) 0;
+    }
+
+    .v-pal-body > * + * {
+      margin-top: 0;
+    }
+
+    .v-pal-group[hidden],
+    .v-pal-row[hidden] {
+      display: none;
+    }
+
+    .v-pal-cap {
+      padding: var(--sl-space-3) var(--sl-modal-pad-x) var(--sl-space-1);
+      color: var(--sl-text-subtle);
+      font-size: var(--sl-font-micro);
+      font-weight: var(--sl-weight-semibold);
+      letter-spacing: var(--sl-track-wide);
+      text-transform: uppercase;
+    }
+
+    .v-pal-row {
+      display: flex;
+      align-items: center;
+      gap: var(--sl-space-4);
+      box-sizing: border-box;
+      width: 100%;
+      padding: var(--sl-space-2) var(--sl-modal-pad-x);
+      border: 0;
+      background: transparent;
+      color: var(--sl-text);
+      font: inherit;
+      font-size: var(--sl-font-body);
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .v-pal-row > .bi {
+      color: var(--sl-text-muted);
+    }
+
+    .v-pal-name {
+      flex: 1 1 auto;
+      min-width: 0;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+
+    .v-pal-name b {
+      color: var(--sl-primary);
+      font-weight: var(--sl-weight-bold);
+    }
+
+    .v-pal-keys {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--sl-space-1);
+    }
+
+    .v-pal-row:hover {
+      background: var(--sl-bg-subtle);
+    }
+
+    .v-pal-row[aria-selected="true"] {
+      background: var(--sl-tint);
+      box-shadow: inset var(--sl-rail-width) 0 0 var(--sl-primary);
+    }
+
+    .v-pal-row[aria-selected="true"] > .bi {
+      color: var(--sl-primary);
+    }
+
+    .v-pal-row[data-recent] .v-pal-keys::before {
+      content: "недавно";
+      margin-right: var(--sl-space-2);
+      color: var(--sl-text-subtle);
+      font-size: var(--sl-font-micro);
+    }
+
+    .v-pal-empty {
+      margin: 0;
+      padding: var(--sl-space-6) var(--sl-modal-pad-x);
+      color: var(--sl-text-muted);
+      text-align: center;
+    }
+
+    .v-pal-foot {
+      justify-content: flex-start;
+    }
+
+    .v-pal-foot .sl-modal-info {
+      display: flex;
+      align-items: center;
+      gap: var(--sl-space-2);
+      font-size: var(--sl-font-micro);
+    }
+
+    /* Проверка: template lint with gutter marks, badge and one-click fixes */
+    .v-lint-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--sl-space-2);
+      height: var(--sl-chip-height);
+      margin-left: auto;
+      padding: 0 var(--sl-space-3);
+      border: 0;
+      border-radius: var(--sl-radius-pill);
+      background: var(--sl-success-subtle);
+      color: var(--sl-success-strong);
+      font: inherit;
+      font-size: var(--sl-font-micro);
+      font-weight: var(--sl-weight-semibold);
+      cursor: pointer;
+      transition: background-color var(--sl-time-base) var(--sl-ease-out), color var(--sl-time-base) var(--sl-ease-out);
+    }
+
+    .v-lint-badge:focus-visible {
+      outline: 0;
+      box-shadow: var(--sl-shadow-focus);
+    }
+
+    .v-lint-warn,
+    .v-lint-err {
+      display: none;
+    }
+
+    [data-lint="warn"] .v-lint-badge {
+      background: var(--sl-warning-subtle);
+      color: var(--sl-warning-strong);
+    }
+
+    [data-lint="error"] .v-lint-badge {
+      background: var(--sl-danger);
+      color: var(--sl-on-solid);
+    }
+
+    [data-lint="warn"] .v-lint-ok,
+    [data-lint="error"] .v-lint-ok {
+      display: none;
+    }
+
+    [data-lint="warn"] .v-lint-warn,
+    [data-lint="error"] .v-lint-err {
+      display: inline;
+    }
+
+    .v-lint .v-ed-head .sl-modal-act {
+      color: var(--sl-text-muted);
+    }
+
+    [data-lint="ok"] .v-ed-head .sl-modal-act {
+      visibility: hidden;
+    }
+
+    [data-lint="error"] .v-ed-code:not(:focus-within) {
+      border-color: var(--sl-danger);
+    }
+
+    .v-zen .d-cm .cm-editor .cm-lintRange {
+      background-image: none;
+      text-decoration: underline wavy;
+      text-decoration-skip-ink: none;
+      text-underline-offset: var(--sl-space-1);
+    }
+
+    .v-zen .d-cm .cm-editor .cm-lintRange-error { text-decoration-color: var(--sl-danger); }
+    .v-zen .d-cm .cm-editor .cm-lintRange-warning { text-decoration-color: var(--sl-warning); }
+    .v-zen .d-cm .cm-editor .cm-lintRange-info { text-decoration-color: var(--sl-primary); }
+
+    .v-zen .d-cm .cm-editor .cm-gutter-lint .cm-gutterElement {
+      padding: 0 var(--sl-space-2);
+    }
+
+    .v-zen .d-cm .cm-editor .cm-lint-marker {
+      content: normal;
+      display: inline-block;
+      width: var(--sl-space-3);
+      height: var(--sl-space-3);
+      border-radius: var(--sl-radius-circle);
+      vertical-align: middle;
+    }
+
+    .v-zen .d-cm .cm-editor .cm-lint-marker-error { background: var(--sl-danger); }
+    .v-zen .d-cm .cm-editor .cm-lint-marker-warning { background: var(--sl-warning); }
+    .v-zen .d-cm .cm-editor .cm-lint-marker-info { background: var(--sl-primary); }
+
+    .v-zen .d-cm .cm-editor .cm-tooltip-lint {
+      padding: 0;
+    }
+
+    .v-zen .d-cm .cm-editor .cm-diagnostic {
+      padding: var(--sl-space-2) var(--sl-space-4);
+      border-left: var(--sl-rail-width) solid var(--sl-primary);
+      font-family: Tahoma, Arial, Verdana, sans-serif;
+      font-size: var(--sl-font-small);
+      line-height: var(--sl-line-normal);
+    }
+
+    .v-zen .d-cm .cm-editor .cm-diagnostic-error { border-left-color: var(--sl-danger); }
+    .v-zen .d-cm .cm-editor .cm-diagnostic-warning { border-left-color: var(--sl-warning); }
+
+    .v-zen .d-cm .cm-editor .cm-diagnosticAction {
+      margin-left: var(--sl-space-4);
+      padding: var(--sl-space-1) var(--sl-space-3);
+      border: 0;
+      border-radius: var(--sl-radius-1);
+      background: var(--sl-primary);
+      color: var(--sl-on-solid);
+      font: inherit;
+      font-size: var(--sl-font-micro);
+      cursor: pointer;
+    }
+
+    .v-zen .d-cm .cm-editor .cm-panel.cm-panel-lint ul {
+      max-height: 8em;
+    }
+
+    .v-zen .d-cm .cm-editor .cm-panel.cm-panel-lint ul [aria-selected] {
+      background: var(--sl-tint);
+      color: var(--sl-text);
+    }
+
+    .v-zen .d-cm .cm-editor .cm-panel.cm-panel-lint ul:focus [aria-selected] {
+      background: var(--sl-primary);
+      color: var(--sl-on-solid);
+    }
+
+    .v-zen .d-cm .cm-editor .cm-panel.cm-panel-lint ul:focus [aria-selected] .cm-diagnosticAction {
+      background: var(--sl-on-solid);
+      color: var(--sl-primary);
+    }
+
+    .v-zen .d-cm .cm-editor .cm-panel.cm-panel-lint .cm-diagnostic {
+      border-left: 0;
+    }
+
+    .v-view {
+      display: block;
+      width: 100%;
+      min-height: var(--sl-fm-preview-height);
+      border: 0;
+      background: var(--sl-bg);
+    }
+    .v-seg {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--sl-space-1);
+      padding: var(--sl-space-1);
+      border: 1px solid var(--sl-border);
+      border-radius: var(--sl-radius-2);
+      background: var(--sl-bg);
+    }
+
+    .v-seg-cap {
+      padding: 0 var(--sl-space-2);
+      color: var(--sl-text-subtle);
+      font: var(--sl-font-micro) / var(--sl-line-normal) var(--d-mono);
+    }
+
+    .v-seg-opt {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      gap: var(--sl-space-2);
+      height: var(--sl-size-chip);
+      padding: 0 var(--sl-space-3);
+      border-radius: var(--sl-radius-1);
+      color: var(--sl-text-muted);
+      font-size: var(--sl-font-small);
+      cursor: pointer;
+      transition: background-color var(--sl-time-fast) var(--sl-ease-out), color var(--sl-time-fast) var(--sl-ease-out);
+    }
+
+    .v-seg-opt input {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .v-seg-opt:hover {
+      color: var(--sl-text);
+    }
+
+    .v-seg-opt:has(:checked) {
+      background: var(--sl-primary);
+      color: var(--sl-on-solid);
+    }
+
+    .v-seg-opt:has(:focus-visible) {
+      box-shadow: var(--sl-shadow-focus);
+    }
+
+
+    /* Фокус · финал: Фокус with the capsule and status line of Панель, the palette and the lint */
+    .v-zen {
+      --v-rail: var(--sl-border-strong);
+    }
+
+    .v-zen:focus-within {
+      --v-rail: var(--sl-primary);
+    }
+
+    .v-zen[data-demo-ed-dirty] {
+      --v-rail: var(--sl-warning);
+    }
+
+    .v-zen[data-lint="error"] {
+      --v-rail: var(--sl-danger);
+    }
+
+    .v-zen-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-end;
+      gap: var(--sl-space-2) var(--sl-space-3);
+      min-width: 0;
+    }
+
+    .v-zen-tab {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--sl-space-3);
+      min-width: 0;
+      height: var(--sl-tab-height);
+      padding: 0 var(--sl-space-5);
+      overflow: hidden;
+      border: 1px solid var(--sl-border);
+      border-bottom: 0;
+      border-radius: var(--sl-radius-2) var(--sl-radius-2) 0 0;
+      background: var(--sl-surface);
+      color: var(--sl-text-muted);
+      font-size: var(--sl-font-small);
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      transition: color var(--sl-time-fast) var(--sl-ease-out);
+    }
+
+    .v-zen-tab > .bi {
+      color: var(--v-rail);
+      transition: color var(--sl-time-base) var(--sl-ease-out);
+    }
+
+    .v-zen:focus-within .v-zen-tab {
+      color: var(--sl-text);
+    }
+
+    .v-zen-card {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      border: 1px solid var(--sl-border);
+      border-radius: 0 var(--sl-radius-2) var(--sl-radius-2) var(--sl-radius-2);
+      background: var(--sl-surface);
+      box-shadow: inset var(--sl-rail-width) 0 0 var(--v-rail);
+      transition: box-shadow var(--sl-time-base) var(--sl-ease-out);
+    }
+
+    .v-zen-pill {
+      display: inline-flex;
+      flex-wrap: wrap;
+      margin-left: auto;
+      align-items: center;
+      gap: var(--sl-space-1);
+      padding: var(--sl-space-1);
+      border: 1px solid var(--sl-border);
+      border-radius: var(--sl-radius-pill);
+      background: var(--sl-bg);
+      box-shadow: var(--sl-shadow-raised);
+      opacity: 0;
+      transform: translateY(var(--sl-space-2));
+      transition: opacity var(--sl-time-base) var(--sl-ease-out), transform var(--sl-time-base) var(--sl-ease-out);
+      pointer-events: none;
+    }
+
+    .v-zen:hover .v-zen-pill,
+    .v-zen:focus-within .v-zen-pill,
+    .v-zen:has(:popover-open) .v-zen-pill,
+    .v-zen.d-ed-full .v-zen-pill {
+      opacity: 1;
+      transform: none;
+      pointer-events: auto;
+    }
+
+    .v-zen-wide,
+    .v-zen-mid {
+      display: contents;
+    }
+
+    .v-zen-sep {
+      width: 1px;
+      height: var(--sl-size-icon-xs);
+      margin: 0 var(--sl-space-1);
+      background: var(--sl-border-strong);
+    }
+
+    .v-zen-pill .sl-modal-act {
+      width: var(--sl-size-chip);
+      height: var(--sl-size-chip);
+      border-radius: var(--sl-radius-pill);
+      color: var(--sl-text-muted);
+    }
+
+    .v-zen-pill .sl-modal-act[aria-pressed="true"] {
+      background: var(--sl-tint);
+      color: var(--sl-primary);
+    }
+
+    .v-zen-pill .sl-modal-act:has(+ :popover-open),
+    .v-zen-pill [popovertarget]:hover {
+      color: var(--sl-primary);
+    }
+
+    .v-zen-pop {
+      inset: auto;
+      position-area: bottom span-left;
+      margin: var(--sl-space-2) 0 0;
+      padding: var(--sl-space-2);
+      border: 1px solid var(--sl-border-strong);
+      border-radius: var(--sl-radius-2);
+      background: var(--sl-bg);
+      box-shadow: var(--sl-popover-shadow);
+      color: var(--sl-text);
+    }
+
+    .v-zen-pop:popover-open {
+      display: grid;
+    }
+
+    .v-zen-key {
+      display: grid;
+      grid-template-columns: 9ch 1fr;
+      align-items: baseline;
+      gap: var(--sl-space-4);
+      padding: var(--sl-space-2) var(--sl-space-4);
+      border: 0;
+      border-radius: var(--sl-radius-1);
+      background: transparent;
+      color: var(--sl-text-muted);
+      font: inherit;
+      font-size: var(--sl-font-small);
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .v-zen-key code {
+      color: var(--sl-primary-strong);
+      font-family: var(--d-mono);
+    }
+
+    .v-zen-key[data-used="true"] code::after {
+      content: " ✓";
+      color: var(--sl-success);
+    }
+
+    .v-zen-key:hover,
+    .v-zen-key:focus-visible {
+      outline: 0;
+      background: var(--sl-primary);
+      color: var(--sl-on-solid);
+    }
+
+    .v-zen-key:hover code,
+    .v-zen-key:focus-visible code {
+      color: inherit;
+    }
+
+    .v-zen .d-cm .cm-editor {
+      padding-left: var(--sl-rail-width);
+      background: transparent;
+    }
+
+    .v-zen .d-cm .cm-editor .cm-gutters {
+      border-right-color: transparent;
+      background: transparent;
+    }
+
+    .v-zen .d-cm .cm-editor .cm-lineNumbers,
+    .v-zen .d-cm .cm-editor .cm-foldGutter {
+      opacity: 0;
+      transition: opacity var(--sl-time-base) var(--sl-ease-out);
+    }
+
+    .v-zen:hover .d-cm .cm-editor .cm-lineNumbers,
+    .v-zen:focus-within .d-cm .cm-editor .cm-lineNumbers,
+    .v-zen:hover .d-cm .cm-editor .cm-foldGutter,
+    .v-zen:focus-within .d-cm .cm-editor .cm-foldGutter {
+      opacity: 1;
+    }
+
+    .v-zen .d-cm .cm-editor.cm-focused .cm-activeLine {
+      background: var(--sl-bg);
+    }
+
+    .v-zen-status {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: var(--sl-space-1) var(--sl-space-6);
+      padding: var(--sl-space-1) var(--sl-space-2) var(--sl-space-1) var(--sl-space-5);
+      border-top: 1px solid var(--sl-border);
+      color: var(--sl-text-muted);
+      font-size: var(--sl-font-micro);
+      line-height: var(--sl-line-loose);
+    }
+
+    .v-zen-status b {
+      color: var(--sl-text);
+      font-weight: var(--sl-weight-semibold);
+    }
+
+    .v-zen-note {
+      color: var(--sl-success);
+    }
+
+    .v-zen-dirty {
+      display: none;
+      align-items: center;
+      gap: var(--sl-space-2);
+      padding: 0 var(--sl-space-2);
+      border: 0;
+      border-radius: var(--sl-radius-pill);
+      background: var(--sl-warning-subtle);
+      color: var(--sl-warning-strong);
+      font: inherit;
+      cursor: pointer;
+    }
+
+    .v-zen-dirty:hover {
+      text-decoration: underline;
+    }
+
+    [data-demo-ed-dirty] .v-zen-dirty {
+      display: inline-flex;
+    }
+
+    [data-demo-ed-dirty] .v-zen-pill [data-demo-ed-act="diff"] {
+      color: var(--sl-warning-strong);
+    }
+
+    .v-zen-view {
+      display: none;
+      flex-direction: column;
+      border-top: 1px solid var(--sl-border);
+      background: var(--sl-bg);
+    }
+
+    .v-zen[data-view] .v-zen-view {
+      display: flex;
+    }
+
+    .v-zen-view-head {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: var(--sl-space-2) var(--sl-space-3);
+      padding: var(--sl-space-1) var(--sl-space-2) var(--sl-space-1) var(--sl-space-5);
+      border-bottom: 1px solid var(--sl-border);
+      color: var(--sl-text-subtle);
+      font-size: var(--sl-font-micro);
+    }
+
+    .v-zen-view-head .v-seg {
+      margin-left: auto;
+    }
+
+    .v-zen.d-ed-full[data-view] .v-zen-card {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      grid-template-rows: minmax(0, 1fr) auto;
+    }
+
+    .v-zen.d-ed-full[data-view] .v-zen-view {
+      border-top: 0;
+      border-left: 1px solid var(--sl-border);
+      min-height: 0;
+    }
+
+    .v-zen.d-ed-full[data-view] .v-view {
+      flex: 1 1 0;
+    }
+
+    .v-zen.d-ed-full .v-zen-status {
+      grid-column: 1 / -1;
+    }
+
+    @media (max-width: 900px) {
+      .v-zen-view-head .v-seg-opt span {
+        display: none;
+      }
+
+      .v-zen.d-ed-full[data-view] .v-zen-card {
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-rows: minmax(0, 1fr) minmax(0, 1fr) auto;
+      }
+
+      .v-zen.d-ed-full[data-view] .v-zen-view {
+        border-top: 1px solid var(--sl-border);
+        border-left: 0;
+      }
+    }
+
+    .v-dif-body {
+      display: flex;
+      flex-direction: column;
+      gap: var(--sl-space-4);
+    }
+
+    .v-dif-body > * + * {
+      margin-top: 0;
+    }
+
+    dialog.v-dif .v-dif-bar {
+      gap: var(--sl-space-4);
+    }
+
+    .v-dif-count {
+      display: inline-flex;
+      gap: var(--sl-space-3);
+      margin-left: auto;
+      font: var(--sl-font-small) / var(--sl-line-normal) var(--d-mono);
+    }
+
+    .v-dif-ins {
+      color: var(--sl-success-strong);
+    }
+
+    .v-dif-del {
+      color: var(--sl-danger);
+    }
+
+    .v-dif-same {
+      display: none;
+      align-items: center;
+      gap: var(--sl-space-3);
+      color: var(--sl-success-strong);
+    }
+
+    dialog.v-dif[data-same] .v-dif-same {
+      display: flex;
+    }
+
+    dialog.v-dif[data-same] .v-dif-count,
+    dialog.v-dif[data-same] .v-dif-back {
+      display: none;
+    }
+
+    .v-dif-code {
+      padding: var(--sl-space-4) var(--sl-space-5);
+      border: 1px solid var(--sl-border);
+      border-radius: var(--sl-radius-2);
+      background: var(--sl-surface);
+      color: var(--sl-text-muted);
+      font: var(--sl-font-small) / var(--sl-line-loose) var(--d-mono);
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+
+    .v-dif-code del {
+      border-radius: var(--sl-radius-1);
+      color: var(--sl-danger);
+      text-decoration: line-through;
+    }
+
+    .v-dif-code ins {
+      border-radius: var(--sl-radius-1);
+      background: var(--sl-success-subtle);
+      color: var(--sl-success-strong);
+      text-decoration: none;
+    }
+
+    .v-dif-side {
+      display: none;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: var(--sl-space-5);
+    }
+
+    .v-dif-side section {
+      min-width: 0;
+    }
+
+    .v-dif-cap {
+      margin: 0 0 var(--sl-space-2);
+      color: var(--sl-text-muted);
+      font-size: var(--sl-font-small);
+      font-weight: var(--sl-weight-semibold);
+    }
+
+    dialog.v-dif:has([value="side"]:checked) .v-dif-all {
+      display: none;
+    }
+
+    dialog.v-dif:has([value="side"]:checked) .v-dif-side {
+      display: grid;
+    }
+
+    @media (max-width: 560px) {
+      .v-dif-side {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    .v-zen-end {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--sl-space-3);
+      margin-left: auto;
+    }
+
+    .v-zen .v-lint-badge {
+      margin-left: 0;
+      opacity: var(--sl-fade-muted);
+      transition: opacity var(--sl-time-base) var(--sl-ease-out), background-color var(--sl-time-base) var(--sl-ease-out);
+    }
+
+    .v-zen:hover .v-lint-badge,
+    .v-zen:focus-within .v-lint-badge,
+    .v-zen[data-lint="warn"] .v-lint-badge,
+    .v-zen[data-lint="error"] .v-lint-badge {
+      opacity: 1;
+    }
+
+    .v-zen-next {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: var(--sl-chip-height);
+      height: var(--sl-chip-height);
+      padding: 0;
+      border: 0;
+      border-radius: var(--sl-radius-pill);
+      background: transparent;
+      color: var(--sl-text-muted);
+      cursor: pointer;
+    }
+
+    .v-zen-next:hover {
+      background: var(--sl-scrim-subtle);
+      color: var(--sl-primary);
+    }
+
+    [data-lint="ok"] .v-zen-next {
+      display: none;
+    }
+
+    .v-pal-help {
+      padding: var(--sl-space-2) 0 var(--sl-space-4);
+      border-top: 1px solid var(--sl-border);
+    }
+
+    .v-pal-help .v-pal-cap {
+      display: flex;
+      align-items: center;
+      gap: var(--sl-space-2);
+    }
+
+    .v-pal-body:has(.v-pal-row[hidden]) .v-pal-help {
+      display: none;
+    }
+
+    .v-pal-keymap {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: var(--sl-space-2) var(--sl-space-6);
+      margin: 0;
+      padding: var(--sl-space-1) var(--sl-modal-pad-x) 0;
+    }
+
+    .v-pal-keymap > div {
+      display: flex;
+      align-items: baseline;
+      gap: var(--sl-space-3);
+    }
+
+    .v-pal-keymap dt {
+      display: inline-flex;
+      flex: 0 0 auto;
+      gap: var(--sl-space-1);
+    }
+
+    .v-pal-keymap dd {
+      margin: 0;
+      color: var(--sl-text-muted);
+      font-size: var(--sl-font-small);
+    }
+
+    dialog.v-pal {
+      --sl-modal-width: 640px;
+    }
+
+    @media (max-width: 900px) {
+      .v-zen-wide {
+        display: none;
+      }
+    }
+
+    @media (max-width: 560px) {
+      .v-zen:not(:focus-within, :has(:popover-open), .d-ed-full) .v-zen-pill,
+      .v-zen-mid {
+        display: none;
+      }
+    }
+
+    .v-zen.d-ed-full {
+      padding: var(--sl-space-5);
+      border-radius: var(--sl-radius-2);
+      background: var(--sl-bg);
+    }
+
+    .v-zen.d-ed-full .v-zen-card {
+      flex: 1 1 auto;
+      min-height: 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="sl-wrapper sl-admin-shell">
+    <div class="sl-wraptop"></div>
+    <div class="sl-wrapmid">
+      <div class="sl-header sl-admin-header">
+        <div class="sl-admin-brand"><h1><a href="//slaed.net" target="_blank" title="Название сайта"><img src="../templates/admin/images/logos/slaed-logo-wordmark-gradient-blue.svg" alt="Название сайта" title="Название сайта"></a></h1></div>
+        <div class="sl-admin-toolbar">
+          <div class="sl-toolbar">
+            <div>
+              <ul class="sl-reset">
+<li><a href="../admin.php" title="Главная"><i class="bi bi-house-door"></i> <b>Главная</b></a></li>
+<li><a href="../admin.php?name=blocks" title="Блоки и баннеры"><i class="bi bi-grid-3x3-gap"></i> <b>Блоки и баннеры</b></a></li>
+<li><a href="../admin.php?name=modules" title="Модули"><i class="bi bi-gpu-card"></i> <b>Модули</b></a></li>
+<li><a href="../admin.php?name=categories" title="Категории"><i class="bi bi-folder"></i> <b>Категории</b></a></li>
+<li class="sl-split-item"><a href="/" title="Сайт"><i class="bi bi-globe2"></i> <b>Сайт</b></a></li>
+<li><a href="../index.php?name=account" title="Профиль"><i class="bi bi-person"></i> <b>Профиль</b></a></li>
+<li class="sl-split-item"><a href="../admin.php?op=logout" title="Выход"><i class="bi bi-box-arrow-right"></i> <b>Выход</b></a></li>
+<li class="sl-set-item"><button type="button" title="Опции"><i class="bi bi-sliders" aria-hidden="true"></i> <b>Опции</b></button></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="sl-admin-main">
+        <aside class="sl-admin-sidebar">
+          <div class="sl-block-sidebar">
+            <h3 title="Свёртывание / Развёртывание" data-sl-toggle-control="sl-block-7" data-sl-toggle-effect="slide" data-sl-toggle-duration="500"><b><i class="bi bi-person-gear"></i>Администрация</b><i class="bi bi-arrows-collapse sl-panel-toggle sl-panel-toggle-open" aria-hidden="true"></i><i class="bi bi-arrows-expand sl-panel-toggle sl-panel-toggle-closed" aria-hidden="true"></i></h3>
+            <div id="sl-block-7" class="sl-block-sidebar-content" data-sl-toggle="sl-block-7">
+              <div class="sl-admin-block-links">
+                <div class="sl-admin-block-link"><a href="../admin.php" title="Панель администратора"><i class="bi bi-house-door"></i> Панель администратора</a></div>
+                <div class="sl-admin-block-link"><a href="../admin.php?op=logout" title="Выход"><i class="bi bi-box-arrow-right"></i> Выход</a></div>
+              </div>
+            </div>
+          </div>
+          <div class="sl-block-sidebar">
+            <h3 title="Свёртывание / Развёртывание" data-sl-toggle-control="sl-block-8" data-sl-toggle-effect="slide" data-sl-toggle-duration="500"><b><i class="bi bi-eye"></i>Наблюдение</b><i class="bi bi-arrows-collapse sl-panel-toggle sl-panel-toggle-open" aria-hidden="true"></i><i class="bi bi-arrows-expand sl-panel-toggle sl-panel-toggle-closed" aria-hidden="true"></i></h3>
+            <div id="sl-block-8" class="sl-block-sidebar-content" data-sl-toggle="sl-block-8">
+              <div class="sl-session-line sl-session-line--icon"><div class="sl-session-icon"><i class="bi bi-person-gear"></i></div><div>Администрация:</div><div class="sl-session-right">1</div></div>
+              <div class="sl-session-line sl-session-line--icon"><div class="sl-session-icon"><i class="bi bi-person"></i></div><div>Пользователей:</div><div class="sl-session-right">0</div></div>
+              <div class="sl-session-line sl-session-line--icon"><div class="sl-session-icon"><i class="bi bi-person-slash"></i></div><div>Гостей:</div><div class="sl-session-right">0</div></div>
+              <div class="sl-session-line sl-session-line--icon"><div class="sl-session-icon"><i class="bi bi-people"></i></div><div>Всего:</div><div class="sl-session-right">1</div></div>
+            </div>
+          </div>
+        </aside>
+        <main class="sl-admin-content"><div class="sl-admin-content-inner">
+          <div class="sl-box">
+            <div class="sl-module-head">
+              <div class="sl-module-head-icon"><i class="bi bi-cloud-arrow-up" title="Загрузки"></i></div>
+              <div class="sl-module-head-body">
+                <h1 class="sl-module-head-title">Загрузки</h1>
+              </div>
+            </div>
+            <ul class="sl-tabs-nav sl-tabs-nav-main">
+<li class="sl-tabs-item"><a href="../admin.php?name=uploads" title="Главная" class="sl-tabs-link">Главная</a></li>
+<li class="sl-tabs-item"><a href="../admin.php?name=uploads&amp;op=sysfiles" title="Системные файлы" class="sl-tabs-link">Системные файлы</a></li>
+<li class="sl-tabs-item"><a href="../admin.php?name=uploads&amp;op=tplconfig" title="Шаблоны" class="sl-tabs-link sl-is-active">Шаблоны</a></li>
+<li class="sl-tabs-item"><a href="../admin.php?name=uploads&amp;op=config" title="Конфигурации" class="sl-tabs-link">Конфигурации</a></li>
+<li class="sl-tabs-item"><a href="../admin.php?name=uploads&amp;op=info" title="Справка" class="sl-tabs-link">Справка</a></li>
+            </ul>
+          </div>
+          <div class="sl-alert sl-alert-info">
+            <div class="sl-alert-body"><b>[src]</b> - Ссылка на файл<br><b>[tsrc]</b> - Ссылка на файл предварительного просмотра<br><b>[width]</b> - Ширина приложения<br><b>[twidth]</b> - Ширина предварительного просмотра<br><b>[height]</b> - Высота приложения<br><b>[theight]</b> - Высота предварительного просмотра<br><b>[align]</b> - Расположение по отношению к содержанию<br><b>[title]</b> - Заголовок приложения<br><b>[quot]</b> - Кавычки<br><b>[rel]</b> - Дополнительный атрибут</div>
+          </div>
+          <div class="sl-box">
+          <form action="#" method="post" class="sl-div-form" onsubmit="return false">
+            <div class="sl-box v-zen" data-demo-ed data-demo-ed-name="Шаблон для формата: jpg" data-demo-ed-kind="jpg" data-demo-ed-lint data-lint="ok">
+              <div class="v-zen-row"><span class="v-zen-tab"><i class="bi bi-filetype-html" aria-hidden="true"></i>Шаблон для формата: jpg</span><span class="v-zen-pill" role="toolbar" aria-label="Команды: Шаблон для формата: jpg"><button type="button" class="sl-modal-act" data-demo-ed-act="undo" title="Отменить (Ctrl+Z)" aria-label="Отменить (Ctrl+Z)"><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i></button><button type="button" class="sl-modal-act" data-demo-ed-act="redo" title="Повторить (Ctrl+Y)" aria-label="Повторить (Ctrl+Y)"><i class="bi bi-arrow-clockwise" aria-hidden="true"></i></button><span class="v-zen-sep" aria-hidden="true"></span><button type="button" class="sl-modal-act" data-demo-ed-act="search" title="Найти и заменить (Ctrl+F)" aria-label="Найти и заменить (Ctrl+F)"><i class="bi bi-search" aria-hidden="true"></i></button><button type="button" class="sl-modal-act" data-demo-ed-act="wrap" aria-pressed="true" title="Перенос строк" aria-label="Перенос строк"><i class="bi bi-text-wrap" aria-hidden="true"></i></button><span class="v-zen-sep" aria-hidden="true"></span><span class="v-zen-wide"><button type="button" class="sl-modal-act" data-demo-ed-act="fold" title="Свернуть всё" aria-label="Свернуть всё"><i class="bi bi-chevron-bar-contract" aria-hidden="true"></i></button><button type="button" class="sl-modal-act" data-demo-ed-act="unfold" title="Развернуть всё" aria-label="Развернуть всё"><i class="bi bi-chevron-bar-expand" aria-hidden="true"></i></button><span class="v-zen-sep" aria-hidden="true"></span><button type="button" class="sl-modal-act" data-demo-ed-act="pretty" title="Тег на строку" aria-label="Тег на строку"><i class="bi bi-text-indent-left" aria-hidden="true"></i></button><button type="button" class="sl-modal-act" data-demo-ed-act="flat" title="Собрать в одну строку" aria-label="Собрать в одну строку"><i class="bi bi-text-paragraph" aria-hidden="true"></i></button><span class="v-zen-sep" aria-hidden="true"></span></span><span class="v-zen-mid"><button type="button" class="sl-modal-act" data-demo-ed-act="copy" title="Копировать" aria-label="Копировать"><i class="bi bi-copy" aria-hidden="true"></i></button><button type="button" class="sl-modal-act" data-demo-ed-act="reset" title="Вернуть исходный текст" aria-label="Вернуть исходный текст"><i class="bi bi-arrow-repeat" aria-hidden="true"></i></button><span class="v-zen-sep" aria-hidden="true"></span></span><button type="button" class="sl-modal-act" popovertarget="ed-0-keys" style="anchor-name: --ed-0" title="Вставить переменную" aria-label="Вставить переменную"><i class="bi bi-braces" aria-hidden="true"></i></button><button type="button" class="sl-modal-act" data-demo-ed-act="complete" title="Подсказка у курсора (Ctrl+Space)" aria-label="Подсказка у курсора (Ctrl+Space)"><i class="bi bi-lightbulb" aria-hidden="true"></i></button><span class="v-zen-sep" aria-hidden="true"></span><button type="button" class="sl-modal-act" data-demo-ed-act="preview" aria-pressed="false" title="Просмотр: как увидит читатель" aria-label="Просмотр: как увидит читатель"><i class="bi bi-eye" aria-hidden="true"></i></button><button type="button" class="sl-modal-act" data-demo-ed-act="diff" title="Сверка: было → стало" aria-label="Сверка: было → стало"><i class="bi bi-file-diff" aria-hidden="true"></i></button><span class="v-zen-sep" aria-hidden="true"></span><button type="button" class="sl-modal-act" data-demo-ed-act="palette" title="Все команды (Ctrl+K)" aria-label="Все команды (Ctrl+K)"><i class="bi bi-command" aria-hidden="true"></i></button><button type="button" class="sl-modal-act v-full" data-demo-ed-act="full" aria-pressed="false" title="Развернуть" aria-label="Развернуть"><i class="bi bi-arrows-angle-expand" aria-hidden="true"></i><i class="bi bi-arrows-angle-contract" aria-hidden="true"></i></button></span></div>
+              <div class="v-zen-card">
+                <div id="ed-0-keys" class="v-zen-pop" popover style="position-anchor: --ed-0"><button type="button" class="v-zen-key" data-demo-ed-ins="[src]"><code>[src]</code><span>Ссылка на файл</span></button><button type="button" class="v-zen-key" data-demo-ed-ins="[tsrc]"><code>[tsrc]</code><span>Ссылка на файл предварительного просмотра</span></button><button type="button" class="v-zen-key" data-demo-ed-ins="[width]"><code>[width]</code><span>Ширина приложения</span></button><button type="button" class="v-zen-key" data-demo-ed-ins="[twidth]"><code>[twidth]</code><span>Ширина предварительного просмотра</span></button><button type="button" class="v-zen-key" data-demo-ed-ins="[height]"><code>[height]</code><span>Высота приложения</span></button><button type="button" class="v-zen-key" data-demo-ed-ins="[theight]"><code>[theight]</code><span>Высота предварительного просмотра</span></button><button type="button" class="v-zen-key" data-demo-ed-ins="[align]"><code>[align]</code><span>Расположение по отношению к содержанию</span></button><button type="button" class="v-zen-key" data-demo-ed-ins="[title]"><code>[title]</code><span>Заголовок приложения</span></button><button type="button" class="v-zen-key" data-demo-ed-ins="[quot]"><code>[quot]</code><span>Кавычки</span></button><button type="button" class="v-zen-key" data-demo-ed-ins="[rel]"><code>[rel]</code><span>Дополнительный атрибут</span></button></div>
+                <div class="d-cm" data-demo-cm="Шаблон для формата: jpg" data-demo-ed-body><textarea name="tmp[]" hidden>&lt;a rel="[rel]" title="[title]" href="[src]" class="sl-attach sl-attach-[align]"&gt;&lt;img src="[tsrc]" style="max-width:[twidth]px" alt="[title]" loading="lazy"&gt;&lt;/a&gt;</textarea></div>
+                <div class="v-zen-view">
+                  <div class="v-zen-view-head"><i class="bi bi-eye" aria-hidden="true"></i><span>Так увидит читатель · тема lite</span><span class="v-seg" role="radiogroup" aria-label="[align] — расположение"><span class="v-seg-cap">[align]</span><label class="v-seg-opt" title="Нет"><input type="radio" name="ed-0-align" value="" data-demo-ed-align checked><i class="bi bi-dash-lg" aria-hidden="true"></i><span>Нет</span></label><label class="v-seg-opt" title="Слева"><input type="radio" name="ed-0-align" value="left" data-demo-ed-align><i class="bi bi-align-start" aria-hidden="true"></i><span>Слева</span></label><label class="v-seg-opt" title="По центру"><input type="radio" name="ed-0-align" value="center" data-demo-ed-align><i class="bi bi-align-center" aria-hidden="true"></i><span>По центру</span></label><label class="v-seg-opt" title="Справа"><input type="radio" name="ed-0-align" value="right" data-demo-ed-align><i class="bi bi-align-end" aria-hidden="true"></i><span>Справа</span></label></span></div>
+                  <iframe class="v-view" data-demo-ed-view data-demo-ed-fit title="Просмотр: Шаблон для формата: jpg" loading="lazy"></iframe>
+                </div>
+                <div class="v-zen-status" aria-live="polite">
+                  <span data-demo-ed-pos></span><span data-demo-ed-size></span><span>Переменных: <b data-demo-ed-used></b></span><span class="v-zen-note" data-demo-ed-note></span>
+                  <button type="button" class="v-zen-dirty" data-demo-ed-act="diff" title="Сверка: было → стало"><i class="bi bi-file-diff" aria-hidden="true"></i>изменено</button>
+                  <span class="v-zen-end">
+                    <button type="button" class="v-lint-badge" data-demo-ed-act="lint" title="Список проблем (Ctrl+Shift+M)"><i class="bi bi-check-circle v-lint-ok" aria-hidden="true"></i><i class="bi bi-exclamation-triangle v-lint-warn" aria-hidden="true"></i><i class="bi bi-x-octagon v-lint-err" aria-hidden="true"></i><span data-demo-ed-lint>Проблем нет</span></button>
+                    <button type="button" class="v-zen-next" data-demo-ed-act="next" title="Следующая проблема (F8)" aria-label="Следующая проблема"><i class="bi bi-arrow-down-circle" aria-hidden="true"></i></button>
+                    <span>HTML · UTF-8</span>
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div class="sl-box v-zen" data-demo-ed data-demo-ed-name="Шаблон для формата: mp3" data-demo-ed-kind="mp3" data-demo-ed-lint data-lint="ok">
+              <div class="v-zen-row"><span class="v-zen-tab"><i class="bi bi-filetype-html" aria-hidden="true"></i>Шаблон для формата: mp3</span><span class="v-zen-pill" role="toolbar" aria-label="Команды: Шаблон для формата: mp3"><button type="button" class="sl-modal-act" data-demo-ed-act="undo" title="Отменить (Ctrl+Z)" aria-label="Отменить (Ctrl+Z)"><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i></button><button type="button" class="sl-modal-act" data-demo-ed-act="redo" title="Повторить (Ctrl+Y)" aria-label="Повторить (Ctrl+Y)"><i class="bi bi-arrow-clockwise" aria-hidden="true"></i></button><span class="v-zen-sep" aria-hidden="true"></span><button type="button" class="sl-modal-act" data-demo-ed-act="search" title="Найти и заменить (Ctrl+F)" aria-label="Найти и заменить (Ctrl+F)"><i class="bi bi-search" aria-hidden="true"></i></button><button type="button" class="sl-modal-act" data-demo-ed-act="wrap" aria-pressed="true" title="Перенос строк" aria-label="Перенос строк"><i class="bi bi-text-wrap" aria-hidden="true"></i></button><span class="v-zen-sep" aria-hidden="true"></span><span class="v-zen-wide"><button type="button" class="sl-modal-act" data-demo-ed-act="fold" title="Свернуть всё" aria-label="Свернуть всё"><i class="bi bi-chevron-bar-contract" aria-hidden="true"></i></button><button type="button" class="sl-modal-act" data-demo-ed-act="unfold" title="Развернуть всё" aria-label="Развернуть всё"><i class="bi bi-chevron-bar-expand" aria-hidden="true"></i></button><span class="v-zen-sep" aria-hidden="true"></span><button type="button" class="sl-modal-act" data-demo-ed-act="pretty" title="Тег на строку" aria-label="Тег на строку"><i class="bi bi-text-indent-left" aria-hidden="true"></i></button><button type="button" class="sl-modal-act" data-demo-ed-act="flat" title="Собрать в одну строку" aria-label="Собрать в одну строку"><i class="bi bi-text-paragraph" aria-hidden="true"></i></button><span class="v-zen-sep" aria-hidden="true"></span></span><span class="v-zen-mid"><button type="button" class="sl-modal-act" data-demo-ed-act="copy" title="Копировать" aria-label="Копировать"><i class="bi bi-copy" aria-hidden="true"></i></button><button type="button" class="sl-modal-act" data-demo-ed-act="reset" title="Вернуть исходный текст" aria-label="Вернуть исходный текст"><i class="bi bi-arrow-repeat" aria-hidden="true"></i></button><span class="v-zen-sep" aria-hidden="true"></span></span><button type="button" class="sl-modal-act" popovertarget="ed-1-keys" style="anchor-name: --ed-1" title="Вставить переменную" aria-label="Вставить переменную"><i class="bi bi-braces" aria-hidden="true"></i></button><button type="button" class="sl-modal-act" data-demo-ed-act="complete" title="Подсказка у курсора (Ctrl+Space)" aria-label="Подсказка у курсора (Ctrl+Space)"><i class="bi bi-lightbulb" aria-hidden="true"></i></button><span class="v-zen-sep" aria-hidden="true"></span><button type="button" class="sl-modal-act" data-demo-ed-act="preview" aria-pressed="false" title="Просмотр: как увидит читатель" aria-label="Просмотр: как увидит читатель"><i class="bi bi-eye" aria-hidden="true"></i></button><button type="button" class="sl-modal-act" data-demo-ed-act="diff" title="Сверка: было → стало" aria-label="Сверка: было → стало"><i class="bi bi-file-diff" aria-hidden="true"></i></button><span class="v-zen-sep" aria-hidden="true"></span><button type="button" class="sl-modal-act" data-demo-ed-act="palette" title="Все команды (Ctrl+K)" aria-label="Все команды (Ctrl+K)"><i class="bi bi-command" aria-hidden="true"></i></button><button type="button" class="sl-modal-act v-full" data-demo-ed-act="full" aria-pressed="false" title="Развернуть" aria-label="Развернуть"><i class="bi bi-arrows-angle-expand" aria-hidden="true"></i><i class="bi bi-arrows-angle-contract" aria-hidden="true"></i></button></span></div>
+              <div class="v-zen-card">
+                <div id="ed-1-keys" class="v-zen-pop" popover style="position-anchor: --ed-1"><button type="button" class="v-zen-key" data-demo-ed-ins="[src]"><code>[src]</code><span>Ссылка на файл</span></button><button type="button" class="v-zen-key" data-demo-ed-ins="[tsrc]"><code>[tsrc]</code><span>Ссылка на файл предварительного просмотра</span></button><button type="button" class="v-zen-key" data-demo-ed-ins="[width]"><code>[width]</code><span>Ширина приложения</span></button><button type="button" class="v-zen-key" data-demo-ed-ins="[twidth]"><code>[twidth]</code><span>Ширина предварительного просмотра</span></button><button type="button" class="v-zen-key" data-demo-ed-ins="[height]"><code>[height]</code><span>Высота приложения</span></button><button type="button" class="v-zen-key" data-demo-ed-ins="[theight]"><code>[theight]</code><span>Высота предварительного просмотра</span></button><button type="button" class="v-zen-key" data-demo-ed-ins="[align]"><code>[align]</code><span>Расположение по отношению к содержанию</span></button><button type="button" class="v-zen-key" data-demo-ed-ins="[title]"><code>[title]</code><span>Заголовок приложения</span></button><button type="button" class="v-zen-key" data-demo-ed-ins="[quot]"><code>[quot]</code><span>Кавычки</span></button><button type="button" class="v-zen-key" data-demo-ed-ins="[rel]"><code>[rel]</code><span>Дополнительный атрибут</span></button></div>
+                <div class="d-cm" data-demo-cm="Шаблон для формата: mp3" data-demo-ed-body><textarea name="tmp[]" hidden>&lt;audio controls preload="metadata" src="[src]" title="[title]"&gt;&lt;/audio&gt;</textarea></div>
+                <div class="v-zen-view">
+                  <div class="v-zen-view-head"><i class="bi bi-eye" aria-hidden="true"></i><span>Так увидит читатель · тема lite</span><span class="v-seg" role="radiogroup" aria-label="[align] — расположение"><span class="v-seg-cap">[align]</span><label class="v-seg-opt" title="Нет"><input type="radio" name="ed-1-align" value="" data-demo-ed-align checked><i class="bi bi-dash-lg" aria-hidden="true"></i><span>Нет</span></label><label class="v-seg-opt" title="Слева"><input type="radio" name="ed-1-align" value="left" data-demo-ed-align><i class="bi bi-align-start" aria-hidden="true"></i><span>Слева</span></label><label class="v-seg-opt" title="По центру"><input type="radio" name="ed-1-align" value="center" data-demo-ed-align><i class="bi bi-align-center" aria-hidden="true"></i><span>По центру</span></label><label class="v-seg-opt" title="Справа"><input type="radio" name="ed-1-align" value="right" data-demo-ed-align><i class="bi bi-align-end" aria-hidden="true"></i><span>Справа</span></label></span></div>
+                  <iframe class="v-view" data-demo-ed-view data-demo-ed-fit title="Просмотр: Шаблон для формата: mp3" loading="lazy"></iframe>
+                </div>
+                <div class="v-zen-status" aria-live="polite">
+                  <span data-demo-ed-pos></span><span data-demo-ed-size></span><span>Переменных: <b data-demo-ed-used></b></span><span class="v-zen-note" data-demo-ed-note></span>
+                  <button type="button" class="v-zen-dirty" data-demo-ed-act="diff" title="Сверка: было → стало"><i class="bi bi-file-diff" aria-hidden="true"></i>изменено</button>
+                  <span class="v-zen-end">
+                    <button type="button" class="v-lint-badge" data-demo-ed-act="lint" title="Список проблем (Ctrl+Shift+M)"><i class="bi bi-check-circle v-lint-ok" aria-hidden="true"></i><i class="bi bi-exclamation-triangle v-lint-warn" aria-hidden="true"></i><i class="bi bi-x-octagon v-lint-err" aria-hidden="true"></i><span data-demo-ed-lint>Проблем нет</span></button>
+                    <button type="button" class="v-zen-next" data-demo-ed-act="next" title="Следующая проблема (F8)" aria-label="Следующая проблема"><i class="bi bi-arrow-down-circle" aria-hidden="true"></i></button>
+                    <span>HTML · UTF-8</span>
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div class="sl-box v-zen" data-demo-ed data-demo-ed-name="Шаблон для формата: pdf" data-demo-ed-kind="pdf" data-demo-ed-lint data-lint="ok">
+              <div class="v-zen-row"><span class="v-zen-tab"><i class="bi bi-filetype-html" aria-hidden="true"></i>Шаблон для формата: pdf</span><span class="v-zen-pill" role="toolbar" aria-label="Команды: Шаблон для формата: pdf"><button type="button" class="sl-modal-act" data-demo-ed-act="undo" title="Отменить (Ctrl+Z)" aria-label="Отменить (Ctrl+Z)"><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i></button><button type="button" class="sl-modal-act" data-demo-ed-act="redo" title="Повторить (Ctrl+Y)" aria-label="Повторить (Ctrl+Y)"><i class="bi bi-arrow-clockwise" aria-hidden="true"></i></button><span class="v-zen-sep" aria-hidden="true"></span><button type="button" class="sl-modal-act" data-demo-ed-act="search" title="Найти и заменить (Ctrl+F)" aria-label="Найти и заменить (Ctrl+F)"><i class="bi bi-search" aria-hidden="true"></i></button><button type="button" class="sl-modal-act" data-demo-ed-act="wrap" aria-pressed="true" title="Перенос строк" aria-label="Перенос строк"><i class="bi bi-text-wrap" aria-hidden="true"></i></button><span class="v-zen-sep" aria-hidden="true"></span><span class="v-zen-wide"><button type="button" class="sl-modal-act" data-demo-ed-act="fold" title="Свернуть всё" aria-label="Свернуть всё"><i class="bi bi-chevron-bar-contract" aria-hidden="true"></i></button><button type="button" class="sl-modal-act" data-demo-ed-act="unfold" title="Развернуть всё" aria-label="Развернуть всё"><i class="bi bi-chevron-bar-expand" aria-hidden="true"></i></button><span class="v-zen-sep" aria-hidden="true"></span><button type="button" class="sl-modal-act" data-demo-ed-act="pretty" title="Тег на строку" aria-label="Тег на строку"><i class="bi bi-text-indent-left" aria-hidden="true"></i></button><button type="button" class="sl-modal-act" data-demo-ed-act="flat" title="Собрать в одну строку" aria-label="Собрать в одну строку"><i class="bi bi-text-paragraph" aria-hidden="true"></i></button><span class="v-zen-sep" aria-hidden="true"></span></span><span class="v-zen-mid"><button type="button" class="sl-modal-act" data-demo-ed-act="copy" title="Копировать" aria-label="Копировать"><i class="bi bi-copy" aria-hidden="true"></i></button><button type="button" class="sl-modal-act" data-demo-ed-act="reset" title="Вернуть исходный текст" aria-label="Вернуть исходный текст"><i class="bi bi-arrow-repeat" aria-hidden="true"></i></button><span class="v-zen-sep" aria-hidden="true"></span></span><button type="button" class="sl-modal-act" popovertarget="ed-2-keys" style="anchor-name: --ed-2" title="Вставить переменную" aria-label="Вставить переменную"><i class="bi bi-braces" aria-hidden="true"></i></button><button type="button" class="sl-modal-act" data-demo-ed-act="complete" title="Подсказка у курсора (Ctrl+Space)" aria-label="Подсказка у курсора (Ctrl+Space)"><i class="bi bi-lightbulb" aria-hidden="true"></i></button><span class="v-zen-sep" aria-hidden="true"></span><button type="button" class="sl-modal-act" data-demo-ed-act="preview" aria-pressed="false" title="Просмотр: как увидит читатель" aria-label="Просмотр: как увидит читатель"><i class="bi bi-eye" aria-hidden="true"></i></button><button type="button" class="sl-modal-act" data-demo-ed-act="diff" title="Сверка: было → стало" aria-label="Сверка: было → стало"><i class="bi bi-file-diff" aria-hidden="true"></i></button><span class="v-zen-sep" aria-hidden="true"></span><button type="button" class="sl-modal-act" data-demo-ed-act="palette" title="Все команды (Ctrl+K)" aria-label="Все команды (Ctrl+K)"><i class="bi bi-command" aria-hidden="true"></i></button><button type="button" class="sl-modal-act v-full" data-demo-ed-act="full" aria-pressed="false" title="Развернуть" aria-label="Развернуть"><i class="bi bi-arrows-angle-expand" aria-hidden="true"></i><i class="bi bi-arrows-angle-contract" aria-hidden="true"></i></button></span></div>
+              <div class="v-zen-card">
+                <div id="ed-2-keys" class="v-zen-pop" popover style="position-anchor: --ed-2"><button type="button" class="v-zen-key" data-demo-ed-ins="[src]"><code>[src]</code><span>Ссылка на файл</span></button><button type="button" class="v-zen-key" data-demo-ed-ins="[tsrc]"><code>[tsrc]</code><span>Ссылка на файл предварительного просмотра</span></button><button type="button" class="v-zen-key" data-demo-ed-ins="[width]"><code>[width]</code><span>Ширина приложения</span></button><button type="button" class="v-zen-key" data-demo-ed-ins="[twidth]"><code>[twidth]</code><span>Ширина предварительного просмотра</span></button><button type="button" class="v-zen-key" data-demo-ed-ins="[height]"><code>[height]</code><span>Высота приложения</span></button><button type="button" class="v-zen-key" data-demo-ed-ins="[theight]"><code>[theight]</code><span>Высота предварительного просмотра</span></button><button type="button" class="v-zen-key" data-demo-ed-ins="[align]"><code>[align]</code><span>Расположение по отношению к содержанию</span></button><button type="button" class="v-zen-key" data-demo-ed-ins="[title]"><code>[title]</code><span>Заголовок приложения</span></button><button type="button" class="v-zen-key" data-demo-ed-ins="[quot]"><code>[quot]</code><span>Кавычки</span></button><button type="button" class="v-zen-key" data-demo-ed-ins="[rel]"><code>[rel]</code><span>Дополнительный атрибут</span></button></div>
+                <div class="d-cm" data-demo-cm="Шаблон для формата: pdf" data-demo-ed-body><textarea name="tmp[]" hidden>&lt;object data="[src]" type="application/pdf" width="[width]" height="[height]"&gt;&lt;a href="[src]"&gt;[title]&lt;/a&gt;&lt;/object&gt;</textarea></div>
+                <div class="v-zen-view">
+                  <div class="v-zen-view-head"><i class="bi bi-eye" aria-hidden="true"></i><span>Так увидит читатель · тема lite</span><span class="v-seg" role="radiogroup" aria-label="[align] — расположение"><span class="v-seg-cap">[align]</span><label class="v-seg-opt" title="Нет"><input type="radio" name="ed-2-align" value="" data-demo-ed-align checked><i class="bi bi-dash-lg" aria-hidden="true"></i><span>Нет</span></label><label class="v-seg-opt" title="Слева"><input type="radio" name="ed-2-align" value="left" data-demo-ed-align><i class="bi bi-align-start" aria-hidden="true"></i><span>Слева</span></label><label class="v-seg-opt" title="По центру"><input type="radio" name="ed-2-align" value="center" data-demo-ed-align><i class="bi bi-align-center" aria-hidden="true"></i><span>По центру</span></label><label class="v-seg-opt" title="Справа"><input type="radio" name="ed-2-align" value="right" data-demo-ed-align><i class="bi bi-align-end" aria-hidden="true"></i><span>Справа</span></label></span></div>
+                  <iframe class="v-view" data-demo-ed-view data-demo-ed-fit title="Просмотр: Шаблон для формата: pdf" loading="lazy"></iframe>
+                </div>
+                <div class="v-zen-status" aria-live="polite">
+                  <span data-demo-ed-pos></span><span data-demo-ed-size></span><span>Переменных: <b data-demo-ed-used></b></span><span class="v-zen-note" data-demo-ed-note></span>
+                  <button type="button" class="v-zen-dirty" data-demo-ed-act="diff" title="Сверка: было → стало"><i class="bi bi-file-diff" aria-hidden="true"></i>изменено</button>
+                  <span class="v-zen-end">
+                    <button type="button" class="v-lint-badge" data-demo-ed-act="lint" title="Список проблем (Ctrl+Shift+M)"><i class="bi bi-check-circle v-lint-ok" aria-hidden="true"></i><i class="bi bi-exclamation-triangle v-lint-warn" aria-hidden="true"></i><i class="bi bi-x-octagon v-lint-err" aria-hidden="true"></i><span data-demo-ed-lint>Проблем нет</span></button>
+                    <button type="button" class="v-zen-next" data-demo-ed-act="next" title="Следующая проблема (F8)" aria-label="Следующая проблема"><i class="bi bi-arrow-down-circle" aria-hidden="true"></i></button>
+                    <span>HTML · UTF-8</span>
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div class="sl-box v-zen" data-demo-ed data-demo-ed-name="Шаблон для формата: Полный размер (size=full)" data-demo-ed-kind="full" data-demo-ed-lint data-lint="ok">
+              <div class="v-zen-row"><span class="v-zen-tab"><i class="bi bi-filetype-html" aria-hidden="true"></i>Шаблон для формата: Полный размер (size=full)</span><span class="v-zen-pill" role="toolbar" aria-label="Команды: Шаблон для формата: Полный размер (size=full)"><button type="button" class="sl-modal-act" data-demo-ed-act="undo" title="Отменить (Ctrl+Z)" aria-label="Отменить (Ctrl+Z)"><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i></button><button type="button" class="sl-modal-act" data-demo-ed-act="redo" title="Повторить (Ctrl+Y)" aria-label="Повторить (Ctrl+Y)"><i class="bi bi-arrow-clockwise" aria-hidden="true"></i></button><span class="v-zen-sep" aria-hidden="true"></span><button type="button" class="sl-modal-act" data-demo-ed-act="search" title="Найти и заменить (Ctrl+F)" aria-label="Найти и заменить (Ctrl+F)"><i class="bi bi-search" aria-hidden="true"></i></button><button type="button" class="sl-modal-act" data-demo-ed-act="wrap" aria-pressed="true" title="Перенос строк" aria-label="Перенос строк"><i class="bi bi-text-wrap" aria-hidden="true"></i></button><span class="v-zen-sep" aria-hidden="true"></span><span class="v-zen-wide"><button type="button" class="sl-modal-act" data-demo-ed-act="fold" title="Свернуть всё" aria-label="Свернуть всё"><i class="bi bi-chevron-bar-contract" aria-hidden="true"></i></button><button type="button" class="sl-modal-act" data-demo-ed-act="unfold" title="Развернуть всё" aria-label="Развернуть всё"><i class="bi bi-chevron-bar-expand" aria-hidden="true"></i></button><span class="v-zen-sep" aria-hidden="true"></span><button type="button" class="sl-modal-act" data-demo-ed-act="pretty" title="Тег на строку" aria-label="Тег на строку"><i class="bi bi-text-indent-left" aria-hidden="true"></i></button><button type="button" class="sl-modal-act" data-demo-ed-act="flat" title="Собрать в одну строку" aria-label="Собрать в одну строку"><i class="bi bi-text-paragraph" aria-hidden="true"></i></button><span class="v-zen-sep" aria-hidden="true"></span></span><span class="v-zen-mid"><button type="button" class="sl-modal-act" data-demo-ed-act="copy" title="Копировать" aria-label="Копировать"><i class="bi bi-copy" aria-hidden="true"></i></button><button type="button" class="sl-modal-act" data-demo-ed-act="reset" title="Вернуть исходный текст" aria-label="Вернуть исходный текст"><i class="bi bi-arrow-repeat" aria-hidden="true"></i></button><span class="v-zen-sep" aria-hidden="true"></span></span><button type="button" class="sl-modal-act" popovertarget="ed-3-keys" style="anchor-name: --ed-3" title="Вставить переменную" aria-label="Вставить переменную"><i class="bi bi-braces" aria-hidden="true"></i></button><button type="button" class="sl-modal-act" data-demo-ed-act="complete" title="Подсказка у курсора (Ctrl+Space)" aria-label="Подсказка у курсора (Ctrl+Space)"><i class="bi bi-lightbulb" aria-hidden="true"></i></button><span class="v-zen-sep" aria-hidden="true"></span><button type="button" class="sl-modal-act" data-demo-ed-act="preview" aria-pressed="false" title="Просмотр: как увидит читатель" aria-label="Просмотр: как увидит читатель"><i class="bi bi-eye" aria-hidden="true"></i></button><button type="button" class="sl-modal-act" data-demo-ed-act="diff" title="Сверка: было → стало" aria-label="Сверка: было → стало"><i class="bi bi-file-diff" aria-hidden="true"></i></button><span class="v-zen-sep" aria-hidden="true"></span><button type="button" class="sl-modal-act" data-demo-ed-act="palette" title="Все команды (Ctrl+K)" aria-label="Все команды (Ctrl+K)"><i class="bi bi-command" aria-hidden="true"></i></button><button type="button" class="sl-modal-act v-full" data-demo-ed-act="full" aria-pressed="false" title="Развернуть" aria-label="Развернуть"><i class="bi bi-arrows-angle-expand" aria-hidden="true"></i><i class="bi bi-arrows-angle-contract" aria-hidden="true"></i></button></span></div>
+              <div class="v-zen-card">
+                <div id="ed-3-keys" class="v-zen-pop" popover style="position-anchor: --ed-3"><button type="button" class="v-zen-key" data-demo-ed-ins="[src]"><code>[src]</code><span>Ссылка на файл</span></button><button type="button" class="v-zen-key" data-demo-ed-ins="[tsrc]"><code>[tsrc]</code><span>Ссылка на файл предварительного просмотра</span></button><button type="button" class="v-zen-key" data-demo-ed-ins="[width]"><code>[width]</code><span>Ширина приложения</span></button><button type="button" class="v-zen-key" data-demo-ed-ins="[twidth]"><code>[twidth]</code><span>Ширина предварительного просмотра</span></button><button type="button" class="v-zen-key" data-demo-ed-ins="[height]"><code>[height]</code><span>Высота приложения</span></button><button type="button" class="v-zen-key" data-demo-ed-ins="[theight]"><code>[theight]</code><span>Высота предварительного просмотра</span></button><button type="button" class="v-zen-key" data-demo-ed-ins="[align]"><code>[align]</code><span>Расположение по отношению к содержанию</span></button><button type="button" class="v-zen-key" data-demo-ed-ins="[title]"><code>[title]</code><span>Заголовок приложения</span></button><button type="button" class="v-zen-key" data-demo-ed-ins="[quot]"><code>[quot]</code><span>Кавычки</span></button><button type="button" class="v-zen-key" data-demo-ed-ins="[rel]"><code>[rel]</code><span>Дополнительный атрибут</span></button></div>
+                <div class="d-cm" data-demo-cm="Шаблон для формата: Полный размер (size=full)" data-demo-ed-body><textarea name="tmp[]" hidden>&lt;a rel="[rel]" title="[title]" href="[src]" class="sl-attach sl-attach-[align]"&gt;&lt;img src="[src]" width="[width]" height="[height]" alt="[title]" loading="lazy"&gt;&lt;/a&gt;</textarea></div>
+                <div class="v-zen-view">
+                  <div class="v-zen-view-head"><i class="bi bi-eye" aria-hidden="true"></i><span>Так увидит читатель · тема lite</span><span class="v-seg" role="radiogroup" aria-label="[align] — расположение"><span class="v-seg-cap">[align]</span><label class="v-seg-opt" title="Нет"><input type="radio" name="ed-3-align" value="" data-demo-ed-align checked><i class="bi bi-dash-lg" aria-hidden="true"></i><span>Нет</span></label><label class="v-seg-opt" title="Слева"><input type="radio" name="ed-3-align" value="left" data-demo-ed-align><i class="bi bi-align-start" aria-hidden="true"></i><span>Слева</span></label><label class="v-seg-opt" title="По центру"><input type="radio" name="ed-3-align" value="center" data-demo-ed-align><i class="bi bi-align-center" aria-hidden="true"></i><span>По центру</span></label><label class="v-seg-opt" title="Справа"><input type="radio" name="ed-3-align" value="right" data-demo-ed-align><i class="bi bi-align-end" aria-hidden="true"></i><span>Справа</span></label></span></div>
+                  <iframe class="v-view" data-demo-ed-view data-demo-ed-fit title="Просмотр: Шаблон для формата: Полный размер (size=full)" loading="lazy"></iframe>
+                </div>
+                <div class="v-zen-status" aria-live="polite">
+                  <span data-demo-ed-pos></span><span data-demo-ed-size></span><span>Переменных: <b data-demo-ed-used></b></span><span class="v-zen-note" data-demo-ed-note></span>
+                  <button type="button" class="v-zen-dirty" data-demo-ed-act="diff" title="Сверка: было → стало"><i class="bi bi-file-diff" aria-hidden="true"></i>изменено</button>
+                  <span class="v-zen-end">
+                    <button type="button" class="v-lint-badge" data-demo-ed-act="lint" title="Список проблем (Ctrl+Shift+M)"><i class="bi bi-check-circle v-lint-ok" aria-hidden="true"></i><i class="bi bi-exclamation-triangle v-lint-warn" aria-hidden="true"></i><i class="bi bi-x-octagon v-lint-err" aria-hidden="true"></i><span data-demo-ed-lint>Проблем нет</span></button>
+                    <button type="button" class="v-zen-next" data-demo-ed-act="next" title="Следующая проблема (F8)" aria-label="Следующая проблема"><i class="bi bi-arrow-down-circle" aria-hidden="true"></i></button>
+                    <span>HTML · UTF-8</span>
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div class="sl-div-actions">
+              <input type="submit" value="Сохранить изменения" class="sl-but-blue">
+            </div>
+          </form>
+          </div>
+          <div class="sl-box" data-demo-about></div>
+          <dialog class="sl-modal v-pal" data-demo-ed-palette aria-label="Команды редактора">
+            <div class="sl-modal-title">
+              <i class="bi bi-command" aria-hidden="true"></i>
+              <span class="sl-modal-cap"><strong>Команды</strong><span class="sl-modal-sub" data-demo-ed-pal-sub></span></span>
+              <span class="sl-modal-acts"><button type="button" class="sl-modal-act sl-modal-act-close" data-sl-close title="Закрыть" aria-label="Закрыть"><i class="bi bi-x-lg" aria-hidden="true"></i></button></span>
+            </div>
+            <div class="sl-modal-bar v-pal-bar"><i class="bi bi-search" aria-hidden="true"></i><input type="search" class="v-pal-find" data-demo-ed-find data-sl-focus placeholder="Что сделать? Например: перенос, src, проблема" aria-label="Поиск команды" autocomplete="off"></div>
+            <div class="sl-modal-body sl-modal-body-flush v-pal-body">
+              <div role="listbox" aria-label="Команды">
+<div class="v-pal-group" data-demo-ed-pal-group><div class="v-pal-cap">Правка</div><div class="v-pal-list"><button type="button" role="option" class="v-pal-row" data-demo-ed-cmd="Отменить" data-demo-ed-act="undo"><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i><span class="v-pal-name" data-demo-ed-cmd-name>Отменить</span><span class="v-pal-keys"><kbd>Ctrl</kbd><kbd>Z</kbd></span></button><button type="button" role="option" class="v-pal-row" data-demo-ed-cmd="Повторить" data-demo-ed-act="redo"><i class="bi bi-arrow-clockwise" aria-hidden="true"></i><span class="v-pal-name" data-demo-ed-cmd-name>Повторить</span><span class="v-pal-keys"><kbd>Ctrl</kbd><kbd>Y</kbd></span></button><button type="button" role="option" class="v-pal-row" data-demo-ed-cmd="Выделить всё" data-demo-ed-act="all"><i class="bi bi-cursor-text" aria-hidden="true"></i><span class="v-pal-name" data-demo-ed-cmd-name>Выделить всё</span><span class="v-pal-keys"><kbd>Ctrl</kbd><kbd>A</kbd></span></button><button type="button" role="option" class="v-pal-row" data-demo-ed-cmd="Закомментировать" data-demo-ed-act="comment"><i class="bi bi-chat-square-text" aria-hidden="true"></i><span class="v-pal-name" data-demo-ed-cmd-name>Закомментировать</span><span class="v-pal-keys"><kbd>Ctrl</kbd><kbd>/</kbd></span></button><button type="button" role="option" class="v-pal-row" data-demo-ed-cmd="Вернуть исходный текст" data-demo-ed-act="reset"><i class="bi bi-arrow-repeat" aria-hidden="true"></i><span class="v-pal-name" data-demo-ed-cmd-name>Вернуть исходный текст</span><span class="v-pal-keys"></span></button><button type="button" role="option" class="v-pal-row" data-demo-ed-cmd="Копировать шаблон" data-demo-ed-act="copy"><i class="bi bi-copy" aria-hidden="true"></i><span class="v-pal-name" data-demo-ed-cmd-name>Копировать шаблон</span><span class="v-pal-keys"></span></button></div></div><div class="v-pal-group" data-demo-ed-pal-group><div class="v-pal-cap">Формат и проверка</div><div class="v-pal-list"><button type="button" role="option" class="v-pal-row" data-demo-ed-cmd="Сверка: было → стало" data-demo-ed-act="diff"><i class="bi bi-file-diff" aria-hidden="true"></i><span class="v-pal-name" data-demo-ed-cmd-name>Сверка: было → стало</span><span class="v-pal-keys"></span></button><button type="button" role="option" class="v-pal-row" data-demo-ed-cmd="Просмотр: как увидит читатель" data-demo-ed-act="preview"><i class="bi bi-eye" aria-hidden="true"></i><span class="v-pal-name" data-demo-ed-cmd-name>Просмотр: как увидит читатель</span><span class="v-pal-keys"></span></button><button type="button" role="option" class="v-pal-row" data-demo-ed-cmd="Разложить: тег на строку" data-demo-ed-act="pretty"><i class="bi bi-text-indent-left" aria-hidden="true"></i><span class="v-pal-name" data-demo-ed-cmd-name>Разложить: тег на строку</span><span class="v-pal-keys"></span></button><button type="button" role="option" class="v-pal-row" data-demo-ed-cmd="Собрать в одну строку" data-demo-ed-act="flat"><i class="bi bi-text-paragraph" aria-hidden="true"></i><span class="v-pal-name" data-demo-ed-cmd-name>Собрать в одну строку</span><span class="v-pal-keys"></span></button><button type="button" role="option" class="v-pal-row" data-demo-ed-cmd="Список проблем" data-demo-ed-act="lint"><i class="bi bi-list-check" aria-hidden="true"></i><span class="v-pal-name" data-demo-ed-cmd-name>Список проблем</span><span class="v-pal-keys"><kbd>Ctrl</kbd><kbd>Shift</kbd><kbd>M</kbd></span></button><button type="button" role="option" class="v-pal-row" data-demo-ed-cmd="Следующая проблема" data-demo-ed-act="next"><i class="bi bi-arrow-down-circle" aria-hidden="true"></i><span class="v-pal-name" data-demo-ed-cmd-name>Следующая проблема</span><span class="v-pal-keys"><kbd>F8</kbd></span></button></div></div><div class="v-pal-group" data-demo-ed-pal-group><div class="v-pal-cap">Вид</div><div class="v-pal-list"><button type="button" role="option" class="v-pal-row" data-demo-ed-cmd="Найти и заменить" data-demo-ed-act="search"><i class="bi bi-search" aria-hidden="true"></i><span class="v-pal-name" data-demo-ed-cmd-name>Найти и заменить</span><span class="v-pal-keys"><kbd>Ctrl</kbd><kbd>F</kbd></span></button><button type="button" role="option" class="v-pal-row" data-demo-ed-cmd="Перенос строк" data-demo-ed-act="wrap"><i class="bi bi-text-wrap" aria-hidden="true"></i><span class="v-pal-name" data-demo-ed-cmd-name>Перенос строк</span><span class="v-pal-keys"></span></button><button type="button" role="option" class="v-pal-row" data-demo-ed-cmd="Свернуть всё" data-demo-ed-act="fold"><i class="bi bi-chevron-bar-contract" aria-hidden="true"></i><span class="v-pal-name" data-demo-ed-cmd-name>Свернуть всё</span><span class="v-pal-keys"><kbd>Ctrl</kbd><kbd>Alt</kbd><kbd>[</kbd></span></button><button type="button" role="option" class="v-pal-row" data-demo-ed-cmd="Развернуть всё" data-demo-ed-act="unfold"><i class="bi bi-chevron-bar-expand" aria-hidden="true"></i><span class="v-pal-name" data-demo-ed-cmd-name>Развернуть всё</span><span class="v-pal-keys"><kbd>Ctrl</kbd><kbd>Alt</kbd><kbd>]</kbd></span></button><button type="button" role="option" class="v-pal-row" data-demo-ed-cmd="Редактор на весь экран" data-demo-ed-act="full"><i class="bi bi-arrows-angle-expand" aria-hidden="true"></i><span class="v-pal-name" data-demo-ed-cmd-name>Редактор на весь экран</span><span class="v-pal-keys"></span></button></div></div><div class="v-pal-group" data-demo-ed-pal-group><div class="v-pal-cap">Вставить переменную</div><div class="v-pal-list"><button type="button" role="option" class="v-pal-row" data-demo-ed-cmd="Подсказка у курсора" data-demo-ed-act="complete"><i class="bi bi-lightbulb" aria-hidden="true"></i><span class="v-pal-name" data-demo-ed-cmd-name>Подсказка у курсора</span><span class="v-pal-keys"><kbd>Ctrl</kbd><kbd>Space</kbd></span></button><button type="button" role="option" class="v-pal-row" data-demo-ed-cmd="[src] — Ссылка на файл" data-demo-ed-ins="[src]"><i class="bi bi-braces" aria-hidden="true"></i><span class="v-pal-name" data-demo-ed-cmd-name>[src] — Ссылка на файл</span><span class="v-pal-keys"></span></button><button type="button" role="option" class="v-pal-row" data-demo-ed-cmd="[tsrc] — Ссылка на файл предварительного просмотра" data-demo-ed-ins="[tsrc]"><i class="bi bi-braces" aria-hidden="true"></i><span class="v-pal-name" data-demo-ed-cmd-name>[tsrc] — Ссылка на файл предварительного просмотра</span><span class="v-pal-keys"></span></button><button type="button" role="option" class="v-pal-row" data-demo-ed-cmd="[width] — Ширина приложения" data-demo-ed-ins="[width]"><i class="bi bi-braces" aria-hidden="true"></i><span class="v-pal-name" data-demo-ed-cmd-name>[width] — Ширина приложения</span><span class="v-pal-keys"></span></button><button type="button" role="option" class="v-pal-row" data-demo-ed-cmd="[twidth] — Ширина предварительного просмотра" data-demo-ed-ins="[twidth]"><i class="bi bi-braces" aria-hidden="true"></i><span class="v-pal-name" data-demo-ed-cmd-name>[twidth] — Ширина предварительного просмотра</span><span class="v-pal-keys"></span></button><button type="button" role="option" class="v-pal-row" data-demo-ed-cmd="[height] — Высота приложения" data-demo-ed-ins="[height]"><i class="bi bi-braces" aria-hidden="true"></i><span class="v-pal-name" data-demo-ed-cmd-name>[height] — Высота приложения</span><span class="v-pal-keys"></span></button><button type="button" role="option" class="v-pal-row" data-demo-ed-cmd="[theight] — Высота предварительного просмотра" data-demo-ed-ins="[theight]"><i class="bi bi-braces" aria-hidden="true"></i><span class="v-pal-name" data-demo-ed-cmd-name>[theight] — Высота предварительного просмотра</span><span class="v-pal-keys"></span></button><button type="button" role="option" class="v-pal-row" data-demo-ed-cmd="[align] — Расположение по отношению к содержанию" data-demo-ed-ins="[align]"><i class="bi bi-braces" aria-hidden="true"></i><span class="v-pal-name" data-demo-ed-cmd-name>[align] — Расположение по отношению к содержанию</span><span class="v-pal-keys"></span></button><button type="button" role="option" class="v-pal-row" data-demo-ed-cmd="[title] — Заголовок приложения" data-demo-ed-ins="[title]"><i class="bi bi-braces" aria-hidden="true"></i><span class="v-pal-name" data-demo-ed-cmd-name>[title] — Заголовок приложения</span><span class="v-pal-keys"></span></button><button type="button" role="option" class="v-pal-row" data-demo-ed-cmd="[quot] — Кавычки" data-demo-ed-ins="[quot]"><i class="bi bi-braces" aria-hidden="true"></i><span class="v-pal-name" data-demo-ed-cmd-name>[quot] — Кавычки</span><span class="v-pal-keys"></span></button><button type="button" role="option" class="v-pal-row" data-demo-ed-cmd="[rel] — Дополнительный атрибут" data-demo-ed-ins="[rel]"><i class="bi bi-braces" aria-hidden="true"></i><span class="v-pal-name" data-demo-ed-cmd-name>[rel] — Дополнительный атрибут</span><span class="v-pal-keys"></span></button></div></div>
+              </div>
+              <p class="v-pal-empty" data-demo-ed-pal-empty hidden>Ничего не найдено</p>
+              <section class="v-pal-help" aria-label="Горячие клавиши">
+                <div class="v-pal-cap"><i class="bi bi-keyboard" aria-hidden="true"></i>Горячие клавиши редактора</div>
+                <dl class="v-pal-keymap"><div><dt><kbd>Ctrl</kbd><kbd>Space</kbd></dt><dd>подсказать переменную</dd></div><div><dt><kbd>[</kbd></dt><dd>список переменных</dd></div><div><dt><kbd>Ctrl</kbd><kbd>D</kbd></dt><dd>выделить следующее совпадение</dd></div><div><dt><kbd>Ctrl</kbd><kbd>L</kbd></dt><dd>выделить строку</dd></div><div><dt><kbd>Alt</kbd><kbd>↑</kbd><kbd>↓</kbd></dt><dd>переместить строку</dd></div><div><dt><kbd>Shift</kbd><kbd>Alt</kbd><kbd>↑</kbd><kbd>↓</kbd></dt><dd>копировать строку</dd></div><div><dt><kbd>Ctrl</kbd><kbd>Shift</kbd><kbd>K</kbd></dt><dd>удалить строку</dd></div><div><dt><kbd>Ctrl</kbd><kbd>]</kbd><kbd>[</kbd></dt><dd>отступ больше, меньше</dd></div><div><dt><kbd>Ctrl</kbd><kbd>Shift</kbd><kbd>\</kbd></dt><dd>к парной скобке</dd></div><div><dt><kbd>Ctrl</kbd><kbd>клик</kbd></dt><dd>ещё один курсор</dd></div><div><dt><kbd>Ctrl</kbd><kbd>Shift</kbd><kbd>M</kbd></dt><dd>список проблем</dd></div><div><dt><kbd>F8</kbd></dt><dd>следующая проблема</dd></div><div><dt><kbd>Esc</kbd></dt><dd>закрыть окно, выйти из экрана</dd></div></dl>
+              </section>
+            </div>
+            <div class="sl-modal-foot v-pal-foot"><span class="sl-modal-info"><kbd>↑</kbd><kbd>↓</kbd> выбор · <kbd>Enter</kbd> выполнить · <kbd>Esc</kbd> закрыть · <kbd>Ctrl</kbd><kbd>K</kbd> из любого редактора</span></div>
+          </dialog>
+          <dialog class="sl-modal sl-modal-lg v-dif" data-demo-ed-diffwin aria-label="Сверка: было → стало">
+            <div class="sl-modal-title">
+              <i class="bi bi-file-diff" aria-hidden="true"></i>
+              <span class="sl-modal-cap"><strong>Сверка: было → стало</strong><span class="sl-modal-sub" data-demo-ed-dw-sub></span></span>
+              <span class="sl-modal-acts"><button type="button" class="sl-modal-act sl-modal-act-close" data-sl-close title="Закрыть" aria-label="Закрыть"><i class="bi bi-x-lg" aria-hidden="true"></i></button></span>
+            </div>
+            <div class="sl-modal-bar v-dif-bar">
+              <span class="v-seg" role="radiogroup" aria-label="Вид сверки">
+                <label class="v-seg-opt"><input type="radio" name="v-dif-mode" value="all" checked><i class="bi bi-list" aria-hidden="true"></i><span>Вместе</span></label>
+                <label class="v-seg-opt"><input type="radio" name="v-dif-mode" value="side"><i class="bi bi-layout-split" aria-hidden="true"></i><span>Рядом</span></label>
+              </span>
+              <span class="v-dif-count"><span class="v-dif-ins" data-demo-ed-dw-ins></span><span class="v-dif-del" data-demo-ed-dw-del></span></span>
+            </div>
+            <div class="sl-modal-body v-dif-body">
+              <p class="v-dif-same"><i class="bi bi-check-circle" aria-hidden="true"></i>Изменений нет: текст совпадает с сохранённым</p>
+              <div class="v-dif-code v-dif-all" data-demo-ed-dw-all></div>
+              <div class="v-dif-side">
+                <section><h3 class="v-dif-cap">Было</h3><div class="v-dif-code" data-demo-ed-dw-was></div></section>
+                <section><h3 class="v-dif-cap">Стало</h3><div class="v-dif-code" data-demo-ed-dw-now></div></section>
+              </div>
+            </div>
+            <div class="sl-modal-foot">
+              <span class="sl-modal-info">«Сохранить изменения» запишет «Стало» в config/filetype.php</span>
+              <button type="button" class="sl-modal-btn v-dif-back" data-demo-ed-act="reset"><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i>Вернуть было</button>
+              <button type="button" class="sl-modal-btn sl-modal-btn-main" data-sl-close><i class="bi bi-check-lg" aria-hidden="true"></i>Оставить стало</button>
+            </div>
+          </dialog>
+        </div></main>
+      </div>
+      <div class="sl-footer sl-admin-footer">
+        <div class="sl-copyright">Генерация: 0.251 сек. и 15 запросов к базе данных за 0.005 сек.<br><a href="https://slaed.net" title="SLAED CMS" target="_blank" rel="noopener noreferrer">SLAED CMS</a> © 2005-2026 Eduard Laas. Released under MIT License.</div>
+        <span><a href="//slaed.net" title="SLAED CMS" class="sl-thide sl-slaed-home" target="_blank" rel="noopener noreferrer">SLAED CMS</a><a href="#" title="Наверх" class="sl-thide" onclick="Upper('html, body', 600); return false;">Наверх</a></span>
+      </div>
+    </div>
+    <div class="sl-wrapfoot"></div>
+  </div>
+  <script>document.write('<script src="assets/demo.js?v=' + Date.now() + '"><\/script>');</script>
+</body>
+</html>

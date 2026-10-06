@@ -182,8 +182,8 @@
         ed.exec('addImage', { imageUrl: url, altText: text || 'image' });
     }
 
-    function addAttach(id, file, title, align) {
-        var txt = '[attach=' + file + ' align=' + (align || 'none') + ' title=' + getTagText(title || file) + ']';
+    function addAttach(id, file, title, align, full) {
+        var txt = '[attach=' + file + ' align=' + (align || 'none') + ' title=' + getTagText(title || file) + (full ? ' size=full' : '') + ']';
         addText(getEditor(id), txt);
     }
 
@@ -1083,6 +1083,8 @@
         getRoom(id).want = { way: way, rows: rows, at: 0, title: title || '' };
         one = el.querySelector('[data-sl-opts="align"] input[value=""]');
         if (one) one.checked = true;
+        one = el.querySelector('[data-sl-opts="size"] input[value=""]');
+        if (one) one.checked = true;
         setInsertStep(id);
         win.setWindowOpen(el);
     }
@@ -1094,8 +1096,11 @@
         var name = getOptsPart(id, 'name');
         var note = getOptsPart(id, 'info');
         var field = getOptsPart(id, 'title');
+        var size = getOptsPart(id, 'size');
         var row = want ? want.rows[want.at] : null;
         if (!row) return;
+        // Only a picture that enters the text as an attachment has a thumbnail to refuse; a markdown picture is full size already
+        if (size) size.hidden = !(row.image && (want.way === 'attach' || row.bytag));
         if (name) name.textContent = row.file;
         if (note) note.textContent = (want.rows.length > 1) ? getText(getLab(id, 'quota', '%1$s / %2$s'), want.at + 1, want.rows.length) : '';
         if (field) field.value = (want.at === 0) ? want.title : '';
@@ -1107,9 +1112,11 @@
         var want = room.want;
         var field = getOptsPart(id, 'title');
         var mark = getOptsPart(id, 'align');
+        var size = getOptsPart(id, 'size');
         var sel = mark ? mark.querySelector('input:checked') : null;
+        var full = !!size && !size.hidden && !!size.querySelector('input[value="full"]:checked');
         if (!want) return;
-        addInsertRows(id, want.way, [want.rows[want.at]], sel ? sel.value : '', field ? String(field.value || '').trim() : '');
+        addInsertRows(id, want.way, [want.rows[want.at]], sel ? sel.value : '', field ? String(field.value || '').trim() : '', full);
         want.at++;
         if (want.at < want.rows.length) {
             setInsertStep(id);
@@ -1124,10 +1131,10 @@
     }
 
     // A file of a closed directory has no address a reader could open, so it enters the text as the tag the stored material resolves
-    function addInsertRows(id, way, rows, align, title) {
+    function addInsertRows(id, way, rows, align, title, full) {
         rows.forEach(function(row) {
             if (way === 'image' && row.image && !row.bytag) addImage(id, row.url, title || row.file, align);
-            else addAttach(id, row.file, title || row.file, align);
+            else addAttach(id, row.file, title || row.file, align, full && row.image);
         });
     }
 

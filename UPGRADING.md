@@ -87,10 +87,16 @@ moves each of them with its contents before the new files answer a request:
 | `uploads/help/` | `uploads/node/help/` |
 | `uploads/links/` | `uploads/node/links/` |
 | `uploads/news/` | `uploads/node/news/` |
+| `uploads/pages/` of the 6.2 module `pages` | `uploads/node/docs/` |
 | `uploads/<type>/` of any other type | `uploads/node/<type>/` |
 
+On a site updated from 6.2 these moves come before the migration of the removed modules in `update.php`, which
+changes the database alone: it moves, copies and renames no file. It turns a direct address of a moved file into an
+`[attach]` of the type with the name unchanged, and where a resource of `files` or `links` names a path Node refuses
+it stores a safe spelling and its report names the file to rename to it.
+
 No folder of `uploads/` carries a guard file any more, and the upload service creates a missing folder of its owner
-on the first write. No stored text and no setting carries the folder: texts reach their files through `op=attach`
+on the first write. No stored text and no setting carries the folder: texts reach their files through `go=file`
 and `op=asset` by name, and the default folder of the uploads screen (`dir` in `config/uploads.php`) names a type,
 not a path.
 
@@ -107,9 +113,13 @@ README.md, "Document Root and Web Server". The installer records the mode it fou
 
 No upload lies in the document root. An address `uploads/<folder>/<name>` reaches `index.php`, whose light path
 serves a file of a public folder (avatars, `presentation`, `all`, `voting`, `archive`, the forum and the account)
-before the core boots and refuses every other folder; the files of a Node type leave only through `op=attach` and
-`op=asset`. nginx reads no `.htaccess`: the release ships `nginx.conf.example`, whose `server` block carries the root
-on `public/`, the prefix `/uploads/` for the front controller and the refusals of `public/.htaccess`.
+before the core boots and answers 410 for every other folder and every missing file; the files of a Node type leave
+only through `go=file` and `op=asset`. nginx reads no `.htaccess`: the release ships `nginx.conf.example`, whose
+`server` block carries the root on `public/`, the prefix `/uploads/` for the front controller, a path after a script
+sent to that script and the refusals of `public/.htaccess`.
+
+The site answers only at its folder and its scripts. A path after a script (`/index.php/…`) answers 301 to that
+script with the same query, and any other path, an old `*.html` address included, gets the 404 page.
 
 Every `.htaccess` outside `public/` but the one of the project, and every guard `index.html` outside it, are gone:
 a folder outside the document root needs none.

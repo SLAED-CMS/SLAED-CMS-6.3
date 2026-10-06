@@ -4,10 +4,10 @@ Work plan for the two items the production log audit of 2026-08-21 left open. Ne
 that day: the site was down because the PHP-FPM backend had stopped and nginx answered every dynamic request with
 502. Both items were found while reading the logs the outage made someone open.
 
-Status: planned, nothing implemented. The two items are independent; their order is kept in
-`docs/ROADMAP-2026.md`. Item 1 lands after batch 4 of 0-PRIVATE-DATA-2026.md, whose `nginx.conf.example` it extends.
-Neither needs the code of the release production runs. Update this line as they land; the step that lands the second
-item moves the lasting part into `docs/VERSIONS.md` and deletes this file.
+Status: item 1 done 2026-10-06 (step 7 of the roadmap), with the owner's change of its first rule recorded below;
+the stand's `.osp/nginx/slaed.loc.conf` carries the same location of a path after a script. Item 2 open. The two items are independent; their order is kept in `docs/ROADMAP-2026.md`. Neither needs the code of
+the release production runs. Update this line as they land; the step that lands the second item moves the lasting
+part into `docs/VERSIONS.md` and deletes this file.
 
 No line numbers for this tree anywhere in this document on purpose: every reference names the function, the file or
 the constant it points at.
@@ -48,25 +48,33 @@ or a server block, so Apache, nginx and LiteSpeed behave the same. It is a finit
 engine. Node keeps `getNodeLegacyUrl()` for the old ops and ids of a migrated type; this layer covers what never
 reaches a module.
 
-- **`.html` answers 410.** Any request for a `*.html` path that reaches PHP answers 410 Gone. No address of this
-  tree ends in `.html`, and a real `.html` file (`error.html`, the pages of `demo/`) is served by the server before
-  PHP is asked. No table of the old scheme is built: a crawler drops a 410 sooner than a 404, which is the whole
-  gain left to win. Apache sends a missing path to PHP through the `!-f` rewrite already; nginx answers its own 404
-  today, so `nginx.conf.example` of 0-PRIVATE-DATA-2026.md batch 4 gains the fallback to `index.php` for a missing
-  `*.html`; every address under `uploads/` reaches `index.php` there already, through the location of the light path.
-- **The script segment is normalised.** A request whose path carries anything after `index.php` answers 301 to the
-  same script with the same query string. One rule covers `/index.php/index.php` and `/index.php/` alike. It
-  replaces the guard at the top of `core/security.php` that forces `$_GET['error'] = 404` for every `PATH_INFO`
-  request today.
+- **A path that is no address answers 404.** Decided by the owner 2026-10-06, in place of a 410 for `*.html`: 8.0
+  has no HTML pages, so `.html` is no special case. The site answers only at its folder and its scripts; any other
+  path that reaches `index.php` — an old `*.html` address, a stray path, a missing file of a theme that nginx sent on
+  — sets error 404 and gets the standard page through `setError()`. Before this the router read only the query, so
+  `/news.html` rendered the start page with 200. A real `.html` file (`error.html`, the pages of `demo/`) is served
+  by the server before PHP is asked, and a status an error document brings in `?error=` is kept. No table of the old
+  scheme is built. Apache sends a missing path to PHP through the `!-f` rewrite and nginx through `location /`, so
+  no `*.html` fallback is needed in `nginx.conf.example`.
+- **The script segment is normalised.** A request whose path carries anything after the script that runs answers
+  301 to that script with the same query string, or to the folder when the script is `index.php` and the query is
+  empty. One rule covers `/index.php/index.php`, `/index.php/` and `/admin.php/x` alike, together with the bare
+  `/index.php`, and replaces the guard at the top of `core/security.php` that forced `$_GET['error'] = 404` for every
+  `PATH_INFO` request. The target is built from the script name, never from the path of the request, which closes
+  an open redirect of the old bare rule (`//other.host/index.php` sent `Location: //other.host/`). nginx answers a
+  path after a script with its own 404, whose `error_page` keeps that status over the 301 of PHP, so
+  `nginx.conf.example` gains `location ~ ^(.+?\.php)/` that rewrites the path to the script itself.
 - **Retired files answer 410.** Every refusal of the light path of 0-PRIVATE-DATA-2026.md batch 2 answers 410
   instead of 404: a missing file under `uploads/`, and the direct address of a file of a closed owner. No record maps
   an old address to a route (decided 2026-10-05): 8.0 is installed from scratch, and `update.php` updates the
   database only.
 
-Tests: a `.html` path answers 410 and a physical `.html` file is not touched; `/index.php/index.php?name=sitemap`
-answers 301 to `/index.php?name=sitemap`; a missing file under `uploads/` and a file of a closed owner answer 410 and
-an existing public upload is served; an address of this tree answers as before; a static test finds the `*.html`
-fallback and the location of the light path in `nginx.conf.example`.
+Tests: a `.html` path and a stray path answer the 404 page and a physical `.html` file is not touched;
+`/index.php/index.php?name=sitemap` answers 301 to `/index.php?name=sitemap`, `/index.php/` and `/index.php` to `/`,
+`/admin.php/x` to `/admin.php`, `//evil.example/index.php` answers 404 without a `Location`; a missing file under
+`uploads/` and a file of a closed owner answer 410 and an existing public upload is served; an address of this tree
+answers as before (`aRetiredAddressIsNotFoundOrMoved` of `NodeRouteTest`, `PublicTreeTest`); a static test finds the
+location of the light path and the one of a path after a script in `nginx.conf.example` (`NginxConfigTest`).
 
 ## Item 2 — `addFile()` guesses whether it got a path or data
 

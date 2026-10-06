@@ -124,7 +124,7 @@ final class NodeRouteTest extends TestCase
         $this->assertStringContainsString("\$poster = (string)(\$view['assets']['poster'][0]['href'] ?? '');", self::getBody('modules/node/index.php', 'getNodeAssetView'));
     }
 
-    # The editor attachment answers its own name of an accessible material alone, through the controlled private answer, and nothing crafted
+    # The file route answers the attachment of an accessible material by its own name alone, through the controlled private answer, and nothing crafted
     #[Test]
     public function theAttachmentAnswersOnlyItsOwnName(): void
     {
@@ -132,11 +132,13 @@ final class NodeRouteTest extends TestCase
         $this->assertSame([200, 'image/png', 'private, no-cache, must-revalidate, no-transform', 70], $run['file']);
         $this->assertSame([200, 0], $run['head']);
         $this->assertSame(200, $run['thumb']);
-        $this->assertSame(array_fill(0, 14, 404), $run['refused'],
-            'A name of no text, a crafted key, an extra, a mixed or a wrong flag, a closed material, a foreign type, a repeated or an unknown key is served');
+        $this->assertSame(array_fill(0, 20, 404), $run['refused'],
+            'A name of no text, a crafted key, an extra, a mixed or a wrong flag, a closed material, a foreign owner, a repeated or an unknown key is served');
         $this->assertSame(200, $run['coded'], 'A percent-encoded key is not the same key as its plain form');
-        $this->assertSame(404, $run['direct'], 'The upload directory of the type is open to direct access, the light path served it');
+        $this->assertSame(410, $run['direct'], 'The upload directory of the type is open to direct access, the light path served it');
         $this->assertFalse($run['climb'], 'A key climbing out of the directory served a file');
+        $this->assertSame(405, $run['post'], 'The file route answered a write method');
+        $this->assertSame(404, $run['retired'], 'The retired attach operation still serves a file');
     }
 
     # The resources: an image is shown without counting, a download is counted before a whole body or a range from zero only, an external visit before its redirect
@@ -153,7 +155,7 @@ final class NodeRouteTest extends TestCase
         $this->assertSame([302, 'https://example.com/tool', 1], $run['link']);
         $this->assertSame([404, '', 0], $run['shown'], 'An external address of an image role became a redirect of the site');
         $this->assertSame([404, 404], $run['foreign']);
-        $this->assertSame(404, $run['direct'], 'The light path served a file of a private folder');
+        $this->assertSame(410, $run['direct'], 'The light path served a file of a private folder');
     }
 
     # A report needs POST and the token, is stored once with its reporter, and a second report of the same visitor within a minute is refused
@@ -519,6 +521,16 @@ final class NodeRouteTest extends TestCase
     public function aPagePastTheEndIsNotFoundBeforeAnyRedirect(): void
     {
         $this->assertSame([404, '', 301, 'index.php?name=news&num=2'], $this->getMode('seo')['bound'], 'The redirect of the default sort leads to a page that does not exist');
+    }
+
+    # A path that is no address of the site finds the error page, a path after a script goes 301 to that script, and an address of the site answers as before
+    #[Test]
+    public function aRetiredAddressIsNotFoundOrMoved(): void
+    {
+        $run = $this->getMode('seo');
+        $this->assertSame([404, true, 404, 404, [301, '/index.php?name=sitemap'], [301, '/'], [301, '/'], [301, '/admin.php'], [404, ''], [404, ''], 403, 410], $run['retired'],
+            'A retired address renders a page, redirects elsewhere or a refusal of the light path is not gone');
+        $this->assertSame([200, 200, 200, 200, true], $run['kept'], 'An address of the site or a file of the document root no longer answers');
     }
 
     # A name without a feed is not found, no name takes the start feed, the alternate link names the feed of the page and a description links absolutely

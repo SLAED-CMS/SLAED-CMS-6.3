@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="ru" data-theme="auto">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Вкладки &middot; Шапка модуля Node — стенд SLAED CMS</title>
+  <link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../templates/lite/assets/css/base.css">
+  <link rel="stylesheet" href="../templates/lite/assets/css/theme.css">
+  <!-- The stand is served without Cache-Control; its sheet and script are stamped so an edit is seen at once -->
+  <script>document.write('<link rel="stylesheet" href="assets/demo.css?v=' + Date.now() + '">');</script>
+  <style>
+    .v-ico { width: var(--sl-btn-height); height: var(--sl-btn-height); }
+    .v-ico .bi { font-size: var(--sl-size-icon-xs); }
+
+    /* Вкладки: categories as tabs with their counts, the sort as a popover menu, a search that opens from its icon */
+    .v4 { margin-bottom: var(--sl-space-7); }
+    .v4-top { display: flex; align-items: center; gap: var(--sl-space-4); margin-bottom: var(--sl-space-4); }
+    .v4-top .sl-title { margin: 0; }
+    .v4-acts { display: inline-flex; align-items: center; gap: var(--sl-space-3); margin-left: auto; }
+    .v4-acts .sl-but { margin: 0; }
+    .v4-line { display: flex; align-items: flex-end; gap: var(--sl-space-4); border-bottom: 1px solid var(--sl-border-strong); }
+    .v4-tabs { flex: 1 1 auto; min-width: 0; padding: 0; border-bottom: 0; }
+    .v4-tab { display: inline-flex; align-items: center; gap: var(--sl-space-3); }
+    .v4-tab > .bi { color: var(--sl-cat-tone); }
+    .v4-num { height: var(--sl-chip-height, var(--sl-size-chip)); font-size: var(--sl-font-micro); }
+    .v4-tab[aria-current="true"] { background: var(--sl-bg); border-bottom: 1px solid var(--sl-bg); color: var(--sl-text-strong); box-shadow: inset 0 var(--sl-space-1) 0 var(--sl-cat-tone); }
+    .v4-tab[aria-current="true"] .v4-num { background: var(--sl-chip-bg); color: var(--sl-cat-tone); }
+    .v4-tools { display: flex; align-items: center; gap: var(--sl-space-3); padding-bottom: var(--sl-space-3); }
+    .v4-find { position: relative; display: inline-flex; align-items: center; }
+    .v4-find > .bi { position: absolute; left: var(--sl-space-4); color: var(--sl-text-muted); pointer-events: none; }
+    .v4-find input { box-sizing: border-box; width: var(--sl-btn-height); height: var(--sl-btn-height); padding: 0 0 0 var(--sl-space-8); border: 1px solid var(--sl-border); border-radius: var(--sl-radius-pill); background: var(--sl-bg); color: var(--sl-text); font: inherit; cursor: pointer; transition: width var(--sl-time-slow) var(--sl-ease-in-out); }
+    .v4-find input:focus, .v4-find input:not(:placeholder-shown) { width: 220px; padding-right: var(--sl-space-4); outline: 0; border-color: var(--sl-primary); box-shadow: var(--sl-shadow-focus); cursor: text; }
+    .v4-sortbtn { margin: 0; }
+    .v4-pop { inset: auto; position-area: bottom span-left; min-width: 220px; margin: var(--sl-space-2) 0 0; padding: var(--sl-space-2); border: 1px solid var(--sl-border-strong); border-radius: var(--sl-radius-2); background: var(--sl-bg); box-shadow: var(--sl-shadow-float); color: var(--sl-text); }
+    .v4-pop:popover-open { display: grid; }
+    .v4-cap { margin: 0; padding: var(--sl-space-2) var(--sl-space-4); color: var(--sl-text-subtle); font-size: var(--sl-font-micro); letter-spacing: var(--sl-track-wide); text-transform: uppercase; }
+    .v4-item { display: flex; align-items: center; gap: var(--sl-space-3); padding: var(--sl-space-3) var(--sl-space-4); border: 0; border-radius: var(--sl-radius-1); background: transparent; color: var(--sl-text); font: inherit; text-align: left; cursor: pointer; }
+    .v4-item:hover { background: var(--sl-bg-subtle); }
+    .v4-check { margin-left: auto; color: var(--sl-primary); visibility: hidden; }
+    .v4-item[aria-pressed="true"] { color: var(--sl-primary); }
+    .v4-item[aria-pressed="true"] .v4-check { visibility: visible; }
+    .v4-dirrow { display: flex; align-items: center; justify-content: space-between; margin-top: var(--sl-space-2); padding: var(--sl-space-3) var(--sl-space-4) var(--sl-space-2); border-top: 1px solid var(--sl-border-subtle); color: var(--sl-text-muted); font-size: var(--sl-font-small); }
+    .v4-found { margin: var(--sl-space-3) 0 0; color: var(--sl-text-muted); font-size: var(--sl-font-small); }
+    .v4-found:empty { display: none; }
+    @media (max-width: 768px) { .v4-line { flex-wrap: wrap; } .v4-tools { margin-left: auto; } }
+  </style>
+</head>
+<body class="sl-summer" id="top">
+<main class="d-page" data-demo-page data-demo-band="Новости">
+<header class="v-nh v4" data-nh data-cat="all" data-sort="published" data-dir="desc" aria-label="Раздел «Новости»">
+  <div class="v4-top"><h1 class="sl-title">Новости</h1><span class="v4-acts"><a class="sl-but" href="../index.php?name=news&amp;op=add" title="Предложить новость"><i class="bi bi-plus-lg" aria-hidden="true"></i>Добавить</a><a class="sl-but-mini v-ico" href="../index.php?go=rss&amp;name=news" title="RSS раздела" aria-label="RSS раздела"><i class="bi bi-rss" aria-hidden="true"></i></a></span></div>
+  <div class="v4-line">
+    <ul class="sl-tabs-nav v4-tabs d-nh-scroll" aria-label="Категории"><li class="sl-tabs-item"><a class="sl-tabs-link v4-tab sl-cat-tone-0" href="../index.php?name=news" data-nh-cat="all" data-name="Все материалы" data-count="97"><i class="bi bi-collection" aria-hidden="true"></i>Все<span class="sl-chip v4-num">97</span></a></li><li class="sl-tabs-item"><a class="sl-tabs-link v4-tab sl-cat-tone-1" href="../index.php?name=news&amp;cat=2" data-nh-cat="2" data-name="Наши новости" data-count="69"><i class="bi bi-newspaper" aria-hidden="true"></i>Наши новости<span class="sl-chip v4-num">69</span></a></li><li class="sl-tabs-item"><a class="sl-tabs-link v4-tab sl-cat-tone-2" href="../index.php?name=news&amp;cat=1" data-nh-cat="1" data-name="Интернет" data-count="19"><i class="bi bi-globe" aria-hidden="true"></i>Интернет<span class="sl-chip v4-num">19</span></a></li><li class="sl-tabs-item"><a class="sl-tabs-link v4-tab sl-cat-tone-3" href="../index.php?name=news&amp;cat=3" data-nh-cat="3" data-name="Программы" data-count="9"><i class="bi bi-pc-display-horizontal" aria-hidden="true"></i>Программы<span class="sl-chip v4-num">9</span></a></li></ul>
+    <div class="v4-tools">
+      <label class="v4-find"><i class="bi bi-search" aria-hidden="true"></i><input type="search" placeholder="Поиск" aria-label="Поиск в разделе" data-nh-find></label>
+      <button type="button" class="sl-but v4-sortbtn" popovertarget="nh4-sort" style="anchor-name: --nh4"><i class="bi bi-sort-down" aria-hidden="true"></i><span data-nh-sortname>Новые</span><i class="bi bi-chevron-down" aria-hidden="true"></i></button>
+      <div id="nh4-sort" class="v4-pop" popover style="position-anchor: --nh4">
+        <p class="v4-cap">Сортировка</p><button type="button" class="v4-item" data-nh-sort="published" data-name="Новые" data-dir="desc"><i class="bi bi-clock-history" aria-hidden="true"></i>Новые<i class="bi bi-check2 v4-check" aria-hidden="true"></i></button><button type="button" class="v4-item" data-nh-sort="rating" data-name="Лучшие" data-dir="desc"><i class="bi bi-star" aria-hidden="true"></i>Лучшие<i class="bi bi-check2 v4-check" aria-hidden="true"></i></button><button type="button" class="v4-item" data-nh-sort="views" data-name="Популярные" data-dir="desc"><i class="bi bi-eye" aria-hidden="true"></i>Популярные<i class="bi bi-check2 v4-check" aria-hidden="true"></i></button><button type="button" class="v4-item" data-nh-sort="updated" data-name="Обновлённые" data-dir="desc"><i class="bi bi-arrow-repeat" aria-hidden="true"></i>Обновлённые<i class="bi bi-check2 v4-check" aria-hidden="true"></i></button><button type="button" class="v4-item" data-nh-sort="title" data-name="По названию" data-dir="asc"><i class="bi bi-sort-alpha-down" aria-hidden="true"></i>По названию<i class="bi bi-check2 v4-check" aria-hidden="true"></i></button>
+        <div class="v4-dirrow"><span>Порядок</span><button type="button" class="d-nh-dir" data-nh-dir title="По убыванию" aria-label="По убыванию"><i class="bi bi-sort-down d-nh-down" aria-hidden="true"></i><i class="bi bi-sort-up d-nh-up" aria-hidden="true"></i></button></div>
+      </div>
+    </div>
+  </div>
+  <p class="v4-found" data-nh-found aria-live="polite"></p>
+</header>
+<article id="node-3918" class="sl-post sl-card">
+  <h2 class="sl-title"><a href="../index.php?name=news&amp;op=view&amp;id=3918" title="SLAED CMS возвращается - мощнее, быстрее, безопаснее">SLAED CMS возвращается - мощнее, быстрее, безопаснее</a></h2>
+  <div class="sl-meta">
+    <ul class="sl-pull-right">
+      <li><a href="../index.php?name=news&amp;op=view&amp;id=3918#comm" title="Комментарии" class="sl-chip sl-card-comment"><i class="bi bi-chat-text" aria-hidden="true"></i> 3</a></li>            <li><span title="Прочитано" class="sl-chip sl-card-reads"><i class="bi bi-eye" aria-hidden="true"></i> 6720</span></li>      <li><span title="Разместил" class="sl-chip sl-chip-info sl-card-post"><a href="../index.php?name=account&amp;op=view&amp;uname=SLAED%20CMS" title="SLAED CMS" class="sl-author"><i class="bi bi-person" aria-hidden="true"></i> SLAED CMS</a></span></li>      <li class="sl-meta-actions"><a href="#node-3918" title="3918" class="sl-but-mini">3918</a></li>    </ul>
+    <ul>
+      <li><time datetime="2025-11-28T22:55:00+01:00" title="Дата" class="sl-chip sl-chip-info sl-card-date"><i class="bi bi-calendar3" aria-hidden="true"></i> 28.11.2025</time></li>      <li><a href="../index.php?name=news&amp;cat=2" title="Наши новости" class="sl-chip sl-card-category"><i class="bi bi-folder" aria-hidden="true"></i> Наши новости</a></li>    </ul>
+  </div>
+  <div class="sl-entry-content">
+    <a href="../index.php?name=news&amp;cat=2" title="Наши новости" class="sl-card-image sl-cat-tone-1"><i class="bi bi-newspaper" aria-hidden="true"></i>
+</a>    <i class="bi bi-image sl-img-placeholder" role="img" aria-label="SLAED CMS возвращается мощнее быстрее безопаснее" title="SLAED CMS возвращается мощнее быстрее безопаснее"></i>
+<div style="text-align:justify;">
+<p><a href="//slaed.net/index.php?name=files&amp;op=view&amp;id=1529" title="SLAED CMS">SLAED CMS</a> переходит на новый этап развития — готовится версия 6.3. Это обновление направлено на повышение безопасности, ускорение работы и совместимость с современными версиями PHP, включая 8.x. Уже выполнена часть технических изменений: переработаны модули, обновлён код ядра, улучшена защита данных и оптимизирована работа админ-панели.</p>
+<p>Версия <a href="//slaed.net/index.php?name=files&amp;op=view&amp;id=1529" title="SLAED CMS">SLAED CMS</a> 6.3 станет более стабильной, быстрой и безопасной, сохраняя привычную структуру системы. Это важный шаг вперёд для всех пользователей платформы и основа дальнейшего обновления проекта.</p>
+<p>Началась масштабная модернизация системы — и мы движемся к релизу версии <strong>6.3</strong>. Она станет самой значимой за всю историю платформы.</p>
+</div>  </div>
+  <div class="sl-meta-foot">
+    <div class="sl-rate-box sl-pull-right"><div id="rep3918" class="sl-rate"><div title="Рейтинг: 5/9 Средняя оценка: 5" class="sl-urating" data-sl-rate="" hx-target="#rep3918" hx-swap="innerHTML transition:true" hx-push-url="false" hx-vals="{&quot;mod&quot;: &quot;node.news&quot;, &quot;id&quot;: &quot;3918&quot;, &quot;typ&quot;: &quot;stars&quot;, &quot;token&quot;: &quot;0876efec6d5bdc1d86ab43b83d818e81d92ff2745a61f53f2e204a17505018ff&quot;}">
+  <a class="sl-star" hx-post="index.php?go=1&amp;op=getRatingView" hx-vals="{&quot;rate&quot;: &quot;1&quot;}" hx-trigger="click" title="1"><i class="bi bi-star-fill" aria-hidden="true"></i></a><a class="sl-star" hx-post="index.php?go=1&amp;op=getRatingView" hx-vals="{&quot;rate&quot;: &quot;2&quot;}" hx-trigger="click" title="2"><i class="bi bi-star-fill" aria-hidden="true"></i></a><a class="sl-star" hx-post="index.php?go=1&amp;op=getRatingView" hx-vals="{&quot;rate&quot;: &quot;3&quot;}" hx-trigger="click" title="3"><i class="bi bi-star-fill" aria-hidden="true"></i></a><a class="sl-star" hx-post="index.php?go=1&amp;op=getRatingView" hx-vals="{&quot;rate&quot;: &quot;4&quot;}" hx-trigger="click" title="4"><i class="bi bi-star-fill" aria-hidden="true"></i></a><a class="sl-star" hx-post="index.php?go=1&amp;op=getRatingView" hx-vals="{&quot;rate&quot;: &quot;5&quot;}" hx-trigger="click" title="5"><i class="bi bi-star-fill" aria-hidden="true"></i></a></div>
+<span title="Голосов" class="sl-rate-num sl-rate-is">9</span>
+</div>
+</div>    <a href="../index.php?name=news&amp;op=view&amp;id=3918" title="SLAED CMS возвращается - мощнее, быстрее, безопаснее" class="sl-but">Подробнее</a>  </div></article>
+<article id="node-3916" class="sl-post sl-card">
+  <h2 class="sl-title"><a href="../index.php?name=news&amp;op=view&amp;id=3916" title="Производительность SLAED CMS относительно новых версий PHP">Производительность SLAED CMS относительно новых версий PHP</a></h2>
+  <div class="sl-meta">
+    <ul class="sl-pull-right">
+      <li><a href="../index.php?name=news&amp;op=view&amp;id=3916#comm" title="Комментарии" class="sl-chip sl-card-comment"><i class="bi bi-chat-text" aria-hidden="true"></i> 6</a></li>            <li><span title="Прочитано" class="sl-chip sl-card-reads"><i class="bi bi-eye" aria-hidden="true"></i> 137287</span></li>      <li><span title="Разместил" class="sl-chip sl-chip-info sl-card-post"><a href="../index.php?name=account&amp;op=view&amp;uname=SLAED%20CMS" title="SLAED CMS" class="sl-author"><i class="bi bi-person" aria-hidden="true"></i> SLAED CMS</a></span></li>      <li class="sl-meta-actions"><a href="#node-3916" title="3916" class="sl-but-mini">3916</a></li>    </ul>
+    <ul>
+      <li><time datetime="2018-01-01T19:30:00+01:00" title="Дата" class="sl-chip sl-chip-info sl-card-date"><i class="bi bi-calendar3" aria-hidden="true"></i> 01.01.2018</time></li>      <li><a href="../index.php?name=news&amp;cat=2" title="Наши новости" class="sl-chip sl-card-category"><i class="bi bi-folder" aria-hidden="true"></i> Наши новости</a></li>    </ul>
+  </div>
+  <div class="sl-entry-content">
+    <a href="../index.php?name=news&amp;cat=2" title="Наши новости" class="sl-card-image sl-cat-tone-1"><i class="bi bi-newspaper" aria-hidden="true"></i>
+</a>    <p><i class="bi bi-image sl-img-placeholder" role="img" aria-label="Производительность CMS относительно новых и старых версий PHP" title="Производительность CMS относительно новых и старых версий PHP"></i>
+ </p><div style="text-align:justify;"><p>В последнее время выход новых версии PHP и количество произведённых в нем модификаций относительно функционала, а главное оптимизации скорости работы не могут не радовать. Казалось бы всё хорошо, в верном направлении «идём товарищи!». Но реакция не всегда позитивная, есть как не удивительно и отрицательные стороны, этого, казалось бы положительного события. Часто веб-мастерам и владельцам сайтов переход на новую версию PHP создаёт настоящую головную боль,  в виду того что обновление до актуальной версии не всегда возможно, по причине устаревшего функционала используемых ими CMS и скриптов.</p>
+</div><p></p>  </div>
+  <div class="sl-meta-foot">
+    <div class="sl-rate-box sl-pull-right"><div id="rep3916" class="sl-rate"><div title="Рейтинг: 4.72/18 Средняя оценка: 4.72" class="sl-urating" data-sl-rate="" hx-target="#rep3916" hx-swap="innerHTML transition:true" hx-push-url="false" hx-vals="{&quot;mod&quot;: &quot;node.news&quot;, &quot;id&quot;: &quot;3916&quot;, &quot;typ&quot;: &quot;stars&quot;, &quot;token&quot;: &quot;0876efec6d5bdc1d86ab43b83d818e81d92ff2745a61f53f2e204a17505018ff&quot;}">
+  <a class="sl-star" hx-post="index.php?go=1&amp;op=getRatingView" hx-vals="{&quot;rate&quot;: &quot;1&quot;}" hx-trigger="click" title="1"><i class="bi bi-star-fill" aria-hidden="true"></i></a><a class="sl-star" hx-post="index.php?go=1&amp;op=getRatingView" hx-vals="{&quot;rate&quot;: &quot;2&quot;}" hx-trigger="click" title="2"><i class="bi bi-star-fill" aria-hidden="true"></i></a><a class="sl-star" hx-post="index.php?go=1&amp;op=getRatingView" hx-vals="{&quot;rate&quot;: &quot;3&quot;}" hx-trigger="click" title="3"><i class="bi bi-star-fill" aria-hidden="true"></i></a><a class="sl-star" hx-post="index.php?go=1&amp;op=getRatingView" hx-vals="{&quot;rate&quot;: &quot;4&quot;}" hx-trigger="click" title="4"><i class="bi bi-star-fill" aria-hidden="true"></i></a><a class="sl-star" hx-post="index.php?go=1&amp;op=getRatingView" hx-vals="{&quot;rate&quot;: &quot;5&quot;}" hx-trigger="click" title="5"><i class="bi bi-star-half" aria-hidden="true"></i></a></div>
+<span title="Голосов" class="sl-rate-num sl-rate-is">18</span>
+</div>
+</div>    <a href="../index.php?name=news&amp;op=view&amp;id=3916" title="Производительность SLAED CMS относительно новых версий PHP" class="sl-but">Подробнее</a>  </div></article>
+<article id="node-3915" class="sl-post sl-card">
+  <h2 class="sl-title"><a href="../index.php?name=news&amp;op=view&amp;id=3915" title="Бесплатная система управления содержимым SLAED CMS 6.2 Pro">Бесплатная система управления содержимым SLAED CMS 6.2 Pro</a></h2>
+  <div class="sl-meta">
+    <ul class="sl-pull-right">
+      <li><a href="../index.php?name=news&amp;op=view&amp;id=3915#comm" title="Комментарии" class="sl-chip sl-card-comment"><i class="bi bi-chat-text" aria-hidden="true"></i> 5</a></li>            <li><span title="Прочитано" class="sl-chip sl-card-reads"><i class="bi bi-eye" aria-hidden="true"></i> 312500</span></li>      <li><span title="Разместил" class="sl-chip sl-chip-info sl-card-post"><a href="../index.php?name=account&amp;op=view&amp;uname=SLAED%20CMS" title="SLAED CMS" class="sl-author"><i class="bi bi-person" aria-hidden="true"></i> SLAED CMS</a></span></li>      <li class="sl-meta-actions"><a href="#node-3915" title="3915" class="sl-but-mini">3915</a></li>    </ul>
+    <ul>
+      <li><time datetime="2017-04-28T15:00:00+02:00" title="Дата" class="sl-chip sl-chip-info sl-card-date"><i class="bi bi-calendar3" aria-hidden="true"></i> 28.04.2017</time></li>      <li><a href="../index.php?name=news&amp;cat=2" title="Наши новости" class="sl-chip sl-card-category"><i class="bi bi-folder" aria-hidden="true"></i> Наши новости</a></li>    </ul>
+  </div>
+  <div class="sl-entry-content">
+    <a href="../index.php?name=news&amp;cat=2" title="Наши новости" class="sl-card-image sl-cat-tone-1"><i class="bi bi-newspaper" aria-hidden="true"></i>
+</a>    <p><i class="bi bi-image sl-img-placeholder" role="img" aria-label="Бесплатная система управления содержимым SLAED CMS 6.2 Pro" title="Бесплатная система управления содержимым SLAED CMS 6.2 Pro"></i>
+ </p><div style="text-align:justify;"><p>Три месяца назад мы объявили о переходе к Open Source модели распространения <a href="//slaed.net/index.php?name=files&amp;op=view&amp;id=1529" title="SLAED CMS">SLAED CMS</a> Pro и выложили бесплатную версию 6.1 (позже дополнили до 6.1.1). За это время версию 6.1 скачали 486 раз и предложили десятки свежих идей <a href="https://slaed.net/index.php?name=forum&amp;cat=95">в специальной ветке форума</a>.  </p>
+<p>Команда SLAED благодарна всем неравнодушным пользователям системы. Мы реализовали многие предложения и создали новую версию системы − <a href="//slaed.net/index.php?name=files&amp;op=view&amp;id=1529" title="SLAED CMS">SLAED CMS</a> 6.2 Pro.   </p>
+<p>Версия 6.2. имеет 30 изменений относительно 6.1.1. В новой версии <a href="//slaed.net/index.php?name=files&amp;op=view&amp;id=1529" title="SLAED CMS">SLAED CMS</a> реализована интеграция с соцсетями, код адаптирован под PHP 7+, улучшено кэширование страниц, добавлена sitemap.xml, система почищена от лишнего.  </p>
+<p><em>А что дальше!?</em>  </p>
+<p>Дальше мы начнём работать над новой версией <a href="//slaed.net/index.php?name=files&amp;op=view&amp;id=1529" title="SLAED CMS">SLAED CMS</a>, учитывая предложения пользователей.</p>
+</div><p></p>  </div>
+  <div class="sl-meta-foot">
+    <div class="sl-rate-box sl-pull-right"><div id="rep3915" class="sl-rate"><div title="Рейтинг: 4.9/20 Средняя оценка: 4.9" class="sl-urating" data-sl-rate="" hx-target="#rep3915" hx-swap="innerHTML transition:true" hx-push-url="false" hx-vals="{&quot;mod&quot;: &quot;node.news&quot;, &quot;id&quot;: &quot;3915&quot;, &quot;typ&quot;: &quot;stars&quot;, &quot;token&quot;: &quot;0876efec6d5bdc1d86ab43b83d818e81d92ff2745a61f53f2e204a17505018ff&quot;}">
+  <a class="sl-star" hx-post="index.php?go=1&amp;op=getRatingView" hx-vals="{&quot;rate&quot;: &quot;1&quot;}" hx-trigger="click" title="1"><i class="bi bi-star-fill" aria-hidden="true"></i></a><a class="sl-star" hx-post="index.php?go=1&amp;op=getRatingView" hx-vals="{&quot;rate&quot;: &quot;2&quot;}" hx-trigger="click" title="2"><i class="bi bi-star-fill" aria-hidden="true"></i></a><a class="sl-star" hx-post="index.php?go=1&amp;op=getRatingView" hx-vals="{&quot;rate&quot;: &quot;3&quot;}" hx-trigger="click" title="3"><i class="bi bi-star-fill" aria-hidden="true"></i></a><a class="sl-star" hx-post="index.php?go=1&amp;op=getRatingView" hx-vals="{&quot;rate&quot;: &quot;4&quot;}" hx-trigger="click" title="4"><i class="bi bi-star-fill" aria-hidden="true"></i></a><a class="sl-star" hx-post="index.php?go=1&amp;op=getRatingView" hx-vals="{&quot;rate&quot;: &quot;5&quot;}" hx-trigger="click" title="5"><i class="bi bi-star-fill" aria-hidden="true"></i></a></div>
+<span title="Голосов" class="sl-rate-num sl-rate-is">20</span>
+</div>
+</div>    <a href="../index.php?name=news&amp;op=view&amp;id=3915" title="Бесплатная система управления содержимым SLAED CMS 6.2 Pro" class="sl-but">Подробнее</a>  </div></article>
+<p class="sl-pager-info">Страница <b>1 из 10</b>. Всего: <b>97</b></p>
+<div class="sl-pager">
+  <div class="sl-pager-main">
+    <div class="sl-pager-pages">  <span title="1" class="sl-but-mini sl-is-active">1</span>
+   <a href="../index.php?name=news&amp;num=2" title="2" class="sl-but-mini">2</a>
+   <a href="../index.php?name=news&amp;num=3" title="3" class="sl-but-mini">3</a>
+   <a href="../index.php?name=news&amp;num=4" title="4" class="sl-but-mini">4</a>
+   <a href="../index.php?name=news&amp;num=5" title="5" class="sl-but-mini">5</a>
+   <a href="../index.php?name=news&amp;num=6" title="6" class="sl-but-mini">6</a>
+   <a href="../index.php?name=news&amp;num=7" title="7" class="sl-but-mini">7</a>
+   <a href="../index.php?name=news&amp;num=8" title="8" class="sl-but-mini">8</a>
+ <span title="…" class="sl-but-mini sl-is-muted">…</span>
+  <a href="../index.php?name=news&amp;num=10" title="10" class="sl-but-mini">10</a>
+ </div>
+    <div class="sl-pager-nextprev">
+      <b class="sl-pager-prev">  <span title="Назад" class="sl-but-mini sl-is-muted"><i class="bi bi-chevron-left" aria-hidden="true"></i></span>
+</b>
+      <b class="sl-pager-next">  <a href="../index.php?name=news&amp;num=2" title="Вперед" class="sl-but-mini"><i class="bi bi-chevron-right" aria-hidden="true"></i></a>
+</b>
+    </div>
+  </div>
+</div>
+</main>
+<script>document.write('<script src="assets/demo.js?v=' + Date.now() + '"><\/script>');</script>
+</body>
+</html>

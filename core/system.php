@@ -3452,7 +3452,7 @@ function getImgText(string $text, string $type = '', bool $check = true, string 
     $mod = filterVar(($mod !== '') ? $mod : (string)($conf['name'] ?? ''));
     if (preg_match('#\[attach=(.*?)\s(.*?)\]#i', $text, $match)) {
         $fname = basename(trim($match[1]));
-        $img = getUploadUrl(getUploadFolder($mod).'/'.((!$type) ? 'thumb/' : '').$fname);
+        $img = getUploadUrl(getUploadFolder($mod).'/'.((!$type && stripos($match[0], ' size=full]') === false) ? 'thumb/' : '').$fname);
     } elseif (preg_match('#\[img=[a-zA-Z]+\](.*?)\[/img\]#i', $text, $match)) {
         $img = trim($match[1]);
     } elseif (preg_match('#\[img\](.*?)\[/img\]#i', $text, $match)) {
@@ -4455,6 +4455,74 @@ function getUploadService(): Upload {
     return $upl;
 }
 
+# Build the delivery decision of the request once: Node grants through the reader of its material, a public folder has no route, and each closed owner adds its adapter here
+function getFileService(): FileAccess {
+    static $fac = null;
+    if ($fac !== null) return $fac;
+    require_once BASE_DIR.'/core/classes/access.php';
+    $kind = static function (string $mod, int $id): ?NodeType {
+        global $db;
+        static $memo = [];
+        if ($mod !== '' || $id < 1) return getNodeTypeMap()[$mod] ?? null;
+        if (!array_key_exists($id, $memo)) {
+            $tid = intval($db->getSqlRow($db->getSqlQuery('SELECT tid FROM '.PREFIX_DB.'_nodes WHERE id = :id', ['id' => $id]))['tid'] ?? 0);
+            $memo[$id] = array_values(array_filter(getNodeTypeMap(), fn(NodeType $one): bool => $one->id === $tid))[0] ?? null;
+        }
+        return $memo[$id];
+    };
+    $node = static function (string $mod, int $id, string $key) use ($kind): bool {
+        global $com;
+        $type = $kind($mod, $id);
+        $jour = getConfigJournal();
+        if ($type === null || ($jour && ($jour['why'] === 'journal' || in_array($type->name, $jour['types'], true)))) return false;
+        return getNodeWriter($type)->getNodeFile($type, $id, $key, false, $com) !== '';
+    };
+    $room = fn(string $mod, int $id): string => ($mod !== '') ? getUploadFolder($mod, true) : (($type = $kind('', $id)) ? getUploadFolder($type->name, true) : '');
+    return $fac = new FileAccess([
+        'node' => ['folder' => $room, 'grant' => $node],
+        'public' => ['folder' => fn(string $mod, int $id): string => getUploadFolder($mod)],
+    ]);
+}
+
+# The query of one URL checked against a key => value regex allowlist: an unknown, a repeated, a malformed or an empty key refuses the whole query with null
+# Keys and values are compared decoded, so a percent-encoded form is the same key and cannot slip past as a second one
+function getStrictQuery(string $url, array $allow): ?array {
+    $cut = strpos($url, '?');
+    $query = ($cut === false) ? '' : substr($url, $cut + 1);
+    $vars = [];
+    foreach (explode('&', $query) as $pair) {
+        if ($pair === '') continue;
+        $eq = strpos($pair, '=');
+        $key = urldecode(($eq === false) ? $pair : substr($pair, 0, $eq));
+        if (!isset($allow[$key]) || isset($vars[$key])) return null;
+        $val = ($eq === false) ? '' : urldecode(substr($pair, $eq + 1));
+        if (!preg_match($allow[$key], $val)) return null;
+        $vars[$key] = $val;
+    }
+    return $vars;
+}
+
+# The file route of every owner: the query is exactly an owner with its target or the preview of a Node type, and every refusal is the same not found
+function setFileRoute(): never {
+    $url = (string)($_SERVER['REQUEST_URI'] ?? '');
+    if (!in_array($_SERVER['REQUEST_METHOD'] ?? 'GET', ['GET', 'HEAD'], true)) {
+        header('Allow: GET, HEAD');
+        setError(405);
+    }
+    $base = ['go' => '#^file$#D', 'own' => '#^[a-z]{1,12}$#D', 'key' => '#^.{1,255}$#Ds', 'thumb' => '#^1$#D'];
+    $saved = getStrictQuery($url, $base + ['id' => '#^[1-9][0-9]{0,9}$#D']);
+    $fresh = getStrictQuery($url, $base + ['name' => '#^[a-z][a-z0-9]{0,19}$#D', 'preview' => '#^1$#D']);
+    $id = isset($saved['own'], $saved['id'], $saved['key']) ? (int)$saved['id'] : 0;
+    $view = !$id && isset($fresh['name'], $fresh['preview'], $fresh['key']) && ($fresh['own'] ?? '') === 'node';
+    if (!$id && !$view) setError(404);
+    $ask = $id ? $saved : $fresh;
+    $path = getFileService()->getFilePath($ask['own'], $ask['name'] ?? '', $id, $ask['key'], isset($ask['thumb']));
+    if ($path === '') setError(404);
+    $info = class_exists('finfo') ? new finfo(FILEINFO_MIME_TYPE) : null;
+    $mime = $info ? $info->file($path) : false;
+    getFileStream($path, $ask['key'], is_string($mime) ? $mime : 'application/octet-stream', true, $id ? 'private' : 'none');
+}
+
 # Answer whether the current administrator moderates the files of one upload place: a Node type through its right node-<name> alone, any other module through its own key
 # The mapping of a registered type to its right lives in is_admin_modul(), so this and every other moderator question about a type name agree
 # The key is read from the stored rights of the session and never from the request, so a type name cannot turn into a right, and every upload helper asks this one question
@@ -4531,8 +4599,8 @@ function getEditorFileData(array $one, bool $moder = false, string $mod = ''): a
         'owner' => (string)($one['owner'] ?? ''),
     ];
     $node = $mod !== '' && isset($conf['node']['types'][$mod]);
-    $url = $node ? 'index.php?name='.$mod.'&op=attach&key='.rawurlencode($one['name']).'&preview=1' : $one['url'];
-    $shot = ($one['thumbnail'] === '') ? $url : ($node ? $url.'&thumb=1' : $one['thumbnail']);
+    $url = $node ? getFileService()->getFileUrl('node', $mod, 0, $one['name']) : $one['url'];
+    $shot = ($one['thumbnail'] === '') ? $url : ($node ? getFileService()->getFileUrl('node', $mod, 0, $one['name'], true) : $one['thumbnail']);
     return [
         'file' => $one['name'],
         'path' => $one['path'],

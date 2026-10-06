@@ -334,8 +334,9 @@ function getRouteLists(PDO $pdo): array {
 function getRouteViewRuns(PDO $pdo): array {
     $code = fn(string $who, string $path, string $method = 'GET'): int => getRouteReply($who, $method, $path)['code'];
     $one = getRouteReply('', 'GET', 'index.php?name=news&op=view&id=101');
-    $out = ['view' => [$one['code'], str_contains($one['body'], '<h1 class="sl-title">Alpha</h1>'), str_contains($one['body'], 'op=attach&amp;id=101&amp;key=att-aaaaaaaaaa.png'),
-        str_contains($one['body'], 'op=asset&amp;id=2'), str_contains($one['body'], 'uploads/node/news/')]];
+    $out = ['view' => [$one['code'], str_contains($one['body'], '<h1 class="sl-title">Alpha</h1>'),
+        str_contains($one['body'], 'go=file&amp;own=node&amp;id=101&amp;key=att-aaaaaaaaaa.png'), str_contains($one['body'], 'op=asset&amp;id=2'),
+        str_contains($one['body'], 'uploads/node/news/')]];
     $out['views'] = getRouteViews($pdo, 101, 1);
     getRouteReply('', 'HEAD', 'index.php?name=news&op=view&id=101');
     usleep(500000);
@@ -351,28 +352,31 @@ function getRouteViewRuns(PDO $pdo): array {
     return $out;
 }
 
-# The editor attachment of a stored material: its own name only, the thumb, and every crafted key or parameter refused with the same not found
+# The editor attachment of a stored material on the file route: its own name only, the thumb, and every crafted key or parameter refused with the same not found
 function getRouteAttach(): array {
     $code = fn(string $who, string $path, string $method = 'GET'): int => getRouteReply($who, $method, $path)['code'];
-    $one = getRouteReply('', 'GET', 'index.php?name=news&op=attach&id=101&key=att-aaaaaaaaaa.png');
-    $head = getRouteReply('', 'HEAD', 'index.php?name=news&op=attach&id=101&key=att-aaaaaaaaaa.png');
+    $own = 'index.php?go=file&own=node&id=101&key=att-aaaaaaaaaa.png';
+    $one = getRouteReply('', 'GET', $own);
+    $head = getRouteReply('', 'HEAD', $own);
     return [
         'file' => [$one['code'], $one['head']['content-type'] ?? '', $one['head']['cache-control'] ?? '', strlen($one['body'])],
         'head' => [$head['code'], strlen($head['body'])],
-        'thumb' => $code('', 'index.php?name=news&op=attach&id=101&key=att-aaaaaaaaaa.png&thumb=1'),
+        'thumb' => $code('', $own.'&thumb=1'),
         'refused' => [
-            $code('', 'index.php?name=news&op=attach&id=101&key=other-bbbbbbbbbb.png'), $code('', 'index.php?name=news&op=attach&id=101&key=att-aaaaaaaaaa.png%00.php'),
-            $code('', 'index.php?name=news&op=attach&id=101&key=att-aaaaaaaaaa.png&foo=1'), $code('', 'index.php?name=news&op=attach&id=101&key=att-aaaaaaaaaa.png&preview=1'),
-            $code('', 'index.php?name=news&op=attach&id=101&key=att-aaaaaaaaaa.png&thumb=2'), $code('', 'index.php?name=news&op=attach&id=103&key=att-aaaaaaaaaa.png'),
-            $code('', 'index.php?name=docs&op=attach&id=101&key=att-aaaaaaaaaa.png'), $code('', 'index.php?name=news&op=attach&key=att-aaaaaaaaaa.png&preview=1'),
-            $code('', 'index.php?name=news&op=attach&id=101&key=att-aaaaaaaaaa.png&%6Bey=att-aaaaaaaaaa.png'),
-            $code('', 'index.php?name=news&op=attach&id=101&id=101&key=att-aaaaaaaaaa.png'), $code('', 'index.php?name=news&op=attach&id=101&key=att-aaaaaaaaaa.png&amp;thumb=1'),
-            $code('', 'index.php?name=news&op=attach&id=101&key=att-aaaaaaaaaa.png&utm_source=x'),
-            $code('', 'index.php?name=news&op=attach&id=01&key=att-aaaaaaaaaa.png'), $code('', 'index.php?name=news&op=attach&id=101&key=att-aaaaaaaaaa.png&=x'),
+            $code('', 'index.php?go=file&own=node&id=101&key=other-bbbbbbbbbb.png'), $code('', 'index.php?go=file&own=node&id=101&key=att-aaaaaaaaaa.png%00.php'),
+            $code('', $own.'&foo=1'), $code('', $own.'&preview=1'), $code('', $own.'&thumb=2'), $code('', 'index.php?go=file&own=node&id=103&key=att-aaaaaaaaaa.png'),
+            $code('', 'index.php?go=file&own=forum&id=101&key=att-aaaaaaaaaa.png'), $code('', 'index.php?go=file&own=node&name=news&key=att-aaaaaaaaaa.png&preview=1'),
+            $code('', $own.'&%6Bey=att-aaaaaaaaaa.png'), $code('', 'index.php?go=file&own=node&id=101&id=101&key=att-aaaaaaaaaa.png'), $code('', $own.'&amp;thumb=1'),
+            $code('', $own.'&utm_source=x'), $code('', 'index.php?go=file&own=node&id=01&key=att-aaaaaaaaaa.png'), $code('', $own.'&=x'),
+            $code('', 'index.php?go=file&own=node&name=news&id=101&key=att-aaaaaaaaaa.png'), $code('', 'index.php?go=file&own=node&key=att-aaaaaaaaaa.png&preview=1'),
+            $code('', 'index.php?go=file&own=forum&name=news&key=att-aaaaaaaaaa.png&preview=1'), $code('', 'index.php?go=file&own=public&id=101&key=att-aaaaaaaaaa.png'),
+            $code('', 'index.php?go=file&own=zz&id=101&key=att-aaaaaaaaaa.png'), $code('', 'index.php?go=file&id=101&key=att-aaaaaaaaaa.png'),
         ],
-        'coded' => $code('', 'index.php?name=%6E%65%77%73&op=attach&id=101&%6Bey=att-aaaaaaaaaa.png'),
+        'coded' => $code('', 'index.php?go=file&own=%6E%6F%64%65&id=101&%6Bey=att-aaaaaaaaaa.png'),
+        'post' => $code('', $own, 'POST'),
+        'retired' => $code('', 'index.php?name=news&op=attach&id=101&key=att-aaaaaaaaaa.png'),
         'direct' => $code('', 'uploads/node/news/att-aaaaaaaaaa.png'),
-        'climb' => str_contains(getRouteReply('', 'GET', 'index.php?name=news&op=attach&id=101&key=..%2Fconfig%2Fdb.php')['body'], "'pass'"),
+        'climb' => str_contains(getRouteReply('', 'GET', 'index.php?go=file&own=node&id=101&key=..%2Fconfig%2Fdb.php')['body'], "'pass'"),
     ];
 }
 
@@ -451,8 +455,8 @@ function getRouteForm(PDO $pdo): array {
     $multi = ['title' => 'With cover', 'intro' => '', 'body' => '', 'action' => 'preview', 'token' => $tok, 'asset[0][role]' => 'cover', 'asset[0][id]' => '',
         'asset[0][title]' => 'My cover', 'afile0' => $file];
     $prev = getRouteReply('anna', 'POST', 'index.php?name=news&op=add', $multi);
-    $key = preg_match('#op=attach&amp;key=([A-Za-z0-9_.-]+)&amp;preview=1#', $prev['body'], $hit) ? $hit[1] : '';
-    $path = 'index.php?name=news&op=attach&key='.$key.'&preview=1';
+    $key = preg_match('#go=file&amp;own=node&amp;name=news&amp;key=([A-Za-z0-9_.-]+)&amp;preview=1#', $prev['body'], $hit) ? $hit[1] : '';
+    $path = 'index.php?go=file&own=node&name=news&key='.$key.'&preview=1';
     $mine = getRouteReply('anna', 'GET', $path);
     $out['upload'] = [$prev['code'], $key !== '', str_contains($key, '-2.'), is_file($GLOBALS['rwork'].'/uploads/node/news/'.$key), $mine['code'],
         $mine['head']['cache-control'] ?? '', getRouteReply('boris', 'GET', $path)['code'], getRouteReply('', 'GET', $path)['code'], getRouteReply('moder', 'GET', $path)['code'],
@@ -604,7 +608,7 @@ function getRouteViewData(): array {
     $out['keys']['tcard'] = array_keys($view->getNodeView($news, $tgt, 'card')) === $keys;
     $full = $view->getNodeView($news, $node, 'view');
     $light = $view->getNodeView($news, $tgt, 'card');
-    $out['full'] = ['href' => $full['href'], 'title' => $full['title'], 'intro' => $full['intro'], 'body' => str_contains($full['body_html'], 'op=attach&amp;id=101'),
+    $out['full'] = ['href' => $full['href'], 'title' => $full['title'], 'intro' => $full['intro'], 'body' => str_contains($full['body_html'], 'go=file&amp;own=node&amp;id=101'),
         'chref' => $full['chref'], 'ctitle' => $full['ctitle'], 'author' => $full['author'], 'ahref' => $full['ahref'], 'date' => $full['date'] !== '',
             'iso' => $full['date_iso'] !== '',
         'rating' => $full['rating'], 'roles' => array_keys($full['assets'])];
@@ -2021,11 +2025,27 @@ function getRouteSeo(PDO $pdo, string $work): array {
     $far = $get('index.php?name=news&order=published&dir=desc&num=9');
     $near = $get('index.php?name=news&order=published&dir=desc&num=2');
     $out['bound'] = [$far['code'], $far['head']['location'] ?? '', $near['code'], $near['head']['location'] ?? ''];
+    $move = function (string $path, string $who = ''): array {
+        $one = getRouteReply($who, 'GET', $path);
+        return [$one['code'], $one['head']['location'] ?? ''];
+    };
+    $wild = function (string $target) use ($site): array {
+        $curl = curl_init($site.'/');
+        curl_setopt_array($curl, [CURLOPT_RETURNTRANSFER => true, CURLOPT_HEADER => true, CURLOPT_REQUEST_TARGET => $target, CURLOPT_TIMEOUT => 60]);
+        $raw = (string)curl_exec($curl);
+        return [(int)curl_getinfo($curl, CURLINFO_RESPONSE_CODE), preg_match('#^Location:\s*(\S+)#mi', $raw, $hit) ? $hit[1] : ''];
+    };
+    $gone = $get('news.html');
+    $out['retired'] = [$gone['code'], str_contains($gone['body'], 'content="noindex, follow"'), $get('faq-cat-39.html')['code'], $get('config/db.php')['code'],
+        $move('index.php/index.php?name=sitemap'), $move('index.php/'), $move('index.php'), $move('admin.php/x', 'root'), $wild('//evil.example/index.php'),
+        $wild('//evil.example/index.php/x'), $get('templates/lite/index.php?error=403')['code'], $get('uploads/presentation/none.png')['code']];
+    $out['kept'] = [$get('')['code'], $get('index.php?name=news')['code'], getRouteReply('root', 'GET', 'admin.php')['code'], $get('error.html')['code'],
+        str_contains($get('error.html')['body'], 'Service temporarily unavailable')];
     $plain = html_entity_decode($feed['body']);
     $out['rss'] = [$get('index.php?go=rss&name=help')['code'], $get('index.php?go=rss&name=nosuch')['code'], $get('index.php?go=rss&name=off')['code'],
         $get('index.php?go=rss')['code'], str_contains($get('index.php?go=rss')['body'], '<title>Beta</title>'),
         $link($get('index.php?name=docs&op=view&id=201')['body'], 'alternate'), $link($get('index.php?name=rss')['body'], 'alternate'),
-        str_contains($plain, '="'.$site.'/index.php?name=news&amp;op=attach&amp;id=105'), str_contains($plain, '="index.php?name=news&amp;op=attach')];
+        str_contains($plain, '="'.$site.'/index.php?go=file&amp;own=node&amp;id=105'), str_contains($plain, '="index.php?go=file')];
     $tok = getRouteToken(getRouteReply('anna', 'GET', 'index.php?name=help&op=add')['body'], 'name="action"');
     $made = getRouteReply('anna', 'POST', 'index.php?name=help&op=add', ['title' => 'Seo request', 'intro' => 'Seo request intro', 'body' => 'Seo request body', 'cid' => '3',
         'action' => 'submit', 'token' => $tok]);

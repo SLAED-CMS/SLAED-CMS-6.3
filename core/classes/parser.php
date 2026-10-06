@@ -16,10 +16,12 @@ class Parser {
     # Alternative one is the pair, so group 1 is set for a literal alone; the raw regions are matched only to be stepped over, which is what keeps scripts and attributes intact
     private const PAIR = '\\\\([!-\/:-@\[-`{-~])';
     private const LITERAL = '/'.self::PAIR.'|\[(code|php|usephp|usehtml)(?:=[^\]]*)?\].*?\[\/\2\]|<(script|style)\b.*?<\/\3\s*>|<[a-zA-Z\/!][^>]*>/si';
-    # The attachment grammar: file name, alignment and title always, width and height together, a relation only after both; getAttachList() reads all three forms in one pass
+    # The attachment grammar: file name, alignment and title always, width and height together, a relation only after both, and last the full-size form of an image
     private const ATTACH = '\[attach=([a-zA-Z0-9_\-\. ]+) align=([a-zA-Z]+) title=([\pL0-9_\-\.\"\s]+)';
     private const ATTSIZE = ' width=([0-5]?[0-9]?[0-9]+) height=([0-5]?[0-9]?[0-9]+)';
     private const ATTREL = ' rel=([a-zA-Z0-9_\-]+)';
+    private const ATTFULL = ' size=(full)';
+    private const ATTTAG = '/'.self::ATTACH.'(?:'.self::ATTSIZE.'(?:'.self::ATTREL.')?)?(?:'.self::ATTFULL.')?\]/siu';
     public static bool $freeoff = false;
     private static array $pcache = [];
     private array $stash = [];
@@ -28,7 +30,7 @@ class Parser {
     private bool $safe = true;
     private bool $trust = false;
     private string $mod = '';
-    private int $nid = 0;
+    private array $own = [];
     private int $hoff = 0;
     private string $fmt = '';
     private array $hids = [];
@@ -38,14 +40,14 @@ class Parser {
     # The format names how the source is to be read, not who wrote it: plain recognizes no Markdown construct and turns every line ending into a break
     # The breaks format is Markdown that also breaks on a single line ending, and anything else is plain Markdown, where a lone line ending joins the lines around it
     # A conversation channel asks for breaks: a reader of a comment or a message typed the line endings they meant, and every one renders the same way whoever wrote it
-    # A positive nid names the stored Node material the text belongs to: its attachments then point at the controlled attach route of the type instead of the closed directory
+    # The file context names the owner and the stored target of the text, such as [node, id] of a material; its attachments take the address FileAccess answers for it
     # Trust makes a safe rendering honour the trusted tags: only what [usehtml] and [usephp] enclose becomes markup or runs, everything around them stays escaped
-    public function filterDoc(string $src, bool $safe = true, string $mod = '', int $hoff = 0, string $fmt = '', int $nid = 0, bool $trust = false): string {
+    public function filterDoc(string $src, bool $safe = true, string $mod = '', int $hoff = 0, string $fmt = '', array $own = [], bool $trust = false): string {
         $hoff = max(0, min(5, $hoff));
         $fmt = in_array($fmt, ['plain', 'breaks'], true) ? $fmt : '';
-        $nid = max(0, $nid);
+        $own = (is_string($own[0] ?? null) && is_int($own[1] ?? null) && $own[1] > 0) ? [$own[0], $own[1]] : [];
         $trust = $safe && $trust;
-        $key = md5($src.(int)$safe.(int)$trust.$mod.$hoff.$fmt.'|'.$nid);
+        $key = md5($src.(int)$safe.(int)$trust.$mod.$hoff.$fmt.'|'.implode(':', $own));
         if (isset(self::$pcache[$key])) {
             $this->vary = self::$pcache[$key][1];
             return self::$pcache[$key][0];
@@ -58,7 +60,7 @@ class Parser {
         $this->safe  = $safe;
         $this->trust = $trust;
         $this->mod   = $mod;
-        $this->nid   = $nid;
+        $this->own   = $own;
         $this->hoff  = $hoff;
         $this->fmt   = $fmt;
         $src = str_replace(["\r\n", "\r"], "\n", $src);
@@ -92,16 +94,16 @@ class Parser {
     # Standard rendering pipeline: filterDoc() plus replace rules and img repair; call filterDoc() directly when replacement rules must not apply (changelog, search)
     # Stored is the finished rendering of a source of at least CACHEMIN bytes whose parse does not vary; a [block=] or [usephp] source is rendered anew on every serve
     # The stored rendering lives here and not in a caller, because the key is built from what this class itself reads and only this class knows whether a parse may be reused at all
-    public function filterContent(string $src, bool $safe, string $mod, int $hoff = 0, string $fmt = '', int $nid = 0, bool $trust = false): string {
-        $nid = max(0, $nid);
+    public function filterContent(string $src, bool $safe, string $mod, int $hoff = 0, string $fmt = '', array $own = [], bool $trust = false): string {
+        $own = (is_string($own[0] ?? null) && is_int($own[1] ?? null) && $own[1] > 0) ? [$own[0], $own[1]] : [];
         $trust = $safe && $trust;
-        $file = $this->getCachePath($src, $safe, $mod, $hoff, $fmt, $nid, $trust);
+        $file = $this->getCachePath($src, $safe, $mod, $hoff, $fmt, $own, $trust);
         if ($file !== '' && Cache::isFresh($file, self::CACHETTL)) {
             $out = Cache::getBody($file);
             if ($out !== '') return $out;
         }
         $out = $this->normalizeHtmlImages(
-            $this->replaceText($this->filterDoc($src, $safe, $mod, $hoff, $fmt, $nid, $trust), $mod)
+            $this->replaceText($this->filterDoc($src, $safe, $mod, $hoff, $fmt, $own, $trust), $mod)
         );
         if ($file !== '' && $out !== '' && !$this->vary) Cache::setBody($file, $out);
         return $out;
@@ -132,12 +134,12 @@ class Parser {
     }
 
     # The cache path of one rendering, or an empty string when nothing may be stored; the key carries every input the output depends on, the class version included
-    private function getCachePath(string $src, bool $safe, string $mod, int $hoff, string $fmt, int $nid, bool $trust): string {
+    private function getCachePath(string $src, bool $safe, string $mod, int $hoff, string $fmt, array $own, bool $trust): string {
         static $ver = '';
         if (strlen($src) < self::CACHEMIN || !$this->checkCacheReady()) return '';
         if ($ver === '') $ver = (string)filemtime(__FILE__);
         return Cache::getFile([
-            'parser', $ver, $this->getConfigHash($mod), sha1($src), (int)$safe, (int)$trust, $mod, $hoff, $fmt, $nid, getTheme(), _LOCALE,
+            'parser', $ver, $this->getConfigHash($mod), sha1($src), (int)$safe, (int)$trust, $mod, $hoff, $fmt, implode(':', $own), getTheme(), _LOCALE,
         ], 'html');
     }
 
@@ -186,7 +188,6 @@ class Parser {
     public function getAttachList(string $src): array {
         if (stripos($src, '[attach=') === false) return [];
         $src = str_replace(["\r\n", "\r"], "\n", $src);
-        $pat = '/'.self::ATTACH.'(?:'.self::ATTSIZE.'(?:'.self::ATTREL.')?)?\]/siu';
         $out = [];
         $this->trust = false;
         foreach ([['plain', true], ['', false], ['', true]] as [$fmt, $safe]) {
@@ -197,7 +198,7 @@ class Parser {
             $this->fmt = $fmt;
             $txt = ($fmt === 'plain') ? $src : $this->filterCode($src);
             if (str_contains($txt, '\\')) $txt = preg_replace_callback(self::LITERAL, fn(array $m): string => ($m[1] ?? '') !== '' ? "\x02" : $m[0], $txt) ?? $txt;
-            if (preg_match_all($pat, $txt, $mm)) $out = array_merge($out, $mm[1]);
+            if (preg_match_all(self::ATTTAG, $txt, $mm)) $out = array_merge($out, $mm[1]);
         }
         $out = array_values(array_unique($out));
         usort($out, fn(string $a, string $b): int => stripos($src, '[attach='.$a) <=> stripos($src, '[attach='.$b));
@@ -333,7 +334,8 @@ class Parser {
 
         if ($path === '' || preg_match('#^[a-z][a-z0-9+.\-]*:#i', $path)) return $raw;
 
-        if (is_file($this->getAddressFile($path))) return $path;
+        $query = parse_url($raw, PHP_URL_QUERY);
+        if (is_file($this->getAddressFile($path))) return is_string($query) ? $path.'?'.$query : $path;
 
         if (preg_match('#^(uploads/[^/]+)/([^/]+)$#', $path, $m)) {
             $thumb = $m[1].'/thumb/'.$m[2];
@@ -644,19 +646,18 @@ class Parser {
         return $src;
     }
 
-    # Resolve [attach=file align=X title=Y ...] to image or file link HTML with per-request file probe memoization and atomic thumb regeneration
-    # One pass reads all three forms of the grammar, so a text mixing them renders every attachment getAttachList() names
-    # An attachment is resolved against the upload folder of its owner, getUploadFolder(), so like an image it renders what the filesystem holds now and the result is never stored
-    # A text of a stored Node material links the controlled attach route of its type instead of the closed directory, with thumb=1 only for a thumb that exists
+    # Render every [attach] form from config/filetype.php at the address FileAccess answers for the file context; the full-size form of an image takes the template full
     private function filterAttach(string $src): string {
         global $conf;
         $mod = $this->mod !== '' ? $this->mod : 'all';
-        if (!preg_match_all('/'.self::ATTACH.'(?:'.self::ATTSIZE.'(?:'.self::ATTREL.')?)?\]/siu', $src, $mm, PREG_SET_ORDER)) return $src;
+        if (!preg_match_all(self::ATTTAG, $src, $mm, PREG_SET_ORDER)) return $src;
         $this->vary = true;
         static $fex = [];
         static $isz = [];
         $twd = getUploadRuleData($mod)['thumbwidth'] ?: ($conf['uploads']['width'] ?? '250');
-        $room = getUploadFolder($mod);
+        [$own, $tid] = $this->own ?: ['public', 0];
+        $fac = getFileService();
+        $room = $fac->getFileFolder($own, $mod, $tid);
         $img = ['png', 'jpg', 'jpeg', 'gif', 'webp', 'avif'];
         foreach ($mm as $m) {
             $fn  = (string)$m[1];
@@ -666,23 +667,23 @@ class Parser {
             $hg  = $m[5] ?? '';
             $rl  = $m[6] ?? '';
             $ext = strtolower((string)substr((string)strrchr($fn, '.'), 1));
-            $file = getUploadUrl($room.'/'.$fn);
+            $pic = in_array($ext, $img, true);
+            $full = $pic && ($m[7] ?? '') !== '';
             $path = UPLOADS_DIR.'/'.$room.'/'.$fn;
-            $link = ($this->nid > 0) ? 'index.php?name='.$mod.'&op=attach&id='.$this->nid.'&key='.rawurlencode($fn) : $file;
+            $link = $fac->getFileUrl($own, $mod, $tid, $fn);
             $href = str_replace('&', '&amp;', $link);
             $timg = $href;
             if ($tl === '' || strtolower($tl) === 'title') $tl = $fn;
-            if (in_array($ext, $img, true)) {
-                $tfile = getUploadUrl($room.'/thumb/'.$fn);
+            if ($pic) {
                 $tpath = UPLOADS_DIR.'/'.$room.'/thumb/'.$fn;
                 $tdir  = UPLOADS_DIR.'/'.$room.'/thumb';
-                if ($mod !== '' && ($fex[$path] ??= file_exists($path)) && !($fex[$tpath] ??= file_exists($tpath))) {
+                if (!$full && $room !== '' && ($fex[$path] ??= file_exists($path)) && !($fex[$tpath] ??= file_exists($tpath))) {
                     if (!file_exists($tdir)) mkdir($tdir, 0777, true);
                     $tmp = $tpath.'.'.getmypid().'.tmp';
                     if (getImageThumb($path, $tmp, $twd) === $tmp && is_file($tmp) && rename($tmp, $tpath)) $fex[$tpath] = true;
                     elseif (is_file($tmp)) unlink($tmp);
                 }
-                if ($fex[$tpath] ?? false) $timg = ($this->nid > 0) ? $href.'&amp;thumb=1' : $tfile;
+                if ($fex[$tpath] ?? false) $timg = str_replace('&', '&amp;', $fac->getFileUrl($own, $mod, $tid, $fn, true));
                 if ($fex[$path] ??= file_exists($path)) {
                     $isz[$path] ??= getimagesize($path);
                     [$wd, $hg] = $isz[$path];
@@ -691,7 +692,8 @@ class Parser {
                     continue;
                 }
             }
-            $tmp = (string)($conf['filetype'][$ext] ?? '');
+            $tmp = $full ? (string)($conf['filetype']['full'] ?? '') : '';
+            if ($tmp === '') $tmp = (string)($conf['filetype'][$ext] ?? '');
             if ($tmp === '') {
                 $src = str_replace($m[0], $this->addStash($this->getPartLink($link, $tl, $tl, true)), $src);
                 continue;

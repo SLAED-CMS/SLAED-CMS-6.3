@@ -575,6 +575,232 @@ const DEMO_SETUP_RUN = {
   ],
 };
 
+const DEMO_PLAIN = [
+  {
+    file: 'ed-plain-01-sheet.html',
+    title: 'Лист',
+    note: 'Самый тихий: поле темы, моноширинный шрифт и высота по тексту — шаблон в одну строку занимает две строки, а не десять. ' +
+      'Над полем подпись формата и счёт строк и символов, который проявляется только под рукой. Правка отмечена точкой у подписи.',
+    tags: ['минимум', 'высота по тексту', 'field-sizing'],
+  },
+  {
+    file: 'ed-plain-02-window.html',
+    title: 'Окно',
+    note: 'Рамка окна-канона, как у редактора системных файлов: плашка с иконкой, именем и адресом ключа, гостевые кнопки «перенос», ' +
+      '«копировать», «развернуть». В фокусе плашка получает полосу тона, после правки — полосу предупреждения. «Развернуть» превращает ' +
+      'рамку в то самое окно поверх страницы, без второго редактора.',
+    tags: ['канон окна', 'развернуть', 'строка состояния'],
+  },
+  {
+    file: 'ed-plain-03-keys.html',
+    title: 'Вставка',
+    note: 'Под полем — ряд переменных шаблона чипами. Клик вставляет переменную в позицию курсора с отменой по Ctrl+Z, ' +
+      'чип уже использованной переменной горит тоном, неиспользованной — пунктиром. Счёт «6 из 10» говорит, чего шаблону не хватает.',
+    tags: ['чипы переменных', 'вставка в курсор', 'живой счёт'],
+  },
+  {
+    file: 'ed-plain-04-notebook.html',
+    title: 'Тетрадь',
+    note: 'Простой textarea, который ведёт себя как редактор кода: номера строк, полоса текущей строки и переменные, подсвеченные ' +
+      'чипами прямо в тексте. Под полем лежит зеркало, поле над ним прозрачно — ввод, выделение и отмена остаются родными.',
+    tags: ['номера строк', 'подсветка переменных', 'без библиотек'],
+  },
+  {
+    file: 'ed-plain-05-preview.html',
+    title: 'Код / Просмотр',
+    note: 'Две вкладки над полем, как «Write / Preview» у GitHub. «Просмотр» показывает шаблон так, как его выведет сайт: ' +
+      'переменные заменены настоящими файлами стенда — картинкой, звуком, PDF, — вокруг страница темы lite в текущей схеме, ' +
+      'до и после вложения — абзацы статьи. Ошибка в шаблоне видна раньше, чем её увидит читатель.',
+    tags: ['вкладки как у GitHub', 'живой просмотр', 'настоящие файлы'],
+  },
+  {
+    file: 'ed-plain-06-hint.html',
+    title: 'Подсказка',
+    note: 'Простое поле с подсказкой у самого курсора: набор «[» раскрывает список переменных прямо под набираемым словом, ' +
+      'дальше буквы сужают список, стрелки выбирают, Enter или Tab вставляет. Координаты курсора textarea не отдаёт — их ' +
+      'измеряет невидимый двойник поля, тот же приём, что у упоминаний GitHub.',
+    tags: ['автодополнение', 'combobox', 'клавиатура'],
+  },
+  {
+    file: 'ed-plain-07-summary.html',
+    title: 'Сводка',
+    note: 'Ответ на настоящую длину страницы — у живой их двадцать два. Каждый шаблон свёрнут в одну строку: формат, сам код ' +
+      'с подсвеченными переменными, их счёт и точка правки. Раскрытие — родной details, плавное за счёт ::details-content и ' +
+      'interpolate-size; внутри поле и кнопки «тег на строку» и «в одну строку».',
+    tags: ['details', 'одна строка на шаблон', '22 шаблона'],
+  },
+  {
+    file: 'ed-plain-08-diff.html',
+    title: 'Сверка',
+    note: 'После первой правки под полем раскрывается сверка с сохранённым текстом: удалённое зачёркнуто, добавленное ' +
+      'подсвечено, в шапке счёт «+3 −1» и кнопка отката. Сравнение по словам и переменным, без библиотек. Перед сохранением ' +
+      'видно, что именно уйдёт в config/filetype.php.',
+    tags: ['diff', 'было → стало', 'откат'],
+  },
+];
+
+const DEMO_CODE = [
+  {
+    file: 'ed-code-01-sheet.html',
+    title: 'Лист',
+    note: 'CodeMirror, переодетый в поле темы: подсветка синтаксиса взята из токенов темы и сама меняется со схемой, жёлоб номеров — ' +
+      'поверхность темы, курсор и выделение — основной тон. Высота по тексту до половины экрана. Переменные шаблона подсвечены чипами, ' +
+      'набор «[» предлагает их список с расшифровкой.',
+    tags: ['токены темы', 'светлая и тёмная', 'высота по тексту', 'подсказка «['],
+  },
+  {
+    file: 'ed-code-02-window.html',
+    title: 'Окно',
+    note: 'Окно редактора системных файлов, встроенное в форму: плашка с иконкой формата, именем и адресом, справа поиск, перенос, ' +
+      'копирование и «развернуть»; внизу строка состояния — позиция курсора, объём, язык. После правки появляется чип «изменено» ' +
+      'с кнопкой отката. «Развернуть» поднимает рамку окном во весь экран поверх страницы.',
+    tags: ['канон окна', 'fmedit', 'поиск', 'откат'],
+  },
+  {
+    file: 'ed-code-03-bar.html',
+    title: 'Панель',
+    note: 'Плотная панель команд над кодом: отмена и повтор, поиск, перенос, свернуть и развернуть, копирование и откат, справа — ' +
+      '«Вставить переменную» всплывающим списком на Popover API. Снизу тонкая строка состояния, как у IDE: строка и колонка, ' +
+      'выделение, объём и сколько переменных шаблон использует.',
+    tags: ['панель команд', 'popover', 'строка состояния'],
+  },
+  {
+    file: 'ed-code-04-focus.html',
+    title: 'Фокус',
+    note: 'В покое — только код на тихой поверхности с ярлыком формата и рельсом слева. Под рукой проявляются номера строк ' +
+      'и плавающая капсула команд, в фокусе рельс загорается тоном, после правки — тоном предупреждения. Хром живёт, ' +
+      'пока он нужен, и не стоит ни точки, когда не нужен.',
+    tags: ['хром по требованию', 'рельс состояния', 'капсула'],
+  },
+  {
+    file: 'ed-code-05-split.html',
+    title: 'Стенд',
+    note: 'Код и результат рядом: слева CodeMirror, справа шаблон, выведенный страницей темы lite с настоящими файлами ' +
+      'стенда, и обновляется на каждом нажатии. Над ними переключатель [align] — нет, слева, по центру, справа, — так что ' +
+      'обтекание текста проверяется, не уходя со страницы. На узком экране половины встают друг под другом.',
+    tags: ['код и результат', '[align] вживую', 'настоящие файлы'],
+  },
+  {
+    file: 'ed-code-06-palette.html',
+    title: 'Палитра',
+    note: 'Вместо панели кнопок — одна подсказка «Команды Ctrl K», а все команды — в палитре Ctrl+K, как у VS Code, Linear и Raycast: окно канона, поле, ' +
+      'которое ищет по буквам в порядке набора и выделяет совпавшие, группы «Правка», «Вид», «Вставить переменную», стрелки ' +
+      'и Enter. Последняя выполненная команда поднимается наверх своей группы.',
+    tags: ['Ctrl+K', 'окно канона', 'нечёткий поиск', 'клавиатура'],
+  },
+  {
+    file: 'ed-code-07-tabs.html',
+    title: 'Вкладки',
+    note: 'Четыре шаблона — четыре буфера одного редактора, как файлы в IDE: строка вкладок с точкой правки, хлебные крошки ' +
+      'config › filetype.php › формат, команды справа и строка состояния. Вкладки ходят стрелками, правка не теряется при ' +
+      'переключении. Страница из двадцати двух шаблонов становится одним блоком высотой в экран.',
+    tags: ['буферы', 'точка правки', 'хлебные крошки'],
+  },
+  {
+    file: 'ed-code-08-lint.html',
+    title: 'Проверка',
+    note: 'CodeMirror с проверкой шаблона на @codemirror/lint: неизвестная переменная с подсказкой ближайшей, незакрытый ' +
+      'или лишний тег, img без alt, новое окно без noopener, значение без кавычек, шаблон без [src]. У каждой находки — ' +
+      'исправление одной кнопкой, в жёлобе — метка, в шапке — значок «Проблем нет» или счёт. Попробуйте стереть кавычку.',
+    tags: ['lint', 'быстрые исправления', 'доступность'],
+  },
+  {
+    file: 'ed-code-09-final.html',
+    title: 'Фокус · финал',
+    note: 'Сборка из лидеров на основе «Фокуса»: в покое только код, ярлык формата и рельс. Под рукой справа от ярлыка ' +
+      'проявляется капсула команд «Панели» — отмена, поиск, перенос, свёртка, формат, копирование, откат, переменные, ' +
+      'подсказка у курсора, просмотр, сверка, палитра и экран. «Просмотр» из «Код / Просмотр» открывает под кодом шаблон ' +
+      'на странице темы lite с настоящими файлами и переключателем [align], во весь экран — рядом с кодом. «Сверка» — окно ' +
+      'канона: было → стало вместе или рядом, счёт и «Вернуть было»; открывается и меткой «изменено». Внизу строка ' +
+      'состояния «Панели» со значком проверки, Ctrl+K — палитра со всеми командами и шпаргалкой клавиш.',
+    tags: ['финал', 'капсула команд', 'просмотр', 'сверка', 'проверка', 'Ctrl+K'],
+  },
+];
+
+const DEMO_NODEHEAD = [
+  {
+    file: 'nh-01-strip.html',
+    title: 'Строка',
+    note: 'Всё в двух строках и ничего не спрятано. Сверху название, счёт материалов и действия — добавить, RSS, поиск; ' +
+      'снизу чипы категорий в тонах их плиток со счётом и сегмент сортировки с направлением. Выбранное горит, счёт ' +
+      'меняется с категорией. На телефоне чипы и сортировка уходят в горизонтальную прокрутку.',
+    tags: ['компактно', 'чипы категорий', 'сегмент сортировки'],
+  },
+  {
+    file: 'nh-02-tiles.html',
+    title: 'Плитки',
+    note: 'Развитие живой страницы: плитки категорий остались, но получили счёт, долю от всех материалов полосой тона ' +
+      'и плитку «Все», выбранная плитка горит. Голые таблетки стали вкладками системы со своими иконками, а строка ' +
+      '«Общее количество: 0 3» — честной сводкой.',
+    tags: ['эволюция', 'плитки со счётом', 'вкладки'],
+  },
+  {
+    file: 'nh-03-cover.html',
+    title: 'Обложка',
+    note: 'Шапка как обложка раздела: иконка типа, название Magistral, строка фактов — материалы, категории, последняя ' +
+      'публикация, — и поиск по разделу прямо в шапке. Под ней чипы категорий и сортировка выпадающим списком ' +
+      'с направлением рядом.',
+    tags: ['обложка', 'поиск в шапке', 'факты'],
+  },
+  {
+    file: 'nh-04-tabs.html',
+    title: 'Вкладки',
+    note: 'Категории — это вкладки со счётом, как в кабинете: «Все 97», «Наши новости 69»… Справа сортировка меню на ' +
+      'Popover API с галочкой у выбранной и поиск, который раскрывается из иконки. Самый привычный вид раздела.',
+    tags: ['вкладки категорий', 'меню сортировки', 'раскрывающийся поиск'],
+  },
+  {
+    file: 'nh-05-filter.html',
+    title: 'Фильтр',
+    note: 'В покое — одна строка: название, счёт и кнопка «Фильтры» со значком числа активных. Панель раскрывается под ' +
+      'строкой: категории карточками, сортировка и направление. Выбранное повторяется чипами с крестиком, ' +
+      '«Сбросить» возвращает всё. Лучше всех на телефоне.',
+    tags: ['панель фильтров', 'активные чипы', 'сброс'],
+  },
+  {
+    file: 'nh-06-search.html',
+    title: 'Поиск',
+    note: 'Раздел, который начинается с поиска: широкое поле «Искать в новостях», под ним быстрые чипы категорий ' +
+      'и сортировки. Поле фильтрует карточки страницы прямо при наборе и говорит, сколько найдено; Enter ведёт в поиск ' +
+      'по всему разделу.',
+    tags: ['поиск первым', 'живой отбор', 'быстрые чипы'],
+  },
+  {
+    file: 'nh-07-map.html',
+    title: 'Карта',
+    note: 'Раздел в цифрах: материалы, просмотры, комментарии и последняя публикация — числами, а категории одной ' +
+      'полосой долей 69 · 19 · 9 в их тонах. Клик по доле выбирает категорию. Сортировка — сегментом под полосой.',
+    tags: ['полоса долей', 'цифры раздела', 'выбор долей'],
+  },
+  {
+    file: 'nh-08-sticky.html',
+    title: 'Липкая',
+    note: 'Полная шапка вверху страницы, а при прокрутке она сворачивается в тонкую липкую полосу: название, выбранная ' +
+      'категория, сортировка и «наверх». Категорию и порядок можно сменить из середины ленты, не прокручивая назад.',
+    tags: ['sticky', 'сворачивается', 'из середины ленты'],
+  },
+  {
+    file: 'nh-09-final.html',
+    title: 'Фильтр · финал',
+    note: 'Сборка из лидеров на основе «Фильтра». Одна строка: название и счёт, затем поиск из «Вкладок», «Категории», ' +
+      '«А–Я», меню сортировки с направлением, добавить и RSS. «Категории» раскрывают живые плитки типа со счётом, «А–Я» — ' +
+      'алфавит, где, как раньше, подсвечены и кликабельны только буквы, на которые есть материалы, с числом в подсказке. ' +
+      'Выбор закрывает панель, Esc тоже; выбранное повторяется чипами с крестиком и «Сбросить». При прокрутке строка ' +
+      'прилипает к верху, как в «Липкой», и всё это доступно из середины ленты.',
+    tags: ['финал', 'плитки категорий', 'алфавит с подсветкой', 'меню сортировки', 'поиск', 'sticky'],
+  },
+  {
+    file: 'nh-10-unified.html',
+    title: 'Единый',
+    note: 'Финал в одном языке и на деталях системы. Фильтры — кнопки sl-but, которые показывают своё значение: «Все ' +
+      'категории», «Все буквы», «Новые»; выбранное тонируется (sl-is-active) и получает крестик sl-but-mini. Блоки ' +
+      'категорий, букв и сортировки открывает тот же механизм data-sl-toggle из slaed.js, что и живые «Категории»: ' +
+      'плитки sl-cat-tile, буквы sl-letter по старому правилу — есть материалы, буква подсвечена, — направление метками ' +
+      'sl-sort. Поиск — системная sl-search-form с клавишей «/». В покое две строки, при прокрутке одна липкая.',
+    tags: ['детали системы', 'data-sl-toggle', 'sl-cat-tile', 'sl-letter', 'sl-search-form', 'sticky'],
+  },
+];
+
 const DEMO_SERIES = [
   { key: 'presentation', title: 'Презентационная страница', addr: 'index.php?name=presentation', items: DEMO_VARIANTS },
   { key: 'settings', title: 'Настройки аккаунта', addr: 'index.php?name=account&op=edithome', items: DEMO_SETTINGS },
@@ -583,6 +809,9 @@ const DEMO_SERIES = [
   { key: 'admin', title: 'Панель администратора', addr: 'admin.php', items: DEMO_ADMIN },
   { key: 'flash', title: 'Алерт подтверждения', addr: 'admin.php после сохранения', items: DEMO_FLASH },
   { key: 'setup', title: 'Установщик', addr: 'setup.php', items: DEMO_SETUP },
+  { key: 'plain', title: 'Редактор Plain Textarea', addr: 'admin.php?name=uploads&op=tplconfig', items: DEMO_PLAIN },
+  { key: 'code', title: 'Редактор CodeMirror', addr: 'admin.php?name=uploads&op=tplconfig', items: DEMO_CODE },
+  { key: 'nodehead', title: 'Шапка модуля Node', addr: 'index.php?name=news', items: DEMO_NODEHEAD },
 ];
 
 /* Which series a file belongs to, and where it stands in it. An unknown file gets the first series at index -1,
@@ -1710,6 +1939,968 @@ function setDemoFlash(place) {
   play('success');
 }
 
+const ED_KEYS = [
+  ['[src]', 'Ссылка на файл'],
+  ['[tsrc]', 'Ссылка на файл предварительного просмотра'],
+  ['[width]', 'Ширина приложения'],
+  ['[twidth]', 'Ширина предварительного просмотра'],
+  ['[height]', 'Высота приложения'],
+  ['[theight]', 'Высота предварительного просмотра'],
+  ['[align]', 'Расположение по отношению к содержанию'],
+  ['[title]', 'Заголовок приложения'],
+  ['[quot]', 'Кавычки'],
+  ['[rel]', 'Дополнительный атрибут'],
+];
+const ED_RE = /\[(?:src|tsrc|width|twidth|height|theight|align|title|quot|rel)\]/g;
+const ED_VOID = /^(area|base|br|col|embed|hr|img|input|link|meta|source|track|wbr)$/i;
+const ED_SAMPLE = {
+  base: {
+    '[width]': '1040',
+    '[height]': '740',
+    '[twidth]': '260',
+    '[theight]': '185',
+    '[title]': 'Акведук — главная страница',
+    '[quot]': '&quot;',
+    '[rel]': 'gallery',
+  },
+  jpg: { '[src]': '../uploads/presentation/sites/akveduk.com.jpg', '[tsrc]': '../uploads/presentation/sites/thumb/akveduk.com.jpg' },
+  full: { '[src]': '../uploads/presentation/sites/akveduk.com.jpg', '[width]': '520', '[height]': '370' },
+  mp3: { '[src]': '../sound/privat-russian.mp3', '[title]': 'Сигнал личного сообщения' },
+  pdf: { '[src]': 'assets/sample.pdf', '[width]': '100%', '[height]': '300', '[title]': 'Образец PDF' },
+};
+const ED_PHRASES = {
+  'Find': 'Найти',
+  'Replace': 'Заменить на',
+  'next': 'далее',
+  'previous': 'назад',
+  'all': 'все',
+  'match case': 'регистр',
+  'by word': 'слово',
+  'regexp': 'regexp',
+  'replace': 'заменить',
+  'replace all': 'заменить все',
+  'close': 'закрыть',
+  'Folded lines': 'Свёрнутые строки',
+  'Unfolded lines': 'Развёрнутые строки',
+  'folded code': 'свёрнутый код',
+  'unfold': 'развернуть',
+  'Fold line': 'Свернуть строку',
+  'Unfold line': 'Развернуть строку',
+  'Go to line': 'Перейти к строке',
+  'go': 'перейти',
+  'Diagnostics': 'Проверка',
+  'No diagnostics': 'Проблем нет',
+};
+
+let edlast = null;
+
+/* Escape text for innerHTML */
+function getEdEsc(str) {
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+/* Read the text of a frame from CodeMirror or from its textarea */
+function getEdText(frame) {
+  return frame.edView ? frame.edView.state.doc.toString() : frame.edArea.value;
+}
+
+/* Pick the Russian plural form for a number */
+function getEdWord(num, one, few, many) {
+  const last = num % 10;
+  const tens = num % 100;
+  if (last === 1 && tens !== 11) return one;
+  return (last >= 2 && last <= 4 && (tens < 10 || tens >= 20)) ? few : many;
+}
+
+/* Write caret, size, variables, dirty mark and every dependent view of one frame */
+function setEdStatus(frame) {
+  const text = getEdText(frame);
+  let line = 1;
+  let col = 1;
+  let sel = 0;
+  if (frame.edView) {
+    const state = frame.edView.state;
+    const range = state.selection.main;
+    const row = state.doc.lineAt(range.head);
+    line = row.number;
+    col = range.head - row.from + 1;
+    sel = range.to - range.from;
+  } else {
+    const area = frame.edArea;
+    const rows = area.value.slice(0, area.selectionStart).split('\n');
+    line = rows.length;
+    col = rows[rows.length - 1].length + 1;
+    sel = area.selectionEnd - area.selectionStart;
+  }
+  const lines = text.split('\n').length;
+  const used = ED_KEYS.filter(([key]) => text.includes(key)).length;
+  const dirty = text !== frame.edOrig;
+  const put = (name, value) => frame.querySelectorAll(`[data-demo-ed-${name}]`).forEach((node) => { node.textContent = value; });
+  put('pos', `Стр. ${line}, кол. ${col}` + (sel ? ` · выделено ${sel}` : ''));
+  put('size', `${lines} ${getEdWord(lines, 'строка', 'строки', 'строк')} · ${text.length} симв.`);
+  put('used', `${used} из ${ED_KEYS.length}`);
+  frame.querySelectorAll('[data-demo-ed-ins]').forEach((btn) => { btn.dataset.used = String(text.includes(btn.dataset.demoEdIns)); });
+  frame.querySelectorAll('[data-demo-ed-line]').forEach((node) => {
+    node.innerHTML = getEdEsc(text.replace(/\s+/g, ' ')).replace(ED_RE, '<mark>$&</mark>');
+  });
+  frame.toggleAttribute('data-demo-ed-dirty', dirty);
+  if (frame.dataset.demoEdKey) {
+    document.querySelectorAll(`[data-demo-ed-tab="${frame.dataset.demoEdKey}"]`).forEach((tab) => tab.toggleAttribute('data-dirty', dirty));
+  }
+  if (frame.edMirror) setEdMirror(frame, line);
+  if (frame.querySelector('[data-demo-ed-diff]')) setEdDelta(frame, text);
+  if (frame.querySelector('[data-demo-ed-view]')) setEdViewSoon(frame);
+}
+
+/* Draw the mirror under a transparent textarea, one block per line so a wrapped line keeps its number */
+function setEdMirror(frame, line) {
+  const focus = frame.contains(document.activeElement);
+  frame.edMirror.innerHTML = frame.edArea.value.split('\n').map((row, i) =>
+    `<div${focus && i + 1 === line ? ' data-on' : ''}>${getEdEsc(row).replace(ED_RE, '<mark>$&</mark>') || ' '}</div>`).join('');
+  frame.edMirror.scrollTop = frame.edArea.scrollTop;
+}
+
+/* Show a short note in the status line of a frame for a moment */
+function setEdNote(frame, text) {
+  frame.querySelectorAll('[data-demo-ed-note]').forEach((node) => {
+    node.textContent = text;
+    clearTimeout(node.edWait);
+    node.edWait = setTimeout(() => { node.textContent = ''; }, 1600);
+  });
+}
+
+/* Build the lite page that renders a template with real files of the stand in place of its variables */
+function getEdPage(frame) {
+  const kind = frame.dataset.demoEdKind || 'jpg';
+  const vals = { ...ED_SAMPLE.base, ...(ED_SAMPLE[kind] || {}), '[align]': frame.edAlign || '' };
+  const body = getEdText(frame).replace(ED_RE, (key) => vals[key] ?? '');
+  const mode = document.documentElement.dataset.theme || 'auto';
+  const lead = 'Абзац статьи перед вложением: так читатель увидит файл посреди текста, с тем же оформлением, что у сайта.';
+  const tail = 'Текст после вложения. Если выбрано расположение слева или справа, абзац обтекает вложение, а при «нет» '
+    + 'и «центр» встаёт под ним. Ширина, высота и заголовок подставлены из настоящего файла стенда.';
+  return `<!doctype html><html lang="ru" data-theme="${mode}"><head><meta charset="utf-8"><base href="${location.href}">`
+    + '<link rel="stylesheet" href="../templates/lite/assets/css/base.css">'
+    + '<link rel="stylesheet" href="../templates/lite/assets/css/theme.css">'
+    + '<style>html,body{background:var(--sl-bg)}body{display:flow-root;margin:0;padding:var(--sl-space-5);color:var(--sl-text);'
+    + 'font-size:var(--sl-font-body);line-height:var(--sl-line-loose)}p{margin:0 0 var(--sl-space-4)}p:last-child{margin:0}</style>'
+    + `</head><body><p>${lead}</p>${body}<p>${tail}</p></body></html>`;
+}
+
+/* Render the template into every visible preview frame and fit its height when asked */
+function setEdView(frame) {
+  frame.querySelectorAll('[data-demo-ed-view]').forEach((box) => {
+    if (!box.checkVisibility()) return;
+    box.onload = () => {
+      const doc = box.contentDocument;
+      if (doc && box.hasAttribute('data-demo-ed-fit')) box.style.height = Math.ceil(doc.body.getBoundingClientRect().height) + 'px';
+    };
+    box.srcdoc = getEdPage(frame);
+  });
+}
+
+/* Refresh the preview once typing pauses, so a frame is not reloaded on every key */
+function setEdViewSoon(frame) {
+  clearTimeout(frame.edViewWait);
+  frame.edViewWait = setTimeout(() => setEdView(frame), 260);
+}
+
+/* Diff two short texts by variables, words, spaces and signs through the longest common subsequence */
+function getEdDiff(prev, next) {
+  const split = (str) => str.match(/\[\w+\]|\w+|\s+|[^\w\s]/g) || [];
+  const was = split(prev);
+  const now = split(next);
+  const grid = Array.from({ length: was.length + 1 }, () => new Uint16Array(now.length + 1));
+  for (let i = was.length - 1; i >= 0; i--) {
+    for (let j = now.length - 1; j >= 0; j--) {
+      grid[i][j] = was[i] === now[j] ? grid[i + 1][j + 1] + 1 : Math.max(grid[i + 1][j], grid[i][j + 1]);
+    }
+  }
+  let i = 0;
+  let j = 0;
+  let html = '';
+  let left = '';
+  let right = '';
+  let del = 0;
+  let ins = 0;
+  while (i < was.length || j < now.length) {
+    if (i < was.length && j < now.length && was[i] === now[j]) {
+      const same = getEdEsc(was[i++]);
+      html += same;
+      left += same;
+      right += same;
+      j++;
+    } else if (j >= now.length || (i < was.length && grid[i + 1][j] >= grid[i][j + 1])) {
+      const gone = `<del>${getEdEsc(was[i++])}</del>`;
+      html += gone;
+      left += gone;
+      del++;
+    } else {
+      const came = `<ins>${getEdEsc(now[j++])}</ins>`;
+      html += came;
+      right += came;
+      ins++;
+    }
+  }
+  const join = (str) => str.replace(/<\/del><del>/g, '').replace(/<\/ins><ins>/g, '');
+  return { html: join(html), left: join(left), right: join(right), del: del, ins: ins };
+}
+
+/* Fill the comparison window with the diff of a frame against its saved text and open it */
+function setEdDiffOpen(frame) {
+  const win = document.querySelector('[data-demo-ed-diffwin]');
+  if (!win) return;
+  const diff = getEdDiff(frame.edOrig, getEdText(frame));
+  const put = (name, html) => win.querySelectorAll(`[data-demo-ed-dw-${name}]`).forEach((node) => { node.innerHTML = html; });
+  win.edFrame = frame;
+  win.toggleAttribute('data-same', !(diff.del || diff.ins));
+  put('sub', getEdEsc(frame.dataset.demoEdName || ''));
+  put('all', diff.html);
+  put('was', diff.left);
+  put('now', diff.right);
+  put('ins', `+${diff.ins}`);
+  put('del', `−${diff.del}`);
+  if (window.setWindowOpen) window.setWindowOpen(win);
+  else win.showModal();
+}
+
+/* Write the diff against the saved text and its count into a frame */
+function setEdDelta(frame, text) {
+  const diff = getEdDiff(frame.edOrig, text);
+  frame.querySelectorAll('[data-demo-ed-diff]').forEach((node) => { node.innerHTML = diff.html; });
+  frame.querySelectorAll('[data-demo-ed-delta]').forEach((node) => {
+    node.textContent = (diff.del || diff.ins) ? `+${diff.ins} −${diff.del}` : 'без изменений';
+  });
+}
+
+/* Lay a template out one tag a line, indenting nested tags */
+function getEdPretty(text) {
+  let depth = 0;
+  return text.replace(/>\s*</g, '>\n<').split('\n').map((row) => {
+    const tag = row.trim();
+    const close = tag.startsWith('</');
+    if (close) depth = Math.max(0, depth - 1);
+    const out = '  '.repeat(depth) + tag;
+    const open = tag.match(/^<([a-zA-Z][\w-]*)/);
+    if (open && !ED_VOID.test(open[1]) && !tag.endsWith('/>') && !new RegExp(`</${open[1]}>\\s*$`, 'i').test(tag)) depth++;
+    return out;
+  }).join('\n');
+}
+
+/* Join a laid out template back into one line */
+function getEdFlat(text) {
+  return text.replace(/>\s*\n\s*</g, '><').replace(/\s*\n\s*/g, ' ').trim();
+}
+
+/* Replace the whole text of a frame as one undo step */
+function setEdText(frame, text, note) {
+  const view = frame.edView;
+  if (view) view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: text } });
+  else {
+    frame.edArea.focus();
+    frame.edArea.select();
+    document.execCommand('insertText', false, text);
+  }
+  if (note) setEdNote(frame, note);
+}
+
+/* Count the edits between two strings, to name the nearest known variable */
+function getEdDistance(src, dst) {
+  const row = Array.from({ length: dst.length + 1 }, (_, k) => k);
+  for (let i = 1; i <= src.length; i++) {
+    let prev = row[0];
+    row[0] = i;
+    for (let j = 1; j <= dst.length; j++) {
+      const keep = row[j];
+      row[j] = Math.min(row[j] + 1, row[j - 1] + 1, prev + (src[i - 1] === dst[j - 1] ? 0 : 1));
+      prev = keep;
+    }
+  }
+  return row[dst.length];
+}
+
+/* Find what a template gets wrong, each finding with its fix where one exists */
+function getEdIssues(text) {
+  const out = [];
+  for (const hit of text.matchAll(/\[(\w+)\]/g)) {
+    if (ED_KEYS.some(([key]) => key === hit[0])) continue;
+    const near = ED_KEYS.map(([key]) => [key, getEdDistance(hit[0], key)]).sort((p, q) => p[1] - q[1])[0];
+    const hint = near[1] <= 3 ? near[0] : '';
+    out.push({
+      from: hit.index,
+      to: hit.index + hit[0].length,
+      severity: 'error',
+      message: `Неизвестная переменная ${hit[0]}` + (hint ? ` — может быть, ${hint}?` : ''),
+      fix: hint ? { label: `Заменить на ${hint}`, insert: hint } : null,
+    });
+  }
+  const stack = [];
+  for (const tag of text.matchAll(/<\/?([a-zA-Z][\w-]*)([^>]*)>/g)) {
+    const name = tag[1].toLowerCase();
+    const end = tag.index + tag[0].length;
+    if (tag[0][1] === '/') {
+      if (stack.length && stack[stack.length - 1].name === name) stack.pop();
+      else {
+        out.push({ from: tag.index, to: end, severity: 'error', message: `Лишний закрывающий тег </${name}>`,
+          fix: { label: 'Удалить тег', insert: '' } });
+      }
+      continue;
+    }
+    const tail = tag.index + 1 + name.length;
+    if (name === 'img' && !/\salt=/.test(tag[2])) {
+      out.push({ from: tag.index, to: tail, severity: 'warning', message: 'У <img> нет alt: изображение не прочитает экранный диктор',
+        fix: { label: 'Добавить alt="[title]"', at: tail, insert: ' alt="[title]"' } });
+    }
+    if (/target="_blank"/.test(tag[2]) && !/rel="[^"]*noopener/.test(tag[2])) {
+      out.push({ from: tag.index, to: tail, severity: 'warning', message: 'Ссылка в новом окне без rel="noopener"',
+        fix: { label: 'Добавить rel="noopener"', at: tail, insert: ' rel="noopener"' } });
+    }
+    for (const bare of tag[2].matchAll(/=(\[\w+\])/g)) {
+      const from = tail + bare.index + 1;
+      out.push({ from: from, to: from + bare[1].length, severity: 'info', message: 'Значение атрибута без кавычек',
+        fix: { label: 'Взять в кавычки', insert: `"${bare[1]}"` } });
+    }
+    if (!ED_VOID.test(name) && !tag[0].endsWith('/>')) stack.push({ name: name, from: tag.index, to: end });
+  }
+  stack.forEach((open) => out.push({ from: open.from, to: open.to, severity: 'error', message: `Тег <${open.name}> не закрыт`,
+    fix: { label: `Закрыть </${open.name}>`, at: text.length, insert: `</${open.name}>` } }));
+  if (text.trim() && !text.includes('[src]')) {
+    out.push({ from: 0, to: Math.min(text.length, 1), severity: 'warning', message: 'Шаблон не выводит ссылку на файл [src]' });
+  }
+  return out;
+}
+
+/* Build the CodeMirror lint source of a frame, which also writes its badge */
+function getEdLint(frame) {
+  return (view) => {
+    const found = getEdIssues(view.state.doc.toString());
+    const errors = found.filter((item) => item.severity === 'error').length;
+    const warns = found.length - errors;
+    const label = `${errors} ${getEdWord(errors, 'ошибка', 'ошибки', 'ошибок')} · ${warns} ${getEdWord(warns, 'замечание', 'замечания', 'замечаний')}`;
+    frame.dataset.lint = errors ? 'error' : (warns ? 'warn' : 'ok');
+    frame.querySelectorAll('[data-demo-ed-lint]').forEach((node) => { node.textContent = found.length ? label : 'Проблем нет'; });
+    return found.map((item) => ({
+      from: item.from,
+      to: item.to,
+      severity: item.severity,
+      message: item.message,
+      actions: item.fix ? [{
+        name: item.fix.label,
+        apply(editor, from, to) {
+          const at = item.fix.at ?? null;
+          editor.dispatch({ changes: at === null ? { from: from, to: to, insert: item.fix.insert } : { from: at, insert: item.fix.insert } });
+        },
+      }] : [],
+    }));
+  };
+}
+
+/* Offer the template variables when a bracket is typed, taking the bracket the editor closed by itself */
+function getEdComplete(ctx) {
+  const word = ctx.matchBefore(/\[\w*\]?/);
+  if (!word || (word.from === word.to && !ctx.explicit)) return null;
+  const shut = !word.text.endsWith(']') && ctx.state.sliceDoc(ctx.pos, ctx.pos + 1) === ']';
+  return {
+    from: word.from,
+    to: shut ? ctx.pos + 1 : ctx.pos,
+    options: ED_KEYS.map(([label, detail]) => ({ label: label, detail: detail, type: 'variable' })),
+    validFor: /^\[\w*\]?$/,
+  };
+}
+
+/* Mount CodeMirror in a frame with the theme highlighter, variable marks and the lint it asks for */
+function setEdCode(frame, mount) {
+  const area = mount.querySelector('textarea');
+  const wrap = new CM6.Compartment();
+  const deco = new CM6.MatchDecorator({ regexp: ED_RE, decoration: CM6.Decoration.mark({ class: 'd-ph' }) });
+  const marks = CM6.ViewPlugin.define((view) => ({
+    marks: deco.createDeco(view),
+    update(upd) { this.marks = deco.updateDeco(upd, this.marks); },
+  }), { decorations: (view) => view.marks });
+  const lint = frame.hasAttribute('data-demo-ed-lint') ? [CM6.linter(getEdLint(frame), { delay: 250 }), CM6.lintGutter()] : [];
+  frame.edWrap = wrap;
+  frame.edView = new CM6.EditorView({
+    parent: mount,
+    state: CM6.EditorState.create({
+      doc: area.value,
+      extensions: [
+        CM6.basicSetup,
+        CM6.html(),
+        CM6.syntaxHighlighting(CM6.classHighlighter),
+        CM6.keymap.of([CM6.indentWithTab]),
+        wrap.of(CM6.EditorView.lineWrapping),
+        marks,
+        lint,
+        CM6.EditorState.languageData.of(() => [{ autocomplete: getEdComplete }]),
+        CM6.EditorState.phrases.of(ED_PHRASES),
+        CM6.EditorView.contentAttributes.of({ 'aria-label': mount.dataset.demoCm || 'HTML' }),
+        CM6.EditorView.updateListener.of((upd) => {
+          if (upd.docChanged || upd.selectionSet || upd.focusChanged) setEdStatus(frame);
+        }),
+      ],
+    }),
+  });
+}
+
+/* Measure the caret of a textarea through a hidden twin with the same box and face */
+function getEdCaret(area, pos) {
+  const probe = document.createElement('div');
+  const css = getComputedStyle(area);
+  ['boxSizing', 'width', 'paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft', 'borderTopWidth', 'borderRightWidth',
+    'borderBottomWidth', 'borderLeftWidth', 'fontFamily', 'fontSize', 'fontWeight', 'lineHeight', 'letterSpacing', 'tabSize',
+    'wordSpacing', 'overflowWrap'].forEach((prop) => { probe.style[prop] = css[prop]; });
+  Object.assign(probe.style, { position: 'absolute', visibility: 'hidden', whiteSpace: 'pre-wrap', top: '0', left: '-9999px', borderStyle: 'solid' });
+  probe.textContent = area.value.slice(0, pos);
+  const mark = document.createElement('span');
+  mark.textContent = area.value.slice(pos) || '.';
+  probe.appendChild(mark);
+  document.body.appendChild(probe);
+  const at = { top: mark.offsetTop - area.scrollTop, left: mark.offsetLeft, height: parseFloat(css.lineHeight) || mark.offsetHeight };
+  probe.remove();
+  return at;
+}
+
+/* Mark one option of a list as active and tell the owner field which one it is */
+function setEdActive(owner, list, item) {
+  list.querySelectorAll('[aria-selected="true"]').forEach((node) => node.removeAttribute('aria-selected'));
+  if (!item) {
+    owner.removeAttribute('aria-activedescendant');
+    return;
+  }
+  item.setAttribute('aria-selected', 'true');
+  owner.setAttribute('aria-activedescendant', item.id);
+  item.scrollIntoView({ block: 'nearest' });
+}
+
+/* Open or narrow the variable hint under the caret of a plain field */
+function setEdHint(frame) {
+  const area = frame.edArea;
+  const list = frame.edHint;
+  const head = area.value.slice(0, area.selectionStart).match(/\[(\w*)$/);
+  const rows = head ? [...list.querySelectorAll('[data-demo-ed-ins]')] : [];
+  rows.forEach((row) => { row.hidden = !row.dataset.demoEdIns.startsWith('[' + head[1]); });
+  const first = rows.find((row) => !row.hidden);
+  if (!first || area.selectionStart !== area.selectionEnd || document.activeElement !== area) {
+    setEdHintShut(frame);
+    return;
+  }
+  frame.edHintFrom = area.selectionStart - head[0].length;
+  const at = getEdCaret(area, frame.edHintFrom);
+  list.hidden = false;
+  const room = list.offsetParent ? list.offsetParent.clientWidth - list.offsetWidth : 0;
+  list.style.left = Math.max(0, Math.min(area.offsetLeft + at.left, room)) + 'px';
+  list.style.top = area.offsetTop + at.top + at.height + 'px';
+  area.setAttribute('aria-expanded', 'true');
+  setEdActive(area, list, first);
+}
+
+/* Close the variable hint of a plain field */
+function setEdHintShut(frame) {
+  if (!frame.edHint) return;
+  frame.edHint.hidden = true;
+  frame.edHintFrom = null;
+  frame.edArea.setAttribute('aria-expanded', 'false');
+  setEdActive(frame.edArea, frame.edHint, null);
+}
+
+/* Step the active option of a list up or down, wrapping round */
+function setEdStep(owner, list, step) {
+  const rows = [...list.querySelectorAll('[role="option"]:not([hidden])')];
+  if (!rows.length) return;
+  const now = rows.findIndex((row) => row.getAttribute('aria-selected') === 'true');
+  setEdActive(owner, list, rows[(now + step + rows.length) % rows.length]);
+}
+
+/* Toggle a frame between its place in the form and the whole screen */
+function setEdFull(frame) {
+  const view = frame.edView;
+  const on = !frame.classList.contains('d-ed-full');
+  const flip = () => {
+    frame.classList.toggle('d-ed-full', on);
+    document.documentElement.classList.toggle('sl-is-locked', on);
+    frame.querySelectorAll('[data-demo-ed-act="full"]').forEach((btn) => btn.setAttribute('aria-pressed', String(on)));
+  };
+  const done = () => {
+    frame.style.viewTransitionName = '';
+    if (view) view.requestMeasure();
+    setEdView(frame);
+    (view || frame.edArea).focus();
+  };
+  if (!document.startViewTransition) {
+    flip();
+    done();
+    return;
+  }
+  frame.style.viewTransitionName = 'd-ed';
+  document.startViewTransition(flip).finished.then(done, done);
+}
+
+/* Run one named command of the editor on a frame */
+function setEdAct(frame, act, btn) {
+  const view = frame.edView;
+  const area = frame.edArea;
+  if (act === 'full') return setEdFull(frame);
+  if (act === 'palette') return setEdPalette(frame);
+  if (act === 'reset') return setEdText(frame, frame.edOrig, 'Возвращён исходный текст');
+  if (act === 'pretty') return setEdText(frame, getEdPretty(getEdFlat(getEdText(frame))), 'Тег на строку');
+  if (act === 'flat') return setEdText(frame, getEdFlat(getEdText(frame)), 'Собрано в одну строку');
+  if (act === 'diff') return setEdDiffOpen(frame);
+  if (act === 'preview') {
+    const on = !frame.hasAttribute('data-view');
+    frame.toggleAttribute('data-view', on);
+    frame.querySelectorAll('[data-demo-ed-act="preview"]').forEach((item) => item.setAttribute('aria-pressed', String(on)));
+    if (view) view.requestMeasure();
+    if (on) setEdView(frame);
+    return;
+  }
+  if (act === 'code' || act === 'view') {
+    frame.dataset.pane = act;
+    frame.querySelectorAll('[data-demo-ed-act="code"], [data-demo-ed-act="view"]').forEach((tab) => {
+      tab.setAttribute('aria-selected', String(tab.dataset.demoEdAct === act));
+    });
+    if (act === 'view') setEdView(frame);
+    else (view || area).focus();
+    return;
+  }
+  if (act === 'copy') {
+    navigator.clipboard?.writeText(getEdText(frame)).then(() => setEdNote(frame, 'Скопировано'), () => setEdNote(frame, 'Буфер недоступен'));
+    return;
+  }
+  if (act === 'wrap') {
+    const on = btn ? btn.getAttribute('aria-pressed') !== 'true' : !!frame.edNoWrap;
+    frame.edNoWrap = !on;
+    frame.querySelectorAll('[data-demo-ed-act="wrap"]').forEach((item) => item.setAttribute('aria-pressed', String(on)));
+    if (view) view.dispatch({ effects: frame.edWrap.reconfigure(on ? CM6.EditorView.lineWrapping : []) });
+    else area.setAttribute('wrap', on ? 'soft' : 'off');
+    return;
+  }
+  if (view) {
+    const run = {
+      undo: CM6.undo,
+      redo: CM6.redo,
+      search: CM6.openSearchPanel,
+      fold: CM6.foldAll,
+      unfold: CM6.unfoldAll,
+      comment: CM6.toggleComment,
+      lint: CM6.openLintPanel,
+      next: CM6.nextDiagnostic,
+      complete: CM6.startCompletion,
+      all: CM6.selectAll,
+    }[act];
+    view.focus();
+    if (run) run(view);
+    return;
+  }
+  area.focus();
+  if (act === 'undo' || act === 'redo') document.execCommand(act);
+  if (act === 'all') area.select();
+}
+
+/* Insert a variable at the caret, replacing the typed beginning of it in a plain field */
+function setEdInsert(frame, key) {
+  const view = frame.edView;
+  if (view) {
+    view.dispatch(view.state.replaceSelection(key));
+    view.focus();
+    return;
+  }
+  const area = frame.edArea;
+  area.focus();
+  if (frame.edHintFrom !== null && frame.edHintFrom !== undefined) area.setSelectionRange(frame.edHintFrom, area.selectionStart);
+  document.execCommand('insertText', false, key);
+  setEdHintShut(frame);
+}
+
+/* Open the command palette for a frame */
+function setEdPalette(frame) {
+  const pal = document.querySelector('[data-demo-ed-palette]');
+  if (!pal) return;
+  edlast = frame || edlast || document.querySelector('[data-demo-ed]');
+  pal.querySelectorAll('[data-demo-ed-pal-sub]').forEach((node) => { node.textContent = edlast.dataset.demoEdName || ''; });
+  const find = pal.querySelector('[data-demo-ed-find]');
+  find.value = '';
+  setEdPaletteFilter(pal, '');
+  if (window.setWindowOpen) window.setWindowOpen(pal);
+  else pal.showModal();
+  find.focus();
+}
+
+/* Filter the palette by letters typed in order, marking the matched ones */
+function setEdPaletteFilter(pal, term) {
+  const want = term.trim().toLowerCase();
+  const find = pal.querySelector('[data-demo-ed-find]');
+  let first = null;
+  pal.querySelectorAll('[data-demo-ed-cmd]').forEach((row) => {
+    const label = row.dataset.demoEdCmd;
+    const low = label.toLowerCase();
+    const hits = [];
+    let at = 0;
+    for (const ch of want) {
+      const pos = low.indexOf(ch, at);
+      if (pos < 0) {
+        at = -1;
+        break;
+      }
+      hits.push(pos);
+      at = pos + 1;
+    }
+    const ok = !want || at >= 0;
+    row.hidden = !ok;
+    const name = row.querySelector('[data-demo-ed-cmd-name]');
+    name.innerHTML = [...label].map((ch, k) => (ok && hits.includes(k)) ? `<b>${getEdEsc(ch)}</b>` : getEdEsc(ch)).join('');
+    if (ok && !first) first = row;
+  });
+  pal.querySelectorAll('[data-demo-ed-pal-group]').forEach((group) => {
+    group.hidden = !group.querySelector('[data-demo-ed-cmd]:not([hidden])');
+  });
+  pal.querySelectorAll('[data-demo-ed-pal-empty]').forEach((node) => { node.hidden = !!first; });
+  setEdActive(find, pal, first);
+}
+
+/* Run a palette command on the frame it was opened for and raise it in its group */
+function setEdPaletteRun(pal, row) {
+  if (!row || !edlast) return;
+  pal.querySelectorAll('[data-recent]').forEach((node) => node.removeAttribute('data-recent'));
+  row.parentNode.prepend(row);
+  row.setAttribute('data-recent', '');
+  const frame = edlast;
+  if (window.setWindowClose) window.setWindowClose(pal);
+  else pal.close();
+  requestAnimationFrame(() => {
+    if (row.dataset.demoEdIns) setEdInsert(frame, row.dataset.demoEdIns);
+    else setEdAct(frame, row.dataset.demoEdAct, null);
+  });
+}
+
+/* Show one buffer of a tabbed editor, focusing it only when the reader asked */
+function setEdTab(key, focus) {
+  document.querySelectorAll('[data-demo-ed-tab]').forEach((tab) => {
+    const on = tab.dataset.demoEdTab === key;
+    tab.setAttribute('aria-selected', String(on));
+    tab.tabIndex = on ? 0 : -1;
+  });
+  document.querySelectorAll('[data-demo-ed-key]').forEach((frame) => {
+    const on = frame.dataset.demoEdKey === key;
+    frame.hidden = !on;
+    if (!on || !frame.edView) return;
+    frame.edView.requestMeasure();
+    if (focus) frame.edView.focus();
+  });
+}
+
+/* Wire a plain textarea frame: growth, status, mirror scroll and the keys of its hint */
+function setEdPlain(frame, area) {
+  const grow = !CSS.supports('field-sizing', 'content');
+  const keys = ['ArrowUp', 'ArrowDown', 'Enter', 'Tab', 'Escape'];
+  const fit = () => {
+    if (!grow || !area.hasAttribute('data-demo-ta-grow')) return;
+    area.style.height = 'auto';
+    area.style.height = area.scrollHeight + 2 + 'px';
+  };
+  frame.edArea = area;
+  frame.edOrig = area.value;
+  ['input', 'select', 'keyup', 'click', 'focus', 'blur'].forEach((type) => area.addEventListener(type, (ev) => {
+    fit();
+    setEdStatus(frame);
+    if (frame.edHint && !(ev.type === 'keyup' && keys.includes(ev.key))) setEdHint(frame);
+  }));
+  area.addEventListener('scroll', () => {
+    if (frame.edMirror) frame.edMirror.scrollTop = area.scrollTop;
+  });
+  area.addEventListener('keydown', (ev) => {
+    if (!frame.edHint || frame.edHint.hidden) return;
+    if (ev.key === 'ArrowDown' || ev.key === 'ArrowUp') {
+      ev.preventDefault();
+      setEdStep(area, frame.edHint, ev.key === 'ArrowDown' ? 1 : -1);
+    } else if (ev.key === 'Enter' || ev.key === 'Tab') {
+      ev.preventDefault();
+      setEdInsert(frame, frame.edHint.querySelector('[aria-selected="true"]').dataset.demoEdIns);
+    } else if (ev.key === 'Escape') {
+      ev.preventDefault();
+      setEdHintShut(frame);
+    }
+  });
+  if (frame.edHint) frame.edHint.addEventListener('mousedown', (ev) => ev.preventDefault());
+  fit();
+}
+
+/* Wire the palette field: filter on typing, arrows to choose, Enter to run, Esc to close at once */
+function setEdPaletteKeys(pal) {
+  const find = pal.querySelector('[data-demo-ed-find]');
+  find.addEventListener('input', () => setEdPaletteFilter(pal, find.value));
+  pal.addEventListener('keydown', (ev) => {
+    if (ev.key === 'ArrowDown' || ev.key === 'ArrowUp') {
+      ev.preventDefault();
+      setEdStep(find, pal, ev.key === 'ArrowDown' ? 1 : -1);
+    } else if (ev.key === 'Enter') {
+      ev.preventDefault();
+      setEdPaletteRun(pal, pal.querySelector('[data-demo-ed-cmd][aria-selected="true"]'));
+    } else if (ev.key === 'Escape') {
+      ev.preventDefault();
+      if (window.setWindowClose) window.setWindowClose(pal);
+      else pal.close();
+    }
+  });
+}
+
+/* Start every editor frame of the page and the shared keys and clicks of the series */
+function setDemoEditors() {
+  const frames = document.querySelectorAll('[data-demo-ed]');
+  if (!frames.length) return;
+  let uid = 0;
+  document.querySelectorAll('[data-demo-ta-hint] [role="option"], [data-demo-ed-palette] [role="option"]').forEach((node) => {
+    node.id = node.id || 'd-ed-opt-' + uid++;
+  });
+  frames.forEach((frame) => {
+    const mount = frame.querySelector('[data-demo-cm]');
+    const area = frame.querySelector('[data-demo-ta]');
+    frame.edMirror = frame.querySelector('[data-demo-ta-mirror]');
+    frame.edHint = frame.querySelector('[data-demo-ta-hint]');
+    frame.edAlign = frame.querySelector('[data-demo-ed-align]:checked')?.value || '';
+    if (mount && window.CM6) {
+      frame.edOrig = mount.querySelector('textarea').value;
+      setEdCode(frame, mount);
+    } else if (area) setEdPlain(frame, area);
+    frame.addEventListener('focusin', () => { edlast = frame; });
+    frame.querySelectorAll('[data-demo-ed-align]').forEach((input) => input.addEventListener('change', () => {
+      frame.edAlign = input.value;
+      setEdView(frame);
+    }));
+    setEdStatus(frame);
+  });
+  const first = document.querySelector('[data-demo-ed-tab]');
+  if (first) setEdTab(first.dataset.demoEdTab, false);
+  new MutationObserver(() => frames.forEach((frame) => {
+    if (frame.querySelector('[data-demo-ed-view]')) setEdView(frame);
+  })).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+  const pal = document.querySelector('[data-demo-ed-palette]');
+  if (pal) setEdPaletteKeys(pal);
+  document.addEventListener('click', (ev) => {
+    const tab = ev.target.closest('[data-demo-ed-tab]');
+    if (tab) return setEdTab(tab.dataset.demoEdTab, true);
+    const cmd = ev.target.closest('[data-demo-ed-cmd]');
+    if (cmd) {
+      ev.preventDefault();
+      return setEdPaletteRun(cmd.closest('[data-demo-ed-palette]'), cmd);
+    }
+    const btn = ev.target.closest('[data-demo-ed-act], [data-demo-ed-ins]');
+    const win = btn && btn.closest('[data-demo-ed-diffwin]');
+    const frame = btn && (btn.closest('[data-demo-ed]') || (win && win.edFrame));
+    if (!frame) return;
+    ev.preventDefault();
+    btn.closest('[popover]')?.hidePopover();
+    if (win && window.setWindowClose) window.setWindowClose(win);
+    else if (win) win.close();
+    if (btn.dataset.demoEdIns) setEdInsert(frame, btn.dataset.demoEdIns);
+    else setEdAct(frame, btn.dataset.demoEdAct, btn);
+  });
+  document.addEventListener('keydown', (ev) => {
+    const tab = ev.target.closest?.('[data-demo-ed-tab]');
+    if (tab && (ev.key === 'ArrowRight' || ev.key === 'ArrowLeft')) {
+      const tabs = [...document.querySelectorAll('[data-demo-ed-tab]')];
+      const next = tabs[(tabs.indexOf(tab) + (ev.key === 'ArrowRight' ? 1 : -1) + tabs.length) % tabs.length];
+      setEdTab(next.dataset.demoEdTab, false);
+      next.focus();
+      return;
+    }
+    if (pal && (ev.ctrlKey || ev.metaKey) && ev.code === 'KeyK') {
+      ev.preventDefault();
+      if (!pal.open) setEdPalette(ev.target.closest?.('[data-demo-ed]') || edlast);
+      else if (window.setWindowClose) window.setWindowClose(pal);
+      else pal.close();
+      return;
+    }
+    const open = document.querySelector('[data-demo-ed].d-ed-full');
+    if (ev.key === 'Escape' && open && !ev.defaultPrevented && !document.querySelector('dialog[open]')) setEdFull(open);
+  });
+}
+
+/* Read what a card of the list carries for the sorts and filters: date, views, rating, title, first letter, category */
+function getNodeCardData(card) {
+  const num = (sel) => parseInt((card.querySelector(sel)?.textContent || '0').replace(/\D/g, ''), 10) || 0;
+  return {
+    published: Date.parse(card.querySelector('time[datetime]')?.getAttribute('datetime') || '') || 0,
+    views: num('.sl-card-reads'),
+    rating: num('.sl-rate-num'),
+    title: (card.querySelector('.sl-title')?.textContent || '').trim().toLowerCase(),
+    head: (card.querySelector('.sl-title')?.textContent || '').trim().charAt(0).toUpperCase(),
+    cat: (card.querySelector('.sl-card-category')?.textContent || '').trim(),
+  };
+}
+
+/* Show the cards of the chosen category and letter holding the typed words, in the chosen order, or the empty notice */
+function setNodeHeadList(root) {
+  const cards = [...document.querySelectorAll('.sl-post')];
+  if (!cards.length) return;
+  const pick = root.querySelector(`[data-nh-cat="${root.dataset.cat}"][data-count]`);
+  const name = root.dataset.cat === 'all' || !pick ? '' : pick.dataset.name;
+  const want = (root.nhFind || '').trim().toLowerCase();
+  const lead = root.dataset.let || '';
+  const key = root.dataset.sort === 'updated' ? 'published' : root.dataset.sort;
+  const way = root.dataset.dir === 'asc' ? 1 : -1;
+  const rows = cards.map((card) => ({ card: card, data: getNodeCardData(card) }));
+  rows.sort((one, two) => (one.data[key] > two.data[key] ? 1 : one.data[key] < two.data[key] ? -1 : 0) * way);
+  const tail = rows[0].card.parentNode.querySelector('.sl-pager-info');
+  let shown = 0;
+  rows.forEach(({ card, data }) => {
+    const ok = (!name || data.cat === name) && (!lead || data.head === lead) && (!want || data.title.includes(want));
+    card.hidden = !ok;
+    if (ok) shown++;
+    card.parentNode.insertBefore(card, tail);
+  });
+  let empty = document.querySelector('[data-nh-empty]');
+  if (!empty) {
+    empty = document.createElement('div');
+    empty.className = 'sl-alert sl-alert-info';
+    empty.setAttribute('data-nh-empty', '');
+    empty.innerHTML = '<div class="sl-alert-body">Нет информации</div>';
+    rows[0].card.parentNode.insertBefore(empty, tail);
+  }
+  empty.hidden = shown > 0;
+  root.querySelectorAll('[data-nh-found]').forEach((node) => {
+    node.textContent = want ? `Найдено на странице: ${shown} из ${cards.length}` : '';
+  });
+}
+
+/* Draw the state of one Node header root into its marks, counts, labels and the cards under it */
+function setNodeHeadDraw(root) {
+  const cat = root.dataset.cat;
+  const sort = root.dataset.sort;
+  const dir = root.dataset.dir;
+  const lead = root.dataset.let || '';
+  const pick = root.querySelector(`[data-nh-cat="${cat}"][data-count]`);
+  const by = root.querySelector(`[data-nh-sort="${sort}"][data-name]`);
+  const put = (name, text) => root.querySelectorAll(`[data-nh-${name}]`).forEach((node) => { node.textContent = text; });
+  root.querySelectorAll('[data-nh-cat]:not([data-nh-tag])').forEach((node) => node.setAttribute('aria-current', String(node.dataset.nhCat === cat)));
+  root.querySelectorAll('[data-nh-sort]:not(option):not([data-nh-tag])').forEach((node) => {
+    node.setAttribute(node.tagName === 'A' ? 'aria-current' : 'aria-pressed', String(node.dataset.nhSort === sort));
+  });
+  root.querySelectorAll('[data-nh-let]:not([data-nh-tag])').forEach((node) => node.setAttribute('aria-current', String(node.dataset.nhLet === lead)));
+  root.querySelectorAll('[data-nh-sort-select]').forEach((node) => { node.value = sort; });
+  root.querySelectorAll('[data-nh-dir]:not([data-nh-tag])').forEach((node) => {
+    node.title = dir === 'asc' ? 'По возрастанию' : 'По убыванию';
+    node.setAttribute('aria-label', node.title);
+  });
+  put('scope', pick ? pick.dataset.name : '');
+  put('count', pick ? pick.dataset.count : '');
+  put('sortname', by ? by.dataset.name : '');
+  put('letter', lead);
+  const on = { cat: cat !== 'all', let: lead !== '', sort: sort !== 'published' || dir !== 'desc' };
+  root.querySelectorAll('[data-nh-pill]').forEach((node) => node.classList.toggle('sl-is-active', !!on[node.dataset.nhPill]));
+  put('active', String((cat !== 'all') + (sort !== 'published') + (dir !== 'desc') + (lead !== '')));
+  root.toggleAttribute('data-filtered', cat !== 'all' || sort !== 'published' || dir !== 'desc' || lead !== '');
+  setNodeHeadList(root);
+}
+
+/* Close the panel of a Node header and tell its toggles */
+function setNodeHeadShut(root) {
+  root.removeAttribute('data-open');
+  root.querySelectorAll('[data-nh-panel]').forEach((node) => node.setAttribute('aria-expanded', 'false'));
+}
+
+/* Move the focus through the options of an open menu with the arrows, wrapping round */
+function setNodeHeadStep(pop, ev) {
+  const keys = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 };
+  if (!(ev.key in keys)) return;
+  const rows = [...pop.querySelectorAll('[data-nh-cat], [data-nh-let], [data-nh-sort]')].filter((node) => node.checkVisibility());
+  const now = rows.indexOf(document.activeElement);
+  if (now < 0) return;
+  ev.preventDefault();
+  rows[(now + keys[ev.key] + rows.length) % rows.length].focus();
+}
+
+/* Close the toggle block a pick was made in through its own control, so slaed.js keeps the state it owns */
+function setNodeHeadFold(node) {
+  const box = node.closest('[data-sl-toggle]');
+  if (!box || !box.classList.contains('sl-is-open')) return null;
+  const ctl = document.querySelector(`[data-sl-toggle-control="${box.id}"]`);
+  ctl?.click();
+  return ctl;
+}
+
+/* Wire every Node header of the stand: category, letter, sort, direction, reset, panels, menus, search, keys, stickiness */
+function setDemoNodeHead() {
+  document.querySelectorAll('[data-nh]').forEach((root) => {
+    root.addEventListener('click', (ev) => {
+      const cat = ev.target.closest('[data-nh-cat]');
+      const sort = ev.target.closest('[data-nh-sort]:not(option)');
+      const dir = ev.target.closest('[data-nh-dir]');
+      const reset = ev.target.closest('[data-nh-reset]');
+      const panel = ev.target.closest('[data-nh-panel]');
+      const lead = ev.target.closest('[data-nh-let]');
+      if (panel) {
+        const name = panel.dataset.nhPanel || 'on';
+        const open = root.dataset.open !== name;
+        if (open) root.dataset.open = name;
+        else root.removeAttribute('data-open');
+        root.querySelectorAll('[data-nh-panel]').forEach((node) => {
+          node.setAttribute('aria-expanded', String(open && (node.dataset.nhPanel || 'on') === name));
+        });
+        return;
+      }
+      if (!cat && !sort && !dir && !reset && !lead) return;
+      ev.preventDefault();
+      if (cat) root.dataset.cat = cat.dataset.nhCat;
+      if (lead) root.dataset.let = lead.dataset.nhLet;
+      if ((cat || lead) && (cat || lead).closest('[data-nh-closes]')) setNodeHeadShut(root);
+      if ((cat || lead || sort) && !(cat || lead || sort).hasAttribute('data-nh-tag')) setNodeHeadFold(cat || lead || sort);
+      if (sort) {
+        root.dataset.sort = sort.dataset.nhSort;
+        root.dataset.dir = sort.dataset.dir || 'desc';
+      }
+      if (dir) root.dataset.dir = root.dataset.dir === 'asc' ? 'desc' : 'asc';
+      if (reset) Object.assign(root.dataset, { cat: 'all', sort: 'published', dir: 'desc', let: '' });
+      ev.target.closest('[popover]')?.hidePopover();
+      setNodeHeadDraw(root);
+    });
+    root.addEventListener('change', (ev) => {
+      const sel = ev.target.closest('[data-nh-sort-select]');
+      if (!sel) return;
+      root.dataset.sort = sel.value;
+      root.dataset.dir = sel.selectedOptions[0]?.dataset.dir || 'desc';
+      setNodeHeadDraw(root);
+    });
+    root.addEventListener('keydown', (ev) => {
+      if (ev.key !== 'Escape' || !root.hasAttribute('data-open') || ev.target.closest('[popover]')) return;
+      const back = root.querySelector('[data-nh-panel][aria-expanded="true"]');
+      setNodeHeadShut(root);
+      back?.focus();
+    });
+    root.querySelectorAll('[data-nh-find]').forEach((field) => field.addEventListener('input', () => {
+      root.nhFind = field.value;
+      setNodeHeadList(root);
+    }));
+    root.querySelectorAll('[data-sl-toggle]').forEach((box) => {
+      box.addEventListener('keydown', (ev) => {
+        if (ev.key === 'Escape') setNodeHeadFold(ev.target)?.focus();
+        else setNodeHeadStep(box, ev);
+      });
+      document.querySelectorAll(`[data-sl-toggle-control="${box.id}"]`).forEach((ctl) => ctl.addEventListener('sl-toggle-open', () => {
+        (box.querySelector('[aria-current="true"], [aria-pressed="true"]') || box.querySelector('a[href], button'))?.focus({ preventScroll: true });
+      }));
+    });
+    root.querySelectorAll('[popover]').forEach((pop) => {
+      pop.addEventListener('toggle', (ev) => {
+        if (ev.newState !== 'open') return;
+        (pop.querySelector('[aria-current="true"], [aria-pressed="true"]') || pop.querySelector('a[href], button'))?.focus();
+      });
+      pop.addEventListener('keydown', (ev) => setNodeHeadStep(pop, ev));
+    });
+    if (root.hasAttribute('data-nh-sticky')) {
+      const mark = root.querySelector('[data-nh-mark]') || document.createElement('div');
+      if (!mark.isConnected) root.before(mark);
+      new IntersectionObserver(([row]) => root.toggleAttribute('data-stuck', !row.isIntersecting)).observe(mark);
+    }
+    setNodeHeadDraw(root);
+  });
+  document.addEventListener('keydown', (ev) => {
+    if (ev.key !== '/' || ev.target.closest('input, textarea, select, [contenteditable]')) return;
+    const field = [...document.querySelectorAll('[data-nh] [data-nh-find]')].find((node) => node.checkVisibility());
+    if (!field) return;
+    ev.preventDefault();
+    field.focus();
+  });
+}
+
 function initDemoPage() {
   const params = new URLSearchParams(location.search);
   const bare = params.has('bare');
@@ -1745,6 +2936,8 @@ function initDemoPage() {
   setDemoDrop();
   setDemoWindow();
   setDemoFlash(place);
+  setDemoEditors();
+  setDemoNodeHead();
 
   document.addEventListener('click', (e) => {
     const btn = e.target.closest('[data-demo-set]');

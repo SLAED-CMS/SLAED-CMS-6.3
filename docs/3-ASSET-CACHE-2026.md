@@ -54,8 +54,8 @@ printed without a version and keeps the short lifetime below.
 | CSS and JS without a version, fonts, images, icons, sounds | `templates/`, `plugins/`, `sound/` | `public, max-age=604800` with the validators |
 | Public uploads | `uploads/` of a public owner, through the light path | `public, max-age=86400` with the validators |
 | Pages | every route of PHP | `no-store`, as today |
-| Files of the routes | `op=attach` of a stored material, `op=asset` | `private, no-cache` with ETag, as `getFileStream()` answers today |
-| Previews and administrative downloads | `op=attach` with `preview=1`, the file view of the panel | `no-store`, as today |
+| Files of the routes | `go=file` of a stored target, `op=asset` | `private, no-cache` with ETag, as `getFileStream()` answers today |
+| Previews and administrative downloads | `go=file` with `preview=1`, the file view of the panel | `no-store`, as today |
 
 The web server sets these headers, not PHP: the static files never reach PHP. The versioned case is told by its
 query: a request with `v` in the query gets the year, any other the week. The public uploads are the exception: no
@@ -69,8 +69,8 @@ An inline script that calls a function of a deferred file is moved into that fil
 `DOMContentLoaded`. Three exist today: `Editor::getInitScript()` runs the editor at once when `window.SlaedEditors`
 is missing, so a deferred `slaed.js` would leave every instance without its teardown and an htmx swap would leak
 it; the file-manager field of `core/helpers.php` skips itself when `window.SlaedFileManager` is missing; the
-highlight call of `Parser` needs `hljs`. The `go=file` route of 1-FILES-2026.md batch 4 answers like `op=attach`
-when it lands.
+highlight call of `Parser` needs `hljs`. The `go=file` route of 1-FILES-2026.md batch 4 serves every
+closed owner, Node included.
 
 ### Compression
 

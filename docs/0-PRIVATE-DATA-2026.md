@@ -138,10 +138,10 @@ stay as they are; only the root moves out of the document root. What differs bet
   index changes. No file exists there in `public/`, so the request reaches the front controller (`!-f` on Apache, a
   `location ^~ /uploads/` on nginx), and the **light path** answers it before the core boots: no configuration, no
   database, no session. It serves a file of a public folder, a `thumb/` copy included, and refuses everything else
-  — a private folder, a name that leaves its folder, a missing file — with 404 until item 1 of
-  2-PROD-FINDINGS-2026.md turns that into 410.
+  — a private folder, a name that leaves its folder, a missing file — with 410 (item 1 of
+  2-PROD-FINDINGS-2026.md).
 - *Private owner* — the Node types now; the forum, the private messages and the profile comments with their batches
-  of 1-FILES-2026.md. Only the route of the owner delivers a file, after its rights check: `op=attach` and `op=asset`
+  of 1-FILES-2026.md. Only the route of the owner delivers a file, after its rights check: `go=file` and `op=asset`
   of Node, `go=file` of 1-FILES-2026.md batch 4. The light path refuses the folder like any other it does not serve.
 
 The answer of the light path:
@@ -162,7 +162,7 @@ Where it is decided:
   `getUploadUrl()` (new, `core/system.php`) answers the address `uploads/<path>` of a path of a public folder and an
   empty string for a private one, whose address only the route of its owner builds. Closing an owner in
   1-FILES-2026.md is a line out of that list plus its route; no folder moves.
--  **One sender.** Every byte of an upload leaves through `getFileStream()`: the light path, `op=attach`, `op=asset`
+-  **One sender.** Every byte of an upload leaves through `getFileStream()`: the light path, `go=file`, `op=asset`
   and later `go=file`. It moves from `core/system.php` into the file of the light path, `core/stream.php` (new), which
   the core requires as well, so the light path loads that file and the `Cache` class it calls, nothing else. Handing
   the sending to the server (`X-Accel-Redirect`, `X-Sendfile`, `X-LiteSpeed-Location`) is a later setting in that one
@@ -209,8 +209,8 @@ rewrite gets a broken site rather than an open one.
   This is the mode for nginx, whose server block sets the root anyway, and the recommended one everywhere.
 - *Root on the project.* For a host whose document root cannot be moved, the project sits in the root whole and the
   project-level `.htaccess` rewrites every request into `public/`. Apache and LiteSpeed only. A request for a file
-  outside `public/` is rewritten into `public/` and answers 404, and so does a request under `uploads/` the light
-  path does not serve (2-PROD-FINDINGS-2026.md turns both into 410).
+  outside `public/` is rewritten into `public/` and finds the 404 page of the site, being no address of it; a request
+  under `uploads/` the light path does not serve answers 410 (item 1 of 2-PROD-FINDINGS-2026.md).
 
 **One place decides.** `BASE_DIR` is the project, `PUBLIC_DIR` is `public/`, `UPLOADS_DIR` the one upload root.
 Every filesystem path into the public part reads `PUBLIC_DIR`, and every path that relies on the working directory

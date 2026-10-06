@@ -758,3 +758,404 @@
   color: var(--sl-text);
   font-size: var(--sl-font-micro);
 }
+
+/* Editors series: code face, full frame and CodeMirror dressed in theme tokens */
+:root {
+  --d-mono: ui-monospace, "Cascadia Mono", "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+}
+
+/* A frame opened full stands over the page like a canon window, its scrim a spread shadow */
+[data-demo-ed].d-ed-full {
+  position: fixed;
+  inset: var(--sl-modal-gap);
+  z-index: var(--sl-z-modal);
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  box-shadow: var(--sl-shadow-float), 0 0 0 100vmax var(--sl-scrim-strong);
+}
+
+.d-ed-full [data-demo-ed-body] {
+  flex: 1 1 0;
+  min-height: 0;
+  max-height: none;
+}
+
+.d-ed-full .d-cm[data-demo-ed-body] {
+  display: flex;
+  flex-direction: column;
+}
+
+.d-ed-full [data-demo-ed-body] .cm-editor {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.d-ed-full [data-demo-ed-body] .cm-editor .cm-scroller {
+  max-height: none;
+}
+
+::view-transition-group(d-ed) {
+  animation-duration: var(--sl-time-slow);
+  animation-timing-function: var(--sl-ease-in-out);
+}
+
+/* A variable of the template, in code and in the mirror of a plain field alike */
+.d-ph,
+.d-ph *,
+[data-demo-ta-mirror] mark {
+  border-radius: var(--sl-radius-1);
+  background: var(--sl-tint);
+  box-shadow: inset 0 0 0 1px var(--sl-tint-strong);
+  color: var(--sl-primary-strong);
+}
+
+.d-ph * {
+  background: none;
+  box-shadow: none;
+}
+
+.d-cm .cm-editor {
+  background: var(--sl-bg);
+  color: var(--sl-text);
+  font-size: var(--sl-font-small);
+}
+
+.d-cm .cm-editor.cm-focused {
+  outline: 0;
+}
+
+.d-cm .cm-editor .cm-scroller {
+  max-height: 50vh;
+  font-family: var(--d-mono);
+  line-height: var(--sl-line-loose);
+}
+
+/* The theme gives the content of every editor in a div-form the body face at 16 points of line, which a code face must not take */
+.d-cm .cm-editor .cm-content {
+  padding: var(--sl-space-3) 0;
+  caret-color: var(--sl-primary);
+  font-family: var(--d-mono);
+  font-size: var(--sl-font-small);
+  line-height: var(--sl-line-loose);
+}
+
+.d-cm .cm-editor .cm-line {
+  padding: 0 var(--sl-space-4);
+}
+
+.d-cm .cm-editor .cm-cursor {
+  border-left: 2px solid var(--sl-primary);
+}
+
+.d-cm .cm-editor .cm-gutters {
+  border-right: 1px solid var(--sl-border);
+  background: var(--sl-surface);
+  color: var(--sl-text-subtle);
+}
+
+.d-cm .cm-editor .cm-lineNumbers .cm-gutterElement {
+  min-width: 3ch;
+  padding: 0 var(--sl-space-2) 0 var(--sl-space-3);
+}
+
+.d-cm .cm-editor .cm-foldGutter .cm-gutterElement {
+  padding: 0 var(--sl-space-1);
+  color: var(--sl-text-muted);
+}
+
+.d-cm .cm-editor .cm-activeLine,
+.d-cm .cm-editor .cm-activeLineGutter {
+  background: transparent;
+}
+
+.d-cm .cm-editor.cm-focused .cm-activeLine {
+  background: var(--sl-bg-subtle);
+}
+
+.d-cm .cm-editor.cm-focused .cm-activeLineGutter {
+  background: var(--sl-tint);
+  color: var(--sl-primary);
+}
+
+.d-cm .cm-editor .cm-selectionLayer .cm-selectionBackground,
+.d-cm .cm-editor.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground {
+  background: var(--sl-tint-strong);
+}
+
+.d-cm .cm-editor .cm-content ::selection {
+  background: var(--sl-tint-strong);
+}
+
+.d-cm .cm-editor .cm-selectionMatch {
+  background: var(--sl-primary-subtle);
+}
+
+.d-cm .cm-editor.cm-focused .cm-matchingBracket {
+  background: var(--sl-success-subtle);
+  color: var(--sl-success-strong);
+  outline: 0;
+}
+
+.d-cm .cm-editor .cm-searchMatch {
+  background: var(--sl-warning-subtle);
+  outline: 1px solid var(--sl-warning);
+}
+
+.d-cm .cm-editor .cm-searchMatch-selected {
+  background: var(--sl-tint-strong);
+}
+
+.d-cm .cm-editor .cm-foldPlaceholder {
+  margin: 0 var(--sl-space-1);
+  padding: 0 var(--sl-space-2);
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-1);
+  background: var(--sl-bg-subtle);
+  color: var(--sl-text-muted);
+}
+
+/* The code itself: tags in the primary tone, attributes in the accent, values in success, punctuation receding */
+.d-cm .cm-editor .tok-typeName,
+.d-cm .cm-editor .tok-className { color: var(--sl-primary); }
+.d-cm .cm-editor .tok-propertyName { color: var(--sl-accent); }
+.d-cm .cm-editor .tok-string,
+.d-cm .cm-editor .tok-string2 { color: var(--sl-success); }
+.d-cm .cm-editor .tok-keyword { color: var(--sl-danger); }
+.d-cm .cm-editor .tok-number,
+.d-cm .cm-editor .tok-atom,
+.d-cm .cm-editor .tok-bool { color: var(--sl-warning-strong); }
+.d-cm .cm-editor .tok-punctuation,
+.d-cm .cm-editor .tok-operator,
+.d-cm .cm-editor .tok-meta { color: var(--sl-text-muted); }
+.d-cm .cm-editor .tok-comment { color: var(--sl-text-subtle); font-style: italic; }
+.d-cm .cm-editor .tok-invalid { color: var(--sl-danger); text-decoration: underline wavy; }
+
+/* The completion list and the search panel speak the popover and the field of the theme */
+.d-cm .cm-editor .cm-tooltip {
+  overflow: hidden;
+  border: 1px solid var(--sl-border-strong);
+  border-radius: var(--sl-radius-2);
+  background: var(--sl-bg);
+  box-shadow: var(--sl-popover-shadow);
+}
+
+.d-cm .cm-editor .cm-tooltip-autocomplete > ul {
+  max-height: 16em;
+  font-family: var(--d-mono);
+}
+
+.d-cm .cm-editor .cm-tooltip-autocomplete > ul > li {
+  padding: var(--sl-space-1) var(--sl-space-4) var(--sl-space-1) var(--sl-space-2);
+  line-height: var(--sl-line-loose);
+}
+
+.d-cm .cm-editor .cm-tooltip-autocomplete > ul > li[aria-selected] {
+  background: var(--sl-primary);
+  color: var(--sl-on-solid);
+}
+
+.d-cm .cm-editor .cm-completionDetail {
+  margin-left: var(--sl-space-5);
+  color: inherit;
+  font-family: Tahoma, Arial, Verdana, sans-serif;
+  font-style: normal;
+  opacity: var(--sl-fade-subtle);
+}
+
+.d-cm .cm-editor .cm-completionMatchedText {
+  color: inherit;
+  font-weight: var(--sl-weight-bold);
+  text-decoration: none;
+}
+
+.d-cm .cm-editor .cm-completionIcon {
+  opacity: var(--sl-fade-muted);
+}
+
+.d-cm .cm-editor .cm-panels {
+  border-color: var(--sl-border);
+  background: var(--sl-surface);
+  color: var(--sl-text);
+}
+
+.d-cm .cm-editor .cm-panel.cm-search {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sl-space-2) var(--sl-space-3);
+  padding: var(--sl-space-3) var(--sl-space-8) var(--sl-space-3) var(--sl-space-4);
+  font-size: var(--sl-font-small);
+}
+
+.d-cm .cm-editor .cm-panel.cm-search br {
+  display: none;
+}
+
+.d-cm .cm-editor .cm-panel.cm-search label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sl-space-2);
+  font-size: var(--sl-font-small);
+}
+
+.d-cm .cm-editor .cm-textfield {
+  height: var(--sl-size-control);
+  margin: 0;
+  padding: 0 var(--sl-space-3);
+  border: 1px solid var(--sl-field-border);
+  border-radius: var(--sl-field-radius);
+  background: var(--sl-field-bg);
+  color: var(--sl-text);
+  font: inherit;
+}
+
+.d-cm .cm-editor .cm-textfield:focus {
+  border-color: var(--sl-primary);
+  outline: 0;
+  box-shadow: var(--sl-shadow-focus);
+}
+
+.d-cm .cm-editor .cm-button {
+  height: var(--sl-size-control);
+  margin: 0;
+  padding: 0 var(--sl-space-4);
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-1);
+  background: var(--sl-bg);
+  color: var(--sl-text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.d-cm .cm-editor .cm-button:hover {
+  border-color: var(--sl-border-strong);
+}
+
+.d-cm .cm-editor .cm-panel button[name="close"] {
+  top: 50%;
+  right: var(--sl-space-3);
+  width: var(--sl-size-control);
+  height: var(--sl-size-control);
+  border-radius: var(--sl-radius-1);
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-h3);
+  transform: translateY(-50%);
+  cursor: pointer;
+}
+
+.d-cm .cm-editor .cm-panel button[name="close"]:hover {
+  background: var(--sl-scrim-subtle);
+  color: var(--sl-danger);
+}
+
+/* Node header series: the category chip, the sort segment and the direction button every face shares */
+.sl-chip.d-nh-cat {
+  border-color: var(--sl-border-subtle);
+  background: var(--sl-bg);
+  color: var(--sl-text);
+  cursor: pointer;
+  transition: background-color var(--sl-time-base) var(--sl-ease-out), border-color var(--sl-time-base) var(--sl-ease-out);
+}
+
+.sl-chip.d-nh-cat > .bi {
+  color: var(--sl-cat-tone);
+}
+
+.sl-chip.d-nh-cat:hover {
+  border-color: var(--sl-cat-tone);
+}
+
+.sl-chip.d-nh-cat[aria-current="true"] {
+  border-color: currentColor;
+  background: var(--sl-chip-bg);
+  color: var(--sl-cat-tone);
+}
+
+.d-nh-num {
+  font-weight: var(--sl-weight-bold);
+  opacity: var(--sl-fade-subtle);
+}
+
+.d-nh-seg {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sl-space-1);
+  padding: var(--sl-space-1);
+  border: 1px solid var(--sl-border-subtle);
+  border-radius: var(--sl-radius-pill);
+  background: var(--sl-bg-subtle);
+}
+
+.d-nh-opt {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sl-space-2);
+  height: var(--sl-size-chip);
+  padding: 0 var(--sl-space-4);
+  border: 0;
+  border-radius: var(--sl-radius-pill);
+  background: transparent;
+  color: var(--sl-text-muted);
+  font: inherit;
+  font-size: var(--sl-font-small);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color var(--sl-time-base) var(--sl-ease-out), color var(--sl-time-base) var(--sl-ease-out);
+}
+
+.d-nh-opt:hover {
+  color: var(--sl-text);
+}
+
+.d-nh-opt[aria-pressed="true"] {
+  background: var(--sl-bg);
+  box-shadow: var(--sl-shadow-xs);
+  color: var(--sl-primary);
+}
+
+.d-nh-opt:focus-visible,
+.d-nh-dir:focus-visible,
+.sl-chip.d-nh-cat:focus-visible {
+  outline: 0;
+  box-shadow: var(--sl-shadow-focus);
+}
+
+.d-nh-dir {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: var(--sl-size-chip);
+  height: var(--sl-size-chip);
+  padding: 0;
+  border: 1px solid var(--sl-border-subtle);
+  border-radius: var(--sl-radius-circle);
+  background: var(--sl-bg);
+  color: var(--sl-text-muted);
+  cursor: pointer;
+}
+
+.d-nh-dir:hover {
+  border-color: var(--sl-primary);
+  color: var(--sl-primary);
+}
+
+[data-dir="desc"] .d-nh-dir .d-nh-up,
+[data-dir="asc"] .d-nh-dir .d-nh-down {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .d-nh-scroll {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    scroll-snap-type: x proximity;
+  }
+
+  .d-nh-scroll > * {
+    flex: 0 0 auto;
+    scroll-snap-align: start;
+  }
+}

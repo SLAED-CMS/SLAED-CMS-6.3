@@ -9,11 +9,11 @@ if (!defined('MODULE_FILE') && !defined('ADMIN_FILE')) {
     exit;
 }
 
-# The one public entry point of every registered Node type: the list, the material, the public form, the resource, the attachment and the report of a resource
+# The one public entry point of every registered Node type: the list, the material, the public form, the resource and the report of a resource
 
 # The closed public operations of a type and the methods each one answers; the extension support adds its one operation, no other extension adds any
 function getNodeOps(string $ext = ''): array {
-    $ops = ['' => ['GET', 'HEAD'], 'view' => ['GET', 'HEAD'], 'add' => ['GET', 'HEAD', 'POST'], 'asset' => ['GET', 'HEAD'], 'attach' => ['GET', 'HEAD'], 'report' => ['POST']];
+    $ops = ['' => ['GET', 'HEAD'], 'view' => ['GET', 'HEAD'], 'add' => ['GET', 'HEAD', 'POST'], 'asset' => ['GET', 'HEAD'], 'report' => ['POST']];
     return ($ext === 'support') ? $ops + ['support' => ['POST']] : $ops;
 }
 
@@ -861,46 +861,6 @@ function setNodeAsset(): void {
     exit;
 }
 
-# The query of one URL checked against a key => value regex allowlist: an unknown, a repeated, a malformed or an empty key refuses the whole query with null
-# Keys and values are compared decoded, so a percent-encoded form is the same key and cannot slip past as a second one
-function getNodeQuery(string $url, array $allow): ?array {
-    $cut = strpos($url, '?');
-    $query = ($cut === false) ? '' : substr($url, $cut + 1);
-    $vars = [];
-    foreach (explode('&', $query) as $pair) {
-        if ($pair === '') continue;
-        $eq = strpos($pair, '=');
-        $key = urldecode(($eq === false) ? $pair : substr($pair, 0, $eq));
-        if (!isset($allow[$key]) || isset($vars[$key])) return null;
-        $val = ($eq === false) ? '' : urldecode(substr($pair, $eq + 1));
-        if (!preg_match($allow[$key], $val)) return null;
-        $vars[$key] = $val;
-    }
-    return $vars;
-}
-
-# One editor attachment of the type: a name the text of the stored material carries, or the preview of a new upload of the visitor; any refusal is the same not found
-# The query must be exactly one of the two forms, so a flag, a repeated or an unknown parameter never changes which branch decides
-function setNodeAttach(): void {
-    global $com;
-    $url = (string)($_SERVER['REQUEST_URI'] ?? '');
-    $base = ['name' => '#^[a-z][a-z0-9]{0,19}$#D', 'op' => '#^attach$#D', 'key' => '#^.{1,255}$#Ds', 'thumb' => '#^1$#D'];
-    $saved = getNodeQuery($url, $base + ['id' => '#^[1-9][0-9]{0,9}$#D']);
-    $fresh = getNodeQuery($url, $base + ['preview' => '#^1$#D']);
-    $id = isset($saved['id'], $saved['key']) ? (int)$saved['id'] : 0;
-    $view = !$id && isset($fresh['preview'], $fresh['key']);
-    if (!$id && !$view) setNodeDeny(404);
-    $type = getNodeRoute();
-    $key = getVar('get', 'key', 'raw', '');
-    $thumb = getVar('get', 'thumb', 'raw', '') === '1';
-    $path = getNodeWriter($type)->getNodeFile($type, $id, $key, $thumb, $com);
-    if ($path === '') setNodeDeny(404);
-    $info = class_exists('finfo') ? new finfo(FILEINFO_MIME_TYPE) : null;
-    $mime = $info ? $info->file($path) : false;
-    getFileStream($path, $key, is_string($mime) ? $mime : 'application/octet-stream', true, ($id > 0) ? 'private' : 'none');
-    exit;
-}
-
 # A report that a resource does not work: CSRF, one report a minute for a visitor, and the writer stores the first report once
 # The answer returns to the material the resource belongs to, which is the page the report came from, and to the list of the type only when the material can no longer be read
 function setNodeReport(): void {
@@ -970,7 +930,6 @@ if (!defined('ADMIN_FILE')) {
         case 'view': setNodeView(); break;
         case 'add': setNodeForm(); break;
         case 'asset': setNodeAsset(); break;
-        case 'attach': setNodeAttach(); break;
         case 'report': setNodeReport(); break;
         case 'support': setNodeSupport(); break;
     }

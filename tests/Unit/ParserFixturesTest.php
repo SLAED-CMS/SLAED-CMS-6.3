@@ -30,6 +30,20 @@ namespace {
     if (!function_exists('getUploadFolder')) {
         function getUploadFolder(string $mod, bool $node = false): string { return $node ? 'node/'.$mod : $mod; }
     }
+    # The adapters of the real factory plus one closed owner, so a parse is checked against every form of the address a file context answers
+    if (!function_exists('getFileService')) {
+        function getFileService(): FileAccess
+        {
+            static $fac = null;
+            require_once BASE_DIR.'/core/classes/access.php';
+            $none = fn(string $mod, int $id, string $key): bool => false;
+            return $fac ??= new FileAccess([
+                'node' => ['folder' => fn(string $mod, int $id): string => getUploadFolder($mod, true), 'grant' => $none],
+                'forum' => ['folder' => fn(string $mod, int $id): string => 'forum', 'grant' => $none],
+                'public' => ['folder' => fn(string $mod, int $id): string => getUploadFolder($mod)],
+            ]);
+        }
+    }
 }
 
 namespace Tests\Unit {
@@ -521,6 +535,10 @@ namespace Tests\Unit {
                 'slash in name'      => ['[attach=x/a.pdf align=left title=A]',                            'x/a.pdf', false, false],
                 'no alignment'       => ['[attach=a.pdf title=A]',                                         'a.pdf', false, false],
                 'relation alone'     => ['[attach=a.pdf align=left title=A rel=g]',                        'a.pdf', false, false],
+                'full size'          => ['[attach=a.pdf align=left title=A size=full]',                    'a.pdf', true,  true],
+                'full after rel'     => ['[attach=a.pdf align=left title=A width=1 height=2 rel=g size=full]', 'a.pdf', true, true],
+                'full before width'  => ['[attach=a.pdf align=left title=A size=full width=1 height=2]',   'a.pdf', false, false],
+                'size not full'      => ['[attach=a.pdf align=left title=A size=thumb]',                   'a.pdf', false, false],
                 'trusted raw pair'   => ['[usehtml]\[attach=a.pdf align=left title=A][/usehtml]',          'a.pdf', true,  true],
                 'inside code span'   => ['`[attach=a.pdf align=left title=A]`',                            'a.pdf', true,  false],
                 'inside bb code'     => ['[code][attach=a.pdf align=left title=A][/code]',                 'a.pdf', true,  false],
@@ -548,14 +566,14 @@ namespace Tests\Unit {
             $this->assertSame([], self::$p->getAttachList('no tag at all'));
         }
 
-        # A stored Node material (nid above zero) links the controlled attach route of its type with an encoded key, escaped once for the attribute, and never the closed directory
+        # A file context [owner, id] links the file route with an encoded key, escaped once for the attribute, for Node and any closed owner alike, and never a closed folder
         # The thumb gets thumb=1 for the copy that exists, the old call of a private folder gets no direct address, and the memory of a request keeps both renderings apart
         #[Test]
         public function checkAttachOfAStoredMaterialUsesTheControlledRoute(): void
         {
             if (!defined('UPLOADS_DIR')) define('UPLOADS_DIR', BASE_DIR.'/uploads');
             $mod = 'zzparsernid';
-            $dir = BASE_DIR.'/uploads/'.$mod;
+            $dir = UPLOADS_DIR.'/node/'.$mod;
             $keep = $GLOBALS['conf']['filetype'] ?? null;
             $GLOBALS['conf']['filetype'] = ['pdf' => '<a href="[src]">[title]</a>', 'png' => '<a href="[src]"><img src="[tsrc]" alt="[title]"></a>'];
             mkdir($dir.'/thumb', 0777, true);
@@ -565,15 +583,18 @@ namespace Tests\Unit {
                 file_put_contents($dir.'/thumb/a-abcdefghij-2.png', $png);
                 $src = '[attach=my file.pdf align=left title=Doc] [attach=a-abcdefghij-2.png align=left title=A]';
                 $old = self::$p->filterDoc($src, true, $mod);
-                $new = self::$p->filterDoc($src, true, $mod, 0, '', 7);
+                $new = self::$p->filterDoc($src, true, $mod, 0, '', ['node', 7]);
                 $this->assertStringNotContainsString('uploads/', $old, 'The old call spelled a direct address of a private folder, which only the route of its owner may build');
-                $base = 'index.php?name='.$mod.'&amp;op=attach&amp;id=7&amp;key=';
+                $base = 'index.php?go=file&amp;own=node&amp;id=7&amp;key=';
                 $this->assertStringContainsString('href="'.$base.'my%20file.pdf"', $new);
                 $this->assertStringContainsString('href="'.$base.'a-abcdefghij-2.png"><img src="'.$base.'a-abcdefghij-2.png&amp;thumb=1"', $new);
                 $this->assertStringNotContainsString('uploads/', $new, 'A stored material links the closed directory');
-                $this->assertSame($new, self::$p->filterDoc($src, true, $mod, 0, '', 7));
-                $this->assertSame($old, self::$p->filterDoc($src, true, $mod, 0, '', 0));
-                $this->assertSame($old, self::$p->filterDoc($src, true, $mod, 0, '', -3), 'A negative nid is no material');
+                $this->assertSame($new, self::$p->filterDoc($src, true, $mod, 0, '', ['node', 7]));
+                $this->assertSame($old, self::$p->filterDoc($src, true, $mod, 0, '', ['node', 0]));
+                $this->assertSame($old, self::$p->filterDoc($src, true, $mod, 0, '', ['node', -3]), 'A negative id is no target');
+                $this->assertSame($old, self::$p->filterDoc($src, true, $mod, 0, '', ['node', '7']), 'An id that is no number is no target');
+                $shut = self::$p->filterDoc('[attach=my file.pdf align=left title=Doc]', true, 'forum', 0, '', ['forum', 5]);
+                $this->assertStringContainsString('href="index.php?go=file&amp;own=forum&amp;id=5&amp;key=my%20file.pdf"', $shut, 'A closed owner did not link its file route');
             } finally {
                 $GLOBALS['conf']['filetype'] = $keep;
                 if ($keep === null) unset($GLOBALS['conf']['filetype']);
@@ -588,22 +609,22 @@ namespace Tests\Unit {
         #[Test]
         public function checkTrustedTagsTrustOnlyTheirContent(): void
         {
-            $html = self::$p->filterDoc('<b>foreign</b> [url=javascript:alert(1)]u[/url] [block=1] [usehtml]<i>own</i>[/usehtml]', true, '', 0, '', 0, true);
+            $html = self::$p->filterDoc('<b>foreign</b> [url=javascript:alert(1)]u[/url] [block=1] [usehtml]<i>own</i>[/usehtml]', true, '', 0, '', [], true);
             $this->assertStringContainsString('<i>own</i>', $html, 'The content of a trusted tag was not trusted');
             $this->assertStringContainsString('&lt;b&gt;foreign', $html, 'Markup around a trusted tag was trusted');
             $this->assertStringNotContainsString('<b>foreign', $html);
             $this->assertStringNotContainsString('javascript:', $html, 'An unsafe link around a trusted tag survived');
             $this->assertStringContainsString('[block=1]', $html, 'A free block around a trusted tag was rendered');
-            $run = self::$p->filterDoc('[usephp]echo 6*7;[/usephp] <script>x()</script>', true, '', 0, '', 0, true);
+            $run = self::$p->filterDoc('[usephp]echo 6*7;[/usephp] <script>x()</script>', true, '', 0, '', [], true);
             $this->assertStringContainsString('42', $run, 'The content of [usephp] did not run');
             $this->assertStringNotContainsString('<script>', $run, 'A script around [usephp] was trusted');
             $flag = new \ReflectionProperty(\Parser::class, 'vary');
             $this->assertTrue($flag->getValue(self::$p), 'Executed php of a trusting safe rendering may be stored');
-            $deep = self::$p->filterDoc("[usehtml]\n    <div>x</div>\n[/usehtml]\n\n    code", true, '', 0, '', 0, true);
+            $deep = self::$p->filterDoc("[usehtml]\n    <div>x</div>\n[/usehtml]\n\n    code", true, '', 0, '', [], true);
             $this->assertStringContainsString('<div>x</div>', $deep, 'An indented line inside a trusted tag became code');
             $this->assertStringContainsString('<code', $deep, 'An indented line outside the tags stopped being code');
             $this->assertSame('<p>[usehtml]a[/usehtml]</p>', self::$p->filterDoc('[usehtml]a[/usehtml]', true), 'A safe rendering without trust honoured a tag');
-            $this->assertSame(self::$p->filterDoc('<b>x</b> [usehtml]y[/usehtml]', false), self::$p->filterDoc('<b>x</b> [usehtml]y[/usehtml]', false, '', 0, '', 0, true));
+            $this->assertSame(self::$p->filterDoc('<b>x</b> [usehtml]y[/usehtml]', false), self::$p->filterDoc('<b>x</b> [usehtml]y[/usehtml]', false, '', 0, '', [], true));
         }
 
         # A text mixing the three forms of the attachment grammar renders every attachment, the same set getAttachList() names
@@ -614,6 +635,46 @@ namespace Tests\Unit {
             $html = self::$p->filterDoc($src, true, '');
             foreach (['a.pdf', 'b.pdf', 'c.pdf'] as $name) $this->assertStringContainsString('uploads/all/'.$name, $html, 'A mixed form was not rendered: '.$name);
             $this->assertSame(['a.pdf', 'b.pdf', 'c.pdf'], self::$p->getAttachList($src));
+        }
+
+        # The full-size form of an image renders the template full with the image itself and its own size, makes no thumb, and falls back to the thumbnail without that template
+        #[Test]
+        public function checkFullSizeAttachRendersTheImageItself(): void
+        {
+            if (!defined('UPLOADS_DIR')) define('UPLOADS_DIR', BASE_DIR.'/uploads');
+            $mod = 'zzparserfull';
+            $dir = UPLOADS_DIR.'/node/'.$mod;
+            $keep = $GLOBALS['conf']['filetype'] ?? null;
+            $thumb = '<a href="[src]"><img src="[tsrc]" alt="[title]"></a>';
+            $full = '<a href="[src]"><img src="[src]" width="[width]" height="[height]"></a>';
+            $GLOBALS['conf']['filetype'] = ['pdf' => '<a href="[src]">[title]</a>', 'png' => $thumb, 'full' => $full];
+            mkdir($dir, 0777, true);
+            try {
+                $png = base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==');
+                file_put_contents($dir.'/f-abcdefghij-1.png', $png);
+                $src = '[attach=f-abcdefghij-1.png align=left title=F size=full] [attach=d.pdf align=left title=D size=full]';
+                $this->assertSame(['f-abcdefghij-1.png', 'd.pdf'], self::$p->getAttachList($src), 'A name of the full-size form is not listed, so the route would refuse it');
+                $base = 'index.php?go=file&amp;own=node&amp;id=7&amp;key=';
+                $html = self::$p->filterDoc($src, true, $mod, 0, '', ['node', 7]);
+                $this->assertStringContainsString('<a href="'.$base.'f-abcdefghij-1.png"><img src="'.$base.'f-abcdefghij-1.png" width="1" height="1"></a>', $html);
+                $this->assertStringNotContainsString('thumb=1', $html, 'The full-size form showed a thumbnail');
+                $this->assertStringContainsString('<a href="'.$base.'d.pdf">D</a>', $html, 'A file that is no image left its own template');
+                $this->assertDirectoryDoesNotExist($dir.'/thumb', 'The full-size form made a thumb nobody shows');
+                unset($GLOBALS['conf']['filetype']['full']);
+                $html = self::$p->filterDoc($src, true, $mod, 0, '', ['node', 8]);
+                $want = '<img src="index.php?go=file&amp;own=node&amp;id=8&amp;key=f-abcdefghij-1.png" alt="F">';
+                $this->assertStringContainsString($want, $html, 'Without the template full the image did not fall back to its thumbnail template');
+                $html = self::$p->filterContent($src, true, $mod, 0, '', ['node', 8]);
+                $this->assertStringContainsString($want, $html, 'The image repair of a rendered page cut the query off the route of the attachment');
+            } finally {
+                $GLOBALS['conf']['filetype'] = $keep;
+                if ($keep === null) unset($GLOBALS['conf']['filetype']);
+                if (is_file($dir.'/f-abcdefghij-1.png')) unlink($dir.'/f-abcdefghij-1.png');
+                if (is_dir($dir)) rmdir($dir);
+            }
+            $code = (string)file_get_contents(BASE_DIR.'/core/system.php');
+            $body = substr($code, (int)strpos($code, 'function getImgText('), 1500);
+            $this->assertStringContainsString("stripos(\$match[0], ' size=full]') === false) ? 'thumb/'", $body, 'The image of a text names a thumb the full-size form never made');
         }
 
         #[Test]

@@ -289,20 +289,21 @@ function tplconfig(): void {
     ]);
     $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _TPINFO]);
     $cont .= checkPerms(CONFIG_DIR.'/filetype.php');
-    $typm = explode(',', $conf['uploads']['typ']);
+    $typm = [...explode(',', $conf['uploads']['typ']), 'full'];
     $blocks = '';
     for ($i = 0; $i < count($typm); $i++) {
+        $form = ($typm[$i] === 'full') ? _EDITOR_FULLSIZE.' (size=full)' : $typm[$i];
         $blocks .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('div', [
             'rows' => [[
                 'label_html' => '',
-                'field_html' => _TPFOR.': '.$typm[$i],
+                'field_html' => _TPFOR.': '.$form,
                 'is_full' => true,
             ], [
                 'label_html' => '',
                 'field_html' => Editor::getCode([
                     'id' => 'code_'.$i,
                     'name' => 'tmp[]',
-                    'label' => _TPFOR.': '.$typm[$i],
+                    'label' => _TPFOR.': '.$form,
                     'lang' => 'html',
                     'text' => $conf['filetype'][$typm[$i]] ?? '',
                 ]),
@@ -329,7 +330,7 @@ function tplsave(): void {
     $warn = !checkAdminPost('uploads');
     if (!$warn) {
         $cont = [];
-        $typm = explode(',', $conf['uploads']['typ']);
+        $typm = [...explode(',', $conf['uploads']['typ']), 'full'];
         $tmp = getVar('post', 'tmp[]');
         for ($i = 0; $i < count($typm); $i++) $cont[$typm[$i]] = $tmp[$i] ?? '';
         setConfigFile('filetype.php', $cont);

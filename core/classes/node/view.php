@@ -40,7 +40,7 @@ final class NodeView {
 
     # Render one stored text safe with its trusted tags honoured, so foreign markup around a tag of the main administrator stays escaped; a saved material links its attachments
     private function getTextHtml(string $src, string $mod, int $nid, int $hoff): string {
-        return ($src === '') ? '' : $this->prs->filterContent($src, true, $mod, $hoff, '', $nid, true);
+        return ($src === '') ? '' : $this->prs->filterContent($src, true, $mod, $hoff, '', ['node', $nid], true);
     }
 
     # The plain text of rendered HTML: script and style elements dropped with their content, tags removed, entities decoded, white space folded
@@ -62,7 +62,7 @@ final class NodeView {
         if ($link && in_array($mode, self::OUTSIDE, true)) return $one->src;
         if ($one->id > 0) return getSeoUrl(['name' => $type->name, 'op' => 'asset', 'id' => $one->id]);
         if ($link) return $one->src;
-        return ($one->src === basename($one->src)) ? getSeoUrl(['name' => $type->name, 'op' => 'attach', 'key' => rawurlencode($one->src), 'preview' => 1]) : '';
+        return ($one->src === basename($one->src)) ? getFileService()->getFileUrl('node', $type->name, 0, $one->src) : '';
     }
 
     # The resources of a material grouped by role in the order of the roles of the type; an inactive or unknown role stays out, the source, the report and its author never leave
