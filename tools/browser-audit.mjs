@@ -124,6 +124,9 @@ function findChromiumExe() {
     process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH,
   ].filter(Boolean);
 
+  // The build pinned by the installed playwright wins over whatever older revisions linger on disk.
+  const pinnedCandidates = [chromium.executablePath()];
+
   const home = os.homedir();
   const playwrightBase = path.join(home, 'AppData', 'Local', 'ms-playwright');
   const localCandidates = [];
@@ -147,7 +150,7 @@ function findChromiumExe() {
     'C:\\Program Files (x86)\\BraveSoftware\\Brave-Browser\\Application\\brave.exe',
   ];
 
-  return pickFirst([...envCandidates, ...localCandidates, ...systemCandidates]);
+  return pickFirst([...envCandidates, ...pinnedCandidates, ...localCandidates, ...systemCandidates]);
 }
 
 function chooseExecutable(browserName) {

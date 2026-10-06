@@ -534,7 +534,7 @@ final class NodeServiceTest extends TestCase
         $this->assertTrue($run['same'], 'A failed extension left the main write behind');
     }
 
-    # The upload helpers: the moderator right of a place is node-<name> for a Node type and the module key for any other module, through one helper asked in all six places
+    # The upload helpers: the moderator right of a place is node-<name> for a Node type, account for profile and the module key for any other, through one helper in all six places
     # A booted moderator of the type passes, a site user owns by his id, and an administrator who still carries the key of a removed module of the same name inherits nothing
     #[Test]
     public function theUploadHelpersKnowTheModeratorOfANodeType(): void
@@ -544,7 +544,8 @@ final class NodeServiceTest extends TestCase
         $this->assertSame(['moder' => false, 'forum' => false, 'voting' => false, 'none' => false, 'owner' => '2', 'flag' => false], $run['anna']);
         $this->assertSame(['moder' => false, 'forum' => true, 'voting' => false, 'none' => false, 'flag' => false], array_diff_key($run['legacy'], ['owner' => 0]),
             'The stored key of a removed module made its administrator a moderator of the Node type of that name');
-        $this->assertStringContainsString("return \$mod !== '' && is_moder(\$mod) === 1;", self::getBody('core/system.php', 'checkUploadModer'));
+        $this->assertStringContainsString("return \$mod !== '' && is_moder((\$mod === 'profile') ? 'account' : \$mod) === 1;", self::getBody('core/system.php', 'checkUploadModer'),
+            'The moderator of an upload place is no longer the one right of is_moder(), or the folder profile is not moderated as account');
         $this->assertStringContainsString("if (isset(\$conf['node']['types'][\$modul])) \$modul = 'node-'.\$modul;", self::getBody('core/system.php', 'is_admin_modul'));
         foreach (['checkEditorUploadAccess', 'getEditorFileOwner', 'getUploadFileArea', 'getUploadTakenFile', 'addEditorUpload', 'getEditorFileJson'] as $name) {
             $body = self::getBody('core/system.php', $name);

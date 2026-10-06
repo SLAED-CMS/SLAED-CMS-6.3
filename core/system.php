@@ -4456,7 +4456,8 @@ function getUploadService(): Upload {
     return $upl;
 }
 
-# Build the delivery decision of the request once: Node grants through the reader of its material, the forum through the reader of its post, a public folder has no route
+# Build the delivery decision of the request once: Node grants through the reader of its material, the forum through the reader of its post, a private message to its two sides
+# The account texts of profile grant through the account that writes them, and a public folder has no route
 function getFileService(): FileAccess {
     static $fac = null;
     if ($fac !== null) return $fac;
@@ -4480,11 +4481,58 @@ function getFileService(): FileAccess {
     };
     $room = fn(string $mod, int $id): string => ($mod !== '') ? getUploadFolder($mod, true) : (($type = $kind('', $id)) ? getUploadFolder($type->name, true) : '');
     $forum = fn(string $mod, int $id, string $key): bool => function_exists('checkForumFile') && checkForumFile($mod, $id, $key);
+    $privat = fn(string $mod, int $id, string $key): bool => function_exists('checkPrivatFile') && checkPrivatFile($mod, $id, $key);
+    $profile = fn(string $mod, int $id, string $key): bool => function_exists('checkProfileFile') && checkProfileFile($mod, $id, $key);
     return $fac = new FileAccess([
         'node' => ['folder' => $room, 'grant' => $node],
         'forum' => ['folder' => fn(string $mod, int $id): string => getUploadFolder('forum'), 'grant' => $forum],
+        'privat' => ['folder' => fn(string $mod, int $id): string => getUploadFolder('account'), 'grant' => $privat],
+        'profile' => ['folder' => fn(string $mod, int $id): string => getUploadFolder('profile'), 'grant' => $profile],
         'public' => ['folder' => fn(string $mod, int $id): string => getUploadFolder($mod)],
     ]);
+}
+
+# Answer the closed owner whose route serves the folder of one upload module, or an empty string for a public folder
+# A Node type, the forum, the private messages in the folder of account and the account texts in profile; the editor window and every renderer of a stored text ask here
+function getUploadOwner(string $mod): string {
+    global $conf;
+    if ($mod !== '' && isset($conf['node']['types'][$mod])) return 'node';
+    return ['forum' => 'forum', 'account' => 'privat', 'profile' => 'profile'][$mod] ?? '';
+}
+
+# Answer the upload module of the comment form of one module: a comment on a profile uploads into the folder of the account texts, any other into the folder of its module
+function getCommentPlace(string $mod): string {
+    return ($mod === 'account') ? 'profile' : $mod;
+}
+
+# Answer whether the preview form of the file route serves one name of the folder of an upload module: a managed upload of the visitor, any file to a moderator of the folder
+# Only a visitor the upload rule lets list the folder gets one, and only a name of an extension the rule accepts, so the preview shows what the editor window lists and nothing else
+function checkUploadPreview(string $mod, string $key): bool {
+    require_once BASE_DIR.'/core/classes/filemanager.php';
+    $rule = getUploadRuleData($mod);
+    $tok = getEditorFileOwner($mod);
+    $mine = checkUploadModer($mod) || ($tok !== null && FileManager::getFileOwner($key) === $tok);
+    $good = $rule['ok'] && in_array(strtolower(pathinfo($key, PATHINFO_EXTENSION)), explode(',', $rule['extensions']), true);
+    return $good && FileManager::checkFileName($key) && checkEditorUploadAccess($mod, $rule) && $mine;
+}
+
+# Answer the refusal of the first name a text may not bind in the folder of an upload module, or an empty string
+# A name passes when a text the writer reads already carries it, when it is the writer's own upload there, or when a moderator of the folder writes
+# Every other name must name an existing file of an allowed extension, so a writer cannot bind a file of the folder they did not upload
+function checkUploadNames(string $mod, array $fresh, array $seen): string {
+    if (!$fresh) return '';
+    require_once BASE_DIR.'/core/classes/filemanager.php';
+    $exts = explode(',', getUploadRuleData($mod)['extensions']);
+    $area = new FileManager('editor', UPLOADS_DIR.'/'.getUploadFolder($mod));
+    $mods = checkUploadModer($mod);
+    $tok = getEditorFileOwner($mod);
+    foreach ($fresh as $name) {
+        if (in_array($name, $seen, true)) continue;
+        $row = $area->getFileData($name);
+        $good = $row && $row['kind'] !== 'dir' && $row['path'] === $name && in_array($row['extension'], $exts, true);
+        if (!$good || (!$mods && ($tok === null || FileManager::getFileOwner($name) !== $tok))) return _FILE_FOREIGN.': '.$name;
+    }
+    return '';
 }
 
 # The query of one URL checked against a key => value regex allowlist: an unknown, a repeated, a malformed or an empty key refuses the whole query with null
@@ -4530,8 +4578,9 @@ function setFileRoute(): never {
 # Answer whether the current administrator moderates the files of one upload place: a Node type through its right node-<name> alone, any other module through its own key
 # The mapping of a registered type to its right lives in is_admin_modul(), so this and every other moderator question about a type name agree
 # The key is read from the stored rights of the session and never from the request, so a type name cannot turn into a right, and every upload helper asks this one question
+# The folder profile holds the texts of the account module, so the moderator of account moderates it
 function checkUploadModer(string $mod): bool {
-    return $mod !== '' && is_moder($mod) === 1;
+    return $mod !== '' && is_moder(($mod === 'profile') ? 'account' : $mod) === 1;
 }
 
 # Check whether the current visitor may use the module editor upload
@@ -4594,15 +4643,14 @@ function getEditorRouteRule(string $src = 'post'): array {
 # Which actions a row offers is the capability set of its own descriptor and never a role the window derives again, which is what keeps the interface from computing a permission
 # The absolute server path is absent because the file layer gives an editor context none, and the thumbnail falls back to the file itself so a listing always has one to draw
 # The mode and the account of the stored object travel only to a module moderator: they answer for the server, not the text, and an author inserting a picture needs neither
-# The folder of a Node type or of the forum is closed to direct access, so its rows carry the controlled preview route of the owner instead of a file address
+# The folder of a closed owner, getUploadOwner(), has no direct address, so its rows carry the controlled preview route of the owner instead of a file address
 # The bytag flag tells the window that such a file enters a text only as the [attach] tag, which the stored text turns into its own controlled address
 function getEditorFileData(array $one, bool $moder = false, string $mod = ''): array {
-    global $conf;
     if ($moder) return getEditorFileData($one, false, $mod) + [
         'perms' => (string)($one['perms'] ?? ''),
         'owner' => (string)($one['owner'] ?? ''),
     ];
-    $own = ($mod !== '' && isset($conf['node']['types'][$mod])) ? 'node' : (($mod === 'forum') ? 'forum' : '');
+    $own = getUploadOwner($mod);
     $url = ($own !== '') ? getFileService()->getFileUrl($own, $mod, 0, $one['name']) : $one['url'];
     $shot = ($one['thumbnail'] === '') ? $url : (($own !== '') ? getFileService()->getFileUrl($own, $mod, 0, $one['name'], true) : $one['thumbnail']);
     return [
@@ -5924,8 +5972,8 @@ function getQuickService(): QuickEdit {
             $row = $com->getEditSource($id);
             if (!$row) return null;
             if (!$row['allow']) return ['allow' => false];
-            $edit = getTplTextarea(['label' => _TEXT, 'id' => 'quick-comment-'.$id.'-body', 'name' => 'text', 'value' => $row['body'], 'mod' => $row['mod'], 'rows' => 10,
-                'placeholder' => _TEXT, 'store' => 'comment.body']);
+            $edit = getTplTextarea(['label' => _TEXT, 'id' => 'quick-comment-'.$id.'-body', 'name' => 'text', 'value' => $row['body'],
+                'mod' => getCommentPlace($row['mod']), 'rows' => 10, 'placeholder' => _TEXT, 'store' => 'comment.body']);
             return ['allow' => true, 'stamp' => $row['stamp'], 'editor' => $edit];
         },
         'write' => static fn(int $id, string $field, string $stamp, string $text): array => $com->updateComment($id, $text, $stamp),

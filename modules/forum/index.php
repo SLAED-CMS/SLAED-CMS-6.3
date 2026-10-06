@@ -723,7 +723,7 @@ function view(): void {
                 );
                 $uname_html = (!empty($nick)) ? user_info($nick, false) : htmlspecialchars($avname, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
                 $fields = getTplViewFieldRows(['field' => $val[8], 'mod' => $conf['name']]);
-                $sig = (!empty($sig)) ? $tpl->getHtmlFrag('block-content', ['is_signature' => true, 'content' => $sig]) : '';
+                $sig = (!empty($sig)) ? $tpl->getHtmlFrag('block-content', ['is_signature' => true, 'content' => getUserSign((string)$sig, intval($uid))]) : '';
                 $uitems = [];
                 if (is_moder($conf['name']) || ($isreply && $tstatus && $conf['forum']['qreply'])) {
                     $uitems[] = ['href' => '#', 'title' => _PERSONAL, 'icon_name' => 'reply', 'link_attr' => getTplEditorInsertAttr('name', $avname)];
@@ -786,7 +786,7 @@ function view(): void {
                     'rank_link' => $rlink,
                     'user_rate' => $rate,
                     'text' => $text,
-                    'sig' => $prs->filterContent($sig, false, 'account'),
+                    'sig' => $sig,
                     'btn_user' => $usermenu,
                     'btn_warn' => $warn,
                     'btn_thank' => $thank,

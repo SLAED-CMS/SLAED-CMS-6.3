@@ -206,6 +206,11 @@ function addRouteFiles(string $work): void {
     $forum = ['fa-aaaaaaaaaa.png', 'fb-aaaaaaaaaa.png', 'fc-aaaaaaaaaa.png', 'fd-aaaaaaaaaa.png', 'fe-aaaaaaaaaa.png', 'free-aaaaaaaaaa.png', 'mine-aaaaaaaaaa-2.png',
         'other-bbbbbbbbbb-3.png', 'thumb/fa-aaaaaaaaaa.png'];
     foreach ($forum as $one) file_put_contents($work.'/uploads/forum/'.$one, $png);
+    foreach (['account', 'profile'] as $dir) mkdir($work.'/uploads/'.$dir.'/thumb', 0777, true);
+    $owns = ['account' => ['pa-aaaaaaaaaa-3.png', 'pb-aaaaaaaaaa-3.png', 'mine-aaaaaaaaaa-2.png', 'other-bbbbbbbbbb-4.png', 'thumb/pa-aaaaaaaaaa-3.png'],
+        'profile' => ['sig-aaaaaaaaaa-3.png', 'own-aaaaaaaaaa-2.png', 'other-bbbbbbbbbb-4.png', 'thumb/sig-aaaaaaaaaa-3.png']];
+    foreach ($owns as $dir => $list) foreach ($list as $one) file_put_contents($work.'/uploads/'.$dir.'/'.$one, $png);
+    file_put_contents($work.'/uploads/account/brandbook.pdf', '%PDF-1.4'.str_repeat('0123456789', 199).'%%');
     file_put_contents($work.'/uploads/node/news/manual-dddddddddd.pdf', '%PDF-1.4'.str_repeat('0123456789', 199).'%%');
     file_put_contents($work.'/upload.png', $png);
 }
@@ -2317,6 +2322,79 @@ function getRouteFiles(PDO $pdo): array {
     return $out;
 }
 
+# The private messages and the signature on the file route: both sides, a deleted side, a third account, a guest and a moderator, the previews and the writers that bind a name
+function getRouteAccount(PDO $pdo): array {
+    global $rwork;
+    $pre = RPREF.'_';
+    $conf = require $rwork.'/config/privat.php';
+    $conf['privat'] = array_replace($conf['privat'], ['act' => '1', 'send' => '0', 'himself' => '0']);
+    setRouteFile($rwork.'/config/privat.php', $conf);
+    if (is_file($rwork.'/config/local.php')) unlink($rwork.'/config/local.php');
+    $pdo->exec('INSERT INTO '.$pre.'privat (id, uidin, uidout, title, body, time, ip, viewed, saved, delin, delout) VALUES'
+        .' (701, 2, 3, \'Kept\', \'Look [attach=pa-aaaaaaaaaa-3.png align=left title=a]\', NOW(), \'127.0.0.1\', 0, 0, 0, 0),'
+        .' (702, 2, 3, \'Gone\', \'Look [attach=pb-aaaaaaaaaa-3.png align=left title=b]\', NOW(), \'127.0.0.1\', 0, 0, 1, 0),'
+        .' (703, 2, 3, \'Book\', \'See [attach=brandbook.pdf align=none title=pdf file]\', NOW(), \'127.0.0.1\', 0, 0, 0, 0)');
+    $pdo->exec('UPDATE '.$pre.'users SET sig = \'Boris [attach=sig-aaaaaaaaaa-3.png align=left title=s]\' WHERE id = 3');
+    $code = fn(string $who, string $path): int => getRouteReply($who, 'GET', $path)['code'];
+    $mail = fn(int $id, string $key, string $tail = ''): string => 'index.php?go=file&own=privat&id='.$id.'&key='.$key.$tail;
+    $sign = fn(int $id, string $key): string => 'index.php?go=file&own=profile&id='.$id.'&key='.$key;
+    $view = fn(string $own, string $name, string $key): string => 'index.php?go=file&own='.$own.'&name='.$name.'&key='.$key.'&preview=1';
+    $out = ['privat' => [$code('anna', $mail(701, 'pa-aaaaaaaaaa-3.png')), $code('boris', $mail(701, 'pa-aaaaaaaaaa-3.png')),
+        $code('anna', $mail(701, 'pa-aaaaaaaaaa-3.png', '&thumb=1')), $code('clara', $mail(701, 'pa-aaaaaaaaaa-3.png')), $code('', $mail(701, 'pa-aaaaaaaaaa-3.png')),
+        $code('anna', $mail(702, 'pb-aaaaaaaaaa-3.png')), $code('boris', $mail(702, 'pb-aaaaaaaaaa-3.png')), $code('anna', $mail(701, 'mine-aaaaaaaaaa-2.png')),
+        $code('root', $mail(702, 'pb-aaaaaaaaaa-3.png')), $code('moder', $mail(701, 'pa-aaaaaaaaaa-3.png'))]];
+    $out['rule'] = [$code('anna', $mail(703, 'brandbook.pdf')), $code('clara', $mail(703, 'brandbook.pdf')),
+        $code('anna', $view('privat', 'account', 'brandbook.pdf'))];
+    $out['shut'] = [$code('anna', 'uploads/account/pa-aaaaaaaaaa-3.png'), $code('', 'uploads/profile/sig-aaaaaaaaaa-3.png')];
+    $out['pview'] = [$code('anna', $view('privat', 'account', 'mine-aaaaaaaaaa-2.png')), $code('boris', $view('privat', 'account', 'mine-aaaaaaaaaa-2.png')),
+        $code('', $view('privat', 'account', 'mine-aaaaaaaaaa-2.png')), $code('root', $view('privat', 'account', 'other-bbbbbbbbbb-4.png')),
+        $code('anna', $view('privat', 'profile', 'mine-aaaaaaaaaa-2.png'))];
+    $tok = getRouteToken(getRouteReply('anna', 'GET', 'index.php?name=account&op=privat&typ=4')['body'], 'op=addPrivateMessage');
+    $page = getRouteReply('anna', 'POST', 'index.php?go=1&op=setPrivateMessageRead', ['token' => $tok, 'id' => '701', 'cid' => '1'])['body'];
+    $out['mpage'] = [str_contains($page, 'go=file&amp;own=privat&amp;id=701&amp;key=pa-aaaaaaaaaa-3.png'),
+        str_contains($page, 'go=file&amp;own=profile&amp;id=3&amp;key=sig-aaaaaaaaaa-3.png'), str_contains($page, 'uploads/account/')];
+    $send = fn(string $text): array => getRouteReply('anna', 'POST', 'index.php?go=1&op=addPrivateMessage', ['token' => $tok, 'name' => 'clara',
+        'title' => 'Note', 'text' => $text], ['HX-Request: true']);
+    $count = fn(): int => intval($pdo->query('SELECT COUNT(*) FROM '.$pre.'privat WHERE uidout = 2')->fetchColumn());
+    $bad = $send('Anna takes [attach=other-bbbbbbbbbb-4.png align=left title=o]');
+    $out['msend'] = [$tok !== '', str_contains($bad['body'], ': other-bbbbbbbbbb-4.png'), $count()];
+    $out['mgone'] = [str_contains($send('Anna takes [attach=pb-aaaaaaaaaa-3.png align=left title=b]')['body'], ': pb-aaaaaaaaaa-3.png'), $count()];
+    $send('Forward [attach=pa-aaaaaaaaaa-3.png align=left title=a]');
+    $fwd = intval($pdo->query('SELECT MAX(id) FROM '.$pre.'privat WHERE uidout = 2')->fetchColumn());
+    $send('Mine [attach=mine-aaaaaaaaaa-2.png align=left title=m]');
+    $out['mfwd'] = [$count(), $code('clara', $mail($fwd, 'pa-aaaaaaaaaa-3.png')), $code('boris', $mail($fwd, 'pa-aaaaaaaaaa-3.png'))];
+    $out['sign'] = [$code('', $sign(3, 'sig-aaaaaaaaaa-3.png')), $code('clara', $sign(3, 'sig-aaaaaaaaaa-3.png')), $code('', $sign(2, 'sig-aaaaaaaaaa-3.png')),
+        $code('', $sign(3, 'own-aaaaaaaaaa-2.png'))];
+    $conf = require $rwork.'/config/users.php';
+    $conf['users']['prof'] = '1';
+    setRouteFile($rwork.'/config/users.php', $conf);
+    if (is_file($rwork.'/config/local.php')) unlink($rwork.'/config/local.php');
+    $out['closed'] = [$code('', $sign(3, 'sig-aaaaaaaaaa-3.png')), $code('anna', $sign(3, 'sig-aaaaaaaaaa-3.png'))];
+    $conf['users']['prof'] = '0';
+    setRouteFile($rwork.'/config/users.php', $conf);
+    if (is_file($rwork.'/config/local.php')) unlink($rwork.'/config/local.php');
+    $out['sview'] = [$code('anna', $view('profile', 'profile', 'own-aaaaaaaaaa-2.png')), $code('boris', $view('profile', 'profile', 'own-aaaaaaaaaa-2.png')),
+        $code('anna', $view('profile', 'profile', 'other-bbbbbbbbbb-4.png'))];
+    $page = getRouteReply('', 'GET', 'index.php?name=forum&op=view&id=601')['body'];
+    $out['spage'] = [str_contains($page, 'go=file&amp;own=profile&amp;id=3&amp;key=sig-aaaaaaaaaa-3.png'), str_contains($page, 'uploads/account/')];
+    $page = getRouteReply('', 'GET', 'index.php?name=account&op=view&uname=boris')['body'];
+    $out['sprof'] = str_contains($page, 'go=file&amp;own=profile&amp;id=3&amp;key=sig-aaaaaaaaaa-3.png');
+    $conf = require $rwork.'/config/fields.php';
+    $conf['fields']['account'] = [];
+    setRouteFile($rwork.'/config/fields.php', $conf);
+    if (is_file($rwork.'/config/local.php')) unlink($rwork.'/config/local.php');
+    $form = getRouteReply('anna', 'GET', 'index.php?name=account&op=edithome')['body'];
+    $tok = getRouteToken($form, 'savehome');
+    $save = fn(string $sig): array => getRouteReply('anna', 'POST', 'index.php?name=account', ['op' => 'savehome', 'token' => $tok, 'mail' => 'anna@probe.test',
+        'sig' => $sig, 'block' => '']);
+    $sig = fn(): string => (string)$pdo->query('SELECT sig FROM '.$pre.'users WHERE id = 2')->fetchColumn();
+    $bad = $save('Anna [attach=other-bbbbbbbbbb-4.png align=left title=o]');
+    $out['ssave'] = [$tok !== '', str_contains($bad['body'], ': other-bbbbbbbbbb-4.png'), $sig()];
+    $save('Anna [attach=own-aaaaaaaaaa-2.png align=left title=m]');
+    $out['sown'] = [$sig(), $code('', $sign(2, 'own-aaaaaaaaaa-2.png')), str_contains($form, 'place=profile.attach')];
+    return $out;
+}
+
 # The child favhold of the intact run holds the account of anna with one more favorite for two seconds, as a parallel request at the limit does before its commit
 if (($argv[2] ?? '') === 'favhold') {
     $hpdo = getRoutePdo((string)($argv[3] ?? ''));
@@ -2377,7 +2455,7 @@ try {
     } elseif (($argv[2] ?? '') === 'quick') {
         $report['runs']['quick'] = getRouteQuick($rpdo, $rwork);
     } elseif (($argv[2] ?? '') === 'files') {
-        $report['runs']['files'] = getRouteFiles($rpdo);
+        $report['runs']['files'] = getRouteFiles($rpdo) + getRouteAccount($rpdo);
     } else {
         $report['runs']['lists'] = getRouteLists($rpdo);
         $report['runs']['view'] = getRouteViewRuns($rpdo);

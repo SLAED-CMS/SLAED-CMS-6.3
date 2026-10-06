@@ -112,12 +112,20 @@ README.md, "Document Root and Web Server". The installer records the mode it fou
 `config/global.php`.
 
 No upload lies in the document root. An address `uploads/<folder>/<name>` reaches `index.php`, whose light path
-serves a file of a public folder (avatars, `presentation`, `all`, `voting`, `archive` and the account) before the
-core boots and answers 410 for every other folder and every missing file; the files of a Node type leave only
-through `go=file` and `op=asset`, the files of the forum only through `go=file` to a reader of the post that names
-them. `update.php` turns a direct address of a file `uploads/forum/` holds in a post into an `[attach]` of the same
-name; an address the folder does not hold, and an image inside a link to another site, stay as written and answer
-410. nginx reads no `.htaccess`: the release ships `nginx.conf.example`, whose
+serves a file of a public folder (avatars, `presentation`, `all`, `voting` and `archive`) before the core boots and
+answers 410 for every other folder and every missing file; the files of a Node type leave only through `go=file` and
+`op=asset`, the files of the forum only through `go=file` to a reader of the post that names them, and the files of
+`uploads/account/` only to the two sides of the private message that names them and to a moderator of `account`.
+`update.php` turns a direct address of a file `uploads/forum/` holds in a post, and of a file `uploads/account/` holds
+in a private message, into an `[attach]` of the same name; an address the folder does not hold, and an image inside a
+link to another site, stay as written and answer 410.
+
+`uploads/account/` holds the files of the private messages alone. The signature, the own block and the comments on a
+profile upload into `uploads/profile/`, and a signature is served from there to whoever may open the profile; the
+mail texts of the panel take their pictures from the public `uploads/all/`. The release added `profile` to
+`config/uploads.php`. A signature, an own block or a mail text of a 6.2 site that carries an `[attach]` of a file in
+`uploads/account/` needs that file copied into `uploads/profile/` (a signature or a block) or `uploads/all/` (a mail
+text); the signatures and own blocks of `slaed.net` carry none. nginx reads no `.htaccess`: the release ships `nginx.conf.example`, whose
 `server` block carries the root on `public/`, the prefix `/uploads/` for the front controller, a path after a script
 sent to that script and the refusals of `public/.htaccess`.
 

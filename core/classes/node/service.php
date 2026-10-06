@@ -1446,12 +1446,14 @@ final class NodeService {
     }
 
     # Resolve one attachment of the type to its path: a stored material grants a name its text or a published comment carries, a preview the visitor's own managed upload
+    # The upload rule of the type decides the preview alone: a stored name is served whatever extensions the rule takes today, as long as the upload service knows its type
     public function getNodeFile(NodeType $type, int $id, string $key, bool $thumb, Comment $com): string {
         $ext = strtolower(pathinfo($key, PATHINFO_EXTENSION));
         $exts = $type->uploads ? explode(',', $type->uploads['extensions']) : [];
         $good = $id >= 0 && !$this->ctx->task && strlen($key) <= 255 && preg_match('/^[A-Za-z0-9_\-. ]+$/D', $key) && trim($key, '. ') !== '';
         require_once BASE_DIR.'/core/classes/filemanager.php';
-        if (!$good || ($id === 0 && !FileManager::checkFileName($key)) || !in_array($ext, $exts, true) || !in_array($ext, getUploadService()::getSupportedTypes(), true)) return '';
+        $new = $id === 0 && (!FileManager::checkFileName($key) || !in_array($ext, $exts, true));
+        if (!$good || $new || !in_array($ext, getUploadService()::getSupportedTypes(), true)) return '';
         $area = new FileManager('editor', UPLOADS_DIR.'/'.getUploadFolder($type->name, true));
         try {
             if ($id > 0) {

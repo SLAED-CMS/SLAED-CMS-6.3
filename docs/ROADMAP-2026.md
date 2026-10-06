@@ -60,7 +60,7 @@ into the plan, then do whatever work the step names.
 - [x] 9. FILES batch 3 — Node texts off the archive. (2026-10-06)
 - [x] 10. FILES batch 4 — the protocol: `FileAccess`, `go=file`. (2026-10-06)
 - [x] 11. FILES batch 5 — forum. (2026-10-06)
-- [ ] 12. FILES batch 6 — private messages and signatures.
+- [x] 12. FILES batch 6 — private messages and signatures. (2026-10-06)
 - [ ] 13. FILES batch 7 — comments of other targets.
 - [ ] 14. FILES batch 8 — retire the archive.
 - [ ] 15. FILES rehearsal — `update.php` on the fresh 6.2 dump the owner provides, as batch 3 of the plan names it:

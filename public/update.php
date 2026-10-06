@@ -1294,21 +1294,22 @@ function setUpdateFields(Database $db, string $prefix): array {
     return getUpdateRow($text.'; the subsystem is open', true);
 }
 
-# The forum unit of the 6.3 data update: a direct address of a file uploads/forum holds becomes an attachment of its name, so a stopped run is simply run again
-function setUpdateForum(Database $db, string $prefix): array {
-    $res = $db->getSqlQuery('SELECT id, body FROM `'.$prefix.'_forum` WHERE body LIKE :addr', ['addr' => '%uploads/forum/%']);
-    if ($res === false) return getUpdateRow('forum: the posts could not be read, no address was rewritten', false);
-    $have = fn(string $name): bool => is_file(UPLOADS_DIR.'/forum/'.$name);
+# The attachment unit of the 6.3 data update for one table of texts: a direct address of a file its folder holds becomes an attachment of its name
+# The forum posts address uploads/forum and the private messages uploads/account; both folders are closed, so a direct address would answer 410; a stopped run is run again
+function setUpdateAttach(Database $db, string $prefix, string $tab, string $dir): array {
+    $res = $db->getSqlQuery('SELECT id, body FROM `'.$prefix.'_'.$tab.'` WHERE body LIKE :addr', ['addr' => '%uploads/'.$dir.'/%']);
+    if ($res === false) return getUpdateRow($tab.': the texts could not be read, no address was rewritten', false);
+    $have = fn(string $name): bool => is_file(UPLOADS_DIR.'/'.$dir.'/'.$name);
     $done = 0;
     $good = true;
     foreach ($db->getSqlRows($res) ?: [] as $row) {
-        $body = getMigrateAttach((string)$row[1], 'forum', 0, $have);
+        $body = getMigrateAttach((string)$row[1], $dir, 0, $have);
         if ($body === (string)$row[1]) continue;
-        $ok = $db->getSqlQuery('UPDATE `'.$prefix.'_forum` SET body = :body WHERE id = :id', ['body' => $body, 'id' => intval($row[0])]) !== false;
+        $ok = $db->getSqlQuery('UPDATE `'.$prefix.'_'.$tab.'` SET body = :body WHERE id = :id', ['body' => $body, 'id' => intval($row[0])]) !== false;
         $good = $good && $ok;
         if ($ok) $done++;
     }
-    return getUpdateRow('forum: direct addresses of uploads/forum turned into attachments of their posts (posts: '.$done.')', $good);
+    return getUpdateRow($tab.': direct addresses of uploads/'.$dir.' turned into attachments (texts: '.$done.')', $good);
 }
 
 # The configuration step of the 6.3 update for a 6.2 site, whose settings live in config/config_<name>.php as a variable of their own
@@ -1748,7 +1749,7 @@ function setUpdateRun(): array {
     $text = 'the update stopped at the schema file: no data unit ran and no mark was written, correct the failed statement and run the update again';
     if ($ddl === [] || checkUpdateFail($ddl)) return array_merge($rows, getUpdateRow($text, false));
     $rows = array_merge($rows, setUpdatePoints($db, $pref), setUpdateRatings($db, $pref), setUpdateFields($db, $pref));
-    $rows = array_merge($rows, setUpdateForum($db, $pref));
+    $rows = array_merge($rows, setUpdateAttach($db, $pref, 'forum', 'forum'), setUpdateAttach($db, $pref, 'privat', 'account'));
     $rdata = getUpdateSource(CONFIG_DIR.'/rss.php')['rss'] ?? [];
     if ($rdata !== [] && (isset($rdata['temp']) || !isset($rdata['bytes'], $rdata['redirects'], $rdata['timeout']))) {
         unset($rdata['temp']);

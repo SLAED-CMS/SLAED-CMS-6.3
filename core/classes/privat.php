@@ -445,6 +445,22 @@ final class Privat {
             + ['body' => (string)$row['body'], 'ip' => (string)$row['ip'], 'snip' => $this->filterSnippet((string)$row['body'])];
     }
 
+    # The body of one message to a reader whose side still holds it, or to anyone when the caller reads as a moderator, and an empty string otherwise
+    # The file route asks it, so a side that deleted its copy reads no file of it, exactly as it reads no longer the message itself
+    public function getMessageBody(int $uid, int $id, bool $all = false): string {
+        if ($id < 1 || (!$all && $uid < 1)) return '';
+        $sql = 'SELECT body FROM '.PREFIX_DB.'_privat WHERE id = :id'.($all ? '' : ' AND (uidin = :uin AND delin = 0 OR uidout = :uout AND delout = 0)').' LIMIT 1';
+        $row = $this->db->getSqlRow($this->db->getSqlQuery($sql, ['id' => $id] + ($all ? [] : ['uin' => $uid, 'uout' => $uid])));
+        return $row ? (string)$row['body'] : '';
+    }
+
+    # The bodies carrying an attachment of every message one reader still holds on either side, which are the names a new message of that reader may quote or forward
+    public function getAttachBodies(int $uid): array {
+        if ($uid < 1) return [];
+        $sql = 'SELECT body FROM '.PREFIX_DB.'_privat WHERE (uidin = :uin AND delin = 0 OR uidout = :uout AND delout = 0) AND body LIKE \'%[attach=%\'';
+        return array_map(static fn(array $row): string => (string)$row['body'], $this->db->getSqlRows($this->db->getSqlQuery($sql, ['uin' => $uid, 'uout' => $uid])) ?: []);
+    }
+
     # Return one page of the administrator list, newest first, with both account names and the state the four columns add up to
     # It filters no state on purpose: what an administrator has to see includes the copies the participants have already deleted
     public function getAdminList(int $page = 1): array {

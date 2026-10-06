@@ -485,8 +485,9 @@ Server metrics:
 An upload rule belongs to a **place**, not to a module. One module can hold two
 unrelated stores: `files` keeps attachments to the description text under
 `$conf['uploads']['files']` and the distributed file under `$conf['files']`;
-`account` keeps attachments under `$conf['uploads']['account']` and the avatar
-under `$conf['users']`. These are two different things and one rule cannot hold
+`account` keeps the attachments of private messages under `$conf['uploads']['account']`,
+those of its signature, own block and profile comments under `$conf['uploads']['profile']`
+(moderated as `account`), and the avatar under `$conf['users']`. These are two different things and one rule cannot hold
 both, so the uploader opens for a place and reads the settings of that place's
 module. The configs stay where they are and no administrative settings screen is
 involved.

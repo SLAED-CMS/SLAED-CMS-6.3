@@ -56,7 +56,7 @@ final class UpdateAttachTest extends TestCase
 
     # An image becomes the full-size form with its alignment and its alternative text as the title; a link around its thumb becomes the thumbnail form
     # A link around another image keeps the image alone in full size, a link becomes an attachment titled by its label, a bare link or one labelled by its address titled title
-    # A Markdown image takes the same forms as [img], and the forum folder converts like the folder of a module
+    # A Markdown image takes the same forms as [img], and the folders of the forum and of the private messages convert like the folder of a module
     #[Test]
     public function everyFormOfTheOwnFolderBecomesAnAttachment(): void
     {
@@ -76,6 +76,9 @@ final class UpdateAttachTest extends TestCase
         foreach ($cases as $from => $want) $this->assertSame($want, $this->getText($from), 'The form '.$from.' was not converted');
         $this->assertSame('[attach=a-1.gif align=left title=A size=full]', $this->getText('[img=left alt=A]./uploads/archive/news/a-1.gif[/img]', 0, 'archive/news'));
         $this->assertSame('[attach=k.gif align=center title=K size=full]', $this->getText('[img=center alt=K]uploads/forum/k.gif[/img]', 0, 'forum'));
+        $mail = 'See [url=https://slaed.net/uploads/account/brandbook.pdf]pdf file[/url].';
+        $this->assertSame('See [attach=brandbook.pdf align=none title=pdf file].', $this->getText($mail, 0, 'account'),
+            'A labelled link of a private message to its folder did not become an attachment');
         require_once BASE_DIR.'/core/classes/parser.php';
         $tag = (new \ReflectionClassConstant(\Parser::class, 'ATTTAG'))->getValue();
         preg_match_all($tag, implode(' ', $cases), $mm);

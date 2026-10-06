@@ -7,8 +7,8 @@
 if (!defined('FUNC_FILE')) die('Illegal file access');
 
 final class FileAccess {
-    public const OWNERS = ['node', 'forum', 'privat', 'comment', 'public'];
-    public const PREVIEW = ['node', 'forum'];
+    public const OWNERS = ['node', 'forum', 'privat', 'comment', 'profile', 'public'];
+    public const PREVIEW = ['node', 'forum', 'privat', 'profile'];
 
     # One adapter per owner as closures: folder(string $mod, int $id): string always, grant(string $mod, int $id, string $key): bool for an owner with a route
     public function __construct(private readonly array $owns) {}

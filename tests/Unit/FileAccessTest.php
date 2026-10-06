@@ -7,7 +7,7 @@ namespace Tests\Unit;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-# The delivery decision of every file: one adapter per owner, each address form, a refusal for every name a target does not carry, the forum on route_probe.php files
+# The delivery decision of every file: one adapter per owner, each address form, a refusal of every name a target does not carry, the closed owners on route_probe.php files
 final class FileAccessTest extends TestCase
 {
     private const ROOM = 'zzfileaccess';
@@ -71,8 +71,8 @@ final class FileAccessTest extends TestCase
     public function anOwnerOutsideTheClosedSetIsRefused(): void
     {
         $fac = self::getAccess();
-        $this->assertSame(['node', 'forum', 'privat', 'comment', 'public'], \FileAccess::OWNERS);
-        $this->assertSame(['node', 'forum'], \FileAccess::PREVIEW);
+        $this->assertSame(['node', 'forum', 'privat', 'comment', 'profile', 'public'], \FileAccess::OWNERS);
+        $this->assertSame(['node', 'forum', 'privat', 'profile'], \FileAccess::PREVIEW);
         foreach (['mystery', 'Forum', 'FORUM', '', 'forum ', 'privat'] as $own) {
             $this->assertSame('', $fac->getFileFolder($own, 'forum', 5), 'A folder of '.$own);
             $this->assertSame('', $fac->getFileUrl($own, 'forum', 5, 'plain.png'), 'An address of '.$own);
@@ -166,5 +166,56 @@ final class FileAccessTest extends TestCase
         $this->assertSame([true, 200, true, 0], $run['send'], 'A reply naming a foreign file was stored or did not name the refused file');
         $this->assertSame([303, 1], $run['quote'], 'A quote of a name the topic carries was refused');
         $this->assertSame([303, 2], $run['own'], 'A reply naming an own upload was refused');
+    }
+
+    # A private message serves its names to the sides that still hold it and to a moderator of account, whatever extensions the rule takes; the folder has no direct address
+    #[Test]
+    public function aPrivateMessageServesItsTwoSides(): void
+    {
+        $run = $this->getRun();
+        $this->assertSame([200, 200, 200, 404, 404, 404, 200, 404, 200, 404], $run['privat'],
+            'A side was refused, a third account, a guest, a deleted side, a name the message does not carry or a moderator of a type was served, or root refused');
+        $this->assertSame([200, 404, 404], $run['rule'], 'A stored PDF the rule of account does not take was refused to its side, or served to a stranger or as a preview');
+        $this->assertSame([410, 410], $run['shut'], 'The light path served the folder of the private messages or of the account texts');
+        $this->assertSame([true, true, false], $run['mpage'], 'The opened message does not print the file route of its body and its signature, or still prints the folder');
+    }
+
+    # The preview of a private message serves the own upload of account and any to a moderator, never another member's or under another name
+    #[Test]
+    public function aPrivatePreviewServesTheOwnUpload(): void
+    {
+        $this->assertSame([200, 404, 404, 200, 404], $this->getRun()['pview']);
+    }
+
+    # A writer of a message binds an own upload or a name a message they still read carries: a forward goes through, a foreign file and a deleted copy do not
+    #[Test]
+    public function aMessageWriterBindsItsOwnOrAReadName(): void
+    {
+        $run = $this->getRun();
+        $this->assertSame([true, true, 0], $run['msend'], 'A message naming a foreign file was stored or did not name the refused file');
+        $this->assertSame([true, 0], $run['mgone'], 'A message naming a file of a copy the writer deleted was stored');
+        $this->assertSame([2, 200, 404], $run['mfwd'], 'A forward or an own upload was refused, its recipient cannot read it, or the first sender reads the forward');
+    }
+
+    # A signature serves its names to every reader of profiles on every page that shows it, and nothing when profiles are closed to guests
+    #[Test]
+    public function aSignatureServesEveryReaderOfProfiles(): void
+    {
+        $run = $this->getRun();
+        $this->assertSame([200, 200, 404, 404], $run['sign'], 'A guest or a member was refused, or another account or a name the signature does not carry was served');
+        $this->assertSame([404, 200], $run['closed'], 'Closed profiles served a guest or refused a member');
+        $this->assertSame([true, false], $run['spage'], 'The topic page does not print the file route of the signature or still prints the account folder');
+        $this->assertTrue($run['sprof'], 'The profile page does not print the file route of the signature');
+    }
+
+    # The account texts upload into profile, its preview serves the own upload, and a signature binds an own file and refuses a foreign one
+    #[Test]
+    public function aSignatureBindsOnlyAnOwnFile(): void
+    {
+        $run = $this->getRun();
+        $this->assertSame([200, 404, 404], $run['sview'], 'The preview of profile served a foreign upload or refused the own one');
+        $this->assertSame([true, true, ''], $run['ssave'], 'A signature naming a foreign file was stored or did not name the refused file');
+        $this->assertSame(['Anna [attach=own-aaaaaaaaaa-2.png align=left title=m]', 200, true], $run['sown'],
+            'An own file was refused, is not served through the signature, or the editor does not upload into profile');
     }
 }

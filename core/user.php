@@ -71,7 +71,7 @@ function getCommentView(array $val, int $numb, string $token): string {
         $gone
     );
     $unam = (!empty($anam)) ? user_info($anam, false) : htmlspecialchars($avname, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
-    $sig = (!empty($usr['sig'])) ? $tpl->getHtmlFrag('block-content', ['is_signature' => true, 'content' => $usr['sig']]) : '';
+    $sig = (!empty($usr['sig'])) ? $tpl->getHtmlFrag('block-content', ['is_signature' => true, 'content' => getUserSign((string)$usr['sig'], $auid, 2)]) : '';
     $aweb = (string)($usr['website'] ?? '');
     $uitems = [];
     if (($mods || is_user() || $conf['comments']['anonpost'] != 0) && $deep + 2 <= 20) {
@@ -280,7 +280,7 @@ function setComShow(int $id = 0, int $acomm = 0): string {
                     'id' => 'ctext',
                     'name' => 'text',
                     'value' => '',
-                    'mod' => $conf['name'],
+                    'mod' => getCommentPlace($conf['name']),
                     'store' => 'comment.body',
                     'rows' => '5',
                     'placeholder' => _COMMENT,
@@ -501,7 +501,7 @@ function getUserBlock(): string {
     $block = (isset($user[4])) ? intval($user[4]) : 0;
     if (is_user() && $block) {
         [$userblock] = $db->getSqlRow($db->getSqlQuery('SELECT block FROM '.PREFIX_DB.'_users WHERE id = :uid', ['uid' => $uid]));
-        $userblock = $prs->filterContent($userblock, false, 'account', 2);
+        $userblock = $prs->filterContent($userblock, false, 'profile', 2, '', ['profile', $uid]);
         return $tpl->getHtmlFrag('block-all', ['title' => _MENUFOR, 'content' => $userblock]);
     }
     return '';
@@ -683,19 +683,14 @@ function updateForumBody(int $id, string $text, string $stamp): array {
 }
 
 # Answer whether the reader gets one forum file: the names a post carries to whom its topic page shows it, a preview the own upload to whom may list the folder
+# The upload rule decides the preview alone: a name a stored post carries is served whatever extensions the rule takes today
 function checkForumFile(string $mod, int $id, string $key): bool {
     global $db, $conf;
-    $rule = getUploadRuleData('forum');
     $mods = checkUploadModer('forum');
     $show = intval($conf['modules']['forum']['view'] ?? 0);
     $open = $mods || (!empty($conf['modules']['forum']['active']) && ($show === 0 || ($show === 1 && is_user() && isModGroup('forum'))));
-    if (!$open || !$rule['ok'] || !in_array(strtolower(pathinfo($key, PATHINFO_EXTENSION)), explode(',', $rule['extensions']), true)) return false;
-    if ($id < 1) {
-        require_once BASE_DIR.'/core/classes/filemanager.php';
-        $tok = getEditorFileOwner('forum');
-        $mine = $mods || ($tok !== null && FileManager::getFileOwner($key) === $tok);
-        return $mod === 'forum' && FileManager::checkFileName($key) && checkEditorUploadAccess('forum', $rule) && $mine;
-    }
+    if (!$open) return false;
+    if ($id < 1) return $mod === 'forum' && checkUploadPreview('forum', $key);
     $sql = 'SELECT f.pid, f.body, f.status, f.time <= NOW() AS live, c.pread, c.pmod FROM '.PREFIX_DB.'_forum AS f'
         .' LEFT JOIN '.PREFIX_DB.'_categories AS c ON (c.id = f.cid) WHERE f.id = :id';
     $row = $db->getSqlRow($db->getSqlQuery($sql, ['id' => $id]));
@@ -713,22 +708,57 @@ function checkForumNames(string $text, string $old, int $topic): string {
     $prs = new Parser();
     $fresh = array_values(array_diff($prs->getAttachList($text), ($old !== '') ? $prs->getAttachList($old) : []));
     if (!$fresh) return '';
-    require_once BASE_DIR.'/core/classes/filemanager.php';
     $seen = [];
     $sql = 'SELECT body FROM '.PREFIX_DB.'_forum WHERE (id = :id OR pid = :pid) AND status != \'0\' AND time <= NOW() AND body LIKE \'%[attach=%\'';
     $res = ($topic > 0) ? $db->getSqlQuery($sql, ['id' => $topic, 'pid' => $topic]) : false;
     while ($res && ($one = $db->getSqlRow($res))) $seen = array_merge($seen, $prs->getAttachList((string)$one['body']));
-    $exts = explode(',', getUploadRuleData('forum')['extensions']);
-    $area = new FileManager('editor', UPLOADS_DIR.'/'.getUploadFolder('forum'));
-    $mods = checkUploadModer('forum');
-    $tok = getEditorFileOwner('forum');
-    foreach ($fresh as $name) {
-        if (in_array($name, $seen, true)) continue;
-        $row = $area->getFileData($name);
-        $good = $row && $row['kind'] !== 'dir' && $row['path'] === $name && in_array($row['extension'], $exts, true);
-        if (!$good || (!$mods && ($tok === null || FileManager::getFileOwner($name) !== $tok))) return _FILE_FOREIGN.': '.$name;
-    }
-    return '';
+    return checkUploadNames('forum', $fresh, $seen);
+}
+
+# Answer whether the reader gets one file of a private message: the names a message carries to its sender and its recipient while their side holds it
+# A moderator of account reads the files of every message, as the message list of the panel shows every body; a preview serves the own upload to a member
+function checkPrivatFile(string $mod, int $id, string $key): bool {
+    global $conf, $user, $prv;
+    $mods = checkUploadModer('account');
+    if (!$mods && (!is_user() || empty($conf['privat']['act']))) return false;
+    if ($id < 1) return $mod === 'account' && checkUploadPreview('account', $key);
+    $body = $prv->getMessageBody(is_user() ? intval($user[0]) : 0, $id, $mods);
+    return in_array($key, (new Parser())->getAttachList($body), true);
+}
+
+# Answer the refusal of the first [attach] name of a message, or an empty string
+# An own upload, any file for a moderator of account and a name that a message the writer still reads carries pass, so a reply quotes and a forward carries its files
+function checkPrivatNames(string $text): string {
+    global $user, $prv;
+    $prs = new Parser();
+    $fresh = $prs->getAttachList($text);
+    if (!$fresh) return '';
+    $seen = [];
+    foreach ($prv->getAttachBodies(is_user() ? intval($user[0]) : 0) as $body) $seen = array_merge($seen, $prs->getAttachList($body));
+    return checkUploadNames('account', $fresh, $seen);
+}
+
+# Answer whether the reader gets one file of an account text: the names its signature carries to whom may open the profile, a preview the own upload
+# The signature shows on every page an account writes on, so its files go to every reader of profiles
+# The own block and the comments on a profile upload into the same folder and grant nothing here yet
+function checkProfileFile(string $mod, int $id, string $key): bool {
+    global $db, $conf;
+    if (intval($conf['users']['prof'] ?? 0) === 1 && !is_user() && !isAdmin()) return false;
+    if ($id < 1) return $mod === 'profile' && checkUploadPreview('profile', $key);
+    $row = $db->getSqlRow($db->getSqlQuery('SELECT sig FROM '.PREFIX_DB.'_users WHERE id = :id', ['id' => $id]));
+    return $row && in_array($key, (new Parser())->getAttachList((string)$row['sig']), true);
+}
+
+# Answer the refusal of the first new [attach] name of an account text that is no own upload of profile and no file for a moderator of account, or an empty string
+function checkProfileNames(string $text, string $old): string {
+    $prs = new Parser();
+    return checkUploadNames('profile', array_values(array_diff($prs->getAttachList($text), ($old !== '') ? $prs->getAttachList($old) : [])), []);
+}
+
+# Render one signature in the file context of its account, so every page that shows it resolves its attachments against the one folder and owner of the account texts
+function getUserSign(string $sig, int $uid, int $hoff = 0): string {
+    global $prs;
+    return ($sig === '') ? '' : $prs->filterContent($sig, false, 'profile', $hoff, '', ($uid > 0) ? ['profile', $uid] : []);
 }
 
 # The shelf strip of the private message page: the three mailboxes and the compose action, each with the quota ring that replaced the half-capacity alert
@@ -1155,8 +1185,8 @@ function getPrivateMessagePane(string|array $stop, string $info, int $typ, array
             'author_html' => ($pname !== '') ? user_info($pname, false) : '',
             'note' => ($gname !== '') ? _GROUP.': '.$gname : (string)_RANK,
             'chips_html' => $chips,
-            'text_html' => $prs->filterContent($view['body'], true, $conf['name'], 2, 'breaks'),
-            'sig_html' => ($mate['sig'] ?? '') ? $prs->filterContent((string)$mate['sig'], false, $conf['name'], 2) : '',
+            'text_html' => $prs->filterContent($view['body'], true, $conf['name'], 2, 'breaks', ['privat', $view['id']]),
+            'sig_html' => getUserSign((string)($mate['sig'] ?? ''), intval($view['partner']), 2),
             'is_reply' => true,
             'reply_label' => (string)_PRREP,
             'forward_href' => 'index.php?go=1&op=getPrivateMessageView&typ=4&id='.$view['id'].'&fwd=1&cid='.($mine ? 1 : 2),
@@ -1191,13 +1221,12 @@ function addPrivateMessage(): void {
         echo getPrivateMessageView((string)_ERROR, '', 4);
         return;
     }
-    $new = $prv->addMessage(
-        $uid,
-        $name,
-        getVar('post', 'title', 'raw', ''),
-        getVar('post', 'text', 'raw', ''),
-        getIp()
-    );
+    $body = getVar('post', 'text', 'raw', '');
+    if ($bad = checkPrivatNames($body)) {
+        echo getPrivateMessageView($bad, '', 4);
+        return;
+    }
+    $new = $prv->addMessage($uid, $name, getVar('post', 'title', 'raw', ''), $body, getIp());
     if ($new['error'] !== 'ok') {
         $note = match ($new['error']) {
             'no_recipient' => (string)_CERROR6,

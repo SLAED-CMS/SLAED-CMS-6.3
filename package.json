@@ -33,7 +33,6 @@
   },
   "homepage": "https://github.com/SLAED-CMS/SLAED-CMS-6.3#readme",
   "devDependencies": {
-    "chrome-remote-interface": "^0.34.0",
-    "playwright": "^1.60.0"
+    "playwright": "^1.63.0"
   }
 }

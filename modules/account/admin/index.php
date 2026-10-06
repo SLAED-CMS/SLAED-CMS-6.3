@@ -371,7 +371,7 @@ function add(bool $fresh = false): void {
         'label_html' => _SIGNATURE, 'hint_html' => _SIGNATURE_TEXT,
         'label_id' => ($fids = getFieldIds('', 'sig'))['label'], 'hint_id' => $fids['hint'],
         'field_html' => getTplTextarea(['describedby' => $fids['hint'], 'labelledby' => $fids['label'], 'label' => _SIGNATURE,
-            'id' => '1', 'name' => 'sig', 'value' => $sig, 'mod' => 'account', 'store' => 'users.sig', 'rows' => '5', 'placeholder' => _SIGNATURE, 'required' => '',
+            'id' => '1', 'name' => 'sig', 'value' => $sig, 'mod' => 'profile', 'store' => 'users.sig', 'rows' => '5', 'placeholder' => _SIGNATURE, 'required' => '',
             'autofocus' => true,
         ]),
     ];
@@ -414,7 +414,7 @@ function add(bool $fresh = false): void {
         'label_html' => _MENUCONF, 'hint_html' => _MENUINFO,
         'label_id' => ($fids = getFieldIds('', 'block'))['label'], 'hint_id' => $fids['hint'],
         'field_html' => getTplTextarea(['describedby' => $fids['hint'], 'labelledby' => $fids['label'], 'label' => _MENUCONF,
-            'id' => '2', 'name' => 'block', 'value' => $block, 'mod' => 'account', 'store' => 'users.block', 'rows' => '5', 'placeholder' => _MENUCONF, 'required' => '',
+            'id' => '2', 'name' => 'block', 'value' => $block, 'mod' => 'profile', 'store' => 'users.block', 'rows' => '5', 'placeholder' => _MENUCONF, 'required' => '',
         ]),
     ];
     if ($conf['users']['theme']) {
@@ -563,7 +563,7 @@ function add(bool $fresh = false): void {
                 'label_id' => ($fids = getFieldIds('', 'mailtext'))['label'], 'hint_id' => $fids['hint'],
                 'field_html' => getTplTextarea(['describedby' => $fids['hint'], 'labelledby' => $fids['label'], 'label' => _MAIL_TEXT,
                     'id' => '3', 'name' => 'mailtext',
-                    'value' => replace_break(str_replace('[text]', _FOLLOWINGMEM."\n\n"._NICKNAME.': [login]\n'._PASSWORD.': [pass]', $conf['mtemp'])), 'mod' => 'account',
+                    'value' => replace_break(str_replace('[text]', _FOLLOWINGMEM."\n\n"._NICKNAME.': [login]\n'._PASSWORD.': [pass]', $conf['mtemp'])), 'mod' => 'all',
                     'store' => 'config', 'rows' => '10', 'placeholder' => _MAIL_TEXT, 'required' => '',
                 ]),
             ]]]),
@@ -694,7 +694,7 @@ function addsave(): void {
             if ($mail) {
                 $subject = $conf['sitename'].' - '._USERPASSWORD.' '.$uname;
                 $mailtext = getVar('post', 'mailtext', 'text');
-                $msg = nl2br($prs->filterContent(str_replace('[pass]', $pass, str_replace('[login]', $uname, $mailtext)), false, 'account'), false);
+                $msg = nl2br($prs->filterContent(str_replace('[pass]', $pass, str_replace('[login]', $uname, $mailtext)), false, 'all'), false);
                 $mailer->addQueue(['kind' => 'account', 'email' => $email, 'title' => $subject, 'body' => $msg, 'sender' => $conf['adminmail'], 'prio' => 3]);
                 $text = _MAIL_SEND;
             }

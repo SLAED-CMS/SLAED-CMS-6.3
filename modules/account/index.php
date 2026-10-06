@@ -285,7 +285,7 @@ function activate(): void {
 }
 
 function view(): void {
-    global $db, $conf, $afile, $tpl, $prs, $com, $pnt;
+    global $db, $conf, $afile, $tpl, $com, $pnt;
     if ($conf['users']['prof'] != 1 || ($conf['users']['prof'] == 1 && is_user()) || isAdmin()) {
         $uname = htmlspecialchars(substr(urldecode(getVar('get', 'uname', 'text')), 0, 25));
         $params = [];
@@ -335,7 +335,7 @@ function view(): void {
             $userIpRaw = $ip;
             $seotitle  = $nick;
             $seoctitle = _PERSONALINFO;
-            $seodesc   = cutstr(trim(strip_tags($prs->filterContent($sig ?? '', false, $conf['name']))), 160);
+            $seodesc   = cutstr(trim(strip_tags(getUserSign((string)($sig ?? ''), intval($uid)))), 160);
             $seoimg    = ($avatar) ? $conf['homeurl'].'/'.getUserAvatarUrl(['avatar' => $avatar]) : '';
             $seoauthor = $nick ?: ($uname ?: $conf['sitename']);
             setHead([
@@ -373,7 +373,7 @@ function view(): void {
             $mailv = (($adm || $view) && $mail) ? $mail : _HIDE;
             $sitev = ($site) ? (($adm || is_user()) ? domain($site) : _HIDE) : _NO_INFO;
             $avatar = getUserAvatarUrl(['avatar' => $avatar]);
-            $sign = ($sig) ? $prs->filterContent($sig, false, $conf['name']) : '';
+            $sign = getUserSign((string)$sig, intval($uid));
             $lang = getLangName($lang ?: $conf['language']);
             $points = ($pnt->active && $point) ? number_format((int)$point, 0, '', "\u{202F}") : _NO_INFO;
             $wnum = count(array_filter(explode('|', (string)$warn)));
@@ -1111,7 +1111,7 @@ function edithome(): void {
                 'id' => '1',
                 'name' => 'sig',
                 'value' => $info['sig'],
-                'mod' => $conf['name'],
+                'mod' => 'profile',
                 'store' => 'users.sig',
                 'rows' => '5',
                 'placeholder' => _SIGNATURE,
@@ -1227,7 +1227,7 @@ function edithome(): void {
                 'id' => '2',
                 'name' => 'block',
                 'value' => $info['block'],
-                'mod' => $conf['name'],
+                'mod' => 'profile',
                 'store' => 'users.block',
                 'rows' => '10',
                 'placeholder' => _MENUCONF,
@@ -1395,7 +1395,9 @@ function savehome(): void {
     for ($i = $prev; $i < $last; $i++) $stop[$i] = ['text' => (string)$stop[$i], 'sect' => 'personal'];
     if ($room = checkEditorTextRoom($sig, 'users.sig')) $stop[] = ['text' => $room, 'sect' => 'personal'];
     if ($room = checkEditorTextRoom($block, 'users.block')) $stop[] = ['text' => $room, 'sect' => 'privacy'];
-    [$fold] = $db->getSqlRow($db->getSqlQuery('SELECT field FROM '.PREFIX_DB.'_users WHERE id = :id', ['id' => (int)$user[0]])) ?: [''];
+    [$fold, $sold, $bold] = $db->getSqlRow($db->getSqlQuery('SELECT field, sig, block FROM '.PREFIX_DB.'_users WHERE id = :id', ['id' => (int)$user[0]])) ?: ['', '', ''];
+    if ($file = checkProfileNames($sig, (string)$sold)) $stop[] = ['text' => $file, 'sect' => 'personal'];
+    if ($file = checkProfileNames($block, (string)$bold)) $stop[] = ['text' => $file, 'sect' => 'privacy'];
     $flds = getFieldsPost($conf['name'], (string)$fold);
     foreach ($flds['stop'] as $text) $stop[] = ['text' => $text, 'sect' => 'personal'];
     if (!$stop) {

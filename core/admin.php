@@ -884,7 +884,7 @@ function getAdminPrivateList(int $obj = 0): string {
                 'read' => (string)_PROLD,
                 default => (string)_PROUTNEW,
             };
-            $info = $prs->filterContent($one['body'], true, 'privat', 0, 'breaks');
+            $info = $prs->filterContent($one['body'], true, 'account', 0, 'breaks', ['privat', $one['id']]);
             $delattr = getTplPostVals(['name' => 'privat', 'op' => 'delete', 'id' => $one['id'], 'num' => $data['page']], '#repadminPrivateList');
             $rows[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
                 'cells' => [

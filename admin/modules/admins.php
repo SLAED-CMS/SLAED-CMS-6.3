@@ -459,7 +459,7 @@ function save(): void {
             $subj = $conf['sitename'].' - '._USERPASSWORD.' '.$name;
             $text = getVar('post', 'mailtext', 'text', '');
             $text = str_replace('[pass]', $pwd, str_replace('[login]', $name, $text));
-            $text = $prs->filterContent($text, false, 'account');
+            $text = $prs->filterContent($text, false, 'all');
             $mailer->addQueue(['kind' => 'admins', 'email' => $email, 'title' => $subj, 'body' => nl2br($text, false), 'sender' => $conf['adminmail'], 'prio' => 3]);
         }
         setRedirect($afile.'.php?name=admins', false, 302, $mail ? _MAIL_SEND : _SUCCSAVE);
