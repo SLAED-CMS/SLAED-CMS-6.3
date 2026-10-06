@@ -193,7 +193,7 @@ final class PublicTreeTest extends TestCase
         $list = explode("\0", (string)shell_exec('git -C '.escapeshellarg(BASE_DIR).' ls-files -co --exclude-standard -z'));
         $left = [];
         foreach ($list as $one) {
-            if ($one === '' || str_starts_with($one, 'public/') || str_starts_with($one, 'setup_old/') || $one === '.htaccess') continue;
+            if ($one === '' || str_starts_with($one, 'public/') || $one === '.htaccess') continue;
             if (in_array(basename($one), ['.htaccess', 'index.html'], true)) $left[] = $one;
         }
         $this->assertSame([], $left, 'A guard file lies outside the document root');

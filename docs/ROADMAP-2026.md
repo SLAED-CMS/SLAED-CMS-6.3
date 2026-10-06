@@ -51,7 +51,8 @@ into the plan, then do whatever work the step names.
 - [x] 4. PRIVATE-DATA batch 2 — the project out of web reach, the `public/` tree, the whole `uploads/` outside it
   with the light path. Its decisions were taken 2026-10-05 and stand in the plan; the step is the code. (2026-10-05)
 - [x] 5. PRIVATE-DATA batch 3 — the self-check, `checkTypeGuard()` on it. (2026-10-06)
-- [ ] 6. PRIVATE-DATA batch 4 — `setup_old/` leaves the tree; `nginx.conf.example` landed with step 4 (2026-10-05).
+- [x] 6. PRIVATE-DATA batch 4 — `setup_old/` leaves the tree; `nginx.conf.example` landed with step 4 (2026-10-05).
+  (2026-10-06)
 - [ ] 7. PROD-FINDINGS item 1 — `.html` and missing uploads answer 410, `/index.php/…` answers 301.
 - [ ] 8. FILES batch 2 — inline attachment.
 - [ ] 9. FILES batch 3 — Node texts off the archive.

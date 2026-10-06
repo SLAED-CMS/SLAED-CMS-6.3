@@ -18,8 +18,10 @@ of the file layer follow the document root by `PUBLIC_DIR`, so a root named `pub
 seam, the markers by `setPrivateMark()`, the system job `selfcheck` every hour, which keeps the verdicts in its own
 scheduler state, and `getSelfCheckAlert()` on the home of the panel (only a problem or no run within a day) and in
 the security section (the all-clear as well); the last part of `setup.php` writes the markers, since it is the one that runs with the core; `checkTypeGuard()` asks the upload root
-alone. The plain name was tried on the stock OSPanel nginx of the stand: `check.txt` is served as it is. Batches 4-6
-open. The order
+alone. The plain name was tried on the stock OSPanel nginx of the stand: `check.txt` is served as it is. Batch 4
+done 2026-10-06: `setup_old/` left the tree with its ignored `.sql` files, and `PublicTreeTest` no longer exempts it;
+the `.sql` files of the old installer are in history before `b2973ad4`, the schema in `storage/update/sql`. Batches
+5-6 open. The order
 of the batches is kept in `docs/ROADMAP-2026.md`: batches 0 and 1 of 1-FILES-2026.md run between batch 1 and batch 2,
 so the Node types sit in `uploads/node/<type>/` before the tree is split. Update this line as batches land.
 
