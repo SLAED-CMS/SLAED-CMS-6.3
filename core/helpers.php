@@ -131,7 +131,7 @@ function getTplViewFieldRows(array $data = []): string {
     return $rows;
 }
 
-# Render one full preview block from prepared source texts and dynamic fields
+# Render one full preview block from prepared source texts and dynamic fields; own is the file context of the parser, such as [forum, 0] of an unsaved post
 function getTplPreviewContent(array $data = []): string {
     global $tpl, $prs;
     $title = $data['title'] ?? '';
@@ -139,9 +139,10 @@ function getTplPreviewContent(array $data = []): string {
     $textb = $data['textb'] ?? '';
     $field = $data['field'] ?? '';
     $mod = $data['mod'] ?? '';
+    $own = $data['own'] ?? [];
     if ($title === '' && $texta === '' && $textb === '' && $field === '') return '';
-    $bodya = $texta ? $prs->filterContent($texta, false, $mod) : '';
-    $bodyb = $textb ? $prs->filterContent($textb, false, $mod) : '';
+    $bodya = $texta ? $prs->filterContent($texta, false, $mod, 0, '', $own) : '';
+    $bodyb = $textb ? $prs->filterContent($textb, false, $mod, 0, '', $own) : '';
     $bodyc = $field ? getTplViewFieldRows(['field' => $field, 'mod' => $mod]) : '';
     return $tpl->getHtmlPart('preview', [
         'title' => _PREVIEW,

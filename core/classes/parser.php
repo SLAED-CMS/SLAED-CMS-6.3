@@ -40,12 +40,12 @@ class Parser {
     # The format names how the source is to be read, not who wrote it: plain recognizes no Markdown construct and turns every line ending into a break
     # The breaks format is Markdown that also breaks on a single line ending, and anything else is plain Markdown, where a lone line ending joins the lines around it
     # A conversation channel asks for breaks: a reader of a comment or a message typed the line endings they meant, and every one renders the same way whoever wrote it
-    # The file context names the owner and the stored target of the text, such as [node, id] of a material; its attachments take the address FileAccess answers for it
+    # The file context names the owner and the target of the text, [node, id] of a material or target 0 of an unsaved one; attachments take the address FileAccess answers
     # Trust makes a safe rendering honour the trusted tags: only what [usehtml] and [usephp] enclose becomes markup or runs, everything around them stays escaped
     public function filterDoc(string $src, bool $safe = true, string $mod = '', int $hoff = 0, string $fmt = '', array $own = [], bool $trust = false): string {
         $hoff = max(0, min(5, $hoff));
         $fmt = in_array($fmt, ['plain', 'breaks'], true) ? $fmt : '';
-        $own = (is_string($own[0] ?? null) && is_int($own[1] ?? null) && $own[1] > 0) ? [$own[0], $own[1]] : [];
+        $own = (is_string($own[0] ?? null) && is_int($own[1] ?? null) && $own[1] >= 0) ? [$own[0], $own[1]] : [];
         $trust = $safe && $trust;
         $key = md5($src.(int)$safe.(int)$trust.$mod.$hoff.$fmt.'|'.implode(':', $own));
         if (isset(self::$pcache[$key])) {
@@ -95,7 +95,7 @@ class Parser {
     # Stored is the finished rendering of a source of at least CACHEMIN bytes whose parse does not vary; a [block=] or [usephp] source is rendered anew on every serve
     # The stored rendering lives here and not in a caller, because the key is built from what this class itself reads and only this class knows whether a parse may be reused at all
     public function filterContent(string $src, bool $safe, string $mod, int $hoff = 0, string $fmt = '', array $own = [], bool $trust = false): string {
-        $own = (is_string($own[0] ?? null) && is_int($own[1] ?? null) && $own[1] > 0) ? [$own[0], $own[1]] : [];
+        $own = (is_string($own[0] ?? null) && is_int($own[1] ?? null) && $own[1] >= 0) ? [$own[0], $own[1]] : [];
         $trust = $safe && $trust;
         $file = $this->getCachePath($src, $safe, $mod, $hoff, $fmt, $own, $trust);
         if ($file !== '' && Cache::isFresh($file, self::CACHETTL)) {

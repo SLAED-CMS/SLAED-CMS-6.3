@@ -242,6 +242,7 @@ define('_FILES','Katalog plików');
 define('_FILEUP','Liczbę jednocześnie pobieranych plików');
 define('_FILE_RENAMED','Plik przesłany i nazwany');
 define('_FILE_SITE','Pobierz plik z linku');
+define('_FILE_FOREIGN','Załącznik wskazuje plik, który nie został przesłany przez Ciebie');
 define('_FIN',', w bajtach');
 define('_FMODC','Zamknij na sprawdzanie');
 define('_FOLLOWINGMEM','Informacje dla dostępu');

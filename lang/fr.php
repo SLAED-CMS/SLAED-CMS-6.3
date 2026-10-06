@@ -242,6 +242,7 @@ define('_FILES','Répertoire de fichiers');
 define('_FILEUP','Le nombre que vous pouvez télécharger simultanément des fichiers');
 define('_FILE_RENAMED','Fichier chargé et nommé');
 define('_FILE_SITE','Télécharger le fichier de lien');
+define('_FILE_FOREIGN','Une pièce jointe désigne un fichier que vous n\'avez pas téléversé');
 define('_FIN',', en octets');
 define('_FMODC','Fermer la vérification de la');
 define('_FOLLOWINGMEM','Pour accéder informations');

@@ -152,6 +152,7 @@ final class QuickEditTest extends TestCase
         $this->assertSame([200, true], $run['repeat'], 'The repeat of a stored forum save was a conflict or wrote again');
         $this->assertSame([409, true], $run['conflict']);
         $this->assertSame([403, 403, true], $run['foreign']);
+        $this->assertSame([422, true, true], $run['names'], 'A quick edit bound a file of the forum folder its author does not own');
     }
 
     # A Node material offers the quick edit on its public page alone: its author sees an own entry, a stranger none, a card of the list none, its moderator before the editor

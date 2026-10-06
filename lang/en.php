@@ -242,6 +242,7 @@ define('_FILES','Files');
 define('_FILEUP','Quantity of simultaneously loaded files');
 define('_FILE_RENAMED','File uploaded and named');
 define('_FILE_SITE','Load a file under the link');
+define('_FILE_FOREIGN','An attachment names a file you did not upload');
 define('_FIN',', in bytes');
 define('_FMODC','Close to the verification of the');
 define('_FOLLOWINGMEM','Following is the member information');

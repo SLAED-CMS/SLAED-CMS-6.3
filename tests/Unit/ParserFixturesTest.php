@@ -567,7 +567,7 @@ namespace Tests\Unit {
         }
 
         # A file context [owner, id] links the file route with an encoded key, escaped once for the attribute, for Node and any closed owner alike, and never a closed folder
-        # The thumb gets thumb=1 for the copy that exists, the old call of a private folder gets no direct address, and the memory of a request keeps both renderings apart
+        # The thumb gets thumb=1 for the copy that exists, the old call of a private folder gets no direct address, target 0 the preview, and the memory keeps them apart
         #[Test]
         public function checkAttachOfAStoredMaterialUsesTheControlledRoute(): void
         {
@@ -590,7 +590,12 @@ namespace Tests\Unit {
                 $this->assertStringContainsString('href="'.$base.'a-abcdefghij-2.png"><img src="'.$base.'a-abcdefghij-2.png&amp;thumb=1"', $new);
                 $this->assertStringNotContainsString('uploads/', $new, 'A stored material links the closed directory');
                 $this->assertSame($new, self::$p->filterDoc($src, true, $mod, 0, '', ['node', 7]));
-                $this->assertSame($old, self::$p->filterDoc($src, true, $mod, 0, '', ['node', 0]));
+                $draft = self::$p->filterDoc($src, true, $mod, 0, '', ['node', 0]);
+                $this->assertStringContainsString('href="index.php?go=file&amp;own=node&amp;name='.$mod.'&amp;key=my%20file.pdf&amp;preview=1"', $draft,
+                    'An unsaved text did not take the preview of its owner');
+                $draft = self::$p->filterDoc('[attach=my file.pdf align=left title=Doc]', true, 'forum', 0, '', ['forum', 0]);
+                $this->assertStringContainsString('href="index.php?go=file&amp;own=forum&amp;name=forum&amp;key=my%20file.pdf&amp;preview=1"', $draft,
+                    'An unsaved post did not take the preview of the forum');
                 $this->assertSame($old, self::$p->filterDoc($src, true, $mod, 0, '', ['node', -3]), 'A negative id is no target');
                 $this->assertSame($old, self::$p->filterDoc($src, true, $mod, 0, '', ['node', '7']), 'An id that is no number is no target');
                 $shut = self::$p->filterDoc('[attach=my file.pdf align=left title=Doc]', true, 'forum', 0, '', ['forum', 5]);
@@ -674,7 +679,9 @@ namespace Tests\Unit {
             }
             $code = (string)file_get_contents(BASE_DIR.'/core/system.php');
             $body = substr($code, (int)strpos($code, 'function getImgText('), 1500);
-            $this->assertStringContainsString("stripos(\$match[0], ' size=full]') === false) ? 'thumb/'", $body, 'The image of a text names a thumb the full-size form never made');
+            $this->assertStringContainsString("\$thumb = !\$type && stripos(\$match[0], ' size=full]') === false;", $body,
+                'The image of a text names a thumb the full-size form never made');
+            $this->assertStringContainsString("(\$thumb ? 'thumb/' : '')", $body, 'The direct address of a public folder lost its thumb');
         }
 
         #[Test]

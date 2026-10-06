@@ -620,7 +620,7 @@ function view(): void {
         $isdelete = is_acess((string)($rows[0][23] ?? ''));
         $ismod = is_acess((string)($rows[0][24] ?? ''));
         $seodesc = cutstr(trim(strip_tags($prs->filterContent($rows[0][7], false, $conf['name']))), 160);
-        $seoimg = getImgText($rows[0][7], '', false);
+        $seoimg = getImgText($rows[0][7], '', false, '', ['forum', intval($rows[0][0])]);
         $seoimg = $seoimg ? $conf['homeurl'].'/'.$seoimg : '';
         if (!$ismod) {
             if (!$isread) setError(403);
@@ -786,7 +786,7 @@ function view(): void {
                     'rank_link' => $rlink,
                     'user_rate' => $rate,
                     'text' => $text,
-                    'sig' => $prs->filterContent($sig, false, $conf['name']),
+                    'sig' => $prs->filterContent($sig, false, 'account'),
                     'btn_user' => $usermenu,
                     'btn_warn' => $warn,
                     'btn_thank' => $thank,
@@ -1014,7 +1014,7 @@ function add(): void {
         setHead(['title' => $head, 'kind' => 'utility', 'robots' => 'noindex, follow']);
         $cont = ($stop) ? $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => (array)$stop]) : '';
         $psubject = (!$subh) ? $subject : '';
-        if ($hometext) $cont .= getTplPreviewContent(['title' => $psubject, 'texta' => $hometext, 'textb' => '', 'mod' => $conf['name']]);
+        if ($hometext) $cont .= getTplPreviewContent(['title' => $psubject, 'texta' => $hometext, 'textb' => '', 'mod' => $conf['name'], 'own' => ['forum', intval($fid)]]);
         $userinfo = getUserInfo();
         if (($userinfo['access'] ?? false) || (!is_user() && !$conf['forum']['anonpost'])) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _POSTNOTE]);
         $cont .= $tpl->getHtmlFrag('title', ['title' => $info, 'is_level_one' => true]);
@@ -1158,7 +1158,7 @@ function send(): void {
         }
         $long = intval($conf['forum']['letter']);
         $status = getVar('post', 'status', 'num', 0);
-        [$fold] = $id ? ($db->getSqlRow($db->getSqlQuery('SELECT field FROM '.PREFIX_DB.'_forum WHERE id = :id', ['id' => $id])) ?: ['']) : [''];
+        [$fold, $bold] = $id ? ($db->getSqlRow($db->getSqlQuery('SELECT field, body FROM '.PREFIX_DB.'_forum WHERE id = :id', ['id' => $id])) ?: ['', '']) : ['', ''];
         $flds = getFieldsPost($conf['name'], (string)$fold);
         $field = $flds['json'];
         $time = ($ismod) ? getVar('req', 'time', 'time') : date('Y-m-d H:i:s');
@@ -1172,6 +1172,7 @@ function send(): void {
         if ($long > 0 && $size > $long) $stop[] = _CERROR2;
         if (!$postname && !is_user()) $stop[] = _CERROR3;
         if ($room = checkEditorTextRoom($hometext, 'forum.body')) $stop[] = $room;
+        if ($file = checkForumNames($hometext, (string)$bold, $place['topic'])) $stop[] = $file;
         $stop = array_merge($stop, $flds['stop']);
         if (!$stop && getVar('post', 'posttype', 'var') == 'save') {
             $fstatus = $place['status'];

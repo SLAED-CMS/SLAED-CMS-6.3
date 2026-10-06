@@ -29,7 +29,7 @@ The standard rendering pipeline for all modules. It processes Markdown, BBCode, 
 ### `Parser::filterDoc(string $src, bool $safe = true, string $mod = '', int $hoff = 0, string $fmt = '', array $own = [], bool $trust = false): string`
 The core parser operation. Processes all markup but **skips** the global search-and-replace rules. Use this for static documents, changelogs, search rendering, or anywhere where automatic keyword replacement could corrupt the output.
 
-The file context `$own` names the owner and the stored target of the text, `['node', $nid]` for a Node material. Every `[attach]` takes the address `FileAccess::getFileUrl()` answers for it; without a context the owner is `public`, the direct link of a public folder.
+The file context `$own` names the owner and the stored target of the text, `['node', $nid]` for a Node material and `['forum', $id]` for a forum post; target 0 is an unsaved text, whose attachments take the preview form of an owner that has one (`FileAccess::PREVIEW`). Every `[attach]` takes the address `FileAccess::getFileUrl()` answers for it; without a context the owner is `public`, the direct link of a public folder.
 
 ## Source Format (`$fmt`)
 

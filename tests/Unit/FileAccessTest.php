@@ -7,11 +7,29 @@ namespace Tests\Unit;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-# The delivery decision of every uploaded file: one adapter per owner, the address of each form and a refusal for every name a target does not carry (docs/1-FILES-2026.md, batch 4)
+# The delivery decision of every file: one adapter per owner, each address form, a refusal for every name a target does not carry, the forum on route_probe.php files
 final class FileAccessTest extends TestCase
 {
     private const ROOM = 'zzfileaccess';
     private const PNG = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==';
+    private static array $probe = [];
+
+    # Run tests/Support/route_probe.php files once and memoize it; the routes may write no PHP and no SQL error
+    private function getRun(): array
+    {
+        if (self::$probe === []) {
+            $script = dirname(__DIR__).'/Support/route_probe.php';
+            $work = str_replace('\\', '/', sys_get_temp_dir()).'/slaed_files_route';
+            $out = (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' '.escapeshellarg($work).' files 2>&1');
+            $data = json_decode($out, true);
+            $this->assertIsArray($data, 'The probe did not return JSON: '.substr($out, 0, 600));
+            $this->assertSame('', $data['error'], 'The probe failed');
+            $this->assertTrue($data['clean'], 'The probe left a disposable database on the server');
+            $this->assertSame(['error_php.log' => [], 'error_sql.log' => []], $data['logs'], 'The routes wrote PHP or SQL errors');
+            self::$probe = $data['runs']['files'];
+        }
+        return self::$probe;
+    }
 
     # A closed owner whose texts carry names by target id, a Node owner that grants nothing and the public owner, all over one scratch folder
     private static function getAccess(): \FileAccess
@@ -24,6 +42,7 @@ final class FileAccessTest extends TestCase
         return new \FileAccess([
             'forum' => ['folder' => fn(string $mod, int $id): string => self::ROOM, 'grant' => $grant],
             'node' => ['folder' => fn(string $mod, int $id): string => 'node/'.$mod, 'grant' => fn(string $mod, int $id, string $key): bool => false],
+            'comment' => ['folder' => fn(string $mod, int $id): string => self::ROOM, 'grant' => $grant],
             'public' => ['folder' => fn(string $mod, int $id): string => $mod],
             'mystery' => ['folder' => fn(string $mod, int $id): string => self::ROOM, 'grant' => fn(string $mod, int $id, string $key): bool => true],
         ]);
@@ -53,6 +72,7 @@ final class FileAccessTest extends TestCase
     {
         $fac = self::getAccess();
         $this->assertSame(['node', 'forum', 'privat', 'comment', 'public'], \FileAccess::OWNERS);
+        $this->assertSame(['node', 'forum'], \FileAccess::PREVIEW);
         foreach (['mystery', 'Forum', 'FORUM', '', 'forum ', 'privat'] as $own) {
             $this->assertSame('', $fac->getFileFolder($own, 'forum', 5), 'A folder of '.$own);
             $this->assertSame('', $fac->getFileUrl($own, 'forum', 5, 'plain.png'), 'An address of '.$own);
@@ -60,7 +80,7 @@ final class FileAccessTest extends TestCase
         }
     }
 
-    # Every closed owner answers the file route, Node also with the preview of its type, a public folder its direct link, and an owner without a target nothing
+    # Every closed owner answers the file route, Node and the forum also their preview, a public folder its direct link, and any other owner without a target nothing
     #[Test]
     public function everyOwnerAnswersItsOwnAddress(): void
     {
@@ -74,7 +94,10 @@ final class FileAccessTest extends TestCase
         $this->assertSame('uploads/all/a.png', $fac->getFileUrl('public', 'all', 0, 'a.png'));
         $this->assertSame('uploads/all/thumb/a.png', $fac->getFileUrl('public', 'all', 0, 'a.png', true));
         $this->assertSame('', $fac->getFileUrl('public', self::ROOM, 0, 'a.png'), 'A folder off the public list got a direct address');
-        $this->assertSame('', $fac->getFileUrl('forum', 'forum', 0, 'a.png'), 'A closed owner without a target got an address');
+        $this->assertSame('index.php?go=file&own=forum&name=forum&key=a.png&preview=1', $fac->getFileUrl('forum', 'forum', 0, 'a.png'));
+        $this->assertSame('index.php?go=file&own=comment&id=5&key=a.png', $fac->getFileUrl('comment', 'voting', 5, 'a.png'));
+        $this->assertSame('', $fac->getFileUrl('comment', 'voting', 0, 'a.png'), 'A closed owner without a preview and a target got an address');
+        $this->assertSame('', $fac->getFileUrl('forum', '', 0, 'a.png'), 'A forum preview without its name got an address');
         $this->assertSame('', $fac->getFileUrl('node', '', 0, 'a.png'), 'A Node preview without its type got an address');
         $this->assertSame('node/news', $fac->getFileFolder('node', 'news'));
         $this->assertSame(self::ROOM, $fac->getFileFolder('forum', '', 5));
@@ -111,5 +134,37 @@ final class FileAccessTest extends TestCase
         $bad = ['', '.png', 'b.png.', '../'.self::ROOM.'/plain.png', self::ROOM.'/plain.png', 'thumb/plain.png', 'plain.png%00', "plain.png\0", 'plain.png/', 'PLAIN.png',
             str_repeat('a', 252).'.png', 'pl@in.png'];
         foreach ($bad as $key) $this->assertSame('', $fac->getFilePath('forum', '', 5, $key), 'A name that is no bare carried name was served: '.$key);
+    }
+
+    # A post of the forum serves the names its text carries to a reader of its category while it and its topic are published; the folder has no direct address
+    #[Test]
+    public function aForumPostServesItsReader(): void
+    {
+        $run = $this->getRun();
+        $this->assertSame([200, 'image/png', 'private, no-cache, must-revalidate, no-transform'], $run['file']);
+        $this->assertSame([200, 200, 404, 404, 404, 404, 404, 404], $run['reader'],
+            'A guest got an unpublished reply, a hidden topic, a closed category, a name of another post, a name no post carries or a missing thumb');
+        $this->assertSame([200, 404, 404], $run['club'], 'The club category refused its member, served a stranger, or a hidden topic served a member');
+        $this->assertSame([200, 200, 200, 404], $run['moder'], 'The moderator of the forum was refused, or a moderator of a type read the forum');
+        $this->assertSame([410, 410], $run['direct'], 'The light path served the closed forum folder');
+        $this->assertSame([true, true, false], $run['page'], 'The topic page does not print the file route or still prints the folder');
+    }
+
+    # The preview of the forum serves the visitor's own upload and any to a moderator of the forum, never a foreign one, a name of a post or another name
+    #[Test]
+    public function aForumPreviewServesTheOwnUpload(): void
+    {
+        $this->assertSame([200, 404, 404, 200, 404, 404, 404], $this->getRun()['preview']);
+        $this->assertSame([true, 2], $this->getRun()['draft'], 'The preview of an unsaved post does not take the preview address or stored the post');
+    }
+
+    # A writer of a post binds a new name only to an own upload or to a name the topic already carries: a foreign file keeps the form open with its refusal
+    #[Test]
+    public function aForumWriterBindsOnlyItsOwnOrAQuotedName(): void
+    {
+        $run = $this->getRun();
+        $this->assertSame([true, 200, true, 0], $run['send'], 'A reply naming a foreign file was stored or did not name the refused file');
+        $this->assertSame([303, 1], $run['quote'], 'A quote of a name the topic carries was refused');
+        $this->assertSame([303, 2], $run['own'], 'A reply naming an own upload was refused');
     }
 }

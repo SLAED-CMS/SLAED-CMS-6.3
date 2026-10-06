@@ -20,6 +20,7 @@
 # The argument seo runs the canonical routes, the head and the feeds, and its child seoext asks the core for the feeds
 # The argument head runs the routes, the notices and the theme header
 # The argument quick runs the quick edit of a comment over its two routes: methods, the header token, the closed forms, the codes and what each leaves in the row
+# The argument files runs the files of the forum on the file route and the writers of a post that bind a name
 if (PHP_SAPI !== 'cli') {
     http_response_code(404);
     exit;
@@ -193,7 +194,7 @@ function addRouteRows(PDO $pdo): void {
         .' (3, 101, \'file\', \'files\', \'https://example.com/tool\', \'Tool\', \'\', NULL, NULL, NULL, NULL, 0, 1)');
 }
 
-# The scratch upload root with the directory of every type, and the files the materials point at; no folder carries a guard, the light path refuses the private ones
+# The scratch upload root with the directory of every type and of the forum, and the files the texts point at; no folder carries a guard, the light path refuses the private ones
 function addRouteFiles(string $work): void {
     $png = base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==');
     mkdir($work.'/uploads/node', 0777, true);
@@ -201,6 +202,10 @@ function addRouteFiles(string $work): void {
         mkdir($work.'/uploads/node/'.$name.'/thumb', 0777, true);
     }
     foreach (['cover-cccccccccc.png', 'att-aaaaaaaaaa.png', 'other-bbbbbbbbbb.png', 'thumb/att-aaaaaaaaaa.png'] as $one) file_put_contents($work.'/uploads/node/news/'.$one, $png);
+    mkdir($work.'/uploads/forum/thumb', 0777, true);
+    $forum = ['fa-aaaaaaaaaa.png', 'fb-aaaaaaaaaa.png', 'fc-aaaaaaaaaa.png', 'fd-aaaaaaaaaa.png', 'fe-aaaaaaaaaa.png', 'free-aaaaaaaaaa.png', 'mine-aaaaaaaaaa-2.png',
+        'other-bbbbbbbbbb-3.png', 'thumb/fa-aaaaaaaaaa.png'];
+    foreach ($forum as $one) file_put_contents($work.'/uploads/forum/'.$one, $png);
     file_put_contents($work.'/uploads/node/news/manual-dddddddddd.pdf', '%PDF-1.4'.str_repeat('0123456789', 199).'%%');
     file_put_contents($work.'/upload.png', $png);
 }
@@ -2257,6 +2262,8 @@ function getRouteQuickForum(PDO $pdo, Closure $head): array {
     $out['repeat'] = [$post('anna', $first, 'Anna reply edited')['code'], $row() === $saved];
     $out['conflict'] = [$post('anna', $first, 'Anna reply again')['code'], $row() === $saved];
     $out['foreign'] = [$get('boris')['code'], $post('boris', sha1($saved['body']."\0".$saved['etime']), 'Boris took it')['code'], $row() === $saved];
+    $alien = $post('anna', sha1($saved['body']."\0".$saved['etime']), 'Anna takes [attach=other-bbbbbbbbbb-3.png align=left title=o]');
+    $out['names'] = [$alien['code'], str_contains($alien['body'], ': other-bbbbbbbbbb-3.png'), $row() === $saved];
     $fresh = getRouteField($get('anna')['body'], 'stamp');
     $pdo->exec('UPDATE '.$pre.'forum SET status = 1 WHERE id = 501');
     $out['closed'] = [$post('anna', $fresh, 'Anna after the close')['code'], $get('anna')['code'], $row() === $saved];
@@ -2265,6 +2272,48 @@ function getRouteQuickForum(PDO $pdo, Closure $head): array {
     $pdo->exec('UPDATE '.$pre.'forum SET cid = 5 WHERE id IN (501, 502)');
     $out['moved'] = [$post('anna', $fresh, 'Anna after the move')['code'], $row()['body'] === $saved['body']];
     $out['moder'] = [$post('root', $fresh, 'Root fixed the reply')['code'], $row()['body']];
+    return $out;
+}
+
+# The forum files on the file route for a guest, a member, the club and a moderator, the preview of an own upload, the topic page and the three writers of a reply
+function getRouteFiles(PDO $pdo): array {
+    $pre = RPREF.'_';
+    $pdo->exec('INSERT INTO '.$pre.'categories (id, modul, title, intro, pview, pread, ppost, preply, pedit, pdelete, pmod, lang) VALUES'
+        .' (6, \'forum\', \'Open\', \'\', \'0|0\', \'0|0\', \'1|0\', \'1|0\', \'1|0\', \'1|0\', \'\', \'\'),'
+        .' (7, \'forum\', \'Club\', \'\', \'1|1\', \'1|1\', \'1|1\', \'1|1\', \'1|1\', \'1|1\', \'\', \'\')');
+    $rows = [[601, 0, 6, 'Open topic', 'fa', 3], [602, 601, 6, 'Open topic', 'fb', 3], [603, 601, 6, 'Open topic', 'fc', 0], [611, 0, 6, 'Hidden topic', 'fd', 1],
+        [621, 0, 7, 'Club topic', 'fe', 3]];
+    $st = $pdo->prepare('INSERT INTO '.$pre.'forum (id, pid, cid, uid, name, title, time, body, field, luid, lname, ltime, status)'
+        .' VALUES (?, ?, ?, 3, \'boris\', ?, \'2026-01-01 10:00:00\', ?, \'\', 3, \'boris\', \'2026-01-01 10:00:00\', ?)');
+    foreach ($rows as [$id, $pid, $cid, $title, $key, $stat]) $st->execute([$id, $pid, $cid, $title, 'Text [attach='.$key.'-aaaaaaaaaa.png align=left title=a]', $stat]);
+    $code = fn(string $who, string $path): int => getRouteReply($who, 'GET', $path)['code'];
+    $url = fn(int $id, string $key, string $tail = ''): string => 'index.php?go=file&own=forum&id='.$id.'&key='.$key.'-aaaaaaaaaa.png'.$tail;
+    $view = fn(string $key): string => 'index.php?go=file&own=forum&name=forum&key='.$key.'&preview=1';
+    $one = getRouteReply('', 'GET', $url(601, 'fa'));
+    $out = ['file' => [$one['code'], $one['head']['content-type'] ?? '', $one['head']['cache-control'] ?? ''],
+        'reader' => [$code('', $url(602, 'fb')), $code('', $url(601, 'fa', '&thumb=1')), $code('', $url(603, 'fc')), $code('', $url(611, 'fd')), $code('', $url(621, 'fe')),
+            $code('', $url(601, 'fb')), $code('', $url(601, 'free')), $code('', $url(602, 'fb', '&thumb=1'))],
+        'club' => [$code('anna', $url(621, 'fe')), $code('boris', $url(621, 'fe')), $code('anna', $url(611, 'fd'))],
+        'moder' => [$code('root', $url(603, 'fc')), $code('root', $url(611, 'fd')), $code('root', $url(621, 'fe')), $code('moder', $url(611, 'fd'))],
+        'direct' => [$code('', 'uploads/forum/fa-aaaaaaaaaa.png'), $code('root', 'uploads/forum/fa-aaaaaaaaaa.png')],
+        'preview' => [$code('anna', $view('mine-aaaaaaaaaa-2.png')), $code('boris', $view('mine-aaaaaaaaaa-2.png')), $code('', $view('mine-aaaaaaaaaa-2.png')),
+            $code('root', $view('mine-aaaaaaaaaa-2.png')), $code('anna', $view('other-bbbbbbbbbb-3.png')), $code('anna', $view('fa-aaaaaaaaaa.png')),
+            $code('anna', 'index.php?go=file&own=forum&name=news&key=mine-aaaaaaaaaa-2.png&preview=1')]];
+    $page = getRouteReply('', 'GET', 'index.php?name=forum&op=view&id=601')['body'];
+    $out['page'] = [str_contains($page, 'go=file&amp;own=forum&amp;id=601&amp;key=fa-aaaaaaaaaa.png&amp;thumb=1'),
+        str_contains($page, 'go=file&amp;own=forum&amp;id=602&amp;key=fb-aaaaaaaaaa.png'), str_contains($page, 'uploads/forum/')];
+    $tok = getRouteToken(getRouteReply('anna', 'GET', 'index.php?name=forum&op=add&cat=6&pid=601')['body'], 'send');
+    $send = fn(string $text): array => getRouteReply('anna', 'POST', 'index.php?name=forum', ['op' => 'send', 'token' => $tok, 'cat' => '6', 'pid' => '601', 'fid' => '0',
+        'id' => '0', 'subject' => 'Open topic', 'hometext' => $text, 'posttype' => 'save']);
+    $count = fn(): int => intval($pdo->query('SELECT COUNT(*) FROM '.$pre.'forum WHERE pid = 601')->fetchColumn());
+    $was = $count();
+    $bad = $send('Anna takes [attach=other-bbbbbbbbbb-3.png align=left title=o]');
+    $out['send'] = [$tok !== '', $bad['code'], str_contains($bad['body'], ': other-bbbbbbbbbb-3.png'), $count() - $was];
+    $out['quote'] = [$send('[quote]Text [attach=fb-aaaaaaaaaa.png align=left title=a][/quote] agreed')['code'], $count() - $was];
+    $out['own'] = [$send('Anna shows [attach=mine-aaaaaaaaaa-2.png align=left title=m]')['code'], $count() - $was];
+    $view = getRouteReply('anna', 'POST', 'index.php?name=forum', ['op' => 'send', 'token' => $tok, 'cat' => '6', 'pid' => '601', 'fid' => '0', 'id' => '0',
+        'subject' => 'Open topic', 'hometext' => 'Preview [attach=mine-aaaaaaaaaa-2.png align=left title=m]', 'posttype' => 'preview'])['body'];
+    $out['draft'] = [str_contains($view, 'go=file&amp;own=forum&amp;name=forum&amp;key=mine-aaaaaaaaaa-2.png&amp;preview=1'), $count() - $was];
     return $out;
 }
 
@@ -2327,6 +2376,8 @@ try {
         $report['runs']['head'] = getRouteHead();
     } elseif (($argv[2] ?? '') === 'quick') {
         $report['runs']['quick'] = getRouteQuick($rpdo, $rwork);
+    } elseif (($argv[2] ?? '') === 'files') {
+        $report['runs']['files'] = getRouteFiles($rpdo);
     } else {
         $report['runs']['lists'] = getRouteLists($rpdo);
         $report['runs']['view'] = getRouteViewRuns($rpdo);

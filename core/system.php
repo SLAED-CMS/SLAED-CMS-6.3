@@ -3446,13 +3446,14 @@ function getProtocol(): string {
 # An attachment is resolved against the upload directory of its own module, and the module is named explicitly by a caller that renders the content of another one
 # Without that name the request module would decide the path, which is right for a module rendering itself and wrong for a page that lists the newest rows of several
 # The name becomes a path segment, so it passes the same filter the request boundary applies; anything else answers an empty name, whose path resolves to no file
-# An attachment has an address only in a public folder, getUploadUrl(); an address under uploads/ is checked below UPLOADS_DIR and any other below PUBLIC_DIR
-function getImgText(string $text, string $type = '', bool $check = true, string $mod = ''): string|false {
+# An attachment has an address only in a public folder, getUploadUrl(), or in the file context $own of a closed owner, its file route, which no check can find on disk
+function getImgText(string $text, string $type = '', bool $check = true, string $mod = '', array $own = []): string|false {
  global $conf;
     $mod = filterVar(($mod !== '') ? $mod : (string)($conf['name'] ?? ''));
     if (preg_match('#\[attach=(.*?)\s(.*?)\]#i', $text, $match)) {
         $fname = basename(trim($match[1]));
-        $img = getUploadUrl(getUploadFolder($mod).'/'.((!$type && stripos($match[0], ' size=full]') === false) ? 'thumb/' : '').$fname);
+        $thumb = !$type && stripos($match[0], ' size=full]') === false;
+        $img = $own ? getFileService()->getFileUrl($own[0], $mod, $own[1], $fname, $thumb) : getUploadUrl(getUploadFolder($mod).'/'.($thumb ? 'thumb/' : '').$fname);
     } elseif (preg_match('#\[img=[a-zA-Z]+\](.*?)\[/img\]#i', $text, $match)) {
         $img = trim($match[1]);
     } elseif (preg_match('#\[img\](.*?)\[/img\]#i', $text, $match)) {
@@ -4455,7 +4456,7 @@ function getUploadService(): Upload {
     return $upl;
 }
 
-# Build the delivery decision of the request once: Node grants through the reader of its material, a public folder has no route, and each closed owner adds its adapter here
+# Build the delivery decision of the request once: Node grants through the reader of its material, the forum through the reader of its post, a public folder has no route
 function getFileService(): FileAccess {
     static $fac = null;
     if ($fac !== null) return $fac;
@@ -4478,8 +4479,10 @@ function getFileService(): FileAccess {
         return getNodeWriter($type)->getNodeFile($type, $id, $key, false, $com) !== '';
     };
     $room = fn(string $mod, int $id): string => ($mod !== '') ? getUploadFolder($mod, true) : (($type = $kind('', $id)) ? getUploadFolder($type->name, true) : '');
+    $forum = fn(string $mod, int $id, string $key): bool => function_exists('checkForumFile') && checkForumFile($mod, $id, $key);
     return $fac = new FileAccess([
         'node' => ['folder' => $room, 'grant' => $node],
+        'forum' => ['folder' => fn(string $mod, int $id): string => getUploadFolder('forum'), 'grant' => $forum],
         'public' => ['folder' => fn(string $mod, int $id): string => getUploadFolder($mod)],
     ]);
 }
@@ -4502,21 +4505,22 @@ function getStrictQuery(string $url, array $allow): ?array {
     return $vars;
 }
 
-# The file route of every owner: the query is exactly an owner with its target or the preview of a Node type, and every refusal is the same not found
+# The file route of every owner: the query is exactly an owner with its target or the preview of an owner that has one, and every refusal is the same not found
 function setFileRoute(): never {
     $url = (string)($_SERVER['REQUEST_URI'] ?? '');
     if (!in_array($_SERVER['REQUEST_METHOD'] ?? 'GET', ['GET', 'HEAD'], true)) {
         header('Allow: GET, HEAD');
         setError(405);
     }
+    $fac = getFileService();
     $base = ['go' => '#^file$#D', 'own' => '#^[a-z]{1,12}$#D', 'key' => '#^.{1,255}$#Ds', 'thumb' => '#^1$#D'];
     $saved = getStrictQuery($url, $base + ['id' => '#^[1-9][0-9]{0,9}$#D']);
     $fresh = getStrictQuery($url, $base + ['name' => '#^[a-z][a-z0-9]{0,19}$#D', 'preview' => '#^1$#D']);
     $id = isset($saved['own'], $saved['id'], $saved['key']) ? (int)$saved['id'] : 0;
-    $view = !$id && isset($fresh['name'], $fresh['preview'], $fresh['key']) && ($fresh['own'] ?? '') === 'node';
+    $view = !$id && isset($fresh['name'], $fresh['preview'], $fresh['key']) && in_array($fresh['own'] ?? '', FileAccess::PREVIEW, true);
     if (!$id && !$view) setError(404);
     $ask = $id ? $saved : $fresh;
-    $path = getFileService()->getFilePath($ask['own'], $ask['name'] ?? '', $id, $ask['key'], isset($ask['thumb']));
+    $path = $fac->getFilePath($ask['own'], $ask['name'] ?? '', $id, $ask['key'], isset($ask['thumb']));
     if ($path === '') setError(404);
     $info = class_exists('finfo') ? new finfo(FILEINFO_MIME_TYPE) : null;
     $mime = $info ? $info->file($path) : false;
@@ -4590,23 +4594,23 @@ function getEditorRouteRule(string $src = 'post'): array {
 # Which actions a row offers is the capability set of its own descriptor and never a role the window derives again, which is what keeps the interface from computing a permission
 # The absolute server path is absent because the file layer gives an editor context none, and the thumbnail falls back to the file itself so a listing always has one to draw
 # The mode and the account of the stored object travel only to a module moderator: they answer for the server, not the text, and an author inserting a picture needs neither
-# The directory of a registered Node type is closed to direct access, so its rows carry the controlled preview route of the type instead of a file address
-# The bytag flag tells the window that such a file enters a text only as the [attach] tag, which the stored material turns into its own controlled address
+# The folder of a Node type or of the forum is closed to direct access, so its rows carry the controlled preview route of the owner instead of a file address
+# The bytag flag tells the window that such a file enters a text only as the [attach] tag, which the stored text turns into its own controlled address
 function getEditorFileData(array $one, bool $moder = false, string $mod = ''): array {
     global $conf;
     if ($moder) return getEditorFileData($one, false, $mod) + [
         'perms' => (string)($one['perms'] ?? ''),
         'owner' => (string)($one['owner'] ?? ''),
     ];
-    $node = $mod !== '' && isset($conf['node']['types'][$mod]);
-    $url = $node ? getFileService()->getFileUrl('node', $mod, 0, $one['name']) : $one['url'];
-    $shot = ($one['thumbnail'] === '') ? $url : ($node ? getFileService()->getFileUrl('node', $mod, 0, $one['name'], true) : $one['thumbnail']);
+    $own = ($mod !== '' && isset($conf['node']['types'][$mod])) ? 'node' : (($mod === 'forum') ? 'forum' : '');
+    $url = ($own !== '') ? getFileService()->getFileUrl($own, $mod, 0, $one['name']) : $one['url'];
+    $shot = ($one['thumbnail'] === '') ? $url : (($own !== '') ? getFileService()->getFileUrl($own, $mod, 0, $one['name'], true) : $one['thumbnail']);
     return [
         'file' => $one['name'],
         'path' => $one['path'],
         'url' => $url,
         'thumb' => $shot,
-        'bytag' => $node,
+        'bytag' => $own !== '',
         'kind' => $one['kind'],
         'type' => $one['extension'],
         'size' => $one['size'],

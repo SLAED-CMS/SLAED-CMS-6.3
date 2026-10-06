@@ -112,9 +112,12 @@ README.md, "Document Root and Web Server". The installer records the mode it fou
 `config/global.php`.
 
 No upload lies in the document root. An address `uploads/<folder>/<name>` reaches `index.php`, whose light path
-serves a file of a public folder (avatars, `presentation`, `all`, `voting`, `archive`, the forum and the account)
-before the core boots and answers 410 for every other folder and every missing file; the files of a Node type leave
-only through `go=file` and `op=asset`. nginx reads no `.htaccess`: the release ships `nginx.conf.example`, whose
+serves a file of a public folder (avatars, `presentation`, `all`, `voting`, `archive` and the account) before the
+core boots and answers 410 for every other folder and every missing file; the files of a Node type leave only
+through `go=file` and `op=asset`, the files of the forum only through `go=file` to a reader of the post that names
+them. `update.php` turns a direct address of a file `uploads/forum/` holds in a post into an `[attach]` of the same
+name; an address the folder does not hold, and an image inside a link to another site, stay as written and answer
+410. nginx reads no `.htaccess`: the release ships `nginx.conf.example`, whose
 `server` block carries the root on `public/`, the prefix `/uploads/` for the front controller, a path after a script
 sent to that script and the refusals of `public/.htaccess`.
 

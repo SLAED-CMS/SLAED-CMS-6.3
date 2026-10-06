@@ -193,7 +193,7 @@ function setMigrateType(string $mod, array $one, array &$state): void {
     setMigrateState($state);
 }
 
-# Rewrite direct addresses of files in uploads/$dir into attachments, names unchanged; inside [usehtml] a source becomes the file address of material $nid
+# Rewrite direct addresses of files in uploads/$dir, BB and Markdown, into attachments, names unchanged; inside [usehtml] a source becomes the file address of material $nid
 function getMigrateAttach(string $text, string $dir, int $nid, Closure $have): string {
     global $conf;
     if (stripos($text, 'uploads/'.$dir.'/') === false) return $text;
@@ -230,7 +230,12 @@ function getMigrateAttach(string $text, string $dir, int $nid, Closure $have): s
         $file = $name($thumb ? substr($m[3], 6) : $m[3]);
         return ($file !== '') ? $tag($file, $m[1], $m[2], !$thumb) : $m[0];
     }, $text) ?? $text;
-    $link = fn(array $m): string => ($name($m[1]) !== '') ? $tag($name($m[1]), '', $m[2] ?? '', false) : $m[0];
+    $text = preg_replace_callback('#!\[([^\]\n]*)\]\('.$addr.'\)#i', function (array $m) use ($name, $tag): string {
+        $thumb = str_starts_with($m[2], 'thumb/');
+        $file = $name($thumb ? substr($m[2], 6) : $m[2]);
+        return ($file !== '') ? $tag($file, '', $m[1], !$thumb) : $m[0];
+    }, $text) ?? $text;
+    $link = fn(array $m): string => ($name($m[1]) !== '') ? $tag($name($m[1]), '', (stripos($m[2] ?? '', 'uploads/') === false) ? ($m[2] ?? '') : '', false) : $m[0];
     $text = preg_replace_callback('#\[url='.$addr.'\]([^\[]*)\[/url\]#i', $link, $text) ?? $text;
     $text = preg_replace_callback('#\[url\]'.$addr.'\[/url\]#i', $link, $text) ?? $text;
     for ($i = count($keep) - 1; $i >= 0; $i--) $text = str_replace("\x01".$i."\x01", $keep[$i], $text);
@@ -1289,6 +1294,23 @@ function setUpdateFields(Database $db, string $prefix): array {
     return getUpdateRow($text.'; the subsystem is open', true);
 }
 
+# The forum unit of the 6.3 data update: a direct address of a file uploads/forum holds becomes an attachment of its name, so a stopped run is simply run again
+function setUpdateForum(Database $db, string $prefix): array {
+    $res = $db->getSqlQuery('SELECT id, body FROM `'.$prefix.'_forum` WHERE body LIKE :addr', ['addr' => '%uploads/forum/%']);
+    if ($res === false) return getUpdateRow('forum: the posts could not be read, no address was rewritten', false);
+    $have = fn(string $name): bool => is_file(UPLOADS_DIR.'/forum/'.$name);
+    $done = 0;
+    $good = true;
+    foreach ($db->getSqlRows($res) ?: [] as $row) {
+        $body = getMigrateAttach((string)$row[1], 'forum', 0, $have);
+        if ($body === (string)$row[1]) continue;
+        $ok = $db->getSqlQuery('UPDATE `'.$prefix.'_forum` SET body = :body WHERE id = :id', ['body' => $body, 'id' => intval($row[0])]) !== false;
+        $good = $good && $ok;
+        if ($ok) $done++;
+    }
+    return getUpdateRow('forum: direct addresses of uploads/forum turned into attachments of their posts (posts: '.$done.')', $good);
+}
+
 # The configuration step of the 6.3 update for a 6.2 site, whose settings live in config/config_<name>.php as a variable of their own
 # The site values go over the shipped source of the same name, stat into statistic and seo over global; an unshipped key stays for the data units and the next form save
 # The version, the asset lists and the closed site belong to the release and the update, and a language name becomes its code
@@ -1726,6 +1748,7 @@ function setUpdateRun(): array {
     $text = 'the update stopped at the schema file: no data unit ran and no mark was written, correct the failed statement and run the update again';
     if ($ddl === [] || checkUpdateFail($ddl)) return array_merge($rows, getUpdateRow($text, false));
     $rows = array_merge($rows, setUpdatePoints($db, $pref), setUpdateRatings($db, $pref), setUpdateFields($db, $pref));
+    $rows = array_merge($rows, setUpdateForum($db, $pref));
     $rdata = getUpdateSource(CONFIG_DIR.'/rss.php')['rss'] ?? [];
     if ($rdata !== [] && (isset($rdata['temp']) || !isset($rdata['bytes'], $rdata['redirects'], $rdata['timeout']))) {
         unset($rdata['temp']);

@@ -55,7 +55,8 @@ final class UpdateAttachTest extends TestCase
     }
 
     # An image becomes the full-size form with its alignment and its alternative text as the title; a link around its thumb becomes the thumbnail form
-    # A link around another image keeps the image alone in full size, a link becomes an attachment titled by its label, a bare link one titled title
+    # A link around another image keeps the image alone in full size, a link becomes an attachment titled by its label, a bare link or one labelled by its address titled title
+    # A Markdown image takes the same forms as [img], and the forum folder converts like the folder of a module
     #[Test]
     public function everyFormOfTheOwnFolderBecomesAnAttachment(): void
     {
@@ -68,13 +69,18 @@ final class UpdateAttachTest extends TestCase
             '[url=./uploads/news/f.png]Скачать[/url]' => '[attach=f.png align=none title=Скачать]',
             '[url]/uploads/news/g.zip[/url]' => '[attach=g.zip align=none title=title]',
             '[img]./uploads/news/a%20b.png[/img]' => '[attach=a b.png align=none title=title size=full]',
+            '![Shot one](uploads/news/h.png)' => '[attach=h.png align=none title=Shot one size=full]',
+            '![](/uploads/news/thumb/i.png)' => '[attach=i.png align=none title=title]',
+            '[url=http://www.slaed.net/uploads/news/j.zip]http://www.slaed.net/uploads/news/j.zip[/url]' => '[attach=j.zip align=none title=title]',
         ];
         foreach ($cases as $from => $want) $this->assertSame($want, $this->getText($from), 'The form '.$from.' was not converted');
         $this->assertSame('[attach=a-1.gif align=left title=A size=full]', $this->getText('[img=left alt=A]./uploads/archive/news/a-1.gif[/img]', 0, 'archive/news'));
+        $this->assertSame('[attach=k.gif align=center title=K size=full]', $this->getText('[img=center alt=K]uploads/forum/k.gif[/img]', 0, 'forum'));
         require_once BASE_DIR.'/core/classes/parser.php';
         $tag = (new \ReflectionClassConstant(\Parser::class, 'ATTTAG'))->getValue();
         preg_match_all($tag, implode(' ', $cases), $mm);
-        $this->assertSame(['a-1.gif', 'b.png', 'c.png', 'd.png', 'e.jpg', 'f.png', 'g.zip', 'a b.png'], $mm[1], 'The parser does not read every converted attachment');
+        $this->assertSame(['a-1.gif', 'b.png', 'c.png', 'd.png', 'e.jpg', 'f.png', 'g.zip', 'a b.png', 'h.png', 'i.png', 'j.zip'], $mm[1],
+            'The parser does not read every converted attachment');
     }
 
     # A missing file, a name outside the attachment grammar, a sub folder, another folder, another host and a link around markup stay exactly as they were

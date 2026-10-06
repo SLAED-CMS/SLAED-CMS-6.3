@@ -8,6 +8,7 @@ if (!defined('FUNC_FILE')) die('Illegal file access');
 
 final class FileAccess {
     public const OWNERS = ['node', 'forum', 'privat', 'comment', 'public'];
+    public const PREVIEW = ['node', 'forum'];
 
     # One adapter per owner as closures: folder(string $mod, int $id): string always, grant(string $mod, int $id, string $key): bool for an owner with a route
     public function __construct(private readonly array $owns) {}
@@ -18,12 +19,13 @@ final class FileAccess {
         return ($call instanceof Closure) ? $call($mod, $id) : '';
     }
 
-    # The address a text prints for one name: the file route of a closed owner and its target, the preview of a Node type without one, the direct link of a public folder
+    # The address a text prints for one name: the file route of a closed owner and its target, the preview of an owner of PREVIEW without one, the direct link of a public folder
     public function getFileUrl(string $own, string $mod, int $id, string $key, bool $thumb = false): string {
         $tail = $thumb ? '&thumb=1' : '';
         if ($own === 'public') return getUploadUrl($this->getFileFolder($own, $mod, $id).'/'.($thumb ? 'thumb/' : '').$key);
-        if (!in_array($own, self::OWNERS, true) || !(($this->owns[$own]['grant'] ?? null) instanceof Closure) || ($id < 1 && ($own !== 'node' || $mod === ''))) return '';
-        if ($id < 1) return 'index.php?go=file&own=node&name='.$mod.'&key='.rawurlencode($key).'&preview=1'.$tail;
+        if (!in_array($own, self::OWNERS, true) || !(($this->owns[$own]['grant'] ?? null) instanceof Closure)) return '';
+        if ($id < 1 && (!in_array($own, self::PREVIEW, true) || $mod === '')) return '';
+        if ($id < 1) return 'index.php?go=file&own='.$own.'&name='.$mod.'&key='.rawurlencode($key).'&preview=1'.$tail;
         return 'index.php?go=file&own='.$own.'&id='.$id.'&key='.rawurlencode($key).$tail;
     }
 

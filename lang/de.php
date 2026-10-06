@@ -242,6 +242,7 @@ define('_FILES','Dateien');
 define('_FILEUP','Die Menge der gleichzeitig geladenen Dateien');
 define('_FILE_RENAMED','Datei ist hochgeladen und wurde benannt');
 define('_FILE_SITE','Datei nach von dem Link laden');
+define('_FILE_FOREIGN','Ein Anhang nennt eine Datei, die Sie nicht hochgeladen haben');
 define('_FIN',', in den Bytes');
 define('_FMODC','Schließen für die Überprüfung');
 define('_FOLLOWINGMEM','Folgende Informationen liegen von Ihnen vor');

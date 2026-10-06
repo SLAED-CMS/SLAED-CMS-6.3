@@ -630,7 +630,7 @@ function getForumBody(int $id, string $body, string $etime, bool $see, string $w
     global $tpl, $prs;
     $badge = ($see && $etime !== '') ? $tpl->getHtmlFrag('inline-badge', ['title_text' => _PEDIT, 'is_topic_edit' => true, 'label' => format_time($etime, _TIMESTRING)]) : '';
     return [
-        'text' => filterTextHighlight($prs->filterContent($body, false, 'forum', 2), $word),
+        'text' => filterTextHighlight($prs->filterContent($body, false, 'forum', 2, '', ['forum', $id]), $word),
         'mark' => $tpl->getHtmlFrag('quick-edit', ['is_mark' => true, 'is_oob' => $oob, 'mark_id' => 'quick-mark-forum-'.$id, 'mark_html' => $badge]),
     ];
 }
@@ -656,11 +656,13 @@ function updateForumBody(int $id, string $text, string $stamp): array {
     $lock = ($top === false) ? [] : $db->getSqlRow($top);
     $row = ($res === false) ? [] : $db->getSqlRow($res);
     $cat = $row ? $db->getSqlRow($db->getSqlQuery('SELECT pedit, pmod FROM '.PREFIX_DB.'_categories WHERE id = :cid', ['cid' => intval($row['cid'])])) : [];
+    $bad = $row ? checkForumNames($html, (string)$row['body'], $head['topic']) : '';
     $code = match (true) {
         $res === false => 'storage',
         !$row || !$lock => 'unavailable',
         !$cat || (intval($row['pid']) ?: $id) !== $head['topic'] => 'denied',
         !checkForumRight(is_moder('forum') || is_acess((string)$cat['pmod']), is_acess((string)$cat['pedit']), intval($row['uid']), intval($lock['status'])) => 'denied',
+        $bad !== '' => 'rules',
         $html === (string)$row['body'] => 'equal',
         !hash_equals(QuickEdit::getStamp((string)$row['body'], (string)($row['etime'] ?? '')), $stamp) => 'conflict',
         default => 'write',
@@ -670,7 +672,7 @@ function updateForumBody(int $id, string $text, string $stamp): array {
         !== false ? 'moved' : 'storage';
     if ($code !== 'equal' && $code !== 'moved') {
         $db->setSqlRollback();
-        return ['code' => $code, 'error' => []];
+        return ['code' => $code, 'error' => ($code === 'rules') ? [$bad] : []];
     }
     if (!$db->setSqlCommit()) {
         $db->setSqlRollback();
@@ -678,6 +680,55 @@ function updateForumBody(int $id, string $text, string $stamp): array {
         return ['code' => 'storage', 'error' => []];
     }
     return ['code' => 'saved', 'error' => []];
+}
+
+# Answer whether the reader gets one forum file: the names a post carries to whom its topic page shows it, a preview the own upload to whom may list the folder
+function checkForumFile(string $mod, int $id, string $key): bool {
+    global $db, $conf;
+    $rule = getUploadRuleData('forum');
+    $mods = checkUploadModer('forum');
+    $show = intval($conf['modules']['forum']['view'] ?? 0);
+    $open = $mods || (!empty($conf['modules']['forum']['active']) && ($show === 0 || ($show === 1 && is_user() && isModGroup('forum'))));
+    if (!$open || !$rule['ok'] || !in_array(strtolower(pathinfo($key, PATHINFO_EXTENSION)), explode(',', $rule['extensions']), true)) return false;
+    if ($id < 1) {
+        require_once BASE_DIR.'/core/classes/filemanager.php';
+        $tok = getEditorFileOwner('forum');
+        $mine = $mods || ($tok !== null && FileManager::getFileOwner($key) === $tok);
+        return $mod === 'forum' && FileManager::checkFileName($key) && checkEditorUploadAccess('forum', $rule) && $mine;
+    }
+    $sql = 'SELECT f.pid, f.body, f.status, f.time <= NOW() AS live, c.pread, c.pmod FROM '.PREFIX_DB.'_forum AS f'
+        .' LEFT JOIN '.PREFIX_DB.'_categories AS c ON (c.id = f.cid) WHERE f.id = :id';
+    $row = $db->getSqlRow($db->getSqlQuery($sql, ['id' => $id]));
+    if (!$row) return false;
+    $top = intval($row['pid']);
+    $head = $top ? $db->getSqlRow($db->getSqlQuery('SELECT status, time <= NOW() AS live FROM '.PREFIX_DB.'_forum WHERE id = :id', ['id' => $top])) : $row;
+    $gate = is_acess((string)$row['pmod']) || (is_acess((string)$row['pread']) && intval($head['status'] ?? 0) > 1 && intval($head['live'] ?? 0) === 1);
+    $seen = $mods || ($gate && intval($row['status']) !== 0 && intval($row['live']) === 1);
+    return $seen && in_array($key, (new Parser())->getAttachList((string)$row['body']), true);
+}
+
+# Answer the refusal of the first new [attach] name of a post that is no own upload, no file for a forum moderator and no name the topic carries, or an empty string
+function checkForumNames(string $text, string $old, int $topic): string {
+    global $db;
+    $prs = new Parser();
+    $fresh = array_values(array_diff($prs->getAttachList($text), ($old !== '') ? $prs->getAttachList($old) : []));
+    if (!$fresh) return '';
+    require_once BASE_DIR.'/core/classes/filemanager.php';
+    $seen = [];
+    $sql = 'SELECT body FROM '.PREFIX_DB.'_forum WHERE (id = :id OR pid = :pid) AND status != \'0\' AND time <= NOW() AND body LIKE \'%[attach=%\'';
+    $res = ($topic > 0) ? $db->getSqlQuery($sql, ['id' => $topic, 'pid' => $topic]) : false;
+    while ($res && ($one = $db->getSqlRow($res))) $seen = array_merge($seen, $prs->getAttachList((string)$one['body']));
+    $exts = explode(',', getUploadRuleData('forum')['extensions']);
+    $area = new FileManager('editor', UPLOADS_DIR.'/'.getUploadFolder('forum'));
+    $mods = checkUploadModer('forum');
+    $tok = getEditorFileOwner('forum');
+    foreach ($fresh as $name) {
+        if (in_array($name, $seen, true)) continue;
+        $row = $area->getFileData($name);
+        $good = $row && $row['kind'] !== 'dir' && $row['path'] === $name && in_array($row['extension'], $exts, true);
+        if (!$good || (!$mods && ($tok === null || FileManager::getFileOwner($name) !== $tok))) return _FILE_FOREIGN.': '.$name;
+    }
+    return '';
 }
 
 # The shelf strip of the private message page: the three mailboxes and the compose action, each with the quota ring that replaced the half-capacity alert

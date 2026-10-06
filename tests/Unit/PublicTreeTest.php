@@ -182,8 +182,8 @@ final class PublicTreeTest extends TestCase
     public function onlyAPublicFolderHasAnAddress(): void
     {
         foreach (getUploadPublic() as $dir) $this->assertSame('uploads/'.$dir.'/a.png', getUploadUrl($dir.'/a.png'), $dir.' has no address');
-        foreach (['node/news/a.png', 'media/a.png', 'a.png', '', '../config/db.php'] as $path) $this->assertSame('', getUploadUrl($path), $path.' has an address');
-        $this->assertSame('uploads/forum/thumb/a.png', getUploadUrl('/forum\\thumb/a.png'), 'A path is not normalized before the list decides');
+        foreach (['node/news/a.png', 'forum/a.png', 'media/a.png', 'a.png', '', '../config/db.php'] as $path) $this->assertSame('', getUploadUrl($path), $path.' has an address');
+        $this->assertSame('uploads/all/thumb/a.png', getUploadUrl('/all\\thumb/a.png'), 'A path is not normalized before the list decides');
     }
 
     # Exactly one .htaccess lies outside public/, the one of the project, and no guard page at all: a folder outside the document root needs no guard
