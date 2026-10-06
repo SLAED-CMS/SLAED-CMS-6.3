@@ -125,7 +125,7 @@ final class UpdateAttachTest extends TestCase
     }
 
     # An address into the 6.2 folder of another type points at the material that carries the name, its thumb at the thumb; a name no material carries keeps its address
-    # A quoted example, another host and an address that only ends in the folder path stay, and so does a name outside the attachment grammar
+    # A quoted example, another host and an address that only ends in the folder path stay, and so does a name outside the attachment grammar; a forum file reaches its post
     #[Test]
     public function aFileOfAnotherOwnerLeavesThroughItsMaterial(): void
     {
@@ -134,7 +134,7 @@ final class UpdateAttachTest extends TestCase
         $was = $had ? $GLOBALS['conf']['homeurl'] : null;
         $GLOBALS['conf']['homeurl'] = 'https://slaed.net';
         $find = fn(string $name): int => ['a-1.jpg' => 4919, 'b c.png' => 3891][$name] ?? 0;
-        $form = fn(string $text): string => \getMigrateForeign($text, 'files', $find);
+        $form = fn(string $text): string => \getMigrateForeign($text, 'files', 'node', $find);
         try {
             $cases = [
                 '[img=center alt=T]http://www.slaed.net/uploads/files/a-1.jpg[/img]' => '[img=center alt=T]./index.php?go=file&own=node&id=4919&key=a-1.jpg[/img]',
@@ -156,6 +156,10 @@ final class UpdateAttachTest extends TestCase
             $mix = '[code]uploads/files/a-1.jpg[/code] [img]uploads/files/a-1.jpg[/img]';
             $this->assertSame('[code]uploads/files/a-1.jpg[/code] [img]./index.php?go=file&own=node&id=4919&key=a-1.jpg[/img]', $form($mix),
                 'A quoted example was rewritten or not restored');
+            $post = fn(string $name): int => ['forum-a.zip' => 14824][$name] ?? 0;
+            $this->assertSame('[url=./index.php?go=file&own=forum&id=14824&key=forum-a.zip]Get[/url] [img]uploads/forum/gone.png[/img]',
+                \getMigrateForeign('[url=http://www.slaed.net/uploads/forum/forum-a.zip]Get[/url] [img]uploads/forum/gone.png[/img]', 'forum', 'forum', $post),
+                'A forum file outside the forum did not reach the post that carries it');
         } finally {
             if ($had) $GLOBALS['conf']['homeurl'] = $was;
             else unset($GLOBALS['conf']['homeurl']);

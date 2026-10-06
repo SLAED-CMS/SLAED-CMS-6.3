@@ -64,6 +64,7 @@ final class UpdateSiteTest extends TestCase
     }
 
     # The schema file runs on the tables of a real 6.2 site without a failed statement on the first run, every unit finishes, and the repeats change nothing
+    # The attachment unit turns the forum address of a file the folder holds and leaves a missing one in the post and in the message
     #[Test]
     public function aRealSiteFinishesOnTheFirstRun(): void
     {
@@ -75,12 +76,14 @@ final class UpdateSiteTest extends TestCase
             $this->assertSame(['points' => 'verified', 'ratings' => 'verified', 'fields' => 'verified'], $run[$name]['manifest'], $name);
             $this->assertSame('1', $run[$name]['close'], $name);
             $this->assertSame([3, 35], $run[$name]['users'], $name);
-            $this->assertSame(['targets' => 3, 'votes' => 0], $run[$name]['rating'], $name);
+            $this->assertSame(['targets' => 4, 'votes' => 0], $run[$name]['rating'], $name);
             $this->assertSame(['old' => 300, 'next' => 301], $run[$name]['ids'], $name);
             $this->assertSame(0, $run[$name]['dupes'], $name.': a repeat removed a vote');
         }
         $this->assertSame(['account', 'forum'], array_keys($run['first']['ratings']));
         $this->assertTrue($run['third']['same']);
+        $want = ['[attach=slaed_cms_2026-07-13_22-01-38.png align=none title=title size=full] [img]uploads/forum/gone.png[/img]', '[url=uploads/account/gone.zip]Gone[/url]'];
+        $this->assertSame($want, $run['first']['attach'], 'The attachment unit did not turn the address of a file its folder holds, or turned a missing one');
     }
 
     # The structure after three runs over the 6.2 schema equals a clean installation of the release, table for table, column for column and index for index

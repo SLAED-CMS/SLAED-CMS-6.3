@@ -63,8 +63,8 @@ into the plan, then do whatever work the step names.
 - [x] 12. FILES batch 6 — private messages and signatures. (2026-10-06)
 - [x] 13. FILES batch 7 — comments of other targets. (2026-10-06)
 - [x] 14. FILES batch 8 — retire the archive. (2026-10-06)
-- [ ] 15. FILES rehearsal — `update.php` on the fresh 6.2 dump the owner provides, as batch 3 of the plan names it:
-  the crawl, the `src` values before and after, the files against a listing of the production folders.
+- [x] 15. FILES rehearsal — `update.php` on the fresh 6.2 dump the owner provides, as batch 3 of the plan names it:
+  the crawl, the `src` values before and after, the files against a listing of the production folders. (2026-10-07)
 - [ ] 16. FILES batch 9 — unused files and the tree.
 - [ ] 17. FILES batch 10 — reference; deletes `docs/1-FILES-2026.md`.
 - [ ] 18. PRIVATE-DATA batch 5 — names that say what a journal holds.

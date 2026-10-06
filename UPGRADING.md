@@ -90,10 +90,11 @@ moves each of them with its contents before the new files answer a request:
 | `uploads/pages/` of the 6.2 module `pages` | `uploads/node/docs/` |
 | `uploads/<type>/` of any other type | `uploads/node/<type>/` |
 
-On a site updated from 6.2 these moves come before the migration of the removed modules in `update.php`, which
-changes the database alone: it moves, copies and renames no file. It turns a direct address of a moved file into an
-`[attach]` of the type with the name unchanged, and where a resource of `files` or `links` names a path Node refuses
-it stores a safe spelling and its report names the file to rename to it.
+On a site updated from 6.2 these moves come after the migration of the removed modules in `update.php` and before
+the site opens: the migration creates each type with an empty folder and refuses one that already holds a file. It
+changes the database alone: it moves, copies and renames no file. It turns a direct address of a file of the 6.2
+folder into an `[attach]` of the type with the name unchanged, and where a resource of `files` or `links` names a path
+Node refuses it stores a safe spelling and its report names the file to rename to it.
 
 No folder of `uploads/` carries a guard file any more, and the upload service creates a missing folder of its owner
 on the first write. No stored text and no setting carries the folder: texts reach their files through `go=file`
@@ -124,8 +125,9 @@ in a private message, into an `[attach]` of the same name; an address the folder
 link to another site, stay as written and answer 410. Once the old modules are carried into Node, `update.php` points a
 direct address any text keeps into the 6.2 folder of a type it does not belong to (`uploads/news/`, `uploads/files/`
 and the others) at the `go=file` address of a published material of that type whose text or published comment names
-the file, so the reader of that material receives it; a name no material carries keeps its address and answers 410,
-and a quoted example inside `[code]` stays as written.
+the file, so the reader of that material receives it, and a direct address of `uploads/forum/` outside the forum at
+the `go=file` address of a published post that names the file; a name nothing carries keeps its address and answers
+410, and a quoted example inside `[code]` stays as written.
 
 `uploads/account/` holds the files of the private messages alone. The signature, the own block and the comments on a
 profile upload into `uploads/profile/`; a signature is served from there to whoever may open the profile, an own

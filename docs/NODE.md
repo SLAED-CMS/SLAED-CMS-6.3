@@ -3058,7 +3058,9 @@ The first stage does not include `core/system.php`. It loads only self-contained
 splitter `getSqlbatch()` and `getSqlinfo()`, which honour the `DELIMITER` directive), `core/classes/filemanager.php`,
 `core/classes/logger.php`, `core/classes/pdo.php` (`Database`, which throws a `RuntimeException` on a refused
 connection under `SETUP_FILE`), `core/classes/template.php`, `lang/en.php` and, inside the fields unit,
-`core/classes/field.php`. A class the update needs must not depend on functions of `core/system.php`. The update
+`core/classes/field.php`. A class the update needs must not depend on functions of `core/system.php`. The first stage
+defines the path constants itself, `CONFIG_DIR`, `BACKUP_DIR`, `LOGS_DIR` and `UPLOADS_DIR`, which the attachment
+units of the forum and the private messages read. The update
 runs on a closed site with one writer, so the runtime configuration protocol of the running system is not used.
 No function of `update.php` carries a name the core, `core/admin.php` or a module declares, because the second stage
 boots the core in the same file.
@@ -3316,6 +3318,8 @@ function deleteUpdateTypes(array $keep): array|false
   settings form drops the rest on its next save.
 - `global`: `close = '1'`; language names become codes (also `lang.lang`); `module` keeps only modules of the
   tree and `amod` is dropped; `version`, `css_f`, `script_f` come from the release; a missing theme or logo falls back.
+  A key that names a configuration area (`forum`, `newsletter` and `search` of 6.2) is dropped: `getConfig()` merges
+  the files in name order, so `global.php` would replace the whole `$conf['forum']` of `forum.php` with its string.
 - `uploads`: a 12-field rule loses field 8 (`adminlist`) and gains `guestfiles` = `userfiles` as field 12.
 - `security.blocker_ip`: `ip|octets|hash|time|reason` becomes `CIDR|hash|time|reason`; other entries are dropped.
 - Not carried: the nine removed modules, `templ`, `header`, `chmod`, `core`, `rewrite`, `rules`, `db`, a file
@@ -3435,7 +3439,10 @@ SQL logs. A change to the first stage or the schema file is done only when this 
 
 `update.php` in the root carries the content of `news`, `pages`, `faq`, `help`, `links`, `files` and `content` into
 Node on a site that ran the 6.3 update. Only the main administrator opens it; the page shows the plan per module and
-a POST with the token scope `update` runs every step that is not done yet. The old tables stay as they are.
+a POST with the token scope `update` runs every step that is not done yet. The old tables stay as they are. It reads
+the module tables in the 6.3 shape (`id`, `cid`, `intro`, `body`, `ip`), which the production tables of `slaed.net`
+carry; `table_update6_3.sql` no longer renames the tables of the removed modules, so a clean 6.2 site with `sid`,
+`hometext` and `bodytext` stops at the counter step.
 
 | Module | Type | Notes |
 |---|---|---|
@@ -3444,9 +3451,11 @@ a POST with the token scope `update` runs every step that is not done yet. The o
 | `help` | `help` (`support`) | every request becomes a published material, each reply a comment of its author; open or closed goes to the queue row, which follows the last reply |
 | `content` | `content` without extension | static pages; a feed address is noted, not carried |
 
-The run changes the database and nothing else: it moves, copies and renames no file. The operator moves the upload
-folders of the modules into the folders of their types as UPGRADING.md lists them (`uploads/pages/` becomes
-`uploads/node/docs/`), before the run; the run finds a file there or, not moved yet, in `uploads/<module>/`.
+The run changes the database and nothing else: it moves, copies and renames no file. The operator runs it with the
+upload folders of the modules where 6.2 left them, and after it, before the site opens, moves them into the empty
+folders of their types as UPGRADING.md lists them (`uploads/pages/` becomes `uploads/node/docs/`). A new type refuses
+a folder that already holds a file, so a folder moved before the run stops it at the types step; the run finds a
+file in `uploads/<module>/` or, moved already for a type that exists, in the folder of the type.
 
 Steps, in this order; the manifest `storage/backup/update/node/manifest.json` records each, so a stopped run
 continues where it stopped:
@@ -3463,7 +3472,12 @@ continues where it stopped:
    and Markdown; blocks the conversion does not know become `[usehtml]` blocks, and a bare relative address of
    `[img]` or `[url]` gains `./`, the local form the safe parser accepts. A local resource path Node refuses gets a
    safe spelling, and a note names the file the operator renames to it.
-5. Activation of every type the run created or switched off.
+5. Foreign addresses, on every run (`setMigrateForeign()`): a direct address any text keeps into the 6.2 folder of
+   a type it does not belong to becomes the `go=file&own=node` address of the first published material of that type
+   whose text or published comment carries the name, and an address of `uploads/forum/` in a text that is no forum
+   post the `go=file&own=forum` address of the first published post that carries it. A name nothing carries keeps
+   its address and answers 410; `[code]` and `[php]` keep their examples.
+6. Activation of every type the run created or switched off.
 
 The data step turns a direct address of a file of `uploads/<module>/` in a material, a comment or a help reply into
 an `[attach]` of the type with the name unchanged (`getMigrateAttach()`), whatever the form of the name, when the file

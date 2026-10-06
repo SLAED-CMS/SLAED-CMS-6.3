@@ -678,6 +678,12 @@ INSERT INTO `old_news` (`sid`, `catid`, `uid`, `name`, `title`, `time`, `hometex
 INSERT INTO `old_files` (`lid`, `cid`, `uid`, `name`, `title`, `description`, `bodytext`, `url`, `date`, `status`) VALUES
 (300, 0, 1, 'alpha', 'A file', 'Description of the file', '', 'https://site62.test/file.zip', '2019-05-01 10:00:00', 1);
 
+INSERT INTO `old_forum` (`id`, `pid`, `catid`, `uid`, `name`, `title`, `time`, `hometext`, `field`, `l_uid`, `l_name`, `l_time`, `status`) VALUES
+(1, 0, 0, 1, 'alpha', 'A topic', '2024-03-01 10:00:00', '[img]uploads/forum/slaed_cms_2026-07-13_22-01-38.png[/img] [img]uploads/forum/gone.png[/img]', '', 1, 'alpha', '2024-03-01 10:00:00', 1);
+
+INSERT INTO `old_privat` (`id`, `uidin`, `uidout`, `title`, `content`, `date`, `status`) VALUES
+(1, 2, 1, 'A message', '[url=uploads/account/gone.zip]Gone[/url]', '2024-03-01 10:00:00', 1);
+
 INSERT INTO `old_blocks` (`bid`, `title`, `content`, `url`, `bposition`, `weight`, `active`, `refresh`, `time`, `blockfile`, `which`) VALUES
 (1, 'News', '', '', 'l', 1, 1, 0, '0', 'block-news.php', 'all'),
 (2, 'Poll', '', '', 'r', 1, 1, 0, '0', 'block-voting.php', 'all'),

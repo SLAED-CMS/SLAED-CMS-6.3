@@ -347,7 +347,7 @@ define('_NODE_CREATOR','Créateur');
 define('_NODE_DIRECTOR','Réalisateur');
 define('_NODE_MFORMAT','Format');
 define('_NODE_MIGDONE','Terminé');
-define('_NODE_MIGINFO','Transfère les contenus des modules supprimés vers des types Node avec leurs catégories, commentaires, favoris et notes. Les anciennes tables restent inchangées et aucun fichier n\'est déplacé : déplacez les dossiers de téléversement comme UPGRADING.md les liste avant le lancement. Fermez d\'abord le site et sauvegardez la base de données ; une exécution interrompue reprend à l\'étape où elle s\'est arrêtée.');
+define('_NODE_MIGINFO','Transfère les contenus des modules supprimés vers des types Node avec leurs catégories, commentaires, favoris et notes. Les anciennes tables restent inchangées et aucun fichier n\'est déplacé : déplacez les dossiers de téléversement comme UPGRADING.md les liste après l\'exécution et avant l\'ouverture du site. Fermez d\'abord le site et sauvegardez la base de données ; une exécution interrompue reprend à l\'étape où elle s\'est arrêtée.');
 define('_NODE_MIGRATE','Migration des anciens modules');
 define('_NODE_MIGROWS','Contenus');
 define('_NODE_MIGRUN','Lancer la migration');

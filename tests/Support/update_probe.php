@@ -564,7 +564,7 @@ function getFieldStop(): array {
 # The source seo carries SEO keys the global of 6.2 also had, header is code that prints, core is code without settings, and db, news and templ have no successor
 const CONFOLD = [
     'global' => "\$conf = array (\n  'sitename' => 'Old site',\n  'version' => '6.2.0 Pro',\n  'close' => '0',\n  'language' => 'russian',\n  'module' => 'news,forum',\n"
-        ."  'amod' => 'news',\n  'css_f' => 'plugins/jquery/ui/',\n  'sep' => '/',\n  'oldkey' => 'kept',\n"
+        ."  'amod' => 'news',\n  'css_f' => 'plugins/jquery/ui/',\n  'sep' => '/',\n  'oldkey' => 'kept',\n  'forum' => '0',\n"
         ."  'theme' => 'default',\n  'site_logo' => 'mark.svg',\n);",
     'seo' => "\$confse = array();\n\$confse['sep'] = \"-\";\n\$confse['tsep'] = \"_\";",
     'users' => "\$confu = array();\n\$confu['point'] = \"1\";\n\$confu['points'] = \"1,2,3\";\n\$confu['anum'] = \"77\";",
@@ -580,8 +580,8 @@ const CONFOLD = [
     'templ' => "\$conftp = array('gif' => '<img>');",
 ];
 
-# The shipped sources the configuration step writes over, as the release tracks them
-const CONFSHIP = ['global', 'security', 'users', 'fields', 'lang', 'statistic', 'uploads'];
+# The shipped sources the configuration step writes over, and forum, whose area a key of the 6.2 global names, as the release tracks them
+const CONFSHIP = ['global', 'security', 'users', 'fields', 'lang', 'statistic', 'uploads', 'forum'];
 
 # Put the scratch site back to a 6.2 site copied under the release: the tracked sources of the release, the 6.2 sources beside them and a 6.2 db.php
 # The tree holds one public module, one panel module and one logo of the shipped theme, while the theme default of 6.2 is gone

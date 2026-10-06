@@ -347,7 +347,7 @@ define('_NODE_CREATOR','Urheber');
 define('_NODE_DIRECTOR','Regie');
 define('_NODE_MFORMAT','Format');
 define('_NODE_MIGDONE','Erledigt');
-define('_NODE_MIGINFO','Überträgt die Inhalte der entfernten Module samt Kategorien, Kommentaren, Favoriten und Bewertungen in Node-Typen. Die alten Tabellen bleiben unverändert, und keine Datei wird verschoben: Verschieben Sie die Upload-Ordner vor dem Start so, wie UPGRADING.md sie aufführt. Schließen Sie zuerst die Website und sichern Sie die Datenbank; ein abgebrochener Lauf setzt beim unterbrochenen Schritt fort.');
+define('_NODE_MIGINFO','Überträgt die Inhalte der entfernten Module samt Kategorien, Kommentaren, Favoriten und Bewertungen in Node-Typen. Die alten Tabellen bleiben unverändert, und keine Datei wird verschoben: Verschieben Sie die Upload-Ordner nach dem Lauf und vor dem Öffnen der Website so, wie UPGRADING.md sie aufführt. Schließen Sie zuerst die Website und sichern Sie die Datenbank; ein abgebrochener Lauf setzt beim unterbrochenen Schritt fort.');
 define('_NODE_MIGRATE','Migration der alten Module');
 define('_NODE_MIGROWS','Inhalte');
 define('_NODE_MIGRUN','Migration starten');

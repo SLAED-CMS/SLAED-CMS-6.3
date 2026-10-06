@@ -750,7 +750,7 @@ function getInstallRows(string $body): array {
 
 # What one run of the update left: the rows update.php reported as failed, the closed site, the marks, the reconciled registry, the converted sources
 # It also reads the manifests of the three units, the balances and the Node tables, whether config/local.php is gone, the panel file, the site language and address
-# Then come the blocks of removed modules switched off, the Node types taken out of the configuration, and the switches of the owner
+# Then come the blocks of removed modules switched off, the Node types taken out of the configuration, the switches of the owner and the post and message of update62
 # The counter of _nodes comes from SHOW CREATE TABLE, because MySQL 8 answers SHOW TABLE STATUS from cached statistics
 function getInstallAfter(PDO $pdo, array $page): array {
     global $isite;
@@ -821,6 +821,8 @@ function getInstallAfter(PDO $pdo, array $page): array {
         'types' => [$tgone[1] ?? '', array_keys(getInstallConf('node')['node']['types'] ?? []), array_keys($fields['node'] ?? []),
             array_values(array_filter(array_keys(getInstallConf('ratings')['ratings'] ?? []), fn(int|string $v): bool => str_starts_with($v, 'node.')))],
         'owner' => [$mods['forum']['active'] ?? null, $jobs['newsletter']['active'] ?? null, str_contains($page['body'], 'were carried by the first run')],
+        'attach' => [(string)$pdo->query('SELECT body FROM '.IPREF.'_forum WHERE id = 1')->fetchColumn(),
+            (string)$pdo->query('SELECT body FROM '.IPREF.'_privat WHERE id = 1')->fetchColumn()],
     ];
 }
 

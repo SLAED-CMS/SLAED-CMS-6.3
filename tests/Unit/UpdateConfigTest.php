@@ -33,6 +33,7 @@ final class UpdateConfigTest extends TestCase
     # The values of the site go over the shipped source, the release keeps its version and asset list, the site stays closed, a language name becomes its code
     # The start module of the panel is a setting the release dropped, so the one the site stored never reaches the carried source
     # A start module or a theme that left the tree falls back to the shipped value, a logo the theme holds stays, and seo wins over the global of 6.2
+    # The 6.2 key forum names the area of config/forum.php, which global.php would shadow in the merged configuration, so it is not carried
     #[Test]
     public function theSiteValuesGoOverTheRelease(): void
     {
@@ -44,6 +45,7 @@ final class UpdateConfigTest extends TestCase
             $glob['oldkey']]);
         $this->assertSame([$run['ship']['version'], $run['ship']['css_f'], $run['ship']['amod']], [$glob['version'], $glob['css_f'], $glob['amod'] ?? null]);
         $this->assertSame([$run['ship']['theme'], 'mark.svg'], [$glob['theme'], $glob['site_logo']], 'A theme that left the tree was kept or a logo of the theme was dropped');
+        $this->assertArrayNotHasKey('forum', $glob, 'A 6.2 key that names a configuration area reached global.php and shadows that area');
         $this->assertSame(['de', 'k1'], [$run['lang']['lang'], $run['lang']['key']]);
         $want = ['stat' => '0'] + $run['ship']['statistic'];
         ksort($want);

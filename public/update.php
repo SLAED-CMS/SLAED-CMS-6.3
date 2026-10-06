@@ -249,9 +249,9 @@ function getMigrateAttach(string $text, string $dir, int $nid, Closure $have): s
     }, $text) ?? $text;
 }
 
-# Rewrite direct addresses of files in uploads/$dir, the 6.2 folder of a type the text does not own, into the file address of the material $find answers for the name
+# Rewrite direct addresses of files in uploads/$dir, a folder of another owner than the text, into the file address of owner $own and the target $find answers for the name
 # A quoted example inside [code] or [php] stays, and a name $find answers 0 for keeps its address, which answers 410
-function getMigrateForeign(string $text, string $dir, Closure $find): string {
+function getMigrateForeign(string $text, string $dir, string $own, Closure $find): string {
     global $conf;
     if (stripos($text, 'uploads/'.$dir.'/') === false) return $text;
     $host = preg_quote((string)preg_replace('#^www\.#i', '', (string)parse_url((string)($conf['homeurl'] ?? ''), PHP_URL_HOST)), '#');
@@ -261,12 +261,12 @@ function getMigrateForeign(string $text, string $dir, Closure $find): string {
         $keep[] = $m[0];
         return "\x01".(count($keep) - 1)."\x01";
     }, $text) ?? $text;
-    $text = preg_replace_callback('#'.$addr.'#i', function (array $m) use ($find): string {
+    $text = preg_replace_callback('#'.$addr.'#i', function (array $m) use ($own, $find): string {
         $rel = rawurldecode($m[1]);
         $thumb = str_starts_with($rel, 'thumb/');
         $name = $thumb ? substr($rel, 6) : $rel;
         $nid = (preg_match('/^[A-Za-z0-9_\-. ]+$/D', $name) && trim($name, '. ') !== '') ? $find($name) : 0;
-        return ($nid > 0) ? './index.php?go=file&own=node&id='.$nid.'&key='.rawurlencode($name).($thumb ? '&thumb=1' : '') : $m[0];
+        return ($nid > 0) ? './index.php?go=file&own='.$own.'&id='.$nid.'&key='.rawurlencode($name).($thumb ? '&thumb=1' : '') : $m[0];
     }, $text) ?? $text;
     for ($i = count($keep) - 1; $i >= 0; $i--) $text = str_replace("\x01".$i."\x01", $keep[$i], $text);
     return $text;
@@ -670,18 +670,26 @@ function setMigrateData(string $mod, array $one, array &$state): void {
     setMigrateState($state);
 }
 
-# Point the direct addresses a text keeps into the 6.2 folder of a type it does not belong to at a published material of that type which carries the name
+# Point the direct addresses a text keeps into the 6.2 folder of a type, or into uploads/forum outside the forum, at a published material or post that carries the name
 # It runs on every run after the data step, so a type that was blocked before is served once its materials exist; a converted address no longer matches
 function setMigrateForeign(array &$state): void {
     $prs = new Parser();
     $cols = ['nodes' => ['intro', 'body'], 'comment' => ['body'], 'forum' => ['body'], 'privat' => ['body'], 'message' => ['body'], 'newsletter' => ['body'],
         'blocks' => ['content'], 'users' => ['sig', 'block'], 'voting' => ['body']];
     $live = NodeStatus::Published->value;
-    foreach (getMigrateMap() as $mod => $item) {
-        $type = getMigrateType($item['type']);
-        if ($type === null) continue;
+    foreach (array_map(fn(array $v): string => $v['type'], getMigrateMap()) + ['forum' => ''] as $mod => $kind) {
+        $type = ($kind !== '') ? getMigrateType($kind) : null;
+        if ($kind !== '' && $type === null) continue;
         $memo = [];
-        $find = function (string $name) use ($type, $prs, $live, &$memo): int {
+        $find = ($type === null) ? function (string $name) use ($prs, &$memo): int {
+            if (isset($memo[$name])) return $memo[$name];
+            $sql = 'SELECT f.id, f.body FROM '.PREFIX_DB.'_forum AS f LEFT JOIN '.PREFIX_DB.'_forum AS h ON h.id = f.pid WHERE f.status <> 0 AND f.time <= NOW()'
+                .' AND COALESCE(h.status, f.status) > 1 AND COALESCE(h.time, f.time) <= NOW() AND f.body LIKE :like ORDER BY f.id';
+            foreach (getMigrateQuery($sql, ['like' => '%'.$name.'%'])->fetchAll(PDO::FETCH_ASSOC) as $row) {
+                if (in_array($name, $prs->getAttachList($row['body']), true)) return $memo[$name] = intval($row['id']);
+            }
+            return $memo[$name] = 0;
+        } : function (string $name) use ($type, $prs, $live, &$memo): int {
             if (isset($memo[$name])) return $memo[$name];
             $like = '%'.$name.'%';
             $sql = 'SELECT id, intro, body FROM '.PREFIX_DB.'_nodes WHERE tid = :tid AND status = :live AND (intro LIKE :one OR body LIKE :two) ORDER BY id';
@@ -700,8 +708,10 @@ function setMigrateForeign(array &$state): void {
             return $memo[$name] = 0;
         };
         $num = 0;
-        $self = ['nodes' => ['tid', $type->id], 'comment' => ['modul', $type->name]];
+        $self = ($type === null) ? [] : ['nodes' => ['tid', $type->id], 'comment' => ['modul', $type->name]];
+        $own = ($type === null) ? 'forum' : 'node';
         foreach ($cols as $tab => $list) {
+            if ($tab === $mod) continue;
             $pars = [];
             foreach (array_keys($list) as $i) $pars['l'.$i] = '%uploads/'.$mod.'/%';
             $where = '('.implode(' OR ', array_map(fn(string $v, string $k): string => '`'.$v.'` LIKE :'.$k, $list, array_keys($pars))).')';
@@ -713,7 +723,7 @@ function setMigrateForeign(array &$state): void {
                 $sets = [];
                 $vals = ['id' => $row['id']];
                 foreach ($list as $i => $col) {
-                    $text = getMigrateForeign((string)$row[$col], $mod, $find);
+                    $text = getMigrateForeign((string)$row[$col], $mod, $own, $find);
                     if ($text === (string)$row[$col]) continue;
                     if (strlen($text) > getEditorRoomData($tab.'.'.$col)['bytes']) {
                         addMigrateNote($state, $mod, $tab.' #'.$row['id'].': the rewritten '.$col.' would not fit its column, it keeps the old addresses');
@@ -727,7 +737,7 @@ function setMigrateForeign(array &$state): void {
                 $num++;
             }
         }
-        if ($num > 0) addMigrateNote($state, $mod, $num.' texts reach a file of uploads/'.$mod.' through the material that carries it');
+        if ($num > 0) addMigrateNote($state, $mod, $num.' texts reach a file of uploads/'.$mod.' through the '.(($type === null) ? 'post' : 'material').' that carries it');
     }
     setMigrateState($state);
 }
@@ -1402,7 +1412,7 @@ function setUpdateAttach(Database $db, string $prefix, string $tab, string $dir)
 # The configuration step of the 6.3 update for a 6.2 site, whose settings live in config/config_<name>.php as a variable of their own
 # The site values go over the shipped source of the same name, stat into statistic and seo over global; an unshipped key stays for the data units and the next form save
 # The version, the asset lists and the closed site belong to the release and the update, and a language name becomes its code
-# A start module, a theme or a site logo that is not in the tree falls back to the shipped value
+# A start module, a theme or a site logo that is not in the tree falls back to the shipped value; a global key naming a configuration area would shadow it and is dropped
 # Two positional formats changed after 6.2: an upload rule loses its retired eighth field adminlist and gains the guest file limit at the user one
 # The upload rule takes the short form the runtime reads, and an address ban turns ip and octet count into one CIDR
 # Every source ends in storage/backup/update/config once its target is written and read back, the ones without a successor as well, so the runtime never includes one again
@@ -1442,6 +1452,7 @@ function setUpdateConfig(): array {
             if ($keep === '') unset($site['module']);
             else $site['module'] = $keep;
             unset($site['version'], $site['css_f'], $site['script_f'], $site['amod']);
+            foreach (glob(CONFIG_DIR.'/*.php') ?: [] as $one) unset($site[basename($one, '.php')]);
             if (isset($site['theme']) && !is_dir(PUBLIC_DIR.'/templates/'.basename((string)$site['theme']))) unset($site['theme']);
             $look = PUBLIC_DIR.'/templates/'.basename((string)($site['theme'] ?? $base['theme'] ?? '')).'/images/logos/';
             if (isset($site['site_logo']) && !is_file($look.basename((string)$site['site_logo']))) unset($site['site_logo']);
@@ -1931,6 +1942,7 @@ if (($_REQUEST['op'] ?? '') === 'update' || !isset($umark['points'], $umark['rat
     define('CONFIG_DIR', BASE_DIR.'/config');
     define('BACKUP_DIR', BASE_DIR.'/storage/backup');
     define('LOGS_DIR', BASE_DIR.'/storage/logs');
+    define('UPLOADS_DIR', BASE_DIR.'/uploads');
     $conf = array_merge(require CONFIG_DIR.'/global.php', require CONFIG_DIR.'/security.php');
     require_once BASE_DIR.'/core/admin.php';
     require_once BASE_DIR.'/core/classes/filemanager.php';
