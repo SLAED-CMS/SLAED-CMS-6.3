@@ -72,7 +72,7 @@ final class FileAccessTest extends TestCase
     {
         $fac = self::getAccess();
         $this->assertSame(['node', 'forum', 'privat', 'comment', 'profile', 'public'], \FileAccess::OWNERS);
-        $this->assertSame(['node', 'forum', 'privat', 'profile'], \FileAccess::PREVIEW);
+        $this->assertSame(['node', 'forum', 'privat', 'comment', 'profile'], \FileAccess::PREVIEW);
         foreach (['mystery', 'Forum', 'FORUM', '', 'forum ', 'privat'] as $own) {
             $this->assertSame('', $fac->getFileFolder($own, 'forum', 5), 'A folder of '.$own);
             $this->assertSame('', $fac->getFileUrl($own, 'forum', 5, 'plain.png'), 'An address of '.$own);
@@ -80,7 +80,7 @@ final class FileAccessTest extends TestCase
         }
     }
 
-    # Every closed owner answers the file route, Node and the forum also their preview, a public folder its direct link, and any other owner without a target nothing
+    # Every closed owner answers the file route, an owner of PREVIEW also its preview with a name, a public folder its direct link, and no owner without a target and a name
     #[Test]
     public function everyOwnerAnswersItsOwnAddress(): void
     {
@@ -96,7 +96,8 @@ final class FileAccessTest extends TestCase
         $this->assertSame('', $fac->getFileUrl('public', self::ROOM, 0, 'a.png'), 'A folder off the public list got a direct address');
         $this->assertSame('index.php?go=file&own=forum&name=forum&key=a.png&preview=1', $fac->getFileUrl('forum', 'forum', 0, 'a.png'));
         $this->assertSame('index.php?go=file&own=comment&id=5&key=a.png', $fac->getFileUrl('comment', 'voting', 5, 'a.png'));
-        $this->assertSame('', $fac->getFileUrl('comment', 'voting', 0, 'a.png'), 'A closed owner without a preview and a target got an address');
+        $this->assertSame('index.php?go=file&own=comment&name=voting&key=a.png&preview=1', $fac->getFileUrl('comment', 'voting', 0, 'a.png'));
+        $this->assertSame('', $fac->getFileUrl('comment', '', 0, 'a.png'), 'A comment preview without its name got an address');
         $this->assertSame('', $fac->getFileUrl('forum', '', 0, 'a.png'), 'A forum preview without its name got an address');
         $this->assertSame('', $fac->getFileUrl('node', '', 0, 'a.png'), 'A Node preview without its type got an address');
         $this->assertSame('node/news', $fac->getFileFolder('node', 'news'));
@@ -217,5 +218,41 @@ final class FileAccessTest extends TestCase
         $this->assertSame([true, true, ''], $run['ssave'], 'A signature naming a foreign file was stored or did not name the refused file');
         $this->assertSame(['Anna [attach=own-aaaaaaaaaa-2.png align=left title=m]', 200, true], $run['sown'],
             'An own file was refused, is not served through the signature, or the editor does not upload into profile');
+    }
+
+    # A comment on a poll serves its names while it is published and its poll is shown, every one to a moderator of voting; the folder of the poll comments has no direct address
+    #[Test]
+    public function aPollCommentServesTheReaderOfItsPoll(): void
+    {
+        $run = $this->getRun();
+        $this->assertSame([200, 200, 404, 404, 200, 404, 404, 404], $run['poll'],
+            'A published comment or its thumb was refused, or a pending one served a guest or its author, a hidden poll, a foreign name or a moderator of a type');
+        $this->assertSame([410, 410], $run['vshut'], 'The light path served the folder of the poll comments');
+        $this->assertSame([200, 404, 404, 200, 404], $run['vview'], 'The preview of voting served a foreign upload, refused the own one, or served the folder of profile');
+        $this->assertSame([true, false, false], $run['vpage'], 'The poll page does not print the file route, still prints the folder, or shows a pending comment');
+    }
+
+    # A comment on a profile serves its names to whoever may open the profile while it is published, and the own block serves its names to its owner alone
+    #[Test]
+    public function aProfileCommentServesTheReaderOfTheProfile(): void
+    {
+        $run = $this->getRun();
+        $this->assertSame([200, 404, 404, 200, 404], $run['prof'],
+            'A published comment was refused, a pending one served a guest or its author, root refused, or the file of a comment served as an account text');
+        $this->assertSame([404, 200], $run['pshut'], 'Closed profiles served a comment to a guest or refused a member');
+        $this->assertSame([true, false], $run['ppage'], 'The profile page does not print the file route of a comment or shows a pending one');
+        $this->assertSame([200, 404, 404, 404], $run['block'], 'The own block served another account, a guest or an administrator, or refused its owner');
+    }
+
+    # A writer of a comment binds an own upload or a name the same target already serves, for a poll, a profile and a Node material alike, and never a foreign file
+    #[Test]
+    public function aCommentWriterBindsOnlyItsOwnOrAServedName(): void
+    {
+        $run = $this->getRun();
+        $this->assertSame([true, true, true, 2], $run['pwrite'], 'A poll comment naming a foreign file or one of another poll was stored, or a quote or an own upload refused');
+        $this->assertSame([true, true, true], $run['pedit'], 'The author edit stored a foreign file or did not name it, or refused a name the poll serves');
+        $this->assertSame([true, true], $run['medit'], 'The moderation form of the main administrator refused a file of the folder');
+        $this->assertSame([true, 1], $run['awrite'], 'A profile comment naming a file of the own block was stored, or an own upload refused');
+        $this->assertSame([true, 1], $run['nwrite'], 'A Node comment naming a foreign file of the type was stored, or a name of its material refused');
     }
 }

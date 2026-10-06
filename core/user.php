@@ -10,12 +10,12 @@ if (!defined('FUNC_FILE')) die('Illegal file access');
 # The mark stands in a wrapper the page always prints, empty while the comment is unedited, because an out-of-band swap can only replace an element already there
 function getCommentBody(array $val, bool $oob = false): array {
     global $conf, $tpl, $prs;
-    $own = isset($conf['node']['types'][$val['modul']]) ? ['node', intval($val['cid'] ?? 0)] : [];
+    $own = isset($conf['node']['types'][$val['modul']]) ? ['node', intval($val['cid'] ?? 0)] : ['comment', intval($val['id'])];
     $sent = (string)($val['edited'] ?? '');
     $badge = ($sent !== '') ? $tpl->getHtmlFrag('inline-badge', ['title_text' => (string)_COMMENTS_EDITED, 'label' => format_time($sent, _TIMESTRING),
         'is_comment_edit' => true]) : '';
     return [
-        'text' => $prs->filterContent($val['body'], true, $val['modul'], 2, 'breaks', $own),
+        'text' => $prs->filterContent($val['body'], true, getCommentPlace($val['modul']), 2, 'breaks', $own),
         'mark' => $tpl->getHtmlFrag('quick-edit', ['is_mark' => true, 'is_oob' => $oob, 'mark_id' => 'quick-mark-comment-'.$val['id'], 'mark_html' => $badge]),
     ];
 }
@@ -738,15 +738,30 @@ function checkPrivatNames(string $text): string {
     return checkUploadNames('account', $fresh, $seen);
 }
 
-# Answer whether the reader gets one file of an account text: the names its signature carries to whom may open the profile, a preview the own upload
-# The signature shows on every page an account writes on, so its files go to every reader of profiles
-# The own block and the comments on a profile upload into the same folder and grant nothing here yet
+# Answer whether the reader gets one file of an account text: a name of the signature to whom may open the profile, of the own block to its owner, a preview the own upload
 function checkProfileFile(string $mod, int $id, string $key): bool {
-    global $db, $conf;
+    global $db, $conf, $user;
     if (intval($conf['users']['prof'] ?? 0) === 1 && !is_user() && !isAdmin()) return false;
     if ($id < 1) return $mod === 'profile' && checkUploadPreview('profile', $key);
-    $row = $db->getSqlRow($db->getSqlQuery('SELECT sig FROM '.PREFIX_DB.'_users WHERE id = :id', ['id' => $id]));
-    return $row && in_array($key, (new Parser())->getAttachList((string)$row['sig']), true);
+    $row = $db->getSqlRow($db->getSqlQuery('SELECT sig, block FROM '.PREFIX_DB.'_users WHERE id = :id', ['id' => $id]));
+    if (!$row) return false;
+    $prs = new Parser();
+    $mine = is_user() && intval($user[0]) === $id;
+    return in_array($key, array_merge($prs->getAttachList((string)$row['sig']), $mine ? $prs->getAttachList((string)$row['block']) : []), true);
+}
+
+# Answer whether the reader gets one file of a comment on a poll or a profile: a name of a published comment its target shows, any to a moderator, a preview the own upload
+function checkCommentFile(string $mod, int $id, string $key, array $row): bool {
+    global $conf, $com;
+    if ($id < 1) return getUploadOwner($mod) === 'comment' && checkUploadPreview($mod, $key);
+    $cmod = (string)($row['modul'] ?? '');
+    if ($cmod === '' || getUploadOwner($cmod) === 'node') return false;
+    $mods = is_moder($cmod) === 1;
+    $show = intval($conf['modules'][$cmod]['view'] ?? 0);
+    $open = $mods || (!empty($conf['modules'][$cmod]['active']) && ($show === 0 || ($show === 1 && is_user() && isModGroup($cmod))));
+    $live = $mods || $row['status'] === CommentStatus::Published->value;
+    if (!$open || !$live || $com->getTargetMode($cmod, intval($row['cid'])) === CommentMode::Disabled) return false;
+    return in_array($key, (new Parser())->getAttachList((string)$row['body']), true);
 }
 
 # Answer the refusal of the first new [attach] name of an account text that is no own upload of profile and no file for a moderator of account, or an empty string

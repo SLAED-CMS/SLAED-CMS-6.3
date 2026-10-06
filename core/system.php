@@ -4457,7 +4457,7 @@ function getUploadService(): Upload {
 }
 
 # Build the delivery decision of the request once: Node grants through the reader of its material, the forum through the reader of its post, a private message to its two sides
-# The account texts of profile grant through the account that writes them, and a public folder has no route
+# A comment on a poll or a profile grants through the reader of its target, the account texts of profile through the account, and a public folder has no route
 function getFileService(): FileAccess {
     static $fac = null;
     if ($fac !== null) return $fac;
@@ -4483,21 +4483,32 @@ function getFileService(): FileAccess {
     $forum = fn(string $mod, int $id, string $key): bool => function_exists('checkForumFile') && checkForumFile($mod, $id, $key);
     $privat = fn(string $mod, int $id, string $key): bool => function_exists('checkPrivatFile') && checkPrivatFile($mod, $id, $key);
     $profile = fn(string $mod, int $id, string $key): bool => function_exists('checkProfileFile') && checkProfileFile($mod, $id, $key);
+    $note = static function (int $id): array {
+        global $com;
+        static $memo = [];
+        return $memo[$id] ??= ($id > 0) ? $com->getComment($id) : [];
+    };
+    $place = static function (string $mod, int $id) use ($note): string {
+        $one = getCommentPlace(($mod !== '') ? $mod : (string)($note($id)['modul'] ?? ''));
+        return in_array(getUploadOwner($one), ['comment', 'profile'], true) ? getUploadFolder($one) : '';
+    };
+    $comment = fn(string $mod, int $id, string $key): bool => function_exists('checkCommentFile') && checkCommentFile($mod, $id, $key, $note($id));
     return $fac = new FileAccess([
         'node' => ['folder' => $room, 'grant' => $node],
         'forum' => ['folder' => fn(string $mod, int $id): string => getUploadFolder('forum'), 'grant' => $forum],
         'privat' => ['folder' => fn(string $mod, int $id): string => getUploadFolder('account'), 'grant' => $privat],
+        'comment' => ['folder' => $place, 'grant' => $comment],
         'profile' => ['folder' => fn(string $mod, int $id): string => getUploadFolder('profile'), 'grant' => $profile],
         'public' => ['folder' => fn(string $mod, int $id): string => getUploadFolder($mod)],
     ]);
 }
 
 # Answer the closed owner whose route serves the folder of one upload module, or an empty string for a public folder
-# A Node type, the forum, the private messages in the folder of account and the account texts in profile; the editor window and every renderer of a stored text ask here
+# A Node type, the forum, the private messages in the folder of account, the comments on a poll and the account texts in profile; the editor window and the renderers ask here
 function getUploadOwner(string $mod): string {
     global $conf;
     if ($mod !== '' && isset($conf['node']['types'][$mod])) return 'node';
-    return ['forum' => 'forum', 'account' => 'privat', 'profile' => 'profile'][$mod] ?? '';
+    return ['forum' => 'forum', 'account' => 'privat', 'voting' => 'comment', 'profile' => 'profile'][$mod] ?? '';
 }
 
 # Answer the upload module of the comment form of one module: a comment on a profile uploads into the folder of the account texts, any other into the folder of its module

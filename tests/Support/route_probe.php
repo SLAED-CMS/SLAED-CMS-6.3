@@ -206,9 +206,11 @@ function addRouteFiles(string $work): void {
     $forum = ['fa-aaaaaaaaaa.png', 'fb-aaaaaaaaaa.png', 'fc-aaaaaaaaaa.png', 'fd-aaaaaaaaaa.png', 'fe-aaaaaaaaaa.png', 'free-aaaaaaaaaa.png', 'mine-aaaaaaaaaa-2.png',
         'other-bbbbbbbbbb-3.png', 'thumb/fa-aaaaaaaaaa.png'];
     foreach ($forum as $one) file_put_contents($work.'/uploads/forum/'.$one, $png);
-    foreach (['account', 'profile'] as $dir) mkdir($work.'/uploads/'.$dir.'/thumb', 0777, true);
+    foreach (['account', 'profile', 'voting'] as $dir) mkdir($work.'/uploads/'.$dir.'/thumb', 0777, true);
     $owns = ['account' => ['pa-aaaaaaaaaa-3.png', 'pb-aaaaaaaaaa-3.png', 'mine-aaaaaaaaaa-2.png', 'other-bbbbbbbbbb-4.png', 'thumb/pa-aaaaaaaaaa-3.png'],
-        'profile' => ['sig-aaaaaaaaaa-3.png', 'own-aaaaaaaaaa-2.png', 'other-bbbbbbbbbb-4.png', 'thumb/sig-aaaaaaaaaa-3.png']];
+        'profile' => ['sig-aaaaaaaaaa-3.png', 'own-aaaaaaaaaa-2.png', 'other-bbbbbbbbbb-4.png', 'thumb/sig-aaaaaaaaaa-3.png', 'pc-aaaaaaaaaa-4.png', 'pd-aaaaaaaaaa-2.png',
+            'blk-aaaaaaaaaa-3.png'],
+        'voting' => ['va-aaaaaaaaaa-3.png', 'vb-aaaaaaaaaa-2.png', 'vc-aaaaaaaaaa-3.png', 'mine-aaaaaaaaaa-2.png', 'other-bbbbbbbbbb-4.png', 'thumb/va-aaaaaaaaaa-3.png']];
     foreach ($owns as $dir => $list) foreach ($list as $one) file_put_contents($work.'/uploads/'.$dir.'/'.$one, $png);
     file_put_contents($work.'/uploads/account/brandbook.pdf', '%PDF-1.4'.str_repeat('0123456789', 199).'%%');
     file_put_contents($work.'/uploads/node/news/manual-dddddddddd.pdf', '%PDF-1.4'.str_repeat('0123456789', 199).'%%');
@@ -2395,6 +2397,81 @@ function getRouteAccount(PDO $pdo): array {
     return $out;
 }
 
+# The comments of a poll and of a profile on the file route: published and pending, a hidden poll, a guest, the author, a moderator, the own block and the writers of a comment
+function getRouteComment(PDO $pdo): array {
+    global $rwork;
+    $pre = RPREF.'_';
+    $pdo->exec('INSERT INTO '.$pre.'voting (id, modul, title, body, answer, time, enddate, lang, acomm, typ, status) VALUES'
+        .' (801, \'\', \'Open poll\', \'A|B\', \'0|0\', \'2026-01-01 10:00:00\', \'2099-12-31 10:00:00\', \'\', 2, 0, 1),'
+        .' (802, \'\', \'Later poll\', \'A|B\', \'0|0\', \'2099-01-01 10:00:00\', \'2099-12-31 10:00:00\', \'\', 2, 0, 1)');
+    $pdo->exec('INSERT INTO '.$pre.'comment (id, pid, cid, modul, time, uid, name, ip, body, status, shown) VALUES'
+        .' (901, 0, 801, \'voting\', NOW(), 3, \'boris\', \'127.0.0.1\', \'Poll [attach=va-aaaaaaaaaa-3.png align=left title=a]\', 1, NOW()),'
+        .' (902, 0, 801, \'voting\', NOW(), 2, \'anna\', \'127.0.0.1\', \'Wait [attach=vb-aaaaaaaaaa-2.png align=left title=b]\', 0, NULL),'
+        .' (903, 0, 802, \'voting\', NOW(), 3, \'boris\', \'127.0.0.1\', \'Later [attach=vc-aaaaaaaaaa-3.png align=left title=c]\', 1, NOW()),'
+        .' (911, 0, 3, \'account\', NOW(), 4, \'clara\', \'127.0.0.1\', \'Hi [attach=pc-aaaaaaaaaa-4.png align=left title=c]\', 1, NOW()),'
+        .' (912, 0, 3, \'account\', NOW(), 2, \'anna\', \'127.0.0.1\', \'Wait [attach=pd-aaaaaaaaaa-2.png align=left title=d]\', 0, NULL)');
+    $pdo->exec('UPDATE '.$pre.'users SET block = \'Mine [attach=blk-aaaaaaaaaa-3.png align=left title=k]\' WHERE id = 3');
+    $pdo->exec('UPDATE '.$pre.'nodes SET comon = 2 WHERE id = 101');
+    $code = fn(string $who, string $path): int => getRouteReply($who, 'GET', $path)['code'];
+    $file = fn(string $own, int $id, string $key, string $tail = ''): string => 'index.php?go=file&own='.$own.'&id='.$id.'&key='.$key.$tail;
+    $view = fn(string $name, string $key): string => 'index.php?go=file&own=comment&name='.$name.'&key='.$key.'&preview=1';
+    $out = ['poll' => [$code('', $file('comment', 901, 'va-aaaaaaaaaa-3.png')), $code('', $file('comment', 901, 'va-aaaaaaaaaa-3.png', '&thumb=1')),
+        $code('', $file('comment', 902, 'vb-aaaaaaaaaa-2.png')), $code('anna', $file('comment', 902, 'vb-aaaaaaaaaa-2.png')),
+        $code('root', $file('comment', 902, 'vb-aaaaaaaaaa-2.png')), $code('', $file('comment', 903, 'vc-aaaaaaaaaa-3.png')),
+        $code('', $file('comment', 901, 'vb-aaaaaaaaaa-2.png')), $code('moder', $file('comment', 902, 'vb-aaaaaaaaaa-2.png'))]];
+    $out['prof'] = [$code('', $file('comment', 911, 'pc-aaaaaaaaaa-4.png')), $code('', $file('comment', 912, 'pd-aaaaaaaaaa-2.png')),
+        $code('anna', $file('comment', 912, 'pd-aaaaaaaaaa-2.png')), $code('root', $file('comment', 912, 'pd-aaaaaaaaaa-2.png')),
+        $code('', $file('profile', 3, 'pc-aaaaaaaaaa-4.png'))];
+    $out['block'] = [$code('boris', $file('profile', 3, 'blk-aaaaaaaaaa-3.png')), $code('anna', $file('profile', 3, 'blk-aaaaaaaaaa-3.png')),
+        $code('', $file('profile', 3, 'blk-aaaaaaaaaa-3.png')), $code('root', $file('profile', 3, 'blk-aaaaaaaaaa-3.png'))];
+    $out['vshut'] = [$code('', 'uploads/voting/va-aaaaaaaaaa-3.png'), $code('root', 'uploads/voting/va-aaaaaaaaaa-3.png')];
+    $out['vview'] = [$code('anna', $view('voting', 'mine-aaaaaaaaaa-2.png')), $code('boris', $view('voting', 'mine-aaaaaaaaaa-2.png')),
+        $code('', $view('voting', 'mine-aaaaaaaaaa-2.png')), $code('root', $view('voting', 'other-bbbbbbbbbb-4.png')), $code('anna', $view('profile', 'own-aaaaaaaaaa-2.png'))];
+    $conf = require $rwork.'/config/users.php';
+    $conf['users']['prof'] = '1';
+    setRouteFile($rwork.'/config/users.php', $conf);
+    if (is_file($rwork.'/config/local.php')) unlink($rwork.'/config/local.php');
+    $out['pshut'] = [$code('', $file('comment', 911, 'pc-aaaaaaaaaa-4.png')), $code('anna', $file('comment', 911, 'pc-aaaaaaaaaa-4.png'))];
+    $conf['users']['prof'] = '0';
+    setRouteFile($rwork.'/config/users.php', $conf);
+    if (is_file($rwork.'/config/local.php')) unlink($rwork.'/config/local.php');
+    $page = getRouteReply('', 'GET', 'index.php?name=voting&op=view&id=801')['body'];
+    $out['vpage'] = [str_contains($page, 'go=file&amp;own=comment&amp;id=901&amp;key=va-aaaaaaaaaa-3.png'), str_contains($page, 'uploads/voting/'),
+        str_contains($page, 'vb-aaaaaaaaaa-2.png')];
+    $page = getRouteReply('', 'GET', 'index.php?name=account&op=view&uname=boris')['body'];
+    $out['ppage'] = [str_contains($page, 'go=file&amp;own=comment&amp;id=911&amp;key=pc-aaaaaaaaaa-4.png'), str_contains($page, 'pd-aaaaaaaaaa-2.png')];
+    $html = getRouteReply('anna', 'GET', 'index.php?name=voting&op=view&id=801')['body'];
+    $tok = preg_match('#id="formcsave".*?name="token"\s+value="([a-f0-9]{64})"#s', $html, $hit) ? $hit[1] : '';
+    $add = fn(string $mod, int $id, string $text): string => getRouteReply('anna', 'POST', 'index.php?go=1&op=addComment&id='.$id.'&mod='.$mod.'&com=1',
+        ['text' => $text, 'name' => '', 'token' => $tok], ['HX-Request: true'])['body'];
+    $count = fn(string $mod): int => intval($pdo->query('SELECT COUNT(*) FROM '.$pre.'comment WHERE uid = 2 AND modul = '.$pdo->quote($mod))->fetchColumn());
+    $was = [$count('voting'), $count('account'), $count('news')];
+    $out['pwrite'] = [$tok !== '', str_contains($add('voting', 801, 'Takes [attach=other-bbbbbbbbbb-4.png align=left title=o]'), ': other-bbbbbbbbbb-4.png'),
+        str_contains($add('voting', 801, 'Takes [attach=vc-aaaaaaaaaa-3.png align=left title=c]'), ': vc-aaaaaaaaaa-3.png')];
+    $add('voting', 801, 'Quotes [attach=va-aaaaaaaaaa-3.png align=left title=a]');
+    $add('voting', 801, 'Shows [attach=mine-aaaaaaaaaa-2.png align=left title=m]');
+    $out['pwrite'][] = $count('voting') - $was[0];
+    $mine = $pdo->query('SELECT id, body FROM '.$pre.'comment WHERE uid = 2 AND modul = \'voting\' ORDER BY id DESC LIMIT 1')->fetch(PDO::FETCH_ASSOC);
+    $body = fn(int $id): string => (string)$pdo->query('SELECT body FROM '.$pre.'comment WHERE id = '.$id)->fetchColumn();
+    $edit = fn(string $text): array => getRouteReply('anna', 'POST', 'index.php?go=1&op=updateQuickEdit', ['kind' => 'comment', 'id' => (string)$mine['id'],
+        'field' => 'body', 'stamp' => sha1($body((int)$mine['id'])."\0"), 'text' => $text], ['X-CSRF-TOKEN: '.$tok]);
+    $bad = $edit($mine['body'].' [attach=other-bbbbbbbbbb-4.png align=left title=o]');
+    $out['pedit'] = [str_contains($bad['body'], ': other-bbbbbbbbbb-4.png'), $body((int)$mine['id']) === $mine['body']];
+    $edit($mine['body'].' [attach=va-aaaaaaaaaa-3.png align=left title=a]');
+    $out['pedit'][] = $body((int)$mine['id']) === $mine['body'].' [attach=va-aaaaaaaaaa-3.png align=left title=a]';
+    $mtok = getRouteToken(getRouteReply('root', 'GET', 'admin.php?name=comments&op=edit&id=901')['body'], 'editsave');
+    $more = $body(901).' [attach=other-bbbbbbbbbb-4.png align=left title=o]';
+    getRouteReply('root', 'POST', 'admin.php?name=comments', ['op' => 'editsave', 'id' => '901', 'comment' => $more, 'token' => $mtok]);
+    $out['medit'] = [$mtok !== '', $body(901) === $more];
+    $out['awrite'] = [str_contains($add('account', 3, 'Takes [attach=blk-aaaaaaaaaa-3.png align=left title=k]'), ': blk-aaaaaaaaaa-3.png')];
+    $add('account', 3, 'Shows [attach=own-aaaaaaaaaa-2.png align=left title=m]');
+    $out['awrite'][] = $count('account') - $was[1];
+    $out['nwrite'] = [str_contains($add('news', 101, 'Takes [attach=other-bbbbbbbbbb.png align=left title=o]'), ': other-bbbbbbbbbb.png')];
+    $add('news', 101, 'Quotes [attach=att-aaaaaaaaaa.png align=left title=a]');
+    $out['nwrite'][] = $count('news') - $was[2];
+    return $out;
+}
+
 # The child favhold of the intact run holds the account of anna with one more favorite for two seconds, as a parallel request at the limit does before its commit
 if (($argv[2] ?? '') === 'favhold') {
     $hpdo = getRoutePdo((string)($argv[3] ?? ''));
@@ -2455,7 +2532,7 @@ try {
     } elseif (($argv[2] ?? '') === 'quick') {
         $report['runs']['quick'] = getRouteQuick($rpdo, $rwork);
     } elseif (($argv[2] ?? '') === 'files') {
-        $report['runs']['files'] = getRouteFiles($rpdo) + getRouteAccount($rpdo);
+        $report['runs']['files'] = getRouteFiles($rpdo) + getRouteAccount($rpdo) + getRouteComment($rpdo);
     } else {
         $report['runs']['lists'] = getRouteLists($rpdo);
         $report['runs']['view'] = getRouteViewRuns($rpdo);

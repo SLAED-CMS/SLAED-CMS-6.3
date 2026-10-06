@@ -457,7 +457,7 @@ class Comment {
         $key = $this->getRequestKey($key);
         if ($key === false) return ['id' => 0, 'name' => $name, 'new' => false, 'error' => _COMMENTS_REPLAY];
         $body = $this->filterCommentBody($body, $this->getLinkFlag($mod));
-        $room = checkEditorTextRoom($body, 'comment.body');
+        $room = checkEditorTextRoom($body, 'comment.body') ?: $this->checkAttachNames($mod, $id, $body, '');
         if ($room !== '') return ['id' => 0, 'name' => $name, 'new' => false, 'error' => $room];
         if (is_user()) {
             $uid = intval($user[0]);
@@ -539,7 +539,8 @@ class Comment {
         if (!$head) return $out;
         if (!$head['allow']) return ['code' => 'denied'] + $out;
         $text = $this->filterCommentBody($body, $this->getLinkFlag($head['mod']));
-        $stop = $this->checkRules($head['mod'], $body, '', '', false) ?: array_filter([checkEditorTextRoom($text, 'comment.body')]);
+        $stop = $this->checkRules($head['mod'], $body, '', '', false)
+            ?: array_filter([checkEditorTextRoom($text, 'comment.body'), $this->checkAttachNames($head['mod'], $head['cid'], $text, $head['body'])]);
         if ($stop) return ['code' => 'rules', 'error' => array_values($stop)] + $out;
         $own = $this->setWriteBegin();
         if ($own !== null && $own !== '') return ['code' => $own] + $out;
@@ -698,13 +699,14 @@ class Comment {
 
     # Store the body a moderator typed in the moderation form, exactly as it arrived, because that form is not the author edit path and applies neither its rules nor its window
     # The trusted tags are the one exception: the moderation form reads its field raw, and a comment must not carry them whoever typed it
-    # The room the column has is the other one, and it refuses rather than saves, because a moderator editing a body is no reason for the database to answer ERROR 1406
+    # The room the column has and the files a new [attach] may name are the others; they refuse rather than save, as a moderator edit is no reason for ERROR 1406 or a foreign file
     # It answers the refusal and not a flag, because a moderation form that reports success on a body it did not store is worse than one that reports nothing at all
     # The update runs as a write of its own, like the author edit: it moves no counter and locks only its own row, so no material lock
     public function updateBody(int $id, string $body): string {
         if ($id < 1) return (string)_ERROR;
+        $head = $this->getEditSource($id);
         $body = filterTrustedTags($body);
-        $room = checkEditorTextRoom($body, 'comment.body');
+        $room = checkEditorTextRoom($body, 'comment.body') ?: ($head ? $this->checkAttachNames($head['mod'], $head['cid'], $body, $head['body']) : '');
         if ($room !== '') return $room;
         $own = $this->setWriteBegin();
         if ($own !== null && $own !== '') return (string)_ERROR;
@@ -731,6 +733,20 @@ class Comment {
         if (!is_moder($mod) && (($this->conf['link'] == 1 && !is_user()) || $this->conf['link'] == 2) && stripos($body, 'http://') !== false) $stop[] = _CERROR9;
         if ($isnew && checkCaptcha('comment')) $stop[] = _SECCODEINCOR;
         return $stop;
+    }
+
+    # Answer the refusal of the first new [attach] name the writer may not bind: one the same target does not serve yet, a published comment of it or for Node its material
+    private function checkAttachNames(string $mod, int $cid, string $body, string $old): string {
+        $fresh = array_values(array_diff($this->prs->getAttachList($body), ($old !== '') ? $this->prs->getAttachList($old) : []));
+        if (!$fresh) return '';
+        $seen = [];
+        $type = $this->checkNodeKind($mod) ? $this->getNodeReader()->getNodeType($mod) : null;
+        if ($type !== null) {
+            foreach ($fresh as $name) if ($this->getNodeWriter()->getNodeFile($type, $cid, $name, false, $this) !== '') $seen[] = $name;
+        } else {
+            foreach ($this->getAttachTexts($mod, $cid, false) as $text) $seen = array_merge($seen, $this->prs->getAttachList($text));
+        }
+        return checkUploadNames(getCommentPlace($mod), $fresh, $seen);
     }
 
     # Award the author of a comment the first time it is visible, or compensate that award once when the comment is removed; hiding a comment moves no points
