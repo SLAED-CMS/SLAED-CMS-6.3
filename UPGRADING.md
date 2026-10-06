@@ -112,7 +112,7 @@ README.md, "Document Root and Web Server". The installer records the mode it fou
 `config/global.php`.
 
 No upload lies in the document root. An address `uploads/<folder>/<name>` reaches `index.php`, whose light path
-serves a file of a public folder (avatars, `presentation`, `all` and `archive`) before the core boots and
+serves a file of a public folder (avatars, `presentation` and `all`) before the core boots and
 answers 410 for every other folder and every missing file; the files of a Node type leave only through `go=file` and
 `op=asset`, the files of the forum only through `go=file` to a reader of the post that names them, the files of
 `uploads/account/` only to the two sides of the private message that names them and to a moderator of `account`, and
@@ -121,7 +121,11 @@ poll or profile while the comment is published, and to a moderator of `voting` o
 comment, Node included, names an own upload or a file the same target already serves; any other is refused.
 `update.php` turns a direct address of a file `uploads/forum/` holds in a post, and of a file `uploads/account/` holds
 in a private message, into an `[attach]` of the same name; an address the folder does not hold, and an image inside a
-link to another site, stay as written and answer 410.
+link to another site, stay as written and answer 410. Once the old modules are carried into Node, `update.php` points a
+direct address any text keeps into the 6.2 folder of a type it does not belong to (`uploads/news/`, `uploads/files/`
+and the others) at the `go=file` address of a published material of that type whose text or published comment names
+the file, so the reader of that material receives it; a name no material carries keeps its address and answers 410,
+and a quoted example inside `[code]` stays as written.
 
 `uploads/account/` holds the files of the private messages alone. The signature, the own block and the comments on a
 profile upload into `uploads/profile/`; a signature is served from there to whoever may open the profile, an own

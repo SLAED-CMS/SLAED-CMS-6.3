@@ -12,7 +12,7 @@ if (!defined('UPLOADS_DIR')) define('UPLOADS_DIR', BASE_DIR.'/uploads');
 # The upload folders the light path serves at their direct address uploads/<folder>/<name>; any other folder below UPLOADS_DIR is read only through the route of its owner
 # Closing an owner takes its folder off this list and moves no file, and getUploadUrl() asks the same list, so an address the site prints and its delivery never disagree
 function getUploadPublic(): array {
-    return ['all', 'archive', 'avatars', 'presentation'];
+    return ['all', 'avatars', 'presentation'];
 }
 
 # Return the address uploads/<path> of a path relative to UPLOADS_DIR when its first folder is on the public list of the light path, and an empty string for any other

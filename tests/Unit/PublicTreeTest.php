@@ -21,8 +21,8 @@ final class PublicTreeTest extends TestCase
         self::$work = str_replace('\\', '/', sys_get_temp_dir()).'/slaed_public_tree';
         self::deleteTree(self::$work);
         self::$png = (string)base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==');
-        foreach (['uploads/presentation/thumb', 'uploads/all', 'uploads/node/news', 'uploads/media'] as $dir) mkdir(self::$work.'/'.$dir, 0777, true);
-        foreach (['presentation/shot.png', 'presentation/thumb/shot.png', 'node/news/shot.png', 'media/shot.png'] as $one) {
+        foreach (['uploads/presentation/thumb', 'uploads/all', 'uploads/node/news', 'uploads/media', 'uploads/archive/news'] as $dir) mkdir(self::$work.'/'.$dir, 0777, true);
+        foreach (['presentation/shot.png', 'presentation/thumb/shot.png', 'node/news/shot.png', 'media/shot.png', 'archive/news/shot.png'] as $one) {
             file_put_contents(self::$work.'/uploads/'.$one, self::$png);
         }
         file_put_contents(self::$work.'/uploads/all/logo.svg', '<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>');
@@ -132,8 +132,9 @@ final class PublicTreeTest extends TestCase
     #[Test]
     public function theLightPathRefusesAnythingButAPublicFile(): void
     {
-        $list = ['/uploads/node/news/shot.png', '/uploads/media/shot.png', '/uploads/presentation/../../secret.txt', '/uploads/presentation/%2e%2e/%2e%2e/secret.txt',
-            '/uploads/presentation/..%2f..%2fsecret.txt', '/uploads/presentation/.hidden', '/uploads/presentation/none.png', '/uploads/presentation', '/uploads/'];
+        $list = ['/uploads/node/news/shot.png', '/uploads/media/shot.png', '/uploads/archive/news/shot.png', '/uploads/presentation/../../secret.txt',
+            '/uploads/presentation/%2e%2e/%2e%2e/secret.txt', '/uploads/presentation/..%2f..%2fsecret.txt', '/uploads/presentation/.hidden', '/uploads/presentation/none.png',
+            '/uploads/presentation', '/uploads/'];
         foreach ($list as $path) {
             $one = $this->getReply($path);
             $this->assertSame(410, $one['status'], $path.' was not refused as gone');
@@ -182,7 +183,7 @@ final class PublicTreeTest extends TestCase
     public function onlyAPublicFolderHasAnAddress(): void
     {
         foreach (getUploadPublic() as $dir) $this->assertSame('uploads/'.$dir.'/a.png', getUploadUrl($dir.'/a.png'), $dir.' has no address');
-        $shut = ['node/news/a.png', 'forum/a.png', 'account/a.png', 'profile/a.png', 'voting/a.png', 'media/a.png', 'a.png', '', '../config/db.php'];
+        $shut = ['node/news/a.png', 'forum/a.png', 'account/a.png', 'profile/a.png', 'voting/a.png', 'archive/news/a.png', 'media/a.png', 'a.png', '', '../config/db.php'];
         foreach ($shut as $path) $this->assertSame('', getUploadUrl($path), $path.' has an address');
         $this->assertSame('uploads/all/thumb/a.png', getUploadUrl('/all\\thumb/a.png'), 'A path is not normalized before the list decides');
     }

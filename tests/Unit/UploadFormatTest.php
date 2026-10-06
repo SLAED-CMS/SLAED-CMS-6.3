@@ -217,7 +217,7 @@ final class UploadFormatTest extends TestCase
         $this->assertStringContainsString('style="max-width:500px"', $runs['image'], 'The image family did not receive the configured thumbnail width');
         $this->assertStringContainsString('<audio controls preload="metadata"', $runs['audio'], 'The audio family is not rendered through <audio>');
         $this->assertStringContainsString('width="100" height="80"', $runs['video'], 'The video family did not receive the dimensions of the tag');
-        $this->assertStringContainsString('<a href="uploads/archive/render.pdf">Render</a></object>', $runs['document'], 'The document family lost its link fallback');
+        $this->assertStringContainsString('<a href="uploads/presentation/render.pdf">Render</a></object>', $runs['document'], 'The document family lost its link fallback');
         $this->assertStringContainsString('rel="noopener"', $runs['archive'], 'The archive family lost its link hardening');
     }
 }

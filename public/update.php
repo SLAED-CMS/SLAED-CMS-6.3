@@ -248,6 +248,30 @@ function getMigrateAttach(string $text, string $dir, int $nid, Closure $have): s
         }, $blk[0]) ?? $blk[0];
     }, $text) ?? $text;
 }
+
+# Rewrite direct addresses of files in uploads/$dir, the 6.2 folder of a type the text does not own, into the file address of the material $find answers for the name
+# A quoted example inside [code] or [php] stays, and a name $find answers 0 for keeps its address, which answers 410
+function getMigrateForeign(string $text, string $dir, Closure $find): string {
+    global $conf;
+    if (stripos($text, 'uploads/'.$dir.'/') === false) return $text;
+    $host = preg_quote((string)preg_replace('#^www\.#i', '', (string)parse_url((string)($conf['homeurl'] ?? ''), PHP_URL_HOST)), '#');
+    $addr = '(?<![A-Za-z0-9_./:%-])(?:\./|/|https?://(?:www\.)?'.$host.'/)?uploads/'.preg_quote($dir, '#').'/([A-Za-z0-9_./%-]+)';
+    $keep = [];
+    $text = preg_replace_callback('#\[(code|php)\b[^\]]*\].*?\[/\1\]#si', function (array $m) use (&$keep): string {
+        $keep[] = $m[0];
+        return "\x01".(count($keep) - 1)."\x01";
+    }, $text) ?? $text;
+    $text = preg_replace_callback('#'.$addr.'#i', function (array $m) use ($find): string {
+        $rel = rawurldecode($m[1]);
+        $thumb = str_starts_with($rel, 'thumb/');
+        $name = $thumb ? substr($rel, 6) : $rel;
+        $nid = (preg_match('/^[A-Za-z0-9_\-. ]+$/D', $name) && trim($name, '. ') !== '') ? $find($name) : 0;
+        return ($nid > 0) ? './index.php?go=file&own=node&id='.$nid.'&key='.rawurlencode($name).($thumb ? '&thumb=1' : '') : $m[0];
+    }, $text) ?? $text;
+    for ($i = count($keep) - 1; $i >= 0; $i--) $text = str_replace("\x01".$i."\x01", $keep[$i], $text);
+    return $text;
+}
+
 # Wrap every block of raw HTML the conversion does not know - tables, divisions, frames, objects, forms, scripts and styles - into a [usehtml] block on its own lines
 # A block is taken up to its balanced closing tag, an unclosed one up to the end of the text; each wrapped block leaves a marker the caller restores last
 function getMigrateBlocks(string $text, array &$keep): string {
@@ -646,6 +670,68 @@ function setMigrateData(string $mod, array $one, array &$state): void {
     setMigrateState($state);
 }
 
+# Point the direct addresses a text keeps into the 6.2 folder of a type it does not belong to at a published material of that type which carries the name
+# It runs on every run after the data step, so a type that was blocked before is served once its materials exist; a converted address no longer matches
+function setMigrateForeign(array &$state): void {
+    $prs = new Parser();
+    $cols = ['nodes' => ['intro', 'body'], 'comment' => ['body'], 'forum' => ['body'], 'privat' => ['body'], 'message' => ['body'], 'newsletter' => ['body'],
+        'blocks' => ['content'], 'users' => ['sig', 'block'], 'voting' => ['body']];
+    $live = NodeStatus::Published->value;
+    foreach (getMigrateMap() as $mod => $item) {
+        $type = getMigrateType($item['type']);
+        if ($type === null) continue;
+        $memo = [];
+        $find = function (string $name) use ($type, $prs, $live, &$memo): int {
+            if (isset($memo[$name])) return $memo[$name];
+            $like = '%'.$name.'%';
+            $sql = 'SELECT id, intro, body FROM '.PREFIX_DB.'_nodes WHERE tid = :tid AND status = :live AND (intro LIKE :one OR body LIKE :two) ORDER BY id';
+            foreach (getMigrateQuery($sql, ['tid' => $type->id, 'live' => $live, 'one' => $like, 'two' => $like])->fetchAll(PDO::FETCH_ASSOC) as $row) {
+                $text = $row['intro']."\n".$row['body'];
+                $mark = '#index\.php\?go=file&(?:amp;)?own=node&(?:amp;)?id='.$row['id'].'&(?:amp;)?key='.preg_quote(rawurlencode($name), '#').'(?![A-Za-z0-9_.%-])#';
+                $html = preg_match_all('#\[usehtml\](.*?)\[/usehtml\]#si', $text, $blks) ? implode("\n", $blks[1]) : '';
+                if (in_array($name, $prs->getAttachList($text), true) || preg_match($mark, $html)) return $memo[$name] = intval($row['id']);
+            }
+            $sql = 'SELECT c.cid, c.body FROM '.PREFIX_DB.'_comment AS c INNER JOIN '.PREFIX_DB.'_nodes AS n ON n.id = c.cid AND n.tid = :tid AND n.status = :live'
+                .' WHERE c.modul = :mod AND c.status = :stat AND c.deleted IS NULL AND c.body LIKE :like ORDER BY c.id';
+            $pars = ['tid' => $type->id, 'live' => $live, 'mod' => $type->name, 'stat' => CommentStatus::Published->value, 'like' => $like];
+            foreach (getMigrateQuery($sql, $pars)->fetchAll(PDO::FETCH_ASSOC) as $row) {
+                if (in_array($name, $prs->getAttachList($row['body']), true)) return $memo[$name] = intval($row['cid']);
+            }
+            return $memo[$name] = 0;
+        };
+        $num = 0;
+        $self = ['nodes' => ['tid', $type->id], 'comment' => ['modul', $type->name]];
+        foreach ($cols as $tab => $list) {
+            $pars = [];
+            foreach (array_keys($list) as $i) $pars['l'.$i] = '%uploads/'.$mod.'/%';
+            $where = '('.implode(' OR ', array_map(fn(string $v, string $k): string => '`'.$v.'` LIKE :'.$k, $list, array_keys($pars))).')';
+            if (isset($self[$tab])) {
+                $where .= ' AND `'.$self[$tab][0].'` <> :own';
+                $pars['own'] = $self[$tab][1];
+            }
+            foreach (getMigrateQuery('SELECT id, `'.implode('`, `', $list).'` FROM '.PREFIX_DB.'_'.$tab.' WHERE '.$where, $pars)->fetchAll(PDO::FETCH_ASSOC) as $row) {
+                $sets = [];
+                $vals = ['id' => $row['id']];
+                foreach ($list as $i => $col) {
+                    $text = getMigrateForeign((string)$row[$col], $mod, $find);
+                    if ($text === (string)$row[$col]) continue;
+                    if (strlen($text) > getEditorRoomData($tab.'.'.$col)['bytes']) {
+                        addMigrateNote($state, $mod, $tab.' #'.$row['id'].': the rewritten '.$col.' would not fit its column, it keeps the old addresses');
+                        continue;
+                    }
+                    $sets[] = '`'.$col.'` = :v'.$i;
+                    $vals['v'.$i] = $text;
+                }
+                if (!$sets) continue;
+                getMigrateQuery('UPDATE '.PREFIX_DB.'_'.$tab.' SET '.implode(', ', $sets).' WHERE id = :id', $vals);
+                $num++;
+            }
+        }
+        if ($num > 0) addMigrateNote($state, $mod, $num.' texts reach a file of uploads/'.$mod.' through the material that carries it');
+    }
+    setMigrateState($state);
+}
+
 # Switch on every type the migration created or switched off; a refusal, for example a web server that serves the upload directory, is noted and leaves the type off
 function setMigrateActive(array &$state): void {
     foreach (array_keys($state['active']) as $name) {
@@ -675,7 +761,7 @@ function setMigrateCounter(array $plan, array &$state): void {
     setMigrateState($state);
 }
 
-# Run every step that is not done yet in the fixed order - stash, types, id counter, data, activation - and answer the text that stopped the run
+# Run every step that is not done yet in the fixed order - stash, types, id counter, data, foreign addresses, activation - and answer the text that stopped the run
 # The map of the old addresses needs its table, which the first stage of this file creates, so a schema without it stops the run before the first write
 function setMigrateRun(): string {
     $state = getMigrateState();
@@ -689,6 +775,7 @@ function setMigrateRun(): string {
         foreach ($todo as $mod => $one) if (empty($state['types'][$mod])) setMigrateType($mod, $one, $state);
         setMigrateCounter($plan, $state);
         foreach ($todo as $mod => $one) setMigrateData($mod, $one, $state);
+        setMigrateForeign($state);
         setMigrateActive($state);
     } catch (Throwable $err) {
         Logger::addSite('error', 'Node: the migration of the old modules stopped', ['error' => $err->getMessage()]);

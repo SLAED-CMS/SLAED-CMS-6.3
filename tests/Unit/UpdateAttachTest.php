@@ -18,12 +18,12 @@ final class UpdateAttachTest extends TestCase
         return self::$code !== '' ? self::$code : self::$code = (string)file_get_contents(dirname(__DIR__, 2).'/public/update.php');
     }
 
-    # Load getMigrateAttach() alone from update.php, whose top level runs the update, by cutting the function out of its tokens
-    private static function getAttach(): void
+    # Load one function alone from update.php, whose top level runs the update, by cutting it out of its tokens
+    private static function getFunc(string $name): void
     {
-        if (function_exists('getMigrateAttach')) return;
+        if (function_exists($name)) return;
         $code = self::getCode();
-        $from = strpos($code, 'function getMigrateAttach(');
+        $from = strpos($code, 'function '.$name.'(');
         $tokens = token_get_all('<?php '.substr($code, (int)$from));
         $text = '';
         $depth = 0;
@@ -42,7 +42,7 @@ final class UpdateAttachTest extends TestCase
     # Convert one text of the 6.2 module news, whose folder holds every name but missing.png
     private function getText(string $text, int $nid = 0, string $dir = 'news'): string
     {
-        self::getAttach();
+        self::getFunc('getMigrateAttach');
         $had = array_key_exists('conf', $GLOBALS) && is_array($GLOBALS['conf']) && array_key_exists('homeurl', $GLOBALS['conf']);
         $was = $had ? $GLOBALS['conf']['homeurl'] : null;
         $GLOBALS['conf']['homeurl'] = 'https://slaed.net';
@@ -122,6 +122,44 @@ final class UpdateAttachTest extends TestCase
         $this->assertSame($want, $this->getText($raw, 7));
         $this->assertSame($raw, $this->getText($raw), 'Without a material the raw HTML was rewritten');
         $this->assertSame('<img src="./uploads/news/check.gif">', $this->getText('<img src="./uploads/news/check.gif">', 7), 'A source outside [usehtml] was rewritten');
+    }
+
+    # An address into the 6.2 folder of another type points at the material that carries the name, its thumb at the thumb; a name no material carries keeps its address
+    # A quoted example, another host and an address that only ends in the folder path stay, and so does a name outside the attachment grammar
+    #[Test]
+    public function aFileOfAnotherOwnerLeavesThroughItsMaterial(): void
+    {
+        self::getFunc('getMigrateForeign');
+        $had = array_key_exists('conf', $GLOBALS) && is_array($GLOBALS['conf']) && array_key_exists('homeurl', $GLOBALS['conf']);
+        $was = $had ? $GLOBALS['conf']['homeurl'] : null;
+        $GLOBALS['conf']['homeurl'] = 'https://slaed.net';
+        $find = fn(string $name): int => ['a-1.jpg' => 4919, 'b c.png' => 3891][$name] ?? 0;
+        $form = fn(string $text): string => \getMigrateForeign($text, 'files', $find);
+        try {
+            $cases = [
+                '[img=center alt=T]http://www.slaed.net/uploads/files/a-1.jpg[/img]' => '[img=center alt=T]./index.php?go=file&own=node&id=4919&key=a-1.jpg[/img]',
+                '[url=./uploads/files/a-1.jpg][img]/uploads/files/thumb/a-1.jpg[/img][/url]'
+                    => '[url=./index.php?go=file&own=node&id=4919&key=a-1.jpg][img]./index.php?go=file&own=node&id=4919&key=a-1.jpg&thumb=1[/img][/url]',
+                '![Shot](uploads/files/b%20c.png)' => '![Shot](./index.php?go=file&own=node&id=3891&key=b%20c.png)',
+                '[usehtml]<img src=&#034;./uploads/files/a-1.jpg&#034;>[/usehtml]' => '[usehtml]<img src=&#034;./index.php?go=file&own=node&id=4919&key=a-1.jpg&#034;>[/usehtml]',
+            ];
+            foreach ($cases as $from => $want) $this->assertSame($want, $form($from), 'The address '.$from.' did not reach its material');
+            $keep = [
+                '[img]./uploads/files/orphan.jpg[/img]',
+                '[code][img]./uploads/files/a-1.jpg[/img][/code]',
+                '[img]https://other.net/uploads/files/a-1.jpg[/img]',
+                '[img]./myuploads/files/a-1.jpg[/img]',
+                '[img]./uploads/files/x%28y%29.jpg[/img]',
+                '[img]./uploads/news/a-1.jpg[/img]',
+            ];
+            foreach ($keep as $text) $this->assertSame($text, $form($text), 'The address '.$text.' was rewritten');
+            $mix = '[code]uploads/files/a-1.jpg[/code] [img]uploads/files/a-1.jpg[/img]';
+            $this->assertSame('[code]uploads/files/a-1.jpg[/code] [img]./index.php?go=file&own=node&id=4919&key=a-1.jpg[/img]', $form($mix),
+                'A quoted example was rewritten or not restored');
+        } finally {
+            if ($had) $GLOBALS['conf']['homeurl'] = $was;
+            else unset($GLOBALS['conf']['homeurl']);
+        }
     }
 
     # update.php moves, copies and renames no upload: the working copy of the files, the archive, the outer addresses and the renamed attachment names are gone

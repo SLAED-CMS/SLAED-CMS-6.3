@@ -16,7 +16,7 @@ require_once BASE_DIR.'/core/system.php';
 if (!class_exists('Parser')) require_once BASE_DIR.'/core/classes/parser.php';
 
 # The upload directory this probe owns, a public folder with an address of its own; it has no record in config/uploads.php, so the thumbnail width falls back to the general setting
-const RENDMOD = 'archive';
+const RENDMOD = 'presentation';
 
 # One attachment per render family, each with the file name the tag points at
 function getProbeCases(): array {
