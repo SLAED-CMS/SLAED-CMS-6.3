@@ -3,8 +3,14 @@
 Work plan for the browser cache of static assets: the browser keeps the styles, scripts, fonts and images of a
 site for as long as they stay the same, and a changed file reaches every visitor on the next page.
 
-Status: batch 0 done (2026-10-07): the inventory and the baseline stand below; no code changed yet. The order of the
-batches is kept in `docs/ROADMAP-2026.md`. Batch 2 writes into the `public/.htaccess` and the `nginx.conf.example` of
+Status: batch 0 done (2026-10-07): the inventory and the baseline stand below. Batch 1 done (2026-10-07): every
+printer of the inventory goes through `Template::getAssetUrl()`, which reads the version from
+`$conf['derived']['version']`, the map `Template::getAssetVersions()` builds of every CSS and JS file below
+`templates/` and `plugins/` with `config/local.php` (`cache_version` 5); `getAssetList()` stays a list of plain
+addresses, so the theme lists and the editor, parser, captcha and module files share one map. `dev_mode`, `setup.php`
+and `update.php` hash per request; `doCss()` and `doScript()` stat no file; the robots screen lost its second tag of
+`editor-robots.js`; tests in `tests/Unit/AssetVersionTest.php` with the probe `tests/Support/asset_probe.php`. The
+order of the batches is kept in `docs/ROADMAP-2026.md`. Batch 2 writes into the `public/.htaccess` and the `nginx.conf.example` of
 0-PRIVATE-DATA-2026.md, so it lands after batches 2 and 4 of that plan. Update this line as batches land.
 
 No line numbers anywhere in this document on purpose: every reference names the function, the file or the constant

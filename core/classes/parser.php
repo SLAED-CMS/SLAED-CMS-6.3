@@ -502,8 +502,8 @@ class Parser {
         } else {
             $scripts = '';
             if ($sname !== 'hljs') {
-                $scripts = $this->getPartHtml('head-script-src', ['src' => 'plugins/highlightjs/highlight.min.js', 'attr' => ''])
-                    .$this->getPartHtml('head-script-src', ['src' => 'plugins/highlightjs/highlight-line-numbers.min.js', 'attr' => ''])
+                $scripts = $this->getPartHtml('head-script-src', ['src' => Template::getAssetUrl('plugins/highlightjs/highlight.min.js'), 'attr' => ''])
+                    .$this->getPartHtml('head-script-src', ['src' => Template::getAssetUrl('plugins/highlightjs/highlight-line-numbers.min.js'), 'attr' => ''])
                     .$this->getPartHtml('head-script-inline', ['js' => 'hljs.highlightAll();hljs.initLineNumbersOnLoad();']);
                 $sname = 'hljs';
             }

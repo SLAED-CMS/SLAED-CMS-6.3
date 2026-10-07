@@ -41,7 +41,7 @@ class AltchaCaptchaProvider implements CaptchaProvider {
         $url = 'index.php?go=captcha&act='.rawurlencode($act);
         return $tpl->getHtmlFrag('captcha-altcha', [
             'script_attr'   => 'type="module"',
-            'script_src'    => 'plugins/altcha/altcha-init.js',
+            'script_src'    => Template::getAssetUrl('plugins/altcha/altcha-init.js'),
             'challenge'     => $url,
             'field_name'    => self::FIELD,
             'lang_code'     => (string)($locale ?: ($conf['language'] ?? 'en')),

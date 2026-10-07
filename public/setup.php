@@ -606,7 +606,7 @@ function getSetupLinks(): string {
     $list = glob($base.'*.css') ?: [];
     foreach (glob($base.'assets/vendor/*/', GLOB_ONLYDIR) ?: [] as $sub) $list = array_merge($list, glob($sub.'*.css') ?: [], glob($sub.'*/*.css') ?: []);
     foreach (array_merge($list, glob($base.'assets/css/*.css') ?: []) as $file) {
-        $out[] = $tpl->getHtmlFrag('head-link', ['rel' => 'stylesheet', 'href' => substr($file, strlen(PUBLIC_DIR) + 1), 'type' => '', 'title' => '']);
+        $out[] = $tpl->getHtmlFrag('head-link', ['rel' => 'stylesheet', 'href' => Template::getAssetUrl(substr($file, strlen(PUBLIC_DIR) + 1)), 'type' => '', 'title' => '']);
     }
     return implode("\n", $out);
 }
@@ -620,7 +620,7 @@ function setSetupPage(int $stop, array $view): void {
     foreach ($names as $i => $name) $road[] = ['title' => $name, 'is_done' => $stop >= 0 && $i < $stop, 'is_current' => $i === $stop];
     $hide = [['name_attr' => 'token', 'value_attr' => getSetupState()['token']], ['name_attr' => 'stop', 'value_attr' => (string)$stop]];
     $meta = $tpl->getHtmlFrag('head-title', ['title' => _SETUP_TITLE])."\n".$tpl->getHtmlFrag('head-meta', ['name' => 'robots', 'content' => 'noindex, nofollow']);
-    $script = $tpl->getHtmlFrag('head-script-src', ['src' => 'templates/admin/assets/js/admin-ui.js', 'attr' => 'defer']);
+    $script = $tpl->getHtmlFrag('head-script-src', ['src' => Template::getAssetUrl('templates/admin/assets/js/admin-ui.js'), 'attr' => 'defer']);
     $logo = 'templates/admin/images/logos/'.basename((string)($conf['admin_logo'] ?? ''));
     if (!is_file(PUBLIC_DIR.'/'.$logo)) $logo = 'templates/admin/images/logos/slaed-logo-wordmark-gradient-blue.svg';
     $link = $tpl->getHtmlFrag('link', ['href' => 'https://slaed.net', 'title' => 'SLAED CMS', 'label' => 'SLAED CMS', 'is_blank' => true]);

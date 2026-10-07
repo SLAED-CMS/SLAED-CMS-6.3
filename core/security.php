@@ -443,7 +443,7 @@ function setExit(string $msg, string $typ = '', string $title = ''): never {
         $linksrc[] = $tpl->getHtmlFrag('head-link', ['rel' => 'shortcut icon', 'href' => $favicon, 'type' => 'image/svg+xml', 'title' => '']);
     }
     foreach (getThemeAssets($theme, 'css') as $asset) {
-        $linksrc[] = $tpl->getHtmlFrag('head-link', ['rel' => 'stylesheet', 'href' => $asset, 'type' => '', 'title' => '']);
+        $linksrc[] = $tpl->getHtmlFrag('head-link', ['rel' => 'stylesheet', 'href' => Template::getAssetUrl($asset), 'type' => '', 'title' => '']);
     }
     $links = implode("\n", $linksrc);
     die($tpl->getHtmlPage('message', [

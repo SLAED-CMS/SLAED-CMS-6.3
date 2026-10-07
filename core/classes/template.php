@@ -623,8 +623,32 @@ class Template {
 
     # Render the tag around one companion asset through the head fragments the theme owns, taken by getHtml so the assets of the current render are neither reset nor re-emitted
     protected function getAssetTag(string $kind, string $path): string {
+        $path = self::getAssetUrl($path);
         if ($kind === 'css') return $this->getHtml('fragments', 'head-link', ['rel' => 'stylesheet', 'href' => $path, 'type' => '', 'title' => '']);
         return $this->getHtml('fragments', 'head-script-src', ['src' => $path, 'attr' => 'defer']);
+    }
+
+    # An asset address with the version of its content from the derived map; dev_mode and a run without the map hash the file per request, an unknown file stays plain
+    public static function getAssetUrl(string $file): string {
+        global $conf;
+        $map = $conf['derived']['version'] ?? null;
+        if (empty($conf['dev_mode']) && is_array($map)) $ver = $map[$file] ?? '';
+        else $ver = is_file(PUBLIC_DIR.'/'.$file) ? substr(sha1_file(PUBLIC_DIR.'/'.$file), 0, 10) : '';
+        return ($ver !== '') ? $file.'?v='.$ver : $file;
+    }
+
+    # The derived map of every stylesheet and script below templates/ and plugins/ to the first ten hex characters of its SHA-1
+    public static function getAssetVersions(): array {
+        $out = [];
+        foreach (['templates', 'plugins'] as $dir) {
+            if (!is_dir(PUBLIC_DIR.'/'.$dir)) continue;
+            foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator(PUBLIC_DIR.'/'.$dir, FilesystemIterator::SKIP_DOTS)) as $file) {
+                if (!in_array(strtolower($file->getExtension()), ['css', 'js'], true)) continue;
+                $out[str_replace('\\', '/', substr($file->getPathname(), strlen(PUBLIC_DIR) + 1))] = substr(sha1_file($file->getPathname()), 0, 10);
+            }
+        }
+        ksort($out);
+        return $out;
     }
 
     # Render collected asset tags for fallback standalone output

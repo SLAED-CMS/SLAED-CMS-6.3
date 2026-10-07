@@ -1896,7 +1896,7 @@ function getUpdateLinks(Template $tpl): string {
     $list = glob($base.'*.css') ?: [];
     foreach (glob($base.'assets/vendor/*/', GLOB_ONLYDIR) ?: [] as $sub) $list = array_merge($list, glob($sub.'*.css') ?: [], glob($sub.'*/*.css') ?: []);
     foreach (array_merge($list, glob($base.'assets/css/*.css') ?: []) as $file) {
-        $out[] = $tpl->getHtmlFrag('head-link', ['rel' => 'stylesheet', 'href' => substr($file, strlen(PUBLIC_DIR) + 1), 'type' => '', 'title' => '']);
+        $out[] = $tpl->getHtmlFrag('head-link', ['rel' => 'stylesheet', 'href' => Template::getAssetUrl(substr($file, strlen(PUBLIC_DIR) + 1)), 'type' => '', 'title' => '']);
     }
     return implode("\n", $out);
 }

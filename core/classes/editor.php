@@ -114,9 +114,11 @@ class Editor {
     }
 
     # Emit the stylesheets and scripts of an editor: plain tags on a page load, where the parser runs them in order before the inline init of an instance
-    # A fragment answered over htmx names them to the client loader instead, which adds only what the page does not carry yet, so no engine and no listener runs twice
+    # A fragment answered over htmx names the same versioned addresses to the client loader, which adds only what the page lacks, so no engine and no listener runs twice
     public static function getAssetTags(array $css, array $js): string {
         global $tpl;
+        $css = array_map(Template::getAssetUrl(...), $css);
+        $js = array_map(Template::getAssetUrl(...), $js);
         if (($_SERVER['HTTP_HX_REQUEST'] ?? '') === 'true') {
             $list = json_encode([$css, $js], JSON_UNESCAPED_SLASHES | JSON_HEX_TAG);
             return $tpl->getHtmlFrag('head-script-inline', ['js' => 'if(window.SlaedEditors){window.SlaedEditors.load.apply(null,'.$list.');}']);

@@ -37,8 +37,8 @@ require_once BASE_DIR.'/core/stream.php';
 if (!defined('NODE_DIR')) define('NODE_DIR', UPLOADS_DIR.'/node');
 
 # Load the runtime config from cache, rebuilding it from source if needed
-# The rebuild also stores derived data (asset manifests per theme, parsed SEO graph/schema, logo sizes) under $conf['derived']
-# Theme asset or logo changes therefore need a config rebuild (admin save or deleting config/local.php) to take effect
+# The rebuild also stores derived data (asset manifests per theme, asset versions, parsed SEO graph/schema, logo sizes) under $conf['derived']
+# Theme asset, plugin asset or logo changes therefore need a config rebuild (admin save or deleting config/local.php) to take effect
 # A hit on local.php costs no lock and reads no journal; the rebuild runs under the shared configuration lock and looks at local.php again, as the awaited writer has published it
 # An unfinished operation forbids a rebuild from half replaced sources: the snapshot is assembled in memory with the touched files read from the journal, and nothing is published
 # A journal that cannot be read or a snapshot that fails its hash names no side, so the sources on disk are read as they are; the marker keeps the touched Node types at 503
@@ -49,10 +49,11 @@ function getConfig(bool $fresh = false): array {
         if (!is_file($local) || !is_readable($local)) return [];
         $cache = require $local;
         $valid = is_array($cache) && isset($cache['_meta'], $cache['_config']) && is_array($cache['_meta']) && is_array($cache['_config']);
-        return ($valid && (($cache['_meta']['cache_version'] ?? 0) === 4)) ? $cache['_config'] : [];
+        return ($valid && (($cache['_meta']['cache_version'] ?? 0) === 5)) ? $cache['_config'] : [];
     };
     if (!$fresh && ($conf = $read())) return $conf;
     require_once BASE_DIR.'/core/classes/filemanager.php';
+    require_once BASE_DIR.'/core/classes/template.php';
     $lock = FileManager::getPathLock(CONFIG_DIR);
     try {
         if (!$fresh && $lock !== false && ($conf = $read())) return $conf;
@@ -78,7 +79,7 @@ function getConfig(bool $fresh = false): array {
         }
         $conf['dev_mode'] ??= false;
         unset($conf['style']);
-        $conf['derived'] = [];
+        $conf['derived'] = ['version' => Template::getAssetVersions()];
         foreach (glob(PUBLIC_DIR.'/templates/*', GLOB_ONLYDIR) ?: [] as $tdir) {
             $tname = basename($tdir);
             $conf['derived']['assets'][$tname] = ['css' => getAssetList($tname, 'css', $conf['css_f'] ?? ''), 'js' => getAssetList($tname, 'js', $conf['script_f'] ?? '')];
@@ -96,7 +97,7 @@ function getConfig(bool $fresh = false): array {
             $data = [
                 '_meta' => [
                     'base_fingerprint' => sha1($hash),
-                    'cache_version' => 4,
+                    'cache_version' => 5,
                     'generated_at' => time(),
                 ],
                 '_config' => $conf,
@@ -2739,15 +2740,13 @@ function getAssetList(string $theme, string $ext, string $list): array {
     return array_values(array_unique(array_merge($out, getThemeAssets($theme, $ext))));
 }
 
-# The script tags of the page head: the files of getAssetList() in their order, and on the site the head of config/header.php
+# The script tags of the page head: the versioned files of getAssetList() in their order, and on the site the head of config/header.php
 function doScript(): string {
     global $theme, $conf, $tpl;
     $async = ($conf['script_a']) ? 'async' : '';
     $array = $conf['derived']['assets'][$theme]['js'] ?? getAssetList($theme, 'js', $conf['script_f']);
     $arr = [];
-    foreach ($array as $file) {
-        if (file_exists(PUBLIC_DIR.'/'.$file)) $arr[] = $tpl->getHtmlFrag('head-script-src', ['src' => $file, 'attr' => $async]);
-    }
+    foreach ($array as $file) $arr[] = $tpl->getHtmlFrag('head-script-src', ['src' => Template::getAssetUrl($file), 'attr' => $async]);
     $cont = implode("\n", $arr);
     if (!defined('ADMIN_FILE') && file_exists(CONFIG_DIR.'/header.php')) {
         ob_start();
@@ -2757,14 +2756,12 @@ function doScript(): string {
     return $cont;
 }
 
-# The stylesheet links of the page head: the files of getAssetList() in their order
+# The stylesheet links of the page head: the versioned files of getAssetList() in their order
 function doCss(): string {
     global $theme, $conf, $tpl;
     $array = $conf['derived']['assets'][$theme]['css'] ?? getAssetList($theme, 'css', $conf['css_f']);
     $arr = [];
-    foreach ($array as $file) {
-        if (file_exists(PUBLIC_DIR.'/'.$file)) $arr[] = $tpl->getHtmlFrag('head-link', ['rel' => 'stylesheet', 'href' => $file, 'type' => '', 'title' => '']);
-    }
+    foreach ($array as $file) $arr[] = $tpl->getHtmlFrag('head-link', ['rel' => 'stylesheet', 'href' => Template::getAssetUrl($file), 'type' => '', 'title' => '']);
     return implode("\n", $arr);
 }
 
