@@ -1,5 +1,46 @@
 # Versions
 
+## 2026-10-07
+
+### Every uploaded file leaves through the owner of the text that names it
+
+Node closed its upload folders and served a file to the reader of its material; every other module linked its files
+directly in open folders, so an attachment of a private message or of a post in a closed forum category reached
+anyone who had its address. Every closed owner now has one route and one rights check (`docs/ARCHITECTURE.md`, "File
+Delivery Boundary").
+
+- **One route for every owner.** `index.php?go=file&own=<owner>&id=<target>&key=<name>` serves Node, the forum, the
+  private messages, the comments on polls and profiles and the texts of an account; `FileAccess` asks the adapter of
+  the owner whether the stored text carries the name and the reader may read the text. Every refusal is 404.
+- **Closed folders.** `uploads/forum/`, `uploads/account/` (private messages alone), `uploads/voting/` and the new
+  `uploads/profile/` (signature, own block, comments on a profile) answer 410 at their direct addresses, as
+  `uploads/archive/` does; `uploads/all/`, `uploads/avatars/` and `uploads/presentation/` stay public.
+- **Node under one root.** A type keeps its files in `uploads/node/<type>/` (`NODE_DIR`, `getUploadFolder()`), so a
+  type can meet only another type there.
+- **A signature renders the same everywhere,** in the file context of its account, on the forum, the profile, the
+  private message and the comments; the comments printed its stored source unparsed until now.
+- **No foreign file through a new text.** A writer binds a new `[attach]` name only when it is an own upload, the
+  writer moderates the folder, or the same target already serves the name; a refusal names the file.
+- **The rule governs the upload.** The extensions of an upload rule decide what may be uploaded, previewed and newly
+  bound; a name a stored text carries is served whatever the rule says today.
+- **Full-size attachments.** `[attach … size=full]` shows an image at its own size through the template `full` of
+  `config/filetype.php`; the insert window of the editor offers "Thumbnail" or "Full size".
+- **Unused files.** The file browser of the uploads screen filters a Node type, the forum, the private messages, the
+  profile texts, the poll comments and the avatars to the files no stored row names, older than a day; the marking
+  and the deletion of the browser remove them.
+- **The update of `slaed.net`.** `update.php` rewrites stored texts and moves, copies and renames no file: a direct
+  address of the own folder becomes an `[attach]`, a source inside `[usehtml]` the `go=file` address of its material,
+  an address into the folder of another type or of the forum the `go=file` address of a published material or post
+  that names the file. On a copy of the production dump of 2026-09-30, of the 721 file addresses of the stored texts
+  657 became attachments, 24 `go=file` addresses, 9 point into public folders, and 31 answer 410, 21 because
+  production does not hold the file and 10 by decision; the 1049 file references of the 231 pages that show them all
+  answered 200. The upload folders move after the run; the steps are in `docs/NODE.md`, "The 6.3 update".
+  `UPGRADING.md` keeps saying that the release installs a new site only.
+- **Breaking:** `op=attach` of Node is gone; `uploads/forum/`, `uploads/account/`, `uploads/voting/`,
+  `uploads/profile/` and `uploads/archive/` answer 410; `Parser::filterContent()` takes the file context `array $own`
+  in place of `int $nid`; `uploads/jokes/`, `uploads/media/`, `uploads/pages/` and `uploads/node/files/temp/` left the
+  shipped tree.
+
 ## 2026-10-05
 
 ### Every page is rendered live, and the ready-page cache leaves the system

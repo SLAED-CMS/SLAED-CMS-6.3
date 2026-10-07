@@ -28,8 +28,9 @@ remaining modules alike.
 
 `modules/node/profiles/` holds ten type profiles in the `slaed.node` export format. A clean installation
 creates ten active types from them; an updated site gets none and creates types in the admin panel, from a
-profile or from scratch. The 6.3 update imports no content of the removed modules (see UPGRADING.md); the
-separate script `update.php` carries it, see [Migration of the removed modules](#migration-of-the-removed-modules).
+profile or from scratch. The 6.3 update imports no content of the removed modules
+(see [The 6.3 update](#the-63-update)); the separate script `update.php` carries it, see
+[Migration of the removed modules](#migration-of-the-removed-modules).
 Settings of each profile are in [Shipped profiles](#shipped-profiles).
 
 | Profile | Replaces | Extension | `view.mode` | Special behaviour |
@@ -259,8 +260,9 @@ modules/node/
 ### Editor, uploads and file delivery
 
 Node has no own editor, uploader or file window. Texts use `getTplTextarea()`; texts and resources use the
-place `<name>.attach`, `Upload`, `FileManager` and `uploads/<name>`; each `getFileManagerField()` picks one
-resource. Files are delivered through `getFileStream()` and `Cache`, authorized by `NodeService::getNodeFile()`.
+place `<name>.attach`, `Upload`, `FileManager` and `uploads/node/<name>`; each `getFileManagerField()` picks one
+resource. Files are delivered through `getFileStream()` and `Cache`, authorized by `NodeService::getNodeFile()` as the
+`node` adapter of `FileAccess` (docs/ARCHITECTURE.md, "File Delivery Boundary").
 
 ### Configuration
 
@@ -1229,16 +1231,22 @@ role, fit the smaller `maxbytes`, match its kind and belong to the visitor (acco
 
 ```php
 public function getNodeFile(NodeType $type, int $id, string $key, bool $thumb, Comment $com): string
+public function getTypeFiles(NodeType $type): array
 public function updateNodeAssetHits(int $id, NodeType $type): void
 public function updateNodeAssetReport(int $id, NodeType $type): void
 public function deleteNodeAssetReport(int $id, NodeType $type, bool $useful): void
 ```
 
 - `getNodeFile()` resolves an attachment to its canonical path for `getFileStream()`, `''` for any refusal. `key`
-  is a managed basename (`FileManager::checkFileName()`, ≤ 255 bytes) with an allowed extension. With `id > 0` it
-  must occur in the text of a material the reader returns, or in a published comment of that material (any comment
-  not deleted for a moderator), read by `Comment::getAttachTexts()`; with `id = 0` (preview) it must belong to the
-  visitor unless he moderates, the visitor may write the type or upload into its area, and no SQL runs.
+  is a bare basename (≤ 255 bytes) of a type `Upload::getSupportedTypes()` knows. With `id > 0` it must occur in the
+  text of a material the reader returns — as an `[attach]` or, inside `[usehtml]`, as the `go=file` address of the
+  same material — or in a published comment of that material (any comment not deleted for a moderator), read by
+  `Comment::getAttachTexts()`; its form does not matter, and the extensions of the upload rule today do not either.
+  With `id = 0` (preview) it must be a managed name (`FileManager::checkFileName()`) with an extension of the rule
+  that belongs to the visitor unless he moderates, the visitor may write the type or upload into its area, and no
+  SQL runs.
+- `getTypeFiles()` answers every name the materials of a type, whatever their state, and their local resources
+  reference; the unused filter of the uploads screen measures the type folder against it.
 - `updateNodeAssetHits()` re-reads through `getNodeAsset()`, accepts mode `download`, or `link` with an external
   URL, and adds one hit atomically right before an allowed `GET` download or visit (`HEAD`, display and later ranges
   do not count).
@@ -3147,7 +3155,10 @@ runs and reports, then neither the schema file nor any data unit runs.
 14. `setUpdateSql($db, 'table_update6_3.sql', $prefix)`. An empty answer or a failed row stops here: no data unit
     runs, no data mark is written.
 15. Data units, each independent of the result of the previous one: `setUpdatePoints()`,
-    `setUpdateRatings()`, `setUpdateFields()`.
+    `setUpdateRatings()`, `setUpdateFields()`, then `setUpdateAttach()` over the forum posts and the private
+    messages: a direct address of a file `uploads/forum/` or `uploads/account/` holds becomes an `[attach]` of the
+    same name, because both folders are closed; an address the folder does not hold, and an image inside a link to
+    another site, stay as written and answer 410.
 16. `config/rss.php`: `temp` removed, missing `bytes` (`2097152`), `redirects` (`3`), `timeout` (`10`) added.
     Without these keys Feed refuses with code `config` before any request.
 17. RSS blocks: `UPDATE _blocks SET content = '', time = '0' WHERE url != ''` drops the cached HTML; the next
@@ -3452,10 +3463,19 @@ carry; `table_update6_3.sql` no longer renames the tables of the removed modules
 | `content` | `content` without extension | static pages; a feed address is noted, not carried |
 
 The run changes the database and nothing else: it moves, copies and renames no file. The operator runs it with the
-upload folders of the modules where 6.2 left them, and after it, before the site opens, moves them into the empty
-folders of their types as UPGRADING.md lists them (`uploads/pages/` becomes `uploads/node/docs/`). A new type refuses
-a folder that already holds a file, so a folder moved before the run stops it at the types step; the run finds a
-file in `uploads/<module>/` or, moved already for a type that exists, in the folder of the type.
+upload folders of the modules where 6.2 left them, and after it, before the site opens, moves each with its contents
+into the empty folder of its type:
+
+| From | To |
+| --- | --- |
+| `uploads/<module>/` of `news`, `faq`, `help`, `links`, `files`, `content` | `uploads/node/<module>/` |
+| `uploads/pages/` | `uploads/node/docs/` |
+
+A new type refuses a folder that already holds a file, so a folder moved before the run stops it at the types step;
+the run finds a file in `uploads/<module>/` or, moved already for a type that exists, in the folder of the type.
+`uploads/account/` keeps the files of the private messages alone: a signature, an own block or a comment on a profile
+of a 6.2 site that carries an `[attach]` of a file there needs it copied into `uploads/profile/`, and a mail text of
+the panel into `uploads/all/`; those of `slaed.net` carry none.
 
 Steps, in this order; the manifest `storage/backup/update/node/manifest.json` records each, so a stopped run
 continues where it stopped:

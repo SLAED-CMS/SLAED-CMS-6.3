@@ -547,6 +547,89 @@ reads `place`, and every endpoint URL is built server side —
 The window built on this boundary is documented in `docs/WINDOW.md`; the runtime
 that drives it in `docs/EDITORS.md`.
 
+## File Delivery Boundary
+
+Every uploaded file has one owner, and the stored text that names the file
+decides who receives it. The class `FileAccess` (`core/classes/access.php`) owns
+that decision and nothing else. Its factory `getFileService()` in
+`core/system.php` builds one adapter per owner as two closures, the way
+`getRatingService()` builds `Rating`:
+
+- **folder** — the folder of the owner relative to `UPLOADS_DIR`;
+- **grant** — whether the reader receives this name of this target, answered
+  from stored rows only, never from the request.
+
+The owners are the closed set `FileAccess::OWNERS`:
+
+| Owner | Folder | Target | Who receives a name |
+|---|---|---|---|
+| `node` | `uploads/node/<type>/` | material | the reader of the material whose text or published comment carries it (`NodeService::getNodeFile()`, `docs/NODE.md`) |
+| `forum` | `uploads/forum/` | post | a reader of the category while the post and its topic are published, a moderator of the forum every post (`checkForumFile()`) |
+| `privat` | `uploads/account/` | private message | a side that still holds the message, a moderator of `account` (`checkPrivatFile()`) |
+| `comment` | `uploads/voting/`, `uploads/profile/` | comment | a reader of its poll or profile while the comment is published, a moderator of the module (`checkCommentFile()`); a comment of a Node material takes the route of its material |
+| `profile` | `uploads/profile/` | account | the signature to whoever may open the profile, the own block to its owner alone (`checkProfileFile()`) |
+| `public` | `uploads/all/`, `uploads/avatars/`, `uploads/presentation/` | none | anyone, at the direct address |
+
+`getUploadOwner()` names the owner of an upload module, and `getCommentPlace()`
+the folder the comment form of a module uploads into: a comment on a profile
+into `uploads/profile/`, any other into the folder of its module.
+
+**The route.** One endpoint serves every closed owner:
+`index.php?go=file&own=<owner>&id=<target>&key=<name>`, with an optional
+`thumb=1`. An owner of `FileAccess::PREVIEW` also answers
+`go=file&own=<owner>&name=<module>&key=<name>&preview=1`, the visitor's own
+upload before its text is saved. `setFileRoute()` reads the exact query and
+`FileAccess::getFilePath()` adds the checks every owner shares: a bare name of
+a type `Upload::getSupportedTypes()` knows, the file inside the folder of its
+owner, a thumb only when it exists. Every refusal is the same 404, and every
+byte leaves through `getFileStream()`.
+
+**What a text carries is served.** The grant asks whether the stored text
+carries the name, whatever its form; a random part of the name protects
+nothing. The upload rule of a folder decides what may be uploaded, previewed
+and newly bound, never whether a stored name is served, so narrowing a rule
+cuts off no file uploaded under it.
+
+**Addresses.** The parser takes a file context `['<owner>', <target>]` and asks
+`FileAccess::getFileUrl()` for the address of every `[attach]`
+(`docs/PARSER.md`): a closed owner answers `go=file`, a public one the direct
+address `getUploadUrl()` builds. The parser cache never stores a text that
+carries an `[attach]`, so the address is built on every render.
+
+**Writers.** A writer binds a new `[attach]` name only when the file is the
+writer's own upload of the folder, the writer moderates the folder, or the
+same target already serves the name — a quote within a forum topic, a reply or
+a forward of a private message, a published comment of the same target. The
+checks are `NodeService::checkNodeFiles()` for a material and, over the shared
+`checkUploadNames()`, `checkForumNames()`, `checkPrivatNames()`,
+`checkProfileNames()` and `Comment::checkAttachNames()`, whose refusal names
+the file with `_FILE_FOREIGN`; the preview of these owners is
+`checkUploadPreview()`.
+
+**Closing a folder.** A folder is public when it is on `getUploadPublic()` in
+`core/stream.php`. The light path of `index.php` serves a file of such a folder
+before the core boots and answers 410 for every other folder and every missing
+file, `uploads/archive/` included. Closing an owner is one entry off that list
+and its adapter; no folder moves, and no folder carries a guard file. A new
+owner takes a value of `FileAccess::OWNERS`, an adapter in `getFileService()`,
+its upload module in `getUploadOwner()`, the file context its renderer passes,
+the check of its writers and its cases in `FileAccessTest`.
+
+**Unused files.** The file browser of the uploads screen offers "Unused: N" at
+the foot of a folder whose references it can read: a Node type, `forum`,
+`account`, `profile`, `voting` and the avatar folder. `all` and `presentation`
+are not covered: any text may address `all` directly, from a site message to a
+mail template, and `presentation` ships its files. `getAdminFileRefs()` in
+`core/admin.php` reads every stored row whatever its state with the readers of
+the route — `Parser::getAttachList()` over posts, signatures, own blocks,
+`Privat::getAttachBodies()` and `Comment::getAttachTexts()`,
+`NodeService::getTypeFiles()` for the materials and resources of a type, and
+`users.avatar` — so a draft, an unpublished post and a message one side
+deleted keep their files. `unused=1` keeps the files nothing names; a thumb
+follows its original, and a file younger than a day is left out because its
+text may not be saved yet. Nothing is deleted on its own: the marking and the
+deletion of the browser remove what the filter shows.
+
 ## Storage Boundary
 
 Runtime-generated files are stored under:

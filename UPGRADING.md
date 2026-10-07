@@ -75,26 +75,8 @@ their block `blocks/auto_links.php`, configuration files, upload directories and
 ### Node Upload Directories Under `uploads/node/`
 
 Every Node type keeps its files in `uploads/node/<type>/`; the folders of the modules (`account`, `all`, `avatars`,
-`forum`, `presentation`, `voting`) stay in `uploads/`. A site whose type folders still sit at `uploads/<type>/`
-moves each of them with its contents before the new files answer a request:
-
-| From | To |
-| --- | --- |
-| `uploads/content/` | `uploads/node/content/` |
-| `uploads/docs/` | `uploads/node/docs/` |
-| `uploads/faq/` | `uploads/node/faq/` |
-| `uploads/files/` | `uploads/node/files/` |
-| `uploads/help/` | `uploads/node/help/` |
-| `uploads/links/` | `uploads/node/links/` |
-| `uploads/news/` | `uploads/node/news/` |
-| `uploads/pages/` of the 6.2 module `pages` | `uploads/node/docs/` |
-| `uploads/<type>/` of any other type | `uploads/node/<type>/` |
-
-On a site updated from 6.2 these moves come after the migration of the removed modules in `update.php` and before
-the site opens: the migration creates each type with an empty folder and refuses one that already holds a file. It
-changes the database alone: it moves, copies and renames no file. It turns a direct address of a file of the 6.2
-folder into an `[attach]` of the type with the name unchanged, and where a resource of `files` or `links` names a path
-Node refuses it stores a safe spelling and its report names the file to rename to it.
+`forum`, `presentation`, `profile`, `voting`) stay in `uploads/`. Custom code asks `getUploadFolder()` for the folder
+of an owner instead of building `'uploads/'.$mod`.
 
 No folder of `uploads/` carries a guard file any more, and the upload service creates a missing folder of its owner
 on the first write. No stored text and no setting carries the folder: texts reach their files through `go=file`
@@ -103,8 +85,8 @@ not a path.
 
 ### The Document Root Is `public/`
 
-The browser reaches `public/` and nothing else: the entries `index.php`, `admin.php`, `setup.php` and
-`update.php`, `.htaccess`, `robots.txt`, `favicon.ico`, `error.html`, the sitemap files, `templates/`, `plugins/`,
+The browser reaches `public/` and nothing else: the entries `index.php`, `admin.php` and `setup.php`,
+`.htaccess`, `robots.txt`, `favicon.ico`, `error.html`, the sitemap files, `templates/`, `plugins/`,
 `sound/` and `demo/`. `core/`, `modules/`, `admin/` with the body of the panel, `config/`, `storage/` and the whole
 `uploads/` stay at the project level. Point the document root of the server at `public/`; where a host cannot move
 it, the `.htaccess` of the project rewrites every request into `public/` (Apache and LiteSpeed with `mod_rewrite`
@@ -119,22 +101,13 @@ answers 410 for every other folder and every missing file; the files of a Node t
 `uploads/account/` only to the two sides of the private message that names them and to a moderator of `account`, and
 the files of a comment on a poll (`uploads/voting/`) or on a profile (`uploads/profile/`) only to a reader of its
 poll or profile while the comment is published, and to a moderator of `voting` or `account`. A new `[attach]` in a
-comment, Node included, names an own upload or a file the same target already serves; any other is refused.
-`update.php` turns a direct address of a file `uploads/forum/` holds in a post, and of a file `uploads/account/` holds
-in a private message, into an `[attach]` of the same name; an address the folder does not hold, and an image inside a
-link to another site, stay as written and answer 410. Once the old modules are carried into Node, `update.php` points a
-direct address any text keeps into the 6.2 folder of a type it does not belong to (`uploads/news/`, `uploads/files/`
-and the others) at the `go=file` address of a published material of that type whose text or published comment names
-the file, so the reader of that material receives it, and a direct address of `uploads/forum/` outside the forum at
-the `go=file` address of a published post that names the file; a name nothing carries keeps its address and answers
-410, and a quoted example inside `[code]` stays as written.
+comment, Node included, names an own upload or a file the same target already serves; any other is refused. The
+owners, the route and the checks are in `docs/ARCHITECTURE.md`, "File Delivery Boundary".
 
 `uploads/account/` holds the files of the private messages alone. The signature, the own block and the comments on a
 profile upload into `uploads/profile/`; a signature is served from there to whoever may open the profile, an own
 block to its owner alone; the mail texts of the panel take their pictures from the public `uploads/all/`. The release
-added `profile` to `config/uploads.php`. A signature, an own block, a comment on a profile or a mail text of a 6.2
-site that carries an `[attach]` of a file in `uploads/account/` needs that file copied into `uploads/profile/` (a
-signature, a block or a comment) or `uploads/all/` (a mail text); those of `slaed.net` carry none. nginx reads no `.htaccess`: the release ships `nginx.conf.example`, whose
+added `profile` to `config/uploads.php`. nginx reads no `.htaccess`: the release ships `nginx.conf.example`, whose
 `server` block carries the root on `public/`, the prefix `/uploads/` for the front controller, a path after a script
 sent to that script and the refusals of `public/.htaccess`.
 

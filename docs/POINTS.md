@@ -458,7 +458,7 @@ The points unit of the 6.3 data update is `setUpdatePoints()` in `update.php`; i
 - Last, the unit writes `update.points = '6.3.0'` into `config/update.php`, which opens the class (see
   Configuration). If that write fails the subsystem stays closed.
 
-The operator procedure of the update is described in `UPGRADING.md`.
+The operator procedure of the update is described in `docs/NODE.md`, "The 6.3 update".
 
 ## Tests
 

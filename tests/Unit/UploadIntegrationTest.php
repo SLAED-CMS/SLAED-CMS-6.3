@@ -177,7 +177,7 @@ final class UploadIntegrationTest extends TestCase
         $this->assertStringEndsWith('/'.$avat['store'], $avat['path'], 'The absolute directory of users.avatar is not the relative one below the upload root');
     }
 
-    # docs/1-FILES-2026.md, Node under one root: a type keeps its files in uploads/node/<type>, and the place rule, the plain rule and the folder function agree on it
+    # A Node type keeps its files in uploads/node/<type>, and the place rule, the plain rule and the folder function agree on it
     # A type the registry does not carry yet is named through the flag, and a module keeps the folder of its own name in the upload root
     #[Test]
     public function theFolderOfATypeLiesBelowTheRootOfTheTypes(): void

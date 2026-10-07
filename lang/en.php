@@ -347,7 +347,7 @@ define('_NODE_CREATOR','Creator');
 define('_NODE_DIRECTOR','Director');
 define('_NODE_MFORMAT','Format');
 define('_NODE_MIGDONE','Done');
-define('_NODE_MIGINFO','Carries the materials of the removed modules into Node types together with their categories, comments, favorites and ratings. The old tables stay as they are, and no file is moved: move the upload folders as UPGRADING.md lists them after the run and before the site opens. Close the site and back up the database first; a stopped run continues from the step where it stopped.');
+define('_NODE_MIGINFO','Carries the materials of the removed modules into Node types together with their categories, comments, favorites and ratings. The old tables stay as they are, and no file is moved: move the upload folders as docs/NODE.md lists them after the run and before the site opens. Close the site and back up the database first; a stopped run continues from the step where it stopped.');
 define('_NODE_MIGRATE','Migration of the old modules');
 define('_NODE_MIGROWS','Materials');
 define('_NODE_MIGRUN','Start the migration');

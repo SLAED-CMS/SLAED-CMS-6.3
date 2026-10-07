@@ -347,7 +347,7 @@ define('_NODE_CREATOR','Twórca');
 define('_NODE_DIRECTOR','Reżyser');
 define('_NODE_MFORMAT','Format');
 define('_NODE_MIGDONE','Gotowe');
-define('_NODE_MIGINFO','Przenosi materiały usuniętych modułów do typów Node razem z kategoriami, komentarzami, ulubionymi i ocenami. Stare tabele pozostają bez zmian i żaden plik nie jest przenoszony: po uruchomieniu, a przed otwarciem strony przenieś katalogi przesyłanych plików tak, jak wymienia je UPGRADING.md. Najpierw zamknij stronę i wykonaj kopię zapasową bazy danych; przerwane uruchomienie jest kontynuowane od kroku, na którym się zatrzymało.');
+define('_NODE_MIGINFO','Przenosi materiały usuniętych modułów do typów Node razem z kategoriami, komentarzami, ulubionymi i ocenami. Stare tabele pozostają bez zmian i żaden plik nie jest przenoszony: po uruchomieniu, a przed otwarciem strony przenieś katalogi przesyłanych plików tak, jak wymienia je docs/NODE.md. Najpierw zamknij stronę i wykonaj kopię zapasową bazy danych; przerwane uruchomienie jest kontynuowane od kroku, na którym się zatrzymało.');
 define('_NODE_MIGRATE','Migracja starych modułów');
 define('_NODE_MIGROWS','Materiały');
 define('_NODE_MIGRUN','Uruchom migrację');
