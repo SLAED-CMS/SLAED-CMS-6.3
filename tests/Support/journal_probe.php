@@ -4,7 +4,7 @@
 # License: MIT
 # Website: slaed.net
 
-# CLI probe for batch 1 of docs/0-PRIVATE-DATA-2026.md: no secret of a request reaches a journal
+# CLI probe for the journals of docs/ARCHITECTURE.md, "Private Data Boundary": no secret of a request reaches a journal
 # It boots the real core with the configuration copied into scratch and every journal of the batch switched on there, so nothing below config/ or storage/ is written
 # The request carries a password field, a cookie and a session value, each a random string the test then looks for in every file the run left in LOGS_DIR
 # Modes: write drives both writers and the dashboard reader once; rotate fills the user login journal and warn.log past the limit and reports where the next entries went

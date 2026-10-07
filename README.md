@@ -77,9 +77,10 @@ an older release is not updated by this release, see [UPGRADING.md](UPGRADING.md
 The browser may reach the folder `public/` and nothing else. It holds the entries (`index.php`, `admin.php`,
 `setup.php`, `update.php`), `.htaccess`, `robots.txt`, `error.html`, the sitemap files, `templates/`, `plugins/` and
 `sound/`. Everything else stays outside: the code in `core/`, `modules/`, `admin/`, the settings in `config/`, the
-logs and database backups in `storage/`, and every uploaded file in `uploads/`. The public files of `uploads/`
-(avatars, the forum, `all/` and the other open folders) are still served at `/uploads/...` by `index.php`; the files
-of a content type only through their checked route.
+logs and database backups in `storage/`, and every uploaded file in `uploads/`. The files of the public folders of
+`uploads/` (avatars, `all/` and `presentation/`) are still served at `/uploads/...` by `index.php`; the files of a
+content type, the forum, the private messages, the profiles and the poll comments only through the checked route of
+the text that names them. The system job `selfcheck` proves every hour that nothing outside `public/` is reachable.
 
 The installer records the mode it found as `webroot` in `config/global.php`: `public` when the document root is
 `public/`, `project` when it is the whole project.

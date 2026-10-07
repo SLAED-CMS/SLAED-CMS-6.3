@@ -4,7 +4,7 @@
 # License: MIT
 # Website: slaed.net
 
-# CLI probe for batch 3 of docs/0-PRIVATE-DATA-2026.md: the core in scratch, the verdicts over a stubbed transport, the job without a network
+# CLI probe for the self-check of docs/ARCHITECTURE.md, "Private Data Boundary": the core in scratch, the verdicts over a stubbed transport, the job without a network
 $probework = (string)($argv[1] ?? '');
 require_once __DIR__.'/probe_boot.php';
 if (!is_dir($probework.'/config')) {

@@ -191,15 +191,21 @@ insert-options window in `driver.php`; a template-only rename breaks the editor
 silently, and the gain is cosmetic — the attribute names the window instance,
 which is true in both modes.
 
-## Open Defect: the editor drops every `<br>` on save
+## Line Breaks on Mount
 
-**Live, unfixed, and it loses member data.** A value that reaches a driver carrying `<br>` comes back without them. Measured across one save of `_users.block`: 1475 bytes fell to 1387, which is exactly 22 tags of four bytes; `_users.sig` fell 213 to 201, exactly 3. Nothing else in either value changed.
+A stored value can carry `<br>`: the `plain` save writes one before every line end through `nl2br()`, the `html` editors write them as markup, and the values migrated from 6.2 hold them: on the stand 8453 of 15261 forum posts, 73 of 829 signatures and 123 of 785 custom menus. `getTplTextarea()` turns each one into what the save of the active format turns back into a break, before any driver sees the value; the `html` format mounts the value as it is.
 
-The reach is wider than one field. The account settings page rewrites `sig` and `block` on every save of its shared form, so **every member who opens settings and saves anything at all loses every line break in their signature and their custom menu** — a member editing their e-mail address pays for it with their sidebar menu. Both columns sit in a block shown on every page, so the damage is visible site-wide the moment it happens.
+| Format | A stored `<br>`, with the line end after it if there is one, mounts as | What the save writes |
+| --- | --- | --- |
+| `plain` | a line end | `<br>` and the line end again, through `nl2br()` of `filterHtml()` |
+| `markdown` | a Markdown hard break: two spaces and a line end | the two spaces and the line end, which every render of the parser, the escaped one included, turns into `<br>` |
 
-Two wrong guesses are already recorded so the next reader does not spend them again. It is **not** a trim of trailing whitespace: three saves with and without waiting for the mount leave the value byte-identical apart from a one-off trim at the very end of the field. It is **not** lost markdown hard breaks: an earlier repair wrote two trailing spaces in their place and produced a residual gap it could not explain, because the original carried no hard break at all — it carried `<br>`.
+A second mount and save leaves the value byte for byte as the first save wrote it. `<br />` comes back as `<br>` in `plain`; a `<br>` with no line end after it gains one; a `<br>` at the very end of the field is lost to the `trim()` of the `text` filter, as any trailing line end is. In `markdown` a line of nothing but a `<br>` becomes a line of two spaces, which Markdown reads as an empty line: the lines around it render as two paragraphs. A `<br>` a member typed as text is stored escaped, `&lt;br&gt;`, and is not touched. `tests/Unit/EditorBreakTest.php` drives each case through the shipped mount, the browser submit and the save with `tests/Support/break_probe.php`.
 
-The byte arithmetic points at the driver rather than at the parser or the handler, but which of the four `ContentDriver` implementations eats them, and whether it happens on mount or on submit, is not pinned down. Pin it before writing a repair: the last two attempts each fixed a symptom and left the mechanism alone.
+Toast UI starts in its markdown mode and hands the text back byte for byte; measured in the browser on 2026-10-07 with `_users.sig` and `_users.block` through one save of the account settings, `block` went from 1475 bytes with 22 tags to 1431 with 22 hard breaks and a second save changed nothing. Its WYSIWYG mode, one click away in the editor, rewrites the text on the way back: it reads every line as a paragraph and writes a hard break back as nothing (`a` and two spaces, a line end and `b` come back `ab`), and a `<br>` as a bare line end. A member who switches modes loses breaks there, whatever the server mounts.
+
+`replace_break()`, which deletes every `<br>`, is no part of the mount; it keeps its other callers: the private messages hand the text to forward and the quote to reply in one hidden field the script copies into the editor, stripped the old way; they render in the `breaks` format, where the line end that remains still breaks, so only a `<br>` with no line end after it is lost there.
+
 ## Content Heading Rule
 
 The module title field owns the page `H1`. Inside an article body, authors start with a first-level Markdown section (`# Section`); the rendering call uses heading offset `1`, so it becomes `H2` on the public detail page. Card, comment, block, and forum contexts apply their own deeper offsets. Do not copy the page title into the body and do not use headings only to change font size.

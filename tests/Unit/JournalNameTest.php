@@ -7,7 +7,7 @@ namespace Tests\Unit;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-# Batch 5 of docs/0-PRIVATE-DATA-2026.md: a journal is named after what it holds, a failure goes to error_*.log, a record of what happened to <meaning>.log
+# Journal names of docs/ARCHITECTURE.md, "Private Data Boundary": a journal is named after what it holds, a failure goes to error_*.log, a record of what happened to <meaning>.log
 final class JournalNameTest extends TestCase
 {
     # Every journal of storage/logs/ and what it holds: the rule table of the plan, which the label map of the security section has to cover exactly

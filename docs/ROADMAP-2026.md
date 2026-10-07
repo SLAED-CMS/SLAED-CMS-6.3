@@ -76,26 +76,34 @@ into the plan, then do whatever work the step names.
 - [x] 22. ASSET-CACHE batch 2 — lifetimes. (2026-10-07)
 - [x] 23. ASSET-CACHE batch 3 — defer. (2026-10-07)
 - [x] 24. ASSET-CACHE batch 4 — reference; deletes `docs/3-ASSET-CACHE-2026.md`. (2026-10-07)
-- [ ] 25. PRIVATE-DATA batch 6 — reference; deletes `docs/0-PRIVATE-DATA-2026.md`.
-- [ ] 26. EDITOR batch 0 — *decision*: the open decisions, the `<br>` check, the baseline.
-- [ ] 27. EDITOR batch 1 — CodeMirror in the theme.
-- [ ] 28. EDITOR batch 2 — the manifest and the split build.
-- [ ] 29. EDITOR batch 3 — the shell and the runtime.
-- [ ] 30. EDITOR batch 4 — CodeMirror as a text editor.
-- [ ] 31. EDITOR batch 5 — file manager for Plain and CodeMirror as text.
-- [ ] 32. EDITOR batch 6 — capsule and palette.
-- [ ] 33. EDITOR batch 7 — variables and the hint.
-- [ ] 34. EDITOR batch 8 — lint and format.
-- [ ] 35. EDITOR batch 9 — comparison.
-- [ ] 36. EDITOR batch 10 — preview.
-- [ ] 37. EDITOR batch 11 — reference; deletes `docs/4-EDITOR-2026.md`.
-- [ ] 38. NODE-HEAD batch 0 — *decision*: the open decisions, the callers of `getModuleNavi()`, the baseline.
-- [ ] 39. NODE-HEAD batch 1 — the feed.
-- [ ] 40. NODE-HEAD batch 2 — the script.
-- [ ] 41. NODE-HEAD batch 3 — the data of the header.
-- [ ] 42. NODE-HEAD batch 4 — template, theme, strings.
-- [ ] 43. NODE-HEAD batch 5 — views.
-- [ ] 44. NODE-HEAD batch 6 — live list and "Показать ещё".
-- [ ] 45. NODE-HEAD batch 7 — search hints.
-- [ ] 46. NODE-HEAD batch 8 — reference; deletes `docs/5-NODE-HEAD-2026.md`.
-- [ ] 47. Close — no `docs/*-2026.md` plan is left; delete this file and report that the work before 8.0 is done.
+- [x] 25. PRIVATE-DATA batch 6 — reference; deletes `docs/0-PRIVATE-DATA-2026.md`. (2026-10-07)
+- [x] 26. EDITOR batch 0 — *decision*: the open decisions, the `<br>` check, the baseline. (2026-10-07)
+- [x] 27. EDITORS defect — `<br>` dropped on mount: the repair at the source, `getTplTextarea()`, and a round-trip test
+  of a stored value through the `plain` and the `markdown` save; the mechanism stands in `docs/EDITORS.md`, "Open
+  Defect". Batch 0 pinned it by a probe of the server path only, so the step also saves `_users.sig` with a known
+  value once through Toast UI in the browser, before and after the repair, and compares the bytes: what Toast UI
+  itself does to the text on the client is not measured yet. Added by the owner on 2026-10-07, before batch 1, so
+  CodeMirror as text does not inherit the loss. Done 2026-10-07: a stored `<br>` mounts as a line end for `plain` and
+  as a Markdown hard break for `markdown` (owner, 2026-10-07); the reference is `docs/EDITORS.md`, "Line Breaks on
+  Mount". (2026-10-07)
+- [ ] 28. EDITOR batch 1 — CodeMirror in the theme.
+- [ ] 29. EDITOR batch 2 — the manifest and the split build.
+- [ ] 30. EDITOR batch 3 — the shell and the runtime.
+- [ ] 31. EDITOR batch 4 — CodeMirror as a text editor.
+- [ ] 32. EDITOR batch 5 — file manager for Plain and CodeMirror as text.
+- [ ] 33. EDITOR batch 6 — capsule and palette.
+- [ ] 34. EDITOR batch 7 — variables and the hint.
+- [ ] 35. EDITOR batch 8 — lint and format.
+- [ ] 36. EDITOR batch 9 — comparison.
+- [ ] 37. EDITOR batch 10 — preview.
+- [ ] 38. EDITOR batch 11 — reference; deletes `docs/4-EDITOR-2026.md`.
+- [ ] 39. NODE-HEAD batch 0 — *decision*: the open decisions, the callers of `getModuleNavi()`, the baseline.
+- [ ] 40. NODE-HEAD batch 1 — the feed.
+- [ ] 41. NODE-HEAD batch 2 — the script.
+- [ ] 42. NODE-HEAD batch 3 — the data of the header.
+- [ ] 43. NODE-HEAD batch 4 — template, theme, strings.
+- [ ] 44. NODE-HEAD batch 5 — views.
+- [ ] 45. NODE-HEAD batch 6 — live list and "Показать ещё".
+- [ ] 46. NODE-HEAD batch 7 — search hints.
+- [ ] 47. NODE-HEAD batch 8 — reference; deletes `docs/5-NODE-HEAD-2026.md`.
+- [ ] 48. Close — no `docs/*-2026.md` plan is left; delete this file and report that the work before 8.0 is done.

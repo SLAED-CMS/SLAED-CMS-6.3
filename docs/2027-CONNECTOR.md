@@ -429,7 +429,7 @@ slaed.net is the master; every other SLAED site is a client of it.
 - `ApiHttp` logs scheme, host, the path with secrets redacted (`/bot***/sendMessage`), status and duration — never a
   query string, request headers or a body.
 - The webhook secret, bot token and AI provider key live in config written by the admin, never in git
-  (`docs/0-PRIVATE-DATA-2026.md` applies).
+  (`docs/ARCHITECTURE.md`, "Private Data Boundary", applies).
 - Kill switch per service and the maintenance flag; a disabled service answers 503 without loading its handlers.
 - One key per caller: every agent, app, bot and site gets its own client; a key is never shared, so revoking one
   stops one caller.

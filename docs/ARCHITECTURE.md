@@ -443,6 +443,9 @@ Confirmed responsibilities:
 - provides CSRF helpers such as `getSiteToken()` and `checkSiteToken()`
 - provides admin/user access helpers
 
+What the web server may reach, the self-check and the journals are under
+"Private Data Boundary".
+
 Security can exit early for blocked or invalid requests before the normal
 `setHead()` / `setFoot()` page lifecycle.
 
@@ -658,6 +661,104 @@ Uploads are stored under:
 
 Do not treat generated storage contents as source files. Documentation and tests
 should describe the directories and contracts, not specific generated artifacts.
+
+## Private Data Boundary
+
+The private part of an installation — the code, `config/`, `storage/` and
+`uploads/` — is kept from the web by the layout of the tree, not by rules a
+server may ignore, and the installation checks that it is.
+
+**The tree.** The document root is `public/`. It holds the entries
+`index.php`, `admin.php`, `setup.php` and, in this repository, `update.php`,
+then `.htaccess`, `favicon.ico`, `robots.txt`, `error.html`, the sitemap files,
+`templates/`, `plugins/`, `sound/` and `demo/`. Everything else stays at the
+project level. Every entry defines `BASE_DIR` (the folder above its own) and
+`PUBLIC_DIR` (its own folder) — all but `admin.php` only when a test or a tool
+has not defined them first — so the root may carry any name, `public_html/`
+included. A filesystem path into the
+public part reads `PUBLIC_DIR`, a path into the project `BASE_DIR` or one of the
+runtime constants (`CONFIG_DIR`, `CACHE_DIR`, `LOGS_DIR`, `UPLOADS_DIR`, …);
+no path relies on the working directory, which is `public/` on the web and
+something else under the tests and the tools. Outside `public/` no folder
+carries a guard `.htaccess` or `index.html`, and no writer creates one.
+
+**Two modes.** The installer records the one it found as `webroot` in
+`config/global.php` (`getSetupRoot()` of `setup.php`):
+
+- `public` — the server points its document root at `public/`; nothing outside
+  it exists for the web. Recommended, and the only mode for nginx.
+- `project` — the root is the whole project, and the `.htaccess` of the project
+  rewrites every request into `public/`; where `mod_rewrite` is missing it
+  refuses every request through `mod_authz_core`, so the site breaks rather than
+  opens. Apache and LiteSpeed only. A path to a file outside `public/` lands in
+  `public/`, finds no file there and gets the 404 page; one under `uploads/`
+  reaches the light path below.
+
+**One upload root.** `UPLOADS_DIR` is `uploads/` at the project level, the
+folder of every owner. A request under `/uploads/` reaches `index.php` (`!-f` on
+Apache, `location ^~ /uploads/` on nginx), whose light path in `core/stream.php`
+answers it before the core boots: a file of a folder on `getUploadPublic()` with
+its type from a fixed map, `nosniff`, `Content-Security-Policy: sandbox` and a
+public lifetime of a day, everything else 410. The owners and their routes are
+under "File Delivery Boundary".
+
+**The server files.** `public/.htaccess` carries the rewrite to the front
+controller, the refusal of `*.php` and of the theme `*.html` under
+`templates/`, the lifetimes and the compression; the `.htaccess` of the project
+carries only the rewrite of the second mode. nginx reads neither:
+`nginx.conf.example` at the project level is the `server` block of the first
+mode, and `NginxConfigTest` walks every file of `public/` through both and
+fails when they refuse different things. The settings for shared hosting are in
+README.md, "Document Root and Web Server", and in the help of the security
+section.
+
+**The self-check.** `getPrivateRoots()` names five roots: the project itself,
+which proves the document root, and `storage/`, `config/`, `uploads/` and
+`admin/info/`, which hold the secrets and catch an alias that opens one of them
+while the root is right. Each holds an untracked marker `check.txt` with 32
+random hex characters, written by the last part of `setup.php` and again by
+`setPrivateMark()` whenever it is missing. `checkPrivateRoots()` asks the site
+address for each marker through `getSchedulerFetch()` and judges by the body
+alone, since a site can answer an error page with 200 or a file with 404:
+`open` when the body carries the marker, `closed` when it does not, `unknown`
+when no request could run. The system job `selfcheck` runs it every hour and
+keeps the verdicts in its scheduler state; `getSelfCheckAlert()` warns on the
+home of the panel about an `open` or `unknown` root and about no verdict within
+a day, and the security section adds the all-clear. A Node type is switched on
+only while the upload root is `closed` (`NodeService::checkTypeGuard()`).
+
+**Journals.** No secret reaches `storage/logs/`. `Logger` masks the value of
+every key matching `pass`, `pwd`, `secret`, `token`, `key` or `code` in the body
+and the query string, and writes the names of cookies and session keys, never
+their values. The request journal (the `log` switch of `config/security.php`,
+off by default) is its channel `request`; the login journals of
+`addLoginReport()` record who tried, under which login, from where and when,
+never the attempted password. A file is named after what it holds:
+`error_*.log` is what the system could not do, `<meaning>.log` what happened,
+and no name carries a `log_` prefix.
+
+| File | Carries | Writer |
+|---|---|---|
+| `error_php.log`, `error_sql.log`, `error_site.log` | failures | `Logger` |
+| `error_file.log` | file operations at `error` and `critical` | `Logger`, channel `file` |
+| `file.log` | file operations below `error`, such as a remote address the policy refused | `Logger`, channel `file` |
+| `hack.log`, `warn.log` | recognised attacks, refused requests | `Logger` |
+| `request.log` | the request journal | `Logger`, channel `request` |
+| `admin.log`, `user.log` | login attempts | `addLoginReport()` |
+| `oauth.log` | OAuth events, no token, code or claim | `OAuth` |
+| `database.log` | database operations of the panel | `admin/modules/database.php` |
+| `filescan.log`, `filescan_tree.log` | changes of the file tree, its snapshot | job `filescan` |
+
+A line goes to one file only, by its level. `Logger`, `addLoginReport()` and
+the job `filescan` move a full journal through `addCompress()` into an archive
+`<name>_<date>.log.<zip|gz|bz2>`, or `.log.bak` without a compressor;
+`oauth.log` starts over when full, and `database.log` has no limit. Beside the
+journals `storage/logs/` holds only state as `.json` (`scheduler/<job>.json`,
+`scheduler/heartbeat.json`, `scheduler/trigger.json`, `monitor.json`,
+`filescan.json`); the locks
+live in `storage/cache/locks/`, which the cache sweeps never empty. The labels
+of the security section come from one map in `admin/modules/security.php`, and
+`JournalNameTest` holds the files, the channels and the map together.
 
 ## Assets
 

@@ -2,6 +2,61 @@
 
 ## 2026-10-07
 
+### A saved text keeps its line breaks in every editor format
+
+`getTplTextarea()` deleted every `<br>` of a stored value before an editor saw it, for every format but `html`. The
+`plain` save put them back through `nl2br()`; the `markdown` save of Toast UI, the editor of the site, did not. Every
+member who saved anything on the account settings lost every line break of the signature and the custom menu, which
+both show on every page: one save took the 22 breaks of a 1475-byte menu.
+
+- **The mount.** A stored `<br>`, with the line end after it, mounts as a line end for `plain` and as a Markdown hard
+  break, two spaces and a line end, for `markdown`; `html` mounts the value as it is. Measured in the browser through
+  one save of the account settings: the menu keeps its 22 breaks as hard breaks and a second save changes no byte.
+- **Stored form.** A value saved in `markdown` holds two spaces where it held `<br>`, two bytes less per break; every
+  render of the parser, the escaped one of comments and the forum included, draws them as `<br>`, where an escaped
+  render used to print a stored `<br>` as text. A line of nothing but a `<br>` becomes an empty line, so the lines
+  around it render as two paragraphs.
+- **Test.** `EditorBreakTest` drives stored values through the shipped mount, the browser submit and the save of both
+  formats. The reference is `docs/EDITORS.md`, "Line Breaks on Mount".
+
+### The private part of an installation is out of web reach, proves it every hour, and no journal holds a secret
+
+The whole project sat in the document root and kept its private part with 95 `.htaccess` files of `deny from all`,
+which nginx never reads; the login journal held the first 25 characters of every refused password and the request
+journal the whole request with cookies and session. One server misconfiguration was a credential leak, and the
+installation had no way to notice. The current state is in `docs/ARCHITECTURE.md`, "Private Data Boundary".
+
+- **No secret in a journal.** `addLoginReport()` records who tried, under which login, from where and when, and
+  rotates before it opens the file. The request journal is the channel `request` of `Logger` with its masking and
+  only the names of cookies and session keys; `addLog()` and `getVariablesInfo()` are gone.
+- **The document root is `public/`.** The entries, `.htaccess`, `robots.txt`, `favicon.ico`, `error.html`, the
+  sitemap, `templates/`, `plugins/`, `sound/` and `demo/` are in it; the code, `config/`, `storage/` and the one
+  upload root `uploads/` stay at the project level. Every entry defines `BASE_DIR` and `PUBLIC_DIR`, and no path relies
+  on the working directory. A request under `/uploads/` reaches the light path of `core/stream.php`, which serves a
+  public folder before the core boots and answers 410 for everything else; `getFileStream()` moved there with it and
+  learned the public mode.
+- **Two modes.** A root on `public/`, or on the project with the `.htaccess` of the project rewriting into `public/`
+  and refusing everything without `mod_rewrite`; the installer records `webroot`. `nginx.conf.example` is the server
+  block of the first mode, and `NginxConfigTest` keeps it refusing what `public/.htaccess` refuses. The help of the
+  security section names the variants of shared hosting.
+- **Guards gone.** Every `.htaccess` outside `public/` but the one of the project and every guard `index.html` outside
+  it left the tree with their writers (`NodeService::setTypeGuards()`, `FileManager::getGuardFiles()`, the guard
+  writer of `CaptchaStore`); the upload service creates a missing folder of its owner on the first write.
+  `setup_old/` left the tree.
+- **The self-check.** A marker `check.txt` in the project, `storage/`, `config/`, `uploads/` and `admin/info/`, asked
+  over the site address every hour by the job `selfcheck` and judged by the body: `open`, `closed` or `unknown`. The
+  home of the panel warns about a problem or a missing verdict, the security section shows the all-clear too, and a
+  Node type is switched on only while `uploads/` is closed.
+- **Journal names.** `error_*.log` is what failed, `<meaning>.log` what happened: `admin.log`, `user.log`,
+  `oauth.log`, `request.log`, `filescan.log`, `filescan_tree.log`, `filescan.json`, and the new `file.log` for file
+  operations below `error`. `Logger` and `addCompress()` name an archive `<name>_<date>.log.<ext>`; the locks moved into
+  `storage/cache/locks/`. The dashboard error counter reads the structured lines and counts the problem levels, so it
+  no longer reports zero whatever the journals hold.
+- **Breaking:** the document root moves to `public/`; `addLoginReport()` lost its password parameter; `addLog()`,
+  `getVariablesInfo()`, `FileManager::getGuardFiles()` and `NodeService::setTypeGuards()` are gone; the journals carry
+  the names above and the label key `log` of the security section is `request`; `$conf['users']['adirectory']` is
+  the folder name `avatars`. The journals of an existing installation are not renamed: 8.0 installs a new site.
+
 ### Every asset address carries the version of its content, the browser keeps it a year, and the head scripts run deferred
 
 No static file carried a version, so a long browser lifetime would have kept an old file after a release. nginx sent

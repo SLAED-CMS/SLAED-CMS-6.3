@@ -117,6 +117,27 @@ script with the same query, and any other path, an old `*.html` address included
 Every `.htaccess` outside `public/` but the one of the project, and every guard `index.html` outside it, are gone:
 a folder outside the document root needs none.
 
+The installation checks this itself. The project, `storage/`, `config/`, `uploads/` and `admin/info/` each hold an
+untracked marker `check.txt`; the system job `selfcheck` asks the site address for every marker each hour and judges by
+the body, and the panel warns when a marker is served, when the site could not be asked, or when there is no verdict
+within a day. A Node type is switched on only while `uploads/` is closed. The markers are not part of the release; the
+installer writes them, and the check writes a missing one again. `docs/ARCHITECTURE.md`, "Private Data Boundary",
+describes the tree, the two modes and the check.
+
+### Journals Carry No Secret and Say What They Hold
+
+- A refused login is recorded without the attempted password. The request journal, behind the `log` switch of
+  `config/security.php`, is written by `Logger` with the masking of every other channel: the values of keys matching
+  `pass`, `pwd`, `secret`, `token`, `key` or `code` are replaced, and cookies and the session leave their names only.
+- The files of `storage/logs/` are renamed: `log_admin.log` → `admin.log`, `log_user.log` → `user.log`,
+  `log_oauth.log` → `oauth.log`, `log.log` → `request.log`, `dump_log.log` → `filescan.log`, `dump.log` →
+  `filescan_tree.log`, `dump_map.json` → `filescan.json`. A file operation lands in `file.log` below the level `error`
+  and in `error_file.log` from it on, never in both. A rotation archive is `<name>_<date>.log.<zip|gz|bz2>`, or
+  `<name>_<date>.log.bak` without a compressor.
+- The locks of the scheduler and of the upload service live in `storage/cache/locks/`, which a cache clear leaves in
+  place.
+- A log reader, a monitoring rule or a `logrotate` entry of your own that names the old files has to follow.
+
 ### Points, Ratings and Extra Fields
 
 - Points run on the journal `{prefix}_points`; `{prefix}_users.points` is the balance.

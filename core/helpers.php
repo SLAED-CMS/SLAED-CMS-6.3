@@ -525,6 +525,7 @@ function checkEditorTextRoom(string $text, string $store): string {
 
 # Render a rich-text editor textarea with upload config and locale for the given module
 # The call site declares where the text is stored: neither the form field name nor the upload directory identifies a column, and several editors write into a config file
+# A stored <br> mounts as what the save of the format turns back into a break: a line end for plain, which nl2br() restores, and a Markdown hard break for markdown
 function getTplTextarea(array $data = []): string {
     $id = (string)($data['id'] ?? '1');
     $name = (string)($data['name'] ?? '');
@@ -537,7 +538,7 @@ function getTplTextarea(array $data = []): string {
     $key = getEditorKey();
     $fmt = getEditorMode($key);
     $desc = $value ?: filterHtml(getVar('post', $name, 'raw', ''));
-    if ($fmt !== 'html') $desc = getDecodedText(replace_break($desc));
+    if ($fmt !== 'html') $desc = getDecodedText(preg_replace('#<br\s*/?>(?:\r\n|\r|\n)?#i', ($fmt === 'markdown') ? "  \n" : "\n", $desc) ?? $desc);
     $rul = getUploadRuleData(strtolower($mod));
     $store = (string)($data['store'] ?? '');
     return Editor::getContent([

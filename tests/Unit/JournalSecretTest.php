@@ -7,7 +7,7 @@ namespace Tests\Unit;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-# Batch 1 of docs/0-PRIVATE-DATA-2026.md: no secret of a request reaches a journal, whichever writer handles it
+# Journals of docs/ARCHITECTURE.md, "Private Data Boundary": no secret of a request reaches a journal, whichever writer handles it
 final class JournalSecretTest extends TestCase
 {
     private static array $probe = [];

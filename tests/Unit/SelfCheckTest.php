@@ -7,7 +7,7 @@ namespace Tests\Unit;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-# Batch 3 of docs/0-PRIVATE-DATA-2026.md: the installation proves its private part is private, by the body of an answer and in three states
+# Self-check of docs/ARCHITECTURE.md, "Private Data Boundary": the installation proves its private part is private, by the body of an answer and in three states
 final class SelfCheckTest extends TestCase
 {
     private static ?array $probe = null;

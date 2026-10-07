@@ -103,6 +103,17 @@
         { "do": "focus", "sel": "input[type=\"text\"]", "shot": "field-focus" },
         { "do": "click", "sel": "[data-sl-modal], .sl-but-modal", "shot": "modal-open", "optional": true }
       ]
-    }
+    },
+    { "name": "admin-tplconfig", "url": "/admin.php?name=uploads&op=tplconfig", "auth": "admin", "theme": "admin" },
+    { "name": "admin-sysfile", "url": "/admin.php?name=uploads&op=fmedit&file=public/error.html", "auth": "admin", "theme": "admin" },
+    {
+      "name": "admin-blockfile",
+      "url": "/admin.php?name=blocks&op=fileedit",
+      "auth": "admin",
+      "theme": "admin",
+      "steps": [{ "do": "click", "sel": "form[action*=\"op=filecode\"] [type=\"submit\"]", "shot": "code" }]
+    },
+    { "name": "admin-template-style", "url": "/admin.php?name=template&op=style", "auth": "admin", "theme": "admin" },
+    { "name": "admin-account-add", "url": "/admin.php?name=account&op=add", "auth": "admin", "theme": "admin" }
   ]
 }

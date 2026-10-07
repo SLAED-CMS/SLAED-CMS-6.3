@@ -4,8 +4,8 @@ Work plan for one editor shell and a second role for CodeMirror: CodeMirror stay
 text editor to choose beside Plain, TinyMCE, CKEditor and Toast UI; Plain stays the light one. Plain and CodeMirror
 wear the same frame, capsule, status line, palette and comparison window.
 
-Status: planned, nothing implemented. The order of the batches is kept in `docs/ROADMAP-2026.md`. Update this line
-as batches land.
+Status: batch 0 done on 2026-10-07 (the decisions answered, the `<br>` check, the baseline); no code yet. The order of
+the batches is kept in `docs/ROADMAP-2026.md`. Update this line as batches land.
 
 No line numbers anywhere in this document on purpose: every reference names the function, the file or the constant
 it points at, and that name is what to search for.
@@ -80,7 +80,9 @@ Gzip, measured on 2026-10-06 from the files of the tree and from esbuild builds 
   `plugins/system/slaed.js` loads and releases editor scripts on htmx swaps; `Editor::getInitScript()` wraps a
   driver's start code.
 - Tests touching the area: `tests/Unit/EditorFormatTest.php`, `tests/Unit/EditorWindowTest.php`.
-- `docs/EDITORS.md` records an open defect: some `ContentDriver` drops every `<br>` on save; which one is not pinned.
+- `docs/EDITORS.md` recorded an open defect: some `ContentDriver` drops every `<br>` on save. It was the mount of
+  `getTplTextarea()`, repaired on 2026-10-07 by step 27 of `docs/ROADMAP-2026.md`; the contract stands under "Line
+  Breaks on Mount", and CodeMirror as text mounts through the same function.
 
 ## Design
 
@@ -205,24 +207,34 @@ two hundred megabytes. Above a token limit the comparison works by lines, and in
 Every word of the shell is a constant in the six locales under `.rules/constants.md`; the runtime reads them from
 the fragments, never from a string in the script.
 
-## Open decisions
+## Answered decisions
 
-Put to the owner in batch 0; the answers are written here before any code.
+Put to the owner in batch 0 and answered on 2026-10-07; settled like the decisions above.
 
-1. **Preview files.** The stand renders with real files of its own tree. In the product the preview of a file
-   template needs a sample per kind: bundled sample assets of the theme, the newest real upload of that type, or no
-   preview for a kind without a sample.
-2. **Preview frame and PDF.** A sandboxed frame shows no PDF in Chrome; an unsandboxed one renders the
-   administrator's own template. Sandbox with a link for PDF, or no sandbox for the panel only.
-3. **Preview of text.** Markdown is rendered by `Parser` on the server, so the preview of a text editor needs a route;
-   a new one, or the preview for code templates only.
-4. **Capsule on the site.** Which commands a member gets in the lite theme: the full capsule, or a shorter one.
-5. **Emoji.** Toast UI has an emoji panel; carry it over to Plain and CodeMirror as text through the same adapter,
-   or not.
-6. **A draft in the browser.** Keeping an unsent text in `localStorage` is cheap and saves a member from a lost
-   tab, but on a shared computer it leaves the text for the next person; on, off, or on for the panel only.
-7. **The demo stand.** Keep `public/demo/ed-code-09-final.html` until the close and delete the other sixteen faces
-   with `assets/cm6-demo.bundle.js` and `assets/sample.pdf`, or keep the series as the stand of record.
+1. **Preview files: bundled samples of the theme.** The preview of a file template takes tiny sample files shipped in
+   `templates/admin/assets`: one picture, one audio, one video and one PDF; an archive needs no file, its template
+   is a link. The preview works on a fresh installation, the same every time, and shows no upload of anybody.
+   Rejected: the newest real upload of that type (empty on a fresh installation, changes from upload to upload), and
+   no preview for a kind without a sample.
+2. **Preview frame: always sandboxed, a link for PDF.** Every preview renders in a sandboxed frame, in the panel as
+   on the site; a PDF is not embedded, the preview shows a link that opens the sample. One rule for the frame.
+   Rejected: no sandbox for the panel only (two modes of the frame).
+3. **Preview of text: a new route.** One `hx-post` with a token renders the text through `getTplPreviewContent()`,
+   the block the "Предпросмотр" buttons of the forum, the private messages and the newsletter already draw by
+   submitting the whole form; the size of the text is limited. It is a POST with a token, never a GET, as the CSRF
+   contract of the htmx routes asks. Rejected: the preview for code templates only.
+4. **Capsule on the site: the full one.** A member in the lite theme gets the same capsule as the panel: every
+   command the engine supports.
+5. **Emoji: carried over, loaded on the first click.** The emoji panel of Toast UI serves Plain and CodeMirror as text
+   through the adapter of the file window; its script and the search words of the locale load when the panel is
+   first opened, so Plain at rest stays at zero script weight. Rejected: emoji for Toast UI only.
+6. **A draft in the browser: `sessionStorage` for everyone.** An unsent text is kept in `sessionStorage` of the tab,
+   as WordPress keeps its backup copy: it survives a reload, a link followed by mistake, an expired token and
+   Ctrl+Shift+T, and is erased on submit. It dies with the browser unless the browser restores its last session on
+   start, which brings `sessionStorage` back with the tabs. Rejected: `localStorage` everywhere or for the panel
+   only (a shared computer keeps the text for the next person), and no draft.
+7. **The demo stand: not this plan's.** `public/demo/` is left as it is; the owner deletes it himself later. No batch
+   adds to it, edits it or deletes from it; batches only read it as the stand of record.
 
 ## Batches
 
@@ -230,11 +242,20 @@ Each batch ends with its checks green, a report, and no commit without the owner
 
 ### Batch 0 — *decision*: questions and baseline
 
-- Ask the open decisions above, write the answers into this plan.
+- Ask the open decisions, write the answers into this plan: done 2026-10-07, under "Answered decisions".
 - Pin whether `EditorPlain` is the driver of the `<br>` defect in `docs/EDITORS.md`: one save through Plain on
   `_users.sig` with a known value. If it is, the repair belongs to batch 3; if not, it stays out of this plan.
+  Done 2026-10-07 by a probe of the server path in place of the save: it is not. No driver eats them;
+  `getTplTextarea()` deletes them on mount for every format but `html`, and only the `markdown` save fails to write
+  them back. The mechanism stands in `docs/EDITORS.md`; the repair stays out of this plan and is a step of its own in
+  `docs/ROADMAP-2026.md`, with the live save through the browser.
 - `npm run ui:before` on the panel screens with editors (`tplconfig`, the system file editor, blocks, template) and on
   one site form with Plain.
+  Done 2026-10-07 over the whole manifest of `tools/ui-shots.json`, which gained `admin-tplconfig`, `admin-sysfile`,
+  `admin-blockfile` (its `code` state is the editor of the first file block), `admin-template-style` and
+  `admin-account-add`.
+  The template screen is taken by its style tab: the html tab opens 208 editors on one page. The site edits with
+  Toast UI on the stand, so the Plain form of the baseline is the panel's new member form.
 
 ### Batch 1 — CodeMirror in the theme
 
@@ -242,8 +263,8 @@ Each batch ends with its checks green, a report, and no commit without the owner
   `syntaxHighlighting`, `classHighlighter`, `openSearchPanel`, `foldAll`, `unfoldAll`, `undo`, `redo`,
   `toggleComment`, `selectAll`, `startCompletion`, `linter`, `lintGutter`, `openLintPanel`, `nextDiagnostic`; `oneDark`
   leaves.
-- The token theme of the stand (`.d-cm` rules of `demo.css`) moves to the admin `theme.css` under the shell name;
-  `cm6.css` loses the fixed 400 points; the Tahoma rule on `.cm-content` and the second-editor height hack go.
+- The token theme of the stand (`.d-cm` rules of `demo.css`) is carried into the admin `theme.css` under the shell
+  name; `cm6.css` loses the fixed 400 points; the Tahoma rule on `.cm-content` and the second-editor height hack go.
 - Russian phrases for the CodeMirror panels.
 - Checks: every code screen above opens with code in the mono face, light and dark; `ui:after`, `npm run ui:gates`.
 
@@ -261,6 +282,8 @@ Each batch ends with its checks green, a report, and no commit without the owner
 - `plugins/system/editor.js` with the frame, status, dirty mark, full screen, wrap, copy, reset, undo and the lazy
   loading of CodeMirror; Plain and CodeMirror as code render through the shell; `EditorCodemirror` keeps no
   JavaScript string.
+- The draft of the tab in `sessionStorage` (answered decision 6): kept while the text differs from the loaded one,
+  offered back when the same form opens again in the tab, erased on submit.
 - Constants in six locales.
 - Tests: a driver test asserting both drivers render the shell fragments and no class string from PHP; the theme
   gates.
@@ -274,14 +297,16 @@ Each batch ends with its checks green, a report, and no commit without the owner
 
 - The shared computation of the file options out of `EditorToastUi`, which calls it as well; the adapter for a
   CodeMirror view and for a textarea; the public entry that opens the window; the folder button and the palette line;
-  paste and drop of an image; the emoji panel as decided; the window above the full screen.
+  paste and drop of an image; the emoji panel loaded on its first click (answered decision 5); the window above the
+  full screen.
 - Checks: upload, link, embed and "Мои файлы" insert into Plain and CodeMirror as text as they insert into Toast UI;
   Toast UI unchanged.
 
 ### Batch 6 — capsule and palette
 
-- The capsule of the final face with the commands each engine supports; the palette as a window of the canon with
-  the groups, the fuzzy filter, the recent command and the key reference; Ctrl+K only while focus is in an editor.
+- The capsule of the final face with the commands each engine supports, the same in both themes (answered decision
+  4); the palette as a window of the canon with the groups, the fuzzy filter, the recent command and the key
+  reference; Ctrl+K only while focus is in an editor.
 - The markdown commands, the list continued by Enter and the character counter for Plain and CodeMirror as text.
 
 ### Batch 7 — variables and the hint
@@ -301,10 +326,11 @@ Each batch ends with its checks green, a report, and no commit without the owner
 
 ### Batch 10 — preview
 
-- As decided under open decisions 1–3.
+- As answered under decisions 1–3: the sample files of the admin theme, the sandboxed frame with a link for PDF, the
+  text route through `getTplPreviewContent()`.
 
 ### Batch 11 — reference
 
 - `docs/EDITORS.md` describes the manifest list type, the shell, the runtime, the data keys and the engines;
-  `docs/TEMPLATES.md` the fragments; `docs/VERSIONS.md` the change. The demo stand as decided under open decision 7.
-  This file is deleted.
+  `docs/TEMPLATES.md` the fragments; `docs/VERSIONS.md` the change. `public/demo/` stays untouched (answered
+  decision 7). This file is deleted.
