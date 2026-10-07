@@ -67,7 +67,7 @@ into the plan, then do whatever work the step names.
   the crawl, the `src` values before and after, the files against a listing of the production folders. (2026-10-07)
 - [x] 16. FILES batch 9 — unused files and the tree. (2026-10-07)
 - [x] 17. FILES batch 10 — reference; deletes `docs/1-FILES-2026.md`. (2026-10-07)
-- [ ] 18. PRIVATE-DATA batch 5 — names that say what a journal holds.
+- [x] 18. PRIVATE-DATA batch 5 — names that say what a journal holds. (2026-10-07)
 - [ ] 19. PROD-FINDINGS item 2 — `addFile()` writes data only; the plan's status line closes it and the file is deleted
   with its lasting part in `docs/VERSIONS.md`.
 - [ ] 20. ASSET-CACHE batch 0 — inventory and baseline.

@@ -1941,6 +1941,7 @@ if (($_REQUEST['op'] ?? '') === 'update' || !isset($umark['points'], $umark['rat
     define('FUNC_FILE', true);
     define('CONFIG_DIR', BASE_DIR.'/config');
     define('BACKUP_DIR', BASE_DIR.'/storage/backup');
+    define('CACHE_DIR', BASE_DIR.'/storage/cache');
     define('LOGS_DIR', BASE_DIR.'/storage/logs');
     define('UPLOADS_DIR', BASE_DIR.'/uploads');
     $conf = array_merge(require CONFIG_DIR.'/global.php', require CONFIG_DIR.'/security.php');

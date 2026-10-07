@@ -13,7 +13,6 @@ define('FUNC_FILE', true);
 define('BASE_DIR', dirname(__DIR__));
 define('PUBLIC_DIR', BASE_DIR.'/public');
 define('CONFIG_DIR', BASE_DIR.'/config');
-define('CACHE_DIR', BASE_DIR.'/storage/cache');
 define('COUNTER_DIR', BASE_DIR.'/storage/counter');
 define('UPLOADS_DIR', BASE_DIR.'/uploads');
 define('NODE_DIR', UPLOADS_DIR.'/node');
@@ -21,8 +20,10 @@ define('NODE_DIR', UPLOADS_DIR.'/node');
 # The upload root, its public folders and the one sender, which the file layer and the parser ask without the rest of the core
 require_once BASE_DIR.'/core/stream.php';
 
-# Write the logs of in-process tests into a directory of this run: the mail tests refuse addresses on purpose, and their lines landed in the site log of the stand
+# Write the logs and the cache of in-process tests into a directory of this run: the mail tests refuse addresses on purpose, and their lines landed in the site log of the stand
+# The cache holds the lock files of the file layer, so a lock a test takes is never one the stand serializes its writers on
 define('LOGS_DIR', str_replace('\\', '/', sys_get_temp_dir()).'/slaed-phpunit-'.getmypid().'/logs');
+define('CACHE_DIR', dirname(LOGS_DIR).'/cache');
 if (!is_dir(LOGS_DIR)) mkdir(LOGS_DIR, 0777, true);
 
 # Remove that directory when the run ends, whatever the tests left in it

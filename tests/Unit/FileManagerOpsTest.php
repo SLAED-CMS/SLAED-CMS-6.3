@@ -37,7 +37,7 @@ final class FileManagerOpsTest extends TestCase
         foreach (self::BODIES as $file => $body) file_put_contents(self::$root.'/'.$file, $body);
     }
 
-    # Leave nothing behind: the tree goes, and so do the lock files the operations of this class opened below the log root
+    # Leave nothing behind: the tree goes, and so do the lock files the operations of this class opened below the cache root
     public static function tearDownAfterClass(): void
     {
         foreach (array_merge([''], self::DIRS) as $dir) {
@@ -67,7 +67,7 @@ final class FileManagerOpsTest extends TestCase
     private static function getLockFile(string $dir): string
     {
         $key = (string)(new \ReflectionMethod(FileManager::class, 'getLockKey'))->invoke(null, $dir);
-        return rtrim(str_replace('\\', '/', LOGS_DIR), '/').'/uploads/'.substr(sha1($key), 0, 16).'.lock';
+        return rtrim(str_replace('\\', '/', CACHE_DIR), '/').'/locks/uploads/'.substr(sha1($key), 0, 16).'.lock';
     }
 
     # Return one context over the disposable tree; the mode decides what the context is allowed to do at all

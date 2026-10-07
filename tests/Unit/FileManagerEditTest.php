@@ -41,7 +41,7 @@ final class FileManagerEditTest extends TestCase
         file_put_contents(self::$work.'/outside.txt', "away\n");
     }
 
-    # Leave nothing behind: the tree goes, and so does the one lock file the saves of this class opened below the log root
+    # Leave nothing behind: the tree goes, and so does the one lock file the saves of this class opened below the cache root
     public static function tearDownAfterClass(): void
     {
         foreach (['files', 'templates', 'config', 'plugins', 'docs', ''] as $dir) {
@@ -71,7 +71,7 @@ final class FileManagerEditTest extends TestCase
     private static function getLockFile(string $dir): string
     {
         $key = (string)(new \ReflectionMethod(FileManager::class, 'getLockKey'))->invoke(null, $dir);
-        return rtrim(str_replace('\\', '/', LOGS_DIR), '/').'/uploads/'.substr(sha1($key), 0, 16).'.lock';
+        return rtrim(str_replace('\\', '/', CACHE_DIR), '/').'/locks/uploads/'.substr(sha1($key), 0, 16).'.lock';
     }
 
     # Restore one fixture file to the body the class started with, so the order of the tests never decides their outcome

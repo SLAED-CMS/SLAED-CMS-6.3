@@ -414,10 +414,10 @@ class Oauth {
         return $tpl->getHtmlFrag('oauth-buttons', ['providers' => $rows, 'title' => _OAUTHWITH]);
     }
 
-    # Appends an OAuth audit event to storage/logs/log_oauth.log with size-capped rotation; never logs tokens, codes or raw claims
+    # Appends an OAuth audit event to storage/logs/oauth.log with size-capped rotation; never logs tokens, codes or raw claims
     public static function setLog(string $event, string $prov = '', int $uid = 0, string $note = '', int $actor = 0): void {
         global $conf;
-        $file = LOGS_DIR.'/log_oauth.log';
+        $file = LOGS_DIR.'/oauth.log';
         $note = substr(preg_replace('/[\r\n]+/', ' ', $note), 0, 200);
         $line = date('Y-m-d H:i:s').' | '.$event.' | '.$prov.' | uid='.$uid.(($actor) ? ' | actor='.$actor : '').' | ip='.getIp().(($note !== '') ? ' | '.$note : '')."\n";
         $mode = (is_file($file) && filesize($file) > (int)($conf['security']['log_size'] ?? 262144)) ? 'wb' : 'ab';

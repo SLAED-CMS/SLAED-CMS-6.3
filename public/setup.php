@@ -10,6 +10,7 @@ if (!defined('BASE_DIR')) define('BASE_DIR', str_replace('\\', '/', dirname(__DI
 if (!defined('PUBLIC_DIR')) define('PUBLIC_DIR', str_replace('\\', '/', __DIR__));
 define('CONFIG_DIR', BASE_DIR.'/config');
 define('BACKUP_DIR', BASE_DIR.'/storage/backup');
+define('CACHE_DIR', BASE_DIR.'/storage/cache');
 define('LOGS_DIR', BASE_DIR.'/storage/logs');
 
 # Read one request value through the only filter of the installer, because the core getVar() is not loaded before the last part

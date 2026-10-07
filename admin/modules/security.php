@@ -7,17 +7,19 @@
 if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 
 $labels = [
+    'admin' => _SEC_STAT_A,
     'database' => _SEC_STAT_DB,
-    'dump' => _SEC_STAT_DUM,
-    'dump_log' => _SEC_STAT_DUML,
     'error_php' => _SEC_STAT_ERROR_D,
     'error_file' => _SEC_STAT_ERROR_FILE,
     'error_site' => _SEC_STAT_ERROR_S,
     'error_sql' => _SEC_STAT_ERROR_SQL,
+    'file' => _SEC_STAT_FILE,
+    'filescan' => _SEC_STAT_DUML,
+    'filescan_tree' => _SEC_STAT_DUM,
     'hack' => _SEC_STAT_HACK,
-    'log_admin' => _SEC_STAT_A,
-    'log_user' => _SEC_STAT_U,
+    'oauth' => _SEC_STAT_OAUTH,
     'request' => _SEC_STAT_LOG,
+    'user' => _SEC_STAT_U,
     'warn' => _SEC_STAT_WARN
 ];
 

@@ -67,20 +67,24 @@ final class JournalSecretTest extends TestCase
     {
         $data = $this->getProbe('write');
         $this->assertSame(3, $data['params'], 'addLoginReport() takes no password');
-        $this->assertStringContainsString('probeuser', $data['files']['log_user.log'] ?? '');
-        $this->assertStringContainsString('probeadmin', $data['files']['log_admin.log'] ?? '');
-        $this->assertStringNotContainsString($data['keys']['pass'], $data['files']['log_user.log'].$data['files']['log_admin.log']);
+        $this->assertStringContainsString('probeuser', $data['files']['user.log'] ?? '');
+        $this->assertStringContainsString('probeadmin', $data['files']['admin.log'] ?? '');
+        $this->assertStringNotContainsString($data['keys']['pass'], $data['files']['user.log'].$data['files']['admin.log']);
     }
 
-    # The entry that triggers the rotation lands in the new journal, not in the file the rotation moved away
+    # The entry that triggers a rotation lands in the new journal, not in the file moved away, and both rotations name the archive after its journal
     #[Test]
     public function rotationEntryReachesNewFile(): void
     {
         $data = $this->getProbe('rotate');
-        $this->assertStringContainsString('probeuser', $data['files']['log_user.log'] ?? '');
-        $this->assertStringNotContainsString('old entry', $data['files']['log_user.log'] ?? '');
-        $arch = array_filter(array_keys($data['files']), static fn($v) => str_starts_with($v, 'log_user_'));
-        $this->assertCount(1, $arch, 'the full journal was moved into one rotation archive');
+        $this->assertStringContainsString('probeuser', $data['files']['user.log'] ?? '');
+        $this->assertStringNotContainsString('old entry', $data['files']['user.log'] ?? '');
+        $arch = array_filter(array_keys($data['files']), static fn($v) => preg_match('/^user_[0-9_-]+\.log\.(zip|gz|bz2|bak)$/', $v) === 1);
+        $this->assertCount(1, $arch, 'the full journal was moved into one rotation archive named user_<date>.log.<ext>');
+        $this->assertStringContainsString('probe rotation', $data['files']['warn.log'] ?? '');
+        $this->assertStringNotContainsString('old entry', $data['files']['warn.log'] ?? '');
+        $arch = array_filter(array_keys($data['files']), static fn($v) => preg_match('/^warn_[0-9_-]+\.log\.(zip|gz|bz2|bak)$/', $v) === 1);
+        $this->assertCount(1, $arch, 'Logger did not name its rotation archive warn_<date>.log.<ext>');
     }
 
     # The security dashboard reads the structured request.log for its latest event

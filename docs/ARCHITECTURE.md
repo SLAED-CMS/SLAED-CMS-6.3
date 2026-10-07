@@ -460,7 +460,7 @@ Scheduler integration:
 - scheduler admin module under `admin/modules/scheduler.php`
 - pseudo-trigger injection from `setHead()` when scheduler config, heartbeat,
   due-job, and cooldown checks allow it
-- scheduler state and locks under `storage/logs/scheduler/`
+- scheduler state under `storage/logs/scheduler/`, its locks under `storage/cache/locks/scheduler/`
 
 The confirmed current runner is HTTP/admin-triggered. Heavy jobs should stay out
 of synchronous page-render side effects.
@@ -637,6 +637,7 @@ Runtime-generated files are stored under:
 - `storage/cache/`
 - `storage/cache/data/`
 - `storage/cache/templates/`
+- `storage/cache/locks/`
 - `storage/captcha/`
 - `storage/counter/`
 - `storage/geoip/`

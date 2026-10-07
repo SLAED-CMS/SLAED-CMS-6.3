@@ -586,24 +586,24 @@ function getDbHealth(object $db): array {
     return $data;
 }
 
-# Counts recent error log entries within a time window using bounded tail parsing
+# Counts the warning, error and critical lines Logger wrote into the error journals within a time window, reading the tail of each
 function getErrorLogCountHours(int $hours = 24): int|string {
-    $logfile = (defined('LOGS_DIR') ? (string)LOGS_DIR : BASE_DIR.'/storage/logs').'/error_file.log';
-    if (!is_file($logfile) || !is_readable($logfile)) return 'N/A';
-    $lines = file($logfile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-    if ($lines === false || !is_array($lines)) return 'N/A';
-    if (!$lines) return 0;
+    $logsdir = defined('LOGS_DIR') ? (string)LOGS_DIR : BASE_DIR.'/storage/logs';
     $thresh = time() - ($hours * 3600);
     $count = 0;
-    for ($ix = count($lines) - 1; $ix >= 0; $ix--) {
-        $line = (string)$lines[$ix];
-        if (!preg_match('/^\[([0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2})\]/', $line, $mx)) continue;
-        $ts = strtotime($mx[1]);
-        if ($ts === false) continue;
-        if ($ts < $thresh) break;
-        $count++;
+    $seen = false;
+    foreach (['error_php.log', 'error_sql.log', 'error_site.log', 'error_file.log'] as $name) {
+        $path = $logsdir.'/'.$name;
+        if (!is_file($path) || !is_readable($path)) continue;
+        $seen = true;
+        foreach (getTailLines(getFileTailChunk($path, 262144), 2500) as $line) {
+            $row = json_decode($line, true);
+            if (!is_array($row) || !in_array($row['level'] ?? '', ['warning', 'error', 'critical'], true)) continue;
+            $ts = strtotime((string)($row['ts'] ?? ''));
+            if ($ts !== false && $ts >= $thresh) $count++;
+        }
     }
-    return $count;
+    return $seen ? $count : 'N/A';
 }
 
 # Reads the last bytes of a log file safely for efficient tail-based analysis
@@ -648,7 +648,7 @@ function getLogLineTimestamp(string $line): int|null {
 
 # Counts failed login events in recent logs within the specified hour interval
 function getFailedLoginCountHours(int $hours = 24): int|string {
-    $file = (defined('LOGS_DIR') ? (string)LOGS_DIR : BASE_DIR.'/storage/logs').'/log_admin.log';
+    $file = (defined('LOGS_DIR') ? (string)LOGS_DIR : BASE_DIR.'/storage/logs').'/admin.log';
     if (!is_file($file) || !is_readable($file)) return 'N/A';
     $tail = getFileTailChunk($file, 262144);
     $lines = getTailLines($tail, 2500);

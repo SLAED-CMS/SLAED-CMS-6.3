@@ -171,6 +171,7 @@ final class UploadContractTest extends TestCase
         $this->assertCount(1, $run['parts'], 'This case is only meaningful while the partial really survives');
         $found = array_filter($data['log'], static fn(array $row): bool => str_contains($row['msg'], 'partial') && $row['path'] === 'files/'.$run['parts'][0]);
         $this->assertCount(1, $found, 'The stranded partial was not logged with its root-relative path: '.json_encode($data['log']));
+        $this->assertSame(['error_file.log'], array_values(array_unique(array_column($found, 'file'))), 'A partial that would not delete is a failure, error_file.log only');
     }
 
     # Partials of earlier runs are collected by the one-hour sweep, which is the only thing that removes them
@@ -387,7 +388,7 @@ final class UploadContractTest extends TestCase
         return $bin;
     }
 
-    # Every refusal by the address policy names the address in error_file.log, which is the only signal an operator has that the prefix list has fallen behind the registry
+    # Every refusal by the address policy names the address in file.log, never in error_file.log: the policy worked, and the line tells an operator the prefix list is behind
     #[Test]
     public function everyRefusedAddressIsRecordedWithItsAddress(): void
     {
@@ -395,7 +396,9 @@ final class UploadContractTest extends TestCase
         $this->assertNotEmpty($rows, 'The address policy recorded nothing at all');
         $seen = [];
         foreach ($rows as $one) {
-            if ($one['msg'] === 'Remote address refused by the address policy') $seen[] = $one['address'];
+            if ($one['msg'] !== 'Remote address refused by the address policy') continue;
+            $this->assertSame('file.log', $one['file'], 'A refusal is no failure of the system and must not reach error_file.log');
+            $seen[] = $one['address'];
         }
         foreach (['10.0.0.5', '127.0.0.1', '169.254.169.254', '::1', 'fc00::1', 'fec0::1', '3ffe::1', '2004::1'] as $addr) {
             $this->assertContains($addr, $seen, 'The refusal of '.$addr.' was not recorded with the address it refused');

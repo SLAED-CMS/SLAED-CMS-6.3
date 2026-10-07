@@ -364,9 +364,9 @@ class FileManager {
     }
 
     # Returns the one directory the lock files of the project live in, outside every tree they guard, so a lock is never listed, downloaded or removed with what it serializes
-    # A build without a log root answers an empty string and every lock then fails closed, because a writer that believes it holds a lock it never took is the worse half
+    # A build without a cache root answers an empty string and every lock then fails closed, because a writer that believes it holds a lock it never took is the worse half
     private static function getLockDir(): string {
-        return defined('LOGS_DIR') ? rtrim(str_replace('\\', '/', LOGS_DIR), '/').'/uploads' : '';
+        return defined('CACHE_DIR') ? rtrim(str_replace('\\', '/', CACHE_DIR), '/').'/locks/uploads' : '';
     }
 
     # Takes the exclusive lock of every directory one operation touches, sorted, because two writers taking the same two keys in opposite order wait for each other forever

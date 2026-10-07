@@ -543,8 +543,10 @@ define('_SEC_STAT_ERROR_D','Журнал динамических ошибок')
 define('_SEC_STAT_ERROR_FILE','Журнал ошибок файлов');
 define('_SEC_STAT_ERROR_S','Журнал статических ошибок');
 define('_SEC_STAT_ERROR_SQL','Журнал ошибок базы данных');
+define('_SEC_STAT_FILE','Журнал файловых операций');
 define('_SEC_STAT_HACK','Журнал атак');
 define('_SEC_STAT_LOG','Журнал входящих запросов');
+define('_SEC_STAT_OAUTH','Журнал входов через OAuth');
 define('_SEC_STAT_U','Журнал входов пользователей');
 define('_SEC_STAT_WARN','Журнал запрещённых действий');
 define('_SEC_URL_GET','Запретить принимать ссылки через GET?');

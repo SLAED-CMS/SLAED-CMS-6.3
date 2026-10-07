@@ -9,14 +9,15 @@
 # Nothing under the site upload tree is read or written - the root, the lock directory, the source files and the logs of every run live below the scratch root the caller passed
 $probework = (string)($argv[2] ?? '');
 require_once __DIR__.'/probe_boot.php';
+define('CACHE_DIR', $probework.'/cache');
 # The queue scenarios publish below a disposable upload root that stands for the site one, so the root of an upload area is a directory of this scratch as well
 if (in_array((string)($argv[1] ?? ''), ['queue', 'area', 'typearea', 'hold'], true)) define('UPLOADS_DIR', str_replace('\\', '/', $probework).'/root');
 require_once BASE_DIR.'/core/system.php';
 require_once BASE_DIR.'/core/classes/upload.php';
-# The scratch of one scenario survives its run, so a parent starts from an empty lock directory: a lock file left by an earlier run is nothing this run opened
-if (!in_array((string)($argv[1] ?? ''), ['hold', 'child'], true)) array_map('unlink', glob(LOGS_DIR.'/uploads/*.lock') ?: []);
+# The scratch of one scenario survives its run, so a parent starts from an empty lock directory and empty journals: what an earlier run left is nothing this run did
+if (!in_array((string)($argv[1] ?? ''), ['hold', 'child'], true)) array_map('unlink', array_merge(glob(CACHE_DIR.'/locks/uploads/*.lock') ?: [], glob(LOGS_DIR.'/*.log') ?: []));
 
-# The disposable upload root and the directory the source files of one run are built in; the lock directory belongs to FileManager and follows the redirected LOGS_DIR
+# The disposable upload root and the directory the source files of one run are built in; the lock directory belongs to FileManager and follows the redirected CACHE_DIR
 $GLOBALS['pwork'] = $probework;
 $GLOBALS['proot'] = $probework.'/root';
 $GLOBALS['ptmp'] = $probework.'/src';
@@ -353,20 +354,23 @@ function getProbeParts(string $dir): array {
     return $out;
 }
 
-# Read back what the file log recorded during a scenario, which is how a stranded partial is proven visible
+# Read back what both file journals recorded during a scenario, each row with the journal it landed in, which is how a stranded partial is proven visible
 function getProbeLog(): array {
-    $path = LOGS_DIR.'/error_file.log';
-    if (!is_file($path)) return [];
     $out = [];
-    foreach (explode("\n", (string)file_get_contents($path)) as $line) {
-        $row = json_decode(trim($line), true);
-        if (!is_array($row)) continue;
-        $out[] = [
-            'msg' => (string)($row['msg'] ?? ''),
-            'path' => (string)($row['path'] ?? ''),
-            'host' => (string)($row['host'] ?? ''),
-            'address' => (string)($row['address'] ?? ''),
-        ];
+    foreach (['file.log', 'error_file.log'] as $name) {
+        $path = LOGS_DIR.'/'.$name;
+        if (!is_file($path)) continue;
+        foreach (explode("\n", (string)file_get_contents($path)) as $line) {
+            $row = json_decode(trim($line), true);
+            if (!is_array($row)) continue;
+            $out[] = [
+                'file' => $name,
+                'msg' => (string)($row['msg'] ?? ''),
+                'path' => (string)($row['path'] ?? ''),
+                'host' => (string)($row['host'] ?? ''),
+                'address' => (string)($row['address'] ?? ''),
+            ];
+        }
     }
     return $out;
 }
@@ -840,7 +844,7 @@ function getProbeRace(): array {
 
 # The lock files that exist at this moment, read out of the one directory FileManager names, which is how two writers are proven to open one file rather than two
 function getProbeLockList(): array {
-    $dir = LOGS_DIR.'/uploads';
+    $dir = CACHE_DIR.'/locks/uploads';
     $out = is_dir($dir) ? array_values(array_diff(scandir($dir) ?: [], ['.', '..'])) : [];
     sort($out);
     return $out;
@@ -893,7 +897,7 @@ function getProbeQueue(string $sub = ''): array {
     $want = [substr(sha1(getProbeLockKey($canon)), 0, 16).'.lock'];
     if ($sub !== '') $want[] = substr(sha1(getProbeLockKey($GLOBALS['proot'].'/'.$dest)), 0, 16).'.lock';
     sort($want);
-    return $out + ['free' => $free, 'dir' => LOGS_DIR.'/uploads', 'want' => $want, 'locks' => getProbeLockList()];
+    return $out + ['free' => $free, 'dir' => CACHE_DIR.'/locks/uploads', 'want' => $want, 'locks' => getProbeLockList()];
 }
 
 # Two types are two upload areas: while the parent holds the folder of one type below NODE_DIR, an upload of another process into another type gets through at once

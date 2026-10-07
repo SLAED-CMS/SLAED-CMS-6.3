@@ -3067,8 +3067,8 @@ splitter `getSqlbatch()` and `getSqlinfo()`, which honour the `DELIMITER` direct
 `core/classes/logger.php`, `core/classes/pdo.php` (`Database`, which throws a `RuntimeException` on a refused
 connection under `SETUP_FILE`), `core/classes/template.php`, `lang/en.php` and, inside the fields unit,
 `core/classes/field.php`. A class the update needs must not depend on functions of `core/system.php`. The first stage
-defines the path constants itself, `CONFIG_DIR`, `BACKUP_DIR`, `LOGS_DIR` and `UPLOADS_DIR`, which the attachment
-units of the forum and the private messages read. The update
+defines the path constants itself, `CONFIG_DIR`, `BACKUP_DIR`, `CACHE_DIR`, `LOGS_DIR` and `UPLOADS_DIR`, which the
+attachment units of the forum and the private messages read. The update
 runs on a closed site with one writer, so the runtime configuration protocol of the running system is not used.
 No function of `update.php` carries a name the core, `core/admin.php` or a module declares, because the second stage
 boots the core in the same file.
@@ -3079,7 +3079,7 @@ function setUpdateFile(string $fp, array $arr, array $act = [], bool $raw = fals
 
 - Writes `config/<fp>` under `FileManager::getPathLock(CONFIG_DIR)`, the same lock the runtime rebuilds
   `config/local.php` under, and deletes `config/local.php` on every call, so a rebuild from half-updated files
-  never publishes `close = 0`. `LOGS_DIR` is defined by the first stage for that lock.
+  never publishes `close = 0`. `CACHE_DIR` is defined by the first stage for that lock.
 - Answers whether the whole file was written; it never touches a file or a `config/` that PHP cannot write, and it
   never changes file permissions. Every caller turns `false` into a failed report row.
 - Scalars are stored as strings; `$raw = true` keeps native `bool`, `int` and `null`, which the Field definitions

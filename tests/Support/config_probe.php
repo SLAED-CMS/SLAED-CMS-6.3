@@ -413,7 +413,7 @@ function getProbeLockKey(string $dir): string {
 
 # Child: try the lock file of one key without waiting and say whether it could be taken
 function getProbeTry(string $dir): array {
-    $file = LOGS_DIR.'/uploads/'.substr(sha1(getProbeLockKey($dir)), 0, 16).'.lock';
+    $file = CACHE_DIR.'/locks/uploads/'.substr(sha1(getProbeLockKey($dir)), 0, 16).'.lock';
     $fh = fopen($file, 'cb');
     $free = ($fh !== false) && flock($fh, LOCK_EX | LOCK_NB);
     if ($free) flock($fh, LOCK_UN);

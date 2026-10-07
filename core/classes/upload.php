@@ -1088,7 +1088,7 @@ class Upload {
     # Records one address the policy refused with the host it came from, so an operator can tell a private target apart from a prefix this build does not know yet
     # Without this line the two are one failure to everyone outside the class, and a list behind the registry looks exactly like a host that is down
     private function getAddressFail(string $host, string $addr): array {
-        Logger::addFile('error', 'Remote address refused by the address policy', ['host' => $host, 'address' => $addr]);
+        Logger::addFile('warning', 'Remote address refused by the address policy', ['host' => $host, 'address' => $addr]);
         return ['addr' => '', 'error' => 'address'];
     }
 

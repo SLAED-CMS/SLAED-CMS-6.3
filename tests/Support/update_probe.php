@@ -13,6 +13,7 @@ $probework = str_replace('\\', '/', (string)($argv[1] ?? ''));
 if ($probework === '') $probework = str_replace('\\', '/', sys_get_temp_dir()).'/slaed_update_probe';
 define('BASE_DIR', $probework.'/site');
 define('CONFIG_DIR', BASE_DIR.'/config');
+define('CACHE_DIR', BASE_DIR.'/storage/cache');
 require_once __DIR__.'/probe_boot.php';
 
 # The tree the shipped sources are read from

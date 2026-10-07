@@ -4,10 +4,11 @@
 # License: MIT
 # Website: slaed.net
 
-# CLI probe for the scheduler lock protocol: boots the real core with LOGS_DIR in scratch, so every lock file and every state file this writes lives outside the site
+# CLI probe for the scheduler lock protocol: boots the real core with LOGS_DIR and CACHE_DIR in scratch, so every lock file and every state file this writes lives outside the site
 # One scenario per process, and the scenarios that need a second party start a real second process, because an operating system lock can only be contended across processes
 $probework = (string)($argv[2] ?? '');
 require_once __DIR__.'/probe_boot.php';
+define('CACHE_DIR', $probework.'/cache');
 require_once BASE_DIR.'/core/system.php';
 
 # The job every scenario drives, declared in memory so no site configuration is written
@@ -50,6 +51,7 @@ function addProbeHolder(string $name, int $msec): mixed {
     $lock = getSchedulerLockPath($name);
     $flag = LOGS_DIR.'/holder.flag';
     if (is_file($flag)) unlink($flag);
+    if (!is_dir(dirname($lock))) mkdir(dirname($lock), 0777, true);
     $code = '<?php $fh = fopen('.var_export($lock, true).', \'cb\'); flock($fh, LOCK_EX); file_put_contents('.var_export($flag,
         true).', \'1\'); usleep('.($msec * 1000).'); flock($fh, LOCK_UN); fclose($fh);';
     file_put_contents($file, $code);

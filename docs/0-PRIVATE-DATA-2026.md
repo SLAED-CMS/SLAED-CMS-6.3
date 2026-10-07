@@ -20,8 +20,15 @@ scheduler state, and `getSelfCheckAlert()` on the home of the panel (only a prob
 the security section (the all-clear as well); the last part of `setup.php` writes the markers, since it is the one that runs with the core; `checkTypeGuard()` asks the upload root
 alone. The plain name was tried on the stock OSPanel nginx of the stand: `check.txt` is served as it is. Batch 4
 done 2026-10-06: `setup_old/` left the tree with its ignored `.sql` files, and `PublicTreeTest` no longer exempts it;
-the `.sql` files of the old installer are in history before `b2973ad4`, the schema in `storage/update/sql`. Batches
-5-6 open. The order
+the `.sql` files of the old installer are in history before `b2973ad4`, the schema in `storage/update/sql`. Batch 5
+done 2026-10-07 (`JournalNameTest`, `JournalSecretTest` on the new names and both rotations): the names of the
+table, `Logger` routes the channel `file` by level and names its archive `<name>_<date>.log.<ext>`, the label map
+and two new constants `_SEC_STAT_FILE` and `_SEC_STAT_OAUTH`. Four points the text left open: the locks sit in
+`storage/cache/locks/scheduler/` and `storage/cache/locks/uploads/`, so `setup.php` and the first stage of
+`update.php` define `CACHE_DIR` for the lock of `config/`; the test bootstrap keeps `CACHE_DIR` in the scratch of
+the run like `LOGS_DIR`; the refusal of the remote address policy is a `warning` and lands in `file.log`, where the
+help of the uploads section now points; and `getErrorLogCountHours()` counts `warning`, `error` and `critical` over
+the four `error_*.log`, not over `error_file.log` alone. Batch 6 open. The order
 of the batches is kept in `docs/ROADMAP-2026.md`: batches 0 and 1 of 1-FILES-2026.md run between batch 1 and batch 2,
 so the Node types sit in `uploads/node/<type>/` before the tree is split. Update this line as batches land.
 

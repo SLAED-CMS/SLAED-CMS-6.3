@@ -342,7 +342,7 @@ function setSchedulerState(string $name, array $state): bool {
 
 # Returns the path of the operating system lock file of one job; the file is created once and never deleted, because deleting it would break the lock for a process still holding it
 function getSchedulerLockPath(string $name): string {
-    return LOGS_DIR.'/scheduler/'.$name.'.lock';
+    return CACHE_DIR.'/locks/scheduler/'.$name.'.lock';
 }
 
 # Takes the operating system lock of one job without waiting and returns the open handle, which the caller must hold for as long as it owns the job
@@ -5335,7 +5335,7 @@ function write_log(mixed $log, string $file): bool {
         flock($fp, 3);
         fclose($fp);
         if (file_exists($file) && filesize($file) > $conf['security']['log_size']) {
-            addCompress(LOGS_DIR, $file, 'dump_log_'.date('Y-m-d_H-i').'.log', 'auto', true);
+            addCompress(LOGS_DIR, $file, 'filescan_'.date('Y-m-d_H-i').'.log', 'auto', true, true);
         }
     }
     return ($fp) ? true : false;
@@ -5387,7 +5387,7 @@ function diff_dump(array $dump, array $old, array $skip = []): array|false {
 function addFilescanTask(): array {
  global $conf, $tpl, $mailer;
     if (empty($conf['security']['log_d'])) return ['status' => 'failed', 'message' => 'File scan is disabled'];
-    $sess_f = LOGS_DIR.'/dump_map.json';
+    $sess_f = LOGS_DIR.'/filescan.json';
     $state = [];
     if (file_exists($sess_f) && filesize($sess_f) != 0) {
         $json = file_get_contents($sess_f);
@@ -5404,7 +5404,7 @@ function addFilescanTask(): array {
 
     $dump = [];
     $skip = ['storage', 'node_modules'];
-    foreach ([LOGS_DIR.'/dump.log', LOGS_DIR.'/dump_log.log'] as $path) {
+    foreach ([LOGS_DIR.'/filescan_tree.log', LOGS_DIR.'/filescan.log'] as $path) {
         $skip[] = ltrim(str_replace('\\', '/', str_replace(BASE_DIR, '', $path)), '/');
     }
     $rawskip = str_replace(["\r\n", "\r"], "\n", (string)($conf['security']['dump_skip'] ?? ''));
@@ -5419,8 +5419,8 @@ function addFilescanTask(): array {
     }
     $skip = array_values(array_unique($skip));
     create_dump(BASE_DIR.'/', $dump, $skip);
-    $dumpp = LOGS_DIR.'/dump.log';
-    $logpp = LOGS_DIR.'/dump_log.log';
+    $dumpp = LOGS_DIR.'/filescan_tree.log';
+    $logpp = LOGS_DIR.'/filescan.log';
     if (file_exists($dumpp) && filesize($dumpp) != 0) {
         if ($log = diff_dump($dump, file($dumpp), $skip)) sort($log);
     } else {
@@ -5477,10 +5477,10 @@ function addLoginReport(int $id, int $typ, string $login): void {
         $url = filterText(getenv('REQUEST_URI'));
         $ladmin = ($admin) ? "\n"._ADMIN.': '.substr($admin[1], 0, 25) : '';
         $luser = ($user) ? "\n"._USER.': '.substr($user[1], 0, 25) : '';
-        $path = LOGS_DIR.'/log_'.$id.'.log';
+        $path = LOGS_DIR.'/'.$id.'.log';
         clearstatcache(true, $path);
         if (is_file($path) && filesize($path) > $conf['security']['log_size']) {
-            addCompress(LOGS_DIR, $path, 'log_'.$id.'_'.date('Y-m-d_H-i').'.log', 'auto', true, true);
+            addCompress(LOGS_DIR, $path, $id.'_'.date('Y-m-d_H-i').'.log', 'auto', true, true);
         }
         if ($fhandle = fopen($path, 'ab')) {
             fwrite(

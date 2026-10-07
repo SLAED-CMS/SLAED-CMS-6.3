@@ -43,7 +43,8 @@ class Logger {
 
     # Add structured log entry
     public static function addEntry(string $chan, string $levl, string $mesg, array $ctx = []): bool {
-        $file = self::getFile($chan);
+        $levl = self::getLevel($levl);
+        $file = self::getFile($chan, $levl);
         if ($file === '') return false;
         if (self::$lock) {
             error_log('[LOG] Recursive call prevented: '.$mesg);
@@ -51,7 +52,6 @@ class Logger {
         }
         self::$lock = true;
         $chan = self::getChan($chan);
-        $levl = self::getLevel($levl);
         $filev = isset($ctx['file']) ? (string)$ctx['file'] : '';
         $linev = isset($ctx['line']) ? (string)$ctx['line'] : '';
         $ctx = self::filterArray($ctx);
@@ -77,13 +77,13 @@ class Logger {
         return in_array($chan, $list, true) ? $chan : '';
     }
 
-    # Get log file by channel
-    protected static function getFile(string $chan): string {
+    # Get the journal of one channel; a file operation below error is a record of what happened, not a failure, so it goes to file.log
+    protected static function getFile(string $chan, string $levl): string {
         if (!defined('LOGS_DIR')) return '';
         $list = [
             'php' => 'error_php.log',
             'sql' => 'error_sql.log',
-            'file' => 'error_file.log',
+            'file' => in_array($levl, ['error', 'critical'], true) ? 'error_file.log' : 'file.log',
             'site' => 'error_site.log',
             'warn' => 'warn.log',
             'hack' => 'hack.log',
@@ -219,7 +219,7 @@ class Logger {
         if ($size !== false && $size >= $max) {
             $guard = $file.'.rotating';
             if (file_put_contents($guard, '1', LOCK_EX) !== false) {
-                $safe = pathinfo($file, PATHINFO_FILENAME).'_'.date('Y-m-d_H-i-s');
+                $safe = pathinfo($file, PATHINFO_FILENAME).'_'.date('Y-m-d_H-i-s').'.log';
                 if (function_exists('addCompress')) addCompress(dirname($file), $file, $safe, 'auto', true, true);
                 if (is_file($guard)) unlink($guard);
             }
