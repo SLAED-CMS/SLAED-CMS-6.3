@@ -70,7 +70,7 @@ into the plan, then do whatever work the step names.
 - [x] 18. PRIVATE-DATA batch 5 — names that say what a journal holds. (2026-10-07)
 - [x] 19. PROD-FINDINGS item 2 — `addFile()` writes data only; the plan's status line closes it and the file is deleted
   with its lasting part in `docs/VERSIONS.md`. (2026-10-07)
-- [ ] 20. ASSET-CACHE batch 0 — inventory and baseline.
+- [x] 20. ASSET-CACHE batch 0 — inventory and baseline. (2026-10-07)
 - [ ] 21. ASSET-CACHE batch 1 — versioned addresses.
 - [ ] 22. ASSET-CACHE batch 2 — lifetimes.
 - [ ] 23. ASSET-CACHE batch 3 — defer.
