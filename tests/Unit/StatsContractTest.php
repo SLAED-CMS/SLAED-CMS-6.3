@@ -41,11 +41,11 @@ final class StatsContractTest extends TestCase
         rmdir($dir);
     }
 
-    # Run one probe process performing $rep statistics hits for one IP and return the resulting counter state
-    private function getHit(string $ip, int $rep = 1): array
+    # Run one probe process performing $rep statistics hits for one IP, as a guest or as a signed-in user, and return the resulting counter state
+    private function getHit(string $ip, int $rep = 1, bool $usr = false): array
     {
         $script = dirname(__DIR__).'/Support/contract_probe.php';
-        $cmd = escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' stathit '.escapeshellarg($this->dir).' '.escapeshellarg($ip).' '.$rep;
+        $cmd = escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' stathit '.escapeshellarg($this->dir).' '.escapeshellarg($ip).' '.$rep.($usr ? ' user' : '');
         $out = (string)shell_exec($cmd.' 2>&1');
         $data = json_decode($out, true);
         $this->assertIsArray($data, 'Probe did not return JSON: '.$out);
@@ -231,13 +231,19 @@ final class StatsContractTest extends TestCase
         mkdir($this->dir.'/blocked');
         $script = dirname(__DIR__).'/Support/contract_probe.php';
         $cmd = escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' appendfail '.escapeshellarg($this->dir);
-        $data = json_decode((string)shell_exec($cmd.' 2>&1'), true);
-        $this->assertIsArray($data);
-        $this->assertSame(2, $data['blocked'], 'a failed append must report the write error code');
+        $out = (string)shell_exec($cmd.' 2>&1');
+        $data = json_decode($out, true);
+        $this->assertIsArray($data, 'Probe did not return JSON: '.$out);
+        $this->assertFalse($data['blocked'], 'a failed append must report failure');
         $this->assertStringContainsString('blocked', $data['log'], 'a failed append must be logged');
-        $this->assertSame(0, $data['plain']);
-        $this->assertSame(0, $data['again']);
+        $this->assertTrue($data['plain']);
+        $this->assertTrue($data['again']);
         $this->assertSame('first,second,', $data['body'], 'successful appends must store exactly their records');
+        $this->assertTrue($data['named']);
+        $this->assertSame($data['namedpath'], $data['namedbody'], 'data that names an existing file was replaced by the content of that file');
+        $this->assertTrue($data['addr']);
+        $this->assertSame([], $data['warn'], 'an appended address was probed as a path, which open_basedir turns into a warning');
+        $this->assertSame('141.148.184.29,', $data['addrbody']);
     }
 
     # A user hit records the visitor name once and derives the user counter from the set
@@ -250,6 +256,18 @@ final class StatsContractTest extends TestCase
         $this->assertSame('3', $part[2]);
         $this->assertSame('203.0.113.36,', $this->getFile('ips.log'));
         $this->assertSame('', $this->getFile('user.log'), 'a guest never enters the user set');
+    }
+
+    # Repeated hits of one signed-in user enter the user set once and the user counter follows the set
+    #[Test]
+    public function repeatedUserHitsCountTheUserOnce(): void
+    {
+        $data = $this->getHit('203.0.113.37', 3, true);
+        $this->assertSame(1, $data['isuser'], 'the probe found no account to sign in with');
+        $part = $this->getFields();
+        $this->assertSame('1', $part[7]);
+        $this->assertSame(1, substr_count($this->getFile('user.log'), ','), 'one user entered the set more than once');
+        $this->assertNotSame(',', $this->getFile('user.log'));
     }
 
     # The real updateStatsCookie() continues a v2 session, keeps the country cache, and exposes no uniqueness state

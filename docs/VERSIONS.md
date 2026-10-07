@@ -2,6 +2,30 @@
 
 ## 2026-10-07
 
+### Retired addresses answer 404, 410 or 301, and the statistics append only what they are given
+
+Two findings of the production logs of 2026-08-18 to 2026-08-21, neither of them the cause of that day's outage
+(PHP-FPM had stopped, nginx answered 502).
+
+- **A path that is no address answers 404.** The router read only the query, so `/news.html` of the long-retired
+  `.html` scheme rendered the start page with 200 — 7058 requests in 2.9 days, almost all of them machines. Any path
+  that reaches `index.php` other than the folder and its scripts now gets the standard 404 page; a real `.html` file
+  is served by the server first, and a status an error document brings in `?error=` is kept. No table of the old
+  scheme is built.
+- **A path after a script answers 301.** `/index.php/index.php?name=sitemap` (1049 requests, from links Google
+  keeps), `/index.php/` and `/admin.php/x` answer 301 to the script with the same query, or to the folder for a bare
+  `index.php`. The target is built from the script name, which closes the open redirect of the old rule
+  (`//other.host/index.php` sent `Location: //other.host/`); `nginx.conf.example` sends such a path to the script.
+- **A retired file answers 410.** A missing file under `uploads/` and the direct address of a file of a closed owner.
+- **`addFile()` writes data only.** It took its second argument as a source file or as the data and told them apart
+  with `is_file()`. The visit statistics append an address or a user name followed by a comma, so every new visitor
+  probed a path, which `open_basedir` logged as a warning (`File(141.148.184.29,) is not within the allowed path(s)`),
+  and data that named an existing file would have appended the content of that file. `addFile(string $file, string
+  $data, string $mode = 'w'): bool` writes or appends exactly the data; the compression branch had no caller and went
+  with `$comp`, `$del` and `$max`.
+- **Breaking:** `addFile()` returns `bool` instead of the codes `0`–`3` and drops its parameters `$comp`, `$del` and
+  `$max`; a caller that copied a file reads it first.
+
 ### Every uploaded file leaves through the owner of the text that names it
 
 Node closed its upload folders and served a file to the reader of its material; every other module linked its files

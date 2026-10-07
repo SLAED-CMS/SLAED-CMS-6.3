@@ -937,15 +937,35 @@ if ($mode === 'statscookie') {
 } elseif ($mode === 'stathit') {
     $_SERVER['REMOTE_ADDR'] = $argv[3] ?? '127.0.0.1';
     $rep = max(1, (int)($argv[4] ?? 1));
+    $guest = 0;
+    if (($argv[5] ?? '') === 'user') {
+        $urow = $db->getSqlRow($db->getSqlQuery('SELECT id, name, password FROM '.PREFIX_DB.'_users WHERE password != \'\' ORDER BY id ASC LIMIT 1'));
+        $user = $urow ? [(string)$urow['id'], (string)$urow['name'], (string)$urow['password']] : [];
+        $guest = 2;
+    }
     for ($num = 0; $num < $rep; $num++) {
-        updateStatsTrack('/index.php?name=voting', 0, ['sess' => null, 'country' => 'DE']);
+        updateStatsTrack('/index.php?name=voting', $guest, ['sess' => null, 'country' => 'DE']);
     }
     $out = getProbeCounter();
+    $out['isuser'] = is_user();
 } elseif ($mode === 'appendfail') {
-    $out['blocked'] = addFile(COUNTER_DIR.'/blocked', 'payload,', 'none', false, 'a');
-    $out['plain'] = addFile(COUNTER_DIR.'/plain.log', 'first,', 'none', false, 'a');
-    $out['again'] = addFile(COUNTER_DIR.'/plain.log', 'second,', 'none', false, 'a');
+    $out['blocked'] = addFile(COUNTER_DIR.'/blocked', 'payload,', 'a');
+    $out['plain'] = addFile(COUNTER_DIR.'/plain.log', 'first,', 'a');
+    $out['again'] = addFile(COUNTER_DIR.'/plain.log', 'second,', 'a');
     $out['body'] = is_file(COUNTER_DIR.'/plain.log') ? (string)file_get_contents(COUNTER_DIR.'/plain.log') : '';
+    file_put_contents(COUNTER_DIR.'/named', 'content of a file on disk');
+    $out['named'] = addFile(COUNTER_DIR.'/named.log', COUNTER_DIR.'/named', 'a');
+    $out['namedbody'] = (string)file_get_contents(COUNTER_DIR.'/named.log');
+    $out['namedpath'] = COUNTER_DIR.'/named';
+    $out['warn'] = [];
+    ini_set('open_basedir', COUNTER_DIR);
+    set_error_handler(static function(int $code, string $text) use (&$out): bool {
+        $out['warn'][] = $text;
+        return true;
+    });
+    $out['addr'] = addFile(COUNTER_DIR.'/ips.log', '141.148.184.29,', 'a');
+    restore_error_handler();
+    $out['addrbody'] = (string)file_get_contents(COUNTER_DIR.'/ips.log');
     $out['log'] = is_file(LOGS_DIR.'/error_file.log') ? (string)file_get_contents(LOGS_DIR.'/error_file.log') : '';
 } elseif ($mode === 'filters') {
     $out['num'] = [filterNum('123'), filterNum('abc123def'), filterNum('abc'), filterNum(''), filterNum('-5'), filterNum('999999999')];

@@ -1355,9 +1355,9 @@ function updateStatsTrack(string $request, int $guest, array $state): void {
             return;
         }
         $ipnew = !str_contains(','.$iplog, ','.$ip.',');
-        if ($ipnew && addFile($spath.'ips.log', $ip.',', 'none', false, 'a') !== 0) $ipnew = false;
+        if ($ipnew && !addFile($spath.'ips.log', $ip.',', 'a')) $ipnew = false;
         $unew = $uname !== '' && !str_contains(','.$unlog, ','.$uname.',');
-        if ($unew && addFile($spath.'user.log', $uname.',', 'none', false, 'a') !== 0) $unew = false;
+        if ($unew && !addFile($spath.'user.log', $uname.',', 'a')) $unew = false;
         $shost = substr_count($iplog, ',') + ($ipnew ? 1 : 0);
         $suser = substr_count($unlog, ',') + ($unew ? 1 : 0);
         if ($isday) {
@@ -2148,17 +2148,8 @@ function filterTextHighlight(string $sourse, string $word): string {
     return str_replace($to, $from, $sourse);
 }
 
-# Write, append, or compress file; a short write counts as a failure and an incomplete append is rolled back so callers never see a partial record as success
-function addFile(string $file, string $src, string $comp = 'none', bool $del = false, string $mode = 'w', int $max = 10485760): int {
-    if (is_file($src)) {
-        $data = file_get_contents($src);
-        if ($data === false) {
-            addErrorFile(_ERR_READ.': '.$src);
-            return 1;
-        }
-    } else {
-        $data = $src;
-    }
+# Write or append exactly the given data; a short write fails and an incomplete append is rolled back, so no partial record counts as success
+function addFile(string $file, string $data, string $mode = 'w'): bool {
     $done = false;
     if ($mode === 'a') {
         $hand = fopen($file, 'ab');
@@ -2176,12 +2167,8 @@ function addFile(string $file, string $src, string $comp = 'none', bool $del = f
     } else {
         $done = (file_put_contents($file, $data, LOCK_EX) === strlen($data));
     }
-    if (!$done) {
-        addErrorFile(_ERR_WRITE.': '.$file);
-        return 2;
-    }
-    if ($comp !== 'none') return addCompress(dirname($file), $file, basename($file), $comp, filesize($file) > $max || $del) ? 0 : 3;
-    return 0;
+    if (!$done) addErrorFile(_ERR_WRITE.': '.$file);
+    return $done;
 }
 
 # Secure recursive directory deletion
