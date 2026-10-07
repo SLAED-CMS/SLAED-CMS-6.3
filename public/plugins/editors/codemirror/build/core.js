@@ -1,0 +1,10 @@
+export { EditorView, keymap, ViewPlugin, Decoration, MatchDecorator } from '@codemirror/view'
+export { EditorState, Compartment } from '@codemirror/state'
+export { basicSetup } from 'codemirror'
+export { indentWithTab, undo, redo, toggleComment, selectAll } from '@codemirror/commands'
+export { syntaxHighlighting, foldAll, unfoldAll } from '@codemirror/language'
+export { classHighlighter } from '@lezer/highlight'
+export { openSearchPanel } from '@codemirror/search'
+export { startCompletion } from '@codemirror/autocomplete'
+export { linter, lintGutter, openLintPanel, nextDiagnostic } from '@codemirror/lint'
+export const editors = {}

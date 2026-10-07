@@ -149,7 +149,7 @@ function addAdminAccount(): void {
         $atwo = getVar('post', 'apwd2', 'raw', '');
         $auser_new = intval($_POST['auser_new'] ?? 0);
         $aeditor   = (string)($conf['editor']['admin'] ?? 'plain');
-        if (!isValidEditor($aeditor, 'admin')) $aeditor = 'plain';
+        if (!Editor::isValidEditor($aeditor, 'admin')) $aeditor = 'plain';
         $alang     = getCookies('language');
         $aip       = getip();
         if (!$aname || !analyze_name($aname)) $stop = _ERRORINVNICK;
@@ -339,22 +339,6 @@ function getAdminLoginForm(): void {
     setFoot();
 }
 
-function isValidEditor(string $key, string $role): bool {
-    if ($key === '') return false;
-    $path = PUBLIC_DIR.'/plugins/editors/'.$key.'/manifest.json';
-    if (!is_file($path)) return false;
-    $json = file_get_contents($path);
-    if ($json === false || $json === '') return false;
-    $data = json_decode($json, true);
-    if (!is_array($data)) return false;
-    if (($data['id'] ?? '') !== $key) return false;
-    if (($data['enabled'] ?? false) !== true) return false;
-    if (($data['type'] ?? '') !== 'content') return false;
-    $roles = $data['roles'] ?? [];
-    if (!is_array($roles)) return false;
-    return in_array($role, $roles, true);
-}
-
 # Store the editor an administrator picked, on the row and in the session, so every screen of the panel opens the same one
 function updateAdminEditor(): void {
     global $db, $admin, $afile, $conf;
@@ -369,9 +353,9 @@ function updateAdminEditor(): void {
     if (count($part) !== 4) {
         setRedirect($afile.'.php', true);
     }
-    if (!isValidEditor($key, 'admin')) {
+    if (!Editor::isValidEditor($key, 'admin')) {
         $key = $conf['editor']['admin'] ?? 'plain';
-        if (!isValidEditor($key, 'admin')) $key = 'plain';
+        if (!Editor::isValidEditor($key, 'admin')) $key = 'plain';
     }
     $part[3] = $key;
     unset($_SESSION[$conf['admin_c']]);

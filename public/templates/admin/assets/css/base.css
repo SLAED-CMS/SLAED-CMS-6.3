@@ -72,6 +72,8 @@
   --sl-line-tight: 1.2;
   --sl-line-normal: 1.45;
   --sl-line-loose: 1.6;
+  /* The face of code: the mono font each system already carries, so no file is fetched for it */
+  --sl-face-mono: ui-monospace, "Cascadia Mono", "SFMono-Regular", Consolas, "Liberation Mono", monospace;
   --sl-weight-normal: 400;
   --sl-weight-medium: 500;
   --sl-weight-semibold: 600;
@@ -329,6 +331,7 @@
   --sl-count-height: 22px;
   --sl-row-border: 2px;
   --sl-editor-height: 250px;
+  --sl-editor-max-height: 50vh;
   --sl-editor-mode-height: 28px;
   --sl-editor-tab-height: 24px;
   --sl-editor-tab-width: 70px;

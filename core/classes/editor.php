@@ -73,7 +73,7 @@ class Editor {
         $profile = (string)($data['profile'] ?? 'full');
         $lang = (string)($data['lang'] ?? 'text');
         $man = self::getManifest($key);
-        if (!$man || !($man['enabled'] ?? true) || ($man['type'] ?? '') !== 'code'
+        if (!$man || !($man['enabled'] ?? true) || !self::checkType($man, 'code')
             || !in_array('admin', (array)($man['roles'] ?? []), true)) {
             $key = 'codemirror';
             $man = self::getManifest($key);
@@ -158,7 +158,7 @@ class Editor {
         return self::getAssetTags([$skin], []);
     }
 
-    # Return parsed manifest for one editor; null if missing or invalid
+    # Return parsed manifest for one editor; null if missing, invalid or named apart from its directory, so a key never walks out of it
     public static function getManifest(string $id): ?array {
         if (isset(self::$mdata[$id])) return self::$mdata[$id];
         $path = PUBLIC_DIR.'/plugins/editors/'.$id.'/manifest.json';
@@ -168,6 +168,7 @@ class Editor {
         foreach (['id', 'type', 'driver', 'entry', 'roles', 'profiles', 'formats'] as $name) {
             if (!isset($data[$name])) return null;
         }
+        if ($data['id'] !== $id) return null;
         self::$mdata[$id] = $data;
         return $data;
     }
@@ -180,11 +181,16 @@ class Editor {
         return in_array($mode, ['plain', 'markdown', 'html'], true) ? $mode : 'plain';
     }
 
+    # Whether a manifest serves one editor type, its type given as one string or as a list of them
+    private static function checkType(array $man, string $type): bool {
+        return in_array($type, (array)($man['type'] ?? []), true);
+    }
+
     # Validate that manifest qualifies as an enabled content editor for the given role
     private static function checkManifest(?array $man, string $role): bool {
         return $man !== null
             && ($man['enabled'] ?? true)
-            && ($man['type'] ?? '') === 'content'
+            && self::checkType($man, 'content')
             && in_array($role, (array)($man['roles'] ?? []), true);
     }
 
@@ -203,7 +209,7 @@ class Editor {
             $man = self::getManifest($dir);
             if (!$man) continue;
             if (!($man['enabled'] ?? true)) continue;
-            if ($type && ($man['type'] ?? '') !== $type) continue;
+            if ($type && !self::checkType($man, $type)) continue;
             if ($role && !in_array($role, (array)($man['roles'] ?? []), true)) continue;
             $list[$man['id']] = $man;
         }

@@ -1,5 +1,5 @@
 {
-    "generated": "2026-10-01T20:32:51Z",
+    "generated": "2026-10-07T19:56:36Z",
     "themes": {
         "admin": {
             "count": 0,
@@ -7,7 +7,7 @@
             "dup": 0,
             "names": 0,
             "dead": 0,
-            "single": 160,
+            "single": 158,
             "alias": 0,
             "unsat": 0,
             "unmet": 0,
@@ -15,7 +15,7 @@
             "clash": 0,
             "classes": 0,
             "important": 21,
-            "tokens": 326,
+            "tokens": 328,
             "contrast": 0
         },
         "lite": {
@@ -99,12 +99,14 @@
             "--sl-ease-in-out",
             "--sl-ease-out",
             "--sl-editor-height",
+            "--sl-editor-max-height",
             "--sl-editor-mode-height",
             "--sl-editor-tab-height",
             "--sl-editor-tab-width",
             "--sl-emoji-full-gap",
             "--sl-emoji-grid-height",
             "--sl-emoji-max-height",
+            "--sl-face-mono",
             "--sl-fade-disabled",
             "--sl-fade-muted",
             "--sl-fade-subtle",

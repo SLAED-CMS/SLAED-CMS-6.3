@@ -4,8 +4,9 @@ Work plan for one editor shell and a second role for CodeMirror: CodeMirror stay
 text editor to choose beside Plain, TinyMCE, CKEditor and Toast UI; Plain stays the light one. Plain and CodeMirror
 wear the same frame, capsule, status line, palette and comparison window.
 
-Status: batch 0 done on 2026-10-07 (the decisions answered, the `<br>` check, the baseline); no code yet. The order of
-the batches is kept in `docs/ROADMAP-2026.md`. Update this line as batches land.
+Status: batches 0 to 2 done on 2026-10-07 (the decisions answered, the `<br>` check, the baseline; CodeMirror painted
+by the admin theme, One Dark gone, the panels in six locales; `type` read as a list, the core and each language built
+as files of their own). The order of the batches is kept in `docs/ROADMAP-2026.md`. Update this line as batches land.
 
 No line numbers anywhere in this document on purpose: every reference names the function, the file or the constant
 it points at, and that name is what to search for.
@@ -267,6 +268,18 @@ Each batch ends with its checks green, a report, and no commit without the owner
   name; `cm6.css` loses the fixed 400 points; the Tahoma rule on `.cm-content` and the second-editor height hack go.
 - Russian phrases for the CodeMirror panels.
 - Checks: every code screen above opens with code in the mono face, light and dark; `ui:after`, `npm run ui:gates`.
+- Done 2026-10-07. The mount of a code editor carries the shell name `sl-editor` in place of `sl-code-editor` (both
+  `editor-mount.html`, both `theme.css`), so the token theme hangs on the class the frame of batch 3 takes over; until
+  then the mount is the shell. `--sl-face-mono` and `--sl-editor-max-height` (50vh, the stand's cap) join the admin API
+  block; the floor `--sl-editor-height` now stands on `.cm-content` and `.cm-gutter`, as CodeMirror asks, so the gutter
+  reaches the bottom of a short file. `cm6.css` keeps only the focus outline. The phrases are every one the bundled
+  packages translate, the stand's set and what it left out (the `regexp` label, the control-character title and the
+  announcements to a screen reader): twenty-five `_EDITOR_*` constants plus `_ALL`, `_CLOSE`, `_EDITOR_PREV` and
+  `_EDITOR_NEXT`; until batch 3 the driver writes them into its start script. The bundle is 240 KB gzip (237 before): the lint, search and language exports outweigh One Dark.
+  The stand's colours were held to AA by the regenerated contrast registry: line numbers and comments take
+  `--sl-text-muted` in place of `--sl-text-subtle`, tags `--sl-primary-strong`. The same crawl was the first over
+  `admin-sysfile` and found the current node of the file tree at 4.09 to 1; by the owner's answer of 2026-10-07 it was
+  fixed in this batch, `.sl-fm-node[aria-current]` on `--sl-primary-strong`.
 
 ### Batch 2 — the manifest and the split build
 
@@ -274,6 +287,21 @@ Each batch ends with its checks green, a report, and no commit without the owner
   the editor lists of `getSelect()`.
 - The build writes the core and each language as separate files; the runtime loader of batch 3 is their only user.
 - `@codemirror/lang-markdown` joins `build/package.json` for the text role.
+- Done 2026-10-07. `Editor::checkType()` reads `type` as one string or a list and replaces the three comparisons; the
+  fourth, `isValidEditor()` of `admin/index.php`, was a copy of `Editor::isValidEditor()` with its own string comparison
+  and is gone, its two callers call the class; the one thing only the copy checked, a manifest `id` equal to its
+  directory, moved into `Editor::getManifest()`, so no key reaches a manifest or a driver outside its own folder. By the owner's answer of 2026-10-07 the CodeMirror manifest takes the
+  list form as `["code"]` only, with its roles and format unchanged: `content`, the `user` role and the formats of the
+  design join in batch 4 together with `ContentDriver`, so no list offers a text editor that renders Plain. Tests in
+  `EditorFormatTest`: both forms of `type`, the three lists of `getSelect()`, a file for every language of the manifest.
+  `build.mjs` writes ES modules with splitting into `assets/`: `core.js`, `lang-<key>.js` for the seven languages of the
+  manifest and `markdown`, each exporting `language`, and shared `chunk-<hash>.js` files whose name follows their
+  content, so the week an unversioned address lives in the browser is safe. A language file never imports `core.js`,
+  which the build refuses and the test checks: the loader takes the core by its versioned address, and an import of
+  the bare one would load a second core. `entry.js` re-exports `core.js` and still builds `cm6.bundle.js`, the asset of
+  the current driver, unchanged in size. Gzip, measured: the core 130.5 KB; with a language css 151.8, sql 151.8, xml
+  145.0, json 140.4, js 171.9, html 195.8, markdown 210.6, php 223.5, against 239.5 for the bundle on every code
+  screen. Each language highlighted its sample in the browser from the split files with no error.
 
 ### Batch 3 — the shell and the runtime
 
@@ -282,6 +310,9 @@ Each batch ends with its checks green, a report, and no commit without the owner
 - `plugins/system/editor.js` with the frame, status, dirty mark, full screen, wrap, copy, reset, undo and the lazy
   loading of CodeMirror; Plain and CodeMirror as code render through the shell; `EditorCodemirror` keeps no
   JavaScript string.
+- `cm6.bundle.js`, its `entry.js` and the IIFE half of `build.mjs` leave once the driver loads through the runtime; the
+  readers of `CM6.editors` (`admin-ui.js`, `editor-robots.js`, the editor module of the panel) move to what the runtime
+  offers.
 - The draft of the tab in `sessionStorage` (answered decision 6): kept while the text differs from the loaded one,
   offered back when the same form opens again in the tab, erased on submit.
 - Constants in six locales.
@@ -291,6 +322,8 @@ Each batch ends with its checks green, a report, and no commit without the owner
 ### Batch 4 — CodeMirror as a text editor
 
 - `EditorCodemirror` implements `ContentDriver`: markdown, plain and, in the panel, html.
+- The manifest becomes the one under "The manifest": `type` `["content", "code"]`, roles `user` and `admin`, the formats
+  `plain`, `markdown`, `html` (owner, 2026-10-07: not before the driver serves them).
 - It appears in the editor lists of the settings for both roles.
 
 ### Batch 5 — file manager

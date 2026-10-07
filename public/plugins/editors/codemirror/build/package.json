@@ -3,6 +3,14 @@
     "devDependencies": { "esbuild": "^0.24" },
     "dependencies": {
         "codemirror": "^6",
+        "@codemirror/state": "^6",
+        "@codemirror/view": "^6",
+        "@codemirror/commands": "^6",
+        "@codemirror/language": "^6",
+        "@codemirror/search": "^6",
+        "@codemirror/autocomplete": "^6",
+        "@codemirror/lint": "^6",
+        "@lezer/highlight": "^1",
         "@codemirror/lang-php": "^6",
         "@codemirror/lang-html": "^6",
         "@codemirror/lang-css": "^6",
@@ -10,7 +18,6 @@
         "@codemirror/lang-sql": "^6",
         "@codemirror/lang-xml": "^6",
         "@codemirror/lang-json": "^6",
-        "@codemirror/commands": "^6",
-        "@codemirror/theme-one-dark": "^6"
+        "@codemirror/lang-markdown": "^6"
     }
 }

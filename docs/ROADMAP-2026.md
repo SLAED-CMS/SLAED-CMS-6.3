@@ -86,8 +86,8 @@ into the plan, then do whatever work the step names.
   CodeMirror as text does not inherit the loss. Done 2026-10-07: a stored `<br>` mounts as a line end for `plain` and
   as a Markdown hard break for `markdown` (owner, 2026-10-07); the reference is `docs/EDITORS.md`, "Line Breaks on
   Mount". (2026-10-07)
-- [ ] 28. EDITOR batch 1 — CodeMirror in the theme.
-- [ ] 29. EDITOR batch 2 — the manifest and the split build.
+- [x] 28. EDITOR batch 1 — CodeMirror in the theme. (2026-10-07)
+- [x] 29. EDITOR batch 2 — the manifest and the split build. (2026-10-07)
 - [ ] 30. EDITOR batch 3 — the shell and the runtime.
 - [ ] 31. EDITOR batch 4 — CodeMirror as a text editor.
 - [ ] 32. EDITOR batch 5 — file manager for Plain and CodeMirror as text.

@@ -1565,7 +1565,7 @@ button.sl-but-mini:hover,
 .sl-form-row:has(.ck-editor),
 .sl-form-row:has(.cm-editor),
 .sl-form-row:has(.tox-tinymce),
-.sl-form-row:has(.sl-code-editor) {
+.sl-form-row:has(.sl-editor) {
   grid-template-columns: minmax(0, 1fr);
   gap: var(--sl-space-3);
   align-items: start;

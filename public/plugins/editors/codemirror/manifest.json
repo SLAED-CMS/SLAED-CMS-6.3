@@ -1,7 +1,7 @@
 {
     "id": "codemirror",
     "label": "CodeMirror 6",
-    "type": "code",
+    "type": ["code"],
     "driver": "EditorCodemirror",
     "entry": "driver.php",
     "enabled": true,
