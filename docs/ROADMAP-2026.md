@@ -6,7 +6,7 @@ The one entry point for the work before release 8.0. The owner starts every sess
 Работай по плану: docs/ROADMAP-2026.md
 ```
 
-This file holds the order and the progress; the five plans hold the content. No plan file decides its own order any
+This file holds the order and the progress; the plans hold the content. No plan file decides its own order any
 more: where a plan and this file disagree about the order, this file wins.
 
 | Plan | Subject |
@@ -16,6 +16,7 @@ more: where a plan and this file disagree about the order, this file wins.
 | `docs/2-PROD-FINDINGS-2026.md` | retired addresses answer 410 or 301, `addFile()` writes data only |
 | `docs/3-ASSET-CACHE-2026.md` | versioned asset addresses, browser lifetimes, `defer` |
 | `docs/4-EDITOR-2026.md` | one editor shell; CodeMirror also a text editor to choose, Plain stays light |
+| `docs/5-NODE-HEAD-2026.md` | the header of a Node list from the stand `nh-13`, views by type, the RSS channel fixed in five points, a live list, search hints |
 
 ## How a session runs
 
@@ -72,9 +73,9 @@ into the plan, then do whatever work the step names.
   with its lasting part in `docs/VERSIONS.md`. (2026-10-07)
 - [x] 20. ASSET-CACHE batch 0 — inventory and baseline. (2026-10-07)
 - [x] 21. ASSET-CACHE batch 1 — versioned addresses. (2026-10-07)
-- [ ] 22. ASSET-CACHE batch 2 — lifetimes.
-- [ ] 23. ASSET-CACHE batch 3 — defer.
-- [ ] 24. ASSET-CACHE batch 4 — reference; deletes `docs/3-ASSET-CACHE-2026.md`.
+- [x] 22. ASSET-CACHE batch 2 — lifetimes. (2026-10-07)
+- [x] 23. ASSET-CACHE batch 3 — defer. (2026-10-07)
+- [x] 24. ASSET-CACHE batch 4 — reference; deletes `docs/3-ASSET-CACHE-2026.md`. (2026-10-07)
 - [ ] 25. PRIVATE-DATA batch 6 — reference; deletes `docs/0-PRIVATE-DATA-2026.md`.
 - [ ] 26. EDITOR batch 0 — *decision*: the open decisions, the `<br>` check, the baseline.
 - [ ] 27. EDITOR batch 1 — CodeMirror in the theme.
@@ -88,4 +89,13 @@ into the plan, then do whatever work the step names.
 - [ ] 35. EDITOR batch 9 — comparison.
 - [ ] 36. EDITOR batch 10 — preview.
 - [ ] 37. EDITOR batch 11 — reference; deletes `docs/4-EDITOR-2026.md`.
-- [ ] 38. Close — no `docs/*-2026.md` plan is left; delete this file and report that the work before 8.0 is done.
+- [ ] 38. NODE-HEAD batch 0 — *decision*: the open decisions, the callers of `getModuleNavi()`, the baseline.
+- [ ] 39. NODE-HEAD batch 1 — the feed.
+- [ ] 40. NODE-HEAD batch 2 — the script.
+- [ ] 41. NODE-HEAD batch 3 — the data of the header.
+- [ ] 42. NODE-HEAD batch 4 — template, theme, strings.
+- [ ] 43. NODE-HEAD batch 5 — views.
+- [ ] 44. NODE-HEAD batch 6 — live list and "Показать ещё".
+- [ ] 45. NODE-HEAD batch 7 — search hints.
+- [ ] 46. NODE-HEAD batch 8 — reference; deletes `docs/5-NODE-HEAD-2026.md`.
+- [ ] 47. Close — no `docs/*-2026.md` plan is left; delete this file and report that the work before 8.0 is done.

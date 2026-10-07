@@ -46,6 +46,7 @@ final class UpdateConfigTest extends TestCase
         $this->assertSame([$run['ship']['version'], $run['ship']['css_f'], $run['ship']['amod']], [$glob['version'], $glob['css_f'], $glob['amod'] ?? null]);
         $this->assertSame([$run['ship']['theme'], 'mark.svg'], [$glob['theme'], $glob['site_logo']], 'A theme that left the tree was kept or a logo of the theme was dropped');
         $this->assertArrayNotHasKey('forum', $glob, 'A 6.2 key that names a configuration area reached global.php and shadows that area');
+        $this->assertSame([], array_intersect_key($glob, ['script_a' => 0, 'script_b' => 0]), 'A script switch the release dropped was carried');
         $this->assertSame(['de', 'k1'], [$run['lang']['lang'], $run['lang']['key']]);
         $want = ['stat' => '0'] + $run['ship']['statistic'];
         ksort($want);

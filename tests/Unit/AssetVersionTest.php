@@ -1,11 +1,12 @@
 <?php
+declare(strict_types=1);
 
 namespace Tests\Unit;
 
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-# Batch 1 of docs/3-ASSET-CACHE-2026.md: every asset address carries the version of its content, from the derived map, and a page never stats an asset file
+# docs/PERFORMANCE.md, section "Static Assets": every asset address carries the version of its content from the derived map, and the head scripts run deferred in order
 class AssetVersionTest extends TestCase
 {
     private static array $probe = [];
@@ -150,6 +151,60 @@ class AssetVersionTest extends TestCase
         $this->assertSame(1, preg_match('#load\.apply\(null,(\[.*\])\);#', $probe['htmx'], $hit), 'The fragment names no list to the client loader');
         $this->assertSame($page, array_merge(...json_decode($hit[1], true)), 'The loader would fetch the engine a second time');
         foreach ($page as $url) $this->assertStringContainsString('?v=', $url);
+    }
+
+    # A stored parser rendering carries the highlight scripts, so their versions are part of its cache key and an update retires it
+    #[Test]
+    public function theParserCacheKeyFollowsTheHighlightVersions(): void
+    {
+        if (!class_exists('Parser', false)) require_once BASE_DIR.'/core/classes/parser.php';
+        $hash = new \ReflectionMethod(\Parser::class, 'getConfigHash');
+        $prs = new \Parser();
+        $GLOBALS['conf']['derived']['version'] = ['plugins/highlightjs/highlight.min.js' => 'aaaaaaaaaa'];
+        $old = $hash->invoke($prs, 'asset-one');
+        $this->assertSame($old, $hash->invoke($prs, 'asset-two'), 'The same versions give the same key');
+        $GLOBALS['conf']['derived']['version'] = ['plugins/highlightjs/highlight.min.js' => 'bbbbbbbbbb'];
+        $this->assertNotSame($old, $hash->invoke($prs, 'asset-three'), 'A rendering stored with the old highlight address would outlive the update');
+    }
+
+    # Every head script of both themes is deferred, and the shipped list of script_f runs first and in its order, since slaed.js relies on htmx and global-func.js
+    #[Test]
+    public function theHeadScriptsAreDeferredInTheShippedOrder(): void
+    {
+        $probe = $this->getProbe();
+        $ship = (require BASE_DIR.'/config/global.php')['script_f'];
+        $want = array_map('trim', explode(',', $ship));
+        $this->assertSame(['plugins/htmx/htmx.min.js', 'plugins/system/global-func.js', 'plugins/system/slaed.js'], array_slice($want, 0, 3));
+        foreach (['lite', 'admin'] as $theme) {
+            $this->assertSame(0, preg_match('#<script(?![^>]*\sdefer\b)[^>]*\ssrc=#', $probe[$theme]['js']), 'A '.$theme.' head script is not deferred');
+            $this->assertStringNotContainsString('async', $probe[$theme]['js']);
+            $list = array_map(static fn(string $v): string => explode('?v=', $v)[0], $this->getAddresses($probe[$theme]['js']));
+            $this->assertSame($want, array_slice($list, 0, count($want)), 'The '.$theme.' head changed the shipped order');
+            $this->assertSame($list, array_values(array_unique($list)), 'The '.$theme.' head prints a script twice');
+        }
+    }
+
+    # The two switches of an older web are gone from the shipped source, the settings form and the configuration a request reads
+    #[Test]
+    public function neitherScriptSwitchIsLeft(): void
+    {
+        $this->assertSame([], $this->getProbe()['keys'], 'The derived configuration still carries script_a or script_b');
+        $ship = require BASE_DIR.'/config/global.php';
+        $this->assertArrayNotHasKey('script_a', $ship);
+        $this->assertArrayNotHasKey('script_b', $ship);
+        $code = (string)file_get_contents(BASE_DIR.'/admin/modules/config.php');
+        $this->assertDoesNotMatchRegularExpression('#script_[ab]\b#', $code, 'The settings form still shows or saves a script switch');
+    }
+
+    # The init of an editor on a page load waits for the deferred slaed.js, so every instance registers its teardown before an htmx swap can remove it
+    #[Test]
+    public function anEditorInitWaitsForTheDeferredHead(): void
+    {
+        $init = $this->getProbe()['editor']['init'];
+        $this->assertStringContainsString('document.addEventListener("DOMContentLoaded",start)', $init);
+        $want = 'if(window.SlaedEditors||document.readyState!=="loading"){start();}';
+        $this->assertStringContainsString($want, $init, 'A fragment or a late script would wait for an event already gone');
+        $this->assertStringContainsString('window.SlaedEditors.own(el,', $init);
     }
 
     # The robots screen prints no tag of its own for a script the admin package prints on every panel page

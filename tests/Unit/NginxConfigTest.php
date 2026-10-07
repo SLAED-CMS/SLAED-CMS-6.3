@@ -78,6 +78,89 @@ final class NginxConfigTest extends TestCase
         $this->assertStringNotContainsString('.htaccess', preg_replace('/^\s*#.*$/m', '', $text), 'A rule of the block names a guard file, which no folder carries');
     }
 
+    # The lifetime the table of the asset cache plan gives a static file by its kind, or null where no static rule may answer
+    private function getPlannedCache(string $rel, bool $ver): ?string
+    {
+        $ext = strtolower(pathinfo($rel, PATHINFO_EXTENSION));
+        if (in_array($ext, ['css', 'js', 'mjs'], true)) return $ver ? 'public, max-age=31536000, immutable' : 'public, max-age=604800';
+        $week = ['woff2', 'woff', 'ttf', 'otf', 'eot', 'jpg', 'jpeg', 'png', 'gif', 'webp', 'avif', 'svg', 'ico', 'mp3', 'ogg', 'wav'];
+        return in_array($ext, $week, true) ? 'public, max-age=604800' : null;
+    }
+
+    # The Cache-Control public/.htaccess sets on a file of the document root: the last FilesMatch of mod_headers that matches wins
+    private function getApacheCache(string $rel, string $query): ?string
+    {
+        $text = (string)file_get_contents(PUBLIC_DIR.'/.htaccess');
+        if (!preg_match('#<IfModule mod_headers\.c>(.*?)\n</IfModule>#s', $text, $hit)) return null;
+        preg_match_all('#<FilesMatch "([^"]+)">(.*?)</FilesMatch>#s', $hit[1], $rows, PREG_SET_ORDER);
+        $out = null;
+        foreach ($rows as $row) {
+            if (preg_match('#'.$row[1].'#', basename($rel)) !== 1) continue;
+            $cond = '#<If "%\{QUERY_STRING\} =~ /(.+?)/">\s*Header set Cache-Control "([^"]+)"\s*</If>\s*<Else>\s*Header set Cache-Control "([^"]+)"\s*</Else>#';
+            if (preg_match($cond, $row[2], $part)) $out = preg_match('#'.$part[1].'#', $query) === 1 ? $part[2] : $part[3];
+            elseif (preg_match('#Header set Cache-Control "([^"]+)"#', $row[2], $part)) $out = $part[1];
+        }
+        return $out;
+    }
+
+    # The Cache-Control nginx.conf.example sends for a path: a ^~ prefix first, then the first regex location, the server variable resolved by $arg_v
+    private function getNginxCache(string $path, string $query): ?string
+    {
+        $text = $this->getConfig();
+        preg_match_all('#location\s+(\^~|~\*?)\s+(\S+)\s*\{([^{}]*)\}#', $text, $rows, PREG_SET_ORDER);
+        $pick = null;
+        foreach ($rows as $row) if ($row[1] === '^~' && str_starts_with($path, $row[2])) $pick ??= $row;
+        foreach ($rows as $row) if ($row[1] !== '^~' && preg_match('#'.$row[2].'#'.($row[1] === '~*' ? 'i' : ''), $path) === 1) $pick ??= $row;
+        if (!$pick || !preg_match('#add_header\s+Cache-Control\s+("([^"]+)"|\$(\w+));#', $pick[3], $hit)) return null;
+        if (($hit[3] ?? '') === '') return $hit[2];
+        $vars = '#set\s+\$'.$hit[3].'\s+"([^"]+)";\s*if\s+\(\$arg_v\)\s*\{\s*set\s+\$'.$hit[3].'\s+"([^"]+)";\s*\}#';
+        if (!preg_match($vars, $text, $set)) return null;
+        parse_str($query, $args);
+        return in_array((string)($args['v'] ?? ''), ['', '0'], true) ? $set[1] : $set[2];
+    }
+
+    # Every file of the document root gets from both servers the lifetime of its kind, with and without a version; a page and an upload get none
+    #[Test]
+    public function bothServersGiveEveryStaticKindItsLifetime(): void
+    {
+        $base = str_replace('\\', '/', PUBLIC_DIR).'/';
+        $diff = [];
+        $kinds = [];
+        foreach (getTreeFiles(PUBLIC_DIR) as $file) {
+            if (!$file->isFile()) continue;
+            $rel = substr(str_replace('\\', '/', $file->getPathname()), strlen($base));
+            foreach (['' => false, 'v=3fa2c19d0b' => true] as $query => $ver) {
+                $want = $this->getPlannedCache($rel, $ver);
+                $one = $this->getApacheCache($rel, $query);
+                $two = $this->getNginxCache('/'.$rel, $query);
+                if ($want !== null) $kinds[pathinfo($rel, PATHINFO_EXTENSION).($ver ? '?v' : '')] = true;
+                if ($one !== $want) $diff[] = $rel.'?'.$query.': public/.htaccess sends '.var_export($one, true);
+                if ($two !== $want) $diff[] = $rel.'?'.$query.': nginx.conf.example sends '.var_export($two, true);
+            }
+        }
+        foreach (['css', 'css?v', 'js', 'js?v', 'svg', 'png', 'webp', 'woff2', 'mp3', 'ico'] as $one) $this->assertArrayHasKey($one, $kinds, 'The walk met no file of kind '.$one);
+        $this->assertSame([], array_slice($diff, 0, 20), 'A static file of public/ is kept for another lifetime than the asset cache plan names');
+        $this->assertSame([$this->getPlannedCache('a.png', false)], array_unique([$this->getApacheCache('img/Logo.PNG', ''), $this->getNginxCache('/img/Logo.PNG', '')]),
+            'A file name in capitals gets another lifetime than its kind');
+        $this->assertNull($this->getNginxCache('/uploads/node/news/a.png', ''), 'An upload must keep the header of the light path');
+        $this->assertNull($this->getNginxCache('/index.php', 'v=1'), 'A page must keep the no-store of PHP');
+    }
+
+    # nginx compresses the types public/.htaccess deflates, text/html being always compressed by gzip
+    #[Test]
+    public function theServerBlockCompressesWhatTheHtaccessDeflates(): void
+    {
+        preg_match_all('#^AddOutputFilterByType DEFLATE (.+)$#m', (string)file_get_contents(PUBLIC_DIR.'/.htaccess'), $rows);
+        $apache = array_diff(preg_split('#\s+#', implode(' ', $rows[1])) ?: [], ['text/html']);
+        $this->assertMatchesRegularExpression('#^\s*gzip\s+on;#m', $this->getConfig(), 'nginx.conf.example compresses nothing');
+        $this->assertSame(1, preg_match('#gzip_types\s+([^;]+);#', $this->getConfig(), $hit), 'nginx.conf.example names no gzip type');
+        $nginx = preg_split('#\s+#', trim($hit[1])) ?: [];
+        sort($apache);
+        sort($nginx);
+        $this->assertNotEmpty($apache);
+        $this->assertSame(array_values($apache), $nginx, 'The two servers compress different types');
+    }
+
     # Where an nginx binary is at hand, in SLAED_NGINX or on the PATH, the block passes nginx -t inside a minimal http context
     #[Test]
     public function theServerBlockPassesTheSyntaxCheck(): void

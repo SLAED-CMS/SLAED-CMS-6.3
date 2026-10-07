@@ -366,21 +366,27 @@
         }
     }
 
-    function getStorageKey(name, scoped) {
-        return scoped ? 'slaed-toggle:' + window.location.pathname + window.location.search + ':' + name : 'slaed-toggle:' + name;
+    // A toggle remembers its state for the site, for one address with scope "path", or never with scope "none"
+    function getStorageKey(name, scope) {
+        if (scope === 'none') return '';
+        return scope === 'path' ? 'slaed-toggle:' + window.location.pathname + window.location.search + ':' + name : 'slaed-toggle:' + name;
     }
 
-    function getToggleState(name, scoped) {
+    function getToggleState(name, scope) {
+        var key = getStorageKey(name, scope);
+        if (!key) return null;
         try {
-            return window.localStorage.getItem(getStorageKey(name, scoped));
+            return window.localStorage.getItem(key);
         } catch (err) {
             return null;
         }
     }
 
-    function setToggleState(name, scoped, value) {
+    function setToggleState(name, scope, value) {
+        var key = getStorageKey(name, scope);
+        if (!key) return;
         try {
-            window.localStorage.setItem(getStorageKey(name, scoped), value);
+            window.localStorage.setItem(key, value);
         } catch (err) {
         }
     }
@@ -433,7 +439,7 @@
         element.style.display = isOpen ? getToggleDisplay(element) : 'none';
     }
 
-    function setToggleBlock(id, scoped, isOpen, effect, duration) {
+    function setToggleBlock(id, scope, isOpen, effect, duration) {
         var element = document.getElementById(id);
         if (!element) return;
         var isHidden;
@@ -445,7 +451,7 @@
         }
         var nextOpen = typeof isOpen === 'boolean' ? isOpen : isHidden;
         setToggleBlockState(element, id, nextOpen, effect, duration);
-        setToggleState(id, scoped, nextOpen ? '1' : '0');
+        setToggleState(id, scope, nextOpen ? '1' : '0');
         if (nextOpen) {
             var items = getToggleControls(id);
             for (var num = 0; num < items.length; num++) items[num].dispatchEvent(new Event('sl-toggle-open'));
@@ -456,7 +462,7 @@
         if (control.getAttribute('data-sl-toggle-ready') === '1') return;
         var id = control.getAttribute('data-sl-toggle-control');
         if (!id) return;
-        var scoped = control.getAttribute('data-sl-toggle-scope') === 'path';
+        var scope = control.getAttribute('data-sl-toggle-scope') || '';
         var isCheckbox = control.type === 'checkbox';
         control.setAttribute('data-sl-toggle-ready', '1');
         control.setAttribute('aria-controls', id);
@@ -469,7 +475,7 @@
             if (!isCheckbox) event.preventDefault();
             var effect = control.getAttribute('data-sl-toggle-effect');
             var duration = parseInt(control.getAttribute('data-sl-toggle-duration') || '400', 10);
-            setToggleBlock(id, scoped, isCheckbox ? control.checked : undefined, effect, duration);
+            setToggleBlock(id, scope, isCheckbox ? control.checked : undefined, effect, duration);
         });
         control.addEventListener('keydown', function (event) {
             if (isCheckbox) return;
@@ -477,7 +483,7 @@
             event.preventDefault();
             var effect = control.getAttribute('data-sl-toggle-effect');
             var duration = parseInt(control.getAttribute('data-sl-toggle-duration') || '400', 10);
-            setToggleBlock(id, scoped, undefined, effect, duration);
+            setToggleBlock(id, scope, undefined, effect, duration);
         });
     }
 
@@ -583,9 +589,9 @@
         var blocks = document.querySelectorAll('[data-sl-toggle]');
         for (var j = 0; j < blocks.length; j++) {
             var id = blocks[j].getAttribute('data-sl-toggle');
-            var scoped = blocks[j].getAttribute('data-sl-toggle-scope') === 'path';
+            var scope = blocks[j].getAttribute('data-sl-toggle-scope') || '';
             if (!id) continue;
-            var state = getToggleState(id, scoped);
+            var state = getToggleState(id, scope);
             var isOpen = state !== '0';
             if (state === null) {
                 var defaultState = blocks[j].getAttribute('data-sl-toggle-default');

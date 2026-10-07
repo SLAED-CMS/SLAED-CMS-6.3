@@ -343,7 +343,7 @@ Current template-related tests include:
 Theme-local assets should live inside the theme.
 
 Recommended pattern:
-- `assets/css/base.css` and `assets/css/theme.css` — the two CSS files every theme package ships; `lite` adds `assets/css/presentation.css`, the stylesheet of the one page of the presentation module, and the runtime bundles every file of `assets/css/` in name order, so it sits between the two
+- `assets/css/base.css` and `assets/css/theme.css` — the two CSS files every theme package ships; `lite` adds `assets/css/presentation.css`, the stylesheet of the one page of the presentation module, and `getThemeAssets()` lists every file of `assets/css/` in name order, so it sits between the two
 - `assets/js/<name>.js` — theme-owned scripts; `admin` carries `admin-ui.js`, `lite` ships none
 - a script one page needs stays out of the global `script_f` list: the module hands `script => ['src' => 'plugins/<name>/<name>.js', 'attr' => 'defer']` to its partial, which prints it through `fragments/head-script-src.html` — `plugins/presentation/presentation.js` is loaded this way, the captcha provider the same
 - `assets/vendor/<library>/...`
@@ -352,6 +352,9 @@ Recommended pattern:
 Example already present — the icon stylesheet and its WOFF2 font, nothing else of Bootstrap:
 - `templates/lite/assets/vendor/bootstrap-icons/`
 - `templates/admin/assets/vendor/bootstrap-icons/`
+
+### Versioned Addresses And Order
+Every `<link>` and `<script src>` a theme prints carries the version of the file's content, `?v=` with the first ten hex characters of its SHA-1, from `Template::getAssetUrl()`; the browser keeps such a file a year and a changed file arrives under a new address. A template never writes an asset address by hand: it receives `href` or `src` already versioned from PHP and prints it through `fragments/head-link.html` or `fragments/head-script-src.html`; the one own tag is the module loader of `fragments/captcha-altcha.html`, whose `script_src` comes versioned from `Captcha` as well. A CSS or JS file added to a theme or a plugin gets its version with the next rebuild of `config/local.php`; a file the derived map does not know is printed plain and kept a week. A font or an image reached by a relative `url()` of a stylesheet carries no version and is kept a week as well. Every head script is `defer` and runs in the order of `getAssetList()`, so an inline script that calls one of them waits for `DOMContentLoaded`. The lifetimes, the server rules and the measurement are in `docs/PERFORMANCE.md`, section "Static Assets".
 
 ### Automatic Asset Loading
 The current runtime automatically injects CSS and JS files for components and blocks. If a file named identically to the included partial exists — `partials/<name>.css` or `partials/<name>.js` beside `partials/<name>.html` — the engine detects it at compile time and adds the asset to the page. No shipped partial uses this today; the mechanism is available, not idiomatic.

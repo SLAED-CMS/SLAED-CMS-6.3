@@ -489,8 +489,6 @@ define('_RSSMIN','Minimalna ilość domyślnie');
 define('_RSSSITE','Zewnętrzny kanał');
 define('_RSSUSE','Aktywacja przeglądanie kanałów RSS?');
 define('_RULACT','Potwierdzenie zasad podczas rejestracji użytkowników?');
-define('_SCRIPTASIN','Asynchroniczne ładowanie skryptów?');
-define('_SCRIPTBOT','Przesuń w dół skryptów stronie?');
 define('_SCRIPTFILE','Pliki skryptów');
 define('_SCRIPTFILEINFO','Podawać bezpośrednio pliki skryptów.');
 define('_SEARCHLETINFO','Aktywnie szukać modułu, jak również w funkcji prosi użytkownika podczas wyszukiwania w module osobistych wiadomości i panelu administracyjnego.');

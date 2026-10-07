@@ -12,6 +12,8 @@ class Parser {
     private const CACHETTL = 86400;
     # The shortest source worth storing, counted in bytes because parsing cost scales with bytes: below it one write costs more than the hits it saves before the entry ages out
     private const CACHEMIN = 2048;
+    # The highlight scripts a code block loads, whose versioned addresses a stored rendering carries
+    private const HLJS = ['plugins/highlightjs/highlight.min.js', 'plugins/highlightjs/highlight-line-numbers.min.js'];
     # One backslash turns the ASCII punctuation after it into a literal; raw regions keep every backslash: the four raw BB pairs, an HTML tag and a script or style element
     # Alternative one is the pair, so group 1 is set for a literal alone; the raw regions are matched only to be stepped over, which is what keeps scripts and attributes intact
     private const PAIR = '\\\\([!-\/:-@\[-`{-~])';
@@ -130,6 +132,7 @@ class Parser {
             $conf['filetype'] ?? [],
             $conf['homeurl'] ?? '',
             $conf['syntax'] ?? '',
+            array_map(Template::getAssetUrl(...), self::HLJS),
         ]));
     }
 
@@ -502,9 +505,8 @@ class Parser {
         } else {
             $scripts = '';
             if ($sname !== 'hljs') {
-                $scripts = $this->getPartHtml('head-script-src', ['src' => Template::getAssetUrl('plugins/highlightjs/highlight.min.js'), 'attr' => ''])
-                    .$this->getPartHtml('head-script-src', ['src' => Template::getAssetUrl('plugins/highlightjs/highlight-line-numbers.min.js'), 'attr' => ''])
-                    .$this->getPartHtml('head-script-inline', ['js' => 'hljs.highlightAll();hljs.initLineNumbersOnLoad();']);
+                foreach (self::HLJS as $one) $scripts .= $this->getPartHtml('head-script-src', ['src' => Template::getAssetUrl($one), 'attr' => '']);
+                $scripts .= $this->getPartHtml('head-script-inline', ['js' => 'hljs.highlightAll();hljs.initLineNumbersOnLoad();']);
                 $sname = 'hljs';
             }
             $hlang = ['jscript' => 'javascript', 'vb' => 'vbnet', 'plain' => 'plaintext'][strtolower($cname)] ?? strtolower($cname);

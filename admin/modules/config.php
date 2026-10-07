@@ -1001,16 +1001,6 @@ function config(): void {
             'is_config' => true,
         ]),
     ];
-    $rows[] = [
-        'label_html' => _SCRIPTASIN,
-        'label_id' => $labid = getFieldIds('', 'script_a')['label'],
-        'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'script_a', 'value' => $conf['script_a'], 'options' => $yesno]),
-    ];
-    $rows[] = [
-        'label_html' => _SCRIPTBOT,
-        'label_id' => $labid = getFieldIds('', 'script_b')['label'],
-        'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'script_b', 'value' => $conf['script_b'], 'options' => $yesno]),
-    ];
     $lines = [_DIR.': storage/cache'];
     foreach ($dirs as $dk => $dv) $lines[] = $dk.': '.$dv;
     $lines[] = _FILE_M.': '.$cnt;
@@ -1178,8 +1168,6 @@ function save(): void {
             'css_f' => strtr(getVar('post', 'css_f', 'text', 'plugins/highlightjs/slaed-theme.css'), $kprotect),
             'script_f' => strtr(getVar('post', 'script_f', 'text',
                 'plugins/htmx/htmx.min.js,plugins/system/global-func.js,plugins/system/slaed.js,plugins/tablesort/tablesort.min.js'), $kprotect),
-            'script_a' => getVar('post', 'script_a', 'num'),
-            'script_b' => getVar('post', 'script_b', 'num'),
             'mtemp' => filterTrustedTags(getVar('post', 'mtemp', 'raw'), isAdmin(true)),
             'dev_mode' => getVar('post', 'dev_mode', 'num'),
         ];

@@ -129,14 +129,15 @@ class Editor {
         return $out;
     }
 
-    # Wrap the init of one editor instance so it runs once its engine is there: at once on a page load, after the assets a fragment named over htmx otherwise
+    # Wrap the init of one editor instance so it runs once its engine is there: after the deferred head on a page load, after the assets of an htmx fragment otherwise
     # The node is captured when the script runs and checked when the init does, so a region swapped away while the engine loaded binds no instance to a removed node
     # The teardown is handed to the client, which destroys every instance inside a region before that region is swapped away or restored
     public static function getInitScript(string $id, string $run, string $kill): string {
         global $tpl;
         $js = '(function(){var el=document.getElementById('.json_encode($id).');if(!el){return;}var go=function(){if(!el.isConnected){return;}'.$run;
         $js .= 'if(window.SlaedEditors){window.SlaedEditors.own(el,function(){'.$kill.'});}};';
-        $js .= 'if(window.SlaedEditors){window.SlaedEditors.ready(go);}else{go();}})();';
+        $js .= 'var start=function(){if(window.SlaedEditors){window.SlaedEditors.ready(go);}else{go();}};';
+        $js .= 'if(window.SlaedEditors||document.readyState!=="loading"){start();}else{document.addEventListener("DOMContentLoaded",start);}})();';
         return $tpl->getHtmlFrag('head-script-inline', ['js' => $js]);
     }
 
@@ -150,7 +151,7 @@ class Editor {
         if (isset($done[$mark])) return '';
         $done[$mark] = true;
         $skin = 'templates/'.$theme.'/assets/editors/'.$key.'/skin.css';
-        if (!is_file(PUBLIC_DIR.'/'.$skin)) {
+        if (Template::getAssetUrl($skin) === $skin) {
             Logger::addSite('error', 'Editor theme skin missing: '.$skin, ['editor' => $key, 'theme' => (string)$theme]);
             return '';
         }

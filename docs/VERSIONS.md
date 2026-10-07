@@ -2,6 +2,36 @@
 
 ## 2026-10-07
 
+### Every asset address carries the version of its content, the browser keeps it a year, and the head scripts run deferred
+
+No static file carried a version, so a long browser lifetime would have kept an old file after a release. nginx sent
+no `Cache-Control` at all and the `mod_expires` block of `public/.htaccess` never applied on the stand; a browser
+guessed a tenth of a file's age, so right after a release every returning visitor asked for every file again, and a
+file untouched for half a year stayed about eighteen days after it changed.
+
+- **Versions.** Every printer of a stylesheet or script address goes through `Template::getAssetUrl()`:
+  `theme.css?v=0a5af6e4ae`, ten hex characters of the SHA-1 of the file, from the map
+  `$conf['derived']['version']` that `Template::getAssetVersions()` builds of `templates/` and `plugins/` with
+  `config/local.php` (`cache_version` 5). A request stats no asset file; `dev_mode`, `setup.php` and `update.php` hash
+  per request. The highlight versions are part of the parser cache key. The robots screen lost its second tag of
+  `editor-robots.js`.
+- **Lifetimes.** A style or script with `v=` in the query is kept `public, max-age=31536000, immutable`, any other
+  static file `public, max-age=604800`, revalidated by `ETag`; pages stay `no-store`, the public uploads keep the day
+  of the light path. `public/.htaccess` sets this through `mod_headers`, `nginx.conf.example` through a server-level
+  `$asset_cache` and turns `gzip` on for the types the `.htaccess` deflates.
+- **Defer.** `doScript()` prints every head script `defer` in the order of `getAssetList()`.
+  `Editor::getInitScript()` waits for `DOMContentLoaded` while `window.SlaedEditors` is missing, so an editor of a
+  page load registers its teardown.
+- **Measured** on the stand, median of three runs, guest, start page / list / view against the baseline of the same
+  day: a warm page costs one network request (the page) as before, now for a stated year instead of a guess; cold
+  376 576 / 353 477 / 643 884 → 377 584 / 354 380 / 645 434 bytes (the `?v=` of every address), warm 30 449 /
+  16 483 / 21 047 → 30 593 / 16 536 / 21 309 bytes, first paint warm 536 / 300 / 364 → 540 / 352 / 348 ms, within
+  the spread of the runs. The current table is in `docs/PERFORMANCE.md`.
+- **Breaking:** the settings `script_a` (async scripts) and `script_b` (scripts at the end of the page) left
+  `config/global.php` and the settings screen, and `update.php` drops both from a carried 6.2 configuration. The
+  `mod_expires` block left `public/.htaccess`; an Apache without `mod_headers` sends no lifetime. A theme or plugin
+  file replaced by hand needs `config/local.php` rebuilt to reach the browsers.
+
 ### Retired addresses answer 404, 410 or 301, and the statistics append only what they are given
 
 Two findings of the production logs of 2026-08-18 to 2026-08-21, neither of them the cause of that day's outage

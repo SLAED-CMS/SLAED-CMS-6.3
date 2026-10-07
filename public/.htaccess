@@ -30,21 +30,21 @@ AddOutputFilterByType DEFLATE application/javascript application/json applicatio
 AddOutputFilterByType DEFLATE application/rss+xml application/xslt+xml application/opensearchdescription+xml image/svg+xml
 </IfModule>
 
-# Browser cache expires (Apache fallback; on nginx/LiteSpeed configure expires/Cache-Control in the server config)
-<IfModule mod_expires.c>
-ExpiresActive On
-ExpiresByType text/css               "access plus 30 days"
-ExpiresByType text/javascript        "access plus 30 days"
-ExpiresByType application/javascript "access plus 30 days"
-ExpiresByType image/jpeg             "access plus 30 days"
-ExpiresByType image/png              "access plus 30 days"
-ExpiresByType image/gif              "access plus 30 days"
-ExpiresByType image/webp             "access plus 30 days"
-ExpiresByType image/svg+xml          "access plus 30 days"
-ExpiresByType image/x-icon           "access plus 30 days"
-ExpiresByType font/woff2             "access plus 1 year"
-ExpiresByType font/woff              "access plus 1 year"
-ExpiresByType font/ttf               "access plus 1 year"
+# Browser cache lifetimes of the static files; pages and uploads are answered by PHP, which sends their own header
+# A style or script whose address carries the version of its content (?v=) never changes under that address, so it is kept a year; any other static file a week, revalidated by ETag
+# Without mod_headers no rule applies and the browser guesses a lifetime from the validators, as before
+<IfModule mod_headers.c>
+<FilesMatch "(?i)\.(?:css|js|mjs)$">
+<If "%{QUERY_STRING} =~ /(?:^|&)v=[^&]/">
+Header set Cache-Control "public, max-age=31536000, immutable"
+</If>
+<Else>
+Header set Cache-Control "public, max-age=604800"
+</Else>
+</FilesMatch>
+<FilesMatch "(?i)\.(?:woff2?|ttf|otf|eot|jpe?g|png|gif|webp|avif|svg|ico|mp3|ogg|wav)$">
+Header set Cache-Control "public, max-age=604800"
+</FilesMatch>
 </IfModule>
 
 # Mod rewrite on; no RewriteBase, so the rules hold with the root on public/ and with the root on the project, whose .htaccess rewrites into this folder

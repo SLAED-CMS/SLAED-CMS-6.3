@@ -489,8 +489,6 @@ define('_RSSMIN','Minimum quantity by default');
 define('_RSSSITE','Foreign channel');
 define('_RSSUSE','Activate Headlines Reader?');
 define('_RULACT','To demand acknowledgement of rules at registration of users?');
-define('_SCRIPTASIN','Asynchronous loading of scripts?');
-define('_SCRIPTBOT','The side scripts downward transmitted?');
 define('_SCRIPTFILE','Script files');
 define('_SCRIPTFILEINFO','Directly include script files.');
 define('_SEARCHLETINFO','Actively search for the module, as well as in the function prompts the user when searching in the module personal messages and admin panel.');

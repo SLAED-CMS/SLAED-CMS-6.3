@@ -10,7 +10,8 @@ remediation plans are separate documents and are removed once implemented.
 - Current baseline: code-backed architecture map and measurement workflow
 - Rule: measure the current code path before assigning priority
 - Scope: frontend, admin, template runtime, config bootstrap, changelog,
-  scheduler, security request overhead, and web-server static caching
+  scheduler, security request overhead, and the versions, lifetimes, order and
+  compression of static assets
 
 ## Current Request Flow
 
@@ -319,67 +320,124 @@ request re-compiled ~150-200 ms of PHP (core files plus compiled templates).
 Verify OPcache is loaded in the web SAPI before profiling anything else; without
 it, code-size growth translates directly into generation time.
 
-## Static Asset Caching And Compression (Web Server)
+## Static Assets: Versions, Lifetimes, Order And Compression
 
-SLAED ships to many users on different servers. Static files (styles, scripts,
-images, fonts, `.svg`) are served by the web server itself, one file per
-address, so their `Cache-Control`/`Expires` and compression are a server-config
-concern the operator must apply, not PHP.
+A browser keeps the styles, scripts, fonts and images of a site for as long as
+they stay the same, and a changed file reaches every visitor on the next page.
+The static files never reach PHP: the web server serves them and sets their
+headers, PHP only prints their addresses.
 
-### Apache / LiteSpeed
+### A version in every asset address
 
-`public/.htaccess` already enables `mod_deflate` and `mod_expires` as a fallback:
-text responses are compressed, images/CSS/JS get 30 days, fonts get 1 year. WOFF2
-is intentionally excluded from compression because it is already compressed.
-This works out of the box on Apache and on LiteSpeed in `.htaccess`-compat mode.
+Every printer of a stylesheet or script address goes through
+`Template::getAssetUrl()`, which appends the version of the file's content:
+`templates/lite/assets/css/theme.css?v=0a5af6e4ae`, the first ten hex
+characters of its SHA-1.
 
-The compression filter is selected by response type (`AddOutputFilterByType`),
-which is what covers the pages themselves: a page is built by `index.php`, so a
-rule matching file names would never reach the largest response of the site.
+- The versions are the map `$conf['derived']['version']`, which
+  `Template::getAssetVersions()` builds of every CSS and JS file below
+  `templates/` and `plugins/` together with `config/local.php`. A request stats
+  no asset file and hashes nothing.
+- The head lists are `$conf['derived']['assets']`, plain addresses from
+  `getAssetList()`: `css_f` or `script_f`, then the theme package of
+  `getThemeAssets()`. `doCss()` and `doScript()` print them through the map, as
+  do `Editor::getAssetTags()` with the editor skin, `Template::getAssetTag()`
+  (the companion files of a partial), the highlight scripts of `Parser`, the
+  altcha loader of `Captcha`, the module partials and the error page of
+  `setExit()`.
+- The highlight versions are part of the parser cache key, since a stored
+  rendering carries their tags.
+- `dev_mode` hashes per request, so an edit on a working copy shows at once;
+  `setup.php` and `update.php` run without the derived configuration and hash per
+  request as well.
+- A file the map does not know is printed without a version and keeps the week
+  of the table below. So do the files a stylesheet or a script reaches by a
+  relative address: the fonts, the season images, the bootstrap-icons font and
+  the runtime imports of `altcha-init.js`.
+- A changed theme or plugin file gets its new version with the next rebuild of
+  `config/local.php`: a save in the panel, `update.php`, or deleting the file.
+  Until then the page keeps printing the old version, and the browser keeps the
+  old file.
+- The client loader `SlaedEditors` deduplicates by the exact address, so a page
+  load and an htmx fragment print the same versioned address and an engine is
+  fetched once.
 
-### nginx
+### Lifetimes by kind
 
-nginx ignores `.htaccess`. Apply the equivalent in the server/location config.
-The known production gap is that WOFF2 and some SVG have no `Cache-Control`.
+| Kind | Where | Cache-Control |
+| --- | --- | --- |
+| CSS and JS with `v=` in the query | `templates/`, `plugins/` | `public, max-age=31536000, immutable` |
+| CSS and JS without a version, fonts, images, icons, sounds | `templates/`, `plugins/`, `sound/` | `public, max-age=604800`, revalidated by `ETag` |
+| Public uploads | `uploads/` of a public owner, through the light path of `index.php` | `public, max-age=86400` with the validators |
+| Pages | every route of PHP | `no-store` |
+| Files of the routes | `go=file` of a stored target, `op=asset` | `private, no-cache, must-revalidate` with `ETag` |
+| Previews and administrative downloads | `go=file` with `preview=1`, the file view of the panel | `no-store` |
 
-```nginx
-# Compression.
-# Do not gzip woff2/woff — they are already compressed.
-# text/html is compressed by nginx whenever gzip is on and must not be listed in gzip_types: naming it there only produces a duplicate-MIME warning.
-gzip on;
-gzip_vary on;
-gzip_proxied any;
-gzip_comp_level 5;
-gzip_min_length 1024;
-gzip_types text/plain text/css text/javascript application/javascript application/json image/svg+xml application/rss+xml application/xml;
+The versioned case is told by its query alone: a request with `v` in the query
+gets the year, any other the week. No upload lies under the document root, so
+the light path sets the header of the public uploads itself.
 
-# Raster images — 30 days
-location ~* \.(?:jpe?g|gif|png|webp|avif|ico)$ {
-    expires 30d;
-    add_header Cache-Control "public";
-    access_log off;
-}
+**Apache.** `public/.htaccess` sets the two static rows through
+`mod_headers`, guarded by `<IfModule>`: a `<FilesMatch>` on the style and script
+extensions with an `<If>` on `%{QUERY_STRING}` (Apache 2.4), and a second one on
+the fonts, images, icons and sounds. Without `mod_headers` no rule applies and
+the browser guesses a lifetime from the validators. Neither that case nor
+LiteSpeed reading the `<If>` block has been checked on a real server.
 
-# SVG (logos/icons may change) — 30 days
-location ~* \.svg$ {
-    expires 30d;
-    add_header Cache-Control "public";
-}
+**nginx.** nginx reads no `.htaccess`; `nginx.conf.example` carries the same
+rows. The choice between the year and the week is a server-level
+`set $asset_cache` with `if ($arg_v)`, because an `if` inside a location would
+drop its `try_files`; the two static locations send `add_header Cache-Control`
+and pass a missing file to the front controller and its 404.
+`tests/Unit/NginxConfigTest.php` walks every file of `public/` through both
+files and keeps them in step.
 
-# Fonts — 1 year (safe once font URLs are versioned; otherwise rename on change)
-location ~* \.(?:woff2?|ttf)$ {
-    expires 1y;
-    add_header Cache-Control "public, immutable";
-    access_log off;
-}
-```
+### Order without async
 
-### Font caching caveat
+`doScript()` prints every head script with `defer`, in the order of
+`getAssetList()`: the scripts load in parallel and run in document order after
+the parser, so `htmx` → `global-func.js` → `slaed.js` holds. There is no switch
+for `async` or for moving the scripts to the end of the page.
 
-Font file names are static (for example `magistral.woff2`). A 1-year /
-`immutable` policy is only safe if the font URL is versioned (`?v=filemtime`) or
-the file is renamed on change. Otherwise returning visitors keep the old font
-after a replacement.
+An inline script that calls a function of a deferred file waits for it:
+`Editor::getInitScript()` waits for `DOMContentLoaded` while
+`window.SlaedEditors` is missing, so an instance of a page load registers its
+teardown. The file-manager field of `getFileManagerField()` and the highlight
+call of `Parser` need no wait, since their files are synchronous body scripts
+printed before them. A new inline script that needs a head script waits the same
+way or moves into that file.
+
+### Compression
+
+`public/.htaccess` deflates by response type (`AddOutputFilterByType`), which is
+what covers the pages themselves: a page is built by `index.php`, so a rule
+matching file names would never reach the largest response of the site.
+`nginx.conf.example` turns `gzip` on for the same types; `text/html` is
+compressed by nginx whenever gzip is on and is not listed in `gzip_types`.
+WOFF2/WOFF, images and archives are already compressed and stay out.
+
+### Measurement
+
+Start page, a list and a material view on the stand (nginx, HTTPS, Brotli, the
+migrated production database), Chromium of Playwright, 1366×900, guest, median
+of three runs, 2026-10-07. Cold is a fresh browser context; warm is the same
+context after `about:blank`, a normal navigation, not a reload. Bytes are the
+encoded transfer of every request, headers included.
+
+| Page | Load | Requests | From network | From cache | Bytes | FCP ms | DCL ms | load ms |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| start `/` | cold | 25 | 25 | 0 | 377 584 | 724 | 767 | 785 |
+| start `/` | warm | 25 | 1 | 24 | 30 593 | 540 | 559 | 569 |
+| list `?name=news` | cold | 24 | 24 | 0 | 354 380 | 424 | 420 | 426 |
+| list `?name=news` | warm | 24 | 1 | 23 | 16 536 | 352 | 349 | 349 |
+| view `?name=news&op=view&id=3918` | cold | 38 | 38 | 0 | 645 434 | 424 | 506 | 528 |
+| view `?name=news&op=view&id=3918` | warm | 38 | 1 | 37 | 21 309 | 348 | 378 | 385 |
+
+A warm page costs one network request, the page itself, and the browser keeps
+the versioned files for the stated year: a release makes a returning visitor
+fetch only the files whose address changed, on the next page. The view carries the toastui engine for the comment form of a
+guest (about 233 KB of its 645 KB cold), a matter of the editor, not of the
+cache.
 
 ### PHP error pages (nginx `fastcgi_intercept_errors`)
 

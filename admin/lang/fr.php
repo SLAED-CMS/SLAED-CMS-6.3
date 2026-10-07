@@ -489,8 +489,6 @@ define('_RSSMIN','La quantité minimale par défaut');
 define('_RSSSITE','Un canal');
 define('_RSSUSE','Activer afficher les flux RSS?');
 define('_RULACT',"Une confirmation de règles lors de l'enregistrement de l'utilisateur?");
-define('_SCRIPTASIN','Chargement asynchrone des scripts?');
-define('_SCRIPTBOT','Les scripts côté transmis à la baisse?');
 define('_SCRIPTFILE','Les fichiers de script');
 define('_SCRIPTFILEINFO','Indiquer directement les fichiers de script.');
 define('_SEARCHLETINFO',"Rechercher activement pour le module, ainsi que dans la fonction invite l'utilisateur lors de la recherche dans le module des messages personnels et panneau d'administration.");

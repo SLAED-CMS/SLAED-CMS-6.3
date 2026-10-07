@@ -4,7 +4,7 @@
 # License: MIT
 # Website: slaed.net
 
-# CLI probe for batch 1 of docs/3-ASSET-CACHE-2026.md: the asset tags the real core prints, with the derived configuration of a request
+# CLI probe for docs/PERFORMANCE.md, section "Static Assets": the asset tags the real core prints, with the derived configuration of a request
 # It boots the core like index.php, so doCss(), doScript() and the editor loader answer from the same local.php a page reads
 # The ghost run hands the printers a list and a version map naming a file that does not exist, which proves the page prints from the map and never looks at the disk
 $probework = (string)($argv[1] ?? '');
@@ -18,7 +18,7 @@ function getProbeHead(string $name): array {
     return ['css' => doCss(), 'js' => doScript()];
 }
 
-# The tags of one editor engine on a page load and the list the same engine names to the client loader on an htmx fragment
+# The tags of one editor engine on a page load, the list the same engine names to the client loader on an htmx fragment, and the init of an instance
 function getProbeEditor(): array {
     $css = ['plugins/editors/codemirror/assets/cm6.css'];
     $js = ['plugins/editors/codemirror/assets/cm6.bundle.js'];
@@ -27,7 +27,7 @@ function getProbeEditor(): array {
     $_SERVER['HTTP_HX_REQUEST'] = 'true';
     $frag = Editor::getAssetTags($css, $js);
     unset($_SERVER['HTTP_HX_REQUEST']);
-    return ['page' => $page, 'htmx' => $frag];
+    return ['page' => $page, 'htmx' => $frag, 'init' => Editor::getInitScript('probe-editor', 'run();', 'kill();')];
 }
 
 # The head of the site theme printed from a list and a map that name one missing file
@@ -47,6 +47,7 @@ try {
     $conf['dev_mode'] = false;
     $out = [
         'map' => is_array($conf['derived']['version'] ?? null),
+        'keys' => array_values(array_intersect(['script_a', 'script_b'], array_keys($conf))),
         'lite' => getProbeHead('lite'),
         'admin' => getProbeHead('admin'),
         'editor' => getProbeEditor(),

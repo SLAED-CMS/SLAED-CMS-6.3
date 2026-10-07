@@ -799,6 +799,34 @@ const DEMO_NODEHEAD = [
       'sl-sort. Поиск — системная sl-search-form с клавишей «/». В покое две строки, при прокрутке одна липкая.',
     tags: ['детали системы', 'data-sl-toggle', 'sl-cat-tile', 'sl-letter', 'sl-search-form', 'sticky'],
   },
+  {
+    file: 'nh-11-full.html',
+    title: 'Полный',
+    note: '«Единый» с идеями из личных сообщений и без дублей. Под фильтрами полоса быстрых чипов с числами: период «За ' +
+      'неделю · За месяц · За год», «С прошлого визита» и «Избранное», справа вид «карточки / список». Лента по дате ' +
+      'разбита по месяцам заголовками со счётом; компактный вид — готовый список «похожих материалов» sl-related-item. ' +
+      'Направление меняет только таблетка в ряду, число материалов — только в чипе шапки, сброс — только «Сбросить».',
+    tags: ['быстрые чипы', 'месяцы', 'компактный вид', 'с прошлого визита', 'избранное', 'без дублей'],
+  },
+  {
+    file: 'nh-12-views.html',
+    title: 'Виды',
+    note: '«Полный», где переключатель вида sl-mode-rail в полосе чипов в один щелчок выбирает вид списка из готовых ' +
+      'частей: карточки и компакт — карточка новостей; список — строка sl-node-toc с миниатюрой и датой «похожих ' +
+      'материалов»; аккордеон — карточка FAQ; плитки — карточка медиа; рельс — оглавление слева и документ справа на ' +
+      'раскладке личных сообщений и вкладках slaed.js. «Тип» в панели стенда — новости, документация, FAQ — оставляет ' +
+      'только виды типа и включает его вид по умолчанию.',
+    tags: ['виды списка', 'аккордеон', 'плитки', 'рельс слева', 'готовые части'],
+  },
+  {
+    file: 'nh-13-calm.html',
+    title: 'Без перегрузки',
+    note: 'Основа «Единого» в два ряда и лучшее из «Полного» и «Видов» без третьего ряда. Окно «Сортировка» целиком на ' +
+      'чипах; под сортировками группа «Показать»: «С прошлого визита» и «В избранном» — видны, только когда там не ноль, ' +
+      'и, пока включены, подсвечивают таблетку сортировки и стоят в ней иконкой после названия. Переключатель вида стоит в первом ряду перед поиском и виден, ' +
+      'только если у типа больше одного вида. Лента по дате разбита месяцами. Чипов периода нет.',
+    tags: ['два ряда', 'виды по типу', 'месяцы', 'чипы по делу', 'без перегрузки'],
+  },
 ];
 
 const DEMO_SERIES = [
@@ -1108,6 +1136,10 @@ function getDemoPanel(file) {
   const no = (v) => v.file.match(/^(\d{2})-/)?.[1] || String(list.indexOf(v) + 1).padStart(2, '0');
   const seg = (name, items, active) => items.map(([val, label]) =>
     `<button type="button" data-demo-set="${name}" data-demo-value="${val}" aria-pressed="${val === active}">${label}</button>`).join('');
+  const kinds = document.querySelector('[data-demo-kinds]');
+  const kind = kinds ? `<div class="demo-panel-row"><span>Тип</span><div class="demo-seg">${kinds.dataset.demoKinds.split('|')
+    .map((pair) => pair.split(':')).map(([val, label, view]) => `<button type="button" data-demo-kind="${val}" data-demo-view="${view}" ` +
+      `aria-pressed="${val === kinds.dataset.kind}">${label}</button>`).join('')}</div></div>` : '';
   const el = document.createElement('div');
   el.className = 'demo-panel';
   el.innerHTML = `
@@ -1117,7 +1149,7 @@ function getDemoPanel(file) {
     </div>
     <div class="demo-panel-row"><span>Тема</span><div class="demo-seg">${seg('mode', DEMO_MODES, demoState.mode)}</div></div>
     <div class="demo-panel-row"><span>Сезон</span><div class="demo-seg">${seg('season', DEMO_SEASONS, demoState.season)}</div></div>
-    <div class="demo-panel-row"><span>Движение</span><div class="demo-seg">${seg('motion', [['on', 'Вкл'], ['off', 'Выкл']], demoState.motion)}</div></div>
+    <div class="demo-panel-row"><span>Движение</span><div class="demo-seg">${seg('motion', [['on', 'Вкл'], ['off', 'Выкл']], demoState.motion)}</div></div>${kind}
     <div class="demo-panel-nav">
       <a href="${prev.file}" title="${prev.title}">&larr; ${no(prev)}</a>
       <a href="index.html" title="Все варианты">Все варианты</a>
@@ -2724,7 +2756,40 @@ function getNodeCardData(card) {
     title: (card.querySelector('.sl-title')?.textContent || '').trim().toLowerCase(),
     head: (card.querySelector('.sl-title')?.textContent || '').trim().charAt(0).toUpperCase(),
     cat: (card.querySelector('.sl-card-category')?.textContent || '').trim(),
+    fav: card.hasAttribute('data-nh-fav'),
+    fresh: card.hasAttribute('data-nh-new'),
   };
+}
+
+/* Whether a card falls into one quick chip of the strip: a period back from the stand's own today, the new or the favourite */
+function checkNodeHeadChip(root, data, key, value) {
+  const days = { week: 7, month: 31, year: 366 }[value];
+  if (key === 'perd') return !value || (Date.parse(root.dataset.now || '') || Date.now()) - data.published <= days * 864e5;
+  return !value || (value === 'fav' ? data.fav : data.fresh);
+}
+
+/* Head every month of a date-ordered list with its name and the count of its shown cards, or drop the heads for other orders */
+function setNodeHeadDays(root, rows) {
+  document.querySelectorAll('[data-nh-day]').forEach((node) => node.remove());
+  if (!root.hasAttribute('data-nh-days') || !['published', 'updated'].includes(root.dataset.sort)) return;
+  const name = new Intl.DateTimeFormat('ru', { month: 'long' });
+  const heads = new Map();
+  rows.filter(({ card }) => !card.hidden).forEach(({ card, data }) => {
+    const when = new Date(data.published);
+    const key = `${when.getFullYear()}-${when.getMonth()}`;
+    if (!heads.has(key)) {
+      const head = document.createElement('p');
+      const month = name.format(when);
+      head.className = 'sl-pmf-day';
+      head.setAttribute('data-nh-day', '');
+      const label = `${month.charAt(0).toUpperCase() + month.slice(1)} ${when.getFullYear()}`;
+      head.innerHTML = `<i class="bi bi-calendar3" aria-hidden="true"></i> ${label} <span class="sl-chip sl-chip-neutral">0</span>`;
+      card.before(head);
+      heads.set(key, head);
+    }
+    const num = heads.get(key).querySelector('.sl-chip');
+    num.textContent = String(Number(num.textContent) + 1);
+  });
 }
 
 /* Show the cards of the chosen category and letter holding the typed words, in the chosen order, or the empty notice */
@@ -2742,10 +2807,23 @@ function setNodeHeadList(root) {
   const tail = rows[0].card.parentNode.querySelector('.sl-pager-info');
   let shown = 0;
   rows.forEach(({ card, data }) => {
-    const ok = (!name || data.cat === name) && (!lead || data.head === lead) && (!want || data.title.includes(want));
+    const ok = (!name || data.cat === name) && (!lead || data.head === lead) && (!want || data.title.includes(want))
+      && checkNodeHeadChip(root, data, 'perd', root.dataset.perd || '') && checkNodeHeadChip(root, data, 'only', root.dataset.only || '');
     card.hidden = !ok;
     if (ok) shown++;
     card.parentNode.insertBefore(card, tail);
+    document.querySelectorAll(`[data-nh-row="${card.id}"]`).forEach((row) => { row.hidden = !ok; row.parentNode.append(row); });
+  });
+  root.querySelectorAll('[data-nh-chip]').forEach((chip) => {
+    const num = chip.querySelector('[data-nh-num]');
+    const many = rows.filter(({ data }) => checkNodeHeadChip(root, data, chip.dataset.nhChip, chip.dataset.nhValue)).length;
+    if (num) num.textContent = String(many);
+    if (chip.hasAttribute('data-nh-hide-zero')) chip.hidden = !many && chip.getAttribute('aria-pressed') !== 'true';
+  });
+  setNodeHeadDays(root, rows);
+  root.querySelectorAll('[data-sl-tabs-init]').forEach((tabs) => {
+    if (!tabs.querySelector('.sl-is-active[data-sl-tab-link]')?.closest('[data-nh-row]')?.hidden) return;
+    tabs.querySelector('[data-nh-row]:not([hidden]) [data-sl-tab-link]')?.click();
   });
   let empty = document.querySelector('[data-nh-empty]');
   if (!empty) {
@@ -2780,21 +2858,71 @@ function setNodeHeadDraw(root) {
     node.title = dir === 'asc' ? 'По возрастанию' : 'По убыванию';
     node.setAttribute('aria-label', node.title);
   });
+  root.querySelectorAll('[data-nh-flip] [data-nh-sort]').forEach((node) => {
+    node.title = node.dataset.nhSort === sort ? `${dir === 'asc' ? 'По возрастанию' : 'По убыванию'} — щелчок меняет направление` : node.dataset.name;
+  });
   put('scope', pick ? pick.dataset.name : '');
   put('count', pick ? pick.dataset.count : '');
+  root.querySelectorAll('[data-nh-total]').forEach((node) => { node.hidden = !pick || pick.dataset.count === node.dataset.nhTotal; });
   put('sortname', by ? by.dataset.name : '');
   put('letter', lead);
   const on = { cat: cat !== 'all', let: lead !== '', sort: sort !== 'published' || dir !== 'desc' };
-  root.querySelectorAll('[data-nh-pill]').forEach((node) => node.classList.toggle('sl-is-active', !!on[node.dataset.nhPill]));
+  root.querySelectorAll('[data-nh-chip]').forEach((chip) => chip.setAttribute('aria-pressed', String(root.dataset[chip.dataset.nhChip] === chip.dataset.nhValue)));
+  root.querySelectorAll('[data-nh-pill]').forEach((node) => {
+    const box = document.getElementById(node.querySelector('[data-sl-toggle-control]')?.dataset.slToggleControl || '');
+    node.classList.toggle('sl-is-active', !!on[node.dataset.nhPill] || !!box?.querySelector('[data-nh-chip][aria-pressed="true"]'));
+  });
   put('active', String((cat !== 'all') + (sort !== 'published') + (dir !== 'desc') + (lead !== '')));
-  root.toggleAttribute('data-filtered', cat !== 'all' || sort !== 'published' || dir !== 'desc' || lead !== '');
+  root.querySelectorAll('[data-nh-look]').forEach((cell) => {
+    cell.classList.toggle('sl-is-active', cell.dataset.nhLook === root.dataset.view);
+    cell.setAttribute('aria-pressed', String(cell.classList.contains('sl-is-active')));
+  });
+  const face = root.querySelector('[data-nh-look].sl-is-active .bi');
+  root.querySelectorAll('.sl-mode-knob .bi').forEach((icon) => { if (face) icon.className = face.className; });
+  const quick = !!(root.dataset.perd || root.dataset.only);
+  root.toggleAttribute('data-filtered', cat !== 'all' || sort !== 'published' || dir !== 'desc' || lead !== '' || quick);
   setNodeHeadList(root);
+}
+
+/* Show the list of a Node header in one view and keep the choice for this stand page */
+function setNodeHeadView(root, view) {
+  root.dataset.view = view;
+  try { localStorage.setItem(`demo-nh-view:${location.pathname}`, view); } catch (err) { /* storage is a convenience */ }
+  setNodeHeadDraw(root);
+}
+
+/* Keep in the view rail only the cells the stand's type allows, in their order, and fall back to its first view */
+function setNodeHeadKind(root, view) {
+  root.nhLooks ||= [...root.querySelectorAll('[data-nh-look]')];
+  root.nhRail ||= root.nhLooks[0].parentNode;
+  const knob = root.nhRail.querySelector('.sl-mode-knob');
+  root.nhLooks.forEach((cell) => {
+    if (cell.dataset.kinds.split(' ').includes(root.dataset.kind)) root.nhRail.insertBefore(cell, knob);
+    else cell.remove();
+  });
+  root.nhRail.closest('.sl-mode').hidden = root.nhLooks.filter((cell) => cell.isConnected).length < 2;
+  const fits = root.nhLooks.some((cell) => cell.isConnected && cell.dataset.nhLook === view);
+  setNodeHeadView(root, fits ? view : root.querySelector('[data-nh-look]').dataset.nhLook);
 }
 
 /* Close the panel of a Node header and tell its toggles */
 function setNodeHeadShut(root) {
   root.removeAttribute('data-open');
   root.querySelectorAll('[data-nh-panel]').forEach((node) => node.setAttribute('aria-expanded', 'false'));
+}
+
+/* Open the search field of a stuck Node header behind its lens, or shut it and drop what was typed */
+function setNodeHeadLens(root, open) {
+  const field = root.querySelector('[data-nh-find]');
+  root.toggleAttribute('data-finding', open);
+  root.querySelectorAll('[data-nh-lens]').forEach((node) => node.setAttribute('aria-expanded', String(open)));
+  if (open) {
+    field?.focus();
+    return;
+  }
+  if (!field?.value) return;
+  field.value = '';
+  field.dispatchEvent(new Event('input'));
 }
 
 /* Move the focus through the options of an open menu with the arrows, wrapping round */
@@ -2827,6 +2955,23 @@ function setDemoNodeHead() {
       const reset = ev.target.closest('[data-nh-reset]');
       const panel = ev.target.closest('[data-nh-panel]');
       const lead = ev.target.closest('[data-nh-let]');
+      const lens = ev.target.closest('[data-nh-lens]');
+      if (lens) {
+        setNodeHeadLens(root, !root.hasAttribute('data-finding'));
+        return;
+      }
+      const chip = ev.target.closest('[data-nh-chip]');
+      if (chip) {
+        const key = chip.dataset.nhChip;
+        root.dataset[key] = root.dataset[key] === chip.dataset.nhValue ? '' : chip.dataset.nhValue;
+        setNodeHeadDraw(root);
+        return;
+      }
+      const look = ev.target.closest('[data-nh-view], [data-nh-look]');
+      if (look) {
+        setNodeHeadView(root, look.dataset.nhLook || (root.dataset.view === 'list' ? 'cards' : 'list'));
+        return;
+      }
       if (panel) {
         const name = panel.dataset.nhPanel || 'on';
         const open = root.dataset.open !== name;
@@ -2842,13 +2987,16 @@ function setDemoNodeHead() {
       if (cat) root.dataset.cat = cat.dataset.nhCat;
       if (lead) root.dataset.let = lead.dataset.nhLet;
       if ((cat || lead) && (cat || lead).closest('[data-nh-closes]')) setNodeHeadShut(root);
-      if ((cat || lead || sort) && !(cat || lead || sort).hasAttribute('data-nh-tag')) setNodeHeadFold(cat || lead || sort);
+      const flip = sort && sort.closest('[data-nh-flip]') && sort.dataset.nhSort === root.dataset.sort;
+      if ((cat || lead || sort) && !flip && !(cat || lead || sort).hasAttribute('data-nh-tag')) setNodeHeadFold(cat || lead || sort);
       if (sort) {
         root.dataset.sort = sort.dataset.nhSort;
-        root.dataset.dir = sort.dataset.dir || 'desc';
+        const same = !sort.hasAttribute('data-nh-tag') && sort.dataset.nhSort === root.dataset.sort;
+        if (flip) root.dataset.dir = root.dataset.dir === 'asc' ? 'desc' : 'asc';
+        else if (!same) root.dataset.dir = sort.dataset.dir || 'desc';
       }
       if (dir) root.dataset.dir = root.dataset.dir === 'asc' ? 'desc' : 'asc';
-      if (reset) Object.assign(root.dataset, { cat: 'all', sort: 'published', dir: 'desc', let: '' });
+      if (reset) Object.assign(root.dataset, { cat: 'all', sort: 'published', dir: 'desc', let: '' }, 'perd' in root.dataset ? { perd: '', only: '' } : {});
       ev.target.closest('[popover]')?.hidePopover();
       setNodeHeadDraw(root);
     });
@@ -2865,16 +3013,26 @@ function setDemoNodeHead() {
       setNodeHeadShut(root);
       back?.focus();
     });
-    root.querySelectorAll('[data-nh-find]').forEach((field) => field.addEventListener('input', () => {
-      root.nhFind = field.value;
-      setNodeHeadList(root);
-    }));
+    root.querySelectorAll('[data-nh-find]').forEach((field) => {
+      field.addEventListener('input', () => {
+        root.nhFind = field.value;
+        setNodeHeadList(root);
+      });
+      field.addEventListener('keydown', (ev) => {
+        if (ev.key !== 'Escape' || !root.hasAttribute('data-finding')) return;
+        setNodeHeadLens(root, false);
+        root.querySelector('[data-nh-lens]')?.focus();
+      });
+    });
     root.querySelectorAll('[data-sl-toggle]').forEach((box) => {
       box.addEventListener('keydown', (ev) => {
         if (ev.key === 'Escape') setNodeHeadFold(ev.target)?.focus();
         else setNodeHeadStep(box, ev);
       });
       document.querySelectorAll(`[data-sl-toggle-control="${box.id}"]`).forEach((ctl) => ctl.addEventListener('sl-toggle-open', () => {
+        root.querySelectorAll('[data-sl-toggle].sl-is-open').forEach((other) => {
+          if (other !== box) document.querySelector(`[data-sl-toggle-control="${other.id}"]`)?.click();
+        });
         (box.querySelector('[aria-current="true"], [aria-pressed="true"]') || box.querySelector('a[href], button'))?.focus({ preventScroll: true });
       }));
     });
@@ -2888,7 +3046,23 @@ function setDemoNodeHead() {
     if (root.hasAttribute('data-nh-sticky')) {
       const mark = root.querySelector('[data-nh-mark]') || document.createElement('div');
       if (!mark.isConnected) root.before(mark);
-      new IntersectionObserver(([row]) => root.toggleAttribute('data-stuck', !row.isIntersecting)).observe(mark);
+      new IntersectionObserver(([row]) => {
+        root.toggleAttribute('data-stuck', !row.isIntersecting);
+        if (row.isIntersecting && root.hasAttribute('data-finding')) {
+          root.removeAttribute('data-finding');
+          root.querySelectorAll('[data-nh-lens]').forEach((node) => node.setAttribute('aria-expanded', 'false'));
+        }
+      }).observe(mark);
+    }
+    if ('view' in root.dataset) {
+      try {
+        const kept = localStorage.getItem(`demo-nh-view:${location.pathname}`);
+        if (kept) root.dataset.view = kept;
+      } catch (err) { /* storage is a convenience */ }
+    }
+    if ('kind' in root.dataset) {
+      root.addEventListener('demo-kind', (ev) => setNodeHeadKind(root, ev.detail));
+      setNodeHeadKind(root, root.dataset.view);
     }
     setNodeHeadDraw(root);
   });
@@ -2944,6 +3118,14 @@ function initDemoPage() {
     if (btn) {
       demoState[btn.dataset.demoSet] = btn.dataset.demoValue;
       setDemoState();
+      return;
+    }
+    const sort = e.target.closest('[data-demo-kind]');
+    if (sort) {
+      const host = document.querySelector('[data-demo-kinds]');
+      host.dataset.kind = sort.dataset.demoKind;
+      document.querySelectorAll('[data-demo-kind]').forEach((b) => b.setAttribute('aria-pressed', String(b === sort)));
+      host.dispatchEvent(new CustomEvent('demo-kind', { detail: sort.dataset.demoView }));
       return;
     }
     const tgl = e.target.closest('.demo-panel-toggle');

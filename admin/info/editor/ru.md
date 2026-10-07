@@ -136,40 +136,62 @@ Options All -ExecCGI -Indexes -Includes +FollowSymLinks
 ```
 
 **6. Кеширование браузера и сжатие статики (PageSpeed):**
-Заставляет браузер хранить картинки, стили, скрипты и шрифты локально и отдавать текстовые файлы в сжатом виде. Эти блоки уже включены в стандартном `.htaccess` проекта — здесь они приведены для справки и тонкой настройки. Шрифты `woff2/woff` сжимать не нужно (они уже сжаты), поэтому из сжатия они исключены.
+Заставляет браузер хранить стили, скрипты, шрифты и картинки локально и отдавать текстовые ответы в сжатом виде. Эти блоки уже включены в стандартный `.htaccess` проекта — здесь они приведены для справки и тонкой настройки.
+
+Каждый адрес стиля или скрипта, который печатает система, несёт версию своего содержимого: `templates/lite/assets/css/theme.css?v=0a5af6e4ae`. Под таким адресом файл не меняется никогда, поэтому браузер хранит его год и не переспрашивает сервер; изменённый файл получает новый адрес и приходит к посетителю на следующей же странице. Всё остальное (стили и скрипты без версии, шрифты, картинки, иконки, звуки) хранится неделю и после неё сверяется с сервером по `ETag`. Страницы сайта не кешируются никогда.
 
 ```apache
-# Сжатие текстовых файлов
+# Сжатие: по типу ответа, а не по имени файла — так сжимаются и сами страницы, которые строит index.php
+# WOFF2/WOFF, картинки и архивы уже сжаты и намеренно не перечислены
 <IfModule mod_deflate.c>
-<FilesMatch "\.(js|css|svg|xml|json|txt)$">
-SetOutputFilter DEFLATE
-</FilesMatch>
+AddOutputFilterByType DEFLATE text/html text/plain text/css text/javascript text/xml text/xsl
+AddOutputFilterByType DEFLATE application/javascript application/json application/xml application/xhtml+xml
+AddOutputFilterByType DEFLATE application/rss+xml application/xslt+xml application/opensearchdescription+xml image/svg+xml
 </IfModule>
 
-# Время хранения в кеше браузера
-<IfModule mod_expires.c>
-ExpiresActive On
-ExpiresByType text/css               "access plus 30 days"
-ExpiresByType application/javascript "access plus 30 days"
-ExpiresByType image/jpeg             "access plus 30 days"
-ExpiresByType image/png              "access plus 30 days"
-ExpiresByType image/svg+xml          "access plus 30 days"
-ExpiresByType font/woff2             "access plus 1 year"
+# Срок хранения в кеше браузера: стиль или скрипт с версией (?v=) — год, любой другой статический файл — неделя
+<IfModule mod_headers.c>
+<FilesMatch "(?i)\.(?:css|js|mjs)$">
+<If "%{QUERY_STRING} =~ /(?:^|&)v=[^&]/">
+Header set Cache-Control "public, max-age=31536000, immutable"
+</If>
+<Else>
+Header set Cache-Control "public, max-age=604800"
+</Else>
+</FilesMatch>
+<FilesMatch "(?i)\.(?:woff2?|ttf|otf|eot|jpe?g|png|gif|webp|avif|svg|ico|mp3|ogg|wav)$">
+Header set Cache-Control "public, max-age=604800"
+</FilesMatch>
 </IfModule>
 ```
 
 > [!NOTE]
-> **На Nginx эти директивы не работают** — задайте кеш и сжатие в конфиге сервера (блок `server`). Шрифты `woff2/woff` в `gzip_types` не добавляйте.
+> Без модуля `mod_headers` сроки не задаются, и браузер угадывает их сам по дате изменения файла. Версия в адресе при этом всё равно гарантирует, что изменённый файл придёт по новому адресу.
+
+> [!NOTE]
+> **На Nginx эти директивы не работают** — сроки и сжатие задаются в блоке `server`. Готовые правила есть в поставляемом файле `nginx.conf.example`: выбор между годом и неделей делается на уровне `server` переменной `$asset_cache` по `$arg_v`, потому что `if` внутри `location` отменил бы его `try_files`.
 
 ```nginx
 gzip on;
 gzip_vary on;
-gzip_proxied any;
-gzip_types text/css text/javascript application/javascript application/json image/svg+xml application/xml;
+gzip_types text/plain text/css text/javascript text/xml text/xsl application/javascript application/json application/xml
+    application/xhtml+xml application/rss+xml application/xslt+xml application/opensearchdescription+xml image/svg+xml;
 
-location ~* \.(?:jpe?g|gif|png|webp|svg|ico)$ { expires 30d; add_header Cache-Control "public"; }
-location ~* \.(?:woff2?|ttf)$              { expires 1y;  add_header Cache-Control "public, immutable"; }
+set $asset_cache "public, max-age=604800";
+if ($arg_v) {
+    set $asset_cache "public, max-age=31536000, immutable";
+}
+
+location ~* \.(?:css|js|mjs)$ {
+    try_files $uri /index.php?$args;
+    add_header Cache-Control $asset_cache;
+}
+
+location ~* \.(?:woff2?|ttf|otf|eot|jpe?g|png|gif|webp|avif|svg|ico|mp3|ogg|wav)$ {
+    try_files $uri /index.php?$args;
+    add_header Cache-Control "public, max-age=604800";
+}
 ```
 
 > [!IMPORTANT]
-> Имена файлов шрифтов постоянны, поэтому срок «1 год / immutable» безопасен, только если при замене шрифта файл переименовывается (или к ссылке добавляется версия `?v=...`). Иначе у вернувшихся посетителей останется старая версия из кеша.
+> Версии адресов берутся из кеша конфигурации `config/local.php`. Если файл темы или плагина заменён вручную, удалите `config/local.php` (или сохраните любые настройки в админке) — иначе страница продолжит печатать старую версию, и вернувшиеся посетители останутся со старым файлом.

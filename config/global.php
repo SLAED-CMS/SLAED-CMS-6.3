@@ -85,8 +85,6 @@ support@slaed.net',
 	]
 }
 </script>',
-    'script_a' => '0',
-    'script_b' => '0',
     'script_f' => 'plugins/htmx/htmx.min.js,plugins/system/global-func.js,plugins/system/slaed.js,plugins/tablesort/tablesort.min.js',
     'sep' => '%2F',
     'sess_t' => '900',

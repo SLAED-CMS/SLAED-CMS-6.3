@@ -1856,7 +1856,7 @@ function setHead(array $seo = []): void {
         $strlink .= $tpl->getHtmlFrag('head-link', ['rel' => 'shortcut icon', 'href' => $favicon, 'type' => 'image/svg+xml', 'title' => ''])."\n";
     }
     $strlink .= doCss();
-    $script = (defined('ADMIN_FILE') || empty($conf['script_b'])) ? doScript()."\n".$stscript : $stscript;
+    $script = doScript()."\n".$stscript;
     if (defined('ADMIN_FILE')) {
         $adlogo = basename((string)($conf['admin_logo'] ?? 'slaed_logo_256x73.png'));
         $adpath = getThemeImagePath('logos/'.$adlogo);
@@ -2740,13 +2740,12 @@ function getAssetList(string $theme, string $ext, string $list): array {
     return array_values(array_unique(array_merge($out, getThemeAssets($theme, $ext))));
 }
 
-# The script tags of the page head: the versioned files of getAssetList() in their order, and on the site the head of config/header.php
+# The deferred script tags of the page head: the versioned files of getAssetList() run in their order after the parser, and on the site the head of config/header.php
 function doScript(): string {
     global $theme, $conf, $tpl;
-    $async = ($conf['script_a']) ? 'async' : '';
     $array = $conf['derived']['assets'][$theme]['js'] ?? getAssetList($theme, 'js', $conf['script_f']);
     $arr = [];
-    foreach ($array as $file) $arr[] = $tpl->getHtmlFrag('head-script-src', ['src' => Template::getAssetUrl($file), 'attr' => $async]);
+    foreach ($array as $file) $arr[] = $tpl->getHtmlFrag('head-script-src', ['src' => Template::getAssetUrl($file), 'attr' => 'defer']);
     $cont = implode("\n", $arr);
     if (!defined('ADMIN_FILE') && file_exists(CONFIG_DIR.'/header.php')) {
         ob_start();
