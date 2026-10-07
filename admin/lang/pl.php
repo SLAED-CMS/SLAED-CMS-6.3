@@ -859,3 +859,5 @@ define('_UPLOADS_STOP','Anuluj wysyłanie');
 define('_UPLOADS_TOPACK','Spakuj do jednego archiwum');
 define('_UPLOADS_FAIL','Lista nie dotarła');
 define('_UPLOADS_FAILTXT','Serwer nie odpowiedział na żądanie katalogu. Dotychczasowa zawartość pozostaje.');
+define('_UPLOADS_UNUSED','Nieużywane');
+define('_UPLOADS_UNUSEDTXT','Pliki, do których nie odwołuje się żaden tekst, komentarz, zasób ani awatar. Plik wgrany w ciągu ostatniej doby nie jest liczony: jego tekst może nie być jeszcze zapisany.');

@@ -20,7 +20,7 @@
 # The argument seo runs the canonical routes, the head and the feeds, and its child seoext asks the core for the feeds
 # The argument head runs the routes, the notices and the theme header
 # The argument quick runs the quick edit of a comment over its two routes: methods, the header token, the closed forms, the codes and what each leaves in the row
-# The argument files runs the files of the forum on the file route and the writers of a post that bind a name
+# The argument files runs the files of the forum on the file route, the writers of a post that bind a name and the unused filter of the upload browser
 if (PHP_SAPI !== 'cli') {
     http_response_code(404);
     exit;
@@ -2397,6 +2397,37 @@ function getRouteAccount(PDO $pdo): array {
     return $out;
 }
 
+# The unused filter of the upload browser in every covered folder: an old file no row names is listed, a named one of any state, its thumb and a fresh one are not
+function getRouteUnused(PDO $pdo): array {
+    global $rwork;
+    $png = base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==');
+    mkdir($rwork.'/uploads/avatars', 0777, true);
+    foreach (['ava-aaaaaaaaaa.png', 'lost-aaaaaaaaaa.png'] as $one) file_put_contents($rwork.'/uploads/avatars/'.$one, $png);
+    file_put_contents($rwork.'/uploads/voting/lost-aaaaaaaaaa.png', $png);
+    $pdo->exec('UPDATE '.RPREF.'_users SET avatar = \'ava-aaaaaaaaaa.png\' WHERE id = 2');
+    $old = ['forum/fa-aaaaaaaaaa.png', 'forum/free-aaaaaaaaaa.png', 'forum/thumb/fa-aaaaaaaaaa.png', 'node/news/att-aaaaaaaaaa.png', 'node/news/cover-cccccccccc.png',
+        'node/news/manual-dddddddddd.pdf', 'node/news/other-bbbbbbbbbb.png', 'avatars/ava-aaaaaaaaaa.png', 'avatars/lost-aaaaaaaaaa.png', 'account/pa-aaaaaaaaaa-3.png',
+        'account/other-bbbbbbbbbb-4.png', 'profile/sig-aaaaaaaaaa-3.png', 'profile/pc-aaaaaaaaaa-4.png', 'profile/other-bbbbbbbbbb-4.png', 'voting/va-aaaaaaaaaa-3.png',
+        'voting/other-bbbbbbbbbb-4.png', 'voting/vb-aaaaaaaaaa-2.png', 'voting/lost-aaaaaaaaaa.png'];
+    foreach ($old as $one) touch($rwork.'/uploads/'.$one, time() - 2 * 86400);
+    $list = function (string $dir, bool $lone): array {
+        $body = getRouteReply('root', 'GET', 'admin.php?name=uploads&dir='.$dir.($lone ? '&unused=1' : ''))['body'];
+        preg_match_all('#<tr data-sl-fm-file="([^"]+)"#', $body, $rows);
+        $num = preg_match('#bi-funnel" aria-hidden="true"></i>&nbsp;[^<]*?(\d+)</a>#', $body, $hit) ? intval($hit[1]) : -1;
+        return ['rows' => $rows[1], 'count' => $num, 'body' => $body];
+    };
+    $forum = $list('forum', true);
+    $out = ['unused' => ['forum' => [$forum['rows'], $forum['count']], 'thumb' => $list('forum/thumb', true)['rows'], 'news' => $list('node/news', true)['rows'],
+        'avatars' => $list('avatars', true)['rows'], 'account' => $list('account', true)['rows'], 'profile' => $list('profile', true)['rows'],
+        'voting' => $list('voting', true)['rows'], 'plain' => $list('forum', false)['count'], 'node' => $list('node', false)['count']]];
+    $tok = getRouteToken($forum['body'], 'sl-fm-ops');
+    $gone = getRouteReply('root', 'POST', 'admin.php', ['name' => 'uploads', 'op' => 'fmdelete', 'ctx' => 'uploads', 'back' => 'forum', 'unused' => '1', 'token' => $tok,
+        'mark' => ['forum/free-aaaaaaaaaa.png']]);
+    $out['unused']['delete'] = [$gone['code'], str_ends_with($gone['head']['location'] ?? '', '&dir=forum&unused=1'), is_file($rwork.'/uploads/forum/free-aaaaaaaaaa.png'),
+        $list('forum', true)['rows']];
+    return $out;
+}
+
 # The comments of a poll and of a profile on the file route: published and pending, a hidden poll, a guest, the author, a moderator, the own block and the writers of a comment
 function getRouteComment(PDO $pdo): array {
     global $rwork;
@@ -2532,7 +2563,7 @@ try {
     } elseif (($argv[2] ?? '') === 'quick') {
         $report['runs']['quick'] = getRouteQuick($rpdo, $rwork);
     } elseif (($argv[2] ?? '') === 'files') {
-        $report['runs']['files'] = getRouteFiles($rpdo) + getRouteAccount($rpdo) + getRouteComment($rpdo);
+        $report['runs']['files'] = getRouteFiles($rpdo) + getRouteAccount($rpdo) + getRouteComment($rpdo) + getRouteUnused($rpdo);
     } else {
         $report['runs']['lists'] = getRouteLists($rpdo);
         $report['runs']['view'] = getRouteViewRuns($rpdo);

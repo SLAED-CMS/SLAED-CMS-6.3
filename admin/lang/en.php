@@ -859,3 +859,5 @@ define('_UPLOADS_STOP','Cancel the upload');
 define('_UPLOADS_TOPACK','Pack into one archive');
 define('_UPLOADS_FAIL','The list did not arrive');
 define('_UPLOADS_FAILTXT','The server did not answer the request for the directory. What was shown is still shown.');
+define('_UPLOADS_UNUSED','Unused');
+define('_UPLOADS_UNUSEDTXT','Files no text, comment, resource or avatar references. A file uploaded within the last day is not counted: its text may not be saved yet.');

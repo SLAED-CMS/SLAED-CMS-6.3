@@ -255,4 +255,21 @@ final class FileAccessTest extends TestCase
         $this->assertSame([true, 1], $run['awrite'], 'A profile comment naming a file of the own block was stored, or an own upload refused');
         $this->assertSame([true, 1], $run['nwrite'], 'A Node comment naming a foreign file of the type was stored, or a name of its material refused');
     }
+
+    # The unused filter of the upload browser lists an old file no row names and keeps a named one, its thumb, a resource, an avatar and a fresh upload
+    # A folder no reader covers offers no filter, and the marked deletion of the filtered list removes the file and returns to the filter
+    #[Test]
+    public function theUnusedFilterListsOnlyWhatNothingNames(): void
+    {
+        $run = $this->getRun()['unused'];
+        $this->assertSame([['forum/free-aaaaaaaaaa.png'], 1], $run['forum'], 'The forum filter missed the old unnamed file or listed a named or a fresh one');
+        $this->assertSame([], $run['thumb'], 'The thumb of a named file was listed as unused');
+        $this->assertSame(['node/news/other-bbbbbbbbbb.png'], $run['news'], 'The type filter listed a file a material or a resource names, or missed the unnamed one');
+        $this->assertSame(['avatars/lost-aaaaaaaaaa.png'], $run['avatars'], 'The avatar filter listed the avatar of an account or missed the unnamed file');
+        $this->assertSame(['account/other-bbbbbbbbbb-4.png'], $run['account'], 'The message filter listed a file a message names or missed the unnamed one');
+        $this->assertSame(['profile/other-bbbbbbbbbb-4.png'], $run['profile'], 'The profile filter listed a file of a signature or a profile comment, or missed the unnamed one');
+        $this->assertSame(['voting/lost-aaaaaaaaaa.png'], $run['voting'], 'The poll filter listed a file of a pending or an edited comment, or missed the unnamed one');
+        $this->assertSame([1, -1], [$run['plain'], $run['node']], 'The full list does not count the unused files, or the root of the types offers the filter');
+        $this->assertSame([303, true, false, []], $run['delete'], 'The marked deletion kept the file or left the filter');
+    }
 }

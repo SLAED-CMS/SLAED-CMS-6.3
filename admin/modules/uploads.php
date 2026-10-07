@@ -185,7 +185,7 @@ function setFileAction(string $op): void {
     $mark = getVar('post', 'mark[]', 'raw', []);
     $mark = is_array($mark) ? array_values(array_filter($mark, 'is_string')) : [];
     $page = ($ctx === 'uploads') ? '' : '&op=sysfiles';
-    $back = $afile.'.php?name=uploads'.$page.(($dir === '') ? '' : '&dir='.rawurlencode($dir));
+    $back = $afile.'.php?name=uploads'.$page.(($dir === '') ? '' : '&dir='.rawurlencode($dir)).((getVar('post', 'unused', 'num', 0) === 1) ? '&unused=1' : '');
     $pass = checkAdminPost('uploads');
     unset($_POST['token']);
     if (!$pass) setRedirect($back, false, 302, _TOKENMISS, true);

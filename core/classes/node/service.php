@@ -1496,6 +1496,18 @@ final class NodeService {
         return array_values(array_unique($out));
     }
 
+    # Return every name the materials of the type and their local resources reference, whatever their state, which the unused files of its folder are measured against
+    public function getTypeFiles(NodeType $type): array {
+        $sql = 'SELECT intro, body FROM '.PREFIX_DB.'_nodes WHERE tid = :tid AND (intro LIKE :ia OR body LIKE :ba OR intro LIKE :ig OR body LIKE :bg)';
+        $res = $this->getQueryRes($sql, ['tid' => $type->id, 'ia' => '%[attach=%', 'ba' => '%[attach=%', 'ig' => '%go=file%', 'bg' => '%go=file%']);
+        $out = [];
+        while ($row = $this->db->getSqlRow($res)) array_push($out, ...$this->getAttachNames($type, 0, $row['intro'], $row['body']));
+        $sql = 'SELECT a.src FROM '.PREFIX_DB.'_node_assets AS a INNER JOIN '.PREFIX_DB.'_nodes AS n ON n.id = a.nid WHERE n.tid = :tid';
+        $res = $this->getQueryRes($sql, ['tid' => $type->id]);
+        while ($row = $this->db->getSqlRow($res)) if (!preg_match('#^https?://#i', $row['src'])) $out[] = ltrim(str_replace('\\', '/', $row['src']), '/');
+        return array_values(array_unique($out));
+    }
+
     # Count one allowed start of a download or one external visit of a resource right before the response: the access is checked again and a role of another mode is refused
     # The counter moves by one atomic statement without a new version or date, and a registered visitor is rewarded once per resource
     public function updateNodeAssetHits(int $id, NodeType $type): void {

@@ -454,11 +454,12 @@ final class Privat {
         return $row ? (string)$row['body'] : '';
     }
 
-    # The bodies carrying an attachment of every message one reader still holds on either side, which are the names a new message of that reader may quote or forward
-    public function getAttachBodies(int $uid): array {
-        if ($uid < 1) return [];
-        $sql = 'SELECT body FROM '.PREFIX_DB.'_privat WHERE (uidin = :uin AND delin = 0 OR uidout = :uout AND delout = 0) AND body LIKE \'%[attach=%\'';
-        return array_map(static fn(array $row): string => (string)$row['body'], $this->db->getSqlRows($this->db->getSqlQuery($sql, ['uin' => $uid, 'uout' => $uid])) ?: []);
+    # The bodies carrying an attachment of every message one reader still holds on either side, the names it may quote or forward, or of every stored message for $all
+    public function getAttachBodies(int $uid, bool $all = false): array {
+        if ($uid < 1 && !$all) return [];
+        $sql = 'SELECT body FROM '.PREFIX_DB.'_privat WHERE '.($all ? '' : '(uidin = :uin AND delin = 0 OR uidout = :uout AND delout = 0) AND ').'body LIKE \'%[attach=%\'';
+        $res = $this->db->getSqlQuery($sql, $all ? [] : ['uin' => $uid, 'uout' => $uid]);
+        return array_map(static fn(array $row): string => (string)$row['body'], $this->db->getSqlRows($res) ?: []);
     }
 
     # Return one page of the administrator list, newest first, with both account names and the state the four columns add up to

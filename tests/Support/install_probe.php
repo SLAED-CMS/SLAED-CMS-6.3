@@ -871,6 +871,7 @@ function setInstallSources(PDO $pdo, string $snap): array {
 # The standard update of a real 6.2 site: its dump in a disposable database under its own prefix, its configuration from the revision given, the release code around it
 # From the snapshot of its own field update come the definitions it never committed; the 6.2 loader myadm.php is still in the root, and config_security.php names it
 # The address of the 6.2 site points at the second server while update.php is asked on the first
+# The forum folder of the copy gets the one file the post of update62 shows, because the delivery ships no upload of a post
 # The first stage of update.php opens without a login on a 6.2 site: its page offers the run and writes nothing, the run is refused by the preflight first
 # A 6.2 table _modules the registry cannot read stops the run before the schema without the mark modules, so the next run, over a broken schema file, is the first
 # The sources the site corrected are put back only when the field unit refused them; the owner switches forum and the newsletter job, and three blocks appear
@@ -881,6 +882,9 @@ function setInstallSources(PDO $pdo, string $snap): array {
 function getInstallUpgrade(PDO $pdo, string $base, string $dump, string $rev, string $snap): array {
     global $iguard, $iport, $isite;
     $out = ['config' => setInstallOld($isite, $rev, $base), 'dump' => addInstallDump($base, $dump), 'guard' => 'http://127.0.0.1:'.$iguard];
+    if (!is_dir($isite.'/uploads/forum')) mkdir($isite.'/uploads/forum', 0777, true);
+    $png = base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==');
+    file_put_contents($isite.'/uploads/forum/slaed_cms_2026-07-13_22-01-38.png', $png);
     file_put_contents($isite.'/public/myadm.php', "<?php\ndefine('ADMIN_FILE', true);\nrequire_once 'admin/admin.php';\n");
     $sec =$isite.'/config/config_security.php';
     if (is_file($sec)) file_put_contents($sec, (string)preg_replace("/'afile' => '[a-z0-9_-]*'/", "'afile' => 'myadm'", (string)file_get_contents($sec)));

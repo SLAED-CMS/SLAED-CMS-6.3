@@ -298,11 +298,12 @@ class Comment {
         return $out;
     }
 
-    # The bodies of the comments of one target that name an attachment: the published ones, or every one not deleted when the caller moderates the target
+    # The bodies of the comments of one target, of every target of the module for 0, that name an attachment: the published ones, or every one not deleted for $all
     # Node asks this to grant a file its attach route delivers, after it has read the material itself through its own checks
     public function getAttachTexts(string $mod, int $cid, bool $all): array {
-        $sql = 'SELECT body FROM '.PREFIX_DB.'_comment WHERE modul = :mod AND cid = :cid AND deleted IS NULL AND body LIKE :tag'.($all ? '' : ' AND status = :stat');
-        $pars = ['mod' => $mod, 'cid' => $cid, 'tag' => '%[attach=%'] + ($all ? [] : ['stat' => CommentStatus::Published->value]);
+        $sql = 'SELECT body FROM '.PREFIX_DB.'_comment WHERE modul = :mod'.(($cid > 0) ? ' AND cid = :cid' : '').' AND deleted IS NULL AND body LIKE :tag'
+            .($all ? '' : ' AND status = :stat');
+        $pars = ['mod' => $mod, 'tag' => '%[attach=%'] + (($cid > 0) ? ['cid' => $cid] : []) + ($all ? [] : ['stat' => CommentStatus::Published->value]);
         $out = [];
         foreach ($this->db->getSqlRows($this->db->getSqlQuery($sql, $pars)) ?: [] as $row) $out[] = (string)$row['body'];
         return $out;

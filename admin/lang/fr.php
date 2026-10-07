@@ -859,3 +859,5 @@ define('_UPLOADS_STOP','Annuler le téléversement');
 define('_UPLOADS_TOPACK','Compresser en une seule archive');
 define('_UPLOADS_FAIL','La liste n\'est pas arrivée');
 define('_UPLOADS_FAILTXT','Le serveur n\'a pas répondu à la demande du répertoire. Le contenu affiché reste en place.');
+define('_UPLOADS_UNUSED','Inutilisés');
+define('_UPLOADS_UNUSEDTXT','Fichiers qu\'aucun texte, commentaire, ressource ou avatar ne référence. Un fichier envoyé depuis moins d\'un jour n\'est pas compté : son texte n\'est peut-être pas encore enregistré.');

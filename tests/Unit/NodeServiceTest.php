@@ -97,6 +97,7 @@ final class NodeServiceTest extends TestCase
             'getNodeFile' => ['NodeType type', 'int id', 'string key', 'bool thumb', 'Comment com', 'string'],
             'getNodePreview' => ['NodeType type', 'NodeInput input', 'NodeStatus status', 'Node'],
             'getNodeRemains' => ['array'],
+            'getTypeFiles' => ['NodeType type', 'array'],
             'getTextSource' => ['int id', '?array'],
             'setTargetLock' => ['int id', 'NodeType type', 'void'],
             'updateNode' => ['int id', 'NodeInput input', 'int version', 'Node'],

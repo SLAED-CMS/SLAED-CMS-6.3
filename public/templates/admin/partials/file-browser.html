@@ -9,7 +9,7 @@
     {% if can_mkdir %}<button type="button" class="sl-but-mini sl-is-muted" data-sl-fm-act="fmmkdir" title="{{ newdir_text }}" aria-label="{{ newdir_text }}"><i class="bi bi-folder-plus" aria-hidden="true"></i></button>{% endif %}
     {% if can_upload %}<button type="button" class="sl-but-mini sl-fm-main" data-sl-fm-act="upload" title="{{ load_text }}" aria-label="{{ load_text }}"><i class="bi bi-cloud-arrow-up" aria-hidden="true"></i></button>{% endif %}
     <span class="sl-fm-crumbs" id="slfmcrumbs">{% for crumb in crumbs %}{% if crumb.url %}<a href="{{ crumb.url }}" hx-get="{{ crumb.url }}" hx-target="#slfmbody" hx-swap="innerHTML" hx-push-url="false">{{ crumb.name }}</a><span>/</span>{% else %}<b>{{ crumb.name }}</b>{% endif %}{% endfor %}</span>
-    <input type="text" name="find" value="{{ find_text }}" placeholder="{{ filter_text }}" aria-label="{{ filter_text }}" hx-get="{{ find_url }}" hx-include="#slfmbody [name='dir']" hx-target="#slfmbody" hx-swap="innerHTML" hx-push-url="false" hx-trigger="input changed delay:400ms, search">
+    <input type="text" name="find" value="{{ find_text }}" placeholder="{{ filter_text }}" aria-label="{{ filter_text }}" hx-get="{{ find_url }}" hx-include="#slfmbody [name='dir'], #slfmbody [name='unused']" hx-target="#slfmbody" hx-swap="innerHTML" hx-push-url="false" hx-trigger="input changed delay:400ms, search">
     <button type="button" class="sl-but-mini sl-is-muted" data-sl-fm-view="list" aria-pressed="true" title="{{ list_text }}" aria-label="{{ list_text }}"><i class="bi bi-list-ul" aria-hidden="true"></i></button>
     <button type="button" class="sl-but-mini sl-is-muted" data-sl-fm-view="grid" aria-pressed="false" title="{{ tiles_text }}" aria-label="{{ tiles_text }}"><i class="bi bi-grid-3x3-gap" aria-hidden="true"></i></button>
   </div>
@@ -26,12 +26,14 @@
   <div id="slfmbody">
 {% endif %}
     <input type="hidden" name="dir" value="{{ dir }}">
+    {% if is_unused %}<input type="hidden" name="unused" value="1">{% endif %}
     <form class="sl-fm-ops" action="{{ post_url }}" method="post" hidden>
       <input type="hidden" name="name" value="uploads">
       <input type="hidden" name="op" value="">
       <input type="hidden" name="ctx" value="{{ ctx }}">
       <input type="hidden" name="file" value="">
       <input type="hidden" name="back" value="{{ dir }}">
+      {% if is_unused %}<input type="hidden" name="unused" value="1">{% endif %}
       <input type="hidden" name="token" value="{{ token }}">
       <b data-sl-fm-title></b>
       <input type="text" name="arg" value="" autocomplete="off" spellcheck="false" required>
@@ -77,6 +79,7 @@
     {% if caps_html %}<div class="sl-fm-caps"><b>{{ caps_label }}</b>{{{ caps_html }}}</div>{% endif %}
     <div class="sl-fm-foot">
       <span aria-live="polite">{{ info_text }}</span>
+      {% if unused_url %}<a class="sl-chip {% if is_unused %}sl-chip-warn{% else %}sl-chip-neutral{% endif %}" href="{{ unused_url }}" hx-get="{{ unused_url }}" hx-target="#slfmbody" hx-swap="innerHTML" hx-push-url="false" title="{{ unused_hint }}"{% if is_unused %} aria-current="true"{% endif %}><i class="bi bi-funnel" aria-hidden="true"></i>&nbsp;{{ unused_text }}</a>{% endif %}
     </div>
 {% if is_full %}
   </div>

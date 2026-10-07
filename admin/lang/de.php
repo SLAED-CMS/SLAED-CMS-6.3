@@ -859,3 +859,5 @@ define('_UPLOADS_STOP','Hochladen abbrechen');
 define('_UPLOADS_TOPACK','In ein Archiv packen');
 define('_UPLOADS_FAIL','Die Liste kam nicht an');
 define('_UPLOADS_FAILTXT','Der Server hat die Anfrage nach dem Verzeichnis nicht beantwortet. Der bisherige Inhalt bleibt stehen.');
+define('_UPLOADS_UNUSED','Unbenutzt');
+define('_UPLOADS_UNUSEDTXT','Dateien, auf die kein Text, Kommentar, keine Ressource und kein Avatar verweist. Eine Datei vom letzten Tag zählt nicht: Ihr Text ist vielleicht noch nicht gespeichert.');

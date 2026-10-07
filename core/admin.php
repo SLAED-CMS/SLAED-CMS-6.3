@@ -1189,6 +1189,46 @@ function getAdminUploadRule(string $dir): array {
     return array_merge(getUploadRuleData($mod), ['mod' => $mod, 'maxquota' => 0]);
 }
 
+# The owner folder of an upload path and the paths below it that any stored row references, read as the route reads them, or null for a folder no reader covers
+function getAdminFileRefs(string $dir): ?array {
+    global $db, $conf, $com, $prv;
+    $part = explode('/', $dir);
+    $node = $part[0] === basename(NODE_DIR);
+    $mod = $node ? ($part[1] ?? '') : $part[0];
+    $type = $node ? (getNodeTypeMap()[$mod] ?? null) : null;
+    $ava = (string)preg_replace('#^uploads(?:/|$)#', '', trim(str_replace('\\', '/', (string)($conf['users']['adirectory'] ?? '')), '/'));
+    $room = match (true) {
+        $type !== null => getUploadFolder($mod, true),
+        !$node && !in_array(getUploadOwner($mod), ['', 'node'], true) => $mod,
+        $ava !== '' && ($dir === $ava || str_starts_with($dir, $ava.'/')) => $ava,
+        default => '',
+    };
+    if ($room === '') return null;
+    $cmod = ($mod === 'profile') ? 'account' : $mod;
+    $texts = ($room !== $ava && getCommentPlace($cmod) === $mod) ? $com->getAttachTexts($cmod, 0, true) : [];
+    if ($room === 'account') array_push($texts, ...$prv->getAttachBodies(0, true));
+    $sql = match ($room) {
+        'forum' => 'SELECT body FROM '.PREFIX_DB.'_forum WHERE body LIKE \'%[attach=%\'',
+        'profile' => 'SELECT sig, block FROM '.PREFIX_DB.'_users WHERE sig LIKE \'%[attach=%\' OR block LIKE \'%[attach=%\'',
+        default => '',
+    };
+    $res = ($sql === '') ? false : $db->getSqlQuery($sql);
+    while ($res && ($row = $db->getSqlRow($res))) array_push($texts, ...array_values(array_filter($row, 'is_string', ARRAY_FILTER_USE_KEY)));
+    $prs = new Parser();
+    $refs = [];
+    foreach ($texts as $text) array_push($refs, ...$prs->getAttachList($text));
+    try {
+        if ($type !== null) array_push($refs, ...getNodeWriter($type)->getTypeFiles($type));
+    } catch (NodeException) {
+        return null;
+    }
+    if ($room === $ava) {
+        $res = $db->getSqlQuery('SELECT avatar FROM '.PREFIX_DB.'_users WHERE avatar != \'\' AND avatar NOT LIKE \'presets/%\'');
+        while ($res && ($row = $db->getSqlRow($res))) $refs[] = $row['avatar'];
+    }
+    return ['room' => $room, 'refs' => array_values(array_unique($refs))];
+}
+
 # Return one relative path of the request unfiltered, because what a path means is decided by the canonicalization of the file layer and never by a filter of the input side
 # A reading route carries its path in the query and a write carries it in the body, so the source is named by the caller and the two never read each other by accident
 function getAdminFilePath(string $key, string $src = 'get'): string {
@@ -1451,6 +1491,17 @@ function getAdminFileShell(bool $full = false, array $edit = []): string {
     $one = $man->getFileData($dir);
     if (($one['kind'] ?? '') !== 'dir') $dir = '';
     $all = $man->getFileList($dir);
+    $used = ($ctx === 'uploads') ? getAdminFileRefs($dir) : null;
+    $lone = $used !== null && getVar('get', 'unused', 'num', 0) === 1;
+    $idle = [];
+    $refs = array_flip($used['refs'] ?? []);
+    $age = time() - 86400;
+    foreach (($used === null) ? [] : $all as $row) {
+        $rel = substr($row['path'], strlen($used['room']) + 1);
+        $rel = str_starts_with($rel, 'thumb/') ? substr($rel, 6) : $rel;
+        if ($row['kind'] !== 'dir' && $row['mtime'] < $age && !isset($refs[$rel])) $idle[$row['path']] = true;
+    }
+    if ($lone) $all = array_values(array_filter($all, static fn(array $row): bool => isset($idle[$row['path']])));
     if ($find !== '') $all = array_values(array_filter($all, static fn(array $row): bool => mb_stripos($row['name'], $find) !== false));
     $sum = 0;
     foreach ($all as $row) $sum += $row['size'];
@@ -1538,7 +1589,11 @@ function getAdminFileShell(bool $full = false, array $edit = []): string {
         'clear_text' => _UPLOADS_UNMARK,
         'ask_text' => _UPLOADS_MANYDEL,
         'pack_name' => 'archive.zip',
-        'self_url' => getAdminFileLink('getAdminFileList', ['dir' => $dir, 'find' => $find]),
+        'self_url' => getAdminFileLink('getAdminFileList', ['dir' => $dir, 'find' => $find, 'unused' => $lone ? 1 : '']),
+        'is_unused' => $lone,
+        'unused_url' => ($used === null) ? '' : getAdminFileLink('getAdminFileList', ['dir' => $dir, 'find' => $find, 'unused' => $lone ? '' : 1]),
+        'unused_text' => _UPLOADS_UNUSED.': '.count($idle),
+        'unused_hint' => _UPLOADS_UNUSEDTXT,
         'up_url' => getAdminFileLink('getAdminFileList', ['dir' => str_contains($dir, '/') ? substr($dir, 0, (int)strrpos($dir, '/')) : '']),
         'find_url' => getAdminFileLink('getAdminFileList'),
         'find_text' => $find,
@@ -1564,10 +1619,10 @@ function getAdminFileShell(bool $full = false, array $edit = []): string {
         'edit_html' => ($pick === '') ? '' : getAdminFileEditor($edit),
         'list_html' => $tpl->getHtmlPart('file-browser-list', [
             'is_empty' => $rows === '',
-            'empty_icon' => ($find === '') ? 'folder' : 'search',
-            'empty_title' => ($find === '') ? _UPLOADS_EMPTY : _UPLOADS_NOFIND,
-            'empty_text' => ($find === '') ? _UPLOADS_EMPTYTXT : _UPLOADS_NOFINDTXT,
-            'reset_url' => ($find === '') ? '' : getAdminFileLink('getAdminFileList', ['dir' => $dir]),
+            'empty_icon' => ($find === '' && !$lone) ? 'folder' : 'search',
+            'empty_title' => ($find === '' && !$lone) ? _UPLOADS_EMPTY : _UPLOADS_NOFIND,
+            'empty_text' => ($find === '' && !$lone) ? _UPLOADS_EMPTYTXT : _UPLOADS_NOFINDTXT,
+            'reset_url' => ($find === '' && !$lone) ? '' : getAdminFileLink('getAdminFileList', ['dir' => $dir]),
             'reset_text' => _FRESET,
             'fail_title' => _UPLOADS_FAIL,
             'fail_text' => _UPLOADS_FAILTXT,
