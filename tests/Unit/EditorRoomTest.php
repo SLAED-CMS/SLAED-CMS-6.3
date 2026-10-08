@@ -277,7 +277,7 @@ class EditorRoomTest extends TestCase
     #[Test]
     public function theEditorReadsTheCapAndTheTypeListFromPhp(): void
     {
-        $drv = $this->getFile('public/plugins/editors/toastui/driver.php');
+        $drv = $this->getFile('core/helpers.php');
         $this->assertStringContainsString("'embedmax' => Parser::EMBEDMAX,", $drv, 'The editor no longer receives the cap from the one constant that defines it');
         $this->assertStringContainsString("'embedimg' => Parser::EMBEDIMG,", $drv, 'The editor no longer receives the type list from the one array that defines it');
         $js = $this->getFile('public/plugins/system/filemanager.js');

@@ -381,7 +381,7 @@ final class FileManagerPathTest extends TestCase
     {
         $rows = [
             'a.php' => 'php', 'a.html' => 'html', 'a.htm' => 'html', 'a.tpl' => 'html', 'a.css' => 'css', 'a.js' => 'js', 'a.json' => 'json',
-            'a.sql' => 'sql', 'a.xml' => 'xml', 'a.txt' => 'text', 'a.md' => 'text', 'a.ini' => 'text', 'a.log' => 'text',
+            'a.sql' => 'sql', 'a.xml' => 'xml', 'a.txt' => 'text', 'a.md' => 'markdown', 'a.ini' => 'ini', 'a.log' => 'text',
             'a.PHP' => 'php', 'dir/a.css' => 'css', 'a.png' => '', 'a.zip' => '', 'a.exe' => '', 'noext' => '', 'a.php.png' => '',
         ];
         $fm = $this->getManager();

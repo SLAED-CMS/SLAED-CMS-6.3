@@ -14,9 +14,16 @@ final class EditorFormatTest extends TestCase
         if (!class_exists('Template', false)) require_once BASE_DIR.'/core/classes/template.php';
         $words = ['_TEXT', '_EDITOR_DIRTY', '_EDITOR_TOOLS', '_EDITOR_POS', '_EDITOR_SEL', '_EDITOR_SIZE', '_COPYDONE', '_EDITOR_NOCLIP', '_EDITOR_RESTORED',
             '_EDITOR_UNDO', '_EDITOR_REDO', '_EDITOR_WRAP', '_COPY', '_EDITOR_RESET', '_EMOVEWIN',
-            '_EEXPAND', '_ERESTORE', '_EDITOR_DRAFT', '_EDITOR_DRAFTBACK', '_EDITOR_DRAFTDROP'];
+            '_EEXPAND', '_ERESTORE', '_EDITOR_DRAFT', '_EDITOR_DRAFTBACK', '_EDITOR_DRAFTDROP', '_EUPLOAD', '_EEMOJI', '_CLOSE', '_EEMOJIRECENT',
+            '_EEMOJISMILE', '_EEMOJIREACT', '_EEMOJINOTICE', '_EEMOJISYMBOL', '_EEMOJIEMPTY', '_EDITOR_RECENT', '_EDITOR_LEFT', '_ETEXTLONG',
+            '_EDITOR_SEARCH', '_EDITOR_FOLDALL', '_EDITOR_UNFOLDALL', '_EDITOR_BOLD', '_EDITOR_ITALIC', '_CODE', '_URL', '_LIST', '_QUOTE', '_EDITOR_FILES',
+            '_EDITOR_SELALL', '_EDITOR_COMMENT', '_EFULLSCREEN', '_EDITOR_CMDS', '_EDITOR_CMDFIND', '_EDITOR_GRPEDIT', '_EDITOR_GRPFORMAT',
+            '_EDITOR_GRPINSERT', '_EDITOR_GRPVIEW', '_EDITOR_NONE', '_EDITOR_KEYS', '_EDITOR_KEYNEXT', '_EDITOR_KEYLINE', '_EDITOR_KEYMOVE',
+            '_EDITOR_KEYDUP', '_EDITOR_KEYDEL', '_EDITOR_KEYINDENT', '_EDITOR_KEYPAIR', '_EDITOR_KEYCARET', '_EDITOR_KEYLIST', '_EDITOR_KEYESC',
+            '_EDITOR_PALPICK', '_EDITOR_PALRUN', '_EDITOR_PALSHUT', '_EDITOR_PALANY'];
         $words = array_merge($words, array_values((new ReflectionClassConstant(Editor::class, 'PHRASES'))->getValue()));
         foreach ($words as $name) if (!defined($name)) define($name, 'word '.$name);
+        if (!defined('_LOCALE')) define('_LOCALE', 'en_US');
     }
 
     #[Test]
@@ -104,8 +111,15 @@ final class EditorFormatTest extends TestCase
                 $this->frags[] = [$name, $data];
                 return '';
             }
+
+            public function getHtmlPart(string $name, array $data = []): string
+            {
+                $this->frags[] = [$name, $data];
+                return '';
+            }
         };
         (new ReflectionProperty(Editor::class, 'done'))->setValue(null, false);
+        (new ReflectionProperty(Editor::class, 'emoji'))->setValue(null, false);
         $run();
         $out = $GLOBALS['tpl']->frags;
         $GLOBALS['tpl'] = $keep;
@@ -242,5 +256,80 @@ final class EditorFormatTest extends TestCase
         $run = (string)file_get_contents(PUBLIC_DIR.'/plugins/system/editor.js');
         $this->assertStringContainsString('cm.syntaxHighlighting(cm.classHighlighter)', $run, 'The code is not handed to the theme as classes');
         $this->assertStringNotContainsString('oneDark', $run, 'A fixed dark scheme paints the code over the theme');
+    }
+
+    # Every text of the shell offers emoji, from a panel printed once per answer with its words and the addresses its script loads by on the first press; code never
+    # A text tells the runtime the format it writes a picture in, and a text without an upload place carries no file window
+    #[Test]
+    public function textEditorsOfferEmojiAndTheirFormat(): void
+    {
+        require_once BASE_DIR.'/public/plugins/editors/plain/driver.php';
+        $frags = $this->getDriverFrags(function (): void {
+            (new EditorPlain())->getWidget('1', 'one', '', 'full', []);
+            (new EditorCodemirror())->getWidget('2', 'two', '', 'full', ['format' => 'markdown']);
+        });
+        $this->assertCount(1, array_filter($frags, fn($one) => $one[0] === 'emoji-panel'), 'The emoji panel is printed more than once or not at all');
+        $part = $this->getFragData($frags, 'emoji-panel');
+        $src = json_decode((string)($part['src_json'] ?? ''), true);
+        $this->assertStringStartsWith('plugins/system/emoji.js', $src[0] ?? '', 'The panel names no script to load');
+        $this->assertStringStartsWith('plugins/system/emoji/en.js', $src[1] ?? '', 'The panel names no words of the locale');
+        $this->assertSame('word _EEMOJISMILE', json_decode((string)($part['words_json'] ?? ''), true)['smileys'] ?? null, 'A category of the panel speaks English');
+        $frame = $this->getFragData($frags, 'editor-frame');
+        $this->assertSame('plain', $frame['lang_key'] ?? null, 'The frame does not tell the runtime the format it writes a picture in');
+        $this->assertSame('', $frame['files_json'] ?? null, 'A text without an upload place offers the file window');
+        $code = $this->getDriverFrags(fn() => (new EditorCodemirror())->getWidget('c', 'x', '', 'php', 'full', 'File'));
+        $this->assertNull($this->getFragData($code, 'emoji-panel'), 'Code offers emoji');
+        $kit = $this->getFragData($code, 'editor-kit');
+        $this->assertSame('word _EUPLOAD', $kit['files_text'] ?? null, 'The folder of the capsule is not named');
+        $this->assertSame('word _EEMOJI', $kit['emoji_text'] ?? null, 'The emoji button of the capsule is not named');
+    }
+
+    # The capsule and the palette carry every command once, each marked with what its engine needs, and the runtime keeps of them what the frame serves
+    # The palette is a window of the canon printed inside the kit, so a page of many editors carries one; Ctrl+K reaches it only from inside a frame
+    #[Test]
+    public function capsuleAndPaletteFollowTheEngine(): void
+    {
+        $kit = $this->getFragData($this->getDriverFrags(fn() => (new EditorCodemirror())->getWidget('c', 'x', '', 'php', 'full', 'File')), 'editor-kit');
+        $words = json_decode((string)($kit['words_json'] ?? ''), true);
+        foreach (['recent' => '_EDITOR_RECENT', 'left' => '_EDITOR_LEFT', 'long' => '_ETEXTLONG'] as $key => $name) {
+            $this->assertSame('word '.$name, $words[$key] ?? null, 'The runtime has no word for '.$key);
+        }
+        foreach ($kit as $key => $value) {
+            if (str_ends_with($key, '_text')) $this->assertNotSame('', (string)$value, $key.' of the kit carries no word');
+        }
+        $tpl = (string)file_get_contents(PUBLIC_DIR.'/templates/admin/fragments/editor-kit.html');
+        $acts = ['undo', 'redo', 'search', 'wrap', 'fold', 'unfold', 'bold', 'italic', 'code', 'link', 'list', 'quote', 'files', 'emoji', 'copy', 'reset', 'full'];
+        foreach ($acts as $act) {
+            $this->assertStringContainsString('data-sl-editor-act="'.$act.'"', $tpl, 'The capsule has no '.$act);
+            $this->assertStringContainsString('data-sl-editor-cmd="'.$act.'"', $tpl, 'The palette has no '.$act);
+        }
+        $need = ['search' => 'cm', 'fold' => 'cm', 'unfold' => 'cm', 'comment' => 'code', 'bold' => 'markdown', 'list' => 'markdown', 'files' => 'files', 'emoji' => 'text'];
+        foreach ($need as $act => $want) {
+            $this->assertMatchesRegularExpression('#data-sl-editor-cmd="'.$act.'" data-sl-editor-need="'.$want.'"#', $tpl, 'The palette offers '.$act.' to an engine without it');
+        }
+        $this->assertMatchesRegularExpression('#<dialog class="sl-modal sl-editor-pal" data-sl-editor-palette#', $tpl, 'The palette is not a window of the canon');
+        $this->assertStringContainsString('data-sl-focus', $tpl, 'The keyboard does not land in the search of the palette');
+        $run = (string)file_get_contents(PUBLIC_DIR.'/plugins/system/editor.js');
+        foreach (["frame.addEventListener('keydown', function (ev) { setKeys(ed, ev); }, true)", "ev.code === 'KeyK'", "ev.key !== 'Escape'", "pal.addEventListener('close'",
+            "area.addEventListener('keydown', function (ev) { setListEnter(ed, ev); })", 'enc.encode(text).length'] as $part) {
+            $this->assertStringContainsString($part, $run, 'The runtime lost '.$part);
+        }
+        $this->assertStringNotContainsString("doc.addEventListener('keydown'", $run, 'Ctrl+K is heard outside the editors');
+    }
+
+    # The counter of a text reads the room of its column: a text column gives its bytes, a mediumtext column and code give none
+    #[Test]
+    public function textCountsTheRoomOfItsColumn(): void
+    {
+        require_once BASE_DIR.'/public/plugins/editors/plain/driver.php';
+        $run = fn(array $room) => $this->getFragData($this->getDriverFrags(fn() => (new EditorPlain())->getWidget('1', 'x', '', 'full', ['room' => $room])), 'editor-frame');
+        $this->assertSame(65535, $run(['kind' => 'text', 'bytes' => 65535])['room_num'] ?? null, 'A text column gives the counter no room');
+        $this->assertSame(0, $run(['kind' => 'mediumtext', 'bytes' => 16777215])['room_num'] ?? null, 'A mediumtext column counts sixteen megabytes down');
+        $this->assertSame(0, $run([])['room_num'] ?? null);
+        $code = $this->getFragData($this->getDriverFrags(fn() => (new EditorCodemirror())->getWidget('c', 'x', '', 'php', 'full', 'File')), 'editor-frame');
+        $this->assertSame(0, $code['room_num'] ?? null, 'Code counts the room of a column');
+        $tpl = (string)file_get_contents(PUBLIC_DIR.'/templates/admin/fragments/editor-frame.html');
+        $this->assertStringContainsString('data-sl-editor-room="{{ room_num }}"', $tpl, 'The frame does not hand the room to the runtime');
+        $this->assertStringContainsString('data-sl-editor-left', $tpl, 'The status line has no place for the counter');
     }
 }

@@ -783,6 +783,116 @@ function getFileManagerWindow(array $opt): string {
     ]);
 }
 
+# Work out the file window of one text editor once for Toast UI, Plain Plus and CodeMirror: the options its runtime reads and the windows it draws
+function getEditorFileKit(string $id, array $data): array {
+    global $tpl;
+    $mod = strtolower((string)($data['mod'] ?? ''));
+    $plc = ($mod !== '') ? $mod.'.attach' : '';
+    $rul = (array)($data['rule'] ?? []);
+    $plr = ($plc !== '') ? getUploadPlaceRule($plc) : [];
+    $room = (array)($data['room'] ?? []);
+    $upl = $mod !== '' && checkEditorUploadAccess($mod, $rul);
+    $emb = !empty($room['embed']);
+    $mdr = $upl && checkUploadModer($mod);
+    $eid = htmlspecialchars($id, ENT_QUOTES, 'UTF-8');
+    $pid = $id.'_fm';
+    $sid = $id.'_fm_insert';
+    $txt = getFileManagerText();
+    $opt = [
+        'labels' => $txt['labels'],
+        'panes' => $txt['panes'] + ['emb' => [_EMODEEMBED, _EMODEEMBEDINFO]],
+        'embedmax' => Parser::EMBEDMAX,
+        'embedimg' => Parser::EMBEDIMG,
+        'canupload' => $upl,
+        'canlist' => $upl,
+        'canembed' => $emb,
+        'canlink' => !empty($plr['canlink']),
+        'canzip' => $mdr,
+        'candel' => $mdr,
+        'room' => (int)($room['bytes'] ?? 65535),
+        'panel' => $pid,
+        'opts' => $sid,
+        'msg' => $id.'_fm_msg',
+        'object' => $id.'_fm_object',
+        'url' => $id.'_fm_url',
+        'alt' => $id.'_fm_alt',
+        'urlalt' => $id.'_fm_urlalt',
+        'last' => 6,
+        'maxfiles' => (int)($rul['maxfiles'] ?? 0),
+        'exts' => array_values(array_filter(array_map('trim', explode(',', strtolower((string)($rul['extensions'] ?? '')))))),
+        'maxbytes' => (int)($rul['maxbytes'] ?? 0),
+        'maxwidth' => (int)($rul['maxwidth'] ?? 0),
+        'maxheight' => (int)($rul['maxheight'] ?? 0),
+        'token' => $upl ? getSiteToken('upload') : '',
+        'ajax' => $upl ? getSiteToken() : '',
+        'upload' => $upl ? 'index.php?go=4&op=editorUpload&place='.rawurlencode($plc) : '',
+        'files' => $upl ? 'index.php?go=4&op=editorFiles&place='.rawurlencode($plc) : '',
+        'remove' => $mdr ? 'index.php?go=4&op=editorDelete&place='.rawurlencode($plc) : '',
+        'archive' => $mdr ? 'index.php?go=4&op=editorArchive&place='.rawurlencode($plc) : '',
+    ];
+    $html = getFileManagerWindow([
+        'place' => $plc,
+        'panel' => $pid,
+        'title' => $id.'_fm_title',
+        'msg' => $opt['msg'],
+        'upfile' => $id.'_fm_file',
+        'embed' => $id.'_fm_embed',
+        'object' => $opt['object'],
+        'url' => $opt['url'],
+        'alt' => $opt['alt'],
+        'urlalt' => $opt['urlalt'],
+        'editor' => $id,
+        'can_embed' => $emb,
+        'embed_accept' => implode(',', array_map(static fn(string $ext): string => '.'.$ext, Parser::EMBEDIMG)),
+        'embed_types' => implode(', ', Parser::EMBEDIMG).' · '.filterSize(Parser::EMBEDMAX),
+        'room_text' => filterSize((int)($room['bytes'] ?? 0)),
+    ]);
+    $acts = [
+        ['key' => 'image', 'icon' => 'image', 'name' => _INSERTIMG, 'tone' => 'info'],
+        ['key' => 'attach', 'icon' => 'paperclip', 'name' => _EINSOBJ, 'tone' => 'neutral'],
+        ['icon' => 'download', 'name' => _DOWNLOAD, 'tone' => 'neutral', 'is_load' => true],
+    ];
+    if ($mdr) $acts[] = ['key' => 'zip', 'icon' => 'file-zip', 'name' => _EDITOR_ZIP, 'tone' => 'warn'];
+    if ($mdr) $acts[] = ['key' => 'delete', 'icon' => 'trash3', 'name' => _DELETE, 'tone' => 'danger'];
+    if ($upl) $html .= getWindowShot([
+        'own' => 'editor',
+        'editor' => $eid,
+        'prev_text' => _EDITOR_PREV,
+        'next_text' => _EDITOR_NEXT,
+        'can_walk' => true,
+        'can_props' => true,
+        'acts' => $acts,
+    ]);
+    if ($upl) $html .= $tpl->getHtmlFrag('window', [
+        'win_id' => htmlspecialchars($sid, ENT_QUOTES, 'UTF-8'),
+        'size_class' => 'sl-modal-sm',
+        'win_class' => 'sl-fm-win sl-toastui-upload',
+        'win_attr' => 'data-editor="'.$eid.'"',
+        'icon_name' => 'sliders',
+        'title_text' => _EDITOR_OPTS,
+        'has_sub' => true,
+        'sub_attr' => 'data-sl-opts="name"',
+        'close_text' => _CLOSE,
+        'body_html' => $tpl->getHtmlFrag('window-body-insert', [
+            'opts_id' => htmlspecialchars($sid, ENT_QUOTES, 'UTF-8'),
+            'align_label' => _EDITOR_ALIGN,
+            'alignno_label' => _EDITOR_ALIGNNO,
+            'alignleft_label' => _EDITOR_ALIGNLEFT,
+            'alignright_label' => _EDITOR_ALIGNRIGHT,
+            'size_label' => _SIZE,
+            'sizethumb_label' => _EDITOR_THUMB,
+            'sizefull_label' => _EDITOR_FULLSIZE,
+            'caption_label' => _EDITOR_CAPTION,
+        ]),
+        'foot_html' => $tpl->getHtmlFrag('window-foot-insert', [
+            'editor_id' => $eid,
+            'close_label' => _CLOSE,
+            'insert_label' => _EDITOR_INSERT,
+        ]),
+    ]);
+    return ['opt' => $opt, 'html' => $html];
+}
+
 # Build the door of one form row onto the file window: the button that opens it, the chip of what came back and the three hidden carriers the submit takes to the handler
 # Outside the editor the window only picks and the form uploads, so the file rides an ordinary multipart submit and the runtime is handed a box instead of an editor to insert into
 # The three outcomes are exclusive and each has its own carrier, because the handler reads them in a fixed defensive order and a leftover of one would answer for another

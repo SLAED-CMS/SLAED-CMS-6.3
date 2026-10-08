@@ -198,7 +198,7 @@ return [
     # CSS spells that track list as one width per cell instead of one `grid-template-columns`, and each is a figure an author retunes
     'components' => [
         'alert', 'arrow', 'aside', 'ava', 'avatar', 'badge', 'band', 'bar', 'beam', 'brand', 'btn', 'btn-mini', 'bullet', 'cab-act', 'cab-msg', 'cab-ring',
-        'calc', 'card', 'changelog', 'changelog-body', 'changelog-date',
+        'calc', 'capsule', 'card', 'changelog', 'changelog-body', 'changelog-date',
         'changelog-files', 'changelog-stat', 'check', 'check-tick', 'chip', 'chip-tint', 'code', 'col-actions', 'col-amount', 'col-author',
         'col-check', 'col-count', 'col-date', 'col-form', 'col-id', 'col-ip', 'col-lang', 'col-last', 'col-module', 'col-num', 'col-sent',
         'col-status', 'com', 'com-arrow', 'com-ava', 'com-item', 'count', 'crumb', 'crumb-bar', 'demo', 'dial', 'donut', 'drift', 'drift-dot',

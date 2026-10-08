@@ -1,8 +1,11 @@
 (function(win, doc) {
     'use strict';
 
-    var api = win.SlaedToastUi || {};
+    var api = win.SlaedEmoji || {};
+    // The key keeps the name it was given under Toast UI, so the recent row a visitor built there survives the move to the shared runtime
     var key = 'slaed_toastui_recent_emoji';
+    var eds = new Map();
+    var lab = null;
     var active = '';
     var panel = null;
     var cat = 'recent';
@@ -248,19 +251,27 @@
         }
     };
 
-    function getOpt(id) {
-        var opt = api.options || {};
-        return opt[String(id)] || {};
+    // The templates of the panel and its words stand in the partial of the theme, so the script holds no node and no word of its own
+    function getRoot() {
+        return doc.querySelector('[data-sl-emoji]');
     }
 
-    function getLab(id, name, val) {
-        var opt = getOpt(id);
-        var lab = opt.labels || {};
+    function getTpl(name) {
+        var root = getRoot();
+        var tpl = root ? root.querySelector('template[data-tpl="' + name + '"]') : null;
+        return tpl && tpl.content && tpl.content.firstElementChild ? tpl.content.firstElementChild.cloneNode(true) : null;
+    }
+
+    function getLab(name, val) {
+        var root = getRoot();
+        if (!lab) {
+            try { lab = JSON.parse(root ? root.getAttribute('data-sl-emoji-words') || '{}' : '{}'); } catch (err) { lab = {}; }
+        }
         return lab[name] || val;
     }
 
-    function getCatLabel(id, name) {
-        return getLab(id, 'emoji_' + name, data[name] ? data[name].label : name);
+    function getCatLabel(name) {
+        return getLab(name, data[name] ? data[name].label : name);
     }
 
     function getRecent() {
@@ -290,7 +301,7 @@
     }
 
     function getWords(emoji) {
-        var map = api.emojiWords || {};
+        var map = api.words || {};
         return String(map[emoji] || '').toLowerCase();
     }
 
@@ -306,8 +317,8 @@
         });
     }
 
-    function addTab(id, name, label) {
-        var btn = api.getTpl(id, 'emoji-tab');
+    function addTab(name, label) {
+        var btn = getTpl('emoji-tab');
         if (!btn) return null;
         btn.setAttribute('data-cat', name);
         btn.textContent = label;
@@ -329,7 +340,7 @@
         panel.style.width = Math.min(width, max) + 'px';
     }
 
-    function render(id) {
+    function render() {
         var search = panel.querySelector('.sl-editor-emoji-search');
         var tabs = panel.querySelector('.sl-editor-emoji-tabs');
         var grid = panel.querySelector('.sl-editor-emoji-grid');
@@ -339,16 +350,16 @@
         var empty;
         tabs.replaceChildren();
         if (rec.length) {
-            tab = addTab(id, 'recent', getLab(id, 'emoji_recent', 'Recent'));
+            tab = addTab('recent', getLab('recent', 'Recent'));
             if (tab) tabs.appendChild(tab);
         }
         Object.keys(data).forEach(function(name) {
-            var btn = addTab(id, name, getCatLabel(id, name));
+            var btn = addTab(name, getCatLabel(name));
             if (btn) tabs.appendChild(btn);
         });
         grid.replaceChildren();
         rows.forEach(function(row) {
-            var btn = api.getTpl(id, 'emoji-item');
+            var btn = getTpl('emoji-item');
             if (!btn) return;
             btn.setAttribute('data-emoji', row);
             btn.title = getName(row);
@@ -356,9 +367,9 @@
             grid.appendChild(btn);
         });
         if (!rows.length) {
-            empty = api.getTpl(id, 'emoji-empty');
+            empty = getTpl('emoji-empty');
             if (empty) {
-                empty.textContent = getLab(id, 'emoji_empty', 'No emoji');
+                empty.textContent = getLab('empty', 'No emoji');
                 grid.appendChild(empty);
             }
         }
@@ -370,12 +381,12 @@
         sizePanel();
     }
 
-    function makePanel(id) {
+    function makePanel() {
         if (panel) return panel;
-        panel = api.getTpl(id, 'emoji-panel');
+        panel = getTpl('emoji-panel');
         if (!panel) return null;
         var search = panel.querySelector('.sl-editor-emoji-search');
-        if (search) search.setAttribute('aria-label', getLab(id, 'emoji', 'Emoji'));
+        if (search) search.setAttribute('aria-label', getLab('emoji', 'Emoji'));
         doc.body.appendChild(panel);
         return panel;
     }
@@ -384,16 +395,15 @@
     // On a phone it takes no coordinates: the canon lays every window as a sheet along the bottom edge, and an inline place would beat that rule and push the panel past it
     // The owner is written before that turn is taken, because a second press on the button closes the panel only while the panel knows whose it is
     function place(id) {
-        var root = doc.getElementById(id + '_toast');
-        var btn = root ? root.querySelector('.toastui-editor-toolbar-icons.sl-editor-icon-emoji') : null;
+        var one = eds.get(id);
+        var btn = one ? one.btn : null;
         var left;
         var top;
         var box;
         if (!panel) return;
         panel.setAttribute('data-editor', id);
         if (win.matchMedia('(max-width: 600px)').matches) return;
-        if (!btn) btn = doc.querySelector('.toastui-editor-toolbar-icons.sl-editor-icon-emoji');
-        if (!btn) return;
+        if (!btn || !btn.isConnected) return;
         box = btn.getBoundingClientRect();
         left = Math.max(8, box.left - 160);
         left = Math.min(left, win.innerWidth - panel.offsetWidth - 8);
@@ -405,15 +415,15 @@
     }
 
     function toggle(id) {
-        makePanel(id);
+        makePanel();
         if (!panel) return;
-        active = String(id);
+        active = id;
         if (cat === 'recent' && !getRecent().length) cat = 'smileys';
         if (panel.open && panel.getAttribute('data-editor') === active) {
             win.setWindowClose(panel);
             return;
         }
-        render(id);
+        render();
         win.setWindowOpen(panel);
         place(id);
     }
@@ -422,9 +432,26 @@
         if (panel) win.setWindowClose(panel);
     }
 
+    // A press on the button of any editor is its own toggle, so only a press outside the panel and outside every such button closes it
+    function isOpener(el) {
+        var hit = false;
+        eds.forEach(function(one) {
+            if (one.btn && one.btn.contains(el)) hit = true;
+        });
+        return hit;
+    }
+
+    // The editor of the panel writes the emoji at its caret, which needs its own focus first
+    function addEmoji(emoji) {
+        var one = eds.get(active);
+        if (!one || !one.ed) return;
+        one.ed.focus();
+        one.ed.insertText(emoji);
+    }
+
     doc.addEventListener('input', function(ev) {
         if (!panel || ev.target !== panel.querySelector('.sl-editor-emoji-search')) return;
-        render(active);
+        render();
     });
 
     doc.addEventListener('click', function(ev) {
@@ -433,42 +460,27 @@
         if (el.classList && el.classList.contains('sl-editor-emoji-tab')) {
             cat = el.getAttribute('data-cat') || 'smileys';
             panel.querySelector('.sl-editor-emoji-search').value = '';
-            render(active);
+            render();
             return;
         }
         if (el.classList && el.classList.contains('sl-editor-emoji-item')) {
-            api.insertText(active, el.getAttribute('data-emoji') || '');
+            addEmoji(el.getAttribute('data-emoji') || '');
             setRecent(el.getAttribute('data-emoji') || '');
-            render(active);
+            render();
             return;
         }
-        if (!panel.contains(el) && !el.classList.contains('sl-editor-icon-emoji')) hide();
+        if (!panel.contains(el) && !isOpener(el)) hide();
     });
 
-    api.getTpl = api.getTpl || function(id, name) {
-        var opt = (api.options || {})[String(id)] || {};
-        var root = doc.querySelector('.' + (opt.tpl || 'js-slaed-editor-tpl'));
-        var tpl = root ? root.querySelector('template[data-tpl="' + name + '"]') : null;
-        return tpl && tpl.content && tpl.content.firstElementChild ? tpl.content.firstElementChild.cloneNode(true) : null;
+    // Open the panel for one editor at the button that was pressed, or close it when it stands open for that editor already
+    api.setPanel = function(id, ed, btn) {
+        eds.set(String(id), { ed: ed, btn: btn });
+        toggle(String(id));
     };
-
-    api.addEmoji = function(id, ed, opt) {
-        if (!ed || typeof ed.addCommand !== 'function' || typeof ed.insertToolbarItem !== 'function') return;
-        api.options = api.options || {};
-        api.options[String(id)] = opt || getOpt(id);
-        ed.addCommand('markdown', 'slaedEmoji', function() {
-            toggle(id);
-        });
-        ed.addCommand('wysiwyg', 'slaedEmoji', function() {
-            toggle(id);
-        });
-        ed.insertToolbarItem({ groupIndex: 6, itemIndex: 3 }, {
-            name: 'slaedEmoji',
-            text: '',
-            className: 'toastui-editor-toolbar-icons sl-editor-icon sl-editor-icon-emoji',
-            tooltip: getLab(id, 'emoji', 'Emoji'),
-            command: 'slaedEmoji'
-        });
+    // An editor whose region left the page is forgotten, and the panel it held open closes with it
+    api.deletePanel = function(id) {
+        eds.delete(String(id));
+        if (panel && panel.open && active === String(id)) hide();
     };
-    win.SlaedToastUi = api;
+    win.SlaedEmoji = api;
 })(window, document);

@@ -336,6 +336,8 @@
   --sl-row-border: 2px;
   --sl-editor-height: 250px;
   --sl-editor-max-height: 50vh;
+  /* The command capsule of an editor beside its tab: wider than this it scrolls instead of pushing the tab off its line */
+  --sl-capsule-max-width: 60%;
   --sl-editor-mode-height: 28px;
   --sl-editor-tab-height: 24px;
   --sl-editor-tab-width: 70px;

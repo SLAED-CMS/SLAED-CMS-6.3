@@ -148,10 +148,13 @@ in `fragments/`.
 | Gallery and lightbox | `partials/window-gallery.html` | lite, admin |
 | Icon picker | `partials/window-icons.html` | admin |
 | File Manager | `partials/file-manager.html` | lite, admin |
-| Emoji panel | `partials/editor-toastui-templates.html` | lite, admin |
+| Emoji panel | `partials/emoji-panel.html` | lite, admin |
+| Editor palette | `fragments/editor-kit.html` | lite, admin |
 
-The emoji panel keeps its editor partial name: that file carries an editor subsystem and not only a window, and it
-is `data-sl-window`. The File Manager left the editor for the theme and is built by `getFileManagerWindow()` from the
+The editor palette is modal and lives inside the `<template>` of the editor kit, which `Editor::getFrame()` prints once
+per answer; the runtime clones it into the page on its first call, so a page of many editors carries one.
+The emoji panel is the shared runtime's since every text engine opens it: `Editor::getEmojiPanel()` prints its partial
+once per answer, and it is `data-sl-window`. The File Manager left the editor for the theme and is built by `getFileManagerWindow()` from the
 rule of one upload place; it is `data-sl-window` inside the editor, where the text under it has to stay reachable, and
 modal beside a form field, where nothing else is worked on at once.
 

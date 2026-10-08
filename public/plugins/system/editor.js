@@ -10,16 +10,29 @@
     var mods = {};
     var kit = null;
     var seer = null;
+    var pal = null;
+    var enc = win.TextEncoder ? new win.TextEncoder() : null;
+    var cmds = { undo: 'undo', redo: 'redo', all: 'selectAll', search: 'openSearchPanel', fold: 'foldAll', unfold: 'unfoldAll', comment: 'toggleComment' };
 
-    // Read the words and the capsule of the shell from the kit the answer carries, once per page
+    // Read the words, the capsule and the palette of the shell from the kit the answer carries, once per page
     function getKit() {
         if (kit) return kit;
         var node = doc.querySelector('template[data-sl-editor-kit]');
         if (!node) return null;
         var words = {};
         try { words = JSON.parse(node.getAttribute('data-sl-editor-words') || '{}'); } catch (err) { words = {}; }
-        kit = { words: words, pill: node.content.querySelector('[data-sl-editor-pill]'), draft: node.content.querySelector('[data-sl-editor-draft]') };
+        kit = {
+            words: words,
+            pill: node.content.querySelector('[data-sl-editor-pill]'),
+            draft: node.content.querySelector('[data-sl-editor-draft]'),
+            palette: node.content.querySelector('[data-sl-editor-palette]')
+        };
         return kit;
+    }
+
+    // Whether an engine serves a command or a key: every word of its need must be a power of the frame
+    function checkNeed(can, node) {
+        return (node.getAttribute('data-sl-editor-need') || '').split(' ').every(function (one) { return !one || can[one]; });
     }
 
     // Put numbers into a phrase of the locale in the order its placeholders name them
@@ -73,11 +86,33 @@
         ed.size.textContent = getPhrase(words.size, rows, size);
     }
 
+    // A count of bytes in the units the meter of the file window writes
+    function getSizeText(size) {
+        var unit = ['B', 'KB', 'MB'];
+        var num = size;
+        var at = 0;
+        while (num >= 1024 && at < unit.length - 1) {
+            num = num / 1024;
+            at++;
+        }
+        return (at === 0 ? num : num.toFixed(1)) + ' ' + unit[at];
+    }
+
+    // Count what is left of the column the text is stored in, in bytes as the column counts them, and say so when the text no longer fits
+    function setRoom(ed, text) {
+        var used;
+        if (!ed.room || !ed.left) return;
+        used = enc ? enc.encode(text).length : text.length;
+        ed.left.toggleAttribute('data-over', used > ed.room);
+        ed.left.textContent = used > ed.room ? getPhrase(kit.words.long, getSizeText(ed.room)) : getPhrase(kit.words.left, getSizeText(ed.room - used));
+    }
+
     // Mark an editor as changed against the text it was loaded with, and keep the draft of the tab after a pause
     function setChange(ed) {
         var text = getText(ed);
         if (ed.frame.hasAttribute('data-invalid')) setValid(ed);
         ed.frame.toggleAttribute('data-dirty', text !== ed.orig);
+        setRoom(ed, text);
         clearTimeout(ed.wait);
         ed.wait = setTimeout(function () { setDraft(ed, text); }, 500);
     }
@@ -167,13 +202,246 @@
         if (note) setNote(ed, note);
     }
 
-    // Toggle soft line wrapping in CodeMirror or in the textarea
-    function setWrap(ed, btn) {
-        var on = btn.getAttribute('aria-pressed') !== 'true';
-        btn.setAttribute('aria-pressed', String(on));
-        ed.nowrap = !on;
-        if (ed.view) ed.view.dispatch({ effects: ed.wrap.reconfigure(on ? ed.cm.EditorView.lineWrapping : []) });
-        else ed.area.setAttribute('wrap', on ? 'soft' : 'off');
+    // Write a text at the caret as one step the undo takes back, telling the form as typing does; a textarea under a modal window waits for it to close to get the focus
+    function addText(ed, text) {
+        var area = ed.area;
+        var modal = doc.querySelector('dialog:modal');
+        if (ed.view) {
+            ed.view.dispatch(ed.view.state.replaceSelection(text), { scrollIntoView: true });
+            area.dispatchEvent(new Event('input', { bubbles: true }));
+            return;
+        }
+        if (modal && !modal.contains(area)) {
+            modal.addEventListener('close', function () { addText(ed, text); }, { once: true });
+            return;
+        }
+        area.focus();
+        if (doc.execCommand('insertText', false, text)) return;
+        area.setRangeText(text, area.selectionStart, area.selectionEnd, 'end');
+        area.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+
+    // A picture in the format the field stores: Markdown, or the tag of the parser, which reads no Markdown picture in a plain text
+    function addImage(ed, url, alt) {
+        var text = String(alt || '').replace(/\s+/g, ' ').trim();
+        var src = String(url || '');
+        if (ed.frame.getAttribute('data-sl-editor-lang') !== 'markdown') {
+            addText(ed, '[img alt=' + (text.replace(/[^\p{L}0-9_\-. "]+/gu, ' ').replace(/\s+/g, ' ').trim() || 'image') + ']' + src + '[/img]');
+            return;
+        }
+        addText(ed, '![' + text.replace(/[[\]\\]/g, '') + '](' + src.replace(/[ ()]/g, function (one) { return { ' ': '%20', '(': '%28', ')': '%29' }[one]; }) + ')');
+    }
+
+    // The selection and the whole text of an editor in one shape for CodeMirror and for the textarea
+    function getRange(ed) {
+        var sel;
+        if (ed.view) {
+            sel = ed.view.state.selection.main;
+            return { from: sel.from, to: sel.to, text: ed.view.state.doc.toString() };
+        }
+        return { from: ed.area.selectionStart, to: ed.area.selectionEnd, text: ed.area.value };
+    }
+
+    // Replace a stretch of the text as one step the undo takes back and select what the command leaves to be selected
+    function setRange(ed, from, to, text, head, tail) {
+        var area = ed.area;
+        if (ed.view) {
+            ed.view.dispatch({ changes: { from: from, to: to, insert: text }, selection: { anchor: head, head: tail }, scrollIntoView: true });
+            ed.view.focus();
+            area.dispatchEvent(new Event('input', { bubbles: true }));
+            return;
+        }
+        area.focus();
+        area.setSelectionRange(from, to);
+        if (from !== to || text !== '') {
+            if (!doc.execCommand(text === '' ? 'delete' : 'insertText', false, text)) {
+                area.setRangeText(text, from, to, 'end');
+                area.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+        }
+        area.setSelectionRange(head, tail);
+    }
+
+    // Put a Markdown mark around the selection, or take it away where the selection or its edges carry it; a lone star never reads half of a bold one
+    function setInline(ed, mark) {
+        var at = getRange(ed);
+        var sel = at.text.slice(at.from, at.to);
+        var len = mark.length;
+        var lone = len === 1;
+        var inner = sel.length >= len * 2 && sel.slice(0, len) === mark && sel.slice(-len) === mark;
+        var outer = at.from >= len && at.text.slice(at.from - len, at.from) === mark && at.text.slice(at.to, at.to + len) === mark;
+        if (inner && !(lone && (sel.charAt(1) === mark || sel.charAt(sel.length - 2) === mark))) {
+            return setRange(ed, at.from, at.to, sel.slice(len, -len), at.from, at.to - len * 2);
+        }
+        if (outer && !(lone && (at.text.charAt(at.from - 2) === mark || at.text.charAt(at.to + 1) === mark))) {
+            return setRange(ed, at.from - len, at.to + len, sel, at.from - len, at.to - len);
+        }
+        setRange(ed, at.from, at.to, mark + sel + mark, at.from + len, at.to + len);
+    }
+
+    // Mark the selection as code: inline inside one line, a fenced block on lines of its own when it runs over several
+    function setCodeMark(ed) {
+        var at = getRange(ed);
+        var sel = at.text.slice(at.from, at.to).replace(/\n$/, '');
+        var lead;
+        var tail;
+        if (sel.indexOf('\n') < 0) return setInline(ed, '`');
+        lead = (at.from > 0 && at.text.charAt(at.from - 1) !== '\n') ? '\n' : '';
+        tail = (at.to < at.text.length && at.text.charAt(at.to) !== '\n') ? '\n' : '';
+        setRange(ed, at.from, at.to, lead + '```\n' + sel + '\n```' + tail, at.from + lead.length + 4, at.from + lead.length + 4 + sel.length);
+    }
+
+    // Make the selection a Markdown link with the address selected to be typed over; a selected address becomes the target and the caret waits for its text
+    function setLink(ed) {
+        var at = getRange(ed);
+        var sel = at.text.slice(at.from, at.to);
+        var head;
+        if (/^(https?:\/\/|www\.)\S+$/i.test(sel)) return setRange(ed, at.from, at.to, '[](' + sel + ')', at.from + 1, at.from + 1);
+        if (sel === '') return setRange(ed, at.from, at.to, '[](url)', at.from + 1, at.from + 1);
+        head = at.from + sel.length + 3;
+        setRange(ed, at.from, at.to, '[' + sel + '](url)', head, head + 3);
+    }
+
+    // Start every line of the selection with the mark of a list or a quote, or take it away where every line carries it
+    function setLines(ed, mark) {
+        var at = getRange(ed);
+        var from = at.text.lastIndexOf('\n', at.from - 1) + 1;
+        var last = (at.to > at.from && at.text.charAt(at.to - 1) === '\n') ? at.to - 1 : at.to;
+        var end = at.text.indexOf('\n', last);
+        var old;
+        var rows;
+        var off;
+        var out;
+        var pos;
+        if (end < 0) end = at.text.length;
+        old = at.text.slice(from, end);
+        rows = old.split('\n');
+        off = rows.some(function (one) { return one !== ''; }) && rows.every(function (one) { return one === '' || one.indexOf(mark) === 0; });
+        out = rows.map(function (one) {
+            if (off) return one.indexOf(mark) === 0 ? one.slice(mark.length) : one;
+            return (one === '' && rows.length > 1) ? one : mark + one;
+        }).join('\n');
+        if (at.from !== at.to) return setRange(ed, from, end, out, from, from + out.length);
+        pos = Math.max(from, at.from + out.length - old.length);
+        setRange(ed, from, end, out, pos, pos);
+    }
+
+    // Carry a Markdown list or quote on to the next line as CodeMirror does, or end it on an empty item; CodeMirror has this of its own
+    function setListEnter(ed, ev) {
+        var area = ed.area;
+        var at = area.selectionStart;
+        var text = area.value;
+        var from;
+        var end;
+        var hit;
+        var next;
+        if (ev.key !== 'Enter' || ev.shiftKey || ev.ctrlKey || ev.metaKey || ev.altKey || ev.isComposing) return;
+        if (ed.view || !ed.can.markdown || at !== area.selectionEnd) return;
+        from = text.lastIndexOf('\n', at - 1) + 1;
+        end = text.indexOf('\n', at);
+        if (end < 0) end = text.length;
+        hit = /^([ \t]*)(?:([-*+])|(\d+)([.)]))[ \t]+(\[[ xX]\][ \t]+)?|^([ \t]*)>[ \t]?/.exec(text.slice(from, end));
+        if (!hit || at < from + hit[0].length) return;
+        ev.preventDefault();
+        if (text.slice(from + hit[0].length, end).trim() === '') return setRange(ed, from, end, '', from, from);
+        if (hit[6] !== undefined) next = hit[6] + '> ';
+        else next = hit[1] + (hit[2] || (parseInt(hit[3], 10) + 1) + hit[4]) + ' ' + (hit[5] ? '[ ] ' : '');
+        setRange(ed, at, at, '\n' + next, at + 1 + next.length, at + 1 + next.length);
+    }
+
+    // The keys a frame answers before its engine: Ctrl+K opens the palette anywhere in the frame, Ctrl+B and Ctrl+I mark a Markdown text under the caret
+    function setKeys(ed, ev) {
+        var act = '';
+        var text = ev.target === ed.area || (ed.view && ed.view.contentDOM.contains(ev.target));
+        if (!(ev.ctrlKey || ev.metaKey) || ev.altKey || ev.shiftKey || ev.isComposing) return;
+        if (ev.code === 'KeyK') act = 'palette';
+        else if (text && ed.can.markdown) act = { KeyB: 'bold', KeyI: 'italic' }[ev.code] || '';
+        if (!act) return;
+        ev.preventDefault();
+        ev.stopPropagation();
+        setAct(ed, act, null);
+    }
+
+    // The adapter the file window and the emoji panel write through: the five calls they make of Toast UI, answered over a textarea or a CodeMirror view
+    function getPort(ed) {
+        if (ed.port) return ed.port;
+        ed.port = {
+            focus: function () { (ed.view || ed.area).focus(); },
+            insertText: function (text) { addText(ed, text); },
+            exec: function (name, data) { if (name === 'addImage' && data) addImage(ed, data.imageUrl, data.altText); },
+            getMarkdown: function () { return getText(ed); },
+            addHook: function (name, run) { if (name === 'addImageBlobHook') ed.hook = run; }
+        };
+        return ed.port;
+    }
+
+    // Bind the file window to an editor the first time it is wanted, by when its runtime has loaded in whatever order the scripts came
+    function setFileKit(ed) {
+        if (ed.bound) return true;
+        if (!ed.files || !win.SlaedFileManager) return false;
+        win.SlaedFileManager.addUpload(ed.area.id, getPort(ed), ed.files);
+        ed.bound = true;
+        return true;
+    }
+
+    // Open or close the file window of an editor from its folder button
+    function setFileWindow(ed) {
+        if (setFileKit(ed)) win.SlaedFileManager.addPanel(ed.area.id);
+    }
+
+    // The images a paste or a drop carries; while a drag is under way only their kinds can be read, so the items stand in for the files
+    function getImages(data) {
+        var list;
+        if (!data) return [];
+        list = Array.prototype.slice.call(data.files || []);
+        if (!list.length) list = Array.prototype.filter.call(data.items || [], function (one) { return one.kind === 'file'; });
+        return list.filter(function (one) { return /^image\//.test(one.type); });
+    }
+
+    // Hand the images of a paste or a drop to the file window as Toast UI hands them to its hook; a paste carrying rich text, as Word and Excel give it, stays text there too
+    function setImages(ed, ev) {
+        var list = getImages(ev.clipboardData || ev.dataTransfer);
+        var rich = ev.clipboardData && Array.prototype.some.call(ev.clipboardData.items || [], function (one) { return one.kind === 'string' && one.type === 'text/rtf'; });
+        var at;
+        if (!list.length || rich) return;
+        ev.preventDefault();
+        ev.stopPropagation();
+        if (!setFileKit(ed) || !ed.hook) return;
+        if (ev.type === 'drop' && ed.view) {
+            at = ed.view.posAtCoords({ x: ev.clientX, y: ev.clientY });
+            if (at !== null) ed.view.dispatch({ selection: { anchor: at } });
+        }
+        list.forEach(function (file) {
+            ed.hook(file, function (url, alt) { addImage(ed, url, alt); });
+        });
+    }
+
+    // Let an image be dropped on a text that has a file window, which the browser would otherwise open in place of the page
+    function setImageDrag(ed, ev) {
+        if (!getImages(ev.dataTransfer).length) return;
+        ev.preventDefault();
+        ev.stopPropagation();
+        ev.dataTransfer.dropEffect = 'copy';
+    }
+
+    // Open the emoji panel at the button of an editor, loading its script and the words of the locale on the first press
+    function setEmoji(ed, btn) {
+        var root = doc.querySelector('[data-sl-emoji-src]');
+        var src = [];
+        if (!root || !win.SlaedEditors) return;
+        try { src = JSON.parse(root.getAttribute('data-sl-emoji-src') || '[]'); } catch (err) { src = []; }
+        win.SlaedEditors.load([], src);
+        win.SlaedEditors.ready(function () {
+            if (win.SlaedEmoji && eds.get(ed.frame) === ed) win.SlaedEmoji.setPanel(ed.area.id, getPort(ed), btn);
+        });
+    }
+
+    // Toggle soft line wrapping in CodeMirror or in the textarea, from the capsule or from the palette alike
+    function setWrap(ed) {
+        ed.nowrap = !ed.nowrap;
+        ed.frame.querySelectorAll('[data-sl-editor-act="wrap"]').forEach(function (btn) { btn.setAttribute('aria-pressed', String(!ed.nowrap)); });
+        if (ed.view) ed.view.dispatch({ effects: ed.wrap.reconfigure(ed.nowrap ? [] : ed.cm.EditorView.lineWrapping) });
+        else ed.area.setAttribute('wrap', ed.nowrap ? 'off' : 'soft');
     }
 
     // Move an editor between its place in the form and the whole screen, through a view transition where the browser has one
@@ -205,21 +473,184 @@
         navigator.clipboard.writeText(getText(ed)).then(function () { setNote(ed, words.copied); }, function () { setNote(ed, words.noclip); });
     }
 
-    // Run one command of the capsule on an editor
+    // Run one command of the capsule or of the palette on an editor; a command only CodeMirror has waits for it to mount
     function setAct(ed, act, btn) {
+        var md = ed.can.markdown;
         if (act === 'full') return setFull(ed, !ed.frame.hasAttribute('data-full'));
-        if (act === 'wrap') return setWrap(ed, btn);
+        if (act === 'wrap') return setWrap(ed);
         if (act === 'copy') return setCopy(ed);
         if (act === 'reset') return setText(ed, ed.orig, kit.words.restored);
         if (act === 'restore' || act === 'drop') return setDraftAnswer(ed, act === 'restore');
-        if (act !== 'undo' && act !== 'redo') return;
+        if (act === 'files') return setFileWindow(ed);
+        if (act === 'emoji') return setEmoji(ed, btn || ed.frame.querySelector('[data-sl-editor-act="emoji"]') || ed.card);
+        if (act === 'palette') return setPalette(ed);
+        if (md && (act === 'bold' || act === 'italic')) return setInline(ed, act === 'bold' ? '**' : '*');
+        if (md && act === 'code') return setCodeMark(ed);
+        if (md && act === 'link') return setLink(ed);
+        if (md && (act === 'list' || act === 'quote')) return setLines(ed, act === 'list' ? '- ' : '> ');
+        if (!cmds[act]) return;
+        if (!ed.view && ed.can.cm && act !== 'undo' && act !== 'redo' && act !== 'all') {
+            setCode(ed).then(function () { if (ed.view) setAct(ed, act, btn); });
+            return;
+        }
         if (ed.view) {
             ed.view.focus();
-            ed.cm[act](ed.view);
+            ed.cm[cmds[act]](ed.view);
             return;
         }
         ed.area.focus();
-        doc.execCommand(act);
+        if (act === 'all') ed.area.select();
+        else if (act === 'undo' || act === 'redo') doc.execCommand(act);
+    }
+
+    // The palette of the page, made from the kit on the first call and wired once: typing filters, the keys choose and run, a click runs
+    function getPalette() {
+        var find;
+        if (pal || !getKit() || !kit.palette) return pal;
+        pal = kit.palette.cloneNode(true);
+        doc.body.appendChild(pal);
+        find = pal.querySelector('[data-sl-editor-find]');
+        find.addEventListener('input', function () { setPaletteFilter(find.value); });
+        pal.addEventListener('keydown', setPaletteKeys);
+        pal.addEventListener('close', function () {
+            var ed = pal.slEd;
+            var act = pal.slAct;
+            pal.slAct = '';
+            if (act && ed && eds.get(ed.frame) === ed) setAct(ed, act, ed.frame.querySelector('[data-sl-editor-act="' + act + '"]'));
+        });
+        pal.addEventListener('click', function (ev) {
+            var row = ev.target.closest ? ev.target.closest('[data-sl-editor-cmd]') : null;
+            if (!row) return;
+            ev.preventDefault();
+            setPaletteRun(row);
+        });
+        return pal;
+    }
+
+    // Open the palette for one editor with only the commands and keys its engine serves, the search empty and the first command chosen
+    function setPalette(ed) {
+        var find;
+        if (!getPalette()) return;
+        pal.slEd = ed;
+        pal.slAct = '';
+        pal.querySelector('[data-sl-editor-pal-sub]').textContent = ed.frame.getAttribute('data-sl-editor-name') || '';
+        pal.querySelectorAll('[data-sl-editor-cmd]').forEach(function (row) { row.slOff = !checkNeed(ed.can, row); });
+        pal.querySelectorAll('[data-sl-editor-pal-help] [data-sl-editor-need]').forEach(function (one) { one.hidden = !checkNeed(ed.can, one); });
+        find = pal.querySelector('[data-sl-editor-find]');
+        find.value = '';
+        setPaletteFilter('');
+        if (win.setWindowOpen) win.setWindowOpen(pal);
+        else pal.showModal();
+    }
+
+    // The places of the typed letters inside a name, in the order they were typed, or null where one of them is missing
+    function getHits(name, want) {
+        var hits = [];
+        var at = 0;
+        for (var i = 0; i < want.length; i++) {
+            at = name.indexOf(want.charAt(i), at);
+            if (at < 0) return null;
+            hits.push(at);
+            at++;
+        }
+        return hits;
+    }
+
+    // Write the name of a command with the matched letters in bold, from text nodes so nothing of the name is read as markup
+    function setPaletteName(node, name, hits) {
+        var run = '';
+        var mark;
+        node.textContent = '';
+        for (var i = 0; i < name.length; i++) {
+            if (hits.indexOf(i) < 0) {
+                run += name.charAt(i);
+                continue;
+            }
+            if (run) node.appendChild(doc.createTextNode(run));
+            run = '';
+            mark = doc.createElement('b');
+            mark.textContent = name.charAt(i);
+            node.appendChild(mark);
+        }
+        if (run) node.appendChild(doc.createTextNode(run));
+    }
+
+    // Keep the commands whose name holds the typed letters in their order, hide the groups left empty and the keys while a search runs
+    function setPaletteFilter(term) {
+        var want = term.trim().toLowerCase();
+        var first = null;
+        pal.querySelectorAll('[data-sl-editor-cmd]').forEach(function (row) {
+            var name = row.querySelector('span');
+            var hits;
+            if (row.slName === undefined) row.slName = name.textContent;
+            hits = getHits(row.slName.toLowerCase(), want);
+            row.hidden = row.slOff || !hits;
+            setPaletteName(name, row.slName, hits || []);
+            if (!row.hidden && !first) first = row;
+        });
+        pal.querySelectorAll('[role="group"]').forEach(function (group) { group.hidden = !group.querySelector('[data-sl-editor-cmd]:not([hidden])'); });
+        pal.querySelector('[data-sl-editor-pal-empty]').hidden = !!first;
+        pal.querySelector('[data-sl-editor-pal-help]').hidden = want !== '';
+        setPaletteActive(first);
+    }
+
+    // Choose one command; the focus stays in the search, which names the chosen one to a screen reader
+    function setPaletteActive(row) {
+        var find = pal.querySelector('[data-sl-editor-find]');
+        pal.querySelectorAll('[data-sl-editor-cmd][aria-selected]').forEach(function (one) { one.removeAttribute('aria-selected'); });
+        if (!row) {
+            find.removeAttribute('aria-activedescendant');
+            return;
+        }
+        row.setAttribute('aria-selected', 'true');
+        find.setAttribute('aria-activedescendant', row.id);
+        row.scrollIntoView({ block: 'nearest' });
+    }
+
+    // Step the chosen command up or down through the shown ones, round from the end to the start
+    function setPaletteStep(step) {
+        var rows = Array.prototype.filter.call(pal.querySelectorAll('[data-sl-editor-cmd]'), function (one) { return !one.hidden; });
+        var now;
+        if (!rows.length) return;
+        now = rows.indexOf(pal.querySelector('[data-sl-editor-cmd][aria-selected]'));
+        setPaletteActive(rows[(now + step + rows.length) % rows.length]);
+    }
+
+    // The keys of the palette: the arrows choose, Enter in the search runs, Escape closes at once over a typed search, Ctrl+K closes it again
+    function setPaletteKeys(ev) {
+        if (ev.isComposing) return;
+        if (ev.key === 'ArrowDown' || ev.key === 'ArrowUp') {
+            ev.preventDefault();
+            setPaletteStep(ev.key === 'ArrowDown' ? 1 : -1);
+            return;
+        }
+        if (ev.key === 'Enter' && ev.target.hasAttribute('data-sl-editor-find')) {
+            ev.preventDefault();
+            setPaletteRun(pal.querySelector('[data-sl-editor-cmd][aria-selected]'));
+            return;
+        }
+        if (ev.key !== 'Escape' && !((ev.ctrlKey || ev.metaKey) && ev.code === 'KeyK')) return;
+        ev.preventDefault();
+        setPaletteShut();
+    }
+
+    // Name the command the palette runs once it has closed and given the focus back, a second press naming it again, and raise it in its group
+    function setPaletteRun(row) {
+        var ed = pal.slEd;
+        var act;
+        if (!row || row.hidden || !ed) return;
+        act = row.getAttribute('data-sl-editor-cmd');
+        pal.querySelectorAll('[data-recent]').forEach(function (one) { one.removeAttribute('data-recent'); });
+        row.parentNode.insertBefore(row, row.parentNode.querySelector('[data-sl-editor-cmd]'));
+        row.setAttribute('data-recent', kit.words.recent || '');
+        pal.slAct = act;
+        setPaletteShut();
+    }
+
+    // Close the palette through the canon, which plays the exit first
+    function setPaletteShut() {
+        if (win.setWindowClose) win.setWindowClose(pal);
+        else pal.close();
     }
 
     // Move the capsule by its grip: the pointer drags it, the arrow keys step it, a double click and Home send it back
@@ -353,6 +784,18 @@
         var area = frame.querySelector('[data-sl-editor-area]');
         if (!area) return;
         var pill = kit.pill.cloneNode(true);
+        var code = frame.hasAttribute('data-sl-editor-code');
+        var files = null;
+        try { files = JSON.parse(frame.getAttribute('data-sl-editor-files') || 'null'); } catch (err) { files = null; }
+        var can = {
+            text: !code,
+            code: code,
+            cm: frame.hasAttribute('data-sl-editor-core'),
+            markdown: !code && frame.getAttribute('data-sl-editor-lang') === 'markdown',
+            files: !!files
+        };
+        pill.querySelectorAll('[data-sl-editor-need]').forEach(function (one) { if (!checkNeed(can, one)) one.remove(); });
+        Array.prototype.slice.call(pill.children).forEach(function (one) { if (!one.querySelector('button')) one.remove(); });
         var ed = {
             frame: frame,
             area: area,
@@ -360,11 +803,18 @@
             pos: frame.querySelector('[data-sl-editor-pos]'),
             size: frame.querySelector('[data-sl-editor-size]'),
             note: frame.querySelector('[data-sl-editor-note]'),
+            left: frame.querySelector('[data-sl-editor-left]'),
+            room: parseInt(frame.getAttribute('data-sl-editor-room') || '0', 10) || 0,
+            can: can,
             orig: area.defaultValue,
             key: getDraftKey(area),
             view: null,
             load: null,
-            nowrap: false
+            nowrap: false,
+            files: files,
+            bound: false,
+            port: null,
+            hook: null
         };
         eds.set(frame, ed);
         pill.setAttribute('aria-label', getPhrase(kit.words.tools, frame.getAttribute('data-sl-editor-name') || ''));
@@ -377,6 +827,13 @@
             });
         });
         area.addEventListener('invalid', function (ev) { setInvalid(ed, ev); });
+        area.addEventListener('keydown', function (ev) { setListEnter(ed, ev); });
+        frame.addEventListener('keydown', function (ev) { setKeys(ed, ev); }, true);
+        if (files) {
+            ed.card.addEventListener('paste', function (ev) { setImages(ed, ev); }, true);
+            ed.card.addEventListener('drop', function (ev) { setImages(ed, ev); }, true);
+            ed.card.addEventListener('dragover', function (ev) { setImageDrag(ed, ev); }, true);
+        }
         frame.addEventListener('keydown', function (ev) {
             if (ev.key !== 'Escape' || ev.defaultPrevented || !frame.hasAttribute('data-full') || checkCovered(frame)) return;
             ev.preventDefault();
@@ -385,6 +842,7 @@
         frame.setAttribute('data-ready', '');
         frame.toggleAttribute('data-dirty', area.value !== ed.orig);
         setStatus(ed);
+        setRoom(ed, area.value);
         setDraftOffer(ed);
         if (frame.hasAttribute('data-sl-editor-core')) {
             area.addEventListener('focus', function () { setCode(ed); });
@@ -401,6 +859,8 @@
         if (seer) seer.unobserve(frame);
         if (ed.view) ed.view.destroy();
         if (frame.hasAttribute('data-full')) doc.documentElement.classList.remove('sl-is-locked');
+        if (ed.bound && win.SlaedFileManager) win.SlaedFileManager.deleteUpload(ed.area.id);
+        if (win.SlaedEmoji) win.SlaedEmoji.deletePanel(ed.area.id);
         clearTimeout(ed.wait);
         eds.delete(frame);
     }
@@ -420,6 +880,7 @@
         clearTimeout(ed.wait);
         setDraft(ed, ed.orig);
         ed.frame.toggleAttribute('data-dirty', getText(ed) !== ed.orig);
+        setRoom(ed, getText(ed));
         setStatus(ed);
     }
 
@@ -446,6 +907,10 @@
         isDirty: function (id) {
             var ed = getEditor(id);
             return !!ed && getText(ed) !== ed.orig;
+        },
+        getEditor: function (id) {
+            var ed = getEditor(id);
+            return ed ? getPort(ed) : null;
         }
     };
 

@@ -398,6 +398,8 @@
   --sl-edge-height: 190px;
   --sl-editor-height: 100px;
   --sl-editor-max-height: 50vh;
+  /* The command capsule of an editor beside its tab: wider than this it scrolls instead of pushing the tab off its line */
+  --sl-capsule-max-width: 60%;
   --sl-entry-height: 42px;
   /* The lower menu: how tall one link stands. It is a thumb target on a phone and a row height on a desktop,
      which is one decision and therefore one value — the icon in front of the label does the separating that the

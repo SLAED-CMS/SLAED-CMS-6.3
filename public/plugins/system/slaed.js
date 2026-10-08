@@ -717,6 +717,13 @@
         var api = window.SlaedToastUi;
         var editor = api && typeof api.getEditor === 'function' ? api.getEditor(id) : null;
         var text = getEditorInsertText(command, value);
+        var shell = !editor && window.SlaedEditor ? window.SlaedEditor.getEditor(id) : null;
+        if (shell) {
+            shell.focus();
+            if (command === 'img') shell.exec('addImage', { imageUrl: value, altText: title || 'image' });
+            else shell.insertText(text);
+            return true;
+        }
         if (editor) {
             editor.focus();
             if (command === 'img' && typeof editor.exec === 'function') {

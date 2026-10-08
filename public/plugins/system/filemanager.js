@@ -1690,5 +1690,7 @@
         fields.set(String(id), node);
         setPane(id, '');
     };
+    // The one public way to open the window of an editor, or close it when it stands open: a toolbar of the editor and the capsule of the shell both take it
+    api.addPanel = addPanel;
     win.SlaedFileManager = api;
 })(window, document);

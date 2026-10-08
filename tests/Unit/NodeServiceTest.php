@@ -554,7 +554,7 @@ final class NodeServiceTest extends TestCase
             $this->assertStringNotContainsString('is_moder(', $body, $name);
         }
         $this->assertStringContainsString("'moder' => \$upl && checkUploadModer(\$mod),", self::getBody('core/helpers.php', 'getUploadPlaceView'));
-        $this->assertStringContainsString('$mdr = $upl && checkUploadModer($mod);', (string)file_get_contents(self::getRoot().'/public/plugins/editors/toastui/driver.php'));
+        $this->assertStringContainsString('$mdr = $upl && checkUploadModer($mod);', (string)file_get_contents(self::getRoot().'/core/helpers.php'));
         $room = self::getBody('core/helpers.php', 'getEditorRoomData');
         $this->assertStringContainsString("'nodes.body' => 'mediumtext'", $room);
         $this->assertStringContainsString("'nodes.intro' => 'text'", $room);

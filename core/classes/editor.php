@@ -24,6 +24,7 @@ class Editor {
     private static array $mdata = [];
     private static array $drvs = [];
     private static bool $done = false;
+    private static bool $emoji = false;
     private const LANGS = [
         'php' => ['PHP', 'filetype-php'],
         'html' => ['HTML', 'filetype-html'],
@@ -140,20 +141,28 @@ class Editor {
         return $driver instanceof CodeDriver ? $driver->getAssets($profile).self::getThemeSkin($key).$driver->getWidget($id, $name, $value, $lang, $profile, $label) : '';
     }
 
-    # Render one editor in the shell around its textarea, printing the runtime and the kit of its words once per answer
+    # Render one editor in the shell: a text with the emoji panel, the room of a text column and, where its field names an upload place, the file window; the kit once per answer
     public static function getFrame(array $data): string {
         global $tpl;
-        [$name, $icon] = self::LANGS[(string)($data['lang'] ?? 'text')] ?? self::LANGS['text'];
+        $lang = (string)($data['lang'] ?? 'text');
+        [$name, $icon] = self::LANGS[$lang] ?? self::LANGS['text'];
+        $code = !empty($data['code']);
+        $kit = (!$code && ($data['mod'] ?? '') !== '') ? getEditorFileKit((string)($data['id'] ?? ''), $data) : ['opt' => [], 'html' => ''];
+        $room = (array)($data['room'] ?? []);
         $head = '';
         if (!self::$done) {
             self::$done = true;
             $head = self::getAssetTags([], ['plugins/system/editor.js']).$tpl->getHtmlFrag('editor-kit', self::getKitData());
         }
+        if (!$code) $head .= self::getEmojiPanel();
         return $head.$tpl->getHtmlFrag('editor-frame', [
             'tab_text' => (string)($data['label'] ?? ''),
             'icon_name' => $icon,
             'lang_text' => $name,
-            'is_code' => !empty($data['code']),
+            'lang_key' => $lang,
+            'files_json' => $kit['opt'] ? json_encode($kit['opt'], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) : '',
+            'room_num' => (!$code && ($room['kind'] ?? '') !== 'mediumtext') ? (int)($room['bytes'] ?? 0) : 0,
+            'is_code' => $code,
             'core_url' => (string)($data['core'] ?? ''),
             'grammar_url' => (string)($data['grammar'] ?? ''),
             'name_attr' => (string)($data['name'] ?? ''),
@@ -166,10 +175,10 @@ class Editor {
             'aria_label' => (string)($data['arialabel'] ?? ''),
             'describedby' => (string)($data['describedby'] ?? ''),
             'dirty_text' => _EDITOR_DIRTY,
-        ]);
+        ]).$kit['html'];
     }
 
-    # The titles of the capsule and the words of the status line and of the CodeMirror panels, which the runtime reads from the kit and never holds itself
+    # The titles of the capsule and the palette and the words of the status line and of the CodeMirror panels, which the runtime reads from the kit and never holds itself
     private static function getKitData(): array {
         $words = [
             'tools' => _EDITOR_TOOLS,
@@ -179,15 +188,56 @@ class Editor {
             'copied' => _COPYDONE,
             'noclip' => _EDITOR_NOCLIP,
             'restored' => _EDITOR_RESTORED,
+            'recent' => _EDITOR_RECENT,
+            'left' => _EDITOR_LEFT,
+            'long' => _ETEXTLONG,
             'phrases' => array_map(constant(...), self::PHRASES),
         ];
         return [
             'words_json' => json_encode($words, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
             'undo_text' => _EDITOR_UNDO,
             'redo_text' => _EDITOR_REDO,
+            'search_text' => _EDITOR_SEARCH,
+            'fold_text' => _EDITOR_FOLDALL,
+            'unfold_text' => _EDITOR_UNFOLDALL,
+            'bold_text' => _EDITOR_BOLD,
+            'italic_text' => _EDITOR_ITALIC,
+            'code_text' => _CODE,
+            'link_text' => _URL,
+            'list_text' => _LIST,
+            'quote_text' => _QUOTE,
+            'files_text' => _EUPLOAD,
+            'upload_text' => _EDITOR_FILES,
+            'emoji_text' => _EEMOJI,
             'wrap_text' => _EDITOR_WRAP,
             'copy_text' => _COPY,
             'reset_text' => _EDITOR_RESET,
+            'all_text' => _EDITOR_SELALL,
+            'comment_text' => _EDITOR_COMMENT,
+            'full_text' => _EFULLSCREEN,
+            'cmds_text' => _EDITOR_CMDS,
+            'find_text' => _EDITOR_CMDFIND,
+            'edit_text' => _EDITOR_GRPEDIT,
+            'format_text' => _EDITOR_GRPFORMAT,
+            'insert_text' => _EDITOR_GRPINSERT,
+            'view_text' => _EDITOR_GRPVIEW,
+            'none_text' => _EDITOR_NONE,
+            'keys_text' => _EDITOR_KEYS,
+            'keynext_text' => _EDITOR_KEYNEXT,
+            'keyline_text' => _EDITOR_KEYLINE,
+            'keymove_text' => _EDITOR_KEYMOVE,
+            'keydup_text' => _EDITOR_KEYDUP,
+            'keydel_text' => _EDITOR_KEYDEL,
+            'keyindent_text' => _EDITOR_KEYINDENT,
+            'keypair_text' => _EDITOR_KEYPAIR,
+            'keycaret_text' => _EDITOR_KEYCARET,
+            'keylist_text' => _EDITOR_KEYLIST,
+            'keyesc_text' => _EDITOR_KEYESC,
+            'pick_text' => _EDITOR_PALPICK,
+            'run_text' => _EDITOR_PALRUN,
+            'shut_text' => _EDITOR_PALSHUT,
+            'any_text' => _EDITOR_PALANY,
+            'close_text' => _CLOSE,
             'move_text' => _EMOVEWIN,
             'expand_text' => _EEXPAND,
             'restore_text' => _ERESTORE,
@@ -195,6 +245,34 @@ class Editor {
             'back_text' => _EDITOR_DRAFTBACK,
             'drop_text' => _EDITOR_DRAFTDROP,
         ];
+    }
+
+    # Print the templates of the emoji panel with its words and the addresses its script loads by, once per answer for every engine that offers it
+    public static function getEmojiPanel(): string {
+        global $tpl;
+        if (self::$emoji) return '';
+        self::$emoji = true;
+        $words = 'plugins/system/emoji/'.substr(_LOCALE, 0, 2).'.js';
+        $src = [Template::getAssetUrl('plugins/system/emoji.js')];
+        if (Template::getAssetUrl($words) !== $words) $src[] = Template::getAssetUrl($words);
+        $lab = [
+            'emoji' => _EEMOJI,
+            'recent' => _EEMOJIRECENT,
+            'smileys' => _EEMOJISMILE,
+            'reactions' => _EEMOJIREACT,
+            'notices' => _EEMOJINOTICE,
+            'symbols' => _EEMOJISYMBOL,
+            'empty' => _EEMOJIEMPTY,
+        ];
+        return $tpl->getHtmlPart('emoji-panel', [
+            'words_json' => json_encode($lab, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+            'src_json' => json_encode($src, JSON_UNESCAPED_SLASHES),
+            'emoji_label' => _EEMOJI,
+            'close_label' => _CLOSE,
+            'move_label' => _EMOVEWIN,
+            'expand_label' => _EEXPAND,
+            'restore_label' => _ERESTORE,
+        ]);
     }
 
     # Render editor select dropdown for settings UI

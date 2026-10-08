@@ -1,18 +1,102 @@
 <template data-sl-editor-kit data-sl-editor-words="{{ words_json }}">
   <span class="sl-editor-pill" role="toolbar" data-sl-editor-pill>
-    <button type="button" class="sl-modal-act" data-sl-editor-act="undo" title="{{ undo_text }} (Ctrl+Z)" aria-label="{{ undo_text }}"><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i></button>
-    <button type="button" class="sl-modal-act" data-sl-editor-act="redo" title="{{ redo_text }} (Ctrl+Y)" aria-label="{{ redo_text }}"><i class="bi bi-arrow-clockwise" aria-hidden="true"></i></button>
-    <span class="sl-editor-sep" aria-hidden="true"></span>
-    <button type="button" class="sl-modal-act" data-sl-editor-act="wrap" aria-pressed="true" title="{{ wrap_text }}" aria-label="{{ wrap_text }}"><i class="bi bi-text-wrap" aria-hidden="true"></i></button>
-    <button type="button" class="sl-modal-act" data-sl-editor-act="copy" title="{{ copy_text }}" aria-label="{{ copy_text }}"><i class="bi bi-copy" aria-hidden="true"></i></button>
-    <button type="button" class="sl-modal-act" data-sl-editor-act="reset" title="{{ reset_text }}" aria-label="{{ reset_text }}"><i class="bi bi-arrow-repeat" aria-hidden="true"></i></button>
-    <span class="sl-editor-sep" aria-hidden="true"></span>
-    <button type="button" class="sl-modal-act sl-modal-act-move" data-sl-editor-act="grip" title="{{ move_text }}" aria-label="{{ move_text }}"><i class="bi bi-grip-vertical" aria-hidden="true"></i></button>
-    <button type="button" class="sl-modal-act" data-sl-editor-act="full" data-expand="{{ expand_text }}" data-restore="{{ restore_text }}" title="{{ expand_text }}" aria-label="{{ expand_text }}"><i class="bi bi-arrows-angle-expand" aria-hidden="true"></i></button>
+    <span class="sl-editor-grp">
+      <button type="button" class="sl-modal-act" data-sl-editor-act="undo" title="{{ undo_text }} (Ctrl+Z)" aria-label="{{ undo_text }}"><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i></button>
+      <button type="button" class="sl-modal-act" data-sl-editor-act="redo" title="{{ redo_text }} (Ctrl+Y)" aria-label="{{ redo_text }}"><i class="bi bi-arrow-clockwise" aria-hidden="true"></i></button>
+    </span>
+    <span class="sl-editor-grp">
+      <button type="button" class="sl-modal-act" data-sl-editor-act="search" data-sl-editor-need="cm" title="{{ search_text }} (Ctrl+F)" aria-label="{{ search_text }}"><i class="bi bi-search" aria-hidden="true"></i></button>
+      <button type="button" class="sl-modal-act" data-sl-editor-act="wrap" aria-pressed="true" title="{{ wrap_text }}" aria-label="{{ wrap_text }}"><i class="bi bi-text-wrap" aria-hidden="true"></i></button>
+    </span>
+    <span class="sl-editor-grp sl-editor-wide">
+      <button type="button" class="sl-modal-act" data-sl-editor-act="fold" data-sl-editor-need="cm" title="{{ fold_text }} (Ctrl+Alt+[)" aria-label="{{ fold_text }}"><i class="bi bi-chevron-bar-contract" aria-hidden="true"></i></button>
+      <button type="button" class="sl-modal-act" data-sl-editor-act="unfold" data-sl-editor-need="cm" title="{{ unfold_text }} (Ctrl+Alt+])" aria-label="{{ unfold_text }}"><i class="bi bi-chevron-bar-expand" aria-hidden="true"></i></button>
+    </span>
+    <span class="sl-editor-grp">
+      <button type="button" class="sl-modal-act" data-sl-editor-act="bold" data-sl-editor-need="markdown" title="{{ bold_text }} (Ctrl+B)" aria-label="{{ bold_text }}"><i class="bi bi-type-bold" aria-hidden="true"></i></button>
+      <button type="button" class="sl-modal-act" data-sl-editor-act="italic" data-sl-editor-need="markdown" title="{{ italic_text }} (Ctrl+I)" aria-label="{{ italic_text }}"><i class="bi bi-type-italic" aria-hidden="true"></i></button>
+      <button type="button" class="sl-modal-act" data-sl-editor-act="code" data-sl-editor-need="markdown" title="{{ code_text }}" aria-label="{{ code_text }}"><i class="bi bi-code" aria-hidden="true"></i></button>
+      <button type="button" class="sl-modal-act" data-sl-editor-act="link" data-sl-editor-need="markdown" title="{{ link_text }}" aria-label="{{ link_text }}"><i class="bi bi-link-45deg" aria-hidden="true"></i></button>
+      <button type="button" class="sl-modal-act" data-sl-editor-act="list" data-sl-editor-need="markdown" title="{{ list_text }}" aria-label="{{ list_text }}"><i class="bi bi-list-ul" aria-hidden="true"></i></button>
+      <button type="button" class="sl-modal-act" data-sl-editor-act="quote" data-sl-editor-need="markdown" title="{{ quote_text }}" aria-label="{{ quote_text }}"><i class="bi bi-quote" aria-hidden="true"></i></button>
+    </span>
+    <span class="sl-editor-grp">
+      <button type="button" class="sl-modal-act" data-sl-editor-act="files" data-sl-editor-need="files" aria-haspopup="dialog" title="{{ files_text }}" aria-label="{{ files_text }}"><i class="bi bi-folder" aria-hidden="true"></i></button>
+      <button type="button" class="sl-modal-act" data-sl-editor-act="emoji" data-sl-editor-need="text" aria-haspopup="dialog" title="{{ emoji_text }}" aria-label="{{ emoji_text }}"><i class="bi bi-emoji-smile" aria-hidden="true"></i></button>
+    </span>
+    <span class="sl-editor-grp sl-editor-mid">
+      <button type="button" class="sl-modal-act" data-sl-editor-act="copy" title="{{ copy_text }}" aria-label="{{ copy_text }}"><i class="bi bi-copy" aria-hidden="true"></i></button>
+      <button type="button" class="sl-modal-act" data-sl-editor-act="reset" title="{{ reset_text }}" aria-label="{{ reset_text }}"><i class="bi bi-arrow-repeat" aria-hidden="true"></i></button>
+    </span>
+    <span class="sl-editor-grp">
+      <button type="button" class="sl-modal-act" data-sl-editor-act="palette" aria-haspopup="dialog" title="{{ cmds_text }} (Ctrl+K)" aria-label="{{ cmds_text }}"><i class="bi bi-command" aria-hidden="true"></i></button>
+      <button type="button" class="sl-modal-act sl-modal-act-move" data-sl-editor-act="grip" title="{{ move_text }}" aria-label="{{ move_text }}"><i class="bi bi-grip-vertical" aria-hidden="true"></i></button>
+      <button type="button" class="sl-modal-act" data-sl-editor-act="full" data-expand="{{ expand_text }}" data-restore="{{ restore_text }}" title="{{ expand_text }}" aria-label="{{ expand_text }}"><i class="bi bi-arrows-angle-expand" aria-hidden="true"></i></button>
+    </span>
   </span>
   <div class="sl-editor-draft" role="status" data-sl-editor-draft>
     <i class="bi bi-clock-history" aria-hidden="true"></i><span>{{ draft_text }}</span>
     <button type="button" class="sl-modal-btn" data-sl-editor-act="restore"><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i>{{ back_text }}</button>
     <button type="button" class="sl-modal-btn" data-sl-editor-act="drop"><i class="bi bi-x-lg" aria-hidden="true"></i>{{ drop_text }}</button>
   </div>
+  <dialog class="sl-modal sl-editor-pal" data-sl-editor-palette aria-labelledby="sl-editor-pal-title">
+    <div class="sl-modal-title">
+      <i class="bi bi-command" aria-hidden="true"></i>
+      <span class="sl-modal-cap"><strong id="sl-editor-pal-title">{{ cmds_text }}</strong><span class="sl-modal-sub" data-sl-editor-pal-sub></span></span>
+      <span class="sl-modal-acts"><button type="button" class="sl-modal-act sl-modal-act-close" data-sl-close title="{{ close_text }}" aria-label="{{ close_text }}"><i class="bi bi-x-lg" aria-hidden="true"></i></button></span>
+    </div>
+    <div class="sl-modal-bar"><i class="bi bi-search" aria-hidden="true"></i><input type="search" class="sl-editor-pal-find" data-sl-editor-find data-sl-focus role="combobox" aria-expanded="true" aria-controls="sl-editor-pal-list" aria-autocomplete="list" placeholder="{{ find_text }}" aria-label="{{ find_text }}" autocomplete="off" spellcheck="false"></div>
+    <div class="sl-modal-body sl-modal-body-flush sl-editor-pal-body">
+      <div id="sl-editor-pal-list" role="listbox" aria-labelledby="sl-editor-pal-title">
+        <div class="sl-editor-pal-group" role="group" aria-labelledby="sl-editor-pal-edit">
+          <div class="sl-editor-pal-cap" id="sl-editor-pal-edit">{{ edit_text }}</div>
+          <button type="button" role="option" tabindex="-1" class="sl-editor-pal-row" id="sl-editor-cmd-undo" data-sl-editor-cmd="undo"><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i><span class="sl-editor-pal-name">{{ undo_text }}</span><span class="sl-editor-pal-keys"><kbd>Ctrl</kbd><kbd>Z</kbd></span></button>
+          <button type="button" role="option" tabindex="-1" class="sl-editor-pal-row" id="sl-editor-cmd-redo" data-sl-editor-cmd="redo"><i class="bi bi-arrow-clockwise" aria-hidden="true"></i><span class="sl-editor-pal-name">{{ redo_text }}</span><span class="sl-editor-pal-keys"><kbd>Ctrl</kbd><kbd>Y</kbd></span></button>
+          <button type="button" role="option" tabindex="-1" class="sl-editor-pal-row" id="sl-editor-cmd-all" data-sl-editor-cmd="all"><i class="bi bi-cursor-text" aria-hidden="true"></i><span class="sl-editor-pal-name">{{ all_text }}</span><span class="sl-editor-pal-keys"><kbd>Ctrl</kbd><kbd>A</kbd></span></button>
+          <button type="button" role="option" tabindex="-1" class="sl-editor-pal-row" id="sl-editor-cmd-comment" data-sl-editor-cmd="comment" data-sl-editor-need="code"><i class="bi bi-chat-square-text" aria-hidden="true"></i><span class="sl-editor-pal-name">{{ comment_text }}</span><span class="sl-editor-pal-keys"><kbd>Ctrl</kbd><kbd>/</kbd></span></button>
+          <button type="button" role="option" tabindex="-1" class="sl-editor-pal-row" id="sl-editor-cmd-copy" data-sl-editor-cmd="copy"><i class="bi bi-copy" aria-hidden="true"></i><span class="sl-editor-pal-name">{{ copy_text }}</span><span class="sl-editor-pal-keys"></span></button>
+          <button type="button" role="option" tabindex="-1" class="sl-editor-pal-row" id="sl-editor-cmd-reset" data-sl-editor-cmd="reset"><i class="bi bi-arrow-repeat" aria-hidden="true"></i><span class="sl-editor-pal-name">{{ reset_text }}</span><span class="sl-editor-pal-keys"></span></button>
+        </div>
+        <div class="sl-editor-pal-group" role="group" aria-labelledby="sl-editor-pal-format">
+          <div class="sl-editor-pal-cap" id="sl-editor-pal-format">{{ format_text }}</div>
+          <button type="button" role="option" tabindex="-1" class="sl-editor-pal-row" id="sl-editor-cmd-bold" data-sl-editor-cmd="bold" data-sl-editor-need="markdown"><i class="bi bi-type-bold" aria-hidden="true"></i><span class="sl-editor-pal-name">{{ bold_text }}</span><span class="sl-editor-pal-keys"><kbd>Ctrl</kbd><kbd>B</kbd></span></button>
+          <button type="button" role="option" tabindex="-1" class="sl-editor-pal-row" id="sl-editor-cmd-italic" data-sl-editor-cmd="italic" data-sl-editor-need="markdown"><i class="bi bi-type-italic" aria-hidden="true"></i><span class="sl-editor-pal-name">{{ italic_text }}</span><span class="sl-editor-pal-keys"><kbd>Ctrl</kbd><kbd>I</kbd></span></button>
+          <button type="button" role="option" tabindex="-1" class="sl-editor-pal-row" id="sl-editor-cmd-code" data-sl-editor-cmd="code" data-sl-editor-need="markdown"><i class="bi bi-code" aria-hidden="true"></i><span class="sl-editor-pal-name">{{ code_text }}</span><span class="sl-editor-pal-keys"></span></button>
+          <button type="button" role="option" tabindex="-1" class="sl-editor-pal-row" id="sl-editor-cmd-link" data-sl-editor-cmd="link" data-sl-editor-need="markdown"><i class="bi bi-link-45deg" aria-hidden="true"></i><span class="sl-editor-pal-name">{{ link_text }}</span><span class="sl-editor-pal-keys"></span></button>
+          <button type="button" role="option" tabindex="-1" class="sl-editor-pal-row" id="sl-editor-cmd-list" data-sl-editor-cmd="list" data-sl-editor-need="markdown"><i class="bi bi-list-ul" aria-hidden="true"></i><span class="sl-editor-pal-name">{{ list_text }}</span><span class="sl-editor-pal-keys"></span></button>
+          <button type="button" role="option" tabindex="-1" class="sl-editor-pal-row" id="sl-editor-cmd-quote" data-sl-editor-cmd="quote" data-sl-editor-need="markdown"><i class="bi bi-quote" aria-hidden="true"></i><span class="sl-editor-pal-name">{{ quote_text }}</span><span class="sl-editor-pal-keys"></span></button>
+        </div>
+        <div class="sl-editor-pal-group" role="group" aria-labelledby="sl-editor-pal-insert">
+          <div class="sl-editor-pal-cap" id="sl-editor-pal-insert">{{ insert_text }}</div>
+          <button type="button" role="option" tabindex="-1" class="sl-editor-pal-row" id="sl-editor-cmd-files" data-sl-editor-cmd="files" data-sl-editor-need="files"><i class="bi bi-folder" aria-hidden="true"></i><span class="sl-editor-pal-name">{{ upload_text }}</span><span class="sl-editor-pal-keys"></span></button>
+          <button type="button" role="option" tabindex="-1" class="sl-editor-pal-row" id="sl-editor-cmd-emoji" data-sl-editor-cmd="emoji" data-sl-editor-need="text"><i class="bi bi-emoji-smile" aria-hidden="true"></i><span class="sl-editor-pal-name">{{ emoji_text }}</span><span class="sl-editor-pal-keys"></span></button>
+        </div>
+        <div class="sl-editor-pal-group" role="group" aria-labelledby="sl-editor-pal-view">
+          <div class="sl-editor-pal-cap" id="sl-editor-pal-view">{{ view_text }}</div>
+          <button type="button" role="option" tabindex="-1" class="sl-editor-pal-row" id="sl-editor-cmd-search" data-sl-editor-cmd="search" data-sl-editor-need="cm"><i class="bi bi-search" aria-hidden="true"></i><span class="sl-editor-pal-name">{{ search_text }}</span><span class="sl-editor-pal-keys"><kbd>Ctrl</kbd><kbd>F</kbd></span></button>
+          <button type="button" role="option" tabindex="-1" class="sl-editor-pal-row" id="sl-editor-cmd-wrap" data-sl-editor-cmd="wrap"><i class="bi bi-text-wrap" aria-hidden="true"></i><span class="sl-editor-pal-name">{{ wrap_text }}</span><span class="sl-editor-pal-keys"></span></button>
+          <button type="button" role="option" tabindex="-1" class="sl-editor-pal-row" id="sl-editor-cmd-fold" data-sl-editor-cmd="fold" data-sl-editor-need="cm"><i class="bi bi-chevron-bar-contract" aria-hidden="true"></i><span class="sl-editor-pal-name">{{ fold_text }}</span><span class="sl-editor-pal-keys"><kbd>Ctrl</kbd><kbd>Alt</kbd><kbd>[</kbd></span></button>
+          <button type="button" role="option" tabindex="-1" class="sl-editor-pal-row" id="sl-editor-cmd-unfold" data-sl-editor-cmd="unfold" data-sl-editor-need="cm"><i class="bi bi-chevron-bar-expand" aria-hidden="true"></i><span class="sl-editor-pal-name">{{ unfold_text }}</span><span class="sl-editor-pal-keys"><kbd>Ctrl</kbd><kbd>Alt</kbd><kbd>]</kbd></span></button>
+          <button type="button" role="option" tabindex="-1" class="sl-editor-pal-row" id="sl-editor-cmd-full" data-sl-editor-cmd="full"><i class="bi bi-arrows-angle-expand" aria-hidden="true"></i><span class="sl-editor-pal-name">{{ full_text }}</span><span class="sl-editor-pal-keys"></span></button>
+        </div>
+      </div>
+      <p class="sl-editor-pal-empty" data-sl-editor-pal-empty hidden>{{ none_text }}</p>
+      <section class="sl-editor-pal-help" data-sl-editor-pal-help aria-labelledby="sl-editor-pal-keys">
+        <div class="sl-editor-pal-cap" id="sl-editor-pal-keys"><i class="bi bi-keyboard" aria-hidden="true"></i>{{ keys_text }}</div>
+        <dl class="sl-editor-pal-keymap">
+          <div data-sl-editor-need="cm"><dt><kbd>Ctrl</kbd><kbd>D</kbd></dt><dd>{{ keynext_text }}</dd></div>
+          <div data-sl-editor-need="cm"><dt><kbd>Ctrl</kbd><kbd>L</kbd></dt><dd>{{ keyline_text }}</dd></div>
+          <div data-sl-editor-need="cm"><dt><kbd>Alt</kbd><kbd>↑</kbd><kbd>↓</kbd></dt><dd>{{ keymove_text }}</dd></div>
+          <div data-sl-editor-need="cm"><dt><kbd>Shift</kbd><kbd>Alt</kbd><kbd>↑</kbd><kbd>↓</kbd></dt><dd>{{ keydup_text }}</dd></div>
+          <div data-sl-editor-need="cm"><dt><kbd>Ctrl</kbd><kbd>Shift</kbd><kbd>K</kbd></dt><dd>{{ keydel_text }}</dd></div>
+          <div data-sl-editor-need="cm"><dt><kbd>Ctrl</kbd><kbd>]</kbd><kbd>[</kbd></dt><dd>{{ keyindent_text }}</dd></div>
+          <div data-sl-editor-need="cm"><dt><kbd>Ctrl</kbd><kbd>Shift</kbd><kbd>\</kbd></dt><dd>{{ keypair_text }}</dd></div>
+          <div data-sl-editor-need="cm"><dt><kbd>Ctrl</kbd></dt><dd>{{ keycaret_text }}</dd></div>
+          <div data-sl-editor-need="markdown"><dt><kbd>Enter</kbd></dt><dd>{{ keylist_text }}</dd></div>
+          <div><dt><kbd>Esc</kbd></dt><dd>{{ keyesc_text }}</dd></div>
+        </dl>
+      </section>
+    </div>
+    <div class="sl-modal-foot"><span class="sl-modal-info"><kbd>↑</kbd><kbd>↓</kbd> {{ pick_text }} · <kbd>Enter</kbd> {{ run_text }} · <kbd>Esc</kbd> {{ shut_text }} · <kbd>Ctrl</kbd><kbd>K</kbd> {{ any_text }}</span></div>
+  </dialog>
 </template>

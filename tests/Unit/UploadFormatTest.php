@@ -165,7 +165,7 @@ final class UploadFormatTest extends TestCase
         $this->assertSame($want, $this->getList('core/classes/parser.php', '$img = ['), 'filterAttach() disagrees on the image set');
         $this->assertStringNotContainsString('$ftype = [', $this->getFile('core/admin.php'), 'The administration restates the image set in a list of its own again');
         $this->assertSame($want, $this->getList('core/classes/parser.php', 'public const EMBEDIMG = ['), 'Parser::EMBEDIMG disagrees on the image set');
-        $drv = $this->getFile('public/plugins/editors/toastui/driver.php');
+        $drv = $this->getFile('core/helpers.php');
         $this->assertStringContainsString('Parser::EMBEDIMG', $drv, 'The editor window no longer reads the one embeddable type list and restates it in its own words');
         $this->assertSame(0, preg_match("#'embedimg' => \[#", $drv), 'The editor window restates the image set in a list of its own again');
         $pars = $this->getFile('core/classes/parser.php');

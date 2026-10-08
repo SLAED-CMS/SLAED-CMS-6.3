@@ -171,7 +171,7 @@ final class EditorWindowTest extends TestCase
             $this->assertStringContainsString('data-sl-opts="size"', $insert, 'The insertion options of theme '.$theme.' offer no full size beside the thumbnail');
         }
         $this->assertStringContainsString("' size=full'", $this->getFile('public/plugins/system/filemanager.js'), 'The window never writes the full-size form of an attachment');
-        $drv = $this->getFile('public/plugins/editors/toastui/driver.php');
+        $drv = $this->getBody('core/helpers.php', 'getEditorFileKit');
         $this->assertStringContainsString(
             "'win_class' => 'sl-fm-win",
             $drv,
@@ -211,9 +211,7 @@ final class EditorWindowTest extends TestCase
         );
         $drv = $this->getFile('public/plugins/editors/toastui/driver.php');
         $this->assertStringNotContainsString('editor-upload.js', $drv, 'The driver still delivers the runtime, so the move is only half done');
-        foreach (['editor-tags.js', 'editor-emoji.js'] as $own) {
-            $this->assertStringContainsString($own, $drv, 'The driver stopped delivering '.$own.', which belongs to the editor and not to the window');
-        }
+        $this->assertStringContainsString('editor-tags.js', $drv, 'The driver stopped delivering editor-tags.js, which belongs to the editor and not to the window');
         $win = $this->getBody('core/helpers.php', 'getFileManagerWindow');
         $this->assertStringContainsString('static $done = false;', $win, 'The window delivers its runtime again for every editor of a page instead of once');
         $this->assertStringContainsString("Editor::getAssetTags([], ['plugins/system/filemanager.js'])", $win, 'The window carries no runtime, so it answers nothing');
@@ -232,8 +230,8 @@ final class EditorWindowTest extends TestCase
         foreach (['lite', 'admin'] as $theme) {
             $part = $this->getFile('public/templates/'.$theme.'/partials/file-manager-templates.html');
             $this->assertSame(11, substr_count($part, '<template'), 'The draw templates of theme '.$theme.' are not the eleven the runtime needs');
-            $emoji = $this->getFile('public/templates/'.$theme.'/partials/editor-toastui-templates.html');
-            $this->assertSame(4, substr_count($emoji, '<template'), 'The editor partial of theme '.$theme.' holds something besides the four emoji templates it keeps');
+            $emoji = $this->getFile('public/templates/'.$theme.'/partials/emoji-panel.html');
+            $this->assertSame(4, substr_count($emoji, '<template'), 'The emoji partial of theme '.$theme.' holds something besides its four templates');
             $this->assertStringNotContainsString('data-tpl="fm-', $emoji, 'A file manager template of theme '.$theme.' stayed behind, so one node is looked for in two places');
         }
         $this->assertSame(
@@ -241,6 +239,75 @@ final class EditorWindowTest extends TestCase
             $this->getFile('public/templates/admin/partials/file-manager-templates.html'),
             'The two themes no longer carry the same draw templates'
         );
+    }
+
+    # Toast UI, Plain Plus and CodeMirror as text take the options of the window from one function, and the shell reaches the window through an adapter
+    # The adapter answers what the window asks of Toast UI, is bound on first use whatever order the scripts came in, and hands a pasted or dropped image to the window
+    #[Test]
+    public function theFileWindowServesEveryTextEngine(): void
+    {
+        $kit = $this->getBody('core/helpers.php', 'getEditorFileKit');
+        foreach (["'canupload' =>", "'upload' =>", 'getFileManagerWindow([', 'getWindowShot(['] as $part) {
+            $this->assertStringContainsString($part, $kit, 'The shared options of the window lost '.$part);
+        }
+        $drv = $this->getFile('public/plugins/editors/toastui/driver.php');
+        $this->assertStringContainsString('getEditorFileKit($id, $data)', $drv, 'Toast UI does not take the options of the window from the shared function');
+        $this->assertStringNotContainsString("'canupload' =>", $drv, 'Toast UI works out the options of the window a second time');
+        $this->assertStringContainsString('getEditorFileKit(', $this->getFile('core/classes/editor.php'), 'The shell offers no file window');
+        $run = $this->getFile('public/plugins/system/editor.js');
+        foreach ([
+            'win.SlaedFileManager.addUpload(ed.area.id, getPort(ed), ed.files)',
+            'win.SlaedFileManager.addPanel(ed.area.id)',
+            'win.SlaedFileManager.deleteUpload(ed.area.id)',
+            "name === 'addImageBlobHook'",
+            "addEventListener('paste'",
+            "addEventListener('drop'",
+            "'[img alt='",
+            "one.type === 'text/rtf'",
+            'win.SlaedEmoji.setPanel(ed.area.id, getPort(ed), btn)',
+        ] as $part) {
+            $this->assertStringContainsString($part, $run, 'The runtime of the shell lost '.$part);
+        }
+        $this->assertStringContainsString('api.addPanel = addPanel;', $this->getFile('public/plugins/system/filemanager.js'), 'The window offers no public way to open it');
+        $page = $this->getFile('public/plugins/system/slaed.js');
+        $this->assertStringContainsString('window.SlaedEditor.getEditor(id)', $page, 'An insert of the page misses a text under CodeMirror');
+        foreach (['lite', 'admin'] as $theme) {
+            $dir = 'public/templates/'.$theme.'/fragments/';
+            $tpl = $this->getFile($dir.'editor-kit.html');
+            foreach (['files', 'emoji'] as $act) $this->assertStringContainsString('data-sl-editor-act="'.$act.'"', $tpl, 'The capsule of '.$theme.' has no '.$act.' button');
+            $this->assertStringContainsString('data-sl-editor-files', $this->getFile($dir.'editor-frame.html'), 'The frame carries no options of the window');
+        }
+    }
+
+    # The emoji panel serves every text engine, so its script, its words, its templates and its rules belong to the shared runtime and Toast UI takes them from there
+    #[Test]
+    public function theEmojiPanelBelongsToTheRuntime(): void
+    {
+        $dir = dirname(__DIR__, 2).'/public/plugins/';
+        $this->assertFileDoesNotExist($dir.'editors/toastui/assets/editor-emoji.js');
+        foreach (self::LOCALES as $loc) {
+            $this->assertFileDoesNotExist($dir.'editors/toastui/assets/i18n/emoji-'.$loc.'.js');
+            $words = $this->getFile('public/plugins/system/emoji/'.$loc.'.js');
+            $this->assertStringContainsString('window.SlaedEmoji.words = {', $words, 'The words of '.$loc.' hang on no namespace the panel reads');
+            $this->assertStringNotContainsString('SlaedToastUi', $words, 'The words of '.$loc.' still hang on the editor plugin');
+        }
+        $js = $this->getFile('public/plugins/system/emoji.js');
+        $this->assertStringContainsString('win.SlaedEmoji = api;', $js);
+        $this->assertStringNotContainsString('SlaedToastUi', $js, 'The panel still reaches into the editor plugin');
+        $this->assertStringNotContainsString("+ '_toast'", $js, 'The panel still looks for the toolbar of Toast UI');
+        $this->assertStringContainsString('win.SlaedEmoji.setPanel(id, ed,', $this->getFile('public/plugins/editors/toastui/assets/editor-tags.js'), 'Toast UI opens no panel');
+        $drv = $this->getFile('public/plugins/editors/toastui/driver.php');
+        $this->assertStringContainsString("'plugins/system/emoji.js'", $drv, 'Toast UI does not load the panel from the runtime');
+        $this->assertStringContainsString('Editor::getEmojiPanel()', $drv, 'Toast UI prints the templates of the panel on its own');
+        $this->assertStringContainsString('"emoji-panel"', $this->getFile('public/plugins/editors/toastui/manifest.json'), 'Toast UI does not name the partial it needs');
+        $this->assertSame($this->getFile('public/templates/lite/partials/emoji-panel.html'), $this->getFile('public/templates/admin/partials/emoji-panel.html'));
+        foreach (['lite', 'admin'] as $theme) {
+            $this->assertFileDoesNotExist(dirname(__DIR__, 2).'/public/templates/'.$theme.'/partials/editor-toastui-templates.html');
+            $skin = $this->getFile('public/templates/'.$theme.'/assets/editors/toastui/skin.css');
+            $this->assertDoesNotMatchRegularExpression('#\.sl-editor-emoji-#', $skin, 'The rules of the panel stayed in the Toast UI skin of '.$theme);
+            $css = $this->getFile('public/templates/'.$theme.'/assets/css/theme.css');
+            $this->assertStringContainsString('dialog.sl-editor-emoji-panel', $css, 'The panel of '.$theme.' has no rules once Toast UI is not on the page');
+        }
     }
 
     # The fan of an object is built from the capabilities of that object, and the width of its plate is written down rather than counted off a child index
@@ -359,14 +426,16 @@ final class EditorWindowTest extends TestCase
         $this->assertStringContainsString("'url_name' => \$link ?", $fld, 'The address field is printed without asking the place, so canlink decides nothing');
         $this->assertStringContainsString('getFieldIds(', $fld, 'The row of the door mints its ids beside the one helper that owns them');
         $txt = $this->getBody('core/helpers.php', 'getFileManagerText');
+        $kit = $this->getBody('core/helpers.php', 'getEditorFileKit');
         $drv = $this->getFile('public/plugins/editors/toastui/driver.php');
-        $this->assertSame(1, substr_count($drv, 'getFileManagerText('), 'The driver reads the shared words more than once per widget, or has stopped reading them at all');
+        $this->assertSame(1, substr_count($kit, 'getFileManagerText('), 'The editor reads the shared words more than once per widget, or has stopped reading them at all');
+        $this->assertStringNotContainsString('getFileManagerText(', $drv, 'Toast UI reads the shared words beside the function that hands them to it');
         $this->assertStringContainsString(
-            "'labels' => \$txt['labels'] + [",
-            $drv,
+            "'labels' => \$txt['labels'],",
+            $kit,
             'The driver builds the words of the window again, so the door and the editor drift apart at the first edit'
         );
-        $this->assertStringContainsString("'panes' => \$txt['panes'] + [", $drv, 'The driver names the sections of the window again beside the one place that does');
+        $this->assertStringContainsString("'panes' => \$txt['panes'] + [", $kit, 'The driver names the sections of the window again beside the one place that does');
         foreach (['badtype', 'big', 'toobig', 'quota', 'mynote'] as $key) {
             $this->assertStringContainsString("'".$key."' => ", $txt, 'The shared words carry no '.$key.', so the runtime falls back to English for it');
             $this->assertStringNotContainsString("'".$key."' =>", $drv, 'The driver keeps its own '.$key.' beside the shared one, and the two can disagree');

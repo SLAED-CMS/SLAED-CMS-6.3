@@ -237,7 +237,7 @@ final class UploadIntegrationTest extends TestCase
     #[Test]
     public function everyEndpointUrlCarriesThePlace(): void
     {
-        $drv = $this->getFile('public/plugins/editors/toastui/driver.php');
+        $drv = $this->getFile('core/helpers.php');
         $this->assertStringContainsString(".'.attach'", $drv, 'The editor no longer names the attachment place of its module, so its URLs carry nothing the routes can resolve');
         foreach (['editorUpload', 'editorFiles', 'editorDelete', 'editorArchive'] as $op) {
             $this->assertStringContainsString('op='.$op.'&place=', $drv, 'The endpoint URL of '.$op.' does not carry a place');

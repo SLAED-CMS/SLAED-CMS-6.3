@@ -110,6 +110,23 @@
         addItem(ed, 6, 'slaedPhp', 'sl-editor-icon sl-editor-icon-php', txt.php || 'SLAED PHP');
     }
 
+    // The emoji panel is the shared runtime's: the toolbar opens it at its own button and hands over the editor it writes into
+    function addEmoji(id, ed, opt) {
+        var txt = opt && opt.labels ? opt.labels : {};
+        if (!win.SlaedEmoji || !ed || typeof ed.addCommand !== 'function' || typeof ed.insertToolbarItem !== 'function') return;
+        addCmd(ed, 'slaedEmoji', function() {
+            var box = doc.getElementById(String(id) + '_toast');
+            win.SlaedEmoji.setPanel(id, ed, box ? box.querySelector('.toastui-editor-toolbar-icons.sl-editor-icon-emoji') : null);
+        });
+        ed.insertToolbarItem({ groupIndex: 6, itemIndex: 3 }, {
+            name: 'slaedEmoji',
+            text: '',
+            className: 'toastui-editor-toolbar-icons sl-editor-icon sl-editor-icon-emoji',
+            tooltip: txt.emoji || 'Emoji',
+            command: 'slaedEmoji'
+        });
+    }
+
     api.editors = map;
     api.options = api.options || {};
     api.getEditor = getEditor;
@@ -152,7 +169,7 @@
         map.set(String(id), ed);
         api.options[String(id)] = opt || {};
         addTags(id, ed, opt || {});
-        if (api.addEmoji) api.addEmoji(id, ed, opt || {});
+        addEmoji(id, ed, opt || {});
         if (win.SlaedFileManager) win.SlaedFileManager.addUpload(id, ed, opt || {});
         setTabs(id);
         if (typeof ed.on === 'function') ed.on('changeMode', function() { setWidth(id); });
@@ -163,6 +180,7 @@
         var ed = map.get(String(id));
         map.delete(String(id));
         delete api.options[String(id)];
+        if (win.SlaedEmoji) win.SlaedEmoji.deletePanel(id);
         if (ed && typeof ed.destroy === 'function') ed.destroy();
     };
     win.SlaedToastUi = api;

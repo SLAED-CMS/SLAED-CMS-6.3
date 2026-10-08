@@ -4,10 +4,12 @@ Work plan for one editor shell and a second role for CodeMirror: CodeMirror stay
 text editor to choose beside Plain Plus, TinyMCE, CKEditor and Toast UI; Plain Plus stays the light one. Plain Plus and CodeMirror
 wear the same frame, capsule, status line, palette and comparison window.
 
-Status: batches 0 to 4 done (0 to 2 on 2026-10-07: the decisions answered, the `<br>` check, the baseline; CodeMirror
+Status: batches 0 to 6 done (0 to 2 on 2026-10-07: the decisions answered, the `<br>` check, the baseline; CodeMirror
 painted by the admin theme, One Dark gone, the panels in six locales; `type` read as a list, the core and each language
-built as files of their own; 3 and 4 on 2026-10-08: the shell and the runtime, Plain Plus and CodeMirror as code in one frame;
-CodeMirror a text editor storing Markdown, offered to both roles). The order of the batches is kept in
+built as files of their own; 3 to 5 on 2026-10-08, 6 on 2026-10-09: the shell and the runtime, Plain Plus and CodeMirror as code in one frame;
+CodeMirror a text editor storing Markdown, offered to both roles; the file window and the emoji panel for Plain Plus and
+CodeMirror as text, emoji in the shared runtime; the capsule by engine, the palette, the Markdown commands and the
+counter of the column). The order of the batches is kept in
 `docs/ROADMAP-2026.md`. Update this line as batches land.
 
 No line numbers anywhere in this document on purpose: every reference names the function, the file or the constant
@@ -243,6 +245,31 @@ Put to the owner in batch 0 and answered on 2026-10-07; settled like the decisio
 7. **The demo stand: not this plan's.** `public/demo/` is left as it is; the owner deletes it himself later. No batch
    adds to it, edits it or deletes from it; batches only read it as the stand of record.
 
+Put to the owner in batch 5 and answered on 2026-10-08:
+
+8. **Emoji: the shared runtime's, as the file window became.** The script and the six word files move from the Toast UI
+   plugin into `public/plugins/system/`, the four templates into a partial whose name does not say `toastui`, the rules
+   from both Toast UI `skin.css` into both `theme.css`, and the namespace leaves `SlaedToastUi`; Toast UI takes them from
+   there. Rejected: Plain Plus and CodeMirror loading the panel, its words and the whole Toast UI skin from the Toast UI
+   plugin.
+9. **Emoji on every text.** Plain Plus and CodeMirror as text offer the emoji button on every field, as Toast UI does,
+   whether or not the field has an upload place; code never. Rejected: emoji only beside the file window.
+10. **The insert of a page reaches the shell.** The forum's "Лично" (`data-sl-editor-insert`, `insertEditorContent()` in
+   `slaed.js`) wrote into the textarea CodeMirror as text hides, and the name was lost; it inserts through the adapter
+   of this batch now, Toast UI and a bare textarea as before.
+
+Put to the owner in batch 6 and answered on 2026-10-08:
+
+11. **The markdown commands follow the format of the field.** Bold, italic, code, link, list, quote and the list
+   continued by Enter appear where the field stores Markdown: CodeMirror as text at once, Plain Plus only on a field
+   whose format is `markdown`, which no caller gives today, since Plain Plus stores `plain` and the parser reads no
+   Markdown there. Rejected: the live BB tags of the parser on a `plain` field, and Plain Plus storing Markdown (a
+   breaking change of every stored `plain` text).
+12. **The limit of the counter is the room of the column.** What is left is counted in bytes against the column the
+   text is stored in, the room `getEditorRoomData()` gives and the meter of the file window reads; it is shown for a
+   `text` column (64 KB: signature, menu, intro, configuration) and not for `mediumtext`. Rejected: `maxlength` of the
+   field, which no caller passes.
+
 ## Batches
 
 Each batch ends with its checks green, a report, and no commit without the owner's command.
@@ -384,6 +411,25 @@ Each batch ends with its checks green, a report, and no commit without the owner
   full screen.
 - Checks: upload, link, embed and "Мои файлы" insert into Plain Plus and CodeMirror as text as they insert into Toast UI;
   Toast UI unchanged.
+- Done 2026-10-08. `getEditorFileKit()` in `core/helpers.php` works out the options and draws the file window, the
+  gallery and the insert options once for the three drivers; Toast UI adds only its toolbar words and `super`, and the
+  ids of the window are `<id>_fm*` for every engine. `Editor::getFrame()` gives a text whose field names an upload
+  place the kit, its options as `data-sl-editor-files` and its format as `data-sl-editor-lang`; code takes neither.
+  The capsule gained the folder (`bi-folder`, the icon Toast UI shows, titled `_EUPLOAD`) and the emoji button
+  (`_EEMOJI`); the runtime drops what a frame cannot use. The adapter of `editor.js` (`getPort()`) answers `focus()`,
+  `insertText()`, `exec('addImage')`, `getMarkdown()` and `addHook('addImageBlobHook')`, and is bound by
+  `SlaedFileManager.addUpload()` on first use, so the order the scripts come in does not matter; `api.addPanel` is the
+  public entry that opens the window. A picture takes the format of the field: Markdown for `markdown`, the `[img]` tag
+  otherwise, because the parser reads no Markdown picture in a `plain` text, which is what Plain Plus stores. A paste or
+  a drop of an image goes to the window as Toast UI's hook sends it: uploaded and marked, inserted from the window;
+  a paste that also carries `text/rtf`, as Word and Excel give it, stays text, by the same rule as Toast UI. A
+  textarea under the modal insert-options window cannot take the focus, so its text waits for that window to close and
+  the insert stays one step of undo. The emoji panel moved by answered decision 8: `plugins/system/emoji.js`
+  (`SlaedEmoji`), `plugins/system/emoji/<locale>.js`, `partials/emoji-panel.html` printed by `Editor::getEmojiPanel()`,
+  its rules in both `theme.css`; Plain Plus and CodeMirror load its script and words on the first press, Toast UI with
+  its page. The forum's "Лично" reaches the shell through `SlaedEditor.getEditor()` (answered decision 10). The window
+  stands above the full screen by itself (`setWindowFront()`, measured 10066 against 3000). The palette line "Файлы:
+  загрузить и вставить" waits for batch 6, which makes the palette.
 
 ### Batch 6 — capsule and palette
 
@@ -391,6 +437,29 @@ Each batch ends with its checks green, a report, and no commit without the owner
   4); the palette as a window of the canon with the groups, the fuzzy filter, the recent command and the key
   reference; Ctrl+K only while focus is in an editor.
 - The markdown commands, the list continued by Enter and the character counter for Plain Plus and CodeMirror as text.
+- The palette line "Файлы: загрузить и вставить", left by batch 5, opens the window through `SlaedFileManager.addPanel()`
+  where the frame carries the file window.
+- Done 2026-10-09. The capsule of `editor-kit.html` stands in groups (`sl-editor-grp`), each command marked with what
+  it needs (`data-sl-editor-need`: `cm`, `code`, `text`, `markdown`, `files`); the runtime drops a command the frame
+  cannot serve and a group left empty, and the line between two groups is drawn by the theme, so no separator hangs
+  over a gap. Under 900 points the folds leave the row and under 560 copy and reset; every command stays in the palette.
+  The capsule keeps to one line no wider than `--sl-capsule-max-width` (60 % of the row, a token of the new component
+  `capsule`) and scrolls what does not fit: `ui:after` showed the capsule, unseen at rest, wrapping to a second line at
+  560 points and making every editor 29 points taller.
+  The palette is a `dialog.sl-modal` printed inside the kit, cloned into the page on its first call, so a page of many
+  editors carries one: groups Правка, Формат, Вставка, Вид, the filter by letters in their order with the matched ones
+  marked, the last command raised in its group with the word of the locale, the keys of the engine under the list
+  until a search narrows it, Esc closing at once over a typed search. A command runs once the window has closed and
+  given the focus back, so a textarea under the modal never misses it. Ctrl+K is heard only by a frame, in the capture
+  phase; Ctrl+B and Ctrl+I only in the text of a Markdown field. The Markdown commands (answered decision 11) put their
+  mark around the selection or take it away, `*` and `**` kept apart; code becomes a fence over several lines; a link
+  selects `url` to be typed over, and a selected address becomes the target. A textarea continues a list, a numbered
+  list, a task and a quote by Enter and ends it on an empty item; CodeMirror does that through its Markdown grammar.
+  The counter (answered decision 12): `Editor::getFrame()` gives `data-sl-editor-room` for a text whose column is not
+  `mediumtext`, the status line says what is left in the units of the file window's meter and turns to `_ETEXTLONG` in
+  the tone of an invalid note once the text no longer fits. The CodeMirror exports of batch 1 cover search, folds and
+  comment; the build is unchanged. Thirty-one `_EDITOR_*` constants in six locales; `_CODE`, `_URL`, `_LIST`,
+  `_QUOTE`, `_EFULLSCREEN` and `_EDITOR_NONE` are reused.
 
 ### Batch 7 — variables and the hint
 

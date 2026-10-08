@@ -151,15 +151,15 @@ there. Delivery is now `getFileManagerWindow()` under a `static $done` — the
 pattern `Editor::getThemeSkin()` already uses — and not `$conf['global']['script_f']`,
 which would load it on every page of the site.
 
-**The namespaces are split and there is no alias.** All three editor plugin
-scripts share one object: each opens with `var api = win.SlaedToastUi || {}` and
-republishes it, and the `i18n/emoji-*.js` files hang `emojiWords` on it too. So
-`SlaedToastUi` stays — it is the editor plugin's own namespace for tags, emoji and
-the word lists — and only the file-manager runtime left it. `editor-tags.js`
-calls the new namespace explicitly:
+**The namespaces are split and there is no alias.** `SlaedToastUi` is the editor
+plugin's own namespace for its tags; the file-manager runtime left it first and the
+emoji panel followed, as `SlaedEmoji` in `plugins/system/emoji.js` with its word
+lists in `plugins/system/emoji/<locale>.js`, because Plain Plus and CodeMirror as
+text open it too. `editor-tags.js` calls both namespaces explicitly:
 
 ```js
 if (win.SlaedFileManager) win.SlaedFileManager.addUpload(id, ed, opt || {});
+win.SlaedEmoji.setPanel(id, ed, button);
 ```
 
 An alias would have hidden the coupling rather than cut it, and the failure it
@@ -179,15 +179,16 @@ runtime needs — `fm-act`, `fm-busy`, `fm-dial`, `fm-job`, `fm-pick`, `fm-prop`
 `fm-row`, `fm-tile`, `fm-why`, `msg-info`, `msg-warn` — live in
 `partials/file-manager-templates.html`, delivered by `getFileManagerWindow()`
 under the same `static $done` as the script. The four the emoji panel needs —
-`emoji-panel`, `emoji-tab`, `emoji-item`, `emoji-empty` — stay in
-`partials/editor-toastui-templates.html` and stay with the driver. Without this
+`emoji-panel`, `emoji-tab`, `emoji-item`, `emoji-empty` — live in
+`partials/emoji-panel.html`, printed once per answer by `Editor::getEmojiPanel()`
+with the words of the panel and the addresses its script loads by. Without this
 split the window opens on a page with no editor and draws no tile, no row, no
 queue card and no message, every one of them silently, because `getTpl()` answers
 null and every caller tolerates null.
 
 `data-editor` was deliberately **not** renamed. It is read from the runtime, from
-`editor-emoji.js`, from the partial itself, from `getWindowShot()` and from the
-insert-options window in `driver.php`; a template-only rename breaks the editor
+`emoji.js`, from the partial itself, from `getWindowShot()` and from the
+insert-options window of `getEditorFileKit()`; a template-only rename breaks the editor
 silently, and the gain is cosmetic — the attribute names the window instance,
 which is true in both modes.
 

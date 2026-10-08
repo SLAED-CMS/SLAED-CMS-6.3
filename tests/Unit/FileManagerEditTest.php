@@ -124,7 +124,7 @@ final class FileManagerEditTest extends TestCase
     public function everyEditableLanguageOpensAndSaves(): void
     {
         $man = $this->getManager();
-        foreach (['index.php' => 'php', 'templates/theme.css' => 'css', 'plugins/app.js' => 'js', 'config/data.json' => 'json', 'docs/note.md' => 'text'] as $file => $lang) {
+        foreach (['index.php' => 'php', 'templates/theme.css' => 'css', 'plugins/app.js' => 'js', 'config/data.json' => 'json', 'docs/note.md' => 'markdown'] as $file => $lang) {
             $this->setFixture($file);
             $this->assertSame($lang, $man->getCodeLanguage($file), $file.' resolves to another highlighting mode');
             $open = $man->getFileBody($file);

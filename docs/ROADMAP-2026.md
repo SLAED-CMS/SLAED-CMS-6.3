@@ -91,8 +91,8 @@ into the plan, then do whatever work the step names.
 - [x] 29. EDITOR batch 2 — the manifest and the split build. (2026-10-07)
 - [x] 30. EDITOR batch 3 — the shell and the runtime. (2026-10-08)
 - [x] 31. EDITOR batch 4 — CodeMirror as a text editor. (2026-10-08)
-- [ ] 32. EDITOR batch 5 — file manager for Plain Plus and CodeMirror as text.
-- [ ] 33. EDITOR batch 6 — capsule and palette.
+- [x] 32. EDITOR batch 5 — file manager for Plain Plus and CodeMirror as text. (2026-10-08)
+- [x] 33. EDITOR batch 6 — capsule and palette. (2026-10-09)
 - [ ] 34. EDITOR batch 7 — variables and the hint.
 - [ ] 35. EDITOR batch 8 — lint and format.
 - [ ] 36. EDITOR batch 9 — comparison.

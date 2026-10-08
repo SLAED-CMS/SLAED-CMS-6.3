@@ -2514,11 +2514,16 @@ pre code.hljs {
   color: var(--sl-warning);
 }
 
-/* The capsule stays out of the way at rest and comes up under the hand, on focus and in the full screen */
+/* The capsule stays out of the way at rest and comes up under the hand, on focus and in the full screen. It keeps to one
+   line and to the larger part of the row, scrolling what does not fit, so a capsule that is not shown does not push the
+   tab off its line and make the editor taller; the palette carries every command it hides */
 .sl-editor-pill {
   display: inline-flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
+  max-width: var(--sl-capsule-max-width);
+  overflow-x: auto;
+  scrollbar-width: none;
   gap: var(--sl-space-1);
   margin-left: auto;
   padding: var(--sl-space-1);
@@ -2545,6 +2550,7 @@ pre code.hljs {
 }
 
 .sl-editor-pill .sl-modal-act {
+  flex: 0 0 auto;
   width: var(--sl-size-chip);
   height: var(--sl-size-chip);
   border-radius: var(--sl-radius-pill);
@@ -2556,11 +2562,31 @@ pre code.hljs {
   color: var(--sl-primary-strong);
 }
 
-.sl-editor-sep {
+/* The groups of the capsule part themselves by a line; a group the engine cannot use is taken out with its line */
+.sl-editor-grp {
+  display: contents;
+}
+
+.sl-editor-grp + .sl-editor-grp::before {
+  content: "";
+  flex: 0 0 auto;
   width: 1px;
   height: var(--sl-size-icon-xs);
   margin: 0 var(--sl-space-1);
   background: var(--sl-border-strong);
+}
+
+/* Every command stays in the palette, so a narrow row lets the folds go first and copy and reset next */
+@media (max-width: 900px) {
+  .sl-editor-wide {
+    display: none;
+  }
+}
+
+@media (max-width: 560px) {
+  .sl-editor-mid {
+    display: none;
+  }
 }
 
 .sl-editor-card {
@@ -2592,7 +2618,8 @@ pre code.hljs {
   border-left-color: var(--sl-danger);
 }
 
-.sl-editor[data-invalid] .sl-editor-note {
+.sl-editor[data-invalid] .sl-editor-note,
+.sl-editor-left[data-over] {
   color: var(--sl-danger);
 }
 
@@ -2666,6 +2693,266 @@ pre code.hljs {
 
 .sl-editor-draft > span {
   flex: 1 1 auto;
+}
+
+/* The palette of the editors: a window of the canon whose bar searches the commands, the body lists them by group
+   with their keys, and the keys of the engine stand under the list until a search narrows it */
+.sl-editor-pal .sl-editor-pal-find,
+.sl-editor-pal .sl-editor-pal-find:focus {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: var(--sl-size-control);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  color: var(--sl-text);
+  font: inherit;
+  font-size: var(--sl-font-h4);
+  outline: 0;
+}
+
+.sl-editor-pal-body {
+  padding: var(--sl-space-2) 0;
+}
+
+.sl-editor-pal-body > * + * {
+  margin-top: 0;
+}
+
+.sl-editor-pal-cap {
+  display: flex;
+  align-items: center;
+  gap: var(--sl-space-2);
+  padding: var(--sl-space-3) var(--sl-modal-pad-x) var(--sl-space-1);
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-micro);
+  font-weight: var(--sl-weight-semibold);
+  letter-spacing: var(--sl-track-wide);
+  text-transform: uppercase;
+}
+
+.sl-editor-pal-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sl-space-4);
+  box-sizing: border-box;
+  width: 100%;
+  padding: var(--sl-space-2) var(--sl-modal-pad-x);
+  border: 0;
+  background: transparent;
+  color: var(--sl-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.sl-editor-pal-row[hidden],
+.sl-editor-pal-keymap > [hidden] {
+  display: none;
+}
+
+.sl-editor-pal-row > .bi {
+  color: var(--sl-text-muted);
+}
+
+.sl-editor-pal-row:hover {
+  background: var(--sl-bg-subtle);
+}
+
+/* The chosen command stands on the tint with the rail of the shell, and the focus stays in the search above it */
+.sl-editor-pal-row[aria-selected="true"] {
+  background: var(--sl-tint);
+  box-shadow: inset var(--sl-rail-width) 0 0 var(--sl-primary);
+}
+
+.sl-editor-pal-row[aria-selected="true"] > .bi {
+  color: var(--sl-primary);
+}
+
+.sl-editor-pal-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.sl-editor-pal-name b {
+  color: var(--sl-primary-strong);
+  font-weight: var(--sl-weight-semibold);
+}
+
+/* The last command run says so between its name and its keys, in the word of the locale the runtime writes on the row */
+.sl-editor-pal-keys {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sl-space-1);
+  order: 1;
+}
+
+.sl-editor-pal-row[data-recent]::after {
+  content: attr(data-recent);
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-micro);
+}
+
+.sl-editor-pal-empty {
+  padding: var(--sl-space-6) var(--sl-modal-pad-x);
+  color: var(--sl-text-muted);
+  text-align: center;
+}
+
+.sl-editor-pal-help {
+  padding: var(--sl-space-2) 0 var(--sl-space-4);
+  border-top: 1px solid var(--sl-border);
+}
+
+.sl-editor-pal-keymap {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: var(--sl-space-2) var(--sl-space-6);
+  margin: 0;
+  padding: var(--sl-space-1) var(--sl-modal-pad-x) 0;
+}
+
+.sl-editor-pal-keymap > div {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sl-space-3);
+}
+
+.sl-editor-pal-keymap dt {
+  display: inline-flex;
+  flex: 0 0 auto;
+  gap: var(--sl-space-1);
+}
+
+.sl-editor-pal-keymap dd {
+  margin: 0;
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-small);
+}
+
+.sl-editor-pal kbd {
+  display: inline-block;
+  padding: 0 var(--sl-space-1);
+  border: 1px solid var(--sl-border-strong);
+  border-radius: var(--sl-radius-1);
+  background: var(--sl-surface);
+  color: var(--sl-text);
+  font-size: var(--sl-font-micro);
+  line-height: var(--sl-line-normal);
+}
+
+/* The panel keeps its own tight spacing: the canon body would give it the padding of a reading window and thin the grid out */
+dialog.sl-editor-emoji-panel {
+  font-family: inherit;
+  font-size: var(--sl-font-small);
+  max-height: var(--sl-emoji-max-height);
+}
+
+.sl-editor-emoji-panel button,
+.sl-editor-emoji-panel input {
+  font-family: inherit;
+}
+
+.sl-editor-emoji-search {
+  margin: var(--sl-space-3) var(--sl-space-3) 0;
+  width: calc(100% - var(--sl-size-icon-xs));
+  background: var(--sl-field-bg);
+  border: 1px solid var(--sl-field-border);
+  border-radius: var(--sl-field-radius);
+  box-shadow: var(--sl-field-shadow);
+  box-sizing: border-box;
+  color: var(--sl-text);
+  font-size: var(--sl-font-small);
+  height: var(--sl-size-icon-lg);
+  padding: 0 var(--sl-space-3);
+}
+
+.sl-editor-emoji-tabs {
+  display: flex;
+  gap: var(--sl-space-2);
+  margin: var(--sl-space-3) var(--sl-space-3);
+  overflow: hidden;
+}
+
+/* Emoji tabs reuse the popup button pair: secondary look idle, primary (blue) when active */
+.sl-editor-emoji-tab {
+  background: var(--sl-surface);
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-1);
+  color: var(--sl-text);
+  cursor: pointer;
+  flex: 0 0 auto;
+  font-size: var(--sl-font-small);
+  height: var(--sl-size-icon-lg);
+  padding: 0 var(--sl-space-5);
+}
+
+.sl-editor-emoji-tab:hover {
+  border-color: var(--sl-border-strong);
+}
+
+.sl-editor-emoji-tab.active {
+  background: var(--sl-primary);
+  border-color: var(--sl-primary);
+  color: var(--sl-on-solid);
+}
+
+.sl-editor-emoji-tab.active:hover {
+  background: var(--sl-primary-strong);
+}
+
+.sl-editor-emoji-grid {
+  display: grid;
+  gap: var(--sl-space-2);
+  padding: 0 var(--sl-space-3) var(--sl-space-3);
+  grid-template-columns: repeat(auto-fill, minmax(32px, 1fr));
+  max-height: var(--sl-emoji-grid-height);
+  overflow: auto;
+}
+
+.sl-editor-emoji-item {
+  background: var(--sl-bg);
+  border: 1px solid transparent;
+  border-radius: var(--sl-radius-1);
+  cursor: pointer;
+  font-size: var(--sl-font-h2);
+  height: var(--sl-size-icon-lg);
+  line-height: 30px;
+  padding: 0;
+  text-align: center;
+  width: var(--sl-size-icon-lg);
+}
+
+.sl-editor-emoji-item:hover,
+.sl-editor-emoji-item:focus {
+  background: var(--sl-surface);
+  border-color: var(--sl-border-strong);
+}
+
+.sl-editor-emoji-empty {
+  color: var(--sl-text-muted);
+  grid-column: 1 / -1;
+  padding: var(--sl-space-5) var(--sl-space-2);
+}
+
+.sl-editor-emoji-panel.sl-is-full .sl-editor-emoji-grid {
+  max-height: calc(100vh - var(--sl-emoji-full-gap));
+}
+
+.sl-editor-emoji-tab:focus-visible,
+.sl-editor-emoji-item:focus-visible {
+  box-shadow: 0 0 0 var(--sl-ring-width) var(--sl-field-ring);
+  outline: 0;
+}
+
+.sl-editor-emoji-search:focus {
+  border-color: var(--sl-primary);
+  box-shadow: 0 0 0 var(--sl-ring-width) var(--sl-field-ring);
+  outline: 0;
 }
 
 /* The full screen stands on the layer of a window, so a non-modal window of the editor still opens above it */
