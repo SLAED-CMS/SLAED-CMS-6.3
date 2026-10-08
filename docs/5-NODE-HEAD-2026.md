@@ -131,8 +131,9 @@ opens the lens and swaps the list. Nothing of the stand's in-page state (`data-n
   of `fragments/related-item.html`; accordion `faq/card.html`; tiles `media/card.html` in `sl-node-tiles`, the play
   mark only for media; rail the `sl-node-toc` rows in the split of the private messages with the tabs of `slaed.js`,
   the whole type and no pages.
-- The view switch is `fragments/mode-switch.html` generalised to a count of cells and a face for the page; the server
-  draws only the cells of the type. The choice of the visitor rides in the address by decision 7.
+- The view switch is the segmented switch `sl-seg sl-seg-view` with `data-sl-knob="view"` from
+  `docs/6-PAGER-2026.md`, batch 0 (owner, 2026-10-08), as on the stand `nh-13-calm.html`; the server draws only the
+  cells of the type, and the knob travels across the htmx swap of the list. The choice of the visitor rides in the address by decision 7.
 - The month heads are drawn by the list for an order by date, in the cards and the compact view.
 
 ### Script
@@ -176,7 +177,7 @@ The stand stands on parts of the tree, and the header keeps them:
 | count, reset, the chips of the sort window | `sl-chip`, `sl-chip-neutral`, `sl-chip-info` |
 | search | `sl-search-form` |
 | direction | the `bi-sort-down` / `bi-sort-up` icons |
-| view switch | `sl-mode-rail` |
+| view switch | `sl-seg sl-seg-view`, `data-sl-knob` |
 | month heads | `sl-pmf-day` |
 | views | the cards of the types, `sl-related-*`, `sl-pmf-split` |
 

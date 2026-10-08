@@ -1,25 +1,20 @@
 <?php
+# Author: Eduard Laas
+# 2005 - 2026 SLAED
+# License: MIT
+# Website: slaed.net
+
 if (!defined('FUNC_FILE')) die('Illegal file access');
 
 class EditorPlain implements ContentDriver {
+    # Plain carries no engine, so it has no asset of its own; the runtime of the shell comes with the frame
     public function getAssets(string $profile): string {
         return '';
     }
 
+    # Render the textarea in the frame of the shell, its height given by rows and its format named in the status line
     public function getWidget(string $id, string $name, string $value, string $profile, array $data = []): string {
-        global $tpl;
-        $rows = (int)($data['rows'] ?? (($profile === 'full') ? 20 : 10));
-        return $tpl->getHtmlFrag('textarea', [
-            'name_attr' => $name,
-            'rows_num' => $rows,
-            'value_text' => $value,
-            'input_class' => defined('ADMIN_FILE') ? 'sl-form-control' : '',
-            'input_id' => $id,
-            'placeholder_text' => (string)($data['placeholder'] ?? ''),
-            'is_required' => !empty($data['required']),
-            'labelledby' => (string)($data['labelledby'] ?? ''),
-            'aria_label' => (string)($data['arialabel'] ?? ''),
-            'describedby' => (string)($data['describedby'] ?? ''),
-        ]);
+        $data['rows'] = (int)($data['rows'] ?? (($profile === 'full') ? 20 : 10));
+        return Editor::getFrame(['id' => $id, 'name' => $name, 'value' => $value, 'lang' => (string)($data['format'] ?? 'plain')] + $data);
     }
 }

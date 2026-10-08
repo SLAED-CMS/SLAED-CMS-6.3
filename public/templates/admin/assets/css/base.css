@@ -60,9 +60,9 @@
   --sl-size-icon-xl: 48px;
 
   /* Type: the size ladder, and the three line heights every block of text sits on */
-  /* The smallest step reads 11 in both themes: a monospace face at 10 reads smaller than it is */
-  --sl-font-micro: 11px;
-  --sl-font-small: 12px;
+  /* The smallest step reads 12 in both themes and the small one 13: 11 read too small */
+  --sl-font-micro: 12px;
+  --sl-font-small: 13px;
   --sl-font-body: 14px;
   --sl-font-h4: 16px;
   --sl-font-h3: 18px;
@@ -73,7 +73,9 @@
   --sl-line-normal: 1.45;
   --sl-line-loose: 1.6;
   /* The face of code: the mono font each system already carries, so no file is fetched for it */
-  --sl-face-mono: ui-monospace, "Cascadia Mono", "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  --sl-face-mono: ui-monospace, "Cascadia Mono", "SFMono-Regular", Menlo, Consolas, "Liberation Mono", monospace;
+  /* The face of a quotation: a serif in italic sets the quoted words apart from the running text */
+  --sl-face-quote: Georgia, "Times New Roman", serif;
   --sl-weight-normal: 400;
   --sl-weight-medium: 500;
   --sl-weight-semibold: 600;
@@ -327,6 +329,8 @@
   --sl-col-ip-width: 150px;
   --sl-col-ip-height: 24px;
   --sl-col-lang-width: 58px;
+  /* A code block opens folded to this height when it is long: twenty of its lines */
+  --sl-code-max-height: 20lh;
   --sl-col-module-width: 88px;
   --sl-count-height: 22px;
   --sl-row-border: 2px;
@@ -734,13 +738,21 @@ select[multiple] {
   height: var(--sl-select-height);
 }
 
+/* Code reads in the face of code wherever it stands: inline, in a block, as a key or as the output of a program */
+code,
+kbd,
+samp,
+pre {
+  font-family: var(--sl-face-mono);
+}
+
 /* Blockquote: quoted text framing */
 blockquote {
   background: var(--sl-bg);
   border-left: 1px solid var(--sl-border-strong);
   border-right: 1px solid var(--sl-border-strong);
   color: var(--sl-text-muted);
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: var(--sl-face-quote);
   font-style: italic;
   margin: var(--sl-space-2);
   padding: var(--sl-space-2);

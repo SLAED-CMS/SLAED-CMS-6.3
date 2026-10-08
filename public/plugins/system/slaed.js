@@ -160,7 +160,6 @@
     // A window with nowhere left to move stops promising a drag: the plate loses its cursor and the grip goes with the freedom it stood for
     // The place the window stood in is remembered and given back, or a moved window collapses into a corner it never came from
     function setWindowExpand(box, button) {
-        var icon = button ? button.querySelector('.bi') : null;
         var full = !box.classList.contains('sl-is-full');
         box.classList.toggle('sl-is-full', full);
         if (!isWindowModal(box)) {
@@ -175,14 +174,17 @@
                 setWindowPlace(box);
             }
         }
-        if (button) {
-            button.title = button.getAttribute(full ? 'data-restore' : 'data-expand') || button.title;
-            button.setAttribute('aria-label', button.title);
-        }
-        if (icon) {
-            icon.classList.toggle('bi-arrows-angle-expand', !full);
-            icon.classList.toggle('bi-arrows-angle-contract', full);
-        }
+        if (button) setExpandButton(button, full);
+    }
+
+    // Name and draw an expand button for the state it leads to: a window and the full screen of an editor share it
+    function setExpandButton(button, full) {
+        var icon = button.querySelector('.bi');
+        button.title = button.getAttribute(full ? 'data-restore' : 'data-expand') || button.title;
+        button.setAttribute('aria-label', button.title);
+        if (!icon) return;
+        icon.classList.toggle('bi-arrows-angle-expand', !full);
+        icon.classList.toggle('bi-arrows-angle-contract', full);
     }
 
     // A window does not let itself be dragged off the screen whole: a piece of its plate stays in reach, or the hand can never bring it back
@@ -206,7 +208,7 @@
         // A window beside the page is not closed by the browser on this key, and a fan standing open at the pointer is what the key reaches first
         document.addEventListener('keydown', function (event) {
             var box = winstack[winstack.length - 1];
-            if (event.key !== 'Escape' || !box || isWindowModal(box)) return;
+            if (event.key !== 'Escape' || event.defaultPrevented || !box || isWindowModal(box)) return;
             if (box.hasAttribute('data-sl-static') || document.querySelector('.sl-dial.sl-open')) return;
             event.preventDefault();
             setWindowClose(box);
@@ -236,6 +238,7 @@
             box.style.left = left + 'px';
             box.style.top = top + 'px';
             box.setAttribute('data-sl-moved', '1');
+            box.setAttribute('data-moving', '');
             windrag = { box: box, left: left, top: top, x: event.clientX, y: event.clientY };
             event.preventDefault();
         });
@@ -243,7 +246,12 @@
             if (!windrag) return;
             setWindowBounds(windrag.box, windrag.left + event.clientX - windrag.x, windrag.top + event.clientY - windrag.y);
         });
-        document.addEventListener('pointerup', function () { windrag = null; });
+        ['pointerup', 'pointercancel'].forEach(function (type) {
+            document.addEventListener(type, function () {
+                if (windrag) windrag.box.removeAttribute('data-moving');
+                windrag = null;
+            });
+        });
         // A screen that shrank must not hide a window: on a phone the coordinates are dropped, on a desktop the window is pulled back into sight
         window.addEventListener('resize', function () {
             winstack.forEach(function (box) {
@@ -262,6 +270,7 @@
     window.setWindowClose = setWindowClose;
     window.setWindowFront = setWindowFront;
     window.setWindowExpand = setWindowExpand;
+    window.setExpandButton = setExpandButton;
 
     // Lightbox: an image link opens the gallery window the page carries, the same one the editor and the file browser open with their own data
     function setLightbox() {
@@ -1731,8 +1740,8 @@
         return { url: url.href, title: host.getAttribute('data-sl-share-title') || document.title };
     }
 
-    // Copy the canonical url with a clipboard fallback, flash a check icon and confirm with a toast
-    function setShareCopy(node, url) {
+    // Copy a text with a clipboard fallback, flash a check icon on the button and confirm with its toast: the address of a share, the source of a code block
+    function setCopyText(node, text) {
         var done = function () {
             setToast(node.getAttribute('data-sl-done') || '');
             var icon = node.querySelector('.bi');
@@ -1742,9 +1751,9 @@
             node.classList.add('sl-is-copied');
             window.setTimeout(function () { icon.className = was; node.classList.remove('sl-is-copied'); }, 1400);
         };
-        if (navigator.clipboard && window.isSecureContext) { navigator.clipboard.writeText(url).then(done, done); return; }
+        if (navigator.clipboard && window.isSecureContext) { navigator.clipboard.writeText(text).then(done, done); return; }
         var area = document.createElement('textarea');
-        area.value = url;
+        area.value = text;
         area.style.position = 'fixed';
         area.style.opacity = '0';
         document.body.appendChild(area);
@@ -1752,6 +1761,38 @@
         try { document.execCommand('copy'); } catch (err) {}
         area.remove();
         done();
+    }
+
+    // A code block takes its buttons once the script is there: until then the whole code shows and nothing promises a copy
+    function setCodeBlocks(root) {
+        var list = root && root.querySelectorAll ? root.querySelectorAll('[data-sl-code]') : [];
+        for (var i = 0; i < list.length; i++) list[i].setAttribute('data-ready', '');
+    }
+
+    // The source of a code block without its line numbers: the lines of a numbered table joined, the plain text otherwise
+    function getCodeText(box) {
+        var body = box.querySelector('[data-sl-code-body]');
+        var rows = body ? body.querySelectorAll('.hljs-ln-code, [data-sl-code-line]') : [];
+        if (rows.length) return Array.prototype.map.call(rows, function (one) { return one.textContent; }).join('\n');
+        return body ? body.innerText : '';
+    }
+
+    // The copy button and the fold of a code block, one listener for every block the page has or receives
+    function setCodeActions() {
+        document.addEventListener('click', function (event) {
+            var btn = event.target && event.target.closest ? event.target.closest('[data-sl-code-copy], [data-sl-code-more]') : null;
+            var box = btn ? btn.closest('[data-sl-code]') : null;
+            if (!box) return;
+            if (btn.hasAttribute('data-sl-code-copy')) return setCopyText(btn, getCodeText(box));
+            var open = !box.hasAttribute('data-open');
+            var icon = btn.querySelector('.bi');
+            var text = btn.querySelector('span');
+            box.toggleAttribute('data-open', open);
+            btn.setAttribute('aria-expanded', String(open));
+            if (text) text.textContent = btn.getAttribute(open ? 'data-less' : 'data-more') || '';
+            if (icon) icon.className = open ? 'bi bi-chevron-up' : 'bi bi-chevron-down';
+            if (!open && box.getBoundingClientRect().top < 0) box.scrollIntoView({ block: 'start' });
+        });
     }
 
     // Burst: one node pops, rings and throws sparks; a turn staggers it behind the nodes before it in a row
@@ -1896,7 +1937,7 @@
             if (!act) return;
             var kind = act.getAttribute('data-sl-share-act');
             var share = getShareData(act);
-            if (kind === 'copy' && share) setShareCopy(act, share.url);
+            if (kind === 'copy' && share) setCopyText(act, share.url);
             if (kind === 'qr' && share) {
                 var qr = document.getElementById('sl-share-qr');
                 if (!qr) return;
@@ -2030,7 +2071,7 @@
     }
 
     function isQuickCovered() {
-        if (document.querySelector('dialog.sl-modal[open], .sl-toastui-editor-fullscreen')) return true;
+        if (document.querySelector('dialog.sl-modal[open], .sl-toastui-editor-fullscreen, [data-sl-editor][data-full]')) return true;
         return Array.prototype.some.call(document.querySelectorAll('.toastui-editor-popup, .ck-balloon-panel_visible, .tox-dialog, .tox-menu'), function (one) {
             return one.offsetParent !== null;
         });
@@ -2099,7 +2140,7 @@
         });
         document.addEventListener('keydown', function (event) {
             var form = event.target && event.target.closest ? event.target.closest('[data-sl-quick-form]') : null;
-            if (!form || isQuickCovered()) return;
+            if (!form || event.defaultPrevented || isQuickCovered()) return;
             if (event.key === 'Escape') {
                 event.preventDefault();
                 setQuickCancel(form);
@@ -2182,6 +2223,7 @@
                 syncEditorValue(area.id, edit);
             } else if (area) {
                 area.value = carry.value;
+                area.dispatchEvent(new Event('input', { bubbles: true }));
             }
         }
         if (carry.parentNode) carry.parentNode.removeChild(carry);
@@ -2203,6 +2245,7 @@
             syncEditorValue(area.id, edit);
         } else if (area) {
             area.value = '';
+            area.dispatchEvent(new Event('input', { bubbles: true }));
         }
         if (!to) return;
         to.value = '';
@@ -2318,6 +2361,8 @@
         setSectionSpy(document);
         setFillMeters();
         setDirtyForms(document);
+        setCodeBlocks(document);
+        setCodeActions();
         setCommentKeys(document);
         setRatingVotes();
         setQuickEdit();
@@ -2345,6 +2390,7 @@
         setLiveChips(event.target);
         setProfileScrolls(document);
         setCommentKeys(event.target);
+        setCodeBlocks(event.target);
         if (event.target && event.target.id === 'prview') {
             setPrivatPane('view');
             setPrivatCarry(event.target);

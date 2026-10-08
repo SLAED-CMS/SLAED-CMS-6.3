@@ -11,6 +11,10 @@ namespace {
     if (!defined('_HIDETEXT')) define('_HIDETEXT', 'Show');
     if (!defined('_SMILIE'))   define('_SMILIE',   'Smilie');
     if (!defined('_CODE'))     define('_CODE',     'Code');
+    if (!defined('_COPY'))     define('_COPY',     'Copy');
+    if (!defined('_COPYDONE')) define('_COPYDONE', 'Copied');
+    if (!defined('_SHOWALL'))  define('_SHOWALL',  'Show all');
+    if (!defined('_COLLAPSE')) define('_COLLAPSE', 'Collapse');
 
     if (!function_exists('getThemeImagePath')) {
         function getThemeImagePath(string $path): string { return '/img/'.$path; }
@@ -108,8 +112,6 @@ namespace Tests\Unit {
                 'ul nested' => ["- item1\n  - nested\n- item2", true, '',
                     "<ul>\n<li><p>item1</p>\n<ul>\n<li>nested</li>\n</ul>\n</li>\n<li>item2</li>\n</ul>"],
 
-                'fenced code php'     => ["```php\necho 1;\n```", true, '', '<pre><code class="language-php">echo 1;</code></pre>'],
-                'fenced code plain'   => ["```\nplain\n```",       true, '', '<pre><code>plain</code></pre>'],
                 'inline code'         => ['`inline`',              true, '', '<code>inline</code>'],
                 'inline code in text' => ['текст `code` текст',    true, '', '<p>текст <code>code</code> текст</p>'],
 
@@ -449,6 +451,36 @@ namespace Tests\Unit {
                 $this->assertStringContainsString('echo &quot;a&amp;b&quot;;', $html);
                 $html = (new \Parser())->filterDoc("[php]one();<br />\ntwo(\"<br>\");[/php]", true, '');
                 $this->assertStringContainsString("one();\ntwo(&quot;&lt;br&gt;&quot;);", $html);
+            } finally {
+                if ($hadconf) $GLOBALS['conf'] = $oldconf;
+                else unset($GLOBALS['conf']);
+            }
+        }
+
+        # A fenced and an indented block render through the [code] path: the block with its head, the language named, the code escaped once in every mode
+        #[Test]
+        public function checkFencedCodeTakesTheCodeBlock(): void
+        {
+            $hadconf = array_key_exists('conf', $GLOBALS);
+            $oldconf = $GLOBALS['conf'] ?? null;
+            try {
+                foreach (['0', '1', '2'] as $mode) {
+                    $GLOBALS['conf'] = ['syntax' => $mode];
+                    $html = (new \Parser())->filterDoc("```php\necho '<b>';\n```", true, '');
+                    $this->assertStringContainsString('data-sl-code', $html, "mode $mode: no block");
+                    $this->assertStringContainsString('<span>PHP</span>', $html, "mode $mode: the language is not named");
+                    $this->assertStringNotContainsString('<b>', $html, "mode $mode: the code is not escaped");
+                    $this->assertStringNotContainsString('&amp;lt;', $html, "mode $mode: the code is escaped twice");
+                    $html = (new \Parser())->filterDoc("```\nplain\n```", true, '');
+                    $this->assertStringContainsString('<span>Code</span>', $html, "mode $mode: a block without a language is not named as code");
+                    $this->assertStringNotContainsString('?php', $html, "mode $mode: the highlighter prefix shows");
+                    $html = (new \Parser())->filterDoc("text\n\n    indented();\n", true, '');
+                    $this->assertStringContainsString('data-sl-code', $html, "mode $mode: an indented block is no code block");
+                }
+                $html = (new \Parser())->filterDoc("```js\n\n    a();\nb();\n```", true, '');
+                $this->assertStringContainsString("<code class=\"language-js\">    a();\nb();</code>", $html, 'the first line loses its indent or a blank line stays');
+                $html = (new \Parser())->filterDoc("```php\necho '<i>';\n```", true, '');
+                $this->assertStringContainsString('<code class="language-php">echo &#039;&lt;i&gt;&#039;;</code>', $html, 'highlight.js receives no language');
             } finally {
                 if ($hadconf) $GLOBALS['conf'] = $oldconf;
                 else unset($GLOBALS['conf']);

@@ -1159,3 +1159,280 @@
     scroll-snap-align: start;
   }
 }
+
+/* Pager series: the list a pager drives, the cases it is judged in, and the measure it is queried against */
+/* A container of inline size does not grow by its content, so a host standing as a flex item would shrink to nothing without a width */
+[data-demo-pager] {
+  container: pg / inline-size;
+  width: 100%;
+  min-width: 0;
+}
+
+/* A control the state switched off keeps its tag on the stand, and must stop answering the pointer like the span it stands for */
+[data-demo-pager] a.sl-is-muted:not([href]) {
+  pointer-events: none;
+}
+
+/* The window of skipped pages sits in the top layer and is placed by the script, not centred by the UA sheet */
+[data-pg-pop] {
+  position: fixed;
+  inset: auto;
+  margin: 0;
+}
+
+.d-pg-list {
+  margin: 0 0 var(--sl-space-6);
+  padding: 0;
+  list-style: none;
+  scroll-margin-top: var(--sl-space-9);
+}
+
+.d-pg-item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sl-space-2) var(--sl-space-5);
+  padding: var(--sl-space-4) 0;
+  border-bottom: 1px solid var(--sl-border-subtle);
+}
+
+.d-pg-item > a {
+  color: var(--sl-text-strong);
+  font-size: var(--sl-font-h4);
+  text-decoration: none;
+}
+
+.d-pg-item > a:hover {
+  color: var(--sl-primary);
+}
+
+.d-pg-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sl-space-2);
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-small);
+}
+
+.d-pg-meta > .bi:not(:first-child) {
+  margin-left: var(--sl-space-3);
+}
+
+.d-pg-new {
+  animation: d-pg-in var(--sl-time-slow) var(--sl-ease-out) both;
+}
+
+@keyframes d-pg-in {
+  from {
+    opacity: 0;
+    transform: translateY(var(--sl-space-3));
+  }
+}
+
+.d-pg-cases {
+  display: grid;
+  gap: var(--sl-space-6);
+  margin-top: var(--sl-space-9);
+}
+
+.d-pg-case {
+  margin: 0;
+  padding: var(--sl-space-5);
+  border: 1px dashed var(--sl-border-muted);
+  border-radius: var(--sl-radius-3);
+}
+
+.d-pg-case > figcaption {
+  margin: 0 0 var(--sl-space-3);
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-small);
+}
+
+/* The narrowest room a pager gets: a column as wide as the sidebar, where the forum footer and the message list live */
+.d-pg-narrow {
+  width: 100%;
+  max-width: var(--sl-layout-sidebar);
+  box-sizing: border-box;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .d-pg-new {
+    animation: none;
+  }
+}
+
+/* The list column of the message page: the pager there measures 329 on a 1440 screen, the case adds its own padding and border */
+.d-pg-pm {
+  width: 100%;
+  max-width: calc(329px + var(--sl-space-5) * 2 + 2px);
+  box-sizing: border-box;
+}
+
+/* The pager series on the admin theme: a frame of the panel's own tokens, since the site's rhythm and sidebar do not exist there */
+.d-pg-adm {
+  max-width: var(--sl-layout-container);
+  margin: 0 auto;
+  padding: var(--sl-space-7) var(--sl-space-6);
+}
+
+.d-pg-adm .d-pg-cases {
+  margin-top: var(--sl-space-6);
+}
+
+.d-pg-adm .d-pg-case {
+  border-color: var(--sl-border);
+}
+
+/* As narrow as the site sidebar, the measure of the site series */
+.d-pg-adm .d-pg-narrow {
+  max-width: 400px;
+}
+
+/* The knob: the plate of a rail travels to the chosen cell by the place the script measured; a rail that is not
+   measured yet keeps whatever its own sheet does, and a rail handed a place from the page before stands still once */
+[data-sl-knob][data-sl-knob-ready] > [data-sl-knob-mark] {
+  left: 0;
+  width: var(--sl-d-knob-w);
+  transform: translateX(var(--sl-d-knob-x));
+}
+
+[data-sl-knob][data-sl-knob-still] > [data-sl-knob-mark] {
+  transition: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  [data-sl-knob][data-sl-knob-ready]:not([data-sl-knob-still]) > [data-sl-knob-mark] {
+    transition:
+      transform var(--sl-time-slow) var(--sl-ease-in-out),
+      width var(--sl-time-slow) var(--sl-ease-in-out);
+  }
+}
+
+/* Segmented switch: one component for every row of cells with one chosen — the colour mode, the view of a list, the
+   pager. A sunken track, cells over it and a raised plate under the chosen one; the plate is always empty and the
+   chosen cell recolours its own content over it. A modifier only sets the tokens of its place */
+.sl-seg {
+  --sl-seg-height: var(--sl-size-control);
+  --sl-seg-pad-x: 0px;
+  --sl-seg-pad-y: 0px;
+  --sl-seg-bg: var(--sl-bg-muted);
+  --sl-seg-text: var(--sl-text-muted);
+  --sl-seg-knob-bg: var(--sl-bg);
+  --sl-seg-knob-text: var(--sl-text-strong);
+  --sl-seg-knob-shadow: var(--sl-shadow-raised);
+  position: relative;
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  box-sizing: border-box;
+  min-width: 0;
+  padding: var(--sl-seg-pad-y) var(--sl-seg-pad-x);
+  border-radius: var(--sl-radius-pill);
+  background: var(--sl-seg-bg);
+  box-shadow: var(--sl-shadow-inset);
+}
+
+.sl-seg-cell {
+  position: relative;
+  z-index: var(--sl-z-raised);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  min-width: var(--sl-seg-height);
+  height: var(--sl-seg-height);
+  margin: 0;
+  padding: 0 var(--sl-space-2);
+  border: 0;
+  border-radius: var(--sl-radius-pill);
+  background: transparent;
+  color: var(--sl-seg-text);
+  font: inherit;
+  line-height: 1;
+  text-decoration: none;
+  cursor: pointer;
+  transition: color var(--sl-time-fast) var(--sl-ease-out);
+}
+
+a.sl-seg-cell:hover,
+button.sl-seg-cell:hover {
+  color: var(--sl-text-strong);
+}
+
+.sl-seg-cell.sl-is-active {
+  color: var(--sl-seg-knob-text);
+  cursor: default;
+}
+
+.sl-seg-cell.sl-is-muted {
+  cursor: default;
+}
+
+.sl-seg-cell:focus-visible {
+  outline: var(--sl-ring-width) solid var(--sl-ring-bg);
+  outline-offset: calc(var(--sl-ring-gap) * -1);
+}
+
+.sl-seg-knob {
+  position: absolute;
+  top: var(--sl-seg-pad-y);
+  left: var(--sl-seg-pad-x);
+  height: var(--sl-seg-height);
+  border-radius: var(--sl-radius-pill);
+  background: var(--sl-seg-knob-bg);
+  box-shadow: var(--sl-seg-knob-shadow);
+  pointer-events: none;
+}
+
+/* Without the script the plate has no place: it stays away and the chosen cell wears the plate itself */
+.sl-seg:not([data-sl-knob-ready]) > .sl-seg-knob {
+  display: none;
+}
+
+.sl-seg:not([data-sl-knob-ready]) .sl-seg-cell.sl-is-active {
+  background: var(--sl-seg-knob-bg);
+  box-shadow: var(--sl-seg-knob-shadow);
+}
+
+/* A run of cells the script redraws, such as the numbers of a pager, lays its cells straight into the track */
+.sl-seg-run {
+  display: contents;
+}
+
+/* The colour mode in the header: the band's gradient track, light icons, the chosen one dark on a light plate */
+.sl-seg-mode {
+  --sl-seg-bg: var(--sl-mode-bg);
+  --sl-seg-text: var(--sl-band-text);
+  font-size: var(--sl-size-icon-sm);
+}
+
+.sl-seg-mode .sl-seg-cell:not(.sl-is-active) {
+  opacity: var(--sl-fade-muted);
+}
+
+.sl-seg-mode .sl-seg-cell:hover {
+  color: var(--sl-band-text);
+  opacity: 1;
+}
+
+.sl-seg-mode .sl-seg-cell.sl-is-active {
+  font-size: var(--sl-size-icon-xs);
+}
+
+/* The view of a list: a quiet track, muted icons, the chosen one on a light plate — a setting, not a place */
+.sl-seg-view {
+  font-size: var(--sl-size-icon-sm);
+}
+
+/* The pager: mini cells, a plate set inside the track, numbers small and bold, the current page in the brand colour — a place */
+.sl-seg-pager {
+  --sl-seg-height: var(--sl-size-chip);
+  --sl-seg-pad-x: var(--sl-space-1);
+  --sl-seg-pad-y: var(--sl-space-1);
+  --sl-seg-knob-bg: var(--sl-primary-strong);
+  --sl-seg-knob-text: var(--sl-on-solid);
+  font-size: var(--sl-font-small);
+  font-weight: var(--sl-weight-bold);
+  font-variant-numeric: tabular-nums;
+}

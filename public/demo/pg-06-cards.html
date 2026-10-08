@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="ru" data-theme="auto">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Соседи &middot; Пагинатор — стенд SLAED CMS</title>
+  <link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../templates/lite/assets/css/base.css">
+  <link rel="stylesheet" href="../templates/lite/assets/css/theme.css">
+  <!-- The stand is served without Cache-Control; its sheet and script are stamped so an edit is seen at once -->
+  <script>document.write('<link rel="stylesheet" href="assets/demo.css?v=' + Date.now() + '">');</script>
+  <script src="../plugins/system/global-func.js"></script>
+  <script src="../plugins/system/slaed.js"></script>
+  <style>
+    /* Соседи: the neighbouring pages as two cards with their range, the numbers as a quiet line for far jumps */
+    .sl-pager.v6 { flex-direction: column; align-items: stretch; gap: var(--sl-space-5); }
+    .sl-pager.v6 .sl-pager-info { margin: 0; font-size: var(--sl-font-small); }
+    .v6 .sl-pager-info b { color: var(--sl-text-strong); }
+    .v6-pair { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sl-space-4); }
+    .v6-card { display: flex; flex-direction: column; gap: var(--sl-space-2); min-width: 0; padding: var(--sl-space-5) var(--sl-space-6); border: 1px solid var(--sl-border-subtle); border-radius: var(--sl-radius-3); background: var(--sl-surface); color: var(--sl-text); text-decoration: none; transition: border-color var(--sl-time-base) var(--sl-ease-out), box-shadow var(--sl-time-base) var(--sl-ease-out); }
+    .v6-next { align-items: flex-end; text-align: right; }
+    .v6-card[href]:hover { border-color: var(--sl-primary); box-shadow: var(--sl-shadow-raised); }
+    .v6-card:focus-visible { outline: var(--sl-ring-width) solid var(--sl-ring-bg); outline-offset: var(--sl-ring-gap); }
+    .v6-cap { display: inline-flex; align-items: center; gap: var(--sl-space-2); color: var(--sl-text-muted); font-size: var(--sl-font-micro); font-weight: var(--sl-weight-bold); letter-spacing: var(--sl-track-wide); text-transform: uppercase; }
+    .v6-cap .bi { transition: transform var(--sl-time-base) var(--sl-ease-out); }
+    .v6-prev[href]:hover .v6-cap .bi { transform: translateX(calc(var(--sl-space-2) * -1)); }
+    .v6-next[href]:hover .v6-cap .bi { transform: translateX(var(--sl-space-2)); }
+    .v6-name { color: var(--sl-text-strong); font-size: var(--sl-font-h4); font-weight: var(--sl-weight-semibold); }
+    .v6-card[href]:hover .v6-name { color: var(--sl-primary-strong); }
+    .v6-meta { color: var(--sl-text-muted); font-size: var(--sl-font-small); font-variant-numeric: tabular-nums; }
+    .v6-edge { display: none; color: var(--sl-text-muted); }
+    .v6-card.sl-is-muted { border-style: dashed; background: transparent; }
+    .v6-card.sl-is-muted .v6-name, .v6-card.sl-is-muted .v6-meta { display: none; }
+    .v6-card.sl-is-muted .v6-edge { display: block; }
+    .v6-pages { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--sl-space-1); }
+    .v6 .v6-cell { background: transparent; color: var(--sl-text-muted); font-weight: var(--sl-weight-semibold); }
+    .v6 a.v6-cell:hover { background: var(--sl-tint); color: var(--sl-primary-strong); }
+    .v6 .v6-cell.sl-is-active { background: var(--sl-primary-strong); color: var(--sl-on-solid); }
+    @container pg (width < 520px) {
+      .v6-card { padding: var(--sl-space-4); }
+      .v6-meta { display: none; }
+      .v6-cell[data-pg-far] { display: none; }
+    }
+  </style>
+</head>
+<body class="sl-summer" id="top">
+<main class="d-page" data-demo-page data-demo-band="Новости">
+  <h1 class="sl-title">Новости</h1>
+  <ul class="d-pg-list" id="pg-list"></ul>
+  <div data-demo-pager data-count="97" data-limit="10" data-cur="1" data-pg-list="pg-list"></div>
+  <section class="d-pg-cases" aria-labelledby="pg-cases">
+    <h2 class="sl-title" id="pg-cases">Тот же пагинатор в других местах</h2>
+    <figure class="d-pg-case"><figcaption>Комментарии — три страницы, открыта вторая</figcaption><div data-demo-pager data-count="27" data-limit="10" data-cur="2"></div></figure>
+    <figure class="d-pg-case"><figcaption>Архив — 480 материалов, 48 страниц, середина</figcaption><div data-demo-pager data-count="480" data-limit="10" data-cur="24"></div></figure>
+    <figure class="d-pg-case"><figcaption>Конец раздела — последняя страница</figcaption><div data-demo-pager data-count="97" data-limit="10" data-cur="10"></div></figure>
+    <figure class="d-pg-case d-pg-narrow"><figcaption>Узкая колонка — подвал форума</figcaption><div data-demo-pager data-count="480" data-limit="10" data-cur="7"></div></figure>
+    <figure class="d-pg-case d-pg-pm"><figcaption>Личные сообщения — колонка списка, 240 писем</figcaption><div data-demo-pager data-count="240" data-limit="15" data-cur="8"></div></figure>
+  </section>
+</main>
+<!-- The pager every host on the page clones: the variant is this template and the style above, the page around it is shared -->
+<template data-pg-tpl>
+  <nav class="sl-pager v6" aria-label="Страницы">
+    <p class="sl-pager-info" aria-live="polite">Страница <b data-pg-text="cur"></b> из <b data-pg-text="pages"></b> · материалы <b><span data-pg-text="from"></span>–<span data-pg-text="to"></span></b> из <b data-pg-text="count"></b></p>
+    <div class="v6-pair">
+      <a class="v6-card v6-prev" data-pg-go="prev" title="Предыдущая страница">
+        <span class="v6-cap"><i class="bi bi-arrow-left" aria-hidden="true"></i>Назад</span>
+        <span class="v6-name">Страница <span data-pg-text="prev"></span></span>
+        <span class="v6-meta">материалы <span data-pg-text="prevfrom"></span>–<span data-pg-text="prevto"></span></span>
+        <span class="v6-edge">Это начало раздела</span>
+      </a>
+      <a class="v6-card v6-next" data-pg-go="next" title="Следующая страница">
+        <span class="v6-cap"><i class="bi bi-arrow-right" aria-hidden="true"></i>Вперёд</span>
+        <span class="v6-name">Страница <span data-pg-text="next"></span></span>
+        <span class="v6-meta">материалы <span data-pg-text="nextfrom"></span>–<span data-pg-text="nextto"></span></span>
+        <span class="v6-edge">Это конец раздела</span>
+      </a>
+    </div>
+    <div class="v6-pages" data-pg-pages data-pg-cell="sl-but-mini v6-cell"></div>
+  </nav>
+</template>
+<script>document.write('<script src="assets/demo.js?v=' + Date.now() + '"><\/script>');</script>
+</body>
+</html>

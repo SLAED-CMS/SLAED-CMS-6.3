@@ -62,7 +62,7 @@ function getEditbox(
     string $file,
     string $info,
     string $warn,
-    string $mtype,
+    string $lang,
     string $edit,
     int $tab,
     bool $trim = false,
@@ -82,10 +82,8 @@ function getEditbox(
     $cont .= $tpl->getHtmlFrag('alert', ['text' => $info]);
     if ($warn) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $warn]);
     $html = ($note !== '') ? $tpl->getHtmlFrag('alert', ['is_warn' => $type === 'warn', 'text' => $note]) : '';
-    $cont .= $tpl->getHtmlPart('div', ['id' => 'repeditornote', 'is_collapsible' => true, 'content_html' => $html]);
-    $attr = 'hx-post="'.$afile.'.php" hx-target="#repeditornote" hx-swap="innerHTML" hx-push-url="false"'
-        .' hx-on:htmx:config-request="var code=document.getElementById(\'code\');var view=(window.CM6&&CM6.editors)?CM6.editors[\'code\']:null;'
-        .'if(code&&view&&view.state&&view.state.doc){code.value=view.state.doc.toString();}"';
+    $cont .= $tpl->getHtmlFrag('block-content', ['id' => 'repeditornote', 'content' => $html]);
+    $attr = 'hx-post="'.$afile.'.php" hx-target="#repeditornote" hx-swap="innerHTML" hx-push-url="false"';
     return $cont.$tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php',
         'form_attr' => $attr,
@@ -103,7 +101,7 @@ function getEditbox(
                 'id' => 'code',
                 'name' => 'template',
                 'label' => _FILE.': '.$file,
-                'lang' => 'php',
+                'lang' => $lang,
                 'text' => $text,
             ]),
         ]],
@@ -114,13 +112,13 @@ function getEditbox(
 
 function getEditorView(string $edit, string $note = '', string $type = 'info'): string {
     return match ($edit) {
-        'editheader' => getEditbox(CONFIG_DIR.'/header.php', _EHEAD.': '.CONFIG_DIR.'/header.php '._EINFO2, _EINFOPHP, 'text/x-php', 'editheader', 1, true, '', '', $note, $type),
-        'htaccess' => getEditbox(PUBLIC_DIR.'/.htaccess', _EHT.': '.PUBLIC_DIR.'/.htaccess '._EINFO4, '', 'text/x-php', 'htaccess', 2, false, '', '', $note, $type),
+        'editheader' => getEditbox(CONFIG_DIR.'/header.php', _EHEAD.': '.CONFIG_DIR.'/header.php '._EINFO2, _EINFOPHP, 'php', 'editheader', 1, true, '', '', $note, $type),
+        'htaccess' => getEditbox(PUBLIC_DIR.'/.htaccess', _EHT.': '.PUBLIC_DIR.'/.htaccess '._EINFO4, '', 'apache', 'htaccess', 2, false, '', '', $note, $type),
         'robots' => getEditbox(
             PUBLIC_DIR.'/robots.txt',
             _EROB.': '.PUBLIC_DIR.'/robots.txt '._EINFO5,
             '',
-            'text/plain',
+            'robots',
             'robots',
             3,
             false,
@@ -129,7 +127,7 @@ function getEditorView(string $edit, string $note = '', string $type = 'info'): 
             $note,
             $type
         ),
-        default => getEditbox(CONFIG_DIR.'/system.php', _EFUNC.': '.CONFIG_DIR.'/system.php '._EINFO, _EINFOPHP, 'text/x-php', 'editor', 0, true, '', '', $note, $type),
+        default => getEditbox(CONFIG_DIR.'/system.php', _EFUNC.': '.CONFIG_DIR.'/system.php '._EINFO, _EINFOPHP, 'php', 'editor', 0, true, '', '', $note, $type),
     };
 }
 

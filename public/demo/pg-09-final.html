@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="ru" data-theme="auto">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Рельс · финал &middot; Пагинатор — стенд SLAED CMS</title>
+  <link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../templates/lite/assets/css/base.css">
+  <link rel="stylesheet" href="../templates/lite/assets/css/theme.css">
+  <!-- The stand is served without Cache-Control; its sheet and script are stamped so an edit is seen at once -->
+  <script>document.write('<link rel="stylesheet" href="assets/demo.css?v=' + Date.now() + '">');</script>
+  <script src="../plugins/system/global-func.js"></script>
+  <script src="../plugins/system/slaed.js"></script>
+  <style>
+    /* Рельс · финал: the rail of 01 at the mini button size, centred in its column, «to the top» and the key tip of the dock of 07 beside it */
+    .sl-pager.v9 { --pg-cell: var(--sl-size-chip); flex-direction: column; gap: var(--sl-space-4); }
+    .v9-row { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: var(--sl-space-2); width: 100%; }
+    .v9-nav { grid-column: 2; display: flex; align-items: center; gap: var(--sl-space-2); min-width: 0; }
+    .v9-aside { display: flex; align-items: center; gap: var(--sl-space-2); justify-self: start; }
+    .v9 .v9-step { width: var(--pg-cell); height: var(--pg-cell); background: var(--sl-surface); color: var(--sl-text-strong); box-shadow: var(--sl-shadow-xs); }
+    .v9 a.v9-step:hover, .v9 .v9-step:focus-visible { background: var(--sl-primary-strong); color: var(--sl-on-solid); }
+    .v9 .v9-step.sl-is-muted { background: transparent; box-shadow: none; opacity: var(--sl-fade-disabled); }
+    .v9 .v9-quiet { background: transparent; color: var(--sl-text-muted); box-shadow: none; }
+    .v9-sep { flex: 0 0 auto; width: 1px; height: var(--sl-size-icon-md); margin: 0 var(--sl-space-2); background: var(--sl-border-muted); }
+    /* The key tip: the system info tip on a round trigger; the trigger lights up while its panel is open */
+    .v9 .v9-info { margin: 0; border-radius: var(--sl-radius-circle); }
+    .v9-info:hover .v9-step, .v9-info.sl-is-open .v9-step { background: var(--sl-tint); color: var(--sl-primary-strong); }
+    .v9-tip-head { margin: 0 0 var(--sl-space-3); color: var(--sl-text-strong); font-weight: var(--sl-weight-semibold); }
+    /* The key legend is a list of its own: neither the label and value rows of the site nor the label: value line of the panel */
+    .v9-tip { text-align: left; }
+    .v9-tip-keys { display: grid; gap: var(--sl-space-3); margin: 0; padding: 0; list-style: none; }
+    .v9-tip-keys li { display: flex; align-items: center; gap: var(--sl-space-3); margin: 0; }
+    .v9 kbd { display: inline-flex; align-items: center; justify-content: center; min-width: var(--sl-size-chip); height: var(--sl-size-chip); padding: 0 var(--sl-space-2); box-sizing: border-box; border: 1px solid var(--sl-border-muted); border-bottom-width: var(--sl-space-1); border-radius: var(--sl-radius-1); background: var(--sl-surface); color: var(--sl-text-strong); font: inherit; font-size: var(--sl-font-small); }
+    .sl-pager.v9 .sl-pager-info { margin: 0; font-size: var(--sl-font-small); }
+    .v9 .sl-pager-info b { color: var(--sl-text-strong); font-weight: var(--sl-weight-semibold); }
+    .v9 kbd .bi { font-size: var(--sl-size-icon-xs); line-height: 1; }
+    .v9-tip-note { margin: var(--sl-space-3) 0 0; color: var(--sl-text-muted); font-size: var(--sl-font-small); }
+    /* A touch screen has no keys to explain */
+    @media (pointer: coarse) {
+      .v9-info { display: none; }
+    }
+    @container pg (width < 520px) {
+      .v9-row { display: flex; justify-content: center; }
+      .sl-seg-cell[data-pg-far], .v9-range { display: none; }
+    }
+    /* The list column of the message page is the tightest room: there the neighbours of the current page go */
+    @container pg (width < 320px) {
+      .sl-seg-cell[data-pg-near] { display: none; }
+    }
+  </style>
+</head>
+<body class="sl-summer" id="top">
+<main class="d-page" data-demo-page data-demo-band="Новости">
+  <h1 class="sl-title">Новости</h1>
+  <ul class="d-pg-list" id="pg-list"></ul>
+  <div data-demo-pager data-count="97" data-limit="10" data-cur="1" data-pg-list="pg-list"></div>
+  <section class="d-pg-cases" aria-labelledby="pg-cases">
+    <h2 class="sl-title" id="pg-cases">Тот же пагинатор в других местах</h2>
+    <figure class="d-pg-case"><figcaption>Комментарии — три страницы, открыта вторая</figcaption><div data-demo-pager data-count="27" data-limit="10" data-cur="2"></div></figure>
+    <figure class="d-pg-case"><figcaption>Архив — 480 материалов, 48 страниц, середина</figcaption><div data-demo-pager data-count="480" data-limit="10" data-cur="24"></div></figure>
+    <figure class="d-pg-case"><figcaption>Конец раздела — последняя страница</figcaption><div data-demo-pager data-count="97" data-limit="10" data-cur="10"></div></figure>
+    <figure class="d-pg-case d-pg-narrow"><figcaption>Узкая колонка — подвал форума</figcaption><div data-demo-pager data-count="480" data-limit="10" data-cur="7"></div></figure>
+    <figure class="d-pg-case d-pg-pm"><figcaption>Личные сообщения — колонка списка, 240 писем</figcaption><div data-demo-pager data-count="240" data-limit="15" data-cur="8"></div></figure>
+  </section>
+</main>
+<!-- The pager every host on the page clones: the variant is this template and the style above, the page around it is shared -->
+<template data-pg-tpl>
+  <nav class="sl-pager v9" aria-label="Страницы">
+    <div class="v9-row" data-pg-keys>
+      <div class="v9-nav">
+        <a class="sl-but-mini v9-step" data-pg-go="prev" title="Назад" aria-label="Назад" aria-keyshortcuts="ArrowLeft"><i class="bi bi-chevron-left" aria-hidden="true"></i></a>
+        <span class="sl-seg sl-seg-pager" data-sl-knob="pager"><span class="sl-seg-knob" data-sl-knob-mark aria-hidden="true"></span><span class="sl-seg-run" data-pg-pages data-pg-cell="sl-seg-cell"></span></span>
+        <a class="sl-but-mini v9-step" data-pg-go="next" title="Вперёд" aria-label="Вперёд" aria-keyshortcuts="ArrowRight"><i class="bi bi-chevron-right" aria-hidden="true"></i></a>
+      </div>
+      <div class="v9-aside">
+        <span class="v9-sep" aria-hidden="true"></span>
+        <a class="sl-but-mini v9-step v9-quiet" href="#top" title="Наверх" aria-label="Наверх"><i class="bi bi-arrow-up" aria-hidden="true"></i></a>
+        <span class="sl-tip sl-float v9-info" tabindex="0" role="button" aria-label="Листание с клавиатуры"><span class="sl-but-mini v9-step v9-quiet" aria-hidden="true"><i class="bi bi-info-lg"></i></span><div class="sl-float-panel v9-tip" role="tooltip"><p class="v9-tip-head">Листайте с клавиатуры</p><ul class="v9-tip-keys"><li><kbd><i class="bi bi-arrow-left" role="img" aria-label="Стрелка влево"></i></kbd>Предыдущая страница</li><li><kbd><i class="bi bi-arrow-right" role="img" aria-label="Стрелка вправо"></i></kbd>Следующая страница</li></ul><p class="v9-tip-note">Пока курсор не стоит в поле ввода</p></div></span>
+      </div>
+    </div>
+    <p class="sl-pager-info" aria-live="polite">Страница <b data-pg-text="cur"></b> из <b data-pg-text="pages"></b><span class="v9-range"> · Показаны <b><span data-pg-text="from"></span>–<span data-pg-text="to"></span></b></span> · Всего <b data-pg-text="count"></b></p>
+  </nav>
+</template>
+<script>document.write('<script src="assets/demo.js?v=' + Date.now() + '"><\/script>');</script>
+</body>
+</html>

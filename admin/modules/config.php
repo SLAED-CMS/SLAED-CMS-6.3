@@ -1165,7 +1165,7 @@ function save(): void {
             'fbots' => strtr(getVar('post', 'fbots', 'text', ''), $kprotect),
             'botsact' => getVar('post', 'botsact', 'num'),
             'cache' => getVar('post', 'cache', 'num'),
-            'css_f' => strtr(getVar('post', 'css_f', 'text', 'plugins/highlightjs/slaed-theme.css'), $kprotect),
+            'css_f' => strtr(getVar('post', 'css_f', 'text', ''), $kprotect),
             'script_f' => strtr(getVar('post', 'script_f', 'text',
                 'plugins/htmx/htmx.min.js,plugins/system/global-func.js,plugins/system/slaed.js,plugins/tablesort/tablesort.min.js'), $kprotect),
             'mtemp' => filterTrustedTags(getVar('post', 'mtemp', 'raw'), isAdmin(true)),

@@ -1,5 +1,5 @@
 {
-    "generated": "2026-10-07T19:56:36Z",
+    "generated": "2026-10-08T16:01:21Z",
     "themes": {
         "admin": {
             "count": 0,
@@ -7,7 +7,7 @@
             "dup": 0,
             "names": 0,
             "dead": 0,
-            "single": 158,
+            "single": 159,
             "alias": 0,
             "unsat": 0,
             "unmet": 0,
@@ -15,7 +15,7 @@
             "clash": 0,
             "classes": 0,
             "important": 21,
-            "tokens": 328,
+            "tokens": 330,
             "contrast": 0
         },
         "lite": {
@@ -24,7 +24,7 @@
             "dup": 0,
             "names": 0,
             "dead": 0,
-            "single": 198,
+            "single": 196,
             "alias": 0,
             "unsat": 0,
             "unmet": 0,
@@ -32,7 +32,7 @@
             "clash": 0,
             "classes": 0,
             "important": 13,
-            "tokens": 431,
+            "tokens": 434,
             "contrast": 0
         }
     },
@@ -74,6 +74,7 @@
             "--sl-chip-bg",
             "--sl-chip-height",
             "--sl-chip-width",
+            "--sl-code-max-height",
             "--sl-col-actions-width",
             "--sl-col-author-width",
             "--sl-col-check-width",
@@ -107,6 +108,7 @@
             "--sl-emoji-grid-height",
             "--sl-emoji-max-height",
             "--sl-face-mono",
+            "--sl-face-quote",
             "--sl-fade-disabled",
             "--sl-fade-muted",
             "--sl-fade-subtle",
@@ -425,6 +427,7 @@
             "--sl-chip-mix",
             "--sl-chip-tint-bg",
             "--sl-chip-tint-mix",
+            "--sl-code-max-height",
             "--sl-col-amount-width",
             "--sl-col-check-width",
             "--sl-col-form-width",
@@ -454,6 +457,7 @@
             "--sl-edge-height",
             "--sl-edge-width",
             "--sl-editor-height",
+            "--sl-editor-max-height",
             "--sl-editor-mode-height",
             "--sl-editor-tab-height",
             "--sl-editor-tab-width",
@@ -463,6 +467,7 @@
             "--sl-entry-height",
             "--sl-f-title-height",
             "--sl-f-title-width",
+            "--sl-face-mono",
             "--sl-face-quote",
             "--sl-fade-disabled",
             "--sl-fade-muted",

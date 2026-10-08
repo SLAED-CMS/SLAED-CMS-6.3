@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="ru" data-theme="auto">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Окно &middot; Пагинатор — стенд SLAED CMS</title>
+  <link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../templates/lite/assets/css/base.css">
+  <link rel="stylesheet" href="../templates/lite/assets/css/theme.css">
+  <!-- The stand is served without Cache-Control; its sheet and script are stamped so an edit is seen at once -->
+  <script>document.write('<link rel="stylesheet" href="assets/demo.css?v=' + Date.now() + '">');</script>
+  <script src="../plugins/system/global-func.js"></script>
+  <script src="../plugins/system/slaed.js"></script>
+  <style>
+    /* Окно: the dots are a button opening the grid of the pages they skip; ends at the edges, the summary as a chip */
+    .v8-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: var(--sl-space-2); }
+    .v8-pages { display: flex; align-items: center; gap: var(--sl-space-2); }
+    .v8 .v8-cell { font-variant-numeric: tabular-nums; transition: background-color var(--sl-time-fast) var(--sl-ease-out), color var(--sl-time-fast) var(--sl-ease-out); }
+    .v8 .v8-cell.sl-is-active { min-width: var(--sl-size-control); height: var(--sl-size-control); font-size: var(--sl-font-body); box-shadow: var(--sl-shadow-raised); }
+    .v8 .v8-edge { background: transparent; color: var(--sl-text-muted); }
+    .v8 a.v8-edge[href]:hover { background: var(--sl-tint); color: var(--sl-primary-strong); }
+    .v8 .v8-edge.sl-is-muted { opacity: var(--sl-fade-disabled); }
+    .v8 button.v8-cell[data-pg-gap] { border: 1px dashed var(--sl-border-muted); background: transparent; color: var(--sl-text-muted); font: inherit; font-weight: var(--sl-weight-bold); cursor: pointer; }
+    .v8 button.v8-cell[data-pg-gap]:hover, .v8 button.v8-cell[data-pg-gap]:focus-visible { border-color: var(--sl-primary); background: var(--sl-tint); color: var(--sl-primary-strong); }
+    .v8-sum { margin-left: var(--sl-space-4); font-variant-numeric: tabular-nums; }
+    .v8-pop { box-sizing: border-box; width: max-content; max-width: min(90vw, var(--sl-layout-sidebar)); padding: var(--sl-space-4); border: 1px solid var(--sl-border-muted); border-radius: var(--sl-radius-2); background: var(--sl-bg); color: var(--sl-text); box-shadow: var(--sl-shadow-float); opacity: 0; transform: translateY(calc(var(--sl-space-3) * -1)); transition: opacity var(--sl-time-base) var(--sl-ease-out), transform var(--sl-time-base) var(--sl-ease-out), overlay var(--sl-time-base) allow-discrete, display var(--sl-time-base) allow-discrete; }
+    .v8-pop:popover-open { opacity: 1; transform: none; }
+    @starting-style { .v8-pop:popover-open { opacity: 0; transform: translateY(calc(var(--sl-space-3) * -1)); } }
+    .v8-pop-title { margin: 0 0 var(--sl-space-3); color: var(--sl-text-muted); font-size: var(--sl-font-micro); font-weight: var(--sl-weight-bold); letter-spacing: var(--sl-track-wide); text-transform: uppercase; }
+    .v8-pop-grid { display: grid; grid-template-columns: repeat(6, var(--sl-size-control)); gap: var(--sl-space-2); }
+    .v8-pop-grid .v8-cell { width: var(--sl-size-control); height: var(--sl-size-control); background: var(--sl-bg-muted); }
+    @container pg (width < 560px) {
+      .v8-sum { display: none; }
+      .v8-pages > [data-pg-far] { display: none; }
+    }
+  </style>
+</head>
+<body class="sl-summer" id="top">
+<main class="d-page" data-demo-page data-demo-band="Новости">
+  <h1 class="sl-title">Новости</h1>
+  <ul class="d-pg-list" id="pg-list"></ul>
+  <div data-demo-pager data-count="97" data-limit="10" data-cur="1" data-pg-list="pg-list"></div>
+  <section class="d-pg-cases" aria-labelledby="pg-cases">
+    <h2 class="sl-title" id="pg-cases">Тот же пагинатор в других местах</h2>
+    <figure class="d-pg-case"><figcaption>Комментарии — три страницы, открыта вторая</figcaption><div data-demo-pager data-count="27" data-limit="10" data-cur="2"></div></figure>
+    <figure class="d-pg-case"><figcaption>Архив — 480 материалов, 48 страниц, середина</figcaption><div data-demo-pager data-count="480" data-limit="10" data-cur="24"></div></figure>
+    <figure class="d-pg-case"><figcaption>Конец раздела — последняя страница</figcaption><div data-demo-pager data-count="97" data-limit="10" data-cur="10"></div></figure>
+    <figure class="d-pg-case d-pg-narrow"><figcaption>Узкая колонка — подвал форума</figcaption><div data-demo-pager data-count="480" data-limit="10" data-cur="7"></div></figure>
+    <figure class="d-pg-case d-pg-pm"><figcaption>Личные сообщения — колонка списка, 240 писем</figcaption><div data-demo-pager data-count="240" data-limit="15" data-cur="8"></div></figure>
+  </section>
+</main>
+<!-- The pager every host on the page clones: the variant is this template and the style above, the page around it is shared -->
+<template data-pg-tpl>
+  <nav class="sl-pager v8" aria-label="Страницы">
+    <div class="v8-row">
+      <a class="sl-but-mini v8-edge" data-pg-go="first" title="Первая страница" aria-label="Первая страница"><i class="bi bi-chevron-double-left" aria-hidden="true"></i></a>
+      <a class="sl-but-mini v8-edge" data-pg-go="prev" title="Назад" aria-label="Назад"><i class="bi bi-chevron-left" aria-hidden="true"></i></a>
+      <span class="v8-pages" data-pg-pages data-pg-cell="sl-but-mini v8-cell" data-pg-dots="pop" data-pg-win="5"></span>
+      <a class="sl-but-mini v8-edge" data-pg-go="next" title="Вперёд" aria-label="Вперёд"><i class="bi bi-chevron-right" aria-hidden="true"></i></a>
+      <a class="sl-but-mini v8-edge" data-pg-go="last" title="Последняя страница" aria-label="Последняя страница"><i class="bi bi-chevron-double-right" aria-hidden="true"></i></a>
+      <span class="sl-chip sl-chip-neutral v8-sum" aria-live="polite"><i class="bi bi-collection" aria-hidden="true"></i><b data-pg-text="cur"></b>&nbsp;/&nbsp;<span data-pg-text="pages"></span> · <span data-pg-text="count"></span> материалов</span>
+    </div>
+    <div class="v8-pop" popover data-pg-pop data-pg-cell="sl-but-mini v8-cell" role="dialog" aria-label="Пропущенные страницы">
+      <p class="v8-pop-title" data-pg-pop-title></p>
+      <div class="v8-pop-grid" data-pg-pop-pages></div>
+    </div>
+  </nav>
+</template>
+<script>document.write('<script src="assets/demo.js?v=' + Date.now() + '"><\/script>');</script>
+</body>
+</html>

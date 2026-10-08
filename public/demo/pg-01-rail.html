@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="ru" data-theme="auto">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Рельс &middot; Пагинатор — стенд SLAED CMS</title>
+  <link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../templates/lite/assets/css/base.css">
+  <link rel="stylesheet" href="../templates/lite/assets/css/theme.css">
+  <!-- The stand is served without Cache-Control; its sheet and script are stamped so an edit is seen at once -->
+  <script>document.write('<link rel="stylesheet" href="assets/demo.css?v=' + Date.now() + '">');</script>
+  <script src="../plugins/system/global-func.js"></script>
+  <script src="../plugins/system/slaed.js"></script>
+  <style>
+    /* Рельс: the numbers sit in a sunken rail and a raised knob rides to the current one, as on sl-mode */
+    .sl-pager.v1 { flex-direction: column; gap: var(--sl-space-4); }
+    .v1-row { display: flex; align-items: center; gap: var(--sl-space-3); max-width: 100%; }
+    .v1 .v1-step { width: var(--sl-size-control); height: var(--sl-size-control); background: var(--sl-surface); color: var(--sl-text-strong); box-shadow: var(--sl-shadow-xs); }
+    .v1 a.v1-step:hover, .v1 .v1-step:focus-visible { background: var(--sl-primary-strong); color: var(--sl-on-solid); }
+    .v1 .v1-step.sl-is-muted { background: transparent; box-shadow: none; opacity: var(--sl-fade-disabled); }
+    .v1-rail { position: relative; display: flex; min-width: 0; padding: var(--sl-space-1); border-radius: var(--sl-radius-pill); background: var(--sl-bg-muted); box-shadow: var(--sl-shadow-inset); }
+    .v1-pages { display: flex; }
+    .v1-knob { position: absolute; top: var(--sl-space-1); left: 0; height: var(--sl-size-control); border-radius: var(--sl-radius-pill); background: var(--sl-primary-strong); box-shadow: var(--sl-shadow-raised); }
+    .v1-cell { position: relative; z-index: var(--sl-z-raised); display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; min-width: var(--sl-size-control); height: var(--sl-size-control); padding: 0 var(--sl-space-3); border-radius: var(--sl-radius-pill); color: var(--sl-text-muted); font-size: var(--sl-font-small); font-weight: var(--sl-weight-semibold); font-variant-numeric: tabular-nums; text-decoration: none; transition: color var(--sl-time-fast) var(--sl-ease-out); }
+    a.v1-cell:hover { color: var(--sl-text-strong); }
+    .v1-cell.sl-is-active { color: var(--sl-on-solid); font-weight: var(--sl-weight-bold); }
+    .v1-cell:focus-visible { outline: var(--sl-ring-width) solid var(--sl-ring-bg); outline-offset: calc(var(--sl-ring-gap) * -1); }
+    .sl-pager.v1 .sl-pager-info { margin: 0; font-size: var(--sl-font-small); }
+    .v1 .sl-pager-info b { color: var(--sl-text-strong); font-weight: var(--sl-weight-semibold); }
+    @container pg (width < 520px) {
+      .v1-cell[data-pg-far] { display: none; }
+      .v1-range { display: none; }
+    }
+  </style>
+</head>
+<body class="sl-summer" id="top">
+<main class="d-page" data-demo-page data-demo-band="Новости">
+  <h1 class="sl-title">Новости</h1>
+  <ul class="d-pg-list" id="pg-list"></ul>
+  <div data-demo-pager data-count="97" data-limit="10" data-cur="1" data-pg-list="pg-list"></div>
+  <section class="d-pg-cases" aria-labelledby="pg-cases">
+    <h2 class="sl-title" id="pg-cases">Тот же пагинатор в других местах</h2>
+    <figure class="d-pg-case"><figcaption>Комментарии — три страницы, открыта вторая</figcaption><div data-demo-pager data-count="27" data-limit="10" data-cur="2"></div></figure>
+    <figure class="d-pg-case"><figcaption>Архив — 480 материалов, 48 страниц, середина</figcaption><div data-demo-pager data-count="480" data-limit="10" data-cur="24"></div></figure>
+    <figure class="d-pg-case"><figcaption>Конец раздела — последняя страница</figcaption><div data-demo-pager data-count="97" data-limit="10" data-cur="10"></div></figure>
+    <figure class="d-pg-case d-pg-narrow"><figcaption>Узкая колонка — подвал форума</figcaption><div data-demo-pager data-count="480" data-limit="10" data-cur="7"></div></figure>
+    <figure class="d-pg-case d-pg-pm"><figcaption>Личные сообщения — колонка списка, 240 писем</figcaption><div data-demo-pager data-count="240" data-limit="15" data-cur="8"></div></figure>
+  </section>
+</main>
+<!-- The pager every host on the page clones: the variant is this template and the style above, the page around it is shared -->
+<template data-pg-tpl>
+  <nav class="sl-pager v1" aria-label="Страницы">
+    <div class="v1-row">
+      <a class="sl-but-mini v1-step" data-pg-go="prev" title="Назад" aria-label="Назад"><i class="bi bi-chevron-left" aria-hidden="true"></i></a>
+      <span class="v1-rail" data-sl-knob="pager"><span class="v1-knob" data-sl-knob-mark aria-hidden="true"></span><span class="v1-pages" data-pg-pages data-pg-cell="v1-cell"></span></span>
+      <a class="sl-but-mini v1-step" data-pg-go="next" title="Вперёд" aria-label="Вперёд"><i class="bi bi-chevron-right" aria-hidden="true"></i></a>
+    </div>
+    <p class="sl-pager-info" aria-live="polite">Страница <b data-pg-text="cur"></b> из <b data-pg-text="pages"></b><span class="v1-range"> · материалы <b><span data-pg-text="from"></span>–<span data-pg-text="to"></span></b></span> · всего <b data-pg-text="count"></b></p>
+  </nav>
+</template>
+<script>document.write('<script src="assets/demo.js?v=' + Date.now() + '"><\/script>');</script>
+</body>
+</html>

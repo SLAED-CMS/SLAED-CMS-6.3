@@ -82,14 +82,10 @@ function getTemplateEditorBlock(string $templ, string $filelink, string $mode, s
         ],
         'rows' => [[
             'label_html' => '',
-            'field_html' => getTplLines([_FILE.': '.$filelink, _DATE.': '.date(_TIMESTRING, filemtime(PUBLIC_DIR.'/'.$filelink))]),
-            'is_full' => true,
-        ], [
-            'label_html' => '',
             'field_html' => Editor::getCode([
                 'id' => 'code_'.md5($filelink),
                 'name' => 'template',
-                'label' => _FILE.': '.$filelink,
+                'label' => _FILE.': '.$filelink.' · '._DATE.': '.date(_TIMESTRING, filemtime(PUBLIC_DIR.'/'.$filelink)),
                 'lang' => str_ends_with($filelink, '.css') ? 'css' : 'html',
                 'text' => (string)file_get_contents(PUBLIC_DIR.'/'.$filelink),
             ]),

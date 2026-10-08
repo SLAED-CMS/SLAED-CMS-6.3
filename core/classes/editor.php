@@ -23,6 +23,53 @@ interface CodeDriver {
 class Editor {
     private static array $mdata = [];
     private static array $drvs = [];
+    private static bool $done = false;
+    private const LANGS = [
+        'php' => ['PHP', 'filetype-php'],
+        'html' => ['HTML', 'filetype-html'],
+        'css' => ['CSS', 'filetype-css'],
+        'js' => ['JavaScript', 'filetype-js'],
+        'json' => ['JSON', 'filetype-json'],
+        'sql' => ['SQL', 'filetype-sql'],
+        'xml' => ['XML', 'filetype-xml'],
+        'markdown' => ['Markdown', 'markdown'],
+        'ini' => ['INI', 'sliders'],
+        'apache' => ['Apache', 'server'],
+        'robots' => ['TXT', 'robot'],
+        'plain' => ['', 'file-text'],
+        'text' => ['', 'file-text'],
+    ];
+    private const PHRASES = [
+        'Find' => '_EDITOR_FIND',
+        'Replace' => '_EDITOR_REPLACE',
+        'next' => '_EDITOR_NEXT',
+        'previous' => '_EDITOR_PREV',
+        'all' => '_ALL',
+        'match case' => '_EDITOR_CASE',
+        'regexp' => '_EDITOR_REGEXP',
+        'by word' => '_EDITOR_WORD',
+        'replace' => '_EDITOR_REPLONE',
+        'replace all' => '_EDITOR_REPLALL',
+        'close' => '_CLOSE',
+        'current match' => '_EDITOR_CURMATCH',
+        'on line' => '_EDITOR_ONLINE',
+        'replaced $ matches' => '_EDITOR_REPLACED',
+        'replaced match on line $' => '_EDITOR_REPLINE',
+        'Folded lines' => '_EDITOR_FOLDED',
+        'Unfolded lines' => '_EDITOR_UNFOLDED',
+        'to' => '_EDITOR_TO',
+        'folded code' => '_EDITOR_FOLDCODE',
+        'unfold' => '_EDITOR_UNFOLD',
+        'Fold line' => '_EDITOR_FOLDLINE',
+        'Unfold line' => '_EDITOR_UNFOLDLN',
+        'Go to line' => '_EDITOR_GOTOLINE',
+        'go' => '_EDITOR_GO',
+        'Diagnostics' => '_EDITOR_LINT',
+        'No diagnostics' => '_EDITOR_NOLINT',
+        'Completions' => '_EDITOR_COMPLETE',
+        'Control character' => '_EDITOR_CTRLCHAR',
+        'Selection deleted' => '_EDITOR_SELDEL',
+    ];
 
     # Render content editor widget; editor, profile, role, format are optional overrides
     public static function getContent(array $data): string {
@@ -91,6 +138,63 @@ class Editor {
         $label = (string)($data['label'] ?? '');
         if ($label === '') $label = _TEXT;
         return $driver instanceof CodeDriver ? $driver->getAssets($profile).self::getThemeSkin($key).$driver->getWidget($id, $name, $value, $lang, $profile, $label) : '';
+    }
+
+    # Render one editor in the shell around its textarea, printing the runtime and the kit of its words once per answer
+    public static function getFrame(array $data): string {
+        global $tpl;
+        [$name, $icon] = self::LANGS[(string)($data['lang'] ?? 'text')] ?? self::LANGS['text'];
+        $head = '';
+        if (!self::$done) {
+            self::$done = true;
+            $head = self::getAssetTags([], ['plugins/system/editor.js']).$tpl->getHtmlFrag('editor-kit', self::getKitData());
+        }
+        return $head.$tpl->getHtmlFrag('editor-frame', [
+            'tab_text' => (string)($data['label'] ?? ''),
+            'icon_name' => $icon,
+            'lang_text' => $name,
+            'is_code' => !empty($data['code']),
+            'core_url' => (string)($data['core'] ?? ''),
+            'grammar_url' => (string)($data['grammar'] ?? ''),
+            'name_attr' => (string)($data['name'] ?? ''),
+            'input_id' => (string)($data['id'] ?? ''),
+            'value_text' => (string)($data['value'] ?? ''),
+            'rows_num' => (int)($data['rows'] ?? 0),
+            'placeholder_text' => (string)($data['placeholder'] ?? ''),
+            'is_required' => !empty($data['required']),
+            'labelledby' => (string)($data['labelledby'] ?? ''),
+            'aria_label' => (string)($data['arialabel'] ?? ''),
+            'describedby' => (string)($data['describedby'] ?? ''),
+            'dirty_text' => _EDITOR_DIRTY,
+        ]);
+    }
+
+    # The titles of the capsule and the words of the status line and of the CodeMirror panels, which the runtime reads from the kit and never holds itself
+    private static function getKitData(): array {
+        $words = [
+            'tools' => _EDITOR_TOOLS,
+            'pos' => _EDITOR_POS,
+            'sel' => _EDITOR_SEL,
+            'size' => _EDITOR_SIZE,
+            'copied' => _COPYDONE,
+            'noclip' => _EDITOR_NOCLIP,
+            'restored' => _EDITOR_RESTORED,
+            'phrases' => array_map(constant(...), self::PHRASES),
+        ];
+        return [
+            'words_json' => json_encode($words, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+            'undo_text' => _EDITOR_UNDO,
+            'redo_text' => _EDITOR_REDO,
+            'wrap_text' => _EDITOR_WRAP,
+            'copy_text' => _COPY,
+            'reset_text' => _EDITOR_RESET,
+            'move_text' => _EMOVEWIN,
+            'expand_text' => _EEXPAND,
+            'restore_text' => _ERESTORE,
+            'draft_text' => _EDITOR_DRAFT,
+            'back_text' => _EDITOR_DRAFTBACK,
+            'drop_text' => _EDITOR_DRAFTDROP,
+        ];
     }
 
     # Render editor select dropdown for settings UI

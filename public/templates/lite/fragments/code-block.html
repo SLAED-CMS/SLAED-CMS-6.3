@@ -1,0 +1,5 @@
+<figure class="sl-code" data-sl-code{% if is_long %} data-long{% endif %}>
+  <figcaption class="sl-code-head"><span>{{ lang_text }}</span><button type="button" class="sl-modal-act" data-sl-code-copy data-sl-done="{{ done_text }}" title="{{ copy_text }}" aria-label="{{ copy_text }}"><i class="bi bi-copy" aria-hidden="true"></i></button></figcaption>
+  <div class="sl-code-body" data-sl-code-body tabindex="0" role="region" aria-label="{{ label_text }}">{{{ content_html }}}</div>
+  {% if is_long %}<button type="button" class="sl-modal-btn sl-code-more" data-sl-code-more data-more="{{ more_text }}" data-less="{{ less_text }}" aria-expanded="false"><i class="bi bi-chevron-down" aria-hidden="true"></i><span>{{ more_text }}</span></button>{% endif %}
+</figure>

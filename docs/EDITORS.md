@@ -19,7 +19,7 @@ All editor plugins must be securely encapsulated in their own subdirectories und
 plugins/editors/
 ├── ckeditor/       # CKEditor (HTML)
 ├── codemirror/     # CodeMirror (Syntax/Code)
-├── plain/          # Fallback dumb textarea
+├── plain/          # Plain Plus, the light textarea and the fallback
 ├── tinymce/        # TinyMCE (HTML)
 └── toastui/        # ToastUI (Markdown/WYSIWYG)
 ```

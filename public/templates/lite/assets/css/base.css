@@ -95,11 +95,13 @@
   --sl-font-h3: 18px;
   --sl-font-h4: 16px;
   --sl-font-body: 14px;
-  --sl-font-small: 12px;
-  /* The smallest step reads 11: most micro labels are monospace, and a monospace face at 10 reads smaller than it is */
-  --sl-font-micro: 11px;
-  /* The one face the running text does not use: the ornament quotation mark behind an owner voice */
+  --sl-font-small: 13px;
+  /* The smallest step reads 12 in both themes and the small one 13: 11 read too small */
+  --sl-font-micro: 12px;
+  /* The face of a quotation: a serif in italic sets the quoted words apart from the running text */
   --sl-face-quote: Georgia, "Times New Roman", serif;
+  /* The face of code: the mono font each system already carries, so no file is fetched for it */
+  --sl-face-mono: ui-monospace, "Cascadia Mono", "SFMono-Regular", Menlo, Consolas, "Liberation Mono", monospace;
   --sl-line-tight: 1.2;
   --sl-line-normal: 1.45;
   --sl-line-loose: 1.6;
@@ -350,6 +352,8 @@
   --sl-check-tick-height: 8px;
   /* Every tinted pill in this theme paints one wash of its own colour, so one declaration serves every tone,
      and the pointer deepens the same wash rather than naming a second colour */
+  /* A code block opens folded to this height when it is long: twenty of its lines */
+  --sl-code-max-height: 20lh;
   --sl-chip-mix: 14%;
   --sl-chip-bg: color-mix(in srgb, currentColor var(--sl-chip-mix), transparent);
   --sl-chip-tint-mix: 24%;
@@ -393,6 +397,7 @@
   --sl-edge-width: 40px;
   --sl-edge-height: 190px;
   --sl-editor-height: 100px;
+  --sl-editor-max-height: 50vh;
   --sl-entry-height: 42px;
   /* The lower menu: how tall one link stands. It is a thumb target on a phone and a row height on a desktop,
      which is one decision and therefore one value — the icon in front of the label does the separating that the
@@ -966,16 +971,20 @@ input[disabled] {
   cursor: default;
 }
 
+/* Code reads in the face of code wherever it stands: inline, in a block, as a key or as the output of a program */
+code,
+kbd,
+samp,
+pre {
+  font-family: var(--sl-face-mono);
+}
+
 blockquote {
   background: var(--sl-bg);
   border-left: 1px solid var(--sl-border-strong);
   border-right: 1px solid var(--sl-border-strong);
   color: var(--sl-text-muted);
-  font-family:
-    Georgia,
-    system-ui,
-    -apple-system,
-    sans-serif;
+  font-family: var(--sl-face-quote);
   font-style: italic;
   margin: var(--sl-space-2);
   padding: var(--sl-space-2);

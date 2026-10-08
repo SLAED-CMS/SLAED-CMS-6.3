@@ -1,6 +1,6 @@
 {
     "id": "plain",
-    "label": "Plain Textarea",
+    "label": "Plain Plus",
     "type": "content",
     "driver": "EditorPlain",
     "entry": "driver.php",

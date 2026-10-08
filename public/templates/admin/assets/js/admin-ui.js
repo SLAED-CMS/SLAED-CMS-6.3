@@ -771,13 +771,12 @@
         if (checkFileEdit()) return setFileLeave(go);
         go();
     });
-    /* An open source editor holds work the server has not seen: the widget copies the document into its field on submit alone, so a document still differing from it is unsaved */
+    /* An open source editor holds work the server has not seen while its text differs from the one it was loaded or last submitted with, which the editor runtime keeps */
     var fmfree = false;
     function checkFileEdit() {
         var box = document.querySelector('[data-sl-fm-ask]');
-        var area = box ? document.getElementById(box.getAttribute('data-sl-fm-code')) : null;
-        var view = (area && window.CM6 && window.CM6.editors) ? window.CM6.editors[area.id] : null;
-        return !fmfree && !!view && view.state.doc.toString() !== area.value;
+        var id = box ? box.getAttribute('data-sl-fm-code') : '';
+        return !fmfree && !!id && !!window.SlaedEditor && window.SlaedEditor.isDirty(id);
     }
     /* Once the administrator answered yes, the way out is released: without that the browser asks a second time with its own dialog on the navigation the answer just allowed */
     function setFileLeave(run) {

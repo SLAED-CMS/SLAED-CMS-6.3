@@ -829,6 +829,112 @@ const DEMO_NODEHEAD = [
   },
 ];
 
+const DEMO_PAGER = [
+  {
+    file: 'pg-01-rail.html',
+    title: 'Рельс',
+    note: 'Номера лежат в утопленном рельсе, как переключатель вида sl-mode, а по нему ездит приподнятая шайба текущей ' +
+      'страницы. Стрелки — круглые кнопки по краям. Под рельсом одна тихая строка: страница, диапазон материалов и итог. ' +
+      'В узкой колонке остаются первая, последняя и соседи текущей.',
+    tags: ['sl-mode', 'шайба', 'одна строка'],
+  },
+  {
+    file: 'pg-02-split.html',
+    title: 'Три зоны',
+    note: 'Классика каталога: «Назад» слева, номера по центру, «Вперёд» справа — большие цели для пальца по краям. ' +
+      'Над ними строка сводки: какие материалы показаны и какая это страница. В узкой колонке номера сворачиваются в «3 / 10».',
+    tags: ['кнопки с текстом', 'сводка', 'палец'],
+  },
+  {
+    file: 'pg-03-jump.html',
+    title: 'Счётчик',
+    note: 'Одна капсула-поле: в начало, назад, «Страница [3] из 10», вперёд, в конец. Номер правится руками, Enter ' +
+      'переходит, стрелки вверх и вниз листают. Тонкая полоса под капсулой показывает место в разделе. Не боится ' +
+      'ни 480 страниц, ни колонки в 300 пикселей — годится форуму и личным сообщениям.',
+    tags: ['поле перехода', 'первая/последняя', 'узкие места'],
+  },
+  {
+    file: 'pg-04-scale.html',
+    title: 'Шкала',
+    note: 'Обычные номера, а под ними шкала всего раздела с делением на каждую страницу. Пройденное залито, наведение ' +
+      'подсказывает страницу и её материалы, щелчок по шкале переходит туда. Видно не только где ты, но и сколько осталось.',
+    tags: ['шкала раздела', 'подсказка', 'переход щелчком'],
+  },
+  {
+    file: 'pg-05-more.html',
+    title: 'Ещё',
+    note: 'Лента вместо листания: «Показать ещё 10» дописывает следующую страницу под прочитанное, полоса и строка ' +
+      '«Показано 30 из 97» растут. Номера остаются ниже тихой строкой и подсвечивают загруженный отрезок — ссылки ' +
+      'настоящие, без JS это обычный пагинатор. Когда всё показано, кнопка уступает место «Это всё».',
+    tags: ['догрузка', 'прогресс', 'без JS — ссылки'],
+  },
+  {
+    file: 'pg-06-cards.html',
+    title: 'Соседи',
+    note: 'Как подвал документации: соседние страницы — две карточки с номером и диапазоном материалов, у края ' +
+      'раздела карточка честно пишет «Это начало» или «Это конец». Номера идут под ними тихой строкой для дальних прыжков.',
+    tags: ['карточки', 'диапазоны', 'края раздела'],
+  },
+  {
+    file: 'pg-07-dock.html',
+    title: 'Док',
+    note: 'Плавающая капсула прилипает к низу экрана, пока читаешь список, и садится на своё место в его конце. ' +
+      'Внутри стрелки, номера, счёт «3 / 10» и «Наверх»; подсказка клавиш ← → листает с клавиатуры.',
+    tags: ['sticky', 'клавиши ← →', 'наверх'],
+  },
+  {
+    file: 'pg-08-window.html',
+    title: 'Окно',
+    note: 'Многоточие — не тупик, а кнопка: открывает окно с сеткой пропущенных страниц, Esc и щелчок мимо закрывают. ' +
+      'По краям «в начало» и «в конец», текущая страница крупнее остальных, сводка — чипом справа.',
+    tags: ['popover', 'пропущенные страницы', 'первая/последняя'],
+  },
+  {
+    file: 'pg-09-final.html',
+    title: 'Рельс · финал',
+    note: 'Лидер «Рельс» в размере кнопок sl-but-mini стоит ровно по центру колонки, справа от него «Наверх» из «Дока» и кнопка «i» — системная ' +
+      'подсказка sl-tip: при наведении объясняет, что стрелки ← → листают страницы с клавиатуры. «i» есть у каждого ' +
+      'пагинатора, на сенсорном экране её нет, «Наверх» остаётся везде.',
+    tags: ['финал', 'sl-mode', 'шайба', 'наверх', 'подсказка клавиш'],
+  },
+  {
+    file: 'pg-10-board.html',
+    title: 'Строка · табло',
+    note: 'Финал, у которого строка под рельсом стала табло из трёх показаний: подпись мелкими прописными, под ней ' +
+      'число табличными цифрами, между показаниями волосяные линии. Страница, материалы, всего — читаются за один взгляд.',
+    tags: ['строка', 'табло', 'прописные подписи'],
+  },
+  {
+    file: 'pg-11-range.html',
+    title: 'Строка · диапазон',
+    note: 'Финал, у которого крупно стоит то, чего нет в рельсе: «1–10 из 97». Номер страницы уже горит на шайбе, ' +
+      'поэтому рядом он мелкий и тихий, за волосяной линией.',
+    tags: ['строка', 'иерархия', 'без повтора рельса'],
+  },
+  {
+    file: 'pg-12-chips.html',
+    title: 'Строка · чипы',
+    note: 'Финал, у которого строка разложена на три тихих чипа с иконками — страница, материалы, всего. Это язык ' +
+      'мета-строки карточки новостей, диапазон выделен информационным тоном.',
+    tags: ['строка', 'sl-chip', 'иконки'],
+  },
+  {
+    file: 'pg-13-bar.html',
+    title: 'Строка · полоса',
+    note: 'Финал, у которого под словами «Показаны 1–10 из 97» идёт тонкая полоса раздела с делением на страницы ' +
+      'и процент справа: видно не только где ты, но и сколько осталось.',
+    tags: ['строка', 'прогресс', 'деления'],
+  },
+  {
+    file: 'pg-14-admin.html',
+    title: 'Панель · финал',
+    note: 'Финал 09 на теме admin в подвале списка admin.php?name=comments — та же разметка и те же классы, другая ' +
+      'только таблица стилей темы: рельс, «Наверх» и «i» стоят от левого края, строка «Страница 5 из 337 · Показаны ' +
+      '101–125 · Всего 8414» прижата вправо к блоку массового действия — там же, где сегодня. В узком месте строка уходит под ряд.',
+    tags: ['admin', 'подвал списка', 'массовое действие'],
+  },
+];
+
 const DEMO_SERIES = [
   { key: 'presentation', title: 'Презентационная страница', addr: 'index.php?name=presentation', items: DEMO_VARIANTS },
   { key: 'settings', title: 'Настройки аккаунта', addr: 'index.php?name=account&op=edithome', items: DEMO_SETTINGS },
@@ -840,6 +946,7 @@ const DEMO_SERIES = [
   { key: 'plain', title: 'Редактор Plain Textarea', addr: 'admin.php?name=uploads&op=tplconfig', items: DEMO_PLAIN },
   { key: 'code', title: 'Редактор CodeMirror', addr: 'admin.php?name=uploads&op=tplconfig', items: DEMO_CODE },
   { key: 'nodehead', title: 'Шапка модуля Node', addr: 'index.php?name=news', items: DEMO_NODEHEAD },
+  { key: 'pager', title: 'Пагинатор', addr: 'index.php?name=news', items: DEMO_PAGER },
 ];
 
 /* Which series a file belongs to, and where it stands in it. An unknown file gets the first series at index -1,
@@ -895,6 +1002,12 @@ const CHROME_TOP = `
     <div class="sl-wrp">
       <ul class="sl-top-contact"><li class="sl-head-marquee"><a href="#" title="Как и где можно установить свою тему оформления?"><i class="bi bi-stars" aria-hidden="true"></i>&nbsp;Как и где можно установить свою тему оформления?</a></li></ul>
       <div class="sl-top-right">
+        <form action="" method="get" data-demo-mode>
+          <span class="sl-seg sl-seg-mode" role="group" aria-label="Тема оформления" data-sl-knob="mode">
+            <button type="submit" class="sl-seg-cell" name="mode" value="light" title="Светлая" aria-label="Светлая"><i class="bi bi-sun" aria-hidden="true"></i></button><button type="submit" class="sl-seg-cell" name="mode" value="auto" title="Системная" aria-label="Системная"><i class="bi bi-circle-half" aria-hidden="true"></i></button><button type="submit" class="sl-seg-cell" name="mode" value="dark" title="Тёмная" aria-label="Тёмная"><i class="bi bi-moon" aria-hidden="true"></i></button>
+            <span class="sl-seg-knob" data-sl-knob-mark aria-hidden="true"></span>
+          </span>
+        </form>
         <div class="sl-top-social">
           <a class="sl-thd sl-circle-action sl-cat-tone-0" href="#" title="Мы в GitHub" aria-label="Мы в GitHub"><i class="bi bi-github" aria-hidden="true"></i>Мы в GitHub</a>
           <a class="sl-thd sl-circle-action sl-cat-tone-1" href="#" title="Мы в YouTube" aria-label="Мы в YouTube"><i class="bi bi-youtube" aria-hidden="true"></i>Мы в YouTube</a>
@@ -1167,6 +1280,11 @@ function setDemoState() {
   localStorage.setItem('demo.motion', demoState.motion);
   document.querySelectorAll('[data-demo-set]').forEach((b) => {
     b.setAttribute('aria-pressed', String(demoState[b.dataset.demoSet] === b.dataset.demoValue));
+  });
+  // The header switch shows the mode in force: a pick in the panel moves its knob in place, a press reloads the page with it
+  document.querySelectorAll('[data-demo-mode] .sl-seg-cell').forEach((cell) => {
+    cell.classList.toggle('sl-is-active', cell.value === demoState.mode);
+    cell.setAttribute('aria-pressed', String(cell.value === demoState.mode));
   });
 }
 
@@ -2895,12 +3013,12 @@ function setNodeHeadView(root, view) {
 function setNodeHeadKind(root, view) {
   root.nhLooks ||= [...root.querySelectorAll('[data-nh-look]')];
   root.nhRail ||= root.nhLooks[0].parentNode;
-  const knob = root.nhRail.querySelector('.sl-mode-knob');
+  const knob = root.nhRail.querySelector('.sl-mode-knob, .sl-seg-knob');
   root.nhLooks.forEach((cell) => {
     if (cell.dataset.kinds.split(' ').includes(root.dataset.kind)) root.nhRail.insertBefore(cell, knob);
     else cell.remove();
   });
-  root.nhRail.closest('.sl-mode').hidden = root.nhLooks.filter((cell) => cell.isConnected).length < 2;
+  root.nhRail.closest('.sl-mode, .sl-seg').hidden = root.nhLooks.filter((cell) => cell.isConnected).length < 2;
   const fits = root.nhLooks.some((cell) => cell.isConnected && cell.dataset.nhLook === view);
   setNodeHeadView(root, fits ? view : root.querySelector('[data-nh-look]').dataset.nhLook);
 }
@@ -3075,6 +3193,325 @@ function setDemoNodeHead() {
   });
 }
 
+/* The pager series reads one feed: the same 97 news of the section in every variant */
+const DEMO_PG_NEWS = [
+  ['SLAED CMS возвращается - мощнее, быстрее, безопаснее', 'Наши новости'],
+  ['Восьмая версия ставится с чистого листа', 'Наши новости'],
+  ['Node: один модуль вместо шести', 'Наши новости'],
+  ['Тёмная тема без второй таблицы стилей', 'Наши новости'],
+  ['Браузеры включают HTTP/3 по умолчанию', 'Интернет'],
+  ['Зачем статике отпечаток содержимого', 'Интернет'],
+  ['CodeMirror 6 в панели администратора', 'Программы'],
+  ['Подготовленные запросы во всём ядре', 'Наши новости'],
+  ['Как устроены живые блоки голосования', 'Наши новости'],
+  ['Поиск по разделу с клавиатуры', 'Наши новости'],
+  ['Контейнерные запросы пришли во все браузеры', 'Интернет'],
+  ['PHP 8.4: что взяли в ядро', 'Программы'],
+  ['Файловый менеджер — единая дверь к файлам', 'Наши новости'],
+  ['OAuth вместо внешнего сервиса входа', 'Наши новости'],
+  ['Сжатие ответов без настройки сервера', 'Интернет'],
+  ['Редактор Plain: лёгкий, но не примитивный', 'Программы'],
+];
+
+const pgState = new WeakMap();
+
+/* The numbers a pager shows, picked as getTplPagerView picks them: a window round the current page, the first and
+   the last outside it, and a gap [from, to] wherever numbers are skipped */
+function getPagerWindow(cur, pages, win) {
+  let from = Math.max(1, cur - Math.floor(win / 2));
+  const to = Math.min(pages, from + win - 1);
+  from = Math.max(1, to - win + 1);
+  const out = [];
+  for (let i = 1; i <= pages; i++) {
+    if (i === cur || i === 1 || i === pages || (i >= from && i <= to)) out.push(i);
+    if (i === 1 && from > 2) out.push([2, from - 1]);
+    if (i === to && to < pages - 1) out.push([to + 1, pages - 1]);
+  }
+  return out;
+}
+
+function getPagerHref(n) {
+  return '../index.php?name=news&num=' + n;
+}
+
+/* The page a control leads to: prev and next step off the loaded run, first and last are its ends */
+function getPagerTarget(st, go) {
+  if (go === 'prev') return st.cur - 1;
+  if (go === 'next') return st.end + 1;
+  if (go === 'first') return 1;
+  if (go === 'last') return st.pages;
+  return Number(go);
+}
+
+function getPagerLink(n, cell, extra) {
+  return '<a href="' + getPagerHref(n).replace('&', '&amp;') + '" class="' + cell + (extra || '') + '" title="Страница ' + n
+    + '" data-pg-go="' + n + '">' + n + '</a>';
+}
+
+function getPagerItem(i) {
+  const [title, cat] = DEMO_PG_NEWS[i % DEMO_PG_NEWS.length];
+  const id = 3918 - i * 7;
+  const day = new Date(Date.UTC(2025, 10, 28 - i * 4));
+  const date = day.toISOString().slice(0, 10).split('-').reverse().join('.');
+  return '<li class="d-pg-item"><a href="../index.php?name=news&amp;op=view&amp;id=' + id + '" title="' + title + '">' + title
+    + '</a><span class="d-pg-meta"><i class="bi bi-calendar3" aria-hidden="true"></i>' + date + '<i class="bi bi-folder" aria-hidden="true"></i>'
+    + cat + '</span></li>';
+}
+
+/* Fill the list a pager drives: a jump replaces it, a «more» appends the page it loaded */
+function setPagerList(host, append) {
+  const list = host.dataset.pgList ? document.getElementById(host.dataset.pgList) : null;
+  if (!list) return;
+  const st = pgState.get(host);
+  const first = ((append ? st.end : st.cur) - 1) * st.limit;
+  const last = Math.min(st.end * st.limit, st.count);
+  let html = '';
+  for (let i = first; i < last; i++) html += getPagerItem(i);
+  if (!append) {
+    list.innerHTML = html;
+    return;
+  }
+  list.insertAdjacentHTML('beforeend', html.replaceAll('class="d-pg-item"', 'class="d-pg-item d-pg-new"'));
+}
+
+
+/* Paint one pager from its state: numbers, controls, texts, the field, the position and the knob */
+function setDemoPagerView(host) {
+  const st = pgState.get(host);
+  const from = (st.cur - 1) * st.limit + 1;
+  const to = Math.min(st.end * st.limit, st.count);
+  const vals = {
+    cur: st.end, pages: st.pages, count: st.count, from, to, left: st.count - to,
+    step: Math.min(st.limit, st.count - to), pct: Math.round(to / st.count * 100),
+    prev: st.cur - 1, next: st.end + 1,
+    prevfrom: (st.cur - 2) * st.limit + 1, prevto: (st.cur - 1) * st.limit,
+    nextfrom: st.end * st.limit + 1, nextto: Math.min((st.end + 1) * st.limit, st.count),
+  };
+  host.querySelectorAll('[data-pg-pages]').forEach((box) => {
+    const cell = box.dataset.pgCell || 'sl-but-mini';
+    const pop = box.dataset.pgDots === 'pop';
+    box.innerHTML = getPagerWindow(st.end, st.pages, Number(box.dataset.pgWin || 8)).map((n) => {
+      if (Array.isArray(n)) {
+        const label = 'Страницы ' + n[0] + '–' + n[1];
+        return pop
+          ? '<button type="button" class="' + cell + ' sl-is-muted" data-pg-gap="' + n[0] + '-' + n[1] + '" title="' + label + '" aria-label="' + label + '" aria-haspopup="dialog">&hellip;</button>'
+          : '<span class="' + cell + ' sl-is-muted" title="' + label + '">&hellip;</span>';
+      }
+      const gap = (n !== 1 && n !== st.pages) ? Math.abs(n - st.end) : 0;
+      const far = gap > 1 ? ' data-pg-far' : (gap === 1 ? ' data-pg-near' : '');
+      if (n === st.end) return '<span class="' + cell + ' sl-is-active" aria-current="page" title="Страница ' + n + '"' + far + '>' + n + '</span>';
+      return getPagerLink(n, cell, n >= st.cur && n < st.end ? ' sl-is-soft' : '').replace('>' + n + '</a>', far + '>' + n + '</a>');
+    }).join('');
+  });
+  host.querySelectorAll('[data-pg-go]').forEach((a) => {
+    if (a.closest('[data-pg-pages], [data-pg-pop]')) return;
+    const go = a.dataset.pgGo;
+    const n = getPagerTarget(st, go);
+    const off = n < 1 || n > st.pages || (go === 'first' && st.cur === 1) || (go === 'last' && st.end === st.pages);
+    a.classList.toggle('sl-is-muted', off);
+    if (off) {
+      a.removeAttribute('href');
+      a.setAttribute('aria-disabled', 'true');
+    } else {
+      a.setAttribute('href', getPagerHref(n));
+      a.removeAttribute('aria-disabled');
+    }
+  });
+  host.querySelectorAll('[data-pg-text]').forEach((node) => { node.textContent = vals[node.dataset.pgText]; });
+  host.querySelectorAll('[data-pg-jump]').forEach((field) => {
+    field.value = st.end;
+    field.setAttribute('aria-valuemax', st.pages);
+  });
+  host.dataset.pgAt = st.end === 1 ? 'first' : (st.end === st.pages ? 'last' : 'mid');
+  host.toggleAttribute('data-pg-done', to >= st.count);
+  host.style.setProperty('--pg-pos', st.pages > 1 ? (st.end - 1) / (st.pages - 1) : 1);
+  host.style.setProperty('--pg-fill', to / st.count);
+  host.style.setProperty('--pg-pages', st.pages);
+}
+
+/* Step a pager: a number replaces the run, «more» extends it by one page */
+function setPagerGo(host, n, more) {
+  const st = pgState.get(host);
+  if (more) {
+    if (st.end >= st.pages) return;
+    st.end++;
+  } else {
+    n = Math.max(1, Math.min(st.pages, n || 1));
+    if (n === st.cur && n === st.end) {
+      setDemoPagerView(host);
+      return;
+    }
+    st.cur = st.end = n;
+  }
+  setDemoPagerView(host);
+  setPagerList(host, more);
+  const list = host.dataset.pgList ? document.getElementById(host.dataset.pgList) : null;
+  if (!more && list && list.getBoundingClientRect().top < 0) list.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+/* Open the window of the pages a gap skips, under the gap, kept inside the viewport */
+function setPagerPop(host, gap) {
+  const pop = host.querySelector('[data-pg-pop]');
+  if (!pop || !pop.showPopover) {
+    const [a, b] = gap.dataset.pgGap.split('-').map(Number);
+    setPagerGo(host, Math.round((a + b) / 2));
+    return;
+  }
+  const [a, b] = gap.dataset.pgGap.split('-').map(Number);
+  const cell = pop.dataset.pgCell || 'sl-but-mini';
+  let html = '';
+  for (let i = a; i <= b; i++) html += getPagerLink(i, cell);
+  pop.querySelector('[data-pg-pop-pages]').innerHTML = html;
+  pop.querySelectorAll('[data-pg-pop-title]').forEach((node) => { node.textContent = 'Страницы ' + a + '–' + b; });
+  pop.showPopover();
+  const rect = gap.getBoundingClientRect();
+  const left = Math.min(Math.max(8, rect.left + rect.width / 2 - pop.offsetWidth / 2), innerWidth - pop.offsetWidth - 8);
+  const below = rect.bottom + 8 + pop.offsetHeight < innerHeight;
+  pop.style.left = left + 'px';
+  pop.style.top = (below ? rect.bottom + 8 : rect.top - 8 - pop.offsetHeight) + 'px';
+  pop.querySelector('a')?.focus();
+}
+
+/* Wire every pager of the stand: each host clones the variant's template and keeps its own page */
+function setDemoPager() {
+  const tpl = document.querySelector('template[data-pg-tpl]');
+  const hosts = document.querySelectorAll('[data-demo-pager]');
+  if (!tpl || !hosts.length) return;
+  hosts.forEach((host) => {
+    const count = Number(host.dataset.count);
+    const limit = Number(host.dataset.limit || 10);
+    const pages = Math.ceil(count / limit);
+    const cur = Math.min(pages, Number(host.dataset.cur || 1));
+    pgState.set(host, { count, limit, pages, cur, end: cur });
+    host.appendChild(tpl.content.cloneNode(true));
+    setDemoPagerView(host);
+    setPagerList(host, false);
+    // The clone arrives after slaed.js wired the page, so it is handed over the way a swap hands new markup, and its floats get placed
+    host.dispatchEvent(new CustomEvent('htmx:afterSwap', { bubbles: true, detail: {} }));
+  });
+  document.addEventListener('click', (ev) => {
+    const host = ev.target.closest('[data-demo-pager]');
+    if (!host) return;
+    const go = ev.target.closest('[data-pg-go]');
+    if (go) {
+      ev.preventDefault();
+      if (go.getAttribute('aria-disabled') === 'true') return;
+      go.closest('[data-pg-pop]')?.hidePopover();
+      setPagerGo(host, getPagerTarget(pgState.get(host), go.dataset.pgGo));
+      return;
+    }
+    if (ev.target.closest('[data-pg-more]')) {
+      setPagerGo(host, 0, true);
+      return;
+    }
+    const gap = ev.target.closest('[data-pg-gap]');
+    if (gap) {
+      setPagerPop(host, gap);
+      return;
+    }
+    const track = ev.target.closest('[data-pg-track]');
+    if (track) {
+      const rect = track.getBoundingClientRect();
+      setPagerGo(host, Math.ceil((ev.clientX - rect.left) / rect.width * pgState.get(host).pages));
+    }
+  });
+  document.addEventListener('pointermove', (ev) => {
+    const track = ev.target.closest('[data-pg-track]');
+    if (!track) return;
+    const host = track.closest('[data-demo-pager]');
+    const st = pgState.get(host);
+    const rect = track.getBoundingClientRect();
+    const at = Math.min(1, Math.max(0, (ev.clientX - rect.left) / rect.width));
+    const n = Math.max(1, Math.ceil(at * st.pages));
+    host.style.setProperty('--pg-hover', at);
+    host.querySelectorAll('[data-pg-hover]').forEach((node) => {
+      node.textContent = 'Страница ' + n + ' · ' + ((n - 1) * st.limit + 1) + '–' + Math.min(n * st.limit, st.count);
+    });
+  });
+  document.addEventListener('change', (ev) => {
+    const field = ev.target.closest('[data-pg-jump]');
+    if (field) setPagerGo(field.closest('[data-demo-pager]'), Number(field.value.replace(/\D/g, '')));
+  });
+  document.addEventListener('keydown', (ev) => {
+    const field = ev.target.closest('[data-pg-jump]');
+    if (field && (ev.key === 'ArrowUp' || ev.key === 'ArrowDown')) {
+      ev.preventDefault();
+      const host = field.closest('[data-demo-pager]');
+      setPagerGo(host, pgState.get(host).end + (ev.key === 'ArrowUp' ? 1 : -1));
+      field.select();
+      return;
+    }
+    if (field && ev.key === 'Enter') {
+      setPagerGo(field.closest('[data-demo-pager]'), Number(field.value.replace(/\D/g, '')));
+      field.select();
+      return;
+    }
+    if ((ev.key !== 'ArrowLeft' && ev.key !== 'ArrowRight') || ev.altKey || ev.ctrlKey || ev.metaKey || ev.shiftKey) return;
+    if (ev.target.closest('input, textarea, select, [contenteditable]')) return;
+    const host = document.querySelector('[data-pg-keys]')?.closest('[data-demo-pager]');
+    if (!host) return;
+    ev.preventDefault();
+    const st = pgState.get(host);
+    setPagerGo(host, ev.key === 'ArrowLeft' ? st.cur - 1 : st.end + 1);
+  });
+}
+
+/* The knob: one mechanism for every rail whose chosen cell wears a travelling plate — the colour mode in the header,
+   the view of a Node list, the pager. The rail names itself in data-sl-knob, the plate carries data-sl-knob-mark, the
+   chosen cell wears sl-is-active; the script measures that cell and writes --sl-d-knob-x and --sl-d-knob-w on the rail
+   and the sheet moves the plate. It follows any change of the chosen cell, whoever makes it, and a page that is left
+   hands the last place of every rail to the next one through sessionStorage, so after a reload or a page change the
+   plate travels from where it stood instead of appearing at once */
+const KNOB_KEY = 'demo-knob';
+
+function setKnobPlace(rail) {
+  const cell = [...rail.querySelectorAll('.sl-is-active')].find((node) => !node.closest('[data-sl-knob-mark]') && node.offsetParent);
+  if (!cell) return;
+  const box = rail.getBoundingClientRect();
+  const rect = cell.getBoundingClientRect();
+  rail.style.setProperty('--sl-d-knob-x', (rect.left - box.left - rail.clientLeft) + 'px');
+  rail.style.setProperty('--sl-d-knob-w', rect.width + 'px');
+}
+
+function setDemoKnob() {
+  const rails = document.querySelectorAll('[data-sl-knob]');
+  if (!rails.length) return;
+  let from = {};
+  try {
+    from = JSON.parse(sessionStorage.getItem(KNOB_KEY) || '{}');
+    sessionStorage.removeItem(KNOB_KEY);
+  } catch (err) { /* storage is a convenience */ }
+  const fresh = from.path === location.pathname && Date.now() - (from.time || 0) < 5000;
+  rails.forEach((rail) => {
+    const was = fresh && from.rails ? from.rails[rail.dataset.slKnob] : null;
+    rail.setAttribute('data-sl-knob-still', '');
+    if (was) {
+      rail.style.setProperty('--sl-d-knob-x', was.x);
+      rail.style.setProperty('--sl-d-knob-w', was.w);
+    } else {
+      setKnobPlace(rail);
+    }
+    rail.setAttribute('data-sl-knob-ready', '');
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      rail.removeAttribute('data-sl-knob-still');
+      setKnobPlace(rail);
+    }));
+    // A resize observer answers at once when it starts: while the plate stands on the place of the page before it is left there
+    const follow = () => { if (!rail.hasAttribute('data-sl-knob-still')) setKnobPlace(rail); };
+    new ResizeObserver(follow).observe(rail);
+    new MutationObserver(follow).observe(rail, { subtree: true, childList: true, attributes: true, attributeFilter: ['class'] });
+  });
+  addEventListener('pagehide', () => {
+    const keep = {};
+    rails.forEach((rail) => {
+      const name = rail.dataset.slKnob;
+      if (keep[name] || !rail.style.getPropertyValue('--sl-d-knob-w')) return;
+      keep[name] = { x: rail.style.getPropertyValue('--sl-d-knob-x'), w: rail.style.getPropertyValue('--sl-d-knob-w') };
+    });
+    try { sessionStorage.setItem(KNOB_KEY, JSON.stringify({ path: location.pathname, time: Date.now(), rails: keep })); } catch (err) { /* storage is a convenience */ }
+  });
+}
+
 function initDemoPage() {
   const params = new URLSearchParams(location.search);
   const bare = params.has('bare');
@@ -3112,6 +3549,8 @@ function initDemoPage() {
   setDemoFlash(place);
   setDemoEditors();
   setDemoNodeHead();
+  setDemoPager();
+  setDemoKnob();
 
   document.addEventListener('click', (e) => {
     const btn = e.target.closest('[data-demo-set]');

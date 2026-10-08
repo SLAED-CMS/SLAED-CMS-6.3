@@ -1,13 +1,13 @@
 {
     "id": "codemirror",
     "label": "CodeMirror 6",
-    "type": ["code"],
+    "type": ["content", "code"],
     "driver": "EditorCodemirror",
     "entry": "driver.php",
     "enabled": true,
-    "priority": 100,
-    "roles": ["admin"],
+    "priority": 60,
+    "roles": ["user", "admin"],
     "profiles": ["simple", "full"],
-    "formats": ["plain"],
-    "lang": ["php", "html", "css", "js", "json", "sql", "xml", "text"]
+    "formats": ["markdown", "plain", "html"],
+    "lang": ["php", "html", "css", "js", "json", "sql", "xml", "markdown", "ini", "apache", "robots", "text"]
 }

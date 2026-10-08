@@ -23,7 +23,7 @@ return [
     'censor_r' => '***',
     'clickable' => '0',
     'close' => '0',
-    'css_f' => 'plugins/highlightjs/slaed-theme.css',
+    'css_f' => '',
     'ctitle' => '1',
     'db_t' => '1',
     'dbsync' => '0',

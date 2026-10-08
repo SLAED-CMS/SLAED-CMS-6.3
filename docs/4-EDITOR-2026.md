@@ -1,12 +1,14 @@
 # Editor 2026
 
 Work plan for one editor shell and a second role for CodeMirror: CodeMirror stays the code editor and becomes a fifth
-text editor to choose beside Plain, TinyMCE, CKEditor and Toast UI; Plain stays the light one. Plain and CodeMirror
+text editor to choose beside Plain Plus, TinyMCE, CKEditor and Toast UI; Plain Plus stays the light one. Plain Plus and CodeMirror
 wear the same frame, capsule, status line, palette and comparison window.
 
-Status: batches 0 to 2 done on 2026-10-07 (the decisions answered, the `<br>` check, the baseline; CodeMirror painted
-by the admin theme, One Dark gone, the panels in six locales; `type` read as a list, the core and each language built
-as files of their own). The order of the batches is kept in `docs/ROADMAP-2026.md`. Update this line as batches land.
+Status: batches 0 to 4 done (0 to 2 on 2026-10-07: the decisions answered, the `<br>` check, the baseline; CodeMirror
+painted by the admin theme, One Dark gone, the panels in six locales; `type` read as a list, the core and each language
+built as files of their own; 3 and 4 on 2026-10-08: the shell and the runtime, Plain Plus and CodeMirror as code in one frame;
+CodeMirror a text editor storing Markdown, offered to both roles). The order of the batches is kept in
+`docs/ROADMAP-2026.md`. Update this line as batches land.
 
 No line numbers anywhere in this document on purpose: every reference names the function, the file or the constant
 it points at, and that name is what to search for.
@@ -18,8 +20,8 @@ Taken by the owner on 2026-10-06; settled, not to be reopened by a batch.
 - **CodeMirror in two roles.** It stays the editor of `Editor::getCode()` and joins the list of text editors that
   `Editor::getContent()` and the settings offer. The owner of a site chooses it like any other text editor; nobody
   receives it without choosing it.
-- **Plain stays light, not primitive.** Plain keeps zero script weight of an engine and takes every ability that is
-  cheap and fast on a textarea (owner, 2026-10-06): the list under "Plain: what it takes" is the rule. What redraws the
+- **Plain Plus stays light, not primitive.** Plain Plus keeps zero script weight of an engine and takes every ability that is
+  cheap and fast on a textarea (owner, 2026-10-06): the list under "Plain Plus: what it takes" is the rule. What redraws the
   whole text on every key — the highlighting mirror and line numbers of the stand — stays out; who wants it chooses
   CodeMirror.
 - **One plugin, `type` as a list.** `plugins/editors/codemirror/manifest.json` declares `"type": ["content", "code"]`;
@@ -34,11 +36,11 @@ Taken by the owner on 2026-10-06; settled, not to be reopened by a batch.
 - **CodeMirror is painted by theme tokens.** `classHighlighter` writes `tok-*` classes, the theme colours them, the
   scheme switches the code with the page; One Dark leaves the tree.
 - **Esc closes the palette at once,** even with text in its search field.
-- **The file window serves Plain and CodeMirror as text** (owner, 2026-10-06), the same window Toast UI opens from its
+- **The file window serves Plain Plus and CodeMirror as text** (owner, 2026-10-06), the same window Toast UI opens from its
   folder button, through an adapter; CodeMirror as code gets none. Toast UI keeps its own wiring.
 
 Rejected, with the reason, so it is not proposed again: CodeMirror as the only engine (it would take the zero-weight
-choice away), and Plain as a light code editor (the code screens are the panel's, where CodeMirror is always wanted).
+choice away), and Plain Plus as a light code editor (the code screens are the panel's, where CodeMirror is always wanted).
 
 ## Measured weights
 
@@ -51,7 +53,7 @@ Gzip, measured on 2026-10-06 from the files of the tree and from esbuild builds 
 | `cm6.bundle.js` today, seven languages | 237 KB |
 | CodeMirror core with `basicSetup` and lint, no language | 126 KB |
 | CodeMirror with `minimalSetup` and markdown (markdown pulls html, css and js for code blocks) | 177 KB |
-| Plain | 0 |
+| Plain Plus | 0 |
 
 ## What exists today
 
@@ -62,7 +64,7 @@ Gzip, measured on 2026-10-06 from the files of the tree and from esbuild builds 
   use: `core/system.php`, `core/user.php`, `modules/account`, `modules/forum`, `modules/node`, `modules/contact/admin`,
   `admin/modules/newsletter.php`, `admin/modules/messages.php` and others. `getEditorKey()` takes, for the panel, the
   editor of the administrator's own profile (`$admin[3]`), then `$conf['editor']['admin']`, then `plain`; for the site
-  `$conf['editor']['user']`, then `plain`. `config/global.php` sets `user` to `toastui` and no `admin` key, so Plain is
+  `$conf['editor']['user']`, then `plain`. `config/global.php` sets `user` to `toastui` and no `admin` key, so Plain Plus is
   the text editor of every administrator who chose none and the fallback of the site.
 - The manifest field `type` is compared as one string in three places of `core/classes/editor.php`: `getCode()`,
   `checkManifest()` and `getEditorList()`. `getSelect()` builds the editor lists of `admin/modules/config.php`,
@@ -98,13 +100,17 @@ serve this type" and replaces the three comparisons. CodeMirror's manifest becom
     "label": "CodeMirror 6",
     "type": ["content", "code"],
     "roles": ["user", "admin"],
-    "formats": ["plain", "markdown", "html"],
-    "lang": ["php", "html", "css", "js", "json", "sql", "xml", "text"]
+    "formats": ["markdown", "plain", "html"],
+    "lang": ["php", "html", "css", "js", "json", "sql", "xml", "markdown", "ini", "apache", "robots", "text"]
 }
 ```
 
 `getCode()` keeps refusing a code editor that lacks the `admin` role; the `html` format stays the panel's, as
 `getContent()` already enforces for every editor.
+
+The first format of the list is the one an editor stores, `Editor::getFormat()`: CodeMirror as text stores Markdown,
+as Toast UI does, so a site moves between the two without touching a stored text, and its highlighting is the
+Markdown grammar (owner, 2026-10-08, in batch 4; the order `plain` first would have stored it as Plain Plus).
 
 ### The shell
 
@@ -148,7 +154,7 @@ A caller may pass, through the data of `getCode()` / `getContent()`:
 
 `tplconfig` is the first caller to pass `vars`, taken from the same constants `_TPINFO` lists today.
 
-### Plain: what it takes
+### Plain Plus: what it takes
 
 Every ability that costs nothing at rest and nothing per key beyond the key itself:
 
@@ -193,7 +199,7 @@ two hundred megabytes. Above a token limit the comparison works by lines, and in
 
 ### Engines
 
-| Ability | Plain | CodeMirror as text | CodeMirror as code |
+| Ability | Plain Plus | CodeMirror as text | CodeMirror as code |
 | --- | --- | --- | --- |
 | frame, rail, capsule, status, full screen, wrap, copy, reset, undo, palette, comparison | yes | yes | yes |
 | preview | yes | yes | yes |
@@ -226,9 +232,9 @@ Put to the owner in batch 0 and answered on 2026-10-07; settled like the decisio
    contract of the htmx routes asks. Rejected: the preview for code templates only.
 4. **Capsule on the site: the full one.** A member in the lite theme gets the same capsule as the panel: every
    command the engine supports.
-5. **Emoji: carried over, loaded on the first click.** The emoji panel of Toast UI serves Plain and CodeMirror as text
+5. **Emoji: carried over, loaded on the first click.** The emoji panel of Toast UI serves Plain Plus and CodeMirror as text
    through the adapter of the file window; its script and the search words of the locale load when the panel is
-   first opened, so Plain at rest stays at zero script weight. Rejected: emoji for Toast UI only.
+   first opened, so Plain Plus at rest stays at zero script weight. Rejected: emoji for Toast UI only.
 6. **A draft in the browser: `sessionStorage` for everyone.** An unsent text is kept in `sessionStorage` of the tab,
    as WordPress keeps its backup copy: it survives a reload, a link followed by mistake, an expired token and
    Ctrl+Shift+T, and is erased on submit. It dies with the browser unless the browser restores its last session on
@@ -244,19 +250,19 @@ Each batch ends with its checks green, a report, and no commit without the owner
 ### Batch 0 — *decision*: questions and baseline
 
 - Ask the open decisions, write the answers into this plan: done 2026-10-07, under "Answered decisions".
-- Pin whether `EditorPlain` is the driver of the `<br>` defect in `docs/EDITORS.md`: one save through Plain on
+- Pin whether `EditorPlain` is the driver of the `<br>` defect in `docs/EDITORS.md`: one save through Plain Plus on
   `_users.sig` with a known value. If it is, the repair belongs to batch 3; if not, it stays out of this plan.
   Done 2026-10-07 by a probe of the server path in place of the save: it is not. No driver eats them;
   `getTplTextarea()` deletes them on mount for every format but `html`, and only the `markdown` save fails to write
   them back. The mechanism stands in `docs/EDITORS.md`; the repair stays out of this plan and is a step of its own in
   `docs/ROADMAP-2026.md`, with the live save through the browser.
 - `npm run ui:before` on the panel screens with editors (`tplconfig`, the system file editor, blocks, template) and on
-  one site form with Plain.
+  one site form with Plain Plus.
   Done 2026-10-07 over the whole manifest of `tools/ui-shots.json`, which gained `admin-tplconfig`, `admin-sysfile`,
   `admin-blockfile` (its `code` state is the editor of the first file block), `admin-template-style` and
   `admin-account-add`.
   The template screen is taken by its style tab: the html tab opens 208 editors on one page. The site edits with
-  Toast UI on the stand, so the Plain form of the baseline is the panel's new member form.
+  Toast UI on the stand, so the Plain Plus form of the baseline is the panel's new member form.
 
 ### Batch 1 — CodeMirror in the theme
 
@@ -292,7 +298,7 @@ Each batch ends with its checks green, a report, and no commit without the owner
   and is gone, its two callers call the class; the one thing only the copy checked, a manifest `id` equal to its
   directory, moved into `Editor::getManifest()`, so no key reaches a manifest or a driver outside its own folder. By the owner's answer of 2026-10-07 the CodeMirror manifest takes the
   list form as `["code"]` only, with its roles and format unchanged: `content`, the `user` role and the formats of the
-  design join in batch 4 together with `ContentDriver`, so no list offers a text editor that renders Plain. Tests in
+  design join in batch 4 together with `ContentDriver`, so no list offers a text editor that renders Plain Plus. Tests in
   `EditorFormatTest`: both forms of `type`, the three lists of `getSelect()`, a file for every language of the manifest.
   `build.mjs` writes ES modules with splitting into `assets/`: `core.js`, `lang-<key>.js` for the seven languages of the
   manifest and `markdown`, each exporting `language`, and shared `chunk-<hash>.js` files whose name follows their
@@ -308,7 +314,7 @@ Each batch ends with its checks green, a report, and no commit without the owner
 - Fragments and `theme.css` rules of the shell in both themes, its tokens in both `base.css`, the names in
   `tools/ui-contract.php`.
 - `plugins/system/editor.js` with the frame, status, dirty mark, full screen, wrap, copy, reset, undo and the lazy
-  loading of CodeMirror; Plain and CodeMirror as code render through the shell; `EditorCodemirror` keeps no
+  loading of CodeMirror; Plain Plus and CodeMirror as code render through the shell; `EditorCodemirror` keeps no
   JavaScript string.
 - `cm6.bundle.js`, its `entry.js` and the IIFE half of `build.mjs` leave once the driver loads through the runtime; the
   readers of `CM6.editors` (`admin-ui.js`, `editor-robots.js`, the editor module of the panel) move to what the runtime
@@ -318,13 +324,57 @@ Each batch ends with its checks green, a report, and no commit without the owner
 - Constants in six locales.
 - Tests: a driver test asserting both drivers render the shell fragments and no class string from PHP; the theme
   gates.
+- Done 2026-10-08. `Editor::getFrame()` renders `editor-frame.html` around the textarea of either driver and, once per
+  answer under the static `$done`, `plugins/system/editor.js` with `editor-kit.html`: a `<template>` holding the capsule,
+  the draft offer and the words of the runtime as JSON (the status phrases and the CodeMirror panel phrases, which moved
+  from the driver to `Editor::PHRASES`), so a page of 208 editors carries one copy. Both fragments are byte-identical in
+  the two themes; the shell rules stand in both `theme.css` on existing tokens (`--sl-editor-tab-height`, the rail,
+  the chip size), so no token was added; the admin theme keeps the CodeMirror rules, now transparent inside the card,
+  with line numbers and fold marks shown under the hand as the stand does. The capsule of this batch is undo, redo,
+  wrap, copy, reset and full screen; batch 6 completes it. The textarea is visible until CodeMirror mounts, which the
+  runtime does by `import()` of the versioned `core.js` and one `lang-*.js` when the frame comes within 200 points of
+  the screen or the textarea takes focus; the tplconfig screen measured 2 of 22 frames mounted on load. CodeMirror
+  writes every change back into the textarea, so a form, htmx or a reader of the field sees the text without a hook;
+  `window.SlaedEditor` (`getText`, `setText`, `isDirty`) is what the robots button and the leave check of the file
+  editor call, and the `hx-on` copy of the editor module is gone. A submit takes the text as the loaded one and erases
+  the draft, a form reset takes the default back as the loaded one, into CodeMirror as well, and the two writes of the
+  private message screen into a Plain Plus field now raise `input`; the draft key is the page, the field name and its place among fields of that name. Esc leaves the full
+  screen unless a window the frame does not stand in is open; the window canon and the quick edit now leave a key
+  another handler already took. `cm6.bundle.js`, `entry.js` and the IIFE half of `build.mjs` are gone; the core lost
+  the `editors` registry. `editor-mount.html` lost its code branch. Seventeen `_EDITOR_*` constants in six locales.
+  Plain Plus on the panel now folds its row to one column as every other editor does.
+  Found on the way and fixed by the owner's answer of 2026-10-08: the four screens of the editor module never saved
+  without a note, because an empty `div` part printed no `#repeditornote` and htmx stopped at its target; the note
+  target is now `block-content`, which is always printed.
 
 ### Batch 4 — CodeMirror as a text editor
 
 - `EditorCodemirror` implements `ContentDriver`: markdown, plain and, in the panel, html.
 - The manifest becomes the one under "The manifest": `type` `["content", "code"]`, roles `user` and `admin`, the formats
-  `plain`, `markdown`, `html` (owner, 2026-10-07: not before the driver serves them).
+  `markdown`, `plain`, `html` (owner, 2026-10-07: not before the driver serves them; 2026-10-08: Markdown first).
 - It appears in the editor lists of the settings for both roles.
+- Done 2026-10-08. `EditorCodemirror` implements both interfaces through one `getWidget()`, whose fifth argument tells
+  the role: the data array of `getContent()` or the profile string of `getCode()`; the interfaces are unchanged. A text
+  takes the grammar of its format (Markdown, built on the GitHub base Toast UI writes; HTML; none for `plain`), the rows
+  of its field like Plain Plus, and a textarea that is not marked as code, so the spell check stays on and CodeMirror takes
+  it from the textarea. The frame carries `data-sl-editor-code` for code; the runtime mounts `basicSetup` for code and
+  `textSetup` for a text, a new export of the core that is the basic setup without line numbers. The Markdown grammar
+  brings the list continued by Enter already. The admin theme sets a text in the face of the page and keeps the mono
+  face for code; the lite theme, which had no CodeMirror rules, gained them for a text (Markdown tones, fold marks under
+  the hand, the search panel) with `--sl-editor-max-height` in its API block. Lists: the panel offers
+  `plain toastui tinymce ckeditor codemirror`, the site `plain toastui codemirror`.
+  Found on the way: a whole-text replacement in CodeMirror (the draft restored, "Вернуть", `SlaedEditor.setText`) raised
+  no `input`, unlike Plain Plus, so the save bar of the site settings stayed hidden; it raises one now. The crawl measured
+  keywords and strings of code at 4.45 and 4.44 to 1 on the card surface the editor stands on since batch 3; they take
+  `--sl-danger-strong` and `--sl-success-strong`.
+  Found by the review of the batch: CodeMirror took the floor of code in the panel and a fixed one on the site, so a
+  form jumped when it mounted; the runtime now measures the field it takes the place of and writes
+  `--sl-d-editor-floor`, which both themes read for code and text alike. A code field in a full row of the panel had
+  lost its floor to the floor of every full-row textarea (180 points against 250), which is where the jump of code
+  came from; it holds the code floor again, so code keeps its 250 points. An empty required text under CodeMirror
+  blocked the form without a word, the field being hidden; the frame now takes `data-invalid`, the rail and the note
+  say it and the focus goes into the editor. Tab moves on to the next field in a text and indents only in code (owner,
+  2026-10-08); a text indents by Ctrl+] and Ctrl+[.
 
 ### Batch 5 — file manager
 
@@ -332,7 +382,7 @@ Each batch ends with its checks green, a report, and no commit without the owner
   CodeMirror view and for a textarea; the public entry that opens the window; the folder button and the palette line;
   paste and drop of an image; the emoji panel loaded on its first click (answered decision 5); the window above the
   full screen.
-- Checks: upload, link, embed and "Мои файлы" insert into Plain and CodeMirror as text as they insert into Toast UI;
+- Checks: upload, link, embed and "Мои файлы" insert into Plain Plus and CodeMirror as text as they insert into Toast UI;
   Toast UI unchanged.
 
 ### Batch 6 — capsule and palette
@@ -340,17 +390,17 @@ Each batch ends with its checks green, a report, and no commit without the owner
 - The capsule of the final face with the commands each engine supports, the same in both themes (answered decision
   4); the palette as a window of the canon with the groups, the fuzzy filter, the recent command and the key
   reference; Ctrl+K only while focus is in an editor.
-- The markdown commands, the list continued by Enter and the character counter for Plain and CodeMirror as text.
+- The markdown commands, the list continued by Enter and the character counter for Plain Plus and CodeMirror as text.
 
 ### Batch 7 — variables and the hint
 
 - The `vars` key through `getCode()` / `getContent()`; the variable list for every engine, the marks in code and the
-  completion in CodeMirror, the hint at the caret of Plain; `tplconfig` passes its variables.
+  completion in CodeMirror, the hint at the caret of Plain Plus; `tplconfig` passes its variables.
 
 ### Batch 8 — lint and format
 
 - The checks under "What the page tells the editor", the badge, the gutter marks and the fixes of one click in
-  CodeMirror, the badge and the list in Plain; "тег на строку" and "в одну строку" for both.
+  CodeMirror, the badge and the list in Plain Plus; "тег на строку" and "в одну строку" for both.
 
 ### Batch 9 — comparison
 

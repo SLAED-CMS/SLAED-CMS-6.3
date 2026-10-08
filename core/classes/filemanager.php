@@ -21,7 +21,7 @@ class FileManager {
     private const MAXEDIT = 2097152;
     private const LANGS = [
         'php' => 'php', 'html' => 'html', 'htm' => 'html', 'tpl' => 'html', 'css' => 'css', 'js' => 'js', 'json' => 'json',
-        'sql' => 'sql', 'xml' => 'xml', 'txt' => 'text', 'md' => 'text', 'ini' => 'text', 'log' => 'text',
+        'sql' => 'sql', 'xml' => 'xml', 'txt' => 'text', 'md' => 'markdown', 'ini' => 'ini', 'log' => 'text',
     ];
     private const IMAGES = ['png', 'jpg', 'jpeg', 'gif', 'webp', 'avif', 'svg'];
     private const AUDIOS = ['mp3', 'wav', 'flac', 'ogg', 'oga', 'opus', 'm4a'];
@@ -140,8 +140,9 @@ class FileManager {
 
     # Returns the highlighting mode of one path for the source editor, or an empty string for everything that is not text, which is what keeps a binary out of the editor
     public function getCodeLanguage(string $path): string {
-        $ext = strtolower(pathinfo(str_replace('\\', '/', $path), PATHINFO_EXTENSION));
-        return self::LANGS[$ext] ?? '';
+        $path = strtolower(str_replace('\\', '/', $path));
+        if (basename($path) === 'robots.txt') return 'robots';
+        return self::LANGS[pathinfo($path, PATHINFO_EXTENSION)] ?? '';
     }
 
     # Reads the source of one text file the way the editor receives it: the content itself, the version the save has to hand back and the number of lines the properties show

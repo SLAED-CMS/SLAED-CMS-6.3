@@ -1,1 +1,1 @@
-import{e as a}from"./chunk-UNPWL2GQ.js";import"./chunk-UAROKMVX.js";import"./chunk-6SJUPBBY.js";import"./chunk-CLTP773P.js";export{a as language};
+import{e as a}from"./chunk-FDW3HIBE.js";import"./chunk-SVNKTRE2.js";import"./chunk-G6ZHVKQX.js";import"./chunk-FHKMPT6H.js";export{a as language};

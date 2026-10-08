@@ -18,6 +18,7 @@
         "@codemirror/lang-sql": "^6",
         "@codemirror/lang-xml": "^6",
         "@codemirror/lang-json": "^6",
-        "@codemirror/lang-markdown": "^6"
+        "@codemirror/lang-markdown": "^6",
+        "@codemirror/legacy-modes": "^6"
     }
 }

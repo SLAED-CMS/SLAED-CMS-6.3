@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="ru" data-theme="auto">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Док &middot; Пагинатор — стенд SLAED CMS</title>
+  <link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../templates/lite/assets/css/base.css">
+  <link rel="stylesheet" href="../templates/lite/assets/css/theme.css">
+  <!-- The stand is served without Cache-Control; its sheet and script are stamped so an edit is seen at once -->
+  <script>document.write('<link rel="stylesheet" href="assets/demo.css?v=' + Date.now() + '">');</script>
+  <script src="../plugins/system/global-func.js"></script>
+  <script src="../plugins/system/slaed.js"></script>
+  <style>
+    /* Док: a floating capsule held to the bottom of the screen while the list is read, landing in its place at the end */
+    [data-pg-list]:has(.v7) { position: sticky; bottom: var(--sl-space-6); z-index: var(--sl-z-sticky); pointer-events: none; }
+    .sl-pager.v7 { padding: var(--sl-space-5) 0; border-top: 0; }
+    .v7-dock { display: inline-flex; align-items: center; gap: var(--sl-space-1); max-width: 100%; padding: var(--sl-space-2); border: 1px solid var(--sl-border-subtle); border-radius: var(--sl-radius-pill); background: var(--sl-bg); box-shadow: var(--sl-shadow-float); box-sizing: border-box; pointer-events: auto; }
+    .v7-pages { display: flex; gap: var(--sl-space-1); }
+    .v7 .v7-cell, .v7 .v7-step { min-width: var(--sl-size-control); height: var(--sl-size-control); background: transparent; color: var(--sl-text); font-weight: var(--sl-weight-semibold); font-variant-numeric: tabular-nums; }
+    .v7 a.v7-cell:hover, .v7 a.v7-step[href]:hover { background: var(--sl-tint); color: var(--sl-primary-strong); }
+    .v7 .v7-cell.sl-is-active { background: var(--sl-primary-strong); color: var(--sl-on-solid); }
+    .v7 .v7-cell.sl-is-muted { min-width: var(--sl-size-icon-md); color: var(--sl-text-muted); }
+    .v7 .v7-step.sl-is-muted { opacity: var(--sl-fade-disabled); }
+    .v7-count { display: none; padding: 0 var(--sl-space-3); color: var(--sl-text-muted); font-size: var(--sl-font-small); font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .v7-count b { color: var(--sl-text-strong); }
+    .v7-sep { flex: 0 0 auto; width: 1px; height: var(--sl-size-icon-md); margin: 0 var(--sl-space-2); background: var(--sl-border-subtle); }
+    .v7-keys { display: inline-flex; gap: var(--sl-space-1); padding: 0 var(--sl-space-2); }
+    .v7 kbd { display: inline-flex; align-items: center; justify-content: center; min-width: var(--sl-size-icon-md); padding: 0 var(--sl-space-1); border: 1px solid var(--sl-border-muted); border-radius: var(--sl-radius-1); background: var(--sl-surface); color: var(--sl-text-muted); font: inherit; font-size: var(--sl-font-micro); }
+    @container pg (width < 560px) {
+      .v7-pages, .v7-keys, .v7-keys + .v7-sep { display: none; }
+      .v7-count { display: inline; }
+    }
+  </style>
+</head>
+<body class="sl-summer" id="top">
+<main class="d-page" data-demo-page data-demo-band="Новости">
+  <h1 class="sl-title">Новости</h1>
+  <ul class="d-pg-list" id="pg-list"></ul>
+  <div data-demo-pager data-count="97" data-limit="10" data-cur="1" data-pg-list="pg-list"></div>
+  <section class="d-pg-cases" aria-labelledby="pg-cases">
+    <h2 class="sl-title" id="pg-cases">Тот же пагинатор в других местах</h2>
+    <figure class="d-pg-case"><figcaption>Комментарии — три страницы, открыта вторая</figcaption><div data-demo-pager data-count="27" data-limit="10" data-cur="2"></div></figure>
+    <figure class="d-pg-case"><figcaption>Архив — 480 материалов, 48 страниц, середина</figcaption><div data-demo-pager data-count="480" data-limit="10" data-cur="24"></div></figure>
+    <figure class="d-pg-case"><figcaption>Конец раздела — последняя страница</figcaption><div data-demo-pager data-count="97" data-limit="10" data-cur="10"></div></figure>
+    <figure class="d-pg-case d-pg-narrow"><figcaption>Узкая колонка — подвал форума</figcaption><div data-demo-pager data-count="480" data-limit="10" data-cur="7"></div></figure>
+    <figure class="d-pg-case d-pg-pm"><figcaption>Личные сообщения — колонка списка, 240 писем</figcaption><div data-demo-pager data-count="240" data-limit="15" data-cur="8"></div></figure>
+  </section>
+</main>
+<!-- The pager every host on the page clones: the variant is this template and the style above, the page around it is shared -->
+<template data-pg-tpl>
+  <nav class="sl-pager v7" aria-label="Страницы">
+    <div class="v7-dock" data-pg-keys>
+      <a class="sl-but-mini v7-step" data-pg-go="prev" title="Назад (←)" aria-label="Назад" aria-keyshortcuts="ArrowLeft"><i class="bi bi-chevron-left" aria-hidden="true"></i></a>
+      <span class="v7-pages" data-pg-pages data-pg-cell="sl-but-mini v7-cell" data-pg-win="5"></span>
+      <span class="v7-count" aria-live="polite"><b data-pg-text="cur"></b> / <span data-pg-text="pages"></span></span>
+      <a class="sl-but-mini v7-step" data-pg-go="next" title="Вперёд (→)" aria-label="Вперёд" aria-keyshortcuts="ArrowRight"><i class="bi bi-chevron-right" aria-hidden="true"></i></a>
+      <span class="v7-sep" aria-hidden="true"></span>
+      <span class="v7-keys" title="Листать клавишами"><kbd>←</kbd><kbd>→</kbd></span>
+      <span class="v7-sep" aria-hidden="true"></span>
+      <a class="sl-but-mini v7-step" href="#top" title="Наверх" aria-label="Наверх"><i class="bi bi-arrow-up" aria-hidden="true"></i></a>
+    </div>
+  </nav>
+</template>
+<script>document.write('<script src="assets/demo.js?v=' + Date.now() + '"><\/script>');</script>
+</body>
+</html>

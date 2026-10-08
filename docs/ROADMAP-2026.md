@@ -15,8 +15,9 @@ more: where a plan and this file disagree about the order, this file wins.
 | `docs/1-FILES-2026.md` | one controlled delivery of uploaded files, `uploads/node/<type>/`, the archive retired |
 | `docs/2-PROD-FINDINGS-2026.md` | retired addresses answer 410 or 301, `addFile()` writes data only |
 | `docs/3-ASSET-CACHE-2026.md` | versioned asset addresses, browser lifetimes, `defer` |
-| `docs/4-EDITOR-2026.md` | one editor shell; CodeMirror also a text editor to choose, Plain stays light |
+| `docs/4-EDITOR-2026.md` | one editor shell; CodeMirror also a text editor to choose, Plain Plus stays light |
 | `docs/5-NODE-HEAD-2026.md` | the header of a Node list from the stand `nh-13`, views by type, the RSS channel fixed in five points, a live list, search hints |
+| `docs/6-PAGER-2026.md` | the segmented switch `sl-seg` with its travelling knob; the pager from the stand `pg-09`: one size, steps by its own column, the key tip |
 
 ## How a session runs
 
@@ -88,22 +89,27 @@ into the plan, then do whatever work the step names.
   Mount". (2026-10-07)
 - [x] 28. EDITOR batch 1 — CodeMirror in the theme. (2026-10-07)
 - [x] 29. EDITOR batch 2 — the manifest and the split build. (2026-10-07)
-- [ ] 30. EDITOR batch 3 — the shell and the runtime.
-- [ ] 31. EDITOR batch 4 — CodeMirror as a text editor.
-- [ ] 32. EDITOR batch 5 — file manager for Plain and CodeMirror as text.
+- [x] 30. EDITOR batch 3 — the shell and the runtime. (2026-10-08)
+- [x] 31. EDITOR batch 4 — CodeMirror as a text editor. (2026-10-08)
+- [ ] 32. EDITOR batch 5 — file manager for Plain Plus and CodeMirror as text.
 - [ ] 33. EDITOR batch 6 — capsule and palette.
 - [ ] 34. EDITOR batch 7 — variables and the hint.
 - [ ] 35. EDITOR batch 8 — lint and format.
 - [ ] 36. EDITOR batch 9 — comparison.
 - [ ] 37. EDITOR batch 10 — preview.
 - [ ] 38. EDITOR batch 11 — reference; deletes `docs/4-EDITOR-2026.md`.
-- [ ] 39. NODE-HEAD batch 0 — *decision*: the open decisions, the callers of `getModuleNavi()`, the baseline.
-- [ ] 40. NODE-HEAD batch 1 — the feed.
-- [ ] 41. NODE-HEAD batch 2 — the script.
-- [ ] 42. NODE-HEAD batch 3 — the data of the header.
-- [ ] 43. NODE-HEAD batch 4 — template, theme, strings.
-- [ ] 44. NODE-HEAD batch 5 — views.
-- [ ] 45. NODE-HEAD batch 6 — live list and "Показать ещё".
-- [ ] 46. NODE-HEAD batch 7 — search hints.
-- [ ] 47. NODE-HEAD batch 8 — reference; deletes `docs/5-NODE-HEAD-2026.md`.
-- [ ] 48. Close — no `docs/*-2026.md` plan is left; delete this file and report that the work before 8.0 is done.
+- [ ] 39. PAGER batch 0 — segmented switch and knob: `sl-seg`, the knob in `slaed.js`, the header mode switch on it;
+  one "Наверх" on `#top` and smooth scrolling in CSS, the dead code it clears; before NODE-HEAD, whose view switch
+  stands on it.
+- [ ] 40. NODE-HEAD batch 0 — *decision*: the open decisions, the callers of `getModuleNavi()`, the baseline.
+- [ ] 41. NODE-HEAD batch 1 — the feed.
+- [ ] 42. NODE-HEAD batch 2 — the script.
+- [ ] 43. NODE-HEAD batch 3 — the data of the header.
+- [ ] 44. NODE-HEAD batch 4 — template, theme, strings.
+- [ ] 45. NODE-HEAD batch 5 — views.
+- [ ] 46. NODE-HEAD batch 6 — live list and "Показать ещё".
+- [ ] 47. NODE-HEAD batch 7 — search hints.
+- [ ] 48. NODE-HEAD batch 8 — reference; deletes `docs/5-NODE-HEAD-2026.md`.
+- [ ] 49. PAGER batch 1 — the pager in both themes.
+- [ ] 50. PAGER batch 2 — keys, tip and reference; deletes `docs/6-PAGER-2026.md`.
+- [ ] 51. Close — no `docs/*-2026.md` plan is left; delete this file and report that the work before 8.0 is done.

@@ -1,8 +1,0 @@
-export * from './core.js'
-export { php } from '@codemirror/lang-php'
-export { html } from '@codemirror/lang-html'
-export { css } from '@codemirror/lang-css'
-export { javascript } from '@codemirror/lang-javascript'
-export { sql } from '@codemirror/lang-sql'
-export { xml } from '@codemirror/lang-xml'
-export { json } from '@codemirror/lang-json'

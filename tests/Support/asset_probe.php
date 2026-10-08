@@ -21,7 +21,7 @@ function getProbeHead(string $name): array {
 # The tags of one editor engine on a page load, the list the same engine names to the client loader on an htmx fragment, and the init of an instance
 function getProbeEditor(): array {
     $css = ['plugins/editors/codemirror/assets/cm6.css'];
-    $js = ['plugins/editors/codemirror/assets/cm6.bundle.js'];
+    $js = ['plugins/system/editor.js'];
     unset($_SERVER['HTTP_HX_REQUEST']);
     $page = Editor::getAssetTags($css, $js);
     $_SERVER['HTTP_HX_REQUEST'] = 'true';

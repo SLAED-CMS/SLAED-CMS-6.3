@@ -84,10 +84,9 @@ return [
         ],
         # The hero step reads 38 and not 48 on purpose: it sizes the dashboard version number and the slider headline, and at 48 the number crowded the pane of its label
         # Step count and role names are unchanged, which is what the ladder law asks of a theme that needs a different value
-        # The micro step reads 11 and not 10 since the presentation page: most of its labels are monospace micro text, and a monospace face at 10 reads smaller than it is
-        # One step serves both themes, decided by the owner on 2026-09-10
+        # The micro step reads 12 and the small step 13, raised from 11 and 12 by the owner on 2026-10-08 because 11 read too small; one ladder serves both themes
         'font-size' => [
-            'steps' => [11, 12, 14, 16, 18, 20, 24, 32, 38],
+            'steps' => [12, 13, 14, 16, 18, 20, 24, 32, 38],
             'unit' => 'px',
             'tokens' => [
                 '--sl-font-micro', '--sl-font-small', '--sl-font-body', '--sl-font-h4', '--sl-font-h3',
@@ -231,9 +230,12 @@ return [
         '--sl-d-count' => 'speed dial item count, plugins/system/filemanager.js',
         '--sl-d-depth' => 'comment nesting depth, templates/lite/fragments/comment.html',
         '--sl-d-duration' => 'profile feed scroll duration, plugins/system/slaed.js',
+        '--sl-d-editor-floor' => 'height of the field CodeMirror takes the place of, plugins/system/editor.js',
         '--sl-d-float-left' => 'floating panel viewport left, plugins/system/slaed.js',
         '--sl-d-float-top' => 'floating panel viewport top, plugins/system/slaed.js',
         '--sl-d-level' => 'profile completion percentage, templates/lite/partials/account-home.html and account-profile.html',
+        '--sl-d-pill-x' => 'editor capsule horizontal offset the grip moved it by, plugins/system/editor.js',
+        '--sl-d-pill-y' => 'editor capsule vertical offset the grip moved it by, plugins/system/editor.js',
         '--sl-d-members' => 'session donut member share, templates/lite/partials/session-summary.html',
         '--sl-d-meter' => 'profile completeness percentage, templates/lite/partials/account-settings.html and plugins/system/slaed.js',
         '--sl-d-at' => 'settings rail mark index, templates/lite/partials/account-settings.html',

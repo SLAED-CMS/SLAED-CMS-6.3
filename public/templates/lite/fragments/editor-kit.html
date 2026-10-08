@@ -1,0 +1,18 @@
+<template data-sl-editor-kit data-sl-editor-words="{{ words_json }}">
+  <span class="sl-editor-pill" role="toolbar" data-sl-editor-pill>
+    <button type="button" class="sl-modal-act" data-sl-editor-act="undo" title="{{ undo_text }} (Ctrl+Z)" aria-label="{{ undo_text }}"><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i></button>
+    <button type="button" class="sl-modal-act" data-sl-editor-act="redo" title="{{ redo_text }} (Ctrl+Y)" aria-label="{{ redo_text }}"><i class="bi bi-arrow-clockwise" aria-hidden="true"></i></button>
+    <span class="sl-editor-sep" aria-hidden="true"></span>
+    <button type="button" class="sl-modal-act" data-sl-editor-act="wrap" aria-pressed="true" title="{{ wrap_text }}" aria-label="{{ wrap_text }}"><i class="bi bi-text-wrap" aria-hidden="true"></i></button>
+    <button type="button" class="sl-modal-act" data-sl-editor-act="copy" title="{{ copy_text }}" aria-label="{{ copy_text }}"><i class="bi bi-copy" aria-hidden="true"></i></button>
+    <button type="button" class="sl-modal-act" data-sl-editor-act="reset" title="{{ reset_text }}" aria-label="{{ reset_text }}"><i class="bi bi-arrow-repeat" aria-hidden="true"></i></button>
+    <span class="sl-editor-sep" aria-hidden="true"></span>
+    <button type="button" class="sl-modal-act sl-modal-act-move" data-sl-editor-act="grip" title="{{ move_text }}" aria-label="{{ move_text }}"><i class="bi bi-grip-vertical" aria-hidden="true"></i></button>
+    <button type="button" class="sl-modal-act" data-sl-editor-act="full" data-expand="{{ expand_text }}" data-restore="{{ restore_text }}" title="{{ expand_text }}" aria-label="{{ expand_text }}"><i class="bi bi-arrows-angle-expand" aria-hidden="true"></i></button>
+  </span>
+  <div class="sl-editor-draft" role="status" data-sl-editor-draft>
+    <i class="bi bi-clock-history" aria-hidden="true"></i><span>{{ draft_text }}</span>
+    <button type="button" class="sl-modal-btn" data-sl-editor-act="restore"><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i>{{ back_text }}</button>
+    <button type="button" class="sl-modal-btn" data-sl-editor-act="drop"><i class="bi bi-x-lg" aria-hidden="true"></i>{{ drop_text }}</button>
+  </div>
+</template>

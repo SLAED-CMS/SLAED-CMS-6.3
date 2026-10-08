@@ -14,6 +14,13 @@ class Parser {
     private const CACHEMIN = 2048;
     # The highlight scripts a code block loads, whose versioned addresses a stored rendering carries
     private const HLJS = ['plugins/highlightjs/highlight.min.js', 'plugins/highlightjs/highlight-line-numbers.min.js'];
+    # The name the head of a code block shows for a language of [code=…]; a language outside the list shows in capitals
+    private const CODENAME = ['bash' => 'Bash', 'cpp' => 'C++', 'csharp' => 'C#', 'css' => 'CSS', 'delphi' => 'Delphi', 'diff' => 'Diff', 'groovy' => 'Groovy',
+        'java' => 'Java', 'jscript' => 'JavaScript', 'javascript' => 'JavaScript', 'js' => 'JavaScript', 'typescript' => 'TypeScript', 'php' => 'PHP',
+        'python' => 'Python', 'ruby' => 'Ruby', 'scala' => 'Scala', 'sql' => 'SQL', 'vb' => 'VB', 'xml' => 'XML', 'shell' => 'Shell', 'sh' => 'Shell',
+        'apache' => 'Apache', 'nginx' => 'Nginx', 'plain' => '', 'plaintext' => '', 'text' => ''];
+    # A code block of more lines than this opens folded, with a button to show the rest
+    private const CODELONG = 25;
     # One backslash turns the ASCII punctuation after it into a literal; raw regions keep every backslash: the four raw BB pairs, an HTML tag and a script or style element
     # Alternative one is the pair, so group 1 is set for a literal alone; the raw regions are matched only to be stepped over, which is what keeps scripts and attributes intact
     private const PAIR = '\\\\([!-\/:-@\[-`{-~])';
@@ -489,16 +496,17 @@ class Parser {
         $cname = str_ireplace($from, $to, preg_match('#[^a-zA-Z0-9_\-]#', $lang) ? '' : $lang);
         $in = ['&#034;', '&quot;', '&#036;', '&dollar;', '&#038;', '&amp;', '&#039;', '&apos;', '&#060;', '&lt;', '&#062;', '&gt;', '&#092;', '&bsol;'];
         $out = ['"', '"', '$', '$', '&', '&', "'", "'", '<', '<', '>', '>', '\\', '\\'];
-        $code = str_replace($in, $out, preg_replace('#<br\s*/?>(?=\r?\n|$)#i', '', trim($src)) ?? '');
+        $src = preg_replace('/\A(?:[ \t]*\r?\n)+|\s+\z/', '', $src) ?? $src;
+        $code = str_replace($in, $out, preg_replace('#<br\s*/?>(?=\r?\n|$)#i', '', $src) ?? '');
         if ($mode === 0) {
             $html = preg_match("#<\?(php)?[^[:graph:]]#", $code) ? highlight_string($code, true)
-                : preg_replace("#&lt;\?php&nbsp;#", '', highlight_string('<?php '.$code, true));
+                : preg_replace('#&lt;\?php(?:&nbsp;| )#', '', highlight_string('<?php '.$code, true), 1);
             $format = str_replace('&nbsp;&nbsp;', '&nbsp; ', (string)$html);
         } elseif ($mode === 1) {
             $rows = '';
             foreach (explode("\n", str_replace(["\r\n", "\r"], "\n", $code)) as $i => $line) {
                 $html = preg_match("#<\?(php)?[^[:graph:]]#", $line) ? highlight_string($line, true)
-                    : preg_replace("#&lt;\?php&nbsp;#", '', highlight_string('<?php '.$line, true));
+                    : preg_replace('#&lt;\?php(?:&nbsp;| )#', '', highlight_string('<?php '.$line, true), 1);
                 $rows .= $this->getPartHtml('code-row', ['is_odd' => $i % 2 === 0, 'row_num' => $i + 1, 'code_html' => (string)$html]);
             }
             $format = $this->getPartHtml('table', ['is_form' => true, 'rows_html' => str_replace('&nbsp;&nbsp;', '&nbsp; ', $rows)]);
@@ -513,7 +521,17 @@ class Parser {
             $format = $this->getPartHtml('code-highlight', ['scripts_html' => $scripts, 'lang' => $hlang,
                 'code_html' => htmlspecialchars($code, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')]);
         }
-        return $this->getPartHtml('div', ['is_code' => true, 'title' => $cname.' - '._CODE, 'content_html' => $format], true);
+        $name = self::CODENAME[strtolower($cname)] ?? strtoupper($cname);
+        return $this->getPartHtml('code-block', [
+            'lang_text' => ($name !== '') ? $name : _CODE,
+            'label_text' => trim(_CODE.' '.$name),
+            'copy_text' => _COPY,
+            'done_text' => _COPYDONE,
+            'is_long' => substr_count($code, "\n") >= self::CODELONG,
+            'more_text' => _SHOWALL,
+            'less_text' => _COLLAPSE,
+            'content_html' => $format,
+        ]);
     }
 
     # Process BB block tags: bracket-free *NN smilies first, then behind the [ guard: [hr], [li], [usehtml], [usephp], [tabs], [code], [php], [quote]/[hide]/alignment, [attach=]
@@ -724,18 +742,14 @@ class Parser {
     private function filterCode(string $src): string {
         $src = preg_replace_callback(
             '/(^(`{3,}|~{3,})[ \t]*([\w\-]*)[^\n]*\n(.*?)\n^\2[ \t]*$)/ms',
-            function(array $m): string {
-                return $this->addStash($this->getPartHtml('code-highlight', ['lang' => $m[3], 'code_html' => $this->filterEsc($m[4])]));
-            },
+            fn(array $m): string => $this->addStash($this->getCodeHtml($m[4], $m[3])),
             $src
         ) ?? $src;
 
         if ($this->safe) {
             $src = preg_replace_callback(
                 $this->trust ? '/\[(use(?:html|php))\](?s:.*?)\[\/\1\](*SKIP)(*F)|(?:^(?:    |\t).+\n?)+/mi' : '/(?:^(?:    |\t).+\n?)+/m',
-                fn(array $m): string => $this->addStash(
-                    $this->getPartHtml('code-highlight', ['code_html' => $this->filterEsc(preg_replace('/^(?:    |\t)/m', '', rtrim($m[0])))])
-                )."\n",
+                fn(array $m): string => $this->addStash($this->getCodeHtml(preg_replace('/^(?:    |\t)/m', '', rtrim($m[0])) ?? '', ''))."\n",
                 $src
             ) ?? $src;
         }

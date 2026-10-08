@@ -2128,20 +2128,59 @@ ol.sl-sublist-two li::before {
   padding-bottom: 0;
 }
 
-.sl-code-row-odd {
+.sl-code-row-odd,
+.hljs-ln tr:nth-child(odd) {
   background-color: var(--sl-surface);
 }
 
-.sl-code-row-even {
+.sl-code-row-even,
+.hljs-ln tr:nth-child(even) {
   background-color: var(--sl-bg);
 }
 
-.sl-code-row-num {
+.sl-code-row-num,
+td.hljs-ln-numbers {
   vertical-align: top;
+  user-select: none;
 }
 
 .sl-code-row-cell {
   width: 100%;
+}
+
+/* A [code] block highlighted by highlight.js: the face of code on the surface of the theme, its rows striped and numbered
+   as the rows of highlight_string are, the rail of the editor at its left and the tones of its tokens shared with CodeMirror above */
+pre code.hljs {
+  display: block;
+  padding: 0;
+  background: var(--sl-surface);
+  color: var(--sl-text);
+  font-family: var(--sl-face-mono);
+  font-size: var(--sl-font-small);
+  line-height: var(--sl-line-loose);
+  tab-size: 4;
+}
+
+.hljs-ln {
+  width: 100%;
+  margin: 0;
+  border-collapse: collapse;
+}
+
+.hljs-ln-n::before {
+  display: block;
+  min-width: var(--sl-space-8);
+  padding-right: var(--sl-space-2);
+  color: var(--sl-text-muted);
+  text-align: right;
+  content: attr(data-line-number);
+}
+
+.hljs-ln td.hljs-ln-code {
+  width: 100%;
+  padding-left: var(--sl-space-3);
+  border-left: var(--sl-rail-width) solid var(--sl-border-strong);
+  white-space: pre;
 }
 
 .sl-note {
@@ -2410,24 +2449,516 @@ ol.sl-sublist-two li::before {
   }
 }
 
-.sl-editor-area {
-  font-family: Verdana, system-ui, -apple-system, sans-serif;
-  font-size: var(--sl-font-small);
-  line-height: var(--sl-line-tight);
-  width: 100%;
-  height: var(--sl-editor-height);
-  padding: var(--sl-space-2);
-  background-color: var(--sl-surface);
-  border: 1px solid var(--sl-border);
-  border-radius: var(--sl-radius-1);
-  color: var(--sl-text-muted);
+/* Editor shell: one frame for Plain and CodeMirror, the format tab and the capsule over the card, the status line under the
+   text; the rail of the card follows the state the runtime writes on the frame */
+.sl-editor {
+  display: flex;
+  flex-direction: column;
   box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
 }
 
-.sl-editor-area:focus {
+/* A row too narrow for both wraps upwards: the tab keeps the line that stands on the card and the capsule goes above it.
+   In a reversed wrap the start of the cross axis is the bottom, so flex-start sets both on the card */
+.sl-editor-row {
+  display: flex;
+  flex-wrap: wrap-reverse;
+  align-items: flex-start;
+  gap: var(--sl-space-2) var(--sl-space-3);
+  min-width: 0;
+}
+
+/* The tab stands one point into the card and above it, so no line parts the two and the rail runs on from the card into it */
+.sl-editor-tab {
+  position: relative;
+  top: 1px;
+  z-index: var(--sl-z-raised);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sl-space-3);
+  min-width: 0;
+  max-width: 100%;
+  height: var(--sl-editor-tab-height);
+  padding: 0 var(--sl-space-5);
+  border: 1px solid var(--sl-border);
+  border-bottom: 0;
+  border-left: var(--sl-rail-width) solid var(--sl-border-strong);
+  border-radius: var(--sl-radius-2) var(--sl-radius-2) 0 0;
+  background: var(--sl-surface);
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-small);
+  transition: color var(--sl-time-fast) var(--sl-ease-out), border-left-color var(--sl-time-base) var(--sl-ease-out);
+}
+
+.sl-editor-tab > span {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.sl-editor-tab > .bi {
+  color: var(--sl-border-strong);
+  transition: color var(--sl-time-base) var(--sl-ease-out);
+}
+
+.sl-editor:focus-within .sl-editor-tab {
+  color: var(--sl-text);
+}
+
+.sl-editor:focus-within .sl-editor-tab > .bi {
+  color: var(--sl-primary);
+}
+
+.sl-editor[data-dirty] .sl-editor-tab > .bi {
+  color: var(--sl-warning);
+}
+
+/* The capsule stays out of the way at rest and comes up under the hand, on focus and in the full screen */
+.sl-editor-pill {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sl-space-1);
+  margin-left: auto;
+  padding: var(--sl-space-1);
+  margin-bottom: var(--sl-space-1);
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-pill);
+  background: var(--sl-bg);
+  box-shadow: var(--sl-shadow-raised);
+  opacity: 0;
+  transform: translateY(var(--sl-space-2));
+  translate: var(--sl-d-pill-x) var(--sl-d-pill-y);
+  position: relative;
+  z-index: var(--sl-z-raised);
+  transition: opacity var(--sl-time-base) var(--sl-ease-out), transform var(--sl-time-base) var(--sl-ease-out);
+  pointer-events: none;
+}
+
+.sl-editor:hover .sl-editor-pill,
+.sl-editor:focus-within .sl-editor-pill,
+.sl-editor[data-full] .sl-editor-pill {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
+
+.sl-editor-pill .sl-modal-act {
+  width: var(--sl-size-chip);
+  height: var(--sl-size-chip);
+  border-radius: var(--sl-radius-pill);
+  color: var(--sl-text-muted);
+}
+
+.sl-editor-pill .sl-modal-act[aria-pressed="true"] {
+  background: var(--sl-tint);
+  color: var(--sl-primary-strong);
+}
+
+.sl-editor-sep {
+  width: 1px;
+  height: var(--sl-size-icon-xs);
+  margin: 0 var(--sl-space-1);
+  background: var(--sl-border-strong);
+}
+
+.sl-editor-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  border: 1px solid var(--sl-border);
+  border-left: var(--sl-rail-width) solid var(--sl-border-strong);
+  border-radius: 0 var(--sl-radius-2) var(--sl-radius-2) var(--sl-radius-2);
+  background: var(--sl-surface);
+  transition: border-left-color var(--sl-time-base) var(--sl-ease-out);
+}
+
+/* The rail is the left edge of the card itself, so it runs from the top to the bottom and no line of the card crosses it */
+.sl-editor:focus-within .sl-editor-card,
+.sl-editor:focus-within .sl-editor-tab {
+  border-left-color: var(--sl-primary);
+}
+
+.sl-editor[data-dirty] .sl-editor-card,
+.sl-editor[data-dirty] .sl-editor-tab {
+  border-left-color: var(--sl-warning);
+}
+
+/* A required text left empty under CodeMirror: the browser cannot point at the hidden field, so the rail and the note say it */
+.sl-editor[data-invalid] .sl-editor-card,
+.sl-editor[data-invalid] .sl-editor-tab {
+  border-left-color: var(--sl-danger);
+}
+
+.sl-editor[data-invalid] .sl-editor-note {
+  color: var(--sl-danger);
+}
+
+/* The textarea is the engine of Plain and the field under CodeMirror: the card draws its frame and the rail its focus */
+.sl-editor-text,
+.sl-editor-text:hover,
+.sl-editor-text:focus {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: var(--sl-space-3) var(--sl-space-4) var(--sl-space-3) var(--sl-space-5);
+  border: 0;
+  border-radius: 0 var(--sl-radius-2) 0 0;
+  background: transparent;
+  box-shadow: none;
+  color: var(--sl-text);
+  resize: vertical;
+}
+
+.sl-editor-status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sl-space-1) var(--sl-space-6);
+  padding: var(--sl-space-1) var(--sl-space-3) var(--sl-space-1) var(--sl-space-5);
+  border-top: 1px solid var(--sl-border);
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-micro);
+  line-height: var(--sl-line-loose);
+}
+
+.sl-editor:not([data-ready]) .sl-editor-status,
+.sl-editor-status > :empty {
+  display: none;
+}
+
+.sl-editor-dirty {
+  display: none;
+  padding: 0 var(--sl-space-2);
+  border-radius: var(--sl-radius-pill);
+  background: var(--sl-warning-subtle);
+  color: var(--sl-warning-strong);
+}
+
+.sl-editor[data-dirty] .sl-editor-dirty {
+  display: inline-flex;
+}
+
+.sl-editor-note {
+  color: var(--sl-success);
+}
+
+.sl-editor-lang {
+  margin-left: auto;
+}
+
+/* The draft of the tab is offered above the text, never put in its place without being asked */
+.sl-editor-draft {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sl-space-2) var(--sl-space-4);
+  padding: var(--sl-space-2) var(--sl-space-3) var(--sl-space-2) var(--sl-space-5);
+  border-bottom: 1px solid var(--sl-border);
+  background: var(--sl-warning-subtle);
+  color: var(--sl-warning-strong);
+  font-size: var(--sl-font-small);
+}
+
+.sl-editor-draft > span {
+  flex: 1 1 auto;
+}
+
+/* The full screen stands on the layer of a window, so a non-modal window of the editor still opens above it */
+.sl-editor[data-full] {
+  position: fixed;
+  inset: 0;
+  z-index: var(--sl-z-modal);
+  padding: var(--sl-space-5);
+  background: var(--sl-bg);
+}
+
+.sl-editor[data-full] .sl-editor-card,
+.sl-editor[data-full] .sl-editor-text,
+.sl-editor[data-full] .cm-editor {
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: none;
+}
+
+.sl-editor[data-full] .sl-editor-text {
+  resize: none;
+}
+
+.sl-editor[data-full] .cm-editor .cm-scroller {
+  max-height: none;
+}
+
+/* CodeMirror as a text editor of the site, painted by the theme: the engine writes tok-* classes through classHighlighter,
+   these rules colour them, and the scheme of the page switches the text with it */
+.sl-editor .cm-editor {
+  padding-left: var(--sl-rail-width);
+  background: transparent;
+  color: var(--sl-text);
+}
+
+.sl-editor .cm-editor .cm-scroller {
+  max-height: var(--sl-editor-max-height);
+  font-family: inherit;
+  line-height: var(--sl-line-normal);
+}
+
+/* CodeMirror keeps the height of the field it takes the place of, measured by the runtime, so the form does not jump;
+   the floor stands on the text and its gutters, the way CodeMirror asks, so the gutter runs to the bottom of a short text */
+.sl-editor .cm-editor .cm-content,
+.sl-editor .cm-editor .cm-gutter {
+  min-height: var(--sl-d-editor-floor, var(--sl-editor-height));
+}
+
+.sl-editor .cm-editor .cm-content {
+  padding: var(--sl-space-3) 0;
+}
+
+.sl-editor .cm-editor .cm-line {
+  padding: 0 var(--sl-space-4);
+}
+
+.sl-editor .cm-editor .cm-cursor {
+  border-left-color: var(--sl-primary);
+}
+
+.sl-editor .cm-editor .cm-gutters {
+  border-right: 0;
+  background: transparent;
+  color: var(--sl-text-muted);
+}
+
+/* The fold marks of a text come up under the hand, as the capsule does */
+.sl-editor .cm-editor .cm-foldGutter {
+  opacity: 0;
+  transition: opacity var(--sl-time-base) var(--sl-ease-out);
+}
+
+.sl-editor:hover .cm-editor .cm-foldGutter,
+.sl-editor:focus-within .cm-editor .cm-foldGutter {
+  opacity: 1;
+}
+
+.sl-editor .cm-editor .cm-foldGutter .cm-gutterElement {
+  padding: 0 var(--sl-space-1);
+}
+
+.sl-editor .cm-editor .cm-activeLine,
+.sl-editor .cm-editor .cm-activeLineGutter {
+  background: transparent;
+}
+
+.sl-editor .cm-editor.cm-focused .cm-activeLine {
+  background: var(--sl-bg);
+}
+
+.sl-editor .cm-editor .cm-selectionLayer .cm-selectionBackground,
+.sl-editor .cm-editor.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground,
+.sl-editor .cm-editor .cm-content ::selection,
+.sl-editor .cm-editor .cm-searchMatch-selected {
+  background: var(--sl-tint-strong);
+}
+
+.sl-editor .cm-editor .cm-selectionMatch {
+  background: var(--sl-primary-subtle);
+}
+
+.sl-editor .cm-editor.cm-focused .cm-matchingBracket {
+  background: var(--sl-success-subtle);
+  color: var(--sl-success);
+  outline: 0;
+}
+
+.sl-editor .cm-editor .cm-searchMatch {
+  background: var(--sl-warning-subtle);
+  outline: 1px solid var(--sl-warning);
+}
+
+.sl-editor .cm-editor .cm-foldPlaceholder {
+  margin: 0 var(--sl-space-1);
+  padding: 0 var(--sl-space-2);
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-1);
+  background: var(--sl-bg-subtle);
+  color: var(--sl-text-muted);
+}
+
+/* Markdown: headings and links in the primary tone, marks and addresses receding, strong text heavier;
+   the HTML inside a text keeps the colours of code */
+.sl-editor .cm-editor .tok-heading,
+.sl-editor .cm-editor .tok-link,
+.sl-editor .cm-editor .tok-typeName,
+.sl-editor .cm-editor .tok-className,
+.hljs-name,
+.hljs-tag,
+.hljs-title,
+.hljs-section,
+.hljs-selector-id,
+.hljs-selector-class,
+.hljs-built_in,
+.hljs-type {
+  color: var(--sl-primary-strong);
+}
+
+.sl-editor .cm-editor .tok-heading,
+.sl-editor .cm-editor .tok-strong,
+.hljs-strong {
+  font-weight: var(--sl-weight-bold);
+}
+
+.sl-editor .cm-editor .tok-propertyName,
+.hljs-attr,
+.hljs-attribute,
+.hljs-property,
+.hljs-variable,
+.hljs-template-variable {
+  color: var(--sl-accent);
+}
+
+.sl-editor .cm-editor .tok-string,
+.sl-editor .cm-editor .tok-string2,
+.hljs-string,
+.hljs-doctag,
+.hljs-regexp,
+.hljs-addition {
+  color: var(--sl-success);
+}
+
+.sl-editor .cm-editor .tok-keyword,
+.hljs-keyword,
+.hljs-selector-tag,
+.hljs-deletion {
+  color: var(--sl-danger);
+}
+
+.sl-editor .cm-editor .tok-number,
+.sl-editor .cm-editor .tok-atom,
+.sl-editor .cm-editor .tok-bool,
+.hljs-number,
+.hljs-literal,
+.hljs-symbol,
+.hljs-bullet {
+  color: var(--sl-warning-strong);
+}
+
+.sl-editor .cm-editor .tok-url,
+.sl-editor .cm-editor .tok-labelName,
+.sl-editor .cm-editor .tok-punctuation,
+.sl-editor .cm-editor .tok-operator,
+.sl-editor .cm-editor .tok-meta,
+.sl-editor .cm-editor .tok-comment,
+.hljs-comment,
+.hljs-quote,
+.hljs-meta,
+.hljs-meta .hljs-keyword,
+.hljs-punctuation,
+.hljs-operator,
+.hljs-link {
+  color: var(--sl-text-muted);
+}
+
+.sl-editor .cm-editor .tok-comment,
+.sl-editor .cm-editor .tok-emphasis,
+.hljs-comment,
+.hljs-quote,
+.hljs-emphasis {
+  font-style: italic;
+}
+
+.sl-editor .cm-editor .tok-invalid {
+  color: var(--sl-danger);
+  text-decoration: underline wavy;
+}
+
+/* The search panel and the tooltips speak the field and the popover of the theme */
+.sl-editor .cm-editor .cm-tooltip {
+  overflow: hidden;
+  border: 1px solid var(--sl-border-strong);
+  border-radius: var(--sl-radius-2);
+  background: var(--sl-bg);
+  box-shadow: var(--sl-shadow-float);
+}
+
+.sl-editor .cm-editor .cm-panels {
+  border-color: var(--sl-border);
+  background: var(--sl-surface);
+  color: var(--sl-text);
+}
+
+.sl-editor .cm-editor .cm-panel.cm-search {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sl-space-2) var(--sl-space-3);
+  padding: var(--sl-space-3) var(--sl-space-8) var(--sl-space-3) var(--sl-space-4);
+  font-size: var(--sl-font-small);
+}
+
+.sl-editor .cm-editor .cm-panel.cm-search br {
+  display: none;
+}
+
+.sl-editor .cm-editor .cm-panel.cm-search label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sl-space-2);
+  font-size: var(--sl-font-small);
+}
+
+/* A form row stretches every input to its width, which the search fields of the panel must not take */
+.sl-editor .cm-editor .cm-textfield {
+  width: auto;
+  height: var(--sl-size-control);
+  margin: 0;
+  padding: 0 var(--sl-space-3);
+  border: 1px solid var(--sl-field-border);
+  border-radius: var(--sl-field-radius);
+  background: var(--sl-field-bg);
+  color: var(--sl-text);
+  font: inherit;
+}
+
+.sl-editor .cm-editor .cm-textfield:focus {
   border-color: var(--sl-primary);
-  box-shadow: var(--sl-field-shadow);
-  outline: none;
+  outline: 0;
+  box-shadow: var(--sl-shadow-focus);
+}
+
+.sl-editor .cm-editor .cm-button {
+  height: var(--sl-size-control);
+  margin: 0;
+  padding: 0 var(--sl-space-4);
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-1);
+  background: var(--sl-bg);
+  color: var(--sl-text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.sl-editor .cm-editor .cm-button:hover {
+  border-color: var(--sl-border-strong);
+}
+
+.sl-editor .cm-editor .cm-panel button[name="close"] {
+  top: 50%;
+  right: var(--sl-space-3);
+  width: var(--sl-size-control);
+  height: var(--sl-size-control);
+  border-radius: var(--sl-radius-1);
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-h3);
+  transform: translateY(-50%);
+  cursor: pointer;
+}
+
+.sl-editor .cm-editor .cm-panel button[name="close"]:hover {
+  background: var(--sl-scrim-subtle);
+  color: var(--sl-danger);
 }
 
 .sl-preview {
@@ -3718,24 +4249,70 @@ ol.sl-sublist-two li::before {
 
 /* Code highlighting: source code block colors */
 .sl-code {
-  font-family:
-    Georgia,
-    system-ui,
-    -apple-system,
-    sans-serif;
-  font-style: italic;
+  font-family: var(--sl-face-mono);
   font-size: var(--sl-font-small);
   background: var(--sl-bg);
   border-left: 1px solid var(--sl-border-muted);
   border-right: 1px solid var(--sl-border-muted);
   color: var(--sl-text-muted);
   margin: var(--sl-space-2);
-  padding: var(--sl-space-2);
+  padding: 0;
   border-radius: var(--sl-radius-2);
 }
 
 .sl-code div {
   border-radius: var(--sl-radius-2);
+}
+
+/* The head of a code block names the language and carries the copy button; the button and the fold wait for the script
+   that runs them, so a page without it shows the whole code */
+.sl-code-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sl-space-2);
+  padding: var(--sl-space-1) var(--sl-space-1) var(--sl-space-1) var(--sl-space-3);
+  border-bottom: 1px solid var(--sl-border);
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-micro);
+}
+
+.sl-code:not([data-ready]) [data-sl-code-copy],
+.sl-code:not([data-ready]) .sl-code-more {
+  display: none;
+}
+
+/* The body is the one part that scrolls sideways, and it takes the focus, so a keyboard reaches a long line too */
+.sl-code > .sl-code-body {
+  overflow-x: auto;
+  padding: var(--sl-space-2);
+  border-radius: 0;
+  line-height: var(--sl-line-loose);
+}
+
+.sl-code-body pre {
+  margin: 0;
+}
+
+.sl-code-body:focus-visible {
+  outline: var(--sl-ring-width) solid var(--sl-ring-bg);
+  outline-offset: calc(var(--sl-ring-width) * -1);
+}
+
+/* A long block opens folded and unfolds under its button */
+.sl-code[data-long][data-ready]:not([data-open]) > .sl-code-body {
+  max-height: var(--sl-code-max-height);
+  overflow-y: hidden;
+}
+
+.sl-code-more {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  margin: 0;
+  border: 0;
+  border-top: 1px solid var(--sl-border);
+  border-radius: 0 0 var(--sl-radius-2) var(--sl-radius-2);
 }
 
 /* Tables: generic content table backgrounds and borders. Nothing in the theme paints a cell, so this declaration is not
@@ -5003,6 +5580,11 @@ ol.sl-sublist-two li::before {
   white-space: pre;
 }
 
+/* Inside a code block the body scrolls and not the pre, or the keyboard focus would sit on a box that cannot move */
+#content .sl-code-body pre {
+  overflow-x: visible;
+}
+
 #content code,
 #content kbd,
 #content samp {
@@ -5025,10 +5607,6 @@ ol.sl-sublist-two li::before {
 #content blockquote {
   overflow-wrap: anywhere;
   word-break: break-word;
-}
-
-#content .sl-code {
-  overflow-x: auto;
 }
 
 #sidebar {
@@ -7041,7 +7619,12 @@ dialog.sl-modal[data-sl-window] {
   margin: 0;
 }
 
-dialog.sl-modal[data-sl-window] > .sl-modal-title { cursor: move; }
+/* The head of a window and every grip take the hand, the grip over the pointer every action shows, in a window or in the capsule of an editor */
+dialog.sl-modal[data-sl-window] > .sl-modal-title,
+.sl-modal-act.sl-modal-act-move { cursor: grab; }
+dialog.sl-modal[data-sl-window][data-moving] > .sl-modal-title,
+[data-moving] .sl-modal-act.sl-modal-act-move { cursor: grabbing; }
+.sl-modal-act.sl-modal-act-move { touch-action: none; }
 dialog.sl-modal[data-sl-window].sl-is-full > .sl-modal-title { cursor: default; }
 dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
 

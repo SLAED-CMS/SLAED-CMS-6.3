@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="ru" data-theme="auto">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Счётчик &middot; Пагинатор — стенд SLAED CMS</title>
+  <link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../templates/lite/assets/css/base.css">
+  <link rel="stylesheet" href="../templates/lite/assets/css/theme.css">
+  <!-- The stand is served without Cache-Control; its sheet and script are stamped so an edit is seen at once -->
+  <script>document.write('<link rel="stylesheet" href="assets/demo.css?v=' + Date.now() + '">');</script>
+  <script src="../plugins/system/global-func.js"></script>
+  <script src="../plugins/system/slaed.js"></script>
+  <style>
+    /* Счётчик: one field-like capsule with the page number typed in place, and a hairline of the place in the section */
+    .sl-pager.v3 { flex-direction: column; gap: var(--sl-space-3); }
+    .v3-cap { position: relative; display: inline-flex; align-items: center; gap: var(--sl-space-1); box-sizing: border-box; max-width: 100%; height: var(--sl-size-control); padding: 0 var(--sl-space-1); border: 1px solid var(--sl-field-border); border-radius: var(--sl-radius-pill); background: var(--sl-field-bg); box-shadow: var(--sl-field-shadow); overflow: hidden; }
+    .v3-cap::after { content: ""; position: absolute; left: 0; bottom: 0; width: calc(var(--pg-fill) * 100%); height: var(--sl-space-1); background: var(--sl-primary); transition: width var(--sl-time-slow) var(--sl-ease-out); }
+    .v3-cap:focus-within { border-color: var(--sl-primary); box-shadow: var(--sl-shadow-focus); }
+    .v3-btn { display: inline-flex; flex: 0 0 auto; align-items: center; justify-content: center; width: var(--sl-size-chip); height: var(--sl-size-chip); border-radius: var(--sl-radius-circle); color: var(--sl-text-muted); font-size: var(--sl-size-icon-xs); text-decoration: none; transition: background-color var(--sl-time-fast) var(--sl-ease-out), color var(--sl-time-fast) var(--sl-ease-out); }
+    a.v3-btn[href]:hover { background: var(--sl-tint); color: var(--sl-primary-strong); }
+    .v3-btn:focus-visible { outline: var(--sl-ring-width) solid var(--sl-ring-bg); outline-offset: calc(var(--sl-ring-gap) * -1); }
+    .v3-btn.sl-is-muted { opacity: var(--sl-fade-disabled); }
+    .v3-mid { display: inline-flex; align-items: center; gap: var(--sl-space-2); padding: 0 var(--sl-space-3); color: var(--sl-text-muted); font-size: var(--sl-font-small); white-space: nowrap; }
+    .v3-mid b { color: var(--sl-text-strong); font-variant-numeric: tabular-nums; }
+    .v3-field { box-sizing: border-box; width: 5ch; height: var(--sl-size-chip); padding: 0; border: 0; border-radius: var(--sl-radius-1); background: var(--sl-bg-muted); color: var(--sl-text-strong); font: inherit; font-weight: var(--sl-weight-bold); font-variant-numeric: tabular-nums; text-align: center; }
+    .v3-field:hover { background: var(--sl-tint); }
+    .v3-field:focus { outline: 0; background: var(--sl-tint-strong); }
+    .sl-pager.v3 .sl-pager-info { display: inline-flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: var(--sl-space-2); margin: 0; font-size: var(--sl-font-micro); }
+    .v3 kbd { display: inline-flex; align-items: center; justify-content: center; min-width: var(--sl-size-icon-md); padding: 0 var(--sl-space-1); border: 1px solid var(--sl-border-muted); border-radius: var(--sl-radius-1); background: var(--sl-surface); color: var(--sl-text); font: inherit; }
+    @container pg (width < 480px) {
+      .v3-keys { display: none; }
+    }
+    @container pg (width < 360px) {
+      .v3-word { display: none; }
+      .v3-mid { padding: 0 var(--sl-space-2); }
+    }
+  </style>
+</head>
+<body class="sl-summer" id="top">
+<main class="d-page" data-demo-page data-demo-band="Новости">
+  <h1 class="sl-title">Новости</h1>
+  <ul class="d-pg-list" id="pg-list"></ul>
+  <div data-demo-pager data-count="97" data-limit="10" data-cur="1" data-pg-list="pg-list"></div>
+  <section class="d-pg-cases" aria-labelledby="pg-cases">
+    <h2 class="sl-title" id="pg-cases">Тот же пагинатор в других местах</h2>
+    <figure class="d-pg-case"><figcaption>Комментарии — три страницы, открыта вторая</figcaption><div data-demo-pager data-count="27" data-limit="10" data-cur="2"></div></figure>
+    <figure class="d-pg-case"><figcaption>Архив — 480 материалов, 48 страниц, середина</figcaption><div data-demo-pager data-count="480" data-limit="10" data-cur="24"></div></figure>
+    <figure class="d-pg-case"><figcaption>Конец раздела — последняя страница</figcaption><div data-demo-pager data-count="97" data-limit="10" data-cur="10"></div></figure>
+    <figure class="d-pg-case d-pg-narrow"><figcaption>Узкая колонка — подвал форума</figcaption><div data-demo-pager data-count="480" data-limit="10" data-cur="7"></div></figure>
+    <figure class="d-pg-case d-pg-pm"><figcaption>Личные сообщения — колонка списка, 240 писем</figcaption><div data-demo-pager data-count="240" data-limit="15" data-cur="8"></div></figure>
+  </section>
+</main>
+<!-- The pager every host on the page clones: the variant is this template and the style above, the page around it is shared -->
+<template data-pg-tpl>
+  <nav class="sl-pager v3" aria-label="Страницы">
+    <div class="v3-cap">
+      <a class="v3-btn" data-pg-go="first" title="Первая страница" aria-label="Первая страница"><i class="bi bi-chevron-double-left" aria-hidden="true"></i></a>
+      <a class="v3-btn" data-pg-go="prev" title="Назад" aria-label="Назад"><i class="bi bi-chevron-left" aria-hidden="true"></i></a>
+      <label class="v3-mid"><span class="v3-word">Страница</span><input class="v3-field" type="text" inputmode="numeric" autocomplete="off" enterkeyhint="go" data-pg-jump aria-label="Номер страницы"><span>из <b data-pg-text="pages"></b></span></label>
+      <a class="v3-btn" data-pg-go="next" title="Вперёд" aria-label="Вперёд"><i class="bi bi-chevron-right" aria-hidden="true"></i></a>
+      <a class="v3-btn" data-pg-go="last" title="Последняя страница" aria-label="Последняя страница"><i class="bi bi-chevron-double-right" aria-hidden="true"></i></a>
+    </div>
+    <p class="sl-pager-info">Всего <b data-pg-text="count"></b><span class="v3-keys">· номер правится, <kbd>Enter</kbd> переходит, <kbd>↑</kbd><kbd>↓</kbd> листают</span></p>
+  </nav>
+</template>
+<script>document.write('<script src="assets/demo.js?v=' + Date.now() + '"><\/script>');</script>
+</body>
+</html>
