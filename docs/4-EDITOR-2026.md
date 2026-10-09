@@ -4,12 +4,13 @@ Work plan for one editor shell and a second role for CodeMirror: CodeMirror stay
 text editor to choose beside Plain Plus, TinyMCE, CKEditor and Toast UI; Plain Plus stays the light one. Plain Plus and CodeMirror
 wear the same frame, capsule, status line, palette and comparison window.
 
-Status: batches 0 to 6 done (0 to 2 on 2026-10-07: the decisions answered, the `<br>` check, the baseline; CodeMirror
+Status: batches 0 to 9 done (0 to 2 on 2026-10-07: the decisions answered, the `<br>` check, the baseline; CodeMirror
 painted by the admin theme, One Dark gone, the panels in six locales; `type` read as a list, the core and each language
-built as files of their own; 3 to 5 on 2026-10-08, 6 on 2026-10-09: the shell and the runtime, Plain Plus and CodeMirror as code in one frame;
+built as files of their own; 3 to 5 on 2026-10-08, 6 to 9 on 2026-10-09: the shell and the runtime, Plain Plus and CodeMirror as code in one frame;
 CodeMirror a text editor storing Markdown, offered to both roles; the file window and the emoji panel for Plain Plus and
 CodeMirror as text, emoji in the shared runtime; the capsule by engine, the palette, the Markdown commands and the
-counter of the column). The order of the batches is kept in
+counter of the column; the `vars` key, the variable list, the hint and the marks, `tplconfig` the first caller; the `lint` key, the check with
+its badge, list, marks and fixes, "тег на строку" and "в одну строку"; the comparison window with its line mode). The order of the batches is kept in
 `docs/ROADMAP-2026.md`. Update this line as batches land.
 
 No line numbers anywhere in this document on purpose: every reference names the function, the file or the constant
@@ -152,7 +153,7 @@ A caller may pass, through the data of `getCode()` / `getContent()`:
 | --- | --- |
 | `vars` | the variables of a template with their descriptions; turns on the variable list, the hint and the unknown-variable check |
 | `preview` | how to render the text for the preview; absent means no preview button |
-| `lint` | on for code in `html`; the checks of the stand: unknown variable, tag left open or closed twice, img without alt, `_blank` without noopener, value without quotes, template without `[src]` when `vars` holds it |
+| `lint` | `true` turns on the check of an `html` frame, other languages ignore it; the checks of the stand: unknown variable, tag left open or closed twice, img without alt, `_blank` without noopener, value without quotes, template without `[src]` when `vars` holds it |
 
 `tplconfig` is the first caller to pass `vars`, taken from the same constants `_TPINFO` lists today.
 
@@ -208,7 +209,7 @@ two hundred megabytes. Above a token limit the comparison works by lines, and in
 | file window (`SlaedFileManager.addUpload`) | yes, through the adapter | yes, through the adapter | no |
 | variables, hint at the caret | when `vars` is passed | when `vars` is passed | when `vars` is passed |
 | markdown commands, list continued by Enter, character counter | yes | yes | no |
-| lint | `html`: badge and list | no | badge, list, marks in the text |
+| lint, "тег на строку", "в одну строку" | `html` with `lint`: badge, list with fixes | no | badge, list with fixes, marks and fixes in the text |
 | highlighting, search panel, multiple carets, folding | no | markdown | the language |
 
 ### Strings
@@ -269,6 +270,14 @@ Put to the owner in batch 6 and answered on 2026-10-08:
    text is stored in, the room `getEditorRoomData()` gives and the meter of the file window reads; it is shown for a
    `text` column (64 KB: signature, menu, intro, configuration) and not for `mediumtext`. Rejected: `maxlength` of the
    field, which no caller passes.
+
+Put to the owner in batch 7 and answered on 2026-10-09:
+
+13. **The variables of `tplconfig` are constants of their own.** One constant a variable, `_UPLOADS_SRC` to
+   `_UPLOADS_REL`, in the six locales; `_TPINFO` and the markup it carried leave the language files, and the alert above
+   the form is drawn from the same list through the `messages` of the alert fragment. Rejected: the alert taken away
+   (the descriptions would show only inside the shell), and the descriptions read out of `_TPINFO` by a pattern (a
+   translation with other markup would lose its variables without a word).
 
 ## Batches
 
@@ -465,16 +474,64 @@ Each batch ends with its checks green, a report, and no commit without the owner
 
 - The `vars` key through `getCode()` / `getContent()`; the variable list for every engine, the marks in code and the
   completion in CodeMirror, the hint at the caret of Plain Plus; `tplconfig` passes its variables.
+- Done 2026-10-09. `vars` is a map of a word in brackets to its description; both doors read it through
+  `Editor::getPageData()` into the private `$page`, which `getFrame()` takes and empties, so the interfaces keep their
+  signatures and the next frame starts without them; a key that is not `[word]` is dropped. The frame hands the pairs
+  over as `data-sl-editor-vars`. The capsule gains a group of two, both needing `vars`: the list (`bi-braces`,
+  `_EDITOR_VARS`) and the hint at the caret (`bi-lightbulb`, `_EDITOR_HINT`, Ctrl+Space); the palette a group of its
+  own with the hint and one row a variable, rebuilt only when a frame with other variables opens it. One list,
+  `.sl-editor-hint` from the kit, serves Plain Plus at the caret and every engine under the button of the capsule: it
+  stands in the card at `--sl-d-hint-x`/`-y`, ticks a variable the text already uses, is chosen by the arrows and
+  inserts by Enter, Tab or a click as one step of undo, over the word typed after the bracket and over a closing
+  bracket waiting behind it. A textarea measures its caret only while a `[…` is being typed. CodeMirror marks the known
+  variables (`sl-editor-var` on the tint) and completes them after a bracket or on Ctrl+Space through its language data,
+  one source for the life of the editor: CodeMirror knows a source by its identity, and a source made anew on every
+  read lost its state at each key and never showed. The status line counts the variables used (`_EDITOR_VARUSED`)
+  after a pause, with the draft. By answered decision 13 `_TPINFO` is gone; the ten `_UPLOADS_*` constants carry the
+  descriptions, which fixes the French and Polish lines that named `[class]`, `[nbsp]` and `[243]` for `[align]` and
+  `[quot]`, and the alert above the form lists them. The selected row of the list and of the CodeMirror completion
+  share one rule. Three `_EDITOR_*` constants in six locales.
 
 ### Batch 8 — lint and format
 
 - The checks under "What the page tells the editor", the badge, the gutter marks and the fixes of one click in
   CodeMirror, the badge and the list in Plain Plus; "тег на строку" and "в одну строку" for both.
 
+- Done 2026-10-09. `lint` is a key like `vars`: `Editor::getPageData()` reads it, `getFrame()` keeps it only for `html` and
+  gives `data-sl-editor-lint` and the badge in the status line; `tplconfig` is the one caller. The template screen of
+  the theme does not pass it: a whole template file branches its tags in `{% if %}` and would show false errors, and
+  "в одну строку" would join its `<pre>` and its scripts. For the same reason both format commands need the check
+  (`data-sl-editor-need="lint"`) and stand in the capsule beside the folds and in the palette under Формат; "Проверка"
+  with Ctrl+Shift+M under Вид, F8 among the keys of CodeMirror. The runtime runs one check, `getIssues()`, for every
+  engine: a textarea after the pause of the draft, CodeMirror through `linter()` with its gutter, both writing the same
+  findings into the badge, the rail (`data-lint`, red on an error) and the list. The list is one for both engines, from
+  the kit under the text: a row selects its place, its button applies the fix; the textarea gets the fixes too, which
+  cost it nothing. A fix is found again in the text as it stands before it is written, so a list or a tooltip a pause
+  behind cannot write into a moved place; a tag closed past an inner one reports the inner one open and closes it
+  where its parent closes, not at the end. The fix button of the list and of the CodeMirror tooltip share one rule.
+  A change the runtime writes into CodeMirror is an event of its own (`userEvent: 'input'`), so two quick commands are
+  two steps of undo. Seventeen `_EDITOR_*` constants in six locales; `_EDITOR_LINT`, `_EDITOR_NOLINT` and
+  `_EDITOR_POS` are reused.
+
 ### Batch 9 — comparison
 
 - The comparison window for every engine, opened from the capsule, the status mark and the palette; the line mode
   above the token limit.
+- Done 2026-10-09. The window is a `dialog.sl-modal.sl-modal-lg` printed inside the kit and cloned into the page on its
+  first call, as the palette is: the bar holds the two views "Вместе" and "Рядом" (`sl-editor-diff-mode`, `aria-pressed`,
+  the choice kept for the page) and the count of the units gone and new, the foot "Вернуть было" and "Оставить стало",
+  the keyboard landing on the second. "Вернуть было" writes the loaded text once the window has closed, one step the
+  undo takes back; a text equal to the loaded one says so and offers neither. It opens from a button of the capsule
+  (`bi-file-diff`, in the group of copy and reset), from a row of the palette under Вид and from the mark "изменено" of
+  the status line, which became a button. The comparison is computed only when the window opens and written as text
+  nodes with `del` and `ins`, never as markup. Units are variables, words of any script, runs of space and single signs;
+  the head and the tail the two texts share are cut off first, the middle is aligned by its longest common
+  subsequence while its table holds at most four million cells, else by lines, and a run of changed lines by its units
+  under the same limit, else gone and new as a whole: a text of eighty kilobytes with edits in three places opens in
+  about a hundred milliseconds. One more button pushed a long tab and the capsule, unseen at rest, onto two lines on
+  the template screens, 29 points taller; the tab now gives way (`flex: 1 1 0%`, `max-width: max-content`) and cuts its
+  words with the whole name in its title, so the row never wraps, which also takes the extra line away where a long tab
+  wrapped before. Ten `_EDITOR_DIFF*` constants in six locales.
 
 ### Batch 10 — preview
 

@@ -18,6 +18,7 @@ more: where a plan and this file disagree about the order, this file wins.
 | `docs/4-EDITOR-2026.md` | one editor shell; CodeMirror also a text editor to choose, Plain Plus stays light |
 | `docs/5-NODE-HEAD-2026.md` | the header of a Node list from the stand `nh-13`, views by type, the RSS channel fixed in five points, a live list, search hints |
 | `docs/6-PAGER-2026.md` | the segmented switch `sl-seg` with its travelling knob; the pager from the stand `pg-09`: one size, steps by its own column, the key tip |
+| `docs/7-SCHEMA-2026.md` | one set of column domains, the time rule, the connection contract, `utf8mb4_unicode_520_ci`, unique email, keys that serve queries |
 
 ## How a session runs
 
@@ -93,9 +94,9 @@ into the plan, then do whatever work the step names.
 - [x] 31. EDITOR batch 4 — CodeMirror as a text editor. (2026-10-08)
 - [x] 32. EDITOR batch 5 — file manager for Plain Plus and CodeMirror as text. (2026-10-08)
 - [x] 33. EDITOR batch 6 — capsule and palette. (2026-10-09)
-- [ ] 34. EDITOR batch 7 — variables and the hint.
-- [ ] 35. EDITOR batch 8 — lint and format.
-- [ ] 36. EDITOR batch 9 — comparison.
+- [x] 34. EDITOR batch 7 — variables and the hint. (2026-10-09)
+- [x] 35. EDITOR batch 8 — lint and format. (2026-10-09)
+- [x] 36. EDITOR batch 9 — comparison. (2026-10-09)
 - [ ] 37. EDITOR batch 10 — preview.
 - [ ] 38. EDITOR batch 11 — reference; deletes `docs/4-EDITOR-2026.md`.
 - [ ] 39. PAGER batch 0 — segmented switch and knob: `sl-seg`, the knob in `slaed.js`, the header mode switch on it;
@@ -112,4 +113,13 @@ into the plan, then do whatever work the step names.
 - [ ] 48. NODE-HEAD batch 8 — reference; deletes `docs/5-NODE-HEAD-2026.md`.
 - [ ] 49. PAGER batch 1 — the pager in both themes.
 - [ ] 50. PAGER batch 2 — keys, tip and reference; deletes `docs/6-PAGER-2026.md`.
-- [ ] 51. Close — no `docs/*-2026.md` plan is left; delete this file and report that the work before 8.0 is done.
+- [ ] 51. SCHEMA batch 0 — inventory: time columns, indexes against queries, `GROUP BY`, uncut writes, `modul`
+  values, `lang` width.
+- [ ] 52. SCHEMA batch 1 — connection: collation, time zone and `sql_mode` in `Database::__construct()`.
+- [ ] 53. SCHEMA batch 2 — text columns: `utf8mb4_unicode_520_ci` from one place, the text domains, cut writes.
+- [ ] 54. SCHEMA batch 3 — time: no `VARCHAR` time, moments and timers on their forms.
+- [ ] 55. SCHEMA batch 4 — NULL, defaults, types; `_users.lang` codes.
+- [ ] 56. SCHEMA batch 5 — keys: unique email, covered indexes and prefixes out, missing ones in.
+- [ ] 57. SCHEMA batch 6 — rehearsal of `update.php` on a fresh 6.2 dump the owner provides; fresh installs.
+- [ ] 58. SCHEMA batch 7 — reference; deletes `docs/7-SCHEMA-2026.md`.
+- [ ] 59. Close — no `docs/*-2026.md` plan is left; delete this file and report that the work before 8.0 is done.

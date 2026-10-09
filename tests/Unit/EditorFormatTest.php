@@ -20,7 +20,11 @@ final class EditorFormatTest extends TestCase
             '_EDITOR_SELALL', '_EDITOR_COMMENT', '_EFULLSCREEN', '_EDITOR_CMDS', '_EDITOR_CMDFIND', '_EDITOR_GRPEDIT', '_EDITOR_GRPFORMAT',
             '_EDITOR_GRPINSERT', '_EDITOR_GRPVIEW', '_EDITOR_NONE', '_EDITOR_KEYS', '_EDITOR_KEYNEXT', '_EDITOR_KEYLINE', '_EDITOR_KEYMOVE',
             '_EDITOR_KEYDUP', '_EDITOR_KEYDEL', '_EDITOR_KEYINDENT', '_EDITOR_KEYPAIR', '_EDITOR_KEYCARET', '_EDITOR_KEYLIST', '_EDITOR_KEYESC',
-            '_EDITOR_PALPICK', '_EDITOR_PALRUN', '_EDITOR_PALSHUT', '_EDITOR_PALANY'];
+            '_EDITOR_PALPICK', '_EDITOR_PALRUN', '_EDITOR_PALSHUT', '_EDITOR_PALANY', '_EDITOR_VARS', '_EDITOR_HINT', '_EDITOR_VARUSED',
+            '_EDITOR_PRETTY', '_EDITOR_FLAT', '_EDITOR_ISSUES', '_EDITOR_KEYISSUE', '_EDITOR_LINTVAR', '_EDITOR_LINTNEAR', '_EDITOR_LINTSHUT',
+            '_EDITOR_LINTOPEN', '_EDITOR_LINTALT', '_EDITOR_LINTBLANK', '_EDITOR_LINTQUOT', '_EDITOR_LINTSRC', '_EDITOR_FIXVAR', '_EDITOR_FIXDEL',
+            '_EDITOR_FIXADD', '_EDITOR_FIXQUOT', '_EDITOR_FIXSHUT', '_EDITOR_DIFF', '_EDITOR_DIFFVIEW', '_EDITOR_DIFFALL', '_EDITOR_DIFFSIDE',
+            '_EDITOR_DIFFWAS', '_EDITOR_DIFFNOW', '_EDITOR_DIFFSAME', '_EDITOR_DIFFBACK', '_EDITOR_DIFFKEEP', '_EDITOR_DIFFNOTE'];
         $words = array_merge($words, array_values((new ReflectionClassConstant(Editor::class, 'PHRASES'))->getValue()));
         foreach ($words as $name) if (!defined($name)) define($name, 'word '.$name);
         if (!defined('_LOCALE')) define('_LOCALE', 'en_US');
@@ -298,12 +302,13 @@ final class EditorFormatTest extends TestCase
             if (str_ends_with($key, '_text')) $this->assertNotSame('', (string)$value, $key.' of the kit carries no word');
         }
         $tpl = (string)file_get_contents(PUBLIC_DIR.'/templates/admin/fragments/editor-kit.html');
-        $acts = ['undo', 'redo', 'search', 'wrap', 'fold', 'unfold', 'bold', 'italic', 'code', 'link', 'list', 'quote', 'files', 'emoji', 'copy', 'reset', 'full'];
+        $acts = ['undo', 'redo', 'search', 'wrap', 'fold', 'unfold', 'bold', 'italic', 'code', 'link', 'list', 'quote', 'files', 'emoji', 'hint', 'copy', 'reset', 'diff', 'full'];
         foreach ($acts as $act) {
             $this->assertStringContainsString('data-sl-editor-act="'.$act.'"', $tpl, 'The capsule has no '.$act);
             $this->assertStringContainsString('data-sl-editor-cmd="'.$act.'"', $tpl, 'The palette has no '.$act);
         }
-        $need = ['search' => 'cm', 'fold' => 'cm', 'unfold' => 'cm', 'comment' => 'code', 'bold' => 'markdown', 'list' => 'markdown', 'files' => 'files', 'emoji' => 'text'];
+        $need = ['search' => 'cm', 'fold' => 'cm', 'unfold' => 'cm', 'comment' => 'code', 'bold' => 'markdown', 'list' => 'markdown', 'files' => 'files', 'emoji' => 'text',
+            'hint' => 'vars', 'var' => 'vars'];
         foreach ($need as $act => $want) {
             $this->assertMatchesRegularExpression('#data-sl-editor-cmd="'.$act.'" data-sl-editor-need="'.$want.'"#', $tpl, 'The palette offers '.$act.' to an engine without it');
         }
@@ -331,5 +336,112 @@ final class EditorFormatTest extends TestCase
         $tpl = (string)file_get_contents(PUBLIC_DIR.'/templates/admin/fragments/editor-frame.html');
         $this->assertStringContainsString('data-sl-editor-room="{{ room_num }}"', $tpl, 'The frame does not hand the room to the runtime');
         $this->assertStringContainsString('data-sl-editor-left', $tpl, 'The status line has no place for the counter');
+    }
+
+    # The variables of a caller reach only its own frame through both doors, and the kit, the runtime and tplconfig carry them
+    #[Test]
+    public function variablesReachTheFrameOfTheirCaller(): void
+    {
+        require_once BASE_DIR.'/public/plugins/editors/plain/driver.php';
+        $keep = $GLOBALS['conf'] ?? null;
+        $GLOBALS['conf']['editor'] = ['code' => 'codemirror', 'admin' => 'plain'];
+        $vars = ['[src]' => 'Link <b>', 'src' => 'No bracket', '[a b]' => 'Space', '[rel]' => 'Attribute'];
+        $frags = $this->getDriverFrags(function () use ($vars): void {
+            Editor::getCode(['id' => 'c', 'lang' => 'html', 'vars' => $vars]);
+            Editor::getContent(['id' => 't', 'role' => 'admin', 'editor' => 'plain', 'vars' => $vars]);
+            (new EditorPlain())->getWidget('p', 'x', '', 'full', []);
+        });
+        $GLOBALS['conf'] = $keep;
+        $frames = array_values(array_filter($frags, fn($one) => $one[0] === 'editor-frame'));
+        $this->assertCount(3, $frames);
+        $want = json_encode([['[src]', 'Link <b>'], ['[rel]', 'Attribute']], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        $this->assertSame($want, $frames[0][1]['vars_json'] ?? null, 'Code does not get the variables of its caller');
+        $this->assertSame($want, $frames[1][1]['vars_json'] ?? null, 'A text does not get the variables of its caller');
+        $this->assertSame('', $frames[2][1]['vars_json'] ?? null, 'A frame inherits the variables of the one before it');
+        $kit = $this->getFragData($frags, 'editor-kit');
+        $this->assertSame('word _EDITOR_VARUSED', json_decode((string)($kit['words_json'] ?? ''), true)['used'] ?? null, 'The count of the variables speaks English');
+        $tpl = (string)file_get_contents(PUBLIC_DIR.'/templates/admin/fragments/editor-kit.html');
+        foreach (['data-sl-editor-act="vars" data-sl-editor-need="vars"', 'data-sl-editor-act="hint" data-sl-editor-need="vars"', 'data-sl-editor-hint'] as $part) {
+            $this->assertStringContainsString($part, $tpl, 'The kit lost '.$part);
+        }
+        $frame = (string)file_get_contents(PUBLIC_DIR.'/templates/admin/fragments/editor-frame.html');
+        $this->assertStringContainsString('data-sl-editor-vars="{{ vars_json }}"', $frame, 'The frame does not hand the variables to the runtime');
+        $this->assertStringContainsString('data-sl-editor-used', $frame, 'The status line has no place for the count of the variables');
+        $run = (string)file_get_contents(PUBLIC_DIR.'/plugins/system/editor.js');
+        $want = ["cm.Decoration.mark({ class: 'sl-editor-var' })", 'cm.EditorState.languageData.of(getVarData(ed))',
+            "frame.addEventListener('keydown', function (ev) { setHintKeys(ed, ev); }, true)"];
+        foreach ($want as $part) {
+            $this->assertStringContainsString($part, $run, 'The runtime lost '.$part);
+        }
+        $page = (string)file_get_contents(BASE_DIR.'/admin/modules/uploads.php');
+        $this->assertStringContainsString("'vars' => \$vars", $page, 'The templates of the file types pass no variables');
+        foreach (['de', 'en', 'fr', 'pl', 'ru', 'uk'] as $loc) {
+            $this->assertStringNotContainsString("'_TPINFO'", (string)file_get_contents(BASE_DIR.'/admin/lang/'.$loc.'.php'), 'The variables stand as markup in '.$loc);
+        }
+    }
+    # The check of a template reaches only the html frame of a caller that asks for it, and the kit, the runtime and tplconfig carry it
+    #[Test]
+    public function templateCheckFollowsItsCaller(): void
+    {
+        $frags = $this->getDriverFrags(function (): void {
+            Editor::getCode(['id' => 'a', 'lang' => 'html', 'lint' => true]);
+            Editor::getCode(['id' => 'b', 'lang' => 'php', 'lint' => true]);
+            Editor::getCode(['id' => 'c', 'lang' => 'html']);
+        });
+        $frames = array_values(array_filter($frags, fn($one) => $one[0] === 'editor-frame'));
+        $this->assertCount(3, $frames);
+        $this->assertTrue($frames[0][1]['is_lint'] ?? null, 'Html of a caller that asks is not checked');
+        $this->assertSame('word _EDITOR_LINT', $frames[0][1]['lint_text'] ?? null, 'The badge of the check is not named');
+        $this->assertFalse($frames[1][1]['is_lint'] ?? null, 'A language the check cannot read is checked');
+        $this->assertFalse($frames[2][1]['is_lint'] ?? null, 'A frame inherits the check of the one before it');
+        $words = json_decode((string)($this->getFragData($frags, 'editor-kit')['words_json'] ?? ''), true);
+        $this->assertSame('word _EDITOR_ISSUES', $words['issues'] ?? null, 'The badge speaks English');
+        foreach (['unknown', 'near', 'shut', 'open', 'alt', 'blank', 'quot', 'src', 'fixvar', 'fixdel', 'fixadd', 'fixquot', 'fixshut'] as $key) {
+            $this->assertStringStartsWith('word _EDITOR_', (string)($words['lint'][$key] ?? ''), 'The check has no word for '.$key);
+        }
+        $kit = (string)file_get_contents(PUBLIC_DIR.'/templates/admin/fragments/editor-kit.html');
+        foreach (['data-sl-editor-act="pretty" data-sl-editor-need="lint"', 'data-sl-editor-act="flat" data-sl-editor-need="lint"',
+            'data-sl-editor-cmd="pretty" data-sl-editor-need="lint"', 'data-sl-editor-cmd="flat" data-sl-editor-need="lint"',
+            'data-sl-editor-cmd="lint" data-sl-editor-need="lint"', 'data-sl-editor-issues'] as $part) {
+            $this->assertStringContainsString($part, $kit, 'The kit lost '.$part);
+        }
+        $frame = (string)file_get_contents(PUBLIC_DIR.'/templates/admin/fragments/editor-frame.html');
+        $this->assertStringContainsString('{% if is_lint %} data-sl-editor-lint{% endif %}', $frame, 'The frame does not tell the runtime to check');
+        $this->assertStringContainsString('data-sl-editor-act="lint"', $frame, 'The status line has no badge of the check');
+        $this->assertStringContainsString('<span data-sl-editor-lint-text>', $frame, 'The words of the badge share the name of the flag of the frame');
+        $run = (string)file_get_contents(PUBLIC_DIR.'/plugins/system/editor.js');
+        foreach (['cm.linter(getLintSource(ed), { delay: 250 }), cm.lintGutter()', "ev.code === 'KeyM' && ed.can.lint", 'setLint(ed);'] as $part) {
+            $this->assertStringContainsString($part, $run, 'The runtime lost '.$part);
+        }
+        $this->assertStringContainsString("'lint' => true", (string)file_get_contents(BASE_DIR.'/admin/modules/uploads.php'), 'The templates of the file types are not checked');
+    }
+
+    # The comparison is one window of the canon in the kit, opened from the capsule, the palette and the mark of a changed text in the status line
+    # It is computed only when asked for, and a long text is aligned by lines before its changed lines are aligned by units, so its table stays small
+    #[Test]
+    public function comparisonOpensFromEveryPlace(): void
+    {
+        $frags = $this->getDriverFrags(fn() => (new EditorCodemirror())->getWidget('c', 'x', '', 'php', 'full', 'File'));
+        $this->assertSame('word _EDITOR_DIFF', $this->getFragData($frags, 'editor-frame')['diff_text'] ?? null, 'The mark of a changed text names no comparison');
+        $kit = $this->getFragData($frags, 'editor-kit');
+        $want = ['diff' => '_EDITOR_DIFF', 'joint' => '_EDITOR_DIFFALL', 'side' => '_EDITOR_DIFFSIDE', 'diffback' => '_EDITOR_DIFFBACK', 'same' => '_EDITOR_DIFFSAME'];
+        foreach ($want as $key => $name) {
+            $this->assertSame('word '.$name, $kit[$key.'_text'] ?? null, 'The comparison has no word for '.$key);
+        }
+        foreach (['lite', 'admin'] as $theme) {
+            $tpl = (string)file_get_contents(PUBLIC_DIR.'/templates/'.$theme.'/fragments/editor-kit.html');
+            foreach (['<dialog class="sl-modal sl-modal-lg sl-editor-diff" data-sl-editor-diff', 'data-sl-editor-diff-view="all" aria-pressed="true"',
+                'data-sl-editor-diff-view="side" aria-pressed="false"', 'data-sl-editor-diff-back', 'data-sl-editor-diff-side hidden'] as $part) {
+                $this->assertStringContainsString($part, $tpl, 'The comparison of '.$theme.' lost '.$part);
+            }
+            $frame = (string)file_get_contents(PUBLIC_DIR.'/templates/'.$theme.'/fragments/editor-frame.html');
+            $this->assertStringContainsString('class="sl-editor-dirty" data-sl-editor-act="diff"', $frame, 'The mark of a changed text in '.$theme.' opens no comparison');
+        }
+        $run = (string)file_get_contents(PUBLIC_DIR.'/plugins/system/editor.js');
+        foreach (["if (act === 'diff') return setDiff(ed);", '<= cells) addSubsequence(out, was, now)', 'else if (deep) addLines(out,', "dif.addEventListener('close'",
+            'setText(ed, ed.orig, kit.words.restored)', 'diff = getDiff(ed.orig, now);'] as $part) {
+            $this->assertStringContainsString($part, $run, 'The runtime lost '.$part);
+        }
+        $this->assertStringNotContainsString('innerHTML', $run, 'The comparison writes a text of the page as markup');
     }
 }

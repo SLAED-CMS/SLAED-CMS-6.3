@@ -25,6 +25,7 @@ class Editor {
     private static array $drvs = [];
     private static bool $done = false;
     private static bool $emoji = false;
+    private static array $page = [];
     private const LANGS = [
         'php' => ['PHP', 'filetype-php'],
         'html' => ['HTML', 'filetype-html'],
@@ -96,6 +97,7 @@ class Editor {
         $id = (string)($data['id'] ?? 'editor');
         $name = (string)($data['name'] ?? 'text');
         $value = (string)($data['value'] ?? '');
+        self::$page = self::getPageData($data);
         $data = self::getNameData($data);
         return $driver instanceof ContentDriver ? $driver->getAssets($profile).self::getThemeSkin($key).$driver->getWidget($id, $name, $value, $profile, $data) : '';
     }
@@ -138,10 +140,20 @@ class Editor {
         $value = (string)($data['text'] ?? '');
         $label = (string)($data['label'] ?? '');
         if ($label === '') $label = _TEXT;
+        self::$page = self::getPageData($data);
         return $driver instanceof CodeDriver ? $driver->getAssets($profile).self::getThemeSkin($key).$driver->getWidget($id, $name, $value, $lang, $profile, $label) : '';
     }
 
-    # Render one editor in the shell: a text with the emoji panel, the room of a text column and, where its field names an upload place, the file window; the kit once per answer
+    # What the page tells the editor it is about to render: the variables of a template, each a word in brackets, and whether its html is checked
+    private static function getPageData(array $data): array {
+        $vars = [];
+        foreach ((array)($data['vars'] ?? []) as $key => $text) {
+            if (preg_match('/^\[\w+\]$/', $key)) $vars[] = [$key, (string)$text];
+        }
+        return ['vars' => $vars, 'lint' => !empty($data['lint'])];
+    }
+
+    # Render one editor in the shell with the variables and check of its caller, a text with emoji, the room of its column and its file window; the kit once per answer
     public static function getFrame(array $data): string {
         global $tpl;
         $lang = (string)($data['lang'] ?? 'text');
@@ -149,6 +161,9 @@ class Editor {
         $code = !empty($data['code']);
         $kit = (!$code && ($data['mod'] ?? '') !== '') ? getEditorFileKit((string)($data['id'] ?? ''), $data) : ['opt' => [], 'html' => ''];
         $room = (array)($data['room'] ?? []);
+        $vars = self::$page['vars'] ?? [];
+        $lint = !empty(self::$page['lint']) && $lang === 'html';
+        self::$page = [];
         $head = '';
         if (!self::$done) {
             self::$done = true;
@@ -161,6 +176,9 @@ class Editor {
             'lang_text' => $name,
             'lang_key' => $lang,
             'files_json' => $kit['opt'] ? json_encode($kit['opt'], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) : '',
+            'vars_json' => $vars ? json_encode($vars, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) : '',
+            'is_lint' => $lint,
+            'lint_text' => $lint ? _EDITOR_LINT : '',
             'room_num' => (!$code && ($room['kind'] ?? '') !== 'mediumtext') ? (int)($room['bytes'] ?? 0) : 0,
             'is_code' => $code,
             'core_url' => (string)($data['core'] ?? ''),
@@ -175,10 +193,11 @@ class Editor {
             'aria_label' => (string)($data['arialabel'] ?? ''),
             'describedby' => (string)($data['describedby'] ?? ''),
             'dirty_text' => _EDITOR_DIRTY,
+            'diff_text' => _EDITOR_DIFF,
         ]).$kit['html'];
     }
 
-    # The titles of the capsule and the palette and the words of the status line and of the CodeMirror panels, which the runtime reads from the kit and never holds itself
+    # The titles of the capsule, the palette and the comparison and the words of the status line and of the CodeMirror panels, which the runtime reads from the kit
     private static function getKitData(): array {
         $words = [
             'tools' => _EDITOR_TOOLS,
@@ -191,6 +210,24 @@ class Editor {
             'recent' => _EDITOR_RECENT,
             'left' => _EDITOR_LEFT,
             'long' => _ETEXTLONG,
+            'used' => _EDITOR_VARUSED,
+            'issues' => _EDITOR_ISSUES,
+            'nolint' => _EDITOR_NOLINT,
+            'lint' => [
+                'unknown' => _EDITOR_LINTVAR,
+                'near' => _EDITOR_LINTNEAR,
+                'shut' => _EDITOR_LINTSHUT,
+                'open' => _EDITOR_LINTOPEN,
+                'alt' => _EDITOR_LINTALT,
+                'blank' => _EDITOR_LINTBLANK,
+                'quot' => _EDITOR_LINTQUOT,
+                'src' => _EDITOR_LINTSRC,
+                'fixvar' => _EDITOR_FIXVAR,
+                'fixdel' => _EDITOR_FIXDEL,
+                'fixadd' => _EDITOR_FIXADD,
+                'fixquot' => _EDITOR_FIXQUOT,
+                'fixshut' => _EDITOR_FIXSHUT,
+            ],
             'phrases' => array_map(constant(...), self::PHRASES),
         ];
         return [
@@ -209,6 +246,11 @@ class Editor {
             'files_text' => _EUPLOAD,
             'upload_text' => _EDITOR_FILES,
             'emoji_text' => _EEMOJI,
+            'vars_text' => _EDITOR_VARS,
+            'hint_text' => _EDITOR_HINT,
+            'pretty_text' => _EDITOR_PRETTY,
+            'flat_text' => _EDITOR_FLAT,
+            'lint_text' => _EDITOR_LINT,
             'wrap_text' => _EDITOR_WRAP,
             'copy_text' => _COPY,
             'reset_text' => _EDITOR_RESET,
@@ -232,6 +274,7 @@ class Editor {
             'keypair_text' => _EDITOR_KEYPAIR,
             'keycaret_text' => _EDITOR_KEYCARET,
             'keylist_text' => _EDITOR_KEYLIST,
+            'keyissue_text' => _EDITOR_KEYISSUE,
             'keyesc_text' => _EDITOR_KEYESC,
             'pick_text' => _EDITOR_PALPICK,
             'run_text' => _EDITOR_PALRUN,
@@ -244,6 +287,16 @@ class Editor {
             'draft_text' => _EDITOR_DRAFT,
             'back_text' => _EDITOR_DRAFTBACK,
             'drop_text' => _EDITOR_DRAFTDROP,
+            'diff_text' => _EDITOR_DIFF,
+            'diffview_text' => _EDITOR_DIFFVIEW,
+            'joint_text' => _EDITOR_DIFFALL,
+            'side_text' => _EDITOR_DIFFSIDE,
+            'same_text' => _EDITOR_DIFFSAME,
+            'was_text' => _EDITOR_DIFFWAS,
+            'now_text' => _EDITOR_DIFFNOW,
+            'diffnote_text' => _EDITOR_DIFFNOTE,
+            'diffback_text' => _EDITOR_DIFFBACK,
+            'keep_text' => _EDITOR_DIFFKEEP,
         ];
     }
 

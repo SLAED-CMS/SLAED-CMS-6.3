@@ -233,6 +233,8 @@ return [
         '--sl-d-editor-floor' => 'height of the field CodeMirror takes the place of, plugins/system/editor.js',
         '--sl-d-float-left' => 'floating panel viewport left, plugins/system/slaed.js',
         '--sl-d-float-top' => 'floating panel viewport top, plugins/system/slaed.js',
+        '--sl-d-hint-x' => 'editor variable list left inside its card, at the caret or under the capsule button, plugins/system/editor.js',
+        '--sl-d-hint-y' => 'editor variable list top inside its card, below the caret line or at the top of the card, plugins/system/editor.js',
         '--sl-d-level' => 'profile completion percentage, templates/lite/partials/account-home.html and account-profile.html',
         '--sl-d-pill-x' => 'editor capsule horizontal offset the grip moved it by, plugins/system/editor.js',
         '--sl-d-pill-y' => 'editor capsule vertical offset the grip moved it by, plugins/system/editor.js',

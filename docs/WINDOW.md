@@ -150,9 +150,11 @@ in `fragments/`.
 | File Manager | `partials/file-manager.html` | lite, admin |
 | Emoji panel | `partials/emoji-panel.html` | lite, admin |
 | Editor palette | `fragments/editor-kit.html` | lite, admin |
+| Editor comparison | `fragments/editor-kit.html` | lite, admin |
 
-The editor palette is modal and lives inside the `<template>` of the editor kit, which `Editor::getFrame()` prints once
-per answer; the runtime clones it into the page on its first call, so a page of many editors carries one.
+The editor palette and the editor comparison are modal and live inside the `<template>` of the editor kit, which
+`Editor::getFrame()` prints once per answer; the runtime clones each into the page on its first call, so a page of many
+editors carries one of each.
 The emoji panel is the shared runtime's since every text engine opens it: `Editor::getEmojiPanel()` prints its partial
 once per answer, and it is `data-sl-window`. The File Manager left the editor for the theme and is built by `getFileManagerWindow()` from the
 rule of one upload place; it is `data-sl-window` inside the editor, where the text under it has to stay reachable, and

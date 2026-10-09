@@ -11,8 +11,12 @@
     var kit = null;
     var seer = null;
     var pal = null;
+    var dif = null;
+    var cells = 4000000;
     var enc = win.TextEncoder ? new win.TextEncoder() : null;
-    var cmds = { undo: 'undo', redo: 'redo', all: 'selectAll', search: 'openSearchPanel', fold: 'foldAll', unfold: 'unfoldAll', comment: 'toggleComment' };
+    var uid = 0;
+    var voids = /^(area|base|br|col|embed|hr|img|input|link|meta|source|track|wbr)$/i;
+    var cmds = { undo: 'undo', redo: 'redo', all: 'selectAll', search: 'openSearchPanel', fold: 'foldAll', unfold: 'unfoldAll', comment: 'toggleComment', hint: 'startCompletion' };
 
     // Read the words, the capsule and the palette of the shell from the kit the answer carries, once per page
     function getKit() {
@@ -25,7 +29,10 @@
             words: words,
             pill: node.content.querySelector('[data-sl-editor-pill]'),
             draft: node.content.querySelector('[data-sl-editor-draft]'),
-            palette: node.content.querySelector('[data-sl-editor-palette]')
+            hint: node.content.querySelector('[data-sl-editor-hint]'),
+            issues: node.content.querySelector('[data-sl-editor-issues]'),
+            palette: node.content.querySelector('[data-sl-editor-palette]'),
+            diff: node.content.querySelector('[data-sl-editor-diff]')
         };
         return kit;
     }
@@ -35,9 +42,9 @@
         return (node.getAttribute('data-sl-editor-need') || '').split(' ').every(function (one) { return !one || can[one]; });
     }
 
-    // Put numbers into a phrase of the locale in the order its placeholders name them
+    // Put values into a phrase of the locale in the order its placeholders name them, a dollar sign in a value taken as it stands
     function getPhrase(text, one, two) {
-        return String(text || '').replace('%1$s', one).replace('%2$s', two).replace('%s', one);
+        return String(text || '').replace('%1$s', function () { return one; }).replace('%2$s', function () { return two; }).replace('%s', function () { return one; });
     }
 
     // The text an editor holds now, from CodeMirror once it is mounted and from the textarea before
@@ -107,14 +114,26 @@
         ed.left.textContent = used > ed.room ? getPhrase(kit.words.long, getSizeText(ed.room)) : getPhrase(kit.words.left, getSizeText(ed.room - used));
     }
 
-    // Mark an editor as changed against the text it was loaded with, and keep the draft of the tab after a pause
+    // Count the variables of a frame the text already uses, so the status line tells what is still to be placed
+    function setVarCount(ed, text) {
+        var used;
+        if (!ed.vars || !ed.used) return;
+        used = ed.vars.filter(function (one) { return text.indexOf(one[0]) >= 0; }).length;
+        ed.used.textContent = getPhrase(kit.words.used, used, ed.vars.length);
+    }
+
+    // Mark an editor as changed against the text it was loaded with, and keep the draft and the count of the variables after a pause
     function setChange(ed) {
         var text = getText(ed);
         if (ed.frame.hasAttribute('data-invalid')) setValid(ed);
         ed.frame.toggleAttribute('data-dirty', text !== ed.orig);
         setRoom(ed, text);
         clearTimeout(ed.wait);
-        ed.wait = setTimeout(function () { setDraft(ed, text); }, 500);
+        ed.wait = setTimeout(function () {
+            setDraft(ed, text);
+            setVarCount(ed, text);
+            setLint(ed);
+        }, 500);
     }
 
     // The draft key names the page, the field and its place among fields of the same name, so two forms of one page keep two drafts
@@ -185,10 +204,10 @@
         ed.note.textContent = '';
     }
 
-    // Replace the whole text as one step the undo of the engine can take back, telling the form as typing does
+    // Replace the whole text as one step the undo of the engine can take back, never joined to the step before it, telling the form as typing does
     function setText(ed, text, note) {
         if (ed.view) {
-            ed.view.dispatch({ changes: { from: 0, to: ed.view.state.doc.length, insert: text } });
+            ed.view.dispatch({ changes: { from: 0, to: ed.view.state.doc.length, insert: text }, userEvent: 'input' });
             ed.area.dispatchEvent(new Event('input', { bubbles: true }));
         } else {
             var area = ed.area;
@@ -246,7 +265,7 @@
     function setRange(ed, from, to, text, head, tail) {
         var area = ed.area;
         if (ed.view) {
-            ed.view.dispatch({ changes: { from: from, to: to, insert: text }, selection: { anchor: head, head: tail }, scrollIntoView: true });
+            ed.view.dispatch({ changes: { from: from, to: to, insert: text }, selection: { anchor: head, head: tail }, scrollIntoView: true, userEvent: 'input' });
             ed.view.focus();
             area.dispatchEvent(new Event('input', { bubbles: true }));
             return;
@@ -349,17 +368,441 @@
         setRange(ed, at, at, '\n' + next, at + 1 + next.length, at + 1 + next.length);
     }
 
-    // The keys a frame answers before its engine: Ctrl+K opens the palette anywhere in the frame, Ctrl+B and Ctrl+I mark a Markdown text under the caret
+    // The keys a frame answers before its engine: Ctrl+K the palette, Ctrl+B and Ctrl+I a Markdown mark, Ctrl+Space the variables of a textarea, Ctrl+Shift+M the findings
     function setKeys(ed, ev) {
         var act = '';
         var text = ev.target === ed.area || (ed.view && ed.view.contentDOM.contains(ev.target));
-        if (!(ev.ctrlKey || ev.metaKey) || ev.altKey || ev.shiftKey || ev.isComposing) return;
-        if (ev.code === 'KeyK') act = 'palette';
+        if (!(ev.ctrlKey || ev.metaKey) || ev.altKey || ev.isComposing) return;
+        if (ev.shiftKey) act = (ev.code === 'KeyM' && ed.can.lint) ? 'lint' : '';
+        else if (ev.code === 'KeyK') act = 'palette';
+        else if (text && ev.code === 'Space' && ed.can.vars && !ed.view) act = 'hint';
         else if (text && ed.can.markdown) act = { KeyB: 'bold', KeyI: 'italic' }[ev.code] || '';
         if (!act) return;
         ev.preventDefault();
         ev.stopPropagation();
         setAct(ed, act, null);
+    }
+
+    // The element that holds the focus while the variables are shown and names the chosen one to a screen reader
+    function getHintOwner(ed) {
+        return ed.view ? ed.view.contentDOM : ed.area;
+    }
+
+    // The list of the variables of one frame, made from the kit the first time it opens and standing in its card
+    function getHint(ed) {
+        var list;
+        var proto;
+        if (ed.hint) return ed.hint;
+        list = kit.hint.cloneNode(true);
+        proto = list.firstElementChild;
+        list.id = 'sl-editor-hint-' + (++uid);
+        ed.vars.forEach(function (one, i) {
+            var row = proto.cloneNode(true);
+            row.id = list.id + '-' + i;
+            row.setAttribute('data-sl-editor-var', one[0]);
+            row.querySelector('code').textContent = one[0];
+            row.querySelector('span').textContent = one[1];
+            list.appendChild(row);
+        });
+        proto.remove();
+        list.addEventListener('mousedown', function (ev) { ev.preventDefault(); });
+        list.addEventListener('click', function (ev) {
+            var row = ev.target.closest('[data-sl-editor-var]');
+            if (row) addVar(ed, row.getAttribute('data-sl-editor-var'));
+        });
+        ed.card.appendChild(list);
+        ed.hint = list;
+        return list;
+    }
+
+    // Where a list stands under the caret inside the card: CodeMirror tells it, a textarea is measured through a hidden twin with the same box and face
+    function getCaretPlace(ed, pos) {
+        var card = ed.card.getBoundingClientRect();
+        var area = ed.area;
+        var css;
+        var probe;
+        var mark;
+        var box;
+        var at;
+        if (ed.view) {
+            at = ed.view.coordsAtPos(pos);
+            return at ? { x: at.left - card.left, y: at.bottom - card.top } : { x: 0, y: 0 };
+        }
+        css = win.getComputedStyle(area);
+        probe = doc.createElement('div');
+        ['boxSizing', 'width', 'paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft', 'borderTopWidth', 'borderRightWidth', 'borderBottomWidth',
+            'borderLeftWidth', 'fontFamily', 'fontSize', 'fontWeight', 'lineHeight', 'letterSpacing', 'tabSize', 'wordSpacing', 'overflowWrap'].forEach(function (prop) {
+            probe.style[prop] = css[prop];
+        });
+        probe.style.cssText += ';position:absolute;visibility:hidden;top:0;left:-9999px;border-style:solid;white-space:'
+            + (area.getAttribute('wrap') === 'off' ? 'pre' : 'pre-wrap');
+        probe.textContent = area.value.slice(0, pos);
+        mark = doc.createElement('span');
+        mark.textContent = area.value.slice(pos) || '.';
+        probe.appendChild(mark);
+        doc.body.appendChild(probe);
+        box = area.getBoundingClientRect();
+        at = {
+            x: box.left - card.left + mark.offsetLeft - area.scrollLeft,
+            y: box.top - card.top + mark.offsetTop - area.scrollTop + (parseFloat(css.lineHeight) || parseFloat(css.fontSize) * 1.2)
+        };
+        probe.remove();
+        return at;
+    }
+
+    // Open the list of variables at a place of the card, narrowed to the words that begin as typed, keeping the chosen one while it is still shown
+    function setHint(ed, from, want, place) {
+        var list = getHint(ed);
+        var owner = getHintOwner(ed);
+        var text = getText(ed);
+        var keep = list.querySelector('[aria-selected="true"]');
+        var first = null;
+        list.querySelectorAll('[data-sl-editor-var]').forEach(function (row) {
+            var key = row.getAttribute('data-sl-editor-var');
+            row.hidden = key.indexOf(want) !== 0;
+            row.toggleAttribute('data-used', text.indexOf(key) >= 0);
+            if (!row.hidden && !first) first = row;
+        });
+        if (!first) return setHintShut(ed);
+        ed.hintFrom = from;
+        list.style.setProperty('--sl-d-hint-x', '0px');
+        list.hidden = false;
+        list.style.setProperty('--sl-d-hint-x', Math.max(0, Math.min(place.x, ed.card.clientWidth - list.offsetWidth)) + 'px');
+        list.style.setProperty('--sl-d-hint-y', Math.max(0, place.y) + 'px');
+        owner.setAttribute('aria-controls', list.id);
+        ed.frame.querySelectorAll('[data-sl-editor-act="vars"]').forEach(function (btn) { btn.setAttribute('aria-expanded', 'true'); });
+        setHintActive(ed, keep && !keep.hidden ? keep : first);
+    }
+
+    // Choose one variable of the list; the focus stays in the text, which names the chosen one to a screen reader
+    function setHintActive(ed, row) {
+        ed.hint.querySelectorAll('[aria-selected]').forEach(function (one) { one.removeAttribute('aria-selected'); });
+        row.setAttribute('aria-selected', 'true');
+        getHintOwner(ed).setAttribute('aria-activedescendant', row.id);
+        row.scrollIntoView({ block: 'nearest' });
+    }
+
+    // Step the chosen variable up or down through the shown ones, round from the end to the start
+    function setHintStep(ed, step) {
+        var rows = Array.prototype.filter.call(ed.hint.querySelectorAll('[data-sl-editor-var]'), function (one) { return !one.hidden; });
+        var now = rows.indexOf(ed.hint.querySelector('[aria-selected="true"]'));
+        setHintActive(ed, rows[(now + step + rows.length) % rows.length]);
+    }
+
+    // Close the list of variables and forget the word it was narrowed by
+    function setHintShut(ed) {
+        var owner;
+        if (!ed.hint || ed.hint.hidden) return;
+        owner = getHintOwner(ed);
+        ed.hint.hidden = true;
+        ed.hintFrom = null;
+        owner.removeAttribute('aria-activedescendant');
+        owner.removeAttribute('aria-controls');
+        ed.frame.querySelectorAll('[data-sl-editor-act="vars"]').forEach(function (btn) { btn.setAttribute('aria-expanded', 'false'); });
+    }
+
+    // Follow the caret of a textarea: open the list after a bracket being typed, narrow it, close it once the caret leaves the word; only caret keys count
+    function setHintType(ed, ev) {
+        var area = ed.area;
+        var at = area.selectionStart;
+        var head;
+        if (ev.type === 'keyup' && !/^(Arrow(Left|Right|Up|Down)|Home|End|Page(Up|Down))$/.test(ev.key)) return;
+        if (ev.type === 'keyup' && /^Arrow(Up|Down)$/.test(ev.key) && ed.hint && !ed.hint.hidden) return;
+        head = at === area.selectionEnd ? /\[\w*$/.exec(area.value.slice(Math.max(0, at - 32), at)) : null;
+        if (!head) return setHintShut(ed);
+        setHint(ed, at - head[0].length, head[0], getCaretPlace(ed, at - head[0].length));
+    }
+
+    // Show every variable from the capsule, the palette or Ctrl+Space: under the button that asked, else at the caret over a word begun after a bracket
+    function setHintOpen(ed, btn) {
+        var at = getRange(ed);
+        var head = at.from === at.to ? /\[\w*$/.exec(at.text.slice(Math.max(0, at.from - 32), at.from)) : null;
+        var from = head ? at.from - head[0].length : null;
+        var card;
+        var box;
+        if (ed.hint && !ed.hint.hidden) return setHintShut(ed);
+        (ed.view || ed.area).focus();
+        if (!btn || !btn.offsetParent) return setHint(ed, from, head ? head[0] : '', getCaretPlace(ed, from === null ? at.from : from));
+        card = ed.card.getBoundingClientRect();
+        box = btn.getBoundingClientRect();
+        setHint(ed, from, head ? head[0] : '', { x: box.left - card.left, y: 0 });
+    }
+
+    // The keys of an open list of variables, heard before the engine: the arrows choose, Enter and Tab insert, Escape closes
+    function setHintKeys(ed, ev) {
+        var list = ed.hint;
+        if (!list || list.hidden || ev.isComposing || ev.ctrlKey || ev.metaKey || ev.altKey || ev.shiftKey) return;
+        if (ev.key === 'ArrowDown' || ev.key === 'ArrowUp') setHintStep(ed, ev.key === 'ArrowDown' ? 1 : -1);
+        else if (ev.key === 'Enter' || ev.key === 'Tab') addVar(ed, list.querySelector('[aria-selected="true"]').getAttribute('data-sl-editor-var'));
+        else if (ev.key === 'Escape') setHintShut(ed);
+        else return;
+        ev.preventDefault();
+        ev.stopPropagation();
+    }
+
+    // Write a variable at the caret as one step of undo, over the word typed after a bracket and over the closing bracket that waited behind it
+    function addVar(ed, key) {
+        var at = getRange(ed);
+        var from = ed.hintFrom;
+        var to = at.to;
+        setHintShut(ed);
+        if (from === null || from === undefined) from = at.from;
+        else if (at.text.charAt(to) === ']') to++;
+        setRange(ed, from, to, key, from + key.length, from + key.length);
+    }
+
+    // Mark the known variables in CodeMirror, so a template shows what the parser fills in
+    function getVarMarks(cm, ed) {
+        var deco = new cm.MatchDecorator({
+            regexp: new RegExp(ed.vars.map(function (one) { return one[0].replace(/[[\]]/g, '\\$&'); }).join('|'), 'g'),
+            decoration: cm.Decoration.mark({ class: 'sl-editor-var' })
+        });
+        return cm.ViewPlugin.define(function (view) {
+            return {
+                marks: deco.createDeco(view),
+                update: function (upd) { this.marks = deco.updateDeco(upd, this.marks); }
+            };
+        }, { decorations: function (one) { return one.marks; } });
+    }
+
+    // Offer the variables in CodeMirror after a bracket or on Ctrl+Space, taking over the closing bracket the editor put in by itself
+    function getVarList(ed, ctx) {
+        var word = ctx.matchBefore(/\[\w*\]?/);
+        var shut;
+        if (!word && !ctx.explicit) return null;
+        if (!word) word = { from: ctx.pos, text: '' };
+        shut = word.text !== '' && !/\]$/.test(word.text) && ctx.state.sliceDoc(ctx.pos, ctx.pos + 1) === ']';
+        return {
+            from: word.from,
+            to: shut ? ctx.pos + 1 : ctx.pos,
+            options: ed.vars.map(function (one) { return { label: one[0], detail: one[1], type: 'variable' }; }),
+            validFor: /^\[\w*\]?$/
+        };
+    }
+
+    // The language data that hands the variables to the completion, one source for the life of the editor, since CodeMirror knows a source by its identity
+    function getVarData(ed) {
+        var data = [{ autocomplete: function (ctx) { return getVarList(ed, ctx); } }];
+        return function () { return data; };
+    }
+
+    // Count the edits between two words, so an unknown variable can name the known one it was meant to be
+    function getDistance(src, dst) {
+        var row = [];
+        var prev;
+        var keep;
+        for (var k = 0; k <= dst.length; k++) row.push(k);
+        for (var i = 1; i <= src.length; i++) {
+            prev = row[0];
+            row[0] = i;
+            for (var j = 1; j <= dst.length; j++) {
+                keep = row[j];
+                row[j] = Math.min(row[j] + 1, row[j - 1] + 1, prev + (src.charAt(i - 1) === dst.charAt(j - 1) ? 0 : 1));
+                prev = keep;
+            }
+        }
+        return row[dst.length];
+    }
+
+    // The known variable nearest to an unknown one, or an empty word where none is three edits or fewer away
+    function getNearVar(ed, word) {
+        var best = '';
+        var gap = 4;
+        ed.vars.forEach(function (one) {
+            var far = getDistance(word, one[0]);
+            if (far < gap) {
+                gap = far;
+                best = one[0];
+            }
+        });
+        return best;
+    }
+
+    // A tag left open, its fix closing it where its parent closes or at the end of the text
+    function addOpenTag(words, out, open, at) {
+        var shut = '</' + open.name + '>';
+        out.push({ from: open.from, to: open.to, tone: 'error', text: getPhrase(words.open, '<' + open.name + '>'),
+            fix: { label: getPhrase(words.fixshut, shut), insert: shut, at: at } });
+    }
+
+    // What a template gets wrong, each finding with its place, its weight and its fix of one click; the variables are checked where the frame has them
+    function getIssues(ed, text) {
+        var words = kit.words.lint;
+        var out = [];
+        var stack = [];
+        var known = ed.vars ? ed.vars.map(function (one) { return one[0]; }) : [];
+        var re = /\[(\w+)\]/g;
+        var hit;
+        var near;
+        var tag;
+        var name;
+        var end;
+        var tail;
+        var bare;
+        var from;
+        while (ed.vars && (hit = re.exec(text))) {
+            if (known.indexOf(hit[0]) >= 0) continue;
+            near = getNearVar(ed, hit[0]);
+            out.push({ from: hit.index, to: hit.index + hit[0].length, tone: 'error', text: getPhrase(near ? words.near : words.unknown, hit[0], near),
+                fix: near ? { label: getPhrase(words.fixvar, near), insert: near } : null });
+        }
+        re = /<\/?([a-zA-Z][\w-]*)([^>]*)>/g;
+        while ((tag = re.exec(text))) {
+            name = tag[1].toLowerCase();
+            end = tag.index + tag[0].length;
+            if (tag[0].charAt(1) === '/') {
+                from = stack.map(function (one) { return one.name; }).lastIndexOf(name);
+                if (from >= 0) stack.splice(from).slice(1).forEach(function (open) { addOpenTag(words, out, open, tag.index); });
+                else out.push({ from: tag.index, to: end, tone: 'error', text: getPhrase(words.shut, '</' + name + '>'), fix: { label: words.fixdel, insert: '' } });
+                continue;
+            }
+            tail = tag.index + 1 + name.length;
+            if (name === 'img' && !/\salt=/i.test(tag[2])) {
+                bare = known.indexOf('[title]') >= 0 ? 'alt="[title]"' : 'alt=""';
+                out.push({ from: tag.index, to: tail, tone: 'warning', text: words.alt, fix: { label: getPhrase(words.fixadd, bare), insert: ' ' + bare, at: tail } });
+            }
+            if (/target=["']?_blank/i.test(tag[2]) && !/rel=["'][^"']*noopener/i.test(tag[2])) {
+                bare = 'rel="noopener"';
+                out.push({ from: tag.index, to: tail, tone: 'warning', text: words.blank, fix: { label: getPhrase(words.fixadd, bare), insert: ' ' + bare, at: tail } });
+            }
+            bare = /=(\[\w+\])/g;
+            while ((hit = bare.exec(tag[2]))) {
+                from = tail + hit.index + 1;
+                out.push({ from: from, to: from + hit[1].length, tone: 'info', text: words.quot, fix: { label: words.fixquot, insert: '"' + hit[1] + '"' } });
+            }
+            if (!voids.test(name) && tag[0].slice(-2) !== '/>') stack.push({ name: name, from: tag.index, to: end });
+        }
+        stack.forEach(function (open) { addOpenTag(words, out, open, text.length); });
+        from = known.indexOf('[src]');
+        if (from >= 0 && text.trim() !== '' && text.indexOf('[src]') < 0) {
+            out.push({ from: 0, to: Math.min(text.length, 1), tone: 'warning', text: getPhrase(words.src, '[src]', ed.vars[from][1]), fix: null });
+        }
+        return out.sort(function (one, two) { return one.from - two.from; });
+    }
+
+    // Lay a template out one tag a line, indenting what nests
+    function getPrettyText(text) {
+        var depth = 0;
+        return text.replace(/>\s*</g, '>\n<').split('\n').map(function (row) {
+            var tag = row.trim();
+            var open = /^<([a-zA-Z][\w-]*)/.exec(tag);
+            var out;
+            if (tag.indexOf('</') === 0) depth = Math.max(0, depth - 1);
+            out = new Array(depth + 1).join('  ') + tag;
+            if (open && !voids.test(open[1]) && tag.slice(-2) !== '/>' && !new RegExp('</' + open[1] + '>\\s*$', 'i').test(tag)) depth++;
+            return out;
+        }).join('\n');
+    }
+
+    // Join a laid out template back into one line
+    function getFlatText(text) {
+        return text.replace(/>\s*\n\s*</g, '><').replace(/\s*\n\s*/g, ' ').trim();
+    }
+
+    // Check the text of a textarea and write what was found; CodeMirror checks through its own linter once it has mounted
+    function setLint(ed) {
+        if (ed.can.lint && !ed.view) setIssues(ed, getIssues(ed, getText(ed)));
+    }
+
+    // Write the findings into the rail, the badge and the open list of a frame
+    function setIssues(ed, found) {
+        var errs = found.filter(function (one) { return one.tone === 'error'; }).length;
+        var tone = errs ? 'error' : (found.length ? 'warn' : 'ok');
+        ed.issues = found;
+        ed.frame.setAttribute('data-lint', tone);
+        ed.badge.querySelectorAll('[data-sl-editor-tone]').forEach(function (one) { one.hidden = one.getAttribute('data-sl-editor-tone') !== tone; });
+        ed.badge.setAttribute('aria-disabled', String(!found.length));
+        ed.badge.querySelector('[data-sl-editor-lint-text]').textContent = found.length ? getPhrase(kit.words.issues, errs, found.length - errs) : kit.words.nolint;
+        if (ed.list && !ed.list.hidden) setIssueList(ed);
+    }
+
+    // Fill the list of findings from the kit, a row of the tone of each one with its place and its fix; an empty check closes it
+    function setIssueList(ed) {
+        var text = getText(ed);
+        if (!ed.issues.length) return setIssueShut(ed);
+        ed.list.textContent = '';
+        ed.issues.forEach(function (one, i) {
+            var row = kit.issues.querySelector('[data-sl-editor-tone="' + one.tone + '"]').cloneNode(true);
+            var fix = row.querySelector('[data-sl-editor-fix]');
+            var col = one.from - text.lastIndexOf('\n', one.from - 1);
+            row.querySelector('[data-sl-editor-issue-text]').textContent = one.text;
+            row.querySelector('[data-sl-editor-issue-pos]').textContent = getPhrase(kit.words.pos, getLineCount(text, one.from), col);
+            row.querySelector('[data-sl-editor-go]').setAttribute('data-sl-editor-go', String(i));
+            if (one.fix) {
+                fix.setAttribute('data-sl-editor-fix', String(i));
+                fix.querySelector('span').textContent = one.fix.label;
+            } else fix.remove();
+            ed.list.appendChild(row);
+        });
+    }
+
+    // Open or close the list of findings under the text, from the badge, the palette or Ctrl+Shift+M
+    function setIssueOpen(ed) {
+        if (ed.list && !ed.list.hidden) return setIssueShut(ed);
+        if (!ed.issues.length) return;
+        if (!ed.list) {
+            ed.list = kit.issues.cloneNode(false);
+            ed.list.id = 'sl-editor-issues-' + (++uid);
+            ed.badge.setAttribute('aria-controls', ed.list.id);
+            ed.list.addEventListener('click', function (ev) { setIssueClick(ed, ev); });
+            ed.card.insertBefore(ed.list, ed.card.querySelector('[data-sl-editor-status]'));
+        }
+        ed.list.hidden = false;
+        ed.badge.setAttribute('aria-expanded', 'true');
+        setIssueList(ed);
+    }
+
+    // Close the list of findings
+    function setIssueShut(ed) {
+        if (!ed.list) return;
+        ed.list.hidden = true;
+        ed.badge.setAttribute('aria-expanded', 'false');
+    }
+
+    // A row of the list selects the place of its finding, its button applies the fix
+    function setIssueClick(ed, ev) {
+        var btn = ev.target.closest('[data-sl-editor-go], [data-sl-editor-fix]');
+        var one;
+        if (!btn) return;
+        ev.preventDefault();
+        one = ed.issues[parseInt(btn.getAttribute('data-sl-editor-go') || btn.getAttribute('data-sl-editor-fix'), 10)];
+        if (!one) return;
+        if (btn.hasAttribute('data-sl-editor-fix')) return setIssueFix(ed, one.from, one.text);
+        if (ed.view) {
+            ed.view.dispatch({ selection: { anchor: one.from, head: one.to }, scrollIntoView: true });
+            ed.view.focus();
+            return;
+        }
+        ed.area.focus();
+        ed.area.setSelectionRange(one.from, one.to);
+    }
+
+    // Apply the fix of a finding found again in the text as it stands now, so a list a pause behind cannot write into a moved place
+    function setIssueFix(ed, from, text) {
+        var one = getIssues(ed, getText(ed)).filter(function (row) { return row.from === from && row.text === text && row.fix; })[0];
+        var at;
+        if (!one) return setLint(ed);
+        at = one.fix.at === undefined ? null : one.fix.at;
+        if (at === null) setRange(ed, one.from, one.to, one.fix.insert, one.from + one.fix.insert.length, one.from + one.fix.insert.length);
+        else setRange(ed, at, at, one.fix.insert, at + one.fix.insert.length, at + one.fix.insert.length);
+        setLint(ed);
+    }
+
+    // The CodeMirror lint source of a frame: marks and fixes in the text, the same findings in the badge and the list
+    function getLintSource(ed) {
+        return function (view) {
+            var found = getIssues(ed, view.state.doc.toString());
+            setIssues(ed, found);
+            return found.map(function (one) {
+                return {
+                    from: one.from,
+                    to: one.to,
+                    severity: one.tone,
+                    message: one.text,
+                    actions: one.fix ? [{ name: one.fix.label, apply: function (view, from) { setIssueFix(ed, from, one.text); } }] : []
+                };
+            });
+        };
     }
 
     // The adapter the file window and the emoji panel write through: the five calls they make of Toast UI, answered over a textarea or a CodeMirror view
@@ -484,15 +927,20 @@
         if (act === 'files') return setFileWindow(ed);
         if (act === 'emoji') return setEmoji(ed, btn || ed.frame.querySelector('[data-sl-editor-act="emoji"]') || ed.card);
         if (act === 'palette') return setPalette(ed);
+        if (act === 'diff') return setDiff(ed);
+        if (ed.can.lint && act === 'lint') return setIssueOpen(ed);
+        if (ed.can.lint && (act === 'pretty' || act === 'flat')) return setText(ed, (act === 'pretty' ? getPrettyText : getFlatText)(getText(ed)), '');
         if (md && (act === 'bold' || act === 'italic')) return setInline(ed, act === 'bold' ? '**' : '*');
         if (md && act === 'code') return setCodeMark(ed);
         if (md && act === 'link') return setLink(ed);
         if (md && (act === 'list' || act === 'quote')) return setLines(ed, act === 'list' ? '- ' : '> ');
-        if (!cmds[act]) return;
+        if (act === 'hint' && !ed.can.cm) return setHintOpen(ed, null);
+        if (!cmds[act] && act !== 'vars') return;
         if (!ed.view && ed.can.cm && act !== 'undo' && act !== 'redo' && act !== 'all') {
             setCode(ed).then(function () { if (ed.view) setAct(ed, act, btn); });
             return;
         }
+        if (act === 'vars') return setHintOpen(ed, btn);
         if (ed.view) {
             ed.view.focus();
             ed.cm[cmds[act]](ed.view);
@@ -508,6 +956,8 @@
         var find;
         if (pal || !getKit() || !kit.palette) return pal;
         pal = kit.palette.cloneNode(true);
+        pal.slVarRow = pal.querySelector('[data-sl-editor-cmd="var"]');
+        pal.slVarRow.remove();
         doc.body.appendChild(pal);
         find = pal.querySelector('[data-sl-editor-find]');
         find.addEventListener('input', function () { setPaletteFilter(find.value); });
@@ -516,7 +966,9 @@
             var ed = pal.slEd;
             var act = pal.slAct;
             pal.slAct = '';
-            if (act && ed && eds.get(ed.frame) === ed) setAct(ed, act, ed.frame.querySelector('[data-sl-editor-act="' + act + '"]'));
+            if (!act || !ed || eds.get(ed.frame) !== ed) return;
+            if (act === 'var') addVar(ed, pal.slVar);
+            else setAct(ed, act, ed.frame.querySelector('[data-sl-editor-act="' + act + '"]'));
         });
         pal.addEventListener('click', function (ev) {
             var row = ev.target.closest ? ev.target.closest('[data-sl-editor-cmd]') : null;
@@ -533,6 +985,7 @@
         if (!getPalette()) return;
         pal.slEd = ed;
         pal.slAct = '';
+        setPaletteVars(ed);
         pal.querySelector('[data-sl-editor-pal-sub]').textContent = ed.frame.getAttribute('data-sl-editor-name') || '';
         pal.querySelectorAll('[data-sl-editor-cmd]').forEach(function (row) { row.slOff = !checkNeed(ed.can, row); });
         pal.querySelectorAll('[data-sl-editor-pal-help] [data-sl-editor-need]').forEach(function (one) { one.hidden = !checkNeed(ed.can, one); });
@@ -541,6 +994,22 @@
         setPaletteFilter('');
         if (win.setWindowOpen) win.setWindowOpen(pal);
         else pal.showModal();
+    }
+
+    // Put the variables of the frame into their group of the palette, rebuilt only when a frame with other variables opens it
+    function setPaletteVars(ed) {
+        var key = ed.frame.getAttribute('data-sl-editor-vars') || '';
+        var group = pal.querySelector('[data-sl-editor-pal-vars]');
+        if (pal.slVars === key) return;
+        pal.slVars = key;
+        group.querySelectorAll('[data-sl-editor-cmd="var"]').forEach(function (row) { row.remove(); });
+        (ed.vars || []).forEach(function (one, i) {
+            var row = pal.slVarRow.cloneNode(true);
+            row.id = 'sl-editor-cmd-var-' + i;
+            row.setAttribute('data-sl-editor-var', one[0]);
+            row.querySelector('span').textContent = one[0] + ' — ' + one[1];
+            group.appendChild(row);
+        });
     }
 
     // The places of the typed letters inside a name, in the order they were typed, or null where one of them is missing
@@ -640,6 +1109,7 @@
         var act;
         if (!row || row.hidden || !ed) return;
         act = row.getAttribute('data-sl-editor-cmd');
+        pal.slVar = row.getAttribute('data-sl-editor-var') || '';
         pal.querySelectorAll('[data-recent]').forEach(function (one) { one.removeAttribute('data-recent'); });
         row.parentNode.insertBefore(row, row.parentNode.querySelector('[data-sl-editor-cmd]'));
         row.setAttribute('data-recent', kit.words.recent || '');
@@ -651,6 +1121,172 @@
     function setPaletteShut() {
         if (win.setWindowClose) win.setWindowClose(pal);
         else pal.close();
+    }
+
+    // Cut a text into variables, words, runs of space and single signs, the units the comparison counts in
+    function getTokens(text) {
+        return text.match(/\[\w+\]|[\p{L}\p{N}_]+|\s+|[^\p{L}\p{N}_\s]/gu) || [];
+    }
+
+    // Cut a text into lines, each keeping its line end, the units a long text is aligned by first
+    function getLines(text) {
+        return text.match(/[^\n]*\n|[^\n]+$/g) || [];
+    }
+
+    // Align two lists through their longest common subsequence and add each unit to the parts as kept, gone or new
+    function addSubsequence(out, was, now) {
+        var cols = now.length + 1;
+        var grid = new Uint16Array((was.length + 1) * cols);
+        var i;
+        var j;
+        for (i = was.length - 1; i >= 0; i--) {
+            for (j = now.length - 1; j >= 0; j--) {
+                grid[i * cols + j] = was[i] === now[j] ? grid[(i + 1) * cols + j + 1] + 1 : Math.max(grid[(i + 1) * cols + j], grid[i * cols + j + 1]);
+            }
+        }
+        i = 0;
+        j = 0;
+        while (i < was.length || j < now.length) {
+            if (i < was.length && j < now.length && was[i] === now[j]) {
+                out.push([0, was[i++]]);
+                j++;
+            } else if (j >= now.length || (i < was.length && grid[(i + 1) * cols + j] >= grid[i * cols + j + 1])) {
+                out.push([-1, was[i++]]);
+            } else {
+                out.push([1, now[j++]]);
+            }
+        }
+    }
+
+    // Compare two lists of units: the same head and tail are kept as they stand, the middle is aligned while its table stays in the limit, else by lines
+    function addParts(out, was, now, deep) {
+        var head = 0;
+        var tail = 0;
+        var end;
+        while (head < was.length && head < now.length && was[head] === now[head]) head++;
+        while (tail < was.length - head && tail < now.length - head && was[was.length - 1 - tail] === now[now.length - 1 - tail]) tail++;
+        if (head) out.push([0, was.slice(0, head).join('')]);
+        end = now.slice(now.length - tail).join('');
+        was = was.slice(head, was.length - tail);
+        now = now.slice(head, now.length - tail);
+        if ((was.length + 1) * (now.length + 1) <= cells) addSubsequence(out, was, now);
+        else if (deep) addLines(out, was.join(''), now.join(''));
+        else {
+            if (was.length) out.push([-1, was.join('')]);
+            if (now.length) out.push([1, now.join('')]);
+        }
+        if (end) out.push([0, end]);
+    }
+
+    // Compare a long text by lines and the lines that changed by their units, so the table never grows with the square of the whole text
+    function addLines(out, was, now) {
+        var rows = [];
+        var gone = '';
+        var came = '';
+        var flush = function () {
+            if (gone && came) addParts(out, getTokens(gone), getTokens(came), false);
+            else if (gone) out.push([-1, gone]);
+            else if (came) out.push([1, came]);
+            gone = '';
+            came = '';
+        };
+        addParts(rows, getLines(was), getLines(now), false);
+        rows.forEach(function (one) {
+            if (one[0] < 0) gone += one[1];
+            else if (one[0] > 0) came += one[1];
+            else {
+                flush();
+                out.push(one);
+            }
+        });
+        flush();
+    }
+
+    // The loaded text against the present one: the parts in order, joined where they run on, and the count of the units gone and new
+    function getDiff(was, now) {
+        var parts = [];
+        var out = [];
+        var del = 0;
+        var ins = 0;
+        if (was !== now) addParts(parts, getTokens(was), getTokens(now), true);
+        else if (was) parts.push([0, was]);
+        parts.forEach(function (one) {
+            var last = out[out.length - 1];
+            if (one[0] < 0) del += getTokens(one[1]).length;
+            if (one[0] > 0) ins += getTokens(one[1]).length;
+            if (last && last[0] === one[0]) last[1] += one[1];
+            else out.push([one[0], one[1]]);
+        });
+        return { parts: out, del: del, ins: ins };
+    }
+
+    // The comparison window of the page, made from the kit on the first call and wired once; "back" takes the loaded text once the window has closed
+    function getDiffWindow() {
+        if (dif || !getKit() || !kit.diff) return dif;
+        dif = kit.diff.cloneNode(true);
+        doc.body.appendChild(dif);
+        dif.addEventListener('click', function (ev) {
+            var btn = ev.target.closest ? ev.target.closest('[data-sl-editor-diff-view], [data-sl-editor-diff-back]') : null;
+            if (!btn) return;
+            ev.preventDefault();
+            if (!btn.hasAttribute('data-sl-editor-diff-back')) return setDiffView(btn.getAttribute('data-sl-editor-diff-view'));
+            dif.slBack = true;
+            if (win.setWindowClose) win.setWindowClose(dif);
+            else dif.close();
+        });
+        dif.addEventListener('close', function () {
+            var ed = dif.slEd;
+            var back = dif.slBack;
+            dif.slBack = false;
+            if (back && ed && eds.get(ed.frame) === ed) setText(ed, ed.orig, kit.words.restored);
+        });
+        return dif;
+    }
+
+    // Show the comparison in one text or in two columns, the choice kept for the next opening
+    function setDiffView(view) {
+        var side = view === 'side';
+        dif.querySelectorAll('[data-sl-editor-diff-view]').forEach(function (btn) {
+            btn.setAttribute('aria-pressed', String(btn.getAttribute('data-sl-editor-diff-view') === view));
+        });
+        dif.querySelector('[data-sl-editor-diff-all]').hidden = side;
+        dif.querySelector('[data-sl-editor-diff-side]').hidden = !side;
+    }
+
+    // Write the parts into a box as text, the gone ones struck out and the new ones marked, leaving out the kind of part the box does not show
+    function setDiffCode(node, parts, skip) {
+        var out = doc.createDocumentFragment();
+        parts.forEach(function (one) {
+            var tag;
+            if (one[0] === skip) return;
+            if (!one[0]) return out.appendChild(doc.createTextNode(one[1]));
+            tag = doc.createElement(one[0] < 0 ? 'del' : 'ins');
+            tag.textContent = one[1];
+            out.appendChild(tag);
+        });
+        node.replaceChildren(out);
+    }
+
+    // Open the comparison of the loaded text with the present one of an editor, computed only now; the window moves nothing in the form
+    function setDiff(ed) {
+        var now = getText(ed);
+        var same = now === ed.orig;
+        var diff;
+        if (!getDiffWindow()) return;
+        diff = getDiff(ed.orig, now);
+        dif.slEd = ed;
+        dif.slBack = false;
+        dif.querySelector('[data-sl-editor-diff-sub]').textContent = ed.frame.getAttribute('data-sl-editor-name') || '';
+        dif.querySelector('[data-sl-editor-diff-ins]').textContent = '+' + diff.ins;
+        dif.querySelector('[data-sl-editor-diff-del]').textContent = '−' + diff.del;
+        dif.querySelector('[data-sl-editor-diff-count]').hidden = same;
+        dif.querySelector('[data-sl-editor-diff-back]').hidden = same;
+        dif.querySelector('[data-sl-editor-diff-same]').hidden = !same;
+        setDiffCode(dif.querySelector('[data-sl-editor-diff-all]'), diff.parts, null);
+        setDiffCode(dif.querySelector('[data-sl-editor-diff-was]'), diff.parts, 1);
+        setDiffCode(dif.querySelector('[data-sl-editor-diff-now]'), diff.parts, -1);
+        if (win.setWindowOpen) win.setWindowOpen(dif);
+        else dif.showModal();
     }
 
     // Move the capsule by its grip: the pointer drags it, the arrow keys step it, a double click and Home send it back
@@ -738,13 +1374,18 @@
                         area.value = upd.state.doc.toString();
                         setChange(ed);
                     }
-                    if (upd.docChanged || upd.selectionSet) setStatus(ed);
+                    if (upd.docChanged || upd.selectionSet) {
+                        setStatus(ed);
+                        setHintShut(ed);
+                    }
                 })
             ];
             ed.cm = cm;
             ed.wrap = new cm.Compartment();
             exts.push(ed.wrap.of(ed.nowrap ? [] : cm.EditorView.lineWrapping));
             if (list[1]) exts.push(list[1].language());
+            if (ed.vars) exts.push(getVarMarks(cm, ed), cm.EditorState.languageData.of(getVarData(ed)));
+            if (ed.can.lint) exts.push(cm.linter(getLintSource(ed), { delay: 250 }), cm.lintGutter());
             ed.view = new cm.EditorView({
                 state: cm.EditorState.create({ doc: area.value, selection: { anchor: area.selectionStart, head: area.selectionEnd }, extensions: exts })
             });
@@ -785,14 +1426,20 @@
         if (!area) return;
         var pill = kit.pill.cloneNode(true);
         var code = frame.hasAttribute('data-sl-editor-code');
+        var badge = frame.querySelector('[data-sl-editor-act="lint"]');
         var files = null;
+        var vars = null;
         try { files = JSON.parse(frame.getAttribute('data-sl-editor-files') || 'null'); } catch (err) { files = null; }
+        try { vars = JSON.parse(frame.getAttribute('data-sl-editor-vars') || 'null'); } catch (err) { vars = null; }
+        if (!Array.isArray(vars) || !vars.length) vars = null;
         var can = {
             text: !code,
             code: code,
             cm: frame.hasAttribute('data-sl-editor-core'),
             markdown: !code && frame.getAttribute('data-sl-editor-lang') === 'markdown',
-            files: !!files
+            files: !!files,
+            vars: !!vars,
+            lint: !!badge && frame.hasAttribute('data-sl-editor-lint')
         };
         pill.querySelectorAll('[data-sl-editor-need]').forEach(function (one) { if (!checkNeed(can, one)) one.remove(); });
         Array.prototype.slice.call(pill.children).forEach(function (one) { if (!one.querySelector('button')) one.remove(); });
@@ -804,7 +1451,14 @@
             size: frame.querySelector('[data-sl-editor-size]'),
             note: frame.querySelector('[data-sl-editor-note]'),
             left: frame.querySelector('[data-sl-editor-left]'),
+            used: frame.querySelector('[data-sl-editor-used]'),
             room: parseInt(frame.getAttribute('data-sl-editor-room') || '0', 10) || 0,
+            vars: vars,
+            hint: null,
+            hintFrom: null,
+            badge: badge,
+            list: null,
+            issues: [],
             can: can,
             orig: area.defaultValue,
             key: getDraftKey(area),
@@ -824,11 +1478,19 @@
             area.addEventListener(type, function (ev) {
                 if (ev.type === 'input') setChange(ed);
                 setStatus(ed);
+                if (vars && !can.cm && ev.type !== 'select' && ev.type !== 'focus') setHintType(ed, ev);
             });
         });
         area.addEventListener('invalid', function (ev) { setInvalid(ed, ev); });
         area.addEventListener('keydown', function (ev) { setListEnter(ed, ev); });
         frame.addEventListener('keydown', function (ev) { setKeys(ed, ev); }, true);
+        if (vars) {
+            frame.addEventListener('keydown', function (ev) { setHintKeys(ed, ev); }, true);
+            ed.card.addEventListener('focusout', function (ev) {
+                var next = ev.relatedTarget;
+                if (!next || !(ed.card.contains(next) || next.getAttribute('data-sl-editor-act') === 'vars')) setHintShut(ed);
+            });
+        }
         if (files) {
             ed.card.addEventListener('paste', function (ev) { setImages(ed, ev); }, true);
             ed.card.addEventListener('drop', function (ev) { setImages(ed, ev); }, true);
@@ -843,6 +1505,8 @@
         frame.toggleAttribute('data-dirty', area.value !== ed.orig);
         setStatus(ed);
         setRoom(ed, area.value);
+        setVarCount(ed, area.value);
+        setLint(ed);
         setDraftOffer(ed);
         if (frame.hasAttribute('data-sl-editor-core')) {
             area.addEventListener('focus', function () { setCode(ed); });
@@ -881,6 +1545,8 @@
         setDraft(ed, ed.orig);
         ed.frame.toggleAttribute('data-dirty', getText(ed) !== ed.orig);
         setRoom(ed, getText(ed));
+        setVarCount(ed, getText(ed));
+        setLint(ed);
         setStatus(ed);
     }
 

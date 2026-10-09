@@ -287,7 +287,19 @@ function tplconfig(): void {
         'tabs' => [_HOME, _UPLOADS_SYSTEM, _TEMPLATES, _PREFERENCES, _MANUAL],
         'tab' => 2,
     ]);
-    $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _TPINFO]);
+    $vars = [
+        '[src]' => _UPLOADS_SRC,
+        '[tsrc]' => _UPLOADS_TSRC,
+        '[width]' => _UPLOADS_WIDTH,
+        '[twidth]' => _UPLOADS_TWIDTH,
+        '[height]' => _UPLOADS_HEIGHT,
+        '[theight]' => _UPLOADS_THEIGHT,
+        '[align]' => _UPLOADS_ALIGN,
+        '[title]' => _UPLOADS_TITLE,
+        '[quot]' => _UPLOADS_QUOT,
+        '[rel]' => _UPLOADS_REL,
+    ];
+    $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'messages' => array_map(fn($k, $v) => $k.' - '.$v, array_keys($vars), $vars)]);
     $cont .= checkPerms(CONFIG_DIR.'/filetype.php');
     $typm = [...explode(',', $conf['uploads']['typ']), 'full'];
     $blocks = '';
@@ -306,6 +318,8 @@ function tplconfig(): void {
                     'label' => _TPFOR.': '.$form,
                     'lang' => 'html',
                     'text' => $conf['filetype'][$typm[$i]] ?? '',
+                    'vars' => $vars,
+                    'lint' => true,
                 ]),
                 'is_full' => true,
             ]],

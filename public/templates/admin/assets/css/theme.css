@@ -1480,8 +1480,8 @@ pre code.hljs {
   min-width: 0;
 }
 
-/* A row too narrow for both wraps upwards: the tab keeps the line that stands on the card and the capsule goes above it.
-   In a reversed wrap the start of the cross axis is the bottom, so flex-start sets both on the card */
+/* The tab and the capsule share one line, the tab cutting its words where the capsule needs the room, so a capsule unseen at rest
+   never wraps and makes an editor taller. In a reversed wrap the start of the cross axis is the bottom, so flex-start sets both on the card */
 .sl-editor-row {
   display: flex;
   flex-wrap: wrap-reverse;
@@ -1498,8 +1498,9 @@ pre code.hljs {
   display: inline-flex;
   align-items: center;
   gap: var(--sl-space-3);
+  flex: 1 1 0%;
   min-width: 0;
-  max-width: 100%;
+  max-width: max-content;
   height: var(--sl-editor-tab-height);
   padding: 0 var(--sl-space-5);
   border: 1px solid var(--sl-border);
@@ -1578,7 +1579,8 @@ pre code.hljs {
   color: var(--sl-text-muted);
 }
 
-.sl-editor-pill .sl-modal-act[aria-pressed="true"] {
+.sl-editor-pill .sl-modal-act[aria-pressed="true"],
+.sl-editor-pill .sl-modal-act[aria-expanded="true"] {
   background: var(--sl-tint);
   color: var(--sl-primary-strong);
 }
@@ -1633,9 +1635,11 @@ pre code.hljs {
   border-left-color: var(--sl-warning);
 }
 
-/* A required text left empty under CodeMirror: the browser cannot point at the hidden field, so the rail and the note say it */
+/* A required text left empty under CodeMirror, which the browser cannot point at with its field hidden, or an error the check found: the rail turns red */
 .sl-editor[data-invalid] .sl-editor-card,
-.sl-editor[data-invalid] .sl-editor-tab {
+.sl-editor[data-invalid] .sl-editor-tab,
+.sl-editor[data-lint="error"] .sl-editor-card,
+.sl-editor[data-lint="error"] .sl-editor-tab {
   border-left-color: var(--sl-danger);
 }
 
@@ -1679,12 +1683,16 @@ pre code.hljs {
   display: none;
 }
 
+/* The mark of a changed text opens the comparison with the loaded one */
 .sl-editor-dirty {
   display: none;
   padding: 0 var(--sl-space-2);
+  border: 0;
   border-radius: var(--sl-radius-pill);
   background: var(--sl-warning-subtle);
   color: var(--sl-warning-strong);
+  font: inherit;
+  cursor: pointer;
 }
 
 .sl-editor[data-dirty] .sl-editor-dirty {
@@ -1697,6 +1705,105 @@ pre code.hljs {
 
 .sl-editor-lang {
   margin-left: auto;
+}
+
+/* The check of a template: the badge says what it found and opens the list, quiet at rest while nothing is wrong */
+.sl-editor-lint {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sl-space-2);
+  margin-left: auto;
+  padding: 0 var(--sl-space-3);
+  border: 0;
+  border-radius: var(--sl-radius-pill);
+  background: var(--sl-success-subtle);
+  color: var(--sl-success-strong);
+  font: inherit;
+  cursor: pointer;
+  opacity: var(--sl-fade-muted);
+  transition: opacity var(--sl-time-base) var(--sl-ease-out);
+}
+
+/* The mark of the badge takes the size of its words, so the badge stands no taller than the status line */
+.sl-editor-lint > .bi {
+  font-size: inherit;
+}
+
+.sl-editor:hover .sl-editor-lint,
+.sl-editor:focus-within .sl-editor-lint {
+  opacity: 1;
+}
+
+.sl-editor[data-lint="warn"] .sl-editor-lint {
+  opacity: 1;
+  background: var(--sl-warning-subtle);
+  color: var(--sl-warning-strong);
+}
+
+.sl-editor[data-lint="error"] .sl-editor-lint {
+  opacity: 1;
+  background: var(--sl-danger);
+  color: var(--sl-on-solid);
+}
+
+.sl-editor-lint ~ .sl-editor-lang {
+  margin-left: 0;
+}
+
+/* The findings under the text: a row selects its place, its button applies the fix */
+.sl-editor-issues {
+  max-height: var(--sl-editor-height);
+  margin: 0;
+  padding: var(--sl-space-1) 0;
+  overflow-y: auto;
+  border-top: 1px solid var(--sl-border);
+  list-style: none;
+  font-size: var(--sl-font-small);
+}
+
+.sl-editor-issues > li {
+  display: flex;
+  align-items: center;
+  gap: var(--sl-space-3);
+  padding: 0 var(--sl-space-3) 0 var(--sl-space-5);
+}
+
+.sl-editor-issues > li:hover {
+  background: var(--sl-bg-subtle);
+}
+
+.sl-editor-issue {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: baseline;
+  gap: var(--sl-space-3);
+  min-width: 0;
+  padding: var(--sl-space-2) 0;
+  border: 0;
+  background: transparent;
+  color: var(--sl-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.sl-editor-issue > small {
+  margin-left: auto;
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-micro);
+  white-space: nowrap;
+}
+
+.sl-editor-issues [data-sl-editor-tone="error"] .sl-editor-issue > .bi {
+  color: var(--sl-danger);
+}
+
+.sl-editor-issues [data-sl-editor-tone="warning"] .sl-editor-issue > .bi {
+  color: var(--sl-warning-strong);
+}
+
+.sl-editor-issues [data-sl-editor-tone="info"] .sl-editor-issue > .bi {
+  color: var(--sl-primary);
 }
 
 /* The draft of the tab is offered above the text, never put in its place without being asked */
@@ -1714,6 +1821,61 @@ pre code.hljs {
 
 .sl-editor-draft > span {
   flex: 1 1 auto;
+}
+
+/* The variables of a template, under the caret or under the button of the capsule, placed by the runtime inside the card;
+   the chosen one stands on the brand colour and a variable the text already uses carries a tick */
+.sl-editor-hint {
+  position: absolute;
+  top: var(--sl-d-hint-y);
+  left: var(--sl-d-hint-x);
+  z-index: var(--sl-z-popover);
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  box-sizing: border-box;
+  max-width: 100%;
+  max-height: var(--sl-editor-max-height);
+  overflow-y: auto;
+  padding: var(--sl-space-2);
+  border: 1px solid var(--sl-border-strong);
+  border-radius: var(--sl-radius-2);
+  background: var(--sl-bg);
+  box-shadow: var(--sl-popover-shadow);
+}
+
+.sl-editor-hint-row {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;
+  align-items: baseline;
+  gap: var(--sl-space-4);
+  padding: var(--sl-space-2) var(--sl-space-4);
+  border: 0;
+  border-radius: var(--sl-radius-1);
+  background: transparent;
+  color: var(--sl-text-muted);
+  font: inherit;
+  font-size: var(--sl-font-small);
+  text-align: left;
+  cursor: pointer;
+}
+
+.sl-editor-hint-row code {
+  color: var(--sl-primary-strong);
+}
+
+.sl-editor-hint-row[data-used] code::after {
+  content: " ✓";
+  color: var(--sl-success-strong);
+}
+
+.sl-editor-hint-row:hover {
+  background: var(--sl-bg-subtle);
+}
+
+.sl-editor-hint-row[aria-selected="true"] code,
+.sl-editor-hint-row[aria-selected="true"] code::after {
+  color: inherit;
 }
 
 /* The palette of the editors: a window of the canon whose bar searches the commands, the body lists them by group
@@ -1737,7 +1899,7 @@ pre code.hljs {
   padding: var(--sl-space-2) 0;
 }
 
-.sl-editor-pal-body > * + * {
+.sl-modal-body.sl-editor-pal-body > * + * {
   margin-top: 0;
 }
 
@@ -1864,6 +2026,110 @@ pre code.hljs {
   color: var(--sl-text);
   font-size: var(--sl-font-micro);
   line-height: var(--sl-line-normal);
+}
+
+/* The comparison of an editor: a window of the canon with the loaded text against the present one, in one text or in
+   two columns, the count of the units gone and new in the bar */
+.sl-editor-diff-modes {
+  display: inline-flex;
+  gap: var(--sl-space-1);
+  padding: var(--sl-space-1);
+  border-radius: var(--sl-radius-2);
+  background: var(--sl-bg-subtle);
+}
+
+.sl-editor-diff-mode {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sl-space-2);
+  height: var(--sl-size-chip);
+  padding: 0 var(--sl-space-3);
+  border: 0;
+  border-radius: var(--sl-radius-2);
+  background: transparent;
+  color: var(--sl-text-muted);
+  font: inherit;
+  font-size: var(--sl-font-small);
+  cursor: pointer;
+}
+
+.sl-editor-diff-count {
+  display: inline-flex;
+  gap: var(--sl-space-3);
+  margin-left: auto;
+  font-family: var(--sl-face-mono);
+  font-size: var(--sl-font-small);
+}
+
+.sl-editor-diff-ins {
+  color: var(--sl-success-strong);
+}
+
+.sl-editor-diff-del {
+  color: var(--sl-danger);
+}
+
+.sl-editor-diff-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sl-space-4);
+}
+
+.sl-modal-body.sl-editor-diff-body > * + * {
+  margin-top: 0;
+}
+
+.sl-editor-diff-same {
+  display: flex;
+  align-items: center;
+  gap: var(--sl-space-3);
+  margin: 0;
+  color: var(--sl-success-strong);
+}
+
+.sl-editor-diff-code {
+  padding: var(--sl-space-4) var(--sl-space-5);
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-2);
+  background: var(--sl-surface);
+  color: var(--sl-text-muted);
+  font-family: var(--sl-face-mono);
+  font-size: var(--sl-font-small);
+  line-height: var(--sl-line-loose);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.sl-editor-diff-code del {
+  border-radius: var(--sl-radius-1);
+  color: var(--sl-danger);
+  text-decoration: line-through;
+}
+
+.sl-editor-diff-code ins {
+  border-radius: var(--sl-radius-1);
+  background: var(--sl-success-subtle);
+  color: var(--sl-success-strong);
+  text-decoration: none;
+}
+
+.sl-editor-diff-side {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--sl-space-5);
+}
+
+.sl-editor-diff-cap {
+  margin: 0 0 var(--sl-space-2);
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-small);
+  font-weight: var(--sl-weight-semibold);
+}
+
+@media (max-width: 560px) {
+  .sl-editor-diff-side {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 /* The panel keeps its own tight spacing: the canon body would give it the padding of a reading window and thin the grid out */
@@ -2208,6 +2474,18 @@ dialog.sl-editor-emoji-panel {
   text-decoration: underline wavy;
 }
 
+/* A variable of the template in the code: the word the parser fills in stands on the tint over the tones of the grammar */
+.sl-editor .cm-editor .sl-editor-var {
+  border-radius: var(--sl-radius-1);
+  background: var(--sl-tint);
+  box-shadow: inset 0 0 0 1px var(--sl-tint-strong);
+  color: var(--sl-primary-strong);
+}
+
+.sl-editor .cm-editor .sl-editor-var * {
+  color: inherit;
+}
+
 /* The completion list and the search panel speak the popover and the field of the theme */
 .sl-editor .cm-editor .cm-tooltip {
   overflow: hidden;
@@ -2226,6 +2504,7 @@ dialog.sl-editor-emoji-panel {
   line-height: var(--sl-line-loose);
 }
 
+.sl-editor-hint-row[aria-selected="true"],
 .sl-editor .cm-editor .cm-tooltip-autocomplete > ul > li[aria-selected] {
   background: var(--sl-primary);
   color: var(--sl-on-solid);
@@ -2324,6 +2603,88 @@ dialog.sl-editor-emoji-panel {
 .sl-editor .cm-editor .cm-panel button[name="close"]:hover {
   background: var(--sl-scrim-subtle);
   color: var(--sl-danger);
+}
+
+/* The marks of the check in CodeMirror: a wavy line under the place, a dot in its gutter, the fix in the tooltip */
+.sl-editor .cm-editor .cm-lintRange {
+  background-image: none;
+  text-decoration: underline wavy;
+  text-decoration-skip-ink: none;
+  text-underline-offset: var(--sl-space-1);
+}
+
+.sl-editor .cm-editor .cm-lintRange-error {
+  text-decoration-color: var(--sl-danger);
+}
+
+.sl-editor .cm-editor .cm-lintRange-warning {
+  text-decoration-color: var(--sl-warning);
+}
+
+.sl-editor .cm-editor .cm-lintRange-info {
+  text-decoration-color: var(--sl-primary);
+}
+
+.sl-editor .cm-editor .cm-gutter-lint .cm-gutterElement {
+  padding: 0 var(--sl-space-1) 0 var(--sl-space-2);
+}
+
+.sl-editor .cm-editor .cm-lint-marker {
+  content: normal;
+  display: inline-block;
+  width: var(--sl-space-3);
+  height: var(--sl-space-3);
+  border-radius: var(--sl-radius-circle);
+  vertical-align: middle;
+}
+
+.sl-editor .cm-editor .cm-lint-marker-error {
+  background: var(--sl-danger);
+}
+
+.sl-editor .cm-editor .cm-lint-marker-warning {
+  background: var(--sl-warning);
+}
+
+.sl-editor .cm-editor .cm-lint-marker-info {
+  background: var(--sl-primary);
+}
+
+.sl-editor .cm-editor .cm-tooltip-lint {
+  padding: 0;
+}
+
+.sl-editor .cm-editor .cm-diagnostic {
+  padding: var(--sl-space-2) var(--sl-space-4);
+  border-left: var(--sl-rail-width) solid var(--sl-primary);
+  font-size: var(--sl-font-small);
+  line-height: var(--sl-line-normal);
+}
+
+.sl-editor .cm-editor .cm-diagnostic-error {
+  border-left-color: var(--sl-danger);
+}
+
+.sl-editor .cm-editor .cm-diagnostic-warning {
+  border-left-color: var(--sl-warning);
+}
+
+/* The fix of one click, in the tooltip of CodeMirror and in the list of findings alike */
+.sl-editor-fix,
+.sl-editor .cm-editor .cm-diagnosticAction {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: var(--sl-space-2);
+  margin-left: var(--sl-space-4);
+  padding: var(--sl-space-1) var(--sl-space-3);
+  border: 0;
+  border-radius: var(--sl-radius-1);
+  background: var(--sl-primary);
+  color: var(--sl-on-solid);
+  font: inherit;
+  font-size: var(--sl-font-micro);
+  cursor: pointer;
 }
 
 /* List footer: pager band and mass-action cluster under list tables */
@@ -3131,7 +3492,10 @@ html.sl-is-locked {
 .sl-modal-act-move { --sl-modal-act-tone: var(--sl-success); }
 .sl-modal-act-close { --sl-modal-act-tone: var(--sl-danger); }
 
-.sl-modal-act:focus-visible {
+.sl-modal-act:focus-visible,
+.sl-editor-dirty:focus-visible,
+.sl-editor-lint:focus-visible,
+.sl-editor-diff-mode:focus-visible {
   outline: 0;
   box-shadow: var(--sl-shadow-focus);
 }
@@ -9052,7 +9416,8 @@ button.sl-fm-thumb:hover .bi-zoom-in {
   width: var(--sl-fm-mode-width);
 }
 
-.sl-fm-win .sl-fm-mode[aria-pressed="true"] {
+.sl-fm-win .sl-fm-mode[aria-pressed="true"],
+.sl-editor-diff-mode[aria-pressed="true"] {
   background: var(--sl-bg);
   box-shadow: var(--sl-shadow-xs);
   color: var(--sl-primary);
