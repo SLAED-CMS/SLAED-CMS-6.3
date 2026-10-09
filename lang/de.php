@@ -319,6 +319,7 @@ define('_EDITOR_DIFFSAME','Keine Änderungen: der Text entspricht dem geladenen'
 define('_EDITOR_DIFFBACK','Vorher zurückholen');
 define('_EDITOR_DIFFKEEP','Nachher behalten');
 define('_EDITOR_DIFFNOTE','Hier ändert sich nichts: das Formular speichert „Nachher“');
+define('_EDITOR_SAMPLE','Muster öffnen');
 define('_FAQ','Fragen und Antworten');
 define('_FAVOR','Ist bereits in Favoriten');
 define('_FAVORITES','Favoriten');

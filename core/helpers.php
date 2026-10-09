@@ -153,6 +153,24 @@ function getTplPreviewContent(array $data = []): string {
     ]);
 }
 
+# Answer an editor text as the site renders it, after the save filter and room check, attachments in the file context of an unsaved text; it ends the answer for the frame
+function getEditorPreview(): void {
+    global $tpl;
+    if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
+        header('Allow: POST');
+        http_response_code(405);
+        exit;
+    }
+    $text = getVar('post', 'text', 'text');
+    $store = getVar('post', 'store', 'raw', '');
+    $mod = getVar('post', 'mod', 'var');
+    $own = getUploadOwner($mod);
+    $room = checkEditorTextRoom($text, is_string($store) ? $store : '');
+    if ($room !== '') echo $tpl->getHtmlFrag('alert', ['text' => $room, 'is_warn' => true]);
+    else echo getTplPreviewContent(['texta' => $text, 'mod' => $mod, 'own' => ($own !== '') ? [$own, 0] : []]);
+    exit;
+}
+
 # Universal pager — works in both admin and front-end contexts
 # Single source of truth for rendering a pager: prev/next nav, numbered links and dots, wrapped in the 'pager' fragment
 # $target(int $page): array yields the link target: ['href' => ...] for URL navigation, or ['query' => ..., 'target_id' => ..., 'push_url' => ...] for HTMX navigation
@@ -559,6 +577,7 @@ function getTplTextarea(array $data = []): string {
         'rule' => $rul,
         'store' => $store,
         'room' => getEditorRoomData($store),
+        'preview' => 'text',
     ]);
 }
 

@@ -238,6 +238,7 @@ return [
         '--sl-d-level' => 'profile completion percentage, templates/lite/partials/account-home.html and account-profile.html',
         '--sl-d-pill-x' => 'editor capsule horizontal offset the grip moved it by, plugins/system/editor.js',
         '--sl-d-pill-y' => 'editor capsule vertical offset the grip moved it by, plugins/system/editor.js',
+        '--sl-d-view-height' => 'height of what the editor preview shows, measured in its sandboxed frame, plugins/system/editor.js',
         '--sl-d-members' => 'session donut member share, templates/lite/partials/session-summary.html',
         '--sl-d-meter' => 'profile completeness percentage, templates/lite/partials/account-settings.html and plugins/system/slaed.js',
         '--sl-d-at' => 'settings rail mark index, templates/lite/partials/account-settings.html',

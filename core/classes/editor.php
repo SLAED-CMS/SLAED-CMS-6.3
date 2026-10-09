@@ -144,16 +144,37 @@ class Editor {
         return $driver instanceof CodeDriver ? $driver->getAssets($profile).self::getThemeSkin($key).$driver->getWidget($id, $name, $value, $lang, $profile, $label) : '';
     }
 
-    # What the page tells the editor it is about to render: the variables of a template, each a word in brackets, and whether its html is checked
+    # What the page tells the editor: the variables of a template, whether its html is checked, and its preview, 'text' for the route or the sample values of a template
     private static function getPageData(array $data): array {
         $vars = [];
         foreach ((array)($data['vars'] ?? []) as $key => $text) {
             if (preg_match('/^\[\w+\]$/', $key)) $vars[] = [$key, (string)$text];
         }
-        return ['vars' => $vars, 'lint' => !empty($data['lint'])];
+        $view = $data['preview'] ?? '';
+        if (is_array($view)) {
+            $vals = [];
+            foreach ((array)($view['vals'] ?? []) as $key => $text) {
+                if (preg_match('/^\[\w+\]$/', $key)) $vals[$key] = (string)$text;
+            }
+            $view = ['vals' => $vals, 'open' => (string)($view['open'] ?? '')];
+        } elseif ($view !== 'text') {
+            $view = '';
+        }
+        return ['vars' => $vars, 'lint' => !empty($data['lint']), 'view' => $view];
     }
 
-    # Render one editor in the shell with the variables and check of its caller, a text with emoji, the room of its column and its file window; the kit once per answer
+    # The data the preview of one frame runs on: a template filled in at once on the client, a text posted with a token to the route of its own door
+    private static function getViewData(string|array $view, array $data): array {
+        if (is_array($view)) return $view['vals'] ? $view : [];
+        return [
+            'url' => 'index.php?go='.(defined('ADMIN_FILE') ? '5' : '1').'&op=getEditorPreview',
+            'token' => getSiteToken(),
+            'mod' => (string)($data['mod'] ?? ''),
+            'store' => (string)($data['store'] ?? ''),
+        ];
+    }
+
+    # Render one editor in the shell with the variables, check and preview of its caller, a text with emoji, the room of its column and its file window; the kit once per answer
     public static function getFrame(array $data): string {
         global $tpl;
         $lang = (string)($data['lang'] ?? 'text');
@@ -163,6 +184,8 @@ class Editor {
         $room = (array)($data['room'] ?? []);
         $vars = self::$page['vars'] ?? [];
         $lint = !empty(self::$page['lint']) && $lang === 'html';
+        $view = self::$page['view'] ?? '';
+        $view = ($view !== '') ? self::getViewData($view, $data) : [];
         self::$page = [];
         $head = '';
         if (!self::$done) {
@@ -177,6 +200,7 @@ class Editor {
             'lang_key' => $lang,
             'files_json' => $kit['opt'] ? json_encode($kit['opt'], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) : '',
             'vars_json' => $vars ? json_encode($vars, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) : '',
+            'view_json' => $view ? json_encode($view, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) : '',
             'is_lint' => $lint,
             'lint_text' => $lint ? _EDITOR_LINT : '',
             'room_num' => (!$code && ($room['kind'] ?? '') !== 'mediumtext') ? (int)($room['bytes'] ?? 0) : 0,
@@ -213,6 +237,7 @@ class Editor {
             'used' => _EDITOR_VARUSED,
             'issues' => _EDITOR_ISSUES,
             'nolint' => _EDITOR_NOLINT,
+            'failed' => _ERROR,
             'lint' => [
                 'unknown' => _EDITOR_LINTVAR,
                 'near' => _EDITOR_LINTNEAR,
@@ -289,6 +314,8 @@ class Editor {
             'drop_text' => _EDITOR_DRAFTDROP,
             'diff_text' => _EDITOR_DIFF,
             'diffview_text' => _EDITOR_DIFFVIEW,
+            'preview_text' => _PREVIEW,
+            'sample_text' => _EDITOR_SAMPLE,
             'joint_text' => _EDITOR_DIFFALL,
             'side_text' => _EDITOR_DIFFSIDE,
             'same_text' => _EDITOR_DIFFSAME,

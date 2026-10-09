@@ -76,7 +76,7 @@ class FileManager {
         if (!$rule['list']) return [];
         $isdir = is_dir($pair['full']);
         $ext = $isdir ? '' : strtolower(pathinfo($pair['full'], PATHINFO_EXTENSION));
-        $kind = $this->getFileKind($isdir, $ext);
+        $kind = self::getFileKind($isdir, $ext);
         $dims = $this->getImageBounds($pair['full'], $kind, $ext);
         $prev = in_array($kind, ['image', 'audio', 'video', 'document'], true);
         $edit = $this->isFileEditable($pair['rel']);
@@ -538,7 +538,7 @@ class FileManager {
     }
 
     # Returns the kind one object is shown and treated as; html, htm and js resolve to code and are therefore never previewable, which is the rule the preview boundary needs
-    private function getFileKind(bool $isdir, string $ext): string {
+    public static function getFileKind(bool $isdir, string $ext): string {
         if ($isdir) return 'dir';
         if (in_array($ext, self::IMAGES, true)) return 'image';
         if (in_array($ext, self::AUDIOS, true)) return 'audio';

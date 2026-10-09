@@ -319,6 +319,7 @@ define('_EDITOR_DIFFSAME','Изменений нет: текст совпада�
 define('_EDITOR_DIFFBACK','Вернуть было');
 define('_EDITOR_DIFFKEEP','Оставить стало');
 define('_EDITOR_DIFFNOTE','Здесь ничего не меняется: форма сохранит «Стало»');
+define('_EDITOR_SAMPLE','Открыть образец');
 define('_FAQ','Вопросы и ответы');
 define('_FAVOR','Уже находится в фаворитах');
 define('_FAVORITES','Фавориты');

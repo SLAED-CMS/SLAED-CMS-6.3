@@ -97,7 +97,7 @@ into the plan, then do whatever work the step names.
 - [x] 34. EDITOR batch 7 — variables and the hint. (2026-10-09)
 - [x] 35. EDITOR batch 8 — lint and format. (2026-10-09)
 - [x] 36. EDITOR batch 9 — comparison. (2026-10-09)
-- [ ] 37. EDITOR batch 10 — preview.
+- [x] 37. EDITOR batch 10 — preview. (2026-10-09)
 - [ ] 38. EDITOR batch 11 — reference; deletes `docs/4-EDITOR-2026.md`.
 - [ ] 39. PAGER batch 0 — segmented switch and knob: `sl-seg`, the knob in `slaed.js`, the header mode switch on it;
   one "Наверх" on `#top` and smooth scrolling in CSS, the dead code it clears; before NODE-HEAD, whose view switch

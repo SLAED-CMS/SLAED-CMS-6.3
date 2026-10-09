@@ -24,7 +24,8 @@ final class EditorFormatTest extends TestCase
             '_EDITOR_PRETTY', '_EDITOR_FLAT', '_EDITOR_ISSUES', '_EDITOR_KEYISSUE', '_EDITOR_LINTVAR', '_EDITOR_LINTNEAR', '_EDITOR_LINTSHUT',
             '_EDITOR_LINTOPEN', '_EDITOR_LINTALT', '_EDITOR_LINTBLANK', '_EDITOR_LINTQUOT', '_EDITOR_LINTSRC', '_EDITOR_FIXVAR', '_EDITOR_FIXDEL',
             '_EDITOR_FIXADD', '_EDITOR_FIXQUOT', '_EDITOR_FIXSHUT', '_EDITOR_DIFF', '_EDITOR_DIFFVIEW', '_EDITOR_DIFFALL', '_EDITOR_DIFFSIDE',
-            '_EDITOR_DIFFWAS', '_EDITOR_DIFFNOW', '_EDITOR_DIFFSAME', '_EDITOR_DIFFBACK', '_EDITOR_DIFFKEEP', '_EDITOR_DIFFNOTE'];
+            '_EDITOR_DIFFWAS', '_EDITOR_DIFFNOW', '_EDITOR_DIFFSAME', '_EDITOR_DIFFBACK', '_EDITOR_DIFFKEEP', '_EDITOR_DIFFNOTE',
+            '_PREVIEW', '_EDITOR_SAMPLE', '_ERROR'];
         $words = array_merge($words, array_values((new ReflectionClassConstant(Editor::class, 'PHRASES'))->getValue()));
         foreach ($words as $name) if (!defined($name)) define($name, 'word '.$name);
         if (!defined('_LOCALE')) define('_LOCALE', 'en_US');
@@ -443,5 +444,61 @@ final class EditorFormatTest extends TestCase
             $this->assertStringContainsString($part, $run, 'The runtime lost '.$part);
         }
         $this->assertStringNotContainsString('innerHTML', $run, 'The comparison writes a text of the page as markup');
+    }
+
+    # The preview reaches only the frame of a caller that asks for it: a template filled with sample values, a text through the route of its door
+    # It renders in a sandboxed frame that runs no script, a PDF is opened by a link, and the route takes a POST that ends the answer
+    #[Test]
+    public function previewFollowsItsCaller(): void
+    {
+        $frags = $this->getDriverFrags(function (): void {
+            Editor::getCode(['id' => 'a', 'lang' => 'html', 'preview' => ['vals' => ['[src]' => 's.webp', 'src' => 'x', '[x' => 'y'], 'open' => 's.pdf']]);
+            Editor::getCode(['id' => 'b', 'lang' => 'html']);
+            Editor::getCode(['id' => 'c', 'lang' => 'html', 'preview' => 'nothing']);
+        });
+        $frames = array_values(array_filter($frags, fn($one) => $one[0] === 'editor-frame'));
+        $this->assertCount(3, $frames);
+        $this->assertSame(['vals' => ['[src]' => 's.webp'], 'open' => 's.pdf'], json_decode((string)($frames[0][1]['view_json'] ?? ''), true),
+            'A template is previewed with other values');
+        $this->assertSame('', $frames[1][1]['view_json'] ?? null, 'A frame inherits the preview of the one before it');
+        $this->assertSame('', $frames[2][1]['view_json'] ?? null, 'A preview of an unknown kind reaches the frame');
+        $kit = $this->getFragData($frags, 'editor-kit');
+        $this->assertSame(_PREVIEW, $kit['preview_text'] ?? null, 'The preview has no name');
+        $this->assertSame('word _EDITOR_SAMPLE', $kit['sample_text'] ?? null, 'The link to the sample has no name');
+        $editor = (string)file_get_contents(BASE_DIR.'/core/classes/editor.php');
+        $this->assertStringContainsString("'url' => 'index.php?go='.(defined('ADMIN_FILE') ? '5' : '1').'&op=getEditorPreview'", $editor,
+            'A text is not previewed by the route of its door');
+        $this->assertStringContainsString("'preview' => 'text',", (string)file_get_contents(BASE_DIR.'/core/helpers.php'), 'The texts of the site are not previewed');
+        foreach (['lite', 'admin'] as $theme) {
+            $tpl = (string)file_get_contents(PUBLIC_DIR.'/templates/'.$theme.'/fragments/editor-kit.html');
+            foreach (['data-sl-editor-act="preview" data-sl-editor-need="preview" aria-pressed="false"', 'data-sl-editor-cmd="preview" data-sl-editor-need="preview"',
+                'data-sl-editor-view-frame sandbox="allow-same-origin"', 'data-sl-editor-view-open href="#" target="_blank" rel="noopener" hidden'] as $part) {
+                $this->assertStringContainsString($part, $tpl, 'The preview of '.$theme.' lost '.$part);
+            }
+            $this->assertStringNotContainsString('allow-scripts', $tpl, 'The preview of '.$theme.' runs the scripts of a text');
+            $frame = (string)file_get_contents(PUBLIC_DIR.'/templates/'.$theme.'/fragments/editor-frame.html');
+            $this->assertStringContainsString('{% if view_json %} data-sl-editor-preview="{{ view_json }}"{% endif %}', $frame, 'The frame of '.$theme.' hands no preview');
+        }
+        foreach (['picture' => 'webp', 'sound' => 'wav', 'film' => 'webm', 'document' => 'pdf'] as $kind => $ext) {
+            $this->assertFileExists(PUBLIC_DIR.'/templates/admin/assets/samples/sample.'.$ext, 'The panel ships no sample '.$kind);
+        }
+        $run = (string)file_get_contents(PUBLIC_DIR.'/plugins/system/editor.js');
+        foreach (["if (ed.can.preview && act === 'preview') return setPreview(ed);", "fetch(data.url, { method: 'POST', body: body, credentials: 'same-origin' })",
+            'seq === ed.sheetSeq && eds.get(ed.frame) === ed', '.srcdoc = ', 'setSheet(ed);',
+            'ed.sheetSeer.observe(page.body);'] as $part) {
+            $this->assertStringContainsString($part, $run, 'The runtime lost '.$part);
+        }
+        $index = (string)file_get_contents(PUBLIC_DIR.'/index.php');
+        $this->assertSame(2, substr_count($index, "case 'getEditorPreview': getEditorPreview(); break;"), 'The route is not answered by both doors');
+        $route = (string)file_get_contents(BASE_DIR.'/core/helpers.php');
+        $from = strpos($route, 'function getEditorPreview(');
+        $this->assertNotFalse($from, 'The route of the preview is gone');
+        $body = substr($route, $from, (int)strpos($route, "\n}\n", $from) - $from);
+        foreach (["!== 'POST'", "getVar('post', 'text', 'text')", 'checkEditorTextRoom(', 'getTplPreviewContent(', 'exit;',
+            '$own = getUploadOwner($mod);', "'own' => (\$own !== '') ? [\$own, 0] : []"] as $part) {
+            $this->assertStringContainsString($part, $body, 'The route of the preview lost '.$part);
+        }
+        $this->assertStringContainsString("'preview' => getTemplateSample(", (string)file_get_contents(BASE_DIR.'/admin/modules/uploads.php'),
+            'The file templates are not previewed');
     }
 }

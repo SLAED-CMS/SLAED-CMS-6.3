@@ -319,6 +319,7 @@ define('_EDITOR_DIFFSAME','No changes: the text matches the loaded one');
 define('_EDITOR_DIFFBACK','Restore before');
 define('_EDITOR_DIFFKEEP','Keep after');
 define('_EDITOR_DIFFNOTE','Nothing changes here: the form saves “After”');
+define('_EDITOR_SAMPLE','Open the sample');
 define('_FAQ','Questions and answers');
 define('_FAVOR','Is already in favorites');
 define('_FAVORITES','Favorites');

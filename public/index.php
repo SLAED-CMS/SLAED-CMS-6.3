@@ -193,6 +193,7 @@ if (empty($go)) {
             case 'deleteFavorite': deleteFavorite(); break;
             case 'getVotingView': echo getVotingView(); break;
             case 'updateVotingResult': updateVotingResult(); break;
+            case 'getEditorPreview': getEditorPreview(); break;
         }
     } elseif ($go == 3) {
         Cache::setHeaders();
@@ -257,6 +258,7 @@ if (empty($go)) {
                 case 'getAdminFileData': getAdminFileData(); break;
                 case 'getAdminFilePreview': getAdminFilePreview(); break;
                 case 'getAdminFileDownload': getAdminFileDownload(); break;
+                case 'getEditorPreview': getEditorPreview(); break;
             }
         } else {
             die('Illegal file access');

@@ -319,6 +319,7 @@ define('_EDITOR_DIFFSAME','Brak zmian: tekst jest taki jak wczytany');
 define('_EDITOR_DIFFBACK','Przywróć przed');
 define('_EDITOR_DIFFKEEP','Zostaw po');
 define('_EDITOR_DIFFNOTE','Tu nic się nie zmienia: formularz zapisze „Po”');
+define('_EDITOR_SAMPLE','Otwórz przykład');
 define('_FAQ','Pytania i odpowiedzi');
 define('_FAVOR','Juz jest w ulubionych');
 define('_FAVORITES','Ulubione');

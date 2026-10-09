@@ -33,6 +33,7 @@
   },
   "homepage": "https://github.com/SLAED-CMS/SLAED-CMS-6.3#readme",
   "devDependencies": {
-    "playwright": "^1.63.0"
+    "playwright": "^1.63.0",
+    "pngjs": "^7.0.0"
   }
 }

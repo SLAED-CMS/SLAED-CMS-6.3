@@ -4,13 +4,14 @@ Work plan for one editor shell and a second role for CodeMirror: CodeMirror stay
 text editor to choose beside Plain Plus, TinyMCE, CKEditor and Toast UI; Plain Plus stays the light one. Plain Plus and CodeMirror
 wear the same frame, capsule, status line, palette and comparison window.
 
-Status: batches 0 to 9 done (0 to 2 on 2026-10-07: the decisions answered, the `<br>` check, the baseline; CodeMirror
+Status: batches 0 to 10 done (0 to 2 on 2026-10-07: the decisions answered, the `<br>` check, the baseline; CodeMirror
 painted by the admin theme, One Dark gone, the panels in six locales; `type` read as a list, the core and each language
-built as files of their own; 3 to 5 on 2026-10-08, 6 to 9 on 2026-10-09: the shell and the runtime, Plain Plus and CodeMirror as code in one frame;
+built as files of their own; 3 to 5 on 2026-10-08, 6 to 10 on 2026-10-09: the shell and the runtime, Plain Plus and CodeMirror as code in one frame;
 CodeMirror a text editor storing Markdown, offered to both roles; the file window and the emoji panel for Plain Plus and
 CodeMirror as text, emoji in the shared runtime; the capsule by engine, the palette, the Markdown commands and the
 counter of the column; the `vars` key, the variable list, the hint and the marks, `tplconfig` the first caller; the `lint` key, the check with
-its badge, list, marks and fixes, "тег на строку" and "в одну строку"; the comparison window with its line mode). The order of the batches is kept in
+its badge, list, marks and fixes, "тег на строку" and "в одну строку"; the comparison window with its line mode; the preview in a
+sandboxed frame, the samples of the panel theme and the text route). The order of the batches is kept in
 `docs/ROADMAP-2026.md`. Update this line as batches land.
 
 No line numbers anywhere in this document on purpose: every reference names the function, the file or the constant
@@ -537,6 +538,29 @@ Each batch ends with its checks green, a report, and no commit without the owner
 
 - As answered under decisions 1–3: the sample files of the admin theme, the sandboxed frame with a link for PDF, the
   text route through `getTplPreviewContent()`.
+- Done 2026-10-09. `preview` is a key like `vars`: `Editor::getPageData()` takes `'text'` or the sample values of a
+  template with an address to open, and `getFrame()` hands `data-sl-editor-preview` to the runtime: the values as given,
+  or for a text the route of its door (`go=1` on the site, `go=5` in the panel, so the format is the one of the role that
+  drew the field), a token, the module and the store. `getTplTextarea()` passes `'text'` for every field; `tplconfig`
+  passes `getTemplateSample()` of `admin/modules/uploads.php` for each type, the values the parser would write for one
+  file: `samples/sample.webp` (480×300, its own size), `sample.wav`, `sample.webm` and `sample.pdf` in
+  `templates/admin/assets/samples/` (24 KB together), the width and height of the upload settings where the parser takes
+  them, the file name as title, `#` for an archive; `[theight]`, which the parser never fills, stays as written. The
+  kind of a type comes from `FileManager::getFileKind()`, made public and static for it. The capsule gains the eye
+  (`bi-eye`, `_PREVIEW`, `aria-pressed`) in the group of the comparison and the palette a row under Вид. The pane of the
+  kit stands in the card above the status line, under the text, beside it on the full screen (two columns of a grid,
+  stacked below 900 points); the frame carries `data-view`. It renders only while shown, again after the pause of the
+  draft when the text changed, and an older answer of the route is dropped. The page in the frame is written by
+  `srcdoc` with the stylesheets of the page it stands on and its colour mode; the frame is `sandbox="allow-same-origin"`,
+  so no script of a text runs and the runtime may measure the height, which it writes into `--sl-d-view-height` on load and
+  again whenever the page grows, as a lazy picture does. A PDF
+  falls back to the link of its template inside the sandbox, and the head of the pane links the sample (`_EDITOR_SAMPLE`).
+  The route `getEditorPreview()` in `core/helpers.php` takes a POST only (405 otherwise), runs the save filter
+  (`getVar(..., 'text')`) and `checkEditorTextRoom()` of the declared store, so a text the field cannot hold gets the
+  refusal a save would give, draws an attachment in the context of an unsaved text, `[getUploadOwner($mod), 0]`, so a file
+  of the forum, a private message, a comment, the profile or a Node type comes through the preview route of its owner as the file
+  window lists it, and ends the answer, so the debug block a door appends for a moderator stays out of the
+  frame. One `_EDITOR_SAMPLE` constant in six locales; `_PREVIEW` and `_ERROR` are reused.
 
 ### Batch 11 — reference
 

@@ -31,6 +31,7 @@
             draft: node.content.querySelector('[data-sl-editor-draft]'),
             hint: node.content.querySelector('[data-sl-editor-hint]'),
             issues: node.content.querySelector('[data-sl-editor-issues]'),
+            view: node.content.querySelector('[data-sl-editor-view]'),
             palette: node.content.querySelector('[data-sl-editor-palette]'),
             diff: node.content.querySelector('[data-sl-editor-diff]')
         };
@@ -133,6 +134,7 @@
             setDraft(ed, text);
             setVarCount(ed, text);
             setLint(ed);
+            setSheet(ed);
         }, 500);
     }
 
@@ -928,6 +930,7 @@
         if (act === 'emoji') return setEmoji(ed, btn || ed.frame.querySelector('[data-sl-editor-act="emoji"]') || ed.card);
         if (act === 'palette') return setPalette(ed);
         if (act === 'diff') return setDiff(ed);
+        if (ed.can.preview && act === 'preview') return setPreview(ed);
         if (ed.can.lint && act === 'lint') return setIssueOpen(ed);
         if (ed.can.lint && (act === 'pretty' || act === 'flat')) return setText(ed, (act === 'pretty' ? getPrettyText : getFlatText)(getText(ed)), '');
         if (md && (act === 'bold' || act === 'italic')) return setInline(ed, act === 'bold' ? '**' : '*');
@@ -1289,6 +1292,99 @@
         else dif.showModal();
     }
 
+    // A value written into the page of the preview as an attribute, its markup characters taken as text
+    function getAttrText(text) {
+        return String(text).replace(/[&<>"]/g, function (one) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[one]; });
+    }
+
+    // The preview pane of a frame, made from the kit the first time it opens and standing in its card above the status line
+    function getSheet(ed) {
+        var pane;
+        var open;
+        if (ed.sheet) return ed.sheet;
+        pane = kit.view.cloneNode(true);
+        pane.id = 'sl-editor-view-' + (++uid);
+        open = pane.querySelector('[data-sl-editor-view-open]');
+        if (ed.preview.open) {
+            open.href = ed.preview.open;
+            open.hidden = false;
+        }
+        pane.querySelector('[data-sl-editor-view-frame]').addEventListener('load', function () { setSheetSeer(ed); });
+        ed.sheet = pane;
+        ed.card.insertBefore(pane, ed.card.querySelector('[data-sl-editor-status]'));
+        ed.frame.querySelectorAll('[data-sl-editor-act="preview"]').forEach(function (btn) { btn.setAttribute('aria-controls', pane.id); });
+        return pane;
+    }
+
+    // Show or hide the preview of a frame, under its text and beside it on the whole screen; it is rendered only while it is shown
+    function setPreview(ed) {
+        var on = !ed.frame.hasAttribute('data-view');
+        var pane = getSheet(ed);
+        ed.frame.toggleAttribute('data-view', on);
+        pane.hidden = !on;
+        ed.frame.querySelectorAll('[data-sl-editor-act="preview"]').forEach(function (btn) { btn.setAttribute('aria-pressed', String(on)); });
+        if (ed.view) ed.view.requestMeasure();
+        ed.sheetText = null;
+        if (on) setSheet(ed);
+    }
+
+    // Render the present text into a shown preview: a template filled with its sample values at once, a text by the route of the site, an older answer dropped
+    function setSheet(ed) {
+        var text = getText(ed);
+        var data = ed.preview;
+        var body;
+        var seq;
+        if (!ed.sheet || ed.sheet.hidden || text === ed.sheetText) return;
+        ed.sheetText = text;
+        if (data.vals) {
+            return setSheetPage(ed, text.replace(/\[\w+\]/g, function (key) { return Object.prototype.hasOwnProperty.call(data.vals, key) ? data.vals[key] : key; }));
+        }
+        seq = ++ed.sheetSeq;
+        body = new FormData();
+        body.append('text', text);
+        body.append('mod', data.mod || '');
+        body.append('store', data.store || '');
+        body.append('token', data.token || '');
+        fetch(data.url, { method: 'POST', body: body, credentials: 'same-origin' }).then(function (res) {
+            if (!res.ok) throw new Error(String(res.status));
+            return res.text();
+        }).then(function (html) {
+            if (seq === ed.sheetSeq && eds.get(ed.frame) === ed) setSheetPage(ed, html);
+        }, function () {
+            if (seq !== ed.sheetSeq) return;
+            ed.sheetText = null;
+            setNote(ed, kit.words.failed);
+        });
+    }
+
+    // Write a page of the theme around a rendered body into the sandboxed frame, with the stylesheets and the colour mode of the page it stands on
+    function setSheetPage(ed, body) {
+        var root = doc.documentElement;
+        var css = Array.prototype.map.call(doc.head.querySelectorAll('link[rel~="stylesheet"]'), function (one) {
+            return '<link rel="stylesheet" href="' + getAttrText(one.href) + '">';
+        }).join('');
+        ed.sheet.querySelector('[data-sl-editor-view-frame]').srcdoc = '<!doctype html><html class="sl-editor-sheet" lang="' + getAttrText(root.lang || '') + '" data-theme="'
+            + getAttrText(root.getAttribute('data-theme') || 'auto') + '"><head><meta charset="utf-8"><base href="' + getAttrText(doc.baseURI) + '">' + css
+            + '</head><body>' + body + '</body></html>';
+    }
+
+    // Fit the frame of the preview to the height of what it shows, which the page may read since the sandbox runs no script of its own
+    function setSheetFit(ed) {
+        var page = ed.sheet ? ed.sheet.querySelector('[data-sl-editor-view-frame]').contentDocument : null;
+        if (page && page.body) ed.sheet.style.setProperty('--sl-d-view-height', Math.ceil(page.body.getBoundingClientRect().height) + 'px');
+    }
+
+    // Fit the frame once its page has loaded and again whenever that page grows, as a lazy picture or a video does after the load
+    function setSheetSeer(ed) {
+        var page = ed.sheet ? ed.sheet.querySelector('[data-sl-editor-view-frame]').contentDocument : null;
+        if (ed.sheetSeer) ed.sheetSeer.disconnect();
+        ed.sheetSeer = null;
+        setSheetFit(ed);
+        if (!page || !page.body || !win.ResizeObserver) return;
+        ed.sheetSeer = new win.ResizeObserver(function () { setSheetFit(ed); });
+        ed.sheetSeer.observe(page.body);
+    }
+
     // Move the capsule by its grip: the pointer drags it, the arrow keys step it, a double click and Home send it back
     function setGrip(pill, grip) {
         var pos = { x: 0, y: 0 };
@@ -1429,9 +1525,12 @@
         var badge = frame.querySelector('[data-sl-editor-act="lint"]');
         var files = null;
         var vars = null;
+        var view = null;
         try { files = JSON.parse(frame.getAttribute('data-sl-editor-files') || 'null'); } catch (err) { files = null; }
         try { vars = JSON.parse(frame.getAttribute('data-sl-editor-vars') || 'null'); } catch (err) { vars = null; }
+        try { view = JSON.parse(frame.getAttribute('data-sl-editor-preview') || 'null'); } catch (err) { view = null; }
         if (!Array.isArray(vars) || !vars.length) vars = null;
+        if (!view || typeof view !== 'object' || !(view.vals || view.url) || !kit.view) view = null;
         var can = {
             text: !code,
             code: code,
@@ -1439,7 +1538,8 @@
             markdown: !code && frame.getAttribute('data-sl-editor-lang') === 'markdown',
             files: !!files,
             vars: !!vars,
-            lint: !!badge && frame.hasAttribute('data-sl-editor-lint')
+            lint: !!badge && frame.hasAttribute('data-sl-editor-lint'),
+            preview: !!view
         };
         pill.querySelectorAll('[data-sl-editor-need]').forEach(function (one) { if (!checkNeed(can, one)) one.remove(); });
         Array.prototype.slice.call(pill.children).forEach(function (one) { if (!one.querySelector('button')) one.remove(); });
@@ -1468,7 +1568,12 @@
             files: files,
             bound: false,
             port: null,
-            hook: null
+            hook: null,
+            preview: view,
+            sheet: null,
+            sheetText: null,
+            sheetSeq: 0,
+            sheetSeer: null
         };
         eds.set(frame, ed);
         pill.setAttribute('aria-label', getPhrase(kit.words.tools, frame.getAttribute('data-sl-editor-name') || ''));
@@ -1522,6 +1627,7 @@
         if (!ed) return;
         if (seer) seer.unobserve(frame);
         if (ed.view) ed.view.destroy();
+        if (ed.sheetSeer) ed.sheetSeer.disconnect();
         if (frame.hasAttribute('data-full')) doc.documentElement.classList.remove('sl-is-locked');
         if (ed.bound && win.SlaedFileManager) win.SlaedFileManager.deleteUpload(ed.area.id);
         if (win.SlaedEmoji) win.SlaedEmoji.deletePanel(ed.area.id);
@@ -1547,6 +1653,7 @@
         setRoom(ed, getText(ed));
         setVarCount(ed, getText(ed));
         setLint(ed);
+        setSheet(ed);
         setStatus(ed);
     }
 

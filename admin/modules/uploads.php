@@ -279,6 +279,32 @@ function fmpack(): void {
     setFileAction('fmpack');
 }
 
+# The values a file template is previewed with, as the parser fills them for one file: the bundled sample of the kind, its size, its name; a PDF is opened, never embedded
+function getTemplateSample(string $type): array {
+    global $conf, $theme;
+    require_once BASE_DIR.'/core/classes/filemanager.php';
+    $kind = ($type === 'full') ? 'image' : FileManager::getFileKind(false, $type);
+    $file = ['image' => 'sample.webp', 'audio' => 'sample.wav', 'video' => 'sample.webm', 'document' => 'sample.pdf'][$kind] ?? '';
+    $path = 'templates/'.$theme.'/assets/samples/'.$file;
+    $url = ($file !== '') ? Template::getAssetUrl($path) : '#';
+    $size = ($kind === 'image' && is_file(PUBLIC_DIR.'/'.$path)) ? getimagesize(PUBLIC_DIR.'/'.$path) : false;
+    $wide = (string)($conf['uploads']['width'] ?? '500');
+    return [
+        'vals' => [
+            '[src]' => $url,
+            '[tsrc]' => $url,
+            '[width]' => $size ? (string)$size[0] : $wide,
+            '[twidth]' => $wide,
+            '[height]' => $size ? (string)$size[1] : (string)($conf['uploads']['height'] ?? '500'),
+            '[align]' => '',
+            '[title]' => ($file !== '') ? $file : 'sample.'.$type,
+            '[quot]' => '&quot;',
+            '[rel]' => 'alternate',
+        ],
+        'open' => ($kind === 'document') ? $url : '',
+    ];
+}
+
 function tplconfig(): void {
     global $afile, $conf, $tpl;
     setHead();
@@ -320,6 +346,7 @@ function tplconfig(): void {
                     'text' => $conf['filetype'][$typm[$i]] ?? '',
                     'vars' => $vars,
                     'lint' => true,
+                    'preview' => getTemplateSample($typm[$i]),
                 ]),
                 'is_full' => true,
             ]],

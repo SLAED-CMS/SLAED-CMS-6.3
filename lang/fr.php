@@ -319,6 +319,7 @@ define('_EDITOR_DIFFSAME','Aucun changement : le texte est celui qui a été cha
 define('_EDITOR_DIFFBACK','Rétablir avant');
 define('_EDITOR_DIFFKEEP','Garder après');
 define('_EDITOR_DIFFNOTE','Rien ne change ici : le formulaire enregistre « Après »');
+define('_EDITOR_SAMPLE','Ouvrir l’exemple');
 define('_FAQ','Questions et réponses');
 define('_FAVOR','Est déjà en favoris');
 define('_FAVORITES','Favoris');

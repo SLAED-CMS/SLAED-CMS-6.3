@@ -2802,6 +2802,58 @@ pre code.hljs {
   flex: 1 1 auto;
 }
 
+/* The preview under the text: a sandboxed frame the runtime fits to what it shows, opened from the capsule and the palette */
+.sl-editor-view {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  border-top: 1px solid var(--sl-border);
+}
+
+.sl-editor-view-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sl-space-2) var(--sl-space-3);
+  padding: var(--sl-space-1) var(--sl-space-3) var(--sl-space-1) var(--sl-space-5);
+  border-bottom: 1px solid var(--sl-border);
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-micro);
+  line-height: var(--sl-line-loose);
+}
+
+.sl-editor-view-open {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sl-space-2);
+  margin-left: auto;
+}
+
+.sl-editor-view-frame {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  height: var(--sl-d-view-height, var(--sl-editor-height));
+  max-height: var(--sl-editor-max-height);
+  border: 0;
+  background: var(--sl-bg);
+}
+
+/* The page inside the frame: the ground of the theme over the whole frame, and a body with no floor of its own and its floats held,
+   so the runtime measures what it shows */
+.sl-editor-sheet {
+  min-height: 0;
+  background: var(--sl-bg);
+}
+
+.sl-editor-sheet > body {
+  display: flow-root;
+  min-height: 0;
+  margin: 0;
+  padding: var(--sl-space-5);
+  background: transparent;
+}
+
 /* The variables of a template, under the caret or under the button of the capsule, placed by the runtime inside the card;
    the chosen one stands on the brand colour and a variable the text already uses carries a tick */
 .sl-editor-hint {
@@ -3245,6 +3297,64 @@ dialog.sl-editor-emoji-panel {
 
 .sl-editor[data-full] .sl-editor-text {
   resize: none;
+}
+
+/* On the whole screen the preview stands beside the text, each taking half, and under it below the middle step */
+.sl-editor[data-full][data-view] .sl-editor-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr) auto auto;
+}
+
+.sl-editor[data-full][data-view] .sl-editor-card > * {
+  grid-column: 1 / -1;
+}
+
+.sl-editor[data-full][data-view] .sl-editor-text,
+.sl-editor[data-full][data-view] .cm-editor {
+  grid-area: 2 / 1;
+}
+
+.sl-editor[data-full][data-view] .sl-editor-view {
+  grid-area: 2 / 2;
+  min-height: 0;
+  border-top: 0;
+  border-left: 1px solid var(--sl-border);
+}
+
+.sl-editor[data-full][data-view] .sl-editor-issues {
+  grid-row: 3;
+}
+
+.sl-editor[data-full][data-view] .sl-editor-status {
+  grid-row: 4;
+}
+
+.sl-editor[data-full] .sl-editor-view-frame {
+  flex: 1 1 auto;
+  height: auto;
+  max-height: none;
+}
+
+@media (max-width: 900px) {
+  .sl-editor[data-full][data-view] .sl-editor-card {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr) minmax(0, 1fr) auto auto;
+  }
+
+  .sl-editor[data-full][data-view] .sl-editor-view {
+    grid-area: 3 / 1;
+    border-top: 1px solid var(--sl-border);
+    border-left: 0;
+  }
+
+  .sl-editor[data-full][data-view] .sl-editor-issues {
+    grid-row: 4;
+  }
+
+  .sl-editor[data-full][data-view] .sl-editor-status {
+    grid-row: 5;
+  }
 }
 
 .sl-editor[data-full] .cm-editor .cm-scroller {
