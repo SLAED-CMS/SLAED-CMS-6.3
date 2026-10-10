@@ -4,6 +4,7 @@
 # License: MIT
 # Website: slaed.net
 
+define('_NODE_ABC','Alfabet');
 define('_NODE_ADDED','Materiał został opublikowany.');
 define('_NODE_ASSETS','Pliki i linki');
 define('_NODE_BADDATE','Data jest nieprawidłowa, użyj postaci RRRR-MM-DD GG:MM.');
@@ -11,13 +12,18 @@ define('_NODE_BUSY','Materiał został w międzyczasie zmieniony, nic nie zapisa
 define('_NODE_CATS','Dodatkowe kategorie');
 define('_NODE_CLOSE','Zamknij zgłoszenie');
 define('_NODE_FAILED','Nie udało się zapisać materiału, spróbuj ponownie później.');
+define('_NODE_FILTERS','Wybór materiałów');
+define('_NODE_FIND','Szukaj w dziale');
 define('_NODE_GONE','Materiał nie istnieje lub jest niedostępny.');
 define('_NODE_INFAV','W ulubionych');
 define('_NODE_INTRO','Wstęp');
 define('_NODE_INVALID','Materiał nie został zapisany: sprawdź wypełnione pola.');
+define('_NODE_LETHINT','Wyróżnione są litery, na które są materiały; liczba jest w podpowiedzi');
+define('_NODE_LETTERS','Według liter');
 define('_NODE_MNEW','Użytkownik %1$s otworzył zgłoszenie „%2$s”. Zobacz: %3$s');
 define('_NODE_MSTAFF','Pomoc techniczna odpowiedziała na Twoje zgłoszenie „%1$s”. Zobacz: %2$s');
 define('_NODE_MUSER','Użytkownik %1$s odpowiedział w zgłoszeniu „%2$s”. Zobacz: %3$s');
+define('_NODE_ONLETTER','Litera „%s”');
 define('_NODE_PARENT','Materiał nadrzędny');
 define('_NODE_PENDING','Materiał został wysłany do moderatora do sprawdzenia.');
 define('_NODE_PERHINT','0 - tylko ręczne sprawdzanie, w przeciwnym razie od 300 do 31536000');
@@ -36,7 +42,13 @@ define('_NODE_SOURCE','Źródło tekstu (RSS lub Atom)');
 define('_NODE_SSAVED','Stan zgłoszenia został zapisany.');
 define('_NODE_STATE','Stan');
 define('_NODE_UPDATED','Zaktualizowane');
+define('_NODE_VACCORD','Akordeon');
+define('_NODE_VCARDS','Karty');
+define('_NODE_VCOMPACT','Kompaktowy');
+define('_NODE_VIEW','Widok listy');
 define('_NODE_VISIT','Przejdź na stronę');
+define('_NODE_VRAIL','Panel boczny');
+define('_NODE_VTILES','Kafelki');
 define('_NODE_WCLOSE','Zamknięte');
 define('_NODE_WSTAFF','Oczekuje na pomoc techniczną');
 define('_NODE_WUSER','Oczekuje na autora');

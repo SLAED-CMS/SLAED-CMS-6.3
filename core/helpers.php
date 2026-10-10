@@ -1391,7 +1391,6 @@ function getModuleNavi(array $p): string {
     $add = $p['add_href'] ?? ($canadd ? getSeoUrl(['name' => $conf['name'], 'op' => 'add']) : '');
     $btit = $p['btitle'] ?? _BEST;
     $ptit = $p['ptitle'] ?? _POP;
-    $catshow = $p['catshow'] ?? $cat;
     return $tpl->getHtmlPart('navi', [
         'title' => $title,
         'nav_label' => $htitle,
@@ -1401,7 +1400,6 @@ function getModuleNavi(array $p): string {
         'pop_link' => $pop ? ['href' => $pop, 'title' => $ptit, 'label' => $ptit, 'is_navi_button' => true] : [],
         'list_link' => $list ? ['href' => $list, 'title' => _LIST, 'label' => _LIST, 'is_navi_button' => true] : [],
         'add_link' => $add ? ['href' => $add, 'title' => _ADD, 'label' => _ADD, 'is_navi_button' => true] : [],
-        'cat_link' => $catshow ? ['title' => _CATVORH, 'label' => _CATEGORIES, 'is_navi_button' => true, 'is_category_toggle' => true] : [],
     ]);
 }
 

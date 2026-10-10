@@ -4,6 +4,7 @@
 # License: MIT
 # Website: slaed.net
 
+define('_NODE_ABC','Абетка');
 define('_NODE_ADDED','Матеріал опубліковано.');
 define('_NODE_ASSETS','Файли та посилання');
 define('_NODE_BADDATE','Дату вказано неправильно, використовуйте вигляд РРРР-ММ-ДД ГГ:ХХ.');
@@ -11,13 +12,18 @@ define('_NODE_BUSY','Матеріал тим часом змінено, нічо
 define('_NODE_CATS','Додаткові категорії');
 define('_NODE_CLOSE','Закрити звернення');
 define('_NODE_FAILED','Матеріал не вдалося зберегти, спробуйте пізніше.');
+define('_NODE_FILTERS','Добір матеріалів');
+define('_NODE_FIND','Пошук у розділі');
 define('_NODE_GONE','Матеріал не існує або недоступний.');
 define('_NODE_INFAV','В обраному');
 define('_NODE_INTRO','Вступ');
 define('_NODE_INVALID','Матеріал не збережено: перевірте заповнення полів.');
+define('_NODE_LETHINT','Виділено літери, на які є матеріали; кількість — у підказці');
+define('_NODE_LETTERS','За літерами');
 define('_NODE_MNEW','Користувач %1$s відкрив звернення «%2$s». Переглянути: %3$s');
 define('_NODE_MSTAFF','Підтримка відповіла на ваше звернення «%1$s». Переглянути: %2$s');
 define('_NODE_MUSER','Користувач %1$s відповів у зверненні «%2$s». Переглянути: %3$s');
+define('_NODE_ONLETTER','На «%s»');
 define('_NODE_PARENT','Батьківський матеріал');
 define('_NODE_PENDING','Матеріал надіслано модератору на перевірку.');
 define('_NODE_PERHINT','0 - лише ручна перевірка, інакше від 300 до 31536000');
@@ -36,7 +42,13 @@ define('_NODE_SOURCE','Джерело тексту (RSS або Atom)');
 define('_NODE_SSAVED','Стан звернення збережено.');
 define('_NODE_STATE','Стан');
 define('_NODE_UPDATED','Оновлені');
+define('_NODE_VACCORD','Акордеон');
+define('_NODE_VCARDS','Картки');
+define('_NODE_VCOMPACT','Компакт');
+define('_NODE_VIEW','Вигляд списку');
 define('_NODE_VISIT','Перейти на сайт');
+define('_NODE_VRAIL','Рейка');
+define('_NODE_VTILES','Плитки');
 define('_NODE_WCLOSE','Закрито');
 define('_NODE_WSTAFF','Очікує відповіді підтримки');
 define('_NODE_WUSER','Очікує відповіді автора');

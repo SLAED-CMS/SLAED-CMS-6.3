@@ -99,8 +99,10 @@ final class SegKnobTest extends TestCase
         $note = 'The step ladder of the old knob is back beside the measured one';
         $this->assertStringNotContainsString('sl-mode-knob', $lite, $note);
         $tpl = $this->getFile('public/templates/lite/fragments/mode-switch.html');
-        $note = 'The mode switch is not a rail the script knows, so its plate never travels';
-        $this->assertStringContainsString('<span class="sl-seg sl-seg-mode" data-sl-knob="mode">', $tpl, $note);
+        $note = 'The mode switch or the view switch of a Node list is not a rail the script knows, so its plate never travels';
+        $this->assertStringContainsString('<span class="sl-seg {% if is_view %}sl-seg-view{% else %}sl-seg-mode{% endif %}" data-sl-knob="{{ field }}"', $tpl, $note);
+        $this->assertStringContainsString("'modes' => \$list, 'field' => 'mode']", $this->getFile('core/system.php'), $note);
+        $this->assertStringContainsString("'field' => 'view',", $this->getFile('modules/node/index.php'), $note);
         $note = 'The plate of the mode switch is not marked, so the sheet has nothing to move';
         $this->assertStringContainsString('<span class="sl-seg-knob" data-sl-knob-mark aria-hidden="true"></span>', $tpl, $note);
     }

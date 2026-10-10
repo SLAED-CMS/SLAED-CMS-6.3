@@ -680,6 +680,7 @@ function getNodeTypeVals(?NodeType $type, ?array $prof): array {
 # Read the posted type form into the effective settings and the input the service takes; fields, uploads and rating stay those of the stored type or the defaults
 # The report switch of a role counts only in the modes download and link, the two that offer the report form, because the form hides it in any other
 # The extension settings stay those of the stored type or of the shipped profile the new type starts from
+# The views put the default one first; the one view of the display mode alone is stored empty, so the list keeps following its mode
 # A public workflow for guests without moderation is taken only with its explicit confirmation, because every visitor would then publish directly
 function getNodeTypePost(?NodeType $old, ?array $prof): array {
     $num = fn(string $key, int $def): int => (($v = getVar('post', $key, 'raw', '')) !== '' && is_string($v) && preg_match('/^-?[0-9]{1,18}$/D', trim($v))) ? trim($v) : $def;
@@ -715,11 +716,14 @@ function getNodeTypePost(?NodeType $old, ?array $prof): array {
             'sort' => (int)($row['sort'] ?? 0),
         ];
     }
+    $mode = trim(getVar('post', 'mode', 'raw', 'default'));
+    $first = getVar('post', 'view', 'var', '');
+    $looks = array_values(array_unique(array_merge(($first !== '') ? [$first] : [], $pick('views', NodeQuery::VIEWS))));
     $set = [
         'list' => ['orders' => $pick('orders', ['published', 'updated', 'title', 'views', 'rating']), 'order' => getVar('post', 'order', 'var', 'published'),
             'dir' => getVar('post', 'dir', 'var', 'desc'), 'limit' => $num('limit', 10), 'alpha' => $flag('alpha'), 'show' => $pick('show', ['category', 'author', 'date',
-                'views'])],
-        'view' => ['mode' => trim(getVar('post', 'mode', 'raw', 'default'))],
+                'views']), 'views' => ($looks === [NodeQuery::MODEVIEW[$mode] ?? '']) ? [] : $looks],
+        'view' => ['mode' => $mode],
         'form' => [],
         'workflow' => ['access' => $access, 'groups' => $gids, 'publish' => $pubs, 'notify' => ['pending' => $flag('notify_pending'), 'result' => $flag('notify_result')]],
         'admin' => [],
@@ -787,6 +791,12 @@ function getNodeTypeRows(array $vals, bool $new): array {
     $show = ['category' => _CATEGORY, 'author' => _POSTEDBY, 'date' => _DATE, 'views' => _READS];
     $rows[] = ['label_html' => _NODE_SHOW, 'field_html' => implode(' ', array_map(fn(string $k, string $v): string => $tpl->getHtmlFrag('checkbox', ['name_attr' => 'show[]',
         'value_attr' => $k, 'is_checked' => in_array($k, $set['list']['show'], true), 'label_text' => $v]), array_keys($show), $show))];
+    $looks = array_combine(NodeQuery::VIEWS, [_NODE_VCARDS, _NODE_VCOMPACT, _LIST, _NODE_VACCORD, _NODE_VTILES, _NODE_VRAIL]);
+    $have = $set['list']['views'] ?: [NodeQuery::MODEVIEW[$set['view']['mode']] ?? 'cards'];
+    $rows[] = ['label_html' => _NODE_VIEWS, 'field_html' => implode(' ', array_map(fn(string $k, string $v): string => $tpl->getHtmlFrag('checkbox', ['name_attr' => 'views[]',
+        'value_attr' => $k, 'is_checked' => in_array($k, $have, true), 'label_text' => $v]), array_keys($looks), $looks))];
+    $rows[] = ['label_for' => 'f-view', 'label_html' => _NODE_VIEWDEF, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'view', 'selectid' => 'f-view',
+        'options_html' => $opts($looks, $have[0])])];
     $rows[] = ['label_for' => 'f-mode', 'label_html' => _NODE_MODE, 'hint_html' => $esc(_NODE_MODEHINT), 'hint_id' => 'f-mode-hint',
         'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'mode',
         'selectid' => 'f-mode', 'describedby' => 'f-mode-hint', 'options_html' => $opts(array_combine(NodeQuery::MODES, NodeQuery::MODES), $set['view']['mode'])])];

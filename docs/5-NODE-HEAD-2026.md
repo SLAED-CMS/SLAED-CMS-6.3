@@ -13,7 +13,22 @@ by "Decisions of batch 3" — `getNodeHead()` draws the draft `partials/node/hea
 counts come from `NodeQuery::getNodeTally()` through `getNodeCountMap()` and `deleteNodeCountMap()` beside the category
 map, which `NodeService` drops after every material write and `deleteCategoryMap()` with the map; the personal filters
 are `NodeQuery::setNodeFavorite()`, `setNodePublished()` from `getUserLastVisit()` and `getNodeOwnCount()`; `_ASC` and
-`_DESC` moved from `admin/lang/` to `lang/`, `_NODE_UPDATED` from the admin language of Node to its site language. The
+`_DESC` moved from `admin/lang/` to `lang/`, `_NODE_UPDATED` from the admin language of Node to its site language. Batch 4
+landed 2026-10-10 by "Decisions of batch 4" — `partials/node/head.html` is the face of `nh-13`: the sticky
+`<header class="sl-node-head">`, the windows of the categories, the letters and the sorts in one toggle group, the
+lens; the stuck bar takes the lens whenever it is narrower than 900 px, measured by `@container` on the bar, since
+beside the sidebar the list column is that narrow on every screen. `setCategories()` and `getLetterNavi()` give the
+contents of the windows, `partials/categories.html` is gone, the month heads are `fragments/date-head.html`, which the
+mailbox shares; `sl-pmf-day` is `sl-date-head`, its token keeps the name `--sl-pmf-day-bg`, since the API of lite is
+frozen. The category toggle left `getModuleNavi()`, `fragments/link.html` and `_CATVORH`; `_PRSORT` and the `_SORT`
+of `admin/lang/` became one `_SORT` in `lang/`. Batch 5 landed 2026-10-10 by "Decisions of batch 5" — `list.views` of
+the type, checked by `NodeQuery::VIEWS`, its first view the default; an empty list, the default of `config/node.php`,
+offers the one view of the display mode by `NodeQuery::MODEVIEW`, so a stored type keeps its face; news, docs and faq of
+the stand and of their profiles offer the views of "Decisions". The type form of the panel has the views and the default
+view. The list answers a POST of the switch: its token of scope `view` sets the cookie `view-<type>` and the answer is a
+303 to the same list; `fragments/mode-switch.html` draws the colour mode and the view switch. The list view is
+`node/docs/card` with the thumbnail and the date, the accordion `node/faq/card`, the tiles `node/media/card` with the
+play mark only for media; the rail is the tabs of `slaed.js` on `sl-duo`, the private messages renamed onto it. The
 order of the batches is kept in `docs/ROADMAP-2026.md`. Update this line as batches land.
 
 No line numbers anywhere in this document on purpose: every reference names the function, the file or the constant
@@ -289,6 +304,40 @@ Taken by the owner on 2026-10-10; settled, not to be reopened by a batch.
 3. **The previous visit at login.** `getUserLastVisit()` in `core/system.php` reads `lastvis` once per session and keeps
    it with the account id in `$_SESSION[$conf['user_c'].'-lastvis']`; `updateSessionTrack()` and `setUserLogin()` of
    `modules/account/index.php` call it before they move the column, and the list reads it from there.
+
+## Decisions of batch 4
+
+Taken by the owner on 2026-10-10; settled, not to be reopened by a batch.
+
+1. **Number forms.** The count chip reads "97 материалов" and "19 из 97 материалов", a letter's hint "А — 4 материала":
+   one helper `getPluralForm()` in `core/system.php` picks one of the forms a constant carries separated by `|`, by the
+   plural rule of `_LOCALE` (three forms for `ru`, `uk`, `pl`, two for `de`, `en`, `fr`), as WordPress `_n()` and
+   Drupal `formatPlural()` do. No `intl`.
+2. **The category window is the stand's:** the tile "Все материалы" first, then the top level of the type with the chips
+   of its subcategories, the chosen tile or chip marked; `setCategories()` no longer descends into the chosen category,
+   and its line "Общее количество N в M категориях" goes, since the count chip says it.
+3. **Month heads count the cards of the page,** as the stand does; no query of its own.
+4. **Letters inside a category** are counted by `NodeQuery::getNodeLetters()`, one grouped query over the conditions of
+   the list with the category set, live and never cached; the cache of decision 3 of batch 0 keeps the counts of the
+   list without a category. Found by the self-check of the batch: type-wide counts beside a link that narrows by the
+   category promised a letter that opened an empty list.
+5. **Month heads only for the order by publication,** whose date the card shows; the order "Обновлённые" has none, since
+   its month would contradict the date on the card.
+6. **Kept without being asked first, approved afterwards:** `fragments/date-head.html`, one markup of a date head for the
+   mailbox and the Node list; the token `--sl-node-find-width` with the component `node-find` in the contract; the row
+   `.sl-node-head-sorts` in the duplicate allowlist.
+
+## Decisions of batch 5
+
+Taken by the owner on 2026-10-10; settled, not to be reopened by a batch.
+
+1. **The rail pages like every view.** The reader caps one page at the limit of the type (`NodeQuery::getPageSize()`,
+   never above `list.limit` and `limits.maxlist`), so "the whole type and no pages" of "Views" is not kept: the rail
+   shows one page of the list and the pager stays under it, as WordPress and Drupal page every view of a list. A type
+   whose rail must hold all its materials raises its limit.
+2. **A view wraps its cards in one container of `partials/node/list.html`,** as `sl-node-tiles` does for the tiles:
+   `sl-node-compact` (new), `sl-node-row` for the list, `sl-node-rail` for the rail; the card fragments know nothing of
+   the views, and `partials/node/media/list.html` goes, since the common list draws the tiles.
 
 ## Batches
 

@@ -21,6 +21,8 @@ return [
                     2 => 'date',
                     3 => 'views',
                 ],
+                'views' => [
+                ],
             ],
             'view' => [
                 'mode' => 'default',
@@ -126,6 +128,10 @@ return [
                         1 => 'date',
                         2 => 'views',
                     ],
+                    'views' => [
+                        0 => 'list',
+                        1 => 'rail',
+                    ],
                 ],
                 'view' => [
                     'mode' => 'docs',
@@ -160,6 +166,10 @@ return [
                         2 => 'title',
                         3 => 'views',
                         4 => 'rating',
+                    ],
+                    'views' => [
+                        0 => 'accordion',
+                        1 => 'list',
                     ],
                 ],
                 'view' => [
@@ -369,6 +379,11 @@ return [
                         2 => 'title',
                         3 => 'views',
                         4 => 'rating',
+                    ],
+                    'views' => [
+                        0 => 'cards',
+                        1 => 'compact',
+                        2 => 'tiles',
                     ],
                 ],
                 'view' => [

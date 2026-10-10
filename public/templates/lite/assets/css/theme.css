@@ -1971,6 +1971,342 @@ button.sl-but-mini:hover,
   }
 }
 
+/* The compact view of a Node list: the cards keep their title and meta row and fold the text into one muted line */
+.sl-node-compact .sl-post .sl-title {
+  margin-bottom: var(--sl-space-2);
+  font-size: var(--sl-font-h4);
+}
+
+.sl-node-compact .sl-meta {
+  margin-bottom: var(--sl-space-3);
+  padding-bottom: var(--sl-space-3);
+}
+
+.sl-node-compact .sl-card-image,
+.sl-node-compact .sl-meta-foot,
+.sl-node-compact .sl-entry-content img,
+.sl-node-compact .sl-img-placeholder,
+.sl-node-compact .sl-meta .sl-pull-right > li:not(.sl-meta-actions) {
+  display: none;
+}
+
+.sl-node-compact .sl-entry-content {
+  display: -webkit-box;
+  overflow: hidden;
+  margin-bottom: 0;
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-small);
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
+}
+
+.sl-node-compact .sl-entry-content p {
+  display: inline;
+  margin: 0;
+}
+
+/* The list view: one row of the thumbnail, the title, the category and the date over one line of the introduction */
+@media (width > 560px) {
+  .sl-node-row .sl-node-toc {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    align-items: center;
+  }
+
+  .sl-node-row .sl-node-toc:has(> .sl-related-img) {
+    grid-template-columns: auto minmax(0, 1fr) auto auto;
+  }
+
+  .sl-node-row .sl-related-img {
+    grid-row: span 2;
+  }
+
+  .sl-node-row .sl-node-toc-intro {
+    grid-column: 1 / -1;
+  }
+
+  .sl-node-row .sl-node-toc:has(> .sl-related-img) .sl-node-toc-intro {
+    grid-column: 2 / -1;
+  }
+}
+
+/* The rail: the titles of the page on the left as tabs, the chosen one read on the right; one column on a phone */
+.sl-duo.sl-node-rail {
+  grid-template-columns: 280px minmax(0, 1fr);
+  margin-bottom: var(--sl-space-7);
+}
+
+.sl-node-rail ul {
+  margin: 0;
+  padding: 0 var(--sl-space-5);
+  list-style: none;
+}
+
+.sl-node-rail [data-sl-tab-link] {
+  display: block;
+  color: var(--sl-text);
+  font-weight: var(--sl-weight-semibold);
+}
+
+.sl-node-rail [data-sl-tab-link].sl-is-active {
+  color: var(--sl-primary-strong);
+}
+
+.sl-node-rail .sl-duo-main {
+  padding: var(--sl-space-6);
+}
+
+@media (max-width: 768px) {
+  .sl-duo.sl-node-rail {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .sl-node-rail .sl-duo-aside {
+    border-right: 0;
+    border-bottom: 1px solid var(--sl-border-subtle);
+  }
+}
+
+/* The header of a Node list: the title row and the filter row stick to the top as one bar while the list scrolls under them */
+.sl-node-head {
+  position: sticky;
+  top: 0;
+  z-index: var(--sl-z-sticky);
+  margin-bottom: var(--sl-space-7);
+  padding-bottom: var(--sl-space-5);
+  border-bottom: 1px solid var(--sl-border-subtle);
+  background: var(--sl-bg);
+  container-type: inline-size;
+  transition:
+    box-shadow var(--sl-time-base) var(--sl-ease-out),
+    padding var(--sl-time-base) var(--sl-ease-out);
+}
+
+/* Stuck, the bar is a card hanging from the top edge: one row of the title, the pills and the search */
+.sl-node-head[data-sl-stuck] {
+  padding: var(--sl-space-3) var(--sl-space-4);
+  border: 1px solid var(--sl-border-subtle);
+  border-top: 0;
+  border-radius: 0 0 var(--sl-radius-3) var(--sl-radius-3);
+  box-shadow: var(--sl-shadow-float);
+}
+
+.sl-node-head-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas: "title acts" "filters filters";
+  align-items: center;
+  gap: var(--sl-space-4);
+}
+
+.sl-node-head[data-sl-stuck] .sl-node-head-row {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas: "title filters acts";
+  gap: var(--sl-space-3);
+}
+
+.sl-node-head-title {
+  grid-area: title;
+  display: flex;
+  align-items: center;
+  gap: var(--sl-space-3);
+  min-width: 0;
+}
+
+.sl-node-head-title .sl-title {
+  margin: 0;
+  transition: font-size var(--sl-time-base) var(--sl-ease-out);
+}
+
+.sl-node-head[data-sl-stuck] .sl-node-head-title .sl-title {
+  font-size: var(--sl-font-h3);
+}
+
+.sl-node-head-acts {
+  grid-area: acts;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sl-space-3);
+}
+
+/* The search of the type is narrower than the one of the site header, which the narrow screens stretch over the whole row */
+.sl-node-head-acts .sl-search-form {
+  width: var(--sl-node-find-width);
+  margin: 0;
+}
+
+/* The round buttons of the row stand as high as the pills beside them */
+.sl-node-head-acts .sl-but-mini {
+  width: var(--sl-btn-height);
+  height: var(--sl-btn-height);
+}
+
+/* The way up and the lens belong to the stuck bar, and the lens shows the cross while its field is open */
+.sl-node-head-acts [href="#top"],
+.sl-node-head-acts [data-sl-lens],
+.sl-node-head[data-sl-lens-open] [data-sl-lens] > .bi:first-child,
+.sl-node-head:not([data-sl-lens-open]) [data-sl-lens] > .bi:last-child,
+.sl-node-head[data-sl-stuck] .sl-node-head-title .sl-chip,
+.sl-node-head[data-sl-stuck] .sl-node-head-acts > :not(.sl-search-form, [data-sl-lens], [href="#top"]),
+.sl-node-head[data-sl-stuck] .sl-node-head-filters > :not(.sl-node-head-pill),
+.sl-node-head[data-sl-stuck] .sl-node-head-pill > a > span {
+  display: none;
+}
+
+.sl-node-head[data-sl-stuck] .sl-node-head-acts [href="#top"] {
+  display: inline-flex;
+}
+
+.sl-node-head-filters {
+  grid-area: filters;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sl-space-3);
+  min-width: 0;
+}
+
+.sl-node-head[data-sl-stuck] .sl-node-head-filters {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+/* "Добавить" closes the filter row at its right edge */
+.sl-node-head-filters > .sl-but {
+  margin: 0 0 0 auto;
+}
+
+.sl-node-head-pill {
+  display: inline-flex;
+  align-items: center;
+}
+
+.sl-node-head-pill .sl-but {
+  margin: 0;
+}
+
+/* The last icon of a pill that opens a window is its chevron, turned while the window is open */
+.sl-node-head-pill button > .bi:last-child {
+  font-size: var(--sl-font-micro);
+  transition: transform var(--sl-time-base) var(--sl-ease-out);
+}
+
+.sl-node-head-pill .sl-but.sl-is-open > .bi:last-child {
+  transform: rotate(180deg);
+}
+
+.sl-node-head-pill .sl-but.sl-is-open {
+  box-shadow: var(--sl-shadow-focus);
+}
+
+/* A window opens under the bar, one at a time */
+.sl-node-head-win {
+  margin-top: var(--sl-space-4);
+  padding: var(--sl-space-5);
+  border: 1px solid var(--sl-border-subtle);
+  border-radius: var(--sl-radius-3);
+  background: var(--sl-surface);
+}
+
+.sl-node-head-cap {
+  margin: 0 0 var(--sl-space-3);
+  color: var(--sl-text-subtle);
+  font-size: var(--sl-font-micro);
+  font-weight: var(--sl-weight-bold);
+  letter-spacing: var(--sl-track-wide);
+  text-transform: uppercase;
+}
+
+.sl-node-head-sorts + .sl-node-head-cap {
+  margin-top: var(--sl-space-5);
+}
+
+.sl-node-head-win > p:not(.sl-node-head-cap) {
+  margin: var(--sl-space-2) 0 0;
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-small);
+}
+
+.sl-node-head-sorts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sl-space-3);
+}
+
+.sl-node-head-sorts .sl-chip {
+  margin: 0;
+}
+
+/* The chosen sort, a personal filter that is on and the chosen subcategory wear the tint of a chosen pill with its ring */
+.sl-node-head-sorts .sl-chip[aria-current="true"],
+.sl-cat-subs .sl-chip[aria-current="true"] {
+  background: var(--sl-tint);
+  color: var(--sl-primary-strong);
+  box-shadow: 0 0 0 1px var(--sl-primary);
+}
+
+.sl-cat-tile:has(> [aria-current="true"]) {
+  border-color: var(--sl-primary);
+  box-shadow: 0 0 0 1px var(--sl-primary);
+}
+
+/* A letter without materials is no link and stays grey */
+.sl-line-stack-item > .sl-letter {
+  color: var(--sl-text-muted);
+  border-color: var(--sl-border);
+}
+
+@media (max-width: 768px) {
+  .sl-node-head-row {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "title" "acts" "filters";
+    gap: var(--sl-space-3);
+  }
+
+  .sl-node-head-acts {
+    display: flex;
+  }
+
+  .sl-node-head-acts .sl-search-form {
+    flex: 1;
+    width: auto;
+    min-width: 0;
+  }
+
+  .sl-node-head-filters > .sl-but {
+    padding-inline: var(--sl-space-4);
+  }
+}
+
+/* A stuck bar narrower than the title, the pills and the search together keeps the pills, the lens and the way up; the lens lays the search over the pills */
+/* The bar is measured, not the window: beside the sidebar of a wide screen the list column is as narrow as a tablet */
+@container (max-width: 900px) {
+  .sl-node-head[data-sl-stuck] .sl-node-head-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas: "filters acts";
+  }
+
+  .sl-node-head[data-sl-stuck] .sl-node-head-title,
+  .sl-node-head[data-sl-stuck] .sl-search-form,
+  .sl-node-head[data-sl-stuck][data-sl-lens-open] .sl-node-head-filters {
+    display: none;
+  }
+
+  .sl-node-head[data-sl-stuck] [data-sl-lens] {
+    display: inline-flex;
+  }
+
+  .sl-node-head[data-sl-stuck][data-sl-lens-open] .sl-node-head-row {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "acts";
+  }
+
+  .sl-node-head[data-sl-stuck][data-sl-lens-open] .sl-search-form {
+    display: flex;
+  }
+}
+
 .sl-table-amount td:first-child {
   width: var(--sl-col-amount-width);
 }
@@ -2554,8 +2890,10 @@ pre code.hljs {
   color: var(--sl-text-muted);
 }
 
+/* A pressed act of the editor pill and a header pill whose filter narrows a Node list wear one tint, which shows what is on at a glance */
 .sl-editor-pill .sl-modal-act[aria-pressed="true"],
-.sl-editor-pill .sl-modal-act[aria-expanded="true"] {
+.sl-editor-pill .sl-modal-act[aria-expanded="true"],
+.sl-node-head-pill.sl-is-active .sl-but {
   background: var(--sl-tint);
   color: var(--sl-primary-strong);
 }
@@ -6450,13 +6788,6 @@ button.sl-seg-cell:hover {
 }
 
 /* News: titles */
-.sl-mtl {
-  font-weight: var(--sl-weight-normal);
-  font-size: var(--sl-font-h2);
-  color: var(--sl-text-strong);
-  margin: var(--sl-space-11) 0 var(--sl-space-6) 0;
-}
-
 .sl-heading {
   font-size: var(--sl-font-h2);
   margin: 0 0 var(--sl-space-5) 0;
@@ -6464,10 +6795,6 @@ button.sl-seg-cell:hover {
 
 .sl-heading a {
   color: var(--sl-text);
-}
-
-.sl-cat-all {
-  margin-bottom: var(--sl-space-11);
 }
 
 /* Comments: comment card layout */
@@ -10344,8 +10671,8 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   font-variant-numeric: tabular-nums;
 }
 
-/* The split is the whole point of the layout: the list keeps the screen on the left and the message opens on the right, so neither the scroll position nor the selection is thrown away by a read */
-.sl-pmf-split {
+/* Two panes, a list on the left and what it opens on the right, so a read throws away neither the scroll nor the selection: the mailbox and the rail of a Node list */
+.sl-duo {
   display: grid;
   grid-template-columns: 396px minmax(0, 1fr);
   overflow: hidden;
@@ -10354,7 +10681,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   background: var(--sl-bg);
 }
 
-.sl-pmf-aside {
+.sl-duo-aside {
   display: flex;
   min-width: 0;
   flex-direction: column;
@@ -10368,26 +10695,33 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   overflow-y: auto;
 }
 
-/* The day header rides the scroll: a reader deep in a long mailbox still sees which day the rows under the cursor belong to */
-.sl-pmf-day {
-  position: sticky;
-  top: 0;
-  z-index: var(--sl-z-overlay);
+/* A date head opens the run of rows of one day or one month with their count: the mailbox heads its days, a Node list by date its months */
+.sl-date-head {
   display: flex;
   align-items: center;
   gap: var(--sl-space-3);
-  margin: 0;
+  margin: 0 0 var(--sl-space-4);
   padding: var(--sl-space-2) var(--sl-space-5);
+  border-radius: var(--sl-radius-1);
   background: var(--sl-pmf-day-bg);
-  backdrop-filter: blur(4px);
   color: var(--sl-text-strong);
   font-size: var(--sl-font-small);
   font-weight: var(--sl-weight-semibold);
 }
 
-/* The count of a day is the neutral chip the shelf heads of the favourites carry, at the right edge of the header */
-.sl-pmf-day .sl-chip {
+/* The count of a run is the neutral chip the shelf heads of the favourites carry, at the right edge of the head */
+.sl-date-head .sl-chip {
   margin: 0 0 0 auto;
+}
+
+/* The day head of the mailbox rides the scroll: a reader deep in a long mailbox still sees which day the rows under the cursor belong to */
+.sl-pmf-scroll .sl-date-head {
+  position: sticky;
+  top: 0;
+  z-index: var(--sl-z-overlay);
+  margin: 0;
+  border-radius: 0;
+  backdrop-filter: blur(4px);
 }
 
 /* Two levels instead of three: the row carries the subject with its time above the sender with the snippet, which puts twice as many messages on one screen without losing either of them */
@@ -10538,7 +10872,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   font-size: var(--sl-font-small);
 }
 
-.sl-pmf-view {
+.sl-duo-main {
   display: flex;
   min-width: 0;
   flex-direction: column;
@@ -10868,13 +11202,13 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
 
 /* Tablet: the list column gives up width the reading pane needs more than it does */
 @container (max-width: 1040px) {
-  .sl-pmf-split { grid-template-columns: 330px minmax(0, 1fr); }
+  .sl-duo { grid-template-columns: 330px minmax(0, 1fr); }
 }
 
 /* Phone: the panels do not shrink, they take each other's place, and the button that brings the list back appears with them */
 @container (max-width: 800px) {
-  .sl-pmf-split { grid-template-columns: 1fr; }
-  .sl-pmf-aside { border-right: 0; }
+  .sl-duo { grid-template-columns: 1fr; }
+  .sl-duo-aside { border-right: 0; }
   .sl-pmf-scroll { max-height: var(--sl-pmf-pane-height); }
   .sl-pmf-back {
     display: inline-flex;
@@ -10884,8 +11218,8 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   .sl-pmf-head { padding: var(--sl-space-6) var(--sl-space-5); }
   .sl-pmf-head h2 { font-size: var(--sl-font-h3); }
   .sl-pmf-reply { padding: var(--sl-space-5) var(--sl-space-5) var(--sl-space-6); }
-  .sl-pmf-split[data-sl-pane="view"] .sl-pmf-aside { display: none; }
-  .sl-pmf-split[data-sl-pane="list"] .sl-pmf-view { display: none; }
+  .sl-duo[data-sl-pane="view"] .sl-duo-aside { display: none; }
+  .sl-duo[data-sl-pane="list"] .sl-duo-main { display: none; }
 }
 
 /* The lower section spans the whole deck width under the rail, like the profile contribution hub; the grid gap spaces the stacked panels */

@@ -19,7 +19,8 @@
                 "show": [
                     "category",
                     "date"
-                ]
+                ],
+                "views": []
             },
             "view": {
                 "mode": "support"

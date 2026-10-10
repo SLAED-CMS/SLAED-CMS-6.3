@@ -627,7 +627,6 @@ define('_ADMINLOGOP','Logo des Admin-Panels');
 define('_SITELOGO','Seitenlogo');
 define('_SITE_CLOSE','Seite schließen?');
 define('_SMAIL','Berichte und Benachrichtigungen erhalten?');
-define('_SORT','Sortierungs-Methode');
 define('_SORTORDER','Reihenfolge');
 define('_SORTE','Sortieren');
 define('_STATISTIC','Statistik');

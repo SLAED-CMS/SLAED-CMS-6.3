@@ -1,5 +1,7 @@
 <article{% if id %} id="node-{{ id }}"{% endif %} class="sl-node-toc">
+  {% if cover %}<a href="{{ href }}" title="{{ title }}" class="sl-related-img"><img src="{{ cover }}" alt="{{ title }}" class="sl-related-img-inner" loading="lazy"></a>{% endif %}
   <h2 class="sl-title">{% if href %}<a href="{{ href }}" title="{{ title }}">{{ title }}</a>{% else %}{{ title }}{% endif %}</h2>
   {% if is_category and chref %}<a href="{{ chref }}" title="{{ ctitle }}" class="sl-chip sl-card-category"><i class="bi bi-folder" aria-hidden="true"></i> {{ ctitle }}</a>{% endif %}
+  {% if is_date and date %}<time datetime="{{ date_iso }}" title="{{ date_label }}" class="sl-related-date">{{ date }}</time>{% endif %}
   {% if intro %}<p class="sl-node-toc-intro">{{ intro }}</p>{% endif %}
 </article>

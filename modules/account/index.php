@@ -717,12 +717,12 @@ function privat(): void {
                 'find' => $pick['find'],
                 'seek_label' => (string)_PRSEEK,
                 'search_label' => (string)_SEARCH,
-                'sort_label' => (string)_PRSORT,
+                'sort_label' => (string)_SORT,
                 'filter_label' => (string)_PRFILTER,
                 'reset_label' => (string)_PRRESET,
                 'chips' => $chips,
                 'sort_html' => $tpl->getHtmlFrag('select', [
-                    'name_attr' => 'sort', 'title' => _PRSORT, 'options_html' => $sorts, 'select_attr' => 'id="prsort"',
+                    'name_attr' => 'sort', 'title' => _SORT, 'options_html' => $sorts, 'select_attr' => 'id="prsort"',
                 ]),
                 'tools_html' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'name', 'value_attr' => 'account', 'input_attr' => ''])
                     .$tpl->getHtmlFrag('hidden', ['name_attr' => 'op', 'value_attr' => 'privat', 'input_attr' => ''])

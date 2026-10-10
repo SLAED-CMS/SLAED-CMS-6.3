@@ -76,7 +76,8 @@ final class NodeRouteTest extends TestCase
         $this->assertSame([200, true, true, false, false], $run['list'], 'Page one of news shows Gamma and Beta; Alpha is on page two and Members is closed to a guest');
         $this->assertTrue($run['canon']);
         $this->assertSame([200, true, 404], $run['page']);
-        $this->assertSame([405, 'GET, HEAD'], $run['post']);
+        $this->assertSame([303, 'index.php?name=news', 405, 'GET, HEAD, POST'], $run['post'],
+            'A POST without the token of the view switch is not sent back to the list, or another method passes');
         $this->assertSame(404, $run['node'], 'The technical name node has a public route');
         $this->assertSame([400, 400, 400, 400, 404, 404, 404], $run['bad'], 'cat, let, order and dir are checked, a foreign category and unknown operations are not found');
         $this->assertSame([301, 'index.php?name=news'], $run['clean'], 'The explicit default sort is not sent back to the clean address');
@@ -464,6 +465,21 @@ final class NodeRouteTest extends TestCase
         $this->assertSame([['<video', 'sl-entry-content'], 1, ['Gallery only']], $run['mediaview'], 'The media view does not play above its text or loses the grid of its related');
     }
 
+    # A list answers only the views of its type: the switch offers them, its POST keeps the choice in a cookie and returns to the list, anything else falls back
+    #[Test]
+    public function aListAnswersOnlyTheViewsOfItsType(): void
+    {
+        $run = $this->getMode('modes')['looks'];
+        $news = ['cards', 'compact', 'tiles'];
+        $this->assertSame([[$news, 'cards', ''], 303, 'index.php?name=news&num=2', [$news, 'compact', 'node-compact']], $run['news'],
+            'The switch does not offer the views of news, or its POST does not set the view and return to the page of the list');
+        $this->assertSame([$news, 'compact', 'node-compact'], $run['keep'], 'A view news does not offer or the token of another form changed the view');
+        $this->assertSame([$news, 'cards', ''], $run['stale'], 'A cookie outside the views of the type did not fall back to its first view');
+        $this->assertSame([[['list', 'rail'], 'list', 'node-row'], [['list', 'rail'], 'rail', 'duo sl-node-rail'], 1, 1], $run['docs'],
+            'The docs list does not start in its first view, or the rail is not one tab and one pane per document');
+        $this->assertSame([[], '', ''], $run['faq'], 'A type of one view draws the switch');
+    }
+
     # Every Node constant of the module exists in all six locales of its own scope, the two scopes do not repeat a name, and the module label lives in the panel language
     #[Test]
     public function theConstantsExistInEveryLocale(): void
@@ -638,17 +654,21 @@ final class NodeRouteTest extends TestCase
     public function theHeaderCountsFollowTheReaderAndTheirCache(): void
     {
         $bar = $this->getMode('head')['bar'];
-        $of = fn(int $one, int $two): string => sprintf($bar['numof'], $one, $two);
         $this->assertSame(['3'], $bar['guest'][1], 'The guest count is not the readable total');
         $this->assertSame(['4', '2', '1'], $bar['anna'][1], 'The total, the news since the last visit or the favorites of anna are miscounted');
-        $this->assertSame([[$of(2, 4), '2', '1'], [103, 105]], array_slice($bar['new'], 1), 'The list since the last visit is not the news after it');
-        $this->assertSame([[$of(1, 4), '2', '1'], [101], 200, []], $bar['fav'], 'The favorites list is not the favorite of anna, or both filters do not intersect');
+        $this->assertSame([['2 4', '2', '1'], [103, 105]], array_slice($bar['new'], 1), 'The list since the last visit is not the news after it');
+        $this->assertSame([['1 4', '2', '1'], [101], 200, []], $bar['fav'], 'The favorites list is not the favorite of anna, or both filters do not intersect');
         $this->assertSame([true, ['4', '2', '1']], $bar['visit'], 'The previous visit moved with the column within the session');
         $this->assertSame([200, true, ['3'], false], $bar['loose'], 'A personal filter of a guest narrowed the list, was indexed or stayed in a link');
         $this->assertSame([[true, false, false], [true, false], ['1', '1', '1']], $bar['counts'],
             'A letter without readable materials is linked, or a category tile does not carry its count');
         $this->assertSame([['c1', 'c1-2'], true, 3, 4], $bar['cache'], 'The counts are not kept per readable set until the next publication');
         $this->assertSame([303, true, true], $bar['drop'], 'A written material did not drop the counts of its type');
+        $this->assertSame([1, 1], [preg_match('/^3 \S+$/u', $bar['words'][0]), preg_match('/^2 \S+ 4 \S+$/u', $bar['words'][1])],
+            'The count chip does not name its materials in the form of its number');
+        $this->assertSame([1, 1, []], [count($bar['months'][0]), preg_match('/^\S+ 2026 2$/u', $bar['months'][0][0] ?? ''), $bar['months'][1]],
+            'A list by publication is not headed by its month with the count of its cards on the page, or a list by title is');
+        $this->assertSame([true, false, true], $bar['catlets'], 'A letter of a category is counted over the whole type');
     }
 
     # The favorites shelf reads without a token in its address, answers the member and nothing to a guest

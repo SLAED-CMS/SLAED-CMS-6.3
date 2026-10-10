@@ -108,3 +108,5 @@ define('_NODE_TYPEOFF','Typ został wyłączony.');
 define('_NODE_TYPEON','Typ został włączony.');
 define('_NODE_TYPES','Typy');
 define('_NODE_USEFUL','Przydatne');
+define('_NODE_VIEWDEF','Widok domyślny');
+define('_NODE_VIEWS','Dozwolone widoki listy');

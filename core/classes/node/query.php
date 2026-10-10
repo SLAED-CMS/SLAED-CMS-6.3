@@ -28,9 +28,13 @@ final class NodeQuery {
     private const SECTIONS = ['list', 'view', 'form', 'workflow', 'admin', 'features', 'assets', 'integrations', 'ext'];
 
     # The closed keys of the list section, its sort keys and the metadata it may show
-    private const LISTKEYS = ['orders', 'order', 'dir', 'limit', 'alpha', 'show'];
+    private const LISTKEYS = ['orders', 'order', 'dir', 'limit', 'alpha', 'show', 'views'];
     private const ORDERS = ['published', 'updated', 'title', 'views', 'rating'];
     private const SHOW = ['category', 'author', 'date', 'views'];
+
+    # The closed views of a list, public for the list and the type form; an empty list of a type offers the one view of its display mode, given here
+    public const VIEWS = ['cards', 'compact', 'list', 'accordion', 'tiles', 'rail'];
+    public const MODEVIEW = ['default' => 'cards', 'article' => 'cards', 'docs' => 'list', 'faq' => 'accordion', 'files' => 'cards', 'media' => 'tiles', 'support' => 'cards'];
 
     # The closed display modes of the view section; a theme overrides the templates of a mode it carries, and support belongs to the type of that extension alone
     public const MODES = ['default', 'article', 'docs', 'faq', 'files', 'media', 'support'];
@@ -219,7 +223,7 @@ final class NodeQuery {
         return $base;
     }
 
-    # Check the list section: the allowed sorts, the default sort and direction, the page size within the system limit, the letter index and the shown metadata
+    # Check the list section: the allowed sorts, the default sort and direction, the page size within the system limit, the letter index, the shown metadata and the views
     private function filterListRule(mixed $rule, array $lims): array {
         if (!is_array($rule) || !$this->checkExactKeys($rule, self::LISTKEYS)) throw $this->getInvalid('list');
         if (!$this->checkNameList($rule['orders'], self::ORDERS) || $rule['orders'] === []) throw $this->getInvalid('list.orders');
@@ -228,7 +232,9 @@ final class NodeQuery {
         if (!is_int($rule['limit']) || $rule['limit'] < 1 || $rule['limit'] > $lims['maxlist']) throw $this->getInvalid('list.limit');
         if (!is_bool($rule['alpha'])) throw $this->getInvalid('list.alpha');
         if (!$this->checkNameList($rule['show'], self::SHOW)) throw $this->getInvalid('list.show');
-        return ['orders' => $rule['orders'], 'order' => $rule['order'], 'dir' => $rule['dir'], 'limit' => $rule['limit'], 'alpha' => $rule['alpha'], 'show' => $rule['show']];
+        if (!$this->checkNameList($rule['views'], self::VIEWS)) throw $this->getInvalid('list.views');
+        return ['orders' => $rule['orders'], 'order' => $rule['order'], 'dir' => $rule['dir'], 'limit' => $rule['limit'], 'alpha' => $rule['alpha'], 'show' => $rule['show'],
+            'views' => $rule['views']];
     }
 
     # Check the view section: one display mode of the closed list, never a path, and the support mode only for a type of the support extension
@@ -986,6 +992,24 @@ final class NodeQuery {
         }
         $query = count($sql) === 1 ? $sql[0] : 'SELECT SUM(q.num) AS num FROM ('.implode(' UNION ALL ', $sql).') AS q';
         return intval($this->getQueryRows($query, $pars)[0]['num'] ?? 0);
+    }
+
+    # Count the selection with the conditions of the list per first letter of the title, upper case, as letter => number
+    public function getNodeLetters(): array {
+        $pars = [];
+        $sql = [];
+        foreach ($this->getListParts('list') as $part) {
+            $sql[] = 'SELECT CAST(LEFT(n.title, 1) AS BINARY) AS sign, COUNT(*) AS num FROM '.PREFIX_DB.'_nodes AS n'.$part['join'].' WHERE '.$part['where'].' GROUP BY sign';
+            $pars += $part['pars'];
+        }
+        $out = [];
+        foreach ($this->getQueryRows(implode(' UNION ALL ', $sql), $pars) as $row) {
+            $sign = $row['sign'] ?? '';
+            if ($sign === '' || !mb_check_encoding($sign, 'UTF-8')) continue;
+            $sign = mb_strtoupper($sign, 'UTF-8');
+            $out[$sign] = ($out[$sign] ?? 0) + intval($row['num']);
+        }
+        return $out;
     }
 
     # Count with one statement the selection published since a moment and the selection among the favorites of one account; no moment or account counts zero

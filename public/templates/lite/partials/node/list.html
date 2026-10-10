@@ -1,9 +1,22 @@
 {{{ head_html }}}
 {% if intro %}<p>{{ intro }}</p>{% endif %}
-{% if cats_html %}{{{ cats_html }}}{% endif %}
-{% if letters_html %}<div>{{{ letters_html }}}</div>{% endif %}
-{% if items_html %}
-{{{ items_html }}}
+{% if rail %}
+<div class="sl-duo sl-node-rail" data-sl-tabs-init="{{ rail_name }}">
+  <aside class="sl-duo-aside"><ul role="tablist" aria-orientation="vertical" aria-label="{{ title }}">{% for item in rail %}<li class="sl-node-toc" role="presentation"><a href="{{ item.href }}" title="{{ item.title }}"{% if item.is_first %} class="sl-is-active"{% endif %} data-sl-tab-link data-sl-tab-target="node-{{ item.id }}">{{ item.title }}</a></li>{% endfor %}</ul></aside>
+  <div class="sl-duo-main">{% for item in rail %}
+    <article id="node-{{ item.id }}" data-sl-tab-panel="node-{{ item.id }}"{% if not item.is_first %} hidden{% endif %}>
+      <h2 class="sl-title"><a href="{{ item.href }}" title="{{ item.title }}">{{ item.title }}</a></h2>
+      {% if item.date %}<time datetime="{{ item.date_iso }}" title="{{ date_label }}" class="sl-chip sl-chip-info sl-card-date"><i class="bi bi-calendar3" aria-hidden="true"></i> {{ item.date }}</time>{% endif %}
+      {{{ item.intro_html }}}
+      <p><a href="{{ item.href }}" title="{{ item.title }}" class="sl-but"><i class="bi bi-arrow-right" aria-hidden="true"></i>{{ read_label }}</a></p>
+    </article>{% endfor %}
+  </div>
+</div>
+{{{ pager_html }}}
+{% elseif groups %}
+{% if is_compact or is_row or is_tiles %}<div class="{% if is_compact %}sl-node-compact{% elseif is_row %}sl-node-row{% else %}sl-node-tiles{% endif %}">{% endif %}
+{% for group in groups %}{% if group.label %}{% include 'fragments/date-head.html' with group %}{% endif %}{{{ group.items_html }}}{% endfor %}
+{% if is_compact or is_row or is_tiles %}</div>{% endif %}
 {{{ pager_html }}}
 {% else %}
 {% include 'fragments/alert.html' with empty_alert %}

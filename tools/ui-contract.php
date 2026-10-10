@@ -210,7 +210,7 @@ return [
         'fresh-now', 'fresh-week', 'gauge', 'graph', 'guard', 'header', 'hub-head', 'hub-row',
         'ico', 'idea', 'info-row', 'item', 'knob', 'lang', 'led', 'letter', 'live-dot', 'loading',
         'loading-dot', 'login', 'login-drop', 'login-footer', 'login-header', 'logo', 'madein', 'marquee', 'menu', 'meta',
-        'meter', 'modal', 'modal-act', 'modal-btn', 'mode', 'module-head', 'monitor-table', 'move', 'msg', 'msg-brand', 'nav', 'opt', 'opt-lamp', 'opt-rail',
+        'meter', 'modal', 'modal-act', 'modal-btn', 'mode', 'module-head', 'monitor-table', 'move', 'msg', 'msg-brand', 'nav', 'node-find', 'opt', 'opt-lamp', 'opt-rail',
         'pager', 'pager-dot', 'pager-item', 'panel', 'panel-feed', 'placeholder', 'plot', 'pointer', 'pmf-ava', 'pmf-blank', 'pmf-chip', 'pmf-day', 'pmf-filter',
         'pmf-head', 'pmf-mate', 'pmf-meta', 'pmf-pane', 'pmf-slot', 'pmf-text', 'pmf-who',
         'pnum', 'pnum-arrow', 'popover', 'pres', 'pres-panel', 'pres-ground', 'pres-inset', 'pres-core', 'pres-frame', 'pres-muted', 'pres-link', 'pres-good', 'pres-warn',
@@ -504,9 +504,9 @@ return [
         '.sl-cab-act b, .sl-fm-win .sl-fm-label, .sl-profile-score > b',
         # The title of a cabinet row beside the correspondent of a message slot: two titles cut off at the same step
         '.sl-cab-row b, .sl-pmf-slot-top b',
-        # The rail of the cabinet beside the rail of a profile, both turning their side border into a bottom one when the two columns stack
-        # Two page regions that stack the same way at one breakpoint
-        '.sl-cab-rail, .sl-profile-split-rail',
+        # The rail of the cabinet, the rail of a profile and the titles of a Node list in its rail view turn their side border into a bottom one
+        # Three page regions that stack the same way at one breakpoint
+        '.sl-cab-rail, .sl-node-rail .sl-duo-aside, .sl-profile-split-rail',
 
         # The seven below met when the file manager window left the editor skin for the theme; nothing about them changed
         # Each was already a body shared with the window, and a body met in two files is one no selector list can join at all
@@ -523,8 +523,8 @@ return [
         '.sl-changelog-filter-field, .sl-fm-win .sl-fm-rows, .sl-profile-facts .sl-profile-panel, dialog.sl-modal[open]',
         # The same three in the administrative theme, which carries no profile facts
         '.sl-changelog-filter-field, .sl-fm-win .sl-fm-rows, dialog.sl-modal[open]',
-        # The row of insertion ways beside the tag list of a profile: two rows that wrap at one gap, in two screens that never meet
-        '.sl-fm-win .sl-fm-as, .sl-profile-tags',
+        # The row of insertion ways, the tag list of a profile and a chip row of a Node list window: three rows that wrap at one gap, in screens that never meet
+        '.sl-fm-win .sl-fm-as, .sl-node-head-sorts, .sl-profile-tags',
         # The typing surface of the editor beside the two columns of the window: both take the height their frame leaves and may shrink inside it
         # One is the vendor's, the other the window's own split
         '.sl-div-form .sl-div-item:has(.toastui-editor-defaultUI) .toastui-editor-main, .sl-fm-win .sl-fm-split',

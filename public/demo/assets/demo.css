@@ -476,6 +476,46 @@
   margin: 0;
 }
 
+/* The differences of an admin page from the panel as it is: a code to name a mechanism by, then what it does */
+.demo-diff-title {
+  margin: var(--sl-space-6) 0 var(--sl-space-3);
+  font-size: var(--sl-font-base);
+}
+
+/* One column of codes per list, as wide as its longest code, so «Э26, Э28, Э30» does not break */
+.demo-diff {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: var(--sl-space-2) var(--sl-space-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  line-height: var(--sl-line-normal);
+}
+
+.demo-diff li {
+  display: contents;
+}
+
+.demo-diff-code {
+  color: var(--sl-primary-strong);
+  font-variant-numeric: tabular-nums;
+}
+
+.demo-diff-more {
+  margin: var(--sl-space-5) 0 0;
+}
+
+.demo-diff-more summary {
+  color: var(--sl-primary-strong);
+  font-weight: var(--sl-weight-semibold);
+  cursor: pointer;
+}
+
+.demo-diff-more .demo-diff {
+  margin-top: var(--sl-space-3);
+}
+
 /* Motion kill switch of the rig, and the platform one it mirrors */
 [data-demo-motion="off"] *,
 [data-demo-motion="off"] *::before,

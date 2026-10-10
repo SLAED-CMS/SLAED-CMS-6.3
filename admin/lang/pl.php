@@ -627,7 +627,6 @@ define('_ADMINLOGOP','Logo panelu administratora');
 define('_SITELOGO','Logo strony');
 define('_SITE_CLOSE','Zamknąć stronę internetową na profilaktykę?');
 define('_SMAIL','Otrzymywać e-maile i powiadomienia?');
-define('_SORT','Sortowanie');
 define('_SORTORDER','Kolejność');
 define('_SORTE','Sortuj');
 define('_STATISTIC','Statystyki');

@@ -25,7 +25,8 @@
                     "author",
                     "date",
                     "views"
-                ]
+                ],
+                "views": []
             },
             "view": {
                 "mode": "article"

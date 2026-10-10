@@ -4,6 +4,7 @@
 # License: MIT
 # Website: slaed.net
 
+define('_NODE_ABC','Alphabet');
 define('_NODE_ADDED','La publication a été mise en ligne.');
 define('_NODE_ASSETS','Fichiers et liens');
 define('_NODE_BADDATE','Une date n\'est pas valide, utilisez la forme AAAA-MM-JJ HH:MM.');
@@ -11,13 +12,18 @@ define('_NODE_BUSY','La publication a été modifiée entre-temps, rien n\'a ét
 define('_NODE_CATS','Catégories supplémentaires');
 define('_NODE_CLOSE','Fermer la demande');
 define('_NODE_FAILED','La publication n\'a pas pu être enregistrée, réessayez plus tard.');
+define('_NODE_FILTERS','Filtrer les publications');
+define('_NODE_FIND','Rechercher dans la section');
 define('_NODE_GONE','La publication n\'existe pas ou n\'est pas disponible.');
 define('_NODE_INFAV','Dans les favoris');
 define('_NODE_INTRO','Introduction');
 define('_NODE_INVALID','La publication n\'a pas été enregistrée : vérifiez les champs remplis.');
+define('_NODE_LETHINT','Les lettres qui ont des publications sont mises en valeur ; leur nombre est dans l\'infobulle');
+define('_NODE_LETTERS','Par lettre');
 define('_NODE_MNEW','L\'utilisateur %1$s a ouvert la demande « %2$s ». Voir : %3$s');
 define('_NODE_MSTAFF','Le support a répondu à votre demande « %1$s ». Voir : %2$s');
 define('_NODE_MUSER','L\'utilisateur %1$s a répondu dans la demande « %2$s ». Voir : %3$s');
+define('_NODE_ONLETTER','Lettre « %s »');
 define('_NODE_PARENT','Publication parente');
 define('_NODE_PENDING','La publication a été envoyée au modérateur pour vérification.');
 define('_NODE_PERHINT','0 - vérification manuelle uniquement, sinon de 300 à 31536000');
@@ -36,7 +42,13 @@ define('_NODE_SOURCE','Source du texte (RSS ou Atom)');
 define('_NODE_SSAVED','L\'état de la demande a été enregistré.');
 define('_NODE_STATE','État');
 define('_NODE_UPDATED','Mises à jour');
+define('_NODE_VACCORD','Accordéon');
+define('_NODE_VCARDS','Cartes');
+define('_NODE_VCOMPACT','Compact');
+define('_NODE_VIEW','Affichage de la liste');
 define('_NODE_VISIT','Visiter le site');
+define('_NODE_VRAIL','Volet latéral');
+define('_NODE_VTILES','Tuiles');
 define('_NODE_WCLOSE','Fermée');
 define('_NODE_WSTAFF','En attente du support');
 define('_NODE_WUSER','En attente de l\'auteur');

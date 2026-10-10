@@ -65,6 +65,7 @@ final class NodeQueryTest extends TestCase
             'getNodeContent' => ['int id', 'NodeType type', '?Node'],
             'getNodeCount' => ['int'],
             'getNodeLegacy' => ['string mod', 'int id = 0', '?array'],
+            'getNodeLetters' => ['array'],
             'getNodeList' => ['array'],
             'getNodeOwnCount' => ['string since', 'int uid', 'array'],
             'getNodeReadSet' => ['NodeType type', 'string'],
@@ -152,7 +153,7 @@ final class NodeQueryTest extends TestCase
         $set = $news['settings'];
         $this->assertSame(['list', 'view', 'form', 'workflow', 'admin', 'features', 'assets', 'integrations', 'ext'], array_keys($set));
         $this->assertSame(['orders' => ['published', 'updated', 'title', 'views', 'rating'], 'order' => 'published', 'dir' => 'desc', 'limit' => 10, 'alpha' => false,
-            'show' => ['category', 'author', 'date', 'views']], $set['list']);
+            'show' => ['category', 'author', 'date', 'views'], 'views' => []], $set['list']);
         $flow = ['access' => 'user', 'groups' => [], 'publish' => [], 'notify' => ['pending' => true, 'result' => true]];
         $this->assertSame($flow, $set['workflow'], 'The defaults were not merged');
         $this->assertSame(['search' => true, 'rss' => true, 'sitemap' => true, 'blocks' => true, 'seo' => 'news'], $set['integrations']);
@@ -215,6 +216,7 @@ final class NodeQueryTest extends TestCase
             'unknown section' => ['section', 'colour'], 'page size 0' => ['listlimit', 'list.limit'], 'page size over maxlist' => ['listmax', 'list.limit'],
             'default sort not allowed' => ['order', 'list.order'], 'repeated sort' => ['orders', 'list.orders'], 'sort outside the registry' => ['sortkey', 'list.orders'],
             'direction' => ['dir', 'list.dir'], 'letter switch as string' => ['alpha', 'list.alpha'], 'unknown metadata' => ['show', 'list.show'],
+            'repeated view' => ['views', 'list.views'], 'view outside the registry' => ['viewkey', 'list.views'],
             'unknown list key' => ['listkey', 'list'], 'view path' => ['view', 'view.mode'], 'view mode outside the list' => ['viewmode', 'view.mode'],
             'support view without the extension' => ['viewsupport', 'view.mode'], 'form key' => ['form', 'form'], 'missing feature' => ['features', 'features'],
             'feature as string' => ['feature', 'features.comments'], 'unknown integration' => ['integr', 'integrations'], 'page kind' => ['seo', 'integrations.seo'],

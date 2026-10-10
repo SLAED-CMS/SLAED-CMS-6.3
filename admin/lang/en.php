@@ -627,7 +627,6 @@ define('_ADMINLOGOP','Admin panel logo');
 define('_SITELOGO','Site Logo');
 define('_SITE_CLOSE','Close the site on prevention?');
 define('_SMAIL','Reports and receive alerts?');
-define('_SORT','Sort method');
 define('_SORTORDER','Order');
 define('_SORTE','To sort');
 define('_STATISTIC','Statistics');

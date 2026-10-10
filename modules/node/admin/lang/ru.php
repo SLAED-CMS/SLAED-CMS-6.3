@@ -108,3 +108,5 @@ define('_NODE_TYPEOFF','Тип отключён.');
 define('_NODE_TYPEON','Тип включён.');
 define('_NODE_TYPES','Типы');
 define('_NODE_USEFUL','Полезная');
+define('_NODE_VIEWDEF','Вид по умолчанию');
+define('_NODE_VIEWS','Разрешённые виды списка');

@@ -25,6 +25,11 @@
                     "author",
                     "date",
                     "views"
+                ],
+                "views": [
+                    "cards",
+                    "compact",
+                    "tiles"
                 ]
             },
             "view": {

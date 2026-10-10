@@ -416,7 +416,8 @@ function getProbeNodeConf(int $stale): array {
         'limits' => ['maxassets' => 100, 'maxlist' => 100, 'syncbatch' => 500, 'send' => 0, 'edit' => 600],
         'support' => ['state' => ['staff' => 0, 'author' => 1, 'closed' => 2], 'prio' => ['low' => 0, 'normal' => 1, 'high' => 2, 'urgent' => 3]],
         'defaults' => [
-            'list' => ['orders' => ['published'], 'order' => 'published', 'dir' => 'desc', 'limit' => 10, 'alpha' => false, 'show' => ['category', 'author', 'date', 'views']],
+            'list' => ['orders' => ['published'], 'order' => 'published', 'dir' => 'desc', 'limit' => 10, 'alpha' => false, 'show' => ['category', 'author', 'date', 'views'],
+                'views' => []],
             'view' => ['mode' => 'default'],
             'form' => [],
             'workflow' => ['access' => 'user', 'groups' => [], 'publish' => [], 'notify' => ['pending' => true, 'result' => true]],
@@ -795,6 +796,8 @@ function getProbeSettings(): array {
         'dir' => [$set(['list', 'dir'], 'up'), ''],
         'alpha' => [$set(['list', 'alpha'], 'yes'), ''],
         'show' => [$set(['list', 'show'], ['colour']), ''],
+        'views' => [$set(['list', 'views'], ['cards', 'cards']), ''],
+        'viewkey' => [$set(['list', 'views'], ['grid']), ''],
         'listkey' => [$set(['list', 'page'], 1), ''],
         'view' => [$set(['view', 'mode'], '../x'), ''],
         'viewmode' => [$set(['view', 'mode'], 'gallery'), ''],

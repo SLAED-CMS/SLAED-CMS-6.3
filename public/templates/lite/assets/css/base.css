@@ -372,6 +372,7 @@
   --sl-com-item-width: 93px;
   --sl-crumb-bar-height: 2px;
   --sl-demo-height: 76px;
+  --sl-node-find-width: 200px;
   /* The halo a speed dial opens behind its items: the step it clears the chip by on every side */
   --sl-dial-gap: 6px;
   --sl-donut-width: 76px;

@@ -316,7 +316,8 @@ function getRouteLists(PDO $pdo): array {
     $two = getRouteReply('', 'GET', 'index.php?name=news&num=2');
     $out['page'] = [$two['code'], str_contains($two['body'], 'Alpha'), $code('', 'index.php?name=news&num=3')];
     $post = getRouteReply('', 'POST', 'index.php?name=news');
-    $out['post'] = [$post['code'], $post['head']['allow'] ?? ''];
+    $put = getRouteReply('', 'PUT', 'index.php?name=news');
+    $out['post'] = [$post['code'], $post['head']['location'] ?? '', $put['code'], $put['head']['allow'] ?? ''];
     $out['node'] = $code('', 'index.php?name=node');
     $out['bad'] = [$code('', 'index.php?name=news&cat=abc'), $code('', 'index.php?name=news&let=AB'), $code('', 'index.php?name=news&order=rating'),
         $code('', 'index.php?name=news&dir=up'), $code('', 'index.php?name=news&cat=99'), $code('', 'index.php?name=news&op=liste'), $code('', 'index.php?name=news&op=bogus')];
@@ -1880,6 +1881,8 @@ function addRouteModeTypes(PDO $pdo, string $work): void {
     $data = require $work.'/config/node.php';
     $data['node']['types']['news']['view'] = ['mode' => 'article'];
     $data['node']['types']['docs']['view'] = ['mode' => 'docs'];
+    $data['node']['types']['docs']['list'] = ['views' => ['list', 'rail']];
+    $data['node']['types']['news']['list']['views'] = ['cards', 'compact', 'tiles'];
     $data['node']['types']['faq'] = ['version' => 1, 'view' => ['mode' => 'faq'], 'features' => getRouteFeatures([])];
     $data['node']['types']['files'] = ['version' => 1, 'view' => ['mode' => 'files'], 'features' => getRouteFeatures([]), 'assets' => ['cover' => getRouteRole('Cover',
         'image', ['image'], 1, false, false, 0), 'download' => getRouteRole('Download', 'download', [], 3, true, true, 1)]];
@@ -1958,10 +1961,10 @@ function getRouteModes(PDO $pdo): array {
     $out = [];
     foreach (['news', 'docs', 'faq', 'files', 'media'] as $name) {
         $one = $get('index.php?name='.$name);
-        $out['list'][$name] = [$one['code'], str_contains($one['body'], 'sl-node-'), substr_count($one['body'], 'class="sl-post sl-card"')];
+        $out['list'][$name] = [$one['code'], preg_match('/class="[^"]*sl-node-(?!head)/', $one['body']) === 1, substr_count($one['body'], 'class="sl-post sl-card"')];
     }
     $one = $get('index.php?name=news&op=view&id=101');
-    $out['news'] = [$one['code'], str_contains($one['body'], 'sl-node-')];
+    $out['news'] = [$one['code'], preg_match('/class="[^"]*sl-node-(?!head)/', $one['body']) === 1];
     $out['docs'] = getRouteModeBits($get('index.php?name=docs')['body'], 'sl-node-toc');
     $one = $get('index.php?name=docs&op=view&id=201')['body'];
     $out['docsview'] = [str_contains($one, 'sl-views'), str_contains($one, 'sl-author'), str_contains($one, 'sl-date')];
@@ -1978,6 +1981,29 @@ function getRouteModes(PDO $pdo): array {
     return $out;
 }
 
+# The views of a list over real requests: the switch offers the views of the type, and a POST with its own token sets the view of the visitor and returns to the list
+# A view the type does not offer, the token of another form and a cookie outside the views leave the view as it was or the first one; a type of one view draws no switch
+function getRouteLooks(): array {
+    $get = fn(string $path, string $who = 'looker', array $head = []): array => getRouteReply($who, 'GET', $path, [], $head);
+    $read = fn(string $html): array => [preg_match_all('#name="view" value="([a-z]+)"#', $html, $all) ? $all[1] : [],
+        preg_match('#name="view" value="([a-z]+)"[^>]*aria-pressed="true"#', $html, $one) ? $one[1] : '',
+        preg_match('#class="sl-(node-compact|node-row|node-tiles|duo sl-node-rail)"#', $html, $box) ? $box[1] : ''];
+    $page = $get('index.php?name=news&num=2')['body'];
+    $tok = getRouteToken($page, 'data-sl-knob="view"');
+    $post = fn(string $view, string $token): array => getRouteReply('looker', 'POST', 'index.php?name=news&num=2', ['token' => $token, 'view' => $view]);
+    $set = $post('compact', $tok);
+    $out = ['news' => [$read($page), $set['code'], $set['head']['location'] ?? '', $read($get('index.php?name=news')['body'])]];
+    $post('rail', $tok);
+    $post('tiles', getRouteToken($page, 'mode'));
+    $out['keep'] = $read($get('index.php?name=news')['body']);
+    $out['stale'] = $read($get('index.php?name=news', 'stale', ['Cookie: slaed-view-news=rail'])['body']);
+    $docs = $get('index.php?name=docs', 'reader')['body'];
+    getRouteReply('reader', 'POST', 'index.php?name=docs', ['token' => getRouteToken($docs, 'data-sl-knob="view"'), 'view' => 'rail']);
+    $rail = $get('index.php?name=docs', 'reader')['body'];
+    $out['docs'] = [$read($docs), $read($rail), substr_count($rail, 'data-sl-tab-panel="node-201"'), substr_count($rail, 'data-sl-tab-link')];
+    $out['faq'] = $read($get('index.php?name=faq')['body']);
+    return $out;
+}
 # The types of the routes and feeds: docs sorted by title without the publication sort, in a feed and a block of its own, news in a feed with an attachment in an introduction
 # News also has a material in a category named by a language constant, and the site has a slogan the start page must show
 function addRouteSeoTypes(PDO $pdo, string $work): void {
@@ -2163,14 +2189,33 @@ function getRouteHead(): array {
     return $out;
 }
 
+# The header of a Node list read back from its markup in the order of its controls: the sorts, the direction, the personal filters, the reset, the feed, the form
+# The count is the digits of the count chip, the personal filters add their own numbers; the category tiles and the letters are read apart
+function getRouteHeadRead(string $html): array {
+    if (!preg_match('#<header class="sl-node-head".*?</header>#s', $html, $hit)) return ['hrefs' => [], 'chips' => [], 'html' => '', 'count' => ''];
+    $dom = new DOMDocument();
+    libxml_use_internal_errors(true);
+    $dom->loadHTML('<?xml encoding="utf-8"?>'.$hit[0]);
+    libxml_clear_errors();
+    $xp = new DOMXPath($dom);
+    $list = fn(string $path): array => array_map(fn($v) => trim($v->textContent), iterator_to_array($xp->query($path)));
+    $sort = '//div[@id="sl-node-sort"]/div[contains(@class, "sl-node-head-sorts")]';
+    $hrefs = array_merge($list($sort.'[1]/a/@href'), $list('//span[contains(@class, "sl-node-head-pill")]/a/@href'), $list($sort.'[2]/a/@href'),
+        $list('//div[contains(@class, "sl-node-head-filters")]/a[contains(@class, "sl-chip")]/@href'),
+        $list('//div[contains(@class, "sl-node-head-acts")]/a[contains(@href, "go=rss")]/@href'),
+        $list('//div[contains(@class, "sl-node-head-filters")]/a[contains(@class, "sl-but")]/@href'));
+    $count = implode('', $list('//div[contains(@class, "sl-node-head-title")]/span'));
+    return ['hrefs' => $hrefs, 'chips' => [implode(' ', preg_split('/\D+/', $count, -1, PREG_SPLIT_NO_EMPTY)), ...$list($sort.'[2]/a/b')], 'html' => $hit[0], 'count' => $count];
+}
+
 # The header of the news list: the sorts, the direction, the reset and the feed of a guest, the personal links of anna and the filters each link keeps
 # Then the counts of the header by reader and the one cache file of the type: its entries, its moment of the next publication and its drop by a write
 # The previous visit of anna stays the one her session found, though her first answer moves the column; a guest's personal filter narrows nothing
 function getRouteHeadBar(PDO $pdo, string $work): array {
     $get = fn(string $path, string $who = ''): array => getRouteReply($who, 'GET', $path);
-    $bar = fn(string $html): string => preg_match('#<h1 class="sl-title">.*?</nav>#s', $html, $hit) ? html_entity_decode($hit[0]) : '';
-    $hrefs = fn(string $html): array => preg_match_all('#href="([^"]*)"#', $bar($html), $hit) ? $hit[1] : [];
-    $chips = fn(string $html): array => preg_match_all('#sl-chip-(?:neutral|info)"(?: title="[^"]*")?>([^<]*)<#', $bar($html), $hit) ? $hit[1] : [];
+    $bar = fn(string $html): string => html_entity_decode(getRouteHeadRead($html)['html']);
+    $hrefs = fn(string $html): array => getRouteHeadRead($html)['hrefs'];
+    $chips = fn(string $html): array => getRouteHeadRead($html)['chips'];
     $file = $work.'/cache/data/'.sha1('nodecount|news').'.json';
     $guest = $get('index.php?name=news');
     $anna = $get('index.php?name=news', 'anna');
@@ -2203,8 +2248,13 @@ function getRouteHeadBar(PDO $pdo, string $work): array {
     $gone = !is_file($file);
     $get('index.php?name=news');
     $out['drop'] = [$sent['code'], $gone, is_file($file)];
-    $lang = (string)file_get_contents(BASE_DIR.'/lang/'.(require $work.'/config/global.php')['language'].'.php');
-    $out['numof'] = preg_match("#define\('_NUMOF', *'([^']+)'\)#", $lang, $hit) ? $hit[1] : '?';
+    $out['words'] = [getRouteHeadRead($guest['body'])['count'], getRouteHeadRead($new['body'])['count']];
+    $heads = fn(string $html): array => preg_match_all('#<p class="sl-date-head">(.*?)</p>#s', $html, $hit)
+        ? array_map(fn($v) => preg_replace('/\s+/u', ' ', trim(strip_tags($v))), $hit[1]) : [];
+    $out['months'] = [$heads($guest['body']), $heads($sort['body'])];
+    $one = $get('index.php?name=news&cat=1')['body'];
+    $out['catlets'] = [str_contains($one, 'index.php?name=news&amp;cat=1&amp;let=A"'), str_contains($one, 'index.php?name=news&amp;cat=1&amp;let=B"'),
+        $letter($guest['body'], 'B')];
     return $out;
 }
 
@@ -2628,7 +2678,7 @@ try {
     } elseif (($argv[2] ?? '') === 'tree') {
         $report['runs']['tree'] = getRouteTree($rpdo);
     } elseif (($argv[2] ?? '') === 'modes') {
-        $report['runs']['modes'] = getRouteModes($rpdo);
+        $report['runs']['modes'] = getRouteModes($rpdo) + ['looks' => getRouteLooks()];
     } elseif (($argv[2] ?? '') === 'seo') {
         $report['runs']['seo'] = getRouteSeo($rpdo, $rwork);
     } elseif (($argv[2] ?? '') === 'head') {

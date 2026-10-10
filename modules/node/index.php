@@ -13,7 +13,7 @@ if (!defined('MODULE_FILE') && !defined('ADMIN_FILE')) {
 
 # The closed public operations of a type and the methods each one answers; the extension support adds its one operation, no other extension adds any
 function getNodeOps(string $ext = ''): array {
-    $ops = ['' => ['GET', 'HEAD'], 'view' => ['GET', 'HEAD'], 'add' => ['GET', 'HEAD', 'POST'], 'asset' => ['GET', 'HEAD'], 'report' => ['POST']];
+    $ops = ['' => ['GET', 'HEAD', 'POST'], 'view' => ['GET', 'HEAD'], 'add' => ['GET', 'HEAD', 'POST'], 'asset' => ['GET', 'HEAD'], 'report' => ['POST']];
     return ($ext === 'support') ? $ops + ['support' => ['POST']] : $ops;
 }
 
@@ -513,6 +513,10 @@ function getNodeRoute(): NodeType {
 # Explicitly sent default sort parameters are sent back to the clean address, and a sort or letter the type does not allow is a bad request; published is allowed to every type
 # The personal filters new and fav narrow the list of a signed-in visitor to what came since the last visit and to the favorites; a guest's one narrows nothing
 # A page past the end is not found before any redirect and before the reader sets its page
+# The view is the one the visitor chose for the type and keeps in a cookie, else the first view of the type; a POST of the switch sets it and returns to the list
+# A view draws the card fragment of its own, the rail its pane of tabs; an empty list of views offers the one view of the display mode
+# A list by publication in cards or compact is headed month by month with the count of its cards on the page; a pinned material opens a run of its own month
+# The letters of a category are counted live within it, the letters of the whole list come with the stored counts of the type
 # The canonical address names only the category and the page; the start page keeps the site description and names the type once a category or a page is asked
 # A refusal of the reader answers by its code, while a storage failure goes to the shared handler
 function setNodeList(): void {
@@ -544,11 +548,23 @@ function setNodeList(): void {
         $since = getUserLastVisit($uid);
         $mine = (($new !== '' && $since !== '') ? ['new' => 1] : []) + (($fav !== '' && $uid > 0) ? ['fav' => 1] : []);
         $base = ['name' => $type->name] + ($cat ? ['cat' => $cat] : []) + ($let !== '' ? ['let' => rawurlencode($let)] : []) + $mine;
+        $link = static fn(int $i): array => ['href' => getSeoUrl($base + (($sort !== '' || $dir !== '') ? ['order' => $key, 'dir' => $way] : [])
+            + ($i > 1 ? ['num' => $i] : []))];
+        $mode = $type->settings['view']['mode'];
+        $views = $set['views'] ?: [NodeQuery::MODEVIEW[$mode]];
         $cats = getCategoryMap($type->name);
         $query = getNodeReader($type)->setNodeType($type);
         if ($cat && (!isset($cats[$cat]) || !$query->checkNodeCategory($type, $cat))) setNodeDeny(404);
+        if (strtoupper($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
+            $pick = getVar('post', 'view', 'var', '');
+            if (checkAdminPost('view') && in_array($pick, $views, true)) setCookies('view-'.$type->name, time() + 31536000, $pick);
+            setRedirect($link($num)['href'], false, 303);
+        }
+        $look = getCookies('view-'.$type->name);
+        if (!in_array($look, $views, true)) $look = $views[0];
         $tally = getNodeCountMap($type, $query);
         if ($cat) $query->setNodeCategory($cat);
+        $lets = ($cat && $set['alpha']) ? $query->getNodeLetters() : $tally['lets'];
         if ($let !== '') $query->setNodeLetter($let);
         $own = ($uid > 0) ? $query->getNodeOwnCount($since, $type->settings['features']['favorites'] ? $uid : 0) : [];
         if (isset($mine['new'])) $query->setNodePublished($since, null);
@@ -562,22 +578,49 @@ function setNodeList(): void {
         $list = $count ? $query->getNodeList() : [];
         $hand = $list ? getNodeHandler($type) : null;
         $extm = $hand ? $hand->getNodeData($type, $list, 'list') : [];
-        $items = '';
+        $card = ['list' => 'node/docs/card', 'accordion' => 'node/faq/card', 'tiles' => 'node/media/card'][$look]
+            ?? ((NodeQuery::MODEVIEW[$mode] === 'cards') ? getNodeTplName('fragments', 'card', $type) : 'node/card');
+        $dated = in_array($look, ['cards', 'compact'], true) && $key === 'published';
+        $months = explode(',', _MONTHS);
+        $groups = [];
+        $rail = [];
+        $slot = null;
         foreach ($list as $node) {
             $view = getNodeViewData($type, $node, 'list');
-            $items .= $tpl->getHtmlFrag(getNodeTplName('fragments', 'card', $type), $view + getNodeViewVars($type) + getNodeMetaVars($type, $node)
-                + ['cover' => getNodeCover($type, $view), 'download' => getNodeDownload($type, $view), 'ext' => getNodeExtVars($type, $node, $extm[$node->id] ?? [])]);
+            if ($look === 'rail') {
+                $rail[] = ['id' => $node->id, 'href' => $view['href'], 'title' => $view['title'], 'date' => $view['date'], 'date_iso' => $view['date_iso'],
+                    'intro_html' => $view['intro_html'], 'is_first' => $rail === []];
+                continue;
+            }
+            $when = $node->pubdate ?? $node->updated;
+            $month = $dated ? substr($when, 0, 7) : '';
+            if ($month !== $slot) $groups[] = ['label' => $dated ? $months[substr($when, 5, 2) - 1].' '.substr($when, 0, 4) : '', 'count' => 0, 'items_html' => ''];
+            $slot = $month;
+            $last = array_key_last($groups);
+            $groups[$last]['count']++;
+            $groups[$last]['items_html'] .= $tpl->getHtmlFrag($card, $view + getNodeViewVars($type) + getNodeMetaVars($type, $node)
+                + ['cover' => getNodeCover($type, $view), 'download' => getNodeDownload($type, $view), 'ext' => getNodeExtVars($type, $node, $extm[$node->id] ?? []),
+                'is_play' => $mode === 'media']);
         }
-        $link = static fn(int $i): array => ['href' => getSeoUrl($base + (($sort !== '' || $dir !== '') ? ['order' => $key, 'dir' => $way] : [])
-            + ($i > 1 ? ['num' => $i] : []))];
         $title = getModuleName($type->name);
         $ctitle = $cat ? html_entity_decode(getConst($cats[$cat]['title']), ENT_QUOTES | ENT_HTML5, 'UTF-8') : '';
         $page = $tpl->getHtmlPart(getNodeTplName('partials', 'list', $type), [
-            'head_html' => getNodeHead($type, $base, $key, $way, ['count' => $count, 'total' => $tally['total']] + $own),
+            'head_html' => getNodeHead($type, $base, $key, $way, ['count' => $count, 'total' => $tally['total']] + $own, [
+                'cats' => $type->settings['features']['categories'] ? setCategories($type->name, $cat, $tally['cats'], $tally['total']) : '',
+                'cat' => $ctitle,
+                'lets' => $set['alpha'] ? getLetterNavi($type->name, $cat, $lets, $let) : '',
+                'let' => $let,
+            ], ['now' => $look, 'all' => $views, 'action' => $link($num)['href']]),
             'intro' => ($cat || $num > 1 || $let !== '' || $mine) ? '' : getConst($type->intro),
-            'cats_html' => $type->settings['features']['categories'] ? setCategories($type->name, $cat, $tally['cats'], $tally['total']) : '',
-            'letters_html' => $set['alpha'] ? getLetterNavi($type->name, $cat, $tally['lets']) : '',
-            'items_html' => $items,
+            'groups' => $groups,
+            'rail' => $rail,
+            'rail_name' => 'sl-node-rail-'.$type->name,
+            'title' => $title,
+            'is_compact' => $look === 'compact',
+            'is_row' => $look === 'list',
+            'is_tiles' => $look === 'tiles',
+            'date_label' => _DATE,
+            'read_label' => _READMORE,
             'pager_html' => getTplPagerView($num, $pages, 8, $link, ['count' => $count, 'limit' => $set['limit']]),
             'empty_alert' => ['text' => _NO_INFO, 'is_warn' => false],
         ]);
@@ -628,47 +671,79 @@ function getNodeSortWay(NodeType $type, string $key): string {
     return ($key === $set['order']) ? $set['dir'] : (($key === 'title') ? 'asc' : 'desc');
 }
 
-# The header of a list: the title and the count, the sorts with their direction, the personal filters, the reset, the feed, the public form and the category switch
-# Every link keeps the other filters of the list and leaves the page; the default sort and direction leave the address clean, as the list sends them back there
-function getNodeHead(NodeType $type, array $base, string $key, string $way, array $nums): string {
+# The header of a list: the title and the count, the windows of the categories, the letters and the sorts with the personal filters, the direction, the reset
+# Beside them the views of the type, the search, the feed, the way up for the stuck bar and the public form; every link keeps the other filters and leaves the page
+# The default sort and direction leave the address clean, as the list sends them back there; the switch of the views is drawn only for two views or more
+function getNodeHead(NodeType $type, array $base, string $key, string $way, array $nums, array $wins, array $look): string {
     global $tpl;
     $set = $type->settings['list'];
+    $cells = [];
+    $names = ['cards' => [_NODE_VCARDS, 'card-text'], 'compact' => [_NODE_VCOMPACT, 'view-list'], 'list' => [_LIST, 'list-ul'], 'accordion' => [_NODE_VACCORD,
+        'chevron-bar-expand'], 'tiles' => [_NODE_VTILES, 'grid-3x2-gap'], 'rail' => [_NODE_VRAIL, 'layout-sidebar']];
+    foreach ($look['all'] as $one) $cells[] = ['key' => $one, 'title' => $names[$one][0], 'icon_name' => $names[$one][1], 'is_now' => $one === $look['now']];
+    $token = $tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken('view'), 'input_attr' => '']);
     $url = static function (array $pars, string $one, string $dir) use ($set): string {
         $pars = array_filter(array_replace(array_fill_keys(['name', 'cat', 'let', 'new', 'fav'], null), $pars), fn($v) => $v !== null);
         return getSeoUrl($pars + (($one === $set['order'] && $dir === $set['dir']) ? [] : ['order' => $one, 'dir' => $dir]));
     };
     $sorts = [];
-    foreach (['published' => _NEW, 'updated' => _NODE_UPDATED, 'title' => _TITLE, 'views' => _POP, 'rating' => _BEST] as $one => $label) {
+    $named = '';
+    foreach (['published' => [_NEW, 'clock-history'], 'updated' => [_NODE_UPDATED, 'arrow-repeat'], 'title' => [_TITLE, 'sort-alpha-down'], 'views' => [_POP, 'eye'],
+        'rating' => [_BEST, 'star']] as $one => [$label, $icon]) {
         if ($one !== 'published' && !in_array($one, $set['orders'], true)) continue;
-        $sorts[] = ['href' => $url($base, $one, ($one === $key) ? $way : getNodeSortWay($type, $one)), 'label' => $label, 'is_current' => $one === $key];
+        if ($one === $key) $named = $label;
+        $sorts[] = ['href' => $url($base, $one, ($one === $key) ? $way : getNodeSortWay($type, $one)), 'label' => $label, 'icon_name' => $icon, 'is_current' => $one === $key];
     }
     $mine = [];
-    foreach (['new' => _NODE_SINCE, 'fav' => _NODE_INFAV] as $flag => $label) {
+    foreach (['new' => [_NODE_SINCE, 'stars'], 'fav' => [_NODE_INFAV, 'star-fill']] as $flag => [$label, $icon]) {
         $on = isset($base[$flag]);
         if (!$on && ($nums[$flag] ?? 0) < 1) continue;
-        $mine[] = ['href' => $url($on ? array_diff_key($base, [$flag => 0]) : $base + [$flag => 1], $key, $way), 'label' => $label, 'count' => $nums[$flag] ?? 0,
-            'is_on' => $on, 'is_fav' => $flag === 'fav'];
+        $mine[] = ['href' => $url($on ? array_diff_key($base, [$flag => 0]) : $base + [$flag => 1], $key, $way), 'label' => $label, 'icon_name' => $icon,
+            'count' => $nums[$flag] ?? 0, 'is_on' => $on];
     }
     $narrow = count($base) > 1;
     $clean = !$narrow && $key === $set['order'] && $way === $set['dir'];
     $feed = isset(getRssFeeds()[$type->name]) ? 'index.php?go=rss&name='.$type->name.(isset($base['cat']) ? '&cat='.$base['cat'] : '') : '';
+    $asc = $way === 'asc';
     return $tpl->getHtmlPart('node/head', [
         'title' => getModuleName($type->name),
-        'count_text' => $narrow ? sprintf(_NUMOF, $nums['count'], $nums['total']) : $nums['count'],
-        'count_title' => _OVERALL,
+        'view_html' => (count($cells) > 1) ? $tpl->getHtmlFrag('mode-switch', ['action' => $look['action'], 'hidden' => $token, 'modes' => $cells, 'field' => 'view',
+            'is_view' => true, 'label' => _NODE_VIEW]) : '',
+        'count_text' => $narrow ? sprintf(getPluralForm($nums['total'], _MATERIALSOF), $nums['count'], $nums['total'])
+            : sprintf(getPluralForm($nums['count'], _MATERIALS), $nums['count']),
+        'filters_label' => _NODE_FILTERS,
+        'cats_html' => $wins['cats'],
+        'cats_label' => _CATEGORIES,
+        'cat_name' => ($wins['cat'] !== '') ? $wins['cat'] : _CATEGORIES,
+        'is_cat' => $wins['cat'] !== '',
+        'lets_html' => $wins['lets'],
+        'lets_label' => _NODE_LETTERS,
+        'lets_hint' => _NODE_LETHINT,
+        'let_name' => ($wins['let'] !== '') ? sprintf(_NODE_ONLETTER, mb_strtoupper($wins['let'])) : _NODE_ABC,
+        'is_let' => $wins['let'] !== '',
+        'sort_name' => $named,
+        'sort_label' => _SORT,
+        'show_label' => _SHOW,
         'sorts' => $sorts,
-        'dir_href' => $url($base, $key, ($way === 'asc') ? 'desc' : 'asc'),
-        'dir_label' => ($way === 'asc') ? _ASC : _DESC,
-        'is_asc' => $way === 'asc',
         'mine' => $mine,
+        'is_new' => isset($base['new']),
+        'is_fav' => isset($base['fav']),
+        'new_label' => _NODE_SINCE,
+        'fav_label' => _NODE_INFAV,
+        'dir_href' => $url($base, $key, $asc ? 'desc' : 'asc'),
+        'dir_label' => $asc ? _ASCENDING : _DESCENDING,
+        'dir_title' => $asc ? _ASC : _DESC,
+        'is_asc' => $asc,
         'reset_href' => $clean ? '' : getSeoUrl(['name' => $type->name]),
         'reset_label' => _FRESET,
+        'find_mod' => (is_active('search') && $type->settings['integrations']['search']) ? $type->name : '',
+        'find_label' => _NODE_FIND,
+        'search_label' => _SEARCH,
         'rss_href' => $feed,
         'rss_title' => _RSS,
+        'top_label' => _PAGETOP,
         'add_href' => checkNodeFlow($type) ? getSeoUrl(['name' => $type->name, 'op' => 'add']) : '',
         'add_label' => _ADD,
-        'cat_link' => ($type->settings['features']['categories'] && getCategoryMap($type->name) !== [])
-            ? ['title' => _CATVORH, 'label' => _CATEGORIES, 'is_navi_button' => true, 'is_category_toggle' => true] : [],
     ]);
 }
 
@@ -758,7 +833,7 @@ function setNodeView(): void {
         $tgts = [];
         foreach (array_chunk($refs, $query->getTargetSize(), true) as $part) $tgts += $query->getNodeTargetList($part);
         foreach ($tgts as $tgt) {
-            $card = ['is_views' => false, 'cover' => ''] + getNodeViewData($type, $tgt, 'card') + getNodeViewVars($type);
+            $card = ['is_views' => false, 'cover' => '', 'is_play' => $type->settings['view']['mode'] === 'media'] + getNodeViewData($type, $tgt, 'card') + getNodeViewVars($type);
             $rels .= $tpl->getHtmlFrag(getNodeTplName('fragments', 'card', $type), $card);
         }
         $cover = getNodeCover($type, $view);

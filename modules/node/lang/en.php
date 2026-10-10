@@ -4,6 +4,7 @@
 # License: MIT
 # Website: slaed.net
 
+define('_NODE_ABC','Alphabet');
 define('_NODE_ADDED','The material has been published.');
 define('_NODE_ASSETS','Files and links');
 define('_NODE_BADDATE','A date is not valid, use the form YYYY-MM-DD HH:MM.');
@@ -11,13 +12,18 @@ define('_NODE_BUSY','The material was changed in the meantime, nothing was saved
 define('_NODE_CATS','Additional categories');
 define('_NODE_CLOSE','Close the request');
 define('_NODE_FAILED','The material could not be saved, please try again later.');
+define('_NODE_FILTERS','Filter materials');
+define('_NODE_FIND','Search this section');
 define('_NODE_GONE','The material does not exist or is not available.');
 define('_NODE_INFAV','In favorites');
 define('_NODE_INTRO','Introduction');
 define('_NODE_INVALID','The material was not saved: check the filled in fields.');
+define('_NODE_LETHINT','Letters with materials are highlighted; the count is in the hint');
+define('_NODE_LETTERS','By letter');
 define('_NODE_MNEW','User %1$s opened the request "%2$s". View: %3$s');
 define('_NODE_MSTAFF','Support answered your request "%1$s". View: %2$s');
 define('_NODE_MUSER','User %1$s replied in the request "%2$s". View: %3$s');
+define('_NODE_ONLETTER','Letter %s');
 define('_NODE_PARENT','Parent material');
 define('_NODE_PENDING','The material has been sent to the moderator for review.');
 define('_NODE_PERHINT','0 - manual check only, otherwise from 300 to 31536000');
@@ -36,7 +42,13 @@ define('_NODE_SOURCE','Source of the text (RSS or Atom)');
 define('_NODE_SSAVED','The state of the request has been saved.');
 define('_NODE_STATE','State');
 define('_NODE_UPDATED','Updated');
+define('_NODE_VACCORD','Accordion');
+define('_NODE_VCARDS','Cards');
+define('_NODE_VCOMPACT','Compact');
+define('_NODE_VIEW','List view');
 define('_NODE_VISIT','Visit the site');
+define('_NODE_VRAIL','Rail');
+define('_NODE_VTILES','Tiles');
 define('_NODE_WCLOSE','Closed');
 define('_NODE_WSTAFF','Waiting for support');
 define('_NODE_WUSER','Waiting for the author');

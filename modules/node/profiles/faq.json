@@ -25,6 +25,10 @@
                     "author",
                     "date",
                     "views"
+                ],
+                "views": [
+                    "accordion",
+                    "list"
                 ]
             },
             "view": {

@@ -2393,41 +2393,36 @@ function checkCaptcha(string $act): bool {
     return Captcha::check($act);
 }
 
-# Build the module categories block: fluid tiles with tinted icon, the count the caller holds for each, the description and subcategory chips
-function setCategories(string $mod, string $id = '', array $nums = [], int $total = 0): string {
- global $db, $conf, $locale, $tpl;
+# The category tiles of a module: all materials, then the top level with its count and subcategory chips, the chosen one marked, an unreadable one dimmed
+function setCategories(string $mod, int $cur = 0, array $nums = [], int $total = 0): string {
+    global $db, $conf, $locale, $tpl;
     if (!filterVar($mod)) return '';
-    $id = intval($id) ?: 0;
     $params = ['mod' => $mod];
-    if ($id) {
-        $where = 'WHERE modul = :mod AND parent = :pid';
-        $params['pid'] = $id;
-    } elseif ($conf['multilingual']) {
-        $where = "WHERE modul = :mod AND (lang = :loc OR lang = '')";
+    $where = 'WHERE modul = :mod';
+    if ($conf['multilingual']) {
+        $where .= " AND (lang = :loc OR lang = '')";
         $params['loc'] = $locale;
-    } else {
-        $where = 'WHERE modul = :mod';
     }
     $massiv = [];
     $result = $db->getSqlQuery('SELECT id, title, intro, img, parent, pview, pread, ordern FROM '.PREFIX_DB.'_categories '.$where.' ORDER BY ordern, title', $params);
     while ([$cid, $title, $intro, $img, $parentid, $pview, $pread, $ordern] = $db->getSqlRow($result)) {
         $massiv[] = [$cid, $title, $intro, $img, $parentid, $pview, $pread, $ordern];
     }
-    if (!$massiv) return '';
     $cont = '';
     foreach ($massiv as $val) {
-        if ($val[4] == $id && is_acess($val[5])) {
+        if ($val[4] == 0 && is_acess($val[5])) {
             $name = getConst($val[1]);
             $hidden = !is_acess($val[6]);
             $subs = [];
             foreach ($massiv as $sval) {
                 if ($val[0] == $sval[4] && is_acess($sval[5]) && is_acess($sval[6])) {
                     $sname = getConst($sval[1]);
-                    $subs[] = ['href' => getSeoUrl(['name' => $mod, 'cat' => $sval[0]]), 'title' => $sname, 'name' => $sname];
+                    $subs[] = ['href' => getSeoUrl(['name' => $mod, 'cat' => $sval[0]]), 'title' => $sname, 'name' => $sname, 'is_current' => $sval[0] == $cur];
                 }
             }
             $cont .= $tpl->getHtmlFrag('category-row', [
                 'is_hidden' => $hidden,
+                'is_current' => $val[0] == $cur,
                 'tone' => (int)$val[7] % 6,
                 'href' => $hidden ? '' : getSeoUrl(['name' => $mod, 'cat' => $val[0]]),
                 'title' => $hidden ? $name.' - '._CCLOSED : $name,
@@ -2440,16 +2435,8 @@ function setCategories(string $mod, string $id = '', array $nums = [], int $tota
         }
     }
     if (!$cont) return '';
-    return $tpl->getHtmlPart('categories', [
-        'categories' => _CATEGORIES,
-        'content' => $cont,
-        'total' => _ALLIN,
-        'pages' => $total,
-        'in' => '',
-        'cat' => count($massiv),
-        'category' => _ALLINC,
-        'mod' => $mod,
-    ]);
+    return $tpl->getHtmlFrag('category-row', ['is_current' => !$cur, 'tone' => 0, 'href' => getSeoUrl(['name' => $mod]), 'title' => _ALLMATERIALS,
+        'name' => _ALLMATERIALS, 'icon_name' => 'collection', 'count' => $total, 'description' => '', 'subs' => []]).$cont;
 }
 
 # Load configuration file or directory and return chmod warning if needed
@@ -3581,7 +3568,7 @@ function getThemeModeSwitch(string $action): string {
     foreach (['light', 'auto', 'dark'] as $step) {
         $list[] = ['key' => $step, 'title' => $name[$step], 'icon_name' => $icon[$step], 'is_now' => $step === $mode ? '1' : ''];
     }
-    return $tpl->getHtmlFrag('mode-switch', ['action' => $action, 'hidden' => $html, 'modes' => $list]);
+    return $tpl->getHtmlFrag('mode-switch', ['action' => $action, 'hidden' => $html, 'modes' => $list, 'field' => 'mode']);
 }
 
 # Validate that a theme directory contains the canonical structure: base/theme CSS, icon library, system avatars, presets, and theme assets declared by editor manifests
@@ -3837,6 +3824,21 @@ function updateNewsletter(): array {
 # Resolve a label: a defined name with a leading underscore is a language constant and answers its text, any other text is returned as it is
 function getConst(string $con): string {
     return ($con !== '' && $con[0] === '_' && defined($con)) ? constant($con) : $con;
+}
+
+# One of the forms a text carries separated by |, picked for the number by the plural rule of the locale: three forms for ru, uk and pl, two for the others
+function getPluralForm(int $num, string $forms): string {
+    $list = explode('|', $forms);
+    $tail = $num % 10;
+    $hund = $num % 100;
+    $few = $tail >= 2 && $tail <= 4 && ($hund < 12 || $hund > 14);
+    $pick = match (substr(_LOCALE, 0, 2)) {
+        'ru', 'uk' => ($tail === 1 && $hund !== 11) ? 0 : ($few ? 1 : 2),
+        'pl' => ($num === 1) ? 0 : ($few ? 1 : 2),
+        'fr' => ($num < 2) ? 0 : 1,
+        default => ($num === 1) ? 0 : 1,
+    };
+    return $list[min($pick, count($list) - 1)];
 }
 
 # Resolve a module key to its localised name constant; a registered Node type answers its own title, a language constant or plain text, read from the shared type map
@@ -4806,42 +4808,22 @@ function setEditorFileRun(string $op): void {
     getEditorJson(['ok' => $done > 0, 'done' => $done, 'total' => count($mark), 'error' => ($done > 0) ? '' : ($note ?: _ERROR)]);
 }
 
-# The letter navigation of a list: digits, the local and the Latin alphabet; a Node type links the letters its counts hold with its category, any other module none
-function getLetterNavi(string $mod, int $cat = 0, array $nums = []): string {
-    global $tpl, $conf;
-    $node = isset($conf['node']['types'][$mod]);
-    $href = static fn(string $char): string => $node ? getSeoUrl(['name' => $mod] + ($cat > 0 ? ['cat' => $cat] : []) + ['let' => rawurlencode($char)])
-        : 'index.php?name='.$mod.'&op=liste&let='.urlencode($char);
-    $rows = [];
-    $digits = '';
-    foreach (range(0, 9) as $num) {
-        $label = $tpl->getHtmlFrag('span', ['text' => (string)$num, 'is_alpha_letter' => true]);
-        $digits .= ($node && ($nums[$num] ?? 0) > 0)
-            ? $tpl->getHtmlFrag('link', ['href' => $href((string)$num), 'title' => (string)$num, 'label_html' => $label])
-            : $label;
-    }
-    $rows[] = $digits;
-    $locale = '';
-    foreach (preg_split('//u', _ALPHABET, -1, PREG_SPLIT_NO_EMPTY) as $char) {
-        $label = $tpl->getHtmlFrag('span', ['text' => $char, 'is_alpha_letter' => true]);
-        $locale .= ($node && ($nums[mb_strtoupper($char)] ?? 0) > 0)
-            ? $tpl->getHtmlFrag('link', ['href' => $href($char), 'title' => $char, 'label_html' => $label])
-            : $label;
-    }
-    $rows[] = $locale;
-    if (substr(_LOCALE, 0, 2) != 'fr') {
-        $latin = '';
-        foreach (range('A', 'Z') as $eng) {
-            $label = $tpl->getHtmlFrag('span', ['text' => $eng, 'is_alpha_letter' => true]);
-            $latin .= ($node && ($nums[$eng] ?? 0) > 0)
-                ? $tpl->getHtmlFrag('link', ['href' => $href($eng), 'title' => $eng, 'label_html' => $label])
-                : $label;
-        }
-        $rows[] = $latin;
-    }
+# The letters of a Node list: digits, local and Latin alphabet; a letter with materials links its list in the category, each tells its count, the chosen one is marked
+function getLetterNavi(string $mod, int $cat = 0, array $nums = [], string $let = ''): string {
+    global $tpl;
+    $rows = [range(0, 9), preg_split('//u', _ALPHABET, -1, PREG_SPLIT_NO_EMPTY)];
+    if (substr(_LOCALE, 0, 2) != 'fr') $rows[] = range('A', 'Z');
     $items = '';
     foreach ($rows as $row) {
-        $items .= $tpl->getHtmlFrag('span', ['is_line_stack_item' => true, 'content_html' => $row, 'is_line_break' => true]);
+        $line = '';
+        foreach ($row as $char) {
+            $num = $nums[mb_strtoupper($char)] ?? 0;
+            $hint = $char.' — '.sprintf(getPluralForm($num, _MATERIALS), $num);
+            $label = $tpl->getHtmlFrag('span', ['text' => $char, 'title' => $num ? '' : $hint, 'is_alpha_letter' => true]);
+            $line .= $num ? $tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => $mod] + ($cat > 0 ? ['cat' => $cat] : []) + ['let' => rawurlencode($char)]),
+                'title' => $hint, 'label_html' => $label, 'link_attr' => (mb_strtoupper($char) === mb_strtoupper($let)) ? 'aria-current="true"' : '']) : $label;
+        }
+        $items .= $tpl->getHtmlFrag('span', ['is_line_stack_item' => true, 'content_html' => $line, 'is_line_break' => true]);
     }
     return $items;
 }

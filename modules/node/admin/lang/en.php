@@ -108,3 +108,5 @@ define('_NODE_TYPEOFF','The type has been switched off.');
 define('_NODE_TYPEON','The type has been switched on.');
 define('_NODE_TYPES','Types');
 define('_NODE_USEFUL','Useful');
+define('_NODE_VIEWDEF','Default view');
+define('_NODE_VIEWS','Allowed views');

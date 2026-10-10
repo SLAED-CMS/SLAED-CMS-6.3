@@ -1016,25 +1016,81 @@ const DEMO_GROUPS = [
   },
 ];
 
-const DEMO_ADMINUX = [
-  {
+/* What the reference changes against the panel as it is, one code a mechanism: s — the shell of every screen (head,
+   menu, session), l — the list of «Комментарии». A variant shows its own codes and folds these under them */
+const DEMO_UX_BASE = [
+  { c: 'Э01', g: 's', t: 'Логотип ведёт на главную панели (admin.php), а не на сайт в новой вкладке, и стоит без h1 — единственный h1 теперь название раздела.' },
+  { c: 'Э02', g: 's', t: 'Заголовок вкладки браузера «Комментарии — Админ — Название сайта» вместо «Название сайта - Администратор».' },
+  { c: 'Э03', g: 's', t: 'Ссылка «К содержимому» — первая остановка Tab.' },
+  { c: 'Э04', g: 's', t: 'Колокольчик «Уведомления» в верхней панели: сумма очередей (комментарии, пользователи, новости, помощь) и панель со ссылками; число комментариев живое.' },
+  { c: 'Э05', g: 's', t: '«Уведомления» и «Опции» — иконками с подсказкой, парой у правого края; у «Опций» в оригинале было слово.' },
+  { c: 'Э06', g: 's', t: 'Окно «Опции» без перезагрузки: тема меняется сразу, редактор и язык сохраняются с подтверждением «Сохранено: …»; у списков подпись — название поля, а не текущее значение.' },
+  { c: 'Э07', g: 's', t: 'Над меню поле «Найти раздел» — сужает меню по названию.' },
+  { c: 'Э08', g: 's', t: 'Быстрый переход Ctrl+K: разделы и действия экрана в одном окне с поиском и стрелками.' },
+  { c: 'Э09', g: 's', t: 'Блоки меню раскрываются настоящей кнопкой (button, aria-expanded) вместо h3 с ролью кнопки.' },
+  { c: 'Э10', g: 's', t: 'Открытый раздел отмечен: заливка плашки, синий край по всей высоте, aria-current; на пункте чип очереди «3».' },
+  { c: 'Э11', g: 's', t: '«…» у пунктов меню — только при наведении и в фокусе, в покое меню без кнопок.' },
+  { c: 'Э12', g: 's', t: 'Телефон: кнопка «Меню» в шапке, меню выезжает панелью поверх, содержимое первым.' },
+  { c: 'Э13', g: 's', t: '«Наблюдение»: нули приглушены, а не теряются на фоне.' },
+  { c: 'Э14', g: 's', t: 'Конец сессии: окно с отсчётом, «Продлить сессию» и «Выйти» (в палитре — «Смоделировать конец сессии»).' },
+  { c: 'Э15', g: 'l', t: 'Фильтр: у полей подписи «Модуль» и «Поиск»; модуль применяется сразу без перезагрузки, поиск — кнопкой «OK», результат объявляется экранному чтецу.' },
+  { c: 'Э16', g: 'l', t: 'Фильтр живёт в адресе: «Назад» возвращает прежний, ссылку можно отправить; после правки комментария — возврат к тому же фильтру.' },
+  { c: 'Э17', g: 'l', t: 'Вкладки «Главная» и «Ждут проверки» переключают список без перезагрузки; пустая очередь — «Всё проверено».' },
+  { c: 'Э18', g: 'l', t: '«Мои виды»: два встроенных вида и свои — «Сохранить текущий» запоминает фильтр, вид списка и сортировку под именем.' },
+  { c: 'Э19', g: 'l', t: 'Сортировка доступна с клавиатуры (кнопка в заголовке колонки), выбор запоминается и объявляется.' },
+  { c: 'Э20', g: 'l', t: 'Дата относительная («8 месяцев назад»), точная — в подсказке.' },
+  { c: 'Э21', g: 'l', t: 'Подсказка ⓘ у комментария — кнопка с подписью, а не nav.' },
+  { c: 'Э22', g: 'l', t: 'Статус — кнопка в своей колонке: один щелчок активирует или деактивирует; пункт «Деактивировать» из «…» убран.' },
+  { c: 'Э23', g: 'l', t: 'Удаление без «Вы уверены?» (оригинал спрашивает); удаление и смена статуса идут без перезагрузки, с уведомлением «Отменить» на 10 секунд.' },
+  { c: 'Э24', g: 'l', t: 'Флажки подписаны («Выбрать комментарий 20679»), общий — «Отметить все показанные».' },
+  { c: 'Э25', g: 'l', t: 'Счётчик «Отмечено: N»; «OK» недоступна, пока ничего не отмечено; в действиях добавлено «Активировать».' },
+  { c: 'Э26', g: 'l', t: '«Отметить все 8 414 комментариев» — предлагается после отметки всей страницы.' },
+  { c: 'Э27', g: 'l', t: 'Клавиши: J и K — строки, X — отметить, E — править, / — поиск.' },
+  { c: 'Э28', g: 'l', t: 'Загрузка списка — индикатор; сбой — сообщение с «Повторить», отметки и фильтры сохраняются (в палитре — «Смоделировать сбой сети»).' },
+  { c: 'Э29', g: 'l', t: 'Удалённая строка передаёт фокус следующей, а не началу страницы.' },
+  { c: 'Э30', g: 'l', t: '«Журнал действий» экрана: кто, что и когда изменил, включая отмены.' },
+  { c: 'Э31', g: 'l', t: 'Пейджер — финал серии пагинатора (pg-14) вместо «1 2 … 337 · Назад · Вперед».' },
+  { c: 'Э32', g: 'l', t: 'Телефон: строка таблицы — карточка с подписями колонок; при отметке действие встаёт к нижнему краю экрана.' },
+];
+/* What the reference does not carry over from the panel: so a mechanism is not lost by taking the page as it stands */
+const DEMO_UX_LESS = [
+  { c: 'Н1', t: 'Поиск только по «Комментарий», «№», «Разместил» — в оригинале ещё «Модуль» и «IP Адрес».' },
+  { c: 'Н2', t: 'В списке модулей названия без кода: «Новости», а не «Новости - news».' },
+  { c: 'Н3', t: 'В подсказке ⓘ IP без флага страны и без ссылки на whatismyipaddress.' },
+  { c: 'Н4', t: '«Наблюдение» — только числа: нет раскрываемого списка сессий и ссылки «Обновить».' },
+  { c: 'Н5', t: 'Нет блока «Администрация» (Панель администратора, Выход, DB Backup — Sypex Dumper).' },
+];
+
+const DEMO_ADMINUX = [  {
     file: 'ux-01-reference.html',
     title: 'Эталон панели',
     note: 'Все решения docs/2027-ADMIN-UX.md на одном экране «Комментариев». Логотип — ссылка, h1 один; вкладка браузера ' +
-      'называет раздел и вкладку. Меню — четыре группы с фильтром, открытый раздел отмечен, «…» только при наведении и в ' +
+      'называет раздел и вкладку. Меню — два блока панели, «Администратор» и «Модули», с фильтром, открытый раздел отмечен, «…» только при наведении и в ' +
       'фокусе; на телефоне меню прячется за кнопкой и выезжает панелью. Модуль фильтрует список сразу, без перезагрузки, ' +
       'поиск — по кнопке, результат объявляется. Все поля подписаны, подсказка «i» — кнопка, а не nav, нули читаются. ' +
       '«Опции» применяются сразу. Пейджер — финал серии пагинатора. Сверх плана, «сначала в демо»: фильтр в адресе и ' +
       '«Назад», возврат после правки, чип очереди в меню, «Всё проверено», Ctrl+K, клавиши J/K/X/E, отмена вместо ' +
       'подтверждения, статус одним щелчком.',
     tags: ['2027-ADMIN-UX', 'навигация', 'формы и ARIA', 'htmx-фильтр', 'телефон'],
+    base: 'self',
   },
   {
     file: 'ux-02-density.html',
-    title: 'Плотность',
-    note: 'Эталон, у которого список выбирает плотность: «Удобно» или «Компактно» переключает высоту строк без перезагрузки. ' +
+    title: 'Вид списка',
+    note: 'Эталон, у которого список выбирает вид четырьмя иконками справа в строке «Мои виды», прямо над таблицей: ' +
+      '«Стандартный» — по умолчанию, таблица темы; «Полный» — комментарий переносится без многоточия; «Компактный» — строка ' +
+      'в высоту кнопки; «Карточки» — сетка карточек одного порядка: статус, номер и модуль сверху, комментарий в две строки, автор и дата снизу. Группа переключателей со стрелками, выбор запоминается; на телефоне её нет — там и так карточки. ' +
       'Шапка таблицы остаётся на виду при прокрутке, строка под рукой подсвечивается, отмеченная — заметнее.',
-    tags: ['плотность', 'закреплённая шапка', 'подсветка строки'],
+    tags: ['вид списка', 'четыре вида', 'только иконки', 'закреплённая шапка'],
+    base: 'all',
+    diff: [
+      { c: 'В02.1', t: 'Переключатель вида списка — четыре иконки справа в строке «Мои виды»: «Стандартный» (по умолчанию), «Полный», «Компактный», «Карточки»; стрелки, выбор запоминается.' },
+      { c: 'В02.2', t: '«Полный»: комментарий и модуль переносятся без многоточия, строка растёт по тексту.' },
+      { c: 'В02.3', t: '«Компактный»: строка 24 px вместо 30, шрифт мельче.' },
+      { c: 'В02.4', t: '«Карточки»: сетка карточек одного порядка — статус · № · модуль, комментарий в две строки, автор · дата, «…»; углы симметричны.' },
+      { c: 'В02.5', t: 'Шапка таблицы закреплена при прокрутке.' },
+      { c: 'В02.6', t: 'Строка под курсором подсвечивается, отмеченная — сильнее.' },
+    ],
   },
   {
     file: 'ux-03-cards.html',
@@ -1042,6 +1098,18 @@ const DEMO_ADMINUX = [
     note: 'Вместо узкой ячейки таблицы комментарий читается в две строки, а модуль, автор, дата и номер стоят под ним одной ' +
       'тихой строкой. Ждущий проверки комментарий отмечен полосой и чипом. На телефоне ничего не прячется.',
     tags: ['текст первым', 'чтение', 'телефон'],
+    base: 'all',
+    diff: [
+      { c: 'В03.1', t: 'Список карточек вместо таблицы: текст комментария первым, до двух строк, вместо узкой ячейки с многоточием.' },
+      { c: 'В03.2', t: 'Под текстом одной тихой строкой: модуль чипом, автор, точная дата, №; колонок и шапки таблицы нет.' },
+      { c: 'В03.3', t: 'Ждущий проверки — оранжевая полоса слева и чип «Ждёт проверки».' },
+      { c: 'В03.4', t: 'На телефоне та же карточка, ничего не прячется.' },
+    ],
+    skip: [
+      { c: 'Э18–Э22', t: 'нет «Моих видов», сортировки, относительной даты, подсказки ⓘ и кнопки статуса — у карточки нет колонок' },
+      { c: 'Э24', t: 'флажки подписаны, но общего «Отметить все показанные» нет' },
+      { c: 'Э26, Э28, Э30, Э32', t: 'нет «Отметить все 8 414», сообщения о сбое, журнала; Э32 не нужен — карточки везде' },
+    ],
   },
   {
     file: 'ux-04-chips.html',
@@ -1049,6 +1117,14 @@ const DEMO_ADMINUX = [
     note: 'Модули — чипы с числом комментариев, выбор одним нажатием вместо списка. Действующие фильтры стоят над таблицей ' +
       'чипами с крестиком: модуль, «Ждут проверки», поиск — каждый снимается сам.',
     tags: ['чипы', 'счётчики', 'снять фильтр'],
+    base: 'all',
+    diff: [
+      { c: 'В04.1', t: 'Модули — чипы с числом комментариев: выбор одним нажатием вместо списка.' },
+      { c: 'В04.2', t: 'Действующие фильтры стоят над таблицей чипами с крестиком — модуль, «Ждут проверки», поиск снимаются по одному.' },
+    ],
+    skip: [
+      { c: 'Э15', t: 'список «Модуль» заменён чипами В04.1; подпись и кнопка поиска остались' },
+    ],
   },
   {
     file: 'ux-05-inspector.html',
@@ -1056,6 +1132,16 @@ const DEMO_ADMINUX = [
     note: 'Щелчок по тексту строки открывает справа весь комментарий: полный текст, модуль, автор, дата, IP и действия ' +
       '«Активировать» или «Деактивировать», «Править», «Удалить». Список остаётся на месте, переходить на другую страницу не нужно.',
     tags: ['мастер-деталь', 'полный текст', 'действия рядом'],
+    base: 'all',
+    diff: [
+      { c: 'В05.1', t: 'Щелчок по тексту строки открывает справа панель просмотра: полный текст, модуль, автор, дата, IP.' },
+      { c: 'В05.2', t: 'В панели действия «Активировать» или «Деактивировать», «Править», «Удалить» — без перехода на другую страницу; «Удалить» тоже с «Отменить».' },
+    ],
+    skip: [
+      { c: 'Э16', t: 'фильтр в адресе есть, но возврата после правки нет — «Править» в панели без адреса возврата' },
+      { c: 'Э18–Э21', t: 'нет «Моих видов», сортировки, относительной даты, подсказки ⓘ — их место заняла панель просмотра' },
+      { c: 'Э26, Э28–Э30, Э32', t: 'нет «Отметить все 8 414», сообщения о сбое, фокуса на следующей строке, журнала, карточек на телефоне' },
+    ],
   },
   {
     file: 'ux-06-bulk.html',
@@ -1063,14 +1149,30 @@ const DEMO_ADMINUX = [
     note: 'Пока ничего не отмечено, действий нет. Отметка строки поднимает внизу экрана полосу «Отмечено: N» с действиями ' +
       'и «Снять отметку»; она остаётся под рукой при прокрутке списка.',
     tags: ['массовые действия', 'sticky', 'по требованию'],
+    base: 'all',
+    diff: [
+      { c: 'В06.1', t: 'Пока ничего не отмечено, действий с отмеченными нет вовсе.' },
+      { c: 'В06.2', t: 'Отметка поднимает внизу экрана полосу «Отмечено: N» с действиями «Активировать», «Деактивировать», «Удалить» и «Снять отметку»; она остаётся под рукой при прокрутке.' },
+    ],
+    skip: [
+      { c: 'Э25', t: 'строка «Действие · OK» под списком заменена полосой В06.2' },
+    ],
   },
   {
     file: 'ux-07-motion.html',
     title: 'Движение',
     note: 'Эталон без единой перекраски — со слоем движения в духе выбранного 07 «Эффекты» серии панели: строки въезжают ' +
-      'каскадом при фильтре, группы меню раскрываются, открытый раздел прочерчивает полосу, кнопки отвечают на нажатие. ' +
+      'каскадом при фильтре, блоки меню раскрываются, открытый раздел прочерчивает полосу, кнопки отвечают на нажатие. ' +
       'Гаснет от выключателя движения стенда и prefers-reduced-motion.',
     tags: ['движение', 'каскад', 'reduced-motion'],
+    base: 'all',
+    diff: [
+      { c: 'В07.1', t: 'Строки въезжают каскадом при смене фильтра.' },
+      { c: 'В07.2', t: 'Блоки меню раскрываются плавно, синий край открытого раздела прочерчивается.' },
+      { c: 'В07.3', t: 'Кнопки и вкладки отвечают на нажатие, значок раздела в шапке появляется с отскоком.' },
+      { c: 'В07.4', t: 'Строка под курсором подсвечивается плавно.' },
+      { c: 'В07.5', t: 'Всё движение гаснет от выключателя стенда и prefers-reduced-motion.' },
+    ],
   },
   {
     file: 'ux-08-config.html',
@@ -1080,6 +1182,37 @@ const DEMO_ADMINUX = [
       'на липкой панели «Сохранить», вкладка с изменениями помечена. Ошибки — сводкой сверху со ссылками на поля и ' +
       'сообщением у каждого поля; уход с несохранённой формы спрашивает. Пароли и логины почты на стенде пусты.',
     tags: ['форма', 'сводка ошибок', 'липкое сохранение', 'поиск настроек'],
+    base: 'shell',
+    against: 'admin.php?name=config',
+    diff: [
+      { c: 'В08.1', t: 'У каждого из 94 полей подпись, связанная с полем.' },
+      { c: 'В08.2', t: '«Да / Нет» — группа переключателей (radiogroup) с целью 24 px вместо 13 px.' },
+      { c: 'В08.3', t: 'Вкладки по образцу ARIA: стрелки, Home, End; «Справка» вынесена из списка вкладок.' },
+      { c: 'В08.4', t: 'Сводка ошибок сверху: ссылка открывает вкладку поля и ставит в него фокус; сообщение у поля через aria-describedby.' },
+      { c: 'В08.5', t: 'Проверка — после первой попытки сохранить и при уходе с поля; форма не застревает молча на скрытом обязательном поле.' },
+      { c: 'В08.6', t: 'Липкая панель «Изменено полей: N · Сбросить · Сохранить»; вкладка с изменениями помечена точкой.' },
+      { c: 'В08.7', t: '«Найти настройку» ищет по всем вкладкам и ведёт к полю.' },
+      { c: 'В08.8', t: 'Уход с изменённой формы спрашивает подтверждение.' },
+    ],
+  },
+  {
+    file: 'ux-09-rail.html',
+    title: 'Балка',
+    note: 'Эталон, у которого меню сворачивается в узкую балку иконок в той же одежде, что верхняя панель: градиент, ' +
+      'рамка, сплошная плашка под рукой. Колонка 300 px уходит контенту. В балке — развернуть, быстрый переход и сразу ' +
+      'все 33 раздела иконками, блоками панели «Администратор» и «Модули» через черту, затем «Наблюдение». Под рукой справа — ' +
+      'веер развёрнутого меню, название — в подсказке браузера: «…», «Полное редактирование», «Справка». Стрелки ходят по иконкам. Открытый раздел отмечен кромкой и очередью. Выбор запоминается, клавиша [ сворачивает ' +
+      'и разворачивает. На телефоне балки нет — там остаётся выезжающее меню.',
+    tags: ['балка', 'больше места', 'иконки', 'по требованию'],
+    base: 'all',
+    diff: [
+      { c: 'В09.1', t: 'Кнопка в шапке меню и клавиша [ сворачивают меню в узкую балку иконок; колонка 300 px уходит контенту (+242 px на 1440).' },
+      { c: 'В09.2', t: 'Балка в одежде верхней панели: градиент, рамка, сплошная плашка под рукой.' },
+      { c: 'В09.3', t: 'В балке сразу все 33 раздела иконками, блоками «Администратор» и «Модули» через черту, затем «Наблюдение» с панелью счётчиков.' },
+      { c: 'В09.4', t: 'Под рукой у иконки справа — тот же веер, что в развёрнутом меню: «…», «Полное редактирование», «Справка».' },
+      { c: 'В09.5', t: 'Стрелки ходят по иконкам; открытый раздел отмечен кромкой и очередью.' },
+      { c: 'В09.6', t: 'Выбор запоминается и ставится до первой отрисовки — страница не дёргается; на телефоне балки нет.' },
+    ],
   },
 ];
 
@@ -2202,6 +2335,28 @@ function setDemoRun() {
   });
 }
 
+/* The differences of an admin page from the panel as it is, by code: the reference lists its own and what it leaves
+   out; a variant lists its own and folds the codes of the reference it carries, all of them or those of the shell */
+function getDemoDiffHtml(item) {
+  if (!item.base) return '';
+  const li = (list) => `<ul class="demo-diff">${list.map((d) => `<li><b class="demo-diff-code">${d.c}</b> <span>${d.t}</span></li>`).join('')}</ul>`;
+  const against = item.against || 'admin.php?name=comments';
+  let html = `<h3 class="demo-diff-title">Отличия от оригинала ${against}</h3>`;
+  if (item.base === 'self') {
+    html += li(DEMO_UX_BASE);
+    html += `<h3 class="demo-diff-title">Чего нет из оригинала</h3>` + li(DEMO_UX_LESS);
+    return html;
+  }
+  html += li(item.diff || []);
+  const carried = item.base === 'shell' ? DEMO_UX_BASE.filter((d) => d.g === 's') : DEMO_UX_BASE;
+  const span = `${carried[0].c}–${carried[carried.length - 1].c}`;
+  if (item.skip) html += `<h3 class="demo-diff-title">Чего из эталона 01 здесь нет</h3>` + li(item.skip);
+  const what = item.base === 'shell' ? ' — шапка, меню, сессия' : (item.skip ? ', кроме перечисленных выше' : ' — все');
+  html += `<details class="demo-diff-more"><summary>Из эталона 01: ${span}${what}</summary>${li(carried)}</details>`;
+  if (item.base === 'all') html += `<details class="demo-diff-more"><summary>Чего нет из оригинала: Н1–Н${DEMO_UX_LESS.length}</summary>${li(DEMO_UX_LESS)}</details>`;
+  return html;
+}
+
 /* The confirmation series replays the flash an admin screen shows after a save. A button with data-demo-flash names a
    <template data-demo-flash-tpl>; the copy replaces the last one in data-demo-flash-host, and the theme's own
    htmx:afterSwap hook arms its autohide, so the countdown and the exit are the theme's and not the stand's. With
@@ -2213,7 +2368,7 @@ function setDemoFlash(place) {
     const no = String(place.idx + 1).padStart(2, '0');
     const tags = (place.item.tags || []).map((t) => `<span class="sl-chip">${t}</span>`).join(' ');
     node.innerHTML = `<h2 class="demo-about-title">${no} &middot; ${place.item.title}</h2>` +
-      `<p class="demo-about-note">${place.item.note}</p><p class="demo-about-tags">${tags}</p>`;
+      `<p class="demo-about-note">${place.item.note}</p><p class="demo-about-tags">${tags}</p>` + getDemoDiffHtml(place.item);
   });
   const host = document.querySelector('[data-demo-flash-host]');
   if (!host) return;
@@ -4424,8 +4579,7 @@ function setDemoAdminUx() {
     }
     const dense = node.closest('[data-ux-density]');
     if (dense) {
-      document.querySelectorAll('[data-ux-density]').forEach((b) => b.setAttribute('aria-pressed', String(b === dense)));
-      if (table) table.dataset.density = dense.dataset.uxDensity;
+      setDensity(dense.dataset.uxDensity, true);
       return;
     }
     if (node.closest('[data-ux-unpick]')) {
@@ -4455,6 +4609,33 @@ function setDemoAdminUx() {
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && document.body.hasAttribute('data-ux-nav-open')) setMenu(false);
   });
+  // The view of the list: one radio group of icons, arrows move and choose, the choice is kept per viewer
+  const setDensity = (mode, keep) => {
+    const btns = [...document.querySelectorAll('[data-ux-density]')];
+    if (!btns.length || !table) return;
+    if (!btns.some((b) => b.dataset.uxDensity === mode)) mode = btns[0].dataset.uxDensity;
+    btns.forEach((b) => {
+      const on = b.dataset.uxDensity === mode;
+      b.setAttribute('aria-checked', String(on));
+      b.tabIndex = on ? 0 : -1;
+    });
+    table.dataset.density = mode;
+    if (keep) {
+      try { localStorage.setItem('ux.density', mode); } catch (e) { /* storage may be off */ }
+    }
+  };
+  let keptDensity = null;
+  try { keptDensity = localStorage.getItem('ux.density'); } catch (e) { keptDensity = null; }
+  setDensity(keptDensity || (table && table.dataset.density), false);
+  document.querySelectorAll('[data-ux-dense]').forEach((grp) => grp.addEventListener('keydown', (e) => {
+    const step = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key];
+    if (!step) return;
+    e.preventDefault();
+    const btns = [...grp.querySelectorAll('[data-ux-density]')];
+    const next = btns[(btns.indexOf(document.activeElement) + step + btns.length) % btns.length];
+    setDensity(next.dataset.uxDensity, true);
+    next.focus();
+  }));
   // A short notice with Undo replaces "Are you sure?": the change is made at once and can be taken back for ten seconds
   const toast = document.querySelector('[data-ux-toast]');
   let undo = null;
@@ -4552,7 +4733,8 @@ function setDemoAdminUx() {
     const list = palShown();
     if (!list.length) return;
     palAt = (i + list.length) % list.length;
-    list.forEach((o, n) => o.setAttribute('aria-selected', String(n === palAt)));
+    // One option is selected among all of them: a hidden one must not keep the mark it had before the filter
+    palList.querySelectorAll('[role="option"]').forEach((o) => o.setAttribute('aria-selected', String(o === list[palAt])));
     palQ.setAttribute('aria-activedescendant', list[palAt].id);
     list[palAt].scrollIntoView({ block: 'nearest' });
   };
@@ -4576,6 +4758,8 @@ function setDemoAdminUx() {
       if (e.key === 'ArrowDown') { e.preventDefault(); setPalAt(palAt + 1); }
       if (e.key === 'ArrowUp') { e.preventDefault(); setPalAt(palAt - 1); }
       if (e.key === 'Enter') { e.preventDefault(); const o = palShown()[palAt]; if (o) runPal(o); }
+      // A search field clears itself on the first Escape; a palette closes on it, as a dialog does
+      if (e.key === 'Escape') { e.preventDefault(); if (window.setWindowClose) window.setWindowClose(pal); else pal.close(); }
     });
     palList.addEventListener('click', (e) => { const o = e.target.closest('[role="option"]'); if (o) runPal(o); });
   }
@@ -4674,17 +4858,37 @@ function setDemoAdminUx() {
     t.title = t.textContent.trim();
     t.textContent = rtf.format(Math.round(sec / size), unit);
   });
-  // Saved views: a view is the filter of the list under a name, built in or saved by the administrator
+  // Saved views: a view is the screen of the list under a name — its filter, the view of the list and the sort — built in
+  // or saved by the administrator; a built-in one holds the filter alone and leaves the rest as it is
   const views = document.querySelector('[data-ux-views]');
   const builtIn = [
     { name: 'Ждут проверки в Новостях', mod: 'news', q: '', in: 'text', tab: 'wait' },
     { name: 'Ответы администрации', mod: '', q: 'SLAED CMS', in: 'by', tab: 'all' },
   ];
   const ownViews = () => { try { return JSON.parse(localStorage.getItem('ux.views') || '[]'); } catch (e) { return []; } };
+  const getSort = () => {
+    const th = table && table.tHead ? table.tHead.querySelector('th[aria-sort]') : null;
+    return th ? { i: th.cellIndex, dir: th.getAttribute('aria-sort') } : null;
+  };
+  // Tablesort turns a column by a click: a new column takes its first direction, a second click the other one
+  const setSort = (s) => {
+    const th = s && table && table.tHead ? table.tHead.rows[0].cells[s.i] : null;
+    if (!th || th.getAttribute('data-sort-method') === 'none') return;
+    if (th.getAttribute('aria-sort') !== s.dir) th.click();
+    if (th.getAttribute('aria-sort') !== s.dir) th.click();
+  };
+  const getViewNote = (v) => {
+    const parts = ['фильтр'];
+    const b = v.dens ? document.querySelector('[data-ux-density="' + v.dens + '"]') : null;
+    if (b) parts.push('вид «' + b.getAttribute('aria-label') + '»');
+    const th = v.sort && table && table.tHead ? table.tHead.rows[0].cells[v.sort.i] : null;
+    if (th) parts.push('сортировка «' + th.textContent.trim() + '» ' + (v.sort.dir === 'ascending' ? 'по возрастанию' : 'по убыванию'));
+    return parts.join(', ');
+  };
   const drawViews = () => {
     if (!views) return;
     const list = views.querySelector('[data-ux-views-list]');
-    list.innerHTML = builtIn.concat(ownViews()).map((v, i) => '<li><button type="button" class="sl-chip sl-chip-neutral v-view" data-ux-view="' + i + '">' + getGroupEsc(v.name) + '</button>'
+    list.innerHTML = builtIn.concat(ownViews()).map((v, i) => '<li><button type="button" class="sl-chip sl-chip-neutral v-view" data-ux-view="' + i + '" title="' + getGroupEsc(getViewNote(v)) + '">' + getGroupEsc(v.name) + '</button>'
       + (i >= builtIn.length ? '<button type="button" class="v-view-x" data-ux-view-x="' + (i - builtIn.length) + '" aria-label="Удалить вид «' + getGroupEsc(v.name) + '»" title="Удалить вид"><i class="bi bi-x" aria-hidden="true"></i></button>' : '') + '</li>').join('');
   };
   const useView = (v) => {
@@ -4693,6 +4897,8 @@ function setDemoAdminUx() {
     document.querySelectorAll('[data-ux-q]').forEach((x) => { x.value = v.q; });
     const tab = document.querySelector('[data-ux-tab="' + v.tab + '"]');
     if (tab) setTab(tab); else setList();
+    if (v.dens) setDensity(v.dens, true);
+    if (v.sort) setSort(v.sort);
   };
   drawViews();
   // The bell: every queue of the panel in one place; the comments count is live, the others as the dashboard gives them
@@ -4758,12 +4964,13 @@ function setDemoAdminUx() {
       const name = input.value.trim();
       if (!name) { input.focus(); return; }
       const own = ownViews();
-      own.push({ name, mod: state.mod, q: state.q, in: state.field, tab: state.status });
+      const dens = document.querySelector('[data-ux-density]') && table ? table.dataset.density : '';
+      own.push({ name, mod: state.mod, q: state.q, in: state.field, tab: state.status, dens, sort: getSort() });
       try { localStorage.setItem('ux.views', JSON.stringify(own)); } catch (er) { /* storage may be off */ }
       input.value = '';
       e.currentTarget.hidden = true;
       drawViews();
-      setToast('Вид «' + name + '» сохранён.', null);
+      setToast('Вид «' + name + '» сохранён: ' + getViewNote(own[own.length - 1]) + '.', null);
     });
   }
   setBellHook = () => { setBell(); };
@@ -4776,6 +4983,95 @@ function setDemoAdminUx() {
 /* Reference form of docs/2027-ADMIN-UX.md, the config of the panel: ARIA tabs with arrow keys, the changes counted on a
    sticky bar, an error summary that links to each field, messages bound to their fields, a guard on leaving, a search
    over every setting */
+// 09 Балка: the menu folds into a bar of icons and back; the choice is kept, a group opens its sections beside its icon
+function setDemoRailUx() {
+  const bar = document.querySelector('[data-ux-rail-bar]');
+  if (!bar) return;
+  const wide = window.matchMedia('(min-width: 901px)');
+  const toggles = [...document.querySelectorAll('[data-ux-rail-toggle]')];
+  const flys = [...document.querySelectorAll('.v-fly')];
+  const root = document.documentElement;
+  let backWait = 0;
+  let animWait = 0;
+  const setRail = (on, keep) => {
+    const was = root.hasAttribute('data-ux-rail');
+    // The width moves only under a hand; the head of the page already set the kept state before paint
+    if (keep) {
+      root.setAttribute('data-ux-rail-anim', '');
+      clearTimeout(animWait);
+      animWait = setTimeout(() => root.removeAttribute('data-ux-rail-anim'), 400);
+    }
+    root.toggleAttribute('data-ux-rail', on);
+    toggles.forEach((b) => b.setAttribute('aria-expanded', String(!on)));
+    flys.forEach((p) => { if (p.matches(':popover-open')) p.hidePopover(); });
+    if (was && !on) {
+      root.setAttribute('data-ux-rail-back', '');
+      clearTimeout(backWait);
+      backWait = setTimeout(() => root.removeAttribute('data-ux-rail-back'), 400);
+    }
+    if (keep) {
+      try { localStorage.setItem('ux.rail', on ? '1' : '0'); } catch (e) { /* storage may be off */ }
+    }
+  };
+  let kept = null;
+  try { kept = localStorage.getItem('ux.rail'); } catch (e) { kept = null; }
+  setRail(kept === '1', false);
+  // The hand keeps its place: after a fold the focus stands on the twin toggle that is now in view
+  const flip = () => {
+    setRail(!root.hasAttribute('data-ux-rail'), true);
+    const twin = toggles.find((b) => b.offsetParent !== null);
+    if (twin) twin.focus();
+  };
+  document.addEventListener('click', (e) => {
+    if (e.target.closest('[data-ux-rail-toggle]')) flip();
+  });
+  document.addEventListener('keydown', (e) => {
+    const t = e.target;
+    if (e.code !== 'BracketLeft' || e.ctrlKey || e.metaKey || e.altKey || !wide.matches) return;
+    if (t.closest && t.closest('input, select, textarea, dialog')) return;
+    e.preventDefault();
+    flip();
+  });
+  // A flyout stands to the right of its icon, held inside the window; the first section takes the focus
+  flys.forEach((pop) => {
+    const btn = document.querySelector('[popovertarget="' + pop.id + '"]');
+    pop.addEventListener('beforetoggle', (e) => {
+      if (btn) btn.classList.toggle('v-on', e.newState === 'open');
+      if (e.newState !== 'open' || !btn) return;
+      const r = btn.getBoundingClientRect();
+      pop.style.left = Math.round(r.right + 12) + 'px';
+      pop.style.top = Math.round(r.top) + 'px';
+    });
+    pop.addEventListener('toggle', (e) => {
+      if (e.newState !== 'open') return;
+      const room = window.innerHeight - 16 - pop.offsetHeight;
+      if (pop.getBoundingClientRect().top > room) pop.style.top = Math.max(16, room) + 'px';
+      const first = pop.querySelector('[aria-current="page"]') || pop.querySelector('a');
+      if (first) first.focus();
+    });
+    // Arrows walk the sections, as in a menu
+    pop.addEventListener('keydown', (e) => {
+      if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
+      const links = [...pop.querySelectorAll('a')];
+      if (!links.length) return;
+      e.preventDefault();
+      const i = links.indexOf(document.activeElement);
+      links[(i + (e.key === 'ArrowDown' ? 1 : -1) + links.length) % links.length].focus();
+    });
+  });
+  // Arrows walk the icons of the rail, as in a menu; Tab still passes through them in order
+  bar.addEventListener('keydown', (e) => {
+    if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
+    const its = [...bar.querySelectorAll('.v-rail-it')];
+    const i = its.indexOf(document.activeElement);
+    if (i < 0) return;
+    e.preventDefault();
+    its[(i + (e.key === 'ArrowDown' ? 1 : -1) + its.length) % its.length].focus();
+  });
+  // A phone has no rail: the drawer shows the full menu whatever the wide screen chose
+  wide.addEventListener('change', () => flys.forEach((p) => { if (p.matches(':popover-open')) p.hidePopover(); }));
+}
+
 function setDemoConfigUx() {
   const form = document.querySelector('[data-cf-form]');
   if (!form) return;
@@ -5004,6 +5300,7 @@ function initDemoPage() {
   setDemoKnob();
   setDemoGroups();
   setDemoAdminUx();
+  setDemoRailUx();
   setDemoConfigUx();
 
   document.addEventListener('click', (e) => {

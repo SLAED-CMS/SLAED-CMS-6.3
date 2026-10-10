@@ -2214,7 +2214,7 @@ use it, so a mode overrides `list`, `view`, `card`, `block`, `tree` and each res
 | `docs` | `fragments/node/docs/card.html`, `partials/node/docs/view.html` | table-of-contents row: title, category chip, one-line plain intro; view without author and views chips |
 | `faq` | `fragments/node/faq/card.html`, `partials/node/faq/view.html` | native `<details>` accordion: question in `<summary>`, intro answer and a read-more link; view without author and views chips |
 | `files` | `fragments/node/files/card.html`, `partials/node/files/view.html` | card with direct download button, size and hits of the first `download`-mode resource; view shows resources above the text |
-| `media` | `partials/node/media/list.html`, `fragments/node/media/card.html`, `partials/node/media/view.html` | tile grid; tile with cover, play icon, title and the `year` field (or the date); view shows player and gallery, then fields, then text; related as tiles |
+| `media` | `partials/node/list.html`, `fragments/node/media/card.html`, `partials/node/media/view.html` | tile grid; tile with cover, play icon, title and the `year` field (or the date); view shows player and gallery, then fields, then text; related as tiles |
 | `support` | `fragments/node/support/card.html`, `partials/node/support/view.html` | state chip; view adds state and priority chips, the owner's close/reopen form and the staff card link |
 
 The cover of a card is the first image of the role `poster`, then of roles in mode `image` or `gallery`

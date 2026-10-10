@@ -118,8 +118,8 @@ final class NodeProfileTest extends TestCase
         }
         $this->assertSame(['mail' => true], self::getProfile('help')['type']['settings']['ext']);
         $this->assertSame(['pending' => false, 'result' => false], self::getProfile('help')['type']['settings']['workflow']['notify']);
-        $this->assertSame(['orders' => ['title', 'updated', 'views'], 'order' => 'title', 'dir' => 'asc', 'limit' => 50, 'alpha' => true, 'show' => ['category', 'date', 'views']],
-            self::getProfile('docs')['type']['settings']['list']);
+        $this->assertSame(['orders' => ['title', 'updated', 'views'], 'order' => 'title', 'dir' => 'asc', 'limit' => 50, 'alpha' => true, 'show' => ['category', 'date', 'views'],
+            'views' => ['list', 'rail']], self::getProfile('docs')['type']['settings']['list']);
         $this->assertSame([25, true], [self::getProfile('files')['type']['settings']['list']['limit'], self::getProfile('files')['type']['settings']['list']['alpha']]);
         $this->assertSame(['release' => ['text', 100], 'site' => ['url', null]], array_map(fn($v) => [$v['type'], $v['options']['max'] ?? null],
             self::getProfile('files')['type']['fields']));

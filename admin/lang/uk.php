@@ -627,7 +627,6 @@ define('_ADMINLOGOP','Логотип панелі адміністратора')
 define('_SITELOGO','Логотип сайту');
 define('_SITE_CLOSE','Закрити сайт на профілактику?');
 define('_SMAIL','Одержувати листи і повідомлення?');
-define('_SORT','Сортування');
 define('_SORTORDER','Порядок');
 define('_SORTE','Сортувати');
 define('_STATISTIC','Статистика');
