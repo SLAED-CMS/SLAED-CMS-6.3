@@ -1,7 +1,7 @@
 <form action="{{ action }}" method="post" class="sl-mode">
   {{{ hidden }}}
-  <span class="sl-mode-rail">
-    {% for item in modes %}<button type="submit" class="sl-mode-cell{% if item.is_now %} sl-is-active{% endif %}" name="mode" value="{{ item.key }}" title="{{ item.title }}" aria-label="{{ item.title }}"><i class="bi bi-{{ item.icon_name }}" aria-hidden="true"></i></button>{% endfor %}
-    <span class="sl-mode-knob" aria-hidden="true"><i class="bi bi-{{ icon_name }}"></i></span>
+  <span class="sl-seg sl-seg-mode" data-sl-knob="mode">
+    {% for item in modes %}<button type="submit" class="sl-seg-cell{% if item.is_now %} sl-is-active{% endif %}" name="mode" value="{{ item.key }}" title="{{ item.title }}" aria-label="{{ item.title }}"><i class="bi bi-{{ item.icon_name }}" aria-hidden="true"></i></button>{% endfor %}
+    <span class="sl-seg-knob" data-sl-knob-mark aria-hidden="true"></span>
   </span>
 </form>

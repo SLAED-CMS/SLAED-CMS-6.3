@@ -9,6 +9,8 @@
   <link rel="stylesheet" href="../templates/lite/assets/css/theme.css">
   <!-- The stand is served without Cache-Control; its sheet and script are stamped so an edit is seen at once -->
   <script>document.write('<link rel="stylesheet" href="assets/demo.css?v=' + Date.now() + '">');</script>
+  <script src="../plugins/system/global-func.js"></script>
+  <script src="../plugins/system/slaed.js"></script>
   <style>
     .v-ico { width: var(--sl-btn-height); height: var(--sl-btn-height); }
     .v-ico .bi { font-size: var(--sl-size-icon-xs); }
@@ -29,10 +31,10 @@
 
     /* Фильтр · финал: one row with search, categories, letters and sort, a panel each, and the row sticks on scroll */
     .v9-bar { position: sticky; top: 0; z-index: var(--sl-z-sticky); margin-bottom: var(--sl-space-7); padding-bottom: var(--sl-space-5); border-bottom: 1px solid var(--sl-border-subtle); background: var(--sl-bg); transition: box-shadow var(--sl-time-base) var(--sl-ease-out), padding var(--sl-time-base) var(--sl-ease-out); }
-    .v9[data-stuck] .v9-bar { padding: var(--sl-space-3) var(--sl-space-4); border: 1px solid var(--sl-border-subtle); border-top: 0; border-radius: 0 0 var(--sl-radius-3) var(--sl-radius-3); box-shadow: var(--sl-shadow-float); }
+    .v9[data-sl-stuck] .v9-bar { padding: var(--sl-space-3) var(--sl-space-4); border: 1px solid var(--sl-border-subtle); border-top: 0; border-radius: 0 0 var(--sl-radius-3) var(--sl-radius-3); box-shadow: var(--sl-shadow-float); }
     .v9-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sl-space-3) var(--sl-space-4); }
     .v9-row .sl-title { margin: 0; transition: font-size var(--sl-time-base) var(--sl-ease-out); }
-    .v9[data-stuck] .v9-row .sl-title { font-size: var(--sl-font-h3); }
+    .v9[data-sl-stuck] .v9-row .sl-title { font-size: var(--sl-font-h3); }
     .v9-acts { display: inline-flex; flex-wrap: wrap; align-items: center; gap: var(--sl-space-3); margin-left: auto; }
     .v9-acts .sl-but { margin: 0; }
     .v9-badge { display: none; place-items: center; min-width: var(--sl-size-icon-sm); height: var(--sl-size-icon-sm); margin-left: var(--sl-space-1); padding: 0 var(--sl-space-1); border-radius: var(--sl-radius-pill); background: var(--sl-primary); color: var(--sl-on-solid); font-size: var(--sl-font-micro); font-weight: var(--sl-weight-bold); }
@@ -41,7 +43,7 @@
     .v9-open[aria-expanded="true"] { box-shadow: var(--sl-shadow-focus); }
     .v9-open[aria-expanded="true"] .v9-chev { transform: rotate(180deg); }
     .v9-up { display: none; }
-    .v9[data-stuck] .v9-up { display: inline-flex; }
+    .v9[data-sl-stuck] .v9-up { display: inline-flex; }
     .v9-tags { display: none; flex-wrap: wrap; align-items: center; gap: var(--sl-space-3); margin-top: var(--sl-space-4); }
     .v9[data-filtered] .v9-tags { display: flex; }
     .v9-tag { gap: var(--sl-space-2); border-color: var(--sl-border); background: var(--sl-bg); cursor: pointer; }
@@ -69,16 +71,16 @@
     .v9-found:empty { display: none; }
     @media (max-width: 560px) {
       .v9-acts { margin-left: 0; }
-      .v9[data-stuck] .v9-row { flex-wrap: nowrap; }
-      .v9[data-stuck] .v9-count, .v9[data-stuck] .v9-lab, .v9[data-stuck] .v9-acts > a:not(.v9-up) { display: none; }
-      .v9[data-stuck] .v9-acts { flex-wrap: nowrap; margin-left: auto; }
+      .v9[data-sl-stuck] .v9-row { flex-wrap: nowrap; }
+      .v9[data-sl-stuck] .v9-count, .v9[data-sl-stuck] .v9-lab, .v9[data-sl-stuck] .v9-acts > a:not(.v9-up) { display: none; }
+      .v9[data-sl-stuck] .v9-acts { flex-wrap: nowrap; margin-left: auto; }
     }
   </style>
 </head>
 <body class="sl-summer" id="top">
 <main class="d-page" data-demo-page data-demo-band="Новости">
-<div class="v-nh v9" data-nh data-cat="all" data-sort="published" data-dir="desc" data-let="" data-nh-sticky>
-  <span data-nh-mark></span>
+<div class="v-nh v9" data-nh data-cat="all" data-sort="published" data-dir="desc" data-let="" data-sl-sticky>
+  <span data-sl-sticky-mark></span>
   <div class="v9-bar">
     <div class="v9-row">
       <h1 class="sl-title">Новости</h1>

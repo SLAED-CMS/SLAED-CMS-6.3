@@ -935,6 +935,154 @@ const DEMO_PAGER = [
   },
 ];
 
+const DEMO_GROUPS = [
+  {
+    file: 'grp-01-rows.html',
+    title: 'Строки',
+    note: 'Ближе всего к плану RANKS: та же таблица и та же форма. В колонке «Ранг» иконки вместо картинки. В форме ' +
+      'строки «Изображение» и превью сливаются в одну строку «Ранг»: выбор иконки из категорий, «горит N из M», цвет ранга ' +
+      'и живой ряд справа.',
+    tags: ['минимальная правка', 'sl-div-grid', 'icon-picker'],
+  },
+  {
+    file: 'grp-02-split.html',
+    title: 'Список и правка',
+    note: 'Список и правка на одном экране. Слева компактный список: ранг, имя цветом группы, порог и участники. ' +
+      'Справа прилипшая форма. Щелчок по группе открывает её, а любая правка сразу видна в строке списка.',
+    tags: ['master-detail', 'живая запись в список', 'sticky'],
+  },
+  {
+    file: 'grp-03-ladder.html',
+    title: 'Лестница',
+    note: 'Группы по баллам выстроены лестницей от 25 до 15 000, у каждой ступени полоса участников. Особые группы ' +
+      'стоят отдельной полкой. Форма снизу говорит, на какую ступень встанет группа с введённым порогом.',
+    tags: ['пороги баллов', 'особые группы', 'место на лестнице'],
+  },
+  {
+    file: 'grp-04-cards.html',
+    title: 'Карточки',
+    note: 'Каждая группа — карточка с крупным рангом, именем цветом группы, описанием и чипами порога и участников. ' +
+      'Составитель рядом собирает такую же карточку вживую: что видно в превью, то и сохранится.',
+    tags: ['сетка карточек', 'WYSIWYG', 'sl-chip'],
+  },
+  {
+    file: 'grp-05-presets.html',
+    title: 'Пресеты',
+    note: 'Составитель начинается с витрины готовых рангов: звёзды, солнца, шестерни, кубки, кристаллы, сердца и ' +
+      'другие. Щелчок применяет пресет, дальше идёт тонкая настройка. В списке рядом с рангом видна строка, которую ' +
+      'хранит колонка rank.',
+    tags: ['витрина', 'тонкая настройка', 'код ранга'],
+  },
+  {
+    file: 'grp-06-context.html',
+    title: 'В контексте',
+    note: 'Ранг показан там, где его увидят: у автора в форуме, в комментарии, в профиле под аватаром и в блоке ' +
+      'пользователя. Все четыре превью меняются вместе с полями, так что размер и цвет проверяются сразу в деле.',
+    tags: ['форум', 'комментарий', 'профиль', 'блок'],
+  },
+  {
+    file: 'grp-07-console.html',
+    title: 'Пульт',
+    note: 'Ползунки «горит» и «всего» с делениями. Палитра тонов темы и цветов, снятых с нынешних картинок. Ряд частых ' +
+      'иконок и «Все иконки…» в окно каталога. Флажок «Как цвет группы» привязывает цвет ранга к цвету группы.',
+    tags: ['range', 'палитра', 'частые иконки'],
+  },
+  {
+    file: 'grp-08-inline.html',
+    title: 'На месте',
+    note: 'Отдельной страницы правки нет. Карандаш раскрывает составитель прямо под строкой таблицы, и правка пишется ' +
+      'в строку на лету. «Новая группа» раскрывает его над таблицей.',
+    tags: ['inline-edit', 'без перехода', 'одна страница'],
+  },
+  {
+    file: 'grp-09-final.html',
+    title: 'Лестница и пульт',
+    note: 'Сборка из лидеров. «Главная»: первым блоком во всю ширину лестница пунктов из 03 с описанием и долей ' +
+      'участников, порядок по пунктам переворачивается. Вторым блоком — особые группы строками из 02. «Добавить»: витрина ' +
+      'пресетов из 05, под ней пульт из 07 и поля группы. Порог прячется у особой группы и говорит, на какую ступень встанет ' +
+      'группа. Вкладки переключают экраны на месте, правка открывает «Добавить», сохранение возвращает на список.',
+    tags: ['лидер', 'лестница', 'пресеты', 'пульт'],
+  },
+  {
+    file: 'grp-10-unified.html',
+    title: 'Одна лестница',
+    note: 'Лидер серии. «Главная»: лестница пунктов и специальные группы — одна и та же ступень, ранг перед названием, ' +
+      'у каждого списка своя сортировка, «Участников: N» ведёт к списку пользователей группы, пустая группа помечена. ' +
+      '«Добавить»: новая группа сразу предложена следующей ступенью; 18 пресетов, пульт, все цвета кружками; превью в трёх ' +
+      'размерах и на светлом и тёмном фоне с проверкой контраста. Ряды выбора проходятся стрелками, уход с изменённой ' +
+      'формы спрашивает системным окном и возвращает строку. Имя ступени открывает правку, его цвет тема держит читаемым; ' +
+      'на телефоне форма та же, без прокрутки вбок.',
+    tags: ['лидер', 'одна ступень', 'контраст', 'следующая ступень', 'клавиатура'],
+  },
+];
+
+const DEMO_ADMINUX = [
+  {
+    file: 'ux-01-reference.html',
+    title: 'Эталон панели',
+    note: 'Все решения docs/2027-ADMIN-UX.md на одном экране «Комментариев». Логотип — ссылка, h1 один; вкладка браузера ' +
+      'называет раздел и вкладку. Меню — четыре группы с фильтром, открытый раздел отмечен, «…» только при наведении и в ' +
+      'фокусе; на телефоне меню прячется за кнопкой и выезжает панелью. Модуль фильтрует список сразу, без перезагрузки, ' +
+      'поиск — по кнопке, результат объявляется. Все поля подписаны, подсказка «i» — кнопка, а не nav, нули читаются. ' +
+      '«Опции» применяются сразу. Пейджер — финал серии пагинатора. Сверх плана, «сначала в демо»: фильтр в адресе и ' +
+      '«Назад», возврат после правки, чип очереди в меню, «Всё проверено», Ctrl+K, клавиши J/K/X/E, отмена вместо ' +
+      'подтверждения, статус одним щелчком.',
+    tags: ['2027-ADMIN-UX', 'навигация', 'формы и ARIA', 'htmx-фильтр', 'телефон'],
+  },
+  {
+    file: 'ux-02-density.html',
+    title: 'Плотность',
+    note: 'Эталон, у которого список выбирает плотность: «Удобно» или «Компактно» переключает высоту строк без перезагрузки. ' +
+      'Шапка таблицы остаётся на виду при прокрутке, строка под рукой подсвечивается, отмеченная — заметнее.',
+    tags: ['плотность', 'закреплённая шапка', 'подсветка строки'],
+  },
+  {
+    file: 'ux-03-cards.html',
+    title: 'Строки-карточки',
+    note: 'Вместо узкой ячейки таблицы комментарий читается в две строки, а модуль, автор, дата и номер стоят под ним одной ' +
+      'тихой строкой. Ждущий проверки комментарий отмечен полосой и чипом. На телефоне ничего не прячется.',
+    tags: ['текст первым', 'чтение', 'телефон'],
+  },
+  {
+    file: 'ux-04-chips.html',
+    title: 'Чипы фильтра',
+    note: 'Модули — чипы с числом комментариев, выбор одним нажатием вместо списка. Действующие фильтры стоят над таблицей ' +
+      'чипами с крестиком: модуль, «Ждут проверки», поиск — каждый снимается сам.',
+    tags: ['чипы', 'счётчики', 'снять фильтр'],
+  },
+  {
+    file: 'ux-05-inspector.html',
+    title: 'Просмотр',
+    note: 'Щелчок по тексту строки открывает справа весь комментарий: полный текст, модуль, автор, дата, IP и действия ' +
+      '«Активировать» или «Деактивировать», «Править», «Удалить». Список остаётся на месте, переходить на другую страницу не нужно.',
+    tags: ['мастер-деталь', 'полный текст', 'действия рядом'],
+  },
+  {
+    file: 'ux-06-bulk.html',
+    title: 'Отметка',
+    note: 'Пока ничего не отмечено, действий нет. Отметка строки поднимает внизу экрана полосу «Отмечено: N» с действиями ' +
+      'и «Снять отметку»; она остаётся под рукой при прокрутке списка.',
+    tags: ['массовые действия', 'sticky', 'по требованию'],
+  },
+  {
+    file: 'ux-07-motion.html',
+    title: 'Движение',
+    note: 'Эталон без единой перекраски — со слоем движения в духе выбранного 07 «Эффекты» серии панели: строки въезжают ' +
+      'каскадом при фильтре, группы меню раскрываются, открытый раздел прочерчивает полосу, кнопки отвечают на нажатие. ' +
+      'Гаснет от выключателя движения стенда и prefers-reduced-motion.',
+    tags: ['движение', 'каскад', 'reduced-motion'],
+  },
+  {
+    file: 'ux-08-config.html',
+    title: 'Форма · Конфигурации',
+    note: 'Эталон формы на 94 настоящих полях «Конфигураций»: у каждого поля подпись, «Да / Нет» — группа переключателей, ' +
+      'вкладки по образцу ARIA со стрелками. «Найти настройку» ищет по всем вкладкам и ведёт к полю. Изменения считаются ' +
+      'на липкой панели «Сохранить», вкладка с изменениями помечена. Ошибки — сводкой сверху со ссылками на поля и ' +
+      'сообщением у каждого поля; уход с несохранённой формы спрашивает. Пароли и логины почты на стенде пусты.',
+    tags: ['форма', 'сводка ошибок', 'липкое сохранение', 'поиск настроек'],
+  },
+];
+
 const DEMO_SERIES = [
   { key: 'presentation', title: 'Презентационная страница', addr: 'index.php?name=presentation', items: DEMO_VARIANTS },
   { key: 'settings', title: 'Настройки аккаунта', addr: 'index.php?name=account&op=edithome', items: DEMO_SETTINGS },
@@ -947,6 +1095,8 @@ const DEMO_SERIES = [
   { key: 'code', title: 'Редактор CodeMirror', addr: 'admin.php?name=uploads&op=tplconfig', items: DEMO_CODE },
   { key: 'nodehead', title: 'Шапка модуля Node', addr: 'index.php?name=news', items: DEMO_NODEHEAD },
   { key: 'pager', title: 'Пагинатор', addr: 'index.php?name=news', items: DEMO_PAGER },
+  { key: 'groups', title: 'Группы и ранги', addr: 'admin.php?name=groups', items: DEMO_GROUPS },
+  { key: 'adminux', title: 'Эталон панели и варианты', addr: 'admin.php?name=comments', items: DEMO_ADMINUX },
 ];
 
 /* Which series a file belongs to, and where it stands in it. An unknown file gets the first series at index -1,
@@ -3029,20 +3179,6 @@ function setNodeHeadShut(root) {
   root.querySelectorAll('[data-nh-panel]').forEach((node) => node.setAttribute('aria-expanded', 'false'));
 }
 
-/* Open the search field of a stuck Node header behind its lens, or shut it and drop what was typed */
-function setNodeHeadLens(root, open) {
-  const field = root.querySelector('[data-nh-find]');
-  root.toggleAttribute('data-finding', open);
-  root.querySelectorAll('[data-nh-lens]').forEach((node) => node.setAttribute('aria-expanded', String(open)));
-  if (open) {
-    field?.focus();
-    return;
-  }
-  if (!field?.value) return;
-  field.value = '';
-  field.dispatchEvent(new Event('input'));
-}
-
 /* Move the focus through the options of an open menu with the arrows, wrapping round */
 function setNodeHeadStep(pop, ev) {
   const keys = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 };
@@ -3063,7 +3199,7 @@ function setNodeHeadFold(node) {
   return ctl;
 }
 
-/* Wire every Node header of the stand: category, letter, sort, direction, reset, panels, menus, search, keys, stickiness */
+/* Wire every Node header of the stand: category, letter, sort, direction, reset, panels, menus, search, keys; slaed.js sticks the bar, groups the windows and opens the lens */
 function setDemoNodeHead() {
   document.querySelectorAll('[data-nh]').forEach((root) => {
     root.addEventListener('click', (ev) => {
@@ -3073,11 +3209,6 @@ function setDemoNodeHead() {
       const reset = ev.target.closest('[data-nh-reset]');
       const panel = ev.target.closest('[data-nh-panel]');
       const lead = ev.target.closest('[data-nh-let]');
-      const lens = ev.target.closest('[data-nh-lens]');
-      if (lens) {
-        setNodeHeadLens(root, !root.hasAttribute('data-finding'));
-        return;
-      }
       const chip = ev.target.closest('[data-nh-chip]');
       if (chip) {
         const key = chip.dataset.nhChip;
@@ -3136,11 +3267,6 @@ function setDemoNodeHead() {
         root.nhFind = field.value;
         setNodeHeadList(root);
       });
-      field.addEventListener('keydown', (ev) => {
-        if (ev.key !== 'Escape' || !root.hasAttribute('data-finding')) return;
-        setNodeHeadLens(root, false);
-        root.querySelector('[data-nh-lens]')?.focus();
-      });
     });
     root.querySelectorAll('[data-sl-toggle]').forEach((box) => {
       box.addEventListener('keydown', (ev) => {
@@ -3148,9 +3274,6 @@ function setDemoNodeHead() {
         else setNodeHeadStep(box, ev);
       });
       document.querySelectorAll(`[data-sl-toggle-control="${box.id}"]`).forEach((ctl) => ctl.addEventListener('sl-toggle-open', () => {
-        root.querySelectorAll('[data-sl-toggle].sl-is-open').forEach((other) => {
-          if (other !== box) document.querySelector(`[data-sl-toggle-control="${other.id}"]`)?.click();
-        });
         (box.querySelector('[aria-current="true"], [aria-pressed="true"]') || box.querySelector('a[href], button'))?.focus({ preventScroll: true });
       }));
     });
@@ -3161,17 +3284,6 @@ function setDemoNodeHead() {
       });
       pop.addEventListener('keydown', (ev) => setNodeHeadStep(pop, ev));
     });
-    if (root.hasAttribute('data-nh-sticky')) {
-      const mark = root.querySelector('[data-nh-mark]') || document.createElement('div');
-      if (!mark.isConnected) root.before(mark);
-      new IntersectionObserver(([row]) => {
-        root.toggleAttribute('data-stuck', !row.isIntersecting);
-        if (row.isIntersecting && root.hasAttribute('data-finding')) {
-          root.removeAttribute('data-finding');
-          root.querySelectorAll('[data-nh-lens]').forEach((node) => node.setAttribute('aria-expanded', 'false'));
-        }
-      }).observe(mark);
-    }
     if ('view' in root.dataset) {
       try {
         const kept = localStorage.getItem(`demo-nh-view:${location.pathname}`);
@@ -3512,6 +3624,1345 @@ function setDemoKnob() {
   });
 }
 
+/* Groups series: the groups of the stand database, their ranks written as the migration of docs/8-RANKS-2026.md writes them */
+const DEMO_GROUP_ROWS = [
+  { id: 6, name: 'Клиент', intro: 'Клиенты системы', points: 0, extra: 1, users: 91, color: '#ffa200', rank: 'record-circle-fill:5:5:#629abf' },
+  { id: 7, name: 'Модераторы «Система построения сайтов»', intro: 'Модераторы форума «Система построения сайтов»', points: 0, extra: 1, users: 2, color: '#8800ff', rank: 'star-fill:5:5:#b0904d' },
+  { id: 9, name: 'Партнеры', intro: 'Официальные партнеры проекта', points: 0, extra: 1, users: 0, color: '#26d927', rank: 'sun-fill:5:5:#c68649' },
+  { id: 10, name: 'Модераторы «Вебмастер и вебдизайн»', intro: 'Модераторы форума «Вебмастер и вебдизайн»', points: 0, extra: 1, users: 1, color: '#8800ff', rank: 'star-fill:5:5:#b0904d' },
+  { id: 11, name: 'Супермодераторы', intro: 'Модераторы всех форумов', points: 0, extra: 1, users: 1, color: '#ff5500', rank: 'star-fill:5:5:#c68649' },
+  { id: 8, name: 'Новички', intro: 'Новые посетители портала, проявляющие низкую активность.', points: 25, extra: 0, users: 981, color: '#888888', rank: 'star-fill:0:5:#8297a2' },
+  { id: 1, name: 'Посетители', intro: 'Посетители портала не проявляющие большой активности.', points: 250, extra: 0, users: 115, color: '#acb500', rank: 'star-fill:1:5:#8297a2' },
+  { id: 2, name: 'Пользователи', intro: 'Пользователи портала, проявляющие небольшую активность.', points: 1000, extra: 0, users: 33, color: '#059600', rank: 'star-fill:2:5:#8297a2' },
+  { id: 3, name: 'Местные', intro: 'Пользователи портала, которые активно посещают сайт и высказывают свое мнение.', points: 5000, extra: 0, users: 8, color: '#2e8fff', rank: 'star-fill:3:5:#8297a2' },
+  { id: 4, name: 'Активисты', intro: 'Постоянные пользователи портала, которые проявляют особую активность на страницах сайта.', points: 10000, extra: 0, users: 6, color: '#005ec9', rank: 'star-fill:4:5:#8297a2' },
+  { id: 5, name: 'Опытные', intro: 'Пользователи портала, которые приняли самое активное участие в работе сайта.', points: 15000, extra: 0, users: 4, color: '#003f87', rank: 'star-fill:5:5:#8297a2' },
+];
+
+/* Ready ranks: the faces the migration keeps, then the icons a rank most often wears */
+const DEMO_RANK_PRESETS = [
+  ['Звёзды', 'star-fill:3:5:#8297a2'], ['Золото', 'star-fill:5:5:#b0904d'], ['Солнца', 'sun-fill:5:5:#c68649'],
+  ['Шестерни', 'gear-fill:5:5:#629abf'], ['Кольца', 'record-circle-fill:5:5:#629abf'], ['Кристаллы', 'gem:3:5:#2e8fff'],
+  ['Кубки', 'trophy-fill:3:3:#c68649'], ['Награда', 'award-fill:1:1:#c18a05'], ['Щиты', 'shield-fill:3:3:#059600'],
+  ['Сердца', 'heart-fill:4:5:#e5484d'], ['Молнии', 'lightning-fill:3:5:#c48800'], ['Огни', 'fire:3:5:#ff5500'],
+  ['Ромбы', 'diamond-fill:4:5:#8c08ff'], ['Ракета', 'rocket-takeoff-fill:1:1:#2e8fff'], ['Печать', 'patch-check-fill:1:1:#2e8fff'],
+  ['Соты', 'hexagon-fill:3:5:#0561ca'], ['Капли', 'droplet-fill:3:5:#2e8fff'], ['Луны', 'moon-stars-fill:2:3:#b0904d'],
+];
+
+/* One colour serves both themes, and no colour reaches 4.5:1 on white and on the dark surface at once; 3:1 is the floor
+   both can meet — WCAG 1.4.11 for the marks, the large-text floor of 1.4.3 for the bold name */
+const DEMO_CONTRAST = { mark: 3, text: 3 };
+
+const DEMO_GROUP_NEW = { id: 0, name: '', intro: '', points: 0, extra: 0, users: 0, color: '#2e8fff', rank: 'star-fill:1:5:#2e8fff' };
+const grpState = { rows: DEMO_GROUP_ROWS.map((g) => ({ ...g })), edit: 0, fresh: false, dirty: false, snap: null };
+
+function getColorLight(rgb) {
+  const lin = (v) => {
+    const c = v / 255;
+    return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+  };
+  return 0.2126 * lin(rgb[0]) + 0.7152 * lin(rgb[1]) + 0.0722 * lin(rgb[2]);
+}
+
+/* Any CSS colour as rgb, the way the browser paints it: oklch, a relative colour or hex all pass through one pixel */
+function getColorRgb(css) {
+  if (!getColorRgb.ctx) {
+    const cv = document.createElement('canvas');
+    cv.width = 1;
+    cv.height = 1;
+    getColorRgb.ctx = cv.getContext('2d', { willReadFrequently: true });
+  }
+  const ctx = getColorRgb.ctx;
+  ctx.clearRect(0, 0, 1, 1);
+  ctx.fillStyle = '#fff';
+  ctx.fillStyle = css;
+  ctx.fillRect(0, 0, 1, 1);
+  return [...ctx.getImageData(0, 0, 1, 1).data].slice(0, 3);
+}
+
+/* The contrast of two CSS colours */
+function getColorContrast(fore, back) {
+  const a = getColorLight(getColorRgb(fore));
+  const b = getColorLight(getColorRgb(back));
+  return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+}
+
+/* The next step of the ladder: a threshold half again above the top one, the same icon with one more lit mark,
+   the group colour that follows the top one in the palette of the form */
+function getGroupNext(box) {
+  const ladder = grpState.rows.filter((r) => !r.extra).sort((a, b) => a.points - b.points);
+  const last = ladder[ladder.length - 1];
+  if (!last) return { ...DEMO_GROUP_NEW };
+  const d = getRankData(last.rank) || getRankData(DEMO_GROUP_NEW.rank);
+  const total = d.lit >= d.total ? Math.min(10, d.total + 1) : d.total;
+  const lit = Math.min(total, d.lit + 1);
+  const step = last.points >= 1000 ? 1000 : 25;
+  const points = Math.max(last.points + step, Math.ceil((last.points * 1.5) / step) * step);
+  const tones = [...box.querySelectorAll('[data-demo-group-tone]')].map((b) => b.dataset.demoGroupTone);
+  const at = tones.indexOf(last.color.toLowerCase());
+  const color = tones.length ? tones[(at + 1) % tones.length] : DEMO_GROUP_NEW.color;
+  return { ...DEMO_GROUP_NEW, points, color, rank: `${d.icon}:${lit}:${total}:${d.color}`, after: last.name };
+}
+
+/* A row of choices is one stop for Tab and is walked with the arrows; the chosen member, or the first, holds the stop */
+function getRovingItems(row) {
+  return [...row.querySelectorAll(':scope > button, :scope > label > input')].filter((i) => !i.hidden);
+}
+
+function setGroupRoving(row) {
+  const items = getRovingItems(row);
+  const cur = items.find((i) => i.getAttribute('aria-pressed') === 'true' || i.closest('[data-custom]')) || items[0];
+  items.forEach((i) => { i.tabIndex = i === cur ? 0 : -1; });
+}
+
+/* Leaving the form with changes asks through the confirm window of the panel; leaving without saving gives the row back */
+function setGroupLeave(box, run) {
+  const back = () => {
+    const row = grpState.rows.find((r) => r.id === grpState.edit);
+    if (row && grpState.snap) {
+      Object.assign(row, grpState.snap);
+      setGroupHosts();
+    }
+    grpState.dirty = false;
+    run();
+  };
+  if (!document.querySelector('[data-demo-group-panel]') || !grpState.dirty) return run();
+  if (typeof window.setConfirmTask === 'function' && document.getElementById('sl-confirm')) {
+    window.setConfirmTask('Изменения группы не сохранены. Уйти без сохранения?', back);
+  } else {
+    back();
+  }
+}
+
+function getGroupEsc(text) {
+  return String(text).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+}
+
+/* The rank string `icon:lit:total:#rrggbb`, by the rules getRankData() of the plan checks; anything else draws nothing */
+function getRankData(rank) {
+  const m = /^([a-z0-9-]+):(\d{1,2}):(\d{1,2}):(#[0-9a-f]{6})$/i.exec(rank || '');
+  if (!m) return null;
+  const lit = Number(m[2]);
+  const total = Number(m[3]);
+  if (total < 1 || total > 10 || lit > total) return null;
+  return { icon: m[1], lit, total, color: m[4].toLowerCase() };
+}
+
+/* The markup the rank fragment of the plan prints: one labelled span, the marks hidden from a screen reader */
+function getRankHtml(rank, title) {
+  const d = getRankData(rank);
+  if (!d) return '';
+  const marks = Array.from({ length: d.total }, (_, i) => `<i class="bi bi-${d.icon}${i < d.lit ? ' sl-is-active' : ''}" aria-hidden="true"></i>`).join('');
+  const label = getGroupEsc(title);
+  return `<span class="sl-rank" role="img" aria-label="${label}" title="${label}" style="--sl-rank-color: ${d.color}">${marks}</span>`;
+}
+
+function getGroupTitle(g) {
+  return g.name ? 'Группа: ' + g.name : 'Ранг';
+}
+
+function getGroupNodes(root, sel) {
+  return [...(root.matches(sel) ? [root] : []), ...root.querySelectorAll(sel)];
+}
+
+/* One row, card or step of a list: `data-g` takes a text, `data-g-color` the group colour, `data-g-tone` and
+   `data-g-share` custom properties, `data-g-if` hides what does not apply, `data-demo-rank` the rank itself */
+function setGroupFill(node, g) {
+  node.dataset.demoGid = String(g.id);
+  const most = Math.max(1, ...grpState.rows.map((r) => r.users));
+  const map = {
+    id: g.id, name: g.name || 'Новая группа', intro: g.intro || '—', code: g.rank, color: g.color,
+    points: g.extra ? '—' : g.points.toLocaleString('ru-RU'), users: g.users.toLocaleString('ru-RU'),
+    extra: g.extra ? 'Да' : 'Нет', kind: g.extra ? 'Особая' : 'По баллам',
+  };
+  getGroupNodes(node, '[data-g]').forEach((el) => { el.textContent = map[el.dataset.g] ?? ''; });
+  getGroupNodes(node, '[data-g-title]').forEach((el) => { el.title = String(map[el.dataset.gTitle] ?? ''); });
+  getGroupNodes(node, '[data-g-color]').forEach((el) => { el.style.color = g.color; });
+  getGroupNodes(node, '[data-g-tone]').forEach((el) => el.style.setProperty('--v-gcolor', g.color));
+  getGroupNodes(node, '[data-g-share]').forEach((el) => el.style.setProperty('--v-share', String(g.users / most)));
+  const cond = { extra: Boolean(g.extra), points: !g.extra, empty: g.users === 0, users: g.users > 0 };
+  getGroupNodes(node, '[data-g-if]').forEach((el) => { el.hidden = !cond[el.dataset.gIf]; });
+  getGroupNodes(node, '[data-g-href]').forEach((el) => { el.href = el.dataset.gHref.replace('{id}', String(g.id)); });
+  node.toggleAttribute('data-g-empty', g.users === 0);
+  getGroupNodes(node, '[data-demo-rank]').forEach((el) => { el.innerHTML = getRankHtml(g.rank, getGroupTitle(g)); });
+}
+
+/* Every list host clones its own template per group: `all` in the order of the panel query, `points` by threshold, `extra` the special ones */
+function setGroupHosts() {
+  document.querySelectorAll('[data-demo-groups]').forEach((host) => {
+    const tpl = host.querySelector(':scope > template');
+    if (!tpl) return;
+    host.querySelectorAll(':scope > [data-demo-gid]').forEach((n) => n.remove());
+    const kind = host.dataset.demoGroups;
+    const rows = grpState.rows.filter((g) => kind === 'all' || (kind === 'extra') === Boolean(g.extra))
+      .sort((a, b) => (a.points - b.points) || (b.extra - a.extra));
+    // A list without thresholds, as the special groups, may order itself by members instead
+    if (host.dataset.demoGroupsBy === 'users') rows.sort((a, b) => (a.users - b.users) || (a.id - b.id));
+    if (host.dataset.demoGroupsDir === 'desc') rows.reverse();
+    rows.forEach((g) => {
+      const node = tpl.content.firstElementChild.cloneNode(true);
+      setGroupFill(node, g);
+      node.classList.toggle('sl-is-active', g.id === grpState.edit);
+      host.appendChild(node);
+    });
+    host.querySelectorAll('[data-demo-groups-count]').forEach((n) => { n.textContent = String(rows.length); });
+    host.dispatchEvent(new CustomEvent('htmx:afterSwap', { bubbles: true, detail: {} }));
+  });
+  document.querySelectorAll('[data-demo-groups-count]').forEach((n) => {
+    const kind = n.dataset.demoGroupsCount;
+    n.textContent = String(grpState.rows.filter((g) => kind === 'all' || (kind === 'extra') === Boolean(g.extra)).length);
+  });
+}
+
+/* Where a group with this threshold would stand among the point groups */
+function getGroupPlace(g) {
+  if (g.extra) return 'Специальная группа: порог не действует, участников назначает администратор.';
+  const list = grpState.rows.filter((r) => !r.extra && r.id !== grpState.edit).sort((a, b) => a.points - b.points);
+  const prev = list.filter((r) => r.points <= g.points).pop();
+  const next = list.find((r) => r.points > g.points);
+  const pts = (r) => `«${r.name}» (${r.points.toLocaleString('ru-RU')} пунктов)`;
+  document.querySelectorAll('[data-demo-groups] [data-demo-gid]').forEach((n) => n.toggleAttribute('data-g-at', Boolean(prev) && n.dataset.demoGid === String(prev.id)));
+  // Two groups on one threshold leave the ladder without an order between them, so the hint warns instead of placing
+  if (prev && prev.points === g.points) return `Такой порог уже у ${pts(prev)}: выберите другой.`;
+  if (!prev && !next) return 'Встанет единственной ступенью лестницы.';
+  if (!prev) return `Встанет первой ступенью, перед ${pts(next)}.`;
+  if (!next) return `Встанет последней ступенью, после ${pts(prev)}.`;
+  return `Встанет между ${pts(prev)} и ${pts(next)}.`;
+}
+
+function getComposerGroup(box) {
+  const val = (n) => box.querySelector(`[name="${n}"]`)?.value ?? '';
+  const num = (n) => Math.max(0, parseInt(val(n), 10) || 0);
+  const total = Math.min(10, Math.max(1, num('rank_total')));
+  const lit = Math.min(total, num('rank_lit'));
+  const color = (val('color') || DEMO_GROUP_NEW.color).toLowerCase();
+  const sync = box.querySelector('[name="rank_sync"]')?.checked;
+  const tone = (sync ? color : (val('rank_color') || color)).toLowerCase();
+  const icon = /^[a-z0-9-]+$/.test(val('rank_icon').trim()) ? val('rank_icon').trim() : 'star-fill';
+  return {
+    name: val('grname').trim(), intro: val('description').trim(), color, points: num('points'),
+    extra: box.querySelector('[name="grextra"]')?.checked ? 1 : 0, rank: `${icon}:${lit}:${total}:${tone}`,
+  };
+}
+
+function setComposerField(box, name, value) {
+  box.querySelectorAll(`[name="${name}"]`).forEach((f) => {
+    if (f.type === 'checkbox') f.checked = Boolean(value);
+    else f.value = String(value);
+  });
+}
+
+function setComposerRank(box, rank) {
+  const d = getRankData(rank);
+  if (!d) return;
+  setComposerField(box, 'rank_icon', d.icon);
+  setComposerField(box, 'rank_total', d.total);
+  setComposerField(box, 'rank_lit', d.lit);
+  setComposerField(box, 'rank_color', d.color);
+  box.querySelectorAll('[data-sl-icon-preview]').forEach((i) => { i.className = 'bi bi-' + d.icon; });
+}
+
+function setComposerLoad(box, g) {
+  setComposerField(box, 'grname', g.name);
+  setComposerField(box, 'description', g.intro);
+  setComposerField(box, 'color', g.color);
+  setComposerField(box, 'points', g.points);
+  setComposerField(box, 'grextra', g.extra);
+  setComposerRank(box, g.rank);
+  const d = getRankData(g.rank);
+  setComposerField(box, 'rank_sync', Boolean(d) && d.color === g.color.toLowerCase());
+  setComposerView(box);
+}
+
+/* The composer answers every change at once: its own previews and texts, the controls that mirror the rank,
+   and the list row of the group being edited */
+function setComposerView(box) {
+  const g = getComposerGroup(box);
+  const d = getRankData(g.rank);
+  box.querySelectorAll('[name="rank_lit"]').forEach((f) => {
+    f.max = String(d.total);
+    if (Number(f.value) > d.total) f.value = String(d.total);
+  });
+  const sync = box.querySelector('[name="rank_sync"]')?.checked;
+  // Bound to the group, the rank colour follows it; the own colour field stays live, and touching it unbinds the rank
+  box.querySelectorAll('[name="rank_color"]').forEach((f) => {
+    if (sync) f.value = g.color;
+  });
+  box.querySelectorAll('[data-demo-rank-live]').forEach((n) => { n.innerHTML = getRankHtml(g.rank, getGroupTitle(g)); });
+  const map = {
+    name: g.name || 'Новая группа', intro: g.intro || 'Описание группы', code: g.rank, lit: d.lit, total: d.total,
+    icon: d.icon, tone: d.color, points: g.extra ? '—' : g.points.toLocaleString('ru-RU'), kind: g.extra ? 'Особая' : 'По баллам',
+    title: grpState.fresh ? 'Новая группа' + (g.name ? ': ' + g.name : '') : 'Правка группы: ' + g.name,
+    after: grpState.next || '', place: getGroupPlace(g), mode: grpState.fresh ? 'Новая группа' : 'Правка группы', submit: grpState.fresh ? 'Добавить' : 'Сохранить',
+  };
+  box.querySelectorAll('[data-c]').forEach((n) => { n.textContent = String(map[n.dataset.c] ?? ''); });
+  box.querySelectorAll('[data-c-color]').forEach((n) => { n.style.color = g.color; });
+  box.querySelectorAll('[data-c-tone]').forEach((n) => n.style.setProperty('--v-gcolor', g.color));
+  const cond = { extra: Boolean(g.extra), points: !g.extra, fresh: grpState.fresh, edit: !grpState.fresh };
+  box.querySelectorAll('[data-c-if]').forEach((n) => { n.hidden = !cond[n.dataset.cIf]; });
+  // Each tile measures its own surface, so the light and the dark one are judged against what they really show
+  box.querySelectorAll('[data-demo-contrast]').forEach((tile) => {
+    const back = getComputedStyle(tile).backgroundColor;
+    const mark = getColorContrast(d.color, back);
+    // The name is measured as it is painted: the theme may have adjusted the stored group colour
+    const named = tile.querySelector('[data-c="name"]');
+    const text = getColorContrast(named ? getComputedStyle(named).color : g.color, back);
+    tile.querySelectorAll('[data-demo-contrast-mark]').forEach((n) => { n.textContent = mark.toFixed(1) + ':1'; });
+    tile.querySelectorAll('[data-demo-contrast-text]').forEach((n) => { n.textContent = text.toFixed(1) + ':1'; });
+    tile.toggleAttribute('data-bad-mark', mark < DEMO_CONTRAST.mark);
+    tile.toggleAttribute('data-bad-text', text < DEMO_CONTRAST.text);
+  });
+  box.querySelectorAll('[data-demo-contrast-note]').forEach((n) => {
+    n.hidden = !box.querySelector('[data-demo-contrast][data-bad-mark], [data-demo-contrast][data-bad-text]');
+  });
+  box.querySelectorAll('[data-demo-rank-set]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.demoRankSet === g.rank)));
+  box.querySelectorAll('[data-demo-rank-tone]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.demoRankTone === 'group' ? Boolean(sync) : (!sync && b.dataset.demoRankTone === d.color))));
+  box.querySelectorAll('[data-demo-group-tone]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.demoGroupTone === g.color)));
+  box.querySelectorAll('[data-demo-roving]').forEach((row) => setGroupRoving(row));
+  // The own-colour swatch of a row wears the value and is marked chosen when no swatch of its row holds it
+  box.querySelectorAll('[data-demo-tone-custom]').forEach((n) => {
+    const rank = n.dataset.demoToneCustom === 'rank';
+    const value = rank ? d.color : g.color;
+    const list = [...box.querySelectorAll(rank ? '[data-demo-rank-tone]' : '[data-demo-group-tone]')].map((b) => (rank ? b.dataset.demoRankTone : b.dataset.demoGroupTone));
+    n.style.setProperty('--v-swatch', value);
+    n.toggleAttribute('data-custom', !(rank && sync) && !list.includes(value));
+  });
+  box.querySelectorAll('[data-demo-rank-icon]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.demoRankIcon === d.icon)));
+  const row = grpState.rows.find((r) => r.id === grpState.edit);
+  if (!row) return;
+  Object.assign(row, g);
+  document.querySelectorAll(`[data-demo-groups] [data-demo-gid="${row.id}"]`).forEach((n) => setGroupFill(n, row));
+}
+
+/* A page that holds both screens of the module switches them as the panel does: «Главная» the list, «Добавить» the form */
+function setGroupTab(key) {
+  const panels = document.querySelectorAll('[data-demo-group-panel]');
+  if (!panels.length) return false;
+  panels.forEach((p) => { p.hidden = p.dataset.demoGroupPanel !== key; });
+  document.querySelectorAll('[data-demo-group-tab]').forEach((t) => t.classList.toggle('sl-is-active', t.dataset.demoGroupTab === key));
+  // A row set up while its panel was hidden still holds a stop on every member; the shown panel gets its rows set again
+  document.querySelectorAll('[data-demo-roving]').forEach((row) => setGroupRoving(row));
+  return true;
+}
+
+/* Open a group in the composer, or a fresh one; an inline composer moves under the row it edits */
+function setComposerOpen(box, id, still) {
+  grpState.fresh = id === 'new';
+  grpState.edit = grpState.fresh ? 0 : Number(id);
+  const smart = grpState.fresh && box.dataset.demoGroupSmart !== undefined;
+  const g = grpState.fresh ? (smart ? getGroupNext(box) : DEMO_GROUP_NEW) : grpState.rows.find((r) => r.id === grpState.edit);
+  if (!g) return;
+  grpState.next = smart ? (g.after || '') : '';
+  grpState.snap = grpState.fresh ? null : { ...g };
+  document.querySelectorAll('[data-demo-groups] [data-demo-gid]').forEach((n) => n.classList.toggle('sl-is-active', n.dataset.demoGid === String(grpState.edit)));
+  if (!still && setGroupTab('add')) window.scrollTo({ top: 0 });
+  if (box.dataset.demoComposer === 'inline') {
+    const host = document.querySelector('[data-demo-groups]');
+    const row = host.querySelector(`:scope > [data-demo-gid="${grpState.edit}"]`);
+    if (row) row.after(box);
+    else host.prepend(box);
+    box.hidden = false;
+  }
+  setComposerLoad(box, g);
+  grpState.dirty = false;
+  if (!still && box.dataset.demoComposer !== 'inline') box.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  if (!still) box.querySelector('[name="grname"]')?.focus({ preventScroll: box.dataset.demoComposer !== 'inline' });
+}
+
+function setComposerShut(box) {
+  grpState.edit = 0;
+  grpState.fresh = false;
+  document.querySelectorAll('[data-demo-groups] [data-demo-gid]').forEach((n) => n.classList.remove('sl-is-active'));
+  // An inline editor folds away; a standing one goes back to a fresh group rather than keep the closed one
+  if (box.dataset.demoComposer === 'inline') box.hidden = true;
+  else setComposerOpen(box, 'new', true);
+  setGroupTab('list');
+}
+
+function setDemoGroups() {
+  const box = document.querySelector('[data-demo-composer]');
+  document.addEventListener('keydown', (e) => {
+    const row = e.target.closest ? e.target.closest('[data-demo-roving]') : null;
+    if (!row || !['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End'].includes(e.key)) return;
+    const items = getRovingItems(row);
+    const at = items.indexOf(e.target);
+    if (at < 0) return;
+    // Up and down move by a whole line of the row, measured, since the rows wrap by the width they get
+    const top = items[0].getBoundingClientRect().top;
+    const across = items.filter((i) => Math.abs(i.getBoundingClientRect().top - top) < 2).length || items.length;
+    const move = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -across, ArrowDown: across };
+    let to = e.key === 'Home' ? 0 : (e.key === 'End' ? items.length - 1 : at + move[e.key]);
+    to = Math.max(0, Math.min(items.length - 1, to));
+    e.preventDefault();
+    items.forEach((i, n) => { i.tabIndex = n === to ? 0 : -1; });
+    items[to].focus();
+  });
+  window.addEventListener('beforeunload', (e) => {
+    if (!grpState.dirty || !document.querySelector('[data-demo-group-panel]')) return;
+    e.preventDefault();
+    e.returnValue = '';
+  });
+  setGroupHosts();
+  document.querySelectorAll('[data-demo-rank-presets]').forEach((host) => {
+    host.innerHTML = DEMO_RANK_PRESETS.map(([label, rank]) => `<button type="button" class="d-rank-preset" data-demo-rank-set="${rank}" aria-pressed="false">`
+      + `${getRankHtml(rank, label)}<span>${label}</span></button>`).join('');
+  });
+  if (!box) return;
+  if (box.dataset.demoComposer === 'inline') box.hidden = true;
+  if (box.dataset.demoGroupOpen) setComposerOpen(box, box.dataset.demoGroupOpen, true);
+  else if (box.dataset.demoComposer !== 'inline') setComposerOpen(box, 'new', true);
+  if (location.hash === '#add') setGroupTab('add');
+  box.addEventListener('input', (e) => {
+    grpState.dirty = true;
+    if (e.target.name === 'rank_color') setComposerField(box, 'rank_sync', false);
+    setComposerView(box);
+  });
+  box.addEventListener('change', () => setComposerView(box));
+  box.addEventListener('submit', (e) => {
+    e.preventDefault();
+    if (grpState.fresh) {
+      const g = { ...DEMO_GROUP_NEW, ...getComposerGroup(box), id: Math.max(...grpState.rows.map((r) => r.id)) + 1 };
+      if (!g.name) {
+        box.querySelector('[name="grname"]')?.reportValidity();
+        return;
+      }
+      grpState.rows.push(g);
+      setGroupHosts();
+      setComposerOpen(box, g.id, true);
+    }
+    grpState.dirty = false;
+    grpState.snap = { ...(grpState.rows.find((r) => r.id === grpState.edit) || {}) };
+    // The panel leaves the form for the list after a save; a page with both screens does the same
+    if (setGroupTab('list')) {
+      setGroupHosts();
+      window.scrollTo({ top: 0 });
+    }
+    document.querySelectorAll('[data-demo-saved]').forEach((n) => {
+      n.hidden = false;
+      clearTimeout(n.demoWait);
+      n.demoWait = setTimeout(() => { n.hidden = true; }, 2400);
+    });
+  });
+  document.addEventListener('click', (e) => {
+    const node = e.target;
+    if (!node.closest) return;
+    const edit = node.closest('[data-demo-group-edit]');
+    if (edit) {
+      e.preventDefault();
+      const row = edit.closest('[data-demo-gid]');
+      if (row) setComposerOpen(box, row.dataset.demoGid);
+      return;
+    }
+    if (node.closest('[data-demo-group-new]')) {
+      e.preventDefault();
+      setComposerOpen(box, 'new');
+      return;
+    }
+    const tab = node.closest('[data-demo-group-tab]');
+    if (tab) {
+      e.preventDefault();
+      setGroupLeave(box, () => {
+        if (tab.dataset.demoGroupTab === 'add') setComposerOpen(box, 'new');
+        else setComposerShut(box);
+      });
+      return;
+    }
+    const flip = node.closest('[data-demo-groups-flip]');
+    if (flip) {
+      const host = document.getElementById(flip.dataset.demoGroupsFlip);
+      if (!host) return;
+      host.dataset.demoGroupsDir = host.dataset.demoGroupsDir === 'desc' ? 'asc' : 'desc';
+      flip.setAttribute('aria-pressed', String(host.dataset.demoGroupsDir === 'desc'));
+      setGroupHosts();
+      return;
+    }
+    if (node.closest('[data-demo-group-close]')) {
+      e.preventDefault();
+      setGroupLeave(box, () => setComposerShut(box));
+      return;
+    }
+    const drop = node.closest('[data-demo-group-drop]');
+    if (drop) {
+      e.preventDefault();
+      const id = Number(drop.closest('[data-demo-gid]')?.dataset.demoGid);
+      if (id === grpState.edit) setComposerShut(box);
+      grpState.rows = grpState.rows.filter((r) => r.id !== id);
+      setGroupHosts();
+      return;
+    }
+    const set = node.closest('[data-demo-rank-set]');
+    if (set && box.contains(set)) {
+      grpState.dirty = true;
+      setComposerRank(box, set.dataset.demoRankSet);
+      setComposerField(box, 'rank_sync', false);
+      setComposerView(box);
+      return;
+    }
+    const tone = node.closest('[data-demo-rank-tone]');
+    if (tone && box.contains(tone)) {
+      grpState.dirty = true;
+      const bind = tone.dataset.demoRankTone === 'group';
+      setComposerField(box, 'rank_sync', bind);
+      if (!bind) setComposerField(box, 'rank_color', tone.dataset.demoRankTone);
+      setComposerView(box);
+      return;
+    }
+    const gtone = node.closest('[data-demo-group-tone]');
+    if (gtone && box.contains(gtone)) {
+      grpState.dirty = true;
+      setComposerField(box, 'color', gtone.dataset.demoGroupTone);
+      setComposerView(box);
+      return;
+    }
+    const icon = node.closest('[data-demo-rank-icon]');
+    if (icon && box.contains(icon)) {
+      grpState.dirty = true;
+      setComposerField(box, 'rank_icon', icon.dataset.demoRankIcon);
+      box.querySelectorAll('[data-sl-icon-preview]').forEach((i) => { i.className = 'bi bi-' + icon.dataset.demoRankIcon; });
+      setComposerView(box);
+      return;
+    }
+    if (node.closest('.sl-icon-cell')) grpState.dirty = true;
+    // The icon window of the panel writes the field without an input event; its own handler has run by now
+    if (node.closest('.sl-icon-cell')) setComposerView(box);
+  });
+}
+
+/* Reference page of docs/2027-ADMIN-UX.md: the side menu as a panel on a phone, its groups and filter, a list filtered
+   in place with the result announced, module tabs that name the browser tab, row checks with a count, live options */
+/* The size of the whole comments list of the stand, for "check all on every page" */
+const UX_TOTAL = 8414;
+
+function getUxNum(n) {
+  return Number(n).toLocaleString('ru-RU');
+}
+
+function setDemoAdminUx() {
+  const nav = document.querySelector('[data-ux-nav]');
+  if (!nav) return;
+  let setBellHook = () => {};
+  const opener = document.querySelector('[data-ux-menu-open]');
+  const setMenu = (open) => {
+    document.body.toggleAttribute('data-ux-nav-open', open);
+    if (opener) opener.setAttribute('aria-expanded', String(open));
+    if (open) {
+      const first = nav.querySelector('[data-ux-find]') || nav.querySelector('a, button');
+      if (first) first.focus();
+    } else if (opener && nav.contains(document.activeElement)) {
+      opener.focus();
+    }
+  };
+  // The groups of the menu: a disclosure each, the group of the open section unfolded
+  const groups = [...nav.querySelectorAll('[data-ux-group]')];
+  const setGroup = (group, open) => {
+    const btn = group.querySelector('[data-ux-group-toggle]');
+    const list = document.getElementById(btn.getAttribute('aria-controls'));
+    btn.setAttribute('aria-expanded', String(open));
+    list.hidden = !open;
+    // The theme swaps its collapse and expand marks by this class on the block
+    group.classList.toggle('sl-is-closed', !open);
+  };
+  // The filter narrows the menu by the name of a section and its module word, unfolding every group with a match
+  const find = nav.querySelector('[data-ux-find]');
+  const keep = new Map();
+  const setFind = () => {
+    const term = find.value.trim().toLowerCase();
+    let seen = 0;
+    groups.forEach((group) => {
+      if (term && !keep.has(group)) keep.set(group, group.querySelector('[data-ux-group-toggle]').getAttribute('aria-expanded') === 'true');
+      let hits = 0;
+      group.querySelectorAll('[data-ux-item]').forEach((item) => {
+        const hit = !term || (item.textContent + ' ' + item.dataset.uxItem).toLowerCase().includes(term);
+        item.hidden = !hit;
+        if (hit) hits += 1;
+      });
+      group.hidden = term !== '' && hits === 0;
+      if (term) setGroup(group, hits > 0);
+      else if (keep.has(group)) setGroup(group, keep.get(group));
+      seen += hits;
+    });
+    if (!term) keep.clear();
+    nav.querySelectorAll('[data-ux-empty]').forEach((n) => { n.hidden = seen > 0; });
+  };
+  if (find) find.addEventListener('input', setFind);
+
+  // The list: the module and status filters act at once, the text search on its button; the result is announced
+  const table = document.querySelector('[data-ux-list]');
+  const rows = table ? [...table.querySelectorAll('[data-ux-row]')] : [];
+  const state = { mod: '', status: 'all', field: 'text', q: '' };
+  const picked = () => rows.filter((r) => !r.hidden && r.querySelector('[data-ux-check]').checked);
+  const setPicked = () => {
+    const all = document.querySelector('[data-ux-check-all]');
+    const shown = rows.filter((r) => !r.hidden);
+    const on = picked().length;
+    if (all) {
+      all.checked = on > 0 && on === shown.length;
+      all.indeterminate = on > 0 && on < shown.length;
+    }
+    // Every row of the page checked offers the whole list; any other change of the pick withdraws it
+    const pages = state.status === 'all' && !state.mod && !state.q && shown.length > 0 && on === shown.length;
+    if (!pages) state.allPages = false;
+    document.querySelectorAll('[data-ux-allpages]').forEach((b) => {
+      b.hidden = !pages;
+      const n = b.querySelector('[data-ux-allpages-text]');
+      if (n) n.textContent = state.allPages ? 'Отмечены все ' + getUxNum(UX_TOTAL) + ' комментариев.' : 'Отмечены все ' + on + ' на этой странице.';
+      b.querySelectorAll('[data-ux-allpages-go]').forEach((x) => { x.hidden = state.allPages; });
+      b.querySelectorAll('[data-ux-allpages-off]').forEach((x) => { x.hidden = !state.allPages; });
+    });
+    const count = state.allPages ? getUxNum(UX_TOTAL) : String(on);
+    document.body.toggleAttribute('data-ux-picking', on > 0);
+    document.querySelectorAll('[data-ux-picked]').forEach((n) => { n.textContent = on ? 'Отмечено: ' + count : 'Ничего не отмечено'; });
+    document.querySelectorAll('[data-ux-bulk-go]').forEach((b) => { b.disabled = on === 0; });
+    // A bar of bulk actions, where a variant has one, rises while anything is checked
+    document.querySelectorAll('[data-ux-bulkbar]').forEach((b) => { b.hidden = on === 0; });
+    document.querySelectorAll('[data-ux-row]').forEach((r) => r.toggleAttribute('data-ux-picked-row', r.querySelector('[data-ux-check]').checked));
+  };
+  const modName = (key) => {
+    const chip = document.querySelector('[data-ux-mod-chip="' + key + '"]');
+    const sel = document.querySelector('[data-ux-mod]');
+    const opt = sel ? [...sel.options].find((o) => o.value === key) : null;
+    return chip ? chip.dataset.label : (opt ? opt.text : key);
+  };
+  const setList = (say) => {
+    if (say !== false && !restoring && state.fail && table) {
+      state.fail = false;
+      table.setAttribute('aria-busy', 'false');
+      document.querySelectorAll('[data-ux-error]').forEach((n) => { n.hidden = false; n.focus(); });
+      return;
+    }
+    document.querySelectorAll('[data-ux-error]').forEach((n) => { n.hidden = true; });
+    if (say !== false && table) {
+      table.setAttribute('aria-busy', 'true');
+      table.classList.add('v-loading');
+      clearTimeout(state.busy);
+      state.busy = setTimeout(() => { table.classList.remove('v-loading'); table.setAttribute('aria-busy', 'false'); }, 320);
+    }
+    let shown = 0;
+    rows.forEach((r) => {
+      const hay = state.field === 'id' ? r.dataset.id : (state.field === 'by' ? r.dataset.by : r.dataset.text);
+      // A row of a later page shows only where its status brings it, under «Ждут проверки»
+      const ok = !r.hasAttribute('data-ux-gone') && (!state.mod || r.dataset.mod === state.mod) && (state.status === 'all' ? !r.hasAttribute('data-ux-far') : r.dataset.on === '0')
+        && (!state.q || hay.toLowerCase().includes(state.q.toLowerCase()));
+      // A row that comes into view is marked to enter, with its place in the order for a stagger
+      if (ok && say !== false) {
+        r.style.setProperty('--ux-i', String(shown));
+        r.removeAttribute('data-ux-enter');
+        void r.offsetWidth;
+        r.setAttribute('data-ux-enter', '');
+      }
+      r.hidden = !ok;
+      if (!ok) r.querySelector('[data-ux-check]').checked = false;
+      if (ok) shown += 1;
+    });
+    document.querySelectorAll('[data-ux-mod-chip]').forEach((c) => c.setAttribute('aria-pressed', String(c.dataset.uxModChip === state.mod)));
+    document.querySelectorAll('[data-ux-mod]').forEach((sel) => { sel.value = state.mod; });
+    // The filters in force, each a chip that takes itself off
+    document.querySelectorAll('[data-ux-active]').forEach((box) => {
+      const chips = [];
+      if (state.mod) chips.push(['mod', 'Модуль: ' + modName(state.mod)]);
+      if (state.status === 'wait') chips.push(['status', 'Ждут проверки']);
+      if (state.q) chips.push(['q', 'Поиск: «' + state.q + '»']);
+      box.innerHTML = chips.map(([k, t]) => '<button type="button" class="sl-chip sl-chip-accent v-off" data-ux-clear="' + k + '" aria-label="Снять фильтр ' + getGroupEsc(t) + '">' + getGroupEsc(t) + ' <i class="bi bi-x" aria-hidden="true"></i></button>').join(' ');
+      box.hidden = chips.length === 0;
+    });
+    document.querySelectorAll('[data-ux-none]').forEach((n) => { n.hidden = shown > 0; });
+    const label = state.mod ? ' модуля «' + modName(state.mod) + '»' : '';
+    const wait = state.status === 'wait' ? ', ждущих проверки' : '';
+    const q = state.q ? ', найдено по «' + state.q + '»' : '';
+    const total = rows.filter((r) => !r.hasAttribute('data-ux-gone') && (state.status === 'all' ? !r.hasAttribute('data-ux-far') : r.dataset.on === '0')).length;
+    // An empty list says why: nothing waits, or nothing matches
+    document.querySelectorAll('[data-ux-none]').forEach((n) => {
+      const cell = n.querySelector('td') || n;
+      const calm = state.status === 'wait' && !state.mod && !state.q;
+      cell.textContent = calm ? 'Всё проверено: комментариев, ждущих проверки, нет.' : 'Комментариев не найдено. Измените модуль или текст поиска.';
+      n.classList.toggle('v-calm', calm);
+    });
+    if (say !== false) document.querySelectorAll('[data-ux-status]').forEach((n) => { n.textContent = 'Показаны ' + shown + ' из ' + total + label + wait + q + '.'; });
+    setPicked();
+    setPending();
+    // The waiting list fits one page; the pager of «Главная» does not belong to it
+    document.querySelectorAll('[data-demo-pager]').forEach((p) => { p.hidden = state.status === 'wait'; });
+    if (say !== false) setUrl();
+  };
+  // The queue of the section: the menu item carries it while it is not empty, the tab names it
+  const setPending = () => {
+    if (!rows.length) return;
+    const n = rows.filter((r) => r.dataset.on === '0' && !r.hasAttribute('data-ux-gone')).length;
+    document.querySelectorAll('[data-ux-queue]').forEach((c) => {
+      c.hidden = n === 0;
+      c.querySelectorAll('[data-ux-queue-n]').forEach((x) => { x.textContent = String(n); });
+    });
+    setBellHook();
+  };
+  // The filters live in the address: Back returns to the previous filter, the address can be sent, an edit returns to it
+  let restoring = false;
+  const listUrl = () => location.pathname.split('/').pop() + location.search;
+  const setBack = () => {
+    document.querySelectorAll('[data-ux-edit]').forEach((a) => {
+      const row = a.closest('[data-ux-row]');
+      if (row) a.href = '../admin.php?name=comments&op=edit&id=' + row.dataset.id + '&back=' + encodeURIComponent(listUrl());
+    });
+  };
+  const setUrl = () => {
+    if (restoring) return;
+    const u = new URL(location.href);
+    [['mod', state.mod], ['q', state.q], ['in', state.field === 'text' ? '' : state.field], ['tab', state.status === 'wait' ? 'wait' : '']]
+      .forEach(([k, v]) => { if (v) u.searchParams.set(k, v); else u.searchParams.delete(k); });
+    if (u.href !== location.href) history.pushState(null, '', u);
+    setBack();
+  };
+  document.querySelectorAll('[data-ux-mod]').forEach((s) => s.addEventListener('change', () => { state.mod = s.value; setList(); }));
+  document.querySelectorAll('[data-ux-field]').forEach((s) => s.addEventListener('change', () => { state.field = s.value; if (state.q) setList(); }));
+  document.querySelectorAll('[data-ux-search]').forEach((f) => f.addEventListener('submit', (e) => {
+    e.preventDefault();
+    state.q = (f.querySelector('[data-ux-q]') || {}).value?.trim() || '';
+    setList();
+  }));
+  document.querySelectorAll('[data-ux-check], [data-ux-check-all]').forEach((c) => c.addEventListener('change', () => {
+    if (c.matches('[data-ux-check-all]')) rows.filter((r) => !r.hidden).forEach((r) => { r.querySelector('[data-ux-check]').checked = c.checked; });
+    setPicked();
+  }));
+
+  // Module tabs: the open one carries aria-current and names the browser tab as "Section — Tab — Admin — Site"
+  const head = document.querySelector('[data-ux-section]');
+  const setTitle = (tab) => {
+    const parts = [head ? head.dataset.uxSection : ''];
+    if (tab && tab.dataset.uxTitle) parts.push(tab.dataset.uxTitle);
+    parts.push('Админ', document.body.dataset.uxSite || 'Название сайта');
+    document.title = parts.filter(Boolean).join(' — ');
+  };
+  const markTab = (tab) => {
+    document.querySelectorAll('[data-ux-tab]').forEach((t) => {
+      t.classList.toggle('sl-is-active', t === tab);
+      if (t === tab) t.setAttribute('aria-current', 'page');
+      else t.removeAttribute('aria-current');
+    });
+    state.status = tab.dataset.uxTab;
+    setTitle(tab);
+  };
+  const setTab = (tab) => {
+    markTab(tab);
+    setList();
+  };
+  // Read the filters back from the address: on load and on Back or Forward
+  const readUrl = () => {
+    const p = new URL(location.href).searchParams;
+    restoring = true;
+    state.mod = p.get('mod') || '';
+    state.q = p.get('q') || '';
+    state.field = ['id', 'by'].includes(p.get('in')) ? p.get('in') : 'text';
+    document.querySelectorAll('[data-ux-field]').forEach((f) => { f.value = state.field; });
+    document.querySelectorAll('[data-ux-q]').forEach((f) => { f.value = state.q; });
+    const tab = document.querySelector('[data-ux-tab="' + (p.get('tab') === 'wait' ? 'wait' : 'all') + '"]');
+    if (tab) markTab(tab);
+    else state.status = p.get('tab') === 'wait' ? 'wait' : 'all';
+    restoring = false;
+  };
+  window.addEventListener('popstate', () => {
+    readUrl();
+    restoring = true;
+    setList();
+    restoring = false;
+    setBack();
+  });
+  document.querySelectorAll('[data-ux-tab]').forEach((tab) => tab.addEventListener('click', (e) => {
+    e.preventDefault();
+    setTab(tab);
+  }));
+  setTitle(document.querySelector('[data-ux-tab][aria-current="page"]'));
+
+  // Options apply on change without a reload and say so; the colour mode takes effect at once
+  document.querySelectorAll('[data-ux-option]').forEach((s) => s.addEventListener('change', () => {
+    if (s.name === 'mode') {
+      demoState.mode = s.value;
+      setDemoState();
+    }
+    const row = s.closest('[data-ux-option-row]');
+    const name = row ? row.querySelector('label').textContent.trim() : s.name;
+    document.querySelectorAll('[data-ux-option-status]').forEach((n) => { n.textContent = 'Сохранено: ' + name + ' — ' + s.options[s.selectedIndex].text + '.'; });
+  }));
+
+  document.addEventListener('click', (e) => {
+    const node = e.target;
+    if (!node.closest) return;
+    if (node.closest('[data-ux-menu-open]')) {
+      setMenu(!document.body.hasAttribute('data-ux-nav-open'));
+      return;
+    }
+    if (node.closest('[data-ux-menu-close]')) {
+      setMenu(false);
+      return;
+    }
+    const toggle = node.closest('[data-ux-group-toggle]');
+    if (toggle) {
+      setGroup(toggle.closest('[data-ux-group]'), toggle.getAttribute('aria-expanded') !== 'true');
+      return;
+    }
+    const chip = node.closest('[data-ux-mod-chip]');
+    if (chip) {
+      state.mod = chip.dataset.uxModChip;
+      setList();
+      return;
+    }
+    const clear = node.closest('[data-ux-clear]');
+    if (clear) {
+      const k = clear.dataset.uxClear;
+      if (k === 'mod') state.mod = '';
+      if (k === 'q') {
+        state.q = '';
+        document.querySelectorAll('[data-ux-q]').forEach((q) => { q.value = ''; });
+      }
+      if (k === 'status') {
+        const all = document.querySelector('[data-ux-tab="all"]');
+        if (all) setTab(all);
+        else state.status = 'all';
+      }
+      setList();
+      const first = document.querySelector('[data-ux-active] button') || document.querySelector('[data-ux-q]');
+      if (first) first.focus();
+      return;
+    }
+    const dense = node.closest('[data-ux-density]');
+    if (dense) {
+      document.querySelectorAll('[data-ux-density]').forEach((b) => b.setAttribute('aria-pressed', String(b === dense)));
+      if (table) table.dataset.density = dense.dataset.uxDensity;
+      return;
+    }
+    if (node.closest('[data-ux-unpick]')) {
+      rows.forEach((r) => { r.querySelector('[data-ux-check]').checked = false; });
+      setPicked();
+      const all = document.querySelector('[data-ux-check-all]');
+      if (all) all.focus();
+      return;
+    }
+    // The inspector: the opener of a row fills the side panel from the row it stands in
+    const open = node.closest('[data-ux-open]');
+    if (open) {
+      const row = open.closest('[data-ux-row]');
+      rows.forEach((r) => r.classList.toggle('sl-is-active', r === row));
+      rows.forEach((r) => { const o = r.querySelector('[data-ux-open]'); if (o) o.setAttribute('aria-expanded', String(r === row)); });
+      const d = row.dataset;
+      const val = { id: d.id, text: d.text, mod: modName(d.mod), by: d.by, date: d.date, ip: d.ip, state: d.on === '1' ? 'Активирован' : 'Ждёт проверки' };
+      document.querySelectorAll('[data-ux-inspect]').forEach((box) => {
+        box.querySelectorAll('[data-ux-i]').forEach((n) => { n.textContent = val[n.dataset.uxI] || ''; });
+        box.querySelectorAll('[data-ux-i-on]').forEach((n) => { n.hidden = (n.dataset.uxIOn === 'wait') !== (d.on === '0'); });
+        box.querySelectorAll('[data-ux-i-idle]').forEach((n) => { n.hidden = true; });
+        box.querySelectorAll('[data-ux-i-body]').forEach((n) => { n.hidden = false; });
+      });
+      return;
+    }
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && document.body.hasAttribute('data-ux-nav-open')) setMenu(false);
+  });
+  // A short notice with Undo replaces "Are you sure?": the change is made at once and can be taken back for ten seconds
+  const toast = document.querySelector('[data-ux-toast]');
+  let undo = null;
+  let toastWait = 0;
+  const setToast = (text, back) => {
+    if (!toast) return;
+    undo = back;
+    toast.querySelectorAll('[data-ux-undo]').forEach((b) => { b.hidden = !back; });
+    toast.querySelector('[data-ux-toast-text]').textContent = text;
+    toast.hidden = false;
+    clearTimeout(toastWait);
+    toastWait = setTimeout(() => { toast.hidden = true; undo = null; }, 10000);
+  };
+  const setRowOn = (r, on) => {
+    r.dataset.on = on ? '1' : '0';
+    r.querySelectorAll('[data-ux-stat]').forEach((b) => {
+      const id = r.dataset.id;
+      b.setAttribute('aria-pressed', String(on));
+      b.setAttribute('aria-label', 'Комментарий ' + id + ': ' + (on ? 'активирован, нажмите, чтобы деактивировать' : 'ждёт проверки, нажмите, чтобы активировать'));
+      b.title = on ? 'Активирован — деактивировать' : 'Ждёт проверки — активировать';
+      const icon = b.querySelector('span');
+      if (icon) icon.className = on ? 'sl-status-active' : 'sl-status-inactive';
+    });
+  };
+  const log = document.querySelector('[data-ux-log]');
+  const addLog = (text) => {
+    if (!log) return;
+    const t = new Date();
+    const li = document.createElement('li');
+    li.innerHTML = '<time datetime="' + t.toISOString() + '">' + t.toLocaleTimeString('ru-RU') + '</time><b>SLAED CMS</b><span></span>';
+    li.querySelector('span').textContent = text;
+    log.prepend(li);
+    document.querySelectorAll('[data-ux-log-empty]').forEach((n) => { n.hidden = true; });
+    document.querySelectorAll('[data-ux-log-n]').forEach((n) => { n.textContent = String(log.children.length); });
+  };
+  const setAct = (list, act) => {
+    if (!list.length) return;
+    const all = state.allPages;
+    // The row that held the focus may leave; the focus moves to the next row that stays, never to the page top
+    const held = document.activeElement && document.activeElement.closest ? document.activeElement.closest('[data-ux-row]') : null;
+    const after = held ? visible().slice(visible().indexOf(held) + 1).find((r) => !list.includes(r)) || visible().filter((r) => !list.includes(r)).pop() : null;
+    const was = list.map((r) => [r, r.dataset.on, r.hasAttribute('data-ux-gone')]);
+    list.forEach((r) => {
+      if (act === 'del') r.setAttribute('data-ux-gone', '');
+      else setRowOn(r, act === 'on');
+      r.querySelector('[data-ux-check]').checked = false;
+    });
+    state.allPages = false;
+    setList();
+    if (held && held.hidden && after) after.querySelector('[data-ux-check]').focus();
+    const word = { del: 'Удалено', on: 'Активировано', off: 'Деактивировано' }[act];
+    const what = all ? 'Комментариев: ' + getUxNum(UX_TOTAL) : (list.length === 1 ? 'Комментарий № ' + list[0].dataset.id : 'Комментариев: ' + list.length);
+    addLog(word + ': ' + what.replace('Комментарий № ', '№ ').replace('Комментариев: ', '') + (all ? ' (все страницы)' : ''));
+    setToast(what + ' — ' + word.toLowerCase() + '.', () => {
+      was.forEach(([r, on, gone]) => { setRowOn(r, on === '1'); r.toggleAttribute('data-ux-gone', gone); });
+      setList();
+      addLog('Отменено: ' + word.toLowerCase() + ' — ' + what.replace('Комментарий № ', '№ ').replace('Комментариев: ', ''));
+    });
+  };
+  // List keys: J and K walk the rows, X checks, E opens the edit, / goes to the search
+  let cursor = -1;
+  const visible = () => rows.filter((r) => !r.hidden);
+  const setCursor = (i) => {
+    const list = visible();
+    if (!list.length) return;
+    cursor = Math.max(0, Math.min(list.length - 1, i));
+    rows.forEach((r) => r.classList.remove('v-cursor'));
+    const r = list[cursor];
+    r.classList.add('v-cursor');
+    r.tabIndex = -1;
+    r.focus({ preventScroll: false });
+  };
+  // Ctrl+K: one palette for the sections of the menu and the actions of this screen
+  const pal = document.getElementById('ux-palette');
+  const palQ = pal ? pal.querySelector('[data-ux-pal-q]') : null;
+  const palList = pal ? pal.querySelector('[data-ux-pal-list]') : null;
+  const cmds = !table ? [] : [
+    { label: 'Ждут проверки', hint: 'Вкладка', run: () => { const t = document.querySelector('[data-ux-tab="wait"]'); if (t) setTab(t); } },
+    { label: 'Все комментарии', hint: 'Вкладка', run: () => { const t = document.querySelector('[data-ux-tab="all"]'); if (t) setTab(t); } },
+    { label: 'Сбросить фильтры', hint: 'Список', run: () => { state.mod = ''; state.q = ''; document.querySelectorAll('[data-ux-q]').forEach((q) => { q.value = ''; }); setList(); } },
+    { label: 'Отметить все показанные', hint: 'Список', run: () => { visible().forEach((r) => { r.querySelector('[data-ux-check]').checked = true; }); setPicked(); } },
+    { label: 'Смоделировать сбой сети', hint: 'Стенд', run: () => { state.fail = true; } },
+  ];
+  cmds.push(
+    { label: 'Смоделировать конец сессии', hint: 'Стенд', run: () => setSessionEnd() },
+    { label: 'Тёмная тема', hint: 'Опции', run: () => { demoState.mode = 'dark'; setDemoState(); } },
+    { label: 'Светлая тема', hint: 'Опции', run: () => { demoState.mode = 'light'; setDemoState(); } },
+    { label: 'Опции', hint: 'Окно', run: () => { const d = document.getElementById('sl-settings'); if (d && window.setWindowOpen) window.setWindowOpen(d); } },
+  );
+  // A section is named by its own text, without the queue chip that may stand in the link
+  nav.querySelectorAll('[data-ux-item] > a').forEach((a) => cmds.push({ label: [...a.childNodes].filter((x) => x.nodeType === 3).map((x) => x.textContent).join('').trim(), hint: 'Раздел', href: a.getAttribute('href') }));
+  let palAt = 0;
+  const palShown = () => [...palList.querySelectorAll('[role="option"]')].filter((o) => !o.hidden);
+  const setPalAt = (i) => {
+    const list = palShown();
+    if (!list.length) return;
+    palAt = (i + list.length) % list.length;
+    list.forEach((o, n) => o.setAttribute('aria-selected', String(n === palAt)));
+    palQ.setAttribute('aria-activedescendant', list[palAt].id);
+    list[palAt].scrollIntoView({ block: 'nearest' });
+  };
+  const setPalFind = () => {
+    const term = palQ.value.trim().toLowerCase();
+    let seen = 0;
+    palList.querySelectorAll('[role="option"]').forEach((o) => { o.hidden = term !== '' && !o.textContent.toLowerCase().includes(term); if (!o.hidden) seen += 1; });
+    pal.querySelectorAll('[data-ux-pal-empty]').forEach((n) => { n.hidden = seen > 0; });
+    setPalAt(0);
+  };
+  const runPal = (o) => {
+    const c = cmds[Number(o.dataset.cmd)];
+    if (window.setWindowClose) window.setWindowClose(pal); else pal.close();
+    if (c.href && c.href !== '#') location.href = c.href;
+    else if (c.run) c.run();
+  };
+  if (pal) {
+    palList.innerHTML = cmds.map((c, n) => '<li id="ux-pal-' + n + '" role="option" aria-selected="false" data-cmd="' + n + '"><span>' + getGroupEsc(c.label) + '</span><small>' + c.hint + '</small></li>').join('');
+    palQ.addEventListener('input', setPalFind);
+    palQ.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowDown') { e.preventDefault(); setPalAt(palAt + 1); }
+      if (e.key === 'ArrowUp') { e.preventDefault(); setPalAt(palAt - 1); }
+      if (e.key === 'Enter') { e.preventDefault(); const o = palShown()[palAt]; if (o) runPal(o); }
+    });
+    palList.addEventListener('click', (e) => { const o = e.target.closest('[role="option"]'); if (o) runPal(o); });
+  }
+  const openPal = () => {
+    if (!pal) return;
+    palQ.value = '';
+    setPalFind();
+    if (window.setWindowOpen) window.setWindowOpen(pal); else pal.showModal();
+    palQ.focus();
+  };
+
+  document.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+      e.preventDefault();
+      openPal();
+      return;
+    }
+    const t = e.target;
+    if (e.ctrlKey || e.metaKey || e.altKey || (t.closest && t.closest('input, select, textarea, dialog'))) return;
+    const k = e.key.toLowerCase();
+    if (k === '/') {
+      e.preventDefault();
+      const q = document.querySelector('[data-ux-q]');
+      if (q) q.focus();
+    } else if (k === 'j' || k === 'о') {
+      e.preventDefault();
+      setCursor(cursor + 1);
+    } else if (k === 'k' || k === 'л') {
+      e.preventDefault();
+      setCursor(cursor - 1);
+    } else if ((k === 'x' || k === 'ч') && cursor >= 0) {
+      e.preventDefault();
+      const c = visible()[cursor].querySelector('[data-ux-check]');
+      c.checked = !c.checked;
+      setPicked();
+    } else if ((k === 'e' || k === 'у') && cursor >= 0) {
+      const a = visible()[cursor].querySelector('[data-ux-edit]');
+      if (a) { e.preventDefault(); a.click(); }
+    }
+  });
+  document.addEventListener('click', (e) => {
+    const node = e.target;
+    if (!node.closest) return;
+    if (node.closest('[data-ux-pal-open]')) { openPal(); return; }
+    const stat = node.closest('[data-ux-stat]');
+    if (stat) { setAct([stat.closest('[data-ux-row]')], stat.getAttribute('aria-pressed') === 'true' ? 'off' : 'on'); return; }
+    const del = node.closest('[data-ux-del]');
+    if (del) { e.preventDefault(); setAct([del.closest('[data-ux-row]')], 'del'); return; }
+    const bulk = node.closest('[data-ux-bulk-act]');
+    if (bulk) { setAct(picked(), bulk.dataset.uxBulkAct); return; }
+    const go = node.closest('[data-ux-bulk-go]');
+    if (go) {
+      const sel = document.getElementById('ux-typ');
+      setAct(picked(), { d: 'del', a1: 'on', a0: 'off' }[sel ? sel.value : 'a0']);
+      return;
+    }
+    const iact = node.closest('[data-ux-i-act]');
+    if (iact) {
+      const r = rows.find((x) => x.classList.contains('sl-is-active'));
+      if (r) setAct([r], iact.dataset.uxIAct);
+      return;
+    }
+    if (node.closest('[data-ux-undo]') && undo) {
+      undo();
+      undo = null;
+      toast.hidden = true;
+      return;
+    }
+    if (node.closest('[data-ux-toast-close]')) { toast.hidden = true; undo = null; }
+  });
+  // Sort: the theme's Tablesort sorts and sets aria-sort; the button in a head makes it reachable by keys, the choice is kept
+  if (table && table.tHead) {
+    table.addEventListener('afterSort', () => {
+      const th = table.tHead.querySelector('th[aria-sort]');
+      if (!th) return;
+      try { localStorage.setItem('ux.sort', JSON.stringify({ i: th.cellIndex, dir: th.getAttribute('aria-sort') })); } catch (e) { /* storage may be off */ }
+      document.querySelectorAll('[data-ux-status]').forEach((n) => { n.textContent = 'Сортировка: ' + th.textContent.trim() + ', ' + (th.getAttribute('aria-sort') === 'ascending' ? 'по возрастанию' : 'по убыванию') + '.'; });
+    });
+    setTimeout(() => {
+      let keep = null;
+      try { keep = JSON.parse(localStorage.getItem('ux.sort') || 'null'); } catch (e) { keep = null; }
+      const th = keep && table.tHead.rows[0].cells[keep.i];
+      if (!th || th.getAttribute('data-sort-method') === 'none') return;
+      th.click();
+      if (th.getAttribute('aria-sort') !== keep.dir) th.click();
+    }, 0);
+  }
+  // Relative time: "2 года назад" on the screen, the exact moment in the title and the datetime
+  const rtf = new Intl.RelativeTimeFormat('ru', { numeric: 'auto' });
+  document.querySelectorAll('time[data-ux-ago]').forEach((t) => {
+    const ms = Date.parse(t.getAttribute('datetime'));
+    if (Number.isNaN(ms)) return;
+    const sec = (ms - Date.now()) / 1000;
+    const steps = [['year', 31536000], ['month', 2592000], ['week', 604800], ['day', 86400], ['hour', 3600], ['minute', 60]];
+    const [unit, size] = steps.find(([, sz]) => Math.abs(sec) >= sz) || ['minute', 60];
+    t.title = t.textContent.trim();
+    t.textContent = rtf.format(Math.round(sec / size), unit);
+  });
+  // Saved views: a view is the filter of the list under a name, built in or saved by the administrator
+  const views = document.querySelector('[data-ux-views]');
+  const builtIn = [
+    { name: 'Ждут проверки в Новостях', mod: 'news', q: '', in: 'text', tab: 'wait' },
+    { name: 'Ответы администрации', mod: '', q: 'SLAED CMS', in: 'by', tab: 'all' },
+  ];
+  const ownViews = () => { try { return JSON.parse(localStorage.getItem('ux.views') || '[]'); } catch (e) { return []; } };
+  const drawViews = () => {
+    if (!views) return;
+    const list = views.querySelector('[data-ux-views-list]');
+    list.innerHTML = builtIn.concat(ownViews()).map((v, i) => '<li><button type="button" class="sl-chip sl-chip-neutral v-view" data-ux-view="' + i + '">' + getGroupEsc(v.name) + '</button>'
+      + (i >= builtIn.length ? '<button type="button" class="v-view-x" data-ux-view-x="' + (i - builtIn.length) + '" aria-label="Удалить вид «' + getGroupEsc(v.name) + '»" title="Удалить вид"><i class="bi bi-x" aria-hidden="true"></i></button>' : '') + '</li>').join('');
+  };
+  const useView = (v) => {
+    state.mod = v.mod; state.q = v.q; state.field = v.in;
+    document.querySelectorAll('[data-ux-field]').forEach((x) => { x.value = v.in; });
+    document.querySelectorAll('[data-ux-q]').forEach((x) => { x.value = v.q; });
+    const tab = document.querySelector('[data-ux-tab="' + v.tab + '"]');
+    if (tab) setTab(tab); else setList();
+  };
+  drawViews();
+  // The bell: every queue of the panel in one place; the comments count is live, the others as the dashboard gives them
+  const bell = document.querySelector('[data-ux-bell]');
+  const setBell = () => {
+    if (!bell) return;
+    const own = rows.length ? rows.filter((r) => r.dataset.on === '0' && !r.hasAttribute('data-ux-gone')).length : Number(bell.dataset.uxBellComments || 0);
+    document.querySelectorAll('[data-ux-bell-comments]').forEach((n) => { n.textContent = String(own); n.closest('li').hidden = own === 0; });
+    let sum = 0;
+    document.querySelectorAll('[data-ux-bell-n]').forEach((n) => { if (!n.closest('li').hidden) sum += Number(n.textContent) || 0; });
+    sum += own;
+    bell.querySelectorAll('[data-ux-bell-sum]').forEach((n) => { n.textContent = String(sum); n.hidden = sum === 0; });
+    bell.setAttribute('aria-label', 'Уведомления: ' + sum);
+  };
+  // The end of a session: a warning with a countdown before the work is lost, and a way to keep it
+  const sess = document.getElementById('ux-session');
+  let sessTick = 0;
+  const setSessionEnd = () => {
+    if (!sess) return;
+    let left = 120;
+    const draw = () => { sess.querySelectorAll('[data-ux-sess-left]').forEach((n) => { n.textContent = Math.floor(left / 60) + ':' + String(left % 60).padStart(2, '0'); }); };
+    draw();
+    clearInterval(sessTick);
+    sessTick = setInterval(() => { left -= 1; draw(); if (left <= 0) clearInterval(sessTick); }, 1000);
+    if (window.setWindowOpen) window.setWindowOpen(sess); else sess.showModal();
+  };
+  document.addEventListener('click', (e) => {
+    const node = e.target;
+    if (!node.closest) return;
+    if (node.closest('[data-ux-allpages-go]')) { state.allPages = true; setPicked(); return; }
+    if (node.closest('[data-ux-allpages-off]')) { state.allPages = false; rows.forEach((r) => { r.querySelector('[data-ux-check]').checked = false; }); setPicked(); return; }
+    if (node.closest('[data-ux-retry]')) { setList(); return; }
+    const go = node.closest('[data-ux-tab-go]');
+    if (go) {
+      e.preventDefault();
+      const tab = document.querySelector('[data-ux-tab="' + go.dataset.uxTabGo + '"]');
+      const pop = go.closest('[popover]');
+      if (pop) pop.hidePopover();
+      if (tab) { setTab(tab); tab.focus(); }
+      return;
+    }
+    const v = node.closest('[data-ux-view]');
+    if (v) { useView(builtIn.concat(ownViews())[Number(v.dataset.uxView)]); return; }
+    const vx = node.closest('[data-ux-view-x]');
+    if (vx) { const own = ownViews(); own.splice(Number(vx.dataset.uxViewX), 1); try { localStorage.setItem('ux.views', JSON.stringify(own)); } catch (er) { /* storage may be off */ } drawViews(); return; }
+    if (node.closest('[data-ux-view-save]')) {
+      const box = views.querySelector('[data-ux-view-new]');
+      box.hidden = false;
+      box.querySelector('input').focus();
+      return;
+    }
+    if (node.closest('[data-ux-sess-keep]')) {
+      clearInterval(sessTick);
+      if (window.setWindowClose) window.setWindowClose(sess); else sess.close();
+      setToast('Сессия продлена на 30 минут.', null);
+      return;
+    }
+  });
+  if (views) {
+    views.querySelector('[data-ux-view-new]').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const input = e.currentTarget.querySelector('input');
+      const name = input.value.trim();
+      if (!name) { input.focus(); return; }
+      const own = ownViews();
+      own.push({ name, mod: state.mod, q: state.q, in: state.field, tab: state.status });
+      try { localStorage.setItem('ux.views', JSON.stringify(own)); } catch (er) { /* storage may be off */ }
+      input.value = '';
+      e.currentTarget.hidden = true;
+      drawViews();
+      setToast('Вид «' + name + '» сохранён.', null);
+    });
+  }
+  setBellHook = () => { setBell(); };
+  readUrl();
+  setBack();
+  setList(false);
+  setBell();
+}
+
+/* Reference form of docs/2027-ADMIN-UX.md, the config of the panel: ARIA tabs with arrow keys, the changes counted on a
+   sticky bar, an error summary that links to each field, messages bound to their fields, a guard on leaving, a search
+   over every setting */
+function setDemoConfigUx() {
+  const form = document.querySelector('[data-cf-form]');
+  if (!form) return;
+  const tabs = [...document.querySelectorAll('[data-cf-tab]')];
+  const panels = [...document.querySelectorAll('[data-cf-panel]')];
+  const head = document.querySelector('[data-ux-section]');
+  const ctrls = [...form.querySelectorAll('input, select, textarea')].filter((c) => c.name);
+  const snap = (c) => (c.type === 'checkbox' || c.type === 'radio' ? String(c.checked) : (c.multiple ? [...c.selectedOptions].map((o) => o.value).join('|') : c.value));
+  const first = new Map(ctrls.map((c) => [c, snap(c)]));
+  const toast = document.querySelector('[data-ux-toast]');
+  const say = (text) => {
+    if (!toast) return;
+    toast.querySelectorAll('[data-ux-undo]').forEach((b) => { b.hidden = true; });
+    toast.querySelector('[data-ux-toast-text]').textContent = text;
+    toast.hidden = false;
+    clearTimeout(say.t);
+    say.t = setTimeout(() => { toast.hidden = true; }, 6000);
+  };
+  const setTab = (i, focus) => {
+    tabs.forEach((t, n) => {
+      t.setAttribute('aria-selected', String(n === i));
+      t.tabIndex = n === i ? 0 : -1;
+      t.classList.toggle('sl-is-active', n === i);
+    });
+    panels.forEach((p, n) => { p.hidden = n !== i; });
+    if (focus) tabs[i].focus();
+    document.title = [head ? head.dataset.uxSection : '', tabs[i].dataset.cfName, 'Админ', document.body.dataset.uxSite || 'Название сайта'].filter(Boolean).join(' — ');
+  };
+  tabs.forEach((t, i) => {
+    t.addEventListener('click', () => setTab(i, false));
+    t.addEventListener('keydown', (e) => {
+      const go = { ArrowRight: i + 1, ArrowLeft: i - 1, Home: 0, End: tabs.length - 1 }[e.key];
+      if (go === undefined) return;
+      e.preventDefault();
+      setTab((go + tabs.length) % tabs.length, true);
+    });
+  });
+  // Changes: a field counts once, a group of radios too; the tab of a changed field carries a mark
+  const changed = () => {
+    const seen = new Set();
+    ctrls.forEach((c) => { if (snap(c) !== first.get(c)) seen.add(c.type === 'radio' ? 'r:' + c.name : c); });
+    return seen;
+  };
+  const setBar = () => {
+    const set = changed();
+    const n = set.size;
+    form.querySelectorAll('[data-cf-changed]').forEach((x) => { x.textContent = n ? 'Изменено полей: ' + n : 'Изменений нет'; });
+    form.querySelectorAll('[data-cf-reset], [data-cf-save]').forEach((b) => { b.disabled = n === 0; });
+    panels.forEach((p, i) => {
+      const dirty = [...p.querySelectorAll('input, select, textarea')].some((c) => c.name && snap(c) !== first.get(c));
+      tabs[i].querySelectorAll('[data-cf-dot]').forEach((d) => { d.hidden = !dirty; });
+    });
+    return n;
+  };
+  // Validation: nothing is judged before the first save; after it a field is judged again as it is left
+  const rule = (c) => {
+    const v = c.value.trim();
+    const label = c.closest('[data-cf-item]').dataset.cfLabel;
+    if (c.required && !v) return 'Заполните поле «' + label + '».';
+    if (!v) return '';
+    if (c.type === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) return 'Укажите адрес почты в виде name@example.com.';
+    if (c.type === 'url') { try { const u = new URL(v); if (!/^https?:$/.test(u.protocol)) throw new Error('scheme'); } catch (e) { return 'Укажите адрес в виде https://example.com.'; } }
+    if (c.type === 'number' && (Number.isNaN(Number(v)) || Number(v) < 0)) return 'Укажите целое число, не меньше нуля.';
+    return '';
+  };
+  const setErr = (c, msg) => {
+    const p = document.getElementById(c.id + '-err');
+    if (!p) return;
+    p.textContent = msg;
+    p.hidden = !msg;
+    c.toggleAttribute('aria-invalid', Boolean(msg));
+    const ids = (c.getAttribute('aria-describedby') || '').split(' ').filter((x) => x && x !== p.id);
+    if (msg) ids.push(p.id);
+    if (ids.length) c.setAttribute('aria-describedby', ids.join(' ')); else c.removeAttribute('aria-describedby');
+  };
+  let judged = false;
+  const summary = document.querySelector('[data-cf-summary]');
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    judged = true;
+    const bad = [];
+    ctrls.forEach((c) => { if (c.type === 'radio' || c.type === 'checkbox' || c.tagName === 'SELECT') return; const m = rule(c); setErr(c, m); if (m) bad.push([c, m]); });
+    if (bad.length) {
+      summary.querySelector('[data-cf-summary-cap]').textContent = 'Исправьте ' + (bad.length === 1 ? 'ошибку' : 'ошибки') + ': ' + bad.length;
+      summary.querySelector('[data-cf-summary-list]').innerHTML = bad.map(([c, m]) => {
+        const tab = tabs[panels.indexOf(c.closest('[data-cf-panel]'))];
+        return '<li><a href="#' + c.id + '" data-cf-jump="' + c.id + '">' + getGroupEsc(tab.dataset.cfName) + ' › ' + getGroupEsc(m) + '</a></li>';
+      }).join('');
+      summary.hidden = false;
+      summary.focus();
+      return;
+    }
+    summary.hidden = true;
+    ctrls.forEach((c) => first.set(c, snap(c)));
+    setBar();
+    judged = false;
+    say('Конфигурация сохранена.');
+  });
+  form.addEventListener('focusout', (e) => {
+    const c = e.target;
+    if (!judged || !c.name || c.type === 'radio') return;
+    setErr(c, rule(c));
+  });
+  form.addEventListener('input', setBar);
+  form.addEventListener('change', setBar);
+  form.querySelectorAll('[data-cf-reset]').forEach((b) => b.addEventListener('click', () => {
+    ctrls.forEach((c) => {
+      const v = first.get(c);
+      if (c.type === 'checkbox' || c.type === 'radio') c.checked = v === 'true';
+      else if (c.multiple) [...c.options].forEach((o) => { o.selected = v.split('|').includes(o.value); });
+      else c.value = v;
+      setErr(c, '');
+    });
+    summary.hidden = true;
+    judged = false;
+    setBar();
+    say('Изменения сброшены.');
+  }));
+  // Jump from the summary or a search result: the tab of the field opens, the field takes the focus
+  const jump = (id) => {
+    const c = document.getElementById(id);
+    if (!c) return;
+    setTab(panels.indexOf(c.closest('[data-cf-panel]')), false);
+    const item = c.closest('[data-cf-item]');
+    item.classList.remove('v-found');
+    void item.offsetWidth;
+    item.classList.add('v-found');
+    c.focus();
+  };
+  document.addEventListener('click', (e) => {
+    const j = e.target.closest && e.target.closest('[data-cf-jump]');
+    if (j) { e.preventDefault(); jump(j.dataset.cfJump); }
+  });
+  // Search over every setting of every tab, by its name and its hint
+  const find = document.querySelector('[data-cf-find]');
+  const list = document.querySelector('[data-cf-results]');
+  const items = [...form.querySelectorAll('[data-cf-item]')];
+  let at = -1;
+  const draw = () => {
+    const term = find.value.trim().toLowerCase();
+    const hits = term.length < 2 ? [] : items.filter((it) => (it.dataset.cfLabel + ' ' + it.textContent).toLowerCase().includes(term)).slice(0, 8);
+    list.innerHTML = hits.map((it, n) => {
+      const c = it.querySelector('input, select, textarea');
+      const tab = tabs[panels.indexOf(it.closest('[data-cf-panel]'))];
+      return '<li id="cf-hit-' + n + '" role="option" aria-selected="false" data-cf-jump="' + c.id + '"><b>' + getGroupEsc(it.dataset.cfLabel) + '</b><small>' + getGroupEsc(tab.dataset.cfName) + '</small></li>';
+    }).join('') || (term.length < 2 ? '' : '<li class="v-cf-none">Настройка не найдена.</li>');
+    list.hidden = list.innerHTML === '';
+    find.setAttribute('aria-expanded', String(!list.hidden));
+    at = -1;
+  };
+  if (find) {
+    find.addEventListener('input', draw);
+    find.addEventListener('keydown', (e) => {
+      const opts = [...list.querySelectorAll('[role="option"]')];
+      if (e.key === 'Escape') { find.value = ''; draw(); return; }
+      if (!opts.length) return;
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        at = (at + (e.key === 'ArrowDown' ? 1 : -1) + opts.length) % opts.length;
+        opts.forEach((o, n) => o.setAttribute('aria-selected', String(n === at)));
+        find.setAttribute('aria-activedescendant', opts[at].id);
+      }
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        const o = opts[Math.max(0, at)];
+        find.value = '';
+        draw();
+        jump(o.dataset.cfJump);
+      }
+    });
+  }
+  // Leaving with changes asks through the confirm window of the panel; the browser's own ways out ask too
+  document.addEventListener('click', (e) => {
+    const a = e.target.closest && e.target.closest('a[href]');
+    if (!a || a.getAttribute('href').startsWith('#') || a.target === '_blank' || !setBar()) return;
+    e.preventDefault();
+    if (typeof window.setConfirmTask === 'function') window.setConfirmTask('Изменения конфигурации не сохранены. Уйти без сохранения?', () => { ctrls.forEach((c) => first.set(c, snap(c))); location.href = a.href; });
+  }, true);
+  window.addEventListener('beforeunload', (e) => {
+    if (!setBar()) return;
+    e.preventDefault();
+    e.returnValue = '';
+  });
+  setTab(0, false);
+  setBar();
+}
+
 function initDemoPage() {
   const params = new URLSearchParams(location.search);
   const bare = params.has('bare');
@@ -3551,6 +5002,9 @@ function initDemoPage() {
   setDemoNodeHead();
   setDemoPager();
   setDemoKnob();
+  setDemoGroups();
+  setDemoAdminUx();
+  setDemoConfigUx();
 
   document.addEventListener('click', (e) => {
     const btn = e.target.closest('[data-demo-set]');

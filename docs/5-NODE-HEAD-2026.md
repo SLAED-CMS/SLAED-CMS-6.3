@@ -3,8 +3,18 @@
 Work plan for the list of a Node type: its header — the approved face of the stand page `public/demo/nh-13-calm.html`
 carried into the lite theme — the views a type gives its list, and the RSS channel, the second face of the same list.
 
-Status: planned, nothing implemented. The order of the batches is kept in `docs/ROADMAP-2026.md`. Update this line
-as batches land.
+Status: batch 0 landed 2026-10-09 — the open decisions answered under "Decisions of batch 0", the callers of
+`getModuleNavi()` listed there, the screenshot baseline taken. Batch 1 landed 2026-10-10 — the feed fixed in its five
+points in `getRssChannel()`; the `go=rss` branch of `public/index.php` kept its no-store default for a refusal, the
+channel replaces it with private revalidation, and the tag also takes the site name, slogan, version and locale of the
+head. Batch 2 landed 2026-10-10 — the group, the sticky mark and the lens in `slaed.js` under the names given at the end
+of "Script"; the stand pages `nh-08`…`nh-13` stand on them and `demo.js` lost its own copies. Batch 3 landed 2026-10-10
+by "Decisions of batch 3" — `getNodeHead()` draws the draft `partials/node/head.html` in place of `getNodeNavi()`; the
+counts come from `NodeQuery::getNodeTally()` through `getNodeCountMap()` and `deleteNodeCountMap()` beside the category
+map, which `NodeService` drops after every material write and `deleteCategoryMap()` with the map; the personal filters
+are `NodeQuery::setNodeFavorite()`, `setNodePublished()` from `getUserLastVisit()` and `getNodeOwnCount()`; `_ASC` and
+`_DESC` moved from `admin/lang/` to `lang/`, `_NODE_UPDATED` from the admin language of Node to its site language. The
+order of the batches is kept in `docs/ROADMAP-2026.md`. Update this line as batches land.
 
 No line numbers anywhere in this document on purpose: every reference names the function, the file or the constant
 it points at, and that name is what to search for.
@@ -133,7 +143,8 @@ opens the lens and swaps the list. Nothing of the stand's in-page state (`data-n
   the whole type and no pages.
 - The view switch is the segmented switch `sl-seg sl-seg-view` with `data-sl-knob="view"` from
   `docs/6-PAGER-2026.md`, batch 0 (owner, 2026-10-08), as on the stand `nh-13-calm.html`; the server draws only the
-  cells of the type, and the knob travels across the htmx swap of the list. The choice of the visitor rides in the address by decision 7.
+  cells of the type, and the knob travels across the htmx swap of the list. The choice of the visitor is kept in a
+  cookie per type by decision 7.
 - The month heads are drawn by the list for an order by date, in the cards and the compact view.
 
 ### Script
@@ -146,16 +157,29 @@ and added only where nothing there carries it:
 - a sticky mark that sets an attribute on the bar while it is stuck;
 - a lens that opens a field over a stuck bar, closes on Esc and on the lens, and empties the field on closing.
 
+Landed in batch 2 as attributes the header of batch 4 puts on its markup:
+
+- `data-sl-toggle-group="<name>"` on the `data-sl-toggle` blocks: `setToggleGroup()` closes the open blocks of the
+  same name, with the motion of their own control, before one opens.
+- `data-sl-sticky` on the block that sticks: `setStickyBars()` sets `data-sl-stuck` on it while its mark is above
+  its `top`. The mark is its own `[data-sl-sticky-mark]` or a zero-height one put right before it; the observer band
+  reaches far below the screen, so a jump over the whole screen (a fling, a reload at a scrolled place) is not missed.
+  Leaving the stuck state closes an open lens and keeps the word.
+- `data-sl-lens="<field id>"` on a button inside the sticky block, with `aria-expanded`: the block carries
+  `data-sl-lens-open` while the field is shown and focused; the lens or Esc in the field closes it, empties the field
+  with an `input` event and returns the focus to the lens.
+
 ### Live list
 
 - One template part holds the header and the list. A request with `HX-Request` gets that part alone, any other the
   whole page, at the same address, so the address bar, a reload and a shared link agree.
-- The links of the header, the view switch and the pager carry `hx-get` to their own `href`, the part as target and
-  `hx-push-url`; the part carries the `<title>` of the list, which htmx applies. The open windows close with the swap,
+- The links of the header and the pager carry `hx-get` to their own `href`, the part as target and `hx-push-url`; the
+  view switch posts its form by decision 7 with the part as target and pushes no address, which does not change. The
+  part carries the `<title>` of the list, which htmx applies. The open windows close with the swap,
   as they would with a reload.
 - After a swap the bar is scrolled into view when it is above the screen; back and forward restore the list.
 - "Показать ещё" is the link to the next page under the list: `hx-get`, the cards of the answer appended to the card
-  container, the button replaced by the next one, the pager redrawn; by decision 5 the address follows or not.
+  container, the button replaced by the next one, the pager redrawn; by decision 5 the address takes the `num` of the page appended.
 
 ### Search hints
 
@@ -182,8 +206,8 @@ The stand stands on parts of the tree, and the header keeps them:
 | views | the cards of the types, `sl-related-*`, `sl-pmf-split` |
 
 What the stand added only for layout — the two rows of the bar, the stuck state, the list row and the rail — becomes
-the few `sl-*` rules that layout needs, named with the owner in batch 0. Classes taken from the private messages
-(`sl-pmf-day`, `sl-pmf-split`) are renamed to a common name once they serve two places, not copied. Every visible
+the few `sl-*` rules that layout needs, under the names of decision 8. Classes taken from the private messages
+(`sl-pmf-day`, `sl-pmf-split`) are renamed to the common names of decision 8 once they serve two places, not copied. Every visible
 string is a constant in the six locales of `lang/` or `modules/node/lang/`.
 
 ### Feed
@@ -198,24 +222,73 @@ string is a constant in the six locales of `lang/` or `modules/node/lang/`.
   `Cache::checkNotModified()` ends the request with 304.
 - **Copyright** the site name.
 
-## Open decisions
+## Decisions of batch 0
 
-Put to the owner in batch 0; the answers are written here before any code.
+Taken by the owner on 2026-10-09; settled, not to be reopened by a batch. No decision is left open.
 
-1. **Where the header lives.** `partials/navi.html` serves `getModuleNavi()` for every module: rework it for all, or
-   give the Node list its own header partial and leave the navigation of the other modules as it is. Batch 0 lists
-   the callers first.
-2. **Search.** The field submits to the search module scoped to the type (the stand's form does) with the hints under
-   it — and nothing more, or also filters the cards of the open page as the stand does.
-3. **Counts.** The stand shows counts on the category tiles and per letter, and greys letters without materials:
-   one grouped query each per list view, cached with the list, or no counts and every letter a link as today.
-4. **The stand pages.** Which of `public/demo/nh-01…nh-13` stay after batch 8.
-5. **"Показать ещё" and the address.** The address takes the `num` of the last page appended, so a reload shows that
-   page, or keeps the page the visitor started from.
-6. **The hint route.** Its place (an `op` of the search module or of the Node list), the minimum length of the word
-   (two or three letters) and the delay of the input.
-7. **The view of the visitor.** A parameter of the address (shareable, one more variant of every list address for
-   the cache and the canonical link) or a cookie per type through `setCookies()` (one address, the server reads it).
+The callers of `getModuleNavi()` in `core/helpers.php`, listed first: `getNodeNavi()` in `modules/node/index.php`
+(every Node type) and the three operations of `modules/users/index.php` — `users()`, `rules()`, `stats()` — which pass
+three links and no filter.
+
+1. **Where the header lives.** The Node list gets a header partial of its own, `partials/node/head.html`, built by
+   its own builder in `modules/node/index.php` in place of the call to `getModuleNavi()`. `partials/navi.html` and
+   `getModuleNavi()` stay as they are for `modules/users/`; the category toggle `is_category_toggle` of
+   `fragments/link.html` goes with Node if no other caller is left.
+2. **Search.** The field submits to the search module scoped to the type, with the hints under it, and nothing
+   more: no filter of the cards of the open page, no `word` read by the list.
+3. **Counts.** The category tiles and the letters carry counts and a letter without materials is greyed, as on the
+   stand: one grouped query by category and one by the first letter, under the read rights of the visitor. The
+   cache follows `getCategoryMap()` and `deleteCategoryMap()` in `core/system.php` (owner, 2026-10-10):
+   - one file per type, `Cache::getFile(['nodecount', <type>], 'json')`, so the key is known and a drop is one
+     `unlink`;
+   - inside it one entry per readable set, keyed by the sorted ids of `NodeQuery::getCatAllow()`, which already
+     carries the groups and the language of a category; visitors of different groups who read the same categories
+     share an entry;
+   - a time `until` in the file, the nearest future `published` or `expires` of the type, read by one `MIN` query on
+     rebuild, so a scheduled or expiring material moves the counts at its moment with no write; over it the TTL of
+     the category map, 86400;
+   - a drop function beside `deleteCategoryMap()`, called by every writer of a material of the type (create, edit,
+     state, delete) and wherever `deleteCategoryMap()` is called, since the rights and the language of a category
+     change the counts;
+   - a moderator of the type is counted live and never cached, since a moderator reads every category and other states.
+   Two visitors rebuilding different entries at once may lose one of them; it is counted again on the next request.
+4. **The stand pages.** All of `public/demo/nh-01…nh-13` stay after batch 8.
+5. **"Показать ещё" and the address.** The address takes the `num` of the last page appended, so a reload and a shared
+   link open the page the visitor stopped at.
+6. **The hint route.** A light route of `public/index.php` as the other ajax handlers have, `go=1&op=getNodeHint`
+   with the type in `name` and the word in `word`: a GET in the list of public reads, no token, no module and no page
+   frame loaded, the read rights checked by the handler itself. The minimum length of the word is the one of the
+   search module, `$conf['search']['slet']`, not a number of its own; the input waits 300 ms. (Recorded first as an
+   `op` of the Node list, which loads the module; corrected by the owner on 2026-10-10 to the light route the
+   decisions of 2026-10-07 name.)
+7. **The view of the visitor.** A cookie per type through `setCookies()`, written as the colour mode is written by
+   `getThemeModeSwitch()` and `setThemeMode()`: the cells of the view switch submit a POST form with a token of their
+   own, through `hx-post` when the script runs; the cookie is `httponly`, so no script writes it. The address of a
+   list stays one and the canonical link does not change; a value outside the views of the type falls back to its
+   first view.
+8. **Class names** of what the stand added only for layout: the header `sl-node-head` (the block that sticks) with
+   `sl-node-head-row`, `-title`, `-acts`, `-filters`, `-pill`, `-win` (a window under the bar), `-cap` (the caption of
+   a chip group) and `-sorts`; the list view `sl-node-row`, the rail `sl-node-rail`. The parts of the private
+   messages that become common are renamed, not copied: `sl-pmf-day` → `sl-date-head`; `sl-pmf-split`,
+   `sl-pmf-aside`, `sl-pmf-view` → `sl-duo`, `sl-duo-aside`, `sl-duo-main` (`sl-split-item` of the toolbar and the
+   attribute `data-sl-pane` of the file manager already hold the other names).
+
+## Decisions of batch 3
+
+Taken by the owner on 2026-10-10; settled, not to be reopened by a batch.
+
+1. **A draft header now.** `getNodeHead()` takes the place of `getNodeNavi()` in batch 3 and renders
+   `partials/node/head.html` as plain markup: the sort and direction links, the reset link, the RSS link, the personal
+   links, the count with the total of the type, "Добавить" and the category toggle. Its strings are constants in the six
+   locales, only those this markup needs; the route tests of batch 3 read that HTML. Batch 4 turns the draft into the
+   face of the stand — the windows, the chips, the sticky bar, the `sl-node-head-*` classes.
+2. **The parameters** are `new=1` ("С прошлого визита") and `fav=1` ("В избранном"); any other value, and `fav` on a type
+   without favourites, is a bad request, as `let` is on a type without the alphabet. A guest's parameter narrows
+   nothing: the guest gets the list as it is, without the personal links, under the `noindex, follow` of every filtered
+   address.
+3. **The previous visit at login.** `getUserLastVisit()` in `core/system.php` reads `lastvis` once per session and keeps
+   it with the account id in `$_SESSION[$conf['user_c'].'-lastvis']`; `updateSessionTrack()` and `setUserLogin()` of
+   `modules/account/index.php` call it before they move the column, and the list reads it from there.
 
 ## Batches
 

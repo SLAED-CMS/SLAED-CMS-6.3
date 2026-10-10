@@ -983,7 +983,6 @@ function config(): void {
             'name_attr' => 'css_f',
             'input_id' => 'f-css-f',
             'value_text' => (string)$conf['css_f'],
-            'is_required' => true,
             'is_config' => true,
         ]),
     ];

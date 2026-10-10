@@ -107,5 +107,4 @@ define('_NODE_TSAVED','Тип збережено.');
 define('_NODE_TYPEOFF','Тип вимкнено.');
 define('_NODE_TYPEON','Тип увімкнено.');
 define('_NODE_TYPES','Типи');
-define('_NODE_UPDATED','Оновлені');
 define('_NODE_USEFUL','Корисна');

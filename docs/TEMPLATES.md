@@ -412,14 +412,38 @@ Only a row whose field has no labelable control of its own — a radio group, an
 | `label_id` | the row | the id of the caption, for a field that cannot be pointed at with `for` |
 | `hint_html` | the row | the explanation, a `<span class="sl-small">` beside the caption and outside the `<label>` |
 | `hint_id` | the row | the id of that hint |
-| `labelledby` | `getTplRadioGroup()`, `getTplTextarea()`, `block-content`, `editor-mount` | the caption id the group or editor is named by |
+| `labelledby` | `getTplRadioGroup()`, `getTplTextarea()`, `block-content`, `editor-frame`, `editor-mount` | the caption id the group or editor is named by |
 | `describedby` | `input`, `select`, `textarea`, `checkbox`, `block-content`, `div` | the hint id the control is described by |
 
 - **A radio group carries the name, not its radios.** `getTplRadioGroup()` renders `fragments/block-content.html` with `is_radio_group`, which writes `role="group"` and `aria-labelledby`. The switch variant is a group too: two radios sharing one name still answer one question. A checkbox list built through `partials/div.html` with `is_radio_group` takes the same two attributes.
 - **The hint is never part of the caption.** It sits in the label cell and outside the `<label>`, because a caption that swallowed it would read the explanation out as the name of the field and the description would then be announced twice.
-- **An editor is named server-side and moved by its driver.** `Editor::getContent()` settles the name once — `labelledby` when the row has a caption, `aria-label` when it has none — and hands both down. `plain` writes them onto its `<textarea>`; `toastui` and `ckeditor` write them onto the mount and their own JS moves them to the element that actually holds `role="textbox"`; **TinyMCE takes `aria-label` only**, because it puts its editable body in a second document and an IDREF does not cross that boundary. `codemirror` implements a different interface, is reached only by `Editor::getCode()`, and has no naming contract yet.
+- **An editor is named server-side and moved by its driver.** `Editor::getContent()` settles the name once — `labelledby` when the row has a caption, `aria-label` when it has none — and hands both down. `plain` and `codemirror` write them onto the `<textarea>` of `editor-frame`, and the shell runtime copies the name onto the editable area of CodeMirror when it mounts; `toastui` and `ckeditor` write them onto the mount and their own JS moves them to the element that actually holds `role="textbox"`; **TinyMCE takes `aria-label` only**, because it puts its editable body in a second document and an IDREF does not cross that boundary. A code editor of `Editor::getCode()` is named by the `label` of its caller, or `_TEXT`.
 - **The read-only value row is not a form row.** `fragments/field-value.html` renders `.sl-value-row` / `.sl-value-label` / `.sl-value-text` in both themes, with a `<span>` caption that labels nothing. `.sl-form-*` means the editable row and nothing else. The width token of the panel caption keeps the name `--sl-form-label-width`: that API block is frozen, and a theme copied from it reads a name this tree cannot reach to rename.
 - **A row folds on the box it stands in.** Both themes keep the viewport step at 900px and add a container step beside it: `.sl-div-grid` and `.sl-form` (and `.sl-oauth-form`) declare `container-name`, so a grid nested in another row's field cell, a composer in a narrow pane and an OAuth card in a `minmax(280px, 1fr)` column fold on their own width. The radio-group ladder moves with the row — both steps or neither, or a single-column row ends up holding a four-across group.
+
+## Editor Fragments
+
+The editor shell is canon: its fragments are byte-identical in `templates/admin` and `templates/lite`, its rules stand in
+both `theme.css`, its names in `tools/ui-contract.php`. `Editor::getFrame()` in `core/classes/editor.php` renders them;
+a driver passes data and writes no class string. The behaviour is `plugins/system/editor.js`, described with the data
+keys in `docs/EDITORS.md`, "The Shell".
+
+| Fragment | Rendered by | Holds |
+|---|---|---|
+| `fragments/editor-frame.html` | `Editor::getFrame()`, once per editor of Plain Plus and CodeMirror | `.sl-editor` with its `data-sl-editor-*` attributes, the format tab, the `<textarea>` that carries the value, the status line |
+| `fragments/editor-kit.html` | `Editor::getFrame()`, once per answer | a `<template data-sl-editor-kit>` with the words as JSON, the capsule, the draft offer, the findings, the preview pane, the variable list, the palette and the comparison dialogs |
+| `partials/emoji-panel.html` | `Editor::getEmojiPanel()`, once per answer | the four `<template data-tpl>` of the emoji panel with its words and script addresses |
+| `fragments/editor-mount.html` | the Toast UI and CKEditor drivers | the empty mount a vendor engine builds into, with the name attributes |
+| `fragments/textarea.html` | TinyMCE, Toast UI for the field its engine fills, and every plain form field | a bare `<textarea>` |
+
+- **The kit is printed once and cloned.** The runtime clones the capsule, the lists and the pane into a frame when it
+  needs them and the two dialogs into the page on their first call, so a page of many editors carries one copy of each.
+- **The textarea is the value.** CodeMirror mounts over the textarea of the frame and writes every change back into it;
+  the textarea is hidden, never removed, so a page without script and a form submit see the same field.
+- **Every word comes from PHP.** The titles of the capsule, the palette and the comparison are template variables of
+  the kit, the phrases of the status line and of the CodeMirror panels its `words_json`; the script carries no text.
+- **The preview frame is sandboxed.** The pane writes a page of the theme into an `<iframe sandbox="allow-same-origin">`
+  by `srcdoc`, with the stylesheets of the page it stands on: no script of a text runs inside.
 
 ## Settings Page Contract
 

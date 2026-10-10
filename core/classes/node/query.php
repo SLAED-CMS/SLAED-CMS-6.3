@@ -119,6 +119,7 @@ final class NodeQuery {
     private int $page = 1;
     private int $limit = 0;
     private int $author = 0;
+    private int $favor = 0;
     private ?NodeStatus $status = null;
     private array $order = [];
     private ?string $from = null;
@@ -623,6 +624,11 @@ final class NodeQuery {
             $where[] = 'n.uid = :'.$key.'a';
             $pars[$key.'a'] = $this->author;
         }
+        if ($this->favor > 0) {
+            if (!$set['features']['favorites']) throw $this->getInvalid('favorite');
+            $where[] = 'n.id IN (SELECT f.fid FROM '.PREFIX_DB.'_favorites AS f WHERE f.uid = :'.$key.'g AND f.modul = :'.$key.'m)';
+            $pars += [$key.'g' => $this->favor, $key.'m' => $type->name];
+        }
         if ($this->from !== null) {
             $where[] = 'n.published >= :'.$key.'f';
             $pars[$key.'f'] = $this->from;
@@ -896,6 +902,13 @@ final class NodeQuery {
         return $this;
     }
 
+    # Limit the selection to the favorites one account holds; every selected type must offer favorites when the read runs
+    public function setNodeFavorite(int $uid): self {
+        if ($uid < 1) throw $this->getInvalid('favorite');
+        $this->favor = $uid;
+        return $this;
+    }
+
     # Limit the selection to one state; only a moderator of a type reads a state other than published, everyone else gets the intersection with published
     public function setNodeStatus(NodeStatus $status): self {
         $this->status = $status;
@@ -975,6 +988,25 @@ final class NodeQuery {
         return intval($this->getQueryRows($query, $pars)[0]['num'] ?? 0);
     }
 
+    # Count with one statement the selection published since a moment and the selection among the favorites of one account; no moment or account counts zero
+    public function getNodeOwnCount(string $since, int $uid): array {
+        if ($since !== '' && !$this->checkDateText($since)) throw $this->getInvalid('published');
+        $pars = [];
+        $sql = [];
+        foreach ($this->getListParts('list') as $i => $part) {
+            $type = $part['type'];
+            $mine = $uid > 0 && $type->settings['features']['favorites'];
+            $new = ($since === '') ? '0' : 'n.published >= :os'.$i;
+            $fav = $mine ? 'n.id IN (SELECT f.fid FROM '.PREFIX_DB.'_favorites AS f WHERE f.uid = :ou'.$i.' AND f.modul = :om'.$i.')' : '0';
+            if ($since !== '') $pars['os'.$i] = $since;
+            if ($mine) $pars += ['ou'.$i => $uid, 'om'.$i => $type->name];
+            $sql[] = 'SELECT COALESCE(SUM('.$new.'), 0) AS fresh, COALESCE(SUM('.$fav.'), 0) AS favs FROM '.PREFIX_DB.'_nodes AS n'.$part['join'].' WHERE '.$part['where'];
+            $pars += $part['pars'];
+        }
+        $row = $this->getQueryRows('SELECT SUM(q.fresh) AS fresh, SUM(q.favs) AS favs FROM ('.implode(' UNION ALL ', $sql).') AS q', $pars)[0] ?? [];
+        return ['new' => intval($row['fresh'] ?? 0), 'fav' => intval($row['favs'] ?? 0)];
+    }
+
     # Count the selection of the author filter per type with the sums of score and ratings and the favorites held on its materials, as type id => the four numbers
     # The rules and filters of the list apply, so a profile counts exactly what its lists read; favorites count only where the type offers them
     public function getNodeAuthorStat(): array {
@@ -1023,6 +1055,41 @@ final class NodeQuery {
         $out = [];
         $sql = 'SELECT cid, COUNT(*) AS num FROM '.PREFIX_DB.'_nodes WHERE tid = :tid AND cid > 0 GROUP BY cid';
         foreach ($this->getQueryRows($sql, ['tid' => $type->id]) as $row) $out[intval($row['cid'])] = intval($row['num']);
+        return $out;
+    }
+
+    # The readable set the counts of a type are shared by, the sorted categories the context reads; empty for a moderator or a scope of the extension, whose counts are its own
+    public function getNodeReadSet(NodeType $type): string {
+        [$join, $cond] = $this->getScopeSql($type, $this->getOwnExt($type), 'z');
+        if ($this->checkModer($type) || $join !== '' || $cond !== '') return '';
+        $ids = $this->getCatAllow($type, true);
+        sort($ids);
+        return 'c'.implode('-', $ids);
+    }
+
+    # Count what the list of a type reads without filters: the total, each main or extra category, each first sign of the title, and the next publication or expiry
+    public function getNodeTally(NodeType $type): array {
+        $ext = $this->getOwnExt($type);
+        $one = $this->getBranchSql($type, 'h', $ext, 'site');
+        $out = ['total' => 0, 'cats' => [], 'lets' => [], 'until' => 0];
+        $sql = 'SELECT CAST(LEFT(n.title, 1) AS BINARY) AS sign, COUNT(*) AS num FROM '.PREFIX_DB.'_nodes AS n'.$one['join'].' WHERE '.$one['where'].' GROUP BY sign';
+        foreach ($this->getQueryRows($sql, $one['pars']) as $row) {
+            $out['total'] += intval($row['num']);
+            $sign = $row['sign'] ?? '';
+            if ($sign === '' || !mb_check_encoding($sign, 'UTF-8')) continue;
+            $sign = mb_strtoupper($sign, 'UTF-8');
+            $out['lets'][$sign] = ($out['lets'][$sign] ?? 0) + intval($row['num']);
+        }
+        if ($type->settings['features']['categories']) {
+            $two = $this->getBranchSql($type, 'k', $ext, 'site');
+            $sql = 'SELECT q.cid, COUNT(*) AS num FROM (SELECT n.id, n.cid FROM '.PREFIX_DB.'_nodes AS n'.$one['join'].' WHERE '.$one['where'].' AND n.cid > 0'
+                .' UNION SELECT n.id, nc.cid FROM '.PREFIX_DB.'_nodes AS n'.$two['join'].' INNER JOIN '.PREFIX_DB.'_node_categories AS nc ON nc.nid = n.id'
+                .' WHERE '.$two['where'].') AS q GROUP BY q.cid';
+            foreach ($this->getQueryRows($sql, $one['pars'] + $two['pars']) as $row) $out['cats'][intval($row['cid'])] = intval($row['num']);
+        }
+        $sql = 'SELECT UNIX_TIMESTAMP(MIN(IF(published > NOW(), published, expires))) AS soon FROM '.PREFIX_DB.'_nodes'
+            .' WHERE tid = :tid AND status = :live AND (published > NOW() OR expires > NOW())';
+        $out['until'] = intval($this->getQueryRows($sql, ['tid' => $type->id, 'live' => NodeStatus::Published->value])[0]['soon'] ?? 0);
         return $out;
     }
 

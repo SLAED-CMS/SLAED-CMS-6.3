@@ -915,6 +915,7 @@ function setUserLogin(int $uid, string $name, string $pass, int $story, int $blo
     setCookies('account', time() + (int)$conf['user_c_t'], [$uid, $name, $pass, $story, $blockon, $theme]);
     $uip = getIp();
     $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_session WHERE uname = :uname AND guest = :guest', ['uname' => $uip, 'guest' => 0]);
+    getUserLastVisit($uid);
     $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET ip = :ip, lastvis = NOW(), agent = :agent WHERE id = :id', ['ip' => $uip, 'agent' => getAgent(), 'id' => $uid]);
     $pnt->addEvent('login', 'account', 'day:'.gmdate('Ymd'), $uid);
     Captcha::clearLoginFailures('user');

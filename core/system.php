@@ -948,6 +948,7 @@ function updateSessionTrack(int $ctime, string $request, string $name): array {
     }
     $uid = (!defined('ADMIN_FILE') && is_user()) ? intval($user[0]) : 0;
     $uagent = ($uid) ? getAgent() : '';
+    if ($uid) getUserLastVisit($uid);
     addDeferredTask(static function() use ($ctime, $uname, $guest, $ip, $url, $name, $uid, $uagent): void {
         global $db, $conf;
         $sessf = COUNTER_DIR.'/session.log';
@@ -973,6 +974,19 @@ function updateSessionTrack(int $ctime, string $request, string $name): array {
         }
     });
     return ['uname' => $uname, 'guest' => $guest];
+}
+
+# The last visit of an account as the session found it, read once and kept in the session before a visit or a login moves the column
+function getUserLastVisit(int $uid): string {
+    global $db, $conf;
+    if ($uid < 1) return '';
+    $key = $conf['user_c'].'-lastvis';
+    $keep = $_SESSION[$key] ?? null;
+    if (is_array($keep) && ($keep['uid'] ?? 0) === $uid && is_string($keep['time'] ?? null)) return $keep['time'];
+    $res = $db->getSqlQuery('SELECT lastvis FROM '.PREFIX_DB.'_users WHERE id = :uid', ['uid' => $uid]);
+    $time = $res ? $res->fetchColumn() : false;
+    $_SESSION[$key] = ['uid' => $uid, 'time' => (is_string($time) && strcmp($time, '1970-01-02') > 0) ? $time : ''];
+    return $_SESSION[$key]['time'];
 }
 
 # Track the current referer hit and optional auto-link attribution
@@ -1599,12 +1613,36 @@ function getCategoryMap(string $mod = ''): array {
     return $maps[$key] = $map;
 }
 
-# Drop the stored category maps of one module and of all modules, so the next read builds them again; every writer of a category title, parent, order or icon calls it
+# Drop the stored category maps of one module and of all modules with the Node counts built on them; every writer of a category title, parent, order or icon calls it
 function deleteCategoryMap(string $mod): void {
     foreach (array_unique([$mod, '*']) as $key) {
         $file = Cache::getFile(['catmap', 'img', $key], 'json');
         if ($file !== '' && is_file($file)) unlink($file);
     }
+    deleteNodeCountMap($mod);
+}
+
+# The counts of the header of a Node list for its reader, kept per type and readable set until a write, a type change or the next publication or expiry
+function getNodeCountMap(NodeType $type, NodeQuery $query): array {
+    $set = $query->getNodeReadSet($type);
+    if ($set === '') return $query->getNodeTally($type);
+    $file = Cache::getFile(['nodecount', $type->name], 'json');
+    $data = Cache::isFresh($file, 86400) ? json_decode(Cache::getBody($file), true) : null;
+    $good = is_array($data) && ($data['ver'] ?? 0) === $type->version && is_int($data['until'] ?? null) && ($data['until'] === 0 || time() < $data['until']);
+    if ($good && is_array($data['sets'][$set] ?? null)) return $data['sets'][$set];
+    $out = $query->getNodeTally($type);
+    $data = $good ? $data : ['ver' => $type->version, 'until' => 0, 'sets' => []];
+    $ends = array_filter([$data['until'], $out['until']]);
+    $data['until'] = $ends ? min($ends) : 0;
+    $data['sets'][$set] = $out;
+    Cache::setBody($file, json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+    return $out;
+}
+
+# Drop the stored counts of one Node list; every writer of a material of the type and every drop of its category map calls it
+function deleteNodeCountMap(string $mod): void {
+    $file = Cache::getFile(['nodecount', $mod], 'json');
+    if ($file !== '' && is_file($file)) unlink($file);
 }
 
 # Build a visible module/category/page breadcrumb trail as BreadcrumbList data
@@ -2019,7 +2057,7 @@ function setFoot(): void {
         $debug = checkDebugView() ? getVariables() : '';
         $vars = array_replace($vars, [
             'time_html' => $time,
-            'foot_html' => getFootControls(_PAGETOP, _PAGETOP, '', '', '', true, $debug !== ''),
+            'foot_html' => getFootControls(_PAGETOP, '', '', true, $debug !== ''),
             'debug_html' => $debug,
             'windows_html' => getWindowSet(true),
         ]);
@@ -2063,7 +2101,7 @@ function setFoot(): void {
     ]);
     $vars = array_replace($vars, getThemeHookVars('getThemeFootVars'));
     $debug = checkDebugView() ? getVariables() : '';
-    $foot = getFootControls(_PAGETOP, _PAGETOP, $time, $license, '', false, $debug !== '');
+    $foot = getFootControls(_PAGETOP, $time, $license, false, $debug !== '');
     $vars = array_replace($vars, [
         'foot_html' => $foot,
         'debug_html' => $debug,
@@ -2355,8 +2393,8 @@ function checkCaptcha(string $act): bool {
     return Captcha::check($act);
 }
 
-# Build the module categories block: fluid tiles with tinted icon, the description and subcategory chips
-function setCategories(string $mod, string $id = ''): string {
+# Build the module categories block: fluid tiles with tinted icon, the count the caller holds for each, the description and subcategory chips
+function setCategories(string $mod, string $id = '', array $nums = [], int $total = 0): string {
  global $db, $conf, $locale, $tpl;
     if (!filterVar($mod)) return '';
     $id = intval($id) ?: 0;
@@ -2395,7 +2433,7 @@ function setCategories(string $mod, string $id = ''): string {
                 'title' => $hidden ? $name.' - '._CCLOSED : $name,
                 'name' => $name,
                 'icon_name' => preg_match('/^[a-z0-9-]+$/', (string)$val[3]) ? $val[3] : 'folder',
-                'count' => '',
+                'count' => $hidden ? '' : ($nums[$val[0]] ?? ''),
                 'description' => getConst($val[2]),
                 'subs' => $subs,
             ]);
@@ -2406,7 +2444,7 @@ function setCategories(string $mod, string $id = ''): string {
         'categories' => _CATEGORIES,
         'content' => $cont,
         'total' => _ALLIN,
-        'pages' => 0,
+        'pages' => $total,
         'in' => '',
         'cat' => count($massiv),
         'category' => _ALLINC,
@@ -3543,7 +3581,7 @@ function getThemeModeSwitch(string $action): string {
     foreach (['light', 'auto', 'dark'] as $step) {
         $list[] = ['key' => $step, 'title' => $name[$step], 'icon_name' => $icon[$step], 'is_now' => $step === $mode ? '1' : ''];
     }
-    return $tpl->getHtmlFrag('mode-switch', ['action' => $action, 'hidden' => $html, 'icon_name' => $icon[$mode], 'title' => $name[$mode], 'modes' => $list]);
+    return $tpl->getHtmlFrag('mode-switch', ['action' => $action, 'hidden' => $html, 'modes' => $list]);
 }
 
 # Validate that a theme directory contains the canonical structure: base/theme CSS, icon library, system avatars, presets, and theme assets declared by editor manifests
@@ -4768,9 +4806,8 @@ function setEditorFileRun(string $op): void {
     getEditorJson(['ok' => $done > 0, 'done' => $done, 'total' => count($mark), 'error' => ($done > 0) ? '' : ($note ?: _ERROR)]);
 }
 
-# The letter navigation of a list: digits, the alphabet of the language and the Latin alphabet, every sign unlinked for a module that is no Node type
-# A registered Node type links every letter to its list filter, because the letters of its titles would cost a query of their own; each keeps its category, as its pager does
-function getLetterNavi(string $mod, int $cat = 0): string {
+# The letter navigation of a list: digits, the local and the Latin alphabet; a Node type links the letters its counts hold with its category, any other module none
+function getLetterNavi(string $mod, int $cat = 0, array $nums = []): string {
     global $tpl, $conf;
     $node = isset($conf['node']['types'][$mod]);
     $href = static fn(string $char): string => $node ? getSeoUrl(['name' => $mod] + ($cat > 0 ? ['cat' => $cat] : []) + ['let' => rawurlencode($char)])
@@ -4779,7 +4816,7 @@ function getLetterNavi(string $mod, int $cat = 0): string {
     $digits = '';
     foreach (range(0, 9) as $num) {
         $label = $tpl->getHtmlFrag('span', ['text' => (string)$num, 'is_alpha_letter' => true]);
-        $digits .= $node
+        $digits .= ($node && ($nums[$num] ?? 0) > 0)
             ? $tpl->getHtmlFrag('link', ['href' => $href((string)$num), 'title' => (string)$num, 'label_html' => $label])
             : $label;
     }
@@ -4787,7 +4824,7 @@ function getLetterNavi(string $mod, int $cat = 0): string {
     $locale = '';
     foreach (preg_split('//u', _ALPHABET, -1, PREG_SPLIT_NO_EMPTY) as $char) {
         $label = $tpl->getHtmlFrag('span', ['text' => $char, 'is_alpha_letter' => true]);
-        $locale .= $node
+        $locale .= ($node && ($nums[mb_strtoupper($char)] ?? 0) > 0)
             ? $tpl->getHtmlFrag('link', ['href' => $href($char), 'title' => $char, 'label_html' => $label])
             : $label;
     }
@@ -4796,7 +4833,7 @@ function getLetterNavi(string $mod, int $cat = 0): string {
         $latin = '';
         foreach (range('A', 'Z') as $eng) {
             $label = $tpl->getHtmlFrag('span', ['text' => $eng, 'is_alpha_letter' => true]);
-            $latin .= $node
+            $latin .= ($node && ($nums[$eng] ?? 0) > 0)
                 ? $tpl->getHtmlFrag('link', ['href' => $href($eng), 'title' => $eng, 'label_html' => $label])
                 : $label;
         }
@@ -4921,11 +4958,9 @@ function getLicenseHtml(): string {
 }
 
 # Get shared footer controls through a fragment
-function getFootControls(string $title, string $label, string $time = '', string $lic = '', string $debug = '', bool $link = false, bool $dbgtog = false): string {
+function getFootControls(string $title, string $time = '', string $lic = '', bool $link = false, bool $dbgtog = false): string {
     global $tpl;
     return $tpl->getHtmlPart('foot-controls', [
-        'top_title' => $title,
-        'top_label' => $label,
         'brand_link' => $link ? [
             'href' => '//slaed.net',
             'title' => 'SLAED CMS',
@@ -4942,10 +4977,9 @@ function getFootControls(string $title, string $label, string $time = '', string
             'isdebug' => true,
             'icon_name' => 'bug',
         ] : [],
-        'top_link' => ['href' => '#', 'title' => $title, 'label' => $label, 'is_top_hidden' => true, 'is_upper' => true],
+        'top_link' => ['href' => '#top', 'title' => $title, 'label' => $title, 'is_top_hidden' => true],
         'time_html' => $time,
         'license_html' => $lic,
-        'debug_html' => $debug,
     ]);
 }
 

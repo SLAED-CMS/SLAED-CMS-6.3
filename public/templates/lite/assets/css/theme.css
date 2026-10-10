@@ -1795,10 +1795,6 @@ button.sl-but-mini:hover,
   height: var(--sl-preview-max-height);
 }
 
-.sl-read-link {
-  display: inline-block;
-}
-
 /* Node document tree: the branch of a document with its trail, the current entry and the pager of the reading order */
 .sl-node-tree {
   margin-top: var(--sl-space-6);
@@ -5296,90 +5292,168 @@ dialog.sl-editor-emoji-panel {
   gap: var(--sl-space-6);
 }
 
-/* Colour mode: the header rail. The three modes stand open side by side and a knob carrying the icon of the one in
-   force rides over them, so the current answer is read without hovering and any other is one click away. It stands on
-   the inverse band of the top bar, so it reads its face off that band rather than off the page the panel toggle sits on */
+/* Colour mode: the header form. Its rail is the segmented switch with the sl-seg-mode modifier below */
 .sl-mode {
   display: flex;
   align-items: center;
   flex: 0 0 auto;
 }
 
-.sl-mode-rail {
+/* The knob: the plate of a rail travels to the chosen cell by the place slaed.js measured; a rail not measured yet
+   keeps what its own sheet does, and a rail handed a place from the page before stands still once */
+[data-sl-knob][data-sl-knob-ready] > [data-sl-knob-mark] {
+  left: 0;
+  width: var(--sl-d-knob-w);
+  transform: translateX(var(--sl-d-knob-x));
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  [data-sl-knob][data-sl-knob-ready]:not([data-sl-knob-still]) > [data-sl-knob-mark] {
+    transition:
+      transform var(--sl-time-slow) var(--sl-ease-in-out),
+      width var(--sl-time-slow) var(--sl-ease-in-out);
+  }
+}
+
+/* Segmented switch: one component for every row of cells with one chosen - the colour mode, the view of a list, the
+   pager. The plate under the chosen cell is always empty and the chosen cell recolours its own content over it */
+.sl-seg {
   position: relative;
-  display: inline-grid;
-  grid-template-columns: repeat(3, var(--sl-mode-width));
+  display: inline-flex;
+  flex: 0 0 auto;
   align-items: center;
   box-sizing: border-box;
-  height: var(--sl-mode-height);
-  padding: 0;
+  min-width: 0;
+  padding: var(--sl-seg-pad-y) var(--sl-seg-pad-x);
   border-radius: var(--sl-radius-pill);
-  background: var(--sl-mode-bg);
+  background: var(--sl-seg-bg);
   box-shadow: var(--sl-shadow-inset);
 }
 
-.sl-mode-cell {
+.sl-seg-cell {
   position: relative;
   z-index: var(--sl-z-raised);
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 100%;
-  height: 100%;
-  padding: 0;
+  box-sizing: border-box;
+  min-width: var(--sl-seg-height);
+  height: var(--sl-seg-height);
+  margin: 0;
+  padding: 0 var(--sl-space-2);
   border: 0;
-  border-radius: var(--sl-radius-circle);
+  border-radius: var(--sl-radius-pill);
   background: transparent;
-  color: var(--sl-band-text);
-  font-size: var(--sl-size-icon-sm);
+  color: var(--sl-seg-text);
+  font: inherit;
   line-height: 1;
-  opacity: var(--sl-fade-muted);
+  text-decoration: none;
   cursor: pointer;
-  transition: opacity var(--sl-time-fast) var(--sl-ease-out);
+  transition: color var(--sl-time-fast) var(--sl-ease-out);
 }
 
-.sl-mode-cell:hover {
-  opacity: 1;
+a.sl-seg-cell:hover,
+button.sl-seg-cell:hover {
+  color: var(--sl-text-strong);
 }
 
-/* The cell the knob covers hands its icon over to it, and showing both would read as two marks on one position */
-.sl-mode-cell.sl-is-active {
-  opacity: 0;
+.sl-seg-cell.sl-is-active {
+  color: var(--sl-seg-knob-text);
+  cursor: default;
 }
 
-.sl-mode-cell:focus-visible {
+.sl-seg-cell:focus-visible {
   outline: var(--sl-ring-width) solid var(--sl-ring-bg);
-  outline-offset: var(--sl-ring-gap);
-  opacity: 1;
+  outline-offset: calc(var(--sl-ring-gap) * -1);
 }
 
-.sl-mode-knob {
+.sl-seg-knob {
   position: absolute;
-  z-index: var(--sl-z-overlay);
-  top: 0;
-  left: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  top: var(--sl-seg-pad-y);
+  left: var(--sl-seg-pad-x);
+  height: var(--sl-seg-height);
+  border-radius: var(--sl-radius-pill);
+  background: var(--sl-seg-knob-bg);
+  box-shadow: var(--sl-seg-knob-shadow);
+  pointer-events: none;
+}
+
+/* Without the script the plate has no place: it stays away and the chosen cell wears the plate itself */
+.sl-seg:not([data-sl-knob-ready]) > .sl-seg-knob {
+  display: none;
+}
+
+.sl-seg:not([data-sl-knob-ready]) .sl-seg-cell.sl-is-active {
+  background: var(--sl-seg-knob-bg);
+  box-shadow: var(--sl-seg-knob-shadow);
+}
+
+/* A run of cells the script redraws, such as the numbers of a pager, lays its cells straight into the track */
+.sl-seg-run {
+  display: contents;
+}
+
+/* The colour mode in the header: the band's gradient track, light icons, the chosen one dark on a light plate */
+.sl-seg-mode {
+  background: var(--sl-mode-bg);
+  font-size: var(--sl-size-icon-sm);
+}
+
+.sl-seg-mode .sl-seg-cell {
   width: var(--sl-mode-width);
   height: var(--sl-mode-height);
-  border-radius: var(--sl-radius-circle);
-  background: var(--sl-bg);
-  color: var(--sl-text-strong);
+  padding: 0;
+}
+
+.sl-seg-mode .sl-seg-knob {
+  height: var(--sl-mode-height);
+}
+
+.sl-seg-mode .sl-seg-cell:not(.sl-is-active) {
+  color: var(--sl-band-text);
+  opacity: var(--sl-fade-muted);
+}
+
+.sl-seg-mode .sl-seg-cell:hover,
+.sl-seg-mode .sl-seg-cell:focus-visible {
+  opacity: 1;
+}
+
+.sl-seg-mode .sl-seg-cell.sl-is-active {
   font-size: var(--sl-size-icon-xs);
-  line-height: 1;
-  box-shadow: var(--sl-shadow-raised);
-  pointer-events: none;
-  transition: transform var(--sl-time-slow) var(--sl-ease-in-out);
 }
 
-/* The knob steps by the position of the active cell, so the rail needs no state attribute written from PHP */
-.sl-mode-rail:has(.sl-mode-cell:nth-child(2).sl-is-active) .sl-mode-knob {
-  transform: translateX(var(--sl-mode-width));
+/* The view of a list: a quiet track, muted icons, the chosen one on a light plate - a setting, not a place */
+.sl-seg-view {
+  font-size: var(--sl-size-icon-sm);
 }
 
-.sl-mode-rail:has(.sl-mode-cell:nth-child(3).sl-is-active) .sl-mode-knob {
-  transform: translateX(calc(var(--sl-mode-width) * 2));
+/* The pager: mini cells, a plate set inside the track, numbers small and bold, the current page in the brand colour - a place */
+.sl-seg-pager {
+  padding: var(--sl-space-1);
+  font-size: var(--sl-font-small);
+  font-weight: var(--sl-weight-bold);
+  font-variant-numeric: tabular-nums;
+}
+
+.sl-seg-pager .sl-seg-cell {
+  min-width: var(--sl-size-chip);
+  height: var(--sl-size-chip);
+}
+
+.sl-seg-pager .sl-seg-knob {
+  top: var(--sl-space-1);
+  left: var(--sl-space-1);
+  height: var(--sl-size-chip);
+  background: var(--sl-primary-strong);
+}
+
+.sl-seg-pager .sl-seg-cell.sl-is-active {
+  color: var(--sl-on-solid);
+}
+
+.sl-seg-pager:not([data-sl-knob-ready]) .sl-seg-cell.sl-is-active {
+  background: var(--sl-primary-strong);
 }
 
 .sl-top-social {

@@ -892,6 +892,7 @@ final class NodeService {
         foreach ($held as $name) $this->db->getSqlQuery('SELECT RELEASE_LOCK(:name)', ['name' => $name]);
         if ($lock !== false) FileManager::deletePathLock($lock);
         if ($fail !== null) throw $fail;
+        if ($root !== null) deleteNodeCountMap($root->name);
         return $res;
     }
 

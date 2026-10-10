@@ -1,5 +1,44 @@
 # Versions
 
+## 2026-10-09
+
+### Plain Plus and CodeMirror share one editor shell, and CodeMirror is also a text editor to choose
+
+CodeMirror served the code screens of the panel as one 240 KB bundle with One Dark painted over the theme, and Plain
+Plus was a bare textarea. Both now stand in one shell with one runtime, and CodeMirror is a fifth text editor beside
+Plain Plus, Toast UI, TinyMCE and CKEditor. The reference is `docs/EDITORS.md`; the fragments are in
+`docs/TEMPLATES.md`, "Editor Fragments".
+
+- **CodeMirror in two roles.** Its manifest declares `type` `["content", "code"]`, which a manifest may now give as one
+  string or a list; it stores Markdown as a text, as Toast UI does, so a site moves between the two without touching a
+  stored text. It is offered to members and administrators and given to nobody who did not choose it.
+- **Painted by the theme.** `classHighlighter` writes `tok-*` classes that both `theme.css` colour, so code follows the
+  colour scheme of the page; One Dark is gone. Code everywhere, the code blocks of the parser included, reads
+  `--sl-face-mono` and the token tones; a `[code]`, `[php]` or fenced block carries its language, a copy button and a
+  fold above 25 lines.
+- **Loaded by need.** The build writes `core.js`, one `lang-*.js` per language and shared chunks; the runtime imports the
+  core and one grammar when a frame comes near the screen: 133 KB gzip for the core, 134 to 226 KB with a language,
+  against 240 KB for every code screen before.
+- **One shell.** `editor-frame.html` and `editor-kit.html`, byte-identical in both themes, and `plugins/system/editor.js`:
+  the format tab, the capsule, the status line with the caret, the size and what the column has left, the dirty mark,
+  full screen, wrap, copy, reset, undo, a draft of the tab in `sessionStorage`, and a palette on Ctrl+K.
+- **Text abilities.** The file window and the emoji panel serve Plain Plus and CodeMirror as text through an adapter;
+  a pasted or dropped image goes to the upload; Markdown commands and lists continued by Enter on a Markdown field.
+- **What the page tells the editor.** `vars` turns on the variable list, the hint and the marks; `lint` the check of a
+  template with its badge, list and fixes, and "тег на строку" and "в одну строку"; `preview` a sandboxed preview of a
+  template with bundled samples or of a text through the new route `getEditorPreview` (`go=1` and `go=5`, POST with a
+  token). The upload templates of `tplconfig` pass all three.
+- **Comparison.** "изменено" opens the loaded text against the present one, together or side by side, and "Вернуть было";
+  a long text is aligned by lines first, so a text of eighty kilobytes with edits in three places opens in about a
+  tenth of a second.
+- **Breaking:** `cm6.bundle.js`, `build/entry.js` and the global `CM6` with `CM6.editors` and `CM6.oneDark` are gone; a
+  script of a screen reads and writes an editor through `window.SlaedEditor`. The mount class `sl-code-editor` is
+  `sl-editor`. `isValidEditor()` of `admin/index.php` is gone, its callers use `Editor::isValidEditor()`. The emoji panel
+  left the Toast UI plugin: `SlaedEmoji` in `plugins/system/emoji.js`, its words in `plugins/system/emoji/<locale>.js`,
+  the partial `emoji-panel`; the plugin's `assets/i18n/emoji-*.js` are gone. `_TPINFO` left the language files for ten
+  `_UPLOADS_*` constants. `plugins/highlightjs/slaed-theme.css` and its `css_f` default are gone; the theme styles
+  highlighted code.
+
 ## 2026-10-07
 
 ### A saved text keeps its line breaks in every editor format

@@ -1,0 +1,1361 @@
+<!doctype html>
+<html lang="ru" data-theme="auto">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Комментарии — Админ — Название сайта</title>
+  <link rel="stylesheet" href="../templates/admin/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../templates/admin/assets/css/base.css">
+  <link rel="stylesheet" href="../templates/admin/assets/css/theme.css">
+  <!-- The stand is served without Cache-Control; its sheet and script are stamped so an edit is seen at once -->
+  <script>document.write('<link rel="stylesheet" href="assets/demo.css?v=' + Date.now() + '">');</script>
+  <script src="../plugins/system/global-func.js"></script>
+  <script src="../plugins/tablesort/tablesort.min.js"></script>
+  <script src="../plugins/system/slaed.js"></script>
+  <script src="../templates/admin/assets/js/admin-ui.js"></script>
+  <style>
+    /* Эталон панели: every decision of docs/2027-ADMIN-UX.md on one screen, the comments list of the stand */
+    .v-sr {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
+    }
+
+    .v-skip {
+      position: absolute;
+      top: var(--sl-space-3);
+      left: var(--sl-space-3);
+      z-index: var(--sl-z-toast);
+      padding: var(--sl-space-3) var(--sl-space-5);
+      border-radius: var(--sl-radius-1);
+      background: var(--sl-primary-strong);
+      color: var(--sl-on-solid);
+      transform: translateY(-200%);
+    }
+
+    .v-skip:focus {
+      transform: none;
+    }
+
+    /* One h1 on the page: the logo is a link, sized as the theme sizes the h1 logo today */
+    .sl-admin-brand {
+      gap: var(--sl-space-3);
+    }
+
+    .v-brand {
+      display: block;
+      width: var(--sl-brand-width);
+    }
+
+    .v-brand img {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    .v-menu-btn {
+      display: none;
+      align-items: center;
+      gap: var(--sl-space-2);
+      height: var(--sl-size-control);
+      padding: 0 var(--sl-space-4);
+      border: 1px solid var(--sl-border);
+      border-radius: var(--sl-radius-1);
+      background: var(--sl-surface);
+      color: var(--sl-primary-strong);
+      font: inherit;
+      font-weight: var(--sl-weight-semibold);
+      cursor: pointer;
+    }
+
+    .v-menu-btn .bi {
+      font-size: var(--sl-font-h3);
+    }
+
+    /* The menu: a filter, four groups of one kind, the open section marked */
+    .v-nav-top {
+      display: flex;
+      align-items: center;
+      gap: var(--sl-space-3);
+      margin: 0 0 var(--sl-space-5);
+    }
+
+    .v-find {
+      position: relative;
+      flex: 1 1 auto;
+    }
+
+    .v-find .bi {
+      position: absolute;
+      top: 50%;
+      left: var(--sl-space-4);
+      color: var(--sl-text-muted);
+      transform: translateY(-50%);
+      pointer-events: none;
+    }
+
+    .v-find input {
+      width: 100%;
+      padding-left: calc(var(--sl-space-4) * 2 + var(--sl-size-icon-xs));
+    }
+
+    .v-nav-close {
+      display: none;
+    }
+
+    .v-empty {
+      margin: 0 0 var(--sl-space-5);
+      color: var(--sl-text-muted);
+      text-align: center;
+    }
+
+    /* The groups are sidebar blocks of the theme. The theme colours a bar by the number of its block (1 and 2 blue,
+       3 and 4 orange), which four groups cannot follow; the group bar takes the blue of the first two by a class */
+    .sl-block-sidebar.v-group h3 {
+      background: var(--sl-solid-bg);
+      border-color: var(--sl-solid-border);
+    }
+
+    .v-gbtn {
+      display: flex;
+      align-items: center;
+      width: 100%;
+      padding: 0;
+      border: 0;
+      background: none;
+      color: inherit;
+      font: inherit;
+      text-align: left;
+      text-shadow: inherit;
+      cursor: pointer;
+    }
+
+    .v-gbtn b {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--sl-space-3);
+      padding: 0 var(--sl-space-3);
+    }
+
+    .v-gbtn:focus-visible {
+      outline: 2px solid var(--sl-on-solid);
+      outline-offset: -3px;
+    }
+    .v-group-list {
+      margin: 0;
+      padding: var(--sl-space-2) var(--sl-space-2);
+      list-style: none;
+    }
+
+    .v-group-list .sl-menu-list-item > a {
+      flex: 1 1 auto;
+      padding: var(--sl-space-2) var(--sl-space-3);
+      border-radius: var(--sl-radius-1);
+    }
+
+    /* The open section: a tint and a bar of the brand colour, said to a screen reader by aria-current */
+    .v-group-list .sl-menu-list-item > a[aria-current="page"] {
+      background: var(--sl-tint);
+      box-shadow: inset 3px 0 0 var(--sl-primary-strong);
+      color: var(--sl-primary-strong);
+      font-weight: var(--sl-weight-semibold);
+    }
+
+    /* «…» only under the pointer and in focus; the column rests without thirty buttons */
+    .v-group-list .sl-menu-list-item > .sl-dial {
+      opacity: 0;
+      transition: opacity var(--sl-time-fast) var(--sl-ease-out);
+    }
+
+    .v-group-list .sl-menu-list-item:hover > .sl-dial,
+    .v-group-list .sl-menu-list-item:focus-within > .sl-dial {
+      opacity: 1;
+    }
+
+    @media (hover: none) {
+      .v-group-list .sl-menu-list-item > .sl-dial {
+        opacity: 1;
+      }
+    }
+
+    /* A zero reads, muted, instead of fading into the surface */
+    .v-zero {
+      color: var(--sl-text-muted);
+    }
+
+    /* The filter: every control named, the module list acting at once, the text search on its button */
+    .v-filter {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: var(--sl-space-3) var(--sl-space-6);
+    }
+
+    .v-field {
+      display: inline-flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: var(--sl-space-3);
+      margin: 0;
+    }
+
+    .v-tab-n {
+      margin-left: var(--sl-space-2);
+    }
+
+    .v-status {
+      margin: 0 0 var(--sl-space-4);
+      color: var(--sl-text-muted);
+      font-size: var(--sl-font-small);
+    }
+
+    .v-slug {
+      color: var(--sl-text-muted);
+    }
+
+    .v-none {
+      padding: var(--sl-space-7);
+      color: var(--sl-text-muted);
+      text-align: center;
+    }
+
+    .v-picked {
+      color: var(--sl-text-muted);
+      white-space: nowrap;
+    }
+
+    .sl-list-bottom-actions label {
+      white-space: nowrap;
+    }
+
+    .sl-list-bottom-actions button:disabled {
+      opacity: var(--sl-fade-disabled);
+      cursor: not-allowed;
+    }
+
+    /* A phone: the content comes first, the menu waits behind a button and slides in over the page */
+    .v-scrim {
+      display: none;
+    }
+
+    @media (max-width: 900px) {
+      .v-menu-btn {
+        display: inline-flex;
+      }
+
+      .sl-admin-brand {
+        justify-content: flex-start;
+      }
+
+      .v-brand {
+        width: calc(var(--sl-brand-width) * 0.6);
+      }
+
+      .sl-admin-main {
+        grid-template-columns: minmax(0, 1fr);
+      }
+
+      .v-nav {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        z-index: var(--sl-z-overlay);
+        width: min(320px, 86vw);
+        padding: var(--sl-space-5);
+        overflow-y: auto;
+        background: var(--sl-bg);
+        box-shadow: var(--sl-shadow-float);
+        transform: translateX(-105%);
+        visibility: hidden;
+        transition: transform var(--sl-time-slow) var(--sl-ease-out), visibility 0s linear var(--sl-time-slow);
+      }
+
+      body[data-ux-nav-open] .v-nav {
+        transform: none;
+        visibility: visible;
+        transition: transform var(--sl-time-slow) var(--sl-ease-out);
+      }
+
+      .v-nav-close {
+        display: inline-grid;
+      }
+
+      body[data-ux-nav-open] .v-scrim {
+        position: fixed;
+        inset: 0;
+        z-index: calc(var(--sl-z-overlay) - 1);
+        display: block;
+        background: var(--sl-scrim);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .v-nav,
+      body[data-ux-nav-open] .v-nav {
+        transition: none;
+      }
+    }
+
+    /* The filter keeps to one line beside the title; its controls take their own width, not the cell's */
+    .v-filter {
+      justify-content: flex-end;
+    }
+
+    .v-field {
+      flex-wrap: nowrap;
+    }
+
+    .v-field label {
+      display: inline;
+      margin: 0;
+      white-space: nowrap;
+    }
+
+    .v-filter .sl-select,
+    .v-filter input[type="search"] {
+      width: auto;
+      min-width: 9em;
+    }
+
+    @media (max-width: 900px) {
+      /* The title and the filter stand one above the other, the filter wraps its fields; the icon keeps to the top */
+      .sl-module-head {
+        align-items: flex-start;
+      }
+
+      .sl-module-head-body {
+        grid-template-columns: minmax(0, 1fr);
+        gap: var(--sl-space-4);
+      }
+
+      .sl-module-head-subtitle {
+        justify-content: flex-start;
+      }
+
+      .v-filter,
+      .v-field {
+        flex-wrap: wrap;
+        justify-content: flex-start;
+      }
+
+      /* The quick links of the header shrink to their icons on one line; each keeps its name for a screen reader */
+      .sl-wrapper.sl-admin-shell .sl-admin-toolbar .sl-toolbar ul {
+        display: flex;
+        flex-wrap: nowrap;
+        justify-content: space-between;
+      }
+
+      .sl-wrapper.sl-admin-shell .sl-admin-toolbar .sl-toolbar li a,
+      .sl-wrapper.sl-admin-shell .sl-admin-toolbar .sl-toolbar li button {
+        padding-right: var(--sl-space-3);
+        padding-left: var(--sl-space-3);
+      }
+
+      .sl-admin-toolbar .sl-toolbar b {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+        white-space: nowrap;
+      }
+    }
+
+    /* A narrow list keeps the text of the comment: module, date and status step aside; a phone gets cards below */
+    @media (min-width: 561px) and (max-width: 760px) {
+      [data-ux-list] th:nth-child(3),
+      [data-ux-list] td:nth-child(3),
+      [data-ux-list] th:nth-child(5),
+      [data-ux-list] td:nth-child(5),
+      [data-ux-list] th:nth-child(6),
+      [data-ux-list] td:nth-child(6) {
+        display: none;
+      }
+    }
+
+
+    /* Status in one press: the theme's mark inside a bare button */
+    .v-stat {
+      display: inline-grid;
+      place-items: center;
+      padding: var(--sl-space-1);
+      border: 0;
+      border-radius: var(--sl-radius-circle);
+      background: none;
+      cursor: pointer;
+    }
+
+    .v-stat:hover,
+    .v-stat:focus-visible {
+      background: var(--sl-tint);
+    }
+
+    /* The queue of a section in the menu: there while something waits, gone at zero */
+    .v-queue {
+      display: inline-grid;
+      place-items: center;
+      min-width: 1.6em;
+      margin-left: auto;
+      padding: 0 var(--sl-space-2);
+      border-radius: var(--sl-radius-pill);
+      background: var(--sl-warning-subtle);
+      color: var(--sl-text-strong);
+      font-size: var(--sl-font-micro);
+      font-weight: var(--sl-weight-bold);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .v-group-list .sl-menu-list-item > a {
+      display: flex;
+    }
+
+    /* Ctrl+K beside the menu search */
+    .v-palbtn {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--sl-space-1);
+      height: var(--sl-size-control);
+      padding: 0 var(--sl-space-3);
+      border: 1px solid var(--sl-border);
+      border-radius: var(--sl-radius-1);
+      background: var(--sl-surface);
+      color: var(--sl-text-muted);
+      cursor: pointer;
+    }
+
+    .v-palbtn:hover,
+    .v-palbtn:focus-visible {
+      border-color: var(--sl-primary);
+      color: var(--sl-primary-strong);
+    }
+
+    kbd {
+      display: inline-grid;
+      place-items: center;
+      min-width: 1.5em;
+      padding: 0 var(--sl-space-1);
+      border: 1px solid var(--sl-border);
+      border-bottom-width: 2px;
+      border-radius: var(--sl-radius-1);
+      background: var(--sl-surface);
+      color: var(--sl-text);
+      font: inherit;
+      font-size: var(--sl-font-micro);
+      line-height: 1.5;
+    }
+
+    /* The list keys, told once under the list */
+    .v-keys {
+      margin: 0 0 var(--sl-space-5);
+      color: var(--sl-text-muted);
+      font-size: var(--sl-font-small);
+    }
+
+    [data-ux-row].v-cursor > td,
+    [data-ux-row].v-cursor {
+      outline: 2px solid var(--sl-primary);
+      outline-offset: -2px;
+    }
+
+    [data-ux-row]:focus {
+      outline: none;
+    }
+
+    /* An empty waiting list is good news, said calmly */
+    .v-calm td,
+    li.v-calm {
+      color: var(--sl-success-strong);
+    }
+
+    /* The notice with Undo, low at the left, above everything but a window */
+    .v-toast {
+      position: fixed;
+      bottom: var(--sl-space-6);
+      left: 50%;
+      z-index: var(--sl-z-toast);
+      display: flex;
+      align-items: center;
+      gap: var(--sl-space-4);
+      max-width: calc(100vw - var(--sl-space-8));
+      padding: var(--sl-space-4) var(--sl-space-5);
+      border: 1px solid var(--sl-border);
+      border-radius: var(--sl-radius-2);
+      background: var(--sl-surface);
+      color: var(--sl-text-strong);
+      box-shadow: var(--sl-shadow-float);
+      transform: translateX(-50%);
+    }
+
+    .v-toast > .bi {
+      color: var(--sl-success-strong);
+      font-size: var(--sl-font-h4);
+    }
+
+    /* The palette: a search over the sections and the actions, walked with the arrows */
+    .v-pal-q {
+      width: 100%;
+      margin: 0 0 var(--sl-space-4);
+    }
+
+    .v-pal-list {
+      max-height: 50vh;
+      margin: 0;
+      padding: 0;
+      overflow-y: auto;
+      list-style: none;
+    }
+
+    .v-pal-list [role="option"] {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--sl-space-4);
+      padding: var(--sl-space-3) var(--sl-space-4);
+      border-radius: var(--sl-radius-1);
+      cursor: pointer;
+    }
+
+    .v-pal-list [role="option"][aria-selected="true"],
+    .v-pal-list [role="option"]:hover {
+      background: var(--sl-tint);
+      color: var(--sl-primary-strong);
+    }
+
+    .v-pal-list small {
+      color: var(--sl-text-muted);
+    }
+
+    .v-pal-empty {
+      margin: 0;
+      color: var(--sl-text-muted);
+      text-align: center;
+    }
+
+    /* Sortable heads: the theme's button-less head gets a button, so the sort is reachable by keys */
+    .v-sortbtn {
+      padding: 0;
+      border: 0;
+      background: none;
+      color: inherit;
+      font: inherit;
+      font-weight: inherit;
+      cursor: pointer;
+    }
+
+    .v-sortbtn:focus-visible {
+      outline: 2px solid var(--sl-primary);
+      outline-offset: 2px;
+    }
+
+    /* Saved views: a quiet row of chips above the list */
+    .v-views {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: var(--sl-space-3);
+      margin: 0 0 var(--sl-space-4);
+    }
+
+    .v-views-cap {
+      color: var(--sl-text-muted);
+      font-size: var(--sl-font-small);
+    }
+
+    .v-views-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--sl-space-2);
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .v-views-list li {
+      display: inline-flex;
+      align-items: center;
+    }
+
+    .v-view {
+      border: 0;
+      font: inherit;
+      font-size: var(--sl-font-micro);
+      cursor: pointer;
+    }
+
+    .v-view-x {
+      display: inline-grid;
+      place-items: center;
+      width: var(--sl-size-icon-sm);
+      height: var(--sl-size-icon-sm);
+      margin-left: var(--sl-space-1);
+      padding: 0;
+      border: 0;
+      border-radius: var(--sl-radius-circle);
+      background: none;
+      color: var(--sl-text-muted);
+      cursor: pointer;
+    }
+
+    .v-views-add {
+      margin-left: auto;
+    }
+
+    .v-views-new {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: var(--sl-space-3);
+      flex: 1 1 100%;
+    }
+
+    .v-linkbtn {
+      padding: 0;
+      border: 0;
+      background: none;
+      color: var(--sl-primary-strong);
+      font: inherit;
+      font-weight: var(--sl-weight-semibold);
+      text-decoration: underline;
+      cursor: pointer;
+    }
+
+    .v-allpages,
+    .v-error {
+      margin: 0 0 var(--sl-space-4);
+    }
+
+    .v-error .sl-but {
+      margin-left: var(--sl-space-3);
+    }
+
+    /* A request on its way: the list dims under a running sheen, the reader hears aria-busy */
+    [data-ux-list].v-loading tbody {
+      opacity: var(--sl-fade-muted);
+      background: linear-gradient(90deg, transparent 0%, var(--sl-tint) 50%, transparent 100%);
+      background-size: 200% 100%;
+      animation: v-sheen 0.9s linear infinite;
+    }
+
+    @keyframes v-sheen {
+      from { background-position: 100% 0; }
+      to { background-position: -100% 0; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      [data-ux-list].v-loading tbody { animation: none; }
+    }
+
+    /* The log of the screen */
+    .v-log summary {
+      display: flex;
+      align-items: center;
+      gap: var(--sl-space-3);
+      font-weight: var(--sl-weight-semibold);
+      cursor: pointer;
+    }
+
+    .v-log-empty {
+      margin: var(--sl-space-4) 0 0;
+      color: var(--sl-text-muted);
+    }
+
+    .v-log-list {
+      display: grid;
+      gap: var(--sl-space-2);
+      margin: var(--sl-space-4) 0 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .v-log-list li {
+      display: grid;
+      grid-template-columns: 6em 8em minmax(0, 1fr);
+      gap: var(--sl-space-4);
+      font-size: var(--sl-font-small);
+    }
+
+    .v-log-list time {
+      color: var(--sl-text-muted);
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* The bell: the sum of the queues in a dot, the queues in a panel under it */
+    .v-bell {
+      position: relative;
+      display: inline-grid;
+      place-items: center;
+      width: var(--sl-size-control);
+      height: var(--sl-size-control);
+      padding: 0;
+      border: 0;
+      background: none;
+      color: inherit;
+      cursor: pointer;
+    }
+
+    .v-bell-n {
+      position: absolute;
+      top: calc(var(--sl-space-1) * -1);
+      right: calc(var(--sl-space-2) * -1);
+      min-width: 1.5em;
+      padding: 0 var(--sl-space-1);
+      border-radius: var(--sl-radius-pill);
+      background: var(--sl-danger-strong);
+      color: var(--sl-on-solid);
+      font-size: var(--sl-font-micro);
+      font-weight: var(--sl-weight-bold);
+      line-height: 1.5;
+    }
+
+    .v-bell-pop {
+      inset: auto;
+      top: 120px;
+      right: 40px;
+      width: 300px;
+      margin: 0;
+      padding: var(--sl-space-4);
+      border: 1px solid var(--sl-border);
+      border-radius: var(--sl-radius-2);
+      background: var(--sl-surface);
+      color: var(--sl-text);
+      box-shadow: var(--sl-shadow-float);
+    }
+
+    .v-bell-cap {
+      margin: 0 0 var(--sl-space-3);
+      color: var(--sl-text-muted);
+      font-size: var(--sl-font-small);
+    }
+
+    .v-bell-pop ul {
+      display: grid;
+      gap: var(--sl-space-1);
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .v-bell-pop a {
+      display: flex;
+      align-items: center;
+      gap: var(--sl-space-3);
+      padding: var(--sl-space-3);
+      border-radius: var(--sl-radius-1);
+    }
+
+    .v-bell-pop a:hover,
+    .v-bell-pop a:focus-visible {
+      background: var(--sl-tint);
+    }
+
+    .v-bell-pop b {
+      margin-left: auto;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* A phone: a table row becomes a card with its column names, nothing is hidden */
+    @media (max-width: 560px) {
+      [data-ux-list] thead {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+      }
+
+      [data-ux-list],
+      [data-ux-list] tbody {
+        display: block;
+        width: 100%;
+      }
+
+      [data-ux-list] tbody tr {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: var(--sl-space-2) var(--sl-space-4);
+        margin: 0 0 var(--sl-space-4);
+        padding: var(--sl-space-4);
+        border: 1px solid var(--sl-border);
+        border-radius: var(--sl-radius-2);
+        background: var(--sl-surface);
+      }
+
+      [data-ux-list] tbody tr[hidden] {
+        display: none;
+      }
+
+      [data-ux-list] tbody td,
+      [data-ux-list] th:nth-child(n),
+      [data-ux-list] td:nth-child(n) {
+        display: block;
+        width: auto;
+        padding: 0;
+        border: 0;
+        background: none;
+        text-align: left;
+        white-space: normal;
+      }
+
+      [data-ux-list] td[data-label]::before {
+        display: block;
+        color: var(--sl-text-muted);
+        font-size: var(--sl-font-micro);
+        content: attr(data-label);
+      }
+
+      [data-ux-list] td.sl-cell-ellipsis:not(.sl-col-module) {
+        grid-column: 1 / -1;
+      }
+
+      [data-ux-list] td.sl-col-actions,
+      [data-ux-list] td.sl-col-check {
+        position: relative;
+        min-height: var(--sl-size-control);
+      }
+    }
+
+    /* A phone with a pick: the bulk action stands at the bottom of the screen, in reach of the thumb */
+    @media (max-width: 900px) {
+      body[data-ux-picking] .sl-list-bottom-actions {
+        position: fixed;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        z-index: var(--sl-z-sticky);
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: var(--sl-space-3);
+        padding: var(--sl-space-4) var(--sl-space-5);
+        border-top: 1px solid var(--sl-border);
+        background: var(--sl-surface);
+        box-shadow: var(--sl-shadow-float);
+      }
+
+      body[data-ux-picking] .v-toast {
+        bottom: calc(var(--sl-size-control) + var(--sl-space-8));
+      }
+    }
+    /* 05 Просмотр: the list stays, the chosen comment opens whole beside it with what can be done to it */
+    .v-split { display: grid; grid-template-columns: minmax(0, 1fr) 360px; align-items: start; gap: var(--sl-space-6); }
+    .v-split > .sl-box { margin: 0; }
+    .v-open { display: block; width: 100%; overflow: hidden; padding: 0; border: 0; background: none; color: var(--sl-primary-strong); font: inherit; text-align: left; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; }
+    .v-open:hover, .v-open:focus-visible { text-decoration: underline; }
+    [data-ux-list] tbody tr.sl-is-active > td { background: var(--sl-tint); }
+    .v-inspect { position: sticky; top: var(--sl-space-6); }
+    .v-idle { display: grid; justify-items: center; gap: var(--sl-space-4); margin: 0; padding: var(--sl-space-8) var(--sl-space-5); color: var(--sl-text-muted); text-align: center; }
+    .v-idle .bi { font-size: var(--sl-size-icon-lg); }
+    .v-ihead { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--sl-space-3); margin: 0 0 var(--sl-space-5); }
+    .v-ihead h2 { margin: 0; font-size: var(--sl-font-h4); }
+    .v-itext { margin: 0 0 var(--sl-space-5); padding: var(--sl-space-5); border-left: 3px solid var(--sl-primary); border-radius: var(--sl-radius-1); background: var(--sl-bg-subtle); color: var(--sl-text-strong); line-height: var(--sl-line-loose); }
+    .v-idl { display: grid; gap: var(--sl-space-3); margin: 0 0 var(--sl-space-6); }
+    .v-idl div { display: grid; grid-template-columns: 8em minmax(0, 1fr); gap: var(--sl-space-3); }
+    .v-idl dt { color: var(--sl-text-muted); }
+    .v-idl dd { margin: 0; overflow-wrap: anywhere; }
+    .v-iacts { display: flex; flex-wrap: wrap; gap: var(--sl-space-3); }
+    .v-none { padding: var(--sl-space-7); color: var(--sl-text-muted); text-align: center; }
+    @media (max-width: 1200px) { .v-split { grid-template-columns: minmax(0, 1fr); } .v-inspect { position: static; } }
+
+    /* The final pager of the pager series (pg-14), carried as it is */
+    /* Панель: the final of 09 on the admin theme, the same markup and classes, «to the top» and the key tip of the dock of 07 beside it */
+    .sl-pager.v9 { --pg-cell: var(--sl-size-chip); flex-direction: column; gap: var(--sl-space-4); }
+    .v9-row { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: var(--sl-space-2); width: 100%; }
+    .v9-nav { grid-column: 2; display: flex; align-items: center; gap: var(--sl-space-2); min-width: 0; }
+    .v9-aside { display: flex; align-items: center; gap: var(--sl-space-2); justify-self: start; }
+    .v9 .v9-step { width: var(--pg-cell); height: var(--pg-cell); background: var(--sl-surface); color: var(--sl-text-strong); box-shadow: var(--sl-shadow-xs); }
+    .v9 a.v9-step:hover, .v9 .v9-step:focus-visible { background: var(--sl-primary-strong); color: var(--sl-on-solid); }
+    .v9 .v9-step.sl-is-muted { background: transparent; box-shadow: none; opacity: var(--sl-fade-disabled); }
+    .v9 .v9-quiet { background: transparent; color: var(--sl-text-muted); box-shadow: none; }
+    .v9-sep { flex: 0 0 auto; width: 1px; height: var(--sl-size-icon-md); margin: 0 var(--sl-space-2); background: var(--sl-border); }
+    /* The key tip: the system info tip on a round trigger; the trigger lights up while its panel is open */
+    .v9 .v9-info { margin: 0; border-radius: var(--sl-radius-circle); }
+    .v9-info:hover .v9-step, .v9-info.sl-is-open .v9-step { background: var(--sl-tint); color: var(--sl-primary-strong); }
+    .v9-tip-head { margin: 0 0 var(--sl-space-3); color: var(--sl-text-strong); font-weight: var(--sl-weight-semibold); }
+    /* The key legend is a list of its own: neither the label and value rows of the site nor the label: value line of the panel */
+    .v9-tip { text-align: left; }
+    .v9-tip-keys { display: grid; gap: var(--sl-space-3); margin: 0; padding: 0; list-style: none; }
+    .v9-tip-keys li { display: flex; align-items: center; gap: var(--sl-space-3); margin: 0; }
+    .v9 kbd { display: inline-flex; align-items: center; justify-content: center; min-width: var(--sl-size-chip); height: var(--sl-size-chip); padding: 0 var(--sl-space-2); box-sizing: border-box; border: 1px solid var(--sl-border); border-bottom-width: var(--sl-space-1); border-radius: var(--sl-radius-1); background: var(--sl-surface); color: var(--sl-text-strong); font: inherit; font-size: var(--sl-font-small); }
+    .sl-pager.v9 .sl-pager-info { margin: 0; font-size: var(--sl-font-small); }
+    .v9 .sl-pager-info b { color: var(--sl-text-strong); font-weight: var(--sl-weight-semibold); }
+    .v9 kbd .bi { font-size: var(--sl-size-icon-xs); line-height: 1; }
+    .v9-tip-note { margin: var(--sl-space-3) 0 0; color: var(--sl-text-muted); font-size: var(--sl-font-small); }
+    /* A touch screen has no keys to explain */
+    @media (pointer: coarse) {
+      .v9-info { display: none; }
+    }
+    @container pg (width < 520px) {
+      .v9-row { display: flex; justify-content: center; }
+      .sl-seg-cell[data-pg-far], .v9-range { display: none; }
+    }
+    /* The list column of the message page is the tightest room: there the neighbours of the current page go */
+    @container pg (width < 320px) {
+      .sl-seg-cell[data-pg-near] { display: none; }
+    }
+    /* The row of the panel starts at the left edge of its foot and closes with the page line, as the panel row does today */
+    .sl-pager.v9 { display: flex; flex-flow: row wrap; align-items: center; gap: var(--sl-space-3) var(--sl-space-6); padding: 0; }
+    .v9-row { display: flex; width: auto; }
+    .v9-nav { grid-column: auto; }
+    .sl-pager.v9 .sl-pager-info { margin: 0 0 0 auto; color: var(--sl-text-muted); font-size: var(--sl-font-small); white-space: nowrap; }
+    @container pg (width < 520px) {
+      .v9-row { justify-content: flex-start; }
+      .sl-pager.v9 .sl-pager-info { margin-left: 0; }
+    }
+    /* The list foot of the panel never wraps today, so on a phone the bulk action lies over the pager: the pager takes the line, the action goes under it */
+    @media (max-width: 560px) {
+      .sl-list-bottom { flex-wrap: wrap; }
+      .sl-list-bottom-pager { flex-basis: 100%; }
+    }
+  </style>
+</head>
+<body id="top" data-ux-site="Название сайта">
+  <a class="v-skip" href="#ux-main">К содержимому</a>
+  <div class="sl-wrapper sl-admin-shell">
+    <div class="sl-wraptop"></div>
+    <div class="sl-wrapmid">
+      <header class="sl-header sl-admin-header">
+        <div class="sl-admin-brand">
+          <button type="button" class="v-menu-btn" data-ux-menu-open aria-controls="ux-nav" aria-expanded="false"><i class="bi bi-list" aria-hidden="true"></i><span>Меню</span></button>
+          <a class="v-brand" href="../admin.php"><img src="../templates/admin/images/logos/slaed-logo-wordmark-gradient-blue.svg" alt="Название сайта" title="Название сайта"></a>
+        </div>
+        <nav class="sl-admin-toolbar" aria-label="Быстрые ссылки">
+          <div class="sl-toolbar">
+            <div>
+              <ul class="sl-reset">
+<li><a href="../admin.php" title="Главная"><i class="bi bi-house-door" aria-hidden="true"></i> <b>Главная</b></a></li>
+<li><a href="../admin.php?name=blocks" title="Блоки и баннеры"><i class="bi bi-grid-3x3-gap" aria-hidden="true"></i> <b>Блоки и баннеры</b></a></li>
+<li><a href="../admin.php?name=modules" title="Модули"><i class="bi bi-gpu-card" aria-hidden="true"></i> <b>Модули</b></a></li>
+<li><a href="../admin.php?name=categories" title="Категории"><i class="bi bi-folder" aria-hidden="true"></i> <b>Категории</b></a></li>
+<li class="sl-split-item"><a href="/" title="Сайт" target="_blank" rel="noopener noreferrer"><i class="bi bi-globe2" aria-hidden="true"></i> <b>Сайт</b></a></li>
+<li><a href="../index.php?name=account" title="Профиль" target="_blank" rel="noopener noreferrer"><i class="bi bi-person" aria-hidden="true"></i> <b>Профиль</b></a></li>
+<li class="sl-split-item"><a href="../admin.php?op=logout" title="Выход"><i class="bi bi-box-arrow-right" aria-hidden="true"></i> <b>Выход</b></a></li>
+<li class="v-bell-item"><button type="button" class="v-bell" data-ux-bell popovertarget="ux-bell-pop" title="Уведомления" aria-label="Уведомления"><i class="bi bi-bell" aria-hidden="true"></i><span class="v-bell-n" data-ux-bell-sum>26</span></button>
+<div class="v-bell-pop" id="ux-bell-pop" popover>
+<p class="v-bell-cap">Ждут внимания</p>
+<ul class="sl-reset">
+<li><a href="#" data-ux-tab-go="wait"><i class="bi bi-chat-dots" aria-hidden="true"></i> Комментарии ждут проверки <b data-ux-bell-comments>3</b></a></li>
+<li><a href="../admin.php?name=account"><i class="bi bi-person-plus" aria-hidden="true"></i> Новые пользователи <b data-ux-bell-n>18</b></a></li>
+<li><a href="../admin.php?name=node"><i class="bi bi-newspaper" aria-hidden="true"></i> Новые новости <b data-ux-bell-n>2</b></a></li>
+<li><a href="../admin.php?name=node"><i class="bi bi-life-preserver" aria-hidden="true"></i> Помощь <b data-ux-bell-n>3</b></a></li>
+</ul>
+</div></li>
+<li class="sl-set-item"><button type="button" data-sl-open="sl-settings" title="Опции"><i class="bi bi-sliders" aria-hidden="true"></i> <b>Опции</b></button></li>
+              </ul>
+            </div>
+          </div>
+        </nav>
+      </header>
+      <div class="sl-admin-main">
+        <div class="v-scrim" data-ux-menu-close aria-hidden="true"></div>
+        <aside class="sl-admin-sidebar v-nav" id="ux-nav" data-ux-nav aria-label="Разделы панели">
+          <div class="v-nav-top">
+            <div class="v-find">
+              <label class="v-sr" for="ux-find">Найти раздел</label>
+              <i class="bi bi-search" aria-hidden="true"></i>
+              <input type="search" id="ux-find" class="sl-select-config" placeholder="Найти раздел" autocomplete="off" data-ux-find>
+            </div>
+            <button type="button" class="v-palbtn" data-ux-pal-open title="Быстрый переход (Ctrl+K)" aria-label="Быстрый переход, Ctrl+K"><kbd>Ctrl</kbd><kbd>K</kbd></button>
+            <button type="button" class="sl-but-mini v-nav-close" data-ux-menu-close title="Закрыть меню" aria-label="Закрыть меню"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
+          </div>
+          <p class="v-empty" data-ux-empty hidden>Раздел не найден.</p>
+            <div class="sl-block-sidebar v-group" data-ux-group>
+              <h3><button type="button" class="v-gbtn" title="Свёртывание / Развёртывание" aria-expanded="true" aria-controls="ux-g-0" data-ux-group-toggle><b><i class="bi bi-collection" aria-hidden="true"></i>Контент</b><i class="bi bi-arrows-collapse sl-panel-toggle sl-panel-toggle-open" aria-hidden="true"></i><i class="bi bi-arrows-expand sl-panel-toggle sl-panel-toggle-closed" aria-hidden="true"></i></button></h3>
+              <div class="sl-block-sidebar-content" id="ux-g-0">
+                <ul class="sl-reset v-group-list">
+                <li class="sl-menu-list-item" data-ux-item="node"><a href="../admin.php?name=node"><i class="bi bi-collection" aria-hidden="true"></i> Материалы</a><span class="sl-dial"><button class="sl-dial-toggle sl-but-mini" type="button" title="Опции" aria-label="Опции раздела «Материалы»"><i class="bi bi-three-dots" aria-hidden="true"></i></button><a class="sl-dial-item sl-but-mini" href="../admin.php?name=modules&amp;op=edit&amp;mod=node" title="Полное редактирование"><i class="bi bi-pencil-square" aria-hidden="true"></i></a><a class="sl-dial-item sl-but-mini" href="../admin.php?name=node&amp;op=info" title="Справка"><i class="bi bi-info-circle" aria-hidden="true"></i></a></span></li>
+                <li class="sl-menu-list-item" data-ux-item="categories"><a href="../admin.php?name=categories"><i class="bi bi-folder" aria-hidden="true"></i> Категории</a><span class="sl-dial"><button class="sl-dial-toggle sl-but-mini" type="button" title="Опции" aria-label="Опции раздела «Категории»"><i class="bi bi-three-dots" aria-hidden="true"></i></button><a class="sl-dial-item sl-but-mini" href="../admin.php?name=modules&amp;op=edit&amp;mod=categories" title="Полное редактирование"><i class="bi bi-pencil-square" aria-hidden="true"></i></a><a class="sl-dial-item sl-but-mini" href="../admin.php?name=categories&amp;op=info" title="Справка"><i class="bi bi-info-circle" aria-hidden="true"></i></a></span></li>
+                <li class="sl-menu-list-item" data-ux-item="comments"><a href="#" aria-current="page"><i class="bi bi-chat-dots" aria-hidden="true"></i> Комментарии <span class="v-queue" data-ux-queue><span data-ux-queue-n>3</span><span class="v-sr"> ждут проверки</span></span></a><span class="sl-dial"><button class="sl-dial-toggle sl-but-mini" type="button" title="Опции" aria-label="Опции раздела «Комментарии»"><i class="bi bi-three-dots" aria-hidden="true"></i></button><a class="sl-dial-item sl-but-mini" href="../admin.php?name=modules&amp;op=edit&amp;mod=comments" title="Полное редактирование"><i class="bi bi-pencil-square" aria-hidden="true"></i></a><a class="sl-dial-item sl-but-mini" href="../admin.php?name=comments&amp;op=info" title="Справка"><i class="bi bi-info-circle" aria-hidden="true"></i></a></span></li>
+                <li class="sl-menu-list-item" data-ux-item="forum"><a href="../admin.php?name=forum"><i class="bi bi-chat-square-text" aria-hidden="true"></i> Форум</a><span class="sl-dial"><button class="sl-dial-toggle sl-but-mini" type="button" title="Опции" aria-label="Опции раздела «Форум»"><i class="bi bi-three-dots" aria-hidden="true"></i></button><a class="sl-dial-item sl-but-mini" href="../admin.php?name=modules&amp;op=edit&amp;mod=forum" title="Полное редактирование"><i class="bi bi-pencil-square" aria-hidden="true"></i></a><a class="sl-dial-item sl-but-mini" href="../admin.php?name=forum&amp;op=info" title="Справка"><i class="bi bi-info-circle" aria-hidden="true"></i></a></span></li>
+                <li class="sl-menu-list-item" data-ux-item="voting"><a href="../admin.php?name=voting"><i class="bi bi-bar-chart" aria-hidden="true"></i> Опросы</a><span class="sl-dial"><button class="sl-dial-toggle sl-but-mini" type="button" title="Опции" aria-label="Опции раздела «Опросы»"><i class="bi bi-three-dots" aria-hidden="true"></i></button><a class="sl-dial-item sl-but-mini" href="../admin.php?name=modules&amp;op=edit&amp;mod=voting" title="Полное редактирование"><i class="bi bi-pencil-square" aria-hidden="true"></i></a><a class="sl-dial-item sl-but-mini" href="../admin.php?name=voting&amp;op=info" title="Справка"><i class="bi bi-info-circle" aria-hidden="true"></i></a></span></li>
+                <li class="sl-menu-list-item" data-ux-item="blocks"><a href="../admin.php?name=blocks"><i class="bi bi-grid-3x3-gap" aria-hidden="true"></i> Блоки и баннеры</a><span class="sl-dial"><button class="sl-dial-toggle sl-but-mini" type="button" title="Опции" aria-label="Опции раздела «Блоки и баннеры»"><i class="bi bi-three-dots" aria-hidden="true"></i></button><a class="sl-dial-item sl-but-mini" href="../admin.php?name=modules&amp;op=edit&amp;mod=blocks" title="Полное редактирование"><i class="bi bi-pencil-square" aria-hidden="true"></i></a><a class="sl-dial-item sl-but-mini" href="../admin.php?name=blocks&amp;op=info" title="Справка"><i class="bi bi-info-circle" aria-hidden="true"></i></a></span></li>
+                <li class="sl-menu-list-item" data-ux-item="fields"><a href="../admin.php?name=fields"><i class="bi bi-input-cursor-text" aria-hidden="true"></i> Дополнительные поля</a><span class="sl-dial"><button class="sl-dial-toggle sl-but-mini" type="button" title="Опции" aria-label="Опции раздела «Дополнительные поля»"><i class="bi bi-three-dots" aria-hidden="true"></i></button><a class="sl-dial-item sl-but-mini" href="../admin.php?name=modules&amp;op=edit&amp;mod=fields" title="Полное редактирование"><i class="bi bi-pencil-square" aria-hidden="true"></i></a><a class="sl-dial-item sl-but-mini" href="../admin.php?name=fields&amp;op=info" title="Справка"><i class="bi bi-info-circle" aria-hidden="true"></i></a></span></li>
+                <li class="sl-menu-list-item" data-ux-item="replace"><a href="../admin.php?name=replace"><i class="bi bi-arrow-left-right" aria-hidden="true"></i> Замена слов</a><span class="sl-dial"><button class="sl-dial-toggle sl-but-mini" type="button" title="Опции" aria-label="Опции раздела «Замена слов»"><i class="bi bi-three-dots" aria-hidden="true"></i></button><a class="sl-dial-item sl-but-mini" href="../admin.php?name=modules&amp;op=edit&amp;mod=replace" title="Полное редактирование"><i class="bi bi-pencil-square" aria-hidden="true"></i></a><a class="sl-dial-item sl-but-mini" href="../admin.php?name=replace&amp;op=info" title="Справка"><i class="bi bi-info-circle" aria-hidden="true"></i></a></span></li>
+                <li class="sl-menu-list-item" data-ux-item="favorites"><a href="../admin.php?name=favorites"><i class="bi bi-star" aria-hidden="true"></i> Фавориты</a><span class="sl-dial"><button class="sl-dial-toggle sl-but-mini" type="button" title="Опции" aria-label="Опции раздела «Фавориты»"><i class="bi bi-three-dots" aria-hidden="true"></i></button><a class="sl-dial-item sl-but-mini" href="../admin.php?name=modules&amp;op=edit&amp;mod=favorites" title="Полное редактирование"><i class="bi bi-pencil-square" aria-hidden="true"></i></a><a class="sl-dial-item sl-but-mini" href="../admin.php?name=favorites&amp;op=info" title="Справка"><i class="bi bi-info-circle" aria-hidden="true"></i></a></span></li>
+                <li class="sl-menu-list-item" data-ux-item="ratings"><a href="../admin.php?name=ratings"><i class="bi bi-star-half" aria-hidden="true"></i> Рейтинги</a><span class="sl-dial"><button class="sl-dial-toggle sl-but-mini" type="button" title="Опции" aria-label="Опции раздела «Рейтинги»"><i class="bi bi-three-dots" aria-hidden="true"></i></button><a class="sl-dial-item sl-but-mini" href="../admin.php?name=modules&amp;op=edit&amp;mod=ratings" title="Полное редактирование"><i class="bi bi-pencil-square" aria-hidden="true"></i></a><a class="sl-dial-item sl-but-mini" href="../admin.php?name=ratings&amp;op=info" title="Справка"><i class="bi bi-info-circle" aria-hidden="true"></i></a></span></li>
+                <li class="sl-menu-list-item" data-ux-item="changelog"><a href="../admin.php?name=changelog"><i class="bi bi-journal-text" aria-hidden="true"></i> Журнал изменений</a><span class="sl-dial"><button class="sl-dial-toggle sl-but-mini" type="button" title="Опции" aria-label="Опции раздела «Журнал изменений»"><i class="bi bi-three-dots" aria-hidden="true"></i></button><a class="sl-dial-item sl-but-mini" href="../admin.php?name=modules&amp;op=edit&amp;mod=changelog" title="Полное редактирование"><i class="bi bi-pencil-square" aria-hidden="true"></i></a><a class="sl-dial-item sl-but-mini" href="../admin.php?name=changelog&amp;op=info" title="Справка"><i class="bi bi-info-circle" aria-hidden="true"></i></a></span></li>
+                </ul>
+              </div>
+            </div>
+            <div class="sl-block-sidebar v-group sl-is-closed" data-ux-group>
+              <h3><button type="button" class="v-gbtn" title="Свёртывание / Развёртывание" aria-expanded="false" aria-controls="ux-g-1" data-ux-group-toggle><b><i class="bi bi-people" aria-hidden="true"></i>Пользователи</b><i class="bi bi-arrows-collapse sl-panel-toggle sl-panel-toggle-open" aria-hidden="true"></i><i class="bi bi-arrows-expand sl-panel-toggle sl-panel-toggle-closed" aria-hidden="true"></i></button></h3>
+              <div class="sl-block-sidebar-content" id="ux-g-1" hidden>
+                <ul class="sl-reset v-group-list">
+                <li class="sl-menu-list-item" data-ux-item="account"><a href="../admin.php?name=account"><i class="bi bi-person" aria-hidden="true"></i> Пользователи</a><span class="sl-dial"><button class="sl-dial-toggle sl-but-mini" type="button" title="Опции" aria-label="Опции раздела «Пользователи»"><i class="bi bi-three-dots" aria-hidden="true"></i></button><a class="sl-dial-item sl-but-mini" href="../admin.php?name=modules&amp;op=edit&amp;mod=account" title="Полное редактирование"><i class="bi bi-pencil-square" aria-hidden="true"></i></a><a class="sl-dial-item sl-but-mini" href="../admin.php?name=account&amp;op=info" title="Справка"><i class="bi bi-info-circle" aria-hidden="true"></i></a></span></li>
+                <li class="sl-menu-list-item" data-ux-item="groups"><a href="../admin.php?name=groups"><i class="bi bi-people-fill" aria-hidden="true"></i> Группы</a><span class="sl-dial"><button class="sl-dial-toggle sl-but-mini" type="button" title="Опции" aria-label="Опции раздела «Группы»"><i class="bi bi-three-dots" aria-hidden="true"></i></button><a class="sl-dial-item sl-but-mini" href="../admin.php?name=modules&amp;op=edit&amp;mod=groups" title="Полное редактирование"><i class="bi bi-pencil-square" aria-hidden="true"></i></a><a class="sl-dial-item sl-but-mini" href="../admin.php?name=groups&amp;op=info" title="Справка"><i class="bi bi-info-circle" aria-hidden="true"></i></a></span></li>
+                <li class="sl-menu-list-item" data-ux-item="admins"><a href="../admin.php?name=admins"><i class="bi bi-person-gear" aria-hidden="true"></i> Администрация</a><span class="sl-dial"><button class="sl-dial-toggle sl-but-mini" type="button" title="Опции" aria-label="Опции раздела «Администрация»"><i class="bi bi-three-dots" aria-hidden="true"></i></button><a class="sl-dial-item sl-but-mini" href="../admin.php?name=modules&amp;op=edit&amp;mod=admins" title="Полное редактирование"><i class="bi bi-pencil-square" aria-hidden="true"></i></a><a class="sl-dial-item sl-but-mini" href="../admin.php?name=admins&amp;op=info" title="Справка"><i class="bi bi-info-circle" aria-hidden="true"></i></a></span></li>
+                <li class="sl-menu-list-item" data-ux-item="privat"><a href="../admin.php?name=privat"><i class="bi bi-incognito" aria-hidden="true"></i> Личные сообщения</a><span class="sl-dial"><button class="sl-dial-toggle sl-but-mini" type="button" title="Опции" aria-label="Опции раздела «Личные сообщения»"><i class="bi bi-three-dots" aria-hidden="true"></i></button><a class="sl-dial-item sl-but-mini" href="../admin.php?name=modules&amp;op=edit&amp;mod=privat" title="Полное редактирование"><i class="bi bi-pencil-square" aria-hidden="true"></i></a><a class="sl-dial-item sl-but-mini" href="../admin.php?name=privat&amp;op=info" title="Справка"><i class="bi bi-info-circle" aria-hidden="true"></i></a></span></li>
+                <li class="sl-menu-list-item" data-ux-item="messages"><a href="../admin.php?name=messages"><i class="bi bi-envelope" aria-hidden="true"></i> Сообщения</a><span class="sl-dial"><button class="sl-dial-toggle sl-but-mini" type="button" title="Опции" aria-label="Опции раздела «Сообщения»"><i class="bi bi-three-dots" aria-hidden="true"></i></button><a class="sl-dial-item sl-but-mini" href="../admin.php?name=modules&amp;op=edit&amp;mod=messages" title="Полное редактирование"><i class="bi bi-pencil-square" aria-hidden="true"></i></a><a class="sl-dial-item sl-but-mini" href="../admin.php?name=messages&amp;op=info" title="Справка"><i class="bi bi-info-circle" aria-hidden="true"></i></a></span></li>
+                <li class="sl-menu-list-item" data-ux-item="newsletter"><a href="../admin.php?name=newsletter"><i class="bi bi-send" aria-hidden="true"></i> Рассылка</a><span class="sl-dial"><button class="sl-dial-toggle sl-but-mini" type="button" title="Опции" aria-label="Опции раздела «Рассылка»"><i class="bi bi-three-dots" aria-hidden="true"></i></button><a class="sl-dial-item sl-but-mini" href="../admin.php?name=modules&amp;op=edit&amp;mod=newsletter" title="Полное редактирование"><i class="bi bi-pencil-square" aria-hidden="true"></i></a><a class="sl-dial-item sl-but-mini" href="../admin.php?name=newsletter&amp;op=info" title="Справка"><i class="bi bi-info-circle" aria-hidden="true"></i></a></span></li>
+                <li class="sl-menu-list-item" data-ux-item="contact"><a href="../admin.php?name=contact"><i class="bi bi-envelope-paper" aria-hidden="true"></i> Обратная связь</a><span class="sl-dial"><button class="sl-dial-toggle sl-but-mini" type="button" title="Опции" aria-label="Опции раздела «Обратная связь»"><i class="bi bi-three-dots" aria-hidden="true"></i></button><a class="sl-dial-item sl-but-mini" href="../admin.php?name=modules&amp;op=edit&amp;mod=contact" title="Полное редактирование"><i class="bi bi-pencil-square" aria-hidden="true"></i></a><a class="sl-dial-item sl-but-mini" href="../admin.php?name=contact&amp;op=info" title="Справка"><i class="bi bi-info-circle" aria-hidden="true"></i></a></span></li>
+                </ul>
+              </div>
+            </div>
+            <div class="sl-block-sidebar v-group sl-is-closed" data-ux-group>
+              <h3><button type="button" class="v-gbtn" title="Свёртывание / Развёртывание" aria-expanded="false" aria-controls="ux-g-2" data-ux-group-toggle><b><i class="bi bi-palette" aria-hidden="true"></i>Внешний вид</b><i class="bi bi-arrows-collapse sl-panel-toggle sl-panel-toggle-open" aria-hidden="true"></i><i class="bi bi-arrows-expand sl-panel-toggle sl-panel-toggle-closed" aria-hidden="true"></i></button></h3>
+              <div class="sl-block-sidebar-content" id="ux-g-2" hidden>
+                <ul class="sl-reset v-group-list">
+                <li class="sl-menu-list-item" data-ux-item="template"><a href="../admin.php?name=template"><i class="bi bi-palette" aria-hidden="true"></i> Шаблон</a><span class="sl-dial"><button class="sl-dial-toggle sl-but-mini" type="button" title="Опции" aria-label="Опции раздела «Шаблон»"><i class="bi bi-three-dots" aria-hidden="true"></i></button><a class="sl-dial-item sl-but-mini" href="../admin.php?name=modules&amp;op=edit&amp;mod=template" title="Полное редактирование"><i class="bi bi-pencil-square" aria-hidden="true"></i></a><a class="sl-dial-item sl-but-mini" href="../admin.php?name=template&amp;op=info" title="Справка"><i class="bi bi-info-circle" aria-hidden="true"></i></a></span></li>
+                <li class="sl-menu-list-item" data-ux-item="editor"><a href="../admin.php?name=editor"><i class="bi bi-pencil-square" aria-hidden="true"></i> Редактор</a><span class="sl-dial"><button class="sl-dial-toggle sl-but-mini" type="button" title="Опции" aria-label="Опции раздела «Редактор»"><i class="bi bi-three-dots" aria-hidden="true"></i></button><a class="sl-dial-item sl-but-mini" href="../admin.php?name=modules&amp;op=edit&amp;mod=editor" title="Полное редактирование"><i class="bi bi-pencil-square" aria-hidden="true"></i></a><a class="sl-dial-item sl-but-mini" href="../admin.php?name=editor&amp;op=info" title="Справка"><i class="bi bi-info-circle" aria-hidden="true"></i></a></span></li>
+                <li class="sl-menu-list-item" data-ux-item="lang"><a href="../admin.php?name=lang"><i class="bi bi-translate" aria-hidden="true"></i> Редактор языков</a><span class="sl-dial"><button class="sl-dial-toggle sl-but-mini" type="button" title="Опции" aria-label="Опции раздела «Редактор языков»"><i class="bi bi-three-dots" aria-hidden="true"></i></button><a class="sl-dial-item sl-but-mini" href="../admin.php?name=modules&amp;op=edit&amp;mod=lang" title="Полное редактирование"><i class="bi bi-pencil-square" aria-hidden="true"></i></a><a class="sl-dial-item sl-but-mini" href="../admin.php?name=lang&amp;op=info" title="Справка"><i class="bi bi-info-circle" aria-hidden="true"></i></a></span></li>
+                <li class="sl-menu-list-item" data-ux-item="uploads"><a href="../admin.php?name=uploads"><i class="bi bi-cloud-arrow-up" aria-hidden="true"></i> Загрузки</a><span class="sl-dial"><button class="sl-dial-toggle sl-but-mini" type="button" title="Опции" aria-label="Опции раздела «Загрузки»"><i class="bi bi-three-dots" aria-hidden="true"></i></button><a class="sl-dial-item sl-but-mini" href="../admin.php?name=modules&amp;op=edit&amp;mod=uploads" title="Полное редактирование"><i class="bi bi-pencil-square" aria-hidden="true"></i></a><a class="sl-dial-item sl-but-mini" href="../admin.php?name=uploads&amp;op=info" title="Справка"><i class="bi bi-info-circle" aria-hidden="true"></i></a></span></li>
+                </ul>
+              </div>
+            </div>
+            <div class="sl-block-sidebar v-group sl-is-closed" data-ux-group>
+              <h3><button type="button" class="v-gbtn" title="Свёртывание / Развёртывание" aria-expanded="false" aria-controls="ux-g-3" data-ux-group-toggle><b><i class="bi bi-gear" aria-hidden="true"></i>Система</b><i class="bi bi-arrows-collapse sl-panel-toggle sl-panel-toggle-open" aria-hidden="true"></i><i class="bi bi-arrows-expand sl-panel-toggle sl-panel-toggle-closed" aria-hidden="true"></i></button></h3>
+              <div class="sl-block-sidebar-content" id="ux-g-3" hidden>
+                <ul class="sl-reset v-group-list">
+                <li class="sl-menu-list-item" data-ux-item="config"><a href="../admin.php?name=config"><i class="bi bi-gear" aria-hidden="true"></i> Конфигурации</a><span class="sl-dial"><button class="sl-dial-toggle sl-but-mini" type="button" title="Опции" aria-label="Опции раздела «Конфигурации»"><i class="bi bi-three-dots" aria-hidden="true"></i></button><a class="sl-dial-item sl-but-mini" href="../admin.php?name=modules&amp;op=edit&amp;mod=config" title="Полное редактирование"><i class="bi bi-pencil-square" aria-hidden="true"></i></a><a class="sl-dial-item sl-but-mini" href="../admin.php?name=config&amp;op=info" title="Справка"><i class="bi bi-info-circle" aria-hidden="true"></i></a></span></li>
+                <li class="sl-menu-list-item" data-ux-item="modules"><a href="../admin.php?name=modules"><i class="bi bi-puzzle" aria-hidden="true"></i> Модули</a><span class="sl-dial"><button class="sl-dial-toggle sl-but-mini" type="button" title="Опции" aria-label="Опции раздела «Модули»"><i class="bi bi-three-dots" aria-hidden="true"></i></button><a class="sl-dial-item sl-but-mini" href="../admin.php?name=modules&amp;op=edit&amp;mod=modules" title="Полное редактирование"><i class="bi bi-pencil-square" aria-hidden="true"></i></a><a class="sl-dial-item sl-but-mini" href="../admin.php?name=modules&amp;op=info" title="Справка"><i class="bi bi-info-circle" aria-hidden="true"></i></a></span></li>
+                <li class="sl-menu-list-item" data-ux-item="security"><a href="../admin.php?name=security"><i class="bi bi-shield-lock" aria-hidden="true"></i> Безопасность</a><span class="sl-dial"><button class="sl-dial-toggle sl-but-mini" type="button" title="Опции" aria-label="Опции раздела «Безопасность»"><i class="bi bi-three-dots" aria-hidden="true"></i></button><a class="sl-dial-item sl-but-mini" href="../admin.php?name=modules&amp;op=edit&amp;mod=security" title="Полное редактирование"><i class="bi bi-pencil-square" aria-hidden="true"></i></a><a class="sl-dial-item sl-but-mini" href="../admin.php?name=security&amp;op=info" title="Справка"><i class="bi bi-info-circle" aria-hidden="true"></i></a></span></li>
+                <li class="sl-menu-list-item" data-ux-item="database"><a href="../admin.php?name=database"><i class="bi bi-database" aria-hidden="true"></i> База данных</a><span class="sl-dial"><button class="sl-dial-toggle sl-but-mini" type="button" title="Опции" aria-label="Опции раздела «База данных»"><i class="bi bi-three-dots" aria-hidden="true"></i></button><a class="sl-dial-item sl-but-mini" href="../admin.php?name=modules&amp;op=edit&amp;mod=database" title="Полное редактирование"><i class="bi bi-pencil-square" aria-hidden="true"></i></a><a class="sl-dial-item sl-but-mini" href="../admin.php?name=database&amp;op=info" title="Справка"><i class="bi bi-info-circle" aria-hidden="true"></i></a></span></li>
+                <li class="sl-menu-list-item" data-ux-item="scheduler"><a href="../admin.php?name=scheduler"><i class="bi bi-clock-history" aria-hidden="true"></i> Планировщик</a><span class="sl-dial"><button class="sl-dial-toggle sl-but-mini" type="button" title="Опции" aria-label="Опции раздела «Планировщик»"><i class="bi bi-three-dots" aria-hidden="true"></i></button><a class="sl-dial-item sl-but-mini" href="../admin.php?name=modules&amp;op=edit&amp;mod=scheduler" title="Полное редактирование"><i class="bi bi-pencil-square" aria-hidden="true"></i></a><a class="sl-dial-item sl-but-mini" href="../admin.php?name=scheduler&amp;op=info" title="Справка"><i class="bi bi-info-circle" aria-hidden="true"></i></a></span></li>
+                <li class="sl-menu-list-item" data-ux-item="monitor"><a href="../admin.php?name=monitor"><i class="bi bi-display" aria-hidden="true"></i> Мониторинг</a><span class="sl-dial"><button class="sl-dial-toggle sl-but-mini" type="button" title="Опции" aria-label="Опции раздела «Мониторинг»"><i class="bi bi-three-dots" aria-hidden="true"></i></button><a class="sl-dial-item sl-but-mini" href="../admin.php?name=modules&amp;op=edit&amp;mod=monitor" title="Полное редактирование"><i class="bi bi-pencil-square" aria-hidden="true"></i></a><a class="sl-dial-item sl-but-mini" href="../admin.php?name=monitor&amp;op=info" title="Справка"><i class="bi bi-info-circle" aria-hidden="true"></i></a></span></li>
+                <li class="sl-menu-list-item" data-ux-item="statistic"><a href="../admin.php?name=statistic"><i class="bi bi-graph-up" aria-hidden="true"></i> Статистика</a><span class="sl-dial"><button class="sl-dial-toggle sl-but-mini" type="button" title="Опции" aria-label="Опции раздела «Статистика»"><i class="bi bi-three-dots" aria-hidden="true"></i></button><a class="sl-dial-item sl-but-mini" href="../admin.php?name=modules&amp;op=edit&amp;mod=statistic" title="Полное редактирование"><i class="bi bi-pencil-square" aria-hidden="true"></i></a><a class="sl-dial-item sl-but-mini" href="../admin.php?name=statistic&amp;op=info" title="Справка"><i class="bi bi-info-circle" aria-hidden="true"></i></a></span></li>
+                <li class="sl-menu-list-item" data-ux-item="referers"><a href="../admin.php?name=referers"><i class="bi bi-box-arrow-in-right" aria-hidden="true"></i> Переходы</a><span class="sl-dial"><button class="sl-dial-toggle sl-but-mini" type="button" title="Опции" aria-label="Опции раздела «Переходы»"><i class="bi bi-three-dots" aria-hidden="true"></i></button><a class="sl-dial-item sl-but-mini" href="../admin.php?name=modules&amp;op=edit&amp;mod=referers" title="Полное редактирование"><i class="bi bi-pencil-square" aria-hidden="true"></i></a><a class="sl-dial-item sl-but-mini" href="../admin.php?name=referers&amp;op=info" title="Справка"><i class="bi bi-info-circle" aria-hidden="true"></i></a></span></li>
+                <li class="sl-menu-list-item" data-ux-item="search"><a href="../admin.php?name=search"><i class="bi bi-search" aria-hidden="true"></i> Поиск</a><span class="sl-dial"><button class="sl-dial-toggle sl-but-mini" type="button" title="Опции" aria-label="Опции раздела «Поиск»"><i class="bi bi-three-dots" aria-hidden="true"></i></button><a class="sl-dial-item sl-but-mini" href="../admin.php?name=modules&amp;op=edit&amp;mod=search" title="Полное редактирование"><i class="bi bi-pencil-square" aria-hidden="true"></i></a><a class="sl-dial-item sl-but-mini" href="../admin.php?name=search&amp;op=info" title="Справка"><i class="bi bi-info-circle" aria-hidden="true"></i></a></span></li>
+                <li class="sl-menu-list-item" data-ux-item="rss"><a href="../admin.php?name=rss"><i class="bi bi-rss" aria-hidden="true"></i> RSS каналы</a><span class="sl-dial"><button class="sl-dial-toggle sl-but-mini" type="button" title="Опции" aria-label="Опции раздела «RSS каналы»"><i class="bi bi-three-dots" aria-hidden="true"></i></button><a class="sl-dial-item sl-but-mini" href="../admin.php?name=modules&amp;op=edit&amp;mod=rss" title="Полное редактирование"><i class="bi bi-pencil-square" aria-hidden="true"></i></a><a class="sl-dial-item sl-but-mini" href="../admin.php?name=rss&amp;op=info" title="Справка"><i class="bi bi-info-circle" aria-hidden="true"></i></a></span></li>
+                <li class="sl-menu-list-item" data-ux-item="sitemap"><a href="../admin.php?name=sitemap"><i class="bi bi-diagram-3" aria-hidden="true"></i> Карта сайта</a><span class="sl-dial"><button class="sl-dial-toggle sl-but-mini" type="button" title="Опции" aria-label="Опции раздела «Карта сайта»"><i class="bi bi-three-dots" aria-hidden="true"></i></button><a class="sl-dial-item sl-but-mini" href="../admin.php?name=modules&amp;op=edit&amp;mod=sitemap" title="Полное редактирование"><i class="bi bi-pencil-square" aria-hidden="true"></i></a><a class="sl-dial-item sl-but-mini" href="../admin.php?name=sitemap&amp;op=info" title="Справка"><i class="bi bi-info-circle" aria-hidden="true"></i></a></span></li>
+                </ul>
+              </div>
+            </div>
+            <div class="sl-block-sidebar v-watch" data-ux-group>
+              <h3><button type="button" class="v-gbtn" title="Свёртывание / Развёртывание" aria-expanded="true" aria-controls="ux-g-watch" data-ux-group-toggle><b><i class="bi bi-eye" aria-hidden="true"></i>Наблюдение</b><i class="bi bi-arrows-collapse sl-panel-toggle sl-panel-toggle-open" aria-hidden="true"></i><i class="bi bi-arrows-expand sl-panel-toggle sl-panel-toggle-closed" aria-hidden="true"></i></button></h3>
+              <div class="sl-block-sidebar-content" id="ux-g-watch">
+                <div class="sl-session-line sl-session-line--icon"><div class="sl-session-icon"><i class="bi bi-person-gear" aria-hidden="true"></i></div><div>Администрация:</div><div class="sl-session-right">1</div></div>
+                <div class="sl-session-line sl-session-line--icon"><div class="sl-session-icon"><i class="bi bi-person" aria-hidden="true"></i></div><div>Пользователей:</div><div class="sl-session-right v-zero">0</div></div>
+                <div class="sl-session-line sl-session-line--icon"><div class="sl-session-icon"><i class="bi bi-person-slash" aria-hidden="true"></i></div><div>Гостей:</div><div class="sl-session-right">1</div></div>
+                <div class="sl-session-line sl-session-line--icon"><div class="sl-session-icon"><i class="bi bi-people" aria-hidden="true"></i></div><div>Всего:</div><div class="sl-session-right">2</div></div>
+              </div>
+            </div>
+        </aside>
+        <main class="sl-admin-content" id="ux-main" tabindex="-1"><div class="sl-admin-content-inner">
+          <div class="sl-box">
+            <div class="sl-module-head">
+              <div class="sl-module-head-icon"><i class="bi bi-chat-dots" aria-hidden="true"></i></div>
+              <div class="sl-module-head-body">
+                <h1 class="sl-module-head-title" data-ux-section="Комментарии">Комментарии</h1>
+                <div class="sl-module-head-subtitle">
+                  <div class="sl-searchbox v-filter">
+                    <span class="v-field"><label for="ux-mod">Модуль</label><select id="ux-mod" class="sl-select" data-ux-mod><option value="">Все</option><option value="docs">Документация</option><option value="files">Каталог файлов</option><option value="help">Помощь</option><option value="links">Каталог сайтов</option><option value="news">Новости</option><option value="voting">Опросы</option></select></span>
+                    <form class="v-field" data-ux-search role="search" aria-label="Поиск комментариев">
+                      <label for="ux-field">Поиск</label>
+                      <select id="ux-field" class="sl-select" data-ux-field><option value="text">Комментарий</option><option value="id">№</option><option value="by">Разместил</option></select>
+                      <label class="v-sr" for="ux-q">Текст поиска</label>
+                      <input type="search" id="ux-q" class="sl-select-config" data-ux-q>
+                      <button type="submit" class="sl-but-blue">OK</button>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <nav aria-label="Комментарии: разделы">
+              <ul class="sl-tabs-nav sl-tabs-nav-main">
+                <li class="sl-tabs-item"><a href="#" class="sl-tabs-link sl-is-active" aria-current="page" data-ux-tab="all" data-ux-title="">Главная</a></li>
+                <li class="sl-tabs-item"><a href="#" class="sl-tabs-link" data-ux-tab="wait" data-ux-title="Ждут проверки">Ждут проверки</a></li>
+                <li class="sl-tabs-item"><a href="../admin.php?name=comments&amp;op=config" class="sl-tabs-link">Конфигурации</a></li>
+                <li class="sl-tabs-item"><a href="../admin.php?name=comments&amp;op=info" class="sl-tabs-link">Справка</a></li>
+              </ul>
+            </nav>
+          </div>
+          <div class="v-split">
+            <div class="sl-box sl-table-shell">
+              <p class="v-sr" role="status" data-ux-status></p>
+              <table class="sl-table-list-sort sl-table-fixed" data-sl-table-sort data-ux-list>
+                <caption class="v-sr">Комментарии сайта</caption>
+                <thead><tr><th class="sl-col-id" scope="col">№</th><th class="sl-cell-ellipsis" scope="col">Комментарий</th><th class="sl-col-author" scope="col">Разместил</th><th class="sl-col-status" scope="col" data-sort-method="none">Статус</th><th class="sl-col-check" scope="col" data-sort-method="none"><input type="checkbox" class="sl-check" data-ux-check-all aria-label="Отметить все показанные"></th></tr></thead>
+                <tbody>
+                <tr data-ux-row data-id="20679" data-mod="news" data-by="olevpa" data-text="Ну что там, сколько уже процентов?" data-date="01.02.2026 19:48:27" data-ip="195.181.175.177" data-on="1">
+                  <td class="sl-col-id">20679</td>
+                  <td class="sl-cell-ellipsis"><button type="button" class="v-open" data-ux-open aria-controls="ux-inspect" aria-expanded="false">Ну что там, сколько уже процентов?</button></td>
+                  <td class="sl-col-author">olevpa</td>
+                  <td class="sl-col-status"><button type="button" class="v-stat" data-ux-stat aria-pressed="true" title="Активирован — деактивировать" aria-label="Комментарий 20679: активирован, нажмите, чтобы деактивировать"><span class="sl-status-active"></span></button></td>
+                  <td class="sl-col-check"><input type="checkbox" class="sl-check" data-ux-check aria-label="Выбрать комментарий 20679"></td>
+                </tr>
+                <tr data-ux-row data-id="20678" data-mod="news" data-by="garry" data-text="Нечасто рассылки Все конечно классно. Но придется менять хостинги или клоуд. С двух сторон забаннены (санкции) эти хос..." data-date="19.12.2025 07:04:04" data-ip="2a10:1fc0:12::68b0:c0b" data-on="1">
+                  <td class="sl-col-id">20678</td>
+                  <td class="sl-cell-ellipsis"><button type="button" class="v-open" data-ux-open aria-controls="ux-inspect" aria-expanded="false">Нечасто рассылки Все конечно классно. Но придется менять хостинги или клоуд. С двух сторон забаннены (санкции) эти хос...</button></td>
+                  <td class="sl-col-author">garry</td>
+                  <td class="sl-col-status"><button type="button" class="v-stat" data-ux-stat aria-pressed="true" title="Активирован — деактивировать" aria-label="Комментарий 20678: активирован, нажмите, чтобы деактивировать"><span class="sl-status-active"></span></button></td>
+                  <td class="sl-col-check"><input type="checkbox" class="sl-check" data-ux-check aria-label="Выбрать комментарий 20678"></td>
+                </tr>
+                <tr data-ux-row data-id="20677" data-mod="news" data-by="Aquamarine" data-text="Отличная новость!" data-date="05.12.2025 11:23:16" data-ip="188.68.83.202" data-on="1">
+                  <td class="sl-col-id">20677</td>
+                  <td class="sl-cell-ellipsis"><button type="button" class="v-open" data-ux-open aria-controls="ux-inspect" aria-expanded="false">Отличная новость!</button></td>
+                  <td class="sl-col-author">Aquamarine</td>
+                  <td class="sl-col-status"><button type="button" class="v-stat" data-ux-stat aria-pressed="true" title="Активирован — деактивировать" aria-label="Комментарий 20677: активирован, нажмите, чтобы деактивировать"><span class="sl-status-active"></span></button></td>
+                  <td class="sl-col-check"><input type="checkbox" class="sl-check" data-ux-check aria-label="Выбрать комментарий 20677"></td>
+                </tr>
+                <tr data-ux-row data-id="20676" data-mod="files" data-by="SLAED CMS" data-text="rvg, да, это возможно. Обновлять нужно последовательно, с версии до версии." data-date="22.12.2024 17:27:36" data-ip="84.178.138.17" data-on="1">
+                  <td class="sl-col-id">20676</td>
+                  <td class="sl-cell-ellipsis"><button type="button" class="v-open" data-ux-open aria-controls="ux-inspect" aria-expanded="false">rvg, да, это возможно. Обновлять нужно последовательно, с версии до версии.</button></td>
+                  <td class="sl-col-author">SLAED CMS</td>
+                  <td class="sl-col-status"><button type="button" class="v-stat" data-ux-stat aria-pressed="true" title="Активирован — деактивировать" aria-label="Комментарий 20676: активирован, нажмите, чтобы деактивировать"><span class="sl-status-active"></span></button></td>
+                  <td class="sl-col-check"><input type="checkbox" class="sl-check" data-ux-check aria-label="Выбрать комментарий 20676"></td>
+                </tr>
+                <tr data-ux-row data-id="20675" data-mod="files" data-by="rvg" data-text="SLAED CMS, Подскажите, можно-ли обновить 2.6 Lite до 6.2 Pro?" data-date="19.12.2024 16:54:23" data-ip="46.175.253.108" data-on="1">
+                  <td class="sl-col-id">20675</td>
+                  <td class="sl-cell-ellipsis"><button type="button" class="v-open" data-ux-open aria-controls="ux-inspect" aria-expanded="false">SLAED CMS, Подскажите, можно-ли обновить 2.6 Lite до 6.2 Pro?</button></td>
+                  <td class="sl-col-author">rvg</td>
+                  <td class="sl-col-status"><button type="button" class="v-stat" data-ux-stat aria-pressed="true" title="Активирован — деактивировать" aria-label="Комментарий 20675: активирован, нажмите, чтобы деактивировать"><span class="sl-status-active"></span></button></td>
+                  <td class="sl-col-check"><input type="checkbox" class="sl-check" data-ux-check aria-label="Выбрать комментарий 20675"></td>
+                </tr>
+                <tr data-ux-row data-id="20674" data-mod="files" data-by="o5Tolik" data-text="Ну что-то прям совсем какая-то простенькая тема. Нет, как-бы сказать, какой-то изюминка, что-ли? Ну хотя, на в кус и цве..." data-date="07.12.2024 23:19:47" data-ip="87.225.94.53" data-on="1">
+                  <td class="sl-col-id">20674</td>
+                  <td class="sl-cell-ellipsis"><button type="button" class="v-open" data-ux-open aria-controls="ux-inspect" aria-expanded="false">Ну что-то прям совсем какая-то простенькая тема. Нет, как-бы сказать, какой-то изюминка, что-ли? Ну хотя, на в кус и цве...</button></td>
+                  <td class="sl-col-author">o5Tolik</td>
+                  <td class="sl-col-status"><button type="button" class="v-stat" data-ux-stat aria-pressed="true" title="Активирован — деактивировать" aria-label="Комментарий 20674: активирован, нажмите, чтобы деактивировать"><span class="sl-status-active"></span></button></td>
+                  <td class="sl-col-check"><input type="checkbox" class="sl-check" data-ux-check aria-label="Выбрать комментарий 20674"></td>
+                </tr>
+                <tr data-ux-row data-id="20673" data-mod="voting" data-by="o5Tolik" data-text="Проголосовал за Каталог сайтов, есть небольшая задумка сделать отличную вещь, какую пока говорить не буду. Если, кто-то ..." data-date="03.12.2024 08:44:51" data-ip="87.225.94.53" data-on="1">
+                  <td class="sl-col-id">20673</td>
+                  <td class="sl-cell-ellipsis"><button type="button" class="v-open" data-ux-open aria-controls="ux-inspect" aria-expanded="false">Проголосовал за Каталог сайтов, есть небольшая задумка сделать отличную вещь, какую пока говорить не буду. Если, кто-то ...</button></td>
+                  <td class="sl-col-author">o5Tolik</td>
+                  <td class="sl-col-status"><button type="button" class="v-stat" data-ux-stat aria-pressed="true" title="Активирован — деактивировать" aria-label="Комментарий 20673: активирован, нажмите, чтобы деактивировать"><span class="sl-status-active"></span></button></td>
+                  <td class="sl-col-check"><input type="checkbox" class="sl-check" data-ux-check aria-label="Выбрать комментарий 20673"></td>
+                </tr>
+                <tr data-ux-row data-id="20672" data-mod="news" data-by="SLAED CMS" data-text="На данный момент времени версия CMS для PHP 8.*, находится в разработке." data-date="16.11.2023 17:07:05" data-ip="79.196.72.151" data-on="1">
+                  <td class="sl-col-id">20672</td>
+                  <td class="sl-cell-ellipsis"><button type="button" class="v-open" data-ux-open aria-controls="ux-inspect" aria-expanded="false">На данный момент времени версия CMS для PHP 8.*, находится в разработке.</button></td>
+                  <td class="sl-col-author">SLAED CMS</td>
+                  <td class="sl-col-status"><button type="button" class="v-stat" data-ux-stat aria-pressed="true" title="Активирован — деактивировать" aria-label="Комментарий 20672: активирован, нажмите, чтобы деактивировать"><span class="sl-status-active"></span></button></td>
+                  <td class="sl-col-check"><input type="checkbox" class="sl-check" data-ux-check aria-label="Выбрать комментарий 20672"></td>
+                </tr>
+                <tr data-ux-row data-id="20671" data-mod="files" data-by="SLAED CMS" data-text="Это очень просто. Добавьте свои языковые файлы в систему, назовите их в соответствии с языком, латинскими буквами. Можно..." data-date="16.11.2023 17:04:42" data-ip="79.196.72.151" data-on="1">
+                  <td class="sl-col-id">20671</td>
+                  <td class="sl-cell-ellipsis"><button type="button" class="v-open" data-ux-open aria-controls="ux-inspect" aria-expanded="false">Это очень просто. Добавьте свои языковые файлы в систему, назовите их в соответствии с языком, латинскими буквами. Можно...</button></td>
+                  <td class="sl-col-author">SLAED CMS</td>
+                  <td class="sl-col-status"><button type="button" class="v-stat" data-ux-stat aria-pressed="true" title="Активирован — деактивировать" aria-label="Комментарий 20671: активирован, нажмите, чтобы деактивировать"><span class="sl-status-active"></span></button></td>
+                  <td class="sl-col-check"><input type="checkbox" class="sl-check" data-ux-check aria-label="Выбрать комментарий 20671"></td>
+                </tr>
+                <tr data-ux-row data-id="20670" data-mod="files" data-by="arassa" data-text="Я хочу попробовать бесплатную версию и добавить в систему Туркменский язык. Можно перевести самостоятельно?" data-date="01.03.2023 09:46:41" data-ip="185.69.185.31" data-on="1">
+                  <td class="sl-col-id">20670</td>
+                  <td class="sl-cell-ellipsis"><button type="button" class="v-open" data-ux-open aria-controls="ux-inspect" aria-expanded="false">Я хочу попробовать бесплатную версию и добавить в систему Туркменский язык. Можно перевести самостоятельно?</button></td>
+                  <td class="sl-col-author">arassa</td>
+                  <td class="sl-col-status"><button type="button" class="v-stat" data-ux-stat aria-pressed="true" title="Активирован — деактивировать" aria-label="Комментарий 20670: активирован, нажмите, чтобы деактивировать"><span class="sl-status-active"></span></button></td>
+                  <td class="sl-col-check"><input type="checkbox" class="sl-check" data-ux-check aria-label="Выбрать комментарий 20670"></td>
+                </tr>
+                <tr data-ux-row data-id="20669" data-mod="news" data-by="hiphell" data-text="А время генерации в PHP 8 тесты будут?" data-date="01.03.2023 06:12:55" data-ip="128.72.8.174" data-on="1">
+                  <td class="sl-col-id">20669</td>
+                  <td class="sl-cell-ellipsis"><button type="button" class="v-open" data-ux-open aria-controls="ux-inspect" aria-expanded="false">А время генерации в PHP 8 тесты будут?</button></td>
+                  <td class="sl-col-author">hiphell</td>
+                  <td class="sl-col-status"><button type="button" class="v-stat" data-ux-stat aria-pressed="true" title="Активирован — деактивировать" aria-label="Комментарий 20669: активирован, нажмите, чтобы деактивировать"><span class="sl-status-active"></span></button></td>
+                  <td class="sl-col-check"><input type="checkbox" class="sl-check" data-ux-check aria-label="Выбрать комментарий 20669"></td>
+                </tr>
+                <tr data-ux-row data-id="20668" data-mod="voting" data-by="potapchik" data-text="1920x1080. Одно из самых распространенных разрешений, а в списке нет..." data-date="30.06.2022 10:38:13" data-ip="176.104.48.144" data-on="1">
+                  <td class="sl-col-id">20668</td>
+                  <td class="sl-cell-ellipsis"><button type="button" class="v-open" data-ux-open aria-controls="ux-inspect" aria-expanded="false">1920x1080. Одно из самых распространенных разрешений, а в списке нет...</button></td>
+                  <td class="sl-col-author">potapchik</td>
+                  <td class="sl-col-status"><button type="button" class="v-stat" data-ux-stat aria-pressed="true" title="Активирован — деактивировать" aria-label="Комментарий 20668: активирован, нажмите, чтобы деактивировать"><span class="sl-status-active"></span></button></td>
+                  <td class="sl-col-check"><input type="checkbox" class="sl-check" data-ux-check aria-label="Выбрать комментарий 20668"></td>
+                </tr>
+                <tr data-ux-row data-id="20667" data-mod="voting" data-by="potapchik" data-text="Тоже ничего не понял!" data-date="29.06.2022 15:46:42" data-ip="176.104.48.144" data-on="1">
+                  <td class="sl-col-id">20667</td>
+                  <td class="sl-cell-ellipsis"><button type="button" class="v-open" data-ux-open aria-controls="ux-inspect" aria-expanded="false">Тоже ничего не понял!</button></td>
+                  <td class="sl-col-author">potapchik</td>
+                  <td class="sl-col-status"><button type="button" class="v-stat" data-ux-stat aria-pressed="true" title="Активирован — деактивировать" aria-label="Комментарий 20667: активирован, нажмите, чтобы деактивировать"><span class="sl-status-active"></span></button></td>
+                  <td class="sl-col-check"><input type="checkbox" class="sl-check" data-ux-check aria-label="Выбрать комментарий 20667"></td>
+                </tr>
+                <tr data-ux-row data-id="20666" data-mod="voting" data-by="globo" data-text="ничего не понятно" data-date="09.06.2022 14:07:18" data-ip="176.104.48.144" data-on="1">
+                  <td class="sl-col-id">20666</td>
+                  <td class="sl-cell-ellipsis"><button type="button" class="v-open" data-ux-open aria-controls="ux-inspect" aria-expanded="false">ничего не понятно</button></td>
+                  <td class="sl-col-author">globo</td>
+                  <td class="sl-col-status"><button type="button" class="v-stat" data-ux-stat aria-pressed="true" title="Активирован — деактивировать" aria-label="Комментарий 20666: активирован, нажмите, чтобы деактивировать"><span class="sl-status-active"></span></button></td>
+                  <td class="sl-col-check"><input type="checkbox" class="sl-check" data-ux-check aria-label="Выбрать комментарий 20666"></td>
+                </tr>
+                <tr data-ux-row data-id="21662" data-mod="help" data-by="SLAED CMS" data-text="test 2" data-date="31.05.2022 13:55:24" data-ip="87.179.54.121" data-on="1">
+                  <td class="sl-col-id">21662</td>
+                  <td class="sl-cell-ellipsis"><button type="button" class="v-open" data-ux-open aria-controls="ux-inspect" aria-expanded="false">test 2</button></td>
+                  <td class="sl-col-author">SLAED CMS</td>
+                  <td class="sl-col-status"><button type="button" class="v-stat" data-ux-stat aria-pressed="true" title="Активирован — деактивировать" aria-label="Комментарий 21662: активирован, нажмите, чтобы деактивировать"><span class="sl-status-active"></span></button></td>
+                  <td class="sl-col-check"><input type="checkbox" class="sl-check" data-ux-check aria-label="Выбрать комментарий 21662"></td>
+                </tr>
+                <tr data-ux-row data-id="20665" data-mod="files" data-by="SLAED CMS" data-text="viris42, всё что возможно, доступно в стандартной поставке." data-date="02.09.2021 13:56:14" data-ip="92.196.158.184" data-on="1">
+                  <td class="sl-col-id">20665</td>
+                  <td class="sl-cell-ellipsis"><button type="button" class="v-open" data-ux-open aria-controls="ux-inspect" aria-expanded="false">viris42, всё что возможно, доступно в стандартной поставке.</button></td>
+                  <td class="sl-col-author">SLAED CMS</td>
+                  <td class="sl-col-status"><button type="button" class="v-stat" data-ux-stat aria-pressed="true" title="Активирован — деактивировать" aria-label="Комментарий 20665: активирован, нажмите, чтобы деактивировать"><span class="sl-status-active"></span></button></td>
+                  <td class="sl-col-check"><input type="checkbox" class="sl-check" data-ux-check aria-label="Выбрать комментарий 20665"></td>
+                </tr>
+                <tr data-ux-row data-id="20664" data-mod="files" data-by="viris42" data-text="SLAED CMS, добрый день. Скажите а реально ли получить исходники логотипа стандартной темы от Open SLAED 1.3.1?" data-date="30.08.2021 11:04:23" data-ip="176.102.2.202" data-on="1">
+                  <td class="sl-col-id">20664</td>
+                  <td class="sl-cell-ellipsis"><button type="button" class="v-open" data-ux-open aria-controls="ux-inspect" aria-expanded="false">SLAED CMS, добрый день. Скажите а реально ли получить исходники логотипа стандартной темы от Open SLAED 1.3.1?</button></td>
+                  <td class="sl-col-author">viris42</td>
+                  <td class="sl-col-status"><button type="button" class="v-stat" data-ux-stat aria-pressed="true" title="Активирован — деактивировать" aria-label="Комментарий 20664: активирован, нажмите, чтобы деактивировать"><span class="sl-status-active"></span></button></td>
+                  <td class="sl-col-check"><input type="checkbox" class="sl-check" data-ux-check aria-label="Выбрать комментарий 20664"></td>
+                </tr>
+                <tr data-ux-row data-id="20663" data-mod="docs" data-by="SLAED CMS" data-text="goolybad, в таких случаях Яндекс рекомендует создавать несколько каналов. Можно добавить дополнительный GET параметр нач..." data-date="26.03.2021 21:02:18" data-ip="92.192.101.1" data-on="1">
+                  <td class="sl-col-id">20663</td>
+                  <td class="sl-cell-ellipsis"><button type="button" class="v-open" data-ux-open aria-controls="ux-inspect" aria-expanded="false">goolybad, в таких случаях Яндекс рекомендует создавать несколько каналов. Можно добавить дополнительный GET параметр нач...</button></td>
+                  <td class="sl-col-author">SLAED CMS</td>
+                  <td class="sl-col-status"><button type="button" class="v-stat" data-ux-stat aria-pressed="true" title="Активирован — деактивировать" aria-label="Комментарий 20663: активирован, нажмите, чтобы деактивировать"><span class="sl-status-active"></span></button></td>
+                  <td class="sl-col-check"><input type="checkbox" class="sl-check" data-ux-check aria-label="Выбрать комментарий 20663"></td>
+                </tr>
+                <tr data-ux-row data-id="20662" data-mod="docs" data-by="goolybad" data-text="Как быть с тем, что яндекс требует в одной ленте rss не более 1000 материалов?" data-date="21.03.2021 12:48:10" data-ip="178.121.191.87" data-on="1">
+                  <td class="sl-col-id">20662</td>
+                  <td class="sl-cell-ellipsis"><button type="button" class="v-open" data-ux-open aria-controls="ux-inspect" aria-expanded="false">Как быть с тем, что яндекс требует в одной ленте rss не более 1000 материалов?</button></td>
+                  <td class="sl-col-author">goolybad</td>
+                  <td class="sl-col-status"><button type="button" class="v-stat" data-ux-stat aria-pressed="true" title="Активирован — деактивировать" aria-label="Комментарий 20662: активирован, нажмите, чтобы деактивировать"><span class="sl-status-active"></span></button></td>
+                  <td class="sl-col-check"><input type="checkbox" class="sl-check" data-ux-check aria-label="Выбрать комментарий 20662"></td>
+                </tr>
+                <tr data-ux-row data-id="20659" data-mod="files" data-by="nafania_19" data-text="Спасибо!" data-date="11.02.2020 12:32:47" data-ip="94.178.97.250" data-on="1">
+                  <td class="sl-col-id">20659</td>
+                  <td class="sl-cell-ellipsis"><button type="button" class="v-open" data-ux-open aria-controls="ux-inspect" aria-expanded="false">Спасибо!</button></td>
+                  <td class="sl-col-author">nafania_19</td>
+                  <td class="sl-col-status"><button type="button" class="v-stat" data-ux-stat aria-pressed="true" title="Активирован — деактивировать" aria-label="Комментарий 20659: активирован, нажмите, чтобы деактивировать"><span class="sl-status-active"></span></button></td>
+                  <td class="sl-col-check"><input type="checkbox" class="sl-check" data-ux-check aria-label="Выбрать комментарий 20659"></td>
+                </tr>
+                <tr data-ux-row data-id="20658" data-mod="voting" data-by="Amikta" data-text="Очень давно имела с ним дело, не самая удобная вещь." data-date="09.02.2020 17:13:35" data-ip="178.70.121.81" data-on="1">
+                  <td class="sl-col-id">20658</td>
+                  <td class="sl-cell-ellipsis"><button type="button" class="v-open" data-ux-open aria-controls="ux-inspect" aria-expanded="false">Очень давно имела с ним дело, не самая удобная вещь.</button></td>
+                  <td class="sl-col-author">Amikta</td>
+                  <td class="sl-col-status"><button type="button" class="v-stat" data-ux-stat aria-pressed="true" title="Активирован — деактивировать" aria-label="Комментарий 20658: активирован, нажмите, чтобы деактивировать"><span class="sl-status-active"></span></button></td>
+                  <td class="sl-col-check"><input type="checkbox" class="sl-check" data-ux-check aria-label="Выбрать комментарий 20658"></td>
+                </tr>
+                <tr data-ux-row data-id="20657" data-mod="links" data-by="Badboy" data-text="Очень интересно, спасибо!" data-date="03.02.2020 10:11:05" data-ip="77.111.247.157" data-on="1">
+                  <td class="sl-col-id">20657</td>
+                  <td class="sl-cell-ellipsis"><button type="button" class="v-open" data-ux-open aria-controls="ux-inspect" aria-expanded="false">Очень интересно, спасибо!</button></td>
+                  <td class="sl-col-author">Badboy</td>
+                  <td class="sl-col-status"><button type="button" class="v-stat" data-ux-stat aria-pressed="true" title="Активирован — деактивировать" aria-label="Комментарий 20657: активирован, нажмите, чтобы деактивировать"><span class="sl-status-active"></span></button></td>
+                  <td class="sl-col-check"><input type="checkbox" class="sl-check" data-ux-check aria-label="Выбрать комментарий 20657"></td>
+                </tr>
+                <tr data-ux-row data-id="20655" data-mod="news" data-by="alexvoronglass" data-text="Вот это здорово!" data-date="10.09.2019 14:28:14" data-ip="159.224.229.27" data-on="1">
+                  <td class="sl-col-id">20655</td>
+                  <td class="sl-cell-ellipsis"><button type="button" class="v-open" data-ux-open aria-controls="ux-inspect" aria-expanded="false">Вот это здорово!</button></td>
+                  <td class="sl-col-author">alexvoronglass</td>
+                  <td class="sl-col-status"><button type="button" class="v-stat" data-ux-stat aria-pressed="true" title="Активирован — деактивировать" aria-label="Комментарий 20655: активирован, нажмите, чтобы деактивировать"><span class="sl-status-active"></span></button></td>
+                  <td class="sl-col-check"><input type="checkbox" class="sl-check" data-ux-check aria-label="Выбрать комментарий 20655"></td>
+                </tr>
+                <tr data-ux-row data-id="20654" data-mod="news" data-by="SLAED CMS" data-text="roma, пожалуйста воспользуйтесь службой обратной связи." data-date="22.07.2019 14:45:55" data-ip="92.252.31.173" data-on="1">
+                  <td class="sl-col-id">20654</td>
+                  <td class="sl-cell-ellipsis"><button type="button" class="v-open" data-ux-open aria-controls="ux-inspect" aria-expanded="false">roma, пожалуйста воспользуйтесь службой обратной связи.</button></td>
+                  <td class="sl-col-author">SLAED CMS</td>
+                  <td class="sl-col-status"><button type="button" class="v-stat" data-ux-stat aria-pressed="true" title="Активирован — деактивировать" aria-label="Комментарий 20654: активирован, нажмите, чтобы деактивировать"><span class="sl-status-active"></span></button></td>
+                  <td class="sl-col-check"><input type="checkbox" class="sl-check" data-ux-check aria-label="Выбрать комментарий 20654"></td>
+                </tr>
+                <tr data-ux-row data-id="20653" data-mod="news" data-by="roma" data-text="Скажите пожалуйста, сколько будет стоить перенос этого сайта: xpower.ua, на самописном движке на SLAED CMS?" data-date="15.07.2019 12:39:08" data-ip="128.124.54.84" data-on="1">
+                  <td class="sl-col-id">20653</td>
+                  <td class="sl-cell-ellipsis"><button type="button" class="v-open" data-ux-open aria-controls="ux-inspect" aria-expanded="false">Скажите пожалуйста, сколько будет стоить перенос этого сайта: xpower.ua, на самописном движке на SLAED CMS?</button></td>
+                  <td class="sl-col-author">roma</td>
+                  <td class="sl-col-status"><button type="button" class="v-stat" data-ux-stat aria-pressed="true" title="Активирован — деактивировать" aria-label="Комментарий 20653: активирован, нажмите, чтобы деактивировать"><span class="sl-status-active"></span></button></td>
+                  <td class="sl-col-check"><input type="checkbox" class="sl-check" data-ux-check aria-label="Выбрать комментарий 20653"></td>
+                </tr>
+                <tr data-ux-row data-id="20552" data-mod="news" data-by="vitalik1972" data-text="Афигеть, я думал этот проект сдох давно... Бррр, как вспомню маршрутизацию в этом движке.... дурно становится... А код в..." data-date="28.01.2017 02:51:44" data-ip="87.241.204.6" data-on="0" data-ux-far hidden>
+                  <td class="sl-col-id">20552</td>
+                  <td class="sl-cell-ellipsis"><button type="button" class="v-open" data-ux-open aria-controls="ux-inspect" aria-expanded="false">Афигеть, я думал этот проект сдох давно... Бррр, как вспомню маршрутизацию в этом движке.... дурно становится... А код в...</button></td>
+                  <td class="sl-col-author">vitalik1972</td>
+                  <td class="sl-col-status"><button type="button" class="v-stat" data-ux-stat aria-pressed="false" title="Ждёт проверки — активировать" aria-label="Комментарий 20552: ждёт проверки, нажмите, чтобы активировать"><span class="sl-status-inactive"></span></button></td>
+                  <td class="sl-col-check"><input type="checkbox" class="sl-check" data-ux-check aria-label="Выбрать комментарий 20552"></td>
+                </tr>
+                <tr data-ux-row data-id="20538" data-mod="news" data-by="Vagulo" data-text="На проекте ещё с первых версий, когда было ещё всё бесплатно... Опять всё вернулось к истокам... Ага. Тогда, помнится, ..." data-date="12.01.2017 08:56:28" data-ip="83.239.67.154" data-on="0" data-ux-far hidden>
+                  <td class="sl-col-id">20538</td>
+                  <td class="sl-cell-ellipsis"><button type="button" class="v-open" data-ux-open aria-controls="ux-inspect" aria-expanded="false">На проекте ещё с первых версий, когда было ещё всё бесплатно... Опять всё вернулось к истокам... Ага. Тогда, помнится, ...</button></td>
+                  <td class="sl-col-author">Vagulo</td>
+                  <td class="sl-col-status"><button type="button" class="v-stat" data-ux-stat aria-pressed="false" title="Ждёт проверки — активировать" aria-label="Комментарий 20538: ждёт проверки, нажмите, чтобы активировать"><span class="sl-status-inactive"></span></button></td>
+                  <td class="sl-col-check"><input type="checkbox" class="sl-check" data-ux-check aria-label="Выбрать комментарий 20538"></td>
+                </tr>
+                <tr data-ux-row data-id="20474" data-mod="news" data-by="panic" data-text="olevpa, не чего, проект сгнил" data-date="06.01.2015 17:43:45" data-ip="195.78.247.104" data-on="0" data-ux-far hidden>
+                  <td class="sl-col-id">20474</td>
+                  <td class="sl-cell-ellipsis"><button type="button" class="v-open" data-ux-open aria-controls="ux-inspect" aria-expanded="false">olevpa, не чего, проект сгнил</button></td>
+                  <td class="sl-col-author">panic</td>
+                  <td class="sl-col-status"><button type="button" class="v-stat" data-ux-stat aria-pressed="false" title="Ждёт проверки — активировать" aria-label="Комментарий 20474: ждёт проверки, нажмите, чтобы активировать"><span class="sl-status-inactive"></span></button></td>
+                  <td class="sl-col-check"><input type="checkbox" class="sl-check" data-ux-check aria-label="Выбрать комментарий 20474"></td>
+                </tr>
+                <tr data-ux-none hidden><td colspan="5" class="v-none">Комментариев не найдено. Измените модуль или текст поиска.</td></tr>
+                </tbody>
+              </table>
+            <form class="sl-div-actions" aria-label="Действие с отмеченными" onsubmit="return false">
+              <div class="sl-list-bottom">
+                <div class="sl-list-bottom-pager"><div data-demo-pager data-count="8414" data-limit="25" data-cur="1"></div></div>
+                <div class="sl-list-bottom-actions">
+                  <span class="v-picked" role="status" data-ux-picked>Ничего не отмечено</span>
+                  <label for="ux-typ">Действие</label>
+                  <select id="ux-typ" class="sl-select"><option value="a1">Активировать</option><option value="a0">Деактивировать</option><option value="d">Удалить</option></select>
+                  <button type="submit" class="sl-but-blue" data-ux-bulk-go disabled>OK</button>
+                </div>
+              </div>
+            </form>
+            </div>
+            <aside class="sl-box v-inspect" id="ux-inspect" data-ux-inspect aria-label="Выбранный комментарий" aria-live="polite">
+              <p class="v-idle" data-ux-i-idle><i class="bi bi-hand-index" aria-hidden="true"></i> Выберите комментарий в списке: здесь появятся его полный текст, сведения и действия.</p>
+              <div class="v-ibody" data-ux-i-body hidden>
+                <div class="v-ihead"><h2>Комментарий № <span data-ux-i="id"></span></h2><span class="sl-chip sl-chip-warn" data-ux-i-on="wait">Ждёт проверки</span><span class="sl-chip sl-chip-success" data-ux-i-on="on">Активирован</span></div>
+                <blockquote class="v-itext" data-ux-i="text"></blockquote>
+                <dl class="v-idl">
+                  <div><dt>Модуль</dt><dd data-ux-i="mod"></dd></div>
+                  <div><dt>Разместил</dt><dd data-ux-i="by"></dd></div>
+                  <div><dt>Дата</dt><dd data-ux-i="date"></dd></div>
+                  <div><dt>IP адрес</dt><dd data-ux-i="ip"></dd></div>
+                </dl>
+                <div class="v-iacts">
+                  <button type="button" class="sl-but-green" data-ux-i-on="wait" data-ux-i-act="on"><i class="bi bi-check2-circle" aria-hidden="true"></i> Активировать</button>
+                  <button type="button" class="sl-but" data-ux-i-on="on" data-ux-i-act="off"><i class="bi bi-power" aria-hidden="true"></i> Деактивировать</button>
+                  <a class="sl-but" href="#"><i class="bi bi-pencil" aria-hidden="true"></i> Править</a>
+                  <button type="button" class="sl-but-red" data-ux-i-act="del"><i class="bi bi-trash" aria-hidden="true"></i> Удалить</button>
+                </div>
+              </div>
+            </aside>
+          </div>
+          <div class="sl-box" data-demo-about></div>
+        </div></main>
+      </div>
+      <footer class="sl-footer sl-admin-footer">
+        <div class="sl-copyright">Генерация: 0.251 сек. и 15 запросов к базе данных за 0.005 сек.<br><a href="https://slaed.net" target="_blank" rel="noopener noreferrer">SLAED CMS</a> © 2005-2026 Eduard Laas. Released under MIT License.</div>
+        <span><a href="#top" class="sl-thide">Наверх</a></span>
+      </footer>
+    </div>
+    <div class="sl-wrapfoot"></div>
+  </div>
+  <div class="v-toast" data-ux-toast hidden role="status"><i class="bi bi-check2-circle" aria-hidden="true"></i><span data-ux-toast-text></span><button type="button" class="sl-but" data-ux-undo>Отменить</button><button type="button" class="sl-but-mini" data-ux-toast-close title="Закрыть" aria-label="Закрыть уведомление"><i class="bi bi-x-lg" aria-hidden="true"></i></button></div>
+  <dialog class="sl-modal sl-modal-sm sl-modal-warn" id="ux-session" aria-labelledby="ux-sess-cap" aria-describedby="ux-sess-text">
+    <div class="sl-modal-title"><i class="bi bi-hourglass-split" aria-hidden="true"></i> <span class="sl-modal-cap"><strong id="ux-sess-cap">Сессия заканчивается</strong></span></div>
+    <div class="sl-modal-body"><p id="ux-sess-text">Через <b data-ux-sess-left>2:00</b> вы выйдете из панели, и несохранённые изменения пропадут.</p></div>
+    <div class="sl-modal-foot"><a class="sl-modal-btn" href="../admin.php?op=logout">Выйти</a> <button type="button" class="sl-modal-btn sl-modal-btn-main" data-ux-sess-keep data-sl-focus>Продлить сессию</button></div>
+  </dialog>
+  <dialog class="sl-modal sl-modal-sm sl-modal-danger" id="sl-confirm" aria-label="Подтверждение">
+    <div class="sl-modal-title"><i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i> <span class="sl-modal-cap"><strong>Подтверждение</strong></span> <span class="sl-modal-acts"><button type="button" class="sl-modal-act sl-modal-act-close" data-sl-close title="Закрыть" aria-label="Закрыть"><i class="bi bi-x-lg" aria-hidden="true"></i></button></span></div>
+    <div class="sl-modal-body"><p data-sl-confirm-text></p></div>
+    <div class="sl-modal-foot"><button type="button" class="sl-modal-btn" data-sl-close data-sl-focus>Нет</button> <button type="button" class="sl-modal-btn sl-modal-btn-main" data-sl-confirm-ok>Да</button></div>
+  </dialog>
+  <dialog class="sl-modal sl-modal-sm v-pal" id="ux-palette" aria-labelledby="ux-pal-cap">
+    <div class="sl-modal-title"><i class="bi bi-lightning-charge" aria-hidden="true"></i> <span class="sl-modal-cap"><strong id="ux-pal-cap">Быстрый переход</strong></span> <span class="sl-modal-acts"><button type="button" class="sl-modal-act sl-modal-act-close" data-sl-close title="Закрыть" aria-label="Закрыть"><i class="bi bi-x-lg" aria-hidden="true"></i></button></span></div>
+    <div class="sl-modal-body">
+      <label class="v-sr" for="ux-pal-q">Раздел или действие</label>
+      <input type="search" id="ux-pal-q" class="sl-select-config v-pal-q" placeholder="Раздел или действие" autocomplete="off" role="combobox" aria-expanded="true" aria-controls="ux-pal-list" data-ux-pal-q>
+      <ul class="sl-reset v-pal-list" id="ux-pal-list" role="listbox" aria-label="Разделы и действия" data-ux-pal-list></ul>
+      <p class="v-pal-empty" data-ux-pal-empty hidden>Ничего не найдено.</p>
+    </div>
+  </dialog>
+  <dialog class="sl-modal sl-modal-sm" id="sl-settings" aria-labelledby="ux-set-cap">
+    <div class="sl-modal-title"><i class="bi bi-sliders" aria-hidden="true"></i> <span class="sl-modal-cap"><strong id="ux-set-cap">Опции</strong></span> <span class="sl-modal-acts"><button type="button" class="sl-modal-act sl-modal-act-close" data-sl-close title="Закрыть" aria-label="Закрыть"><i class="bi bi-x-lg" aria-hidden="true"></i></button></span></div>
+    <div class="sl-modal-body">
+      <div class="sl-set-row sl-mode" data-ux-option-row><label class="sl-set-name" for="ux-o-mode"><i class="bi bi-circle-half" aria-hidden="true"></i>Тема оформления</label><span class="sl-set-pick"><select id="ux-o-mode" name="mode" class="sl-select" data-ux-option><option value="light">Светлая</option><option value="auto" selected>Системная</option><option value="dark">Тёмная</option></select></span></div>
+      <div class="sl-set-row" data-ux-option-row><label class="sl-set-name" for="ux-o-editor"><i class="bi bi-pencil-square" aria-hidden="true"></i>Редактор</label><span class="sl-set-pick"><select id="ux-o-editor" name="editor" class="sl-select" data-ux-option><option value="plain">Plain Plus</option><option value="toastui">TOAST UI Markdown 3</option><option value="codemirror" selected>CodeMirror 6</option><option value="tinymce">TinyMCE 8 Community</option><option value="ckeditor">CKEditor 5</option></select></span></div>
+      <div class="sl-set-row" data-ux-option-row><label class="sl-set-name" for="ux-o-lang"><i class="bi bi-translate" aria-hidden="true"></i>Язык</label><span class="sl-set-pick"><select id="ux-o-lang" name="newlang" class="sl-select" data-ux-option><option value="de">Немецкий</option><option value="en">Английский</option><option value="fr">Французский</option><option value="pl">Польский</option><option value="ru" selected>Русский</option><option value="uk">Украинский</option></select></span></div>
+      <p class="v-status" role="status" data-ux-option-status></p>
+    </div>
+  </dialog>
+<template data-pg-tpl>
+  <nav class="sl-pager v9" aria-label="Страницы">
+    <div class="v9-row" data-pg-keys>
+      <div class="v9-nav">
+        <a role="link" class="sl-but-mini v9-step" data-pg-go="prev" title="Назад" aria-label="Назад" aria-keyshortcuts="ArrowLeft"><i class="bi bi-chevron-left" aria-hidden="true"></i></a>
+        <span class="sl-seg sl-seg-pager" data-sl-knob="pager"><span class="sl-seg-knob" data-sl-knob-mark aria-hidden="true"></span><span class="sl-seg-run" data-pg-pages data-pg-cell="sl-seg-cell"></span></span>
+        <a role="link" class="sl-but-mini v9-step" data-pg-go="next" title="Вперёд" aria-label="Вперёд" aria-keyshortcuts="ArrowRight"><i class="bi bi-chevron-right" aria-hidden="true"></i></a>
+      </div>
+      <div class="v9-aside">
+        <span class="v9-sep" aria-hidden="true"></span>
+        <a class="sl-but-mini v9-step v9-quiet" href="#top" title="Наверх" aria-label="Наверх"><i class="bi bi-arrow-up" aria-hidden="true"></i></a>
+        <span class="sl-tip sl-float v9-info" tabindex="0" role="button" aria-label="Листание с клавиатуры"><span class="sl-but-mini v9-step v9-quiet" aria-hidden="true"><i class="bi bi-info-lg"></i></span><div class="sl-float-panel v9-tip" role="tooltip"><p class="v9-tip-head">Листайте с клавиатуры</p><ul class="v9-tip-keys"><li><kbd><i class="bi bi-arrow-left" role="img" aria-label="Стрелка влево"></i></kbd>Предыдущая страница</li><li><kbd><i class="bi bi-arrow-right" role="img" aria-label="Стрелка вправо"></i></kbd>Следующая страница</li></ul><p class="v9-tip-note">Пока курсор не стоит в поле ввода</p></div></span>
+      </div>
+    </div>
+    <p class="sl-pager-info" aria-live="polite">Страница <b data-pg-text="cur"></b> из <b data-pg-text="pages"></b><span class="v9-range"> · Показаны <b><span data-pg-text="from"></span>–<span data-pg-text="to"></span></b></span> · Всего <b data-pg-text="count"></b></p>
+  </nav>
+</template>
+  <script>document.write('<script src="assets/demo.js?v=' + Date.now() + '"><\/script>');</script>
+</body>
+</html>

@@ -560,6 +560,15 @@
   --sl-search-shadow:
     inset 0 1px 1px 0 light-dark(rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.07)),
     0 1px 2px light-dark(rgba(42, 48, 60, 0.12), rgba(0, 0, 0, 0.5));
+  /* The plain segmented switch: a sunken track, cells over it and a raised plate under the chosen one */
+  --sl-seg-height: var(--sl-size-control);
+  --sl-seg-pad-x: 0;
+  --sl-seg-pad-y: 0;
+  --sl-seg-bg: var(--sl-bg-muted);
+  --sl-seg-text: var(--sl-text-muted);
+  --sl-seg-knob-bg: var(--sl-bg);
+  --sl-seg-knob-text: var(--sl-text-strong);
+  --sl-seg-knob-shadow: var(--sl-shadow-raised);
   /* The panel the user card unfolds is pinned this far above the card's bottom edge and may not grow past it */
   --sl-session-gap: 36px;
   --sl-shot-max-height: min(62vh, 460px);
@@ -633,6 +642,13 @@
 
 :root[data-theme="dark"] {
   color-scheme: dark;
+}
+
+/* Navigation: an in-page anchor, the link back to #top among them, scrolls smoothly unless the reader asked for less motion */
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
 }
 
 /* Reset: the attribute wins over every class, because a component setting display would otherwise keep on the screen what the page has taken off it */

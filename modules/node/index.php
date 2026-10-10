@@ -509,8 +509,9 @@ function getNodeRoute(): NodeType {
     return getNodeTypeMap()[$conf['name']] ?? setNodeDeny(404);
 }
 
-# The list of a type with its category, letter, sort and page
+# The list of a type with its category, letter, personal filters, sort and page
 # Explicitly sent default sort parameters are sent back to the clean address, and a sort or letter the type does not allow is a bad request; published is allowed to every type
+# The personal filters new and fav narrow the list of a signed-in visitor to what came since the last visit and to the favorites; a guest's one narrows nothing
 # A page past the end is not found before any redirect and before the reader sets its page
 # The canonical address names only the category and the page; the start page keeps the site description and names the type once a category or a page is asked
 # A refusal of the reader answers by its code, while a storage failure goes to the shared handler
@@ -521,26 +522,37 @@ function setNodeList(): void {
     $let = getVar('get', 'let', 'raw', '');
     $sort = getVar('get', 'order', 'raw', '');
     $dir = getVar('get', 'dir', 'raw', '');
+    $new = getVar('get', 'new', 'raw', '');
+    $fav = getVar('get', 'fav', 'raw', '');
     if ($let !== '' && !preg_match('/^[\p{L}\p{N}]$/Du', $let)) setNodeDeny(400);
     if ($sort !== '' && !in_array($sort, ['published', 'updated', 'title', 'views', 'rating'], true)) setNodeDeny(400);
     if ($dir !== '' && !in_array($dir, ['asc', 'desc'], true)) setNodeDeny(400);
+    if (!in_array($new, ['', '1'], true) || !in_array($fav, ['', '1'], true)) setNodeDeny(400);
     $page = '';
     try {
         $type = getNodeRoute();
         $priv = $type->ext === 'support';
-        if ($priv && getNodeContext()->uid < 1 && !checkNodeModer($type)) setNodeDeny(403);
+        $uid = getNodeContext()->uid;
+        if ($priv && $uid < 1 && !checkNodeModer($type)) setNodeDeny(403);
         $set = $type->settings['list'];
         if ($let !== '' && !$set['alpha']) setNodeDeny(400);
         if ($sort !== '' && $sort !== 'published' && !in_array($sort, $set['orders'], true)) setNodeDeny(400);
+        if ($fav !== '' && !$type->settings['features']['favorites']) setNodeDeny(400);
         if ($cat && !$type->settings['features']['categories']) setNodeDeny(404);
         $key = $sort ?: $set['order'];
-        $way = $dir ?: (($key === $set['order']) ? $set['dir'] : (($key === 'title') ? 'asc' : 'desc'));
-        $base = ['name' => $type->name] + ($cat ? ['cat' => $cat] : []) + ($let !== '' ? ['let' => rawurlencode($let)] : []);
+        $way = $dir ?: getNodeSortWay($type, $key);
+        $since = getUserLastVisit($uid);
+        $mine = (($new !== '' && $since !== '') ? ['new' => 1] : []) + (($fav !== '' && $uid > 0) ? ['fav' => 1] : []);
+        $base = ['name' => $type->name] + ($cat ? ['cat' => $cat] : []) + ($let !== '' ? ['let' => rawurlencode($let)] : []) + $mine;
         $cats = getCategoryMap($type->name);
         $query = getNodeReader($type)->setNodeType($type);
         if ($cat && (!isset($cats[$cat]) || !$query->checkNodeCategory($type, $cat))) setNodeDeny(404);
+        $tally = getNodeCountMap($type, $query);
         if ($cat) $query->setNodeCategory($cat);
         if ($let !== '') $query->setNodeLetter($let);
+        $own = ($uid > 0) ? $query->getNodeOwnCount($since, $type->settings['features']['favorites'] ? $uid : 0) : [];
+        if (isset($mine['new'])) $query->setNodePublished($since, null);
+        if (isset($mine['fav'])) $query->setNodeFavorite($uid);
         if ($sort !== '' || $dir !== '') $query->setNodeOrder($key, $way);
         $count = $query->getNodeCount();
         $pages = max(1, (int)ceil($count / $set['limit']));
@@ -561,15 +573,15 @@ function setNodeList(): void {
         $title = getModuleName($type->name);
         $ctitle = $cat ? html_entity_decode(getConst($cats[$cat]['title']), ENT_QUOTES | ENT_HTML5, 'UTF-8') : '';
         $page = $tpl->getHtmlPart(getNodeTplName('partials', 'list', $type), [
-            'navi_html' => getNodeNavi($type, $key, $way, $cat),
-            'intro' => ($cat || $num > 1 || $let !== '') ? '' : getConst($type->intro),
-            'cats_html' => $type->settings['features']['categories'] ? setCategories($type->name, $cat) : '',
-            'letters_html' => $set['alpha'] ? getLetterNavi($type->name, $cat) : '',
+            'head_html' => getNodeHead($type, $base, $key, $way, ['count' => $count, 'total' => $tally['total']] + $own),
+            'intro' => ($cat || $num > 1 || $let !== '' || $mine) ? '' : getConst($type->intro),
+            'cats_html' => $type->settings['features']['categories'] ? setCategories($type->name, $cat, $tally['cats'], $tally['total']) : '',
+            'letters_html' => $set['alpha'] ? getLetterNavi($type->name, $cat, $tally['lets']) : '',
             'items_html' => $items,
             'pager_html' => getTplPagerView($num, $pages, 8, $link, ['count' => $count, 'limit' => $set['limit']]),
             'empty_alert' => ['text' => _NO_INFO, 'is_warn' => false],
         ]);
-        $plain = $sort === '' && $dir === '' && $let === '';
+        $plain = $sort === '' && $dir === '' && $let === '' && $new === '' && $fav === '';
         $spot = ($cat ? ['cat' => $cat] : []) + ($num > 1 ? ['num' => $num] : []);
         setHead(['title' => ($ctitle !== '') ? $ctitle : $title, 'ctitle' => ($ctitle !== '') ? $title : '', 'cid' => $cat, 'kind' => 'collection',
             'robots' => $priv ? 'noindex, nofollow' : ($plain ? '' : 'noindex, follow'),
@@ -610,22 +622,53 @@ function getNodeFlowState(NodeType $type): NodeStatus {
     return (!$type->settings['features']['moderation'] || $direct || checkNodeModer($type)) ? NodeStatus::Published : NodeStatus::Pending;
 }
 
-# The navigation of a list: the list itself, the sorts the type allows with their direction, the public form where the visitor may use it and the category switch
-function getNodeNavi(NodeType $type, string $key, string $way, int $cat): string {
+# The default direction of one sort of a type: the stored one for its default sort, ascending for the title, descending for every other key
+function getNodeSortWay(NodeType $type, string $key): string {
     $set = $type->settings['list'];
-    $add = checkNodeFlow($type);
-    $sort = static function (string $one, string $dir) use ($type, $cat, $set): string {
-        $base = ['name' => $type->name] + ($cat ? ['cat' => $cat] : []);
-        return getSeoUrl($base + (($one === $set['order'] && $dir === $set['dir']) ? [] : ['order' => $one, 'dir' => $dir]));
+    return ($key === $set['order']) ? $set['dir'] : (($key === 'title') ? 'asc' : 'desc');
+}
+
+# The header of a list: the title and the count, the sorts with their direction, the personal filters, the reset, the feed, the public form and the category switch
+# Every link keeps the other filters of the list and leaves the page; the default sort and direction leave the address clean, as the list sends them back there
+function getNodeHead(NodeType $type, array $base, string $key, string $way, array $nums): string {
+    global $tpl;
+    $set = $type->settings['list'];
+    $url = static function (array $pars, string $one, string $dir) use ($set): string {
+        $pars = array_filter(array_replace(array_fill_keys(['name', 'cat', 'let', 'new', 'fav'], null), $pars), fn($v) => $v !== null);
+        return getSeoUrl($pars + (($one === $set['order'] && $dir === $set['dir']) ? [] : ['order' => $one, 'dir' => $dir]));
     };
-    return getModuleNavi([
+    $sorts = [];
+    foreach (['published' => _NEW, 'updated' => _NODE_UPDATED, 'title' => _TITLE, 'views' => _POP, 'rating' => _BEST] as $one => $label) {
+        if ($one !== 'published' && !in_array($one, $set['orders'], true)) continue;
+        $sorts[] = ['href' => $url($base, $one, ($one === $key) ? $way : getNodeSortWay($type, $one)), 'label' => $label, 'is_current' => $one === $key];
+    }
+    $mine = [];
+    foreach (['new' => _NODE_SINCE, 'fav' => _NODE_INFAV] as $flag => $label) {
+        $on = isset($base[$flag]);
+        if (!$on && ($nums[$flag] ?? 0) < 1) continue;
+        $mine[] = ['href' => $url($on ? array_diff_key($base, [$flag => 0]) : $base + [$flag => 1], $key, $way), 'label' => $label, 'count' => $nums[$flag] ?? 0,
+            'is_on' => $on, 'is_fav' => $flag === 'fav'];
+    }
+    $narrow = count($base) > 1;
+    $clean = !$narrow && $key === $set['order'] && $way === $set['dir'];
+    $feed = isset(getRssFeeds()[$type->name]) ? 'index.php?go=rss&name='.$type->name.(isset($base['cat']) ? '&cat='.$base['cat'] : '') : '';
+    return $tpl->getHtmlPart('node/head', [
         'title' => getModuleName($type->name),
-        'home_href' => getSeoUrl(['name' => $type->name]),
-        'best_href' => in_array('rating', $set['orders'], true) ? $sort('rating', 'desc') : '',
-        'pop_href' => in_array('views', $set['orders'], true) ? $sort('views', 'desc') : '',
-        'liste_href' => '',
-        'add_href' => $add ? getSeoUrl(['name' => $type->name, 'op' => 'add']) : '',
-        'catshow' => $type->settings['features']['categories'] && getCategoryMap($type->name) !== [],
+        'count_text' => $narrow ? sprintf(_NUMOF, $nums['count'], $nums['total']) : $nums['count'],
+        'count_title' => _OVERALL,
+        'sorts' => $sorts,
+        'dir_href' => $url($base, $key, ($way === 'asc') ? 'desc' : 'asc'),
+        'dir_label' => ($way === 'asc') ? _ASC : _DESC,
+        'is_asc' => $way === 'asc',
+        'mine' => $mine,
+        'reset_href' => $clean ? '' : getSeoUrl(['name' => $type->name]),
+        'reset_label' => _FRESET,
+        'rss_href' => $feed,
+        'rss_title' => _RSS,
+        'add_href' => checkNodeFlow($type) ? getSeoUrl(['name' => $type->name, 'op' => 'add']) : '',
+        'add_label' => _ADD,
+        'cat_link' => ($type->settings['features']['categories'] && getCategoryMap($type->name) !== [])
+            ? ['title' => _CATVORH, 'label' => _CATEGORIES, 'is_navi_button' => true, 'is_category_toggle' => true] : [],
     ]);
 }
 

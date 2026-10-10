@@ -19,6 +19,7 @@ more: where a plan and this file disagree about the order, this file wins.
 | `docs/5-NODE-HEAD-2026.md` | the header of a Node list from the stand `nh-13`, views by type, the RSS channel fixed in five points, a live list, search hints |
 | `docs/6-PAGER-2026.md` | the segmented switch `sl-seg` with its travelling knob; the pager from the stand `pg-09`: one size, steps by its own column, the key tip |
 | `docs/7-SCHEMA-2026.md` | one set of column domains, the time rule, the connection contract, `utf8mb4_unicode_520_ci`, unique email, keys that serve queries |
+| `docs/8-RANKS-2026.md` | the rank of a group as a row of Bootstrap Icons, "N of M" in a colour of its own at 3:1 in both themes; the group list as a ladder and a rank composer from the stand `grp-10` |
 
 ## How a session runs
 
@@ -98,14 +99,15 @@ into the plan, then do whatever work the step names.
 - [x] 35. EDITOR batch 8 — lint and format. (2026-10-09)
 - [x] 36. EDITOR batch 9 — comparison. (2026-10-09)
 - [x] 37. EDITOR batch 10 — preview. (2026-10-09)
-- [ ] 38. EDITOR batch 11 — reference; deletes `docs/4-EDITOR-2026.md`.
-- [ ] 39. PAGER batch 0 — segmented switch and knob: `sl-seg`, the knob in `slaed.js`, the header mode switch on it;
+- [x] 38. EDITOR batch 11 — reference; deletes `docs/4-EDITOR-2026.md`. (2026-10-09)
+- [x] 39. PAGER batch 0 — segmented switch and knob: `sl-seg`, the knob in `slaed.js`, the header mode switch on it;
   one "Наверх" on `#top` and smooth scrolling in CSS, the dead code it clears; before NODE-HEAD, whose view switch
-  stands on it.
-- [ ] 40. NODE-HEAD batch 0 — *decision*: the open decisions, the callers of `getModuleNavi()`, the baseline.
-- [ ] 41. NODE-HEAD batch 1 — the feed.
-- [ ] 42. NODE-HEAD batch 2 — the script.
-- [ ] 43. NODE-HEAD batch 3 — the data of the header.
+  stands on it. (2026-10-09)
+- [x] 40. NODE-HEAD batch 0 — *decision*: the open decisions, the callers of `getModuleNavi()`, the baseline.
+  (2026-10-09)
+- [x] 41. NODE-HEAD batch 1 — the feed. (2026-10-10)
+- [x] 42. NODE-HEAD batch 2 — the script. (2026-10-10)
+- [x] 43. NODE-HEAD batch 3 — the data of the header. (2026-10-10)
 - [ ] 44. NODE-HEAD batch 4 — template, theme, strings.
 - [ ] 45. NODE-HEAD batch 5 — views.
 - [ ] 46. NODE-HEAD batch 6 — live list and "Показать ещё".
@@ -113,13 +115,20 @@ into the plan, then do whatever work the step names.
 - [ ] 48. NODE-HEAD batch 8 — reference; deletes `docs/5-NODE-HEAD-2026.md`.
 - [ ] 49. PAGER batch 1 — the pager in both themes.
 - [ ] 50. PAGER batch 2 — keys, tip and reference; deletes `docs/6-PAGER-2026.md`.
-- [ ] 51. SCHEMA batch 0 — inventory: time columns, indexes against queries, `GROUP BY`, uncut writes, `modul`
+- [ ] 51. RANKS batch 1 — the rank as icons: `getRankView()`, the fragment in both themes, the site readers, the
+  migration of `_groups.rank` in the darkened tones.
+- [ ] 52. RANKS batch 2 — the panel: the ladder and the special groups, the composer of the group form from the stand
+  `grp-10`, the pictures deleted.
+- [ ] 53. RANKS batch 3 — reference; deletes `docs/8-RANKS-2026.md`.
+- [ ] 54. SCHEMA batch 0 — inventory: time columns, indexes against queries, `GROUP BY`, uncut writes, `modul`
   values, `lang` width.
-- [ ] 52. SCHEMA batch 1 — connection: collation, time zone and `sql_mode` in `Database::__construct()`.
-- [ ] 53. SCHEMA batch 2 — text columns: `utf8mb4_unicode_520_ci` from one place, the text domains, cut writes.
-- [ ] 54. SCHEMA batch 3 — time: no `VARCHAR` time, moments and timers on their forms.
-- [ ] 55. SCHEMA batch 4 — NULL, defaults, types; `_users.lang` codes.
-- [ ] 56. SCHEMA batch 5 — keys: unique email, covered indexes and prefixes out, missing ones in.
-- [ ] 57. SCHEMA batch 6 — rehearsal of `update.php` on a fresh 6.2 dump the owner provides; fresh installs.
-- [ ] 58. SCHEMA batch 7 — reference; deletes `docs/7-SCHEMA-2026.md`.
-- [ ] 59. Close — no `docs/*-2026.md` plan is left; delete this file and report that the work before 8.0 is done.
+- [ ] 55. SCHEMA batch 1 — connection: collation, time zone and `sql_mode` in `Database::__construct()`.
+- [ ] 56. SCHEMA batch 2 — text columns: `utf8mb4_unicode_520_ci` from one place, the text domains, cut writes.
+- [ ] 57. SCHEMA batch 3 — time: no `VARCHAR` time, moments and timers on their forms.
+- [ ] 58. SCHEMA batch 4 — NULL, defaults, types; `_users.lang` codes.
+- [ ] 59. SCHEMA batch 5 — keys: unique email, covered indexes and prefixes out, missing ones in.
+- [ ] 60. SCHEMA batch 6 — rehearsal of `update.php` on a fresh 6.2 dump the owner provides; fresh installs.
+- [ ] 61. SCHEMA batch 7 — reference; deletes `docs/7-SCHEMA-2026.md`.
+- [ ] 62. DIAL — *decision*: the options dial `sl-dial` of the panel lists is three Tab stops a row while closed (found
+  by the UI/UX audit of the groups stand, 2026-10-09); write a plan, then make its items reachable only once it opens.
+- [ ] 63. Close — no `docs/*-2026.md` plan is left; delete this file and report that the work before 8.0 is done.

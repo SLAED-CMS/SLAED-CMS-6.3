@@ -1,0 +1,10 @@
+<h1 class="sl-title">{{ title }} <span class="sl-chip sl-chip-neutral" title="{{ count_title }}">{{ count_text }}</span></h1>
+<nav aria-label="{{ title }}"><ul class="sl-navi-menu">
+  {% for sort in sorts %}<li><a class="sl-but" href="{{ sort.href }}" title="{{ sort.label }}"{% if sort.is_current %} aria-current="true"{% endif %}>{{ sort.label }}</a></li>{% endfor %}
+  <li><a class="sl-but" href="{{ dir_href }}" title="{{ dir_label }}"><i class="bi {% if is_asc %}bi-sort-up{% else %}bi-sort-down{% endif %}" aria-hidden="true"></i>{{ dir_label }}</a></li>
+  {% for one in mine %}<li><a class="sl-but" href="{{ one.href }}" title="{{ one.label }}"{% if one.is_on %} aria-current="true"{% endif %}><i class="bi {% if one.is_fav %}bi-star-fill{% else %}bi-stars{% endif %}" aria-hidden="true"></i>{{ one.label }}<span class="sl-chip sl-chip-info">{{ one.count }}</span></a></li>{% endfor %}
+  {% if reset_href %}<li><a class="sl-but" href="{{ reset_href }}" title="{{ reset_label }}"><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i>{{ reset_label }}</a></li>{% endif %}
+  {% if rss_href %}<li><a class="sl-but" href="{{ rss_href }}" title="{{ rss_title }}" aria-label="{{ rss_title }}"><i class="bi bi-rss" aria-hidden="true"></i></a></li>{% endif %}
+  {% if add_href %}<li><a class="sl-but" href="{{ add_href }}" title="{{ add_label }}"><i class="bi bi-plus-lg" aria-hidden="true"></i>{{ add_label }}</a></li>{% endif %}
+  {% if cat_link %}<li>{% include 'fragments/link.html' with cat_link %}</li>{% endif %}
+</ul></nav>

@@ -448,6 +448,20 @@
         element.style.display = isOpen ? getToggleDisplay(element) : 'none';
     }
 
+    // Blocks that share data-sl-toggle-group open one at a time: the block about to open closes the others with the motion of their own control
+    function setToggleGroup(element) {
+        var group = element.getAttribute('data-sl-toggle-group');
+        if (!group) return;
+        var list = document.querySelectorAll('[data-sl-toggle-group].sl-is-open');
+        for (var i = 0; i < list.length; i++) {
+            if (list[i] === element || list[i].getAttribute('data-sl-toggle-group') !== group || !list[i].id) continue;
+            var control = getToggleControls(list[i].id)[0];
+            var effect = control ? control.getAttribute('data-sl-toggle-effect') : null;
+            var duration = parseInt((control && control.getAttribute('data-sl-toggle-duration')) || '400', 10);
+            setToggleBlock(list[i].id, list[i].getAttribute('data-sl-toggle-scope') || '', false, effect, duration);
+        }
+    }
+
     function setToggleBlock(id, scope, isOpen, effect, duration) {
         var element = document.getElementById(id);
         if (!element) return;
@@ -459,6 +473,7 @@
             isHidden = window.getComputedStyle(element).display === 'none' || element.hidden;
         }
         var nextOpen = typeof isOpen === 'boolean' ? isOpen : isHidden;
+        if (nextOpen) setToggleGroup(element);
         setToggleBlockState(element, id, nextOpen, effect, duration);
         setToggleState(id, scope, nextOpen ? '1' : '0');
         if (nextOpen) {
@@ -880,21 +895,6 @@
             own.classList.toggle('sl-open', !open);
         });
     }
-
-    window.Upper = function (obj, dur) {
-        var duration = dur || 200;
-        var target = document.scrollingElement || document.documentElement;
-        if (obj && obj !== 'html, body') {
-            var node = document.querySelector(obj);
-            if (node) target = node;
-        }
-        if (target === document.documentElement || target === document.body || target === document.scrollingElement) {
-            window.scrollTo({ top: 0, behavior: duration > 0 ? 'smooth' : 'auto' });
-        } else {
-            target.scrollTo({ top: 0, behavior: duration > 0 ? 'smooth' : 'auto' });
-        }
-        return false;
-    };
 
     window.TranslateLang = function (input, output, lang, info, key) {
         var source = document.querySelector('input.' + input);
@@ -1338,6 +1338,172 @@
             if (sect) sect.scrollIntoView({ block: 'start', behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
         });
         draw();
+    }
+
+    // The place a page or a swap hands to the next one for the plate of each segmented switch, by the name of its rail
+    var knobkey = 'slaed-knob:place';
+
+    // The plate of a rail (data-sl-knob) goes where its chosen cell stands: the script measures, the sheet moves it
+    function setKnobPlace(rail) {
+        var cell = null;
+        Array.prototype.some.call(rail.querySelectorAll('.sl-is-active'), function (one) {
+            if (one.closest('[data-sl-knob-mark]') || !one.offsetParent) return false;
+            cell = one;
+            return true;
+        });
+        if (!cell) return;
+        var box = rail.getBoundingClientRect();
+        var rect = cell.getBoundingClientRect();
+        rail.style.setProperty('--sl-d-knob-x', (rect.left - box.left - rail.clientLeft) + 'px');
+        rail.style.setProperty('--sl-d-knob-w', rect.width + 'px');
+    }
+
+    // The rails under a node, the node itself included, since an outer swap hands over the rail it replaces
+    function getKnobRails(node) {
+        var root = node && node.querySelectorAll ? node : document;
+        var list = Array.prototype.slice.call(root.querySelectorAll('[data-sl-knob]'));
+        if (root.matches && root.matches('[data-sl-knob]')) list.unshift(root);
+        return list;
+    }
+
+    // The places of the rails under a node, kept for the page or the swap that comes next; the first rail of a name speaks for it
+    function setKnobKeep(node) {
+        var keep = {};
+        var some = false;
+        getKnobRails(node).forEach(function (rail) {
+            var name = rail.getAttribute('data-sl-knob');
+            var wide = rail.style.getPropertyValue('--sl-d-knob-w');
+            if (!name || keep[name] || !wide) return;
+            keep[name] = { x: rail.style.getPropertyValue('--sl-d-knob-x'), w: wide };
+            some = true;
+        });
+        if (!some) return;
+        try {
+            window.sessionStorage.setItem(knobkey, JSON.stringify({ path: window.location.pathname, time: Date.now(), rails: keep }));
+        } catch (err) {
+        }
+    }
+
+    // The places handed over, read once and only on the same path within five seconds, so none wanders into another page
+    function getKnobFrom() {
+        var from = {};
+        try {
+            from = JSON.parse(window.sessionStorage.getItem(knobkey) || '{}') || {};
+            window.sessionStorage.removeItem(knobkey);
+        } catch (err) {
+            return {};
+        }
+        if (from.path !== window.location.pathname || Date.now() - (from.time || 0) > 5000 || !from.rails) return {};
+        return from.rails;
+    }
+
+    // A new rail stands still once on the handed place, then travels; observers that answer at once leave a still plate alone
+    function setKnobs(node) {
+        var rails = getKnobRails(node).filter(function (rail) { return !rail.hasAttribute('data-sl-knob-ready'); });
+        if (!rails.length) return;
+        var from = getKnobFrom();
+        rails.forEach(function (rail) {
+            var was = from[rail.getAttribute('data-sl-knob')];
+            rail.setAttribute('data-sl-knob-still', '');
+            if (was) {
+                rail.style.setProperty('--sl-d-knob-x', was.x);
+                rail.style.setProperty('--sl-d-knob-w', was.w);
+            } else {
+                setKnobPlace(rail);
+            }
+            rail.setAttribute('data-sl-knob-ready', '');
+            window.requestAnimationFrame(function () {
+                window.requestAnimationFrame(function () {
+                    rail.removeAttribute('data-sl-knob-still');
+                    setKnobPlace(rail);
+                });
+            });
+            var follow = function () {
+                if (!rail.hasAttribute('data-sl-knob-still')) setKnobPlace(rail);
+            };
+            if (window.ResizeObserver) new ResizeObserver(follow).observe(rail);
+            new MutationObserver(follow).observe(rail, { subtree: true, childList: true, attributes: true, attributeFilter: ['class'] });
+        });
+    }
+
+    window.addEventListener('pagehide', function () {
+        setKnobKeep(document);
+    });
+
+    document.addEventListener('htmx:beforeSwap', function (event) {
+        if (event.detail && event.detail.target) setKnobKeep(event.detail.target);
+    });
+
+    // A data-sl-sticky block wears data-sl-stuck once its mark passes its top line, the band reaching down so no jump skips it; unsticking closes the lens
+    function setStickyBars(node) {
+        var root = node && node.querySelectorAll ? node : document;
+        var list = Array.prototype.slice.call(root.querySelectorAll('[data-sl-sticky]'));
+        if (root.matches && root.matches('[data-sl-sticky]')) list.unshift(root);
+        if (!window.IntersectionObserver) return;
+        list.forEach(function (bar) {
+            if (bar.hasAttribute('data-sl-sticky-ready')) return;
+            bar.setAttribute('data-sl-sticky-ready', '');
+            var mark = bar.querySelector('[data-sl-sticky-mark]');
+            if (!mark) {
+                mark = document.createElement('div');
+                mark.setAttribute('data-sl-sticky-mark', '');
+                mark.setAttribute('aria-hidden', 'true');
+                bar.before(mark);
+            }
+            var top = parseFloat(window.getComputedStyle(bar).top) || 0;
+            var watch = new IntersectionObserver(function (rows) {
+                var row = rows[rows.length - 1];
+                if (!bar.isConnected) {
+                    watch.disconnect();
+                    return;
+                }
+                var stuck = !row.isIntersecting && row.boundingClientRect.top < top;
+                bar.toggleAttribute('data-sl-stuck', stuck);
+                if (!stuck && bar.hasAttribute('data-sl-lens-open')) setLensState(bar, false);
+            }, { rootMargin: (-top) + 'px 0px 1000000px 0px' });
+            watch.observe(mark);
+        });
+    }
+
+    // The bar carries the state of its lens and every lens button in it tells it
+    function setLensState(bar, open) {
+        bar.toggleAttribute('data-sl-lens-open', open);
+        var list = bar.querySelectorAll('[data-sl-lens]');
+        for (var i = 0; i < list.length; i++) list[i].setAttribute('aria-expanded', open ? 'true' : 'false');
+    }
+
+    // Closing a lens by its button or by Esc drops what was typed, told to the field as input so whatever reads it follows
+    function setLensDrop(bar, field) {
+        setLensState(bar, false);
+        if (field.value === '') return;
+        field.value = '';
+        field.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+
+    // A button with data-sl-lens="<id>" inside a sticky bar opens the field of that id over the bar and focuses it; Esc in the field closes it
+    function setLensKeys() {
+        document.addEventListener('click', function (event) {
+            var lens = event.target && event.target.closest ? event.target.closest('[data-sl-lens]') : null;
+            var bar = lens ? lens.closest('[data-sl-sticky]') : null;
+            var field = lens ? document.getElementById(lens.getAttribute('data-sl-lens') || '') : null;
+            if (!bar || !field) return;
+            event.preventDefault();
+            if (bar.hasAttribute('data-sl-lens-open')) {
+                setLensDrop(bar, field);
+                return;
+            }
+            setLensState(bar, true);
+            field.focus();
+        });
+        document.addEventListener('keydown', function (event) {
+            if (event.key !== 'Escape' || !event.target || !event.target.id || !event.target.closest) return;
+            var bar = event.target.closest('[data-sl-lens-open]');
+            var lens = bar ? bar.querySelector('[data-sl-lens="' + CSS.escape(event.target.id) + '"]') : null;
+            if (!lens) return;
+            event.preventDefault();
+            setLensDrop(bar, event.target);
+            lens.focus();
+        });
     }
 
     // How far the profile is filled, over the fields the server marked as counting. It draws the same rule the server drew,
@@ -2366,6 +2532,9 @@
         setLiveChips(document);
         setProfileScrolls(document);
         setSectionSpy(document);
+        setKnobs(document);
+        setStickyBars(document);
+        setLensKeys();
         setFillMeters();
         setDirtyForms(document);
         setCodeBlocks(document);
@@ -2398,6 +2567,8 @@
         setProfileScrolls(document);
         setCommentKeys(event.target);
         setCodeBlocks(event.target);
+        setKnobs(event.target && event.target.isConnected ? event.target : document);
+        setStickyBars(event.target && event.target.isConnected ? event.target : document);
         if (event.target && event.target.id === 'prview') {
             setPrivatPane('view');
             setPrivatCarry(event.target);

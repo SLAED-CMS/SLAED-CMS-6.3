@@ -107,5 +107,4 @@ define('_NODE_TSAVED','Тип сохранён.');
 define('_NODE_TYPEOFF','Тип отключён.');
 define('_NODE_TYPEON','Тип включён.');
 define('_NODE_TYPES','Типы');
-define('_NODE_UPDATED','Обновлённые');
 define('_NODE_USEFUL','Полезная');

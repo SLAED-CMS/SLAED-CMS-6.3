@@ -107,5 +107,4 @@ define('_NODE_TSAVED','The type has been saved.');
 define('_NODE_TYPEOFF','The type has been switched off.');
 define('_NODE_TYPEON','The type has been switched on.');
 define('_NODE_TYPES','Types');
-define('_NODE_UPDATED','Updated');
 define('_NODE_USEFUL','Useful');

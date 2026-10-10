@@ -1436,3 +1436,67 @@ button.sl-seg-cell:hover {
   font-weight: var(--sl-weight-bold);
   font-variant-numeric: tabular-nums;
 }
+
+/* Groups series: the rank as docs/8-RANKS-2026.md draws it — a row of one icon, the lit marks in the colour of the
+   rank, the rest in the quiet line tone of the theme. Proposed for both themes; it lives here until RANKS batch 1 */
+.sl-rank {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sl-space-1);
+  line-height: 1;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+/* The admin theme sets every .bi to a fixed --sl-size-icon-xs; the marks of a rank take the size of the place instead */
+.sl-rank .bi {
+  color: var(--sl-border-strong);
+  font-size: 1em;
+}
+
+.sl-rank .bi.sl-is-active {
+  color: var(--sl-rank-color);
+}
+
+/* A preset of the composer: its rank over its name, the chosen one ringed in the brand colour */
+.d-rank-preset {
+  display: grid;
+  justify-items: center;
+  gap: var(--sl-space-2);
+  padding: var(--sl-space-4) var(--sl-space-3);
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-2);
+  background: var(--sl-surface);
+  color: var(--sl-text-muted);
+  font: inherit;
+  font-size: var(--sl-font-micro);
+  cursor: pointer;
+  transition: border-color var(--sl-time-fast) var(--sl-ease-out), box-shadow var(--sl-time-fast) var(--sl-ease-out);
+}
+
+.d-rank-preset .sl-rank {
+  font-size: var(--sl-size-icon-xs);
+}
+
+.d-rank-preset:hover {
+  border-color: var(--sl-primary);
+}
+
+.d-rank-preset[aria-pressed="true"] {
+  border-color: var(--sl-primary);
+  box-shadow: 0 0 0 1px var(--sl-primary);
+  color: var(--sl-text-strong);
+}
+
+/* The saved note of a composer leaves as the flash alert does: a moment, then gone */
+[data-demo-saved]:not([hidden]) {
+  animation: d-rank-saved var(--sl-time-slow) var(--sl-ease-out);
+}
+
+@keyframes d-rank-saved {
+  from { opacity: 0; transform: translateY(calc(var(--sl-space-2) * -1)); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-demo-saved]:not([hidden]) { animation: none; }
+}

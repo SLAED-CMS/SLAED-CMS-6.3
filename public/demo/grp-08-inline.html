@@ -1,0 +1,325 @@
+<!doctype html>
+<html lang="ru" data-theme="auto">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>На месте &middot; Группы и ранги — стенд панели администратора SLAED CMS</title>
+  <link rel="stylesheet" href="../templates/admin/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../templates/admin/assets/css/base.css">
+  <link rel="stylesheet" href="../templates/admin/assets/css/theme.css">
+  <!-- The stand is served without Cache-Control; its sheet and script are stamped so an edit is seen at once -->
+  <script>document.write('<link rel="stylesheet" href="assets/demo.css?v=' + Date.now() + '">');</script>
+  <script src="../plugins/system/global-func.js"></script>
+  <script src="../plugins/system/slaed.js"></script>
+  <script src="../templates/admin/assets/js/admin-ui.js"></script>
+  <style>
+    /* На месте: the table is the page; a row opens its editor under itself and writes back while it is edited */
+    .v-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--sl-space-3);
+      margin: 0 0 var(--sl-space-5);
+    }
+
+    .v-bar p {
+      margin: 0;
+      color: var(--sl-text-muted);
+    }
+
+    .v-col-rank {
+      width: 160px;
+    }
+
+    /* The rank cell is itself the way in: a quiet button that shows its pencil on hover */
+    .v-rank-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--sl-space-3);
+      padding: var(--sl-space-1) var(--sl-space-2);
+      border: 1px solid transparent;
+      border-radius: var(--sl-radius-1);
+      background: transparent;
+      color: var(--sl-text-muted);
+      font: inherit;
+      cursor: pointer;
+    }
+
+    .v-rank-btn .bi-pencil {
+      opacity: 0;
+      font-size: var(--sl-font-micro);
+    }
+
+    .v-rank-btn:hover,
+    .v-rank-btn:focus-visible {
+      border-color: var(--sl-border);
+      background: var(--sl-surface);
+    }
+
+    .v-rank-btn:hover .bi-pencil,
+    .v-rank-btn:focus-visible .bi-pencil {
+      opacity: 1;
+    }
+
+    tr.sl-is-active > td {
+      background: var(--sl-tint);
+    }
+
+    /* The editor row: one cell across the table, a raised sheet inside it */
+    .v-edit-row > td {
+      padding: 0 !important;
+      background: var(--sl-tint) !important;
+    }
+
+    .v-sheet {
+      display: grid;
+      gap: var(--sl-space-5);
+      margin: 0 var(--sl-space-3) var(--sl-space-4);
+      padding: var(--sl-space-6);
+      border: 1px solid var(--sl-border);
+      border-radius: 0 0 var(--sl-radius-2) var(--sl-radius-2);
+      background: var(--sl-surface);
+      box-shadow: var(--sl-shadow-raised);
+      white-space: normal;
+      text-align: left;
+    }
+
+    .v-sheet .sl-select-config {
+      width: 100%;
+    }
+
+    .v-sheet .sl-icon-picker .sl-select-config {
+      width: auto;
+    }
+
+    .v-line {
+      display: grid;
+      grid-template-columns: minmax(0, 2fr) auto auto minmax(0, 1fr);
+      align-items: end;
+      gap: var(--sl-space-5);
+    }
+
+    .v-line-rank {
+      grid-template-columns: minmax(0, 1fr) auto auto;
+    }
+
+    .v-sheet label {
+      display: grid;
+      gap: var(--sl-space-2);
+      color: var(--sl-text-muted);
+      font-size: var(--sl-font-small);
+    }
+
+    .v-sheet input[type="number"] {
+      width: 72px;
+    }
+
+    .v-sheet input[type="color"] {
+      width: 48px;
+      height: var(--sl-size-control);
+      padding: var(--sl-space-1);
+    }
+
+    .v-check {
+      display: flex !important;
+      align-items: center;
+      gap: var(--sl-space-2) !important;
+      height: var(--sl-size-control);
+    }
+
+    .v-pair {
+      display: flex;
+      align-items: center;
+      gap: var(--sl-space-2);
+      color: var(--sl-text-muted);
+      font-size: var(--sl-font-small);
+    }
+
+    .v-foot {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: var(--sl-space-3);
+    }
+
+    .v-foot .sl-rank {
+      font-size: var(--sl-size-icon-sm);
+    }
+
+    .v-foot > span:first-child {
+      margin-right: auto;
+    }
+
+    @media (max-width: 1100px) {
+      .v-line,
+      .v-line-rank {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="sl-wrapper sl-admin-shell">
+    <div class="sl-wraptop"></div>
+    <div class="sl-wrapmid">
+      <div class="sl-header sl-admin-header">
+        <div class="sl-admin-brand"><h1><a href="//slaed.net" target="_blank" title="Название сайта"><img src="../templates/admin/images/logos/slaed-logo-wordmark-gradient-blue.svg" alt="Название сайта" title="Название сайта"></a></h1></div>
+        <div class="sl-admin-toolbar">
+          <div class="sl-toolbar">
+            <div>
+              <ul class="sl-reset">
+<li><a href="../admin.php" title="Главная"><i class="bi bi-house-door"></i> <b>Главная</b></a></li>
+<li><a href="../admin.php?name=blocks" title="Блоки и баннеры"><i class="bi bi-grid-3x3-gap"></i> <b>Блоки и баннеры</b></a></li>
+<li><a href="../admin.php?name=modules" title="Модули"><i class="bi bi-gpu-card"></i> <b>Модули</b></a></li>
+<li><a href="../admin.php?name=categories" title="Категории"><i class="bi bi-folder"></i> <b>Категории</b></a></li>
+<li class="sl-split-item"><a href="/" title="Сайт"><i class="bi bi-globe2"></i> <b>Сайт</b></a></li>
+<li><a href="../index.php?name=account" title="Профиль"><i class="bi bi-person"></i> <b>Профиль</b></a></li>
+<li class="sl-split-item"><a href="../admin.php?op=logout" title="Выход"><i class="bi bi-box-arrow-right"></i> <b>Выход</b></a></li>
+<li class="sl-set-item"><button type="button" title="Опции"><i class="bi bi-sliders" aria-hidden="true"></i> <b>Опции</b></button></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="sl-admin-main">
+        <aside class="sl-admin-sidebar">
+          <div class="sl-block-sidebar">
+            <h3 title="Свёртывание / Развёртывание" data-sl-toggle-control="sl-block-1" data-sl-toggle-effect="slide" data-sl-toggle-duration="500"><b><i class="bi bi-person-gear"></i>Администратор</b><i class="bi bi-arrows-collapse sl-panel-toggle sl-panel-toggle-open" aria-hidden="true"></i><i class="bi bi-arrows-expand sl-panel-toggle sl-panel-toggle-closed" aria-hidden="true"></i></h3>
+            <div id="sl-block-1" class="sl-block-sidebar-content" data-sl-toggle="sl-block-1">
+                <div class="sl-menu-list-item"><a href="../admin.php?name=admins" title="Администрация"><i class="bi bi-person-gear"></i> Администрация</a><span class="sl-dial"><button class="sl-dial-toggle sl-but-mini" type="button" title="Опции"><i class="bi bi-three-dots"></i></button></span></div>
+                <div class="sl-menu-list-item"><a href="../admin.php?name=blocks" title="Блоки и баннеры"><i class="bi bi-grid-3x3-gap"></i> Блоки и баннеры</a><span class="sl-dial"><button class="sl-dial-toggle sl-but-mini" type="button" title="Опции"><i class="bi bi-three-dots"></i></button></span></div>
+                <div class="sl-menu-list-item"><a href="../admin.php?name=categories" title="Категории"><i class="bi bi-folder"></i> Категории</a><span class="sl-dial"><button class="sl-dial-toggle sl-but-mini" type="button" title="Опции"><i class="bi bi-three-dots"></i></button></span></div>
+                <div class="sl-menu-list-item"><a href="../admin.php?name=comments" title="Комментарии"><i class="bi bi-chat-dots"></i> Комментарии</a><span class="sl-dial"><button class="sl-dial-toggle sl-but-mini" type="button" title="Опции"><i class="bi bi-three-dots"></i></button></span></div>
+                <div class="sl-menu-list-item"><a href="../admin.php?name=config" title="Конфигурации"><i class="bi bi-gear"></i> Конфигурации</a><span class="sl-dial"><button class="sl-dial-toggle sl-but-mini" type="button" title="Опции"><i class="bi bi-three-dots"></i></button></span></div>
+                <div class="sl-menu-list-item"><a href="../admin.php?name=database" title="База данных"><i class="bi bi-database"></i> База данных</a><span class="sl-dial"><button class="sl-dial-toggle sl-but-mini" type="button" title="Опции"><i class="bi bi-three-dots"></i></button></span></div>
+                <div class="sl-menu-list-item"><a href="../admin.php?name=editor" title="Редактор"><i class="bi bi-pencil-square"></i> Редактор</a><span class="sl-dial"><button class="sl-dial-toggle sl-but-mini" type="button" title="Опции"><i class="bi bi-three-dots"></i></button></span></div>
+                <div class="sl-menu-list-item"><a href="../admin.php?name=favorites" title="Фавориты"><i class="bi bi-star"></i> Фавориты</a><span class="sl-dial"><button class="sl-dial-toggle sl-but-mini" type="button" title="Опции"><i class="bi bi-three-dots"></i></button></span></div>
+                <div class="sl-menu-list-item"><a href="../admin.php?name=fields" title="Дополнительные поля"><i class="bi bi-input-cursor-text"></i> Дополнительные поля</a><span class="sl-dial"><button class="sl-dial-toggle sl-but-mini" type="button" title="Опции"><i class="bi bi-three-dots"></i></button></span></div>
+                <div class="sl-menu-list-item"><a href="../admin.php?name=groups" title="Группы" aria-current="page"><i class="bi bi-people-fill"></i> Группы</a><span class="sl-dial"><button class="sl-dial-toggle sl-but-mini" type="button" title="Опции"><i class="bi bi-three-dots"></i></button></span></div>
+                <div class="sl-menu-list-item"><a href="../admin.php?name=lang" title="Редактор языков"><i class="bi bi-translate"></i> Редактор языков</a><span class="sl-dial"><button class="sl-dial-toggle sl-but-mini" type="button" title="Опции"><i class="bi bi-three-dots"></i></button></span></div>
+                <div class="sl-menu-list-item"><a href="../admin.php?name=messages" title="Сообщения"><i class="bi bi-envelope"></i> Сообщения</a><span class="sl-dial"><button class="sl-dial-toggle sl-but-mini" type="button" title="Опции"><i class="bi bi-three-dots"></i></button></span></div>
+                <div class="sl-menu-list-item"><a href="../admin.php?name=modules" title="Модули"><i class="bi bi-puzzle"></i> Модули</a><span class="sl-dial"><button class="sl-dial-toggle sl-but-mini" type="button" title="Опции"><i class="bi bi-three-dots"></i></button></span></div>
+                <div class="sl-menu-list-item"><a href="../admin.php?name=monitor" title="Мониторинг"><i class="bi bi-display"></i> Мониторинг</a><span class="sl-dial"><button class="sl-dial-toggle sl-but-mini" type="button" title="Опции"><i class="bi bi-three-dots"></i></button></span></div>
+                <div class="sl-menu-list-item"><a href="../admin.php?name=newsletter" title="Рассылка"><i class="bi bi-send"></i> Рассылка</a><span class="sl-dial"><button class="sl-dial-toggle sl-but-mini" type="button" title="Опции"><i class="bi bi-three-dots"></i></button></span></div>
+                <div class="sl-menu-list-item"><a href="../admin.php?name=privat" title="Личные сообщения"><i class="bi bi-incognito"></i> Личные сообщения</a><span class="sl-dial"><button class="sl-dial-toggle sl-but-mini" type="button" title="Опции"><i class="bi bi-three-dots"></i></button></span></div>
+                <div class="sl-menu-list-item"><a href="../admin.php?name=ratings" title="Рейтинги"><i class="bi bi-star-half"></i> Рейтинги</a><span class="sl-dial"><button class="sl-dial-toggle sl-but-mini" type="button" title="Опции"><i class="bi bi-three-dots"></i></button></span></div>
+                <div class="sl-menu-list-item"><a href="../admin.php?name=referers" title="Переходы"><i class="bi bi-box-arrow-in-right"></i> Переходы</a><span class="sl-dial"><button class="sl-dial-toggle sl-but-mini" type="button" title="Опции"><i class="bi bi-three-dots"></i></button></span></div>
+                <div class="sl-menu-list-item"><a href="../admin.php?name=replace" title="Замена слов"><i class="bi bi-arrow-left-right"></i> Замена слов</a><span class="sl-dial"><button class="sl-dial-toggle sl-but-mini" type="button" title="Опции"><i class="bi bi-three-dots"></i></button></span></div>
+                <div class="sl-menu-list-item"><a href="../admin.php?name=scheduler" title="Планировщик"><i class="bi bi-clock-history"></i> Планировщик</a><span class="sl-dial"><button class="sl-dial-toggle sl-but-mini" type="button" title="Опции"><i class="bi bi-three-dots"></i></button></span></div>
+                <div class="sl-menu-list-item"><a href="../admin.php?name=security" title="Безопасность"><i class="bi bi-shield-lock"></i> Безопасность</a><span class="sl-dial"><button class="sl-dial-toggle sl-but-mini" type="button" title="Опции"><i class="bi bi-three-dots"></i></button></span></div>
+                <div class="sl-menu-list-item"><a href="../admin.php?name=statistic" title="Статистика"><i class="bi bi-graph-up"></i> Статистика</a><span class="sl-dial"><button class="sl-dial-toggle sl-but-mini" type="button" title="Опции"><i class="bi bi-three-dots"></i></button></span></div>
+                <div class="sl-menu-list-item"><a href="../admin.php?name=template" title="Шаблон"><i class="bi bi-palette"></i> Шаблон</a><span class="sl-dial"><button class="sl-dial-toggle sl-but-mini" type="button" title="Опции"><i class="bi bi-three-dots"></i></button></span></div>
+                <div class="sl-menu-list-item"><a href="../admin.php?name=uploads" title="Загрузки"><i class="bi bi-cloud-arrow-up"></i> Загрузки</a><span class="sl-dial"><button class="sl-dial-toggle sl-but-mini" type="button" title="Опции"><i class="bi bi-three-dots"></i></button></span></div>
+                <div class="sl-menu-list-item"><a href="../admin.php?name=account" title="Пользователи"><i class="bi bi-people"></i> Пользователи</a><span class="sl-dial"><button class="sl-dial-toggle sl-but-mini" type="button" title="Опции"><i class="bi bi-three-dots"></i></button></span></div>
+                <div class="sl-menu-list-item"><a href="../admin.php?name=changelog" title="Журнал изменений"><i class="bi bi-journal-text"></i> Журнал изменений</a><span class="sl-dial"><button class="sl-dial-toggle sl-but-mini" type="button" title="Опции"><i class="bi bi-three-dots"></i></button></span></div>
+                <div class="sl-menu-list-item"><a href="../admin.php?name=contact" title="Обратная связь"><i class="bi bi-envelope-open"></i> Обратная связь</a><span class="sl-dial"><button class="sl-dial-toggle sl-but-mini" type="button" title="Опции"><i class="bi bi-three-dots"></i></button></span></div>
+                <div class="sl-menu-list-item"><a href="../admin.php?name=forum" title="Форум"><i class="bi bi-chat-square-text"></i> Форум</a><span class="sl-dial"><button class="sl-dial-toggle sl-but-mini" type="button" title="Опции"><i class="bi bi-three-dots"></i></button></span></div>
+                <div class="sl-menu-list-item"><a href="../admin.php?name=node" title="Материалы"><i class="bi bi-collection"></i> Материалы</a><span class="sl-dial"><button class="sl-dial-toggle sl-but-mini" type="button" title="Опции"><i class="bi bi-three-dots"></i></button></span></div>
+                <div class="sl-menu-list-item"><a href="../admin.php?name=rss" title="RSS каналы"><i class="bi bi-rss"></i> RSS каналы</a><span class="sl-dial"><button class="sl-dial-toggle sl-but-mini" type="button" title="Опции"><i class="bi bi-three-dots"></i></button></span></div>
+                <div class="sl-menu-list-item"><a href="../admin.php?name=search" title="Поиск"><i class="bi bi-search"></i> Поиск</a><span class="sl-dial"><button class="sl-dial-toggle sl-but-mini" type="button" title="Опции"><i class="bi bi-three-dots"></i></button></span></div>
+                <div class="sl-menu-list-item"><a href="../admin.php?name=sitemap" title="Карта сайта"><i class="bi bi-diagram-3"></i> Карта сайта</a><span class="sl-dial"><button class="sl-dial-toggle sl-but-mini" type="button" title="Опции"><i class="bi bi-three-dots"></i></button></span></div>
+                <div class="sl-menu-list-item"><a href="../admin.php?name=voting" title="Опросы"><i class="bi bi-bar-chart"></i> Опросы</a><span class="sl-dial"><button class="sl-dial-toggle sl-but-mini" type="button" title="Опции"><i class="bi bi-three-dots"></i></button></span></div>
+            </div>
+          </div>
+          <div class="sl-block-sidebar">
+            <h3 title="Свёртывание / Развёртывание" data-sl-toggle-control="sl-block-2" data-sl-toggle-effect="slide" data-sl-toggle-duration="500"><b><i class="bi bi-people"></i>Модули</b><i class="bi bi-arrows-collapse sl-panel-toggle sl-panel-toggle-open" aria-hidden="true"></i><i class="bi bi-arrows-expand sl-panel-toggle sl-panel-toggle-closed" aria-hidden="true"></i></h3>
+            <div id="sl-block-2" class="sl-block-sidebar-content" data-sl-toggle="sl-block-2">
+            </div>
+          </div>
+          <div class="sl-block-sidebar">
+            <h3 title="Свёртывание / Развёртывание" data-sl-toggle-control="sl-block-7" data-sl-toggle-effect="slide" data-sl-toggle-duration="500"><b><i class="bi bi-person-gear"></i>Администрация</b><i class="bi bi-arrows-collapse sl-panel-toggle sl-panel-toggle-open" aria-hidden="true"></i><i class="bi bi-arrows-expand sl-panel-toggle sl-panel-toggle-closed" aria-hidden="true"></i></h3>
+            <div id="sl-block-7" class="sl-block-sidebar-content" data-sl-toggle="sl-block-7">
+              <div class="sl-admin-block-links">
+                <div class="sl-admin-block-link"><a href="../admin.php" title="Панель администратора"><i class="bi bi-house-door"></i> Панель администратора</a></div>
+                <div class="sl-admin-block-link"><a href="../admin.php?op=logout" title="Выход"><i class="bi bi-box-arrow-right"></i> Выход</a></div>
+              </div>
+            </div>
+          </div>
+          <div class="sl-block-sidebar">
+            <h3 title="Свёртывание / Развёртывание" data-sl-toggle-control="sl-block-8" data-sl-toggle-effect="slide" data-sl-toggle-duration="500"><b><i class="bi bi-eye"></i>Наблюдение</b><i class="bi bi-arrows-collapse sl-panel-toggle sl-panel-toggle-open" aria-hidden="true"></i><i class="bi bi-arrows-expand sl-panel-toggle sl-panel-toggle-closed" aria-hidden="true"></i></h3>
+            <div id="sl-block-8" class="sl-block-sidebar-content" data-sl-toggle="sl-block-8">
+              <div class="sl-session-line sl-session-line--icon"><div class="sl-session-icon"><i class="bi bi-person-gear"></i></div><div>Администрация:</div><div class="sl-session-right">1</div></div>
+              <div class="sl-session-line sl-session-line--icon"><div class="sl-session-icon"><i class="bi bi-person"></i></div><div>Пользователей:</div><div class="sl-session-right">0</div></div>
+              <div class="sl-session-line sl-session-line--icon"><div class="sl-session-icon"><i class="bi bi-person-slash"></i></div><div>Гостей:</div><div class="sl-session-right">0</div></div>
+              <div class="sl-session-line sl-session-line--icon"><div class="sl-session-icon"><i class="bi bi-people"></i></div><div>Всего:</div><div class="sl-session-right">1</div></div>
+            </div>
+          </div>
+        </aside>
+        <main class="sl-admin-content"><div class="sl-admin-content-inner">
+
+          <div class="sl-box">
+            <div class="sl-module-head">
+              <div class="sl-module-head-icon"><i class="bi bi-people-fill" title="Группы"></i></div>
+              <div class="sl-module-head-body">
+                <h1 class="sl-module-head-title">Группы</h1>
+              </div>
+            </div>
+            <ul class="sl-tabs-nav sl-tabs-nav-main">
+<li class="sl-tabs-item"><a href="../admin.php?name=groups" title="Главная" class="sl-tabs-link sl-is-active">Главная</a></li>
+<li class="sl-tabs-item"><a href="../admin.php?name=groups&amp;op=add" title="Добавить" class="sl-tabs-link">Добавить</a></li>
+<li class="sl-tabs-item"><a href="../admin.php?name=groups&amp;op=points" title="Пункты" class="sl-tabs-link">Пункты</a></li>
+<li class="sl-tabs-item"><a href="../admin.php?name=groups&amp;op=info" title="Справка" class="sl-tabs-link">Справка</a></li>
+            </ul>
+          </div>
+
+          <div class="sl-box sl-table-shell">
+            <div class="v-bar">
+              <p>Щёлкните по рангу или по карандашу — правка откроется под строкой.</p>
+              <button type="button" class="sl-but-blue" data-demo-group-new><i class="bi bi-plus-lg" aria-hidden="true"></i> Новая группа</button>
+            </div>
+            <div class="sl-alert sl-alert-success" data-demo-saved hidden><div class="sl-alert-body">Изменения сохранены.</div></div>
+            <table class="sl-table-list-sort sl-table-fixed" data-sl-table-sort>
+              <thead>
+                <tr><th class="sl-col-id">№</th><th class="v-col-rank" data-sort-method="none">Ранг</th><th class="sl-cell-ellipsis">Группа</th><th class="sl-col-count">Пункты</th><th class="sl-col-count">Участ.</th><th class="sl-col-status">Спец.</th><th class="sl-col-actions" data-sort-method="none">Опции</th></tr>
+              </thead>
+              <tbody data-demo-groups="all"><template><tr>
+                <td class="sl-col-id" data-g="id"></td>
+                <td><button type="button" class="v-rank-btn" data-demo-group-edit title="Изменить ранг"><span data-demo-rank></span><i class="bi bi-pencil" aria-hidden="true"></i></button></td>
+                <td class="sl-cell-ellipsis" data-g-title="name"><nav class="sl-float sl-tip" tabindex="0"><i class="bi bi-info-circle-fill"></i><div class="sl-float-panel">Описание: <span data-g="intro"></span></div></nav> <span data-g-color data-g="name"></span></td>
+                <td class="sl-col-count" data-g="points"></td>
+                <td class="sl-col-count" data-g="users"></td>
+                <td class="sl-col-status" data-g="extra"></td>
+                <td class="sl-col-actions"><span class="sl-dial"><button class="sl-dial-toggle sl-but-mini" type="button" title="Опции"><i class="bi bi-three-dots"></i></button><a class="sl-dial-item sl-but-mini" href="#" title="Полное редактирование" data-demo-group-edit><i class="bi bi-pencil"></i></a><button class="sl-dial-item sl-but-mini" type="button" title="Удаление объекта" data-demo-group-drop><i class="bi bi-trash"></i></button></span></td>
+              </tr></template><tr class="v-edit-row" data-demo-composer="inline" data-demo-group-open="2"><td colspan="7">
+                <form action="#" method="post" class="v-sheet">
+                  <div class="v-line">
+                    <label>Название<input type="text" name="grname" class="sl-select-config" required maxlength="255"></label>
+                    <label>Цвет<input type="color" name="color"></label>
+                    <label>Порог<input type="number" name="points" class="sl-select-config" min="0"></label>
+                    <label class="v-check"><input type="checkbox" name="grextra" value="1"> Спец. группа</label>
+                  </div>
+                  <div class="v-line v-line-rank">
+                    <label>Ранг<span class="sl-icon-picker"><span class="sl-ico"><i class="bi bi-star-fill" data-sl-icon-preview></i></span><input type="text" name="rank_icon" value="star-fill" maxlength="64" class="sl-select-config" placeholder="Иконка" aria-label="Иконка ранга" data-sl-icon-input><button type="button" class="sl-but-green" title="Выбрать иконку" data-sl-icon-open>Выбрать иконку</button></span></label>
+                    <label>Горит из<span class="v-pair"><input type="number" name="rank_lit" class="sl-select-config" min="0" max="10" aria-label="Горит">/<input type="number" name="rank_total" class="sl-select-config" min="1" max="10" aria-label="Всего"></span></label>
+                    <label>Цвет ранга<input type="color" name="rank_color"></label>
+                  </div>
+                  <label>Описание<input type="text" name="description" class="sl-select-config"></label>
+                  <div class="v-foot">
+                    <span data-demo-rank-live></span>
+                    <button type="button" class="sl-but" data-demo-group-close>Свернуть</button>
+                    <button type="submit" class="sl-but-blue" data-c="submit">Сохранить</button>
+                  </div>
+                </form>
+              </td></tr></tbody>
+            </table>
+          </div>
+          <div class="sl-box" data-demo-about></div>
+        </div></main>
+      </div>
+      <div class="sl-footer sl-admin-footer">
+        <div class="sl-copyright">Генерация: 0.251 сек. и 15 запросов к базе данных за 0.005 сек.<br><a href="https://slaed.net" title="SLAED CMS" target="_blank" rel="noopener noreferrer">SLAED CMS</a> © 2005-2026 Eduard Laas. Released under MIT License.</div>
+        <span><a href="//slaed.net" title="SLAED CMS" class="sl-thide sl-slaed-home" target="_blank" rel="noopener noreferrer">SLAED CMS</a><a href="#" title="Наверх" class="sl-thide" onclick="Upper('html, body', 600); return false;">Наверх</a></span>
+      </div>
+    </div>
+    <div class="sl-wrapfoot"></div>
+  </div>
+
+  <dialog class="sl-modal sl-modal-lg" id="sl-icon-window" aria-label="Выбрать иконку">
+    <div class="sl-modal-title"><i class="bi bi-grid-3x3-gap-fill" aria-hidden="true"></i> <span class="sl-modal-cap"><strong>Выбрать иконку</strong></span> <span class="sl-modal-acts"><button type="button" class="sl-modal-act sl-modal-act-close" data-sl-close title="Закрыть" aria-label="Закрыть"><i class="bi bi-x-lg" aria-hidden="true"></i></button></span></div>
+    <div class="sl-modal-bar"><nav class="sl-icon-modal-tabs"><button type="button" class="sl-is-active" data-sl-icon-source="bi">Bootstrap Icons</button></nav><input type="search" class="sl-select-config" placeholder="Поиск" aria-label="Поиск" data-sl-icon-search data-sl-focus></div>
+    <div class="sl-modal-body sl-modal-body-flush"><div class="sl-icon-modal-grid notranslate" translate="no" data-sl-icon-grid></div></div>
+  </dialog>
+  <script>document.write('<script src="assets/demo.js?v=' + Date.now() + '"><\/script>');</script>
+</body>
+</html>

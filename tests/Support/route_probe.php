@@ -18,7 +18,7 @@
 # The argument tree runs the document tree on docs switched to the tree, and its child treeext counts the statements of the tree read of one view
 # The argument modes runs the display modes on five types; serve modes keeps a server with the same types up until the file stop appears
 # The argument seo runs the canonical routes, the head and the feeds, and its child seoext asks the core for the feeds
-# The argument head runs the routes, the notices and the theme header
+# The argument head runs the routes, the notices, the theme header and the header of a list with its counts
 # The argument quick runs the quick edit of a comment over its two routes: methods, the header token, the closed forms, the codes and what each leaves in the row
 # The argument files runs the files of the forum on the file route, the writers of a post that bind a name and the unused filter of the upload browser
 if (PHP_SAPI !== 'cli') {
@@ -1990,7 +1990,8 @@ function addRouteSeoTypes(PDO $pdo, string $work): void {
     $data = require $work.'/config/global.php';
     $data['slogan'] = 'Probe slogan of the site';
     setRouteFile($work.'/config/global.php', $data);
-    $pdo->exec('INSERT INTO '.$pre.'categories (id, modul, title, intro, pread, ppost, lang) VALUES (4, \'news\', \'_CATEGORY\', \'\', \'0|0\', \'1|0\', \'\')');
+    $pdo->exec('INSERT INTO '.$pre.'categories (id, modul, title, intro, pread, ppost, lang) VALUES (4, \'news\', \'_CATEGORY\', \'\', \'0|0\', \'1|0\', \'\'),'
+        .' (6, \'news\', \'Quiet\', \'\', \'0|0\', \'1|0\', \'\')');
     $pdo->exec('UPDATE '.$pre.'nodes SET cid = 4 WHERE id = 105');
     $pdo->exec('UPDATE '.$pre.'nodes SET intro = \'Intro [attach=att-aaaaaaaaaa.png align=left title=att]\' WHERE id = 105');
     $pdo->exec('INSERT INTO '.$pre.'nodes (id, tid, cid, uid, aname, ip, title, intro, body, field, status, published)'
@@ -2002,6 +2003,7 @@ function addRouteSeoTypes(PDO $pdo, string $work): void {
 
 # The canonical route answers: canonical addresses beside foreign parameters, the description of the start page, a category named by a constant in view and feed
 # Then the date order of the docs block and feed, a page past the end with the default sort, the feeds without rss and the alternate link, absolute description addresses
+# The channel head of news by category and reader, its tag answered 304 and a closed or unknown category refused
 # Last the whole correspondence of a support card with twenty root messages and a branch of six replies
 function getRouteSeo(PDO $pdo, string $work): array {
     global $rport;
@@ -2058,6 +2060,26 @@ function getRouteSeo(PDO $pdo, string $work): array {
         $get('index.php?go=rss')['code'], str_contains($get('index.php?go=rss')['body'], '<title>Beta</title>'),
         $link($get('index.php?name=docs&op=view&id=201')['body'], 'alternate'), $link($get('index.php?name=rss')['body'], 'alternate'),
         str_contains($plain, '="'.$site.'/index.php?go=file&amp;own=node&amp;id=105'), str_contains($plain, '="index.php?go=file')];
+    $tag = fn(string $xml, string $name): string => preg_match('#<channel>.*?<'.$name.'>([^<]*)</'.$name.'>#s', $xml, $hit) ? html_entity_decode($hit[1]) : '';
+    $newest = fn(string $xml): int => preg_match_all('#<pubDate>([^<]*)</pubDate>#', $xml, $hit) ? max(array_map('strtotime', $hit[1])) : 0;
+    $open = $get('index.php?go=rss&name=news&cat=1');
+    $club = $get('index.php?go=rss&name=news&cat=2', 'anna');
+    $etag = $feed['head']['etag'] ?? '';
+    $same = getRouteReply('', 'GET', 'index.php?go=rss&name=news', [], ['If-None-Match: '.$etag]);
+    $stale = getRouteReply('', 'GET', 'index.php?go=rss&name=news', [], ['If-None-Match: "0000"']);
+    $out['feed'] = [
+        'title' => [$tag($feed['body'], 'title'), $tag($open['body'], 'title'), $tag($club['body'], 'title')],
+        'link' => [$tag($feed['body'], 'link'), $tag($open['body'], 'link')],
+        'built' => [strtotime($tag($feed['body'], 'lastBuildDate')) === $newest($feed['body']), $newest($feed['body']) > 0,
+            strtotime($tag($open['body'], 'lastBuildDate')) === $newest($open['body']), $get('index.php?go=rss&name=news&cat=6')['code'],
+            preg_match('#<item>|<lastBuildDate>#', $get('index.php?go=rss&name=news&cat=6')['body'])],
+        'copy' => $tag($feed['body'], 'copyright'),
+        'cache' => [str_contains($feed['head']['cache-control'] ?? '', 'private'), $etag !== '', $same['code'], $same['body'], $stale['code'],
+            ($get('index.php?go=rss&name=news', 'anna')['head']['etag'] ?? '') !== $etag],
+        'closed' => [$get('index.php?go=rss&name=news&cat=2')['code'], $club['code'], $get('index.php?go=rss&name=news&cat=99')['code'],
+            $get('index.php?go=rss&name=docs&cat=1')['code']],
+        'site' => (require $work.'/config/global.php')['sitename'],
+    ];
     $tok = getRouteToken(getRouteReply('anna', 'GET', 'index.php?name=help&op=add')['body'], 'name="action"');
     $made = getRouteReply('anna', 'POST', 'index.php?name=help&op=add', ['title' => 'Seo request', 'intro' => 'Seo request intro', 'body' => 'Seo request body', 'cid' => '3',
         'action' => 'submit', 'token' => $tok]);
@@ -2075,13 +2097,19 @@ function getRouteSeo(PDO $pdo, string $work): array {
 
 # The setup of the head run before the server starts: docs is the faq type of the header marquee, a guest may submit news, anna keeps one favorite
 # A mixed Node block of home materials on the feeds page has nothing to list, because no type has the home feature
+# News offers favorites and a feed, anna was last here on the second of January, and one news waits for its publication in 2030
 function addRouteHeadTypes(PDO $pdo, string $work): void {
     $pre = RPREF.'_';
     $data = require $work.'/config/node.php';
     $data['node']['types']['docs']['view'] = ['mode' => 'faq'];
     $data['node']['types']['news']['workflow'] = ['access' => 'all'];
+    $data['node']['types']['news']['features']['favorites'] = true;
+    $data['node']['types']['news']['integrations']['rss'] = true;
     setRouteFile($work.'/config/node.php', $data);
     $pdo->exec('INSERT INTO '.$pre.'favorites (uid, fid, modul, time) VALUES (2, 101, \'news\', NOW())');
+    $pdo->exec('UPDATE '.$pre.'users SET lastvis = \'2026-01-02 12:00:00\' WHERE id = 2');
+    $pdo->exec('INSERT INTO '.$pre.'nodes (id, tid, cid, uid, aname, ip, title, intro, body, field, status, published)'
+        .' VALUES (106, 1, 1, 2, \'\', \'127.0.0.1\', \'Zeta later\', \'intro of 106\', \'Body of zeta\', \'\', 2, \'2030-01-01 00:00:00\')');
     $pdo->exec('INSERT INTO '.$pre.'blocks (id, bkey, title, content, url, bpos, weight, status, refresh, time, lang, bfile, view, expire, action, which, param)'
         .' VALUES (70, \'\', \'Empty head block\', \'\', \'\', \'c\', 1, 1, 0, \'\', \'\', \'node.php\', 0, \'0\', \'d\', \'rss\', \'{"type":"","mode":"home","limit":5}\')');
 }
@@ -2132,6 +2160,51 @@ function getRouteHead(): array {
     $part = $get('index.php?go=1&op=getFavoriteList&part=shelves', 'anna');
     $out['favorites'] = [str_contains($shelf, 'op=getFavoriteList'), str_contains($shelf, 'getFavoriteList&amp;part=shelves&amp;token='), $part['code'],
         str_contains($part['body'], 'id="favshelves"'), trim($get('index.php?go=1&op=getFavoriteList&part=shelves')['body'])];
+    return $out;
+}
+
+# The header of the news list: the sorts, the direction, the reset and the feed of a guest, the personal links of anna and the filters each link keeps
+# Then the counts of the header by reader and the one cache file of the type: its entries, its moment of the next publication and its drop by a write
+# The previous visit of anna stays the one her session found, though her first answer moves the column; a guest's personal filter narrows nothing
+function getRouteHeadBar(PDO $pdo, string $work): array {
+    $get = fn(string $path, string $who = ''): array => getRouteReply($who, 'GET', $path);
+    $bar = fn(string $html): string => preg_match('#<h1 class="sl-title">.*?</nav>#s', $html, $hit) ? html_entity_decode($hit[0]) : '';
+    $hrefs = fn(string $html): array => preg_match_all('#href="([^"]*)"#', $bar($html), $hit) ? $hit[1] : [];
+    $chips = fn(string $html): array => preg_match_all('#sl-chip-(?:neutral|info)"(?: title="[^"]*")?>([^<]*)<#', $bar($html), $hit) ? $hit[1] : [];
+    $file = $work.'/cache/data/'.sha1('nodecount|news').'.json';
+    $guest = $get('index.php?name=news');
+    $anna = $get('index.php?name=news', 'anna');
+    $keep = json_decode((string)file_get_contents($file), true);
+    $out = ['guest' => [$hrefs($guest['body']), $chips($guest['body'])], 'anna' => [$hrefs($anna['body']), $chips($anna['body'])]];
+    $new = $get('index.php?name=news&new=1', 'anna');
+    $fav = $get('index.php?name=news&fav=1', 'anna');
+    $both = $get('index.php?name=news&new=1&fav=1', 'anna');
+    $has = fn(array $page): array => array_values(array_filter([101, 102, 103, 105], fn(int $v): bool => str_contains($page['body'], 'id="node-'.$v.'"')));
+    $out['new'] = [$hrefs($new['body']), $chips($new['body']), $has($new)];
+    $out['fav'] = [$chips($fav['body']), $has($fav), $both['code'], $has($both)];
+    $moved = $pdo->query('SELECT lastvis FROM '.RPREF.'_users WHERE id = 2')->fetchColumn();
+    $out['visit'] = [strcmp((string)$moved, '2026-06-01') > 0, $chips($get('index.php?name=news', 'anna')['body'])];
+    $back = getRouteReply('anna', 'GET', 'index.php?name=news&new=1&order=published&dir=desc');
+    $sort = $get('index.php?name=news&fav=1&order=title&dir=asc', 'anna');
+    $out['keep'] = [$back['code'], $back['head']['location'] ?? '', $hrefs($sort['body'])];
+    $loose = $get('index.php?name=news&new=1&fav=1');
+    $out['loose'] = [$loose['code'], str_contains($loose['body'], 'content="noindex, follow"'), $chips($loose['body']), str_contains($bar($loose['body']), 'new=1')];
+    $out['bad'] = [$get('index.php?name=docs&fav=1', 'anna')['code'], $get('index.php?name=news&new=2')['code'], $get('index.php?name=news&fav=yes', 'anna')['code']];
+    $out['feed'] = array_values(array_filter($hrefs($get('index.php?name=news&cat=1&let=A')['body']), fn(string $v): bool => str_contains($v, 'go=rss')));
+    $letter = fn(string $html, string $char): bool => str_contains($html, 'index.php?name=news&amp;let='.$char.'"');
+    $tile = fn(string $html, string $name): string => preg_match('#sl-cat-name">'.$name.'</span><span class="sl-chip sl-chip-info">(\d+)<#', $html, $hit) ? $hit[1] : '';
+    $out['counts'] = [[$letter($guest['body'], 'A'), $letter($guest['body'], 'M'), $letter($guest['body'], 'Z')], [$letter($anna['body'], 'M'), $letter($anna['body'], 'Z')],
+        [$tile($guest['body'], 'Open'), $tile($anna['body'], 'Open'), $tile($anna['body'], 'Members')]];
+    $out['cache'] = [array_keys($keep['sets'] ?? []), abs(($keep['until'] ?? 0) - strtotime('2030-01-01 00:00:00')) < 86400, $keep['sets']['c1']['total'] ?? 0,
+        $keep['sets']['c1-2']['total'] ?? 0];
+    $form = $get('index.php?name=news&op=add')['body'];
+    $post = ['title' => 'Bar notice', 'aname' => 'Guest', 'intro' => 'Intro', 'body' => 'Body', 'action' => 'submit', 'token' => getRouteToken($form, 'name="action"')];
+    $sent = getRouteReply('', 'POST', 'index.php?name=news&op=add', $post);
+    $gone = !is_file($file);
+    $get('index.php?name=news');
+    $out['drop'] = [$sent['code'], $gone, is_file($file)];
+    $lang = (string)file_get_contents(BASE_DIR.'/lang/'.(require $work.'/config/global.php')['language'].'.php');
+    $out['numof'] = preg_match("#define\('_NUMOF', *'([^']+)'\)#", $lang, $hit) ? $hit[1] : '?';
     return $out;
 }
 
@@ -2559,7 +2632,7 @@ try {
     } elseif (($argv[2] ?? '') === 'seo') {
         $report['runs']['seo'] = getRouteSeo($rpdo, $rwork);
     } elseif (($argv[2] ?? '') === 'head') {
-        $report['runs']['head'] = getRouteHead();
+        $report['runs']['head'] = ['bar' => getRouteHeadBar($rpdo, $rwork)] + getRouteHead();
     } elseif (($argv[2] ?? '') === 'quick') {
         $report['runs']['quick'] = getRouteQuick($rpdo, $rwork);
     } elseif (($argv[2] ?? '') === 'files') {

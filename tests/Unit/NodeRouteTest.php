@@ -543,6 +543,21 @@ final class NodeRouteTest extends TestCase
         $this->assertSame(['news', 'docs'], $run['data']['feeds'], 'The list of feeds differs from the types with rss');
     }
 
+    # A channel names the site, the type and a readable category, links its list, dates itself by its newest item, answers 304 to its own tag and 404 for a closed category
+    #[Test]
+    public function aFeedNamesItsListAndRevalidates(): void
+    {
+        $run = $this->getMode('seo');
+        $feed = $run['feed'];
+        $site = $feed['site'];
+        $this->assertSame([$site.' — News', $site.' — News — Open', $site.' — News — Members'], $feed['title'], 'The channel title misses the site, the type or the category');
+        $this->assertSame([$run['site'].'/index.php?name=news', $run['site'].'/index.php?name=news&cat=1'], $feed['link'], 'The channel links other than its list');
+        $this->assertSame([true, true, true, 200, 0], $feed['built'], 'lastBuildDate is not the newest item of the channel, or an empty channel carries one');
+        $this->assertSame('Copyright (c) '.$site, $feed['copy'], 'The copyright names other than the site');
+        $this->assertSame([true, true, 304, '', 200, true], $feed['cache'], 'The channel is not revalidated by its tag, or two read sets share a tag');
+        $this->assertSame([404, 200, 404, 404], $feed['closed'], 'A closed, unknown or foreign category gave a channel');
+    }
+
     # The support card of the administration shows every root message beyond the first page and every reply beyond the cap of a branch
     #[Test]
     public function theSupportCardShowsTheWholeCorrespondence(): void
@@ -596,6 +611,44 @@ final class NodeRouteTest extends TestCase
             'The canonical address of the start page names no type');
         $this->assertSame([true, true], $run['letters'], 'A letter drops the category of the list');
         $this->assertSame([false, false], $run['block'], 'An empty Node block shows its title or the problem notice');
+    }
+
+    # The header of a list links its sorts, the other direction, the reset, the feed with the category and the form; every link keeps the filters and the default sort stays clean
+    #[Test]
+    public function theListHeaderLinksItsSortsAndKeepsItsFilters(): void
+    {
+        $bar = $this->getMode('head')['bar'];
+        $list = 'index.php?name=news';
+        $tail = ['index.php?go=rss&name=news', $list.'&op=add'];
+        $this->assertSame([$list, $list.'&order=title&dir=asc', $list.'&order=views&dir=desc', $list.'&order=published&dir=asc', ...$tail], $bar['guest'][0],
+            'The guest header misses a sort, the direction or the feed, or offers a personal filter');
+        $this->assertSame([$list, $list.'&order=title&dir=asc', $list.'&order=views&dir=desc', $list.'&order=published&dir=asc', $list.'&new=1', $list.'&fav=1', ...$tail],
+            $bar['anna'][0], 'The header of a signed-in visitor misses a personal filter');
+        $this->assertSame([$list.'&new=1', $list.'&new=1&order=title&dir=asc', $list.'&new=1&order=views&dir=desc', $list.'&new=1&order=published&dir=asc', $list,
+            $list.'&new=1&fav=1', $list, ...$tail], $bar['new'][0], 'A link of the header drops the filter of the list, or the filter cannot be switched off');
+        $this->assertSame([301, $list.'&new=1', [$list.'&fav=1', $list.'&fav=1&order=title&dir=asc', $list.'&fav=1&order=views&dir=desc', $list.'&fav=1&order=title&dir=desc',
+            $list.'&new=1&fav=1&order=title&dir=asc', $list.'&order=title&dir=asc', $list, ...$tail]], $bar['keep'],
+            'The default sort does not return to the clean address with its filter, or a link loses the chosen sort');
+        $this->assertSame(['index.php?go=rss&name=news&cat=1'], $bar['feed'], 'The feed of the header is not the channel of the category');
+        $this->assertSame([400, 400, 400], $bar['bad'], 'fav on a type without favorites or a personal filter other than 1 passed');
+    }
+
+    # The header counts what its reader reads, kept per readable set until a publication or a write, and the previous visit holds for the session
+    #[Test]
+    public function theHeaderCountsFollowTheReaderAndTheirCache(): void
+    {
+        $bar = $this->getMode('head')['bar'];
+        $of = fn(int $one, int $two): string => sprintf($bar['numof'], $one, $two);
+        $this->assertSame(['3'], $bar['guest'][1], 'The guest count is not the readable total');
+        $this->assertSame(['4', '2', '1'], $bar['anna'][1], 'The total, the news since the last visit or the favorites of anna are miscounted');
+        $this->assertSame([[$of(2, 4), '2', '1'], [103, 105]], array_slice($bar['new'], 1), 'The list since the last visit is not the news after it');
+        $this->assertSame([[$of(1, 4), '2', '1'], [101], 200, []], $bar['fav'], 'The favorites list is not the favorite of anna, or both filters do not intersect');
+        $this->assertSame([true, ['4', '2', '1']], $bar['visit'], 'The previous visit moved with the column within the session');
+        $this->assertSame([200, true, ['3'], false], $bar['loose'], 'A personal filter of a guest narrowed the list, was indexed or stayed in a link');
+        $this->assertSame([[true, false, false], [true, false], ['1', '1', '1']], $bar['counts'],
+            'A letter without readable materials is linked, or a category tile does not carry its count');
+        $this->assertSame([['c1', 'c1-2'], true, 3, 4], $bar['cache'], 'The counts are not kept per readable set until the next publication');
+        $this->assertSame([303, true, true], $bar['drop'], 'A written material did not drop the counts of its type');
     }
 
     # The favorites shelf reads without a token in its address, answers the member and nothing to a guest

@@ -2074,7 +2074,7 @@ Reader refusals map through `getNodeStatus()` (`NOTFOUND` 404, `DENIED` 403, `IN
   so `num > pages` answers 404 before the reader sets the page.
 - Without `order`/`dir` the list uses `list.order`/`list.dir`. With only `order`, the direction is the type default
   for the default key, `asc` for `title`, `desc` otherwise. `let` goes to `NodeQuery::setNodeLetter()`; the letter
-  navigation keeps the category (`getLetterNavi($mod, $cat)`).
+  navigation keeps the category and links only the letters with materials (`getLetterNavi($mod, $cat, $nums)`).
 - The type intro is shown only on the first page without category or letter. A `support` list holds only the
   visitor's own requests.
 - `view` reads through `NodeQuery::getNode()`; the id must belong to the route type. Related materials (at most 500)
@@ -2268,7 +2268,7 @@ back).
 
 | Template | Called by | Keys |
 |---|---|---|
-| `partials/node/list.html` | `setNodeList()` | `navi_html`, `intro`, `cats_html`, `letters_html`, `items_html`, `pager_html`, `empty_alert` |
+| `partials/node/list.html` | `setNodeList()` | `head_html`, `intro`, `cats_html`, `letters_html`, `items_html`, `pager_html`, `empty_alert` |
 | `fragments/node/card.html` in a list | `setNodeList()` | NodeView (`list`) + view labels + material facts + `cover`, `download` (first resource of a `download`- or `link`-mode role or `[]`), `ext` |
 | `fragments/node/card.html` as related card | `setNodeView()` | NodeView (`card` of a target) + view labels, `is_views = false`, `cover = ''` |
 | `partials/node/view.html` | `getNodeViewHtml()` | NodeView (`view`) + view labels + material facts + `fields_html`, `assets_html`, `rels_html`, `rels_label`, `poll_html`, `tree_html`, `share_url`, `share_title`, `user_html`, `ext` |

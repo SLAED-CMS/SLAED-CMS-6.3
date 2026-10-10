@@ -1702,6 +1702,7 @@ function deleteFavorite(): string {
 # A registered Node type with the rss integration is read through the shared reader and prepared by the shared view preparer, at most one list page of the type
 # A name without a feed is not found; no name takes the start module when it has a feed, else the first feed of the site
 # A reader resolves no address of a description against the site, so every relative link and image source of a description is made absolute
+# A closed category is not found; the tag of the head and the items is taken before rendering and alone answers 304, a date misses an item that left the channel
 function getRssChannel(): string {
     global $conf, $prs, $fld;
     $feeds = getRssFeeds();
@@ -1709,8 +1710,6 @@ function getRssChannel(): string {
     $hmod = trim(explode(',', $conf['module'])[0]);
     if ($name === '') $name = isset($feeds[$hmod]) ? $hmod : (string)array_key_first($feeds);
     if (!isset($feeds[$name])) setError(404);
-    header_remove('X-Content-Type-Options');
-    header('Content-Type: application/rss+xml; charset='._CHARSET);
     $base = rtrim($conf['homeurl'], '/').'/';
     $full = static fn(string $html): string => preg_replace('#(\s(?:href|src)=")(?![a-z][a-z0-9+.-]*:|//|\#)/?#i', '${1}'.$base, $html) ?? $html;
     $cat = getVar('post', 'cat', 'num', 0) ?: getVar('get', 'cat', 'num', 0);
@@ -1719,27 +1718,38 @@ function getRssChannel(): string {
     $id = getVar('post', 'id', 'num', 0) ?: getVar('get', 'id', 'num', 0);
     $self = htmlspecialchars($conf['homeurl'].'/index.php?go=rss&name='.$name.(($cat) ? '&cat='.$cat : '').(($id) ? '&id='.$id : '').'&num='.$num);
     $type = getNodeTypeMap()[$name];
+    $cats = getCategoryMap($name);
     $nodes = [];
     $size = min($num, $type->settings['list']['limit'], intval($conf['node']['limits']['maxlist'] ?? 0));
     try {
         $query = getNodeReader($type)->setNodeType($type)->setNodePage(1, max(1, $size));
-        if ($cat && $type->settings['features']['categories']) $query->setNodeCategory($cat);
+        if ($cat && (!isset($cats[$cat]) || !$query->checkNodeCategory($type, $cat))) setError(404);
+        if ($cat) $query->setNodeCategory($cat);
         $query->setNodeOrder('published', 'desc');
         $nodes = $query->getNodeList();
     } catch (NodeException $err) {
         Logger::addSite('error', 'RSS: a Node type cannot be read', ['type' => $name, 'code' => $err->getCode()]);
     }
+    $title = implode(' — ', array_filter([$conf['sitename'], $feeds[$name], $cat ? html_entity_decode(getConst($cats[$cat]['title']), ENT_QUOTES | ENT_HTML5, 'UTF-8') : '']));
+    $last = $nodes ? max(array_map(fn(Node $v): int => strtotime((string)$v->pubdate) ?: 0, $nodes)) : 0;
+    $mtime = $nodes ? max($last, ...array_map(fn(Node $v): int => strtotime($v->updated) ?: 0, $nodes)) : 0;
+    $sum = [$title, $conf['slogan'], $conf['version'], _LOCALE, $num];
+    foreach ($nodes as $node) $sum[] = $node->id.'|'.$node->updated.'|'.$node->pubdate;
+    $etag = '"'.substr(sha1(implode("\n", $sum)), 0, 32).'"';
+    Cache::setHeaders('private', 'application/rss+xml; charset='._CHARSET, $mtime, $etag);
+    header_remove('X-Content-Type-Options');
+    if (Cache::checkNotModified(0, $etag)) return '';
     $content = '<?xml version="1.0" encoding="'._CHARSET."\"?>\n"
     ."<rss version=\"2.0\" xmlns:atom=\"http://www.w3.org/2005/Atom\" xmlns:dc=\"http://purl.org/dc/elements/1.1/\">\n"
     ."<channel>\n"
-    .'<title>'.htmlspecialchars($conf['sitename'])."</title>\n"
-    .'<link>'.htmlspecialchars($conf['homeurl'])."</link>\n"
+    .'<title>'.htmlspecialchars($title)."</title>\n"
+    .'<link>'.htmlspecialchars(getPublicUrl(['name' => $name] + ($cat ? ['cat' => $cat] : [])))."</link>\n"
     .'<atom:link href="'.$self."\" rel=\"self\" type=\"application/rss+xml\"/>\n"
     .'<description>'.htmlspecialchars($conf['slogan'])."</description>\n"
     .'<generator>SLAED CMS '.$conf['version']."</generator>\n"
-    .'<copyright>Copyright (c) SLAED CMS '.$conf['version']."</copyright>\n"
+    .'<copyright>Copyright (c) '.htmlspecialchars($conf['sitename'])."</copyright>\n"
     .'<language>'.htmlspecialchars(substr(_LOCALE, 0, 2))."</language>\n"
-    .'<lastBuildDate>'.date('D, j M Y H:i:s O')."</lastBuildDate>\n\n";
+    .($last ? '<lastBuildDate>'.date('D, j M Y H:i:s O', $last)."</lastBuildDate>\n" : '')."\n";
     foreach ($nodes as $node) {
         $view = (new NodeView($prs, $fld))->getNodeView($type, $node, 'card');
         $rurl = htmlspecialchars($conf['homeurl'].'/'.$view['href']);

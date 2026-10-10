@@ -2,18 +2,15 @@
   href="{% if href %}{{ href }}{% else %}#{% endif %}"
   title="{{ title }}"
 
-  {% if class or is_admin_language_link or rel or toggle_onclick or is_account_button or is_num_anchor or is_button_blue or is_button_green or is_footer_button or is_votes or is_comments or is_top_hidden or isdebug or isslaed or is_mini %}
+  {% if class or rel or is_account_button or is_num_anchor or is_button_blue or is_footer_button or is_votes or is_comments or is_top_hidden or isdebug or isslaed or is_mini %}
   class="
     {{ class }}
     {% if is_mini %} sl-dial-item sl-but-mini{% endif %}
-    {% if is_admin_language_link %} sl-admin-language-link{% endif %}
     {% if rel %} sl-tabs-link{% endif %}
     {% if rel and is_active %} sl-is-active{% endif %}
-    {% if toggle_onclick %} sl-plus{% endif %}
     {% if is_account_button %} sl-but{% endif %}
     {% if is_num_anchor %} sl-pnum{% endif %}
     {% if is_button_blue %} sl-but-blue{% endif %}
-    {% if is_button_green %} sl-but-green{% endif %}
     {% if is_footer_button %} sl-but-foot{% endif %}
     {% if is_votes %} sl-votes{% endif %}
     {% if is_comments %} sl-coms{% endif %}
@@ -34,8 +31,6 @@
   {% endif %}
 
   {% if link_attr %}{{{ link_attr }}}{% endif %}
-  {% if toggle_onclick %}OnClick="{{ toggle_onclick }}"{% endif %}
-  {% if is_upper %}OnClick="Upper('html, body', 600); return false;"{% endif %}
   {% if confirm_text %}data-sl-confirm="{{ confirm_text }}"{% endif %}
   {% if onclick_attr %}{{{ onclick_attr }}}{% endif %}
 
@@ -47,13 +42,9 @@
     {% if hx_include %}hx-include="{{ hx_include }}"{% endif %}
   {% endif %}
 
-  {% if target_attr %}
-    {{{ target_attr }}}
-  {% elseif is_blank %}
+  {% if is_blank %}
     target="_blank"
     rel="noopener noreferrer"
-  {% elseif rel_attr %}
-    rel="{{ rel_attr }}"
   {% endif %}
 >
   {% if img_src %}
@@ -61,18 +52,11 @@
       src="{{ img_src }}"
       alt="{{ img_alt }}"
       title="{{ title }}"
-      {% if is_menu_list_image %}
-        class="sl-menu-list-image"
-      {% elseif img_class %}
-        class="{{ img_class }}"
-      {% endif %}
     >
   {% endif %}
   {% if icon_name %}<i class="bi bi-{{ icon_name }}"></i>{% endif %}
   {% if label_html %}{{{ label_html }}}{% endif %}
-  {% if label_span %}
-    <span{% if label_span_class %} class="{{ label_span_class }}"{% endif %}>{{ label }}</span>
-  {% elseif is_label_strong %}
+  {% if is_label_strong %}
     <b>{{ label }}</b>
   {% elseif label %}
     {{ label }}

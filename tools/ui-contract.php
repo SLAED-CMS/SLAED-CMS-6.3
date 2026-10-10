@@ -215,7 +215,7 @@ return [
         'pmf-head', 'pmf-mate', 'pmf-meta', 'pmf-pane', 'pmf-slot', 'pmf-text', 'pmf-who',
         'pnum', 'pnum-arrow', 'popover', 'pres', 'pres-panel', 'pres-ground', 'pres-inset', 'pres-core', 'pres-frame', 'pres-muted', 'pres-link', 'pres-good', 'pres-warn',
         'preview', 'profile-ava', 'profile-dot', 'progress', 'proof', 'pulse', 'qr', 'quote', 'radio',
-        'rail', 'rank', 'ratings', 'ring', 'row', 'scroll', 'search', 'search-filter', 'search-order', 'search-sort', 'select', 'set', 'sep',
+        'rail', 'rank', 'ratings', 'ring', 'row', 'scroll', 'search', 'search-filter', 'search-order', 'search-sort', 'seg', 'seg-knob', 'select', 'set', 'sep',
         'session', 'setup', 'setup-seal', 'shot', 'shot-side', 'site', 'site-img', 'skel', 'statx',
         'skel-row', 'skel-tile', 'slide', 'slide-cont', 'solid', 'solid-bad', 'solid-good', 'solid-link', 'solid-warn',
         'sort', 'spark', 'spin', 'sublist', 'sublist-two', 'switch', 'switch-knob',
@@ -235,6 +235,8 @@ return [
         '--sl-d-float-top' => 'floating panel viewport top, plugins/system/slaed.js',
         '--sl-d-hint-x' => 'editor variable list left inside its card, at the caret or under the capsule button, plugins/system/editor.js',
         '--sl-d-hint-y' => 'editor variable list top inside its card, below the caret line or at the top of the card, plugins/system/editor.js',
+        '--sl-d-knob-w' => 'width of the chosen cell of a segmented switch, which its plate takes, plugins/system/slaed.js',
+        '--sl-d-knob-x' => 'left of the chosen cell of a segmented switch inside its track, where its plate travels, plugins/system/slaed.js',
         '--sl-d-level' => 'profile completion percentage, templates/lite/partials/account-home.html and account-profile.html',
         '--sl-d-pill-x' => 'editor capsule horizontal offset the grip moved it by, plugins/system/editor.js',
         '--sl-d-pill-y' => 'editor capsule vertical offset the grip moved it by, plugins/system/editor.js',
@@ -788,9 +790,9 @@ return [
             .'with an id, a title and at most one of two classes. The row form differs the same way: the panel includes its own row fragment, the site writes the '
             .'row inline',
         'partials/foot-controls.html' =>
-            'the panel foot carries the two links the site has no producer for - the brand link and the debug switch - and prints the generation time before the '
-            .'licence, where the site prints it after. One producer feeds both and hands every key to each, so the order and the two extra links are what each theme '
-            .'chose to draw',
+            'the panel foot carries three links the site foot does not draw - the brand link, the debug switch and the link to the top, which the site never showed '
+            .'- and prints the generation time before the licence, where the site prints it after. One producer feeds both and hands every key to each, so the order '
+            .'and the three extra links are what each theme chose to draw',
         'partials/preview.html' =>
             'the panel draws its preview inside the sl-box card every panel block sits in, and the site has no such card at all - sl-box appears nowhere in its '
             .'CSS. Everything inside the wrapper is already byte-identical, so this entry is the wrapper and nothing else',

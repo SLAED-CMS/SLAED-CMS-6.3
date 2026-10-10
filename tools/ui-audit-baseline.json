@@ -1,5 +1,5 @@
 {
-    "generated": "2026-10-09T12:15:31Z",
+    "generated": "2026-10-09T19:25:30Z",
     "themes": {
         "admin": {
             "count": 0,
@@ -7,7 +7,7 @@
             "dup": 0,
             "names": 0,
             "dead": 0,
-            "single": 159,
+            "single": 161,
             "alias": 0,
             "unsat": 0,
             "unmet": 0,
@@ -15,7 +15,7 @@
             "clash": 0,
             "classes": 0,
             "important": 21,
-            "tokens": 331,
+            "tokens": 339,
             "contrast": 0
         },
         "lite": {
@@ -24,7 +24,7 @@
             "dup": 0,
             "names": 0,
             "dead": 0,
-            "single": 195,
+            "single": 199,
             "alias": 0,
             "unsat": 0,
             "unmet": 0,
@@ -32,7 +32,7 @@
             "clash": 0,
             "classes": 0,
             "important": 13,
-            "tokens": 435,
+            "tokens": 443,
             "contrast": 0
         }
     },
@@ -272,6 +272,14 @@
             "--sl-search-min-width",
             "--sl-search-order-width",
             "--sl-search-sort-width",
+            "--sl-seg-bg",
+            "--sl-seg-height",
+            "--sl-seg-knob-bg",
+            "--sl-seg-knob-shadow",
+            "--sl-seg-knob-text",
+            "--sl-seg-pad-x",
+            "--sl-seg-pad-y",
+            "--sl-seg-text",
             "--sl-select-height",
             "--sl-select-width",
             "--sl-set-width",
@@ -712,6 +720,14 @@
             "--sl-season-spring",
             "--sl-season-summer",
             "--sl-season-winter",
+            "--sl-seg-bg",
+            "--sl-seg-height",
+            "--sl-seg-knob-bg",
+            "--sl-seg-knob-shadow",
+            "--sl-seg-knob-text",
+            "--sl-seg-pad-x",
+            "--sl-seg-pad-y",
+            "--sl-seg-text",
             "--sl-sep-height",
             "--sl-session-gap",
             "--sl-shadow-float",

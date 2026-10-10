@@ -9,6 +9,8 @@
   <link rel="stylesheet" href="../templates/lite/assets/css/theme.css">
   <!-- The stand is served without Cache-Control; its sheet and script are stamped so an edit is seen at once -->
   <script>document.write('<link rel="stylesheet" href="assets/demo.css?v=' + Date.now() + '">');</script>
+  <script src="../plugins/system/global-func.js"></script>
+  <script src="../plugins/system/slaed.js"></script>
   <style>
     .v-ico { width: var(--sl-btn-height); height: var(--sl-btn-height); }
     .v-ico .bi { font-size: var(--sl-size-icon-xs); }
@@ -23,7 +25,7 @@
     .v8-cats { display: flex; flex-wrap: wrap; gap: var(--sl-space-3); margin-bottom: var(--sl-space-4); }
     .v8-sortrow { display: flex; align-items: center; gap: var(--sl-space-3); max-width: 100%; }
     .v8-slim { position: sticky; top: 0; z-index: var(--sl-z-sticky); display: flex; align-items: center; gap: var(--sl-space-4); height: 0; margin: 0; padding: 0 var(--sl-space-4); overflow: hidden; border-radius: 0 0 var(--sl-radius-3) var(--sl-radius-3); background: var(--sl-bg); opacity: 0; transform: translateY(-100%); transition: opacity var(--sl-time-base) var(--sl-ease-out), transform var(--sl-time-base) var(--sl-ease-out); }
-    .v8[data-stuck] .v8-slim { height: var(--sl-size-tile); margin-bottom: var(--sl-space-5); border-bottom: 1px solid var(--sl-border-subtle); box-shadow: var(--sl-shadow-float); opacity: 1; transform: none; }
+    .v8[data-sl-stuck] .v8-slim { height: var(--sl-size-tile); margin-bottom: var(--sl-space-5); border-bottom: 1px solid var(--sl-border-subtle); box-shadow: var(--sl-shadow-float); opacity: 1; transform: none; }
     .v8-name { font-size: var(--sl-font-h3); font-weight: var(--sl-weight-normal); }
     .v8-scope { color: var(--sl-text-muted); }
     .v8-sort { display: inline-flex; align-items: center; gap: var(--sl-space-2); margin-left: auto; color: var(--sl-text-muted); }
@@ -33,14 +35,14 @@
 </head>
 <body class="sl-summer" id="top">
 <main class="d-page" data-demo-page data-demo-band="Новости">
-<div class="v-nh v8" data-nh data-cat="all" data-sort="published" data-dir="desc" data-nh-sticky>
+<div class="v-nh v8" data-nh data-cat="all" data-sort="published" data-dir="desc" data-sl-sticky>
   <header class="v8-full" aria-label="Раздел «Новости»">
     <div class="v8-top"><h1 class="sl-title">Новости</h1><span class="v8-acts"><a class="sl-but" href="../index.php?name=news&amp;op=add" title="Предложить новость"><i class="bi bi-plus-lg" aria-hidden="true"></i>Добавить</a><a class="sl-but-mini v-ico" href="../index.php?go=rss&amp;name=news" title="RSS раздела" aria-label="RSS раздела"><i class="bi bi-rss" aria-hidden="true"></i></a><a class="sl-but-mini v-ico" href="../index.php?name=search" title="Поиск по разделу" aria-label="Поиск по разделу"><i class="bi bi-search" aria-hidden="true"></i></a></span></div>
     <p class="v8-facts"><b data-nh-count>97</b> материалов · 3 категории · последняя публикация 28.11.2025</p>
     <nav class="v8-cats d-nh-scroll" aria-label="Категории"><a class="sl-chip d-nh-cat sl-cat-tone-0" href="../index.php?name=news" data-nh-cat="all" data-name="Все материалы" data-count="97" title="Все материалы"><i class="bi bi-collection" aria-hidden="true"></i>Все<span class="d-nh-num">97</span></a><a class="sl-chip d-nh-cat sl-cat-tone-1" href="../index.php?name=news&amp;cat=2" data-nh-cat="2" data-name="Наши новости" data-count="69" title="Наши новости"><i class="bi bi-newspaper" aria-hidden="true"></i>Наши новости<span class="d-nh-num">69</span></a><a class="sl-chip d-nh-cat sl-cat-tone-2" href="../index.php?name=news&amp;cat=1" data-nh-cat="1" data-name="Интернет" data-count="19" title="Интернет"><i class="bi bi-globe" aria-hidden="true"></i>Интернет<span class="d-nh-num">19</span></a><a class="sl-chip d-nh-cat sl-cat-tone-3" href="../index.php?name=news&amp;cat=3" data-nh-cat="3" data-name="Программы" data-count="9" title="Программы"><i class="bi bi-pc-display-horizontal" aria-hidden="true"></i>Программы<span class="d-nh-num">9</span></a></nav>
     <div class="v8-sortrow"><div class="d-nh-seg d-nh-scroll" role="group" aria-label="Сортировка"><button type="button" class="d-nh-opt" data-nh-sort="published" data-name="Новые" data-dir="desc"><i class="bi bi-clock-history" aria-hidden="true"></i>Новые</button><button type="button" class="d-nh-opt" data-nh-sort="rating" data-name="Лучшие" data-dir="desc"><i class="bi bi-star" aria-hidden="true"></i>Лучшие</button><button type="button" class="d-nh-opt" data-nh-sort="views" data-name="Популярные" data-dir="desc"><i class="bi bi-eye" aria-hidden="true"></i>Популярные</button><button type="button" class="d-nh-opt" data-nh-sort="updated" data-name="Обновлённые" data-dir="desc"><i class="bi bi-arrow-repeat" aria-hidden="true"></i>Обновлённые</button><button type="button" class="d-nh-opt" data-nh-sort="title" data-name="По названию" data-dir="asc"><i class="bi bi-sort-alpha-down" aria-hidden="true"></i>По названию</button></div><button type="button" class="d-nh-dir" data-nh-dir title="По убыванию" aria-label="По убыванию"><i class="bi bi-sort-down d-nh-down" aria-hidden="true"></i><i class="bi bi-sort-up d-nh-up" aria-hidden="true"></i></button></div>
   </header>
-  <span data-nh-mark></span>
+  <span data-sl-sticky-mark></span>
   <div class="v8-slim" aria-label="Раздел «Новости», кратко">
     <b class="sl-font v8-name">Новости</b>
     <span class="sl-chip v8-scope"><i class="bi bi-folder" aria-hidden="true"></i><span data-nh-scope>Все материалы</span></span>
