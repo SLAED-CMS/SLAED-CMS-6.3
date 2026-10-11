@@ -57,8 +57,6 @@ function getCommentView(array $val, int $numb, string $token): string {
     $avatar = (!empty($anam)) ? getUserAvatarUrl(['avatar' => (string)($usr['avatar'] ?? '')]) : getUserAvatarUrl([], $gone);
     $agnam = (string)($usr['gname'] ?? '');
     $trank = (!empty($agnam)) ? _GROUP.': '.$agnam : _RANK;
-    $rimg = (!empty($usr['grank'])) ? getThemeImagePath('ranks/'.$usr['grank']) : '';
-    $rlink = ($rimg && file_exists(PUBLIC_DIR.'/'.$rimg)) ? $tpl->getHtmlFrag('image', ['src' => $rimg, 'alt' => $trank, 'title' => $trank]) : '';
     $rate = $auid ? getRatingAsync(0, $auid, 'account', $usr['votes'] ?? 0, $usr['tvotes'] ?? 0, $cmid, 1) : '';
     $utip = getUserTip(
         $agnam,
@@ -124,7 +122,7 @@ function getCommentView(array $val, int $numb, string $token): string {
             'is_avatar' => true,
         ]),
         'rank' => (string)($usr['rank'] ?? ''),
-        'rank_link' => $rlink,
+        'rank_html' => getRankView((string)($usr['grank'] ?? ''), $trank),
         'user_rate' => $rate,
         'text' => $text,
         'sig' => $sig,

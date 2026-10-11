@@ -4863,6 +4863,25 @@ function getCategoryIcon(string $img): string {
     return ($img !== '' && preg_match('/^[a-z0-9-]+$/', $img)) ? $tpl->getHtmlFrag('bootstrap-icon', ['icon_name' => $img]) : '';
 }
 
+# Split a stored group rank icon:lit:total:#rrggbb into its parts, empty for anything else, an old picture name included
+function getRankData(string $rank): array {
+    if (!preg_match('/^([a-z0-9-]+):(\d{1,2}):(\d{1,2}):(#[0-9a-f]{6})$/', $rank, $out)) return [];
+    $lit = intval($out[2]);
+    $total = intval($out[3]);
+    if ($total < 1 || $total > 10 || $lit > $total) return [];
+    return ['icon' => $out[1], 'lit' => $lit, 'total' => $total, 'color' => $out[4]];
+}
+
+# Render a group rank as its row of marks through the theme fragment; the title is the accessible name, empty when the value is no rank
+function getRankView(string $rank, string $title): string {
+    global $tpl;
+    $data = getRankData($rank);
+    if (!$data) return '';
+    $marks = [];
+    for ($i = 1; $i <= $data['total']; $i++) $marks[] = ['icon_name' => $data['icon'], 'is_lit' => $i <= $data['lit']];
+    return $tpl->getHtmlFrag('rank', ['title' => $title, 'color' => $data['color'], 'marks' => $marks]);
+}
+
 # Format select RSS
 function rss_select(): string {
     global $conf, $tpl;

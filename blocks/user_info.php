@@ -53,7 +53,6 @@ if (is_user()) {
         if ($gname === '' && $points) $gname = $rank;
     }
     $gcolor = ($gcolor && preg_match('/^#[0-9a-f]{6}$/i', $gcolor)) ? $gcolor : '';
-    $rankurl = ($grank && file_exists(PUBLIC_DIR.'/'.getThemeImagePath('ranks/'.$grank))) ? getThemeImagePath('ranks/'.$grank) : '';
     $level = ($pnt->active && $points) ? (($ngpts > 0) ? min(99, intval(floor($points / $ngpts * 100))) : 100) : (($grp) ? 100 : 0);
     $data = [
         'is_user' => true,
@@ -63,8 +62,7 @@ if (is_user()) {
         'has_meta' => ($gname !== '' || ($pnt->active && $points)),
         'group_name' => $gname,
         'group_color' => $gcolor,
-        'rank_url' => $rankurl,
-        'rank_alt' => ($gname !== '') ? _GROUP.': '.$gname : _RANK,
+        'rank_html' => getRankView($grank, ($gname !== '') ? _GROUP.': '.$gname : _RANK),
         'points_label' => ($pnt->active && $points) ? _POINTS : '',
         'points_count' => number_format($points, 0, '', ' '),
         'ngroup_pct' => $level,

@@ -1833,4 +1833,25 @@ CALL movenet('{prefix}_users', '{prefix}_user_oauth');
 
 DROP PROCEDURE IF EXISTS movenet;
 
+# _groups.rank: a picture of the theme becomes the icon rank icon:lit:total:#rrggbb in tones darkened to 3:1 on both surfaces
+# Only a value ending in a picture extension changes, so a second run changes nothing; a site's own picture keeps no lit mark
+UPDATE `{prefix}_groups` SET `rank` = CASE `rank`
+    WHEN 'rank_0.png' THEN 'star-fill:0:5:#8297a2'
+    WHEN 'rank_1.png' THEN 'star-fill:1:5:#8297a2'
+    WHEN 'rank_2.png' THEN 'star-fill:2:5:#8297a2'
+    WHEN 'rank_3.png' THEN 'star-fill:3:5:#8297a2'
+    WHEN 'rank_4.png' THEN 'star-fill:4:5:#8297a2'
+    WHEN 'rank_5.png' THEN 'star-fill:5:5:#8297a2'
+    WHEN 'admin.png' THEN 'star-fill:5:5:#c68649'
+    WHEN 'moderator.png' THEN 'star-fill:5:5:#b0904d'
+    WHEN 'developer.png' THEN 'star-fill:5:5:#629abf'
+    WHEN 'client.png' THEN 'record-circle-fill:5:5:#629abf'
+    WHEN 'hosting.png' THEN 'gear-fill:5:5:#629abf'
+    WHEN 'partner_silver.png' THEN 'gear-fill:5:5:#8297a2'
+    WHEN 'partner_bronze.png' THEN 'sun-fill:5:5:#c68649'
+    WHEN 'partner_gold.png' THEN 'sun-fill:5:5:#b0904d'
+    ELSE CONCAT('star-fill:0:5:', IF(`color` REGEXP '^#[0-9a-f]{6}$', LOWER(`color`), '#8297a2'))
+END
+WHERE `rank` REGEXP '[.](png|gif|jpe?g|webp|svg)$';
+
 SET SESSION sql_mode = @SLAED_MODE;

@@ -8,7 +8,7 @@ if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 
 
 function groups(): void {
-    global $db, $afile, $conf, $tpl;
+    global $db, $afile, $tpl;
     setHead();
     $cont = getTplAdminTabs(['ops' => ['name=groups', 'name=groups&op=add', 'name=groups&op=points', 'name=groups&op=info'], 'tabs' => [_HOME, _ADD, _POINTS, _MANUAL]]);
     $result = $db->getSqlQuery('SELECT id, name, intro, points, extra, `rank`, color FROM '.PREFIX_DB.'_groups ORDER BY points, extra');
@@ -52,7 +52,7 @@ function groups(): void {
             $rows .= $tpl->getHtmlFrag('table-row', [
                 'cells_html' => $tpl->getHtmlFrag('table-cells', ['cells' => [
                     ['is_col_id' => true, 'content_html' => (string)$grid],
-                    ['content_html' => $tpl->getHtmlFrag('span', ['img_src' => 'templates/'.$conf['theme'].'/images/ranks/'.$rank, 'img_alt' => _RANK])],
+                    ['content_html' => getRankView((string)$rank, _GROUP.': '.$grname)],
                     [
                         'is_truncate' => true,
                         'title_text' => $grname,

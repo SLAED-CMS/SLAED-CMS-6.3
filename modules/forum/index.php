@@ -707,9 +707,6 @@ function view(): void {
                 $amess = $tpl->getHtmlFrag('link', ['href' => '#'.$fid, 'title' => _MESSAGE.': '.$pos, 'label' => (string)$pos, 'is_card_id' => true]);
                 $rank = (!empty($rank)) ? $rank : '';
                 $trank = (!empty($gname)) ? _GROUP.': '.$gname : _RANK;
-                $rlink = (!empty($grank) && file_exists(PUBLIC_DIR.'/'.getThemeImagePath('ranks/'.$grank)))
-                    ? $tpl->getHtmlFrag('image', ['src' => getThemeImagePath('ranks/'.$grank), 'alt' => $trank, 'title' => $trank])
-                    : '';
                 $rate = (!empty($uid)) ? getRatingAsync(0, $uid, 'account', $votes, $total, $fid, 1) : '';
                 $utip = getUserTip(
                     (string)($gname ?? ''),
@@ -783,7 +780,7 @@ function view(): void {
                     'post_count' => $amess,
                     'avatar' => $avatar,
                     'rank' => $rank,
-                    'rank_link' => $rlink,
+                    'rank_html' => getRankView((string)($grank ?? ''), $trank),
                     'user_rate' => $rate,
                     'text' => $text,
                     'sig' => $sig,

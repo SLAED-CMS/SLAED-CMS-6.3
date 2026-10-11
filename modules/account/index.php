@@ -397,7 +397,6 @@ function view(): void {
             foreach ($rgroup as $pos => $guname) $chips[] = ['name' => $guname, 'tone' => $tones[min($pos, 5)]];
             $tags = ($inter) ? array_values(array_filter(array_map('trim', explode(',', $inter)))) : [];
             $trank = ($gname) ? _GROUP.': '.$gname : (($rgroup) ? _USER_GROUPS.': '.implode(', ', $rgroup) : _RANK);
-            $rankImage = ($grank && file_exists(PUBLIC_DIR.'/'.getThemeImagePath('ranks/'.$grank))) ? getThemeImagePath('ranks/'.$grank) : '';
             $panels = [
                 ['title' => _ACCOUNT, 'icon' => getIconName('profile'), 'rows' => [
                     $mkrow('calendar3', _REG, $regdate),
@@ -507,9 +506,7 @@ function view(): void {
                 'offline_label' => _OFFLINE,
                 'ring' => $ring,
                 'urank' => $rank,
-                'has_rank_image' => !empty($rankImage),
-                'rank_src' => $rankImage,
-                'rank_alt' => $trank,
+                'rank_html' => getRankView((string)$grank, $trank),
                 'has_special_group' => !empty($gname),
                 'sgroup' => $gname,
                 'sgroup_label' => _SPEC_GROUP,

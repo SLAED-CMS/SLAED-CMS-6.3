@@ -10027,6 +10027,24 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   font-weight: var(--sl-weight-bold);
 }
 
+/* The rank of a group: a row of one icon, the lit marks in the colour of the rank and the rest muted, standing as tight as the pictures did */
+.sl-rank {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sl-space-1);
+  color: var(--sl-border-strong);
+  vertical-align: middle;
+}
+
+/* The marks take the size of the place they are printed in; the panel needs this against its fixed icon size, the site carries it to read alike */
+.sl-rank .bi {
+  font-size: inherit;
+}
+
+.sl-rank .sl-is-active {
+  color: var(--sl-d-rank);
+}
+
 .sl-profile-rank-img {
   display: block;
   margin: var(--sl-space-3) auto 0;
