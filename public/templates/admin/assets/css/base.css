@@ -383,11 +383,18 @@
   --sl-form-width: 545px;
   --sl-form-label-width: 160px;
   --sl-graph-height: 285px;
+  /* A painted group name keeps the hue of its group, taken from its parent, and the lightness its scheme reads: 4.5:1 for any stored colour */
+  --sl-group-text: light-dark(oklch(from currentColor min(l, 0.5) c h), oklch(from currentColor max(l, 0.7) c h));
   --sl-header-height: 72px;
   /* The module tile paints its border and its ground from its own colour, which is what makes one rule serve four tones */
   --sl-ico-bg: color-mix(in srgb, currentColor 10%, var(--sl-bg));
   --sl-ico-border: color-mix(in srgb, currentColor 26%, var(--sl-border));
   --sl-item-height: 38px;
+  /* The ladder of the groups: its rail, the ring of a node, the share bar and how much of the group colour the bar carries */
+  --sl-ladder-width: 2px;
+  --sl-ladder-ring: 3px;
+  --sl-ladder-bar-height: 6px;
+  --sl-ladder-bar-mix: 70%;
   --sl-lang-shadow: inset 1px 0 0 light-dark(rgba(255, 255, 255, 0.75), rgba(255, 255, 255, 0.05));
   --sl-led-width: 12px;
   --sl-led-height: 12px;
@@ -478,6 +485,9 @@
   --sl-toolbar-min-height: 42px;
   --sl-toolbar-row-height: 34px;
   --sl-tree-width: 22px;
+  /* The own-colour swatch: a hue wheel with the chosen value in its eye */
+  --sl-wheel-bg: conic-gradient(#e5484d, #ffd170, #26d927, #81cafb, #2e8fff, #8800ff, #e5484d);
+  --sl-wheel-eye-width: 12px;
   --sl-wrap-height: 22px;
   --sl-wrap-shadow: 0 2px 6px light-dark(rgba(41, 86, 109, 0.28), rgba(0, 0, 0, 0.7));
 }

@@ -10045,12 +10045,6 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   color: var(--sl-d-rank);
 }
 
-.sl-profile-rank-img {
-  display: block;
-  margin: var(--sl-space-3) auto 0;
-  max-height: var(--sl-rank-height);
-}
-
 .sl-profile-chips {
   display: flex;
   flex-wrap: wrap;

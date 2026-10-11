@@ -322,7 +322,7 @@ Frontend theme assets referenced by a partial must use an explicitly passed and 
 Confirmed current usage:
 
 - frontend/admin bootstrap creates `$tpl = new Template($theme)` in `core/system.php`
-- admin requests get the theme `admin` from `getTheme()` in `core/system.php`; `$conf['theme']` stays the site theme, which the panel reads for the logos, ranks and banners of the site
+- admin requests get the theme `admin` from `getTheme()` in `core/system.php`; `$conf['theme']` stays the site theme, which the panel reads for the logos and banners of the site; a rank is drawn by the fragment of the theme in use and reads no file of the site theme
 - direct admin helper endpoints can create `new Template('admin')` from `index.php`
 - frontend pages are finalized through `setFoot()` and `$tpl->getHtmlPage(...)`
 - admin page rendering also ends in `$tpl->getHtmlPage(...)`
@@ -605,6 +605,82 @@ Both fragments are byte-identical in `templates/admin` and `templates/lite`; onl
   page, and the root of each theme scrolls smoothly unless the reader asked for less motion.
 - `tests/Unit/PagerViewTest.php` holds the window, the marks and the range, `tests/Unit/PagerKeysTest.php` the keys and
   the tip.
+
+## Rank
+
+The rank of a group — the row of marks under an avatar in the forum, the comments, the profile, the user block and the
+group table of the users statistics — is drawn from the string in `_groups.rank` with Bootstrap Icons, which both themes
+carry as a required asset. No theme keeps rank pictures.
+
+**The string.** `icon:lit:total:#rrggbb`, for example `star-fill:3:5:#8297a2`: M marks of one icon, the first N lit in
+the colour of the rank, the rest muted; 0 ≤ N ≤ M, 1 ≤ M ≤ 10. The rank colour is its own, beside the group colour
+`_groups.color` that paints the name and the ring of the avatar. Binding the rank to the group colour is not stored: the
+panel form shows it bound while the two colours are equal.
+
+| Function in `core/system.php` | Does |
+|---|---|
+| `getRankData(string $rank): array` | splits the string; the icon matches `^[a-z0-9-]+$`, the colour `^#[0-9a-f]{6}$`, the counts the bounds above. Anything else, a picture name included, gives an empty array |
+| `getRankView(string $rank, string $title): string` | the `rank` fragment of the theme, or an empty string when the value is no rank. `$title` is the group line the reader already builds (`_GROUP.': '.$name` or `_RANK`) |
+
+Every reader passes the raw column and its title, and every template takes the result as one `rank_html`.
+
+- **One fragment in both themes.** `fragments/rank.html` prints `<span class="sl-rank" role="img">` with the title as
+  `title` and accessible name and `--sl-d-rank` as the colour, then one `<i class="bi bi-<icon>" aria-hidden="true">`
+  per mark, the lit ones `sl-is-active`. The files are the same in `templates/admin` and `templates/lite`; only the sheets
+  differ.
+- **The sheet.** The lit mark takes `--sl-d-rank`, the muted one `--sl-border-strong` — the same icon in a muted tone,
+  not an outline variant, so every icon of the catalogue works. The marks stand at `--sl-space-1` and take the size of
+  the place they are printed in by `.sl-rank .bi { font-size: inherit; }`, which the panel needs against its fixed `.bi`
+  size and lite carries so both sheets read alike.
+- **One contrast floor, 3:1 on both surfaces.** One stored colour serves the light and the dark theme, and no colour
+  reaches 4.5:1 on both at once; 3:1 is the floor both meet (WCAG 1.4.11 for the marks). Every swatch of the panel
+  passes it; a colour the administrator picks below it is warned about, never refused.
+- `tests/Unit/RankDataTest.php` holds the string and the marks of the view.
+
+## Group Ladder And Rank Composer
+
+`admin/modules/groups.php`, tabs «Главная» and «Добавить»; the face is the stand `public/demo/grp-10-unified.html`.
+
+| Template | Prints |
+|---|---|
+| `partials/group-ladder.html` | one list: the heading with its icon, subtitle and sort button, and the `ol.sl-ladder` of its steps; `sl-ladder-extra` dashes the rail of the special groups |
+| `fragments/group-step.html` | one step `sl-ladder-step`: the threshold or the mark «Специальная», the node on the rail, the rank before the name, the description, «Участников: N» or «Пусто — участников нет» over the share bar, the dial |
+| `partials/group-form.html` | the form `sl-rank-form` with its three numbered parts `sl-rank-part`: «Готовый ранг», «Свой ранг» (the console and the preview), «Группа» |
+
+- **The list.** `groups()` counts the members of every group in one query with `GROUP BY` — a special group the users
+  whose `grp` it is, a point group every user at or above its threshold — and prints the point groups by threshold and
+  the special groups by members, most first. The members link goes to the user list of `account` filtered by it:
+  `search=6&chng=<id>` for a special group, `search=7&chng=<threshold>` for a point group. A step names its sort keys in
+  `data-sl-sort-*`, and the button `data-sl-ladder-sort` of its list reverses the steps in place in `admin-ui.js`;
+  nothing is stored.
+- **A painted name stays readable.** The step writes the group colour as `--sl-d-group`; the name reads `--sl-group-text`
+  of the admin `base.css`, which keeps the hue of `currentColor` and clamps its lightness —
+  `light-dark(oklch(from currentColor min(l, 0.5) c h), oklch(from currentColor max(l, 0.7) c h))` — so any stored
+  colour holds 4.5:1 in both themes. The stored colour is untouched, and the contrast tiles of the form measure the name
+  as it is painted.
+- **The form opens filled.** `getRankPresets()` (eighteen presets), `getRankTones()` (sixteen rank swatches) and
+  `getGroupTones()` (fourteen group swatches) are lists beside `add()`, each label a lang constant. For a new group
+  `getGroupNext()` proposes the next step: threshold half again above the top step, rounded up to a thousand when the
+  top step stands at a thousand or more and to 25 below, and at least one such step above it, the icon and rank colour of the top step with one more lit mark (one more mark too when all were
+  lit, at most ten), the group colour that follows the top one in the palette; the alert `_GROUPS_NEXT` names the top
+  step.
+- **One handler.** `setRankForm()` in `admin-ui.js` on `[data-sl-rank-form]` runs the console, the swatch rows, the
+  three preview sizes, the contrast tiles, the threshold hint and the leave guard. The tiles set `color-scheme: light`
+  and `color-scheme: dark`, so each resolves its own surface from the `light-dark()` tokens and the ratio is computed
+  against it. The binding to the group colour travels as the hidden `rank_sync`. The thresholds of the other steps
+  arrive as `data-sl-rank-steps`, from which the hint says where the group will stand or that the threshold is taken.
+- **Rows of choices are toolbars.** The presets, the forty icons and the swatch rows are `role="toolbar"` with
+  `data-sl-roving`: one Tab stop on the chosen member, the arrows inside, up and down by a whole line, Home and End to
+  the ends. `setRankView()` sets the stops when the form loads and after every change.
+- **Leaving asks.** A changed form asks `_GROUPS_LEAVE` through `setConfirmTask()` of `slaed.js` on a tab or «Отмена»,
+  and through `beforeunload` otherwise; the save is not guarded. A form returned with an error opens changed.
+- **`save()` writes the joined string.** It reads `rank_icon`, `rank_lit`, `rank_total`, `rank_color` and `rank_sync`,
+  clamps the counts, refuses an icon or colour `getRankData()` would refuse, a group colour that is no `#rrggbb`, and a
+  threshold another point group has.
+- **Tokens.** The admin `base.css` carries `--sl-group-text`, `--sl-ladder-width`, `--sl-ladder-ring`,
+  `--sl-ladder-bar-height`, `--sl-ladder-bar-mix`, `--sl-wheel-bg` and `--sl-wheel-eye-width`; templates and the script
+  write `--sl-d-group`, `--sl-d-share` and `--sl-d-swatch`, registered under `data` in `tools/ui-contract.php`.
+- `tests/Unit/GroupFormTest.php` holds `save()` and `getGroupNext()`.
 
 ## Theme Contract
 

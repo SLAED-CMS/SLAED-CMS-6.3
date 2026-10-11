@@ -1,0 +1,8 @@
+<div class="sl-box">
+  <h2 class="sl-ladder-head"><i class="bi bi-{{ icon_name }}" aria-hidden="true"></i> {{ title }} <small>{{ note }}</small>
+    <button type="button" class="sl-but-mini sl-ladder-sort" title="{{ sort_title }}" aria-controls="{{ list_id }}" aria-pressed="{% if is_desc %}true{% else %}false{% endif %}" data-sl-ladder-sort="{{ sort_key }}"><i class="bi bi-sort-numeric-down" aria-hidden="true"></i><i class="bi bi-sort-numeric-up-alt" aria-hidden="true"></i></button>
+  </h2>
+  <ol class="sl-ladder{% if is_extra %} sl-ladder-extra{% endif %}" id="{{ list_id }}">
+    {% for step in steps %}{% include 'fragments/group-step.html' with step %}{% endfor %}
+  </ol>
+</div>

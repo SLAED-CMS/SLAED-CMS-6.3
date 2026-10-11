@@ -117,9 +117,9 @@ into the plan, then do whatever work the step names.
 - [x] 50. PAGER batch 2 — keys, tip and reference; deletes `docs/6-PAGER-2026.md`. (2026-10-11)
 - [x] 51. RANKS batch 1 — the rank as icons: `getRankView()`, the fragment in both themes, the site readers, the
   migration of `_groups.rank` in the darkened tones. (2026-10-11)
-- [ ] 52. RANKS batch 2 — the panel: the ladder and the special groups, the composer of the group form from the stand
-  `grp-10`, the pictures deleted.
-- [ ] 53. RANKS batch 3 — reference; deletes `docs/8-RANKS-2026.md`.
+- [x] 52. RANKS batch 2 — the panel: the ladder and the special groups, the composer of the group form from the stand
+  `grp-10`, the pictures deleted. (2026-10-12)
+- [x] 53. RANKS batch 3 — reference; deletes `docs/8-RANKS-2026.md`. (2026-10-12)
 - [ ] 54. SCHEMA batch 0 — inventory: time columns, indexes against queries, `GROUP BY`, uncut writes, `modul`
   values, `lang` width.
 - [ ] 55. SCHEMA batch 1 — connection: collation, time zone and `sql_mode` in `Database::__construct()`.

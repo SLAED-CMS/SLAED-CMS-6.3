@@ -1,5 +1,5 @@
 {
-    "generated": "2026-10-11T21:55:14Z",
+    "generated": "2026-10-11T23:10:15Z",
     "themes": {
         "admin": {
             "count": 0,
@@ -7,7 +7,7 @@
             "dup": 0,
             "names": 0,
             "dead": 0,
-            "single": 157,
+            "single": 161,
             "alias": 0,
             "unsat": 0,
             "unmet": 0,
@@ -15,7 +15,7 @@
             "clash": 0,
             "classes": 0,
             "important": 21,
-            "tokens": 333,
+            "tokens": 340,
             "contrast": 0
         },
         "lite": {
@@ -24,7 +24,7 @@
             "dup": 0,
             "names": 0,
             "dead": 0,
-            "single": 198,
+            "single": 197,
             "alias": 0,
             "unsat": 0,
             "unmet": 0,
@@ -32,7 +32,7 @@
             "clash": 0,
             "classes": 0,
             "important": 13,
-            "tokens": 444,
+            "tokens": 443,
             "contrast": 0
         }
     },
@@ -173,12 +173,17 @@
             "--sl-grad-progress-5",
             "--sl-grad-stripe",
             "--sl-graph-height",
+            "--sl-group-text",
             "--sl-header-bg",
             "--sl-header-height",
             "--sl-ico-bg",
             "--sl-ico-border",
             "--sl-info-subtle",
             "--sl-item-height",
+            "--sl-ladder-bar-height",
+            "--sl-ladder-bar-mix",
+            "--sl-ladder-ring",
+            "--sl-ladder-width",
             "--sl-lang-shadow",
             "--sl-layout-container",
             "--sl-led-border",
@@ -361,6 +366,8 @@
             "--sl-weight-medium",
             "--sl-weight-normal",
             "--sl-weight-semibold",
+            "--sl-wheel-bg",
+            "--sl-wheel-eye-width",
             "--sl-wrap-height",
             "--sl-wrap-shadow",
             "--sl-z-base",
@@ -696,7 +703,6 @@
             "--sl-radius-pill",
             "--sl-rail-max-width",
             "--sl-rail-width",
-            "--sl-rank-height",
             "--sl-ring-bg",
             "--sl-ring-gap",
             "--sl-ring-mix",

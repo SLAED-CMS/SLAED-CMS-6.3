@@ -13,6 +13,7 @@ return [
     # A freeze nothing checks is only a sentence in a file
     # One exception was decided by hand on 2026-09-10: the seventeen names of the home slider and the site carousel left with the main module and were struck from the roster
     # A second was decided on 2026-10-11: the five --sl-pnum-* names and the panel's --sl-card-shadow lost their one reader, the drawn arrow of the old panel pager
+    # A third was decided on 2026-10-09 with the ranks plan: the site's --sl-rank-height lost its one reader, the rank picture of the profile, when ranks became icons
     'frozen' => true,
     'marker' => '/* --- end tokens --- */',
     'prefix' => '--sl-',
@@ -208,8 +209,8 @@ return [
         'fm-bar', 'fm-body', 'fm-busy', 'fm-drop', 'fm-edit', 'fm-empty', 'fm-field', 'fm-filter', 'fm-kind', 'fm-mode',
         'fmenu', 'fm-panel', 'fm-pick', 'fm-preview', 'fm-props', 'fm-quota', 'fm-row', 'fm-search', 'fm-sep', 'fm-split', 'fm-thumb',
         'fm-tile', 'footer', 'form', 'form-label', 'forum', 'fp', 'fp-ava', 'fresh', 'fresh-day', 'fresh-days', 'fresh-month',
-        'fresh-now', 'fresh-week', 'gauge', 'graph', 'guard', 'header', 'hub-head', 'hub-row',
-        'ico', 'idea', 'info-row', 'item', 'knob', 'lang', 'led', 'letter', 'live-dot', 'loading',
+        'fresh-now', 'fresh-week', 'gauge', 'graph', 'group', 'guard', 'header', 'hub-head', 'hub-row',
+        'ico', 'idea', 'info-row', 'item', 'knob', 'ladder', 'ladder-bar', 'lang', 'led', 'letter', 'live-dot', 'loading',
         'loading-dot', 'login', 'login-drop', 'login-footer', 'login-header', 'logo', 'madein', 'marquee', 'menu', 'meta',
         'meter', 'modal', 'modal-act', 'modal-btn', 'mode', 'module-head', 'monitor-table', 'move', 'msg', 'msg-brand', 'nav', 'node-find', 'opt', 'opt-lamp', 'opt-rail',
         'pager', 'pager-dot', 'pager-item', 'panel', 'panel-feed', 'placeholder', 'plot', 'pointer', 'pmf-ava', 'pmf-blank', 'pmf-chip', 'pmf-day', 'pmf-filter',
@@ -221,7 +222,7 @@ return [
         'skel-row', 'skel-tile', 'slide', 'slide-cont', 'solid', 'solid-bad', 'solid-good', 'solid-link', 'solid-warn',
         'sort', 'spark', 'spin', 'sublist', 'sublist-two', 'switch', 'switch-knob',
         't-icon', 'table', 'tab', 'thumb', 'tile', 'toast',
-        'toolbar', 'toolbar-row', 'tooltip', 'topbar', 'touch', 'tree', 'veil', 'view', 'vote', 'wordmark', 'wordmark-img', 'wrap',
+        'toolbar', 'toolbar-row', 'tooltip', 'topbar', 'touch', 'tree', 'veil', 'view', 'vote', 'wheel', 'wheel-eye', 'wordmark', 'wordmark-img', 'wrap',
     ],
 
     # Written from outside CSS by a template or a script, read only by CSS. Never API
@@ -234,6 +235,8 @@ return [
         '--sl-d-editor-floor' => 'height of the field CodeMirror takes the place of, plugins/system/editor.js',
         '--sl-d-float-left' => 'floating panel viewport left, plugins/system/slaed.js',
         '--sl-d-float-top' => 'floating panel viewport top, plugins/system/slaed.js',
+        '--sl-d-group' => 'colour of a group on its ladder step, its contrast tiles and the bind swatch of its form, templates/admin/fragments/group-step.html,'
+            .' partials/group-form.html and assets/js/admin-ui.js',
         '--sl-d-hint-x' => 'editor variable list left inside its card, at the caret or under the capsule button, plugins/system/editor.js',
         '--sl-d-hint-y' => 'editor variable list top inside its card, below the caret line or at the top of the card, plugins/system/editor.js',
         '--sl-d-knob-w' => 'width of the chosen cell of a segmented switch, which its plate takes, plugins/system/slaed.js',
@@ -256,7 +259,9 @@ return [
         '--sl-d-rim-x' => 'pointer horizontal position inside the installer card, templates/admin/assets/js/admin-ui.js',
         '--sl-d-rim-y' => 'pointer vertical position inside the installer card, templates/admin/assets/js/admin-ui.js',
         '--sl-d-ring' => 'profile ring colour, templates/lite/partials/account-home.html and account-profile.html',
+        '--sl-d-share' => 'share of members a group holds against the largest group, as a fraction, templates/admin/fragments/group-step.html',
         '--sl-d-spy' => 'settings rail progress width, and the presentation rail progress in pixels, plugins/system/slaed.js',
+        '--sl-d-swatch' => 'colour one swatch of a palette shows, and the value the own-colour wheel holds, templates/admin/partials/group-form.html and assets/js/admin-ui.js',
         '--sl-d-turn' => 'place of a node in a staggered row: a solid head its beam crosses, templates/admin/assets/js/admin-ui.js,'
             .' a rating star that bursts, plugins/system/slaed.js, and a check row of the installer, templates/admin/pages/setup.html',
         '--sl-d-user' => 'user group colour, templates/lite/partials/block-user-info.html',
@@ -368,6 +373,9 @@ return [
         '.sl-fm-win .sl-fm-filters, .sl-icon-modal-tabs',
         # The name cell of the file manager and a field row of the language editor
         '.sl-fm-name, .sl-lang-edit-row .sl-div-field',
+        # The tab standing open in the icon window and the chosen icon of the rank console: two solid choices of the brand colour that share nothing else
+        # Merging would file the rank console inside the icon window, five thousand lines from where either is edited
+        '.sl-icon-modal-tabs button.sl-is-active, .sl-rank-icons button[aria-pressed="true"]',
         # The key list of the pager tip and the feature list of the panel login: two bare lists laid out as a grid with one gap, which share nothing else
         # Merging would file the login card inside the pager, two files apart from where either is edited
         '.sl-admin-login-list, .sl-pager-tip-keys',

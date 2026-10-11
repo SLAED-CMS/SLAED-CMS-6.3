@@ -1,0 +1,10 @@
+<li class="sl-ladder-step{% if is_empty %} sl-is-empty{% endif %}" style="{% if color %}--sl-d-group: {{ color }}; {% endif %}--sl-d-share: {{ share }}" data-sl-sort-id="{{ id }}" data-sl-sort-points="{{ points }}" data-sl-sort-users="{{ users }}">
+  {% if is_extra %}<span class="sl-ladder-pts sl-ladder-mark" title="{{ mark_text }}"><i class="bi bi-patch-check-fill" aria-hidden="true"></i><span class="sl-ladder-word">{{ mark_text }}</span></span>{% else %}<span class="sl-ladder-pts">{{ points_text }}</span>{% endif %}
+  <span class="sl-ladder-node" aria-hidden="true"></span>
+  <span class="sl-ladder-who">
+    <span class="sl-ladder-top">{{{ rank_html }}}<a class="sl-ladder-name" href="{{ edit_url }}" title="{{ edit_title }}">{{ name }}</a></span>
+    {% if intro %}<small title="{{ intro }}">{{ intro }}</small>{% endif %}
+  </span>
+  <span class="sl-ladder-share">{% if is_empty %}<span class="sl-ladder-empty">{{ empty_text }}</span>{% else %}<a class="sl-ladder-users" href="{{ users_url }}" title="{{ users_title }}">{{ users_text }}</a>{% endif %}<i class="sl-ladder-bar" aria-hidden="true"></i></span>
+  <span class="sl-ladder-opt">{{{ dial_html }}}</span>
+</li>

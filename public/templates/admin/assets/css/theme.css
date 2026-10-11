@@ -21,6 +21,616 @@
   color: var(--sl-d-rank);
 }
 
+/* The groups of the panel: two lists of one ladder step, the threshold, a node on the rail, the group with its rank, its share of members */
+.sl-ladder-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sl-space-3);
+  margin: 0 0 var(--sl-space-5);
+  font-size: var(--sl-font-h4);
+}
+
+.sl-ladder-head small {
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-small);
+  font-weight: var(--sl-weight-normal);
+}
+
+.sl-ladder-sort {
+  margin-left: auto;
+}
+
+/* The sort button shows the direction the list stands in now */
+.sl-ladder-sort[aria-pressed="true"] .bi-sort-numeric-down,
+.sl-ladder-sort[aria-pressed="false"] .bi-sort-numeric-up-alt {
+  display: none;
+}
+
+.sl-ladder {
+  position: relative;
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sl-ladder::before {
+  position: absolute;
+  top: var(--sl-space-8);
+  bottom: var(--sl-space-8);
+  left: calc(8.5em + var(--sl-space-5) + var(--sl-space-3) + var(--sl-size-icon-xs) / 2 - var(--sl-ladder-width) / 2);
+  width: var(--sl-ladder-width);
+  background: var(--sl-border);
+  content: "";
+}
+
+/* The special groups have no sequence: their rail is dashed and the threshold column carries a mark */
+.sl-ladder-extra::before {
+  width: 0;
+  border-left: var(--sl-ladder-width) dashed var(--sl-border-strong);
+  background: none;
+}
+
+.sl-ladder-step {
+  position: relative;
+  display: grid;
+  grid-template-columns: 8.5em var(--sl-size-icon-xs) minmax(0, 1fr) minmax(160px, 260px) auto;
+  align-items: center;
+  gap: var(--sl-space-5);
+  padding: var(--sl-space-4) var(--sl-space-3);
+  border-radius: var(--sl-radius-2);
+}
+
+.sl-ladder-step:hover {
+  background: var(--sl-tint);
+}
+
+.sl-ladder-pts {
+  color: var(--sl-text-strong);
+  font-size: var(--sl-font-h4);
+  font-weight: var(--sl-weight-bold);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.sl-ladder-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--sl-space-2);
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-small);
+  font-weight: var(--sl-weight-semibold);
+}
+
+.sl-ladder-node {
+  z-index: var(--sl-z-raised);
+  width: var(--sl-size-icon-xs);
+  height: var(--sl-size-icon-xs);
+  box-sizing: border-box;
+  border: var(--sl-ladder-ring) solid var(--sl-surface);
+  border-radius: var(--sl-radius-circle);
+  background: var(--sl-d-group, var(--sl-text-muted));
+  box-shadow: 0 0 0 1px var(--sl-d-group, var(--sl-text-muted));
+}
+
+.sl-ladder-who {
+  display: grid;
+  gap: var(--sl-space-1);
+  min-width: 0;
+}
+
+/* The row of the rank and the name carries the group colour, which the name then clamps to what its scheme can read */
+.sl-ladder-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sl-space-2) var(--sl-space-5);
+  color: var(--sl-d-group, var(--sl-text));
+}
+
+.sl-ladder-name {
+  color: var(--sl-group-text);
+  font-size: var(--sl-font-h4);
+  font-weight: var(--sl-weight-bold);
+  text-decoration: none;
+}
+
+.sl-ladder-name:hover,
+.sl-ladder-name:focus-visible {
+  text-decoration: underline;
+}
+
+.sl-ladder-who small {
+  overflow: hidden;
+  color: var(--sl-text-muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sl-ladder-share {
+  display: grid;
+  gap: var(--sl-space-2);
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-small);
+  font-variant-numeric: tabular-nums;
+}
+
+.sl-ladder-users {
+  color: inherit;
+  text-decoration: none;
+}
+
+.sl-ladder-users:hover,
+.sl-ladder-users:focus-visible {
+  color: var(--sl-primary-strong);
+  text-decoration: underline;
+}
+
+.sl-ladder-bar {
+  display: block;
+  height: var(--sl-ladder-bar-height);
+  border-radius: var(--sl-radius-pill);
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--sl-d-group, var(--sl-text-muted)) var(--sl-ladder-bar-mix), transparent) calc(var(--sl-d-share) * 100%),
+    var(--sl-bg-muted) 0
+  );
+}
+
+/* A group without members shows only the outline of its bar */
+.sl-ladder-step.sl-is-empty .sl-ladder-bar {
+  box-sizing: border-box;
+  border: 1px dashed var(--sl-border-strong);
+  background: none;
+}
+
+/* The dial is placed against its positioned ancestor, as in the options cell of a table: this column is that ancestor */
+.sl-ladder-opt {
+  position: relative;
+  display: block;
+  width: calc(var(--sl-size-chip) + var(--sl-space-4));
+  height: var(--sl-size-chip);
+}
+
+/* The group form: three numbered parts, the ready ranks, the console with its proof, the group */
+.sl-rank-part + .sl-rank-part {
+  margin-top: var(--sl-space-8);
+  padding-top: var(--sl-space-6);
+  border-top: 1px solid var(--sl-border);
+}
+
+.sl-rank-cap {
+  display: flex;
+  align-items: center;
+  gap: var(--sl-space-3);
+  margin: 0 0 var(--sl-space-4);
+  color: var(--sl-text-strong);
+  font-weight: var(--sl-weight-semibold);
+}
+
+.sl-rank-cap b {
+  display: inline-grid;
+  place-items: center;
+  width: var(--sl-size-chip);
+  height: var(--sl-size-chip);
+  border-radius: var(--sl-radius-circle);
+  background: var(--sl-primary);
+  color: var(--sl-on-solid);
+  font-size: var(--sl-font-small);
+}
+
+.sl-rank-cap small {
+  color: var(--sl-text-muted);
+  font-weight: var(--sl-weight-normal);
+}
+
+/* Eighteen ready ranks in rows that are always full: nine, six or three across */
+.sl-rank-presets {
+  display: grid;
+  grid-template-columns: repeat(9, minmax(0, 1fr));
+  gap: var(--sl-space-3);
+}
+
+.sl-rank-preset {
+  display: grid;
+  justify-items: center;
+  gap: var(--sl-space-2);
+  padding: var(--sl-space-4) var(--sl-space-3);
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-2);
+  background: var(--sl-surface);
+  color: var(--sl-text-muted);
+  font: inherit;
+  font-size: var(--sl-font-micro);
+  cursor: pointer;
+  transition: border-color var(--sl-time-fast) var(--sl-ease-out), box-shadow var(--sl-time-fast) var(--sl-ease-out);
+}
+
+.sl-rank-preset .sl-rank {
+  font-size: var(--sl-size-icon-xs);
+}
+
+.sl-rank-preset[aria-pressed="true"] {
+  border-color: var(--sl-primary);
+  box-shadow: 0 0 0 1px var(--sl-primary);
+  color: var(--sl-text-strong);
+}
+
+.sl-rank-deck {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: var(--sl-space-6);
+  padding: var(--sl-space-6);
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-3);
+  background: var(--sl-bg-subtle);
+}
+
+/* The controls keep their own height from the top; the proof beside them stands as tall as they are */
+.sl-rank-ctls {
+  display: grid;
+  align-content: start;
+  grid-template-columns: minmax(0, 1fr);
+  container-type: inline-size;
+  gap: var(--sl-space-6);
+}
+
+.sl-rank-ctl {
+  display: grid;
+  gap: var(--sl-space-3);
+}
+
+.sl-rank-ctl > b {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--sl-text-strong);
+  font-weight: var(--sl-weight-semibold);
+}
+
+.sl-rank-ctl > b output {
+  min-width: var(--sl-size-chip);
+  padding: 0 var(--sl-space-3);
+  border-radius: var(--sl-radius-pill);
+  background: var(--sl-surface);
+  color: var(--sl-primary-strong);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+/* The icon picker of the panel lets its button wrap under the field in a narrow console */
+.sl-rank-ctl .sl-icon-picker {
+  flex-wrap: wrap;
+}
+
+.sl-rank-ctl .sl-icon-picker input {
+  flex: 1 1 8em;
+  min-width: 0;
+}
+
+.sl-rank-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--sl-space-6);
+}
+
+/* A row of icons or circles spreads over its whole width, the space shared out between its members */
+.sl-rank-icons {
+  display: grid;
+  grid-template-columns: repeat(8, var(--sl-size-control));
+  justify-content: space-between;
+  gap: var(--sl-space-3) var(--sl-space-2);
+}
+
+.sl-rank-icons button,
+.sl-rank-tones button {
+  display: inline-grid;
+  place-items: center;
+  width: var(--sl-size-control);
+  height: var(--sl-size-control);
+  padding: 0;
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-1);
+  background: var(--sl-surface);
+  color: var(--sl-text);
+  font-size: var(--sl-font-h4);
+  cursor: pointer;
+}
+
+.sl-rank-preset:hover,
+.sl-rank-icons button:hover,
+.sl-rank-tones button:hover {
+  border-color: var(--sl-primary);
+}
+
+.sl-rank-icons button[aria-pressed="true"] {
+  border-color: var(--sl-primary);
+  background: var(--sl-primary);
+  color: var(--sl-on-solid);
+}
+
+.sl-rank-range {
+  width: 100%;
+  accent-color: var(--sl-primary);
+}
+
+.sl-rank-ticks {
+  display: flex;
+  justify-content: space-between;
+  padding: 0 var(--sl-space-2);
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-micro);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Circles stand in columns spread over the whole row; a wrapped line starts at the left under the columns of the first */
+.sl-rank-tones {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, var(--sl-size-control));
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sl-space-2);
+}
+
+.sl-rank-tones button {
+  border-radius: var(--sl-radius-circle);
+  background: var(--sl-d-swatch);
+}
+
+.sl-rank-tones button[aria-pressed="true"],
+.sl-rank-custom.sl-is-active {
+  box-shadow: 0 0 0 var(--sl-ring-gap) var(--sl-surface), 0 0 0 calc(var(--sl-ring-gap) + var(--sl-ring-width)) var(--sl-primary);
+}
+
+/* Own colour: a hue wheel with the value in its eye; the native field lies over it unseen and takes the press */
+.sl-rank-tones .sl-rank-custom {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  width: var(--sl-size-control);
+  height: var(--sl-size-control);
+  margin: 0;
+  border-radius: var(--sl-radius-circle);
+  background: var(--sl-wheel-bg);
+  cursor: pointer;
+}
+
+.sl-rank-custom::after {
+  width: var(--sl-wheel-eye-width);
+  height: var(--sl-wheel-eye-width);
+  border-radius: var(--sl-radius-circle);
+  background: var(--sl-d-swatch);
+  box-shadow: 0 0 0 var(--sl-ring-gap) var(--sl-surface);
+  content: "";
+}
+
+/* The form theme gives a label in a field a trailing margin and its input a full width; the swatch must sit flush */
+.sl-rank-tones .sl-rank-custom input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  min-height: 0;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.sl-rank-custom:focus-within,
+.sl-rank-form [data-sl-roving] button:focus-visible {
+  outline: var(--sl-ring-width) solid var(--sl-primary);
+  outline-offset: var(--sl-ring-gap);
+}
+
+/* Bound to the group: a circle in the group colour with a link, set apart from the palette by a hairline */
+.sl-rank-tones .sl-rank-bind {
+  background: var(--sl-d-group);
+  color: var(--sl-on-solid);
+}
+
+.sl-rank-sep {
+  justify-self: center;
+  width: 1px;
+  height: var(--sl-size-icon-md);
+  background: var(--sl-border);
+}
+
+.sl-rank-proof {
+  display: grid;
+  align-content: center;
+  gap: var(--sl-space-5);
+  padding: var(--sl-space-6);
+  border-radius: var(--sl-radius-2);
+  background: var(--sl-surface);
+  box-shadow: var(--sl-shadow-xs);
+}
+
+/* The rank at the three sizes it is printed in, flush right */
+.sl-rank-size {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: end;
+  align-items: center;
+}
+
+.sl-rank-size-s .sl-rank { font-size: var(--sl-font-body); }
+.sl-rank-size-m .sl-rank { font-size: var(--sl-size-icon-sm); }
+.sl-rank-size-l .sl-rank { font-size: var(--sl-size-icon-md); }
+
+.sl-rank-place {
+  display: flex;
+  align-items: center;
+  gap: var(--sl-space-3);
+  margin: var(--sl-space-3) 0 0;
+  color: var(--sl-primary-strong);
+  font-size: var(--sl-font-small);
+}
+
+/* Contrast tiles: each wears the surface of its scheme and judges the colours against it */
+.sl-rank-tiles {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--sl-space-3);
+  margin-top: var(--sl-space-3);
+}
+
+/* The ratios on the left, the caption and the name on the right, the rank across the tile between them */
+.sl-rank-tile {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas: "mark cap" "rank rank" "text name";
+  align-items: center;
+  justify-items: start;
+  gap: var(--sl-space-2);
+  min-width: 0;
+  padding: var(--sl-space-4);
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-2);
+  background: var(--sl-bg);
+  color: var(--sl-text);
+  font-size: var(--sl-font-small);
+}
+
+.sl-rank-tile-light {
+  color-scheme: light;
+}
+
+.sl-rank-tile-dark {
+  color-scheme: dark;
+}
+
+.sl-rank-tile-cap {
+  grid-area: cap;
+  justify-self: end;
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-micro);
+}
+
+.sl-rank-tile-rank {
+  grid-area: rank;
+  justify-self: end;
+}
+
+.sl-rank-tile-rank .sl-rank {
+  font-size: var(--sl-size-icon-sm);
+}
+
+/* The name is painted as the lists paint it: the tile hands it the group colour, the name clamps it */
+.sl-rank-tile-name {
+  grid-area: name;
+  justify-self: end;
+  overflow: hidden;
+  max-width: 100%;
+  color: var(--sl-d-group);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sl-rank-tile-name span {
+  color: var(--sl-group-text);
+}
+
+.sl-rank-tile-mark,
+.sl-rank-tile-text {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sl-space-2);
+  color: var(--sl-success-strong);
+  font-size: var(--sl-font-micro);
+  font-variant-numeric: tabular-nums;
+}
+
+.sl-rank-tile-mark {
+  grid-area: mark;
+}
+
+.sl-rank-tile-text {
+  grid-area: text;
+}
+
+.sl-rank-tile-mark .bi,
+.sl-rank-tile-text .bi {
+  font-size: var(--sl-font-micro);
+}
+
+.sl-rank-tile .sl-rank-no,
+.sl-rank-tile[data-sl-bad-mark] .sl-rank-tile-mark .sl-rank-ok,
+.sl-rank-tile[data-sl-bad-text] .sl-rank-tile-text .sl-rank-ok {
+  display: none;
+}
+
+.sl-rank-tile[data-sl-bad-mark] .sl-rank-tile-mark .sl-rank-no,
+.sl-rank-tile[data-sl-bad-text] .sl-rank-tile-text .sl-rank-no {
+  display: inline;
+}
+
+.sl-rank-tile[data-sl-bad-mark] .sl-rank-tile-mark,
+.sl-rank-tile[data-sl-bad-text] .sl-rank-tile-text {
+  color: var(--sl-danger-strong);
+}
+
+.sl-rank-note {
+  margin: 0;
+  color: var(--sl-danger-strong);
+  font-size: var(--sl-font-micro);
+}
+
+/* Forty icons run in even lines by the room the controls get: twenty, ten or eight across */
+@container (width > 320px) {
+  .sl-rank-icons {
+    grid-template-columns: repeat(10, var(--sl-size-control));
+  }
+}
+
+@container (width > 640px) {
+  .sl-rank-icons {
+    grid-template-columns: repeat(20, var(--sl-size-control));
+  }
+}
+
+@media (max-width: 1200px) {
+  .sl-rank-presets {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+
+  /* A narrow threshold column keeps the mark of a special group as its icon; the word stays for a screen reader */
+  .sl-ladder-word {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .sl-ladder-step {
+    grid-template-columns: 5.5em var(--sl-size-icon-xs) minmax(0, 1fr) auto;
+  }
+
+  .sl-ladder-share {
+    grid-column: 3 / 4;
+  }
+
+  .sl-ladder::before {
+    left: calc(5.5em + var(--sl-space-5) + var(--sl-space-3) + var(--sl-size-icon-xs) / 2 - var(--sl-ladder-width) / 2);
+  }
+
+  .sl-rank-deck,
+  .sl-rank-pair {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .sl-rank-presets {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
 /* Forms: field width utilities */
 .sl-form-control {
   width: var(--sl-form-width);

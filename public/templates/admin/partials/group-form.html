@@ -1,0 +1,97 @@
+<form action="{{ action_url }}" method="post" class="sl-div-form sl-rank-form" style="--sl-d-group: {{ color }}" data-sl-rank-form data-sl-rank-steps="{{ steps_json }}" data-sl-rank-leave="{{ leave_text }}" data-sl-rank-group="{{ title_group }}" data-sl-rank-none="{{ title_rank }}" data-sl-rank-blank="{{ group_title }}"{% if is_dirty %} data-sl-rank-dirty{% endif %}>
+  <input type="hidden" name="gid" value="{{ gid }}">
+  <input type="hidden" name="name" value="groups">
+  <input type="hidden" name="op" value="save">
+  <input type="hidden" name="token" value="{{ token }}">
+  <input type="hidden" name="rank_sync" value="{% if is_sync %}1{% else %}0{% endif %}">
+  {{{ next_html }}}
+  <div class="sl-rank-part">
+    <p class="sl-rank-cap"><b>1</b> {{ presets_title }} <small>{{ presets_note }}</small></p>
+    <div class="sl-rank-presets" role="toolbar" aria-label="{{ presets_title }}" data-sl-roving>
+      {% for preset in presets %}<button type="button" class="sl-rank-preset" data-sl-rank-set="{{ preset.rank }}" aria-pressed="{% if preset.is_on %}true{% else %}false{% endif %}">{{{ preset.rank_html }}}<span>{{ preset.label }}</span></button>{% endfor %}
+    </div>
+  </div>
+  <div class="sl-rank-part">
+    <p class="sl-rank-cap"><b>2</b> {{ own_title }}</p>
+    <div class="sl-rank-deck">
+      <div class="sl-rank-ctls">
+        <div class="sl-rank-ctl">
+          <b>{{ icon_title }}</b>
+          <div class="sl-rank-icons" role="toolbar" aria-label="{{ icon_label }}" data-sl-roving>
+            {% for icon in icons %}<button type="button" data-sl-rank-icon="{{ icon.icon_name }}" title="{{ icon.icon_name }}" aria-pressed="{% if icon.is_on %}true{% else %}false{% endif %}"><i class="bi bi-{{ icon.icon_name }}" aria-hidden="true"></i></button>{% endfor %}
+          </div>
+          {{{ picker_html }}}
+        </div>
+        <div class="sl-rank-pair">
+          <div class="sl-rank-ctl">
+            <b><label for="f-total">{{ total_title }}</label><output for="f-total" data-sl-rank-out="total">{{ total }}</output></b>
+            <input type="range" name="rank_total" id="f-total" class="sl-rank-range" min="1" max="10" step="1" value="{{ total }}">
+            <div class="sl-rank-ticks" aria-hidden="true"><span>1</span><span>5</span><span>10</span></div>
+          </div>
+          <div class="sl-rank-ctl">
+            <b><label for="f-lit">{{ lit_title }}</label><output for="f-lit" data-sl-rank-out="lit">{{ lit }}</output></b>
+            <input type="range" name="rank_lit" id="f-lit" class="sl-rank-range" min="0" max="{{ total }}" step="1" value="{{ lit }}">
+            <div class="sl-rank-ticks" aria-hidden="true"><span>0</span><span>{{ all_text }}</span></div>
+          </div>
+        </div>
+        <div class="sl-rank-ctl">
+          <b>{{ tone_title }}</b>
+          <div class="sl-rank-tones" role="toolbar" aria-label="{{ tone_title }}" data-sl-roving>
+            {% for tone in rank_tones %}<button type="button" data-sl-rank-tone="{{ tone.color }}" style="--sl-d-swatch: {{ tone.color }}" title="{{ tone.label }}" aria-label="{{ tone.label }}" aria-pressed="{% if tone.is_on %}true{% else %}false{% endif %}"></button>{% endfor %}
+            <label class="sl-rank-custom{% if is_rank_own %} sl-is-active{% endif %}" title="{{ own_text }}" style="--sl-d-swatch: {{ rank_color }}" data-sl-tone-custom="rank"><input type="color" name="rank_color" value="{{ rank_color }}" aria-label="{{ own_text }}"></label>
+            <span class="sl-rank-sep" aria-hidden="true"></span>
+            <button type="button" class="sl-rank-bind" data-sl-rank-tone="group" title="{{ bind_text }}" aria-label="{{ bind_text }}" aria-pressed="{% if is_sync %}true{% else %}false{% endif %}"><i class="bi bi-link-45deg" aria-hidden="true"></i></button>
+          </div>
+        </div>
+      </div>
+      <div class="sl-rank-proof" aria-live="polite">
+        <div class="sl-rank-size sl-rank-size-s" data-sl-rank-live>{{{ rank_html }}}</div>
+        <div class="sl-rank-size sl-rank-size-m" data-sl-rank-live>{{{ rank_html }}}</div>
+        <div class="sl-rank-size sl-rank-size-l" data-sl-rank-live>{{{ rank_html }}}</div>
+        <div class="sl-rank-tiles">
+          <div class="sl-rank-tile sl-rank-tile-light" data-sl-rank-tile>
+            <span class="sl-rank-tile-cap">{{ light_text }}</span>
+            <span class="sl-rank-tile-rank" data-sl-rank-live>{{{ rank_html }}}</span>
+            <b class="sl-rank-tile-name"><span data-sl-rank-name>{{ tile_name }}</span></b>
+            <span class="sl-rank-tile-mark"><i class="bi bi-check-circle-fill sl-rank-ok" aria-hidden="true"></i><i class="bi bi-exclamation-triangle-fill sl-rank-no" aria-hidden="true"></i> {{ rank_text }} <span data-sl-rank-ratio="mark"></span></span>
+            <span class="sl-rank-tile-text"><i class="bi bi-check-circle-fill sl-rank-ok" aria-hidden="true"></i><i class="bi bi-exclamation-triangle-fill sl-rank-no" aria-hidden="true"></i> {{ name_text }} <span data-sl-rank-ratio="text"></span></span>
+          </div>
+          <div class="sl-rank-tile sl-rank-tile-dark" data-sl-rank-tile>
+            <span class="sl-rank-tile-cap">{{ dark_text }}</span>
+            <span class="sl-rank-tile-rank" data-sl-rank-live>{{{ rank_html }}}</span>
+            <b class="sl-rank-tile-name"><span data-sl-rank-name>{{ tile_name }}</span></b>
+            <span class="sl-rank-tile-mark"><i class="bi bi-check-circle-fill sl-rank-ok" aria-hidden="true"></i><i class="bi bi-exclamation-triangle-fill sl-rank-no" aria-hidden="true"></i> {{ rank_text }} <span data-sl-rank-ratio="mark"></span></span>
+            <span class="sl-rank-tile-text"><i class="bi bi-check-circle-fill sl-rank-ok" aria-hidden="true"></i><i class="bi bi-exclamation-triangle-fill sl-rank-no" aria-hidden="true"></i> {{ name_text }} <span data-sl-rank-ratio="text"></span></span>
+          </div>
+        </div>
+        <p class="sl-rank-note" data-sl-rank-note hidden>{{ contrast_text }}</p>
+      </div>
+    </div>
+  </div>
+  <div class="sl-rank-part">
+    <p class="sl-rank-cap"><b>3</b> {{ group_title }}</p>
+    <div class="sl-div-grid">
+      <div class="sl-div-item"><div class="sl-div-label"><label for="f-grname">{{ grname_label }}</label></div><div class="sl-div-field">{{{ name_html }}}</div></div>
+      <div class="sl-div-item"><div class="sl-div-label"><label for="f-description">{{ intro_label }}</label></div><div class="sl-div-field">{{{ intro_html }}}</div></div>
+      <div class="sl-div-item">
+        <div class="sl-div-label"><span id="f-color-label">{{ color_label }}</span><span class="sl-small">{{ color_hint }}</span></div>
+        <div class="sl-div-field"><div class="sl-rank-tones" role="toolbar" aria-labelledby="f-color-label" data-sl-roving>
+          {% for tone in group_tones %}<button type="button" data-sl-group-tone="{{ tone.color }}" style="--sl-d-swatch: {{ tone.color }}" title="{{ tone.label }}" aria-label="{{ tone.label }}" aria-pressed="{% if tone.is_on %}true{% else %}false{% endif %}"></button>{% endfor %}
+          <label class="sl-rank-custom{% if is_group_own %} sl-is-active{% endif %}" title="{{ own_text }}" style="--sl-d-swatch: {{ color }}" data-sl-tone-custom="group"><input type="color" name="color" id="f-color" value="{{ color }}" aria-label="{{ own_text }}"></label>
+        </div></div>
+      </div>
+      <div class="sl-div-item">
+        <div class="sl-div-label"><label for="f-grextra">{{ extra_label }}</label><span class="sl-small" id="f-grextra-hint">{{ extra_hint }}</span></div>
+        <div class="sl-div-field">{{{ extra_html }}}</div>
+      </div>
+      <div class="sl-div-item{% if is_extra %} sl-hidden{% endif %}" data-sl-rank-points>
+        <div class="sl-div-label"><label for="f-points">{{ points_label }}</label><span class="sl-small" id="f-points-hint">{{ points_hint }}</span></div>
+        <div class="sl-div-field">{{{ points_html }}}<p class="sl-rank-place" id="f-points-place" data-sl-rank-place data-sl-rank-first="{{ place_first }}" data-sl-rank-between="{{ place_between }}" data-sl-rank-last="{{ place_last }}" data-sl-rank-only="{{ place_only }}" data-sl-rank-taken="{{ place_taken }}"><i class="bi bi-signpost-split" aria-hidden="true"></i> <span data-sl-rank-place-text></span></p></div>
+      </div>
+    </div>
+    <div class="sl-div-actions">
+      <a class="sl-but" href="{{ list_url }}" data-sl-rank-cancel>{{ cancel_label }}</a>
+      <button type="submit" class="sl-but-blue">{{ submit_label }}</button>
+    </div>
+  </div>
+</form>

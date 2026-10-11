@@ -55,12 +55,14 @@
         var active = modal.querySelector('.sl-icon-cell.sl-is-active');
         if (active) active.scrollIntoView({ block: 'center' });
     }
+    /* Write the picked icon into its field and announce it, so a form that follows its fields hears a pick as it hears a typed name */
     function setIconValue(name) {
         if (!picker) return;
         var input = picker.querySelector('[data-sl-icon-input]');
         var preview = picker.querySelector('[data-sl-icon-preview]');
         if (input) input.value = name;
         if (preview) preview.className = 'bi bi-' + name;
+        if (input) input.dispatchEvent(new Event('input', { bubbles: true }));
     }
     document.addEventListener('click', function (event) {
         var node = event.target;
@@ -852,6 +854,243 @@
         event.preventDefault();
         event.returnValue = '';
     });
+    /* The ladder of the groups: a sort button turns its list over by the key its steps name, in place, the id breaking a tie; nothing is stored */
+    document.addEventListener('click', function (event) {
+        var btn = event.target && event.target.closest ? event.target.closest('[data-sl-ladder-sort]') : null;
+        var list = btn ? document.getElementById(btn.getAttribute('aria-controls')) : null;
+        if (!list) return;
+        var key = 'data-sl-sort-' + btn.getAttribute('data-sl-ladder-sort');
+        var desc = btn.getAttribute('aria-pressed') !== 'true';
+        var num = function (node, name) { return parseInt(node.getAttribute(name), 10) || 0; };
+        Array.prototype.slice.call(list.children).sort(function (a, b) {
+            var gap = num(a, key) - num(b, key);
+            return gap ? (desc ? -gap : gap) : num(a, 'data-sl-sort-id') - num(b, 'data-sl-sort-id');
+        }).forEach(function (step) { list.appendChild(step); });
+        btn.setAttribute('aria-pressed', desc ? 'true' : 'false');
+    });
+    /* The group form: one rank string icon:lit:total:#rrggbb, by the rules getRankData() of the core checks */
+    function getRankParts(rank) {
+        var m = /^([a-z0-9-]+):(\d{1,2}):(\d{1,2}):(#[0-9a-f]{6})$/.exec(rank || '');
+        if (!m) return null;
+        var lit = parseInt(m[2], 10);
+        var total = parseInt(m[3], 10);
+        return (total < 1 || total > 10 || lit > total) ? null : { icon: m[1], lit: lit, total: total, color: m[4] };
+    }
+    var rankpen = null;
+    /* Any CSS colour as the browser paints it, one pixel of a canvas: a relative colour, an oklch or a hex alike */
+    function getColorRgb(css) {
+        if (!rankpen) {
+            var cv = document.createElement('canvas');
+            cv.width = 1;
+            cv.height = 1;
+            rankpen = cv.getContext('2d', { willReadFrequently: true });
+        }
+        rankpen.clearRect(0, 0, 1, 1);
+        rankpen.fillStyle = '#fff';
+        rankpen.fillStyle = css;
+        rankpen.fillRect(0, 0, 1, 1);
+        return Array.prototype.slice.call(rankpen.getImageData(0, 0, 1, 1).data, 0, 3);
+    }
+    /* The relative luminance of a colour by WCAG */
+    function getColorLight(rgb) {
+        var lin = rgb.map(function (v) {
+            v = v / 255;
+            return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+        });
+        return 0.2126 * lin[0] + 0.7152 * lin[1] + 0.0722 * lin[2];
+    }
+    /* The contrast ratio of two CSS colours */
+    function getColorRatio(fore, back) {
+        var a = getColorLight(getColorRgb(fore));
+        var b = getColorLight(getColorRgb(back));
+        return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+    }
+    /* A row of choices is one stop for Tab and is walked with the arrows; the chosen member, or the first, holds the stop */
+    function getRankItems(row) {
+        return Array.prototype.filter.call(row.querySelectorAll(':scope > button, :scope > label > input'), function (item) { return !item.hidden; });
+    }
+    /* Give the Tab stop of a row to its chosen member, or to the first */
+    function setRankRoving(row) {
+        var items = getRankItems(row);
+        var cur = items.filter(function (item) { return item.getAttribute('aria-pressed') === 'true' || !!item.closest('.sl-rank-custom.sl-is-active'); })[0] || items[0];
+        items.forEach(function (item) { item.tabIndex = item === cur ? 0 : -1; });
+    }
+    /* A threshold with its thousands apart, as the list prints it */
+    function getRankNumber(num) {
+        return String(num).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+    }
+    /* Put the values into the %s of a sentence in their order */
+    function getRankFill(text, args) {
+        var at = 0;
+        return String(text || '').replace(/%s/g, function () { return args[at++] || ''; });
+    }
+    /* Where a group with this threshold would stand among the other point groups, in words */
+    function getRankPlace(form, pts) {
+        var hint = form.querySelector('[data-sl-rank-place]');
+        var list = [];
+        try { list = JSON.parse(form.getAttribute('data-sl-rank-steps') || '[]'); } catch (e) { list = []; }
+        var prev = null;
+        var next = null;
+        list.forEach(function (step) {
+            if (step.points <= pts) prev = step;
+            else if (!next) next = step;
+        });
+        var pair = function (step) { return [step.name, getRankNumber(step.points)]; };
+        if (!hint) return '';
+        if (prev && prev.points === pts) return getRankFill(hint.getAttribute('data-sl-rank-taken'), pair(prev));
+        if (!prev && !next) return hint.getAttribute('data-sl-rank-only');
+        if (!prev) return getRankFill(hint.getAttribute('data-sl-rank-first'), pair(next));
+        if (!next) return getRankFill(hint.getAttribute('data-sl-rank-last'), pair(prev));
+        return getRankFill(hint.getAttribute('data-sl-rank-between'), pair(prev).concat(pair(next)));
+    }
+    /* A printed rank takes the new marks by cloning its own first one, so the markup stays the one of the theme fragment */
+    function setRankMarks(span, data, title) {
+        var mark = span.querySelector('i');
+        if (!mark) return;
+        while (span.children.length > data.total) span.removeChild(span.lastElementChild);
+        while (span.children.length < data.total) span.appendChild(mark.cloneNode(false));
+        Array.prototype.forEach.call(span.children, function (item, n) { item.className = 'bi bi-' + data.icon + (n < data.lit ? ' sl-is-active' : ''); });
+        span.style.setProperty('--sl-d-rank', data.color);
+        span.setAttribute('aria-label', title);
+        span.setAttribute('title', title);
+    }
+    /* Answer every change at once: the rank and its proof, each tile against its own surface with the name as painted, the swatches, the threshold */
+    function setRankView(form) {
+        var field = form.elements;
+        var total = Math.min(10, Math.max(1, parseInt(field.rank_total.value, 10) || 1));
+        field.rank_lit.max = String(total);
+        if ((parseInt(field.rank_lit.value, 10) || 0) > total) field.rank_lit.value = String(total);
+        var color = String(field.color.value || '').toLowerCase();
+        var sync = field.rank_sync.value === '1';
+        if (sync) field.rank_color.value = color;
+        var raw = field.rank_icon.value.trim();
+        var lit = Math.min(total, Math.max(0, parseInt(field.rank_lit.value, 10) || 0));
+        var data = getRankParts((/^[a-z0-9-]+$/.test(raw) ? raw : 'x') + ':' + lit + ':' + total + ':'
+            + String(field.rank_color.value || color).toLowerCase());
+        var name = field.grname.value.trim();
+        var title = name ? form.getAttribute('data-sl-rank-group') + name : form.getAttribute('data-sl-rank-none');
+        var each = function (sel, run) { Array.prototype.forEach.call(form.querySelectorAll(sel), run); };
+        form.style.setProperty('--sl-d-group', color);
+        each('[data-sl-rank-out="total"]', function (node) { node.textContent = String(total); });
+        each('[data-sl-rank-out="lit"]', function (node) { node.textContent = String(lit); });
+        each('[data-sl-rank-name]', function (node) { node.textContent = name || form.getAttribute('data-sl-rank-blank'); });
+        if (data && raw === data.icon) {
+            each('[data-sl-rank-live] .sl-rank', function (span) { setRankMarks(span, data, title); });
+            each('[data-sl-icon-preview]', function (node) { node.className = 'bi bi-' + data.icon; });
+            var rank = data.icon + ':' + data.lit + ':' + data.total + ':' + data.color;
+            each('[data-sl-rank-set]', function (node) { node.setAttribute('aria-pressed', String(node.getAttribute('data-sl-rank-set') === rank)); });
+            each('[data-sl-rank-icon]', function (node) { node.setAttribute('aria-pressed', String(node.getAttribute('data-sl-rank-icon') === data.icon)); });
+        }
+        var tone = data ? data.color : String(field.rank_color.value).toLowerCase();
+        var tones = { rank: [], group: [] };
+        each('[data-sl-rank-tone]', function (node) {
+            var val = node.getAttribute('data-sl-rank-tone');
+            if (val !== 'group') tones.rank.push(val);
+            node.setAttribute('aria-pressed', String(val === 'group' ? sync : (!sync && val === tone)));
+        });
+        each('[data-sl-group-tone]', function (node) {
+            tones.group.push(node.getAttribute('data-sl-group-tone'));
+            node.setAttribute('aria-pressed', String(node.getAttribute('data-sl-group-tone') === color));
+        });
+        each('[data-sl-tone-custom]', function (node) {
+            var own = node.getAttribute('data-sl-tone-custom') === 'rank';
+            var val = own ? tone : color;
+            node.style.setProperty('--sl-d-swatch', val);
+            node.classList.toggle('sl-is-active', !(own && sync) && tones[own ? 'rank' : 'group'].indexOf(val) < 0);
+        });
+        each('[data-sl-rank-tile]', function (tile) {
+            var back = getComputedStyle(tile).backgroundColor;
+            var named = tile.querySelector('[data-sl-rank-name]');
+            var mark = getColorRatio(tone, back);
+            var text = getColorRatio(named ? getComputedStyle(named).color : color, back);
+            tile.querySelector('[data-sl-rank-ratio="mark"]').textContent = mark.toFixed(1) + ':1';
+            tile.querySelector('[data-sl-rank-ratio="text"]').textContent = text.toFixed(1) + ':1';
+            tile.toggleAttribute('data-sl-bad-mark', mark < 3);
+            tile.toggleAttribute('data-sl-bad-text', text < 3);
+        });
+        each('[data-sl-rank-note]', function (node) { node.hidden = !form.querySelector('[data-sl-bad-mark], [data-sl-bad-text]'); });
+        each('[data-sl-rank-points]', function (node) { node.classList.toggle('sl-hidden', field.grextra.checked); });
+        each('[data-sl-rank-place-text]', function (node) { node.textContent = getRankPlace(form, Math.max(0, parseInt(field.points.value, 10) || 0)); });
+        each('[data-sl-roving]', setRankRoving);
+    }
+    /* Wire the choices, the arrows of the rows (up and down by a measured line) and the leave question; the save is not a way out */
+    function setRankForm(form) {
+        var field = form.elements;
+        var dirty = form.hasAttribute('data-sl-rank-dirty');
+        var free = false;
+        var setDirty = function () {
+            dirty = true;
+            setRankView(form);
+        };
+        form.addEventListener('input', function (event) {
+            if (event.target.name === 'rank_color') field.rank_sync.value = '0';
+            setDirty();
+        });
+        form.addEventListener('change', function () { setRankView(form); });
+        form.addEventListener('click', function (event) {
+            var node = event.target && event.target.closest ? event.target : null;
+            if (!node) return;
+            var set = node.closest('[data-sl-rank-set]');
+            var tone = node.closest('[data-sl-rank-tone]');
+            var gtone = node.closest('[data-sl-group-tone]');
+            var icon = node.closest('[data-sl-rank-icon]');
+            var data = set ? getRankParts(set.getAttribute('data-sl-rank-set')) : null;
+            if (data) {
+                field.rank_icon.value = data.icon;
+                field.rank_total.value = String(data.total);
+                field.rank_lit.max = String(data.total);
+                field.rank_lit.value = String(data.lit);
+                field.rank_color.value = data.color;
+                field.rank_sync.value = '0';
+            } else if (tone) {
+                field.rank_sync.value = tone.getAttribute('data-sl-rank-tone') === 'group' ? '1' : '0';
+                if (field.rank_sync.value === '0') field.rank_color.value = tone.getAttribute('data-sl-rank-tone');
+            } else if (gtone) {
+                field.color.value = gtone.getAttribute('data-sl-group-tone');
+            } else if (icon) {
+                field.rank_icon.value = icon.getAttribute('data-sl-rank-icon');
+            } else {
+                return;
+            }
+            setDirty();
+        });
+        form.addEventListener('keydown', function (event) {
+            var row = event.target.closest ? event.target.closest('[data-sl-roving]') : null;
+            if (!row || ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End'].indexOf(event.key) < 0) return;
+            var items = getRankItems(row);
+            var at = items.indexOf(event.target);
+            if (at < 0) return;
+            var top = items[0].getBoundingClientRect().top;
+            var across = items.filter(function (item) { return Math.abs(item.getBoundingClientRect().top - top) < 2; }).length || items.length;
+            var move = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -across, ArrowDown: across };
+            var to = event.key === 'Home' ? 0 : (event.key === 'End' ? items.length - 1 : at + move[event.key]);
+            to = Math.max(0, Math.min(items.length - 1, to));
+            event.preventDefault();
+            items.forEach(function (item, n) { item.tabIndex = n === to ? 0 : -1; });
+            items[to].focus();
+        });
+        form.addEventListener('submit', function () { free = true; });
+        document.addEventListener('click', function (event) {
+            var link = event.target && event.target.closest ? event.target.closest('.sl-tabs-nav a[href], [data-sl-rank-cancel]') : null;
+            if (!link || !dirty || free || !window.setConfirmTask) return;
+            event.preventDefault();
+            window.setConfirmTask(form.getAttribute('data-sl-rank-leave'), function () {
+                free = true;
+                window.location.href = link.href;
+            });
+        });
+        window.addEventListener('beforeunload', function (event) {
+            if (!dirty || free) return;
+            event.preventDefault();
+            event.returnValue = '';
+        });
+        setRankView(form);
+    }
+    /* Wire the group form when the page carries one */
+    function addRankForm() {
+        var form = document.querySelector('[data-sl-rank-form]');
+        if (form) setRankForm(form);
+    }
     /* Motion over the page: the place of every solid head in the order its beam crosses, and the light that follows the pointer.
        The pointer is written once a frame and only where motion is welcome; a touch has no pointer to follow.
        The installer card also learns where the pointer is inside it, so the light runs along its rim */
@@ -943,10 +1182,12 @@
             addFileStep();
             setBeamTurns();
             setSetupRun();
+            addRankForm();
         });
     } else {
         addFileStep();
         setBeamTurns();
         setSetupRun();
+        addRankForm();
     }
 })();

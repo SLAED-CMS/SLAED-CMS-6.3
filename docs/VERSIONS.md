@@ -1,5 +1,43 @@
 # Versions
 
+## 2026-10-12
+
+### The rank of a group is a row of icons in a colour of its own, and the group list becomes a ladder with a rank composer
+
+A rank was one of fourteen 93×17 pictures in `templates/lite/images/ranks/`, which seven readers found each their own
+way, and the panel listed the groups as one table and picked a rank from a `select` of file names. The rank is now drawn
+with Bootstrap Icons from one stored string, and the groups screen wears the face of the stand page
+`public/demo/grp-10-unified.html`. The reference is `docs/TEMPLATES.md`, "Rank" and "Group Ladder And Rank Composer";
+the help of the screen is `admin/info/groups/ru.md`.
+
+- **The rank as icons.** `_groups.rank` holds `icon:lit:total:#rrggbb`: M marks of one icon, the first N lit in the
+  colour of the rank, the rest in a muted tone. `getRankData()` and `getRankView()` in `core/system.php` parse and draw
+  it through `fragments/rank.html`, the same in both themes; the comment, the forum post, the profile, the user block,
+  the users statistics and the panel list pass the raw column. The schema does not change.
+- **The migration.** `table_update6_3.sql` maps the fourteen pictures onto icon strings in tones darkened to hold 3:1 on
+  the light and the dark surface — steel `#8297a2`, gold `#b0904d`, bronze `#c68649`, sky `#629abf`; a site's own
+  picture becomes no lit star of five in its group colour. Only values ending in a picture extension change, so a second
+  run changes nothing.
+- **The ladder.** «Главная» shows «Лестница пунктов», the point groups by threshold, and «Специальные группы», by
+  members, as steps on a rail: the threshold or the mark «Специальная», the rank and the name in the group colour, the
+  description, «Участников: N» as a link to the user list over a bar of the share, the dial. Each list reverses in place
+  by its sort button. One query counts the members of every group.
+- **The composer.** «Добавить» holds «Готовый ранг» (eighteen presets), «Свой ранг» (forty icons and the icon window,
+  the counts, the rank colour as swatches, an own colour or the group colour) beside a preview at three sizes and two
+  contrast tiles for the light and the dark theme, and «Группа», where the threshold says where the group will stand. A
+  new group opens filled as the next step of the ladder. The rows of choices are toolbars with one Tab stop, and leaving
+  a changed form asks first.
+- **A painted name stays readable.** The panel clamps the lightness of a group colour in both themes, so any stored
+  colour reads at 4.5:1; the stored value is untouched.
+- **`save()`** writes the joined string, clamps the counts, and refuses a bad icon, a bad colour and a threshold
+  another point group has.
+- **Strings.** The captions of both screens, the eighteen preset names and the colour names in six locales;
+  `_POINTSNEEDED` reads «Порог пунктов»; `_GROUPSI` and `_COLOR` are gone.
+- **Breaking:** an old picture name in `_groups.rank` is not drawn until `update.php` ran, and the folder
+  `templates/lite/images/ranks/` is gone. The templates take `rank_html` in place of `rank_link`, `rank_src`, `rank_url`
+  and `has_rank_image`, so a theme with its own copy of the comment, the forum post, the profile or the user block shows
+  no rank. `.sl-profile-rank-img` and the site token `--sl-rank-height` are gone.
+
 ## 2026-10-11
 
 ### One segmented switch with a travelling plate, and one pager for both themes that pages with the arrow keys

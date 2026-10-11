@@ -3521,7 +3521,7 @@ function filterSlug(string $text, string $sep = '-'): string {
 # Format theme
 # The panel answers its own theme and a member's site theme may not take it back: the panel is built from partials no site theme carries, the login form among them
 # Otherwise a member who once saved a theme preference and then opened the panel was served a page whose form could not render at all
-# `$conf['theme']` stays the theme of the site in the panel too, because its screens pick the logos, ranks and banners of the site from it
+# `$conf['theme']` stays the theme of the site in the panel too, because its screens pick the logos and banners of the site from it
 # `index.php` declares the same constant for its admin endpoints, but long after the answer here is cached, and that branch builds its Template by name anyway
 # The constant is therefore read only where it is set before the bootstrap
 function getTheme(): string {

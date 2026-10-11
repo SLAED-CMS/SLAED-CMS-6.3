@@ -551,7 +551,6 @@
   --sl-pulse-mix: 55%;
   --sl-qr-width: min(64vw, 256px);
   --sl-radio-height: 20px;
-  --sl-rank-height: 26px;
   --sl-row-bg: color-mix(in srgb, var(--sl-warning) 7%, transparent);
   --sl-scroll-height: 190px;
   --sl-search-width: 340px;
