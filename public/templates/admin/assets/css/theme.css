@@ -1580,7 +1580,9 @@ pre code.hljs {
 }
 
 .sl-editor-pill .sl-modal-act[aria-pressed="true"],
-.sl-editor-pill .sl-modal-act[aria-expanded="true"] {
+.sl-editor-pill .sl-modal-act[aria-expanded="true"],
+.sl-pager-keys:hover > .sl-but-mini,
+.sl-pager-keys.sl-is-open > .sl-but-mini {
   background: var(--sl-tint);
   color: var(--sl-primary-strong);
 }
@@ -4953,6 +4955,74 @@ button.sl-seg-cell:hover {
   color: var(--sl-text-strong);
   font-weight: var(--sl-weight-semibold);
   font-variant-numeric: tabular-nums;
+}
+
+/* The key tip: the system tip on a quiet round trigger, which lights up in the tint of a pressed control while its panel is open */
+.sl-pager .sl-pager-keys {
+  width: auto;
+  height: auto;
+  margin: 0;
+}
+
+.sl-pager-tip {
+  text-align: left;
+}
+
+.sl-pager-tip-head {
+  margin: 0 0 var(--sl-space-3);
+  color: var(--sl-text-strong);
+  font-weight: var(--sl-weight-semibold);
+}
+
+/* The keys are a list of their own: neither the label and value rows of the site nor the label: value line of the panel */
+.sl-pager-tip-keys {
+  display: grid;
+  gap: var(--sl-space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sl-pager-tip-keys li {
+  display: flex;
+  align-items: center;
+  gap: var(--sl-space-3);
+  margin: 0;
+}
+
+.sl-pager-tip kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--sl-size-chip);
+  height: var(--sl-size-chip);
+  padding: 0 var(--sl-space-2);
+  box-sizing: border-box;
+  border: 1px solid var(--sl-border);
+  border-bottom-width: var(--sl-space-1);
+  border-radius: var(--sl-radius-1);
+  background: var(--sl-surface);
+  color: var(--sl-text-strong);
+  font: inherit;
+  font-size: var(--sl-font-small);
+}
+
+.sl-pager-tip kbd .bi {
+  font-size: var(--sl-size-icon-xs);
+  line-height: 1;
+}
+
+.sl-pager-tip-note {
+  margin: var(--sl-space-3) 0 0;
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-small);
+}
+
+/* A touch screen has no arrow keys to explain */
+@media (pointer: coarse) {
+  .sl-pager .sl-pager-keys {
+    display: none;
+  }
 }
 
 /* Under 520px of its own column the far numbers and the range go and the line stands under the row, under 320px the neighbours go too */

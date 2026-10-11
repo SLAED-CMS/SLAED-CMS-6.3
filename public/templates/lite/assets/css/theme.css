@@ -554,6 +554,74 @@ thead tr th[data-sort-method="none"]::after {
   font-variant-numeric: tabular-nums;
 }
 
+/* The key tip: the system tip on a quiet round trigger, which lights up in the tint of a pressed control while its panel is open */
+.sl-pager .sl-pager-keys {
+  width: auto;
+  height: auto;
+  margin: 0;
+}
+
+.sl-pager-tip {
+  text-align: left;
+}
+
+.sl-pager-tip-head {
+  margin: 0 0 var(--sl-space-3);
+  color: var(--sl-text-strong);
+  font-weight: var(--sl-weight-semibold);
+}
+
+/* The keys are a list of their own: neither the label and value rows of the site nor the label: value line of the panel */
+.sl-pager-tip-keys {
+  display: grid;
+  gap: var(--sl-space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sl-pager-tip-keys li {
+  display: flex;
+  align-items: center;
+  gap: var(--sl-space-3);
+  margin: 0;
+}
+
+.sl-pager-tip kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--sl-size-chip);
+  height: var(--sl-size-chip);
+  padding: 0 var(--sl-space-2);
+  box-sizing: border-box;
+  border: 1px solid var(--sl-border-muted);
+  border-bottom-width: var(--sl-space-1);
+  border-radius: var(--sl-radius-1);
+  background: var(--sl-surface);
+  color: var(--sl-text-strong);
+  font: inherit;
+  font-size: var(--sl-font-small);
+}
+
+.sl-pager-tip kbd .bi {
+  font-size: var(--sl-size-icon-xs);
+  line-height: 1;
+}
+
+.sl-pager-tip-note {
+  margin: var(--sl-space-3) 0 0;
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-small);
+}
+
+/* A touch screen has no arrow keys to explain */
+@media (pointer: coarse) {
+  .sl-pager .sl-pager-keys {
+    display: none;
+  }
+}
+
 /* Under 520px of its own column the far numbers and the range go, under 320px the neighbours too, leaving 1 … 8 … 16 */
 @container (width < 520px) {
   .sl-pager-main {
@@ -2979,10 +3047,12 @@ pre code.hljs {
   color: var(--sl-text-muted);
 }
 
-/* A pressed act of the editor pill and a header pill whose filter narrows a Node list wear one tint, which shows what is on at a glance */
+/* A pressed act of the editor pill, a header pill whose filter narrows a Node list and the open key tip of a pager wear one tint, which shows what is on at a glance */
 .sl-editor-pill .sl-modal-act[aria-pressed="true"],
 .sl-editor-pill .sl-modal-act[aria-expanded="true"],
-.sl-node-head-pill.sl-is-active .sl-but {
+.sl-node-head-pill.sl-is-active .sl-but,
+.sl-pager-keys:hover > .sl-but-mini,
+.sl-pager-keys.sl-is-open > .sl-but-mini {
   background: var(--sl-tint);
   color: var(--sl-primary-strong);
 }

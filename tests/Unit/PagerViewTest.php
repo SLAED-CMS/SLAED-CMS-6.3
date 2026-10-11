@@ -107,7 +107,7 @@ final class PagerViewTest extends TestCase
         $this->assertSame('', getTplPagerView(1, 1, 8, static fn(int $i): array => []));
     }
 
-    # The arrows lead one page back and forward with their own rel, and an arrow at the end of the run is no link
+    # The arrows lead one page back and forward with their own rel and key, and an arrow at the end of the run is no link
     #[Test]
     public function theArrowsStepOnePage(): void
     {
@@ -115,9 +115,9 @@ final class PagerViewTest extends TestCase
         $next = json_decode(trim(self::getView(1, 16, 5)['view']['data']['next']), true)['data'];
         $this->assertTrue($prev['is_nav'] && $prev['is_cur']);
         $this->assertArrayNotHasKey('href', $prev);
-        $this->assertSame(['index.php?name=news&num=2', 'next', 'chevron-right'], [$next['href'], $next['rel'], $next['icon_name']]);
+        $this->assertSame(['index.php?name=news&num=2', 'next', 'chevron-right', 'ArrowRight'], [$next['href'], $next['rel'], $next['icon_name'], $next['key_name']]);
         $back = json_decode(trim(self::getView(16, 16, 5)['view']['data']['prev']), true)['data'];
-        $this->assertSame(['index.php?name=news&num=15', 'prev', 'chevron-left'], [$back['href'], $back['rel'], $back['icon_name']]);
+        $this->assertSame(['index.php?name=news&num=15', 'prev', 'chevron-left', 'ArrowLeft'], [$back['href'], $back['rel'], $back['icon_name'], $back['key_name']]);
     }
 
     # The page line gets the range of the shown records when the caller names the page size and the total, the last page cut at the total

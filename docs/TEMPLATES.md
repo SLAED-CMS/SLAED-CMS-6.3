@@ -515,6 +515,97 @@ is in `docs/NODE.md`, "List header", "Views of a list" and "Live list"; the keys
 - **The hints share a look rather than a component.** `sl-node-hints` and `sl-node-hint` take the pointed and the chosen
   state of `sl-editor-hint-row`; no shared hint list stands in the tree.
 
+## Segmented Switch
+
+Every row of cells with one chosen — the colour mode of the site header, the view of a Node list, the numbers of the
+pager — is one component, `sl-seg`, in the `theme.css` of both themes; the face it was drawn from is the stand
+`public/demo/assets/demo.css`.
+
+| Part | Is |
+|---|---|
+| `sl-seg` | the sunken track, an inline flex row with the plate under its cells |
+| `sl-seg-cell` | a cell: a link, a button or a `span`; `sl-is-active` marks the chosen one, `sl-is-muted` one that is no choice |
+| `sl-seg-knob` | the plate, an empty `span` with `data-sl-knob-mark` and `aria-hidden="true"`; it carries no copy of the cell content, the chosen cell recolours its own over it |
+| `sl-seg-run` | a run of cells printed by another fragment, laid straight into the track by `display: contents` |
+
+- **A modifier sets the tokens of its place and nothing else.** `sl-seg-mode` — the gradient of the top band, light
+  icons, only in lite, since the panel has no mode switch; `sl-seg-view` — a quiet track; `sl-seg-pager` — mini cells,
+  the plate set inside the track by `--sl-space-1`, the digits small and bold. A setting (the mode, the view) wears a
+  neutral light plate, a place (the current page) the brand colour.
+- **The tokens are API.** `--sl-seg-height`, `--sl-seg-pad-x`, `--sl-seg-pad-y`, `--sl-seg-bg`, `--sl-seg-text`,
+  `--sl-seg-knob-bg`, `--sl-seg-knob-text`, `--sl-seg-knob-shadow` stand in the API block of each `base.css` as the face
+  of the plain `sl-seg`; a modifier reads semantic tokens straight instead of redeclaring them, because a custom property
+  declared in `theme.css` counts as scoped. `--sl-mode-width`, `--sl-mode-height` and `--sl-mode-bg` stay the cell, the
+  plate and the track of `sl-seg-mode`.
+
+**The plate travels.** One mechanism in `plugins/system/slaed.js`, `setKnobs()`, run at start and on `htmx:afterSwap`
+for the swapped part:
+
+| Attribute | On | Carries |
+|---|---|---|
+| `data-sl-knob="<name>"` | the track | the name of the rail — `mode`, `view`, `pager` — under which its place is handed on |
+| `data-sl-knob-mark` | the plate | what the sheet moves |
+| `data-sl-knob-ready` | the track, written by the script | the plate stands on the measured place; without it the plate is hidden and the chosen cell wears the plate itself, so a page without script still shows the choice |
+| `data-sl-knob-still` | the track, written by the script | the plate stands on a handed place for one frame without a transition, and the observers leave it there |
+| `--sl-d-knob-x`, `--sl-d-knob-w` | the track, written by the script | the left and the width of the chosen cell inside the track |
+
+- **The script measures, the sheet moves.** `setKnobPlace()` measures the first visible `sl-is-active` of the rail; a
+  `ResizeObserver` and a `MutationObserver` on the class follow a change of the chosen cell whoever makes it. The sheet
+  moves the plate with `--sl-time-slow` and `--sl-ease-in-out`, and not at all under `prefers-reduced-motion`.
+- **A page hands its places to the next.** On `pagehide` and `htmx:beforeSwap` the place of the first rail of every name
+  goes into `sessionStorage` (`slaed-knob:place`); the next rail of that name takes it once, only on the same path and
+  within five seconds, stands still on it and travels from the next frame. A link, the POST of the mode form and an htmx
+  swap alike look like one plate moving. `tests/Unit/SegKnobTest.php` holds the mechanism.
+
+## Pager
+
+`getTplPagerView()` in `core/helpers.php` is the one renderer of both themes: a window of `$maxpg` numbers round the
+current page, the first and the last outside it, the dots where numbers are skipped. Callers reach it through
+`getTplPager()` (counts by a query or takes `count`) and `getPageNumbers()` (known counters); the private messages of
+the site and the panel, the Node lists of the site and the panel, the panel comments and the newsletter call it
+directly with a link builder of their own, the private messages with their htmx target. Which numbers the window selects is the callers'
+business; the face is the stand `public/demo/pg-09-final.html`, in the panel `pg-14-admin.html`.
+
+| Fragment | Prints |
+|---|---|
+| `fragments/pager.html` | the `nav` labelled `_PAGENAV`: the row `sl-pager-main` with the arrows and the rail in `sl-pager-nav`, the side group `sl-pager-side` with "Наверх" on `#top` and the key tip, then the line `sl-pager-info` |
+| `fragments/pager-link.html` | one cell: a number (`sl-seg-cell`), an arrow (`sl-but-mini`) or the dots; a link by `href`, an htmx link by `query` with `target_id` and `push_url`, a `span` for the current page and for an arrow at the end of the run |
+
+Both fragments are byte-identical in `templates/admin` and `templates/lite`; only each theme's sheet differs.
+
+| Key | To | Carries |
+|---|---|---|
+| `is_cur` | `pager-link` | the current page, printed as `sl-is-active` with `aria-current="page"` |
+| `is_far`, `is_near` | `pager-link` | a number more than one away from the current page, or its neighbour; never the first or the last. The fragment prints `sl-pager-far` and `sl-pager-near` |
+| `is_nav`, `rel`, `icon_name`, `key_name` | `pager-link` | an arrow: `rel="prev"` or `rel="next"`, its chevron, and `aria-keyshortcuts` with `ArrowLeft` or `ArrowRight` |
+| `is_dots` | `pager-link` | the muted cell `&hellip;` |
+| `page_label`, `page_of`, `overall`, `count` | `pager` | "Страница 3 из 10" and "Всего 97" |
+| `range_from`, `range_to`, `range_text` | `pager` | "Показаны 21–30", only when the caller names `limit` and `count` |
+
+- **The rail is the segmented switch.** The numbers are the `sl-seg-run` of `sl-seg sl-seg-pager` with
+  `data-sl-knob="pager"`, so the plate travels to the new page after a reload and after an htmx swap.
+- **It narrows by its own column.** `.sl-pager` declares `container-type: inline-size`: under 520px of it the far
+  numbers and the range part of the line go, under 320px the neighbours too, leaving `‹ 1 … 8 … 16 ›`. A container of
+  inline size does not grow by its content, so a flex foot that holds the pager gives it a width — the panel module foot
+  and the forum foot do; the other places hold it as a block. The site centres the row and puts the line under it; the panel starts the row
+  at the left and pushes the line to the right, under the row in a narrow container; the panel list foot puts the bulk
+  action under the pager below 560px.
+- **The arrow keys page the list.** `setPagerKeys()` in `slaed.js` listens to ← and → without a modifier and clicks the
+  back or forward link (`a[rel]`) of the first pager on show outside a window, so an htmx link swaps as it does for the
+  pointer and two pagers of one topic lead to the same page. It stands aside when the key was handled already, when the
+  focus is in a field, a `select`, a media element or an editable, on a tab or a tab list, inside a `<dialog>` — the
+  file manager, the gallery, every window — and on the file desk of the panel (`.sl-fm-split`).
+- **The "i" explains the keys.** The side group carries the system tip `sl-tip sl-float sl-pager-keys` labelled
+  `_PAGEKEYS`, its panel `sl-pager-tip` with the heading, the two keys as `bi-arrow-left` and `bi-arrow-right` in `kbd`
+  caps labelled `_KEYLEFT` and `_KEYRIGHT`, "Предыдущая страница" and "Следующая страница", and the note `_PAGEKEYNOTE`.
+  The keys are a plain list, not a `dl`, which each theme lays out as label and value. A touch screen
+  (`pointer: coarse`) has no arrow keys, so the "i" is hidden there; "Наверх" stays everywhere.
+- **"Наверх" is a plain anchor.** Every link to the top — the pager, the stuck header of a Node list, the lower
+  navigation of `search` and `users`, the panel footer — points at `#top`, which the browser takes for the start of the
+  page, and the root of each theme scrolls smoothly unless the reader asked for less motion.
+- `tests/Unit/PagerViewTest.php` holds the window, the marks and the range, `tests/Unit/PagerKeysTest.php` the keys and
+  the tip.
+
 ## Theme Contract
 
 A new theme is made by copying an etalon and editing one file: `templates/<theme>/assets/css/base.css` — its `@font-face` and `:root` block, down to the `/* --- end tokens --- */` marker. Everything below the marker is reset and element styles.

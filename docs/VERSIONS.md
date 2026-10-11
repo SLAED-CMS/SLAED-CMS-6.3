@@ -2,6 +2,42 @@
 
 ## 2026-10-11
 
+### One segmented switch with a travelling plate, and one pager for both themes that pages with the arrow keys
+
+The colour mode of the site header was a rail with a plate that copied the chosen icon and stepped by an `nth-child`
+ladder, the site pager a band of mini buttons with its line above it, the panel pager a row of `sl-pnum` cells with
+drawn arrows, and "Наверх" a script in the panel and a hidden link on the site. The switch and the pager now wear the
+faces of the stand pages `public/demo/pg-09-final.html` and `pg-14-admin.html`, chosen by the owner. The reference is
+`docs/TEMPLATES.md`, "Segmented Switch" and "Pager".
+
+- **One segmented switch.** `sl-seg` with `sl-seg-cell`, the empty plate `sl-seg-knob` and `sl-seg-run`, in both
+  themes, with the modifiers `sl-seg-mode` (site header only), `sl-seg-view` (the view of a Node list) and
+  `sl-seg-pager`; eight `--sl-seg-*` tokens in the API block of each `base.css`.
+- **The plate travels.** A rail names itself in `data-sl-knob`; `slaed.js` measures the chosen cell and the sheet moves
+  the plate. A link, the mode form and an htmx swap hand the place to the next page through `sessionStorage`, so the
+  plate moves from where it stood; nothing moves under `prefers-reduced-motion`, and without the script the chosen cell
+  wears the plate.
+- **One pager.** The same `pager.html` and `pager-link.html` in both themes: the arrows, the numbers on the rail with
+  the current page in the brand colour, "Наверх" and an "i" beside them, and the line "Страница 3 из 10 · Показаны
+  21–30 · Всего 97" under the row on the site and at the right of the row in the panel. The pager narrows by its own
+  column — far numbers and the range go under 520px, the neighbours under 320px — and the panel list foot puts the bulk
+  action under it on a phone.
+- **The arrow keys page the list.** ← and → follow the back and forward link of the first pager on show, by a click so
+  an htmx pager swaps its part; a field, an editable, a tab, an open window and the file desk keep their arrows. The "i"
+  explains the keys in the system tip and is hidden on a touch screen.
+- **One "Наверх".** Every link to the top points at `#top` and the page scrolls smoothly by CSS, switched off under
+  `prefers-reduced-motion`; `Upper()` of `slaed.js` and the inline handler of the panel footer are gone.
+- **Strings.** `_PAGENAV`, `_PAGERANGE`, `_PAGEKEYS`, `_PAGEPREV`, `_PAGENEXT`, `_PAGEKEYNOTE`, `_KEYLEFT`, `_KEYRIGHT`
+  in six locales; "Всего" in the page line carries no colon; the French `_PAGETOP` reads "Haut de page".
+- **Breaking:** a theme with its own `pager.html` or `pager-link.html` keeps its old face and loses the marks, the tip
+  and the keys; the fragments take `is_far`, `is_near`, `is_dots`, `rel`, `key_name` and `range_*`, and
+  `.sl-pager-nextprev`, `.sl-pager-prev`, `.sl-pager-next`, `.sl-pnum-nav`, `.sl-pnum-cur`, `.sl-pnum-dots`,
+  `sl-mode-rail`, `sl-mode-cell` and `sl-mode-knob` are gone, as is the `is_pager_dots` branch of `inline-badge.html`.
+  The panel API loses `--sl-pnum-width`, `--sl-pnum-height`, `--sl-pnum-border`, `--sl-pnum-arrow-width`,
+  `--sl-pnum-arrow-height` and `--sl-card-shadow`. `getFootControls()` takes no `$label` and `$debug` any more, the
+  `debug_html` branch of `foot-controls.html` and the flag `is_upper` of `link.html` with them, and a list of keys
+  of `link.html`, `span.html` and `toggle-form-block.html` no caller passed is gone.
+
 ### A Node list gets a header of its own, offers the views of its type, lives in place and hints its search
 
 The list of a Node type had the shared navigation of the modules: a title, three fixed links and a category toggle,

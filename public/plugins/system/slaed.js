@@ -1589,6 +1589,26 @@
         });
     }
 
+    // The arrows click the back or forward link of the first pager on show outside a window; fields, tabs, windows and the file desk keep theirs
+    function setPagerKeys() {
+        document.addEventListener('keydown', function (event) {
+            var rel = event.key === 'ArrowLeft' ? 'prev' : (event.key === 'ArrowRight' ? 'next' : '');
+            var node = event.target;
+            if (!rel || event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
+            if (node && node.isContentEditable) return;
+            if (node && node.closest && node.closest('input, textarea, select, audio, video, [role="tab"], [role="tablist"], dialog, .sl-fm-split')) return;
+            var list = document.querySelectorAll('.sl-pager');
+            for (var i = 0; i < list.length; i++) {
+                if (list[i].closest('dialog') || !list[i].getClientRects().length) continue;
+                var link = list[i].querySelector('.sl-pager-nav > a[rel="' + rel + '"]');
+                if (!link) return;
+                event.preventDefault();
+                link.click();
+                return;
+            }
+        });
+    }
+
     // How far the profile is filled, over the fields the server marked as counting. It draws the same rule the server drew,
     // so the figure the page arrives with and the one after the first keystroke are the same figure and cannot drift apart
     // Each field carries the value that counts as empty for it, which is how a select whose zero is a real option is counted
@@ -2619,6 +2639,7 @@
         setStickyBars(document);
         setLensKeys();
         setHintKeys();
+        setPagerKeys();
         setFillMeters();
         setDirtyForms(document);
         setCodeBlocks(document);

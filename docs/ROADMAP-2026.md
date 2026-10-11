@@ -114,7 +114,7 @@ into the plan, then do whatever work the step names.
 - [x] 47. NODE-HEAD batch 7 — search hints. (2026-10-11)
 - [x] 48. NODE-HEAD batch 8 — reference; deletes `docs/5-NODE-HEAD-2026.md`. (2026-10-11)
 - [x] 49. PAGER batch 1 — the pager in both themes. (2026-10-11)
-- [ ] 50. PAGER batch 2 — keys, tip and reference; deletes `docs/6-PAGER-2026.md`.
+- [x] 50. PAGER batch 2 — keys, tip and reference; deletes `docs/6-PAGER-2026.md`. (2026-10-11)
 - [ ] 51. RANKS batch 1 — the rank as icons: `getRankView()`, the fragment in both themes, the site readers, the
   migration of `_groups.rank` in the darkened tones.
 - [ ] 52. RANKS batch 2 — the panel: the ladder and the special groups, the composer of the group form from the stand

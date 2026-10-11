@@ -186,6 +186,7 @@ function getTplPagerView(int $num, int $pages, int $maxpg, callable $target, arr
     };
     $step = static fn(int $page, string $label, string $rel): string => $link($page, [
         'label' => $label, 'title' => $label, 'is_cur' => $page === 0, 'is_nav' => true, 'icon_name' => 'chevron-'.($rel === 'prev' ? 'left' : 'right'), 'rel' => $rel,
+        'key_name' => $rel === 'prev' ? 'ArrowLeft' : 'ArrowRight',
     ]);
     $dots = $tpl->getHtmlFrag('pager-link', ['is_dots' => true]);
     $items = '';
