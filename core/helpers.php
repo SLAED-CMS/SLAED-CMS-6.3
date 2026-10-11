@@ -171,41 +171,46 @@ function getEditorPreview(): void {
     exit;
 }
 
-# Universal pager — works in both admin and front-end contexts
-# Single source of truth for rendering a pager: prev/next nav, numbered links and dots, wrapped in the 'pager' fragment
-# $target(int $page): array yields the link target: ['href' => ...] for URL navigation, or ['query' => ..., 'target_id' => ..., 'push_url' => ...] for HTMX navigation
-# Renders via $tpl->getHtmlFrag(), so each theme keeps its own pager fragments (admin and lite stay independent)
-# The window holds maxpg numbers and slides with the current page; the first and the last page stand outside it as anchors with the dots between
+# The one pager of both themes: maxpg numbers round the current page between the first and the last, each marked far or near so a narrow pager can drop them
 function getTplPagerView(int $num, int $pages, int $maxpg, callable $target, array $meta = []): string {
     global $tpl;
     if ($pages <= 1) return '';
-    $num  = max(1, min($num, $pages));
+    $num = max(1, min($num, $pages));
     $maxpg = max(1, $maxpg);
     $from = max(1, $num - intdiv($maxpg, 2));
     $to = min($pages, $from + $maxpg - 1);
     $from = max(1, $to - $maxpg + 1);
-    $link = static function(int $page, string $label, bool $cur, bool $nav, string $icon) use ($tpl, $target): string {
-        $opt = ['label' => $label, 'title' => $label, 'is_cur' => $cur, 'is_nav' => $nav, 'icon_name' => $icon];
-        if (!$cur) $opt += $target($page);
+    $link = static function(int $page, array $opt) use ($tpl, $target): string {
+        if ($page > 0) $opt += $target($page);
         return $tpl->getHtmlFrag('pager-link', $opt);
     };
-    $dots = $tpl->getHtmlFrag('inline-badge', ['is_pager_dots' => true]);
-    $prev = ($num > 1) ? $link($num - 1, _BACK, false, true, 'chevron-left') : $link(0, _BACK, true, true, 'chevron-left');
+    $step = static fn(int $page, string $label, string $rel): string => $link($page, [
+        'label' => $label, 'title' => $label, 'is_cur' => $page === 0, 'is_nav' => true, 'icon_name' => 'chevron-'.($rel === 'prev' ? 'left' : 'right'), 'rel' => $rel,
+    ]);
+    $dots = $tpl->getHtmlFrag('pager-link', ['is_dots' => true]);
     $items = '';
     for ($i = 1; $i <= $pages; $i++) {
-        if ($i === $num) {
-            $items .= $link($i, (string)$i, true, false, '').' ';
-        } elseif ($i === 1 || $i === $pages || ($i >= $from && $i <= $to)) {
-            $items .= $link($i, (string)$i, false, false, '').' ';
+        if ($i === $num || $i === 1 || $i === $pages || ($i >= $from && $i <= $to)) {
+            $gap = ($i === 1 || $i === $pages) ? 0 : abs($i - $num);
+            $items .= $link($i === $num ? 0 : $i, [
+                'label' => (string)$i, 'title' => (string)$i, 'is_cur' => $i === $num, 'is_far' => $gap > 1, 'is_near' => $gap === 1,
+            ]);
         }
         if ($i === 1 && $from > 2) $items .= $dots;
         if ($i === $to && $to < $pages - 1) $items .= $dots;
     }
-    $next = ($num < $pages) ? $link($num + 1, _NEXT, false, true, 'chevron-right') : $link(0, _NEXT, true, true, 'chevron-right');
-    return $tpl->getHtmlFrag('pager', array_merge([
+    $view = [
         'overall' => _OVERALL, 'page_label' => _PAGE, 'page_of' => sprintf(_NUMOF, $num, $pages),
-        'prev' => $prev, 'items' => $items, 'next' => $next,
-    ], $meta));
+        'prev' => $step($num > 1 ? $num - 1 : 0, _BACK, 'prev'), 'items' => $items, 'next' => $step($num < $pages ? $num + 1 : 0, _NEXT, 'next'),
+    ];
+    $limit = intval($meta['limit'] ?? 0);
+    $count = intval($meta['count'] ?? 0);
+    if ($limit > 0 && $count > 0) {
+        $view['range_from'] = ($num - 1) * $limit + 1;
+        $view['range_to'] = min($num * $limit, $count);
+        $view['range_text'] = sprintf(_PAGERANGE, $view['range_from'], $view['range_to']);
+    }
+    return $tpl->getHtmlFrag('pager', array_merge($view, $meta));
 }
 
 # Build a pager from a table COUNT query, or from the count the caller already holds, reading the current page from the request

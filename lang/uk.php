@@ -494,6 +494,8 @@ define('_OVERALL','Всього');
 define('_PADD','Добавлено');
 define('_PAGE','Сторінка');
 define('_PAGEHOME','Початок');
+define('_PAGENAV','Сторінки');
+define('_PAGERANGE','Показано %1$s–%2$s');
 define('_PAGES','Статті');
 define('_PAGETOP','Вгору');
 define('_PASSFOR','Втратили пароль?');

@@ -1,5 +1,5 @@
 {
-    "generated": "2026-10-10T20:43:42Z",
+    "generated": "2026-10-11T17:14:49Z",
     "themes": {
         "admin": {
             "count": 0,
@@ -7,7 +7,7 @@
             "dup": 0,
             "names": 0,
             "dead": 0,
-            "single": 161,
+            "single": 157,
             "alias": 0,
             "unsat": 0,
             "unmet": 0,
@@ -15,7 +15,7 @@
             "clash": 0,
             "classes": 0,
             "important": 21,
-            "tokens": 339,
+            "tokens": 333,
             "contrast": 0
         },
         "lite": {
@@ -59,7 +59,6 @@
             "--sl-btn-shadow",
             "--sl-btn-width",
             "--sl-capsule-max-width",
-            "--sl-card-shadow",
             "--sl-changelog-body-border",
             "--sl-changelog-files-height",
             "--sl-changelog-stat-width",
@@ -226,11 +225,6 @@
             "--sl-panel-height",
             "--sl-panel-shadow",
             "--sl-placeholder-height",
-            "--sl-pnum-arrow-height",
-            "--sl-pnum-arrow-width",
-            "--sl-pnum-border",
-            "--sl-pnum-height",
-            "--sl-pnum-width",
             "--sl-pointer-width",
             "--sl-popover-max-width",
             "--sl-popover-min-width",

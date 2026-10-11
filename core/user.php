@@ -1768,6 +1768,31 @@ function getRssChannel(): string {
     return $content;
 }
 
+# The links to the first five materials the search of a Node type finds for a word under the visitor's rights, read in list pages; a word too short answers nothing
+function getNodeHint(): string {
+    global $conf, $tpl;
+    $name = getVar('get', 'name', 'var', '');
+    $word = trim(getVar('get', 'word', 'word', ''));
+    $type = getNodeTypeMap()[$name] ?? null;
+    if (!$type || !is_active('search') || !$type->settings['integrations']['search'] || mb_strlen($word) < max(1, intval($conf['search']['slet']))) return '';
+    $size = max(1, min(5, $type->settings['list']['limit'], intval($conf['node']['limits']['maxlist'] ?? 0)));
+    $list = [];
+    try {
+        $query = getNodeReader($type)->setNodeType($type)->setNodeSets(false)->setNodeSearch(mb_substr($word, 0, 255, 'UTF-8'));
+        for ($num = 1; count($list) < 5; $num++) {
+            $page = $query->setNodePage($num, $size)->getNodeList();
+            $list = array_merge($list, $page);
+            if (count($page) < $size) break;
+        }
+        $hints = array_map(fn(Node $v): array => ['href' => getSeoUrl(['name' => $name, 'op' => 'view', 'id' => $v->id, 'title' => $v->title]), 'label' => $v->title],
+            array_slice($list, 0, 5));
+    } catch (NodeException $err) {
+        Logger::addSite('error', 'Hints: a Node type cannot be searched', ['type' => $name, 'code' => $err->getCode()]);
+        return '';
+    }
+    return $hints ? $tpl->getHtmlPart('node/hints', ['hints' => $hints]) : '';
+}
+
 # Output the OpenSearch description XML for browser search integration
 # Every address is escaped before it enters the document: an ampersand of a query string is a character reference in XML, and a strict parser drops the whole file
 function getOpenSearch() {

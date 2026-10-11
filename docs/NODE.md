@@ -133,11 +133,12 @@ installations with different prefixes can share one database.
 ### Theme names
 
 Large views live in `templates/<theme>/partials/node/`, repeated elements in
-`templates/<theme>/fragments/node/`. The base set is `partials/node/list.html`, `partials/node/view.html`,
+`templates/<theme>/fragments/node/`. The base set is `partials/node/list.html`, `partials/node/head.html`,
+`partials/node/hints.html`, `partials/node/view.html`,
 `fragments/node/card.html`, `block.html`, `image.html`, `gallery.html`, `download.html`, `player.html`,
-`link.html` and `tree.html`. A display mode other than `default` may override any base file with
-`node/<mode>/<file>`; `getNodeTplName()` picks the mode file when the theme has it and the base file
-otherwise. The `lite` theme ships the modes `docs`, `faq`, `files`, `media` and `support`.
+`link.html` and `tree.html`. A display mode other than `default` may override any base file but `head.html` and
+`hints.html`, which are rendered by their own name, with `node/<mode>/<file>`; `getNodeTplName()` picks the mode file
+when the theme has it and the base file otherwise. The `lite` theme ships the modes `docs`, `faq`, `files`, `media` and `support`.
 
 ## Code layout
 
@@ -997,6 +998,7 @@ public function setNodeLetter(string $letter): self
 public function setNodePage(int $page, int $limit): self
 public function setNodeSets(bool $load): self
 public function setNodeAuthor(int $uid): self
+public function setNodeFavorite(int $uid): self
 public function setNodeStatus(NodeStatus $status): self
 public function setNodeOrder(string $order, string $dir = 'desc'): self
 public function setNodePublished(?string $from, ?string $until): self
@@ -1004,6 +1006,8 @@ public function setNodeSearch(string $text): self
 public function setNodeHome(bool $home = true): self
 public function getNodeList(): array
 public function getNodeCount(): int
+public function getNodeLetters(): array
+public function getNodeOwnCount(string $since, int $uid): array
 ```
 
 Setters return the instance and check the shape of their value at once; whether the type settings allow a filter is
@@ -1019,6 +1023,7 @@ column name or SQL.
 | `setNodePage` | page and size from 1; the size may not exceed `limits.maxlist` or any selected `list.limit`; without it the smallest of them |
 | `setNodeSets` | `false` drops fields and the page batches of categories, relations and resources (`null` in models) |
 | `setNodeAuthor` | `uid >= 1` on `_nodes.uid` |
+| `setNodeFavorite` | `uid >= 1`; the materials among the `_favorites` rows of that account for the type; every selected type must offer favorites when the read runs |
 | `setNodeStatus` | moderator: exactly that state, no date window; others: intersection with published; without it everyone lists published only |
 | `setNodeOrder` | `published`, `updated`, `title`, `views`, `rating`; `asc`/`desc`; a key other than `published` must be in `list.orders` of every selected type |
 | `setNodePublished` | canonical bounds on `published`, `from` inclusive, `until` exclusive, one may be `null`, `from < until` |
@@ -1029,6 +1034,10 @@ column name or SQL.
   sets are on; `cids` for `features.categories`, `rels` for `features.related` or `features.tree`, `assets` for an
   active role, each with at most one batch statement per page. `getNodeCount()` applies the same conditions without
   order and paging.
+- `getNodeLetters()` counts the same selection per first sign of the title, upper case, as `letter => count`; the list
+  asks it inside a category, where the stored counts of the type do not apply. `getNodeOwnCount()` counts in one
+  statement what the selection published since `$since` holds and what of it the favorites of `$uid` hold, as `['new',
+  'fav']`; an empty moment or account counts zero, and favorites count only where a type offers them.
 - A mixed selection compiles one branch per type with its own extension, joined by `UNION ALL`; one extension never
   weakens the rights of another type.
 - Order: pinned rows first where `features.pinned` is on; `published`, `updated`, `title` then `id`; `views` then
@@ -1048,6 +1057,8 @@ public function getNodeCategoryCount(NodeType $type): array
 public function checkNodeCategory(NodeType $type, int $cid): bool
 public function getNodePostCats(NodeType $type): array
 public function getNodeLegacy(string $mod, int $id = 0): ?array
+public function getNodeReadSet(NodeType $type): string
+public function getNodeTally(NodeType $type): array
 ```
 
 - `getNodeTree()`: one selected type with `features.tree`, `limit` 1…500; rows `id`, `title`, `parent`, `sort` for
@@ -1064,6 +1075,13 @@ public function getNodeLegacy(string $mod, int $id = 0): ?array
 - `getNodeLegacy()`: the row of `_node_legacy` for a removed module name and its old id as `['type', 'nid']`, or
   with `id` 0 the type its materials went to (`nid` 0); `null` for a name outside the grammar, a missing row or a
   type the context does not receive.
+- `getNodeReadSet()`: the key of the readable set the header counts of a type are shared by, `c` and the sorted ids of
+  the categories the context reads in its language (`c3-7-12`); `''` for a moderator of the type or a scope of its
+  extension, whose counts are their own and never stored.
+- `getNodeTally()`: what the list of the type reads without a filter, as `['total', 'cats', 'lets', 'until']`: the
+  total and the first signs in one grouped statement, each main or extra category in one more where the type has
+  categories, and `until`, the Unix time of the nearest future `published` or `expires` of a published material,
+  `0` for none.
 
 #### Read budgets per method
 
@@ -1074,7 +1092,8 @@ Counted by `$db->qnum` around the Node handler; `getNodeContext()`, Point and gl
 | `getNodeType()` / `getNodeTypeList()` | 1 per new name / 1 for all, 0 from memory (a version mismatch adds a re-read) |
 | category pre-read | 1 per type per instance |
 | `getNodeList()` | 1 page + at most one batch each for `cids`, `rels`, `assets` |
-| `getNodeCount()`, `getNodeAuthorStat()`, `getNodeCategoryCount()`, `getNodeContent()`, `getNodeAsset()` | 1 |
+| `getNodeCount()`, `getNodeLetters()`, `getNodeOwnCount()`, `getNodeAuthorStat()`, `getNodeCategoryCount()`, `getNodeContent()`, `getNodeAsset()` | 1 |
+| `getNodeTally()` | 2, 3 with categories |
 | `getNode()` | 4 |
 | `getNodeTargetList()` | type rows not yet known + 1 |
 | `getNodeTree()`, `getNodeSitemap()` | 1 per batch |
@@ -1369,6 +1388,13 @@ All in `core/system.php` unless noted.
 | `addNodeMail(array $list, string $title, string $text): bool` | one queued mail per address: `mtemp` with escaped `[text]`, subject `<sitename> - <title>`, kind `node`, priority 3 |
 | `addNodePublishTask(): array`, `addNodeSyncTask(): array` | scheduler adapters; a `NodeException` becomes `status = failed` |
 | `getRssFeeds(): array` | active types with `integrations.rss` |
+| `getNodeCountMap(NodeType $type, NodeQuery $query): array` | the header counts of `getNodeTally()` for the readable set of the reader, kept in `Cache::getFile(['nodecount', <type>], 'json')`; see [List header](#list-header) |
+| `deleteNodeCountMap(string $mod): void` | drops that file; called by every material write of `NodeService` and by `deleteCategoryMap()` |
+| `getUserLastVisit(int $uid): string` | the `lastvis` an account had when its session started, kept in `$_SESSION[<user_c>-lastvis]` with the account id; `''` for a guest or an empty column |
+| `getPluralForm(int $num, string $forms): string` | one of the forms a constant carries separated by `\|`, by the plural rule of `_LOCALE`: three for `ru`, `uk`, `pl`, two for the others |
+| `getHeadTitle(array $seo): string` | the `<title>` of a site page; `setHead()` and the part answer of a list both call it |
+| `setCategories(string $mod, int $cur = 0, array $nums = [], int $total = 0): string` | the category window: "all materials", then the top level with its count and its subcategory chips, the chosen one marked |
+| `getLetterNavi(string $mod, int $cat = 0, array $nums = [], string $let = ''): string` | the letter window: digits, `_ALPHABET`, A–Z (not for `fr`); a letter with materials links its list in the category and tells its count, the chosen one marked |
 | `checkUploadModer(string $mod): bool` | upload moderator; a type only through `node-<name>` |
 | `getUserMail(int $uid): string`, `getAdminNames(string $key): array` | stored account address; `id => name` of main administrators and holders of the key |
 | `getConst(string $con): string` | a defined `_NAME` answers its text, anything else as is |
@@ -1685,9 +1711,14 @@ refusal, still fails the type. A write is never narrowed: saving the type form s
 | `limit` | int | 10 | 1 to `limits.maxlist`; page size of the list, the category and the admin preview |
 | `alpha` | bool | false | enables the letter filter `let` |
 | `show` | list | `['category', 'author', 'date', 'views']` | unique subset of these four; ordered; hides metadata in the standard templates only |
+| `views` | list | `[]` | unique subset of `NodeQuery::VIEWS`: `cards`, `compact`, `list`, `accordion`, `tiles`, `rail`; the first is the default view |
 
-The section must carry exactly these six keys after the merge. `features.pinned` puts pinned materials first in every
-sort; there is no sort key for it.
+The section must carry exactly these seven keys after the merge; a `config/node.php` without
+`node.defaults.list.views` refuses every type at `list`. `features.pinned` puts pinned materials first in every sort;
+there is no sort key for it. An empty `views` offers the one view of the display mode, `NodeQuery::MODEVIEW`
+(`docs` → `list`, `faq` → `accordion`, `media` → `tiles`, every other mode `cards`), so a stored type keeps its face.
+The type form of the panel offers the views as boxes and the default view as a select; a choice equal to the one view
+of the mode is stored empty, so the list keeps following its mode.
 
 #### Settings: view
 
@@ -1912,6 +1943,9 @@ All ten profiles share `workflow` = `access user`, no groups, both notices on, e
 | `media` | `_MEDIA` | 90 | `media` | - | all five / published desc / 25 / yes / all four |
 | `docs` | `_DOCS` | 100 | `docs` | - | title, updated, views / title asc / 50 / yes / category, date, views |
 
+`list.views`: `news` offers `cards`, `compact` and `tiles`; `docs` `list` and `rail`; `faq` `accordion` and `list`; the
+other seven keep it empty and show the one view of their mode.
+
 | Profile | Features on | Integrations |
 |---|---|---|
 | `news` | categories, comments, rating, favorites, poll, home, pinned, submit, moderation, schedule, related | all four, `seo = news` |
@@ -2039,7 +2073,7 @@ drawn from `$conf['module']` for the start page) is a key of `$conf['node']['typ
 
 | `op` | Methods | Parameters | Purpose |
 |---|---|---|---|
-| (empty) | GET, HEAD | `cat`, `num`, `let`, `order`, `dir` | list of the type or of one category |
+| (empty) | GET, HEAD, POST | `cat`, `num`, `let`, `order`, `dir`, `new`, `fav`; POST `view`, `token` | list of the type or of one category; a POST is the view switch |
 | `view` | GET, HEAD | `id` (global `_nodes.id`) | full material |
 | `add` | GET, HEAD, POST | POST: `action` (`preview`/`submit`), `token`, form fields | public form, preview, submission |
 | `asset` | GET, HEAD | `id` (`_node_assets.id`) | one structured resource |
@@ -2055,8 +2089,8 @@ with an `Allow` header. Comments, rating and favorites use their own global rout
 |---|---|
 | 301 | explicit `order`/`dir` equal to the type default: redirect to the clean list URL (keeps `cat`, `let`, `num > 1`) |
 | 301 | an address of a removed module in `_node_legacy`: `view`/`broken` with an old `id` to the migrated material; the list, `liste`, `best`, `pop`, `closed` to the list of its type (keeps `cat`). Asked by `getNodeLegacyUrl()` in `core/system.php` only where the answer would be 404: an unknown `id` of `view`, an unknown operation, and in `index.php` a name that is neither module nor type (`pages` → `docs`) |
-| 302 / 303 | redirect after a write (`setRedirect()` sends 303 for POST); 302 for an external `download`/`link` source |
-| 400 | malformed `cat`/`num`; bad or disabled `let`; `order` unknown, or other than `published` and outside `list.orders`; `dir` not `asc`/`desc`; form `action` not `preview`/`submit` |
+| 302 / 303 | redirect after a write (`setRedirect()` sends 303 for POST); 303 after the view switch of a list, whether or not it set the cookie; 302 for an external `download`/`link` source |
+| 400 | malformed `cat`/`num`; bad or disabled `let`; `order` unknown, or other than `published` and outside `list.orders`; `dir` not `asc`/`desc`; `new` or `fav` other than `1`; `fav` on a type without favorites; form `action` not `preview`/`submit` |
 | 403 | guest non-moderator on a `support` list or material; form not open to the visitor; bad token on `add`, `report`, `support`; `support` by a non-owner or to another state; writer `DENIED` |
 | 404 | unknown type or op; `cat` without categories or unreadable; page past the end; missing or malformed `id`; material or resource missing, closed, foreign or unreadable; `add` without `submit`; report refused |
 | 405 | method not in the operation table, with `Allow` |
@@ -2073,14 +2107,113 @@ Reader refusals map through `getNodeStatus()` (`NOTFOUND` 404, `DENIED` 403, `IN
 - `cat` and `num` accept `^[1-9][0-9]{0,9}$` up to 4294967295; `num` defaults to 1. The page count is computed first,
   so `num > pages` answers 404 before the reader sets the page.
 - Without `order`/`dir` the list uses `list.order`/`list.dir`. With only `order`, the direction is the type default
-  for the default key, `asc` for `title`, `desc` otherwise. `let` goes to `NodeQuery::setNodeLetter()`; the letter
-  navigation keeps the category and links only the letters with materials (`getLetterNavi($mod, $cat, $nums)`).
-- The type intro is shown only on the first page without category or letter. A `support` list holds only the
-  visitor's own requests.
+  for the default key, `asc` for `title`, `desc` otherwise (`getNodeSortWay()`, shared by the list and its header).
+  `let` goes to `NodeQuery::setNodeLetter()`; the letter window keeps the category and links only the letters with
+  materials.
+- The type intro is shown only on the first page without category, letter or a personal filter in force. A `support` list holds
+  only the visitor's own requests.
 - `view` reads through `NodeQuery::getNode()`; the id must belong to the route type. Related materials (at most 500)
   become cards; poll, rating (`node.<name>`), favorites, tree and comments appear only with their feature, comments
   only when the material's mode is not `Disabled`. A GET counts the view after the answer
   (`NodeService::updateNodeViews()` as a deferred task); HEAD counts nothing.
+
+### List header
+
+`getNodeHead()` in `modules/node/index.php` renders `partials/node/head.html` and hands it to the list as `head_html`.
+`partials/navi.html` and `getModuleNavi()` serve only the three operations of `modules/users/`. The face is the stand
+page `public/demo/nh-13-calm.html`; the stand pages `nh-01` to `nh-13` stay in `public/demo/` as the record of how it
+was chosen. Every control is a link or a form the server answers; the script only opens the windows, sticks the bar,
+opens the lens and swaps the list.
+
+| Place | Control | Drawn when |
+|---|---|---|
+| row one | the title and the count chip: `_MATERIALS` ("97 материалов"), for a narrowed list `_MATERIALSOF` ("19 из 97 материалов") with the total of the type, both through `getPluralForm()` | always |
+| row one | the view switch | the type offers two views or more |
+| row one | the search field with its hints, posting `word` and `mod` to the search module | the module `search` is active and the type has `integrations.search` |
+| row one | the RSS button, carrying the `cat` of the list | the type is in `getRssFeeds()` |
+| row one | "Наверх" (`#top`) and the lens, which opens the field over the bar | on the stuck bar; the lens when the bar is narrower than 900 px |
+| row two | the category pill and its window (`setCategories()` with the counts) | `features.categories` and a category to show |
+| row two | the letter pill and its window (`getLetterNavi()` with the counts) | `list.alpha` |
+| row two | the sort pill and its window | always |
+| row two | the direction pill ("Убывание" / "Возрастание", the full wording in its hint) | always |
+| row two | the reset chip, the clean list | the list is narrowed or sorted other than by default |
+| row two | "Добавить" | `checkNodeFlow()` |
+
+- **The sort window is chips.** Group "Сортировка": `published` and the keys of `list.orders` in the order of
+  `NodeQuery::ORDERS`, each linked with its default direction; the chosen one links to itself with the direction in
+  force. Group "Показать": "С прошлого визита" (`new=1`) and "В избранном" (`fav=1`) with their numbers, drawn for a
+  signed-in visitor when the number is not zero or the filter is on; a chip that is on links to the list without it.
+  While one is on, the sort pill is tinted and carries its icon after the name.
+- **Which links keep what.** A sort, the direction and a personal chip keep `cat`, `let`, `new` and `fav` and leave
+  the page; the default order with its default direction leaves the address without `order` and `dir`, as the 301 of
+  the list would send it there. The windows are the shared builders and narrow from scratch: a category tile or chip
+  opens its category alone, a letter keeps only the category; neither keeps the sort or a personal filter.
+- **Personal filters.** `new=1` lists the materials published since `getUserLastVisit()`, the `lastvis` the session
+  found when it started (`updateSessionTrack()` and `setUserLogin()` read it before they move the column); `fav=1` the
+  favorites of the visitor (`NodeQuery::setNodeFavorite()`). Both numbers come from one `getNodeOwnCount()` under the
+  conditions of the list. A guest's parameter, and `new=1` of an account that has no previous visit, narrows nothing;
+  the address stays `noindex, follow`.
+- **Counts.** The total, the categories and the first letters of the type come from `getNodeCountMap()`: one file
+  `Cache::getFile(['nodecount', <type>], 'json')` per type holding the type version, a moment `until` and one entry per readable set of
+  `getNodeReadSet()`, so visitors of different groups who read the same categories share an entry. The file is used
+  while it is younger than 86400 seconds, of the current type version and before `until`, the nearest future
+  publication or expiry, so a scheduled or expiring material moves the counts at its moment with no write. A
+  moderator of the type and a scope of its extension are counted live. `deleteNodeCountMap()` drops the file after
+  every material write and with every `deleteCategoryMap()`, since the rights and the language of a category change
+  the counts. Two visitors rebuilding different entries at once may lose one; it is counted again on the next request.
+  Inside a category the letters are counted live by `getNodeLetters()`, so a letter never promises an empty list.
+- **Month heads.** A list by `published` in the views `cards` and `compact` is headed month by month by
+  `fragments/date-head.html` with the number of its cards on the page; a pinned material opens a run of its own month.
+  A page appended by "Показать ещё" brings its own heads, so a month cut by the seam of two pages has a head on each
+  side. The order "Обновлённые" has none, since its month would contradict the date on the card.
+
+Rejected by the owner, with the reason, so it is not proposed again: Atom or JSON Feed in place of RSS 2.0 (every
+reader reads RSS); a direction inside the sort window or a flip by a second click on the chosen sort (two places for
+one action); a cross on every pill beside "Сбросить" (two ways to reset); a third row of quick chips and the period
+chips "За неделю · За месяц · За год" (a row more, mostly zeros on a site that publishes monthly); "Показано 1–N" and
+"Всего" under the list (the count chip says it); moderator actions in the public list — pick boxes, a bulk bar, a card
+menu (the panel does that); a select or a window for the view (two clicks). Out of scope: WebSub, a Telegram bridge,
+push and mail subscriptions, pretty feed addresses.
+
+### Views of a list
+
+- The views offered are `list.views`, or the one view of the display mode when it is empty. The visitor's choice is
+  the cookie `view-<type>`, prefixed by `$conf['user_c']` as every cookie of `setCookies()`; a value outside the views of the type falls back to the first view. The address of a list
+  stays one and its canonical link does not change with the view.
+- The switch is `fragments/mode-switch.html` with `is_view`: one POST form to the list itself whose cells submit
+  `view`, with a token of scope `view`. A valid token and a view of the type set the cookie for a year through
+  `setCookies()`, `httponly`, so no script writes it; every POST answers 303 to the same list with its filters and page.
+- A view chooses the card fragment and the container of `partials/node/list.html`; the card fragments know nothing of
+  the views.
+
+| View | Card | Container |
+|---|---|---|
+| `cards` | the card of the display mode when its view is `cards`, else `fragments/node/card.html` | none |
+| `compact` | as `cards` | `sl-node-compact` |
+| `list` | `fragments/node/docs/card.html`, the thumbnail and the date | `sl-node-row` |
+| `accordion` | `fragments/node/faq/card.html` | none |
+| `tiles` | `fragments/node/media/card.html`, the play mark only for the mode `media` (`is_play`) | `sl-node-tiles` |
+| `rail` | the titles as tabs of `slaed.js`, the intro of the chosen one beside them | `sl-duo sl-node-rail` |
+
+The rail pages like every view: one page of the list with the pager under it. A type whose rail must hold all its
+materials raises its `list.limit`.
+
+### Live list
+
+- `partials/node/list.html` is one part, `#sl-node-list`, holding the header and the list. It carries
+  `hx-target="this"`, `hx-swap="outerHTML show:none"`, `hx-history-elt` and `hx-history="false"`: htmx keeps no
+  snapshot of it, so back and forward ask the part again and the usual `htmx:afterSwap` revives it.
+- A request with `HX-Request: true` gets the part alone, headed by `fragments/head-title.html` with the
+  `getHeadTitle()` a reload shows; any other request the whole page at the same address. Every answer of the list
+  sends `Vary: HX-Request`.
+- `hx-boost="true"` stands on the filter toolbar, the three windows and the foot `#sl-node-foot` (the pager and
+  "Показать ещё"); a boosted link is a GET of its own `href` with the address pushed, and a Ctrl or ⌘ click still
+  opens a tab. "Добавить" carries `hx-boost="false"`; the view switch posts by its own `hx-post`.
+- "Показать ещё" `#sl-node-more` is the link to the next page, drawn under every view but the rail: its answer's cards
+  are appended to `#sl-node-items` by `hx-select`, the foot is redrawn by `hx-select-oob`, and the address takes the
+  `num` of that page, so a reload and a shared link open the page the visitor stopped at.
+- `data-sl-swap-reveal` brings the part back into view when its head went above the screen. The open windows close
+  with the swap, as they would with a reload. Without a script every control is a plain link or form.
 
 ### Public form
 
@@ -2127,7 +2260,7 @@ Node calls the existing `setHead()` and builds no canonical, Open Graph or schem
 | Page | `kind` | `robots` | Canonical |
 |---|---|---|---|
 | list, category, page | `collection` (`website` on the start page) | default `index, follow` | `index.php?name=<type>` with `cat` and `num > 1`; the site root for the start page without `cat`/`num` |
-| list with `let` or a non-default sort | `collection` | `noindex, follow` | none (`setHead()` drops it for noindex) |
+| list with `let`, `new`, `fav` or a non-default sort | `collection` | `noindex, follow` | none (`setHead()` drops it for noindex) |
 | full material | `integrations.seo` | default | the view URL of the material (`getSeoUrl()` with the title slug) |
 | any page of a `support` type | as above | `noindex, nofollow` | none |
 | form, error (status 400+) | - | `noindex, follow` by `getSeoRoute()` | none |
@@ -2188,7 +2321,7 @@ Every public theme carries the Node templates inside its own tree:
 
 ```text
 templates/<theme>/
-├── partials/node/list.html, view.html
+├── partials/node/head.html, hints.html, list.html, view.html
 └── fragments/node/card.html, block.html, image.html, gallery.html, download.html, player.html, link.html, tree.html
 ```
 
@@ -2214,11 +2347,13 @@ use it, so a mode overrides `list`, `view`, `card`, `block`, `tree` and each res
 | `docs` | `fragments/node/docs/card.html`, `partials/node/docs/view.html` | table-of-contents row: title, category chip, one-line plain intro; view without author and views chips |
 | `faq` | `fragments/node/faq/card.html`, `partials/node/faq/view.html` | native `<details>` accordion: question in `<summary>`, intro answer and a read-more link; view without author and views chips |
 | `files` | `fragments/node/files/card.html`, `partials/node/files/view.html` | card with direct download button, size and hits of the first `download`-mode resource; view shows resources above the text |
-| `media` | `partials/node/list.html`, `fragments/node/media/card.html`, `partials/node/media/view.html` | tile grid; tile with cover, play icon, title and the `year` field (or the date); view shows player and gallery, then fields, then text; related as tiles |
+| `media` | `fragments/node/media/card.html`, `partials/node/media/view.html` | tile grid of the common list; tile with cover, play icon, title and the `year` field (or the date); view shows player and gallery, then fields, then text; related as tiles |
 | `support` | `fragments/node/support/card.html`, `partials/node/support/view.html` | state chip; view adds state and priority chips, the owner's close/reopen form and the staff card link |
 
 The cover of a card is the first image of the role `poster`, then of roles in mode `image` or `gallery`
-(`getNodeCover()`); the same cover becomes `og:image` of the full material.
+(`getNodeCover()`); the same cover becomes `og:image` of the full material. The mode decides the default view of a
+list and the templates of the material; which card a list draws is the view of the visitor, see
+[Views of a list](#views-of-a-list).
 
 ### NodeView keys
 
@@ -2268,8 +2403,10 @@ back).
 
 | Template | Called by | Keys |
 |---|---|---|
-| `partials/node/list.html` | `setNodeList()` | `head_html`, `intro`, `cats_html`, `letters_html`, `items_html`, `pager_html`, `empty_alert` |
-| `fragments/node/card.html` in a list | `setNodeList()` | NodeView (`list`) + view labels + material facts + `cover`, `download` (first resource of a `download`- or `link`-mode role or `[]`), `ext` |
+| `partials/node/list.html` | `setNodeList()` | `head_html`, `intro`, `groups` (`label`, `count`, `items_html`; `label` empty without month heads), `rail` (`id`, `href`, `title`, `date`, `date_iso`, `intro_html`, `is_first`), `rail_name`, `title`, `is_compact`, `is_row`, `is_tiles`, `date_label`, `read_label`, `pager_html`, `more_href`, `more_label`, `empty_alert` |
+| `partials/node/head.html` | `getNodeHead()` | `title`, `count_text`, `view_html`, `filters_label`; `cats_html`, `cats_label`, `cat_name`, `is_cat`; `lets_html`, `lets_label`, `lets_hint`, `let_name`, `is_let`; `sort_name`, `sort_label`, `show_label`, `sorts` (`href`, `label`, `icon_name`, `is_current`), `mine` (`href`, `label`, `icon_name`, `count`, `is_on`), `is_new`, `is_fav`, `new_label`, `fav_label`; `dir_href`, `dir_label`, `dir_title`, `is_asc`; `reset_href`, `reset_label`; `find_mod`, `find_label`, `hint_href`, `search_label`; `rss_href`, `rss_title`, `top_label`, `add_href`, `add_label` |
+| `partials/node/hints.html` | `getNodeHint()` in `core/user.php` | `hints` (`href`, `label`) |
+| `fragments/node/card.html` in a list | `setNodeList()` | NodeView (`list`) + view labels + material facts + `cover`, `download` (first resource of a `download`- or `link`-mode role or `[]`), `ext`, `is_play` |
 | `fragments/node/card.html` as related card | `setNodeView()` | NodeView (`card` of a target) + view labels, `is_views = false`, `cover = ''` |
 | `partials/node/view.html` | `getNodeViewHtml()` | NodeView (`view`) + view labels + material facts + `fields_html`, `assets_html`, `rels_html`, `rels_label`, `poll_html`, `tree_html`, `share_url`, `share_title`, `user_html`, `ext` |
 | resource fragment of a role | `getNodeAssetView()` | `items` (resource items + `is_video`, `is_audio`), `role_title`, `poster` (first `poster` href), `token`, `report_label`, `download_label`, `visit_label`, `hits_label` |
@@ -2312,7 +2449,14 @@ not cached.
 
 Lite classes in `templates/lite/assets/css/theme.css`: `sl-node-toc`, `sl-node-toc-intro`, `sl-node-faq`,
 `sl-node-faq-body`, `sl-node-file`, `sl-node-tiles`, `sl-node-tile`, `sl-node-tile-cover`, `sl-node-tree`,
-`sl-node-tree-cur`, `sl-node-tree-more`, `sl-node-tree-pager`. Articles carry `id="node-<id>"`. A theme or showcase
+`sl-node-tree-cur`, `sl-node-tree-more`, `sl-node-tree-pager`; the list `sl-node-list` (with `overflow-anchor: none`,
+so the scroll anchoring of the browser does not flip the bar between its two heights), the views `sl-node-compact`,
+`sl-node-row`, `sl-node-rail`; the header `sl-node-head` with `sl-node-head-row`, `-title`, `-acts`, `-filters`,
+`-pill`, `-win`, `-cap` and `-sorts`, the hints `sl-node-hints` and `sl-node-hint`. Shared parts the list stands on:
+`sl-date-head` (also the mailbox), `sl-duo`, `sl-duo-aside`, `sl-duo-main` (also the private messages), `sl-seg
+sl-seg-view`, `sl-cat-grid`, `sl-letter`, `sl-chip`, `sl-search-form`. The token `--sl-node-find-width` is the width of
+the search field. The script attributes of the header are in `docs/TEMPLATES.md`, "Node List Contract". Articles carry
+`id="node-<id>"`. A theme or showcase
 that needs one type of a kind asks `getNodeModeType(string $mode): ?NodeType` (the first active type without an
 extension whose `view.mode` matches) instead of naming a type.
 
@@ -2450,14 +2594,40 @@ through one reader: `NodeQuery::setNodeSearch(string $text)` (literal substring 
 several. The total is `min(getNodeCount(), search.slimit)`; only rows up to the requested page end are read, in
 pages of the smallest `list.limit` (at most `limits.maxlist`). There is no index or rebuild job.
 
+The search field of a list header asks for hints through the light route `index.php?go=1&op=getNodeHint` with the type
+in `name` and the word in `word`: a GET among the public reads of `public/index.php`, no token, no module and no page
+frame. `getNodeHint()` in `core/user.php` reads the type as the search module does, under the read rights of the
+visitor and without the sets, in pages as large as `list.limit` allows and at most five, and answers the first five
+materials as links of `partials/node/hints.html`, each straight to the material. A word shorter than
+`$conf['search']['slet']`, a type outside the search, the module `search` switched off or an unknown name answers
+nothing; a reader refusal is logged and answers nothing. The field waits 300 ms after typing; the behaviour of the
+list under it is in `docs/TEMPLATES.md`, "Node List Contract". Without a script the field submits to the search module
+scoped to the type, as before.
+
 ### RSS
 
 `getRssFeeds(): array` is the one list of feeds: every active type with `integrations.rss`. The feed route `index.php?go=rss` (`getRssChannel()` in `core/user.php`), the alternate link of the head
 and the picker of `modules/rss` read only this list. No name selects the start module when it has a feed, else
 the first feed; an unknown name is `404`. A Node feed reads one page of `min(num, list.limit, limits.maxlist)`
 items (`num` bounded by `rss.min`/`rss.max`), `published desc` with pinned first where the type has `pinned`;
-`cat` applies only to a type with categories. Items come from `NodeView::getNodeView(..., 'card')`; relative
-`href`/`src` in descriptions become absolute and all addresses are XML-escaped.
+`cat` applies only to a type with categories; a category the visitor may not read (`checkNodeCategory()`) or that does
+not exist answers 404, as the list does. Items come from `NodeView::getNodeView(..., 'card')`; relative `href`/`src` in
+descriptions become absolute and all addresses are XML-escaped. A feed is the list's second face for readers, bots
+and Search Console, and the head of the list links it as its RSS button.
+
+| Element | Value |
+|---|---|
+| `title` | `sitename — type name [— category title]`, the category through `getConst()` only after the read right passes |
+| `link` | the address of the list the channel mirrors, `getPublicUrl()` with `name` and `cat` |
+| `lastBuildDate` | the newest `published` of the items; left out of an empty channel |
+| `copyright` | `Copyright (c) <sitename>` |
+| `language`, `generator` | the two letters of `_LOCALE`; `SLAED CMS <version>` |
+
+The `go=rss` branch of `public/index.php` sends no-store, which stays for a refusal; the channel replaces it with
+`Cache::setHeaders('private', ...)`, its `Last-Modified` the newest `published` or `updated` of the items, and an ETag
+computed before a single item is rendered from the title, the slogan, the version, the locale, `num` and every item's
+id, `updated` and `published`. `Cache::checkNotModified()` ends a request that holds that tag with 304. A date misses an
+item that left the channel; the tag does not.
 
 ### Sitemap
 
@@ -2852,6 +3022,10 @@ theme, blocks and independent global subsystems are outside it, and the `NodeCon
 - A list reads type, page and count (`uname`, `ctitle` joined); extra categories, relations, related cards and
   resources add one batch each; categories add the category-right prefetch (once per type and `NodeQuery`) and
   the page's extra-category batch.
+- The list header adds statements the table above was measured without: none for the counts of a stored entry of
+  `getNodeCountMap()`, else the two or three of `getNodeTally()` (always for a moderator); one `getNodeOwnCount()` for
+  a signed-in visitor; one `getNodeLetters()` in a category of a type with `list.alpha`; the read of `lastvis` once per
+  session.
 - A view reads type, main row, extra categories, relations, resources, and related cards as the sixth; tree
   batches read the index `tree (tid, status, id)`, independent of page size and depth.
 - `[attach]` uses `getNodeContent()`, never `getNode()`. `getNodeAsset()` is one joined statement; a write
@@ -2934,7 +3108,7 @@ files also have a static half that reads the sources.
 | `NodeQueryTest` | 25 | `node_probe.php query` | reader API, access, paging, targets, tree, sitemap, budgets, context |
 | `NodeConfigTest` | 17 | `node_probe.php service` | type writes, versions, import, commit crash, restore, race |
 | `NodeServiceTest` | 29 | `node_probe.php material` | material writes, moves, sets, locks, counters, reports, delayed publication |
-| `NodeRouteTest` | 41 | `route_probe.php` + `secure`, `tree`, `modes`, `seo`, `head` | public and admin HTTP, cache, files, form rules, tree, view modes, SEO |
+| `NodeRouteTest` | 48 | `route_probe.php` + `secure`, `tree`, `modes`, `seo`, `head` | public and admin HTTP, cache, files, form rules, tree, view modes, SEO; the list header with its links, counts and their cache, the views of a type, the part of an htmx request, the search hints, the feed with its title, link, date, 304 and closed category |
 | `NodeSupportTest` | 13 | `route_probe.php support` | comments on Node, private requests, card, mail |
 | `NodeSyncTest` | 10 | `route_probe.php sync` | source form, `op=sync`, `nodesync`, scripted transport |
 | `NodeIntegTest` | 14 | `route_probe.php integ` | rating, favorites, poll, home, search, RSS, sitemap, blocks |

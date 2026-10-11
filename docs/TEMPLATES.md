@@ -475,6 +475,46 @@ keys in `docs/EDITORS.md`, "The Shell".
 | `data-sl-meter` with `data-sl-meter-fill`, `data-sl-meter-num`, `data-sl-meter-left` | the ring, the lamp and each counted control | recomputes profile completeness as the member types; `data-sl-meter-fill` carries the value that counts as empty, so one rule serves a text field and a select whose zero is a real option |
 | `data-sl-dirty` with `data-sl-clean` | the shared form and the discard button | raises the save bar on the first change and reverts on discard. The hidden state is armed by the script and never by the markup: a page whose JavaScript never ran keeps a bar that is simply always there, instead of a form whose only submit can no longer be made to appear |
 
+## Node List Contract
+
+The list of a Node type is one part that swaps itself: `partials/node/list.html` of `lite` is `#sl-node-list`, the
+header `partials/node/head.html` inside it, the cards in `#sl-node-items`, the pager and "Показать ещё" in
+`#sl-node-foot`. What the server reads and answers — the parameters, the counts, the views, the `HX-Request` answer —
+is in `docs/NODE.md`, "List header", "Views of a list" and "Live list"; the keys of the three templates are in its
+"Template keys". Every control is a link or a form the server answers, so the list works without a script.
+
+- **The part is its own target and history.** The wrapper carries `hx-target="this"`, `hx-swap="outerHTML show:none"`,
+  `hx-history-elt` and `hx-history="false"`, and the regions inside inherit them. `hx-boost="true"` stands on the
+  filter toolbar, the three windows and the foot, not on single links, so the shared `link.html` and `pager-link.html`
+  stay as they are; "Добавить" opts out by `hx-boost="false"`.
+- **"Показать ещё" appends and redraws.** `#sl-node-more` overrides the target with `hx-target="#sl-node-items"`,
+  `hx-swap="beforeend show:none"`, `hx-select="#sl-node-items > *"` and `hx-select-oob="#sl-node-foot"`.
+- **Shared fragments.** `fragments/date-head.html` (`sl-date-head`, keys `label` and `count`) heads a month of the list
+  and a day of the mailbox. `fragments/mode-switch.html` draws the colour mode and, with `is_view`, the view switch of
+  the list: one POST form whose cells are submit buttons with `aria-pressed`, `hx-post` to its own `action` only for
+  the view, on the segmented switch `sl-seg` with `data-sl-knob`. The rail is `sl-duo` with `sl-duo-aside` and
+  `sl-duo-main`, the split the private messages stand on, with the tabs of `slaed.js` (`data-sl-tabs-init`,
+  `data-sl-tab-link`, `data-sl-tab-panel`). `partials/node/hints.html` prints only the options; the list box around
+  them stands in the header.
+
+**The header behaviours live in `plugins/system/slaed.js` as attributes with no Node knowledge.**
+
+| Attribute | On | Does |
+|---|---|---|
+| `data-sl-toggle-group="<name>"` | the `data-sl-toggle` blocks of the windows | `setToggleGroup()` closes the open blocks of the same name, with the motion of their own control, before one opens. The windows carry `data-sl-toggle-scope="none"`, so nothing is remembered across a reload. A block takes its default once and is marked as its control is, so a later htmx swap elsewhere on the page — a poll of the session block — keeps the window in the state it stands in |
+| `data-sl-sticky`, optional `[data-sl-sticky-mark]` inside | the header | `setStickyBars()` sets `data-sl-stuck` while the mark is above the top line of the bar; the mark is its own or a zero-height one put right before it, and the observer band reaches far below the screen, so a fling or a reload at a scrolled place is not missed. Leaving the stuck state closes an open lens and keeps the word |
+| `data-sl-lens="<field id>"` with `aria-expanded` | a button inside the sticky block | the block carries `data-sl-lens-open` while the field is shown over it and focused; the lens or Esc in the field closes it, empties the field with an `input` event and returns the focus to the lens |
+| `data-sl-hints="<list id>"` | the search field, `role="combobox"` with `aria-controls` and `aria-expanded` | a swap into the list that brings options opens it while the field has the focus and gives each option an id; the arrows walk them round by `aria-activedescendant` and `aria-selected`, Enter opens the chosen one or, with none chosen, submits the form, Esc closes the list before the lens hears it, and a press on the list keeps the focus in the field, so a browser that focuses no link on a click still opens it. The list closes when the focus leaves both and opens again when the focus returns to a field that holds a word |
+| `data-sl-swap-reveal` | the part | after a swap whose head went above the screen the part jumps back to it, past the smooth scrolling of the sheet; a part in sight stays |
+
+- **The sheet reads the attributes, not classes the script writes.** `.sl-node-head[data-sl-stuck]` hides the count chip
+  and the view switch, shows "Наверх" and keeps the pills on one scrolled row; the lens appears through `@container`
+  on the bar while the stuck bar is narrower than 900 px, since beside the sidebar the list column is that narrow on
+  every screen. `sl-node-list` carries `overflow-anchor: none`: the stuck bar is lower than the free one, and anchoring
+  the list made the page jump back by the difference and flip the bar between its two states.
+- **The hints share a look rather than a component.** `sl-node-hints` and `sl-node-hint` take the pointed and the chosen
+  state of `sl-editor-hint-row`; no shared hint list stands in the tree.
+
 ## Theme Contract
 
 A new theme is made by copying an etalon and editing one file: `templates/<theme>/assets/css/base.css` — its `@font-face` and `:root` block, down to the `/* --- end tokens --- */` marker. Everything below the marker is reset and element styles.

@@ -494,6 +494,8 @@ define('_OVERALL','Total');
 define('_PADD','Ajoute');
 define('_PAGE','Page');
 define('_PAGEHOME','Début');
+define('_PAGENAV','Pages');
+define('_PAGERANGE','Affichés %1$s–%2$s');
 define('_PAGES','Article');
 define('_PAGETOP','Gnoztik');
 define('_PASSFOR','Perdu votre mot de passe?');

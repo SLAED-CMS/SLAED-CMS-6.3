@@ -1,8 +1,6 @@
 <span
-  {% if is_pager_dots %}title="&hellip;"{% elseif title_text %}title="{{ title_text }}"{% endif %}
+  {% if title_text %}title="{{ title_text }}"{% endif %}
   class="
-    {% if is_pager_dots %}sl-pnum-dots
-    {% else %}
       {{ class }}
       {% if chip_tone %} sl-chip sl-chip-{{ chip_tone }}{% endif %}
       {% if is_infly %} sl-infly{% endif %}
@@ -20,8 +18,7 @@
       {% if is_views %} sl-views{% endif %}
       {% if is_post_icon %} sl-post-icon{% endif %}
       {% if is_date %} sl-date{% endif %}
-    {% endif %}
   "
   {% if color_attr %}style="color: {{ color_attr }}"{% endif %}
   {% if badge_attr %}{{{ badge_attr }}}{% endif %}
->{% if is_pager_dots %}&hellip;{% elseif label_html %}{{{ label_html }}}{% else %}{{ label }}{% endif %}</span>
+>{% if label_html %}{{{ label_html }}}{% else %}{{ label }}{% endif %}</span>

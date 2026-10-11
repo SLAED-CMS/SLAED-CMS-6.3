@@ -2151,6 +2151,7 @@ function addRouteHeadTypes(PDO $pdo, string $work): void {
     $data['node']['types']['news']['workflow'] = ['access' => 'all'];
     $data['node']['types']['news']['features']['favorites'] = true;
     $data['node']['types']['news']['integrations']['rss'] = true;
+    $data['node']['types']['news']['integrations']['search'] = true;
     setRouteFile($work.'/config/node.php', $data);
     $pdo->exec('INSERT INTO '.$pre.'favorites (uid, fid, modul, time) VALUES (2, 101, \'news\', NOW())');
     $pdo->exec('UPDATE '.$pre.'users SET lastvis = \'2026-01-02 12:00:00\' WHERE id = 2');
@@ -2277,6 +2278,31 @@ function getRouteHeadBar(PDO $pdo, string $work): array {
     $out['catlets'] = [str_contains($one, 'index.php?name=news&amp;cat=1&amp;let=A"'), str_contains($one, 'index.php?name=news&amp;cat=1&amp;let=B"'),
         $letter($guest['body'], 'B')];
     return $out;
+}
+
+# The search hints of news over the light route: five links at most, none under the minimum length or outside the search, a closed category only for anna of the club
+function getRouteHint(PDO $pdo): array {
+    $st = $pdo->prepare('INSERT INTO '.RPREF.'_nodes (tid, cid, uid, aname, ip, title, intro, body, field, status, published)'
+        .' VALUES (1, 0, 2, \'\', \'127.0.0.1\', ?, \'\', \'Hinted body\', \'\', 2, ?)');
+    foreach (range(1, 6) as $i) $st->execute(['Hinted '.$i, '2026-02-0'.$i.' 10:00:00']);
+    $get = fn(string $word, string $who = '', string $name = 'news'): array
+        => getRouteReply($who, 'GET', 'index.php?go=1&op=getNodeHint&name='.$name.'&word='.rawurlencode($word));
+    $read = function (array $page): array {
+        preg_match_all('#<a class="sl-node-hint" role="option"[^>]* href="([^"]+)">(.*?)</a>#s', $page['body'], $hit);
+        $out = array_map(fn($v) => html_entity_decode($v), $hit[2]);
+        sort($out);
+        return $out;
+    };
+    $many = $get('Hinted');
+    $own = array_filter($read($many), fn(string $v): bool => str_starts_with($v, 'Hinted '));
+    $one = $get('Body of');
+    return [
+        'many' => [$many['code'], count($read($many)), count($own), str_contains($many['body'], '<body')],
+        'short' => [trim($get('Bo')['body']), trim($get('')['body']), count($read($get('Bod')))],
+        'rights' => [$read($one), $read($get('Body of', 'anna'))],
+        'href' => preg_match('#href="([^"]+)">Gamma<#', $one['body'], $hit) ? html_entity_decode($hit[1]) : '',
+        'other' => [trim($get('Doc one', '', 'docs')['body']), trim($get('Body of', '', 'nope')['body'])],
+    ];
 }
 
 # The child seoext of the seo run asks the core directly for the feeds of the site
@@ -2703,7 +2729,7 @@ try {
     } elseif (($argv[2] ?? '') === 'seo') {
         $report['runs']['seo'] = getRouteSeo($rpdo, $rwork);
     } elseif (($argv[2] ?? '') === 'head') {
-        $report['runs']['head'] = ['bar' => getRouteHeadBar($rpdo, $rwork)] + getRouteHead();
+        $report['runs']['head'] = ['bar' => getRouteHeadBar($rpdo, $rwork)] + getRouteHead() + ['hint' => getRouteHint($rpdo)];
     } elseif (($argv[2] ?? '') === 'quick') {
         $report['runs']['quick'] = getRouteQuick($rpdo, $rwork);
     } elseif (($argv[2] ?? '') === 'files') {

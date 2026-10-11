@@ -1,22 +1,27 @@
-{% if href %}
+{% if is_dots %}
+  <span class="sl-seg-cell sl-is-muted" aria-hidden="true">&hellip;</span>
+{% elseif href %}
   <a
     href="{{ href }}"
     title="{{ title }}"
-    class="sl-pnum{% if is_nav %} sl-pnum-nav{% endif %}"
-  >{{ label }}</a>
+    {% if is_nav %}aria-label="{{ title }}" rel="{{ rel }}"{% endif %}
+    class="{% if is_nav %}sl-but-mini{% else %}sl-seg-cell{% if is_far %} sl-pager-far{% elseif is_near %} sl-pager-near{% endif %}{% endif %}"
+  >{% if is_nav %}<i class="bi bi-{{ icon_name }}" aria-hidden="true"></i>{% else %}{{ label }}{% endif %}</a>
 {% elseif query %}
   <a
     href="{{ query }}"
     title="{{ title }}"
-    class="sl-pnum{% if is_nav %} sl-pnum-nav{% endif %}"
+    {% if is_nav %}aria-label="{{ title }}" rel="{{ rel }}"{% endif %}
+    class="{% if is_nav %}sl-but-mini{% else %}sl-seg-cell{% if is_far %} sl-pager-far{% elseif is_near %} sl-pager-near{% endif %}{% endif %}"
     hx-get="{{ query }}"
     hx-target="#{{ target_id }}"
     hx-swap="innerHTML"
     hx-push-url="{% if push_url %}{{ push_url }}{% else %}false{% endif %}"
-  >{{ label }}</a>
+  >{% if is_nav %}<i class="bi bi-{{ icon_name }}" aria-hidden="true"></i>{% else %}{{ label }}{% endif %}</a>
 {% else %}
   <span
     title="{{ title }}"
-    class="sl-pnum{% if is_cur %} sl-pnum-cur{% endif %}{% if is_nav %} sl-pnum-nav{% endif %}"
-  >{{ label }}</span>
+    {% if not is_nav %}aria-current="page"{% endif %}
+    class="{% if is_nav %}sl-but-mini sl-is-muted{% else %}sl-seg-cell sl-is-active{% endif %}"
+  >{% if is_nav %}<i class="bi bi-{{ icon_name }}" aria-hidden="true"></i>{% else %}{{ label }}{% endif %}</span>
 {% endif %}

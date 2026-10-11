@@ -12,6 +12,7 @@ return [
     # The freeze is held by the roster under `api` in tools/ui-audit-baseline.json, which the tool compares every run and --store refuses to write while a name is missing
     # A freeze nothing checks is only a sentence in a file
     # One exception was decided by hand on 2026-09-10: the seventeen names of the home slider and the site carousel left with the main module and were struck from the roster
+    # A second was decided on 2026-10-11: the five --sl-pnum-* names and the panel's --sl-card-shadow lost their one reader, the drawn arrow of the old panel pager
     'frozen' => true,
     'marker' => '/* --- end tokens --- */',
     'prefix' => '--sl-',
@@ -213,7 +214,7 @@ return [
         'meter', 'modal', 'modal-act', 'modal-btn', 'mode', 'module-head', 'monitor-table', 'move', 'msg', 'msg-brand', 'nav', 'node-find', 'opt', 'opt-lamp', 'opt-rail',
         'pager', 'pager-dot', 'pager-item', 'panel', 'panel-feed', 'placeholder', 'plot', 'pointer', 'pmf-ava', 'pmf-blank', 'pmf-chip', 'pmf-day', 'pmf-filter',
         'pmf-head', 'pmf-mate', 'pmf-meta', 'pmf-pane', 'pmf-slot', 'pmf-text', 'pmf-who',
-        'pnum', 'pnum-arrow', 'popover', 'pres', 'pres-panel', 'pres-ground', 'pres-inset', 'pres-core', 'pres-frame', 'pres-muted', 'pres-link', 'pres-good', 'pres-warn',
+        'popover', 'pres', 'pres-panel', 'pres-ground', 'pres-inset', 'pres-core', 'pres-frame', 'pres-muted', 'pres-link', 'pres-good', 'pres-warn',
         'preview', 'profile-ava', 'profile-dot', 'progress', 'proof', 'pulse', 'qr', 'quote', 'radio',
         'rail', 'rank', 'ratings', 'ring', 'row', 'scroll', 'search', 'search-filter', 'search-order', 'search-sort', 'seg', 'seg-knob', 'select', 'set', 'sep',
         'session', 'setup', 'setup-seal', 'shot', 'shot-side', 'site', 'site-img', 'skel', 'statx',
@@ -392,9 +393,6 @@ return [
         # The element default every page inherits, a utility that bolds any inline run, and one component label
         # They met when `bold` and `700` became one name; merging would move the element reset into a utility block
         '.sl-label, .sl-text-bold, strong, b',
-        # The hovered compact button and the current pager page both paint the brand colour and take the text that reads on it, which is one role and not one component
-        # Merging would file the pager's current page inside a button's hover block, where nobody editing either would look for it
-        '.sl-but-mini:hover, .sl-but-mini:focus-visible, .sl-pager-pages .sl-pnum-cur',
         # A chip that carries a checked radio and a filter button that is pressed: two controls of the upload panel that both say "on" in the same tint
         # Merging would hide the chip's definition inside the filter's block, and the two drift apart the moment one of them stops being a tint
         '.sl-fm-win .sl-fm-as label:has(input:checked), .sl-fm-win .sl-fm-filter[aria-pressed="true"]',
@@ -605,13 +603,10 @@ return [
             'the countdown: the panel draws it as a ring centred on the tick, a circle whose dash runs out, the site gives the bar a height and '
             .'fills it',
         '.sl-pager' =>
-            'the panel pager is a row inside a list foot that has already laid it out; the site pager is a centred band with a rule above it, standing '
-            .'between the list and the page',
-        '.sl-pager-main' =>
-            'the same band: the site pager wraps onto a second line on a narrow screen and reads at heading size, the panel one never wraps',
+            'one markup, two layouts: the site pager is a centred column with a rule above it, standing between the list and the page, its line under '
+            .'the row; the panel pager is a row inside a list foot that has already laid it out, and wraps its line under the row only when the row is full',
         '.sl-pager-info' =>
-            'the site prints the page and the total as a centred line above its band; the panel closes its pager row with them, pushed to the right '
-            .'edge on one line',
+            'the site centres the page line under the row; the panel pushes it to the right edge of the row on one line, where the panel always printed it',
         '.sl-but-mini' =>
             'the site\'s mini button is a real button element and resets the appearance the browser gives one; in admin the same chip is a link',
         '.sl-but-mini.sl-is-muted' =>
@@ -747,14 +742,6 @@ return [
             'the largest of the two vocabularies: twelve names the panel maps against thirty-three the site does, and not one is in both. The site link is the '
             .'whole card, cart, category and login language of a public page; the panel link is a row action. This is the pair the plan measured at over a hundred '
             .'lines, and it is two contracts rather than one contract with two spellings',
-        'fragments/pager-link.html' =>
-            'the panel page number is its own control, sl-pnum, with a current and a nav modifier; the site reuses the mini chip every other small control on it is '
-            .'drawn as, and puts a glyph in place of the previous and next labels. One producer feeds both and hands the label and the icon name either way, so what '
-            .'differs is which of the two each theme draws',
-        'fragments/pager.html' =>
-            'the site opens its pager with the tally it paginates - how many records over how many pages at what page size - because a public list is the whole '
-            .'page; the panel pager sits under a module that already carries its own head and toolbar. The one producer passes the four labels to both themes, so '
-            .'the divergence is which theme draws them and not what either is given',
         'fragments/popover.html' =>
             'the hint is a control in the panel and a modifier on the site, which the .sl-tip rules already answer for: the panel draws the glyph itself and gives '
             .'the whole thing a nav element, the site wraps the glyph in its own span so the hint can sit on whatever element carries it. The note under the panel '

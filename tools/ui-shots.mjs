@@ -603,11 +603,21 @@ async function getContrastPairs(page, name, mode) {
       }
       return out;
     };
+    // The chosen cell of a segmented rail stands on the plate slaed.js slides under it, a sibling and not an ancestor:
+    // the walk starts from that plate once it covers the cell, or it measures the cell against the track around both
+    const plate = (node) => {
+      const rail = node.closest('[data-sl-knob][data-sl-knob-ready]');
+      const mark = rail ? rail.querySelector(':scope > [data-sl-knob-mark]') : null;
+      if (!mark) return null;
+      const one = node.getBoundingClientRect();
+      const two = mark.getBoundingClientRect();
+      return Math.abs(one.left - two.left) < 2 && Math.abs(one.width - two.width) < 2 ? mark : null;
+    };
     // Walk out to the first ancestor that paints something opaque, compositing every sheer layer met on the way back down
     const under = (node, fg) => {
       const stack = [];
       let hit = null;
-      for (let el = node; el; el = el.parentElement) {
+      for (let el = plate(node) || node; el; el = el.parentElement) {
         const css = getComputedStyle(el);
         const sel = el.tagName.toLowerCase() + (el.className && typeof el.className === 'string' ? '.' + el.className.trim().split(/\s+/).join('.') : '');
         stack.push({ css, sel });

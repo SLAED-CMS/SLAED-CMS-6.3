@@ -1,10 +1,14 @@
-<p class="sl-pager-info">{{ page_label }} <b>{{ page_of }}</b>{% if count %}. {{ overall }}: <b>{{ count }}</b>{% endif %}</p>
-<div class="sl-pager">
+<nav class="sl-pager" aria-label="{{ _PAGENAV }}">
   <div class="sl-pager-main">
-    <div class="sl-pager-pages">{{{ items }}}</div>
-    <div class="sl-pager-nextprev">
-      <b class="sl-pager-prev">{{{ prev }}}</b>
-      <b class="sl-pager-next">{{{ next }}}</b>
+    <div class="sl-pager-nav">
+      {{{ prev }}}
+      <span class="sl-seg sl-seg-pager" data-sl-knob="pager"><span class="sl-seg-knob" data-sl-knob-mark aria-hidden="true"></span><span class="sl-seg-run sl-pager-pages">{{{ items }}}</span></span>
+      {{{ next }}}
+    </div>
+    <div class="sl-pager-side">
+      <span class="sl-pager-sep" aria-hidden="true"></span>
+      <a href="#top" title="{{ _PAGETOP }}" aria-label="{{ _PAGETOP }}" class="sl-but-mini"><i class="bi bi-arrow-up" aria-hidden="true"></i></a>
     </div>
   </div>
-</div>
+  <p class="sl-pager-info">{{ page_label }} <b>{{ page_of }}</b>{% if range_text %}<span class="sl-pager-range"> · {{ range_text }}</span>{% endif %}{% if count %} · {{ overall }} <b>{{ count }}</b>{% endif %}</p>
+</nav>

@@ -154,7 +154,7 @@ if (empty($go)) {
     }
 } elseif (is_numeric($go)) {
     $public = ($go == 1 && in_array($op, ['getUserSessionInfo', 'getUserSessionRows', 'getPrivateMessageView', 'getRatingView', 'getQuickEdit', 'updateQuickEdit',
-        'getFavoriteList'], true))
+        'getFavoriteList', 'getNodeHint'], true))
         || (($go == 1 || $go == 5) && $op === 'getUserSessionAdminInfo');
     if ($go == 1 && in_array($op, ['addComment', 'updateCommentStatus', 'deleteComment', 'addPrivateMessage',
         'setPrivateMessageRead', 'updatePrivatBox', 'addFavorite', 'deleteFavorite'], true) && ($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
@@ -194,6 +194,7 @@ if (empty($go)) {
             case 'getVotingView': echo getVotingView(); break;
             case 'updateVotingResult': updateVotingResult(); break;
             case 'getEditorPreview': getEditorPreview(); break;
+            case 'getNodeHint': echo getNodeHint(); break;
         }
     } elseif ($go == 3) {
         Cache::setHeaders();

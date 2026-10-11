@@ -2829,6 +2829,17 @@ dialog.sl-editor-emoji-panel {
   box-sizing: border-box;
 }
 
+/* On a phone the pager takes the whole line and the bulk action goes under it instead of lying over it */
+@media (max-width: 560px) {
+  .sl-list-bottom {
+    flex-wrap: wrap;
+  }
+
+  .sl-list-bottom-pager {
+    flex-basis: 100%;
+  }
+}
+
 /* Chips: unified tinted pill labels — shared vocabulary with the lite theme (sl-chip + tone modifiers) */
 .sl-chip {
   display: inline-flex;
@@ -4792,6 +4803,11 @@ button.sl-seg-cell:hover {
   cursor: default;
 }
 
+/* The dots of a pager stand in the track as a cell that leads nowhere */
+.sl-seg-cell.sl-is-muted {
+  cursor: default;
+}
+
 .sl-seg-cell:focus-visible {
   outline: var(--sl-ring-width) solid var(--sl-ring-bg);
   outline-offset: calc(var(--sl-ring-gap) * -1);
@@ -4839,6 +4855,12 @@ button.sl-seg-cell:hover {
 .sl-seg-pager .sl-seg-cell {
   min-width: var(--sl-size-chip);
   height: var(--sl-size-chip);
+  color: var(--sl-text);
+}
+
+/* The digits read at full text strength, so a number in hand takes the brand colour to stand out from its neighbours */
+.sl-seg-pager a.sl-seg-cell:hover {
+  color: var(--sl-primary-strong);
 }
 
 .sl-seg-pager .sl-seg-knob {
@@ -4856,57 +4878,102 @@ button.sl-seg-cell:hover {
   background: var(--sl-primary-strong);
 }
 
-/* Pagination: pager controls */
+/* Pagination: the row of the arrows and the rail starts at the left edge of its foot, the page line is pushed to the right
+   and goes under the row in a narrow container. The pager is the container its steps measure, not the window */
 .sl-pager {
+  display: flex;
+  flex-flow: row wrap;
+  align-items: center;
+  gap: var(--sl-space-3) var(--sl-space-6);
   padding: var(--sl-space-3) var(--sl-space-4);
+  container-type: inline-size;
 }
 
 .sl-box > .sl-pager {
-  width: fit-content;
-  max-width: 100%;
-  margin: var(--sl-space-4) auto 0;
-  padding: var(--sl-space-3) var(--sl-space-3);
+  margin: var(--sl-space-4) 0 0;
+  padding: var(--sl-space-3);
   border-radius: var(--sl-radius-2);
   background-color: var(--sl-surface);
   box-sizing: border-box;
 }
 
-.sl-pager-main {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  gap: var(--sl-space-6);
-}
-
-.sl-pager-pages {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: var(--sl-space-2);
-  min-width: 0;
-}
-
-.sl-pager-nextprev {
+.sl-pager-main,
+.sl-pager-nav,
+.sl-pager-side {
   display: flex;
   align-items: center;
   gap: var(--sl-space-2);
+}
+
+/* The arrows are raised round steps beside the sunken rail; an arrow at the end of the run is flat and faded */
+.sl-pager-nav > .sl-but-mini {
+  width: var(--sl-size-chip);
+  padding: 0;
+  background: var(--sl-surface);
+  color: var(--sl-text-strong);
+  box-shadow: var(--sl-shadow-xs);
+}
+
+.sl-pager-nav > a.sl-but-mini:hover,
+.sl-pager-nav > a.sl-but-mini:focus-visible {
+  background: var(--sl-primary-strong);
+  color: var(--sl-on-solid);
+}
+
+.sl-pager-nav > span.sl-but-mini.sl-is-muted {
+  background: transparent;
+  box-shadow: none;
+  opacity: var(--sl-fade-disabled);
+}
+
+/* The side group is quiet: its buttons wear no plate until the pointer comes */
+.sl-pager-side .sl-but-mini {
+  width: var(--sl-size-chip);
+  padding: 0;
+  background: transparent;
+  color: var(--sl-text-muted);
+}
+
+.sl-pager-sep {
   flex: 0 0 auto;
+  width: 1px;
+  height: var(--sl-size-icon-md);
+  margin: 0 var(--sl-space-2);
+  background: var(--sl-border);
 }
 
 .sl-pager-info {
-  margin-left: auto;
-  font-size: var(--sl-font-small);
+  margin: 0 0 0 auto;
   color: var(--sl-text-muted);
+  font-size: var(--sl-font-small);
   white-space: nowrap;
 }
 
-.sl-pager-prev,
-.sl-pager-next {
-  display: block;
-  margin: 0;
-  font-weight: var(--sl-weight-normal);
+.sl-pager-info b {
+  color: var(--sl-text-strong);
+  font-weight: var(--sl-weight-semibold);
+  font-variant-numeric: tabular-nums;
 }
 
+/* Under 520px of its own column the far numbers and the range go and the line stands under the row, under 320px the neighbours go too */
+@container (width < 520px) {
+  .sl-pager-info {
+    margin-left: 0;
+  }
+
+  .sl-pager .sl-pager-far,
+  .sl-pager .sl-pager-range {
+    display: none;
+  }
+}
+
+@container (width < 320px) {
+  .sl-pager .sl-pager-near {
+    display: none;
+  }
+}
+
+/* A page number printed as an anchor outside the pager */
 .sl-pnum {
   display: inline-flex;
   align-items: center;
@@ -4919,101 +4986,6 @@ button.sl-seg-cell:hover {
   color: var(--sl-text);
   font-weight: var(--sl-weight-normal);
   line-height: 1;
-}
-
-.sl-pager-pages .sl-pnum {
-  min-width: var(--sl-size-icon-sm);
-  height: var(--sl-size-chip);
-  padding: 0 var(--sl-space-2);
-  border-radius: var(--sl-radius-1);
-}
-
-.sl-pager-pages a.sl-pnum:hover {
-  background-color: transparent;
-  color: var(--sl-primary-strong);
-}
-
-.sl-pager-pages .sl-pnum-cur {
-  background-color: var(--sl-primary-strong);
-  color: var(--sl-on-solid);
-}
-
-.sl-pnum-nav {
-  position: relative;
-  width: var(--sl-pnum-width);
-  min-width: var(--sl-pnum-width);
-  height: var(--sl-pnum-height);
-  padding: 0;
-  border: 1px solid var(--sl-border-strong);
-  border-radius: var(--sl-radius-circle);
-  background: linear-gradient(
-    to bottom,
-    var(--sl-bg) 0%,
-    var(--sl-bg-muted) 100%
-  );
-  box-shadow: var(--sl-card-shadow);
-  color: transparent;
-  font-size: 0;
-  text-indent: -9999px;
-  transition:
-    border-color var(--sl-time-base) var(--sl-ease-out),
-    background var(--sl-time-base) var(--sl-ease-out),
-    box-shadow var(--sl-time-base) var(--sl-ease-out),
-    opacity var(--sl-time-base) var(--sl-ease-out);
-}
-
-.sl-pnum-nav::before {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: var(--sl-pnum-arrow-width);
-  height: var(--sl-pnum-arrow-height);
-  border-top: var(--sl-pnum-border) solid var(--sl-text-muted);
-  border-right: var(--sl-pnum-border) solid var(--sl-text-muted);
-  content: "";
-}
-
-.sl-pager-prev .sl-pnum-nav::before {
-  transform: translate(-30%, -50%) rotate(-135deg);
-}
-
-.sl-pager-next .sl-pnum-nav::before {
-  transform: translate(-70%, -50%) rotate(45deg);
-}
-
-.sl-pager-nextprev a.sl-pnum-nav:hover {
-  border-color: var(--sl-primary-muted);
-  background: linear-gradient(
-    to bottom,
-    var(--sl-bg) 0%,
-    var(--sl-surface) 100%
-  );
-  box-shadow: var(--sl-shadow-raised);
-}
-
-.sl-pager-nextprev span.sl-pnum-nav {
-  opacity: var(--sl-fade-disabled);
-  background: linear-gradient(
-    to bottom,
-    var(--sl-bg-muted) 0%,
-    var(--sl-bg-subtle) 100%
-  );
-  box-shadow: none;
-}
-
-.sl-pnum-dots {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: var(--sl-size-icon-sm);
-  height: var(--sl-size-chip);
-  color: var(--sl-text);
-}
-
-@media (max-width: 900px) {
-  .sl-pager-main {
-    flex-wrap: wrap;
-  }
 }
 
 /* Mini chip button: 26px round trigger holding a single icon, shared visual language with the lite theme */

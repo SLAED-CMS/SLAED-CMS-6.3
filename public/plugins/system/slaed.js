@@ -1519,6 +1519,76 @@
         });
     }
 
+    // The chosen hint is told to the field by aria-activedescendant while the focus stays in the field, so typing goes on
+    function setHintActive(field, list, item) {
+        var opts = list.querySelectorAll('[role="option"]');
+        for (var i = 0; i < opts.length; i++) opts[i].setAttribute('aria-selected', opts[i] === item ? 'true' : 'false');
+        if (!item) {
+            field.removeAttribute('aria-activedescendant');
+            return;
+        }
+        field.setAttribute('aria-activedescendant', item.id);
+    }
+
+    // A hint list is shown only with options in it, and the field says whether it stands open
+    function setHintOpen(field, list, open) {
+        var isOpen = open && !!list.querySelector('[role="option"]');
+        list.hidden = !isOpen;
+        field.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+        setHintActive(field, list, null);
+    }
+
+    // A swap into the list a field names by data-sl-hints opens it while the field still has the focus, every option with an id of its own
+    function setHintList(list) {
+        if (!list || !list.id || !list.isConnected) return;
+        var field = document.querySelector('[data-sl-hints="' + CSS.escape(list.id) + '"]');
+        if (!field) return;
+        var opts = list.querySelectorAll('[role="option"]');
+        for (var i = 0; i < opts.length; i++) if (!opts[i].id) opts[i].id = list.id + '-' + i;
+        setHintOpen(field, list, document.activeElement === field);
+    }
+
+    // Arrows walk the hints round, Enter opens the chosen one, Esc closes it before the lens hears it; a press on it keeps the focus, so a browser not focusing links clicks
+    function setHintKeys() {
+        var getList = function (node) {
+            var field = node && node.closest ? node.closest('[data-sl-hints]') : null;
+            var box = !field && node && node.closest ? node.closest('[role="listbox"][id]') : null;
+            if (box) field = document.querySelector('[data-sl-hints="' + CSS.escape(box.id) + '"]');
+            var list = field ? document.getElementById(field.getAttribute('data-sl-hints') || '') : null;
+            return list ? { field: field, list: list } : null;
+        };
+        document.addEventListener('keydown', function (event) {
+            var pair = getList(event.target);
+            if (!pair || pair.list.hidden) return;
+            var opts = Array.prototype.slice.call(pair.list.querySelectorAll('[role="option"]'));
+            var now = opts.indexOf(pair.list.querySelector('[aria-selected="true"]'));
+            if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+                event.preventDefault();
+                var step = event.key === 'ArrowDown' ? 1 : -1;
+                setHintActive(pair.field, pair.list, opts[now < 0 ? (step > 0 ? 0 : opts.length - 1) : (now + step + opts.length) % opts.length]);
+            } else if (event.key === 'Enter' && now >= 0) {
+                event.preventDefault();
+                opts[now].click();
+            } else if (event.key === 'Escape') {
+                event.preventDefault();
+                event.stopPropagation();
+                setHintOpen(pair.field, pair.list, false);
+            }
+        }, true);
+        document.addEventListener('mousedown', function (event) {
+            var pair = getList(event.target);
+            if (pair && pair.list.contains(event.target)) event.preventDefault();
+        });
+        document.addEventListener('focusout', function (event) {
+            var pair = getList(event.target);
+            if (pair && event.relatedTarget !== pair.field && !pair.list.contains(event.relatedTarget)) setHintOpen(pair.field, pair.list, false);
+        });
+        document.addEventListener('focusin', function (event) {
+            var pair = getList(event.target);
+            if (pair && pair.field === event.target && pair.field.value.trim() !== '') setHintOpen(pair.field, pair.list, true);
+        });
+    }
+
     // How far the profile is filled, over the fields the server marked as counting. It draws the same rule the server drew,
     // so the figure the page arrives with and the one after the first keystroke are the same figure and cannot drift apart
     // Each field carries the value that counts as empty for it, which is how a select whose zero is a real option is counted
@@ -2548,6 +2618,7 @@
         setKnobs(document);
         setStickyBars(document);
         setLensKeys();
+        setHintKeys();
         setFillMeters();
         setDirtyForms(document);
         setCodeBlocks(document);
@@ -2583,6 +2654,7 @@
         setKnobs(event.target && event.target.isConnected ? event.target : document);
         setStickyBars(event.target && event.target.isConnected ? event.target : document);
         setSwapReveal(event.target);
+        setHintList(event.detail && event.detail.target);
         if (event.target && event.target.id === 'prview') {
             setPrivatPane('view');
             setPrivatCarry(event.target);

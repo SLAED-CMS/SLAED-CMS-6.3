@@ -122,7 +122,6 @@
   --sl-btn-shadow:
     0 2px 4px light-dark(rgba(0, 0, 0, 0.28), rgba(0, 0, 0, 0.7)), inset 0 1px 0 light-dark(rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0.05)),
     inset 0 -1px 0 light-dark(rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.55));
-  --sl-card-shadow: 0 1px 1px light-dark(rgba(35, 52, 70, 0.08), rgba(0, 0, 0, 0.45));
   /* The solid bars - a panel head, a sidebar block head, the footer band - carry white text on a deep fill in both
      schemes. In dark the tone tokens turn into light tints, right for a glyph and glaring as the fill of a whole bar, so
      a bar reads its own fill: the tone of the light scheme, and in dark that tone under a seventy per cent shade,
@@ -426,11 +425,6 @@
   --sl-msg-width: 460px;
   --sl-msg-shadow: 0 10px 30px light-dark(rgba(35, 52, 70, 0.14), rgba(0, 0, 0, 0.6));
   --sl-msg-brand-width: 240px;
-  --sl-pnum-width: 27px;
-  --sl-pnum-height: 27px;
-  --sl-pnum-border: 2px;
-  --sl-pnum-arrow-width: 7px;
-  --sl-pnum-arrow-height: 7px;
   --sl-popover-min-width: 220px;
   --sl-popover-max-width: 520px;
   --sl-popover-shadow: 0 6px 14px var(--sl-shadow-color);

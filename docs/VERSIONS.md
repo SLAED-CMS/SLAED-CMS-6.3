@@ -1,5 +1,43 @@
 # Versions
 
+## 2026-10-11
+
+### A Node list gets a header of its own, offers the views of its type, lives in place and hints its search
+
+The list of a Node type had the shared navigation of the modules: a title, three fixed links and a category toggle,
+no count, no direction, no search and no feed link, while the RSS channel named the engine and was never cached. The
+list now wears the face of the stand page `public/demo/nh-13-calm.html`, chosen by the owner among thirteen. The
+reference is `docs/NODE.md`, "List header", "Views of a list", "Live list", "Search" and "RSS", and
+`docs/TEMPLATES.md`, "Node List Contract".
+
+- **The header.** `partials/node/head.html` from `getNodeHead()`: the title with the count "19 из 97 материалов" in the
+  plural form of the locale (`getPluralForm()`), the view switch, the search field, the RSS button; the windows of the
+  categories and the letters with their counts, the sort window with "С прошлого визита" and "В избранном" for a
+  signed-in visitor, the direction pill, the reset, "Добавить". The bar sticks while the list scrolls; on a narrow bar
+  a lens opens the search over it. Every control is a link or a form the server answers; a sort, the direction and a personal filter keep the other
+  filters.
+- **Counts that cost nothing on a warm request.** `getNodeCountMap()` keeps one file per type, an entry per set of
+  readable categories, until a write, a new type version or the next scheduled publication or expiry.
+- **Views by type.** `list.views` offers cards, compact, list, accordion, tiles and a rail; the shipped `news` offers
+  cards, compact and tiles, `docs` list and rail, `faq` accordion and list. The visitor's choice is a cookie
+  per type set by a POST with a token; a list by publication is headed month by month.
+- **A live list.** The links of the header and the pager swap the part through htmx and push the address, an
+  `HX-Request` gets the part alone with its title, back and forward ask the part again; "Показать ещё" appends the next
+  page and the address takes its `num`.
+- **Search hints.** Up to five titles of the type under the field after 300 ms, each a link to the material, from the
+  light route `go=1&op=getNodeHint` under the read rights of the visitor; the arrows, Enter and Esc work the list.
+- **The feed.** The channel names the site, the type and the category, links the list it mirrors, dates itself by the
+  newest item, names the site in the copyright, answers 404 for a closed category and 304 to a reader that holds its
+  tag, cached private with revalidation instead of no-store.
+- **Breaking:** `config/node.php` needs `node.defaults.list.views` (`[]`), without it every type is refused at `list`.
+  A theme's `partials/node/list.html` receives `head_html` instead of `navi_html`, `groups` and `rail` instead of
+  `items_html`, and the categories and letters inside the header; `getNodeNavi()`, `partials/categories.html`,
+  `partials/node/media/list.html` and the category toggle of `fragments/link.html` are gone. A POST to a Node list
+  answers 303 instead of 405. `sl-pmf-day` is `sl-date-head` (the token keeps the name `--sl-pmf-day-bg`),
+  `sl-pmf-split`, `sl-pmf-aside`, `sl-pmf-view` are `sl-duo`, `sl-duo-aside`, `sl-duo-main`. `_PRSORT` and the `_SORT`
+  of `admin/lang/` are one `_SORT` of `lang/`, `_ASC` and `_DESC` moved there too, `_CATVORH` is gone. The title of a
+  site page is `getHeadTitle()` in place of the code inside `setHead()`.
+
 ## 2026-10-09
 
 ### Plain Plus and CodeMirror share one editor shell, and CodeMirror is also a text editor to choose

@@ -475,44 +475,102 @@ thead tr th[data-sort-method="none"]::after {
   margin-bottom: 0;
 }
 
-/* Pagination: pager controls */
+/* Pagination: the arrows and the rail centred in the column, the side group beside them, the page line under them.
+   The pager is the container its steps measure, so it narrows by the room its column gives it and not by the window */
 .sl-pager {
   display: flex;
+  flex-flow: column;
   align-items: center;
-  justify-content: center;
+  gap: var(--sl-space-4);
   padding: var(--sl-space-5) 0;
   border-top: 1px solid var(--sl-border-subtle);
+  container-type: inline-size;
 }
 
 .sl-pager-main {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  justify-content: center;
   gap: var(--sl-space-2);
-  font-size: var(--sl-font-h4);
+  width: 100%;
 }
 
-.sl-pager-pages,
-.sl-pager-nextprev {
-  display: contents;
+.sl-pager-nav {
+  grid-column: 2;
+  display: flex;
+  align-items: center;
+  gap: var(--sl-space-2);
+  min-width: 0;
 }
 
-.sl-pager-prev {
-  order: -1;
+.sl-pager-side {
+  display: flex;
+  align-items: center;
+  gap: var(--sl-space-2);
+  justify-self: start;
 }
 
-.sl-pager-next {
-  order: 1;
+/* The arrows are raised round steps beside the sunken rail; an arrow at the end of the run is flat and faded */
+.sl-pager-nav > .sl-but-mini {
+  width: var(--sl-size-chip);
+  padding: 0;
+  background: var(--sl-surface);
+  color: var(--sl-text-strong);
+  box-shadow: var(--sl-shadow-xs);
 }
 
-/* Pagination: pager info */
-.sl-pager-info {
-  margin: 0 0 var(--sl-space-2) 0;
-  text-align: center;
-  font-size: var(--sl-font-body);
-  font-weight: var(--sl-weight-normal);
+.sl-pager-nav > span.sl-but-mini.sl-is-muted {
+  background: transparent;
+  box-shadow: none;
+  opacity: var(--sl-fade-disabled);
+}
+
+/* The side group is quiet: its buttons wear no plate until the pointer comes */
+.sl-pager-side .sl-but-mini {
+  width: var(--sl-size-chip);
+  padding: 0;
+  background: transparent;
   color: var(--sl-text-muted);
+}
+
+.sl-pager-sep {
+  flex: 0 0 auto;
+  width: 1px;
+  height: var(--sl-size-icon-md);
+  margin: 0 var(--sl-space-2);
+  background: var(--sl-border-muted);
+}
+
+.sl-pager-info {
+  margin: 0;
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-small);
+  text-align: center;
+}
+
+.sl-pager-info b {
+  color: var(--sl-text-strong);
+  font-weight: var(--sl-weight-semibold);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Under 520px of its own column the far numbers and the range go, under 320px the neighbours too, leaving 1 … 8 … 16 */
+@container (width < 520px) {
+  .sl-pager-main {
+    display: flex;
+    justify-content: center;
+  }
+
+  .sl-pager .sl-pager-far,
+  .sl-pager .sl-pager-range {
+    display: none;
+  }
+}
+
+@container (width < 320px) {
+  .sl-pager .sl-pager-near {
+    display: none;
+  }
 }
 
 /* Cards: title override */
@@ -2134,10 +2192,36 @@ button.sl-but-mini:hover,
   gap: var(--sl-space-3);
 }
 
-/* The search of the type is narrower than the one of the site header, which the narrow screens stretch over the whole row */
+/* The search of the type is narrower than the one of the site header, which the narrow screens stretch over the whole row; it holds the list of its hints */
 .sl-node-head-acts .sl-search-form {
+  position: relative;
   width: var(--sl-node-find-width);
   margin: 0;
+}
+
+/* The hints of the search hang under the field over the list, as wide as the field: the titles its search finds first, each a link to the material */
+.sl-node-hints {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: var(--sl-z-dropdown);
+  display: grid;
+  margin-top: var(--sl-space-2);
+  padding: var(--sl-space-2);
+  border: 1px solid var(--sl-border-strong);
+  border-radius: var(--sl-radius-2);
+  background: var(--sl-bg);
+  box-shadow: var(--sl-shadow-float);
+}
+
+.sl-node-hint {
+  padding: var(--sl-space-2) var(--sl-space-4);
+  border-radius: var(--sl-radius-1);
+  color: var(--sl-text);
+  font-size: var(--sl-font-small);
+  line-height: var(--sl-line-tight);
+  text-decoration: none;
 }
 
 /* The round buttons of the row stand as high as the pills beside them */
@@ -3239,11 +3323,14 @@ pre code.hljs {
   color: var(--sl-success);
 }
 
-.sl-editor-hint-row:hover {
+/* A pointed hint lies on the subtle ground, the chosen one on the brand colour, in the editor and in the search of a list alike */
+.sl-editor-hint-row:hover,
+.sl-node-hint:hover {
   background: var(--sl-bg-subtle);
 }
 
-.sl-editor-hint-row[aria-selected="true"] {
+.sl-editor-hint-row[aria-selected="true"],
+.sl-node-hint[aria-selected="true"] {
   background: var(--sl-primary);
   color: var(--sl-on-solid);
 }
@@ -5705,6 +5792,11 @@ button.sl-seg-cell:hover {
   cursor: default;
 }
 
+/* The dots of a pager stand in the track as a cell that leads nowhere */
+.sl-seg-cell.sl-is-muted {
+  cursor: default;
+}
+
 .sl-seg-cell:focus-visible {
   outline: var(--sl-ring-width) solid var(--sl-ring-bg);
   outline-offset: calc(var(--sl-ring-gap) * -1);
@@ -5782,6 +5874,12 @@ button.sl-seg-cell:hover {
 .sl-seg-pager .sl-seg-cell {
   min-width: var(--sl-size-chip);
   height: var(--sl-size-chip);
+  color: var(--sl-text);
+}
+
+/* The digits read at full text strength, so a number in hand takes the brand colour to stand out from its neighbours */
+.sl-seg-pager a.sl-seg-cell:hover {
+  color: var(--sl-primary-strong);
 }
 
 .sl-seg-pager .sl-seg-knob {
@@ -7033,17 +7131,11 @@ td.sl-fl-col-stat {
   margin-bottom: var(--sl-space-11);
 }
 
-.sl-forum-foot .sl-pager-info {
-  flex-basis: 100%;
-  margin: 0;
-  padding-bottom: var(--sl-space-3);
-  border-bottom: 1px solid var(--sl-border-subtle);
-  text-align: left;
-}
-
+/* The pager shares the foot with the topic buttons; a container of inline size has no width of its own, so it is given one and wraps under them when the line is short */
 .sl-forum-foot .sl-pager {
-  justify-content: flex-start;
-  padding-top: 0;
+  flex: 1 1 var(--sl-layout-sidebar);
+  min-width: 0;
+  padding: 0;
   border-top: 0;
 }
 
@@ -10844,11 +10936,6 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   margin-top: auto;
   border-top: 1px solid var(--sl-border-subtle);
   background: var(--sl-bg);
-}
-
-.sl-pmf-foot .sl-pager-info {
-  padding: var(--sl-space-3) var(--sl-space-4) 0;
-  font-size: var(--sl-font-small);
 }
 
 .sl-pmf-foot .sl-pager {

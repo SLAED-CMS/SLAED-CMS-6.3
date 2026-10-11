@@ -494,6 +494,8 @@ define('_OVERALL','In total');
 define('_PADD','Added');
 define('_PAGE','Page');
 define('_PAGEHOME','Home');
+define('_PAGENAV','Pages');
+define('_PAGERANGE','Showing %1$s–%2$s');
 define('_PAGES','Pages');
 define('_PAGETOP','Top');
 define('_PASSFOR','Lost your Password?');

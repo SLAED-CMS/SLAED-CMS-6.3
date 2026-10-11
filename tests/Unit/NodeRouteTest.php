@@ -495,6 +495,19 @@ final class NodeRouteTest extends TestCase
         $this->assertSame(1, $this->getMode('head')['bar']['form'], 'The link of the public form is boosted into the list');
     }
 
+    # The search hints of a type answer at most five links to what its search finds, nothing under the minimum length, and no title the visitor may not read
+    #[Test]
+    public function theSearchHintsFollowTheSearchOfTheType(): void
+    {
+        $run = $this->getMode('head')['hint'];
+        $this->assertSame([200, 5, 5, false], $run['many'], 'The hints are not five links of the word, or they carry the page frame');
+        $this->assertSame(['', '', 5], $run['short'], 'A word under the minimum of the search module gets hints, or one at the minimum gets none');
+        $this->assertSame([['Beta', 'Gamma'], ['Beta', 'Gamma', 'Members']], $run['rights'],
+            'A guest sees a closed category, a future or pending material, or the club reader misses the closed category');
+        $this->assertSame('index.php?name=news&op=view&id=105', $run['href'], 'A hint does not link the material');
+        $this->assertSame(['', ''], $run['other'], 'A type outside the search or an unknown name answers hints');
+    }
+
     # Every Node constant of the module exists in all six locales of its own scope, the two scopes do not repeat a name, and the module label lives in the panel language
     #[Test]
     public function theConstantsExistInEveryLocale(): void

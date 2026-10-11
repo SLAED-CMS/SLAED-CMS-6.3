@@ -749,6 +749,7 @@ function getNodeHead(NodeType $type, array $base, string $key, string $way, arra
         'reset_label' => _FRESET,
         'find_mod' => (is_active('search') && $type->settings['integrations']['search']) ? $type->name : '',
         'find_label' => _NODE_FIND,
+        'hint_href' => 'index.php?go=1&op=getNodeHint&name='.$type->name,
         'search_label' => _SEARCH,
         'rss_href' => $feed,
         'rss_title' => _RSS,
