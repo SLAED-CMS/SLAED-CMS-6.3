@@ -21,6 +21,7 @@ define('_NODE_INVALID','The material was not saved: check the filled in fields.'
 define('_NODE_LETHINT','Letters with materials are highlighted; the count is in the hint');
 define('_NODE_LETTERS','By letter');
 define('_NODE_MNEW','User %1$s opened the request "%2$s". View: %3$s');
+define('_NODE_MORE','Show more');
 define('_NODE_MSTAFF','Support answered your request "%1$s". View: %2$s');
 define('_NODE_MUSER','User %1$s replied in the request "%2$s". View: %3$s');
 define('_NODE_ONLETTER','Letter %s');

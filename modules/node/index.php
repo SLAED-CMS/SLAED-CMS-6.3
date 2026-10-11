@@ -518,6 +518,8 @@ function getNodeRoute(): NodeType {
 # A list by publication in cards or compact is headed month by month with the count of its cards on the page; a pinned material opens a run of its own month
 # The letters of a category are counted live within it, the letters of the whole list come with the stored counts of the type
 # The canonical address names only the category and the page; the start page keeps the site description and names the type once a category or a page is asked
+# An htmx request gets the part of the header and the list alone, headed by the title a reload shows; both answers of one address vary by that header
+# "Show more" links the next page under every view but the rail, whose tabs take no appended page
 # A refusal of the reader answers by its code, while a storage failure goes to the shared handler
 function setNodeList(): void {
     global $conf, $tpl, $home;
@@ -528,6 +530,8 @@ function setNodeList(): void {
     $dir = getVar('get', 'dir', 'raw', '');
     $new = getVar('get', 'new', 'raw', '');
     $fav = getVar('get', 'fav', 'raw', '');
+    $part = strtolower($_SERVER['HTTP_HX_REQUEST'] ?? '') === 'true';
+    header('Vary: HX-Request');
     if ($let !== '' && !preg_match('/^[\p{L}\p{N}]$/Du', $let)) setNodeDeny(400);
     if ($sort !== '' && !in_array($sort, ['published', 'updated', 'title', 'views', 'rating'], true)) setNodeDeny(400);
     if ($dir !== '' && !in_array($dir, ['asc', 'desc'], true)) setNodeDeny(400);
@@ -622,17 +626,24 @@ function setNodeList(): void {
             'date_label' => _DATE,
             'read_label' => _READMORE,
             'pager_html' => getTplPagerView($num, $pages, 8, $link, ['count' => $count, 'limit' => $set['limit']]),
+            'more_href' => ($look !== 'rail' && $num < $pages) ? $link($num + 1)['href'] : '',
+            'more_label' => _NODE_MORE,
             'empty_alert' => ['text' => _NO_INFO, 'is_warn' => false],
         ]);
         $plain = $sort === '' && $dir === '' && $let === '' && $new === '' && $fav === '';
         $spot = ($cat ? ['cat' => $cat] : []) + ($num > 1 ? ['num' => $num] : []);
-        setHead(['title' => ($ctitle !== '') ? $ctitle : $title, 'ctitle' => ($ctitle !== '') ? $title : '', 'cid' => $cat, 'kind' => 'collection',
+        $seo = ['title' => ($ctitle !== '') ? $ctitle : $title, 'ctitle' => ($ctitle !== '') ? $title : '', 'cid' => $cat, 'kind' => 'collection',
             'robots' => $priv ? 'noindex, nofollow' : ($plain ? '' : 'noindex, follow'),
             'canon' => ($home && !$spot) ? getPublicUrl() : getSeoUrl(['name' => $type->name] + $spot)]
-            + ($home ? [] : ['desc' => $cat ? null : getConst($type->intro)]));
+            + ($home ? [] : ['desc' => $cat ? null : getConst($type->intro)]);
+        if (!$part) setHead($seo);
     } catch (NodeException $err) {
         if (getNodeStatus($err) === 500) throw $err;
         setNodeDeny(getNodeStatus($err));
+    }
+    if ($part) {
+        echo $tpl->getHtmlFrag('head-title', ['title' => getHeadTitle($seo)]).$page;
+        return;
     }
     echo $page;
     setFoot();

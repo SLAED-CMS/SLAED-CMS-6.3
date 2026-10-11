@@ -1,3 +1,4 @@
+<div id="sl-node-list" class="sl-node-list" hx-target="this" hx-swap="outerHTML show:none" hx-history-elt hx-history="false" data-sl-swap-reveal>
 {{{ head_html }}}
 {% if intro %}<p>{{ intro }}</p>{% endif %}
 {% if rail %}
@@ -12,12 +13,16 @@
     </article>{% endfor %}
   </div>
 </div>
-{{{ pager_html }}}
+<div id="sl-node-foot" hx-boost="true">{{{ pager_html }}}</div>
 {% elseif groups %}
-{% if is_compact or is_row or is_tiles %}<div class="{% if is_compact %}sl-node-compact{% elseif is_row %}sl-node-row{% else %}sl-node-tiles{% endif %}">{% endif %}
+<div id="sl-node-items"{% if is_compact %} class="sl-node-compact"{% elseif is_row %} class="sl-node-row"{% elseif is_tiles %} class="sl-node-tiles"{% endif %}>
 {% for group in groups %}{% if group.label %}{% include 'fragments/date-head.html' with group %}{% endif %}{{{ group.items_html }}}{% endfor %}
-{% if is_compact or is_row or is_tiles %}</div>{% endif %}
-{{{ pager_html }}}
+</div>
+<div id="sl-node-foot" hx-boost="true">
+  {% if more_href %}<p class="sl-center"><a id="sl-node-more" href="{{ more_href }}" title="{{ more_label }}" class="sl-but" hx-target="#sl-node-items" hx-swap="beforeend show:none" hx-select="#sl-node-items > *" hx-select-oob="#sl-node-foot"><i class="bi bi-arrow-down" aria-hidden="true"></i>{{ more_label }}</a></p>{% endif %}
+  {{{ pager_html }}}
+</div>
 {% else %}
 {% include 'fragments/alert.html' with empty_alert %}
 {% endif %}
+</div>

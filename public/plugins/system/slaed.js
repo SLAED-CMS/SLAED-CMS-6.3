@@ -462,17 +462,19 @@
         }
     }
 
+    // Whether a block stands open now: a float panel by its host, which hover and outside clicks drive past the toggle, any other block by its display
+    function isToggleOpen(element) {
+        if (element.classList.contains('sl-float-panel')) {
+            var host = element.closest('.sl-float');
+            return !!(host && host.classList.contains('sl-is-open'));
+        }
+        return !(window.getComputedStyle(element).display === 'none' || element.hidden);
+    }
+
     function setToggleBlock(id, scope, isOpen, effect, duration) {
         var element = document.getElementById(id);
         if (!element) return;
-        var isHidden;
-        if (element.classList.contains('sl-float-panel')) {
-            var fh = element.closest('.sl-float');
-            isHidden = !(fh && fh.classList.contains('sl-is-open'));
-        } else {
-            isHidden = window.getComputedStyle(element).display === 'none' || element.hidden;
-        }
-        var nextOpen = typeof isOpen === 'boolean' ? isOpen : isHidden;
+        var nextOpen = typeof isOpen === 'boolean' ? isOpen : !isToggleOpen(element);
         if (nextOpen) setToggleGroup(element);
         setToggleBlockState(element, id, nextOpen, effect, duration);
         setToggleState(id, scope, nextOpen ? '1' : '0');
@@ -606,6 +608,7 @@
         });
     }
 
+    // A block takes its default only once, marked as its control is; later runs after a swap keep the state it has and only tell its controls
     function setToggleBlocks() {
         var controls = document.querySelectorAll('[data-sl-toggle-control]');
         for (var i = 0; i < controls.length; i++) setToggleControl(controls[i]);
@@ -615,11 +618,15 @@
             var id = blocks[j].getAttribute('data-sl-toggle');
             var scope = blocks[j].getAttribute('data-sl-toggle-scope') || '';
             if (!id) continue;
+            var seen = blocks[j].getAttribute('data-sl-toggle-ready') === '1';
+            blocks[j].setAttribute('data-sl-toggle-ready', '1');
             var state = getToggleState(id, scope);
             var isOpen = state !== '0';
             if (state === null) {
                 var defaultState = blocks[j].getAttribute('data-sl-toggle-default');
-                if (defaultState === 'closed') {
+                if (seen) {
+                    isOpen = isToggleOpen(blocks[j]);
+                } else if (defaultState === 'closed') {
                     isOpen = false;
                 } else if (defaultState === 'open') {
                     isOpen = true;
@@ -1463,6 +1470,12 @@
             }, { rootMargin: (-top) + 'px 0px 1000000px 0px' });
             watch.observe(mark);
         });
+    }
+
+    // A swapped part marked data-sl-swap-reveal whose head went above the screen jumps back to it, past the smooth scrolling of the sheet; a part in sight stays
+    function setSwapReveal(node) {
+        if (!node || !node.isConnected || !node.matches || !node.matches('[data-sl-swap-reveal]')) return;
+        if (node.getBoundingClientRect().top < 0) node.scrollIntoView({ block: 'start', behavior: 'instant' });
     }
 
     // The bar carries the state of its lens and every lens button in it tells it
@@ -2569,6 +2582,7 @@
         setCodeBlocks(event.target);
         setKnobs(event.target && event.target.isConnected ? event.target : document);
         setStickyBars(event.target && event.target.isConnected ? event.target : document);
+        setSwapReveal(event.target);
         if (event.target && event.target.id === 'prview') {
             setPrivatPane('view');
             setPrivatCarry(event.target);

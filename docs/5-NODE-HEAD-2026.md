@@ -28,8 +28,15 @@ the stand and of their profiles offer the views of "Decisions". The type form of
 view. The list answers a POST of the switch: its token of scope `view` sets the cookie `view-<type>` and the answer is a
 303 to the same list; `fragments/mode-switch.html` draws the colour mode and the view switch. The list view is
 `node/docs/card` with the thumbnail and the date, the accordion `node/faq/card`, the tiles `node/media/card` with the
-play mark only for media; the rail is the tabs of `slaed.js` on `sl-duo`, the private messages renamed onto it. The
-order of the batches is kept in `docs/ROADMAP-2026.md`. Update this line as batches land.
+play mark only for media; the rail is the tabs of `slaed.js` on `sl-duo`, the private messages renamed onto it. Batch 6
+landed 2026-10-11 by "Decisions of batch 6" — `partials/node/list.html` is the part `#sl-node-list`, the target of its
+swaps and the history element of htmx without a cache of snapshots, so back and forward ask the part again and the
+usual `htmx:afterSwap` revives it; `setNodeList()` answers `HX-Request` with the part alone headed by the `<title>` of
+`getHeadTitle()`, every answer with `Vary: HX-Request`; the filter toolbar, the windows and `#sl-node-foot` are boosted,
+the view switch posts through `hx-post`; "Показать ещё" `#sl-node-more` appends the cards of the next page to
+`#sl-node-items` by `hx-select`, redraws the foot by `hx-select-oob` and pushes the `num` of that page, under every view
+but the rail; `data-sl-swap-reveal` brings the part back when its head went above the screen. The order of the batches
+is kept in `docs/ROADMAP-2026.md`. Update this line as batches land.
 
 No line numbers anywhere in this document on purpose: every reference names the function, the file or the constant
 it points at, and that name is what to search for.
@@ -338,6 +345,28 @@ Taken by the owner on 2026-10-10; settled, not to be reopened by a batch.
 2. **A view wraps its cards in one container of `partials/node/list.html`,** as `sl-node-tiles` does for the tiles:
    `sl-node-compact` (new), `sl-node-row` for the list, `sl-node-rail` for the rail; the card fragments know nothing of
    the views, and `partials/node/media/list.html` goes, since the common list draws the tiles.
+
+## Decisions of batch 6
+
+Taken by the owner on 2026-10-11; settled, not to be reopened by a batch.
+
+1. **Boosted regions in place of an `hx-get` per link.** `hx-boost="true"` stands on the filter toolbar, the three windows
+   and the foot of the list (the pager and "Показать ещё"); the wrapper of the part names the target and the swap, which
+   they inherit. A boosted link is the same GET of its own `href` with the address pushed, a Ctrl or ⌘ click still opens a
+   tab, and the shared `link.html` and `pager-link.html` stay as they are; "Добавить" carries `hx-boost="false"`. The view
+   switch keeps its own `hx-post` by decision 7 of batch 0.
+2. **One rule of the title.** The title of a site page moves out of `setHead()` into `getHeadTitle()` in
+   `core/system.php`; `setHead()` and the answer of the part both call it, so the `<title>` of a swap is the one a reload
+   shows.
+3. **Month heads stay by page,** by decision 3 of batch 4: a page appended by "Показать ещё" brings its own heads with their
+   counts, so a month cut by the seam of two pages has a head on each side.
+4. **Two faults of batch 4 are repaired here,** found by the browser check of this batch. The stuck bar is lower than the
+   free one, so in a band just past its mark the scroll anchoring of the browser moved the page back by the difference and
+   the bar flipped between the two states on a phone, on a plain load as well; the part `sl-node-list` takes
+   `overflow-anchor: none`, so the list is not an anchor that compensates the bar. And every htmx swap of the page, a poll
+   of the session block among them, ran `setToggleBlocks()` over the whole document and closed an open window of the
+   header; a block now takes its default once, marked as its control is, and a later run keeps the state it stands in,
+   read by `isToggleOpen()` as `setToggleBlock()` reads it, a float panel by its host.
 
 ## Batches
 

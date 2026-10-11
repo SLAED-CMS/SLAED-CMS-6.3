@@ -21,6 +21,7 @@ define('_NODE_INVALID','La publication n\'a pas été enregistrée : vérifiez l
 define('_NODE_LETHINT','Les lettres qui ont des publications sont mises en valeur ; leur nombre est dans l\'infobulle');
 define('_NODE_LETTERS','Par lettre');
 define('_NODE_MNEW','L\'utilisateur %1$s a ouvert la demande « %2$s ». Voir : %3$s');
+define('_NODE_MORE','Afficher plus');
 define('_NODE_MSTAFF','Le support a répondu à votre demande « %1$s ». Voir : %2$s');
 define('_NODE_MUSER','L\'utilisateur %1$s a répondu dans la demande « %2$s ». Voir : %3$s');
 define('_NODE_ONLETTER','Lettre « %s »');

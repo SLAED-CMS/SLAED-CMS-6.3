@@ -1,4 +1,4 @@
-<form action="{{ action }}" method="post" class="sl-mode">
+<form action="{{ action }}" method="post" class="sl-mode"{% if is_view %} hx-post="{{ action }}"{% endif %}>
   {{{ hidden }}}
   <span class="sl-seg {% if is_view %}sl-seg-view{% else %}sl-seg-mode{% endif %}" data-sl-knob="{{ field }}"{% if label %} role="group" aria-label="{{ label }}"{% endif %}>
     {% for item in modes %}<button type="submit" class="sl-seg-cell{% if item.is_now %} sl-is-active{% endif %}" name="{{ field }}" value="{{ item.key }}" title="{{ item.title }}" aria-label="{{ item.title }}" aria-pressed="{% if item.is_now %}true{% else %}false{% endif %}"><i class="bi bi-{{ item.icon_name }}" aria-hidden="true"></i></button>{% endfor %}

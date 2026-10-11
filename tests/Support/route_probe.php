@@ -1953,7 +1953,7 @@ function getRouteModeOrder(string $html, array $marks): array {
     return array_keys($pos);
 }
 
-# The display modes over real requests: every list and one view of each type, read back by the classes of its mode; article keeps the base set
+# The display modes over real requests: every list and one view of each type, read back by the classes of its mode; article keeps the base set beside the head and the part
 # The related cards of a media material come in the grid of its mode as well
 function getRouteModes(PDO $pdo): array {
     $pdo->exec('INSERT INTO '.RPREF.'_node_relations (nid, rid, type, sort) VALUES (701, 702, \'related\', 0)');
@@ -1961,10 +1961,10 @@ function getRouteModes(PDO $pdo): array {
     $out = [];
     foreach (['news', 'docs', 'faq', 'files', 'media'] as $name) {
         $one = $get('index.php?name='.$name);
-        $out['list'][$name] = [$one['code'], preg_match('/class="[^"]*sl-node-(?!head)/', $one['body']) === 1, substr_count($one['body'], 'class="sl-post sl-card"')];
+        $out['list'][$name] = [$one['code'], preg_match('/class="[^"]*sl-node-(?!head|list")/', $one['body']) === 1, substr_count($one['body'], 'class="sl-post sl-card"')];
     }
     $one = $get('index.php?name=news&op=view&id=101');
-    $out['news'] = [$one['code'], preg_match('/class="[^"]*sl-node-(?!head)/', $one['body']) === 1];
+    $out['news'] = [$one['code'], preg_match('/class="[^"]*sl-node-(?!head|list")/', $one['body']) === 1];
     $out['docs'] = getRouteModeBits($get('index.php?name=docs')['body'], 'sl-node-toc');
     $one = $get('index.php?name=docs&op=view&id=201')['body'];
     $out['docsview'] = [str_contains($one, 'sl-views'), str_contains($one, 'sl-author'), str_contains($one, 'sl-date')];
@@ -2003,6 +2003,26 @@ function getRouteLooks(): array {
     $out['docs'] = [$read($docs), $read($rail), substr_count($rail, 'data-sl-tab-panel="node-201"'), substr_count($rail, 'data-sl-tab-link')];
     $out['faq'] = $read($get('index.php?name=faq')['body']);
     return $out;
+}
+
+# The live list over real requests: an htmx request gets the part alone headed by the title of the list, a plain one the whole page, and both vary by that header
+# The part is the history element of its swaps with its boosted regions; "Show more" links the next page, and the last page has none
+function getRouteLive(): array {
+    $get = fn(string $path, array $head = []): array => getRouteReply('', 'GET', $path, [], $head);
+    $title = fn(string $html): string => preg_match('#<title>(.*?)</title>#s', $html, $hit) ? $hit[1] : '';
+    $more = fn(string $html): string => preg_match('#<a id="sl-node-more" href="([^"]+)"#', $html, $hit) ? html_entity_decode($hit[1]) : '';
+    $full = $get('index.php?name=news&num=2');
+    $part = $get('index.php?name=news&num=2', ['HX-Request: true']);
+    $first = $get('index.php?name=news', ['HX-Request: true'])['body'];
+    return [
+        'part' => [$part['code'], str_starts_with($part['body'], '<title>'), str_contains($part['body'], '<div id="sl-node-list"'), str_contains($part['body'], '<body'),
+            str_contains($part['body'], 'sl-wrp')],
+        'full' => [$full['code'], str_contains($full['body'], '<body'), str_contains($full['body'], '<div id="sl-node-list"')],
+        'vary' => [str_contains($full['head']['vary'] ?? '', 'HX-Request'), str_contains($part['head']['vary'] ?? '', 'HX-Request')],
+        'title' => [$title($part['body']), $title($full['body'])],
+        'more' => [$more($first), $more($part['body'])],
+        'marks' => [str_contains($first, 'hx-history-elt hx-history="false"'), substr_count($first, 'hx-boost="true"')],
+    ];
 }
 # The types of the routes and feeds: docs sorted by title without the publication sort, in a feed and a block of its own, news in a feed with an attachment in an introduction
 # News also has a material in a category named by a language constant, and the site has a slogan the start page must show
@@ -2249,6 +2269,7 @@ function getRouteHeadBar(PDO $pdo, string $work): array {
     $get('index.php?name=news');
     $out['drop'] = [$sent['code'], $gone, is_file($file)];
     $out['words'] = [getRouteHeadRead($guest['body'])['count'], getRouteHeadRead($new['body'])['count']];
+    $out['form'] = preg_match('#href="index\.php\?name=news&amp;op=add"[^>]*hx-boost="false"#', $guest['body']);
     $heads = fn(string $html): array => preg_match_all('#<p class="sl-date-head">(.*?)</p>#s', $html, $hit)
         ? array_map(fn($v) => preg_replace('/\s+/u', ' ', trim(strip_tags($v))), $hit[1]) : [];
     $out['months'] = [$heads($guest['body']), $heads($sort['body'])];
@@ -2678,7 +2699,7 @@ try {
     } elseif (($argv[2] ?? '') === 'tree') {
         $report['runs']['tree'] = getRouteTree($rpdo);
     } elseif (($argv[2] ?? '') === 'modes') {
-        $report['runs']['modes'] = getRouteModes($rpdo) + ['looks' => getRouteLooks()];
+        $report['runs']['modes'] = getRouteModes($rpdo) + ['looks' => getRouteLooks(), 'live' => getRouteLive()];
     } elseif (($argv[2] ?? '') === 'seo') {
         $report['runs']['seo'] = getRouteSeo($rpdo, $rwork);
     } elseif (($argv[2] ?? '') === 'head') {

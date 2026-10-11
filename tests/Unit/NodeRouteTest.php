@@ -480,6 +480,21 @@ final class NodeRouteTest extends TestCase
         $this->assertSame([[], '', ''], $run['faq'], 'A type of one view draws the switch');
     }
 
+    # An htmx request of a list gets the part alone with the title a reload shows, a plain one the whole page; "Show more" links the next page only
+    #[Test]
+    public function anHtmxRequestGetsTheListPartAlone(): void
+    {
+        $run = $this->getMode('modes')['live'];
+        $this->assertSame([200, true, true, false, false], $run['part'], 'The htmx answer is not the part headed by its title, or it carries the page frame');
+        $this->assertSame([200, true, true], $run['full'], 'A plain request does not get the whole page around the part');
+        $this->assertSame([true, true], $run['vary'], 'The two answers of one address do not vary by HX-Request');
+        $this->assertNotSame('', $run['title'][0], 'The part carries no title');
+        $this->assertSame($run['title'][1], $run['title'][0], 'The title of the part is not the title of the page');
+        $this->assertSame(['index.php?name=news&num=2', ''], $run['more'], '"Show more" does not link the next page, or the last page offers it');
+        $this->assertSame([true, 5], $run['marks'], 'The part is not the history element, or the toolbar, the three windows and the foot are not boosted');
+        $this->assertSame(1, $this->getMode('head')['bar']['form'], 'The link of the public form is boosted into the list');
+    }
+
     # Every Node constant of the module exists in all six locales of its own scope, the two scopes do not repeat a name, and the module label lives in the panel language
     #[Test]
     public function theConstantsExistInEveryLocale(): void

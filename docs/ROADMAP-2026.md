@@ -110,7 +110,7 @@ into the plan, then do whatever work the step names.
 - [x] 43. NODE-HEAD batch 3 — the data of the header. (2026-10-10)
 - [x] 44. NODE-HEAD batch 4 — template, theme, strings. (2026-10-10)
 - [x] 45. NODE-HEAD batch 5 — views. (2026-10-10)
-- [ ] 46. NODE-HEAD batch 6 — live list and "Показать ещё".
+- [x] 46. NODE-HEAD batch 6 — live list and "Показать ещё". (2026-10-11)
 - [ ] 47. NODE-HEAD batch 7 — search hints.
 - [ ] 48. NODE-HEAD batch 8 — reference; deletes `docs/5-NODE-HEAD-2026.md`.
 - [ ] 49. PAGER batch 1 — the pager in both themes.

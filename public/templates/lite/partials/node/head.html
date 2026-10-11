@@ -12,25 +12,25 @@
       {% if find_mod %}<button type="button" class="sl-but-mini" data-sl-lens="sl-node-find" aria-controls="sl-node-find" aria-expanded="false" title="{{ find_label }}" aria-label="{{ find_label }}"><i class="bi bi-search" aria-hidden="true"></i><i class="bi bi-x-lg" aria-hidden="true"></i></button>{% endif %}
       <a class="sl-but-mini" href="#top" title="{{ top_label }}" aria-label="{{ top_label }}"><i class="bi bi-arrow-up" aria-hidden="true"></i></a>
     </div>
-    <div class="sl-node-head-filters" role="toolbar" aria-label="{{ filters_label }}">
+    <div class="sl-node-head-filters" role="toolbar" aria-label="{{ filters_label }}" hx-boost="true">
       {% if cats_html %}<span class="sl-node-head-pill{% if is_cat %} sl-is-active{% endif %}"><button type="button" class="sl-but" data-sl-toggle-control="sl-node-cats" data-sl-toggle-scope="none" data-sl-toggle-effect="slide" data-sl-toggle-duration="250"><i class="bi bi-folder2-open" aria-hidden="true"></i>{{ cat_name }}<i class="bi bi-chevron-down" aria-hidden="true"></i></button></span>{% endif %}
       {% if lets_html %}<span class="sl-node-head-pill{% if is_let %} sl-is-active{% endif %}"><button type="button" class="sl-but" data-sl-toggle-control="sl-node-lets" data-sl-toggle-scope="none" data-sl-toggle-effect="slide" data-sl-toggle-duration="250"><i class="bi bi-sort-alpha-down" aria-hidden="true"></i>{{ let_name }}<i class="bi bi-chevron-down" aria-hidden="true"></i></button></span>{% endif %}
       <span class="sl-node-head-pill{% if is_new or is_fav %} sl-is-active{% endif %}"><button type="button" class="sl-but" data-sl-toggle-control="sl-node-sort" data-sl-toggle-scope="none" data-sl-toggle-effect="slide" data-sl-toggle-duration="250"><i class="bi bi-filter" aria-hidden="true"></i>{{ sort_name }}{% if is_new %}<i class="bi bi-stars" title="{{ new_label }}" aria-hidden="true"></i>{% endif %}{% if is_fav %}<i class="bi bi-star-fill" title="{{ fav_label }}" aria-hidden="true"></i>{% endif %}<i class="bi bi-chevron-down" aria-hidden="true"></i></button></span>
       <span class="sl-node-head-pill"><a class="sl-but" href="{{ dir_href }}" title="{{ dir_title }}" aria-label="{{ dir_title }}"><i class="bi {% if is_asc %}bi-sort-up{% else %}bi-sort-down{% endif %}" aria-hidden="true"></i><span>{{ dir_label }}</span></a></span>
       {% if reset_href %}<a class="sl-chip sl-chip-info" href="{{ reset_href }}" title="{{ reset_label }}"><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i>{{ reset_label }}</a>{% endif %}
-      {% if add_href %}<a class="sl-but" href="{{ add_href }}" title="{{ add_label }}"><i class="bi bi-plus-lg" aria-hidden="true"></i>{{ add_label }}</a>{% endif %}
+      {% if add_href %}<a class="sl-but" href="{{ add_href }}" title="{{ add_label }}" hx-boost="false"><i class="bi bi-plus-lg" aria-hidden="true"></i>{{ add_label }}</a>{% endif %}
     </div>
   </div>
-  {% if cats_html %}<div id="sl-node-cats" class="sl-node-head-win" data-sl-toggle="sl-node-cats" data-sl-toggle-group="sl-node-head" data-sl-toggle-scope="none" data-sl-toggle-default="closed" hidden>
+  {% if cats_html %}<div id="sl-node-cats" class="sl-node-head-win" data-sl-toggle="sl-node-cats" data-sl-toggle-group="sl-node-head" data-sl-toggle-scope="none" data-sl-toggle-default="closed" hx-boost="true" hidden>
     <p class="sl-node-head-cap">{{ cats_label }}</p>
     <div class="sl-cat-grid">{{{ cats_html }}}</div>
   </div>{% endif %}
-  {% if lets_html %}<div id="sl-node-lets" class="sl-node-head-win" data-sl-toggle="sl-node-lets" data-sl-toggle-group="sl-node-head" data-sl-toggle-scope="none" data-sl-toggle-default="closed" hidden>
+  {% if lets_html %}<div id="sl-node-lets" class="sl-node-head-win" data-sl-toggle="sl-node-lets" data-sl-toggle-group="sl-node-head" data-sl-toggle-scope="none" data-sl-toggle-default="closed" hx-boost="true" hidden>
     <p class="sl-node-head-cap">{{ lets_label }}</p>
     {{{ lets_html }}}
     <p>{{ lets_hint }}</p>
   </div>{% endif %}
-  <div id="sl-node-sort" class="sl-node-head-win" data-sl-toggle="sl-node-sort" data-sl-toggle-group="sl-node-head" data-sl-toggle-scope="none" data-sl-toggle-default="closed" hidden>
+  <div id="sl-node-sort" class="sl-node-head-win" data-sl-toggle="sl-node-sort" data-sl-toggle-group="sl-node-head" data-sl-toggle-scope="none" data-sl-toggle-default="closed" hx-boost="true" hidden>
     <p class="sl-node-head-cap">{{ sort_label }}</p>
     <div class="sl-node-head-sorts">{% for sort in sorts %}<a class="sl-chip sl-chip-neutral" href="{{ sort.href }}" title="{{ sort.label }}"{% if sort.is_current %} aria-current="true"{% endif %}><i class="bi bi-{{ sort.icon_name }}" aria-hidden="true"></i>{{ sort.label }}</a>{% endfor %}</div>
     {% if mine %}<p class="sl-node-head-cap">{{ show_label }}</p>

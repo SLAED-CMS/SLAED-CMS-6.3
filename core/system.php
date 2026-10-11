@@ -1502,6 +1502,32 @@ function getSeoTitle(array $parts, string $sep): string {
     return implode(' '.$sep.' ', $out);
 }
 
+# The title of a site page: the site and its slogan at the start, else the page with its category, the asked word, letter, pages and operation, the module and the site
+function getHeadTitle(array $seo): string {
+    global $home, $conf, $op;
+    $sep = urldecode($conf['defis']);
+    $site = filterSeoText((string)($conf['sitename'] ?? ''));
+    $slogan = filterSeoText((string)($conf['slogan'] ?? ''));
+    $headline = filterSeoText((string)($seo['title'] ?? $site));
+    if ($home) return getSeoTitle(mb_strlen($slogan, 'UTF-8') <= 60 ? [$site, $slogan] : [$site], $sep);
+    if (!$conf['ltitle']) return $headline;
+    $ctitle = filterSeoText((string)($seo['ctitle'] ?? ''));
+    $parts = $headline !== $site ? [$headline, $ctitle] : [$ctitle];
+    $word = getVar('get', 'word', 'word');
+    if ($word !== '') $parts[] = $word;
+    $let = getVar('get', 'let', 'let');
+    if ($let !== '') $parts[] = $let;
+    $num = getVar('get', 'num', 'num');
+    if ($num) $parts[] = _PAGE.' '.$num;
+    $com = getVar('get', 'com', 'num');
+    if ($com) $parts[] = _COMMENTS.' '.$com;
+    $ops = ['best' => _BEST, 'pop' => _POP, 'liste' => _LIST, 'add' => _ADD];
+    if (isset($ops[$op ?? ''])) $parts[] = $ops[$op];
+    $parts[] = getModuleName($conf['name']);
+    $parts[] = $site;
+    return getSeoTitle($parts, $sep);
+}
+
 # Encode one structured-data object without unsafe HTML-significant JSON characters
 function getSeoJson(array $data): string {
     $flags = JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE;
@@ -1718,7 +1744,7 @@ function getRssFeeds(): array {
 # The category of the breadcrumb and of the theme header is the one the page names; without it the category of the query counts only when the visitor may read it
 # That read is judged by the reader of a Node type or by the read right and, on a multilingual site, the language of any other module, so a closed category never shows its title
 function setHead(array $seo = []): void {
-    global $db, $home, $conf, $user, $name, $theme, $op, $tpl, $adminpage, $adminvars, $sitepage, $sitevars, $locale;
+    global $db, $home, $conf, $user, $name, $theme, $tpl, $adminpage, $adminvars, $sitepage, $sitevars, $locale;
     $name = $name ?? '';
     $ctime = time();
     $request = $_SERVER['REQUEST_URI'] ?? getenv('REQUEST_URI') ?: '';
@@ -1774,35 +1800,7 @@ function setHead(array $seo = []): void {
         $ogmap = ['article' => 'article', 'news' => 'article', 'forum' => 'article', 'product' => 'product', 'profile' => 'profile'];
         $type = $ogmap[$kind] ?? 'website';
         $purl = $seomap['iscanon'] ? $seomap['canon'] : $seomap['siteurl'];
-        $title = $headline;
-        if ($home) {
-            $title = getSeoTitle(mb_strlen($slogan, 'UTF-8') <= 60 ? [$site, $slogan] : [$site], $sep);
-        } else {
-            if ($conf['ltitle']) {
-                $mod = getModuleName($conf['name']);
-                $parts = $headline !== $site ? [$headline, $ctitle] : [$ctitle];
-                $word = getVar('get', 'word', 'word');
-                if ($word !== '') $parts[] = $word;
-                $let = getVar('get', 'let', 'let');
-                if ($let !== '') $parts[] = $let;
-                $num = getVar('get', 'num', 'num');
-                if ($num) $parts[] = _PAGE.' '.$num;
-                $com = getVar('get', 'com', 'num');
-                if ($com) $parts[] = _COMMENTS.' '.$com;
-                if ($op == 'best') {
-                    $parts[] = _BEST;
-                } elseif ($op == 'pop') {
-                    $parts[] = _POP;
-                } elseif ($op == 'liste') {
-                    $parts[] = _LIST;
-                } elseif ($op == 'add') {
-                    $parts[] = _ADD;
-                }
-                $parts[] = $mod;
-                $parts[] = $site;
-                $title = getSeoTitle($parts, $sep);
-            }
-        }
+        $title = getHeadTitle($seo);
         $strmeta .= $tpl->getHtmlFrag('head-title', ['title' => $title])."\n";
         if ($author !== '') $strmeta .= $tpl->getHtmlFrag('head-meta', ['name' => 'author', 'content' => $author])."\n";
         if ($desc !== '') $strmeta .= $tpl->getHtmlFrag('head-meta', ['name' => 'description', 'content' => $desc])."\n";

@@ -2067,6 +2067,11 @@ button.sl-but-mini:hover,
   }
 }
 
+/* The part of a Node list is no scroll anchor: the stuck bar is lower than the free one, and a page moved back by the difference would unstick it again */
+.sl-node-list {
+  overflow-anchor: none;
+}
+
 /* The header of a Node list: the title row and the filter row stick to the top as one bar while the list scrolls under them */
 .sl-node-head {
   position: sticky;

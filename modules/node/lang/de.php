@@ -21,6 +21,7 @@ define('_NODE_INVALID','Der Beitrag wurde nicht gespeichert: prüfen Sie die aus
 define('_NODE_LETHINT','Hervorgehoben sind Buchstaben mit Beiträgen; die Anzahl steht im Hinweis');
 define('_NODE_LETTERS','Nach Buchstaben');
 define('_NODE_MNEW','Benutzer %1$s hat die Anfrage „%2$s“ eröffnet. Ansehen: %3$s');
+define('_NODE_MORE','Mehr anzeigen');
 define('_NODE_MSTAFF','Der Support hat auf Ihre Anfrage „%1$s“ geantwortet. Ansehen: %2$s');
 define('_NODE_MUSER','Benutzer %1$s hat in der Anfrage „%2$s“ geantwortet. Ansehen: %3$s');
 define('_NODE_ONLETTER','Buchstabe „%s“');

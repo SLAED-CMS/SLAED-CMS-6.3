@@ -21,6 +21,7 @@ define('_NODE_INVALID','Materiał nie został zapisany: sprawdź wypełnione pol
 define('_NODE_LETHINT','Wyróżnione są litery, na które są materiały; liczba jest w podpowiedzi');
 define('_NODE_LETTERS','Według liter');
 define('_NODE_MNEW','Użytkownik %1$s otworzył zgłoszenie „%2$s”. Zobacz: %3$s');
+define('_NODE_MORE','Pokaż więcej');
 define('_NODE_MSTAFF','Pomoc techniczna odpowiedziała na Twoje zgłoszenie „%1$s”. Zobacz: %2$s');
 define('_NODE_MUSER','Użytkownik %1$s odpowiedział w zgłoszeniu „%2$s”. Zobacz: %3$s');
 define('_NODE_ONLETTER','Litera „%s”');
