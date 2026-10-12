@@ -9,8 +9,18 @@
     const silence = document.querySelector('.sl-phx-silence');
     const rewrite = document.querySelector('.sl-phx-rewrite');
     const editor = document.querySelector('.sl-phx-editor');
-    const archive = [...document.querySelectorAll('.sl-phx-archive figure')];
-    const modules = [...document.querySelectorAll('.sl-phx-modules > span')];
+    const works = [...document.querySelectorAll('.sl-phx-work')];
+    const labs = [...document.querySelectorAll('.sl-phx-lab > article')];
+    const dna = document.querySelector('.sl-phx-dna');
+    const panels = [...document.querySelectorAll('.sl-phx-principle')];
+    const tabs = [...document.querySelectorAll('.sl-phx-dna-index > span')];
+    const year = document.querySelector('[data-sl-phx-year]');
+    const era = document.querySelector('[data-sl-phx-era]');
+    const yearbar = document.querySelector('.sl-phx-years > div i');
+    const idea = document.querySelector('.sl-phx-idea');
+    const wires = document.querySelector('.sl-phx-wires g');
+    const radar = document.querySelector('.sl-phx-radar i');
+    const motto = document.querySelector('.sl-phx-motto strong');
     const code = document.querySelector('[data-sl-phx-code]');
     const file = document.querySelector('[data-sl-phx-file]');
     const build = document.querySelector('[data-sl-phx-build]');
@@ -39,7 +49,7 @@
     const params = new URLSearchParams(location.search);
     const motion = matchMedia('(prefers-reduced-motion: reduce)');
     const still = motion.matches || params.get('still') === '1';
-    const length = 30;
+    const length = 45;
     const beat = 60 / 128;
     const score = new window.PhoenixScore();
     const sources = [
@@ -130,7 +140,7 @@
     function setPalette() {
         const probe = document.createElement('span');
         document.body.append(probe);
-        const names = ['--sl-primary-strong', '--sl-text-strong', '--sl-warning', '--sl-primary', '--sl-primary-muted', '--sl-success'];
+        const names = ['--sl-pres-link-text', '--sl-pres-text', '--sl-pres-warn-text', '--sl-primary', '--sl-primary-muted', '--sl-pres-good-text'];
         palette = names.map((name) => {
             probe.style.color = 'var(' + name + ')';
             return getComputedStyle(probe).color;
@@ -148,9 +158,6 @@
             brush.fillStyle = palette[row === 0 ? 1 : row === 1 ? 0 : 4];
             for (let i = 0; i < glyphs.length; i++) brush.fillText(glyphs[i], i * 18 + 1, row * 20 + 16);
         }
-        const bright = root.dataset.theme === 'dark' ? 1.7 : 1;
-        document.querySelector('.sl-phx-header > img').style.filter = 'brightness(' + bright + ')';
-        logo.style.filter = 'brightness(' + bright + ') drop-shadow(0 0 18px var(--sl-primary-muted))';
         if (cloud) cloud.setTheme(rgb, root.dataset.theme === 'dark');
     }
 
@@ -183,11 +190,11 @@
     function setWorldFrame(time, idle = false) {
         ctx.clearRect(0, 0, wide, high);
         const dark = root.dataset.theme === 'dark';
-        const matrix = idle ? 0.13 : 0.04 + getWindow(time, 6.3, 17.7, 1.5) * 0.68;
+        const matrix = idle ? 0.13 : 0.04 + getWindow(time, 0.2, 7, 0.9) * 0.18 + getWindow(time, 23.5, 32.7, 1.5) * 0.68;
         const space = matrix < 0.2 ? 40 : 24;
         const count = Math.ceil(wide / space);
-        const warp = idle ? 0 : getWindow(time, 12.5, 19.3, 1.1);
-        const power = idle ? 0.09 : getWindow(time, 15.3, 27.5, 1.8);
+        const warp = idle ? 0 : getWindow(time, 0.1, 7.1, 1.1) * 0.3 + getWindow(time, 27.5, 34.3, 1.1);
+        const power = idle ? 0.09 : getWindow(time, 30.3, 42.5, 1.8);
         const pulse = Math.exp(-(time % beat) / 0.09) * power;
         const center = wide / 2;
         const horizon = high * 0.56;
@@ -253,8 +260,24 @@
                 ctx.fillText(['core/system.php', 'getVar()', 'PDOStatement', '{{ mode }}', 'getSiteToken()', 'Template'][i % 6], xx, yy);
             }
         }
-        if (!idle && time > 18.75 && time < 22.5) {
-            const age = time - 18.75;
+        if (!idle && time < 7.5) {
+            const travel = getWindow(time, 0.2, 6.7, 0.7);
+            ctx.textAlign = 'center';
+            for (let i = 0; i < 8; i++) {
+                const depth = (i / 8 + time * 0.18) % 1;
+                const scale = 0.14 + depth ** 2 * 1.8;
+                const side = i % 2 ? 1 : -1;
+                const xx = center + side * wide * 0.42 * scale;
+                const yy = high * (0.4 + Math.sin(i * 2.9) * 0.33 * scale);
+                ctx.globalAlpha = travel * (1 - depth) * 0.14;
+                ctx.fillStyle = palette[0];
+                ctx.font = Math.round(22 + scale * 24) + 'px ' + face;
+                ctx.fillText(String(2005 + i * 3), xx, yy);
+            }
+            ctx.textAlign = 'start';
+        }
+        if (!idle && time > 33.75 && time < 37.5) {
+            const age = time - 33.75;
             for (let i = 0; i < 3; i++) {
                 const radius = Math.max(0, age - i * 0.16) * wide * 0.6;
                 if (!radius) continue;
@@ -283,10 +306,10 @@
 
     /* Type representative project code as each subsystem joins the new architecture */
     function setCodeFrame(time) {
-        const age = Math.max(0, time - 8);
-        const index = Math.min(3, Math.floor(age / 1.36));
+        const age = Math.max(0, time - 24.4);
+        const index = Math.min(3, Math.floor(age / 1.2));
         const text = sources[index].code;
-        const count = Math.min(text.length, Math.floor((age - index * 1.36) / 1.04 * text.length));
+        const count = Math.min(text.length, Math.floor((age - index * 1.2) / 0.94 * text.length));
         if (index !== lastfile) {
             file.textContent = sources[index].file;
             build.textContent = sources[index].label;
@@ -299,68 +322,126 @@
             lines.textContent = Array.from({length: total}, (_, num) => String(num + 1).padStart(2, '0')).join('\n');
             lasttext = count;
         }
-        const progress = getClamp(age / 5.3);
+        const progress = getClamp(age / 4.8);
         percent.textContent = Math.round(progress * 100) + '%';
         buildbar.style.transform = 'scaleX(' + progress + ')';
-        modules.forEach((node, num) => {
-            const lit = getEase((progress - num * 0.21) / 0.2);
-            node.style.opacity = 0.35 + lit * 0.65;
-            node.style.borderColor = lit > 0.9 ? 'var(--sl-primary)' : 'var(--sl-border-strong)';
-            node.style.transform = 'translateY(' + (1 - lit) * 14 + 'px)';
+        labs.forEach((node, num) => {
+            const lit = getEase((age - 0.4 - num * 0.55) / 0.75);
+            node.style.opacity = 0.12 + lit * 0.88;
+            node.style.borderColor = lit > 0.9 ? 'var(--sl-primary-muted)' : 'var(--sl-pres-frame-border)';
+            node.style.transform = 'translateY(' + (1 - lit) * 30 + 'px) scale(' + (0.94 + lit * 0.06) + ')';
+        });
+        radar.style.transform = 'rotate(' + time * 145 + 'deg)';
+        document.querySelectorAll('.sl-phx-trace span').forEach((node, num) => {
+            node.style.opacity = 0.3 + getEase((age - 1.4 - num * 0.45) / 0.5) * 0.7;
         });
     }
 
-    /* Choreograph the development narrative on the same thirty-second musical clock */
+    /* Assemble code, servers, interface and solved challenges around the unmodified brand mark */
+    function setHistoryFrame(time) {
+        const progress = getClamp(time / 6.4);
+        const value = 2005 + Math.floor(progress * 21);
+        if (year.textContent !== String(value)) year.textContent = String(value);
+        const words = ['Первая строка кода.', 'Идеи становятся возможностями.', 'Проблемы. Поиск. Решения.', 'Система растёт вместе с нами.', 'Время двигаться дальше.'];
+        era.textContent = words[Math.min(4, Math.floor(time / 1.4))];
+        yearbar.style.transform = 'scaleX(' + progress + ')';
+        works.forEach((node, index) => {
+            const enter = getEase((time - 0.5 - index * 0.23) / 1.1);
+            const side = index % 2 ? 1 : -1;
+            const float = still ? 0 : Math.sin(time * 1.1 + index) * 5;
+            const depth = 0.91 + enter * 0.09;
+            node.style.opacity = enter;
+            const move = (1 - enter) * side * 110;
+            node.style.transform = 'translate(' + move + 'px,' + float + 'px) perspective(1000px) rotateY(' + side * -5 + 'deg) scale(' + depth + ')';
+        });
+        const solve = getEase((time - 3.8) / 1.1);
+        document.querySelectorAll('.sl-phx-task').forEach((node, index) => {
+            const done = getEase((time - 3.6 - index * 0.4) / 0.7);
+            node.querySelector('b').style.opacity = done;
+            node.querySelector('i').style.opacity = 0.15 + done * 0.85;
+            node.querySelector('span').style.opacity = 1 - done * 0.65;
+        });
+        document.querySelector('[data-sl-phx-taskhead]').textContent = solve > 0.8 ? 'solution' : 'challenge';
+        wires.style.strokeDashoffset = -time * 42;
+        idea.style.transform = 'translate(-50%, -50%) scale(' + (0.9 + getEase(time / 2) * 0.1) + ')';
+        document.querySelector('.sl-phx-orbits').style.transform = 'rotate(' + time * 8 + 'deg)';
+        document.querySelectorAll('.sl-phx-ui-bars i').forEach((node, index) => {
+            node.style.transform = 'scaleY(' + (0.4 + (Math.sin(time * 2 + index * 0.6) * 0.5 + 0.5) * 0.6) + ')';
+        });
+    }
+
+    /* Sweep through the four real product principles as large cinematic image planes */
+    function setDnaFrame(time) {
+        const age = time - 7.5;
+        const index = Math.max(0, Math.min(3, Math.floor(age / 3.75)));
+        panels.forEach((node, num) => {
+            const local = age - num * 3.75;
+            const enter = getEase(local / 0.45);
+            const exit = getEase((local - 3.75) / 0.45);
+            node.style.opacity = enter * (1 - exit);
+            node.querySelector('.sl-phx-dna-copy').style.transform = 'translateX(' + ((1 - enter) * -35 - exit * 30) + 'px)';
+            const scale = 0.94 + getEase(local / 4) * 0.09;
+            node.querySelector('img').style.transform = 'perspective(1400px) rotateY(' + ((1 - enter) * -12 + exit * 10) + 'deg) scale(' + scale + ')';
+            tabs[num].dataset.active = String(num === index);
+        });
+        document.querySelector('.sl-phx-dna-pulse').style.transform = 'rotate(' + time * 8 + 'deg)';
+    }
+
+    /* Choreograph the development narrative on the same twenty-bar musical clock */
     function setSceneFrame(time) {
         spent = Math.min(length, Math.max(0, time));
+        const phase = time - 15;
         const dark = root.dataset.theme === 'dark';
-        const rise = getEase((time - 17.8) / 1.7);
-        const native = getEase((time - 19.6) / 1.25) * (1 - getEase((time - 23.2) / 1.05));
-        const settle = getEase((time - 25.8) / 1.4);
-        const reveal = getEase((time - 28.95) / 1.05);
-        history.style.opacity = getWindow(time, 0.3, 5.3, 0.8);
-        history.style.transform = 'scale(' + (0.92 + getEase(time / 6) * 0.12) + ')';
-        archive.forEach((node, index) => {
-            const mix = getEase((time - 1.15 - index * 0.24) / 0.85);
-            const turn = (index - 1.5) * 8 * (1 - getEase((time - 4.1) / 1.3));
-            node.style.opacity = mix;
-            node.style.transform = 'translateY(' + (1 - mix) * 80 + 'px) rotateY(' + turn + 'deg)';
-        });
-        silence.style.opacity = getWindow(time, 5.5, 7.4, 0.55);
-        silence.style.transform = 'scale(' + (0.96 + getEase((time - 5.5) / 2) * 0.09) + ')';
-        const writing = getWindow(time, 8, 13.4, 0.8);
+        const rise = getEase((phase - 17.8) / 1.7);
+        const native = getEase((phase - 19.6) / 1.25) * (1 - getEase((phase - 23.2) / 1.05));
+        const settle = getEase((phase - 25.8) / 1.4);
+        const reveal = getEase((time - 43.95) / 1.05);
+        const origin = getWindow(time, 0.1, 6.9, 0.6);
+        history.style.opacity = origin;
+        history.style.transform = 'scale(' + (0.97 + getEase(time / 7.5) * 0.04) + ')';
+        if (origin > 0.005) setHistoryFrame(time);
+        const principle = getWindow(time, 7.5, 22.5, 0.45);
+        dna.style.opacity = principle;
+        if (principle > 0.005) setDnaFrame(time);
+        silence.style.opacity = getWindow(time, 22.65, 24.15, 0.4);
+        silence.style.transform = 'scale(' + (0.96 + getEase((time - 22.5) / 1.8) * 0.09) + ')';
+        const writing = getWindow(time, 24.4, 29.8, 0.65);
         rewrite.style.opacity = writing;
-        rewrite.style.transform = 'translateY(' + (1 - getEase((time - 8) / 0.8)) * 24 + 'px)';
-        editor.style.transform = 'perspective(1200px) rotateY(' + (1 - getEase((time - 8) / 1.7)) * -13 + 'deg)';
+        rewrite.style.transform = 'translateY(' + (1 - getEase((time - 24.4) / 0.8)) * 24 + 'px)';
+        editor.style.transform = 'perspective(1200px) rotateY(' + (1 - getEase((time - 24.4) / 1.2)) * -13 + 'deg)';
         if (writing > 0.005) setCodeFrame(time);
-        assemble.style.opacity = getWindow(time, 13.55, 16.4, 0.75);
-        assemble.style.transform = 'translateY(' + (1 - getEase((time - 13.55) / 0.9)) * 30 + 'px)';
+        assemble.style.opacity = getWindow(phase, 15, 16.6, 0.65);
+        assemble.style.transform = 'translateY(' + (1 - getEase((phase - 15) / 0.9)) * 30 + 'px)';
         const scale = 0.81 + rise * 0.19;
         const drift = still ? 0 : Math.sin(time * 1.7) * 3;
         const xx = wide / 2 + pointer[0] * 7;
         const yy = high * 0.41 + drift;
         bird.style.opacity = still ? 0 : native;
         bird.style.transform = 'translate(calc(-50% + ' + pointer[0] * 7 + 'px), calc(-50% + ' + drift + 'px)) scale(' + scale + ')';
-        bird.style.clipPath = 'inset(0 ' + (1 - getEase((time - 19.6) / 1.1)) * 43 + '%)';
-        reborn.style.opacity = getWindow(time, 20.1, 23.4, 0.7);
+        bird.style.clipPath = 'inset(0 ' + (1 - getEase((phase - 19.6) / 1.1)) * 43 + '%)';
+        reborn.style.opacity = getWindow(phase, 20.1, 23.4, 0.7);
         finale.style.opacity = settle;
-        const opacity = (dark ? 0.25 : 0.14) * getWindow(time, 11.7, 17.9, 1.5);
+        const accent = getEase((time - 42.15) / 0.65);
+        motto.style.opacity = accent;
+        motto.style.transform = 'translateY(' + (1 - accent) * 18 + 'px) scale(' + (0.94 + accent * 0.06) + ')';
+        document.querySelector('.sl-phx-cloud').style.opacity = 1 - settle;
+        const opacity = (dark ? 0.18 : 0.07) * getWindow(time, 28.3, 32.9, 1.5);
         portal.style.opacity = opacity;
-        portal.style.transform = 'scale(' + (1 + getEase((time - 12) / 6) * 0.55) + ')';
-        scan.style.opacity = still ? 0 : getWindow(time, 5.1, 13.4, 0.5) * 0.15;
-        const impact = still ? 0 : Math.exp(-(((time - 18.75) / 0.13) ** 2)) * 0.62;
+        portal.style.transform = 'scale(' + (1 + getEase((time - 27.5) / 6) * 0.55) + ')';
+        scan.style.opacity = still ? 0 : getWindow(time, 22.5, 29.8, 0.5) * 0.12;
+        const impact = still ? 0 : Math.exp(-(((time - 33.75) / 0.13) ** 2)) * 0.62;
         flash.style.opacity = impact;
         stage.style.opacity = 1 - reveal;
         stage.style.transform = 'scale(' + (1 + reveal * 0.07) + ')';
         bar.style.transform = 'scaleX(' + getClamp(time / length) + ')';
-        timer.textContent = time.toFixed(1).padStart(4, '0') + ' / 30.0';
-        chapter.textContent = time < 5.5 ? '01 / НАСЛЕДИЕ' : time < 8 ? '02 / ТИШИНА' : time < 13.5 ? '03 / ПЕРЕПИСАН С НУЛЯ'
-            : time < 18.75 ? '04 / НОВАЯ АРХИТЕКТУРА' : time < 24 ? '05 / ВОЗРОЖДЕНИЕ' : '06 / PHOENIX 8.0';
+        timer.textContent = time.toFixed(1).padStart(4, '0') + ' / ' + length.toFixed(1);
+        chapter.textContent = time < 7.5 ? '01 / ДВИЖЕНИЕ ВПЕРЁД' : time < 22.5 ? '02 / DNA ПРОДУКТА' : time < 24.4 ? '03 / ТИШИНА'
+            : time < 30 ? '04 / ПЕРЕПИСАН С НУЛЯ' : time < 33.75 ? '05 / СБОРКА' : time < 39.5 ? '06 / ВОЗРОЖДЕНИЕ' : '07 / PHOENIX 8.0';
         if (!still) setWorldFrame(time);
         else setWorldFrame(27.8, true);
         if (cloud && !still) {
             const markbox = [wide / 2, high * 0.45, Math.min(wide * 0.23, high * 0.37), Math.min(wide * 0.23, high * 0.37) * 1.32];
-            cloud.setFrame(time, [xx, yy, birdwide * scale, birdhigh * scale], logobox, markbox);
+            cloud.setFrame(phase, [xx, yy, birdwide * scale, birdhigh * scale], logobox, markbox);
         }
     }
 
@@ -424,7 +505,7 @@
         stage.hidden = false;
         panel.setAttribute('inert', '');
         start = performance.now() - offset * 1000;
-        setSceneFrame(still ? 28.1 : offset);
+        setSceneFrame(still ? 43.3 : offset);
         setControlState();
         pending = false;
         document.querySelector('[data-sl-phx-skip]').focus({preventScroll: true});
@@ -508,7 +589,8 @@
     setControlState();
     frame = requestAnimationFrame(setCoverFrame);
     const assets = ['assets/phoenix-codex/phoenix-digital.png', 'assets/phoenix-codex/wordmark.svg', 'assets/phoenix-codex/mark.svg'];
-    Promise.all([Promise.all(assets.map(getSceneImage)), score.ready]).then(([images, audio]) => {
+    const photos = [...document.querySelectorAll('.sl-phx-principle > img')].map((node) => node.getAttribute('src'));
+    Promise.all([Promise.all(assets.concat(photos).map(getSceneImage)), score.ready]).then(([images, audio]) => {
         cloud = new window.PhoenixCloud(document.querySelector('.sl-phx-cloud'), {bird: images[0], logo: images[1], mark: images[2]});
         loaded = audio;
         ready = true;
@@ -517,13 +599,13 @@
         document.querySelectorAll('[data-sl-phx-start]').forEach((node) => { node.disabled = false; });
         track.disabled = !audio;
         soundbtn.disabled = !audio;
-        loader.textContent = still ? 'Движение уменьшено согласно настройкам устройства.' : '30 секунд. Включите звук. Почувствуйте возвращение.';
+        loader.textContent = still ? 'Движение уменьшено согласно настройкам устройства.' : '45 секунд. Включите звук. Почувствуйте возвращение.';
         const at = Number(params.get('at'));
         if (params.has('at') && Number.isFinite(at)) {
             cancelAnimationFrame(frame);
             cover.hidden = true;
             started = true;
-            setSceneFrame(Math.max(0, Math.min(28.8, at)));
+            setSceneFrame(Math.max(0, Math.min(43.8, at)));
             setControlState();
         } else if (params.get('autoplay') === '1') setScenePlay(false);
     }).catch((error) => {

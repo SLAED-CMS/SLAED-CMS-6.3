@@ -12,7 +12,7 @@ This guide covers:
 - bootstrap and configuration flow
 - frontend and admin routing
 - core runtime objects and global dependencies
-- module, block, template, editor, parser, cache, and scheduler boundaries
+- module, block, template, editor, parser, cache, scheduler and journal boundaries
 - performance-sensitive and refactor-sensitive areas
 
 This guide does not describe a future framework, dependency injection container,
@@ -444,7 +444,8 @@ Confirmed responsibilities:
 - provides admin/user access helpers
 
 What the web server may reach, the self-check and the journals are under
-"Private Data Boundary".
+"Private Data Boundary"; how the journals are written and read, the record of
+the panel's actions and the login table under "Journal Boundary".
 
 Security can exit early for blocked or invalid requests before the normal
 `setHead()` / `setFoot()` page lifecycle.
@@ -730,10 +731,11 @@ only while the upload root is `closed` (`NodeService::checkTypeGuard()`).
 **Journals.** No secret reaches `storage/logs/`. `Logger` masks the value of
 every key matching `pass`, `pwd`, `secret`, `token`, `key` or `code` in the body
 and the query string, and writes the names of cookies and session keys, never
-their values. The request journal (the `log` switch of `config/security.php`,
-off by default) is its channel `request`; the login journals of
-`addLoginLog()` record who tried, under which login, from where and when,
-never the attempted password. A file is named after what it holds:
+their values; the journals of the site's own events carry no body at all
+("Journal Boundary"). The request journal (the `log` switch of
+`config/security.php`, off by default) is its channel `request`; a login is
+recorded by `addLoginLog()` with who tried, under which login, from where and
+when, never the attempted password. A file is named after what it holds:
 `error_*.log` is what the system could not do, `<meaning>.log` what happened,
 and no name carries a `log_` prefix.
 
@@ -744,21 +746,158 @@ and no name carries a `log_` prefix.
 | `file.log` | file operations below `error`, such as a remote address the policy refused | `Logger`, channel `file` |
 | `hack.log`, `warn.log` | recognised attacks, refused requests | `Logger` |
 | `request.log` | the request journal | `Logger`, channel `request` |
-| `admin.log`, `user.log` | login attempts | `addLoginLog()` |
-| `oauth.log` | OAuth events, no token, code or claim | `OAuth` |
-| `database.log` | database operations of the panel | `admin/modules/database.php` |
-| `filescan.log`, `filescan_tree.log` | changes of the file tree, its snapshot | job `filescan` |
+| `admin.log` | actions and logins of the panel | `Logger`, channel `admin` |
+| `user.log` | logins of the site | `Logger`, channel `user` |
+| `oauth.log` | OAuth protocol events, no token, code or claim | `Logger`, channel `oauth` |
+| `database.log` | runs of the database tool of the panel | `Logger`, channel `database` |
+| `filescan.log` | changes of the file tree | `Logger`, channel `filescan` |
+| `filescan_tree.log` | the snapshot of the tree the next scan compares with | job `filescan` |
 
-A line goes to one file only, by its level. `Logger`, `addLoginLog()` and
-the job `filescan` move a full journal through `addCompress()` into an archive
-`<name>_<date>.log.<zip|gz|bz2>`, or `.log.bak` without a compressor;
-`oauth.log` starts over when full, and `database.log` has no limit. Beside the
+A line goes to one file only, by its level. `Logger` moves a full journal
+through `addCompress()` into an archive `<name>_<date>.log.<zip|gz|bz2>`, or
+`.log.bak` without a compressor; `filescan_tree.log` is rewritten whole by each
+scan. Beside the
 journals `storage/logs/` holds only state as `.json` (`scheduler/<job>.json`,
 `scheduler/heartbeat.json`, `scheduler/trigger.json`, `monitor.json`,
 `filescan.json`); the locks
 live in `storage/cache/locks/`, which the cache sweeps never empty. The labels
 of the security section come from one map in `admin/modules/security.php`, and
 `JournalNameTest` holds the files, the channels and the map together.
+
+## Journal Boundary
+
+Everything the site journals has one format, one writer and one reader per
+store. The files are listed under "Private Data Boundary", "Journals"; this
+section is how they are written and read.
+
+**One format.** `Logger` (`core/classes/logger.php`) writes every journal of
+`storage/logs/` but the snapshot `filescan_tree.log`: one JSON line with `ts`,
+`level`, `chan`, `msg`, `fingerprint`, the request (`ip`, `method`, `url`,
+`referer`, `ua`), the memory and the fields of the caller. The channels of
+failures, attacks, refusals, file operations and the request journal (`php`,
+`sql`, `site`, `file`, `hack`, `warn`, `request`) add the request body
+(`query`, `post`, `cookie_keys`, `session_keys`), masked as above, because it
+serves debugging. The channels of
+the site's own events, listed in `Logger::BARECHANS` — `admin`, `user`,
+`oauth`, `database` and `filescan` — leave it out: for an action of the panel
+it would be the text of a block, a letter or a whole configuration, for the
+database tool the whole dump. The channel list of `getChan()` is closed, every
+channel has its method (`addPhp()`, `addSql()`, `addFile()`, `addSite()`,
+`addWarn()`, `addHack()`, `addRequest()`, `addAdmin()`, `addUser()`,
+`addOauth()`, `addDatabase()`, `addFilescan()`), and `addEntry()` is protected,
+so no caller names a channel by string and no module keeps file handling of its
+own. Levels are `debug`, `info`, `notice`, `warning`, `error`, `critical`.
+
+**One writer and one reader per store.** Nothing else writes or reads a
+journal; a new function here is an owner's decision.
+
+| Store | Writes | Reads |
+|---|---|---|
+| the files of `storage/logs/` | `Logger::add<Channel>(string $levl, string $mesg, array $ctx = []): bool` | `Logger::getEntries(string $chan, array $filt, int $page, int $num): array` |
+| the table `_login_log` | `addLoginLog(int $uid, bool $adm, string $res, string $login, string $way = 'login'): void`, `core/system.php` | `getLoginLog(array $filt, int $page, int $num): array`, `core/system.php` |
+| an action of the panel | `setAdminLog(array $data): void` notes it, `addAdminLog(): bool` writes it, `core/security.php` | `Logger::getEntries('admin', …)` |
+
+**The actions of the panel.** They are recorded at one point: the token check
+`checkAdminPost()` stands in front of every change an administrator makes, so
+every module, one written later included, is covered without a line of its
+own. A passed check calls `setAdminLog()` with its scope, which opens one
+record per request — a second check changes nothing — and registers
+`addAdminLog()` for the end of the request. `setRedirect()` gives an open
+record its result from `$warn`; a request without an open record is untouched.
+`addAdminLog()` writes the line when the request ends, so a handler that stops
+without a redirect is recorded too, and a failed write never breaks the action.
+A record opens only where `ADMIN_FILE` is defined: the switches of the site
+that share `checkAdminPost()` — the colour mode, the view of a list, the
+language — write nothing. A refused token is no event: it changed nothing, and
+a forged request reaches `hack.log` through the input filter. The
+drag-and-drop order of categories and blocks (`updateAdminCategoryOrder()`,
+`updateAdminBlockOrder()` in `core/admin.php`) checks through
+`checkAdminPost()` as well. The switch `log_a` of `config/security.php` turns
+the lines on and off. A line is `info`, its message `<scope> <op>`, with:
+
+| Field | Meaning |
+|---|---|
+| `event` | `action`, or `login` for a login of the panel |
+| `aid`, `aname` | the administrator and the name at the time |
+| `modul` | the scope of the token |
+| `op` | the operation of the request |
+| `target` | the first id of `id`, `bid`, `mid`, `cid`, `nid`, `uid`, `aid` or of the list `id[]`, 0 for none |
+| `num` | how many ids a bulk action named |
+| `result` | `done`, `refused`, or `open` for a form shown again or a request ended without an answer |
+
+The record keeps neither the values before and after a change nor the title of
+the object: both would need a call in every handler. Changes made outside the
+panel — the quick edit of the site, the connector `public/api.php`, the jobs of
+the scheduler, `update.php`, `setup.php` — are not recorded here; the connector
+keeps its own audit table (`docs/2027-CONNECTOR.md`).
+
+**Logins.** Every login, by password or OAuth, of the site or the panel, is
+written by `addLoginLog()` alone: one row of `_login_log` always, and one event
+in `admin.log` or `user.log` while `log_a` or `log_u` is on — `info` "Login
+accepted" or `warning` "Login refused" with `event`, `result`, `way`, `uid`,
+`login` and the administrator or user already signed in. The rows do not follow
+the switches, because the profile shows them and the release ships `log_u` off.
+`oauth.log` keeps the events of the protocol only (the start, the errors of a
+provider, link, unlink, a created account), never a second record of the login.
+The failure counter of the captcha (`Captcha::registerLoginFailure()`) is a
+short window per address that decides when the captcha shows, not a journal.
+
+`_login_log` lies on the column domains of the schema:
+
+| Column | Declaration | Meaning |
+|---|---|---|
+| `id` | `BIGINT UNSIGNED NOT NULL AUTO_INCREMENT` | a log that may outgrow `INT` |
+| `uid` | `INT UNSIGNED NOT NULL DEFAULT 0` | the account, 0 for a name that matches none |
+| `admin` | `BOOLEAN NOT NULL DEFAULT 0` | a login of the panel |
+| `result` | `VARCHAR(10)` ascii | `ok`, `password`, `blocked` |
+| `way` | `VARCHAR(10)` ascii, default `login` | `login` or `oauth` |
+| `ip` | `VARCHAR(45)` ascii | where from |
+| `agent` | `VARCHAR(255)` | the browser, cut to the column by `filterCutText()` |
+| `time` | `DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP` | when |
+
+Keys: `PRIMARY (id)`, `uid_time (admin, uid, time, id)` for the profile and the
+filter by account, `time (time)` for the panel, the monitor and the cleanup. No
+unique key over `(uid, time)` and no `INSERT IGNORE`, or two attempts within
+one second would keep one. `blocked` is a refusal by a guard before the
+password counts — the captcha with its limit, or the stale token of the form of
+the site; `password` is every other refusal. The panel looks the name up even
+when the captcha refused, so a blocked attempt on a real administrator keeps
+its id; a name that matches no account is a row with `uid` 0, seen in the
+panel and in no profile. `getFailedLoginCountHours()` of `core/monitor.php`
+counts the refused rows of the panel through `getLoginLog()`; the daily system
+job `cachegc` deletes rows older than 90 days, a thousand per statement. The
+install schema creates the table and the 6.2 update creates it with
+`CREATE TABLE IF NOT EXISTS`, nothing carried over.
+
+**Reading.** A user reads their own logins in the profile,
+`index.php?name=account&op=logins`, with the pager. The panel reads them all on
+the tab "Журнал входов" of "Безопасность" (`op=logins`), filtered by account,
+panel or site, result, way and period. Every journal of `Logger` opens on
+"Безопасность" as a table (`op=logview&file=<name>`), read by
+`Logger::getEntries()`: newest first across every file of the channel, so
+`file` reads `file.log` and `error_file.log` together; the level is a
+threshold ("≥ warning"), `from` and `to` are whole days, and any other key
+matches the field of the line. A line that is not JSON of the channel — an old
+block of a site updated from 6.2 — is skipped, and a rotated archive is not
+read. `admin.log` shows time, level, who, module, action, object, result and
+address and opens on its actions; its filter of events shows the logins or
+both. The common operations (add, save, delete, status, order) are shown in
+words, any other as its name. The other journals show time, level, message and
+address; `filescan_tree.log` keeps the raw view.
+
+**The link of a module.** `getTplAdminTabs()` ends the tab strip of every module
+known to `$conf['modules']` with "Журнал действий",
+`admin.php?name=security&op=logview&file=admin&modul=<name>`, for an
+administrator for whom `isAdmin(true)` holds, who alone may open
+"Безопасность". No module adds the link by hand or shows a block of entries
+on its own screen.
+
+`LoginLogTest` holds the table, its reader, the monitor count and the cleanup
+over a disposable schema (`tests/Support/login_probe.php`); `AdminLogTest` the
+file journals, the record of the panel, the view and the link over real
+requests (`tests/Support/route_probe.php journal`); `JournalSecretTest` and
+`JournalNameTest` that no secret reaches a journal and every file is named
+after what it holds.
 
 ## Assets
 

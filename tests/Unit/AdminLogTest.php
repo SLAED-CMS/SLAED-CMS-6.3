@@ -7,7 +7,7 @@ namespace Tests\Unit;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-# The file journals of docs/9-ADMIN-LOG-2026.md over real requests, driven by tests/Support/route_probe.php with the argument journal
+# The file journals of docs/ARCHITECTURE.md, "Journal Boundary", over real requests, driven by tests/Support/route_probe.php with the argument journal
 final class AdminLogTest extends TestCase
 {
     private static array $probe = [];

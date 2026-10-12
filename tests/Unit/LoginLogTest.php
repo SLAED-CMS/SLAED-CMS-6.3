@@ -7,7 +7,7 @@ namespace Tests\Unit;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-# The login table _login_log of docs/9-ADMIN-LOG-2026.md: one writer, one reader, the count of the monitor and the cleanup of the daily job
+# The login table _login_log of docs/ARCHITECTURE.md, "Journal Boundary": one writer, one reader, the count of the monitor and the cleanup of the daily job
 final class LoginLogTest extends TestCase
 {
     private static array $probe = [];

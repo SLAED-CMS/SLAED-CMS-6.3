@@ -2,6 +2,37 @@
 
 ## 2026-10-12
 
+### Every journal of the site takes one format, the panel records each action, and every login lands in a table
+
+No change made in the panel was recorded anywhere. A login was a block of text lines in `admin.log` or `user.log`, an
+OAuth login was written three times in two formats, `oauth.log` and `database.log` kept forms of their own, and a user
+could see none of their logins. The reference is `docs/ARCHITECTURE.md`, "Journal Boundary"; the help of the screen is
+`admin/info/security/ru.md`.
+
+- **One format.** `Logger` gains the channels `admin`, `user`, `oauth`, `database` and `filescan` with a method each,
+  and `addRequest()` for the request journal; `addEntry()` is protected. The five carry the address, the method, the
+  URL and the browser of the request, never its body. `Oauth::setLog()`, `addDblog()` of the database tool and
+  `write_log()` of the file scan are gone; every journal rotates through `addCompress()`, `oauth.log` and
+  `database.log` included.
+- **The actions of the panel.** `checkAdminPost()` notes a passed token check through `setAdminLog()`, `setRedirect()`
+  gives it its result, and `addAdminLog()` writes one line of `admin.log` when the request ends: the administrator,
+  the module, the operation, the object and the number of a bulk action, `done`, `refused` or `open`. Every module is
+  covered by that one point, one written later too; the drag-and-drop order of categories and blocks moves onto
+  `checkAdminPost()`. The switch `log_a` covers actions and logins of the panel.
+- **Logins.** `addLoginReport()` becomes `addLoginLog(int $uid, bool $adm, string $res, string $login, string $way)`,
+  the one writer of a login: a row of the new table `_login_log` always, an event of `admin.log` or `user.log` while its
+  switch is on. `oauth.log` keeps the events of the protocol and no longer a second record of the login. The monitor
+  counts the refused logins of the panel from the table, and `cachegc` removes rows older than 90 days.
+- **Reading.** A user reads their own logins in the profile, «Журнал входов»; the panel reads them all on the tab of
+  the same name of «Безопасность» with filters. Every journal opens there as a table with filters of level, period,
+  address and, for `admin.log`, event, module and result, and the pager; `filescan_tree.log` keeps the raw view. Every
+  module ends its tab strip with «Журнал действий», that table filtered by the module, for an administrator who may
+  open «Безопасность».
+
+Breaking for code outside the tree: `addLoginReport()`, `Oauth::setLog()` and `write_log()` no longer exist, and
+`Logger::addEntry()` is not public. The 6.2 update creates `_login_log`; the old text blocks of `admin.log`,
+`user.log` and `oauth.log` stay in their files and the table view skips them.
+
 ### The rank of a group is a row of icons in a colour of its own, and the group list becomes a ladder with a rank composer
 
 A rank was one of fourteen 93×17 pictures in `templates/lite/images/ranks/`, which seven readers found each their own

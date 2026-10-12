@@ -5,16 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>SLAED CMS 8.0 · PHOENIX — Код, который снова живёт</title>
     <link rel="stylesheet" href="../templates/admin/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
-    <link rel="stylesheet" href="../templates/admin/assets/css/base.css">
-    <link rel="stylesheet" href="assets/phoenix-codex.css?v=2">
-    <script src="assets/phoenix-codex-audio.js?v=2" defer></script>
-    <script src="assets/phoenix-codex-particles.js?v=2" defer></script>
-    <script src="assets/phoenix-codex.js?v=2" defer></script>
+    <link rel="stylesheet" href="../templates/lite/assets/css/base.css">
+    <link rel="stylesheet" href="assets/phoenix-codex.css?v=3">
+    <script src="assets/phoenix-codex-audio.js?v=3" defer></script>
+    <script src="assets/phoenix-codex-particles.js?v=3" defer></script>
+    <script src="assets/phoenix-codex.js?v=3" defer></script>
 </head>
 <body class="sl-phx-page">
     <iframe class="sl-phx-panel" src="admin/index.html" title="Макет панели администратора" tabindex="-1" inert></iframe>
     <main class="sl-phx-stage" aria-label="История разработки и возрождения SLAED CMS">
-        <div class="sl-phx-portal" aria-hidden="true"><img src="assets/phoenix-codex/digital-arch.png" alt=""></div>
+        <div class="sl-phx-portal" aria-hidden="true"><img src="assets/phoenix-codex/development-environment.svg" alt=""></div>
         <canvas class="sl-phx-world" aria-hidden="true"></canvas>
         <canvas class="sl-phx-cloud" aria-hidden="true"></canvas>
         <div class="sl-phx-grain" aria-hidden="true"></div>
@@ -28,7 +28,7 @@
         <section class="sl-phx-cover">
             <span class="sl-phx-kicker">С 2005 ГОДА. СНОВА ВПЕРЁД.</span>
             <h1>Код, который<br><em>снова живёт.</em></h1>
-            <p>История SLAED CMS. Написанная заново.</p>
+            <p>Всё великое просто, но не примитивно!</p>
             <div class="sl-phx-cover-actions">
                 <button class="sl-phx-start" type="button" data-sl-phx-start="sound" disabled>
                     <i class="bi bi-play-fill" aria-hidden="true"></i> Смотреть со звуком
@@ -38,13 +38,30 @@
             <span class="sl-phx-load" role="status" data-sl-phx-load>Подготовка сцены…</span>
         </section>
         <section class="sl-phx-history" aria-hidden="true">
-            <div class="sl-phx-history-copy"><span class="sl-phx-kicker">ПЕРВАЯ СТРОКА КОДА</span><strong>2005</strong><p>Одна идея. Тысячи историй.</p></div>
-            <div class="sl-phx-archive">
-                <figure><img src="assets/phoenix-codex/archive-brand.png" alt=""><figcaption>ИДЕЯ</figcaption></figure>
-                <figure><img src="assets/phoenix-codex/archive-box.png" alt=""><figcaption>СИСТЕМА</figcaption></figure>
-                <figure><img src="assets/phoenix-codex/archive-functionality.png" alt=""><figcaption>ВОЗМОЖНОСТИ</figcaption></figure>
-                <figure><img src="assets/phoenix-codex/archive-security.png" alt=""><figcaption>НАДЁЖНОСТЬ</figcaption></figure>
+            <div class="sl-phx-history-copy"><span class="sl-phx-kicker">ОДНА ИДЕЯ. ДВИЖЕНИЕ ВПЕРЁД.</span><strong data-sl-phx-year>2005</strong><p data-sl-phx-era>Первая строка кода.</p></div>
+            <div class="sl-phx-idea"><div class="sl-phx-orbits"><i></i><i></i><i></i></div><img src="assets/phoenix-codex/mark.svg" alt=""><span>SLAED / ИДЕЯ</span></div>
+            <svg class="sl-phx-wires" viewBox="0 0 1000 650" preserveAspectRatio="none" aria-hidden="true"><g><path d="M230 260 H340 L430 325 H500 M770 260 H660 L570 325 H500 M230 465 H340 L430 370 H500 M770 465 H660 L570 370 H500"/><path d="M90 130 H280 L340 190 M910 130 H720 L660 190 M90 550 H280 L340 490 M910 550 H720 L660 490"/></g></svg>
+            <div class="sl-phx-workshop">
+                <article class="sl-phx-work sl-phx-work-code"><header><i class="bi bi-terminal"></i><span>01 / КОД</span><b>main</b></header><pre><span>&lt;?php</span>
+$idea = <em>'SLAED'</em>;
+$core = getSystemCore();
+<span>return</span> $core-&gt;getHtmlPart(
+    <em>'future'</em>, $idea
+);</pre><footer><i></i> Первый шаг становится системой</footer></article>
+                <article class="sl-phx-work sl-phx-work-server"><header><i class="bi bi-hdd-rack"></i><span>02 / ИНФРАСТРУКТУРА</span><b>online</b></header><div class="sl-phx-rack"><div><i></i><span>PHP / APPLICATION</span><b>••••</b></div><div><i></i><span>MariaDB / DATA</span><b>••••</b></div><div><i></i><span>CACHE / STORAGE</span><b>••••</b></div></div><footer><i></i> Запрос → ядро → данные → результат</footer></article>
+                <article class="sl-phx-work sl-phx-work-design"><header><i class="bi bi-palette"></i><span>03 / ИНТЕРФЕЙС</span><b>design</b></header><div class="sl-phx-ui"><aside><i class="bi bi-grid"></i><i class="bi bi-file-earmark"></i><i class="bi bi-people"></i><i class="bi bi-gear"></i></aside><div><span>SLAED / Панель управления</span><div class="sl-phx-swatches"><i></i><i></i><i></i><i></i><i></i></div><div class="sl-phx-ui-bars"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><b>Сохранить</b><small>Светлая + тёмная</small></div></div></article>
+                <article class="sl-phx-work sl-phx-work-tasks"><header><i class="bi bi-git"></i><span>04 / ПУТЬ РАЗРАБОТКИ</span><b data-sl-phx-taskhead>challenge</b></header><div class="sl-phx-task"><span>Сложность</span><i class="bi bi-arrow-right"></i><b>Простое управление</b></div><div class="sl-phx-task"><span>Ограничения</span><i class="bi bi-arrow-right"></i><b>Модульность</b></div><div class="sl-phx-task"><span>Нагрузка</span><i class="bi bi-arrow-right"></i><b>Скорость и кэш</b></div><div class="sl-phx-task"><span>Уязвимости</span><i class="bi bi-arrow-right"></i><b>Защита и контроль</b></div></article>
             </div>
+            <div class="sl-phx-years"><span>2005</span><span>2010</span><span>2015</span><span>2020</span><span>2026</span><span>БУДУЩЕЕ <i class="bi bi-arrow-up-right"></i></span><div><i></i></div></div>
+        </section>
+        <section class="sl-phx-dna" aria-label="Четыре принципа SLAED CMS">
+            <div class="sl-phx-dna-title"><span class="sl-phx-kicker">DNA ПРОДУКТА / ХАРАКТЕР ОСТАЁТСЯ</span><b>04 ПРИНЦИПА. ОДНА СИСТЕМА.</b></div>
+            <div class="sl-phx-dna-pulse" aria-hidden="true"><i></i><i></i><i></i></div>
+            <article class="sl-phx-principle"><div class="sl-phx-dna-copy"><span>01 / ПРОСТОТА</span><h2>Управлять.<br><em>Легко.</em></h2><p>Интуитивно понятный интерфейс, простое управление сайтом, лёгкая модификация.</p><div><b>ПОНЯТНО</b><b>УДОБНО</b><b>ГИБКО</b></div></div><img src="../../uploads/presentation/brand/wallpaper_ease.png" alt="Простота — оригинальная иллюстрация SLAED"></article>
+            <article class="sl-phx-principle"><div class="sl-phx-dna-copy"><span>02 / ФУНКЦИОНАЛЬНОСТЬ</span><h2>Возможности.<br><em>Без границ.</em></h2><p>Неограниченные возможности, масса дополнений, расширение любыми функциями.</p><div><b>МОДУЛИ</b><b>ДОПОЛНЕНИЯ</b><b>РАСШИРЕНИЕ</b></div></div><img src="../../uploads/presentation/brand/wallpaper_functionality.png" alt="Функциональность — оригинальная иллюстрация SLAED"></article>
+            <article class="sl-phx-principle"><div class="sl-phx-dna-copy"><span>03 / ЭФФЕКТИВНОСТЬ</span><h2>Меньше ресурсов.<br><em>Больше скорости.</em></h2><p>Низкое потребление серверных ресурсов, высокая скорость работы системы.</p><div><b>СКОРОСТЬ</b><b>КЭШ</b><b>РЕСУРСЫ</b></div></div><img src="../../uploads/presentation/brand/wallpaper_effectiveness.png" alt="Эффективность — оригинальная иллюстрация SLAED"></article>
+            <article class="sl-phx-principle"><div class="sl-phx-dna-copy"><span>04 / БЕЗОПАСНОСТЬ</span><h2>Защищать.<br><em>На каждом шаге.</em></h2><p>Мощная система безопасности, гибкие настройки, логирование всех действий.</p><div><b>ЗАЩИТА</b><b>НАСТРОЙКИ</b><b>ЖУРНАЛ</b></div></div><img src="../../uploads/presentation/brand/wallpaper_security.png" alt="Безопасность — оригинальная иллюстрация SLAED"></article>
+            <div class="sl-phx-dna-index"><span><i class="bi bi-sliders"></i> Простота</span><span><i class="bi bi-puzzle"></i> Функциональность</span><span><i class="bi bi-lightning-charge"></i> Эффективность</span><span><i class="bi bi-shield-check"></i> Безопасность</span></div>
         </section>
         <section class="sl-phx-silence" aria-hidden="true"><span>10+ ЛЕТ</span><strong>ТИШИНЫ.</strong><p>Но исходный код помнит всё.</p></section>
         <section class="sl-phx-rewrite" aria-hidden="true">
@@ -54,12 +71,12 @@
                 <div class="sl-phx-code-body"><div class="sl-phx-line-numbers" aria-hidden="true"></div><pre data-sl-phx-code></pre><span class="sl-phx-caret">▌</span></div>
                 <div class="sl-phx-build"><span data-sl-phx-build>Инициализация ядра</span><b data-sl-phx-percent>0%</b><div><i></i></div></div>
             </div>
-            <div class="sl-phx-modules">
-                <span><i class="bi bi-cpu" aria-hidden="true"></i> ЯДРО</span>
-                <span><i class="bi bi-database" aria-hidden="true"></i> ДАННЫЕ</span>
-                <span><i class="bi bi-shield-check" aria-hidden="true"></i> БЕЗОПАСНОСТЬ</span>
-                <span><i class="bi bi-window" aria-hidden="true"></i> ИНТЕРФЕЙС</span>
+            <div class="sl-phx-lab">
+                <article class="sl-phx-lab-route"><header><i class="bi bi-diagram-3"></i><b>АРХИТЕКТУРА</b><span>REQUEST / RESPONSE</span></header><div class="sl-phx-route"><span><i class="bi bi-globe2"></i>Запрос</span><i class="bi bi-chevron-right"></i><span><i class="bi bi-cpu"></i>Ядро</span><i class="bi bi-chevron-right"></i><span><i class="bi bi-database"></i>PDO</span><i class="bi bi-chevron-right"></i><span><i class="bi bi-window"></i>HTML</span></div><div class="sl-phx-trace"><span>prepare()</span><span>execute()</span><span>fetchAll()</span></div><footer><i></i> Данные проходят через подготовленные запросы</footer></article>
+                <article class="sl-phx-lab-guard"><header><i class="bi bi-shield-lock"></i><b>ЗАЩИТА</b><span>CONTROL / LOG</span></header><div class="sl-phx-guard-body"><div class="sl-phx-radar"><i></i><b class="bi bi-shield-check"></b></div><div><p><span>Входные данные</span><b>ФИЛЬТРАЦИЯ</b></p><p><span>Действия</span><b>ТОКЕН</b></p><p><span>События</span><b>ЖУРНАЛ</b></p><p><span>Доступ</span><b>КОНТРОЛЬ</b></p></div></div><footer><i></i> Проверить → защитить → записать</footer></article>
+                <article class="sl-phx-lab-design"><header><i class="bi bi-window-stack"></i><b>ИНТЕРФЕЙС</b><span>LIGHT / DARK</span></header><div class="sl-phx-design-body"><div class="sl-phx-mini-theme"><aside><i></i><i></i><i></i></aside><div><b>Публикация</b><p></p><p></p><span>Сохранить</span><i class="bi bi-check-circle-fill"></i></div></div><div class="sl-phx-mini-theme"><aside><i></i><i></i><i></i></aside><div><b>Публикация</b><p></p><p></p><span>Сохранить</span><i class="bi bi-check-circle-fill"></i></div></div></div><footer><i></i> Общие компоненты. Два характера.</footer></article>
             </div>
+            <div class="sl-phx-commits"><span><i class="bi bi-git"></i> РАЗРАБОТКА ПРОДОЛЖАЕТСЯ</span><b>core → database → security → templates → phoenix</b></div>
         </section>
         <section class="sl-phx-assembly" aria-hidden="true"><span class="sl-phx-kicker">КАЖДАЯ СТРОКА — ЧАСТЬ НОВОГО ЦЕЛОГО</span><h2>Код становится<br><em>живым.</em></h2></section>
         <div class="sl-phx-phoenix" aria-hidden="true"><img src="assets/phoenix-codex/phoenix-digital.png" alt=""></div>
@@ -67,10 +84,10 @@
         <section class="sl-phx-finale" aria-label="SLAED CMS 8.0 Phoenix">
             <img class="sl-phx-final-logo" src="assets/phoenix-codex/wordmark.svg" alt="SLAED CMS">
             <div class="sl-phx-version"><span>8.0</span><i></i><strong>PHOENIX</strong></div>
-            <p>Легенда возвращается. Будущее начинается.</p>
+            <p class="sl-phx-motto">Всё великое просто,<br><strong>но не примитивно!</strong></p>
             <div class="sl-phx-tech"><span>PHP 8.4</span><span>MariaDB</span><span>НОВОЕ ЯДРО</span><span>СВЕТЛАЯ / ТЁМНАЯ</span></div>
         </section>
-        <div class="sl-phx-hud"><span data-sl-phx-chapter>ПРЕДЫСТОРИЯ</span><span data-sl-phx-time>00.0 / 30.0</span></div>
+        <div class="sl-phx-hud"><span data-sl-phx-chapter>ПРЕДЫСТОРИЯ</span><span data-sl-phx-time>00.0 / 45.0</span></div>
         <div class="sl-phx-progress"><i></i></div>
     </main>
     <nav class="sl-phx-controls" aria-label="Управление презентацией">

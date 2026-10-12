@@ -4,7 +4,7 @@
 # License: MIT
 # Website: slaed.net
 
-# CLI probe for the login table _login_log of docs/9-ADMIN-LOG-2026.md: its writer addLoginLog(), its reader getLoginLog(), the monitor count and the cleanup of cachegc
+# CLI probe for _login_log of docs/ARCHITECTURE.md, "Journal Boundary": its writer addLoginLog(), its reader getLoginLog(), the monitor count and the cleanup of cachegc
 # It boots the real core with the configuration copied into scratch and both login switches off there, then points the database facade at a disposable schema
 # That schema carries the shipped tables of the administrators, the accounts and the logins; the site database is never written and the schema is dropped again
 $probework = (string)($argv[1] ?? '');

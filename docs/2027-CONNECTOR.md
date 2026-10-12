@@ -437,9 +437,9 @@ slaed.net is the master; every other SLAED site is a client of it.
   pause, stop, takeover, delete, settings) is written with admin, IP, time, target and old/new value; read-only in
   the admin, kept 365 days. Since 8.0 SLAED keeps a general journal of administration in `storage/logs/admin.log`,
   written once in `checkAdminPost()`, which records every POST of this admin too (who, scope, operation, object,
-  result); it holds no old and new value and is bounded by size, not by days. This plan therefore keeps the table
-  `api_audit` and the function `addApiAudit()` for what the file cannot give, used by the Vine admin as well, and the
-  two are linked, not merged (owner, 2026-10-12).
+  result; `docs/ARCHITECTURE.md`, "Journal Boundary"); it holds no old and new value and is bounded by size, not by
+  days. This plan therefore keeps the table `api_audit` and the function `addApiAudit()` for what the file cannot
+  give, used by the Vine admin as well, and the two are linked, not merged (owner, 2026-10-12).
 
 ## Admin
 
