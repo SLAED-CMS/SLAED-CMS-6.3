@@ -1,0 +1,14 @@
+{
+    "source": "../../index.html",
+    "audio": "../../audio/theme.mp3",
+    "themes": ["light", "dark"],
+    "duration": 83.352,
+    "width": 1280,
+    "height": 720,
+    "fps": 30,
+    "video": {"codec": "libx264", "preset": "medium", "crf": 22, "maxrate": "1400k", "bufsize": "2800k",
+        "pixelFormat": "yuv420p", "profile": "main", "level": "3.1"},
+    "sound": {"codec": "aac", "bitrate": "128k", "rate": 44100, "channels": 2},
+    "faststart": true,
+    "metadata": {"title": "SLAED Phoenix", "artist": "SLAED CMS"}
+}

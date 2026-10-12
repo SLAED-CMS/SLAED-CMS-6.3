@@ -1,0 +1,15 @@
+{
+    "source": "../../archive/recordings/7b4b211a-full.mp3",
+    "master": "../../archive/master.wav",
+    "output": "../../audio/theme.mp3",
+    "segments": [[6.0, 19.2], [29.071, 82.4], [134.9, 151.803]],
+    "crossfade": {"seconds": 0.04, "curve": "equal-power"},
+    "attackSeconds": 0.025,
+    "fade": {"from": 74.7, "to": 83.352, "curve": "cosine-squared"},
+    "duration": 83.352,
+    "siteReveal": 80.7,
+    "tailLoop": false,
+    "masterFormat": {"rate": 44100, "channels": 2, "bits": 16, "peakDbfs": -4.0},
+    "encoding": {"codec": "mp3", "bitrate": 256000},
+    "metadata": {"title": "SLAED Phoenix", "artist": "SLAED CMS"}
+}

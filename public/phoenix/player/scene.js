@@ -61,6 +61,15 @@
     const soundbtn = document.querySelector('[data-sl-phx-sound]');
     const track = document.querySelector('[data-sl-phx-track]');
     const params = new URLSearchParams(location.search);
+    const bridge = window.PhoenixBridge;
+    root.dataset.embedded = String(bridge.embedded);
+    if (bridge.embedded) panel.remove();
+    else {
+        let target;
+        try { target = new URL(params.get('target') || panel.dataset.slPhxTarget, location.href); }
+        catch (error) { target = new URL(panel.dataset.slPhxTarget, location.href); }
+        panel.src = target.origin === location.origin ? target.href : panel.dataset.slPhxTarget;
+    }
     const motion = matchMedia('(prefers-reduced-motion: reduce)');
     const still = motion.matches || params.get('still') === '1';
     const timing = window.PhoenixTimeline;
@@ -71,21 +80,21 @@
         {
             file: 'core/system.php', label: 'Переписываем ядро',
             code: [
-                '<?php', "$name = getVar('get', 'name', 'text', '');", "$mode = getCookies('mode');",
+                '<?php', "$name = getVar('get', 'name', 'text', '');", "$data = ['title' => $name];",
                 '$view = $tpl->getHtmlPart(', "    'module-head', $data", ');'
             ].join('\n')
         },
         {
             file: 'core/classes/pdo.php', label: 'Новая работа с данными',
             code: [
-                '<?php', "$sql = 'SELECT * FROM '.PREFIX_DB.'_users';", "$sql .= ' WHERE id = :id';",
+                '<?php', "$uid = getVar('get', 'id', 'num', 0);", "$sql = 'SELECT * FROM '.PREFIX_DB.'_users';", "$sql .= ' WHERE id = :id';",
                 '$rows = $db->getSqlQuery($sql, [', "    'id' => $uid", ']);'
             ].join('\n')
         },
         {
             file: 'core/security.php', label: 'Безопасность с первого шага',
             code: [
-                '<?php', "$token = getSiteToken('admin');", "if (!checkSiteToken($token, 'admin')) {", '    return;', '}',
+                '<?php', "$token = getVar('post', 'token', 'text', '');", "if (!checkSiteToken($token, 'admin')) {", '    return;', '}',
                 "$title = getVar('post', 'title', 'text', '');"
             ].join('\n')
         },
@@ -156,7 +165,7 @@
     function setPalette() {
         const tone = root.dataset.theme === 'dark' ? 'outline' : 'gradient';
         document.querySelectorAll('.sl-phx-header > img, .sl-phx-final-logo').forEach((node) => {
-            node.src = '../templates/admin/images/logos/slaed-logo-wordmark-' + tone + '-blue.svg';
+            node.src = 'logos/slaed-logo-wordmark-' + tone + '-blue.svg';
         });
         const probe = document.createElement('span');
         document.body.append(probe);
@@ -438,7 +447,7 @@
         const value = spent < 9.95 ? 2005 + Math.floor(past * 22) : 2027 + Math.floor(future * 48);
         if (year.textContent !== String(value)) year.textContent = String(value);
         const words = ['Первая строка кода.', 'Идеи становятся возможностями.', 'Проблемы. Поиск. Решения.', 'Система растёт вместе с нами.', 'Время двигаться дальше.'];
-        era.textContent = spent >= 10.8 ? 'Будущее продолжается. Создаём дальше.' : spent >= 9.95 ? '2027 / РЕЛИЗ PHOENIX' : words[Math.min(4, Math.floor(time / 1.4))];
+        era.textContent = spent >= 10.8 ? 'Создаём дальше.' : spent >= 9.95 ? '2027 / РЕЛИЗ PHOENIX' : words[Math.min(4, Math.floor(time / 1.4))];
         yearbar.style.transform = 'scaleX(' + progress + ')';
         works.forEach((node, index) => {
             const enter = getEase((time - 0.5 - index * 0.23) / 1.1);
@@ -575,7 +584,7 @@
         bar.style.transform = 'scaleX(' + getClamp(spent / length) + ')';
         timer.textContent = spent.toFixed(1).padStart(4, '0') + ' / ' + length.toFixed(1);
         chapter.textContent = time < 7.5 ? '01 / ДВИЖЕНИЕ ВПЕРЁД' : time < 22.5 ? '02 / DNA ПРОДУКТА' : time < 24.4 ? '03 / РАБОТА ПРОДОЛЖАЛАСЬ'
-            : time < 30 ? '04 / ПЕРЕПИСАН С НУЛЯ' : time < 33.75 ? '05 / СБОРКА' : time < 39.5 ? '06 / ВОЗРОЖДЕНИЕ' : '07 / PHOENIX';
+            : time < 30 ? '04 / ПЕРЕПИСАНА С НУЛЯ' : time < 33.75 ? '05 / СБОРКА' : time < 39.5 ? '06 / ВОЗРОЖДЕНИЕ' : '07 / PHOENIX';
         if (!still) setWorldFrame(time, false, spent);
         else setWorldFrame(27.8, true);
         if (cloud && !still) {
@@ -597,12 +606,14 @@
     }
 
     /* Make the real site interactive after the final pixel has dissolved */
-    function setSceneEnd(finish = false) {
+    function setSceneEnd(finish = false, reason = 'complete') {
         if (ended) return;
         if (!stage.hidden) {
             stage.hidden = true;
             panel.removeAttribute('inert');
-            status.textContent = 'Открыта главная страница SLAED CMS. Музыка плавно затухает.';
+            root.dataset.revealed = 'true';
+            status.textContent = 'Можно продолжить работу. Музыка плавно затухает.';
+            bridge.setEvent('reveal', {tail: Math.max(0, length - spent), reason});
         }
         if (!finish && spent < length) return;
         ended = true;
@@ -610,7 +621,8 @@
         cancelAnimationFrame(frame);
         score.setStop();
         setControlState();
-        status.textContent = 'Презентация завершена. Открыта главная страница SLAED CMS.';
+        status.textContent = 'Презентация завершена. Можно продолжить работу.';
+        bridge.setEvent('end', {reason});
         replay.focus({preventScroll: true});
     }
 
@@ -627,7 +639,7 @@
     /* Show a brief static final composition when the system requests less motion */
     function setStillFrame(now) {
         if (!running) return;
-        if (now - start > 2200) setSceneEnd(true);
+        if (now - start > 2200) setSceneEnd(true, 'reduced-motion');
         else frame = requestAnimationFrame(setStillFrame);
     }
 
@@ -642,6 +654,7 @@
         started = true;
         ended = false;
         running = true;
+        delete root.dataset.revealed;
         spent = offset;
         lastfile = -1;
         lasttext = -1;
@@ -711,10 +724,10 @@
 
     /* Download the same original composition used by the presentation */
     function getTrackDownload() {
-        if (score.kind === 'suno') {
+        if (score.kind === 'anthem') {
             const anchor = document.createElement('a');
             anchor.href = timing.track;
-            anchor.download = 'SLAED-Phoenix-Suno-Intro.mp3';
+            anchor.download = 'SLAED-Phoenix-Theme.mp3';
             anchor.click();
             return;
         }
@@ -724,11 +737,11 @@
         download = URL.createObjectURL(new Blob([wave], {type: 'audio/wav'}));
         const anchor = document.createElement('a');
         anchor.href = download;
-        anchor.download = 'SLAED-Phoenix-Synth-Reserve.wav';
+        anchor.download = 'SLAED-Phoenix-Reserve.wav';
         anchor.click();
     }
 
-    const mode = params.get('theme');
+    const mode = params.get('theme') || params.get('preset');
     if (mode === 'light' || mode === 'dark') root.dataset.theme = mode;
     panel.addEventListener('load', () => {
         if (panel.contentDocument) panel.contentDocument.documentElement.dataset.theme = root.dataset.theme;
@@ -740,10 +753,16 @@
     setWorldFrame(0, true);
     timer.textContent = '00.0 / ' + length.toFixed(1);
     setControlState();
+    setSceneMode(root.dataset.theme);
+    const level = Number(params.get('volume') ?? 0.7);
+    if (Number.isFinite(level)) {
+        score.setVolume(level);
+        document.querySelector('[data-sl-phx-volume]').value = String(score.level);
+    }
     frame = requestAnimationFrame(setCoverFrame);
     const assets = [
-        'assets/phoenix-codex/phoenix-digital.png', '../templates/admin/images/logos/slaed-logo-wordmark-outline-blue.svg',
-        '../templates/admin/images/logos/slaed-logo-mark-gradient-blue.svg', '../templates/admin/images/logos/slaed-logo-wordmark-gradient-blue.svg'
+        'images/phoenix-digital.png', 'logos/slaed-logo-wordmark-outline-blue.svg',
+        'logos/slaed-logo-mark-gradient-blue.svg', 'logos/slaed-logo-wordmark-gradient-blue.svg'
     ];
     const photos = [...document.querySelectorAll('.sl-phx-dna-art > img')].map((node) => node.getAttribute('src'));
     Promise.all([Promise.all(assets.concat(photos).map(getSceneImage)), score.ready]).then(([images, audio]) => {
@@ -755,22 +774,28 @@
         document.querySelectorAll('[data-sl-phx-start]').forEach((node) => { node.disabled = false; });
         track.disabled = !audio;
         soundbtn.disabled = !audio;
-        loader.textContent = still ? 'Движение уменьшено согласно настройкам устройства.' : '83 секунды. Гимн Suno. Почувствуйте возвращение.';
-        if (score.kind === 'synth' && !still) loader.textContent = '83 секунды. Резервная синтезированная музыка: файл Suno недоступен.';
-        track.title = score.kind === 'suno' ? 'Скачать монтаж гимна Suno · MP3' : 'Скачать резервную синтезированную музыку · WAV';
+        loader.textContent = still ? 'Движение уменьшено согласно настройкам устройства.' : 'Возрождение SLAED CMS.';
+        if (score.kind === 'synth' && !still) loader.textContent = 'Основная музыка недоступна. Подготовлена резервная тема.';
+        track.title = score.kind === 'anthem' ? 'Скачать музыкальную тему SLAED · MP3' : 'Скачать резервную тему SLAED · WAV';
         track.setAttribute('aria-label', track.title);
+        bridge.setEvent('ready', {theme: root.dataset.theme});
         const at = Number(params.get('at'));
         if (params.has('at') && Number.isFinite(at)) {
             cancelAnimationFrame(frame);
             cover.hidden = true;
             started = true;
+            sound = params.get('sound') === '1' && loaded && !still;
             setSceneFrame(Math.max(0, Math.min(length - 0.01, at)));
             setControlState();
-        } else if (params.get('autoplay') === '1') setScenePlay(false);
+        } else if (params.get('autoplay') === '1') {
+            const audible = params.get('sound') === '1';
+            if (!audible || bridge.getAudio()?.state === 'running') setScenePlay(audible);
+        }
     }).catch((error) => {
         loader.textContent = 'Не удалось подготовить сцену. Обновите страницу.';
         status.textContent = loader.textContent;
         console.error(error);
+        bridge.setEvent('error', {reason: 'assets'});
     });
     document.querySelectorAll('[data-sl-phx-start]').forEach((node) => {
         node.addEventListener('click', () => setScenePlay(node.dataset.slPhxStart === 'sound'));
@@ -783,10 +808,10 @@
     soundbtn.addEventListener('click', setSoundMode);
     track.addEventListener('click', getTrackDownload);
     document.querySelector('[data-sl-phx-volume]').addEventListener('input', (event) => score.setVolume(Number(event.target.value)));
-    document.querySelector('[data-sl-phx-skip]').addEventListener('click', () => setSceneEnd(true));
+    document.querySelector('[data-sl-phx-skip]').addEventListener('click', () => setSceneEnd(true, 'skip'));
     document.addEventListener('pointermove', (event) => { if (!still) pointer = [(event.clientX / wide - 0.5) * 2, (event.clientY / high - 0.5) * 2]; }, {passive: true});
     document.addEventListener('keydown', (event) => {
-        if (event.key === 'Escape') setSceneEnd(true);
+        if (event.key === 'Escape') setSceneEnd(true, 'skip');
         if (event.target.closest('input')) return;
         if (!event.ctrlKey && !event.metaKey && ['r', 'R', 'к', 'К'].includes(event.key)) {
             event.preventDefault();
@@ -804,6 +829,16 @@
     document.addEventListener('visibilitychange', () => {
         if (document.hidden && running) setScenePause();
     });
-    window.addEventListener('pagehide', () => { cancelAnimationFrame(frame); running = false; score.setStop(); if (download) URL.revokeObjectURL(download); });
+    window.addEventListener('message', (event) => {
+        if (!bridge.embedded || event.source !== parent || event.origin !== location.origin || event.data?.channel !== 'slaed-phoenix') return;
+        if (event.data.action === 'stop') setSceneEnd(true, 'close');
+    });
+    window.addEventListener('pagehide', () => {
+        cancelAnimationFrame(frame);
+        running = false;
+        score.setStop();
+        if (!score.shared && score.audio && score.audio.state !== 'closed') score.audio.close().catch(() => {});
+        if (download) URL.revokeObjectURL(download);
+    });
     window.addEventListener('pageshow', (event) => { if (event.persisted) { running = false; setControlState(); } });
 })();

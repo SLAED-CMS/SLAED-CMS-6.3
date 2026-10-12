@@ -1,0 +1,265 @@
+{
+    "algorithm": "SHA-256",
+    "files": {
+        "README.md": {
+            "bytes": 9776,
+            "sha256": "4d486f1219cfda0d6890ef27b57649cdfd35b97929b50d422914d98f8763f70b"
+        },
+        "archive/assets/SLAED-Phoenix-Anthem.mp3": {
+            "bytes": 1080842,
+            "sha256": "3c9000eb2a67ba4e8e316918b816930d71239b5fc5403980935b87d897ce02ad"
+        },
+        "archive/assets/archive-box.png": {
+            "bytes": 1325464,
+            "sha256": "59222e46cdc2ef4058ccd261ce0ad5c79d9dddca6216dbaa23a3fa44a401bc94"
+        },
+        "archive/assets/archive-brand.png": {
+            "bytes": 448987,
+            "sha256": "cafbef0467a8ed15057ef1a66450a3f69ec7deae3839295028652355d9b709b7"
+        },
+        "archive/assets/archive-functionality.png": {
+            "bytes": 1144675,
+            "sha256": "fd987036b8d56bf48dc70ea4f2110f7ea295d836c431be66a4caecc140cd0467"
+        },
+        "archive/assets/archive-security.png": {
+            "bytes": 3948987,
+            "sha256": "1a434930ad2f7fc508e2a7baaa84d919b16794f378a59ee470e5bc1c2e36328e"
+        },
+        "archive/assets/digital-arch.png": {
+            "bytes": 1343558,
+            "sha256": "b865cf2c904308e0ec0fbf58f81e4fa248d9727cd1550776eb52db1af979b57c"
+        },
+        "archive/assets/mark.svg": {
+            "bytes": 8998,
+            "sha256": "83c35fb2583da70eb2d73ff0536a4e7414d81ac9d07ff05125b2e611b88331a1"
+        },
+        "archive/assets/previous-edit.mp3": {
+            "bytes": 2669196,
+            "sha256": "6cad087937531d728b1203f9af137c38685b0c72d4dde7d328bcd5af17e6efc3"
+        },
+        "archive/assets/wordmark.svg": {
+            "bytes": 14955,
+            "sha256": "d2d6bcf3cb478dfadbc94479cfc1cd4658c8c46ed4ac6a4e92bc097381aa4a18"
+        },
+        "archive/master.wav": {
+            "bytes": 14703336,
+            "sha256": "2be34135b5ab01b8dfdf0e47afb370fdc23622f8cdd2274c3e31596e9a7cb487"
+        },
+        "archive/pronunciation/slaed.mp3": {
+            "bytes": 464348,
+            "sha256": "4ab10969a8037eb2231d7964237e3deaf1efd2a7ac1a8f86aee0cff2eb8a7588"
+        },
+        "archive/pronunciation/slayed.mp3": {
+            "bytes": 195177,
+            "sha256": "ecddd8f5059ff05b0dfd6573d2e43130fc080a07e323cf2e57f9c2ac5f4cd295"
+        },
+        "archive/recordings/1edab7d8-full.mp3": {
+            "bytes": 4592471,
+            "sha256": "1fffdcda59d1f5041db1304eb7fefdb041a2aa89d5e1b3f23af678984b9bbc41"
+        },
+        "archive/recordings/340bec7b-full.mp3": {
+            "bytes": 3397130,
+            "sha256": "b1515cb352f8f7e131573c11f193789185d27184ab9a9477a9b7981182fbf983"
+        },
+        "archive/recordings/35ee0431-full.mp3": {
+            "bytes": 3408135,
+            "sha256": "bd29860145798972a3ede23efd479821ebcf0da5294211a828a37219aedf84bd"
+        },
+        "archive/recordings/4dc09842-full.mp3": {
+            "bytes": 3208135,
+            "sha256": "62f04f197d7717e7c9829af2cb9a0824ce9097e101d0b8bca1c51666f44940db"
+        },
+        "archive/recordings/5229bbb5-full.mp3": {
+            "bytes": 4116197,
+            "sha256": "4d3f990d100bb5a38b28649ee879b2be99f7efa4c8317562ecbcf03fee435eac"
+        },
+        "archive/recordings/53f85618-full.mp3": {
+            "bytes": 4748303,
+            "sha256": "6304f5e5beb8193ca694a2c0390f3d740a2d8dbfa36864cd4b164f51fe24f905"
+        },
+        "archive/recordings/75d15787-full.mp3": {
+            "bytes": 3972448,
+            "sha256": "60b18731c91b9f199380ca6b605bf13f024c65fe561cafa873fe130117581873"
+        },
+        "archive/recordings/7b4b211a-full.mp3": {
+            "bytes": 4156823,
+            "sha256": "31f9c72baa8bfffdf38981104731f41e1ab2e2de9d9b5755f1f762efe203eadd"
+        },
+        "archive/recordings/7d05442f-full.mp3": {
+            "bytes": 3622881,
+            "sha256": "633ae412d1e8d1383da647f2cb7941a2a85d21c0f7a5f0e3f6371192052a78ad"
+        },
+        "archive/recordings/9c5e535d-full.mp3": {
+            "bytes": 3921537,
+            "sha256": "29eeb876f50bc27e138e025d10d100d082e26a27d672c9d0524c449291b1de5b"
+        },
+        "archive/recordings/README.md": {
+            "bytes": 1166,
+            "sha256": "4b3a3c61bcb7d3d26e7e8802248f2e700368c68f6c600bca9c5a609d4d66f806"
+        },
+        "archive/recordings/ec4062ef-full.mp3": {
+            "bytes": 4090821,
+            "sha256": "81c9ddaa261e72ab494b7d0f296e71dd4b279eda63012b85e305228b173ee342"
+        },
+        "archive/recordings/f26883a1-full.mp3": {
+            "bytes": 3810313,
+            "sha256": "1d422f02ed0474aa30ce345e04972ae94e7d68a56a66a4acfde3a3f0a005fb54"
+        },
+        "archive/recordings/manifest.json": {
+            "bytes": 3972,
+            "sha256": "5bcf75aab468f4d7dd463481b6baa24a6c6dee691e10308c087be4935ecac81f"
+        },
+        "audio/reserve.mp3": {
+            "bytes": 2001858,
+            "sha256": "70c90386f65ebdec8027c2f5424109de6f92393b28981082ed24203ad6283430"
+        },
+        "audio/theme.mp3": {
+            "bytes": 2669140,
+            "sha256": "7ca04f294aa17c265c884591fe9789a6f96b0267d76a6abd11f69e799f8dbc22"
+        },
+        "embed.css": {
+            "bytes": 348,
+            "sha256": "fa203d3b2139955b5c9a41ca6656ee5d8e66a200df3f84a3b2b6576e5daba5db"
+        },
+        "embed.js": {
+            "bytes": 8468,
+            "sha256": "562fa8bdb1321a51557f5e6fbdf0d1bd2d1feda23884ff3633d8e3ad49ce0d5f"
+        },
+        "examples/index.html": {
+            "bytes": 1174,
+            "sha256": "c3b1e8579f72ca0068d794d073b656a278c6bbc803d258541a859bd74e9ff081"
+        },
+        "examples/nested/page.html": {
+            "bytes": 780,
+            "sha256": "2bb402860ca1d1085c15057cfe6f51d5e8accf09db8349eb9fd1e333c85d1acd"
+        },
+        "exports/SLAED-Phoenix-dark-720p.mp4": {
+            "bytes": 14514751,
+            "sha256": "ea6a7f6aa115770ead79672e9e697865ab60ab7646178a7d0b71605b7c435f35"
+        },
+        "exports/SLAED-Phoenix-light-720p.mp4": {
+            "bytes": 14087363,
+            "sha256": "b4e170141bb8e8f521443552cd424c88365ab3eb6c1393faac5bb5ba4b8c540b"
+        },
+        "images/development-environment.svg": {
+            "bytes": 18921,
+            "sha256": "347791e03c767a8a2d592ff47f3b946902d84d32617c8e9f225c929c034291b4"
+        },
+        "images/phoenix-digital.png": {
+            "bytes": 2595214,
+            "sha256": "45fe9920c612f7eed89597b2f1d1fd382d2ca6c5786eccbb223e834b1ecd271e"
+        },
+        "images/principle-ease.png": {
+            "bytes": 2743500,
+            "sha256": "fae058cb3d3c62fba87f15162bf36b9c5ebc1a97fc974112426152c192f493e7"
+        },
+        "images/principle-effectiveness.png": {
+            "bytes": 3844732,
+            "sha256": "3eb1811d8b0f1cc5010862c1ddc61a4696972dc896ab62077bff4ab91638882a"
+        },
+        "images/principle-functionality.png": {
+            "bytes": 1144675,
+            "sha256": "fd987036b8d56bf48dc70ea4f2110f7ea295d836c431be66a4caecc140cd0467"
+        },
+        "images/principle-security.png": {
+            "bytes": 3948987,
+            "sha256": "1a434930ad2f7fc508e2a7baaa84d919b16794f378a59ee470e5bc1c2e36328e"
+        },
+        "index.html": {
+            "bytes": 17480,
+            "sha256": "19c0cff4f621a16c30126ad6902ff6729250a9fa32b1e751b3f4284c4d368a7f"
+        },
+        "logos/slaed-logo-mark-gradient-blue.svg": {
+            "bytes": 8998,
+            "sha256": "83c35fb2583da70eb2d73ff0536a4e7414d81ac9d07ff05125b2e611b88331a1"
+        },
+        "logos/slaed-logo-wordmark-gradient-blue.svg": {
+            "bytes": 14955,
+            "sha256": "d2d6bcf3cb478dfadbc94479cfc1cd4658c8c46ed4ac6a4e92bc097381aa4a18"
+        },
+        "logos/slaed-logo-wordmark-outline-blue.svg": {
+            "bytes": 17966,
+            "sha256": "4e1103d7a23783178cd363850f2d4116c7f6652b60a92d3c3e5c53b9026b0fff"
+        },
+        "manifest.json": {
+            "bytes": 657,
+            "sha256": "5e2a1029b6b31e2af8d2bf004e34c6b51d0112a0310dbd239e5aa3d2405a251c"
+        },
+        "player/audio.js": {
+            "bytes": 18743,
+            "sha256": "01c539b0027a16326eec52f6032e8b66e63a3b4cb15a5087d245fce8ab8a4747"
+        },
+        "player/bridge.js": {
+            "bytes": 765,
+            "sha256": "c5722d055ccefef0b800158e144fd2bf4ff1d562a50dc71d4ce26afe518eada5"
+        },
+        "player/grain.svg": {
+            "bytes": 272,
+            "sha256": "51525d7eb13db5888373717ed3f2c5b550d9b8f004627ece52a51caf7692359e"
+        },
+        "player/particles.js": {
+            "bytes": 10381,
+            "sha256": "ee73bcf7e5002c5d2001fb214d1e72e2a7c9b3f10593f07f2498b3e2769bdd02"
+        },
+        "player/scene.js": {
+            "bytes": 43632,
+            "sha256": "845e994d4d7ce6154b35b83b3de163f843fbed743ee6df102956737d3ff93252"
+        },
+        "player/styles.css": {
+            "bytes": 43121,
+            "sha256": "b90c221047838701d2897de6e7b4a7693520594ba5de12fc5f0e476b7d323755"
+        },
+        "player/timeline.js": {
+            "bytes": 964,
+            "sha256": "cfa422e16fd81bad41b790df291736dc6f6c753775be6c9e4af5849ca2abbcc8"
+        },
+        "presets/dark.json": {
+            "bytes": 84,
+            "sha256": "ed8f31e719c5435a041cd55d3b0f00a99de1714812f35069f89e52e9bc1d22a1"
+        },
+        "presets/light.json": {
+            "bytes": 85,
+            "sha256": "edcf7f79d3e9b6e0fb4fb5af1557b76b8355175708e04fa9420d229fd35b3dda"
+        },
+        "presets/production/audio-edit.json": {
+            "bytes": 639,
+            "sha256": "53b997acaecbe16fbcc421228a93a5e1a973f5e93771da6f8af8bd47e113a1db"
+        },
+        "presets/production/generation-connected.json": {
+            "bytes": 2742,
+            "sha256": "530378cd1611a529aa1d11c5b938b724321e4d0fc124b21a663d50b1c6a25131"
+        },
+        "presets/production/generation-final.json": {
+            "bytes": 2750,
+            "sha256": "b3faf378362fb4d927812a4d1f7d01d64baf18226049cec3ef25d3b4ec88605c"
+        },
+        "presets/production/generation-stress-on-a.json": {
+            "bytes": 2750,
+            "sha256": "b3faf378362fb4d927812a4d1f7d01d64baf18226049cec3ef25d3b4ec88605c"
+        },
+        "presets/production/video-export.json": {
+            "bytes": 530,
+            "sha256": "a1537dc41062e018ac4945e60b20264449b46b3af6059be8dbcd6ca2ed2acb62"
+        },
+        "redirect.js": {
+            "bytes": 214,
+            "sha256": "bf831d633c0036c0f8b9ae8834249989d4880e476101e3200497b9e1cc74b00f"
+        },
+        "vendor/base.css": {
+            "bytes": 37404,
+            "sha256": "86dcb73c369bbca3699d2d934012df4418478446c434454c816dcd164584d74d"
+        },
+        "vendor/fonts/bootstrap-icons.woff2": {
+            "bytes": 134044,
+            "sha256": "6c75710364a1ca5604267716f6d28997b26319fdb078cf11e0b42ab66ff2ea61"
+        },
+        "vendor/fonts/magistral.woff2": {
+            "bytes": 26808,
+            "sha256": "3c2d58b59d2fb4984ca9159f415abf423f2d197d96fff04bb97d130d95b10b09"
+        },
+        "vendor/icons.css": {
+            "bytes": 91098,
+            "sha256": "5bedd7ad4608cd027ca6ab174604d0e94cea7ee30fe1d9a8304c7530caf89db9"
+        }
+    }
+}

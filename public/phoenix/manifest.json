@@ -1,0 +1,19 @@
+{
+    "name": "SLAED Phoenix",
+    "version": "1.0.0",
+    "date": "2026-10-13",
+    "entry": "index.html",
+    "integration": "embed.js",
+    "presets": ["presets/dark.json", "presets/light.json"],
+    "timeline": "player/timeline.js",
+    "audio": "audio/theme.mp3",
+    "reserve": "audio/reserve.mp3",
+    "duration": 83.352,
+    "release": 2027,
+    "fade": 74.7,
+    "reveal": 80.7,
+    "exports": ["exports/SLAED-Phoenix-light-720p.mp4", "exports/SLAED-Phoenix-dark-720p.mp4"],
+    "examples": ["examples/index.html", "examples/nested/page.html"],
+    "requires": {"protocol": "http-or-https", "sameOrigin": true},
+    "checksums": "checksums.json"
+}

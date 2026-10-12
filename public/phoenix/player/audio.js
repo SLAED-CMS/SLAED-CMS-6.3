@@ -273,7 +273,7 @@
 
     /* Decode the mastered local anthem and synthesize it if its downloadable asset is unavailable */
     async function getScoreBuffer() {
-        const assets = [[timing.track, 'suno'], ['assets/phoenix-codex/SLAED-Phoenix-Synth-Reserve.mp3?v=7', 'synth']];
+        const assets = [[timing.track, 'anthem'], ['audio/reserve.mp3?v=1', 'synth']];
         for (const [url, kind] of assets) {
             try {
                 const reply = await fetch(url);
@@ -284,7 +284,7 @@
                 if (Math.abs(buffer.duration - length) > 0.12) throw new Error('The anthem duration does not match the scene');
                 return {buffer, kind};
             } catch (error) {
-                console.warn(kind === 'suno' ? 'Suno unavailable; loading the synthesized reserve' : 'Rendering the emergency score', error);
+                console.warn(kind === 'anthem' ? 'Anthem unavailable; loading the reserve score' : 'Rendering the emergency score', error);
             }
         }
         return {buffer: await getScoreRender(), kind: 'synth'};
@@ -294,6 +294,7 @@
     class PhoenixScore {
         constructor() {
             this.audio = null;
+            this.shared = false;
             this.source = null;
             this.level = 0.7;
             this.offset = 0;
@@ -306,7 +307,9 @@
             if (!ready) return false;
             const audioctx = window.AudioContext || window.webkitAudioContext;
             if (!this.audio) {
-                this.audio = new audioctx();
+                const shared = window.PhoenixBridge.getAudio();
+                this.shared = Boolean(shared);
+                this.audio = shared || new audioctx();
                 this.gain = this.audio.createGain();
                 this.fade = this.audio.createGain();
                 this.fade.connect(this.gain);
