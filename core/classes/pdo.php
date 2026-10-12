@@ -314,4 +314,11 @@ class Database {
         }
         return ['sqlstate' => 'HY000', 'code' => 0, 'message' => 'Unknown SQL error'];
     }
+
+    # The unique key a duplicate entry refused the last query on, without the table MySQL names in front of it; empty after any other outcome
+    function getSqlTwin(): string {
+        if ($this->qresult !== false) return '';
+        $error = $this->getSqlError();
+        return ($error['code'] === 1062 && preg_match('/for key \'(?:[^\']*\.)?([^\'.]+)\'$/', $error['message'], $hit)) ? $hit[1] : '';
+    }
 }

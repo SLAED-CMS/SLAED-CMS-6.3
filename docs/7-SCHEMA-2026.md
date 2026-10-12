@@ -10,8 +10,9 @@ Status: batch 0 done 2026-10-12 — the inventory stands under "Inventory", its 
 text domains, the collation from one place and the cuts, its choices under "Decisions"; batch 3 done 2026-10-12 — every
 time column on its form, the forum new mark on the last visit, its choices under "Decisions"; batch 4 done 2026-10-12 —
 no flag, counter or text is NULL, `_users.lang` holds codes, an empty birthday is NULL, its choices and the release state
-of the stand under "Decisions"; batches 5–7 open. The order of the batches is kept in `docs/ROADMAP-2026.md`. Update
-this line as batches land.
+of the stand under "Decisions"; batch 5 done 2026-10-12 — unique addresses with NULL for none, every key of "Inventory /
+Indexes" out or in, `_node_categories` on its pair, its choices under "Decisions"; batches 6–7 open. The order of the
+batches is kept in `docs/ROADMAP-2026.md`. Update this line as batches land.
 
 No line numbers anywhere in this document on purpose: every reference names the table, the column, the function or
 the file it points at, and that name is what to search for.
@@ -137,6 +138,39 @@ Taken in batch 4, 2026-10-12, where the plan left the choice to it:
   `_rating_votes`, `_user_oauth`) were converted by hand, and the master secret moved from `config/local.php` into the
   uncommitted `config/security.php` before the merge was rebuilt. The seventeen old module tables keep their
   collation as the input of the migration.
+
+Taken in batch 5, 2026-10-12, where the plan left the choice to it:
+
+- **`Database::getSqlTwin()` names the key a duplicate entry refused** (owner, 2026-10-12): the last query failed with
+  1062 and the message ends in `for key 'email'` (MariaDB) or `'<table>.email'` (MySQL). The registration, the
+  activation, the OAuth registration, the settings save, the account panel and the administrators panel answer
+  `email` as `_ERROR_EMAIL` and `name` as the taken name of their screen; the first administrator of
+  `admin/index.php` carries it in its redirect. The `SELECT` checks before a write stay the common path; the result
+  answers the race, and the refused statement stays in `error_sql.log` as the real event it is.
+- **All three unique address columns are `VARCHAR(255) DEFAULT NULL`**, `_users_temp.email` too, so the domain has one
+  spelling; the account panel and the administrators panel check a taken address by the row found, not by a
+  case-sensitive comparison with it.
+- **The keys are reshaped after the collation.** The last block of `table_update6_3.sql` drops every key that leaves
+  and sets every new or changed one through `setidx()`, which rebuilds a key only while its definition differs, so a
+  second run changes nothing; the unique addresses are built in the collation `checkUpdateEmails()` of `update.php`
+  compared them in before the schema file ran. A server that ignores a descending key part (MariaDB before 10.8)
+  rebuilds the two keys of `_node_support` on every run. Cleanup moved behind that block.
+- **The form of the administrators panel shows the refusal of an edit too**: `add()` of `admin/modules/admins.php`
+  dropped every message of `save()` for an existing administrator, so a taken address was refused without a word.
+- **`movenet` carries a missing address as `''`** into `_user_oauth.email`, which keeps its empty default; it runs
+  after the address of `_users` became NULL and no longer leans on `INSERT IGNORE` to coerce it.
+- **The address check refuses beside the preflight**: `checkUpdateEmails()` runs right after `checkUpdateBase()`, so
+  a site with a shared address is neither closed nor touched; each address is a failed row with its accounts.
+- **`modcol()` reads a moment default as written**: MariaDB reports `current_timestamp()`, MySQL `CURRENT_TIMESTAMP`
+  with `DEFAULT_GENERATED`, so since batch 3 every run rebuilt `_privat` (and every table of such a `modcol`) and
+  `PrivatMigrationTest` failed on its converted state; both readings now compare equal to the definition.
+- **`_nodes.expires (tid, status, expires)` leaves installed sites too**: `table.sql` dropped it on 2026-10-05, the
+  update never did, and the stand and production still held it.
+- **The stand's three shared addresses stay on the active account** (owner, 2026-10-12): the accounts 35095, 35124 and
+  35444 (2017, uLogin) hold NULL; production gets the same by hand when `update.php` lists them.
+- **Kept**: `_forum.status` and `_forum.time`, `_categories.parent` and `ordern`; not in the list of unused keys. The
+  per-module statistics of the search panel (`GROUP BY modul` with the score) still scan the log, which no key
+  without `score` serves; `COUNT(DISTINCT word)` and the word list read `word_modul` alone (`EXPLAIN`, stand).
 
 Proposed by the plan on 2026-10-09 and not yet confirmed by the owner; they stand unless the owner overrules them:
 

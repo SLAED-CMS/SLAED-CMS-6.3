@@ -922,6 +922,16 @@ function getInstallUpgrade(PDO $pdo, string $base, string $dump, string $rev, st
     $out['nomods'] = [implode(' ', $bad), getInstallConf('update')['update'] ?? [], sha1_file($isite.'/config/modules.php') === $mods,
         preg_match('#negative point balances set to 0 [^(]*\(accounts: (\d+)\)#', $page['body'], $hit) ? intval($hit[1]) : null];
     $pdo->exec('ALTER TABLE '.IPREF.'_modules RENAME COLUMN `blocks_x` TO `blocks_c`');
+    $pre = $pdo->query('SHOW COLUMNS FROM '.IPREF.'_users LIKE \'user_email\'')->fetch() ? 'user_' : '';
+    $two = $pdo->query('SELECT '.$pre.'id, '.$pre.'name, '.$pre.'email FROM '.IPREF.'_users WHERE '.$pre.'email != \'\' ORDER BY '.$pre.'id LIMIT 2')->fetchAll(PDO::FETCH_NUM);
+    $mail = $pdo->prepare('UPDATE '.IPREF.'_users SET '.$pre.'email = ? WHERE '.$pre.'id = ?');
+    $mail->execute([strtoupper($two[0][2]), $two[1][0]]);
+    $was = getInstallFiles();
+    $bad = array_column(array_filter(getInstallRows(getInstallReply([], 'POST', 'update.php', $form, $head)['body']), fn(array $v): bool => !$v[1]), 0);
+    $list = 'is held by the accounts '.$two[0][0].' ('.$two[0][1].'), '.$two[1][0].' ('.$two[1][1].')';
+    $out['twins'] = [count($bad), str_starts_with($bad[0] ?? '', IPREF.'_users: the address ') && str_contains($bad[0] ?? '', $list),
+        str_starts_with($bad[1] ?? '', 'the update stopped before it changed anything'), getInstallFiles() === $was];
+    $mail->execute([$two[1][2], $two[1][0]]);
     $ddl = $isite.'/storage/update/sql/table_update6_3.sql';
     $keep = (string)file_get_contents($ddl);
     file_put_contents($ddl, "ALTER TABLE `{prefix}_probe_missing` ADD `x` INT;\n".$keep);

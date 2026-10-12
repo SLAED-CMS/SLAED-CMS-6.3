@@ -162,9 +162,10 @@ function addAdminAccount(): void {
             $apwd = getPassHash($apass);
             $db->getSqlQuery(
                 'INSERT INTO '.PREFIX_DB.'_admins VALUES (NULL, :name, \'Admin\', :url, :email, :pass, \'1\', :editor, \'1\', \'\', :lang, :ip, now(), now())',
-                ['name' => $aname, 'url' => $aurl, 'email' => $aemail, 'pass' => $apwd, 'editor' => $aeditor, 'lang' => $alang, 'ip' => $aip]
+                ['name' => $aname, 'url' => $aurl, 'email' => ($aemail !== '') ? $aemail : null, 'pass' => $apwd, 'editor' => $aeditor, 'lang' => $alang, 'ip' => $aip]
             );
             $aid = intval($db->getSqlLastId());
+            $fail = '';
             if ($auser_new == 1) {
                 $urow = $db->getSqlRow($db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_users WHERE name = :name', ['name' => $aname]));
                 $uid = ($urow) ? intval($urow['id']) : 0;
@@ -175,13 +176,14 @@ function addAdminAccount(): void {
                         && $db->setSqlCommit();
                     if (!$gone) $db->setSqlRollback();
                 }
-                $db->getSqlQuery(
+                $made = $db->getSqlQuery(
                     'INSERT INTO '.PREFIX_DB.'_users (id, name, email, website, avatar, regdate, password, lang, ip, sig, block, warnings, field)'
                     .' VALUES (NULL, :name, :email, :website, :avatar, now(), :pass, :lang, :ip, \'\', \'\', \'\', \'\')',
-                    ['name' => $aname, 'email' => $aemail, 'website' => $aurl, 'avatar' => '', 'pass' => $apwd, 'lang' => $alang, 'ip' => $aip]
+                    ['name' => $aname, 'email' => ($aemail !== '') ? $aemail : null, 'website' => $aurl, 'avatar' => '', 'pass' => $apwd, 'lang' => $alang, 'ip' => $aip]
                 );
+                if (!$made) $fail = ($db->getSqlTwin() === 'email') ? _ERROR_EMAIL : _ERROR;
             }
-            $fail = ($aid > 0) ? addNodeProfiles($aid) : '';
+            $fail = implode(' ', array_filter([$fail, ($aid > 0) ? addNodeProfiles($aid) : '']));
             setRedirect($afile.'.php', false, 302, $fail, $fail !== '');
         } else {
             getAdminLoginForm();

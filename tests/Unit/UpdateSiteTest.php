@@ -71,6 +71,7 @@ final class UpdateSiteTest extends TestCase
         $this->assertSame(['points' => 'missing', 'ratings' => 'missing', 'fields' => 'missing'], $run['broken']['manifest']);
         $this->assertSame(503, $run['broken']['guest']);
         $this->assertSame(1, $run['broken']['dupes'], 'The schema file did not remove the later poll vote of one address');
+        $this->assertSame([2, true, true, true], $run['twins'], 'An address held by two accounts did not stop the run before the schema file with both accounts named');
     }
 
     # The schema file runs on the tables of a real 6.2 site without a failed statement on the first run, every unit finishes, and the repeats change nothing

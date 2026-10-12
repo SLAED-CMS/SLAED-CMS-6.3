@@ -203,10 +203,13 @@ function finnewuser(): void {
             $check = md5(getRandomString(10));
             $finishlink = $conf['homeurl'].'/index.php?name='.$conf['name'].'&op=activate&user='.urlencode($nick).'&num='.$check;
             $mail = filterText($mail);
-            $db->getSqlQuery(
+            $done = $db->getSqlQuery(
                 'INSERT INTO '.PREFIX_DB.'_users_temp (id, name, email, password, regdate, code) VALUES (NULL, :name, :email, :password, NOW(), :code)',
                 ['name' => $nick, 'email' => $mail, 'password' => getPassHash($pass), 'code' => $check]
             );
+            if (!$done) $stop[] = match ($db->getSqlTwin()) { 'email' => _ERROR_EMAIL, 'name' => _NICKTAKEN, default => _ERROR };
+        }
+        if (!$stop) {
             setHead(['title' => _ACCOUNTCREATED]);
             if ($conf['users']['nomail'] == 1) {
                 $cont = $tpl->getHtmlFrag('title', ['title' => _ACCOUNTCREATED, 'is_level_one' => true]);
@@ -257,10 +260,18 @@ function activate(): void {
             $uip = getIp();
             $uagent = filterCutText(getAgent(), 255);
             $rank = '';
-            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_users (id, name, `rank`, email, avatar, regdate, password, lang, ip, agent, sig, block, warnings, field) VALUES (NULL,'
-                .' :uname, :rank, :email, :avatar, :regdate, :pwd, :lang, :ip, :agent, :sig, :block, :warnings, :field)', ['uname' => $nick, 'rank' => $rank, 'email' => $mail,
-                'avatar' => '', 'regdate' => $reg, 'pwd' => str_starts_with($pass, '$2') ? $pass : getPassHash($pass), 'lang' => $locale, 'ip' => $uip, 'agent' => $uagent,
-                'sig' => '', 'block' => '', 'warnings' => '', 'field' => '']);
+            $done = $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_users (id, name, `rank`, email, avatar, regdate, password, lang, ip, agent, sig, block, warnings, field)'
+                .' VALUES (NULL, :uname, :rank, :email, :avatar, :regdate, :pwd, :lang, :ip, :agent, :sig, :block, :warnings, :field)', ['uname' => $nick, 'rank' => $rank,
+                'email' => $mail, 'avatar' => '', 'regdate' => $reg, 'pwd' => str_starts_with($pass, '$2') ? $pass : getPassHash($pass), 'lang' => $locale, 'ip' => $uip,
+                'agent' => $uagent, 'sig' => '', 'block' => '', 'warnings' => '', 'field' => '']);
+            if (!$done) {
+                $text = match ($db->getSqlTwin()) { 'email' => _ERROR_EMAIL, 'name' => _NICKTAKEN, default => _ERROR };
+                $meta = $tpl->getHtmlFrag('meta-refresh', ['url' => 'index.php?name='.$conf['name'], 'secs' => 15]);
+                echo $tpl->getHtmlFrag('title', ['title' => _ACTIVATIONERROR, 'is_level_one' => true])
+                    .$tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $text, 'meta' => $meta]);
+                setFoot();
+                return;
+            }
             $nuid = intval($db->getSqlLastId());
             if ($nuid) $pnt->addEvent('register', 'account', 'user:'.$nuid, $nuid);
             $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_users_temp WHERE name = :uname AND code = :cnum', ['uname' => $nick, 'cnum' => $check]);
@@ -287,8 +298,8 @@ function view(): void {
         $uname = htmlspecialchars(substr(urldecode(getVar('get', 'uname', 'text')), 0, 25));
         $params = [];
         if ($uname) {
-            $where = 'BINARY u.name = :uname';
-            $params['uname'] = $uname;
+            $where = 'u.name = :uname AND BINARY u.name = :exact';
+            $params = ['uname' => $uname, 'exact' => $uname];
         } else {
             $where = 'u.id = :uid';
             $params['uid'] = getVar('get', 'id', 'num');
@@ -1423,6 +1434,8 @@ function savehome(): void {
     checkemail($mail);
     $last = count((array)$stop);
     for ($i = $prev; $i < $last; $i++) $stop[$i] = ['text' => (string)$stop[$i], 'sect' => 'personal'];
+    $sql = 'SELECT id FROM '.PREFIX_DB.'_users WHERE email = :email AND id != :id';
+    if ($db->getSqlRowCount($db->getSqlQuery($sql, ['email' => $mail, 'id' => (int)$user[0]])) > 0) $stop[] = ['text' => _ERROR_EMAIL, 'sect' => 'personal'];
     if ($room = checkEditorTextRoom($sig, 'users.sig')) $stop[] = ['text' => $room, 'sect' => 'personal'];
     if ($room = checkEditorTextRoom($block, 'users.block')) $stop[] = ['text' => $room, 'sect' => 'privacy'];
     [$fold, $sold, $bold] = $db->getSqlRow($db->getSqlQuery('SELECT field, sig, block FROM '.PREFIX_DB.'_users WHERE id = :id', ['id' => (int)$user[0]])) ?: ['', '', ''];
@@ -1451,11 +1464,16 @@ function savehome(): void {
             $birth = getVar('req', 'user_birthday', 'date', null);
             $gender = getVar('post', 'gender', 'num');
             $field = $flds['json'];
-            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET email = :email, website = :website, viewmail = :viewmail, occ = :occ, origin = :origin, interest = :interest,'
+            $done = $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET email = :email, website = :website, viewmail = :viewmail, occ = :occ, origin = :origin, interest = :interest,'
                 .' sig = :sig, storynum = COALESCE(NULLIF(:storynum, 0), storynum), blockon = :blockon, block = :block, theme = :theme, newslet = :newslet, fsmail = :fsmail,'
                 .' psmail = :psmail, birthday = :birthday, gender = :gender, field = :field WHERE id = :id', ['email' => $mail, 'website' => $site, 'viewmail' => $view,
                 'occ' => $occ, 'origin' => $from, 'interest' => $inter, 'sig' => $sig, 'storynum' => $story, 'blockon' => $blockon, 'block' => $block, 'theme' => $theme,
                 'newslet' => $news, 'fsmail' => $fsmail, 'psmail' => $psmail, 'birthday' => $birth, 'gender' => $gender, 'field' => $field, 'id' => $uid]);
+            if (!$done) {
+                $stop[] = ['text' => ($db->getSqlTwin() === 'email') ? _ERROR_EMAIL : _ERROR, 'sect' => 'personal'];
+                edithome();
+                return;
+            }
             $avat = getVar('post', 'avatar', 'text');
             $take = getVar('post', 'filepath', 'raw', '');
             $take = is_string($take) ? mb_substr(trim($take), 0, 512) : '';
@@ -1850,12 +1868,13 @@ function oauthfinish(): void {
             'INSERT INTO '.PREFIX_DB.'_users (id, name, `rank`, email, avatar, regdate, password, lang, ip, agent, sig, block, warnings, field)'
             .' VALUES (NULL, :uname, :rank, :email, :avatar, NOW(), :pwd, :lang, :ip, :agent, :sig, :block, :warnings, :field)',
             [
-                'uname' => $uname, 'rank' => '', 'email' => $mail, 'avatar' => '', 'pwd' => $pass, 'lang' => $locale,
+                'uname' => $uname, 'rank' => '', 'email' => ($mail !== '') ? $mail : null, 'avatar' => '', 'pwd' => $pass, 'lang' => $locale,
                 'ip' => getIp(), 'agent' => filterCutText(getAgent(), 255), 'sig' => '', 'block' => '', 'warnings' => '', 'field' => '',
             ]
         );
         $nuid = ($ok !== false) ? (int)$db->getSqlLastId() : 0;
-        $ecode = ($nuid > 0) ? Oauth::setLink($nuid, $prov, (string)$row['uid'], $mail) : 'link_failed';
+        $twin = match (($ok === false) ? $db->getSqlTwin() : '') { 'email' => 'email_exists', 'name' => 'create_login_taken', default => 'link_failed' };
+        $ecode = ($nuid > 0) ? Oauth::setLink($nuid, $prov, (string)$row['uid'], $mail) : $twin;
         if ($nuid > 0 && $ecode === '') $pnt->addEvent('register', 'account', 'user:'.$nuid, $nuid);
         if ($nuid < 1 || $ecode !== '') {
             $db->setSqlRollback();
@@ -1865,7 +1884,7 @@ function oauthfinish(): void {
                 oautherror();
             }
             Logger::addOauth('warning', ($ecode !== '') ? $ecode : 'create_login_taken', ['prov' => $prov, 'uid' => $nuid]);
-            oauthretry(_NICKTAKEN);
+            oauthretry(($ecode === 'email_exists') ? _ERROR_EMAIL : _NICKTAKEN);
         }
         if (!$db->setSqlCommit()) {
             $db->setSqlRollback();

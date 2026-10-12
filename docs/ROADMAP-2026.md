@@ -139,7 +139,8 @@ into the plan, then do whatever work the step names.
   "Journal Boundary"; the help of "Безопасность" took the journal view and the tab "Журнал входов". (2026-10-12)
 - [x] 63. SCHEMA batch 4 — NULL, defaults, types; `_users.lang` codes. The stand was put on the release schema and
   collation on the way (owner, 2026-10-12). (2026-10-12)
-- [ ] 64. SCHEMA batch 5 — keys: unique email, covered indexes and prefixes out, missing ones in.
+- [x] 64. SCHEMA batch 5 — keys: unique email, covered indexes and prefixes out, missing ones in. The stand's three
+  shared addresses stay on the active account (owner, 2026-10-12). (2026-10-12)
 - [ ] 65. SCHEMA batch 6 — rehearsal of `update.php` on a fresh 6.2 dump the owner provides; fresh installs.
 - [ ] 66. SCHEMA batch 7 — reference; deletes `docs/7-SCHEMA-2026.md`.
 - [ ] 67. DIAL — *decision*: the options dial `sl-dial` of the panel lists is three Tab stops a row while closed (found

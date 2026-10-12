@@ -2769,6 +2769,56 @@ function getRouteNull(PDO $pdo): array {
     return $out;
 }
 
+# The unique address over real requests: a taken one in the settings, a registration racing a held one, a late activation, two OAuth accounts without one
+function getRouteEmail(PDO $pdo, string $work): array {
+    $pre = RPREF.'_';
+    $data = require $work.'/config/security.php';
+    $data['security']['captcha']['active'] = '0';
+    setRouteFile($work.'/config/security.php', $data);
+    $data = require $work.'/config/oauth.php';
+    $data['oauth']['active'] = '1';
+    $data['oauth']['google'] = array_replace($data['oauth']['google'], ['active' => '1', 'clientid' => 'probe-client', 'secret' => 'probe-secret']);
+    setRouteFile($work.'/config/oauth.php', $data);
+    if (is_file($work.'/config/local.php')) unlink($work.'/config/local.php');
+    $taken = preg_match("#define\('_ERROR_EMAIL', *'([^']+)'\)#", (string)file_get_contents(BASE_DIR.'/lang/ru.php'), $hit) ? $hit[1] : '?';
+    $count = fn(string $sql): int => (int)$pdo->query($sql)->fetchColumn();
+    $pairs = getRouteInputs(getRouteReply('clara', 'GET', 'index.php?name=account&op=edithome')['body'], 'savehome');
+    $save = getRouteReply('clara', 'POST', 'index.php?name=account', getRoutePairs($pairs, ['mail' => 'ANNA@probe.test']) + ['sig' => '', 'block' => '']);
+    $out = ['save' => [$save['code'], str_contains($save['body'], $taken), $pdo->query('SELECT email FROM '.$pre.'users WHERE id = 4')->fetchColumn()]];
+    $pairs = getRouteInputs(getRouteReply('root', 'GET', 'admin.php?name=account&op=add&id=4')['body'], 'addsave');
+    $more = ['name' => 'account', 'op' => 'addsave', 'sig' => '', 'block' => ''];
+    $user = getRouteReply('root', 'POST', 'admin.php', getRoutePairs($pairs, ['email' => 'ANNA@probe.test']) + $more);
+    $pairs = getRouteInputs(getRouteReply('root', 'GET', 'admin.php?name=admins&op=add&id=2')['body'], 'save');
+    $boss = getRouteReply('root', 'POST', 'admin.php', getRoutePairs($pairs, ['email' => 'ROOT@probe.test']) + ['name' => 'admins', 'op' => 'save']);
+    $out['panel'] = [$user['code'], str_contains($user['body'], $taken), $pdo->query('SELECT email FROM '.$pre.'users WHERE id = 4')->fetchColumn(),
+        $boss['code'], str_contains($boss['body'], $taken), $pdo->query('SELECT email FROM '.$pre.'admins WHERE id = 2')->fetchColumn()];
+    $pairs = getRouteInputs(getRouteReply('', 'GET', 'index.php?name=account&op=newuser')['body'], 'finnewuser');
+    $nick = array_values(array_filter(array_column($pairs, 0), fn($v) => !in_array($v, ['token', 'mail', 'user_password', 'user_password2', 'rules'], true)))[0] ?? '';
+    $hold = proc_open([PHP_BINARY, __FILE__, $work, 'mailhold', $GLOBALS['rbase']], [1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes);
+    $held = trim((string)fgets($pipes[1]));
+    $reg = getRouteReply('', 'POST', 'index.php?name=account', getRoutePairs($pairs, [$nick => 'racer', 'mail' => 'race@probe.test']) + ['op' => 'finnewuser']);
+    proc_close($hold);
+    $out['race'] = [$nick !== '', $held, str_contains($reg['body'], $taken), $count('SELECT COUNT(*) FROM '.$pre.'users_temp WHERE email = \'race@probe.test\''),
+        $count('SELECT COUNT(*) FROM '.$pre.'users_temp WHERE name = \'racer\'')];
+    $pdo->exec('INSERT INTO '.$pre.'users_temp (name, email, password, regdate, code) VALUES (\'late\', \'late@probe.test\', \'x\', NOW(), \'c0de\')');
+    $pdo->exec('INSERT INTO '.$pre.'users (id, name, email, password, sig, block, warnings, field) VALUES (6, \'early\', \'LATE@probe.test\', \'x\', \'\', \'\', \'\', \'\')');
+    $act = getRouteReply('', 'GET', 'index.php?name=account&op=activate&user=late&num=c0de');
+    $out['activate'] = [str_contains($act['body'], $taken), $count('SELECT COUNT(*) FROM '.$pre.'users_temp WHERE name = \'late\''),
+        $count('SELECT COUNT(*) FROM '.$pre.'users WHERE name = \'late\'')];
+    $codes = [];
+    foreach (['ohne1' => 'Ohne Eins', 'ohne2' => 'Ohne Zwei'] as $who => $name) {
+        $ptok = bin2hex(random_bytes(32));
+        $pdo->prepare('INSERT INTO '.$pre.'oauth_temp (token, kind, provider, uid, email, uname, redirect, time) VALUES (?, \'pending\', \'google\', ?, \'\', ?, \'index.php\', ?)')
+            ->execute([$ptok, 'sub-'.$who, $name, time()]);
+        file_put_contents($work.'/jar-'.$who.'.txt', "127.0.0.1\tFALSE\t/\tFALSE\t0\toauth-pt\t".$ptok."\n", FILE_APPEND);
+        $atok = getRouteToken(getRouteReply($who, 'GET', 'index.php?name=account&op=oauth_finish')['body'], 'name="uname"');
+        $codes[] = getRouteReply($who, 'POST', 'index.php?name=account', ['op' => 'oauth_finish', 'act' => 'create', 'uname' => $who, 'token' => $atok])['code'];
+    }
+    $out['oauth'] = [$codes, $count('SELECT COUNT(*) FROM '.$pre.'users WHERE name IN (\'ohne1\', \'ohne2\') AND email IS NULL'),
+        $count('SELECT COUNT(*) FROM '.$pre.'user_oauth WHERE puid IN (\'sub-ohne1\', \'sub-ohne2\') AND email = \'\'')];
+    return $out;
+}
+
 # The journal run: both login journals on, OAuth on with a provider that is never called, a known password for the account clara and the administrator docsman
 function addRouteJournalConf(PDO $pdo, string $work): void {
     $data = require $work.'/config/security.php';
@@ -2921,6 +2971,17 @@ if (($argv[2] ?? '') === 'favhold') {
     exit;
 }
 
+# The child mailhold of the email run holds a pending registration of race@probe.test for two seconds, as a parallel registration does before its commit
+if (($argv[2] ?? '') === 'mailhold') {
+    $hpdo = getRoutePdo((string)($argv[3] ?? ''));
+    $hpdo->beginTransaction();
+    $hpdo->exec('INSERT INTO '.RPREF.'_users_temp (name, email, password, regdate, code) VALUES (\'rival\', \'race@probe.test\', \'x\', NOW(), \'hold\')');
+    echo "held\n";
+    sleep(2);
+    $hpdo->commit();
+    exit;
+}
+
 $report = ['error' => '', 'clean' => false, 'runs' => []];
 $rbase = '';
 $rproc = null;
@@ -2975,6 +3036,8 @@ try {
         $report['runs']['time'] = getRouteTime($rpdo, $rwork);
     } elseif (($argv[2] ?? '') === 'null') {
         $report['runs']['null'] = getRouteNull($rpdo);
+    } elseif (($argv[2] ?? '') === 'email') {
+        $report['runs']['email'] = getRouteEmail($rpdo, $rwork);
     } elseif (($argv[2] ?? '') === 'files') {
         $report['runs']['files'] = getRouteFiles($rpdo) + getRouteAccount($rpdo) + getRouteComment($rpdo) + getRouteUnused($rpdo);
     } else {

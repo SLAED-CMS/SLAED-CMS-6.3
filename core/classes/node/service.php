@@ -1701,9 +1701,10 @@ final class NodeService {
             $this->checkCatParent($id, $row['parent'], $row['modul']);
             if ($row['modul'] !== $was) {
                 $own = isset(self::CATOWN[$was]) ? 'EXISTS (SELECT 1 FROM '.PREFIX_DB.'_'.self::CATOWN[$was].' WHERE cid = :nd) OR ' : '';
-                $sql = 'SELECT ('.$own.'EXISTS (SELECT 1 FROM '.PREFIX_DB.'_nodes WHERE cid = :na) OR EXISTS (SELECT 1 FROM '.PREFIX_DB.'_node_categories WHERE cid = :nb)'
-                    .' OR EXISTS (SELECT 1 FROM '.PREFIX_DB.'_categories WHERE parent = :nc)) AS used';
-                $pars = ['na' => $id, 'nb' => $id, 'nc' => $id] + ($own !== '' ? ['nd' => $id] : []);
+                $tid = intval(array_search($was, array_map(fn($v) => $v->name, $types), true));
+                $sql = 'SELECT ('.$own.'EXISTS (SELECT 1 FROM '.PREFIX_DB.'_nodes WHERE tid = :nt AND cid = :na) OR EXISTS (SELECT 1 FROM '.PREFIX_DB.'_node_categories'
+                    .' WHERE cid = :nb) OR EXISTS (SELECT 1 FROM '.PREFIX_DB.'_categories WHERE parent = :nc)) AS used';
+                $pars = ['nt' => $tid, 'na' => $id, 'nb' => $id, 'nc' => $id] + ($own !== '' ? ['nd' => $id] : []);
                 if ($this->getRowCount($sql, $pars)) throw $this->getInvalid('category.used');
             }
             $set = implode(', ', array_map(fn(string $v): string => $v.' = :'.$v, self::CATKEYS));
@@ -1732,7 +1733,8 @@ final class NodeService {
             }
             $pars = [];
             $in = $this->getInList($tree, 'c', $pars);
-            if ($this->getRowCount('SELECT COUNT(*) FROM '.PREFIX_DB.'_nodes WHERE cid IN ('.$in.')', $pars)) throw $this->getInvalid('category.used');
+            $sql = 'SELECT COUNT(*) FROM '.PREFIX_DB.'_nodes WHERE tid = :tid AND cid IN ('.$in.')';
+            if ($this->getRowCount($sql, $pars + ['tid' => array_key_first($types)])) throw $this->getInvalid('category.used');
             $nids = $this->getQueryRes('SELECT DISTINCT nid FROM '.PREFIX_DB.'_node_categories WHERE cid IN ('.$in.') ORDER BY nid', $pars)->fetchAll(PDO::FETCH_COLUMN);
             if ($nids) {
                 $npar = [];

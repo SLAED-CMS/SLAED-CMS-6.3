@@ -1435,6 +1435,27 @@ function setUpdateLangs(Database $db, string $prefix): array {
     return getUpdateRow($text.($res ? intval($db->getSqlRowCount($res)) : 0).')', $good);
 }
 
+# Answer a failed row per address held twice in one account table, compared in the collation of the unique key the schema file builds; a clean check answers none
+function checkUpdateEmails(Database $db, string $prefix): array {
+    $coll = (string)(getUpdateCred()['collate'] ?? '');
+    if (!preg_match('/^[a-z0-9_]{1,64}$/D', $coll)) return getUpdateRow('config/db.php names no valid collation, the addresses cannot be compared', false);
+    $rows = [];
+    foreach (['admins', 'users', 'users_temp'] as $tab) {
+        $res = $db->getSqlQuery('SELECT column_name FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = :tbl', ['tbl' => $prefix.'_'.$tab]);
+        $cols = $res ? array_column($db->getSqlRows($res) ?: [], 0) : [];
+        if (!$cols) continue;
+        [$id, $name, $mail] = array_map(fn($v) => in_array('user_'.$v, $cols, true) ? 'user_'.$v : $v, ['id', 'name', 'email']);
+        $sql = 'SELECT MIN(`'.$mail.'`), GROUP_CONCAT(CONCAT(`'.$id.'`, \' (\', `'.$name.'`, \')\') ORDER BY `'.$id.'` SEPARATOR \', \') FROM `'.$prefix.'_'.$tab.'`'
+            .' WHERE `'.$mail.'` != \'\' GROUP BY CONVERT(`'.$mail.'` USING utf8mb4) COLLATE '.$coll.' HAVING COUNT(*) > 1 ORDER BY 1';
+        $res = $db->getSqlQuery($sql);
+        if ($res === false) $rows = array_merge($rows, getUpdateRow($prefix.'_'.$tab.': the addresses could not be compared', false));
+        foreach (($res ? $db->getSqlRows($res) : []) ?: [] as [$addr, $list]) {
+            $rows = array_merge($rows, getUpdateRow($prefix.'_'.$tab.': the address '.$addr.' is held by the accounts '.$list.', leave it on one of them by hand', false));
+        }
+    }
+    return $rows;
+}
+
 # The configuration step of the 6.3 update for a 6.2 site, whose settings live in config/config_<name>.php as a variable of their own
 # The site values go over the shipped source of the same name, stat into statistic and seo over global; an unshipped key stays for the data units and the next form save
 # The version, the asset lists and the closed site belong to the release and the update, and a language name becomes its code
@@ -1719,6 +1740,9 @@ function setUpdateRun(): array {
     }
     $stop = checkUpdateBase($db, $pref);
     if ($stop !== '') return getUpdateRow($stop, false);
+    $rows = checkUpdateEmails($db, $pref);
+    $text = 'the update stopped before it changed anything: leave each address above on one account and run it again';
+    if (checkUpdateFail($rows)) return array_merge($rows, getUpdateRow($text, false));
     if (!setUpdateFile('global.php', array_diff_key($conf, ['security' => '', 'db' => '']), ['close' => '1'])) return getUpdateRow('config/global.php could not be written', false);
     $rows = getUpdateRow('the site is closed for the data update (close = 1), open it in the settings after the result is checked', true);
     $rows = array_merge($rows, setUpdateConfig());

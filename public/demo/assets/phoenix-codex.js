@@ -2,11 +2,15 @@
     'use strict';
     const root = document.documentElement;
     const stage = document.querySelector('.sl-phx-stage');
+    const masknode = document.querySelector('#sl-phx-pixel-mask');
     const canvas = document.querySelector('.sl-phx-world');
     const ctx = canvas.getContext('2d');
     const cover = document.querySelector('.sl-phx-cover');
     const history = document.querySelector('.sl-phx-history');
-    const silence = document.querySelector('.sl-phx-silence');
+    const ongoing = document.querySelector('.sl-phx-continuity');
+    const streams = [...document.querySelectorAll('.sl-phx-continuity-flow > div')].map((node) => ({
+        node, code: node.querySelector('pre'), status: node.querySelector('small b'), bar: node.querySelector(':scope > i b')
+    }));
     const rewrite = document.querySelector('.sl-phx-rewrite');
     const editor = document.querySelector('.sl-phx-editor');
     const works = [...document.querySelectorAll('.sl-phx-work')];
@@ -21,6 +25,16 @@
     const wires = document.querySelector('.sl-phx-wires g');
     const radar = document.querySelector('.sl-phx-radar i');
     const motto = document.querySelector('.sl-phx-motto strong');
+    const orbit = document.querySelector('.sl-phx-orbits');
+    const rings = document.querySelector('.sl-phx-dna-pulse');
+    const heading = document.querySelector('[data-sl-phx-taskhead]');
+    const plots = [...document.querySelectorAll('.sl-phx-ui-bars i')];
+    const traces = [...document.querySelectorAll('.sl-phx-trace span')];
+    const tasks = [...document.querySelectorAll('.sl-phx-task')].map((node) => ({
+        from: node.querySelector('span'), arrow: node.querySelector('i'), unto: node.querySelector('b')
+    }));
+    const planes = panels.map((node) => ({copy: node.querySelector('.sl-phx-dna-copy'), image: node.querySelector('.sl-phx-dna-art')}));
+    const clouds = document.querySelector('.sl-phx-cloud');
     const code = document.querySelector('[data-sl-phx-code]');
     const file = document.querySelector('[data-sl-phx-file]');
     const build = document.querySelector('[data-sl-phx-build]');
@@ -49,37 +63,37 @@
     const params = new URLSearchParams(location.search);
     const motion = matchMedia('(prefers-reduced-motion: reduce)');
     const still = motion.matches || params.get('still') === '1';
-    const length = 45;
-    const beat = 60 / 128;
+    const timing = window.PhoenixTimeline;
+    const length = timing.length;
+    const beat = 60 / timing.bpm;
     const score = new window.PhoenixScore();
     const sources = [
         {
             file: 'core/system.php', label: 'Переписываем ядро',
             code: [
-                '<?php', '', "$name = getVar('get', 'name', 'text', '');", "$mode = getCookies('mode');", '',
-                '$view = $tpl->getHtmlPart(', "    'module-head', $data", ');', '', '# A new beginning, line by line'
+                '<?php', "$name = getVar('get', 'name', 'text', '');", "$mode = getCookies('mode');",
+                '$view = $tpl->getHtmlPart(', "    'module-head', $data", ');'
             ].join('\n')
         },
         {
             file: 'core/classes/pdo.php', label: 'Новая работа с данными',
             code: [
-                '<?php', '', "$sql = 'SELECT * FROM '.PREFIX_DB.'_users';", "$sql .= ' WHERE id = :id';", '',
-                '$rows = $db->getSqlQuery($sql, [', "    'id' => $uid", ']);', '', '# Prepared queries', '# Named parameters', '# MariaDB'
+                '<?php', "$sql = 'SELECT * FROM '.PREFIX_DB.'_users';", "$sql .= ' WHERE id = :id';",
+                '$rows = $db->getSqlQuery($sql, [', "    'id' => $uid", ']);'
             ].join('\n')
         },
         {
             file: 'core/security.php', label: 'Безопасность с первого шага',
             code: [
-                '<?php', '', "$token = getSiteToken('admin');", '', "if (!checkSiteToken($token, 'admin')) {", '    return;', '}', '',
-                "$title = getVar('post', 'title', 'text', '');", '', '# Validate input', '# Escape output', '# Protect every action'
+                '<?php', "$token = getSiteToken('admin');", "if (!checkSiteToken($token, 'admin')) {", '    return;', '}',
+                "$title = getVar('post', 'title', 'text', '');"
             ].join('\n')
         },
         {
             file: 'templates/admin/layouts/admin.html', label: 'Новый интерфейс. Обе темы.',
             code: [
-                '<html data-theme="{{ mode }}">', '', '<main class="sl-admin-content">', '    {% block content %}',
-                '    {% endblock %}', '</main>', '', '--sl-primary: light-dark(#0877b1, #38a9de);',
-                '--sl-surface: light-dark(#f7fbfd, #151d2b);', '', '# One system. Two modes.'
+                '<html data-theme="{{ mode }}">', '<main class="sl-admin-content">', '    {% block content %}',
+                '    {% endblock %}', '</main>', '</html>'
             ].join('\n')
         }
     ];
@@ -110,6 +124,8 @@
     let logobox = [0, 0, 0, 0];
     let lastfile = -1;
     let lasttext = -1;
+    let maskstep = -1;
+    let pixels = [];
     let download = '';
 
     /* Clamp timeline values before interpolating scene states */
@@ -138,9 +154,13 @@
 
     /* Resolve the real admin theme tokens into CSS colors and GPU channels */
     function setPalette() {
+        const tone = root.dataset.theme === 'dark' ? 'outline' : 'gradient';
+        document.querySelectorAll('.sl-phx-header > img, .sl-phx-final-logo').forEach((node) => {
+            node.src = '../templates/admin/images/logos/slaed-logo-wordmark-' + tone + '-blue.svg';
+        });
         const probe = document.createElement('span');
         document.body.append(probe);
-        const names = ['--sl-pres-link-text', '--sl-pres-text', '--sl-pres-warn-text', '--sl-primary', '--sl-primary-muted', '--sl-pres-good-text'];
+        const names = ['--sl-pres-link-text', '--sl-pres-text', '--sl-pres-warn-text', '--sl-primary', '--sl-pres-frame-border', '--sl-pres-good-text'];
         palette = names.map((name) => {
             probe.style.color = 'var(' + name + ')';
             return getComputedStyle(probe).color;
@@ -163,6 +183,9 @@
 
     /* Resize all rendering surfaces and measure the true SVG wordmark once */
     function setSceneSize() {
+        maskstep = -1;
+        pixels = [];
+        masknode.replaceChildren();
         wide = innerWidth;
         high = innerHeight;
         ratio = Math.min(devicePixelRatio || 1, 1.5);
@@ -187,15 +210,16 @@
     }
 
     /* Draw blue Matrix streams, traveling code, a perspective grid and musical shockwaves */
-    function setWorldFrame(time, idle = false) {
+    function setWorldFrame(time, idle = false, clock = time) {
         ctx.clearRect(0, 0, wide, high);
         const dark = root.dataset.theme === 'dark';
-        const matrix = idle ? 0.13 : 0.04 + getWindow(time, 0.2, 7, 0.9) * 0.18 + getWindow(time, 23.5, 32.7, 1.5) * 0.68;
+        const activity = idle ? 0 : getWindow(clock, timing.continuity, timing.rewrite, 0.35);
+        const matrix = idle ? 0.13 : 0.04 + activity * 0.48 + getWindow(time, 0.2, 7, 0.9) * 0.18 + getWindow(time, 23.5, 32.7, 1.5) * 0.68;
         const space = matrix < 0.2 ? 40 : 24;
         const count = Math.ceil(wide / space);
-        const warp = idle ? 0 : getWindow(time, 0.1, 7.1, 1.1) * 0.3 + getWindow(time, 27.5, 34.3, 1.1);
+        const warp = idle ? 0 : activity * 0.45 + getWindow(time, 0.1, 7.1, 1.1) * 0.3 + getWindow(time, 27.5, 34.3, 1.1);
         const power = idle ? 0.09 : getWindow(time, 30.3, 42.5, 1.8);
-        const pulse = Math.exp(-(time % beat) / 0.09) * power;
+        const pulse = Math.exp(-(clock % beat) / 0.09) * power;
         const center = wide / 2;
         const horizon = high * 0.56;
         ctx.globalCompositeOperation = dark ? 'lighter' : 'source-over';
@@ -272,10 +296,11 @@
                 ctx.globalAlpha = travel * (1 - depth) * 0.14;
                 ctx.fillStyle = palette[0];
                 ctx.font = Math.round(22 + scale * 24) + 'px ' + face;
-                ctx.fillText(String(2005 + i * 3), xx, yy);
+                ctx.fillText(String([2005, 2010, 2015, 2020, 2027, 2035, 2050, 2075][i]), xx, yy);
             }
             ctx.textAlign = 'start';
         }
+        if (activity > 0.005) setBranchFrame(clock, activity);
         if (!idle && time > 33.75 && time < 37.5) {
             const age = time - 33.75;
             for (let i = 0; i < 3; i++) {
@@ -304,12 +329,79 @@
         ctx.globalCompositeOperation = 'source-over';
     }
 
+    /* Grow development branches and send bright work packets around the readable central title */
+    function setBranchFrame(clock, activity) {
+        const age = clock - timing.continuity;
+        const mobile = wide < 600;
+        const levels = mobile ? [0.16, 0.23, 0.66, 0.75] : [0.23, 0.32, 0.67, 0.76];
+        const labels = ['idea', 'core', 'module', 'test'];
+        ctx.font = '12px ' + face;
+        ctx.lineWidth = 1;
+        for (let side = 0; side < 2; side++) {
+            const axis = side ? 0.88 : 0.12;
+            const direction = side ? -1 : 1;
+            const grow = getEase(age / 1.25);
+            ctx.globalAlpha = activity * 0.42;
+            ctx.strokeStyle = palette[0];
+            ctx.beginPath();
+            ctx.moveTo(wide * axis, high * 0.13);
+            ctx.lineTo(wide * axis, high * (0.13 + grow * 0.67));
+            ctx.stroke();
+            levels.forEach((level, index) => {
+                const enter = getEase((age - index * 0.22) / 0.55);
+                const xx = wide * axis;
+                const yy = high * level;
+                const end = xx + direction * wide * (mobile ? 0.14 : 0.17) * enter;
+                ctx.globalAlpha = activity * enter * 0.33;
+                ctx.beginPath();
+                ctx.moveTo(xx, yy - 16);
+                ctx.lineTo(xx + direction * 18, yy);
+                ctx.lineTo(end, yy);
+                ctx.stroke();
+                const pulse = (age * 0.65 + index * 0.21 + side * 0.15) % 1;
+                ctx.globalAlpha = activity * enter * 0.9;
+                ctx.fillStyle = palette[index % 2 ? 5 : 0];
+                ctx.fillRect(xx + (end - xx) * pulse - 2, yy - 2, 4, 4);
+                ctx.beginPath();
+                ctx.arc(end, yy, 3 + Math.sin(age * 4 + index) * 0.5, 0, Math.PI * 2);
+                ctx.stroke();
+                if (!mobile) {
+                    ctx.globalAlpha = activity * enter * 0.65;
+                    ctx.textAlign = side ? 'right' : 'left';
+                    ctx.fillText(labels[index] + ' / ' + (age > index * 0.55 + 1 ? 'saved' : 'working'), end, yy - 12);
+                }
+            });
+        }
+        ctx.textAlign = 'start';
+    }
+
+    /* Keep short work cycles visibly typing, branching and validating throughout the six-second chapter */
+    function setWorkCycles(clock) {
+        const age = Math.max(0, clock - timing.continuity);
+        const texts = [
+            ["$idea = 'SLAED';\n$view = $tpl->getHtmlPart(...);", "getVar('post', 'title', 'text');\n$data = $db->getSqlQuery(...);"],
+            ['core → module → template\n+ change / + commit / + merge', 'idea → prototype → revision\n+ modules / + themes / + tools'],
+            ['input.filter() → passed\nquery.prepare() → passed', 'template.render() → ready\nrevision.saved() → ready']
+        ];
+        streams.forEach((stream, index) => {
+            const cycle = Math.max(0, age - index * 0.3) / 2.1;
+            const local = cycle % 1;
+            const text = texts[index][Math.floor(cycle) % 2];
+            const count = Math.floor((0.35 + getClamp(local / 0.6) * 0.65) * text.length);
+            stream.code.textContent = text.slice(0, count) + (local < 0.72 ? '▌' : '');
+            stream.status.textContent = local < 0.7 ? ['Пишем…', 'Собираем…', 'Проверяем…'][index] : ['СОХРАНЕНО', 'ОБЪЕДИНЕНО', 'ГОТОВО'][index];
+            stream.bar.style.transform = 'scaleX(' + getClamp(local / 0.7) + ')';
+            stream.node.style.transform = 'translateY(' + Math.sin(age * 2 + index) * 4 + 'px)';
+            stream.node.dataset.active = String(index === Math.floor(age / 1.8) % 3);
+        });
+    }
+
     /* Type representative project code as each subsystem joins the new architecture */
     function setCodeFrame(time) {
         const age = Math.max(0, time - 24.4);
         const index = Math.min(3, Math.floor(age / 1.2));
         const text = sources[index].code;
-        const count = Math.min(text.length, Math.floor((age - index * 1.2) / 0.94 * text.length));
+        const count = Math.min(text.length, Math.floor((age - index * 1.2) / 0.65 * text.length));
         if (index !== lastfile) {
             file.textContent = sources[index].file;
             build.textContent = sources[index].label;
@@ -326,24 +418,27 @@
         percent.textContent = Math.round(progress * 100) + '%';
         buildbar.style.transform = 'scaleX(' + progress + ')';
         labs.forEach((node, num) => {
+            node.dataset.active = String(num === (index < 2 ? 0 : index - 1));
             const lit = getEase((age - 0.4 - num * 0.55) / 0.75);
             node.style.opacity = 0.12 + lit * 0.88;
-            node.style.borderColor = lit > 0.9 ? 'var(--sl-primary-muted)' : 'var(--sl-pres-frame-border)';
+            node.style.borderColor = lit > 0.9 ? 'var(--sl-pres-frame-border)' : 'var(--sl-pres-frame-border)';
             node.style.transform = 'translateY(' + (1 - lit) * 30 + 'px) scale(' + (0.94 + lit * 0.06) + ')';
         });
         radar.style.transform = 'rotate(' + time * 145 + 'deg)';
-        document.querySelectorAll('.sl-phx-trace span').forEach((node, num) => {
+        traces.forEach((node, num) => {
             node.style.opacity = 0.3 + getEase((age - 1.4 - num * 0.45) / 0.5) * 0.7;
         });
     }
 
     /* Assemble code, servers, interface and solved challenges around the unmodified brand mark */
     function setHistoryFrame(time) {
-        const progress = getClamp(time / 6.4);
-        const value = 2005 + Math.floor(progress * 21);
+        const progress = getClamp((spent - 7.1) / 5.7);
+        const past = getClamp((spent - 7.1) / 2.85);
+        const future = getClamp((spent - 10.8) / 2.05);
+        const value = spent < 9.95 ? 2005 + Math.floor(past * 22) : 2027 + Math.floor(future * 48);
         if (year.textContent !== String(value)) year.textContent = String(value);
         const words = ['Первая строка кода.', 'Идеи становятся возможностями.', 'Проблемы. Поиск. Решения.', 'Система растёт вместе с нами.', 'Время двигаться дальше.'];
-        era.textContent = words[Math.min(4, Math.floor(time / 1.4))];
+        era.textContent = spent >= 10.8 ? 'Будущее продолжается. Создаём дальше.' : spent >= 9.95 ? '2027 / РЕЛИЗ PHOENIX' : words[Math.min(4, Math.floor(time / 1.4))];
         yearbar.style.transform = 'scaleX(' + progress + ')';
         works.forEach((node, index) => {
             const enter = getEase((time - 0.5 - index * 0.23) / 1.1);
@@ -355,56 +450,99 @@
             node.style.transform = 'translate(' + move + 'px,' + float + 'px) perspective(1000px) rotateY(' + side * -5 + 'deg) scale(' + depth + ')';
         });
         const solve = getEase((time - 3.8) / 1.1);
-        document.querySelectorAll('.sl-phx-task').forEach((node, index) => {
+        tasks.forEach((node, index) => {
             const done = getEase((time - 3.6 - index * 0.4) / 0.7);
-            node.querySelector('b').style.opacity = done;
-            node.querySelector('i').style.opacity = 0.15 + done * 0.85;
-            node.querySelector('span').style.opacity = 1 - done * 0.65;
+            node.unto.style.opacity = done;
+            node.arrow.style.opacity = 0.15 + done * 0.85;
+            node.from.style.opacity = 1 - done * 0.65;
         });
-        document.querySelector('[data-sl-phx-taskhead]').textContent = solve > 0.8 ? 'solution' : 'challenge';
+        heading.textContent = solve > 0.8 ? 'solution' : 'challenge';
         wires.style.strokeDashoffset = -time * 42;
         idea.style.transform = 'translate(-50%, -50%) scale(' + (0.9 + getEase(time / 2) * 0.1) + ')';
-        document.querySelector('.sl-phx-orbits').style.transform = 'rotate(' + time * 8 + 'deg)';
-        document.querySelectorAll('.sl-phx-ui-bars i').forEach((node, index) => {
+        orbit.style.transform = 'rotate(' + time * 8 + 'deg)';
+        plots.forEach((node, index) => {
             node.style.transform = 'scaleY(' + (0.4 + (Math.sin(time * 2 + index * 0.6) * 0.5 + 0.5) * 0.6) + ')';
         });
     }
 
-    /* Sweep through the four real product principles as large cinematic image planes */
+    /* Reveal the four original illustrations through circular portals with a visible initial size */
     function setDnaFrame(time) {
         const age = time - 7.5;
         const index = Math.max(0, Math.min(3, Math.floor(age / 3.75)));
         panels.forEach((node, num) => {
             const local = age - num * 3.75;
-            const enter = getEase(local / 0.45);
+            const enter = getEase(local / 0.7);
             const exit = getEase((local - 3.75) / 0.45);
             node.style.opacity = enter * (1 - exit);
-            node.querySelector('.sl-phx-dna-copy').style.transform = 'translateX(' + ((1 - enter) * -35 - exit * 30) + 'px)';
-            const scale = 0.94 + getEase(local / 4) * 0.09;
-            node.querySelector('img').style.transform = 'perspective(1400px) rotateY(' + ((1 - enter) * -12 + exit * 10) + 'deg) scale(' + scale + ')';
+            planes[num].copy.style.transform = 'translateX(' + ((1 - enter) * -35 - exit * 30) + 'px)';
+            const scale = 0.76 + enter * 0.24 + getEase(local / 3.75) * 0.035;
+            planes[num].image.style.transform = 'translateY(' + ((1 - enter) * 16) + 'px) scale(' + scale + ')';
             tabs[num].dataset.active = String(num === index);
         });
-        document.querySelector('.sl-phx-dna-pulse').style.transform = 'rotate(' + time * 8 + 'deg)';
+        rings.style.transform = 'rotate(' + time * 8 + 'deg)';
     }
 
-    /* Choreograph the development narrative on the same twenty-bar musical clock */
-    function setSceneFrame(time) {
-        spent = Math.min(length, Math.max(0, time));
+    /* Animate a persistent inline alpha mask without asynchronous image replacement during the crossfade */
+    function setPixelFrame(progress) {
+        const step = still ? 0 : Math.floor(progress * 128);
+        if (step === maskstep) return;
+        maskstep = step;
+        if (!step) {
+            stage.style.maskImage = 'none';
+            return;
+        }
+        if (!pixels.length) {
+            const columns = Math.ceil(wide / 48);
+            const rows = Math.ceil(high / 48);
+            const fragment = document.createDocumentFragment();
+            for (let yy = 0; yy < rows; yy++) {
+                for (let xx = 0; xx < columns; xx++) {
+                    const node = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                    const cx = (xx + 0.5) / columns;
+                    const cy = (yy + 0.5) / rows;
+                    node.setAttribute('x', xx / columns);
+                    node.setAttribute('y', yy / rows);
+                    node.setAttribute('width', 1 / columns + 0.0005);
+                    node.setAttribute('height', 1 / rows + 0.0005);
+                    node.setAttribute('fill', 'white');
+                    fragment.append(node);
+                    const delay = (getSeed(xx + yy * columns + 907) * 0.65 + yy / rows * 0.35) * 0.65;
+                    pixels.push({node, cx, cy, delay});
+                }
+            }
+            masknode.append(fragment);
+        }
+        pixels.forEach(({node, cx, cy, delay}) => {
+            const fade = getEase((step / 128 - delay) / 0.35);
+            const size = 1 - fade * 0.82;
+            node.setAttribute('opacity', (1 - fade * 0.65).toFixed(3));
+            node.setAttribute('transform', 'translate(' + cx + ' ' + cy + ') scale(' + size.toFixed(3) + ') translate(' + -cx + ' ' + -cy + ')');
+        });
+        stage.style.maskImage = 'url("#sl-phx-pixel-mask")';
+    }
+
+    /* Choreograph development, particles and the original brand reveal on the edited audio clock */
+    function setSceneFrame(clock) {
+        spent = Math.min(length, Math.max(0, clock));
+        const time = timing.getSceneTime(spent);
         const phase = time - 15;
         const dark = root.dataset.theme === 'dark';
         const rise = getEase((phase - 17.8) / 1.7);
         const native = getEase((phase - 19.6) / 1.25) * (1 - getEase((phase - 23.2) / 1.05));
         const settle = getEase((phase - 25.8) / 1.4);
-        const reveal = getEase((time - 43.95) / 1.05);
+        const reveal = getClamp((spent - timing.fade) / (timing.site - timing.fade));
         const origin = getWindow(time, 0.1, 6.9, 0.6);
         history.style.opacity = origin;
         history.style.transform = 'scale(' + (0.97 + getEase(time / 7.5) * 0.04) + ')';
         if (origin > 0.005) setHistoryFrame(time);
         const principle = getWindow(time, 7.5, 22.5, 0.45);
         dna.style.opacity = principle;
+        dna.setAttribute('aria-hidden', String(principle < 0.01));
         if (principle > 0.005) setDnaFrame(time);
-        silence.style.opacity = getWindow(time, 22.65, 24.15, 0.4);
-        silence.style.transform = 'scale(' + (0.96 + getEase((time - 22.5) / 1.8) * 0.09) + ')';
+        ongoing.style.opacity = getWindow(spent, timing.continuity, timing.rewrite - 0.35, 0.25);
+        ongoing.setAttribute('aria-hidden', String(Number(ongoing.style.opacity) < 0.01));
+        ongoing.style.transform = 'translateY(' + ((1 - getEase((spent - timing.continuity) / 0.4)) * 18) + 'px)';
+        if (Number(ongoing.style.opacity) > 0.005) setWorkCycles(spent);
         const writing = getWindow(time, 24.4, 29.8, 0.65);
         rewrite.style.opacity = writing;
         rewrite.style.transform = 'translateY(' + (1 - getEase((time - 24.4) / 0.8)) * 24 + 'px)';
@@ -418,31 +556,33 @@
         const yy = high * 0.41 + drift;
         bird.style.opacity = still ? 0 : native;
         bird.style.transform = 'translate(calc(-50% + ' + pointer[0] * 7 + 'px), calc(-50% + ' + drift + 'px)) scale(' + scale + ')';
-        bird.style.clipPath = 'inset(0 ' + (1 - getEase((phase - 19.6) / 1.1)) * 43 + '%)';
         reborn.style.opacity = getWindow(phase, 20.1, 23.4, 0.7);
         finale.style.opacity = settle;
+        finale.setAttribute('aria-hidden', String(settle < 0.01));
         const accent = getEase((time - 42.15) / 0.65);
         motto.style.opacity = accent;
         motto.style.transform = 'translateY(' + (1 - accent) * 18 + 'px) scale(' + (0.94 + accent * 0.06) + ')';
-        document.querySelector('.sl-phx-cloud').style.opacity = 1 - settle;
+        clouds.style.opacity = (1 - settle) * (0.25 + getEase((time - 29.5) / 1.2) * 0.75);
         const opacity = (dark ? 0.18 : 0.07) * getWindow(time, 28.3, 32.9, 1.5);
         portal.style.opacity = opacity;
         portal.style.transform = 'scale(' + (1 + getEase((time - 27.5) / 6) * 0.55) + ')';
         scan.style.opacity = still ? 0 : getWindow(time, 22.5, 29.8, 0.5) * 0.12;
         const impact = still ? 0 : Math.exp(-(((time - 33.75) / 0.13) ** 2)) * 0.62;
         flash.style.opacity = impact;
-        stage.style.opacity = 1 - reveal;
-        stage.style.transform = 'scale(' + (1 + reveal * 0.07) + ')';
-        bar.style.transform = 'scaleX(' + getClamp(time / length) + ')';
-        timer.textContent = time.toFixed(1).padStart(4, '0') + ' / ' + length.toFixed(1);
-        chapter.textContent = time < 7.5 ? '01 / ДВИЖЕНИЕ ВПЕРЁД' : time < 22.5 ? '02 / DNA ПРОДУКТА' : time < 24.4 ? '03 / ТИШИНА'
-            : time < 30 ? '04 / ПЕРЕПИСАН С НУЛЯ' : time < 33.75 ? '05 / СБОРКА' : time < 39.5 ? '06 / ВОЗРОЖДЕНИЕ' : '07 / PHOENIX 8.0';
-        if (!still) setWorldFrame(time);
+        setPixelFrame(reveal);
+        stage.style.opacity = still ? 1 : 1 - getEase(reveal);
+        stage.style.transform = 'none';
+        bar.style.transform = 'scaleX(' + getClamp(spent / length) + ')';
+        timer.textContent = spent.toFixed(1).padStart(4, '0') + ' / ' + length.toFixed(1);
+        chapter.textContent = time < 7.5 ? '01 / ДВИЖЕНИЕ ВПЕРЁД' : time < 22.5 ? '02 / DNA ПРОДУКТА' : time < 24.4 ? '03 / РАБОТА ПРОДОЛЖАЛАСЬ'
+            : time < 30 ? '04 / ПЕРЕПИСАН С НУЛЯ' : time < 33.75 ? '05 / СБОРКА' : time < 39.5 ? '06 / ВОЗРОЖДЕНИЕ' : '07 / PHOENIX';
+        if (!still) setWorldFrame(time, false, spent);
         else setWorldFrame(27.8, true);
         if (cloud && !still) {
             const markbox = [wide / 2, high * 0.45, Math.min(wide * 0.23, high * 0.37), Math.min(wide * 0.23, high * 0.37) * 1.32];
             cloud.setFrame(phase, [xx, yy, birdwide * scale, birdhigh * scale], logobox, markbox);
         }
+        if (spent >= timing.site) setSceneEnd();
     }
 
     /* Reflect playback, sound and completion in accessible controls */
@@ -456,17 +596,21 @@
         soundbtn.title = sound ? 'Выключить звук' : 'Включить звук';
     }
 
-    /* Return to the independent admin preview after the final SVG title */
-    function setSceneEnd() {
+    /* Make the real site interactive after the final pixel has dissolved */
+    function setSceneEnd(finish = false) {
         if (ended) return;
+        if (!stage.hidden) {
+            stage.hidden = true;
+            panel.removeAttribute('inert');
+            status.textContent = 'Открыта главная страница SLAED CMS. Музыка плавно затухает.';
+        }
+        if (!finish && spent < length) return;
         ended = true;
         running = false;
         cancelAnimationFrame(frame);
         score.setStop();
-        stage.hidden = true;
-        panel.removeAttribute('inert');
         setControlState();
-        status.textContent = 'Презентация завершена. Открыт макет панели администратора.';
+        status.textContent = 'Презентация завершена. Открыта главная страница SLAED CMS.';
         replay.focus({preventScroll: true});
     }
 
@@ -483,7 +627,7 @@
     /* Show a brief static final composition when the system requests less motion */
     function setStillFrame(now) {
         if (!running) return;
-        if (now - start > 2200) setSceneEnd();
+        if (now - start > 2200) setSceneEnd(true);
         else frame = requestAnimationFrame(setStillFrame);
     }
 
@@ -505,10 +649,10 @@
         stage.hidden = false;
         panel.setAttribute('inert', '');
         start = performance.now() - offset * 1000;
-        setSceneFrame(still ? 43.3 : offset);
+        setSceneFrame(still ? timing.fade - 1 : offset);
         setControlState();
         pending = false;
-        document.querySelector('[data-sl-phx-skip]').focus({preventScroll: true});
+        (stage.hidden ? pause : document.querySelector('[data-sl-phx-skip]')).focus({preventScroll: true});
         status.textContent = 'Началась история SLAED CMS.';
         frame = requestAnimationFrame(still ? setStillFrame : setNextFrame);
     }
@@ -522,6 +666,7 @@
             if (clock !== null) spent = clock;
             running = false;
             score.setStop();
+            setSceneFrame(spent);
             setControlState();
             status.textContent = 'Пауза.';
         } else await setScenePlay(sound, spent);
@@ -566,13 +711,20 @@
 
     /* Download the same original composition used by the presentation */
     function getTrackDownload() {
+        if (score.kind === 'suno') {
+            const anchor = document.createElement('a');
+            anchor.href = timing.track;
+            anchor.download = 'SLAED-Phoenix-Suno-Intro.mp3';
+            anchor.click();
+            return;
+        }
         const wave = score.getWave();
         if (!wave) return;
         if (download) URL.revokeObjectURL(download);
         download = URL.createObjectURL(new Blob([wave], {type: 'audio/wav'}));
         const anchor = document.createElement('a');
         anchor.href = download;
-        anchor.download = 'SLAED-Phoenix-Anthem.wav';
+        anchor.download = 'SLAED-Phoenix-Synth-Reserve.wav';
         anchor.click();
     }
 
@@ -586,10 +738,14 @@
     portal.style.opacity = root.dataset.theme === 'dark' ? 0.32 : 0.12;
     portal.style.transform = 'translateX(24%) scale(1.15)';
     setWorldFrame(0, true);
+    timer.textContent = '00.0 / ' + length.toFixed(1);
     setControlState();
     frame = requestAnimationFrame(setCoverFrame);
-    const assets = ['assets/phoenix-codex/phoenix-digital.png', 'assets/phoenix-codex/wordmark.svg', 'assets/phoenix-codex/mark.svg'];
-    const photos = [...document.querySelectorAll('.sl-phx-principle > img')].map((node) => node.getAttribute('src'));
+    const assets = [
+        'assets/phoenix-codex/phoenix-digital.png', '../templates/admin/images/logos/slaed-logo-wordmark-outline-blue.svg',
+        '../templates/admin/images/logos/slaed-logo-mark-gradient-blue.svg', '../templates/admin/images/logos/slaed-logo-wordmark-gradient-blue.svg'
+    ];
+    const photos = [...document.querySelectorAll('.sl-phx-dna-art > img')].map((node) => node.getAttribute('src'));
     Promise.all([Promise.all(assets.concat(photos).map(getSceneImage)), score.ready]).then(([images, audio]) => {
         cloud = new window.PhoenixCloud(document.querySelector('.sl-phx-cloud'), {bird: images[0], logo: images[1], mark: images[2]});
         loaded = audio;
@@ -599,13 +755,16 @@
         document.querySelectorAll('[data-sl-phx-start]').forEach((node) => { node.disabled = false; });
         track.disabled = !audio;
         soundbtn.disabled = !audio;
-        loader.textContent = still ? 'Движение уменьшено согласно настройкам устройства.' : '45 секунд. Включите звук. Почувствуйте возвращение.';
+        loader.textContent = still ? 'Движение уменьшено согласно настройкам устройства.' : '83 секунды. Гимн Suno. Почувствуйте возвращение.';
+        if (score.kind === 'synth' && !still) loader.textContent = '83 секунды. Резервная синтезированная музыка: файл Suno недоступен.';
+        track.title = score.kind === 'suno' ? 'Скачать монтаж гимна Suno · MP3' : 'Скачать резервную синтезированную музыку · WAV';
+        track.setAttribute('aria-label', track.title);
         const at = Number(params.get('at'));
         if (params.has('at') && Number.isFinite(at)) {
             cancelAnimationFrame(frame);
             cover.hidden = true;
             started = true;
-            setSceneFrame(Math.max(0, Math.min(43.8, at)));
+            setSceneFrame(Math.max(0, Math.min(length - 0.01, at)));
             setControlState();
         } else if (params.get('autoplay') === '1') setScenePlay(false);
     }).catch((error) => {
@@ -624,10 +783,10 @@
     soundbtn.addEventListener('click', setSoundMode);
     track.addEventListener('click', getTrackDownload);
     document.querySelector('[data-sl-phx-volume]').addEventListener('input', (event) => score.setVolume(Number(event.target.value)));
-    document.querySelector('[data-sl-phx-skip]').addEventListener('click', setSceneEnd);
+    document.querySelector('[data-sl-phx-skip]').addEventListener('click', () => setSceneEnd(true));
     document.addEventListener('pointermove', (event) => { if (!still) pointer = [(event.clientX / wide - 0.5) * 2, (event.clientY / high - 0.5) * 2]; }, {passive: true});
     document.addEventListener('keydown', (event) => {
-        if (event.key === 'Escape') setSceneEnd();
+        if (event.key === 'Escape') setSceneEnd(true);
         if (event.target.closest('input')) return;
         if (!event.ctrlKey && !event.metaKey && ['r', 'R', 'к', 'К'].includes(event.key)) {
             event.preventDefault();

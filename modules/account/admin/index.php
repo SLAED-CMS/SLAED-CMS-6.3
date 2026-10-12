@@ -113,7 +113,7 @@ function account(): void {
                         'title_text' => $name,
                     ]).filterTextHighlight($name, $chng)],
                     ['class_name' => 'sl-col-ip', 'content_html' => filterTextHighlight(Geoip::getIpHtml($ip), $chng)],
-                    ['is_truncate' => true, 'title_text' => $mail, 'content_html' => filterTextHighlight($mail, $chng)],
+                    ['is_truncate' => true, 'title_text' => (string)$mail, 'content_html' => filterTextHighlight((string)$mail, $chng)],
                     ['is_col_date' => true, 'content_html' => format_time($reg, _TIMESTRING)],
                     ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('dial', [
                         'dial_title' => _FUNCTIONS,
@@ -634,9 +634,9 @@ function addsave(): void {
             [$existId, $existName] = $db->getSqlRow($db->getSqlQuery('SELECT id, name FROM '.PREFIX_DB.'_users WHERE name = :name', ['name' => $uname]));
             [$tempId, $tempName] = $db->getSqlRow($db->getSqlQuery('SELECT id, name FROM '.PREFIX_DB.'_users_temp WHERE name = :name', ['name' => $uname]));
             if (($uid != $existId && $uname == $existName) || ($uid != $tempId && $uname == $tempName)) $stop[] = _USEREXIST;
-            [$emailId, $existEmail] = $db->getSqlRow($db->getSqlQuery('SELECT id, email FROM '.PREFIX_DB.'_users WHERE email = :email', ['email' => $email]));
-            [$tempEmailId, $tempEmail] = $db->getSqlRow($db->getSqlQuery('SELECT id, email FROM '.PREFIX_DB.'_users_temp WHERE email = :email', ['email' => $email]));
-            if (($uid != $emailId && $email == $existEmail) || ($uid != $tempEmailId && $email == $tempEmail)) $stop[] = _ERROR_EMAIL;
+            [$mid] = $db->getSqlRow($db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_users WHERE email = :email', ['email' => $email])) ?: [0];
+            [$tmid] = $db->getSqlRow($db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_users_temp WHERE email = :email', ['email' => $email])) ?: [0];
+            if (($mid && $uid != $mid) || ($tmid && $uid != $tmid)) $stop[] = _ERROR_EMAIL;
         } else {
             $stop[] = _ERROR_ALL;
         }
@@ -656,7 +656,7 @@ function addsave(): void {
             if ($uid) {
                 if ($pass && $pass == $pass2) {
                     $saltpass = getPassHash($pass);
-                    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET name = :name, `rank` = :rank, email = :email, website = :website, avatar = :avatar, regdate = :regdate,'
+                    $ok = $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET name = :name, `rank` = :rank, email = :email, website = :website, avatar = :avatar, regdate = :regdate,'
                         .' occ = :occ, origin = :from, interest = :interests, sig = :sig, viewmail = :viewemail, password = :password, storynum = COALESCE(NULLIF(:storynum, 0),'
                         .' storynum), blockon = :blockon, block = :block, theme = :theme, newslet = :newsletter, lang = :lang, warnings = :warnings, access = :access,'
                         .' grp = :group, birthday = :birthday, gender = :gender, field = :field WHERE id = :id', [
@@ -666,7 +666,7 @@ function addsave(): void {
                         'gender' => $gender, 'field' => $field, 'id' => $uid
                     ]);
                 } else {
-                    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET name = :name, `rank` = :rank, email = :email, website = :website, avatar = :avatar, regdate = :regdate,'
+                    $ok = $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET name = :name, `rank` = :rank, email = :email, website = :website, avatar = :avatar, regdate = :regdate,'
                         .' occ = :occ, origin = :from, interest = :interests, sig = :sig, viewmail = :viewemail, storynum = COALESCE(NULLIF(:storynum, 0), storynum),'
                         .' blockon = :blockon, block = :block, theme = :theme, newslet = :newsletter, lang = :lang, warnings = :warnings, access = :access, grp = :group,'
                         .' birthday = :birthday, gender = :gender, field = :field WHERE id = :id', [
@@ -678,7 +678,7 @@ function addsave(): void {
                 }
             } else {
                 $saltpass = getPassHash($pass);
-                $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_users (name, `rank`, email, website, avatar, regdate, occ, origin, interest, sig, viewmail, password, storynum,'
+                $ok = $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_users (name, `rank`, email, website, avatar, regdate, occ, origin, interest, sig, viewmail, password, storynum,'
                     .' blockon, block, theme, newslet, lang, warnings, access, grp, birthday, gender, field) VALUES (:name, :rank, :email, :website, :avatar, :regdate, :occ,'
                     .' :from, :interests, :sig, :viewemail, :password, COALESCE(NULLIF(:storynum, 0), DEFAULT(storynum)), :blockon, :block, :theme, :newsletter, :lang,'
                     .' :warnings, :access, :group, :birthday, :gender, :field)', [
@@ -687,6 +687,11 @@ function addsave(): void {
                     'theme' => $theme, 'newsletter' => $news, 'lang' => $lang, 'warnings' => $warnings, 'access' => $access, 'group' => $group, 'birthday' => $birth,
                     'gender' => $gender, 'field' => $field
                 ]);
+            }
+            if (!$ok) {
+                $stop[] = match ($db->getSqlTwin()) { 'email' => _ERROR_EMAIL, 'name' => _USEREXIST, default => _ERROR };
+                add($twice);
+                return;
             }
             $data = ['aid' => intval(substr($admin[0], 0, 11)), 'note' => $pnote, 'points' => intval($pdiff)];
             if ($pdiff !== '' && !$pnt->addEvent('adjust', 'account', 'adjust:'.$pkey, (int)$uid, $data)) {

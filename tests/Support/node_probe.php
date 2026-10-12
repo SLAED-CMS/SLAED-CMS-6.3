@@ -210,16 +210,16 @@ function getProbeCreate(PDO $pdo, array $list): array {
     return $out;
 }
 
-# The indexes of one table as name => ordered column list, a prefix length kept with its column
+# The indexes of one table as name => ordered column list, a prefix length and a descending order kept with its column
 function getProbeIndexes(PDO $pdo, string $name): array {
-    $sql = 'SELECT INDEX_NAME, COLUMN_NAME, SUB_PART, NON_UNIQUE FROM information_schema.STATISTICS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ?'
+    $sql = 'SELECT INDEX_NAME, COLUMN_NAME, SUB_PART, NON_UNIQUE, COLLATION FROM information_schema.STATISTICS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ?'
         .' ORDER BY INDEX_NAME, SEQ_IN_INDEX';
     $st = $pdo->prepare($sql);
     $st->execute([PROBEPREF.'_'.$name]);
     $out = [];
     foreach ($st->fetchAll(PDO::FETCH_ASSOC) as $row) {
         $key = ($row['NON_UNIQUE'] ? '' : 'unique ').$row['INDEX_NAME'];
-        $out[$key][] = $row['COLUMN_NAME'].($row['SUB_PART'] ? '('.$row['SUB_PART'].')' : '');
+        $out[$key][] = $row['COLUMN_NAME'].($row['SUB_PART'] ? '('.$row['SUB_PART'].')' : '').(($row['COLLATION'] === 'D') ? ' DESC' : '');
     }
     ksort($out);
     return $out;

@@ -790,7 +790,7 @@ function getTextFlight(): array {
             return false;
         }
     };
-    $user = 'INSERT INTO txt_users (name, email, password, sig, block, warnings, field) VALUES (%s, \'\', \'x\', \'\', \'\', \'\', \'\')';
+    $user = 'INSERT INTO txt_users (name, email, password, sig, block, warnings, field) VALUES (%s, NULL, \'x\', \'\', \'\', \'\', \'\')';
     $out = ['coll' => $hit[1], 'names' => [], 'found' => [], 'mails' => []];
     foreach (['😀', '😃'] as $name) {
         $out['names'][] = $add(sprintf($user, $pdo->quote($name)));

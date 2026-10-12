@@ -9,7 +9,7 @@ CREATE TABLE `{prefix}_admins` (
   `name` VARCHAR(25) NOT NULL,
   `title` VARCHAR(50) NOT NULL DEFAULT '',
   `url` VARCHAR(255) NOT NULL DEFAULT '',
-  `email` VARCHAR(255) NOT NULL,
+  `email` VARCHAR(255) DEFAULT NULL,
   `password` VARCHAR(255) NOT NULL,
   `super` BOOLEAN NOT NULL DEFAULT 0,
   `editor` VARCHAR(32) NOT NULL DEFAULT 'plain',
@@ -21,8 +21,7 @@ CREATE TABLE `{prefix}_admins` (
   `lastvis` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   UNIQUE KEY `name` (`name`),
-  KEY `email` (`email`(191)),
-  KEY `lastvis` (`lastvis`)
+  UNIQUE KEY `email` (`email`)
 ) ENGINE={engine} DEFAULT CHARSET={charset} COLLATE={collate};
 
 CREATE TABLE `{prefix}_blocks` (
@@ -44,9 +43,7 @@ CREATE TABLE `{prefix}_blocks` (
   `which` TEXT NOT NULL,
   `param` VARCHAR(255) NOT NULL DEFAULT '',
   PRIMARY KEY (`id`),
-  KEY `title` (`title`),
-  KEY `status_position` (`status`, `bpos`),
-  KEY `lang` (`lang`)
+  KEY `status_weight` (`status`, `weight`)
 ) ENGINE={engine} DEFAULT CHARSET={charset} COLLATE={collate};
 
 CREATE TABLE `{prefix}_categories` (
@@ -70,9 +67,8 @@ CREATE TABLE `{prefix}_categories` (
   `pdelete` VARCHAR(100) NOT NULL DEFAULT '',
   `pmod` VARCHAR(100) NOT NULL DEFAULT '',
   PRIMARY KEY (`id`),
-  KEY `modul` (`modul`),
+  KEY `modul_ordern` (`modul`, `ordern`),
   KEY `parent` (`parent`),
-  KEY `modul_lang_status` (`modul`, `lang`, `status`),
   KEY `ordern` (`ordern`)
 ) ENGINE={engine} DEFAULT CHARSET={charset} COLLATE={collate};
 
@@ -93,10 +89,9 @@ CREATE TABLE `{prefix}_comment` (
   `reqkey` BINARY(16) DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `reqkey` (`reqkey`),
-  KEY `uid` (`uid`),
-  KEY `time` (`time`),
+  KEY `uid_status_deleted` (`uid`, `status`, `deleted`, `modul`, `cid`),
   KEY `modul_cid_status_deleted` (`modul`, `cid`, `status`, `deleted`, `time`, `id`),
-  KEY `modul_cid_deleted` (`modul`, `cid`, `deleted`, `time`, `id`),
+  KEY `modul_status_deleted` (`modul`, `status`, `deleted`, `time`, `id`),
   KEY `status_deleted_time` (`status`, `deleted`, `time`, `id`),
   KEY `modul_cid_pid_time` (`modul`, `cid`, `pid`, `time`, `id`),
   KEY `ip_time` (`ip`, `time`, `id`)
@@ -109,7 +104,6 @@ CREATE TABLE `{prefix}_favorites` (
   `modul` VARCHAR(50) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
   `time` DATETIME DEFAULT NULL,
   PRIMARY KEY (`id`),
-  KEY `uid` (`uid`),
   KEY `fid` (`fid`),
   KEY `modul` (`modul`),
   UNIQUE KEY `uid_fid_modul` (`uid`, `fid`, `modul`)
@@ -139,12 +133,11 @@ CREATE TABLE `{prefix}_forum` (
   `etime` DATETIME DEFAULT NULL,
   `status` BOOLEAN NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`),
-  KEY `pid` (`pid`),
-  KEY `cid` (`cid`),
-  KEY `counter` (`counter`),
-  KEY `uid` (`uid`),
+  KEY `pid_ltime` (`pid`, `ltime`),
+  KEY `pid_time` (`pid`, `time`),
+  KEY `cid_pid_status_ltime` (`cid`, `pid`, `status`, `ltime`),
+  KEY `uid_pid` (`uid`, `pid`),
   KEY `status` (`status`),
-  KEY `cid_status` (`cid`, `status`),
   KEY `time` (`time`)
 ) ENGINE={engine} DEFAULT CHARSET={charset} COLLATE={collate};
 
@@ -156,8 +149,7 @@ CREATE TABLE `{prefix}_groups` (
   `extra` BOOLEAN NOT NULL DEFAULT 0,
   `rank` VARCHAR(255) NOT NULL DEFAULT '',
   `color` VARCHAR(7) NOT NULL DEFAULT '',
-  PRIMARY KEY (`id`),
-  KEY `name` (`name`(191))
+  PRIMARY KEY (`id`)
 ) ENGINE={engine} DEFAULT CHARSET={charset} COLLATE={collate};
 
 CREATE TABLE `{prefix}_login_log` (
@@ -222,8 +214,7 @@ CREATE TABLE `{prefix}_message` (
   `view` BOOLEAN NOT NULL DEFAULT 1,
   `lang` VARCHAR(10) CHARACTER SET ascii COLLATE ascii_bin NOT NULL DEFAULT '',
   PRIMARY KEY (`id`),
-  KEY `status` (`status`),
-  KEY `lang` (`lang`)
+  KEY `status` (`status`)
 ) ENGINE={engine} DEFAULT CHARSET={charset} COLLATE={collate};
 
 CREATE TABLE `{prefix}_newsletter` (
@@ -241,8 +232,7 @@ CREATE TABLE `{prefix}_newsletter` (
   `expect` INT UNSIGNED NOT NULL DEFAULT 0,
   `total` INT UNSIGNED NOT NULL DEFAULT 0,
   `note` VARCHAR(255) NOT NULL DEFAULT '',
-  PRIMARY KEY (`id`),
-  KEY `time` (`time`)
+  PRIMARY KEY (`id`)
 ) ENGINE={engine} DEFAULT CHARSET={charset} COLLATE={collate};
 
 # The Node tables follow their foreign keys instead of the alphabet: the types, then the materials, then every table that references a material
@@ -258,8 +248,7 @@ CREATE TABLE `{prefix}_node_types` (
   `created` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `name` (`name`),
-  KEY `active` (`active`, `sort`, `id`)
+  UNIQUE KEY `name` (`name`)
 ) ENGINE={engine} DEFAULT CHARSET={charset} COLLATE={collate};
 
 CREATE TABLE `{prefix}_nodes` (
@@ -295,7 +284,7 @@ CREATE TABLE `{prefix}_nodes` (
   KEY `views` (`tid`, `status`, `pinned`, `views`, `published`, `id`),
   KEY `title` (`tid`, `status`, `pinned`, `title`, `id`),
   KEY `tree` (`tid`, `status`, `id`),
-  KEY `queue` (`status`, `created`, `id`),
+  KEY `pinned` (`tid`, `pinned`, `published`, `id`),
   KEY `author` (`uid`, `status`, `published`, `id`),
   KEY `ip` (`ip`, `created`, `id`),
   KEY `poll` (`poll`),
@@ -324,7 +313,6 @@ CREATE TABLE `{prefix}_node_assets` (
   `updated` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   KEY `node` (`nid`, `role`, `sort`, `id`),
-  KEY `report` (`reported`, `id`),
   KEY `src` (`src`(191)),
   CONSTRAINT `{prefix}_fk_node_assets_node` FOREIGN KEY (`nid`) REFERENCES `{prefix}_nodes` (`id`) ON UPDATE RESTRICT ON DELETE CASCADE,
   CONSTRAINT `{prefix}_chk_node_assets_kind` CHECK (`kind` IN ('file', 'image', 'audio', 'video')),
@@ -333,11 +321,9 @@ CREATE TABLE `{prefix}_node_assets` (
 ) ENGINE={engine} DEFAULT CHARSET={charset} COLLATE={collate};
 
 CREATE TABLE `{prefix}_node_categories` (
-  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
   `nid` INT UNSIGNED NOT NULL,
   `cid` INT UNSIGNED NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `node` (`nid`, `cid`),
+  PRIMARY KEY (`nid`, `cid`),
   KEY `cat` (`cid`, `nid`),
   CONSTRAINT `{prefix}_fk_node_categories_node` FOREIGN KEY (`nid`) REFERENCES `{prefix}_nodes` (`id`) ON UPDATE RESTRICT ON DELETE CASCADE
 ) ENGINE={engine} DEFAULT CHARSET={charset} COLLATE={collate};
@@ -371,8 +357,8 @@ CREATE TABLE `{prefix}_node_relations` (
   UNIQUE KEY `edge` (`nid`, `type`, `rid`),
   KEY `source` (`nid`, `type`, `sort`, `rid`),
   KEY `target` (`rid`, `type`, `sort`, `nid`),
-  CONSTRAINT `{prefix}_fk_node_relations_node` FOREIGN KEY (`nid`) REFERENCES `{prefix}_nodes` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `{prefix}_fk_node_relations_related` FOREIGN KEY (`rid`) REFERENCES `{prefix}_nodes` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `{prefix}_fk_node_relations_node` FOREIGN KEY (`nid`) REFERENCES `{prefix}_nodes` (`id`) ON UPDATE RESTRICT ON DELETE CASCADE,
+  CONSTRAINT `{prefix}_fk_node_relations_related` FOREIGN KEY (`rid`) REFERENCES `{prefix}_nodes` (`id`) ON UPDATE RESTRICT ON DELETE CASCADE,
   CONSTRAINT `{prefix}_chk_node_relations_self` CHECK (`nid` <> `rid`)
 ) ENGINE={engine} DEFAULT CHARSET={charset} COLLATE={collate};
 
@@ -386,8 +372,8 @@ CREATE TABLE `{prefix}_node_support` (
   `activity` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   UNIQUE KEY `node` (`nid`),
-  KEY `queue` (`state`, `prio`, `activity`, `id`),
-  KEY `admin` (`aid`, `state`, `activity`, `id`),
+  KEY `queue` (`state`, `prio` DESC, `activity`, `id`),
+  KEY `admin` (`aid`, `state`, `prio` DESC, `activity`, `id`),
   CONSTRAINT `{prefix}_fk_node_support_node` FOREIGN KEY (`nid`) REFERENCES `{prefix}_nodes` (`id`) ON UPDATE RESTRICT ON DELETE CASCADE,
   CONSTRAINT `{prefix}_chk_node_support_state` CHECK (`state` <= 2),
   CONSTRAINT `{prefix}_chk_node_support_prio` CHECK (`prio` <= 3)
@@ -446,8 +432,7 @@ CREATE TABLE `{prefix}_points` (
   KEY `uid_action_created` (`uid`, `action`, `created`),
   KEY `action_created` (`action`, `created`),
   KEY `created` (`created`),
-  KEY `target` (`scope`, `mid`),
-  CONSTRAINT `{prefix}_fk_points_rid` FOREIGN KEY (`rid`) REFERENCES `{prefix}_points` (`id`) ON DELETE RESTRICT,
+  CONSTRAINT `{prefix}_fk_points_rid` FOREIGN KEY (`rid`) REFERENCES `{prefix}_points` (`id`) ON UPDATE RESTRICT ON DELETE RESTRICT,
   CONSTRAINT `{prefix}_chk_points_uid` CHECK (`uid` > 0)
 ) ENGINE={engine} DEFAULT CHARSET={charset} COLLATE={collate};
 
@@ -480,9 +465,7 @@ CREATE TABLE `{prefix}_rating` (
   `uid` INT UNSIGNED NOT NULL DEFAULT 0,
   `ip` VARCHAR(45) CHARACTER SET ascii COLLATE ascii_bin NOT NULL DEFAULT '',
   PRIMARY KEY (`id`),
-  KEY `mid` (`mid`),
   KEY `modul` (`modul`),
-  KEY `uid` (`uid`),
   UNIQUE KEY `mid_modul_ip` (`mid`, `modul`, `ip`)
 ) ENGINE={engine} DEFAULT CHARSET={charset} COLLATE={collate};
 
@@ -531,7 +514,6 @@ CREATE TABLE `{prefix}_referer` (
   `url` VARCHAR(2048) NOT NULL DEFAULT '',
   `time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  KEY `uid` (`uid`),
   KEY `time` (`time`),
   KEY `ip` (`ip`)
 ) ENGINE={engine} DEFAULT CHARSET={charset} COLLATE={collate};
@@ -543,10 +525,9 @@ CREATE TABLE `{prefix}_search` (
   `time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `score` INT UNSIGNED NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`),
-  KEY `word` (`word`(191)),
-  KEY `modul` (`modul`),
-  KEY `time` (`time`),
-  KEY `word_modul` (`word`(191), `modul`)
+  KEY `word_modul` (`word`, `modul`),
+  KEY `modul_time` (`modul`, `time`),
+  KEY `time` (`time`)
 ) ENGINE={engine} DEFAULT CHARSET={charset} COLLATE={collate};
 
 CREATE TABLE `{prefix}_session` (
@@ -559,8 +540,7 @@ CREATE TABLE `{prefix}_session` (
   `url` VARCHAR(2048) NOT NULL DEFAULT '',
   PRIMARY KEY (`id`),
   UNIQUE KEY `uname` (`uname`),
-  KEY `time` (`time`),
-  KEY `ip` (`ip`)
+  KEY `time` (`time`)
 ) ENGINE={engine} DEFAULT CHARSET={charset} COLLATE={collate};
 
 CREATE TABLE `{prefix}_user_oauth` (
@@ -572,7 +552,7 @@ CREATE TABLE `{prefix}_user_oauth` (
   `linked` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `lastlog` DATETIME DEFAULT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `provider_puid` (`provider`, `puid`(191)),
+  UNIQUE KEY `provider_puid` (`provider`, `puid`),
   UNIQUE KEY `uid_provider` (`uid`, `provider`)
 ) ENGINE={engine} DEFAULT CHARSET={charset} COLLATE={collate};
 
@@ -580,7 +560,7 @@ CREATE TABLE `{prefix}_users` (
   `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
   `name` VARCHAR(25) NOT NULL,
   `rank` VARCHAR(25) NOT NULL DEFAULT '',
-  `email` VARCHAR(255) NOT NULL,
+  `email` VARCHAR(255) DEFAULT NULL,
   `website` VARCHAR(255) NOT NULL DEFAULT '',
   `avatar` VARCHAR(255) NOT NULL DEFAULT '',
   `regdate` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -612,8 +592,9 @@ CREATE TABLE `{prefix}_users` (
   `agent` VARCHAR(255) NOT NULL DEFAULT '',
   PRIMARY KEY (`id`),
   UNIQUE KEY `name` (`name`),
-  KEY `email` (`email`(191)),
+  UNIQUE KEY `email` (`email`),
   KEY `grp` (`grp`),
+  KEY `newslet` (`newslet`),
   KEY `points` (`points`),
   KEY `lastvis` (`lastvis`)
 ) ENGINE={engine} DEFAULT CHARSET={charset} COLLATE={collate};
@@ -621,13 +602,13 @@ CREATE TABLE `{prefix}_users` (
 CREATE TABLE `{prefix}_users_temp` (
   `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
   `name` VARCHAR(25) NOT NULL,
-  `email` VARCHAR(255) NOT NULL,
+  `email` VARCHAR(255) DEFAULT NULL,
   `password` VARCHAR(255) NOT NULL,
   `regdate` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `code` VARCHAR(50) NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `name` (`name`),
-  KEY `code` (`code`)
+  UNIQUE KEY `email` (`email`)
 ) ENGINE={engine} DEFAULT CHARSET={charset} COLLATE={collate};
 
 CREATE TABLE `{prefix}_voting` (
@@ -646,7 +627,5 @@ CREATE TABLE `{prefix}_voting` (
   `typ` BOOLEAN NOT NULL DEFAULT 0,
   `status` BOOLEAN NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`),
-  KEY `modul` (`modul`),
-  KEY `status` (`status`),
-  KEY `lang` (`lang`)
+  KEY `modul` (`modul`)
 ) ENGINE={engine} DEFAULT CHARSET={charset} COLLATE={collate};

@@ -116,7 +116,7 @@ function admins(): void {
 function add(): void {
     global $afile, $conf, $tpl;
     $aid = getVar('req', 'id', 'num', 0);
-    $stop = [];
+    $stop = $GLOBALS['stop'] ?? [];
     if ($aid) {
         $row = getAdminrow($aid);
         if (!$row) {
@@ -135,7 +135,6 @@ function add(): void {
         $smail = getVar('post', 'smail', 'bool', 0) ? 1 : 0;
         $mods = implode(',', filterAdminmods(getVar('post', 'modules[]', 'var', [])));
         $lang = getVar('post', 'lang', 'var', $conf['language']);
-        $stop = $GLOBALS['stop'] ?? [];
     }
     if (!Editor::isValidEditor((string)$editor, 'admin')) $editor = (string)($conf['editor']['admin'] ?? 'plain');
     if (!Editor::isValidEditor((string)$editor, 'admin')) $editor = 'plain';
@@ -384,8 +383,8 @@ function save(): void {
     if ($name) {
         [$adid, $aname] = $db->getSqlRow($db->getSqlQuery('SELECT id, name FROM '.PREFIX_DB.'_admins WHERE name = :name', ['name' => $name])) ?? [0, ''];
         if ($aid != $adid && $name === $aname) $stop[] = _USEREXIST;
-        [$adid, $amail] = $db->getSqlRow($db->getSqlQuery('SELECT id, email FROM '.PREFIX_DB.'_admins WHERE email = :email', ['email' => $email])) ?? [0, ''];
-        if ($aid != $adid && $email === $amail) $stop[] = _ERROR_EMAIL;
+        [$adid] = $db->getSqlRow($db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_admins WHERE email = :email', ['email' => $email])) ?: [0];
+        if ($adid && $aid != $adid) $stop[] = _ERROR_EMAIL;
     } else {
         $stop[] = _ERROR_ALL;
     }
@@ -401,7 +400,7 @@ function save(): void {
         if ($aid) {
             if ($chg) {
                 $pass = getPassHash($pwd);
-                $db->getSqlQuery(
+                $done = $db->getSqlQuery(
                     'UPDATE '.PREFIX_DB.'_admins SET name = :name, title = :title, url = :url, email = :email, password = :pass, super = :super, editor = :edit,'
                     .' smail = :smail, modules = :mods, lang = :lang WHERE id = :id',
                     [
@@ -419,7 +418,7 @@ function save(): void {
                     ]
                 );
             } else {
-                $db->getSqlQuery(
+                $done = $db->getSqlQuery(
                     'UPDATE '.PREFIX_DB.'_admins SET name = :name, title = :title, url = :url, email = :email, super = :super, editor = :edit, smail = :smail,'
                     .' modules = :mods, lang = :lang WHERE id = :id',
                     [
@@ -438,7 +437,7 @@ function save(): void {
             }
         } else {
             $pass = getPassHash($pwd);
-            $db->getSqlQuery(
+            $done = $db->getSqlQuery(
                 'INSERT INTO '.PREFIX_DB.'_admins (name, title, url, email, password, super, editor, smail, modules, lang, regdate)'
                 .' VALUES (:name, :title, :url, :email, :pass, :super, :edit, :smail, :mods, :lang, now())',
                 [
@@ -455,15 +454,16 @@ function save(): void {
                 ]
             );
         }
+        if (!$done) $stop[] = match ($db->getSqlTwin()) { 'email' => _ERROR_EMAIL, 'name' => _USEREXIST, default => _ERROR };
         if ($aid && !$chg) $mail = 0;
-        if ($mail) {
+        if ($done && $mail) {
             $subj = $conf['sitename'].' - '._USERPASSWORD.' '.$name;
             $text = getVar('post', 'mailtext', 'text', '');
             $text = str_replace('[pass]', $pwd, str_replace('[login]', $name, $text));
             $text = $prs->filterContent($text, false, 'all');
             $mailer->addQueue(['kind' => 'admins', 'email' => $email, 'title' => $subj, 'body' => nl2br($text, false), 'sender' => $conf['adminmail'], 'prio' => 3]);
         }
-        setRedirect($afile.'.php?name=admins', false, 302, $mail ? _MAIL_SEND : _SUCCSAVE);
+        if ($done) setRedirect($afile.'.php?name=admins', false, 302, $mail ? _MAIL_SEND : _SUCCSAVE);
     }
     add();
 }

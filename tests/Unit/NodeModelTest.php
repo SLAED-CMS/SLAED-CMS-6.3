@@ -387,17 +387,17 @@ final class NodeModelTest extends TestCase
     public function theIndexesAreExactlyTheContract(): void
     {
         $want = [
-            'node_types' => ['active' => 'active,sort,id', 'unique PRIMARY' => 'id', 'unique name' => 'name'],
+            'node_types' => ['unique PRIMARY' => 'id', 'unique name' => 'name'],
             'nodes' => ['author' => 'uid,status,published,id', 'cat' => 'tid,cid,status,pinned,published,id',
-                'home' => 'tid,home,status,pinned,published,id', 'ip' => 'ip,created,id', 'poll' => 'poll', 'pub' => 'tid,status,pinned,published,id',
-                'queue' => 'status,created,id', 'title' => 'tid,status,pinned,title,id', 'tree' => 'tid,status,id', 'unique PRIMARY' => 'id',
+                'home' => 'tid,home,status,pinned,published,id', 'ip' => 'ip,created,id', 'pinned' => 'tid,pinned,published,id', 'poll' => 'poll',
+                'pub' => 'tid,status,pinned,published,id', 'title' => 'tid,status,pinned,title,id', 'tree' => 'tid,status,id', 'unique PRIMARY' => 'id',
                 'updated' => 'tid,status,pinned,updated,id', 'views' => 'tid,status,pinned,views,published,id'],
-            'node_assets' => ['node' => 'nid,role,sort,id', 'report' => 'reported,id', 'src' => 'src(191)', 'unique PRIMARY' => 'id'],
-            'node_categories' => ['cat' => 'cid,nid', 'unique PRIMARY' => 'id', 'unique node' => 'nid,cid'],
+            'node_assets' => ['node' => 'nid,role,sort,id', 'src' => 'src(191)', 'unique PRIMARY' => 'id'],
+            'node_categories' => ['cat' => 'cid,nid', 'unique PRIMARY' => 'nid,cid'],
             'node_legacy' => ['node' => 'nid', 'unique PRIMARY' => 'modul,oid'],
             'node_publish' => ['queue' => 'due,nid', 'unique PRIMARY' => 'nid'],
             'node_relations' => ['source' => 'nid,type,sort,rid', 'target' => 'rid,type,sort,nid', 'unique PRIMARY' => 'id', 'unique edge' => 'nid,type,rid'],
-            'node_support' => ['admin' => 'aid,state,activity,id', 'queue' => 'state,prio,activity,id', 'unique PRIMARY' => 'id', 'unique node' => 'nid'],
+            'node_support' => ['admin' => 'aid,state,prio DESC,activity,id', 'queue' => 'state,prio DESC,activity,id', 'unique PRIMARY' => 'id', 'unique node' => 'nid'],
             'node_sync' => ['due' => 'due,id', 'unique PRIMARY' => 'id', 'unique node' => 'nid'],
         ];
         $have = array_map(fn($t) => array_map(fn($c) => implode(',', $c), $t), $this->getProbe()['runs']['fresh']['indexes']);

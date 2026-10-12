@@ -39,6 +39,7 @@ DROP PROCEDURE IF EXISTS runiftype;
 DROP PROCEDURE IF EXISTS renidx;
 DROP PROCEDURE IF EXISTS delidx;
 DROP PROCEDURE IF EXISTS addidx;
+DROP PROCEDURE IF EXISTS setidx;
 DROP PROCEDURE IF EXISTS mkuseruniq;
 DROP PROCEDURE IF EXISTS mksessuniq;
 DROP PROCEDURE IF EXISTS fixgrppk;
@@ -253,6 +254,7 @@ BEGIN
     END IF;
 END$$
 
+# The default a moment reads back is current_timestamp() on MariaDB and CURRENT_TIMESTAMP with DEFAULT_GENERATED on MySQL; modcol reads both as the definition
 CREATE PROCEDURE modcol(IN ptab VARCHAR(128), IN pcol VARCHAR(128), IN pdef TEXT)
 BEGIN
     DECLARE ctab INT DEFAULT 0;
@@ -293,11 +295,12 @@ BEGIN
             SET ctype = CONCAT(SUBSTRING_INDEX(ctype, '(', 1), SUBSTRING(ctype, LOCATE(')', ctype) + 1));
         END IF;
 
+        SET cextr = TRIM(REPLACE(IFNULL(cextr, ''), 'DEFAULT_GENERATED', ''));
         SET have = UPPER(CONCAT(
             ctype,
             IF(cnull = 'NO', ' NOT NULL', ' NULL'),
-            IF(cdflt IS NULL, '', CONCAT(' DEFAULT ', cdflt)),
-            IF(cextr IS NULL OR cextr = '', '', CONCAT(' ', cextr))
+            IF(cdflt IS NULL, '', CONCAT(' DEFAULT ', REPLACE(UPPER(cdflt), 'CURRENT_TIMESTAMP()', 'CURRENT_TIMESTAMP'))),
+            IF(cextr = '', '', CONCAT(' ', cextr))
         ));
 
         SET want = UPPER(TRIM(pdef));
@@ -466,6 +469,41 @@ BEGIN
             SET @sql = CONCAT(
                 'ALTER TABLE `', ptab, '` ',
                 kind, ' `', pidx, '` (', pexp, ')'
+            );
+            PREPARE stmt FROM @sql;
+            EXECUTE stmt;
+            DEALLOCATE PREPARE stmt;
+        END IF;
+    END IF;
+END$$
+
+CREATE PROCEDURE setidx(IN ptab VARCHAR(128), IN pidx VARCHAR(128), IN pexp TEXT, IN puni TINYINT)
+BEGIN
+    DECLARE ctab INT DEFAULT 0;
+    DECLARE cdef TEXT DEFAULT NULL;
+    DECLARE cuni INT DEFAULT 0;
+
+    SELECT COUNT(*)
+      INTO ctab
+      FROM information_schema.tables
+     WHERE table_schema = DATABASE()
+       AND table_name = ptab;
+
+    IF ctab > 0 THEN
+        SELECT GROUP_CONCAT(CONCAT('`', column_name, '`', IFNULL(CONCAT('(', sub_part, ')'), ''), IF(collation = 'D', ' DESC', ''))
+                   ORDER BY seq_in_index SEPARATOR ', '),
+               MIN(non_unique)
+          INTO cdef, cuni
+          FROM information_schema.statistics
+         WHERE table_schema = DATABASE()
+           AND table_name = ptab
+           AND index_name = pidx;
+
+        IF cdef IS NULL OR BINARY cdef <> BINARY pexp OR cuni <> 1 - puni THEN
+            SET @sql = CONCAT(
+                'ALTER TABLE `', ptab, '` ',
+                IF(cdef IS NULL, '', CONCAT('DROP INDEX `', pidx, '`, ')),
+                IF(puni = 1, 'ADD UNIQUE KEY', 'ADD KEY'), ' `', pidx, '` (', pexp, ')'
             );
             PREPARE stmt FROM @sql;
             EXECUTE stmt;
@@ -735,7 +773,6 @@ CALL rencol('{prefix}_admins', 'lastvisit', 'lvisit');
 CALL renidx('{prefix}_admins', 'lastvisit', 'lvisit');
 CALL addidx('{prefix}_admins', 'name', '`name`', 0);
 CALL mkuseruniq('{prefix}_admins');
-CALL addidx('{prefix}_admins', 'email', '`email`(191)', 0);
 
 # =============================================================================
 # Batch C — _blocks
@@ -748,8 +785,6 @@ CALL rencol('{prefix}_blocks', 'blanguage', 'blang');
 CALL rencol('{prefix}_blocks', 'blockfile', 'bfile');
 CALL renidx('{prefix}_blocks', 'active_position', 'status_position');
 CALL renidx('{prefix}_blocks', 'blanguage', 'blang');
-CALL addidx('{prefix}_blocks', 'title', '`title`', 0);
-CALL addidx('{prefix}_blocks', 'status_position', '`status`, `bpos`', 0);
 UPDATE `{prefix}_blocks` SET bfile = REPLACE(bfile, 'block-', '') WHERE bfile LIKE 'block-%';
 CALL addcol('{prefix}_blocks', 'param', 'VARCHAR(255) NOT NULL DEFAULT \'\'');
 
@@ -761,7 +796,6 @@ CALL rencol('{prefix}_categories', 'parentid', 'parent');
 CALL rencol('{prefix}_categories', 'cstatus', 'status');
 CALL rencol('{prefix}_categories', 'lpost_id', 'lpost');
 CALL renidx('{prefix}_categories', 'parentid', 'parent');
-CALL addidx('{prefix}_categories', 'modul', '`modul`', 0);
 CALL addidx('{prefix}_categories', 'parent', '`parent`', 0);
 CALL addidx('{prefix}_categories', 'ordern', '`ordern`', 0);
 
@@ -772,15 +806,12 @@ CALL addidx('{prefix}_categories', 'ordern', '`ordern`', 0);
 CALL rencol('{prefix}_comment', 'date', 'time');
 CALL rencol('{prefix}_comment', 'host_name', 'ip');
 CALL renidx('{prefix}_comment', 'date', 'time');
-CALL addidx('{prefix}_comment', 'uid', '`uid`', 0);
-CALL addidx('{prefix}_comment', 'time', '`time`', 0);
 # cid and modul_status are not created here: batch Y below adds the composites that supersede them and drops both
 
 # =============================================================================
 # Batch G — _favorites
 # =============================================================================
 
-CALL addidx('{prefix}_favorites', 'uid',          '`uid`',                     0);
 CALL addidx('{prefix}_favorites', 'fid',          '`fid`',                     0);
 CALL addidx('{prefix}_favorites', 'modul',        '`modul`',                   0);
 CALL addidx('{prefix}_favorites', 'uid_fid_modul','`uid`, `fid`, `modul`',     1);
@@ -801,12 +832,7 @@ CALL rencol('{prefix}_forum', 'e_ip_send', 'eip');
 CALL rencol('{prefix}_forum', 'e_time', 'etime');
 CALL renidx('{prefix}_forum', 'catid', 'cid');
 CALL renidx('{prefix}_forum', 'catid_status', 'cid_status');
-CALL addidx('{prefix}_forum', 'pid', '`pid`', 0);
-CALL addidx('{prefix}_forum', 'cid', '`cid`', 0);
-CALL addidx('{prefix}_forum', 'counter', '`counter`', 0);
-CALL addidx('{prefix}_forum', 'uid', '`uid`', 0);
 CALL addidx('{prefix}_forum', 'status', '`status`', 0);
-CALL addidx('{prefix}_forum', 'cid_status', '`cid`, `status`', 0);
 CALL addidx('{prefix}_forum', 'time', '`time`', 0);
 
 # =============================================================================
@@ -819,7 +845,6 @@ CALL rencol('{prefix}_message', 'mlanguage', 'lang');
 CALL renidx('{prefix}_message', 'active', 'status');
 CALL renidx('{prefix}_message', 'mlanguage', 'lang');
 CALL addidx('{prefix}_message', 'status', '`status`', 0);
-CALL addidx('{prefix}_message', 'lang', '`lang`', 0);
 
 # =============================================================================
 # Batch J — _points
@@ -845,8 +870,7 @@ CREATE TABLE IF NOT EXISTS `{prefix}_points` (
   KEY `uid_action_created` (`uid`, `action`, `created`),
   KEY `action_created` (`action`, `created`),
   KEY `created` (`created`),
-  KEY `target` (`scope`, `mid`),
-  CONSTRAINT `{prefix}_fk_points_rid` FOREIGN KEY (`rid`) REFERENCES `{prefix}_points` (`id`) ON DELETE RESTRICT,
+  CONSTRAINT `{prefix}_fk_points_rid` FOREIGN KEY (`rid`) REFERENCES `{prefix}_points` (`id`) ON UPDATE RESTRICT ON DELETE RESTRICT,
   CONSTRAINT `{prefix}_chk_points_uid` CHECK (`uid` > 0)
 ) ENGINE={engine} DEFAULT CHARSET={charset} COLLATE={collate};
 
@@ -911,9 +935,7 @@ DELETE FROM `{prefix}_rating` WHERE `id` IN (
 );
 CALL renidx('{prefix}_rating', 'mid_modul_host', 'mid_modul_ip');
 CALL delidx('{prefix}_rating', 'mid_modul_uid');
-CALL addidx('{prefix}_rating', 'mid', '`mid`', 0);
 CALL addidx('{prefix}_rating', 'modul', '`modul`', 0);
-CALL addidx('{prefix}_rating', 'uid', '`uid`', 0);
 CALL addidx('{prefix}_rating', 'mid_modul_ip', '`mid`, `modul`, `ip`', 1);
 
 # The three tables of the rating subsystem; the ratings unit of the data update fills the targets and the actors, and no historic vote is invented
@@ -959,7 +981,6 @@ CREATE TABLE IF NOT EXISTS `{prefix}_rating_votes` (
 
 CALL rencol('{prefix}_referer', 'date', 'time');
 CALL renidx('{prefix}_referer', 'date', 'time');
-CALL addidx('{prefix}_referer', 'uid', '`uid`', 0);
 CALL addidx('{prefix}_referer', 'time', '`time`', 0);
 CALL addidx('{prefix}_referer', 'ip', '`ip`', 0);
 CALL delcol('{prefix}_referer', 'lid');
@@ -977,10 +998,7 @@ CALL renidx('{prefix}_search', 'sl_word', 'word');
 CALL renidx('{prefix}_search', 'sl_modul', 'modul');
 CALL renidx('{prefix}_search', 'sl_time', 'time');
 CALL renidx('{prefix}_search', 'sl_word_modul', 'word_modul');
-CALL addidx('{prefix}_search', 'word', '`word`(191)', 0);
-CALL addidx('{prefix}_search', 'modul', '`modul`', 0);
 CALL addidx('{prefix}_search', 'time', '`time`', 0);
-CALL addidx('{prefix}_search', 'word_modul', '`word`(191), `modul`', 0);
 
 # =============================================================================
 # Batch K — _session
@@ -990,7 +1008,6 @@ CALL rencol('{prefix}_session', 'host_addr', 'ip');
 CALL renidx('{prefix}_session', 'host_addr', 'ip');
 CALL mksessuniq('{prefix}_session');
 CALL addidx('{prefix}_session', 'time', '`time`', 0);
-CALL addidx('{prefix}_session', 'ip', '`ip`', 0);
 
 # =============================================================================
 # Batch K — _voting
@@ -998,7 +1015,6 @@ CALL addidx('{prefix}_session', 'ip', '`ip`', 0);
 
 CALL rencol('{prefix}_voting', 'date', 'time');
 CALL addidx('{prefix}_voting', 'modul', '`modul`', 0);
-CALL addidx('{prefix}_voting', 'status', '`status`', 0);
 
 # =============================================================================
 # Batch L — _users
@@ -1046,7 +1062,6 @@ CALL renidx('{prefix}_users', 'user_points', 'points');
 CALL renidx('{prefix}_users', 'user_lastvisit', 'lastvis');
 # add non-unique key first; mkuseruniq below upgrades to UNIQUE if no duplicates exist
 CALL addidx('{prefix}_users', 'name', '`name`', 0);
-CALL addidx('{prefix}_users', 'email', '`email`(191)', 0);
 CALL addidx('{prefix}_users', 'grp', '`grp`', 0);
 CALL addidx('{prefix}_users', 'points', '`points`', 0);
 CALL addidx('{prefix}_users', 'lastvis', '`lastvis`', 0);
@@ -1069,7 +1084,6 @@ CALL renidx('{prefix}_users_temp', 'user_name', 'name');
 CALL renidx('{prefix}_users_temp', 'check_num', 'code');
 CALL addidx('{prefix}_users_temp', 'name', '`name`', 0);
 CALL mkuseruniq('{prefix}_users_temp');
-CALL addidx('{prefix}_users_temp', 'code', '`code`', 0);
 
 # =============================================================================
 # Batch N — structural fixes not covered in Batches A–L
@@ -1079,7 +1093,6 @@ CALL addidx('{prefix}_users_temp', 'code', '`code`', 0);
 # _groups: restore PRIMARY KEY lost during column migration on some engines
 # fixgrppk handles all 4 states via information_schema (MySQL 8.0+ & MariaDB 10+ compatible)
 CALL fixgrppk('{prefix}_groups');
-CALL addidx('{prefix}_groups', 'name', '`name`(191)', 0);
 
 # _users: normalize legacy zero-dates before changing column defaults
 UPDATE `{prefix}_users` SET `regdate` = '1970-01-01 00:00:01' WHERE `regdate` = '0000-00-00 00:00:00';
@@ -1124,7 +1137,6 @@ UPDATE `{prefix}_users` SET `lastvis` = NULL WHERE `lastvis` = '1970-01-01 00:00
 CALL rencol('{prefix}_admins',   'pwd',    'password');
 CALL rencol('{prefix}_admins',   'lvisit', 'lastvis');
 CALL renidx('{prefix}_admins',   'lvisit', 'lastvis');
-CALL addidx('{prefix}_admins',   'lastvis', '`lastvis`', 0);
 CALL rencol('{prefix}_session',  'module', 'modul');
 
 # =============================================================================
@@ -1136,10 +1148,6 @@ CALL rencol('{prefix}_categories', 'language', 'lang');
 CALL rencol('{prefix}_voting',     'language', 'lang');
 CALL renidx('{prefix}_blocks',     'blang',    'lang');
 CALL renidx('{prefix}_voting',     'language', 'lang');
-CALL addidx('{prefix}_blocks',     'lang', '`lang`', 0);
-CALL addidx('{prefix}_voting',     'lang', '`lang`', 0);
-# The index of the categories needs lang, which 6.2 still calls language until the rename above
-CALL addidx('{prefix}_categories', 'modul_lang_status', '`modul`, `lang`, `status`', 0);
 
 # =============================================================================
 # Batch S: content column renames — step 5
@@ -1185,7 +1193,6 @@ CALL rencol('{prefix}_categories', 'auth_mod',    'pmod');
 
 CALL rencol('{prefix}_message',      'content',    'body');
 CALL rencol('{prefix}_newsletter',   'content',    'body');
-CALL addidx('{prefix}_newsletter',   'time',    '`time`',      0);
 CALL rencol('{prefix}_privat',       'content',    'body');
 CALL rencol('{prefix}_voting',       'questions',  'body');
 
@@ -1208,7 +1215,7 @@ ALTER TABLE `{prefix}_admins`
   MODIFY `name`     VARCHAR(25) NOT NULL,
   MODIFY `title`    VARCHAR(50) NOT NULL DEFAULT '',
   MODIFY `url`      VARCHAR(255) NOT NULL DEFAULT '',
-  MODIFY `email`    VARCHAR(255) NOT NULL,
+  MODIFY `email`    VARCHAR(255) DEFAULT NULL,
   MODIFY `password` VARCHAR(255) NOT NULL,
   MODIFY `super`    BOOLEAN NOT NULL DEFAULT 0,
   MODIFY `editor`   VARCHAR(32) NOT NULL DEFAULT 'plain',
@@ -1382,10 +1389,6 @@ ALTER TABLE `{prefix}_referer`
 
 UPDATE `{prefix}_session` SET `url` = '' WHERE `url` IS NULL;
 
-# An older 6.2 schema keys the whole word, the release keys its first 191 characters; the key is rebuilt, which the small search log allows on every run
-CALL delidx('{prefix}_search', 'word');
-CALL addidx('{prefix}_search', 'word', '`word`(191)', 0);
-
 ALTER TABLE `{prefix}_search`
   MODIFY `id`  INT UNSIGNED NOT NULL AUTO_INCREMENT,
   MODIFY `modul` VARCHAR(50) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
@@ -1405,7 +1408,6 @@ ALTER TABLE `{prefix}_session`
   MODIFY `modul` VARCHAR(50) CHARACTER SET ascii COLLATE ascii_bin NOT NULL;
 
 # NULL-safety before widening _users columns (may be NULL in legacy schema)
-UPDATE `{prefix}_users` SET `email`    = '' WHERE `email`    IS NULL;
 UPDATE `{prefix}_users` SET `website`  = '' WHERE `website`  IS NULL;
 UPDATE `{prefix}_users` SET `avatar`   = '' WHERE `avatar`   IS NULL;
 UPDATE `{prefix}_users` SET `block`    = '' WHERE `block`    IS NULL;
@@ -1424,7 +1426,7 @@ UPDATE `{prefix}_users` SET `lang`     = '' WHERE `lang` NOT REGEXP '^[A-Za-z]{2
 
 ALTER TABLE `{prefix}_users`
   MODIFY `name`     VARCHAR(25) NOT NULL,
-  MODIFY `email`    VARCHAR(255) NOT NULL,
+  MODIFY `email`    VARCHAR(255) DEFAULT NULL,
   MODIFY `website`  VARCHAR(255) NOT NULL DEFAULT '',
   MODIFY `avatar`   VARCHAR(255) NOT NULL DEFAULT '',
   MODIFY `occ`      VARCHAR(100) NOT NULL DEFAULT '',
@@ -1446,15 +1448,20 @@ ALTER TABLE `{prefix}_users`
 # The date filter wrote today into an empty birthday field, so a birthday on the day of the registration is none
 UPDATE `{prefix}_users` SET `birthday` = NULL WHERE `birthday` = DATE(`regdate`);
 
+# A missing address is NULL, which a unique key takes many times, an empty string only once
+UPDATE `{prefix}_admins` SET `email` = NULL WHERE `email` = '';
+UPDATE `{prefix}_users` SET `email` = NULL WHERE `email` = '';
+
 UPDATE `{prefix}_users_temp` SET `regdate` = '1970-01-01 00:00:01' WHERE `regdate` = '0000-00-00 00:00:00';
 
 ALTER TABLE `{prefix}_users_temp`
   MODIFY `id`      INT UNSIGNED NOT NULL AUTO_INCREMENT,
   MODIFY `name`    VARCHAR(25) NOT NULL,
-  MODIFY `email`   VARCHAR(255) NOT NULL,
+  MODIFY `email`   VARCHAR(255) DEFAULT NULL,
   MODIFY `password` VARCHAR(255) NOT NULL,
   MODIFY `regdate` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   MODIFY `code`    VARCHAR(50) NOT NULL;
+UPDATE `{prefix}_users_temp` SET `email` = NULL WHERE `email` = '';
 
 # The unix time of a registration repeats its regdate, which the cleanup of the activation reads instead
 CALL delcol('{prefix}_users_temp', 'time');
@@ -1575,7 +1582,6 @@ CALL delidx('{prefix}_comment', 'modul_cid_path');
 
 CALL addidx('{prefix}_comment', 'reqkey',                   '`reqkey`',                                              1);
 CALL addidx('{prefix}_comment', 'modul_cid_status_deleted', '`modul`, `cid`, `status`, `deleted`, `time`, `id`',     0);
-CALL addidx('{prefix}_comment', 'modul_cid_deleted',        '`modul`, `cid`, `deleted`, `time`, `id`',               0);
 CALL addidx('{prefix}_comment', 'status_deleted_time',      '`status`, `deleted`, `time`, `id`',                     0);
 CALL addidx('{prefix}_comment', 'modul_cid_pid_time',       '`modul`, `cid`, `pid`, `time`, `id`',                   0);
 CALL addidx('{prefix}_comment', 'ip_time',                  '`ip`, `time`, `id`',                                    0);
@@ -1642,8 +1648,7 @@ CREATE TABLE IF NOT EXISTS `{prefix}_node_types` (
   `created` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `name` (`name`),
-  KEY `active` (`active`, `sort`, `id`)
+  UNIQUE KEY `name` (`name`)
 ) ENGINE={engine} DEFAULT CHARSET={charset} COLLATE={collate};
 
 CREATE TABLE IF NOT EXISTS `{prefix}_nodes` (
@@ -1679,7 +1684,7 @@ CREATE TABLE IF NOT EXISTS `{prefix}_nodes` (
   KEY `views` (`tid`, `status`, `pinned`, `views`, `published`, `id`),
   KEY `title` (`tid`, `status`, `pinned`, `title`, `id`),
   KEY `tree` (`tid`, `status`, `id`),
-  KEY `queue` (`status`, `created`, `id`),
+  KEY `pinned` (`tid`, `pinned`, `published`, `id`),
   KEY `author` (`uid`, `status`, `published`, `id`),
   KEY `ip` (`ip`, `created`, `id`),
   KEY `poll` (`poll`),
@@ -1708,7 +1713,6 @@ CREATE TABLE IF NOT EXISTS `{prefix}_node_assets` (
   `updated` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   KEY `node` (`nid`, `role`, `sort`, `id`),
-  KEY `report` (`reported`, `id`),
   KEY `src` (`src`(191)),
   CONSTRAINT `{prefix}_fk_node_assets_node` FOREIGN KEY (`nid`) REFERENCES `{prefix}_nodes` (`id`) ON UPDATE RESTRICT ON DELETE CASCADE,
   CONSTRAINT `{prefix}_chk_node_assets_kind` CHECK (`kind` IN ('file', 'image', 'audio', 'video')),
@@ -1717,11 +1721,9 @@ CREATE TABLE IF NOT EXISTS `{prefix}_node_assets` (
 ) ENGINE={engine} DEFAULT CHARSET={charset} COLLATE={collate};
 
 CREATE TABLE IF NOT EXISTS `{prefix}_node_categories` (
-  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
   `nid` INT UNSIGNED NOT NULL,
   `cid` INT UNSIGNED NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `node` (`nid`, `cid`),
+  PRIMARY KEY (`nid`, `cid`),
   KEY `cat` (`cid`, `nid`),
   CONSTRAINT `{prefix}_fk_node_categories_node` FOREIGN KEY (`nid`) REFERENCES `{prefix}_nodes` (`id`) ON UPDATE RESTRICT ON DELETE CASCADE
 ) ENGINE={engine} DEFAULT CHARSET={charset} COLLATE={collate};
@@ -1755,8 +1757,8 @@ CREATE TABLE IF NOT EXISTS `{prefix}_node_relations` (
   UNIQUE KEY `edge` (`nid`, `type`, `rid`),
   KEY `source` (`nid`, `type`, `sort`, `rid`),
   KEY `target` (`rid`, `type`, `sort`, `nid`),
-  CONSTRAINT `{prefix}_fk_node_relations_node` FOREIGN KEY (`nid`) REFERENCES `{prefix}_nodes` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `{prefix}_fk_node_relations_related` FOREIGN KEY (`rid`) REFERENCES `{prefix}_nodes` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `{prefix}_fk_node_relations_node` FOREIGN KEY (`nid`) REFERENCES `{prefix}_nodes` (`id`) ON UPDATE RESTRICT ON DELETE CASCADE,
+  CONSTRAINT `{prefix}_fk_node_relations_related` FOREIGN KEY (`rid`) REFERENCES `{prefix}_nodes` (`id`) ON UPDATE RESTRICT ON DELETE CASCADE,
   CONSTRAINT `{prefix}_chk_node_relations_self` CHECK (`nid` <> `rid`)
 ) ENGINE={engine} DEFAULT CHARSET={charset} COLLATE={collate};
 
@@ -1770,8 +1772,8 @@ CREATE TABLE IF NOT EXISTS `{prefix}_node_support` (
   `activity` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   UNIQUE KEY `node` (`nid`),
-  KEY `queue` (`state`, `prio`, `activity`, `id`),
-  KEY `admin` (`aid`, `state`, `activity`, `id`),
+  KEY `queue` (`state`, `prio` DESC, `activity`, `id`),
+  KEY `admin` (`aid`, `state`, `prio` DESC, `activity`, `id`),
   CONSTRAINT `{prefix}_fk_node_support_node` FOREIGN KEY (`nid`) REFERENCES `{prefix}_nodes` (`id`) ON UPDATE RESTRICT ON DELETE CASCADE,
   CONSTRAINT `{prefix}_chk_node_support_state` CHECK (`state` <= 2),
   CONSTRAINT `{prefix}_chk_node_support_prio` CHECK (`prio` <= 3)
@@ -1795,28 +1797,6 @@ CREATE TABLE IF NOT EXISTS `{prefix}_node_sync` (
   CONSTRAINT `{prefix}_fk_node_sync_node` FOREIGN KEY (`nid`) REFERENCES `{prefix}_nodes` (`id`) ON UPDATE RESTRICT ON DELETE CASCADE,
   CONSTRAINT `{prefix}_chk_node_sync_refresh` CHECK (`refresh` = 0 OR `refresh` BETWEEN 300 AND 31536000)
 ) ENGINE={engine} DEFAULT CHARSET={charset} COLLATE={collate};
-
-# =============================================================================
-# Cleanup
-# =============================================================================
-
-DROP PROCEDURE IF EXISTS rencol;
-DROP PROCEDURE IF EXISTS addcol;
-DROP PROCEDURE IF EXISTS poscol;
-DROP PROCEDURE IF EXISTS setcoll;
-DROP PROCEDURE IF EXISTS stopcol;
-DROP PROCEDURE IF EXISTS stopnull;
-DROP PROCEDURE IF EXISTS delcol;
-DROP PROCEDURE IF EXISTS modcol;
-DROP PROCEDURE IF EXISTS runifcol;
-DROP PROCEDURE IF EXISTS runiftype;
-DROP PROCEDURE IF EXISTS renidx;
-DROP PROCEDURE IF EXISTS delidx;
-DROP PROCEDURE IF EXISTS addidx;
-DROP PROCEDURE IF EXISTS mkuseruniq;
-DROP PROCEDURE IF EXISTS mksessuniq;
-DROP PROCEDURE IF EXISTS fixgrppk;
-DROP PROCEDURE IF EXISTS finalize_user_names;
 
 # =============================================================================
 # Manual follow-up after this script
@@ -1875,7 +1855,7 @@ CREATE TABLE IF NOT EXISTS `{prefix}_user_oauth` (
   `linked` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `lastlog` DATETIME DEFAULT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `provider_puid` (`provider`, `puid`(191)),
+  UNIQUE KEY `provider_puid` (`provider`, `puid`),
   UNIQUE KEY `uid_provider` (`uid`, `provider`)
 ) ENGINE={engine} DEFAULT CHARSET={charset} COLLATE={collate};
 
@@ -1897,7 +1877,7 @@ BEGIN
     IF ccol > 0 THEN
         SET @sql = CONCAT(
             'INSERT IGNORE INTO `', plinks, '` (`uid`, `provider`, `puid`, `email`, `linked`) ',
-            'SELECT `id`, ''ulogin'', `network`, `email`, NOW() ',
+            'SELECT `id`, ''ulogin'', `network`, COALESCE(`email`, ''''), NOW() ',
             'FROM `', pusers, '` WHERE `network` != '''''
         );
         PREPARE stmt FROM @sql;
@@ -2046,5 +2026,92 @@ CALL setconv('{prefix}_users_temp', '{collate}');
 CALL setconv('{prefix}_voting', '{collate}');
 
 DROP PROCEDURE IF EXISTS setconv;
+
+# =============================================================================
+# The keys of the release
+# =============================================================================
+#
+# Every key the release drops or reshapes, after the collation: the unique addresses are built in the collation
+# update.php searched their duplicates in, before this file ran. setidx() replaces a key only while its definition
+# differs, so a second run changes nothing; a server that ignores a descending part (MariaDB before 10.8) rebuilds
+# the two keys of _node_support on every run
+
+CALL delidx('{prefix}_admins', 'lastvis');
+CALL delidx('{prefix}_blocks', 'title');
+CALL delidx('{prefix}_blocks', 'lang');
+CALL delidx('{prefix}_blocks', 'status_position');
+CALL delidx('{prefix}_categories', 'modul');
+CALL delidx('{prefix}_categories', 'modul_lang_status');
+CALL delidx('{prefix}_comment', 'uid');
+CALL delidx('{prefix}_comment', 'time');
+CALL delidx('{prefix}_comment', 'modul_cid_deleted');
+CALL delidx('{prefix}_favorites', 'uid');
+CALL delidx('{prefix}_forum', 'pid');
+CALL delidx('{prefix}_forum', 'cid');
+CALL delidx('{prefix}_forum', 'counter');
+CALL delidx('{prefix}_forum', 'uid');
+CALL delidx('{prefix}_forum', 'cid_status');
+CALL delidx('{prefix}_groups', 'name');
+CALL delidx('{prefix}_message', 'lang');
+CALL delidx('{prefix}_newsletter', 'time');
+CALL delidx('{prefix}_node_types', 'active');
+CALL delidx('{prefix}_nodes', 'queue');
+CALL delidx('{prefix}_nodes', 'expires');
+CALL delidx('{prefix}_node_assets', 'report');
+CALL delidx('{prefix}_points', 'target');
+CALL delidx('{prefix}_rating', 'mid');
+CALL delidx('{prefix}_rating', 'uid');
+CALL delidx('{prefix}_referer', 'uid');
+CALL delidx('{prefix}_search', 'word');
+CALL delidx('{prefix}_search', 'modul');
+CALL delidx('{prefix}_session', 'ip');
+CALL delidx('{prefix}_users_temp', 'code');
+CALL delidx('{prefix}_voting', 'status');
+CALL delidx('{prefix}_voting', 'lang');
+
+# The link of a material and a category is its own key: the surrogate id no code read leaves, and the primary key takes over the unique pair
+CALL runifcol('{prefix}_node_categories', 'id', 'ALTER TABLE `{prefix}_node_categories` DROP PRIMARY KEY, DROP COLUMN `id`, ADD PRIMARY KEY (`nid`, `cid`), DROP INDEX `node`');
+
+CALL setidx('{prefix}_admins', 'email', '`email`', 1);
+CALL setidx('{prefix}_blocks', 'status_weight', '`status`, `weight`', 0);
+CALL setidx('{prefix}_categories', 'modul_ordern', '`modul`, `ordern`', 0);
+CALL setidx('{prefix}_comment', 'uid_status_deleted', '`uid`, `status`, `deleted`, `modul`, `cid`', 0);
+CALL setidx('{prefix}_comment', 'modul_status_deleted', '`modul`, `status`, `deleted`, `time`, `id`', 0);
+CALL setidx('{prefix}_forum', 'pid_ltime', '`pid`, `ltime`', 0);
+CALL setidx('{prefix}_forum', 'pid_time', '`pid`, `time`', 0);
+CALL setidx('{prefix}_forum', 'cid_pid_status_ltime', '`cid`, `pid`, `status`, `ltime`', 0);
+CALL setidx('{prefix}_forum', 'uid_pid', '`uid`, `pid`', 0);
+CALL setidx('{prefix}_nodes', 'pinned', '`tid`, `pinned`, `published`, `id`', 0);
+CALL setidx('{prefix}_node_support', 'queue', '`state`, `prio` DESC, `activity`, `id`', 0);
+CALL setidx('{prefix}_node_support', 'admin', '`aid`, `state`, `prio` DESC, `activity`, `id`', 0);
+CALL setidx('{prefix}_search', 'word_modul', '`word`, `modul`', 0);
+CALL setidx('{prefix}_search', 'modul_time', '`modul`, `time`', 0);
+CALL setidx('{prefix}_user_oauth', 'provider_puid', '`provider`, `puid`', 1);
+CALL setidx('{prefix}_users', 'email', '`email`', 1);
+CALL setidx('{prefix}_users', 'newslet', '`newslet`', 0);
+CALL setidx('{prefix}_users_temp', 'email', '`email`', 1);
+
+# =============================================================================
+# Cleanup
+# =============================================================================
+
+DROP PROCEDURE IF EXISTS rencol;
+DROP PROCEDURE IF EXISTS addcol;
+DROP PROCEDURE IF EXISTS poscol;
+DROP PROCEDURE IF EXISTS setcoll;
+DROP PROCEDURE IF EXISTS stopcol;
+DROP PROCEDURE IF EXISTS stopnull;
+DROP PROCEDURE IF EXISTS delcol;
+DROP PROCEDURE IF EXISTS modcol;
+DROP PROCEDURE IF EXISTS runifcol;
+DROP PROCEDURE IF EXISTS runiftype;
+DROP PROCEDURE IF EXISTS renidx;
+DROP PROCEDURE IF EXISTS delidx;
+DROP PROCEDURE IF EXISTS addidx;
+DROP PROCEDURE IF EXISTS setidx;
+DROP PROCEDURE IF EXISTS mkuseruniq;
+DROP PROCEDURE IF EXISTS mksessuniq;
+DROP PROCEDURE IF EXISTS fixgrppk;
+DROP PROCEDURE IF EXISTS finalize_user_names;
 
 SET SESSION sql_mode = @SLAED_MODE;

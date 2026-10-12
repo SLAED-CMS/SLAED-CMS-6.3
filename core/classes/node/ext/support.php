@@ -107,7 +107,7 @@ final class NodeSupport implements NodeExtension {
     # With an assigned administrator only that one, when he is still subscribed and entitled; the acting administrator never gets one
     private function getMailList(NodeType $type, int $aid): array {
         global $conf, $locale;
-        $where = 'smail = \'1\'';
+        $where = 'smail = \'1\' AND email IS NOT NULL';
         $pars = [];
         if (!empty($conf['multilingual'])) {
             $where .= ' AND (lang = :lang OR lang = \'\')';

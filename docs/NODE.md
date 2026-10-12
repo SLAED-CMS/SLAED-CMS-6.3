@@ -317,7 +317,6 @@ tables use `0` for "none".
 |---|---|---|
 | `PRIMARY` | `id` | lookup by `_nodes.tid` |
 | `UNIQUE name` | `name` | the route and technical key |
-| `active` | `active, sort, id` | stable list of active types |
 
 - `name` never changes after creation; there is no separate route column.
 - `ext` holds only a key of the closed extension map, never a class, file or path. It can be set, replaced
@@ -375,7 +374,7 @@ RESTRICT`.
 | `views` | `tid, status, pinned, views, published, id` | order by views |
 | `title` | `tid, status, pinned, title, id` | letter filter and order by title |
 | `tree` | `tid, status, id` | `getNodeTree()` batches by id cursor |
-| `queue` | `status, created, id` | moderation queue and state lists |
+| `pinned` | `tid, pinned, published, id` | the moderator list of a type without a state filter |
 | `author` | `uid, status, published, id` | materials of an author |
 | `ip` | `ip, created, id` | source lookup, spam cleanup, the `limits.send` window |
 | `poll` | `poll` | materials using a poll |
@@ -475,14 +474,12 @@ often is a column or indexed extension data, not a field.
 
 | Column | Type | Meaning |
 |---|---|---|
-| `id` | `INT UNSIGNED NOT NULL AUTO_INCREMENT` | link id |
 | `nid` | `INT UNSIGNED NOT NULL` | material |
 | `cid` | `INT UNSIGNED NOT NULL` | extra category |
 
 | Key | Columns | Serves |
 |---|---|---|
-| `PRIMARY` | `id` | |
-| `UNIQUE node` | `nid, cid` | extra categories of a material, logical uniqueness |
+| `PRIMARY` | `nid, cid` | extra categories of a material, one link per pair |
 | `cat` | `cid, nid` | materials of an extra category |
 
 Foreign key `{prefix}_fk_node_categories_node`: `nid` references `_nodes.id`, `ON UPDATE RESTRICT ON DELETE
@@ -519,7 +516,7 @@ CASCADE`. There is no foreign key to `_categories`.
 | `target` | `rid, type, sort, nid` | incoming relations, children of a parent |
 
 Constraints: `{prefix}_fk_node_relations_node` (`nid`) and `{prefix}_fk_node_relations_related` (`rid`) both
-reference `_nodes.id` `ON DELETE CASCADE`; `{prefix}_chk_node_relations_self` is `CHECK (nid <> rid)`.
+reference `_nodes.id` `ON UPDATE RESTRICT ON DELETE CASCADE`; `{prefix}_chk_node_relations_self` is `CHECK (nid <> rid)`.
 
 - Relations are directed; a reverse edge is a separate row written in the same transaction when needed.
 - The kinds are `related` (needs the feature `related`) and `parent` (needs the feature `tree`). An input
@@ -563,7 +560,6 @@ look valid on an old snapshot, and the second fails once it re-reads the first. 
 |---|---|---|
 | `PRIMARY` | `id` | read, counter, delete |
 | `node` | `nid, role, sort, id` | resources of a material or of one role in order |
-| `report` | `reported, id` | admin queue of open reports |
 | `src` | `src(191)` | narrows candidates for the `link` duplicate check |
 
 Constraints: `{prefix}_fk_node_assets_node` (`nid` → `_nodes.id`, `ON UPDATE RESTRICT ON DELETE CASCADE`),
@@ -654,8 +650,8 @@ Used only by a type with the extension `support`. The request itself - author, c
 |---|---|---|
 | `PRIMARY` | `id` | |
 | `UNIQUE node` | `nid` | one row per request |
-| `queue` | `state, prio, activity, id` | the shared queue |
-| `admin` | `aid, state, activity, id` | the queue of one assignee |
+| `queue` | `state, prio DESC, activity, id` | the shared queue, urgent first without a sort |
+| `admin` | `aid, state, prio DESC, activity, id` | the queue of one assignee in the same order |
 
 Constraints: `{prefix}_fk_node_support_node` (`nid` → `_nodes.id`, `ON UPDATE RESTRICT ON DELETE CASCADE`),
 `{prefix}_chk_node_support_state` (`state <= 2`), `{prefix}_chk_node_support_prio` (`prio <= 3`).
@@ -3050,7 +3046,7 @@ threshold). The profile reports timing; only statement counts are hard gates.
   authors, fields, categories, rating or favorites.
 - A page holds `1..list.limit` rows, `list.limit <= limits.maxlist = 100`. The letter filter uses the `title`
   index with one checked letter or digit and a parameterized `LIKE` prefix. SQL never filters or sorts on field
-  JSON. `views` and `hits` move by one atomic statement; the report queue uses `(reported, id)`.
+  JSON. `views` and `hits` move by one atomic statement.
 
 ### The single lock order
 
