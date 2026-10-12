@@ -61,9 +61,9 @@ function getProfilePdo(string $name = ''): PDO {
 function addProfileBase(): PDO {
     global $pcred, $pname;
     if ($pname === $pcred['name']) throw new RuntimeException('The disposable name collides with the site database');
-    getProfilePdo()->exec('CREATE DATABASE `'.$pname.'` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci');
+    getProfilePdo()->exec('CREATE DATABASE `'.$pname.'` DEFAULT CHARACTER SET utf8mb4 COLLATE '.$pcred['collate']);
     $pdo = getProfilePdo($pname);
-    $text = str_replace(['{prefix}', '{engine}', '{charset}', '{collate}'], [PPREF, 'InnoDB', 'utf8mb4', 'utf8mb4_unicode_ci'],
+    $text = str_replace(['{prefix}', '{engine}', '{charset}', '{collate}'], [PPREF, 'InnoDB', 'utf8mb4', $pcred['collate']],
         (string)file_get_contents(BASE_DIR.'/storage/update/sql/table.sql'));
     foreach (preg_split('/;\s*\n/', $text) ?: [] as $sql) if (trim($sql) !== '' && !str_starts_with(trim($sql), '--')) $pdo->exec($sql);
     return $pdo;
@@ -97,7 +97,7 @@ function setProfileConfig(string $dir, int $port): void {
         file_put_contents($dir.'/'.basename($one), (string)shell_exec('git -C '.escapeshellarg(BASE_DIR).' show '.escapeshellarg('HEAD:'.$one).$quiet));
     }
     if (!is_file($dir.'/global.php') || !is_file($dir.'/node.php')) throw new RuntimeException('The release configuration could not be read from git');
-    setProfileFile($dir.'/db.php', ['db' => ['name' => $pname, 'prefix' => PPREF, 'sync' => '0'] + $pcred]);
+    setProfileFile($dir.'/db.php', ['db' => ['name' => $pname, 'prefix' => PPREF] + $pcred]);
     setProfileFile($dir.'/update.php', ['update' => ['points' => '6.3.0', 'ratings' => '6.3.0', 'fields' => '6.3.0']]);
     $glob = require $dir.'/global.php';
     setProfileFile($dir.'/global.php', array_replace($glob, ['homeurl' => 'http://127.0.0.1:'.$port, 'close' => '0', 'cache' => '0']));
@@ -501,7 +501,7 @@ function getProfileNodeSql(array $trace): int {
 if ($preport['error'] === '') {
     try {
         $preport['server'] = (string)$pbase->query('SELECT VERSION()')->fetchColumn();
-        $db = new ProfileBase($conf['db']['host'], $conf['db']['uname'], $conf['db']['pass'], $conf['db']['name'], $conf['db']['charset']);
+        $db = new ProfileBase($conf['db']['host'], $conf['db']['uname'], $conf['db']['pass'], $conf['db']['name'], $conf['db']['collate']);
         $pnt = new Point($db, $conf['points'] ?? []);
         $ptime = microtime(true);
         $ptypes = addProfileTypes();

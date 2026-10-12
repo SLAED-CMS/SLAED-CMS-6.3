@@ -335,28 +335,31 @@ function fix(): void {
 function addsave(): void {
     global $db, $afile, $tpl;
     $warn = !checkAdminPost('blocks');
-    $title = getVar('post', 'title', 'title', '');
+    $title = filterCutText(getVar('post', 'title', 'title', ''), 60);
     $content = getVar('post', 'content', 'text', '');
     $url = getVar('post', 'url', 'url', '');
     $bpos = getVar('post', 'bpos', 'var', '');
+    if (!in_array($bpos, ['l', 'c', 'd', 'r', 'b', 'f'], true)) $bpos = '';
     $active = getVar('post', 'status', 'num', 0);
     $refresh = getVar('post', 'refresh', 'num', 0);
     $headline = getVar('post', 'headline', 'url', '');
     $lang = getVar('post', 'lang', 'var', '');
+    if (!isset(getLanguageList()[$lang])) $lang = '';
     $bfile = getVar('post', 'bfile', 'text', '');
-    $bfile = preg_match('/^[a-z0-9_\-]+\.php$/i', $bfile) ? $bfile : '';
+    $bfile = preg_match('/^[a-z0-9_\-]{1,251}\.php$/i', $bfile) ? $bfile : '';
     $view = getVar('post', 'view', 'num', 0);
-    $expire = getVar('post', 'expire', 'num', 0);
+    $days = getVar('post', 'expire', 'num', 0);
     $action = getVar('post', 'action', 'var', '');
-    $url = ($headline) ? $headline : $url;
+    if (!in_array($action, ['d', 'r'], true)) $action = '';
+    $url = filterCutText(($headline) ? $headline : $url, 200);
     $bwhere = getVar('post', 'blockwhere[]', 'var', []);
     [$weight] = $db->getSqlRow($db->getSqlQuery('SELECT weight FROM '.PREFIX_DB.'_blocks WHERE bpos = :bpos ORDER BY weight DESC', ['bpos' => $bpos]));
     $weight++;
     $bkey = '';
-    $btime = '';
+    $btime = 0;
     if ($bfile != '') {
         $url = '';
-        if ($title == '') $title = str_replace('_', ' ', str_replace('.php', '', $bfile));
+        if ($title == '') $title = filterCutText(str_replace('_', ' ', str_replace('.php', '', $bfile)), 60);
     }
     if ($url) {
         $btime = time();
@@ -373,11 +376,6 @@ function addsave(): void {
         ]);
         setFoot();
     } else {
-        if ($expire == '' || $expire == 0) {
-            $expire = 0;
-        } else {
-            $expire = time() + ($expire * 86400);
-        }
         if (isset($bwhere)) {
             $which = '';
             $which = (in_array('all', $bwhere)) ? 'all' : $which;
@@ -385,12 +383,12 @@ function addsave(): void {
             if ($which == '') $which = implode(',', $bwhere);
         }
         $param = ($bfile === 'node.php') ? json_encode(['type' => '', 'mode' => 'last', 'limit' => 10]) : '';
-        $sql = 'INSERT INTO '.PREFIX_DB.'_blocks VALUES (NULL, :bkey, :title, :content, :url, :bpos, :weight, :active, :refresh, :btime, :lang, :bfile, :view, :expire,'
-            .' :action, :which, :param)';
+        $sql = 'INSERT INTO '.PREFIX_DB.'_blocks VALUES (NULL, :bkey, :title, :content, :url, :bpos, :weight, :active, :refresh, :btime, :lang, :bfile, :view,'
+            .(($days > 0) ? ' NOW() + INTERVAL :days DAY,' : ' NULL,').' :action, :which, :param)';
         $db->getSqlQuery($sql, [
             'bkey' => $bkey, 'title' => $title, 'content' => $content, 'url' => $url, 'bpos' => $bpos, 'weight' => $weight, 'active' => $active, 'refresh' => $refresh,
-            'btime' => $btime, 'lang' => $lang, 'bfile' => $bfile, 'view' => $view, 'expire' => $expire, 'action' => $action, 'which' => $which, 'param' => $param,
-        ]);
+            'btime' => $btime, 'lang' => $lang, 'bfile' => $bfile, 'view' => $view, 'action' => $action, 'which' => $which, 'param' => $param,
+        ] + (($days > 0) ? ['days' => $days] : []));
         setRedirect($afile.'.php?name=blocks', false, 302, _SUCCSAVE);
     }
 }
@@ -663,13 +661,11 @@ function edit(): void {
             ]),
         ];
     }
-    if ($expire != 0) {
+    if ($expire) {
         $newexp = 0;
-        $oldexp = $expire;
-        $expire = intval($expire - time());
+        $expire = strtotime($expire) - time();
         $expday = $expire / 86400;
-        $exptxt = $tpl->getHtmlFrag('hidden', ['nameattr' => 'expire', 'valueattr' => (string)$oldexp])
-            ._PURCHASED.': '.getDuration($expire).' ('.round($expday, 3).' '._DAYS.')';
+        $exptxt = _PURCHASED.': '.getDuration($expire).' ('.round($expday, 3).' '._DAYS.')';
     } else {
         $newexp = 1;
         $exptxt = $tpl->getHtmlFrag('input', [
@@ -724,7 +720,6 @@ function edit(): void {
         'hidden' => [
             ['nameattr' => 'oldposition', 'valueattr' => (string)$bpos],
             ['nameattr' => 'bid', 'valueattr' => (string)$bid],
-            ['nameattr' => 'newexpire', 'valueattr' => (string)$newexp],
             ['nameattr' => 'bkey', 'valueattr' => (string)$bkey],
             ['nameattr' => 'weight', 'valueattr' => (string)$weight],
             ['nameattr' => 'name', 'valueattr' => 'blocks'],
@@ -740,23 +735,25 @@ function edit(): void {
 function editsave(): void {
     global $db, $afile;
     $warn = !checkAdminPost('blocks');
-    $newexp = getVar('post', 'newexpire', 'num', 0);
     $bid = getVar('post', 'bid', 'num');
-    $bkey = getVar('post', 'bkey', 'var', '');
-    $title = getVar('post', 'title', 'title', '');
+    $bkey = filterCutText(getVar('post', 'bkey', 'var', ''), 15);
+    $title = filterCutText(getVar('post', 'title', 'title', ''), 60);
     $content = getVar('post', 'content', 'text', '');
-    $url = getVar('post', 'url', 'url', '');
+    $url = filterCutText(getVar('post', 'url', 'url', ''), 200);
     $oldpos = getVar('post', 'oldposition', 'var', '');
     $bpos = getVar('post', 'bpos', 'var', '');
+    if (!in_array($bpos, ['l', 'c', 'd', 'r', 'b', 'f'], true)) $bpos = '';
     $active = getVar('post', 'status', 'num', 0);
     $refresh = getVar('post', 'refresh', 'num', 0);
     $weight = getVar('post', 'weight', 'num', 0);
     $lang = getVar('post', 'lang', 'var', '');
+    if (!isset(getLanguageList()[$lang])) $lang = '';
     $bfile = getVar('post', 'bfile', 'text', '');
-    $bfile = preg_match('/^[a-z0-9_\-]+\.php$/i', $bfile) ? $bfile : '';
+    $bfile = preg_match('/^[a-z0-9_\-]{1,251}\.php$/i', $bfile) ? $bfile : '';
     $view = getVar('post', 'view', 'num', 0);
-    $expire = getVar('post', 'expire', 'num', 0);
+    $days = getVar('post', 'expire', 'num', 0);
     $action = getVar('post', 'action', 'var', '');
+    if (!in_array($action, ['d', 'r'], true)) $action = '';
     $bwhere = getVar('post', 'blockwhere[]', 'var', []);
     if ($warn) {
         setRedirect($afile.'.php?name=blocks&op=edit&id='.$bid, false, 302, _TOKENMISS, true);
@@ -793,9 +790,6 @@ function editsave(): void {
         $content = getRssBody($url);
         $fresh = $content !== null;
         if (!$fresh) [$content] = $db->getSqlRow($db->getSqlQuery('SELECT content FROM '.PREFIX_DB.'_blocks WHERE id = :bid', ['bid' => $bid]));
-    } elseif ($oldpos == $bpos) {
-        if ($expire == '') $expire = 0;
-        if ($newexp == 1 && $expire != 0) $expire = time() + ($expire * 86400);
     }
     $fail = !$db->setSqlBegin();
     $put = function (string $sql, array $pars) use ($db, &$fail): PDOStatement|false {
@@ -831,7 +825,8 @@ function editsave(): void {
     } elseif ($url) {
         $put($sql.' WHERE id = :bid', ['weight' => $weight] + $pars);
     } else {
-        $put($sql.', expire = :expire, action = :action WHERE id = :bid', ['weight' => $weight, 'expire' => $expire, 'action' => $action] + $pars);
+        $exp = ($days > 0) ? ', expire = COALESCE(expire, NOW() + INTERVAL :days DAY)' : '';
+        $put($sql.$exp.', action = :action WHERE id = :bid', ['weight' => $weight, 'action' => $action] + (($days > 0) ? ['days' => $days] : []) + $pars);
     }
     if (!$fail && !$db->setSqlCommit()) $fail = true;
     if ($fail) {

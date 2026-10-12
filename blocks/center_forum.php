@@ -9,13 +9,12 @@ if (!defined('BLOCK_FILE')) {
     exit;
 }
 
-global $db, $conf, $tpl;
+global $db, $conf, $tpl, $user;
 
 $bicon = 'chat-dots-fill';
 $bhref = 'index.php?name=forum';
 
-$uinfo = getUserInfo();
-$ulast = (is_array($uinfo) && !empty($uinfo['lastvis'])) ? (int)$uinfo['lastvis'] : 0;
+$ulast = getUserLastVisit(is_user() ? intval($user[0]) : 0);
 $ismod = is_moder('forum');
 $pop = $conf['forum']['pop'] ?? 25;
 

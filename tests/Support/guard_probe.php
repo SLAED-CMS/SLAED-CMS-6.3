@@ -98,6 +98,16 @@ function getNodeWriter(): object {
     };
 }
 
+# Answer the forum as the one module with categories, so the save meets a known module
+function getCategoryModules(): array {
+    return ['forum'];
+}
+
+# Answer the locales of the tree as the panel lists them
+function getLanguageList(): array {
+    return ['en' => 'English', 'ru' => 'Russian'];
+}
+
 # Record every module whose stored category map a write drops, instead of touching the data cache
 function deleteCategoryMap(string $mod): void {
     $GLOBALS['pdone']['data']['reset'][] = $mod;
@@ -164,6 +174,7 @@ try {
         $_SERVER = ['HTTP_USER_AGENT' => '<iframe>server</iframe>'];
         $pdone['data']['html'] = getVariables();
     } elseif ($pmode === 'catparent') {
+        setProbeLift($psite.'/core/security.php', 'filterCutText', $pwork.'/lift_cut.php');
         setProbeLift($psite.'/admin/modules/categories.php', 'save', $pwork.'/lift_cat.php');
         [$pid, $ppar] = array_map('intval', explode(':', $pname));
         $db = new ProbeDb([['id' => 1, 'parent' => 0], ['id' => 2, 'parent' => 1], ['id' => 3, 'parent' => 2], ['id' => 4, 'parent' => 0]]);

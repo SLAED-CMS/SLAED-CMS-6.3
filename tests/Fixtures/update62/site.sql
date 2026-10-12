@@ -684,10 +684,14 @@ INSERT INTO `old_forum` (`id`, `pid`, `catid`, `uid`, `name`, `title`, `time`, `
 INSERT INTO `old_privat` (`id`, `uidin`, `uidout`, `title`, `content`, `date`, `status`) VALUES
 (1, 2, 1, 'A message', '[url=uploads/account/gone.zip]Gone[/url]', '2024-03-01 10:00:00', 1);
 
-INSERT INTO `old_blocks` (`bid`, `title`, `content`, `url`, `bposition`, `weight`, `active`, `refresh`, `time`, `blockfile`, `which`) VALUES
-(1, 'News', '', '', 'l', 1, 1, 0, '0', 'block-news.php', 'all'),
-(2, 'Poll', '', '', 'r', 1, 1, 0, '0', 'block-voting.php', 'all'),
-(3, 'Feed', '<ul><li>cached item</li></ul>', 'https://feed.site62.test/rss.xml', 'r', 2, 1, 3600, '1700000000', '', 'all');
+INSERT INTO `old_blocks` (`bid`, `title`, `content`, `url`, `bposition`, `weight`, `active`, `refresh`, `time`, `blockfile`, `expire`, `which`) VALUES
+(1, 'News', '', '', 'l', 1, 1, 0, '0', 'block-news.php', '0', 'all'),
+(2, 'Poll', '', '', 'r', 1, 1, 0, '', 'block-voting.php', '0', 'all'),
+(3, 'Feed', '<ul><li>cached item</li></ul>', 'https://feed.site62.test/rss.xml', 'r', 2, 1, 3600, '1700000000', '', '1700003600', 'all');
+
+INSERT INTO `old_message` (`mid`, `title`, `content`, `expire`, `active`, `view`, `mlanguage`) VALUES
+(1, 'Notice', 'A notice of the 6.2 site', 1700007200, 1, 1, ''),
+(2, 'Lasting', 'A notice without an end', 0, 1, 1, '');
 
 INSERT INTO `old_voting` (`id`, `modul`, `title`, `questions`, `answer`, `date`, `multi`, `language`, `typ`, `status`) VALUES
 (1, '', 'Which one', 'Yes|No', '1|0', '2025-01-01 10:00:00', 0, '', 0, 1);

@@ -370,8 +370,8 @@ function getMigrateNode(string $mod, array $row): array {
     $votes = in_array($mod, ['links', 'files'], true);
     $uid = intval($row['uid'] ?? 0);
     return [
-        'id' => intval($row['id']), 'cid' => intval($row['cid'] ?? 0), 'uid' => $uid, 'aname' => $uid > 0 ? '' : mb_substr((string)($row['name'] ?? ''), 0, 25),
-        'ip' => getIpNorm((string)($row['ip'] ?? '')) ?: '', 'title' => mb_substr(trim((string)($row['title'] ?? '')), 0, 100), 'intro' => (string)($row['intro'] ?? ''),
+        'id' => intval($row['id']), 'cid' => intval($row['cid'] ?? 0), 'uid' => $uid, 'aname' => $uid > 0 ? '' : filterCutText((string)($row['name'] ?? ''), 25),
+        'ip' => getIpNorm((string)($row['ip'] ?? '')) ?: '', 'title' => filterCutText(trim((string)($row['title'] ?? '')), 100), 'intro' => (string)($row['intro'] ?? ''),
         'body' => (string)($row['body'] ?? ''), 'field' => (string)($row['field'] ?? ''), 'time' => (string)($row['time'] ?? ''), 'views' => intval($row['counter'] ?? 0),
         'home' => intval($row['ihome'] ?? 0), 'comon' => ($mod === 'help') ? CommentMode::Open->value : intval($row['acomm'] ?? 0), 'pinned' => intval($row['fix'] ?? 0),
         'poll' => intval($row['vote'] ?? 0), 'score' => intval($votes ? $row['tvotes'] : ($row['score'] ?? 0)),
@@ -476,7 +476,7 @@ function addMigrateNodes(string $mod, NodeType $type, array $rows, Closure $have
         .' :ratings, :status, 1, :created, :updated, :published, NULL)';
     $put = 'INSERT INTO '.PREFIX_DB.'_node_assets (nid, kind, role, src, name, title, intro, mime, size, width, height, duration, hits, reported, ruid, sort, created, updated)'
         .' VALUES (:nid, :kind, :role, :src, :name, \'\', \'\', :mime, :size, :width, :height, NULL, :hits, :rep, 0, 0, :created, :updated)';
-    $rate = 'INSERT INTO '.PREFIX_DB.'_rating_targets (scope, mid, base, votes, created) VALUES (:scope, :mid, :base, :votes, UNIX_TIMESTAMP())';
+    $rate = 'INSERT INTO '.PREFIX_DB.'_rating_targets (scope, mid, base, votes, created) VALUES (:scope, :mid, :base, :votes, NOW())';
     $back = 'INSERT INTO '.PREFIX_DB.'_node_legacy (modul, oid, nid) VALUES (:modul, :oid, :nid)';
     $map = [];
     $miss = [];
@@ -568,7 +568,7 @@ function addMigrateReplies(NodeType $type, array $roots, array $map, Closure $ha
         $time = $row['time'] ?: date('Y-m-d H:i:s');
         $title = trim((string)$row['title']);
         $body = getMigrateAttach(getMigrateHtml(($title !== '' ? '[b]'.$title."[/b]\n\n" : '').$row['body'], false), 'help', 0, $have);
-        getMigrateQuery($sql, ['cid' => $nid, 'modul' => $type->name, 'time' => $time, 'uid' => $aid, 'name' => mb_substr((string)($users[$aid] ?? ''), 0, 25),
+        getMigrateQuery($sql, ['cid' => $nid, 'modul' => $type->name, 'time' => $time, 'uid' => $aid, 'name' => filterCutText((string)($users[$aid] ?? ''), 25),
             'ip' => getIpNorm((string)$row['ip']) ?: '', 'body' => $body, 'status' => CommentStatus::Published->value, 'shown' => $time]);
         $last[$nid] = ['aid' => $aid, 'time' => $time];
     }
@@ -889,10 +889,12 @@ function getUpdateSource(string $file): array {
     return $data;
 }
 
-# The connection settings of the site from config/db.php, written by 6.3 as the db area or by 6.2 as the variable $confdb, empty while the file does not exist
+# The connection settings of config/db.php, the db area of 6.3 with its collation or the $confdb of 6.2 with the collation of the release, empty without the file
 function getUpdateCred(): array {
     $data = getUpdateSource(CONFIG_DIR.'/db.php');
-    return is_array($data['db'] ?? null) ? $data['db'] : $data;
+    $base = ['collate' => 'utf8mb4_unicode_520_ci'];
+    if (is_array($data['db'] ?? null)) return $data['db'] + $base;
+    return $data ? array_replace($data, $base) : [];
 }
 
 # Check what the 6.3 data update needs before anything is changed and answer the refusal, or an empty string when the run may start
@@ -1081,7 +1083,7 @@ function setUpdateRatings(Database $db, string $prefix): array {
             $list = json_decode((string)file_get_contents($dir.'/'.$snap), true);
             $keys = array_slice($cols, 0, $knum);
             $cond = implode(' AND ', array_map(fn(string $v): string => $v.' = :'.$v, $keys));
-            $more = $kind === 'targets' ? ['created' => intval($info['moment'])] : [];
+            $more = $kind === 'targets' ? ['created' => date('Y-m-d H:i:s', intval($info['moment']))] : [];
             $into = array_merge($cols, array_keys($more));
             $sql = 'INSERT INTO `'.$prefix.'_'.$tab.'` ('.implode(', ', $into).') VALUES (:'.implode(', :', $into).')';
             $find = 'SELECT '.implode(', ', $cols).' FROM `'.$prefix.'_'.$tab.'` WHERE '.$cond.' FOR UPDATE';
@@ -1613,7 +1615,7 @@ function setUpdateMails(Database $db, string $prefix, string $from, bool $move):
         if (!$same) return getUpdateRow('newsletter: the snapshot of the recipients does not match its manifest', false);
         $find = 'SELECT id FROM `'.$prefix.'_mail` WHERE kind = \'newsletter\' AND ref = :ref AND email = :mail LIMIT 1';
         $sql = 'INSERT INTO `'.$prefix.'_mail` (kind, sender, email, title, body, ref, prio, time, ntime)'
-            .' VALUES (\'newsletter\', :from, :mail, :title, \'\', :ref, 3, NOW(), NOW())';
+            .' VALUES (\'newsletter\', :from, :mail, :title, \'\', :ref, 3, NOW(), UNIX_TIMESTAMP())';
         $mark = 'UPDATE '.$tab.' SET status = 5, audit = \'list\', expect = :num, total = :sum WHERE id = :id';
         $info['sent'] = 0;
         foreach (json_decode((string)file_get_contents($dir.'/recipients.json'), true) as [$nid, $name, $mails]) {
@@ -1661,8 +1663,9 @@ function setUpdateSql(Database $db, string $file, string $prefix): array {
     $list = getSqlbatch((string)file_get_contents($path));
     if ($list['error'] !== '') return getUpdateRow($file.': '.$list['error'], false);
     $rows = [];
+    $coll = (string)(getUpdateCred()['collate'] ?? '');
     foreach ($list['statements'] as $sql) {
-        $sql = str_replace(['{prefix}', '{engine}', '{charset}', '{collate}'], [$prefix, 'InnoDB', 'utf8mb4', 'utf8mb4_unicode_ci'], $sql);
+        $sql = str_replace(['{prefix}', '{engine}', '{charset}', '{collate}'], [$prefix, 'InnoDB', 'utf8mb4', $coll], $sql);
         $res = $db->getSqlQuery($sql);
         $info = getSqlinfo($sql);
         $gone = ($res && $info['type'] === 'DELETE') ? ' (rows removed: '.intval($db->getSqlRowCount($res)).')' : '';
@@ -1684,8 +1687,9 @@ function setUpdateRun(): array {
     $pref = (string)($cred['prefix'] ?? '');
     $text = 'config/db.php names no database or no valid prefix, nothing was changed';
     if (($cred['name'] ?? '') === '' || !preg_match('/^[A-Za-z0-9_]{1,32}$/D', $pref)) return getUpdateRow($text, false);
+    $base = ['engine' => 'InnoDB', 'charset' => 'utf8mb4'];
     try {
-        $db = new Database((string)($cred['host'] ?? ''), (string)($cred['uname'] ?? ''), (string)($cred['pass'] ?? ''), (string)$cred['name']);
+        $db = new Database((string)($cred['host'] ?? ''), (string)($cred['uname'] ?? ''), (string)($cred['pass'] ?? ''), (string)$cred['name'], (string)$cred['collate']);
     } catch (RuntimeException $err) {
         return getUpdateRow($err->getMessage(), false);
     }
@@ -1702,8 +1706,8 @@ function setUpdateRun(): array {
     if (!in_array(strtolower($spanel), ['admin', 'index', 'setup', 'update', strtolower($afile)], true) && is_file($left)) unlink($left);
     if (!setUpdateFile('security.php', $conf['security'], ['afile' => $afile])) return array_merge($rows, getUpdateRow('config/security.php could not be written', false));
     $conf = array_merge($conf, require CONFIG_DIR.'/security.php');
-    $base = ['engine' => 'InnoDB', 'charset' => 'utf8mb4', 'collate' => 'utf8mb4_unicode_ci', 'sync' => '1'];
-    if (!setUpdateFile('db.php', $cred, $base)) return array_merge($rows, getUpdateRow('config/db.php could not be written', false));
+    $dbc = array_diff_key($cred, array_flip(['mode', 'sync', 'type']));
+    if (!setUpdateFile('db.php', $dbc, $base)) return array_merge($rows, getUpdateRow('config/db.php could not be written', false));
     $mark = getUpdateSource(CONFIG_DIR.'/update.php')['update'] ?? [];
     $first = !isset($mark['modules']);
     $rows = array_merge($rows, setUpdateModules($db, $pref, $first));
@@ -1854,7 +1858,7 @@ function setUpdateRun(): array {
         $rdata += ['bytes' => '2097152', 'redirects' => '3', 'timeout' => '10'];
         if (!setUpdateFile('rss.php', $rdata)) $rows = array_merge($rows, getUpdateRow('config/rss.php could not be written', false));
     }
-    $rnum = $db->getSqlQuery('UPDATE `'.$pref.'_blocks` SET content = \'\', time = \'0\' WHERE url != \'\'');
+    $rnum = $db->getSqlQuery('UPDATE `'.$pref.'_blocks` SET content = \'\', time = 0 WHERE url != \'\'');
     $rows = array_merge($rows, getUpdateRow($pref.'_blocks RSS bodies cleared for Markdown (rows: '.($rnum ? $db->getSqlRowCount($rnum) : 0).')', $rnum !== false));
     $bpars = [];
     foreach (['news', 'pages', 'faq', 'files', 'jokes', 'jokes_random', 'links', 'center', 'center_media', 'center_plus'] as $i => $one) $bpars['b'.$i] = $one.'.php';
@@ -1954,6 +1958,7 @@ if (($_REQUEST['op'] ?? '') === 'update' || !isset($umark['points'], $umark['rat
     ini_set('display_errors', $conf['security']['error'] > 0 ? '1' : '0');
     error_reporting([0, E_ALL ^ E_NOTICE, E_ALL][intval($conf['security']['error'])] ?? 0);
     set_time_limit(0);
+    date_default_timezone_set((string)(getUpdateSource(CONFIG_DIR.'/config_global.php')['gtime'] ?? $conf['gtime']));
     $spanel = (string)(getUpdateSource(CONFIG_DIR.'/config_security.php')['afile'] ?? $conf['security']['afile'] ?? '');
     if (!preg_match('/^[a-zA-Z0-9_-]+$/D', $spanel) || in_array(strtolower($spanel), ['index', 'setup', 'update'], true)) $spanel = 'admin';
     setUpdatePage((($_POST['op'] ?? '') === 'update') ? setUpdateRun() : []);

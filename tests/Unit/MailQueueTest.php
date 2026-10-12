@@ -235,10 +235,10 @@ final class MailQueueTest extends TestCase
         $db->rows = [[['id' => 5, 'kind' => 'account', 'sender' => '', 'email' => 'user@slaed.net', 'title' => '', 'body' => '', 'ref' => 0, 'prio' => 1, 'tries' => 0]]];
         $rows = $this->getMail($db)->getBatch(25);
         $this->assertCount(1, $rows);
-        $claim = $db->getMatch('SET locked = NOW()');
+        $claim = $db->getMatch('SET locked = UNIX_TIMESTAMP()');
         $this->assertCount(1, $claim);
-        $this->assertStringContainsString('WHERE hold = 0 AND status = 0 AND ntime <= NOW() ORDER BY prio ASC, ntime ASC, id ASC LIMIT 25', $claim[0]['query']);
-        $this->assertStringNotContainsString('locked IS NULL', $claim[0]['query']);
+        $this->assertStringContainsString('WHERE hold = 0 AND status = 0 AND ntime <= UNIX_TIMESTAMP() ORDER BY prio ASC, ntime ASC, id ASC LIMIT 25', $claim[0]['query']);
+        $this->assertStringNotContainsString('locked', explode('WHERE', $claim[0]['query'])[1]);
         $this->assertStringNotContainsString('lockid =', explode('WHERE', $claim[0]['query'])[1]);
         $this->assertMatchesRegularExpression('/^[0-9a-f]{32}$/', $claim[0]['pars']['lock']);
         $read = $db->getMatch('SELECT id, kind, sender');
@@ -254,8 +254,8 @@ final class MailQueueTest extends TestCase
         $db = new MailQueueDatabase();
         $mailer = new \Mail($db, ['sitename' => 'SLAED CMS', 'mail' => [], 'scheduler' => ['jobs' => ['maildrain' => ['lock_timeout' => '900']]]]);
         $mailer->getBatch(25);
-        $claim = $db->getMatch('SET locked = NOW()')[0];
-        $this->assertStringContainsString('ntime = DATE_ADD(NOW(), INTERVAL :wait SECOND)', $claim['query']);
+        $claim = $db->getMatch('SET locked = UNIX_TIMESTAMP()')[0];
+        $this->assertStringContainsString('ntime = UNIX_TIMESTAMP() + :wait', $claim['query']);
         $this->assertSame(900, $claim['pars']['wait']);
     }
 
@@ -268,7 +268,7 @@ final class MailQueueTest extends TestCase
         $mailer = $this->getMail($db, ['rate' => '0', 'batch' => '1']);
         $mailer->getBatch(1);
         (new \ReflectionMethod(\Mail::class, 'deleteLock'))->invoke($mailer);
-        $free = $db->getMatch('SET locked = NULL, lockid = \'\', ntime = NOW() WHERE lockid = :lock');
+        $free = $db->getMatch('SET locked = 0, lockid = \'\', ntime = UNIX_TIMESTAMP() WHERE lockid = :lock');
         $this->assertCount(1, $free);
         $this->assertStringContainsString('AND status = 0', $free[0]['query']);
     }
@@ -281,7 +281,7 @@ final class MailQueueTest extends TestCase
         $mailer = $this->getMail($db);
         $mailer->getBatch(5);
         $mailer->getBatch(5);
-        $lock = array_column($db->getMatch('SET locked = NOW()'), 'pars');
+        $lock = array_column($db->getMatch('SET locked = UNIX_TIMESTAMP()'), 'pars');
         $this->assertNotSame($lock[0]['lock'], $lock[1]['lock']);
     }
 
@@ -292,9 +292,9 @@ final class MailQueueTest extends TestCase
         $db = new MailQueueDatabase();
         $mailer = new \Mail($db, ['sitename' => 'SLAED CMS', 'mail' => [], 'scheduler' => ['jobs' => ['maildrain' => ['lock_timeout' => '900']]]]);
         $mailer->getBatch(5);
-        $free = $db->getMatch('SET locked = NULL, lockid = \'\' WHERE status = 0');
+        $free = $db->getMatch('SET locked = 0, lockid = \'\' WHERE status = 0');
         $this->assertCount(1, $free);
-        $this->assertStringContainsString('locked < DATE_SUB(NOW(), INTERVAL :wait SECOND)', $free[0]['query']);
+        $this->assertStringContainsString('locked > 0 AND locked < UNIX_TIMESTAMP() - :wait', $free[0]['query']);
         $this->assertSame(900, $free[0]['pars']['wait']);
     }
 
@@ -305,7 +305,7 @@ final class MailQueueTest extends TestCase
         $db = new MailQueueDatabase();
         $this->assertTrue($this->getMail($db)->setResult(5, true));
         $this->assertCount(1, $db->sql);
-        $this->assertStringContainsString('SET status = 1, tries = tries + 1, locked = NULL, lockid = \'\', phase = \'\', code = \'\', error = \'\'', $db->sql[0]['query']);
+        $this->assertStringContainsString('SET status = 1, tries = tries + 1, locked = 0, lockid = \'\', phase = \'\', code = \'\', error = \'\'', $db->sql[0]['query']);
         $this->assertSame(5, $db->sql[0]['pars']['id']);
     }
 
@@ -322,7 +322,7 @@ final class MailQueueTest extends TestCase
             $one = $db->getMatch('SET status = :stat')[0];
             $this->assertSame(0, $one['pars']['stat']);
             $this->assertSame('the relay refused at rcpt', $one['pars']['err']);
-            $this->assertStringContainsString('locked = NULL, lockid = \'\'', $one['query']);
+            $this->assertStringContainsString('locked = 0, lockid = \'\'', $one['query']);
             $wait[] = $one['pars']['wait'];
         }
         $this->assertSame([300, 600, 1200], $wait);

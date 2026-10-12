@@ -102,7 +102,7 @@ function newuser(): void {
         } else {
             $unkey = substr(getSecret('field'), 0, 32);
             $nick = getVar('post', $unkey, 'text');
-            $nick = ($nick) ? filterText(substr($nick, 0, 25)) : '';
+            $nick = ($nick) ? filterCutText(filterText($nick), 25) : '';
             $mail = getVar('post', 'mail', 'text');
             $mail = ($mail) ? filterText($mail) : '';
             $captcha = getCaptcha('register');
@@ -201,13 +201,11 @@ function finnewuser(): void {
         }
         if (!$stop) {
             $check = md5(getRandomString(10));
-            $time = time();
             $finishlink = $conf['homeurl'].'/index.php?name='.$conf['name'].'&op=activate&user='.urlencode($nick).'&num='.$check;
-            $nick = filterText($nick);
             $mail = filterText($mail);
             $db->getSqlQuery(
-                'INSERT INTO '.PREFIX_DB.'_users_temp (id, name, email, password, regdate, code, time) VALUES (NULL, :name, :email, :password, NOW(), :code, :time)',
-                ['name' => $nick, 'email' => $mail, 'password' => getPassHash($pass), 'code' => $check, 'time' => $time]
+                'INSERT INTO '.PREFIX_DB.'_users_temp (id, name, email, password, regdate, code) VALUES (NULL, :name, :email, :password, NOW(), :code)',
+                ['name' => $nick, 'email' => $mail, 'password' => getPassHash($pass), 'code' => $check]
             );
             setHead(['title' => _ACCOUNTCREATED]);
             if ($conf['users']['nomail'] == 1) {
@@ -247,8 +245,7 @@ function activate(): void {
     global $db, $conf, $locale, $tpl, $pnt;
     $user = getVar('get', 'user', 'name', '');
     $num = getVar('get', 'num', 'text', '');
-    $past = time() - 86400;
-    $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_users_temp WHERE time < :past', ['past' => $past]);
+    $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_users_temp WHERE regdate < NOW() - INTERVAL 1 DAY');
     $result = $db->getSqlQuery(
         'SELECT name, email, password, regdate, code FROM '.PREFIX_DB.'_users_temp WHERE name = :uname AND code = :cnum',
         ['uname' => $user, 'cnum' => $num]
@@ -258,7 +255,7 @@ function activate(): void {
         [$nick, $mail, $pass, $reg, $check] = $db->getSqlRow($result);
         if ($num == $check) {
             $uip = getIp();
-            $uagent = getAgent();
+            $uagent = filterCutText(getAgent(), 255);
             $rank = '';
             $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_users (id, name, `rank`, email, avatar, regdate, password, lang, ip, agent, block, warnings, field) VALUES (NULL, :uname,'
                 .' :rank, :email, :avatar, :regdate, :pwd, :lang, :ip, :agent, :block, :warnings, :field)', ['uname' => $nick, 'rank' => $rank, 'email' => $mail, 'avatar' => '',
@@ -358,13 +355,13 @@ function view(): void {
             if ($adm) {
                 $idv = (string)$uid;
                 $regdate = format_time($reg, _TIMESTRING);
-                $lastvisit = format_time($last, _TIMESTRING);
+                $lastvisit = format_time($last, _TIMESTRING) ?: _NO_INFO;
                 $georow = $mkrow('hdd-network', _IP, '', Geoip::getIpHtml($userIpRaw), true);
                 $agentv = $agent ?: _NO_INFO;
             } else {
                 $idv = _HIDE;
                 $regdate = format_time($reg);
-                $lastvisit = format_time($last);
+                $lastvisit = format_time($last) ?: _NO_INFO;
                 $geo = Geoip::getInfo($ip);
                 $coun = (string)($geo['country_name'] ?: $geo['country']);
                 $georow = $mkrow('geo-alt', _COUNTRY, $coun ?: _NO_INFO);
@@ -617,7 +614,7 @@ function profil(): void {
             }
         }
     }
-    $seen = ($inf['lastvis'] ?? '') ? format_time($inf['lastvis'], _TIMESTRING) : '';
+    $seen = format_time($inf['lastvis'] ?? null, _TIMESTRING);
     echo $tpl->getHtmlPart('account-home', [
         'home_head' => [
             'icon' => getIconName('home'),
@@ -913,7 +910,8 @@ function setUserLogin(int $uid, string $name, string $pass, int $story, int $blo
     $uip = getIp();
     $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_session WHERE uname = :uname AND guest = :guest', ['uname' => $uip, 'guest' => 0]);
     getUserLastVisit($uid);
-    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET ip = :ip, lastvis = NOW(), agent = :agent WHERE id = :id', ['ip' => $uip, 'agent' => getAgent(), 'id' => $uid]);
+    $pars = ['ip' => $uip, 'agent' => filterCutText(getAgent(), 255), 'id' => $uid];
+    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET ip = :ip, lastvis = NOW(), agent = :agent WHERE id = :id', $pars);
     $pnt->addEvent('login', 'account', 'day:'.gmdate('Ymd'), $uid);
     Captcha::clearLoginFailures('user');
     addLoginReport(0, 1, $name);
@@ -1315,7 +1313,7 @@ function edithome(): void {
                 'prov' => (string)$lnk['provider'],
                 'label' => ucfirst((string)$lnk['provider']),
                 'email' => (string)$lnk['email'],
-                'since' => ($lnk['linked']) ? format_time(date('Y-m-d H:i:s', (int)$lnk['linked'])) : '',
+                'since' => format_time($lnk['linked']),
                 'unlink_html' => $tpl->getHtmlFrag('post-button', [
                     'action' => 'index.php?name='.$conf['name'],
                     'hidden' => $ohid,
@@ -1404,10 +1402,10 @@ function savehome(): void {
         $checkp = htmlspecialchars($user[2]);
         [$id, $name, $pass] = $db->getSqlRow($db->getSqlQuery('SELECT id, name, password FROM '.PREFIX_DB.'_users WHERE id = :user_id', ['user_id' => $uid]));
         if ($id == $uid && $name == $checkn && $pass == $checkp) {
-            $site = getVar('post', 'site', 'url');
-            $occ = getVar('post', 'occ', 'text');
-            $from = getVar('post', 'from', 'text');
-            $inter = getVar('post', 'inter', 'text');
+            $site = filterCutText(getVar('post', 'site', 'url'), 255);
+            $occ = filterCutText(getVar('post', 'occ', 'text'), 100);
+            $from = filterCutText(getVar('post', 'from', 'text'), 100);
+            $inter = filterCutText(getVar('post', 'inter', 'text'), 150);
             $view = getVar('post', 'view', 'num');
             $story = getVar('post', 'story', 'num');
             $blockon = getVar('post', 'blockon', 'num');
@@ -1553,7 +1551,7 @@ function oauthlogin(int $uid, string $prov, string $redir, string $event = ''): 
     global $db, $conf;
     $row = $db->getSqlRow($db->getSqlQuery('SELECT id, name, password, storynum, blockon, theme FROM '.PREFIX_DB.'_users WHERE id = :uid', ['uid' => $uid]));
     if (!is_array($row) || empty($row['id'])) oautherror();
-    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_user_oauth SET lastlog = :time WHERE uid = :uid AND provider = :prov', ['time' => time(), 'uid' => $uid, 'prov' => $prov]);
+    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_user_oauth SET lastlog = NOW() WHERE uid = :uid AND provider = :prov', ['uid' => $uid, 'prov' => $prov]);
     if ($event !== '') Oauth::setLog($event, $prov, $uid);
     setUserLogin((int)$row['id'], (string)$row['name'], (string)$row['password'], (int)$row['storynum'], (int)$row['blockon'], (string)$row['theme']);
     setRedirect($redir !== '' ? $redir : 'index.php?name='.$conf['name'].'&op=profil');
@@ -1788,8 +1786,7 @@ function oauthfinish(): void {
             Oauth::setLog('oauth_reg_disabled', $prov);
             oautherror();
         }
-        $uname = getVar('post', 'uname', 'name');
-        $uname = trim(substr((string)$uname, 0, 25));
+        $uname = trim((string)getVar('post', 'uname', 'name'));
         $nameb = explode(',', $conf['users']['name_b']);
         $badnm = !$uname || !analyze_name($uname) || in_array(strtolower($uname), array_filter($nameb), true);
         if (!$badnm && $db->getSqlRowCount($db->getSqlQuery('SELECT name FROM '.PREFIX_DB.'_users WHERE name = :name', ['name' => $uname])) > 0) $badnm = true;
@@ -1821,7 +1818,7 @@ function oauthfinish(): void {
             .' VALUES (NULL, :uname, :rank, :email, :avatar, NOW(), :pwd, :lang, :ip, :agent, :block, :warnings, :field)',
             [
                 'uname' => $uname, 'rank' => '', 'email' => $mail, 'avatar' => '', 'pwd' => $pass, 'lang' => $locale,
-                'ip' => getIp(), 'agent' => getAgent(), 'block' => '', 'warnings' => '', 'field' => '',
+                'ip' => getIp(), 'agent' => filterCutText(getAgent(), 255), 'block' => '', 'warnings' => '', 'field' => '',
             ]
         );
         $nuid = ($ok !== false) ? (int)$db->getSqlLastId() : 0;

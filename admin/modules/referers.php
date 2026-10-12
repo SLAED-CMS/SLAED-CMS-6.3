@@ -66,7 +66,8 @@ function referers(): void {
     $count = $sortmap[$sort][0] ?? 'time';
     $ordby = $sortmap[$sort][1] ?? 'time';
     $ordsc = ($order == 1) ? 'ASC' : 'DESC';
-    $result = $db->getSqlQuery('SELECT Count('.$count.') AS hits, uid, name, ip, referer, url, time FROM '.PREFIX_DB.'_referer GROUP BY '.$count.' ORDER BY '.$ordby.' '.$ordsc);
+    $sql = 'SELECT t.hits, r.uid, r.name, r.ip, r.referer, r.url, r.time FROM (SELECT Count('.$count.') AS hits, MAX(id) AS id FROM '.PREFIX_DB.'_referer GROUP BY '.$count.') t';
+    $result = $db->getSqlQuery($sql.' JOIN '.PREFIX_DB.'_referer r ON r.id = t.id ORDER BY '.$ordby.' '.$ordsc);
     setHead();
     $cont = getTplAdminTabs([
         'ops' => ['name=referers', 'name=referers&op=config', 'name=referers&op=info'],

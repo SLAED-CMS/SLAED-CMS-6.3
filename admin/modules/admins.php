@@ -355,12 +355,13 @@ function save(): void {
     $aid = getVar('post', 'aid', 'num', 0);
     $warn = !checkAdminPost('admins');
     $name = getVar('post', 'aname', 'name', '');
-    $title = getVar('post', 'title', 'title', '');
-    $url = getVar('post', 'url', 'url', 'https://');
+    $title = filterCutText(getVar('post', 'title', 'title', ''), 50);
+    $url = filterCutText(getVar('post', 'url', 'url', 'https://'), 255);
     $email = getVar('post', 'email', 'email', '');
     $pwd = getVar('post', 'pwd', 'raw', '');
     $ptwo = getVar('post', 'pwdtwo', 'raw', '');
     $lang = getVar('post', 'lang', 'var', $conf['language']);
+    if (!isset(getLanguageList()[$lang])) $lang = $conf['language'];
     $mods = filterAdminmods(getVar('post', 'modules[]', 'var', []));
     $held = $aid ? getAdminModuleNames((string)(getAdminrow($aid)['modules'] ?? '')) : [];
     foreach ($held as $key) {

@@ -241,7 +241,7 @@ function save(): void {
     $stop = [];
     $warn = !checkAdminPost('groups');
     if (!$warn) {
-        $grname = getVar('post', 'grname', 'title');
+        $grname = filterCutText(getVar('post', 'grname', 'title'), 255);
         $intro = getVar('post', 'description', 'text');
         $points = getVar('post', 'points', 'num');
         $grextra = getVar('post', 'grextra', 'num') ? 1 : 0;
@@ -252,7 +252,7 @@ function save(): void {
         $rank = trim((string)getVar('post', 'rank_icon', 'raw')).':'.$lit.':'.$total.':'.$tone;
         if (!$grname) $stop[] = _CERROR;
         if (!preg_match('/^#[0-9a-f]{6}$/', $color)) $stop[] = _GROUPS_BADCOLOR;
-        if (!getRankData($rank)) $stop[] = _GROUPS_BADRANK;
+        if (strlen($rank) > 255 || !getRankData($rank)) $stop[] = _GROUPS_BADRANK;
         if (!is_numeric($points) && !$grextra) $stop[] = _NONUMVALUE;
         if (is_numeric($points) && !$grextra) {
             $taken = $db->getSqlRow($db->getSqlQuery('SELECT name, points FROM '.PREFIX_DB.'_groups WHERE extra != 1 AND points = :points AND id != :id LIMIT 1', [

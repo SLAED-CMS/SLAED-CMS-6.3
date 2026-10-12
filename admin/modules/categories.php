@@ -9,6 +9,7 @@ if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 function categories(): void {
     global $afile, $tpl;
     $modul = getVar('req', 'modul', 'var', '');
+    if (!in_array($modul, getCategoryModules(), true)) $modul = '';
     $modlink = $modul ? '&modul='.$modul : '';
     $ops = ['name=categories'.$modlink, 'name=categories&op=add'.$modlink, 'name=categories&op=subadd'.$modlink, 'name=categories&op=addedit'.$modlink,
         'name=categories&op=info'.$modlink];
@@ -39,6 +40,7 @@ function categories(): void {
 function fix(): void {
     global $db, $afile;
     $modul = getVar('post', 'modul', 'var', 'forum');
+    if (!in_array($modul, getCategoryModules(), true)) $modul = 'forum';
     $warn = !checkAdminPost('categories');
     if (!$warn) {
         $result = $db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_categories WHERE modul = :modul ORDER BY ordern ASC', ['modul' => $modul]);
@@ -55,6 +57,7 @@ function fix(): void {
 function add(): void {
     global $conf, $afile, $tpl;
     $modul = getVar('get', 'modul', 'var', 'forum');
+    if (!in_array($modul, getCategoryModules(), true)) $modul = 'forum';
     $modlink = '&modul='.$modul;
     $ops = ['name=categories'.$modlink, 'name=categories&op=add'.$modlink, 'name=categories&op=subadd'.$modlink, 'name=categories&op=addedit'.$modlink,
         'name=categories&op=info'.$modlink];
@@ -194,6 +197,7 @@ function add(): void {
 function subadd(): void {
     global $db, $conf, $afile, $tpl;
     $modul = getVar('get', 'modul', 'var', 'forum');
+    if (!in_array($modul, getCategoryModules(), true)) $modul = 'forum';
     $modlink = '&modul='.$modul;
     $ops = ['name=categories'.$modlink, 'name=categories&op=add'.$modlink, 'name=categories&op=subadd'.$modlink, 'name=categories&op=addedit'.$modlink,
         'name=categories&op=info'.$modlink];
@@ -352,6 +356,7 @@ function subadd(): void {
 function addedit(): void {
     global $db, $afile, $tpl;
     $modul = getVar('get', 'modul', 'var', 'forum');
+    if (!in_array($modul, getCategoryModules(), true)) $modul = 'forum';
     $modlink = '&modul='.$modul;
     $ops = ['name=categories'.$modlink, 'name=categories&op=add'.$modlink, 'name=categories&op=subadd'.$modlink, 'name=categories&op=addedit'.$modlink,
         'name=categories&op=info'.$modlink];
@@ -556,13 +561,15 @@ function addsave(): void {
     global $db, $afile;
     $warn = !checkAdminPost('categories');
     $modul = getVar('post', 'modul', 'var');
-    $title = getVar('post', 'title', 'title');
+    if (!in_array($modul, getCategoryModules(), true)) $warn = true;
+    $title = filterCutText(getVar('post', 'title', 'title'), 100);
     $description = getVar('post', 'description', 'text');
     $imgcat = getVar('post', 'imgcat', 'var');
     $lang = getVar('post', 'lang', 'var');
+    if (!isset(getLanguageList()[$lang])) $lang = '';
     $cid = getVar('post', 'cid', 'num', 0);
     $imgcat = strtolower($imgcat);
-    if (!preg_match('/^[a-z0-9-]+$/', $imgcat)) $imgcat = '';
+    if (!preg_match('/^[a-z0-9-]{1,100}$/', $imgcat)) $imgcat = '';
     $status = getVar('post', 'status', 'num');
     $row = ['modul' => $modul, 'title' => $title, 'intro' => $description, 'img' => $imgcat, 'lang' => $lang, 'parent' => $cid, 'status' => $status] + getCategoryRights();
     $text = $warn ? _TOKENMISS : _SUCCSAVE;
@@ -597,13 +604,15 @@ function save(): void {
     $warn = !checkAdminPost('categories');
     $id = getVar('post', 'id', 'num');
     $modul = getVar('post', 'modul', 'var');
-    $title = getVar('post', 'title', 'title');
+    if (!in_array($modul, getCategoryModules(), true)) $warn = true;
+    $title = filterCutText(getVar('post', 'title', 'title'), 100);
     $description = getVar('post', 'description', 'text');
     $imgcat = getVar('post', 'imgcat', 'var');
     $lang = getVar('post', 'lang', 'var');
+    if (!isset(getLanguageList()[$lang])) $lang = '';
     $parent = getVar('post', 'parent', 'num');
     $imgcat = strtolower($imgcat);
-    if (!preg_match('/^[a-z0-9-]+$/', $imgcat)) $imgcat = '';
+    if (!preg_match('/^[a-z0-9-]{1,100}$/', $imgcat)) $imgcat = '';
     $status = getVar('post', 'status', 'num');
     $row = ['modul' => $modul, 'title' => $title, 'intro' => $description, 'img' => $imgcat, 'lang' => $lang, 'parent' => $parent, 'status' => $status] + getCategoryRights();
     $was = (string)$db->getSqlQuery('SELECT modul FROM '.PREFIX_DB.'_categories WHERE id = :id', ['id' => $id])->fetchColumn();
@@ -647,6 +656,7 @@ function change(): void {
     $id = getVar('post', 'id', 'num');
     $act = getVar('post', 'act', 'num', 0);
     $modul = getVar('post', 'modul', 'var', '');
+    if (!in_array($modul, getCategoryModules(), true)) $modul = '';
     $warn = !checkAdminPost('categories');
     $text = $warn ? _TOKENMISS : _SUCCSTATUS;
     $sql = 'SELECT modul, title, intro, img, lang, parent, status, pview, pread, ppost, preply, pedit, pdelete, pmod FROM '.PREFIX_DB.'_categories WHERE id = :id';
@@ -677,6 +687,7 @@ function delete(): void {
     global $db, $afile;
     $id = getVar('post', 'id', 'num');
     $modul = getVar('post', 'modul', 'var', 'forum');
+    if (!in_array($modul, getCategoryModules(), true)) $modul = 'forum';
     $warn = !checkAdminPost('categories');
     $text = $warn ? _TOKENMISS : _SUCCDELETE;
     $was = (!$warn && $id) ? (string)$db->getSqlQuery('SELECT modul FROM '.PREFIX_DB.'_categories WHERE id = :id', ['id' => $id])->fetchColumn() : '';
@@ -705,6 +716,7 @@ function delete(): void {
 
 function info(): void {
     $modul = getVar('req', 'modul', 'var', 'forum');
+    if (!in_array($modul, getCategoryModules(), true)) $modul = 'forum';
     $modlink = '&modul='.$modul;
     setTplAdminInfoPage([
         'ops' => ['name=categories'.$modlink, 'name=categories&op=add'.$modlink, 'name=categories&op=subadd'.$modlink, 'name=categories&op=addedit'.$modlink,

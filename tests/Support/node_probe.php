@@ -146,7 +146,7 @@ function addProbeBase(): PDO {
     global $conf;
     $name = 'slaed_node_'.bin2hex(random_bytes(4));
     if ($name === $conf['db']['name']) throw new RuntimeException('The disposable name collides with the site database');
-    getProbeRoot()->exec('CREATE DATABASE `'.$name.'` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci');
+    getProbeRoot()->exec('CREATE DATABASE `'.$name.'` DEFAULT CHARACTER SET utf8mb4 COLLATE '.$conf['db']['collate']);
     $GLOBALS['pnames'][] = $name;
     return getProbeRoot($name);
 }
@@ -182,7 +182,8 @@ function addProbeSplitter(): void {
 function getProbeStatements(string $file, string $pref = PROBEPREF): array {
     $sql = getSqlbatch((string)file_get_contents(BASE_DIR.'/storage/update/sql/'.$file));
     if ($sql['error'] !== '') throw new RuntimeException($file.' does not split: '.$sql['error']);
-    $fill = static fn(string $one): string => str_replace(['{prefix}', '{engine}', '{charset}', '{collate}'], [$pref, 'InnoDB', 'utf8mb4', 'utf8mb4_unicode_ci'], $one);
+    $coll = $GLOBALS['conf']['db']['collate'];
+    $fill = static fn(string $one): string => str_replace(['{prefix}', '{engine}', '{charset}', '{collate}'], [$pref, 'InnoDB', 'utf8mb4', $coll], $one);
     return array_map($fill, $sql['statements']);
 }
 
@@ -289,8 +290,8 @@ function getProbeRules(PDO $pdo): array {
         'refresh' => getProbeTry($pdo, 'INSERT INTO '.$pre.'node_sync` (nid, url, refresh) VALUES (3, \'https://example.com/feed\', 299)'),
         'longest' => getProbeTry($pdo, 'INSERT INTO '.$pre.'node_sync` (nid, url, refresh) VALUES (3, \'https://example.com/feed\', 31536001)'),
         'synctwin' => getProbeTry($pdo, 'INSERT INTO '.$pre.'node_sync` (nid, url) VALUES (1, \'https://example.com/other\')'),
-        'publish' => getProbeTry($pdo, 'INSERT INTO '.$pre.'node_publish` (nid, published, due) VALUES (1, \'2030-01-01 00:00:00\', \'2030-01-01 00:00:00\')'),
-        'pubtwin' => getProbeTry($pdo, 'INSERT INTO '.$pre.'node_publish` (nid, published, due) VALUES (1, \'2031-01-01 00:00:00\', \'2031-01-01 00:00:00\')'),
+        'publish' => getProbeTry($pdo, 'INSERT INTO '.$pre.'node_publish` (nid, published, due) VALUES (1, \'2030-01-01 00:00:00\', 1893456000)'),
+        'pubtwin' => getProbeTry($pdo, 'INSERT INTO '.$pre.'node_publish` (nid, published, due) VALUES (1, \'2031-01-01 00:00:00\', 1924992000)'),
         'defaults' => $pdo->query('SELECT status, version, comon, home, pinned, cid, uid, aname, ip, poll, published, expires FROM '.$pre.'nodes` WHERE id = 1')
             ->fetch(PDO::FETCH_ASSOC),
         'typedef' => $pdo->query('SELECT ext, active, sort, version FROM '.$pre.'node_types` WHERE id = 1')->fetch(PDO::FETCH_ASSOC),
@@ -1237,7 +1238,7 @@ function getProbeQueryRuns(): array {
     $out = ['schema' => setProbeRun($pdo, getProbeStatements('table.sql', PREFIX_DB))];
     addProbeRows($pdo);
     $out['reader'] = addProbeReader($GLOBALS['probework'].'/node');
-    $GLOBALS['pdb'] = new Database($conf['db']['host'], $conf['db']['uname'], $conf['db']['pass'], $name);
+    $GLOBALS['pdb'] = new Database($conf['db']['host'], $conf['db']['uname'], $conf['db']['pass'], $name, $conf['db']['collate']);
     $out['types'] = getProbeTypes();
     $out['stale'] = getProbeStale($pdo);
     $out['late'] = getProbeLate($pdo);
@@ -1788,7 +1789,7 @@ function getProbeServiceRuns(): array {
     $data['db']['name'] = $name;
     setProbeFile(CONFIG_DIR.'/db.php', $data);
     if (is_file(CONFIG_DIR.'/local.php')) unlink(CONFIG_DIR.'/local.php');
-    $GLOBALS['pdb'] = new Database($conf['db']['host'], $conf['db']['uname'], $conf['db']['pass'], $name);
+    $GLOBALS['pdb'] = new Database($conf['db']['host'], $conf['db']['uname'], $conf['db']['pass'], $name, $conf['db']['collate']);
     addProbeWeb();
     $out['rights'] = getProbeSvcRights();
     $out['names'] = getProbeSvcNames();
@@ -1871,13 +1872,6 @@ function addProbeWriter(string $dir): array {
     return ['query' => sha1_file($real.'/query.php') === sha1_file($dir.'/query.php'), 'service' => sha1_file($real.'/service.php') === sha1_file($dir.'/service.php')];
 }
 
-# Give a connection of the run the time zone the booted connection of a request gets, so every process of the run reads one clock
-function setProbeZone(Database $pdb): Database {
-    global $conf;
-    if ($conf['db']['sync']) $pdb->getSqlQuery("SET LOCAL time_zone = '".date('P')."'");
-    return $pdb;
-}
-
 # The points of the run: the shipped rules with every Node action and moderate worth one point and no period, or with a publication worth nothing, on the given connection
 function getProbeMatPoint(bool $zero = false, ?Database $pdb = null): Point {
     global $conf;
@@ -1895,7 +1889,8 @@ function addProbeMatRows(PDO $pdo): void {
         .' (2, \'anna\', \'anna@probe.test\', \'hash-anna\', \'\', \'\', \'\', 1, 0, \'127.0.0.1\'),'
         .' (3, \'boris\', \'boris@probe.test\', \'hash-boris\', \'\', \'\', \'\', 0, 150, \'127.0.0.1\'),'
         .' (4, \'clara\', \'clara@probe.test\', \'hash-clara\', \'\', \'\', \'\', 0, 0, \'127.0.0.1\')');
-    $pdo->exec('INSERT INTO '.$pre.'voting (id, modul, title, body, answer, status) VALUES (1, \'voting\', \'Poll\', \'\', \'\', 1), (2, \'voting\', \'Off\', \'\', \'\', 0)');
+    $pdo->exec('INSERT INTO '.$pre.'voting (id, modul, title, body, answer, enddate, status) VALUES (1, \'voting\', \'Poll\', \'\', \'\', NOW(), 1),'
+        .' (2, \'voting\', \'Off\', \'\', \'\', NOW(), 0)');
     $pdo->exec('INSERT INTO '.$pre.'admins (id, name, email, password, super, modules, ip)'
         .' VALUES (4, \'legacy\', \'legacy@probe.test\', \'hash-legacy\', 0, \'news,forum\', \'127.0.0.1\')');
 }
@@ -2050,7 +2045,7 @@ function getProbePoints(string $act, string $src): array {
 
 # The job of one material, or null
 function getProbeJob(int $id): ?array {
-    $row = $GLOBALS['pdb']->getSqlQuery('SELECT published, due FROM '.PREFIX_DB.'_node_publish WHERE nid = :id', ['id' => $id])->fetch(PDO::FETCH_ASSOC);
+    $row = $GLOBALS['pdb']->getSqlQuery('SELECT published, FROM_UNIXTIME(due) AS due FROM '.PREFIX_DB.'_node_publish WHERE nid = :id', ['id' => $id])->fetch(PDO::FETCH_ASSOC);
     return $row ?: null;
 }
 
@@ -2058,7 +2053,8 @@ function getProbeJob(int $id): ?array {
 function setProbeCome(int $id, int $sec = -60): void {
     $when = getProbeClock($sec);
     $GLOBALS['pdb']->getSqlQuery('UPDATE '.PREFIX_DB.'_nodes SET published = :pub WHERE id = :id', ['pub' => $when, 'id' => $id]);
-    $GLOBALS['pdb']->getSqlQuery('UPDATE '.PREFIX_DB.'_node_publish SET published = :pub, due = :due WHERE nid = :id', ['pub' => $when, 'due' => $when, 'id' => $id]);
+    $sql = 'UPDATE '.PREFIX_DB.'_node_publish SET published = :pub, due = UNIX_TIMESTAMP(:due) WHERE nid = :id';
+    $GLOBALS['pdb']->getSqlQuery($sql, ['pub' => $when, 'due' => $when, 'id' => $id]);
 }
 
 # Create: every refused create writes nothing; a draft, a submission, a direct publication and a guest submission store what the contract says
@@ -2609,11 +2605,12 @@ function getProbeMatPublish(): array {
     $job = getProbeJob($fail->id);
     $out['broken'] = ['status' => $res['status'], 'run' => $res['extra'], 'job' => $job !== null, 'later' => $job !== null && strcmp($job['due'], getProbeClock(30)) > 0];
     $GLOBALS['pdb']->getSqlQuery('RENAME TABLE '.$pre.'points_off TO '.$pre.'points');
-    $GLOBALS['pdb']->getSqlQuery('UPDATE '.$pre.'node_publish SET due = published WHERE nid = :id', ['id' => $fail->id]);
+    $GLOBALS['pdb']->getSqlQuery('UPDATE '.$pre.'node_publish SET due = UNIX_TIMESTAMP(published) WHERE nid = :id', ['id' => $fail->id]);
     $out['healed'] = ['run' => $run()['extra'], 'points' => $pts($fail->id)];
     $para = $late();
     setProbeCome($para->id);
-    $due = $GLOBALS['pdb']->getSqlQuery('SELECT p.nid, n.title, n.status, p.due FROM '.$pre.'node_publish AS p INNER JOIN '.$pre.'nodes AS n ON n.id = p.nid WHERE p.due <= NOW()')
+    $due = $GLOBALS['pdb']->getSqlQuery('SELECT p.nid, n.title, n.status, p.due FROM '.$pre.'node_publish AS p INNER JOIN '.$pre.'nodes AS n ON n.id = p.nid'
+        .' WHERE p.due <= UNIX_TIMESTAMP()')
         ->fetchAll(PDO::FETCH_ASSOC);
     $out['parallel'] = ['due' => $due, 'para' => $para->id, 'runs' => getProbeRaceRun('mpub', [[], []]), 'points' => $pts($para->id), 'job' => getProbeJob($para->id)];
     foreach (['before', 'after'] as $when) {
@@ -2836,7 +2833,7 @@ function getProbeMaterialRuns(): array {
     $data['db']['name'] = $name;
     setProbeFile(CONFIG_DIR.'/db.php', $data);
     if (is_file(CONFIG_DIR.'/local.php')) unlink(CONFIG_DIR.'/local.php');
-    $GLOBALS['pdb'] = setProbeZone(new Database($conf['db']['host'], $conf['db']['uname'], $conf['db']['pass'], $name));
+    $GLOBALS['pdb'] = new Database($conf['db']['host'], $conf['db']['uname'], $conf['db']['pass'], $name, $conf['db']['collate']);
     $GLOBALS['mpnt'] = getProbeMatPoint();
     addProbeWeb();
     $out['copies'] = $GLOBALS['mcopy'];
@@ -2946,7 +2943,7 @@ function getProbeMatAward(): array {
     $pdb->getSqlQuery('INSERT INTO '.$pre.'comment (cid, modul, time, uid, name, body, status) VALUES (:cid, \'news\', NOW(), 2, \'n\', \'x\', 1)', ['cid' => $one->id]);
     $cid = intval($pdb->getSqlLastId());
     $GLOBALS['mpnt']->addEvent('comment', 'node.news', 'comment:'.$cid, 2, ['mid' => $one->id]);
-    $side = getProbeMatPoint(false, setProbeZone(new Database($conf['db']['host'], $conf['db']['uname'], $conf['db']['pass'], (string)end($GLOBALS['pnames']))));
+    $side = getProbeMatPoint(false, new Database($conf['db']['host'], $conf['db']['uname'], $conf['db']['pass'], (string)end($GLOBALS['pnames']), $conf['db']['collate']));
     $was = $sum();
     $rows = fn(): int => intval(getProbeValue('SELECT COUNT(*) FROM '.$pre.'comment WHERE modul = \'news\' AND cid = :cid', ['cid' => $one->id]));
     $out = ['refused' => getProbeCall(fn(): null => getProbeWriter('moder', $side)->deleteNode($one->id, 1, getProbeCom()))];
@@ -2994,7 +2991,7 @@ function getProbeMatComm(string $who): array {
         $res = $early->addComment('news', $id, 'probe body', '');
         $out[$key] = [$mode, $res['id'] > 0, $rows($id), $sum() - $was];
     }
-    $sdb = setProbeZone(new ProbeSaveDb($conf['db']['host'], $conf['db']['uname'], $conf['db']['pass'], $conf['db']['name']));
+    $sdb = new ProbeSaveDb($conf['db']['host'], $conf['db']['uname'], $conf['db']['pass'], $conf['db']['name'], $conf['db']['collate']);
     $id = $open();
     $was = $sum();
     $res = $com($sdb)->addComment('news', $id, 'probe body', '');
@@ -3042,7 +3039,7 @@ function getProbeMatCross(): array {
     $node = getProbeWriter('mixed')->addNode($links, getProbeIn(['assets' => [getProbeAsset(null, 'file', 'link', 'https://example.com/cross')]]), NodeStatus::Published);
     $aid = $node->assets[0]->id;
     getProbeWriter('anna')->updateNodeAssetReport($aid, $links);
-    $hdb = setProbeZone(new ProbeHoldDb($conf['db']['host'], $conf['db']['uname'], $conf['db']['pass'], (string)end($GLOBALS['pnames'])));
+    $hdb = new ProbeHoldDb($conf['db']['host'], $conf['db']['uname'], $conf['db']['pass'], (string)end($GLOBALS['pnames']), $conf['db']['collate']);
     $proc = null;
     $pipes = [];
     $hdb->hold = function () use (&$proc, &$pipes, $node): void {
@@ -3149,7 +3146,7 @@ function getProbeMatSnap(): array {
     $node = getProbeWriter('mixed', null, getNodeExtension('hook', $pdb, $ctx))->addNode($hook, getProbeIn(), NodeStatus::Draft);
     $pdb->getSqlQuery('INSERT INTO '.$pre.'comment (cid, modul, time, uid, name, body, status) VALUES (:cid, \'hook\', NOW(), 0, \'g\', \'x\', 1)', ['cid' => $node->id]);
     $cid = intval($pdb->getSqlLastId());
-    $hdb = setProbeZone(new ProbeHoldDb($conf['db']['host'], $conf['db']['uname'], $conf['db']['pass'], (string)end($GLOBALS['pnames'])));
+    $hdb = new ProbeHoldDb($conf['db']['host'], $conf['db']['uname'], $conf['db']['pass'], (string)end($GLOBALS['pnames']), $conf['db']['collate']);
     $out = ['snapshot' => $hdb->getSqlQuery('SET SESSION innodb_snapshot_isolation = 1') !== false];
     $hdb->match = '_comment WHERE cid IN';
     $hdb->early = true;
@@ -3170,7 +3167,7 @@ if ($pmat) {
     if ($pmode !== 'material') {
         $GLOBALS['pdb'] = $db;
         if (in_array($pmode, ['mcrash', 'mpubcrash'], true)) {
-            $GLOBALS['pdb'] = setProbeZone(new ProbeCrashDb($conf['db']['host'], $conf['db']['uname'], $conf['db']['pass'], $conf['db']['name']));
+            $GLOBALS['pdb'] = new ProbeCrashDb($conf['db']['host'], $conf['db']['uname'], $conf['db']['pass'], $conf['db']['name'], $conf['db']['collate']);
             $GLOBALS['pdb']->when = ($pmode === 'mcrash') ? 'before' : (string)($pargs[0] ?? '');
         }
         $GLOBALS['mpnt'] = getProbeMatPoint();
@@ -3198,7 +3195,7 @@ if ($pmode === 'context') {
 }
 
 if ($pmode === 'crash') {
-    $cdb = new ProbeCrashDb($conf['db']['host'], $conf['db']['uname'], $conf['db']['pass'], $conf['db']['name']);
+    $cdb = new ProbeCrashDb($conf['db']['host'], $conf['db']['uname'], $conf['db']['pass'], $conf['db']['name'], $conf['db']['collate']);
     $cdb->when = (string)($pargs[0] ?? '');
     if ($cdb->when === 'journal') set_error_handler(static fn(int $no, string $text): bool => str_contains($text, 'journal.json.tmp'));
     $type = (new NodeQuery($cdb, getProbeContext('boss'), $fld))->getNodeType('news');

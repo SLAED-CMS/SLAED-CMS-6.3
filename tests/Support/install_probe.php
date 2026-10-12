@@ -109,7 +109,7 @@ function addInstallBase(): string {
     $dbc = getInstallCred();
     $name = 'slaed_inst_'.bin2hex(random_bytes(4));
     if ($name === $dbc['name']) throw new RuntimeException('The disposable name collides with the site database');
-    getInstallPdo()->exec('CREATE DATABASE `'.$name.'` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci');
+    getInstallPdo()->exec('CREATE DATABASE `'.$name.'` DEFAULT CHARACTER SET utf8mb4 COLLATE '.$dbc['collate']);
     return $name;
 }
 
@@ -686,7 +686,7 @@ function getInstallTables(): array {
 
 # Run the shipped schema into an empty database under a prefix, statement by statement; the answer is the number of tables it holds afterwards
 function addInstallFresh(PDO $pdo, string $pref): int {
-    $text = str_replace(['{prefix}', '{engine}', '{charset}', '{collate}'], [$pref, 'InnoDB', 'utf8mb4', 'utf8mb4_unicode_ci'],
+    $text = str_replace(['{prefix}', '{engine}', '{charset}', '{collate}'], [$pref, 'InnoDB', 'utf8mb4', getInstallCred()['collate']],
         (string)file_get_contents(BASE_DIR.'/storage/update/sql/table.sql'));
     foreach (preg_split('/;\s*\n/', $text) ?: [] as $sql) if (trim($sql) !== '' && !str_starts_with(trim($sql), '--')) $pdo->exec($sql);
     return count($pdo->query('SHOW TABLES')->fetchAll());
@@ -798,6 +798,7 @@ function getInstallAfter(PDO $pdo, array $page): array {
         'rating' => array_map(fn(string $v): int => (int)$pdo->query('SELECT COUNT(*) FROM '.IPREF.'_rating_'.$v)->fetchColumn(), ['targets' => 'targets', 'votes' => 'votes']),
         'node' => (int)$pdo->query('SELECT COUNT(*) FROM '.IPREF.'_node_types')->fetchColumn(),
         'local' => is_file($isite.'/config/local.php'),
+        'base' => [getInstallConf('db')['db']['collate'] ?? null, array_values(array_intersect(['mode', 'sync', 'type'], array_keys(getInstallConf('db')['db'] ?? [])))],
         'old' => count(glob($isite.'/config/config_*.php') ?: []),
         'snaps' => array_values(array_filter(
             array_map(fn(string $v): string => substr($v, strlen($isite.'/storage/backup/update/')), glob($isite.'/storage/backup/update/*/*') ?: []),
@@ -821,6 +822,9 @@ function getInstallAfter(PDO $pdo, array $page): array {
         'types' => [$tgone[1] ?? '', array_keys(getInstallConf('node')['node']['types'] ?? []), array_keys($fields['node'] ?? []),
             array_values(array_filter(array_keys(getInstallConf('ratings')['ratings'] ?? []), fn(int|string $v): bool => str_starts_with($v, 'node.')))],
         'owner' => [$mods['forum']['active'] ?? null, $jobs['newsletter']['active'] ?? null, str_contains($page['body'], 'were carried by the first run')],
+        'times' => [$pdo->query('SELECT time FROM '.IPREF.'_blocks WHERE id < 4 ORDER BY id')->fetchAll(PDO::FETCH_COLUMN),
+            $pdo->query('SELECT expire FROM '.IPREF.'_blocks WHERE id < 4 ORDER BY id')->fetchAll(PDO::FETCH_COLUMN),
+            $pdo->query('SELECT expire FROM '.IPREF.'_message ORDER BY id')->fetchAll(PDO::FETCH_COLUMN)],
         'attach' => [(string)$pdo->query('SELECT body FROM '.IPREF.'_forum WHERE id = 1')->fetchColumn(),
             (string)$pdo->query('SELECT body FROM '.IPREF.'_privat WHERE id = 1')->fetchColumn()],
     ];
@@ -921,8 +925,14 @@ function getInstallUpgrade(PDO $pdo, string $base, string $dump, string $rev, st
     $out['broken'] = getInstallAfter($pdo, getInstallReply([], 'POST', 'update.php', $form, $head));
     $out['broken']['guest'] = getInstallReply([], 'GET', '/')['code'];
     file_put_contents($ddl, $keep);
+    foreach ([$isite.'/config/config_global.php', $isite.'/config/global.php'] as $one) {
+        if (is_file($one)) file_put_contents($one, (string)preg_replace("/'gtime' => '[^']*'/", "'gtime' => 'Pacific/Tongatapu'", (string)file_get_contents($one)));
+    }
     $time = microtime(true);
     $out['first'] = getInstallAfter($pdo, getInstallReply([], 'POST', 'update.php', $form, $head)) + ['time' => round(microtime(true) - $time, 1)];
+    $tonga = new DateTimeZone('Pacific/Tongatapu');
+    $out['first']['zone'] = [(new DateTime('@'.(int)floor($time)))->setTimezone($tonga)->format('Y-m-d H:i:s'),
+        (string)$pdo->query('SELECT MAX(time) FROM '.IPREF.'_mail WHERE kind = \'newsletter\'')->fetchColumn(), (new DateTime('now', $tonga))->format('Y-m-d H:i:s')];
     if ($snap !== '' && !isset($out['first']['marks']['fields'])) $out['sources'] = setInstallSources($pdo, $snap);
     $mods = getInstallConf('modules');
     $mods['modules']['forum']['active'] = ($mods['modules']['forum']['active'] ?? '1') === '1' ? '0' : '1';
@@ -941,7 +951,7 @@ function getInstallUpgrade(PDO $pdo, string $base, string $dump, string $rev, st
     $out['third'] = getInstallAfter($pdo, getInstallReply([], 'POST', 'update.php', $form, $head));
     $out['third']['same'] = $mani() === $was;
     $fresh = 'slaed_inst_'.bin2hex(random_bytes(4));
-    $pdo->exec('CREATE DATABASE `'.$fresh.'` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci');
+    $pdo->exec('CREATE DATABASE `'.$fresh.'` DEFAULT CHARACTER SET utf8mb4 COLLATE '.getInstallCred()['collate']);
     try {
         $out['fresh'] = [count(getInstallTables()), addInstallFresh(getInstallPdo($fresh), IPREF)];
         $out['schema'] = getInstallDiffs(getInstallShape($pdo, $fresh, IPREF), getInstallShape($pdo, $base, IPREF));

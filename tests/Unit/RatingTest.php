@@ -160,7 +160,7 @@ final class RatingTest extends TestCase
         $this->assertSame([['node.story', 1, 0, 0]], $targets, 'A new target did not start with a zero balance');
         $this->assertSame(['u:2', 'u:3', 'u:4'], array_column($actors, 2));
         $this->assertSame([[2, 5], [3, 1], [4, 5]], array_map(static fn(array $row): array => [$row[4], $row[5]], $votes));
-        foreach ($votes as $key => $row) $this->assertSame([$actors[$key][3], 0, 0, ''], [$row[7], $row[8], $row[9], $row[10]], 'last is not the moment of the vote');
+        foreach ($votes as $key => $row) $this->assertSame([$actors[$key][3], null, 0, ''], [$row[7], $row[8], $row[9], $row[10]], 'last is not the moment of the vote');
         $this->assertFalse($run['open']);
     }
 
@@ -246,8 +246,8 @@ final class RatingTest extends TestCase
         $this->assertSame('interval', $run['still'], 'An annulment reopened the interval of the voter');
         $this->assertSame(['ok', [0, 0]], $run['hidden']);
         $this->assertSame(['ok', [0, 0]], $run['norule']);
-        $this->assertSame([['unavailable', false, 0, 0, null, false, false], 0], $run['gone'], 'A vote of a removed target was marked without its aggregate');
-        $this->assertSame(['storage', 0, true], $run['broken']);
+        $this->assertSame([['unavailable', false, 0, 0, null, false, false], null], $run['gone'], 'A vote of a removed target was marked without its aggregate');
+        $this->assertSame(['storage', null, true], $run['broken']);
     }
 
     # The journal pages by the vote id for the main administrator alone: everything, one scope, one target, a cursor, a closed set of arguments and the stored columns
@@ -257,7 +257,7 @@ final class RatingTest extends TestCase
         $run = $this->getRun('annul');
         $keys = ['id', 'scope', 'mid', 'actor', 'uid', 'value', 'request', 'created', 'annulled', 'aid', 'reason'];
         $this->assertSame([true, 'ok', true, true, $keys], $run['list']['all']);
-        $this->assertSame(['node.story', 1, 'u:2', 2, 5, 0, 0, ''], array_values(array_diff_key($run['list']['first'], ['id' => 0, 'request' => 0, 'created' => 0])));
+        $this->assertSame(['node.story', 1, 'u:2', 2, 5, null, 0, ''], array_values(array_diff_key($run['list']['first'], ['id' => 0, 'request' => 0, 'created' => 0])));
         $this->assertSame([[1, 1, 2], [2, 3], ['account', 'node.probe'], [2, true]], [$run['list']['scope'], $run['list']['target'], $run['list']['after'], $run['list']['page']]);
         $this->assertSame(['ok' => true, 'code' => 'ok', 'rows' => [], 'next' => 0], $run['list']['past']);
         $this->assertSame('ok', $run['list']['oldtype'], 'The history of a type that is gone cannot be read');

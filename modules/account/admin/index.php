@@ -595,14 +595,14 @@ function addsave(): void {
     if (!$iswarn) {
         $uid = getVar('post', 'uid', 'num');
         $uname = getVar('post', 'uname', 'name');
-        $rank = getVar('post', 'rank');
+        $rank = filterCutText(getVar('post', 'rank'), 25);
         $email = getVar('post', 'email');
-        $site = getVar('post', 'site', 'url');
-        $avatar = getVar('post', 'avatar', '', '');
+        $site = filterCutText(getVar('post', 'site', 'url'), 255);
+        $avatar = filterCutText(getVar('post', 'avatar', '', ''), 255);
         $reg = getVar('req', 'reg', 'time');
-        $occ = getVar('post', 'occ');
-        $from = getVar('post', 'from');
-        $inter = getVar('post', 'inter');
+        $occ = filterCutText(getVar('post', 'occ'), 100);
+        $from = filterCutText(getVar('post', 'from'), 100);
+        $inter = filterCutText(getVar('post', 'inter'), 150);
         $sig = getVar('post', 'sig', 'text');
         $view = getVar('post', 'view', 'num');
         $pass = getVar('post', 'pass');
@@ -614,6 +614,7 @@ function addsave(): void {
         if ($theme !== '' && !checkThemeAssets($theme)) $theme = '';
         $news = getVar('post', 'news', 'num');
         $lang = getVar('post', 'lang');
+        if (!isset(getLanguageList()[$lang])) $lang = '';
         $pdiff = trim(getVar('post', 'pdiff', 'raw', ''));
         $pnote = trim(getVar('post', 'pnote', 'raw', ''));
         $pkey = getVar('post', 'pkey', 'raw', '');
@@ -1315,8 +1316,8 @@ function oauthlist(): void {
                     ['has_content_text' => true, 'content_text' => ucfirst((string)$prov)],
                     ['is_truncate' => true, 'title_text' => (string)$puid, 'has_content_text' => true, 'content_text' => (string)$puid],
                     ['is_truncate' => true, 'title_text' => (string)$mail, 'has_content_text' => true, 'content_text' => (string)$mail],
-                    ['is_col_date' => true, 'content_html' => ($linked) ? date(_TIMESTRING, (int)$linked) : ''],
-                    ['is_col_date' => true, 'content_html' => ($lastlog) ? date(_TIMESTRING, (int)$lastlog) : ''],
+                    ['is_col_date' => true, 'content_html' => format_time($linked, _TIMESTRING)],
+                    ['is_col_date' => true, 'content_html' => format_time($lastlog, _TIMESTRING)],
                     ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('post-button', [
                         'action' => $afile.'.php',
                         'hidden' => $hidden,

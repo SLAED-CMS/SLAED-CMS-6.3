@@ -478,7 +478,7 @@ class FeedTest extends TestCase
         $at = strpos($code, 'setUpdateFields($db, $pref));');
         $this->assertNotFalse($at);
         $tail = substr($code, $at, 1200);
-        $this->assertStringContainsString("SET content = \\'\\', time = \\'0\\' WHERE url != \\'\\'", $tail, 'The body is emptied and the next view refreshes at once');
+        $this->assertStringContainsString("SET content = \\'\\', time = 0 WHERE url != \\'\\'", $tail, 'The body is emptied and the next view refreshes at once');
         $this->assertStringContainsString("unset(\$rdata['temp']);", $tail);
         $this->assertStringContainsString("['bytes' => '2097152', 'redirects' => '3', 'timeout' => '10']", $tail, 'A site keeping its own rss.php gets the three bounds');
     }

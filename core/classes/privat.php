@@ -488,7 +488,7 @@ final class Privat {
     # Both fields are normalized once, before the first attempt: a second attempt writes the bytes the first one meant to write and rewrites nothing
     # The room of the column is measured on the normalized body only, as the link rewrite decides the last bytes; no_room is the one code carrying a ready note
     public function addMessage(int $uid, string $name, string $title, string $body, string $ip): array {
-        $title = $this->filterMessageText($title, false);
+        $title = filterCutText(trim($this->filterMessageText($title, false)), 100);
         $body = $this->filterMessageText($body, true);
         $room = checkEditorTextRoom($body, 'privat.body');
         if ($room !== '') return ['id' => 0, 'error' => 'no_room', 'note' => $room];

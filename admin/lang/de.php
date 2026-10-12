@@ -144,7 +144,6 @@ define('_DBINFO','Die Verwendung des Standard-Präfixes ist nicht zwingend erfor
 define('_DBWARN','Im Fall der falsche Abfrage kann fehlschlagen in den Betrieb der Datenbank, so verwenden Sie diese Funktion sollte nur von erfahrenen Benutzern des Systems.');
 define('_DB_DELETE','Das Löschen der Tabellen');
 define('_DB_INSTALL','Die Installation der Tabellen');
-define('_DB_SYNC','Synchronisierung der «PHP timezone» und «MySQL timezone»?');
 define('_DB_UPDATE','Die Erneuerung der Tabellen');
 define('_DB_MODE','Modus');
 define('_DB_BLOCKS','Blöcke');

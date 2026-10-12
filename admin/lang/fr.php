@@ -144,7 +144,6 @@ define('_DBINFO',"L'utilisation standard de préfixe n'est pas nécessairement, 
 define('_DBWARN',"Dans le cas d'une requête incorrecte peut échouer dans le fonctionnement de la base de données, donc à utiliser cette fonctionnalité, il est recommandé uniquement pour les utilisateurs avancés du système.");
 define('_DB_DELETE','Suppression des tables de base');
 define('_DB_INSTALL','Installation des tables de la base');
-define('_DB_SYNC',"Synchroniser l'heure «PHP timezone» et «MySQL timezone»?");
 define('_DB_UPDATE','Mettre à jour les tables de la base');
 define('_DB_MODE','Mode');
 define('_DB_BLOCKS','Blocs');

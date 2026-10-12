@@ -97,10 +97,10 @@ final class UpdateConfigTest extends TestCase
         $this->assertSame([], $data['broken']['old']);
     }
 
-    # The first stage of the update reads the connection settings of a 6.2 db.php, so it runs on a 6.2 site without a form
+    # The first stage of the update reads the connection settings of a 6.2 db.php, so it runs on a 6.2 site without a form, in the collation of the release
     #[Test]
     public function theOldConnectionSettingsAreRead(): void
     {
-        $this->assertSame(['host' => 'h', 'name' => 'olddb', 'prefix' => 'sport', 'mode' => '1'], $this->getRun()['base']);
+        $this->assertSame(['host' => 'h', 'name' => 'olddb', 'prefix' => 'sport', 'mode' => '1', 'collate' => 'utf8mb4_unicode_520_ci'], $this->getRun()['base']);
     }
 }

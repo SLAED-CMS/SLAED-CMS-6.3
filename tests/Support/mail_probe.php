@@ -32,7 +32,7 @@ foreach (['mail' => false, 'maildead' => false, 'newsletter' => false, 'users' =
     $seed->exec('CREATE TABLE '.$to.' LIKE '.$from);
     if ($withrows) $seed->exec('INSERT INTO '.$to.' SELECT * FROM '.$from);
 }
-$db = $GLOBALS['db'] = new Database($conf['db']['host'], $conf['db']['uname'], $conf['db']['pass'], $GLOBALS['mailschema']);
+$db = $GLOBALS['db'] = new Database($conf['db']['host'], $conf['db']['uname'], $conf['db']['pass'], $GLOBALS['mailschema'], $conf['db']['collate']);
 
 # The kind every row this probe stores carries, so its own rows can be found and removed without touching anything the installation queued
 const PROBEKIND = 'probe';
@@ -57,7 +57,7 @@ function addProbeRow(array $data): int {
     $data += ['kind' => PROBEKIND, 'sender' => 'info@slaed.net', 'email' => 'probe@slaed.net', 'title' => 'probe', 'body' => 'probe body', 'ref' => 0, 'prio' => 3];
     $data += ['tries' => 0, 'status' => 0, 'age' => 0];
     $sql = 'INSERT INTO '.PREFIX_DB.'_mail (kind, sender, email, title, body, ref, prio, tries, status, time, ntime)'
-        .' VALUES (:kind, :sender, :email, :title, :body, :ref, :prio, :tries, :status, DATE_SUB(NOW(), INTERVAL :age DAY), NOW())';
+        .' VALUES (:kind, :sender, :email, :title, :body, :ref, :prio, :tries, :status, DATE_SUB(NOW(), INTERVAL :age DAY), UNIX_TIMESTAMP())';
     $db->getSqlQuery($sql, $data);
     return intval($db->getSqlLastId());
 }
@@ -101,12 +101,12 @@ function getProbeQueue(): array {
     $out['claim'] = ['mine' => count($take), 'them' => count($them->getBatch(50))];
     $held = getProbeRow($qid);
     $out['claim']['marked'] = strlen($held['lockid'] ?? '') === 32;
-    $sql = 'UPDATE '.PREFIX_DB.'_mail SET locked = DATE_SUB(NOW(), INTERVAL 2 HOUR), ntime = DATE_SUB(NOW(), INTERVAL 1 HOUR) WHERE id = :id';
+    $sql = 'UPDATE '.PREFIX_DB.'_mail SET locked = UNIX_TIMESTAMP() - 7200, ntime = UNIX_TIMESTAMP() - 3600 WHERE id = :id';
     $db->getSqlQuery($sql, ['id' => $qid]);
     $out['claim']['stale'] = count(getProbeMail()->getBatch(50));
     $mailer->setResult($qid, false, "550 5.7.1 refused\r\nby policy");
     $row = getProbeRow($qid);
-    $wait = $db->getSqlRow($db->getSqlQuery('SELECT TIMESTAMPDIFF(SECOND, NOW(), ntime) AS num FROM '.PREFIX_DB.'_mail WHERE id = :id', ['id' => $qid]));
+    $wait = $db->getSqlRow($db->getSqlQuery('SELECT CAST(ntime AS SIGNED) - UNIX_TIMESTAMP() AS num FROM '.PREFIX_DB.'_mail WHERE id = :id', ['id' => $qid]));
     $out['retry'] = [
         'status' => intval($row['status'] ?? -1),
         'tries' => intval($row['tries'] ?? -1),

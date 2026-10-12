@@ -83,6 +83,7 @@ final class ProbeDb {
 
 try {
     setProbeLift($psite.'/core/security.php', 'filterNum', $pwork.'/lift_num.php');
+    setProbeLift($psite.'/core/security.php', 'filterCutText', $pwork.'/lift_cut.php');
     setProbeLift($psite.'/core/system.php', 'getRankData', $pwork.'/lift_rank.php');
     $db = new ProbeDb();
     $afile = 'admin';

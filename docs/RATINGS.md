@@ -84,20 +84,21 @@ rule and the interval, and uniqueness of the key never replaces the interval.
 
 ### The database clock
 
-The only clock is the database server: `UNIX_TIMESTAMP()` on the same connection fills `created`, `last` and
-`annulled` and measures the interval. `getRating()` reads `now` in the same statement as the actor row; the write
-path reads it once with its own `SELECT`. PHP time takes no part.
+The only clock is the database server: `UNIX_TIMESTAMP()` on the same connection fills `last` and measures the
+interval, and the same value turned by `FROM_UNIXTIME()` fills `created` and `annulled`. `getRating()` reads `now` in
+the same statement as the actor row; the write path reads it once with its own `SELECT`. PHP time takes no part.
 
 ### Storage
 
 Three InnoDB tables in `storage/update/sql/table.sql`; `scope`, `actor` and `request` are ASCII with binary collation. There
-are no foreign keys to the polymorphic targets. All times are Unix seconds.
+are no foreign keys to the polymorphic targets. The timer `last` is Unix seconds, the moments `created` and
+`annulled` are `DATETIME` in the zone of the site.
 
 | Table | Columns | Keys |
 |---|---|---|
-| `_rating_targets` | `scope` VARCHAR(50), `mid` INT UNSIGNED, `base` BIGINT UNSIGNED (starting sum), `votes` BIGINT UNSIGNED (starting count), `created` BIGINT UNSIGNED | PRIMARY (`scope`, `mid`) |
-| `_rating_actors` | `scope`, `mid`, `actor` VARCHAR(50), `last` BIGINT UNSIGNED | PRIMARY (`scope`, `mid`, `actor`) |
-| `_rating_votes` | `id` BIGINT UNSIGNED AUTO_INCREMENT, `scope`, `mid`, `actor`, `uid` INT UNSIGNED (0 for a guest), `value` TINYINT UNSIGNED, `request` CHAR(32), `created`, `annulled` (default 0), `aid` INT UNSIGNED (default 0), `reason` VARCHAR(255) (default `''`) | PRIMARY (`id`); UNIQUE `request` (`scope`, `mid`, `actor`, `request`); KEY `target` (`scope`, `mid`, `id`); KEY `scope` (`scope`, `id`); CHECK `value` BETWEEN 1 AND 5 |
+| `_rating_targets` | `scope` VARCHAR(50), `mid` INT UNSIGNED, `base` BIGINT UNSIGNED (starting sum), `votes` BIGINT UNSIGNED (starting count), `created` DATETIME | PRIMARY (`scope`, `mid`) |
+| `_rating_actors` | `scope`, `mid`, `actor` VARCHAR(50), `last` BIGINT UNSIGNED (default 0) | PRIMARY (`scope`, `mid`, `actor`) |
+| `_rating_votes` | `id` BIGINT UNSIGNED AUTO_INCREMENT, `scope`, `mid`, `actor`, `uid` INT UNSIGNED (0 for a guest), `value` TINYINT UNSIGNED, `request` CHAR(32), `created` DATETIME, `annulled` DATETIME (NULL while the vote stands), `aid` INT UNSIGNED (default 0), `reason` VARCHAR(255) (default `''`) | PRIMARY (`id`); UNIQUE `request` (`scope`, `mid`, `actor`, `request`); KEY `target` (`scope`, `mid`, `id`); KEY `scope` (`scope`, `id`); CHECK `value` BETWEEN 1 AND 5 |
 
 A target gets its `_rating_targets` row at its first vote, with a zero balance. A target whose owner row carries a
 non-zero aggregate but has no such row was never carried over by the 6.3 update: it takes no vote (`storage`,

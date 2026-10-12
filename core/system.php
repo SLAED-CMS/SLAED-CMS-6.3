@@ -156,8 +156,6 @@ $prv = new Privat($db, $conf);
 # Helpers include
 require_once BASE_DIR.'/core/helpers.php';
 
-if ($conf['db']['sync']) $db->getSqlQuery("SET LOCAL time_zone = '".date('P')."'");
-
 if (defined('MODULE_FILE')) {
     require_once BASE_DIR.'/core/user.php';
 } elseif (defined('ADMIN_FILE')) {
@@ -853,9 +851,9 @@ function getBlocks(string $side, string $fly = ''): void {
             if (in_array('otricanie', $where)) $show = ($show) ? 0 : 1;
             if ($show == 1) {
                 [$bid, $bkey, $title, $content, $url, $bfile, $view, $expire, $action, $bpos, $where, $param] = $barr[$i];
-                if ($expire && $expire < time()) {
+                if ($expire && strtotime($expire) < time()) {
                     if ($action == 'd') {
-                        $db->getSqlQuery('UPDATE '.PREFIX_DB."_blocks SET status = '0', expire = '0' WHERE id = :bid", ['bid' => $bid]);
+                        $db->getSqlQuery('UPDATE '.PREFIX_DB."_blocks SET status = '0', expire = NULL WHERE id = :bid", ['bid' => $bid]);
                         return;
                     } elseif ($action == 'r') {
                         $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_blocks WHERE id = :bid', ['bid' => $bid]);
@@ -931,15 +929,15 @@ function updateSessionTrack(int $ctime, string $request, string $name): array {
     $guest = 0;
     $uname = '';
     if (isAdmin()) {
-        $uname = filterText(substr($admin[1], 0, 25), 1);
+        $uname = filterCutText(filterText($admin[1], 1), 25);
         $guest = 3;
     } elseif (!defined('ADMIN_FILE') && is_user()) {
-        $uname = filterText(substr($user[1], 0, 25), 1);
+        $uname = filterCutText(filterText($user[1], 1), 25);
         $guest = 2;
     } elseif (!defined('ADMIN_FILE') && !is_user()) {
         $bname = is_bot();
         if ($bname) {
-            $uname = filterText(substr($bname, 0, 25), 1);
+            $uname = filterCutText(filterText($bname, 1), 25);
             $guest = 1;
         } else {
             $uname = $ip;
@@ -947,7 +945,7 @@ function updateSessionTrack(int $ctime, string $request, string $name): array {
         }
     }
     $uid = (!defined('ADMIN_FILE') && is_user()) ? intval($user[0]) : 0;
-    $uagent = ($uid) ? getAgent() : '';
+    $uagent = ($uid) ? filterCutText(getAgent(), 255) : '';
     if ($uid) getUserLastVisit($uid);
     addDeferredTask(static function() use ($ctime, $uname, $guest, $ip, $url, $name, $uid, $uagent): void {
         global $db, $conf;
@@ -964,7 +962,7 @@ function updateSessionTrack(int $ctime, string $request, string $name): array {
         if ($uname !== '') {
             if ($uid) {
                 $db->getSqlQuery(
-                    'UPDATE '.PREFIX_DB.'_users SET ip = :ip, lastvis = NOW(), agent = :agent WHERE id = :uid AND lastvis < NOW() - INTERVAL 60 SECOND',
+                    'UPDATE '.PREFIX_DB.'_users SET ip = :ip, lastvis = NOW(), agent = :agent WHERE id = :uid AND (lastvis IS NULL OR lastvis < NOW() - INTERVAL 60 SECOND)',
                     ['ip' => $ip, 'agent' => $uagent, 'uid' => $uid]
                 );
             }
@@ -985,7 +983,7 @@ function getUserLastVisit(int $uid): string {
     if (is_array($keep) && ($keep['uid'] ?? 0) === $uid && is_string($keep['time'] ?? null)) return $keep['time'];
     $res = $db->getSqlQuery('SELECT lastvis FROM '.PREFIX_DB.'_users WHERE id = :uid', ['uid' => $uid]);
     $time = $res ? $res->fetchColumn() : false;
-    $_SESSION[$key] = ['uid' => $uid, 'time' => (is_string($time) && strcmp($time, '1970-01-02') > 0) ? $time : ''];
+    $_SESSION[$key] = ['uid' => $uid, 'time' => is_string($time) ? $time : ''];
     return $_SESSION[$key]['time'];
 }
 
@@ -1006,8 +1004,7 @@ function updateRefererTrack(int $ctime, string $request, string $uname): void {
     }
     $ip = getIp();
     $uid = is_user() ? intval($user[0]) : 0;
-    $link = filterText($request);
-    $args = ['uid' => $uid, 'name' => $uname, 'ip' => $ip, 'referer' => $referer, 'url' => $link];
+    $args = ['uid' => $uid, 'name' => $uname, 'ip' => $ip, 'referer' => filterCutText($referer, 2048), 'url' => filterCutText(filterText($request), 2048)];
     if ($conf['referers']['referb'] != 1 || ($conf['referers']['referb'] == 1 && from_bot())) {
         $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_referer (uid, name, ip, referer, url, time) VALUES (:uid, :name, :ip, :referer, :url, NOW())', $args);
     }
@@ -3930,8 +3927,9 @@ function checkPassHash(string $pass, string $hash): bool {
 # OLD FUNCTIONS (for backward compatibility, not recommended for use in new code)
 ####
 
-# Format Time filter
-function format_time(string $time, string $string = ''): string {
+# Format a moment with the default or given pattern; a moment never recorded formats as empty
+function format_time(?string $time, string $string = ''): string {
+    if (!$time) return '';
     $string = ($string) ? $string : _DATESTRING;
     $cont = date($string, strtotime($time));
     return $cont;
@@ -4283,7 +4281,7 @@ function setForumLast(int $cat, int $gone = 0): void {
 }
 
 # Resolve the topic status badge flag shared by the forum list and the home forum block
-function getForumTopicState(int $status, string $time, string $ltime, int $comments, int $pop, int $ulast, bool $ismod): string {
+function getForumTopicState(int $status, string $time, string $ltime, int $comments, int $pop, string $ulast, bool $ismod): string {
     $now = date('Y-m-d H:i:s');
     if (!$status && $ismod) return 'is_topic_moderated';
     if ($status == 1) return 'is_topic_admin';
@@ -5119,7 +5117,7 @@ function engines_word(string $refer): string {
 
     $refer= str_replace(['&#038;', '&amp;'], '&', $refer);
     $tmp = parse_url(urldecode(trim($refer)));
-    $site = $tmp['host'];
+    $site = $tmp['host'] ?? '';
     $str = $tmp['query'] ?? '';
     parse_str($str, $arr);
 
@@ -5610,11 +5608,11 @@ function is_active(string $mod, string $view = ''): int {
     return isset($list[$vnum][$mod]) ? 1 : 0;
 }
 
-# Mail check
+# Check an address for its form and for the 255 characters of the columns that store it
 function checkemail(string $mail): array {
  global $stop;
     $mail = strtolower(filterText($mail, 1));
-    if ((!$mail) || ($mail=='') || (!preg_match("#^[_\.a-z0-9-]+@([a-z0-9_-]+\.)+[a-z]{2,6}$#", $mail))) $stop[] = _ERROR1.' '._ERROR2.' (email@domain.com)';
+    if ((!$mail) || strlen($mail) > 255 || (!preg_match("#^[_\.a-z0-9-]+@([a-z0-9_-]+\.)+[a-z]{2,6}$#", $mail))) $stop[] = _ERROR1.' '._ERROR2.' (email@domain.com)';
     if ((strlen($mail) >= 4) && (substr($mail, 0, 4) == 'www.')) $stop[] = _ERROR1.' '._ERROR3.' (www.)';
     if (strrpos($mail, ' ') > 0) $stop[] = _ERROR1.' '._ERROR4.'.';
     return $stop ?? [];

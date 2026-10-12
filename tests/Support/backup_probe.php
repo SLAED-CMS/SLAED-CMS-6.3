@@ -43,7 +43,7 @@ function addProbeSchema(): Database {
     $root->exec('INSERT INTO `p_gen` (`id`, `price`) VALUES (1, 10), (2, 25)');
     $root->exec('INSERT INTO `p_multi` (`one`, `two`, `txt`) VALUES (2, 1, \'b\'), (1, 2, \'a\'), (1, 1, \'c\')');
     addProbeRoot();
-    $GLOBALS['pdb'] = new Database($conf['db']['host'], $conf['db']['uname'], $conf['db']['pass'], $GLOBALS['pname']);
+    $GLOBALS['pdb'] = new Database($conf['db']['host'], $conf['db']['uname'], $conf['db']['pass'], $GLOBALS['pname'], $conf['db']['collate']);
     return $GLOBALS['pdb'];
 }
 
@@ -360,7 +360,7 @@ function getProbeGrantRun(string $user, string $role = ''): array {
     } catch (Throwable $error) {
         return ['status' => 'no connection', 'message' => $error->getMessage()];
     }
-    $db = new Database($conf['db']['host'], $user, 'probe', $GLOBALS['pname']);
+    $db = new Database($conf['db']['host'], $user, 'probe', $GLOBALS['pname'], $conf['db']['collate']);
     if (!$db->sqlconnid instanceof PDO) return ['status' => 'no connection'];
     if ($role !== '') $db->sqlconnid->exec('SET ROLE `'.$role.'`');
     $back = new Backup($db, ['name' => $GLOBALS['pname']], ['include' => '*', 'compress' => 'none'], $GLOBALS['proot'], ['zip' => false, 'gz' => false, 'bz2' => false]);
@@ -435,7 +435,7 @@ function getProbeTableState(PDO $pdo): array {
 # The site database is only ever read here; everything written goes into the disposable schema, which is dropped again
 function getProbeGate(): array {
     global $conf;
-    $live = new Database($conf['db']['host'], $conf['db']['uname'], $conf['db']['pass'], $conf['db']['name']);
+    $live = new Database($conf['db']['host'], $conf['db']['uname'], $conf['db']['pass'], $conf['db']['name'], $conf['db']['collate']);
     $made = (new Backup($live, $conf['db'], ['include' => '*', 'compress' => 'none'], $GLOBALS['proot']))->addDatabaseBackup();
     if (($made['status'] ?? '') !== 'success') return ['error' => 'The site backup failed: '.($made['message'] ?? '')];
     $best = ['file' => (string)$made['extra']['backup_file']];

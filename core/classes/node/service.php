@@ -148,7 +148,7 @@ final class NodeService {
 
     # Refuse a new name outside the grammar, a reserved name, a module name other than the nine replacements, or a name a shared area already carries
     # The upload rule a removed module left under one of the nine replaced names is no refusal: the new type takes it over, see addNodeType()
-    # Also refuse a name whose categories, comments or favorites remain from an earlier owner; the folder of a type lies below NODE_DIR, where only another type can meet it
+    # Also refuse a name whose categories, comments or favorites remain from an earlier owner under a key of any case; a type folder lies below NODE_DIR, apart
     private function checkNewName(string $name, array $base): void {
         global $conf;
         if (!preg_match(self::NAME, $name) || in_array($name, self::RESERVED, true)) throw $this->getInvalid('name');
@@ -158,14 +158,14 @@ final class NodeService {
         $used = isset($base['node']['types'][$name]) || isset($base['fields']['node'][$name]) || (isset($base['uploads'][$name]) && !$swap)
             || isset($base['ratings']['node.'.$name]);
         if ($used) throw $this->getInvalid('name');
-        if ($this->getRowCount('SELECT COUNT(*) FROM '.PREFIX_DB.'_categories WHERE modul = :name', ['name' => $name])) throw $this->getInvalid('categories');
+        if ($this->getRowCount('SELECT COUNT(*) FROM '.PREFIX_DB.'_categories WHERE LOWER(modul) = :name', ['name' => $name])) throw $this->getInvalid('categories');
         foreach (['_comment', '_favorites'] as $tab) {
-            if ($this->getRowCount('SELECT COUNT(*) FROM '.PREFIX_DB.$tab.' WHERE modul = :name', ['name' => $name])) throw $this->getInvalid('remains');
+            if ($this->getRowCount('SELECT COUNT(*) FROM '.PREFIX_DB.$tab.' WHERE LOWER(modul) = :name', ['name' => $name])) throw $this->getInvalid('remains');
         }
     }
 
     # The remains of owners that are gone: every comment and favorite module key of a type that is neither a registered type nor a live module beyond the nine replacements
-    # Each key comes with its rows in each table; keys are told apart by their exact bytes, because the column compares without case
+    # Each key comes with its rows in each table; the binary column tells keys apart by their exact bytes
     # The registered types are read from their table, which a type operation changes under its lock before the configuration follows
     public function getNodeRemains(): array {
         global $conf;
@@ -173,8 +173,8 @@ final class NodeService {
         $types = array_map('strtolower', $this->getQueryRes('SELECT name FROM '.PREFIX_DB.'_node_types')->fetchAll(PDO::FETCH_COLUMN));
         $out = [];
         foreach (['comments' => '_comment', 'favorites' => '_favorites'] as $key => $tab) {
-            foreach ($this->getQueryRes('SELECT CAST(modul AS BINARY) AS bkey, COUNT(*) AS num FROM '.PREFIX_DB.$tab.' GROUP BY bkey')->fetchAll(PDO::FETCH_ASSOC) as $row) {
-                $name = $row['bkey'];
+            foreach ($this->getQueryRes('SELECT modul, COUNT(*) AS num FROM '.PREFIX_DB.$tab.' GROUP BY modul')->fetchAll(PDO::FETCH_ASSOC) as $row) {
+                $name = $row['modul'];
                 $low = strtolower($name);
                 if (!preg_match(self::NAME, $low) || in_array($low, $types, true)) continue;
                 if ((isset($conf['modules'][$low]) || is_dir(BASE_DIR.'/modules/'.$low)) && !in_array($low, self::SWAPS, true)) continue;
@@ -192,8 +192,7 @@ final class NodeService {
         if (!isset($this->getNodeRemains()[$name])) throw $this->getInvalid('name');
         $this->setNodeWrite(null, [], null, function () use ($name): bool {
             if ($this->getTypeRow(strtolower($name)) !== null) throw $this->getInvalid('name');
-            $sql = ' WHERE modul = :name AND CAST(modul AS BINARY) = CAST(:bin AS BINARY)';
-            foreach (['_comment', '_favorites'] as $tab) $this->getQueryRes('DELETE FROM '.PREFIX_DB.$tab.$sql, ['name' => $name, 'bin' => $name]);
+            foreach (['_comment', '_favorites'] as $tab) $this->getQueryRes('DELETE FROM '.PREFIX_DB.$tab.' WHERE modul = :name', ['name' => $name]);
             return true;
         });
     }
@@ -1058,7 +1057,8 @@ final class NodeService {
         $live = $status === NodeStatus::Published;
         $wait = $live && $pub !== null && strcmp($pub, $now) > 0;
         if ($wait && $job !== $pub) {
-            $sql = 'INSERT INTO '.PREFIX_DB.'_node_publish (nid, published, due) VALUES (:id, :pub, :due) ON DUPLICATE KEY UPDATE published = :pa, due = :pb';
+            $sql = 'INSERT INTO '.PREFIX_DB.'_node_publish (nid, published, due) VALUES (:id, :pub, UNIX_TIMESTAMP(:due))'
+                .' ON DUPLICATE KEY UPDATE published = :pa, due = UNIX_TIMESTAMP(:pb)';
             $this->getQueryRes($sql, ['id' => $id, 'pub' => $pub, 'due' => $pub, 'pa' => $pub, 'pb' => $pub]);
         } elseif (!$wait && $job !== null) {
             $this->getQueryRes('DELETE FROM '.PREFIX_DB.'_node_publish WHERE nid = :id', ['id' => $id]);
@@ -1566,7 +1566,7 @@ final class NodeService {
             $live = $this->getQueryRes('SELECT active FROM '.PREFIX_DB.'_node_types WHERE id = :id FOR UPDATE', ['id' => $tid])->fetchColumn();
             $sql = 'SELECT uid, status, published, published <= NOW() AS came FROM '.PREFIX_DB.'_nodes WHERE id = :id AND tid = :tid FOR UPDATE';
             $row = $this->getQueryRes($sql, ['id' => $id, 'tid' => $tid])->fetch(PDO::FETCH_ASSOC);
-            $sql = 'SELECT published, due <= NOW() AS ready FROM '.PREFIX_DB.'_node_publish WHERE nid = :id FOR UPDATE';
+            $sql = 'SELECT published, due <= UNIX_TIMESTAMP() AS ready FROM '.PREFIX_DB.'_node_publish WHERE nid = :id FOR UPDATE';
             $job = $this->getQueryRes($sql, ['id' => $id])->fetch(PDO::FETCH_ASSOC);
             $out = 'skipped';
             $del = 'DELETE FROM '.PREFIX_DB.'_node_publish WHERE nid = :id';
@@ -1575,14 +1575,14 @@ final class NodeService {
             } elseif (NodeStatus::tryFrom(intval($row['status'])) !== NodeStatus::Published || $row['published'] !== $job['published']) {
                 $this->getQueryRes($del, ['id' => $id]);
             } elseif (!$row['came']) {
-                $this->getQueryRes('UPDATE '.PREFIX_DB.'_node_publish SET due = published WHERE nid = :id', ['id' => $id]);
+                $this->getQueryRes('UPDATE '.PREFIX_DB.'_node_publish SET due = UNIX_TIMESTAMP(published) WHERE nid = :id', ['id' => $id]);
             } else {
                 $uid = intval($row['uid']);
                 $user = $uid > 0 && $this->getRowCount('SELECT COUNT(*) FROM '.PREFIX_DB.'_users WHERE id = :id', ['id' => $uid]) > 0 && !$this->checkNodeLegacy($id);
                 $shut = $user && !$this->getPoint()->valid;
                 if ($shut) Logger::addSite('warning', 'Node: a publication was delivered without its award, the points configuration is closed or invalid', ['nid' => $id]);
                 $done = !$user || $shut || $this->getPoint()->addEvent('publish', 'node.'.$name, 'node:'.$id, $uid);
-                $this->getQueryRes($done ? $del : 'UPDATE '.PREFIX_DB.'_node_publish SET due = NOW() + INTERVAL 60 SECOND WHERE nid = :id', ['id' => $id]);
+                $this->getQueryRes($done ? $del : 'UPDATE '.PREFIX_DB.'_node_publish SET due = UNIX_TIMESTAMP() + 60 WHERE nid = :id', ['id' => $id]);
                 $out = $done ? 'processed' : 'failed';
             }
             if (!$this->db->setSqlCommit()) throw $this->getStorage('The commit of a publication job is uncertain');
@@ -1601,7 +1601,7 @@ final class NodeService {
         if ($limit < 1 || $limit > 500) throw $this->getInvalid('limit');
         $this->getPoint();
         $sql = 'SELECT p.nid, n.tid, t.name FROM '.PREFIX_DB.'_node_publish AS p INNER JOIN '.PREFIX_DB.'_nodes AS n ON n.id = p.nid'
-            .' INNER JOIN '.PREFIX_DB.'_node_types AS t ON t.id = n.tid WHERE p.due <= NOW() AND t.active = 1 ORDER BY p.due, p.nid LIMIT '.$limit;
+            .' INNER JOIN '.PREFIX_DB.'_node_types AS t ON t.id = n.tid WHERE p.due <= UNIX_TIMESTAMP() AND t.active = 1 ORDER BY p.due, p.nid LIMIT '.$limit;
         $sum = ['processed' => 0, 'failed' => 0, 'skipped' => 0];
         foreach ($this->getQueryRes($sql)->fetchAll(PDO::FETCH_ASSOC) as $row) $sum[$this->setPublishDue(intval($row['nid']), intval($row['tid']), $row['name'])]++;
         $text = sprintf('Node publication: %d processed, %d failed, %d skipped', $sum['processed'], $sum['failed'], $sum['skipped']);
@@ -1648,11 +1648,12 @@ final class NodeService {
         if (count($this->getQueryRes($sql, $pars)->fetchAll(PDO::FETCH_COLUMN)) !== count($types)) throw $this->getMissing('The node type does not exist');
     }
 
-    # Refuse a category row that is not the full row of the category form: exactly the stored columns, scalar values only and a module name
+    # Refuse a category row that is not the full row of the category form: exactly the stored columns, scalar values that fit them and a module name
     private function checkCatRow(array $row): void {
         if (!$this->checkKeys($row, self::CATKEYS)) throw $this->getInvalid('category');
         foreach ($row as $key => $val) if (!is_string($val) && !is_int($val)) throw $this->getInvalid('category.'.$key);
         if (!is_string($row['modul']) || $row['modul'] === '') throw $this->getInvalid('category.modul');
+        foreach (['title' => 100, 'img' => 100, 'lang' => 10] as $key => $len) if (mb_strlen((string)$row[$key]) > $len) throw $this->getInvalid('category.'.$key);
     }
 
     # Refuse a parent that is not the root or a category of the same module, and one whose chain up to the root reaches the category itself or runs in a loop

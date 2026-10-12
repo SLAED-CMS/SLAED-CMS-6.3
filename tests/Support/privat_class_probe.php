@@ -42,7 +42,7 @@ function getProbeRoot(): PDO {
 function getProbeTable(string $name): string {
     $text = (string)file_get_contents(BASE_DIR.'/storage/update/sql/table.sql');
     if (!preg_match('/CREATE TABLE `\{prefix\}_'.$name.'`.*?\n\)\s*ENGINE=[^;]*;/s', $text, $hit)) throw new RuntimeException('table.sql carries no '.$name.' table');
-    return str_replace(['{prefix}', '{engine}', '{charset}', '{collate}'], [PREFIX_DB, 'InnoDB', 'utf8mb4', 'utf8mb4_unicode_ci'], $hit[0]);
+    return str_replace(['{prefix}', '{engine}', '{charset}', '{collate}'], [PREFIX_DB, 'InnoDB', 'utf8mb4', $GLOBALS['conf']['db']['collate']], $hit[0]);
 }
 
 # Open a second connection to the disposable schema, which is the concurrent session the lock protocol has to be proved against
@@ -56,7 +56,7 @@ function getProbeSide(): PDO {
 function addProbeSchema(): Database {
     global $conf;
     $root = getProbeRoot();
-    $root->exec('CREATE DATABASE `'.$GLOBALS['pname'].'` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci');
+    $root->exec('CREATE DATABASE `'.$GLOBALS['pname'].'` DEFAULT CHARACTER SET utf8mb4 COLLATE '.$conf['db']['collate']);
     $root->exec('USE `'.$GLOBALS['pname'].'`');
     $root->exec(getProbeTable('privat'));
     $root->exec(getProbeTable('users'));
@@ -64,7 +64,7 @@ function addProbeSchema(): Database {
         $root->exec('INSERT INTO `'.PREFIX_DB.'_users` (`id`, `name`, `email`, `password`, `block`, `warnings`, `field`, `avatar`)'
             .' VALUES ('.intval($id).', \''.$name.'\', \''.$name.'@probe.test\', \'x\', \'\', \'\', \'\', \''.$name.'.png\')');
     }
-    $GLOBALS['pdb'] = new Database($conf['db']['host'], $conf['db']['uname'], $conf['db']['pass'], $GLOBALS['pname']);
+    $GLOBALS['pdb'] = new Database($conf['db']['host'], $conf['db']['uname'], $conf['db']['pass'], $GLOBALS['pname'], $conf['db']['collate']);
     return $GLOBALS['pdb'];
 }
 
@@ -417,7 +417,7 @@ function getProbeRetry(): array {
 function getProbeRival(string $base, float $when, int $uid, int $room): array {
     global $conf;
     $GLOBALS['pname'] = $base;
-    $GLOBALS['pdb'] = new Database($conf['db']['host'], $conf['db']['uname'], $conf['db']['pass'], $base);
+    $GLOBALS['pdb'] = new Database($conf['db']['host'], $conf['db']['uname'], $conf['db']['pass'], $base, $conf['db']['collate']);
     $prv = getProbeMail(['send' => 0, 'messin' => $room, 'messsav' => 250]);
     while (microtime(true) < $when) usleep(200);
     return $prv->addMessage($uid, 'anna', 'rival title', 'rival body', '127.0.0.1');

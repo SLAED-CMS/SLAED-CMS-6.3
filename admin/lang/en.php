@@ -144,7 +144,6 @@ define('_DBINFO','The use of a standard prefix is not necessarily required. You 
 define('_DBWARN','In case of incorrect request can fail in the database, so using this function, it is recommended that only experienced users of the system.');
 define('_DB_DELETE','Removal of tables of a database');
 define('_DB_INSTALL','Installation of tables of a database');
-define('_DB_SYNC','Synchronize time «PHP timezone» and «MySQL timezone»?');
 define('_DB_UPDATE','Updating of tables of a database');
 define('_DB_MODE','Mode');
 define('_DB_BLOCKS','Blocks');

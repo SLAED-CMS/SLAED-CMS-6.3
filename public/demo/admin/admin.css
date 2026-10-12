@@ -1,0 +1,1592 @@
+/* The comments reference: sl-* rules are written to move into the admin theme, demo-* rules are the stand marks */
+
+/* ---------- Shared ---------- */
+
+/* Text for a screen reader alone; the head of a list drawn as cards keeps its names for a reader */
+.sl-sr,
+.sl-list[data-density="cards"] thead {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* Э03 The first stop of Tab: off screen until focused */
+.sl-skip {
+  position: absolute;
+  top: var(--sl-space-3);
+  left: var(--sl-space-3);
+  z-index: var(--sl-z-toast);
+  padding: var(--sl-space-3) var(--sl-space-5);
+  border-radius: var(--sl-radius-1);
+  background: var(--sl-primary-strong);
+  color: var(--sl-on-solid);
+  transform: translateY(-200%);
+}
+
+.sl-skip:focus {
+  transform: none;
+}
+
+.sl-menu-pal kbd {
+  display: inline-grid;
+  place-items: center;
+  min-width: 1.5em;
+  padding: 0 var(--sl-space-1);
+  border: 1px solid var(--sl-border);
+  border-bottom-width: var(--sl-space-1);
+  border-radius: var(--sl-radius-1);
+  background: var(--sl-surface);
+  color: var(--sl-text);
+  font: inherit;
+  font-size: var(--sl-font-micro);
+  line-height: var(--sl-line-normal);
+}
+
+.sl-linkbtn {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--sl-primary-strong);
+  font: inherit;
+  font-weight: var(--sl-weight-semibold);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* ---------- Header ---------- */
+
+/* Э01 The logo is a link home to the panel, sized as the theme sizes the h1 logo; the one h1 is the section */
+.sl-admin-brand {
+  gap: var(--sl-space-3);
+}
+
+.sl-brand {
+  display: block;
+  width: var(--sl-brand-width);
+}
+
+.sl-brand img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* Э12 The menu button of a phone */
+.sl-menu-btn {
+  display: none;
+  align-items: center;
+  gap: var(--sl-space-2);
+  height: var(--sl-size-control);
+  padding: 0 var(--sl-space-4);
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-1);
+  background: var(--sl-surface);
+  color: var(--sl-primary-strong);
+  font: inherit;
+  font-weight: var(--sl-weight-semibold);
+  cursor: pointer;
+}
+
+.sl-menu-btn .bi {
+  font-size: var(--sl-font-h3);
+}
+
+/* Э04 Э05 The bell and Options as a pair of icons at the right; the sum of the queues stands out of the bell's corner */
+.sl-toolbar li.sl-bell-item {
+  margin-left: auto;
+  overflow: visible;
+}
+
+.sl-toolbar li.sl-bell-item + li.sl-set-item {
+  margin-left: 0;
+}
+
+.sl-bell-ic {
+  position: relative;
+  display: inline-flex;
+}
+
+.sl-bell-n {
+  position: absolute;
+  top: calc(var(--sl-space-3) * -1);
+  left: 55%;
+  min-width: 1.5em;
+  padding: 0 var(--sl-space-1);
+  border-radius: var(--sl-radius-pill);
+  background: var(--sl-danger-strong);
+  color: var(--sl-on-solid);
+  font-size: var(--sl-font-micro);
+  font-weight: var(--sl-weight-bold);
+  line-height: var(--sl-line-normal);
+  text-align: center;
+}
+
+/* Э04 The bell panel is the theme tip, opening at once; spans and links only, so the bar rules for div, list and label miss it */
+.sl-bell-float {
+  display: flex;
+  height: 100%;
+}
+
+.sl-bell-tip {
+  width: 300px;
+  line-height: var(--sl-line-normal);
+  text-align: left;
+}
+
+.sl-bell-cap {
+  display: block;
+  margin: 0 0 var(--sl-space-3);
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-small);
+}
+
+.sl-wrapper .sl-toolbar li .sl-bell-tip a {
+  display: flex;
+  align-items: center;
+  gap: var(--sl-space-3);
+  padding: var(--sl-space-3);
+  border-radius: var(--sl-radius-1);
+  background: transparent;
+  color: var(--sl-text);
+  text-shadow: none;
+}
+
+.sl-wrapper .sl-toolbar li .sl-bell-tip a:hover,
+.sl-wrapper .sl-toolbar li .sl-bell-tip a:focus-visible {
+  background: var(--sl-tint);
+  color: var(--sl-primary-strong);
+}
+
+.sl-wrapper.sl-admin-shell .sl-admin-toolbar .sl-toolbar li .sl-bell-tip a {
+  padding: var(--sl-space-3);
+}
+
+.sl-bell-num {
+  margin-left: auto;
+  font-weight: var(--sl-weight-bold);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Menu ---------- */
+
+/* Э07 Э08 The find field, Ctrl K, the fold of the rail and the close of the drawer above the blocks */
+.sl-menu-top {
+  display: flex;
+  align-items: center;
+  gap: var(--sl-space-3);
+  margin: 0 0 var(--sl-space-5);
+}
+
+.sl-menu-find {
+  position: relative;
+  flex: 1 1 auto;
+}
+
+.sl-menu-find > .bi {
+  position: absolute;
+  top: 50%;
+  left: var(--sl-space-4);
+  color: var(--sl-text-muted);
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.sl-menu-find input {
+  width: 100%;
+  padding-left: calc(var(--sl-space-4) * 2 + var(--sl-size-icon-xs));
+}
+
+.sl-menu-tool {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sl-space-1);
+  min-width: var(--sl-size-control);
+  height: var(--sl-size-control);
+  padding: 0 var(--sl-space-3);
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-1);
+  background: var(--sl-surface);
+  color: var(--sl-text-muted);
+  font: inherit;
+  cursor: pointer;
+}
+
+.sl-menu-tool:hover,
+.sl-menu-tool:focus-visible {
+  border-color: var(--sl-primary);
+  color: var(--sl-primary-strong);
+}
+
+.sl-menu-pal > .bi,
+.sl-menu-close {
+  display: none;
+}
+
+.sl-menu-empty {
+  margin: 0 0 var(--sl-space-5);
+  color: var(--sl-text-muted);
+  text-align: center;
+}
+
+/* Э09 The head of a block is a real button inside the h3; the theme toggle drives it and swaps its marks */
+.sl-wrapper.sl-admin-shell .sl-menu .sl-block-sidebar h3:has(> .sl-menu-head) {
+  padding: 0;
+  cursor: default;
+}
+
+.sl-menu-head {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 100%;
+  padding: var(--sl-admin-tight-title-pad) 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  text-shadow: inherit;
+  cursor: pointer;
+}
+
+.sl-menu-head:focus-visible {
+  outline: var(--sl-ring-width) solid var(--sl-on-solid);
+  outline-offset: calc(var(--sl-ring-gap) * -1);
+}
+
+/* Э07 While a search narrows the menu, the rule of the administration block steps aside with its links */
+.sl-menu:has([data-sl-menu-find]:not(:placeholder-shown)) .sl-block-sidebar-content > hr {
+  display: none;
+}
+
+/* Н6 A section switched off reads muted until it is switched back */
+.sl-menu [data-sl-off] > a {
+  opacity: var(--sl-fade-muted);
+}
+
+/* Н4 The administration line of the watch is a button that opens its sessions */
+.sl-session-toggle {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--sl-primary);
+  font: inherit;
+}
+
+.sl-menu-watch [aria-busy="true"] {
+  opacity: var(--sl-fade-muted);
+}
+
+.sl-wrapper.sl-admin-shell .sl-menu .sl-menu-list-item > a {
+  display: flex;
+  min-width: 0;
+}
+
+/* Э10 The open section: the plate takes the tint and the brand bar along its whole height; its queue gives way to the dial */
+.sl-wrapper.sl-admin-shell .sl-menu .sl-menu-list-item > a[aria-current="page"] {
+  color: var(--sl-primary-strong);
+  font-weight: var(--sl-weight-semibold);
+}
+
+.sl-wrapper.sl-admin-shell .sl-menu .sl-menu-list-item:has(> a[aria-current="page"]) {
+  padding-right: var(--sl-space-3);
+  border-color: var(--sl-primary);
+  background: var(--sl-tint);
+}
+
+/* The bar runs the whole height over the left border; with the corners of the plate and no top or bottom border it turns round them and ends in a point */
+.sl-wrapper.sl-admin-shell .sl-menu .sl-menu-list-item:has(> a[aria-current="page"])::before {
+  position: absolute;
+  inset: -1px;
+  border-left: var(--sl-rail-width) solid var(--sl-primary);
+  border-radius: inherit;
+  pointer-events: none;
+  content: "";
+}
+
+.sl-wrapper.sl-admin-shell .sl-menu .sl-menu-list-item:has(> a[aria-current="page"]):hover,
+.sl-wrapper.sl-admin-shell .sl-menu .sl-menu-list-item:has(> a[aria-current="page"]):focus-within {
+  padding-right: calc(var(--sl-size-chip) + var(--sl-space-3) * 2);
+  box-shadow: var(--sl-shadow-raised);
+}
+
+/* The queue of a section: there while something waits, gone at zero */
+.sl-queue {
+  display: inline-grid;
+  place-items: center;
+  min-width: 1.6em;
+  margin-left: auto;
+  padding: 0 var(--sl-space-2);
+  border-radius: var(--sl-radius-pill);
+  background: var(--sl-warning-subtle);
+  color: var(--sl-text-strong);
+  font-size: var(--sl-font-micro);
+  font-weight: var(--sl-weight-bold);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Э11 The dial only under the pointer and in focus; the column rests without thirty buttons */
+.sl-menu .sl-menu-list-item > .sl-dial {
+  opacity: 0;
+  transition: opacity var(--sl-time-fast) var(--sl-ease-out);
+}
+
+.sl-menu .sl-menu-list-item:hover > .sl-dial,
+.sl-menu .sl-menu-list-item:focus-within > .sl-dial {
+  opacity: 1;
+}
+
+@media (hover: none) {
+  .sl-menu .sl-menu-list-item > .sl-dial {
+    opacity: 1;
+  }
+}
+
+/* Э13 A zero reads, muted, instead of fading into the surface */
+.sl-zero {
+  color: var(--sl-text-muted);
+}
+
+/* Э12 A phone: the content first, the menu behind a button sliding in over the page */
+.sl-menu-scrim {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .sl-menu-btn {
+    display: inline-flex;
+  }
+
+  .sl-admin-brand {
+    justify-content: flex-start;
+  }
+
+  .sl-brand {
+    width: calc(var(--sl-brand-width) * 0.6);
+  }
+
+  .sl-admin-main {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .sl-wrapper.sl-admin-shell .sl-menu {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: var(--sl-z-overlay);
+    width: min(320px, 86vw);
+    padding: var(--sl-space-5);
+    overflow-y: auto;
+    background: var(--sl-bg);
+    box-shadow: var(--sl-shadow-float);
+    transform: translateX(-105%);
+    visibility: hidden;
+    transition: transform var(--sl-time-slow) var(--sl-ease-out), visibility 0s linear var(--sl-time-slow);
+  }
+
+  body[data-sl-drawer] .sl-wrapper.sl-admin-shell .sl-menu {
+    transform: none;
+    visibility: visible;
+    transition: transform var(--sl-time-slow) var(--sl-ease-out);
+  }
+
+  .sl-menu-close {
+    display: inline-flex;
+  }
+
+  .sl-menu-fold {
+    display: none;
+  }
+
+  body[data-sl-drawer] .sl-menu-scrim {
+    position: fixed;
+    inset: 0;
+    z-index: calc(var(--sl-z-overlay) - 1);
+    display: block;
+    background: var(--sl-scrim);
+  }
+
+  /* The quick links shrink to their icons on one line; each keeps its name for a screen reader */
+  .sl-wrapper.sl-admin-shell .sl-admin-toolbar .sl-toolbar ul {
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: space-between;
+  }
+
+  .sl-wrapper.sl-admin-shell .sl-admin-toolbar .sl-toolbar li a,
+  .sl-wrapper.sl-admin-shell .sl-admin-toolbar .sl-toolbar li button {
+    padding-right: var(--sl-space-3);
+    padding-left: var(--sl-space-3);
+  }
+
+  .sl-admin-toolbar .sl-toolbar b {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sl-wrapper.sl-admin-shell .sl-menu,
+  body[data-sl-drawer] .sl-wrapper.sl-admin-shell .sl-menu {
+    transition: none;
+  }
+}
+
+/* ---------- В09 The rail: the same menu folded into a bar of icons dressed as the top toolbar ---------- */
+
+@media (width > 900px) {
+  /* The width moves only under a hand: a page that opens folded is folded from its first paint */
+  :root[data-sl-rail-anim] .sl-admin-main {
+    transition: grid-template-columns var(--sl-time-slow) var(--sl-ease-out);
+  }
+
+  :root[data-sl-rail] .sl-admin-main {
+    grid-template-columns: calc(var(--sl-size-control) + var(--sl-space-2) * 3 + 2px + var(--sl-space-3) * 2) minmax(0, 1fr);
+  }
+
+  :root[data-sl-rail] .sl-wrapper.sl-admin-shell .sl-menu {
+    align-self: start;
+    margin: var(--sl-space-3);
+    padding: var(--sl-space-2);
+    border: 1px solid var(--sl-border);
+    border-radius: var(--sl-radius-2);
+    background: linear-gradient(to bottom, var(--sl-bg) 0%, var(--sl-bg-muted) 100%);
+    box-shadow: var(--sl-bar-shadow);
+  }
+
+  :root[data-sl-rail] .sl-menu-top {
+    flex-direction: column;
+    gap: var(--sl-space-2);
+    margin: 0;
+  }
+
+  :root[data-sl-rail] .sl-menu-find,
+  :root[data-sl-rail] .sl-menu-pal kbd,
+  :root[data-sl-rail] .sl-menu-empty,
+  :root[data-sl-rail] .sl-menu .sl-block-sidebar:not(.sl-menu-watch) h3,
+  :root[data-sl-rail] .sl-menu .sl-panel-toggle,
+  :root[data-sl-rail] .sl-menu .sl-menu-name {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  :root[data-sl-rail] .sl-menu-pal > .bi {
+    display: inline;
+  }
+
+  /* Every icon of the rail is one size: the tools above, the sections, the head of the watch block */
+  :root[data-sl-rail] .sl-menu-tool,
+  :root[data-sl-rail] .sl-wrapper.sl-admin-shell .sl-menu :is(.sl-menu-list-item, .sl-admin-block-link),
+  :root[data-sl-rail] .sl-menu .sl-menu-watch h3 {
+    width: calc(var(--sl-size-control) + var(--sl-space-2));
+    min-width: 0;
+    height: calc(var(--sl-size-control) + var(--sl-space-2));
+    min-height: 0;
+    margin: 0 auto;
+    padding: 0;
+    border: 1px solid transparent;
+    border-radius: var(--sl-radius-1);
+    background: transparent;
+    box-shadow: none;
+    color: var(--sl-primary);
+    font-size: var(--sl-font-h3);
+  }
+
+  :root[data-sl-rail] .sl-wrapper.sl-admin-shell .sl-menu :is(.sl-menu-list-item, .sl-admin-block-link) + :is(.sl-menu-list-item, .sl-admin-block-link) {
+    margin-top: var(--sl-space-2);
+  }
+
+  :root[data-sl-rail] .sl-wrapper.sl-admin-shell .sl-menu :is(.sl-menu-list-item, .sl-admin-block-link) > a,
+  :root[data-sl-rail] .sl-menu .sl-menu-head {
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    color: inherit;
+  }
+
+  :root[data-sl-rail] .sl-wrapper.sl-admin-shell .sl-menu :is(.sl-menu-list-item, .sl-admin-block-link) > a .bi,
+  :root[data-sl-rail] .sl-menu .sl-menu-head .bi {
+    width: auto;
+    font-size: inherit;
+  }
+
+  :root[data-sl-rail] .sl-menu .sl-menu-head b {
+    padding: 0;
+  }
+
+  /* В07.2 The rail keeps its icons still: no block grows, no bar is drawn */
+  :root[data-sl-rail] .sl-menu .sl-block-sidebar-content[data-sl-toggle] {
+    animation: none;
+    transition: none;
+  }
+
+  :root[data-sl-rail] .sl-menu .sl-block-sidebar-content > hr {
+    display: none;
+  }
+
+  /* The blocks lose their plates; a short rule, as on the toolbar, parts the admin block, the modules and the watch */
+  :root[data-sl-rail] .sl-wrapper.sl-admin-shell .sl-menu .sl-block-sidebar {
+    position: relative;
+    margin: 0;
+    padding: 0;
+    overflow: visible;
+    border: 0;
+    background: none;
+    box-shadow: none;
+  }
+
+  :root[data-sl-rail] .sl-wrapper.sl-admin-shell .sl-menu > *:not([hidden]) + .sl-block-sidebar {
+    margin-top: var(--sl-space-3);
+    padding-top: var(--sl-space-5);
+  }
+
+  :root[data-sl-rail] .sl-wrapper.sl-admin-shell .sl-menu > *:not([hidden]) + .sl-block-sidebar::before {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: var(--sl-size-icon-sm);
+    height: 1px;
+    background: var(--sl-border-strong);
+    transform: translateX(-50%);
+    content: "";
+  }
+
+  /* В09.5 The open section: an edge and a tint; its queue sits on the corner of the icon */
+  :root[data-sl-rail] .sl-wrapper.sl-admin-shell .sl-menu .sl-menu-list-item:has(> a[aria-current="page"]),
+  :root[data-sl-rail] .sl-wrapper.sl-admin-shell .sl-menu .sl-menu-list-item:has(> a[aria-current="page"]):hover {
+    padding: 0;
+    background: var(--sl-tint-strong);
+    box-shadow: inset var(--sl-rail-width) 0 0 var(--sl-primary);
+    color: var(--sl-primary-strong);
+  }
+
+  /* The rail draws its own edge, so the bar of the full menu steps aside */
+  :root[data-sl-rail] .sl-wrapper.sl-admin-shell .sl-menu .sl-menu-list-item:has(> a[aria-current="page"])::before {
+    content: none;
+  }
+
+  :root[data-sl-rail] .sl-menu .sl-queue {
+    position: absolute;
+    top: calc(var(--sl-space-3) * -1);
+    right: calc(var(--sl-space-3) * -1);
+    z-index: var(--sl-z-raised);
+    margin: 0;
+    padding: 0 var(--sl-space-1);
+    line-height: var(--sl-line-normal);
+  }
+
+  /* В09.2 An icon in hand is a solid plate, as a toolbar item is */
+  :root[data-sl-rail] .sl-menu-tool:hover,
+  :root[data-sl-rail] .sl-wrapper.sl-admin-shell .sl-menu :is(.sl-menu-list-item, .sl-admin-block-link):hover,
+  :root[data-sl-rail] .sl-wrapper.sl-admin-shell .sl-menu .sl-menu-list-item:has(> a[aria-current="page"]):hover,
+  :root[data-sl-rail] .sl-menu .sl-menu-watch:hover h3,
+  :root[data-sl-rail] .sl-menu .sl-menu-watch:focus-within h3 {
+    border-color: var(--sl-solid-border);
+    background: var(--sl-solid-bg);
+    box-shadow: var(--sl-solid-shadow);
+    color: var(--sl-solid-text);
+  }
+
+  :root[data-sl-rail] .sl-wrapper.sl-admin-shell .sl-menu :is(.sl-menu-list-item, .sl-admin-block-link):hover > a {
+    color: var(--sl-solid-text);
+  }
+
+  /* В09.4 The dial of the full menu stands to the right of its icon with its fan open; an unseen bridge carries the pointer over */
+  :root[data-sl-rail] .sl-menu .sl-menu-list-item > .sl-dial {
+    top: 50%;
+    right: auto;
+    left: calc(100% + var(--sl-space-4));
+    z-index: var(--sl-z-dropdown);
+    flex-direction: row;
+    border-color: var(--sl-border-strong);
+    background: var(--sl-bg);
+    box-shadow: var(--sl-shadow-raised);
+    font-size: var(--sl-font-body);
+    pointer-events: none;
+  }
+
+  :root[data-sl-rail] .sl-menu .sl-menu-list-item > .sl-dial::before {
+    position: absolute;
+    top: 0;
+    right: 100%;
+    bottom: 0;
+    width: var(--sl-space-5);
+    content: "";
+  }
+
+  :root[data-sl-rail] .sl-menu .sl-menu-list-item:hover > .sl-dial,
+  :root[data-sl-rail] .sl-menu .sl-menu-list-item:has(:focus-visible) > .sl-dial,
+  :root[data-sl-rail] .sl-menu .sl-menu-list-item > .sl-dial.sl-open {
+    pointer-events: auto;
+  }
+
+  :root[data-sl-rail] .sl-menu .sl-menu-list-item:hover .sl-dial-item,
+  :root[data-sl-rail] .sl-menu .sl-menu-list-item:has(:focus-visible) .sl-dial-item {
+    min-width: var(--sl-size-chip);
+    max-width: var(--sl-size-chip);
+    margin-inline: var(--sl-space-2) 0;
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
+  }
+
+  :root[data-sl-rail] .sl-menu .sl-menu-list-item:hover .sl-dial-toggle,
+  :root[data-sl-rail] .sl-menu .sl-menu-list-item:has(:focus-visible) .sl-dial-toggle {
+    background: var(--sl-solid-bg);
+    color: var(--sl-solid-text);
+  }
+
+  /* The watch block: its icon opens the panel of counters beside it, under the pointer or in focus */
+  :root[data-sl-rail] .sl-menu .sl-menu-watch > .sl-block-sidebar-content {
+    position: absolute;
+    top: var(--sl-space-5);
+    left: calc(100% + var(--sl-space-4));
+    z-index: var(--sl-z-dropdown);
+    display: none;
+    width: 240px;
+    padding: var(--sl-space-3);
+    border: 1px solid var(--sl-border);
+    border-radius: var(--sl-radius-2);
+    background: var(--sl-surface);
+    box-shadow: var(--sl-shadow-float);
+  }
+
+  :root[data-sl-rail] .sl-menu .sl-menu-watch > .sl-block-sidebar-content::before {
+    position: absolute;
+    top: 0;
+    right: 100%;
+    bottom: 0;
+    width: var(--sl-space-5);
+    content: "";
+  }
+
+  :root[data-sl-rail] .sl-menu .sl-menu-watch:hover > .sl-block-sidebar-content,
+  :root[data-sl-rail] .sl-menu .sl-menu-watch:focus-within > .sl-block-sidebar-content {
+    display: block;
+  }
+
+  :root[data-sl-rail] .sl-menu :focus-visible {
+    outline: var(--sl-ring-width) solid var(--sl-ring-bg);
+    outline-offset: var(--sl-ring-gap);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root[data-sl-rail-anim] .sl-admin-main {
+    transition: none;
+  }
+}
+
+/* ---------- Э15 The filter: every control named, the module list acting at once, the search on its button ---------- */
+
+.sl-filter {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--sl-space-3) var(--sl-space-6);
+}
+
+.sl-filter-field {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sl-space-3);
+  margin: 0;
+}
+
+.sl-filter-field label {
+  display: inline;
+  margin: 0;
+  white-space: nowrap;
+}
+
+.sl-filter .sl-select,
+.sl-filter input[type="search"] {
+  width: auto;
+  min-width: 9em;
+}
+
+@media (max-width: 900px) {
+  .sl-module-head {
+    align-items: flex-start;
+  }
+
+  .sl-module-head-body {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--sl-space-4);
+  }
+
+  .sl-module-head-subtitle {
+    justify-content: flex-start;
+  }
+
+  .sl-filter,
+  .sl-filter-field {
+    flex-wrap: wrap;
+    justify-content: flex-start;
+  }
+}
+
+/* ---------- The list ---------- */
+
+/* В02.1 The row over the table: the count of the pick at the left, the view of the list at the right */
+.sl-list-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sl-space-4);
+  margin: 0 0 var(--sl-space-4);
+}
+
+/* Э25 The count holds the width of its widest figure, so the page line of the pager beside it never moves */
+.sl-list-picked {
+  display: inline-grid;
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-small);
+  white-space: nowrap;
+}
+
+.sl-list-picked::before {
+  visibility: hidden;
+  content: attr(data-sl-widest);
+}
+
+.sl-list-picked::before,
+.sl-list-picked > * {
+  grid-area: 1 / 1;
+}
+
+/* Э27 The key tip is useful at once: its trigger rests in the subtle system green and lights up in the full green under the pointer or while open */
+.sl-pager .sl-pager-keys > .sl-but-mini {
+  background: var(--sl-success-subtle);
+  color: var(--sl-success-strong);
+}
+
+.sl-pager .sl-pager-keys:is(:hover, .sl-is-open) > .sl-but-mini {
+  background: var(--sl-success);
+  color: var(--sl-on-solid);
+}
+
+/* Э27 The ways up and down follow the key tip in the colour of the pager: subtle at rest, full under the pointer or the focus */
+.sl-pager .sl-pager-side > a.sl-but-mini {
+  background: var(--sl-primary-subtle);
+  color: var(--sl-primary-strong);
+}
+
+.sl-pager .sl-pager-side > a.sl-but-mini:is(:hover, :focus-visible) {
+  background: var(--sl-primary);
+  color: var(--sl-on-solid);
+}
+
+/* П7 The page line stands in the row of its pager, centred between the key tip (Э27) and the actions (Э25) or the view switch (В02.1) */
+:is(.sl-list-head, .sl-list-bottom) .sl-pager-info {
+  margin-inline: auto;
+}
+
+
+/* The pager over the list stands at its left edge and takes the room up to the view switch, so it shows as many pages as the one under the list */
+.sl-list-head-pager {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.sl-list-head .sl-pager {
+  padding: 0;
+}
+
+.sl-list-note {
+  margin: 0 0 var(--sl-space-4);
+}
+
+.sl-list-note .sl-but {
+  margin-left: var(--sl-space-3);
+}
+
+/* Э22 The status in one press: the theme's mark inside a bare button */
+.sl-stat {
+  display: inline-grid;
+  place-items: center;
+  padding: var(--sl-space-1);
+  border: 0;
+  border-radius: var(--sl-radius-circle);
+  background: none;
+  cursor: pointer;
+}
+
+.sl-stat:hover,
+.sl-stat:focus-visible {
+  background: var(--sl-tint);
+}
+
+/* Э27 The row the list keys point at is outlined */
+.sl-list tbody tr[data-sl-cursor] {
+  outline: var(--sl-ring-width) solid var(--sl-ring-bg);
+  outline-offset: calc(var(--sl-ring-gap) * -1);
+}
+
+.sl-list-none {
+  padding: var(--sl-space-7);
+  color: var(--sl-text-muted);
+  text-align: center;
+}
+
+/* Э17 An empty waiting list is good news, said calmly */
+.sl-list-none[data-calm] {
+  color: var(--sl-success-strong);
+}
+
+/* Э28 A request on its way: the rows dim under the loading mark of the theme, the reader hears aria-busy */
+.sl-table-shell {
+  position: relative;
+}
+
+.sl-list-busy {
+  position: absolute;
+  inset: 0;
+  z-index: var(--sl-z-raised);
+  margin: auto;
+}
+
+.sl-list[aria-busy="true"] tbody {
+  opacity: var(--sl-fade-muted);
+}
+
+/* В02.5 В02.6 П7 The head stays in view, the block under the list keeps the air the head row keeps over it; the row in hand is tinted, a picked one more */
+.sl-wrapper .sl-table-shell {
+  overflow: visible;
+  padding-bottom: var(--sl-space-4);
+}
+
+.sl-list thead th {
+  position: sticky;
+  top: 0;
+  z-index: var(--sl-z-raised);
+}
+
+.sl-list tbody tr:hover > td {
+  background: var(--sl-tint);
+}
+
+.sl-list tbody tr[data-sl-checked] > td {
+  background: var(--sl-tint-strong);
+}
+
+/* В02.2 В02.3 В02.4 The views apply above a phone; a phone draws its own cards */
+@media (width > 560px) {
+  /* В02.3 Compact: a row 24px high, the floor of a target, with one pixel between rows */
+  .sl-list[data-density="compact"] {
+    border-spacing: 2px 1px;
+  }
+
+  .sl-list[data-density="compact"] tbody td {
+    height: calc(var(--sl-size-control) - var(--sl-space-2));
+    min-height: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    font-size: var(--sl-font-small);
+    line-height: var(--sl-line-tight);
+  }
+
+  .sl-list[data-density="compact"] .sl-dial-toggle {
+    width: var(--sl-size-icon-sm);
+    height: var(--sl-size-icon-sm);
+    min-width: 0;
+  }
+
+  .sl-list[data-density="compact"] .sl-check {
+    width: var(--sl-size-icon-xs);
+    height: var(--sl-size-icon-xs);
+  }
+
+  /* В02.2 Full: the comment and the module wrap instead of ending in an ellipsis; a row grows to its text */
+  .sl-list[data-density="full"] .sl-cell-ellipsis {
+    overflow: visible;
+    white-space: normal;
+    text-overflow: clip;
+    overflow-wrap: anywhere;
+  }
+
+  .sl-list[data-density="full"] tbody td {
+    padding-top: var(--sl-space-4);
+    padding-bottom: var(--sl-space-4);
+    vertical-align: top;
+  }
+
+  .sl-list[data-density="full"] td.sl-col-actions .sl-dial {
+    top: var(--sl-space-3);
+    transform: none;
+  }
+
+  /* В02.4 Cards: one order in every card, three lines of one wrapping flex row */
+  .sl-list[data-density="cards"] {
+    display: block;
+    width: 100%;
+  }
+
+  .sl-list[data-density="cards"] tbody {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: var(--sl-space-4);
+  }
+
+  .sl-list[data-density="cards"] tbody tr {
+    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--sl-space-3) var(--sl-space-2);
+    padding: var(--sl-space-5);
+    border: 1px solid var(--sl-border);
+    border-radius: var(--sl-radius-2);
+    background: var(--sl-surface);
+    box-shadow: var(--sl-shadow-xs);
+  }
+
+  .sl-list[data-density="cards"] tbody tr:hover {
+    border-color: var(--sl-border-strong);
+    box-shadow: var(--sl-shadow-raised);
+  }
+
+  .sl-list[data-density="cards"] tbody tr[data-sl-checked] {
+    border-color: var(--sl-primary);
+    background: var(--sl-tint);
+  }
+
+  .sl-list[data-density="cards"] tbody tr > td {
+    display: block;
+    width: auto;
+    max-width: none;
+    height: auto;
+    min-height: 0;
+    padding: 0;
+    overflow: visible;
+    border: 0;
+    background: none;
+    line-height: var(--sl-line-normal);
+    text-align: left;
+    white-space: nowrap;
+  }
+
+  .sl-list[data-density="cards"] td.sl-col-status {
+    order: 1;
+    display: flex;
+    margin-right: var(--sl-space-2);
+  }
+
+  .sl-list[data-density="cards"] td.sl-col-status .sl-stat {
+    padding: calc(var(--sl-space-1) + 1px);
+  }
+
+  .sl-list[data-density="cards"] td.sl-col-id {
+    order: 2;
+    color: var(--sl-text-muted);
+    font-size: var(--sl-font-small);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .sl-list[data-density="cards"] td.sl-col-module {
+    order: 3;
+    flex: 1 1 0;
+    min-width: 0;
+    overflow: hidden;
+    color: var(--sl-text-muted);
+    font-size: var(--sl-font-small);
+    text-overflow: ellipsis;
+  }
+
+  .sl-list[data-density="cards"] td.sl-col-check {
+    order: 4;
+    display: flex;
+    align-self: flex-start;
+    justify-content: center;
+    width: calc(var(--sl-size-icon-sm) + var(--sl-space-2));
+    padding-top: calc(var(--sl-space-1) + 1px);
+  }
+
+  .sl-list[data-density="cards"] td.sl-cell-ellipsis:not(.sl-col-module) {
+    order: 5;
+    flex: 1 0 100%;
+    display: flex;
+    align-items: flex-start;
+    gap: var(--sl-space-3);
+    min-height: calc(2em * var(--sl-line-normal));
+    font-weight: var(--sl-weight-semibold);
+    white-space: normal;
+  }
+
+  .sl-list[data-density="cards"] .sl-cell-text {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    overflow-wrap: anywhere;
+  }
+
+  .sl-list[data-density="cards"] td.sl-cell-ellipsis:not(.sl-col-module) .sl-float {
+    flex: 0 0 auto;
+  }
+
+  .sl-list[data-density="cards"] td.sl-col-author {
+    order: 6;
+    min-width: 0;
+    max-width: 50%;
+    overflow: hidden;
+    font-size: var(--sl-font-small);
+    text-overflow: ellipsis;
+  }
+
+  .sl-list[data-density="cards"] td.sl-col-date {
+    order: 7;
+    flex: 1 1 auto;
+    color: var(--sl-text-muted);
+    font-size: var(--sl-font-small);
+  }
+
+  .sl-list[data-density="cards"] td.sl-col-actions {
+    order: 8;
+    position: relative;
+    width: calc(var(--sl-size-chip) + var(--sl-space-1) * 2 + 2px);
+    height: calc(var(--sl-size-chip) + var(--sl-space-1) * 2 + 2px);
+  }
+
+  .sl-list[data-density="cards"] td.sl-col-actions .sl-dial {
+    right: 0;
+  }
+
+  .sl-list[data-density="cards"] td.sl-col-id::before {
+    content: "№ ";
+  }
+
+  .sl-list[data-density="cards"] td.sl-col-module::before,
+  .sl-list[data-density="cards"] td.sl-col-date::before {
+    content: "· ";
+  }
+
+  .sl-list[data-density="cards"] tr[data-sl-none] {
+    display: block;
+    grid-column: 1 / -1;
+  }
+}
+
+/* A narrow list keeps the text of the comment: module, date and status step aside; a phone gets cards below */
+@media (width > 560px) and (max-width: 768px) {
+  .sl-list:not([data-density="cards"]) :is(th, td):is(:nth-child(3), :nth-child(5), :nth-child(6)) {
+    display: none;
+  }
+}
+
+/* Э32 A phone: a row is a card with its column names, whatever view was chosen; the switch steps aside */
+@media (max-width: 560px) {
+  .sl-list-view {
+    display: none;
+  }
+
+  .sl-list thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+
+  .sl-list,
+  .sl-list tbody {
+    display: block;
+    width: 100%;
+  }
+
+  .sl-list tbody tr {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: var(--sl-space-2) var(--sl-space-4);
+    margin: 0 0 var(--sl-space-4);
+    padding: var(--sl-space-4);
+    border: 1px solid var(--sl-border);
+    border-radius: var(--sl-radius-2);
+    background: var(--sl-surface);
+  }
+
+  .sl-list tbody tr[data-sl-checked] {
+    border-color: var(--sl-primary);
+    background: var(--sl-tint);
+  }
+
+  .sl-list tbody tr:is(:hover, [data-sl-checked]) > td {
+    background: none;
+  }
+
+  .sl-wrapper.sl-admin-shell .sl-admin-toolbar .sl-toolbar li a,
+  .sl-wrapper.sl-admin-shell .sl-admin-toolbar .sl-toolbar li button {
+    padding-right: var(--sl-space-2);
+    padding-left: var(--sl-space-2);
+  }
+
+  .sl-list tbody td,
+  .sl-list :is(th, td):nth-child(n) {
+    display: block;
+    width: auto;
+    max-width: none;
+    padding: 0;
+    border: 0;
+    background: none;
+    text-align: left;
+    white-space: normal;
+  }
+
+  .sl-list td[data-label]::before {
+    display: block;
+    color: var(--sl-text-muted);
+    font-size: var(--sl-font-micro);
+    content: attr(data-label);
+  }
+
+  .sl-list td.sl-cell-ellipsis:not(.sl-col-module) {
+    grid-column: 1 / -1;
+  }
+
+  .sl-list td.sl-col-actions,
+  .sl-list td.sl-col-check {
+    position: relative;
+    min-height: var(--sl-size-control);
+  }
+
+  .sl-list-bottom {
+    flex-wrap: wrap;
+  }
+
+  .sl-list-bottom-pager {
+    flex-basis: 100%;
+  }
+}
+
+/* A phone with a pick: the bulk action stands at the bottom of the screen, in reach of the thumb */
+@media (max-width: 900px) {
+  body[data-sl-picking] .sl-list-bottom-actions {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: var(--sl-z-sticky);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--sl-space-3);
+    padding: var(--sl-space-4) var(--sl-space-5);
+    border-top: 1px solid var(--sl-border);
+    background: var(--sl-surface);
+    box-shadow: var(--sl-shadow-float);
+  }
+
+  body[data-sl-picking] .sl-toast-host {
+    bottom: calc(var(--sl-size-control) + var(--sl-space-8) * 2);
+  }
+}
+
+.sl-list-bottom-actions label {
+  white-space: nowrap;
+}
+
+.sl-list-bottom-actions button:disabled {
+  opacity: var(--sl-fade-disabled);
+  cursor: not-allowed;
+}
+
+/* ---------- Э23 The notice with Undo: the flash alert of the theme, its ring counting ten seconds ---------- */
+
+.sl-toast-host {
+  position: fixed;
+  border-radius: var(--sl-radius-2);
+  background: var(--sl-surface);
+  bottom: var(--sl-space-6);
+  left: 50%;
+  z-index: var(--sl-z-toast);
+  width: max-content;
+  max-width: calc(100vw - var(--sl-space-8));
+  transform: translateX(-50%);
+}
+
+.sl-toast {
+  --sl-flash-dur: 10s;
+  margin: 0;
+  box-shadow: var(--sl-shadow-float);
+}
+
+.sl-toast .sl-alert-body {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sl-space-4);
+}
+
+/* ---------- В08 The config form ---------- */
+
+/* В08.6 A tab with unsaved changes carries a dot in its upper right corner */
+.sl-tabs-link:has(> .sl-tab-dot) {
+  position: relative;
+}
+
+.sl-tab-dot {
+  position: absolute;
+  top: calc(var(--sl-space-2) * -1);
+  right: calc(var(--sl-space-2) * -1);
+  width: var(--sl-space-4);
+  height: var(--sl-space-4);
+  border: 2px solid var(--sl-bg);
+  border-radius: var(--sl-radius-circle);
+  background: var(--sl-warning-strong);
+}
+
+/* В08.7 The search over the settings stands at the right of the heading like the filter of the list (Э15), its hits under the field */
+.sl-conf-find {
+  position: relative;
+  display: inline-block;
+}
+
+.sl-conf-hits {
+  position: absolute;
+  top: calc(100% + var(--sl-space-2));
+  right: 0;
+  z-index: var(--sl-z-dropdown);
+  width: max-content;
+  min-width: 100%;
+  max-width: min(28em, 90vw);
+  white-space: normal;
+  padding: var(--sl-space-2);
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-2);
+  background: var(--sl-surface);
+  box-shadow: var(--sl-shadow-float);
+}
+
+/* On a phone the field stands at the left under the heading, so its hits open to the right */
+@media (max-width: 900px) {
+  .sl-conf-hits {
+    right: auto;
+    left: 0;
+  }
+}
+
+.sl-conf-hits [role="option"],
+.sl-conf-hits .sl-conf-none {
+  display: block;
+  padding: var(--sl-space-3);
+  border-radius: var(--sl-radius-1);
+}
+
+.sl-conf-hits [role="option"] {
+  cursor: pointer;
+}
+
+.sl-conf-hits [role="option"][aria-selected="true"],
+.sl-conf-hits [role="option"]:hover {
+  background: var(--sl-tint);
+  color: var(--sl-primary-strong);
+}
+
+.sl-conf-hits .sl-conf-none {
+  color: var(--sl-text-muted);
+}
+
+.sl-div-item[data-sl-found] {
+  animation: sl-conf-found var(--sl-flash-dur) var(--sl-ease-out);
+}
+
+@keyframes sl-conf-found {
+  from {
+    background: var(--sl-tint-strong);
+  }
+}
+
+/* В08.5 A field judged wrong says why under itself and in the summary above the form */
+.sl-conf-sum {
+  margin: 0 0 var(--sl-space-5);
+}
+
+.sl-conf-sum a {
+  color: inherit;
+}
+
+.sl-field-err {
+  display: block;
+  margin-top: var(--sl-space-2);
+  color: var(--sl-danger-strong);
+  font-size: var(--sl-font-small);
+}
+
+.sl-div-field [aria-invalid="true"] {
+  border-color: var(--sl-danger-strong);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sl-div-item[data-sl-found] {
+    animation: none;
+  }
+}
+
+/* ---------- В07 Motion: every rule stands under prefers-reduced-motion, nothing moves for a reader who asked for stillness ---------- */
+
+@media (prefers-reduced-motion: no-preference) {
+  /* В07.1 Rows a filter brings enter one after another; the cascade shows the arrival, so the rows are not dimmed meanwhile */
+  .sl-list tbody tr[data-sl-enter] {
+    animation: sl-row-in calc(var(--sl-time-slow) + var(--sl-time-fast)) var(--sl-ease-out) both;
+    animation-delay: calc(min(var(--sl-d-i, 0), 12) * var(--sl-time-fast) / 3);
+  }
+
+  .sl-list[aria-busy="true"] tbody {
+    opacity: 1;
+  }
+
+  /* В07.2 A block of the menu opens and closes by its height */
+  .sl-menu .sl-block-sidebar-content[data-sl-toggle] {
+    overflow: clip;
+    overflow-clip-margin: var(--sl-space-3);
+    interpolate-size: allow-keywords;
+    transition:
+      height var(--sl-time-slow) var(--sl-ease-out),
+      opacity var(--sl-time-slow) var(--sl-ease-out),
+      display var(--sl-time-slow) allow-discrete;
+  }
+
+  .sl-menu .sl-block-sidebar-content[data-sl-toggle][hidden] {
+    height: 0;
+    opacity: 0;
+  }
+
+  @starting-style {
+    .sl-menu .sl-block-sidebar-content[data-sl-toggle]:not([hidden]) {
+      height: 0;
+      opacity: 0;
+    }
+  }
+
+  /* В07.2 The bar of the open section is drawn once its block stands open, then gives the hover back */
+  .sl-wrapper.sl-admin-shell .sl-menu .sl-menu-list-item:has(> a[aria-current="page"])::before {
+    animation: sl-bar-draw calc(var(--sl-time-slow) * 2) var(--sl-ease-out) var(--sl-time-slow) backwards;
+  }
+
+  /* В07.3 Buttons and tabs give under a press, keeping the fade the theme gives a button */
+  :is(.sl-but, .sl-but-blue) {
+    transition: opacity var(--sl-time-base) var(--sl-ease-out), transform var(--sl-time-fast) var(--sl-ease-out);
+  }
+
+  .sl-tabs-link {
+    transition: transform var(--sl-time-fast) var(--sl-ease-out);
+  }
+
+  :is(.sl-but, .sl-but-blue, .sl-tabs-link):active {
+    transform: scale(0.94);
+  }
+
+  /* В07.3 The section icon bounces in on load; the script plays it again on every view of the section */
+  .sl-module-head-icon .bi {
+    animation: sl-icon-pop calc(var(--sl-time-slow) * 2) var(--sl-ease-out) both;
+  }
+
+  /* В07.4 The row in hand and the picked row take their tint softly */
+  .sl-list tbody tr > td {
+    transition: background-color var(--sl-time-base) var(--sl-ease-out);
+  }
+
+  @keyframes sl-row-in {
+    from {
+      opacity: 0;
+      transform: translateY(var(--sl-space-5));
+    }
+  }
+
+  @keyframes sl-bar-draw {
+    from {
+      transform: scaleY(0);
+    }
+  }
+
+  @keyframes sl-icon-pop {
+    0% {
+      opacity: 0;
+      transform: scale(0.6);
+    }
+
+    70% {
+      transform: scale(1.15);
+    }
+
+    100% {
+      opacity: 1;
+      transform: none;
+    }
+  }
+}
+
+/* В07.5 Motion switched off in Options stills the page as the reduced-motion setting would */
+:root[data-sl-still] *,
+:root[data-sl-still] *::before,
+:root[data-sl-still] *::after {
+  animation: none !important;
+  transition: none !important;
+}
+
+:root[data-sl-still] :is(.sl-but, .sl-but-blue, .sl-tabs-link):active {
+  transform: none;
+}
+
+:root[data-sl-still] .sl-list[aria-busy="true"] tbody {
+  opacity: var(--sl-fade-muted);
+}
+
+/* ---------- Stand marks: not part of the panel ---------- */
+
+.demo-marks {
+  position: fixed;
+  inset: 0;
+  z-index: var(--sl-z-popover);
+  pointer-events: none;
+}
+
+:root:not([data-demo-marks]) .demo-marks {
+  display: none;
+}
+
+.demo-mark-box {
+  position: absolute;
+  border: 1px dashed var(--sl-accent);
+  border-radius: var(--sl-radius-1);
+}
+
+.demo-mark-tag {
+  position: absolute;
+  padding: 0 var(--sl-space-2);
+  border: 0;
+  border-radius: var(--sl-radius-pill);
+  background: var(--sl-accent);
+  color: var(--sl-on-solid);
+  font: inherit;
+  font-size: var(--sl-font-micro);
+  font-weight: var(--sl-weight-bold);
+  line-height: var(--sl-line-normal);
+  white-space: nowrap;
+  box-shadow: var(--sl-shadow-xs);
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.demo-mark-box[data-kind="v"] {
+  border-color: var(--sl-warning-strong);
+}
+
+.demo-mark-tag[data-kind="v"] {
+  background: var(--sl-warning-strong);
+}
+
+.demo-mark-box[data-kind="n"] {
+  border-color: var(--sl-success-strong);
+}
+
+.demo-mark-tag[data-kind="n"] {
+  background: var(--sl-success-strong);
+}
+
+.demo-mark-box[data-kind="p"] {
+  border-color: var(--sl-primary-strong);
+}
+
+.demo-mark-tag[data-kind="p"] {
+  background: var(--sl-primary-strong);
+}
+
+.demo-mark-box[data-flash] {
+  border-style: solid;
+  border-width: 2px;
+  box-shadow: 0 0 0 var(--sl-space-2) var(--sl-tint-strong);
+}
+
+/* The helper window of the stand stands half clear at rest and comes up whole under the hand or the keyboard */
+.demo-panel {
+  transition: opacity var(--sl-time-base) var(--sl-ease-out);
+}
+
+.demo-panel:not(:hover, :focus-within, [data-moving]) {
+  opacity: var(--sl-fade-muted);
+}
+
+/* On a phone with a pick the sheet of the stand stands over the bar of the bulk action instead of on it */
+@media (max-width: 560px) {
+  body[data-sl-picking] dialog.demo-panel[data-sl-window] {
+    bottom: calc(var(--sl-size-control) + var(--sl-space-4) * 2 + 1px);
+  }
+}
+
+.demo-panel {
+  --sl-modal-width: 300px;
+}
+
+.demo-panel .sl-set-row + .sl-set-row {
+  margin-top: var(--sl-space-3);
+}
+
+.demo-panel .sl-set-pick {
+  display: flex;
+  flex-basis: auto;
+  justify-content: flex-end;
+}
+
+.demo-seg-text {
+  font-size: var(--sl-font-small);
+}
+
+.demo-legend-note {
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-small);
+}
+
+.demo-legend-all {
+  display: flex;
+  align-items: center;
+  gap: var(--sl-space-3);
+  font-weight: var(--sl-weight-semibold);
+}
+
+.demo-legend h3 {
+  margin: var(--sl-space-7) 0 var(--sl-space-3);
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-micro);
+  letter-spacing: var(--sl-track-wide);
+  text-transform: uppercase;
+}
+
+.demo-legend li {
+  display: grid;
+  grid-template-columns: auto 4em minmax(0, 1fr);
+  align-items: start;
+  gap: var(--sl-space-3);
+  padding: var(--sl-space-3);
+  border-radius: var(--sl-radius-1);
+  font-size: var(--sl-font-small);
+}
+
+.demo-legend li[data-flash] {
+  background: var(--sl-tint);
+}
+
+.demo-legend-code {
+  justify-self: start;
+}
+
+.demo-legend-text .sl-linkbtn {
+  margin-left: var(--sl-space-2);
+}

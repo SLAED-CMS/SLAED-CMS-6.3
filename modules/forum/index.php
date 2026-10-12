@@ -21,7 +21,7 @@ function forumIcon(string $href, string $title, string $state, string $label = '
 }
 
 function forum(): void {
-    global $db, $conf, $locale, $tpl;
+    global $db, $conf, $locale, $tpl, $user;
     $rows = [];
     $mod = ($conf['name']) ? filterVar($conf['name']) : 0;
     $cat = getVar('req', 'cat', 'num');
@@ -127,8 +127,7 @@ function forum(): void {
         $isedit = is_acess($rows[0][14]);
         $isdelete = is_acess($rows[0][15]);
         $ismod = is_acess($rows[0][16]);
-        $uinfo = getUserInfo();
-        $ulast = (is_array($uinfo) && !empty($uinfo['lastvis'])) ? (int)$uinfo['lastvis'] : 0;
+        $ulast = getUserLastVisit(is_user() ? intval($user[0]) : 0);
         $head = ($id) ? _FORUM.' '.$rows[0][1] : _FORUM;
         setHead(['title' => $head, 'kind' => 'collection']);
         echo $tpl->getHtmlFrag('title', ['title' => $head, 'is_level_one' => true]);
@@ -1146,8 +1145,8 @@ function send(): void {
         $isedit = is_acess($authe);
         $ismod = is_acess($authm);
         $id = $fid;
-        $postname = filterText(substr(getVar('post', 'postname', 'text'), 0, 25));
-        $subject = getVar('post', 'subject', 'text');
+        $postname = filterCutText(filterText(getVar('post', 'postname', 'text')), 25);
+        $subject = filterCutText(getVar('post', 'subject', 'text'), 100);
         $hometext = getVar('post', 'hometext', 'text');
         $size = 0;
         foreach (preg_split('/\s+/u', $hometext, -1, PREG_SPLIT_NO_EMPTY) ?: [] as $word) {

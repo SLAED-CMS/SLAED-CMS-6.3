@@ -144,7 +144,6 @@ define('_DBINFO','Przy użyciu standardowego prefiksu nie jest konieczne, na mie
 define('_DBWARN','W przypadku nieprawidłowego żądania możliwy błąd w działaniu bazy danych, więc korzystać z tej funkcji jest zalecane tylko dla zaawansowanych użytkowników systemu.');
 define('_DB_DELETE','Usuwanie tabel bazy');
 define('_DB_INSTALL','Instalacja tabele bazy');
-define('_DB_SYNC','Synchronizacja «PHP timezone» Czas «MySQL timezone»?');
 define('_DB_UPDATE','Aktualizacja tabel bazy');
 define('_DB_MODE','Tryb');
 define('_DB_BLOCKS','Bloki');

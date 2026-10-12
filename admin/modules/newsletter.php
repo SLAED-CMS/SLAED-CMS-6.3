@@ -273,13 +273,17 @@ function save(): void {
     global $db, $afile, $stop;
     $stop = [];
     $nid = getVar('post', 'nid', 'num', 0);
-    $title = getVar('post', 'title', 'title');
+    $title = filterCutText(getVar('post', 'title', 'title'), 50);
     $body = getVar('post', 'body', 'text');
     $pick = getVar('post', 'audit', 'var', '');
     $days = max(1, getVar('post', 'days', 'num', 365));
     $part = explode('-', $pick, 2);
     $audit = $part[0] ?? '';
-    $apar = ($audit === 'active') ? (string)$days : ($part[1] ?? '');
+    $apar = match ($audit) {
+        'active' => (string)$days,
+        'group' => (string)intval($part[1] ?? 0),
+        default => '',
+    };
     $warn = !checkAdminPost('newsletter');
     if (!$title) $stop[] = _CERROR;
     if (!$body) $stop[] = _CERROR1;

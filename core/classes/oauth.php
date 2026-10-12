@@ -48,10 +48,10 @@ class Oauth {
         return preg_match('/^[a-f0-9]{64}$/', $val) ? $val : '';
     }
 
-    # Normalizes a post-login redirect target to a safe internal path, rejects any scheme, host, backslash, CRLF, control chars and protocol-relative input
+    # Normalizes a post-login redirect target to a safe internal path, rejects any scheme, host, backslash, control chars, relative root and what overflows its column
     public static function getRedirect(string $raw): string {
         $raw = trim(preg_replace('/[\x00-\x1F\x7F\\\\]/', '', $raw));
-        if ($raw === '' || str_starts_with($raw, '/')) return 'index.php';
+        if ($raw === '' || str_starts_with($raw, '/') || mb_strlen($raw) > 512) return 'index.php';
         if (preg_match('#^[a-z][a-z0-9+.-]*:#i', $raw)) return 'index.php';
         return $raw;
     }
@@ -354,8 +354,8 @@ class Oauth {
     public static function setLink(int $uid, string $prov, string $puid, string $mail): string {
         global $db;
         $res = $db->getSqlQuery(
-            'INSERT INTO '.PREFIX_DB.'_user_oauth (uid, provider, puid, email, linked, lastlog) VALUES (:uid, :prov, :puid, :email, :time, :time2)',
-            ['uid' => $uid, 'prov' => $prov, 'puid' => $puid, 'email' => $mail, 'time' => time(), 'time2' => time()]
+            'INSERT INTO '.PREFIX_DB.'_user_oauth (uid, provider, puid, email, linked, lastlog) VALUES (:uid, :prov, :puid, :email, NOW(), NOW())',
+            ['uid' => $uid, 'prov' => $prov, 'puid' => $puid, 'email' => $mail]
         );
         if ($res !== false) return '';
         $err = $db->getSqlError();

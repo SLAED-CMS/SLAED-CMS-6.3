@@ -335,9 +335,9 @@ function setMessageShow(): string {
         if ($db->getSqlRowCount($result) > 0) {
             while ([$mid, $title, $body, $expire, $view] = $db->getSqlRow($result)) {
                 $mid = intval($mid);
-                if ($expire && $expire < time()) $db->getSqlQuery('UPDATE '.PREFIX_DB.'_message SET status = 0, expire = 0 WHERE id = :mid', ['mid' => $mid]);
+                $exp = $expire ? strtotime($expire) - time() : 0;
+                if ($expire && $exp < 0) $db->getSqlQuery('UPDATE '.PREFIX_DB.'_message SET status = 0, expire = NULL WHERE id = :mid', ['mid' => $mid]);
                 $body = $prs->filterContent($body, false, 'all', 2);
-                $exp = intval($expire - time());
                 $exp = ($exp > 0) ? getDuration($exp) : _UNLIMITED;
                 if ($view == 4 && is_moder()) {
                     if (is_moder()) $body .= $adminNote(_MVADMIN, $exp, $afile.'.php?op=msg_add&id='.$mid);
@@ -513,7 +513,7 @@ function addComment(): void {
     global $conf, $tpl, $com, $db;
     $id   = getVar('req', 'id',   'num',  0);
     $mod  = filterVar(getVar('req', 'mod',  'text', ''));
-    $name = filterText(substr(getVar('post', 'name', 'raw', ''), 0, 25));
+    $name = filterCutText(filterText(getVar('post', 'name', 'raw', '')), 25);
     $body = trim(getVar('post', 'text', 'raw', ''));
     $key = getVar('req', 'reqkey', 'var', '');
     $page = getVar('req', 'com', 'num', 1);

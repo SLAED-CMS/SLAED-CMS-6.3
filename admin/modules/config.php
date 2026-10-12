@@ -654,11 +654,6 @@ function config(): void {
         'is_config' => true,
     ])];
     $rows[] = [
-        'label_html' => _DB_SYNC,
-        'label_id' => $labid = getFieldIds('', 'dbsync')['label'],
-        'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'dbsync', 'value' => $conf['dbsync'], 'options' => $yesno]),
-    ];
-    $rows[] = [
         'label_html' => _SESSION,
         'label_id' => $labid = getFieldIds('', 'session')['label'],
         'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'session', 'value' => $conf['session'], 'options' => $yesno]),
@@ -1123,7 +1118,6 @@ function save(): void {
             'syntax' => getVar('post', 'syntax', 'num'),
             'variables' => $xvariables,
             'admcol' => getVar('post', 'admcol', 'num', 6),
-            'dbsync' => getVar('post', 'dbsync', 'num'),
             'session' => getVar('post', 'session', 'num'),
             'live_u' => getVar('post', 'live_u', 'num'),
             'message' => getVar('post', 'message', 'num'),

@@ -20,6 +20,7 @@ more: where a plan and this file disagree about the order, this file wins.
 | `docs/6-PAGER-2026.md` | the segmented switch `sl-seg` with its travelling knob; the pager from the stand `pg-09`: one size, steps by its own column, the key tip |
 | `docs/7-SCHEMA-2026.md` | one set of column domains, the time rule, the connection contract, `utf8mb4_unicode_520_ci`, unique email, keys that serve queries |
 | `docs/8-RANKS-2026.md` | the rank of a group as a row of Bootstrap Icons, "N of M" in a colour of its own at 3:1 in both themes; the group list as a ladder and a rank composer from the stand `grp-10` |
+| `docs/9-ADMIN-LOG-2026.md` | every journal of the site: the actions of the panel in `storage/logs/admin.log` in the one JSON format of `Logger`, written in `checkAdminPost()` with the logins; `user.log` and `oauth.log` on the same format; the login table `_login_log` for the profile and the panel; read on "Безопасность", linked from each module |
 
 ## How a session runs
 
@@ -120,15 +121,24 @@ into the plan, then do whatever work the step names.
 - [x] 52. RANKS batch 2 — the panel: the ladder and the special groups, the composer of the group form from the stand
   `grp-10`, the pictures deleted. (2026-10-12)
 - [x] 53. RANKS batch 3 — reference; deletes `docs/8-RANKS-2026.md`. (2026-10-12)
-- [ ] 54. SCHEMA batch 0 — inventory: time columns, indexes against queries, `GROUP BY`, uncut writes, `modul`
-  values, `lang` width.
-- [ ] 55. SCHEMA batch 1 — connection: collation, time zone and `sql_mode` in `Database::__construct()`.
-- [ ] 56. SCHEMA batch 2 — text columns: `utf8mb4_unicode_520_ci` from one place, the text domains, cut writes.
-- [ ] 57. SCHEMA batch 3 — time: no `VARCHAR` time, moments and timers on their forms.
-- [ ] 58. SCHEMA batch 4 — NULL, defaults, types; `_users.lang` codes.
-- [ ] 59. SCHEMA batch 5 — keys: unique email, covered indexes and prefixes out, missing ones in.
-- [ ] 60. SCHEMA batch 6 — rehearsal of `update.php` on a fresh 6.2 dump the owner provides; fresh installs.
-- [ ] 61. SCHEMA batch 7 — reference; deletes `docs/7-SCHEMA-2026.md`.
-- [ ] 62. DIAL — *decision*: the options dial `sl-dial` of the panel lists is three Tab stops a row while closed (found
+- [x] 54. SCHEMA batch 0 — inventory: time columns, indexes against queries, `GROUP BY`, uncut writes, `modul`
+  values, `lang` width. (2026-10-12)
+- [x] 55. SCHEMA batch 1 — connection: collation, time zone and `sql_mode` in `Database::__construct()`. (2026-10-12)
+- [x] 56. SCHEMA batch 2 — text columns: `utf8mb4_unicode_520_ci` from one place, the text domains, cut writes.
+  (2026-10-12)
+- [x] 57. SCHEMA batch 3 — time: no `VARCHAR` time, moments and timers on their forms. (2026-10-12)
+- [ ] 58. ADMIN-LOG batch 0 — *decision*: the proposals of the plan, the names of the functions; added by the owner on
+  2026-10-12, with the login journal of `docs/2027-CORE.md`, before the remaining SCHEMA batches so their final pass
+  covers `_login_log`.
+- [ ] 59. ADMIN-LOG batch 1 — login table: `_login_log`, the profile screen, the tab of "Безопасность", `cachegc`.
+- [ ] 60. ADMIN-LOG batch 2 — file journals: the channels of `Logger`, the login written once, the record in
+  `checkAdminPost()`.
+- [ ] 61. ADMIN-LOG batch 3 — reading the files: the table view of `logview` and the link of a module.
+- [ ] 62. ADMIN-LOG batch 4 — reference; deletes `docs/9-ADMIN-LOG-2026.md`.
+- [ ] 63. SCHEMA batch 4 — NULL, defaults, types; `_users.lang` codes.
+- [ ] 64. SCHEMA batch 5 — keys: unique email, covered indexes and prefixes out, missing ones in.
+- [ ] 65. SCHEMA batch 6 — rehearsal of `update.php` on a fresh 6.2 dump the owner provides; fresh installs.
+- [ ] 66. SCHEMA batch 7 — reference; deletes `docs/7-SCHEMA-2026.md`.
+- [ ] 67. DIAL — *decision*: the options dial `sl-dial` of the panel lists is three Tab stops a row while closed (found
   by the UI/UX audit of the groups stand, 2026-10-09); write a plan, then make its items reachable only once it opens.
-- [ ] 63. Close — no `docs/*-2026.md` plan is left; delete this file and report that the work before 8.0 is done.
+- [ ] 68. Close — no `docs/*-2026.md` plan is left; delete this file and report that the work before 8.0 is done.

@@ -15,8 +15,9 @@ function messages(): void {
     if ($db->getSqlRowCount($result) > 0) {
         $rows = [];
         while ([$mid, $title, $body, $expire, $active, $view, $lang] = $db->getSqlRow($result)) {
-            if (($expire && $expire < time()) || (!$active && $expire)) {
-                $db->getSqlQuery('UPDATE '.PREFIX_DB.'_message SET status = :active, expire = :expire WHERE id = :mid', ['active' => 0, 'expire' => 0, 'mid' => $mid]);
+            $exp = $expire ? strtotime($expire) - time() : 0;
+            if (($expire && $exp < 0) || (!$active && $expire)) {
+                $db->getSqlQuery('UPDATE '.PREFIX_DB.'_message SET status = 0, expire = NULL WHERE id = :mid', ['mid' => $mid]);
             }
             if ($view == 1) {
                 $mview = _MVALL;
@@ -28,7 +29,6 @@ function messages(): void {
                 $mview = _MVADMIN;
             }
             $lang = (!$lang) ? _ALL : $lang;
-            $exp = intval($expire - time());
             $exp = ($exp > 0) ? getDuration($exp) : _UNLIMITED;
             $rows[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
                 'cells' => [
@@ -93,13 +93,13 @@ function add(): void {
             $view,
             $lang,
         ] = $db->getSqlRow($db->getSqlQuery('SELECT title, body, expire, status, view, lang FROM '.PREFIX_DB.'_message WHERE id = :mid', ['mid' => $mid]));
+        $days = 0;
     } else {
         $mid = getVar('post', 'mid', 'num');
         $title = getVar('post', 'title', 'title');
         $body = getVar('post', 'body', 'text');
-        $newexpire = getVar('post', 'newexpire', 'num');
-        $expire_input = getVar('post', 'expire', 'num');
-        $expire = ($newexpire == 1 && $expire_input) ? time() + ($expire_input * 86400) : $expire_input;
+        $days = getVar('post', 'expire', 'num', 0);
+        [$expire] = ($mid ? $db->getSqlRow($db->getSqlQuery('SELECT expire FROM '.PREFIX_DB.'_message WHERE id = :mid', ['mid' => $mid])) : false) ?: [null];
         $active = getVar('post', 'status', 'num');
         $view = getVar('post', 'view', 'num');
         $lang = getVar('post', 'lang', 'var');
@@ -113,15 +113,11 @@ function add(): void {
     if ($conf['multilingual'] == 1) {
         $langsel = $tpl->getHtmlFrag('select', ['name_attr' => 'lang', 'options_html' => getTplLanguageOptions($lang, 1)]);
     }
-    if ($expire != 0) {
+    if ($expire) {
         $newexpire = 0;
-        $oldexpire = $expire;
-        $expire = intval($expire - time());
+        $expire = strtotime($expire) - time();
         $exp_day = $expire / 86400;
-        $expire_text = $tpl->getHtmlFrag('hidden', [
-            'nameattr' => 'expire',
-            'valueattr' => (string)$oldexpire,
-        ])._PURCHASED.': '.getDuration($expire).' ('.round($exp_day, 3).' '._DAYS.')';
+        $expire_text = _PURCHASED.': '.getDuration($expire).' ('.round($exp_day, 3).' '._DAYS.')';
     } else {
         $newexpire = 1;
         $expire_text = $tpl->getHtmlFrag('input', [
@@ -129,7 +125,7 @@ function add(): void {
             'name_attr' => 'expire',
             'input_id' => 'f-expire',
             'describedby' => 'f-expire-hint',
-            'value_attr' => '0',
+            'value_attr' => (string)$days,
             'placeholder_text' => _EXPIRATION,
             'is_required' => true,
         ]);
@@ -195,7 +191,6 @@ function add(): void {
             ['nameattr' => 'name', 'valueattr' => 'messages'],
             ['nameattr' => 'op', 'valueattr' => 'save'],
             ['nameattr' => 'posttype', 'valueattr' => 'save'],
-            ['nameattr' => 'newexpire', 'valueattr' => (string)$newexpire],
             ['nameattr' => 'token', 'valueattr' => getSiteToken('messages')],
         ],
         'rows' => $rows,
@@ -209,39 +204,38 @@ function save(): void {
     global $db, $afile, $stop;
     $stop = [];
     $mid = getVar('post', 'mid', 'num');
-    $title = getVar('post', 'title', 'title');
+    $title = filterCutText(getVar('post', 'title', 'title'), 100);
     $body = getVar('post', 'body', 'text');
-    $newexpire = getVar('post', 'newexpire', 'num');
-    $expire = getVar('post', 'expire', 'num');
+    $days = getVar('post', 'expire', 'num', 0);
     $active = getVar('post', 'status', 'num');
     $view = getVar('post', 'view', 'num');
     $lang = getVar('post', 'lang', 'var');
+    if (!isset(getLanguageList()[$lang])) $lang = '';
     $posttype = getVar('post', 'posttype', 'var');
     $warn = !checkAdminPost('messages');
-    $expire = ($newexpire == 1 && $expire) ? time() + ($expire * 86400) : $expire;
     if (!$title) $stop[] = _CERROR;
     if (!$body) $stop[] = _CERROR1;
     if ($room = checkEditorTextRoom($body, 'message.body')) $stop[] = $room;
     if (!$warn && !$stop && $posttype == 'save') {
         if ($mid) {
-            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_message SET title = :title, body = :body, expire = :expire, status = :active, view = :view, lang = :lang WHERE id = :mid', [
+            $exp = ($days > 0) ? ' expire = COALESCE(expire, NOW() + INTERVAL :days DAY),' : '';
+            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_message SET title = :title, body = :body,'.$exp.' status = :active, view = :view, lang = :lang WHERE id = :mid', [
                 'title' => $title,
                 'body' => $body,
-                'expire' => $expire,
                 'active' => $active,
                 'view' => $view,
                 'lang' => $lang,
                 'mid' => $mid,
-            ]);
+            ] + (($days > 0) ? ['days' => $days] : []));
         } else {
-            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_message (id, title, body, expire, status, view, lang) VALUES (NULL, :title, :body, :expire, :active, :view, :lang)', [
+            $exp = ($days > 0) ? 'NOW() + INTERVAL :days DAY' : 'NULL';
+            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_message (id, title, body, expire, status, view, lang) VALUES (NULL, :title, :body, '.$exp.', :active, :view, :lang)', [
                 'title' => $title,
                 'body' => $body,
-                'expire' => $expire,
                 'active' => $active,
                 'view' => $view,
                 'lang' => $lang,
-            ]);
+            ] + (($days > 0) ? ['days' => $days] : []));
         }
         setRedirect($afile.'.php?name=messages', false, 302, _SUCCSAVE);
     } elseif ($warn) {

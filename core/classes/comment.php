@@ -902,7 +902,7 @@ class Comment {
             $pars['fusr'] = '%'.$term.'%';
             return [$where.' AND (s.name LIKE :fnam OR u.name LIKE :fusr)', $pars];
         }
-        $pars['find'] = '%'.$term.'%';
+        $pars['find'] = '%'.(($find === 4) ? strtolower($term) : $term).'%';
         $where .= match ($find) {
             1 => ' AND s.id LIKE :find',
             4 => ' AND s.modul LIKE :find',

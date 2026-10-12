@@ -86,12 +86,12 @@ function addRouteBase(): array {
     $dbc = (require BASE_DIR.'/config/db.php')['db'];
     $name = 'slaed_route_'.bin2hex(random_bytes(4));
     if ($name === $dbc['name']) throw new RuntimeException('The disposable name collides with the site database');
-    getRoutePdo()->exec('CREATE DATABASE `'.$name.'` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci');
+    getRoutePdo()->exec('CREATE DATABASE `'.$name.'` DEFAULT CHARACTER SET utf8mb4 COLLATE '.$dbc['collate']);
     $pdo = getRoutePdo($name);
     addRouteSplitter();
     $sql = getSqlbatch((string)file_get_contents(BASE_DIR.'/storage/update/sql/table.sql'));
     if ($sql['error'] !== '') throw new RuntimeException('table.sql does not split');
-    foreach ($sql['statements'] as $one) $pdo->exec(str_replace(['{prefix}', '{engine}', '{charset}', '{collate}'], [RPREF, 'InnoDB', 'utf8mb4', 'utf8mb4_unicode_ci'], $one));
+    foreach ($sql['statements'] as $one) $pdo->exec(str_replace(['{prefix}', '{engine}', '{charset}', '{collate}'], [RPREF, 'InnoDB', 'utf8mb4', $dbc['collate']], $one));
     return [$pdo, $name];
 }
 
@@ -1114,7 +1114,7 @@ function getRouteSyncData(): array {
     $huge = ['ok' => true, 'changed' => true, 'code' => 200, 'body' => str_repeat('a', 16777216), 'etag' => '', 'modified' => '', 'error' => ''];
     $call = (new ReflectionMethod(NodeSync::class, 'setSourceResult'))->invoke($ext, $snap, $huge);
     $out['huge'] = [$call, $col($aid, 'body') === $body];
-    $lost = new class($conf['db']['host'], $conf['db']['uname'], $conf['db']['pass'], $conf['db']['name']) extends Database {
+    $lost = new class($conf['db']['host'], $conf['db']['uname'], $conf['db']['pass'], $conf['db']['name'], $conf['db']['collate']) extends Database {
         # Refuse the write of the source row that follows the new text, so the result fails inside its open transaction
         public function getSqlQuery(string $query = '', array $params = []): PDOStatement|false {
             return str_starts_with($query, 'UPDATE '.PREFIX_DB.'_node_sync') ? false : parent::getSqlQuery($query, $params);
@@ -1178,7 +1178,7 @@ function addRouteIntegTypes(PDO $pdo, string $work): void {
     $pdo->exec('UPDATE '.$pre.'nodes SET poll = 7 WHERE id = 102');
     $pdo->exec('UPDATE '.$pre.'nodes SET home = 1 WHERE id IN (101, 105)');
     $st = $pdo->prepare('INSERT INTO '.$pre.'blocks (id, bkey, title, content, url, bpos, weight, status, refresh, time, lang, bfile, view, expire, action, which, param)'
-        .' VALUES (?, \'\', ?, \'\', \'\', \'c\', ?, 1, 0, \'\', \'\', \'node.php\', 0, \'0\', \'d\', \'rss\', ?)');
+        .' VALUES (?, \'\', ?, \'\', \'\', \'c\', ?, 1, 0, 0, \'\', \'node.php\', 0, NULL, \'d\', \'rss\', ?)');
     $st->execute([50, 'Node home block', 1, '{"type":"news","mode":"home","limit":5}']);
     $st->execute([51, 'Node mixed block', 2, '{"type":"","mode":"last","limit":5}']);
     $st->execute([52, 'Node broken block', 3, '{"type":"off","mode":"last","limit":2}']);
@@ -1282,7 +1282,7 @@ function getRouteInteg(PDO $pdo, string $work): array {
         str_contains($root, 'Node broken block')];
     $edit = getRouteReply('root', 'GET', 'admin.php?name=blocks&op=edit&id=51');
     $post = ['name' => 'blocks', 'op' => 'editsave', 'token' => getRouteToken($edit['body'], 'editsave'), 'bid' => '51', 'bkey' => '', 'title' => 'Node mixed block',
-        'bfile' => 'node.php', 'bpos' => 'c', 'oldposition' => 'c', 'weight' => '2', 'status' => '1', 'view' => '0', 'newexpire' => '1', 'expire' => '0', 'action' => 'd',
+        'bfile' => 'node.php', 'bpos' => 'c', 'oldposition' => 'c', 'weight' => '2', 'status' => '1', 'view' => '0', 'expire' => '0', 'action' => 'd',
         'blockwhere[]' => 'rss'];
     $param = fn(): string => (string)$pdo->query('SELECT param FROM '.$pre.'blocks WHERE id = 51')->fetchColumn();
     $bad = getRouteReply('root', 'POST', 'admin.php', $post + ['ntype' => 'off', 'nmode' => 'last', 'nlimit' => '3']);
@@ -1586,7 +1586,7 @@ function getRouteIntact(PDO $pdo, string $work): array {
         $page = getRouteReply('root', 'GET', 'admin.php?name=ratings&op=votes&vote='.$vote)['body'];
         $res = getRouteReply('root', 'POST', 'admin.php', ['name' => 'ratings', 'op' => 'annul', 'vote' => (string)$vote, 'reason' => 'probe',
             'token' => getRouteToken($page, 'annul')]);
-        return [$res['code'], (int)$pdo->query('SELECT annulled FROM '.$pre.'rating_votes WHERE id = '.$vote)->fetchColumn() > 0, getRouteRate($pdo, $mid)];
+        return [$res['code'], $pdo->query('SELECT annulled FROM '.$pre.'rating_votes WHERE id = '.$vote)->fetchColumn() !== null, getRouteRate($pdo, $mid)];
     };
     $pdo->exec('UPDATE '.$pre.'nodes SET status = 0 WHERE id = 102');
     $out['annul']['material'] = $annul((int)($ids[0] ?? 0), 102);
@@ -2043,8 +2043,8 @@ function addRouteSeoTypes(PDO $pdo, string $work): void {
     $pdo->exec('INSERT INTO '.$pre.'nodes (id, tid, cid, uid, aname, ip, title, intro, body, field, status, published)'
         .' VALUES (202, 2, 0, 3, \'\', \'127.0.0.1\', \'Zebra doc\', \'intro of 202\', \'Body of zebra\', \'\', 2, \'2026-01-10 10:00:00\')');
     $pdo->exec('INSERT INTO '.$pre.'blocks (id, bkey, title, content, url, bpos, weight, status, refresh, time, lang, bfile, view, expire, action, which, param)'
-        .' VALUES (60, \'\', \'Docs last block\', \'\', \'\', \'c\', 1, 1, 0, \'\', \'\', \'node.php\', 0, \'0\', \'d\', \'rss\', \'{"type":"docs","mode":"last","limit":5}\'),'
-        .' (61, \'\', \'Stale seo block\', \'\', \'\', \'c\', 2, 1, 0, \'\', \'\', \'node.php\', 0, \'0\', \'d\', \'rss\', \'{"type":"off","mode":"last","limit":2}\')');
+        .' VALUES (60, \'\', \'Docs last block\', \'\', \'\', \'c\', 1, 1, 0, 0, \'\', \'node.php\', 0, NULL, \'d\', \'rss\', \'{"type":"docs","mode":"last","limit":5}\'),'
+        .' (61, \'\', \'Stale seo block\', \'\', \'\', \'c\', 2, 1, 0, 0, \'\', \'node.php\', 0, NULL, \'d\', \'rss\', \'{"type":"off","mode":"last","limit":2}\')');
 }
 
 # The canonical route answers: canonical addresses beside foreign parameters, the description of the start page, a category named by a constant in view and feed
@@ -2158,7 +2158,7 @@ function addRouteHeadTypes(PDO $pdo, string $work): void {
     $pdo->exec('INSERT INTO '.$pre.'nodes (id, tid, cid, uid, aname, ip, title, intro, body, field, status, published)'
         .' VALUES (106, 1, 1, 2, \'\', \'127.0.0.1\', \'Zeta later\', \'intro of 106\', \'Body of zeta\', \'\', 2, \'2030-01-01 00:00:00\')');
     $pdo->exec('INSERT INTO '.$pre.'blocks (id, bkey, title, content, url, bpos, weight, status, refresh, time, lang, bfile, view, expire, action, which, param)'
-        .' VALUES (70, \'\', \'Empty head block\', \'\', \'\', \'c\', 1, 1, 0, \'\', \'\', \'node.php\', 0, \'0\', \'d\', \'rss\', \'{"type":"","mode":"home","limit":5}\')');
+        .' VALUES (70, \'\', \'Empty head block\', \'\', \'\', \'c\', 1, 1, 0, 0, \'\', \'node.php\', 0, NULL, \'d\', \'rss\', \'{"type":"","mode":"home","limit":5}\')');
 }
 
 # The route answers of notices and the page cache: a page past the reader bound, the notice after a submission once and the list cached after it, the notice after a report once
@@ -2673,6 +2673,69 @@ function getRouteComment(PDO $pdo): array {
     return $out;
 }
 
+# The time forms of docs/7-SCHEMA-2026.md over real requests: the cleanups, the refresh and the expiry of a block, the expiry of a message, the session sweep, the forum new mark
+function getRouteTime(PDO $pdo, string $work): array {
+    $pre = RPREF.'_';
+    $one = fn(string $sql): mixed => $pdo->query($sql)->fetchColumn();
+    $row = fn(string $sql): array => $pdo->query($sql)->fetch(PDO::FETCH_NUM) ?: [];
+    $pdo->exec('INSERT INTO '.$pre.'users_temp (name, email, password, regdate, code) VALUES (\'stale\', \'stale@probe.test\', \'x\', NOW() - INTERVAL 2 DAY, \'a\'),'
+        .' (\'fresh\', \'fresh@probe.test\', \'x\', NOW() - INTERVAL 1 HOUR, \'b\')');
+    getRouteReply('', 'GET', 'index.php?name=account&op=activate&user=nobody&num=none');
+    $out = ['temp' => $pdo->query('SELECT name FROM '.$pre.'users_temp ORDER BY name')->fetchAll(PDO::FETCH_COLUMN)];
+    $pdo->exec('INSERT INTO '.$pre.'voting (id, modul, title, body, answer, time, enddate, lang, status) VALUES'
+        .' (1, \'\', \'Probe poll\', \'Yes|No\', \'0|0\', NOW() - INTERVAL 1 DAY, NOW() + INTERVAL 1 DAY, \'\', 0)');
+    $pdo->exec('INSERT INTO '.$pre.'rating (mid, modul, time, uid, ip) VALUES (1, \'voting\', UNIX_TIMESTAMP() - 40000000, 0, \'10.0.0.1\'),'
+        .' (1, \'voting\', UNIX_TIMESTAMP(), 0, \'10.0.0.2\')');
+    $poll = getRouteReply('', 'GET', 'index.php?name=voting&op=view&id=1');
+    $out['rating'] = [$poll['code'], $pdo->query('SELECT ip FROM '.$pre.'rating ORDER BY ip')->fetchAll(PDO::FETCH_COLUMN)];
+    $pdo->exec('INSERT INTO '.$pre.'blocks (id, bkey, title, content, url, bpos, weight, status, refresh, time, lang, bfile, view, expire, action, which, param) VALUES'
+        .' (82, \'\', \'Stale feed\', \'kept feed\', \'http://127.0.0.1:1/feed.xml\', \'c\', 1, 1, 3600, 0, \'\', \'\', 0, NULL, \'\', \'all\', \'\'),'
+        .' (83, \'\', \'Fresh feed\', \'fresh feed\', \'http://127.0.0.1:1/feed.xml\', \'c\', 2, 1, 3600, UNIX_TIMESTAMP() - 10, \'\', \'\', 0, NULL, \'\', \'all\', \'\'),'
+        .' (80, \'\', \'Gone block\', \'gone text\', \'\', \'c\', 3, 1, 0, 0, \'\', \'\', 0, NOW() - INTERVAL 1 HOUR, \'d\', \'all\', \'\'),'
+        .' (81, \'\', \'Kept block\', \'kept text\', \'\', \'c\', 4, 1, 0, 0, \'\', \'\', 0, NOW() + INTERVAL 1 DAY, \'d\', \'all\', \'\')');
+    $pdo->exec('INSERT INTO '.$pre.'message (id, title, body, expire, status, view, lang) VALUES (1, \'Gone message\', \'gone body\', NOW() - INTERVAL 1 HOUR, 1, 1, \'\'),'
+        .' (2, \'Live message\', \'live body\', NOW() + INTERVAL 1 DAY, 1, 1, \'\')');
+    $pdo->exec('INSERT INTO '.$pre.'session (uname, time, ip, guest, modul, url) VALUES (\'oldbot\', UNIX_TIMESTAMP() - 5000, \'10.0.0.3\', 1, \'news\', \'\'),'
+        .' (\'newbot\', UNIX_TIMESTAMP(), \'10.0.0.4\', 1, \'news\', \'\')');
+    file_put_contents($work.'/counter/session.log', '0');
+    $was = time();
+    $home = getRouteReply('', 'GET', '/');
+    $out['blocks'] = [$home['code'], $row('SELECT time >= '.($was - 1).', content FROM '.$pre.'blocks WHERE id = 82'),
+        $row('SELECT time < '.$was.' FROM '.$pre.'blocks WHERE id = 83'), $row('SELECT status, expire FROM '.$pre.'blocks WHERE id = 80'),
+        $row('SELECT status, expire > NOW() FROM '.$pre.'blocks WHERE id = 81')];
+    $out['message'] = [$row('SELECT status, expire FROM '.$pre.'message WHERE id = 1'), $row('SELECT status, expire > NOW() FROM '.$pre.'message WHERE id = 2'),
+        str_contains(getRouteReply('', 'GET', '/')['body'], 'live body')];
+    $out['session'] = $pdo->query('SELECT uname FROM '.$pre.'session WHERE uname LIKE \'%bot\' ORDER BY uname')->fetchAll(PDO::FETCH_COLUMN);
+    $add = getRouteReply('root', 'GET', 'admin.php?name=blocks&op=add');
+    getRouteReply('root', 'POST', 'admin.php?name=blocks', ['op' => 'addsave', 'token' => getRouteToken($add['body'], 'addsave'), 'title' => 'Timed block',
+        'content' => 'timed text', 'bpos' => 'l', 'status' => '1', 'view' => '0', 'expire' => '2', 'action' => 'd', 'blockwhere[]' => 'all']);
+    $add = getRouteReply('root', 'GET', 'admin.php?name=messages&op=add');
+    getRouteReply('root', 'POST', 'admin.php?name=messages', ['op' => 'save', 'posttype' => 'save', 'token' => getRouteToken($add['body'], 'save'), 'mid' => '0',
+        'title' => 'Timed message', 'body' => 'timed body', 'expire' => '3', 'status' => '1', 'view' => '1']);
+    $days = 'ROUND(TIMESTAMPDIFF(SECOND, NOW(), expire) / 86400)';
+    $out['panel'] = [$one('SELECT '.$days.' FROM '.$pre.'blocks WHERE title = \'Timed block\''), $one('SELECT '.$days.' FROM '.$pre.'message WHERE title = \'Timed message\'')];
+    $pdo->exec('INSERT INTO '.$pre.'categories (id, modul, title, intro, status, pview, pread, ppost, preply, pedit, pdelete, pmod, lang) VALUES'
+        .' (6, \'forum\', \'Times\', \'\', 1, \'0|0\', \'0|0\', \'1|0\', \'1|0\', \'1|0\', \'1|0\', \'\', \'\')');
+    $pdo->exec('INSERT INTO '.$pre.'forum (id, pid, cid, uid, name, title, time, body, field, luid, lname, ltime, status) VALUES'
+        .' (601, 0, 6, 3, \'boris\', \'Older topic\', \'2026-01-01 09:00:00\', \'old\', \'\', 3, \'boris\', \'2026-01-01 10:00:00\', 3),'
+        .' (602, 0, 6, 3, \'boris\', \'Newer topic\', \'2026-01-01 09:00:00\', \'new\', \'\', 3, \'boris\', \'2026-01-03 10:00:00\', 3)');
+    $pdo->exec('UPDATE '.$pre.'users SET lastvis = \'2026-01-02 12:00:00\' WHERE id = 4');
+    $pdo->exec('UPDATE '.$pre.'users SET lastvis = NULL WHERE id = 3');
+    $marks = static function (string $html): array {
+        $out = [];
+        foreach (['Older topic', 'Newer topic'] as $title) {
+            $at = strpos($html, 'title="'.$title.'"');
+            $cut = ($at === false) ? '' : substr($html, $at, (int)strpos($html, '</a>', $at) - $at);
+            $out[] = str_contains($cut, 'sl-topic-new') ? 'new' : (str_contains($cut, 'sl-topic-old') ? 'old' : '');
+        }
+        return $out;
+    };
+    $out['forum'] = ['clara' => $marks(getRouteReply('clara', 'GET', 'index.php?name=forum&cat=6')['body']),
+        'boris' => $marks(getRouteReply('boris', 'GET', 'index.php?name=forum&cat=6')['body']), 'guest' => $marks(getRouteReply('', 'GET', 'index.php?name=forum&cat=6')['body'])];
+    $out['visit'] = [$one('SELECT lastvis IS NOT NULL FROM '.$pre.'users WHERE id = 3'), $one('SELECT lastvis > \'2026-06-01\' FROM '.$pre.'users WHERE id = 4')];
+    return $out;
+}
+
 # The child favhold of the intact run holds the account of anna with one more favorite for two seconds, as a parallel request at the limit does before its commit
 if (($argv[2] ?? '') === 'favhold') {
     $hpdo = getRoutePdo((string)($argv[3] ?? ''));
@@ -2732,6 +2795,8 @@ try {
         $report['runs']['head'] = ['bar' => getRouteHeadBar($rpdo, $rwork)] + getRouteHead() + ['hint' => getRouteHint($rpdo)];
     } elseif (($argv[2] ?? '') === 'quick') {
         $report['runs']['quick'] = getRouteQuick($rpdo, $rwork);
+    } elseif (($argv[2] ?? '') === 'time') {
+        $report['runs']['time'] = getRouteTime($rpdo, $rwork);
     } elseif (($argv[2] ?? '') === 'files') {
         $report['runs']['files'] = getRouteFiles($rpdo) + getRouteAccount($rpdo) + getRouteComment($rpdo) + getRouteUnused($rpdo);
     } else {

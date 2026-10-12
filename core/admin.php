@@ -414,7 +414,7 @@ function getDbVersion() {
 # The materials of a Node type come from its reader; a count the administrator may not read offers no deletion, which the writer would refuse anyway
 function getAdminCategoryList(string $modul = '', int $obj = 0): string {
     global $db, $afile, $tpl;
-    $modul = filterVar($modul);
+    if (!in_array($modul, getCategoryModules(), true)) $modul = '';
     $where = ($modul) ? 'WHERE modul = :modul' : '';
     $params = ($modul) ? ['modul' => $modul] : [];
     $modlink = ($modul) ? '&modul='.$modul : '';
@@ -635,9 +635,10 @@ function getAdminBlockList(): string {
     $group = '';
     $result = $db->getSqlQuery('SELECT id, bkey, title, url, bpos, weight, status, lang, bfile, view, expire, action, which FROM '.PREFIX_DB.'_blocks ORDER BY bpos, weight');
     while ([$bid, $bkey, $title, $url, $bpos, $weight, $active, $lang, $bfile, $view, $expire, $action, $which] = $db->getSqlRow($result)) {
-        if (($expire && $expire < time()) || (!$active && $expire)) {
+        $exp = $expire ? strtotime($expire) - time() : 0;
+        if (($expire && $exp < 0) || (!$active && $expire)) {
             if ($action == 'd') {
-                $db->getSqlQuery('UPDATE '.PREFIX_DB.'_blocks SET status = 0, expire = 0 WHERE id = :bid', ['bid' => $bid]);
+                $db->getSqlQuery('UPDATE '.PREFIX_DB.'_blocks SET status = 0, expire = NULL WHERE id = :bid', ['bid' => $bid]);
             } elseif ($action == 'r') {
                 $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_blocks WHERE id = :bid', ['bid' => $bid]);
             }
@@ -645,7 +646,6 @@ function getAdminBlockList(): string {
         $marks = explode(',', (string)$which);
         $isfly = in_array('infly', $marks, true);
         $isfix = $isfly && in_array('flyfix', $marks, true);
-        $exp = intval($expire - time());
         $exp = ($exp > 0) ? getDuration($exp) : _UNLIMITED;
         $tips = [['label' => _NAME, 'value' => $title, 'is_last' => false]];
         if ($lang !== '') $tips[] = ['label' => _LANGUAGE, 'value' => getLangName($lang), 'is_last' => false];

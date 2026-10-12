@@ -66,9 +66,11 @@ class SchemaUpdateValidationTest extends TestCase
     # Collects every column definition of the update file as [table, column, definition, line]
     # Three shapes count: the MODIFY of an ALTER and the definition handed to the addcol or the modcol procedure
     # The modcol procedure is the conditional MODIFY, so what it forces a column onto is a declaration exactly like the other two
+    # A runiftype step runs only while a column still has its old type, so what it declares is a passage to the target and is blanked out, its line kept
     private static function getUpdateColumns(string $content): array
     {
         $out = [];
+        $content = (string)preg_replace('/^CALL\s+runiftype\(.*$/mi', '', $content);
         preg_match_all('/ALTER\s+TABLE\s+`\{prefix\}_([a-z0-9_]+)`(.*?);/is', $content, $blocks, PREG_SET_ORDER | PREG_OFFSET_CAPTURE);
 
         foreach ($blocks as $block) {

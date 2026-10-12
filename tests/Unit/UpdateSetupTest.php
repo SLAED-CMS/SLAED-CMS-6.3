@@ -96,6 +96,43 @@ final class UpdateSetupTest extends TestCase
         $this->assertSame('Problem establishing a connection to the database!', $run['none']);
     }
 
+    # Every connection runs in the zone of PHP, the configured collation and one SQL mode: a setup.php session at +13 and at +14, which MariaDB refuses, writes NOW() as date()
+    # The installer and the update set the zone of the site before they connect, the core no longer sets it after booting, and no configuration carries the switch sync
+    #[Test]
+    public function theConnectionRunsInTheZoneOfPhp(): void
+    {
+        $mode = ['STRICT_TRANS_TABLES', 'ONLY_FULL_GROUP_BY', 'NO_ZERO_DATE', 'NO_ZERO_IN_DATE', 'ERROR_FOR_DIVISION_BY_ZERO', 'NO_ENGINE_SUBSTITUTION'];
+        sort($mode);
+        foreach ($this->getRun()['fresh']['link'] as $name => $link) {
+            $this->assertLessThanOrEqual(1, $link['skew'], 'NOW() of the session and date() of PHP differ in '.$name);
+            $this->assertSame($link['want'], $link['coll'], 'The session does not run in the configured collation');
+            sort($link['mode']);
+            $this->assertSame($mode, $link['mode'], 'The session does not run in the SQL mode of the connection contract');
+        }
+        $root = dirname(__DIR__, 2);
+        $setup = (string)file_get_contents($root.'/public/setup.php');
+        $zone = strpos($setup, "\ndate_default_timezone_set(\$conf['gtime']);\n");
+        $this->assertNotFalse($zone, 'setup.php does not set the zone of the site');
+        $this->assertLessThan(strpos($setup, "\nif (checkSetupDone(\$setup))"), $zone, 'setup.php connects before it sets the zone');
+        $update = (string)file_get_contents($root.'/public/update.php');
+        $zone = strpos($update, "date_default_timezone_set((string)(getUpdateSource(CONFIG_DIR.'/config_global.php')['gtime'] ?? \$conf['gtime']));");
+        $this->assertNotFalse($zone, 'update.php does not set the zone of the site');
+        $this->assertLessThan(strpos($update, 'setUpdatePage((($_POST'), $zone, 'update.php runs the update before it sets the zone');
+        $this->assertStringNotContainsString('time_zone', (string)file_get_contents($root.'/core/system.php'), 'The core sets the zone a second time');
+        foreach ([$setup, $update, (string)file_get_contents($root.'/tools/node-profile.php')] as $code) $this->assertStringNotContainsString("'sync' => '", $code);
+    }
+
+    # The installer writes utf8mb4_unicode_520_ci, under which 😀 and 😃 are two names of _users, while _maildead keeps two addresses apart only in case
+    #[Test]
+    public function theReleaseCollationTellsApartWhatItStores(): void
+    {
+        $text = $this->getRun()['text'];
+        $this->assertSame('utf8mb4_unicode_520_ci', $text['coll']);
+        $this->assertSame([true, true], $text['names'], 'Two emoji names collide in _users.name');
+        $this->assertSame([1, 1], $text['found'], 'An emoji name finds another one');
+        $this->assertSame([true, true], $text['mails'], '_maildead.email no longer tells apart the case of an address');
+    }
+
     # The installer reads the request only through getSetupVar(), prints no password back, never changes permissions and declares no function the core declares
     # Install checks the grammar of prefix and panel, the writable configuration, a pending journal and both schema files before it asks the database
     # The marks of config/update.php are written in one place, after the statements of a part ran

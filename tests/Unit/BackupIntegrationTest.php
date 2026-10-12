@@ -49,10 +49,13 @@ final class BackupIntegrationTest extends TestCase
     }
 
     # The shared connection is handed back exactly as it was found, including the buffering mode and an open transaction
+    # What it was found in is the state Database sets: the configured collation and the SQL mode of the connection contract
     #[Test]
     public function theSharedConnectionIsRestored(): void
     {
         $data = $this->getProbe('export');
+        $this->assertSame((require BASE_DIR.'/config/db.php')['db']['collate'], $data['before']['coll'], 'The connection did not start in the configured collation');
+        $this->assertStringContainsString('ONLY_FULL_GROUP_BY', $data['before']['mode'], 'The connection did not start in the SQL mode of the contract');
         $this->assertSame($data['before'], $data['after'], 'The export changed session state it did not restore');
         $this->assertTrue($data['after']['buffered'], 'Unbuffered mode survived the export');
         $this->assertSame(0, $data['after']['intrx'], 'The export left a transaction open');

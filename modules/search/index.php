@@ -79,12 +79,12 @@ function getSearchForm(array $state): string {
 function addSearchStat(array $state): void {
     global $db, $conf;
     if (!$conf['search']['asearch'] || $state['word'] === '') return;
-    $pars = ['word' => $state['word'], 'modul' => $state['mod']];
+    $pars = ['word' => filterCutText($state['word'], 255), 'modul' => $state['mod']];
     $result = $db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_search WHERE word = :word AND modul = :modul', $pars);
     if ($db->getSqlRowCount($result) > 0) {
         $db->getSqlQuery('UPDATE '.PREFIX_DB.'_search SET time = NOW(), score = score + 1 WHERE word = :word AND modul = :modul', $pars);
     } else {
-        $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_search VALUES (NULL, :word, :modul, NOW(), :score)', ['word' => $state['word'], 'modul' => $state['mod'], 'score' => 1]);
+        $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_search VALUES (NULL, :word, :modul, NOW(), :score)', $pars + ['score' => 1]);
     }
 }
 

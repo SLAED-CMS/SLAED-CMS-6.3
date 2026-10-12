@@ -154,11 +154,11 @@ function votes(): void {
     $list = getRatingService()->getRatingList($scope, $mid, $after, 50);
     $rows = '';
     foreach ($list['rows'] as $row) {
-        $state = $row['annulled'] ? date('Y-m-d H:i', $row['annulled']).' #'.$row['aid'].': '.$row['reason'] : '';
+        $state = $row['annulled'] ? format_time($row['annulled'], 'Y-m-d H:i').' #'.$row['aid'].': '.$row['reason'] : '';
         $href = $link.'&after='.$after.'&vote='.$row['id'];
         $cells = [
             ['is_col_id' => true, 'has_content_text' => true, 'content_text' => $row['id']],
-            ['is_col_date' => true, 'has_content_text' => true, 'content_text' => date('Y-m-d H:i', $row['created'])],
+            ['is_col_date' => true, 'has_content_text' => true, 'content_text' => format_time($row['created'], 'Y-m-d H:i')],
             ['has_content_text' => true, 'content_text' => $row['scope'].' #'.$row['mid']],
             ['is_truncate' => true, 'has_content_text' => true, 'content_text' => $row['actor']],
             ['is_col_count' => true, 'has_content_text' => true, 'content_text' => $row['value']],

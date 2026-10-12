@@ -35,6 +35,7 @@ DROP PROCEDURE IF EXISTS stopnull;
 DROP PROCEDURE IF EXISTS delcol;
 DROP PROCEDURE IF EXISTS modcol;
 DROP PROCEDURE IF EXISTS runifcol;
+DROP PROCEDURE IF EXISTS runiftype;
 DROP PROCEDURE IF EXISTS renidx;
 DROP PROCEDURE IF EXISTS delidx;
 DROP PROCEDURE IF EXISTS addidx;
@@ -350,6 +351,26 @@ BEGIN
     END IF;
 END$$
 
+CREATE PROCEDURE runiftype(IN ptab VARCHAR(128), IN pcol VARCHAR(128), IN ptype VARCHAR(64), IN psql TEXT)
+BEGIN
+    DECLARE ccol INT DEFAULT 0;
+
+    SELECT COUNT(*)
+      INTO ccol
+      FROM information_schema.columns
+     WHERE table_schema = DATABASE()
+       AND table_name = ptab
+       AND column_name = pcol
+       AND UPPER(data_type) = UPPER(ptype);
+
+    IF ccol > 0 THEN
+        SET @sql = psql;
+        PREPARE stmt FROM @sql;
+        EXECUTE stmt;
+        DEALLOCATE PREPARE stmt;
+    END IF;
+END$$
+
 CREATE PROCEDURE renidx(IN ptab VARCHAR(128), IN pold VARCHAR(128), IN pnew VARCHAR(128))
 BEGIN
     DECLARE ctab INT DEFAULT 0;
@@ -612,6 +633,7 @@ BEGIN
     DECLARE ccol_id  INT DEFAULT 0;
     DECLARE ccol_name INT DEFAULT 0;
     DECLARE cconflict INT DEFAULT 0;
+    DECLARE ccoll VARCHAR(64) DEFAULT '';
 
     SELECT COUNT(*)
       INTO ctab
@@ -635,11 +657,21 @@ BEGIN
         IF ccol_id > 0 AND ccol_name > 0 THEN
             DROP TEMPORARY TABLE IF EXISTS tmp_user_name_fix;
 
-            CREATE TEMPORARY TABLE tmp_user_name_fix (
-                id INT UNSIGNED NOT NULL PRIMARY KEY,
-                old_name VARCHAR(25) NOT NULL,
-                new_name VARCHAR(25) NOT NULL
-            ) ENGINE=MEMORY;
+            # The names take the collation of the column, whatever the default of the database is, so the join below compares like with like
+            SELECT collation_name
+              INTO ccoll
+              FROM information_schema.columns
+             WHERE table_schema = DATABASE()
+               AND table_name = ptab
+               AND column_name = 'name';
+
+            SET @sql = CONCAT(
+                'CREATE TEMPORARY TABLE tmp_user_name_fix (id INT UNSIGNED NOT NULL PRIMARY KEY, ',
+                'old_name VARCHAR(25) COLLATE ', ccoll, ' NOT NULL, new_name VARCHAR(25) COLLATE ', ccoll, ' NOT NULL) ENGINE=MEMORY'
+            );
+            PREPARE stmt FROM @sql;
+            EXECUTE stmt;
+            DEALLOCATE PREPARE stmt;
 
             SET @sql = CONCAT(
                 'INSERT INTO tmp_user_name_fix (`id`, `old_name`, `new_name`) ',
@@ -861,7 +893,7 @@ CALL addidx('{prefix}_privat', 'out_box', '`uidout`, `delout`, `time`', 0);
 CALL addidx('{prefix}_privat', 'out_new', '`uidout`, `delout`, `viewed`', 0);
 CALL addidx('{prefix}_privat', 'flood', '`uidout`, `time`', 0);
 CALL stopnull('{prefix}_privat', 'time', 'privat.time holds NULL rows: repair them before this upgrade');
-CALL modcol('{prefix}_privat', 'time', 'DATETIME NOT NULL');
+CALL modcol('{prefix}_privat', 'time', 'DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP');
 
 # =============================================================================
 # Batch K — _rating
@@ -889,7 +921,7 @@ CREATE TABLE IF NOT EXISTS `{prefix}_rating_actors` (
   `scope` VARCHAR(50) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
   `mid` INT UNSIGNED NOT NULL,
   `actor` VARCHAR(50) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
-  `last` BIGINT UNSIGNED NOT NULL,
+  `last` BIGINT UNSIGNED NOT NULL DEFAULT 0,
   PRIMARY KEY (`scope`, `mid`, `actor`)
 ) ENGINE={engine} DEFAULT CHARSET={charset} COLLATE={collate};
 
@@ -898,7 +930,7 @@ CREATE TABLE IF NOT EXISTS `{prefix}_rating_targets` (
   `mid` INT UNSIGNED NOT NULL,
   `base` BIGINT UNSIGNED NOT NULL DEFAULT 0,
   `votes` BIGINT UNSIGNED NOT NULL DEFAULT 0,
-  `created` BIGINT UNSIGNED NOT NULL,
+  `created` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`scope`, `mid`)
 ) ENGINE={engine} DEFAULT CHARSET={charset} COLLATE={collate};
 
@@ -910,8 +942,8 @@ CREATE TABLE IF NOT EXISTS `{prefix}_rating_votes` (
   `uid` INT UNSIGNED NOT NULL DEFAULT 0,
   `value` TINYINT UNSIGNED NOT NULL,
   `request` CHAR(32) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
-  `created` BIGINT UNSIGNED NOT NULL,
-  `annulled` BIGINT UNSIGNED NOT NULL DEFAULT 0,
+  `created` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `annulled` DATETIME DEFAULT NULL,
   `aid` INT UNSIGNED NOT NULL DEFAULT 0,
   `reason` VARCHAR(255) NOT NULL DEFAULT '',
   PRIMARY KEY (`id`),
@@ -1055,10 +1087,10 @@ UPDATE `{prefix}_users` SET `lastvis` = '1970-01-01 00:00:01' WHERE `lastvis` = 
 # A 6.2 site may hold NULL where the statement below demands NOT NULL, which strict mode refuses: every NULL takes the default of its column
 UPDATE `{prefix}_users` SET
   `password` = COALESCE(`password`, ''), `ip` = COALESCE(`ip`, ''), `regdate` = COALESCE(`regdate`, '1970-01-01 00:00:01'),
-  `lastvis` = COALESCE(`lastvis`, '1970-01-01 00:00:01'), `newslet` = COALESCE(`newslet`, 1), `fsmail` = COALESCE(`fsmail`, 1),
+  `newslet` = COALESCE(`newslet`, 1), `fsmail` = COALESCE(`fsmail`, 1),
   `psmail` = COALESCE(`psmail`, 1), `points` = COALESCE(`points`, 0), `votes` = COALESCE(`votes`, 0), `tvotes` = COALESCE(`tvotes`, 0),
   `storynum` = COALESCE(`storynum`, 10), `grp` = COALESCE(`grp`, 0), `rank` = COALESCE(`rank`, '')
-WHERE `password` IS NULL OR `ip` IS NULL OR `regdate` IS NULL OR `lastvis` IS NULL OR `newslet` IS NULL OR `fsmail` IS NULL OR `psmail` IS NULL
+WHERE `password` IS NULL OR `ip` IS NULL OR `regdate` IS NULL OR `newslet` IS NULL OR `fsmail` IS NULL OR `psmail` IS NULL
   OR `points` IS NULL OR `votes` IS NULL OR `tvotes` IS NULL OR `storynum` IS NULL OR `grp` IS NULL OR `rank` IS NULL;
 
 # _users: widen critical columns and fix types / defaults
@@ -1067,9 +1099,9 @@ WHERE `password` IS NULL OR `ip` IS NULL OR `regdate` IS NULL OR `lastvis` IS NU
 ALTER TABLE `{prefix}_users`
   MODIFY `id`        INT UNSIGNED NOT NULL AUTO_INCREMENT,
   MODIFY `password`  VARCHAR(255) NOT NULL,
-  MODIFY `ip`        VARCHAR(45) NOT NULL DEFAULT '',
+  MODIFY `ip`        VARCHAR(45) CHARACTER SET ascii COLLATE ascii_bin NOT NULL DEFAULT '',
   MODIFY `regdate`   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  MODIFY `lastvis`   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  MODIFY `lastvis`   DATETIME DEFAULT NULL,
   MODIFY `newslet`   TINYINT(1) NOT NULL DEFAULT 1,
   MODIFY `fsmail`    TINYINT(1) NOT NULL DEFAULT 1,
   MODIFY `psmail`    TINYINT(1) NOT NULL DEFAULT 1,
@@ -1079,6 +1111,9 @@ ALTER TABLE `{prefix}_users`
   MODIFY `storynum`  TINYINT UNSIGNED NOT NULL DEFAULT 10,
   MODIFY `grp`       INT NOT NULL DEFAULT 0,
   MODIFY `rank`      VARCHAR(25) NOT NULL DEFAULT '';
+
+# A user who never came back is NULL, not the sentinel the zero date of 6.2 was carried through above
+UPDATE `{prefix}_users` SET `lastvis` = NULL WHERE `lastvis` = '1970-01-01 00:00:01';
 
 # =============================================================================
 # Batch O: field naming unification — step 1
@@ -1174,8 +1209,8 @@ ALTER TABLE `{prefix}_admins`
   MODIFY `editor`   VARCHAR(32) NOT NULL DEFAULT 'plain',
   MODIFY `smail`    BOOLEAN DEFAULT NULL,
   MODIFY `modules`  TEXT NOT NULL,
-  MODIFY `lang`     VARCHAR(30) NOT NULL DEFAULT '',
-  MODIFY `ip`       VARCHAR(45) NOT NULL DEFAULT '',
+  MODIFY `lang`     VARCHAR(10) CHARACTER SET ascii COLLATE ascii_bin NOT NULL DEFAULT '',
+  MODIFY `ip`       VARCHAR(45) CHARACTER SET ascii COLLATE ascii_bin NOT NULL DEFAULT '',
   MODIFY `regdate`  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   MODIFY `lastvis`  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP;
 
@@ -1190,21 +1225,28 @@ ALTER TABLE `{prefix}_blocks`
   MODIFY `weight` SMALLINT UNSIGNED NOT NULL DEFAULT 1,
   MODIFY `status` BOOLEAN NOT NULL DEFAULT 1,
   MODIFY `refresh` INT UNSIGNED NOT NULL DEFAULT 0,
-  MODIFY `time` VARCHAR(14) NOT NULL DEFAULT '0',
-  MODIFY `lang` VARCHAR(30) NOT NULL DEFAULT '',
+  MODIFY `lang` VARCHAR(10) CHARACTER SET ascii COLLATE ascii_bin NOT NULL DEFAULT '',
   MODIFY `bfile` VARCHAR(255) NOT NULL DEFAULT '',
   MODIFY `view` TINYINT UNSIGNED NOT NULL DEFAULT 0,
-  MODIFY `expire` VARCHAR(14) NOT NULL DEFAULT '0',
   MODIFY `action` CHAR(1) NOT NULL DEFAULT '',
   MODIFY `which` TEXT NOT NULL;
 
+# The refresh stamp of a feed block is unix seconds: an empty or a zero text of 6.2 becomes 0 before the column turns numeric
+CALL runiftype('{prefix}_blocks', 'time', 'varchar', 'UPDATE `{prefix}_blocks` SET `time` = \'0\' WHERE `time` NOT REGEXP \'^[0-9]{1,19}$\'');
+CALL modcol('{prefix}_blocks', 'time', 'BIGINT UNSIGNED NOT NULL DEFAULT 0');
+
+# The expiry of a block becomes the moment it ends, NULL for none: the unix text passes through its digits in the zone of the site, a second run finds a DATETIME
+CALL runiftype('{prefix}_blocks', 'expire', 'varchar', 'ALTER TABLE `{prefix}_blocks` MODIFY `expire` VARCHAR(14) NULL DEFAULT NULL');
+CALL runiftype('{prefix}_blocks', 'expire', 'varchar', 'UPDATE `{prefix}_blocks` SET `expire` = CASE WHEN `expire` REGEXP \'^[0-9]{14}$\' THEN `expire` WHEN `expire` REGEXP \'^[1-9][0-9]{0,10}$\' THEN DATE_FORMAT(FROM_UNIXTIME(`expire`), \'%Y%m%d%H%i%s\') END');
+CALL modcol('{prefix}_blocks', 'expire', 'DATETIME DEFAULT NULL');
+
 ALTER TABLE `{prefix}_categories`
   MODIFY `id`    INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  MODIFY `modul` VARCHAR(50) NOT NULL,
+  MODIFY `modul` VARCHAR(50) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
   MODIFY `title` VARCHAR(100) NOT NULL,
   MODIFY `intro` TEXT NOT NULL,
   MODIFY `img` VARCHAR(100) NOT NULL DEFAULT '',
-  MODIFY `lang` VARCHAR(30) NOT NULL DEFAULT '',
+  MODIFY `lang` VARCHAR(10) CHARACTER SET ascii COLLATE ascii_bin NOT NULL DEFAULT '',
   MODIFY `parent` INT UNSIGNED NOT NULL DEFAULT 0,
   MODIFY `status` BOOLEAN NOT NULL DEFAULT 0,
   MODIFY `ordern` INT UNSIGNED NOT NULL DEFAULT 0,
@@ -1232,7 +1274,7 @@ UPDATE `{prefix}_comment` SET `uid` = 0 WHERE `uid` IS NULL;
 # VARCHAR(255) behind a rich editor holds about 127 Cyrillic characters, which is one sentence
 ALTER TABLE `{prefix}_comment`
   MODIFY `id`    INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  MODIFY `modul` VARCHAR(60) NOT NULL,
+  MODIFY `modul` VARCHAR(50) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
   MODIFY `body` MEDIUMTEXT NOT NULL,
   MODIFY `cid` INT UNSIGNED NOT NULL DEFAULT 0,
   MODIFY `uid` INT UNSIGNED NOT NULL DEFAULT 0,
@@ -1240,12 +1282,17 @@ ALTER TABLE `{prefix}_comment`
 
 ALTER TABLE `{prefix}_favorites`
   MODIFY `id`    INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  MODIFY `modul` VARCHAR(50) NOT NULL,
+  MODIFY `modul` VARCHAR(50) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
   MODIFY `uid` INT UNSIGNED NOT NULL DEFAULT 0,
   MODIFY `fid` INT UNSIGNED NOT NULL DEFAULT 0;
 
+CALL stopnull('{prefix}_forum', 'time', 'forum.time holds NULL rows: repair them before this upgrade');
+UPDATE `{prefix}_forum` SET `ltime` = `time` WHERE `ltime` IS NULL;
+
 ALTER TABLE `{prefix}_forum`
   MODIFY `id`   INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  MODIFY `time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  MODIFY `ltime` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   MODIFY `name` VARCHAR(25) NOT NULL,
   MODIFY `title` VARCHAR(100) NOT NULL,
   MODIFY `body` MEDIUMTEXT,
@@ -1257,11 +1304,11 @@ ALTER TABLE `{prefix}_forum`
   MODIFY `counter` INT UNSIGNED NOT NULL DEFAULT 0,
   MODIFY `score` INT UNSIGNED NOT NULL DEFAULT 0,
   MODIFY `ratings` INT UNSIGNED NOT NULL DEFAULT 0,
-  MODIFY `ip` VARCHAR(45) NOT NULL DEFAULT '',
+  MODIFY `ip` VARCHAR(45) CHARACTER SET ascii COLLATE ascii_bin NOT NULL DEFAULT '',
   MODIFY `luid` INT UNSIGNED NOT NULL DEFAULT 0,
   MODIFY `lpost` INT UNSIGNED NOT NULL DEFAULT 0,
   MODIFY `euid` INT UNSIGNED NOT NULL DEFAULT 0,
-  MODIFY `eip` VARCHAR(45) NOT NULL DEFAULT '',
+  MODIFY `eip` VARCHAR(45) CHARACTER SET ascii COLLATE ascii_bin NOT NULL DEFAULT '',
   MODIFY `status` BOOLEAN NOT NULL DEFAULT 0;
 
 ALTER TABLE `{prefix}_groups`
@@ -1277,16 +1324,23 @@ ALTER TABLE `{prefix}_message`
   MODIFY `id`     INT UNSIGNED NOT NULL AUTO_INCREMENT,
   MODIFY `title`  VARCHAR(100) NOT NULL,
   MODIFY `body`   MEDIUMTEXT NOT NULL,
-  MODIFY `expire` INT UNSIGNED NOT NULL DEFAULT 0,
   MODIFY `status` BOOLEAN NOT NULL DEFAULT 1,
   MODIFY `view`   BOOLEAN NOT NULL DEFAULT 1,
-  MODIFY `lang`   VARCHAR(30) NOT NULL DEFAULT '';
+  MODIFY `lang`   VARCHAR(10) CHARACTER SET ascii COLLATE ascii_bin NOT NULL DEFAULT '';
+
+# The expiry of a message becomes the moment it ends, NULL for none, by the same path as the expiry of a block
+CALL runiftype('{prefix}_message', 'expire', 'int', 'ALTER TABLE `{prefix}_message` MODIFY `expire` VARCHAR(14) NULL DEFAULT NULL');
+CALL runiftype('{prefix}_message', 'expire', 'varchar', 'UPDATE `{prefix}_message` SET `expire` = CASE WHEN `expire` REGEXP \'^[0-9]{14}$\' THEN `expire` WHEN `expire` REGEXP \'^[1-9][0-9]{0,10}$\' THEN DATE_FORMAT(FROM_UNIXTIME(`expire`), \'%Y%m%d%H%i%s\') END');
+CALL modcol('{prefix}_message', 'expire', 'DATETIME DEFAULT NULL');
+
+CALL stopnull('{prefix}_newsletter', 'time', 'newsletter.time holds NULL rows: repair them before this upgrade');
 
 ALTER TABLE `{prefix}_newsletter`
   MODIFY `id`    INT UNSIGNED NOT NULL AUTO_INCREMENT,
   MODIFY `title` VARCHAR(50) NOT NULL,
   MODIFY `body` MEDIUMTEXT,
-  MODIFY `send` INT UNSIGNED NOT NULL DEFAULT 0;
+  MODIFY `send` INT UNSIGNED NOT NULL DEFAULT 0,
+  MODIFY `time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP;
 
 # The message table is reconciled column by column: a bare MODIFY rebuilds the table even when nothing changes, and an installation already on 6.3 must not be rewritten
 CALL modcol('{prefix}_privat', 'id',    'INT UNSIGNED NOT NULL AUTO_INCREMENT');
@@ -1294,15 +1348,18 @@ CALL modcol('{prefix}_privat', 'title', 'VARCHAR(100) NOT NULL');
 CALL modcol('{prefix}_privat', 'body',  'MEDIUMTEXT NOT NULL');
 CALL modcol('{prefix}_privat', 'uidin', 'INT UNSIGNED NOT NULL DEFAULT 0');
 CALL modcol('{prefix}_privat', 'uidout', 'INT UNSIGNED NOT NULL DEFAULT 0');
-CALL modcol('{prefix}_privat', 'ip',    'VARCHAR(45) NOT NULL DEFAULT \'\'');
+CALL setcoll('{prefix}_privat', 'ip', 'VARCHAR(45) CHARACTER SET ascii COLLATE ascii_bin NOT NULL DEFAULT \'\'', 'ascii_bin');
+
+# The time of a poll vote is unix seconds: a text that is no number becomes 0, which the ratings unit of update.php reports as broken like before
+CALL runiftype('{prefix}_rating', 'time', 'varchar', 'UPDATE `{prefix}_rating` SET `time` = \'0\' WHERE `time` NOT REGEXP \'^[0-9]{1,19}$\'');
+CALL modcol('{prefix}_rating', 'time', 'BIGINT UNSIGNED NOT NULL DEFAULT 0');
 
 ALTER TABLE `{prefix}_rating`
   MODIFY `id`    INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  MODIFY `modul` VARCHAR(50) NOT NULL,
-  MODIFY `time` VARCHAR(14) NOT NULL,
+  MODIFY `modul` VARCHAR(50) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
   MODIFY `mid` INT UNSIGNED NOT NULL DEFAULT 0,
   MODIFY `uid` INT UNSIGNED NOT NULL DEFAULT 0,
-  MODIFY `ip` VARCHAR(45) NOT NULL DEFAULT '';
+  MODIFY `ip` VARCHAR(45) CHARACTER SET ascii COLLATE ascii_bin NOT NULL DEFAULT '';
 
 UPDATE `{prefix}_referer` SET `referer` = '' WHERE `referer` IS NULL;
 UPDATE `{prefix}_referer` SET `url`     = '' WHERE `url`     IS NULL;
@@ -1312,8 +1369,8 @@ ALTER TABLE `{prefix}_referer`
   MODIFY `referer` VARCHAR(2048) NOT NULL DEFAULT '',
   MODIFY `url`     VARCHAR(2048) NOT NULL DEFAULT '',
   MODIFY `uid` INT UNSIGNED NOT NULL,
-  MODIFY `name` VARCHAR(40) NOT NULL,
-  MODIFY `ip` VARCHAR(45) NOT NULL DEFAULT '',
+  MODIFY `name` VARCHAR(45) NOT NULL,
+  MODIFY `ip` VARCHAR(45) CHARACTER SET ascii COLLATE ascii_bin NOT NULL DEFAULT '',
   MODIFY `time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP;
 
 UPDATE `{prefix}_session` SET `url` = '' WHERE `url` IS NULL;
@@ -1324,20 +1381,21 @@ CALL addidx('{prefix}_search', 'word', '`word`(191)', 0);
 
 ALTER TABLE `{prefix}_search`
   MODIFY `id`  INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  MODIFY `modul` VARCHAR(50) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
   MODIFY `time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   MODIFY `score` INT UNSIGNED NOT NULL DEFAULT 0;
 
-# An older 6.2 schema holds the module of an online visitor in 100 characters, the release in 25; a longer name of a transient row is cut
-UPDATE `{prefix}_session` SET `modul` = LEFT(`modul`, 25) WHERE CHAR_LENGTH(`modul`) > 25;
+# An older 6.2 schema holds the module of an online visitor in 100 characters, the release in 50; a longer name of a transient row is cut
+UPDATE `{prefix}_session` SET `modul` = LEFT(`modul`, 50) WHERE CHAR_LENGTH(`modul`) > 50;
 
 ALTER TABLE `{prefix}_session`
   MODIFY `id`  INT UNSIGNED NOT NULL AUTO_INCREMENT,
   MODIFY `url` VARCHAR(2048) NOT NULL DEFAULT '',
-  MODIFY `uname` VARCHAR(40) NOT NULL,
-  MODIFY `time` BIGINT UNSIGNED NOT NULL,
-  MODIFY `ip` VARCHAR(45) NOT NULL DEFAULT '',
+  MODIFY `uname` VARCHAR(45) NOT NULL,
+  MODIFY `time` BIGINT UNSIGNED NOT NULL DEFAULT 0,
+  MODIFY `ip` VARCHAR(45) CHARACTER SET ascii COLLATE ascii_bin NOT NULL DEFAULT '',
   MODIFY `guest` BOOLEAN NOT NULL DEFAULT 0,
-  MODIFY `modul` VARCHAR(25) NOT NULL DEFAULT '';
+  MODIFY `modul` VARCHAR(50) CHARACTER SET ascii COLLATE ascii_bin NOT NULL;
 
 # NULL-safety before widening _users columns (may be NULL in legacy schema)
 UPDATE `{prefix}_users` SET `email`    = '' WHERE `email`    IS NULL;
@@ -1379,18 +1437,26 @@ ALTER TABLE `{prefix}_users_temp`
   MODIFY `email`   VARCHAR(255) NOT NULL,
   MODIFY `password` VARCHAR(255) NOT NULL,
   MODIFY `regdate` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  MODIFY `code`    VARCHAR(50) NOT NULL,
-  MODIFY `time`    VARCHAR(14) NOT NULL;
+  MODIFY `code`    VARCHAR(50) NOT NULL;
+
+# The unix time of a registration repeats its regdate, which the cleanup of the activation reads instead
+CALL delcol('{prefix}_users_temp', 'time');
+
+CALL stopnull('{prefix}_voting', 'time', 'voting.time holds NULL rows: repair them before this upgrade');
+UPDATE `{prefix}_voting` SET `enddate` = `time` WHERE `enddate` IS NULL;
 
 ALTER TABLE `{prefix}_voting`
   MODIFY `id`   INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  MODIFY `time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  MODIFY `enddate` DATETIME NOT NULL,
+  MODIFY `modul` VARCHAR(50) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
   MODIFY `body` TEXT NOT NULL,
   MODIFY `answer` TEXT NOT NULL,
   MODIFY `multi` BOOLEAN NOT NULL DEFAULT 0,
   MODIFY `comments` INT UNSIGNED NOT NULL DEFAULT 0,
-  MODIFY `lang` VARCHAR(30) NOT NULL DEFAULT '',
+  MODIFY `lang` VARCHAR(10) CHARACTER SET ascii COLLATE ascii_bin NOT NULL DEFAULT '',
   MODIFY `acomm` BOOLEAN NOT NULL DEFAULT 0,
-  MODIFY `ip` VARCHAR(45) NOT NULL DEFAULT '',
+  MODIFY `ip` VARCHAR(45) CHARACTER SET ascii COLLATE ascii_bin NOT NULL DEFAULT '',
   MODIFY `typ` BOOLEAN NOT NULL DEFAULT 0,
   MODIFY `status` BOOLEAN NOT NULL DEFAULT 0;
 
@@ -1413,12 +1479,12 @@ CREATE TABLE IF NOT EXISTS `{prefix}_mail` (
   `ref` INT UNSIGNED NOT NULL DEFAULT 0,
   `prio` TINYINT UNSIGNED NOT NULL DEFAULT 3,
   `time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `ntime` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `ntime` BIGINT UNSIGNED NOT NULL DEFAULT 0,
   `tries` TINYINT UNSIGNED NOT NULL DEFAULT 0,
   `status` TINYINT UNSIGNED NOT NULL DEFAULT 0,
   `camp` TINYINT UNSIGNED NOT NULL DEFAULT 0,
   `hold` TINYINT UNSIGNED NOT NULL DEFAULT 0,
-  `locked` DATETIME DEFAULT NULL,
+  `locked` BIGINT UNSIGNED NOT NULL DEFAULT 0,
   `lockid` CHAR(32) NOT NULL DEFAULT '',
   `phase` VARCHAR(10) NOT NULL DEFAULT '',
   `code` VARCHAR(20) NOT NULL DEFAULT '',
@@ -1480,7 +1546,7 @@ CALL stopcol('{prefix}_comment', 'reqkey', 'char', 'comment.reqkey is still hex 
 CALL addcol('{prefix}_comment', 'reqkey',  'BINARY(16) DEFAULT NULL');
 
 CALL stopnull('{prefix}_comment', 'time', 'comment.time holds NULL rows: repair them before this upgrade');
-CALL modcol('{prefix}_comment', 'time', 'DATETIME NOT NULL');
+CALL modcol('{prefix}_comment', 'time', 'DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP');
 UPDATE `{prefix}_comment` SET `shown` = `time` WHERE `status` = 1 AND `shown` IS NULL;
 CALL setcoll('{prefix}_comment', 'ip', 'VARCHAR(45) CHARACTER SET ascii COLLATE ascii_bin NOT NULL DEFAULT \'\'', 'ascii_bin');
 CALL poscol('{prefix}_comment', 'pid', 'INT UNSIGNED NOT NULL DEFAULT 0', 'id');
@@ -1618,7 +1684,7 @@ CREATE TABLE IF NOT EXISTS `{prefix}_node_assets` (
   `height` INT UNSIGNED NULL DEFAULT NULL,
   `duration` INT UNSIGNED NULL DEFAULT NULL,
   `hits` INT UNSIGNED NOT NULL DEFAULT 0,
-  `reported` DATETIME NULL DEFAULT NULL,
+  `reported` DATETIME DEFAULT NULL,
   `ruid` INT UNSIGNED NOT NULL DEFAULT 0,
   `sort` INT UNSIGNED NOT NULL DEFAULT 0,
   `created` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -1655,7 +1721,7 @@ CREATE TABLE IF NOT EXISTS `{prefix}_node_legacy` (
 CREATE TABLE IF NOT EXISTS `{prefix}_node_publish` (
   `nid` INT UNSIGNED NOT NULL,
   `published` DATETIME NOT NULL,
-  `due` DATETIME NOT NULL,
+  `due` BIGINT UNSIGNED NOT NULL DEFAULT 0,
   PRIMARY KEY (`nid`),
   KEY `queue` (`due`, `nid`),
   CONSTRAINT `{prefix}_fk_node_publish_node` FOREIGN KEY (`nid`) REFERENCES `{prefix}_nodes` (`id`) ON UPDATE RESTRICT ON DELETE CASCADE
@@ -1699,9 +1765,9 @@ CREATE TABLE IF NOT EXISTS `{prefix}_node_sync` (
   `nid` INT UNSIGNED NOT NULL,
   `url` VARCHAR(2048) NOT NULL,
   `refresh` INT UNSIGNED NOT NULL DEFAULT 3600,
-  `due` DATETIME NULL DEFAULT NULL,
-  `checked` DATETIME NULL DEFAULT NULL,
-  `synced` DATETIME NULL DEFAULT NULL,
+  `due` DATETIME DEFAULT NULL,
+  `checked` DATETIME DEFAULT NULL,
+  `synced` DATETIME DEFAULT NULL,
   `etag` VARCHAR(255) NOT NULL DEFAULT '',
   `modified` VARCHAR(100) CHARACTER SET ascii COLLATE ascii_bin NOT NULL DEFAULT '',
   `fails` SMALLINT UNSIGNED NOT NULL DEFAULT 0,
@@ -1726,6 +1792,7 @@ DROP PROCEDURE IF EXISTS stopnull;
 DROP PROCEDURE IF EXISTS delcol;
 DROP PROCEDURE IF EXISTS modcol;
 DROP PROCEDURE IF EXISTS runifcol;
+DROP PROCEDURE IF EXISTS runiftype;
 DROP PROCEDURE IF EXISTS renidx;
 DROP PROCEDURE IF EXISTS delidx;
 DROP PROCEDURE IF EXISTS addidx;
@@ -1788,8 +1855,8 @@ CREATE TABLE IF NOT EXISTS `{prefix}_user_oauth` (
   `provider` VARCHAR(32) NOT NULL DEFAULT '',
   `puid` VARCHAR(255) NOT NULL DEFAULT '',
   `email` VARCHAR(255) NOT NULL DEFAULT '',
-  `linked` BIGINT UNSIGNED NOT NULL DEFAULT 0,
-  `lastlog` BIGINT UNSIGNED NOT NULL DEFAULT 0,
+  `linked` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `lastlog` DATETIME DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `provider_puid` (`provider`, `puid`(191)),
   UNIQUE KEY `uid_provider` (`uid`, `provider`)
@@ -1813,7 +1880,7 @@ BEGIN
     IF ccol > 0 THEN
         SET @sql = CONCAT(
             'INSERT IGNORE INTO `', plinks, '` (`uid`, `provider`, `puid`, `email`, `linked`) ',
-            'SELECT `id`, ''ulogin'', `network`, `email`, UNIX_TIMESTAMP() ',
+            'SELECT `id`, ''ulogin'', `network`, `email`, NOW() ',
             'FROM `', pusers, '` WHERE `network` != '''''
         );
         PREPARE stmt FROM @sql;
@@ -1853,5 +1920,94 @@ UPDATE `{prefix}_groups` SET `rank` = CASE `rank`
     ELSE CONCAT('star-fill:0:5:', IF(`color` REGEXP '^#[0-9a-f]{6}$', LOWER(`color`), '#8297a2'))
 END
 WHERE `rank` REGEXP '[.](png|gif|jpe?g|webp|svg)$';
+
+# =============================================================================
+# The collation of the release, column by column
+# =============================================================================
+#
+# CONVERT TO CHARACTER SET would also turn the ascii_bin and utf8mb4_bin columns, and MariaDB lets it win over a MODIFY
+# of the same statement, so a case-only twin in _maildead breaks its unique key. setconv sets the table default and
+# modifies only the text columns of another utf8 collation, keeping type, NULL and default; a table on the collation
+# is left alone. The old module tables are not named here: they are the input of the migration and keep their own
+
+DROP PROCEDURE IF EXISTS setconv;
+
+DELIMITER $$
+
+CREATE PROCEDURE setconv(IN ptab VARCHAR(128), IN pcoll VARCHAR(64))
+BEGIN
+    DECLARE ctab INT DEFAULT 0;
+    DECLARE maria INT DEFAULT 0;
+    DECLARE mods TEXT DEFAULT NULL;
+
+    SET SESSION group_concat_max_len = 1048576;
+    SET maria = VERSION() LIKE '%MariaDB%';
+
+    SELECT COUNT(*)
+      INTO ctab
+      FROM information_schema.tables
+     WHERE table_schema = DATABASE()
+       AND table_name = ptab
+       AND table_collation <> pcoll;
+
+    SELECT GROUP_CONCAT(CONCAT(
+               'MODIFY `', column_name, '` ', column_type, ' CHARACTER SET utf8mb4 COLLATE ', pcoll,
+               IF(is_nullable = 'NO', ' NOT NULL', ' NULL'),
+               IF(column_default IS NULL, '', CONCAT(' DEFAULT ', IF(maria, column_default, QUOTE(column_default))))
+           ) ORDER BY ordinal_position SEPARATOR ', ')
+      INTO mods
+      FROM information_schema.columns
+     WHERE table_schema = DATABASE()
+       AND table_name = ptab
+       AND character_set_name LIKE 'utf8%'
+       AND RIGHT(collation_name, 4) <> '_bin'
+       AND collation_name <> pcoll;
+
+    IF ctab > 0 OR mods IS NOT NULL THEN
+        SET @sql = CONCAT('ALTER TABLE `', ptab, '` DEFAULT CHARACTER SET utf8mb4 COLLATE ', pcoll, IFNULL(CONCAT(', ', mods), ''));
+        PREPARE stmt FROM @sql;
+        EXECUTE stmt;
+        DEALLOCATE PREPARE stmt;
+    END IF;
+END$$
+
+DELIMITER ;
+
+CALL setconv('{prefix}_admins', '{collate}');
+CALL setconv('{prefix}_blocks', '{collate}');
+CALL setconv('{prefix}_categories', '{collate}');
+CALL setconv('{prefix}_comment', '{collate}');
+CALL setconv('{prefix}_favorites', '{collate}');
+CALL setconv('{prefix}_forum', '{collate}');
+CALL setconv('{prefix}_groups', '{collate}');
+CALL setconv('{prefix}_mail', '{collate}');
+CALL setconv('{prefix}_maildead', '{collate}');
+CALL setconv('{prefix}_message', '{collate}');
+CALL setconv('{prefix}_newsletter', '{collate}');
+CALL setconv('{prefix}_node_types', '{collate}');
+CALL setconv('{prefix}_nodes', '{collate}');
+CALL setconv('{prefix}_node_assets', '{collate}');
+CALL setconv('{prefix}_node_categories', '{collate}');
+CALL setconv('{prefix}_node_legacy', '{collate}');
+CALL setconv('{prefix}_node_publish', '{collate}');
+CALL setconv('{prefix}_node_relations', '{collate}');
+CALL setconv('{prefix}_node_support', '{collate}');
+CALL setconv('{prefix}_node_sync', '{collate}');
+CALL setconv('{prefix}_oauth_temp', '{collate}');
+CALL setconv('{prefix}_points', '{collate}');
+CALL setconv('{prefix}_privat', '{collate}');
+CALL setconv('{prefix}_rating', '{collate}');
+CALL setconv('{prefix}_rating_actors', '{collate}');
+CALL setconv('{prefix}_rating_targets', '{collate}');
+CALL setconv('{prefix}_rating_votes', '{collate}');
+CALL setconv('{prefix}_referer', '{collate}');
+CALL setconv('{prefix}_search', '{collate}');
+CALL setconv('{prefix}_session', '{collate}');
+CALL setconv('{prefix}_user_oauth', '{collate}');
+CALL setconv('{prefix}_users', '{collate}');
+CALL setconv('{prefix}_users_temp', '{collate}');
+CALL setconv('{prefix}_voting', '{collate}');
+
+DROP PROCEDURE IF EXISTS setconv;
 
 SET SESSION sql_mode = @SLAED_MODE;

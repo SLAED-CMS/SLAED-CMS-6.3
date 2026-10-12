@@ -553,7 +553,7 @@ look valid on an old snapshot, and the second fails once it re-reads the first. 
 | `height` | `INT UNSIGNED NULL DEFAULT NULL` | pixels |
 | `duration` | `INT UNSIGNED NULL DEFAULT NULL` | seconds |
 | `hits` | `INT UNSIGNED NOT NULL DEFAULT 0` | allowed download starts or `link` visits |
-| `reported` | `DATETIME NULL DEFAULT NULL` | date of the first open report |
+| `reported` | `DATETIME DEFAULT NULL` | date of the first open report |
 | `ruid` | `INT UNSIGNED NOT NULL DEFAULT 0` | registered author of that report, `0` for a guest |
 | `sort` | `INT UNSIGNED NOT NULL DEFAULT 0` | order within the role |
 | `created` | `DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP` | added to the material |
@@ -616,7 +616,7 @@ Keys: `PRIMARY (modul, oid)`, `node (nid)`. Foreign key `{prefix}_fk_node_legacy
 |---|---|---|
 | `nid` | `INT UNSIGNED NOT NULL` | material, primary key |
 | `published` | `DATETIME NOT NULL` | publication date the job was created for |
-| `due` | `DATETIME NOT NULL` | next attempt |
+| `due` | `BIGINT UNSIGNED NOT NULL DEFAULT 0` | next attempt, unix seconds: a machine timer no person reads |
 
 Keys: `PRIMARY (nid)`, `queue (due, nid)`. Foreign key `{prefix}_fk_node_publish_node` (`nid` →
 `_nodes.id`, `ON UPDATE RESTRICT ON DELETE CASCADE`).
@@ -628,11 +628,11 @@ The table delivers the Point reward `publish` of a scheduled publication; at mos
   removes any job and rewards in the owner's transaction. Editing an already published material does not
   reward again; moving a pending job's date into the past is handled as a publication that has come.
 - `nodepublish` runs `NodeService::updateNodePublishList(int $limit = 50): array` (background context
-  only) over jobs with `due <= NOW()` of active types, one transaction per job, locking type, material and
+  only) over jobs with `due <= UNIX_TIMESTAMP()` of active types, one transaction per job, locking type, material and
   job in that order and re-reading them. A job whose material left `Published` or whose date differs is
-  deleted without reward; one whose date has not come gets `due = published`; an author without account
+  deleted without reward; one whose date has not come gets `due = UNIX_TIMESTAMP(published)`; an author without account
   gets nothing. `Point::addEvent()` and the job deletion commit together, so a retry never doubles a
-  balance. A recoverable Point refusal moves `due` to `NOW() + 60 seconds`; a closed or invalid points
+  balance. A recoverable Point refusal moves `due` to `UNIX_TIMESTAMP() + 60`; a closed or invalid points
   configuration delivers without reward and logs it.
 
 ### `_node_support`
@@ -683,9 +683,9 @@ the table holds one external source per material and the state of its background
 | `nid` | `INT UNSIGNED NOT NULL` | material |
 | `url` | `VARCHAR(2048) NOT NULL` | normalized RSS or Atom address |
 | `refresh` | `INT UNSIGNED NOT NULL DEFAULT 3600` | seconds between checks, `0` for manual only |
-| `due` | `DATETIME NULL DEFAULT NULL` | next automatic check, `NULL` when `refresh = 0` |
-| `checked` | `DATETIME NULL DEFAULT NULL` | last finished attempt |
-| `synced` | `DATETIME NULL DEFAULT NULL` | last real change of the text |
+| `due` | `DATETIME DEFAULT NULL` | next automatic check, `NULL` when `refresh = 0` |
+| `checked` | `DATETIME DEFAULT NULL` | last finished attempt |
+| `synced` | `DATETIME DEFAULT NULL` | last real change of the text |
 | `etag` | `VARCHAR(255) NOT NULL DEFAULT ''` | last accepted `ETag` |
 | `modified` | `VARCHAR(100) ascii_bin NOT NULL DEFAULT ''` | last accepted `Last-Modified` |
 | `fails` | `SMALLINT UNSIGNED NOT NULL DEFAULT 0` | consecutive failures |
@@ -1339,8 +1339,8 @@ public function deleteNodeRemains(string $name): void
 public function updateNodePublishList(int $limit = 50): array
 ```
 
-A published material with a future date has a row in `_node_publish` (`published = due = date`) kept in line by
-every write. `updateNodePublishList()` needs `task`, `limit` 1…500, takes due jobs of active types by `due, nid`,
+A published material with a future date has a row in `_node_publish` (`published` the date, `due` its unix
+seconds) kept in line by every write. `updateNodePublishList()` needs `task`, `limit` 1…500, takes due jobs of active types by `due, nid`,
 one transaction each: stale jobs go without award, a refused award moves the job 60 seconds on, a closed Point
 configuration delivers without award and logs. It never changes `version` or `updated` and returns exactly
 `status` (`success`/`failed`), `message` and `extra` (`processed`, `failed`, `skipped`). The job `nodepublish`
@@ -1390,7 +1390,7 @@ All in `core/system.php` unless noted.
 | `getRssFeeds(): array` | active types with `integrations.rss` |
 | `getNodeCountMap(NodeType $type, NodeQuery $query): array` | the header counts of `getNodeTally()` for the readable set of the reader, kept in `Cache::getFile(['nodecount', <type>], 'json')`; see [List header](#list-header) |
 | `deleteNodeCountMap(string $mod): void` | drops that file; called by every material write of `NodeService` and by `deleteCategoryMap()` |
-| `getUserLastVisit(int $uid): string` | the `lastvis` an account had when its session started, kept in `$_SESSION[<user_c>-lastvis]` with the account id; `''` for a guest or an empty column |
+| `getUserLastVisit(int $uid): string` | the `lastvis` an account had when its session started, kept in `$_SESSION[<user_c>-lastvis]` with the account id; `''` for a guest or an account that never came back (`NULL`); the forum marks what came after it as new |
 | `getPluralForm(int $num, string $forms): string` | one of the forms a constant carries separated by `\|`, by the plural rule of `_LOCALE`: three for `ru`, `uk`, `pl`, two for the others |
 | `getHeadTitle(array $seo): string` | the `<title>` of a site page; `setHead()` and the part answer of a list both call it |
 | `setCategories(string $mod, int $cur = 0, array $nums = [], int $total = 0): string` | the category window: "all materials", then the top level with its count and its subcategory chips, the chosen one marked |
@@ -3230,9 +3230,11 @@ arrays, so `getConfig()` finds no database. `update.php` therefore decides befor
   removed modules.
 
 The connection comes from `config/db.php` in either shape (area `db` of 6.3, `$confdb` of 6.2), so the first stage
-has no form. The panel file keeps the name of the site: the `afile` of `config/config_security.php` while a 6.2 site
-still has it, otherwise the one of `security.php`; a name outside `[a-zA-Z0-9_-]` or one of `index`, `setup`,
-`update` falls back to `admin`.
+has no form. Its collation is the `collate` of a 6.3 area, while a 6.2 source, which names the collation of 6.2,
+connects and is written in the collation of the release, `utf8mb4_unicode_520_ci`, without the `mode`, `sync` and
+`type` of 6.2, which nothing reads; `setUpdateSql()` fills `{collate}` with the same value. The panel file keeps the
+name of the site: the `afile` of `config/config_security.php` while a 6.2 site still has it, otherwise the one of
+`security.php`; a name outside `[a-zA-Z0-9_-]` or one of `index`, `setup`, `update` falls back to `admin`.
 
 ### Boundary of the first stage
 
@@ -3335,7 +3337,7 @@ runs and reports, then neither the schema file nor any data unit runs.
     another site, stay as written and answer 410.
 16. `config/rss.php`: `temp` removed, missing `bytes` (`2097152`), `redirects` (`3`), `timeout` (`10`) added.
     Without these keys Feed refuses with code `config` before any request.
-17. RSS blocks: `UPDATE _blocks SET content = '', time = '0' WHERE url != ''` drops the cached HTML; the next
+17. RSS blocks: `UPDATE _blocks SET content = '', time = 0 WHERE url != ''` drops the cached HTML; the next
     display fetches the feed and stores Markdown. A repeat empties the bodies again, which is harmless.
 18. `_blocks` rows with `status = 1` and `bfile` `news`, `pages`, `faq`, `files`, `jokes`, `jokes_random`,
     `links`, `center`, `center_media`, `center_plus` (`.php`) get `status = 0`; the report names the files.
@@ -3537,14 +3539,21 @@ every `ALTER` of a 6.2 table whose datetime defaults to a zero date, and restore
 Before a statement makes a column `NOT NULL` or narrower, a NULL takes the default of its column and a longer value is
 cut where the row is transient (`_session.modul`). The final alignment covers the two 6.2 schemas the tests carry:
 `tests/Fixtures/update62` and the earlier `update62early` (signed integers, addresses of 15 characters, other defaults).
-It stops with a message while `_privat.time` or `_comment.time` holds `NULL` or `_comment.reqkey` is still hex text.
+It stops with a message while `_privat.time`, `_comment.time`, `_forum.time`, `_newsletter.time` or `_voting.time` holds
+`NULL` or `_comment.reqkey` is still hex text; a missing `_forum.ltime` takes the topic time and a missing
+`_voting.enddate` the poll start, which is when the site read such a poll as closed. Text times take their forms: the
+refresh stamps `_blocks.time` and `_rating.time` become numbers (a text that is no number becomes `0`), the unix
+expiries of `_blocks.expire` and `_message.expire` become the `DATETIME` the connection shows for them, `0` becoming
+`NULL`, `_users_temp.time` is dropped, and `_users.lastvis` loses its zero date and the sentinel
+`1970-01-01 00:00:01` to `NULL` for "never".
 
 Its one `DELETE` removes, before the unique key `mid_modul_ip`, every `_rating` row that has an earlier row of the
 same `mid`, `modul` and `ip`: 6.2 kept one row per account, so two accounts of one address could both have voted.
 `setUpdateSql()` names the removed rows of a `DELETE` in its report row.
 
 Helper procedures are dropped and created at the top inside `DELIMITER $$` and dropped again in the cleanup
-section; `movenet` is created and dropped around the OAuth block at the end.
+section; `movenet` is created and dropped around the OAuth block and `setconv` around the collation block, the last
+of the file.
 
 | Procedure | Effect |
 |---|---|
@@ -3555,19 +3564,21 @@ section; `movenet` is created and dropped around the OAuth block at the end.
 | `setcoll(tab, col, def, coll)` | `MODIFY` when the collation differs |
 | `delcol(tab, col)` | `DROP COLUMN` when present |
 | `runifcol(tab, col, sql)` | runs `sql` only while `col` exists (backfills that must read a column before a rename consumes it) |
+| `runiftype(tab, col, type, sql)` | runs `sql` only while `col` has the data type `type` (the passage of a value to a new type, so a second run finds the target and skips it) |
 | `renidx`, `delidx`, `addidx(tab, idx, exp, unique)` | index rename, drop, add when absent |
 | `stopcol(tab, col, type, msg)`, `stopnull(tab, col, msg)` | `SIGNAL SQLSTATE '45000'` with `msg` when the column has that type or holds `NULL` rows |
-| `finalize_user_names(tab)` | renames duplicate user names to `<name>_<id>` (cut to 25), signals on a conflict |
+| `finalize_user_names(tab)` | renames duplicate user names to `<name>_<id>` (cut to 25) in the collation of the column, signals on a conflict |
 | `mkuseruniq(tab)`, `mksessuniq(tab)` | turn `name` into a `UNIQUE KEY` when no duplicates remain; dedupe `_session` and make `uname` unique |
 | `fixgrppk(tab)` | restores the primary key of `_groups` |
 | `movenet(users, links)` | archives `_users.network` as provider `ulogin` rows of `_user_oauth` and drops the column |
+| `setconv(tab, coll)` | sets the table default to `coll` and `MODIFY`s, keeping type, `NULL` and default, every text column of another utf8 collation that is not `_bin`; `CONVERT TO` would also turn the `ascii_bin` and `utf8mb4_bin` columns, and MariaDB lets it win over a `MODIFY` of the same statement. Every table of the release is named, the old module tables are not |
 
 Rules, enforced by `tests/SchemaUpdateValidationTest.php` for the file:
 
 - Every `{prefix}_<table>` it names must be a table of `storage/update/sql/table.sql` (named `CONSTRAINT`s aside; the
   6.2 table `modules` is the only exception). A table it drops with `DROP TABLE IF EXISTS` must not be in `table.sql`.
 - A column declaration is a `MODIFY` line of an `ALTER TABLE`, or the definition passed to `addcol()` or
-  `modcol()`. Every declaration must equal the definition `table.sql` gives the column (whitespace, case and
+  `modcol()`; what a `runiftype()` step declares is a passage, not a declaration. Every declaration must equal the definition `table.sql` gives the column (whitespace, case and
   `BOOLEAN` = `TINYINT(1)` normalized).
 - A column is not declared twice with different definitions: the last one would silently win. A type change is
   therefore one declaration of the final type. Data that only the old type accepts is fixed before the

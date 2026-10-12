@@ -865,22 +865,32 @@
     }
     /* 07 Движение: nothing is recoloured or moved; rows enter, groups unfold, the open section draws its bar, presses give */
     @media (prefers-reduced-motion: no-preference) {
-      html:not([data-demo-motion="off"]) [data-ux-row][data-ux-enter] { animation: v-in var(--sl-time-slow) var(--sl-ease-out) both; animation-delay: calc(var(--ux-i, 0) * 18ms); }
-      html:not([data-demo-motion="off"]) .v-group-list:not([hidden]) { animation: v-drop var(--sl-time-base) var(--sl-ease-out); }
-      html:not([data-demo-motion="off"]) .sl-wrapper.sl-admin-shell .sl-admin-sidebar .v-group-list .sl-menu-list-item:has(> a[aria-current="page"]) { animation: v-bar 600ms var(--sl-ease-out) both; }
-      html:not([data-demo-motion="off"]) [data-ux-list] tbody tr > td { transition: background var(--sl-time-fast) var(--sl-ease-out); }
-      html:not([data-demo-motion="off"]) [data-ux-list] tbody tr:hover > td { background: var(--sl-tint); }
+      /* В07.1 Rows enter one after another; the cascade is the arrival here, so the loading dim of the reference steps aside */
+      html:not([data-demo-motion="off"]) [data-ux-row][data-ux-enter] { animation: v-in 420ms var(--sl-ease-out) both; animation-delay: calc(min(var(--ux-i, 0), 12) * 45ms); }
+      html:not([data-demo-motion="off"]) [data-ux-list].v-loading tbody { opacity: 1; background: none; animation: none; }
+      /* В07.2 A group opens and closes by its height; the bar of the open section is drawn after, and gives the hover back when done */
+      html:not([data-demo-motion="off"]) [data-ux-group] > .sl-block-sidebar-content { overflow: clip; interpolate-size: allow-keywords; transition: height var(--sl-time-slow) var(--sl-ease-out), opacity var(--sl-time-slow) var(--sl-ease-out), display var(--sl-time-slow) allow-discrete; }
+      html:not([data-demo-motion="off"]) [data-ux-group] > .sl-block-sidebar-content[hidden] { height: 0; opacity: 0; }
+      @starting-style {
+        html:not([data-demo-motion="off"]) [data-ux-group] > .sl-block-sidebar-content:not([hidden]) { height: 0; opacity: 0; }
+      }
+      html:not([data-demo-motion="off"]) .sl-wrapper.sl-admin-shell .sl-admin-sidebar .v-group-list .sl-menu-list-item:has(> a[aria-current="page"]) { animation: v-bar 600ms var(--sl-ease-out) 250ms backwards; }
+      /* В07.4 The row in hand takes its tint softly */
+      html:not([data-demo-motion="off"]) [data-ux-list] tbody tr > td { transition: background-color var(--sl-time-base) var(--sl-ease-out); }
+      html:not([data-demo-motion="off"]) [data-ux-list] tbody tr:hover > td { background-color: var(--sl-tint); }
+      /* В07.3 Buttons and tabs give under a press; the section icon bounces on load and again on every tab, by a second name of one bounce */
       html:not([data-demo-motion="off"]) .sl-but-blue,
       html:not([data-demo-motion="off"]) .sl-but,
       html:not([data-demo-motion="off"]) .sl-tabs-link { transition: transform var(--sl-time-fast) var(--sl-ease-out); }
       html:not([data-demo-motion="off"]) .sl-but-blue:active,
       html:not([data-demo-motion="off"]) .sl-but:active,
-      html:not([data-demo-motion="off"]) .sl-tabs-link:active { transform: scale(0.96); }
+      html:not([data-demo-motion="off"]) .sl-tabs-link:active { transform: scale(0.94); }
       html:not([data-demo-motion="off"]) .sl-module-head-icon .bi { animation: v-pop 700ms var(--sl-ease-out) both; }
-      @keyframes v-in { from { opacity: 0; transform: translateY(6px); } }
-      @keyframes v-drop { from { opacity: 0; transform: translateY(-4px); } }
+      html:not([data-demo-motion="off"]) body:has([data-ux-tab="wait"].sl-is-active) .sl-module-head-icon .bi { animation-name: v-pop-wait; }
+      @keyframes v-in { from { opacity: 0; transform: translateY(12px); } }
       @keyframes v-bar { from { box-shadow: inset 0 0 0 var(--sl-primary-strong); } to { box-shadow: inset 4px 0 0 var(--sl-primary-strong); } }
-      @keyframes v-pop { 0% { transform: scale(0.6); opacity: 0; } 70% { transform: scale(1.08); } 100% { transform: none; opacity: 1; } }
+      @keyframes v-pop { 0% { transform: scale(0.6); opacity: 0; } 70% { transform: scale(1.15); } 100% { transform: none; opacity: 1; } }
+      @keyframes v-pop-wait { 0% { transform: scale(0.6); opacity: 0; } 70% { transform: scale(1.15); } 100% { transform: none; opacity: 1; } }
     }
 
     /* The final pager of the pager series (pg-14), carried as it is */

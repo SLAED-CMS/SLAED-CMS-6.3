@@ -54,7 +54,7 @@ function getProbeRoot(): PDO {
 # Create the disposable schema and return a connection bound to it
 function addProbeSchema(): PDO {
     $conf = $GLOBALS['pconf'];
-    getProbeRoot()->exec('CREATE DATABASE `'.$GLOBALS['pname'].'` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci');
+    getProbeRoot()->exec('CREATE DATABASE `'.$GLOBALS['pname'].'` DEFAULT CHARACTER SET utf8mb4 COLLATE '.$conf['collate']);
     return new PDO('mysql:host='.$conf['host'].';dbname='.$GLOBALS['pname'].';charset=utf8mb4', $conf['uname'], $conf['pass'], [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
 }
 
@@ -70,7 +70,7 @@ function deleteProbeSchema(): bool {
 
 # Fill the installation placeholders of a shipped script the way the installer and the Inquiry tab fill them
 function getProbeFilled(string $text): string {
-    return str_replace(['{prefix}', '{engine}', '{charset}', '{collate}'], [$GLOBALS['ppre'], 'InnoDB', 'utf8mb4', 'utf8mb4_unicode_ci'], $text);
+    return str_replace(['{prefix}', '{engine}', '{charset}', '{collate}'], [$GLOBALS['ppre'], 'InnoDB', 'utf8mb4', $GLOBALS['pconf']['collate']], $text);
 }
 
 # Read one update channel and keep what a private-message migration consists of: every procedure and every statement naming the table

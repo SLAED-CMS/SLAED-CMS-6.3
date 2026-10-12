@@ -19,13 +19,21 @@ class Database {
     public ?string $qid = null;
     public ?PDOException $laste = null;
 
-    # Opens connection to the SQL server (PDO); a refused connection is logged, and a caller without the core under SETUP_FILE gets the reason as an exception to report
-    public function __construct(string $server, string $user, string $pass, string $dbname, string $charset = 'utf8mb4') {
-        $dsn = 'mysql:host='.$server.';dbname='.$dbname.';charset='.$charset;
+    # Opens the PDO connection in the given collation, one SQL mode and the PHP zone, by name where MariaDB refuses the offset; a refusal is logged, thrown under SETUP_FILE
+    public function __construct(string $server, string $user, string $pass, string $dbname, string $collate) {
+        $dsn = 'mysql:host='.$server.';dbname='.$dbname.';charset=utf8mb4';
+        $mode = 'STRICT_TRANS_TABLES,ONLY_FULL_GROUP_BY,NO_ZERO_DATE,NO_ZERO_IN_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION';
         try {
             $opts = [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_BOTH, PDO::ATTR_EMULATE_PREPARES => false];
             $this->sqlconnid = new PDO($dsn, $user, $pass, $opts);
+            $this->sqlconnid->exec('SET NAMES utf8mb4 COLLATE '.$this->sqlconnid->quote($collate).', sql_mode = \''.$mode.'\'');
+            try {
+                $this->sqlconnid->exec('SET time_zone = '.$this->sqlconnid->quote(date('P')));
+            } catch (PDOException) {
+                $this->getSqlQuery('SET time_zone = '.$this->sqlconnid->quote(date_default_timezone_get()));
+            }
         } catch (PDOException $e) {
+            $this->sqlconnid = null;
             global $conf;
             $detail = _SQLERRORCON.' - '._ERROR.': '.$e->getCode().' - '.$e->getMessage();
             Logger::addSite('error', $detail, ['http_code' => 500]);

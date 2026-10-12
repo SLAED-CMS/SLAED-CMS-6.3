@@ -172,10 +172,10 @@ function checkSetupPanel(string $name): bool {
     return !is_file(PUBLIC_DIR.'/'.$name.'.php') || in_array($low, ['admin', strtolower((string)($conf['security']['afile'] ?? ''))], true);
 }
 
-# Whether an address may become the home of the site: http or https with a host and without a user, a query or a fragment; it is stored without a trailing slash
+# Whether an address may become the home of the site: http or https with a host, no user, query or fragment, within 255 bytes; stored without a trailing slash
 function checkSetupUrl(string $url): bool {
     $part = parse_url($url);
-    if (filter_var($url, FILTER_VALIDATE_URL) === false || !is_array($part)) return false;
+    if (strlen($url) > 255 || filter_var($url, FILTER_VALIDATE_URL) === false || !is_array($part)) return false;
     return in_array(strtolower($part['scheme'] ?? ''), ['http', 'https'], true) && !array_intersect_key($part, array_flip(['user', 'pass', 'query', 'fragment']));
 }
 
@@ -185,7 +185,7 @@ function checkSetupDone(array $state): bool {
     $base = getSetupBase();
     if ((string)($base['name'] ?? '') === '' || $state['part'] >= 0) return false;
     try {
-        $db = new Database((string)($base['host'] ?? ''), (string)($base['uname'] ?? ''), (string)($base['pass'] ?? ''), (string)$base['name']);
+        $db = new Database((string)($base['host'] ?? ''), (string)($base['uname'] ?? ''), (string)($base['pass'] ?? ''), (string)$base['name'], (string)($base['collate'] ?? ''));
     } catch (RuntimeException) {
         return true;
     }
@@ -235,7 +235,7 @@ function getSetupProbe(array $base): array {
     $rows = [['turn' => 0, 'text' => sprintf(_SETUP_CONNECT, $base['host']), 'note' => sprintf(_SETUP_CONN_USER, $base['uname']), 'is_fail' => true]];
     if ($base['host'] === '' || $base['uname'] === '' || $base['name'] === '') return ['checks' => $rows, 'fail' => _SQLERRORCON];
     try {
-        $db = new Database($base['host'], $base['uname'], $base['pass'], $base['name']);
+        $db = new Database($base['host'], $base['uname'], $base['pass'], $base['name'], $base['collate']);
     } catch (RuntimeException $err) {
         return ['checks' => $rows, 'fail' => $err->getMessage()];
     }
@@ -263,7 +263,7 @@ function checkSetupInput(int $stop, array &$state, bool $test): string {
         if (isset(getSetupLangs()[$code])) $state['lang'] = $code;
     } elseif ($stop === 2) {
         $state['base'] = ['host' => getSetupVar('post', 'xhost'), 'uname' => getSetupVar('post', 'xuname'), 'pass' => getSetupVar('post', 'xpass', 'pass'),
-            'name' => getSetupVar('post', 'xname'), 'prefix' => getSetupVar('post', 'xprefix')];
+            'name' => getSetupVar('post', 'xname'), 'prefix' => getSetupVar('post', 'xprefix'), 'collate' => 'utf8mb4_unicode_520_ci'];
         if ($test && !checkSetupPrefix($state['base']['prefix'])) return _SETUP_BADPREFIX;
     } elseif ($stop === 3) {
         $name = mb_substr(getSetupVar('post', 'sname', 'text'), 0, 255);
@@ -385,7 +385,7 @@ function setSetupConfig(array &$state): array {
         return ['task' => '', 'fail' => _FILE.' config/security.php — '._SETUP_NOWRITE];
     }
     $cont = ['host' => $base['host'], 'uname' => $base['uname'], 'pass' => $base['pass'], 'name' => $base['name'], 'engine' => 'InnoDB', 'charset' => 'utf8mb4',
-        'collate' => 'utf8mb4_unicode_ci', 'prefix' => $base['prefix'], 'sync' => '1'];
+        'collate' => $base['collate'], 'prefix' => $base['prefix']];
     if (!setSetupFile('db.php', getSetupBase(), $cont)) return ['task' => '', 'fail' => _FILE.' config/db.php — '._SETUP_NOWRITE];
     if (deleteSetupTypes() === false) return ['task' => '', 'fail' => _FILE.' config/node.php — '._SETUP_NOWRITE];
     $state['base']['pass'] = '';
@@ -411,7 +411,7 @@ function deleteSetupTypes(): array|false {
 function setSetupTables(array &$state, array $item): array {
     $base = getSetupBase();
     try {
-        $db = new Database((string)$base['host'], (string)$base['uname'], (string)$base['pass'], (string)$base['name']);
+        $db = new Database((string)$base['host'], (string)$base['uname'], (string)$base['pass'], (string)$base['name'], (string)$base['collate']);
     } catch (RuntimeException $err) {
         return ['task' => '', 'fail' => $err->getMessage()];
     }
@@ -633,6 +633,7 @@ function setSetupPage(int $stop, array $view): void {
 }
 
 $conf = array_merge(require CONFIG_DIR.'/global.php', require CONFIG_DIR.'/security.php');
+date_default_timezone_set($conf['gtime']);
 ini_set('display_errors', $conf['security']['error'] > 0 ? '1' : '0');
 error_reporting([0, E_ALL ^ E_NOTICE, E_ALL][intval($conf['security']['error'])] ?? 0);
 set_time_limit(300);

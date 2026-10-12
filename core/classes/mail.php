@@ -92,7 +92,7 @@ class Mail {
         if ($ref === 0 && !empty($mesg['client'])) $body .= $this->getClientBlock();
         $body = getOutputHtml($body);
         $sql = 'INSERT INTO '.PREFIX_DB.'_mail (kind, sender, email, title, body, ref, prio, camp, hold, time, ntime)'
-            .' VALUES (:kind, :from, :mail, :subj, :body, :ref, :prio, :camp, :hold, NOW(), NOW())';
+            .' VALUES (:kind, :from, :mail, :subj, :body, :ref, :prio, :camp, :hold, NOW(), UNIX_TIMESTAMP())';
         $pars = ['kind' => $kind, 'from' => $smail, 'mail' => $rcpt, 'subj' => $subj, 'body' => $body, 'ref' => $ref, 'prio' => (intval($mesg['prio'] ?? 0) ?: 3)];
         $pars += ['camp' => empty($mesg['camp']) ? 0 : 2, 'hold' => empty($mesg['hold']) ? 0 : 1];
         if (!$this->db->getSqlQuery($sql, $pars)) return $this->setError('the message could not be stored in the queue', ['kind' => $kind, 'mail' => $this->getMaskedMail($rcpt)]);
@@ -107,8 +107,8 @@ class Mail {
         if (!$this->db instanceof Database || $num < 1) return [];
         $this->deleteClaim();
         $this->lock = bin2hex(random_bytes(16));
-        $sql = 'UPDATE '.PREFIX_DB.'_mail SET locked = NOW(), lockid = :lock, ntime = DATE_ADD(NOW(), INTERVAL :wait SECOND)'
-            .' WHERE hold = 0 AND status = 0 AND ntime <= NOW() ORDER BY prio ASC, ntime ASC, id ASC LIMIT '.intval($num);
+        $sql = 'UPDATE '.PREFIX_DB.'_mail SET locked = UNIX_TIMESTAMP(), lockid = :lock, ntime = UNIX_TIMESTAMP() + :wait'
+            .' WHERE hold = 0 AND status = 0 AND ntime <= UNIX_TIMESTAMP() ORDER BY prio ASC, ntime ASC, id ASC LIMIT '.intval($num);
         if (!$this->db->getSqlQuery($sql, ['lock' => $this->lock, 'wait' => $this->wait]) || intval($this->db->getSqlAffected()) < 1) return [];
         $sql = 'SELECT id, kind, sender, email, title, body, ref, prio, tries, camp FROM '.PREFIX_DB.'_mail WHERE lockid = :lock ORDER BY prio ASC, id ASC';
         return $this->db->getSqlRows($this->db->getSqlQuery($sql, ['lock' => $this->lock])) ?: [];
@@ -120,14 +120,14 @@ class Mail {
     public function setResult(int $id, bool $sent, string $mesg = '', bool $hard = false): bool {
         if (!$this->db instanceof Database || $id < 1) return false;
         if ($sent) {
-            $sql = 'UPDATE '.PREFIX_DB.'_mail SET status = 1, tries = tries + 1, locked = NULL, lockid = \'\', phase = \'\', code = \'\', error = \'\' WHERE id = :id';
+            $sql = 'UPDATE '.PREFIX_DB.'_mail SET status = 1, tries = tries + 1, locked = 0, lockid = \'\', phase = \'\', code = \'\', error = \'\' WHERE id = :id';
             return (bool)$this->db->getSqlQuery($sql, ['id' => $id]);
         }
         $row = $this->db->getSqlRow($this->db->getSqlQuery('SELECT tries FROM '.PREFIX_DB.'_mail WHERE id = :id', ['id' => $id]));
         $try = intval($row['tries'] ?? 0) + 1;
         $cap = max(1, intval($this->conf['tries'] ?? 0) ?: 5);
         $back = max(1, intval($this->conf['backoff'] ?? 0) ?: 300);
-        $sql = 'UPDATE '.PREFIX_DB.'_mail SET status = :stat, tries = tries + 1, ntime = DATE_ADD(NOW(), INTERVAL :wait SECOND), locked = NULL, lockid = \'\','
+        $sql = 'UPDATE '.PREFIX_DB.'_mail SET status = :stat, tries = tries + 1, ntime = UNIX_TIMESTAMP() + :wait, locked = 0, lockid = \'\','
             .' phase = :phase, code = :code, error = :err WHERE id = :id';
         $pars = [
             'stat' => ($hard || $try >= $cap) ? 2 : 0,
@@ -304,7 +304,7 @@ class Mail {
     # A release that frees nothing finishes the mailing instead of starting it: suppression can leave an audience no larger than the sample already sent
     public function setCampFree(int $ref): bool {
         if ($ref < 1 || !$this->db instanceof Database) return false;
-        $sql = 'UPDATE '.PREFIX_DB.'_mail SET hold = 0, ntime = NOW() WHERE kind = \'newsletter\' AND ref = :id AND camp = 2 AND status = 0';
+        $sql = 'UPDATE '.PREFIX_DB.'_mail SET hold = 0, ntime = UNIX_TIMESTAMP() WHERE kind = \'newsletter\' AND ref = :id AND camp = 2 AND status = 0';
         $this->db->getSqlQuery($sql, ['id' => $ref]);
         $sql = ($this->getCampLeft($ref) > 0)
             ? 'UPDATE '.PREFIX_DB.'_newsletter SET status = 5, note = \'\' WHERE id = :id AND status IN (4, 7)'
@@ -461,7 +461,7 @@ class Mail {
 
     # Release the claims of a run that died before it recorded a result, so its rows become claimable again once the lock window of the drain job has passed
     private function deleteClaim(): void {
-        $sql = 'UPDATE '.PREFIX_DB.'_mail SET locked = NULL, lockid = \'\' WHERE status = 0 AND locked IS NOT NULL AND locked < DATE_SUB(NOW(), INTERVAL :wait SECOND)';
+        $sql = 'UPDATE '.PREFIX_DB.'_mail SET locked = 0, lockid = \'\' WHERE status = 0 AND locked > 0 AND locked < UNIX_TIMESTAMP() - :wait';
         $this->db->getSqlQuery($sql, ['wait' => $this->wait]);
     }
 
@@ -469,7 +469,7 @@ class Mail {
     # The next attempt goes back to now, because a released row is due again immediately and must not sit out the lock window the claim moved it behind
     private function deleteLock(): void {
         if ($this->lock === '') return;
-        $sql = 'UPDATE '.PREFIX_DB.'_mail SET locked = NULL, lockid = \'\', ntime = NOW() WHERE lockid = :lock AND status = 0';
+        $sql = 'UPDATE '.PREFIX_DB.'_mail SET locked = 0, lockid = \'\', ntime = UNIX_TIMESTAMP() WHERE lockid = :lock AND status = 0';
         $this->db->getSqlQuery($sql, ['lock' => $this->lock]);
         $this->lock = '';
     }
@@ -556,7 +556,7 @@ class Mail {
     public function setQueueRetry(array $list): int {
         $list = $this->getIdList($list);
         if ($list === '' || !$this->db instanceof Database) return 0;
-        $sql = 'UPDATE '.PREFIX_DB.'_mail SET status = 0, tries = 0, ntime = NOW(), locked = NULL, lockid = \'\', phase = \'\', code = \'\', error = \'\''
+        $sql = 'UPDATE '.PREFIX_DB.'_mail SET status = 0, tries = 0, ntime = UNIX_TIMESTAMP(), locked = 0, lockid = \'\', phase = \'\', code = \'\', error = \'\''
             .' WHERE status = 2 AND id IN ('.$list.')';
         if (!$this->db->getSqlQuery($sql)) return 0;
         return intval($this->db->getSqlAffected());

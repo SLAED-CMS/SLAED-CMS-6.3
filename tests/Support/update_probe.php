@@ -77,7 +77,7 @@ function getProbeSide(bool $root = false): PDO {
 function getProbeTable(string $name, string $engine = 'InnoDB'): string {
     $text = (string)file_get_contents(PROBEROOT.'/storage/update/sql/table.sql');
     if (!preg_match('/CREATE TABLE `\{prefix\}_'.$name.'`.*?\n\)\s*ENGINE=[^;]*;/s', $text, $hit)) throw new RuntimeException('table.sql carries no '.$name.' table');
-    return str_replace(['{prefix}', '{engine}', '{charset}', '{collate}'], [PROBEPREF, $engine, 'utf8mb4', 'utf8mb4_unicode_ci'], $hit[0]);
+    return str_replace(['{prefix}', '{engine}', '{charset}', '{collate}'], [PROBEPREF, $engine, 'utf8mb4', $GLOBALS['pcred']['collate']], $hit[0]);
 }
 
 # Lift one function out of public/update.php, or out of public/setup.php for the preflight of a clean installation, into this process; $swap replaces text of its source first
@@ -89,9 +89,9 @@ function addProbeCode(string $name, string $file = 'public/update.php', array $s
     eval(strtr(substr($code, $from, $to - $from + 3), $swap));
 }
 
-# The facade the preflight lifted from setup.php connects with: the facade of the probe on the database it names, answering the server version $GLOBALS['pfake'] names
-function getProbeBase(string $host, string $user, string $pass, string $name): ProbeBase {
-    $base = new ProbeBase($host, $user, $pass, $name);
+# The facade the preflight lifted from setup.php connects with, answering the server version $GLOBALS['pfake'] names; the last one stays in $GLOBALS['plast']
+function getProbeBase(string $host, string $user, string $pass, string $name, string $collate): ProbeBase {
+    $base = $GLOBALS['plast'] = new ProbeBase($host, $user, $pass, $name, $collate);
     $base->fake = (string)($GLOBALS['pfake'] ?? '');
     return $base;
 }
@@ -109,7 +109,7 @@ function checkProbeDone(array $rows): bool {
 # Create the disposable schema with the account table, the journal and three accounts, and connect the project facade to it
 function addProbeSchema(): void {
     $root = getProbeSide(true);
-    $root->exec('CREATE DATABASE `'.$GLOBALS['pname'].'` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci');
+    $root->exec('CREATE DATABASE `'.$GLOBALS['pname'].'` DEFAULT CHARACTER SET utf8mb4 COLLATE '.$GLOBALS['pcred']['collate']);
     $root->exec('USE `'.$GLOBALS['pname'].'`');
     foreach (['users', 'admins', 'points', 'forum', 'rating', 'rating_targets', 'rating_actors', 'rating_votes'] as $name) $root->exec(getProbeTable($name));
     foreach (PROBEBAL as $id => $sum) {
@@ -117,7 +117,7 @@ function addProbeSchema(): void {
             .' VALUES ('.$id.', \'user'.$id.'\', \'user'.$id.'@probe.test\', \'x\', \'\', \'\', \'\', '.$sum.')');
     }
     $cred = $GLOBALS['pcred'];
-    $GLOBALS['pdb'] = new ProbeBase($cred['host'], $cred['uname'], $cred['pass'], $GLOBALS['pname']);
+    $GLOBALS['pdb'] = new ProbeBase($cred['host'], $cred['uname'], $cred['pass'], $GLOBALS['pname'], $cred['collate']);
 }
 
 # Drop the disposable schema again and report whether the server is left without it
@@ -309,7 +309,7 @@ function getRateState(array $rows): array {
         'sealed' => is_array($info) && count($info['target']) === 3 && ($info['target']['ratings.php'] ?? '') === hash_file('sha256', CONFIG_DIR.'/ratings.php'),
         'targets' => $list('SELECT scope, mid, base, votes FROM '.$pref.'rating_targets` WHERE mid < 100 ORDER BY scope, mid'),
         'total' => intval($list('SELECT COUNT(*) FROM '.$pref.'rating_targets`')[0][0]),
-        'moment' => $list('SELECT DISTINCT created FROM '.$pref.'rating_targets`') === (is_array($info) ? [[$info['moment']]] : []),
+        'moment' => $list('SELECT DISTINCT created FROM '.$pref.'rating_targets`') === (is_array($info) ? [[date('Y-m-d H:i:s', $info['moment'])]] : []),
         'actors' => $list('SELECT scope, mid, actor, last FROM '.$pref.'rating_actors` ORDER BY scope, mid, actor'),
         'votes' => intval($list('SELECT COUNT(*) FROM '.$pref.'rating_votes`')[0][0]),
         'owners' => $list('SELECT id, votes, tvotes FROM '.$pref.'users` WHERE id < 100 ORDER BY id'),
@@ -342,7 +342,7 @@ function getRateClean(): array {
     $kept = array_map(fn($v) => file_get_contents($dir.'/'.$v), $names);
     getProbeSide()->exec('UPDATE `'.PROBEPREF.'_users` SET votes = 11, tvotes = 42 WHERE id = 2');
     getProbeSide()->exec('INSERT INTO `'.PROBEPREF.'_rating_votes` (scope, mid, actor, uid, value, request, created)'
-        .' VALUES (\'account\', 2, \'u:3\', 3, 5, \''.str_repeat('a', 32).'\', 1700000500)');
+        .' VALUES (\'account\', 2, \'u:3\', 3, 5, \''.str_repeat('a', 32).'\', NOW())');
     $out['again'] = getRateRun();
     unlink(CONFIG_DIR.'/update.php');
     $out['nomark'] = getRateRun();
@@ -377,7 +377,7 @@ function getRateResume(): array {
 function getRateStop(): array {
     $out = [];
     setRateSite();
-    getProbeSide()->exec('INSERT INTO `'.PROBEPREF.'_rating_targets` (scope, mid, base, votes, created) VALUES (\'account\', 2, 42, 11, 1700000500)');
+    getProbeSide()->exec('INSERT INTO `'.PROBEPREF.'_rating_targets` (scope, mid, base, votes, created) VALUES (\'account\', 2, 42, 11, NOW())');
     $out['rows'] = getRateRun();
     setRateSite(PROBEOLD, ['points' => '6.3.0', 'ratings' => '6.3.0']);
     $out['mark'] = getRateRun();
@@ -397,7 +397,7 @@ function getRateStop(): array {
     getProbeSide()->exec('UPDATE `'.PROBEPREF.'_users` SET tvotes = 38 WHERE id = 2');
     $out['owner'] = getRateRun();
     $rows = [
-        [20, 2, 'account', 'abc', 9, '5.5.5.5'], [21, 2, 'account', '9999999999', 9, '6.6.6.6'],
+        [20, 2, 'account', '0', 9, '5.5.5.5'], [21, 2, 'account', '9999999999', 9, '6.6.6.6'],
         [22, 2, 'account', '1700000000', 0, '0.0.0.0'], [23, 2, 'account', '1700000000', 0, 'x'],
     ];
     setRateSite(['account' => '100|1|0', 'forum' => '0|2|1'], ['points' => '6.3.0'], array_merge(PROBEROWS, $rows));
@@ -755,10 +755,10 @@ function getModState(array $rows): array {
 }
 
 # The preflight of a clean installation, lifted from setup.php: a taken prefix, a free one, one that only starts like a taken one and one holding the _ LIKE takes for any character
-# Then the oldest accepted and the newest refused version of both servers, and answers without a database name, which never reach the server
+# Then the oldest accepted and the newest refused version of both servers, answers without a database name, and its session at +13 and at the +14 MariaDB refuses as an offset
 function getFreshFlight(): array {
     $cred = $GLOBALS['pcred'];
-    $base = ['host' => $cred['host'], 'uname' => $cred['uname'], 'pass' => $cred['pass'], 'name' => $GLOBALS['pname']];
+    $base = ['host' => $cred['host'], 'uname' => $cred['uname'], 'pass' => $cred['pass'], 'name' => $GLOBALS['pname'], 'collate' => $cred['collate']];
     $out = [];
     foreach (['taken' => PROBEPREF, 'free' => 'free', 'near' => 'prob', 'wild' => 'prob_'] as $key => $pref) $out[$key] = getSetupProbe(['prefix' => $pref] + $base)['fail'];
     foreach (['10.5.1-MariaDB', '10.5.2-MariaDB', '8.0.15', '8.0.16'] as $ver) {
@@ -767,6 +767,37 @@ function getFreshFlight(): array {
     }
     $GLOBALS['pfake'] = '';
     $out['none'] = getSetupProbe(['name' => '', 'prefix' => 'free'] + $base)['fail'];
+    $zone = date_default_timezone_get();
+    foreach (['Pacific/Tongatapu', 'Pacific/Kiritimati'] as $name) {
+        date_default_timezone_set($name);
+        getSetupProbe(['prefix' => 'free'] + $base);
+        $row = $GLOBALS['plast']->getSqlRow($GLOBALS['plast']->getSqlQuery('SELECT NOW(), @@session.sql_mode, @@session.collation_connection'));
+        $out['link'][$name] = ['skew' => abs(strtotime((string)$row[0]) - time()), 'mode' => explode(',', (string)$row[1]), 'coll' => $row[2], 'want' => $cred['collate']];
+    }
+    date_default_timezone_set($zone);
+    return $out;
+}
+
+# The shipped users and maildead tables in the collation setup.php writes: two emoji names and two addresses apart only in case, each stored and found once
+function getTextFlight(): array {
+    preg_match("#'collate' => '(utf8mb4_[a-z0-9_]+)'#", (string)file_get_contents(PROBEROOT.'/public/setup.php'), $hit);
+    $pdo = getProbeSide();
+    foreach (['users', 'maildead'] as $name) $pdo->exec(str_replace([PROBEPREF.'_', 'COLLATE='.$GLOBALS['pcred']['collate']], ['txt_', 'COLLATE='.$hit[1]], getProbeTable($name)));
+    $add = function (string $sql) use ($pdo): bool {
+        try {
+            return $pdo->exec($sql) === 1;
+        } catch (PDOException) {
+            return false;
+        }
+    };
+    $user = 'INSERT INTO txt_users (name, email, password, block, warnings, field) VALUES (%s, \'\', \'x\', \'\', \'\', \'\')';
+    $out = ['coll' => $hit[1], 'names' => [], 'found' => [], 'mails' => []];
+    foreach (['😀', '😃'] as $name) {
+        $out['names'][] = $add(sprintf($user, $pdo->quote($name)));
+        $out['found'][] = (int)$pdo->query('SELECT COUNT(*) FROM txt_users WHERE name = '.$pdo->quote($name))->fetchColumn();
+    }
+    foreach (['Probe@Mail.test', 'probe@mail.test'] as $mail) $out['mails'][] = $add('INSERT INTO txt_maildead (email) VALUES ('.$pdo->quote($mail).')');
+    $pdo->exec('DROP TABLE txt_users, txt_maildead');
     return $out;
 }
 
@@ -796,6 +827,7 @@ function getSetupClean(): array {
     setModSite(false);
     $out['plain'] = getModState(setUpdateModules($pdb, PROBEPREF));
     $out['fresh'] = getFreshFlight();
+    $out['text'] = getTextFlight();
     $out['update'] = ['real' => checkUpdateBase($pdb, PROBEPREF), 'none' => checkUpdateBase($pdb, 'free')];
     getProbeSide()->exec('RENAME TABLE `'.PROBEPREF.'_admins` TO `'.PROBEPREF.'_admins_off`');
     $out['update']['half'] = checkUpdateBase($pdb, PROBEPREF);

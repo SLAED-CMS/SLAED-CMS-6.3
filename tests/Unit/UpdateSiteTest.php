@@ -42,6 +42,16 @@ final class UpdateSiteTest extends TestCase
         $this->assertSame(['old_probe_missing'], $fail, 'The first schema run failed on more than the broken statement');
     }
 
+    # The connection of update.php runs in the zone of the 6.2 site: set to +13, far from the server, the newsletter replay writes NOW() inside the window of the run
+    #[Test]
+    public function theUpdateWritesInTheZoneOfTheSite(): void
+    {
+        [$from, $stamp, $to] = $this->getRun()['first']['zone'];
+        $this->assertNotSame('', $stamp, 'The first run queued no newsletter mail to read its moment from');
+        $this->assertGreaterThanOrEqual($from, $stamp, 'update.php wrote NOW() before the run began in the zone of the site');
+        $this->assertLessThanOrEqual($to, $stamp, 'update.php wrote NOW() after the run ended in the zone of the site');
+    }
+
     # The fixture loads, the page of the first stage offers the run and writes nothing, the preflight refuses a MyISAM table without touching a file
     # A broken schema file stops before any unit
     # A registry stop before the mark modules leaves config/modules.php alone, and the next run, over a broken schema file, reads the 6.2 table as the first and writes the mark
@@ -86,6 +96,18 @@ final class UpdateSiteTest extends TestCase
         $this->assertSame($want, $run['first']['attach'], 'The attachment unit did not turn the address of a file its folder holds, or turned a missing one');
     }
 
+    # The times of 6.2 take their forms: a refresh stamp is a number the feed unit sets to 0, a unix expiry of a block or a message is a moment, none is NULL, repeats keep them
+    # The first schema run converts in the release zone of a site without its own, Europe/Berlin, at the offset its connection carries today
+    #[Test]
+    public function theTimesOfASiteTakeTheirForms(): void
+    {
+        $run = $this->getRun();
+        $zone = new \DateTimeZone((new \DateTime('now', new \DateTimeZone('Europe/Berlin')))->format('P'));
+        $at = fn(int $v): string => (new \DateTime('@'.$v))->setTimezone($zone)->format('Y-m-d H:i:s');
+        $want = [[0, 0, 0], [null, null, $at(1700003600)], [$at(1700007200), null]];
+        foreach (['first', 'second', 'third'] as $name) $this->assertSame($want, $run[$name]['times'], $name);
+    }
+
     # The structure after three runs over the 6.2 schema equals a clean installation of the release, table for table, column for column and index for index
     #[Test]
     public function theUpdatedSchemaEqualsACleanInstallation(): void
@@ -115,7 +137,7 @@ final class UpdateSiteTest extends TestCase
     }
 
     # The panel stays myadm.php, now the shipped loader in place of the one of 6.2
-    # The language and the address of the 6.2 site survive an update asked on another host
+    # The language and the address of the 6.2 site survive an update asked on another host; config/db.php takes the collation of the release and no dead key of 6.2
     # The blocks of removed modules are switched off with their names while a block of the owner stays, and the switches of the owner survive the repeat
     #[Test]
     public function theSiteKeepsWhatItOwns(): void
@@ -124,6 +146,7 @@ final class UpdateSiteTest extends TestCase
         foreach (['first', 'second', 'third'] as $name) {
             $this->assertSame([false, true, 'myadm', true], $run[$name]['panel'], $name);
             $this->assertSame(['ru', $run['guard']], $run[$name]['site'], $name);
+            $this->assertSame(['utf8mb4_unicode_520_ci', []], $run[$name]['base'], $name.': config/db.php lacks the collation of the release or keeps a key of 6.2');
         }
         $this->assertSame([200, 200, 200, 404], $run['panel']);
         $this->assertSame(['news.php', 0, 0], [trim($run['first']['blocks'][0]), $run['first']['blocks'][1], $run['first']['blocks'][2]]);

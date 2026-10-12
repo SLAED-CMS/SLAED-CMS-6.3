@@ -68,7 +68,8 @@ function comments(): void {
     global $conf, $afile, $tpl, $prs, $com;
     setHead();
     $status = getVar('get', 'status', 'num') ? 1 : 0;
-    $modul = getVar('get', 'modul', 'var');
+    $modul = strtolower(getVar('get', 'modul', 'var'));
+    if (!in_array($modul, $com->getModuleList(), true)) $modul = '';
     $search = getVar('get', 'search', 'num', 2);
     $search = ($search >= 1 && $search <= 5) ? $search : 2;
     $chng = trim(getVar('get', 'chng'));

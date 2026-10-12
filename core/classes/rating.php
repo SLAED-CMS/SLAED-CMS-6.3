@@ -196,7 +196,7 @@ final class Rating {
             $this->addRatingLog('the target carries an aggregate that was never carried over and takes no vote', ['scope' => $scope, 'mid' => $id]);
             return false;
         }
-        $sql = 'INSERT INTO '.PREFIX_DB.'_rating_targets (scope, mid, base, votes, created) VALUES (:scope, :mid, 0, 0, :now)';
+        $sql = 'INSERT INTO '.PREFIX_DB.'_rating_targets (scope, mid, base, votes, created) VALUES (:scope, :mid, 0, 0, FROM_UNIXTIME(:now))';
         return $this->db->getSqlQuery($sql, ['scope' => $scope, 'mid' => $id, 'now' => $now]) !== false;
     }
 
@@ -226,7 +226,8 @@ final class Rating {
             return $fail;
         }
         if ($wait) return [$this->getResult('interval', $target, $state), false];
-        $sql = 'INSERT INTO '.PREFIX_DB.'_rating_votes (scope, mid, actor, uid, value, request, created) VALUES (:scope, :mid, :actor, :uid, :value, :request, :now)';
+        $sql = 'INSERT INTO '.PREFIX_DB.'_rating_votes (scope, mid, actor, uid, value, request, created)'
+            .' VALUES (:scope, :mid, :actor, :uid, :value, :request, FROM_UNIXTIME(:now))';
         if ($this->db->getSqlQuery($sql, $pars + ['uid' => $this->actor['uid'], 'value' => $value, 'request' => $request, 'now' => $now]) === false) return $fail;
         $vote = intval($this->db->getSqlLastId());
         $sql = $seen['last'] === null
@@ -256,7 +257,7 @@ final class Rating {
         $mine = $this->akey === '' ? ['last' => null, 'now' => 0] : $this->getActorLast($scope, $id, $this->akey, false);
         if ($mine === false) return $fail;
         $rule = $this->rules[$scope] ?? ['active' => false, 'period' => 0, 'detail' => false, 'guests' => false];
-        if (intval($cur['annulled']) > 0) {
+        if ($cur['annulled'] !== null) {
             [$can, $wait] = $this->getVoteState($rule, $target, $mine['last'], $now);
             return [$this->getResult('ok', $target, ['vote' => $vote, 'duplicate' => true, 'wait' => $wait, 'canvote' => $can]), false];
         }
@@ -265,7 +266,7 @@ final class Rating {
             $this->addRatingLog('the annulment would turn the aggregate negative and is refused', ['scope' => $scope, 'mid' => $id, 'vote' => $vote]);
             return $fail;
         }
-        $sql = 'UPDATE '.PREFIX_DB.'_rating_votes SET annulled = :now, aid = :aid, reason = :reason WHERE id = :id';
+        $sql = 'UPDATE '.PREFIX_DB.'_rating_votes SET annulled = FROM_UNIXTIME(:now), aid = :aid, reason = :reason WHERE id = :id';
         if ($this->db->getSqlQuery($sql, ['now' => $now, 'aid' => $this->actor['aid'], 'reason' => $reason, 'id' => $vote]) === false) return $fail;
         if (!($this->write)($scope, $id, $next['score'], $next['ratings'])) return $fail;
         [$can, $wait] = $this->getVoteState($rule, $next, $mine['last'], $now);
@@ -356,7 +357,8 @@ final class Rating {
         $res = $this->db->getSqlQuery($sql, $pars);
         if ($res === false) return array_replace($out, ['code' => 'storage']);
         foreach ($this->db->getSqlRows($res) ?: [] as $row) {
-            $one = ['id' => 0, 'scope' => '', 'mid' => 0, 'actor' => '', 'uid' => 0, 'value' => 0, 'request' => '', 'created' => 0, 'annulled' => 0, 'aid' => 0, 'reason' => ''];
+            $one = ['id' => 0, 'scope' => '', 'mid' => 0, 'actor' => '', 'uid' => 0, 'value' => 0, 'request' => '', 'created' => '', 'annulled' => null, 'aid' => 0,
+                'reason' => ''];
             foreach ($one as $key => $void) $one[$key] = is_int($void) ? intval($row[$key]) : $row[$key];
             $out['rows'][] = $one;
             $out['next'] = $one['id'];

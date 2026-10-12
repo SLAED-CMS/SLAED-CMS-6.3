@@ -14,7 +14,7 @@ class DatabaseBatchTest extends TestCase
     {
         if (function_exists('getSqlbatch')) return;
         if (!defined('PREFIX_DB')) define('PREFIX_DB', 'test');
-        $GLOBALS['conf']['db'] = ['engine' => 'InnoDB', 'charset' => 'utf8mb4', 'collate' => 'utf8mb4_unicode_ci'] + (array)($GLOBALS['conf']['db'] ?? []);
+        $GLOBALS['conf']['db'] = ['engine' => 'InnoDB', 'charset' => 'utf8mb4', 'collate' => 'utf8mb4_unicode_520_ci'] + (array)($GLOBALS['conf']['db'] ?? []);
         $code = (string)file_get_contents(dirname(__DIR__, 2).'/core/admin.php');
         foreach (['getSqlbatch', 'getSqlclean', 'getSqlinfo', 'getSqlFilled', 'getSqlFileTables'] as $name) {
             $from = strpos($code, 'function '.$name.'(');

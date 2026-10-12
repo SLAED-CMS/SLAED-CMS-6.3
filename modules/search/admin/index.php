@@ -663,7 +663,7 @@ function edit(): void {
 }
 
 function editsave(): void {
-    global $db, $afile;
+    global $db, $afile, $conf;
     $id = getVar('post', 'id', 'num', 0);
     $sort = getVar('post', 'sort', 'num', 3);
     $order = getVar('post', 'order', 'num', 2);
@@ -671,9 +671,11 @@ function editsave(): void {
     $find = trim(getVar('post', 'find', 'text', ''));
     $fmod = getVar('post', 'fmod', 'var', '');
     $iswarn = !checkAdminPost('search');
-    $word = trim(getVar('post', 'word', 'text', ''));
+    $word = filterCutText(trim(getVar('post', 'word', 'text', '')), 255);
     if (!$iswarn && $word !== '') {
-        $mod = getVar('post', 'modul', 'var', '');
+        $mod = strtolower(getVar('post', 'modul', 'var', ''));
+        $mods = array_map('trim', explode(',', (string)$conf['search']['mods']));
+        if (!isset(getNodeTypeMap()[$mod]) && !in_array($mod, $mods, true)) $mod = '';
         $time = getVar('post', 'time', 'time');
         $hits = getVar('post', 'hits', 'num', 1);
         $hits = ($hits > 0) ? $hits : 1;
@@ -723,14 +725,15 @@ function delete(): void {
 }
 
 function clear(): void {
-    global $db, $afile;
+    global $db, $afile, $conf;
     $iswarn = !checkAdminPost('search');
     if (!$iswarn) {
         $mode = getVar('post', 'mode', 'var', 'all');
-        $cmod = getVar('post', 'cmod', 'var', '');
+        $cmod = strtolower(getVar('post', 'cmod', 'var', ''));
+        $mods = array_map('trim', explode(',', (string)$conf['search']['mods']));
         $days = getVar('post', 'days', 'num', 30);
         if ($mode === 'mod' && $cmod !== '') {
-            $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_search WHERE modul = :modul', ['modul' => $cmod]);
+            if (isset(getNodeTypeMap()[$cmod]) || in_array($cmod, $mods, true)) $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_search WHERE modul = :modul', ['modul' => $cmod]);
         } elseif ($mode === 'days' && $days > 0) {
             $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_search WHERE time < DATE_SUB(NOW(), INTERVAL '.intval($days).' DAY)');
         } elseif ($mode === 'empty') {

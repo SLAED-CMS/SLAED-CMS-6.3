@@ -66,27 +66,29 @@ function getProbeRoot(): PDO {
 function getProbeTable(string $name): string {
     $text = (string)file_get_contents(BASE_DIR.'/storage/update/sql/table.sql');
     if (!preg_match('/CREATE TABLE `\{prefix\}_'.$name.'`.*?\n\)\s*ENGINE=[^;]*;/s', $text, $hit)) throw new RuntimeException('table.sql carries no '.$name.' table');
-    return str_replace(['{prefix}', '{engine}', '{charset}', '{collate}'], [PREFIX_DB, 'InnoDB', 'utf8mb4', 'utf8mb4_unicode_ci'], $hit[0]);
+    return str_replace(['{prefix}', '{engine}', '{charset}', '{collate}'], [PREFIX_DB, 'InnoDB', 'utf8mb4', $GLOBALS['conf']['db']['collate']], $hit[0]);
 }
 
 # Open a second connection to the disposable schema: the independent reader of every persistent result
 function getProbeSide(): PDO {
     global $conf;
     $dsn = 'mysql:host='.$conf['db']['host'].';dbname='.$GLOBALS['pname'].';charset=utf8mb4';
-    return new PDO($dsn, $conf['db']['uname'], $conf['db']['pass'], [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+    $pdo = new PDO($dsn, $conf['db']['uname'], $conf['db']['pass'], [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+    $pdo->exec('SET time_zone = \''.date('P').'\'');
+    return $pdo;
 }
 
 # Open one more project facade on the disposable schema
 function getProbeBase(): ProbeBase {
     global $conf;
-    return new ProbeBase($conf['db']['host'], $conf['db']['uname'], $conf['db']['pass'], $GLOBALS['pname']);
+    return new ProbeBase($conf['db']['host'], $conf['db']['uname'], $conf['db']['pass'], $GLOBALS['pname'], $conf['db']['collate']);
 }
 
 # Create the disposable schema with the three shipped rating tables and the shipped tables the test adapters rate, and connect the project facade to it
 # The materials are rows of the shipped node table under one probe type, because the type table is what its foreign key demands
 function addProbeSchema(): void {
     $root = getProbeRoot();
-    $root->exec('CREATE DATABASE `'.$GLOBALS['pname'].'` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci');
+    $root->exec('CREATE DATABASE `'.$GLOBALS['pname'].'` DEFAULT CHARACTER SET utf8mb4 COLLATE '.$GLOBALS['conf']['db']['collate']);
     $root->exec('USE `'.$GLOBALS['pname'].'`');
     foreach (['users', 'node_types', 'nodes', 'rating_actors', 'rating_targets', 'rating_votes'] as $name) $root->exec(getProbeTable($name));
     $root->exec('INSERT INTO `'.PREFIX_DB.'_node_types` (`id`, `name`, `title`, `intro`, `active`) VALUES (1, \'story\', \'probe\', \'\', 1)');
@@ -193,7 +195,7 @@ function getProbeKey(int $num): string {
 # Every row of one rating table in the order of its key, read through a connection of its own so only what was really committed is seen
 function getProbeRows(string $name): array {
     $sql = [
-        'votes' => 'SELECT id, scope, mid, actor, uid, value, request, created, annulled, aid, reason FROM '.PREFIX_DB.'_rating_votes ORDER BY id',
+        'votes' => 'SELECT id, scope, mid, actor, uid, value, request, UNIX_TIMESTAMP(created), annulled, aid, reason FROM '.PREFIX_DB.'_rating_votes ORDER BY id',
         'actors' => 'SELECT scope, mid, actor, last FROM '.PREFIX_DB.'_rating_actors ORDER BY scope, mid, actor',
         'targets' => 'SELECT scope, mid, base, votes FROM '.PREFIX_DB.'_rating_targets ORDER BY scope, mid',
     ][$name];
@@ -388,7 +390,7 @@ function getProbeCarry(): array {
     setProbeSeed();
     $pdb = $GLOBALS['pdb'];
     $pdb->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET votes = 10, tvotes = 37 WHERE id IN (3, 4)');
-    $pdb->getSqlQuery('INSERT INTO '.PREFIX_DB.'_rating_targets (scope, mid, base, votes, created) VALUES (\'account\', 3, 37, 10, UNIX_TIMESTAMP())');
+    $pdb->getSqlQuery('INSERT INTO '.PREFIX_DB.'_rating_targets (scope, mid, base, votes, created) VALUES (\'account\', 3, 37, 10, NOW())');
     $rat = getProbeRating(getProbeUser(2));
     $out = ['before' => getProbeBrief($rat->getRating('account', 3))];
     $new = $rat->addRating('account', 3, 5, getProbeKey(1));
@@ -398,7 +400,7 @@ function getProbeCarry(): array {
     $out['loose'] = array_merge($out['loose'], [getProbeSum('account', 4), count(getProbeRows('votes'))]);
     $out['log'] = checkProbeLog('was never carried over');
     $pdb->getSqlQuery('UPDATE '.PREFIX_DB.'_nodes SET ratings = :num, score = :sum WHERE id = 2', ['num' => PROBEMAX, 'sum' => PROBEMAX]);
-    $sql = 'INSERT INTO '.PREFIX_DB.'_rating_targets (scope, mid, base, votes, created) VALUES (\'node.story\', 2, :sum, :num, UNIX_TIMESTAMP())';
+    $sql = 'INSERT INTO '.PREFIX_DB.'_rating_targets (scope, mid, base, votes, created) VALUES (\'node.story\', 2, :sum, :num, NOW())';
     $pdb->getSqlQuery($sql, ['num' => PROBEMAX, 'sum' => PROBEMAX]);
     $out['full'] = [$rat->addRating('node.story', 2, 1, getProbeKey(3))['code'], getProbeSum('node.story', 2)[1] === PROBEMAX, count(getProbeRows('votes'))];
     return $out;
@@ -529,7 +531,7 @@ function getProbeAnnul(): array {
     $res = $sup->deleteRating($ids[1], str_repeat('я', 255));
     $out['done'] = [getProbeBrief($res), $res['vote'] === $ids[1], getProbeSum('node.story', 1), $GLOBALS['pcalls'], getProbeLast('u:3') === $last];
     $row = getProbeRows('votes')[1];
-    $out['row'] = [$row[8] > 0, $row[9], mb_strlen($row[10]), $row[5]];
+    $out['row'] = [$row[8] !== null, $row[9], mb_strlen($row[10]), $row[5]];
     $res = $sup->deleteRating($ids[1], 'once more');
     $out['twice'] = [getProbeBrief($res), getProbeSum('node.story', 1), mb_strlen(getProbeRows('votes')[1][10])];
     $out['still'] = getProbeRating(getProbeUser(3))->addRating('node.story', 1, 5, getProbeKey(20))['code'];
@@ -606,7 +608,7 @@ function getProbeFail(): array {
         $pdb->fail = $i;
         $res = $sup->deleteRating($vote, 'fail');
         $pdb->fail = 0;
-        $out['delete'][$i] = [$res['code'], getProbeRows('votes')[0][8] > 0, getProbeSum('node.story', 1)[0], $pdb->checkSqlActive()];
+        $out['delete'][$i] = [$res['code'], getProbeRows('votes')[0][8] !== null, getProbeSum('node.story', 1)[0], $pdb->checkSqlActive()];
     }
     setProbeSeed();
     $GLOBALS['pwrite'] = false;
@@ -622,7 +624,7 @@ function getProbeFail(): array {
     $code = getProbeRating(getProbeUser(2))->addRating('node.story', 1, 5, getProbeKey(1))['code'];
     $out['hard'] = [$code, count(getProbeRows('votes')), $pdb->checkSqlActive()];
     $pdb->getSqlQuery('DROP TRIGGER probehard');
-    $sql = 'INSERT INTO '.PREFIX_DB.'_rating_votes (scope, mid, actor, value, request, created) VALUES (\'node.story\', 1, \'u:2\', 6, \''.getProbeKey(1).'\', 1)';
+    $sql = 'INSERT INTO '.PREFIX_DB.'_rating_votes (scope, mid, actor, value, request, created) VALUES (\'node.story\', 1, \'u:2\', 6, \''.getProbeKey(1).'\', NOW())';
     $out['value'] = getProbeThrow(static fn(): bool => getProbeSide()->exec($sql) > 0);
     $out['healed'] = getProbeBrief(getProbeRating(getProbeUser(2))->addRating('node.story', 1, 5, getProbeKey(1)));
     $out['log'] = checkProbeLog('the write was not stored') && checkProbeLog('the write threw');

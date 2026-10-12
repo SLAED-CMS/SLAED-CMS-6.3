@@ -91,4 +91,25 @@ final class InputFilterTest extends TestCase
         $this->assertStringContainsString('&#039;', $html[2]);
         $this->assertSame('', $html[3]);
     }
+
+    # The name filter of getVar() cuts after the escape: 25 characters with & stay 25 once escaped, and a cut through an entity drops the whole entity
+    #[Test]
+    public function cutKeepsTheColumnAndNeverSplitsAnEntity(): void
+    {
+        $cut = $this->getProbe()['cut'];
+        $this->assertSame(str_repeat('я', 20).'&amp;', $cut[0]);
+        $this->assertSame(25, mb_strlen($cut[0]));
+        $this->assertSame(str_repeat('я', 22), $cut[1]);
+        $this->assertSame('short', $cut[2]);
+    }
+
+    # An agent longer than _users.agent is stored cut to the column, while getAgent() stays whole, so the blocker still matches the hash of the full agent
+    #[Test]
+    public function aLongAgentIsStoredCutAndBlockedWhole(): void
+    {
+        [$full, $kept, $same] = $this->getProbe()['agent'];
+        $this->assertGreaterThan(255, $full);
+        $this->assertLessThanOrEqual(255, $kept);
+        $this->assertTrue($same, 'getAgent() no longer answers the full escaped agent the blocker hashes');
+    }
 }

@@ -250,11 +250,12 @@ function add(): void {
 }
 
 function save(): void {
-    global $db, $afile, $stop;
+    global $db, $afile, $stop, $conf;
     $iswarn = !checkAdminPost('voting');
     $id = getVar('post', 'id', 'num', 0);
     $modul = filterVar(getVar('post', 'modul', 'text', ''));
-    $title = getVar('post', 'title', 'text', '');
+    if (!isset(getNodeTypeMap()[$modul]) && !isset($conf['modules'][$modul])) $modul = '';
+    $title = filterCutText(getVar('post', 'title', 'text', ''), 255);
     $body = getVar('post', 'body[]', '', []);
     $answer = getVar('post', 'answer[]', '', []);
     $quest = [];
@@ -271,6 +272,7 @@ function save(): void {
     $enddate = getVar('req', 'enddate', 'time');
     $multi = getVar('post', 'multi', 'num', 0);
     $lang = getVar('post', 'lang', 'text', '');
+    if (!isset(getLanguageList()[$lang])) $lang = '';
     $acomm = ($modul) ? '0' : getVar('post', 'acomm', 'num', 0);
     $typ = getVar('post', 'typ', 'num', 0);
     $status = (!$typ) ? '0' : getVar('post', 'status', 'num', 0);

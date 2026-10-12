@@ -988,6 +988,11 @@ if ($mode === 'statscookie') {
     ];
     $out['url'] = [filterWebUrl('example.com'), filterWebUrl('https://example.com'), filterWebUrl(''), filterWebUrl('http://'),
         filterWebUrl('HTTPS://Feeds.Example.COM/News/RSS.xml?Id=A'), filterWebUrl('Example.COM/Path')];
+    $_POST['cut'] = [str_repeat('я', 20).'&abcd', str_repeat('я', 22).'&b'];
+    $out['cut'] = [getVar('post', 'cut[0]', 'name'), getVar('post', 'cut[1]', 'name'), filterCutText('short', 25)];
+    $_SERVER['HTTP_USER_AGENT'] = str_repeat('Mozilla/5.0 & Probe ', 20);
+    putenv('HTTP_USER_AGENT='.$_SERVER['HTTP_USER_AGENT']);
+    $out['agent'] = [mb_strlen(getAgent()), mb_strlen(filterCutText(getAgent(), 255)), md5(getAgent()) === md5(filterText($_SERVER['HTTP_USER_AGENT']))];
     $out['html'] = [filterHtml('cost $5'), filterHtml('back\\slash'), filterHtml('say "hi" and \'bye\''), filterHtml('')];
 } elseif ($mode === 'getvar') {
     $_POST = [

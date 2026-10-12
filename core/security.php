@@ -54,7 +54,7 @@ setLang();
 
 # Database connection using unified config
 require_once BASE_DIR.'/core/classes/pdo.php';
-$db = new Database($conf['db']['host'], $conf['db']['uname'], $conf['db']['pass'], $conf['db']['name'], $conf['db']['charset']);
+$db = new Database($conf['db']['host'], $conf['db']['uname'], $conf['db']['pass'], $conf['db']['name'], $conf['db']['collate']);
 define('PREFIX_DB', $conf['db']['prefix']);
 
 # Outgoing mail service, created here because the request scan below reports through it and runs long before the rest of the bootstrap
@@ -791,7 +791,7 @@ function getVar(string $var, string $key, string $type = '', mixed $default = ''
         'num' => fn($v) => filterNum($v),
         'let' => fn($v) => is_string($v) ? mb_substr(trim($v), 0, 1, 'utf-8') : $v,
         'word' => fn($v) => is_string($v) ? filterWord(urldecode(trim($v))) : $v,
-        'name' => fn($v) => is_string($v) ? filterText(mb_substr(trim($v), 0, 25, 'utf-8')) : $v,
+        'name' => fn($v) => is_string($v) ? filterCutText(filterText(trim($v)), 25) : $v,
         'title' => fn($v) => is_string($v) ? filterHtml(trim($v), 1) : $v,
         'text' => fn($v) => is_string($v) ? filterHtml(trim($v)) : $v,
         'url' => fn($v) => is_string($v) ? filterWebUrl(trim($v)) : $v,
@@ -930,6 +930,12 @@ function filterText(string $message, int $type = 0): string {
         }
     }
     return $message;
+}
+
+# Cut an escaped value to the characters of its column, dropping an HTML entity the cut would split
+function filterCutText(string $text, int $len): string {
+    if (mb_strlen($text, 'utf-8') <= $len) return $text;
+    return preg_replace('#&[\#a-z0-9]*$#i', '', mb_substr($text, 0, $len, 'utf-8')) ?? '';
 }
 
 # Length center filter

@@ -26,7 +26,6 @@ return [
     'css_f' => '',
     'ctitle' => '1',
     'db_t' => '1',
-    'dbsync' => '0',
     'defis' => '-',
     'dev_mode' => '0',
     'dletter' => '160',

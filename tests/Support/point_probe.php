@@ -54,7 +54,7 @@ function getProbeRoot(): PDO {
 function getProbeTable(string $name): string {
     $text = (string)file_get_contents(BASE_DIR.'/storage/update/sql/table.sql');
     if (!preg_match('/CREATE TABLE `\{prefix\}_'.$name.'`.*?\n\)\s*ENGINE=[^;]*;/s', $text, $hit)) throw new RuntimeException('table.sql carries no '.$name.' table');
-    return str_replace(['{prefix}', '{engine}', '{charset}', '{collate}'], [PREFIX_DB, 'InnoDB', 'utf8mb4', 'utf8mb4_unicode_ci'], $hit[0]);
+    return str_replace(['{prefix}', '{engine}', '{charset}', '{collate}'], [PREFIX_DB, 'InnoDB', 'utf8mb4', $GLOBALS['conf']['db']['collate']], $hit[0]);
 }
 
 # Open a second connection to the disposable schema: the concurrent session of the lock scenarios and the independent reader of every persistent result
@@ -67,13 +67,13 @@ function getProbeSide(): PDO {
 # Open one more project facade on the disposable schema
 function getProbeBase(): ProbeBase {
     global $conf;
-    return new ProbeBase($conf['db']['host'], $conf['db']['uname'], $conf['db']['pass'], $GLOBALS['pname']);
+    return new ProbeBase($conf['db']['host'], $conf['db']['uname'], $conf['db']['pass'], $GLOBALS['pname'], $conf['db']['collate']);
 }
 
 # Create the disposable schema with the two shipped tables the class talks to and connect the project database facade to it
 function addProbeSchema(): void {
     $root = getProbeRoot();
-    $root->exec('CREATE DATABASE `'.$GLOBALS['pname'].'` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci');
+    $root->exec('CREATE DATABASE `'.$GLOBALS['pname'].'` DEFAULT CHARACTER SET utf8mb4 COLLATE '.$GLOBALS['conf']['db']['collate']);
     $root->exec('USE `'.$GLOBALS['pname'].'`');
     $root->exec(getProbeTable('users'));
     $root->exec(getProbeTable('points'));

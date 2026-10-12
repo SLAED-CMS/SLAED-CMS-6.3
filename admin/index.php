@@ -142,15 +142,16 @@ function getAdminPanel(): void {
 function addAdminAccount(): void {
     global $db, $afile, $conf, $stop, $prv;
     if ($db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_admins LIMIT 1')) == 0) {
-        $aname     = filterText(trim(substr($_POST['aname'] ?? '', 0, 25)));
-        $aurl      = filterWebUrl($_POST['aurl'] ?? '');
-        $aemail    = filterText(getVar('post', 'aemail', 'raw', ''));
+        $aname     = getVar('post', 'aname', 'name', '');
+        $aurl      = filterCutText(getVar('post', 'aurl', 'url', ''), 255);
+        $aemail    = filterCutText(filterText(getVar('post', 'aemail', 'raw', '')), 255);
         $apass = getVar('post', 'apwd', 'raw', '');
         $atwo = getVar('post', 'apwd2', 'raw', '');
         $auser_new = intval($_POST['auser_new'] ?? 0);
         $aeditor   = (string)($conf['editor']['admin'] ?? 'plain');
         if (!Editor::isValidEditor($aeditor, 'admin')) $aeditor = 'plain';
         $alang     = getCookies('language');
+        if (!isset(getLanguageList()[$alang])) $alang = '';
         $aip       = getip();
         if (!$aname || !analyze_name($aname)) $stop = _ERRORINVNICK;
         if ($apass === '' && $atwo === '') $stop = _NOPASS;
