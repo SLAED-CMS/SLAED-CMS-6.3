@@ -885,7 +885,8 @@ function setInstallSources(PDO $pdo, string $snap): array {
 # Then it is asked to finish and asked once more for the repeat, and the structure is compared with a clean installation
 # Two guests vote in one poll with the statement of core/system.php, and the first super administrator signs in from the probe address as the session check demands
 # The panel, the content profile and the public side of Node are walked
-# Last a material is created and deleted and the update runs again, which must not bring the counter of _nodes back to the one of the deleted material
+# Then a material is created and deleted and the update runs again, which must not bring the counter of _nodes back to the one of the deleted material
+# Last the main administrator runs the second stage, and the materials the old module tables became are read with their types
 function getInstallUpgrade(PDO $pdo, string $base, string $dump, string $rev, string $snap): array {
     global $iguard, $iport, $isite;
     $out = ['config' => setInstallOld($isite, $rev, $base), 'dump' => addInstallDump($base, $dump), 'guard' => 'http://127.0.0.1:'.$iguard];
@@ -1016,6 +1017,11 @@ function getInstallUpgrade(PDO $pdo, string $base, string $dump, string $rev, st
     $was = $next();
     $page = getInstallAfter($pdo, getInstallReply([], 'POST', 'update.php', $again, $head));
     $out['last'] = ['id' => $last, 'old' => $page['ids']['old'], 'before' => $was, 'after' => $next(), 'failed' => $page['failed']];
+    $page = getInstallReply($who, 'GET', 'update.php');
+    $tok = getInstallToken($page['body'], 'run');
+    $done = getInstallReply($who, 'POST', 'update.php', ['op' => 'run', 'token' => $tok]);
+    $sql = 'SELECT t.name, n.title, n.intro, n.body FROM '.IPREF.'_nodes n JOIN '.IPREF.'_node_types t ON t.id = n.tid ORDER BY t.name, n.title';
+    $out['migrate'] = [$page['code'], $tok !== '', $done['code'], $pdo->query($sql)->fetchAll(PDO::FETCH_NUM)];
     return $out;
 }
 

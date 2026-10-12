@@ -638,7 +638,7 @@ ini_set('display_errors', $conf['security']['error'] > 0 ? '1' : '0');
 error_reporting([0, E_ALL ^ E_NOTICE, E_ALL][intval($conf['security']['error'])] ?? 0);
 set_time_limit(300);
 require_once BASE_DIR.'/core/admin.php';
-session_start();
+if (session_status() === PHP_SESSION_NONE) session_start();
 $setup = getSetupState();
 if (getSetupVar('post', 'go', 'var') === 'part' && $setup['part'] >= 0 && $setup['part'] === $setup['count'] - 1) {
     $ahash = (string)($setup['admin']['hash'] ?? '');

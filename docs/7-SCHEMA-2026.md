@@ -11,8 +11,9 @@ text domains, the collation from one place and the cuts, its choices under "Deci
 time column on its form, the forum new mark on the last visit, its choices under "Decisions"; batch 4 done 2026-10-12 —
 no flag, counter or text is NULL, `_users.lang` holds codes, an empty birthday is NULL, its choices and the release state
 of the stand under "Decisions"; batch 5 done 2026-10-12 — unique addresses with NULL for none, every key of "Inventory /
-Indexes" out or in, `_node_categories` on its pair, its choices under "Decisions"; batches 6–7 open. The order of the
-batches is kept in `docs/ROADMAP-2026.md`. Update this line as batches land.
+Indexes" out or in, `_node_categories` on its pair, its choices under "Decisions"; batch 6 done 2026-10-13 — any 6.2
+site migrates (owner), the rehearsal on a clean 6.2 on three servers, the fresh installation green again; batch 7
+open. The order of the batches is kept in `docs/ROADMAP-2026.md`. Update this line as batches land.
 
 No line numbers anywhere in this document on purpose: every reference names the table, the column, the function or
 the file it points at, and that name is what to search for.
@@ -168,6 +169,23 @@ Taken in batch 5, 2026-10-12, where the plan left the choice to it:
   update never did, and the stand and production still held it.
 - **The stand's three shared addresses stay on the active account** (owner, 2026-10-12): the accounts 35095, 35124 and
   35444 (2017, uLogin) hold NULL; production gets the same by hand when `update.php` lists them.
+- **Any 6.2 site migrates** (owner, 2026-10-12, batch 6). The rehearsal runs on a clean 6.2 installation from
+  `slaed-old.loc/public/setup/sql` (`table.sql` and `insert.sql`), not on a production dump: production is close to
+  the last 6.3 and is updated later on a fresh dump. This overrules "The rehearsal data" of the FILES plan (roadmap
+  step 15), which kept the migration on the 6.3 shape of production and rejected restoring the renames:
+  `table_update6_3.sql` again renames the columns of the seven source tables of Node (`_news`, `_pages`, `_faq`,
+  `_help`, `_links`, `_files`, `_content`) by `rencol`, which does nothing on a table already in the 6.3 shape.
+  `update.php` stays the internal tool of the maintainer that the release does not ship, and `UPGRADING.md` keeps
+  saying that the release updates no 6.2 site (owner, same day); only the sentences that a clean 6.2 is not migrated
+  change. Rejected: shipping `update.php` with the release, which needs a guard of its first stage and a plan of its
+  own.
+- **The installer starts its session once** (batch 6, 2026-10-12). `setup.php` called `session_start()` without a
+  check; where a session is already open — the router of `install_probe.php`, a host with `session.auto_start` — the
+  notice went out before the JSON of every part of the run. The probe then read no `more`, left the run of its
+  refusal checks unfinished in the session, `setSetupStep()` pinned the real installation to that run, and its first
+  part was the tables, which read the `config/db.php` the probe had just removed (`2002`). `setup.php` now starts the
+  session as `core/security.php` does, only when none is open. Rejected: changing the router of the probe, which
+  would have hidden the same failure on such a host.
 - **Kept**: `_forum.status` and `_forum.time`, `_categories.parent` and `ordern`; not in the list of unused keys. The
   per-module statistics of the search panel (`GROUP BY modul` with the score) still scan the log, which no key
   without `score` serves; `COUNT(DISTINCT word)` and the word list read `word_modul` alone (`EXPLAIN`, stand).
@@ -704,6 +722,27 @@ with a taken address is refused; the update probe with a duplicate address stops
 run to the end, `/schema` against the result, the language names gone, the collation and the domains in place;
 `UpdateSiteTest`; a fresh install by `setup.php` on MySQL 8.4 and on MariaDB 10.11 if the owner has them, else on the
 stand server, said so in the report.
+
+Done 2026-10-13, on a clean 6.2 by the owner's decision "Any 6.2 site migrates". `table_update6_3.sql` renames the
+seven source tables again ("Batch X"); `UpdateSiteTest` runs the second stage on its fixture and reads the two news
+and the file it makes, and fails without the renames (checked by taking them out). The rehearsal is
+`tests/Support/install_probe.php` in its update mode over `table.sql` and `insert.sql` of
+`slaed-old.loc/public/setup/sql` with prefix `slaed`, one administrator and three accounts added (the 6.2 seed has
+none; languages `russian`, `english`, `ukrainian`, a NULL and a set `viewmail`, a false and a real birthday) and the
+real `config_*.php` of `slaed-old.loc`, on MariaDB 11.8, MySQL 8.4.6 and MariaDB 10.11.14 alike: two accounts on one
+address stop the run before the schema file with both named; three runs without a failed statement, all marks and
+manifests; the structure equals a clean installation in `information_schema`, every column with its type, NULL,
+default and collation (the `/schema` comparison); `utf8mb4_unicode_520_ci` in `config/db.php` without the keys of
+6.2; the languages `ru`, `en`, `uk`, the false birthday NULL; the second stage creates `news`, `faq`, `help`, `links`
+and `files`, adjusts `content`, and carries the three news of the seed; PHP, SQL and site logs hold no error. A second
+run on MariaDB 11.8 added one row to each of the other six tables in its 6.2 columns, a reply to the help request and a
+comment on the page and on the link: all nine rows became materials of their seven types with intro and body in place
+(`pages` in `docs`), the two comments stayed on their materials, the reply became a comment of the request, and the
+link and the file became resources of the roles `link` and `download`, the 5 hits of the link kept. The fresh
+installation, red in `NodeProfileTest` since 2026-10-04 with its root cause open, passes 14 of 14 on the three servers
+after the fix of "The installer starts its session once". `UpdateSiteTest` passes on MariaDB 11.8 and 10.11; MySQL
+8.4 refuses to load its fixture (`ERROR 1067 Invalid default value for 'user_regdate'`), a raw MariaDB dump with zero
+dates, which is a property of the fixture, not of `update.php`.
 
 ### Batch 7 — reference
 

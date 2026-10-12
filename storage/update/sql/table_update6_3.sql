@@ -1197,6 +1197,54 @@ CALL rencol('{prefix}_privat',       'content',    'body');
 CALL rencol('{prefix}_voting',       'questions',  'body');
 
 # =============================================================================
+# Batch X: the source tables of Node
+#   The migration of update.php reads news, pages, faq, help, links, files and content in the 6.3 shape
+#   A clean 6.2 site still carries the 6.2 names; a table already in the 6.3 shape is left as it is
+# =============================================================================
+
+CALL rencol('{prefix}_news',     'sid',           'id');
+CALL rencol('{prefix}_news',     'catid',         'cid');
+CALL rencol('{prefix}_news',     'hometext',      'intro');
+CALL rencol('{prefix}_news',     'bodytext',      'body');
+CALL rencol('{prefix}_news',     'associated',    'assoc');
+CALL rencol('{prefix}_news',     'ip_sender',     'ip');
+
+CALL rencol('{prefix}_pages',    'pid',           'id');
+CALL rencol('{prefix}_pages',    'catid',         'cid');
+CALL rencol('{prefix}_pages',    'hometext',      'intro');
+CALL rencol('{prefix}_pages',    'bodytext',      'body');
+CALL rencol('{prefix}_pages',    'ip_sender',     'ip');
+
+CALL rencol('{prefix}_faq',      'fid',           'id');
+CALL rencol('{prefix}_faq',      'catid',         'cid');
+CALL rencol('{prefix}_faq',      'hometext',      'body');
+CALL rencol('{prefix}_faq',      'ip_sender',     'ip');
+
+CALL rencol('{prefix}_help',     'sid',           'id');
+CALL rencol('{prefix}_help',     'catid',         'cid');
+CALL rencol('{prefix}_help',     'hometext',      'body');
+CALL rencol('{prefix}_help',     'ip_sender',     'ip');
+
+CALL rencol('{prefix}_links',    'lid',           'id');
+CALL rencol('{prefix}_links',    'description',   'intro');
+CALL rencol('{prefix}_links',    'bodytext',      'body');
+CALL rencol('{prefix}_links',    'date',          'time');
+CALL rencol('{prefix}_links',    'ip_sender',     'ip');
+CALL rencol('{prefix}_links',    'totalvotes',    'tvotes');
+CALL rencol('{prefix}_links',    'totalcomments', 'comments');
+
+CALL rencol('{prefix}_files',    'lid',           'id');
+CALL rencol('{prefix}_files',    'description',   'intro');
+CALL rencol('{prefix}_files',    'bodytext',      'body');
+CALL rencol('{prefix}_files',    'date',          'time');
+CALL rencol('{prefix}_files',    'homepage',      'website');
+CALL rencol('{prefix}_files',    'ip_sender',     'ip');
+CALL rencol('{prefix}_files',    'totalvotes',    'tvotes');
+CALL rencol('{prefix}_files',    'totalcomments', 'comments');
+
+CALL rencol('{prefix}_content',  'text',          'body');
+
+# =============================================================================
 # Final type alignment to storage/update/sql/table.sql
 # =============================================================================
 

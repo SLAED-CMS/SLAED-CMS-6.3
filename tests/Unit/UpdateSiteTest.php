@@ -147,6 +147,18 @@ final class UpdateSiteTest extends TestCase
         $this->assertSame($last['before'], $last['after']);
     }
 
+    # The second stage carries the 6.2 tables of the removed modules into Node: the schema file gave them the 6.3 names the migration reads
+    # The two news and the file of the fixture become materials of their types, the intro and the body of 6.2 in their places
+    #[Test]
+    public function theSecondStageCarriesTheModulesOfASite(): void
+    {
+        $run = $this->getRun()['migrate'];
+        $this->assertSame([200, true, 200], array_slice($run, 0, 3), 'The page of the second stage offers no run to the main administrator');
+        $want = [['files', 'A file', 'Description of the file', ''], ['news', 'First news', 'Intro of the first news', ''],
+            ['news', 'Second news', 'Intro of the second news', 'Body of the second news']];
+        $this->assertSame($want, $run[3], 'The migration did not carry the rows of a clean 6.2 site');
+    }
+
     # The panel stays myadm.php, now the shipped loader in place of the one of 6.2
     # The language and the address of the 6.2 site survive an update asked on another host; config/db.php takes the collation of the release and no dead key of 6.2
     # The blocks of removed modules are switched off with their names while a block of the owner stays, and the switches of the owner survive the repeat

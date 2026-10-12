@@ -3624,8 +3624,9 @@ manifest, the later poll vote of one address removed), then three runs, each wit
 four marks, all manifests `verified` and `_nodes` continuing at 301. After them the schema equals a clean
 installation in `information_schema` (columns, indexes, foreign keys, checks, engine, collation). It also checks two
 guest votes in one poll, the kept panel name `myadm` now holding the shipped loader, language and address of 6.2,
-the switched-off blocks, type creation in the panel, the `_nodes` counter after a deleted material, and empty PHP and
-SQL logs. A change to the first stage or the schema file is done only when this test passes.
+the switched-off blocks, type creation in the panel, the `_nodes` counter after a deleted material, the second stage
+carrying the two news and the file of the seed into Node, and empty PHP and SQL logs. A change to the first stage or
+the schema file is done only when this test passes.
 
 ## Migration of the removed modules
 
@@ -3633,8 +3634,9 @@ SQL logs. A change to the first stage or the schema file is done only when this 
 Node on a site that ran the 6.3 update. Only the main administrator opens it; the page shows the plan per module and
 a POST with the token scope `update` runs every step that is not done yet. The old tables stay as they are. It reads
 the module tables in the 6.3 shape (`id`, `cid`, `intro`, `body`, `ip`), which the production tables of `slaed.net`
-carry; `table_update6_3.sql` no longer renames the tables of the removed modules, so a clean 6.2 site with `sid`,
-`hometext` and `bodytext` stops at the counter step.
+carry; for a clean 6.2 site, whose tables still say `sid`, `catid`, `hometext` and `bodytext`, the first stage renames
+the columns of the seven tables in `table_update6_3.sql` ("Batch X"), and a table already in the 6.3 shape stays as
+it is. `UpdateSiteTest` runs this second stage on its 6.2 fixture and reads the materials it made.
 
 | Module | Type | Notes |
 |---|---|---|

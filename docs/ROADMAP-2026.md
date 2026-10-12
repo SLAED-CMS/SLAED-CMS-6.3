@@ -141,7 +141,9 @@ into the plan, then do whatever work the step names.
   collation on the way (owner, 2026-10-12). (2026-10-12)
 - [x] 64. SCHEMA batch 5 — keys: unique email, covered indexes and prefixes out, missing ones in. The stand's three
   shared addresses stay on the active account (owner, 2026-10-12). (2026-10-12)
-- [ ] 65. SCHEMA batch 6 — rehearsal of `update.php` on a fresh 6.2 dump the owner provides; fresh installs.
+- [x] 65. SCHEMA batch 6 — rehearsal of `update.php` on a fresh 6.2 dump the owner provides; fresh installs. The owner
+  chose a clean 6.2 from `slaed-old.loc/public/setup/sql` and that any 6.2 site migrates, `update.php` staying internal
+  (2026-10-12); production is updated later on a fresh dump. (2026-10-13)
 - [ ] 66. SCHEMA batch 7 — reference; deletes `docs/7-SCHEMA-2026.md`.
 - [ ] 67. DIAL — *decision*: the options dial `sl-dial` of the panel lists is three Tab stops a row while closed (found
   by the UI/UX audit of the groups stand, 2026-10-09); write a plan, then make its items reachable only once it opens.
