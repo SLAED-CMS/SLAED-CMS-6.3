@@ -95,7 +95,7 @@ function getTplAddDateTime(array $data = []): string {
     $with = $data['with'] ?? true;
     $max = $data['max'] ?? 16;
     $iscfg = !empty($data['is_config']);
-    $time = $time ? substr($time, 0, $max) : ($with ? date('Y-m-d H:i') : date('Y-m-d'));
+    $time = $time ? substr($time, 0, $max) : ($with ? date('Y-m-d H:i') : '');
     static $fieldid = 0;
     $fieldid++;
     $type = $with ? 'datetime-local' : 'date';

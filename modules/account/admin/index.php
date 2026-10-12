@@ -233,7 +233,7 @@ function add(bool $fresh = false): void {
         $warn = getVar('post', 'warn[]', '', []);
         $access = getVar('post', 'access', 'num', 0);
         $group = getVar('post', 'group', 'num', 0);
-        $birth = getVar('post', 'birth', 'time', '');
+        $birth = getVar('post', 'birth', 'date', '');
         $gender = getVar('post', 'gender', 'num', 0);
         $field = '';
     }
@@ -381,7 +381,7 @@ function add(bool $fresh = false): void {
         'field_html' => getTplRadioGroup([
             'labelledby' => $labid,
             'name' => 'view',
-            'value' => (string)$view,
+            'value' => $view ? '1' : '0',
             'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]],
         ]),
     ];
@@ -622,7 +622,7 @@ function addsave(): void {
         $warnings = is_array($warnvals) ? filterText(implode('|', str_replace('|', '', $warnvals))) : 0;
         $access = getVar('post', 'access', 'num');
         $group = getVar('post', 'group');
-        $birth = getVar('req', 'birth', 'date');
+        $birth = getVar('req', 'birth', 'date', null);
         $gender = getVar('post', 'gender');
         [$fold] = $uid ? ($db->getSqlRow($db->getSqlQuery('SELECT field FROM '.PREFIX_DB.'_users WHERE id = :id', ['id' => $uid])) ?: ['']) : [''];
         $flds = getFieldsPost('account', (string)$fold);

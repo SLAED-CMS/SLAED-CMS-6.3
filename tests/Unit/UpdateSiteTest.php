@@ -108,6 +108,16 @@ final class UpdateSiteTest extends TestCase
         foreach (['first', 'second', 'third'] as $name) $this->assertSame($want, $run[$name]['times'], $name);
     }
 
+    # The empty values and the language names of 6.2 take their domains in every table, a false birthday is none, an unserved language is the site one
+    #[Test]
+    public function theEmptyValuesOfASiteTakeTheirDomains(): void
+    {
+        $run = $this->getRun();
+        $users = [['ru', 0, null, '', '', ''], ['en', 1, '1990-05-17', '', '', ''], ['', 0, null, '', '', '']];
+        $want = [$users, ['', 0, 'de'], ['', 'uk'], 'ru'];
+        foreach (['first', 'second', 'third'] as $name) $this->assertSame($want, $run[$name]['nulls'], $name);
+    }
+
     # The structure after three runs over the 6.2 schema equals a clean installation of the release, table for table, column for column and index for index
     #[Test]
     public function theUpdatedSchemaEqualsACleanInstallation(): void

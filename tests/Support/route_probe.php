@@ -162,11 +162,11 @@ function addRouteConfig(string $work, string $base, int $port): void {
 function addRouteRows(PDO $pdo): void {
     $pre = RPREF.'_';
     $pdo->exec('INSERT INTO '.$pre.'groups (id, name, intro, points, extra) VALUES (1, \'club\', \'\', 0, 1)');
-    $pdo->exec('INSERT INTO '.$pre.'users (id, name, email, password, block, warnings, field, grp, points, ip) VALUES'
-        .' (2, \'anna\', \'anna@probe.test\', \'hash-anna\', \'\', \'\', \'\', 1, 0, \'127.0.0.1\'),'
-        .' (3, \'boris\', \'boris@probe.test\', \'hash-boris\', \'\', \'\', \'\', 0, 0, \'127.0.0.1\'),'
-        .' (4, \'clara\', \'clara@probe.test\', \'hash-clara\', \'\', \'\', \'\', 0, 0, \'127.0.0.1\'),'
-        .' (5, \'helper\', \'helper@probe.test\', \'hash-helper\', \'\', \'\', \'\', 0, 0, \'127.0.0.1\')');
+    $pdo->exec('INSERT INTO '.$pre.'users (id, name, email, password, sig, block, warnings, field, grp, points, ip) VALUES'
+        .' (2, \'anna\', \'anna@probe.test\', \'hash-anna\', \'\', \'\', \'\', \'\', 1, 0, \'127.0.0.1\'),'
+        .' (3, \'boris\', \'boris@probe.test\', \'hash-boris\', \'\', \'\', \'\', \'\', 0, 0, \'127.0.0.1\'),'
+        .' (4, \'clara\', \'clara@probe.test\', \'hash-clara\', \'\', \'\', \'\', \'\', 0, 0, \'127.0.0.1\'),'
+        .' (5, \'helper\', \'helper@probe.test\', \'hash-helper\', \'\', \'\', \'\', \'\', 0, 0, \'127.0.0.1\')');
     $pdo->exec('INSERT INTO '.$pre.'admins (id, name, email, password, super, smail, modules, ip) VALUES'
         .' (1, \'root\', \'root@probe.test\', \'hash-root\', 1, 1, \'\', \'127.0.0.1\'),'
         .' (2, \'moder\', \'moder@probe.test\', \'hash-moder\', 0, 1, \'node-news\', \'127.0.0.1\'),'
@@ -2737,6 +2737,38 @@ function getRouteTime(PDO $pdo, string $work): array {
     return $out;
 }
 
+# The empty values of the schema over real requests: the address hidden by default, an empty birthday stored as none, a language code read as its name
+function getRouteNull(PDO $pdo): array {
+    global $rwork;
+    $pre = RPREF.'_';
+    $conf = require $rwork.'/config/fields.php';
+    $conf['fields']['account'] = [];
+    setRouteFile($rwork.'/config/fields.php', $conf);
+    if (is_file($rwork.'/config/local.php')) unlink($rwork.'/config/local.php');
+    $row = fn(string $sql): array => $pdo->query($sql)->fetch(PDO::FETCH_NUM) ?: [];
+    $word = fn(string $file, string $key): string => preg_match("#define\('".$key."', *'([^']+)'\)#", (string)file_get_contents(BASE_DIR.'/'.$file), $hit) ? $hit[1] : '?';
+    $pick = fn(array $pairs, string $name): ?string => array_values(array_filter($pairs, fn(array $v): bool => $v[0] === $name))[0][1] ?? null;
+    $pdo->exec('UPDATE '.$pre.'users SET lang = \'de\' WHERE id = 4');
+    $pdo->exec('UPDATE '.$pre.'users SET birthday = \'1990-05-17\' WHERE id = 3');
+    $out = ['stored' => $row('SELECT viewmail, birthday, sig, occ, origin FROM '.$pre.'users WHERE id = 4')];
+    $prof = getRouteReply('anna', 'GET', 'index.php?name=account&op=view&uname=clara')['body'];
+    $out['profile'] = [str_contains($prof, $word('lang/ru.php', '_GERMAN')), str_contains($prof, 'clara@probe.test')];
+    $form = getRouteReply('clara', 'GET', 'index.php?name=account&op=edithome')['body'];
+    $pairs = getRouteInputs($form, 'savehome');
+    $lamp = [$word('modules/account/lang/ru.php', '_ACCOUNT_HIDDEN'), $word('modules/account/lang/ru.php', '_ACCOUNT_SHOWN')];
+    $out['form'] = [$pick($pairs, 'view'), $pick($pairs, 'user_birthday'), str_contains($form, $lamp[0]), str_contains($form, $lamp[1])];
+    $save = getRouteReply('clara', 'POST', 'index.php?name=account', getRoutePairs($pairs) + ['sig' => '', 'block' => '']);
+    $out['save'] = [$save['code'], $row('SELECT viewmail, birthday FROM '.$pre.'users WHERE id = 4')];
+    $form = getRouteReply('boris', 'GET', 'index.php?name=account&op=edithome')['body'];
+    $pairs = getRouteInputs($form, 'savehome');
+    $was = $pick($pairs, 'user_birthday');
+    $save = getRouteReply('boris', 'POST', 'index.php?name=account', getRoutePairs($pairs, ['user_birthday' => '']) + ['sig' => '', 'block' => '']);
+    $out['clear'] = [$was, $save['code'], $row('SELECT birthday FROM '.$pre.'users WHERE id = 3')];
+    $panel = getRouteInputs(getRouteReply('root', 'GET', 'admin.php?name=account&op=add&id=4')['body'], 'addsave');
+    $out['panel'] = [$pick($panel, 'view'), $pick($panel, 'birth')];
+    return $out;
+}
+
 # The journal run: both login journals on, OAuth on with a provider that is never called, a known password for the account clara and the administrator docsman
 function addRouteJournalConf(PDO $pdo, string $work): void {
     $data = require $work.'/config/security.php';
@@ -2941,6 +2973,8 @@ try {
         $report['runs']['journal'] = getRouteJournal($rpdo, $rwork);
     } elseif (($argv[2] ?? '') === 'time') {
         $report['runs']['time'] = getRouteTime($rpdo, $rwork);
+    } elseif (($argv[2] ?? '') === 'null') {
+        $report['runs']['null'] = getRouteNull($rpdo);
     } elseif (($argv[2] ?? '') === 'files') {
         $report['runs']['files'] = getRouteFiles($rpdo) + getRouteAccount($rpdo) + getRouteComment($rpdo) + getRouteUnused($rpdo);
     } else {

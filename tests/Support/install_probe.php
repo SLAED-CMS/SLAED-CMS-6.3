@@ -463,8 +463,8 @@ function getInstallLock(): array {
 function getInstallWho(PDO $pdo): array {
     $adm = $pdo->query('SELECT id, name, password FROM '.IPREF.'_admins ORDER BY id LIMIT 1')->fetch(PDO::FETCH_ASSOC);
     $usr = $pdo->query('SELECT id, name, password FROM '.IPREF.'_users WHERE name = \'Probe\'')->fetch(PDO::FETCH_ASSOC);
-    $pdo->exec('INSERT INTO '.IPREF.'_users (name, email, password, block, warnings, field, grp, points, ip) VALUES (\'Stranger\', \'stranger@probe.test\','
-        .' \'hash-stranger\', \'\', \'\', \'\', 0, 0, \'127.0.0.1\')');
+    $pdo->exec('INSERT INTO '.IPREF.'_users (name, email, password, sig, block, warnings, field, grp, points, ip) VALUES (\'Stranger\', \'stranger@probe.test\','
+        .' \'hash-stranger\', \'\', \'\', \'\', \'\', 0, 0, \'127.0.0.1\')');
     $sid = (int)$pdo->lastInsertId();
     return [
         'guest' => [],
@@ -825,6 +825,9 @@ function getInstallAfter(PDO $pdo, array $page): array {
         'times' => [$pdo->query('SELECT time FROM '.IPREF.'_blocks WHERE id < 4 ORDER BY id')->fetchAll(PDO::FETCH_COLUMN),
             $pdo->query('SELECT expire FROM '.IPREF.'_blocks WHERE id < 4 ORDER BY id')->fetchAll(PDO::FETCH_COLUMN),
             $pdo->query('SELECT expire FROM '.IPREF.'_message ORDER BY id')->fetchAll(PDO::FETCH_COLUMN)],
+        'nulls' => [$pdo->query('SELECT lang, viewmail, birthday, sig, occ, origin FROM '.IPREF.'_users WHERE id < 4 ORDER BY id')->fetchAll(PDO::FETCH_NUM),
+            $pdo->query('SELECT title, smail, lang FROM '.IPREF.'_admins WHERE id = 2')->fetch(PDO::FETCH_NUM),
+            $pdo->query('SELECT lang FROM '.IPREF.'_message ORDER BY id')->fetchAll(PDO::FETCH_COLUMN), (string)$pdo->query('SELECT lang FROM '.IPREF.'_voting')->fetchColumn()],
         'attach' => [(string)$pdo->query('SELECT body FROM '.IPREF.'_forum WHERE id = 1')->fetchColumn(),
             (string)$pdo->query('SELECT body FROM '.IPREF.'_privat WHERE id = 1')->fetchColumn()],
     ];

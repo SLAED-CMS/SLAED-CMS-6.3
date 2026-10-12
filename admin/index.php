@@ -176,8 +176,8 @@ function addAdminAccount(): void {
                     if (!$gone) $db->setSqlRollback();
                 }
                 $db->getSqlQuery(
-                    'INSERT INTO '.PREFIX_DB.'_users (id, name, email, website, avatar, regdate, password, lang, ip, block, warnings, field)'
-                    .' VALUES (NULL, :name, :email, :website, :avatar, now(), :pass, :lang, :ip, \'\', \'\', \'\')',
+                    'INSERT INTO '.PREFIX_DB.'_users (id, name, email, website, avatar, regdate, password, lang, ip, sig, block, warnings, field)'
+                    .' VALUES (NULL, :name, :email, :website, :avatar, now(), :pass, :lang, :ip, \'\', \'\', \'\', \'\')',
                     ['name' => $aname, 'email' => $aemail, 'website' => $aurl, 'avatar' => '', 'pass' => $apwd, 'lang' => $alang, 'ip' => $aip]
                 );
             }

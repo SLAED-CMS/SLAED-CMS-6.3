@@ -284,8 +284,8 @@ function getProbeCamp(): array {
     $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_groups (name, intro, points, extra, rank, color) VALUES (\'probe group\', \'\', 0, 1, \'\', \'\')');
     $gid = intval($db->getSqlLastId());
     $mail = ['camper@slaed.net', 'campertwo@slaed.net', 'camperthree@slaed.net', 'camperdead@slaed.net', 'campergone@slaed.net'];
-    $sql = 'INSERT INTO '.PREFIX_DB.'_users (name, email, password, block, warnings, field, grp, newslet, regdate, lastvis)'
-        .' VALUES (:name, :mail, \'x\', \'\', \'\', \'\', :grp, :news, NOW(), NOW())';
+    $sql = 'INSERT INTO '.PREFIX_DB.'_users (name, email, password, sig, block, warnings, field, grp, newslet, regdate, lastvis)'
+        .' VALUES (:name, :mail, \'x\', \'\', \'\', \'\', \'\', :grp, :news, NOW(), NOW())';
     $ours = [];
     foreach ($mail as $idx => $addr) {
         $db->getSqlQuery($sql, ['name' => 'probeuser'.chr(97 + $idx), 'mail' => $addr, 'grp' => $gid, 'news' => ($addr === 'campergone@slaed.net') ? 0 : 1]);

@@ -8,8 +8,10 @@ migration on every installed site.
 Status: batch 0 done 2026-10-12 — the inventory stands under "Inventory", its decisions under "Decisions"; batch 1 done
 2026-10-12 — the connection contract of "Design / Connection" is in `Database::__construct()`; batch 2 done 2026-10-12 — the
 text domains, the collation from one place and the cuts, its choices under "Decisions"; batch 3 done 2026-10-12 — every
-time column on its form, the forum new mark on the last visit, its choices under "Decisions"; batches 4–7 open. The
-order of the batches is kept in `docs/ROADMAP-2026.md`. Update this line as batches land.
+time column on its form, the forum new mark on the last visit, its choices under "Decisions"; batch 4 done 2026-10-12 —
+no flag, counter or text is NULL, `_users.lang` holds codes, an empty birthday is NULL, its choices and the release state
+of the stand under "Decisions"; batches 5–7 open. The order of the batches is kept in `docs/ROADMAP-2026.md`. Update
+this line as batches land.
 
 No line numbers anywhere in this document on purpose: every reference names the table, the column, the function or
 the file it points at, and that name is what to search for.
@@ -105,6 +107,36 @@ Taken in batch 3, 2026-10-12, where the plan left the choice to it:
   `NULL` moments need no guard at each reader.
 - **One spelling of a nullable moment**: `DATETIME DEFAULT NULL`, also for `_node_assets.reported` and the three
   of `_node_sync`, which said `DATETIME NULL DEFAULT NULL`.
+
+Taken in batch 4, 2026-10-12, where the plan left the choice to it:
+
+- **`_admins.password` is `NOT NULL` without a default**, as `_users.password`; `_users.sig`, `_forum.body` and
+  `_newsletter.body` are `TEXT` / `MEDIUMTEXT NOT NULL` and every insert supplies them, the probes and
+  `tools/node-profile.php` included. `SchemaConventionTest` holds it: a column is nullable only as a moment
+  (`DATETIME DEFAULT NULL`) or as one of the named exceptions — `_comment.reqkey` (no request key), the five measures
+  of `_node_assets` (an outside file), `_points.rid` (not reversed) and `_users.birthday` (a calendar day).
+- **The false birthday had two sources, both fixed at the source.** The `date` filter of `getVar()` answered today
+  for an empty or invalid value, and `getTplAddDateTime()` prefilled a date-only control with today, so even an
+  untouched settings save posted a day. Both served the birthday alone; the filter now answers empty, the
+  date-only control stays empty, and the two writers pass `null` as the default, so an empty field stores NULL.
+- **`viewmail` is read as the profile reads it** — truthy shows — by the settings switch, the cabinet lamp and the
+  panel form; the other switches of `getSetupSwitch()` keep their reading.
+- **The 6.2 language names are mapped in every `lang` column**, not only `_users` and `_voting`: a 6.2 site may hold
+  names in `_admins`, `_blocks`, `_categories` and `_message` too. The schema file empties a `_users.lang` that cannot
+  be a name or a code (`NOT REGEXP '^[A-Za-z]{2,10}$'`, both cases because an interrupted run leaves the column
+  `ascii_bin` and the comparison case-sensitive) before it narrows the column; `setUpdateLangs()` of `update.php`
+  turns the names into codes by `getUpdateLangs()`, the map `setUpdateConfig()` reads too, and sets an account
+  language no `lang/` file serves to the empty site language. Content rows keep an unknown value: it was shown to
+  nobody before and would otherwise be shown to everyone.
+- **`configsave()` of `admin/modules/lang.php` keeps the stored language** when the form sends none.
+- **The stand is on the release** (owner, 2026-10-12): it lacked the schema of batches 2–3, although batch 3 had recorded the stand as converted, and its `config/db.php`
+  still named `utf8mb4_unicode_ci`, which turned `UpdateSiteTest` red against a fresh install in the release
+  collation. After a dump into `storage/backup/slaed_2026-10-12_before-stand-release.sql` the stand configuration
+  names `utf8mb4_unicode_520_ci` without `sync`, `table_update6_3.sql` ran over the stand without a failed statement,
+  the eight time columns of the 6.3 tables that no 6.2 site has (`_mail`, `_node_publish`, `_rating_targets`,
+  `_rating_votes`, `_user_oauth`) were converted by hand, and the master secret moved from `config/local.php` into the
+  uncommitted `config/security.php` before the merge was rebuilt. The seventeen old module tables keep their
+  collation as the input of the migration.
 
 Proposed by the plan on 2026-10-09 and not yet confirmed by the owner; they stand unless the owner overrules them:
 

@@ -304,7 +304,7 @@ function configsave(): void {
     if (!$warn) {
         $cont = [
             'key' => getVar('post', 'key', 'text', ''),
-            'lang' => getVar('post', 'lang', 'var', 'russian'),
+            'lang' => getVar('post', 'lang', 'var', $conf['lang']['lang']),
             'count' => getVar('post', 'count', 'num', 0),
             'per_page' => getVar('post', 'per_page', 'num', 100)
         ];

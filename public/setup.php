@@ -442,8 +442,8 @@ function addSetupAdmin(array &$state, string $hash): array {
     $sql = 'INSERT INTO '.PREFIX_DB.'_admins VALUES (NULL, :name, \'Admin\', :url, :email, :pass, \'1\', :editor, \'1\', \'\', :lang, :ip, now(), now())';
     $aid = ($hash !== '' && $db->getSqlQuery($sql, $pars)) ? intval($db->getSqlLastId()) : 0;
     if ($aid < 1) return ['task' => '', 'fail' => _ERROR.': '.PREFIX_DB.'_admins — '.$db->getSqlError()['message']];
-    $sql = 'INSERT INTO '.PREFIX_DB.'_users (id, name, email, website, avatar, regdate, password, lang, ip, block, warnings, field)'
-        .' VALUES (NULL, :name, :email, :website, \'\', now(), :pass, :lang, :ip, \'\', \'\', \'\')';
+    $sql = 'INSERT INTO '.PREFIX_DB.'_users (id, name, email, website, avatar, regdate, password, lang, ip, sig, block, warnings, field)'
+        .' VALUES (NULL, :name, :email, :website, \'\', now(), :pass, :lang, :ip, \'\', \'\', \'\', \'\')';
     $pars = ['name' => $adm['name'], 'email' => $adm['mail'], 'website' => $state['site']['url'], 'pass' => $hash, 'lang' => $state['lang'], 'ip' => $pars['ip']];
     if ($adm['user'] === '1' && !$db->getSqlQuery($sql, $pars)) return ['task' => '', 'fail' => _ERROR.': '.PREFIX_DB.'_users — '.$db->getSqlError()['message']];
     $state['note'] = addNodeProfiles($aid);

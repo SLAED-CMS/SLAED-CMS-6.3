@@ -271,8 +271,8 @@ function addProfileRows(PDO $pdo, array $types, int $rows): array {
         foreach (getProfileSlots($type) as $i => [$one, $kind, $src]) $role->execute(['tid' => $type->id, 'slot' => $i, 'role' => $one, 'kind' => $kind, 'src' => $src]);
         $num++;
     }
-    $pdo->exec('INSERT INTO '.$pre.'users (id, name, email, password, block, warnings, field, ip) SELECT n + 1, CONCAT(\'user\', n + 1),'
-        .' CONCAT(\'user\', n + 1, \'@profile.test\'), \'hash\', \'\', \'\', \'\', \'127.0.0.1\' FROM profile_seq WHERE n < 1000');
+    $pdo->exec('INSERT INTO '.$pre.'users (id, name, email, password, sig, block, warnings, field, ip) SELECT n + 1, CONCAT(\'user\', n + 1),'
+        .' CONCAT(\'user\', n + 1, \'@profile.test\'), \'hash\', \'\', \'\', \'\', \'\', \'127.0.0.1\' FROM profile_seq WHERE n < 1000');
     $pdo->exec('INSERT INTO '.$pre.'categories (id, modul, title, intro, pread, lang, status, ordern) SELECT m.k * '.PCATS.' + s.n + 1, t.name, CONCAT(t.name, \' \', s.n + 1),'
         .' \'\', \'0|0\', \'\', 1, s.n FROM profile_map AS m INNER JOIN '.$pre.'node_types AS t ON t.id = m.tid INNER JOIN profile_seq AS s ON s.n < '.PCATS);
     $state = 'CASE WHEN s.n % 100 < 90 THEN 2 WHEN s.n % 100 < 95 THEN 1 WHEN s.n % 100 < 98 THEN 0 ELSE 3 END';

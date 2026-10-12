@@ -45,10 +45,10 @@ function addProbeSchema(): void {
     $root->exec('CREATE DATABASE `'.$GLOBALS['pname'].'` DEFAULT CHARACTER SET utf8mb4 COLLATE '.$conf['db']['collate']);
     $root->exec('USE `'.$GLOBALS['pname'].'`');
     foreach (['admins', 'users', 'login_log'] as $name) $root->exec(getProbeTable($name));
-    $root->exec('INSERT INTO `'.PREFIX_DB.'_admins` (`id`, `name`, `email`, `modules`) VALUES (2, \'root\', \'root@probe.test\', \'\')');
+    $root->exec('INSERT INTO `'.PREFIX_DB.'_admins` (`id`, `name`, `email`, `password`, `modules`) VALUES (2, \'root\', \'root@probe.test\', \'x\', \'\')');
     foreach ([2 => 'anna', 3 => 'boris'] as $id => $name) {
-        $root->exec('INSERT INTO `'.PREFIX_DB.'_users` (`id`, `name`, `email`, `password`, `block`, `warnings`, `field`)'
-            .' VALUES ('.$id.', \''.$name.'\', \''.$name.'@probe.test\', \'x\', \'\', \'\', \'\')');
+        $root->exec('INSERT INTO `'.PREFIX_DB.'_users` (`id`, `name`, `email`, `password`, `sig`, `block`, `warnings`, `field`)'
+            .' VALUES ('.$id.', \''.$name.'\', \''.$name.'@probe.test\', \'x\', \'\', \'\', \'\', \'\')');
     }
     $GLOBALS['db'] = new Database($conf['db']['host'], $conf['db']['uname'], $conf['db']['pass'], $GLOBALS['pname'], $conf['db']['collate']);
 }

@@ -6,7 +6,18 @@ class SchemaConventionTest extends TestCase
 {
     private const IP = "VARCHAR(45) CHARACTER SET ASCII COLLATE ASCII_BIN NOT NULL DEFAULT ''";
     private const MODUL = 'VARCHAR(50) CHARACTER SET ASCII COLLATE ASCII_BIN NOT NULL';
+    private const LANG = "VARCHAR(10) CHARACTER SET ASCII COLLATE ASCII_BIN NOT NULL DEFAULT ''";
     private const TIMER = 'BIGINT UNSIGNED NOT NULL DEFAULT 0';
+    private const NULLS = [
+        'comment.reqkey' => 'BINARY(16) DEFAULT NULL',
+        'node_assets.mime' => 'VARCHAR(100) CHARACTER SET ASCII COLLATE ASCII_BIN NULL DEFAULT NULL',
+        'node_assets.size' => 'BIGINT UNSIGNED NULL DEFAULT NULL',
+        'node_assets.width' => 'INT UNSIGNED NULL DEFAULT NULL',
+        'node_assets.height' => 'INT UNSIGNED NULL DEFAULT NULL',
+        'node_assets.duration' => 'INT UNSIGNED NULL DEFAULT NULL',
+        'points.rid' => 'BIGINT UNSIGNED DEFAULT NULL',
+        'users.birthday' => 'DATE DEFAULT NULL',
+    ];
     private const MOMENT = ['DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP', 'DATETIME DEFAULT NULL', 'DATETIME NOT NULL'];
     private const TIMES = ['time', 'ltime', 'etime', 'ntime', 'endtime', 'enddate', 'expire', 'expires', 'created', 'updated', 'published', 'annulled', 'linked',
         'lastlog', 'lastvis', 'regdate', 'due', 'locked', 'last', 'shown', 'edited', 'deleted', 'checked', 'synced', 'reported', 'activity', 'modified', 'birthday'];
@@ -41,6 +52,7 @@ class SchemaConventionTest extends TestCase
                 $want = match ($col) {
                     'ip', 'eip' => self::IP,
                     'modul', 'scope' => self::MODUL,
+                    'lang' => self::LANG,
                     default => null,
                 };
                 if ($want !== null && $def !== $want) $bad[] = $tab.'.'.$col.': '.$def;
@@ -62,6 +74,20 @@ class SchemaConventionTest extends TestCase
             }
         }
         $this->assertSame([], $bad, 'A time column leaves the form of a moment or a timer');
+    }
+
+    # NULL means none or not recorded: a moment not yet reached, a request key, a measure of an outside file, a reversal, a calendar day; a flag, a counter or a text is never NULL
+    public function testNullMeansNoneOrNotRecorded(): void
+    {
+        $bad = [];
+        foreach (self::$columns as $tab => $cols) {
+            foreach ($cols as $col => $def) {
+                $key = $tab.'.'.$col;
+                if (str_contains($def, 'NOT NULL') || $def === 'DATETIME DEFAULT NULL' || (self::NULLS[$key] ?? '') === $def) continue;
+                $bad[] = $key.': '.$def;
+            }
+        }
+        $this->assertSame([], $bad, 'A column is nullable without a meaning of NULL');
     }
 
     # The collation of text comes from {collate} of config/db.php alone; the one column that spells utf8mb4 is the case-sensitive address list of _maildead

@@ -113,8 +113,8 @@ function addProbeSchema(): void {
     $root->exec('USE `'.$GLOBALS['pname'].'`');
     foreach (['users', 'admins', 'points', 'forum', 'rating', 'rating_targets', 'rating_actors', 'rating_votes'] as $name) $root->exec(getProbeTable($name));
     foreach (PROBEBAL as $id => $sum) {
-        $root->exec('INSERT INTO `'.PROBEPREF.'_users` (`id`, `name`, `email`, `password`, `block`, `warnings`, `field`, `points`)'
-            .' VALUES ('.$id.', \'user'.$id.'\', \'user'.$id.'@probe.test\', \'x\', \'\', \'\', \'\', '.$sum.')');
+        $root->exec('INSERT INTO `'.PROBEPREF.'_users` (`id`, `name`, `email`, `password`, `sig`, `block`, `warnings`, `field`, `points`)'
+            .' VALUES ('.$id.', \'user'.$id.'\', \'user'.$id.'@probe.test\', \'x\', \'\', \'\', \'\', \'\', '.$sum.')');
     }
     $cred = $GLOBALS['pcred'];
     $GLOBALS['pdb'] = new ProbeBase($cred['host'], $cred['uname'], $cred['pass'], $GLOBALS['pname'], $cred['collate']);
@@ -279,11 +279,11 @@ function setRateSite(array $rules = PROBEOLD, array $mark = ['points' => '6.3.0'
     foreach (['rating_targets', 'rating_actors', 'rating_votes', 'rating', 'forum'] as $name) $side->exec('DELETE FROM `'.PROBEPREF.'_'.$name.'`');
     $side->exec('DELETE FROM `'.PROBEPREF.'_users` WHERE id >= 100');
     $bulk = [];
-    for ($i = 100; $i < 1300; $i++) $bulk[] = '('.$i.', \'bulk'.$i.'\', \'bulk'.$i.'@probe.test\', \'x\', \'\', \'\', \'\', '.($i % 3).', '.(($i % 3) * 4).')';
-    $side->exec('INSERT INTO `'.PROBEPREF.'_users` (`id`, `name`, `email`, `password`, `block`, `warnings`, `field`, `votes`, `tvotes`) VALUES '.implode(', ', $bulk));
+    for ($i = 100; $i < 1300; $i++) $bulk[] = '('.$i.', \'bulk'.$i.'\', \'bulk'.$i.'@probe.test\', \'x\', \'\', \'\', \'\', \'\', '.($i % 3).', '.(($i % 3) * 4).')';
+    $side->exec('INSERT INTO `'.PROBEPREF.'_users` (`id`, `name`, `email`, `password`, `sig`, `block`, `warnings`, `field`, `votes`, `tvotes`) VALUES '.implode(', ', $bulk));
     foreach ([2 => [10, 37], 3 => [0, 0], 4 => [1, 5]] as $id => [$num, $sum]) $side->exec('UPDATE `'.PROBEPREF.'_users` SET votes = '.$num.', tvotes = '.$sum.' WHERE id = '.$id);
-    $side->exec('INSERT INTO `'.PROBEPREF.'_forum` (`id`, `pid`, `uid`, `name`, `title`, `field`, `score`, `ratings`, `status`) VALUES'
-        .' (5, 0, 2, \'user2\', \'topic\', \'\', 6, 2, 2), (7, 5, 3, \'user3\', \'reply\', \'\', 5, 1, 2)');
+    $side->exec('INSERT INTO `'.PROBEPREF.'_forum` (`id`, `pid`, `uid`, `name`, `title`, `body`, `field`, `score`, `ratings`, `status`) VALUES'
+        .' (5, 0, 2, \'user2\', \'topic\', \'\', \'\', 6, 2, 2), (7, 5, 3, \'user3\', \'reply\', \'\', \'\', 5, 1, 2)');
     $add = $side->prepare('INSERT INTO `'.PROBEPREF.'_rating` (`id`, `mid`, `modul`, `time`, `uid`, `ip`) VALUES (?, ?, ?, ?, ?, ?)');
     foreach ($rows as $row) $add->execute($row);
 }
@@ -441,11 +441,11 @@ function setFieldSite(array $defs = PROBEDEFS, array $mark = ['points' => '6.3.0
     $side->exec('DELETE FROM `'.PROBEPREF.'_forum`');
     $side->exec('DELETE FROM `'.PROBEPREF.'_users` WHERE id >= 100');
     $list = [];
-    for ($i = 100; $i < 1300; $i++) $list[] = '('.$i.', \'bulk'.$i.'\', \'bulk'.$i.'@probe.test\', \'x\', \'\', \'\', \''.($bulk ? 'A|user '.$i : '').'\')';
-    $side->exec('INSERT INTO `'.PROBEPREF.'_users` (`id`, `name`, `email`, `password`, `block`, `warnings`, `field`) VALUES '.implode(', ', $list));
+    for ($i = 100; $i < 1300; $i++) $list[] = '('.$i.', \'bulk'.$i.'\', \'bulk'.$i.'@probe.test\', \'x\', \'\', \'\', \'\', \''.($bulk ? 'A|user '.$i : '').'\')';
+    $side->exec('INSERT INTO `'.PROBEPREF.'_users` (`id`, `name`, `email`, `password`, `sig`, `block`, `warnings`, `field`) VALUES '.implode(', ', $list));
     $set = $side->prepare('UPDATE `'.PROBEPREF.'_users` SET field = ? WHERE id = ?');
     foreach ($rows['users'] as $id => $text) $set->execute([$text, $id]);
-    $add = $side->prepare('INSERT INTO `'.PROBEPREF.'_forum` (`id`, `pid`, `uid`, `name`, `title`, `field`, `status`) VALUES (?, 0, 2, \'user2\', \'topic\', ?, 2)');
+    $add = $side->prepare('INSERT INTO `'.PROBEPREF.'_forum` (`id`, `pid`, `uid`, `name`, `title`, `body`, `field`, `status`) VALUES (?, 0, 2, \'user2\', \'topic\', \'\', ?, 2)');
     foreach ($rows['forum'] as $id => $text) $add->execute([$id, $text]);
 }
 
@@ -740,7 +740,7 @@ function setModSite(bool $table): void {
     getProbeSide()->exec('CREATE TABLE `'.PROBEPREF.'_modules` (`mid` INT NOT NULL PRIMARY KEY, `title` VARCHAR(255) NOT NULL, `active` TINYINT NOT NULL, `view` TINYINT NOT NULL,'
         .' `inmenu` TINYINT NOT NULL, `mod_group` INT NOT NULL, `blocks` TINYINT NOT NULL, `blocks_c` TINYINT NOT NULL) ENGINE=InnoDB');
     getProbeSide()->exec('INSERT INTO `'.PROBEPREF."_modules` VALUES (1, 'forum', 0, 1, 0, 3, 1, 1), (2, 'voting', 1, 2, 1, 0, 2, 0), (3, 'news', 1, 0, 1, 0, 0, 0)");
-    getProbeSide()->exec('INSERT INTO `'.PROBEPREF."_admins` (`id`, `name`, `email`, `modules`) VALUES (1, 'probe', 'probe@probe.test', '1,3,voting,9')");
+    getProbeSide()->exec('INSERT INTO `'.PROBEPREF."_admins` (`id`, `name`, `email`, `password`, `modules`) VALUES (1, 'probe', 'probe@probe.test', 'x', '1,3,voting,9')");
 }
 
 # What the registry step leaves behind: its answer, the records of config/modules.php read fresh, and the rights of the administrator
@@ -790,7 +790,7 @@ function getTextFlight(): array {
             return false;
         }
     };
-    $user = 'INSERT INTO txt_users (name, email, password, block, warnings, field) VALUES (%s, \'\', \'x\', \'\', \'\', \'\')';
+    $user = 'INSERT INTO txt_users (name, email, password, sig, block, warnings, field) VALUES (%s, \'\', \'x\', \'\', \'\', \'\', \'\')';
     $out = ['coll' => $hit[1], 'names' => [], 'found' => [], 'mails' => []];
     foreach (['😀', '😃'] as $name) {
         $out['names'][] = $add(sprintf($user, $pdo->quote($name)));
@@ -860,7 +860,7 @@ $report = ['error' => '', 'clean' => false, 'runs' => []];
 
 try {
     $units = ['setUpdateFile', 'getUpdateSource', 'getUpdateCred', 'getUpdateRow', 'checkUpdateFail', 'checkUpdateBase', 'setUpdateBackup', 'setUpdatePoints',
-        'setUpdateRatings', 'getUpdateRules', 'getUpdateValue', 'setUpdateFields', 'setUpdateConfig', 'setUpdateMails', 'setUpdateModules', 'deleteUpdateTypes'];
+        'setUpdateRatings', 'getUpdateRules', 'getUpdateValue', 'setUpdateFields', 'getUpdateLangs', 'setUpdateConfig', 'setUpdateMails', 'setUpdateModules', 'deleteUpdateTypes'];
     foreach ($units as $name) addProbeCode($name);
     if (($argv[2] ?? '') === 'setup') {
         require_once PROBEROOT.'/lang/en.php';

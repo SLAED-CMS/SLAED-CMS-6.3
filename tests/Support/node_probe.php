@@ -332,7 +332,7 @@ function getProbeUpdate(): array {
     }
     $out = ['base' => setProbeRun($pdo, $keep)];
     $pdo->exec('ALTER TABLE `'.PROBEPREF.'_admins` MODIFY `modules` VARCHAR(255) NOT NULL DEFAULT \'\'');
-    $pdo->exec('INSERT INTO `'.PROBEPREF.'_admins` (name, email, modules) VALUES (\'probe\', \'probe@probe.test\', \'forum,voting,node,node-news\')');
+    $pdo->exec('INSERT INTO `'.PROBEPREF.'_admins` (name, email, password, modules) VALUES (\'probe\', \'probe@probe.test\', \'x\', \'forum,voting,node,node-news\')');
     $out['checks'] = intval($pdo->query('SELECT @@SESSION.foreign_key_checks')->fetchColumn());
     $sql = 'SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME LIKE \''.PROBEPREF.'\\_node%\'';
     $out['tables'] = intval($pdo->query($sql)->fetchColumn());
@@ -504,11 +504,11 @@ function getProbeVisitor(): array {
 function addProbeRows(PDO $pdo): void {
     $pre = PREFIX_DB.'_';
     $pdo->exec('INSERT INTO '.$pre.'groups (id, name, intro, points, extra) VALUES (1, \'club\', \'\', 0, 1), (2, \'active\', \'\', 100, 0)');
-    $pdo->exec('INSERT INTO '.$pre.'users (id, name, email, password, block, warnings, field, grp, points, ip) VALUES'
-        .' (2, \'anna\', \'anna@probe.test\', \'hash-anna\', \'\', \'\', \'\', 1, 0, \'127.0.0.1\'),'
-        .' (3, \'boris\', \'boris@probe.test\', \'hash-boris\', \'\', \'\', \'\', 0, 150, \'127.0.0.1\'),'
-        .' (4, \'clara\', \'clara@probe.test\', \'hash-clara\', \'\', \'\', \'\', 0, 0, \'127.0.0.1\'),'
-        .' (5, \'dmitri\', \'dmitri@probe.test\', \'hash-dmitri\', \'\', \'\', \'\', 1, 200, \'127.0.0.1\')');
+    $pdo->exec('INSERT INTO '.$pre.'users (id, name, email, password, sig, block, warnings, field, grp, points, ip) VALUES'
+        .' (2, \'anna\', \'anna@probe.test\', \'hash-anna\', \'\', \'\', \'\', \'\', 1, 0, \'127.0.0.1\'),'
+        .' (3, \'boris\', \'boris@probe.test\', \'hash-boris\', \'\', \'\', \'\', \'\', 0, 150, \'127.0.0.1\'),'
+        .' (4, \'clara\', \'clara@probe.test\', \'hash-clara\', \'\', \'\', \'\', \'\', 0, 0, \'127.0.0.1\'),'
+        .' (5, \'dmitri\', \'dmitri@probe.test\', \'hash-dmitri\', \'\', \'\', \'\', \'\', 1, 200, \'127.0.0.1\')');
     $pdo->exec('INSERT INTO '.$pre.'admins (id, name, email, password, super, modules, ip) VALUES'
         .' (1, \'root\', \'root@probe.test\', \'hash-root\', 1, \'\', \'127.0.0.1\'),'
         .' (2, \'moder\', \'moder@probe.test\', \'hash-moder\', 0, \'forum,node-news,node-docs,node-news,node-Bad,node-,nodes\', \'127.0.0.1\'),'
@@ -1885,10 +1885,10 @@ function getProbeMatPoint(bool $zero = false, ?Database $pdb = null): Point {
 function addProbeMatRows(PDO $pdo): void {
     $pre = PREFIX_DB.'_';
     addProbeServiceRows($pdo);
-    $pdo->exec('INSERT INTO '.$pre.'users (id, name, email, password, block, warnings, field, grp, points, ip) VALUES'
-        .' (2, \'anna\', \'anna@probe.test\', \'hash-anna\', \'\', \'\', \'\', 1, 0, \'127.0.0.1\'),'
-        .' (3, \'boris\', \'boris@probe.test\', \'hash-boris\', \'\', \'\', \'\', 0, 150, \'127.0.0.1\'),'
-        .' (4, \'clara\', \'clara@probe.test\', \'hash-clara\', \'\', \'\', \'\', 0, 0, \'127.0.0.1\')');
+    $pdo->exec('INSERT INTO '.$pre.'users (id, name, email, password, sig, block, warnings, field, grp, points, ip) VALUES'
+        .' (2, \'anna\', \'anna@probe.test\', \'hash-anna\', \'\', \'\', \'\', \'\', 1, 0, \'127.0.0.1\'),'
+        .' (3, \'boris\', \'boris@probe.test\', \'hash-boris\', \'\', \'\', \'\', \'\', 0, 150, \'127.0.0.1\'),'
+        .' (4, \'clara\', \'clara@probe.test\', \'hash-clara\', \'\', \'\', \'\', \'\', 0, 0, \'127.0.0.1\')');
     $pdo->exec('INSERT INTO '.$pre.'voting (id, modul, title, body, answer, enddate, status) VALUES (1, \'voting\', \'Poll\', \'\', \'\', NOW(), 1),'
         .' (2, \'voting\', \'Off\', \'\', \'\', NOW(), 0)');
     $pdo->exec('INSERT INTO '.$pre.'admins (id, name, email, password, super, modules, ip)'

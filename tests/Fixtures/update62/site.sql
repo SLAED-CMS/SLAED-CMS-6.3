@@ -655,7 +655,7 @@ CREATE TABLE `old_whois` (
 
 INSERT INTO `old_admins` (`id`, `name`, `title`, `url`, `email`, `pwd`, `super`, `editor`, `smail`, `modules`, `lang`, `ip`, `regdate`, `lastvisit`) VALUES
 (1, 'admin', 'Administrator', '', 'admin@site62.test', 'c4ca4238a0b923820dcc509a6f75849b', 1, 0, 1, '', '', '127.0.0.1', '2010-01-01 10:00:00', '2025-11-20 10:00:00'),
-(2, 'editor', 'Editor', '', 'editor@site62.test', 'c81e728d9d4c2f636f067f89cc14862c', 0, NULL, 0, '10,104', '', '127.0.0.1', '2012-01-01 10:00:00', '2025-11-20 10:00:00');
+(2, 'editor', NULL, '', 'editor@site62.test', 'c81e728d9d4c2f636f067f89cc14862c', 0, NULL, NULL, '10,104', 'german', '127.0.0.1', '2012-01-01 10:00:00', '2025-11-20 10:00:00');
 
 INSERT INTO `old_modules` (`mid`, `title`, `active`, `view`, `inmenu`, `mod_group`, `blocks`, `blocks_c`) VALUES
 (10, 'news', 1, 0, 1, 0, 0, 0), (23, 'voting', 1, 0, 1, 0, 0, 0), (26, 'faq', 1, 0, 1, 0, 0, 0), (36, 'files', 1, 0, 1, 0, 0, 0),
@@ -663,10 +663,10 @@ INSERT INTO `old_modules` (`mid`, `title`, `active`, `view`, `inmenu`, `mod_grou
 (110, 'jokes', 0, 0, 1, 0, 0, 0);
 
 INSERT INTO `old_users` (`user_id`, `user_name`, `user_rank`, `user_email`, `user_avatar`, `user_regdate`, `user_password`, `user_block`, `user_lastvisit`,
-  `user_points`, `user_last_ip`, `user_warnings`, `user_field`, `user_network`) VALUES
-(1, 'alpha', '', 'alpha@site62.test', 'default/05.gif', '2015-03-01 12:00:00', 'c4ca4238a0b923820dcc509a6f75849b', '', '2025-11-01 12:00:00', 10, '10.0.0.1', '', '', ''),
-(2, 'beta', '', 'beta@site62.test', '', '2016-03-01 12:00:00', 'c81e728d9d4c2f636f067f89cc14862c', '', '2025-11-02 12:00:00', 0, '10.0.0.2', '', '', ''),
-(3, 'gamma', '', 'gamma@site62.test', 'default/99.gif', '2017-03-01 12:00:00', 'eccbc87e4b5ce2fe28308fd9f2a7baf3', '', '2025-11-03 12:00:00', 25, '10.0.0.3', '', '', '');
+  `user_points`, `user_last_ip`, `user_warnings`, `user_field`, `user_network`, `user_lang`, `user_viewemail`, `user_birthday`) VALUES
+(1, 'alpha', '', 'alpha@site62.test', 'default/05.gif', '2015-03-01 12:00:00', 'c4ca4238a0b923820dcc509a6f75849b', '', '2025-11-01 12:00:00', 10, '10.0.0.1', '', '', '', 'russian', NULL, '2015-03-01'),
+(2, 'beta', '', 'beta@site62.test', '', '2016-03-01 12:00:00', 'c81e728d9d4c2f636f067f89cc14862c', '', '2025-11-02 12:00:00', 0, '10.0.0.2', '', '', '', 'English', 1, '1990-05-17'),
+(3, 'gamma', '', 'gamma@site62.test', 'default/99.gif', '2017-03-01 12:00:00', 'eccbc87e4b5ce2fe28308fd9f2a7baf3', '', '2025-11-03 12:00:00', 25, '10.0.0.3', '', '', '', 'klingon', 0, NULL);
 
 INSERT INTO `old_categories` (`id`, `modul`, `title`, `description`, `cstatus`) VALUES
 (1, 'news', 'General', 'News of the site', 1);
@@ -691,10 +691,10 @@ INSERT INTO `old_blocks` (`bid`, `title`, `content`, `url`, `bposition`, `weight
 
 INSERT INTO `old_message` (`mid`, `title`, `content`, `expire`, `active`, `view`, `mlanguage`) VALUES
 (1, 'Notice', 'A notice of the 6.2 site', 1700007200, 1, 1, ''),
-(2, 'Lasting', 'A notice without an end', 0, 1, 1, '');
+(2, 'Lasting', 'A notice without an end', 0, 1, 1, 'ukrainian');
 
 INSERT INTO `old_voting` (`id`, `modul`, `title`, `questions`, `answer`, `date`, `multi`, `language`, `typ`, `status`) VALUES
-(1, '', 'Which one', 'Yes|No', '1|0', '2025-01-01 10:00:00', 0, '', 0, 1);
+(1, '', 'Which one', 'Yes|No', '1|0', '2025-01-01 10:00:00', 0, 'russian', 0, 1);
 
 INSERT INTO `old_rating` (`id`, `mid`, `modul`, `time`, `uid`, `host`) VALUES
 (1, 1, 'voting', '1700000000', 0, '10.0.0.9'),

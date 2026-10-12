@@ -61,8 +61,8 @@ function addProbeSchema(): Database {
     $root->exec(getProbeTable('privat'));
     $root->exec(getProbeTable('users'));
     foreach (PROBEUSER as $id => $name) {
-        $root->exec('INSERT INTO `'.PREFIX_DB.'_users` (`id`, `name`, `email`, `password`, `block`, `warnings`, `field`, `avatar`)'
-            .' VALUES ('.intval($id).', \''.$name.'\', \''.$name.'@probe.test\', \'x\', \'\', \'\', \'\', \''.$name.'.png\')');
+        $root->exec('INSERT INTO `'.PREFIX_DB.'_users` (`id`, `name`, `email`, `password`, `sig`, `block`, `warnings`, `field`, `avatar`)'
+            .' VALUES ('.intval($id).', \''.$name.'\', \''.$name.'@probe.test\', \'x\', \'\', \'\', \'\', \'\', \''.$name.'.png\')');
     }
     $GLOBALS['pdb'] = new Database($conf['db']['host'], $conf['db']['uname'], $conf['db']['pass'], $GLOBALS['pname'], $conf['db']['collate']);
     return $GLOBALS['pdb'];

@@ -137,7 +137,8 @@ into the plan, then do whatever work the step names.
 - [x] 61. ADMIN-LOG batch 3 — reading the files: the table view of `logview` and the link of a module. (2026-10-12)
 - [x] 62. ADMIN-LOG batch 4 — reference; deletes `docs/9-ADMIN-LOG-2026.md`. The reference is `docs/ARCHITECTURE.md`,
   "Journal Boundary"; the help of "Безопасность" took the journal view and the tab "Журнал входов". (2026-10-12)
-- [ ] 63. SCHEMA batch 4 — NULL, defaults, types; `_users.lang` codes.
+- [x] 63. SCHEMA batch 4 — NULL, defaults, types; `_users.lang` codes. The stand was put on the release schema and
+  collation on the way (owner, 2026-10-12). (2026-10-12)
 - [ ] 64. SCHEMA batch 5 — keys: unique email, covered indexes and prefixes out, missing ones in.
 - [ ] 65. SCHEMA batch 6 — rehearsal of `update.php` on a fresh 6.2 dump the owner provides; fresh installs.
 - [ ] 66. SCHEMA batch 7 — reference; deletes `docs/7-SCHEMA-2026.md`.

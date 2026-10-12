@@ -840,7 +840,7 @@ function getVar(string $var, string $key, string $type = '', mixed $default = ''
         'date' => function($v) {
             $v = is_string($v) ? trim($v) : '';
             $ts = strtotime($v);
-            return ($ts !== false && date('Y-m-d', $ts) === $v) ? $v : date('Y-m-d');
+            return ($ts !== false && date('Y-m-d', $ts) === $v) ? $v : '';
         },
         'raw' => fn($v) => $v,
     ];

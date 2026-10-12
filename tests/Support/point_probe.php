@@ -78,8 +78,8 @@ function addProbeSchema(): void {
     $root->exec(getProbeTable('users'));
     $root->exec(getProbeTable('points'));
     foreach (PROBEUSER as $id => $name) {
-        $root->exec('INSERT INTO `'.PREFIX_DB.'_users` (`id`, `name`, `email`, `password`, `block`, `warnings`, `field`)'
-            .' VALUES ('.$id.', \''.$name.'\', \''.$name.'@probe.test\', \'x\', \'\', \'\', \'\')');
+        $root->exec('INSERT INTO `'.PREFIX_DB.'_users` (`id`, `name`, `email`, `password`, `sig`, `block`, `warnings`, `field`)'
+            .' VALUES ('.$id.', \''.$name.'\', \''.$name.'@probe.test\', \'x\', \'\', \'\', \'\', \'\')');
     }
     $GLOBALS['pdb'] = getProbeBase();
 }
@@ -665,8 +665,9 @@ function getProbeReset(): array {
     setProbeSeed();
     $pdb = $GLOBALS['pdb'];
     $rows = [];
-    for ($i = 1000; $i < 1620; $i++) $rows[] = '('.$i.', \'wipe'.$i.'\', \'wipe'.$i.'@probe.test\', \'x\', \'\', \'\', \'\', '.($i === 1000 ? 2500000 : ($i % 10 ? 3 : 0)).')';
-    getProbeSide()->exec('INSERT INTO `'.PREFIX_DB.'_users` (`id`, `name`, `email`, `password`, `block`, `warnings`, `field`, `points`) VALUES '.implode(', ', $rows));
+    for ($i = 1000; $i < 1620; $i++) $rows[] = '('.$i.', \'wipe'.$i.'\', \'wipe'.$i.'@probe.test\', \'x\', \'\', \'\', \'\', \'\', '.($i === 1000 ? 2500000 : ($i % 10 ? 3 : 0))
+        .')';
+    getProbeSide()->exec('INSERT INTO `'.PREFIX_DB.'_users` (`id`, `name`, `email`, `password`, `sig`, `block`, `warnings`, `field`, `points`) VALUES '.implode(', ', $rows));
     $total = 2500000 + 3 * 558;
     addProbeCode('modules/account/admin/index.php', 'setPointsReset');
     $keep = [$db, $pnt, $admin, $_SESSION ?? null];

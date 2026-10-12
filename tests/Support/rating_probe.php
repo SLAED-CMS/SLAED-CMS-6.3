@@ -93,8 +93,8 @@ function addProbeSchema(): void {
     foreach (['users', 'node_types', 'nodes', 'rating_actors', 'rating_targets', 'rating_votes'] as $name) $root->exec(getProbeTable($name));
     $root->exec('INSERT INTO `'.PREFIX_DB.'_node_types` (`id`, `name`, `title`, `intro`, `active`) VALUES (1, \'story\', \'probe\', \'\', 1)');
     foreach (PROBEUSER as $id => $name) {
-        $root->exec('INSERT INTO `'.PREFIX_DB.'_users` (`id`, `name`, `email`, `password`, `block`, `warnings`, `field`)'
-            .' VALUES ('.$id.', \''.$name.'\', \''.$name.'@probe.test\', \'x\', \'\', \'\', \'\')');
+        $root->exec('INSERT INTO `'.PREFIX_DB.'_users` (`id`, `name`, `email`, `password`, `sig`, `block`, `warnings`, `field`)'
+            .' VALUES ('.$id.', \''.$name.'\', \''.$name.'@probe.test\', \'x\', \'\', \'\', \'\', \'\')');
     }
     $GLOBALS['pdb'] = getProbeBase();
 }

@@ -1411,6 +1411,30 @@ function setUpdateAttach(Database $db, string $prefix, string $tab, string $dir)
     return getUpdateRow($tab.': direct addresses of uploads/'.$dir.' turned into attachments (texts: '.$done.')', $good);
 }
 
+# The language names 6.2 stored in its settings and rows, each with the code of its lang/ file
+function getUpdateLangs(): array {
+    return ['english' => 'en', 'french' => 'fr', 'german' => 'de', 'polish' => 'pl', 'russian' => 'ru', 'ukrainian' => 'uk'];
+}
+
+# The language unit of the 6.3 data update: a 6.2 name in a language column becomes its code, and an account keeping a language no lang/ file serves takes the site one
+function setUpdateLangs(Database $db, string $prefix): array {
+    $good = true;
+    $done = 0;
+    foreach (['admins', 'blocks', 'categories', 'message', 'users', 'voting'] as $tab) {
+        foreach (getUpdateLangs() as $name => $code) {
+            $res = $db->getSqlQuery('UPDATE `'.$prefix.'_'.$tab.'` SET lang = :code WHERE LOWER(lang) = :name', ['code' => $code, 'name' => $name]);
+            $good = $good && $res !== false;
+            $done += $res ? intval($db->getSqlRowCount($res)) : 0;
+        }
+    }
+    $pars = [];
+    foreach (glob(BASE_DIR.'/lang/*.php') ?: [] as $i => $file) $pars['l'.$i] = basename($file, '.php');
+    $res = $pars ? $db->getSqlQuery('UPDATE `'.$prefix.'_users` SET lang = \'\' WHERE lang != \'\' AND lang NOT IN (:'.implode(', :', array_keys($pars)).')', $pars) : false;
+    $good = $good && $res !== false;
+    $text = 'languages: the names of 6.2 turned into codes (rows: '.$done.'), accounts without a served language back on the site one (';
+    return getUpdateRow($text.($res ? intval($db->getSqlRowCount($res)) : 0).')', $good);
+}
+
 # The configuration step of the 6.3 update for a 6.2 site, whose settings live in config/config_<name>.php as a variable of their own
 # The site values go over the shipped source of the same name, stat into statistic and seo over global; an unshipped key stays for the data units and the next form save
 # The version, the asset lists and the closed site belong to the release and the update, and a language name becomes its code
@@ -1425,7 +1449,7 @@ function setUpdateConfig(): array {
     if (!is_dir($dir) && !mkdir($dir, 0750, true)) return getUpdateRow('config: '.$dir.' could not be created', false);
     $maps = ['stat' => 'statistic', 'seo' => 'global'];
     $skip = ['news', 'pages', 'faq', 'help', 'jokes', 'content', 'links', 'files', 'media', 'templ', 'header', 'chmod', 'core', 'rewrite', 'rules', 'db'];
-    $langs = ['english' => 'en', 'french' => 'fr', 'german' => 'de', 'polish' => 'pl', 'russian' => 'ru', 'ukrainian' => 'uk'];
+    $langs = getUpdateLangs();
     $mods = array_map('basename', glob(BASE_DIR.'/modules/*', GLOB_ONLYDIR) ?: []);
     $plan = [];
     $left = [];
@@ -1851,7 +1875,7 @@ function setUpdateRun(): array {
     $text = 'the update stopped at the schema file: no data unit ran and no mark was written, correct the failed statement and run the update again';
     if ($ddl === [] || checkUpdateFail($ddl)) return array_merge($rows, getUpdateRow($text, false));
     $rows = array_merge($rows, setUpdatePoints($db, $pref), setUpdateRatings($db, $pref), setUpdateFields($db, $pref));
-    $rows = array_merge($rows, setUpdateAttach($db, $pref, 'forum', 'forum'), setUpdateAttach($db, $pref, 'privat', 'account'));
+    $rows = array_merge($rows, setUpdateAttach($db, $pref, 'forum', 'forum'), setUpdateAttach($db, $pref, 'privat', 'account'), setUpdateLangs($db, $pref));
     $rdata = getUpdateSource(CONFIG_DIR.'/rss.php')['rss'] ?? [];
     if ($rdata !== [] && (isset($rdata['temp']) || !isset($rdata['bytes'], $rdata['redirects'], $rdata['timeout']))) {
         unset($rdata['temp']);

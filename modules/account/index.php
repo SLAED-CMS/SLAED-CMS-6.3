@@ -257,10 +257,10 @@ function activate(): void {
             $uip = getIp();
             $uagent = filterCutText(getAgent(), 255);
             $rank = '';
-            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_users (id, name, `rank`, email, avatar, regdate, password, lang, ip, agent, block, warnings, field) VALUES (NULL, :uname,'
-                .' :rank, :email, :avatar, :regdate, :pwd, :lang, :ip, :agent, :block, :warnings, :field)', ['uname' => $nick, 'rank' => $rank, 'email' => $mail, 'avatar' => '',
-                'regdate' => $reg, 'pwd' => str_starts_with($pass, '$2') ? $pass : getPassHash($pass), 'lang' => $locale, 'ip' => $uip, 'agent' => $uagent, 'block' => '',
-                'warnings' => '', 'field' => '']);
+            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_users (id, name, `rank`, email, avatar, regdate, password, lang, ip, agent, sig, block, warnings, field) VALUES (NULL,'
+                .' :uname, :rank, :email, :avatar, :regdate, :pwd, :lang, :ip, :agent, :sig, :block, :warnings, :field)', ['uname' => $nick, 'rank' => $rank, 'email' => $mail,
+                'avatar' => '', 'regdate' => $reg, 'pwd' => str_starts_with($pass, '$2') ? $pass : getPassHash($pass), 'lang' => $locale, 'ip' => $uip, 'agent' => $uagent,
+                'sig' => '', 'block' => '', 'warnings' => '', 'field' => '']);
             $nuid = intval($db->getSqlLastId());
             if ($nuid) $pnt->addEvent('register', 'account', 'user:'.$nuid, $nuid);
             $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_users_temp WHERE name = :uname AND code = :cnum', ['uname' => $nick, 'cnum' => $check]);
@@ -1015,7 +1015,7 @@ function getAvatarPreset(string $avat): string {
 }
 
 # The one declaration of what a filled profile is: the counted controls of the settings form against the columns behind them, each with the value that counts as empty
-# The birthday is out because the date helper writes today into an empty field, and the signature is out because the editor owns its textarea and no attribute reaches it
+# The birthday is out because its date control takes no fill mark, and the signature is out because the editor owns its textarea and no attribute reaches it
 function getProfileFillRate(array $info): array {
     $list = ['gender' => ['gender', '0'], 'mail' => ['email', ''], 'site' => ['website', ''], 'occ' => ['occ', ''], 'from' => ['origin', ''], 'inter' => ['interest', '']];
     $full = 0;
@@ -1036,7 +1036,7 @@ function getAccountLamps(array $info, array $lnks, array $fill): array {
     $haspw = !str_starts_with((string)($info['password'] ?? ''), '!');
     $ways = ($haspw) ? [_PASSWORD] : [];
     foreach ($lnks as $lnk) $ways[] = ucfirst((string)$lnk['provider']);
-    $seen = (string)($info['viewmail'] ?? '') !== '0';
+    $seen = !empty($info['viewmail']);
     $subs = [!empty($info['newslet'])];
     if (is_active('forum')) $subs[] = !empty($info['fsmail']);
     if (!empty($conf['privat']['act'])) $subs[] = !empty($info['psmail']);
@@ -1242,7 +1242,7 @@ function edithome(): void {
         if (!empty($conf['privat']['act'])) $lins[] = getSetupSwitch(_PSMAIL, 'psmail', (string)$info['psmail'], _ACCOUNT_PSMAILNOTE);
         $tils = [['icon' => getIconName('mail'), 'title' => _ACCOUNT_MAILHEAD, 'width' => 6, 'tone' => 1, 'fields' => $lins]];
         $secs[] = ['id' => 'mail', 'icon' => getIconName('mail'), 'title' => _ACCOUNT_MAIL, 'inform' => true, 'tiles' => $tils];
-        $lins = [getSetupSwitch(_ALLOWUSERS, 'view', (string)$info['viewmail'], _ACCOUNT_VIEWNOTE)];
+        $lins = [getSetupSwitch(_ALLOWUSERS, 'view', !empty($info['viewmail']) ? '1' : '0', _ACCOUNT_VIEWNOTE)];
         $lins[] = getSetupSwitch(_ACTIVATEPERSONAL, 'blockon', (string)$info['blockon'], _ACCOUNT_BLOCKNOTE);
         $mids = getFieldIds('', 'block');
         $lins[] = [
@@ -1448,7 +1448,7 @@ function savehome(): void {
             $news = getVar('post', 'news', 'num');
             $fsmail = getVar('post', 'fsmail', 'num');
             $psmail = getVar('post', 'psmail', 'num');
-            $birth = getVar('req', 'user_birthday', 'date');
+            $birth = getVar('req', 'user_birthday', 'date', null);
             $gender = getVar('post', 'gender', 'num');
             $field = $flds['json'];
             $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET email = :email, website = :website, viewmail = :viewmail, occ = :occ, origin = :origin, interest = :interest,'
@@ -1847,11 +1847,11 @@ function oauthfinish(): void {
             oauthretry(_ERROR);
         }
         $ok = $db->getSqlQuery(
-            'INSERT INTO '.PREFIX_DB.'_users (id, name, `rank`, email, avatar, regdate, password, lang, ip, agent, block, warnings, field)'
-            .' VALUES (NULL, :uname, :rank, :email, :avatar, NOW(), :pwd, :lang, :ip, :agent, :block, :warnings, :field)',
+            'INSERT INTO '.PREFIX_DB.'_users (id, name, `rank`, email, avatar, regdate, password, lang, ip, agent, sig, block, warnings, field)'
+            .' VALUES (NULL, :uname, :rank, :email, :avatar, NOW(), :pwd, :lang, :ip, :agent, :sig, :block, :warnings, :field)',
             [
                 'uname' => $uname, 'rank' => '', 'email' => $mail, 'avatar' => '', 'pwd' => $pass, 'lang' => $locale,
-                'ip' => getIp(), 'agent' => filterCutText(getAgent(), 255), 'block' => '', 'warnings' => '', 'field' => '',
+                'ip' => getIp(), 'agent' => filterCutText(getAgent(), 255), 'sig' => '', 'block' => '', 'warnings' => '', 'field' => '',
             ]
         );
         $nuid = ($ok !== false) ? (int)$db->getSqlLastId() : 0;

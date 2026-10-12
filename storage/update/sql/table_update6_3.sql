@@ -1092,6 +1092,8 @@ UPDATE `{prefix}_users` SET
   `storynum` = COALESCE(`storynum`, 10), `grp` = COALESCE(`grp`, 0), `rank` = COALESCE(`rank`, '')
 WHERE `password` IS NULL OR `ip` IS NULL OR `regdate` IS NULL OR `newslet` IS NULL OR `fsmail` IS NULL OR `psmail` IS NULL
   OR `points` IS NULL OR `votes` IS NULL OR `tvotes` IS NULL OR `storynum` IS NULL OR `grp` IS NULL OR `rank` IS NULL;
+# A group below zero names none, as 0 does, before the column turns unsigned
+UPDATE `{prefix}_users` SET `grp` = 0 WHERE `grp` < 0;
 
 # _users: widen critical columns and fix types / defaults
 # network is deliberately absent here: the OAuth block at the end of this file archives it and drops it,
@@ -1109,7 +1111,7 @@ ALTER TABLE `{prefix}_users`
   MODIFY `votes`     INT UNSIGNED NOT NULL DEFAULT 0,
   MODIFY `tvotes`    INT UNSIGNED NOT NULL DEFAULT 0,
   MODIFY `storynum`  TINYINT UNSIGNED NOT NULL DEFAULT 10,
-  MODIFY `grp`       INT NOT NULL DEFAULT 0,
+  MODIFY `grp`       INT UNSIGNED NOT NULL DEFAULT 0,
   MODIFY `rank`      VARCHAR(25) NOT NULL DEFAULT '';
 
 # A user who never came back is NULL, not the sentinel the zero date of 6.2 was carried through above
@@ -1197,17 +1199,20 @@ CALL rencol('{prefix}_voting',       'questions',  'body');
 # accepts where it refuses a word; after the widening the 0 or 1 of the old shape, which names no plugin
 # and which getEditorKey() resolves back to plain anyway, is written as plain
 UPDATE `{prefix}_admins` SET `editor` = 0 WHERE `editor` IS NULL;
+# NULL in the title, the password and the two flags of 6.2 says nothing the empty value does not: the columns turn NOT NULL
+UPDATE `{prefix}_admins` SET `title` = COALESCE(`title`, ''), `password` = COALESCE(`password`, ''), `super` = COALESCE(`super`, 0), `smail` = COALESCE(`smail`, 0)
+WHERE `title` IS NULL OR `password` IS NULL OR `super` IS NULL OR `smail` IS NULL;
 
 ALTER TABLE `{prefix}_admins`
   MODIFY `id`       INT UNSIGNED NOT NULL AUTO_INCREMENT,
   MODIFY `name`     VARCHAR(25) NOT NULL,
-  MODIFY `title`    VARCHAR(50) DEFAULT NULL,
+  MODIFY `title`    VARCHAR(50) NOT NULL DEFAULT '',
   MODIFY `url`      VARCHAR(255) NOT NULL DEFAULT '',
   MODIFY `email`    VARCHAR(255) NOT NULL,
-  MODIFY `password` VARCHAR(255) DEFAULT NULL,
-  MODIFY `super`    BOOLEAN DEFAULT NULL,
+  MODIFY `password` VARCHAR(255) NOT NULL,
+  MODIFY `super`    BOOLEAN NOT NULL DEFAULT 0,
   MODIFY `editor`   VARCHAR(32) NOT NULL DEFAULT 'plain',
-  MODIFY `smail`    BOOLEAN DEFAULT NULL,
+  MODIFY `smail`    BOOLEAN NOT NULL DEFAULT 0,
   MODIFY `modules`  TEXT NOT NULL,
   MODIFY `lang`     VARCHAR(10) CHARACTER SET ascii COLLATE ascii_bin NOT NULL DEFAULT '',
   MODIFY `ip`       VARCHAR(45) CHARACTER SET ascii COLLATE ascii_bin NOT NULL DEFAULT '',
@@ -1288,6 +1293,7 @@ ALTER TABLE `{prefix}_favorites`
 
 CALL stopnull('{prefix}_forum', 'time', 'forum.time holds NULL rows: repair them before this upgrade');
 UPDATE `{prefix}_forum` SET `ltime` = `time` WHERE `ltime` IS NULL;
+UPDATE `{prefix}_forum` SET `body` = COALESCE(`body`, ''), `comments` = COALESCE(`comments`, 0) WHERE `body` IS NULL OR `comments` IS NULL;
 
 ALTER TABLE `{prefix}_forum`
   MODIFY `id`   INT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -1295,12 +1301,12 @@ ALTER TABLE `{prefix}_forum`
   MODIFY `ltime` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   MODIFY `name` VARCHAR(25) NOT NULL,
   MODIFY `title` VARCHAR(100) NOT NULL,
-  MODIFY `body` MEDIUMTEXT,
+  MODIFY `body` MEDIUMTEXT NOT NULL,
   MODIFY `field` MEDIUMTEXT NOT NULL,
   MODIFY `pid` INT UNSIGNED NOT NULL DEFAULT 0,
   MODIFY `cid` INT UNSIGNED NOT NULL DEFAULT 0,
   MODIFY `uid` INT UNSIGNED NOT NULL DEFAULT 0,
-  MODIFY `comments` INT UNSIGNED DEFAULT 0,
+  MODIFY `comments` INT UNSIGNED NOT NULL DEFAULT 0,
   MODIFY `counter` INT UNSIGNED NOT NULL DEFAULT 0,
   MODIFY `score` INT UNSIGNED NOT NULL DEFAULT 0,
   MODIFY `ratings` INT UNSIGNED NOT NULL DEFAULT 0,
@@ -1334,11 +1340,12 @@ CALL runiftype('{prefix}_message', 'expire', 'varchar', 'UPDATE `{prefix}_messag
 CALL modcol('{prefix}_message', 'expire', 'DATETIME DEFAULT NULL');
 
 CALL stopnull('{prefix}_newsletter', 'time', 'newsletter.time holds NULL rows: repair them before this upgrade');
+UPDATE `{prefix}_newsletter` SET `body` = '' WHERE `body` IS NULL;
 
 ALTER TABLE `{prefix}_newsletter`
   MODIFY `id`    INT UNSIGNED NOT NULL AUTO_INCREMENT,
   MODIFY `title` VARCHAR(50) NOT NULL,
-  MODIFY `body` MEDIUMTEXT,
+  MODIFY `body` MEDIUMTEXT NOT NULL,
   MODIFY `send` INT UNSIGNED NOT NULL DEFAULT 0,
   MODIFY `time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP;
 
@@ -1407,27 +1414,37 @@ UPDATE `{prefix}_users` SET `field`    = '' WHERE `field`    IS NULL;
 UPDATE `{prefix}_users` SET `interest` = '' WHERE `interest` IS NULL;
 UPDATE `{prefix}_users` SET `theme`    = '' WHERE `theme`    IS NULL;
 UPDATE `{prefix}_users` SET `agent`    = '' WHERE `agent`    IS NULL;
+UPDATE `{prefix}_users` SET `occ`      = '' WHERE `occ`      IS NULL;
+UPDATE `{prefix}_users` SET `origin`   = '' WHERE `origin`   IS NULL;
+UPDATE `{prefix}_users` SET `sig`      = '' WHERE `sig`      IS NULL;
+# The public profile hides the address of a NULL row, so NULL is the 0 of a hidden address
+UPDATE `{prefix}_users` SET `viewmail` = 0  WHERE `viewmail` IS NULL;
+# A language is a code of lang/ or, before update.php turns the 6.2 names into codes, a name of 6.2; anything else is no choice and cannot narrow to ASCII
+UPDATE `{prefix}_users` SET `lang`     = '' WHERE `lang` NOT REGEXP '^[A-Za-z]{2,10}$';
 
 ALTER TABLE `{prefix}_users`
   MODIFY `name`     VARCHAR(25) NOT NULL,
   MODIFY `email`    VARCHAR(255) NOT NULL,
   MODIFY `website`  VARCHAR(255) NOT NULL DEFAULT '',
   MODIFY `avatar`   VARCHAR(255) NOT NULL DEFAULT '',
-  MODIFY `occ`      VARCHAR(100) DEFAULT NULL,
-  MODIFY `origin`   VARCHAR(100) DEFAULT NULL,
+  MODIFY `occ`      VARCHAR(100) NOT NULL DEFAULT '',
+  MODIFY `origin`   VARCHAR(100) NOT NULL DEFAULT '',
   MODIFY `interest` VARCHAR(150) NOT NULL DEFAULT '',
-  MODIFY `sig`      TEXT,
-  MODIFY `viewmail` BOOLEAN DEFAULT NULL,
+  MODIFY `sig`      TEXT NOT NULL,
+  MODIFY `viewmail` BOOLEAN NOT NULL DEFAULT 0,
   MODIFY `blockon`  BOOLEAN NOT NULL DEFAULT 0,
   MODIFY `block`    TEXT NOT NULL,
   MODIFY `theme`    VARCHAR(255) NOT NULL DEFAULT '',
-  MODIFY `lang`     VARCHAR(255) NOT NULL DEFAULT 'russian',
+  MODIFY `lang`     VARCHAR(10) CHARACTER SET ascii COLLATE ascii_bin NOT NULL DEFAULT '',
   MODIFY `access`   BOOLEAN NOT NULL DEFAULT 0,
   MODIFY `birthday` DATE DEFAULT NULL,
   MODIFY `gender`   BOOLEAN NOT NULL DEFAULT 0,
   MODIFY `warnings` TEXT NOT NULL,
   MODIFY `field`    MEDIUMTEXT NOT NULL,
   MODIFY `agent`    VARCHAR(255) NOT NULL DEFAULT '';
+
+# The date filter wrote today into an empty birthday field, so a birthday on the day of the registration is none
+UPDATE `{prefix}_users` SET `birthday` = NULL WHERE `birthday` = DATE(`regdate`);
 
 UPDATE `{prefix}_users_temp` SET `regdate` = '1970-01-01 00:00:01' WHERE `regdate` = '0000-00-00 00:00:00';
 
