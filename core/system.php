@@ -1703,10 +1703,16 @@ function getSeoBreadcrumbSchema(string $name, int $cid, string $title, string $u
     return ['@context' => 'https://schema.org', '@type' => 'BreadcrumbList', 'itemListElement' => $items];
 }
 
-# Sweep cache files older than the retention window of Cache::KEEP as a scheduler job and report the removed count
+# Sweep cache files older than Cache::KEEP and logins older than 90 days, a thousand rows a statement, as a scheduler job and report what it removed
 function addCacheGcTask(): array {
+    global $db;
     $num = Cache::deleteStale(CACHE_DIR.'/data', Cache::KEEP) + Cache::deleteStale(CACHE_DIR.'/templates', Cache::KEEP);
-    return ['status' => 'success', 'message' => 'Removed '.$num.' cache files'];
+    $rows = 0;
+    do {
+        $del = $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_login_log WHERE time < NOW() - INTERVAL 90 DAY LIMIT 1000') ? intval($db->getSqlAffected()) : 0;
+        $rows += $del;
+    } while ($del === 1000);
+    return ['status' => 'success', 'message' => 'Removed '.$num.' cache files and '.$rows.' logins'];
 }
 
 # Scheduler job sampling the server once a minute for the presentation module: the two history writers of monitor.json run first, then the snapshot keys join their rows
@@ -3886,8 +3892,8 @@ function getIconName(string $con): string {
         'categories' => 'folder', 'delete' => 'trash', 'download' => 'download', 'editor' => 'pencil-square', 'favorites' => 'star',
         'fields' => 'plus-square-dotted', 'fmcompress' => 'file-zip', 'fmcopy' => 'files', 'fmdelete' => 'trash3', 'fmedit' => 'pencil-square',
         'fmmove' => 'folder-symlink', 'fmrename' => 'input-cursor-text', 'focus' => 'lightning-charge', 'groups' => 'people', 'home' => 'house-door',
-        'hub' => 'grid', 'image' => 'image', 'images' => 'images', 'items' => 'grid', 'keys' => 'key', 'language' => 'translate', 'logout' => 'box-arrow-right',
-        'mail' => 'envelope-paper', 'messages' => 'envelope', 'module' => 'puzzle', 'modules' => 'gpu-card', 'oauth' => 'diagram-3',
+        'hub' => 'grid', 'image' => 'image', 'images' => 'images', 'items' => 'grid', 'keys' => 'key', 'language' => 'translate', 'logins' => 'box-arrow-in-right',
+        'logout' => 'box-arrow-right', 'mail' => 'envelope-paper', 'messages' => 'envelope', 'module' => 'puzzle', 'modules' => 'gpu-card', 'oauth' => 'diagram-3',
         'password' => 'shield-plus', 'person' => 'person', 'personal' => 'person-lines-fill', 'privacy' => 'shield-lock',
         'profile' => 'person-vcard', 'rating' => 'star-fill', 'read' => 'envelope-open', 'rss' => 'rss', 'save' => 'archive', 'search' => 'search',
         'settings' => 'gear', 'site' => 'globe2', 'system' => 'pc-display', 'tags' => 'tags', 'unread' => 'envelope', 'unsave' => 'bookmark-dash',
@@ -5475,35 +5481,60 @@ function addFilescanTask(): array {
     ];
 }
 
-# Append one login attempt to the admin or the user log: who tried, under which login, from where, with which browser, when, and whether it was let in
-# No attempted password is ever written: a journal holding one is a credential store that travels into backups and rotation archives
-# Each surface answers for its own journal, and the flag is read before the kind becomes a string: a non-empty string is true either way, which left log_u unreachable
-# A full journal is moved away before the file is opened, so the entry that triggers the rotation lands in the new file and not in the one addCompress() took
-function addLoginReport(int $id, int $typ, string $login): void {
-    global $admin, $conf, $user;
-    $adm = ($id !== 0);
-    $id = $adm ? 'admin' : 'user';
-    if ($adm ? $conf['security']['log_a'] : $conf['security']['log_u']) {
-        $typ = ($typ) ? _YES : _NO;
-        $ip = getIp();
-        $login = ($login) ? "\n"._NICKNAME.': '.substr($login, 0, 25) : '';
-        $agent = getAgent();
-        $url = filterText(getenv('REQUEST_URI'));
-        $ladmin = ($admin) ? "\n"._ADMIN.': '.substr($admin[1], 0, 25) : '';
-        $luser = ($user) ? "\n"._USER.': '.substr($user[1], 0, 25) : '';
-        $path = LOGS_DIR.'/'.$id.'.log';
-        clearstatcache(true, $path);
-        if (is_file($path) && filesize($path) > $conf['security']['log_size']) {
-            addCompress(LOGS_DIR, $path, $id.'_'.date('Y-m-d_H-i').'.log', 'auto', true, true);
-        }
-        if ($fhandle = fopen($path, 'ab')) {
-            fwrite(
-                $fhandle,
-                _INPUT.': '.$typ."\n"._IP.': '.$ip.$login.$ladmin.$luser."\n"._URL.': '.$url."\n"._BROWSER.': '.$agent."\n"._DATE.': '.date(_TIMESTRING)."\n---\n"
-            );
-            fclose($fhandle);
-        }
+# Record one login attempt, never its password: a row of _login_log always, and the block of admin.log or user.log while log_a or log_u is on
+function addLoginLog(int $uid, bool $adm, string $res, string $login, string $way = 'login'): void {
+    global $admin, $conf, $db, $user;
+    $ip = getIp();
+    $agent = getAgent();
+    $pars = ['uid' => $uid, 'adm' => (int)$adm, 'res' => $res, 'way' => $way, 'ip' => $ip, 'agent' => filterCutText($agent, 255)];
+    $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_login_log (uid, admin, result, way, ip, agent) VALUES (:uid, :adm, :res, :way, :ip, :agent)', $pars);
+    if (!($adm ? $conf['security']['log_a'] : $conf['security']['log_u'])) return;
+    $chan = $adm ? 'admin' : 'user';
+    $typ = ($res === 'ok') ? _YES : _NO;
+    $login = ($login) ? "\n"._NICKNAME.': '.substr($login, 0, 25) : '';
+    $url = filterText(getenv('REQUEST_URI'));
+    $ladmin = ($admin) ? "\n"._ADMIN.': '.substr($admin[1], 0, 25) : '';
+    $luser = ($user) ? "\n"._USER.': '.substr($user[1], 0, 25) : '';
+    $path = LOGS_DIR.'/'.$chan.'.log';
+    clearstatcache(true, $path);
+    if (is_file($path) && filesize($path) > $conf['security']['log_size']) {
+        addCompress(LOGS_DIR, $path, $chan.'_'.date('Y-m-d_H-i').'.log', 'auto', true, true);
     }
+    if ($fhandle = fopen($path, 'ab')) {
+        fwrite(
+            $fhandle,
+            _INPUT.': '.$typ."\n"._IP.': '.$ip.$login.$ladmin.$luser."\n"._URL.': '.$url."\n"._BROWSER.': '.$agent."\n"._DATE.': '.date(_TIMESTRING)."\n---\n"
+        );
+        fclose($fhandle);
+    }
+}
+
+# Read the logins a filter of uid, admin, result, way and a period from/to selects, newest first, with their total; $num 0 reads the total alone
+function getLoginLog(array $filt, int $page, int $num): array {
+    global $db;
+    $where = [];
+    $pars = [];
+    if (isset($filt['uid'])) [$where[], $pars['uid']] = ['l.uid = :uid', intval($filt['uid'])];
+    if (isset($filt['admin'])) [$where[], $pars['adm']] = ['l.admin = :adm', $filt['admin'] ? 1 : 0];
+    if (!empty($filt['result'])) {
+        $res = [];
+        foreach (array_values((array)$filt['result']) as $i => $val) [$res[], $pars['r'.$i]] = [':r'.$i, (string)$val];
+        $where[] = 'l.result IN ('.implode(', ', $res).')';
+    }
+    if (!empty($filt['way'])) [$where[], $pars['way']] = ['l.way = :way', (string)$filt['way']];
+    if (!empty($filt['from'])) [$where[], $pars['from']] = ['l.time >= :from', (string)$filt['from']];
+    if (!empty($filt['to'])) [$where[], $pars['to']] = ['l.time < :to', (string)$filt['to']];
+    $cond = $where ? ' WHERE '.implode(' AND ', $where) : '';
+    [$total] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(*) FROM '.PREFIX_DB.'_login_log AS l'.$cond, $pars)) ?: [0];
+    $rows = [];
+    if ($num > 0 && $total > 0) {
+        $sql = 'SELECT l.id, l.uid, l.admin, l.result, l.way, l.ip, l.agent, l.time, COALESCE(a.name, u.name, \'\') AS name FROM '.PREFIX_DB.'_login_log AS l'
+            .' LEFT JOIN '.PREFIX_DB.'_admins AS a ON (l.admin = 1 AND a.id = l.uid)'
+            .' LEFT JOIN '.PREFIX_DB.'_users AS u ON (l.admin = 0 AND u.id = l.uid)'.$cond.' ORDER BY l.time DESC, l.id DESC LIMIT :offset, :limit';
+        $result = $db->getSqlQuery($sql, $pars + ['offset' => (max(1, $page) - 1) * $num, 'limit' => $num]);
+        while ($result && ($row = $db->getSqlRow($result))) $rows[] = $row;
+    }
+    return ['rows' => $rows, 'total' => intval($total)];
 }
 
 # Check user acess

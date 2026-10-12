@@ -6,6 +6,7 @@
 
 # CLI probe for the journals of docs/ARCHITECTURE.md, "Private Data Boundary": no secret of a request reaches a journal
 # It boots the real core with the configuration copied into scratch and every journal of the batch switched on there, so nothing below config/ or storage/ is written
+# The rows the login writer adds to _login_log of the site database are deleted again right after it
 # The request carries a password field, a cookie and a session value, each a random string the test then looks for in every file the run left in LOGS_DIR
 # Modes: write drives both writers and the dashboard reader once; rotate fills the user login journal and warn.log past the limit and reports where the next entries went
 $pmode = (string)($argv[1] ?? '');
@@ -42,13 +43,16 @@ function getProbeFiles(): array {
     return $out;
 }
 
-addLoginReport(0, 0, 'probeuser');
+[$pmax] = $db->getSqlRow($db->getSqlQuery('SELECT COALESCE(MAX(id), 0) FROM '.PREFIX_DB.'_login_log')) ?: [0];
+addLoginLog(0, false, 'password', 'probeuser');
+$db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_login_log WHERE id > :max', ['max' => $pmax]);
 if ($pmode === 'rotate') {
     Logger::addWarn('warning', 'probe rotation');
     echo json_encode(['files' => getProbeFiles()]);
     exit;
 }
-addLoginReport(1, 0, 'probeadmin');
+addLoginLog(0, true, 'password', 'probeadmin');
+$db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_login_log WHERE id > :max', ['max' => $pmax]);
 $pfiles = getProbeFiles();
 foreach (array_keys($pfiles) as $name) {
     if ($name !== 'request.log') unlink(LOGS_DIR.'/'.$name);
@@ -56,6 +60,6 @@ foreach (array_keys($pfiles) as $name) {
 echo json_encode([
     'keys' => $pkeys,
     'files' => $pfiles,
-    'params' => (new ReflectionFunction('addLoginReport'))->getNumberOfParameters(),
+    'params' => (new ReflectionFunction('addLoginLog'))->getNumberOfParameters(),
     'event' => getSecurityEventHours(24),
 ]);

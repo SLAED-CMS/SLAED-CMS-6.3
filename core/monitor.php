@@ -646,43 +646,9 @@ function getLogLineTimestamp(string $line): int|null {
     return null;
 }
 
-# Counts failed login events in recent logs within the specified hour interval
-function getFailedLoginCountHours(int $hours = 24): int|string {
-    $file = (defined('LOGS_DIR') ? (string)LOGS_DIR : BASE_DIR.'/storage/logs').'/admin.log';
-    if (!is_file($file) || !is_readable($file)) return 'N/A';
-    $tail = getFileTailChunk($file, 262144);
-    $lines = getTailLines($tail, 2500);
-    if (!$lines) return 0;
-    $thresh = time() - ($hours * 3600);
-    $count = 0;
-    $block = [];
-    $isbound = static fn(string $line): bool => preg_match('/^-{3,}$/', $line) === 1;
-    $hasauth = static fn(string $text): bool =>
-        preg_match('/(login|auth|вход)/iu', $text) === 1;
-    $isfailed = static fn(string $text): bool =>
-        preg_match('/(\bno\b|нет|fail|failed|denied|invalid|unauthori[sz]ed|blocked)/iu', $text) === 1;
-    $flushfn = static function(array $rows) use (&$count, $thresh, $hasauth, $isfailed): void {
-        if (!$rows) return;
-        $text = implode("\n", $rows);
-        if (!$hasauth($text)) return;
-        if (!$isfailed($text)) return;
-        $ts = null;
-        foreach ($rows as $row) {
-            $ts = getLogLineTimestamp($row);
-            if ($ts !== null) break;
-        }
-        if ($ts !== null && $ts >= $thresh) $count++;
-    };
-    foreach ($lines as $line) {
-        if ($isbound($line)) {
-            $flushfn($block);
-            $block = [];
-            continue;
-        }
-        $block[] = $line;
-    }
-    $flushfn($block);
-    return $count;
+# Count the refused logins of the panel within the last hours from _login_log
+function getFailedLoginCountHours(int $hours = 24): int {
+    return getLoginLog(['admin' => 1, 'result' => ['password', 'blocked'], 'from' => date('Y-m-d H:i:s', time() - $hours * 3600)], 1, 0)['total'];
 }
 
 # Splits SERVER_SOFTWARE into the raw string, the web server name and its version, so the admin monitor and the presentation page read one parser

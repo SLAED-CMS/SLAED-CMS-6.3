@@ -8,8 +8,9 @@ reads their own in the profile and the panel reads them all. The journals are re
 module links to its entries there. The plan replaces the client-only "Журнал действий" (Э30) of the stand
 `public/demo/admin/comments.html` and takes over the login journal of `docs/2027-CORE.md` (section 3).
 
-Status: open; batch 0 is the first step. The order of the batches is kept in `docs/ROADMAP-2026.md`. Update this line
-as batches land.
+Status: batch 0 done on 2026-10-12 (the proposals taken, the functions named); batch 1 done on 2026-10-12 (the
+login table, its screens, the monitor and the cleanup on it); batch 2 is next. The order of the
+batches is kept in `docs/ROADMAP-2026.md`. Update this line as batches land.
 
 No line numbers anywhere in this document on purpose: every reference names the table, the column, the function or
 the file it points at, and that name is what to search for.
@@ -43,10 +44,10 @@ Taken by the owner on 2026-10-12:
   POSTs of that admin like any other, and the connector plan says so), and the receiver of CSP reports of
   `docs/2027-CORE.md` (question 9).
 - **A login is written at one point.** Every login, by password or by OAuth, of the site or of the panel, is written
-  by `addLoginReport()` alone: one event in `admin.log` or `user.log` and one row of `_login_log`. `oauth.log` keeps the
+  by `addLoginLog()` alone: one event in `admin.log` or `user.log` and one row of `_login_log`. `oauth.log` keeps the
   events of the protocol only — the start, the errors of a provider, link, unlink, a created account — and no longer a
   second record of the login itself (`oauth_callback_success`); a refused password of the link form is the refused
-  login of `addLoginReport()`, not a second event `link_login_failed`. The monitor counts the refused logins of the
+  login of `addLoginLog()`, not a second event `link_login_failed`. The monitor counts the refused logins of the
   panel from `_login_log`. The failure counter of the captcha (`Captcha::registerLoginFailure()`) stays: it is a short
   window per address that decides when the captcha shows, not a journal.
 - **The logins are shown once.** The tab "Журнал входов" of "Безопасность" reads `_login_log`; the table view of
@@ -58,7 +59,7 @@ Taken by the owner on 2026-10-12:
   were deleted on 2026-10-12; nothing is carried over. Empty `user.log`, `oauth.log` and `request.log` were created in
   their place beside the existing `admin.log`.
 
-Proposed by the plan on 2026-10-12, to be put to the owner in batch 0; they stand unless the owner overrules them:
+Proposed by the plan and taken by the owner unchanged in batch 0 on 2026-10-12:
 
 - **The table is written whatever the switches say.** `log_a` and `log_u` keep switching the events of `admin.log`
   and `user.log`; the rows of `_login_log` are written always, because the profile shows them to the user and the
@@ -76,11 +77,16 @@ Proposed by the plan on 2026-10-12, to be put to the owner in batch 0; they stan
 - **Every journal of `Logger` opens as a table** in `logview`, not only `admin.log`: they share one format, so one
   reader serves them all; `filescan_tree.log` keeps the raw view.
 - **The link of a module is shown to an administrator who may open "Безопасность"** and to no one else.
+- **The link stands in every module at once** (owner, batch 0): `getTplAdminTabs()` adds "Журнал действий" to the tab
+  strip of whatever module it draws, so a module written later carries it without a line of its own; there is no
+  function of its own for the address and no module adds the link by hand.
 - **The tab "Журнал входов"** filters by account, panel or site, result, way and period.
 - **A login with a name that matches no account** is a row with `uid` 0, seen in the panel and in no profile.
 - **`way` tells a password login from an OAuth one**, a column the table of `docs/2027-CORE.md` did not have.
 - **The results** are `ok`, `password` and `blocked` now; the steps of TOTP in `docs/2027-CORE.md` add `totp` and
-  `recovery` when they land.
+  `recovery` when they land. `blocked` is a refusal by a guard before the password counts — the captcha with its
+  limit of attempts, or the stale token of the form of the site; `password` is every other refusal (batch 1). The
+  panel looks the name up even when the captcha refused, so a blocked attempt on a real administrator keeps its id.
 
 ## What exists today
 
@@ -127,6 +133,41 @@ Confirmed on 2026-10-12 against the code.
 
 ## Design
 
+### Functions
+
+Approved by the owner in batch 0 on 2026-10-12 as one standard: every store of a journal has one writer and one
+reader, and every name carries `Log` or the channel. Nothing else writes or reads a journal; a function not in this
+list needs the owner's approval first.
+
+| Store | Writes | Reads |
+| --- | --- | --- |
+| the files of `storage/logs/` | `Logger::add<Channel>(string $levl, string $mesg, array $ctx = []): bool`, one per channel | `Logger::getEntries(string $chan, array $filt, int $page, int $num): array` |
+| the table `_login_log` | `addLoginLog(int $uid, bool $adm, string $res, string $login, string $way = 'login'): void` in `core/system.php` | `getLoginLog(array $filt, int $page, int $num): array` in `core/system.php` |
+| an action of the panel | `setAdminLog(array $data): void` notes it, `addAdminLog(): bool` writes it, both in `core/security.php` | `Logger::getEntries('admin', …)` |
+
+- **`Logger`** keeps `addPhp()`, `addSql()`, `addFile()`, `addSite()`, `addWarn()` and `addHack()` and gains
+  `addAdmin()`, `addUser()`, `addOauth()`, `addDatabase()`, `addFilescan()` and `addRequest()`, the last replacing the
+  one direct `Logger::addEntry('request', …)` of `core/security.php`; every channel then has its method and no caller
+  names a channel by string. `getEntries()` reads what `addEntry()` writes, so the format has one owner. The channels
+  without the request body are listed in the class constant `BARECHANS`, spelled without an underscore like
+  `MASKKEYS` and every other class constant of `core/classes/`.
+- **Removed:** `Oauth::setLog()` (its 34 calls — 30 in `modules/account/index.php`, one in
+  `modules/account/admin/index.php`, three `self::setLog()` inside `Oauth` — call `Logger::addOauth()`, the level
+  written where the event is raised), `addDblog()` of `admin/modules/database.php` and `write_log()` of the file scan.
+- **Renamed:** `addLoginReport()` becomes `addLoginLog()`; its five callers in `admin/index.php` and
+  `modules/account/index.php` pass the account, the result and the way. `tests/Support/journal_probe.php` calls it
+  twice and reflects on it, and `JournalSecretTest` counts its parameters (three today, five then, still without a
+  password); both follow the rename.
+- **`getLoginLog()`** serves the profile (filter by `uid`), the tab of the panel and the count of
+  `getFailedLoginCountHours()`, which keeps its name and loses its parser of text blocks. It returns the rows and the
+  total.
+- **`setAdminLog()`** is called by `checkAdminPost()` with the scope, which opens the record and registers
+  `addAdminLog()` for the end of the request, and by `setRedirect()` with the result, which does nothing while no
+  record is open; a second open changes nothing.
+- **The handlers** are `logins()` (`op=logins`) in `modules/account/index.php` and in `admin/modules/security.php`.
+- **Unchanged names:** `addCacheGcTask()` deletes the old rows, `getTplAdminTabs()` draws the link, `logview()` shows
+  the table.
+
 ### Login table
 
 `_login_log`, on the domains of `docs/7-SCHEMA-2026.md`:
@@ -146,18 +187,19 @@ Keys: `PRIMARY (id)`, `uid_time (admin, uid, time, id)` for the profile and the 
 the panel, the count of the monitor and the cleanup. The trap of `docs/2027-CORE.md` is kept out: no unique key over
 `(uid, time)` and no `INSERT IGNORE`, or two attempts within one second would keep only one.
 
-`addLoginReport()` alone writes the row, so it learns the account and the way: its callers pass the id they found (0
+`addLoginLog()` alone writes the row, so it learns the account and the way: its callers pass the id they found (0
 for a name that matches none) and `setUserLogin()` passes `oauth` when `oauthlogin()` called it. `agent` is cut to its
 column by `filterCutText()`, as every writer of an outside value is since SCHEMA batch 2. `getFailedLoginCountHours()`
-counts the refused rows with `admin = 1`. `cachegc` deletes rows older than 90 days in batches. The 6.2 path creates
-the table with `CREATE TABLE IF NOT EXISTS` in `table_update6_3.sql` and lists it in its `setconv` block.
+counts the refused rows with `admin = 1` through `getLoginLog()`. `cachegc` deletes rows older than 90 days in
+batches. The 6.2 path creates the table with `CREATE TABLE IF NOT EXISTS` in `table_update6_3.sql` and lists it in its
+`setconv` block.
 
 ### Channels
 
 `Logger` gains the channels `admin`, `user`, `oauth`, `database` and `filescan`, written to the files of those names
-and rotated by `addLine()` like the others. The first three carry the request without its body (see "Decisions").
-`addLoginReport()`, `Oauth::setLog()`, `addDblog()` and the file scan write through them and lose their own file
-handling.
+and rotated by `addLine()` like the others; the first three, listed in `BARECHANS`, carry the request without its
+body (see "Decisions"). `addLoginLog()`, `addAdminLog()`, the OAuth handlers, the database tool and the file scan
+write through the methods of "Functions" and keep no file handling of their own.
 
 An event of the panel adds to the common fields:
 
@@ -171,26 +213,26 @@ An event of the panel adds to the common fields:
 | `num` | how many ids a bulk action named |
 | `result` | `done`, `refused`, or `open` for a form shown again or a request ended without an answer |
 
-A login keeps what `addLoginReport()` writes today: whether it was let in, the name tried, the administrator or the
-user already signed in.
+A login keeps what `addLoginReport()` writes today, now written by `addLoginLog()`: whether it was let in, the name
+tried, the administrator or the user already signed in.
 
 ### Write
 
-`checkAdminPost()` notes the request once it passes: scope, `op`, the first id of the known keys (`id`, `bid`, `mid`,
-`cid`, `nid`, `uid`, `aid`) or of the list `id[]` with its count. A second call in the same request changes nothing.
-`setRedirect()` notes the result from `$warn`. One line is written when the request ends, so a handler that stops
-without a redirect is recorded too. The two order handlers of `core/admin.php` move onto `checkAdminPost()` with
-their scopes. A failed write never breaks the action it records. The functions this needs are named in batch 0 and
-approved before they are written.
+`checkAdminPost()` notes the request through `setAdminLog()` once it passes: scope, `op`, the first id of the known
+keys (`id`, `bid`, `mid`, `cid`, `nid`, `uid`, `aid`) or of the list `id[]` with its count. A second call in the same
+request changes nothing.
+`setRedirect()` notes the result from `$warn` through the same function. `addAdminLog()` writes one line when the
+request ends, so a handler that stops without a redirect is recorded too. The two order handlers of `core/admin.php`
+move onto `checkAdminPost()` with their scopes. A failed write never breaks the action it records.
 
 ### Read
 
-`logview` shows a journal of `Logger` as a table instead of raw text: time, level, message, address and, for
-`admin.log`, who, module, action, object and result, newest first, with filters and the pager of the panel; a line
-that is not JSON — an old block of a site updated from 6.2 — is skipped. `admin.log` opens on its actions; its filter
-of events shows the logins too. `filescan_tree.log` keeps the raw view. A module links to
-`admin.php?name=security&op=logview&file=admin&modul=<scope>`. The words of the actions come from the language
-constants of the panel in all six locales.
+`logview` shows a journal of `Logger`, read by `Logger::getEntries()`, as a table instead of raw text: time, level,
+message, address and, for `admin.log`, who, module, action, object and result, newest first, with filters and the
+pager of the panel; a line that is not JSON — an old block of a site updated from 6.2 — is skipped. `admin.log` opens
+on its actions; its filter of events shows the logins too. `filescan_tree.log` keeps the raw view. The tab strip of
+`getTplAdminTabs()` links every module to `admin.php?name=security&op=logview&file=admin&modul=<scope>`. The words
+of the actions come from the language constants of the panel in all six locales.
 
 ## Batches
 
@@ -201,42 +243,55 @@ straight from the text of `admin.log` onto the table and never reads a format in
 ### Batch 0 — decision
 
 The proposals of "Decisions" put to the owner, the answers written into this plan; the list of the new functions with
-their names, approved before any code.
+their names, approved before any code. Done on 2026-10-12: the proposals taken unchanged, the link in every module,
+the functions in "Design", "Functions".
 
 ### Batch 1 — login table
 
-The table in `table.sql` and `table_update6_3.sql` and on the stand; `addLoginReport()` learns the account and the
-way and writes a row; the monitor counts the refused logins of the panel from the table; `cachegc` removes rows older
+The table in `table.sql` and `table_update6_3.sql` and on the stand; `addLoginReport()` becomes `addLoginLog()`,
+learns the account, the result and the way and writes a row, its file block staying until batch 2; `getLoginLog()`
+reads the rows; the monitor counts the refused logins of the panel from the table; `cachegc` removes rows older
 than 90 days; the profile screen "Журнал входов" of the account module with its pager, in both themes; the tab "Журнал
 входов" of "Безопасность" with its filters; the language constants of the account module and of the panel in six
 locales. The batch ends with `/schema` showing no drift and runs `SchemaConventionTest`, `SchemaUpdateValidationTest`
 and `UpdateSiteTest`. Tests: an accepted and a refused login of the site and of the panel write one row each with
 `log_u` off, two attempts in one second two rows, an OAuth login one row with `way` `oauth`; a name that matches no
 account writes `uid` 0 and shows in no profile; a user reads only their own rows; the panel filters; the monitor counts
-the refused rows of the panel; `cachegc` removes only rows older than 90 days; the 6.2 update creates the table.
+the refused rows of the panel; `cachegc` removes only rows older than 90 days; the 6.2 update creates the table;
+`JournalSecretTest` and its probe on the new name and parameters.
+
+Done on 2026-10-12. The words of the table (`_ACCOUNT_LOGINS` and the results, the way and the note of the tile)
+stand in `lang/*.php`, because the profile and the panel both read them and the language file of the account module
+clashes with the one of the panel. The tab strip of "Безопасность" is one array `$tabset` of the module. The tests
+are `LoginLogTest` over `tests/Support/login_probe.php`, a disposable schema; `journal_probe.php` deletes the rows it
+writes into the site database.
 
 ### Batch 2 — file journals
 
-The five channels in `Logger`; `addLoginReport()`, `Oauth::setLog()`, `addDblog()` and the file scan on them; the
-login written once (`oauth_callback_success` and `link_login_failed` no longer written beside it); the record in
-`checkAdminPost()` and `setRedirect()`, the write at the end of the request; the two order handlers on
-`checkAdminPost()`. On the stand the old-format `admin.log`, `database.log` and `filescan.log` are emptied once the
-format changes. Tests: a POST of the panel that passes writes one line with scope, operation, target and result and
-no request body; a refused token writes nothing; a bulk action writes its count; a handler that shows its form again
-writes `open`; a request that checks twice writes one line; a failed write leaves the action done; an accepted and a
-refused login of the panel and of the site; an OAuth login writes one login event and no second one in `oauth.log`;
-a protocol event of OAuth; a line of the database tool and of the file scan; the rotation of a channel.
+The five channels in `Logger` and a method for each of its channels, `addRequest()` included; `addLoginLog()`, the
+OAuth handlers, the database tool and the file scan on them, `Oauth::setLog()`, `addDblog()` and `write_log()`
+deleted; the login written once (`oauth_callback_success` and `link_login_failed` no longer written beside it);
+`setAdminLog()` in `checkAdminPost()` and `setRedirect()`, `addAdminLog()` at the end of the request; the two order
+handlers on `checkAdminPost()`. On the stand the old-format `admin.log`, `database.log` and `filescan.log` are emptied
+once the format changes. Tests: a POST of the panel that passes writes one line with scope, operation, target and
+result and no request body; a refused token writes nothing; a bulk action writes its count; a handler that shows its
+form again writes `open`; a request that checks twice writes one line; a failed write leaves the action done; an
+accepted and a refused login of the panel and of the site; an OAuth login writes one login event and no second one in
+`oauth.log`; a protocol event of OAuth; a line of the database tool and of the file scan; the rotation of a channel,
+which replaces the rotation of `user.log` by `addLoginReport()` that `JournalSecretTest` checks today.
 
 ### Batch 3 — reading the files
 
-The table view of `logview` with its filters and pager, `admin.log` opening on its actions; the link "Журнал действий"
-of a module, beginning with comments; the language constants in six locales; the template parts in both themes where
-the panel needs them; the block Э30 of the stand replaced by the link. Tests: the filters, the pager, the skipped
-foreign line and the link over real requests, and an administrator without "Безопасность" sees no link.
+`Logger::getEntries()`; the table view of `logview` with its filters and pager, `admin.log` opening on its actions;
+the link "Журнал действий" in the tab strip of `getTplAdminTabs()`, so in every module at once; the language constants
+in six locales; the template parts in both themes where the panel needs them; the block Э30 of the stand replaced by
+the link. Tests: the filters, the pager, the skipped foreign line and the link over real requests, and an
+administrator without "Безопасность" sees no link.
 
 ### Batch 4 — reference
 
-The journals, their format and the login table in the permanent documentation, the change in `docs/VERSIONS.md`; the
+The journals, their format, the functions of "Functions" and the login table in the permanent documentation (the
+journal table of `docs/ARCHITECTURE.md`, which names `addLoginLog()` since batch 1 but not yet the table), the change in `docs/VERSIONS.md`; the
 references to this plan in `docs/2027-CORE.md` and `docs/2027-CONNECTOR.md` point at that reference. Deletes this
 file.
 

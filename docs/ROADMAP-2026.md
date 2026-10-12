@@ -127,10 +127,11 @@ into the plan, then do whatever work the step names.
 - [x] 56. SCHEMA batch 2 — text columns: `utf8mb4_unicode_520_ci` from one place, the text domains, cut writes.
   (2026-10-12)
 - [x] 57. SCHEMA batch 3 — time: no `VARCHAR` time, moments and timers on their forms. (2026-10-12)
-- [ ] 58. ADMIN-LOG batch 0 — *decision*: the proposals of the plan, the names of the functions; added by the owner on
+- [x] 58. ADMIN-LOG batch 0 — *decision*: the proposals of the plan, the names of the functions; added by the owner on
   2026-10-12, with the login journal of `docs/2027-CORE.md`, before the remaining SCHEMA batches so their final pass
-  covers `_login_log`.
-- [ ] 59. ADMIN-LOG batch 1 — login table: `_login_log`, the profile screen, the tab of "Безопасность", `cachegc`.
+  covers `_login_log`. (2026-10-12)
+- [x] 59. ADMIN-LOG batch 1 — login table: `_login_log`, the profile screen, the tab of "Безопасность", `cachegc`.
+  (2026-10-12)
 - [ ] 60. ADMIN-LOG batch 2 — file journals: the channels of `Logger`, the login written once, the record in
   `checkAdminPost()`.
 - [ ] 61. ADMIN-LOG batch 3 — reading the files: the table view of `logview` and the link of a module.

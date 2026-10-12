@@ -66,7 +66,7 @@ final class JournalSecretTest extends TestCase
     public function refusedLoginHasNoPassword(): void
     {
         $data = $this->getProbe('write');
-        $this->assertSame(3, $data['params'], 'addLoginReport() takes no password');
+        $this->assertSame(5, $data['params'], 'addLoginLog() takes no password');
         $this->assertStringContainsString('probeuser', $data['files']['user.log'] ?? '');
         $this->assertStringContainsString('probeadmin', $data['files']['admin.log'] ?? '');
         $this->assertStringNotContainsString($data['keys']['pass'], $data['files']['user.log'].$data['files']['admin.log']);

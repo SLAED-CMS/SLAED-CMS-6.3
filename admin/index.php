@@ -196,18 +196,22 @@ function addAdminAccount(): void {
 # A stored hash that matches only that old form still opens the panel and stays as it is, so no working login is lost; a legacy md5 hash is renewed from the form that matched
 function checkAdminLogin(): void {
     global $db, $afile, $conf, $stop;
-    if (checkCaptcha('adminlogin')) $stop = _SECCODEINCOR;
+    $block = checkCaptcha('adminlogin');
+    if ($block) $stop = _SECCODEINCOR;
     $name = htmlspecialchars(trim(substr($_POST['name'] ?? '', 0, 25)));
     $pwd = getVar('post', 'pwd', 'raw', '');
     $old = htmlspecialchars(trim(substr($pwd, 0, 25)));
     if (!$name || $pwd === '') $stop = _LOGININCOR;
     $aid = $aname = $apwd = $aeditor = null;
     $back = false;
-    if (!$stop) {
+    if ($name) {
         $result = $db->getSqlQuery('SELECT id, name, password, editor FROM '.PREFIX_DB.'_admins WHERE name = :name', ['name' => $name]);
         if ($db->getSqlRowCount($result) == 1) {
             [$aid, $aname, $apwd, $aeditor] = $db->getSqlRow($result);
         }
+    }
+    $lid = ($aname === $name) ? intval($aid) : 0;
+    if (!$stop) {
         $good = $aid && $aname === $name && checkPassHash($pwd, (string)$apwd);
         $back = !$good && $aid && $aname === $name && $old !== $pwd && checkPassHash($old, (string)$apwd);
         if (!$good && !$back) $stop = _LOGININCOR;
@@ -225,11 +229,11 @@ function checkAdminLogin(): void {
         $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_session WHERE uname = :ip', ['ip' => $ip]);
         $db->getSqlQuery('UPDATE '.PREFIX_DB.'_admins SET ip = :ip, lastvis = now() WHERE id = :id', ['ip' => $ip, 'id' => $aid]);
         Captcha::clearLoginFailures('admin');
-        addLoginReport(1, 1, $name);
+        addLoginLog($lid, true, 'ok', $name);
         setRedirect($afile.'.php');
     } else {
         Captcha::registerLoginFailure('admin');
-        addLoginReport(1, 0, $name);
+        addLoginLog($lid, true, $block ? 'blocked' : 'password', $name);
         getAdminLoginForm();
     }
 }

@@ -23,13 +23,15 @@ $labels = [
     'warn' => _SEC_STAT_WARN
 ];
 
+$tabset = [
+    'ops' => ['name=security', 'name=security&op=logins', 'name=security&op=banlist', 'name=security&op=passwd', 'name=security&op=config', 'name=security&op=info'],
+    'tabs' => [_HOME, _ACCOUNT_LOGINS, _BANNED, _SEC_PASS, _PREFERENCES, _MANUAL],
+];
+
 function security(): void {
-    global $afile, $labels, $tpl;
+    global $afile, $labels, $tabset, $tpl;
     setHead();
-    $cont = getTplAdminTabs([
-        'ops' => ['name=security', 'name=security&op=banlist', 'name=security&op=passwd', 'name=security&op=config', 'name=security&op=info'],
-        'tabs' => [_HOME, _BANNED, _SEC_PASS, _PREFERENCES, _MANUAL],
-    ]);
+    $cont = getTplAdminTabs($tabset);
     $cont .= checkPerms(CONFIG_DIR.'/security.php').getSelfCheckAlert(true);
     $head = [
         ['content' => _TITLE],
@@ -84,12 +86,9 @@ function security(): void {
 }
 
 function logview(): void {
-    global $labels, $tpl;
+    global $labels, $tabset, $tpl;
     setHead();
-    $cont = getTplAdminTabs([
-        'ops' => ['name=security', 'name=security&op=banlist', 'name=security&op=passwd', 'name=security&op=config', 'name=security&op=info'],
-        'tabs' => [_HOME, _BANNED, _SEC_PASS, _PREFERENCES, _MANUAL],
-    ]);
+    $cont = getTplAdminTabs($tabset);
     $file = getVar('get', 'file', 'var');
     if ($file) {
         $title = $labels[$file] ?? $file;
@@ -115,18 +114,88 @@ function logview(): void {
     setFoot();
 }
 
+function logins(): void {
+    global $afile, $tabset, $tpl;
+    $sides = ['admin' => _ADMIN, 'site' => _USER];
+    $results = ['ok' => _ACCOUNT_LOGOK, 'password' => _ACCOUNT_LOGPASS, 'blocked' => _ACCOUNT_LOGBLOCK];
+    $ways = ['login' => _PASSWORD, 'oauth' => _ACCOUNT_LOGOAUTH];
+    $day = static fn(string $v): string => (preg_match('/^\d{4}-\d{2}-\d{2}$/D', $v) && strtotime($v) !== false) ? $v : '';
+    $uid = getVar('get', 'uid', 'num', 0);
+    $side = getVar('get', 'side', 'word', '');
+    $res = getVar('get', 'res', 'word', '');
+    $way = getVar('get', 'way', 'word', '');
+    $from = $day(getVar('get', 'from', 'text', ''));
+    $to = $day(getVar('get', 'to', 'text', ''));
+    $num = max(1, getVar('get', 'num', 'num', 1));
+    $side = isset($sides[$side]) ? $side : '';
+    $res = isset($results[$res]) ? $res : '';
+    $way = isset($ways[$way]) ? $way : '';
+    $filt = array_filter([
+        'uid' => $uid ?: null,
+        'admin' => ($side !== '') ? $side === 'admin' : null,
+        'result' => $res,
+        'way' => $way,
+        'from' => ($from !== '') ? $from.' 00:00:00' : '',
+        'to' => ($to !== '') ? date('Y-m-d', strtotime($to.' +1 day')).' 00:00:00' : '',
+    ], static fn($v) => $v !== null && $v !== '');
+    $log = getLoginLog($filt, $num, 50);
+    setHead();
+    $cont = getTplAdminTabs($tabset + ['tab' => 1]);
+    $pick = static function(string $name, array $list, string $cur, string $all) use ($tpl): string {
+        $opts = [['value_attr' => '', 'label_text' => $all, 'is_selected' => $cur === '']];
+        foreach ($list as $key => $label) $opts[] = ['value_attr' => $key, 'label_text' => $label, 'is_selected' => $key === $cur];
+        return $tpl->getHtmlFrag('select', ['name_attr' => $name, 'options' => $opts, 'is_config' => true]);
+    };
+    $form = $tpl->getHtmlPart('form', [
+        'action_url' => $afile.'.php',
+        'method' => 'get',
+        'is_inline_filter' => true,
+        'hidden' => [
+            ['nameattr' => 'name', 'valueattr' => 'security'],
+            ['nameattr' => 'op', 'valueattr' => 'logins'],
+        ],
+        'content_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'uid', 'value_attr' => $uid ? (string)$uid : '', 'placeholder_text' => _ACCOUNT.' '._ID])
+            .$pick('side', $sides, $side, _ADMIN.' / '._USER).$pick('res', $results, $res, _STATUS).$pick('way', $ways, $way, _TYPE)
+            .$tpl->getHtmlFrag('input', ['itype' => 'date', 'name_attr' => 'from', 'value_attr' => $from, 'placeholder_text' => _DATE])
+            .$tpl->getHtmlFrag('input', ['itype' => 'date', 'name_attr' => 'to', 'value_attr' => $to, 'placeholder_text' => _DATE])
+            .$tpl->getHtmlFrag('button', ['button_type' => 'submit', 'submit_label' => _OK]),
+    ]);
+    $rows = '';
+    foreach ($log['rows'] as $row) {
+        $agent = html_entity_decode((string)$row['agent'], ENT_QUOTES, 'UTF-8');
+        $info = getAgentInfo($agent, 0);
+        $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', ['cells' => [
+            ['is_col_date' => true, 'has_content_text' => true, 'content_text' => format_time((string)$row['time'], _TIMESTRING)],
+            ['is_truncate' => true, 'has_content_text' => true, 'content_text' => trim((string)$row['name'].' #'.intval($row['uid']))],
+            ['has_content_text' => true, 'content_text' => $row['admin'] ? _ADMIN : _USER],
+            ['has_content_text' => true, 'content_text' => $results[$row['result']] ?? (string)$row['result']],
+            ['has_content_text' => true, 'content_text' => $ways[$row['way']] ?? (string)$row['way']],
+            ['content_html' => Geoip::getIpHtml((string)$row['ip'])],
+            ['is_truncate' => true, 'has_content_text' => true, 'title_text' => $agent, 'content_text' => $info['browser'].' / '.$info['os']],
+        ]])]);
+    }
+    if ($rows === '') {
+        $body = $form.$tpl->getHtmlFrag('alert', ['text' => _NO_INFO, 'meta' => '', 'type' => 'info', 'is_warn' => false]);
+    } else {
+        $head = [['content' => _DATE], ['content' => _ACCOUNT], ['content' => _ADMIN.' / '._USER], ['content' => _STATUS], ['content' => _TYPE],
+            ['content' => _IP], ['content' => _BROWSER]];
+        $link = 'name=security&op=logins'.($uid ? '&uid='.$uid : '').($side !== '' ? '&side='.$side : '').($res !== '' ? '&res='.$res : '')
+            .($way !== '' ? '&way='.$way : '').($from !== '' ? '&from='.$from : '').($to !== '' ? '&to='.$to : '').'&';
+        $body = $form.$tpl->getHtmlFrag('table', ['head' => $head, 'rows_html' => $rows])
+            .getPageNumbers('', $log['total'], (int)ceil($log['total'] / 50), 50, $link, 10, $num, '', 'num');
+    }
+    echo $cont.$tpl->getHtmlPart('box', ['title' => _ACCOUNT_LOGINS, 'content_html' => $body]);
+    setFoot();
+}
+
 function banlist(): void {
-    global $conf, $afile, $tpl;
+    global $conf, $afile, $tabset, $tpl;
     $time = getVar('req', 'time', 'num');
     $info = getVar('req', 'info', 'text');
     $hash = getVar('req', 'hash', 'text');
     $cidr = getVar('req', 'cidr', 'text');
     setHead();
-    $cont = getTplAdminTabs([
-        'ops' => ['name=security', 'name=security&op=banlist', 'name=security&op=passwd', 'name=security&op=config', 'name=security&op=info'],
-        'tabs' => [_HOME, _BANNED, _SEC_PASS, _PREFERENCES, _MANUAL],
-        'tab' => 1,
-    ]);
+    $cont = getTplAdminTabs($tabset + ['tab' => 2]);
     $cont .= checkPerms(CONFIG_DIR.'/security.php');
     if (getVar('get', 'send', 'var')) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _MAIL_SEND]);
     $tabone = '';
@@ -417,13 +486,9 @@ function bansave(): void {
 }
 
 function passwd(): void {
-    global $conf, $afile, $tpl;
+    global $conf, $afile, $tabset, $tpl;
     setHead();
-    $cont = getTplAdminTabs([
-        'ops' => ['name=security', 'name=security&op=banlist', 'name=security&op=passwd', 'name=security&op=config', 'name=security&op=info'],
-        'tabs' => [_HOME, _BANNED, _SEC_PASS, _PREFERENCES, _MANUAL],
-        'tab' => 2,
-    ]);
+    $cont = getTplAdminTabs($tabset + ['tab' => 3]);
     $cont .= checkPerms(CONFIG_DIR.'/security.php');
     $cont .= (!$conf['security']['login'] || !$conf['security']['password'])
         ? $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _SEC_AUTH_INFO])
@@ -508,13 +573,9 @@ function passsave(): void {
 }
 
 function config(): void {
-    global $conf, $afile, $tpl;
+    global $conf, $afile, $tabset, $tpl;
     setHead();
-    $cont = getTplAdminTabs([
-        'ops' => ['name=security', 'name=security&op=banlist', 'name=security&op=passwd', 'name=security&op=config', 'name=security&op=info'],
-        'tabs' => [_HOME, _BANNED, _SEC_PASS, _PREFERENCES, _MANUAL],
-        'tab' => 3,
-    ]);
+    $cont = getTplAdminTabs($tabset + ['tab' => 4]);
     $cont .= checkPerms(CONFIG_DIR.'/security.php');
     $ainfo = sprintf(_ADMIN_FILE_INFO, strtolower(getRandomString('10')));
     $floodhtml = $tpl->getHtmlFrag('select', [
@@ -967,10 +1028,8 @@ function configsave(): void {
 }
 
 function info(): void {
-    setTplAdminInfoPage([
-        'ops' => ['name=security', 'name=security&op=banlist', 'name=security&op=passwd', 'name=security&op=config', 'name=security&op=info'],
-        'tabs' => [_HOME, _BANNED, _SEC_PASS, _PREFERENCES, _MANUAL],
-    ]);
+    global $tabset;
+    setTplAdminInfoPage($tabset);
 }
 
 function download(): void {
@@ -1001,6 +1060,7 @@ function delete(): void {
 switch ($op) {
     default: security(); break;
     case 'logview': logview(); break;
+    case 'logins': logins(); break;
     case 'download': download(); break;
     case 'delete': delete(); break;
     case 'banlist': banlist(); break;

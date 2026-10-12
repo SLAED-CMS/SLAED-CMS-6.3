@@ -1922,6 +1922,25 @@ END
 WHERE `rank` REGEXP '[.](png|gif|jpe?g|webp|svg)$';
 
 # =============================================================================
+# _login_log
+# =============================================================================
+
+# Every login of the site and of the panel, read by the profile and by the security page of the panel; a 6.2 site kept none, so nothing is carried over
+CREATE TABLE IF NOT EXISTS `{prefix}_login_log` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `uid` INT UNSIGNED NOT NULL DEFAULT 0,
+  `admin` BOOLEAN NOT NULL DEFAULT 0,
+  `result` VARCHAR(10) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  `way` VARCHAR(10) CHARACTER SET ascii COLLATE ascii_bin NOT NULL DEFAULT 'login',
+  `ip` VARCHAR(45) CHARACTER SET ascii COLLATE ascii_bin NOT NULL DEFAULT '',
+  `agent` VARCHAR(255) NOT NULL DEFAULT '',
+  `time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `uid_time` (`admin`, `uid`, `time`, `id`),
+  KEY `time` (`time`)
+) ENGINE={engine} DEFAULT CHARSET={charset} COLLATE={collate};
+
+# =============================================================================
 # The collation of the release, column by column
 # =============================================================================
 #
@@ -1980,6 +1999,7 @@ CALL setconv('{prefix}_comment', '{collate}');
 CALL setconv('{prefix}_favorites', '{collate}');
 CALL setconv('{prefix}_forum', '{collate}');
 CALL setconv('{prefix}_groups', '{collate}');
+CALL setconv('{prefix}_login_log', '{collate}');
 CALL setconv('{prefix}_mail', '{collate}');
 CALL setconv('{prefix}_maildead', '{collate}');
 CALL setconv('{prefix}_message', '{collate}');

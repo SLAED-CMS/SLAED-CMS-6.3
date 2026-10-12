@@ -178,7 +178,6 @@ function getPresentationData(): array {
     $bcount = getTableCount('blocks', "status = '1'");
     $events = getSecurityEventCount(24);
     $failed = getFailedLoginCountHours(24);
-    $failed = is_int($failed) ? $failed : 0;
     $langs = count(glob(BASE_DIR.'/lang/*.php') ?: []);
     [$tid, $ttitle, $ttime] = $db->getSqlRow(getForumTopics('id, title, ltime', '', 1));
     $read = static function (string $mode): array {

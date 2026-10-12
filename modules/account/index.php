@@ -792,6 +792,39 @@ function favorites(): void {
     }
 }
 
+function logins(): void {
+    global $conf, $tpl, $user;
+    if (!is_user()) {
+        account();
+        return;
+    }
+    $page = max(1, getVar('get', 'num', 'num', 1));
+    $num = 20;
+    $log = getLoginLog(['uid' => intval($user[0]), 'admin' => 0], $page, $num);
+    if ($page > 1 && !$log['rows']) setError(404);
+    setHead(['title' => _ACCOUNT_LOGINS]);
+    $res = ['ok' => _ACCOUNT_LOGOK, 'password' => _ACCOUNT_LOGPASS, 'blocked' => _ACCOUNT_LOGBLOCK];
+    $rows = '';
+    foreach ($log['rows'] as $row) {
+        $agent = html_entity_decode((string)$row['agent'], ENT_QUOTES, 'UTF-8');
+        $info = getAgentInfo($agent, 0);
+        $rows .= $tpl->getHtmlFrag('table-row', ['cells' => [
+            ['text' => format_time((string)$row['time'], _TIMESTRING)],
+            ['text' => $res[$row['result']] ?? (string)$row['result']],
+            ['text' => ($row['way'] === 'oauth') ? _ACCOUNT_LOGOAUTH : _PASSWORD],
+            ['text' => (string)$row['ip']],
+            ['primary_text' => $info['browser'].' / '.$info['os'], 'primary_title' => $agent],
+        ]]);
+    }
+    $cont = ($rows === '') ? getCabinetNotes('', _NO_INFO, 0) : $tpl->getHtmlFrag('table', [
+        'is_list' => true,
+        'rows_html' => $rows,
+        'headers' => [['text' => _DATE], ['text' => _STATUS], ['text' => _TYPE], ['text' => _IP], ['text' => _BROWSER]],
+    ]).getTplPager(['count' => $log['total'], 'limit' => $num, 'mod' => $conf['name'], 'url_extra' => ['op' => 'logins']]);
+    echo $tpl->getHtmlFrag('title', ['title' => _ACCOUNT_LOGINS, 'is_level_one' => true]).getUserNav().$cont;
+    setFoot();
+}
+
 function passlost(): void {
     global $conf, $stop, $tpl;
     $code = getVar('get', 'code', 'text');
@@ -904,7 +937,7 @@ function passmail(): void {
     }
 }
 
-function setUserLogin(int $uid, string $name, string $pass, int $story, int $blockon, string $theme): void {
+function setUserLogin(int $uid, string $name, string $pass, int $story, int $blockon, string $theme, string $way = 'login'): void {
     global $db, $conf, $pnt;
     setCookies('account', time() + (int)$conf['user_c_t'], [$uid, $name, $pass, $story, $blockon, $theme]);
     $uip = getIp();
@@ -914,13 +947,14 @@ function setUserLogin(int $uid, string $name, string $pass, int $story, int $blo
     $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET ip = :ip, lastvis = NOW(), agent = :agent WHERE id = :id', $pars);
     $pnt->addEvent('login', 'account', 'day:'.gmdate('Ymd'), $uid);
     Captcha::clearLoginFailures('user');
-    addLoginReport(0, 1, $name);
+    addLoginLog($uid, false, 'ok', $name, $way);
 }
 
 function login(): void {
     global $db, $conf, $stop;
-    if (!checkSiteToken(getVar('post', 'token', 'raw', ''), 'account')) $stop[] = _ERROR;
-    if (checkCaptcha('login')) $stop[] = _SECCODEINCOR;
+    $block = !checkSiteToken(getVar('post', 'token', 'raw', ''), 'account');
+    if ($block) $stop[] = _ERROR;
+    if (checkCaptcha('login')) [$stop[], $block] = [_SECCODEINCOR, true];
     $uname = htmlspecialchars(trim(substr(getVar('post', 'user_name', 'text'), 0, 25)));
     $upass = htmlspecialchars(trim(substr(getVar('post', 'user_password', 'text'), 0, 25)));
     if (!$uname || !$upass) $stop[] = _LOGININCOR;
@@ -939,7 +973,7 @@ function login(): void {
         setRedirect('index.php?name='.$conf['name'].'&op=profil', true);
     } else {
         Captcha::registerLoginFailure('user');
-        addLoginReport(0, 0, $uname);
+        addLoginLog(($nick === $uname) ? intval($uid) : 0, false, $block ? 'blocked' : 'password', $uname);
         account();
     }
 }
@@ -1553,7 +1587,7 @@ function oauthlogin(int $uid, string $prov, string $redir, string $event = ''): 
     if (!is_array($row) || empty($row['id'])) oautherror();
     $db->getSqlQuery('UPDATE '.PREFIX_DB.'_user_oauth SET lastlog = NOW() WHERE uid = :uid AND provider = :prov', ['uid' => $uid, 'prov' => $prov]);
     if ($event !== '') Oauth::setLog($event, $prov, $uid);
-    setUserLogin((int)$row['id'], (string)$row['name'], (string)$row['password'], (int)$row['storynum'], (int)$row['blockon'], (string)$row['theme']);
+    setUserLogin((int)$row['id'], (string)$row['name'], (string)$row['password'], (int)$row['storynum'], (int)$row['blockon'], (string)$row['theme'], 'oauth');
     setRedirect($redir !== '' ? $redir : 'index.php?name='.$conf['name'].'&op=profil');
 }
 
@@ -1765,7 +1799,7 @@ function oauthfinish(): void {
         $badcap = checkCaptcha('login');
         if ($badcap || !$uname || !$upass || !is_array($urow) || empty($urow['id']) || !checkPassHash($upass, (string)$urow['password'])) {
             Captcha::registerLoginFailure('user');
-            addLoginReport(0, 0, $uname);
+            addLoginLog(intval($urow['id'] ?? 0), false, $badcap ? 'blocked' : 'password', $uname);
             Oauth::setLog('link_login_failed', $prov);
             oauthretry(_LOGININCOR);
         }
@@ -1892,6 +1926,7 @@ switch ($op) {
     case 'privat': privat(); break;
     case 'rss': rssfeed(); break;
     case 'favorites': favorites(); break;
+    case 'logins': logins(); break;
     case 'view': view(); break;
     case 'login': login(); break;
     case 'logout': logout(); break;

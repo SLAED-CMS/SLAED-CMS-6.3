@@ -160,6 +160,20 @@ CREATE TABLE `{prefix}_groups` (
   KEY `name` (`name`(191))
 ) ENGINE={engine} DEFAULT CHARSET={charset} COLLATE={collate};
 
+CREATE TABLE `{prefix}_login_log` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `uid` INT UNSIGNED NOT NULL DEFAULT 0,
+  `admin` BOOLEAN NOT NULL DEFAULT 0,
+  `result` VARCHAR(10) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  `way` VARCHAR(10) CHARACTER SET ascii COLLATE ascii_bin NOT NULL DEFAULT 'login',
+  `ip` VARCHAR(45) CHARACTER SET ascii COLLATE ascii_bin NOT NULL DEFAULT '',
+  `agent` VARCHAR(255) NOT NULL DEFAULT '',
+  `time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `uid_time` (`admin`, `uid`, `time`, `id`),
+  KEY `time` (`time`)
+) ENGINE={engine} DEFAULT CHARSET={charset} COLLATE={collate};
+
 CREATE TABLE `{prefix}_mail` (
   `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
   `kind` VARCHAR(20) NOT NULL DEFAULT '',

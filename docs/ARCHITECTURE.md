@@ -732,7 +732,7 @@ every key matching `pass`, `pwd`, `secret`, `token`, `key` or `code` in the body
 and the query string, and writes the names of cookies and session keys, never
 their values. The request journal (the `log` switch of `config/security.php`,
 off by default) is its channel `request`; the login journals of
-`addLoginReport()` record who tried, under which login, from where and when,
+`addLoginLog()` record who tried, under which login, from where and when,
 never the attempted password. A file is named after what it holds:
 `error_*.log` is what the system could not do, `<meaning>.log` what happened,
 and no name carries a `log_` prefix.
@@ -744,12 +744,12 @@ and no name carries a `log_` prefix.
 | `file.log` | file operations below `error`, such as a remote address the policy refused | `Logger`, channel `file` |
 | `hack.log`, `warn.log` | recognised attacks, refused requests | `Logger` |
 | `request.log` | the request journal | `Logger`, channel `request` |
-| `admin.log`, `user.log` | login attempts | `addLoginReport()` |
+| `admin.log`, `user.log` | login attempts | `addLoginLog()` |
 | `oauth.log` | OAuth events, no token, code or claim | `OAuth` |
 | `database.log` | database operations of the panel | `admin/modules/database.php` |
 | `filescan.log`, `filescan_tree.log` | changes of the file tree, its snapshot | job `filescan` |
 
-A line goes to one file only, by its level. `Logger`, `addLoginReport()` and
+A line goes to one file only, by its level. `Logger`, `addLoginLog()` and
 the job `filescan` move a full journal through `addCompress()` into an archive
 `<name>_<date>.log.<zip|gz|bz2>`, or `.log.bak` without a compressor;
 `oauth.log` starts over when full, and `database.log` has no limit. Beside the

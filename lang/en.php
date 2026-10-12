@@ -6,6 +6,12 @@
 
 define('_ACCESSDENIED','Access Denied');
 define('_ACCOUNT','Account');
+define('_ACCOUNT_LOGINS','Login journal');
+define('_ACCOUNT_LOGSNOTE','When and from where you signed in');
+define('_ACCOUNT_LOGOK','Signed in');
+define('_ACCOUNT_LOGPASS','Wrong name or password');
+define('_ACCOUNT_LOGBLOCK','Stopped by the protection');
+define('_ACCOUNT_LOGOAUTH','External service');
 define('_ACT','Activated');
 define('_ACTIVATE','Activate');
 define('_ACTIVATEPERSONAL','Activate Personal Menu?');

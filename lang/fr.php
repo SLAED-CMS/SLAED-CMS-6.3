@@ -6,6 +6,12 @@
 
 define('_ACCESSDENIED',"L'accès est refusé");
 define('_ACCOUNT','Profil');
+define('_ACCOUNT_LOGINS','Journal des connexions');
+define('_ACCOUNT_LOGSNOTE','Quand et d\'où vous vous êtes connecté');
+define('_ACCOUNT_LOGOK','Connecté');
+define('_ACCOUNT_LOGPASS','Nom ou mot de passe incorrect');
+define('_ACCOUNT_LOGBLOCK','Arrêté par la protection');
+define('_ACCOUNT_LOGOAUTH','Service externe');
 define('_ACT','Activé');
 define('_ACTIVATE','Activer');
 define('_ACTIVATEPERSONAL','Activer votre propre menu?');

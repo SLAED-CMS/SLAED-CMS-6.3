@@ -6,6 +6,12 @@
 
 define('_ACCESSDENIED','Dostęp zabroniony');
 define('_ACCOUNT','Profil');
+define('_ACCOUNT_LOGINS','Dziennik logowań');
+define('_ACCOUNT_LOGSNOTE','Kiedy i skąd się logowano');
+define('_ACCOUNT_LOGOK','Zalogowano');
+define('_ACCOUNT_LOGPASS','Błędna nazwa lub hasło');
+define('_ACCOUNT_LOGBLOCK','Zatrzymano przez ochronę');
+define('_ACCOUNT_LOGOAUTH','Usługa zewnętrzna');
 define('_ACT','Aktywowane');
 define('_ACTIVATE','Aktywacja');
 define('_ACTIVATEPERSONAL','Aktywacja własne menu?');

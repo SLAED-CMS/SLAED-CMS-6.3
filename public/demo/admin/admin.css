@@ -315,6 +315,20 @@
   box-shadow: var(--sl-shadow-raised);
 }
 
+/* Г1 The head of a panel of the home is a button filling the solid plate; the plate keeps its border while open */
+.sl-dashboard-panel-head > .sl-menu-head {
+  height: 100%;
+}
+
+.sl-dashboard-panel-head:has(> .sl-is-open) {
+  border-color: var(--sl-solid-border);
+}
+
+/* Г4 The queue of a card stands right after its name */
+.sl-mcard .sl-queue {
+  margin-left: var(--sl-space-2);
+}
+
 /* The queue of a section: there while something waits, gone at zero */
 .sl-queue {
   display: inline-grid;
@@ -330,19 +344,22 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* Э11 The dial only under the pointer and in focus; the column rests without thirty buttons */
-.sl-menu .sl-menu-list-item > .sl-dial {
+/* Э11 Г7 The dial only under the pointer and in focus: the menu column and the grid of cards rest without a button on every section */
+.sl-menu .sl-menu-list-item > .sl-dial,
+.sl-mcard > .sl-dial {
   opacity: 0;
   transition: opacity var(--sl-time-fast) var(--sl-ease-out);
 }
 
 .sl-menu .sl-menu-list-item:hover > .sl-dial,
-.sl-menu .sl-menu-list-item:focus-within > .sl-dial {
+.sl-menu .sl-menu-list-item:focus-within > .sl-dial,
+.sl-mcard:is(:hover, :focus-within) > .sl-dial {
   opacity: 1;
 }
 
 @media (hover: none) {
-  .sl-menu .sl-menu-list-item > .sl-dial {
+  .sl-menu .sl-menu-list-item > .sl-dial,
+  .sl-mcard > .sl-dial {
     opacity: 1;
   }
 }
@@ -490,7 +507,7 @@
 
   /* Every icon of the rail is one size: the tools above, the sections, the head of the watch block */
   :root[data-sl-rail] .sl-menu-tool,
-  :root[data-sl-rail] .sl-wrapper.sl-admin-shell .sl-menu :is(.sl-menu-list-item, .sl-admin-block-link),
+  :root[data-sl-rail] .sl-wrapper.sl-admin-shell .sl-menu :is(.sl-menu-list-item, .sl-admin-block-link, .sl-block-sidebar-count-row),
   :root[data-sl-rail] .sl-menu .sl-menu-watch h3 {
     width: calc(var(--sl-size-control) + var(--sl-space-2));
     min-width: 0;
@@ -533,6 +550,34 @@
   :root[data-sl-rail] .sl-menu .sl-block-sidebar-content[data-sl-toggle] {
     animation: none;
     transition: none;
+  }
+
+  :root[data-sl-rail] .sl-wrapper.sl-admin-shell .sl-menu .sl-block-sidebar-count-row {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  :root[data-sl-rail] .sl-wrapper.sl-admin-shell .sl-menu .sl-block-sidebar-count-label a {
+    color: inherit;
+  }
+
+  :root[data-sl-rail] .sl-wrapper.sl-admin-shell .sl-menu .sl-block-sidebar-count-label .bi {
+    width: auto;
+    height: auto;
+    font-size: var(--sl-font-h3);
+  }
+
+  :root[data-sl-rail] .sl-menu .sl-block-sidebar-count-value {
+    position: absolute;
+    top: calc(var(--sl-space-3) * -1);
+    right: calc(var(--sl-space-3) * -1);
+    z-index: var(--sl-z-raised);
+  }
+
+  :root[data-sl-rail] .sl-menu .sl-block-sidebar-count-value .sl-chip {
+    font-size: var(--sl-font-micro);
   }
 
   :root[data-sl-rail] .sl-menu .sl-block-sidebar-content > hr {
@@ -592,7 +637,7 @@
 
   /* В09.2 An icon in hand is a solid plate, as a toolbar item is */
   :root[data-sl-rail] .sl-menu-tool:hover,
-  :root[data-sl-rail] .sl-wrapper.sl-admin-shell .sl-menu :is(.sl-menu-list-item, .sl-admin-block-link):hover,
+  :root[data-sl-rail] .sl-wrapper.sl-admin-shell .sl-menu :is(.sl-menu-list-item, .sl-admin-block-link, .sl-block-sidebar-count-row):hover,
   :root[data-sl-rail] .sl-wrapper.sl-admin-shell .sl-menu .sl-menu-list-item:has(> a[aria-current="page"]):hover,
   :root[data-sl-rail] .sl-menu .sl-menu-watch:hover h3,
   :root[data-sl-rail] .sl-menu .sl-menu-watch:focus-within h3 {
@@ -602,7 +647,8 @@
     color: var(--sl-solid-text);
   }
 
-  :root[data-sl-rail] .sl-wrapper.sl-admin-shell .sl-menu :is(.sl-menu-list-item, .sl-admin-block-link):hover > a {
+  :root[data-sl-rail] .sl-wrapper.sl-admin-shell .sl-menu :is(.sl-menu-list-item, .sl-admin-block-link):hover > a,
+  :root[data-sl-rail] .sl-wrapper.sl-admin-shell .sl-menu .sl-block-sidebar-count-row:hover a {
     color: var(--sl-solid-text);
   }
 
@@ -1353,7 +1399,7 @@
   }
 
   /* В07.2 A block of the menu opens and closes by its height */
-  .sl-menu .sl-block-sidebar-content[data-sl-toggle] {
+  :is(.sl-menu .sl-block-sidebar-content, .sl-dashboard-panel-content)[data-sl-toggle] {
     overflow: clip;
     overflow-clip-margin: var(--sl-space-3);
     interpolate-size: allow-keywords;
@@ -1363,13 +1409,13 @@
       display var(--sl-time-slow) allow-discrete;
   }
 
-  .sl-menu .sl-block-sidebar-content[data-sl-toggle][hidden] {
+  :is(.sl-menu .sl-block-sidebar-content, .sl-dashboard-panel-content)[data-sl-toggle][hidden] {
     height: 0;
     opacity: 0;
   }
 
   @starting-style {
-    .sl-menu .sl-block-sidebar-content[data-sl-toggle]:not([hidden]) {
+    :is(.sl-menu .sl-block-sidebar-content, .sl-dashboard-panel-content)[data-sl-toggle]:not([hidden]) {
       height: 0;
       opacity: 0;
     }
@@ -1451,6 +1497,12 @@
 
 /* ---------- Stand marks: not part of the panel ---------- */
 
+/* One file serves the home and the comments page; the other page is unseen from the first paint and then removed */
+:root[data-demo-page="home"] [data-demo-page="comments"],
+:root[data-demo-page="comments"] [data-demo-page="home"] {
+  display: none;
+}
+
 .demo-marks {
   position: fixed;
   inset: 0;
@@ -1482,6 +1534,10 @@
   white-space: nowrap;
   box-shadow: var(--sl-shadow-xs);
   cursor: pointer;
+}
+
+/* A code lets every click through to the panel under it; held Alt makes the codes answer and open their description */
+:root[data-demo-tags-live] .demo-mark-tag {
   pointer-events: auto;
 }
 
@@ -1507,6 +1563,14 @@
 
 .demo-mark-tag[data-kind="p"] {
   background: var(--sl-primary-strong);
+}
+
+.demo-mark-box[data-kind="d"] {
+  border-color: var(--sl-danger-strong);
+}
+
+.demo-mark-tag[data-kind="d"] {
+  background: var(--sl-danger-strong);
 }
 
 .demo-mark-box[data-flash] {

@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="ru" data-theme="auto">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Феникс · Возвращение 8.0 — стенд панели администратора SLAED CMS</title>
+  <script>
+    try {
+      const mode = localStorage.getItem('sl.mode');
+      if (['light', 'dark'].includes(mode)) document.documentElement.dataset.theme = mode;
+    } catch (e) { /* storage may be off */ }
+  </script>
+  <link rel="stylesheet" href="../templates/admin/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../templates/admin/assets/css/base.css">
+  <link rel="stylesheet" href="../templates/admin/assets/css/theme.css">
+  <style>
+    /* The stage: the live etalon fills the window, the faces play over it */
+    html,
+    body {
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: var(--sl-bg);
+    }
+
+    .phx-frame {
+      display: block;
+      width: 100%;
+      height: 100%;
+      border: 0;
+    }
+
+    /* The desk: which face, what it does, play it again */
+    .phx-dock {
+      position: fixed;
+      left: 50%;
+      bottom: var(--sl-space-4);
+      z-index: var(--sl-z-toast);
+      display: grid;
+      gap: var(--sl-space-2);
+      width: min(760px, calc(100% - 32px));
+      padding: var(--sl-space-3) var(--sl-space-4);
+      border: 1px solid var(--sl-border);
+      border-radius: var(--sl-radius-3);
+      background: var(--sl-surface);
+      color: var(--sl-text);
+      box-shadow: var(--sl-shadow-float);
+      font-size: var(--sl-font-small);
+      transform: translateX(-50%);
+      transition: opacity 0.3s;
+    }
+
+    .phx-dock-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: var(--sl-space-2);
+    }
+
+    .phx-dock-cap {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--sl-space-1);
+      margin-right: auto;
+      color: var(--sl-warning-strong);
+    }
+
+    .phx-dock button {
+      min-width: 32px;
+      padding: var(--sl-space-1) var(--sl-space-2);
+      border: 1px solid var(--sl-border);
+      border-radius: var(--sl-radius-2);
+      background: var(--sl-bg);
+      color: var(--sl-text);
+      font: inherit;
+      cursor: pointer;
+    }
+
+    .phx-dock button:hover {
+      border-color: var(--sl-warning);
+    }
+
+    .phx-dock button[aria-pressed="true"] {
+      border-color: var(--sl-warning-strong);
+      background: var(--sl-warning-strong);
+      color: var(--sl-bg);
+    }
+
+    .phx-dock-more {
+      display: grid;
+      gap: var(--sl-space-2);
+    }
+
+    .phx-dock-group {
+      margin-left: var(--sl-space-2);
+      color: var(--sl-text-muted);
+      font-size: var(--sl-font-micro);
+    }
+
+    .phx-dock-name {
+      font-size: var(--sl-font-body);
+    }
+
+    .phx-dock-note {
+      margin: 0;
+      color: var(--sl-text-muted);
+    }
+
+    .phx-dock[data-fold] .phx-dock-more {
+      display: none;
+    }
+
+    @media (width <= 560px) {
+      .phx-dock {
+        bottom: var(--sl-space-2);
+      }
+    }
+  </style>
+</head>
+<body>
+  <iframe id="phx-frame" class="phx-frame" title="Эталон панели администратора"></iframe>
+  <section id="phx-dock" class="phx-dock" aria-label="Феникс: варианты эффекта">
+    <div class="phx-dock-row">
+      <span class="phx-dock-cap"><i class="bi bi-fire" aria-hidden="true"></i> <b>Феникс 8.0</b></span>
+      <span class="phx-dock-row" role="group" aria-label="Вариант" data-phx-list></span>
+      <button type="button" data-phx-again title="Повторить (R)"><i class="bi bi-arrow-repeat" aria-hidden="true"></i> Повторить</button>
+      <button type="button" data-phx-fold title="Свернуть описание" aria-expanded="true"><i class="bi bi-chevron-bar-down" aria-hidden="true"></i></button>
+    </div>
+    <div class="phx-dock-more">
+      <div class="phx-dock-row" role="group" aria-label="Повтор без действий" data-phx-idle></div>
+      <div class="phx-dock-name" data-phx-name></div>
+      <p class="phx-dock-note" data-phx-note></p>
+    </div>
+  </section>
+  <script>document.write('<script src="assets/phoenix.js?v=' + Date.now() + '"><\/script>');</script>
+</body>
+</html>

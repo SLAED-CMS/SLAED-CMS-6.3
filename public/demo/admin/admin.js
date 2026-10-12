@@ -62,8 +62,8 @@
   }
 
   // Э07 В09.3 Every block shows its sections while a search narrows the menu or the rail is folded; after, each takes back its own state
-  function setGroupsShown(force) {
-    doc.querySelectorAll('[data-sl-menu] .sl-block-sidebar-content[data-sl-toggle]').forEach((box) => {
+  function setGroupsShown(force, sel) {
+    doc.querySelectorAll(sel).forEach((box) => {
       if (force && !box.hasAttribute('data-sl-keep')) {
         box.setAttribute('data-sl-keep', JSON.stringify([box.hidden, box.style.display]));
         box.hidden = false;
@@ -77,24 +77,28 @@
     });
   }
 
-  // Э07 The find field narrows the menu by the name of a section and its module word
+  // Э07 Г2 The find field narrows the sections by name and module word where they are listed: the menu of a page, the cards of the home
   function setMenuFind() {
     const find = doc.querySelector('[data-sl-menu-find]');
     const term = find ? find.value.trim().toLowerCase() : '';
-    let seen = 0;
-    doc.querySelectorAll('[data-sl-menu] .sl-block-sidebar:has([data-sl-menu-item])').forEach((block) => {
-      let hits = 0;
-      block.querySelectorAll('[data-sl-menu-item]').forEach((item) => {
-        const hit = !term || (item.textContent + ' ' + item.dataset.slMenuItem).toLowerCase().includes(term);
-        item.hidden = !hit;
-        if (hit) hits += 1;
+    doc.querySelectorAll('[data-sl-menu], .sl-admin-content').forEach((scope) => {
+      const groups = [...scope.querySelectorAll('[data-sl-find-group]')];
+      let seen = 0;
+      groups.forEach((group) => {
+        let hits = 0;
+        group.querySelectorAll('[data-sl-menu-item]').forEach((item) => {
+          const hit = !term || (item.textContent + ' ' + item.dataset.slMenuItem).toLowerCase().includes(term);
+          item.hidden = !hit;
+          if (hit) hits += 1;
+        });
+        group.hidden = term !== '' && hits === 0;
+        seen += hits;
       });
-      block.hidden = term !== '' && hits === 0;
-      seen += hits;
+      if (groups.length && scope.matches('[data-sl-menu]')) scope.querySelectorAll('.sl-block-sidebar:not([data-sl-find-group])').forEach((n) => { n.hidden = term !== ''; });
+      scope.querySelectorAll('[data-sl-menu-empty]').forEach((n) => { n.hidden = !groups.length || seen > 0; });
     });
-    doc.querySelectorAll('[data-sl-menu] .sl-menu-watch').forEach((n) => { n.hidden = term !== ''; });
-    doc.querySelectorAll('[data-sl-menu-empty]').forEach((n) => { n.hidden = seen > 0; });
-    setGroupsShown(term !== '' || (root.hasAttribute('data-sl-rail') && wide.matches));
+    setGroupsShown(term !== '' || (root.hasAttribute('data-sl-rail') && wide.matches), '[data-sl-menu] .sl-block-sidebar-content[data-sl-toggle]');
+    setGroupsShown(term !== '', '.sl-dashboard-panel-content[data-sl-toggle]');
   }
 
   // В09.1 Fold the menu into the rail and back; the width moves only under a hand, the choice is kept
@@ -118,7 +122,8 @@
   // В09.5 Arrows walk the icons of the rail as in a menu; Tab still passes through them in order
   function setRailKeys(e) {
     if (!root.hasAttribute('data-sl-rail') || !wide.matches || (e.key !== 'ArrowDown' && e.key !== 'ArrowUp')) return;
-    const its = [...doc.querySelectorAll('[data-sl-menu] .sl-menu-tool, [data-sl-menu-item] > a, [data-sl-menu] .sl-menu-watch .sl-menu-head')]
+    const parts = ['.sl-menu-tool', '[data-sl-menu-item] > a', '.sl-block-sidebar-count-label a', '.sl-menu-watch .sl-menu-head'];
+    const its = [...doc.querySelectorAll(parts.map((x) => '[data-sl-menu] ' + x).join(', '))]
       .filter((n) => n.getClientRects().length);
     const at = its.indexOf(doc.activeElement);
     if (at < 0) return;
@@ -128,7 +133,8 @@
 
   // Э04 The bell sums every queue of the panel; the comments count is live, the others as the dashboard gives them
   function setBell() {
-    const own = rows.filter((r) => r.dataset.on === '0' && !r.hasAttribute('data-sl-gone')).length;
+    const given = doc.querySelector('[data-sl-bell-own]');
+    const own = rows.length ? rows.filter((r) => r.dataset.on === '0' && !r.hasAttribute('data-sl-gone')).length : Number(given ? given.textContent : 0) || 0;
     let sum = own;
     doc.querySelectorAll('[data-sl-bell-own]').forEach((n) => { n.textContent = String(own); n.closest('a').hidden = own === 0; });
     doc.querySelectorAll('[data-sl-bell-n]').forEach((n) => { sum += Number(n.textContent) || 0; });
@@ -178,11 +184,12 @@
     if (!list) return;
     cmds.length = 0;
     const add = (group, icon, label, run, keys) => cmds.push({ group, icon, label, run, keys: keys || '' });
-    add('Действия', 'list-ul', 'Все комментарии', () => setView('all'));
-    add('Действия', 'hourglass-split', 'Ждут проверки', () => setView('wait'));
-    add('Действия', 'gear', 'Конфигурации', () => setView('config'));
+    const onList = (tab, run) => () => (doc.querySelector('[data-sl-list]') ? run() : location.assign('?name=comments' + (tab ? '&tab=' + tab : '')));
+    add('Действия', 'list-ul', 'Все комментарии', onList('', () => setView('all')));
+    add('Действия', 'hourglass-split', 'Ждут проверки', onList('wait', () => setView('wait')));
+    add('Действия', 'gear', 'Конфигурации', onList('config', () => setView('config')));
     add('Действия', 'funnel', 'Сбросить фильтры', () => { state.mod = ''; state.q = ''; doc.querySelectorAll('[data-sl-q]').forEach((q) => { q.value = ''; }); setList(); });
-    add('Действия', 'check2-square', 'Отметить все показанные', setShownPicked);
+    add('Действия', 'check2-square', 'Отметить все показанные', onList('', setShownPicked));
     add('Действия', 'layout-sidebar', 'Свернуть или развернуть меню', () => setRail(!root.hasAttribute('data-sl-rail'), true), '<kbd>[</kbd>');
     add('Действия', 'moon', 'Тёмная тема', () => setModeTo('dark'));
     add('Действия', 'sun', 'Светлая тема', () => setModeTo('light'));
@@ -325,6 +332,7 @@
       if (ok) shown += 1;
     });
     if (!quiet && !stay) setRowsEnter(table);
+    setFound();
     doc.querySelectorAll('[data-sl-mod]').forEach((s) => { s.value = state.mod; });
     const calm = state.view === 'wait' && !state.mod && !state.q;
     doc.querySelectorAll('[data-sl-none]').forEach((n) => {
@@ -345,6 +353,18 @@
     setPicked();
     setBell();
     setUrl();
+  }
+
+  // Д2 Mark what the search found in the number, the text, the author and the module, as filterTextHighlight() does
+  function setFound() {
+    const words = state.q.split(/\s+/).filter(Boolean).sort((a, b) => b.length - a.length).map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+    const re = words.length ? new RegExp('(' + words.join('|') + ')', 'iu') : null;
+    doc.querySelectorAll('[data-sl-row] [data-sl-hl]').forEach((n) => {
+      if (n.dataset.slRaw === undefined) n.dataset.slRaw = n.textContent;
+      const raw = n.dataset.slRaw;
+      if (!re) { n.textContent = raw; return; }
+      n.innerHTML = raw.split(new RegExp(re.source, 'giu')).map((p, i) => (i % 2 ? '<span class="sl-highlight">' + getEsc(p) + '</span>' : getEsc(p))).join('');
+    });
   }
 
   // В07.1 Mark the rows on screen to enter, each with its place in the order for the cascade
@@ -381,7 +401,9 @@
     const pairs = [['mod', state.mod], ['q', state.q], ['in', state.field === 'text' ? '' : state.field], ['tab', state.view === 'all' ? '' : state.view]];
     pairs.forEach(([k, v]) => { if (v) url.searchParams.set(k, v); else url.searchParams.delete(k); });
     if (!state.restoring && url.href !== location.href) history.pushState(null, '', url);
-    const back = encodeURIComponent('admin.php?name=comments' + url.search.replace(/^\?/, '&'));
+    const keep = new URLSearchParams(url.search);
+    keep.delete('name');
+    const back = encodeURIComponent('admin.php?name=comments' + (keep.toString() ? '&' + keep : ''));
     doc.querySelectorAll('[data-sl-edit]').forEach((a) => { a.href = '../../admin.php?name=comments&op=edit&id=' + a.closest('[data-sl-row]').dataset.id + '&back=' + back; });
   }
 
@@ -495,6 +517,12 @@
     const name = item.querySelector('.sl-menu-name').textContent;
     const draw = (now) => {
       item.toggleAttribute('data-sl-off', now);
+      item.classList.toggle('sl-mcard-off', now && item.classList.contains('sl-mcard'));
+      item.querySelectorAll('.sl-led').forEach((l) => {
+        l.classList.toggle('sl-led-ok', !now);
+        l.classList.toggle('sl-led-off', now);
+        l.title = now ? 'Деактивирован' : 'Активирован';
+      });
       btn.title = now ? 'Активировать' : 'Деактивировать';
     };
     draw(off);
@@ -524,6 +552,7 @@
   function setDensity(mode, keep) {
     const btns = [...doc.querySelectorAll('[data-sl-density]')];
     const table = doc.querySelector('[data-sl-list]');
+    if (!table) return;
     if (!btns.some((b) => b.dataset.slDensity === mode)) mode = 'standard';
     btns.forEach((b) => {
       const on = b.dataset.slDensity === mode;
@@ -538,6 +567,7 @@
   // Э19 The sort the theme's Tablesort made is kept and said; on load it is put back
   function setSortKept() {
     const table = doc.querySelector('[data-sl-list]');
+    if (!table) return;
     let keep = null;
     try { keep = JSON.parse(getKept('sl.sort') || 'null'); } catch (e) { keep = null; }
     const was = keep && table.tHead.rows[0].cells[keep.i];
@@ -722,7 +752,7 @@
     const view = t.closest('[data-sl-view]');
     if (view) { e.preventDefault(); setView(view.dataset.slView); return; }
     const go = t.closest('[data-sl-tab-go]');
-    if (go) {
+    if (go && doc.querySelector('[data-sl-list]')) {
       e.preventDefault();
       const tip = go.closest('.sl-float');
       if (tip) {
@@ -740,6 +770,16 @@
     if (t.closest('[data-sl-allpages-go]')) { state.allPages = true; setPicked(); return; }
     if (t.closest('[data-sl-allpages-off]')) { rows.forEach((r) => { r.querySelector('[data-sl-check-item]').checked = false; }); setPicked(); return; }
     if (t.closest('[data-sl-retry]')) { setList(); return; }
+    const find = t.closest('[data-sl-find]');
+    if (find) {
+      const row = find.closest('[data-sl-row]');
+      state.field = find.dataset.slFind;
+      state.q = row.dataset[find.dataset.slFind];
+      doc.querySelectorAll('[data-sl-field]').forEach((f) => { f.value = state.field; });
+      doc.querySelectorAll('[data-sl-q]').forEach((f) => { f.value = state.q; });
+      setList();
+      return;
+    }
     const sec = t.closest('[data-sl-section-off]');
     if (sec) { setSectionOn(sec); return; }
     if (t.closest('[data-sl-sess-refresh]')) { setWatchFresh(); return; }
@@ -759,6 +799,10 @@
     const t = e.target;
     if (e.ctrlKey || e.metaKey || e.altKey || (t.closest && t.closest('input, select, textarea, dialog, [contenteditable]'))) return;
     if (e.code === 'BracketLeft' && wide.matches) { e.preventDefault(); setRail(!root.hasAttribute('data-sl-rail'), true); return; }
+    if (!doc.querySelector('[data-sl-list]')) {
+      if (e.key === '/') { e.preventDefault(); doc.querySelector('[data-sl-menu-find]').focus(); }
+      return;
+    }
     if (state.view === 'config') {
       if (e.key === '/') { e.preventDefault(); doc.querySelector('[data-sl-conf-find]').focus(); }
       return;
@@ -826,21 +870,47 @@
     setSortKept();
     setFromUrl();
     setList(true);
+    setBell();
   }
 
   /* ---------- Stand: data and marks, not part of the panel ---------- */
 
-  // Draw the menu and the rows of the stand from its data into the one-item templates of the page
+  // Draw the stand page from its data: the other page of the file leaves the document, then menu, cards and rows fill their templates
   function setDemoRender() {
+    const page = root.dataset.demoPage;
+    doc.querySelectorAll('[data-demo-page]').forEach((n) => { if (n !== root && n.dataset.demoPage !== page) n.remove(); });
+    if (page === 'home') doc.body.dataset.slSection = 'Главная';
+    doc.querySelectorAll('#demo-panel .sl-modal-sub').forEach((n) => { n.textContent = 'Эталон · ' + doc.body.dataset.slSection; });
     const menu = JSON.parse(doc.getElementById('demo-menu').textContent);
     const mtpl = doc.getElementById('sl-menu-tpl').content.firstElementChild;
+    const ctpl = doc.getElementById('sl-card-tpl').content.firstElementChild;
     ['admin', 'modules'].forEach((block) => {
+      const grid = doc.querySelector('[data-sl-cards="' + block + '"]');
+      if (grid) menu[block].forEach(([key, name, icon]) => {
+        const card = ctpl.cloneNode(true);
+        const a = card.querySelector('a');
+        card.dataset.slMenuItem = key;
+        a.href = key === 'comments' ? '?name=comments' : '../../admin.php?name=' + key;
+        a.title = name;
+        a.querySelector('.bi').classList.add('bi-' + icon);
+        a.querySelector('.sl-menu-name').textContent = name;
+        a.querySelector('[data-m="sub"]').textContent = key + ' · ' + (menu.access[key] || 'Все посетители');
+        card.querySelector('.sl-dial-toggle').setAttribute('aria-label', 'Опции раздела «' + name + '»');
+        card.querySelector('[data-m="edit"]').href = '../../admin.php?name=modules&op=edit&mod=' + key;
+        card.querySelector('[data-m="info"]').href = '../../admin.php?name=' + key + '&op=info';
+        const cfg = card.querySelector('[data-m="conf"]');
+        if (!menu.conf.includes(key)) cfg.remove();
+        else cfg.href = key === 'comments' ? '?name=comments&tab=config' : '../../admin.php?name=' + key + '&op=config';
+        const chip = '<span class="sl-queue" data-sl-queue><span data-sl-queue-n></span><span class="sl-sr"> ждут проверки</span></span>';
+        if (key === 'comments') a.querySelector('strong').insertAdjacentHTML('beforeend', ' ' + chip);
+        grid.append(card);
+      });
       const box = doc.querySelector('[data-sl-menu-list="' + block + '"]');
-      menu[block].forEach(([key, name, icon]) => {
+      if (box) menu[block].forEach(([key, name, icon]) => {
         const it = mtpl.cloneNode(true);
         const a = it.querySelector('a');
         it.dataset.slMenuItem = key;
-        a.href = key === 'comments' ? 'comments.html' : '../../admin.php?name=' + key;
+        a.href = key === 'comments' ? '?name=comments' : '../../admin.php?name=' + key;
         a.title = name;
         a.querySelector('.bi').classList.add('bi-' + icon);
         a.querySelector('.sl-menu-name').textContent = name;
@@ -861,6 +931,7 @@
     const data = JSON.parse(doc.getElementById('demo-rows').textContent);
     const rtpl = doc.getElementById('sl-row-tpl').content.firstElementChild;
     const body = doc.querySelector('[data-sl-rows]');
+    if (!body) return;
     const none = body.querySelector('[data-sl-none]');
     data.rows.forEach(([id, mod, by, text, date, ip, cid, on, far, cc, land]) => {
       const r = rtpl.cloneNode(true);
@@ -876,11 +947,17 @@
       r.querySelector('[data-r-tip]').setAttribute('aria-label', 'Подробности комментария ' + id);
       r.querySelector('[data-r-dial]').setAttribute('aria-label', 'Опции комментария ' + id);
       r.querySelector('[data-r-view]').href = '../../index.php?name=' + mod + '&op=view&id=' + cid + '#' + id;
+      r.querySelector('[data-r-reply]').href = '../../index.php?name=' + mod + '&op=view&id=' + cid + '#reply-' + id;
+      r.querySelectorAll('[data-sl-find]').forEach((b) => {
+        const name = b.dataset.slFind === 'by' ? 'Все комментарии автора «' + by + '»' : 'Все комментарии с IP ' + ip;
+        b.title = name;
+        b.setAttribute('aria-label', name);
+      });
       const flag = r.querySelector('.sl-geo-flag');
       flag.title = land;
       Object.assign(flag.firstElementChild, { src: '../../templates/admin/images/flags/' + cc + '.svg', alt: land, title: land });
       Object.assign(r.querySelector('[data-r="ip"]'), { href: 'https://whatismyipaddress.com/ip/' + ip, title: 'IP Адрес: ' + ip });
-      r.querySelector('[data-r="by"]').href = '../../index.php?name=account&op=view&uname=' + encodeURIComponent(by);
+      r.querySelector('a[data-r="by"]').href = '../../index.php?name=account&op=view&uname=' + encodeURIComponent(by);
       const check = r.querySelector('[data-sl-check-item]');
       check.value = id;
       check.setAttribute('aria-label', 'Выбрать комментарий ' + id);
@@ -898,7 +975,7 @@
     if (!layer || !legend || !panel) return;
     const off = new Set(JSON.parse(getKept('demo.marks.off') || '[]'));
     const items = [...legend.querySelectorAll('li[data-code]')];
-    const tones = { 'В': 'sl-chip-warn', 'Н': 'sl-chip-success', 'П': 'sl-chip-neutral' };
+    const tones = { 'В': 'sl-chip-warn', 'Н': 'sl-chip-success', 'П': 'sl-chip-neutral', 'Д': 'sl-chip-danger' };
     items.forEach((li) => {
       const code = li.dataset.code;
       const show = li.dataset.show ? ' <button type="button" class="sl-linkbtn" data-demo-show="' + li.dataset.show + '">Показать</button>' : '';
@@ -916,10 +993,10 @@
         const codes = el.dataset.mark.split(' ').filter((c) => !off.has(c));
         const r = el.getBoundingClientRect();
         const head = el.closest('thead');
-        if (!codes.length || !r.width || !r.height || el.closest('dialog, [popover], [hidden]') || (head && head.getBoundingClientRect().height < 2)) return;
+        if (!codes.length || r.width < 4 || r.height < 4 || el.closest('dialog, [popover], [hidden]') || (head && head.getBoundingClientRect().height < 2)) return;
         const kinds = new Map();
         codes.forEach((c) => {
-          const k = { 'В': 'v', 'Н': 'n', 'П': 'p' }[c[0]] || 'e';
+          const k = { 'В': 'v', 'Н': 'n', 'П': 'p', 'Д': 'd' }[c[0]] || 'e';
           kinds.set(k, (kinds.get(k) || []).concat(c));
         });
         html += '<span class="demo-mark-box" data-kind="' + (kinds.has('p') ? 'p' : kinds.keys().next().value) + '" data-codes="' + codes.join(' ') + '" style="left:'
@@ -1017,9 +1094,9 @@
       palette: () => setPalOpen(),
       session: () => setSessionEnd(),
       phone: () => setToast('Сузьте окно до 900 px и меньше (телефон — до 560 px), чтобы увидеть это.', null),
-      fail: () => { setView('all', true); state.fail = true; setList(); },
-      allpages: setShownPicked,
-      config: () => setView('config'),
+      fail: () => (doc.querySelector('[data-sl-list]') ? (setView('all', true), state.fail = true, setList()) : location.assign('?name=comments')),
+      allpages: () => (doc.querySelector('[data-sl-list]') ? setShownPicked() : location.assign('?name=comments')),
+      config: () => (doc.querySelector('[data-sl-list]') ? setView('config') : location.assign('?name=comments&tab=config')),
       rail: () => { if (!wide.matches) setToast('Балка есть только шире 900 px.', null); else setRail(true, true); }
     };
     legend.addEventListener('change', (e) => {
@@ -1046,9 +1123,16 @@
       else if (t.closest('[data-demo-reset]')) {
         ['sl.mode', 'sl.rail', 'sl.density', 'sl.sort', 'demo.marks', 'demo.marks.off', 'sl.motion', 'demo.panel.at', 'demo.panel.fold']
           .forEach((k) => { try { localStorage.removeItem(k); } catch (er) { /* storage may be off */ } });
-        location.href = location.pathname;
+        location.href = location.pathname + (root.dataset.demoPage === 'comments' ? '?name=comments' : '');
       } else if (t.closest('[data-demo-show]')) shows[t.closest('[data-demo-show]').dataset.demoShow]();
-      else if (t.closest('.demo-legend-code')) setFlash(t.closest('li').dataset.code);
+      else if (t.closest('.demo-legend-code')) {
+        const li = t.closest('li');
+        const other = root.dataset.demoPage === 'home' ? 'странице «Комментарии» (index.html?name=comments)' : 'главной (index.html)';
+        if (!setFlash(li.dataset.code)) {
+          if (li.dataset.show) shows[li.dataset.show]();
+          else setToast('Пометка ' + li.dataset.code + ' — на ' + other + '.', null);
+        }
+      }
       else if (t.closest('[data-demo-tag]')) {
         const li = legend.querySelector('li[data-code="' + t.closest('[data-demo-tag]').dataset.demoTag + '"]');
         setLegend(true);
@@ -1057,6 +1141,10 @@
         setTimeout(() => li.removeAttribute('data-flash'), 1600);
       }
     });
+    const setTagsLive = (e) => root.toggleAttribute('data-demo-tags-live', e.altKey === true);
+    doc.addEventListener('keydown', setTagsLive);
+    doc.addEventListener('keyup', setTagsLive);
+    window.addEventListener('blur', () => root.removeAttribute('data-demo-tags-live'));
     window.addEventListener('scroll', later, { passive: true, capture: true });
     window.addEventListener('resize', later);
     new MutationObserver((list) => { if (list.some((m) => !layer.contains(m.target))) later(); })

@@ -390,6 +390,8 @@ function getUserNavItems(bool $home = false): array {
     }
     $items[] = ['label' => _INFO, 'title' => _PERSONALINFO, 'href' => 'index.php?name=account&op=view&id='.$uid, 'icon' => getIconName('profile')];
     $items[] = ['label' => _CHANGE, 'title' => _CHANGE, 'href' => 'index.php?name=account&op=edithome', 'icon' => getIconName('settings'), 'sub' => _ACCOUNT_SETUPNOTE];
+    $items[] = ['label' => _ACCOUNT_LOGINS, 'title' => _ACCOUNT_LOGINS, 'href' => 'index.php?name=account&op=logins', 'icon' => getIconName('logins'),
+        'sub' => _ACCOUNT_LOGSNOTE];
     $items[] = ['label' => _LOGOUT, 'title' => _LOGOUT, 'href' => 'index.php?name=account&op=logout', 'icon' => getIconName('logout'), 'sub' => _ACCOUNT_EXITNOTE];
     foreach ($items as $pos => $item) {
         $items[$pos]['tone'] = $pos % 6;

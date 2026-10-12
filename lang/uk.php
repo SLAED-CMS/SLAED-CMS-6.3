@@ -6,6 +6,12 @@
 
 define('_ACCESSDENIED','Доступ заборонений');
 define('_ACCOUNT','Профіль');
+define('_ACCOUNT_LOGINS','Журнал входів');
+define('_ACCOUNT_LOGSNOTE','Коли й звідки був вхід');
+define('_ACCOUNT_LOGOK','Вхід виконано');
+define('_ACCOUNT_LOGPASS','Невірне ім\'я або пароль');
+define('_ACCOUNT_LOGBLOCK','Зупинено захистом');
+define('_ACCOUNT_LOGOAUTH','Зовнішній сервіс');
 define('_ACT','Активований');
 define('_ACTIVATE','Активувати');
 define('_ACTIVATEPERSONAL','Активувати власне меню?');
