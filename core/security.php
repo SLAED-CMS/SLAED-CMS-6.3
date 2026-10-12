@@ -97,7 +97,7 @@ $admin = (($tmp = base64_decode($_SESSION[$conf['admin_c']] ?? '', true)) && $tm
 $user = (($tmp = base64_decode($_COOKIE[$conf['user_c'].'-account'] ?? '', true)) && $tmp !== '') ? explode(':', $tmp) : [];
 
 # Request journal: every request is one Logger line of request.log, so posted secrets are masked and cookies and the session leave only their names
-if ($conf['security']['log']) Logger::addEntry('request', 'info', 'Request', ['user' => $user[1] ?? '']);
+if ($conf['security']['log']) Logger::addRequest('info', 'Request', ['user' => $user[1] ?? '']);
 
 # Security cookies blocker or ip blocker and member blocker
 $bcookie = getCookies($conf['security']['blocker_cookie']);
@@ -696,7 +696,41 @@ function checkSiteToken(string $tok = '', string $scope = 'ajax'): bool {
 # A link carrying one is also followed by prefetchers, scanners and link previews without anyone clicking it
 function checkAdminPost(string $scope): bool {
     if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') return false;
-    return checkSiteToken(getVar('post', 'token', 'text'), $scope);
+    if (!checkSiteToken(getVar('post', 'token', 'text'), $scope)) return false;
+    setAdminLog(['modul' => $scope]);
+    return true;
+}
+
+# Note one action of the panel: the passed token check opens the record once with its scope, operation and object, a redirect sets its result on an open one
+function setAdminLog(array $data): void {
+    global $admin, $alog;
+    if (!isset($data['modul'])) {
+        if ($alog) $alog = array_replace($alog, $data);
+        return;
+    }
+    if ($alog || !defined('ADMIN_FILE')) return;
+    $ids = getVar('req', 'id[]', 'num', []);
+    $tid = 0;
+    foreach (['id', 'bid', 'mid', 'cid', 'nid', 'uid', 'aid'] as $key) if ($tid = getVar('req', $key, 'num', 0)) break;
+    $alog = [
+        'event' => 'action',
+        'aid' => intval($admin[0] ?? 0),
+        'aname' => substr((string)($admin[1] ?? ''), 0, 25),
+        'modul' => $data['modul'],
+        'op' => getVar('req', 'op', 'var', ''),
+        'target' => $tid ?: intval($ids[0] ?? 0),
+        'num' => $tid ? 1 : count($ids),
+        'result' => 'open',
+    ];
+    register_shutdown_function('addAdminLog');
+}
+
+# Write the noted action of the panel as one line of admin.log when the request ends, so a handler that stops without a redirect is recorded too
+function addAdminLog(): bool {
+    global $alog, $conf;
+    if (!$alog || empty($conf['security']['log_a'])) return false;
+    [$data, $alog] = [$alog, []];
+    return Logger::addAdmin('info', $data['modul'].' '.$data['op'], $data);
 }
 
 # Return external HTTP referer URL, or empty string if internal/invalid/unknown

@@ -2142,8 +2142,9 @@ function getFlashHtml(): string {
     ]);
 }
 
-# Safe redirect with optional referer fallback
+# Safe redirect with optional referer fallback; it also gives an open action of the panel its result, a warning being a refusal
 function setRedirect(string $url, bool $refer = false, int $code = 302, string $text = '', bool $warn = false): never {
+    setAdminLog(['result' => $warn ? 'refused' : 'done']);
     if (!in_array($code, [301, 302, 303, 307, 308], true)) $code = 302;
     if ($code === 302 && strtoupper((string)($_SERVER['REQUEST_METHOD'] ?? '')) === 'POST') $code = 303;
     if ($text !== '') setFlash($text, $warn);
@@ -5346,21 +5347,6 @@ function write_dump(array $dump, string $file): bool {
     return ($fp) ? true : false;
 }
 
-function write_log(mixed $log, string $file): bool {
-    global $conf;
-    if ($fp = fopen($file, 'ab')) {
-        $log = ($log) ? implode("\n", $log) : _NO;
-        flock($fp, 2);
-        fwrite($fp, $log."\n"._DATE.': '.date(_TIMESTRING)."\n---\n");
-        flock($fp, 3);
-        fclose($fp);
-        if (file_exists($file) && filesize($file) > $conf['security']['log_size']) {
-            addCompress(LOGS_DIR, $file, 'filescan_'.date('Y-m-d_H-i').'.log', 'auto', true, true);
-        }
-    }
-    return ($fp) ? true : false;
-}
-
 function diff_dump(array $dump, array $old, array $skip = []): array|false {
     $log = [];
     $skip = array_map(static fn($path): string => trim(str_replace('\\', '/', (string)$path), '/'), $skip);
@@ -5440,13 +5426,13 @@ function addFilescanTask(): array {
     $skip = array_values(array_unique($skip));
     create_dump(BASE_DIR.'/', $dump, $skip);
     $dumpp = LOGS_DIR.'/filescan_tree.log';
-    $logpp = LOGS_DIR.'/filescan.log';
     if (file_exists($dumpp) && filesize($dumpp) != 0) {
         if ($log = diff_dump($dump, file($dumpp), $skip)) sort($log);
     } else {
         $log = false;
     }
-    write_log($log, $logpp);
+    foreach (is_array($log) ? $log : [] as $line) Logger::addFilescan('notice', $line);
+    Logger::addFilescan('info', 'File scan', ['files' => count($dump), 'changes' => is_array($log) ? count($log) : 0]);
     write_dump($dump, $dumpp);
     $state['last_run'] = time();
     $state['running'] = 0;
@@ -5481,32 +5467,18 @@ function addFilescanTask(): array {
     ];
 }
 
-# Record one login attempt, never its password: a row of _login_log always, and the block of admin.log or user.log while log_a or log_u is on
+# Record one login attempt, never its password: a row of _login_log always, and an event of admin.log or user.log while log_a or log_u is on
 function addLoginLog(int $uid, bool $adm, string $res, string $login, string $way = 'login'): void {
     global $admin, $conf, $db, $user;
-    $ip = getIp();
-    $agent = getAgent();
-    $pars = ['uid' => $uid, 'adm' => (int)$adm, 'res' => $res, 'way' => $way, 'ip' => $ip, 'agent' => filterCutText($agent, 255)];
+    $pars = ['uid' => $uid, 'adm' => (int)$adm, 'res' => $res, 'way' => $way, 'ip' => getIp(), 'agent' => filterCutText(getAgent(), 255)];
     $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_login_log (uid, admin, result, way, ip, agent) VALUES (:uid, :adm, :res, :way, :ip, :agent)', $pars);
     if (!($adm ? $conf['security']['log_a'] : $conf['security']['log_u'])) return;
-    $chan = $adm ? 'admin' : 'user';
-    $typ = ($res === 'ok') ? _YES : _NO;
-    $login = ($login) ? "\n"._NICKNAME.': '.substr($login, 0, 25) : '';
-    $url = filterText(getenv('REQUEST_URI'));
-    $ladmin = ($admin) ? "\n"._ADMIN.': '.substr($admin[1], 0, 25) : '';
-    $luser = ($user) ? "\n"._USER.': '.substr($user[1], 0, 25) : '';
-    $path = LOGS_DIR.'/'.$chan.'.log';
-    clearstatcache(true, $path);
-    if (is_file($path) && filesize($path) > $conf['security']['log_size']) {
-        addCompress(LOGS_DIR, $path, $chan.'_'.date('Y-m-d_H-i').'.log', 'auto', true, true);
-    }
-    if ($fhandle = fopen($path, 'ab')) {
-        fwrite(
-            $fhandle,
-            _INPUT.': '.$typ."\n"._IP.': '.$ip.$login.$ladmin.$luser."\n"._URL.': '.$url."\n"._BROWSER.': '.$agent."\n"._DATE.': '.date(_TIMESTRING)."\n---\n"
-        );
-        fclose($fhandle);
-    }
+    $levl = ($res === 'ok') ? 'info' : 'warning';
+    $mesg = ($res === 'ok') ? 'Login accepted' : 'Login refused';
+    $ctx = ['event' => 'login', 'result' => $res, 'way' => $way, 'uid' => $uid, 'login' => substr($login, 0, 25),
+        'admin' => substr((string)($admin[1] ?? ''), 0, 25), 'user' => substr((string)($user[1] ?? ''), 0, 25)];
+    if ($adm) Logger::addAdmin($levl, $mesg, $ctx);
+    else Logger::addUser($levl, $mesg, $ctx);
 }
 
 # Read the logins a filter of uid, admin, result, way and a period from/to selects, newest first, with their total; $num 0 reads the total alone

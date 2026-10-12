@@ -1359,7 +1359,7 @@ function oauthunlink(): void {
     $prov = strtolower(getVar('post', 'prov', 'word'));
     if (!$iswarn && $id && $prov !== '') {
         $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_user_oauth WHERE uid = :id AND provider = :prov', ['id' => $id, 'prov' => $prov]);
-        Oauth::setLog('oauth_admin_unlink', $prov, (int)$id, '', (int)($admin[0] ?? 0));
+        Logger::addOauth('info', 'oauth_admin_unlink', ['prov' => $prov, 'uid' => $id, 'actor' => (int)($admin[0] ?? 0)]);
     }
     setRedirect($afile.'.php?name=account&op=oauthlist'.($id ? '&id='.$id : ''), false, 302, $iswarn ? _TOKENMISS : _SUCCDELETE, $iswarn);
 }

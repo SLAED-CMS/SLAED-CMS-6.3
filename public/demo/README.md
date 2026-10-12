@@ -150,7 +150,7 @@
 - второй круг: Tablesort темы с кнопкой `v-sortbtn` в заголовке и памятью `ux.sort`; `data-ux-allpages` с
   `data-ux-allpages-go` и `-off` — отметка всего списка; `time[data-ux-ago]` — относительное время; `data-ux-views`
   (`data-ux-view`, `data-ux-view-x`, `data-ux-view-save`, `data-ux-view-new`, хранилище `ux.views`: фильтр, `dens` — вид списка, `sort` — колонка и направление); `data-ux-error` с
-  `data-ux-retry` и команда палитры «Смоделировать сбой сети»; `data-ux-log` — журнал экрана; `data-ux-bell` с панелью
+  `data-ux-retry` и команда палитры «Смоделировать сбой сети»; `data-ux-bell` с панелью
   `#ux-bell-pop` и `data-ux-tab-go`; `#ux-session` с `data-ux-sess-left` и `data-ux-sess-keep`, команда «Смоделировать
   конец сессии»; `data-label` у ячеек — карточки на телефоне
 - форма `ux-08-config.html`: `data-cf-form`, вкладки `data-cf-tab` / `data-cf-panel` (`role="tablist"`),

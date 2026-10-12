@@ -86,10 +86,98 @@ function security(): void {
 }
 
 function logview(): void {
-    global $labels, $tabset, $tpl;
+    global $afile, $conf, $labels, $tabset, $tpl;
+    $chans = ['admin' => 'admin', 'database' => 'database', 'error_file' => 'file', 'error_php' => 'php', 'error_site' => 'site', 'error_sql' => 'sql', 'file' => 'file',
+        'filescan' => 'filescan', 'hack' => 'hack', 'oauth' => 'oauth', 'request' => 'request', 'user' => 'user', 'warn' => 'warn'];
+    $file = getVar('get', 'file', 'var');
+    if ($file && isset($chans[$file])) {
+        $levs = array_slice(['debug', 'info', 'notice', 'warning', 'error', 'critical'], $file === 'error_file' ? 4 : 0);
+        $events = ['' => _SEC_ACTS, 'login' => _SEC_LOGINS, 'all' => _ALL];
+        $results = ['done' => _SEC_DONE, 'refused' => _SEC_REFUSED, 'open' => _SEC_OPEN, 'ok' => _ACCOUNT_LOGOK, 'password' => _ACCOUNT_LOGPASS, 'blocked' => _ACCOUNT_LOGBLOCK];
+        $words = ['add' => _ADD, 'save' => _SAVE, 'delete' => _DELETE, 'status' => _STATUS, 'updateAdminBlockOrder' => _SORTORDER, 'updateAdminCategoryOrder' => _SORTORDER];
+        $mods = [];
+        foreach ($conf['modules'] as $key => $mod) $mods[$key] = defined($mod['lang'] ?? '') ? constant($mod['lang']) : $key;
+        asort($mods);
+        $day = static fn(string $v): string => (preg_match('/^\d{4}-\d{2}-\d{2}$/D', $v) && strtotime($v) !== false) ? $v : '';
+        $isadm = $file === 'admin';
+        $levl = getVar('get', 'level', 'var', '');
+        $levl = in_array($levl, $levs, true) ? $levl : '';
+        $ip = getVar('get', 'ip', 'text', '');
+        $ip = filter_var($ip, FILTER_VALIDATE_IP) ? $ip : '';
+        $from = $day(getVar('get', 'from', 'text', ''));
+        $to = $day(getVar('get', 'to', 'text', ''));
+        $event = $isadm ? getVar('get', 'event', 'var', '') : '';
+        $event = isset($events[$event]) ? $event : '';
+        $modul = $isadm ? getVar('get', 'modul', 'var', '') : '';
+        $modul = isset($mods[$modul]) ? $modul : '';
+        $res = $isadm ? getVar('get', 'res', 'var', '') : '';
+        $res = isset($results[$res]) ? $res : '';
+        $num = max(1, getVar('get', 'num', 'num', 1));
+        $filt = array_filter(['level' => $levl ?: $levs[0], 'ip' => $ip, 'from' => $from, 'to' => $to, 'event' => $isadm ? ($event === '' ? 'action' : $event) : '',
+            'modul' => $modul, 'result' => $res], static fn($v) => $v !== '' && $v !== 'all');
+        $log = Logger::getEntries($chans[$file], $filt, $num, 50);
+        setHead();
+        $cont = getTplAdminTabs($tabset);
+        $pick = static function(string $name, array $list, string $cur, string $all) use ($tpl): string {
+            $opts = $all !== '' ? [['value_attr' => '', 'label_text' => $all, 'is_selected' => $cur === '']] : [];
+            foreach ($list as $key => $label) $opts[] = ['value_attr' => $key, 'label_text' => $label, 'is_selected' => $key === $cur];
+            return $tpl->getHtmlFrag('select', ['name_attr' => $name, 'options' => $opts, 'is_config' => true]);
+        };
+        $form = $tpl->getHtmlPart('form', [
+            'action_url' => $afile.'.php',
+            'method' => 'get',
+            'is_inline_filter' => true,
+            'hidden' => [
+                ['nameattr' => 'name', 'valueattr' => 'security'],
+                ['nameattr' => 'op', 'valueattr' => 'logview'],
+                ['nameattr' => 'file', 'valueattr' => $file],
+            ],
+            'content_html' => ($isadm ? $pick('event', $events, $event, '').$pick('modul', $mods, $modul, _MODUL).$pick('res', $results, $res, _STATUS) : '')
+                .$pick('level', array_combine($levs, array_map(static fn($v) => "\u{2265} ".$v, $levs)), $levl, _SEC_LEVEL)
+                .$tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'ip', 'value_attr' => $ip, 'placeholder_text' => _IP])
+                .$tpl->getHtmlFrag('input', ['itype' => 'date', 'name_attr' => 'from', 'value_attr' => $from, 'placeholder_text' => _DATE])
+                .$tpl->getHtmlFrag('input', ['itype' => 'date', 'name_attr' => 'to', 'value_attr' => $to, 'placeholder_text' => _DATE])
+                .$tpl->getHtmlFrag('button', ['button_type' => 'submit', 'submit_label' => _OK]),
+        ]);
+        $rows = '';
+        foreach ($log['rows'] as $row) {
+            $cells = [['is_col_date' => true, 'has_content_text' => true, 'content_text' => format_time((string)$row['ts'], _TIMESTRING)],
+                ['is_col_status' => true, 'has_content_text' => true, 'content_text' => (string)$row['level']]];
+            if ($isadm) {
+                $login = ($row['event'] ?? '') === 'login';
+                $who = $login ? (string)($row['login'] ?? '').(empty($row['uid']) ? '' : ' #'.intval($row['uid'])) : (string)($row['aname'] ?? '').' #'.intval($row['aid'] ?? 0);
+                $op = (string)($row['op'] ?? '');
+                $tid = intval($row['target'] ?? 0);
+                $more = intval($row['num'] ?? 0) - 1;
+                $cells[] = ['is_truncate' => true, 'has_content_text' => true, 'content_text' => trim($who)];
+                $cells[] = ['has_content_text' => true, 'content_text' => $mods[$row['modul'] ?? ''] ?? (string)($row['modul'] ?? '')];
+                $cells[] = ['has_content_text' => true, 'content_text' => $login ? _SEC_ENTRY : ($words[$op] ?? $op)];
+                $cells[] = ['is_col_status' => true, 'has_content_text' => true, 'content_text' => $tid ? '#'.$tid.($more > 0 ? ' +'.$more : '') : ''];
+                $cells[] = ['has_content_text' => true, 'content_text' => $results[$row['result'] ?? ''] ?? (string)($row['result'] ?? '')];
+            } else {
+                $cells[] = ['is_truncate' => true, 'has_content_text' => true, 'title_text' => (string)$row['msg'], 'content_text' => (string)$row['msg']];
+            }
+            $cells[] = ['content_html' => Geoip::getIpHtml((string)($row['ip'] ?? ''))];
+            $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', ['cells' => $cells])]);
+        }
+        if ($rows === '') {
+            $body = $form.$tpl->getHtmlFrag('alert', ['text' => _NO_INFO, 'meta' => '', 'type' => 'info', 'is_warn' => false]);
+        } else {
+            $head = $isadm ? [['content' => _ADMIN, 'is_truncate' => true], ['content' => _MODUL], ['content' => _CHECKOP], ['content' => _SEC_OBJECT, 'is_col_status' => true],
+                ['content' => _STATUS]] : [['content' => _MESSAGE, 'is_truncate' => true]];
+            $head = array_merge([['content' => _DATE, 'is_col_date' => true], ['content' => _SEC_LEVEL, 'is_col_status' => true]], $head,
+                [['content' => _IP, 'is_col_date' => true]]);
+            $link = 'name=security&op=logview&file='.$file.($event !== '' ? '&event='.$event : '').($modul !== '' ? '&modul='.$modul : '').($res !== '' ? '&res='.$res : '')
+                .($levl !== '' ? '&level='.$levl : '').($ip !== '' ? '&ip='.urlencode($ip) : '').($from !== '' ? '&from='.$from : '').($to !== '' ? '&to='.$to : '').'&';
+            $body = $form.$tpl->getHtmlFrag('table', ['is_fixed' => true, 'head' => $head, 'rows_html' => $rows])
+                .getPageNumbers('', $log['total'], (int)ceil($log['total'] / 50), 50, $link, 10, $num, '', 'num');
+        }
+        echo $cont.checkPerms(LOGS_DIR.'/'.$file.'.log').$tpl->getHtmlPart('box', ['title' => $labels[$file] ?? $file, 'content_html' => $body]);
+        setFoot();
+        return;
+    }
     setHead();
     $cont = getTplAdminTabs($tabset);
-    $file = getVar('get', 'file', 'var');
     if ($file) {
         $title = $labels[$file] ?? $file;
         $path = LOGS_DIR.'/'.$file.'.log';

@@ -391,7 +391,6 @@ define('_ID','№');
 define('_IMG','Bild');
 define('_INFO','Information');
 define('_DOCS','Dokumentation');
-define('_INPUT','Eingang');
 define('_INSERTIMG','Bild einfügen');
 define('_INTERESTS','Interessen');
 define('_INTERVAL','Intervall');

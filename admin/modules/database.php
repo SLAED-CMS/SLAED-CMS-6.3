@@ -7,12 +7,6 @@
 if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 
 
-function addDblog(string $text): void {
-    $path = LOGS_DIR.'/database.log';
-    $line = '['.date('Y-m-d H:i:s').'] '.$text."\n";
-    file_put_contents($path, $line, FILE_APPEND | LOCK_EX);
-}
-
 
 function checkDblock(): bool {
     global $db;
@@ -276,7 +270,7 @@ function dump(): void {
                 if (!checkDblock()) {
                     $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => 'Another migration run is already active']);
                 } else {
-                    addDblog('START blocks='.count($items));
+                    Logger::addDatabase('info', 'Run started', ['blocks' => count($items)]);
                     try {
                         foreach ($items as $index => $sql) {
                             $info = getSqlinfo($sql);
@@ -288,7 +282,8 @@ function dump(): void {
                                 $error = trim(($dberr['sqlstate'] ?? '').' / '.($dberr['code'] ?? '').' / '.($dberr['message'] ?? 'SQL error'), ' /');
                             }
                             $reslist[] = ['num' => $index + 1, 'type' => $info['type'], 'table' => $info['table'], 'ok' => $ok, 'error' => $error, 'sql' => $sql];
-                            addDblog(($ok ? 'OK ' : 'ERR ').'block='.($index + 1).' type='.$info['type'].' table='.$info['table'].($error ? ' error='.$error : ''));
+                            $note = ['block' => $index + 1, 'kind' => $info['type'], 'table' => $info['table'], 'error' => $error];
+                            Logger::addDatabase($ok ? 'info' : 'error', $ok ? 'Block done' : 'Block failed', $note);
                             if (!$ok) break;
                         }
                     } finally {

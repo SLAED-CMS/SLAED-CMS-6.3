@@ -21,6 +21,7 @@
 # The argument head runs the routes, the notices, the theme header and the header of a list with its counts
 # The argument quick runs the quick edit of a comment over its two routes: methods, the header token, the closed forms, the codes and what each leaves in the row
 # The argument files runs the files of the forum on the file route, the writers of a post that bind a name and the unused filter of the upload browser
+# The argument journal runs the journals of the panel, the logins and OAuth: a passed token writes one line, a refused one none, and a login is written once
 if (PHP_SAPI !== 'cli') {
     http_response_code(404);
     exit;
@@ -2736,6 +2737,146 @@ function getRouteTime(PDO $pdo, string $work): array {
     return $out;
 }
 
+# The journal run: both login journals on, OAuth on with a provider that is never called, a known password for the account clara and the administrator docsman
+function addRouteJournalConf(PDO $pdo, string $work): void {
+    $data = require $work.'/config/security.php';
+    $data['security'] = array_replace($data['security'], ['log' => '0', 'log_a' => '1', 'log_u' => '1']);
+    $data['security']['captcha']['active'] = '0';
+    setRouteFile($work.'/config/security.php', $data);
+    $data = require $work.'/config/oauth.php';
+    $data['oauth']['active'] = '1';
+    $data['oauth']['google'] = array_replace($data['oauth']['google'], ['active' => '1', 'clientid' => 'probe-client', 'secret' => 'probe-secret']);
+    setRouteFile($work.'/config/oauth.php', $data);
+    $pdo->prepare('UPDATE '.RPREF.'_users SET password = ? WHERE id = 4')->execute([password_hash('clara-pass-1', PASSWORD_BCRYPT)]);
+    $pdo->prepare('UPDATE '.RPREF.'_admins SET password = ? WHERE id = 4')->execute([password_hash('docs-pass-1', PASSWORD_BCRYPT)]);
+}
+
+# The lines one journal of the scratch gained since the given count, each reduced to the fields a test compares and whether it carried any part of the request body
+function getRouteLines(string $name, int $from = 0): array {
+    global $rwork;
+    $file = $rwork.'/logs/'.$name.'.log';
+    $out = [];
+    foreach (array_slice(is_file($file) ? (file($file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) ?: []) : [], $from) as $line) {
+        $row = json_decode($line, true);
+        if (!is_array($row)) {
+            $out[] = ['raw' => $line];
+            continue;
+        }
+        $keep = array_intersect_key($row, array_flip(['level', 'chan', 'msg', 'event', 'aname', 'modul', 'op', 'target', 'num', 'result', 'way', 'uid', 'login', 'prov',
+            'blocks', 'block', 'kind']));
+        $out[] = $keep + ['body' => array_intersect_key($row, array_flip(['query', 'post', 'cookie_keys', 'session_keys'])) !== []];
+    }
+    return $out;
+}
+
+# The journals of the panel, the logins and OAuth over real requests: what a passed token writes, what a refused one does not, and the logins written once
+function getRouteJournal(PDO $pdo, string $work): array {
+    $pre = RPREF.'_';
+    $count = fn(string $name): int => count(getRouteLines($name));
+    $out = [];
+    $gate = getRouteReply('gate', 'POST', 'admin.php', ['op' => 'check_admin', 'name' => 'docsman', 'pwd' => 'wrong-pass']);
+    $open = getRouteReply('gate', 'POST', 'admin.php', ['op' => 'check_admin', 'name' => 'docsman', 'pwd' => 'docs-pass-1']);
+    $out['panellogin'] = [$gate['code'], $open['code'], getRouteLines('admin')];
+    $mark = $count('admin');
+    $tok = getRouteToken(getRouteReply('root', 'GET', 'admin.php?name=messages&op=add')['body'], 'save');
+    $base = ['name' => 'messages', 'op' => 'save', 'posttype' => 'save', 'mid' => '0', 'title' => 'Journal one', 'body' => 'secret body text', 'expire' => '0',
+        'status' => '1', 'view' => '1', 'token' => $tok];
+    $codes = [getRouteReply('root', 'POST', 'admin.php', $base)['code']];
+    $mid = (int)$pdo->query('SELECT id FROM '.$pre.'message WHERE title = \'Journal one\'')->fetchColumn();
+    $codes[] = getRouteReply('root', 'POST', 'admin.php', ['name' => 'messages', 'op' => 'status', 'id' => (string)$mid, 'act' => '0', 'token' => $tok])['code'];
+    $codes[] = getRouteReply('root', 'POST', 'admin.php', ['name' => 'messages', 'op' => 'delete', 'id' => (string)$mid, 'token' => str_repeat('0', 64)])['code'];
+    $codes[] = getRouteReply('root', 'POST', 'admin.php', array_replace($base, ['mid' => (string)$mid, 'title' => '']))['code'];
+    $codes[] = getRouteReply('root', 'POST', 'admin.php', array_replace($base, ['mid' => (string)$mid, 'posttype' => 'delete']))['code'];
+    $when = date('Y-m-d H:i:s');
+    foreach (['first', 'second'] as $text) {
+        $pdo->prepare('INSERT INTO '.$pre.'comment (cid, modul, time, uid, name, ip, body, status, shown) VALUES (101, \'news\', ?, 2, \'anna\', \'127.0.0.1\', ?, 1, ?)')
+            ->execute([$when, $text, $when]);
+    }
+    $cids = $pdo->query('SELECT id FROM '.$pre.'comment ORDER BY id')->fetchAll(PDO::FETCH_COLUMN);
+    $ctok = getRouteToken(getRouteReply('root', 'GET', 'admin.php?name=comments')['body'], 'id="combulk"');
+    $codes[] = getRouteReply('root', 'POST', 'admin.php', ['name' => 'comments', 'op' => 'delete', 'id' => array_map('strval', $cids), 'token' => $ctok])['code'];
+    $blocks = getRouteReply('root', 'GET', 'admin.php?name=blocks')['body'];
+    $btok = preg_match('#data-sl-drag-token="([a-f0-9]{64})"#', $blocks, $hit) ? $hit[1] : '';
+    $codes[] = getRouteReply('root', 'POST', 'index.php?go=5&op=updateAdminBlockOrder', ['ids' => '', 'token' => str_repeat('0', 64)])['code'];
+    $codes[] = getRouteReply('root', 'POST', 'index.php?go=5&op=updateAdminBlockOrder', ['ids' => '', 'token' => $btok])['code'];
+    $stok = getRouteToken(getRouteReply('anna', 'GET', 'index.php?name=news')['body'], 'mode');
+    $codes[] = getRouteReply('anna', 'POST', 'index.php', ['op' => 'mode', 'mode' => 'dark', 'token' => $stok])['code'];
+    $dtok = getRouteToken(getRouteReply('root', 'GET', 'admin.php?name=database&op=dump')['body'], 'name="string"');
+    $codes[] = getRouteReply('root', 'POST', 'admin.php?name=database&op=dump', ['type' => 'dump', 'action' => 'exec', 'string' => 'SELECT 1;', 'token' => $dtok])['code'];
+    $out['actions'] = ['codes' => $codes, 'tokens' => [$tok !== '', $ctok !== '', $btok !== '', $stok !== '', $dtok !== ''], 'gone' => [$mid > 0,
+        (int)$pdo->query('SELECT COUNT(*) FROM '.$pre.'message WHERE id = '.$mid)->fetchColumn(), (int)$pdo->query('SELECT COUNT(*) FROM '.$pre.'comment WHERE deleted IS NULL')
+        ->fetchColumn()], 'lines' => getRouteLines('admin', $mark), 'database' => getRouteLines('database')];
+    $mark = $count('admin');
+    mkdir($work.'/logs/admin.log.tmp');
+    rename($work.'/logs/admin.log', $work.'/logs/admin.log.tmp/admin.log');
+    mkdir($work.'/logs/admin.log');
+    $kept = getRouteReply('root', 'POST', 'admin.php', array_replace($base, ['title' => 'Journal kept']))['code'];
+    rmdir($work.'/logs/admin.log');
+    rename($work.'/logs/admin.log.tmp/admin.log', $work.'/logs/admin.log');
+    rmdir($work.'/logs/admin.log.tmp');
+    $out['broken'] = [$kept, (int)$pdo->query('SELECT COUNT(*) FROM '.$pre.'message WHERE title = \'Journal kept\'')->fetchColumn(), $count('admin') - $mark];
+    $ltok = getRouteToken(getRouteReply('door', 'GET', 'index.php?name=account')['body'], 'user_password');
+    $out['sitelogin'] = [$ltok !== '', getRouteReply('door', 'POST', 'index.php?name=account', ['op' => 'login', 'user_name' => 'clara', 'user_password' => 'wrong-pass',
+        'token' => $ltok])['code'], getRouteReply('door', 'POST', 'index.php?name=account', ['op' => 'login', 'user_name' => 'clara', 'user_password' => 'clara-pass-1',
+        'token' => $ltok])['code']];
+    $mark = $count('user');
+    $init = getRouteReply('link', 'GET', 'index.php?name=account&op=oauth_init&prov=google');
+    $ptok = bin2hex(random_bytes(32));
+    $pdo->prepare('INSERT INTO '.$pre.'oauth_temp (token, kind, provider, uid, email, uname, redirect, time) VALUES (?, \'pending\', \'google\', \'sub-clara\', \'\', \'Clara\','
+        .' \'index.php\', ?)')->execute([$ptok, time()]);
+    file_put_contents($work.'/jar-link.txt', "127.0.0.1\tFALSE\t/\tFALSE\t0\toauth-pt\t".$ptok."\n", FILE_APPEND);
+    $atok = getRouteToken(getRouteReply('link', 'GET', 'index.php?name=account&op=oauth_finish')['body'], 'user_password');
+    $link = ['op' => 'oauth_finish', 'act' => 'link', 'user_name' => 'clara', 'user_password' => 'wrong-pass', 'token' => $atok];
+    $out['oauth'] = ['codes' => [$init['code'], $atok !== '', getRouteReply('link', 'POST', 'index.php?name=account', $link)['code'],
+        getRouteReply('link', 'POST', 'index.php?name=account', array_replace($link, ['user_password' => 'clara-pass-1']))['code']],
+        'linked' => (int)$pdo->query('SELECT COUNT(*) FROM '.$pre.'user_oauth WHERE uid = 4 AND provider = \'google\'')->fetchColumn(),
+        'user' => getRouteLines('user'), 'since' => $mark, 'events' => getRouteLines('oauth')];
+    $out['read'] = getRouteJournalView($work);
+    return $out;
+}
+
+# The table of the journals on the security screen over real requests: the filters, the pager, a foreign line skipped and the link of a module for a super-admin alone
+function getRouteJournalView(string $work): array {
+    $cells = static function (string $html): array {
+        $rows = [];
+        if (!preg_match('#<tbody>(.*?)</tbody>#s', $html, $body)) return $rows;
+        preg_match_all('#<tr\b.*?</tr>#s', $body[1], $all);
+        foreach ($all[0] as $tr) {
+            preg_match_all('#<td\b[^>]*>(.*?)</td>#s', $tr, $tds);
+            $rows[] = array_map(static fn($v) => trim(preg_replace('/\s+/', ' ', html_entity_decode(strip_tags($v), ENT_QUOTES, 'UTF-8'))), $tds[1]);
+        }
+        return $rows;
+    };
+    $page = static fn(string $query): string => getRouteReply('root', 'GET', 'admin.php?name=security&op=logview&'.$query)['body'];
+    $view = static fn(string $query): array => $cells($page($query));
+    file_put_contents($work.'/logs/admin.log', "Login: Yes\nForeign block\n---\n", FILE_APPEND);
+    $lines = '';
+    for ($i = 0; $i < 120; $i++) {
+        $lines .= json_encode(['ts' => date('c', time() - 600 + $i), 'level' => $i % 2 ? 'error' : 'warning', 'chan' => 'warn', 'msg' => 'Probe line '.$i,
+            'ip' => '127.0.0.1'])."\n";
+    }
+    file_put_contents($work.'/logs/warn.log', $lines, FILE_APPEND);
+    $first = $page('file=warn');
+    $soon = date('Y-m-d', time() + 86400 * 2);
+    $past = date('Y-m-d', time() - 86400 * 2);
+    $tabs = getRouteReply('root', 'GET', 'admin.php?name=messages')['body'];
+    $help = getRouteReply('helper', 'GET', 'admin.php?name=comments');
+    $deny = getRouteReply('helper', 'GET', 'admin.php?name=security&op=logview&file=admin');
+    return [
+        'actions' => $view('file=admin'),
+        'logins' => $view('file=admin&event=login'),
+        'all' => count($view('file=admin&event=all')),
+        'modul' => count($view('file=admin&modul=messages')),
+        'open' => count($view('file=admin&res=open')),
+        'foreign' => str_contains($page('file=admin&event=all'), 'Foreign block'),
+        'pages' => [count($cells($first)), str_contains($first, 'class="sl-pager"'), count($view('file=warn&num=3')), count($view('file=warn&level=error&num=2'))],
+        'order' => [$cells($first)[0][2] ?? '', $view('file=warn&level=error')[0][2] ?? '', array_unique(array_column($view('file=warn&level=error'), 1))],
+        'days' => [count($view('file=warn&from='.$past)), count($view('file=warn&from='.$soon)), count($view('file=warn&to='.$past))],
+        'link' => [str_contains($tabs, 'op=logview&amp;file=admin&amp;modul=messages'), $help['code'], str_contains($help['body'], 'op=logview'),
+            str_contains($deny['body'], '<tbody>')],
+    ];
+}
+
 # The child favhold of the intact run holds the account of anna with one more favorite for two seconds, as a parallel request at the limit does before its commit
 if (($argv[2] ?? '') === 'favhold') {
     $hpdo = getRoutePdo((string)($argv[3] ?? ''));
@@ -2767,6 +2908,7 @@ try {
     if (($argv[2] ?? '') === 'modes' || ($argv[3] ?? '') === 'modes') addRouteModeTypes($rpdo, $rwork);
     if (($argv[2] ?? '') === 'seo') addRouteSeoTypes($rpdo, $rwork);
     if (($argv[2] ?? '') === 'head') addRouteHeadTypes($rpdo, $rwork);
+    if (($argv[2] ?? '') === 'journal') addRouteJournalConf($rpdo, $rwork);
     $rproc = addRouteServer($rwork, $rport);
     if (($argv[2] ?? '') === 'serve') {
         fwrite(STDERR, 'serving on '.$rport.' with '.$rbase."\n");
@@ -2795,6 +2937,8 @@ try {
         $report['runs']['head'] = ['bar' => getRouteHeadBar($rpdo, $rwork)] + getRouteHead() + ['hint' => getRouteHint($rpdo)];
     } elseif (($argv[2] ?? '') === 'quick') {
         $report['runs']['quick'] = getRouteQuick($rpdo, $rwork);
+    } elseif (($argv[2] ?? '') === 'journal') {
+        $report['runs']['journal'] = getRouteJournal($rpdo, $rwork);
     } elseif (($argv[2] ?? '') === 'time') {
         $report['runs']['time'] = getRouteTime($rpdo, $rwork);
     } elseif (($argv[2] ?? '') === 'files') {

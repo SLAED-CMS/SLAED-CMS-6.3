@@ -8,7 +8,7 @@
 # It boots the real core with the configuration copied into scratch and every journal of the batch switched on there, so nothing below config/ or storage/ is written
 # The rows the login writer adds to _login_log of the site database are deleted again right after it
 # The request carries a password field, a cookie and a session value, each a random string the test then looks for in every file the run left in LOGS_DIR
-# Modes: write drives both writers and the dashboard reader once; rotate fills the user login journal and warn.log past the limit and reports where the next entries went
+# Modes: write drives both writers and the dashboard once; rotate fills user.log and warn.log past the limit; scan runs the file scan twice, the second time one file short
 $pmode = (string)($argv[1] ?? '');
 $probework = (string)($argv[2] ?? '');
 require_once __DIR__.'/probe_boot.php';
@@ -19,7 +19,8 @@ if (!is_dir($probework.'/config')) {
     }
 }
 $psec = require $probework.'/config/security.php';
-$psec['security'] = array_merge($psec['security'], ['log' => '1', 'log_a' => '1', 'log_u' => '1', 'log_size' => ($pmode === 'rotate') ? '64' : '10485760']);
+$psec['security'] = array_merge($psec['security'], ['log' => '1', 'log_a' => '1', 'log_u' => '1', 'log_d' => '1', 'mail_d' => '0',
+    'log_size' => ($pmode === 'rotate') ? '64' : '10485760']);
 file_put_contents($probework.'/config/security.php', "<?php\nreturn ".var_export($psec, true).";\n");
 if (is_file($probework.'/config/local.php')) unlink($probework.'/config/local.php');
 define('CONFIG_DIR', $probework.'/config');
@@ -43,6 +44,15 @@ function getProbeFiles(): array {
     return $out;
 }
 
+if ($pmode === 'scan') {
+    addFilescanTask();
+    $ptree = file(LOGS_DIR.'/filescan_tree.log', FILE_IGNORE_NEW_LINES) ?: [];
+    $pgone = (string)array_shift($ptree);
+    file_put_contents(LOGS_DIR.'/filescan_tree.log', implode("\n", $ptree)."\n");
+    addFilescanTask();
+    echo json_encode(['gone' => explode('||', $pgone)[0], 'lines' => array_map(static fn($v) => json_decode($v, true), file(LOGS_DIR.'/filescan.log') ?: [])]);
+    exit;
+}
 [$pmax] = $db->getSqlRow($db->getSqlQuery('SELECT COALESCE(MAX(id), 0) FROM '.PREFIX_DB.'_login_log')) ?: [0];
 addLoginLog(0, false, 'password', 'probeuser');
 $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_login_log WHERE id > :max', ['max' => $pmax]);

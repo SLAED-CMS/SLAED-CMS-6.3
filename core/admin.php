@@ -531,7 +531,7 @@ function getAdminCategoryList(string $modul = '', int $obj = 0): string {
 # Persist a full drag-and-drop tree order for one category module after a token check and echo the refreshed list fragment
 function updateAdminCategoryOrder(): void {
     global $db;
-    if (checkSiteToken()) {
+    if (checkAdminPost('categories')) {
         $ids = array_values(array_filter(array_map('intval', explode('-', getVar('post', 'ids', 'var')))));
         if ($ids) {
             [$cmod] = $db->getSqlRow($db->getSqlQuery('SELECT modul FROM '.PREFIX_DB.'_categories WHERE id = :cid', ['cid' => $ids[0]]));
@@ -750,7 +750,7 @@ function getAdminGroupRow(string $label, string $key, int $span): string {
 # Persist a full drag-and-drop order for one block position group after a token check and echo the refreshed list fragment
 function updateAdminBlockOrder(): void {
     global $db;
-    if (checkSiteToken()) {
+    if (checkAdminPost('blocks')) {
         $ids = array_values(array_filter(array_map('intval', explode('-', getVar('post', 'ids', 'var')))));
         if ($ids) {
             [$bpos] = $db->getSqlRow($db->getSqlQuery('SELECT bpos FROM '.PREFIX_DB.'_blocks WHERE id = :bid', ['bid' => $ids[0]]));

@@ -391,7 +391,6 @@ define('_ID','№');
 define('_IMG','Зображення');
 define('_INFO','Інформація');
 define('_DOCS','Документація');
-define('_INPUT','Вхід');
 define('_INSERTIMG','Вставити зображення');
 define('_INTERESTS','Інтереси');
 define('_INTERVAL','Інтервал');

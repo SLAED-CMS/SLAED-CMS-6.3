@@ -9,6 +9,8 @@ if (!defined('FUNC_FILE')) die('Illegal file access');
 class Logger {
     # The names whose value is a secret; the rule is the substring, checked case-insensitively, so every password, token, key and one-time code field in the codebase is covered
     private const MASKKEYS = '/pass|pwd|secret|token|key|code/i';
+    # The journals of the site's own events: a line carries the address, the method, the URL and the browser of its request, never the request body
+    private const BARECHANS = ['admin', 'user', 'oauth', 'database', 'filescan'];
     protected static bool $lock = false;
 
     # Add PHP log entry
@@ -41,8 +43,74 @@ class Logger {
         return self::addEntry('hack', $levl, $mesg, $ctx);
     }
 
+    # Add request log entry
+    public static function addRequest(string $levl, string $mesg, array $ctx = []): bool {
+        return self::addEntry('request', $levl, $mesg, $ctx);
+    }
+
+    # Add panel log entry: an action or a login of the panel
+    public static function addAdmin(string $levl, string $mesg, array $ctx = []): bool {
+        return self::addEntry('admin', $levl, $mesg, $ctx);
+    }
+
+    # Add user log entry: a login of the site
+    public static function addUser(string $levl, string $mesg, array $ctx = []): bool {
+        return self::addEntry('user', $levl, $mesg, $ctx);
+    }
+
+    # Add OAuth log entry: an event of the protocol, never a token, a code or a claim
+    public static function addOauth(string $levl, string $mesg, array $ctx = []): bool {
+        return self::addEntry('oauth', $levl, $mesg, $ctx);
+    }
+
+    # Add database log entry: a run of the database tool of the panel
+    public static function addDatabase(string $levl, string $mesg, array $ctx = []): bool {
+        return self::addEntry('database', $levl, $mesg, $ctx);
+    }
+
+    # Add file scan log entry: the changes of the file tree one scan found
+    public static function addFilescan(string $levl, string $mesg, array $ctx = []): bool {
+        return self::addEntry('filescan', $levl, $mesg, $ctx);
+    }
+
+    # Read the lines of one channel newest first with their total; level is a threshold, from and to are inclusive days, any other key matches its field
+    public static function getEntries(string $chan, array $filt, int $page, int $num): array {
+        $chan = self::getChan($chan);
+        $levs = ['debug', 'info', 'notice', 'warning', 'error', 'critical'];
+        $min = (int)array_search($filt['level'] ?? 'debug', $levs, true);
+        $from = (string)($filt['from'] ?? '');
+        $to = (string)($filt['to'] ?? '');
+        $match = array_diff_key($filt, array_flip(['level', 'from', 'to']));
+        $files = $chan !== '' ? array_values(array_unique(array_filter(array_map(static fn($v) => self::getFile($chan, $v), $levs)))) : [];
+        $lists = array_map(static fn($v) => is_file($v) ? (file($v, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) ?: []) : [], $files);
+        $pos = array_map(static fn($v) => count($v) - 1, $lists);
+        $next = static function (int $k) use (&$lists, &$pos, $chan, $levs, $min, $from, $to, $match): ?array {
+            while ($pos[$k] >= 0) {
+                $row = json_decode($lists[$k][$pos[$k]--], true);
+                if (!is_array($row) || !is_string($row['ts'] ?? null) || !is_string($row['level'] ?? null) || ($row['chan'] ?? '') !== $chan) continue;
+                $day = substr($row['ts'], 0, 10);
+                if ((int)array_search($row['level'], $levs, true) < $min || ($from !== '' && $day < $from) || ($to !== '' && $day > $to)) continue;
+                foreach ($match as $key => $val) if (!is_scalar($row[$key] ?? '') || (string)($row[$key] ?? '') !== (string)$val) continue 2;
+                return $row;
+            }
+            return null;
+        };
+        $heads = array_map($next, array_keys($lists));
+        $skip = (max(1, $page) - 1) * $num;
+        $rows = [];
+        $total = 0;
+        while ($heads = array_filter($heads)) {
+            $k = array_key_first($heads);
+            foreach ($heads as $j => $row) if (strcmp($row['ts'], $heads[$k]['ts']) > 0) $k = $j;
+            if ($total >= $skip && $total < $skip + $num) $rows[] = $heads[$k];
+            $total++;
+            $heads[$k] = $next($k);
+        }
+        return ['rows' => $rows, 'total' => $total];
+    }
+
     # Add structured log entry
-    public static function addEntry(string $chan, string $levl, string $mesg, array $ctx = []): bool {
+    protected static function addEntry(string $chan, string $levl, string $mesg, array $ctx = []): bool {
         $levl = self::getLevel($levl);
         $file = self::getFile($chan, $levl);
         if ($file === '') return false;
@@ -63,7 +131,7 @@ class Logger {
             'type' => $chan,
             'msg' => self::filterText($mesg, 2048),
             'fingerprint' => self::getFinger($chan, $filev, $linev, $mesg),
-        ], self::getRequest(), self::getContext(), self::getMemory(), $ctx);
+        ], self::getRequest(), in_array($chan, self::BARECHANS, true) ? [] : self::getContext(), self::getMemory(), $ctx);
         $line = json_encode($row, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE);
         $ok = $line !== false && self::addLine($file, $line);
         if (!$ok) error_log('[LOG] Write failed: '.$file.' | '.$mesg);
@@ -73,7 +141,7 @@ class Logger {
 
     # Get normalized channel
     protected static function getChan(string $chan): string {
-        $list = ['php', 'sql', 'file', 'site', 'warn', 'hack', 'request'];
+        $list = ['php', 'sql', 'file', 'site', 'warn', 'hack', 'request', 'admin', 'user', 'oauth', 'database', 'filescan'];
         return in_array($chan, $list, true) ? $chan : '';
     }
 
@@ -88,6 +156,11 @@ class Logger {
             'warn' => 'warn.log',
             'hack' => 'hack.log',
             'request' => 'request.log',
+            'admin' => 'admin.log',
+            'user' => 'user.log',
+            'oauth' => 'oauth.log',
+            'database' => 'database.log',
+            'filescan' => 'filescan.log',
         ];
         return isset($list[$chan]) ? rtrim(LOGS_DIR, '\\/').'/'.$list[$chan] : '';
     }
@@ -124,7 +197,7 @@ class Logger {
 
     # Get bounded request context
     # Request data is masked by key name before it is bounded, so a value named after a password, a secret, a token or a code never reaches a log line whatever raised the entry
-    # The name decides, not the channel or the module: every posted field of every request passes here, and a false positive such as a captcha code loses nothing worth reading
+    # The name decides, not the module: every posted field of a request a journal of errors records passes here, and a false positive such as a captcha code loses nothing
     protected static function getContext(): array {
         $data = ['query' => $_GET ?? [], 'post' => $_POST ?? []];
         foreach ($data as $part => $rows) {

@@ -61,18 +61,22 @@ final class JournalSecretTest extends TestCase
         $this->assertContains('probe_session', $line['session_keys']);
     }
 
-    # A refused login is recorded with the login that tried and without any attempted string, and the writer no longer accepts one
+    # A refused login is one Logger line of its journal with the login that tried, without any attempted string and without the request body
     #[Test]
     public function refusedLoginHasNoPassword(): void
     {
         $data = $this->getProbe('write');
         $this->assertSame(5, $data['params'], 'addLoginLog() takes no password');
-        $this->assertStringContainsString('probeuser', $data['files']['user.log'] ?? '');
-        $this->assertStringContainsString('probeadmin', $data['files']['admin.log'] ?? '');
         $this->assertStringNotContainsString($data['keys']['pass'], $data['files']['user.log'].$data['files']['admin.log']);
+        foreach (['user.log' => ['user', 'probeuser'], 'admin.log' => ['admin', 'probeadmin']] as $name => [$chan, $login]) {
+            $line = json_decode(trim($data['files'][$name] ?? ''), true);
+            $this->assertIsArray($line, $name.' holds one structured line');
+            $this->assertSame([$chan, 'warning', 'login', 'password', $login], [$line['chan'], $line['level'], $line['event'], $line['result'], $line['login']]);
+            foreach (['query', 'post', 'cookie_keys', 'session_keys'] as $key) $this->assertArrayNotHasKey($key, $line, $name.' carries the request body');
+        }
     }
 
-    # The entry that triggers a rotation lands in the new journal, not in the file moved away, and both rotations name the archive after its journal
+    # The entry that triggers a rotation lands in the new journal, not in the file moved away, and the rotation of Logger names the archive after its channel
     #[Test]
     public function rotationEntryReachesNewFile(): void
     {
@@ -85,6 +89,17 @@ final class JournalSecretTest extends TestCase
         $this->assertStringNotContainsString('old entry', $data['files']['warn.log'] ?? '');
         $arch = array_filter(array_keys($data['files']), static fn($v) => preg_match('/^warn_[0-9_-]+\.log\.(zip|gz|bz2|bak)$/', $v) === 1);
         $this->assertCount(1, $arch, 'Logger did not name its rotation archive warn_<date>.log.<ext>');
+    }
+
+    # The file scan writes one line per change and one line per run through Logger, without the request it ran in
+    #[Test]
+    public function fileScanWritesItsChanges(): void
+    {
+        $data = $this->getProbe('scan');
+        $want = [['info', 'File scan', 0], ['notice', null, null], ['info', 'File scan', 1]];
+        $this->assertSame($want, array_map(static fn(array $v): array => [$v['level'], $v['level'] === 'notice' ? null : $v['msg'], $v['changes'] ?? null], $data['lines']));
+        $this->assertStringEndsWith(': '.$data['gone'], $data['lines'][1]['msg'], 'the change names the file the snapshot lacked');
+        foreach ($data['lines'] as $line) $this->assertSame(['filescan', false], [$line['chan'], isset($line['post'])]);
     }
 
     # The security dashboard reads the structured request.log for its latest event

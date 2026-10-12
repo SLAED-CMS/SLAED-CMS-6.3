@@ -665,40 +665,6 @@
       [data-ux-list].v-loading tbody { animation: none; }
     }
 
-    /* The log of the screen */
-    .v-log summary {
-      display: flex;
-      align-items: center;
-      gap: var(--sl-space-3);
-      font-weight: var(--sl-weight-semibold);
-      cursor: pointer;
-    }
-
-    .v-log-empty {
-      margin: var(--sl-space-4) 0 0;
-      color: var(--sl-text-muted);
-    }
-
-    .v-log-list {
-      display: grid;
-      gap: var(--sl-space-2);
-      margin: var(--sl-space-4) 0 0;
-      padding: 0;
-      list-style: none;
-    }
-
-    .v-log-list li {
-      display: grid;
-      grid-template-columns: 6em 8em minmax(0, 1fr);
-      gap: var(--sl-space-4);
-      font-size: var(--sl-font-small);
-    }
-
-    .v-log-list time {
-      color: var(--sl-text-muted);
-      font-variant-numeric: tabular-nums;
-    }
-
     /* The bell is a toolbar item of one icon, as «Опции» is; the sum of the queues sits on the corner of the icon.
        The theme clips a toolbar item, so this one lets its count stand out of it */
     .sl-toolbar li.v-bell-item {
@@ -1066,6 +1032,7 @@
                 <li class="sl-tabs-item"><a href="#" class="sl-tabs-link" data-ux-tab="wait" data-ux-title="Ждут проверки">Ждут проверки</a></li>
                 <li class="sl-tabs-item"><a href="../admin.php?name=comments&amp;op=config" class="sl-tabs-link">Конфигурации</a></li>
                 <li class="sl-tabs-item"><a href="../admin.php?name=comments&amp;op=info" class="sl-tabs-link">Справка</a></li>
+                <li class="sl-tabs-item"><a href="../admin.php?name=security&amp;op=logview&amp;file=admin&amp;modul=comments" class="sl-tabs-link">Журнал действий</a></li>
               </ul>
             </nav>
           </div>

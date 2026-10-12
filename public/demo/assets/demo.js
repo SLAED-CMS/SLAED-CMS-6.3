@@ -1048,7 +1048,7 @@ const DEMO_UX_BASE = [
   { c: 'Э27', g: 'l', t: 'Клавиши: J и K — строки, X — отметить, E — править, / — поиск.' },
   { c: 'Э28', g: 'l', t: 'Загрузка списка — индикатор; сбой — сообщение с «Повторить», отметки и фильтры сохраняются (в палитре — «Смоделировать сбой сети»).' },
   { c: 'Э29', g: 'l', t: 'Удалённая строка передаёт фокус следующей, а не началу страницы.' },
-  { c: 'Э30', g: 'l', t: '«Журнал действий» экрана: кто, что и когда изменил, включая отмены.' },
+  { c: 'Э30', g: 'l', t: '«Журнал действий» — вкладка-ссылка на таблицу журнала «Безопасности», отобранную по модулю: кто, что и когда изменил.' },
   { c: 'Э31', g: 'l', t: 'Пейджер — финал серии пагинатора (pg-14) вместо «1 2 … 337 · Назад · Вперед».' },
   { c: 'Э32', g: 'l', t: 'Телефон: строка таблицы — карточка с подписями колонок; при отметке действие встаёт к нижнему краю экрана.' },
 ];
@@ -1108,7 +1108,7 @@ const DEMO_ADMINUX = [  {
     skip: [
       { c: 'Э18–Э22', t: 'нет «Моих видов», сортировки, относительной даты, подсказки ⓘ и кнопки статуса — у карточки нет колонок' },
       { c: 'Э24', t: 'флажки подписаны, но общего «Отметить все показанные» нет' },
-      { c: 'Э26, Э28, Э30, Э32', t: 'нет «Отметить все 8 414», сообщения о сбое, журнала; Э32 не нужен — карточки везде' },
+      { c: 'Э26, Э28, Э32', t: 'нет «Отметить все 8 414», сообщения о сбое; Э32 не нужен — карточки везде' },
     ],
   },
   {
@@ -1140,7 +1140,7 @@ const DEMO_ADMINUX = [  {
     skip: [
       { c: 'Э16', t: 'фильтр в адресе есть, но возврата после правки нет — «Править» в панели без адреса возврата' },
       { c: 'Э18–Э21', t: 'нет «Моих видов», сортировки, относительной даты, подсказки ⓘ — их место заняла панель просмотра' },
-      { c: 'Э26, Э28–Э30, Э32', t: 'нет «Отметить все 8 414», сообщения о сбое, фокуса на следующей строке, журнала, карточек на телефоне' },
+      { c: 'Э26, Э28, Э29, Э32', t: 'нет «Отметить все 8 414», сообщения о сбое, фокуса на следующей строке, карточек на телефоне' },
     ],
   },
   {
@@ -4660,17 +4660,6 @@ function setDemoAdminUx() {
       if (icon) icon.className = on ? 'sl-status-active' : 'sl-status-inactive';
     });
   };
-  const log = document.querySelector('[data-ux-log]');
-  const addLog = (text) => {
-    if (!log) return;
-    const t = new Date();
-    const li = document.createElement('li');
-    li.innerHTML = '<time datetime="' + t.toISOString() + '">' + t.toLocaleTimeString('ru-RU') + '</time><b>SLAED CMS</b><span></span>';
-    li.querySelector('span').textContent = text;
-    log.prepend(li);
-    document.querySelectorAll('[data-ux-log-empty]').forEach((n) => { n.hidden = true; });
-    document.querySelectorAll('[data-ux-log-n]').forEach((n) => { n.textContent = String(log.children.length); });
-  };
   const setAct = (list, act) => {
     if (!list.length) return;
     const all = state.allPages;
@@ -4688,11 +4677,9 @@ function setDemoAdminUx() {
     if (held && held.hidden && after) after.querySelector('[data-ux-check]').focus();
     const word = { del: 'Удалено', on: 'Активировано', off: 'Деактивировано' }[act];
     const what = all ? 'Комментариев: ' + getUxNum(UX_TOTAL) : (list.length === 1 ? 'Комментарий № ' + list[0].dataset.id : 'Комментариев: ' + list.length);
-    addLog(word + ': ' + what.replace('Комментарий № ', '№ ').replace('Комментариев: ', '') + (all ? ' (все страницы)' : ''));
     setToast(what + ' — ' + word.toLowerCase() + '.', () => {
       was.forEach(([r, on, gone]) => { setRowOn(r, on === '1'); r.toggleAttribute('data-ux-gone', gone); });
       setList();
-      addLog('Отменено: ' + word.toLowerCase() + ' — ' + what.replace('Комментарий № ', '№ ').replace('Комментариев: ', ''));
     });
   };
   // List keys: J and K walk the rows, X checks, E opens the edit, / goes to the search

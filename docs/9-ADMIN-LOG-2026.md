@@ -9,8 +9,10 @@ module links to its entries there. The plan replaces the client-only "Журна
 `public/demo/admin/comments.html` and takes over the login journal of `docs/2027-CORE.md` (section 3).
 
 Status: batch 0 done on 2026-10-12 (the proposals taken, the functions named); batch 1 done on 2026-10-12 (the
-login table, its screens, the monitor and the cleanup on it); batch 2 is next. The order of the
-batches is kept in `docs/ROADMAP-2026.md`. Update this line as batches land.
+login table, its screens, the monitor and the cleanup on it); batch 2 done on 2026-10-12 (the channels of `Logger`,
+the login written once, the record of the panel in `checkAdminPost()`); batch 3 done on 2026-10-12 (the table view of
+`logview` on `Logger::getEntries()`, the link of every module); batch 4 is next. The order of the batches is
+kept in `docs/ROADMAP-2026.md`. Update this line as batches land.
 
 No line numbers anywhere in this document on purpose: every reference names the table, the column, the function or
 the file it points at, and that name is what to search for.
@@ -56,8 +58,9 @@ Taken by the owner on 2026-10-12:
   the end so that its final pass also covers what the steps before it add.
 - **The old files of the stand are gone.** `log_admin.log`, `log_user.log`, `log_oauth.log` and the empty `log.log`,
   left from before the journals were renamed on 2026-10-07, and `dump.log` and `dump_log.log`, which nothing writes,
-  were deleted on 2026-10-12; nothing is carried over. Empty `user.log`, `oauth.log` and `request.log` were created in
-  their place beside the existing `admin.log`.
+  were to be deleted on 2026-10-12; nothing is carried over. Batch 2 found them still on the stand, with no
+  `user.log`, `oauth.log` and `request.log`, and deleted them then (owner, 2026-10-12); `Logger` creates the new
+  journals on their first line.
 
 Proposed by the plan and taken by the owner unchanged in batch 0 on 2026-10-12:
 
@@ -68,6 +71,9 @@ Proposed by the plan and taken by the owner unchanged in batch 0 on 2026-10-12:
   characters, names like `pass`, `token`, `key` masked): for an action of the panel that is the text of a block or a
   letter, an address of a user, a whole configuration. The channels `admin`, `user` and `oauth` keep the address, the
   method, the URL and the browser of the request and leave `query`, `post`, `cookie_keys` and `session_keys` out.
+  The owner widened this in batch 2 on 2026-10-12 to `database` and `filescan` as well: the posted `string` of the
+  database tool is the whole dump and would repeat in every line of a run, and the file scan runs on a visitor's
+  request through the pseudo-cron. The body stays only in the journals of errors, where it serves debugging.
 - **A refused token is no event.** It changed nothing; a forged request already reaches the hack journal through the
   input filter, and a stale form after a long pause is no event of administration.
 - **The action is shown in words** for the common operations (add, save, delete, status, order), from language
@@ -197,8 +203,8 @@ batches. The 6.2 path creates the table with `CREATE TABLE IF NOT EXISTS` in `ta
 ### Channels
 
 `Logger` gains the channels `admin`, `user`, `oauth`, `database` and `filescan`, written to the files of those names
-and rotated by `addLine()` like the others; the first three, listed in `BARECHANS`, carry the request without its
-body (see "Decisions"). `addLoginLog()`, `addAdminLog()`, the OAuth handlers, the database tool and the file scan
+and rotated by `addLine()` like the others; all five, listed in `BARECHANS`, carry the request without its body
+(see "Decisions"). `addLoginLog()`, `addAdminLog()`, the OAuth handlers, the database tool and the file scan
 write through the methods of "Functions" and keep no file handling of their own.
 
 An event of the panel adds to the common fields:
@@ -280,6 +286,18 @@ accepted and a refused login of the panel and of the site; an OAuth login writes
 `oauth.log`; a protocol event of OAuth; a line of the database tool and of the file scan; the rotation of a channel,
 which replaces the rotation of `user.log` by `addLoginReport()` that `JournalSecretTest` checks today.
 
+Done on 2026-10-12. `setAdminLog()` opens a record only where `ADMIN_FILE` is defined, so the switches of the site
+that share `checkAdminPost()` (the colour mode, the view of a list, the language) write nothing; the token check of
+`index.php?go=5` stands in front of the order handlers and wants the token of the scope `ajax`, which
+`checkAdminPost()` accepts for any scope, so their tables keep emitting it. A line of the panel takes the message
+`<scope> <op>`; a login `Login accepted` or `Login refused` with `event`, `result`, `way`, `uid`, `login` and the
+`admin` or `user` already signed in; an OAuth event its name with `prov`, `uid`, `note` and `actor` where known; the
+database tool `Run started` and one `Block done` or `Block failed` per block; the file scan one `notice` per change and
+one `File scan` per run. `_INPUT`, read only by the old block of `addLoginReport()`, left the six locales. The tests
+are `AdminLogTest` over `route_probe.php journal` and `JournalSecretTest` with the probe mode `scan`. The stand had
+lost `_login_log` of batch 1 together with the old files (its database lags the shipped schema);
+the table was created again from `table.sql`.
+
 ### Batch 3 — reading the files
 
 `Logger::getEntries()`; the table view of `logview` with its filters and pager, `admin.log` opening on its actions;
@@ -287,6 +305,21 @@ the link "Журнал действий" in the tab strip of `getTplAdminTabs()`
 in six locales; the template parts in both themes where the panel needs them; the block Э30 of the stand replaced by
 the link. Tests: the filters, the pager, the skipped foreign line and the link over real requests, and an
 administrator without "Безопасность" sees no link.
+
+Done on 2026-10-12. `Logger::getEntries()` reads every file of a channel, so the channel `file` is `file.log` and
+`error_file.log` together, newest first; the view of `error_file` keeps the levels from `error` up. Its filter of
+levels is a threshold ("≥ warning" shows warning, error and critical), `from` and `to` are whole days, any other key
+matches the field of the line; a rotated archive is not read. The table of `admin.log` shows time, level, who, module,
+action, object and result and the address, without the message, which repeats `<scope> <op>` or the result of a login;
+the other journals show time, level, message and address. The link "Журнал действий" (`_SEC_STAT_A`, the label of
+`admin.log` in the list as well) stands at the end of the tab strip of a module known to `$conf['modules']`, for an
+administrator for whom `isAdmin(true)` holds, which is who may open "Безопасность". The words are the constants
+`_SEC_ACTS`, `_SEC_DONE`, `_SEC_ENTRY` (`_SEC_LOGIN` was taken), `_SEC_LEVEL`, `_SEC_LOGINS`, `_SEC_OBJECT`, `_SEC_OPEN`
+and `_SEC_REFUSED` in `admin/lang/*.php`, with `_ADD`, `_SAVE`, `_DELETE`, `_STATUS` and `_SORTORDER` for the common
+operations; `_SEC_LOG_A` and `_SEC_STAT_OAUTH` now name what their journals hold since batch 2. No template part was
+needed. On the stand the block Э30 left the pages `ux-*.html` and their script, and the link stands in the tab strip of
+`admin/index.html` and of `ux-*.html` but `ux-08-config.html`, whose tabs are buttons of a tab list. The tests are
+`AdminLogTest` over `route_probe.php journal`, its part `getRouteJournalView()`.
 
 ### Batch 4 — reference
 

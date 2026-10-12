@@ -6,7 +6,7 @@
 
 if (!defined('FUNC_FILE')) die('Illegal file access');
 
-# OAuth2/OIDC client: provider HTTP, JWT validation, one-time flow storage, account links, UI buttons and audit log
+# OAuth2/OIDC client: provider HTTP, JWT validation, one-time flow storage, account links and UI buttons; its events go to Logger::addOauth()
 class Oauth {
 
     # Returns the provider config row when OAuth and the provider are active and fully configured, null otherwise
@@ -135,7 +135,7 @@ class Oauth {
         global $conf;
         $data = self::getHttp((string)($conf['oauth'][$prov]['userinfo'] ?? ''), [], $tok);
         if (!$data['ok']) {
-            self::setLog('userinfo_failed', $prov, 0, $data['error']);
+            Logger::addOauth('warning', 'userinfo_failed', ['prov' => $prov, 'note' => $data['error']]);
             return [];
         }
         return $data['data'];
@@ -151,7 +151,7 @@ class Oauth {
         $data = self::getHttp((string)($conf['oauth'][$prov]['jwks'] ?? ''));
         if (!$data['ok'] || empty($data['data']['keys']) || !is_array($data['data']['keys'])) {
             if ($stale) {
-                self::setLog('jwks_net_error', $prov, 0, $data['error']);
+                Logger::addOauth('warning', 'jwks_net_error', ['prov' => $prov, 'note' => $data['error']]);
                 return $stale;
             }
             throw new RuntimeException('jwks_unavailable');
@@ -206,7 +206,7 @@ class Oauth {
         $key = null;
         foreach ($keys as $row) if (($row['kid'] ?? '') === $kid) $key = $row;
         if ($key === null) {
-            self::setLog('jwks_kid_miss', $prov);
+            Logger::addOauth('warning', 'jwks_kid_miss', ['prov' => $prov]);
             foreach (self::getJwksKeys($prov, true) as $row) if (($row['kid'] ?? '') === $kid) $key = $row;
         }
         if ($key === null) throw new RuntimeException('jwks_kid_miss');
@@ -412,18 +412,5 @@ class Oauth {
         }
         if (!$rows) return '';
         return $tpl->getHtmlFrag('oauth-buttons', ['providers' => $rows, 'title' => _OAUTHWITH]);
-    }
-
-    # Appends an OAuth audit event to storage/logs/oauth.log with size-capped rotation; never logs tokens, codes or raw claims
-    public static function setLog(string $event, string $prov = '', int $uid = 0, string $note = '', int $actor = 0): void {
-        global $conf;
-        $file = LOGS_DIR.'/oauth.log';
-        $note = substr(preg_replace('/[\r\n]+/', ' ', $note), 0, 200);
-        $line = date('Y-m-d H:i:s').' | '.$event.' | '.$prov.' | uid='.$uid.(($actor) ? ' | actor='.$actor : '').' | ip='.getIp().(($note !== '') ? ' | '.$note : '')."\n";
-        $mode = (is_file($file) && filesize($file) > (int)($conf['security']['log_size'] ?? 262144)) ? 'wb' : 'ab';
-        if ($fh = fopen($file, $mode)) {
-            fwrite($fh, $line);
-            fclose($fh);
-        }
     }
 }

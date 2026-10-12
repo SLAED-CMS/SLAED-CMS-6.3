@@ -254,14 +254,15 @@ function getTplPager(array $data = []): string {
     return getTplPagerView($num, $pages, $maxpg, $target, ['count' => $cnt, 'limit' => $limit, 'page' => $limit]);
 }
 
-# Render one full admin module header with title, icon and top-level tabs
+# Render one full admin module header with title, icon and top-level tabs; a super-admin also gets the action log of the module
 function getTplAdminTabs(array $data = []): string {
     global $afile, $conf, $tpl;
     $title = _ADMINMENU;
     $icon = 'grid';
     $subtitle = (string)($data['subtitle_html'] ?? '');
     $name = filterWord(getVar('req', 'name', 'text', ''));
-    if ($name !== '' && isset($conf['modules'][$name]) && is_array($conf['modules'][$name])) {
+    $known = $name !== '' && isset($conf['modules'][$name]) && is_array($conf['modules'][$name]);
+    if ($known) {
         $lang = trim((string)($conf['modules'][$name]['lang'] ?? ''));
         if ($lang !== '') $title = defined($lang) ? constant($lang) : $lang;
         $ico = trim((string)($conf['modules'][$name]['icon'] ?? ''));
@@ -281,6 +282,7 @@ function getTplAdminTabs(array $data = []): string {
             ];
         }
     }
+    if ($known && isAdmin(true)) $links[] = ['href' => $afile.'.php?name=security&op=logview&file=admin&modul='.$name, 'label' => _SEC_STAT_A];
     $tabs = '';
     foreach ($links as $link) {
         $tabs .= $tpl->getHtmlFrag('tabs-link', [
