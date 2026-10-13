@@ -2,8 +2,8 @@
     "algorithm": "SHA-256",
     "files": {
         "README.md": {
-            "bytes": 9776,
-            "sha256": "4d486f1219cfda0d6890ef27b57649cdfd35b97929b50d422914d98f8763f70b"
+            "bytes": 11217,
+            "sha256": "434e894c94a246db8749581bfe1b9a3de1d05c4c3a8bb7c92a3cf52f72675830"
         },
         "archive/assets/SLAED-Phoenix-Anthem.mp3": {
             "bytes": 1080842,
@@ -133,13 +133,29 @@
             "bytes": 780,
             "sha256": "2bb402860ca1d1085c15057cfe6f51d5e8accf09db8349eb9fd1e333c85d1acd"
         },
+        "exports/SLAED-Phoenix-dark-1080x1920.mp4": {
+            "bytes": 35454161,
+            "sha256": "e2c433b9e15f458eff16c47742bf1b9aee3fbb701ac0b2d2aef3c2942fa563eb"
+        },
+        "exports/SLAED-Phoenix-dark-1920x1080.mp4": {
+            "bytes": 38696857,
+            "sha256": "ce1bb6494f55c49cba03ab21e71d09e088621583acdb550d97a0ece8c9d0fda6"
+        },
         "exports/SLAED-Phoenix-dark-720p.mp4": {
-            "bytes": 14514751,
-            "sha256": "ea6a7f6aa115770ead79672e9e697865ab60ab7646178a7d0b71605b7c435f35"
+            "bytes": 13206784,
+            "sha256": "765b7720674e37149ab342c33d6183b4e6f5fea84a440ee808df155f4c4381a5"
+        },
+        "exports/SLAED-Phoenix-light-1080x1920.mp4": {
+            "bytes": 33912869,
+            "sha256": "ed0ac2f49e31155bb5e353abfc2aa71adff16ea72cc1d3e4624e73dfd18bcdc4"
+        },
+        "exports/SLAED-Phoenix-light-1920x1080.mp4": {
+            "bytes": 37307429,
+            "sha256": "16b4edd8ac15641ac8fd477c9785d7b0acf07d7c0c8dce54b6e3737eee48ee60"
         },
         "exports/SLAED-Phoenix-light-720p.mp4": {
-            "bytes": 14087363,
-            "sha256": "b4e170141bb8e8f521443552cd424c88365ab3eb6c1393faac5bb5ba4b8c540b"
+            "bytes": 12686317,
+            "sha256": "18f9f24968a89c8fe61aa6c2c7fd29deb9a25788f014093a8e29dc1e34eb5e0b"
         },
         "images/development-environment.svg": {
             "bytes": 18921,
@@ -166,8 +182,8 @@
             "sha256": "1a434930ad2f7fc508e2a7baaa84d919b16794f378a59ee470e5bc1c2e36328e"
         },
         "index.html": {
-            "bytes": 17480,
-            "sha256": "19c0cff4f621a16c30126ad6902ff6729250a9fa32b1e751b3f4284c4d368a7f"
+            "bytes": 17534,
+            "sha256": "4524622abf19b50bc9d3ad95cadf27ec8b1105fcdc8b646afd4a5d3a0e77fe96"
         },
         "logos/slaed-logo-mark-gradient-blue.svg": {
             "bytes": 8998,
@@ -182,8 +198,8 @@
             "sha256": "4e1103d7a23783178cd363850f2d4116c7f6652b60a92d3c3e5c53b9026b0fff"
         },
         "manifest.json": {
-            "bytes": 657,
-            "sha256": "5e2a1029b6b31e2af8d2bf004e34c6b51d0112a0310dbd239e5aa3d2405a251c"
+            "bytes": 889,
+            "sha256": "3f3067fb50d0a04ddaa11306ecaf89848686ef2bf7ac399f201c10e5a2f8e99b"
         },
         "player/audio.js": {
             "bytes": 18743,
@@ -202,16 +218,16 @@
             "sha256": "ee73bcf7e5002c5d2001fb214d1e72e2a7c9b3f10593f07f2498b3e2769bdd02"
         },
         "player/scene.js": {
-            "bytes": 43632,
-            "sha256": "845e994d4d7ce6154b35b83b3de163f843fbed743ee6df102956737d3ff93252"
+            "bytes": 43966,
+            "sha256": "5bf0ff2260ea4ac735bd3c60f9c3c1aa0305c6e9548c846e0755e573c3910104"
         },
         "player/styles.css": {
-            "bytes": 43121,
-            "sha256": "b90c221047838701d2897de6e7b4a7693520594ba5de12fc5f0e476b7d323755"
+            "bytes": 49617,
+            "sha256": "62e4ffba4de11878221eed33ab35d979e27d7182b3029c94ec92a68c8ea942f2"
         },
         "player/timeline.js": {
             "bytes": 964,
-            "sha256": "cfa422e16fd81bad41b790df291736dc6f6c753775be6c9e4af5849ca2abbcc8"
+            "sha256": "d7ff55e8634ad229c4b7c17f5178fa4bc5a9d4a3be97edcf8415681944021be6"
         },
         "presets/dark.json": {
             "bytes": 84,
@@ -240,6 +256,10 @@
         "presets/production/video-export.json": {
             "bytes": 530,
             "sha256": "a1537dc41062e018ac4945e60b20264449b46b3af6059be8dbcd6ca2ed2acb62"
+        },
+        "presets/production/video-fullhd.json": {
+            "bytes": 1128,
+            "sha256": "3213f88ddc4d55d018fa6d5853a019e075e9f438589795c4806b8e2c9d9bf258"
         },
         "redirect.js": {
             "bytes": 214,

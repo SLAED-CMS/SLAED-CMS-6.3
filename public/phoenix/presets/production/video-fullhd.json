@@ -1,0 +1,29 @@
+{
+    "source": "../../index.html",
+    "themes": ["light", "dark"],
+    "duration": 83.352,
+    "fps": 30,
+    "profiles": {
+        "portrait": {
+            "width": 1080,
+            "height": 1920,
+            "viewport": {"width": 360, "height": 640},
+            "deviceScaleFactor": 3,
+            "output": "SLAED-Phoenix-{theme}-1080x1920.mp4"
+        },
+        "landscape": {
+            "width": 1920,
+            "height": 1080,
+            "viewport": {"width": 1280, "height": 720},
+            "deviceScaleFactor": 1.5,
+            "output": "SLAED-Phoenix-{theme}-1920x1080.mp4"
+        }
+    },
+    "capture": {"scale": "device", "jpegQuality": 96, "canvasScaleLimit": 3, "controls": false},
+    "video": {"codec": "libx264", "preset": "medium", "crf": 20, "maxrate": "5000k", "bufsize": "10000k",
+        "pixelFormat": "yuv420p", "profile": "main", "level": "4.0"},
+    "sound": {"source": "../../exports/SLAED-Phoenix-{theme}-720p.mp4", "mode": "stream-copy",
+        "codec": "aac", "rate": 44100, "channels": 2},
+    "faststart": true,
+    "metadata": {"title": "SLAED Phoenix", "artist": "SLAED CMS"}
+}

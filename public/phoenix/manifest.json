@@ -1,6 +1,6 @@
 {
     "name": "SLAED Phoenix",
-    "version": "1.0.0",
+    "version": "1.0.3",
     "date": "2026-10-13",
     "entry": "index.html",
     "integration": "embed.js",
@@ -12,7 +12,14 @@
     "release": 2027,
     "fade": 74.7,
     "reveal": 80.7,
-    "exports": ["exports/SLAED-Phoenix-light-720p.mp4", "exports/SLAED-Phoenix-dark-720p.mp4"],
+    "exports": [
+        "exports/SLAED-Phoenix-light-720p.mp4",
+        "exports/SLAED-Phoenix-dark-720p.mp4",
+        "exports/SLAED-Phoenix-light-1080x1920.mp4",
+        "exports/SLAED-Phoenix-dark-1080x1920.mp4",
+        "exports/SLAED-Phoenix-light-1920x1080.mp4",
+        "exports/SLAED-Phoenix-dark-1920x1080.mp4"
+    ],
     "examples": ["examples/index.html", "examples/nested/page.html"],
     "requires": {"protocol": "http-or-https", "sameOrigin": true},
     "checksums": "checksums.json"

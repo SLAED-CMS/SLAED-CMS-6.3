@@ -99,7 +99,7 @@
             ].join('\n')
         },
         {
-            file: 'templates/admin/layouts/admin.html', label: 'Новый интерфейс. Обе темы.',
+            file: 'templates/admin/layouts/admin.html', label: 'Новый интерфейс · обе темы',
             code: [
                 '<html data-theme="{{ mode }}">', '<main class="sl-admin-content">', '    {% block content %}',
                 '    {% endblock %}', '</main>', '</html>'
@@ -408,9 +408,10 @@
     /* Type representative project code as each subsystem joins the new architecture */
     function setCodeFrame(time) {
         const age = Math.max(0, time - 24.4);
-        const index = Math.min(3, Math.floor(age / 1.2));
+        const phases = [0, 0.9, 1.8, 3.6];
+        const index = age < 0.9 ? 0 : age < 1.8 ? 1 : age < 3.6 ? 2 : 3;
         const text = sources[index].code;
-        const count = Math.min(text.length, Math.floor((age - index * 1.2) / 0.65 * text.length));
+        const count = Math.min(text.length, Math.floor((age - phases[index]) / 0.65 * text.length));
         if (index !== lastfile) {
             file.textContent = sources[index].file;
             build.textContent = sources[index].label;
@@ -423,13 +424,14 @@
             lines.textContent = Array.from({length: total}, (_, num) => String(num + 1).padStart(2, '0')).join('\n');
             lasttext = count;
         }
-        const progress = getClamp(age / 4.8);
+        const progress = getClamp(age / 5.4);
         percent.textContent = Math.round(progress * 100) + '%';
         buildbar.style.transform = 'scaleX(' + progress + ')';
+        const focus = Math.min(2, Math.floor(age / 1.8));
         labs.forEach((node, num) => {
-            node.dataset.active = String(num === (index < 2 ? 0 : index - 1));
-            const lit = getEase((age - 0.4 - num * 0.55) / 0.75);
-            node.style.opacity = 0.12 + lit * 0.88;
+            node.dataset.active = String(num === focus);
+            const lit = getEase((age - focus * 1.8) / 0.2);
+            node.style.opacity = num === focus ? lit : 0;
             node.style.borderColor = lit > 0.9 ? 'var(--sl-pres-frame-border)' : 'var(--sl-pres-frame-border)';
             node.style.transform = 'translateY(' + (1 - lit) * 30 + 'px) scale(' + (0.94 + lit * 0.06) + ')';
         });
@@ -446,11 +448,14 @@
         const future = getClamp((spent - 10.8) / 2.05);
         const value = spent < 9.95 ? 2005 + Math.floor(past * 22) : 2027 + Math.floor(future * 48);
         if (year.textContent !== String(value)) year.textContent = String(value);
-        const words = ['Первая строка кода.', 'Идеи становятся возможностями.', 'Проблемы. Поиск. Решения.', 'Система растёт вместе с нами.', 'Время двигаться дальше.'];
-        era.textContent = spent >= 10.8 ? 'Создаём дальше.' : spent >= 9.95 ? '2027 / РЕЛИЗ PHOENIX' : words[Math.min(4, Math.floor(time / 1.4))];
+        const words = ['Первая строка кода', 'Идеи становятся возможностями', 'Проблемы → поиск → решения', 'Система растёт вместе с нами', 'Время двигаться дальше'];
+        era.textContent = spent >= 10.8 ? 'Создаём дальше' : spent >= 9.95 ? '2027 / РЕЛИЗ PHOENIX' : words[Math.min(4, Math.floor(time / 1.4))];
         yearbar.style.transform = 'scaleX(' + progress + ')';
         works.forEach((node, index) => {
-            const enter = getEase((time - 0.5 - index * 0.23) / 1.1);
+            const focus = Math.min(3, Math.floor(time / 1.875));
+            node.dataset.active = String(index === focus);
+            const narrow = wide <= 560 || (wide <= 900 && high > 650);
+            const enter = getEase(narrow ? (time - focus * 1.875) / 0.22 : (time - 0.5 - index * 0.23) / 1.1);
             const side = index % 2 ? 1 : -1;
             const float = still ? 0 : Math.sin(time * 1.1 + index) * 5;
             const depth = 0.91 + enter * 0.09;
@@ -557,7 +562,7 @@
         rewrite.style.transform = 'translateY(' + (1 - getEase((time - 24.4) / 0.8)) * 24 + 'px)';
         editor.style.transform = 'perspective(1200px) rotateY(' + (1 - getEase((time - 24.4) / 1.2)) * -13 + 'deg)';
         if (writing > 0.005) setCodeFrame(time);
-        assemble.style.opacity = getWindow(phase, 15, 16.6, 0.65);
+        assemble.style.opacity = getWindow(phase, 15, 19.2, 0.25);
         assemble.style.transform = 'translateY(' + (1 - getEase((phase - 15) / 0.9)) * 30 + 'px)';
         const scale = 0.81 + rise * 0.19;
         const drift = still ? 0 : Math.sin(time * 1.7) * 3;
@@ -583,7 +588,7 @@
         stage.style.transform = 'none';
         bar.style.transform = 'scaleX(' + getClamp(spent / length) + ')';
         timer.textContent = spent.toFixed(1).padStart(4, '0') + ' / ' + length.toFixed(1);
-        chapter.textContent = time < 7.5 ? '01 / ДВИЖЕНИЕ ВПЕРЁД' : time < 22.5 ? '02 / DNA ПРОДУКТА' : time < 24.4 ? '03 / РАБОТА ПРОДОЛЖАЛАСЬ'
+        chapter.textContent = time < 7.5 ? '01 / ДВИЖЕНИЕ ВПЕРЁД' : time < 22.5 ? '02 / ДНК ПРОДУКТА' : time < 24.4 ? '03 / РАБОТА ПРОДОЛЖАЛАСЬ'
             : time < 30 ? '04 / ПЕРЕПИСАНА С НУЛЯ' : time < 33.75 ? '05 / СБОРКА' : time < 39.5 ? '06 / ВОЗРОЖДЕНИЕ' : '07 / PHOENIX';
         if (!still) setWorldFrame(time, false, spent);
         else setWorldFrame(27.8, true);
@@ -681,7 +686,7 @@
             score.setStop();
             setSceneFrame(spent);
             setControlState();
-            status.textContent = 'Пауза.';
+            status.textContent = 'Пауза';
         } else await setScenePlay(sound, spent);
     }
 
@@ -774,7 +779,7 @@
         document.querySelectorAll('[data-sl-phx-start]').forEach((node) => { node.disabled = false; });
         track.disabled = !audio;
         soundbtn.disabled = !audio;
-        loader.textContent = still ? 'Движение уменьшено согласно настройкам устройства.' : 'Возрождение SLAED CMS.';
+        loader.textContent = still ? 'Движение уменьшено согласно настройкам устройства.' : 'Возрождение SLAED CMS';
         if (score.kind === 'synth' && !still) loader.textContent = 'Основная музыка недоступна. Подготовлена резервная тема.';
         track.title = score.kind === 'anthem' ? 'Скачать музыкальную тему SLAED · MP3' : 'Скачать резервную тему SLAED · WAV';
         track.setAttribute('aria-label', track.title);
