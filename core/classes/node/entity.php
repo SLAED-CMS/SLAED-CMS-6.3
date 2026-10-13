@@ -6,7 +6,7 @@
 
 if (!defined('FUNC_FILE')) die('Illegal file access');
 
-# One material as a read returned it: the main row with its decoded state, comment mode and fields, the related sets the projection asked for, and two joined names at the end
+# One material as a read returned it: the main row with its decoded state, comment mode and fields, the sets the projection asked for, two joined names and the path
 final readonly class Node {
 
     # Hold one read material exactly in the order of the node table, with pubdate standing for the published column
@@ -39,6 +39,7 @@ final readonly class Node {
         public ?array $rels,
         public ?array $assets,
         public ?string $uname,
-        public ?string $ctitle
+        public ?string $ctitle,
+        public ?string $path = null
     ) {}
 }

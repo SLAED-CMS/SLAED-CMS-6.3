@@ -9,7 +9,7 @@ if (!defined('FUNC_FILE')) die('Illegal file access');
 # The content of one material as a create or an update hands it to the service: full sets of categories, fields, relations and assets, never a partial change
 final readonly class NodeInput {
 
-    # Fix the sixteen top-level values in the order the contract names them
+    # Fix the sixteen top-level values in the order the contract names them, and the name a moderator gives the path of a published material
     public function __construct(
         public int $cid,
         public array $cids,
@@ -26,6 +26,7 @@ final readonly class NodeInput {
         public ?string $expires,
         public array $rels,
         public array $assets,
-        public array $ext
+        public array $ext,
+        public string $path = ''
     ) {}
 }

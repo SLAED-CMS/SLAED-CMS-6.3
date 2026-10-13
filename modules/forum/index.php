@@ -488,9 +488,10 @@ function view(): void {
         $orderw = (is_moder($conf['name'])) ? 'WHERE (s.id = :id1 OR s.pid = :id2)' : "WHERE (s.id = :id1 OR s.pid = :id2) AND s.time <= NOW() AND s.status != '0'";
         $query = $db->getSqlQuery(
             'SELECT s.id, s.pid, s.cid, s.uid, s.name, s.title, s.time, s.body, s.field, s.comments, s.counter, s.score, s.ratings, s.ip, s.euid, s.eip, s.etime, s.status,'
-                .' c.title, c.pread, c.ppost, c.preply, c.pedit, c.pdelete, c.pmod FROM '.PREFIX_DB.'_forum AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.cid=c.id) '.$orderw
+                .' c.title, c.pread, c.ppost, c.preply, c.pedit, c.pdelete, c.pmod, r.path FROM '.PREFIX_DB.'_forum AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.cid=c.id)'
+                .' LEFT JOIN '.PREFIX_DB.'_routes AS r ON r.kind = \'topic\' AND r.oid = :id3 AND r.cur = 1 '.$orderw
                 .' ORDER BY s.time '.$sort.' LIMIT '.$offset.', '.$fornum,
-            $opars
+            $opars + ['id3' => $topic]
         );
         $db->getSqlQuery('UPDATE '.PREFIX_DB.'_forum SET counter=counter+1 WHERE id = :id', ['id' => $topic]);
         while ([
@@ -518,7 +519,8 @@ function view(): void {
             $authy,
             $authe,
             $authd,
-            $authm
+            $authm,
+            $route
         ] = $db->getSqlRow($query)) {
             $rows[] = [
                 $id,
@@ -1209,7 +1211,8 @@ function send(): void {
                 $insert = $pid ? ($isreply && (is_moder($conf['name']) || $fstatus > 2)) : $istopic;
                 if ($insert) {
                     $catids = catids($conf['name'], $catid);
-                    $db->getSqlQuery(
+                    $open = $db->setSqlBegin();
+                    $made = $open && $db->getSqlQuery(
                         'INSERT INTO '.PREFIX_DB.'_forum (id, pid, cid, uid, name, title, time, body, field, ip, luid, lname, ltime, status)'
                             .' VALUES (NULL, :pid, :catid, :postid, :postname, :subject, :time, :body, :field, :ip, :luid, :lname, :ltime, :status)',
                         [
@@ -1227,8 +1230,8 @@ function send(): void {
                             'ltime' => $time,
                             'status' => $status,
                         ]
-                    );
-                    $lpid = intval($db->getSqlLastId());
+                    ) !== false;
+                    $lpid = $made ? intval($db->getSqlLastId()) : 0;
                     [$ltime] = $db->getSqlRow($db->getSqlQuery('SELECT time FROM '.PREFIX_DB.'_forum WHERE id = :id', ['id' => $lpid])) ?: [''];
                     if ($pid) {
                         $lname = (isset($uname) && $uname) ? $uname : $postname;
@@ -1263,6 +1266,12 @@ function send(): void {
                         }
                         if ($postid && $status) $pnt->addEvent('publish', 'forum.topic', 'topic:'.$lpid, (int)$postid, ['mid' => (int)$lpid]);
                     }
+                    $kept = $made && ($pid || (new Route($db))->addRoute('topic', $lpid, 'forum', $subject) !== '') && $db->setSqlCommit();
+                    if (!$kept) {
+                        if ($open) $db->setSqlRollback();
+                        setFlash(_ERROR, true);
+                        $pid = 0;
+                    }
                 }
             }
             $lid = ($fpid) ? $fpid : (($pid) ? $pid.'&last=1#'.$lpid : '');
@@ -1295,17 +1304,20 @@ function delete(int|string|null $id = null): void {
         [$authd, $authm] = $db->getSqlRow($db->getSqlQuery('SELECT pdelete, pmod FROM '.PREFIX_DB.'_categories WHERE id = :catid', ['catid' => $catid]));
         $isdelete = is_acess($authd);
         $ismod = is_acess($authm);
-        [$pid, $uid] = $db->getSqlRow($db->getSqlQuery('SELECT pid, uid FROM '.PREFIX_DB.'_forum WHERE id = :id', ['id' => $id]));
+        [$pid, $uid, $title] = $db->getSqlRow($db->getSqlQuery('SELECT pid, uid, title FROM '.PREFIX_DB.'_forum WHERE id = :id', ['id' => $id]));
         $may = checkForumRight($ismod, $isdelete, (int)$uid);
         $own = $may && $db->setSqlBegin();
         if ($may && !$own) setFlash(_ERROR, true);
         if ($own) {
+            $rte = new Route($db);
+            $made = true;
             $recycle = (int)$conf['forum']['recycle'];
             if ($recycle && $recycle != $catid) {
                 $rcatids = catids($conf['name'], $recycle);
                 if ($pid) {
                     $db->getSqlQuery('UPDATE '.PREFIX_DB."_forum SET pid = '0', cid = :recycle WHERE id = :id", ['recycle' => $recycle, 'id' => $id]);
                     $db->getSqlQuery('UPDATE '.PREFIX_DB.'_categories SET topics = topics+1, lpost = :id WHERE id IN ('.$rcatids.')', ['id' => $id]);
+                    $made = $rte->addRoute('topic', (int)$id, 'forum', (string)$title) !== '';
                 } else {
                     $db->getSqlQuery('UPDATE '.PREFIX_DB.'_forum SET cid = :recycle WHERE id = :id OR pid = :pid', ['recycle' => $recycle, 'id' => $id, 'pid' => $id]);
                     [$rnpost] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_forum WHERE pid = :id', ['id' => $id]));
@@ -1333,7 +1345,7 @@ function delete(int|string|null $id = null): void {
                 $wnpost = ($npost) ? ', posts=posts-'.$npost : '';
                 $db->getSqlQuery('UPDATE '.PREFIX_DB.'_categories SET topics = topics-1'.$wnpost.' WHERE id IN ('.$catids.')');
             }
-            $kept = true;
+            $kept = $made;
             if (!$recycle || $recycle == $catid) {
                 $act = $pid ? 'comment' : 'publish';
                 $rid = $uid ? $pnt->getEventId($act, 'forum.topic', ($pid ? 'post:' : 'topic:').$id, (int)$uid) : 0;
@@ -1342,6 +1354,7 @@ function delete(int|string|null $id = null): void {
                 [$fid] = $db->getSqlRow($db->getSqlQuery('SELECT id FROM '.PREFIX_DB."_favorites WHERE fid = :id AND modul = 'forum'", ['id' => $id]));
                 if ($fid) $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_favorites WHERE id = :fid', ['fid' => $fid]);
                 $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_forum WHERE id = :id1 OR pid = :id2', ['id1' => $id, 'id2' => $id]);
+                if (!$pid) $kept = $kept && $rte->deleteRoute('topic', (int)$id);
             }
             if (!$kept || !$db->setSqlCommit()) {
                 $db->setSqlRollback();

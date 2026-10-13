@@ -24,7 +24,6 @@ return [
     'clickable' => '0',
     'close' => '0',
     'css_f' => '',
-    'ctitle' => '1',
     'db_t' => '1',
     'defis' => '-',
     'dev_mode' => '0',
@@ -69,7 +68,6 @@ SLAED CMS - Support
 https://slaed.net
 support@slaed.net',
     'multilingual' => '1',
-    'rewrite' => '0',
     'schema' => '<script type="application/ld+json">
 {
 	"@context": "https://schema.org",
@@ -85,7 +83,6 @@ support@slaed.net',
 }
 </script>',
     'script_f' => 'plugins/htmx/htmx.min.js,plugins/system/global-func.js,plugins/system/slaed.js,plugins/tablesort/tablesort.min.js',
-    'sep' => '%2F',
     'sess_t' => '900',
     'session' => '1',
     'site_logo' => 'slaed-logo-wordmark-gradient-blue.svg',
@@ -94,8 +91,6 @@ support@slaed.net',
     'startdate' => '2013-06-17 00:00:00',
     'syntax' => '2',
     'theme' => 'lite',
-    'title' => '1',
-    'tsep' => '-',
     'user_c' => 'slaed',
     'user_c_t' => '2592000',
     'var_view' => '1',

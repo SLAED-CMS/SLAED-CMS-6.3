@@ -22,6 +22,7 @@
 # The argument quick runs the quick edit of a comment over its two routes: methods, the header token, the closed forms, the codes and what each leaves in the row
 # The argument files runs the files of the forum on the file route, the writers of a post that bind a name and the unused filter of the upload browser
 # The argument journal runs the journals of the panel, the logins and OAuth: a passed token writes one line, a refused one none, and a login is written once
+# The argument address runs the writers of the registry of addresses: every path given, moved and marked gone inside the write of its entity
 if (PHP_SAPI !== 'cli') {
     http_response_code(404);
     exit;
@@ -129,7 +130,7 @@ function addRouteConfig(string $work, string $base, int $port): void {
     $data['db']['prefix'] = RPREF;
     setRouteFile($work.'/config/db.php', $data);
     $data = require BASE_DIR.'/config/global.php';
-    $data = array_replace($data, ['homeurl' => 'http://127.0.0.1:'.$port, 'cache' => '1', 'close' => '0', 'module' => 'news', 'multilingual' => '0', 'rewrite' => '0']);
+    $data = array_replace($data, ['homeurl' => 'http://127.0.0.1:'.$port, 'cache' => '1', 'close' => '0', 'module' => 'news', 'multilingual' => '0']);
     setRouteFile($work.'/config/global.php', $data);
     $news = [
         'version' => 1,
@@ -2959,6 +2960,199 @@ function getRouteJournalView(string $work): array {
     ];
 }
 
+# Every row the registry holds for one entity in the order it was written: path, state and the generated cur
+function getRouteAddress(PDO $pdo, string $kind, int $oid): array {
+    $st = $pdo->prepare('SELECT path, state, cur FROM '.RPREF.'_routes WHERE kind = ? AND oid = ? ORDER BY id');
+    $st->execute([$kind, $oid]);
+    return array_map(fn(array $v): array => [$v[0], (int)$v[1], ($v[2] === null) ? null : (int)$v[2]], $st->fetchAll(PDO::FETCH_NUM));
+}
+
+# Whether any file of the scratch data cache holds the text, the way the category map stores a path
+function getRouteCached(string $work, string $text): bool {
+    foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator($work.'/cache', FilesystemIterator::SKIP_DOTS)) as $file) {
+        if ($file->isFile() && str_contains((string)file_get_contents($file->getPathname()), $text)) return true;
+    }
+    return false;
+}
+
+# The forum of the address run: two sections the members post into and delete their own topics from, the second one the recycle section
+function addRouteAddressConf(PDO $pdo, string $work): void {
+    $pdo->exec('INSERT INTO '.RPREF.'_categories (id, modul, title, intro, pview, pread, ppost, preply, pedit, pdelete, pmod, lang) VALUES'
+        .' (10, \'forum\', \'Talk\', \'\', \'0|0\', \'0|0\', \'1|0\', \'1|0\', \'1|0\', \'1|0\', \'3|0\', \'\'),'
+        .' (11, \'forum\', \'Bin\', \'\', \'0|0\', \'0|0\', \'1|0\', \'1|0\', \'1|0\', \'1|0\', \'3|0\', \'\')');
+    $data = require $work.'/config/forum.php';
+    $data['forum'] = array_replace($data['forum'], ['add' => '1', 'recycle' => '11', 'addmail' => '0']);
+    setRouteFile($work.'/config/forum.php', $data);
+    if (is_file($work.'/config/local.php')) unlink($work.'/config/local.php');
+}
+
+# The writers of the registry of addresses over real requests: each gives, moves and marks gone the paths of its entity inside its own transaction
+# A trigger then refuses every path with a word starting fail, and each writer must leave neither its entity nor a route row behind; the refusals it logs are counted apart
+function getRouteWriters(PDO $pdo, string $work): array {
+    $pre = RPREF.'_';
+    $one = fn(string $sql): mixed => $pdo->query($sql)->fetchColumn();
+    $out = [];
+    $page = getRouteReply('root', 'GET', 'admin.php?name=node&op=add&type=news');
+    $base = ['name' => 'node', 'op' => 'add', 'type' => 'news', 'token' => getRouteToken($page['body'], 'add'), 'intro' => 'intro', 'body' => 'body', 'comon' => '0'];
+    $made = getRouteReply('root', 'POST', 'admin.php', $base + ['title' => 'Адаптивный шаблон Pure', 'status' => '2']);
+    $nid = (int)$one('SELECT id FROM '.$pre.'nodes WHERE title = \'Адаптивный шаблон Pure\'');
+    $draft = getRouteReply('root', 'POST', 'admin.php', $base + ['title' => 'Черновик', 'status' => '0']);
+    $did = (int)$one('SELECT id FROM '.$pre.'nodes WHERE title = \'Черновик\'');
+    $out['node'] = ['made' => [$made['code'], getRouteAddress($pdo, 'node', $nid)], 'draft' => [$draft['code'], getRouteAddress($pdo, 'node', $did)]];
+    $form = getRouteReply('root', 'GET', 'admin.php?name=node&op=edit&id='.$nid.'&type=news')['body'];
+    $edit = ['name' => 'node', 'op' => 'edit', 'id' => (string)$nid, 'type' => 'news', 'token' => getRouteToken($form, 'edit'), 'action' => 'save', 'intro' => 'intro',
+        'body' => 'body', 'comon' => '0'];
+    $out['node']['field'] = [getRouteField($form, 'path'), str_contains($form, 'name="path"'),
+        str_contains(getRouteReply('root', 'GET', 'admin.php?name=node&op=edit&id='.$did.'&type=news')['body'], 'name="path"')];
+    $ver = getRouteField($form, 'version');
+    $retitle = getRouteReply('root', 'POST', 'admin.php', $edit + ['version' => $ver, 'title' => 'Совсем другой заголовок', 'path' => getRouteField($form, 'path')]);
+    $out['node']['retitle'] = [$retitle['code'], getRouteAddress($pdo, 'node', $nid)];
+    $form = getRouteReply('root', 'GET', 'admin.php?name=node&op=edit&id='.$nid.'&type=news')['body'];
+    $moved = getRouteReply('root', 'POST', 'admin.php', $edit + ['version' => getRouteField($form, 'version'), 'title' => 'Совсем другой заголовок', 'path' => 'Новый адрес']);
+    $out['node']['moved'] = [$moved['code'], getRouteAddress($pdo, 'node', $nid)];
+    $list = getRouteReply('root', 'GET', 'admin.php?name=node')['body'];
+    $pub = getRouteReply('root', 'POST', 'admin.php', ['name' => 'node', 'op' => 'status', 'id' => (string)$did, 'type' => 'news', 'status' => '2',
+        'version' => (string)$one('SELECT version FROM '.$pre.'nodes WHERE id = '.$did), 'token' => $edit['token']]);
+    $out['node']['publish'] = [$pub['code'], getRouteAddress($pdo, 'node', $did)];
+    $tok = getRouteToken(getRouteReply('anna', 'GET', 'index.php?name=help&op=add')['body'], 'name="action"');
+    $priv = getRouteReply('anna', 'POST', 'index.php?name=help&op=add', ['title' => 'Private request', 'intro' => 'intro', 'body' => 'body', 'cid' => '3',
+        'action' => 'submit', 'token' => $tok]);
+    $hid = (int)$one('SELECT id FROM '.$pre.'nodes WHERE title = \'Private request\'');
+    $out['node']['private'] = [$priv['code'], (int)$one('SELECT status FROM '.$pre.'nodes WHERE id = '.$hid), getRouteAddress($pdo, 'node', $hid)];
+    $gone = getRouteReply('root', 'POST', 'admin.php', ['name' => 'node', 'op' => 'delete', 'id' => (string)$nid, 'type' => 'news',
+        'version' => (string)$one('SELECT version FROM '.$pre.'nodes WHERE id = '.$nid), 'token' => getRouteToken($list, 'delete')]);
+    $out['node']['delete'] = [$gone['code'], (int)$one('SELECT COUNT(*) FROM '.$pre.'nodes WHERE id = '.$nid), getRouteAddress($pdo, 'node', $nid)];
+    $again = getRouteReply('root', 'POST', 'admin.php', $base + ['title' => 'Адаптивный шаблон Pure', 'status' => '2']);
+    $aid = (int)$one('SELECT id FROM '.$pre.'nodes WHERE title = \'Адаптивный шаблон Pure\'');
+    $out['node']['noreuse'] = [$again['code'], getRouteAddress($pdo, 'node', $aid)];
+    $page = getRouteReply('boss', 'GET', 'admin.php?name=node&op=type');
+    $type = ['name' => 'node', 'op' => 'type', 'token' => getRouteToken($page['body'], 'type'), 'tname' => 'recipes', 'title' => 'Recipes', 'intro' => '', 'ext' => '',
+        'sort' => '5', 'orders' => ['published'], 'order' => 'published', 'dir' => 'desc', 'limit' => '10', 'show' => ['date'], 'mode' => 'default', 'access' => ['1|0'],
+        'notify_pending' => '1', 'seo' => 'website'];
+    $new = getRouteReply('boss', 'POST', 'admin.php', $type);
+    $tid = (int)$one('SELECT id FROM '.$pre.'node_types WHERE name = \'recipes\'');
+    $out['type'] = ['made' => [$new['code'], getRouteAddress($pdo, 'type', $tid)]];
+    $list = getRouteReply('boss', 'GET', 'admin.php?name=node&op=types')['body'];
+    $del = getRouteReply('boss', 'POST', 'admin.php', ['name' => 'node', 'op' => 'typedelete', 'type' => 'recipes', 'version' => '1',
+        'token' => getRouteToken($list, 'typedelete')]);
+    $out['type']['delete'] = [$del['code'], (int)$one('SELECT COUNT(*) FROM '.$pre.'node_types WHERE name = \'recipes\''), getRouteAddress($pdo, 'type', $tid)];
+    $names = [];
+    foreach (['recipes', 'api', 'uploads'] as $name) {
+        getRouteReply('boss', 'POST', 'admin.php', array_replace($type, ['tname' => $name]));
+        $names[$name] = (int)$one('SELECT COUNT(*) FROM '.$pre.'node_types WHERE name = '.$pdo->quote($name));
+    }
+    $out['type']['refused'] = $names;
+    $form = getRouteReply('root', 'GET', 'admin.php?name=categories&op=add&modul=news')['body'];
+    $cat = ['name' => 'categories', 'op' => 'addsave', 'token' => getRouteToken($form, 'addsave'), 'description' => '', 'imgcat' => '', 'lang' => '', 'cid' => '0',
+        'status' => '1', 'path' => ''];
+    $add = getRouteReply('root', 'POST', 'admin.php', $cat + ['modul' => 'news', 'title' => 'Модули']);
+    $cid = (int)$one('SELECT id FROM '.$pre.'categories WHERE title = \'Модули\'');
+    $twin = getRouteReply('root', 'POST', 'admin.php', array_replace($cat, ['path' => 'Модули']) + ['modul' => 'news', 'title' => 'Другие модули']);
+    $tcid = (int)$one('SELECT id FROM '.$pre.'categories WHERE title = \'Другие модули\'');
+    $out['cat'] = ['made' => [$add['code'], getRouteAddress($pdo, 'cat', $cid)], 'twin' => [$twin['code'], getRouteAddress($pdo, 'cat', $tcid)]];
+    $form = getRouteReply('root', 'GET', 'admin.php?name=categories&op=edit&cid='.$cid)['body'];
+    $save = ['name' => 'categories', 'op' => 'save', 'id' => (string)$cid, 'token' => getRouteToken($form, 'save'), 'description' => '', 'imgcat' => '', 'lang' => '',
+        'parent' => '0', 'status' => '1', 'title' => 'Модули'];
+    $out['cat']['field'] = [getRouteField($form, 'path'), str_contains($form, '/news/moduli')];
+    $move = getRouteReply('root', 'POST', 'admin.php', $save + ['modul' => 'news', 'path' => 'Плагины']);
+    $out['cat']['moved'] = [$move['code'], getRouteAddress($pdo, 'cat', $cid), (getRouteReply('', 'GET', 'index.php?name=news')['code'])];
+    $out['cat']['cache'] = [getRouteCached($work, '"news/plaginy"')];
+    $forum = getRouteReply('root', 'POST', 'admin.php', $save + ['modul' => 'forum', 'path' => 'plaginy']);
+    $out['cat']['modul'] = [$forum['code'], getRouteAddress($pdo, 'cat', $cid)];
+    $out['cat']['cache'][] = getRouteCached($work, '"news/plaginy"');
+    $del = getRouteReply('root', 'POST', 'admin.php', ['name' => 'categories', 'op' => 'delete', 'id' => (string)$cid, 'modul' => 'forum', 'token' => $save['token']]);
+    $out['cat']['delete'] = [$del['code'], (int)$one('SELECT COUNT(*) FROM '.$pre.'categories WHERE id = '.$cid), getRouteAddress($pdo, 'cat', $cid)];
+    $ndel = getRouteReply('root', 'POST', 'admin.php', ['name' => 'categories', 'op' => 'delete', 'id' => (string)$tcid, 'modul' => 'news', 'token' => $save['token']]);
+    $out['cat']['nodedelete'] = [$ndel['code'], (int)$one('SELECT COUNT(*) FROM '.$pre.'categories WHERE id = '.$tcid), getRouteAddress($pdo, 'cat', $tcid)];
+    $fadd = getRouteReply('root', 'POST', 'admin.php', $cat + ['modul' => 'forum', 'title' => 'Общие вопросы']);
+    $fcid = (int)$one('SELECT id FROM '.$pre.'categories WHERE title = \'Общие вопросы\'');
+    $out['cat']['forum'] = [$fadd['code'], getRouteAddress($pdo, 'cat', $fcid)];
+    $form = getRouteReply('anna', 'GET', 'index.php?name=forum&op=add&cat=10')['body'];
+    $tok = getRouteToken($form, 'name="hometext"');
+    $post = ['name' => 'forum', 'op' => 'send', 'posttype' => 'save', 'cat' => '10', 'id' => '', 'fid' => '0', 'pid' => '0', 'token' => $tok, 'hometext' => 'Text of it'];
+    $topic = getRouteReply('anna', 'POST', 'index.php', $post + ['subject' => 'Модуль поиска']);
+    $tid = (int)$one('SELECT id FROM '.$pre.'forum WHERE title = \'Модуль поиска\' AND pid = 0');
+    $reply = getRouteReply('anna', 'POST', 'index.php', array_replace($post, ['pid' => (string)$tid]) + ['subject' => 'Модуль поиска']);
+    $rid = (int)$one('SELECT id FROM '.$pre.'forum WHERE pid = '.$tid);
+    $out['topic'] = ['made' => [$topic['code'], getRouteAddress($pdo, 'topic', $tid)], 'reply' => [$reply['code'], $rid > 0, getRouteAddress($pdo, 'topic', $rid)]];
+    $bin = getRouteReply('anna', 'POST', 'index.php', ['name' => 'forum', 'op' => 'delete', 'id' => (string)$rid, 'token' => $tok]);
+    $out['topic']['binreply'] = [$bin['code'], (int)$one('SELECT pid FROM '.$pre.'forum WHERE id = '.$rid), getRouteAddress($pdo, 'topic', $rid)];
+    $bin = getRouteReply('anna', 'POST', 'index.php', ['name' => 'forum', 'op' => 'delete', 'id' => (string)$tid, 'token' => $tok]);
+    $out['topic']['bin'] = [$bin['code'], (int)$one('SELECT cid FROM '.$pre.'forum WHERE id = '.$tid), getRouteAddress($pdo, 'topic', $tid)];
+    $kill = getRouteReply('anna', 'POST', 'index.php', ['name' => 'forum', 'op' => 'delete', 'id' => (string)$tid, 'token' => $tok]);
+    $out['topic']['delete'] = [$kill['code'], (int)$one('SELECT COUNT(*) FROM '.$pre.'forum WHERE id = '.$tid), getRouteAddress($pdo, 'topic', $tid)];
+    $form = getRouteReply('root', 'GET', 'admin.php?name=account&op=add')['body'];
+    $pairs = getRouteInputs($form, 'addsave');
+    $user = getRoutePairs($pairs, ['uname' => 'Eduard', 'email' => 'eduard@probe.test', 'pass' => 'Secret-123', 'pass2' => 'Secret-123']) + ['sig' => '', 'block' => ''];
+    $made = getRouteReply('root', 'POST', 'admin.php', $user);
+    $uid = (int)$one('SELECT id FROM '.$pre.'users WHERE name = \'Eduard\'');
+    $out['user'] = ['made' => [$made['code'], getRouteAddress($pdo, 'user', $uid)]];
+    $pairs = getRouteInputs(getRouteReply('root', 'GET', 'admin.php?name=account&op=add&id='.$uid)['body'], 'addsave');
+    $same = getRouteReply('root', 'POST', 'admin.php', getRoutePairs($pairs) + ['sig' => '', 'block' => '']);
+    $out['user']['same'] = [$same['code'], getRouteAddress($pdo, 'user', $uid)];
+    $rename = getRouteReply('root', 'POST', 'admin.php', getRoutePairs($pairs, ['uname' => 'Edik']) + ['sig' => '', 'block' => '']);
+    $out['user']['rename'] = [$rename['code'], getRouteAddress($pdo, 'user', $uid)];
+    $taken = getRouteReply('root', 'POST', 'admin.php', getRoutePairs(getRouteInputs($form, 'addsave'), ['uname' => 'Eduard', 'email' => 'other@probe.test',
+        'pass' => 'Secret-123', 'pass2' => 'Secret-123']) + ['sig' => '', 'block' => '']);
+    $out['user']['taken'] = [$taken['code'], getRouteAddress($pdo, 'user', (int)$one('SELECT id FROM '.$pre.'users WHERE name = \'Eduard\''))];
+    $list = getRouteReply('root', 'GET', 'admin.php?name=account')['body'];
+    $drop = getRouteReply('root', 'POST', 'admin.php', ['name' => 'account', 'op' => 'delete', 'id' => (string)$uid, 'token' => getRouteToken($list, 'delete')]);
+    $out['user']['delete'] = [$drop['code'], (int)$one('SELECT COUNT(*) FROM '.$pre.'users WHERE id = '.$uid), getRouteAddress($pdo, 'user', $uid)];
+    $pdo->exec('INSERT INTO '.$pre.'users_temp (name, email, password, regdate, code) VALUES (\'dora\', \'dora@probe.test\', \'x\', NOW(), \'probecode\')');
+    $act = getRouteReply('', 'GET', 'index.php?name=account&op=activate&user=dora&num=probecode');
+    $out['user']['activate'] = [$act['code'], getRouteAddress($pdo, 'user', (int)$one('SELECT id FROM '.$pre.'users WHERE name = \'dora\''))];
+    $form = getRouteReply('root', 'GET', 'admin.php?name=voting&op=add')['body'];
+    $vote = getRoutePairs(getRouteInputs($form, 'save'), ['title' => 'Как вам новый дизайн?', 'posttype' => 'save', 'path' => '']);
+    $vote['body'] = ['Да', 'Нет'];
+    $vote['answer'] = ['0', '0'];
+    $poll = getRouteReply('root', 'POST', 'admin.php', $vote);
+    $vid = (int)$one('SELECT id FROM '.$pre.'voting WHERE title = \'Как вам новый дизайн?\'');
+    $out['poll'] = ['made' => [$poll['code'], getRouteAddress($pdo, 'poll', $vid)]];
+    $form = getRouteReply('root', 'GET', 'admin.php?name=voting&op=add&id='.$vid)['body'];
+    $out['poll']['field'] = getRouteField($form, 'path');
+    $edit = getRoutePairs(getRouteInputs($form, 'save'), ['posttype' => 'save', 'path' => 'Дизайн']);
+    $edit['body'] = ['Да', 'Нет'];
+    $edit['answer'] = ['0', '0'];
+    $out['poll']['moved'] = [getRouteReply('root', 'POST', 'admin.php', $edit)['code'], getRouteAddress($pdo, 'poll', $vid)];
+    $out['poll']['delete'] = [getRouteReply('root', 'POST', 'admin.php', array_replace($edit, ['posttype' => 'delete']))['code'],
+        (int)$one('SELECT COUNT(*) FROM '.$pre.'voting WHERE id = '.$vid), getRouteAddress($pdo, 'poll', $vid)];
+    $pdo->exec('CREATE TRIGGER '.$pre.'routes_fail BEFORE INSERT ON '.$pre.'routes FOR EACH ROW BEGIN'
+        .' IF NEW.path LIKE \'%/fail%\' THEN SIGNAL SQLSTATE \'45000\' SET MESSAGE_TEXT = \'probe refuses\'; END IF; END');
+    $rows = fn(): int => (int)$one('SELECT COUNT(*) FROM '.$pre.'routes');
+    $before = $rows();
+    $page = getRouteReply('root', 'GET', 'admin.php?name=node&op=add&type=news');
+    getRouteReply('root', 'POST', 'admin.php', array_replace($base, ['token' => getRouteToken($page['body'], 'add')]) + ['title' => 'Failing story', 'status' => '2']);
+    $form = getRouteReply('root', 'GET', 'admin.php?name=categories&op=add&modul=forum')['body'];
+    getRouteReply('root', 'POST', 'admin.php', array_replace($cat, ['token' => getRouteToken($form, 'addsave')]) + ['modul' => 'forum', 'title' => 'Failing section']);
+    getRouteReply('root', 'POST', 'admin.php', array_replace($cat, ['token' => getRouteToken($form, 'addsave')]) + ['modul' => 'news', 'title' => 'Failing kind']);
+    getRouteReply('anna', 'POST', 'index.php', $post + ['subject' => 'Failing topic']);
+    $form = getRouteReply('root', 'GET', 'admin.php?name=account&op=add')['body'];
+    getRouteReply('root', 'POST', 'admin.php', getRoutePairs(getRouteInputs($form, 'addsave'), ['uname' => 'failer', 'email' => 'failer@probe.test', 'pass' => 'Secret-123',
+        'pass2' => 'Secret-123']) + ['sig' => '', 'block' => '']);
+    $pdo->exec('INSERT INTO '.$pre.'users_temp (name, email, password, regdate, code) VALUES (\'failing\', \'failing@probe.test\', \'x\', NOW(), \'failcode\')');
+    getRouteReply('', 'GET', 'index.php?name=account&op=activate&user=failing&num=failcode');
+    $form = getRouteReply('root', 'GET', 'admin.php?name=voting&op=add')['body'];
+    $vote = getRoutePairs(getRouteInputs($form, 'save'), ['title' => 'Failing poll', 'posttype' => 'save', 'path' => '']);
+    $vote['body'] = ['Yes', 'No'];
+    $vote['answer'] = ['0', '0'];
+    getRouteReply('root', 'POST', 'admin.php', $vote);
+    $out['fail'] = [
+        'node' => (int)$one('SELECT COUNT(*) FROM '.$pre.'nodes WHERE title = \'Failing story\''),
+        'forumcat' => (int)$one('SELECT COUNT(*) FROM '.$pre.'categories WHERE title = \'Failing section\''),
+        'nodecat' => (int)$one('SELECT COUNT(*) FROM '.$pre.'categories WHERE title = \'Failing kind\''),
+        'topic' => (int)$one('SELECT COUNT(*) FROM '.$pre.'forum WHERE title = \'Failing topic\''),
+        'user' => (int)$one('SELECT COUNT(*) FROM '.$pre.'users WHERE name IN (\'failer\', \'failing\')'),
+        'poll' => (int)$one('SELECT COUNT(*) FROM '.$pre.'voting WHERE title = \'Failing poll\''),
+        'routes' => $rows() - $before,
+    ];
+    $out['apart'] = (int)$one('SELECT COUNT(*) FROM '.$pre.'routes WHERE (state = 1) <> (cur <=> 1)');
+    $slog = $work.'/logs/error_sql.log';
+    $lines = is_file($slog) ? (file($slog, FILE_IGNORE_NEW_LINES) ?: []) : [];
+    $out['refusals'] = count(array_filter($lines, fn(string $v): bool => str_contains($v, 'probe refuses')));
+    if (is_file($slog)) file_put_contents($slog, implode("\n", array_filter($lines, fn(string $v): bool => !str_contains($v, 'probe refuses'))));
+    return $out;
+}
+
 # The child favhold of the intact run holds the account of anna with one more favorite for two seconds, as a parallel request at the limit does before its commit
 if (($argv[2] ?? '') === 'favhold') {
     $hpdo = getRoutePdo((string)($argv[3] ?? ''));
@@ -3002,6 +3196,7 @@ try {
     if (($argv[2] ?? '') === 'seo') addRouteSeoTypes($rpdo, $rwork);
     if (($argv[2] ?? '') === 'head') addRouteHeadTypes($rpdo, $rwork);
     if (($argv[2] ?? '') === 'journal') addRouteJournalConf($rpdo, $rwork);
+    if (($argv[2] ?? '') === 'address') addRouteAddressConf($rpdo, $rwork);
     $rproc = addRouteServer($rwork, $rport);
     if (($argv[2] ?? '') === 'serve') {
         fwrite(STDERR, 'serving on '.$rport.' with '.$rbase."\n");
@@ -3032,6 +3227,8 @@ try {
         $report['runs']['quick'] = getRouteQuick($rpdo, $rwork);
     } elseif (($argv[2] ?? '') === 'journal') {
         $report['runs']['journal'] = getRouteJournal($rpdo, $rwork);
+    } elseif (($argv[2] ?? '') === 'address') {
+        $report['runs']['address'] = getRouteWriters($rpdo, $rwork);
     } elseif (($argv[2] ?? '') === 'time') {
         $report['runs']['time'] = getRouteTime($rpdo, $rwork);
     } elseif (($argv[2] ?? '') === 'null') {

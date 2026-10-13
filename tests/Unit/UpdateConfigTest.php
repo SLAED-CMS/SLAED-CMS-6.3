@@ -41,8 +41,9 @@ final class UpdateConfigTest extends TestCase
         $glob = $run['global'];
         $this->assertTrue($run['done'], $run['text']);
         $this->assertFalse($run['leak'], 'The output of an old source reached the page');
-        $this->assertSame(['Old site', '1', 'ru', 'forum', '-', '_', 'kept'], [$glob['sitename'], $glob['close'], $glob['language'], $glob['module'], $glob['sep'], $glob['tsep'],
-            $glob['oldkey']]);
+        $this->assertSame(['Old site', '1', 'ru', 'forum', '1', 'kept'], [$glob['sitename'], $glob['close'], $glob['language'], $glob['module'], $glob['ltitle'], $glob['oldkey']]);
+        $site = ['rewrite' => '1', 'sep' => '-', 'tsep' => '_', 'title' => '0', 'ctitle' => '0'];
+        $this->assertSame([], array_intersect_assoc($glob, $site), 'A value of an address switch of 6.2 was carried');
         $this->assertSame([$run['ship']['version'], $run['ship']['css_f'], $run['ship']['amod']], [$glob['version'], $glob['css_f'], $glob['amod'] ?? null]);
         $this->assertSame([$run['ship']['theme'], 'mark.svg'], [$glob['theme'], $glob['site_logo']], 'A theme that left the tree was kept or a logo of the theme was dropped');
         $this->assertArrayNotHasKey('forum', $glob, 'A 6.2 key that names a configuration area reached global.php and shadows that area');

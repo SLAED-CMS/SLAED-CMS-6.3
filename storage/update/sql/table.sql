@@ -518,6 +518,20 @@ CREATE TABLE `{prefix}_referer` (
   KEY `ip` (`ip`)
 ) ENGINE={engine} DEFAULT CHARSET={charset} COLLATE={collate};
 
+CREATE TABLE `{prefix}_routes` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `path` VARCHAR(255) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  `kind` VARCHAR(10) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  `oid` INT UNSIGNED NOT NULL,
+  `state` TINYINT UNSIGNED NOT NULL DEFAULT 1,
+  `cur` TINYINT UNSIGNED AS (IF(`state` = 1, 1, NULL)) STORED,
+  `created` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `path` (`path`),
+  UNIQUE KEY `owner` (`kind`, `oid`, `cur`),
+  CONSTRAINT `{prefix}_chk_routes_state` CHECK (`state` IN (0, 1, 2))
+) ENGINE={engine} DEFAULT CHARSET={charset} COLLATE={collate};
+
 CREATE TABLE `{prefix}_search` (
   `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
   `word` VARCHAR(255) NOT NULL,

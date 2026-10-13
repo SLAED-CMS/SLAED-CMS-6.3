@@ -162,6 +162,7 @@ final class AdminGuardTest extends TestCase
         $data = $this->getProbe('catparent', $pair);
         $this->assertArrayNotHasKey('update', $data, 'The category was written');
         $this->assertArrayNotHasKey('reset', $data, 'A refused write dropped the category map');
+        $this->assertArrayNotHasKey('route', $data, 'A refused write touched the path of the category');
         $this->assertSame(['badparent', true], [$data['text'], $data['warn']]);
     }
 
@@ -173,6 +174,7 @@ final class AdminGuardTest extends TestCase
             $data = $this->getProbe('catparent', $pair);
             $this->assertSame($want, $data['update'][0]['parent'] ?? null, $pair.' was not written');
             $this->assertSame(['forum'], $data['reset'] ?? [], $pair.' did not drop the category map of its module once');
+            $this->assertSame([['cat', (int)$pair, 'forum', '', 'probe']], $data['route'] ?? [], $pair.' did not keep the category on its path in the same save');
             $this->assertSame(['saved', false], [$data['text'], $data['warn']]);
         }
     }

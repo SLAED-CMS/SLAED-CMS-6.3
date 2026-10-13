@@ -1986,6 +1986,26 @@ CREATE TABLE IF NOT EXISTS `{prefix}_login_log` (
 ) ENGINE={engine} DEFAULT CHARSET={charset} COLLATE={collate};
 
 # =============================================================================
+# _routes
+# =============================================================================
+
+# The registry of public addresses: every path an entity was ever given, current, former or gone; cur is 1 on the current row only, so the owner key
+# allows one current path per entity beside any number of NULL ones. A 6.2 site had no such addresses, so the table starts empty
+CREATE TABLE IF NOT EXISTS `{prefix}_routes` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `path` VARCHAR(255) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  `kind` VARCHAR(10) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  `oid` INT UNSIGNED NOT NULL,
+  `state` TINYINT UNSIGNED NOT NULL DEFAULT 1,
+  `cur` TINYINT UNSIGNED AS (IF(`state` = 1, 1, NULL)) STORED,
+  `created` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `path` (`path`),
+  UNIQUE KEY `owner` (`kind`, `oid`, `cur`),
+  CONSTRAINT `{prefix}_chk_routes_state` CHECK (`state` IN (0, 1, 2))
+) ENGINE={engine} DEFAULT CHARSET={charset} COLLATE={collate};
+
+# =============================================================================
 # The collation of the release, column by column
 # =============================================================================
 #
@@ -2066,6 +2086,7 @@ CALL setconv('{prefix}_rating_actors', '{collate}');
 CALL setconv('{prefix}_rating_targets', '{collate}');
 CALL setconv('{prefix}_rating_votes', '{collate}');
 CALL setconv('{prefix}_referer', '{collate}');
+CALL setconv('{prefix}_routes', '{collate}');
 CALL setconv('{prefix}_search', '{collate}');
 CALL setconv('{prefix}_session', '{collate}');
 CALL setconv('{prefix}_user_oauth', '{collate}');

@@ -289,7 +289,7 @@ final class NodeConfigTest extends TestCase
         $this->assertTrue($run['unchanged'], 'A refused import left a trace');
     }
 
-    # A material in the trash, a category and a user file, hidden or in thumb, keep the type; a clean type leaves every area and the rights, its directory stays
+    # Leftover materials, categories or user files keep the type; a clean type leaves every area and the rights, its directory stays, its name never comes back
     #[Test]
     public function aTypeIsDeletedOnlyWhenNothingOfItIsLeft(): void
     {
@@ -304,8 +304,8 @@ final class NodeConfigTest extends TestCase
         foreach (['row', 'node', 'fields', 'uploads', 'rating'] as $key) $this->assertNull($run['trace'][$key], $key.' is left after the delete');
         $this->assertSame([], $run['walk'], 'The empty directory of the deleted type was not kept as it was');
         $this->assertSame(['1' => '', '2' => 'forum,node-news,node-docs', '3' => 'node,voting'], $run['admins'], 'The right of the deleted type was left');
-        $this->assertSame(['ok' => true, 'value' => 1], $run['reuse'], 'The name of a deleted type cannot be registered again');
-        $this->assertSame(['ok' => true, 'value' => null], $run['again']);
+        $this->assertInvalid($run['reuse'], 'name', 'The name of a deleted type was registered again, its gone path would point at the new one');
+        $this->assertRefused($run['again'], 1, 'The node type does not exist', 'again');
     }
 
     # A type goes public only when the self-check finds the upload root closed, and a new directory stays empty

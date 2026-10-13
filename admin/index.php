@@ -172,16 +172,21 @@ function addAdminAccount(): void {
                 if ($uid) {
                     $gone = $db->setSqlBegin()
                         && $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_users WHERE id = :id', ['id' => $uid]) !== false
+                        && (new Route($db))->deleteRoute('user', $uid)
                         && $prv->deleteUser($uid)
                         && $db->setSqlCommit();
                     if (!$gone) $db->setSqlRollback();
                 }
-                $made = $db->getSqlQuery(
+                $open = $db->setSqlBegin();
+                $made = $open && $db->getSqlQuery(
                     'INSERT INTO '.PREFIX_DB.'_users (id, name, email, website, avatar, regdate, password, lang, ip, sig, block, warnings, field)'
                     .' VALUES (NULL, :name, :email, :website, :avatar, now(), :pass, :lang, :ip, \'\', \'\', \'\', \'\')',
                     ['name' => $aname, 'email' => ($aemail !== '') ? $aemail : null, 'website' => $aurl, 'avatar' => '', 'pass' => $apwd, 'lang' => $alang, 'ip' => $aip]
-                );
+                ) !== false;
                 if (!$made) $fail = ($db->getSqlTwin() === 'email') ? _ERROR_EMAIL : _ERROR;
+                $made = $made && (new Route($db))->addRoute('user', intval($db->getSqlLastId()), 'users', $aname) !== '' && $db->setSqlCommit();
+                if ($open && !$made) $db->setSqlRollback();
+                if (!$made && $fail === '') $fail = _ERROR;
             }
             $fail = implode(' ', array_filter([$fail, ($aid > 0) ? addNodeProfiles($aid) : '']));
             setRedirect($afile.'.php', false, 302, $fail, $fail !== '');

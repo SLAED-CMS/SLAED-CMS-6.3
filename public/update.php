@@ -1499,6 +1499,7 @@ function setUpdateConfig(): array {
             if ($keep === '') unset($site['module']);
             else $site['module'] = $keep;
             unset($site['version'], $site['css_f'], $site['script_f'], $site['script_a'], $site['script_b'], $site['amod']);
+            unset($site['rewrite'], $site['sep'], $site['tsep'], $site['title'], $site['ctitle']);
             foreach (glob(CONFIG_DIR.'/*.php') ?: [] as $one) unset($site[basename($one, '.php')]);
             if (isset($site['theme']) && !is_dir(PUBLIC_DIR.'/templates/'.basename((string)$site['theme']))) unset($site['theme']);
             $look = PUBLIC_DIR.'/templates/'.basename((string)($site['theme'] ?? $base['theme'] ?? '')).'/images/logos/';

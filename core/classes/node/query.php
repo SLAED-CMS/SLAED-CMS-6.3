@@ -777,7 +777,7 @@ final class NodeQuery {
             intval($row['poll']), $row['home'], $mode, $row['pinned'], intval($row['comnum']), intval($row['views']), intval($row['score']), intval($row['ratings']),
             $state, intval($row['version']), $row['created'], $row['updated'], $row['published'],
             $row['expires'], $cids, $rels, $assets, $row['uname'],
-            $row['ctitle']);
+            $row['ctitle'], $row['path'] ?? null);
     }
 
     # Build one resource from its row, the unknown metadata as null
@@ -1117,13 +1117,14 @@ final class NodeQuery {
         return $out;
     }
 
-    # Read the main row of one material of the type with its author and category, checked like every read; the field column only when asked
+    # Read the main row of one material of the type with its author, category and current path, checked like every read; the field column only when asked
     private function getNodeRow(int $id, NodeType $type, bool $field): ?array {
         if ($id < 1 || (!$type->active && !$this->checkModer($type))) return null;
         $part = $this->getBranchSql($type, 'm', $this->getOwnExt($type), 'item');
-        $sql = 'SELECT '.self::COLS.', n.body'.($field ? ', n.field' : '').', u.name AS uname, c.title AS ctitle, c.pread AS cread, c.modul AS cmod'
+        $sql = 'SELECT '.self::COLS.', n.body'.($field ? ', n.field' : '').', u.name AS uname, c.title AS ctitle, c.pread AS cread, c.modul AS cmod, r.path'
             .' FROM '.PREFIX_DB.'_nodes AS n LEFT JOIN '.PREFIX_DB.'_users AS u ON u.id = n.uid AND n.uid > 0'
-            .' LEFT JOIN '.PREFIX_DB.'_categories AS c ON c.id = n.cid AND n.cid > 0'.$part['join'].' WHERE n.id = :mi AND '.$part['where'];
+            .' LEFT JOIN '.PREFIX_DB.'_categories AS c ON c.id = n.cid AND n.cid > 0'
+            .' LEFT JOIN '.PREFIX_DB.'_routes AS r ON r.kind = \'node\' AND r.oid = n.id AND r.cur = 1'.$part['join'].' WHERE n.id = :mi AND '.$part['where'];
         $row = $this->getQueryRows($sql, $part['pars'] + ['mi' => $id])[0] ?? null;
         return ($row && $this->checkRowCat($row, $type)) ? $row : null;
     }

@@ -776,7 +776,6 @@ function getMonitorTemplateVars(?array $snapshot, array $ctx, array $conf, objec
             'referact' => $status(is_active('referers')),
             'newslet' => $status((bool)($conf['newsletter']['active'] ?? 0)),
             'cache' => $status((bool)($conf['cache'] ?? 0)),
-            'rewrite' => $status((bool)($conf['rewrite'] ?? 0)),
             'cmsver' => (string)($conf['version'] ?? ''),
             'osname' => php_uname('s'),
             'servfull' => (string)$ctx['servsw'],

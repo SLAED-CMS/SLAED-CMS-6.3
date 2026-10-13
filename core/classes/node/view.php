@@ -33,7 +33,7 @@ final class NodeView {
         return $full ? $this->getFullView($type, $node, $mode) : $this->getTargetView($type, $node, $mode);
     }
 
-    # The public address of one material of the type, empty for an unsaved one, with the title as the slug where the site rewrites addresses
+    # The public address of one material of the type, empty for an unsaved one
     private function getViewHref(NodeType $type, int $id, string $title): string {
         return ($id > 0) ? getSeoUrl(['name' => $type->name, 'op' => 'view', 'id' => $id, 'title' => $title]) : '';
     }

@@ -260,19 +260,23 @@ function activate(): void {
             $uip = getIp();
             $uagent = filterCutText(getAgent(), 255);
             $rank = '';
-            $done = $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_users (id, name, `rank`, email, avatar, regdate, password, lang, ip, agent, sig, block, warnings, field)'
+            $open = $db->setSqlBegin();
+            $done = $open && $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_users (id, name, `rank`, email, avatar, regdate, password, lang, ip, agent, sig, block, warnings, field)'
                 .' VALUES (NULL, :uname, :rank, :email, :avatar, :regdate, :pwd, :lang, :ip, :agent, :sig, :block, :warnings, :field)', ['uname' => $nick, 'rank' => $rank,
                 'email' => $mail, 'avatar' => '', 'regdate' => $reg, 'pwd' => str_starts_with($pass, '$2') ? $pass : getPassHash($pass), 'lang' => $locale, 'ip' => $uip,
-                'agent' => $uagent, 'sig' => '', 'block' => '', 'warnings' => '', 'field' => '']);
+                'agent' => $uagent, 'sig' => '', 'block' => '', 'warnings' => '', 'field' => '']) !== false;
+            $twin = $done ? '' : $db->getSqlTwin();
+            $nuid = $done ? intval($db->getSqlLastId()) : 0;
+            $done = $done && (new Route($db))->addRoute('user', $nuid, 'users', $nick) !== '' && $db->setSqlCommit();
+            if ($open && !$done) $db->setSqlRollback();
             if (!$done) {
-                $text = match ($db->getSqlTwin()) { 'email' => _ERROR_EMAIL, 'name' => _NICKTAKEN, default => _ERROR };
+                $text = match ($twin) { 'email' => _ERROR_EMAIL, 'name' => _NICKTAKEN, default => _ERROR };
                 $meta = $tpl->getHtmlFrag('meta-refresh', ['url' => 'index.php?name='.$conf['name'], 'secs' => 15]);
                 echo $tpl->getHtmlFrag('title', ['title' => _ACTIVATIONERROR, 'is_level_one' => true])
                     .$tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $text, 'meta' => $meta]);
                 setFoot();
                 return;
             }
-            $nuid = intval($db->getSqlLastId());
             if ($nuid) $pnt->addEvent('register', 'account', 'user:'.$nuid, $nuid);
             $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_users_temp WHERE name = :uname AND code = :cnum', ['uname' => $nick, 'cnum' => $check]);
             $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_session WHERE uname = :uname AND guest = 0', ['uname' => $uip]);
@@ -306,8 +310,10 @@ function view(): void {
         }
         $result = $db->getSqlQuery(
             'SELECT u.id, u.name, u.rank, u.email, u.website, u.avatar, u.regdate, u.occ, u.origin, u.interest, u.sig, u.viewmail, u.lastvis, u.lang, u.points, u.ip, u.warnings,'
-                .' u.birthday, u.gender, u.votes, u.tvotes, u.field, u.agent, g.name, g.rank, g.color, (SELECT COUNT(s.id) FROM '.PREFIX_DB.'_session AS s WHERE s.uname = u.name)'
-                .' FROM '.PREFIX_DB.'_users AS u LEFT JOIN '.PREFIX_DB.'_groups AS g ON (g.id = u.grp) WHERE '.$where,
+                .' u.birthday, u.gender, u.votes, u.tvotes, u.field, u.agent, g.name, g.rank, g.color, (SELECT COUNT(s.id) FROM '.PREFIX_DB.'_session AS s WHERE s.uname = u.name),'
+                .' r.path'
+                .' FROM '.PREFIX_DB.'_users AS u LEFT JOIN '.PREFIX_DB.'_groups AS g ON (g.id = u.grp)'
+                .' LEFT JOIN '.PREFIX_DB.'_routes AS r ON r.kind = \'user\' AND r.oid = u.id AND r.cur = 1 WHERE '.$where,
             $params
         );
         if ($db->getSqlRowCount($result) > 0) {
@@ -338,7 +344,8 @@ function view(): void {
                 $gname,
                 $grank,
                 $gcolor,
-                $ison
+                $ison,
+                $route
             ] = $db->getSqlRow($result);
             $userIpRaw = $ip;
             $seotitle  = $nick;
@@ -1875,6 +1882,7 @@ function oauthfinish(): void {
         $nuid = ($ok !== false) ? (int)$db->getSqlLastId() : 0;
         $twin = match (($ok === false) ? $db->getSqlTwin() : '') { 'email' => 'email_exists', 'name' => 'create_login_taken', default => 'link_failed' };
         $ecode = ($nuid > 0) ? Oauth::setLink($nuid, $prov, (string)$row['uid'], $mail) : $twin;
+        if ($ecode === '' && (new Route($db))->addRoute('user', $nuid, 'users', $uname) === '') $ecode = 'link_failed';
         if ($nuid > 0 && $ecode === '') $pnt->addEvent('register', 'account', 'user:'.$nuid, $nuid);
         if ($nuid < 1 || $ecode !== '') {
             $db->setSqlRollback();

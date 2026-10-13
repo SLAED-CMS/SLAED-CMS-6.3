@@ -565,9 +565,11 @@ function getFieldStop(): array {
 # The source seo carries SEO keys the global of 6.2 also had, header is code that prints, core is code without settings, and db, news and templ have no successor
 const CONFOLD = [
     'global' => "\$conf = array (\n  'sitename' => 'Old site',\n  'version' => '6.2.0 Pro',\n  'close' => '0',\n  'language' => 'russian',\n  'module' => 'news,forum',\n"
-        ."  'amod' => 'news',\n  'css_f' => 'plugins/jquery/ui/',\n  'script_a' => '1',\n  'script_b' => '1',\n  'sep' => '/',\n  'oldkey' => 'kept',\n  'forum' => '0',\n"
+        ."  'amod' => 'news',\n  'css_f' => 'plugins/jquery/ui/',\n  'script_a' => '1',\n  'script_b' => '1',\n"
+        ."  'sep' => '/',\n  'rewrite' => '0',\n  'title' => '0',\n  'ltitle' => '0',\n"
+        ."  'oldkey' => 'kept',\n  'forum' => '0',\n"
         ."  'theme' => 'default',\n  'site_logo' => 'mark.svg',\n);",
-    'seo' => "\$confse = array();\n\$confse['sep'] = \"-\";\n\$confse['tsep'] = \"_\";",
+    'seo' => "\$confse = array();\n\$confse['sep'] = \"-\";\n\$confse['tsep'] = \"_\";\n\$confse['rewrite'] = \"1\";\n\$confse['ctitle'] = \"0\";\n\$confse['ltitle'] = \"1\";",
     'users' => "\$confu = array();\n\$confu['point'] = \"1\";\n\$confu['points'] = \"1,2,3\";\n\$confu['anum'] = \"77\";",
     'stat' => "\$confst = array();\n\$confst['stat'] = \"0\";",
     'uploads' => "\$confup = array();\n\$confup['forum'] = \"gif,png|104857600|1048576|500|500|10|250|10|200|100|1|0\";\n\$confup['typ'] = \"gif,png\";",

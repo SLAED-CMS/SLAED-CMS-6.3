@@ -17,6 +17,7 @@ class SchemaConventionTest extends TestCase
         'node_assets.duration' => 'INT UNSIGNED NULL DEFAULT NULL',
         'admins.email' => 'VARCHAR(255) DEFAULT NULL',
         'points.rid' => 'BIGINT UNSIGNED DEFAULT NULL',
+        'routes.cur' => 'TINYINT UNSIGNED AS (IF(`STATE` = 1, 1, NULL)) STORED',
         'users.birthday' => 'DATE DEFAULT NULL',
         'users.email' => 'VARCHAR(255) DEFAULT NULL',
         'users_temp.email' => 'VARCHAR(255) DEFAULT NULL',

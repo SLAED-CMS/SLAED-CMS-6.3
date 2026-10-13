@@ -145,6 +145,11 @@ function getNodeAdminForm(NodeType $type, array $vals, array $errs, int $id, int
         $rows[] = ['label_html' => $label, 'field_html' => $tpl->getHtmlFrag('checkbox', ['name_attr' => $key, 'value_attr' => '1', 'input_id' => 'f-'.$key,
             'is_checked' => $vals[$key]])];
     }
+    if ($vals['route'] !== '') {
+        $rows[] = ['label_for' => 'f-path', 'label_html' => _ADDRESS, 'hint_html' => htmlspecialchars('/'.$vals['route'], ENT_QUOTES, 'UTF-8'), 'hint_id' => 'f-path-hint',
+            'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'path', 'input_id' => 'f-path', 'describedby' => 'f-path-hint',
+            'value_attr' => $vals['path'], 'maxlength_num' => 255])];
+    }
     $date = fn(?string $val): string => ($val === null) ? '' : str_replace(' ', 'T', substr($val, 0, 16));
     $rows[] = ['label_for' => 'f-pubdate', 'label_html' => _CHNGSTORY, 'hint_html' => _NODE_DATEHINT, 'hint_id' => 'f-pubdate-hint',
         'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'datetime-local',

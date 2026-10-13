@@ -325,8 +325,9 @@ values over real requests. The 6.2 path of `table_update6_3.sql` reaches the sam
 
 NULL means "none" or "not recorded" and nothing else. Besides a nullable moment it is allowed only for
 `_comment.reqkey` (no request key), the five measures of `_node_assets` (an outside file), `_points.rid` (not
-reversed), `_users.birthday` (a calendar day) and the three unique addresses. A flag, a counter or a text is never
-NULL.
+reversed), `_users.birthday` (a calendar day), the three unique addresses and `_routes.cur` (not the current path: a
+column generated from `state`, so the unique key `owner` holds one current path per entity beside any number of
+former and gone ones). A flag, a counter or a text is never NULL.
 
 **Time.** A moment is `DATETIME`; a timer no person reads is unix seconds: `_blocks.time` (the refresh of an RSS
 block), `_mail.ntime` and `locked`, `_node_publish.due`, `_oauth_temp.time`, `_rating.time` (the vote window of a
@@ -3612,6 +3613,7 @@ function deleteUpdateTypes(array $keep): array|false
   settings form drops the rest on its next save.
 - `global`: `close = '1'`; language names become codes (also `lang.lang`); `module` keeps only modules of the
   tree and `amod` is dropped; `version`, `css_f`, `script_f` come from the release; a missing theme or logo falls back.
+  The address switches `rewrite`, `sep`, `tsep`, `title` and `ctitle` are dropped, from `global` and from `seo` alike.
   A key that names a configuration area (`forum`, `newsletter` and `search` of 6.2) is dropped: `getConfig()` merges
   the files in name order, so `global.php` would replace the whole `$conf['forum']` of `forum.php` with its string.
 - `uploads`: a 12-field rule loses field 8 (`adminlist`) and gains `guestfiles` = `userfiles` as field 12.

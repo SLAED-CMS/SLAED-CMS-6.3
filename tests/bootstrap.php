@@ -42,7 +42,6 @@ $GLOBALS['conf'] = [
     'multilingual' => '0',
     'user_c' => 'test',
     'user_c_t' => '3600',
-    'rewrite' => '0',
     'name' => 'test',
     'defis' => '-',
 ];

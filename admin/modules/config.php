@@ -722,31 +722,6 @@ function config(): void {
         'label_id' => $labid = getFieldIds('', 'adesc')['label'],
         'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'adesc', 'value' => $conf['adesc'], 'options' => $yesno]),
     ];
-    $rows[] = ['label_for' => 'f-sep', 'label_html' => _RSEP, 'field_html' => $tpl->getHtmlFrag('input', [
-        'itype' => 'text',
-        'name_attr' => 'sep',
-        'input_id' => 'f-sep',
-        'value_attr' => urldecode($conf['sep']),
-        'maxlength_num' => 255,
-        'placeholder_text' => _RSEP,
-        'is_required' => true,
-        'is_config' => true,
-    ])];
-    $rows[] = ['label_for' => 'f-tsep', 'label_html' => _TSEP, 'field_html' => $tpl->getHtmlFrag('input', [
-        'itype' => 'text',
-        'name_attr' => 'tsep',
-        'input_id' => 'f-tsep',
-        'value_attr' => urldecode($conf['tsep']),
-        'maxlength_num' => 255,
-        'placeholder_text' => _TSEP,
-        'is_required' => true,
-        'is_config' => true,
-    ])];
-    $rows[] = [
-        'label_html' => _REWRITE_MOD,
-        'label_id' => $labid = getFieldIds('', 'rewrite')['label'],
-        'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'rewrite', 'value' => $conf['rewrite'], 'options' => $yesno]),
-    ];
     $rows[] = [
         'label_html' => _FORCESSL,
         'label_id' => $labid = getFieldIds('', 'forcessl')['label'],
@@ -756,16 +731,6 @@ function config(): void {
         'label_html' => _FORCEHOST,
         'label_id' => $labid = getFieldIds('', 'forcehost')['label'],
         'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'forcehost', 'value' => $conf['forcehost'] ?? 0, 'options' => $yesno]),
-    ];
-    $rows[] = [
-        'label_html' => _SEOTITLE,
-        'label_id' => $labid = getFieldIds('', 'title')['label'],
-        'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'title', 'value' => $conf['title'] ?? 1, 'options' => $yesno]),
-    ];
-    $rows[] = [
-        'label_html' => _SEOCTITLE,
-        'label_id' => $labid = getFieldIds('', 'ctitle')['label'],
-        'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'ctitle', 'value' => $conf['ctitle'] ?? 1, 'options' => $yesno]),
     ];
     $rows[] = [
         'label_html' => _OGRAPH,
@@ -1128,13 +1093,8 @@ function save(): void {
             'dletter' => getVar('post', 'dletter', 'num', 160),
             'ltitle' => getVar('post', 'ltitle', 'num'),
             'adesc' => getVar('post', 'adesc', 'num'),
-            'sep' => urlencode(getVar('post', 'sep', 'let', '-')),
-            'tsep' => urlencode(getVar('post', 'tsep', 'let', '-')),
-            'rewrite' => getVar('post', 'rewrite', 'num'),
             'forcessl' => getVar('post', 'forcessl', 'num'),
             'forcehost' => getVar('post', 'forcehost', 'num'),
-            'title' => getVar('post', 'title', 'num'),
-            'ctitle' => getVar('post', 'ctitle', 'num'),
             'agraph' => getVar('post', 'agraph', 'num'),
             'graph' => $graph,
             'aschema' => getVar('post', 'aschema', 'num'),

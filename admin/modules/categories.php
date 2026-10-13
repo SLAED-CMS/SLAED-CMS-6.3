@@ -96,6 +96,7 @@ function add(): void {
             'placeholder_text' => _TITLE,
             'is_required' => true,
         ])],
+        getCategoryPathRow(0),
         ['label_for' => 'f-description', 'label_html' => _DESCRIPTION, 'field_html' => $tpl->getHtmlFrag('textarea', [
             'name_attr' => 'description',
             'input_id' => 'f-description',
@@ -238,6 +239,7 @@ function subadd(): void {
                 'placeholder_text' => _TITLE,
                 'is_required' => true,
             ])],
+            getCategoryPathRow(0),
             ['label_for' => 'f-description', 'label_html' => _DESCRIPTION, 'field_html' => $tpl->getHtmlFrag('textarea', [
                 'name_attr' => 'description',
                 'input_id' => 'f-description',
@@ -442,6 +444,7 @@ function edit(): void {
             'placeholder_text' => _TITLE,
             'is_required' => true,
         ])],
+        getCategoryPathRow(intval($cid)),
         ['label_for' => 'f-description', 'label_html' => _DESCRIPTION, 'field_html' => $tpl->getHtmlFrag('textarea', [
             'name_attr' => 'description',
             'input_id' => 'f-description',
@@ -547,6 +550,16 @@ function edit(): void {
     setFoot();
 }
 
+# The row of the field Address: the name of the current path of a category, empty for a new one, with the whole path as its hint
+function getCategoryPathRow(int $cid): array {
+    global $db, $tpl;
+    $path = ($cid > 0) ? ((new Route($db))->getRouteList('cat', [$cid])[$cid] ?? '') : '';
+    $name = substr((string)strrchr('/'.$path, '/'), 1);
+    $field = ['itype' => 'text', 'name_attr' => 'path', 'input_id' => 'f-path', 'value_attr' => $name, 'maxlength_num' => 255];
+    if ($path === '') return ['label_for' => 'f-path', 'label_html' => _ADDRESS, 'field_html' => $tpl->getHtmlFrag('input', $field)];
+    return ['label_for' => 'f-path', 'label_html' => _ADDRESS, 'hint_html' => htmlspecialchars('/'.$path, ENT_QUOTES, 'UTF-8'), 'hint_id' => 'f-path-hint',
+        'field_html' => $tpl->getHtmlFrag('input', $field + ['describedby' => 'f-path-hint'])];
+}
 # The seven access rules of the category form as stored rule strings: a posted list of level|group values, or the default of the rule when none is valid
 function getCategoryRights(): array {
     $out = [];
@@ -568,6 +581,7 @@ function addsave(): void {
     $lang = getVar('post', 'lang', 'var');
     if (!isset(getLanguageList()[$lang])) $lang = '';
     $cid = getVar('post', 'cid', 'num', 0);
+    $path = filterCutText(trim(getVar('post', 'path', 'raw', '')), 255);
     $imgcat = strtolower($imgcat);
     if (!preg_match('/^[a-z0-9-]{1,100}$/', $imgcat)) $imgcat = '';
     $status = getVar('post', 'status', 'num');
@@ -579,7 +593,7 @@ function addsave(): void {
         try {
             $srv = getNodeWriter();
             $node = $srv->checkTypeRegistry([$modul]);
-            if ($node) $srv->addNodeCategory($row);
+            if ($node) $srv->addNodeCategory($row, $path);
         } catch (NodeException $err) {
             $warn = true;
             $text = match ($err->getCode()) {
@@ -590,10 +604,14 @@ function addsave(): void {
         }
     }
     if (!$node) {
-        [$ordern] = $db->getSqlRow($db->getSqlQuery('SELECT ordern FROM '.PREFIX_DB.'_categories WHERE modul = :modul ORDER BY ordern DESC', ['modul' => $modul]));
+        $open = $db->setSqlBegin();
+        [$ordern] = $db->getSqlRow($db->getSqlQuery('SELECT ordern FROM '.PREFIX_DB.'_categories WHERE modul = :modul ORDER BY ordern DESC FOR UPDATE', ['modul' => $modul]));
         $keys = array_keys($row);
         $sql = 'INSERT INTO '.PREFIX_DB.'_categories ('.implode(', ', $keys).', ordern) VALUES (:'.implode(', :', $keys).', :ordern)';
-        $db->getSqlQuery($sql, $row + ['ordern' => intval($ordern) + 1]);
+        $done = $open && $db->getSqlQuery($sql, $row + ['ordern' => intval($ordern) + 1]) !== false;
+        $done = $done && (new Route($db))->setRouteName('cat', intval($db->getSqlLastId()), $modul, $path, $title) !== '' && $db->setSqlCommit();
+        if ($open && !$done) $db->setSqlRollback();
+        if (!$done) [$warn, $text] = [true, _ERROR];
         deleteCategoryMap($modul);
     }
     setRedirect($afile.'.php?name=categories&modul='.$modul, false, 302, $text, $warn);
@@ -611,6 +629,7 @@ function save(): void {
     $lang = getVar('post', 'lang', 'var');
     if (!isset(getLanguageList()[$lang])) $lang = '';
     $parent = getVar('post', 'parent', 'num');
+    $path = filterCutText(trim(getVar('post', 'path', 'raw', '')), 255);
     $imgcat = strtolower($imgcat);
     if (!preg_match('/^[a-z0-9-]{1,100}$/', $imgcat)) $imgcat = '';
     $status = getVar('post', 'status', 'num');
@@ -625,7 +644,7 @@ function save(): void {
             $old = $srv->checkTypeRegistry([$was]);
             if ($old) $label = htmlspecialchars($was, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
             $node = $old || $srv->checkTypeRegistry([$modul]);
-            if ($node) $srv->updateNodeCategory($id, $row);
+            if ($node) $srv->updateNodeCategory($id, $row, $path);
         } catch (NodeException $err) {
             $warn = true;
             $text = match ($err->getCode()) {
@@ -644,7 +663,11 @@ function save(): void {
     }
     if (!$node && !$warn) {
         $set = implode(', ', array_map(fn(string $v): string => $v.' = :'.$v, array_keys($row)));
-        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_categories SET '.$set.' WHERE id = :id', $row + ['id' => $id]);
+        $open = $db->setSqlBegin();
+        $done = $open && $db->getSqlQuery('UPDATE '.PREFIX_DB.'_categories SET '.$set.' WHERE id = :id', $row + ['id' => $id]) !== false;
+        $done = $done && (new Route($db))->setRouteName('cat', intval($id), $modul, $path, $title) !== '' && $db->setSqlCommit();
+        if ($open && !$done) $db->setSqlRollback();
+        if (!$done) [$warn, $text] = [true, _ERROR];
         deleteCategoryMap($modul);
         if ($was !== $modul) deleteCategoryMap($was);
     }
@@ -707,8 +730,15 @@ function delete(): void {
         }
     }
     if (!$node) {
-        $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_categories WHERE id = :id', ['id' => $id]);
-        $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_categories WHERE parent = :id', ['id' => $id]);
+        $open = $db->setSqlBegin();
+        $res = $open ? $db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_categories WHERE id = :id OR parent = :pid FOR UPDATE', ['id' => $id, 'pid' => $id]) : false;
+        $ids = $res ? array_map('intval', $res->fetchAll(PDO::FETCH_COLUMN)) : [];
+        $rte = new Route($db);
+        $done = $res !== false && $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_categories WHERE id = :id OR parent = :pid', ['id' => $id, 'pid' => $id]) !== false;
+        foreach ($ids as $one) $done = $done && $rte->deleteRoute('cat', $one);
+        $done = $done && $db->setSqlCommit();
+        if ($open && !$done) $db->setSqlRollback();
+        if (!$done) [$warn, $text] = [true, _ERROR];
         deleteCategoryMap($was);
     }
     setRedirect($afile.'.php?name=categories&modul='.$modul, false, 302, $text, $warn);

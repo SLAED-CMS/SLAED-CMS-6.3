@@ -96,10 +96,11 @@ function voting(): void {
 function view(): void {
     global $db, $conf, $tpl;
     $id = getVar('get', 'id', 'num');
-    $result = $db->getSqlQuery('SELECT title, time, acomm FROM '.PREFIX_DB.'_voting'
-        .' WHERE id = :id AND modul = \'\' AND time <= NOW() AND (enddate >= NOW() AND status = \'0\' OR status = \'1\')', ['id' => $id]);
+    $result = $db->getSqlQuery('SELECT v.title, v.time, v.acomm, r.path FROM '.PREFIX_DB.'_voting AS v'
+        .' LEFT JOIN '.PREFIX_DB.'_routes AS r ON r.kind = \'poll\' AND r.oid = v.id AND r.cur = 1'
+        .' WHERE v.id = :id AND v.modul = \'\' AND v.time <= NOW() AND (v.enddate >= NOW() AND v.status = \'0\' OR v.status = \'1\')', ['id' => $id]);
     if ($db->getSqlRowCount($result) > 0) {
-        [$title, $date, $acomm] = $db->getSqlRow($result);
+        [$title, $date, $acomm, $route] = $db->getSqlRow($result);
         setHead([
             'title' => $title,
             'kind' => 'website',

@@ -466,7 +466,6 @@ define('_REPLACEIN','Słowo zostanie zastąpione przez wpisana zawartość tekst
 define('_REPLACEINFO','W treści wymiany dopuszczalne wykorzystania, jak zwykły tekst, jak i HTML. Aby wyłączyć wymiany należy podać wartość «0» w słowie i zawartości pola.');
 define('_REPLACE_FIELD','Wymiana');
 define('_REPTEXT','W nowoczesnych tabelach InnoDB odzyskiwanie danych po awarii odbywa się automatycznie. Funkcja naprawy powinna być używana tylko w przypadku faktycznych błędów tabel.');
-define('_REWRITE_MOD','Aktywacja konwersja linków w Rewrite Mod?');
 define('_FORCESSL','Zawsze używaj HTTPS (przekieruj z http)?');
 define('_FORCEHOST','Jedna domena (przekieruj www na główną)?');
 define('_RIGHT','Po prawej stronie');
@@ -776,10 +775,6 @@ define('_ASEARCH','Aktywować analizator wyszukiwarek?');
 define('_LTITLE','Używać długich tytułów?');
 define('_ADESC','Automatyczne generowanie opisu?');
 define('_DLETTER','Maksymalna liczba znaków w opisie');
-define('_RSEP','Separator URL');
-define('_TSEP','Separator tytułów dla adresów SEO');
-define('_SEOTITLE','Dodać tytuł?');
-define('_SEOCTITLE','Dodać tytuł kategorii?');
 define('_OGRAPH','Włączyć Open Graph?');
 define('_OGRAPHT','Szablon Open Graph');
 define('_SCHEMA','Włączyć Schema.org?');

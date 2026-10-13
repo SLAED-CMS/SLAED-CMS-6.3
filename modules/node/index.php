@@ -190,9 +190,11 @@ function getNodeFormPost(NodeType $type, bool $moder, ?Node $old, bool $upload =
         'rels' => $rels,
         'assets' => $show,
         'ext' => $src,
+        'route' => $old?->path ?? '',
+        'path' => ($moder && $old?->path !== null) ? filterCutText(trim(getVar('post', 'path', 'raw', '')), 255) : '',
     ];
     $input = new NodeInput($vals['cid'], $vals['cids'], $vals['aname'], $vals['title'], $vals['intro'], $vals['body'], $vals['fields'], $vals['poll'], $vals['home'],
-        $vals['comon'], $vals['pinned'], $vals['pubdate'], $vals['expires'], $rels, $assets, $ext);
+        $vals['comon'], $vals['pinned'], $vals['pubdate'], $vals['expires'], $rels, $assets, $ext, $vals['path']);
     return [$input, $vals, $errs];
 }
 
@@ -219,6 +221,8 @@ function getNodeFormVals(?Node $node, array $ext = []): array {
             array_map(fn(NodeRelation $v): array => ['rid' => $v->rid, 'type' => 'parent', 'sort' => 0], $up)),
         'assets' => getNodeAssetRows($node),
         'ext' => $ext,
+        'route' => $node?->path ?? '',
+        'path' => substr((string)strrchr('/'.($node?->path ?? ''), '/'), 1),
     ];
 }
 

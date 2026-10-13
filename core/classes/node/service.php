@@ -63,6 +63,7 @@ final class NodeService {
     private ?Point $pnt;
     private ?NodeExtension $ext;
     private NodeQuery $query;
+    private Route $route;
 
     # Keep the database, the request context, the shared field system, the shared points of the operations that reward and the extension of the type a material write serves
     public function __construct(Database $db, NodeContext $context, Field $field, ?Point $point = null, ?NodeExtension $ext = null) {
@@ -72,6 +73,7 @@ final class NodeService {
         $this->pnt = $point;
         $this->ext = $ext;
         $this->query = (new NodeQuery($db, $context, $field))->setNodeExtension($ext);
+        $this->route = new Route($db);
     }
 
     # The refusal of an input, with the path of the first error for the log
@@ -146,12 +148,12 @@ final class NodeService {
         if (!$now || $now !== $was) throw new NodeException('The global node settings changed during the request', NodeException::CONFLICT);
     }
 
-    # Refuse a new name outside the grammar, a reserved name, a module name other than the nine replacements, or a name a shared area already carries
+    # Refuse a new name outside the grammar, a reserved name, one the registry refuses, a module name other than the nine replacements, or one a shared area carries
     # The upload rule a removed module left under one of the nine replaced names is no refusal: the new type takes it over, see addNodeType()
     # Also refuse a name whose categories, comments or favorites remain from an earlier owner under a key of any case; a type folder lies below NODE_DIR, apart
     private function checkNewName(string $name, array $base): void {
         global $conf;
-        if (!preg_match(self::NAME, $name) || in_array($name, self::RESERVED, true)) throw $this->getInvalid('name');
+        if (!preg_match(self::NAME, $name) || in_array($name, self::RESERVED, true) || !$this->route->checkTypeName($name)) throw $this->getInvalid('name');
         $swap = in_array($name, self::SWAPS, true);
         $module = isset($conf['modules'][$name]) || is_dir(BASE_DIR.'/modules/'.$name);
         if ($module && !$swap) throw $this->getInvalid('name');
@@ -423,7 +425,7 @@ final class NodeService {
         return $type;
     }
 
-    # Create a disabled type of version 1 under a new public name: its row, its sections in the four shared areas and its upload directory with the guard
+    # Create a disabled type of version 1 under a new public name: its row and path, its sections in the four shared areas and its upload directory
     # An empty upload rule copies the rule all and an empty rating rule is the new rule; an existing directory is taken only when it holds nothing but guard files
     # An empty upload rule of one of the nine replaced names takes over the valid rule the removed module left under that name; a broken one is logged and all applies
     public function addNodeType(string $name, NodeTypeInput $input): NodeType {
@@ -445,6 +447,7 @@ final class NodeService {
                 .' VALUES (:name, :title, :intro, :ext, 0, :sort, 1, NOW(), NOW())';
             $this->getQueryRes($sql, ['name' => $name, 'title' => $input->title, 'intro' => $input->intro, 'ext' => $input->ext, 'sort' => $input->sort]);
             $id = intval($this->db->getSqlLastId());
+            if ($this->route->addRoute('type', $id, '', $name) !== $name) throw $this->getStorage('The path of the type cannot be stored');
             return [$this->getTypePack($base, $name, $data), ['kind' => 'add', 'name' => $name, 'id' => $id, 'old' => 0, 'new' => 1]];
         });
         return $this->getTypeResult($name);
@@ -490,7 +493,7 @@ final class NodeService {
         return $this->getTypeResult($name);
     }
 
-    # Delete a type at the expected version when it has no material in any state, no category and no user file; its directory and guard stay
+    # Delete a type at the expected version when it has no material in any state, no category and no user file; its directory stays, its paths gone
     # The sections of the type leave all four shared areas, and the moderation right node-<name> leaves every administrator, so a later type of that name inherits nothing
     public function deleteNodeType(string $name, int $version): void {
         $this->setTypeWrite($name, function (array $base, ?array $row) use ($name, $version): array {
@@ -509,6 +512,7 @@ final class NodeService {
                 $this->getQueryRes('UPDATE '.PREFIX_DB.'_admins SET modules = :mods WHERE id = :id', ['mods' => $keep, 'id' => intval($one['id'])]);
             }
             $this->getQueryRes('DELETE FROM '.PREFIX_DB.'_node_types WHERE id = :id', ['id' => $id]);
+            if (!$this->route->deleteRoute('type', $id)) throw $this->getStorage('The paths of the type cannot be marked gone');
             return [$this->getTypePack($base, $name, null), ['kind' => 'delete', 'name' => $name, 'id' => $id, 'old' => $version, 'new' => 0]];
         });
     }
@@ -1053,7 +1057,7 @@ final class NodeService {
 
     # Keep the delivery of a future publication in line with the stored state: a published material with a future date has its job and any other state has none
     # A publication whose date has come, at once or because a pending job was moved into the past, is rewarded inside this transaction, a material of a removed module never
-    private function setPublishJob(NodeType $type, int $id, int $uid, NodeStatus $status, ?string $pub, ?string $job, bool $was, string $now): void {
+    private function setPublishJob(NodeType $type, int $id, int $uid, NodeStatus $status, ?string $pub, ?string $job, bool $was, string $now, string $title): void {
         $live = $status === NodeStatus::Published;
         $wait = $live && $pub !== null && strcmp($pub, $now) > 0;
         if ($wait && $job !== $pub) {
@@ -1064,6 +1068,13 @@ final class NodeService {
             $this->getQueryRes('DELETE FROM '.PREFIX_DB.'_node_publish WHERE nid = :id', ['id' => $id]);
         }
         if ($live && !$wait && (!$was || $job !== null) && !$this->checkNodeLegacy($id)) $this->addNodePoint('publish', $type, 'node:'.$id, $uid);
+        if ($live && !$wait) $this->addNodeRoute($type, $id, $title);
+    }
+
+    # Give a public material of a type that is not private its first path from its title inside the open write; one that has a path keeps it, a refusal rolls the write back
+    private function addNodeRoute(NodeType $type, int $id, string $title): void {
+        if ($type->ext === 'support') return;
+        if ($this->route->addRoute('node', $id, $type->name, $title) === '') throw $this->getStorage('The path of the material cannot be stored');
     }
 
     # Whether a material came from a removed module: that module rewarded its publication and 6.3 carried the balance, so Node never rewards it a second time
@@ -1094,13 +1105,14 @@ final class NodeService {
             $row['intro'], $row['body'], $vals, intval($row['poll']), $row['home'], $mode, $row['pinned'], intval($row['comnum']),
             intval($row['views']), intval($row['score']), intval($row['ratings']), $state, intval($row['version']), $row['created'], $row['updated'],
             $row['published'], $row['expires'], $sets['cids'] ?? null,
-            $sets['rels'] ?? null, $sets['assets'] ?? null, $row['uname'] ?? null, $row['ctitle'] ?? null);
+            $sets['rels'] ?? null, $sets['assets'] ?? null, $row['uname'] ?? null, $row['ctitle'] ?? null, $row['path'] ?? null);
     }
 
     # Read one stored material of the type the way the writer sees it, without the read rules of a visitor, with its three sets when asked; null when it does not exist
     private function getStoredNode(int $id, NodeType $type, bool $sets): ?Node {
-        $sql = 'SELECT '.self::COLS.', u.name AS uname, c.title AS ctitle FROM '.PREFIX_DB.'_nodes AS n LEFT JOIN '.PREFIX_DB.'_users AS u ON u.id = n.uid AND n.uid > 0'
-            .' LEFT JOIN '.PREFIX_DB.'_categories AS c ON c.id = n.cid AND n.cid > 0 WHERE n.id = :id AND n.tid = :tid';
+        $sql = 'SELECT '.self::COLS.', u.name AS uname, c.title AS ctitle, r.path FROM '.PREFIX_DB.'_nodes AS n LEFT JOIN '.PREFIX_DB.'_users AS u ON u.id = n.uid AND n.uid > 0'
+            .' LEFT JOIN '.PREFIX_DB.'_categories AS c ON c.id = n.cid AND n.cid > 0 LEFT JOIN '.PREFIX_DB.'_routes AS r ON r.kind = \'node\' AND r.oid = n.id AND r.cur = 1'
+            .' WHERE n.id = :id AND n.tid = :tid';
         $row = $this->getQueryRes($sql, ['id' => $id, 'tid' => $type->id])->fetch(PDO::FETCH_ASSOC);
         if (!$row) return null;
         if (!$sets) return $this->getNodeModel($row, $type, null);
@@ -1208,7 +1220,7 @@ final class NodeService {
             $this->getQueryRes($sql, ['text' => $canon, 'status' => $state->value, 'now' => $now, 'id' => $id, 'ver' => $version]);
             if ($back) {
                 $job = $this->getQueryRes('SELECT published FROM '.PREFIX_DB.'_node_publish WHERE nid = :id FOR UPDATE', ['id' => $id])->fetchColumn();
-                $this->setPublishJob($type, $id, $cur->uid, $state, $cur->pubdate, ($job === false) ? null : (string)$job, true, $now);
+                $this->setPublishJob($type, $id, $cur->uid, $state, $cur->pubdate, ($job === false) ? null : (string)$job, true, $now, $cur->title);
             }
             return $this->getNodeModel(array_replace($row, [$field => $canon, 'status' => $state->value, 'version' => $version + 1, 'updated' => $now]), $type, null);
         });
@@ -1253,7 +1265,7 @@ final class NodeService {
             $this->setNodeSets($id, $data, null, $now);
             $node = $this->getStoredNode($id, $type, true) ?? throw $this->getStorage('The created material cannot be read back');
             $this->ext?->addNodeData($node, $data['ext']);
-            $this->setPublishJob($type, $id, $this->ctx->uid, $status, $data['pub'], null, false, $now);
+            $this->setPublishJob($type, $id, $this->ctx->uid, $status, $data['pub'], null, false, $now, $data['title']);
             return $node;
         });
     }
@@ -1266,12 +1278,13 @@ final class NodeService {
         if (intval($head['version']) !== $version) throw new NodeException('The expected material version is stale', NodeException::CONFLICT);
         $old = $this->getStoredNode($id, $type, true) ?? throw $this->getMissing('The material does not exist');
         $data = $this->getInputData($type, $input, $old->status, $old);
+        if (!mb_check_encoding($input->path, 'UTF-8') || mb_strlen($input->path) > 255) throw $this->getInvalid('path');
         $polls = ($data['poll'] !== $old->poll) ? array_values(array_filter([$old->poll, $data['poll']])) : [];
         sort($polls);
         $files = function () use ($type, &$data, $old): void {
             $this->checkNodeFiles($type, $data, $old);
         };
-        return $this->setNodeWrite($type, $polls, $files, function () use ($type, $id, $version, $old, &$data): Node {
+        return $this->setNodeWrite($type, $polls, $files, function () use ($type, $id, $version, $old, $input, &$data): Node {
             $now = $this->getTypeLock($type);
             $row = $this->checkNodeRefs($type, $data, $old->status, $now, $old, $id, true);
             if ($row === null) throw $this->getMissing('The material does not exist');
@@ -1283,11 +1296,13 @@ final class NodeService {
                 'field' => $data['field'], 'poll' => $data['poll'], 'home' => $data['home'] ? 1 : 0, 'comon' => $data['comon']->value, 'pinned' => $data['pinned'] ? 1 : 0,
                 'pub' => $data['pub'], 'exp' => $data['expires'], 'now' => $now, 'id' => $id, 'ver' => $version]);
             $this->setNodeSets($id, $data, $before, $now);
+            $move = trim($input->path) !== '' && $before->path !== null;
+            if ($move && $this->route->setRoute('node', $id, $type->name, trim($input->path)) === '') throw $this->getStorage('The path of the material cannot be moved');
             $after = $this->getStoredNode($id, $type, true) ?? throw $this->getStorage('The changed material cannot be read back');
             $this->ext?->updateNodeData($before, $after, $data['ext']);
             $job = $this->getQueryRes('SELECT published FROM '.PREFIX_DB.'_node_publish WHERE nid = :id FOR UPDATE', ['id' => $id])->fetchColumn();
             $live = $before->status === NodeStatus::Published;
-            $this->setPublishJob($type, $id, $before->uid, $before->status, $data['pub'], ($job === false) ? null : (string)$job, $live, $now);
+            $this->setPublishJob($type, $id, $before->uid, $before->status, $data['pub'], ($job === false) ? null : (string)$job, $live, $now, $data['title']);
             return $after;
         });
     }
@@ -1321,7 +1336,7 @@ final class NodeService {
             $after = $this->getNodeModel(array_replace($row, ['status' => $status->value, 'published' => $pub, 'version' => $version + 1, 'updated' => $now]), $type, null);
             $this->ext?->updateNodeData($before, $after, null);
             $job = $row['jpub'];
-            $this->setPublishJob($type, $id, $before->uid, $status, $pub, $job, $before->status === NodeStatus::Published, $now);
+            $this->setPublishJob($type, $id, $before->uid, $status, $pub, $job, $before->status === NodeStatus::Published, $now, $before->title);
             if ($before->status === NodeStatus::Pending && $status === NodeStatus::Published) $this->addNodePoint('moderate', $type, 'approve:'.$id, 0, $before->uid);
             return $after;
         });
@@ -1357,6 +1372,7 @@ final class NodeService {
             }
             if (!$back) throw $this->getStorage('The award of the material cannot be compensated');
             $this->getQueryRes('DELETE FROM '.PREFIX_DB.'_favorites WHERE modul = :modul AND fid = :fid', ['modul' => $type->name, 'fid' => $id]);
+            if (!$this->route->deleteRoute('node', $id)) throw $this->getStorage('The paths of the material cannot be marked gone');
             $this->getQueryRes('DELETE FROM '.PREFIX_DB.'_nodes WHERE id = :id AND version = :ver', ['id' => $id, 'ver' => $version]);
             return true;
         });
@@ -1563,8 +1579,9 @@ final class NodeService {
     private function setPublishDue(int $id, int $tid, string $name): string {
         if (!$this->db->setSqlBegin()) return 'failed';
         try {
-            $live = $this->getQueryRes('SELECT active FROM '.PREFIX_DB.'_node_types WHERE id = :id FOR UPDATE', ['id' => $tid])->fetchColumn();
-            $sql = 'SELECT uid, status, published, published <= NOW() AS came FROM '.PREFIX_DB.'_nodes WHERE id = :id AND tid = :tid FOR UPDATE';
+            $kind = $this->getQueryRes('SELECT active, ext FROM '.PREFIX_DB.'_node_types WHERE id = :id FOR UPDATE', ['id' => $tid])->fetch(PDO::FETCH_ASSOC);
+            $live = $kind && $kind['active'];
+            $sql = 'SELECT uid, title, status, published, published <= NOW() AS came FROM '.PREFIX_DB.'_nodes WHERE id = :id AND tid = :tid FOR UPDATE';
             $row = $this->getQueryRes($sql, ['id' => $id, 'tid' => $tid])->fetch(PDO::FETCH_ASSOC);
             $sql = 'SELECT published, due <= UNIX_TIMESTAMP() AS ready FROM '.PREFIX_DB.'_node_publish WHERE nid = :id FOR UPDATE';
             $job = $this->getQueryRes($sql, ['id' => $id])->fetch(PDO::FETCH_ASSOC);
@@ -1582,6 +1599,8 @@ final class NodeService {
                 $shut = $user && !$this->getPoint()->valid;
                 if ($shut) Logger::addSite('warning', 'Node: a publication was delivered without its award, the points configuration is closed or invalid', ['nid' => $id]);
                 $done = !$user || $shut || $this->getPoint()->addEvent('publish', 'node.'.$name, 'node:'.$id, $uid);
+                $path = $kind['ext'] === 'support' || $this->route->addRoute('node', $id, $name, $row['title']) !== '';
+                if (!$path) throw $this->getStorage('The path of a delivered publication cannot be stored');
                 $this->getQueryRes($done ? $del : 'UPDATE '.PREFIX_DB.'_node_publish SET due = UNIX_TIMESTAMP() + 60 WHERE nid = :id', ['id' => $id]);
                 $out = $done ? 'processed' : 'failed';
             }
@@ -1670,17 +1689,30 @@ final class NodeService {
         }
     }
 
-    # Create one category of a Node type with the full checked row of the category form, under the lock of its type, at the end of the order of its module
-    public function addNodeCategory(array $row): int {
+    # Refuse a name for the path of a category that is not text or longer than any title
+    private function checkCatPath(string $path): void {
+        if (!mb_check_encoding($path, 'UTF-8') || mb_strlen($path) > 255) throw $this->getInvalid('category.path');
+    }
+
+    # Keep a category on the path of the name its form gave, or of its current name under the module it now belongs to, or give it the first one from its title
+    private function setCatRoute(int $id, array $row, string $path): void {
+        if ($this->route->setRouteName('cat', $id, $row['modul'], trim($path), (string)$row['title']) === '') throw $this->getStorage('The path of the category cannot be stored');
+    }
+
+    # Create one category of a Node type with the full checked row of the category form, under the lock of its type, at the end of the order of its module, with its path
+    public function addNodeCategory(array $row, string $path = ''): int {
         $this->checkCatRow($row);
+        $this->checkCatPath($path);
         $types = $this->getCatTypes([$row['modul']]);
-        $cid = $this->setNodeWrite(null, [], null, function () use ($row, $types): int {
+        $cid = $this->setNodeWrite(null, [], null, function () use ($row, $types, $path): int {
             $this->setCatTypeLock($types);
             $this->checkCatParent(0, $row['parent'], $row['modul']);
             $num = $this->getRowCount('SELECT COALESCE(MAX(ordern), 0) FROM '.PREFIX_DB.'_categories WHERE modul = :modul', ['modul' => $row['modul']]);
             $sql = 'INSERT INTO '.PREFIX_DB.'_categories ('.implode(', ', self::CATKEYS).', ordern) VALUES (:'.implode(', :', self::CATKEYS).', :ordern)';
             $this->getQueryRes($sql, $row + ['ordern' => $num + 1]);
-            return intval($this->db->getSqlLastId());
+            $cid = intval($this->db->getSqlLastId());
+            $this->setCatRoute($cid, $row, $path);
+            return $cid;
         });
         deleteCategoryMap($row['modul']);
         return $cid;
@@ -1689,11 +1721,12 @@ final class NodeService {
     # Change one category of a Node type with the full checked row of the category form, under the lock of every type it leaves or enters and of the category itself
     # A category that still carries materials as main or extra category, items of its fixed module or subcategories never leaves its module
     # Its language and rights decide what pages show; the items of a fixed module are counted without a lock, since that module writes them outside the Node order
-    public function updateNodeCategory(int $id, array $row): void {
+    public function updateNodeCategory(int $id, array $row, string $path = ''): void {
         $this->checkCatRow($row);
+        $this->checkCatPath($path);
         $was = $this->getCatModul($id);
         $types = $this->getCatTypes([$was, $row['modul']]);
-        $this->setNodeWrite(null, [], null, function () use ($id, $row, $was, $types): bool {
+        $this->setNodeWrite(null, [], null, function () use ($id, $row, $was, $types, $path): bool {
             $this->setCatTypeLock($types);
             $now = $this->getQueryRes('SELECT modul FROM '.PREFIX_DB.'_categories WHERE id = :id FOR UPDATE', ['id' => $id])->fetchColumn();
             if ($now === false) throw $this->getMissing('The category does not exist');
@@ -1709,6 +1742,7 @@ final class NodeService {
             }
             $set = implode(', ', array_map(fn(string $v): string => $v.' = :'.$v, self::CATKEYS));
             $this->getQueryRes('UPDATE '.PREFIX_DB.'_categories SET '.$set.' WHERE id = :id', $row + ['id' => $id]);
+            $this->setCatRoute($id, $row, $path);
             return true;
         });
         deleteCategoryMap($was);
@@ -1744,6 +1778,7 @@ final class NodeService {
                 $this->getQueryRes('DELETE FROM '.PREFIX_DB.'_node_categories WHERE cid IN ('.$in.')', $pars);
             }
             $this->getQueryRes('DELETE FROM '.PREFIX_DB.'_categories WHERE id IN ('.$in.')', $pars);
+            foreach ($tree as $one) if (!$this->route->deleteRoute('cat', $one)) throw $this->getStorage('The paths of a category cannot be marked gone');
             return true;
         });
         deleteCategoryMap($was);

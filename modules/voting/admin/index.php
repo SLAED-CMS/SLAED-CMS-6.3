@@ -147,6 +147,8 @@ function add(): void {
     if ($id) {
         $result = $db->getSqlQuery('SELECT id, modul, title, body, answer, time, enddate, multi, lang, acomm, typ, status FROM '.PREFIX_DB.'_voting WHERE id = :id', ['id' => $id]);
         [$id, $modul, $title, $body, $answer, $date, $enddate, $multi, $lang, $acomm, $typ, $status] = $db->getSqlRow($result);
+        $path = (new Route($db))->getRouteList('poll', [intval($id)])[intval($id)] ?? '';
+        $pname = substr((string)strrchr('/'.$path, '/'), 1);
         $body = explode('|', $body);
         $answer = explode('|', $answer);
     } else {
@@ -161,6 +163,8 @@ function add(): void {
         $acomm = getVar('post', 'acomm', 'num', 0);
         $typ = getVar('post', 'typ', 'num', 0);
         $status = getVar('post', 'status', 'num', 0);
+        $path = '';
+        $pname = filterCutText(trim(getVar('post', 'path', 'raw', '')), 255);
     }
     setHead();
     $cont = getTplAdminTabs([
@@ -176,6 +180,12 @@ function add(): void {
             'field_html' => $tpl->getHtmlFrag('input', [
                 'itype' => 'text', 'name_attr' => 'title', 'input_id' => 'f-title', 'value_attr' => $title, 'is_required' => true, 'maxlength_num' => 255,
             ]),
+        ],
+        [
+            'label_for' => 'f-path', 'label_html' => _ADDRESS, 'hint_html' => ($path !== '') ? htmlspecialchars('/'.$path, ENT_QUOTES, 'UTF-8') : '',
+            'hint_id' => ($path !== '') ? 'f-path-hint' : '',
+            'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'path', 'input_id' => 'f-path', 'value_attr' => $pname, 'maxlength_num' => 255]
+                + (($path !== '') ? ['describedby' => 'f-path-hint'] : [])),
         ],
         ['label_html' => _MODUL, 'field_html' => getVotingModuleSelect($modul)],
         ['label_html' => _CHNGSTORY, 'field_html' => getTplAddDateTime(['name' => 'date', 'time' => $date, 'with' => true, 'max' => 16])],
@@ -256,6 +266,7 @@ function save(): void {
     $modul = filterVar(getVar('post', 'modul', 'text', ''));
     if (!isset(getNodeTypeMap()[$modul]) && !isset($conf['modules'][$modul])) $modul = '';
     $title = filterCutText(getVar('post', 'title', 'text', ''), 255);
+    $path = filterCutText(trim(getVar('post', 'path', 'raw', '')), 255);
     $body = getVar('post', 'body[]', '', []);
     $answer = getVar('post', 'answer[]', '', []);
     $quest = [];
@@ -282,27 +293,31 @@ function save(): void {
     if ($iswarn) {
         setRedirect($afile.'.php?name=voting', false, 302, _TOKENMISS, true);
     } elseif (!$stop && $posttype == 'save') {
+        $open = $db->setSqlBegin();
         if ($id) {
-            $db->getSqlQuery(
+            $done = $open && $db->getSqlQuery(
                 'UPDATE '.PREFIX_DB.'_voting SET modul = :modul, title = :title, body = :quest, answer = :answ, time = :time,'
                 .' enddate = :enddate, multi = :multi, lang = :lang, acomm = :acomm, typ = :typ, status = :status WHERE id = :id',
                 [
                     'modul' => $modul, 'title' => $title, 'quest' => $quest, 'answ' => $answ, 'time' => $date, 'enddate' => $enddate,
                     'multi' => $multi, 'lang' => $lang, 'acomm' => $acomm, 'typ' => $typ, 'status' => $status, 'id' => $id,
                 ]
-            );
+            ) !== false;
         } else {
             $ip = getIp();
-            $db->getSqlQuery(
+            $done = $open && $db->getSqlQuery(
                 'INSERT INTO '.PREFIX_DB.'_voting (id, modul, title, body, answer, time, enddate, multi, lang, acomm, ip, typ, status)'
                 .' VALUES (NULL, :modul, :title, :quest, :answ, :time, :enddate, :multi, :lang, :acomm, :ip, :typ, :status)',
                 [
                     'modul' => $modul, 'title' => $title, 'quest' => $quest, 'answ' => $answ, 'time' => $date, 'enddate' => $enddate,
                     'multi' => $multi, 'lang' => $lang, 'acomm' => $acomm, 'ip' => $ip, 'typ' => $typ, 'status' => $status,
                 ]
-            );
+            ) !== false;
+            $id = $done ? intval($db->getSqlLastId()) : 0;
         }
-        setRedirect($afile.'.php?name=voting', false, 302, _SUCCSAVE, false);
+        $done = $done && ($modul !== '' || (new Route($db))->setRouteName('poll', intval($id), 'voting', $path, $title) !== '') && $db->setSqlCommit();
+        if ($open && !$done) $db->setSqlRollback();
+        setRedirect($afile.'.php?name=voting', false, 302, $done ? _SUCCSAVE : _ERROR, !$done);
     } elseif ($posttype == 'delete') {
         delete($id);
     } else {
@@ -317,7 +332,8 @@ function delete(int $id = 0): void {
     $fail = false;
     if (!$iswarn && $id && empty($conf['node']['types'])) {
         $open = $db->setSqlBegin();
-        $done = $open && $com->deleteTarget('voting', [$id]) && $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_voting WHERE id = :id', ['id' => $id]) !== false && $db->setSqlCommit();
+        $done = $open && $com->deleteTarget('voting', [$id]) && $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_voting WHERE id = :id', ['id' => $id]) !== false
+            && (new Route($db))->deleteRoute('poll', intval($id)) && $db->setSqlCommit();
         if ($open && !$done) $db->setSqlRollback();
         $fail = !$done;
     } elseif (!$iswarn && $id) {
@@ -333,6 +349,7 @@ function delete(int $id = 0): void {
             if (!$com->deleteTarget('voting', [$id])) throw new NodeException('The comments of the poll were not deleted', NodeException::STORAGE);
             $gone = $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_voting WHERE id = :id', ['id' => $id]);
             if ($gone === false) throw new NodeException('The poll row was not deleted', NodeException::STORAGE);
+            if (!(new Route($db))->deleteRoute('poll', intval($id))) throw new NodeException('The paths of the poll were not marked gone', NodeException::STORAGE);
             $step = 'unknown';
             if (!$db->setSqlCommit()) throw new NodeException('The commit of a poll deletion is uncertain', NodeException::STORAGE);
         } catch (Throwable $err) {

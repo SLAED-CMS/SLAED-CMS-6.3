@@ -445,7 +445,14 @@ function addSetupAdmin(array &$state, string $hash): array {
     $sql = 'INSERT INTO '.PREFIX_DB.'_users (id, name, email, website, avatar, regdate, password, lang, ip, sig, block, warnings, field)'
         .' VALUES (NULL, :name, :email, :website, \'\', now(), :pass, :lang, :ip, \'\', \'\', \'\', \'\')';
     $pars = ['name' => $adm['name'], 'email' => $adm['mail'], 'website' => $state['site']['url'], 'pass' => $hash, 'lang' => $state['lang'], 'ip' => $pars['ip']];
-    if ($adm['user'] === '1' && !$db->getSqlQuery($sql, $pars)) return ['task' => '', 'fail' => _ERROR.': '.PREFIX_DB.'_users — '.$db->getSqlError()['message']];
+    if ($adm['user'] === '1') {
+        $open = $db->setSqlBegin();
+        $made = $open && $db->getSqlQuery($sql, $pars) && (new Route($db))->addRoute('user', intval($db->getSqlLastId()), 'users', $adm['name']) !== '';
+        $text = $made ? '' : $db->getSqlError()['message'];
+        $made = $made && $db->setSqlCommit();
+        if ($open && !$made) $db->setSqlRollback();
+        if (!$made) return ['task' => '', 'fail' => _ERROR.': '.PREFIX_DB.'_users — '.$text];
+    }
     $state['note'] = addNodeProfiles($aid);
     foreach (getPrivateRoots() as $dir) setPrivateMark($dir);
     setCookies('language', time() + intval($conf['user_c_t'] ?? 0), $state['lang']);

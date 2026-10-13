@@ -142,6 +142,7 @@ require_once BASE_DIR.'/core/classes/rating.php';
 require_once BASE_DIR.'/core/classes/comment.php';
 require_once BASE_DIR.'/core/classes/quick.php';
 require_once BASE_DIR.'/core/classes/privat.php';
+require_once BASE_DIR.'/core/classes/route.php';
 # Only the closed class map of Node is registered here; its classes load when a request really uses one of them
 require_once BASE_DIR.'/core/classes/node/load.php';
 $tpl = new Template($theme);
@@ -1440,10 +1441,6 @@ function getSeoRoute(array $seo = []): array {
     $vars = filterCanonicalParams();
     $name = $vars['name'] ?? '';
     $op = $vars['op'] ?? '';
-    if (!empty($vars['id']) && !empty($GLOBALS['conf']['rewrite'])) {
-        $vars['title'] = filterSeoText((string)($seo['title'] ?? ''));
-        $vars['ctitle'] = filterSeoText((string)($seo['ctitle'] ?? ''));
-    }
     $robot = trim((string)($seo['robots'] ?? ''));
     $canon = trim((string)($seo['canon'] ?? ''));
     $services = ['contact', 'recommend', 'search'];
@@ -1613,33 +1610,34 @@ function getSeoSchema(string $kind, array $seo, bool $ishome = false): array {
     return $data;
 }
 
-# Return the shared category map for one module or all modules as id => raw title, parent, ordern and the icon name of img
+# Return the shared category map for one module or all modules as id => raw title, parent, ordern, the icon name of img and the current path, empty for none
 # The map lives in a persistent data cache plus a request-static copy; callers apply getConst and escaping at their own boundary
 function getCategoryMap(string $mod = ''): array {
     global $db;
     static $maps = [];
     $key = ($mod === '') ? '*' : $mod;
     if (isset($maps[$key])) return $maps[$key];
-    $file = Cache::getFile(['catmap', 'img', $key], 'json');
+    $file = Cache::getFile(['catmap', 'path', $key], 'json');
     if (Cache::isFresh($file, 86400)) {
         $data = json_decode(Cache::getBody($file), true);
         if (is_array($data)) return $maps[$key] = $data;
     }
-    $where = ($mod !== '') ? ' WHERE modul = :modul' : '';
+    $where = ($mod !== '') ? ' WHERE c.modul = :modul' : '';
     $pars = ($mod !== '') ? ['modul' => $mod] : [];
-    $res = $db->getSqlQuery('SELECT id, title, parent, ordern, img FROM '.PREFIX_DB.'_categories'.$where, $pars);
+    $res = $db->getSqlQuery('SELECT c.id, c.title, c.parent, c.ordern, c.img, r.path FROM '.PREFIX_DB.'_categories AS c'
+        .' LEFT JOIN '.PREFIX_DB.'_routes AS r ON r.kind = \'cat\' AND r.oid = c.id AND r.cur = 1'.$where, $pars);
     $map = [];
-    while ([$cid, $title, $parent, $ordern, $img] = $db->getSqlRow($res)) {
-        $map[(int)$cid] = ['title' => (string)$title, 'parent' => (int)$parent, 'ordern' => (int)$ordern, 'img' => (string)$img];
+    while ([$cid, $title, $parent, $ordern, $img, $path] = $db->getSqlRow($res)) {
+        $map[(int)$cid] = ['title' => (string)$title, 'parent' => (int)$parent, 'ordern' => (int)$ordern, 'img' => (string)$img, 'path' => (string)$path];
     }
     Cache::setBody($file, json_encode($map, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
     return $maps[$key] = $map;
 }
 
-# Drop the stored category maps of one module and of all modules with the Node counts built on them; every writer of a category title, parent, order or icon calls it
+# Drop the stored category maps of one module and of all modules with the Node counts built on them; every writer of a category title, parent, order, icon or path calls it
 function deleteCategoryMap(string $mod): void {
     foreach (array_unique([$mod, '*']) as $key) {
-        $file = Cache::getFile(['catmap', 'img', $key], 'json');
+        $file = Cache::getFile(['catmap', 'path', $key], 'json');
         if ($file !== '' && is_file($file)) unlink($file);
     }
     deleteNodeCountMap($mod);
@@ -2843,8 +2841,6 @@ function addSitemapTask(bool $force = false): array {
         }
     }
     $home = $conf['homeurl'];
-    $fix = static fn(string $xml): string => $conf['rewrite']
-        ? (string)preg_replace('#<loc>(.*?)</loc>#is', '<loc>'.$home.'/\\1</loc>', str_replace($home.'/', '', $xml)) : $xml;
     $head = '<?xml version="1.0" encoding="UTF-8"?>'."\n"
         .(($sm['xsl'] && file_exists(SITEMAP_DIR.'/sitemap.xsl')) ? '<?xml-stylesheet type="text/xsl" href="'.$home.'/index.php?go=xsl"?>'."\n" : '');
     $opt = static fn(string $tag, mixed $val): string => (!empty($val) && $val !== '0') ? '<'.$tag.'>'.$val.'</'.$tag.'>' : '';
@@ -2855,7 +2851,7 @@ function addSitemapTask(bool $force = false): array {
     $fh = null;
     $inset = 0;
     $total = 0;
-    $put = static function (string $url) use (&$files, &$fh, &$inset, &$total, $head, $fix): void {
+    $put = static function (string $url) use (&$files, &$fh, &$inset, &$total, $head): void {
         if ($fh !== null && $inset >= 50000) {
             fwrite($fh, '</urlset>');
             fclose($fh);
@@ -2865,10 +2861,10 @@ function addSitemapTask(bool $force = false): array {
             $files[] = PUBLIC_DIR.'/sitemap-'.(count($files) + 1).'.xml';
             $fh = fopen(end($files), 'wb');
             if ($fh === false) throw new RuntimeException('a sitemap file cannot be opened');
-            fwrite($fh, $fix($head.'<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'."\n"));
+            fwrite($fh, $head.'<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'."\n");
             $inset = 0;
         }
-        fwrite($fh, $fix($url));
+        fwrite($fh, $url);
         $inset++;
         $total++;
     };
@@ -2968,11 +2964,11 @@ function addSitemapTask(bool $force = false): array {
             $keep[] = basename($file);
             $links .= '<sitemap><loc>'.$home.'/'.basename($file).'</loc><lastmod>'.$date.'</lastmod></sitemap>'."\n";
         }
-        file_put_contents(PUBLIC_DIR.'/sitemap.xml', $fix($head.'<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'."\n".$links.'</sitemapindex>'));
+        file_put_contents(PUBLIC_DIR.'/sitemap.xml', $head.'<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'."\n".$links.'</sitemapindex>');
     } elseif ($files) {
         rename($files[0], PUBLIC_DIR.'/sitemap.xml');
     } else {
-        file_put_contents(PUBLIC_DIR.'/sitemap.xml', $fix($head.'<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'."\n".'</urlset>'));
+        file_put_contents(PUBLIC_DIR.'/sitemap.xml', $head.'<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'."\n".'</urlset>');
     }
     foreach (glob(PUBLIC_DIR.'/sitemap-*.xml*') ?: [] as $old) {
         if (preg_match('/^sitemap-[1-9][0-9]*\.xml(?:\.gz)?$/D', basename($old)) && !in_array(basename($old), $keep, true)) unlink($old);
@@ -3478,48 +3474,34 @@ function getImgText(string $text, string $type = '', bool $check = true, string 
     return $img;
 }
 
-# Format SEO url
+# The relative query address of a page from its route keys in the order passed, the title keys left out
 function getSeoUrl(array $params): string {
- global $conf;
-    $sep   = $conf['sep'] ?? '-';
-    $tsep  = $conf['tsep'] ?? '-';
-    $slugs = ['title', 'ctitle'];
-    $segments = [];
     $query = [];
     foreach ($params as $key => $val) {
-        if (in_array($key, $slugs, true)) continue;
-        $segments[] = $val;
+        if ($key === 'title' || $key === 'ctitle') continue;
         $query[] = $key.'='.$val;
-    }
-    if ($conf['rewrite'] ?? false) {
-        foreach ($slugs as $key) {
-            if (!empty($conf[$key]) && !empty($params[$key])) {
-                $segments[] = filterSlug($params[$key], $tsep);
-            }
-        }
-        return implode($sep, $segments);
     }
     return 'index.php?'.implode('&', $query);
 }
 
-function filterSlug(string $text, string $sep = '-'): string {
-    $text = trim($text);
-    static $rus = [
-        'А' => 'A',  'Б' => 'B',  'В' => 'V',  'Г' => 'G',  'Д' => 'D',  'Е' => 'E',  'Ё' => 'E',  'Ж' => 'Zh',
-        'З' => 'Z',  'И' => 'I',  'Й' => 'I',  'К' => 'K',  'Л' => 'L',  'М' => 'M',  'Н' => 'N',  'О' => 'O',
-        'П' => 'P',  'Р' => 'R',  'С' => 'S',  'Т' => 'T',  'У' => 'U',  'Ф' => 'F',  'Х' => 'Kh', 'Ц' => 'Ts',
-        'Ч' => 'Ch', 'Ш' => 'Sh', 'Щ' => 'Shch', 'Ы' => 'Y', 'Э' => 'E', 'Ю' => 'Yu', 'Я' => 'Ya',
-        'Ъ' => '',   'Ь' => '',
-        'а' => 'a',  'б' => 'b',  'в' => 'v',  'г' => 'g',  'д' => 'd',  'е' => 'e',  'ё' => 'e',  'ж' => 'zh',
-        'з' => 'z',  'и' => 'i',  'й' => 'i',  'к' => 'k',  'л' => 'l',  'м' => 'm',  'н' => 'n',  'о' => 'o',
-        'п' => 'p',  'р' => 'r',  'с' => 's',  'т' => 't',  'у' => 'u',  'ф' => 'f',  'х' => 'kh', 'ц' => 'ts',
-        'ч' => 'ch', 'ш' => 'sh', 'щ' => 'shch', 'ы' => 'y', 'э' => 'e', 'ю' => 'yu', 'я' => 'ya',
-        'ъ' => '',   'ь' => '',
+# The name of an address from a stored, escaped title of any of the six locales in one Latin table, its locale being unknown; hyphens, cut to 80 at a hyphen
+function filterSlug(string $text): string {
+    static $map = [
+        'а' => 'a', 'б' => 'b', 'в' => 'v', 'г' => 'g', 'д' => 'd', 'е' => 'e', 'ё' => 'e', 'ж' => 'zh', 'з' => 'z', 'и' => 'i', 'й' => 'i',
+        'к' => 'k', 'л' => 'l', 'м' => 'm', 'н' => 'n', 'о' => 'o', 'п' => 'p', 'р' => 'r', 'с' => 's', 'т' => 't', 'у' => 'u', 'ф' => 'f',
+        'х' => 'kh', 'ц' => 'ts', 'ч' => 'ch', 'ш' => 'sh', 'щ' => 'shch', 'ъ' => '', 'ы' => 'y', 'ь' => '', 'э' => 'e', 'ю' => 'yu', 'я' => 'ya',
+        'і' => 'i', 'ї' => 'yi', 'є' => 'ye', 'ґ' => 'g',
+        'ä' => 'ae', 'ö' => 'oe', 'ü' => 'ue', 'ß' => 'ss',
+        'ą' => 'a', 'ć' => 'c', 'ę' => 'e', 'ł' => 'l', 'ń' => 'n', 'ó' => 'o', 'ś' => 's', 'ź' => 'z', 'ż' => 'z',
+        'à' => 'a', 'â' => 'a', 'æ' => 'ae', 'ç' => 'c', 'é' => 'e', 'è' => 'e', 'ê' => 'e', 'ë' => 'e', 'î' => 'i', 'ï' => 'i', 'ô' => 'o',
+        'œ' => 'oe', 'ù' => 'u', 'û' => 'u', 'ÿ' => 'y',
+        '\'' => '', '’' => '', 'ʼ' => '',
     ];
-    $text = strtr($text, $rus);
-    $text = preg_replace('~[^a-zA-Z0-9]+~', $sep, $text);
-    $text = trim($text, $sep);
-    return strtolower($text);
+    $text = strtr(mb_strtolower(html_entity_decode($text, ENT_QUOTES | ENT_HTML5, 'UTF-8'), 'UTF-8'), $map);
+    $text = trim(preg_replace('/[^a-z0-9]+/', '-', $text) ?? '', '-');
+    if (strlen($text) <= 80) return $text;
+    $cut = strrpos(substr($text, 0, 81), '-');
+    return substr($text, 0, ($cut === false) ? 80 : $cut);
 }
 
 # Format theme

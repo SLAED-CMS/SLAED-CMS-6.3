@@ -147,19 +147,24 @@ into the plan, then do whatever work the step names.
   (2026-10-12); production is updated later on a fresh dump. (2026-10-13)
 - [x] 66. SCHEMA batch 7 — reference; deletes `docs/7-SCHEMA-2026.md`. The reference is `docs/NODE.md`, "Schema
   conventions". (2026-10-13)
-- [ ] 67. DIAL — *decision*: the options dial `sl-dial` of the panel lists is three Tab stops a row while closed (found
-  by the UI/UX audit of the groups stand, 2026-10-09); write a plan, then make its items reachable only once it opens.
-- [ ] 68. URL batch 0 — the switch out and the inventory: `rewrite`, `sep`, `tsep`, `title`, `ctitle` leave the panel
+- [x] 67. URL batch 0 — the switch out and the inventory: `rewrite`, `sep`, `tsep`, `title`, `ctitle` leave the panel
   and the config; literals classified, module operations listed, list query counts as the baseline. The plan was taken
   out of `docs/2027-CORE.md`, moved before the release and turned to addresses without `id` by the owner on 2026-10-13.
-- [ ] 69. URL batch 1 — registry and name: `_routes`, the class `Route`, `filterSlug()` for six locales, suffixes,
-  reserved words.
-- [ ] 70. URL batch 2 — the writers: materials, categories, topics, users, polls; the field "Адрес"; `update.php`
-  fills the registry, `setup.php` the seed.
-- [ ] 71. URL batch 3 — parsing and building: the cut before the database, the resolution after it, `getVar()` on the
-  arrays, `getSeoUrl()` on passed paths, the join in the lists, `page` for `num`.
-- [ ] 72. URL batch 4 — one redirect: after the access check, every reason in one 301, host and scheme included; 410,
+  No 6.2 path form is parsed: production links only `index.php?…`, and its `.html` scheme answers 404 since
+  2026-10-06. (2026-10-13)
+- [x] 68. URL batch 1 — registry and name: `_routes`, the class `Route`, `filterSlug()` for six locales, suffixes,
+  reserved words. `cur` is a column generated from `state`; the stand got the empty table. (2026-10-13)
+- [x] 69. URL batch 2 — the writers: materials, categories, topics, users, polls inside their transactions; the field
+  "Адрес"; the category cache carries the path. (2026-10-13)
+- [ ] 70. URL batch 3 — migration: `update.php` fills the registry, `setup.php` the seed; rehearsal on the clean 6.2.
+- [ ] 71. URL batch 4 — parsing: the cut before the database, the resolution after it, `getVar()` on the arrays; a
+  path opens its page while the links stay `index.php?…`.
+- [ ] 72. URL batch 5 — building: `getSeoUrl()` on passed paths, the join in the lists, `page` for `num`.
+- [ ] 73. URL batch 6 — one redirect: after the access check, every reason in one 301, host and scheme included; 410,
   the legacy map on registry paths, sitemap, feed, `robots.txt`.
-- [ ] 73. URL batch 5 — the links: literals of PHP, templates, mails and language constants.
-- [ ] 74. URL batch 6 — reference; deletes `docs/10-URL-2026.md`.
-- [ ] 75. Close — no `docs/*-2026.md` plan is left; delete this file and report that the work before 8.0 is done.
+- [ ] 74. URL batch 7 — the links: literals of PHP, templates, mails and language constants.
+- [ ] 75. URL batch 8 — reference; deletes `docs/10-URL-2026.md`.
+- [ ] 76. DIAL — *decision*: the options dial `sl-dial` of the panel lists is three Tab stops a row while closed
+  (found by the UI/UX audit of the groups stand, 2026-10-09); write a plan, then make its items reachable only once it
+  opens. Put last by the owner on 2026-10-13, since its plan is not written yet.
+- [ ] 77. Close — no `docs/*-2026.md` plan is left; delete this file and report that the work before 8.0 is done.

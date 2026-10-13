@@ -344,7 +344,7 @@ final class NodeQueryTest extends TestCase
         $run = $this->getRuns()['items'];
         $node = $run['guest101'];
         $keys = ['id', 'tid', 'cid', 'uid', 'aname', 'ip', 'title', 'intro', 'body', 'fields', 'poll', 'home', 'comon', 'pinned', 'comnum', 'views', 'score', 'ratings',
-            'status', 'version', 'created', 'updated', 'pubdate', 'expires', 'cids', 'rels', 'assets', 'uname', 'ctitle'];
+            'status', 'version', 'created', 'updated', 'pubdate', 'expires', 'cids', 'rels', 'assets', 'uname', 'ctitle', 'path'];
         $this->assertSame($keys, array_keys($node));
         $pick = [$node['status'], $node['comon'], $node['body'], $node['fields'], $node['cids'], $node['pubdate'], $node['ip']];
         $this->assertSame(['Published', 'Open', 'body of 101', [], [], '2026-01-01 10:00:00', null], $pick);

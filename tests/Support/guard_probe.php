@@ -151,6 +151,34 @@ final class ProbeDb {
     public function getSqlRows(object $res): array {
         return $res->fetchAll();
     }
+
+    # Open the transaction of a save, which the in-memory table does not need
+    public function setSqlBegin(): bool {
+        return true;
+    }
+
+    # Close the transaction of a save
+    public function setSqlCommit(): bool {
+        return true;
+    }
+
+    # Undo the transaction of a refused save, which recorded nothing it would have to take back
+    public function setSqlRollback(): bool {
+        return true;
+    }
+}
+
+# The registry of addresses of a scenario: every name a save keeps a category on is recorded instead of written
+final class Route {
+    # Take the table of the scenario
+    public function __construct(object $db) {
+    }
+
+    # Record the kind, the id, the prefix and the name of the path a save keeps an entity on, and answer the path
+    public function setRouteName(string $kind, int $oid, string $prefix, string $name, string $title): string {
+        $GLOBALS['pdone']['data']['route'][] = [$kind, $oid, $prefix, $name, $title];
+        return $prefix.'/'.$title;
+    }
 }
 
 final class ProbeTpl {

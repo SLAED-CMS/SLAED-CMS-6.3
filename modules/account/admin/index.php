@@ -653,6 +653,7 @@ function addsave(): void {
         if ($room = checkEditorTextRoom($block, 'users.block')) $stop[] = $room;
         if (!$stop) {
             $text = _SUCCSAVE;
+            $open = $db->setSqlBegin();
             if ($uid) {
                 if ($pass && $pass == $pass2) {
                     $saltpass = getPassHash($pass);
@@ -688,8 +689,12 @@ function addsave(): void {
                     'gender' => $gender, 'field' => $field
                 ]);
             }
+            $twin = $ok ? '' : $db->getSqlTwin();
+            $rid = $uid ? intval($uid) : ($ok ? intval($db->getSqlLastId()) : 0);
+            $ok = $open && $ok && (new Route($db))->setRouteName('user', $rid, 'users', $uname, $uname) !== '' && $db->setSqlCommit();
+            if ($open && !$ok) $db->setSqlRollback();
             if (!$ok) {
-                $stop[] = match ($db->getSqlTwin()) { 'email' => _ERROR_EMAIL, 'name' => _USEREXIST, default => _ERROR };
+                $stop[] = match ($twin) { 'email' => _ERROR_EMAIL, 'name' => _USEREXIST, default => _ERROR };
                 add($twice);
                 return;
             }
@@ -1276,6 +1281,7 @@ function delete(): void {
                 && $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_users WHERE id = :id', ['id' => $id]) !== false
                 && $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_favorites WHERE uid = :id', ['id' => $id]) !== false
                 && $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_user_oauth WHERE uid = :id', ['id' => $id]) !== false
+                && (new Route($db))->deleteRoute('user', intval($id))
                 && $com->deleteUser($id)
                 && $prv->deleteUser($id)
                 && $db->setSqlCommit();

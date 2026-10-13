@@ -83,7 +83,7 @@ final class NodeServiceTest extends TestCase
         $want = [
             '__construct' => ['Database db', 'NodeContext context', 'Field field', '?Point point = NULL', '?NodeExtension ext = NULL', ''],
             'addNode' => ['NodeType type', 'NodeInput input', 'NodeStatus status', 'Node'],
-            'addNodeCategory' => ['array row', 'int'],
+            'addNodeCategory' => ['array row', "string path = ''", 'int'],
             'addNodeType' => ['string name', 'NodeTypeInput input', 'NodeType'],
             'addNodeTypeImport' => ['string json', "string name = ''", 'NodeType'],
             'checkTypeRegistry' => ['array names', 'bool'],
@@ -103,7 +103,7 @@ final class NodeServiceTest extends TestCase
             'updateNode' => ['int id', 'NodeInput input', 'int version', 'Node'],
             'updateNodeAssetHits' => ['int id', 'NodeType type', 'void'],
             'updateNodeAssetReport' => ['int id', 'NodeType type', 'void'],
-            'updateNodeCategory' => ['int id', 'array row', 'void'],
+            'updateNodeCategory' => ['int id', 'array row', "string path = ''", 'void'],
             'updateNodeComments' => ['int id', 'NodeType type', 'int count', 'void'],
             'updateNodePublishList' => ['int limit = 50', 'array'],
             'updateNodeRating' => ['int id', 'NodeType type', 'int score', 'int ratings', 'void'],
@@ -235,7 +235,7 @@ final class NodeServiceTest extends TestCase
         $this->assertInvalid($run['required'], 'fields.release.required');
         $this->assertInvalid($run['minimum'], 'assets.download.min');
         $this->assertSame(['ok' => true, 'value' => 'Published'], $run['ready']);
-        $this->assertLessThanOrEqual(6, $run['budget'], 'A move without a job');
+        $this->assertLessThanOrEqual(12, $run['budget'], 'A move without a job, the six statements of the first path included');
         $this->assertLessThanOrEqual(7, $run['budgetjob'], 'A move with a job of _node_publish');
         $this->assertTrue($run['published'], 'A publication without a date does not take the clock of the database');
         $this->assertTrue($run['job'], 'A publication with a future date gets no job');
@@ -291,7 +291,7 @@ final class NodeServiceTest extends TestCase
         $this->assertSame(['nodes' => 0, 'node_assets' => 0, 'node_categories' => 0], $run['rows']);
         $this->assertTrue($run['file'], 'The delete removed the file a resource pointed at');
         $this->assertSame([], $run['child'], 'The parent link of a child survived the delete of its parent');
-        $this->assertSame(8, $run['sqlnode'], 'The statements of a physical delete, the favorites and the locking reads of the resources and comments included');
+        $this->assertSame(9, $run['sqlnode'], 'The statements of a physical delete: favorites, paths and the locking reads of resources and comments');
     }
 
     # Full sets: the limits of categories and relations by the sync batch and of resources by maxassets, the roles, the shapes and the kinds
@@ -625,7 +625,7 @@ final class NodeServiceTest extends TestCase
         $code = (string)file_get_contents(self::getRoot().'/admin/modules/categories.php');
         $this->assertSame(2, substr_count($code, '->updateNodeCategory($id, '), 'The save and the switch of a Node category');
         $this->assertSame(1, substr_count($code, '->deleteNodeCategory($id)'), 'The delete of a Node category');
-        $this->assertSame(1, substr_count($code, '->addNodeCategory($row)'), 'The create of a Node category');
+        $this->assertSame(1, substr_count($code, '->addNodeCategory($row, $path)'), 'The create of a Node category');
         $this->assertSame(5, substr_count($code, '->checkTypeRegistry(['), 'The screen decides a Node category by something else than the registry');
         $this->assertStringNotContainsString('getNodeTypeMap()', $code, 'The screen decides a Node category by the type map, which skips a broken type');
         $this->assertStringNotContainsString('_nodes', $code, 'The category screen touches a Node table itself');
