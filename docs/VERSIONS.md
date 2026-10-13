@@ -1,5 +1,43 @@
 # Versions
 
+## 2026-10-13
+
+### The schema takes one set of column domains, one connection contract and keys that serve the queries that run
+
+Every change of a type, a key or a collation after 8.0 would be a migration step on every installed site, so the whole
+schema was brought to one set of conventions before the release. The reference is `docs/NODE.md`, "Schema
+conventions"; `tests/SchemaConventionTest.php` holds them for every later table.
+
+- **The connection.** `Database::__construct()` takes the collation and sets it with `utf8mb4`, the time zone of PHP
+  (by name where the server refuses the offset) and one strict `sql_mode` with `ONLY_FULL_GROUP_BY` on every path —
+  the site, the panel, `setup.php`, `update.php`, tools and probes — so `NOW()` and `date()` write the same moment
+  and MariaDB refuses what MySQL would. The zone line of `core/system.php`, `$conf['db']['sync']` and the panel switch
+  `dbsync` are gone; the referer list groups by its newest row.
+- **Text.** `utf8mb4_unicode_520_ci`, the newest collation both MySQL and MariaDB know, comes from `{collate}` of
+  `config/db.php` alone. `ip`, `modul`, `scope` and `lang` are binary ASCII of one width each, a `lang` column holds a
+  code. `filterCutText()` cuts a stored, escaped value to its column without splitting an entity, and every writer of
+  an outside value uses it; a fixed choice is checked against its values.
+- **Time.** A moment is `DATETIME`, a machine timer `BIGINT` unix seconds, and no column holds a time as text:
+  `_mail.ntime` and `locked`, `_node_publish.due`, `_blocks.time` and `_rating.time` are timers, `_blocks.expire`,
+  `_message.expire`, the stamps of `_rating_*` and `_user_oauth` are moments, `_users.lastvis` is NULL for never.
+  `_users_temp.time` leaves. The forum marks a topic new against the last visit, which it did for every topic before.
+- **NULL.** No flag, counter or text is NULL. `_users.viewmail` is 0 where it was NULL, so an address stays hidden as
+  the profile showed it, and saving the settings untouched no longer publishes it. An empty birthday is NULL; the
+  false ones a date filter wrote into empty fields are gone.
+- **Keys.** `_users.email`, `_admins.email` and `_users_temp.email` are unique with NULL for "no address";
+  `Database::getSqlTwin()` names the key a duplicate hit, and every writer answers it as "address taken". Covered keys
+  and `(191)` prefixes leave, unused keys leave, the lists of the forum, comments, blocks, categories, search and
+  support get the keys they sort by, and `_node_categories` keys on `(nid, cid)`.
+- **The 6.2 path.** `table_update6_3.sql` converts column by column, reaches every form through `runiftype()` and sets
+  the keys through `setidx()`, both doing nothing on a second run; `update.php` stops before any change while two
+  accounts share an address, and maps language names to codes. Any clean 6.2 site migrates: the rehearsal ran on
+  MariaDB 11.8, MariaDB 10.11 and MySQL 8.4. `setup.php` starts its session only when none is open.
+
+Breaking for code outside the tree: `Database::__construct()` requires the collation; `$conf['db']['sync']`, `dbsync`
+and `_users_temp.time` no longer exist; the time columns named above changed type; an address column is written NULL,
+never `''`; a `GROUP BY` must name every column it selects. The recommended servers are MySQL 8.4 and MariaDB 10.11 or
+newer; the floor stays MariaDB 10.5.2 and MySQL 8.0.16.
+
 ## 2026-10-12
 
 ### Every journal of the site takes one format, the panel records each action, and every login lands in a table

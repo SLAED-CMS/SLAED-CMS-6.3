@@ -45,10 +45,10 @@ http://localhost/setup.php
 ## System Requirements
 
 - **PHP:** 8.4+
-- **Database:** PDO MySQL-compatible server (MySQL 8.0.16+ or MariaDB 10.5.2+), InnoDB
+- **Database:** PDO MySQL-compatible server (MySQL 8.0.16+ or MariaDB 10.5.2+), InnoDB; MySQL 8.4 or MariaDB 10.11 and newer recommended, since MySQL 8.0, MariaDB 10.5 and 10.6 are out of upstream support
 - **Web Server:** Apache, Nginx, IIS, or another PHP-capable web server
 - **Extensions:** `composer.json` requires PDO, JSON, mbstring, GD and cURL. Fileinfo, Zip and Zlib are declared under `suggest`: the upload service falls back to its own structural validators without them. SMTP over TLS uses OpenSSL and the Sendmail transport uses `proc_open`. The installer does not go on while PDO MySQL, JSON or mbstring is missing; a missing Zip or Zlib only gets a warning row, and the archives of that kind stay off
-- **Encoding:** UTF-8 / utf8mb4
+- **Encoding:** UTF-8 / utf8mb4, collation `utf8mb4_unicode_520_ci`, the newest one both MySQL and MariaDB know
 
 > [!NOTE]
 > SLAED CMS has no runtime Composer dependency. `composer.json` declares only the PHP version; PHPStan, PHPUnit and PHP-CS-Fixer live in `require-dev` and are not part of a release.

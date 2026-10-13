@@ -205,8 +205,9 @@ Stops, each its own request, seven on the road of the card:
    `uploads/`, and the protocol; a failed row keeps the stop. Zip and Zlib are
    optional: a missing one is a warning row that lets the stop pass
 3. database: host, user, password, name and a random prefix; `go=probe` runs
-   `getSetupProbe()`: the connection, MariaDB 10.5.2+ or MySQL 8.0.16+, and a
-   prefix no table of the database carries
+   `getSetupProbe()`: the connection, MariaDB 10.5.2+ or MySQL 8.0.16+ (MySQL 8.4
+   or MariaDB 10.11 and newer recommended), and a prefix no table of the database
+   carries
 4. site: name, address (http or https, no user, query or fragment) and a random
    panel file name; `index`, `setup`, `update` and another file of the root are
    refused
@@ -423,9 +424,17 @@ Current behavior:
 - `PREFIX_DB` is defined from database config
 - `getSqlQuery()` supports prepared statements with named or positional
   parameters
+- the constructor sets the collation of `config/db.php`, the time zone of PHP
+  and one strict `sql_mode` with `ONLY_FULL_GROUP_BY` on every connection: the
+  site, the panel, `setup.php`, `update.php`, tools and probes
+- `getSqlTwin()` names the unique key a refused duplicate hit
 
 New and refactored SQL should use prepared statements and named placeholders
 where practical.
+
+The schema is `storage/update/sql/table.sql`; its column domains, the time
+rule, the collation and the keys are in `docs/NODE.md`, "Schema conventions",
+held by `tests/SchemaConventionTest.php`.
 
 ## Security Boundary
 

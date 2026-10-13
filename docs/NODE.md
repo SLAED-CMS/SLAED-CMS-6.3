@@ -298,6 +298,112 @@ journal `_points` in [POINTS.md](POINTS.md).
 User, categories and poll are references the application checks, without foreign keys: the global SLAED
 tables use `0` for "none".
 
+### Schema conventions
+
+These hold for every table of `table.sql`, not only the Node tables. `tests/SchemaConventionTest.php` reads
+`table.sql` and fails when a column or a key leaves them; a later table takes them as it is added. `SchemaTimeTest`
+and `SchemaNullTest` (`tests/Unit/`, driven by `tests/Support/route_probe.php`) hold the time forms and the empty
+values over real requests. The 6.2 path of `table_update6_3.sql` reaches the same state (see
+[The schema file](#the-schema-file)).
+
+**Domains.** One spelling per kind of column:
+
+| Kind | Declaration |
+|---|---|
+| identifier, reference | `INT UNSIGNED NOT NULL`; a log that may outgrow it is `BIGINT UNSIGNED` |
+| counter | `INT UNSIGNED NOT NULL DEFAULT 0` |
+| flag | `BOOLEAN NOT NULL DEFAULT 0` or `1` |
+| moment a person reads or sets | `DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP` when it always exists, `DATETIME NOT NULL` when the insert supplies it and "now" means nothing (`_voting.enddate`, `_node_publish.published`), `DATETIME DEFAULT NULL` when NULL means "not yet", "never" or "not recorded" |
+| machine timer | `BIGINT UNSIGNED NOT NULL DEFAULT 0`, unix seconds |
+| ip | `VARCHAR(45) CHARACTER SET ascii COLLATE ascii_bin NOT NULL DEFAULT ''` |
+| module, scope | `VARCHAR(50) CHARACTER SET ascii COLLATE ascii_bin NOT NULL` |
+| language | `VARCHAR(10) CHARACTER SET ascii COLLATE ascii_bin NOT NULL DEFAULT ''`: the name of a `lang/<code>.php` file, `''` for "all languages" or "the site language" |
+| user name | `VARCHAR(25)`; `_session.uname` and `_referer.name`, which may hold an ip, are 45; `_oauth_temp.uname`, the display name of a provider, is 128 |
+| email | `VARCHAR(255)`, keyed whole; the unique ones are `DEFAULT NULL`, NULL for "no address" |
+| text | `TEXT` / `MEDIUMTEXT NOT NULL`, supplied by the insert |
+| long address | `VARCHAR(2048)`, keyed by prefix where a key is needed (`_node_assets.src`) |
+
+NULL means "none" or "not recorded" and nothing else. Besides a nullable moment it is allowed only for
+`_comment.reqkey` (no request key), the five measures of `_node_assets` (an outside file), `_points.rid` (not
+reversed), `_users.birthday` (a calendar day) and the three unique addresses. A flag, a counter or a text is never
+NULL.
+
+**Time.** A moment is `DATETIME`; a timer no person reads is unix seconds: `_blocks.time` (the refresh of an RSS
+block), `_mail.ntime` and `locked`, `_node_publish.due`, `_oauth_temp.time`, `_rating.time` (the vote window of a
+poll), `_rating_actors.last` and `_session.time`. A `VARCHAR` never holds a time; the two own forms are
+`_node_sync.modified`, the HTTP `Last-Modified` validator echoed back as `If-Modified-Since`, and `_users.birthday`,
+`DATE`. SQL compares a timer with `UNIX_TIMESTAMP()` and a moment with `NOW()` or a bound `DATETIME`; PHP reads a
+moment through `strtotime()`. `format_time()` answers `''` for a moment never recorded, so no reader guards NULL.
+The update does not shift the times of 6.2 rows: the offset each was written with is unknown.
+
+**Connection.** `Database::__construct(string $server, string $user, string $pass, string $dbname, string $collate)`
+runs once after connecting:
+
+- `SET NAMES utf8mb4 COLLATE` the configured collation;
+- `sql_mode` `STRICT_TRANS_TABLES, ONLY_FULL_GROUP_BY, NO_ZERO_DATE, NO_ZERO_IN_DATE, ERROR_FOR_DIVISION_BY_ZERO,
+  NO_ENGINE_SUBSTITUTION`, so MariaDB refuses what a MySQL host would refuse;
+- `time_zone` from `date('P')`; an offset the server refuses (MariaDB takes −12:59 … +13:00, so `Pacific/Kiritimati`
+  and the summer of `Pacific/Chatham` lie beyond it) is followed by the zone name, which needs the zone tables of the
+  server; a refused name leaves the session in the server zone with a row in `error_sql.log`, and the site runs on.
+
+Every path connects this way — the site and the panel through `core/security.php` from `$conf['db']`, `setup.php`,
+`update.php`, `tools/` and the probes — so `NOW()` and `date()` write the same moment everywhere. A `GROUP BY` names
+every selected column that no aggregate wraps: MariaDB knows no functional dependency. `table_update6_3.sql` sets
+its own mode for its session and restores it; `Backup` puts its session into an export state of its own
+(`NO_AUTO_VALUE_ON_ZERO`, zone `+00:00`) and hands back the saved mode, zone and collation.
+
+**Collation.** `{collate}` of `config/db.php` is the only source: `setup.php` writes `utf8mb4_unicode_520_ci`,
+`update.php` gives a 6.2 configuration the same and keeps the one of a 6.3 configuration; `table.sql` and
+`insert.sql` carry it as `{collate}`, and `setUpdateSql()`, `tools/node-profile.php` and the probes read it. No
+column spells a `utf8mb4` collation but `_maildead.email`, `utf8mb4_bin`, the case-sensitive list of dead addresses.
+
+`utf8mb4_unicode_520_ci` is the newest collation that both families of the servers hosts offer know (2026-10: cPanel
+installs MariaDB 10.11 and offers 10.5 … 11.8 and MySQL 8.0 / 8.4). `utf8mb4_0900_ai_ci` of MySQL is refused by
+MariaDB 10.11, `utf8mb4_uca1400_ai_ci` of MariaDB is unknown to MySQL. Against `utf8mb4_unicode_ci` it tells apart
+the characters outside the basic plane (😀 and 😃, 𠀋 and 𠀀) and compares Cyrillic, case and accents alike
+(ё = е, Е = е, é = e, ß = ss). Newer MariaDB carries `utf8mb4_0900_ai_ci` as an alias. Once every version hosts
+offer knows it, the move is one value in `setup.php` and one conversion step of `setconv()` in the update, which is
+why the collation is read from one place only.
+
+**Writes fit their columns.** A value from outside is cut where it is stored, so no write fails with 1406:
+`filterCutText(string $text, int $len): string` of `core/security.php` cuts the stored, already escaped value by
+characters and drops an HTML entity the cut would split; the `name` filter of `getVar()` escapes first and cuts
+through it. The user agent is cut in the writers of `_users.agent` and `_login_log.agent`, not in `getAgent()`,
+whose `md5()` keys the agent blocker. A fixed choice is checked against its values instead of cut — `bpos` and
+`action` of a block, a `lang` against the `lang/` files, a `modul` against the modules and types, `apar` of a
+newsletter — and a value a cut would turn into another one is refused: an address over 255 (`checkemail()`), an
+OAuth return address over 512, a block file name, a group rank, a category row of `NodeService`.
+
+**Addresses.** `_users.email`, `_admins.email` and `_users_temp.email` are unique, and every writer turns `''` into
+NULL, so many accounts may lack an address (an OAuth registration without one) but no two share one. The `SELECT`
+checks before a write stay the common path; a write that loses the race fails with 1062, and
+`Database::getSqlTwin()` names the key it hit. The registration, the activation, the OAuth registration, the
+settings save, the account panel, the administrators panel and the first administrator of `admin/index.php` answer
+`email` as `_ERROR_EMAIL` and `name` as the taken name of their screen. `activate()` keeps the temporary row when its
+insert fails. `getMailAudience()` reads `email != ''`, which excludes NULL too.
+
+**Keys.** A key holds its column whole wherever the 3072 bytes of an InnoDB key allow it (a `VARCHAR(255)` in
+`utf8mb4` fits); only `_node_assets.src`, a `VARCHAR(2048)`, is keyed by a prefix. No plain key is the left part of
+another key of its table. Every key serves a query that runs: the lists of the forum, the comments, the blocks and
+the categories read through composite keys that end in their sort column, and `_node_support` sorts `prio DESC`
+through descending key parts, which MySQL 8 and MariaDB 10.8+ build (below 10.8 they are built ascending, and
+`setidx()` rebuilds the two keys of `_node_support` on every run of the update). A polymorphic link — `modul` with an
+id in `_comment.cid`, `_favorites.fid`, `_rating.mid` — and `_users.grp`, where 0 is "no group", carry no foreign
+key.
+Every foreign key spells `ON UPDATE RESTRICT` and its `ON DELETE` explicitly; no code changes `_nodes.id`, and
+`RESTRICT` guards it against a hand edit.
+
+**Outside the conventions.** The names of columns are not one vocabulary (`modul` and `scope`, `time` and `created`,
+`typ`, `ordern`): every name is read across the code, and unifying them is a refactor of its own. `_rating` stays the
+vote guard of `_voting` beside the `_rating_*` tables. `InsertValidationTest` sees only an insert with a column list
+inside one literal; the positional inserts — `insert.sql`, the block save of `admin/modules/blocks.php`, the first
+administrator of `admin/index.php`, `setup.php`, the favourites of `core/user.php` — are checked by hand when a
+column changes.
+
+**Versions.** The floor is MariaDB 10.5.2+ (`RENAME COLUMN`, `RENAME INDEX`, enforced `CHECK`) and MySQL 8.0.16+,
+checked by `getSetupProbe()` and `checkUpdateBase()`. MySQL 8.4 and MariaDB 10.11 or newer are recommended: MySQL 8.0,
+MariaDB 10.5 and 10.6 are out of upstream support.
+
 ### `_node_types`
 
 | Column | Type | Meaning |
@@ -3274,6 +3380,7 @@ In this order, each a failed row that changes nothing:
 | `config/db.php` names a database and a prefix matching `[A-Za-z0-9_]{1,32}` | no database or no valid prefix |
 | the connection | the reason of the server |
 | `checkUpdateBase()` | see below |
+| `checkUpdateEmails()` | per account table (`_admins`, `_users`, `_users_temp`), every address held by more than one row, compared in the collation of the unique key the schema file builds, with its accounts; the site is not closed |
 
 ### Preflight
 
@@ -3548,8 +3655,10 @@ same `mid`, `modul` and `ip`: 6.2 kept one row per account, so two accounts of o
 `setUpdateSql()` names the removed rows of a `DELETE` in its report row.
 
 Helper procedures are dropped and created at the top inside `DELIMITER $$` and dropped again in the cleanup
-section; `movenet` is created and dropped around the OAuth block and `setconv` around the collation block, the last
-of the file.
+section; `movenet` is created and dropped around the OAuth block and `setconv` around the collation block. The block
+of the keys of the release follows the collation and comes last before the cleanup: it drops every key that leaves
+and sets every new or reshaped one through `setidx()`, the unique addresses in the collation `checkUpdateEmails()`
+compared them in.
 
 | Procedure | Effect |
 |---|---|
@@ -3562,6 +3671,7 @@ of the file.
 | `runifcol(tab, col, sql)` | runs `sql` only while `col` exists (backfills that must read a column before a rename consumes it) |
 | `runiftype(tab, col, type, sql)` | runs `sql` only while `col` has the data type `type` (the passage of a value to a new type, so a second run finds the target and skips it) |
 | `renidx`, `delidx`, `addidx(tab, idx, exp, unique)` | index rename, drop, add when absent |
+| `setidx(tab, idx, exp, unique)` | builds a key or rebuilds it while its parts, prefixes, directions or uniqueness differ from `exp`, so a second run changes nothing |
 | `stopcol(tab, col, type, msg)`, `stopnull(tab, col, msg)` | `SIGNAL SQLSTATE '45000'` with `msg` when the column has that type or holds `NULL` rows |
 | `finalize_user_names(tab)` | renames duplicate user names to `<name>_<id>` (cut to 25) in the collation of the column, signals on a conflict |
 | `mkuseruniq(tab)`, `mksessuniq(tab)` | turn `name` into a `UNIQUE KEY` when no duplicates remain; dedupe `_session` and make `uname` unique |
@@ -3595,6 +3705,7 @@ word of MySQL 8.0.2+: unqualified `_users.rank` and `_groups.rank` are written i
 | Test | Driver | Covers |
 |---|---|---|
 | `tests/SchemaUpdateValidationTest.php` | static | tables and column declarations of the schema file against `table.sql` |
+| `tests/SchemaConventionTest.php` | static | the domains, the time forms, NULL, the collation and the keys of `table.sql` ([Schema conventions](#schema-conventions)) |
 | `tests/Unit/UpdateSiteTest.php` | `tests/Support/install_probe.php` mode `update` over HTTP | the whole first stage on a real 6.2 schema |
 | `UpdateSetupTest` | `tests/Support/update_probe.php … setup` | the update preflight, registry, `deleteUpdateTypes()`; the installer preflight `getSetupProbe()` and the order of `checkSetupRun()` in `setup.php` |
 | `UpdatePointsTest`, `UpdateRatingsTest`, `UpdateFieldsTest`, `UpdateConfigTest`, `UpdateMailsTest` | `update_probe.php` with unit `points` (default), `ratings`, `fields`, `config`, `mails` | one unit each: resume from cursors, stops, marks |

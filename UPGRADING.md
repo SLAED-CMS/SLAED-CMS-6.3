@@ -27,7 +27,8 @@ table of the database carries yet. Keep the old site and its backups until the n
 ### Minimum Runtime
 
 - **PHP:** 8.4+
-- **Database:** PDO MySQL-compatible server: MariaDB 10.5.2+ or MySQL 8.0.16+, InnoDB tables
+- **Database:** PDO MySQL-compatible server: MariaDB 10.5.2+ or MySQL 8.0.16+, InnoDB tables; MySQL 8.4 or MariaDB 10.11
+  and newer are recommended, since MySQL 8.0, MariaDB 10.5 and 10.6 are out of upstream support
 
 ### Writable Directories
 
@@ -175,6 +176,19 @@ Current method family:
 - `getSqlRowCount()`
 
 Custom code should use the current `Database` API.
+
+- `Database::__construct()` takes the collation as its fifth argument. Every connection runs `utf8mb4` in the
+  collation of `config/db.php` (`utf8mb4_unicode_520_ci` for a new site), the time zone of PHP and the SQL mode
+  `STRICT_TRANS_TABLES, ONLY_FULL_GROUP_BY, NO_ZERO_DATE, NO_ZERO_IN_DATE, ERROR_FOR_DIVISION_BY_ZERO,
+  NO_ENGINE_SUBSTITUTION`. A `GROUP BY` must name every selected column no aggregate wraps, and a value longer than
+  its column fails instead of being cut: cut it with `filterCutText()` before the write. `$conf['db']['sync']` is
+  gone.
+- A moment is `DATETIME`, a machine timer is `BIGINT` unix seconds, and no column holds a time as text.
+  `_users_temp.time` is gone; `_blocks.expire` and `_message.expire` are `DATETIME`, NULL for no expiry.
+- `_users.email`, `_admins.email` and `_users_temp.email` are unique and NULL for "no address": write NULL, never `''`,
+  and read the result of the write — `Database::getSqlTwin()` names the key of a refused duplicate.
+- Every `lang` column holds a language code (`ru`, `en`, …), never a name such as `russian`.
+- The conventions are in `docs/NODE.md`, "Schema conventions".
 
 ### Input Handling
 

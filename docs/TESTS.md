@@ -264,6 +264,7 @@ Current validation test files include:
 - `ModuleStructureTest.php`
 - `PhpFileFormatTest.php`
 - `TextFileEncodingTest.php`
+- `SchemaConventionTest.php`
 - `SchemaUpdateValidationTest.php`
 - `SecurityValidationTest.php`
 - `SeoSemanticsValidationTest.php`

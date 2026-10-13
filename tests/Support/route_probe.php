@@ -2674,7 +2674,7 @@ function getRouteComment(PDO $pdo): array {
     return $out;
 }
 
-# The time forms of docs/7-SCHEMA-2026.md over real requests: the cleanups, the refresh and the expiry of a block, the expiry of a message, the session sweep, the forum new mark
+# The time forms of the schema over real requests: the cleanups, the refresh and the expiry of a block, the expiry of a message, the session sweep, the forum new mark
 function getRouteTime(PDO $pdo, string $work): array {
     $pre = RPREF.'_';
     $one = fn(string $sql): mixed => $pdo->query($sql)->fetchColumn();

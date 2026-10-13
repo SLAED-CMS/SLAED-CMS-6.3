@@ -21,6 +21,7 @@ more: where a plan and this file disagree about the order, this file wins.
 | `docs/7-SCHEMA-2026.md` | one set of column domains, the time rule, the connection contract, `utf8mb4_unicode_520_ci`, unique email, keys that serve queries |
 | `docs/8-RANKS-2026.md` | the rank of a group as a row of Bootstrap Icons, "N of M" in a colour of its own at 3:1 in both themes; the group list as a ladder and a rank composer from the stand `grp-10` |
 | `docs/9-ADMIN-LOG-2026.md` | every journal of the site: the actions of the panel in `storage/logs/admin.log` in the one JSON format of `Logger`, written in `checkAdminPost()` with the logins; `user.log` and `oauth.log` on the same format; the login table `_login_log` for the profile and the panel; read on "Безопасность", linked from each module |
+| `docs/10-URL-2026.md` | readable addresses without `id` — `/files/adaptivnyi-shablon-pure` — in one registry of routes; one address per page, 301 for every other form, an address never reused |
 
 ## How a session runs
 
@@ -144,7 +145,21 @@ into the plan, then do whatever work the step names.
 - [x] 65. SCHEMA batch 6 — rehearsal of `update.php` on a fresh 6.2 dump the owner provides; fresh installs. The owner
   chose a clean 6.2 from `slaed-old.loc/public/setup/sql` and that any 6.2 site migrates, `update.php` staying internal
   (2026-10-12); production is updated later on a fresh dump. (2026-10-13)
-- [ ] 66. SCHEMA batch 7 — reference; deletes `docs/7-SCHEMA-2026.md`.
+- [x] 66. SCHEMA batch 7 — reference; deletes `docs/7-SCHEMA-2026.md`. The reference is `docs/NODE.md`, "Schema
+  conventions". (2026-10-13)
 - [ ] 67. DIAL — *decision*: the options dial `sl-dial` of the panel lists is three Tab stops a row while closed (found
   by the UI/UX audit of the groups stand, 2026-10-09); write a plan, then make its items reachable only once it opens.
-- [ ] 68. Close — no `docs/*-2026.md` plan is left; delete this file and report that the work before 8.0 is done.
+- [ ] 68. URL batch 0 — the switch out and the inventory: `rewrite`, `sep`, `tsep`, `title`, `ctitle` leave the panel
+  and the config; literals classified, module operations listed, list query counts as the baseline. The plan was taken
+  out of `docs/2027-CORE.md`, moved before the release and turned to addresses without `id` by the owner on 2026-10-13.
+- [ ] 69. URL batch 1 — registry and name: `_routes`, the class `Route`, `filterSlug()` for six locales, suffixes,
+  reserved words.
+- [ ] 70. URL batch 2 — the writers: materials, categories, topics, users, polls; the field "Адрес"; `update.php`
+  fills the registry, `setup.php` the seed.
+- [ ] 71. URL batch 3 — parsing and building: the cut before the database, the resolution after it, `getVar()` on the
+  arrays, `getSeoUrl()` on passed paths, the join in the lists, `page` for `num`.
+- [ ] 72. URL batch 4 — one redirect: after the access check, every reason in one 301, host and scheme included; 410,
+  the legacy map on registry paths, sitemap, feed, `robots.txt`.
+- [ ] 73. URL batch 5 — the links: literals of PHP, templates, mails and language constants.
+- [ ] 74. URL batch 6 — reference; deletes `docs/10-URL-2026.md`.
+- [ ] 75. Close — no `docs/*-2026.md` plan is left; delete this file and report that the work before 8.0 is done.
