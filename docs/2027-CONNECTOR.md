@@ -22,7 +22,7 @@ actions and writes their bodies.
 
 ## Prior art
 
-What the connector takes from LAAS CMS (`C:\OSPanel\home\laas.loc`, `docs/API.md`, `docs/ROUTES.md`,
+What the connector takes from LAAS CMS (`E:\OSPanel\home\laas.loc`, `docs/API.md`, `docs/ROUTES.md`,
 `modules/Api/`) and from other CMSs — the contract and the ideas, not the code: LAAS runs on Composer, a kernel and a
 middleware queue, which `docs/PRINCIPLES.md` rules out here.
 
@@ -69,7 +69,6 @@ Taken by the owner on 2026-10-07; settled, not to be reopened by a step.
   with it the server's IP; the admin shows this and has a switch (service `update`).
 - **Step order:** Vine right after clients and guards; outbound, queue and events right before Telegram (section
   "Steps"). Vine needs none of the queue, and the queue is built for its first real consumer.
-- **Agent rules for the code:** `.rules/api.md` binds every connector and service change; `CLAUDE.md` lists it.
 - **Operations:** one key per caller (no shared keys), an audit log of admin actions, a status page, the server clock
   in every reply, a live API reference `system/schema`.
 - **Developer tools:** `tools/api.http` for the VS Code REST Client, `tools/apikey.php` for dev keys, release builds
@@ -79,8 +78,10 @@ Taken by the owner on 2026-10-07; settled, not to be reopened by a step.
 ## Recommended decisions
 
 - **How `api.php` works** (as in LAAS and Joomla): JSON only, no theme, no template, no session, no HTML error page.
-  Pretty route `/api/v1/<service>/<action>` by one rewrite rule in `public/.htaccess` and `nginx.conf.example`; the
-  plain form `api.php?r=<service>/<action>` always works. Reason for a separate entry rather than `index.php?go=api`:
+  Pretty route `/api/v1/<service>/<action>` by one rewrite rule in `public/.htaccess` and `nginx.conf.example`, placed
+  before the fallback that sends every other path to `index.php`; the name `api` is reserved for that prefix in the
+  reserved names of `docs/10-URL-2026.md`, so no Node type takes it. The plain form `api.php?r=<service>/<action>`
+  always works. Reason for a separate entry rather than `index.php?go=api`:
   the SLAED boot loads the theme and the template object on every request, and a Vine agent beats every 45 s — the
   light boot pays off, and a fault in the API cannot render a site page.
 - **A light boot of the core:** `api.php` defines `API_FILE`; `core/system.php` accepts it beside `MODULE_FILE` and
@@ -90,7 +91,10 @@ Taken by the owner on 2026-10-07; settled, not to be reopened by a step.
 - **One client registry for every caller:** a client is a key with scopes. A Vine agent, a headless app, an AI agent
   and a partner site are rows of the same table; a service never invents its own key scheme.
 - **Inbound and outbound in one layer:** `ApiHttp` is the only place API code calls external hosts, with a host
-  allowlist in config, SSRF protection, timeouts and logging. The existing `getSchedulerFetch()` moves onto it.
+  allowlist in config, SSRF protection, timeouts and logging. The existing `getSchedulerFetch()` moves onto it, but
+  its own-site calls keep working: `addSchedulerCustom()` accepts `http://` and a relative address resolved against
+  `$conf['homeurl']`, which on a dev host is plain http or loopback, so a call to the site's own host is exempt from
+  the HTTPS and loopback rules of "Security"; only a foreign host goes through them.
 - **Slow work never runs inside a request:** a webhook or an AI request that calls an external host or may exceed 1 s
   enqueues a job; the existing scheduler drains the queue.
 - **No new runtime dependency** (`docs/PRINCIPLES.md`): plain PHP 8.4 with its bundled extensions (`json`, `sodium`,
@@ -99,10 +103,13 @@ Taken by the owner on 2026-10-07; settled, not to be reopened by a step.
 - **Versioned contract:** `v1` in the path; a breaking change is `v2` beside `v1`, never in place.
 - **Node gains a headless read API.** `docs/NODE.md` says today that Node offers no public headless API; this plan
   changes that sentence on purpose (content service, read first, write later through the shared writer).
-- **Scheduler jobs follow the existing pattern:** connector and Vine jobs (`apiclean`, `apiqueue`, `updatecheck`,
-  `vinewatch`, `vineclean`) are entries in `config/scheduler.php` with `'type' => 'system'` and a branch in the
-  `match` of `addSchedulerSystemJob()`, exactly as `newsletter` and `nodepublish` are today. A module job type is not
-  introduced by this plan.
+- **Scheduler jobs register the way the core does when the step runs:** connector and Vine jobs (`apiclean`,
+  `apiqueue`, `updatecheck`, `vinewatch`, `vineclean`). Today that is three places, as for `nodepublish`: an entry in
+  `config/scheduler.php` (`'type' => 'system'`, `'system' => '<name>'`), a branch in the `match` of
+  `addSchedulerSystemJob()` and a key in the static map of `getSchedulerJob()` (`core/system.php`), plus the step of
+  `update.php` that seeds the job on an installed site. Once step 2 of `docs/2027-CORE.md` (module-declared jobs) has
+  landed, the connector jobs stand in the one list of the core and the Vine jobs in `modules/vine/scheduler.php`.
+  This plan adds no job mechanism of its own.
 
 ## Kernel
 
@@ -268,13 +275,20 @@ return [
 
 ## Data model
 
+Every column takes its domain from `docs/NODE.md`, "Schema conventions", which `tests/SchemaConventionTest.php`
+holds for every table of `table.sql`: ids and references `INT UNSIGNED` (the log `BIGINT UNSIGNED`), counters and
+numbers `INT UNSIGNED NOT NULL DEFAULT 0`, flags `BOOLEAN`, `ip` the ascii `VARCHAR(45)`, a moment a person reads
+`DATETIME`, a timer no person reads `BIGINT UNSIGNED` unix seconds, NULL only for a moment that has not happened.
+Codes, hashes and names of routes are `CHARACTER SET ascii COLLATE ascii_bin`. The table names what the domains do
+not decide.
+
 | Table | Columns | Keys |
 | --- | --- | --- |
-| `api_client` | `id`, `name`, `kind` (agent, app, bot, ai, site), `prefix` CHAR(8), `token` CHAR(64) sha256, `scopes` TEXT, `etime` (expiry, NULL = none), `rtime` (revoked), `uid` (acting site user, 0 = guest rights), `origins` TEXT, `ips` TEXT, `rate` SMALLINT (per minute), `active` BOOL, `seen`, `ip`, `ctime` | PK `id`, UNIQUE `token` |
-| `api_log` | `id` BIGINT, `time`, `client`, `ip`, `route`, `status` SMALLINT, `ms` INT, `rid` VARCHAR(32), `error` VARCHAR(64) | KEY `time`, KEY `client,time` |
-| `api_idem` | `client`, `ikey` VARCHAR(64), `rhash` CHAR(64), `state` (pending, done), `time`, `status`, `body` MEDIUMTEXT | PK `client,ikey` |
-| `api_queue` | `id`, `kind` VARCHAR(32) (job or event name), `data` MEDIUMTEXT, `ntime`, `tries`, `status`, `error`, `ctime` | KEY `status,ntime` |
-| `api_audit` | `id`, `time`, `aname` (admin), `ip`, `act` VARCHAR(32), `target` VARCHAR(64), `info` TEXT (JSON old/new) | KEY `time`, KEY `target` |
+| `api_client` | `id`, `name` VARCHAR(64), `kind` VARCHAR(10) ascii (agent, app, bot, ai, site), `prefix` CHAR(8) ascii, `token` CHAR(64) ascii (sha256), `scopes` TEXT, `etime` `DATETIME DEFAULT NULL` (expiry, NULL = never), `rtime` `DATETIME DEFAULT NULL` (revoked, NULL = not revoked), `uid` (acting site user, 0 = guest rights), `origins` TEXT, `ips` TEXT, `rate` (per minute), `active` BOOLEAN, `seen` `DATETIME DEFAULT NULL` (NULL = never used), `ip`, `ctime` `DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP` | PK `id`, UNIQUE `token` |
+| `api_log` | `id` BIGINT, `time` `DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP`, `client` (0 = no key), `ip`, `route` VARCHAR(64) ascii, `status`, `ms`, `rid` VARCHAR(32) ascii, `error` VARCHAR(64) ascii | KEY `time`, KEY `client,time` |
+| `api_idem` | `client`, `ikey` VARCHAR(64) ascii, `rhash` CHAR(64) ascii, `done` BOOLEAN (0 = pending), `time` timer, `status`, `body` MEDIUMTEXT | PK `client,ikey` |
+| `api_queue` | `id`, `kind` VARCHAR(32) ascii (job or event name), `data` MEDIUMTEXT, `ntime` timer, `tries`, `status` VARCHAR(10) ascii, `error` VARCHAR(255), `ctime` `DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP` | KEY `status,ntime` |
+| `api_audit` | `id`, `time` `DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP`, `aname` VARCHAR(25) (admin), `ip`, `act` VARCHAR(32) ascii, `target` VARCHAR(64), `info` TEXT (JSON old/new) | KEY `time`, KEY `target` |
 
 Retention, enforced by the scheduler job `apiclean`: `api_log` 30 days, `api_idem` 24 h, finished `api_queue` 7
 days, `api_audit` 365 days.
@@ -286,8 +300,10 @@ allowlist for preflights), `log` (all / errors only), `maint` (answer 503 to eve
 client), `ai` (provider, model, provider key), `master` (1 only on slaed.net), `dev` (1 only on a
 development host; `tools/apikey.php` refuses to run without it).
 
-`config/update.php` (`$conf['update']`): `check` (daily check on/off, default 1), `channel` (`stable` or `beta`,
-default `stable`).
+The update service keeps its two settings in `config/api.php` too: `upcheck` (daily check on/off) and `channel`
+(`stable` or `beta`); a missing key reads as `upcheck` 1 and `channel` `stable`, so a site that never saved the page
+checks daily on `stable`. `config/update.php` and `$conf['update']` are taken: they hold the marks of the finished
+6.3 data updates, which `setup.php`, `update.php` and `core/admin.php` write and the core reads.
 
 ## Services
 
@@ -363,13 +379,15 @@ slaed.net is the master; every other SLAED site is a client of it.
 - **Manifest:** a JSON file with `type` (`release`), `version`, `channel`, `min` (lowest version that may update
   from it), `sha256`, `size`, `url`, `commit` (the git commit the zip was built from), `time`, `expires` (`time` + 45
   days) and `kid` (the key that signed it). Versions are `MAJOR.MINOR.PATCH`, digits only, compared with
-  `version_compare()`.
+  `version_compare()`. The installed version is the leading `MAJOR.MINOR.PATCH` of `$conf['version']` (`6.3.0` of
+  `6.3.0 Phoenix`); the release name after it is never compared, and a value without that leading form disables
+  the check with a message in the admin.
 - **Signature:** Ed25519 (`sodium_crypto_sign_detached()`), detached, over the exact raw bytes of the manifest as
   served, prefixed with the type tag `SLAED-UPDATE-MANIFEST-v1\n`. The client verifies first, then decodes the same
   bytes with `JSON_THROW_ON_ERROR`, never re-encodes. Signatures and keys are base64, strictly decoded, exactly 64 and
   32 bytes.
 - **Channels:** a site follows `stable` by default, `beta` only when its admin switches it on
-  (`$conf['update']['channel']`). A `stable` site accepts only `channel = stable`; a `beta` site accepts `beta` and
+  (`$conf['api']['channel']`). A `stable` site accepts only `channel = stable`; a `beta` site accepts `beta` and
   `stable` and takes the newer. A release goes to `beta` first and is promoted to `stable` with the same zip and the
   same version string, only a new signed manifest. Switching back to `stable` never downgrades: the site waits until
   `stable` passes its version.
@@ -396,17 +414,20 @@ slaed.net is the master; every other SLAED site is a client of it.
   owner's machine.
 - **Client side, check:** the scheduler job `updatecheck` asks the master once a day; the request carries only the
   channel and `kseq`, but the master sees the server's IP, so the job is on by default with a switch
-  (`$conf['update']['check']`); the admin update page says what is sent and where; `docs/` gets a short GDPR (DSGVO)
+  (`$conf['api']['upcheck']`); the admin update page says what is sent and where; `docs/` gets a short GDPR (DSGVO)
   note for site owners; with the switch off the owner checks with a button.
 - **Client side, download:** on the owner's click only; `ApiHttp` streams the zip to `storage/update/tmp/`, aborts as
   soon as it exceeds the signed `size`, then checks `size` and SHA-256 with `hash_equals()`.
 - **Client side, unpack:** into `storage/update/stage/<version>/`; an entry is refused if it is absolute, contains
-  `..`, a backslash or a drive letter, is a symlink, or lies outside the shipped top-level directories (`admin`,
-  `config`, `core`, `modules`, `public`, `storage/update`, `tools`, the root files of the release); a total
+  `..`, a backslash or a drive letter, is a symlink, or lies outside the shipped top-level entries — the tracked
+  tree of the tag: `admin`, `blocks`, `config`, `core`, `docs`, `lang`, `modules`, `public`, `storage` (only
+  `geoip`, `sitemap` and `update/sql`), `tests`, `tools`, `uploads/presentation` and the root files;
+  `tools/release.php` refuses a tag with a top-level entry outside this list, so the two never drift; a total
   uncompressed size above 10 × `size` is refused (zip bomb); files get mode 0644, directories 0755.
-- **Client side, apply:** set the maintenance flag, back up files and database to `storage/backup/`, copy, run the
-  SQL, clear the flag; on any error restore the backup automatically; a marker file makes an apply interrupted by a
-  crash visible on the next request. Never an automatic apply.
+- **Client side, apply:** close the site and the API — `$conf['close']` (visitors get 503, admins pass) and
+  `$conf['api']['maint']` (everything but `system` gets 503) — back up files and database to `storage/backup/`, copy,
+  run the SQL, then give both flags back the values they had before; on any error restore the backup automatically; a
+  marker file makes an apply interrupted by a crash visible on the next request. Never an automatic apply.
 - **Without `sodium`** the check still shows news, but download and apply are disabled with a message.
 
 ## Security
@@ -421,7 +442,8 @@ slaed.net is the master; every other SLAED site is a client of it.
   forgotten agent at the owner's home cannot get the owner's own IP blocked.
 - Every input through `ApiInput` with declared types and caps; prepared statements with named placeholders only.
 - No CSRF token on the API: actions are session-less and authenticated per request by key or secret;
-  `admin/modules/api.php` and every module admin keep `checkSiteToken()` (recorded in `.rules/global.md`).
+  `admin/modules/api.php` and every module admin keep the panel's check `checkAdminPost()`, which wraps
+  `checkSiteToken()` (recorded in `.rules/global.md`).
 - Outbound (`ApiHttp`): HTTPS only, port 443 unless the allowlist entry names a port; the host is resolved once,
   loopback, private (RFC 1918, `fc00::/7`), link-local (`169.254.0.0/16`, cloud metadata) and unspecified addresses are
   refused, and the checked IP is the one connected to (stream context `peer_name` = host), so DNS rebinding does not
@@ -434,16 +456,17 @@ slaed.net is the master; every other SLAED site is a client of it.
 - One key per caller: every agent, app, bot and site gets its own client; a key is never shared, so revoking one
   stops one caller.
 - Audit log: every admin action on clients, services and agents (create, rotate, revoke, enable, disable, start,
-  pause, stop, takeover, delete, settings) is written with admin, IP, time, target and old/new value; read-only in
-  the admin, kept 365 days. Since 8.0 SLAED keeps a general journal of administration in `storage/logs/admin.log`,
-  written once in `checkAdminPost()`, which records every POST of this admin too (who, scope, operation, object,
-  result; `docs/ARCHITECTURE.md`, "Journal Boundary"); it holds no old and new value and is bounded by size, not by
-  days. This plan therefore keeps the table `api_audit` and the function `addApiAudit()` for what the file cannot
-  give, used by the Vine admin as well, and the two are linked, not merged (owner, 2026-10-12).
+  pause, stop, takeover, delete, settings) is written with admin, IP, time, target and old/new value; read-only in the
+  admin, kept 365 days. Since 8.0 SLAED keeps a general journal of administration in `storage/logs/admin.log`:
+  `checkAdminPost()` opens the record and `addAdminLog()` writes it once at the end of the request; it records every
+  POST of this admin too (who, scope, operation, object, result; `docs/ARCHITECTURE.md`, "Journal Boundary"); it holds
+  no old and new value and is bounded by size, not by days. This plan therefore keeps the table `api_audit` and the
+  function `addApiAudit()` for what the file cannot give, used by the Vine admin as well, and the two are linked, not
+  merged (owner, 2026-10-12).
 
 ## Admin
 
-New admin module `admin/modules/api.php` (tabs through `getTplAdminTabs()`, CSRF on every POST):
+New admin module `admin/modules/api.php` (tabs through `getTplAdminTabs()`, every POST through `checkAdminPost()`):
 
 - **Состояние:** one table — requests and errors per hour, 401/429 counts, last run of each scheduler job, services
   switched off, maintenance flag; from step 5 also queue depth with the oldest waiting job and outbound failures; a
@@ -475,8 +498,6 @@ New admin module `admin/modules/api.php` (tabs through `getTplAdminTabs()`, CSRF
 
 ## Developer tools
 
-- **`.rules/api.md`:** the binding rules for connector and service code — declaration format, guard order, envelope,
-  error codes, scopes, input types, what a handler may and may not do. `CLAUDE.md` lists it beside the other rules.
 - **`tools/api.http`:** requests for the VS Code REST Client, one per action plus an error case each; the key comes
   from `{{$dotenv SLAED_API_KEY}}`, and `tools/.env` is added to `.gitignore` in the step that creates the file.
 - **`tools/apikey.php`:** CLI on the dev host — create a client with name and scopes and print the key once, list,
@@ -501,7 +522,7 @@ None; all decided on 2026-10-07 (section "Decisions"). A new question goes here 
 Order decided on 2026-10-07: Vine right after clients and guards.
 
 - [ ] 1. Light boot: `API_FILE` in `core/system.php`, `public/api.php`, rewrite rules, `.rules/architecture.md`
-  updated; `.rules/api.md` (written and listed in `CLAUDE.md` on 2026-10-07) checked against the code as it lands.
+  updated; `.rules/api.md` checked against the code as it lands.
   Done when `api.php` boots without theme and template and three modules of `index.php` and `admin.php` render
   unchanged.
 - [ ] 2. Core of the connector: `ApiRouter` with the guards that need no client (`checkApiRoute`, `checkApiMaint`,

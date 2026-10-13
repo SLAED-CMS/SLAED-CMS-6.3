@@ -30,8 +30,9 @@ Taken by the owner on 2026-10-07; settled, not to be reopened by a step.
 - **Admin has full control of every agent:** start, pause, stop, check now, make active, resync, new key, delete;
   per-agent settings; a weekly schedule with priorities that decides who runs when.
 - **Profile page for permitted users:** statistics and finds only, no agent control, no settings.
-- **Server side is a SLAED 6.3 module** (`modules/vine/`, admin part in `modules/vine/admin/`), PHP 8.4, MySQL 8 /
-  MariaDB 10, following `.rules/global.md`, `.rules/architecture.md` and `.rules/api.md` without exceptions.
+- **Server side is a SLAED module** (`modules/vine/`, admin part in `modules/vine/admin/`) on the floor of the release
+  it ships with — today PHP 8.4, MariaDB 10.5.2+ or MySQL 8.0.16+ (`docs/VERSIONS.md`) — following `.rules/global.md`,
+  `.rules/architecture.md` and `.rules/api.md` without exceptions.
 - **The userscript keeps a standalone mode:** with no server configured it behaves exactly like v5.0.
 - **Captcha stops the account, not the agent:** a captcha on the active agent pauses every agent, records an event
   and, once Telegram exists, sends an alert; monitoring resumes only when the owner presses «Запуск всех» (after
@@ -44,7 +45,8 @@ Taken by the owner on 2026-10-07; settled, not to be reopened by a step.
 - **Panel data from the server:** in server mode the panel sections «Находки», «База товаров» and «Статистика» show
   the server's data, so every agent shows the same; the local journal is only the offline buffer and the panel's
   fallback while the server is unreachable.
-- **Every admin action on agents goes to the connector's audit log** (`addApiAudit()`).
+- **Every admin action on agents goes to the connector's audit log** (`addApiAudit()`) with its old and new value;
+  the panel's own journal `storage/logs/admin.log` records the same POST by itself through `checkAdminPost()`.
 
 ## Architecture
 
@@ -58,7 +60,7 @@ Taken by the owner on 2026-10-07; settled, not to be reopened by a step.
                     https://<domain>/api/v1/vine/<action>   (connector, public/api.php)
                     modules/vine/api.php + common.php ── MySQL {prefix}_vine_*
                                           ▲
-                    admin.php?name=vine (owner)   index.php?name=vine (permitted users)
+                    admin.php?name=vine (owner)   /vine (permitted users)
 ```
 
 - **Agent roles,** decided by the server on every heartbeat: `active` (holds the lease, runs cycles), `standby`
@@ -78,22 +80,28 @@ Taken by the owner on 2026-10-07; settled, not to be reopened by a step.
 ## Data model
 
 All tables `{prefix}_vine_*`, `ENGINE={engine} DEFAULT CHARSET={charset} COLLATE={collate}`, added to
-`storage/update/sql/table.sql` and, for existing sites, to the update SQL the project uses for 6.3 installs.
-Times are `DATETIME` in UTC; the admin renders Europe/Berlin; the API sends times as unix milliseconds. Column names
-follow the 2–8 lowercase style of the project tables.
+`storage/update/sql/table.sql` for a new install and, for an installed site, to the step of `update.php` of the
+version that ships the module. Every column takes its domain from `docs/NODE.md`, "Schema conventions", which
+`tests/SchemaConventionTest.php` holds: ids and references `INT UNSIGNED` (a log `BIGINT UNSIGNED`), every number
+`INT UNSIGNED NOT NULL DEFAULT 0`, flags `BOOLEAN`, `ip` the ascii `VARCHAR(45)`, codes and ASINs
+`CHARACTER SET ascii COLLATE ascii_bin`, no key the left part of another. A moment a person reads is `DATETIME` in
+the site zone — the connection runs on `$conf['gtime']` (`Database::__construct()`, Europe/Berlin on the owner's
+site), so `NOW()` and `date()` agree; a timer only the coordination reads is `BIGINT UNSIGNED` unix seconds; the API
+sends times as unix milliseconds. NULL only where the table says what it means. Column names follow the 2–8
+lowercase style of the project tables.
 
 | Table | Columns | Keys |
 | --- | --- | --- |
-| `vine_agent` | `id`, `client` (id in `{prefix}_api_client`, which holds the key and the scopes), `name` VARCHAR(40), `active` BOOL, `mode` TINYINT (1 run, 2 pause, 3 stop), `prio` TINYINT (1 = highest), `sets` TEXT (JSON overrides), `state` VARCHAR(16) (last reported), `outbox` SMALLINT, `qlen` SMALLINT (last reported), `info` VARCHAR(255) (last error), `ver` VARCHAR(16), `ip` VARCHAR(45), `seen` DATETIME, `ctime` DATETIME | PK `id`, UNIQUE `client` |
-| `vine_slot` | `id`, `agent`, `dow` TINYINT (0 = Monday … 6 = Sunday, as MySQL `WEEKDAY()`), `smin` SMALLINT, `emin` SMALLINT (minutes of the day, Europe/Berlin) | KEY `agent` |
-| `vine_cmd` | `id`, `agent`, `cmd` VARCHAR(16), `args` TEXT, `ctime`, `dtime` (delivered), `atime` (acked), `result` VARCHAR(255) | KEY `agent,atime` |
-| `vine_lease` | `id`=1, `agent`, `epoch` INT UNSIGNED, `gtime`, `until`, `nrun`, `next` (agent waiting for a release), `hold` TINYINT (0 none, 1 captcha, 2 owner), `htime`, `prev` TEXT (JSON: agents with `mode` run before the hold), `idleat` (start of an open idle incident, NULL = none) | PK `id` |
-| `vine_state` | `name` VARCHAR(32), `val` MEDIUMTEXT (JSON), `epoch`, `seq` INT UNSIGNED (cycle number), `mtime` | PK `name` |
-| `vine_known` | `asin` CHAR(10), `pn` VARCHAR(20), `ftime`, `ltime` | PK `asin`, KEY `ltime,asin` |
-| `vine_item` | `id` BIGINT, `asin`, `day` DATE (set by the server from `time`, Europe/Berlin), `time`, `agent`, `title` VARCHAR(300), `src` VARCHAR(120), `pn`, `pos` SMALLINT, `par` BOOL, `etv` DECIMAL(9,2) NULL, `etvmin` DECIMAL(9,2) NULL, `nvar` TINYINT, `kw` VARCHAR(60), `stop` VARCHAR(60), `shift` BOOL, `old` BOOL, `expired` BOOL, `tries` TINYINT | PK `id`, UNIQUE `day,asin`, KEY `time`, KEY `etv` |
-| `vine_cycle` | `id` BIGINT, `agent`, `time`, `total` INT, `newn`, `shiftn`, `req`, `ms`, `err` VARCHAR(255), `data` MEDIUMTEXT (JSON: p1/p1add/p1gone, cats, grown, checked, deep, subErr) | PK `id`, UNIQUE `agent,time`, KEY `time` |
-| `vine_hit` | `id`, `asin`, `time`, `agent`, `etv`, `etvmin`, `kw`, `title`, `src`, `pos`, `shift`, `old`, `thumb` MEDIUMTEXT (`data:image/jpeg;base64,…`, ≤ 16 KB) — no URL column: every link is built from `asin` | PK `id`, UNIQUE `asin`, KEY `time` |
-| `vine_event` | `id`, `agent`, `uid` CHAR(16) (outbox id, NULL for server events), `time`, `level` TINYINT, `kind` VARCHAR(20) (start, stop, captcha, login, throttle, error, handover, cmd, idle, resume, hold), `text` VARCHAR(255) | KEY `time`, KEY `agent`, UNIQUE `agent,uid` |
+| `vine_agent` | `id`, `client` (id in `{prefix}_api_client`, which holds the key and the scopes), `name` VARCHAR(40), `active` BOOLEAN, `mode` (1 run, 2 pause, 3 stop), `prio` (1 = highest), `sets` TEXT (JSON overrides), `state` VARCHAR(16) ascii (last reported), `outbox`, `qlen` (last reported), `info` VARCHAR(255) (last error), `ver` VARCHAR(16) ascii, `ip`, `seen` `DATETIME DEFAULT NULL` (NULL = never beaten), `ctime` `DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP` | PK `id`, UNIQUE `client` |
+| `vine_slot` | `id`, `agent`, `dow` (0 = Monday … 6 = Sunday, as MySQL `WEEKDAY()`), `smin`, `emin` (minutes of the day, site zone) | KEY `agent` |
+| `vine_cmd` | `id`, `agent`, `cmd` VARCHAR(16) ascii, `args` TEXT, `ctime` `DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP`, `dtime` `DATETIME DEFAULT NULL` (delivered, NULL = not yet), `atime` `DATETIME DEFAULT NULL` (acked, NULL = not yet), `result` VARCHAR(255) | KEY `agent,atime` |
+| `vine_lease` | `id`=1, `agent` (0 = free), `epoch`, `gtime`, `until`, `nrun` (timers), `next` (agent waiting for a release, 0 = none), `hold` (0 none, 1 captcha, 2 owner), `htime` (timer), `prev` TEXT (JSON: agents with `mode` run before the hold), `idleat` (timer: start of an open idle incident, 0 = none) | PK `id` |
+| `vine_state` | `name` VARCHAR(32) ascii, `val` MEDIUMTEXT (JSON), `epoch`, `seq` (cycle number), `mtime` `DATETIME NOT NULL` | PK `name` |
+| `vine_known` | `asin` CHAR(10) ascii, `pn` VARCHAR(20) ascii, `ftime`, `ltime` (`DATETIME NOT NULL`) | PK `asin`, KEY `ltime,asin` |
+| `vine_item` | `id` BIGINT, `asin`, `day` `DATETIME NOT NULL` (midnight of the site day, set by the server from `time`), `time` `DATETIME NOT NULL`, `agent`, `title` VARCHAR(300), `src` VARCHAR(120), `pn`, `pos`, `par` BOOLEAN, `etv` and `etvmin` `INT UNSIGNED DEFAULT NULL` (cents; NULL = the page showed no ETV, which 0 € would falsify — both join the NULL list of "Schema conventions" and `SchemaConventionTest` in step 1), `nvar`, `kw` VARCHAR(60), `stop` VARCHAR(60), `shift`, `old`, `expired` BOOLEAN, `tries` | PK `id`, UNIQUE `day,asin`, KEY `time`, KEY `etv` |
+| `vine_cycle` | `id` BIGINT, `agent`, `time` `DATETIME NOT NULL`, `total`, `newn`, `shiftn`, `req`, `ms`, `err` VARCHAR(255), `data` MEDIUMTEXT (JSON: p1/p1add/p1gone, cats, grown, checked, deep, subErr) | PK `id`, UNIQUE `agent,time`, KEY `time` |
+| `vine_hit` | `id`, `asin`, `time` `DATETIME NOT NULL`, `agent`, `etv`, `etvmin` (as in `vine_item`), `kw`, `title`, `src`, `pos`, `shift`, `old`, `thumb` MEDIUMTEXT (`data:image/jpeg;base64,…`, ≤ 16 KB) — no URL column: every link is built from `asin` | PK `id`, UNIQUE `asin`, KEY `time` |
+| `vine_event` | `id`, `agent` (0 = the server), `uid` CHAR(16) ascii (outbox id; a server event gets its own, `s` and 15 random hex digits), `time` `DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP`, `level`, `kind` VARCHAR(20) ascii (start, stop, captcha, login, throttle, error, handover, cmd, idle, resume, hold), `text` VARCHAR(255) | KEY `time`, UNIQUE `agent,uid` |
 
 Global configuration in `config/vine.php` (`$conf['vine']`), edited on the admin settings tab:
 
@@ -198,10 +206,11 @@ server time.
    standby at once; a 409 that carries `Retry-After` (a concurrent idempotent request) is retried, not a demotion. A 503
    `disabled` or `maintenance` with the connector's envelope is not a transport failure: the agent stops cycling at once
    and keeps beating. A standby agent never becomes active without the server.
-9. **Nobody working:** the scheduler job `vinewatch` (every 5 min) checks whether the time is inside any agent's
-   window, `hold` is not set, and for `idle` either no lease was held or the holder has not beaten (a silent holder,
-   rule 6); then it sets `idleat` and records the event `idle` once; the first beat of a holder after it clears
-   `idleat` and records `resume`. From the connector's step 5 both also raise `vine.idle` and `vine.resume`.
+9. **Nobody working:** the scheduler job `vinewatch` (every 5 min, registered as `vineclean` is) checks whether the
+   time is inside any agent's window, `hold` is not set, and for `idle` either no lease was held or the holder has not
+   beaten (a silent holder, rule 6); then it sets `idleat` and records the event `idle` once; the first beat of a
+   holder after it clears `idleat` and records `resume`. From the connector's step 5 both also raise `vine.idle` and
+   `vine.resume`.
 10. **Next run:** on `push` with `done` the server sets `nrun = now + rand(imin, imax) × 2^backoff` (backoff capped at
     1 h, as in v5.0) and returns it.
 
@@ -249,7 +258,8 @@ Changes to `vine-monitor.user.js`; everything not named here stays as in v5.0.
 ## Admin panel
 
 `admin.php?name=vine`, tabs through `getTplAdminTabs()`, handlers in `switch ($op)` named by the admin naming rule
-(e.g. `start`, `pause`, `stop`, `takeover`), CSRF on every POST (`getSiteToken`/`checkSiteToken`), markup in theme
+(e.g. `start`, `pause`, `stop`, `takeover`), every POST through `checkAdminPost()` (the form carries
+`getSiteToken()`), markup in theme
 partials, no HTML in PHP. All visible text through the module's language constants in six languages.
 
 - **Обзор (state page):** who is active and since when, lease `epoch` and `until`, `nrun`, every agent's last beat
@@ -259,7 +269,7 @@ partials, no HTML in PHP. All visible text through the module's language constan
   «Пауза», «Стоп», «Проверить сейчас», «Сделать активным», «Ресинхронизация», «Новый ключ», «Удалить»; form «Новый
   агент» (name, priority) creates the connector client with the scopes `vine:agent` and `vine:read` through
   `ApiClient::addClient()` and shows the key once; «Новый ключ» uses `setClientKey()`, «Удалить» `deleteClient()`.
-- **Расписание:** per agent a weekly grid of windows (day, from, to, Europe/Berlin) and the priority; a preview line
+- **Расписание:** per agent a weekly grid of windows (day, from, to, site zone) and the priority; a preview line
   «Сейчас должен работать: …».
 - **Настройки:** global monitor defaults, coordination values, retention, `notifyall`, profile groups; per-agent
   overrides on the agent's edit form.
@@ -274,20 +284,24 @@ partials, no HTML in PHP. All visible text through the module's language constan
   the connector logged for its client (`getClientLog()`: errors, 401, 429).
 - **Справка:** `modules/vine/admin/info/ru.md` — install, keys, `@connect`.
 
-Every action on this panel that changes an agent, a schedule or a setting is written with `addApiAudit()`.
+Every action on this panel that changes an agent, a schedule or a setting is written with `addApiAudit()` (old and
+new value); `checkAdminPost()` journals the same POST to `storage/logs/admin.log`, and `getTplAdminTabs()` gives the
+module the link «Журнал действий» by itself.
 
 Charts: SVG drawn by a small script under `public/plugins/vine/` from JSON the admin page embeds (a port of the
 userscript's chart and tooltip functions); colours and sizes from theme tokens.
 
 ## Profile page
 
-`index.php?name=vine`, visible only to logged-in users of the groups in `$conf['vine']['groups']` (and admins): the
+`/vine` (the module address of `docs/10-URL-2026.md`; `index.php?name=vine` answers 301 to it), visible only to
+logged-in users of the groups in `$conf['vine']['groups']` (and admins): the
 statistics tab and the finds list of the admin panel, read-only; no agents, no settings, no keys, no IPs.
 
 ## Retention and maintenance
 
-- **Scheduler job `vineclean`** (daily, like `cachegc`; an entry in `config/scheduler.php` and a branch in
-  `addSchedulerSystemJob()`, the connector's pattern): delete `vine_item`, `vine_cycle`, `vine_hit` and `vine_event`
+- **Scheduler job `vineclean`** (daily, like `cachegc`; registered as `docs/2027-CONNECTOR.md`, "Recommended
+  decisions", says — in `modules/vine/scheduler.php` once step 2 of `docs/2027-CORE.md` has landed, else in the three
+  places of the core plus the seed of `update.php`): delete `vine_item`, `vine_cycle`, `vine_hit` and `vine_event`
   older than `days`, acked `vine_cmd` older than 7 days, and `vine_known` rows whose `ltime` is older than 30 days,
   always keeping the newest 60,000.
 - **Aggregates only if needed:** if a statistics query over the whole retention exceeds 300 ms on real data, add
@@ -310,7 +324,8 @@ statistics tab and the finds list of the admin panel, read-only; no agents, no s
   window, also for a silent holder, none outside or on hold, `resume` once); epoch and `seq` fencing of `push`; a
   repeated push changes nothing (`uid`); `stats` equals SQL counts; validation of each field.
 - **Structure:** `ModuleStructureTest`, `LanguageValidationTest` (all six languages), `SecurityValidationTest`,
-  `PhpFileFormatTest`; the `/schema` command (database vs `table.sql`) reports no drift.
+  `PhpFileFormatTest`, `SchemaConventionTest` (the domains, time forms, NULL and keys of the `vine_*` tables); the
+  `/schema` command (database vs `table.sql`) reports no drift.
 - **Userscript:** the jsdom harness gets a mock server (hello/beat/cfg/pull/push/ack/hits/items/stats/finds) — role
   gate, `until − 10 s`, grace only on transport failures, 401 stops at once, 409 on a stale epoch makes standby, 409
   with `Retry-After` is retried, 503 `disabled` stops cycling, outbox and `uid`, pull on activation, `release`,
@@ -328,8 +343,9 @@ None; all decided on 2026-10-07 (section "Decisions"). A new question goes here 
 ## Steps
 
 - [ ] 1. Module skeleton: `modules/vine/` (index, common, api, lang ×6, admin/index, admin/lang ×6, admin/info/ru.md),
-  `config/vine.php`, entry in `config/modules.php`, tables in `table.sql` + update SQL. Done when the structure,
-  language and format tests pass and the `/schema` command reports no drift.
+  `config/vine.php`, entry in `config/modules.php`, tables in `table.sql` + the step of `update.php`, `etv` and
+  `etvmin` in the NULL list of "Schema conventions". Done when the structure, language, format and schema convention
+  tests pass and the `/schema` command reports no drift.
 - [ ] 2. Service `vine` on the connector: action table, `hello`, `beat` (without coordination), `cfg`; agents tab with
   create / new key / delete through `ApiClient`, each written with `addApiAudit()`; requests in `tools/api.http`.
   Done when a curl with an agent key gets the merged settings, a key without `vine:agent` gets 403, a wrong key 401
