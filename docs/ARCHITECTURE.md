@@ -426,7 +426,8 @@ Current behavior:
   parameters
 - the constructor sets the collation of `config/db.php`, the time zone of PHP
   and one strict `sql_mode` with `ONLY_FULL_GROUP_BY` on every connection: the
-  site, the panel, `setup.php`, `update.php`, tools and probes
+  site, the panel, `setup.php`, `update.php`, the tools and the probes that load
+  the code
 - `getSqlTwin()` names the unique key a refused duplicate hit
 
 New and refactored SQL should use prepared statements and named placeholders

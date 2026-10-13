@@ -332,8 +332,9 @@ NULL.
 block), `_mail.ntime` and `locked`, `_node_publish.due`, `_oauth_temp.time`, `_rating.time` (the vote window of a
 poll), `_rating_actors.last` and `_session.time`. A `VARCHAR` never holds a time; the two own forms are
 `_node_sync.modified`, the HTTP `Last-Modified` validator echoed back as `If-Modified-Since`, and `_users.birthday`,
-`DATE`. SQL compares a timer with `UNIX_TIMESTAMP()` and a moment with `NOW()` or a bound `DATETIME`; PHP reads a
-moment through `strtotime()`. `format_time()` answers `''` for a moment never recorded, so no reader guards NULL.
+`DATE`. SQL compares a timer with `UNIX_TIMESTAMP()` or a bound `time()`, a moment with `NOW()` or a bound
+`DATETIME`; PHP reads a moment through `strtotime()`. `format_time()` answers `''` for a moment never recorded, so no
+reader guards NULL.
 The update does not shift the times of 6.2 rows: the offset each was written with is unknown.
 
 **Connection.** `Database::__construct(string $server, string $user, string $pass, string $dbname, string $collate)`
@@ -347,10 +348,11 @@ runs once after connecting:
   server; a refused name leaves the session in the server zone with a row in `error_sql.log`, and the site runs on.
 
 Every path connects this way — the site and the panel through `core/security.php` from `$conf['db']`, `setup.php`,
-`update.php`, `tools/` and the probes — so `NOW()` and `date()` write the same moment everywhere. A `GROUP BY` names
-every selected column that no aggregate wraps: MariaDB knows no functional dependency. `table_update6_3.sql` sets
-its own mode for its session and restores it; `Backup` puts its session into an export state of its own
-(`NO_AUTO_VALUE_ON_ZERO`, zone `+00:00`) and hands back the saved mode, zone and collation.
+`update.php`, the scripts of `tools/` and the probes that load the code — so `NOW()` and `date()` write the same
+moment everywhere; a probe that only loads a fixture opens `PDO` itself. A `GROUP BY` names every selected column
+that no aggregate wraps: MariaDB knows no functional dependency. `table_update6_3.sql` sets its own mode for its
+session and restores it; `Backup` puts its session into an export state of its own (`NO_AUTO_VALUE_ON_ZERO`, zone
+`+00:00`) and hands back the saved mode, zone and collation.
 
 **Collation.** `{collate}` of `config/db.php` is the only source: `setup.php` writes `utf8mb4_unicode_520_ci`,
 `update.php` gives a 6.2 configuration the same and keeps the one of a 6.3 configuration; `table.sql` and
@@ -371,16 +373,18 @@ characters and drops an HTML entity the cut would split; the `name` filter of `g
 through it. The user agent is cut in the writers of `_users.agent` and `_login_log.agent`, not in `getAgent()`,
 whose `md5()` keys the agent blocker. A fixed choice is checked against its values instead of cut — `bpos` and
 `action` of a block, a `lang` against the `lang/` files, a `modul` against the modules and types, `apar` of a
-newsletter — and a value a cut would turn into another one is refused: an address over 255 (`checkemail()`), an
-OAuth return address over 512, a block file name, a group rank, a category row of `NodeService`.
+newsletter — and a value a cut would turn into another one is refused: an address over 255 (`checkemail()`), a
+block file name, a group rank, a category row of `NodeService`; an OAuth return address over 512 falls back to
+`index.php`.
 
 **Addresses.** `_users.email`, `_admins.email` and `_users_temp.email` are unique, and every writer turns `''` into
 NULL, so many accounts may lack an address (an OAuth registration without one) but no two share one. The `SELECT`
 checks before a write stay the common path; a write that loses the race fails with 1062, and
 `Database::getSqlTwin()` names the key it hit. The registration, the activation, the OAuth registration, the
 settings save, the account panel, the administrators panel and the first administrator of `admin/index.php` answer
-`email` as `_ERROR_EMAIL` and `name` as the taken name of their screen. `activate()` keeps the temporary row when its
-insert fails. `getMailAudience()` reads `email != ''`, which excludes NULL too.
+`email` as `_ERROR_EMAIL`; those that also write a name answer `name` as the taken name of their screen.
+`activate()` keeps the temporary row when its insert fails. `getMailAudience()` reads `email != ''`, which excludes
+NULL too.
 
 **Keys.** A key holds its column whole wherever the 3072 bytes of an InnoDB key allow it (a `VARCHAR(255)` in
 `utf8mb4` fits); only `_node_assets.src`, a `VARCHAR(2048)`, is keyed by a prefix. No plain key is the left part of

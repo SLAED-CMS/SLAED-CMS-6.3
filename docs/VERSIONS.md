@@ -10,9 +10,9 @@ conventions"; `tests/SchemaConventionTest.php` holds them for every later table.
 
 - **The connection.** `Database::__construct()` takes the collation and sets it with `utf8mb4`, the time zone of PHP
   (by name where the server refuses the offset) and one strict `sql_mode` with `ONLY_FULL_GROUP_BY` on every path —
-  the site, the panel, `setup.php`, `update.php`, tools and probes — so `NOW()` and `date()` write the same moment
-  and MariaDB refuses what MySQL would. The zone line of `core/system.php`, `$conf['db']['sync']` and the panel switch
-  `dbsync` are gone; the referer list groups by its newest row.
+  the site, the panel, `setup.php`, `update.php`, the tools and the probes that load the code — so `NOW()` and
+  `date()` write the same moment and MariaDB refuses what MySQL would. The zone line of `core/system.php`,
+  `$conf['db']['sync']` and the panel switch `dbsync` are gone; the referer list groups by its newest row.
 - **Text.** `utf8mb4_unicode_520_ci`, the newest collation both MySQL and MariaDB know, comes from `{collate}` of
   `config/db.php` alone. `ip`, `modul`, `scope` and `lang` are binary ASCII of one width each, a `lang` column holds a
   code. `filterCutText()` cuts a stored, escaped value to its column without splitting an entity, and every writer of
@@ -20,7 +20,7 @@ conventions"; `tests/SchemaConventionTest.php` holds them for every later table.
 - **Time.** A moment is `DATETIME`, a machine timer `BIGINT` unix seconds, and no column holds a time as text:
   `_mail.ntime` and `locked`, `_node_publish.due`, `_blocks.time` and `_rating.time` are timers, `_blocks.expire`,
   `_message.expire`, the stamps of `_rating_*` and `_user_oauth` are moments, `_users.lastvis` is NULL for never.
-  `_users_temp.time` leaves. The forum marks a topic new against the last visit, which it did for every topic before.
+  `_users_temp.time` leaves. The forum marks a topic new only when it changed after the last visit, not every topic.
 - **NULL.** No flag, counter or text is NULL. `_users.viewmail` is 0 where it was NULL, so an address stays hidden as
   the profile showed it, and saving the settings untouched no longer publishes it. An empty birthday is NULL; the
   false ones a date filter wrote into empty fields are gone.
