@@ -11,7 +11,6 @@ final class InputVarContractTest extends TestCase
     private static array $probe = [];
 
     # Run the getVar probe of tests/Support/contract_probe.php once and memoize its report for every scenario in this class
-    # The scalar branch reads filter_input(), which has no request payload in CLI, so only array and nested-array keys are exercised here
     private function getProbe(): array
     {
         if (self::$probe !== []) return self::$probe;
@@ -71,5 +70,13 @@ final class InputVarContractTest extends TestCase
         $data = $this->getProbe();
         $this->assertSame('fallback', $data['scalar_key_on_array']);
         $this->assertSame([], $data['array_default_scalar_filter']);
+    }
+
+    # A scalar is read from $_POST and $_GET themselves, so a key the core writes there, as the resolution of a path does, reaches every reader
+    #[Test]
+    public function scalarKeysReadTheArraysTheCoreWrites(): void
+    {
+        $this->assertSame(['scalar value', 'get scalar', 'scalar value', 101, 'view', 1234, 7, 'fallback'], $this->getProbe()['scalar'],
+            'A scalar key misses a value written into $_GET, or the source, the filter or the default changed');
     }
 }

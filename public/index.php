@@ -18,7 +18,42 @@ require_once BASE_DIR.'/core/system.php';
 
 if (!defined('ADMIN_FILE') && $conf['close'] && !isAdmin()) { http_response_code(503); setExit(_CLOSE_TEXT); }
 
-$go = getVar('req', 'go', 'var');
+# A path the cut of core/security.php kept resolves by one grammar, first match wins, and its keys replace the same keys of the query in $_GET
+# A type or module alone is its home, with a reserved operation that operation, with digits after the operation also the id; any other path is asked of the registry
+# A former path opens its entity marked to move, a gone path answers 410 and a path never given 404; the entity found stays in $urlroute for the redirect
+if ($urlroute['seg'] !== []) {
+    $rseg = $urlroute['seg'];
+    $rlen = count($rseg);
+    $rte = new Route($db);
+    $rown = isset($conf['node']['types'][$rseg[0]]) || isset($conf['modules'][$rseg[0]]);
+    $rops = $rown && $rlen <= 3 && $rte->isRouteReserved($rseg[0], $rseg[1] ?? '');
+    if ($rown && $rlen === 1) {
+        $rkeys = ['name' => $rseg[0]];
+    } elseif ($rops && ($rlen === 2 || ctype_digit($rseg[2]))) {
+        $rkeys = ['name' => $rseg[0], 'op' => $rseg[1]] + (($rlen === 3) ? ['id' => $rseg[2]] : []);
+    } elseif (!$rown || $rlen === 2) {
+        $rhit = $rte->getRoute(implode('/', $rseg));
+        if ($rhit === []) setError(404);
+        if ($rhit['state'] === 2) setError(410);
+        $rpre = explode('/', $rhit['path'] ?: implode('/', $rseg))[0];
+        $roid = (string)$rhit['oid'];
+        $rkeys = match ($rhit['kind']) {
+            'type' => ['name' => $rpre],
+            'node' => ['name' => $rpre, 'op' => 'view', 'id' => $roid],
+            'cat' => ['name' => $rpre, 'cat' => $roid],
+            'topic' => ['name' => 'forum', 'op' => 'view', 'id' => $roid],
+            'user' => ['name' => 'account', 'op' => 'view', 'id' => $roid],
+            default => ['name' => 'voting', 'op' => 'view', 'id' => $roid],
+        };
+        $urlroute += ['kind' => $rhit['kind'], 'oid' => $rhit['oid'], 'path' => $rhit['path'], 'move' => $rhit['state'] === 0];
+    } else {
+        setError(404);
+    }
+    $_GET = array_replace($_GET, $rkeys);
+    unset($rseg, $rlen, $rte, $rown, $rops, $rkeys, $rhit, $rpre, $roid);
+}
+
+$go =getVar('req', 'go', 'var');
 $name = getVar('req', 'name', 'var');
 $op = getVar('req', 'op', 'var');
 

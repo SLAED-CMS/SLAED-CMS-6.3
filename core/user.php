@@ -1711,7 +1711,7 @@ function getRssChannel(): string {
     if ($name === '') $name = isset($feeds[$hmod]) ? $hmod : (string)array_key_first($feeds);
     if (!isset($feeds[$name])) setError(404);
     $base = rtrim($conf['homeurl'], '/').'/';
-    $full = static fn(string $html): string => preg_replace('#(\s(?:href|src)=")(?![a-z][a-z0-9+.-]*:|//|\#)/?#i', '${1}'.$base, $html) ?? $html;
+    $full = static fn(string $html): string => preg_replace('#(\s(?:href|src)=")(?![a-z][a-z0-9+.-]*:|//|\#)(?:'.preg_quote(HOME_PATH, '#').'|/)?#i', '${1}'.$base, $html) ?? $html;
     $cat = getVar('post', 'cat', 'num', 0) ?: getVar('get', 'cat', 'num', 0);
     $num = getVar('post', 'num', 'num', 0) ?: getVar('get', 'num', 'num', 0);
     $num = ($num) ? (($num <= $conf['rss']['max']) ? $num : $conf['rss']['max']) : $conf['rss']['min'];
@@ -1752,7 +1752,7 @@ function getRssChannel(): string {
     .($last ? '<lastBuildDate>'.date('D, j M Y H:i:s O', $last)."</lastBuildDate>\n" : '')."\n";
     foreach ($nodes as $node) {
         $view = (new NodeView($prs, $fld))->getNodeView($type, $node, 'card');
-        $rurl = htmlspecialchars($conf['homeurl'].'/'.$view['href']);
+        $rurl = htmlspecialchars(getPublicUrl($view['href']));
         $content .= "<item>\n"
         .'<title>'.htmlspecialchars($node->title)."</title>\n"
         .'<pubDate>'.htmlspecialchars(date('D, j M Y H:i:s O', strtotime((string)$node->pubdate)))."</pubDate>\n"

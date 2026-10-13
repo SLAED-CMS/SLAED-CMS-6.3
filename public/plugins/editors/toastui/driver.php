@@ -23,7 +23,7 @@ class EditorToastUi implements ContentDriver {
         $js = ['plugins/editors/toastui/assets/toastui-editor.all.min.js'];
         if ($locale[1] !== '') $js[] = 'plugins/editors/toastui/assets/i18n/'.$locale[1];
         $ewords = 'plugins/system/emoji/'.substr(_LOCALE, 0, 2).'.js';
-        if (Template::getAssetUrl($ewords) !== $ewords) $js[] = $ewords;
+        if (str_contains(Template::getAssetUrl($ewords), '?v=')) $js[] = $ewords;
         $js[] = 'plugins/editors/toastui/assets/editor-tags.js';
         $js[] = 'plugins/system/emoji.js';
         return Editor::getEmojiPanel().Editor::getAssetTags(['plugins/editors/toastui/assets/toastui-editor.min.css'], $js);

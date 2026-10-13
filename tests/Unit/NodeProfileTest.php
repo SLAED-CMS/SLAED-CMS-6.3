@@ -157,6 +157,7 @@ final class NodeProfileTest extends TestCase
     # The first part drops the types the shipped configuration and an earlier installation left in the tree, with their four areas
     # The administrator part creates the administrator with a site account of the same password and turns every profile into an active type through the one import path
     # The ten types carry every shared area and directory and the starter news, the mark is gone, and the recovery form of the panel creates nothing more
+    # Every type, the starter news, the site account and the forum seed of insert.sql carry their first path, the seed in the order of the registry
     #[Test]
     public function aCleanInstallationCreatesTheTenTypes(): void
     {
@@ -188,6 +189,14 @@ final class NodeProfileTest extends TestCase
         $this->assertFalse($run['mark']);
         $this->assertSame([['name' => 'news', 'cid' => 0, 'uid' => 0, 'aname' => 'SLAED', 'title' => 'Добро пожаловать в SLAED CMS', 'status' => 2, 'home' => 1,
             'comon' => 2]], $run['starter']);
+        $want = [['user', 'users/probe']];
+        foreach (['content', 'docs', 'faq', 'files', 'help', 'jokes', 'links', 'media', 'news', 'pages'] as $name) $want[] = ['type', $name];
+        array_splice($want, 10, 0, [['node', 'news/dobro-pozhalovat-v-slaed-cms']]);
+        $seed = ['cat' => ['kategoriya-foruma', 'demonstratsiya-foruma', 'ustarevshie-soobshcheniya'],
+            'topic' => ['zashchita-i-bezopasnost', 'yazykovye-versii-statei', 'dobavlenie-pod-kategorii']];
+        foreach ($seed as $kind => $list) foreach ($list as $name) $want[] = [$kind, 'forum/'.$name];
+        $this->assertSame($want, array_map(fn(array $v): array => [$v[0], $v[1]], $run['routes']), 'The installation did not give its seed, types and accounts their paths');
+        $this->assertSame(array_fill(0, count($want), 1), array_map('intval', array_column($run['routes'], 2)));
         $this->assertSame([303, 1, 10], $run['again']);
         $this->assertSame([2, false], $run['notice']);
     }

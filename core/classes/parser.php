@@ -316,7 +316,7 @@ class Parser {
         return $memo[$key] = $this->checkImageSource($src);
     }
 
-    # Convert a local/absolute image source into a stable public path; data URIs survive only as whitelisted base64 raster images, length-capped before any regex or decode
+    # Convert a local/absolute image source into a stable address from the root of the site; data URIs survive only as whitelisted, length-capped base64 rasters
     # The whitelist is EMBEDIMG, matched as a subtype rather than spelled into the pattern, so the editor, the upload adapter and this render read one list
     private function checkImageSource(string $src): ?string {
         global $conf;
@@ -333,7 +333,8 @@ class Parser {
         $host = parse_url($raw, PHP_URL_HOST);
         $path = parse_url($raw, PHP_URL_PATH);
         $path = is_string($path) && $path !== '' ? $path : $raw;
-        $path = ltrim($path, '/');
+        $home = defined('HOME_PATH') ? HOME_PATH : '/';
+        $path = str_starts_with($path, $home) ? substr($path, strlen($home)) : ltrim($path, '/');
 
         if ($host) {
             $homeHost = parse_url((string)($conf['homeurl'] ?? ''), PHP_URL_HOST);
@@ -345,11 +346,11 @@ class Parser {
         if ($path === '' || preg_match('#^[a-z][a-z0-9+.\-]*:#i', $path)) return $raw;
 
         $query = parse_url($raw, PHP_URL_QUERY);
-        if (is_file($this->getAddressFile($path))) return is_string($query) ? $path.'?'.$query : $path;
+        if (is_file($this->getAddressFile($path))) return $home.(is_string($query) ? $path.'?'.$query : $path);
 
         if (preg_match('#^(uploads/[^/]+)/([^/]+)$#', $path, $m)) {
             $thumb = $m[1].'/thumb/'.$m[2];
-            if (is_file($this->getAddressFile($thumb))) return $thumb;
+            if (is_file($this->getAddressFile($thumb))) return $home.$thumb;
         }
 
         return null;

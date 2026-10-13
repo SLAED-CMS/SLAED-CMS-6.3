@@ -1020,6 +1020,10 @@ if ($mode === 'statscookie') {
     $out['scalar_key_on_array'] = getVar('post', 'flat', 'raw', 'fallback');
     $out['array_default_scalar_filter'] = getVar('post', 'missing', 'num', []);
     $out['branch_untouched'] = getVar('post', 'rows[]', 'raw');
+    $_GET['id'] = '101';
+    $_GET['op'] = 'view';
+    $out['scalar'] = [getVar('post', 'name', 'raw'), getVar('get', 'name', 'raw'), getVar('req', 'name', 'raw'), getVar('get', 'id', 'num'), getVar('req', 'op', 'var'),
+        getVar('post', 'digits', 'num'), getVar('get', 'missing', 'num', 7), getVar('get', 'flat', 'var', 'fallback')];
 } elseif ($mode === 'comment') {
     $out = getProbeComment();
 } elseif ($mode === 'commentread') {

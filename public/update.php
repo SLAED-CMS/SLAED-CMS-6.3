@@ -31,7 +31,7 @@ function getMigrateDir(): string {
 function getMigrateState(): array {
     $file = getMigrateDir().'/manifest.json';
     $data = is_file($file) ? json_decode((string)file_get_contents($file), true) : null;
-    $base = ['version' => 1, 'stash' => [], 'types' => [], 'data' => [], 'active' => [], 'notes' => [], 'counter' => 0];
+    $base = ['version' => 1, 'stash' => [], 'types' => [], 'data' => [], 'active' => [], 'notes' => [], 'counter' => 0, 'routes' => []];
     return is_array($data) ? $data + $base : $base;
 }
 
@@ -771,7 +771,13 @@ function setMigrateCounter(array $plan, array &$state): void {
     setMigrateState($state);
 }
 
-# Run every step that is not done yet in the fixed order - stash, types, id counter, data, foreign addresses, activation - and answer the text that stopped the run
+# Give every entity of the site its first address once the materials exist; it runs on every run, so the materials of a module carried later get theirs as well
+function setMigrateRoutes(array &$state): void {
+    $state['routes'] = addRouteBacklog();
+    setMigrateState($state);
+}
+
+# Run every step that is not done yet in the fixed order - stash, types, id counter, data, foreign addresses, addresses, activation - and answer the text that stopped the run
 # The map of the old addresses needs its table, which the first stage of this file creates, so a schema without it stops the run before the first write
 function setMigrateRun(): string {
     $state = getMigrateState();
@@ -786,12 +792,13 @@ function setMigrateRun(): string {
         setMigrateCounter($plan, $state);
         foreach ($todo as $mod => $one) setMigrateData($mod, $one, $state);
         setMigrateForeign($state);
+        setMigrateRoutes($state);
         setMigrateActive($state);
     } catch (Throwable $err) {
         Logger::addSite('error', 'Node: the migration of the old modules stopped', ['error' => $err->getMessage()]);
         return $err->getMessage();
     }
-    Logger::addSite('info', 'Node: the migration of the old modules ran', ['aid' => getNodeContext()->aid]);
+    Logger::addSite('info', 'Node: the migration of the old modules ran', ['aid' => getNodeContext()->aid, 'routes' => array_sum($state['routes'])]);
     return '';
 }
 
@@ -812,12 +819,12 @@ function setMigratePage(string $fail): void {
     $head = array_map(fn(string $v): array => ['text' => $v], [_TYPE, _NODE_MIGROWS, _COMMENTS, _FAVORITES, _CATEGORIES, _STATUS]);
     $cont = $tpl->getHtmlFrag('alert', ['text' => _NODE_MIGINFO]);
     if ($fail !== '') $cont .= $tpl->getHtmlFrag('alert', ['type' => 'error', 'messages' => [_NODE_MIGSTOP, $fail]]);
-    elseif (!$open && $plan) $cont .= $tpl->getHtmlFrag('alert', ['type' => 'success', 'text' => _NODE_MIGDONE]);
+    elseif (!$open && $plan && $state['routes']) $cont .= $tpl->getHtmlFrag('alert', ['type' => 'success', 'text' => _NODE_MIGDONE]);
     $cont .= $tpl->getHtmlFrag('table', ['headers' => $head, 'rows_html' => $rows]);
     foreach ($state['notes'] as $mod => $list) {
         if ($list) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => array_map(fn(string $v): string => $mod.': '.$v, $list)]);
     }
-    if ($open || !empty($state['active'])) {
+    if ($open || !empty($state['active']) || !$state['routes']) {
         $hide = '';
         foreach (['op' => 'run', 'token' => getSiteToken('update')] as $key => $val) {
             $hide .= $tpl->getHtmlFrag('hidden', ['name_attr' => $key, 'value_attr' => $val, 'input_attr' => '']);
@@ -1997,6 +2004,7 @@ if (($_REQUEST['op'] ?? '') === 'update' || !isset($umark['points'], $umark['rat
     define('CACHE_DIR', BASE_DIR.'/storage/cache');
     define('LOGS_DIR', BASE_DIR.'/storage/logs');
     define('UPLOADS_DIR', BASE_DIR.'/uploads');
+    define('HOME_PATH', rtrim(str_replace('\\', '/', dirname((string)($_SERVER['SCRIPT_NAME'] ?? '/'))), '/').'/');
     $conf = array_merge(require CONFIG_DIR.'/global.php', require CONFIG_DIR.'/security.php');
     require_once BASE_DIR.'/core/admin.php';
     require_once BASE_DIR.'/core/classes/filemanager.php';

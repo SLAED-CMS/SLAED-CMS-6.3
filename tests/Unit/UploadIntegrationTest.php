@@ -173,7 +173,7 @@ final class UploadIntegrationTest extends TestCase
         $data = $this->getProbe('place');
         $avat = $data['rules']['users.avatar'];
         $this->assertSame($data['dirs']['users.avatar'], $avat['store'], 'An avatar no longer lands in the configured avatar folder below the upload root');
-        $this->assertSame('uploads/'.$avat['store'], $avat['dir'], 'The two relative directory forms of users.avatar disagree');
+        $this->assertSame('/uploads/'.$avat['store'], $avat['dir'], 'The two relative directory forms of users.avatar disagree');
         $this->assertStringEndsWith('/'.$avat['store'], $avat['path'], 'The absolute directory of users.avatar is not the relative one below the upload root');
     }
 

@@ -622,7 +622,7 @@ function view(): void {
         $ismod = is_acess((string)($rows[0][24] ?? ''));
         $seodesc = cutstr(trim(strip_tags($prs->filterContent($rows[0][7], false, $conf['name']))), 160);
         $seoimg = getImgText($rows[0][7], '', false, '', ['forum', intval($rows[0][0])]);
-        $seoimg = $seoimg ? $conf['homeurl'].'/'.$seoimg : '';
+        $seoimg = $seoimg ? getPublicUrl($seoimg) : '';
         if (!$ismod) {
             if (!$isread) setError(403);
             elseif ($tstatus <= 1) setError(404);

@@ -878,7 +878,7 @@ function setNodeView(): void {
         'author' => $view['author'],
         'time' => (string)$node->pubdate,
         'mtime' => $node->updated,
-        'img' => ($cover === '' || preg_match('#^https?://#i', $cover)) ? $cover : rtrim($conf['homeurl'], '/').'/'.$cover,
+        'img' => ($cover === '') ? '' : getPublicUrl($cover),
     ]);
     echo getNodeViewHtml($type, $node, $view, $rels, $ext, $live)
         .($talk ? setComShow($node->id, $com->getTargetMode($type->name, $node->id)->value) : '');

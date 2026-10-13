@@ -125,7 +125,7 @@ function getProbeAttach(): array {
     if ($left) unlink($thumb);
     if ($made && is_dir($dir.'/thumb')) rmdir($dir.'/thumb');
     if ($made) rmdir($dir);
-    return ['ran' => true, 'html' => $html, 'src' => 'uploads/all/'.$name, 'thumb' => 'uploads/all/thumb/'.$name, 'left' => $left];
+    return ['ran' => true, 'html' => $html, 'src' => getUploadUrl('all/'.$name), 'thumb' => getUploadUrl('all/thumb/'.$name), 'left' => $left];
 }
 
 $mode = (string)($argv[1] ?? '');

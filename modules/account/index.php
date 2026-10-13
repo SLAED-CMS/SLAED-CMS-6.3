@@ -351,7 +351,7 @@ function view(): void {
             $seotitle  = $nick;
             $seoctitle = _PERSONALINFO;
             $seodesc   = cutstr(trim(strip_tags(getUserSign((string)($sig ?? ''), intval($uid)))), 160);
-            $seoimg    = ($avatar) ? $conf['homeurl'].'/'.getUserAvatarUrl(['avatar' => $avatar]) : '';
+            $seoimg    = ($avatar) ? getPublicUrl(getUserAvatarUrl(['avatar' => $avatar])) : '';
             $seoauthor = $nick ?: ($uname ?: $conf['sitename']);
             setHead([
                 'title' => $seotitle,

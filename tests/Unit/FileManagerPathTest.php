@@ -468,8 +468,8 @@ final class FileManagerPathTest extends TestCase
     #[Test]
     public function theAddressOfAnObjectIsTheOneOfItsPublicFolder(): void
     {
-        $this->assertSame('uploads/presentation', (new \FileManager('uploads', UPLOADS_DIR))->getFileData('presentation')['url'], 'A public folder carries no address');
-        $this->assertSame(['uploads/all/a.png', '', '', ''],
+        $this->assertSame('/uploads/presentation', (new \FileManager('uploads', UPLOADS_DIR))->getFileData('presentation')['url'], 'A public folder carries no address');
+        $this->assertSame(['/uploads/all/a.png', '', '', ''],
             [getUploadUrl('all/a.png'), getUploadUrl('forum/a.png'), getUploadUrl('node/news/a.png'), getUploadUrl('../config/db.php')],
             'An address is not the one of the public list');
         $this->assertSame('', (new \FileManager('system', BASE_DIR))->getFileData('public/index.php')['url'], 'The system context hands out a direct address');

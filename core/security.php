@@ -10,22 +10,36 @@ if (!defined('FUNC_FILE')) die('Illegal file access');
 if (ob_get_level() === 0) ob_start();
 
 # Retired addresses: a path after the script or a bare index.php goes 301 to the address built from the script name, any other path finds no page
+# The cut of index.php, before the database: a path of up to five ASCII words is kept lowercased in $urlroute for public/index.php, which resolves it
+# The flag bent marks a path written otherwise than its address: upper case, a trailing slash or /index.php/ in front; a path after it that names only the script keeps its 301
+$urlroute = ['seg' => [], 'bent' => false];
 if (PHP_SAPI !== 'cli') {
     [$rpath, $rquery] = array_pad(explode('?', (string)($_SERVER['REQUEST_URI'] ?? ''), 2), 2, '');
     $sname = basename(str_replace('\\', '/', (string)($_SERVER['SCRIPT_NAME'] ?? '')));
     $sbase = rtrim(str_replace('\\', '/', dirname((string)($_SERVER['SCRIPT_NAME'] ?? '/'))), '/');
     $rhome = [];
-    foreach (array_unique([$sbase, (string)preg_replace('#/public$#', '', $sbase)]) as $rone) array_push($rhome, $rone.'/', $rone.'/'.$sname);
+    $rrest = null;
+    foreach (array_unique([$sbase, (string)preg_replace('#/public$#', '', $sbase)]) as $rone) {
+        array_push($rhome, $rone.'/', $rone.'/'.$sname);
+        if ($rrest === null && str_starts_with($rpath, $rone.'/')) $rrest = substr($rpath, strlen($rone) + 1);
+    }
+    $rcut = ($sname === 'index.php') ? (string)preg_replace('#^(?:index\.php/)+#', '', (string)$rrest, -1, $rnum) : '';
     $rdest = '';
-    if (preg_match('#^(.*?/'.preg_quote($sname, '#').')/#', $rpath, $rhit) && in_array($rhit[1], $rhome, true)) $rdest = $rhit[1];
-    if ($rdest === '' && ($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET' && in_array($rpath, $rhome, true)) $rdest = $rpath;
+    if ($rcut === '' || $rcut === 'index.php') {
+        if (preg_match('#^(.*?/'.preg_quote($sname, '#').')/#', $rpath, $rhit) && in_array($rhit[1], $rhome, true)) $rdest = $rhit[1];
+        if ($rdest === '' && ($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET' && in_array($rpath, $rhome, true)) $rdest = $rpath;
+    }
     if ($rquery === '' && str_ends_with($rdest, '/index.php')) $rdest = substr($rdest, 0, -9);
     if ($rdest !== '' && $rdest !== $rpath) {
         header('Location: '.$rdest.(($rquery !== '') ? '?'.$rquery : ''), true, 301);
         exit;
     }
-    if (!in_array($rpath, $rhome, true) && !isset($_GET['error'])) $_GET['error'] = 404;
-    unset($rpath, $rquery, $sname, $sbase, $rhome, $rdest, $rone, $rhit);
+    $rsegs = ($rcut === '' || $rcut === 'index.php') ? [] : explode('/', str_ends_with($rcut, '/') ? substr($rcut, 0, -1) : $rcut);
+    if ($rsegs !== [] && count($rsegs) <= 5 && preg_grep('#^[A-Za-z0-9_-]+$#D', $rsegs, PREG_GREP_INVERT) === []) {
+        $urlroute = ['seg' => array_map('strtolower', $rsegs), 'bent' => $rnum > 0 || str_ends_with($rcut, '/') || strtolower($rcut) !== $rcut];
+    }
+    if (!in_array($rpath, $rhome, true) && $urlroute['seg'] === [] && !isset($_GET['error'])) $_GET['error'] = 404;
+    unset($rpath, $rquery, $sname, $sbase, $rhome, $rrest, $rcut, $rnum, $rdest, $rone, $rhit, $rsegs);
 }
 
 # Ensure configuration exists when this file is analyzed or included directly
@@ -805,7 +819,7 @@ function getLang(string $module = '', bool $admin = false): string {
     return $locale;
 }
 
-# Clean access to POST, GET or Request parameters
+# Clean access to POST, GET or Request parameters, read from $_POST and $_GET themselves, so the keys public/index.php resolves from a path count as the query's
 # A trailing '[]' returns the whole array, a trailing '[n]' or '[name]' returns one element, and leading segments walk nested form fields ('lng[ru][]', 'row[2][id]')
 # Plain keys return a filtered scalar; an array value reached through a scalar key counts as missing so a mismatched form name yields the default instead of a filter error
 function getVar(string $var, string $key, string $type = '', mixed $default = ''): mixed {
@@ -872,13 +886,12 @@ function getVar(string $var, string $key, string $type = '', mixed $default = ''
         }
         return $value;
     }
-    if ($arridx !== null) {
-        $p = is_array($p) ? '' : ($p ?? '');
-        $g = is_array($g) ? '' : ($g ?? '');
-    } else {
-        $p = is_array($_POST[$key] ?? null) ? '' : (filter_input(INPUT_POST, $key, FILTER_DEFAULT) ?? '');
-        $g = is_array($_GET[$key] ?? null) ? '' : (filter_input(INPUT_GET, $key, FILTER_DEFAULT) ?? '');
+    if ($arridx === null) {
+        $p = $_POST[$key] ?? null;
+        $g = $_GET[$key] ?? null;
     }
+    $p = is_array($p) ? '' : ($p ?? '');
+    $g = is_array($g) ? '' : ($g ?? '');
     $value = match(strtolower($var)) {
         'post' => $p,
         'get' => $g,

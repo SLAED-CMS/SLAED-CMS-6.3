@@ -76,11 +76,11 @@ final class NodeRouteTest extends TestCase
         $this->assertSame([200, true, true, false, false], $run['list'], 'Page one of news shows Gamma and Beta; Alpha is on page two and Members is closed to a guest');
         $this->assertTrue($run['canon']);
         $this->assertSame([200, true, 404], $run['page']);
-        $this->assertSame([303, 'index.php?name=news', 405, 'GET, HEAD, POST'], $run['post'],
+        $this->assertSame([303, '/index.php?name=news', 405, 'GET, HEAD, POST'], $run['post'],
             'A POST without the token of the view switch is not sent back to the list, or another method passes');
         $this->assertSame(404, $run['node'], 'The technical name node has a public route');
         $this->assertSame([400, 400, 400, 400, 404, 404, 404], $run['bad'], 'cat, let, order and dir are checked, a foreign category and unknown operations are not found');
-        $this->assertSame([301, 'index.php?name=news'], $run['clean'], 'The explicit default sort is not sent back to the clean address');
+        $this->assertSame([301, '/index.php?name=news'], $run['clean'], 'The explicit default sort is not sent back to the clean address');
         $this->assertSame([200, 400], $run['published'], 'The sort published the reader accepts for every type is refused by the route, or a sort outside the list passes');
         $this->assertSame([200, true, 200], $run['sort'], 'Another sort is not answered noindex');
         $this->assertSame([404, false, 200, true, 200], $run['cat'], 'A category the guest may not read is not missing, or the readable ones do not answer');
@@ -185,7 +185,7 @@ final class NodeRouteTest extends TestCase
         $this->assertSame([200, true, 0], $run['preview'], 'The preview wrote a material or does not show it');
         $this->assertSame([403, 0], $run['notoken']);
         $this->assertSame(400, $run['badact']);
-        $this->assertSame([303, 'index.php?name=news', 1, ['status' => 1, 'uid' => 2, 'cid' => 1]], $run['submit']);
+        $this->assertSame([303, '/index.php?name=news', 1, ['status' => 1, 'uid' => 2, 'cid' => 1]], $run['submit']);
         $this->assertSame([422, 1], $run['invalid']);
         [$code, $key, $own, $file, $mine, $cache, $other, $guest, $moder, $none] = $run['upload'];
         $this->assertSame([200, true, true, true, 200], [$code, $key, $own, $file, $mine], 'The upload is not stored with its owner or not previewed to that owner');
@@ -258,11 +258,11 @@ final class NodeRouteTest extends TestCase
         $run = $this->getRuns()['data'];
         $this->assertSame(array_fill_keys(['list', 'view', 'card', 'tcard'], true), $run['keys']);
         $this->assertSame([3, 3, 3, 3, 3, 3, 3], $run['refused'], 'A light target was prepared for a mode other than card');
-        $this->assertSame('index.php?name=news&op=view&id=101', $run['full']['href']);
-        $this->assertSame(['Alpha', 'intro of 101', true, 'index.php?name=news&cat=1', 'Open', 'anna', 'index.php?name=account&op=view&uname=anna'],
+        $this->assertSame('/index.php?name=news&op=view&id=101', $run['full']['href']);
+        $this->assertSame(['Alpha', 'intro of 101', true, '/index.php?name=news&cat=1', 'Open', 'anna', '/index.php?name=account&op=view&uname=anna'],
             [$run['full']['title'], $run['full']['intro'], $run['full']['body'], $run['full']['chref'], $run['full']['ctitle'], $run['full']['author'], $run['full']['ahref']]);
         $this->assertSame(['cover', 'files'], $run['full']['roles']);
-        $this->assertSame([true, 'index.php?name=news&op=asset&id=2', 'index.php?name=news&op=report&id=2', false, true, 'index.php?name=news&op=asset&id=1'],
+        $this->assertSame([true, '/index.php?name=news&op=asset&id=2', '/index.php?name=news&op=report&id=2', false, true, '/index.php?name=news&op=asset&id=1'],
             array_values($run['asset']));
         $this->assertSame(['title' => 'Beta', 'intro' => '', 'body' => '', 'views' => null, 'fields' => [], 'assets' => []], $run['light']);
         $this->assertSame('', $run['list'], 'A list card carries the body');
@@ -454,12 +454,12 @@ final class NodeRouteTest extends TestCase
         $this->assertSame([2, ['details'], ['Why no mail arrives?', 'How to reset a password?']], [$run['faq']['count'], $run['faq']['tags'], $run['faq']['titles']],
             'The faq list is no accordion of its questions');
         $this->assertSame([true, false, false], $run['faqview'], 'The faq view does not ask its question or shows its views or author');
-        $this->assertSame([['index.php?name=files&op=asset&id=12'], ['index.php?name=files&op=asset&id=11'], 3], [$run['files']['links'], $run['files']['images'],
+        $this->assertSame([['/index.php?name=files&op=asset&id=12'], ['/index.php?name=files&op=asset&id=11'], 3], [$run['files']['links'], $run['files']['images'],
             $run['files']['buttons']], 'The file card does not offer the download of the one material that has it beside both reading buttons');
         $this->assertContains('1.95 KB', $run['files']['chips'], 'The file card hides the size of its download');
         $this->assertContains('318', $run['files']['chips'], 'The file card hides the count of its downloads');
         $this->assertSame(['bi-download', 'sl-entry-content'], $run['filesview'], 'The files view does not put its resources above the text');
-        $this->assertSame([['Gallery only', 'Overview video'], ['index.php?name=media&op=asset&id=16', 'index.php?name=media&op=asset&id=13'], 1],
+        $this->assertSame([['Gallery only', 'Overview video'], ['/index.php?name=media&op=asset&id=16', '/index.php?name=media&op=asset&id=13'], 1],
             [$run['media']['titles'], $run['media']['images'], $run['grid']], 'The media tiles are not one grid, or the cover does not prefer the poster over the gallery');
         $this->assertContains('2026', $run['media']['chips'], 'The media tile hides the year of its field');
         $this->assertSame([['<video', 'sl-entry-content'], 1, ['Gallery only']], $run['mediaview'], 'The media view does not play above its text or loses the grid of its related');
@@ -471,7 +471,7 @@ final class NodeRouteTest extends TestCase
     {
         $run = $this->getMode('modes')['looks'];
         $news = ['cards', 'compact', 'tiles'];
-        $this->assertSame([[$news, 'cards', ''], 303, 'index.php?name=news&num=2', [$news, 'compact', 'node-compact']], $run['news'],
+        $this->assertSame([[$news, 'cards', ''], 303, '/index.php?name=news&num=2', [$news, 'compact', 'node-compact']], $run['news'],
             'The switch does not offer the views of news, or its POST does not set the view and return to the page of the list');
         $this->assertSame([$news, 'compact', 'node-compact'], $run['keep'], 'A view news does not offer or the token of another form changed the view');
         $this->assertSame([$news, 'cards', ''], $run['stale'], 'A cookie outside the views of the type did not fall back to its first view');
@@ -490,7 +490,7 @@ final class NodeRouteTest extends TestCase
         $this->assertSame([true, true], $run['vary'], 'The two answers of one address do not vary by HX-Request');
         $this->assertNotSame('', $run['title'][0], 'The part carries no title');
         $this->assertSame($run['title'][1], $run['title'][0], 'The title of the part is not the title of the page');
-        $this->assertSame(['index.php?name=news&num=2', ''], $run['more'], '"Show more" does not link the next page, or the last page offers it');
+        $this->assertSame(['/index.php?name=news&num=2', ''], $run['more'], '"Show more" does not link the next page, or the last page offers it');
         $this->assertSame([true, 5], $run['marks'], 'The part is not the history element, or the toolbar, the three windows and the foot are not boosted');
         $this->assertSame(1, $this->getMode('head')['bar']['form'], 'The link of the public form is boosted into the list');
     }
@@ -504,7 +504,7 @@ final class NodeRouteTest extends TestCase
         $this->assertSame(['', '', 5], $run['short'], 'A word under the minimum of the search module gets hints, or one at the minimum gets none');
         $this->assertSame([['Beta', 'Gamma'], ['Beta', 'Gamma', 'Members']], $run['rights'],
             'A guest sees a closed category, a future or pending material, or the club reader misses the closed category');
-        $this->assertSame('index.php?name=news&op=view&id=105', $run['href'], 'A hint does not link the material');
+        $this->assertSame('/index.php?name=news&op=view&id=105', $run['href'], 'A hint does not link the material');
         $this->assertSame(['', ''], $run['other'], 'A type outside the search or an unknown name answers hints');
     }
 
@@ -564,7 +564,7 @@ final class NodeRouteTest extends TestCase
     #[Test]
     public function aPagePastTheEndIsNotFoundBeforeAnyRedirect(): void
     {
-        $this->assertSame([404, '', 301, 'index.php?name=news&num=2'], $this->getMode('seo')['bound'], 'The redirect of the default sort leads to a page that does not exist');
+        $this->assertSame([404, '', 301, '/index.php?name=news&num=2'], $this->getMode('seo')['bound'], 'The redirect of the default sort leads to a page that does not exist');
     }
 
     # A path that is no address of the site finds the error page, a path after a script goes 301 to that script, and an address of the site answers as before
@@ -633,8 +633,8 @@ final class NodeRouteTest extends TestCase
     public function theNoticeShowsOnceAndTheMarqueeShowsTheLatest(): void
     {
         $run = $this->getMode('head');
-        $this->assertSame([303, 'index.php?name=news', true, false], $run['notice'], 'The notice of a submission did not show exactly once');
-        $this->assertSame([303, 'index.php?name=news&op=view&id=101', true, false], $run['report'], 'The notice of a report did not show exactly once');
+        $this->assertSame([303, '/index.php?name=news', true, false], $run['notice'], 'The notice of a submission did not show exactly once');
+        $this->assertSame([303, '/index.php?name=news&op=view&id=101', true, false], $run['report'], 'The notice of a report did not show exactly once');
         $this->assertStringContainsString('Doc one', $run['faq'], 'The header marquee does not show the latest faq material');
     }
 
@@ -662,7 +662,7 @@ final class NodeRouteTest extends TestCase
     public function theListHeaderLinksItsSortsAndKeepsItsFilters(): void
     {
         $bar = $this->getMode('head')['bar'];
-        $list = 'index.php?name=news';
+        $list = '/index.php?name=news';
         $tail = ['index.php?go=rss&name=news', $list.'&op=add'];
         $this->assertSame([$list, $list.'&order=title&dir=asc', $list.'&order=views&dir=desc', $list.'&order=published&dir=asc', ...$tail], $bar['guest'][0],
             'The guest header misses a sort, the direction or the feed, or offers a personal filter');

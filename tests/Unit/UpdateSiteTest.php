@@ -148,15 +148,35 @@ final class UpdateSiteTest extends TestCase
     }
 
     # The second stage carries the 6.2 tables of the removed modules into Node: the schema file gave them the 6.3 names the migration reads
-    # The two news and the file of the fixture become materials of their types, the intro and the body of 6.2 in their places
+    # The news and the file of the fixture and the rows the probe adds before the stage - three news and a help request - become materials of their types
     #[Test]
     public function theSecondStageCarriesTheModulesOfASite(): void
     {
         $run = $this->getRun()['migrate'];
         $this->assertSame([200, true, 200], array_slice($run, 0, 3), 'The page of the second stage offers no run to the main administrator');
-        $want = [['files', 'A file', 'Description of the file', ''], ['news', 'First news', 'Intro of the first news', ''],
-            ['news', 'Second news', 'Intro of the second news', 'Body of the second news']];
+        $want = [['files', 'A file', 'Description of the file', ''], ['help', 'A request', '', 'Help'], ['news', 'First news', 'Intro of the first news', ''],
+            ['news', 'General', 'Intro of General', ''], ['news', 'Later', 'Intro of Later', ''],
+            ['news', 'Second news', 'Intro of the second news', 'Body of the second news'], ['news', 'Waiting', 'Intro of Waiting', '']];
         $this->assertSame($want, $run[3], 'The migration did not carry the rows of a clean 6.2 site');
+    }
+
+    # The second stage gives every entity its first address in the fixed order of the migration, hubs before pages and each group by ascending id
+    # The category General takes the clean name before the news of the same title, and the forum section A topic before the topic
+    # A news waiting for approval, one dated in the future and the request of the private type help get none; a repeat adds nothing
+    #[Test]
+    public function theSecondStageFillsTheRegistry(): void
+    {
+        [$rows, $code, $same] = $this->getRun()['routes'];
+        $want = [['type', 'docs', 'docs'], ['type', 'content', 'content'], ['type', 'news', 'news'], ['type', 'faq', 'faq'], ['type', 'help', 'help'],
+            ['type', 'links', 'links'], ['type', 'files', 'files'], ['cat', 'news/general', 'General'], ['node', 'news/first-news', 'First news'],
+            ['node', 'news/second-news', 'Second news'], ['node', 'news/general-2', 'General'], ['node', 'files/a-file', 'A file'], ['cat', 'forum/a-topic', 'A topic'],
+            ['topic', 'forum/a-topic-2', 'A topic'], ['user', 'users/alpha', 'alpha'], ['user', 'users/beta', 'beta'], ['user', 'users/gamma', 'gamma'],
+            ['poll', 'voting/which-one', 'Which one']];
+        $this->assertSame($want, array_map(fn(array $v): array => [$v[0], $v[1], $v[3]], $rows), 'The registry after the migration is not the one of the fixed order');
+        $this->assertSame(array_fill(0, count($want), 1), array_map('intval', array_column($rows, 2)), 'A path of the migration is not current');
+        $this->assertSame([200, true], [$code, $same], 'A repeat of the second stage changed the registry');
+        $runs = substr_count(implode("\n", $this->getRun()['logs']['error_site']), 'the migration of the old modules ran');
+        $this->assertSame(2, $runs, 'The second stage did not run twice, so the repeat proves nothing');
     }
 
     # The panel stays myadm.php, now the shipped loader in place of the one of 6.2

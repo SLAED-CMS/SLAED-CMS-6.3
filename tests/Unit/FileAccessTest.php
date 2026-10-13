@@ -85,18 +85,18 @@ final class FileAccessTest extends TestCase
     public function everyOwnerAnswersItsOwnAddress(): void
     {
         $fac = self::getAccess();
-        $this->assertSame('index.php?go=file&own=node&id=7&key=my%20file.pdf', $fac->getFileUrl('node', 'news', 7, 'my file.pdf'));
-        $this->assertSame('index.php?go=file&own=node&id=7&key=a.png&thumb=1', $fac->getFileUrl('node', 'news', 7, 'a.png', true));
-        $this->assertSame('index.php?go=file&own=node&name=news&key=a.png&preview=1', $fac->getFileUrl('node', 'news', 0, 'a.png'));
-        $this->assertSame('index.php?go=file&own=node&name=news&key=a.png&preview=1&thumb=1', $fac->getFileUrl('node', 'news', 0, 'a.png', true));
-        $this->assertSame('index.php?go=file&own=forum&id=5&key=my%20file.pdf', $fac->getFileUrl('forum', 'forum', 5, 'my file.pdf'));
-        $this->assertSame('index.php?go=file&own=forum&id=5&key=a.png&thumb=1', $fac->getFileUrl('forum', '', 5, 'a.png', true));
-        $this->assertSame('uploads/all/a.png', $fac->getFileUrl('public', 'all', 0, 'a.png'));
-        $this->assertSame('uploads/all/thumb/a.png', $fac->getFileUrl('public', 'all', 0, 'a.png', true));
+        $this->assertSame('/index.php?go=file&own=node&id=7&key=my%20file.pdf', $fac->getFileUrl('node', 'news', 7, 'my file.pdf'));
+        $this->assertSame('/index.php?go=file&own=node&id=7&key=a.png&thumb=1', $fac->getFileUrl('node', 'news', 7, 'a.png', true));
+        $this->assertSame('/index.php?go=file&own=node&name=news&key=a.png&preview=1', $fac->getFileUrl('node', 'news', 0, 'a.png'));
+        $this->assertSame('/index.php?go=file&own=node&name=news&key=a.png&preview=1&thumb=1', $fac->getFileUrl('node', 'news', 0, 'a.png', true));
+        $this->assertSame('/index.php?go=file&own=forum&id=5&key=my%20file.pdf', $fac->getFileUrl('forum', 'forum', 5, 'my file.pdf'));
+        $this->assertSame('/index.php?go=file&own=forum&id=5&key=a.png&thumb=1', $fac->getFileUrl('forum', '', 5, 'a.png', true));
+        $this->assertSame('/uploads/all/a.png', $fac->getFileUrl('public', 'all', 0, 'a.png'));
+        $this->assertSame('/uploads/all/thumb/a.png', $fac->getFileUrl('public', 'all', 0, 'a.png', true));
         $this->assertSame('', $fac->getFileUrl('public', self::ROOM, 0, 'a.png'), 'A folder off the public list got a direct address');
-        $this->assertSame('index.php?go=file&own=forum&name=forum&key=a.png&preview=1', $fac->getFileUrl('forum', 'forum', 0, 'a.png'));
-        $this->assertSame('index.php?go=file&own=comment&id=5&key=a.png', $fac->getFileUrl('comment', 'voting', 5, 'a.png'));
-        $this->assertSame('index.php?go=file&own=comment&name=voting&key=a.png&preview=1', $fac->getFileUrl('comment', 'voting', 0, 'a.png'));
+        $this->assertSame('/index.php?go=file&own=forum&name=forum&key=a.png&preview=1', $fac->getFileUrl('forum', 'forum', 0, 'a.png'));
+        $this->assertSame('/index.php?go=file&own=comment&id=5&key=a.png', $fac->getFileUrl('comment', 'voting', 5, 'a.png'));
+        $this->assertSame('/index.php?go=file&own=comment&name=voting&key=a.png&preview=1', $fac->getFileUrl('comment', 'voting', 0, 'a.png'));
         $this->assertSame('', $fac->getFileUrl('comment', '', 0, 'a.png'), 'A comment preview without its name got an address');
         $this->assertSame('', $fac->getFileUrl('forum', '', 0, 'a.png'), 'A forum preview without its name got an address');
         $this->assertSame('', $fac->getFileUrl('node', '', 0, 'a.png'), 'A Node preview without its type got an address');

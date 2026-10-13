@@ -617,21 +617,21 @@ namespace Tests\Unit {
                 $old = self::$p->filterDoc($src, true, $mod);
                 $new = self::$p->filterDoc($src, true, $mod, 0, '', ['node', 7]);
                 $this->assertStringNotContainsString('uploads/', $old, 'The old call spelled a direct address of a private folder, which only the route of its owner may build');
-                $base = 'index.php?go=file&amp;own=node&amp;id=7&amp;key=';
+                $base = '/index.php?go=file&amp;own=node&amp;id=7&amp;key=';
                 $this->assertStringContainsString('href="'.$base.'my%20file.pdf"', $new);
                 $this->assertStringContainsString('href="'.$base.'a-abcdefghij-2.png"><img src="'.$base.'a-abcdefghij-2.png&amp;thumb=1"', $new);
                 $this->assertStringNotContainsString('uploads/', $new, 'A stored material links the closed directory');
                 $this->assertSame($new, self::$p->filterDoc($src, true, $mod, 0, '', ['node', 7]));
                 $draft = self::$p->filterDoc($src, true, $mod, 0, '', ['node', 0]);
-                $this->assertStringContainsString('href="index.php?go=file&amp;own=node&amp;name='.$mod.'&amp;key=my%20file.pdf&amp;preview=1"', $draft,
+                $this->assertStringContainsString('href="/index.php?go=file&amp;own=node&amp;name='.$mod.'&amp;key=my%20file.pdf&amp;preview=1"', $draft,
                     'An unsaved text did not take the preview of its owner');
                 $draft = self::$p->filterDoc('[attach=my file.pdf align=left title=Doc]', true, 'forum', 0, '', ['forum', 0]);
-                $this->assertStringContainsString('href="index.php?go=file&amp;own=forum&amp;name=forum&amp;key=my%20file.pdf&amp;preview=1"', $draft,
+                $this->assertStringContainsString('href="/index.php?go=file&amp;own=forum&amp;name=forum&amp;key=my%20file.pdf&amp;preview=1"', $draft,
                     'An unsaved post did not take the preview of the forum');
                 $this->assertSame($old, self::$p->filterDoc($src, true, $mod, 0, '', ['node', -3]), 'A negative id is no target');
                 $this->assertSame($old, self::$p->filterDoc($src, true, $mod, 0, '', ['node', '7']), 'An id that is no number is no target');
                 $shut = self::$p->filterDoc('[attach=my file.pdf align=left title=Doc]', true, 'forum', 0, '', ['forum', 5]);
-                $this->assertStringContainsString('href="index.php?go=file&amp;own=forum&amp;id=5&amp;key=my%20file.pdf"', $shut, 'A closed owner did not link its file route');
+                $this->assertStringContainsString('href="/index.php?go=file&amp;own=forum&amp;id=5&amp;key=my%20file.pdf"', $shut, 'A closed owner did not link its file route');
             } finally {
                 $GLOBALS['conf']['filetype'] = $keep;
                 if ($keep === null) unset($GLOBALS['conf']['filetype']);
@@ -691,7 +691,7 @@ namespace Tests\Unit {
                 file_put_contents($dir.'/f-abcdefghij-1.png', $png);
                 $src = '[attach=f-abcdefghij-1.png align=left title=F size=full] [attach=d.pdf align=left title=D size=full]';
                 $this->assertSame(['f-abcdefghij-1.png', 'd.pdf'], self::$p->getAttachList($src), 'A name of the full-size form is not listed, so the route would refuse it');
-                $base = 'index.php?go=file&amp;own=node&amp;id=7&amp;key=';
+                $base = '/index.php?go=file&amp;own=node&amp;id=7&amp;key=';
                 $html = self::$p->filterDoc($src, true, $mod, 0, '', ['node', 7]);
                 $this->assertStringContainsString('<a href="'.$base.'f-abcdefghij-1.png"><img src="'.$base.'f-abcdefghij-1.png" width="1" height="1"></a>', $html);
                 $this->assertStringNotContainsString('thumb=1', $html, 'The full-size form showed a thumbnail');
@@ -699,7 +699,7 @@ namespace Tests\Unit {
                 $this->assertDirectoryDoesNotExist($dir.'/thumb', 'The full-size form made a thumb nobody shows');
                 unset($GLOBALS['conf']['filetype']['full']);
                 $html = self::$p->filterDoc($src, true, $mod, 0, '', ['node', 8]);
-                $want = '<img src="index.php?go=file&amp;own=node&amp;id=8&amp;key=f-abcdefghij-1.png" alt="F">';
+                $want = '<img src="/index.php?go=file&amp;own=node&amp;id=8&amp;key=f-abcdefghij-1.png" alt="F">';
                 $this->assertStringContainsString($want, $html, 'Without the template full the image did not fall back to its thumbnail template');
                 $html = self::$p->filterContent($src, true, $mod, 0, '', ['node', 8]);
                 $this->assertStringContainsString($want, $html, 'The image repair of a rendered page cut the query off the route of the attachment');

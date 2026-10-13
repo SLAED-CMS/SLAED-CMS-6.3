@@ -25,8 +25,8 @@ final class FileAccess {
         if ($own === 'public') return getUploadUrl($this->getFileFolder($own, $mod, $id).'/'.($thumb ? 'thumb/' : '').$key);
         if (!in_array($own, self::OWNERS, true) || !(($this->owns[$own]['grant'] ?? null) instanceof Closure)) return '';
         if ($id < 1 && (!in_array($own, self::PREVIEW, true) || $mod === '')) return '';
-        if ($id < 1) return 'index.php?go=file&own='.$own.'&name='.$mod.'&key='.rawurlencode($key).'&preview=1'.$tail;
-        return 'index.php?go=file&own='.$own.'&id='.$id.'&key='.rawurlencode($key).$tail;
+        if ($id < 1) return HOME_PATH.'index.php?go=file&own='.$own.'&name='.$mod.'&key='.rawurlencode($key).'&preview=1'.$tail;
+        return HOME_PATH.'index.php?go=file&own='.$own.'&id='.$id.'&key='.rawurlencode($key).$tail;
     }
 
     # The path one reader may receive, or an empty string for every refusal: a bare name of a supported type that the adapter grants, whatever its form, in its folder

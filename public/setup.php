@@ -433,7 +433,7 @@ function setSetupTables(array &$state, array $item): array {
     return ['task' => $task, 'fail' => ''];
 }
 
-# The last part, run with the core: the first administrator, a site account of the same name when asked, the Node profiles and the markers of the self-check
+# The last part, run with the core: the first administrator, a site account of the same name when asked, the Node profiles, the paths of the seed and the self-check markers
 function addSetupAdmin(array &$state, string $hash): array {
     global $db, $conf;
     $adm = $state['admin'];
@@ -454,6 +454,11 @@ function addSetupAdmin(array &$state, string $hash): array {
         if (!$made) return ['task' => '', 'fail' => _ERROR.': '.PREFIX_DB.'_users — '.$text];
     }
     $state['note'] = addNodeProfiles($aid);
+    try {
+        addRouteBacklog();
+    } catch (Throwable $err) {
+        return ['task' => '', 'fail' => _ERROR.': '.PREFIX_DB.'_routes — '.$err->getMessage()];
+    }
     foreach (getPrivateRoots() as $dir) setPrivateMark($dir);
     setCookies('language', time() + intval($conf['user_c_t'] ?? 0), $state['lang']);
     return ['task' => _ADMIN.' '.$adm['name'].' — '.(($adm['user'] === '1') ? _SETUP_ADM_USER : _SETUP_ADM_MADE), 'fail' => ''];
@@ -639,6 +644,8 @@ function setSetupPage(int $stop, array $view): void {
         'adlogo' => $logo, 'adalt' => 'SLAED CMS', 'adtitle' => 'SLAED CMS', 'license' => $link.' © 2005-'.date('Y').' Eduard Laas. Released under MIT License.']);
 }
 
+# The installer renders before the core and without a site address, so the root of its addresses is the folder it is served from
+define('HOME_PATH', rtrim(str_replace('\\', '/', dirname((string)($_SERVER['SCRIPT_NAME'] ?? '/'))), '/').'/');
 $conf = array_merge(require CONFIG_DIR.'/global.php', require CONFIG_DIR.'/security.php');
 date_default_timezone_set($conf['gtime']);
 ini_set('display_errors', $conf['security']['error'] > 0 ? '1' : '0');

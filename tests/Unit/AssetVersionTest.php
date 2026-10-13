@@ -59,8 +59,8 @@ class AssetVersionTest extends TestCase
     {
         unset($GLOBALS['conf']['derived']);
         $file = 'plugins/system/slaed.js';
-        $this->assertSame($file.'?v='.$this->getHash($file), \Template::getAssetUrl($file));
-        $this->assertSame('plugins/system/no-such-file.js', \Template::getAssetUrl('plugins/system/no-such-file.js'), 'A missing file is printed plain');
+        $this->assertSame('/'.$file.'?v='.$this->getHash($file), \Template::getAssetUrl($file), 'An address is printed from the root of the site');
+        $this->assertSame('/plugins/system/no-such-file.js', \Template::getAssetUrl('plugins/system/no-such-file.js'), 'A missing file is printed plain');
     }
 
     # With a map a request reads the version and never the disk, and dev_mode hashes per request so an edit shows at once
@@ -70,11 +70,11 @@ class AssetVersionTest extends TestCase
         $file = 'plugins/system/slaed.js';
         $GLOBALS['conf']['derived']['version'] = [$file => 'abcdef0123', 'plugins/ghost.js' => '0123abcdef'];
         $GLOBALS['conf']['dev_mode'] = '0';
-        $this->assertSame($file.'?v=abcdef0123', \Template::getAssetUrl($file), 'The map is read, the file is not hashed');
-        $this->assertSame('plugins/ghost.js?v=0123abcdef', \Template::getAssetUrl('plugins/ghost.js'), 'A request never looks at the disk');
-        $this->assertSame('plugins/system/global-func.js', \Template::getAssetUrl('plugins/system/global-func.js'), 'A file the map does not know stays plain');
+        $this->assertSame('/'.$file.'?v=abcdef0123', \Template::getAssetUrl($file), 'The map is read, the file is not hashed');
+        $this->assertSame('/plugins/ghost.js?v=0123abcdef', \Template::getAssetUrl('plugins/ghost.js'), 'A request never looks at the disk');
+        $this->assertSame('/plugins/system/global-func.js', \Template::getAssetUrl('plugins/system/global-func.js'), 'A file the map does not know stays plain');
         $GLOBALS['conf']['dev_mode'] = '1';
-        $this->assertSame($file.'?v='.$this->getHash($file), \Template::getAssetUrl($file), 'dev_mode shows an edit at once');
+        $this->assertSame('/'.$file.'?v='.$this->getHash($file), \Template::getAssetUrl($file), 'dev_mode shows an edit at once');
     }
 
     # A file changed on disk gets a new address, per request and in a rebuilt map alike
@@ -91,7 +91,7 @@ class AssetVersionTest extends TestCase
             file_put_contents($full, 'var one = 2;');
             $this->assertNotSame($old, \Template::getAssetUrl($file));
             $this->assertNotSame($map[$file] ?? '', \Template::getAssetVersions()[$file] ?? '', 'A rebuilt map carries the new version');
-            $this->assertSame($file.'?v='.\Template::getAssetVersions()[$file], \Template::getAssetUrl($file));
+            $this->assertSame('/'.$file.'?v='.\Template::getAssetVersions()[$file], \Template::getAssetUrl($file));
         } finally {
             if (is_file($full)) unlink($full);
         }
@@ -137,8 +137,8 @@ class AssetVersionTest extends TestCase
     public function aPagePrintsItsAssetsFromTheMapWithoutStatingAFile(): void
     {
         $probe = $this->getProbe();
-        $this->assertSame(['templates/lite/assets/css/ghost-probe.css?v=abcdef0123'], $this->getAddresses($probe['ghost']['css']));
-        $this->assertSame(['plugins/system/ghost-probe.js?v=0123abcdef'], $this->getAddresses($probe['ghost']['js']));
+        $this->assertSame(['/templates/lite/assets/css/ghost-probe.css?v=abcdef0123'], $this->getAddresses($probe['ghost']['css']));
+        $this->assertSame(['/plugins/system/ghost-probe.js?v=0123abcdef'], $this->getAddresses($probe['ghost']['js']));
     }
 
     # The engine of a page and the engine an htmx fragment names are one address, which the client loader compares, so it is fetched once
@@ -178,7 +178,7 @@ class AssetVersionTest extends TestCase
         foreach (['lite', 'admin'] as $theme) {
             $this->assertSame(0, preg_match('#<script(?![^>]*\sdefer\b)[^>]*\ssrc=#', $probe[$theme]['js']), 'A '.$theme.' head script is not deferred');
             $this->assertStringNotContainsString('async', $probe[$theme]['js']);
-            $list = array_map(static fn(string $v): string => explode('?v=', $v)[0], $this->getAddresses($probe[$theme]['js']));
+            $list = array_map(static fn(string $v): string => substr(explode('?v=', $v)[0], 1), $this->getAddresses($probe[$theme]['js']));
             $this->assertSame($want, array_slice($list, 0, count($want)), 'The '.$theme.' head changed the shipped order');
             $this->assertSame($list, array_values(array_unique($list)), 'The '.$theme.' head prints a script twice');
         }

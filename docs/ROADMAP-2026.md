@@ -156,13 +156,16 @@ into the plan, then do whatever work the step names.
   reserved words. `cur` is a column generated from `state`; the stand got the empty table. (2026-10-13)
 - [x] 69. URL batch 2 — the writers: materials, categories, topics, users, polls inside their transactions; the field
   "Адрес"; the category cache carries the path. (2026-10-13)
-- [ ] 70. URL batch 3 — migration: `update.php` fills the registry, `setup.php` the seed; rehearsal on the clean 6.2.
-- [ ] 71. URL batch 4 — parsing: the cut before the database, the resolution after it, `getVar()` on the arrays; a
-  path opens its page while the links stay `index.php?…`.
+- [x] 70. URL batch 3 — migration: `update.php` fills the registry, `setup.php` the seed; rehearsal on the clean 6.2.
+  (2026-10-13)
+- [x] 71. URL batch 4 — parsing: the cut before the database, the resolution after it, `getVar()` on the arrays; a
+  path opens its page while the links stay `index.php?…`. (2026-10-14)
 - [ ] 72. URL batch 5 — building: `getSeoUrl()` on passed paths, the join in the lists, `page` for `num`.
-- [ ] 73. URL batch 6 — one redirect: after the access check, every reason in one 301, host and scheme included; 410,
+- [ ] 73. URL batch 7 — the links: literals of PHP, templates, scripts, mails and language constants, every one from
+  the root of the site, the endpoints included. Put before the redirect by the owner on 2026-10-14: once batch 6 sends
+  the query addresses to paths, a page opened at a path must carry no relative address.
+- [ ] 74. URL batch 6 — one redirect: after the access check, every reason in one 301, host and scheme included; 410,
   the legacy map on registry paths, sitemap, feed, `robots.txt`.
-- [ ] 74. URL batch 7 — the links: literals of PHP, templates, mails and language constants.
 - [ ] 75. URL batch 8 — reference; deletes `docs/10-URL-2026.md`.
 - [ ] 76. DIAL — *decision*: the options dial `sl-dial` of the panel lists is three Tab stops a row while closed
   (found by the UI/UX audit of the groups stand, 2026-10-09); write a plan, then make its items reachable only once it

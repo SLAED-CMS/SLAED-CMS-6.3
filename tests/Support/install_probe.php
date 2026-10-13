@@ -342,7 +342,8 @@ function getInstallSetup(PDO $pdo, string $base): array {
     $out['mark'] = array_key_exists('node', getInstallConf('update')['update'] ?? []);
     $out['starter'] = $pdo->query('SELECT t.name, n.cid, n.uid, n.aname, n.title, n.status, n.home, n.comon FROM '.IPREF.'_nodes AS n'
         .' INNER JOIN '.IPREF.'_node_types AS t ON t.id = n.tid')->fetchAll(PDO::FETCH_ASSOC);
-    $adm = $pdo->query('SELECT a.name, a.email, a.lang, a.url, u.name AS uname, a.password = u.password AS same FROM '.IPREF.'_admins AS a'
+    $out['routes'] = $pdo->query('SELECT kind, path, state FROM '.IPREF.'_routes ORDER BY id')->fetchAll(PDO::FETCH_NUM);
+    $adm =$pdo->query('SELECT a.name, a.email, a.lang, a.url, u.name AS uname, a.password = u.password AS same FROM '.IPREF.'_admins AS a'
         .' LEFT JOIN '.IPREF.'_users AS u ON u.name = a.name')->fetchAll(PDO::FETCH_ASSOC);
     $out['account'] = array_map(fn(array $v): array => [$v['name'], $v['email'], $v['lang'], $v['url'], $v['uname'], (int)$v['same']], $adm);
     $out['account'][] = password_verify(IPASS, (string)$pdo->query('SELECT password FROM '.IPREF.'_admins')->fetchColumn());
@@ -886,7 +887,8 @@ function setInstallSources(PDO $pdo, string $snap): array {
 # Two guests vote in one poll with the statement of core/system.php, and the first super administrator signs in from the probe address as the session check demands
 # The panel, the content profile and the public side of Node are walked
 # Then a material is created and deleted and the update runs again, which must not bring the counter of _nodes back to the one of the deleted material
-# Last the main administrator runs the second stage, and the materials the old module tables became are read with their types
+# Last three news, a help request and a forum section are added to the 6.2 tables and the main administrator runs the second stage twice
+# The materials the old module tables became are read with their types, and the registry with the title of each entity
 function getInstallUpgrade(PDO $pdo, string $base, string $dump, string $rev, string $snap): array {
     global $iguard, $iport, $isite;
     $out = ['config' => setInstallOld($isite, $rev, $base), 'dump' => addInstallDump($base, $dump), 'guard' => 'http://127.0.0.1:'.$iguard];
@@ -1017,11 +1019,26 @@ function getInstallUpgrade(PDO $pdo, string $base, string $dump, string $rev, st
     $was = $next();
     $page = getInstallAfter($pdo, getInstallReply([], 'POST', 'update.php', $again, $head));
     $out['last'] = ['id' => $last, 'old' => $page['ids']['old'], 'before' => $was, 'after' => $next(), 'failed' => $page['failed']];
+    $add = 'INSERT INTO '.IPREF.'_news (cid, uid, name, title, time, intro, body, field, assoc, ip, ihome, status)'
+        .' VALUES (1, 1, \'alpha\', :title, :time, :intro, \'\', \'\', \'\', \'\', 0, :status)';
+    foreach ([['General', '2022-05-01 10:00:00', 1], ['Waiting', '2022-06-01 10:00:00', 0], ['Later', '2099-01-01 10:00:00', 1]] as [$title, $time, $stat]) {
+        $pdo->prepare($add)->execute(['title' => $title, 'time' => $time, 'intro' => 'Intro of '.$title, 'status' => $stat]);
+    }
+    $pdo->exec('INSERT INTO '.IPREF.'_help (pid, cid, uid, aid, title, time, body, field, ip, status)'
+        ." VALUES (0, 0, 2, 0, 'A request', '2023-01-01 10:00:00', 'Help', '', '', 0)");
+    $pdo->exec('INSERT INTO '.IPREF."_categories (modul, title, intro) VALUES ('forum', 'A topic', '')");
     $page = getInstallReply($who, 'GET', 'update.php');
     $tok = getInstallToken($page['body'], 'run');
     $done = getInstallReply($who, 'POST', 'update.php', ['op' => 'run', 'token' => $tok]);
     $sql = 'SELECT t.name, n.title, n.intro, n.body FROM '.IPREF.'_nodes n JOIN '.IPREF.'_node_types t ON t.id = n.tid ORDER BY t.name, n.title';
     $out['migrate'] = [$page['code'], $tok !== '', $done['code'], $pdo->query($sql)->fetchAll(PDO::FETCH_NUM)];
+    $sql = 'SELECT r.kind, r.path, r.state, COALESCE(n.title, c.title, f.title, u.name, v.title, t.name) FROM '.IPREF.'_routes AS r'
+        .' LEFT JOIN '.IPREF.'_nodes AS n ON r.kind = \'node\' AND n.id = r.oid LEFT JOIN '.IPREF.'_categories AS c ON r.kind = \'cat\' AND c.id = r.oid'
+        .' LEFT JOIN '.IPREF.'_forum AS f ON r.kind = \'topic\' AND f.id = r.oid LEFT JOIN '.IPREF.'_users AS u ON r.kind = \'user\' AND u.id = r.oid'
+        .' LEFT JOIN '.IPREF.'_voting AS v ON r.kind = \'poll\' AND v.id = r.oid LEFT JOIN '.IPREF.'_node_types AS t ON r.kind = \'type\' AND t.id = r.oid ORDER BY r.id';
+    $rows = $pdo->query($sql)->fetchAll(PDO::FETCH_NUM);
+    $again = getInstallReply($who, 'POST', 'update.php', ['op' => 'run', 'token' => $tok]);
+    $out['routes'] = [$rows, $again['code'], $pdo->query($sql)->fetchAll(PDO::FETCH_NUM) === $rows];
     return $out;
 }
 

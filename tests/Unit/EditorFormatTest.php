@@ -201,15 +201,15 @@ final class EditorFormatTest extends TestCase
         $this->assertInstanceOf(ContentDriver::class, new EditorCodemirror());
         $run = fn(array $data) => $this->getFragData($this->getDriverFrags(fn() => (new EditorCodemirror())->getWidget('1', 'text', 'a', 'simple', $data)), 'editor-frame');
         $data = $run(['label' => 'Text', 'arialabel' => 'Text', 'rows' => 7]);
-        $this->assertStringStartsWith('plugins/editors/codemirror/assets/core.js', $data['core_url'] ?? '');
-        $this->assertStringStartsWith('plugins/editors/codemirror/assets/lang-markdown.js', $data['grammar_url'] ?? '', 'A text without a format is not Markdown');
+        $this->assertStringStartsWith('/plugins/editors/codemirror/assets/core.js', $data['core_url'] ?? '');
+        $this->assertStringStartsWith('/plugins/editors/codemirror/assets/lang-markdown.js', $data['grammar_url'] ?? '', 'A text without a format is not Markdown');
         $this->assertSame('Markdown', $data['lang_text'] ?? null);
         $this->assertSame(7, $data['rows_num'] ?? null, 'The rows of the field are lost');
         $this->assertFalse($data['is_code'] ?? null, 'A text is marked as code and loses the spell check');
         $this->assertSame('Text', $data['aria_label'] ?? null);
         $this->assertSame(10, $run([])['rows_num'] ?? null);
         $this->assertSame('', $run(['format' => 'plain'])['grammar_url'] ?? null, 'Plain text asks for a grammar');
-        $this->assertStringStartsWith('plugins/editors/codemirror/assets/lang-html.js', $run(['format' => 'html'])['grammar_url'] ?? '');
+        $this->assertStringStartsWith('/plugins/editors/codemirror/assets/lang-html.js', $run(['format' => 'html'])['grammar_url'] ?? '');
         $code = $this->getFragData($this->getDriverFrags(fn() => (new EditorCodemirror())->getWidget('c', 'x', '', 'php', 'full', 'File')), 'editor-frame');
         $this->assertTrue($code['is_code'] ?? null, 'Code is not marked as code');
         $run = (string)file_get_contents(PUBLIC_DIR.'/plugins/system/editor.js');
@@ -233,8 +233,8 @@ final class EditorFormatTest extends TestCase
     public function codeEditorLoadsThroughTheRuntime(): void
     {
         $data = $this->getFragData($this->getDriverFrags(fn() => (new EditorCodemirror())->getWidget('code', 'text', '', 'sql', 'full', 'File')), 'editor-frame');
-        $this->assertStringStartsWith('plugins/editors/codemirror/assets/core.js', $data['core_url'] ?? '');
-        $this->assertStringStartsWith('plugins/editors/codemirror/assets/lang-sql.js', $data['grammar_url'] ?? '');
+        $this->assertStringStartsWith('/plugins/editors/codemirror/assets/core.js', $data['core_url'] ?? '');
+        $this->assertStringStartsWith('/plugins/editors/codemirror/assets/lang-sql.js', $data['grammar_url'] ?? '');
         $data = $this->getFragData($this->getDriverFrags(fn() => (new EditorCodemirror())->getWidget('code', 'text', '', 'text', 'full', 'File')), 'editor-frame');
         $this->assertSame('', $data['grammar_url'] ?? null, 'Plain text asks for a grammar');
         $dir = PUBLIC_DIR.'/plugins/editors/codemirror/';
@@ -276,8 +276,8 @@ final class EditorFormatTest extends TestCase
         $this->assertCount(1, array_filter($frags, fn($one) => $one[0] === 'emoji-panel'), 'The emoji panel is printed more than once or not at all');
         $part = $this->getFragData($frags, 'emoji-panel');
         $src = json_decode((string)($part['src_json'] ?? ''), true);
-        $this->assertStringStartsWith('plugins/system/emoji.js', $src[0] ?? '', 'The panel names no script to load');
-        $this->assertStringStartsWith('plugins/system/emoji/en.js', $src[1] ?? '', 'The panel names no words of the locale');
+        $this->assertStringStartsWith('/plugins/system/emoji.js', $src[0] ?? '', 'The panel names no script to load');
+        $this->assertStringStartsWith('/plugins/system/emoji/en.js', $src[1] ?? '', 'The panel names no words of the locale');
         $this->assertSame('word _EEMOJISMILE', json_decode((string)($part['words_json'] ?? ''), true)['smileys'] ?? null, 'A category of the panel speaks English');
         $frame = $this->getFragData($frags, 'editor-frame');
         $this->assertSame('plain', $frame['lang_key'] ?? null, 'The frame does not tell the runtime the format it writes a picture in');

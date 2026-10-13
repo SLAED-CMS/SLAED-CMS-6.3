@@ -23,6 +23,7 @@
 # The argument files runs the files of the forum on the file route, the writers of a post that bind a name and the unused filter of the upload browser
 # The argument journal runs the journals of the panel, the logins and OAuth: a passed token writes one line, a refused one none, and a login is written once
 # The argument address runs the writers of the registry of addresses: every path given, moved and marked gone inside the write of its entity
+# The argument parse runs the resolution of a path: the pages of the address table, the grammar, the cut and the keys of a path over those of the query
 if (PHP_SAPI !== 'cli') {
     http_response_code(404);
     exit;
@@ -2272,7 +2273,7 @@ function getRouteHeadBar(PDO $pdo, string $work): array {
     $get('index.php?name=news');
     $out['drop'] = [$sent['code'], $gone, is_file($file)];
     $out['words'] = [getRouteHeadRead($guest['body'])['count'], getRouteHeadRead($new['body'])['count']];
-    $out['form'] = preg_match('#href="index\.php\?name=news&amp;op=add"[^>]*hx-boost="false"#', $guest['body']);
+    $out['form'] = preg_match('#href="/index\.php\?name=news&amp;op=add"[^>]*hx-boost="false"#', $guest['body']);
     $heads = fn(string $html): array => preg_match_all('#<p class="sl-date-head">(.*?)</p>#s', $html, $hit)
         ? array_map(fn($v) => preg_replace('/\s+/u', ' ', trim(strip_tags($v))), $hit[1]) : [];
     $out['months'] = [$heads($guest['body']), $heads($sort['body'])];
@@ -3153,6 +3154,58 @@ function getRouteWriters(PDO $pdo, string $work): array {
     return $out;
 }
 
+# The registry of the parse run, written by hand: every type, a material with a current and a former path, a category, a section, a topic, a profile and a poll
+# Gone are one material of news and the deleted type recipes with a material of its own; the forum of the address run holds the section and the topic
+function addRouteParseConf(PDO $pdo, string $work): void {
+    $pre = RPREF.'_';
+    addRouteAddressConf($pdo, $work);
+    $pdo->exec('INSERT INTO '.$pre.'forum (id, pid, cid, uid, name, title, time, body, field, luid, lname, ltime, status) VALUES'
+        .' (601, 0, 10, 2, \'anna\', \'Topic one\', NOW(), \'Topic one body\', \'\', 2, \'anna\', NOW(), 3)');
+    $pdo->exec('INSERT INTO '.$pre.'voting (id, modul, title, body, answer, time, enddate, lang, typ, status) VALUES'
+        .' (7, \'\', \'Poll one\', \'Yes|No\', \'0|0\', NOW() - INTERVAL 1 DAY, NOW() + INTERVAL 30 DAY, \'\', 1, 1)');
+    $rows = [['news', 'type', 1, 1], ['docs', 'type', 2, 1], ['off', 'type', 3, 1], ['help', 'type', 4, 1], ['recipes', 'type', 9, 2], ['news/old-alpha', 'node', 101, 0],
+        ['news/alpha', 'node', 101, 1], ['news/beta', 'node', 102, 1], ['news/gone-one', 'node', 999, 2], ['recipes/old-dish', 'node', 998, 2], ['news/open', 'cat', 1, 1],
+        ['forum/talk', 'cat', 10, 1], ['forum/topic-one', 'topic', 601, 1], ['users/anna', 'user', 2, 1], ['voting/poll-one', 'poll', 7, 1]];
+    $st = $pdo->prepare('INSERT INTO '.$pre.'routes (path, kind, oid, state) VALUES (?, ?, ?, ?)');
+    foreach ($rows as $row) $st->execute($row);
+}
+
+# The resolution of a path over real requests: the status, the title and the canonical address, which the core builds from getVar('get', ...) of the route keys
+# The pages of the decided address table, every row of the grammar, the cut of a path no address can have, and the keys of a path over the same keys of the query
+function getRouteParse(): array {
+    global $rport;
+    $site = 'http://127.0.0.1:'.$rport.'/';
+    $ask = function (string $path, string $who = '') use ($site): array {
+        $one = getRouteReply($who, 'GET', $path);
+        $title = preg_match('#<title>([^<]*)</title>#', $one['body'], $hit) ? html_entity_decode($hit[1]) : '';
+        $canon = preg_match('#<link\s+rel="canonical"[^>]*href="([^"]*)"#s', $one['body'], $hit) ? html_entity_decode($hit[1]) : '';
+        return [$one['code'], implode(' - ', array_slice(explode(' - ', $title), 0, -1)) ?: $title, str_replace($site, '', $canon)];
+    };
+    $out = ['pages' => [], 'grammar' => [], 'cut' => [], 'wins' => []];
+    foreach (['news', 'news/alpha', 'news/open', 'news?let=B', 'news?order=title', 'forum', 'forum/topic-one', 'forum/talk', 'users', 'voting/poll-one', 'news/view/101',
+        'account/login', 'news/old-alpha'] as $path) {
+        $out['pages'][$path] = $ask($path);
+    }
+    $out['pages']['news/add'] = $ask('news/add', 'anna');
+    $out['pages']['users/anna'] = $ask('users/anna', 'boris');
+    $out['pages']['account/privat'] = $ask('account/privat', 'anna');
+    foreach (['news/gone-one', 'news/nosuch', 'recipes', 'recipes/old-dish', 'nosuch', 'nosuch/alpha', 'news/view/abc', 'news/view/101/x',
+        'news/alpha/x', 'search/add', 'node'] as $path) {
+        $out['grammar'][$path] = $ask($path)[0];
+    }
+    foreach (['news.html', 'news-view-101.html', 'a/b/c/d/e/f', 'news/a/b/c/d', 'News/Alpha', 'news/alpha/', 'index.php/news/alpha', 'news//alpha',
+        'news%2Falpha'] as $path) {
+        $out['cut'][$path] = array_slice($ask($path), 0, 2);
+    }
+    $out['wins'] = [$ask('news/view/101?id=102&name=docs&op=add'), $ask('news/alpha?id=102'), $ask('news?name=docs'), $ask('index.php?name=news&op=view&id=102')];
+    $page = getRouteReply('', 'GET', 'news/alpha')['body'];
+    preg_match_all('#(?:href|src)="([^"]*\.(?:css|js)(?:\?[^"]*)?)"#', $page, $hit);
+    $kits = array_values(array_unique($hit[1]));
+    $out['root'] = ['count' => count($kits) > 0, 'relative' => array_values(array_filter($kits, fn(string $v): bool => !str_starts_with($v, '/'))),
+        'missing' => array_values(array_filter($kits, fn(string $v): bool => getRouteReply('', 'GET', html_entity_decode($v))['code'] !== 200))];
+    return $out;
+}
+
 # The child favhold of the intact run holds the account of anna with one more favorite for two seconds, as a parallel request at the limit does before its commit
 if (($argv[2] ?? '') === 'favhold') {
     $hpdo = getRoutePdo((string)($argv[3] ?? ''));
@@ -3197,6 +3250,7 @@ try {
     if (($argv[2] ?? '') === 'head') addRouteHeadTypes($rpdo, $rwork);
     if (($argv[2] ?? '') === 'journal') addRouteJournalConf($rpdo, $rwork);
     if (($argv[2] ?? '') === 'address') addRouteAddressConf($rpdo, $rwork);
+    if (($argv[2] ?? '') === 'parse') addRouteParseConf($rpdo, $rwork);
     $rproc = addRouteServer($rwork, $rport);
     if (($argv[2] ?? '') === 'serve') {
         fwrite(STDERR, 'serving on '.$rport.' with '.$rbase."\n");
@@ -3229,6 +3283,8 @@ try {
         $report['runs']['journal'] = getRouteJournal($rpdo, $rwork);
     } elseif (($argv[2] ?? '') === 'address') {
         $report['runs']['address'] = getRouteWriters($rpdo, $rwork);
+    } elseif (($argv[2] ?? '') === 'parse') {
+        $report['runs']['parse'] = getRouteParse();
     } elseif (($argv[2] ?? '') === 'time') {
         $report['runs']['time'] = getRouteTime($rpdo, $rwork);
     } elseif (($argv[2] ?? '') === 'null') {

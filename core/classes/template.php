@@ -634,7 +634,7 @@ class Template {
         $map = $conf['derived']['version'] ?? null;
         if (empty($conf['dev_mode']) && is_array($map)) $ver = $map[$file] ?? '';
         else $ver = is_file(PUBLIC_DIR.'/'.$file) ? substr(sha1_file(PUBLIC_DIR.'/'.$file), 0, 10) : '';
-        return ($ver !== '') ? $file.'?v='.$ver : $file;
+        return HOME_PATH.(($ver !== '') ? $file.'?v='.$ver : $file);
     }
 
     # The derived map of every stylesheet and script below templates/ and plugins/ to the first ten hex characters of its SHA-1

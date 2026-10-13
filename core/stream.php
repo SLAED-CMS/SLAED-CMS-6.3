@@ -15,11 +15,11 @@ function getUploadPublic(): array {
     return ['all', 'avatars', 'presentation'];
 }
 
-# Return the address uploads/<path> of a path relative to UPLOADS_DIR when its first folder is on the public list of the light path, and an empty string for any other
+# The address uploads/<path> from the root of the site of a path below UPLOADS_DIR whose first folder is on the public list of the light path, else an empty string
 # A file of a private owner has no address of its own: only the route of that owner builds one, after its rights check, so no caller spells uploads/ into an address
 function getUploadUrl(string $path): string {
     $path = ltrim(str_replace('\\', '/', $path), '/');
-    return in_array(explode('/', $path)[0], getUploadPublic(), true) ? 'uploads/'.$path : '';
+    return in_array(explode('/', $path)[0], getUploadPublic(), true) ? HOME_PATH.'uploads/'.$path : '';
 }
 
 # The path below uploads/ one request asks for, or null for a request of anything else; the prefix is the folder of the entry, and in the root-on-the-project mode its parent

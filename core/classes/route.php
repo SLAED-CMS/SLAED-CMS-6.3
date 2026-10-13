@@ -115,8 +115,10 @@ final class Route {
     }
 
     # Whether a name under a prefix is an operation of its module or type, which the parser reads before the registry, so a page of that name would never open
+    # A module without a switch has no operation of its own; any other prefix is a Node type
     public function isRouteReserved(string $prefix, string $name): bool {
-        return in_array($name, self::COMMON, true) || in_array($name, self::OPS[$prefix] ?? self::OPS['node'], true);
+        $ops = self::OPS[$prefix] ?? ((preg_match(self::NAME, $prefix) && is_dir(BASE_DIR.'/modules/'.$prefix)) ? [] : self::OPS['node']);
+        return in_array($name, self::COMMON, true) || in_array($name, $ops, true);
     }
 
     # Whether a name is free for a new Node type: its grammar, no module, no entry of public/ and no path a type ever had, a deleted type included

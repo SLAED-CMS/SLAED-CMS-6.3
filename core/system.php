@@ -119,6 +119,9 @@ require_once BASE_DIR.'/core/classes/logger.php';
 # Load the generated runtime config cache
 $conf = getConfig();
 
+# The path of the site below its host, from homeurl, with both slashes: every address the core builds starts here, so a page opened at any depth resolves it
+if (!defined('HOME_PATH')) define('HOME_PATH', rtrim('/'.trim((string)parse_url((string)($conf['homeurl'] ?? ''), PHP_URL_PATH), '/'), '/').'/');
+
 # Outgoing mail service; the class loads here and is instantiated inside core/security.php, where the database connection is created
 require_once BASE_DIR.'/core/classes/mail.php';
 
@@ -1427,13 +1430,14 @@ function filterCanonicalParams(): array {
     return $vars;
 }
 
-# Build one public site URL from normalized route parameters
-function getPublicUrl(array $vars = []): string {
+# The absolute address of a page from its route keys, or of an address of the site given from its root or relative to it; an absolute one is answered as it is
+function getPublicUrl(array|string $vars = []): string {
     global $conf;
     $base = rtrim((string)($conf['homeurl'] ?? ''), '/');
     if ($vars === []) return $base.'/';
-    $path = ltrim(getSeoUrl($vars), '/');
-    return $base.'/'.$path;
+    if (is_string($vars) && preg_match('#^([a-z][a-z0-9+.-]*:|//)#i', $vars)) return $vars;
+    $path = is_string($vars) ? $vars : getSeoUrl($vars);
+    return $base.'/'.(str_starts_with($path, HOME_PATH) ? substr($path, strlen(HOME_PATH)) : ltrim($path, '/'));
 }
 
 # Resolve canonical URL and robots defaults for the current frontend request
@@ -1458,10 +1462,7 @@ function getSeoRoute(array $seo = []): array {
     }
     if (stripos($robot, 'noindex') !== false) $iscanon = false;
     if ($canon !== '') {
-        if (!preg_match('#^https?://#i', $canon)) {
-            $base = rtrim((string)($GLOBALS['conf']['homeurl'] ?? ''), '/');
-            $canon = $base.'/'.ltrim($canon, '/');
-        }
+        $canon = getPublicUrl($canon);
     } elseif ($iscanon) {
         $canon = getPublicUrl($vars);
     }
@@ -2141,6 +2142,7 @@ function getFlashHtml(): string {
 }
 
 # Safe redirect with optional referer fallback; it also gives an open action of the panel its result, a warning being a refusal
+# A relative target is taken from the root of the site, since a browser would resolve it against the path of the page that redirects
 function setRedirect(string $url, bool $refer = false, int $code = 302, string $text = '', bool $warn = false): never {
     setAdminLog(['result' => $warn ? 'refused' : 'done']);
     if (!in_array($code, [301, 302, 303, 307, 308], true)) $code = 302;
@@ -2163,7 +2165,7 @@ function setRedirect(string $url, bool $refer = false, int $code = 302, string $
             }
         }
     }
-    if ($target === '') $target = '/';
+    if (!preg_match('#^([a-z][a-z0-9+.-]*:|/)#i', $target)) $target = HOME_PATH.$target;
     header('Location: '.$target, true, $code);
     exit;
 }
@@ -3468,20 +3470,21 @@ function getImgText(string $text, string $type = '', bool $check = true, string 
         $img = '';
     }
     if ($img !== '' && stripos($img, 'data:') === 0) $img = '';
-    $rel = ltrim(str_replace('\\', '/', $img), '/');
+    $rel = str_replace('\\', '/', $img);
+    $rel = str_starts_with($rel, HOME_PATH) ? substr($rel, strlen(HOME_PATH)) : ltrim($rel, '/');
     $path = empty($img) ? '' : (str_starts_with($rel, 'uploads/') ? UPLOADS_DIR.substr($rel, 7) : PUBLIC_DIR.'/'.$rel);
     $img = empty($img) ? false : ($check ? (file_exists($path) ? $img : false) : $img);
     return $img;
 }
 
-# The relative query address of a page from its route keys in the order passed, the title keys left out
+# The query address of a page from the root of the site, its route keys in the order passed, the title keys left out
 function getSeoUrl(array $params): string {
     $query = [];
     foreach ($params as $key => $val) {
         if ($key === 'title' || $key === 'ctitle') continue;
         $query[] = $key.'='.$val;
     }
-    return 'index.php?'.implode('&', $query);
+    return HOME_PATH.'index.php?'.implode('&', $query);
 }
 
 # The name of an address from a stored, escaped title of any of the six locales in one Latin table, its locale being unknown; hyphens, cut to 80 at a hyphen
@@ -3502,6 +3505,49 @@ function filterSlug(string $text): string {
     if (strlen($text) <= 80) return $text;
     $cut = strrpos(substr($text, 0, 81), '-');
     return substr($text, 0, ($cut === false) ? 80 : $cut);
+}
+
+# Give each entity due an address and lacking one its first path, hubs before pages and oldest first so collisions resolve alike; answers the paths given per kind
+function addRouteBacklog(): array {
+    global $db;
+    $rte = new Route($db);
+    $live = implode(', ', [NodeStatus::Published->value, NodeStatus::Disabled->value, NodeStatus::Deleted->value]);
+    $cats = 'SELECT id, title FROM '.PREFIX_DB.'_categories WHERE modul = :mod ORDER BY id';
+    $list = [['type', '', 'SELECT id, name AS title FROM '.PREFIX_DB.'_node_types ORDER BY id', []]];
+    $res = $db->getSqlQuery('SELECT id, name, ext FROM '.PREFIX_DB.'_node_types ORDER BY id');
+    if ($res === false) throw new RuntimeException('Route: the types cannot be read');
+    foreach ($db->getSqlRows($res) ?: [] as $row) {
+        $list[] = ['cat', $row['name'], $cats, ['mod' => $row['name']]];
+        $sql = 'SELECT id, title FROM '.PREFIX_DB.'_nodes WHERE tid = :tid AND status IN ('.$live.') AND published <= NOW() ORDER BY id';
+        if ($row['ext'] !== 'support') $list[] = ['node', $row['name'], $sql, ['tid' => intval($row['id'])]];
+    }
+    $list[] = ['cat', 'forum', $cats, ['mod' => 'forum']];
+    $list[] = ['topic', 'forum', 'SELECT id, title FROM '.PREFIX_DB.'_forum WHERE pid = 0 ORDER BY id', []];
+    $list[] = ['user', 'users', 'SELECT id, name AS title FROM '.PREFIX_DB.'_users ORDER BY id', []];
+    $list[] = ['poll', 'voting', 'SELECT id, title FROM '.PREFIX_DB.'_voting WHERE modul = \'\' ORDER BY id', []];
+    $out = array_fill_keys(['type', 'cat', 'node', 'topic', 'user', 'poll'], 0);
+    foreach ($list as [$kind, $pref, $sql, $pars]) {
+        $res = $db->getSqlQuery($sql, $pars);
+        $got = $db->getSqlQuery('SELECT oid FROM '.PREFIX_DB.'_routes WHERE kind = :kind AND cur = 1', ['kind' => $kind]);
+        if ($res === false || $got === false) throw new RuntimeException('Route: the entities of '.$kind.' cannot be read');
+        $have = array_flip(array_map('intval', array_column($db->getSqlRows($got) ?: [], 'oid')));
+        $todo = array_filter($db->getSqlRows($res) ?: [], fn(array $v): bool => !isset($have[intval($v['id'])]));
+        foreach (array_chunk($todo, 500) as $part) {
+            if (!$db->setSqlBegin()) throw new RuntimeException('Route: the transaction of '.$kind.' cannot be started');
+            try {
+                foreach ($part as $row) {
+                    if ($rte->addRoute($kind, intval($row['id']), $pref, (string)$row['title']) === '') throw new RuntimeException('Route: '.$kind.' '.$row['id'].' got no path');
+                }
+                if (!$db->setSqlCommit()) throw new RuntimeException('Route: the commit of '.$kind.' failed');
+            } catch (Throwable $err) {
+                $db->setSqlRollback();
+                throw $err;
+            }
+            $out[$kind] += count($part);
+        }
+        if ($kind === 'cat' && $todo) deleteCategoryMap($pref);
+    }
+    return $out;
 }
 
 # Format theme

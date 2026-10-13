@@ -133,7 +133,7 @@ final class CommentNotifyTest extends TestCase
     }
 
     # The handler owns one transaction and both writes happen inside it, the notification only for a comment this request stored
-    # The handler cannot be called from CLI, since getVar() reads a scalar through filter_input(), so its wiring is read from the source instead
+    # The handler is not called from CLI; its wiring is read from the source instead
     # A reply to a request of support is announced by its extension alone, so the general notice leaves that one type of target out
     #[Test]
     public function theHandlerOwnsTheTransactionSpanningBothWrites(): void

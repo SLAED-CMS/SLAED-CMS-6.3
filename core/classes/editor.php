@@ -334,7 +334,7 @@ class Editor {
         self::$emoji = true;
         $words = 'plugins/system/emoji/'.substr(_LOCALE, 0, 2).'.js';
         $src = [Template::getAssetUrl('plugins/system/emoji.js')];
-        if (Template::getAssetUrl($words) !== $words) $src[] = Template::getAssetUrl($words);
+        if (str_contains(Template::getAssetUrl($words), '?v=')) $src[] = Template::getAssetUrl($words);
         $lab = [
             'emoji' => _EEMOJI,
             'recent' => _EEMOJIRECENT,
@@ -413,7 +413,7 @@ class Editor {
         if (isset($done[$mark])) return '';
         $done[$mark] = true;
         $skin = 'templates/'.$theme.'/assets/editors/'.$key.'/skin.css';
-        if (Template::getAssetUrl($skin) === $skin) {
+        if (!str_contains(Template::getAssetUrl($skin), '?v=')) {
             Logger::addSite('error', 'Editor theme skin missing: '.$skin, ['editor' => $key, 'theme' => (string)$theme]);
             return '';
         }

@@ -331,7 +331,7 @@ headers, PHP only prints their addresses.
 
 Every printer of a stylesheet or script address goes through
 `Template::getAssetUrl()`, which appends the version of the file's content:
-`templates/lite/assets/css/theme.css?v=0a5af6e4ae`, the first ten hex
+`/templates/lite/assets/css/theme.css?v=0a5af6e4ae`, from the root of the site, the first ten hex
 characters of its SHA-1.
 
 - The versions are the map `$conf['derived']['version']`, which
