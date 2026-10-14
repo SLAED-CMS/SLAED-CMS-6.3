@@ -184,9 +184,9 @@ Bundled themes currently present in the repository:
 
 ### Routing and Entry Flow
 
-Frontend requests are routed from `index.php` by `go`, `name`, `op`, and optional `file` parameters. Standard module requests resolve to `modules/<name>/<file>.php`, while special direct flows include RSS, OpenSearch, XSL, generated CSS, generated JavaScript, and numeric helper endpoints.
+Every page has one readable address without an id — `/files`, `/files/adaptivnyi-shablon-pure`, `/forum/modul-poiska`, `/users/eduard` — kept in the registry `_routes`; `index.php` resolves the path into the `go`, `name`, `op`, and optional `file` parameters it routes by, and every other form of a page, the query addresses of 6.2 included, answers one 301 to its address. Standard module requests resolve to `modules/<name>/<file>.php`, while special direct flows include RSS, OpenSearch, XSL, generated CSS, generated JavaScript, and numeric helper endpoints.
 
-The site answers only at its folder and its scripts, and the path is decided before the database connects, at the top of `core/security.php`: a path after a script (`/index.php/index.php?name=sitemap`, `/admin.php/x`) answers 301 to that script with the same query, a bare `/index.php` answers 301 to the folder, and any other path that reaches `index.php`, an old `*.html` address included, gets the 404 page. A request under `uploads/` that the light path does not serve answers 410.
+The path is cut before the database connects, at the top of `core/security.php`: a path of `index.php` of up to five words of `[A-Za-z0-9_-]` goes on to the resolution of `index.php`, any other one, an old `*.html` address included, gets the 404 page; a path after another script (`/admin.php/x`) answers 301 to that script with the same query. `docs/ARCHITECTURE.md`, "Address Boundary", describes the registry, the parsing, the building and the redirect. A request under `uploads/` that the light path does not serve answers 410.
 
 Admin requests enter through `admin.php`, which loads `admin/index.php` and then resolves admin handlers from `admin/modules/*.php` and `modules/*/admin/`.
 

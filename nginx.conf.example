@@ -48,6 +48,11 @@ server {
         return 404;
     }
 
+    # A dot file or folder is no address of the site; the ACME challenges of .well-known stay reachable
+    location ~ /\.(?!well-known/) {
+        return 404;
+    }
+
     # A path after a script, such as /index.php/index.php, runs that script, which answers 301 to its own address
     location ~ ^(.+?\.php)/ {
         rewrite ^(.+?\.php)/ $1 last;

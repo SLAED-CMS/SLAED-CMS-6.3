@@ -226,6 +226,11 @@ Current unit test files include:
 - `PasswordHashTest.php`
 - `PrivatClassTest.php`
 - `PrivatMigrationTest.php`
+- `RouteBuildTest.php`
+- `RouteMoveTest.php`
+- `RouteParseTest.php`
+- `RouteRegistryTest.php`
+- `RouteWriterTest.php`
 - `SchedulerLockTest.php`
 - `StatsContractTest.php`
 - `StructureTest.php`

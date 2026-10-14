@@ -10,6 +10,11 @@
 # Prevent directory listing
 Options -Indexes
 
+# A folder of the project, docs/ beside the Node type docs, is no address: without the slash redirect the path reaches the front controller
+<IfModule mod_dir.c>
+DirectorySlash Off
+</IfModule>
+
 <IfModule mod_rewrite.c>
 RewriteEngine On
 RewriteRule ^(.*)$ public/$1 [L]

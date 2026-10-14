@@ -8,7 +8,7 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
 
-# The registry of addresses of docs/10-URL-2026.md, batch 1: the name filterSlug() makes, the class Route over _routes and its reserved words
+# The registry of addresses of the Address Boundary of docs/ARCHITECTURE.md: the name filterSlug() makes, the class Route over _routes and its reserved words
 final class RouteRegistryTest extends TestCase
 {
     private static array $probe = [];

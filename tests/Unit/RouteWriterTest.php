@@ -7,7 +7,7 @@ namespace Tests\Unit;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-# The writers of the address registry of docs/10-URL-2026.md, batch 2, over route_probe.php address; a row is [path, state, cur]
+# The writers of the address registry of the Address Boundary of docs/ARCHITECTURE.md, over route_probe.php address; a row is [path, state, cur]
 final class RouteWriterTest extends TestCase
 {
     private static array $probe = [];

@@ -1,5 +1,55 @@
 # Versions
 
+## 2026-10-14
+
+### Every page has one readable address without an id, and every other form of it answers one 301
+
+The links of 6.2 were `index.php?name=files&op=view&id=5061`, and its switch of readable addresses could not work:
+switched on, it printed `faq%2Fview%2F4048`, which Apache refuses before PHP, and nothing parsed a path. The addresses
+change once, before the release, so the index of a search engine moves from the 6.2 query addresses straight to the
+final form. The reference is `docs/ARCHITECTURE.md`, "Address Boundary"; the addresses of a type are in
+`docs/NODE.md`, "Addresses", the links of templates in `docs/TEMPLATES.md`, "Links In Templates".
+
+- **The addresses.** `/files`, `/files/adaptivnyi-shablon-pure`, `/files/moduli`, `/files/moduli?page=2`,
+  `/forum/modul-poiska`, `/users/eduard`, `/voting/kak-vam-novyi-dizain`, `/files/add`, `/files/asset/2`. The prefix
+  of the type is part of the address, the separator a fixed `/`; materials and categories of a type share one
+  namespace; a private type keeps `/<type>/view/<id>`. AJAX, feeds, the panel and `/uploads/` keep their addresses.
+- **One registry.** `_routes` maps a path to its entity — the current path and every former one; one class, `Route`,
+  owns it. An address is never reused: a former path answers 301 to the current one, the path of a deleted entity
+  410, and both stay taken. `filterSlug()` transliterates the letters of all six locales and cuts to 80 characters.
+  Every writer of a material, type, category, topic, account and poll gives, moves and marks gone its paths inside
+  its own transaction; the address follows the title until the first publication and then changes only by the field
+  "Адрес". The name of a Node type is permanent, and the name of a deleted type is never given again.
+- **Migration.** `addRouteBacklog()` gives every entity due an address its first path, categories before materials
+  and the oldest first, from the second stage of `update.php` and from `setup.php`. No 6.2 path form is parsed: 6.2
+  printed query addresses, and those answer one 301.
+- **Parsing.** `core/security.php` cuts a path of up to five words before the database, `public/index.php` resolves
+  it by one grammar against the configuration and the registry; `getVar()` reads scalars from `$_GET` and `$_POST`,
+  so the keys of a path reach every reader. One indexed query per page view.
+- **Building.** `getSeoUrl()` builds the address from the path the reader joined, operations and a numeric `id` in the
+  path, the rest of the query sorted; every address the site prints starts at the root of the site, `HOME_PATH`, and
+  templates take `{{ root }}`. The query counts of every list page stayed as they were.
+- **One redirect.** `setSeoMove()` answers a former path, upper case, a trailing slash, `/index.php/`, a query address
+  of 6.2 or 8.0, `?num=`, `page=1` and the wrong scheme or host in one absolute 301, after the entity is read and its
+  access checked, for `GET` and `HEAD` only. `robots.txt` names the sitemap absolutely, written by the sitemap task,
+  and lost the `Disallow` lines of folders no longer under `public/`.
+- **The servers.** Checked live on Apache with the root on `public/` and on the project and on nginx: the same answer
+  for every address of the route matrix and every link the pages print. The `.htaccess` of the project turns off the
+  slash redirect of `mod_dir`, which sent `/docs` to the folder `docs/` of the project and back in a loop;
+  `public/.htaccess` and `nginx.conf.example` refuse every dot file but `.well-known/`, which nginx served.
+- **Pages.** A public list counts its pages by `page`; the panel keeps `num`. A profile of a user that does not exist
+  answers 404, a profile closed to guests 403.
+
+Breaking for code outside the tree: `rewrite`, `sep`, `tsep`, `title` and `ctitle` are no settings and no keys of
+`getSeoUrl()`; `getSeoUrl()`, `Template::getAssetUrl()`, `getUploadUrl()` and `FileAccess::getFileUrl()` answer
+addresses from the root; an entity link passes its `route` (`null` for none), and a link of `op=view` without the key
+is logged; `getVar()` no longer reads through `filter_input()`; `getPublicUrl()` takes an address as a string too and
+`setRedirect()` roots a relative target; `filterSlug()` lost its separator; `user_info()` takes the path of the user
+as its second argument; `getPageNumbers()` writes `page` on the site and takes the keys of its page as an array;
+`NodeService::addNodeCategory()` and `updateNodeCategory()` take the field "Адрес", `Node` and `NodeInput` end in a
+path; a page link in a template or a script starts at `{{ root }}` or `HOME_PATH`. The server must send every path
+that is no file to `index.php`, as `public/.htaccess` and `nginx.conf.example` do.
+
 ## 2026-10-13
 
 ### The schema takes one set of column domains, one connection contract and keys that serve the queries that run

@@ -7,7 +7,7 @@ namespace Tests\Unit;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-# The resolution of a path of docs/10-URL-2026.md, batch 4, over route_probe.php parse; a page is [status, title without the site name, canonical address]
+# The resolution of a path of the Address Boundary of docs/ARCHITECTURE.md, over route_probe.php parse; a page is [status, title without the site name, canonical address]
 final class RouteParseTest extends TestCase
 {
     private static array $probe = [];

@@ -7,7 +7,7 @@ namespace Tests\Unit;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-# The building of an address of docs/10-URL-2026.md, batch 5, over route_probe.php build: the links the pages print, the statements of the lists, the builder itself
+# The building of an address of the Address Boundary of docs/ARCHITECTURE.md, over route_probe.php build: the links the pages print, the statements of the lists, the builder itself
 final class RouteBuildTest extends TestCase
 {
     # The statements of each page before batch 5, measured by the same run on the tree of batch 4; a list may run one more and no other page any more

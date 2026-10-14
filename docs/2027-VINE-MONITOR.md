@@ -293,7 +293,7 @@ userscript's chart and tooltip functions); colours and sizes from theme tokens.
 
 ## Profile page
 
-`/vine` (the module address of `docs/10-URL-2026.md`; `index.php?name=vine` answers 301 to it), visible only to
+`/vine` (the module address of `docs/ARCHITECTURE.md`, "Address Boundary"; `index.php?name=vine` answers 301 to it), visible only to
 logged-in users of the groups in `$conf['vine']['groups']` (and admins): the
 statistics tab and the finds list of the admin panel, read-only; no agents, no settings, no keys, no IPs.
 

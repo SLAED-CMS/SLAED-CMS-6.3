@@ -4,7 +4,7 @@
 # License: MIT
 # Website: slaed.net
 
-# CLI probe for the registry of addresses of docs/10-URL-2026.md: the name filterSlug() makes and the class Route over _routes
+# CLI probe for the registry of addresses of the Address Boundary of docs/ARCHITECTURE.md: the name filterSlug() makes and the class Route over _routes
 # It boots the real core with the configuration copied into scratch, then points the database facade at a disposable schema holding the shipped _routes
 # The mode race is the second writer of the race: a child this probe starts, which takes the path of the same name while the parent still holds it uncommitted
 $probework = (string)($argv[1] ?? '');

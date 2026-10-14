@@ -7,7 +7,7 @@ namespace Tests\Unit;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-# The one redirect of docs/10-URL-2026.md, batch 6, over route_probe.php move; an answer is [status, Location], the probe site written as ~
+# The one redirect of the Address Boundary of docs/ARCHITECTURE.md, over route_probe.php move; an answer is [status, Location], the probe site written as ~
 final class RouteMoveTest extends TestCase
 {
     private static array $probe = [];

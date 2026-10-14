@@ -35,8 +35,9 @@ main execution model is:
 
 `setHead()` is also the single serialization boundary for public SEO data. Modules pass facts (`kind`, title, description, dates, author, image, and optional JSON-LD objects); core resolves robots/canonical policy, Open Graph, route schema, and breadcrumbs. Configurable Graph/Schema templates are decoded before values are substituted and are re-rendered through safe fragments.
 
-There is no central application kernel, route registry, or framework middleware
-pipeline in the current codebase.
+There is no central application kernel or framework middleware pipeline in the
+current codebase. The one registry of routes is that of public addresses, `_routes`:
+it maps a path to an entity, never to code (see "Address Boundary").
 
 ## Entry Points
 
@@ -51,6 +52,7 @@ Role:
 - defines `MODULE_FILE`, loads `core/stream.php` and answers a request under `uploads/` there through the light
   path, before the core boots
 - loads `core/system.php`
+- resolves a path the cut of `core/security.php` kept into the route keys of `$_GET` (see "Address Boundary")
 - reads `go`, `name`, `op`, and `file` through `getVar()`
 - routes normal page requests to `modules/<name>/<file>.php`
 - routes helper/AJAX operations through numeric and named `go` branches
@@ -60,6 +62,7 @@ Normal frontend module route:
 ```text
 index.php
   -> core/system.php
+  -> a path resolved into name, op, id, cat by the configuration and _routes
   -> getVar('req', 'name')
   -> modules/<name>/<file>.php
   -> setHead()
@@ -269,9 +272,10 @@ Confirmed bootstrap responsibilities:
 - loads configuration through `getConfig()`
 - applies admin theme override when `ADMIN_FILE` is defined
 - loads `core/security.php`
-- `core/security.php` first decides the path: a path after a script or a bare
-  `/index.php` answers 301 to the address of the script, any other path than the
-  folder of the site or its script gets the 404 page
+- `core/security.php` first cuts the path, before the database: for `index.php` it
+  keeps up to five segments in `$urlroute` and answers 404 for any other path (see
+  "Address Boundary"); for the other scripts a path after the script answers 301
+  to the address of the script and any other path gets the 404 page
 - `core/security.php` loads `core/classes/pdo.php`, initializes `$db`, and starts
   request security/session handling
 - resolves and loads the active theme hook
@@ -314,6 +318,10 @@ Frontend request keys:
 - `file`: target module file, default `index`
 - `op`: module operation
 - `go`: helper/AJAX/scheduler branch selector
+- `id`, `cat`, `uname`: the entity of a page; a page number of a public list is `page`
+
+On a page of the site the keys usually come from the path, which `public/index.php`
+writes into `$_GET` before the first read (see "Address Boundary").
 
 Admin request keys:
 
@@ -324,6 +332,157 @@ Admin request keys:
 
 Input should be read through `getVar()` rather than directly from `$_GET`,
 `$_POST`, or `$_REQUEST`.
+
+## Address Boundary
+
+Every page of the site has one readable address without an `id`, kept in one registry; every other form of the same
+page answers one 301 to it, and an address once given never points anywhere else.
+
+| Page | Address |
+|---|---|
+| Home of a type or a module | `/files`, `/forum`, `/users` |
+| Material, category of a type | `/files/adaptivnyi-shablon-pure`, `/files/moduli` |
+| Page of a list; sorting, letter, filter | `/files/moduli?page=2`; `/files?order=views`, `/files?let=a` |
+| Forum topic, forum section | `/forum/modul-poiska`, `/forum/obshchie-voprosy` |
+| Profile, poll | `/users/eduard`, `/voting/kak-vam-novyi-dizain` |
+| Operations | `/files/add`, `/files/asset/2`, `/account/login`, `/account/privat` |
+
+- The prefix of the type or module is part of every address; the separator is a fixed `/`, no setting moves it.
+- Materials and categories of a type share one namespace; the category is not in the address of a material, so a
+  material keeps its address when it moves. The forum names topics and sections the same way under `/forum`.
+- The profile lives under the list of users and is named by its login: a new login in the panel moves it, and the old
+  path is never handed to the next user who takes the freed login.
+- A private type (`ext` `support`) has no address in the registry: its materials stay `/<type>/view/<id>` with
+  `noindex`, so the title of a request never enters an address.
+- AJAX and feeds (`go=…`), the panel, `/uploads/` and the module sub-files (`&file=…`) keep their query addresses.
+
+### The registry
+
+`_routes` (`storage/update/sql/table.sql`): `path` (ASCII, binary, unique, without the leading slash), `kind`
+(`type`, `node`, `cat`, `topic`, `user`, `poll`), `oid`, `state` (`1` current, `0` former, `2` gone) and `cur`, a stored
+column generated from `state` — `1` on the current row, `NULL` on every other — so the unique key `(kind, oid, cur)`
+lets an entity hold any number of former paths and at most one current one. No foreign key: the rows outlive their
+entity on purpose.
+
+- A former path answers 301 to the current path of the same entity, never to the path that followed it, so there is
+  no chain. When an entity is gone every row of it gets `state = 2` and its paths answer 410 for ever.
+- One class owns the table, `Route` in `core/classes/route.php` (`new Route($db)`): `getRoute()` finds a path with the
+  current path of its entity in one query, `getRouteList()` answers the current paths of a set of entities,
+  `addRoute()` gives the first path, `setRoute()` moves it, `setRouteName()` applies the field "Адрес", `deleteRoute()`
+  marks every row gone, `isRouteReserved()` and `checkTypeName()` answer the reserved words. No other code writes the
+  table.
+- A write runs inside the transaction of its writer, behind a savepoint, or opens its own. A path that is taken —
+  current, former or gone — or reserved takes the first free suffix `-2`, `-3` …; a racing writer that took the path
+  first answers 1062 and the write moves on to the next suffix, at most 20 times. A move to a path the entity held
+  before takes that row back.
+- **The name.** `filterSlug()` in `core/system.php` decodes the stored entities of a title, transliterates the letters
+  of all six locales from one table (the letters ru and uk share take the Russian form; `і ї є ґ` → `i yi ye g`; `ü` →
+  `ue`), lowercases, turns every run of other characters into one `-`, and cuts to 80 characters at the last `-` or,
+  inside one long word, hard. An apostrophe joins its word. An empty result takes the `id`. No `intl`.
+- **Reserved words.** Within a prefix, the operations of its module (`Route::OPS`, a prefix that is no module takes
+  those of `getNodeOps()`) and `mode`, `newlang`, which `public/index.php` answers under any name; `users` reserves
+  `rules` and `stats` in front of the profiles. For the name of a new Node type, the modules, the entries of `public/`,
+  `uploads`, `api` and every `type` row of the registry, so the name of a deleted type is never given again.
+  `RouteRegistryTest` holds the lists against the switches, `getNodeOps()`, `public/index.php` and the tree.
+
+### When an entity gets and changes its path
+
+| Kind | First path | Changes | Gone (410) |
+|---|---|---|---|
+| `type` | creation of the type | never — the name is permanent | deletion of the type (only when empty) |
+| `node` | its first move to Published — by hand, by the scheduler; Draft and Pending have none, a private type never | the field "Адрес" of the form | `deleteNode()` for good; the trash and Disabled keep the path |
+| `cat` | creation, for the categories of a Node type and of the forum | the field "Адрес" of the category form | deletion of the category, its subtree with it |
+| `topic` | creation of the topic; a reply the recycle section turns into a topic | never by the title | deletion for good; the recycle section keeps it |
+| `user` | creation of the `_users` row: activation, OAuth sign-up, the panel, the first administrator | a new login in the panel | deletion of the account |
+| `poll` | save of a poll without a module (a poll of a module has no page) | the field "Адрес" of the poll form | deletion |
+
+- The address follows the title only until the first publication; after that a new title, category or display name
+  never moves it, only the field "Адрес" does. `Route::setRouteName()` is its one rule: the name the form gave, else
+  the current name under a new prefix (a category moved to another module), else the first path from the title.
+- The entity and its paths change in one transaction; a refused path rolls the whole write back.
+  `getCategoryMap()` carries the path of every category, and a writer that moves one drops the map.
+- **Migration.** `addRouteBacklog()` in `core/system.php` gives every entity that is due an address and lacks one its
+  first path, in a fixed order so a collision always resolves alike: types; per type its categories before its
+  materials; forum sections before topics; users; polls; inside each group the oldest `id` first. A material is due
+  when it was ever public — Published, Disabled or Deleted with `published <= NOW()` — in a type that is not private.
+  The second stage of `update.php` runs it on every run (`setMigrateRoutes()`), `setup.php` for its seed; a second
+  call adds nothing.
+
+### Parsing
+
+Two stages, because the registry needs the database and the cut runs before it.
+
+1. **The cut**, the first block of `core/security.php`, for `index.php` only: a path after the base, with
+   `/index.php/` in front read as nothing, of up to five segments of `[A-Za-z0-9_-]` is kept lowercased in
+   `$urlroute['seg']`. Any other path — a `.`, an encoded byte, an empty segment, more segments — answers 404 before
+   the database. A path that names only the script is the start page. No 6.2 path form is parsed: 6.2 printed query
+   addresses, and its `.html` scheme answers 404.
+2. **The resolution**, in `public/index.php` after the check of a closed site and before the first `getVar()`, by one
+   grammar, first match wins: a type or module alone is its home; with a reserved operation that operation, with
+   digits after it also the `id` (`/files/asset/2`); any other path is asked of the registry by its whole length — a
+   current or former path opens the page of its entity, a gone path answers 410, a path never given 404, a known
+   prefix with more segments than its grammar 404. The page of an entity is `name=<type>` for `type`,
+   `name=<type>&op=view&id=` for `node`, `name=<prefix>&cat=` for `cat`, `name=forum&op=view&id=` for `topic`,
+   `name=account&op=view&id=` for `user`, `name=voting&op=view&id=` for `poll`. The keys replace the same keys of the
+   query in `$_GET`.
+
+`getVar()` reads scalars from `$_GET` and `$_POST` like its array branch, not through `filter_input()`, so the keys a
+path wrote reach every reader. The price of an address is one indexed query per page view, with no cache in front of
+it.
+
+### Building
+
+`getSeoUrl()` in `core/system.php` is the one builder, and every address it answers starts at the root of the site,
+`HOME_PATH` — the path of `homeurl` with both slashes (`/`, or `/sub/` below a folder), defined right after
+`getConfig()`. `getPublicUrl()` makes any address of the site absolute.
+
+- A passed `route` path absorbs `name`, `id`, `cat`, `uname` and an `op` of `view`; without one the address is the
+  module, the operation and a numeric `id` in the path (`/news/asset/2`). The other keys are sorted by name, so a page
+  has one query in every caller; `page` below 2 is left out.
+- The stored path reaches the builder in the parameters; it never looks one up. A list brings it from a `LEFT JOIN` of
+  the registry (`cur = 1`) in its own query; where no join fits (comment targets, favorites, a report) the caller asks
+  `Route::getRouteList()` once for the set. The one lookup of the builder is a category link, answered from the
+  category map. An entity that has no path by design is passed with `'route' => null` and gets
+  `/<type>/view/<id>`; a call with `op=view` and an `id` or `uname` but no key `route` is a defect, logged to
+  `error_site.log` with its caller.
+- Every address the site prints starts at the root: page links through `getSeoUrl()`, mails through
+  `getPublicUrl()`, and every endpoint `go=…`, form, htmx attribute, script address, theme image
+  (`getThemeImageUrl()`), avatar and favicon from `HOME_PATH`, so a page opened two segments deep resolves nothing
+  against its own path. Templates take `{{ root }}` (`docs/TEMPLATES.md`, "Links In Templates"). Stored texts keep
+  the form `./index.php?go=file…`, which `Parser::filterUrl()` reads from the root.
+- The `redirect_uri` of OAuth, the panel and its scripts, and the absolute addresses of the feed and the sitemap keep
+  their form.
+
+### One redirect
+
+The parser never redirects. `setSeoMove()` in `core/system.php` collects every reason and answers once, after the
+module has read its entity and checked access: the material (`setNodeView()`), the topic, the profile and the poll
+call it right after their read, every other page reaches it as the first step of `setHead()`, so a redirect pays for
+nothing else and counts no view.
+
+- The target is the address of the page — its route keys and its current `route` through `getSeoUrl()`, or the `url`
+  of a 6.2 address — with every other pair of the raw query kept in its order and spelling, `num` renamed to `page`
+  (the activation code of `account` keeps its `num`) and `page=1` dropped; absolute, on the scheme and host of
+  `forcessl` / `forcehost` or of the request.
+- Reasons: a former path, upper case, a trailing slash, `/index.php/`, a query address of 6.2 or 8.0
+  (`index.php?name=files&op=view&id=5061`, `?uname=`, `?num=`), the wrong scheme or host. Any mix is one 301.
+- Never moved: a method other than `GET` / `HEAD` (a `HEAD` gets the same status and `Location`), an htmx request, an
+  answer of 400 and above — the current path of a closed entity never leaks through the 301 of a former one — an
+  endpoint `go=`, a module file, the panel, the CLI, another script, an unknown name and an operation the parser would
+  not read back.
+- The early `forcessl` / `forcehost` block of `core/security.php` serves the endpoints, the panel and the scripts
+  only; a page leaves the host to `setSeoMove()`, so the wrong host and an old address are one hop.
+- The query addresses of the removed 6.2 modules go through `_node_legacy`: `getNodeLegacyUrl()` answers the current
+  registry path, and its callers — the not-found branch of `setNodeView()`, an unknown operation of a type and the
+  unknown name of `public/index.php` — pass it to `setSeoMove()` as `url`.
+- `getSeoRoute()` serializes the same address as the canonical one; page 2 and on carry their own `?page=N`. The
+  sitemap and the feed write `getPublicUrl()` of `getSeoUrl()`; `addSitemapTask()` writes the absolute
+  `Sitemap: <homeurl>/sitemap.xml` into `public/robots.txt`, replacing a line naming `sitemap.xml` or adding one.
+
+The server sends every path that is neither a file nor a folder to `index.php`: `public/.htaccess`, and
+`try_files` of `nginx.conf.example`. The tests are `RouteRegistryTest`, `RouteWriterTest`, `RouteParseTest`,
+`RouteBuildTest` and `RouteMoveTest` over `tests/Support/registry_probe.php` and `route_probe.php`; the 6.2 rehearsal
+of `UpdateSiteTest` holds the registry a migration fills.
 
 ## Module Boundary
 
@@ -703,7 +862,9 @@ carries a guard `.htaccess` or `index.html`, and no writer creates one.
   refuses every request through `mod_authz_core`, so the site breaks rather than
   opens. Apache and LiteSpeed only. A path to a file outside `public/` lands in
   `public/`, finds no file there and gets the 404 page; one under `uploads/`
-  reaches the light path below.
+  reaches the light path below. The slash redirect of `mod_dir` is off
+  (`DirectorySlash Off`), so a folder of the project — `docs/` beside the Node
+  type `docs` — never answers in place of an address.
 
 **One upload root.** `UPLOADS_DIR` is `uploads/` at the project level, the
 folder of every owner. A request under `/uploads/` reaches `index.php` (`!-f` on
@@ -715,8 +876,9 @@ under "File Delivery Boundary".
 
 **The server files.** `public/.htaccess` carries the rewrite to the front
 controller, the refusal of `*.php` and of the theme `*.html` under
-`templates/`, the lifetimes and the compression; the `.htaccess` of the project
-carries only the rewrite of the second mode. nginx reads neither:
+`templates/`, the refusal of every dot file or folder but `.well-known/`, the
+lifetimes and the compression; the `.htaccess` of the project carries only the
+rewrite of the second mode and `DirectorySlash Off`. nginx reads neither:
 `nginx.conf.example` at the project level is the `server` block of the first
 mode, and `NginxConfigTest` walks every file of `public/` through both and
 fails when they refuse different things. The settings for shared hosting are in
@@ -1138,6 +1300,8 @@ Use these documents as the primary sources for their topics:
 - Do not assume a middleware pipeline exists.
 - Do not assume all plugins share the editor manifest contract.
 - Do not assume modules are isolated packages.
+- Do not assume the address of a page holds its id: build it through `getSeoUrl()` with the `route` its reader
+  joined, and never write a page address by hand.
 - Do not assume parser cache, asset cache, or scheduler jobs are enabled without
   checking current configuration.
 - Do not copy architecture claims from other projects without validating them

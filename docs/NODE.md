@@ -99,7 +99,12 @@ A type name matches `^[a-z][a-z0-9]{0,19}$` and is fixed at creation. `NodeServi
 - a name that already has a section in any of the four configuration areas of a type (see below);
 - a name whose directory exists under `uploads/` in a different letter case;
 - a name that categories, comments or favorites of an earlier owner still carry (`modul = <name>`);
-- an existing `uploads/<name>` directory that holds anything but guard files.
+- an existing `uploads/<name>` directory that holds anything but guard files;
+- a name `Route::checkTypeName()` refuses: an entry of `public/`, `uploads`, `api`, and every name the registry of
+  addresses holds as a path — the name of a deleted type is never given again.
+
+The name is the prefix of every address of the type (`/files`, `/files/moduli`, `/files/adaptivnyi-shablon-pure`),
+so it is permanent by contract: `updateNodeType()` writes `title`, `intro`, `ext` and `sort`, never `name`.
 
 Concurrent creation of the same name is resolved by `UNIQUE KEY name` and the configuration lock. Field
 names and `select` option keys use a different grammar, `^[a-z][a-z0-9_]{0,31}$`; once values are stored
@@ -110,7 +115,7 @@ of a `_nodes` column.
 
 | Place | Form |
 |---|---|
-| Route parameter, registry | `name=<name>`, `_node_types.name` |
+| Address, route parameter, registry | `/<name>` (the `type` row of `_routes`), `name=<name>`, `_node_types.name` |
 | Type settings | `$conf['node']['types'][<name>]` in `config/node.php` |
 | Field definitions | `$conf['fields']['node'][<name>]` in `config/fields.php` |
 | Uploads | rule `$conf['uploads'][<name>]`, place `<name>.attach`, directory `uploads/<name>` |
@@ -429,7 +434,8 @@ MariaDB 10.5 and 10.6 are out of upstream support.
 | `PRIMARY` | `id` | lookup by `_nodes.tid` |
 | `UNIQUE name` | `name` | the route and technical key |
 
-- `name` never changes after creation; there is no separate route column.
+- `name` never changes after creation; the paths of the type, its categories and its materials live in `_routes`
+  (`docs/ARCHITECTURE.md`, "Address Boundary"), not here.
 - `ext` holds only a key of the closed extension map, never a class, file or path. It can be set, replaced
   or cleared only while the type is disabled and has no material.
 - A new type is created disabled with version 1 and becomes public only by explicit activation. Activation
@@ -1247,8 +1253,9 @@ partial write; a configuration that does not carry the row's version is `STORAGE
   `RESERVED` list (`node`, system directories, Windows device names), is no module key or `modules/<name>` unless one
   of the nine replacements (`news`, `pages`, `faq`, `help`, `jokes`, `content`, `links`, `files`, `media`), is free
   in the four areas and in `uploads/` in any case, and has no categories (`INVALID categories`) or comments and
-  favorites of an earlier owner (`INVALID remains`). Empty `uploads` copies `uploads.all`; empty `rating` becomes
-  `active '1'`, `period '2592000'`, `detail '1'`, `guests '1'`.
+  favorites of an earlier owner (`INVALID remains`), and `Route::checkTypeName()` accepts it. Empty `uploads` copies
+  `uploads.all`; empty `rating` becomes `active '1'`, `period '2592000'`, `detail '1'`, `guests '1'`. The type gets
+  its path, its name, in the same transaction; a refused path is `STORAGE`.
 - `updateNodeType()` needs complete rules. `ext` changes only while the type is disabled and has no material.
   Switching off `features.categories` with categories, `features.tree` with `parent` links or `features.related`
   with `related` links is `INVALID features.<key>`. A role with resource rows cannot be removed
@@ -1260,7 +1267,8 @@ partial write; a configuration that does not carry the row's version is `STORAGE
   under the lock it repeats the full check of what is stored and needs a writable, non-link directory.
 - `deleteNodeType()` needs no material in any state, no category and no user file. It removes the sections from the
   four areas and the key `node-<name>` from every administrator in the same transaction, so a later type of that
-  name inherits no rights; the directory and guards stay.
+  name inherits no rights, and marks the path of the type gone, so it answers 410 and the name stays taken; the
+  directory and guards stay.
 - `addNodeTypeImport()` takes a `slaed.node` export up to 1 MiB: exactly `format`, `type`, `version = 1`, and the
   nine export keys with native types. A non-empty `$name` replaces the file's name; an existing type is never
   overwritten. Cloning is export plus import under a new name; a profile is `modules/node/profiles/<name>.json`.
@@ -1352,6 +1360,13 @@ role, fit the smaller `maxbytes`, match its kind and belong to the visitor (acco
   publication goes with it. Categories, fields, relations, resources and the poll stay as they are.
 - After `CONFLICT` nothing is changed; the controller keeps the input and offers the current version as the new
   base. There is no merge and no version-less write.
+- **Paths.** A material gets its first path where its publication comes — `setPublishJob()` of `addNode()`,
+  `updateNode()` and `updateNodeStatus()`, and the scheduled delivery `setPublishDue()` — inside the write, never for
+  a type with `ext` `support`; Draft and Pending have none, and until then the path follows the title. Once it has one,
+  only `NodeInput::$path`, the field "Адрес" the panel form shows for such a material, moves it in `updateNode()`.
+  The writer answers the path in `Node::$path`, so the redirect after the public form and the mail of an approval link
+  it. `deleteNode()` marks every path of the material gone; the trash and Disabled keep it. A refused path is
+  `STORAGE` and rolls the whole write back.
 
 #### Resources and reports
 
@@ -1418,8 +1433,8 @@ extension's `updateNodeAction('comment')` runs only on the first publication (`_
 #### Categories and remains
 
 ```php
-public function addNodeCategory(array $row): int
-public function updateNodeCategory(int $id, array $row): void
+public function addNodeCategory(array $row, string $path = ''): int
+public function updateNodeCategory(int $id, array $row, string $path = ''): void
 public function deleteNodeCategory(int $id): void
 public function checkTypeRegistry(array $names): bool
 public function getNodeRemains(): array
@@ -1434,6 +1449,9 @@ public function deleteNodeRemains(string $name): void
   category of any material, direct subcategories, or items of the fixed module `forum` in `_forum`, counted
   without a lock). `deleteNodeCategory()` deletes the whole subtree; a main category of any
   material in it refuses (`category.used`), extra links go and the affected materials get a new version.
+- `$path` is the field "Адрес" of the category form, applied by `Route::setRouteName()` in the same transaction: the
+  given name, else the current name under a new module, else the first path from the title. A deletion marks the
+  paths of the whole subtree gone. `getCategoryMap()` carries the path and is dropped by every writer that moves one.
 - `checkTypeRegistry()` answers whether a name is in `_node_types` whatever its configuration says; the category
   screen chooses the Node path by it, so a broken type is refused instead of falling back to plain SQL.
 - `getNodeRemains()` (`manage`/`super`) lists `modul` keys of `_comment` and `_favorites` that are neither a
@@ -1743,7 +1761,8 @@ final readonly class NodeTypeInput {
   `tests`, `vendor`, Windows device names; a module name (`$conf['modules']` or `modules/<name>`) other than the nine
   replacements `news`, `pages`, `faq`, `help`, `jokes`, `content`, `links`, `files`, `media`; a name any of the four
   areas carries or `uploads/` holds in another case; a name with rows in `_categories` (`INVALID categories`) or in
-  `_comment`/`_favorites` (`INVALID remains`, cleared with admin `op=remains`).
+  `_comment`/`_favorites` (`INVALID remains`, cleared with admin `op=remains`); a name `Route::checkTypeName()`
+  refuses — an entry of `public/`, `uploads`, `api`, any path of the registry, so a deleted type's name included.
 - One area is no refusal for the nine replacements: the upload rule a removed module left under its name in
   `config/uploads.php`. A new type of that name with an empty upload rule takes the old rule over; a rule the check
   refuses is logged (`Node: the upload rule a removed module left is invalid, …`) and the new type gets the copy of
@@ -2161,7 +2180,8 @@ base of a new type against the new values; the first type that fails is named an
 
 ### Dispatch
 
-`index.php` reads `name`, `op` and `file` from the request. When the effective name (explicit `name`, or the module
+`index.php` reads `name`, `op` and `file` from the request, after a path has been resolved into them (see
+"Addresses" below). When the effective name (explicit `name`, or the module
 drawn from `$conf['module']` for the start page) is a key of `$conf['node']['types']`, the request goes to the fixed
 `modules/node/index.php`; no SQL runs before that decision and the name never builds a path.
 
@@ -2176,11 +2196,31 @@ drawn from `$conf['module']` for the start page) is a key of `$conf['node']['typ
   disabled type answers 404. A disabled type is visible to the main administrator, the Node manager and its
   moderators.
 
+### Addresses
+
+The addresses of a type follow `docs/ARCHITECTURE.md`, "Address Boundary"; `_routes` holds them.
+
+| Page | Address |
+|---|---|
+| list of the type | `/<type>`, page 2 and on `/<type>?page=2` |
+| category | `/<type>/<category name>` |
+| material | `/<type>/<material name>`; without a path (Draft, Pending, a type with `ext` `support`) `/<type>/view/<id>` with `noindex` |
+| operation | `/<type>/add`, `/<type>/asset/<id>`, `/<type>/view/<id>` |
+
+- Materials and categories of a type share one namespace; the category is not in the address of a material.
+- The operations of `getNodeOps()` and `mode`, `newlang` are reserved under every type prefix: no material or category
+  takes such a name.
+- `NodeQuery` joins the registry in one place, `getPathSql()`, for the list and the single read: `Node::$path` is the
+  path of the material, `Node::$upath` that of its author; `NodeTarget::$path`, the tree, the sitemap read and the
+  legacy map `getNodeLegacy()` carry the path of a material too. A category takes its path from `getCategoryMap()`.
+- The panel form of a material that has a path shows the field "Адрес" (label `_ADDRESS`): the name after the
+  prefix, the whole path as hint.
+
 ### Public operations
 
 | `op` | Methods | Parameters | Purpose |
 |---|---|---|---|
-| (empty) | GET, HEAD, POST | `cat`, `num`, `let`, `order`, `dir`, `new`, `fav`; POST `view`, `token` | list of the type or of one category; a POST is the view switch |
+| (empty) | GET, HEAD, POST | `cat`, `page`, `let`, `order`, `dir`, `new`, `fav`; POST `view`, `token` | list of the type or of one category; a POST is the view switch |
 | `view` | GET, HEAD | `id` (global `_nodes.id`) | full material |
 | `add` | GET, HEAD, POST | POST: `action` (`preview`/`submit`), `token`, form fields | public form, preview, submission |
 | `asset` | GET, HEAD | `id` (`_node_assets.id`) | one structured resource |
@@ -2194,10 +2234,11 @@ with an `Allow` header. Comments, rating and favorites use their own global rout
 
 | Code | Cause |
 |---|---|
-| 301 | explicit `order`/`dir` equal to the type default: redirect to the clean list URL (keeps `cat`, `let`, `num > 1`) |
-| 301 | an address of a removed module in `_node_legacy`: `view`/`broken` with an old `id` to the migrated material; the list, `liste`, `best`, `pop`, `closed` to the list of its type (keeps `cat`). Asked by `getNodeLegacyUrl()` in `core/system.php` only where the answer would be 404: an unknown `id` of `view`, an unknown operation, and in `index.php` a name that is neither module nor type (`pages` → `docs`) |
+| 301 | any other form of the page — a former path, a query address, upper case, a trailing slash, `?num=`, `page=1`, the wrong scheme or host — in one hop to its address by `setSeoMove()` right after the read and the access check (`docs/ARCHITECTURE.md`, "One redirect") |
+| 301 | explicit `order`/`dir` equal to the type default: redirect to the clean list URL (keeps `cat`, `let`, `page > 1`) |
+| 301 | an address of a removed module in `_node_legacy`: `view`/`broken` with an old `id` to the migrated material; the list, `liste`, `best`, `pop`, `closed` to the list of its type (keeps `cat`), on the registry path. Asked by `getNodeLegacyUrl()` in `core/system.php` only where the answer would be 404 — an unknown `id` of `view`, an unknown operation, and in `index.php` a name that is neither module nor type (`pages` → `docs`) — and answered by `setSeoMove()` |
 | 302 / 303 | redirect after a write (`setRedirect()` sends 303 for POST); 303 after the view switch of a list, whether or not it set the cookie; 302 for an external `download`/`link` source |
-| 400 | malformed `cat`/`num`; bad or disabled `let`; `order` unknown, or other than `published` and outside `list.orders`; `dir` not `asc`/`desc`; `new` or `fav` other than `1`; `fav` on a type without favorites; form `action` not `preview`/`submit` |
+| 400 | malformed `cat`/`page`; bad or disabled `let`; `order` unknown, or other than `published` and outside `list.orders`; `dir` not `asc`/`desc`; `new` or `fav` other than `1`; `fav` on a type without favorites; form `action` not `preview`/`submit` |
 | 403 | guest non-moderator on a `support` list or material; form not open to the visitor; bad token on `add`, `report`, `support`; `support` by a non-owner or to another state; writer `DENIED` |
 | 404 | unknown type or op; `cat` without categories or unreadable; page past the end; missing or malformed `id`; material or resource missing, closed, foreign or unreadable; `add` without `submit`; report refused |
 | 405 | method not in the operation table, with `Allow` |
@@ -2211,8 +2252,8 @@ Reader refusals map through `getNodeStatus()` (`NOTFOUND` 404, `DENIED` 403, `IN
 
 ### List and material
 
-- `cat` and `num` accept `^[1-9][0-9]{0,9}$` up to 4294967295; `num` defaults to 1. The page count is computed first,
-  so `num > pages` answers 404 before the reader sets the page.
+- `cat` and `page` accept `^[1-9][0-9]{0,9}$` up to 4294967295; `page` defaults to 1. The page count is computed
+  first, so `page > pages` answers 404 before the reader sets the page.
 - Without `order`/`dir` the list uses `list.order`/`list.dir`. With only `order`, the direction is the type default
   for the default key, `asc` for `title`, `desc` otherwise (`getNodeSortWay()`, shared by the list and its header).
   `let` goes to `NodeQuery::setNodeLetter()`; the letter window keeps the category and links only the letters with
@@ -2318,7 +2359,7 @@ materials raises its `list.limit`.
   opens a tab. "Добавить" carries `hx-boost="false"`; the view switch posts by its own `hx-post`.
 - "Показать ещё" `#sl-node-more` is the link to the next page, drawn under every view but the rail: its answer's cards
   are appended to `#sl-node-items` by `hx-select`, the foot is redrawn by `hx-select-oob`, and the address takes the
-  `num` of that page, so a reload and a shared link open the page the visitor stopped at.
+  `page` of that page, so a reload and a shared link open the page the visitor stopped at.
 - `data-sl-swap-reveal` brings the part back into view when its head went above the screen. The open windows close
   with the swap, as they would with a reload. Without a script every control is a plain link or form.
 
@@ -2366,9 +2407,9 @@ Node calls the existing `setHead()` and builds no canonical, Open Graph or schem
 
 | Page | `kind` | `robots` | Canonical |
 |---|---|---|---|
-| list, category, page | `collection` (`website` on the start page) | default `index, follow` | `index.php?name=<type>` with `cat` and `num > 1`; the site root for the start page without `cat`/`num` |
+| list, category, page | `collection` (`website` on the start page) | default `index, follow` | `/<type>` or the category path, with `?page=N` from page 2; the site root for the start page without `cat`/`page` |
 | list with `let`, `new`, `fav` or a non-default sort | `collection` | `noindex, follow` | none (`setHead()` drops it for noindex) |
-| full material | `integrations.seo` | default | the view URL of the material (`getSeoUrl()` with the title slug) |
+| full material | `integrations.seo` | default | the path of the material (`getSeoUrl()` with `route`) |
 | any page of a `support` type | as above | `noindex, nofollow` | none |
 | form, error (status 400+) | - | `noindex, follow` by `getSeoRoute()` | none |
 
@@ -2470,7 +2511,7 @@ or a material of another type throws `NodeException::INVALID`. Every result has 
 | Key | Content |
 |---|---|
 | `id`, `type`, `mode` | global id, type name, prepared mode |
-| `href` | view URL (`getSeoUrl()` with title slug), `''` for an unsaved preview |
+| `href` | the path of the material (`getSeoUrl()` with `route`), `/<type>/view/<id>` without one, `''` for an unsaved preview |
 | `title` | plain title |
 | `intro` | plain text of the rendered intro (scripts and styles dropped) |
 | `intro_html` | intro rendered by `Parser::filterContent()` with trusted tags honoured (heading offset 1 in `view`, 2 otherwise) |
@@ -2742,8 +2783,8 @@ item that left the channel; the tag does not.
 and joins several files with an index. For each active type with `integrations.sitemap` it writes the module URL,
 the open categories (`pread` level `0` without groups; on a multilingual site only `lang = ''` or the site
 language) and the materials read by `NodeQuery::getNodeSitemap(int $after = 0, int $limit = 500): array` - rows
-`id`, type name, `title`, `cid`, `ctitle`, `published`, `updated` of every sitemap type after a global id cursor,
-as a guest context of the site language (none on a site with one language), in batches of
+`id`, type name, `title`, `cid`, `ctitle`, `published`, `updated`, `path` of every sitemap type after a global id
+cursor, as a guest context of the site language (none on a site with one language), in batches of
 `NodeQuery::getTargetSize()`. A failure removes the files of the run.
 The HTML map lists a type with its open categories and leaves materials to the XML.
 
@@ -3011,9 +3052,9 @@ code. Nothing syncs during a public request.
 ### Public routes
 
 `modules/node/index.php` answers the closed map of `getNodeOps()`: `''` and `view` (`GET`, `HEAD`), `add` (`GET`,
-`HEAD`, `POST`), `asset` and `attach` (`GET`, `HEAD`), `report` (`POST`), plus `support` (`POST`) for a `support`
+`HEAD`, `POST`), `asset` (`GET`, `HEAD`), `report` (`POST`), plus `support` (`POST`) for a `support`
 type. A pending configuration journal holding the type answers `503` (`Retry-After: 60`) before `op`, method or
-type are examined. Unknown `op` is `404`, wrong method `405` with `Allow`, `cat`/`num`/`id` must be positive up
+type are examined. Unknown `op` is `404`, wrong method `405` with `Allow`, `cat`/`page`/`id` must be positive up
 to 4294967295, an unknown or (for this visitor) disabled type is `404`. `NodeException` codes map to `404`,
 `403`, `422`, `409`, `429` (`NOTFOUND`, `DENIED`, `INVALID`, `CONFLICT`, `LIMITED`), else `500`; pages show a safe
 text, never the exception message.

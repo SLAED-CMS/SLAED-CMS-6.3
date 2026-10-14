@@ -54,6 +54,9 @@ RewriteEngine On
 RewriteRule ^templates/.*\.php$ - [F,L,NC]
 RewriteRule ^templates/[^/]+/.*\.html$ - [F,L,NC]
 
+# A dot file or folder is no address of the site; the ACME challenges of .well-known stay reachable
+RewriteRule (?:^|/)\.(?!well-known/) - [F,L]
+
 # Rewrite rules to block out some common exploits
 RewriteCond %{QUERY_STRING} base64_encode[^(]*\([^)]*\) [NC,OR]
 RewriteCond %{QUERY_STRING} (<|%3C)([^s]*s)+cript.*(>|%3E) [NC,OR]

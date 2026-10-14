@@ -260,6 +260,7 @@ The current `Template` runtime supports:
 - escaped output: `{{ var }}`
 - raw output: `{{{ var }}}`
 - language constants: `{{ _CONST }}` (UPPER_SNAKE_CASE with `_` prefix — resolved at runtime via `defined()`, cache-safe)
+- the root of the site: `{{ root }}`, put into every render by `Template::getView()` (see "Links In Templates")
 - conditions:
   - `{% if var %}`
   - `{% elseif var %}`
@@ -377,11 +378,13 @@ setHead([
     'mtime' => $modified,
     'author' => $author,
     'img' => $image,
+    'route' => $path,
 ]);
 ```
 
 Behavior:
 
+- `route` is the current path of the entity of the page from its reader (`null` for an entity without one); the canonical address is built from it, and `setHead()` first answers any other form of the page with one 301 through `setSeoMove()` (`docs/ARCHITECTURE.md`, "Address Boundary")
 - supported page kinds are `website`, `collection`, `article`, `news`, `product`, `forum`, `profile`, and `utility`
 - `canon` and `robots` are explicit overrides; normal routes use route-aware defaults
 - search, account forms, add/send flows, and other service routes are `noindex, follow` without canonical
@@ -391,6 +394,19 @@ Behavior:
 - `config/local.php` is a generated snapshot and must not be edited manually
 
 Heading components use explicit boolean context flags because the template engine does not compare string values. Cards use `is_detail` for `H1`, `is_nested` for `H3`, and `H2` by default. Voting uses exactly one of `is_page`, `is_section`, or `is_widget`.
+
+## Links In Templates
+
+A page is opened at a path such as `/news/internet`, so a relative address in its markup would resolve under `/news/`. Every address a template prints starts at the root of the site, `{{ root }}`, which is `HOME_PATH` — `/`, or `/sub/` for a site below a folder:
+
+- the address of an entity comes from PHP, built by `getSeoUrl()` from the path its reader joined; a template never assembles one from an `id`
+- a fixed page link is a path: `{{ root }}account/privat`, `{{ root }}files`, `{{ root }}search`
+- endpoints, forms and htmx attributes keep their query behind the root: `{{ root }}index.php?go=1&op=…`, `action="{{ root }}index.php"`
+- an image of the theme is `{{ root }}templates/{{ theme }}/images/…` in a template and `getThemeImageUrl()` in PHP; `getThemeImagePath()` stays the path of the file below `PUBLIC_DIR`
+- an asset reaches the template versioned and rooted from `Template::getAssetUrl()` (see "Versioned Addresses And Order")
+- a fragment link `href="#…"` stays as it is; there is no `<base>` tag, which would send it to the start page
+
+`RouteBuildTest::aPageAtAPathCarriesNoRelativeAddress` opens pages at paths of two and three segments as a guest, a member and the administrator and fails on any `href`, `src`, `action`, `hx-*` or `data-*` address, inline `url()` or `fetch()` that does not start at the root.
 
 ## Engine Limitations
 - no advanced expression language

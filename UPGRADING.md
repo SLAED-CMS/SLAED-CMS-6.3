@@ -54,8 +54,8 @@ The modules `news`, `pages`, `faq`, `help`, `jokes`, `content`, `links`, `files`
 their blocks, configuration files and tables. Their content is served by Node
 (`modules/node`, `core/classes/node/`): one module that runs any number of content types side by side.
 
-- A type keeps the public list address of the module it replaces, `index.php?name=<type>`; a material opens
-  at `index.php?name=<type>&op=view&id=<id>` with one global id across all types.
+- A type keeps the name of the module it replaces as its address, `/<type>`; a material opens at its own
+  path, `/<type>/<name>`, and has one global id across all types. The 6.2 query addresses answer 301 to it.
 - The installer creates ten active types from `modules/node/profiles/*.json` — the nine replacements
   and `docs` — with the first administrator, and one welcome news item.
 - Custom code that read these tables or called helpers of the removed modules must move to `NodeQuery`
@@ -112,8 +112,8 @@ added `profile` to `config/uploads.php`. nginx reads no `.htaccess`: the release
 `server` block carries the root on `public/`, the prefix `/uploads/` for the front controller, a path after a script
 sent to that script and the refusals of `public/.htaccess`.
 
-The site answers only at its folder and its scripts. A path after a script (`/index.php/…`) answers 301 to that
-script with the same query, and any other path, an old `*.html` address included, gets the 404 page.
+A path of `index.php` is a readable address (see "Readable Addresses" below); a path after another script answers
+301 to that script with the same query, and an old `*.html` address gets the 404 page.
 
 Every `.htaccess` outside `public/` but the one of the project, and every guard `index.html` outside it, are gone:
 a folder outside the document root needs none.
@@ -138,6 +138,21 @@ describes the tree, the two modes and the check.
 - The locks of the scheduler and of the upload service live in `storage/cache/locks/`, which a cache clear leaves in
   place.
 - A log reader, a monitoring rule or a `logrotate` entry of your own that names the old files has to follow.
+
+### Readable Addresses
+
+Every page has one address without an id — `/files/adaptivnyi-shablon-pure`, `/files/moduli`, `/forum/modul-poiska`,
+`/users/eduard` — held in the registry `_routes`. A 6.2 query address, a former path, upper case or a trailing slash
+answers one 301 to it; the path of a deleted entity answers 410 and is never given again. `update.php` fills the
+registry. The reference is `docs/ARCHITECTURE.md`, "Address Boundary".
+
+- The server must send every path that is no file or folder to `index.php`: `public/.htaccess` does it for Apache and
+  LiteSpeed, `try_files` of `nginx.conf.example` for nginx.
+- `rewrite`, `sep`, `tsep`, `title` and `ctitle` are no settings any more.
+- Custom code builds a page link through `getSeoUrl()` with the `route` its query joined from `_routes` (`cur = 1`),
+  `null` for an entity without one; every address starts at the root of the site, `HOME_PATH`, `{{ root }}` in a
+  template. A public list counts its pages by `page`, not `num`.
+- `getVar()` reads `$_GET` and `$_POST` itself, so the keys of a path reach every reader.
 
 ### Points, Ratings and Extra Fields
 

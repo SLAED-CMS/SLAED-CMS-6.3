@@ -170,7 +170,9 @@ into the plan, then do whatever work the step names.
 - [x] 74. URL batch 6 — one redirect: after the access check, every reason in one 301, host and scheme included; 410,
   the legacy map on registry paths, sitemap, feed, `robots.txt`. The sitemap task writes the absolute `Sitemap:` line
   into `robots.txt` (owner, 2026-10-14). (2026-10-14)
-- [ ] 75. URL batch 8 — reference; deletes `docs/10-URL-2026.md`.
+- [x] 75. URL batch 8 — reference; deletes `docs/10-URL-2026.md`. The reference is `docs/ARCHITECTURE.md`, "Address
+  Boundary"; `docs/NODE.md`, "Addresses", `docs/TEMPLATES.md`, "Links In Templates", `docs/VERSIONS.md`,
+  `UPGRADING.md` and `README.md` follow it. (2026-10-14)
 - [ ] 76. DIAL — *decision*: the options dial `sl-dial` of the panel lists is three Tab stops a row while closed
   (found by the UI/UX audit of the groups stand, 2026-10-09); write a plan, then make its items reachable only once it
   opens. Put last by the owner on 2026-10-13, since its plan is not written yet.

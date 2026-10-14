@@ -5,7 +5,7 @@ of the site — a Vine Monitor agent, a headless front end, a Telegram bot, an A
 updates — talks to the site through it, and the site talks to the outside world (update server, Telegram Bot API, AI
 providers) through the same layer.
 
-Status: planned, nothing implemented. The owner's decisions of 2026-10-07 are in "Decisions"; "Recommended
+Status: planned, nothing implemented. The owner's decisions of 2026-10-07 and 2026-10-14 are in "Decisions"; "Recommended
 decisions" and everything below it is the working design, changed only through "Open questions". The steps are at the
 end, one per session. The binding coding rules are in `.rules/api.md`; where this plan and that file differ, the file
 wins and this plan is corrected.
@@ -62,6 +62,11 @@ Taken by the owner on 2026-10-07; settled, not to be reopened by a step.
   adopted; the connector gets its own minimal pipeline (section "Kernel"), which is the part of a framework that pays
   off here.
 - **MCP in the `ai` step** (step 9): an inbound MCP endpoint for AI agents, after `content` reads exist.
+- **Full, safe administrator access for AI agents** (owner, 2026-10-14): an agent may do over MCP what the
+  administrator it acts for may do in the panel, if the site owner — the main administrator — opens it for that key.
+  It is off by default; "safe" means every action has a risk class with an owner-set policy, a short-lived key, a
+  fixed list of actions no agent ever gets, and an audit trail (section "Administrator access"). This supersedes
+  "read-only or draft-only" for administrator keys; a user key stays draft-only.
 - **Update channels `stable` + `beta`** (service `update`).
 - **Two signing keys:** a primary that signs releases and a recovery key kept offline in a safe, used only for key
   statements — replacing or revoking keys (service `update`).
@@ -80,7 +85,7 @@ Taken by the owner on 2026-10-07; settled, not to be reopened by a step.
 - **How `api.php` works** (as in LAAS and Joomla): JSON only, no theme, no template, no session, no HTML error page.
   Pretty route `/api/v1/<service>/<action>` by one rewrite rule in `public/.htaccess` and `nginx.conf.example`, placed
   before the fallback that sends every other path to `index.php`; the name `api` is reserved for that prefix in the
-  reserved names of `docs/10-URL-2026.md`, so no Node type takes it. The plain form `api.php?r=<service>/<action>`
+  reserved names of `docs/ARCHITECTURE.md`, "Address Boundary", so no Node type takes it. The plain form `api.php?r=<service>/<action>`
   always works. Reason for a separate entry rather than `index.php?go=api`:
   the SLAED boot loads the theme and the template object on every request, and a Vine agent beats every 45 s — the
   light boot pays off, and a fault in the API cannot render a site page.
@@ -284,20 +289,22 @@ not decide.
 
 | Table | Columns | Keys |
 | --- | --- | --- |
-| `api_client` | `id`, `name` VARCHAR(64), `kind` VARCHAR(10) ascii (agent, app, bot, ai, site), `prefix` CHAR(8) ascii, `token` CHAR(64) ascii (sha256), `scopes` TEXT, `etime` `DATETIME DEFAULT NULL` (expiry, NULL = never), `rtime` `DATETIME DEFAULT NULL` (revoked, NULL = not revoked), `uid` (acting site user, 0 = guest rights), `origins` TEXT, `ips` TEXT, `rate` (per minute), `active` BOOLEAN, `seen` `DATETIME DEFAULT NULL` (NULL = never used), `ip`, `ctime` `DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP` | PK `id`, UNIQUE `token` |
+| `api_client` | `id`, `name` VARCHAR(64), `kind` VARCHAR(10) ascii (agent, app, bot, ai, site), `prefix` CHAR(8) ascii, `token` CHAR(64) ascii (sha256), `scopes` TEXT, `etime` `DATETIME DEFAULT NULL` (expiry, NULL = never), `rtime` `DATETIME DEFAULT NULL` (revoked, NULL = not revoked), `uid` (acting site user, 0 = guest rights), `aid` (acting administrator, 0 = none; never replaced by `uid`, as in `NodeContext`), `policy` TEXT (JSON: risk class → `allow`, `undo`, `confirm` or `deny`; empty = the site default), `origins` TEXT, `ips` TEXT, `rate` (per minute), `active` BOOLEAN, `seen` `DATETIME DEFAULT NULL` (NULL = never used), `ip`, `ctime` `DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP` | PK `id`, UNIQUE `token` |
 | `api_log` | `id` BIGINT, `time` `DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP`, `client` (0 = no key), `ip`, `route` VARCHAR(64) ascii, `status`, `ms`, `rid` VARCHAR(32) ascii, `error` VARCHAR(64) ascii | KEY `time`, KEY `client,time` |
 | `api_idem` | `client`, `ikey` VARCHAR(64) ascii, `rhash` CHAR(64) ascii, `done` BOOLEAN (0 = pending), `time` timer, `status`, `body` MEDIUMTEXT | PK `client,ikey` |
 | `api_queue` | `id`, `kind` VARCHAR(32) ascii (job or event name), `data` MEDIUMTEXT, `ntime` timer, `tries`, `status` VARCHAR(10) ascii, `error` VARCHAR(255), `ctime` `DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP` | KEY `status,ntime` |
 | `api_audit` | `id`, `time` `DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP`, `aname` VARCHAR(25) (admin), `ip`, `act` VARCHAR(32) ascii, `target` VARCHAR(64), `info` TEXT (JSON old/new) | KEY `time`, KEY `target` |
+| `api_confirm` | `id`, `client`, `route` VARCHAR(64) ascii, `rhash` CHAR(64) ascii (sha256 of the exact input), `code` CHAR(64) ascii (sha256 of the one-time confirmation code), `aname` VARCHAR(25) (admin who confirmed, empty while pending), `etime` timer (expiry), `done` BOOLEAN, `ctime` `DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP` | KEY `client,done` |
 
 Retention, enforced by the scheduler job `apiclean`: `api_log` 30 days, `api_idem` 24 h, finished `api_queue` 7
-days, `api_audit` 365 days.
+days, `api_audit` 365 days, `api_confirm` 24 h after expiry.
 
 `config/api.php` (`$conf['api']`): `active`, `off` (disabled services and actions — switches only, no routes),
 `outbound` (host allowlist), `limits` (default rate, burst, body size), `cors` (off by default, global origin
 allowlist for preflights), `log` (all / errors only), `maint` (answer 503 to everything but `system`), `hooks`
 (outbound webhook URLs and the events each one receives), `telegram` (bot token, webhook secret, id of the bot's
-client), `ai` (provider, model, provider key), `master` (1 only on slaed.net), `dev` (1 only on a
+client), `ai` (provider, model, provider key), `risk` (the site default policy per risk class, see "Administrator
+access"), `master` (1 only on slaed.net), `dev` (1 only on a
 development host; `tools/apikey.php` refuses to run without it).
 
 The update service keeps its two settings in `config/api.php` too: `upcheck` (daily check on/off) and `channel`
@@ -350,8 +357,9 @@ Each service is its own plan or section; the connector only hosts it.
 - Methods: `server/discover` (`serverInfo` in the result `_meta`), `tools/list` (only the flagged actions whose scope
   the key holds, deterministic order, `ttlMs`, `cacheScope: "private"` because the list depends on the key),
   `tools/call` (through `ApiRouter::getActionResult()`, so the tool's own scope, kill switch, limit and input filter
-  apply; `ai:tools` alone is never enough); every result carries `resultType: "complete"`; later `resources/*` for
-  materials.
+  apply; `ai:tools` alone is never enough); every result carries `resultType: "complete"`, or `"input_required"`
+  when the action's policy is `confirm` (Multi Round-Trip Requests of `2026-07-28`, see "Administrator access");
+  later `resources/*` for materials.
 - Transport checks: the headers `MCP-Protocol-Version`, `Mcp-Method` and `Mcp-Name` must match the body (400 with
   JSON-RPC `-32020` otherwise); an unsupported version gets 400 with `-32022` and `data.supported`; an unknown method
   gets 404 with `-32601`; `GET` and `DELETE` get 405; a batch (JSON array body) gets 400; a present `Origin` that is
@@ -362,10 +370,53 @@ Each service is its own plan or section; the connector only hosts it.
 - Auth in v1: the connector key as `Authorization: Bearer` (Claude Code and VS Code accept a header in their MCP
   config); authorization is optional in the spec. OAuth 2.1 with Client ID Metadata Documents and RFC 9728 Protected
   Resource Metadata only when a client that requires it is needed.
-- Tools are read-only or draft-only, as in LAAS: an AI agent proposes, a person applies. Text that comes from outside
-  (a product title) is returned as data, never as an instruction.
+- With a user key (`aid` 0) tools are read-only or draft-only, as in LAAS: an AI agent proposes, a person applies.
+  With an administrator key they follow "Administrator access". Text that comes from outside (a product title, a
+  comment, a complaint) is returned as data, never as an instruction, and is marked as untrusted in the result.
 - Outbound: an AI bot on the site or in Telegram answers from site content through a provider API called by `ApiHttp`,
   run from the queue.
+
+### Administrator access
+
+An agent works in the panel with the rights of one administrator and never more; whether it may, and how far, is the
+decision of the site owner, the main administrator.
+
+- **Who opens it:** only the main administrator (`isAdmin(true)`) gives a client an `aid`; a client with the `aid` of
+  the main administrator can be made only by the main administrator. Off by default; a site without such a client has
+  no administrator surface over MCP.
+- **Rights:** the intersection of the administrator's rights (`_admins.modules`, `super`), the key's scopes, the
+  action's own scope, kill switch and limit, and the policy of its risk class. Admin modules declare their actions
+  with scopes `admin:<module>`, explicit, no wildcard.
+- **Access for a time:** the Клиенты tab offers "Пустить агента на 1 час / 1 день / 7 дней", which sets `etime`; an
+  administrator client without `etime` is refused at creation. `ips` and `rate` as for any client.
+- **Risk class, declared next to each action** (`'risk' => …` in `modules/<module>/api.php`; the router refuses an
+  administrator action without it):
+
+  | Class | Examples | Default policy |
+  | --- | --- | --- |
+  | `read` | materials, journals, statistics, `selfcheck`, settings read | `allow` |
+  | `change` | edit a material, moderate a comment, most settings | `undo`: applied at once, a revision or the old value kept, undo offered for 10 s in the panel and through a tool |
+  | `danger` | delete, ban, restore a backup, apply an update, security settings, mass action over the batch cap | `confirm` |
+
+  The owner sets the policy per class in `$conf['api']['risk']` and may tighten it per client in `api_client.policy`;
+  `deny` is always available, a client policy never loosens the site default.
+- **Confirmation (`confirm`):** the action is not run; `api_confirm` stores the route, the hash of the exact input and
+  the hash of a one-time code, valid 10 minutes, and the MCP result is `input_required`. A person confirms in the panel
+  (with the second factor when TOTP exists, `docs/2027-CORE.md`, item 2) or by a button of the linked admin in
+  Telegram; the agent's retry carries the code in `inputResponses`, and the action runs only if the input hash matches.
+  An agent can never confirm its own request.
+- **Never, whatever the policy** — these actions carry no `tool` flag and the router refuses them for any `aid`
+  client: grant or change administrator rights; create, rotate, widen or revoke an API client, its own included;
+  change `api_client.policy` or `$conf['api']['risk']`; switch off the audit, `api_log` or `admin.log`; write
+  executable or server files (PHP, `.htaccess`, theme code that runs on the server); read or change secrets (keys,
+  passwords, provider and bot tokens, `config/db.php`).
+- **Every write:** accepts `dry_run` and then answers the diff without applying; a mass action is capped per call and
+  takes a snapshot first; every call is written to `api_audit` with the administrator's name and the client marked as
+  an agent; a `danger` action notifies the linked admins in Telegram or by mail.
+
+The binding rules follow in the same step: `.rules/api.md` today allows a tool only to read or create a draft and
+takes rights from `scopes` and `uid` alone; the step that builds this section changes those two lines to the model
+above.
 
 ## Service `update`
 
@@ -436,7 +487,10 @@ slaed.net is the master; every other SLAED site is a client of it.
   revokes the old one.
 - HTTPS only outside the dev host; `Strict-Transport-Security` from the entry.
 - Scopes are explicit strings declared by their services, e.g. `vine:agent`, `vine:read`, `vine:admin`,
-  `content:read`, `content:write`, `ai:tools`, `system:self`, `system:info`; no wildcard.
+  `content:read`, `content:write`, `ai:tools`, `system:self`, `system:info`, `admin:<module>`; no wildcard.
+- An administrator client (`aid` set) always has an expiry and is checked against "Administrator access" on every
+  call: rights of that administrator, risk policy, the "never" list; a `confirm` code is single use and bound to the
+  hash of the input it was issued for.
 - Limits per IP (before auth) and per client; failed auth counted per IP and fed to the existing security log and
   blocker — except a well-formed `SLAED_` key of a revoked or expired client, which is logged but not counted, so a
   forgotten agent at the owner's home cannot get the owner's own IP blocked.
@@ -471,7 +525,11 @@ New admin module `admin/modules/api.php` (tabs through `getTplAdminTabs()`, ever
 - **Состояние:** one table — requests and errors per hour, 401/429 counts, last run of each scheduler job, services
   switched off, maintenance flag; from step 5 also queue depth with the oldest waiting job and outbound failures; a
   red line for anything outside its normal range.
-- **Клиенты:** create (name, kind, scopes, user, limits, origins, IPs), show the key once, rotate, revoke, disable.
+- **Клиенты:** create (name, kind, scopes, user, limits, origins, IPs), show the key once, rotate, revoke, disable;
+  for the main administrator also the administrator, the access time ("Пустить агента на …") and the client's risk
+  policy.
+- **Подтверждения** (step 10): pending `confirm` requests with route, input and expiry — confirm or refuse; the risk
+  policy of the site per class.
 - **Сервисы:** on/off per service and action, limits, maintenance; from step 5 the outbound allowlist and the
   outbound webhooks.
 - **Журнал:** requests by time/client/route/status, error detail by request id.
@@ -511,11 +569,18 @@ Recorded so it is not forgotten; not part of the steps.
 - **Staged rollout of `stable`:** the manifest gets `rollout` 1–100; a site takes the release when
   `crc32(site id) % 100 < rollout`, so a release can reach 10 % of sites first and 100 % a few days later; `beta`
   sites always get it at once; the owner raises the number by re-signing the manifest.
-- **Move this plan to a stable name** (e.g. `docs/API.md`) once step 10 is done, and point `.rules/api.md` at it.
+- **Move this plan to a stable name** (e.g. `docs/API.md`) once step 11 is done, and point `.rules/api.md` at it.
 
 ## Open questions
 
-None; all decided on 2026-10-07 (section "Decisions"). A new question goes here before a step starts.
+The plan of 2026-10-07 is decided (section "Decisions"). A new question goes here before a step starts.
+
+- **Dependencies of administrator access** (2026-10-14): the `undo` policy needs node revisions (`docs/2027-CORE.md`,
+  item 3) and old values of settings; the `confirm` policy is stronger with TOTP (item 2). Build those two items
+  before step 10, or let step 10 treat `undo` as `confirm` and confirm without a second factor until they exist?
+- **OAuth for administrator keys:** chat clients such as Claude.ai and ChatGPT connect remote servers through OAuth
+  rather than a Bearer header; an administrator who is not a developer needs OAuth 2.1 (RFC 9728, CIMD, RFC 8707,
+  RFC 9207) to connect at all. Move it from "only when a client requires it" into step 10?
 
 ## Steps
 
@@ -557,4 +622,11 @@ Order decided on 2026-10-07: Vine right after clients and guards.
   transport checks, older-client support, Bearer key), outbound provider calls through the queue. Done when Claude
   Code connects with the key, lists the flagged tools and calls `vine_stats`, a client of the older revision connects
   too, and a tool whose scope the key lacks is neither listed nor callable.
-- [ ] 10. Review: security pass over every service, load test of `vine/beat` and `content` reads, docs.
+- [ ] 10. Administrator access: `aid` and `policy` of `api_client`, `api_confirm`, `$conf['api']['risk']`, `risk`
+  in the action declaration, the "never" list in the router, `input_required` and its retry, confirmation in the panel
+  and in Telegram, `dry_run`, batch cap and snapshot, admin tab Подтверждения; `.rules/api.md` changed to the model of
+  "Administrator access". Done when an administrator key without `etime` is refused, a `danger` action runs only after
+  a person confirms it and only with the same input, an agent cannot confirm its own request, every "never" action is
+  refused for the main administrator's key too, a client policy cannot loosen the site default, and a user key still
+  cannot publish.
+- [ ] 11. Review: security pass over every service, load test of `vine/beat` and `content` reads, docs.
