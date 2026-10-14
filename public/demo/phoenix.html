@@ -106,6 +106,30 @@
       color: var(--sl-text-muted);
     }
 
+    /* The player: play and pause, the stopwatch, the scrubber and the act that plays now */
+    .phx-dock-player input[type="range"] {
+      flex: 1;
+      min-width: 160px;
+      margin: 0;
+      accent-color: var(--sl-warning-strong);
+    }
+
+    .phx-dock-time {
+      min-width: 12ch;
+      font-family: var(--sl-face-mono);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .phx-dock-wait {
+      color: var(--sl-text-muted);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .phx-dock-act {
+      min-width: 11ch;
+      color: var(--sl-warning-strong);
+    }
+
     .phx-dock[data-fold] .phx-dock-more {
       display: none;
     }
@@ -119,17 +143,24 @@
 </head>
 <body>
   <iframe id="phx-frame" class="phx-frame" title="Эталон панели администратора"></iframe>
-  <section id="phx-dock" class="phx-dock" aria-label="Феникс: варианты эффекта">
+  <section id="phx-dock" class="phx-dock" aria-label="Феникс: заставка">
     <div class="phx-dock-row">
-      <span class="phx-dock-cap"><i class="bi bi-fire" aria-hidden="true"></i> <b>Феникс 8.0</b></span>
-      <span class="phx-dock-row" role="group" aria-label="Вариант" data-phx-list></span>
-      <button type="button" data-phx-again title="Повторить (R)"><i class="bi bi-arrow-repeat" aria-hidden="true"></i> Повторить</button>
-      <button type="button" data-phx-fold title="Свернуть описание" aria-expanded="true"><i class="bi bi-chevron-bar-down" aria-hidden="true"></i></button>
+      <span class="phx-dock-cap"><i class="bi bi-fire" aria-hidden="true"></i> <b>Феникс 8.0</b> · <span class="phx-dock-name">Возрождение</span></span>
+      <span class="phx-dock-wait" data-phx-wait></span>
+      <button type="button" data-phx-again title="Запустить сейчас (R)"><i class="bi bi-play-circle" aria-hidden="true"></i> Запустить</button>
+      <button type="button" data-phx-fold title="Свернуть" aria-expanded="true"><i class="bi bi-chevron-bar-down" aria-hidden="true"></i></button>
+    </div>
+    <div class="phx-dock-row phx-dock-player">
+      <button type="button" data-phx-play title="Пауза / старт (пробел)" aria-pressed="true"><i class="bi bi-pause-fill" aria-hidden="true"></i></button>
+      <span class="phx-dock-time" data-phx-time>0,0 / 60,0 с</span>
+      <input type="range" min="0" max="60" step="0.1" value="0" data-phx-seek aria-label="Время сцены">
+      <span class="phx-dock-act" data-phx-act>Код</span>
     </div>
     <div class="phx-dock-more">
-      <div class="phx-dock-row" role="group" aria-label="Повтор без действий" data-phx-idle></div>
-      <div class="phx-dock-name" data-phx-name></div>
-      <p class="phx-dock-note" data-phx-note></p>
+      <div class="phx-dock-row" role="group" aria-label="Акты" data-phx-acts></div>
+      <div class="phx-dock-row" role="group" aria-label="Скорость" data-phx-speed></div>
+      <div class="phx-dock-row" role="group" aria-label="Заставка после простоя" data-phx-idle></div>
+      <p class="phx-dock-note" data-phx-note>Заставка стартует после простоя на странице и идёт по кругу; движение, клавиша или прокрутка на странице мягко её гасят, пепел и лучи остаются фоном. Клавиши стенда: пробел — пауза, ← → — на секунду (с Shift — на пять), R — запустить сейчас.</p>
     </div>
   </section>
   <script>document.write('<script src="assets/phoenix.js?v=' + Date.now() + '"><\/script>');</script>
