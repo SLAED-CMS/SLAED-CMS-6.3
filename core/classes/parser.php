@@ -381,11 +381,12 @@ class Parser {
         return implode('', array_map(fn($p) => preg_match($pat, $p) ? $p : $this->filterEsc($p), $parts));
     }
 
-    # Validate a link URL: data:/javascript:/vbscript: never pass, in any mode; safe mode also allows only http/https/mailto/relative, trusted content keeps its href
+    # Validate a link URL: data:/javascript:/vbscript: never pass; safe mode allows only http/https/mailto/relative; a stored ./ address is one from the root of the site
     private function filterUrl(string $url): string {
         $url = trim($url);
         $bare = preg_replace('#[\s\x00-\x1f]+#', '', $url) ?? $url;
         if (preg_match('#^(?:data|javascript|vbscript):#i', $bare)) return '#';
+        if (str_starts_with($url, './')) return (defined('HOME_PATH') ? HOME_PATH : '/').substr($url, 2);
         if (!$this->safe) return $url;
         return preg_match('/^(?:https?:\/\/|mailto:|[\/\.#?])/i', $url) ? $url : '#';
     }
@@ -544,7 +545,7 @@ class Parser {
                 '/(?<!\*)\*(0[1-9]|1[0-8])(?!\d)/',
                 function(array $m): string {
                     $num = $this->filterEsc($m[1]);
-                    $img = getThemeImagePath('smilies/'.$num.'.gif');
+                    $img = getThemeImageUrl('smilies/'.$num.'.gif');
                     $ttl = _SMILIE.' - '.$num;
                     return $this->addStash($this->getParserImage($img, $ttl, $ttl));
                 },
@@ -643,7 +644,7 @@ class Parser {
                 function(array $m): string {
                     $show = (defined('ADMIN_FILE') || is_user());
                     $this->vary = true;
-                    $txt = $show ? $this->filterNest($m[1]) : (string) _HIDETEXT;
+                    $txt = $show ? $this->filterNest($m[1]) : sprintf(_HIDETEXT, getSeoUrl(['name' => 'account']));
                     return $this->addStash($this->getQuoteHtml(['is_hide' => true, 'content_html' => $txt, 'title_text' => _HIDE]));
                 },
                 $src

@@ -113,7 +113,7 @@ function comments(): void {
             $nick = $val['nick'];
             $modname = trim((string)getModuleName($cmod));
             $modlabel = ($modname !== '') ? $modname.' - '.$cmod : $cmod;
-            $post = $nick ? filterTextHighlight(user_info($nick), $chng) : filterTextHighlight($val['name'] ?: _ANONYM, $chng);
+            $post = $nick ? filterTextHighlight(user_info($nick, null), $chng) : filterTextHighlight($val['name'] ?: _ANONYM, $chng);
             $comment = trim(strip_tags((string)$prs->filterContent($val['body'], true, $cmod, 0, 'breaks')));
             $comment = cutstr($comment, 120);
             $comment = filterTextHighlight($comment, $chng);
@@ -240,7 +240,7 @@ function edit(): void {
     $ip = (string)($row['ip'] ?? '');
     $modname = trim((string)getModuleName($cmod));
     $modlabel = ($modname !== '') ? $modname.' - '.$cmod : $cmod;
-    $post = $nick ? user_info($nick) : (($row['name'] ?? '') ?: _ANONYM);
+    $post = $nick ? user_info($nick, null) : (($row['name'] ?? '') ?: _ANONYM);
     $iptext = $ip ? Geoip::getIpHtml($ip) : _NO;
     $rows = [
         ['label_html' => _MODUL, 'field_html' => htmlspecialchars($modlabel, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')],

@@ -44,12 +44,12 @@ define('_ACCOUNT_UNSUBOK','The address %s no longer receives the site newsletter
 define('_ACCOUNT_VIEWNOTE','A hidden address is not shown even in your information.');
 define('_ACCOUNT_WORK','Profession');
 define('_ACCOUNT_YEARS','Years with the project');
-define('_ACTERROR1','New user verification number is invalid.<br>Please be sure to click on the link you received by email or apply for a new account <a href="index.php?name=account">here</a>.');
-define('_ACTERROR2','There is no user in the database with this information.<br>You can register a new user from <a href="index.php?name=account">here</a>.');
+define('_ACTERROR1','New user verification number is invalid.<br>Please be sure to click on the link you received by email or apply for a new account <a href="%s">here</a>.');
+define('_ACTERROR2','There is no user in the database with this information.<br>You can register a new user from <a href="%s">here</a>.');
 define('_ACTIVATIONERROR','New User Activation Error');
 define('_ACTIVATIONSUB','New User Account Activation');
 define('_ACTIVATIONYES','New User Activation');
-define('_ACTMSG','Your account has been activated. Please login from <a href="index.php?name=account">this link</a> using your assigned Nickname and Password.');
+define('_ACTMSG','Your account has been activated. Please login from <a href="%s">this link</a> using your assigned Nickname and Password.');
 define('_AVATARINFO','Displays a small graphic image below your details in posts. Only one image can be displayed at a time, its width can be no greater than %1$s pixels, the height no greater than %2$s pixels, and the file size no more than %3$s.');
 define('_AVATARSAVE','Select Avatar from gallery');
 define('_AVATARSELECT','Choose your favorite avatar from the gallery, it is enough to press the left mouse button on the desired image.');

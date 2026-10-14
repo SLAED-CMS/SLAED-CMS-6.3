@@ -500,7 +500,7 @@ function addSchedulerTrigger(): array {
     if (!$job) return [];
     $json = json_encode(['time' => time(), 'job' => (string)($job['name'] ?? '')], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     if (!is_string($json) || !Cache::setBody($file, $json)) return [];
-    return ['url' => 'index.php?go=3&op=scheduler', 'token' => rawurlencode(getSiteToken('scheduler'))];
+    return ['url' => HOME_PATH.'index.php?go=3&op=scheduler', 'token' => rawurlencode(getSiteToken('scheduler'))];
 }
 
 # Fetches a remote scheduler target through a safe GET request and captures transport errors
@@ -1421,8 +1421,8 @@ function filterCanonicalParams(): array {
     if ($id) $vars['id'] = (string)$id;
     $cat = getVar('get', 'cat', 'num');
     if ($cat) $vars['cat'] = (string)$cat;
-    $num = getVar('get', 'num', 'num');
-    if ($num > 1) $vars['num'] = (string)$num;
+    $page = getVar('get', 'page', 'num');
+    if ($page > 1) $vars['page'] = (string)$page;
     $let = getVar('get', 'let', 'let');
     if ($let !== '') $vars['let'] = $let;
     $uname = getVar('get', 'uname', 'name');
@@ -1440,9 +1440,48 @@ function getPublicUrl(array|string $vars = []): string {
     return $base.'/'.(str_starts_with($path, HOME_PATH) ? substr($path, strlen(HOME_PATH)) : ltrim($path, '/'));
 }
 
+# One 301 to the address of a page of index.php that answers a GET or HEAD for every reason at once: path, query, num, page 1, scheme, host; url is a 6.2 target
+function setSeoMove(array $seo = []): void {
+    global $db, $conf;
+    $way = strtoupper((string)($_SERVER['REQUEST_METHOD'] ?? 'GET'));
+    if (PHP_SAPI === 'cli' || defined('ADMIN_FILE') || !in_array($way, ['GET', 'HEAD'], true) || !empty($_SERVER['HTTP_HX_REQUEST']) || http_response_code() >= 400) return;
+    if (!isset($_SERVER['REQUEST_URI']) || basename(str_replace('\\', '/', (string)($_SERVER['SCRIPT_NAME'] ?? ''))) !== 'index.php') return;
+    if (getVar('req', 'go', 'var') !== '' || !in_array(getVar('req', 'file', 'var'), ['', 'index'], true)) return;
+    $keys = array_intersect_key(filterCanonicalParams(), array_flip(['name', 'op', 'id', 'cat', 'uname']));
+    $name = $keys['name'] ?? '';
+    $op = $keys['op'] ?? '';
+    if (array_key_exists('route', $seo)) $keys['route'] = $seo['route'];
+    $known = $name === '' || isset($conf['node']['types'][$name]) || isset($conf['modules'][$name]);
+    $bare = $op !== '' && ($keys['route'] ?? '') === '' && ($name === '' || !(new Route($db))->isRouteReserved($name, $op));
+    if (!isset($seo['url']) && (!$known || $bare)) return;
+    $drop = ['name', 'op', 'id', 'cat', 'uname'];
+    [$path, $query] = array_pad(explode('?', (string)($_SERVER['REQUEST_URI'] ?? ''), 2), 2, '');
+    $list = array_values(array_filter(explode('&', $query), fn(string $v): bool => $v !== ''));
+    $turn = !($name === 'account' && $op === 'activate');
+    if ($turn && in_array('page', array_map(fn(string $v): string => urldecode(explode('=', $v, 2)[0]), $list), true)) $drop[] = 'num';
+    $rest = [];
+    foreach ($list as $pair) {
+        [$raw, $val] = array_pad(explode('=', $pair, 2), 2, '');
+        $key = urldecode($raw);
+        if ($key === 'num' && $turn && !in_array('num', $drop, true)) [$key, $pair] = ['page', 'page='.$val];
+        if (!in_array($key, $drop, true) && ($key !== 'page' || intval(urldecode($val)) > 1)) $rest[] = $pair;
+    }
+    $want = (string)($seo['url'] ?? getSeoUrl($keys));
+    if ($rest) $want .= (str_contains($want, '?') ? '&' : '?').implode('&', $rest);
+    $secure = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || (($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https');
+    $host = strtolower((string)($_SERVER['HTTP_HOST'] ?? ''));
+    $home = parse_url((string)($conf['homeurl'] ?? '')) ?: [];
+    $chost = strtolower((string)($home['host'] ?? '')).(isset($home['port']) ? ':'.$home['port'] : '');
+    $ssl = !empty($conf['forcessl']) || $secure;
+    $site = (!empty($conf['forcehost']) && $chost !== '') ? $chost : $host;
+    if ($want === $path.(($query !== '') ? '?'.$query : '') && $ssl === $secure && $site === $host) return;
+    setRedirect((($site !== '') ? ($ssl ? 'https' : 'http').'://'.$site : '').$want, false, 301);
+}
+
 # Resolve canonical URL and robots defaults for the current frontend request
 function getSeoRoute(array $seo = []): array {
     $vars = filterCanonicalParams();
+    if (array_key_exists('route', $seo) || http_response_code() >= 400) $vars['route'] = $seo['route'] ?? null;
     $name = $vars['name'] ?? '';
     $op = $vars['op'] ?? '';
     $robot = trim((string)($seo['robots'] ?? ''));
@@ -1512,8 +1551,8 @@ function getHeadTitle(array $seo): string {
     if ($word !== '') $parts[] = $word;
     $let = getVar('get', 'let', 'let');
     if ($let !== '') $parts[] = $let;
-    $num = getVar('get', 'num', 'num');
-    if ($num) $parts[] = _PAGE.' '.$num;
+    $page = getVar('get', 'page', 'num');
+    if ($page) $parts[] = _PAGE.' '.$page;
     $com = getVar('get', 'com', 'num');
     if ($com) $parts[] = _COMMENTS.' '.$com;
     $ops = ['best' => _BEST, 'pop' => _POP, 'liste' => _LIST, 'add' => _ADD];
@@ -1747,6 +1786,7 @@ function getRssFeeds(): array {
 # That read is judged by the reader of a Node type or by the read right and, on a multilingual site, the language of any other module, so a closed category never shows its title
 function setHead(array $seo = []): void {
     global $db, $home, $conf, $user, $name, $theme, $tpl, $adminpage, $adminvars, $sitepage, $sitevars, $locale;
+    setSeoMove($seo);
     $name = $name ?? '';
     $ctime = time();
     $request = $_SERVER['REQUEST_URI'] ?? getenv('REQUEST_URI') ?: '';
@@ -1891,7 +1931,7 @@ function setHead(array $seo = []): void {
     }
     $favicon = 'templates/'.(defined('ADMIN_FILE') ? 'admin' : $theme).'/images/favicon.svg';
     if (is_file(PUBLIC_DIR.'/'.$favicon)) {
-        $strlink .= $tpl->getHtmlFrag('head-link', ['rel' => 'shortcut icon', 'href' => $favicon, 'type' => 'image/svg+xml', 'title' => ''])."\n";
+        $strlink .= $tpl->getHtmlFrag('head-link', ['rel' => 'shortcut icon', 'href' => HOME_PATH.$favicon, 'type' => 'image/svg+xml', 'title' => ''])."\n";
     }
     $strlink .= doCss();
     $script = doScript()."\n".$stscript;
@@ -1921,7 +1961,7 @@ function setHead(array $seo = []): void {
             'blocks_right' => '',
             'blocks_down' => '',
             'debug_html' => '',
-            'adlogo' => $adpath,
+            'adlogo' => HOME_PATH.$adpath,
             'adalt' => $conf['sitename'] ?? 'SLAED CMS',
             'adtitle' => $conf['sitename'] ?? 'SLAED CMS',
         ];
@@ -1944,7 +1984,7 @@ function setHead(array $seo = []): void {
         $avatar = getUserAvatarUrl($userinfo);
         $items = [
             $tpl->getHtmlFrag('link', [
-                'href' => 'index.php?name=account',
+                'href' => getSeoUrl(['name' => 'account']),
                 'title' => _ACCOUNT,
                 'img_src' => $avatar,
                 'img_alt' => _ACCOUNT,
@@ -1953,7 +1993,7 @@ function setHead(array $seo = []): void {
                 'is_login_avatar' => true,
                 'is_bold_label' => true,
             ]),
-            $tpl->getHtmlFrag('link', ['href' => 'index.php?name=account&op=logout&refer=1', 'title' => _LOGOUT, 'label' => _LOGOUT]),
+            $tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => 'account', 'op' => 'logout', 'refer' => 1]), 'title' => _LOGOUT, 'label' => _LOGOUT]),
         ];
         $html = '';
         foreach ($items as $item) {
@@ -1981,22 +2021,22 @@ function setHead(array $seo = []): void {
                 'is_required' => true,
             ],
             'submit_button' => ['button_type' => 'submit', 'label' => _LOGIN, 'title' => _LOGIN],
-            'lost_link' => ['href' => 'index.php?name=account&op=passlost', 'title' => _PASSFOR, 'label' => _PASSFOR],
-            'register_link' => ['href' => 'index.php?name=account&op=newuser', 'title' => _REG, 'label' => _REG, 'is_account_button' => true],
+            'lost_link' => ['href' => getSeoUrl(['name' => 'account', 'op' => 'passlost']), 'title' => _PASSFOR, 'label' => _PASSFOR],
+            'register_link' => ['href' => getSeoUrl(['name' => 'account', 'op' => 'newuser']), 'title' => _REG, 'label' => _REG, 'is_account_button' => true],
             'token_field' => ['name_attr' => 'token', 'value_attr' => $atok],
             'refer_field' => ['name_attr' => 'refer', 'value_attr' => '1'],
             'op_field' => ['name_attr' => 'op', 'value_attr' => 'login'],
             'oauth_html' => Oauth::getButtons(),
         ]);
     } else {
-        $item = $tpl->getHtmlFrag('link', ['href' => 'index.php?name=account', 'title' => _BREG, 'label' => _BREG, 'is_login_button' => true, 'is_bold_label' => true]);
+        $item = $tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => 'account']), 'title' => _BREG, 'label' => _BREG, 'is_login_button' => true, 'is_bold_label' => true]);
         $login = $tpl->getHtmlFrag('list', ['is_unordered' => true, 'is_login_top' => true, 'items_html' => $tpl->getHtmlFrag('list-item', ['content_html' => $item])]);
     }
     [$logo_w, $logo_h] = $conf['derived']['logo'][$theme] ?? getImageBox(PUBLIC_DIR.'/templates/'.$theme.'/images/logos/'.($conf['site_logo'] ?? ''));
     $sitevars = [
         'theme' => getTheme(),
         'mode' => getThemeMode(),
-        'mode_html' => getThemeModeSwitch('index.php'),
+        'mode_html' => getThemeModeSwitch(HOME_PATH.'index.php'),
         'lang' => substr(_LOCALE, 0, 2),
         'sitename' => $conf['sitename'] ?? '',
         'logo' => $conf['site_logo'] ?? '',
@@ -2791,7 +2831,7 @@ function doCss(): string {
     return implode("\n", $arr);
 }
 
-# Create a sitemap: the XML goes straight into its files as it is produced, a new file follows every 50000 URLs, and more than one file is joined by an index
+# Create a sitemap: the XML goes straight into its files as it is produced, a new file follows every 50000 URLs, more than one is joined by an index, robots.txt names it
 # The modules of sitemap.mod are read as before; a Node type takes part through its own sitemap integration, its materials in cursor batches read as a guest of the site language
 # Neither a closed category nor the whole set of materials is ever held; the HTML map shows a Node type with its categories and leaves its materials to the XML
 # The forum keeps a category and a topic whose right opens to a guest by the guest branch of is_acess(): level 0, no group, and an empty right stays closed
@@ -2815,18 +2855,20 @@ function addSitemapTask(bool $force = false): array {
     };
     for ($i = 0; $i < count($mod); $i++) {
         if ($mod[$i] == 'account' && is_active($mod[$i], '0')) {
-            $result = $db->getSqlQuery('SELECT id, name, lastvis FROM '.PREFIX_DB.'_users');
-            while ([$id, $title, $time] = $db->getSqlRow($result)) $info[$mod[$i]][] = [$id, '', $title, $time, $mod[$i]];
+            $result = $db->getSqlQuery('SELECT u.id, u.name, u.lastvis, r.path FROM '.PREFIX_DB.'_users AS u'
+                .' LEFT JOIN '.PREFIX_DB.'_routes AS r ON r.kind = \'user\' AND r.oid = u.id AND r.cur = 1');
+            while ([$id, $title, $time, $path] = $db->getSqlRow($result)) $info[$mod[$i]][] = [$id, '', $title, $time, $mod[$i], $path];
         } elseif ($mod[$i] == 'forum' && is_active($mod[$i], '0')) {
-            $result = $db->getSqlQuery('SELECT f.id, f.cid, f.title, f.time, c.pread FROM '.PREFIX_DB.'_forum AS f LEFT JOIN '.PREFIX_DB.'_categories AS c ON c.id = f.cid'
-                ." WHERE f.pid = '0' AND f.time <= NOW() AND f.status > '1'");
-            while ([$id, $cat, $title, $time, $pread] = $db->getSqlRow($result)) if ($guest((string)$pread)) $info[$mod[$i]][] = [$id, $cat, $title, $time, $mod[$i]];
+            $result = $db->getSqlQuery('SELECT f.id, f.cid, f.title, f.time, c.pread, r.path FROM '.PREFIX_DB.'_forum AS f LEFT JOIN '.PREFIX_DB.'_categories AS c ON c.id = f.cid'
+                .' LEFT JOIN '.PREFIX_DB.'_routes AS r ON r.kind = \'topic\' AND r.oid = f.id AND r.cur = 1'." WHERE f.pid = '0' AND f.time <= NOW() AND f.status > '1'");
+            while ([$id, $cat, $title, $time, $pread, $path] = $db->getSqlRow($result)) if ($guest((string)$pread)) $info[$mod[$i]][] = [$id, $cat, $title, $time, $mod[$i], $path];
         } elseif ($mod[$i] == 'voting' && is_active($mod[$i], '0')) {
-            $result = $db->getSqlQuery('SELECT id, title, time FROM '.PREFIX_DB."_voting WHERE modul = '' AND time <= NOW()"
-                ." AND (enddate >= NOW() AND status = '0' OR status = '1')");
-            while ([$id, $title, $time] = $db->getSqlRow($result)) $info[$mod[$i]][] = [$id, '', $title, $time, $mod[$i]];
+            $result = $db->getSqlQuery('SELECT v.id, v.title, v.time, r.path FROM '.PREFIX_DB.'_voting AS v'
+                .' LEFT JOIN '.PREFIX_DB.'_routes AS r ON r.kind = \'poll\' AND r.oid = v.id AND r.cur = 1'
+                ." WHERE v.modul = '' AND v.time <= NOW() AND (v.enddate >= NOW() AND v.status = '0' OR v.status = '1')");
+            while ([$id, $title, $time, $path] = $db->getSqlRow($result)) $info[$mod[$i]][] = [$id, '', $title, $time, $mod[$i], $path];
         } elseif (is_active($mod[$i], '0')) {
-            $info[$mod[$i]][] = ['', '', '', '', $mod[$i]];
+            $info[$mod[$i]][] = ['', '', '', '', $mod[$i], null];
         }
     }
     $ncats = [];
@@ -2884,8 +2926,9 @@ function addSitemapTask(bool $force = false): array {
         if ($sm['gen_c']) foreach ($ncats as $key => $cats) foreach (array_keys($cats) as $cid) $put($line(getPublicUrl(['name' => $key, 'cat' => $cid]), $date, 'c'));
         foreach ($info as $key => $val) {
             foreach ($val as $one) {
-                if ($sm['gen_p'] && $one[0]) $put($line(getPublicUrl(['name' => $one[4], 'op' => 'view', 'id' => $one[0]]), format_time($one[3], 'Y-m-d'), 'p'));
-                $htm[$key][$one[1]][] = [$one[0], $one[2]];
+                if ($sm['gen_p'] && $one[0]) $put($line(getPublicUrl(['name' => $one[4], 'op' => 'view', 'id' => $one[0], 'route' => $one[5]]),
+                    format_time($one[3], 'Y-m-d'), 'p'));
+                $htm[$key][$one[1]][] = [$one[0], $one[2], $one[5]];
             }
         }
         if ($sm['gen_p'] && $types) {
@@ -2895,7 +2938,7 @@ function addSitemapTask(bool $force = false): array {
             do {
                 $rows = $query->getNodeSitemap($after, $size);
                 foreach ($rows as $row) {
-                    $put($line(getPublicUrl(['name' => $row['name'], 'op' => 'view', 'id' => $row['id']]), substr($row['updated'], 0, 10), 'p'));
+                    $put($line(getPublicUrl(['name' => $row['name'], 'op' => 'view', 'id' => $row['id'], 'route' => $row['path']]), substr($row['updated'], 0, 10), 'p'));
                     $after = $row['id'];
                 }
             } while (count($rows) === $size);
@@ -2926,7 +2969,8 @@ function addSitemapTask(bool $force = false): array {
                 $vitems = '';
                 foreach ($list as $item) {
                     if (!$item[0]) continue;
-                    $vlink = $tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => $key, 'op' => 'view', 'id' => $item[0]]), 'title' => $item[1], 'label' => $item[1]]);
+                    $vlink = $tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => $key, 'op' => 'view', 'id' => $item[0], 'route' => $item[2]]), 'title' => $item[1],
+                        'label' => $item[1]]);
                     $vitems .= $tpl->getHtmlFrag('list-item', ['content_html' => $vlink]);
                 }
                 $vlist = $vitems ? $tpl->getHtmlFrag('list', ['items_html' => $vitems, 'is_sub_two' => true]) : '';
@@ -2975,6 +3019,12 @@ function addSitemapTask(bool $force = false): array {
     foreach (glob(PUBLIC_DIR.'/sitemap-*.xml*') ?: [] as $old) {
         if (preg_match('/^sitemap-[1-9][0-9]*\.xml(?:\.gz)?$/D', basename($old)) && !in_array(basename($old), $keep, true)) unlink($old);
     }
+    $robot = PUBLIC_DIR.'/robots.txt';
+    $rtext = is_file($robot) ? (string)file_get_contents($robot) : '';
+    $rline = 'Sitemap: '.getPublicUrl('sitemap.xml');
+    $rpat = '#^Sitemap:[ \t]*(?:\S*/)?sitemap\.xml[ \t]*(\r?)$#mi';
+    $rnew = preg_match($rpat, $rtext) ? (string)preg_replace_callback($rpat, fn(array $v): string => $rline.$v[1], $rtext) : rtrim($rtext)."\n\n".$rline."\n";
+    if ($rnew !== $rtext) file_put_contents($robot, ltrim($rnew));
     return [
         'status' => 'success',
         'message' => 'Sitemap generation completed',
@@ -3123,14 +3173,16 @@ function getVotingView(int $id = 0, string $votid = '', bool $force = false): st
     }
 
     $result = $db->getSqlQuery(
-        'SELECT modul, title, body, answer, enddate, multi, comments, acomm, typ FROM '.PREFIX_DB.'_voting WHERE id = :id AND '.$qwhere,
+        'SELECT v.modul, v.title, v.body, v.answer, v.enddate, v.multi, v.comments, v.acomm, v.typ, r.path FROM '.PREFIX_DB.'_voting AS v'
+        .' LEFT JOIN '.PREFIX_DB.'_routes AS r ON r.kind = \'poll\' AND r.oid = v.id AND r.cur = 1 WHERE v.id = :id AND '.$qwhere,
         array_merge(['id' => $id], $qpars)
     );
     if ($db->getSqlRowCount($result) < 1) {
         return $tpl->getHtmlFrag('alert', ['text' => _NO_INFO, 'meta' => '', 'type' => 'info', 'is_warn' => false]);
     }
 
-    [$modul, $title, $body, $answer, $end, $multi, $comm, $acomm, $typ] = $db->getSqlRow($result);
+    [$modul, $title, $body, $answer, $end, $multi, $comm, $acomm, $typ, $route] = $db->getSqlRow($result);
+    $page = getSeoUrl(['name' => 'voting', 'op' => 'view', 'id' => $id, 'route' => $route]);
     $cmod = substr('voting', 0, 2).'-'.$id;
     $cook = isset($_COOKIE[$cmod]) ? intval($_COOKIE[$cmod]) : 0;
     $uid = is_user() ? intval(substr($user[0], 0, 11)) : 0;
@@ -3181,11 +3233,12 @@ function getVotingView(int $id = 0, string $votid = '', bool $force = false): st
     [$vnum] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_voting WHERE '.$qwhere, $qpars));
     $admin = '';
     if (!$force && is_moder('voting')) {
-        $admin = $tpl->getHtmlFrag('dial', getTplEditMenu($afile.'.php?name=voting&op=add&id='.$id, $afile.'.php?name=voting&op=delete&id='.$id.'&refer=1', $title));
+        $edit = HOME_PATH.$afile.'.php?name=voting&op=';
+        $admin = $tpl->getHtmlFrag('dial', getTplEditMenu($edit.'add&id='.$id, $edit.'delete&id='.$id.'&refer=1', $title));
     }
 
     $post = (!$force && !$rate) ? $tpl->getHtmlFrag('link', [
-        'href' => 'index.php?go=1&op=updateVotingResult&votid='.$votid,
+        'href' => HOME_PATH.'index.php?go=1&op=updateVotingResult&votid='.$votid,
         'is_post' => true,
         'hx_target' => '#rep'.$votid,
         'hx_include' => '#form'.$votid,
@@ -3194,7 +3247,7 @@ function getVotingView(int $id = 0, string $votid = '', bool $force = false): st
         'is_button_blue' => true,
     ]) : '';
     $polls = (!$force && $vnum > 1) ? $tpl->getHtmlFrag('link', [
-        'href' => 'index.php?name=voting',
+        'href' => getSeoUrl(['name' => 'voting']),
         'title' => _POLLS,
         'label' => _POLLS,
         'icon_name' => 'card-checklist',
@@ -3202,10 +3255,10 @@ function getVotingView(int $id = 0, string $votid = '', bool $force = false): st
     ]) : '';
     $votes = $force ? '' : $tpl->getHtmlFrag('span', ['is_votes' => true, 'text' => _VOTES.': '.$vote]);
     if (!$force && !$modul && $votid != 'voting') {
-        $votes = $tpl->getHtmlFrag('link', ['href' => 'index.php?name=voting&op=view&id='.$id, 'title' => _VOTES, 'label' => _VOTES.': '.$vote, 'is_votes' => true]);
+        $votes = $tpl->getHtmlFrag('link', ['href' => $page, 'title' => _VOTES, 'label' => _VOTES.': '.$vote, 'is_votes' => true]);
     }
     $com = (!$force && !$modul && $acomm) ? $tpl->getHtmlFrag('link', [
-        'href' => 'index.php?name=voting&op=view&id='.$id.'#comm',
+        'href' => $page.'#comm',
         'title' => _COMMENTS,
         'label' => _COMMENTS.': '.$comm,
         'is_comments' => true,
@@ -3477,14 +3530,32 @@ function getImgText(string $text, string $type = '', bool $check = true, string 
     return $img;
 }
 
-# The query address of a page from the root of the site, its route keys in the order passed, the title keys left out
+# The address of a page from the root: the passed or category path absorbs its keys, else module, operation and id; sorted query; a missing route is logged with its caller
 function getSeoUrl(array $params): string {
-    $query = [];
-    foreach ($params as $key => $val) {
-        if ($key === 'title' || $key === 'ctitle') continue;
-        $query[] = $key.'='.$val;
+    $name = (string)($params['name'] ?? '');
+    $op = (string)($params['op'] ?? '');
+    $cat = intval($params['cat'] ?? 0);
+    $has = array_key_exists('route', $params);
+    $path = (string)($params['route'] ?? '');
+    if (!$has && $cat > 0 && $name !== '' && $op === '') [$path, $has] = [getCategoryMap($name)[$cat]['path'] ?? '', true];
+    if (!$has && $op === 'view' && (isset($params['id']) || isset($params['uname']))) {
+        $line = array_map(fn(array $v): string => basename($v['file'] ?? '').':'.($v['line'] ?? 0), array_slice(debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2), 0, 2));
+        Logger::addSite('warning', 'getSeoUrl: an entity link without its route', ['name' => $name, 'caller' => implode(' < ', $line)]);
     }
-    return HOME_PATH.'index.php?'.implode('&', $query);
+    $drop = ['route', 'name', 'op', 'id'];
+    if ($path !== '') {
+        $drop = array_merge($drop, ['cat', 'uname']);
+        if ($op !== '' && $op !== 'view') unset($drop[2]);
+    } elseif ($name !== '') {
+        $id = (string)($params['id'] ?? '');
+        $path = $name.(($op !== '') ? '/'.$op.(ctype_digit($id) ? '/'.$id : '') : '');
+        if ($op === '' || !ctype_digit($id)) unset($drop[3]);
+    }
+    $rest = array_diff_key($params, array_flip($drop));
+    if (intval($rest['page'] ?? 2) < 2) unset($rest['page']);
+    ksort($rest, SORT_STRING);
+    $query = implode('&', array_map(fn(int|string $k, mixed $v): string => $k.'='.$v, array_keys($rest), $rest));
+    return HOME_PATH.$path.(($query !== '') ? '?'.$query : '');
 }
 
 # The name of an address from a stored, escaped title of any of the six locales in one Latin table, its locale being unknown; hyphens, cut to 80 at a hyphen
@@ -3942,7 +4013,7 @@ function getLanguageFlagSrc(string $lang): string {
     $map = ['en' => 'gb', 'uk' => 'ua'];
     $code = $map[$lang] ?? $lang;
     $path = 'flags/'.$code.'.svg';
-    return file_exists(PUBLIC_DIR.'/'.getThemeImagePath($path)) ? getThemeImagePath($path) : getThemeImagePath('flags/unknown.svg');
+    return file_exists(PUBLIC_DIR.'/'.getThemeImagePath($path)) ? getThemeImageUrl($path) : getThemeImageUrl('flags/unknown.svg');
 }
 
 # Hash a user password with bcrypt
@@ -4064,8 +4135,10 @@ function getUserSessionRows(): void {
     if (!$conf['session']) return;
     $where = ($conf['botsact']) ? 'guest IN (1, 2)' : 'guest = 2';
     $rows = '';
-    $result = $db->getSqlQuery('SELECT uname, time, ip, guest, modul FROM '.PREFIX_DB.'_session WHERE '.$where.' ORDER BY uname');
-    while ([$uname, $time, $host, $guest, $module] = $db->getSqlRow($result)) {
+    $result = $db->getSqlQuery('SELECT s.uname, s.time, s.ip, s.guest, s.modul, r.path FROM '.PREFIX_DB.'_session AS s'
+        .' LEFT JOIN '.PREFIX_DB.'_users AS u ON s.guest = 2 AND u.name = s.uname LEFT JOIN '.PREFIX_DB.'_routes AS r ON r.kind = \'user\' AND r.oid = u.id AND r.cur = 1'
+        .' WHERE s.'.$where.' ORDER BY s.uname');
+    while ([$uname, $time, $host, $guest, $module, $route] = $db->getSqlRow($result)) {
         $time = time() - $time;
         $strip = cutstr($uname, 15);
         $module = getModuleName($module);
@@ -4073,7 +4146,8 @@ function getUserSessionRows(): void {
         if ($guest == 2) {
             $rows .= $tpl->getHtmlFrag('session-row', [
                 'geo_html' => Geoip::getFlagHtml($host),
-                'name_link' => ['href' => 'index.php?name=account&op=view&uname='.urlencode($uname), 'title' => getDuration($time), 'label' => $strip],
+                'name_link' => ['href' => getSeoUrl(['name' => 'account', 'op' => 'view', 'uname' => rawurlencode($uname), 'route' => $route]), 'title' => getDuration($time),
+                    'label' => $strip],
                 'module_title' => $module,
                 'module_text' => $lstrip,
             ]);
@@ -4098,8 +4172,10 @@ function getUserSessionAdminInfo(string $id = ''): string {
         $a = $b = $m = $u = $i = 0;
         $who_online = ['0' => '', '1' => '', '2' => '', '3' => ''];
         $content_who = '';
-        $result = $db->getSqlQuery('SELECT uname, time, ip, guest, modul, url FROM '.PREFIX_DB.'_session ORDER BY uname');
-        while ([$uname, $time, $host, $guest, $module, $url] = $db->getSqlRow($result)) {
+        $result = $db->getSqlQuery('SELECT s.uname, s.time, s.ip, s.guest, s.modul, s.url, r.path FROM '.PREFIX_DB.'_session AS s'
+            .' LEFT JOIN '.PREFIX_DB.'_users AS u ON s.guest = 2 AND u.name = s.uname LEFT JOIN '.PREFIX_DB.'_routes AS r ON r.kind = \'user\' AND r.oid = u.id AND r.cur = 1'
+            .' ORDER BY s.uname');
+        while ([$uname, $time, $host, $guest, $module, $url, $route] = $db->getSqlRow($result)) {
             $time = time() - $time;
             $namestrip = cutstr($uname, 15);
             $lstrip = cutstr($module, 15);
@@ -4118,7 +4194,7 @@ function getUserSessionAdminInfo(string $id = ''): string {
                 $title_who = $tpl->getHtmlFrag('session-row', [
                     'geo_html'    => Geoip::getFlagHtml($host),
                     'name_link'   => [
-                        'href' => 'index.php?name=account&op=view&uname='.urlencode($uname),
+                        'href' => getSeoUrl(['name' => 'account', 'op' => 'view', 'uname' => rawurlencode($uname), 'route' => $route]),
                         'title' => getDuration($time).' - '._IP.': '.$host,
                         'label' => $namestrip,
                         'is_blank' => true,
@@ -4196,8 +4272,8 @@ function adminblock(): string {
             $block = (string)$content;
         }
         $cont = $tpl->getHtmlFrag('admin-block-links', [
-            'admin_link'  => ['href' => $afile.'.php', 'title' => (string)_ADMINMENU, 'label' => (string)_ADMINMENU, 'icon_name' => 'house-door'],
-            'logout_link' => ['href' => $afile.'.php?op=logout', 'title' => (string)_LOGOUT, 'label' => (string)_LOGOUT, 'icon_name' => 'box-arrow-right'],
+            'admin_link'  => ['href' => HOME_PATH.$afile.'.php', 'title' => (string)_ADMINMENU, 'label' => (string)_ADMINMENU, 'icon_name' => 'house-door'],
+            'logout_link' => ['href' => HOME_PATH.$afile.'.php?op=logout', 'title' => (string)_LOGOUT, 'label' => (string)_LOGOUT, 'icon_name' => 'box-arrow-right'],
             'block_html'  => $block,
         ]);
         $a_title = ($title) ? $title : _ADMINS;
@@ -4214,14 +4290,13 @@ function adminblock(): string {
     return '';
 }
 
-# User info link
-# $icon is off wherever the name stands next to an info tip, because the "i" already marks the user block and a second person icon would only repeat it
-function user_info(string $name, bool $icon = true): string {
+# The link to a profile on the path its reader joined; $icon is off beside an info tip, whose "i" already marks the user block
+function user_info(string $name, ?string $route, bool $icon = true): string {
     global $conf, $tpl;
     if (!$name) return '';
     if ($conf['users']['prof'] != 1 || ($conf['users']['prof'] == 1 && is_user()) || isAdmin()) {
         return $tpl->getHtmlFrag('link', [
-            'href' => 'index.php?name=account&op=view&uname='.urlencode($name),
+            'href' => getSeoUrl(['name' => 'account', 'op' => 'view', 'uname' => rawurlencode($name), 'route' => $route]),
             'title' => (string)_PERSONALINFO,
             'is_author' => $icon,
             'label' => $name,
@@ -4331,12 +4406,15 @@ function getForumTopicState(int $status, string $time, string $ltime, int $comme
     return '';
 }
 
-# Query recent root forum topics shared by the forum blocks and theme teasers
+# Recent root forum topics for the blocks and theme teasers; the asked columns end with the paths of the topic, its author and its last poster
 function getForumTopics(string $cols, string $bclos, int $limit): mixed {
     global $db;
     $where = $bclos ? 'cid NOT IN ('.$bclos.') AND' : '';
     $vis = is_moder('forum') ? '' : "AND time <= now() AND status > '1'";
-    return $db->getSqlQuery('SELECT '.$cols.' FROM '.PREFIX_DB.'_forum WHERE '.$where." pid = '0' ".$vis.' ORDER BY ltime DESC LIMIT 0, '.$limit);
+    $sub = static fn(string $kind, string $col, string $as): string => '(SELECT r.path FROM '.PREFIX_DB.'_routes AS r WHERE r.kind = \''.$kind.'\' AND r.oid = f.'.$col
+        .' AND r.cur = 1) AS '.$as;
+    $path = $sub('topic', 'id', 'path').', '.$sub('user', 'uid', 'upath').', '.$sub('user', 'luid', 'lpath');
+    return $db->getSqlQuery('SELECT '.$cols.', '.$path.' FROM '.PREFIX_DB.'_forum AS f WHERE '.$where." pid = '0' ".$vis.' ORDER BY ltime DESC LIMIT 0, '.$limit);
 }
 
 # Format user warnings
@@ -4883,11 +4961,16 @@ function ad_status(mixed $link, mixed $id, string $text = ''): string {
         : $tpl->getHtmlFrag('inline-badge', ['title_text' => _DEACT, 'is_status_inactive' => true, 'label' => '']);
 }
 
-# Returns the address of an image inside the active theme images directory, relative to the document root; a file check prefixes PUBLIC_DIR
+# The path of an image of the active theme below the document root, for a file check behind PUBLIC_DIR; getThemeImageUrl() gives its address
 function getThemeImagePath(string $img): string {
     static $base;
     if (!$base) $base = 'templates/'.getTheme().'/images/';
     return $base.$img;
+}
+
+# The address of an image of the active theme from the root of the site
+function getThemeImageUrl(string $img): string {
+    return HOME_PATH.getThemeImagePath($img);
 }
 
 # Render a category icon from its stored Bootstrap Icons name, empty string when no icon is set
@@ -5811,7 +5894,7 @@ function getNodeLegacyUrl(string $mod, string $op, int $id, int $cat): string {
         return '';
     }
     if ($hit === null) return '';
-    return getSeoUrl(['name' => $hit['type']] + ($item ? ['op' => 'view', 'id' => $hit['nid']] : ($cat > 0 ? ['cat' => $cat] : [])));
+    return getSeoUrl(['name' => $hit['type']] + ($item ? ['op' => 'view', 'id' => $hit['nid'], 'route' => $hit['path']] : ($cat > 0 ? ['cat' => $cat] : [])));
 }
 
 # The label and the icon of the move of a material into one state
@@ -5831,7 +5914,7 @@ function getNodeQuickItems(NodeType $type, Node $node): array {
     if ($type->ext !== '' || $node->id < 1) return [];
     $out = [];
     foreach (['intro' => _NODE_INTRO, 'body' => _TEXT] as $field => $label) {
-        $out[] = ['href' => 'index.php?go=1&op=getQuickEdit&kind=node&id='.$node->id.'&field='.$field, 'title' => _ONEDIT.': '.$label, 'icon_name' => 'pencil-square',
+        $out[] = ['href' => HOME_PATH.'index.php?go=1&op=getQuickEdit&kind=node&id='.$node->id.'&field='.$field, 'title' => _ONEDIT.': '.$label, 'icon_name' => 'pencil-square',
             'is_htmx' => true, 'hx_target' => '#repnode'.$node->id.$field, 'hx_headers' => getSiteToken()];
     }
     return $out;
@@ -5843,7 +5926,7 @@ function getNodeQuickItems(NodeType $type, Node $node): array {
 function getNodeModerDial(NodeType $type, Node $node, bool $back = false, bool $quick = false): array {
     global $afile;
     $out = $quick ? getNodeQuickItems($type, $node) : [];
-    $out[] = ['href' => $afile.'.php?name=node&op=edit&id='.$node->id.'&type='.$type->name, 'icon_name' => 'pencil', 'title' => _FULLEDIT];
+    $out[] = ['href' => HOME_PATH.$afile.'.php?name=node&op=edit&id='.$node->id.'&type='.$type->name, 'icon_name' => 'pencil', 'title' => _FULLEDIT];
     foreach (NodeStatus::cases() as $to) {
         if (!$node->status->checkStatusMove($to)) continue;
         [$label, $icon] = getNodeMoveLabel($to);
@@ -6223,10 +6306,12 @@ function updateVotingResult(): void {
         $querylang = 'time <= NOW() AND enddate >= NOW()';
         $qlang_params = [];
     }
-    $result = $db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_voting WHERE id = :id AND '.$querylang, array_merge(['id' => $id], $qlang_params));
+    $result = $db->getSqlQuery('SELECT r.path FROM '.PREFIX_DB.'_voting AS v LEFT JOIN '.PREFIX_DB.'_routes AS r ON r.kind = \'poll\' AND r.oid = v.id AND r.cur = 1'
+        .' WHERE v.id = :id AND '.$querylang, array_merge(['id' => $id], $qlang_params));
     if ($db->getSqlRowCount($result) > 0) {
+        $page = getSeoUrl(['name' => 'voting', 'op' => 'view', 'id' => $id, 'route' => $db->getSqlRow($result)[0]]);
         if (!$body) {
-            $meta = $tpl->getHtmlFrag('meta-refresh', ['secs' => '3', 'url' => 'index.php?name=voting&op=view&id='.$id]);
+            $meta = $tpl->getHtmlFrag('meta-refresh', ['secs' => '3', 'url' => $page]);
             $cont = $tpl->getHtmlFrag('alert', ['text' => _SEROR1, 'meta' => $meta, 'type' => 'warn', 'is_warn' => true]);
         } else {
             $ip = getIp();
@@ -6241,7 +6326,7 @@ function updateVotingResult(): void {
                 ['id' => $id, 'ip' => $ip, 'id2' => $id, 'uid' => $uid]
             ));
             if ($cookies == $id || $num > 0) {
-                $meta = $tpl->getHtmlFrag('meta-refresh', ['secs' => '3', 'url' => 'index.php?name=voting&op=view&id='.$id]);
+                $meta = $tpl->getHtmlFrag('meta-refresh', ['secs' => '3', 'url' => $page]);
                 $cont = $tpl->getHtmlFrag('alert', ['text' => _SEROR2, 'meta' => $meta, 'type' => 'warn', 'is_warn' => true]);
             } else {
                 setcookie(substr('voting', 0, 2).'-'.$id, $id, time() + intval($conf['voting']['voting_t']));
@@ -6275,7 +6360,7 @@ function updateVotingResult(): void {
             }
         }
     } else {
-        $meta = $tpl->getHtmlFrag('meta-refresh', ['secs' => '3', 'url' => 'index.php?name=voting']);
+        $meta = $tpl->getHtmlFrag('meta-refresh', ['secs' => '3', 'url' => getSeoUrl(['name' => 'voting'])]);
         $cont = $tpl->getHtmlFrag('alert', ['text' => _ERROR, 'meta' => $meta, 'type' => 'warn', 'is_warn' => true]);
     }
     echo $cont;

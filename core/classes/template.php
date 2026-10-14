@@ -161,6 +161,7 @@ class Template {
     # Render compiled PHP from a cache file or inline source through one shared path; inline source is stored by its hash through a temporary file, a rename and compile.lock
     protected function getView(string $file, array $data = [], bool $iscode = false, string $sourceType = '', string $sourceName = ''): string {
         $data = $this->setData($data);
+        $data['root'] = defined('HOME_PATH') ? HOME_PATH : '/';
         $path = $file;
         if ($iscode) {
             if ($file === '') return '';

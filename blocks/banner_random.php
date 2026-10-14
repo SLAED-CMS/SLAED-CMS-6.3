@@ -22,6 +22,6 @@ $url = preg_split('#-#', $ban[$i]);
 $content = $tpl->getHtmlFrag('link', [
     'href' => 'https://'.str_replace(['_', '+'], ['/', '?'], $url[0]),
     'title' => 'SLAED CMS',
-    'img_src' => getThemeImagePath('banners/random/'.$ban[$i]),
+    'img_src' => getThemeImageUrl('banners/random/'.$ban[$i]),
     'img_alt' => 'SLAED CMS',
 ]);

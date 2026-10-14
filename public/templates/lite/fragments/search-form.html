@@ -1,5 +1,5 @@
 {% if is_block %}
-<form action="index.php?name=search" method="post" class="sl-block-search">
+<form action="{{ root }}search" method="post" class="sl-block-search">
   <input type="hidden" name="mod" value="">
   <input type="text" name="word" maxlength="100" placeholder="{{ search_label }}" aria-label="{{ search_label }}" class="sl-field sl-field--block" required>
   <button type="submit" class="sl-but">{{ ok_label }}</button>

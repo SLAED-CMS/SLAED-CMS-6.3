@@ -1,9 +1,9 @@
 <div class="sl-user-card"{% if group_color %} style="--sl-d-user: {{ group_color }}; --sl-d-usrlevel: {{ ngroup_pct }}%;"{% endif %}>
   <div class="sl-block-user-ava">
-    {% if is_user %}<a href="index.php?name=account" title="{{ change_label }}" class="sl-live-avatar"><i class="sl-ava-min" style="background-image: url({{ avatar_url }});"></i></a>{% else %}<i class="sl-ava-min" style="background-image: url({{ avatar_url }});"></i>{% endif %}
+    {% if is_user %}<a href="{{ root }}account" title="{{ change_label }}" class="sl-live-avatar"><i class="sl-ava-min" style="background-image: url({{ avatar_url }});"></i></a>{% else %}<i class="sl-ava-min" style="background-image: url({{ avatar_url }});"></i>{% endif %}
     <p>
       {% if is_user %}
-      <a href="index.php?name=account">{{ greeting_name }}</a>
+      <a href="{{ root }}account">{{ greeting_name }}</a>
       {{{ rank_html }}}
       <small{% if group_name %} title="{{ group_name }}"{% endif %}>{% if has_meta %}{% if group_name %}{{ group_name }}{% endif %}{% if group_name and ngroup_pct %} &middot; {% endif %}{% if ngroup_pct %}{{ ngroup_pct }}%{% endif %}{% else %}{{ greeting_label }}{% endif %}</small>
       {% else %}
@@ -15,23 +15,23 @@
   {% if is_user %}
   <ul class="sl-block-pm">
     {% if has_privat %}
-    <li><a href="index.php?name=account&amp;op=privat"><i class="bi bi-envelope" aria-hidden="true"></i><span>{{ inbox_label }}</span><b{% if has_new_in %} class="sl-pm-new"{% endif %}>{{ inbox_count }}</b></a></li>
-    <li><a href="index.php?name=account&amp;op=privat"><i class="bi bi-send" aria-hidden="true"></i><span>{{ outbox_label }}</span><b>{{ outbox_count }}</b></a></li>
+    <li><a href="{{ root }}account/privat"><i class="bi bi-envelope" aria-hidden="true"></i><span>{{ inbox_label }}</span><b{% if has_new_in %} class="sl-pm-new"{% endif %}>{{ inbox_count }}</b></a></li>
+    <li><a href="{{ root }}account/privat"><i class="bi bi-send" aria-hidden="true"></i><span>{{ outbox_label }}</span><b>{{ outbox_count }}</b></a></li>
     {% endif %}
-    {% if has_fav %}<li><a href="index.php?name=account&amp;op=favorites"><i class="bi bi-star" aria-hidden="true"></i><span>{{ favorites_label }}</span><i class="bi bi-chevron-right" aria-hidden="true"></i></a></li>{% endif %}
-    <li><a href="index.php?name=account&amp;op=edithome"><i class="bi bi-sliders" aria-hidden="true"></i><span>{{ change_label }}</span><i class="bi bi-chevron-right" aria-hidden="true"></i></a></li>
+    {% if has_fav %}<li><a href="{{ root }}account/favorites"><i class="bi bi-star" aria-hidden="true"></i><span>{{ favorites_label }}</span><i class="bi bi-chevron-right" aria-hidden="true"></i></a></li>{% endif %}
+    <li><a href="{{ root }}account/edithome"><i class="bi bi-sliders" aria-hidden="true"></i><span>{{ change_label }}</span><i class="bi bi-chevron-right" aria-hidden="true"></i></a></li>
   </ul>
   <nav class="sl-user-nav" aria-label="{{ change_label }}">
-    <a href="index.php?name=account" title="{{ profile_label }}" aria-label="{{ profile_label }}"><i class="bi bi-person" aria-hidden="true"></i></a>
-    {% if has_privat %}<a href="index.php?name=account&amp;op=privat" title="{{ privat_label }}" aria-label="{{ privat_label }}"><i class="bi bi-chat-dots" aria-hidden="true"></i></a>{% endif %}
-    <a href="index.php?name=account&amp;op=edithome" title="{{ change_label }}" aria-label="{{ change_label }}"><i class="bi bi-gear" aria-hidden="true"></i></a>
-    <a href="index.php?name=account&amp;op=logout&amp;refer=1" title="{{ logout_label }}" aria-label="{{ logout_label }}"><i class="bi bi-box-arrow-right" aria-hidden="true"></i></a>
+    <a href="{{ root }}account" title="{{ profile_label }}" aria-label="{{ profile_label }}"><i class="bi bi-person" aria-hidden="true"></i></a>
+    {% if has_privat %}<a href="{{ root }}account/privat" title="{{ privat_label }}" aria-label="{{ privat_label }}"><i class="bi bi-chat-dots" aria-hidden="true"></i></a>{% endif %}
+    <a href="{{ root }}account/edithome" title="{{ change_label }}" aria-label="{{ change_label }}"><i class="bi bi-gear" aria-hidden="true"></i></a>
+    <a href="{{ root }}account/logout?refer=1" title="{{ logout_label }}" aria-label="{{ logout_label }}"><i class="bi bi-box-arrow-right" aria-hidden="true"></i></a>
   </nav>
   {% else %}
   {% include 'fragments/block-login-form.html' %}
   <ul class="sl-block-pm">
-    <li><a href="index.php?name=account&amp;op=reg"><i class="bi bi-person-plus" aria-hidden="true"></i><span>{{ register_label }}</span><i class="bi bi-chevron-right" aria-hidden="true"></i></a></li>
-    <li><a href="index.php?name=account&amp;op=passfor"><i class="bi bi-key" aria-hidden="true"></i><span>{{ passfor_label }}</span><i class="bi bi-chevron-right" aria-hidden="true"></i></a></li>
+    <li><a href="{{ root }}account/newuser"><i class="bi bi-person-plus" aria-hidden="true"></i><span>{{ register_label }}</span><i class="bi bi-chevron-right" aria-hidden="true"></i></a></li>
+    <li><a href="{{ root }}account/passlost"><i class="bi bi-key" aria-hidden="true"></i><span>{{ passfor_label }}</span><i class="bi bi-chevron-right" aria-hidden="true"></i></a></li>
   </ul>
   {% endif %}
   {% if session_html %}<div class="sl-block-session" id="repsinfo" data-sl-live-box>{{{ session_html }}}</div>{% endif %}

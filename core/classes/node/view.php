@@ -33,9 +33,9 @@ final class NodeView {
         return $full ? $this->getFullView($type, $node, $mode) : $this->getTargetView($type, $node, $mode);
     }
 
-    # The public address of one material of the type, empty for an unsaved one
-    private function getViewHref(NodeType $type, int $id, string $title): string {
-        return ($id > 0) ? getSeoUrl(['name' => $type->name, 'op' => 'view', 'id' => $id, 'title' => $title]) : '';
+    # The public address of one material of the type on its stored path, empty for an unsaved one; a material without a path keeps its view by id
+    private function getViewHref(NodeType $type, int $id, ?string $path): string {
+        return ($id > 0) ? getSeoUrl(['name' => $type->name, 'op' => 'view', 'id' => $id, 'route' => $path]) : '';
     }
 
     # Render one stored text safe with its trusted tags honoured, so foreign markup around a tag of the main administrator stays escaped; a saved material links its attachments
@@ -105,13 +105,13 @@ final class NodeView {
             'id' => $node->id,
             'type' => $type->name,
             'mode' => $mode,
-            'href' => $this->getViewHref($type, $node->id, $node->title),
+            'href' => $this->getViewHref($type, $node->id, $node->path),
             'title' => $node->title,
             'intro' => $this->getPlainText($intro),
             'intro_html' => $intro,
             'body_html' => ($mode === 'view' && $node->body !== null) ? $this->getTextHtml($node->body, $type->name, $node->id, $hoff) : '',
             'author' => ($node->uid > 0) ? $user : $node->aname,
-            'ahref' => ($user !== '') ? getSeoUrl(['name' => 'account', 'op' => 'view', 'uname' => rawurlencode($user)]) : '',
+            'ahref' => ($user !== '') ? getSeoUrl(['name' => 'account', 'op' => 'view', 'uname' => rawurlencode($user), 'route' => $node->upath]) : '',
             'ctitle' => $cat,
             'chref' => ($cat !== '') ? getSeoUrl(['name' => $type->name, 'cat' => $node->cid]) : '',
             'date' => ($node->pubdate !== null) ? format_time($node->pubdate) : '',
@@ -132,7 +132,7 @@ final class NodeView {
             'id' => $node->id,
             'type' => $type->name,
             'mode' => $mode,
-            'href' => $this->getViewHref($type, $node->id, $node->title),
+            'href' => $this->getViewHref($type, $node->id, $node->path),
             'title' => $node->title,
             'intro' => '',
             'intro_html' => '',

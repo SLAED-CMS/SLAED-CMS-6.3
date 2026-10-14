@@ -1,4 +1,4 @@
-<div class="sl-vote"{% if live_every %} data-sl-vote-live="{{ live_every }}" data-sl-vote-url="index.php?{{ live_query }}"{% endif %}>
+<div class="sl-vote"{% if live_every %} data-sl-vote-live="{{ live_every }}" data-sl-vote-url="{{ root }}index.php?{{ live_query }}"{% endif %}>
 {% if live_every or is_closed %}
 <div class="sl-vote-tools" data-sl-float-align="end">
   {% if admin_html %}{{{ admin_html }}}{% endif %}

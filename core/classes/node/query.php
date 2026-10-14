@@ -777,7 +777,7 @@ final class NodeQuery {
             intval($row['poll']), $row['home'], $mode, $row['pinned'], intval($row['comnum']), intval($row['views']), intval($row['score']), intval($row['ratings']),
             $state, intval($row['version']), $row['created'], $row['updated'], $row['published'],
             $row['expires'], $cids, $rels, $assets, $row['uname'],
-            $row['ctitle'], $row['path'] ?? null);
+            $row['ctitle'], $row['path'] ?? null, $row['upath'] ?? null);
     }
 
     # Build one resource from its row, the unknown metadata as null
@@ -957,6 +957,12 @@ final class NodeQuery {
         return $this;
     }
 
+    # The joins of the current path of a material as r and of its author as ur, both on the unique owner key of the registry
+    private function getPathSql(): string {
+        return ' LEFT JOIN '.PREFIX_DB.'_routes AS r ON r.kind = \'node\' AND r.oid = n.id AND r.cur = 1'
+            .' LEFT JOIN '.PREFIX_DB.'_routes AS ur ON ur.kind = \'user\' AND ur.oid = n.uid AND n.uid > 0 AND ur.cur = 1';
+    }
+
     # The select of one list part: the id and the sort keys with the order helpers, no text column, so the union of the parts stays a small table in memory
     private function getListSelect(array $part): string {
         return 'SELECT n.id, '.($part['type']->settings['features']['pinned'] ? 'n.pinned' : '0').' AS pin, n.published, n.updated, n.title, n.views, n.ratings,'
@@ -975,9 +981,9 @@ final class NodeQuery {
         foreach ($parts as $part) $pars += $part['pars'];
         $page = 'SELECT q.* FROM ('.implode(' UNION ALL ', array_map(fn(array $v): string => '('.$this->getListSelect($v).' ORDER BY '.$ord.' LIMIT '.($skip + $size).')', $parts))
             .') AS q ORDER BY '.$this->getOrderSql('q.').' LIMIT '.$skip.', '.$size;
-        $sql = 'SELECT '.self::COLS.', '.($field ? 'n.field' : '\'\'').' AS field, u.name AS uname, c.title AS ctitle FROM ('.$page.') AS p'
+        $sql = 'SELECT '.self::COLS.', '.($field ? 'n.field' : '\'\'').' AS field, u.name AS uname, c.title AS ctitle, r.path, ur.path AS upath FROM ('.$page.') AS p'
             .' INNER JOIN '.PREFIX_DB.'_nodes AS n ON n.id = p.id LEFT JOIN '.PREFIX_DB.'_users AS u ON u.id = n.uid AND n.uid > 0'
-            .' LEFT JOIN '.PREFIX_DB.'_categories AS c ON c.id = n.cid AND n.cid > 0 ORDER BY '.$this->getOrderSql('p.');
+            .' LEFT JOIN '.PREFIX_DB.'_categories AS c ON c.id = n.cid AND n.cid > 0'.$this->getPathSql().' ORDER BY '.$this->getOrderSql('p.');
         return $this->getListNodes($this->getQueryRows($sql, $pars));
     }
 
@@ -1121,10 +1127,9 @@ final class NodeQuery {
     private function getNodeRow(int $id, NodeType $type, bool $field): ?array {
         if ($id < 1 || (!$type->active && !$this->checkModer($type))) return null;
         $part = $this->getBranchSql($type, 'm', $this->getOwnExt($type), 'item');
-        $sql = 'SELECT '.self::COLS.', n.body'.($field ? ', n.field' : '').', u.name AS uname, c.title AS ctitle, c.pread AS cread, c.modul AS cmod, r.path'
-            .' FROM '.PREFIX_DB.'_nodes AS n LEFT JOIN '.PREFIX_DB.'_users AS u ON u.id = n.uid AND n.uid > 0'
-            .' LEFT JOIN '.PREFIX_DB.'_categories AS c ON c.id = n.cid AND n.cid > 0'
-            .' LEFT JOIN '.PREFIX_DB.'_routes AS r ON r.kind = \'node\' AND r.oid = n.id AND r.cur = 1'.$part['join'].' WHERE n.id = :mi AND '.$part['where'];
+        $sql = 'SELECT '.self::COLS.', n.body'.($field ? ', n.field' : '').', u.name AS uname, c.title AS ctitle, c.pread AS cread, c.modul AS cmod, r.path,'
+            .' ur.path AS upath FROM '.PREFIX_DB.'_nodes AS n LEFT JOIN '.PREFIX_DB.'_users AS u ON u.id = n.uid AND n.uid > 0'
+            .' LEFT JOIN '.PREFIX_DB.'_categories AS c ON c.id = n.cid AND n.cid > 0'.$this->getPathSql().$part['join'].' WHERE n.id = :mi AND '.$part['where'];
         $row = $this->getQueryRows($sql, $part['pars'] + ['mi' => $id])[0] ?? null;
         return ($row && $this->checkRowCat($row, $type)) ? $row : null;
     }
@@ -1175,8 +1180,9 @@ final class NodeQuery {
             if (!$type || (!$type->active && !$all)) continue;
             $part = $this->getBranchSql($type, 'b'.$i, $type->ext === '' ? null : $this->getFactoryExt($type->ext), $all ? 'item' : 'target');
             $ids = $this->getInList(array_keys($refs, $name, true), 'b'.$i.'i', $pars);
-            $sql[] = 'SELECT n.id, n.tid, n.cid, n.uid, n.title, n.comon, n.comnum, n.score, n.ratings, c.pread AS cread, c.modul AS cmod FROM '.PREFIX_DB.'_nodes AS n'
-                .' LEFT JOIN '.PREFIX_DB.'_categories AS c ON c.id = n.cid AND n.cid > 0'.$part['join'].' WHERE n.id IN ('.$ids.') AND '.$part['where'];
+            $sql[] = 'SELECT n.id, n.tid, n.cid, n.uid, n.title, n.comon, n.comnum, n.score, n.ratings, c.pread AS cread, c.modul AS cmod, r.path'
+                .' FROM '.PREFIX_DB.'_nodes AS n LEFT JOIN '.PREFIX_DB.'_categories AS c ON c.id = n.cid AND n.cid > 0'
+                .' LEFT JOIN '.PREFIX_DB.'_routes AS r ON r.kind = \'node\' AND r.oid = n.id AND r.cur = 1'.$part['join'].' WHERE n.id IN ('.$ids.') AND '.$part['where'];
             $pars += $part['pars'];
             $tmap[$type->id] = $type;
         }
@@ -1187,7 +1193,7 @@ final class NodeQuery {
             $mode = CommentMode::tryFrom(intval($row['comon']));
             if ($mode === null || !$this->checkRowCat($row, $type)) continue;
             $found[intval($row['id'])] = new NodeTarget($type, intval($row['id']), intval($row['uid']), $row['title'], $mode, intval($row['comnum']),
-                intval($row['score']), intval($row['ratings']));
+                intval($row['score']), intval($row['ratings']), $row['path']);
         }
         $out = [];
         foreach (array_keys($refs) as $id) if (isset($found[$id])) $out[$id] = $found[$id];
@@ -1205,11 +1211,12 @@ final class NodeQuery {
     # The map is _node_legacy; a type the context may not receive answers null like a missing row, and the material itself is checked by the route it leads to
     public function getNodeLegacy(string $mod, int $id = 0): ?array {
         if (!preg_match(self::NAME, $mod) || $id < 0 || $id > 4294967295) return null;
-        $sql = 'SELECT t.name, l.nid FROM '.PREFIX_DB.'_node_legacy AS l INNER JOIN '.PREFIX_DB.'_nodes AS n ON n.id = l.nid'
-            .' INNER JOIN '.PREFIX_DB.'_node_types AS t ON t.id = n.tid WHERE l.modul = :mod'.($id > 0 ? ' AND l.oid = :oid' : '').' LIMIT 1';
+        $sql = 'SELECT t.name, l.nid, r.path FROM '.PREFIX_DB.'_node_legacy AS l INNER JOIN '.PREFIX_DB.'_nodes AS n ON n.id = l.nid'
+            .' INNER JOIN '.PREFIX_DB.'_node_types AS t ON t.id = n.tid LEFT JOIN '.PREFIX_DB.'_routes AS r ON r.kind = \'node\' AND r.oid = n.id AND r.cur = 1'
+            .' WHERE l.modul = :mod'.($id > 0 ? ' AND l.oid = :oid' : '').' LIMIT 1';
         $row = $this->getQueryRows($sql, ['mod' => $mod] + ($id > 0 ? ['oid' => $id] : []))[0] ?? null;
         if ($row === null || $this->getNodeType($row['name']) === null) return null;
-        return ['type' => $row['name'], 'nid' => ($id > 0) ? intval($row['nid']) : 0];
+        return ['type' => $row['name'], 'nid' => ($id > 0) ? intval($row['nid']) : 0, 'path' => ($id > 0) ? $row['path'] : null];
     }
 
     # Read the light target of one global id of the expected type with the very check of the batch read
@@ -1224,14 +1231,15 @@ final class NodeQuery {
         $ext = $this->getOwnExt($type);
         $part = $this->getBranchSql($type, 'b', $ext, 'list');
         $up = $this->getBranchSql($type, 'p', $ext, 'parent');
-        $sql = 'SELECT n.id, n.title, r.rid AS parent, r.sort AS rsort,'
+        $sql = 'SELECT n.id, n.title, r.rid AS parent, r.sort AS rsort, w.path,'
             .' EXISTS (SELECT 1 FROM '.PREFIX_DB.'_nodes AS n'.$up['join'].' WHERE n.id = r.rid AND '.$up['where'].') AS rok'
             .' FROM '.PREFIX_DB.'_nodes AS n'.$part['join'].' LEFT JOIN '.PREFIX_DB.'_node_relations AS r ON r.nid = n.id AND r.type = \'parent\''
+            .' LEFT JOIN '.PREFIX_DB.'_routes AS w ON w.kind = \'node\' AND w.oid = n.id AND w.cur = 1'
             .' WHERE '.$part['where'].' AND n.id > :after ORDER BY n.id LIMIT '.$limit;
         $out = [];
         foreach ($this->getQueryRows($sql, $part['pars'] + $up['pars'] + ['after' => $after]) as $row) {
             $out[] = ['id' => intval($row['id']), 'title' => $row['title'], 'parent' => ($row['rok'] && $row['parent'] !== null) ? intval($row['parent']) : null,
-                'sort' => intval($row['rsort'] ?? 0)];
+                'sort' => intval($row['rsort'] ?? 0), 'path' => $row['path']];
         }
         return $out;
     }
@@ -1245,8 +1253,9 @@ final class NodeQuery {
         foreach ($this->getNodeTypeList() as $i => $type) {
             if (!$type->active || !$type->settings['integrations']['sitemap']) continue;
             $part = $this->getBranchSql($type, 'b'.$i, $type->ext === '' ? null : $this->getFactoryExt($type->ext), 'site');
-            $sql[] = 'SELECT n.id, n.tid, n.title, n.cid, c.title AS ctitle, n.published, n.updated FROM '.PREFIX_DB.'_nodes AS n'
-                .' LEFT JOIN '.PREFIX_DB.'_categories AS c ON c.id = n.cid AND n.cid > 0'.$part['join']
+            $sql[] = 'SELECT n.id, n.tid, n.title, n.cid, c.title AS ctitle, n.published, n.updated, r.path FROM '.PREFIX_DB.'_nodes AS n'
+                .' LEFT JOIN '.PREFIX_DB.'_categories AS c ON c.id = n.cid AND n.cid > 0'
+                .' LEFT JOIN '.PREFIX_DB.'_routes AS r ON r.kind = \'node\' AND r.oid = n.id AND r.cur = 1'.$part['join']
                 .' WHERE '.$part['where'].' AND n.id > :b'.$i.'z ORDER BY n.id LIMIT '.$limit;
             $pars += $part['pars'] + ['b'.$i.'z' => $after];
             $tmap[$type->id] = $type->name;
@@ -1257,7 +1266,7 @@ final class NodeQuery {
         $out = [];
         foreach ($this->getQueryRows($query, $pars) as $row) {
             $out[] = ['id' => intval($row['id']), 'name' => $tmap[intval($row['tid'])], 'title' => $row['title'], 'cid' => intval($row['cid']),
-                'ctitle' => $row['ctitle'], 'published' => $row['published'], 'updated' => $row['updated']];
+                'ctitle' => $row['ctitle'], 'published' => $row['published'], 'updated' => $row['updated'], 'path' => $row['path']];
         }
         return $out;
     }

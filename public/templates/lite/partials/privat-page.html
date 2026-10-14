@@ -2,7 +2,7 @@
   {{{ shelves_html }}}
   {% if focus_html %}{{{ focus_html }}}{% endif %}
   {{{ notes_html }}}
-  <form class="sl-pmf-bar" id="prtools" role="search" action="index.php" method="get" hx-get="{{ find_url }}" hx-target="#prlist" hx-swap="innerHTML" hx-push-url="false" hx-params="not name,op" hx-trigger="submit, change from:#prsort">
+  <form class="sl-pmf-bar" id="prtools" role="search" action="{{ root }}index.php" method="get" hx-get="{{ find_url }}" hx-target="#prlist" hx-swap="innerHTML" hx-push-url="false" hx-params="not name,op" hx-trigger="submit, change from:#prsort">
     {{{ tools_html }}}
     <label class="sl-visually-hidden" for="prfind">{{ seek_label }}</label>
     <span class="sl-search-form">

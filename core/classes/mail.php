@@ -921,7 +921,7 @@ class Mail {
     # Build the unsubscribe address of one mailing recipient, signed for that address, or nothing when the site has no address of its own to send the reader to
     private function getUnsubUrl(string $mail): string {
         if ($this->home === '' || !function_exists('getUnsubKey')) return '';
-        return rtrim($this->home, '/').'/index.php?name=account&op=unsub&mail='.rawurlencode($mail).'&key='.getUnsubKey($mail);
+        return getPublicUrl(['name' => 'account', 'op' => 'unsub', 'key' => getUnsubKey($mail), 'mail' => rawurlencode($mail)]);
     }
 
     # Build the unsubscribe line appended to a mailing body, keeping the template form when a template is available and the plain form when it is not

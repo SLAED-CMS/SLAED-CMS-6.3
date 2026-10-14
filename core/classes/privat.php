@@ -102,10 +102,10 @@ final class Privat {
         return $row ? intval($row['num']) : 0;
     }
 
-    # The join one list needs to name the counterpart of every row, which is the same join its count takes on only when the search reads that name
+    # The join that names the counterpart of every row with the path of its profile, which a count takes on only when the search reads that name
     private function getMateJoin(PrivatBox $box): string {
         $mate = ($box === PrivatBox::Outbox) ? 'uidin' : 'uidout';
-        return ' LEFT JOIN '.PREFIX_DB.'_users AS u ON (p.'.$mate.' = u.id)';
+        return ' LEFT JOIN '.PREFIX_DB.'_users AS u ON (p.'.$mate.' = u.id) LEFT JOIN '.PREFIX_DB.'_routes AS r ON r.kind = \'user\' AND r.oid = u.id AND r.cur = 1';
     }
 
     # The selection one list answers: the mailbox predicate with the toolbar conditions above it, the values each of them binds, and whether the counterpart has to be joined for it
@@ -190,7 +190,7 @@ final class Privat {
     # An account that no longer exists answers an empty name, which is what the adapter renders as the anonymous reader
     private function getMateData(array $row, PrivatBox $box): array {
         $uid = ($box === PrivatBox::Outbox) ? intval($row['uidin']) : intval($row['uidout']);
-        return ['partner' => $uid, 'name' => (string)($row['name'] ?? ''), 'avatar' => (string)($row['avatar'] ?? '')];
+        return ['partner' => $uid, 'name' => (string)($row['name'] ?? ''), 'avatar' => (string)($row['avatar'] ?? ''), 'path' => $row['path'] ?? null];
     }
 
     # The plain single line a list row shows under its subject, built from the prefix the server cut and never from a whole stored body
@@ -384,7 +384,7 @@ final class Privat {
         $link = $this->getMateJoin($box);
         $out = $this->getPager(($uid < 1) ? 0 : $this->getTotal($where, $pars, $join ? $link : ''), $page, intval($this->conf['num'] ?? 25));
         if ($uid < 1 || $out['total'] < 1) return $out;
-        $sql = 'SELECT p.'.str_replace(', ', ', p.', self::FIELDS).', LEFT(p.body, '.self::SNIPCUT.') AS snip, u.name, u.avatar'
+        $sql = 'SELECT p.'.str_replace(', ', ', p.', self::FIELDS).', LEFT(p.body, '.self::SNIPCUT.') AS snip, u.name, u.avatar, r.path'
             .' FROM '.PREFIX_DB.'_privat AS p'.$link.' WHERE '.$where
             .' ORDER BY '.$this->getSortOrder((string)($pick['sort'] ?? '')).' LIMIT '.$out['offset'].', '.$out['limit'];
         foreach ($this->db->getSqlRows($this->db->getSqlQuery($sql, $pars)) ?: [] as $row) {
@@ -420,8 +420,8 @@ final class Privat {
     public function getRecentList(int $uid, int $num = 6, bool $new = false): array {
         if ($uid < 1 || $num < 1) return [];
         $where = $new ? $this->getNewWhere('p.') : $this->getBoxWhere(PrivatBox::Inbox, 'p.');
-        $sql = 'SELECT p.'.str_replace(', ', ', p.', self::FIELDS).', LEFT(p.body, '.self::SNIPCUT.') AS snip, u.name, u.avatar FROM '.PREFIX_DB.'_privat AS p'
-            .' LEFT JOIN '.PREFIX_DB.'_users AS u ON (p.uidout = u.id) WHERE '.$where
+        $sql = 'SELECT p.'.str_replace(', ', ', p.', self::FIELDS).', LEFT(p.body, '.self::SNIPCUT.') AS snip, u.name, u.avatar, r.path FROM '.PREFIX_DB.'_privat AS p'
+            .$this->getMateJoin(PrivatBox::Inbox).' WHERE '.$where
             .' ORDER BY p.time DESC, p.id DESC LIMIT 0, '.intval($num);
         $out = [];
         foreach ($this->db->getSqlRows($this->db->getSqlQuery($sql, ['uid' => $uid])) ?: [] as $row) {
@@ -436,9 +436,8 @@ final class Privat {
     # The snippet travels with it because the list row of that message is redrawn from this answer after a change, and no consumer outside this class cuts a body
     public function getMessageView(int $uid, int $id, PrivatBox $box): array {
         if ($uid < 1 || $id < 1) return [];
-        $mate = ($box === PrivatBox::Outbox) ? 'uidin' : 'uidout';
-        $sql = 'SELECT p.'.str_replace(', ', ', p.', self::FIELDS).', p.body, p.ip, u.name, u.avatar FROM '.PREFIX_DB.'_privat AS p'
-            .' LEFT JOIN '.PREFIX_DB.'_users AS u ON (p.'.$mate.' = u.id) WHERE p.id = :id AND '.$this->getSideWhere($box, 'p.').' LIMIT 1';
+        $sql = 'SELECT p.'.str_replace(', ', ', p.', self::FIELDS).', p.body, p.ip, u.name, u.avatar, r.path FROM '.PREFIX_DB.'_privat AS p'
+            .$this->getMateJoin($box).' WHERE p.id = :id AND '.$this->getSideWhere($box, 'p.').' LIMIT 1';
         $row = $this->db->getSqlRow($this->db->getSqlQuery($sql, ['id' => $id, 'uid' => $uid]));
         if (!$row) return [];
         return $this->getRowData($row) + $this->getMateData($row, $box)

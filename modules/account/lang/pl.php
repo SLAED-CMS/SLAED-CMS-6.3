@@ -44,12 +44,12 @@ define('_ACCOUNT_UNSUBOK','Adres %s nie otrzymuje już newslettera serwisu. Pono
 define('_ACCOUNT_VIEWNOTE','Ukryty adres nie jest pokazywany nawet w Twoich informacjach.');
 define('_ACCOUNT_WORK','Zawód');
 define('_ACCOUNT_YEARS','Lat z projektem');
-define('_ACTERROR1','Dane użytkownika są niepoprawne.<br>Proszę sprawdzić wprowadzone dane, lub jeśli nie Jesteś jeszcze zarejestrowany, to zarejestruj się już teraz <a href="index.php?name= " account">tutaj</a>.');
-define('_ACTERROR2','Użytkownika z takimi danymi w bazie danych nie odnaleziono.<br>możesz zarejestrować się <a href="index.php?name= " account">tutaj</a>.');
+define('_ACTERROR1','Dane użytkownika są niepoprawne.<br>Proszę sprawdzić wprowadzone dane, lub jeśli nie Jesteś jeszcze zarejestrowany, to zarejestruj się już teraz <a href="%s">tutaj</a>.');
+define('_ACTERROR2','Użytkownika z takimi danymi w bazie danych nie odnaleziono.<br>możesz zarejestrować się <a href="%s">tutaj</a>.');
 define('_ACTIVATIONERROR','Błąd podczas aktywacji nowego użytkownika');
 define('_ACTIVATIONSUB','Aktywacja konta');
 define('_ACTIVATIONYES','Nowy użytkownik został uaktywniony');
-define('_ACTMSG','Twoje konto zostało pomyślnie aktywowany, proszę do wejścia na stronę pod swoją nazwą, naciśnij <a href="index.php?name= " account">tutaj</a> i wpisz swój login i hasło.');
+define('_ACTMSG','Twoje konto zostało pomyślnie aktywowany, proszę do wejścia na stronę pod swoją nazwą, naciśnij <a href="%s">tutaj</a> i wpisz swój login i hasło.');
 define('_AVATARINFO','Wyświetla mały obrazek pod informacjami o tobie w wiadomościach. Może być wyświetlana tylko jeden obraz, o szerokości nie więcej niż %1$s pikseli, wysokość nie więcej niż %2$s pikseli i pojemności nie więcej niż %3$s.');
 define('_AVATARSAVE','Wybierz awatar');
 define('_AVATARSELECT','Wybierz swój ulubiony awatara z galerii, wystarczy nacisnąć lewy przycisk myszy na wybranym zdjęciu.');

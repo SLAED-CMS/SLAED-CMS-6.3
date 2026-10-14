@@ -25,7 +25,7 @@ if ($conf['flags'] == 1) {
         if ($lang === '') continue;
         $langs[] = ['key' => $lang, 'title' => getLangName($lang), 'img_src' => getLanguageFlagSrc($lang)];
     }
-    $cont = $tpl->getHtmlFrag('lang-switch', ['action' => 'index.php', 'hidden' => $hide, 'langs' => $langs]);
+    $cont = $tpl->getHtmlFrag('lang-switch', ['action' => HOME_PATH.'index.php', 'hidden' => $hide, 'langs' => $langs]);
     $content = $tpl->getHtmlFrag('block-content', ['is_block_flags' => true, 'content' => $cont]);
 } else {
     $opts = '';
@@ -39,7 +39,7 @@ if ($conf['flags'] == 1) {
     }
     $sel = $tpl->getHtmlFrag('select', ['name_attr' => 'newlang', 'select_attr' => 'onchange="this.form.submit()"', 'options_html' => $opts]);
     $content = $tpl->getHtmlPart('form-wrap', [
-        'action' => 'index.php',
+        'action' => HOME_PATH.'index.php',
         'method' => 'post',
         'is_block_languages' => true,
         'content_html' => $hide.$sel,

@@ -38,7 +38,7 @@ class AltchaCaptchaProvider implements CaptchaProvider {
     # Render the ALTCHA v3 widget (3.0.11): external build with the self-hosted same-origin worker plugins/altcha/altcha-sha.js, so a strict CSP works without blob:
     public function html(string $act): string {
         global $tpl, $conf, $locale;
-        $url = 'index.php?go=captcha&act='.rawurlencode($act);
+        $url = HOME_PATH.'index.php?go=captcha&act='.rawurlencode($act);
         return $tpl->getHtmlFrag('captcha-altcha', [
             'script_attr'   => 'type="module"',
             'script_src'    => Template::getAssetUrl('plugins/altcha/altcha-init.js'),

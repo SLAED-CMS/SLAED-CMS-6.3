@@ -344,7 +344,7 @@ final class NodeQueryTest extends TestCase
         $run = $this->getRuns()['items'];
         $node = $run['guest101'];
         $keys = ['id', 'tid', 'cid', 'uid', 'aname', 'ip', 'title', 'intro', 'body', 'fields', 'poll', 'home', 'comon', 'pinned', 'comnum', 'views', 'score', 'ratings',
-            'status', 'version', 'created', 'updated', 'pubdate', 'expires', 'cids', 'rels', 'assets', 'uname', 'ctitle', 'path'];
+            'status', 'version', 'created', 'updated', 'pubdate', 'expires', 'cids', 'rels', 'assets', 'uname', 'ctitle', 'path', 'upath'];
         $this->assertSame($keys, array_keys($node));
         $pick = [$node['status'], $node['comon'], $node['body'], $node['fields'], $node['cids'], $node['pubdate'], $node['ip']];
         $this->assertSame(['Published', 'Open', 'body of 101', [], [], '2026-01-01 10:00:00', null], $pick);
@@ -481,10 +481,10 @@ final class NodeQueryTest extends TestCase
             $this->assertSame(1, $run[$who]['again'], $who.': known types were read again');
         }
         $this->assertSame(['class' => 'NodeTarget', 'type' => true, 'id' => 101, 'uid' => 2, 'title' => 'Open air', 'comon' => 'Open', 'comnum' => 0, 'score' => 8, 'ratings' => 2,
-            'props' => ['type', 'id', 'uid', 'title', 'comon', 'comnum', 'score', 'ratings']], $run['one']);
+            'props' => ['type', 'id', 'uid', 'title', 'comon', 'comnum', 'score', 'ratings', 'path']], $run['one']);
         $this->assertTrue($run['shared']);
-        $this->assertSame(['item' => ['type' => 'news', 'nid' => 101], 'list' => ['type' => 'docs', 'nid' => 0], 'off' => null, 'miss' => null, 'bad' => null],
-            $run['legacy'], 'An old address of a removed module does not lead to its migrated material or type');
+        $this->assertSame(['item' => ['type' => 'news', 'nid' => 101, 'path' => null], 'list' => ['type' => 'docs', 'nid' => 0, 'path' => null], 'off' => null,
+            'miss' => null, 'bad' => null], $run['legacy'], 'An old address of a removed module does not lead to its migrated material or type');
         $this->assertFalse($run['wrongtype']);
         $this->assertSame([[], 0], $run['empty']);
         $this->assertSame(['count' => 30, 'sql' => 2], $run['big']);
@@ -498,7 +498,7 @@ final class NodeQueryTest extends TestCase
         $run = $this->getRuns()['tree'];
         $rows = [[201, null, 0], [202, 201, 1], [203, 202, 2], [205, null, 3], [206, null, 0], [207, null, 0], [208, null, 0]];
         $this->assertSame($rows, array_map(fn($v) => [$v['id'], $v['parent'], $v['sort']], $run['all']));
-        $this->assertSame(['id', 'title', 'parent', 'sort'], array_keys($run['all'][0]));
+        $this->assertSame(['id', 'title', 'parent', 'sort', 'path'], array_keys($run['all'][0]));
         $this->assertSame([203, 205], array_column($run['batch'], 'id'));
         $this->assertSame($run['all'], $run['root'], 'A moderator list shows a parent the published tree does not have');
         foreach (['limit', 'after', 'notree', 'notype'] as $key) $this->assertRefused($run[$key], 'tree', $key);
@@ -513,9 +513,9 @@ final class NodeQueryTest extends TestCase
         $ids = [101, 102, 112, 113, 114, 116, 119, 120, 121, 201, 202, 203, 205, 206, 207, 208, 301, 302, 303];
         $this->assertSame($ids, array_column($run['all'], 'id'));
         $this->assertSame($ids, $run['walk']);
-        $this->assertSame(['id' => 102, 'name' => 'news', 'title' => 'Open cat', 'cid' => 1, 'ctitle' => 'Open', 'published' => '2026-01-02 10:00:00'],
+        $this->assertSame(['id' => 102, 'name' => 'news', 'title' => 'Open cat', 'cid' => 1, 'ctitle' => 'Open', 'published' => '2026-01-02 10:00:00', 'path' => null],
             array_diff_key($run['all'][1], ['updated' => 1]));
-        $this->assertSame(['id', 'name', 'title', 'cid', 'ctitle', 'published', 'updated'], array_keys($run['all'][0]));
+        $this->assertSame(['id', 'name', 'title', 'cid', 'ctitle', 'published', 'updated', 'path'], array_keys($run['all'][0]));
         $this->assertRefused($run['limit'], 'sitemap', 'limit 501');
         $this->assertRefused($run['after'], 'sitemap', 'cursor -1');
     }

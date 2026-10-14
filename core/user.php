@@ -68,7 +68,7 @@ function getCommentView(array $val, int $numb, string $token): string {
         empty($anam),
         $gone
     );
-    $unam = (!empty($anam)) ? user_info($anam, false) : htmlspecialchars($avname, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+    $unam = (!empty($anam)) ? user_info($anam, $usr['path'] ?? null, false) : htmlspecialchars($avname, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
     $sig = (!empty($usr['sig'])) ? $tpl->getHtmlFrag('block-content', ['is_signature' => true, 'content' => getUserSign((string)$usr['sig'], $auid, 2)]) : '';
     $aweb = (string)($usr['website'] ?? '');
     $uitems = [];
@@ -76,15 +76,16 @@ function getCommentView(array $val, int $numb, string $token): string {
         $uitems[] = ['href' => '#formcsave', 'title' => _COMMENTS_REPLY, 'icon_name' => 'reply', 'link_attr' => 'data-sl-reply="'.$cmid.'"'];
     }
     if ($conf['comments']['privat'] && $conf['privat']['act'] && !empty($anam)) {
-        $uitems[] = ['href' => 'index.php?name=account&op=privat&uname='.urlencode($anam), 'title' => _SENDMES, 'icon_name' => 'envelope'];
+        $uitems[] = ['href' => getSeoUrl(['name' => 'account', 'op' => 'privat', 'uname' => rawurlencode($anam)]), 'title' => _SENDMES, 'icon_name' => 'envelope'];
     }
     if ($conf['comments']['profil'] && !empty($anam)) {
-        $uitems[] = ['href' => 'index.php?name=account&op=view&uname='.urlencode($anam), 'title' => _PERSONALINFO, 'icon_name' => 'person'];
+        $uitems[] = ['href' => getSeoUrl(['name' => 'account', 'op' => 'view', 'uname' => rawurlencode($anam), 'route' => $usr['path'] ?? null]), 'title' => _PERSONALINFO,
+            'icon_name' => 'person'];
     }
     if ($conf['comments']['web'] && !empty($aweb)) {
         $uitems[] = ['href' => $aweb, 'title' => _DOWNLLINK, 'icon_name' => 'globe', 'is_blank' => true];
     }
-    $act = 'index.php?go=1&op=';
+    $act = HOME_PATH.'index.php?go=1&op=';
     $one = '[id=\''.$cmid.'\']';
     $form = ['href' => $act.'getQuickEdit&kind=comment&id='.$cmid.'&field=body', 'title' => _ONEDIT, 'icon_name' => 'pencil-square', 'is_htmx' => true,
         'hx_target' => '#repcom'.$cmid];
@@ -139,15 +140,15 @@ function getCommentView(array $val, int $numb, string $token): string {
 # Render the comment rows of one page and, while the discussion continues, the control that appends the next page to the list the reader is on
 # The control replaces itself with the answer, so it always stands at the end of what is loaded and no second element has to be kept in step with it
 # Its href is the ordinary page URL the numbered pager also links to, so a reader without HTMX follows it as a plain link and lands on that page
-function getCommentRows(array $data, string $mod, int $cid, string $token, string $pag): string {
+function getCommentRows(array $data, string $mod, int $cid, string $token, array $pag): string {
     global $conf, $tpl;
     $numb = $data['first'];
     $cont = '';
     $open = [];
     $more = static function (array $val) use ($tpl, $mod, $cid, $token, $pag): string {
         return $tpl->getHtmlFrag('link', [
-            'href' => getSeoUrl(['name' => $mod, $pag.'&all' => $val['id']]).'#'.$val['id'],
-            'hx_url' => 'index.php?go=1&op=getCommentBranch&id='.$val['id'].'&skip='.$val['shown'],
+            'href' => getSeoUrl($pag + ['all' => $val['id']]).'#'.$val['id'],
+            'hx_url' => HOME_PATH.'index.php?go=1&op=getCommentBranch&id='.$val['id'].'&skip='.$val['shown'],
             'hx_headers' => $token,
             'title' => (string)_COMMENTS_REPLIES,
             'label' => (string)_COMMENTS_REPLIES.' ('.($val['kids'] - $val['shown']).')',
@@ -171,8 +172,8 @@ function getCommentRows(array $data, string $mod, int $cid, string $token, strin
     if ($data['page'] >= $data['pages']) return $cont;
     $next = $data['page'] + 1;
     return $cont.$tpl->getHtmlFrag('link', [
-        'href' => getSeoUrl(['name' => $mod, $pag.'&com' => $next]).'#comm',
-        'hx_url' => 'index.php?go=1&op=getCommentPage&id='.$cid.'&mod='.$mod.'&com='.$next,
+        'href' => getSeoUrl($pag + ['com' => $next]).'#comm',
+        'hx_url' => HOME_PATH.'index.php?go=1&op=getCommentPage&id='.$cid.'&mod='.$mod.'&com='.$next,
         'hx_headers' => $token,
         'title' => (string)_COMMENTS_MORE,
         'label' => (string)_COMMENTS_MORE,
@@ -186,30 +187,30 @@ function getCommentRows(array $data, string $mod, int $cid, string $token, strin
 # Render the comment list of one target: the rows, the pagination and the author records come from the comment subsystem, this function only assembles the markup
 # The page counts root comments and every root arrives with its branch behind it, so the running number follows the roots and a reply carries none
 # The rows have a container of their own, because a fragment response appends to them and the pager below them is not a comment
-function getCommentList(int $cid = 0, string $mod = '', int $page = 0, int $full = 0): string {
+function getCommentList(int $cid, string $mod, int $page, int $full, ?string $route): string {
     global $conf, $tpl, $com;
     $mod = filterVar($mod);
     $data = $com->getList($mod, $cid, $page ?: 1, $full);
-    $num = getVar('get', 'num', 'num');
-    $pag = empty($num) ? 'op=view&id='.$cid : 'op=view&id='.$cid.'&num='.$num;
+    $pag = ['name' => $mod, 'op' => 'view', 'id' => $cid, 'route' => $route, 'page' => getVar('get', 'page', 'num')];
     $rows = ($data['total'] < 1)
         ? $tpl->getHtmlFrag('alert', ['text' => _NOCOMMENTS, 'meta' => '', 'type' => 'info', 'is_warn' => false])
         : getCommentRows($data, $mod, $cid, getSiteToken(), $pag);
     $out = $tpl->getHtmlFrag('block-content', ['id' => 'repcrows', 'content' => $rows]);
     if ($data['total'] < 1) return $out;
-    return $out.getPageNumbers($mod, $data['total'], $data['pages'], $data['limit'], $pag.'&', $conf['comments']['nump'], $data['page'], '#comm', 'com');
+    return $out.getPageNumbers($mod, $data['total'], $data['pages'], $data['limit'], $pag, $conf['comments']['nump'], $data['page'], '#comm', 'com');
 }
 
 # Answer one page of the comment list as the sequence of fragments the reader appends to the list already on the page
 # A page beyond the last is refused rather than clamped, because the clamp would answer the last page a second time and duplicate every row of it
 function getCommentPage(): void {
-    global $com;
+    global $com, $db;
     $id = getVar('req', 'id', 'num', 0);
     $mod = filterVar(getVar('req', 'mod', 'text', ''));
     $page = getVar('req', 'com', 'num', 1);
     $data = $com->getList($mod, $id, $page);
     if ($data['total'] < 1 || $data['page'] !== $page) return;
-    echo getCommentRows($data, $mod, $id, getSiteToken(), 'op=view&id='.$id);
+    $path = (new Route($db))->getRouteList(['account' => 'user', 'voting' => 'poll'][$mod] ?? 'node', [$id])[$id] ?? null;
+    echo getCommentRows($data, $mod, $id, getSiteToken(), ['name' => $mod, 'op' => 'view', 'id' => $id, 'route' => $path]);
 }
 
 # Answer the replies of one comment the reader has not been shown yet, as the sequence of fragments appended in place of the control that asked for them
@@ -228,7 +229,7 @@ function getCommentBranch(): void {
         $seen = $skip + count($data['rows']);
         $cont .= $tpl->getHtmlFrag('link', [
             'href' => '#'.$id,
-            'hx_url' => 'index.php?go=1&op=getCommentBranch&id='.$id.'&skip='.$seen,
+            'hx_url' => HOME_PATH.'index.php?go=1&op=getCommentBranch&id='.$id.'&skip='.$seen,
             'hx_headers' => $token,
             'title' => (string)_COMMENTS_REPLIES,
             'label' => (string)_COMMENTS_REPLIES.' ('.$data['left'].')',
@@ -245,16 +246,16 @@ function getCommentBranch(): void {
 # The list, the status zone and the form are three regions a fragment response addresses on its own, so an add never replaces the region it was submitted from
 # The editor field is named rather than numbered, because a view page already carries the target id and every comment id as element ids and a numeric one collides with them
 # A disabled mode keeps the discussion readable without a form, which is how a target that takes no new comment any more, such as a closed request, is shown
-function setComShow(int $id = 0, int $acomm = 0): string {
+function setComShow(int $id, int $acomm, ?string $route): string {
     global $conf, $user, $tpl, $com;
     $full = getVar('get', 'all', 'num', 0);
     $page = getVar('get', 'com', 'num', 0) ?: $com->getRootPage($full ?: getVar('get', 'at', 'num', 0));
     $mode = CommentMode::tryFrom($acomm) ?? CommentMode::Disabled;
     $cont = $tpl->getHtmlFrag('title', ['title' => _COMMENTS, 'is_level_two' => true]);
-    $cont .= $tpl->getHtmlFrag('block-content', ['id' => 'repcsave', 'content' => getCommentList($id, $conf['name'], $page, $full)]);
+    $cont .= $tpl->getHtmlFrag('block-content', ['id' => 'repcsave', 'content' => getCommentList($id, $conf['name'], $page, $full, $route)]);
     $cont .= $tpl->getHtmlFrag('block-content', ['id' => 'repcstat', 'content' => '']);
     if ($mode !== CommentMode::Disabled && !is_user() && $conf['comments']['anonpost'] == 0) {
-        $cont .= $tpl->getHtmlFrag('alert', ['text' => _NOANONCOMMENTS, 'meta' => '', 'type' => 'warn', 'is_warn' => true]);
+        $cont .= $tpl->getHtmlFrag('alert', ['text' => sprintf(_NOANONCOMMENTS, getSeoUrl(['name' => 'account'])), 'meta' => '', 'type' => 'warn', 'is_warn' => true]);
     } elseif ($mode !== CommentMode::Disabled) {
         $userinfo = getUserInfo();
         $note = ($mode === CommentMode::Moderated || !empty($userinfo['access']) || (!is_user() && $conf['comments']['anonpost'] == 1));
@@ -287,7 +288,7 @@ function setComShow(int $id = 0, int $acomm = 0): string {
             .$tpl->getHtmlFrag('hidden', ['name_attr' => 'reqkey', 'value_attr' => '', 'input_attr' => 'data-sl-reqkey'])
             .$tpl->getHtmlFrag('hidden', ['name_attr' => 'pid', 'value_attr' => '', 'input_attr' => 'data-sl-reply-to'])
             .$tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken()]);
-        $post = 'index.php?go=1&op=addComment&id='.$id.'&mod='.$conf['name'].'&com='.$page;
+        $post = HOME_PATH.'index.php?go=1&op=addComment&id='.$id.'&mod='.$conf['name'].'&com='.$page;
         $submit = $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit',
             'label' => _COMMENTREPLY,
             'title' => _COMMENTREPLY,
@@ -340,16 +341,16 @@ function setMessageShow(): string {
                 $body = $prs->filterContent($body, false, 'all', 2);
                 $exp = ($exp > 0) ? getDuration($exp) : _UNLIMITED;
                 if ($view == 4 && is_moder()) {
-                    if (is_moder()) $body .= $adminNote(_MVADMIN, $exp, $afile.'.php?op=msg_add&id='.$mid);
+                    if (is_moder()) $body .= $adminNote(_MVADMIN, $exp, HOME_PATH.$afile.'.php?op=msg_add&id='.$mid);
                     return $messageBox($title, $body);
                 } elseif (($view == 3 && is_user()) || ($view == 3 && is_user() && is_moder())) {
-                    if (is_moder()) $body .= $adminNote(_MVUSERS, $exp, $afile.'.php?op=msg_add&id='.$mid);
+                    if (is_moder()) $body .= $adminNote(_MVUSERS, $exp, HOME_PATH.$afile.'.php?op=msg_add&id='.$mid);
                     return $messageBox($title, $body);
                 } elseif (($view == 2 && !is_user()) || ($view == 2 && !is_user() && is_moder())) {
-                    if (is_moder()) $body .= $adminNote(_MVANON, $exp, $afile.'.php?op=msg_add&id='.$mid);
+                    if (is_moder()) $body .= $adminNote(_MVANON, $exp, HOME_PATH.$afile.'.php?op=msg_add&id='.$mid);
                     return $messageBox($title, $body);
                 } elseif ($view == 1) {
-                    if (is_moder()) $body .= $adminNote(_MVALL, $exp, $afile.'.php?op=msg_add&id='.$mid);
+                    if (is_moder()) $body .= $adminNote(_MVALL, $exp, HOME_PATH.$afile.'.php?op=msg_add&id='.$mid);
                     return $messageBox($title, $body);
                 }
             }
@@ -363,36 +364,39 @@ function setMessageShow(): string {
 # Only the inner strip names its unread badge: that is the one an out-of-band swap reaches, and the cabinet home page draws its own tiles from the same items
 function getUserNavItems(bool $home = false): array {
     global $db, $conf, $prv;
-    $uid = intval(getUserInfo()['id'] ?? 0);
+    $info = getUserInfo();
+    $uid = intval($info['id'] ?? 0);
     if ($conf['name'] !== 'account') getLang('account');
     $items = [];
-    if ($home) $items[] = ['label' => _HOME, 'title' => _RETURNACCOUNT, 'href' => 'index.php?name=account', 'icon' => getIconName('cabinet')];
+    if ($home) $items[] = ['label' => _HOME, 'title' => _RETURNACCOUNT, 'href' => getSeoUrl(['name' => 'account']), 'icon' => getIconName('cabinet')];
     if ($conf['privat']['act']) {
         $new = $prv->getUnreadCount($uid);
         $mark = ($new > 99) ? '99+' : (string)$new;
         $items[] = [
-            'label' => _MESSAGES, 'title' => _PRIVAT, 'href' => 'index.php?name=account&op=privat', 'icon' => getIconName('messages'),
+            'label' => _MESSAGES, 'title' => _PRIVAT, 'href' => getSeoUrl(['name' => 'account', 'op' => 'privat']), 'icon' => getIconName('messages'),
             'badge' => $new ? $mark : '', 'badge_id' => $home ? 'pmbadgenav' : '',
         ];
     }
     foreach (getNodeTypeMap() as $type) {
         if (!$type->active || $type->ext !== 'support') continue;
         $label = getModuleName($type->name);
-        $items[] = ['label' => $label, 'title' => ($type->intro !== '') ? getConst($type->intro) : $label, 'href' => 'index.php?name='.$type->name,
+        $items[] = ['label' => $label, 'title' => ($type->intro !== '') ? getConst($type->intro) : $label, 'href' => getSeoUrl(['name' => $type->name]),
             'icon' => getIconName($type->name)];
     }
     if ($conf['favorites']['favact']) {
         [$fnum] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_favorites WHERE uid = :uid', ['uid' => $uid]));
         $items[] = [
-            'label' => _FAVORITES, 'title' => _FAVORITES, 'href' => 'index.php?name=account&op=favorites',
+            'label' => _FAVORITES, 'title' => _FAVORITES, 'href' => getSeoUrl(['name' => 'account', 'op' => 'favorites']),
             'icon' => getIconName('favorites'), 'sub' => sprintf(_NUMOF, $fnum, $conf['favorites']['favorites']),
         ];
     }
-    $items[] = ['label' => _INFO, 'title' => _PERSONALINFO, 'href' => 'index.php?name=account&op=view&id='.$uid, 'icon' => getIconName('profile')];
-    $items[] = ['label' => _CHANGE, 'title' => _CHANGE, 'href' => 'index.php?name=account&op=edithome', 'icon' => getIconName('settings'), 'sub' => _ACCOUNT_SETUPNOTE];
-    $items[] = ['label' => _ACCOUNT_LOGINS, 'title' => _ACCOUNT_LOGINS, 'href' => 'index.php?name=account&op=logins', 'icon' => getIconName('logins'),
+    $self = getSeoUrl(['name' => 'account', 'op' => 'view', 'id' => $uid, 'route' => $info['path'] ?? null]);
+    $items[] = ['label' => _INFO, 'title' => _PERSONALINFO, 'href' => $self, 'icon' => getIconName('profile')];
+    $items[] = ['label' => _CHANGE, 'title' => _CHANGE, 'href' => getSeoUrl(['name' => 'account', 'op' => 'edithome']), 'icon' => getIconName('settings'),
+        'sub' => _ACCOUNT_SETUPNOTE];
+    $items[] = ['label' => _ACCOUNT_LOGINS, 'title' => _ACCOUNT_LOGINS, 'href' => getSeoUrl(['name' => 'account', 'op' => 'logins']), 'icon' => getIconName('logins'),
         'sub' => _ACCOUNT_LOGSNOTE];
-    $items[] = ['label' => _LOGOUT, 'title' => _LOGOUT, 'href' => 'index.php?name=account&op=logout', 'icon' => getIconName('logout'), 'sub' => _ACCOUNT_EXITNOTE];
+    $items[] = ['label' => _LOGOUT, 'title' => _LOGOUT, 'href' => getSeoUrl(['name' => 'account', 'op' => 'logout']), 'icon' => getIconName('logout'), 'sub' => _ACCOUNT_EXITNOTE];
     foreach ($items as $pos => $item) {
         $items[$pos]['tone'] = $pos % 6;
         if (!isset($item['sub'])) $items[$pos]['sub'] = ($item['title'] !== $item['label']) ? $item['title'] : '';
@@ -437,18 +441,19 @@ function getUserInfo(): array {
     global $db, $user;
     $uid = (isset($user[0])) ? intval($user[0]) : 0;
     if (!is_user() || !$uid) return [];
-    return $db->getSqlRow($db->getSqlQuery('SELECT * FROM '.PREFIX_DB.'_users WHERE id = :uid', ['uid' => $uid])) ?: [];
+    return $db->getSqlRow($db->getSqlQuery('SELECT u.*, r.path FROM '.PREFIX_DB.'_users AS u'
+        .' LEFT JOIN '.PREFIX_DB.'_routes AS r ON r.kind = \'user\' AND r.oid = u.id AND r.cur = 1 WHERE u.id = :uid', ['uid' => $uid])) ?: [];
 }
 
 # Resolve the avatar URL for a user record; system avatars (user/guest/deleted) and presets come from the active theme, uploaded files from the avatar upload directory
 # The avatar folder is named relative to UPLOADS_DIR, a leading uploads/ of a stored value dropped, and its address is the one of getUploadUrl(), as for every public owner
 function getUserAvatarUrl(array $userinfo = [], bool $deleted = false): string {
     global $conf;
-    $base = 'templates/'.getTheme().'/images/avatars/';
+    $base = getThemeImageUrl('avatars/');
     if ($deleted) return $base.'system/deleted.svg';
     if (!$userinfo) return $base.'system/guest.svg';
     $ava = $userinfo['avatar'] ?? '';
-    $preset = preg_match('#^presets/[\w.-]+\.(gif|png|jpe?g|svg)$#i', $ava) && file_exists(PUBLIC_DIR.'/'.$base.$ava);
+    $preset = preg_match('#^presets/[\w.-]+\.(gif|png|jpe?g|svg)$#i', $ava) && file_exists(PUBLIC_DIR.'/'.getThemeImagePath('avatars/'.$ava));
     if (str_starts_with($ava, 'presets/')) return $preset ? $base.$ava : $base.'system/user.svg';
     $room = preg_replace('#^uploads(?:/|$)#', '', trim(str_replace('\\', '/', (string)($conf['users']['adirectory'] ?? '')), '/'));
     $href = ($ava !== '' && $room !== '' && is_file(UPLOADS_DIR.'/'.$room.'/'.$ava)) ? getUploadUrl($room.'/'.$ava) : '';
@@ -520,12 +525,14 @@ function addComment(): void {
     $key = getVar('req', 'reqkey', 'var', '');
     $page = getVar('req', 'com', 'num', 1);
     $pid = getVar('req', 'pid', 'num', 0);
-    $back = 'index.php?name='.$mod.'&op=view&id='.$id;
+    $route = (new Route($db))->getRouteList(['account' => 'user', 'voting' => 'poll'][$mod] ?? 'node', [$id])[$id] ?? null;
+    $addr = ['name' => $mod, 'op' => 'view', 'id' => $id, 'route' => $route];
+    $back = getSeoUrl($addr);
     $live = !empty($_SERVER['HTTP_HX_REQUEST']);
     $own = $db->setSqlBegin();
     $new = $com->addComment($mod, $id, $body, $name, $key, $pid);
     if ($new['error'] === '' && $new['new'] && (getNodeTypeMap()[$mod] ?? null)?->ext !== 'support') {
-        $link = $conf['homeurl'].'/index.php?name='.$mod.'&op=view&id='.$id.'&at='.$new['id'].'#'.$new['id'];
+        $link = getPublicUrl($addr + ['at' => $new['id']]).'#'.$new['id'];
         $clink = $tpl->getHtmlFrag('link', ['href' => $link, 'title' => '', 'label_html' => $link]);
         addAdminMail($conf['comments']['addmail'], $mod, $new['name'], getModuleName($mod), 1, $clink);
     }
@@ -560,7 +567,7 @@ function addComment(): void {
         if ($conf['comments']['sort']) { $numb++; } else { $numb--; }
     }
     if ($at < 0) {
-        $seen = $back.'&at='.$row['id'].'#'.$row['id'];
+        $seen = getSeoUrl($addr + ['at' => $row['id']]).'#'.$row['id'];
         $note((string)_COMMENTS_ADDED, $tpl->getHtmlFrag('link', [
             'href' => $seen,
             'title' => (string)_COMMENT,
@@ -801,7 +808,7 @@ function getPrivatShelves(int $typ = 1): string {
             'label' => $lab,
             'icon' => $icon,
             'tone' => $tone,
-            'href' => 'index.php?name=account&op=privat&typ='.$num,
+            'href' => getSeoUrl(['name' => 'account', 'op' => 'privat', 'typ' => $num]),
             'current' => $typ === $num,
             'part' => number_format($part, 1, '.', ''),
             'full' => $max < 1 || $part >= 100,
@@ -815,7 +822,7 @@ function getPrivatShelves(int $typ = 1): string {
     }
     $items[] = [
         'label' => (string)_PRWRITE, 'icon' => getIconName('write'), 'tone' => 'info', 'part' => '0.0', 'full' => true,
-        'href' => 'index.php?name=account&op=privat&typ=4', 'current' => $typ === 4,
+        'href' => getSeoUrl(['name' => 'account', 'op' => 'privat', 'typ' => 4]), 'current' => $typ === 4,
         'ring' => '', 'count' => '', 'note' => (string)_PRNEW, 'free' => '', 'badge' => '', 'badge_id' => '',
     ];
     return $tpl->getHtmlFrag('privat-shelves', ['nav_label' => _PRIVAT, 'items' => $items]);
@@ -842,8 +849,8 @@ function getPrivatFocus(int $typ = 1): string {
     $slots = [];
     foreach ($rows as $one) {
         $when = strtotime($one['time']);
-        $open = 'index.php?go=1&op=setPrivateMessageRead&id='.$one['id'].'&cid=1';
-        $base = 'index.php?go=1&op=updatePrivatBox&typ=1'.$state.'&id%5B%5D='.$one['id'].'&act=';
+        $open = HOME_PATH.'index.php?go=1&op=setPrivateMessageRead&id='.$one['id'].'&cid=1';
+        $base = HOME_PATH.'index.php?go=1&op=updatePrivatBox&typ=1'.$state.'&id%5B%5D='.$one['id'].'&act=';
         $mkact = static fn(string $href, string $title, string $icon, bool $view = false, bool $reply = false): array => [
             'href' => $href, 'title' => $title, 'icon' => $icon, 'is_reply' => $reply,
             'target' => $view ? 'prview' : 'prlist', 'confirm' => ($icon === 'trash') ? (string)_ONDELETE : '',
@@ -865,7 +872,7 @@ function getPrivatFocus(int $typ = 1): string {
             },
             'title' => $one['title'],
             'snip' => $one['snip'],
-            'href' => 'index.php?name=account&op=privat&id='.$one['id'],
+            'href' => getSeoUrl(['name' => 'account', 'op' => 'privat', 'id' => $one['id']]),
             'open' => $open,
             'is_keep' => $one['saved'] > 0,
             'tone' => count($slots) % 6,
@@ -881,7 +888,7 @@ function getPrivatFocus(int $typ = 1): string {
         'slots' => $slots,
         'more' => ($new > count($slots)) ? (string)($new - count($slots)) : '',
         'more_label' => (string)_MORE,
-        'more_href' => 'index.php?name=account&op=privat&typ=1&stat=unread',
+        'more_href' => getSeoUrl(['name' => 'account', 'op' => 'privat', 'typ' => 1, 'stat' => 'unread']),
     ]);
 }
 
@@ -937,8 +944,8 @@ function getPrivatRowData(array $row, int $typ, string $tok, int $pick = 0, stri
     global $tpl;
     $when = strtotime($row['time']);
     $past = date('Y-m-d', strtotime('-1 day'));
-    $link = 'index.php?go=1&op=setPrivateMessageRead&id='.$row['id'].'&cid='.(($typ == 2) ? 2 : 1).'&row=1'.$state;
-    $base = 'index.php?go=1&op=updatePrivatBox&typ='.$typ.$state.'&id%5B%5D='.$row['id'].'&act=';
+    $link = HOME_PATH.'index.php?go=1&op=setPrivateMessageRead&id='.$row['id'].'&cid='.(($typ == 2) ? 2 : 1).'&row=1'.$state;
+    $base = HOME_PATH.'index.php?go=1&op=updatePrivatBox&typ='.$typ.$state.'&id%5B%5D='.$row['id'].'&act=';
     $mkact = static fn(string $href, string $title, string $icon, bool $stay = false): array => [
         'href' => $href, 'title' => $title, 'icon_name' => $icon,
         'is_htmx' => true, 'is_post' => true, 'hx_headers' => $tok, 'no_params' => true,
@@ -972,14 +979,14 @@ function getPrivatRowData(array $row, int $typ, string $tok, int $pick = 0, stri
         'pick_label' => $row['title'],
         'pick_html' => $tpl->getHtmlFrag('checkbox', ['name_attr' => 'id[]', 'value_attr' => (string)$row['id'], 'is_check' => true]),
         'avatar' => ($row['name'] !== '') ? getUserAvatarUrl(['avatar' => $row['avatar']]) : getUserAvatarUrl([], true),
-        'open_href' => 'index.php?name=account&op=privat&id='.$row['id'].$state,
+        'open_href' => getSeoUrl(['name' => 'account', 'op' => 'privat', 'id' => $row['id']]).(($state !== '') ? '?'.substr($state, 1) : ''),
         'open_post' => $link,
         'token' => $tok,
         'title' => $row['title'],
         'stamp' => date('Y-m-d\TH:i', $when),
         'when' => (date('Y-m-d', $when) >= $past) ? date('H:i', $when) : date('d.m', $when),
         'author' => (string)_ANONYM,
-        'author_html' => ($row['name'] !== '') ? user_info($row['name']) : '',
+        'author_html' => ($row['name'] !== '') ? user_info($row['name'], $row['path'] ?? null) : '',
         'snip' => $row['snip'],
         'mark_html' => $mark,
         'actions_html' => getActionMenu($acts),
@@ -1085,7 +1092,7 @@ function getPrivateMessagePane(string|array $stop, string $info, int $typ, array
             ])
             .$tpl->getHtmlFrag('button', [
                 'button_type' => 'submit', 'submit_label' => _OK, 'title' => _CHECKOP, 'input_attr' => 'form="prbulk"',
-                'hx_post' => 'index.php?go=1&op=updatePrivatBox',
+                'hx_post' => HOME_PATH.'index.php?go=1&op=updatePrivatBox',
                 'hx_include' => '#prbulk', 'hx_target' => '#prlist',
             ]);
         $keys = $tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => $tok, 'input_attr' => ''])
@@ -1101,10 +1108,10 @@ function getPrivateMessagePane(string|array $stop, string $info, int $typ, array
             'empty_title' => $seek ? (string)_PRNOHIT : (string)_NO_INFO,
             'empty_icon' => $seek ? 'funnel' : 'inbox',
             'found' => $found,
-            'bulk_url' => 'index.php?go=1&op=updatePrivatBox',
+            'bulk_url' => HOME_PATH.'index.php?go=1&op=updatePrivatBox',
             'hidden_html' => $keys,
             'pager_html' => getTplPagerView($data['page'], $data['pages'], intval($conf['privat']['nump']), static fn(int $i): array => [
-                'query' => 'index.php?go=1&op=getPrivateMessageView&typ='.$typ.'&pnum='.$i.$pick['link'],
+                'query' => HOME_PATH.'index.php?go=1&op=getPrivateMessageView&typ='.$typ.'&pnum='.$i.$pick['link'],
                 'target_id' => 'prlist',
             ], ['count' => $data['total'], 'limit' => $data['limit'], 'page' => $data['limit']]),
             'bulk_html' => $tpl->getHtmlFrag('block-content', ['is_bulk_bar' => true, 'content' => $bulk]),
@@ -1141,7 +1148,8 @@ function getPrivateMessagePane(string|array $stop, string $info, int $typ, array
                 'carry_body' => $back,
             ]);
         }
-        $sql = 'SELECT u.id, u.name, u.avatar, u.website, u.sig, g.name AS gname FROM '.PREFIX_DB.'_users AS u'
+        $sql = 'SELECT u.id, u.name, u.avatar, u.website, u.sig, g.name AS gname, r.path FROM '.PREFIX_DB.'_users AS u'
+            .' LEFT JOIN '.PREFIX_DB.'_routes AS r ON r.kind = \'user\' AND r.oid = u.id AND r.cur = 1'
             .' LEFT JOIN '.PREFIX_DB.'_groups AS g ON ((g.extra = 1 AND u.grp = g.id) OR (g.extra != 1 AND u.points >= g.points))'
             .' WHERE u.id = :pid ORDER BY g.extra DESC, g.points DESC';
         $mate = $db->getSqlRow($db->getSqlQuery($sql, ['pid' => $view['partner']])) ?: [];
@@ -1150,7 +1158,7 @@ function getPrivateMessagePane(string|array $stop, string $info, int $typ, array
         $gname = (string)($mate['gname'] ?? '');
         $mine = $view['uidin'] === $uid;
         $mod = $mine ? ($view['saved'] ? 3 : 1) : 2;
-        $base = 'index.php?go=1&op=updatePrivatBox&typ='.$mod.'&id%5B%5D='.$view['id'].'&act=';
+        $base = HOME_PATH.'index.php?go=1&op=updatePrivatBox&typ='.$mod.'&id%5B%5D='.$view['id'].'&act=';
         $acts = [];
         if ($mine) {
             $acts[] = $view['saved']
@@ -1179,7 +1187,7 @@ function getPrivateMessagePane(string|array $stop, string $info, int $typ, array
         }
         if ($conf['privat']['profil'] && $pname !== '') {
             $chips .= $tpl->getHtmlFrag('link', [
-                'href' => 'index.php?name=account&op=view&uname='.urlencode($pname),
+                'href' => getSeoUrl(['name' => 'account', 'op' => 'view', 'uname' => rawurlencode($pname), 'route' => $mate['path'] ?? null]),
                 'title' => _PERSONALINFO, 'label' => _ACCOUNT, 'icon_name' => 'person-vcard', 'chip_tone' => 'neutral',
             ]);
         }
@@ -1197,14 +1205,14 @@ function getPrivateMessagePane(string|array $stop, string $info, int $typ, array
             'title' => $view['title'],
             'avatar' => ($pname !== '') ? getUserAvatarUrl(['avatar' => (string)($mate['avatar'] ?? '')]) : getUserAvatarUrl([], true),
             'author' => $show,
-            'author_html' => ($pname !== '') ? user_info($pname, false) : '',
+            'author_html' => ($pname !== '') ? user_info($pname, $mate['path'] ?? null, false) : '',
             'note' => ($gname !== '') ? _GROUP.': '.$gname : (string)_RANK,
             'chips_html' => $chips,
             'text_html' => $prs->filterContent($view['body'], true, $conf['name'], 2, 'breaks', ['privat', $view['id']]),
             'sig_html' => getUserSign((string)($mate['sig'] ?? ''), intval($view['partner']), 2),
             'is_reply' => true,
             'reply_label' => (string)_PRREP,
-            'forward_href' => 'index.php?go=1&op=getPrivateMessageView&typ=4&id='.$view['id'].'&fwd=1&cid='.($mine ? 1 : 2),
+            'forward_href' => HOME_PATH.'index.php?go=1&op=getPrivateMessageView&typ=4&id='.$view['id'].'&fwd=1&cid='.($mine ? 1 : 2),
             'forward_label' => (string)_PRFORWARD,
             'acts' => $acts,
             'is_carry' => true,
@@ -1267,7 +1275,7 @@ function addPrivateMessage(): void {
             ['uidin' => intval($sent['partner'] ?? 0)]
         ));
         if ($mail && $wish) {
-            $back = $conf['homeurl'].'/index.php?name=account&op=privat&id='.$new['id'].'#prmess';
+            $back = getPublicUrl(['name' => 'account', 'op' => 'privat', 'id' => $new['id']]).'#prmess';
             $link = $tpl->getHtmlFrag('link', ['href' => $back, 'title' => '', 'label_html' => $back]);
             $text = getMailFrame(sprintf(_PRNEWMAIL, filterText(mb_substr($user[1], 0, 25)), $link));
             $mailer->addQueue([
@@ -1364,6 +1372,7 @@ function getProfileModules(int $uid = 0): array {
             'title' => _FORUM,
             'icon' => getIconName('forum'),
             'table' => 'forum',
+            'kind' => 'topic',
             'where' => "uid = :uid AND pid = '0' AND time <= NOW() AND status > '1'",
             'rate' => ['ratings', 'score'],
             'fav' => 'forum',
@@ -1401,8 +1410,9 @@ function getProfileLastView(int $uid): string {
         if ($mod == 'comm' || isset($inf['type']) || !is_active($mod)) continue;
         $ron = !empty(getRatingService()->getRule($mod)['active']);
         $rsel = ($ron && $inf['rate']) ? $inf['rate'][0].' AS rc, '.$inf['rate'][1].' AS rt' : '0 AS rc, 0 AS rt';
-        $from = PREFIX_DB.'_'.$inf['table'].' WHERE '.str_replace(':uid', ':u'.$mod, $inf['where']);
-        $parts[] = "(SELECT '".$mod."' AS mkey, id, 0 AS ref, '' AS sub, title, time, ".$rsel.' FROM '.$from.' ORDER BY id DESC LIMIT 0,'.$limit.')';
+        $from = PREFIX_DB.'_'.$inf['table'].' AS t WHERE '.str_replace(':uid', ':u'.$mod, $inf['where']);
+        $rcol = '(SELECT r.path FROM '.PREFIX_DB.'_routes AS r WHERE r.kind = \''.$inf['kind'].'\' AND r.oid = t.id AND r.cur = 1)';
+        $parts[] = "(SELECT '".$mod."' AS mkey, id, 0 AS ref, '' AS sub, title, time, ".$rsel.', '.$rcol.' AS path FROM '.$from.' ORDER BY id DESC LIMIT 0,'.$limit.')';
         $params['u'.$mod] = $uid;
         $lists[$mod] = [];
     }
@@ -1411,17 +1421,17 @@ function getProfileLastView(int $uid): string {
         $text = cutstr(str_replace([_QUOTE, _CODE], '', filterText($prs->filterContent($row['body'], true, $conf['name'], 0, 'breaks'))), 70);
         $lists['comm'][] = [
             'datehtml' => $tpl->getHtmlFrag('date-badge', ['iso' => date('c', strtotime($when)), 'title' => format_time($when, _TIMESTRING), 'text' => format_time($when)]),
-            'href' => getSeoUrl(['name' => $row['modul'], 'op' => 'view', 'id' => $row['cid']]).'#'.$row['id'],
+            'href' => getSeoUrl(['name' => $row['modul'], 'op' => 'view', 'id' => $row['cid'], 'route' => $row['path']]).'#'.$row['id'],
             'label' => $text,
             'rating' => '',
         ];
     }
     if ($parts) {
         $result = $db->getSqlQuery(implode(' UNION ALL ', $parts), $params);
-        while ([$key, $id, $cid, $cmod, $label, $time, $cnt, $tot] = $db->getSqlRow($result)) {
+        while ([$key, $id, $cid, $cmod, $label, $time, $cnt, $tot, $path] = $db->getSqlRow($result)) {
             $lists[$key][] = [
                 'datehtml' => $tpl->getHtmlFrag('date-badge', ['iso' => date('c', strtotime($time)), 'title' => format_time($time, _TIMESTRING), 'text' => format_time($time)]),
-                'href' => getSeoUrl(['name' => $key, 'op' => 'view', 'id' => $id, 'title' => $label]),
+                'href' => getSeoUrl(['name' => $key, 'op' => 'view', 'id' => $id, 'route' => $path]),
                 'label' => $label,
                 'rating' => ($cnt > 0) ? number_format($tot / $cnt, 2) : '',
             ];
@@ -1440,7 +1450,7 @@ function getProfileLastView(int $uid): string {
                 $when = (string)$node->pubdate;
                 $lists[$mod][] = [
                     'datehtml' => $tpl->getHtmlFrag('date-badge', ['iso' => date('c', strtotime($when)), 'title' => format_time($when, _TIMESTRING), 'text' => format_time($when)]),
-                    'href' => getSeoUrl(['name' => $mod, 'op' => 'view', 'id' => $node->id, 'title' => $node->title]),
+                    'href' => getSeoUrl(['name' => $mod, 'op' => 'view', 'id' => $node->id, 'route' => $node->path]),
                     'label' => $node->title,
                     'rating' => $type->settings['features']['rating'] ? (Rating::getAverage($node->score, $node->ratings, 2) ?? '') : '',
                 ];
@@ -1486,7 +1496,7 @@ function getFavoriteButton(?int $fid, string $mod): string {
         'is_limit' => true,
         'title' => sprintf(_FAVOR_EXIT, $conf['favorites']['favorites']),
     ]);
-    return $tpl->getHtmlFrag('favorite', ['rep_id' => $repid, 'href' => 'index.php?go=1&op=addFavorite&id='.$fid.'&mod='.$mod, 'token' => getSiteToken()]);
+    return $tpl->getHtmlFrag('favorite', ['rep_id' => $repid, 'href' => HOME_PATH.'index.php?go=1&op=addFavorite&id='.$fid.'&mod='.$mod, 'token' => getSiteToken()]);
 }
 
 # Add an item to the user's favorites list and echo the updated toggle button
@@ -1585,6 +1595,8 @@ function getFavoriteList(int $obj = 0): string {
 
     $shelves = [];
     $last = [];
+    $paths = (new Route($db))->getRouteList('node', array_merge(...array_map('array_keys', array_values(array_diff_key($fmap, $tables)))));
+    $tops = [];
     foreach ($fmap as $modul => $fids) {
         $titles = [];
         if (isset($tables[$modul])) {
@@ -1594,8 +1606,9 @@ function getFavoriteList(int $obj = 0): string {
                 $pp[] = ':f'.$idx;
                 $pm['f'.$idx] = $val;
             }
-            $result = $db->getSqlQuery('SELECT id, title FROM '.PREFIX_DB.'_'.$tables[$modul].' WHERE id IN ('.implode(', ', $pp).')', $pm);
-            while ($row = $db->getSqlRow($result)) $titles[intval($row[0])] = (string)$row[1];
+            $result = $db->getSqlQuery('SELECT t.id, t.title, r.path FROM '.PREFIX_DB.'_'.$tables[$modul].' AS t LEFT JOIN '.PREFIX_DB.'_routes AS r'
+                .' ON r.kind = \'topic\' AND r.oid = t.id AND r.cur = 1 WHERE t.id IN ('.implode(', ', $pp).')', $pm);
+            while ($row = $db->getSqlRow($result)) [$titles[intval($row[0])], $tops[intval($row[0])]] = [(string)$row[1], $row[2]];
         } else {
             $titles = getNodeTitleMap(array_fill_keys(array_keys($fids), $modul));
         }
@@ -1605,8 +1618,8 @@ function getFavoriteList(int $obj = 0): string {
                 $rows[$id] = [
                     'title' => $title,
                     'label_html' => filterTextHighlight(htmlspecialchars(cutstr($title, 100), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'), $seek),
-                    'href' => 'index.php?name='.$modul.'&op=view&id='.$fid,
-                    'del_href' => 'index.php?go=1&op=deleteFavorite&id='.$id,
+                    'href' => getSeoUrl(['name' => $modul, 'op' => 'view', 'id' => $fid, 'route' => (isset($tables[$modul]) ? $tops : $paths)[$fid] ?? null]),
+                    'del_href' => HOME_PATH.'index.php?go=1&op=deleteFavorite&id='.$id,
                 ];
             }
         }
@@ -1629,14 +1642,14 @@ function getFavoriteList(int $obj = 0): string {
     if (!isset($shelves[$mod])) $mod = '';
     $total = array_sum(array_column($shelves, 'count'));
     $lead = array_key_first($shelves);
-    $base ='index.php?go=1&op=getFavoriteList&part=shelves';
-    $link = 'index.php?name=account&op=favorites'.(($seek !== '') ? '&q='.rawurlencode($seek) : '');
+    $base = HOME_PATH.'index.php?go=1&op=getFavoriteList&part=shelves';
+    $link = ['name' => 'account', 'op' => 'favorites'] + (($seek !== '') ? ['q' => rawurlencode($seek)] : []);
     $chips = [];
     $view = [];
     $pos = 0;
     foreach ($shelves as $key => $shelf) {
         $shelf['tone'] = $pos++ % 6;
-        $chips[] = ['label' => $shelf['title'], 'icon' => $shelf['icon'], 'href' => $link.'&mod='.$key, 'hx_url' => $base.'&mod='.$key, 'is_now' => $key === $mod];
+        $chips[] = ['label' => $shelf['title'], 'icon' => $shelf['icon'], 'href' => getSeoUrl($link + ['mod' => $key]), 'hx_url' => $base.'&mod='.$key, 'is_now' => $key === $mod];
         if ($mod !== '' && $key !== $mod) continue;
         if ($seek !== '' && mb_stripos($shelf['title'], $seek, 0, 'utf-8') === false) {
             $shelf['rows'] = array_values(array_filter($shelf['rows'], static fn(array $row): bool => mb_stripos($row['title'], $seek, 0, 'utf-8') !== false));
@@ -1645,7 +1658,7 @@ function getFavoriteList(int $obj = 0): string {
         $shelf['chips'] = [['tone' => 'neutral', 'title' => _FAVORITES, 'text' => (string)$shelf['count']]];
         if ($shelf['rows']) $view[] = $shelf;
     }
-    $chips[] = ['label' => _ALL, 'icon' => getIconName('all'), 'href' => $link, 'hx_url' => $base.'&mod=', 'is_now' => $mod === ''];
+    $chips[] = ['label' => _ALL, 'icon' => getIconName('all'), 'href' => getSeoUrl($link), 'hx_url' => $base.'&mod=', 'is_now' => $mod === ''];
     $tally = sprintf(_NUMOF, array_sum(array_column($view, 'count')), $total);
     $quota =($num >= $max) ? ['tone' => 'warn', 'cat' => 0] : ['tone' => 'info', 'cat' => 4];
     $lamps = [
@@ -1784,7 +1797,7 @@ function getNodeHint(): string {
             $list = array_merge($list, $page);
             if (count($page) < $size) break;
         }
-        $hints = array_map(fn(Node $v): array => ['href' => getSeoUrl(['name' => $name, 'op' => 'view', 'id' => $v->id, 'title' => $v->title]), 'label' => $v->title],
+        $hints = array_map(fn(Node $v): array => ['href' => getSeoUrl(['name' => $name, 'op' => 'view', 'id' => $v->id, 'route' => $v->path]), 'label' => $v->title],
             array_slice($list, 0, 5));
     } catch (NodeException $err) {
         Logger::addSite('error', 'Hints: a Node type cannot be searched', ['type' => $name, 'code' => $err->getCode()]);
@@ -1798,7 +1811,7 @@ function getNodeHint(): string {
 function getOpenSearch() {
     global $conf;
     header('Content-Type: application/opensearchdescription+xml');
-    $find = htmlspecialchars($conf['homeurl'].'/index.php?name=search&word={searchTerms}');
+    $find = htmlspecialchars(getPublicUrl(['name' => 'search']).'?word={searchTerms}');
     return '<?xml version="1.0" encoding="'._CHARSET."\"?>\n"
     ."<OpenSearchDescription xmlns=\"http://a9.com/-/spec/opensearch/1.1/\">\n"
     .'<ShortName>'.htmlspecialchars($conf['sitename'])."</ShortName>\n"
@@ -1835,7 +1848,7 @@ switch(getVar('get', 'stat', 'num', 0)) {
     case 1:
     $img = getVar('get', 'img', 'num', 0) ? '_'.getVar('get', 'img', 'num', 0) : '';
     $stat = getStatsToday();
-    $image = imagecreatefrompng(getThemeImagePath('banners/stat'.$img.'.png'));
+    $image = imagecreatefrompng(PUBLIC_DIR.'/'.getThemeImagePath('banners/stat'.$img.'.png'));
     $white = imagecolorallocate($image, 255, 255, 255);
     imagestring($image, 1, 22, 4, $stat['visits'].'/'.$stat['hosts'], $white);
     header('Content-type: image/png');

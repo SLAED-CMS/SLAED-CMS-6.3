@@ -9,10 +9,10 @@ if (!defined('FUNC_FILE')) die('Illegal file access');
 # Output buffering on — must precede all bootstrap operations
 if (ob_get_level() === 0) ob_start();
 
-# Retired addresses: a path after the script or a bare index.php goes 301 to the address built from the script name, any other path finds no page
+# Retired addresses: a path after another script or a bare script name goes 301 to the address built from the script name, any other path finds no page
 # The cut of index.php, before the database: a path of up to five ASCII words is kept lowercased in $urlroute for public/index.php, which resolves it
-# The flag bent marks a path written otherwise than its address: upper case, a trailing slash or /index.php/ in front; a path after it that names only the script keeps its 301
-$urlroute = ['seg' => [], 'bent' => false];
+# A path of index.php that names only the script is its start page, and setSeoMove() answers it in the one 301 of the page with every other reason
+$urlroute = ['seg' => []];
 if (PHP_SAPI !== 'cli') {
     [$rpath, $rquery] = array_pad(explode('?', (string)($_SERVER['REQUEST_URI'] ?? ''), 2), 2, '');
     $sname = basename(str_replace('\\', '/', (string)($_SERVER['SCRIPT_NAME'] ?? '')));
@@ -23,33 +23,34 @@ if (PHP_SAPI !== 'cli') {
         array_push($rhome, $rone.'/', $rone.'/'.$sname);
         if ($rrest === null && str_starts_with($rpath, $rone.'/')) $rrest = substr($rpath, strlen($rone) + 1);
     }
-    $rcut = ($sname === 'index.php') ? (string)preg_replace('#^(?:index\.php/)+#', '', (string)$rrest, -1, $rnum) : '';
+    $rcut = ($sname === 'index.php') ? (string)preg_replace('#^(?:index\.php/)+#', '', (string)$rrest) : '';
     $rdest = '';
-    if ($rcut === '' || $rcut === 'index.php') {
+    if ($sname !== 'index.php') {
         if (preg_match('#^(.*?/'.preg_quote($sname, '#').')/#', $rpath, $rhit) && in_array($rhit[1], $rhome, true)) $rdest = $rhit[1];
         if ($rdest === '' && ($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET' && in_array($rpath, $rhome, true)) $rdest = $rpath;
     }
-    if ($rquery === '' && str_ends_with($rdest, '/index.php')) $rdest = substr($rdest, 0, -9);
     if ($rdest !== '' && $rdest !== $rpath) {
         header('Location: '.$rdest.(($rquery !== '') ? '?'.$rquery : ''), true, 301);
         exit;
     }
     $rsegs = ($rcut === '' || $rcut === 'index.php') ? [] : explode('/', str_ends_with($rcut, '/') ? substr($rcut, 0, -1) : $rcut);
-    if ($rsegs !== [] && count($rsegs) <= 5 && preg_grep('#^[A-Za-z0-9_-]+$#D', $rsegs, PREG_GREP_INVERT) === []) {
-        $urlroute = ['seg' => array_map('strtolower', $rsegs), 'bent' => $rnum > 0 || str_ends_with($rcut, '/') || strtolower($rcut) !== $rcut];
-    }
-    if (!in_array($rpath, $rhome, true) && $urlroute['seg'] === [] && !isset($_GET['error'])) $_GET['error'] = 404;
-    unset($rpath, $rquery, $sname, $sbase, $rhome, $rrest, $rcut, $rnum, $rdest, $rone, $rhit, $rsegs);
+    if ($rsegs !== [] && count($rsegs) <= 5 && preg_grep('#^[A-Za-z0-9_-]+$#D', $rsegs, PREG_GREP_INVERT) === []) $urlroute = ['seg' => array_map('strtolower', $rsegs)];
+    $rself = $sname === 'index.php' && $rrest !== null && $rsegs === [];
+    if (!in_array($rpath, $rhome, true) && !$rself && $urlroute['seg'] === [] && !isset($_GET['error'])) $_GET['error'] = 404;
+    unset($rpath, $rquery, $sname, $sbase, $rhome, $rrest, $rcut, $rdest, $rone, $rhit, $rsegs, $rself);
 }
 
 # Ensure configuration exists when this file is analyzed or included directly
 if (!isset($conf) || !is_array($conf)) $conf = getConfig();
 
-# SEO: optional canonical host/scheme enforcement (opt-in per install; portable, proxy-aware via X-Forwarded-Proto)
-if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET' && (!empty($conf['forcessl']) || !empty($conf['forcehost']))) {
+# SEO: optional canonical host/scheme enforcement (opt-in per install; portable, proxy-aware via X-Forwarded-Proto); the host of homeurl keeps its port
+# A page of index.php is left to setSeoMove(), so the wrong host and an old address of a page are one hop; the endpoints go=, the panel and the scripts are answered here
+$rpage = basename(str_replace('\\', '/', (string)($_SERVER['SCRIPT_NAME'] ?? ''))) === 'index.php' && getVar('req', 'go', 'var') === '';
+if (!$rpage && ($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET' && (!empty($conf['forcessl']) || !empty($conf['forcehost']))) {
     $rhost = strtolower((string)($_SERVER['HTTP_HOST'] ?? ''));
     $secure = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || (($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https');
-    $chost = strtolower((string)parse_url((string)($conf['homeurl'] ?? ''), PHP_URL_HOST));
+    $chome = parse_url((string)($conf['homeurl'] ?? '')) ?: [];
+    $chost = strtolower((string)($chome['host'] ?? '')).(isset($chome['port']) ? ':'.$chome['port'] : '');
     $badssl = !empty($conf['forcessl']) && !$secure;
     $badhost = !empty($conf['forcehost']) && $rhost !== '' && $chost !== '' && $rhost !== $chost;
     if ($badssl || $badhost) {
@@ -59,6 +60,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET' && (!empty($conf['forcessl']
         exit;
     }
 }
+unset($rpage);
 
 # Set the default timezone
 date_default_timezone_set($conf['gtime']);
@@ -454,7 +456,7 @@ function setExit(string $msg, string $typ = '', string $title = ''): never {
     $linksrc = [];
     $favicon = 'templates/'.$theme.'/images/favicon.svg';
     if (is_file(PUBLIC_DIR.'/'.$favicon)) {
-        $linksrc[] = $tpl->getHtmlFrag('head-link', ['rel' => 'shortcut icon', 'href' => $favicon, 'type' => 'image/svg+xml', 'title' => '']);
+        $linksrc[] = $tpl->getHtmlFrag('head-link', ['rel' => 'shortcut icon', 'href' => $base.$favicon, 'type' => 'image/svg+xml', 'title' => '']);
     }
     foreach (getThemeAssets($theme, 'css') as $asset) {
         $linksrc[] = $tpl->getHtmlFrag('head-link', ['rel' => 'stylesheet', 'href' => Template::getAssetUrl($asset), 'type' => '', 'title' => '']);
@@ -482,7 +484,7 @@ function setExit(string $msg, string $typ = '', string $title = ''): never {
         'blocks_left' => '',
         'blocks_right' => '',
         'blocks_down' => '',
-        'adlogo' => $adpath,
+        'adlogo' => $base.$adpath,
         'adalt' => $conf['sitename'] ?? 'SLAED CMS',
         'adtitle' => $conf['sitename'] ?? 'SLAED CMS',
         'logo' => $conf['site_logo'] ?? '',

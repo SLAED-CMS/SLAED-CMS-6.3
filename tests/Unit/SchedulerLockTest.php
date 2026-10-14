@@ -232,7 +232,7 @@ final class SchedulerLockTest extends TestCase
     public function theTriggerCredentialIsNotInTheUrl(): void
     {
         $data = $this->getProbe('trigger');
-        $this->assertSame('index.php?go=3&op=scheduler', $data['url']);
+        $this->assertSame('/index.php?go=3&op=scheduler', $data['url']);
         $this->assertNotSame('', $data['token'], 'The trigger produced no credential');
         $this->assertFalse($data['query'], 'The credential is still part of the address');
     }

@@ -67,7 +67,7 @@ final class RatingOwnersTest extends TestCase
             'The dispatcher asks for a token before the handler can refuse the method');
         foreach (['rating-bar', 'rating-like'] as $name) {
             $frag = $this->getCode('public/templates/lite/fragments/'.$name.'.html');
-            $this->assertStringContainsString('hx-post="index.php?go=1&amp;op=getRatingView"', $frag, $name);
+            $this->assertStringContainsString('hx-post="{{ root }}index.php?go=1&amp;op=getRatingView"', $frag, $name);
             $this->assertStringNotContainsString('rate=', $frag, $name.' still carries a voting address with parameters');
         }
     }

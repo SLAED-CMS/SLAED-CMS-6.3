@@ -24,6 +24,7 @@
 # The argument journal runs the journals of the panel, the logins and OAuth: a passed token writes one line, a refused one none, and a login is written once
 # The argument address runs the writers of the registry of addresses: every path given, moved and marked gone inside the write of its entity
 # The argument parse runs the resolution of a path: the pages of the address table, the grammar, the cut and the keys of a path over those of the query
+# The argument build runs the links the pages print on the registry, the statements of the lists and the warnings, and its child buildext asks the builder itself
 if (PHP_SAPI !== 'cli') {
     http_response_code(404);
     exit;
@@ -31,7 +32,7 @@ if (PHP_SAPI !== 'cli') {
 error_reporting(E_ALL);
 ini_set('display_errors', '0');
 $rwork = str_replace('\\', '/', (string)($argv[1] ?? sys_get_temp_dir().'/slaed_node_route'));
-if (in_array($argv[2] ?? '', ['view', 'comments', 'ext', 'syncext', 'integext', 'guardext', 'treeext', 'seoext'], true)) {
+if (in_array($argv[2] ?? '', ['view', 'comments', 'ext', 'syncext', 'integext', 'guardext', 'treeext', 'seoext', 'buildext'], true)) {
     $probework = $rwork.'/child';
     foreach (['CONFIG_DIR' => 'config', 'BACKUP_DIR' => 'backup', 'CACHE_DIR' => 'cache', 'UPLOADS_DIR' => 'uploads'] as $rkey => $rdir) define($rkey, $rwork.'/'.$rdir);
     require_once __DIR__.'/probe_boot.php';
@@ -39,7 +40,7 @@ if (in_array($argv[2] ?? '', ['view', 'comments', 'ext', 'syncext', 'integext', 
     require_once BASE_DIR.'/core/system.php';
     $rchild = ['view' => 'getRouteViewData', 'comments' => 'getRouteCommentData', 'ext' => 'getRouteExtData', 'syncext' => 'getRouteSyncData',
         'integext' => 'getRouteIntegData', 'guardext' => 'getRouteGuardData', 'treeext' => 'getRouteTreeData',
-        'seoext' => 'getRouteSeoData'][$argv[2]];
+        'seoext' => 'getRouteSeoData', 'buildext' => 'getRouteBuildData'][$argv[2]];
     echo json_encode($rchild());
     exit;
 }
@@ -243,8 +244,8 @@ function getRoutePort(): int {
     return $port;
 }
 
-# One real exchange as one visitor with the cookies of that visitor: the status, the headers by lower-case name and the body
-function getRouteReply(string $who, string $method, string $path, array $post = [], array $head = []): array {
+# One real exchange as one visitor with the cookies of that visitor: the status, the headers by lower-case name and the body; a 301 of a page on the site is followed once
+function getRouteReply(string $who, string $method, string $path, array $post = [], array $head = [], bool $hop = true): array {
     global $rwork, $rport;
     $curl = curl_init('http://127.0.0.1:'.$rport.'/'.ltrim($path, '/'));
     $jar = $rwork.'/jar-'.($who === '' ? 'guest' : $who).'.txt';
@@ -263,6 +264,10 @@ function getRouteReply(string $who, string $method, string $path, array $post = 
             $heads[strtolower(trim($key))] = trim($val);
         }
     }
+    unset($curl);
+    $site = 'http://127.0.0.1:'.$rport.'/';
+    $move = $heads['location'] ?? '';
+    if ($hop && $code === 301 && str_starts_with($move, $site)) return getRouteReply($who, $method, substr($move, strlen($site)), $post, $head, false);
     return ['code' => $code, 'head' => $heads, 'body' => substr($raw, $size)];
 }
 
@@ -316,8 +321,8 @@ function getRouteLists(PDO $pdo): array {
     $out['hit'] = str_contains(getRouteReply('', 'GET', 'index.php?name=news')['body'], 'Gamma changed');
     $out['user'] = str_contains(getRouteReply('anna', 'GET', 'index.php?name=news')['body'], 'Gamma changed');
     $pdo->exec('UPDATE '.RPREF.'_nodes SET title = \'Gamma\' WHERE id = 105');
-    $two = getRouteReply('', 'GET', 'index.php?name=news&num=2');
-    $out['page'] = [$two['code'], str_contains($two['body'], 'Alpha'), $code('', 'index.php?name=news&num=3')];
+    $two = getRouteReply('', 'GET', 'index.php?name=news&page=2');
+    $out['page'] = [$two['code'], str_contains($two['body'], 'Alpha'), $code('', 'index.php?name=news&page=3')];
     $post = getRouteReply('', 'POST', 'index.php?name=news');
     $put = getRouteReply('', 'PUT', 'index.php?name=news');
     $out['post'] = [$post['code'], $post['head']['location'] ?? '', $put['code'], $put['head']['allow'] ?? ''];
@@ -351,7 +356,7 @@ function getRouteViewRuns(PDO $pdo): array {
     $code = fn(string $who, string $path, string $method = 'GET'): int => getRouteReply($who, $method, $path)['code'];
     $one = getRouteReply('', 'GET', 'index.php?name=news&op=view&id=101');
     $out = ['view' => [$one['code'], str_contains($one['body'], '<h1 class="sl-title">Alpha</h1>'),
-        str_contains($one['body'], 'go=file&amp;own=node&amp;id=101&amp;key=att-aaaaaaaaaa.png'), str_contains($one['body'], 'op=asset&amp;id=2'),
+        str_contains($one['body'], 'go=file&amp;own=node&amp;id=101&amp;key=att-aaaaaaaaaa.png'), str_contains($one['body'], '/news/asset/2'),
         str_contains($one['body'], 'uploads/node/news/')]];
     $out['views'] = getRouteViews($pdo, 101, 1);
     getRouteReply('', 'HEAD', 'index.php?name=news&op=view&id=101');
@@ -425,7 +430,7 @@ function getRouteAssets(PDO $pdo): array {
 # The report of a resource: POST with the token of the page, stored once for a guest, and a second report of the same visitor within a minute refused
 function getRouteReports(PDO $pdo): array {
     $page = getRouteReply('boris', 'GET', 'index.php?name=news&op=view&id=101');
-    $tok = getRouteToken($page['body'], 'op=report');
+    $tok = getRouteToken($page['body'], '/report/');
     $out = ['get' => getRouteReply('boris', 'GET', 'index.php?name=news&op=report&id=2')['code']];
     $out['token'] = getRouteReply('boris', 'POST', 'index.php?name=news&op=report&id=2', ['refer' => '1'])['code'];
     $one = getRouteReply('boris', 'POST', 'index.php?name=news&op=report&id=2', ['token' => $tok, 'refer' => '1']);
@@ -435,7 +440,7 @@ function getRouteReports(PDO $pdo): array {
     $two = getRouteReply('boris', 'POST', 'index.php?name=news&op=report&id=2', ['token' => $tok, 'refer' => '1']);
     $out['again'] = [$two['code'], ($two['head']['retry-after'] ?? '') !== ''];
     $out['image'] = getRouteReply('clara', 'POST', 'index.php?name=news&op=report&id=1', ['token' => getRouteToken(getRouteReply('clara', 'GET',
-        'index.php?name=news&op=view&id=101')['body'], 'op=report')])['code'];
+        'index.php?name=news&op=view&id=101')['body'], '/report/')])['code'];
     return $out;
 }
 
@@ -768,7 +773,7 @@ function getRouteSupport(PDO $pdo): array {
     $ctok = fn(string $html): string => preg_match('#id="formcsave".*?name="token"\s+value="([a-f0-9]{64})"#s', $html, $hit) ? $hit[1] : '';
     $reply = function (string $who, int $id, string $text) use ($ctok) {
         $page = getRouteReply($who, 'GET', 'index.php?name=help&op=view&id='.$id);
-        $tok = $ctok($page['body']) ?: getRouteToken($page['body'], 'op=support');
+        $tok = $ctok($page['body']) ?: getRouteToken($page['body'], '/support/');
         return getRouteReply($who, 'POST', 'index.php?go=1&op=addComment&id='.$id.'&mod=help&com=1', ['text' => $text, 'name' => '', 'token' => $tok]);
     };
     $out = ['guest' => [$code('', 'index.php?name=help'), $code('', 'index.php?name=help&op=add'), $code('', 'index.php?name=help&op=view&id=1')]];
@@ -776,7 +781,7 @@ function getRouteSupport(PDO $pdo): array {
     [$made, $aid] = $open('anna', 'Anna request');
     $new = $since($was);
     $out['open'] = [$made, (int)getRouteCol($pdo, $aid, 'status'), (int)getRouteCol($pdo, $aid, 'comon'), $card($aid), $new['to'], str_contains($new['text'], 'Anna request'),
-        str_contains($new['text'], 'private'), str_contains($new['text'], 'op=view&amp;id='.$aid)];
+        str_contains($new['text'], 'private'), str_contains($new['text'], '/help/view/'.$aid)];
     [, $bid] = $open('boris', 'Boris request');
     $list = fn(string $who): string => getRouteReply($who, 'GET', 'index.php?name=help')['body'];
     $out['lists'] = [
@@ -813,7 +818,7 @@ function getRouteSupport(PDO $pdo): array {
     $prof = fn(string $who): string => getRouteReply($who, 'GET', 'index.php?name=account&op=view&uname=anna')['body'];
     $out['profile'] = [str_contains($prof('boris'), 'Anna reply one'), str_contains($prof('anna'), 'Anna reply one'), str_contains($prof('helper'), 'Anna reply one')];
     $page = getRouteReply('anna', 'GET', 'index.php?name=help&op=view&id='.$aid);
-    $tok = getRouteToken($page['body'], 'op=support');
+    $tok = getRouteToken($page['body'], '/support/');
     $ver = getRouteField($page['body'], 'version');
     $before = $when($aid);
     sleep(1);
@@ -1197,7 +1202,7 @@ function getRouteRate(PDO $pdo, int $id): array {
 # The live token a page hands its rating widget, the address of the favorite switch it offers and the header token the switch posts with
 function getRoutePageBits(string $html): array {
     $tok = preg_match('#"token": "([A-Za-z0-9]+)"#', $html, $hit) ? $hit[1] : '';
-    $fav = preg_match('#hx-post="(index\.php\?go=1&amp;op=addFavorite[^"]+)"#', $html, $hit) ? html_entity_decode($hit[1]) : '';
+    $fav = preg_match('#hx-post="/(index\.php\?go=1&amp;op=addFavorite[^"]+)"#', $html, $hit) ? html_entity_decode($hit[1]) : '';
     $ftok = preg_match('#op=addFavorite[^"]+"[^>]*"X-CSRF-TOKEN": "([A-Za-z0-9]+)"#', $html, $hit) ? $hit[1] : '';
     return [$tok, $fav, $ftok];
 }
@@ -1276,7 +1281,7 @@ function getRouteInteg(PDO $pdo, string $work): array {
     $none = getRouteReply('', 'GET', 'index.php?go=rss&name=docs')['body'];
     $pick = getRouteReply('', 'GET', 'index.php?name=rss')['body'];
     $out['rss'] = [$rss['code'], str_contains($rss['body'], '<title>Beta</title>'), str_contains($rss['body'], 'Members'), str_contains($rss['body'], 'Pending one'),
-        str_contains($rss['body'], 'op=view&amp;id=102'), str_contains($none, '<item>'), str_contains($pick, 'value="news"'), str_contains($pick, 'value="docs"')];
+        str_contains($rss['body'], '/news/view/102'), str_contains($none, '<item>'), str_contains($pick, 'value="news"'), str_contains($pick, 'value="docs"')];
     $blk = getRouteReply('', 'GET', 'index.php?name=rss')['body'];
     $root = getRouteReply('root', 'GET', 'index.php?name=rss')['body'];
     $cut = fn(string $html, string $title): string => (string)strstr((string)strstr($html, $title), '</ol>', true);
@@ -1298,8 +1303,8 @@ function getRouteInteg(PDO $pdo, string $work): array {
     $node = require $work.'/config/node.php';
     $out['toggle'] = [(bool)preg_match('#name="ntype\[\]"\s+value="news"#', $conf['body']), $save['code'], $node['node']['types']['docs']['integrations']['search'] ?? null,
         (int)$pdo->query('SELECT version FROM '.$pre.'node_types WHERE name = \'docs\'')->fetchColumn(), str_contains($find('', 'word=intro+of'), 'Doc one')];
-    [$one, $two] = [$find('', 'word=intro+of&num=1'), $find('', 'word=intro+of&num=2')];
-    $out['paged'] = [str_contains($one, 'Beta'), str_contains($one, 'Alpha'), str_contains($two, 'Alpha'), str_contains($two, 'Beta'), str_contains($one, 'num=2')];
+    [$one, $two] = [$find('', 'word=intro+of&page=1'), $find('', 'word=intro+of&page=2')];
+    $out['paged'] = [str_contains($one, 'Beta'), str_contains($one, 'Alpha'), str_contains($two, 'Alpha'), str_contains($two, 'Beta'), str_contains($one, 'page=2')];
     $pdo->exec('INSERT INTO '.$pre.'node_relations (nid, rid, type, sort) VALUES (102, 101, \'related\', 0)');
     $rel = function (string $html): array {
         $part = preg_match('#class="sl-related-title".*?</section>#s', $html, $hit) ? $hit[0] : '';
@@ -1325,25 +1330,26 @@ function getRouteInteg(PDO $pdo, string $work): array {
     return $out;
 }
 
-# The sitemap of the child: the generator runs against the files of the tree, so the map and the HTML map of the stand are kept byte for byte and put back afterwards
+# The sitemap of the child: the generator runs against the files of the tree, so the maps and robots.txt of the stand are kept byte for byte and put back afterwards
 # Two warm runs, at the configured limits.syncbatch and at 100, answer how many statements more the smaller cursor batches of Node cost
 # A multilingual map lists a category of the site language and leaves out one of another language, which a visitor without a language cookie gets as not found
 function getRouteIntegData(): array {
     global $db, $conf;
     $keep = [];
-    foreach ([PUBLIC_DIR.'/sitemap.xml', SITEMAP_DIR.'/sitemap.txt'] as $file) $keep[$file] = is_file($file) ? [file_get_contents($file), filemtime($file)] : null;
+    foreach ([PUBLIC_DIR.'/sitemap.xml', SITEMAP_DIR.'/sitemap.txt', PUBLIC_DIR.'/robots.txt'] as $file) {
+        $keep[$file] = is_file($file) ? [file_get_contents($file), filemtime($file)] : null;
+    }
     try {
         $res = addSitemapTask(true);
         $xml = (string)file_get_contents(PUBLIC_DIR.'/sitemap.xml');
         $txt = (string)file_get_contents(SITEMAP_DIR.'/sitemap.txt');
         preg_match_all('#<loc>([^<]+)</loc>#', $xml, $all);
         $locs = array_map('html_entity_decode', $all[1]);
-        $has = fn(string $tail): bool => in_array($GLOBALS['conf']['homeurl'].'/index.php?'.$tail, $locs, true);
+        $has = fn(string $tail): bool => in_array($GLOBALS['conf']['homeurl'].'/'.$tail, $locs, true);
         $out = ['status' => $res['status'], 'count' => $res['extra']['last_url_count'] ?? 0, 'valid' => simplexml_load_string($xml) !== false,
-            'raw' => str_contains($xml, '&op='), 'list' => [$has('name=news'), $has('name=docs'), $has('name=off')], 'cats' => [$has('name=news&cat=1'), $has('name=news&cat=2')],
-            'items' => [$has('name=news&op=view&id=101'), $has('name=news&op=view&id=102'), $has('name=news&op=view&id=103'), $has('name=news&op=view&id=104'),
-                $has('name=docs&op=view&id=201'), $has('name=off&op=view&id=301')],
-            'bulk' => count(array_filter($locs, fn($v) => str_contains($v, 'name=docs&op=view'))),
+            'raw' => str_contains($xml, '&op='), 'list' => [$has('news'), $has('docs'), $has('off')], 'cats' => [$has('news?cat=1'), $has('news?cat=2')],
+            'items' => [$has('news/view/101'), $has('news/view/102'), $has('news/view/103'), $has('news/view/104'), $has('docs/view/201'), $has('off/view/301')],
+            'bulk' => count(array_filter($locs, fn($v) => str_contains($v, '/docs/view/'))),
             'txt' => [(bool)preg_match('#>\s*Open\s*<#', $txt), str_contains($txt, 'Members'),
                 str_contains($txt, 'Alpha')], 'parts' => count(glob(BASE_DIR.'/sitemap-*.xml*') ?: [])];
         $num = $db->qnum;
@@ -1355,12 +1361,14 @@ function getRouteIntegData(): array {
         $conf['multilingual'] = 1;
         $db->getSqlQuery('UPDATE '.PREFIX_DB.'_categories SET lang = :lang WHERE id = 1', ['lang' => 'zz']);
         addSitemapTask(true);
-        $out['lang'] = str_contains(html_entity_decode((string)file_get_contents(PUBLIC_DIR.'/sitemap.xml')), 'index.php?name=news&cat=1<');
+        $out['lang'] = str_contains(html_entity_decode((string)file_get_contents(PUBLIC_DIR.'/sitemap.xml')), '/news?cat=1<');
         $db->getSqlQuery('UPDATE '.PREFIX_DB.'_categories SET lang = :lang WHERE id = 1', ['lang' => $conf['language']]);
         addSitemapTask(true);
-        $out['lang'] = [$out['lang'], str_contains(html_entity_decode((string)file_get_contents(PUBLIC_DIR.'/sitemap.xml')), 'index.php?name=news&cat=1<')];
+        $out['lang'] = [$out['lang'], str_contains(html_entity_decode((string)file_get_contents(PUBLIC_DIR.'/sitemap.xml')), '/news?cat=1<')];
         $db->getSqlQuery('UPDATE '.PREFIX_DB.'_categories SET lang = \'\' WHERE id = 1');
         $conf['multilingual'] = 0;
+        preg_match_all('#^Sitemap:\s*(\S+)#m', (string)file_get_contents(PUBLIC_DIR.'/robots.txt'), $all);
+        $out['robots'] = [$all[1] === [$conf['homeurl'].'/sitemap.xml'], str_contains((string)file_get_contents(PUBLIC_DIR.'/robots.txt'), 'Disallow: /setup.php')];
         return $out;
     } finally {
         foreach ($keep as $file => $old) {
@@ -1842,7 +1850,7 @@ function getRouteTree(PDO $pdo): array {
     }
     $mid = $page('', 204)['body'];
     $out['escape'] = [str_contains($mid, '>Install &amp; run</a>'), str_contains($mid, '&amp;amp;')];
-    $out['hidden'] = [str_contains($page('', 207)['body'], 'op=view&amp;id=206'), $page('', 206)['code']];
+    $out['hidden'] = [str_contains($page('', 207)['body'], '/docs/view/206'), $page('', 206)['code']];
     $mod = $page('docsman', 206);
     $out['moder'] = [$mod['code'], getRouteTreeNav($mod['body'])];
     $news = getRouteReply('', 'GET', 'index.php?name=news&op=view&id=101');
@@ -1943,7 +1951,7 @@ function getRouteModeBits(string $html, string $mark): array {
     $list = iterator_to_array($xp->query($in));
     $text = fn(string $path): array => array_map(fn($v) => trim($v->textContent), iterator_to_array($xp->query($in.$path)));
     return ['count' => count($list), 'tags' => array_values(array_unique(array_map(fn($v) => $v->nodeName, $list))), 'titles' => $text('//*[contains(@class, "sl-title")]'),
-        'chips' => $text('//*[contains(@class, "sl-chip")]'), 'links' => $text('//a[contains(@href, "op=asset")]/@href'), 'images' => $text('//img/@src'),
+        'chips' => $text('//*[contains(@class, "sl-chip")]'), 'links' => $text('//a[contains(@href, "/asset/")]/@href'), 'images' => $text('//img/@src'),
         'buttons' => count($xp->query($in.'//*[contains(@class, "sl-meta-foot")]//a[contains(@class, "sl-but")]'))];
 }
 
@@ -1991,9 +1999,9 @@ function getRouteLooks(): array {
     $read = fn(string $html): array => [preg_match_all('#name="view" value="([a-z]+)"#', $html, $all) ? $all[1] : [],
         preg_match('#name="view" value="([a-z]+)"[^>]*aria-pressed="true"#', $html, $one) ? $one[1] : '',
         preg_match('#class="sl-(node-compact|node-row|node-tiles|duo sl-node-rail)"#', $html, $box) ? $box[1] : ''];
-    $page = $get('index.php?name=news&num=2')['body'];
+    $page = $get('index.php?name=news&page=2')['body'];
     $tok = getRouteToken($page, 'data-sl-knob="view"');
-    $post = fn(string $view, string $token): array => getRouteReply('looker', 'POST', 'index.php?name=news&num=2', ['token' => $token, 'view' => $view]);
+    $post = fn(string $view, string $token): array => getRouteReply('looker', 'POST', 'index.php?name=news&page=2', ['token' => $token, 'view' => $view]);
     $set = $post('compact', $tok);
     $out = ['news' => [$read($page), $set['code'], $set['head']['location'] ?? '', $read($get('index.php?name=news')['body'])]];
     $post('rail', $tok);
@@ -2014,8 +2022,8 @@ function getRouteLive(): array {
     $get = fn(string $path, array $head = []): array => getRouteReply('', 'GET', $path, [], $head);
     $title = fn(string $html): string => preg_match('#<title>(.*?)</title>#s', $html, $hit) ? $hit[1] : '';
     $more = fn(string $html): string => preg_match('#<a id="sl-node-more" href="([^"]+)"#', $html, $hit) ? html_entity_decode($hit[1]) : '';
-    $full = $get('index.php?name=news&num=2');
-    $part = $get('index.php?name=news&num=2', ['HX-Request: true']);
+    $full = $get('index.php?name=news&page=2');
+    $part = $get('index.php?name=news&page=2', ['HX-Request: true']);
     $first = $get('index.php?name=news', ['HX-Request: true'])['body'];
     return [
         'part' => [$part['code'], str_starts_with($part['body'], '<title>'), str_contains($part['body'], '<div id="sl-node-list"'), str_contains($part['body'], '<body'),
@@ -2062,9 +2070,9 @@ function getRouteSeo(PDO $pdo, string $work): array {
     $link = fn(string $html, string $rel): string => preg_match('#<link\s+rel="'.$rel.'"[^>]*href="([^"]*)"#s', $html, $hit) ? html_entity_decode($hit[1]) : '';
     $meta = fn(string $html): string => preg_match('#<meta\s+name="description"\s+content="([^"]*)"#', $html, $hit) ? html_entity_decode($hit[1]) : '';
     $out = [];
-    $junk = $get('index.php?name=news&op=view&id=102&cat=5&num=3&let=Q&uname=zed')['body'];
+    $junk = $get('index.php?name=news&op=view&id=102&cat=5&page=3&let=Q&uname=zed')['body'];
     $out['canon'] = [$link($junk, 'canonical'), $link($get('index.php?name=news&op=view&id=102')['body'], 'canonical'),
-        $link($get('index.php?name=news&cat=1&id=9&uname=zed')['body'], 'canonical'), $link($get('index.php?name=news&num=2&id=9')['body'], 'canonical'),
+        $link($get('index.php?name=news&cat=1&id=9&uname=zed')['body'], 'canonical'), $link($get('index.php?name=news&page=2&id=9')['body'], 'canonical'),
         $link($get('')['body'], 'canonical'), $link($get('index.php?id=5&uname=zed')['body'], 'canonical'), str_contains($junk, 'content="index, follow"')];
     $out['site'] = $site;
     $home = $get('')['body'];
@@ -2085,11 +2093,11 @@ function getRouteSeo(PDO $pdo, string $work): array {
     $out['order'] = [strpos($blk, 'Zebra doc') !== false && strpos($blk, 'Zebra doc') < (int)strpos($blk, 'Doc one'),
         strpos($docs, '<title>Zebra doc</title>') !== false && strpos($docs, '<title>Zebra doc</title>') < (int)strpos($docs, '<title>Doc one</title>'),
         getRouteModeOrder($get('index.php?name=docs')['body'], ['Doc one', 'Zebra doc'])];
-    $far = $get('index.php?name=news&order=published&dir=desc&num=9');
-    $near = $get('index.php?name=news&order=published&dir=desc&num=2');
+    $far = $get('index.php?name=news&order=published&dir=desc&page=9');
+    $near = $get('index.php?name=news&order=published&dir=desc&page=2');
     $out['bound'] = [$far['code'], $far['head']['location'] ?? '', $near['code'], $near['head']['location'] ?? ''];
     $move = function (string $path, string $who = ''): array {
-        $one = getRouteReply($who, 'GET', $path);
+        $one = getRouteReply($who, 'GET', $path, [], [], false);
         return [$one['code'], $one['head']['location'] ?? ''];
     };
     $wild = function (string $target) use ($site): array {
@@ -2175,11 +2183,11 @@ function getRouteHead(): array {
     $word = fn(string $file, string $key): string => preg_match("#define\('".$key."', *'([^']+)'\)#", (string)file_get_contents(BASE_DIR.'/'.$file), $hit) ? $hit[1] : '?';
     $crumb = fn(string $html): string => preg_match('#<div class="sl-breadcrumbs">(.*?)</div>#s', $html, $hit) ? $hit[1] : '';
     $trail = fn(string $html): string => preg_match('#"@type":\s*"BreadcrumbList".*?\]#s', $html, $hit) ? $hit[0] : '';
-    $far = $get('index.php?name=news&num=999999999');
-    $out = ['bound' => [$far['code'], $get('index.php?name=news&num=4294967295')['code'], $get('index.php?name=news&op=view&id=4294967295')['code']]];
+    $far = $get('index.php?name=news&page=999999999');
+    $out = ['bound' => [$far['code'], $get('index.php?name=news&page=4294967295')['code'], $get('index.php?name=news&op=view&id=4294967295')['code']]];
     $mark = $get('index.php?name=news')['body'];
     $out['faq'] = preg_match('#sl-head-marquee">(.*?)</li>#s', $mark, $hit) ? trim(strip_tags($hit[1])) : '';
-    preg_match_all('#(?:href|src)="((?:templates|plugins)/[^"?\#]+)#', $mark, $hits);
+    preg_match_all('#(?:href|src)="/((?:templates|plugins)/[^"?\#]+)#', $mark, $hits);
     $files = array_values(array_unique($hits[1]));
     $out['assets'] = [count($files), array_values(array_filter($files, fn(string $v): bool => $get(html_entity_decode($v))['code'] !== 200))];
     $form = $get('index.php?name=news&op=add')['body'];
@@ -2189,7 +2197,7 @@ function getRouteHead(): array {
     $first = $get('index.php?name=news')['body'];
     $again = $get('index.php?name=news')['body'];
     $out['notice'] = [$sent['code'], $sent['head']['location'] ?? '', str_contains($first, $note), str_contains($again, $note)];
-    $tok = getRouteToken($get('index.php?name=news&op=view&id=101')['body'], 'op=report');
+    $tok = getRouteToken($get('index.php?name=news&op=view&id=101')['body'], '/report/');
     $told = getRouteReply('', 'POST', 'index.php?name=news&op=report&id=2', ['token' => $tok]);
     $said = $word('modules/node/lang/ru.php', '_NODE_REPORTED');
     $out['report'] = [$told['code'], $told['head']['location'] ?? '', str_contains($get('index.php?name=news&op=view&id=101')['body'], $said),
@@ -2200,10 +2208,10 @@ function getRouteHead(): array {
     $own = $get('index.php?name=news&op=view&id=101&cat=2')['body'];
     $out['banner'] = [str_contains($crumb($guest), 'Members'), str_contains($trail($guest), 'Members'), str_contains($crumb($anna), 'Members'),
         str_contains($crumb($view), 'Members'), str_contains($crumb($own), 'Open') && !str_contains($crumb($own), 'Members')];
-    $out['canon'] = [$link($get('index.php?cat=1')['body']), $link($get('index.php?num=2')['body']), $link($get('')['body'])];
+    $out['canon'] = [$link($get('index.php?cat=1')['body']), $link($get('index.php?page=2')['body']), $link($get('')['body'])];
     $out['site'] = $site;
     $list = $get('index.php?name=news&cat=1')['body'];
-    $out['letters'] = [str_contains($list, 'index.php?name=news&amp;cat=1&amp;let='), str_contains($get('index.php?name=news')['body'], 'index.php?name=news&amp;let=')];
+    $out['letters'] = [str_contains($list, '/news?cat=1&amp;let='), str_contains($get('index.php?name=news')['body'], '/news?let=')];
     $feeds = $get('index.php?name=rss')['body'];
     $out['block'] = [str_contains($feeds, 'Empty head block'), str_contains($feeds, $word('lang/ru.php', '_BLOCKPROBLEM2'))];
     $shelf = $get('index.php?name=account&op=favorites', 'anna')['body'];
@@ -2260,7 +2268,7 @@ function getRouteHeadBar(PDO $pdo, string $work): array {
     $out['loose'] = [$loose['code'], str_contains($loose['body'], 'content="noindex, follow"'), $chips($loose['body']), str_contains($bar($loose['body']), 'new=1')];
     $out['bad'] = [$get('index.php?name=docs&fav=1', 'anna')['code'], $get('index.php?name=news&new=2')['code'], $get('index.php?name=news&fav=yes', 'anna')['code']];
     $out['feed'] = array_values(array_filter($hrefs($get('index.php?name=news&cat=1&let=A')['body']), fn(string $v): bool => str_contains($v, 'go=rss')));
-    $letter = fn(string $html, string $char): bool => str_contains($html, 'index.php?name=news&amp;let='.$char.'"');
+    $letter = fn(string $html, string $char): bool => str_contains($html, '/news?let='.$char.'"');
     $tile = fn(string $html, string $name): string => preg_match('#sl-cat-name">'.$name.'</span><span class="sl-chip sl-chip-info">(\d+)<#', $html, $hit) ? $hit[1] : '';
     $out['counts'] = [[$letter($guest['body'], 'A'), $letter($guest['body'], 'M'), $letter($guest['body'], 'Z')], [$letter($anna['body'], 'M'), $letter($anna['body'], 'Z')],
         [$tile($guest['body'], 'Open'), $tile($anna['body'], 'Open'), $tile($anna['body'], 'Members')]];
@@ -2273,12 +2281,12 @@ function getRouteHeadBar(PDO $pdo, string $work): array {
     $get('index.php?name=news');
     $out['drop'] = [$sent['code'], $gone, is_file($file)];
     $out['words'] = [getRouteHeadRead($guest['body'])['count'], getRouteHeadRead($new['body'])['count']];
-    $out['form'] = preg_match('#href="/index\.php\?name=news&amp;op=add"[^>]*hx-boost="false"#', $guest['body']);
+    $out['form'] = preg_match('#href="/news/add"[^>]*hx-boost="false"#', $guest['body']);
     $heads = fn(string $html): array => preg_match_all('#<p class="sl-date-head">(.*?)</p>#s', $html, $hit)
         ? array_map(fn($v) => preg_replace('/\s+/u', ' ', trim(strip_tags($v))), $hit[1]) : [];
     $out['months'] = [$heads($guest['body']), $heads($sort['body'])];
     $one = $get('index.php?name=news&cat=1')['body'];
-    $out['catlets'] = [str_contains($one, 'index.php?name=news&amp;cat=1&amp;let=A"'), str_contains($one, 'index.php?name=news&amp;cat=1&amp;let=B"'),
+    $out['catlets'] = [str_contains($one, '/news?cat=1&amp;let=A"'), str_contains($one, '/news?cat=1&amp;let=B"'),
         $letter($guest['body'], 'B')];
     return $out;
 }
@@ -3206,6 +3214,167 @@ function getRouteParse(): array {
     return $out;
 }
 
+# The registry of the build run is the one of the parse run, with the generation line of the footer on, and anna keeps a material and a topic of one id as favorites
+function addRouteBuildConf(PDO $pdo, string $work): void {
+    addRouteParseConf($pdo, $work);
+    $pre = RPREF.'_';
+    $pdo->exec('INSERT INTO '.$pre.'forum (id, pid, cid, uid, name, title, time, body, field, luid, lname, ltime, status) VALUES'
+        .' (101, 0, 10, 2, \'anna\', \'Collide\', NOW() - INTERVAL 1 DAY, \'Collide body\', \'\', 2, \'anna\', NOW() - INTERVAL 1 DAY, 3)');
+    $pdo->exec('INSERT INTO '.$pre.'routes (path, kind, oid, state) VALUES (\'forum/collide\', \'topic\', 101, 1)');
+    $pdo->exec('INSERT INTO '.$pre.'favorites (uid, fid, modul, time) VALUES (2, 101, \'news\', NOW()), (2, 101, \'forum\', NOW())');
+    $data = require $work.'/config/global.php';
+    setRouteFile($work.'/config/global.php', array_replace($data, ['db_t' => '1']));
+    if (is_file($work.'/config/local.php')) unlink($work.'/config/local.php');
+}
+
+# The addresses of one page a browser would resolve against the path of the page: attributes, inline styles and the fetches of inline scripts that start nowhere
+function getRouteRelative(string $who, string $path): array {
+    $one = getRouteReply($who, 'GET', $path);
+    $attr = '(?:href|src|action|formaction|poster|hx-get|hx-post|hx-put|hx-delete|data-[a-z-]*(?:url|src|href|action|query))';
+    preg_match_all('#\s'.$attr.'\s*=\s*"([^"]*)"#i', $one['body'], $hit);
+    preg_match_all('#url\(\s*[\'"]?([^\'")]+)#i', $one['body'], $css);
+    preg_match_all('#fetch\(\s*[\'"]([^\'"]*)#', $one['body'], $call);
+    $all = array_map('html_entity_decode', array_merge($hit[1], $css[1], $call[1]));
+    $bad = array_filter($all, fn(string $v): bool => $v !== '' && !preg_match('#^(?:/|\#|[a-z][a-z0-9+.-]*:|\{|\[|data:)#i', $v));
+    return [$one['code'], array_values(array_unique($bad))];
+}
+
+# The links, the statements and the route warnings of the pages over real requests, a published submission, and the child buildext that asks the builder itself
+function getRouteBuild(string $work): array {
+    $links = function (string $path, string $who = ''): array {
+        preg_match_all('#\s(?:href|action)="(/(?:news|docs|help|forum|users|voting|account)[^"\#]*)#', getRouteReply($who, 'GET', $path)['body'], $hit);
+        return array_values(array_unique(array_map('html_entity_decode', $hit[1])));
+    };
+    $out = ['links' => [], 'counts' => [], 'relative' => []];
+    $deep = ['' => ['news/alpha', 'news/open', 'forum/talk', 'forum/topic-one', 'voting/poll-one', 'users/anna', 'account/newuser', 'account/passlost', 'news/view/101'],
+        'anna' => ['news/alpha', 'forum/topic-one', 'users/anna', 'account/privat', 'account/favorites', 'account/edithome', 'account/logins', 'news/add', 'forum/add?cat=10'],
+        'root' => ['news/alpha', 'news/open', 'forum/topic-one', 'voting/poll-one', 'users/anna']];
+    foreach ($deep as $who => $list) foreach ($list as $path) $out['relative'][($who ?: 'guest').' '.$path] = getRouteRelative($who, $path);
+    foreach (['news', 'news/alpha', 'news/open', 'forum/talk', 'forum/topic-one', 'voting', 'account'] as $path) $out['links'][$path] = $links($path);
+    $out['links']['news/add'] = $links('news/add', 'anna');
+    $out['links']['account/favorites'] = $links('account/favorites', 'anna');
+    $out['links']['cabinet'] = $links('account', 'anna');
+    foreach (['news', 'news/open', 'news?page=2', 'news/alpha', 'forum', 'forum/talk', 'forum/topic-one', 'users', 'voting', 'voting/poll-one', 'users/anna'] as $path) {
+        getRouteReply('', 'GET', $path);
+        $out['counts'][$path] = preg_match('#(\d+) запрос#u', getRouteReply('', 'GET', $path)['body'], $hit) ? (int)$hit[1] : -1;
+    }
+    $file = $work.'/config/node.php';
+    $keep = require $file;
+    $node = $keep;
+    $node['node']['types']['news']['features']['moderation'] = false;
+    setRouteFile($file, $node);
+    if (is_file($work.'/config/local.php')) unlink($work.'/config/local.php');
+    $tok = getRouteToken(getRouteReply('anna', 'GET', 'news/add')['body'], 'name="action"');
+    $done = getRouteReply('anna', 'POST', 'news/add', ['title' => 'Probe built', 'intro' => 'Intro', 'body' => 'Body', 'cid' => '1', 'action' => 'submit', 'token' => $tok]);
+    $out['added'] = [$done['code'], $done['head']['location'] ?? ''];
+    setRouteFile($file, $keep);
+    if (is_file($work.'/config/local.php')) unlink($work.'/config/local.php');
+    $slog = $work.'/logs/error_site.log';
+    $lines = is_file($slog) ? (file($slog, FILE_IGNORE_NEW_LINES) ?: []) : [];
+    $out['warn'] = array_values(array_filter($lines, fn(string $v): bool => str_contains($v, 'an entity link without its route')));
+    $out['child'] = json_decode((string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg(__FILE__).' '.escapeshellarg($work).' buildext 2>&1'), true);
+    return $out;
+}
+
+# The builder asked in a child process: the address table from its entities, a material by id, a forgotten route, and an approval whose answer carries its new path
+function getRouteBuildData(): array {
+    global $db, $fld, $pnt;
+    $query = new NodeQuery($db, new NodeContext(0, [], 1, [], true, true, '127.0.0.1', ''), $fld);
+    $news = $query->getNodeType('news');
+    $alpha = $query->getNode(101, $news);
+    $wait = $query->getNode(104, $news);
+    $rte = new Route($db);
+    $out = ['table' => [
+        'home' => getSeoUrl(['name' => 'news']),
+        'node' => getSeoUrl(['name' => 'news', 'op' => 'view', 'id' => $alpha->id, 'route' => $alpha->path]),
+        'cat' => getSeoUrl(['name' => 'news', 'cat' => 1]),
+        'page' => getSeoUrl(['name' => 'news', 'cat' => 1, 'page' => 2]),
+        'first' => getSeoUrl(['name' => 'news', 'cat' => 1, 'page' => 1]),
+        'sort' => getSeoUrl(['name' => 'news', 'order' => 'title', 'let' => 'a']),
+        'topic' => getSeoUrl(['name' => 'forum', 'op' => 'view', 'id' => 601, 'route' => $rte->getRouteList('topic', [601])[601] ?? null]),
+        'section' => getSeoUrl(['name' => 'forum', 'cat' => 10]),
+        'profile' => getSeoUrl(['name' => 'account', 'op' => 'view', 'uname' => 'anna', 'route' => $alpha->upath]),
+        'poll' => getSeoUrl(['name' => 'voting', 'op' => 'view', 'id' => 7, 'route' => $rte->getRouteList('poll', [7])[7] ?? null]),
+        'add' => getSeoUrl(['name' => 'news', 'op' => 'add']),
+        'asset' => getSeoUrl(['name' => 'news', 'op' => 'asset', 'id' => 2]),
+        'login' => getSeoUrl(['name' => 'account', 'op' => 'login']),
+        'privat' => getSeoUrl(['name' => 'account', 'op' => 'privat', 'uname' => 'anna']),
+        'public' => getPublicUrl(['name' => 'news', 'op' => 'view', 'id' => $alpha->id, 'route' => $alpha->path, 'com' => 2]),
+    ]];
+    $out['byid'] = [
+        'pending' => [$wait->path, getSeoUrl(['name' => 'news', 'op' => 'view', 'id' => $wait->id, 'route' => $wait->path])],
+        'help' => getSeoUrl(['name' => 'help', 'op' => 'view', 'id' => 7, 'route' => null]),
+    ];
+    $slog = LOGS_DIR.'/error_site.log';
+    $before = is_file($slog) ? count(file($slog, FILE_IGNORE_NEW_LINES) ?: []) : 0;
+    $out['forgot'] = ['url' => getSeoUrl(['name' => 'news', 'op' => 'view', 'id' => 101]), 'line' => __LINE__];
+    $lines = array_slice(is_file($slog) ? (file($slog, FILE_IGNORE_NEW_LINES) ?: []) : [], $before);
+    $out['forgot']['log'] = array_map(fn(string $v): array => array_intersect_key(json_decode($v, true) ?: [], ['level' => 0, 'msg' => 0, 'name' => 0, 'caller' => 0]), $lines);
+    $svc = new NodeService($db, new NodeContext(0, [], 1, [], true, true, '127.0.0.1', ''), $fld, $pnt);
+    $out['approved'] = [$svc->updateNodeStatus(104, NodeStatus::Published, $wait->version)->path, $rte->getRouteList('node', [104])[104] ?? null];
+    return $out;
+}
+
+# The registry of the move run is the one of the build run with a former path of the closed material 103 and of the pending 104, and the 6.2 address pages 9 of the alpha
+function addRouteMoveConf(PDO $pdo, string $work): void {
+    addRouteBuildConf($pdo, $work);
+    $pre = RPREF.'_';
+    $pdo->exec('INSERT INTO '.$pre.'routes (path, kind, oid, state) VALUES (\'news/old-members\', \'node\', 103, 0), (\'news/members\', \'node\', 103, 1),'
+        .' (\'news/old-wait\', \'node\', 104, 0)');
+    $pdo->exec('INSERT INTO '.$pre.'node_legacy (modul, oid, nid) VALUES (\'pages\', 9, 101)');
+}
+
+# The one redirect over real requests, never followed, the site as ~: each reason, the kept query, host and scheme, what it leaves alone, no view counted
+function getRouteMove(PDO $pdo, string $work): array {
+    global $rport;
+    $site = 'http://127.0.0.1:'.$rport;
+    $move = function (string $path, string $who = '', string $method = 'GET', array $head = []) use ($site): array {
+        $one = getRouteReply($who, $method, $path, [], $head, false);
+        return [$one['code'], str_replace($site, '~', $one['head']['location'] ?? '')];
+    };
+    $out = ['alone' => [], 'kept' => [], 'left' => []];
+    foreach (['news/old-alpha', 'News/Alpha', 'news/alpha/', 'index.php/news/alpha', 'index.php?name=news&op=view&id=101', 'news/view/101', 'news?num=2', 'news?page=1',
+        'index.php', 'index.php/', 'index.php/index.php?name=voting', 'index.php?name=forum&op=view&id=601', 'index.php?name=forum&cat=10', 'index.php?name=voting&op=view&id=7',
+        'index.php?name=news&cat=1&num=2', 'index.php?name=pages&op=view&id=9', 'news/alpha', 'news?page=2'] as $path) {
+        $out['alone'][$path] = $move($path);
+    }
+    $out['alone']['index.php?name=account&op=view&uname=anna'] = $move('index.php?name=account&op=view&uname=anna', 'boris');
+    foreach (['index.php?name=news&op=view&id=101&com=2&utm=x', 'index.php?name=news&order=title&let=B', 'news?num=3&page=2', 'index.php?name=account&op=activate&user=x&num=abc',
+        'index.php?name=news&op=add&cat=1'] as $path) {
+        $out['kept'][$path] = $move($path, ($path === 'index.php?name=news&op=add&cat=1') ? 'anna' : '');
+    }
+    $out['left'] = ['closed' => $move('news/old-members'), 'closedq' => $move('index.php?name=news&op=view&id=103'), 'pending' => $move('news/old-wait'),
+        'post' => $move('index.php?name=voting&op=view&id=7', '', 'POST'), 'htmx' => $move('index.php?name=news', '', 'GET', ['HX-Request: true']),
+        'head' => $move('index.php?name=news&op=view&id=101', '', 'HEAD'), 'sort' => $move('news?order=title&let=B'), 'gone' => $move('news/gone-one'),
+        'bare' => $move('index.php?op=add', 'anna')];
+    $canon = getRouteReply('', 'GET', 'news?page=2')['body'];
+    $out['canon'] = preg_match('#<link\s+rel="canonical"[^>]*href="([^"]*)"#s', $canon, $hit) ? str_replace($site, '~', html_entity_decode($hit[1])) : '';
+    $seen = (int)getRouteCol($pdo, 101, 'views');
+    $talk = fn(): int => (int)$pdo->query('SELECT counter FROM '.RPREF.'_forum WHERE id = 601')->fetchColumn();
+    $said = $talk();
+    $move('index.php?name=news&op=view&id=101');
+    $move('news/old-alpha', '', 'HEAD');
+    $move('index.php?name=forum&op=view&id=601');
+    $quiet = [$talk() - $said];
+    getRouteReply('', 'GET', 'news/alpha');
+    getRouteReply('', 'GET', 'forum/topic-one');
+    $out['views'] = array_merge($quiet, [getRouteViews($pdo, 101, $seen + 1) - $seen, $talk() - $said]);
+    $file = $work.'/config/global.php';
+    $keep = require $file;
+    $force = function (array $set) use ($file, $keep, $work): void {
+        setRouteFile($file, array_replace($keep, $set));
+        if (is_file($work.'/config/local.php')) unlink($work.'/config/local.php');
+    };
+    $wrong = ['Host: other.test'];
+    $force(['forcehost' => '1']);
+    $out['host'] = [$move('news/alpha', '', 'GET', $wrong), $move('News/Old-Alpha/', '', 'GET', $wrong), $move('index.php?name=pages&op=view&id=9&utm=x', '', 'GET', $wrong),
+        $move('news/alpha'), $move('index.php?go=rss&name=news', '', 'GET', $wrong), $move('news/nosuch', '', 'GET', $wrong)];
+    $force(['forcessl' => '1']);
+    $out['ssl'] = [$move('index.php?name=news&op=view&id=101'), $move('news/alpha', '', 'GET', ['X-Forwarded-Proto: https'])];
+    $force([]);
+    return $out;
+}
+
 # The child favhold of the intact run holds the account of anna with one more favorite for two seconds, as a parallel request at the limit does before its commit
 if (($argv[2] ?? '') === 'favhold') {
     $hpdo = getRoutePdo((string)($argv[3] ?? ''));
@@ -3251,6 +3420,8 @@ try {
     if (($argv[2] ?? '') === 'journal') addRouteJournalConf($rpdo, $rwork);
     if (($argv[2] ?? '') === 'address') addRouteAddressConf($rpdo, $rwork);
     if (($argv[2] ?? '') === 'parse') addRouteParseConf($rpdo, $rwork);
+    if (($argv[2] ?? '') === 'build') addRouteBuildConf($rpdo, $rwork);
+    if (($argv[2] ?? '') === 'move') addRouteMoveConf($rpdo, $rwork);
     $rproc = addRouteServer($rwork, $rport);
     if (($argv[2] ?? '') === 'serve') {
         fwrite(STDERR, 'serving on '.$rport.' with '.$rbase."\n");
@@ -3285,6 +3456,10 @@ try {
         $report['runs']['address'] = getRouteWriters($rpdo, $rwork);
     } elseif (($argv[2] ?? '') === 'parse') {
         $report['runs']['parse'] = getRouteParse();
+    } elseif (($argv[2] ?? '') === 'build') {
+        $report['runs']['build'] = getRouteBuild($rwork);
+    } elseif (($argv[2] ?? '') === 'move') {
+        $report['runs']['move'] = getRouteMove($rpdo, $rwork);
     } elseif (($argv[2] ?? '') === 'time') {
         $report['runs']['time'] = getRouteTime($rpdo, $rwork);
     } elseif (($argv[2] ?? '') === 'null') {

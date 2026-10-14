@@ -20,7 +20,7 @@ if (!defined('ADMIN_FILE') && $conf['close'] && !isAdmin()) { http_response_code
 
 # A path the cut of core/security.php kept resolves by one grammar, first match wins, and its keys replace the same keys of the query in $_GET
 # A type or module alone is its home, with a reserved operation that operation, with digits after the operation also the id; any other path is asked of the registry
-# A former path opens its entity marked to move, a gone path answers 410 and a path never given 404; the entity found stays in $urlroute for the redirect
+# A former path opens its entity, whose page answers 301 to its current path through setSeoMove(); a gone path answers 410 and a path never given 404
 if ($urlroute['seg'] !== []) {
     $rseg = $urlroute['seg'];
     $rlen = count($rseg);
@@ -45,7 +45,6 @@ if ($urlroute['seg'] !== []) {
             'user' => ['name' => 'account', 'op' => 'view', 'id' => $roid],
             default => ['name' => 'voting', 'op' => 'view', 'id' => $roid],
         };
-        $urlroute += ['kind' => $rhit['kind'], 'oid' => $rhit['oid'], 'path' => $rhit['path'], 'move' => $rhit['state'] === 0];
     } else {
         setError(404);
     }
@@ -113,7 +112,7 @@ if (empty($go)) {
     if ($name) {
         if (!isset($conf['modules'][$name]) && !is_dir(BASE_DIR.'/modules/'.$name)) {
             $lmove = getNodeLegacyUrl($name, (string)$op, getVar('get', 'id', 'num', 0), getVar('get', 'cat', 'num', 0));
-            if ($lmove !== '') setRedirect($lmove, false, 301);
+            if ($lmove !== '') setSeoMove(['url' => $lmove]);
         }
         $conf['name'] = $name;
         $module = 1;
@@ -131,7 +130,7 @@ if (empty($go)) {
                 getLang($name);
                 require_once $path;
             } elseif ($view == 1 && !is_moder($name)) {
-                if (!is_user()) $info = _MODULEUSERS.' ';
+                if (!is_user()) $info = sprintf(_MODULEUSERS, getSeoUrl(['name' => 'account'])).' ';
                 $group = $mconf['group'] ?? 0;
                 $gname = '';
                 if ($group) {

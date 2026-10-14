@@ -44,12 +44,12 @@ define('_ACCOUNT_UNSUBOK','Die Adresse %s erhält den Newsletter der Website nic
 define('_ACCOUNT_VIEWNOTE','Eine verborgene Adresse wird auch in Ihren Angaben nicht gezeigt.');
 define('_ACCOUNT_WORK','Beruf');
 define('_ACCOUNT_YEARS','Jahre im Projekt');
-define('_ACTERROR1','Die Prüfzahl zur Freischaltung Ihres neuen Accounts ist nicht korrekt.<br>Sie müssen auf den per eMail erhaltenen Link klicken, damit Ihr Benutzerkonto freigeschaltet wird - <a href="index.php?name=account">hier</a>.');
-define('_ACTERROR2','Es existiert kein Benutzer mit diesen Angaben in unserer Datenbank.<br>Sie können sich <a href="index.php?name=account">hier</a> als neuen Benutzer kostenlos anmelden.');
+define('_ACTERROR1','Die Prüfzahl zur Freischaltung Ihres neuen Accounts ist nicht korrekt.<br>Sie müssen auf den per eMail erhaltenen Link klicken, damit Ihr Benutzerkonto freigeschaltet wird - <a href="%s">hier</a>.');
+define('_ACTERROR2','Es existiert kein Benutzer mit diesen Angaben in unserer Datenbank.<br>Sie können sich <a href="%s">hier</a> als neuen Benutzer kostenlos anmelden.');
 define('_ACTIVATIONERROR','Fehler bei der Benutzeraktivierung');
 define('_ACTIVATIONSUB','Account aktivieren');
 define('_ACTIVATIONYES','Ihr Benutzerkonto ist aktiviert worden!');
-define('_ACTMSG','Ihr Benutzerkonto ist aktiviert worden. Bitten melden Sie sich mit <a href="index.php?name=account">diesem Link</a> an und benutzen Sie Ihren Benutzernamen und Ihr Passwort.');
+define('_ACTMSG','Ihr Benutzerkonto ist aktiviert worden. Bitten melden Sie sich mit <a href="%s">diesem Link</a> an und benutzen Sie Ihren Benutzernamen und Ihr Passwort.');
 define('_AVATARINFO','Zeigt eine kleine Grafik neben deinen Details zu jedem deiner Beiträge an. Es kann immer nur ein Avatar angezeigt werden, seine Breite darf nicht grцsser als %1$s Pixel sein, die Höhe nicht grösser als %2$s Pixel, und die Dateigrцsse darf maximal %3$s betragen.');
 define('_AVATARSAVE','Avatar auswählen');
 define('_AVATARSELECT','Wählen Sie Ihr Lieblingsbild aus der Galerie, mit der linke Maustaste auf das gewünschte Bild klicken.');

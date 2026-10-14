@@ -19,13 +19,13 @@ function setTemplateForum(): string {
     global $db, $tpl;
     $items = '';
     $result = getForumTopics('id, title, ltime, luid, lname, lpost, status', '97, 98, 99, 100, 101', 3);
-    while ([$id, $title, $time, $luid, $lname, $lpost, $status] = $db->getSqlRow($result)) {
+    while ([$id, $title, $time, $luid, $lname, $lpost, $status, $path, , $lpath] = $db->getSqlRow($result)) {
         $items .= $tpl->getHtmlFrag('forum-teaser-item', [
             'hidden' => $status <= 1 || $time > date('Y-m-d H:i:s'),
-            'href' => 'index.php?name=forum&op=view&id='.$id.'&last#'.$lpost,
+            'href' => getSeoUrl(['name' => 'forum', 'op' => 'view', 'id' => $id, 'route' => $path, 'last' => 1]).'#'.$lpost,
             'title' => getDecodedText($title),
             'by' => _POSTEDBY,
-            'poster' => $luid ? user_info($lname) : htmlspecialchars($lname, ENT_QUOTES, 'UTF-8'),
+            'poster' => $luid ? user_info($lname, $lpath) : htmlspecialchars($lname, ENT_QUOTES, 'UTF-8'),
             'when_label' => _DATE,
             'when' => format_time($time, _TIMESTRING),
         ]);
@@ -48,7 +48,7 @@ function getTemplateFaq(): string {
     }
     if ($node === null) return '';
     return $tpl->getHtmlFrag('link', [
-        'href' => getSeoUrl(['name' => $type->name, 'op' => 'view', 'id' => $node->id, 'title' => $node->title]),
+        'href' => getSeoUrl(['name' => $type->name, 'op' => 'view', 'id' => $node->id, 'route' => $node->path]),
         'title' => $node->title,
         'icon_name' => 'stars',
         'label' => $node->title,
@@ -87,7 +87,7 @@ function getTemplateLcpPreload(string $season, bool $hasHead): string {
     $img = preg_replace('/^sl-/', '', $season).'-cat.webp';
     $href = 'templates/'.getTheme().'/images/seasons/'.$img;
     if (!is_file(PUBLIC_DIR.'/'.$href)) return '';
-    return '<link rel="preload" as="image" href="'.$href.'" fetchpriority="high">'."\n";
+    return '<link rel="preload" as="image" href="'.HOME_PATH.$href.'" fetchpriority="high">'."\n";
 }
 
 # Provide foot-time variables for the lite theme layout

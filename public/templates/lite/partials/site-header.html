@@ -21,7 +21,7 @@
           <a class="sl-thd sl-circle-action sl-cat-tone-3" rel="me noopener" target="_blank" href="https://vk.com/slaed_cms" title="Мы вКонтакте" aria-label="Мы вКонтакте"><i class="bi bi-chat-square-text" aria-hidden="true"></i>Мы вКонтакте</a>
           <a class="sl-thd sl-circle-action sl-cat-tone-4" rel="me noopener" target="_blank" href="https://slaed.de" title="Документация на немецком" aria-label="Документация на немецком"><i class="bi bi-book-half" aria-hidden="true"></i>Документация на немецком</a>
           <a class="sl-thd sl-circle-action sl-cat-tone-5" rel="me noopener" target="_blank" href="https://slaed.info" title="Документация на английском" aria-label="Документация на английском"><i class="bi bi-book" aria-hidden="true"></i>Документация на английском</a>
-          <a class="sl-thd sl-circle-action sl-cat-tone-0" href="index.php?name=recommend" title="{{ recommend }}" aria-label="{{ recommend }}"><i class="bi bi-star" aria-hidden="true"></i>{{ recommend }}</a>
+          <a class="sl-thd sl-circle-action sl-cat-tone-0" href="{{ root }}recommend" title="{{ recommend }}" aria-label="{{ recommend }}"><i class="bi bi-star" aria-hidden="true"></i>{{ recommend }}</a>
         </div>
       </div>
     </div>
@@ -29,21 +29,21 @@
   <header id="header">
     <div class="sl-wrp">
       <a href="/" class="sl-thd sl-logo" title="{% if slogan %}{{ sitename }} - {{ slogan }}{% else %}{{ sitename }}{% endif %}">
-        <img src="templates/{{ theme }}/images/logos/{{ logo }}" alt="{% if slogan %}{{ sitename }} - {{ slogan }}{% else %}{{ sitename }}{% endif %}" title="{% if slogan %}{{ sitename }} - {{ slogan }}{% else %}{{ sitename }}{% endif %}"{% if logo_w %} width="{{ logo_w }}" height="{{ logo_h }}"{% endif %}>
+        <img src="{{ root }}templates/{{ theme }}/images/logos/{{ logo }}" alt="{% if slogan %}{{ sitename }} - {{ slogan }}{% else %}{{ sitename }}{% endif %}" title="{% if slogan %}{{ sitename }} - {{ slogan }}{% else %}{{ sitename }}{% endif %}"{% if logo_w %} width="{{ logo_w }}" height="{{ logo_h }}"{% endif %}>
       </a>
       <p class="sl-font sl-slogan">Все великое<br>просто</p>
       {{{ login }}}
       <ul class="sl-d-pane">
         <li class="sl-d-info sl-d-version sl-font">Aктуальная версия</li>
         <li class="sl-d-num sl-font">6.2</li>
-        <li class="sl-d-btns"><a class="sl-but" href="index.php?name=files" title="Скачать бесплатно актуальную версию системы">Скачать систему</a></li>
+        <li class="sl-d-btns"><a class="sl-but" href="{{ root }}files" title="Скачать бесплатно актуальную версию системы">Скачать систему</a></li>
       </ul>
     </div>
   </header>
   <nav id="hmenu" aria-label="Главное меню">
     <div class="sl-wrp">
       {% include 'partials/menu.html' %}
-      <form class="sl-search-form" role="search" action="index.php?name=search" method="post">
+      <form class="sl-search-form" role="search" action="{{ root }}search" method="post">
         <input type="hidden" value="{{ modul }}" name="mod">
         <input type="text" value="" name="word" maxlength="100" placeholder="{{ search }}" aria-label="{{ search }}" class="sl-field" required>
         <button type="submit" class="sl-search-btn sl-circle-action" aria-label="{{ search }}" title="{{ search }}"><i class="bi bi-search" aria-hidden="true"></i></button>

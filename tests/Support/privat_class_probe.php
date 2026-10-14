@@ -52,7 +52,7 @@ function getProbeSide(): PDO {
     return new PDO($dsn, $conf['db']['uname'], $conf['db']['pass'], [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
 }
 
-# Create the disposable schema with the two tables the class reads and connect the project database facade to it
+# Create the disposable schema with the tables the class reads, the registry of the profile paths among them, and connect the project database facade to it
 function addProbeSchema(): Database {
     global $conf;
     $root = getProbeRoot();
@@ -60,6 +60,7 @@ function addProbeSchema(): Database {
     $root->exec('USE `'.$GLOBALS['pname'].'`');
     $root->exec(getProbeTable('privat'));
     $root->exec(getProbeTable('users'));
+    $root->exec(getProbeTable('routes'));
     foreach (PROBEUSER as $id => $name) {
         $root->exec('INSERT INTO `'.PREFIX_DB.'_users` (`id`, `name`, `email`, `password`, `sig`, `block`, `warnings`, `field`, `avatar`)'
             .' VALUES ('.intval($id).', \''.$name.'\', \''.$name.'@probe.test\', \'x\', \'\', \'\', \'\', \'\', \''.$name.'.png\')');

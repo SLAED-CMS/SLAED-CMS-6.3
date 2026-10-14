@@ -1057,7 +1057,7 @@ final class NodeService {
 
     # Keep the delivery of a future publication in line with the stored state: a published material with a future date has its job and any other state has none
     # A publication whose date has come, at once or because a pending job was moved into the past, is rewarded inside this transaction, a material of a removed module never
-    private function setPublishJob(NodeType $type, int $id, int $uid, NodeStatus $status, ?string $pub, ?string $job, bool $was, string $now, string $title): void {
+    private function setPublishJob(NodeType $type, int $id, int $uid, NodeStatus $status, ?string $pub, ?string $job, bool $was, string $now, string $title): ?string {
         $live = $status === NodeStatus::Published;
         $wait = $live && $pub !== null && strcmp($pub, $now) > 0;
         if ($wait && $job !== $pub) {
@@ -1068,13 +1068,15 @@ final class NodeService {
             $this->getQueryRes('DELETE FROM '.PREFIX_DB.'_node_publish WHERE nid = :id', ['id' => $id]);
         }
         if ($live && !$wait && (!$was || $job !== null) && !$this->checkNodeLegacy($id)) $this->addNodePoint('publish', $type, 'node:'.$id, $uid);
-        if ($live && !$wait) $this->addNodeRoute($type, $id, $title);
+        return ($live && !$wait) ? $this->addNodeRoute($type, $id, $title) : null;
     }
 
-    # Give a public material of a type that is not private its first path from its title inside the open write; one that has a path keeps it, a refusal rolls the write back
-    private function addNodeRoute(NodeType $type, int $id, string $title): void {
-        if ($type->ext === 'support') return;
-        if ($this->route->addRoute('node', $id, $type->name, $title) === '') throw $this->getStorage('The path of the material cannot be stored');
+    # Give a published material of a public type its first path inside the open write and answer it, the answer of setPublishJob() too; a held path stays, a refusal rolls back
+    private function addNodeRoute(NodeType $type, int $id, string $title): ?string {
+        if ($type->ext === 'support') return null;
+        $path = $this->route->addRoute('node', $id, $type->name, $title);
+        if ($path === '') throw $this->getStorage('The path of the material cannot be stored');
+        return $path;
     }
 
     # Whether a material came from a removed module: that module rewarded its publication and 6.3 carried the balance, so Node never rewards it a second time
@@ -1265,8 +1267,8 @@ final class NodeService {
             $this->setNodeSets($id, $data, null, $now);
             $node = $this->getStoredNode($id, $type, true) ?? throw $this->getStorage('The created material cannot be read back');
             $this->ext?->addNodeData($node, $data['ext']);
-            $this->setPublishJob($type, $id, $this->ctx->uid, $status, $data['pub'], null, false, $now, $data['title']);
-            return $node;
+            $path = $this->setPublishJob($type, $id, $this->ctx->uid, $status, $data['pub'], null, false, $now, $data['title']);
+            return ($path === null || $path === $node->path) ? $node : ($this->getStoredNode($id, $type, true) ?? $node);
         });
     }
 
@@ -1302,8 +1304,8 @@ final class NodeService {
             $this->ext?->updateNodeData($before, $after, $data['ext']);
             $job = $this->getQueryRes('SELECT published FROM '.PREFIX_DB.'_node_publish WHERE nid = :id FOR UPDATE', ['id' => $id])->fetchColumn();
             $live = $before->status === NodeStatus::Published;
-            $this->setPublishJob($type, $id, $before->uid, $before->status, $data['pub'], ($job === false) ? null : (string)$job, $live, $now, $data['title']);
-            return $after;
+            $path = $this->setPublishJob($type, $id, $before->uid, $before->status, $data['pub'], ($job === false) ? null : (string)$job, $live, $now, $data['title']);
+            return ($path === null || $path === $after->path) ? $after : ($this->getStoredNode($id, $type, true) ?? $after);
         });
     }
 
@@ -1333,10 +1335,12 @@ final class NodeService {
             if ($gone && in_array($status, [NodeStatus::Pending, NodeStatus::Published], true)) throw $this->getInvalid('expires');
             $sql = 'UPDATE '.PREFIX_DB.'_nodes SET status = :status, published = :pub, version = version + 1, updated = :now WHERE id = :id AND version = :ver';
             $this->getQueryRes($sql, ['status' => $status->value, 'pub' => $pub, 'now' => $now, 'id' => $id, 'ver' => $version]);
-            $after = $this->getNodeModel(array_replace($row, ['status' => $status->value, 'published' => $pub, 'version' => $version + 1, 'updated' => $now]), $type, null);
+            $vals = ['status' => $status->value, 'published' => $pub, 'version' => $version + 1, 'updated' => $now];
+            $after = $this->getNodeModel(array_replace($row, $vals), $type, null);
             $this->ext?->updateNodeData($before, $after, null);
             $job = $row['jpub'];
-            $this->setPublishJob($type, $id, $before->uid, $status, $pub, $job, $before->status === NodeStatus::Published, $now, $before->title);
+            $path = $this->setPublishJob($type, $id, $before->uid, $status, $pub, $job, $before->status === NodeStatus::Published, $now, $before->title);
+            $after = $this->getNodeModel(array_replace($row, $vals, ['path' => $path ?? ($this->route->getRouteList('node', [$id])[$id] ?? null)]), $type, null);
             if ($before->status === NodeStatus::Pending && $status === NodeStatus::Published) $this->addNodePoint('moderate', $type, 'approve:'.$id, 0, $before->uid);
             return $after;
         });

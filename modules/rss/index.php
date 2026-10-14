@@ -60,7 +60,7 @@ function info(): void {
         ]),
     ]);
     $cont .= $tpl->getHtmlPart('form-add', [
-        'action' => 'index.php?name='.$conf['name'],
+        'action' => getSeoUrl(['name' => $conf['name']]),
         'method' => 'post',
         'form_name' => 'post',
         'no_enctype' => true,
@@ -71,7 +71,7 @@ function info(): void {
         $link = ($url) ? $url : 'http://';
         $cont .= $tpl->getHtmlFrag('block-content', ['is_section' => true, 'has_hr' => true]);
         $cont .= $tpl->getHtmlPart('form-add', [
-            'action' => 'index.php?name='.$conf['name'],
+            'action' => getSeoUrl(['name' => $conf['name']]),
             'method' => 'post',
             'form_name' => 'post',
             'no_enctype' => true,
@@ -83,7 +83,7 @@ function info(): void {
             'submit' => $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'label' => _OK]),
         ]);
         $cont .= $tpl->getHtmlPart('form-add', [
-            'action' => 'index.php?name='.$conf['name'],
+            'action' => getSeoUrl(['name' => $conf['name']]),
             'method' => 'post',
             'form_name' => 'post',
             'no_enctype' => true,

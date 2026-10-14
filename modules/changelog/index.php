@@ -12,16 +12,15 @@ if (!defined('MODULE_FILE')) {
 require_once __DIR__.'/common.php';
 
 function chlogRenderPaging(string $modname, int $totcom, int $totpage, int $perpage, int $page, array $filters): string {
-    $query = http_build_query(array_filter([
+    $keys = array_map('rawurlencode', array_filter([
         'author' => $filters['author'] ?? '',
         'file' => $filters['file'] ?? '',
         'word' => $filters['search'] ?? '',
         'datefrom' => $filters['since'] ?? '',
         'dateto' => $filters['until'] ?? ''
     ]));
-    $url = $query ? $query.'&' : '';
 
-    $out = getPageNumbers($modname, $totcom, $totpage, $perpage, $url, 10, $page, '', 'page');
+    $out = getPageNumbers($modname, $totcom, $totpage, $perpage, $keys, 10, $page, '', 'page');
     return $out ?? '';
 }
 
@@ -32,7 +31,7 @@ function changelog(): void {
 
     $page = max(1, getVar('get', 'page', 'num', 1));
     $filters = chlogReadFilters('get');
-    chlogCanonicalRedirect('index.php', $conf['name'], $filters, $page);
+    chlogCanonicalRedirect('', $conf['name'], $filters, $page);
     $config = chlogGetConfig($conf);
     $loaded = chlogLoadCommits($conf, $filters, defined('BASE_DIR') ? (string)BASE_DIR : getcwd());
     $commits = $loaded['commits'];
@@ -59,7 +58,7 @@ function changelog(): void {
     }
 
     $cont = $head.$tpl->getHtmlPart('changelog', [
-        'action_url' => 'index.php?name='.$conf['name'],
+        'action_url' => getSeoUrl(['name' => $conf['name']]),
         'hidden' => ['name_attr' => 'name', 'value_attr' => $conf['name']],
         'search_field' => ['itype' => 'text', 'input_id' => 'search', 'name_attr' => 'word', 'value_attr' => chlogEsc($filters['search']), 'placeholder_text' => _CHLOG_SEARCH_PH],
         'author_field' => [
@@ -69,13 +68,13 @@ function changelog(): void {
         'datefrom_field' => ['itype' => 'date', 'input_id' => 'datefrom', 'name_attr' => 'datefrom', 'value_attr' => chlogEsc($filters['since'])],
         'dateto_field' => ['itype' => 'date', 'input_id' => 'dateto', 'name_attr' => 'dateto', 'value_attr' => chlogEsc($filters['until'])],
         'filter_button' => ['button_type' => 'submit', 'submit_label' => _CHLOG_FILTER_BTN],
-        'reset_button' => ['button_type' => 'button', 'submit_label' => _CHLOG_RESET_BTN, 'reset_url' => 'index.php?name='.$conf['name']],
+        'reset_button' => ['button_type' => 'button', 'submit_label' => _CHLOG_RESET_BTN, 'reset_url' => getSeoUrl(['name' => $conf['name']])],
         'search' => chlogEsc($filters['search']),
         'author' => chlogEsc($filters['author']),
         'file' => chlogEsc($filters['file']),
         'datefrom' => chlogEsc($filters['since']),
         'dateto' => chlogEsc($filters['until']),
-        'reset_url' => 'index.php?name='.$conf['name'],
+        'reset_url' => getSeoUrl(['name' => $conf['name']]),
         'show_file' => $config['source'] !== 'github',
         'totcount' => $totcount,
         'totcom' => $totcom,

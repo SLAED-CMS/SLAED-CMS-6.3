@@ -6,7 +6,7 @@
 
 if (!defined('FUNC_FILE')) die('Illegal file access');
 
-# The light target a global subsystem works on: the shared type, the identity, the stored author, the title, the comment mode and the counters, without any text or related set
+# The light target a global subsystem works on: the shared type, the identity, the stored author, the title, the comment mode, the counters and the path, no text or related set
 final readonly class NodeTarget {
 
     # Hold one accessible target with the type snapshot it shares with every other target of the same type
@@ -18,6 +18,7 @@ final readonly class NodeTarget {
         public CommentMode $comon,
         public int $comnum,
         public int $score,
-        public int $ratings
+        public int $ratings,
+        public ?string $path = null
     ) {}
 }

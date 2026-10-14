@@ -179,7 +179,7 @@ function getPresentationData(): array {
     $events = getSecurityEventCount(24);
     $failed = getFailedLoginCountHours(24);
     $langs = count(glob(BASE_DIR.'/lang/*.php') ?: []);
-    [$tid, $ttitle, $ttime] = $db->getSqlRow(getForumTopics('id, title, ltime', '', 1));
+    [$tid, $ttitle, $ttime, $tpath] = $db->getSqlRow(getForumTopics('id, title, ltime', '', 1)) ?: [0, '', '', null];
     $read = static function (string $mode): array {
         $out = ['type' => getNodeModeType($mode), 'num' => 0, 'cats' => 0, 'last' => null];
         if ($out['type'] === null) return $out;
@@ -225,7 +225,7 @@ function getPresentationData(): array {
         $mtot++;
         if (!empty($item['active'])) $mon++;
         if (count($mods) >= 8 || empty($item['menu'])) continue;
-        $mods[] = ['icon' => getIconName($key), 'label' => getModuleName($key), 'note' => $key, 'href' => 'index.php?name='.$key, 'is_on' => !empty($item['active'])];
+        $mods[] = ['icon' => getIconName($key), 'label' => getModuleName($key), 'note' => $key, 'href' => getSeoUrl(['name' => $key]), 'is_on' => !empty($item['active'])];
     }
     $lit = [];
     foreach (['one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight'] as $i => $word) $lit[$word] = !empty($mods[$i]['is_on']);
@@ -250,7 +250,7 @@ function getPresentationData(): array {
             $text = trim((string)preg_replace('/\s+/', ' ', explode("\n\n", trim((string)($row['body'] ?? '')))[0]));
             $commits[] = [
                 'short' => $row['hash'], 'title' => $row['subject'], 'iso' => date('c', strtotime($row['date'])), 'date' => format_time($row['date'], _DATESTRING),
-                'note' => $row['author'], 'href' => ($base !== '') ? $base.$row['fullhash'] : 'index.php?name=changelog', 'is_on' => $i === 0, 'is_ext' => $base !== '',
+                'note' => $row['author'], 'href' => ($base !== '') ? $base.$row['fullhash'] : getSeoUrl(['name' => 'changelog']), 'is_on' => $i === 0, 'is_ext' => $base !== '',
                 'tags' => $tags, 'has_tags' => $tags !== [], 'text' => mb_strlen($text) > 180 ? mb_substr($text, 0, 177).'…' : $text,
             ];
         }
@@ -496,15 +496,15 @@ function getPresentationData(): array {
             'tone' => $t[0], 'icon' => $t[1], 'label' => $t[2], 'text' => $t[3], 'zone' => $t[4], 'is_bad' => $t[5],
             'result' => $t[5] ? _PRES_GD_BLOCK.' → '._PRES_GD_QUARANT : $t[6], 'verdict' => $t[5] ? 'danger' : ($t[6] === _PRES_GD_CLASSIFY ? 'info' : 'success'),
         ], [
-            ['primary', 'person-fill', _PRES_GD_HUMAN, 'GET /index.php?name=forum', 'door', false, _PRES_GD_ALLOW],
-            ['info', 'search', _PRES_GD_SEARCH, 'GET /index.php?name=sitemap', '2', false, _PRES_GD_INDEX],
-            ['accent', 'stars', 'AI', 'GET /index.php?name=content', '3', false, _PRES_GD_CLASSIFY],
-            ['muted', 'robot', _PRES_GD_BOT, 'GET /index.php?name=rss', '4', false, _PRES_GD_ALLOW],
-            ['primary', 'person-fill', _PRES_GD_HUMAN, 'GET /index.php?name=files', 'door', false, _PRES_GD_ALLOW],
+            ['primary', 'person-fill', _PRES_GD_HUMAN, 'GET /forum', 'door', false, _PRES_GD_ALLOW],
+            ['info', 'search', _PRES_GD_SEARCH, 'GET /sitemap', '2', false, _PRES_GD_INDEX],
+            ['accent', 'stars', 'AI', 'GET /content', '3', false, _PRES_GD_CLASSIFY],
+            ['muted', 'robot', _PRES_GD_BOT, 'GET /rss', '4', false, _PRES_GD_ALLOW],
+            ['primary', 'person-fill', _PRES_GD_HUMAN, 'GET /files', 'door', false, _PRES_GD_ALLOW],
             ['danger', 'database-exclamation', 'SQLi', 'id=1 UNION SELECT …', '1', true, ''],
             ['danger', 'code-slash', 'XSS', 'q=%3Cscript%3E…%3C/script%3E', '1', true, ''],
             ['danger', 'folder-x', 'TRAVERSAL', '../../etc/passwd', '1', true, ''],
-            ['danger', 'person-lock', 'BRUTE', 'POST /index.php?name=account × 27', 'door', true, ''],
+            ['danger', 'person-lock', 'BRUTE', 'POST /account × 27', 'door', true, ''],
             ['danger', 'bug-fill', 'PROBE', 'GET /.env /backup /config', '1', true, ''],
         ]),
         'panes' => [
@@ -648,13 +648,13 @@ function getPresentationData(): array {
         'mode' => $mode, 'badge' => $badge, 'btone' => $btone, 'route' => $route, 'sub' => $sub, 'state' => $state, 'gatea' => $gatea, 'gateb' => $gateb,
         'modb' => $modb, 'states' => implode('|', $states), 'tones' => implode('|', $tones), 'seq' => $seq,
     ];
-    $view = 'GET /index.php?name=news&op=view · '._PRES_AR_S_GUEST;
+    $view = 'GET /news/… · '._PRES_AR_S_GUEST;
     $flows = $cache ? [
         $flow('hit', 'HIT', 'success', $view, _PRES_AR_DYNAMIC, _PRES_AR_WARM, 'storage/cache/data', 'HIT', 'HTML',
             ['HIT', _PRES_AR_COMPILED, _PRES_AR_DATA_V, _PRES_AR_PAGE_V], ['success', 'success', 'success', 'success'], '1,2,3,4,5,6,7'),
         $flow('miss', 'MISS', 'warning', $view, _PRES_AR_REBUILD, 'MISS', 'storage/cache/data', 'MISS', 'HTML',
             ['MISS', _PRES_AR_COMPILED, _PRES_AR_DATA_V, _PRES_AR_PAGE_V], ['warning', 'success', 'success', 'success'], '1,2,3,4,5,6,7'),
-        $flow('bypass', 'BYPASS', 'info', 'GET /index.php?name=forum · '._PRES_AR_S_GUEST, _PRES_AR_NOSTORE, 'BYPASS', '< 2048 B', 'BYPASS', 'HTML',
+        $flow('bypass', 'BYPASS', 'info', 'GET /forum · '._PRES_AR_S_GUEST, _PRES_AR_NOSTORE, 'BYPASS', '< 2048 B', 'BYPASS', 'HTML',
             ['BYPASS', _PRES_AR_COMPILED, _PRES_AR_DATA_V, _PRES_AR_PAGE_V], ['muted', 'success', 'success', 'success'], '1,2,3,4,6,7'),
     ] : [
         $flow('off', _PRES_AR_MODE_OFF, 'warning', $view, _PRES_AR_NOSTORE, _PRES_AR_MODE_OFF, 'cache = 0', 'OFF', 'HTML',
@@ -697,12 +697,12 @@ function getPresentationData(): array {
                 'icon' => getIconName('news'), 'title' => _PRES_PU_NEWS, 'over' => _PRES_PU_NEWS_S,
                 'when' => $news['last'] ? format_time((string)$news['last']->pubdate, _DATESTRING) : '', 'heading' => $news['last']->title ?? _PRES_PU_NONE,
                 'text' => _PRES_PU_NEWS_P, 'link' => _PRES_PU_NEWS_A, 'tone' => 'primary', 'has_date' => (bool)$news['last'],
-                'href' => getSeoUrl(['name' => $news['type']->name] + ($news['last'] ? ['op' => 'view', 'id' => $news['last']->id, 'title' => $news['last']->title] : [])),
+                'href' => getSeoUrl(['name' => $news['type']->name] + ($news['last'] ? ['op' => 'view', 'id' => $news['last']->id, 'route' => $news['last']->path] : [])),
             ]] : []),
             [
                 'icon' => getIconName('forum'), 'title' => _PRES_PU_FORUM, 'over' => _PRES_PU_FORUM_S, 'when' => $ttime ? format_time($ttime, _DATESTRING) : '',
                 'heading' => $ttitle ?: _PRES_PU_NONE, 'text' => _PRES_PU_FORUM_P, 'link' => _PRES_PU_FORUM_A, 'tone' => 'accent', 'has_date' => (bool)$ttime,
-                'href' => $tid ? 'index.php?name=forum&op=view&id='.$tid : 'index.php?name=forum',
+                'href' => $tid ? getSeoUrl(['name' => 'forum', 'op' => 'view', 'id' => $tid, 'route' => $tpath]) : getSeoUrl(['name' => 'forum']),
             ],
             ...($docs['type'] ? [[
                 'icon' => getIconName('pages'), 'title' => _PRES_PU_PAGES, 'over' => _PRES_PU_PAGES_S, 'when' => _PRES_PU_PAGES_T,

@@ -51,8 +51,8 @@ class Oauth {
     # Normalizes a post-login redirect target to a safe internal path, rejects any scheme, host, backslash, control chars, relative root and what overflows its column
     public static function getRedirect(string $raw): string {
         $raw = trim(preg_replace('/[\x00-\x1F\x7F\\\\]/', '', $raw));
-        if ($raw === '' || str_starts_with($raw, '/') || mb_strlen($raw) > 512) return 'index.php';
-        if (preg_match('#^[a-z][a-z0-9+.-]*:#i', $raw)) return 'index.php';
+        if ($raw === '' || str_starts_with($raw, '/') || mb_strlen($raw) > 512) return HOME_PATH;
+        if (preg_match('#^[a-z][a-z0-9+.-]*:#i', $raw)) return HOME_PATH;
         return $raw;
     }
 
@@ -406,8 +406,7 @@ class Oauth {
         $rows = [];
         foreach (['google', 'microsoft'] as $prov) {
             if (!self::getProvider($prov)) continue;
-            $url = 'index.php?name=account&op=oauth_init&prov='.$prov;
-            if ($redir !== '') $url .= '&redirect='.rawurlencode($redir);
+            $url = getSeoUrl(['name' => 'account', 'op' => 'oauth_init', 'prov' => $prov] + (($redir !== '') ? ['redirect' => rawurlencode($redir)] : []));
             $rows[] = ['prov' => $prov, 'label' => ucfirst($prov), 'href' => $url];
         }
         if (!$rows) return '';

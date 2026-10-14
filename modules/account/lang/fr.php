@@ -44,12 +44,12 @@ define('_ACCOUNT_UNSUBOK','L\'adresse %s ne reçoit plus la lettre d\'informatio
 define('_ACCOUNT_VIEWNOTE','Une adresse masquée n\'apparaît même pas dans vos informations.');
 define('_ACCOUNT_WORK','Profession');
 define('_ACCOUNT_YEARS','Années avec le projet');
-define('_ACTERROR1',"Données de l'utilisateur ne sont pas valides.<br>S'il vous Plaît, vérifiez les données saisies, ou si Vous n'êtes pas encore membre, alors cliquez inscription <a href=\"index.php?name=account\">ici</a>.");
-define('_ACTERROR2',"Utilisateur à ces données dans notre base de données n'est pas trouvé.<br>Vous pouvez Vous enregistrer de <a href=\"index.php?name=account\">ici</a>.");
+define('_ACTERROR1',"Données de l'utilisateur ne sont pas valides.<br>S'il vous Plaît, vérifiez les données saisies, ou si Vous n'êtes pas encore membre, alors cliquez inscription <a href=\"%s\">ici</a>.");
+define('_ACTERROR2',"Utilisateur à ces données dans notre base de données n'est pas trouvé.<br>Vous pouvez Vous enregistrer de <a href=\"%s\">ici</a>.");
 define('_ACTIVATIONERROR','Erreur lors de la revitalisation nouvel utilisateur');
 define('_ACTIVATIONSUB','Activation de compte');
 define('_ACTIVATIONYES','Le nouvel utilisateur est activé');
-define('_ACTMSG',"Votre compte est activé avec succès, s'il vous plaît entrer sur le site sous votre nom, puis appuyez sur <a href=\"index.php?name=account\">ici</a> et entrez votre login et mot de passe.");
+define('_ACTMSG',"Votre compte est activé avec succès, s'il vous plaît entrer sur le site sous votre nom, puis appuyez sur <a href=\"%s\">ici</a> et entrez votre login et mot de passe.");
 define('_AVATARINFO',"Affiche une petite image sous informations sur vous dans les messages. Peut être montré seulement une image, d'une largeur de pas plus de %1\$s de pixels, la hauteur n'est pas plus de %2\$s pixel et le volume pas plus de %3\$s.");
 define('_AVATARSAVE','Choisir un avatar');
 define('_AVATARSELECT',"Choisissez votre avatar favori de la galerie, il suffit d'appuyer sur le bouton gauche de la souris sur l'image souhaitée.");

@@ -15,11 +15,12 @@ function users(): void {
     $cont = getModuleNavi(['title' => _TOPUSERS, 'htitle' => _TOPUSERS, 'best_href' => $pnt->active ? getSeoUrl(['name' => $conf['name'], 'op' => 'rules']) : '',
         'btitle' => _TU_RULES, 'pop_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'stats']), 'ptitle' => _TU_STATS, 'liste_href' => '', 'add_href' => '']);
     $lim = 50;
-    $num = getVar('get', 'num', 'num', '1');
+    $num = getVar('get', 'page', 'num', 1);
     $offset = (int)(($num - 1) * $lim);
     $count = ($num) ? $offset + 1 : 1;
-        $result = $db->getSqlQuery('SELECT id, name, website, regdate, origin, lastvis, points, ip, gender, votes, tvotes'
-            .' FROM '.PREFIX_DB.'_users ORDER BY points DESC LIMIT '.$offset.', '.$lim);
+        $result = $db->getSqlQuery('SELECT u.id, u.name, u.website, u.regdate, u.origin, u.lastvis, u.points, u.ip, u.gender, u.votes, u.tvotes, r.path'
+            .' FROM '.PREFIX_DB.'_users AS u'
+            .' LEFT JOIN '.PREFIX_DB.'_routes AS r ON r.kind = \'user\' AND r.oid = u.id AND r.cur = 1 ORDER BY u.points DESC LIMIT '.$offset.', '.$lim);
         if ($db->getSqlRowCount($result) > 0) {
             $con = explode('|', (string)($conf['rating']['account'] ?? '0|0|0'));
             $rate = !empty($con[1]);
@@ -27,7 +28,7 @@ function users(): void {
             $sort = $rate ? _RATING : _LOCALITYLANG;
         $rows = [];
         while ($row = $db->getSqlRow($result)) {
-            [$id, $name, $site, $reg, $from, $last, $point, $ip, $gender, $votes, $total] = $row;
+            [$id, $name, $site, $reg, $from, $last, $point, $ip, $gender, $votes, $total, $path] = $row;
             $tipItems = [
                 ['label' => _REG, 'value' => format_time($reg, _TIMESTRING), 'is_last' => false],
                 ['label' => _LAST_VISIT, 'value' => format_time($last, _TIMESTRING), 'is_last' => !$site],
@@ -39,7 +40,7 @@ function users(): void {
                 'id' => (string)$count,
                 'cells' => [
                     ['text' => (string)$count, 'href' => '#'.$count, 'title' => (string)$count, 'is_num' => true],
-                    ['prefix_html' => getTplTitleTip($tipItems), 'content_html' => user_info($name)],
+                    ['prefix_html' => getTplTitleTip($tipItems), 'content_html' => user_info($name, $path)],
                     ['content_html' => $info],
                     ['content_html' => getGenderText($gender)],
                     ['content_html' => $rating],
@@ -84,7 +85,7 @@ function users(): void {
 
 function rules(): void {
     global $conf, $tpl, $pnt;
-    if (!$pnt->active) setRedirect('index.php?name='.$conf['name']);
+    if (!$pnt->active) setRedirect(getSeoUrl(['name' => $conf['name']]));
     setHead(['title' => _TU_RULES, 'kind' => 'collection']);
     $cont = getModuleNavi(['title' => _TOPUSERS, 'htitle' => _TOPUSERS, 'best_href' => $pnt->active ? getSeoUrl(['name' => $conf['name'], 'op' => 'rules']) : '',
         'btitle' => _TU_RULES, 'pop_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'stats']), 'ptitle' => _TU_STATS, 'liste_href' => '', 'add_href' => '']);
@@ -117,7 +118,7 @@ function rules(): void {
     ]);
     $cont .= $tpl->getHtmlPart('navi-lower', [
         'back_button' => ['button_type' => 'button', 'title' => _BACK, 'label' => _BACK, 'is_back' => true, 'is_navi_lower' => true],
-        'home_link' => ['href' => 'index.php?name='.$conf['name'], 'title' => _PAGEHOME, 'label' => _PAGEHOME, 'is_navi_lower' => true],
+        'home_link' => ['href' => getSeoUrl(['name' => $conf['name']]), 'title' => _PAGEHOME, 'label' => _PAGEHOME, 'is_navi_lower' => true],
         'top_link' => ['href' => '#top', 'title' => _PAGETOP, 'label' => _PAGETOP, 'is_navi_lower' => true],
     ]);
     echo $cont;
@@ -170,7 +171,7 @@ function stats(): void {
         ]);
         $cont .= $tpl->getHtmlPart('navi-lower', [
             'back_button' => ['button_type' => 'button', 'title' => _BACK, 'label' => _BACK, 'is_back' => true, 'is_navi_lower' => true],
-            'home_link' => ['href' => 'index.php?name='.$conf['name'], 'title' => _PAGEHOME, 'label' => _PAGEHOME, 'is_navi_lower' => true],
+            'home_link' => ['href' => getSeoUrl(['name' => $conf['name']]), 'title' => _PAGEHOME, 'label' => _PAGEHOME, 'is_navi_lower' => true],
             'top_link' => ['href' => '#top', 'title' => _PAGETOP, 'label' => _PAGETOP, 'is_navi_lower' => true],
         ]);
     } else {

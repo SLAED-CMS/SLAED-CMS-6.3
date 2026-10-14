@@ -325,7 +325,7 @@ function getProbeCamp(): array {
         $part = getProbeMessage((string)$mesg);
         if (str_contains($part['body'], 'shared probe body')) $out['shared']++;
         $rcpt = preg_match('/^To: <([^>]+)>/m', $part['head'], $mtch) ? $mtch[1] : '';
-        $link = 'op=unsub&mail='.rawurlencode($rcpt).'&key='.getUnsubKey($rcpt);
+        $link = 'account/unsub?key='.getUnsubKey($rcpt).'&mail='.rawurlencode($rcpt);
         $head = preg_match('/^List-Unsubscribe: <[^>]*'.preg_quote($link, '/').'>\r?$/m', $part['head'])
             && str_contains($part['head'], 'List-Unsubscribe-Post: List-Unsubscribe=One-Click') && str_contains($part['head'], 'Precedence: bulk')
             && !str_contains($part['head'], 'Auto-Submitted');

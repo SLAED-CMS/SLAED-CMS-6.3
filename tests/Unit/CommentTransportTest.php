@@ -64,7 +64,7 @@ final class CommentTransportTest extends TestCase
         $view = $this->getSource('core/user.php', 'getCommentView');
         $this->assertStringNotContainsString('token=', $view, 'A comment action still builds a token into its url');
         $this->assertStringNotContainsString('getSiteToken', $view);
-        $this->assertStringContainsString("\$act = 'index.php?go=1&op='", $view);
+        $this->assertStringContainsString("\$act = HOME_PATH.'index.php?go=1&op='", $view);
         $this->assertStringContainsString('deleteComment&id=', $view);
         $this->assertSame(3, substr_count($view, "'is_post' => true"), 'A moderation action is still reachable as a plain link');
         $this->assertStringNotContainsString('token=', $this->getFile('public/templates/lite/fragments/quick-edit.html'), 'The quick editor still builds a token into its url');
@@ -125,9 +125,9 @@ final class CommentTransportTest extends TestCase
         $code = $this->getSource('core/user.php', 'getCommentRows');
         $this->assertStringContainsString("'hx_target' => 'this'", $code);
         $this->assertStringContainsString("'hx_swap' => 'outerHTML'", $code);
-        $this->assertStringContainsString("'hx_url' => 'index.php?go=1&op=getCommentPage", $code);
+        $this->assertStringContainsString("'hx_url' => HOME_PATH.'index.php?go=1&op=getCommentPage", $code);
         $this->assertStringContainsString("'hx_headers' => \$token", $code);
-        $this->assertStringContainsString("getSeoUrl(['name' => \$mod, \$pag.'&com' => \$next])", $code, 'The control is not an ordinary page link without HTMX');
+        $this->assertStringContainsString("getSeoUrl(\$pag + ['com' => \$next])", $code, 'The control is not an ordinary page link without HTMX');
         $this->assertStringContainsString("if (\$data['page'] >= \$data['pages']) return \$cont", $code, 'The last page still offers to load a page after it');
         $this->assertStringContainsString("case 'getCommentPage': getCommentPage(); break;", $this->getFile('public/index.php'));
         $route = $this->getSource('core/user.php', 'getCommentPage');
@@ -140,8 +140,8 @@ final class CommentTransportTest extends TestCase
     public function aCommentLinkNamesThePageThatShowsIt(): void
     {
         $code = $this->getSource('core/user.php', 'addComment');
-        $this->assertStringContainsString("'&op=view&id='.\$id.'&at='.\$new['id'].'#'.\$new['id']", $code, 'The notification still links a bare anchor');
-        $this->assertStringContainsString("\$seen = \$back.'&at='.\$row['id'].'#'.\$row['id']", $code, 'The other-page notice still links a bare anchor');
+        $this->assertStringContainsString("getPublicUrl(\$addr + ['at' => \$new['id']]).'#'.\$new['id']", $code, 'The notification still links a bare anchor');
+        $this->assertStringContainsString("\$seen = getSeoUrl(\$addr + ['at' => \$row['id']]).'#'.\$row['id']", $code, 'The other-page notice still links a bare anchor');
         $show = $this->getSource('core/user.php', 'setComShow');
         $this->assertStringContainsString("\$com->getRootPage(\$full ?: getVar('get', 'at', 'num', 0))", $show, 'The page of a named comment is not resolved');
         $root = $this->getSource('core/classes/comment.php', 'getRootPage', '    ');
@@ -156,7 +156,7 @@ final class CommentTransportTest extends TestCase
         $code = $this->getSource('core/user.php', 'getCommentRows');
         $this->assertSame(2, substr_count($code, "'hx_target' => 'this'"), 'A control does not replace itself with its own answer');
         $this->assertStringContainsString('op=getCommentBranch', $code);
-        $this->assertStringContainsString("getSeoUrl(['name' => \$mod, \$pag.'&all' => \$val['id']])", $code, 'The reply control has no plain link');
+        $this->assertStringContainsString("getSeoUrl(\$pag + ['all' => \$val['id']])", $code, 'The reply control has no plain link');
         $this->assertStringContainsString("intval(\$val['kids'] ?? 0) > intval(\$val['shown'] ?? 0)", $code, 'The control shows even when the branch is complete');
         $branch = $this->getSource('core/user.php', 'getCommentBranch');
         $this->assertStringContainsString('$com->getBranch($id, $reps, $skip)', $branch);

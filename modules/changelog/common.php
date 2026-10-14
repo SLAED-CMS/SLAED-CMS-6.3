@@ -72,6 +72,7 @@ function chlogGetConfig(array $conf): array {
     ];
 }
 
+# Answer a filter query with an empty key by its canonical form: on the panel script, or with no base on the address of the site
 function chlogCanonicalRedirect(string $base, string $name, array $filters, int $page): void {
     $cur = (string)($_SERVER['QUERY_STRING'] ?? '');
     if ($cur === '') return;
@@ -93,7 +94,7 @@ function chlogCanonicalRedirect(string $base, string $name, array $filters, int 
         'page' => $page > 1 ? (string)$page : ''
     ], static fn(string $val): bool => $val !== '');
 
-    setRedirect($base.'?'.http_build_query($want));
+    setRedirect(($base !== '') ? $base.'?'.http_build_query($want) : getSeoUrl(array_map('rawurlencode', $want)));
 }
 
 function chlogFilterCommits(array $commits, array $filters): array {

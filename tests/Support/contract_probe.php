@@ -702,8 +702,11 @@ function getProbeCommentNotify(): array {
 
 # Render the profile feed the way it was rendered before batch 5, from the single UNION that still carried the comment branch
 # It is a verbatim copy of the pre-move function and exists only so the migrated one can be compared against it byte for byte on the live rows
+# Its addresses ask the registry row by row for the path the migrated feed joins, as the builder of URL batch 5 takes it
 function getProbeFeedLegacy(int $uid): string {
     global $db, $conf, $tpl, $prs;
+    $rte = new Route($db);
+    $path = fn(string $kind, int $oid): ?string => $rte->getRouteList($kind, [$oid])[$oid] ?? null;
     if ($uid < 1 || ($conf['users']['prof'] == 1 && !is_user() && !isAdmin())) return '';
     $limit = intval(getUserNews(25));
     $parts = [];
@@ -729,13 +732,13 @@ function getProbeFeedLegacy(int $uid): string {
         if ($key == 'comm') {
             $label = cutstr(str_replace([_QUOTE, _CODE], '', filterText($prs->filterContent($label, true, $conf['name'], 0))), 70);
             $cnt = 0;
-            $href = getSeoUrl(['name' => $cmod, 'op' => 'view', 'id' => $cid]).'#'.$id;
+            $href = getSeoUrl(['name' => $cmod, 'op' => 'view', 'id' => $cid, 'route' => $path(['account' => 'user', 'voting' => 'poll'][$cmod] ?? 'node', (int)$cid)]).'#'.$id;
         } elseif ($key == 'jokes') {
             $href = getSeoUrl(['name' => 'jokes']).'#'.$id;
         } elseif ($key == 'forum') {
-            $href = getSeoUrl(['name' => $key, 'op' => 'view', 'id' => $id, 'title' => $label]);
+            $href = getSeoUrl(['name' => $key, 'op' => 'view', 'id' => $id, 'route' => $path('topic', (int)$id)]);
         } else {
-            $href = getSeoUrl(['name' => $key, 'op' => 'view', 'id' => $id, 'title' => $label]).'#'.$id;
+            $href = getSeoUrl(['name' => $key, 'op' => 'view', 'id' => $id, 'route' => null]).'#'.$id;
         }
         $lists[$key][] = [
             'datehtml' => $tpl->getHtmlFrag('date-badge', ['iso' => date('c', strtotime($time)), 'title' => format_time($time, _TIMESTRING), 'text' => format_time($time)]),

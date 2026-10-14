@@ -57,7 +57,7 @@ function account(): void {
         ]);
         $after .= Oauth::getButtons();
         $cont .= $tpl->getHtmlPart('form-add', [
-            'action' => 'index.php?name='.$conf['name'],
+            'action' => getSeoUrl(['name' => $conf['name']]),
             'fields' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken('account')]).$fields,
             'captcha' => $captcha,
             'submit' => $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'op' => 'login', 'label' => _USERLOGIN]),
@@ -164,7 +164,7 @@ function newuser(): void {
             ]);
             $after .= Oauth::getButtons();
             $cont .= $tpl->getHtmlPart('form-add', [
-                'action' => 'index.php?name='.$conf['name'],
+                'action' => getSeoUrl(['name' => $conf['name']]),
                 'fields' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken('account')]).$fields,
                 'captcha' => $captcha,
                 'submit' => $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'op' => 'finnewuser', 'label' => _NEWUSER]),
@@ -201,7 +201,7 @@ function finnewuser(): void {
         }
         if (!$stop) {
             $check = md5(getRandomString(10));
-            $finishlink = $conf['homeurl'].'/index.php?name='.$conf['name'].'&op=activate&user='.urlencode($nick).'&num='.$check;
+            $finishlink = getPublicUrl(['name' => $conf['name'], 'op' => 'activate', 'user' => urlencode($nick), 'num' => $check]);
             $mail = filterText($mail);
             $done = $db->getSqlQuery(
                 'INSERT INTO '.PREFIX_DB.'_users_temp (id, name, email, password, regdate, code) VALUES (NULL, :name, :email, :password, NOW(), :code)',
@@ -221,7 +221,7 @@ function finnewuser(): void {
                     .$tpl->getHtmlFrag('hidden', ['name_attr' => 'user', 'value_attr' => urlencode($nick)])
                     .$tpl->getHtmlFrag('hidden', ['name_attr' => 'num', 'value_attr' => $check]);
                 $cont .= $tpl->getHtmlPart('form-add', [
-                    'action' => 'index.php',
+                    'action' => HOME_PATH.'index.php',
                     'method' => 'get',
                     'no_enctype' => true,
                     'fields' => $fields,
@@ -232,7 +232,7 @@ function finnewuser(): void {
                 $subject = $conf['sitename'].' - '._ACTIVATIONSUB;
                 $message = getMailFrame(getTplLines([sprintf(_PASSFSEND, $mail, $conf['sitename'], $link, $nick, $pass), _IFYOUDIDNOTASK], true, true));
                 $mailer->addQueue(['kind' => 'account', 'email' => $mail, 'title' => $subject, 'body' => $message, 'sender' => $conf['adminmail'], 'prio' => 3]);
-                $meta = $tpl->getHtmlFrag('meta-refresh', ['url' => 'index.php', 'secs' => 30]);
+                $meta = $tpl->getHtmlFrag('meta-refresh', ['url' => HOME_PATH, 'secs' => 30]);
                 $cont = $tpl->getHtmlFrag('title', ['title' => _ACCOUNTCREATED, 'is_level_one' => true])
                     .$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => getTplLines([_YOUAREREGISTERED, _FINISHUSERCONF, _THANKSUSER], true, true), 'meta' => $meta]);
             }
@@ -271,7 +271,7 @@ function activate(): void {
             if ($open && !$done) $db->setSqlRollback();
             if (!$done) {
                 $text = match ($twin) { 'email' => _ERROR_EMAIL, 'name' => _NICKTAKEN, default => _ERROR };
-                $meta = $tpl->getHtmlFrag('meta-refresh', ['url' => 'index.php?name='.$conf['name'], 'secs' => 15]);
+                $meta = $tpl->getHtmlFrag('meta-refresh', ['url' => getSeoUrl(['name' => $conf['name']]), 'secs' => 15]);
                 echo $tpl->getHtmlFrag('title', ['title' => _ACTIVATIONERROR, 'is_level_one' => true])
                     .$tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $text, 'meta' => $meta]);
                 setFoot();
@@ -280,18 +280,18 @@ function activate(): void {
             if ($nuid) $pnt->addEvent('register', 'account', 'user:'.$nuid, $nuid);
             $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_users_temp WHERE name = :uname AND code = :cnum', ['uname' => $nick, 'cnum' => $check]);
             $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_session WHERE uname = :uname AND guest = 0', ['uname' => $uip]);
-            $meta = $tpl->getHtmlFrag('meta-refresh', ['url' => 'index.php?name='.$conf['name'], 'secs' => 15]);
+            $meta = $tpl->getHtmlFrag('meta-refresh', ['url' => getSeoUrl(['name' => $conf['name']]), 'secs' => 15]);
             echo $tpl->getHtmlFrag('title', ['title' => _ACTIVATIONYES, 'is_level_one' => true])
-                .$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _ACTMSG, 'meta' => $meta]);
+                .$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => sprintf(_ACTMSG, getSeoUrl(['name' => $conf['name']])), 'meta' => $meta]);
         } else {
-            $meta = $tpl->getHtmlFrag('meta-refresh', ['url' => 'index.php?name='.$conf['name'], 'secs' => 15]);
+            $meta = $tpl->getHtmlFrag('meta-refresh', ['url' => getSeoUrl(['name' => $conf['name']]), 'secs' => 15]);
             echo $tpl->getHtmlFrag('title', ['title' => _ACTIVATIONERROR, 'is_level_one' => true])
-                .$tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _ACTERROR1, 'meta' => $meta]);
+                .$tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => sprintf(_ACTERROR1, getSeoUrl(['name' => $conf['name']])), 'meta' => $meta]);
         }
     } else {
-        $meta = $tpl->getHtmlFrag('meta-refresh', ['url' => 'index.php?name='.$conf['name'], 'secs' => 15]);
+        $meta = $tpl->getHtmlFrag('meta-refresh', ['url' => getSeoUrl(['name' => $conf['name']]), 'secs' => 15]);
         echo $tpl->getHtmlFrag('title', ['title' => _ACTIVATIONERROR, 'is_level_one' => true])
-            .$tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _ACTERROR2, 'meta' => $meta]);
+            .$tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => sprintf(_ACTERROR2, getSeoUrl(['name' => $conf['name']])), 'meta' => $meta]);
     }
     setFoot();
 }
@@ -347,6 +347,7 @@ function view(): void {
                 $ison,
                 $route
             ] = $db->getSqlRow($result);
+            setSeoMove(['route' => $route]);
             $userIpRaw = $ip;
             $seotitle  = $nick;
             $seoctitle = _PERSONALINFO;
@@ -355,6 +356,7 @@ function view(): void {
             $seoauthor = $nick ?: ($uname ?: $conf['sitename']);
             setHead([
                 'title' => $seotitle,
+                'route' => $route,
                 'kind' => 'profile',
                 'ctitle' => $seoctitle,
                 'desc' => $seodesc,
@@ -489,9 +491,9 @@ function view(): void {
             }
             $hub = array_values($hub);
             $acts = $adm ? getActionMenu([
-                ['href' => $afile.'.php?name=account&op=add&id='.$uid, 'title' => _FULLEDIT, 'icon_name' => 'pencil'],
+                ['href' => HOME_PATH.$afile.'.php?name=account&op=add&id='.$uid, 'title' => _FULLEDIT, 'icon_name' => 'pencil'],
                 [
-                    'href' => $afile.'.php?name=security&op=banlist&new_ip='.$userIpRaw,
+                    'href' => HOME_PATH.$afile.'.php?name=security&op=banlist&new_ip='.$userIpRaw,
                     'title' => _BANIPSENDER,
                     'icon_name' => 'shield-x',
                     'confirm_text' => _BANIPSENDER.' "'.$userIpRaw.'"?',
@@ -510,7 +512,7 @@ function view(): void {
                 'main_head' => [
                     'icon' => getIconName('profile'), 'title' => _PERSONALINFO,
                     'total_html' => getActionMenu($uacts, true).$acts.$tpl->getHtmlFrag('share', [
-                        'share_url' => getPublicUrl(['name' => $conf['name'], 'op' => 'view', 'uname' => urlencode($nick)]),
+                        'share_url' => getPublicUrl(['name' => $conf['name'], 'op' => 'view', 'uname' => urlencode($nick), 'route' => $route]),
                         'share_title' => $nick,
                     ]),
                 ],
@@ -566,18 +568,20 @@ function view(): void {
                 'col_favs' => _FAVORITES,
                 'feed_html' => getProfileLastView($uid),
             ]);
-            echo setComShow($uid, CommentMode::Open->value);
+            echo setComShow($uid, CommentMode::Open->value, $route);
             setFoot();
         } else {
+            http_response_code(404);
             setHead(['title' => _USERNOEXIST]);
-            $meta = $tpl->getHtmlFrag('meta-refresh', ['url' => 'index.php', 'secs' => 3]);
+            $meta = $tpl->getHtmlFrag('meta-refresh', ['url' => HOME_PATH, 'secs' => 3]);
             echo $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _USERNOEXIST, 'meta' => $meta]);
             setFoot();
         }
     } else {
-        setHead(['title' => _MODULEUSERS]);
-        $meta = $tpl->getHtmlFrag('meta-refresh', ['url' => 'index.php', 'secs' => 15]);
-        echo $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _MODULEUSERS, 'meta' => $meta]);
+        http_response_code(403);
+        setHead(['title' => sprintf(_MODULEUSERS, getSeoUrl(['name' => $conf['name']]))]);
+        $meta = $tpl->getHtmlFrag('meta-refresh', ['url' => HOME_PATH, 'secs' => 15]);
+        echo $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => sprintf(_MODULEUSERS, getSeoUrl(['name' => $conf['name']])), 'meta' => $meta]);
         setFoot();
     }
 }
@@ -613,20 +617,23 @@ function profil(): void {
         while ([$fid, $fmod] = $db->getSqlRow($result)) {
             if (preg_match('/^[a-z_]+$/', (string)$fmod)) $fmap[$fmod][] = (int)$fid;
         }
+        $paths = (new Route($db))->getRouteList('node', array_merge(...array_values(array_diff_key($fmap, ['forum' => 0]))));
+        $tops = [];
         foreach ($fmap as $fmod => $fids) {
             $ftitles = [];
             if (isset($conf['node']['types'][$fmod])) {
                 $ftitles = getNodeTitleMap(array_fill_keys($fids, $fmod));
             } elseif ($fmod === 'forum') {
-                $fres = $db->getSqlQuery('SELECT id, title FROM '.PREFIX_DB.'_forum WHERE id IN ('.implode(', ', $fids).')');
-                while ([$fid, $ftitle] = $db->getSqlRow($fres)) $ftitles[$fid] = $ftitle;
+                $fres = $db->getSqlQuery('SELECT f.id, f.title, r.path FROM '.PREFIX_DB.'_forum AS f LEFT JOIN '.PREFIX_DB.'_routes AS r'
+                    .' ON r.kind = \'topic\' AND r.oid = f.id AND r.cur = 1 WHERE f.id IN ('.implode(', ', $fids).')');
+                while ($frow = $db->getSqlRow($fres)) [$ftitles[$frow[0]], $tops[$frow[0]]] = [$frow[1], $frow[2]];
             }
             foreach ($ftitles as $fid => $ftitle) {
                 $favs[] = [
                     'icon' => getIconName($fmod),
                     'chip_icon' => $conf['modules'][$fmod]['icon'] ?? 'folder',
                     'title' => cutstr($ftitle, 60),
-                    'href' => 'index.php?name='.$fmod.'&op=view&id='.$fid,
+                    'href' => getSeoUrl(['name' => $fmod, 'op' => 'view', 'id' => $fid, 'route' => (($fmod === 'forum') ? $tops : $paths)[$fid] ?? null]),
                     'mod' => getModuleName($fmod),
                 ];
             }
@@ -656,17 +663,17 @@ function profil(): void {
         'points_label' => _POINTS,
         'rating' => ((int)($inf['votes'] ?? 0) > 0) ? number_format($inf['tvotes'] / $inf['votes'], 2) : '',
         'rating_label' => _RATING,
-        'profile_href' => 'index.php?name='.$conf['name'].'&op=view&id='.$uid,
+        'profile_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $uid, 'route' => $inf['path'] ?? null]),
         'profile_label' => _PERSONALINFO,
         'actions' => getUserNavItems(),
         'pm_head' => ['icon' => getIconName('messages'), 'title' => _PRIVAT, 'live_title' => _PRIVAT],
-        'pm_href' => 'index.php?name='.$conf['name'].'&op=privat',
+        'pm_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'privat']),
         'pms' => $pms,
         'fav_head' => ['icon' => getIconName('favorites'), 'title' => _FAVORITES, 'live_title' => _FAVORITES],
         'favs' => $favs,
         'has_rss' => ($conf['rss']['use'] ?? 0) == 1,
         'rss_head' => ['icon' => getIconName('rss'), 'title' => _RSS],
-        'rss_action' => 'index.php?name='.$conf['name'].'&op=rss',
+        'rss_action' => getSeoUrl(['name' => $conf['name'], 'op' => 'rss']),
         'rss_select_label' => _SELECTASITE,
         'rss_options_html' => (($conf['rss']['use'] ?? 0) == 1) ? rss_select() : '',
         'rss_url_label' => _ORTYPEURL,
@@ -701,7 +708,7 @@ function privat(): void {
             if (!$view) $view = $prv->getMessageView($uid, $id, PrivatBox::Outbox);
             if ($view) {
                 $typ = ($side == 2) ? 2 : ($view['saved'] ? 3 : 1);
-                $open = 'index.php?go=1&op=setPrivateMessageRead&id='.$id.'&cid='.$side;
+                $open = HOME_PATH.'index.php?go=1&op=setPrivateMessageRead&id='.$id.'&cid='.$side;
             }
         }
         if ($typ < 1 || $typ > 4) $typ = ($name !== '') ? 4 : 1;
@@ -725,7 +732,7 @@ function privat(): void {
                 'shelves_html' => getPrivatShelves($typ),
                 'focus_html' => getPrivatFocus($typ),
                 'notes_html' => getCabinetNotes('', '', $list),
-                'find_url' => 'index.php?go=1&op=getPrivateMessageView',
+                'find_url' => HOME_PATH.'index.php?go=1&op=getPrivateMessageView',
                 'find' => $pick['find'],
                 'seek_label' => (string)_PRSEEK,
                 'search_label' => (string)_SEARCH,
@@ -750,7 +757,7 @@ function privat(): void {
                 'list_html' => getPrivateMessageView('', '', $list),
                 'shown' => getPrivatShown(),
                 'view_html' => getPrivateMessageView('', '', ($typ == 4) ? 4 : 0),
-                'send_url' => 'index.php?go=1&op=addPrivateMessage',
+                'send_url' => HOME_PATH.'index.php?go=1&op=addPrivateMessage',
                 'token_html' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => $tok, 'input_attr' => '']),
                 'to_row_html' => $tpl->getHtmlFrag('form-field-row', [
                     'label_for' => 'privat_message_name',
@@ -816,7 +823,7 @@ function logins(): void {
         account();
         return;
     }
-    $page = max(1, getVar('get', 'num', 'num', 1));
+    $page = max(1, getVar('get', 'page', 'num', 1));
     $num = 20;
     $log = getLoginLog(['uid' => intval($user[0]), 'admin' => 0], $page, $num);
     if ($page > 1 && !$log['rows']) setError(404);
@@ -887,11 +894,12 @@ function passlost(): void {
         }
         $after = $tpl->getHtmlFrag('block-content', [
             'is_form_submit' => true,
-            'content' => $tpl->getHtmlFrag('link', ['href' => 'index.php?name='.$conf['name'], 'title' => _USERLOGIN, 'label' => _USERLOGIN, 'is_footer_button' => true])
-                .$tpl->getHtmlFrag('link', ['href' => 'index.php?name='.$conf['name'].'&op=newuser', 'title' => _REGNEWUSER, 'label' => _REGNEWUSER, 'is_footer_button' => true]),
+            'content' => $tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => $conf['name']]), 'title' => _USERLOGIN, 'label' => _USERLOGIN, 'is_footer_button' => true])
+                .$tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => $conf['name'], 'op' => 'newuser']), 'title' => _REGNEWUSER, 'label' => _REGNEWUSER,
+                    'is_footer_button' => true]),
         ]);
         $cont .= $tpl->getHtmlPart('form-add', [
-            'action' => 'index.php?name='.$conf['name'],
+            'action' => getSeoUrl(['name' => $conf['name']]),
             'fields' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken('account')]).$fields,
             'submit' => $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'op' => 'passmail', 'label' => $send]),
             'after_submit' => $after,
@@ -925,9 +933,9 @@ function passmail(): void {
             $chash = getPassHash($newpass);
             $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET password = :password WHERE email = :email', ['password' => $chash, 'email' => $email]);
             $link = $tpl->getHtmlFrag('link', [
-                'href' => $conf['homeurl'].'/index.php?name='.$conf['name'],
-                'title' => $conf['homeurl'].'/index.php?name='.$conf['name'],
-                'label_html' => $conf['homeurl'].'/index.php?name='.$conf['name'],
+                'href' => getPublicUrl(['name' => $conf['name']]),
+                'title' => getPublicUrl(['name' => $conf['name']]),
+                'label_html' => getPublicUrl(['name' => $conf['name']]),
             ]);
             $subject = $conf['sitename'].' - '._USERPASSWORD.' '.$nick;
             $message = getMailFrame(sprintf(_PASSSEND, $nick, $conf['sitename'], $nick, $newpass, $link));
@@ -935,20 +943,20 @@ function passmail(): void {
             setHead([
                 'title' => _PASSWORDLOST,
             ]);
-            $meta = $tpl->getHtmlFrag('meta-refresh', ['url' => 'index.php?name='.$conf['name'], 'secs' => 10]);
+            $meta = $tpl->getHtmlFrag('meta-refresh', ['url' => getSeoUrl(['name' => $conf['name']]), 'secs' => 10]);
             echo $tpl->getHtmlFrag('title', ['title' => _PASSWORDLOST, 'is_level_one' => true])
                 .$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _USERPASSWORD.' '.$nick.' '._MAILED, 'meta' => $meta]);
             setFoot();
         } else {
             $link = $tpl->getHtmlFrag('link', [
-                'href' => $conf['homeurl'].'/index.php?name='.$conf['name'].'&op=passlost&code='.$subpass.'&email='.$email,
-                'title' => $conf['homeurl'].'/index.php?name='.$conf['name'].'&op=passlost&code='.$subpass.'&email='.$email,
-                'label_html' => $conf['homeurl'].'/index.php?name='.$conf['name'].'&op=passlost&code='.$subpass.'&email='.$email,
+                'href' => getPublicUrl(['name' => $conf['name'], 'op' => 'passlost', 'code' => $subpass, 'email' => $email]),
+                'title' => getPublicUrl(['name' => $conf['name'], 'op' => 'passlost', 'code' => $subpass, 'email' => $email]),
+                'label_html' => getPublicUrl(['name' => $conf['name'], 'op' => 'passlost', 'code' => $subpass, 'email' => $email]),
             ]);
             $subject = $conf['sitename'].' - '._CODEFOR.' '.$nick;
             $message = getMailFrame(getTplLines([sprintf(_PASSCSEND, $nick, $conf['sitename'], $subpass, $link), _IFYOUDIDNOTASK], true, true));
             $mailer->addQueue(['kind' => 'account', 'email' => $mail, 'title' => $subject, 'body' => $message, 'sender' => $conf['adminmail'], 'prio' => 3]);
-            setRedirect('index.php?name='.$conf['name'].'&op=passlost&email='.$email);
+            setRedirect(getSeoUrl(['name' => $conf['name'], 'op' => 'passlost', 'email' => $email]));
         }
     } else {
         passlost();
@@ -988,7 +996,7 @@ function login(): void {
     }
     if (!$stop) {
         setUserLogin((int)$uid, (string)$nick, (string)$pass, (int)$story, (int)$blockon, (string)$theme);
-        setRedirect('index.php?name='.$conf['name'].'&op=profil', true);
+        setRedirect(getSeoUrl(['name' => $conf['name']]), true);
     } else {
         Captcha::registerLoginFailure('user');
         addLoginLog(($nick === $uname) ? intval($uid) : 0, false, $block ? 'blocked' : 'password', $uname);
@@ -1002,7 +1010,7 @@ function logout(): void {
     setCookiesDelete('account');
     if ($nick !== '') $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_session WHERE uname = :uname AND guest = :guest', ['uname' => $nick, 'guest' => 2]);
     unset($user);
-    setRedirect('index.php', true);
+    setRedirect(HOME_PATH, true);
 }
 
 # Build one yes/no line of the settings page: the caption names the group, the hint under it says what the yes costs, and the group is two radios sharing one name
@@ -1206,7 +1214,7 @@ function edithome(): void {
             $aset[] = [
                 'value' => $file,
                 'label_html' => $tpl->getHtmlFrag('image', [
-                    'src' => $adir.'/'.$file,
+                    'src' => HOME_PATH.$adir.'/'.$file,
                     'alt' => $alt,
                     'title' => $alt,
                     'is_avatar' => true,
@@ -1224,7 +1232,7 @@ function edithome(): void {
                 'text_id' => $aids['hint'],
                 'width' => 4,
                 'tone' => 3,
-                'hx_post' => 'index.php?name='.$conf['name'].'&op=setavatar',
+                'hx_post' => getSeoUrl(['name' => $conf['name'], 'op' => 'setavatar']),
                 'hx_params' => 'avatar,token',
                 'hx_target' => '#f-face',
                 'done_text' => _SUCCSAVE,
@@ -1348,7 +1356,7 @@ function edithome(): void {
             ]);
             $note = _PASSTEXT;
             $keys = $tpl->getHtmlPart('form-add', [
-                'action' => 'index.php?name='.$conf['name'],
+                'action' => getSeoUrl(['name' => $conf['name']]),
                 'fields' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken('account')]).$pass,
                 'submit' => $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'op' => 'savepass', 'label' => _SAVECHANGES]),
             ]);
@@ -1367,7 +1375,7 @@ function edithome(): void {
                 'email' => (string)$lnk['email'],
                 'since' => format_time($lnk['linked']),
                 'unlink_html' => $tpl->getHtmlFrag('post-button', [
-                    'action' => 'index.php?name='.$conf['name'],
+                    'action' => getSeoUrl(['name' => $conf['name']]),
                     'hidden' => $ohid,
                     'icon_name' => 'x-lg',
                     'title' => _DELETE,
@@ -1405,7 +1413,7 @@ function edithome(): void {
         foreach ($rail as $key => $mark) $rail[$key]['of'] = count($rail) - 1;
         echo $tpl->getHtmlFrag('title', ['title' => _CHANGE, 'is_level_one' => true]).getUserNav().$tpl->getHtmlPart('account-settings', [
             'alert_html' => ($tops) ? $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => $tops]) : '',
-            'form_action' => 'index.php?name='.$conf['name'],
+            'form_action' => getSeoUrl(['name' => $conf['name']]),
             'form_hidden' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken('account')]),
             'form_submit' => $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'extra' => $extra, 'op' => 'savehome', 'label' => _SAVECHANGES]),
             'lamps' => getAccountLamps($info, $lnks, $fill),
@@ -1514,7 +1522,7 @@ function savehome(): void {
                 edithome();
                 return;
             }
-            setRedirect('index.php?name='.$conf['name'].'&op=edithome');
+            setRedirect(getSeoUrl(['name' => $conf['name'], 'op' => 'edithome']));
         }
     } else {
         edithome();
@@ -1559,15 +1567,15 @@ function savepass(): void {
                         return;
                     }
                     $link = $tpl->getHtmlFrag('link', [
-                        'href' => $conf['homeurl'].'/index.php?name='.$conf['name'],
-                        'title' => $conf['homeurl'].'/index.php?name='.$conf['name'],
-                        'label_html' => $conf['homeurl'].'/index.php?name='.$conf['name'],
+                        'href' => getPublicUrl(['name' => $conf['name']]),
+                        'title' => getPublicUrl(['name' => $conf['name']]),
+                        'label_html' => getPublicUrl(['name' => $conf['name']]),
                     ]);
                     $subject = $conf['sitename'].' - '._USERPASSWORD.' '.$nick;
                     $message = getMailFrame(sprintf(_PASSESEND, $nick, $conf['sitename'], $nick, $link));
                     $mailer->addQueue(['kind' => 'account', 'email' => $mail, 'title' => $subject, 'body' => $message, 'sender' => $conf['adminmail'], 'prio' => 3]);
                     setCookies('account', time() + (int)$conf['user_c_t'], [$uid, $nick, $hash, $story, $blockon, $theme]);
-                    setRedirect('index.php?name='.$conf['name'].'&op=edithome', false, 302, _SUCCSAVE);
+                    setRedirect(getSeoUrl(['name' => $conf['name'], 'op' => 'edithome']), false, 302, _SUCCSAVE);
                 } else {
                     $stop[] = _ERROR_PASS;
                     edithome();
@@ -1594,7 +1602,7 @@ function oautherror(): void {
     setHead(['title' => _ERROR]);
     echo $tpl->getHtmlFrag('title', ['title' => _ERROR, 'is_level_one' => true])
         .$tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _OAUTHFAIL])
-        .$tpl->getHtmlFrag('link', ['href' => 'index.php?name='.$conf['name'], 'title' => _USERLOGIN, 'label' => _USERLOGIN, 'is_footer_button' => true]);
+        .$tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => $conf['name']]), 'title' => _USERLOGIN, 'label' => _USERLOGIN, 'is_footer_button' => true]);
     setFoot();
     exit;
 }
@@ -1603,7 +1611,7 @@ function oauthretry(string $msg): void {
     global $conf;
     header('Cache-Control: no-store, no-cache, must-revalidate');
     header('Referrer-Policy: no-referrer');
-    setRedirect('index.php?name='.$conf['name'].'&op=oauth_finish', false, 302, $msg, true);
+    setRedirect(getSeoUrl(['name' => $conf['name'], 'op' => 'oauth_finish']), false, 302, $msg, true);
 }
 
 function oauthlogin(int $uid, string $prov, string $redir, string $event = ''): void {
@@ -1613,7 +1621,7 @@ function oauthlogin(int $uid, string $prov, string $redir, string $event = ''): 
     $db->getSqlQuery('UPDATE '.PREFIX_DB.'_user_oauth SET lastlog = NOW() WHERE uid = :uid AND provider = :prov', ['uid' => $uid, 'prov' => $prov]);
     if ($event !== '') Logger::addOauth('info', $event, ['prov' => $prov, 'uid' => $uid]);
     setUserLogin((int)$row['id'], (string)$row['name'], (string)$row['password'], (int)$row['storynum'], (int)$row['blockon'], (string)$row['theme'], 'oauth');
-    setRedirect($redir !== '' ? $redir : 'index.php?name='.$conf['name'].'&op=profil');
+    setRedirect($redir !== '' ? $redir : getSeoUrl(['name' => $conf['name']]));
 }
 
 function oauthinit(): void {
@@ -1717,7 +1725,7 @@ function oauthback(): void {
     if (!Oauth::setTemp('pending', $tok, ['provider' => $prov, 'uid' => $claims['sub'], 'email' => $mail, 'uname' => $claims['name'], 'redirect' => $redir])) oautherror();
     Oauth::setCookie('pt', $tok, 900);
     Logger::addOauth('info', 'oauth_callback_pending', ['prov' => $prov]);
-    setRedirect('index.php?name=account&op=oauth_finish');
+    setRedirect(getSeoUrl(['name' => 'account', 'op' => 'oauth_finish']));
 }
 
 function oauthfinish(): void {
@@ -1726,11 +1734,11 @@ function oauthfinish(): void {
     header('Referrer-Policy: no-referrer');
     if (strtoupper((string)($_SERVER['REQUEST_METHOD'] ?? 'GET')) !== 'POST') {
         $tok = Oauth::getCookie('pt');
-        if ($tok === '') setRedirect('index.php?name='.$conf['name']);
+        if ($tok === '') setRedirect(getSeoUrl(['name' => $conf['name']]));
         $row = Oauth::getTemp('pending', $tok);
         if ($row === null) {
             Oauth::setCookie('pt', '', 0);
-            setRedirect('index.php?name='.$conf['name']);
+            setRedirect(getSeoUrl(['name' => $conf['name']]));
         }
         setHead(['title' => _OAUTHTITLE]);
         $link = $tpl->getHtmlFrag('form-field-row', [
@@ -1789,7 +1797,7 @@ function oauthfinish(): void {
             'create_label' => _NEWUSER,
             'captcha' => getCaptcha('login'),
             'token' => htmlspecialchars(getSiteToken('account'), ENT_QUOTES, 'UTF-8'),
-            'action' => 'index.php?name='.$conf['name'],
+            'action' => getSeoUrl(['name' => $conf['name']]),
         ]);
         setFoot();
         return;
@@ -1908,14 +1916,14 @@ function oauthfinish(): void {
 
 function oauthunlink(): void {
     global $user, $conf;
-    if (strtoupper((string)($_SERVER['REQUEST_METHOD'] ?? 'GET')) !== 'POST' || !is_user()) setRedirect('index.php?name='.$conf['name']);
-    if (!checkSiteToken(getVar('post', 'token', 'raw', ''), 'account')) setRedirect('index.php?name='.$conf['name'].'&op=edithome', false, 302, _TOKENMISS, true);
+    if (strtoupper((string)($_SERVER['REQUEST_METHOD'] ?? 'GET')) !== 'POST' || !is_user()) setRedirect(getSeoUrl(['name' => $conf['name']]));
+    if (!checkSiteToken(getVar('post', 'token', 'raw', ''), 'account')) setRedirect(getSeoUrl(['name' => $conf['name'], 'op' => 'edithome']), false, 302, _TOKENMISS, true);
     $prov = strtolower(getVar('post', 'prov', 'word'));
     $cuid = (int)$user[0];
     $ecode = Oauth::deleteLink($cuid, $prov);
-    if ($ecode !== '') setRedirect('index.php?name='.$conf['name'].'&op=edithome', false, 302, _OAUTHLAST, true);
+    if ($ecode !== '') setRedirect(getSeoUrl(['name' => $conf['name'], 'op' => 'edithome']), false, 302, _OAUTHLAST, true);
     Logger::addOauth('info', 'oauth_unlink', ['prov' => $prov, 'uid' => $cuid]);
-    setRedirect('index.php?name='.$conf['name'].'&op=edithome', false, 302, _OAUTHOFF);
+    setRedirect(getSeoUrl(['name' => $conf['name'], 'op' => 'edithome']), false, 302, _OAUTHOFF);
 }
 
 function unsub(): void {
@@ -1936,7 +1944,7 @@ function unsub(): void {
     } else {
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => sprintf(_ACCOUNT_UNSUBASK, $show)]);
         $cont .= $tpl->getHtmlPart('form-add', [
-            'action' => 'index.php?name='.$conf['name'].'&op=unsub&mail='.rawurlencode($mail).'&key='.$key,
+            'action' => getSeoUrl(['name' => $conf['name'], 'op' => 'unsub', 'key' => $key, 'mail' => rawurlencode($mail)]),
             'no_enctype' => true,
             'submit' => $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'op' => 'unsub', 'label' => _MAIL_UNSUB]),
         ]);

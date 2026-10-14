@@ -73,7 +73,7 @@ function contact(): void {
         ]),
     ]);
     $form = ($info ? $tpl->getHtmlFrag('block-content', ['is_section' => true, 'content' => $info, 'has_hr' => true]) : '').$tpl->getHtmlPart('form-add', [
-        'action' => 'index.php?name='.$conf['name'],
+        'action' => getSeoUrl(['name' => $conf['name']]),
         'method' => 'post',
         'form_name' => 'post',
         'no_enctype' => true,
@@ -115,7 +115,7 @@ function contact(): void {
             ]);
             $mailer->addQueue(['kind' => 'contact', 'email' => $to, 'title' => $subject, 'body' => $msg, 'sender' => $semail, 'prio' => 1, 'client' => true]);
             if (is_user()) $pnt->addEvent('message', 'contact', 'req:'.bin2hex(random_bytes(16)), intval($user[0]));
-            $meta = $tpl->getHtmlFrag('meta-refresh', ['url' => 'index.php', 'secs' => 5]);
+            $meta = $tpl->getHtmlFrag('meta-refresh', ['url' => HOME_PATH, 'secs' => 5]);
             $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _FBMAILSENT, 'meta' => $meta]);
         } else {
             $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => (array)$stop]);

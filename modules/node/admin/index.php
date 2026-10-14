@@ -83,7 +83,7 @@ function setNodeResultMail(NodeType $type, Node $node, NodeStatus $was): void {
     if ($was !== NodeStatus::Pending || !$done || !$type->settings['workflow']['notify']['result'] || $node->uid < 1) return;
     $mail = getUserMail($node->uid);
     if ($mail === '') return;
-    $url = getPublicUrl(['name' => $type->name, 'op' => 'view', 'id' => $node->id]);
+    $url = getPublicUrl(['name' => $type->name, 'op' => 'view', 'id' => $node->id, 'route' => $node->path]);
     $text = ($node->status === NodeStatus::Published) ? sprintf(_NODE_MAILPUB, $node->title, $url) : sprintf(_NODE_MAILNO, $node->title);
     if (!addNodeMail([$mail], $node->title, $text)) Logger::addSite('error', 'Node: the result notice could not be queued', ['nid' => $node->id]);
 }
@@ -252,7 +252,7 @@ function setNodeSupportQueue(NodeType $type): void {
     foreach ($data['nodes'] as $one) {
         $card = $data['ext'][$one->id];
         $dial = [['href' => $afile.'.php?name=node&op=support&id='.$one->id, 'icon_name' => 'kanban', 'title' => _NODE_CARD],
-            ['href' => getSeoUrl(['name' => $type->name, 'op' => 'view', 'id' => $one->id, 'title' => $one->title]), 'icon_name' => 'eye', 'title' => _MVIEW]];
+            ['href' => getSeoUrl(['name' => $type->name, 'op' => 'view', 'id' => $one->id, 'route' => null]), 'icon_name' => 'eye', 'title' => _MVIEW]];
         $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', ['cells' => [
             ['is_col_id' => true, 'has_content_text' => true, 'content_text' => $one->id],
             ['is_col_title' => true, 'is_truncate' => true, 'title_text' => $one->title, 'has_content_text' => true, 'content_text' => $one->title],
@@ -329,7 +329,7 @@ function show(): void {
     foreach ($types as $one) $tmap[$one->id] = $one;
     foreach ($count ? $query->getNodeList() : [] as $node) {
         $type = $tmap[$node->tid];
-        $dial = [['href' => getSeoUrl(['name' => $type->name, 'op' => 'view', 'id' => $node->id, 'title' => $node->title]), 'icon_name' => 'eye', 'title' => _MVIEW],
+        $dial = [['href' => getSeoUrl(['name' => $type->name, 'op' => 'view', 'id' => $node->id, 'route' => $node->path]), 'icon_name' => 'eye', 'title' => _MVIEW],
             ...getNodeModerDial($type, $node)];
         $dial[] =getTplPostAction(['name' => 'node', 'op' => 'delete', 'id' => $node->id, 'type' => $type->name, 'version' => $node->version], 'x-octagon', _DELETE,
             _DELETE.' "'.$node->title.'"?');

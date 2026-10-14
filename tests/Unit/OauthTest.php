@@ -90,13 +90,13 @@ final class OauthTest extends TestCase
     public function redirectRejectsSchemesHostsAndControlChars(): void
     {
         $this->assertSame('index.php?name=news', \Oauth::getRedirect('index.php?name=news'));
-        $this->assertSame('index.php', \Oauth::getRedirect('https://evil.example/x'));
-        $this->assertSame('index.php', \Oauth::getRedirect('https:evil.example'));
-        $this->assertSame('index.php', \Oauth::getRedirect('JaVaScRiPt:alert(1)'));
-        $this->assertSame('index.php', \Oauth::getRedirect('data:text/html,x'));
-        $this->assertSame('index.php', \Oauth::getRedirect('//evil.example'));
-        $this->assertSame('index.php', \Oauth::getRedirect('/index.php'));
-        $this->assertSame('index.php', \Oauth::getRedirect(''));
+        $this->assertSame('/', \Oauth::getRedirect('https://evil.example/x'));
+        $this->assertSame('/', \Oauth::getRedirect('https:evil.example'));
+        $this->assertSame('/', \Oauth::getRedirect('JaVaScRiPt:alert(1)'));
+        $this->assertSame('/', \Oauth::getRedirect('data:text/html,x'));
+        $this->assertSame('/', \Oauth::getRedirect('//evil.example'));
+        $this->assertSame('/', \Oauth::getRedirect('/index.php'));
+        $this->assertSame('/', \Oauth::getRedirect(''));
         $this->assertStringNotContainsString("\n", \Oauth::getRedirect("index.php?a=1\r\nSet-Cookie: x=y"));
     }
 

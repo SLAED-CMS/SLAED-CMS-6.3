@@ -808,7 +808,7 @@ function getAdminFavoriteList(int $obj = 0): string {
                 $fid = $val[1];
                 $modul = $val[2];
                 $title = getDecodedText((string)$val[3]);
-                $uname = ($val[4]) ? user_info($val[4]) : _ANONYM;
+                $uname = ($val[4]) ? user_info($val[4], null) : _ANONYM;
                 $delattr = getTplPostVals(['name' => 'favorites', 'op' => 'delete', 'id' => $id, 'num' => $cid], '#repadminFavoriteList');
                 $rows[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
                     'cells' => [
@@ -891,8 +891,8 @@ function getAdminPrivateList(int $obj = 0): string {
                     ['content_html' => (string)$one['id']],
                     ['content_html' => $tpl->getHtmlFrag('popover', ['content_html' => $info])
                         .$tpl->getHtmlFrag('inline-badge', ['is_note' => true, 'label' => $title, 'title_text' => $title])],
-                    ['content_html' => ($one['nameout'] !== '') ? user_info($one['nameout']) : (string)_ANONYM],
-                    ['content_html' => ($one['namein'] !== '') ? user_info($one['namein']) : (string)_ANONYM],
+                    ['content_html' => ($one['nameout'] !== '') ? user_info($one['nameout'], null) : (string)_ANONYM],
+                    ['content_html' => ($one['namein'] !== '') ? user_info($one['namein'], null) : (string)_ANONYM],
                     ['content_html' => format_time($one['time'], _TIMESTRING)],
                     ['content_html' => $tpl->getHtmlFrag('inline-badge', ['chip_tone' => $tone, 'label' => $note, 'title_text' => $note]), 'is_col_status' => true],
                     ['content_html' => $tpl->getHtmlFrag('dial', [

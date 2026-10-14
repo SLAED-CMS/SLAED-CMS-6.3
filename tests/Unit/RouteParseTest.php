@@ -29,26 +29,26 @@ final class RouteParseTest extends TestCase
         return self::$probe;
     }
 
-    # Every row of the address table opens its page as a path; the canonical address, still index.php?..., shows what getVar('get', ...) returned for the route keys
+    # Every row of the address table opens its page as a path; the canonical address, built since batch 5 on the stored path, shows the entity the route keys named
     #[Test]
     public function everyPageOfTheTableOpensAsAPath(): void
     {
         $want = [
-            'news' => [200, 'News', 'index.php?name=news'],
-            'news/alpha' => [200, 'Alpha - Open - News', 'index.php?name=news&op=view&id=101'],
-            'news/open' => [200, 'Open - News', 'index.php?name=news&cat=1'],
+            'news' => [200, 'News', 'news'],
+            'news/alpha' => [200, 'Alpha - Open - News', 'news/alpha'],
+            'news/open' => [200, 'Open - News', 'news/open'],
             'news?let=B' => [200, 'News - B', ''],
             'news?order=title' => [200, 'News', ''],
-            'forum' => [200, 'Форум', 'index.php?name=forum'],
-            'forum/topic-one' => [200, 'Topic one - Talk - Форум', 'index.php?name=forum&op=view&id=601'],
-            'forum/talk' => [200, 'Форум Talk - Форум', 'index.php?name=forum&cat=10'],
-            'users' => [200, 'Tоп пользователи', 'index.php?name=users'],
-            'voting/poll-one' => [200, 'Poll one - Опросы', 'index.php?name=voting&op=view&id=7'],
-            'news/view/101' => [200, 'Alpha - Open - News', 'index.php?name=news&op=view&id=101'],
+            'forum' => [200, 'Форум', 'forum'],
+            'forum/topic-one' => [200, 'Topic one - Talk - Форум', 'forum/topic-one'],
+            'forum/talk' => [200, 'Форум Talk - Форум', 'forum/talk'],
+            'users' => [200, 'Tоп пользователи', 'users'],
+            'voting/poll-one' => [200, 'Poll one - Опросы', 'voting/poll-one'],
+            'news/view/101' => [200, 'Alpha - Open - News', 'news/alpha'],
             'account/login' => [200, 'Вход в панель управления - Профиль', ''],
-            'news/old-alpha' => [200, 'Alpha - Open - News', 'index.php?name=news&op=view&id=101'],
+            'news/old-alpha' => [200, 'Alpha - Open - News', 'news/alpha'],
             'news/add' => [200, 'Добавить - News', ''],
-            'users/anna' => [200, 'anna - Персональная информация - Профиль', 'index.php?name=account&op=view&id=2'],
+            'users/anna' => [200, 'anna - Персональная информация - Профиль', 'users/anna'],
             'account/privat' => [200, 'Личные сообщения - Профиль', ''],
         ];
         $this->assertSame($want, $this->getRun()['pages'], 'A path of the table does not open its page with the keys of its route');
@@ -84,8 +84,8 @@ final class RouteParseTest extends TestCase
     #[Test]
     public function theKeysOfThePathWinOverTheQuery(): void
     {
-        $alpha = [200, 'Alpha - Open - News', 'index.php?name=news&op=view&id=101'];
-        $want = [$alpha, $alpha, [200, 'News', 'index.php?name=news'], [200, 'Beta - News', 'index.php?name=news&op=view&id=102']];
+        $alpha = [200, 'Alpha - Open - News', 'news/alpha'];
+        $want = [$alpha, $alpha, [200, 'News', 'news'], [200, 'Beta - News', 'news/beta']];
         $this->assertSame($want, $this->getRun()['wins']);
     }
 }

@@ -12,7 +12,7 @@ if (!defined('BLOCK_FILE')) {
 global $db, $conf, $tpl, $user;
 
 $bicon = 'chat-dots-fill';
-$bhref = 'index.php?name=forum';
+$bhref = getSeoUrl(['name' => 'forum']);
 
 $ulast = getUserLastVisit(is_user() ? intval($user[0]) : 0);
 $ismod = is_moder('forum');
@@ -20,8 +20,8 @@ $pop = $conf['forum']['pop'] ?? 25;
 
 $rows = '';
 $result = getForumTopics('id, uid, name, title, time, comments, counter, luid, lname, lpost, ltime, status', '97, 98', 15);
-while ([$id, $uid, $uname, $title, $time, $comments, $counter, $luid, $lname, $lpost, $ltime, $status] = $db->getSqlRow($result)) {
-    $thref = getSeoUrl(['name' => 'forum', 'op' => 'view', 'id' => $id, 'title' => $title]).'&last';
+while ([$id, $uid, $uname, $title, $time, $comments, $counter, $luid, $lname, $lpost, $ltime, $status, $path, $upath, $lpath] = $db->getSqlRow($result)) {
+    $thref = getSeoUrl(['name' => 'forum', 'op' => 'view', 'id' => $id, 'route' => $path, 'last' => 1]);
     $title = getDecodedText($title);
 
     $tflag = getForumTopicState((int)$status, $time, $ltime, (int)$comments, (int)$pop, $ulast, $ismod);
@@ -32,10 +32,10 @@ while ([$id, $uid, $uname, $title, $time, $comments, $counter, $luid, $lname, $l
         'is_hidden' => $status <= 1 || $time > date('Y-m-d H:i:s'),
         'cells' => [
             ['content_html' => $tlink, 'is_truncate' => true],
-            ['content_html' => $uid ? user_info($uname) : $uname, 'is_forum_user' => true],
+            ['content_html' => $uid ? user_info($uname, $upath) : $uname, 'is_forum_user' => true],
             ['text' => $comments, 'is_forum_stat' => true],
             ['text' => $counter, 'is_forum_stat' => true],
-            ['content_html' => $luid ? user_info($lname) : $lname, 'is_forum_user' => true],
+            ['content_html' => $luid ? user_info($lname, $lpath) : $lname, 'is_forum_user' => true],
         ],
     ]);
 }

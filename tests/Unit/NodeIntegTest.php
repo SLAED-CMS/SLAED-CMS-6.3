@@ -155,7 +155,7 @@ final class NodeIntegTest extends TestCase
         $this->assertSame([true, false, true, false, true], $this->getRun()['paged']);
     }
 
-    # The sitemap reads the materials of its types as a guest in cursor batches, escapes its addresses, and the HTML map shows a type with its open categories only
+    # The sitemap reads the materials of its types as a guest in cursor batches, escapes its addresses, the HTML map shows open categories only, robots.txt names the map
     #[Test]
     public function theSitemapWalksTheTypesOfItsIntegration(): void
     {
@@ -168,6 +168,7 @@ final class NodeIntegTest extends TestCase
         $this->assertSame(['success', 5], $map['batch'], 'The sitemap did not read about six hundred materials in batches of limits.syncbatch');
         $this->assertSame([true, false, false], $map['txt'], 'The HTML map misses the open category or lists materials of Node');
         $this->assertSame([false, true], $map['lang'], 'A multilingual map lists a category of another language or misses one of the site language');
+        $this->assertSame([true, true], $map['robots'], 'robots.txt does not name the map once by its absolute address, or lost a line of its own');
     }
 
     # The shared code names no type: the adapters, the block and the generators read the registry and the settings of each type

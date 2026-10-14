@@ -81,7 +81,7 @@ final class NodeModelTest extends TestCase
             'Node' => ['Node', ['int id', 'int tid', 'int cid', 'int uid', 'string aname', '?string ip', 'string title', 'string intro', '?string body',
                 '?array fields', 'int poll', 'bool home', 'CommentMode comon', 'bool pinned', 'int comnum', 'int views', 'int score', 'int ratings',
                 'NodeStatus status', 'int version', 'string created', 'string updated', '?string pubdate', '?string expires', '?array cids', '?array rels',
-                '?array assets', '?string uname', '?string ctitle', '?string path = NULL']],
+                '?array assets', '?string uname', '?string ctitle', '?string path = NULL', '?string upath = NULL']],
             'NodeType' => ['NodeType', ['int id', 'string name', 'string title', 'string intro', 'string ext', 'bool active', 'int sort', 'int version',
                 'string created', 'string updated', 'array settings', 'array fields', 'array uploads', 'array rating']],
             'NodeTypeInput' => ['NodeTypeInput', ['string title', 'string intro', 'string ext', 'int sort', 'array settings', 'array fields', 'array uploads', 'array rating']],
@@ -91,7 +91,8 @@ final class NodeModelTest extends TestCase
             'NodeAsset' => ['NodeAsset', ['int id', 'int nid', 'string kind', 'string role', 'string src', 'string name', 'string title', 'string intro',
                 '?string mime', '?int size', '?int width', '?int height', '?int duration', 'int hits', '?string reported', 'int ruid', 'int sort',
                 'string created', 'string updated']],
-            'NodeTarget' => ['NodeTarget', ['NodeType type', 'int id', 'int uid', 'string title', 'CommentMode comon', 'int comnum', 'int score', 'int ratings']],
+            'NodeTarget' => ['NodeTarget', ['NodeType type', 'int id', 'int uid', 'string title', 'CommentMode comon', 'int comnum', 'int score', 'int ratings',
+                '?string path = NULL']],
             'NodeContext' => ['NodeContext', ['int uid', 'array groups', 'int aid', 'array mods', 'bool manage', 'bool super', 'string ip', 'string lang', 'bool task = false',
                 'bool polls = false']],
         ];

@@ -1,4 +1,4 @@
-<form action="index.php?name=account" method="post" class="sl-block-login">
+<form action="{{ root }}account" method="post" class="sl-block-login">
   <label class="sl-user-field"><i class="bi bi-person" aria-hidden="true"></i><span class="sl-visually-hidden">{{ nickname_label }}</span>{{{ name_input }}}</label>
   <label class="sl-user-field"><i class="bi bi-lock" aria-hidden="true"></i><span class="sl-visually-hidden">{{ password_label }}</span><input type="password" name="user_password" maxlength="25" class="sl-field sl-field--block" placeholder="{{ password_label }}" autocomplete="current-password" required></label>
   {% if captcha_html %}<div class="sl-user-captcha">{{{ captcha_html }}}</div>{% endif %}

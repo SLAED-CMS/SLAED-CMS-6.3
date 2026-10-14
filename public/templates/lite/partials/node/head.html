@@ -3,7 +3,7 @@
     <div class="sl-node-head-title"><h1 class="sl-title">{{ title }}</h1><span class="sl-chip sl-chip-neutral">{{ count_text }}</span></div>
     <div class="sl-node-head-acts">
       {{{ view_html }}}
-      {% if find_mod %}<form class="sl-search-form" role="search" action="index.php?name=search" method="post">
+      {% if find_mod %}<form class="sl-search-form" role="search" action="{{ root }}search" method="post">
         <input type="hidden" value="{{ find_mod }}" name="mod">
         <input type="text" value="" name="word" maxlength="100" placeholder="{{ find_label }}" aria-label="{{ find_label }}" class="sl-field" id="sl-node-find" required role="combobox" aria-autocomplete="list" aria-controls="sl-node-hints" aria-expanded="false" autocomplete="off" hx-get="{{ hint_href }}" hx-trigger="input changed delay:300ms" hx-target="#sl-node-hints" hx-swap="innerHTML" hx-sync="this:replace" data-sl-hints="sl-node-hints">
         <button type="submit" class="sl-search-btn sl-circle-action" aria-label="{{ search_label }}" title="{{ search_label }}"><i class="bi bi-search" aria-hidden="true"></i></button>

@@ -13,12 +13,13 @@ global $db, $tpl;
 
 $rows = '';
 $result = getForumTopics('id, title, time, lname, lpost, ltime, status', '97, 98', 3);
-while ([$id, $title, $time, $lname, $lpost, $ltime, $status] = $db->getSqlRow($result)) {
+while ([$id, $title, $time, $lname, $lpost, $ltime, $status, $path] = $db->getSqlRow($result)) {
     $title = getDecodedText($title);
     $rows .= $tpl->getHtmlFrag('table-row', [
         'is_hidden' => $status <= 1 || $time > date('Y-m-d H:i:s'),
         'cells' => [
-            ['href' => 'index.php?name=forum&op=view&id='.$id.'&last#'.$lpost, 'title' => $title, 'text' => $title, 'is_truncate' => true],
+            ['href' => getSeoUrl(['name' => 'forum', 'op' => 'view', 'id' => $id, 'route' => $path, 'last' => 1]).'#'.$lpost, 'title' => $title, 'text' => $title,
+                'is_truncate' => true],
             ['primary_text' => _POSTEDBY.': '.$lname, 'secondary_text' => _DATE.': '.format_time($ltime, _TIMESTRING)],
         ],
     ]);

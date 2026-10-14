@@ -377,7 +377,7 @@ function getNodeExtVars(NodeType $type, Node|NodeTarget $node, array $data): arr
         'token' => $owner ? getSiteToken() : '',
         'next' => $shut ? $maps['state']['staff'] : $maps['state']['closed'],
         'switch_label' => $shut ? _NODE_REOPEN : _NODE_CLOSE,
-        'card_href' => checkNodeModer($type) ? $afile.'.php?name=node&op=support&id='.$node->id : '',
+        'card_href' => checkNodeModer($type) ? HOME_PATH.$afile.'.php?name=node&op=support&id='.$node->id : '',
     ];
 }
 
@@ -469,7 +469,8 @@ function getNodeViewHtml(NodeType $type, Node $node, array $view, string $rels, 
         'value_text' => $one['value_text']]);
     $open = $node->id > 0 && $type->ext !== 'support';
     $who = ($node->id > 0 && $view['ahref'] !== '') ? [
-        !empty($conf['privat']['act']) ? ['href' => 'index.php?name=account&op=privat&uname='.urlencode($view['author']), 'title' => _SENDMES, 'icon_name' => 'envelope'] : [],
+        !empty($conf['privat']['act'])
+            ? ['href' => getSeoUrl(['name' => 'account', 'op' => 'privat', 'uname' => rawurlencode($view['author'])]), 'title' => _SENDMES, 'icon_name' => 'envelope'] : [],
         ['href' => $view['ahref'], 'title' => _PERSONALINFO, 'icon_name' => 'person'],
     ] : [];
     $meta = getNodeMetaVars($type, $node);
@@ -485,7 +486,7 @@ function getNodeViewHtml(NodeType $type, Node $node, array $view, string $rels, 
         'rels_label' => _NODE_RELATED,
         'poll_html' => $live['poll'] ?? '',
         'tree_html' => $live['tree'] ?? '',
-        'share_url' => $open ? getPublicUrl(['name' => $type->name, 'op' => 'view', 'id' => $node->id, 'title' => $node->title]) : '',
+        'share_url' => $open ? getPublicUrl(['name' => $type->name, 'op' => 'view', 'id' => $node->id, 'route' => $node->path]) : '',
         'share_title' => $node->title,
         'user_html' => getActionMenu($who, true),
         'ext' => $ext,
@@ -528,7 +529,7 @@ function getNodeRoute(): NodeType {
 function setNodeList(): void {
     global $conf, $tpl, $home;
     $cat = getNodeNumber('cat');
-    $num = getNodeNumber('num') ?: 1;
+    $num = getNodeNumber('page') ?: 1;
     $let = getVar('get', 'let', 'raw', '');
     $sort = getVar('get', 'order', 'raw', '');
     $dir = getVar('get', 'dir', 'raw', '');
@@ -557,7 +558,7 @@ function setNodeList(): void {
         $mine = (($new !== '' && $since !== '') ? ['new' => 1] : []) + (($fav !== '' && $uid > 0) ? ['fav' => 1] : []);
         $base = ['name' => $type->name] + ($cat ? ['cat' => $cat] : []) + ($let !== '' ? ['let' => rawurlencode($let)] : []) + $mine;
         $link = static fn(int $i): array => ['href' => getSeoUrl($base + (($sort !== '' || $dir !== '') ? ['order' => $key, 'dir' => $way] : [])
-            + ($i > 1 ? ['num' => $i] : []))];
+            + ['page' => $i])];
         $mode = $type->settings['view']['mode'];
         $views = $set['views'] ?: [NodeQuery::MODEVIEW[$mode]];
         $cats = getCategoryMap($type->name);
@@ -582,7 +583,7 @@ function setNodeList(): void {
         $pages = max(1, (int)ceil($count / $set['limit']));
         if ($num > $pages) setNodeDeny(404);
         $query->setNodePage($num, $set['limit']);
-        if (($sort !== '' || $dir !== '') && $key === $set['order'] && $way === $set['dir']) setRedirect(getSeoUrl($base + ($num > 1 ? ['num' => $num] : [])), false, 301);
+        if (($sort !== '' || $dir !== '') && $key === $set['order'] && $way === $set['dir']) setRedirect(getSeoUrl($base + ['page' => $num]), false, 301);
         $list = $count ? $query->getNodeList() : [];
         $hand = $list ? getNodeHandler($type) : null;
         $extm = $hand ? $hand->getNodeData($type, $list, 'list') : [];
@@ -635,7 +636,7 @@ function setNodeList(): void {
             'empty_alert' => ['text' => _NO_INFO, 'is_warn' => false],
         ]);
         $plain = $sort === '' && $dir === '' && $let === '' && $new === '' && $fav === '';
-        $spot = ($cat ? ['cat' => $cat] : []) + ($num > 1 ? ['num' => $num] : []);
+        $spot = ($cat ? ['cat' => $cat] : []) + ($num > 1 ? ['page' => $num] : []);
         $seo = ['title' => ($ctitle !== '') ? $ctitle : $title, 'ctitle' => ($ctitle !== '') ? $title : '', 'cid' => $cat, 'kind' => 'collection',
             'robots' => $priv ? 'noindex, nofollow' : ($plain ? '' : 'noindex, follow'),
             'canon' => ($home && !$spot) ? getPublicUrl() : getSeoUrl(['name' => $type->name] + $spot)]
@@ -718,7 +719,7 @@ function getNodeHead(NodeType $type, array $base, string $key, string $way, arra
     }
     $narrow = count($base) > 1;
     $clean = !$narrow && $key === $set['order'] && $way === $set['dir'];
-    $feed = isset(getRssFeeds()[$type->name]) ? 'index.php?go=rss&name='.$type->name.(isset($base['cat']) ? '&cat='.$base['cat'] : '') : '';
+    $feed = isset(getRssFeeds()[$type->name]) ? HOME_PATH.'index.php?go=rss&name='.$type->name.(isset($base['cat']) ? '&cat='.$base['cat'] : '') : '';
     $asc = $way === 'asc';
     return $tpl->getHtmlPart('node/head', [
         'title' => getModuleName($type->name),
@@ -753,7 +754,7 @@ function getNodeHead(NodeType $type, array $base, string $key, string $way, arra
         'reset_label' => _FRESET,
         'find_mod' => (is_active('search') && $type->settings['integrations']['search']) ? $type->name : '',
         'find_label' => _NODE_FIND,
-        'hint_href' => 'index.php?go=1&op=getNodeHint&name='.$type->name,
+        'hint_href' => HOME_PATH.'index.php?go=1&op=getNodeHint&name='.$type->name,
         'search_label' => _SEARCH,
         'rss_href' => $feed,
         'rss_title' => _RSS,
@@ -789,7 +790,7 @@ function getNodeTreeData(NodeQuery $query, NodeType $type, Node $node): array {
         foreach (array_reverse($kids[$id] ?? []) as $sub) $stack[] = $sub;
     }
     if (!isset($order[$node->id]) || count($order) < 2) return [];
-    $link = fn(int $id): array => ['href' => getSeoUrl(['name' => $type->name, 'op' => 'view', 'id' => $id, 'title' => $rows[$id]['title']]), 'title' => $rows[$id]['title']];
+    $link = fn(int $id): array => ['href' => getSeoUrl(['name' => $type->name, 'op' => 'view', 'id' => $id, 'route' => $rows[$id]['path']]), 'title' => $rows[$id]['title']];
     $up = isset($rows[$rows[$node->id]['parent'] ?? 0]) ? $rows[$node->id]['parent'] : 0;
     $trail = [];
     for ($cur = $up; $cur && !isset($trail[$cur]); $cur = isset($rows[$rows[$cur]['parent'] ?? 0]) ? $rows[$cur]['parent'] : 0) $trail[$cur] = $link($cur);
@@ -839,9 +840,10 @@ function setNodeView(): void {
         $node = $query->getNode($id, $type);
         if ($node === null) {
             $move = getNodeLegacyUrl($type->name, 'view', $id, 0);
-            if ($move !== '') setRedirect($move, false, 301);
+            if ($move !== '') setSeoMove(['url' => $move]);
             setNodeDeny(404);
         }
+        setSeoMove(['route' => $node->path]);
         $view = getNodeViewData($type, $node, 'view');
         $refs = [];
         foreach ($node->rels ?? [] as $rel) if ($rel->type === 'related') $refs[$rel->rid] = $type->name;
@@ -871,6 +873,7 @@ function setNodeView(): void {
         'title' => $node->title,
         'robots' => $priv ? 'noindex, nofollow' : '',
         'canon' => $view['href'],
+        'route' => $node->path,
         'ctitle' => $view['ctitle'],
         'cid' => $node->cid,
         'kind' => $type->settings['integrations']['seo'],
@@ -881,7 +884,7 @@ function setNodeView(): void {
         'img' => ($cover === '') ? '' : getPublicUrl($cover),
     ]);
     echo getNodeViewHtml($type, $node, $view, $rels, $ext, $live)
-        .($talk ? setComShow($node->id, $com->getTargetMode($type->name, $node->id)->value) : '');
+        .($talk ? setComShow($node->id, $com->getTargetMode($type->name, $node->id)->value, $node->path) : '');
     if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET') {
         addDeferredTask(static function () use ($id, $type): void {
             try {
@@ -927,7 +930,8 @@ function setNodeForm(): void {
                     if ($state === NodeStatus::Pending && $type->settings['workflow']['notify']['pending']) {
                         addAdminMail(true, 'node-'.$type->name, ($node->uid > 0) ? (string)$node->uname : $node->aname, $node->title);
                     }
-                    if ($state === NodeStatus::Published) setRedirect(getSeoUrl(['name' => $type->name, 'op' => 'view', 'id' => $node->id]), false, 302, _NODE_ADDED);
+                    $done = getSeoUrl(['name' => $type->name, 'op' => 'view', 'id' => $node->id, 'route' => $node->path]);
+                    if ($state === NodeStatus::Published) setRedirect($done, false, 302, _NODE_ADDED);
                     setRedirect(getSeoUrl(['name' => $type->name]), false, 302, _NODE_PENDING);
                 }
             } catch (NodeException $err) {
@@ -998,7 +1002,7 @@ function setNodeAsset(): void {
 # A report that a resource does not work: CSRF, one report a minute for a visitor, and the writer stores the first report once
 # The answer returns to the material the resource belongs to, which is the page the report came from, and to the list of the type only when the material can no longer be read
 function setNodeReport(): void {
-    global $conf;
+    global $conf, $db;
     $id = getNodeNumber('id', 404);
     if (!$id) setNodeDeny(404);
     if (!checkSiteToken(getVar('post', 'token', 'raw', ''))) setNodeDeny(403);
@@ -1020,7 +1024,8 @@ function setNodeReport(): void {
     } catch (NodeException) {
         $nid = 0;
     }
-    setRedirect(getSeoUrl(['name' => $type->name] + ($nid ? ['op' => 'view', 'id' => $nid] : [])), true, 302, _NODE_REPORTED);
+    $path = $nid ? ((new Route($db))->getRouteList('node', [$nid])[$nid] ?? null) : null;
+    setRedirect(getSeoUrl(['name' => $type->name] + ($nid ? ['op' => 'view', 'id' => $nid, 'route' => $path] : [])), true, 302, _NODE_REPORTED);
 }
 
 # The owner closes or reopens one request of support: CSRF, the expected version of its card and the wanted state; the answer returns to the request
@@ -1045,7 +1050,7 @@ function setNodeSupport(): void {
     } catch (NodeException $err) {
         setNodeDeny(getNodeStatus($err));
     }
-    setRedirect(getSeoUrl(['name' => $type->name, 'op' => 'view', 'id' => $id]), false, 302, _NODE_SSAVED);
+    setRedirect(getSeoUrl(['name' => $type->name, 'op' => 'view', 'id' => $id, 'route' => null]), false, 302, _NODE_SSAVED);
 }
 
 if (!defined('ADMIN_FILE')) {
@@ -1055,7 +1060,7 @@ if (!defined('ADMIN_FILE')) {
     $nway = strtoupper($_SERVER['REQUEST_METHOD'] ?? 'GET');
     if (!isset($nops[$op])) {
         $nmove = getNodeLegacyUrl($conf['name'], $op, getVar('get', 'id', 'num', 0), getVar('get', 'cat', 'num', 0));
-        if ($nmove !== '') setRedirect($nmove, false, 301);
+        if ($nmove !== '') setSeoMove(['url' => $nmove]);
         setNodeDeny(404);
     }
     if (!in_array($nway, $nops[$op], true)) setNodeDeny(405, $nops[$op]);

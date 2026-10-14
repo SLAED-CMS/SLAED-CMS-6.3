@@ -54,7 +54,7 @@ function recommend(): void {
         ]),
     ]);
     $cont .= $tpl->getHtmlPart('form-add', [
-        'action' => 'index.php?name='.$conf['name'],
+        'action' => getSeoUrl(['name' => $conf['name']]),
         'method' => 'post',
         'form_name' => 'post',
         'no_enctype' => true,
@@ -93,7 +93,7 @@ function send(): void {
         $mailer->addQueue(['kind' => 'recommend', 'email' => $femail, 'title' => $subject, 'body' => $message, 'sender' => $semail, 'prio' => 3]);
         if (is_user()) $pnt->addEvent('recommend', 'recommend', 'req:'.bin2hex(random_bytes(16)), intval($user[0]));
         setHead(['title' => _RECOMMTITLE]);
-        $meta = $tpl->getHtmlFrag('meta-refresh', ['url' => 'index.php?name='.$conf['name'], 'secs' => 10]);
+        $meta = $tpl->getHtmlFrag('meta-refresh', ['url' => getSeoUrl(['name' => $conf['name']]), 'secs' => 10]);
         echo $tpl->getHtmlFrag('title', ['title' => _RECOMMTITLE, 'is_level_one' => true])
             .$tpl->getHtmlFrag('alert', ['is_warn' => false, 'messages' => [_FREFERENCE.' '.$fname.'.', _THANKSREC], 'meta' => $meta]);
         setFoot();

@@ -14,17 +14,17 @@ function voting(): void {
     $onum = ($conf['multilingual'] == 1)
         ? "(lang = '".$locale."' OR lang = '') AND modul = '' AND time <= NOW() AND (enddate >= NOW() AND status = '0' OR status = '1')"
         : "modul = '' AND time <= NOW() AND (enddate >= NOW() AND status = '0' OR status = '1')";
-    $num = getVar('get', 'num', 'num', '1');
+    $num = getVar('get', 'page', 'num', 1);
     $offset = (int)(($num - 1) * $conf['voting']['num']);
     setHead(['title' => _VOTING, 'kind' => 'collection']);
     $cont = $tpl->getHtmlFrag('title', ['title' => _VOTING, 'is_level_one' => true]);
-    $result = $db->getSqlQuery('SELECT id, title, answer, time, enddate, comments, acomm, typ'
-        .' FROM '.PREFIX_DB.'_voting WHERE '.$onum.' ORDER BY id DESC LIMIT '.$offset.', '.$conf['voting']['num']);
+    $result = $db->getSqlQuery('SELECT v.id, v.title, v.answer, v.time, v.enddate, v.comments, v.acomm, v.typ, r.path FROM '.PREFIX_DB.'_voting AS v'
+        .' LEFT JOIN '.PREFIX_DB.'_routes AS r ON r.kind = \'poll\' AND r.oid = v.id AND r.cur = 1 WHERE '.$onum.' ORDER BY v.id DESC LIMIT '.$offset.', '.$conf['voting']['num']);
     if ($db->getSqlRowCount($result) > 0) {
         $rows = '';
         $ismoder = is_moder($conf['name']);
-        while ([$id, $stitle, $answer, $date, $enddate, $comm, $acomm, $typ] = $db->getSqlRow($result)) {
-            $thref = getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $id, 'title' => $stitle]);
+        while ([$id, $stitle, $answer, $date, $enddate, $comm, $acomm, $typ, $path] = $db->getSqlRow($result)) {
+            $thref = getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $id, 'route' => $path]);
             $comm = ($acomm && $comm) ? $comm : _NO;
             $vote = array_sum(explode('|', $answer));
             $type = ($typ == '1') ? _VOPEN : _VCLOSE;
@@ -58,8 +58,8 @@ function voting(): void {
                 'end_label' => _VOTING_END,
             ];
             if ($ismoder) {
-                $edit = $afile.'.php?name=voting&op=add&id='.$id;
-                $del = $afile.'.php?name=voting&op=delete&id='.$id.'&refer=1';
+                $edit = HOME_PATH.$afile.'.php?name=voting&op=add&id='.$id;
+                $del = HOME_PATH.$afile.'.php?name=voting&op=delete&id='.$id.'&refer=1';
                 $row += getTplEditMenu($edit, $del, $stitle);
             }
             $rows .= $tpl->getHtmlPart('voting-home', $row);
@@ -101,8 +101,10 @@ function view(): void {
         .' WHERE v.id = :id AND v.modul = \'\' AND v.time <= NOW() AND (v.enddate >= NOW() AND v.status = \'0\' OR v.status = \'1\')', ['id' => $id]);
     if ($db->getSqlRowCount($result) > 0) {
         [$title, $date, $acomm, $route] = $db->getSqlRow($result);
+        setSeoMove(['route' => $route]);
         setHead([
             'title' => $title,
+            'route' => $route,
             'kind' => 'website',
             'ctitle' => _VOTING,
             'desc' => cutstr(trim(strip_tags($title)), 160),
@@ -114,7 +116,7 @@ function view(): void {
             'content' => getVotingView($id, $conf['name']),
         ]);
         $cont = $tpl->getHtmlFrag('block-content', ['is_post_vote' => true, 'content' => $vote]);
-        if ($acomm) $cont .= setComShow($id, $acomm);
+        if ($acomm) $cont .= setComShow($id, $acomm, $route);
     } else {
         setError(404);
     }

@@ -466,7 +466,7 @@ final class EditorFormatTest extends TestCase
         $this->assertSame(_PREVIEW, $kit['preview_text'] ?? null, 'The preview has no name');
         $this->assertSame('word _EDITOR_SAMPLE', $kit['sample_text'] ?? null, 'The link to the sample has no name');
         $editor = (string)file_get_contents(BASE_DIR.'/core/classes/editor.php');
-        $this->assertStringContainsString("'url' => 'index.php?go='.(defined('ADMIN_FILE') ? '5' : '1').'&op=getEditorPreview'", $editor,
+        $this->assertStringContainsString("'url' => HOME_PATH.'index.php?go='.(defined('ADMIN_FILE') ? '5' : '1').'&op=getEditorPreview'", $editor,
             'A text is not previewed by the route of its door');
         $this->assertStringContainsString("'preview' => 'text',", (string)file_get_contents(BASE_DIR.'/core/helpers.php'), 'The texts of the site are not previewed');
         foreach (['lite', 'admin'] as $theme) {

@@ -28,7 +28,7 @@ function getSearchState(): array {
     $word = trim(getVar('req', 'word', 'word', ''));
     $mod = getVar('req', 'mod', 'var', '');
     $mod = in_array($mod, $mods, true) ? $mod : '';
-    $num = getVar('req', 'num', 'num', 1);
+    $num = getVar('req', 'page', 'num', 1);
     $stop = ($word !== '' && mb_strlen($word) < (int)$conf['search']['slet']) ? _SEARCHLETMIN.': '.$conf['search']['slet'] : '';
     return [
         'mods' => $mods,
@@ -69,7 +69,7 @@ function getSearchForm(array $state): string {
         'is_required' => true,
     ]);
     return $tpl->getHtmlFrag('search-form', [
-        'action' => 'index.php?name='.$conf['name'],
+        'action' => getSeoUrl(['name' => $conf['name']]),
         'mod_html' => $mod_html,
         'word_html' => $word_html,
         'ok_label' => _SEARCH,
@@ -98,6 +98,7 @@ function getSearchItem(string $mod, string $url, string $edithref, array $data):
         'safe' => (bool)($data['safe'] ?? false),
         'trust' => (bool)($data['trust'] ?? false),
         'nick' => $data['nick'] ?? null,
+        'upath' => $data['upath'] ?? null,
         'user' => $data['user'] ?? null,
         'post' => (bool)($data['post'] ?? false),
         'comments' => isset($data['comments']) && $data['comments'] !== null ? (int)$data['comments'] : null,
@@ -106,9 +107,7 @@ function getSearchItem(string $mod, string $url, string $edithref, array $data):
 }
 
 function getSearchUrl(array $params, string $word, string $anchor = ''): string {
-    $url = getSeoUrl($params);
-    if ($word !== '') $url .= (str_contains($url, '?') ? '&' : '?').'word='.urlencode($word);
-    return $url.$anchor;
+    return getSeoUrl($params + (($word !== '') ? ['word' => urlencode($word)] : [])).$anchor;
 }
 
 function getSearchMap(): array {
@@ -130,18 +129,20 @@ function getSearchForum(array $state): array {
     }
     $pars['lim'] = $state['lim'];
     $result = $db->getSqlQuery(
-        'SELECT f.id, f.pid, f.name, f.title, f.time, f.cid, f.body, f.comments, f.counter, u.name'
+        'SELECT f.id, f.pid, f.name, f.title, f.time, f.cid, f.body, f.comments, f.counter, u.name, r.path, ur.path'
         .' FROM '.PREFIX_DB.'_forum AS f LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.id)'
+        .' LEFT JOIN '.PREFIX_DB.'_routes AS ur ON ur.kind = \'user\' AND ur.oid = u.id AND ur.cur = 1'
+        .' LEFT JOIN '.PREFIX_DB.'_routes AS r ON r.kind = \'topic\' AND r.oid = f.id AND r.cur = 1'
         .' WHERE '.$cond.' f.pid = \'0\' AND f.time <= NOW() AND f.status != \'0\' AND (f.title LIKE :worda OR f.body LIKE :wordb) ORDER BY f.time DESC LIMIT :lim',
         $pars
     );
-    while ([$mid, $pid, $user, $titl, $time, $cid, $cont, $comm, $reads, $nick] = $db->getSqlRow($result)) {
+    while ([$mid, $pid, $user, $titl, $time, $cid, $cont, $comm, $reads, $nick, $path, $upath] = $db->getSqlRow($result)) {
         $tid = !$pid ? $mid : $pid;
-        $url = getSearchUrl(['name' => 'forum', 'op' => 'view', 'id' => $tid, 'title' => $titl], $state['word']);
-        $edit = 'index.php?name=forum&op=add&cat='.$cid.'&id='.$tid.'&pid='.$pid;
+        $url = getSearchUrl(['name' => 'forum', 'op' => 'view', 'id' => $tid, 'route' => $path], $state['word']);
+        $edit = getSeoUrl(['name' => 'forum', 'op' => 'add', 'id' => $tid, 'cat' => $cid, 'pid' => $pid]);
         $rows[] = getSearchItem('forum', $url, $edit, [
             'title' => $titl, 'time' => $time, 'cid' => $cid, 'content' => $cont,
-            'nick' => $nick, 'user' => $user, 'post' => true, 'comments' => $comm, 'reads' => $reads,
+            'nick' => $nick, 'upath' => $upath, 'user' => $user, 'post' => true, 'comments' => $comm, 'reads' => $reads,
         ]);
     }
     return $rows;
@@ -167,8 +168,8 @@ function getSearchNode(array $state, array $types, int $skip): array {
             $list = $query->setNodePage($num, $size)->getNodeList();
             foreach ($list as $node) {
                 $type = $tmap[$node->tid];
-                $url = getSearchUrl(['name' => $type->name, 'op' => 'view', 'id' => $node->id, 'title' => $node->title], $state['word']);
-                $rows[] = getSearchItem($type->name, $url, $afile.'.php?name=node&op=edit&id='.$node->id.'&type='.$type->name, [
+                $url = getSearchUrl(['name' => $type->name, 'op' => 'view', 'id' => $node->id, 'route' => $node->path], $state['word']);
+                $rows[] = getSearchItem($type->name, $url, HOME_PATH.$afile.'.php?name=node&op=edit&id='.$node->id.'&type='.$type->name, [
                     'title' => htmlspecialchars($node->title, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'), 'time' => (string)$node->pubdate, 'cid' => $node->cid,
                     'content' => $node->intro, 'safe' => true, 'trust' => true,
                     'comments' => $type->settings['features']['comments'] ? $node->comnum : null, 'reads' => $node->views,
@@ -240,7 +241,7 @@ function getSearchLine(array $row, array $state, int $numb): string {
         $meta .= $tpl->getHtmlFrag('span', ['is_card_reads' => true, 'title' => _READS, 'text' => (string)$row['reads']]);
     }
     if ($row['post']) {
-        $pval = $row['nick'] ? user_info($row['nick']) : ($row['user'] ?: _ANONYM);
+        $pval = $row['nick'] ? user_info($row['nick'], $row['upath']) : ($row['user'] ?: _ANONYM);
         $meta .= $tpl->getHtmlFrag('inline-badge', ['title_text' => _POSTEDBY, 'label_html' => $pval, 'is_media_post' => true]);
     }
     $aside = '';
@@ -274,10 +275,10 @@ function getSearchList(array $rows, int $anum, array $state): string {
         $numb++;
     }
     if (!$anum) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _NOMATCHES]);
-    $pref = 'mod='.$state['mod'].'&word='.urlencode($state['word']).'&';
+    $pref = ['mod' => $state['mod'], 'word' => urlencode($state['word'])];
     $cont .= ($anum > $snum) ? getPageNumbers($conf['name'], $anum, $pnum, $snum, $pref, $state['snump'], $page) : $tpl->getHtmlPart('navi-lower', [
         'back_button' => ['button_type' => 'button', 'title' => _BACK, 'label' => _BACK, 'is_back' => true, 'is_navi_lower' => true],
-        'home_link' => ['href' => 'index.php?name='.$conf['name'], 'title' => _PAGEHOME, 'label' => _PAGEHOME, 'is_navi_lower' => true],
+        'home_link' => ['href' => getSeoUrl(['name' => $conf['name']]), 'title' => _PAGEHOME, 'label' => _PAGEHOME, 'is_navi_lower' => true],
         'top_link' => ['href' => '#top', 'title' => _PAGETOP, 'label' => _PAGETOP, 'is_navi_lower' => true],
     ]);
     return $cont;

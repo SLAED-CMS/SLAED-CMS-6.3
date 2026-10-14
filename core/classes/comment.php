@@ -330,9 +330,10 @@ class Comment {
         $last = 0;
         for ($i = 0; $i < 10 && count($out) < $limit; $i++) {
             $pars = ['uid' => $uid, 'stat' => CommentStatus::Published->value] + ($last ? ['last' => $last] : []);
-            $sql = 'SELECT '.self::FIELDS.' FROM '.PREFIX_DB.'_comment WHERE uid = :uid AND status = :stat AND deleted IS NULL'.($last ? ' AND id < :last' : '')
-                .' ORDER BY id DESC LIMIT 0, '.$size;
-            $rows = array_map(fn(array $v): array => $this->getRowData($v), $this->db->getSqlRows($this->db->getSqlQuery($sql, $pars)) ?: []);
+            $sql = 'SELECT '.self::FIELDS.', (SELECT r.path FROM '.PREFIX_DB.'_routes AS r WHERE r.oid = c.cid AND r.cur = 1'
+                .' AND r.kind = CASE c.modul WHEN \'account\' THEN \'user\' WHEN \'voting\' THEN \'poll\' ELSE \'node\' END) AS path FROM '.PREFIX_DB.'_comment AS c'
+                .' WHERE uid = :uid AND status = :stat AND deleted IS NULL'.($last ? ' AND id < :last' : '').' ORDER BY id DESC LIMIT 0, '.$size;
+            $rows = array_map(fn(array $v): array => $this->getRowData($v) + ['path' => $v['path']], $this->db->getSqlRows($this->db->getSqlQuery($sql, $pars)) ?: []);
             $refs = [];
             foreach ($rows as $row) if ($this->checkNodeKind($row['modul']) && $row['cid'] > 0) $refs[$row['cid']] = $row['modul'];
             $open = [];
@@ -1037,7 +1038,8 @@ class Comment {
             $pars['u'.$key] = $val;
         }
         $sql = 'SELECT u.id, u.name, u.rank, u.email, u.website, u.avatar, u.regdate, u.origin, u.sig, u.viewmail, u.points, u.warnings, u.gender, u.votes, u.tvotes,'
-            .' g.name AS gnam, g.rank AS grnk, g.color AS gclr FROM '.PREFIX_DB.'_users AS u'
+            .' g.name AS gnam, g.rank AS grnk, g.color AS gclr, r.path FROM '.PREFIX_DB.'_users AS u'
+            .' LEFT JOIN '.PREFIX_DB.'_routes AS r ON r.kind = \'user\' AND r.oid = u.id AND r.cur = 1'
             .' LEFT JOIN '.PREFIX_DB.'_groups AS g ON ((g.extra = 1 AND u.grp = g.id) OR (g.extra != 1 AND u.points >= g.points))'
             .' WHERE u.id IN ('.implode(', ', $keys).') ORDER BY g.extra ASC, g.points ASC';
         $out = [];
@@ -1061,6 +1063,7 @@ class Comment {
                 'gname' => (string)($row['gnam'] ?? ''),
                 'grank' => (string)($row['grnk'] ?? ''),
                 'gcolor' => (string)($row['gclr'] ?? ''),
+                'path' => $row['path'],
             ];
         }
         return $out;

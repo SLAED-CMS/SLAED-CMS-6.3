@@ -167,7 +167,7 @@ class Editor {
     private static function getViewData(string|array $view, array $data): array {
         if (is_array($view)) return $view['vals'] ? $view : [];
         return [
-            'url' => 'index.php?go='.(defined('ADMIN_FILE') ? '5' : '1').'&op=getEditorPreview',
+            'url' => HOME_PATH.'index.php?go='.(defined('ADMIN_FILE') ? '5' : '1').'&op=getEditorPreview',
             'token' => getSiteToken(),
             'mod' => (string)($data['mod'] ?? ''),
             'store' => (string)($data['store'] ?? ''),

@@ -18,7 +18,7 @@
         <path{% if lit.seven %} class="sl-is-on"{% endif %} d="M330 72 C380 100 410 130 450 173"></path>
         <path{% if lit.eight %} class="sl-is-on"{% endif %} d="M570 274 C525 245 490 210 450 173"></path>
       </svg>
-      <div class="sl-pres-map-core"><i class="sl-pres-orbit"></i><img src="templates/{{ theme }}/images/logos/{{ logo }}" alt="SLAED" width="64" height="64"></div>
+      <div class="sl-pres-map-core"><i class="sl-pres-orbit"></i><img src="{{ root }}templates/{{ theme }}/images/logos/{{ logo }}" alt="SLAED" width="64" height="64"></div>
       {% for item in mods %}{% include 'fragments/presentation-module.html' with item %}{% endfor %}
     </div>
     <div class="sl-pres-detail">

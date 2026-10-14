@@ -85,7 +85,7 @@ function referers(): void {
         $rows = [];
         for ($i = $offset; $i < $tnum; $i++) {
             if (isset($massiv[$i]) && $massiv[$i] != '') {
-                $name = ($massiv[$i][1]) ? user_info($massiv[$i][2]) : $massiv[$i][2];
+                $name = ($massiv[$i][1]) ? user_info($massiv[$i][2], null) : $massiv[$i][2];
                 $words = engines_word($massiv[$i][4]) ?: _NO;
                 $rows[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
                     'cells' => [

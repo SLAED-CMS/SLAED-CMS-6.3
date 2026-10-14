@@ -224,7 +224,7 @@ function getTplPager(array $data = []): string {
     $where = $data['where'] ?? '';
     $mod = $data['mod'] ?? '';
     $anchor = $data['anchor'] ?? '';
-    $n = $data['n'] ?? 'num';
+    $n = $data['n'] ?? (defined('ADMIN_FILE') ? 'num' : 'page');
     $url = html_entity_decode($data['url'] ?? '', ENT_QUOTES, 'UTF-8');
     $targetid = (string)($data['target_id'] ?? '');
     $pushurl = !empty($data['push_url']);
@@ -240,7 +240,7 @@ function getTplPager(array $data = []): string {
     $pages = (int)ceil($cnt / $limit);
     $num = max(1, min(getVar('get', $n, 'num', 1), $pages));
     $mkurl = static function(int $i) use ($mod, $url, $n, $anchor, $afile, $urlx): string {
-        if (defined('ADMIN_FILE')) return $afile.'.php?'.$url.$n.'='.$i.$anchor;
+        if (defined('ADMIN_FILE')) return HOME_PATH.$afile.'.php?'.$url.$n.'='.$i.$anchor;
         $params = $mod ? ['name' => $mod] : [];
         if ($urlx) $params = array_merge($params, $urlx);
         $params[$n] = $i;
@@ -275,14 +275,14 @@ function getTplAdminTabs(array $data = []): string {
         $active = (int)($data['tab'] ?? 0);
         foreach ($tabs as $idx => $label) {
             $links[] = [
-                'href' => $afile.'.php?'.($ops[$idx] ?? ''),
+                'href' => HOME_PATH.$afile.'.php?'.($ops[$idx] ?? ''),
                 'is_active' => $idx === $active,
                 'label' => $label,
                 'title' => $label,
             ];
         }
     }
-    if ($known && isAdmin(true)) $links[] = ['href' => $afile.'.php?name=security&op=logview&file=admin&modul='.$name, 'label' => _SEC_STAT_A];
+    if ($known && isAdmin(true)) $links[] = ['href' => HOME_PATH.$afile.'.php?name=security&op=logview&file=admin&modul='.$name, 'label' => _SEC_STAT_A];
     $tabs = '';
     foreach ($links as $link) {
         $tabs .= $tpl->getHtmlFrag('tabs-link', [
@@ -316,7 +316,7 @@ function setTplAdminInfoPage(array $data = []): void {
     $tabs = $data['tabs'] ?? [];
     $tab = array_key_exists('tab', $data) ? (int)$data['tab'] : ($tabs ? count($tabs) - 1 : 0);
     $mod = $data['mod'] ?? 'info';
-    $action = $data['action_url'] ?? ($afile.'.php?name='.$name.'&op=info');
+    $action = $data['action_url'] ?? (HOME_PATH.$afile.'.php?name='.$name.'&op=info');
     $save = $data['save_flag'] ?? 'save_info';
     $submit = $data['submit_label'] ?? _SAVECHANGES;
     $fdoc = static function(string $path): string {
@@ -457,7 +457,7 @@ function getTplUserSearchInput(array $data = []): string {
     $name = $data['name'] ?? 'uname';
     $inpid = $data['input_id'] ?? $name;
     $list = $data['list_id'] ?? ($inpid.'_list');
-    $endpoint = $data['endpoint'] ?? 'index.php?go=1&op=getUserList';
+    $endpoint = $data['endpoint'] ?? HOME_PATH.'index.php?go=1&op=getUserList';
     $mlen = (int)($data['minlength'] ?? 1);
     $tip = (string)($data['tip'] ?? '');
     $tiphtml = '';
@@ -622,7 +622,7 @@ function getTplPostAction(array $hide, string $icon, string $title, string $conf
     foreach ($hide as $key => $val) {
         $html .= $tpl->getHtmlFrag('hidden', ['name_attr' => (string)$key, 'value_attr' => (string)$val, 'input_attr' => '']);
     }
-    $out = ['href' => $afile.'.php', 'form_id' => 'slpost'.$salt.(++$seq), 'hidden' => $html, 'icon_name' => $icon, 'title' => $title];
+    $out = ['href' => HOME_PATH.$afile.'.php', 'form_id' => 'slpost'.$salt.(++$seq), 'hidden' => $html, 'icon_name' => $icon, 'title' => $title];
     if ($confirm !== '') $out['confirm_text'] = $confirm;
     return $out;
 }
@@ -852,10 +852,10 @@ function getEditorFileKit(string $id, array $data): array {
         'maxheight' => (int)($rul['maxheight'] ?? 0),
         'token' => $upl ? getSiteToken('upload') : '',
         'ajax' => $upl ? getSiteToken() : '',
-        'upload' => $upl ? 'index.php?go=4&op=editorUpload&place='.rawurlencode($plc) : '',
-        'files' => $upl ? 'index.php?go=4&op=editorFiles&place='.rawurlencode($plc) : '',
-        'remove' => $mdr ? 'index.php?go=4&op=editorDelete&place='.rawurlencode($plc) : '',
-        'archive' => $mdr ? 'index.php?go=4&op=editorArchive&place='.rawurlencode($plc) : '',
+        'upload' => $upl ? HOME_PATH.'index.php?go=4&op=editorUpload&place='.rawurlencode($plc) : '',
+        'files' => $upl ? HOME_PATH.'index.php?go=4&op=editorFiles&place='.rawurlencode($plc) : '',
+        'remove' => $mdr ? HOME_PATH.'index.php?go=4&op=editorDelete&place='.rawurlencode($plc) : '',
+        'archive' => $mdr ? HOME_PATH.'index.php?go=4&op=editorArchive&place='.rawurlencode($plc) : '',
     ];
     $html = getFileManagerWindow([
         'place' => $plc,
@@ -961,10 +961,10 @@ function getFileManagerField(array $opt): string {
         'maxheight' => (int)$rul['maxheight'],
         'token' => $upl ? getSiteToken('upload') : '',
         'ajax' => $upl ? getSiteToken() : '',
-        'upload' => ($upl && in_array('editorUpload', $ops, true)) ? 'index.php?go=4&op=editorUpload&place='.rawurlencode($plc) : '',
-        'files' => ($upl && in_array('editorFiles', $ops, true)) ? 'index.php?go=4&op=editorFiles&place='.rawurlencode($plc) : '',
-        'remove' => ($mdr && in_array('editorDelete', $ops, true)) ? 'index.php?go=4&op=editorDelete&place='.rawurlencode($plc) : '',
-        'archive' => ($mdr && in_array('editorArchive', $ops, true)) ? 'index.php?go=4&op=editorArchive&place='.rawurlencode($plc) : '',
+        'upload' => ($upl && in_array('editorUpload', $ops, true)) ? HOME_PATH.'index.php?go=4&op=editorUpload&place='.rawurlencode($plc) : '',
+        'files' => ($upl && in_array('editorFiles', $ops, true)) ? HOME_PATH.'index.php?go=4&op=editorFiles&place='.rawurlencode($plc) : '',
+        'remove' => ($mdr && in_array('editorDelete', $ops, true)) ? HOME_PATH.'index.php?go=4&op=editorDelete&place='.rawurlencode($plc) : '',
+        'archive' => ($mdr && in_array('editorArchive', $ops, true)) ? HOME_PATH.'index.php?go=4&op=editorArchive&place='.rawurlencode($plc) : '',
     ];
     $box = $tpl->getHtmlFrag('file-field', [
         'box_id' => $eid.'-box',
@@ -1077,7 +1077,7 @@ function getTplPostButton(array $hide, string $icon, string $label, string $attr
         $html .= $tpl->getHtmlFrag('hidden', ['name_attr' => (string)$key, 'value_attr' => (string)$val, 'input_attr' => '']);
     }
     return $tpl->getHtmlFrag('post-button', [
-        'action' => $afile.'.php',
+        'action' => HOME_PATH.$afile.'.php',
         'hidden' => $html,
         'icon_name' => $icon,
         'title' => $label,
@@ -1411,13 +1411,15 @@ function getModuleNavi(array $p): string {
     ]);
 }
 
-# Render page numbers from known counters
-function getPageNumbers(string $mod, int $count, int $pages, int $limit, string $url = '', int $maxpg = 8, int $num = 0, string $anchor = '', string $n = 'num'): string {
+# Render page numbers from known counters: the site takes the keys of its page as an array and the number as page, the panel a query prefix and num
+function getPageNumbers(string $mod, int $count, int $pages, int $limit, array|string $url = '', int $maxpg = 8, int $num = 0, string $anchor = '', string $n = ''): string {
     global $afile;
+    $site = !defined('ADMIN_FILE');
+    $n = $n ?: ($site ? 'page' : 'num');
     $num = $num ?: getVar('get', $n, 'num', 1);
-    $url = html_entity_decode($url, ENT_QUOTES, 'UTF-8');
-    $target = static function(int $i) use ($mod, $url, $n, $anchor, $afile): array {
-        $href = (!defined('ADMIN_FILE')) ? getSeoUrl(['name' => $mod, $url.$n => $i]).$anchor : $afile.'.php?'.$url.$n.'='.$i.$anchor;
+    $url = is_array($url) ? $url : html_entity_decode($url, ENT_QUOTES, 'UTF-8');
+    $target = static function(int $i) use ($mod, $url, $n, $anchor, $afile, $site): array {
+        $href = $site ? getSeoUrl(['name' => $mod] + (is_array($url) ? $url : []) + [$n => $i]).$anchor : HOME_PATH.$afile.'.php?'.$url.$n.'='.$i.$anchor;
         return ['href' => $href];
     };
     return getTplPagerView((int)$num, $pages, $maxpg, $target, ['count' => $count, 'limit' => $limit]);

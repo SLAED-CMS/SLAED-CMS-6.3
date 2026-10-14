@@ -128,7 +128,7 @@ final class NodeSupport implements NodeExtension {
     private function addSupportMail(NodeType $type, int $id, int $uid, string $title, string $event, int $aid): void {
         if (empty($type->settings['ext']['mail'])) return;
         getLang('node');
-        $url = getPublicUrl(['name' => $type->name, 'op' => 'view', 'id' => $id]);
+        $url = getPublicUrl(['name' => $type->name, 'op' => 'view', 'id' => $id, 'route' => null]);
         try {
             $name = (string)$this->getQueryRes('SELECT name FROM '.PREFIX_DB.'_users WHERE id = :id', ['id' => $uid])->fetchColumn();
             $list = ($event === 'staff') ? [] : $this->getMailList($type, ($event === 'owner') ? $aid : 0);

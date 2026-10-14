@@ -67,15 +67,15 @@ function addInstallTree(string $site): int {
     return $num;
 }
 
-# The router of both servers, whose document root is public/ of the copy: static files are served as they are, an address under uploads/ reaches the light path of index.php
+# The router of both servers, whose document root is public/ of the copy: static files are served as they are, every other path reaches index.php as the server rules send it
 # The entry stubs of the copy are required with the account the checks name in X-Probe-User or X-Probe-Admin put where the core reads it
 function setInstallRouter(string $site): void {
     $code = <<<'PHP'
 <?php
 $ipath = (string)parse_url((string)($_SERVER['REQUEST_URI'] ?? ''), PHP_URL_PATH);
 $iserve = ['/', '/index.php', '/admin.php', '/myadm.php', '/setup.php', '/update.php'];
-$ifile = (($ipath === '/') || str_starts_with($ipath, '/uploads/')) ? '/index.php' : $ipath;
-if ((!in_array($ipath, $iserve, true) && $ifile !== '/index.php') || !is_file(__DIR__.'/public'.$ifile)) return false;
+$ifile = in_array($ipath, $iserve, true) ? $ipath : '/index.php';
+if (($ifile === '/index.php' && $ipath !== '/index.php' && is_file(__DIR__.'/public'.$ipath)) || !is_file(__DIR__.'/public'.$ifile)) return false;
 $_SERVER['SCRIPT_NAME'] = $ifile;
 foreach (['HTTP_HOST', 'REQUEST_URI', 'HTTP_REFERER', 'HTTP_USER_AGENT', 'REMOTE_ADDR'] as $ikey) if (isset($_SERVER[$ikey])) putenv($ikey.'='.$_SERVER[$ikey]);
 $iglob = require __DIR__.'/config/global.php';
@@ -155,8 +155,8 @@ function deleteInstallServer(mixed $proc): void {
     proc_close($proc);
 }
 
-# One real exchange on the first server as guest, the administrator or a site account with the cookies of that identity: the status, the headers by lower-case name and the body
-function getInstallReply(array $who, string $method, string $path, array $post = [], array $head = []): array {
+# One exchange on the first server as guest, the administrator or a site account with its cookies: status, headers by lower-case name, body; a 301 on the site is followed once
+function getInstallReply(array $who, string $method, string $path, array $post = [], array $head = [], bool $hop = true): array {
     global $iport, $iwork;
     $curl = curl_init('http://127.0.0.1:'.$iport.'/'.ltrim($path, '/'));
     $jar = $iwork.'/jar-'.md5((string)json_encode($who)).'.txt';
@@ -177,6 +177,10 @@ function getInstallReply(array $who, string $method, string $path, array $post =
             $heads[strtolower(trim($key))] = trim($val);
         }
     }
+    unset($curl);
+    $site = 'http://127.0.0.1:'.$iport.'/';
+    $move = $heads['location'] ?? '';
+    if ($hop && $code === 301 && str_starts_with($move, $site)) return getInstallReply($who, $method, substr($move, strlen($site)), $post, $head, false);
     return ['code' => $code, 'head' => $heads, 'body' => substr($raw, $size)];
 }
 
@@ -610,12 +614,12 @@ function getInstallShowcase(PDO $pdo, array $who): array {
             'status' => '2'])[2];
     }
     $one = getInstallReply($who['guest'], 'GET', 'index.php?name=news');
-    $two = getInstallReply($who['guest'], 'GET', 'index.php?name=news&num=2');
+    $two = getInstallReply($who['guest'], 'GET', 'index.php?name=news&page=2');
     $cat = getInstallReply($who['guest'], 'GET', 'index.php?name=news&cat='.$cid);
     $item = getInstallReply($who['guest'], 'GET', 'index.php?name=news&op=view&id='.$ids[0]);
     return [
         'made' => [$made['code'], $cid > 0, count(array_filter($ids))],
-        'pages' => [$one['code'], str_contains($one['body'], 'num=2'), $two['code'], getInstallReply($who['guest'], 'GET', 'index.php?name=news&num=9')['code']],
+        'pages' => [$one['code'], str_contains($one['body'], 'page=2'), $two['code'], getInstallReply($who['guest'], 'GET', 'index.php?name=news&page=9')['code']],
         'cat' => [$cat['code'], str_contains($cat['body'], 'Probe category'), preg_match_all('#<article id="node-\d+"#', $cat['body'])],
         'canon' => [getInstallCanon($one['body']), getInstallCanon($two['body']), getInstallCanon($cat['body']), getInstallCanon($item['body'])],
         'ids' => [$cid, $ids[0]],

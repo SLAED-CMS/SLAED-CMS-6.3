@@ -401,7 +401,7 @@ function banlist(): void {
                 ]);
                 $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
                     'cells' => [
-                        ['is_truncate' => true, 'title_text' => (string)$binfo[0], 'content_html' => user_info($binfo[0])],
+                        ['is_truncate' => true, 'title_text' => (string)$binfo[0], 'content_html' => user_info($binfo[0], null)],
                         ['is_truncate' => true, 'title_text' => (string)($binfo[2] ?? ''), 'has_content_text' => true, 'content_text' => (string)($binfo[2] ?? '')],
                         ['content_html' => getTimeLeft((int)($binfo[1] ?? 0))],
                         ['content_html' => $acts],
