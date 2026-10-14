@@ -46,7 +46,7 @@ http://localhost/setup.php
 
 - **PHP:** 8.4+
 - **Database:** PDO MySQL-compatible server (MySQL 8.0.16+ or MariaDB 10.5.2+), InnoDB; MySQL 8.4 or MariaDB 10.11 and newer recommended, since MySQL 8.0, MariaDB 10.5 and 10.6 are out of upstream support
-- **Web Server:** Apache, Nginx, IIS, or another PHP-capable web server
+- **Web Server:** Apache or LiteSpeed with `mod_rewrite`, or nginx with the `server` block of `nginx.conf.example`; another PHP-capable server (IIS, Caddy) needs a rule of its own that sends every path that is no file or folder to `index.php`. Readable addresses are the only form of a page address and cannot be turned off
 - **Extensions:** `composer.json` requires PDO, JSON, mbstring, GD and cURL. Fileinfo, Zip and Zlib are declared under `suggest`: the upload service falls back to its own structural validators without them. SMTP over TLS uses OpenSSL and the Sendmail transport uses `proc_open`. The installer does not go on while PDO MySQL, JSON or mbstring is missing; a missing Zip or Zlib only gets a warning row, and the archives of that kind stay off
 - **Encoding:** UTF-8 / utf8mb4, collation `utf8mb4_unicode_520_ci`, the newest one both MySQL and MariaDB know
 
@@ -92,6 +92,9 @@ The installer records the mode it found as `webroot` in `config/global.php`: `pu
   `server_name`, `root` and `fastcgi_pass`. It sets the root on `public/`, sends `/uploads/` and every missing path to
   `index.php`, refuses the PHP and the markup of the themes and routes the error pages; `tests/Unit/NginxConfigTest.php`
   keeps it in step with `public/.htaccess`.
+- Any other server needs the same rule written by hand: every path that is no file or folder goes to `index.php`.
+  Without it the start page opens and every other page gets the 404 of the server, since every page of the site has
+  a readable address (`/files/moduli`) and no setting turns them off.
 
 **Shared hosting.** Pick the first variant the hosting allows:
 
