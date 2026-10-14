@@ -214,6 +214,8 @@
   /* The smallest step reads 12 in both themes and the small one 13: 11 read too small */
   --sl-font-micro: 12px;
 
+  --sl-face-body: "Magistral", Arial, sans-serif;
+
   /* The face of a quotation: a serif in italic sets the quoted words apart from the running text */
   --sl-face-quote: Georgia,
  "Times New Roman",

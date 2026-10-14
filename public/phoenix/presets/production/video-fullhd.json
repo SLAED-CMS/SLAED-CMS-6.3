@@ -3,6 +3,8 @@
     "themes": ["light", "dark"],
     "duration": 83.352,
     "fps": 30,
+    "fonts": {"body": "Magistral", "bodyFile": "../../vendor/fonts/magistral.woff2",
+        "icons": "bootstrap-icons", "iconFile": "../../vendor/fonts/bootstrap-icons.woff2"},
     "profiles": {
         "portrait": {
             "width": 1080,

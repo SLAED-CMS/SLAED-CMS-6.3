@@ -2,8 +2,8 @@
     "algorithm": "SHA-256",
     "files": {
         "README.md": {
-            "bytes": 11217,
-            "sha256": "434e894c94a246db8749581bfe1b9a3de1d05c4c3a8bb7c92a3cf52f72675830"
+            "bytes": 11626,
+            "sha256": "9494d2d3ac6baa103079c14ce69c3852f5d35a7fd344ce288177940b4a61a2d3"
         },
         "archive/assets/SLAED-Phoenix-Anthem.mp3": {
             "bytes": 1080842,
@@ -134,28 +134,28 @@
             "sha256": "2bb402860ca1d1085c15057cfe6f51d5e8accf09db8349eb9fd1e333c85d1acd"
         },
         "exports/SLAED-Phoenix-dark-1080x1920.mp4": {
-            "bytes": 35454161,
-            "sha256": "e2c433b9e15f458eff16c47742bf1b9aee3fbb701ac0b2d2aef3c2942fa563eb"
+            "bytes": 35502157,
+            "sha256": "4bff75a2fff1fe0a39690cf942b01862ea6319ced93327a7758d9e08f4da6e39"
         },
         "exports/SLAED-Phoenix-dark-1920x1080.mp4": {
-            "bytes": 38696857,
-            "sha256": "ce1bb6494f55c49cba03ab21e71d09e088621583acdb550d97a0ece8c9d0fda6"
+            "bytes": 38720051,
+            "sha256": "a58d280df95e428784670a71381b6bf7423ac69cd6243b6a66077e94e0426103"
         },
         "exports/SLAED-Phoenix-dark-720p.mp4": {
-            "bytes": 13206784,
-            "sha256": "765b7720674e37149ab342c33d6183b4e6f5fea84a440ee808df155f4c4381a5"
+            "bytes": 13741357,
+            "sha256": "a24682938cba927723bf9cd9a316c5222200fe02cf6bfcee1afe444efd8645ba"
         },
         "exports/SLAED-Phoenix-light-1080x1920.mp4": {
-            "bytes": 33912869,
-            "sha256": "ed0ac2f49e31155bb5e353abfc2aa71adff16ea72cc1d3e4624e73dfd18bcdc4"
+            "bytes": 33899630,
+            "sha256": "3e296d47090c6e0dc80a40ebc3aee3753eb29d13ea6b4d91e5f13c1e40d2e695"
         },
         "exports/SLAED-Phoenix-light-1920x1080.mp4": {
-            "bytes": 37307429,
-            "sha256": "16b4edd8ac15641ac8fd477c9785d7b0acf07d7c0c8dce54b6e3737eee48ee60"
+            "bytes": 37362709,
+            "sha256": "a0f24c65f77d6b447516dd1723a405444b73c1005fb738405fa5cf9e42745761"
         },
         "exports/SLAED-Phoenix-light-720p.mp4": {
-            "bytes": 12686317,
-            "sha256": "18f9f24968a89c8fe61aa6c2c7fd29deb9a25788f014093a8e29dc1e34eb5e0b"
+            "bytes": 13328586,
+            "sha256": "ebe83d8a4b4a0a49a4ed63979577ad1a24e26a4fe9b7da87692f96c38db2d2ac"
         },
         "images/development-environment.svg": {
             "bytes": 18921,
@@ -182,8 +182,8 @@
             "sha256": "1a434930ad2f7fc508e2a7baaa84d919b16794f378a59ee470e5bc1c2e36328e"
         },
         "index.html": {
-            "bytes": 17534,
-            "sha256": "4524622abf19b50bc9d3ad95cadf27ec8b1105fcdc8b646afd4a5d3a0e77fe96"
+            "bytes": 17795,
+            "sha256": "451b1ea3c145d489aad523320f5282f0a74392da26aee8020b24979c55ffe528"
         },
         "logos/slaed-logo-mark-gradient-blue.svg": {
             "bytes": 8998,
@@ -199,7 +199,7 @@
         },
         "manifest.json": {
             "bytes": 889,
-            "sha256": "3f3067fb50d0a04ddaa11306ecaf89848686ef2bf7ac399f201c10e5a2f8e99b"
+            "sha256": "fead77e95195185e09e9d7bed36226e00d8176372cb44840bd246fb0230b4bac"
         },
         "player/audio.js": {
             "bytes": 18743,
@@ -222,8 +222,8 @@
             "sha256": "5bf0ff2260ea4ac735bd3c60f9c3c1aa0305c6e9548c846e0755e573c3910104"
         },
         "player/styles.css": {
-            "bytes": 49617,
-            "sha256": "62e4ffba4de11878221eed33ab35d979e27d7182b3029c94ec92a68c8ea942f2"
+            "bytes": 49639,
+            "sha256": "9cbbbecb484050aa78ef0e08ab60121cca981bf8e1e202f7b59d85a2fd0d5c7c"
         },
         "player/timeline.js": {
             "bytes": 964,
@@ -258,16 +258,16 @@
             "sha256": "a1537dc41062e018ac4945e60b20264449b46b3af6059be8dbcd6ca2ed2acb62"
         },
         "presets/production/video-fullhd.json": {
-            "bytes": 1128,
-            "sha256": "3213f88ddc4d55d018fa6d5853a019e075e9f438589795c4806b8e2c9d9bf258"
+            "bytes": 1306,
+            "sha256": "9b3289cffffd5364db633c1af3281c0233c22e4ca1a61946c920e35169ef7891"
         },
         "redirect.js": {
             "bytes": 214,
             "sha256": "bf831d633c0036c0f8b9ae8834249989d4880e476101e3200497b9e1cc74b00f"
         },
         "vendor/base.css": {
-            "bytes": 37404,
-            "sha256": "86dcb73c369bbca3699d2d934012df4418478446c434454c816dcd164584d74d"
+            "bytes": 37455,
+            "sha256": "14dd48f69f05812636b3114bf5200b085e00fcc76f797c5c25baf73a8219adc9"
         },
         "vendor/fonts/bootstrap-icons.woff2": {
             "bytes": 134044,
