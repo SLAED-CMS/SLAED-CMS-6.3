@@ -174,8 +174,11 @@ into the plan, then do whatever work the step names.
 - [x] 75. URL batch 8 — reference; deletes `docs/10-URL-2026.md`. The reference is `docs/ARCHITECTURE.md`, "Address
   Boundary"; `docs/NODE.md`, "Addresses", `docs/TEMPLATES.md`, "Links In Templates", `docs/VERSIONS.md`,
   `UPGRADING.md` and `README.md` follow it. (2026-10-14)
-- [ ] 76. UPDATE batch 0 — *decision*: the open questions of the plan, the probes, the baseline. Added by the owner on
-  2026-10-15: a site learns of an update only by code it already has, so the updater goes into 8.0.
+- [x] 76. UPDATE batch 0 — *decision*: the open questions of the plan, the probes, the baseline. Added by the owner on
+  2026-10-15: a site learns of an update only by code it already has, so the updater goes into 8.0. The core carries
+  `sodium_compat` for the signature and reads a zip through its own central directory with `PharData` beside
+  `ZipArchive`; `public/sitemap.xml` leaves git and `public/robots.txt` is a site file; the whole tree ships (owner,
+  2026-10-15). (2026-10-15)
 - [ ] 77. UPDATE batch 1 — one entry: the branch `/api/` of `public/index.php`, `API_FILE` and the light core.
 - [ ] 78. UPDATE batch 2 — the core of the connector without clients, `checkApiFlood`, the reply mode `file`.
 - [ ] 79. UPDATE batch 3 — signature, keys, `files.json`, `tools/release.php` and `tools/sign.php`.
