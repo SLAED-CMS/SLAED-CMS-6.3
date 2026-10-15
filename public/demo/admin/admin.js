@@ -6,7 +6,7 @@
   const root = doc.documentElement;
   const TOTAL = 8414;
   const wide = window.matchMedia('(width > 900px)');
-  const state = { mod: '', field: 'text', q: '', view: 'all', allPages: false, fail: false, down: false, cursor: -1, restoring: false };
+  const state = { mod: '', field: 'text', q: '', view: 'all', allPages: false, fail: false, down: false, cursor: -1, restoring: false, unseen: 0 };
   let rows = [];
   let conf = null;
 
@@ -44,11 +44,76 @@
 
   /* ---------- Shell ---------- */
 
-  // Э02 The browser tab names the section, the open view of it, the panel and the site, the most important first
+  // Э02 Д8 The browser tab names the section, the open view of it, the panel and the site; queue arrivals not yet seen go first
   function setTitle() {
     const tab = doc.querySelector('[data-sl-view="' + state.view + '"]');
     const parts = [doc.body.dataset.slSection, tab ? tab.dataset.slViewName : '', 'Админ', doc.body.dataset.slSite];
-    doc.title = parts.filter(Boolean).join(' — ');
+    doc.title = (state.unseen ? '(' + state.unseen + ') ' : '') + parts.filter(Boolean).join(' — ');
+  }
+
+  // Д4 One engine for every sound of the system; a page without it stays silent
+  function setSound(id) {
+    if (window.slSound) window.slSound.setPlay(id);
+  }
+
+  // Д4 The sound switch of Options, kept next to the motion; turning it on answers with the success tone
+  function setSoundOn(on, keep = true) {
+    const snd = window.slSound;
+    if (!snd) return;
+    if (keep) {
+      snd.conf.mute = !on;
+      snd.setSave();
+      snd.setVolume();
+      if (on) setSound('alOk');
+    }
+    doc.querySelectorAll('#sl-o-sound').forEach((s) => { s.value = snd.conf.mute ? '0' : '1'; });
+    if (setSoundOn.onset) setSoundOn.onset(!snd.conf.mute);
+  }
+
+  // В08.8 Д7 The question before a change is lost comes with the warning tone
+  function setAsk(text, run) {
+    setSound('alWarn');
+    window.setConfirmTask(text, run);
+  }
+
+  // Д8 The tab is seen again: the number of new arrivals leaves its title
+  function setSeen() {
+    if (doc.hidden || !state.unseen) return;
+    state.unseen = 0;
+    setTitle();
+  }
+
+  // Д8 A comment for the queue arrives: the row enters, the bell counts and stirs, the title counts while unseen, the ear gets a low tone
+  function setQueueIn(row) {
+    if (row) {
+      const held = doc.querySelector('[data-sl-row][data-sl-cursor]');
+      const errs = [...doc.querySelectorAll('[data-sl-error]')].filter((n) => !n.hidden);
+      rows = [...doc.querySelectorAll('[data-sl-row]')];
+      setList(true);
+      errs.forEach((n) => { n.hidden = false; });
+      if (held && !held.hidden) {
+        state.cursor = getShown().indexOf(held);
+        held.setAttribute('data-sl-cursor', '');
+      }
+      if (!row.hidden) {
+        row.style.setProperty('--sl-d-i', '0');
+        row.setAttribute('data-sl-enter', '');
+      }
+    } else {
+      doc.querySelectorAll('[data-sl-bell-own]').forEach((n) => { n.textContent = String((Number(n.textContent) || 0) + 1); });
+      setBell();
+    }
+    doc.querySelectorAll('[data-sl-bell]').forEach((b) => {
+      b.removeAttribute('data-sl-ping');
+      void b.offsetWidth;
+      b.setAttribute('data-sl-ping', '');
+    });
+    setStatus('Новый комментарий ждёт проверки.');
+    if (doc.hidden || !doc.hasFocus()) {
+      state.unseen += 1;
+      setTitle();
+    }
+    setSound('mod');
   }
 
   // Э12 The drawer of a phone: opened by the menu button, closed by its cross, the scrim or Escape; the focus comes back to the button
@@ -131,15 +196,25 @@
     its[(at + (e.key === 'ArrowDown' ? 1 : -1) + its.length) % its.length].focus();
   }
 
-  // Э04 The bell sums every queue of the panel; the comments count is live, the others as the dashboard gives them
+  // The comments of the list that wait for a check
+  function getWaitCount() {
+    return rows.filter((r) => r.dataset.on === '0' && !r.hasAttribute('data-sl-gone')).length;
+  }
+
+  // Э04 Г8 The bell sums every queue of the panel; the comments count is live, the others as the dashboard gives them
   function setBell() {
     const given = doc.querySelector('[data-sl-bell-own]');
-    const own = rows.length ? rows.filter((r) => r.dataset.on === '0' && !r.hasAttribute('data-sl-gone')).length : Number(given ? given.textContent : 0) || 0;
+    const own = rows.length ? getWaitCount() : Number(given ? given.textContent : 0) || 0;
     let sum = own;
     doc.querySelectorAll('[data-sl-bell-own]').forEach((n) => { n.textContent = String(own); n.closest('a').hidden = own === 0; });
     doc.querySelectorAll('[data-sl-bell-n]').forEach((n) => { sum += Number(n.textContent) || 0; });
     doc.querySelectorAll('[data-sl-bell]').forEach((b) => b.setAttribute('aria-label', 'Уведомления: ' + sum));
     doc.querySelectorAll('[data-sl-bell-sum]').forEach((n) => { n.textContent = String(sum); n.hidden = sum === 0; });
+    doc.querySelectorAll('[data-sl-count-own]').forEach((n) => {
+      n.textContent = String(own);
+      n.classList.toggle('sl-chip-warn', own > 0);
+      n.classList.toggle('sl-chip-success', own === 0);
+    });
     doc.querySelectorAll('[data-sl-queue]').forEach((c) => {
       c.hidden = own === 0;
       c.querySelectorAll('[data-sl-queue-n]').forEach((x) => { x.textContent = String(own); });
@@ -152,18 +227,72 @@
     if (keep) setKept('sl.motion', on ? '1' : '0');
     doc.querySelectorAll('#sl-o-motion').forEach((s) => { s.value = on ? '1' : '0'; });
     if (setMotion.onset) setMotion.onset(on);
+    if (keep) setSaver();
   }
 
-  // Э06 Options apply on change without a reload; the colour mode and the motion take effect at once
+  // Д12 The rest of the hand before the screensaver, in ms; 0 keeps it off, one minute unless chosen
+  function getSaverWait() {
+    const wait = getKept('sl.saver');
+    return Number(wait === null ? '60000' : wait);
+  }
+
+  // Д11 The Phoenix screensaver: while it is on, the badge and the quiet ground, the scene after the rest of the hand; off, still or framed — none
+  function setSaver() {
+    const phx = window.slPhoenix;
+    const brand = doc.querySelector('.sl-brand');
+    const framed = new URLSearchParams(location.search).has('phx');
+    const token = setSaver.token = (setSaver.token || 0) + 1;
+    if (setSaver.kit) setSaver.kit.reset();
+    if (setSaver.busy && setSaver.onset) setSaver.onset(false);
+    Object.assign(setSaver, { kit: null, ctl: null, idle: null, busy: false });
+    if (framed || !phx || !brand) return;
+    doc.querySelectorAll('.phx-badge').forEach((n) => n.remove());
+    root.classList.remove('phx-lit', 'phx-crown');
+    if (!getSaverWait()) {
+      delete root.dataset.phx;
+      return;
+    }
+    root.dataset.phx = 'panel';
+    root.classList.add('phx-lit', 'phx-crown');
+    brand.insertAdjacentHTML('beforeend', '<span class="phx-badge" aria-hidden="true"><b>8.0</b> Phoenix</span>');
+    const kit = phx.getKit(window);
+    setSaver.kit = kit;
+    if (kit.still) return;
+    phx.getScene(kit).then((ctl) => {
+      if (token !== setSaver.token) return;
+      setSaver.ctl = ctl;
+      setSaver.idle = phx.setIdle(kit, ctl, () => (doc.querySelector('dialog:modal') ? 0 : getSaverWait()));
+      ctl.onframe = () => {
+        if (ctl.busy === setSaver.busy) return;
+        setSaver.busy = ctl.busy;
+        if (setSaver.onset) setSaver.onset(ctl.busy);
+      };
+    }, () => kit.reset());
+  }
+
+  // Д11 Start the screensaver now, or say why it cannot start
+  function setSaverNow() {
+    if (setSaver.idle) { setSaver.idle.sleep(); return; }
+    if (!getSaverWait()) setToast('Заставка выключена: выберите время в «Опциях» → «Заставка».', null);
+    else if (setSaver.kit && setSaver.kit.still) setToast('Движение выключено: заставки нет, только значок «8.0 Phoenix».', null);
+  }
+
+  // Э06 Д4 Д12 Options apply on change without a reload; the colour mode, the motion, the sound and the screensaver take effect at once
   function setOption(sel) {
     if (sel.name === 'mode') {
       root.dataset.theme = sel.value;
       setKept('sl.mode', sel.value);
+      setSaver();
+    }
+    if (sel.name === 'saver') {
+      setKept('sl.saver', sel.value);
+      setSaver();
     }
     if (sel.name === 'motion') setMotion(sel.value === '1');
+    if (sel.name === 'sound') setSoundOn(sel.value === '1');
   }
 
-  // Э14 The end of a session: a countdown before the work is lost, and a way to keep it
+  // Э14 Д7 The end of a session: a countdown before the work is lost, a way to keep it, the warning tone
   function setSessionEnd() {
     const box = doc.getElementById('sl-session');
     let left = 120;
@@ -172,6 +301,7 @@
     clearInterval(setSessionEnd.tick);
     setSessionEnd.tick = setInterval(() => { left -= 1; draw(); if (left <= 0) clearInterval(setSessionEnd.tick); }, 1000);
     setWindow(box, true);
+    setSound('alWarn');
   }
 
   /* ---------- Э08 Ctrl+K: sections, actions of the screen and settings in one palette of the theme ---------- */
@@ -199,6 +329,8 @@
     doc.querySelectorAll('[data-sl-conf-item]').forEach((it) => add('Настройки', 'gear', getConfLabel(it), () => setConfJump(getConfField(it).id)));
     add('Стенд', 'wifi-off', 'Смоделировать сбой сети', () => { state.fail = true; setStatus('Следующий запрос списка не дойдёт до сервера.'); });
     add('Стенд', 'hourglass-bottom', 'Смоделировать конец сессии', () => setSessionEnd());
+    add('Стенд', 'inbox', 'Смоделировать новый комментарий', () => setDemoArrive());
+    add('Стенд', 'fire', 'Запустить заставку', () => setSaverNow());
     const groups = [...new Set(cmds.map((c) => c.group))];
     const row = (c, i) => '<button type="button" role="option" tabindex="-1" aria-selected="false" class="sl-editor-pal-row" id="sl-pal-' + i + '" data-cmd="' + i + '">'
       + '<i class="bi bi-' + c.icon + '" aria-hidden="true"></i><span class="sl-editor-pal-name">' + getEsc(c.label) + '</span>'
@@ -304,7 +436,7 @@
     rows.forEach((r) => r.toggleAttribute('data-sl-checked', r.querySelector('[data-sl-check-item]').checked));
   }
 
-  // Э15 Э17 Э28 В07.1 Draw the list for the filter and the view; rows a filter brings enter, rows an action touched stay put
+  // Э15 Э17 Э28 В07.1 Д6 Draw the list for the filter and the view; rows a filter brings enter, rows an action touched stay put
   function setList(quiet, stay) {
     const table = doc.querySelector('[data-sl-list]');
     if (!table) return;
@@ -312,6 +444,7 @@
     if (!quiet && (state.fail || state.down)) {
       state.fail = false;
       doc.querySelectorAll('[data-sl-error]').forEach((n) => { n.hidden = false; n.focus(); });
+      setSound('alErr');
       return;
     }
     if (!quiet) {
@@ -413,7 +546,7 @@
     if (state.view !== 'config' || to === 'config' || !conf || !conf.isDirty()) { setFromUrl(); return; }
     const away = location.href;
     setUrl();
-    window.setConfirmTask('Изменения конфигурации не сохранены. Уйти без сохранения?', () => {
+    setAsk('Изменения конфигурации не сохранены. Уйти без сохранения?', () => {
       conf.setClean(true);
       history.pushState(null, '', away);
       setFromUrl();
@@ -436,7 +569,7 @@
   // Э17 В08.8 Switch the view in place; leaving a changed form asks first
   function setView(view, force) {
     if (!force && state.view === 'config' && view !== 'config' && conf && conf.isDirty()) {
-      window.setConfirmTask('Изменения конфигурации не сохранены. Уйти без сохранения?', () => { conf.setClean(true); setView(view, true); });
+      setAsk('Изменения конфигурации не сохранены. Уйти без сохранения?', () => { conf.setClean(true); setView(view, true); });
       return;
     }
     if (view !== state.view && !state.restoring) {
@@ -484,12 +617,13 @@
     setTimeout(drop, 10000);
   }
 
-  // Э22 Э23 Э29 Act on rows at once, without a question: the focus moves to the next row that stays, the change can be undone
+  // Э22 Э23 Э29 Д5 Д9 Act on rows at once, without a question: the focus moves on, the change can be undone, an emptied queue sounds a win
   function setAct(list, act) {
     if (!list.length) return;
     const all = state.allPages;
     const held = doc.activeElement && doc.activeElement.closest ? doc.activeElement.closest('[data-sl-row]') : null;
     const was = list.map((r) => [r, r.dataset.on, r.hasAttribute('data-sl-gone')]);
+    const waits = getWaitCount();
     list.forEach((r) => {
       if (act === 'del') r.setAttribute('data-sl-gone', '');
       else setRowOn(r, act === 'on');
@@ -508,9 +642,10 @@
       was.forEach(([r, on, gone]) => { setRowOn(r, on === '1'); r.toggleAttribute('data-sl-gone', gone); });
       setList(false, true);
     });
+    setSound(waits > 0 && getWaitCount() === 0 ? 'win' : 'alOk');
   }
 
-  // Н6 A section is switched off or on at once, without a question, and can be switched back for ten seconds
+  // Н6 Д5 A section is switched off or on at once, without a question, and can be switched back for ten seconds
   function setSectionOn(btn) {
     const item = btn.closest('[data-sl-menu-item]');
     const off = !item.hasAttribute('data-sl-off');
@@ -527,6 +662,7 @@
     };
     draw(off);
     setToast('Раздел «' + name + '» ' + (off ? 'деактивирован' : 'активирован') + '.', () => draw(!off));
+    setSound('alOk');
   }
 
   // Н4 Refresh the counters of the watch in place; the stand has no live sessions, so the figures stay
@@ -584,10 +720,10 @@
   }
 
   // Э20 A relative time on the screen, the exact moment in the title and the datetime
-  function setAgo() {
+  function setAgo(scope = doc) {
     const rtf = new Intl.RelativeTimeFormat('ru', { numeric: 'auto' });
     const steps = [['year', 31536000], ['month', 2592000], ['week', 604800], ['day', 86400], ['hour', 3600], ['minute', 60]];
-    doc.querySelectorAll('time[data-sl-ago]').forEach((t) => {
+    scope.querySelectorAll('time[data-sl-ago]').forEach((t) => {
       const sec = (Date.parse(t.dateTime) - Date.now()) / 1000;
       const [unit, size] = steps.find(([, s]) => Math.abs(sec) >= s) || steps[steps.length - 1];
       t.title = t.textContent;
@@ -620,7 +756,7 @@
     field.focus();
   }
 
-  // В08.5 В08.6 В08.7 В08.8 Changes against the saved values, the dot of the tab, judgement after the first save, search, leave guard
+  // В08.5 В08.6 В08.7 В08.8 Д5 Д6 Changes against the saved values, the dot of the tab, judgement after the first save, search, leave guard
   function setConfForm() {
     const form = doc.querySelector('[data-sl-conf]');
     if (!form) return null;
@@ -670,10 +806,12 @@
           + getEsc(m) + '</a></li>').join('');
         sum.hidden = false;
         sum.focus();
+        setSound('alErr');
         return;
       }
       setClean(false);
       setToast('Конфигурация сохранена.', null);
+      setSound('alOk');
     });
     form.addEventListener('focusout', (e) => { if (judged && e.target.name && e.target.type !== 'radio') setErr(e.target, getRule(e.target)); });
     form.addEventListener('input', setDot);
@@ -691,7 +829,7 @@
       const a = e.target.closest('a[href]');
       if (!a || a.getAttribute('href').startsWith('#') || a.target === '_blank' || a.hasAttribute('data-sl-view') || !isDirty()) return;
       e.preventDefault();
-      window.setConfirmTask('Изменения конфигурации не сохранены. Уйти без сохранения?', () => { setClean(true); location.href = a.href; });
+      setAsk('Изменения конфигурации не сохранены. Уйти без сохранения?', () => { setClean(true); location.href = a.href; });
     }, true);
     setConfFind();
     return { isDirty, setClean };
@@ -789,6 +927,7 @@
       clearInterval(setSessionEnd.tick);
       setWindow(doc.getElementById('sl-session'), false);
       setToast('Сессия продлена на 30 минут.', null);
+      setSound('alOk');
     }
   }
 
@@ -858,10 +997,22 @@
       if (e.key === 'Escape') { e.preventDefault(); setWindow(doc.getElementById('sl-palette'), false); }
     });
     window.addEventListener('popstate', setBackGuard);
+    doc.addEventListener('visibilitychange', setSeen);
+    window.addEventListener('focus', setSeen);
+    if (window.slSound) window.slSound.onload = () => setSoundOn(false, false);
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { if ((root.dataset.theme || 'auto') === 'auto') setSaver(); });
+    window.matchMedia('(prefers-reduced-motion: reduce)').addEventListener('change', setSaver);
+    window.addEventListener('storage', (e) => {
+      if (e.key !== 'sl.saver') return;
+      doc.querySelectorAll('#sl-o-saver').forEach((s) => { s.value = String(getSaverWait()); });
+      setSaver();
+    });
     wide.addEventListener('change', setMenuFind);
     const mode = doc.getElementById('sl-o-mode');
     if (mode) mode.value = root.dataset.theme || 'auto';
     setMotion(!root.hasAttribute('data-sl-still'), false);
+    setSoundOn(false, false);
+    doc.querySelectorAll('#sl-o-saver').forEach((s) => { s.value = String(getSaverWait()); });
     conf = setConfForm();
     setPalette();
     setAgo();
@@ -871,6 +1022,7 @@
     setFromUrl();
     setList(true);
     setBell();
+    setSaver();
   }
 
   /* ---------- Stand: data and marks, not part of the panel ---------- */
@@ -929,42 +1081,63 @@
       });
     });
     const data = JSON.parse(doc.getElementById('demo-rows').textContent);
-    const rtpl = doc.getElementById('sl-row-tpl').content.firstElementChild;
     const body = doc.querySelector('[data-sl-rows]');
     if (!body) return;
     const none = body.querySelector('[data-sl-none]');
-    data.rows.forEach(([id, mod, by, text, date, ip, cid, on, far, cc, land]) => {
-      const r = rtpl.cloneNode(true);
-      const iso = date.replace(/^(\d\d)\.(\d\d)\.(\d{4}) (.+)$/, '$3-$2-$1T$4');
-      const vals = { id, modname: data.mods[mod] + ' - ' + mod, cid, date, ip, text, by };
-      Object.assign(r.dataset, { id, mod, by, text, ip, modname: vals.modname, on: String(on) });
-      if (far) r.setAttribute('data-sl-far', '');
-      r.querySelectorAll('[data-r]').forEach((n) => { n.textContent = vals[n.dataset.r]; });
-      r.cells[1].title = text;
-      r.cells[2].title = vals.modname;
-      r.cells[4].dataset.sort = iso.replace(/\D/g, '');
-      r.querySelector('time').dateTime = iso;
-      r.querySelector('[data-r-tip]').setAttribute('aria-label', 'Подробности комментария ' + id);
-      r.querySelector('[data-r-dial]').setAttribute('aria-label', 'Опции комментария ' + id);
-      r.querySelector('[data-r-view]').href = '../../index.php?name=' + mod + '&op=view&id=' + cid + '#' + id;
-      r.querySelector('[data-r-reply]').href = '../../index.php?name=' + mod + '&op=view&id=' + cid + '#reply-' + id;
-      r.querySelectorAll('[data-sl-find]').forEach((b) => {
-        const name = b.dataset.slFind === 'by' ? 'Все комментарии автора «' + by + '»' : 'Все комментарии с IP ' + ip;
-        b.title = name;
-        b.setAttribute('aria-label', name);
-      });
-      const flag = r.querySelector('.sl-geo-flag');
-      flag.title = land;
-      Object.assign(flag.firstElementChild, { src: '../../templates/admin/images/flags/' + cc + '.svg', alt: land, title: land });
-      Object.assign(r.querySelector('[data-r="ip"]'), { href: 'https://whatismyipaddress.com/ip/' + ip, title: 'IP Адрес: ' + ip });
-      r.querySelector('a[data-r="by"]').href = '../../index.php?name=account&op=view&uname=' + encodeURIComponent(by);
-      const check = r.querySelector('[data-sl-check-item]');
-      check.value = id;
-      check.setAttribute('aria-label', 'Выбрать комментарий ' + id);
-      setRowOn(r, on === 1);
-      body.insertBefore(r, none);
-    });
+    data.rows.forEach((row) => addDemoRow(data, row, none));
     rows = [...body.querySelectorAll('[data-sl-row]')];
+  }
+
+  // Fill one row of the list from the stand data and put it before the given one
+  function addDemoRow(data, [id, mod, by, text, date, ip, cid, on, far, cc, land], before) {
+    const r = doc.getElementById('sl-row-tpl').content.firstElementChild.cloneNode(true);
+    const iso = date.replace(/^(\d\d)\.(\d\d)\.(\d{4}) (.+)$/, '$3-$2-$1T$4');
+    const vals = { id, modname: data.mods[mod] + ' - ' + mod, cid, date, ip, text, by };
+    Object.assign(r.dataset, { id, mod, by, text, ip, modname: vals.modname, on: String(on) });
+    if (far) r.setAttribute('data-sl-far', '');
+    r.querySelectorAll('[data-r]').forEach((n) => { n.textContent = vals[n.dataset.r]; });
+    r.cells[1].title = text;
+    r.cells[2].title = vals.modname;
+    r.cells[4].dataset.sort = iso.replace(/\D/g, '');
+    r.querySelector('time').dateTime = iso;
+    r.querySelector('[data-r-tip]').setAttribute('aria-label', 'Подробности комментария ' + id);
+    r.querySelector('[data-r-dial]').setAttribute('aria-label', 'Опции комментария ' + id);
+    r.querySelector('[data-r-view]').href = '../../index.php?name=' + mod + '&op=view&id=' + cid + '#' + id;
+    r.querySelector('[data-r-reply]').href = '../../index.php?name=' + mod + '&op=view&id=' + cid + '#reply-' + id;
+    r.querySelectorAll('[data-sl-find]').forEach((b) => {
+      const name = b.dataset.slFind === 'by' ? 'Все комментарии автора «' + by + '»' : 'Все комментарии с IP ' + ip;
+      b.title = name;
+      b.setAttribute('aria-label', name);
+    });
+    const flag = r.querySelector('.sl-geo-flag');
+    flag.title = land;
+    Object.assign(flag.firstElementChild, { src: '../../templates/admin/images/flags/' + cc + '.svg', alt: land, title: land });
+    Object.assign(r.querySelector('[data-r="ip"]'), { href: 'https://whatismyipaddress.com/ip/' + ip, title: 'IP Адрес: ' + ip });
+    r.querySelector('a[data-r="by"]').href = '../../index.php?name=account&op=view&uname=' + encodeURIComponent(by);
+    const check = r.querySelector('[data-sl-check-item]');
+    check.value = id;
+    check.setAttribute('aria-label', 'Выбрать комментарий ' + id);
+    setRowOn(r, on === 1);
+    before.parentNode.insertBefore(r, before);
+    return r;
+  }
+
+  // Д8 The stand: a comment for the queue arrives as the server would send it, in turn from the pool of the stand data
+  function setDemoArrive() {
+    const body = doc.querySelector('[data-sl-rows]');
+    let row = null;
+    if (body) {
+      const data = JSON.parse(doc.getElementById('demo-rows').textContent);
+      const turn = setDemoArrive.turn = (setDemoArrive.turn || 0) + 1;
+      const [mod, by, text, ip, cid, cc, land] = data.incoming[(turn - 1) % data.incoming.length];
+      const id = Math.max(...rows.map((r) => Number(r.dataset.id))) + 1;
+      const now = new Date();
+      const two = (n) => String(n).padStart(2, '0');
+      const date = two(now.getDate()) + '.' + two(now.getMonth() + 1) + '.' + now.getFullYear() + ' ' + [now.getHours(), now.getMinutes(), now.getSeconds()].map(two).join(':');
+      row = addDemoRow(data, [id, mod, by, text, date, ip, cid, 0, 0, cc, land], body.querySelector('[data-sl-row]') || body.querySelector('[data-sl-none]'));
+      setAgo(row);
+    }
+    setQueueIn(row);
   }
 
   // The stand: marks, their description and the helper window; dialog.show() would take the focus, so the window opens inert
@@ -1031,6 +1204,57 @@
       later();
     };
     setMotion.onset = (on) => setSeg('motion', on ? '1' : '0');
+    const sbox = doc.querySelector('[data-demo-sounds]');
+    const snd = window.slSound;
+    const SNDS = [
+      ['alOk', 'success', 'check-circle', 'Успех', 'Д5', 'Статус строки (Э22), «Удалить» (Э23), «OK» отмеченных (Э25), веер раздела (Н6, Г3), '
+        + '«Сохранить изменения» (В08), «Продлить сессию» (Э14), включение звука (Д4)', 'success'],
+      ['alErr', 'error', 'x-octagon', 'Ошибка', 'Д6', 'Сбой загрузки списка (Э28), сводка ошибок формы (В08.5)', 'fail'],
+      ['alWarn', 'warn', 'exclamation-triangle', 'Внимание', 'Д7', 'Конец сессии (Э14), «Уйти без сохранения?» (В08.8)', 'session'],
+      ['mod', 'info', 'inbox', 'Очередь модерации', 'Д8', 'Новый комментарий на проверку: колокольчик (Э04), строка очереди, чипы (Э10, Г4), «Ждут внимания» (Г8)', 'queue'],
+      ['win', 'accent', 'trophy', 'Победа', 'Д9', 'Очередь опустела действием: статус (Э22), «OK» (Э25) или удаление', 'win']
+    ];
+    const setSndDraw = () => {
+      if (!sbox || !snd) return;
+      sbox.querySelectorAll('[data-demo-snd-var]').forEach((b) => b.setAttribute('aria-pressed', String(snd.conf.pick[b.dataset.demoSndId] === b.dataset.demoSndVar)));
+      sbox.querySelectorAll('[data-demo-snd-row]').forEach((r) => r.toggleAttribute('data-off', !snd.conf.on[snd.ZONES[r.dataset.demoSndRow]] || snd.conf.mute));
+      sbox.querySelectorAll('[data-demo-snd-zone]').forEach((c) => { c.checked = snd.conf.on[c.dataset.demoSndZone]; });
+      sbox.querySelectorAll('[data-demo-snd-master]').forEach((c) => { c.checked = !snd.conf.mute; });
+      sbox.querySelectorAll('[data-demo-snd-vol]').forEach((v) => { v.value = String(snd.conf.vol); });
+      sbox.querySelectorAll('[data-demo-snd-asleep]').forEach((p) => { p.hidden = snd.getState() === 'running'; });
+    };
+    if (sbox && snd) {
+      sbox.querySelector('[data-demo-snd-list]').innerHTML = SNDS.map(([id, tone, icon, name, code, where, show]) => '<section class="demo-snd-row" data-tone="' + tone
+        + '" data-demo-snd-row="' + id + '"><h3><i class="bi bi-' + icon + '" aria-hidden="true"></i> ' + name + ' <span class="sl-chip ' + tones['Д'] + '">' + code + '</span>'
+        + '<button type="button" class="sl-linkbtn" data-demo-show="' + show + '">Показать</button></h3><p class="demo-snd-where">' + where + '</p>'
+        + '<div class="demo-snd-pick" role="group" aria-label="Вариант: ' + name + '">' + Object.entries(snd.SOUNDS[id]).map(([key, v]) => '<button type="button" class="sl-but"'
+        + ' data-demo-snd-id="' + id + '" data-demo-snd-var="' + key + '" aria-pressed="false">' + getEsc(v.name) + '</button>').join('') + '</div></section>').join('');
+      sbox.addEventListener('click', (e) => {
+        const b = e.target.closest('[data-demo-snd-var]');
+        if (!b) return;
+        const id = b.dataset.demoSndId;
+        snd.conf.pick[id] = b.dataset.demoSndVar;
+        snd.setSave();
+        setSndDraw();
+        const ac = snd.getCtx();
+        if (ac && !snd.conf.mute) ac.resume().then(() => { snd.SOUNDS[id][b.dataset.demoSndVar].play(ac.currentTime + 0.01, 1); setSndDraw(); });
+      });
+      sbox.addEventListener('change', (e) => {
+        const c = e.target;
+        if (c.matches('[data-demo-snd-master]')) setSoundOn(c.checked);
+        if (!c.matches('[data-demo-snd-zone]')) return;
+        snd.conf.on[c.dataset.demoSndZone] = c.checked;
+        snd.setSave();
+        setSndDraw();
+      });
+      sbox.querySelector('[data-demo-snd-vol]').addEventListener('input', (e) => {
+        snd.conf.vol = Number(e.target.value);
+        snd.setVolume();
+        snd.setSave();
+      });
+    }
+    setSoundOn.onset = (on) => { setSeg('sound', on ? '1' : '0'); setSndDraw(); };
+    setSaver.onset = (busy) => setSeg('saver', busy ? '1' : '0');
     const setStill = (still) => setMotion(!still);
     const setLegend = (open) => setWindow(legend, open);
     const sess = doc.getElementById('sl-session');
@@ -1038,7 +1262,9 @@
       setSeg('mode', root.dataset.theme || 'auto');
       setSeg('legend', legend.open ? '1' : '0');
       setSeg('session', sess.open ? '1' : '0');
+      if (sbox) setSeg('sounds', sbox.open ? '1' : '0');
     };
+    let flow = 0;
     const segs = {
       mode: (v) => setModeTo(v),
       marks: (v) => setOn(v === '1'),
@@ -1049,7 +1275,21 @@
         setSeg('net', v);
         setStatus(state.down ? 'Сеть стенда отключена: запросы списка не доходят до сервера.' : 'Сеть стенда снова работает.');
       },
-      session: (v) => (v === '1' ? setSessionEnd() : setWindow(sess, false))
+      session: (v) => (v === '1' ? setSessionEnd() : setWindow(sess, false)),
+      sound: (v) => setSoundOn(v === '1'),
+      sounds: (v) => { setSndDraw(); setWindow(sbox, v === '1'); },
+      saver: (v) => {
+        if (v === '1') setSaverNow();
+        else if (setSaver.ctl) setSaver.ctl.wake();
+      },
+      flow: (v) => {
+        clearInterval(flow);
+        setSeg('flow', v);
+        if (v !== '1') return;
+        setDemoArrive();
+        flow = setInterval(setDemoArrive, 10000);
+        if (window.slSound && !window.slSound.conf.on.mod) setToast('Звук очереди выключен: включите зону «Очередь модерации» в панели «Звуки» (строка «Выбор звуков»).', null);
+      }
     };
     const fold = panel.querySelector('[data-demo-fold]');
     const phone = window.matchMedia('(max-width: 560px)');
@@ -1097,7 +1337,27 @@
       fail: () => (doc.querySelector('[data-sl-list]') ? (setView('all', true), state.fail = true, setList()) : location.assign('?name=comments')),
       allpages: () => (doc.querySelector('[data-sl-list]') ? setShownPicked() : location.assign('?name=comments')),
       config: () => (doc.querySelector('[data-sl-list]') ? setView('config') : location.assign('?name=comments&tab=config')),
-      rail: () => { if (!wide.matches) setToast('Балка есть только шире 900 px.', null); else setRail(true, true); }
+      rail: () => { if (!wide.matches) setToast('Балка есть только шире 900 px.', null); else setRail(true, true); },
+      options: () => { setLegend(false); setWindow(doc.getElementById('sl-settings'), true); },
+      queue: () => setDemoArrive(),
+      saver: () => { setLegend(false); setTimeout(setSaverNow, 300); },
+      sounds: () => { setLegend(false); setSndDraw(); setWindow(sbox, true); },
+      success: () => {
+        if (!doc.querySelector('[data-sl-list]')) { location.assign('?name=comments'); return; }
+        setLegend(false);
+        setView('all', true);
+        const r = getShown()[0];
+        if (r) setAct([r], r.dataset.on === '1' ? 'off' : 'on');
+        else setToast('В списке нет строк: сбросьте фильтр.', null);
+      },
+      win: () => {
+        if (!doc.querySelector('[data-sl-list]')) { location.assign('?name=comments&tab=wait'); return; }
+        setLegend(false);
+        setView('wait', true);
+        const left = getShown().filter((r) => r.dataset.on === '0');
+        if (left.length) setAct(left, 'on');
+        else setToast('Очередь уже пуста: дождитесь заявки («Поток заявок») или отмените последнее действие.', null);
+      }
     };
     legend.addEventListener('change', (e) => {
       const c = e.target;
@@ -1121,7 +1381,7 @@
       if (cell) segs[cell.closest('[data-demo-seg]').dataset.demoSeg](cell.dataset.demoVal);
       else if (t.closest('[data-demo-fold]')) setFold(fold.getAttribute('aria-expanded') === 'true', true);
       else if (t.closest('[data-demo-reset]')) {
-        ['sl.mode', 'sl.rail', 'sl.density', 'sl.sort', 'demo.marks', 'demo.marks.off', 'sl.motion', 'demo.panel.at', 'demo.panel.fold']
+        ['sl.mode', 'sl.rail', 'sl.density', 'sl.sort', 'demo.marks', 'demo.marks.off', 'sl.motion', 'sl.sound', 'sl.saver', 'demo.panel.at', 'demo.panel.fold']
           .forEach((k) => { try { localStorage.removeItem(k); } catch (er) { /* storage may be off */ } });
         location.href = location.pathname + (root.dataset.demoPage === 'comments' ? '?name=comments' : '');
       } else if (t.closest('[data-demo-show]')) shows[t.closest('[data-demo-show]').dataset.demoShow]();
@@ -1154,12 +1414,15 @@
     doc.addEventListener('pointerup', () => { if (panel.hasAttribute('data-moving')) setKept('demo.panel.at', JSON.stringify([panel.offsetLeft, panel.offsetTop])); }, true);
     const watch = new MutationObserver(setWinSegs);
     watch.observe(root, { attributes: true, attributeFilter: ['data-theme'] });
-    [legend, sess].forEach((d) => watch.observe(d, { attributes: true, attributeFilter: ['open'] }));
+    [legend, sess, sbox].filter(Boolean).forEach((d) => watch.observe(d, { attributes: true, attributeFilter: ['open'] }));
     setAllBox();
     setOn(root.hasAttribute('data-demo-marks'));
     setMotion(!root.hasAttribute('data-sl-still'), false);
     setWinSegs();
     setSeg('net', '0');
+    setSeg('flow', '0');
+    setSeg('saver', '0');
+    setSoundOn(false, false);
     panel.inert = true;
     panel.show();
     panel.inert = false;

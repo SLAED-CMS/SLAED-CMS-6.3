@@ -1,8 +1,10 @@
-/* Phoenix screensaver, laid into the etalon frame by phoenix.js; every rule waits for :root[data-phx] */
+/* Phoenix screensaver: linked by the etalon, laid into a frame by a player; every rule waits for :root[data-phx] */
 
-/* The stand of the etalon steps aside while the screensaver plays */
-:root[data-phx] #demo-panel,
-:root[data-phx] .demo-marks {
+/* The stand of the etalon steps aside: always under a player of its frame (data-phx="on"), otherwise while the scene is on the screen */
+:root[data-phx="on"] #demo-panel,
+:root[data-phx="on"] .demo-marks,
+:root[data-phx].phx-busy #demo-panel,
+:root[data-phx].phx-busy .demo-marks {
   display: none !important;
 }
 
@@ -88,6 +90,16 @@
   animation: phx-badge-shine 0.9s ease-in-out;
 }
 
+/* A reader who asked for stillness gets the version standing, without a spring, a swell or a running light */
+@media (prefers-reduced-motion: reduce) {
+  :root[data-phx] .phx-badge,
+  :root[data-phx] .phx-badge::after,
+  :root[data-phx] .sl-brand img {
+    animation: none;
+    transition: none;
+  }
+}
+
 @keyframes phx-badge-shine {
   0% { opacity: 0.85; background-position: 150% 0; }
   100% { opacity: 0.85; background-position: -50% 0; }
@@ -121,7 +133,7 @@
   opacity: 0;
 }
 
-/* The page dims while the event plays over it, and comes back when the logo is home; phoenix.js sets the measure from the clock.
+/* The page dims while the event plays over it, and comes back when the logo is home; the scene sets the measure from its clock.
    It lies next to the ground and just under it, so every effect plays over it and the ground can stay under the page while the ash of the last round burns out */
 .phx-veil {
   position: fixed;

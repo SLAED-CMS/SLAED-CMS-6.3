@@ -22,6 +22,7 @@ more: where a plan and this file disagree about the order, this file wins.
 | `docs/8-RANKS-2026.md` | the rank of a group as a row of Bootstrap Icons, "N of M" in a colour of its own at 3:1 in both themes; the group list as a ladder and a rank composer from the stand `grp-10` |
 | `docs/9-ADMIN-LOG-2026.md` | every journal of the site: the actions of the panel in `storage/logs/admin.log` in the one JSON format of `Logger`, written in `checkAdminPost()` with the logins; `user.log` and `oauth.log` on the same format; the login table `_login_log` for the profile and the panel; read on "Безопасность", linked from each module |
 | `docs/10-URL-2026.md` | readable addresses without `id` — `/files/adaptivnyi-shablon-pure` — in one registry of routes; one address per page, 301 for every other form, an address never reused |
+| `docs/11-UPDATE-2026.md` | updates from the panel: signed releases, the module `master` on slaed.net, the page "Обновления" in the core, the API as the branch `/api/` of `public/index.php` (written in Russian by the owner's wish) |
 
 ## How a session runs
 
@@ -176,4 +177,17 @@ into the plan, then do whatever work the step names.
 - [ ] 76. DIAL — *decision*: the options dial `sl-dial` of the panel lists is three Tab stops a row while closed
   (found by the UI/UX audit of the groups stand, 2026-10-09); write a plan, then make its items reachable only once it
   opens. Put last by the owner on 2026-10-13, since its plan is not written yet.
-- [ ] 77. Close — no `docs/*-2026.md` plan is left; delete this file and report that the work before 8.0 is done.
+- [ ] 77. UPDATE batch 0 — *decision*: the open questions of the plan, the probes, the baseline. Added by the owner on
+  2026-10-15: a site learns of an update only by code it already has, so the updater goes into 8.0.
+- [ ] 78. UPDATE batch 1 — one entry: the branch `/api/` of `public/index.php`, `API_FILE` and the light core.
+- [ ] 79. UPDATE batch 2 — the core of the connector without clients, `checkApiFlood`, the reply mode `file`.
+- [ ] 80. UPDATE batch 3 — signature, keys, `files.json`, `tools/release.php` and `tools/sign.php`.
+- [ ] 81. UPDATE batch 4 — the module `master`.
+- [ ] 82. UPDATE batch 5 — the client: the check, the page "Обновления", the notice.
+- [ ] 83. UPDATE batch 6 — the client: download, manual upload, verification, unpacking.
+- [ ] 84. UPDATE batch 7 — settings, languages and themes: the installer adds missing options and constants to the
+  site's files without a second layer, the themes `admin` and `lite` replaced whole, other themes untouched. One batch by the owner's wish, 2026-10-15.
+- [ ] 85. UPDATE batch 8 — the client: installation in steps and rollback.
+- [ ] 86. UPDATE batch 9 — the full rehearsal on the stand.
+- [ ] 87. UPDATE batch 10 — reference and the real keys; deletes `docs/11-UPDATE-2026.md`.
+- [ ] 88. Close — no `docs/*-2026.md` plan is left; delete this file and report that the work before 8.0 is done.

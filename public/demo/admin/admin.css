@@ -1449,6 +1449,31 @@
     transition: background-color var(--sl-time-base) var(--sl-ease-out);
   }
 
+  /* Д8 A comment for the queue stirs the bell: the icon swings once from its top and the sum pops */
+  .sl-bell[data-sl-ping] .sl-bell-ic > .bi {
+    display: inline-block;
+    transform-origin: 50% 0;
+    animation: sl-bell-swing calc(var(--sl-time-slow) * 2) var(--sl-ease-out);
+  }
+
+  .sl-bell[data-sl-ping] .sl-bell-n {
+    animation: sl-icon-pop calc(var(--sl-time-slow) * 2) var(--sl-ease-out);
+  }
+
+  @keyframes sl-bell-swing {
+    20% {
+      transform: rotate(16deg);
+    }
+
+    45% {
+      transform: rotate(-12deg);
+    }
+
+    70% {
+      transform: rotate(6deg);
+    }
+  }
+
   @keyframes sl-row-in {
     from {
       opacity: 0;
@@ -1653,4 +1678,102 @@
 
 .demo-legend-text .sl-linkbtn {
   margin-left: var(--sl-space-2);
+}
+
+/* Д10 The sound panel of the stand: the switch, the volume and the zones on top, then every sound with its places and variants */
+.demo-sounds {
+  --sl-modal-width: 540px;
+}
+
+.demo-snd-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sl-space-3) var(--sl-space-5);
+  margin-bottom: var(--sl-space-3);
+}
+
+.demo-snd-flag {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sl-space-2);
+  font-size: var(--sl-font-small);
+}
+
+.demo-snd-vol {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sl-space-2);
+  margin-left: auto;
+}
+
+.demo-snd-vol input {
+  width: 140px;
+  accent-color: var(--sl-primary);
+}
+
+.demo-snd-asleep {
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-small);
+}
+
+.demo-snd-row {
+  padding: var(--sl-space-4) 0;
+  border-top: 1px solid var(--sl-border);
+}
+
+.demo-snd-row[data-off] {
+  opacity: var(--sl-fade-muted);
+}
+
+.demo-snd-row h3 {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sl-space-2);
+  margin: 0;
+  font-size: var(--sl-font-h4);
+}
+
+.demo-snd-row h3 .sl-linkbtn {
+  margin-left: auto;
+  font-size: var(--sl-font-small);
+}
+
+.demo-snd-row[data-tone="success"] h3 > .bi {
+  color: var(--sl-success);
+}
+
+.demo-snd-row[data-tone="error"] h3 > .bi {
+  color: var(--sl-danger);
+}
+
+.demo-snd-row[data-tone="warn"] h3 > .bi {
+  color: var(--sl-warning);
+}
+
+.demo-snd-row[data-tone="info"] h3 > .bi {
+  color: var(--sl-primary);
+}
+
+.demo-snd-row[data-tone="accent"] h3 > .bi {
+  color: var(--sl-accent);
+}
+
+.demo-snd-where {
+  margin: var(--sl-space-2) 0 var(--sl-space-3);
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-small);
+}
+
+.demo-snd-pick {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sl-space-2);
+}
+
+.demo-snd-pick .sl-but[aria-pressed="true"] {
+  border-color: var(--sl-primary);
+  background: var(--sl-primary);
+  color: var(--sl-on-solid);
 }

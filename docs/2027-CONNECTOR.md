@@ -5,7 +5,9 @@ of the site — a Vine Monitor agent, a headless front end, a Telegram bot, an A
 updates — talks to the site through it, and the site talks to the outside world (update server, Telegram Bot API, AI
 providers) through the same layer.
 
-Status: planned, nothing implemented. The owner's decisions of 2026-10-07 and 2026-10-14 are in "Decisions"; "Recommended
+Status: planned, nothing implemented. The updates, the entry of the API and steps 1–2 moved into
+`docs/11-UPDATE-2026.md` before 8.0 (owner, 2026-10-15); this plan starts after them, with step 3.
+The owner's decisions of 2026-10-07 and 2026-10-14 are in "Decisions"; "Recommended
 decisions" and everything below it is the working design, changed only through "Open questions". The steps are at the
 end, one per session. The binding coding rules are in `.rules/api.md`; where this plan and that file differ, the file
 wins and this plan is corrected.
@@ -53,8 +55,10 @@ next to the route. That is what the connector does in SLAED terms.
 
 Taken by the owner on 2026-10-07; settled, not to be reopened by a step.
 
-- **Own entry `public/api.php`** next to `index.php` and `admin.php` (how it boots: "Recommended decisions").
-- **slaed.net is the master:** the update server of every SLAED site (service `update`).
+- **One entry, the branch `/api/` of `public/index.php`** (owner, 2026-10-15, in place of the own entry
+  `public/api.php` of 2026-10-07): no new rewrite rule on either server, one door for every machine client.
+- **slaed.net is the master:** the update server of every SLAED site — now the module `master` and the core page
+  "Обновления" of `docs/11-UPDATE-2026.md`, built before 8.0.
 - **Anonymous access only to safe actions:** an action is open without a key only if it is `GET`/`HEAD`, declared
   `'auth' => 'public'`, read-only and returns only data a guest may see on the site anyway; it is rate-limited per IP
   and cacheable. Everything else needs a key or, for an inbound webhook, its declared secret.
@@ -67,11 +71,8 @@ Taken by the owner on 2026-10-07; settled, not to be reopened by a step.
   It is off by default; "safe" means every action has a risk class with an owner-set policy, a short-lived key, a
   fixed list of actions no agent ever gets, and an audit trail (section "Administrator access"). This supersedes
   "read-only or draft-only" for administrator keys; a user key stays draft-only.
-- **Update channels `stable` + `beta`** (service `update`).
-- **Two signing keys:** a primary that signs releases and a recovery key kept offline in a safe, used only for key
-  statements — replacing or revoking keys (service `update`).
-- **Update check on by default, with a notice:** it sends the site's channel and key sequence `kseq` to slaed.net, and
-  with it the server's IP; the admin shows this and has a switch (service `update`).
+- **Update channels, the two signing keys and the check on by default with a notice** — decided here on 2026-10-07,
+  carried into `docs/11-UPDATE-2026.md`, which holds them now.
 - **Step order:** Vine right after clients and guards; outbound, queue and events right before Telegram (section
   "Steps"). Vine needs none of the queue, and the queue is built for its first real consumer.
 - **Operations:** one key per caller (no shared keys), an audit log of admin actions, a status page, the server clock
@@ -82,17 +83,15 @@ Taken by the owner on 2026-10-07; settled, not to be reopened by a step.
 
 ## Recommended decisions
 
-- **How `api.php` works** (as in LAAS and Joomla): JSON only, no theme, no template, no session, no HTML error page.
-  Pretty route `/api/v1/<service>/<action>` by one rewrite rule in `public/.htaccess` and `nginx.conf.example`, placed
-  before the fallback that sends every other path to `index.php`; the name `api` is reserved for that prefix in the
-  reserved names of `docs/ARCHITECTURE.md`, "Address Boundary", so no Node type takes it. The plain form `api.php?r=<service>/<action>`
-  always works. Reason for a separate entry rather than `index.php?go=api`:
-  the SLAED boot loads the theme and the template object on every request, and a Vine agent beats every 45 s — the
-  light boot pays off, and a fault in the API cannot render a site page.
-- **A light boot of the core:** `api.php` defines `API_FILE`; `core/system.php` accepts it beside `MODULE_FILE` and
+- **How the API is entered:** JSON only, no theme, no template, no session, no HTML error page. `public/index.php`
+  takes a path under `/api/` right after its light path of `uploads/`, before the core boots; every other path is the
+  site. The fallback of both servers already sends every path that is no file to `index.php`, so no rewrite rule is
+  added; `api` is reserved in `Route::TYPES`. There is no query form: readable addresses are mandatory. The SLAED boot
+  loads the theme and the template object on every request, and a Vine agent beats every 45 s — the branch before
+  the boot pays off, and a fault in the API cannot render a site page.
+- **A light boot of the core:** the branch defines `API_FILE`; `core/system.php` accepts it beside `MODULE_FILE` and
   `ADMIN_FILE` and skips the theme, the template object and everything visual. Config, DB, security, logger, cache,
-  mail and the classes that services need stay loaded. `.rules/architecture.md` gets `public/api.php` and `API_FILE`
-  in its entry points in the same step.
+  mail and the classes that services need stay loaded. Built by `docs/11-UPDATE-2026.md`, batch 1.
 - **One client registry for every caller:** a client is a key with scopes. A Vine agent, a headless app, an AI agent
   and a partner site are rows of the same table; a service never invents its own key scheme.
 - **Inbound and outbound in one layer:** `ApiHttp` is the only place API code calls external hosts, with a host
@@ -128,7 +127,8 @@ Why no framework kernel (PSR-7/15, a container, a middleware stack):
   delivery model.
 
 What the connector has instead: `ApiRouter::getResponse()` runs a fixed guard list and returns the reply array;
-`public/api.php` passes it to `setApiReply()`, the only function that writes headers and body. The guards, in order:
+the API branch of `public/index.php` passes it to `setApiReply()`, the only function that writes headers and body.
+The guards, in order:
 
 1. `checkApiRoute` — parse the path, find service and action: 404 `no_route`, 405 `no_method`.
 2. `checkApiMaint` — maintenance flag (everything but `system` gets 503 `maintenance`) and the kill switch per
@@ -157,7 +157,7 @@ decision for all of SLAED, not for this plan.
 ## Architecture
 
 ```
- clients                         public/api.php  (API_FILE, light core)
+ clients                         public/index.php /api/  (API_FILE, light core)
  ───────                         ──────────────────────────────────────
  Vine agents        ─┐           ApiRouter::getResponse()
  headless front end ─┤   HTTPS     ├─ route      /v1/<service>/<action>
@@ -169,7 +169,7 @@ decision for all of SLAED, not for this plan.
                                    ├─ call       handler → array
                                    └─ reply      setApiReply(): envelope or JSON-RPC, log, request id
                                        │
-                 services: vine · content · telegram · ai · update · system
+                 services: vine · content · telegram · ai · master · system
                                        │
                                  ApiQueue ◄── scheduler job "apiqueue"
                                        │
@@ -226,7 +226,7 @@ Files under `core/classes/api/`, one class each; names follow `.rules/global.md`
 | `audit.php` | `ApiAudit` | `addApiAudit()`: one audit row per admin action |
 | `error.php` | `ApiError` | the one exception a guard or handler throws: code, status, text |
 
-Core services (`system`, `update`, `ai`) live in `core/classes/api/services/<service>.php`, a declaration and its
+Core services (`system`, `ai`) live in `core/classes/api/services/<service>.php`, a declaration and its
 handlers in one file.
 
 Input types worth naming: `rows` — a list of rows with a nested column schema and a row cap, e.g.
@@ -307,10 +307,8 @@ client), `ai` (provider, model, provider key), `risk` (the site default policy p
 access"), `master` (1 only on slaed.net), `dev` (1 only on a
 development host; `tools/apikey.php` refuses to run without it).
 
-The update service keeps its two settings in `config/api.php` too: `upcheck` (daily check on/off) and `channel`
-(`stable` or `beta`); a missing key reads as `upcheck` 1 and `channel` `stable`, so a site that never saved the page
-checks daily on `stable`. `config/update.php` and `$conf['update']` are taken: they hold the marks of the finished
-6.3 data updates, which `setup.php`, `update.php` and `core/admin.php` write and the core reads.
+The settings of updates, `upcheck` and `channel`, live in `config/update.php` beside the marks of the data updates
+(`docs/11-UPDATE-2026.md`); `config/api.php` holds none of them.
 
 ## Services
 
@@ -343,7 +341,7 @@ Each service is its own plan or section; the connector only hosts it.
   - the client's `uid` decides read rights through the existing category rights — no second rights system;
   - writes later, scope `content:write`, only through the shared Node writer.
 - **`ai`:** see the next section.
-- **`update`:** see the section after it.
+- **`master`:** the update server, a module installed on slaed.net only — `docs/11-UPDATE-2026.md`.
 
 ## Service `ai`
 
@@ -353,7 +351,7 @@ Each service is its own plan or section; the connector only hosts it.
   over one POST per call; `setApiReply()` has two modes, `envelope` and `jsonrpc`, and this action uses the second.
 - Protocol revision `2026-07-28`, which is stateless: no session, no `initialize` handshake, protocol version and
   client capabilities in `_meta` of every request, `server/discover` mandatory for the server — so one PHP request
-  answers one call, a good fit for `api.php`.
+  answers one call, a good fit for the API branch of `public/index.php`.
 - Methods: `server/discover` (`serverInfo` in the result `_meta`), `tools/list` (only the flagged actions whose scope
   the key holds, deterministic order, `ttlMs`, `cacheScope: "private"` because the list depends on the key),
   `tools/call` (through `ApiRouter::getActionResult()`, so the tool's own scope, kill switch, limit and input filter
@@ -420,66 +418,9 @@ above.
 
 ## Service `update`
 
-slaed.net is the master; every other SLAED site is a client of it.
-
-- **Master side**, only where `$conf['api']['master'] = 1`: one public action `update/check` (`GET`, param
-  `channel`, optional `kseq`). It returns signed data only, never an unsigned verdict: the signed manifest of the
-  latest release of the asked channel (for `beta` also of `stable`) and every key statement with a `kseq` above the
-  one sent. The zip itself is a static file on slaed.net, named in the manifest `url`, so no binary passes through
-  `setApiReply()`.
-- **Manifest:** a JSON file with `type` (`release`), `version`, `channel`, `min` (lowest version that may update
-  from it), `sha256`, `size`, `url`, `commit` (the git commit the zip was built from), `time`, `expires` (`time` + 45
-  days) and `kid` (the key that signed it). Versions are `MAJOR.MINOR.PATCH`, digits only, compared with
-  `version_compare()`. The installed version is the leading `MAJOR.MINOR.PATCH` of `$conf['version']` (`6.3.0` of
-  `6.3.0 Phoenix`); the release name after it is never compared, and a value without that leading form disables
-  the check with a message in the admin.
-- **Signature:** Ed25519 (`sodium_crypto_sign_detached()`), detached, over the exact raw bytes of the manifest as
-  served, prefixed with the type tag `SLAED-UPDATE-MANIFEST-v1\n`. The client verifies first, then decodes the same
-  bytes with `JSON_THROW_ON_ERROR`, never re-encodes. Signatures and keys are base64, strictly decoded, exactly 64 and
-  32 bytes.
-- **Channels:** a site follows `stable` by default, `beta` only when its admin switches it on
-  (`$conf['api']['channel']`). A `stable` site accepts only `channel = stable`; a `beta` site accepts `beta` and
-  `stable` and takes the newer. A release goes to `beta` first and is promoted to `stable` with the same zip and the
-  same version string, only a new signed manifest. Switching back to `stable` never downgrades: the site waits until
-  `stable` passes its version.
-- **Freshness:** the client accepts a manifest only if its `version` is above the installed one, the installed one is
-  at least `min`, and its `time` is not older than the newest `time` it has seen for that channel. An expired
-  manifest is not blocked but shows a red warning on the admin update page («Сервер обновлений отдаёт устаревшие
-  данные»). The owner re-signs the latest manifest at least once a month even without a release.
-- **Keys:**
-  - **primary** signs release manifests and nothing else; a release verifies only against the current primary;
-  - **recovery** signs key statements `{type: keychange, kseq, role, newkey, revoked: [kid…], time}` with the type tag
-    `SLAED-KEYCHANGE-v1\n`, `role` = `primary` or `recovery`; a site accepts a statement only if it verifies against
-    the recovery key and its `kseq` is above the stored one; revoked keys are stored and never trusted again; planned
-    and emergency rotations go the same way;
-  - a statement with `role` = `recovery` (the recovery key itself is replaced) needs a second signature `sig2` by the
-    current primary over the same bytes; recovery alone is refused;
-  - the trusted keys, `kseq` and the revoked list live in `storage/update/keys.json` (gitignored), written only by
-    the key-statement handler; no package may contain that path (apply refuses it); the core carries only the factory
-    keys used when that file does not exist yet;
-  - both private keys stay offline: the primary on the owner's machine, the recovery key in a safe (printed and on a
-    separate USB stick); neither ever touches a server, the repository or CI; key fingerprints are also published
-    outside slaed.net (repository README and docs).
-- **Build and sign:** `tools/release.php <tag>` builds the zip from a git tag only (`git archive`, never the working
-  tree), refuses a tag that contains a symlink and writes the unsigned manifest; `tools/sign.php` signs it on the
-  owner's machine.
-- **Client side, check:** the scheduler job `updatecheck` asks the master once a day; the request carries only the
-  channel and `kseq`, but the master sees the server's IP, so the job is on by default with a switch
-  (`$conf['api']['upcheck']`); the admin update page says what is sent and where; `docs/` gets a short GDPR (DSGVO)
-  note for site owners; with the switch off the owner checks with a button.
-- **Client side, download:** on the owner's click only; `ApiHttp` streams the zip to `storage/update/tmp/`, aborts as
-  soon as it exceeds the signed `size`, then checks `size` and SHA-256 with `hash_equals()`.
-- **Client side, unpack:** into `storage/update/stage/<version>/`; an entry is refused if it is absolute, contains
-  `..`, a backslash or a drive letter, is a symlink, or lies outside the shipped top-level entries — the tracked
-  tree of the tag: `admin`, `blocks`, `config`, `core`, `docs`, `lang`, `modules`, `public`, `storage` (only
-  `geoip`, `sitemap` and `update/sql`), `tests`, `tools`, `uploads/presentation` and the root files;
-  `tools/release.php` refuses a tag with a top-level entry outside this list, so the two never drift; a total
-  uncompressed size above 10 × `size` is refused (zip bomb); files get mode 0644, directories 0755.
-- **Client side, apply:** close the site and the API — `$conf['close']` (visitors get 503, admins pass) and
-  `$conf['api']['maint']` (everything but `system` gets 503) — back up files and database to `storage/backup/`, copy,
-  run the SQL, then give both flags back the values they had before; on any error restore the backup automatically; a
-  marker file makes an apply interrupted by a crash visible on the next request. Never an automatic apply.
-- **Without `sodium`** the check still shows news, but download and apply are disabled with a message.
+Moved into `docs/11-UPDATE-2026.md` and built before 8.0 (owner, 2026-10-15): the master is the module `master`
+on slaed.net, the client the core page "Обновления", the download a reply in the mode `file`. The signature,
+the keys, the channels, the manifest, the unpacking and the installation are designed there.
 
 ## Security
 
@@ -551,8 +492,9 @@ New admin module `admin/modules/api.php` (tabs through `getTplAdminTabs()`, ever
   `PhpFileFormatTest`; the `/schema` command (database vs `table.sql`) reports no drift.
 - **Tools:** `tools/api.http` runs green against the dev host; `tools/apikey.php` refuses to run without
   `$conf['api']['dev']`.
-- **Light boot:** `api.php` loads no theme and no template (assert on included files) and answers in under 30 ms for
-  `system/ping` on the dev host; `index.php` and `admin.php` routes of at least three modules unchanged.
+- **Light boot:** the API branch of `index.php` loads no theme and no template (assert on included files) and answers
+  in under 30 ms for `system/ping` on the dev host; `index.php` and `admin.php` routes of at least three modules
+  unchanged.
 
 ## Developer tools
 
@@ -560,15 +502,12 @@ New admin module `admin/modules/api.php` (tabs through `getTplAdminTabs()`, ever
   from `{{$dotenv SLAED_API_KEY}}`, and `tools/.env` is added to `.gitignore` in the step that creates the file.
 - **`tools/apikey.php`:** CLI on the dev host — create a client with name and scopes and print the key once, list,
   revoke. Refuses to run unless `$conf['api']['dev']` is 1.
-- **`tools/release.php`, `tools/sign.php`:** build from a tag and sign offline (service `update`).
+- **`tools/release.php`, `tools/sign.php`:** build from a tag and sign offline (`docs/11-UPDATE-2026.md`).
 
 ## Later
 
 Recorded so it is not forgotten; not part of the steps.
 
-- **Staged rollout of `stable`:** the manifest gets `rollout` 1–100; a site takes the release when
-  `crc32(site id) % 100 < rollout`, so a release can reach 10 % of sites first and 100 % a few days later; `beta`
-  sites always get it at once; the owner raises the number by re-signing the manifest.
 - **Move this plan to a stable name** (e.g. `docs/API.md`) once step 11 is done, and point `.rules/api.md` at it.
 
 ## Open questions
@@ -586,17 +525,10 @@ The plan of 2026-10-07 is decided (section "Decisions"). A new question goes her
 
 Order decided on 2026-10-07: Vine right after clients and guards.
 
-- [ ] 1. Light boot: `API_FILE` in `core/system.php`, `public/api.php`, rewrite rules, `.rules/architecture.md`
-  updated; `.rules/api.md` checked against the code as it lands.
-  Done when `api.php` boots without theme and template and three modules of `index.php` and `admin.php` render
-  unchanged.
-- [ ] 2. Core of the connector: `ApiRouter` with the guards that need no client (`checkApiRoute`, `checkApiMaint`,
-  `checkApiCors`, `checkApiSize`, `filterApiInput`), `ApiInput`, `ApiError`, `setApiReply()` with `meta.now`, service
-  discovery from enabled modules with the declaration format, `system/ping`, `system/schema` (guest view);
-  `config/api.php` (`active`, `off`, `maint`, `cors`, `limits`, `log`); `tools/api.http` with `ping` and `schema`,
-  `tools/.env` in `.gitignore`. Done when the unit tests for routing,
-  discovery, envelope and codes pass and a test module with an `api.php` answers without any core edit.
-- [ ] 3. Clients and guards: `config/api.php` (`dev`), `api_client`, keys, scopes, `checkApiFlood`, `checkApiAuth`,
+- [x] 1. Light boot — moved to `docs/11-UPDATE-2026.md`, batch 1 (the branch `/api/` of `public/index.php`).
+- [x] 2. Core of the connector — moved to `docs/11-UPDATE-2026.md`, batch 2, with `checkApiFlood` and the reply
+  mode `file`.
+- [ ] 3. Clients and guards: `config/api.php` (`dev`), `api_client`, keys, scopes, `checkApiAuth`,
   `checkApiScope`, `checkApiOrigin`, `checkApiLimit`, `api_log`, `api_idem`, `api_audit`, `addApiAudit()`, the
   scheduler job `apiclean`, `system/whoami`, scope filtering of `system/schema`, `getActionResult()`;
   `tools/apikey.php`; admin tabs Состояние, Клиенты, Сервисы, Журнал, Аудит. Done when the auth/scope/limit tests
@@ -610,14 +542,7 @@ Order decided on 2026-10-07: Vine right after clients and guards.
 - [ ] 6. Service `telegram`: webhook with the secret header, linking, alerts (Vine captcha and nobody working first),
   Vine finds to the phone, admin commands with `vine/hold` and `vine/resume`; admin tab Telegram.
 - [ ] 7. Service `content`: headless reads with rights, ETag, cursor paging; `docs/NODE.md` updated.
-- [ ] 8. Service `update`: `tools/release.php` and `tools/sign.php`, manifest with type tag, `expires` and `commit`,
-  key store with primary and recovery, `update/check` on the master, channels `stable`/`beta` with promotion, the
-  check with the switch and the GDPR note, download, unpack, backup, apply on click with automatic restore. Done when
-  each of these is refused before unpacking: tampered zip, tampered manifest, a release signed by the recovery key,
-  wrong channel, an older or equal version, an older `time`, a zip with `..` or a symlink, a zip bomb; and when a
-  `beta` → `stable` switch does not downgrade, a key statement signed by the recovery key with a higher `kseq` is
-  accepted, one with a lower `kseq` or signed by the primary is refused, and a recovery replacement is accepted only
-  with both signatures.
+- [x] 8. Service `update` — moved to `docs/11-UPDATE-2026.md` and built before 8.0.
 - [ ] 9. Service `ai`: tool table, MCP endpoint `/api/v1/ai/mcp` (`server/discover`, `tools/list`, `tools/call`,
   transport checks, older-client support, Bearer key), outbound provider calls through the queue. Done when Claude
   Code connects with the key, lists the flagged tools and calls `vine_stats`, a client of the older revision connects

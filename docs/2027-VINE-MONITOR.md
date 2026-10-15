@@ -57,7 +57,7 @@ Taken by the owner on 2026-10-07; settled, not to be reopened by a step.
    │                           │                         │
    └── GM_xmlhttpRequest ──────┴──────────┬──────────────┘
                                           ▼
-                    https://<domain>/api/v1/vine/<action>   (connector, public/api.php)
+                    https://<domain>/api/v1/vine/<action>   (connector, public/index.php)
                     modules/vine/api.php + common.php ── MySQL {prefix}_vine_*
                                           ▲
                     admin.php?name=vine (owner)   /vine (permitted users)

@@ -18,11 +18,13 @@
   <link rel="stylesheet" href="../../templates/admin/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
   <link rel="stylesheet" href="../../templates/admin/assets/css/base.css">
   <link rel="stylesheet" href="../../templates/admin/assets/css/theme.css">
-  <script>document.write('<link rel="stylesheet" href="admin.css?v=' + Date.now() + '">');</script>
+  <script>document.write('<link rel="stylesheet" href="admin.css?v=' + Date.now() + '"><link rel="stylesheet" href="../assets/phoenix-fx.css?v=' + Date.now() + '">');</script>
   <script src="../../plugins/system/global-func.js"></script>
   <script src="../../plugins/tablesort/tablesort.min.js"></script>
   <script src="../../plugins/system/slaed.js"></script>
   <script src="../../templates/admin/assets/js/admin-ui.js"></script>
+  <script src="../assets/sound.js"></script>
+  <script src="../assets/phoenix-scene.js"></script>
 </head>
 <body id="top" data-sl-site="Название сайта" data-sl-section="Комментарии">
   <a class="sl-skip" href="#sl-main" data-mark="Э03">К содержимому</a>
@@ -32,7 +34,7 @@
       <header class="sl-header sl-admin-header">
         <div class="sl-admin-brand">
           <button type="button" class="sl-menu-btn" data-sl-menu-open aria-controls="sl-menu" aria-expanded="false" data-mark="Э12"><i class="bi bi-list" aria-hidden="true"></i><span>Меню</span></button>
-          <a class="sl-brand" href="index.html" data-mark="Э01"><img src="../../templates/admin/images/logos/slaed-logo-wordmark-gradient-blue.svg" alt="Название сайта — главная панели" title="Главная панели"></a>
+          <a class="sl-brand" href="index.html" data-mark="Э01 Д11"><img src="../../templates/admin/images/logos/slaed-logo-wordmark-gradient-blue.svg" alt="Название сайта — главная панели" title="Главная панели"></a>
         </div>
         <nav class="sl-admin-toolbar" aria-label="Быстрые ссылки">
           <div class="sl-toolbar">
@@ -45,7 +47,7 @@
                 <li class="sl-split-item"><a href="/" title="Сайт" target="_blank" rel="noopener noreferrer"><i class="bi bi-globe2" aria-hidden="true"></i> <b>Сайт</b></a></li>
                 <li><a href="../../index.php?name=account" title="Профиль" target="_blank" rel="noopener noreferrer"><i class="bi bi-person" aria-hidden="true"></i> <b>Профиль</b></a></li>
                 <li class="sl-split-item"><a href="../../admin.php?op=logout" title="Выход"><i class="bi bi-box-arrow-right" aria-hidden="true"></i> <b>Выход</b></a></li>
-                <li class="sl-bell-item" data-mark="Э04 Э05 П1"><span class="sl-float sl-bell-float" data-sl-float-align="end"><button type="button" class="sl-bell" data-sl-bell aria-label="Уведомления"><span class="sl-bell-ic"><i class="bi bi-bell" aria-hidden="true"></i><span class="sl-bell-n" data-sl-bell-sum></span></span></button>
+                <li class="sl-bell-item" data-mark="Э04 Э05 П1 Д8"><span class="sl-float sl-bell-float" data-sl-float-align="end"><button type="button" class="sl-bell" data-sl-bell aria-label="Уведомления"><span class="sl-bell-ic"><i class="bi bi-bell" aria-hidden="true"></i><span class="sl-bell-n" data-sl-bell-sum></span></span></button>
                   <span class="sl-float-panel sl-bell-tip" role="group" aria-labelledby="sl-bell-cap">
                     <span class="sl-bell-cap" id="sl-bell-cap">Ждут внимания</span>
                     <a href="../../admin.php?name=account&amp;op=newuser" title="Новые пользователи"><i class="bi bi-person-plus" aria-hidden="true"></i> Пользователи <span class="sl-bell-num" data-sl-bell-n>18</span></a>
@@ -54,7 +56,7 @@
                     <a href="../../admin.php?name=node&amp;type=news&amp;status=1" title="Новости"><i class="bi bi-newspaper" aria-hidden="true"></i> Новости <span class="sl-bell-num" data-sl-bell-n>2</span></a>
                   </span>
                 </span></li>
-                <li class="sl-set-item" data-mark="Э05 Э06 П2 П3 В07.5"><button type="button" data-sl-open="sl-settings" title="Опции" aria-label="Опции"><i class="bi bi-sliders" aria-hidden="true"></i></button></li>
+                <li class="sl-set-item" data-mark="Э05 Э06 П2 П3 В07.5 Д4 Д12"><button type="button" data-sl-open="sl-settings" title="Опции" aria-label="Опции"><i class="bi bi-sliders" aria-hidden="true"></i></button></li>
               </ul>
             </div>
           </div>
@@ -76,7 +78,7 @@
           <p class="sl-menu-empty" data-sl-menu-empty hidden>Раздел не найден.</p>
           <div class="sl-block-sidebar" data-demo-page="comments" data-sl-find-group>
             <h3 data-mark="Э09"><button type="button" class="sl-menu-head" title="Свёртывание / Развёртывание" data-sl-toggle-control="sl-block-1"><b><i class="bi bi-person-gear" aria-hidden="true"></i><span class="sl-menu-name">Администратор</span></b><i class="bi bi-arrows-collapse sl-panel-toggle sl-panel-toggle-open" aria-hidden="true"></i><i class="bi bi-arrows-expand sl-panel-toggle sl-panel-toggle-closed" aria-hidden="true"></i></button></h3>
-            <div id="sl-block-1" class="sl-block-sidebar-content" data-sl-toggle="sl-block-1" data-sl-menu-list="admin" data-mark="Э10 Э11 Н6 В07.2"></div>
+            <div id="sl-block-1" class="sl-block-sidebar-content" data-sl-toggle="sl-block-1" data-sl-menu-list="admin" data-mark="Э10 Э11 Н6 В07.2 Д5 Д8"></div>
           </div>
           <div class="sl-block-sidebar" data-demo-page="comments" data-sl-find-group>
             <h3><button type="button" class="sl-menu-head" title="Свёртывание / Развёртывание" data-sl-toggle-control="sl-block-2"><b><i class="bi bi-people" aria-hidden="true"></i><span class="sl-menu-name">Модули</span></b><i class="bi bi-arrows-collapse sl-panel-toggle sl-panel-toggle-open" aria-hidden="true"></i><i class="bi bi-arrows-expand sl-panel-toggle sl-panel-toggle-closed" aria-hidden="true"></i></button></h3>
@@ -84,9 +86,9 @@
           </div>
           <div class="sl-block-sidebar" data-demo-page="home">
             <h3><button type="button" class="sl-menu-head" title="Свёртывание / Развёртывание" data-sl-toggle-control="sl-block-3"><b><i class="bi bi-bell" aria-hidden="true"></i><span class="sl-menu-name">Ждут внимания</span></b><i class="bi bi-arrows-collapse sl-panel-toggle sl-panel-toggle-open" aria-hidden="true"></i><i class="bi bi-arrows-expand sl-panel-toggle sl-panel-toggle-closed" aria-hidden="true"></i></button></h3>
-            <div id="sl-block-3" class="sl-block-sidebar-content" data-sl-toggle="sl-block-3" data-mark="Г5 Г6 Г8"><div class="sl-block-sidebar-count-list">
+            <div id="sl-block-3" class="sl-block-sidebar-content" data-sl-toggle="sl-block-3" data-mark="Г5 Г6 Г8 Д8"><div class="sl-block-sidebar-count-list">
               <div class="sl-block-sidebar-count-row"><div class="sl-block-sidebar-count-label"><a href="../../admin.php?name=account&amp;op=newuser" title="Новые пользователи"><i class="bi bi-person-plus" aria-hidden="true"></i> <span class="sl-menu-name">Пользователи</span></a></div><div class="sl-block-sidebar-count-value"><span class="sl-chip sl-chip-warn">18</span></div></div>
-              <div class="sl-block-sidebar-count-row"><div class="sl-block-sidebar-count-label"><a href="?name=comments&amp;tab=wait" title="Комментарии ждут проверки"><i class="bi bi-chat-dots" aria-hidden="true"></i> <span class="sl-menu-name">Комментарии</span></a></div><div class="sl-block-sidebar-count-value"><span class="sl-chip sl-chip-warn">3</span></div></div>
+              <div class="sl-block-sidebar-count-row"><div class="sl-block-sidebar-count-label"><a href="?name=comments&amp;tab=wait" title="Комментарии ждут проверки"><i class="bi bi-chat-dots" aria-hidden="true"></i> <span class="sl-menu-name">Комментарии</span></a></div><div class="sl-block-sidebar-count-value"><span class="sl-chip sl-chip-warn" data-sl-count-own>3</span></div></div>
               <div class="sl-block-sidebar-count-row"><div class="sl-block-sidebar-count-label"><a href="../../admin.php?name=node&amp;type=help" title="Помощь"><i class="bi bi-life-preserver" aria-hidden="true"></i> <span class="sl-menu-name">Помощь</span></a></div><div class="sl-block-sidebar-count-value"><span class="sl-chip sl-chip-warn">3</span></div></div>
               <div class="sl-block-sidebar-count-row"><div class="sl-block-sidebar-count-label"><a href="../../admin.php?name=node&amp;type=news&amp;status=1" title="Новости"><i class="bi bi-newspaper" aria-hidden="true"></i> <span class="sl-menu-name">Новости</span></a></div><div class="sl-block-sidebar-count-value"><span class="sl-chip sl-chip-warn">2</span></div></div>
               <div class="sl-block-sidebar-count-row"><div class="sl-block-sidebar-count-label"><a href="../../admin.php?name=node&amp;type=faq&amp;status=1" title="Вопросы и ответы"><i class="bi bi-question-circle" aria-hidden="true"></i> <span class="sl-menu-name">Вопросы и ответы</span></a></div><div class="sl-block-sidebar-count-value"><span class="sl-chip sl-chip-success">0</span></div></div>
@@ -125,10 +127,10 @@
         <main class="sl-admin-content" id="sl-main" tabindex="-1"><div class="sl-admin-content-inner">
           <div data-demo-page="home">
             <h1 class="sl-sr">Главная</h1>
-            <div class="sl-alert sl-alert-warn"><div class="sl-alert-body">setup.php должен был удалить себя после установки, но всё ещё лежит в корне сайта. Удалите его с сервера.</div></div>
+            <div class="sl-alert sl-alert-warn" data-mark="Д4"><div class="sl-alert-body">setup.php должен был удалить себя после установки, но всё ещё лежит в корне сайта. Удалите его с сервера.</div></div>
             <div class="sl-alert sl-alert-info"><div class="sl-alert-body">Информация, которая будет доступна всем авторам. Отображение данной информации производится в верхней части панели администратора системы.</div></div>
             <p class="sl-menu-empty" data-sl-menu-empty hidden>Раздел не найден.</p>
-            <div data-mark="Г2 Г3 Г4 Г7">
+            <div data-mark="Г2 Г3 Г4 Г7 Д5 Д8">
               <div class="sl-dashboard-panel" data-sl-find-group>
                 <h2 class="sl-dashboard-panel-head" data-mark="Г1"><button type="button" class="sl-menu-head" title="Свёртывание / Развёртывание" data-sl-toggle-control="sl_panel_admin"><b><i class="bi bi-person-gear" aria-hidden="true"></i>Административные и системные модули панели управления</b><i class="bi bi-arrows-collapse sl-panel-toggle sl-panel-toggle-open" aria-hidden="true"></i><i class="bi bi-arrows-expand sl-panel-toggle sl-panel-toggle-closed" aria-hidden="true"></i></button></h2>
                 <div id="sl_panel_admin" class="sl-dashboard-panel-content" data-sl-toggle="sl_panel_admin"><div class="sl-menu-grid" data-sl-cards="admin"></div></div>
@@ -172,8 +174,8 @@
             <nav aria-label="Комментарии: разделы" data-mark="Э17">
               <ul class="sl-tabs-nav sl-tabs-nav-main">
                 <li class="sl-tabs-item"><a href="?name=comments" class="sl-tabs-link sl-is-active" aria-current="page" data-sl-view="all" data-sl-view-name="">Главная</a></li>
-                <li class="sl-tabs-item"><a href="?name=comments&amp;tab=wait" class="sl-tabs-link" data-sl-view="wait" data-sl-view-name="Ждут проверки">Ждут проверки</a></li>
-                <li class="sl-tabs-item"><a href="?name=comments&amp;tab=config" class="sl-tabs-link" data-sl-view="config" data-sl-view-name="Конфигурации" data-mark="В08.6">Конфигурации<span class="sl-tab-dot" data-sl-dirty-dot hidden><span class="sl-sr"> — есть несохранённые изменения</span></span></a></li>
+                <li class="sl-tabs-item"><a href="?name=comments&amp;tab=wait" class="sl-tabs-link" data-sl-view="wait" data-sl-view-name="Ждут проверки" data-mark="Д9">Ждут проверки</a></li>
+                <li class="sl-tabs-item"><a href="?name=comments&amp;tab=config" class="sl-tabs-link" data-sl-view="config" data-sl-view-name="Конфигурации" data-mark="В08.6 Д7">Конфигурации<span class="sl-tab-dot" data-sl-dirty-dot hidden><span class="sl-sr"> — есть несохранённые изменения</span></span></a></li>
                 <li class="sl-tabs-item"><a href="../../admin.php?name=comments&amp;op=info" class="sl-tabs-link">Справка</a></li>
                 <li class="sl-tabs-item"><a href="../../admin.php?name=security&amp;op=logview&amp;file=admin&amp;modul=comments" class="sl-tabs-link" data-mark="Э30">Журнал действий</a></li>
               </ul>
@@ -192,12 +194,12 @@
               </div>
             </div>
             <div class="sl-alert sl-alert-info sl-list-note" data-sl-allpages hidden data-mark="Э26"><div class="sl-alert-body"><span data-sl-allpages-text></span> <button type="button" class="sl-linkbtn" data-sl-allpages-go>Отметить все 8 414 комментариев</button><button type="button" class="sl-linkbtn" data-sl-allpages-off hidden>Снять отметку</button></div></div>
-            <div class="sl-alert sl-alert-error sl-list-note" data-sl-error role="alert" tabindex="-1" hidden data-mark="Э28"><div class="sl-alert-body">Не удалось загрузить список: сервер не ответил. Отметки и фильтры сохранены. <button type="button" class="sl-but" data-sl-retry><i class="bi bi-arrow-clockwise" aria-hidden="true"></i> Повторить</button></div></div>
+            <div class="sl-alert sl-alert-error sl-list-note" data-sl-error role="alert" tabindex="-1" hidden data-mark="Э28 Д6"><div class="sl-alert-body">Не удалось загрузить список: сервер не ответил. Отметки и фильтры сохранены. <button type="button" class="sl-but" data-sl-retry><i class="bi bi-arrow-clockwise" aria-hidden="true"></i> Повторить</button></div></div>
             <div class="sl-loading sl-list-busy" data-sl-busy hidden aria-hidden="true"></div>
             <table class="sl-table-list-sort sl-table-fixed sl-list" data-sl-table-sort data-sl-list data-density="standard">
               <caption class="sl-sr">Комментарии сайта</caption>
               <thead data-mark="Э19 В02.5">
-                <tr><th class="sl-col-id" scope="col">№</th><th class="sl-cell-ellipsis" scope="col" data-mark="Э21 Н3">Комментарий</th><th class="sl-cell-ellipsis" scope="col">Модуль</th><th class="sl-col-author" scope="col">Разместил</th><th class="sl-col-date" scope="col" data-mark="Э20">Дата</th><th class="sl-col-status" scope="col" data-sort-method="none" data-mark="Э22">Статус</th><th class="sl-col-actions" scope="col" data-sort-method="none" data-mark="Э23 Э29 Д1 Д3">Опции</th><th class="sl-col-check" scope="col" data-sort-method="none" data-sl-check-all data-mark="Э24"><input type="checkbox" class="sl-check" aria-label="Отметить все показанные"></th></tr>
+                <tr><th class="sl-col-id" scope="col">№</th><th class="sl-cell-ellipsis" scope="col" data-mark="Э21 Н3">Комментарий</th><th class="sl-cell-ellipsis" scope="col">Модуль</th><th class="sl-col-author" scope="col">Разместил</th><th class="sl-col-date" scope="col" data-mark="Э20">Дата</th><th class="sl-col-status" scope="col" data-sort-method="none" data-mark="Э22 Д5 Д9">Статус</th><th class="sl-col-actions" scope="col" data-sort-method="none" data-mark="Э23 Э29 Д1 Д3 Д5">Опции</th><th class="sl-col-check" scope="col" data-sort-method="none" data-sl-check-all data-mark="Э24"><input type="checkbox" class="sl-check" aria-label="Отметить все показанные"></th></tr>
               </thead>
               <tbody data-sl-rows data-mark="В02.6 В07.1 В07.4">
                 <tr data-sl-none data-sort-method="none" hidden><td colspan="8" class="sl-list-none"></td></tr>
@@ -222,7 +224,7 @@
                     <p class="sl-pager-info" data-mark="П7">Страница <b>1 из 337</b><span class="sl-pager-range"> · Показаны 1–25</span> · Всего <b>8414</b></p>
                   </nav>
                 </div>
-                <div class="sl-list-bottom-actions" data-mark="Э25 Э32">
+                <div class="sl-list-bottom-actions" data-mark="Э25 Э32 Д5">
                   <span class="sl-list-picked" data-sl-widest="Отмечено: 8 414"><span role="status" data-sl-picked>Отмечено: 0</span></span>
                   <label class="sl-sr" for="sl-act">Действие с отмеченными</label>
                   <select id="sl-act" class="sl-select" data-sl-act><option value="on">Активировать</option><option value="off">Деактивировать</option><option value="del">Удалить</option></select>
@@ -233,7 +235,7 @@
           </div>
 
           <div class="sl-box" data-sl-for-config hidden data-demo-page="comments">
-            <div class="sl-alert sl-alert-error sl-conf-sum" data-sl-conf-sum role="alert" tabindex="-1" hidden><div class="sl-alert-body"><b data-sl-conf-sum-cap></b><ul class="sl-alert-list" data-sl-conf-sum-list></ul></div></div>
+            <div class="sl-alert sl-alert-error sl-conf-sum" data-sl-conf-sum role="alert" tabindex="-1" hidden data-mark="В08.5 Д6"><div class="sl-alert-body"><b data-sl-conf-sum-cap></b><ul class="sl-alert-list" data-sl-conf-sum-list></ul></div></div>
             <form class="sl-div-form" data-sl-conf novalidate data-mark="В08.5 В08.8">
               <div class="sl-div-grid">
                 <div class="sl-div-item" data-sl-conf-item><div class="sl-div-label"><label for="f-num">Количество публикаций на страницу пользователя</label></div><div class="sl-div-field"><input type="number" name="num" value="15" id="f-num" min="1" required><span class="sl-field-err" id="f-num-err" hidden></span></div></div>
@@ -253,7 +255,7 @@
                 <div class="sl-div-item" data-sl-conf-item><div class="sl-div-label"><span id="f-profil-label">Выводить кнопку перехода к профилю пользователя?</span></div><div class="sl-div-field"><div class="sl-radio-switch sl-radio-group" role="radiogroup" aria-labelledby="f-profil-label"><label class="sl-radio"><input type="radio" name="profil" value="1" id="f-profil" checked> Да</label> <label class="sl-radio"><input type="radio" name="profil" value="0"> Нет</label></div></div></div>
                 <div class="sl-div-item" data-sl-conf-item><div class="sl-div-label"><span id="f-web-label">Выводить кнопку перехода на сайт пользователя?</span></div><div class="sl-div-field"><div class="sl-radio-switch sl-radio-group" role="radiogroup" aria-labelledby="f-web-label"><label class="sl-radio"><input type="radio" name="web" value="1" id="f-web"> Да</label> <label class="sl-radio"><input type="radio" name="web" value="0" checked> Нет</label></div></div></div>
               </div>
-              <div class="sl-div-actions"><button type="submit" class="sl-but-blue">Сохранить изменения</button></div>
+              <div class="sl-div-actions"><button type="submit" class="sl-but-blue" data-mark="Д5">Сохранить изменения</button></div>
             </form>
           </div>
         </div></main>
@@ -294,6 +296,8 @@
     <div class="sl-modal-body">
       <div class="sl-set-row sl-mode"><label class="sl-set-name" for="sl-o-mode"><i class="bi bi-circle-half" aria-hidden="true"></i>Тема оформления</label><span class="sl-set-pick"><select id="sl-o-mode" name="mode" class="sl-select" data-sl-option><option value="light">Светлая</option><option value="auto" selected>Системная</option><option value="dark">Тёмная</option></select></span></div>
       <div class="sl-set-row"><label class="sl-set-name" for="sl-o-motion"><i class="bi bi-magic" aria-hidden="true"></i>Движение</label><span class="sl-set-pick"><select id="sl-o-motion" name="motion" class="sl-select" data-sl-option><option value="1" selected>Включено</option><option value="0">Выключено</option></select></span></div>
+      <div class="sl-set-row"><label class="sl-set-name" for="sl-o-sound"><i class="bi bi-volume-up" aria-hidden="true"></i>Звук</label><span class="sl-set-pick"><select id="sl-o-sound" name="sound" class="sl-select" data-sl-option><option value="1" selected>Включено</option><option value="0">Выключено</option></select></span></div>
+      <div class="sl-set-row"><label class="sl-set-name" for="sl-o-saver"><i class="bi bi-fire" aria-hidden="true"></i>Заставка</label><span class="sl-set-pick"><select id="sl-o-saver" name="saver" class="sl-select" data-sl-option><option value="0">Выключена</option><option value="60000" selected>Через 1 минуту</option><option value="300000">Через 5 минут</option><option value="900000">Через 15 минут</option></select></span></div>
       <div class="sl-set-row"><label class="sl-set-name" for="sl-o-editor"><i class="bi bi-pencil-square" aria-hidden="true"></i>Редактор</label><span class="sl-set-pick"><select id="sl-o-editor" name="editor" class="sl-select" data-sl-option><option value="plain">Plain Plus</option><option value="toastui">TOAST UI Markdown 3</option><option value="codemirror" selected>CodeMirror 6</option><option value="tinymce">TinyMCE 8 Community</option><option value="ckeditor">CKEditor 5</option></select></span></div>
       <div class="sl-set-row"><label class="sl-set-name" for="sl-o-lang"><i class="bi bi-translate" aria-hidden="true"></i>Язык</label><span class="sl-set-pick"><select id="sl-o-lang" name="newlang" class="sl-select" data-sl-option><option value="de">Немецкий</option><option value="en">Английский</option><option value="fr">Французский</option><option value="pl">Польский</option><option value="ru" selected>Русский</option><option value="uk">Украинский</option></select></span></div>
     </div>
@@ -319,7 +323,7 @@
     </tr>
   </template>
 
-  <!-- Stand data: the two menu blocks of the panel and 28 comments of the stand base, three of them waiting -->
+  <!-- Stand data: the two menu blocks of the panel and 28 comments of the stand base, three of them waiting, and four that arrive for the queue -->
   <script type="application/json" id="demo-menu">
     {"admin": [["admins", "Администрация", "person-gear"], ["blocks", "Блоки и баннеры", "grid-3x3-gap"], ["categories", "Категории", "folder"], ["comments", "Комментарии", "chat-dots"], ["config", "Конфигурации", "gear"], ["database", "База данных", "database"], ["editor", "Редактор", "pencil-square"], ["favorites", "Фавориты", "star"], ["fields", "Дополнительные поля", "input-cursor-text"], ["groups", "Группы", "people-fill"], ["lang", "Редактор языков", "translate"], ["messages", "Сообщения", "envelope"], ["modules", "Модули", "puzzle"], ["monitor", "Мониторинг", "display"], ["newsletter", "Рассылка", "send"], ["privat", "Личные сообщения", "incognito"], ["ratings", "Рейтинги", "star-half"], ["referers", "Переходы", "box-arrow-in-right"], ["replace", "Замена слов", "arrow-left-right"], ["scheduler", "Планировщик", "clock-history"], ["security", "Безопасность", "shield-lock"], ["statistic", "Статистика", "graph-up"], ["template", "Шаблон", "palette"], ["uploads", "Загрузки", "cloud-arrow-up"]],
      "conf": ["comments", "favorites", "lang", "newsletter", "privat", "referers", "security", "statistic", "uploads", "changelog", "forum", "node", "search", "sitemap", "voting"],
@@ -355,7 +359,11 @@
       [20653, "news", "roma", "Скажите пожалуйста, сколько будет стоить перенос этого сайта: xpower.ua, на самописном движке на SLAED CMS?", "15.07.2019 12:39:08", "128.124.54.84", 3916, 1, 0, "ua", "Ukraine"],
       [20552, "news", "vitalik1972", "Афигеть, я думал этот проект сдох давно... Бррр, как вспомню маршрутизацию в этом движке.... дурно становится... А код в...", "28.01.2017 02:51:44", "87.241.204.6", 3910, 0, 1, "ru", "Russia"],
       [20538, "news", "Vagulo", "На проекте ещё с первых версий, когда было ещё всё бесплатно... Опять всё вернулось к истокам... Ага. Тогда, помнится, ...", "12.01.2017 08:56:28", "83.239.67.154", 3910, 0, 1, "ru", "Russia"],
-      [20474, "news", "panic", "olevpa, не чего, проект сгнил", "06.01.2015 17:43:45", "195.78.247.104", 3906, 0, 1, "ua", "Ukraine"]]}
+      [20474, "news", "panic", "olevpa, не чего, проект сгнил", "06.01.2015 17:43:45", "195.78.247.104", 3906, 0, 1, "ua", "Ukraine"]],
+     "incoming": [["news", "Гость", "Когда выйдет 8.0? Жду с нетерпением, хочу обновить свой сайт.", "91.204.15.7", 3918, "ru", "Russia"],
+      ["files", "kostya_dev", "Подскажите, тема из каталога файлов подойдёт к версии 8.0 без доработки?", "46.211.80.14", 5057, "ua", "Ukraine"],
+      ["help", "Гость", "После переноса на новый хостинг не открывается панель, белый экран.", "84.143.20.9", 4187, "de", "Germany"],
+      ["voting", "Marta", "Голосую за каталог сайтов, давно его не хватало.", "178.70.12.33", 26, "by", "Belarus"]]}
   </script>
 
   <!-- The stand: a helper window of the system at the bottom right, the marks of every code and their description; not part of the panel -->
@@ -365,13 +373,35 @@
       <div class="sl-set-row"><span class="sl-set-name" id="demo-l-mode"><i class="bi bi-circle-half" aria-hidden="true"></i>Тема</span><span class="sl-set-pick"><span class="sl-seg sl-seg-view" data-sl-knob="demo-mode" role="group" aria-labelledby="demo-l-mode" data-demo-seg="mode"><button type="button" class="sl-seg-cell" data-demo-val="light" title="Светлая" aria-label="Светлая" aria-pressed="false"><i class="bi bi-sun" aria-hidden="true"></i></button><button type="button" class="sl-seg-cell" data-demo-val="auto" title="Системная" aria-label="Системная" aria-pressed="false"><i class="bi bi-circle-half" aria-hidden="true"></i></button><button type="button" class="sl-seg-cell" data-demo-val="dark" title="Тёмная" aria-label="Тёмная" aria-pressed="false"><i class="bi bi-moon" aria-hidden="true"></i></button><span class="sl-seg-knob" data-sl-knob-mark aria-hidden="true"></span></span></span></div>
       <div class="sl-set-row"><span class="sl-set-name" id="demo-l-marks"><i class="bi bi-bookmark-star" aria-hidden="true"></i>Пометки</span><span class="sl-set-pick"><span class="sl-seg sl-seg-view demo-seg-text" data-sl-knob="demo-marks" role="group" aria-labelledby="demo-l-marks" data-demo-seg="marks"><button type="button" class="sl-seg-cell" data-demo-val="1" title="Да" aria-label="Да" aria-pressed="false">Да</button><button type="button" class="sl-seg-cell" data-demo-val="0" title="Нет" aria-label="Нет" aria-pressed="false">Нет</button><span class="sl-seg-knob" data-sl-knob-mark aria-hidden="true"></span></span></span></div>
       <div class="sl-set-row"><span class="sl-set-name" id="demo-l-motion"><i class="bi bi-magic" aria-hidden="true"></i>Движение</span><span class="sl-set-pick"><span class="sl-seg sl-seg-view demo-seg-text" data-sl-knob="demo-motion" role="group" aria-labelledby="demo-l-motion" data-demo-seg="motion"><button type="button" class="sl-seg-cell" data-demo-val="1" title="Да" aria-label="Да" aria-pressed="false">Да</button><button type="button" class="sl-seg-cell" data-demo-val="0" title="Нет" aria-label="Нет" aria-pressed="false">Нет</button><span class="sl-seg-knob" data-sl-knob-mark aria-hidden="true"></span></span></span></div>
+      <div class="sl-set-row"><span class="sl-set-name" id="demo-l-sound"><i class="bi bi-volume-up" aria-hidden="true"></i>Звук</span><span class="sl-set-pick"><span class="sl-seg sl-seg-view demo-seg-text" data-sl-knob="demo-sound" role="group" aria-labelledby="demo-l-sound" data-demo-seg="sound"><button type="button" class="sl-seg-cell" data-demo-val="1" title="Да" aria-label="Да" aria-pressed="false">Да</button><button type="button" class="sl-seg-cell" data-demo-val="0" title="Нет" aria-label="Нет" aria-pressed="false">Нет</button><span class="sl-seg-knob" data-sl-knob-mark aria-hidden="true"></span></span></span></div>
+      <div class="sl-set-row"><span class="sl-set-name" id="demo-l-sounds"><i class="bi bi-music-note-beamed" aria-hidden="true"></i>Выбор звуков</span><span class="sl-set-pick"><span class="sl-seg sl-seg-view demo-seg-text" data-sl-knob="demo-sounds" role="group" aria-labelledby="demo-l-sounds" data-demo-seg="sounds"><button type="button" class="sl-seg-cell" data-demo-val="1" title="Да" aria-label="Да" aria-pressed="false">Да</button><button type="button" class="sl-seg-cell" data-demo-val="0" title="Нет" aria-label="Нет" aria-pressed="false">Нет</button><span class="sl-seg-knob" data-sl-knob-mark aria-hidden="true"></span></span></span></div>
+      <div class="sl-set-row"><span class="sl-set-name" id="demo-l-saver"><i class="bi bi-fire" aria-hidden="true"></i>Заставка</span><span class="sl-set-pick"><span class="sl-seg sl-seg-view demo-seg-text" data-sl-knob="demo-saver" role="group" aria-labelledby="demo-l-saver" data-demo-seg="saver"><button type="button" class="sl-seg-cell" data-demo-val="1" title="Да" aria-label="Да" aria-pressed="false">Да</button><button type="button" class="sl-seg-cell" data-demo-val="0" title="Нет" aria-label="Нет" aria-pressed="false">Нет</button><span class="sl-seg-knob" data-sl-knob-mark aria-hidden="true"></span></span></span></div>
       <div class="sl-set-row"><span class="sl-set-name" id="demo-l-legend"><i class="bi bi-list-check" aria-hidden="true"></i>Описание</span><span class="sl-set-pick"><span class="sl-seg sl-seg-view demo-seg-text" data-sl-knob="demo-legend" role="group" aria-labelledby="demo-l-legend" data-demo-seg="legend"><button type="button" class="sl-seg-cell" data-demo-val="1" title="Да" aria-label="Да" aria-pressed="false">Да</button><button type="button" class="sl-seg-cell" data-demo-val="0" title="Нет" aria-label="Нет" aria-pressed="false">Нет</button><span class="sl-seg-knob" data-sl-knob-mark aria-hidden="true"></span></span></span></div>
       <div class="sl-set-row"><span class="sl-set-name" id="demo-l-net"><i class="bi bi-wifi-off" aria-hidden="true"></i>Сбой сети</span><span class="sl-set-pick"><span class="sl-seg sl-seg-view demo-seg-text" data-sl-knob="demo-net" role="group" aria-labelledby="demo-l-net" data-demo-seg="net"><button type="button" class="sl-seg-cell" data-demo-val="1" title="Да" aria-label="Да" aria-pressed="false">Да</button><button type="button" class="sl-seg-cell" data-demo-val="0" title="Нет" aria-label="Нет" aria-pressed="false">Нет</button><span class="sl-seg-knob" data-sl-knob-mark aria-hidden="true"></span></span></span></div>
       <div class="sl-set-row"><span class="sl-set-name" id="demo-l-session"><i class="bi bi-hourglass-bottom" aria-hidden="true"></i>Конец сессии</span><span class="sl-set-pick"><span class="sl-seg sl-seg-view demo-seg-text" data-sl-knob="demo-session" role="group" aria-labelledby="demo-l-session" data-demo-seg="session"><button type="button" class="sl-seg-cell" data-demo-val="1" title="Да" aria-label="Да" aria-pressed="false">Да</button><button type="button" class="sl-seg-cell" data-demo-val="0" title="Нет" aria-label="Нет" aria-pressed="false">Нет</button><span class="sl-seg-knob" data-sl-knob-mark aria-hidden="true"></span></span></span></div>
+      <div class="sl-set-row"><span class="sl-set-name" id="demo-l-flow"><i class="bi bi-inbox" aria-hidden="true"></i>Поток заявок</span><span class="sl-set-pick"><span class="sl-seg sl-seg-view demo-seg-text" data-sl-knob="demo-flow" role="group" aria-labelledby="demo-l-flow" data-demo-seg="flow"><button type="button" class="sl-seg-cell" data-demo-val="1" title="Да" aria-label="Да" aria-pressed="false">Да</button><button type="button" class="sl-seg-cell" data-demo-val="0" title="Нет" aria-label="Нет" aria-pressed="false">Нет</button><span class="sl-seg-knob" data-sl-knob-mark aria-hidden="true"></span></span></span></div>
     </div>
-    <div class="sl-modal-foot"><a class="sl-modal-btn" href="../index.html" title="Все варианты стенда">Варианты</a> <button type="button" class="sl-modal-btn" data-demo-reset title="Сбросить выбор: тема, меню, вид, сортировка, пометки, место окна">Сбросить</button></div>
+    <div class="sl-modal-foot"><a class="sl-modal-btn" href="../index.html" title="Все варианты стенда">Варианты</a> <button type="button" class="sl-modal-btn" data-demo-reset title="Сбросить выбор: тема, движение, звук, заставка, меню, вид, сортировка, пометки, место окна">Сбросить</button></div>
   </dialog>
   <div class="demo-marks" data-demo-layer aria-hidden="true"></div>
+  <dialog class="sl-modal demo-sounds" id="demo-sounds" data-sl-window data-demo-sounds aria-labelledby="demo-snd-cap">
+    <div class="sl-modal-title"><i class="bi bi-music-note-beamed" aria-hidden="true"></i> <span class="sl-modal-cap"><strong id="demo-snd-cap">Звуки</strong><span class="sl-modal-sub">Выбор для панели · общий с лабораторией</span></span> <span class="sl-modal-acts"><span class="sl-modal-act sl-modal-act-move" title="Перетащить" aria-hidden="true"><i class="bi bi-grip-vertical"></i></span><button type="button" class="sl-modal-act sl-modal-act-close" data-sl-close title="Закрыть" aria-label="Закрыть"><i class="bi bi-x-lg" aria-hidden="true"></i></button></span></div>
+    <div class="sl-modal-body">
+      <div class="demo-snd-top">
+        <label class="demo-snd-flag"><input type="checkbox" class="sl-check" data-demo-snd-master> Звук</label>
+        <label class="demo-snd-vol"><i class="bi bi-volume-down" aria-hidden="true"></i><span class="sl-sr">Громкость</span><input type="range" min="0" max="1" step="0.05" data-demo-snd-vol></label>
+      </div>
+      <div class="demo-snd-top" role="group" aria-label="Зоны звука">
+        <label class="demo-snd-flag"><input type="checkbox" class="sl-check" data-demo-snd-zone="alert"> Алерты</label>
+        <label class="demo-snd-flag"><input type="checkbox" class="sl-check" data-demo-snd-zone="mod"> Очередь модерации</label>
+        <label class="demo-snd-flag"><input type="checkbox" class="sl-check" data-demo-snd-zone="win"> Победы</label>
+      </div>
+      <p class="demo-snd-asleep" data-demo-snd-asleep hidden>Браузер ещё не дал звук: щёлкните по странице.</p>
+      <div data-demo-snd-list></div>
+      <p class="demo-legend-note">Щелчок по варианту выбирает его и даёт прослушать. Выбор хранится в этом браузере и общий с лабораторией звуков: что выбрано здесь, звучит там, и наоборот. «Сведения» и «Объявление» в панели пока не звучат, сообщения и упоминания — звуки сайта.</p>
+    </div>
+    <div class="sl-modal-foot"><a class="sl-modal-btn" href="../snd-01-lab.html" target="_blank" rel="noopener">Лаборатория</a></div>
+  </dialog>
   <dialog class="sl-modal sl-modal-sm demo-legend" id="demo-legend" data-sl-window data-demo-legend aria-labelledby="demo-legend-cap">
     <div class="sl-modal-title"><i class="bi bi-list-check" aria-hidden="true"></i> <span class="sl-modal-cap"><strong id="demo-legend-cap">Описание</strong><span class="sl-modal-sub">Перенесённые решения</span></span> <span class="sl-modal-acts"><span class="sl-modal-act sl-modal-act-move" title="Перетащить" aria-hidden="true"><i class="bi bi-grip-vertical"></i></span><button type="button" class="sl-modal-act sl-modal-act-close" data-sl-close title="Закрыть" aria-label="Закрыть"><i class="bi bi-x-lg" aria-hidden="true"></i></button></span></div>
     <div class="sl-modal-body">
@@ -394,6 +424,15 @@
         <li data-code="Д1">В «…» строки — фильтры «Все комментарии автора» и «Все комментарии с этого IP», перед «Удалить»: список сразу сужается поиском по полю «Разместил» или «IP Адрес» (Н1), фильтр живёт в адресе (Э16). Приём против спама без нового экрана.</li>
         <li data-code="Д2">Найденное подсвечивается в номере, тексте, авторе и модуле — как в живой панели (filterTextHighlight, класс темы sl-highlight); подсветка снимается вместе с поиском.</li>
         <li data-code="Д3">В «…» строки — «Ответить на сайте»: ведёт к комментарию на его странице сразу в форму ответа, адрес …#reply-ID. Для переноса: slaed.js должен по такому адресу вызвать setCommentTarget(ID) — сейчас ответ на сайте открывается только кнопкой «Ответить» под комментарием.</li>
+        <li data-code="Д4" data-show="options">Звук: в «Опциях» (Э06) строка «Звук: Включено / Выключено» рядом с «Движением» (П2), применяется сразу; включение отвечает тоном «Успех» (Д5). Общие правила: звучит только то, что появилось в ответ на действие или событие — алерты, отрисованные вместе со страницей (setup.php и информация на главной), молчат; одна категория звучит не чаще раза в 2,5 с; до первого касания страницы браузер звук не даёт; подсказки самого стенда звука не дают. Движок demo/assets/sound.js и ключ sl.sound — общие с лабораторией звуков (demo/snd-01-lab.html). Строка «Звук» окна стенда — тот же переключатель. Для переноса: движок — в plugins/system, строка «Звук» — в «Опции» живой панели.</li>
+        <li data-code="Д5" data-show="success">Тон «Успех» (зона «Алерты») — вместе с уведомлением «Отменить» (Э23): кнопка статуса строки (Э22), «Удалить» в «…» строки (Э23), «OK» действий с отмеченными (Э25), «Деактивировать» и «Активировать» в веере раздела — в меню и на карточках главной (Н6, Г3), «Сохранить изменения» формы «Конфигурации» (В08), «Продлить сессию» (Э14), включение звука в «Опциях» (Д4). Само «Отменить» молчит. «Показать» переключает статус первой строки.</li>
+        <li data-code="Д6" data-show="fail">Тон «Ошибка» (зона «Алерты»): сбой загрузки списка с «Повторить» (Э28) и сводка ошибок формы «Конфигурации» при сохранении (В08.5). «Показать» моделирует сбой сети.</li>
+        <li data-code="Д7" data-show="session">Тон «Внимание» (зона «Алерты»): окно конца сессии с отсчётом (Э14) и вопрос «Уйти без сохранения?» при уходе с изменённой формы — на другую вкладку, по ссылке или «Назад» (В08.8). «Показать» открывает окно конца сессии.</li>
+        <li data-code="Д8" data-show="queue">Очередь (зона «Очередь модерации»): новый комментарий на проверку — колокольчик (Э04) прибавляет число и вздрагивает, строка входит в «Ждут проверки», растут чип очереди в меню и на карточке (Э10, Г4) и строка «Ждут внимания» (Г8); пока вкладка не на глазах, число новых стоит в её заголовке (Э02) и снимается, когда к ней возвращаются. Звук — тихий низкий тон на открытой вкладке, полный — на неактивной; зона по умолчанию выключена. Стенд: «Поток заявок» в окне «Стенд» — комментарий каждые 10 с, в Ctrl+K — «Смоделировать новый комментарий». Для переноса: число очереди приходит опросом сервера, звук — когда оно выросло.</li>
+        <li data-code="Д9" data-show="win">Победа (зона «Победы»): действие, которое проверило последний ждущий комментарий — кнопкой статуса (Э22), «OK» (Э25) или удалением, — звучит фирменным мотивом вместо тона «Успех»: очередь пуста, «Всё проверено» (Э17). «Показать» активирует все ждущие строки; «Отменить» возвращает очередь.</li>
+        <li data-code="Д10" data-show="sounds">Панель «Звуки» стенда (строка «Выбор звуков» окна «Стенд»): для каждого звука панели — где он звучит с кодами мест, варианты (щелчок выбирает и даёт прослушать) и «Показать»; сверху общий выключатель (тот же, что Д4), громкость и зоны «Алерты», «Очередь модерации», «Победы». Выбор общий с лабораторией (ключ sl.sound.set) в обе стороны без перезагрузки. Для переноса: выбор вариантов — решение для всей системы, не настройка пользователя; в живую панель уходит только выключатель Д4, зоны — флажками в профиле.</li>
+        <li data-code="Д11" data-show="saver">Заставка «Возрождение» к выходу 8.0 (версия Phoenix). После простоя (Д12) экран тускнеет, по нему бежит код системы, искры собираются в A, A осыпается пеплом, пепел загорается большим логотипом, тот улетает в угол, становится пиксельным и снова настоящим логотипом (Э01); дальше покой — пепел поднимается от низа страницы под содержимым, по логотипу раз в 6 с проходит луч, на углу логотипа значок «8.0 Phoenix». Пока простой продолжается, сцена идёт по кругу. Движение мыши, клавиша, колесо или прокрутка мягко гасят сцену за 0,8 с, покой остаётся фоном. Заставка не стартует, пока открыто модальное окно (конец сессии Э14, вопрос В08.8) и пока вкладка скрыта; окно «Стенд» и пометки на время сцены уходят. «Движение: Выключено» (В07.5) или prefers-reduced-motion — сцены нет, только значок. Огонь — в тонах темы, светлой и тёмной; смена темы перезапускает покой в новых цветах. Стенд: строка «Заставка» окна «Стенд», «Запустить заставку» в Ctrl+K, «Показать» — после запуска не трогайте мышь. Сцена и таймер простоя — demo/assets/phoenix-scene.js, стили — demo/assets/phoenix-fx.css. Для переноса: сцена — в тему admin, таймер простоя — в admin-ui.js.</li>
+        <li data-code="Д12" data-show="options">«Опции» (Э06): строка «Заставка: Выключена / Через 1 минуту / Через 5 минут / Через 15 минут» рядом с «Движением» (П2) и «Звуком» (Д4), по умолчанию через минуту; применяется сразу и доходит до других открытых вкладок, ключ sl.saver. «Выключена» снимает и сцену, и покой со значком.</li>
       </ul>
       <h3>Г · главная панели</h3>
       <ul class="sl-reset">

@@ -999,7 +999,7 @@ the lines on and off. A line is `info`, its message `<scope> <op>`, with:
 
 The record keeps neither the values before and after a change nor the title of
 the object: both would need a call in every handler. Changes made outside the
-panel — the quick edit of the site, the connector `public/api.php`, the jobs of
+panel — the quick edit of the site, the connector under `/api/`, the jobs of
 the scheduler, `update.php`, `setup.php` — are not recorded here; the connector
 keeps its own audit table (`docs/2027-CONNECTOR.md`).
 
