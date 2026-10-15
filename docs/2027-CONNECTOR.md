@@ -238,8 +238,9 @@ string, strict base64, decoded bytes start with `FFD8FF`, at most 16 KB encoded.
 A service is added without touching the connector or any central list:
 
 - **Discovery:** a service is any enabled module with a file `modules/<module>/api.php`, plus the core services in
-  `core/classes/api/services/`. The router builds the service list from the enabled modules (cached, rebuilt when
-  `config/modules.php` changes). Service name = module name; `/api/v1/vine/beat` → module `vine`, action `beat`.
+  `core/classes/api/services/`, a core service before a module of the same name. A request reads only the service its
+  path names, one file, so no list is built or cached; `system/schema` alone walks the active modules. Service name =
+  module name; `/api/v1/vine/beat` → module `vine`, action `beat`.
 - **Declaration next to the code:** `modules/<module>/api.php` only returns the action table — method, auth, scope,
   params, size cap, cache, handler, flags; it defines no function. The handlers live in `modules/<module>/common.php`,
   which the router includes only after every guard passed. The admin shows the declarations as the live API
@@ -275,7 +276,11 @@ return [
 ];
 ```
 
-`auth` defaults to `key`. An agent splits a large push so each call stays under the action's `size`. A handler is
+`auth` defaults to `key`, `reply` to `envelope` (`file` hands a stored file to `getFileStream()`, `jsonrpc` is MCP),
+`ver` to `[1]`. A param is a type of `ApiInput` or `[type, argument, 'def' => default]`: `num` takes a maximum,
+`word` a list of allowed values, `text` a length; a param without `def` is required, an undeclared one is dropped. The
+router refuses a declaration with an unknown key, a `key` action without a scope of its service, a `public` action
+that is not `GET` or a param type `ApiInput` does not know; such a service answers 500 and is logged. An agent splits a large push so each call stays under the action's `size`. A handler is
 `function (array $in, ApiClient $cli): array`; it returns data or throws `ApiError`.
 
 ## Data model
@@ -300,7 +305,7 @@ Retention, enforced by the scheduler job `apiclean`: `api_log` 30 days, `api_ide
 days, `api_audit` 365 days, `api_confirm` 24 h after expiry.
 
 `config/api.php` (`$conf['api']`): `active`, `off` (disabled services and actions — switches only, no routes),
-`outbound` (host allowlist), `limits` (default rate, burst, body size), `cors` (off by default, global origin
+`outbound` (host allowlist), `limits` (`flood` and `burst`: the bucket of an address per minute; `size`: the default body), `cors` (off by default, global origin
 allowlist for preflights), `log` (all / errors only), `maint` (answer 503 to everything but `system`), `hooks`
 (outbound webhook URLs and the events each one receives), `telegram` (bot token, webhook secret, id of the bot's
 client), `ai` (provider, model, provider key), `risk` (the site default policy per risk class, see "Administrator

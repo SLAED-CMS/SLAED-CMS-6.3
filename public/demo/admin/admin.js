@@ -1027,41 +1027,72 @@
 
   /* ---------- Stand: data and marks, not part of the panel ---------- */
 
-  // The states the stand can put the cockpit in: the line of state, and the class, glyph and note of the two signals that move
+  // The signals the lamp sums, each read in the panel from a source the code already has: the self-check of the
+  // scheduler, the setup file, the error and security logs of the monitor, its disk and runtime figures, the backups.
+  // A state of the stand gives the ones it breaks a level and the fact to show
+  const SIGNALS = [
+    { key: 'dirs', name: 'Защита каталогов', href: '../../admin.php?name=security' },
+    { key: 'setup', name: 'Файл установки', href: '#sl-alert-setup' },
+    { key: 'phperr', name: 'Ошибки PHP', href: '../../admin.php?name=monitor' },
+    { key: 'dberr', name: 'Ошибки базы данных', href: '../../admin.php?name=database' },
+    { key: 'disk', name: 'Место на диске', href: '../../admin.php?name=monitor' },
+    { key: 'backup', name: 'Резервная копия', href: '../../plugins/sxd/index.php' },
+    { key: 'login', name: 'Неудачные входы', href: '../../admin.php?name=security' },
+    { key: 'attack', name: 'События безопасности', href: '../../admin.php?name=security' },
+    { key: 'cron', name: 'Планировщик', href: '../../admin.php?name=scheduler' },
+    { key: 'https', name: 'HTTPS', href: '../../admin.php?name=config' },
+    { key: 'opcache', name: 'OPcache', href: '../../admin.php?name=monitor' },
+    { key: 'php', name: 'Версия PHP', href: '../../admin.php?name=monitor' }
+  ];
   const STATES = {
-    ok: { icon: 'check-circle-fill', text: 'Все системы в норме', setup: ['', 'check-circle-fill', 'удалён после установки'], db: ['', 'check-circle-fill', 'нет за 24 часа'] },
-    warn: { icon: 'exclamation-triangle-fill', text: 'Требует внимания · 1', setup: ['sl-is-warn', 'exclamation-triangle-fill', 'setup.php всё ещё лежит в корне сайта'], db: ['', 'check-circle-fill', 'нет за 24 часа'] },
-    danger: { icon: 'x-circle-fill', text: 'Сбой · 2', setup: ['sl-is-warn', 'exclamation-triangle-fill', 'setup.php всё ещё лежит в корне сайта'], db: ['sl-is-fail', 'x-circle-fill', '12 ошибок за последний час'] }
+    ok: { word: 'Все системы в норме', icon: 'check-circle-fill', off: {} },
+    warn: {
+      word: 'Требует внимания', icon: 'exclamation-triangle-fill',
+      off: { setup: ['warn', 'в корне сайта'], phperr: ['warn', '29 за сутки'] }
+    },
+    danger: {
+      word: 'Сбой', icon: 'x-octagon-fill',
+      off: {
+        dirs: ['fail', 'каталог открыт'],
+        dberr: ['fail', '12 за сутки'],
+        login: ['warn', '214 за сутки'],
+        phperr: ['warn', '37 за сутки'],
+        setup: ['warn', 'в корне сайта']
+      }
+    }
   };
+  const LEVELS = { fail: ['sl-knob-danger', 'x-octagon-fill'], warn: ['sl-knob-warn', 'exclamation-triangle-fill'] };
 
-  // Put the cockpit in one state: one ring tone class on the panel colours the lamp and the line, the signals follow
+  // Put the cockpit in one state: one ring tone class on the panel colours the lamp and the line; the bell panel of the
+  // lamp lists only the signals that broke, the failures first, and a calm system says in its caption that all passed
   function setCockpitState(tone) {
     const box = doc.querySelector('[data-sl-cockpit]');
     const now = STATES[tone];
     if (!box || !now) return;
+    const rows = SIGNALS.map((s) => ({ ...s, level: (now.off[s.key] || [])[0] || '', note: (now.off[s.key] || [])[1] || '' }));
+    const loud = rows.filter((r) => r.level).sort((x, y) => (x.level === y.level ? 0 : x.level === 'fail' ? -1 : 1));
+    const tip = (r) => '<a class="' + LEVELS[r.level][0] + '" href="' + getEsc(r.href) + '"' + (r.href.includes('/plugins/') ? ' target="_blank" rel="noopener noreferrer"' : '') + '><i class="bi bi-' + LEVELS[r.level][1] + '" aria-hidden="true"></i> ' + getEsc(r.name) + ' <span class="sl-bell-num">' + getEsc(r.note) + '</span></a>';
+    box.querySelector('[data-sl-signals]').innerHTML = loud.map(tip).join('');
+    box.querySelector('[data-sl-signals-cap]').textContent = loud.length ? 'Требуют внимания' : 'Все ' + SIGNALS.length + ' проверок пройдены';
+    const text = loud.length ? now.word + ' · ' + loud.length : now.word;
     box.classList.remove('sl-knob-ok', 'sl-knob-warn', 'sl-knob-danger');
     box.classList.add('sl-knob-' + tone);
     const line = box.querySelector('[data-sl-cockpit-state]');
     line.firstElementChild.className = 'bi bi-' + now.icon;
-    line.lastElementChild.textContent = now.text;
-    box.querySelector('[data-sl-cockpit-lamp]').setAttribute('aria-label', 'Состояние системы: ' + now.text + '. Сигналы');
-    ['setup', 'db'].forEach((key) => {
-      const [cls, icon, note] = now[key];
-      const row = box.querySelector('[data-sl-signal="' + key + '"]');
-      row.className = cls;
-      row.querySelector('.bi').className = 'bi bi-' + icon;
-      row.querySelector('span').textContent = note;
-    });
+    line.lastElementChild.textContent = text;
+    box.querySelector('[data-sl-cockpit-lamp]').setAttribute('aria-label', 'Состояние системы: ' + text + '. Сигналы');
   }
 
   // The cockpit of the home: the stand has no server behind it, so each gauge and each figure of the strip drifts round its own value as a live panel would
   function setCockpit() {
     const box = doc.querySelector('[data-sl-cockpit]');
     if (!box) return;
+    setCockpitState('warn');
     const rings = [...box.querySelectorAll('[data-sl-gauge]')];
     const base = rings.map((r) => Number(r.querySelector('[data-sl-gauge-val]').textContent));
     setInterval(() => {
-      if (doc.hidden || root.hasAttribute('data-sl-still')) return;
+      if (doc.hidden || root.hasAttribute('data-sl-still') || box.hasAttribute('data-sl-live-paused')) return;
+      box.setAttribute('data-sl-live-stamp', Date.now());
       rings.forEach((r, i) => {
         const max = Number(r.dataset.slGaugeMax);
         const val = Math.max(0, Math.min(max, Math.round(base[i] * (0.9 + Math.random() * 0.2))));
@@ -1070,7 +1101,7 @@
         r.querySelector('.sl-knob-val')?.setAttribute('stroke-dasharray', part + ' 100');
         if (r.getAttribute('role') === 'meter') {
           r.setAttribute('aria-valuenow', val);
-          r.setAttribute('aria-valuetext', val + ' %');
+          r.setAttribute('aria-valuetext', val + '%');
         }
         // The server gauges take their tone from the share, by the thresholds of getPercentTone() in core/system.php
         if (r.hasAttribute('data-sl-gauge-tone')) {
@@ -1079,7 +1110,7 @@
           r.classList.add('sl-knob-' + tone);
         }
       });
-    }, 3000);
+    }, 10000);
   }
 
   // Draw the stand page from its data: the other page of the file leaves the document, then menu, cards and rows fill their templates
@@ -1399,6 +1430,17 @@
       rail: () => { if (!wide.matches) setToast('Балка есть только шире 900 px.', null); else setRail(true, true); },
       options: () => { setLegend(false); setWindow(doc.getElementById('sl-settings'), true); },
       queue: () => setDemoArrive(),
+      cockpit: () => {
+        if (!doc.querySelector('[data-sl-cockpit]')) { location.assign('index.html'); return; }
+        setLegend(false);
+        segs.state('danger');
+        doc.querySelector('[data-sl-cockpit]').scrollIntoView({ block: 'center', behavior: 'instant' });
+      },
+      signals: () => {
+        if (!doc.querySelector('[data-sl-cockpit]')) { location.assign('index.html'); return; }
+        setLegend(false);
+        setTimeout(() => doc.querySelector('[data-sl-cockpit-lamp]').focus(), 450);
+      },
       saver: () => { setLegend(false); setTimeout(setSaverNow, 300); },
       sounds: () => { setLegend(false); setSndDraw(); setWindow(sbox, true); },
       success: () => {

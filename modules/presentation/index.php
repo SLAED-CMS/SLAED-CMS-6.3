@@ -314,7 +314,9 @@ function getPresentationData(): array {
     $branch = (string)($conf['presentation']['branch'] ?? '');
     $logo = 'slaed-logo-mark-gradient-blue.svg';
     $state = $cache ? _PRES_STK_ACTIVE : _PRES_STK_OFF;
-    $hit = $cache ? min(98, 84 + $today['visits'] % 13) : 0;
+    $opcache = function_exists('opcache_get_status') ? opcache_get_status(false) : false;
+    $hit = ($opcache && !empty($opcache['opcache_enabled'])) ? (int)round($opcache['opcache_statistics']['opcache_hit_rate'] ?? 0) : 0;
+    $hitval = $hit ?: _PRES_STK_OFF;
     $live = max($cnt['all'], 48 + $today['visits'] % 37);
     $split = static function (array $visits, int $hit, int $shift): array {
         $rows = ['visits' => [], 'cache' => [], 'db' => []];
@@ -378,10 +380,10 @@ function getPresentationData(): array {
     $hero = [
         'cockpit' => _PRES_COCKPIT, 'nominal' => _PRES_NOMINAL, 'version' => $ver[0].(isset($ver[1]) ? ' · '.$ver[1] : ''),
         'gen_ring' => $ring((string)$gen, 'ms', _PRES_GEN, $gpart, '', false, '', 'info'),
-        'cache_ring' => $ring((string)$hit, '%', _PRES_CACHE, $hit, '', false, '', 'ok'),
+        'cache_ring' => $ring($hitval, $hit ? '%' : '', 'OPcache', $hit, '', false, '', 'ok'),
         'qnum_ring' => $ring((string)$load['qnum'], 'sql', _PRES_QUERY, $qpart, '', false, '', 'warn'),
         'online_ring' => $ring((string)$live, '', _ONLINE, $share($live, 120), '', false, '', 'info'),
-        'plate' => ['theme' => $theme, 'logo' => $logo, 'tone' => 'success'],
+        'plate' => ['tone' => 'success'],
         'eyebrow' => _PRES_EYEBROW, 'head_a' => _PRES_HEAD_A, 'head_b' => _PRES_HEAD_B, 'head_c' => _PRES_HEAD_C, 'lead' => _PRES_LEAD,
         'core' => [
             'title' => _PRES_CONTROL, 'route' => $menu[0]['path'], 'menu' => $menu, 'view' => _PRES_MONITOR, 'online' => _ONLINE,
@@ -433,7 +435,7 @@ function getPresentationData(): array {
             ['key' => 'area', 'label' => _PRES_RH_AREA, 'icon' => 'graph-up', 'is_on' => true], ['key' => 'bar', 'label' => _PRES_RH_BARS, 'icon' => 'bar-chart', 'is_on' => false],
         ],
         'legend' => [_PRES_RH_HITS, _PRES_CACHE, _PRES_DB],
-        'vring' => ['is_round' => true, 'inner' => $gpart, 'deep' => $qpart] + $ring((string)$hit, '%', _PRES_CACHE, $hit, '', false, '', 'info'),
+        'vring' => ['is_round' => true, 'inner' => $gpart, 'deep' => $qpart] + $ring($hitval, $hit ? '%' : '', 'OPcache', $hit, '', false, '', 'info'),
         'vitals' => [
             'over' => _PRES_RH_VITALS, 'title' => _PRES_RH_FAST, 'text' => _PRES_RH_FAST_T,
             'rows' => [

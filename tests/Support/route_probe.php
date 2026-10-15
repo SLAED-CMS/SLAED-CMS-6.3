@@ -26,6 +26,7 @@
 # The argument parse runs the resolution of a path: the pages of the address table, the grammar, the cut and the keys of a path over those of the query
 # The argument build runs the links the pages print on the registry, the statements of the lists and the warnings, and its child buildext asks the builder itself
 # The argument entry runs the branch of the API of index.php beside the site and the panel: its JSON, the light core, its refusals, a ban and a lost database
+# The argument router runs the core of the connector over three modules it writes for the run: the route, the guards in their order, the input, the envelope and the file
 if (PHP_SAPI !== 'cli') {
     http_response_code(404);
     exit;
@@ -3257,6 +3258,143 @@ function getRouteEntry(string $work): array {
     return $out;
 }
 
+# The modules of the router run, in modules/ for the run only: apiprobe declares every case, apibroken a key action without scope, apiidle stays inactive
+# No configuration but the scratch one names them, so the stand never routes to them, and they are removed when the probe ends, whatever it ended with
+function addRouteApiConf(string $work): void {
+    $mods = ['apiprobe', 'apibroken', 'apiidle'];
+    register_shutdown_function(static function () use ($mods): void {
+        foreach ($mods as $name) deleteRouteTree(BASE_DIR.'/modules/'.$name);
+    });
+    $head = "<?php\nif (!defined('FUNC_FILE')) die('Illegal file access');\n\n";
+    $files = [
+        'apiprobe/api.php' => $head.<<<'PHP'
+return [
+    'title' => 'Probe',
+    'scopes' => ['apiprobe:write' => 'Probe writes'],
+    'events' => [],
+    'actions' => [
+        'echo' => ['method' => 'GET', 'auth' => 'public', 'size' => 64, 'call' => 'getProbeEcho',
+            'params' => ['v' => 'ver', 'kind' => ['word', ['full', 'delta']], 'days' => ['num', 90, 'def' => 7], 'note' => ['text', 20, 'def' => '']]],
+        'save' => ['method' => 'POST', 'scope' => 'apiprobe:write', 'call' => 'addProbeSave', 'params' => ['num' => 'num']],
+        'hook' => ['method' => 'POST', 'auth' => 'secret', 'call' => 'addProbeSave'],
+        'fail' => ['method' => 'GET', 'auth' => 'public', 'call' => 'getProbeFail'],
+        'crash' => ['method' => 'GET', 'auth' => 'public', 'call' => 'getProbeCrash'],
+        'file' => ['method' => 'GET', 'auth' => 'public', 'reply' => 'file', 'cache' => 60, 'call' => 'getProbeFile', 'params' => ['name' => 'word']],
+        'twice' => ['method' => 'GET', 'auth' => 'public', 'ver' => [2], 'call' => 'getProbeEcho'],
+        'off' => ['method' => 'GET', 'auth' => 'public', 'call' => 'getProbeEcho'],
+    ],
+];
+PHP,
+        'apiprobe/common.php' => $head.<<<'PHP'
+function getProbeEcho(array $in, ApiClient $cli): array {
+    return $in;
+}
+
+function addProbeSave(array $in, ApiClient $cli): array {
+    return ['saved' => true];
+}
+
+function getProbeFail(array $in, ApiClient $cli): array {
+    throw new ApiError('conflict', ['why' => 'probe']);
+}
+
+function getProbeCrash(array $in, ApiClient $cli): array {
+    throw new RuntimeException('probe secret detail');
+}
+
+function getProbeFile(array $in, ApiClient $cli): array {
+    return ['path' => ($in['name'] === 'out') ? BASE_DIR.'/config/global.php' : UPLOADS_DIR.'/apiprobe/'.$in['name'].'.bin', 'name' => 'probe.bin'];
+}
+PHP,
+        'apibroken/api.php' => $head."return ['title' => 'Broken', 'actions' => ['echo' => ['method' => 'GET', 'call' => 'getProbeEcho']]];\n",
+        'apiidle/api.php' => $head."return ['title' => 'Idle', 'actions' => ['echo' => ['method' => 'GET', 'auth' => 'public', 'call' => 'getProbeEcho']]];\n",
+    ];
+    foreach ($files as $path => $code) {
+        if (!is_dir(dirname(BASE_DIR.'/modules/'.$path))) mkdir(dirname(BASE_DIR.'/modules/'.$path), 0777, true);
+        file_put_contents(BASE_DIR.'/modules/'.$path, $code);
+    }
+    mkdir($work.'/uploads/apiprobe', 0777, true);
+    file_put_contents($work.'/uploads/apiprobe/data.bin', str_repeat('0123456789', 100));
+    $data = require $work.'/config/modules.php';
+    foreach ($mods as $name) $data['modules'][$name] = array_replace($data['modules']['account'], ['active' => ($name === 'apiidle') ? '0' : '1', 'menu' => '0']);
+    setRouteFile($work.'/config/modules.php', $data);
+    setRouteFile($work.'/config/api.php', ['api' => ['active' => '1', 'maint' => '0', 'off' => ['apiprobe/off'], 'cors' => ['https://partner.example'],
+        'limits' => ['flood' => 600, 'burst' => 600, 'size' => 65536]]]);
+    if (is_file($work.'/config/local.php')) unlink($work.'/config/local.php');
+}
+
+# The core of the connector over real requests: routes and versions, each guard against the next one, typed input, the envelope, a fault of a handler and the mode file
+function getRouteApi(string $work): array {
+    global $rport;
+    $ask = function (string $path, string $method = 'GET', array $head = [], string $body = '') use ($work, &$rport): array {
+        if (is_file($work.'/api.json')) unlink($work.'/api.json');
+        $curl = curl_init('http://127.0.0.1:'.$rport.'/'.$path);
+        curl_setopt_array($curl, [CURLOPT_RETURNTRANSFER => true, CURLOPT_HEADER => true, CURLOPT_HTTPHEADER => $head, CURLOPT_TIMEOUT => 60,
+            CURLOPT_CUSTOMREQUEST => $method, CURLOPT_NOBODY => $method === 'HEAD']);
+        if ($body !== '') curl_setopt($curl, CURLOPT_POSTFIELDS, $body);
+        $raw = (string)curl_exec($curl);
+        $size = (int)curl_getinfo($curl, CURLINFO_HEADER_SIZE);
+        $heads = [];
+        foreach (explode("\r\n", substr($raw, 0, $size)) as $line) {
+            if (str_contains($line, ':')) {
+                [$key, $val] = explode(':', $line, 2);
+                $heads[strtolower(trim($key))] = trim($val);
+            }
+        }
+        $load = is_file($work.'/api.json') ? (json_decode((string)file_get_contents($work.'/api.json'), true) ?: []) : [];
+        return ['code' => (int)curl_getinfo($curl, CURLINFO_RESPONSE_CODE), 'head' => $heads, 'body' => substr($raw, $size), 'json' => json_decode(substr($raw, $size), true),
+            'files' => array_map(fn(string $v): string => str_replace(BASE_DIR.'/', '', $v), $load['files'] ?? [])];
+    };
+    $set = function (array $api) use ($work): void {
+        $data = require $work.'/config/api.php';
+        setRouteFile($work.'/config/api.php', ['api' => array_replace($data['api'], $api)]);
+        unlink($work.'/config/local.php');
+    };
+    $code = fn(array $one): array => [$one['code'], $one['json']['error']['code'] ?? 'ok', $one['json']['error']['details'] ?? null];
+    $out = ['ping' => $ask('api/v1/system/ping'), 'schema' => $ask('api/v1/system/schema'), 'auth' => $ask('api/v1/system/schema', 'GET', ['Authorization: Bearer SLAED_probe.x']),
+        'echo' => $ask('api/v1/apiprobe/echo?v=8.0.1&kind=full&extra=1'), 'days' => $ask('api/v1/apiprobe/echo?v=8.0.1&kind=delta&days=90&note=hi'),
+        'head' => $ask('api/v1/system/ping', 'HEAD'), 'twice' => $ask('api/v2/apiprobe/twice'), 'method' => $ask('api/v1/apiprobe/save')];
+    $bad = ['dots' => 'v=../8.0.1&kind=full', 'beta' => 'v=8.0.1-beta&kind=full', 'kind' => 'v=8.0.1&kind=zip', 'miss' => 'v=8.0.1', 'max' => 'v=8.0.1&kind=full&days=91',
+        'list' => 'v[]=8.0.1&kind=full', 'ctrl' => 'v=8.0.1&kind=full&note=a%01b', 'long' => 'v=8.0.1&kind=full&note='.str_repeat('a', 21)];
+    foreach ($bad as $name => $query) $out['bad'][$name] = $code($ask('api/v1/apiprobe/echo?'.$query));
+    $path = ['action' => 'v1/apiprobe/nope', 'service' => 'v1/nope/echo', 'upper' => 'v1/System/ping', 'slash' => 'v1/system/ping/', 'bare' => 'system/ping',
+        'version' => 'v2/system/ping', 'twice' => 'v1/apiprobe/twice', 'idle' => 'v1/apiidle/echo', 'broken' => 'v1/apibroken/echo'];
+    foreach ($path as $name => $one) $out['route'][$name] = $code($ask('api/'.$one));
+    $json = ['Content-Type: application/json'];
+    $out['order'] = ['save' => $code($ask('api/v1/apiprobe/save', 'POST', $json, '{"num":1}')), 'hook' => $code($ask('api/v1/apiprobe/hook', 'POST', $json, '{}')),
+        'big' => $code($ask('api/v1/apiprobe/save', 'POST', $json, str_repeat(' ', 70000).'{}')),
+        'size' => $code($ask('api/v1/apiprobe/echo?v=../x', 'GET', [], str_repeat('x', 65))),
+        'off' => $code($ask('api/v1/apiprobe/off'))];
+    $out['fail'] = $ask('api/v1/apiprobe/fail');
+    $out['crash'] = $ask('api/v1/apiprobe/crash', 'GET', ['X-Request-Id: probe-crash-0001']);
+    $log = is_file($work.'/logs/error_php.log') ? (string)file_get_contents($work.'/logs/error_php.log') : '';
+    $out['log'] = ['crash' => str_contains($log, 'probe-crash-0001') && str_contains($log, 'probe secret detail'), 'broken' => str_contains($log, 'API declaration refused')
+        && str_contains($log, 'apibroken')];
+    $out['file'] = $ask('api/v1/apiprobe/file?name=data');
+    $out['range'] = $ask('api/v1/apiprobe/file?name=data', 'GET', ['Range: bytes=0-3']);
+    $out['fhead'] = $ask('api/v1/apiprobe/file?name=data', 'HEAD');
+    $out['same'] = $ask('api/v1/apiprobe/file?name=data', 'GET', ['If-None-Match: '.($out['file']['head']['etag'] ?? '')]);
+    $out['fmiss'] = $ask('api/v1/apiprobe/file?name=none');
+    $out['fout'] = $ask('api/v1/apiprobe/file?name=out');
+    $log = is_file($work.'/logs/error_php.log') ? (string)file_get_contents($work.'/logs/error_php.log') : '';
+    $out['log']['out'] = str_contains($log, 'outside storage/update and uploads');
+    if (is_file($work.'/logs/error_php.log')) unlink($work.'/logs/error_php.log');
+    $from = ['Origin: https://partner.example'];
+    $out['cors'] = ['pre' => $ask('api/v1/apiprobe/save', 'OPTIONS', array_merge($from, ['Access-Control-Request-Method: POST'])),
+        'prenone' => $ask('api/v1/apiprobe/nope', 'OPTIONS', $from), 'foreign' => $ask('api/v1/system/ping', 'GET', ['Origin: https://evil.example']),
+        'partner' => $ask('api/v1/system/ping', 'GET', $from), 'own' => $ask('api/v1/system/ping', 'GET', ['Origin: http://127.0.0.1:'.$rport]),
+        'lost' => $ask('api/v1/apiprobe/nope', 'GET', $from)];
+    $set(['maint' => '1']);
+    $out['maint'] = ['echo' => $code($ask('api/v1/apiprobe/echo?v=8.0.1&kind=full')), 'ping' => $code($ask('api/v1/system/ping'))];
+    $set(['maint' => '0', 'active' => '0']);
+    $out['maint']['inactive'] = $code($ask('api/v1/system/ping'));
+    $set(['active' => '1', 'limits' => ['flood' => 1, 'burst' => 3, 'size' => 65536]]);
+    $out['flood'] = ['pass' => [$ask('api/v1/system/ping')['code'], $ask('api/v1/system/ping')['code'], $ask('api/v1/system/ping')['code']], 'stop' => $ask('api/v1/system/ping')];
+    $out['flood'] += ['save' => $code($ask('api/v1/apiprobe/save', 'POST', $json, '{"num":1}')), 'off' => $code($ask('api/v1/apiprobe/off')),
+        'action' => $code($ask('api/v1/apiprobe/nope')), 'pre' => $ask('api/v1/apiprobe/save', 'OPTIONS', $from)['code']];
+    return $out;
+}
+
 # The registry of the build run is the one of the parse run, with the generation line of the footer on, and anna keeps a material and a topic of one id as favorites
 function addRouteBuildConf(PDO $pdo, string $work): void {
     addRouteParseConf($pdo, $work);
@@ -3465,6 +3603,7 @@ try {
     if (($argv[2] ?? '') === 'parse') addRouteParseConf($rpdo, $rwork);
     if (($argv[2] ?? '') === 'build') addRouteBuildConf($rpdo, $rwork);
     if (($argv[2] ?? '') === 'move') addRouteMoveConf($rpdo, $rwork);
+    if (($argv[2] ?? '') === 'router') addRouteApiConf($rwork);
     $rproc = addRouteServer($rwork, $rport);
     if (($argv[2] ?? '') === 'serve') {
         fwrite(STDERR, 'serving on '.$rport.' with '.$rbase."\n");
@@ -3503,6 +3642,8 @@ try {
         $report['runs']['build'] = getRouteBuild($rwork);
     } elseif (($argv[2] ?? '') === 'entry') {
         $report['runs']['entry'] = getRouteEntry($rwork);
+    } elseif (($argv[2] ?? '') === 'router') {
+        $report['runs']['router'] = getRouteApi($rwork);
     } elseif (($argv[2] ?? '') === 'move') {
         $report['runs']['move'] = getRouteMove($rpdo, $rwork);
     } elseif (($argv[2] ?? '') === 'time') {

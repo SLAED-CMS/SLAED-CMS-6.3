@@ -47,14 +47,20 @@ final class ApiEntryTest extends TestCase
         $this->assertEqualsWithDelta(time() * 1000, $one['json']['meta']['now'], 600000, 'The server time of the meta is not in unix milliseconds');
     }
 
-    # No route is declared before the router has its services, so a path under api/ answers 404 no_route, and a valid request id comes back as it was sent
+    # system/ping answers the envelope of a success with no data, and a valid request id comes back as it was sent while an invalid one is replaced
     #[Test]
     public function aPathUnderApiAnswersTheEnvelope(): void
     {
         $run = $this->getRun();
-        $this->assertRefusal($run['ping'], 404, 'no_route', 'Not found');
+        foreach (['ping', 'badid'] as $name) {
+            $this->assertSame(200, $run[$name]['code'], 'system/ping did not answer');
+            $this->assertSame('application/json; charset=UTF-8', $run[$name]['type']);
+            $this->assertFalse($run[$name]['cookie'], 'The API set a cookie');
+            $this->assertFalse($run[$name]['session'], 'The API opened a session');
+            $this->assertStringContainsString('"ok":true,"data":{},"meta":', $run[$name]['body'], 'The ping is not the empty success of the envelope');
+        }
         $this->assertSame('probe-request-01', $run['ping']['rid'], 'A valid request id was not echoed');
-        $this->assertRefusal($run['badid'], 404, 'no_route', 'Not found');
+        $this->assertSame('probe-request-01', $run['ping']['json']['meta']['id'], 'The request id of the header and of the meta differ');
         $this->assertMatchesRegularExpression('#^[0-9a-f]{16}$#D', $run['badid']['rid'], 'An invalid request id was not replaced by a generated one');
     }
 
@@ -80,8 +86,9 @@ final class ApiEntryTest extends TestCase
     public function everyRequestUnderApiStaysInTheApi(): void
     {
         $run = $this->getRun();
-        foreach (['deep', 'query', 'post'] as $name) $this->assertRefusal($run[$name], 404, 'no_route', 'Not found');
-        $this->assertSame(404, $run['head']['code']);
+        foreach (['deep', 'query'] as $name) $this->assertRefusal($run[$name], 404, 'no_route', 'Not found');
+        $this->assertRefusal($run['post'], 405, 'no_method', 'Method not allowed');
+        $this->assertSame(200, $run['head']['code']);
         $this->assertSame('application/json; charset=UTF-8', $run['head']['type']);
         $this->assertSame('', $run['head']['body'], 'A HEAD of the API carried a body');
     }
@@ -103,7 +110,7 @@ final class ApiEntryTest extends TestCase
         foreach (['SQLSTATE', 'probe-wrong-pass', 'Access denied', 'pdo.php'] as $word) {
             $this->assertStringNotContainsString($word, $run['lost']['body'], 'The reply of a lost database named its reason');
         }
-        $this->assertSame(404, $run['back'], 'The API did not come back with the database');
+        $this->assertSame(200, $run['back'], 'The API did not come back with the database');
     }
 
     # The site and the panel answer their pages as before, and a path that only begins like api, or api without its slash, is a page of the site that is not found

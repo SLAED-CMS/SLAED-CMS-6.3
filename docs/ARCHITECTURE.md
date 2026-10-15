@@ -57,6 +57,14 @@ Role:
   `ApiRouter::getResponse()`; in this mode `core/security.php` keeps no path, reads no account cookie, scans no input
   (`ApiInput` is the filter of the API) and answers a ban, a lost database or an uncaught error in JSON without
   detail (`.rules/api.md`)
+- the router of the API: a path `v<n>/<service>/<action>` names a core service of `core/classes/api/services/` or
+  the `api.php` of an active module; only the service the path names is read, so no list is kept. The guards run
+  in the order of `.rules/api.md` - route, maintenance and switches, CORS, the bucket of the address (`ApiLimit`,
+  IPv6 by its /64, the address only as a keyed hash in the file cache), auth, size, typed input (`ApiInput`) -
+  each refusal an `ApiError` of the closed code list; the `common.php` of a module loads after the last guard, and a
+  fault of a handler is logged under the request id and answers 500 `internal`. `config/api.php` holds the switches
+  (`active`, `maint`, `off`), the global CORS list and the limits (`flood`, `burst`, `size`); `system/ping` and
+  `system/schema`, the live reference built from the declarations, are the core service
 - loads `core/system.php`
 - resolves a path the cut of `core/security.php` kept into the route keys of `$_GET` (see "Address Boundary")
 - reads `go`, `name`, `op`, and `file` through `getVar()`

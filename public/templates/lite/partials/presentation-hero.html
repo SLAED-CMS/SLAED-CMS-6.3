@@ -11,7 +11,7 @@
         <div class="sl-pres-gauges">
           {% include 'fragments/presentation-ring.html' with gen_ring %}
           {% include 'fragments/presentation-ring.html' with cache_ring %}
-          <div class="sl-pres-plate" data-sl-tone="{{ plate.tone }}" title="{{ nominal }}"><img src="{{ root }}templates/{{ plate.theme }}/images/logos/{{ plate.logo }}" alt="SLAED" width="96" height="96"></div>
+          <div class="sl-pres-plate" data-sl-tone="{{ plate.tone }}" title="{{ nominal }}"><span class="sl-pres-mark" role="img" aria-label="SLAED"></span></div>
           {% include 'fragments/presentation-ring.html' with qnum_ring %}
           {% include 'fragments/presentation-ring.html' with online_ring %}
         </div>

@@ -1,0 +1,27 @@
+# Requests of the API for the VS Code REST Client against the dev host: one per action and an error case each
+# The host and later the key come from tools/.env, which git ignores: SLAED_API_HOST=http://slaed.loc and SLAED_API_KEY=SLAED_<prefix>.<secret>
+
+@host = {{$dotenv SLAED_API_HOST}}
+@base = {{host}}/api/v1
+
+### system/ping - 200, the empty success of the envelope
+GET {{base}}/system/ping
+X-Request-Id: api-http-ping-01
+
+### system/ping by POST - 405 no_method, Allow: GET, HEAD, OPTIONS
+POST {{base}}/system/ping
+
+### system/schema - 200, the public actions of every running service, Cache-Control: public, max-age=60
+GET {{base}}/system/schema
+
+### system/schema from a foreign origin - 403 no_scope unless the origin is on $conf['api']['cors']
+GET {{base}}/system/schema
+Origin: https://foreign.example
+
+### an unknown action - 404 no_route
+GET {{base}}/system/nope
+
+### a preflight - 204 without auth
+OPTIONS {{base}}/system/ping
+Origin: {{host}}
+Access-Control-Request-Method: GET

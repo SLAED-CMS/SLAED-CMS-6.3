@@ -143,7 +143,8 @@
   font-size: var(--sl-font-small);
 }
 
-.sl-wrapper .sl-toolbar li .sl-bell-tip a {
+.sl-wrapper .sl-toolbar li .sl-bell-tip a,
+.sl-cockpit .sl-bell-tip a {
   display: flex;
   align-items: center;
   gap: var(--sl-space-3);
@@ -155,7 +156,9 @@
 }
 
 .sl-wrapper .sl-toolbar li .sl-bell-tip a:hover,
-.sl-wrapper .sl-toolbar li .sl-bell-tip a:focus-visible {
+.sl-wrapper .sl-toolbar li .sl-bell-tip a:focus-visible,
+.sl-cockpit .sl-bell-tip a:hover,
+.sl-cockpit .sl-bell-tip a:focus-visible {
   background: var(--sl-tint);
   color: var(--sl-primary-strong);
 }
@@ -740,6 +743,14 @@
 
 /* ---------- The cockpit: the state of the system over the home, the twin of the cockpit of the presentation ---------- */
 
+/* Two tokens the admin theme takes into base.css together with the cockpit, their first consumer, so the audit never
+   sees them dead: the hero step of the one font ladder of both themes (tools/ui-contract.php), the size of a dashboard
+   number, and the width of a gauge, the component the lite theme declares already */
+:root {
+  --sl-font-hero: 38px;
+  --sl-gauge-width: 150px;
+}
+
 /* The panel. Its state is one class of the theme ring vocabulary on the panel itself, sl-knob-ok, -warn or -danger:
    --sl-knob-tone then colours the line of state and the lamp, while every ring keeps the class of its own share */
 .sl-cockpit {
@@ -757,6 +768,9 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--sl-space-4);
+}
+
+.sl-cockpit-top > span {
   font-family: var(--sl-face-mono);
   font-size: var(--sl-font-micro);
   letter-spacing: var(--sl-track-wide);
@@ -764,23 +778,97 @@
   color: var(--sl-text-muted);
 }
 
-.sl-cockpit-top .bi {
+.sl-cockpit-top > span > .bi {
   display: inline-block;
   margin-right: var(--sl-space-3);
   color: var(--sl-primary);
 }
 
 /* The line of state carries the glyph of the alert of its tone and moves as that alert moves */
-.sl-cockpit-state,
-.sl-cockpit-top .sl-cockpit-state .bi {
+.sl-cockpit-top > .sl-cockpit-state,
+.sl-cockpit-top > .sl-cockpit-state > .bi {
   color: var(--sl-knob-tone);
 }
 
-.sl-cockpit.sl-knob-warn .sl-cockpit-state .bi {
+/* The live chip of the blocks of the site, on the components of this theme: the tip with the state, the interval, the
+   age of the figures and the pause; its beat is the led pulse of the theme, and a pause stills it in the warning tone */
+.sl-tip.sl-live-chip {
+  width: auto;
+  height: auto;
+  margin: 0 0 0 auto;
+  cursor: pointer;
+}
+
+.sl-live-icon {
+  display: grid;
+  place-items: center;
+  width: var(--sl-size-chip);
+  height: var(--sl-size-chip);
+  border-radius: var(--sl-radius-circle);
+  background: var(--sl-chip-bg);
+  color: var(--sl-success);
+  font-size: var(--sl-size-icon-xs);
+  line-height: 1;
+  animation: sl-led-pulse var(--sl-led-dur) var(--sl-ease-in-out) infinite;
+}
+
+.sl-live-chip.sl-is-paused .sl-live-icon {
+  color: var(--sl-warning);
+  animation: none;
+}
+
+.sl-live-panel {
+  min-width: var(--sl-popover-min-width);
+}
+
+/* The rows of the live chip read as on the site: the label muted at the left, the value flushed right, no colon */
+.sl-tip .sl-live-panel dl {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: var(--sl-space-2) var(--sl-space-5);
+}
+
+.sl-tip .sl-live-panel dt {
+  color: var(--sl-text-muted);
+}
+
+.sl-tip .sl-live-panel dt::after,
+.sl-tip .sl-live-panel dd::after {
+  content: none;
+}
+
+.sl-tip .sl-live-panel dd {
+  color: var(--sl-text);
+  text-align: right;
+}
+
+.sl-live-action {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: var(--sl-space-5);
+  padding-top: var(--sl-space-3);
+  border-top: 1px solid var(--sl-border);
+}
+
+.sl-live-chip .sl-live-s-paused,
+.sl-live-chip.sl-is-paused .sl-live-s-on {
+  display: none;
+}
+
+.sl-live-chip.sl-is-paused .sl-live-s-paused {
+  display: inline;
+}
+
+.sl-live-chip.sl-is-paused .sl-live-act {
+  background: var(--sl-chip-bg);
+  color: var(--sl-success);
+}
+
+.sl-cockpit.sl-knob-warn .sl-cockpit-state > .bi {
   animation: sl-alert-shake var(--sl-alert-dur) var(--sl-ease-in-out) infinite;
 }
 
-.sl-cockpit.sl-knob-danger .sl-cockpit-state .bi {
+.sl-cockpit.sl-knob-danger .sl-cockpit-state > .bi {
   animation: sl-alert-beat calc(var(--sl-alert-dur) / 2) var(--sl-ease-in-out) infinite;
 }
 
@@ -831,31 +919,31 @@
   text-transform: uppercase;
 }
 
-/* The signals the lamp sums are the check rows of the theme, the rows the installer lists its checks in: the tick, the
-   warning and the failure come with them; here the name is a link to the place that fixes it */
-.sl-cockpit-signals {
-  margin-top: var(--sl-space-5);
-  border-top: 1px solid var(--sl-border);
+/* The lamp and every ring open the bell panel on the pointer or the focus: the signals of the lamp, the details of a
+   ring, each row a link with its mark in the tone of its level, or the brand tone for a detail, and the figure at the right */
+.sl-cockpit-float {
+  display: grid;
+  justify-items: center;
+  width: 100%;
 }
 
-.sl-cockpit-signals .sl-setup-checks {
-  margin: 0;
+.sl-cockpit .sl-bell-tip .bi {
+  color: var(--sl-primary);
 }
 
-.sl-cockpit-signals .sl-setup-checks li {
-  grid-template-columns: var(--sl-size-icon-sm) minmax(0, 14em) minmax(0, 1fr);
-}
-
-.sl-cockpit-signals .sl-setup-checks li:last-child {
-  border-bottom: 0;
+.sl-cockpit .sl-bell-tip :is(.sl-knob-warn, .sl-knob-danger) .bi {
+  color: var(--sl-knob-tone);
 }
 
 /* The gauge: the theme ring drawn as an open arc with its scale; the figure in the centre, the caption in the mouth of the arc */
+/* A ring opens its panel as the bell does - under the pointer, and held by a click until the next one - so it takes the
+   pointer of the bell, as the lamp and the chip do */
 .sl-cockpit-ring.sl-knob {
   --sl-knob-width: 4;
   --sl-knob-track: var(--sl-border);
+  cursor: pointer;
   width: 100%;
-  max-width: 150px;
+  max-width: var(--sl-gauge-width);
   height: auto;
   aspect-ratio: 1;
   margin: 0;
@@ -887,9 +975,9 @@
   justify-content: center;
   align-items: baseline;
   gap: var(--sl-space-1);
-  font-size: 38px;
+  font-size: var(--sl-font-hero);
   line-height: var(--sl-line-tight);
-  color: var(--sl-text);
+  color: var(--sl-knob-tone);
 }
 
 .sl-cockpit-ring > div > b > small {
@@ -920,7 +1008,7 @@
   place-items: center;
   box-sizing: border-box;
   width: 100%;
-  max-width: 150px;
+  max-width: var(--sl-gauge-width);
   aspect-ratio: 1;
   border: 1px solid var(--sl-knob-tone);
   border-radius: var(--sl-radius-circle);
@@ -954,20 +1042,25 @@
   opacity: 0;
 }
 
-.sl-cockpit-plate img {
-  width: 100%;
-  height: auto;
+/* The mark of the lamp is the one-colour mark of the theme cut out of the tone of the state, so the brand in colour
+   stays with the logo of the header and the lamp reads as a signal, not as a second logo */
+.sl-cockpit-mark {
+  display: block;
+  width: calc(var(--sl-gauge-width) / 2);
   aspect-ratio: 1;
-  object-fit: contain;
+  background: currentColor;
+  mask: url(../../templates/admin/images/logos/slaed-logo-mark-solid-black.svg) center / contain no-repeat;
   filter: drop-shadow(0 0 var(--sl-space-4) color-mix(in srgb, currentColor var(--sl-ring-mix), transparent));
 }
 
-.sl-cockpit-plate:focus-visible {
+.sl-cockpit-plate:focus-visible,
+.sl-cockpit-ring:focus-visible {
   outline: var(--sl-ring-width) solid var(--sl-ring-bg);
   outline-offset: var(--sl-space-3);
+  border-radius: var(--sl-radius-circle);
 }
 
-.sl-cockpit-plate.sl-is-open {
+.sl-cockpit-float.sl-is-open .sl-cockpit-plate {
   box-shadow:
     0 0 0 var(--sl-space-3) color-mix(in srgb, var(--sl-knob-tone) var(--sl-ring-mix), transparent),
     inset 0 0 var(--sl-space-8) color-mix(in srgb, var(--sl-knob-tone) var(--sl-ring-mix), transparent);
@@ -977,7 +1070,7 @@
   animation: sl-cockpit-ring var(--sl-alert-dur) var(--sl-ease-out) infinite;
 }
 
-.sl-cockpit.sl-knob-warn .sl-cockpit-plate img {
+.sl-cockpit.sl-knob-warn .sl-cockpit-mark {
   animation: sl-alert-shake var(--sl-alert-dur) var(--sl-ease-in-out) infinite;
 }
 
@@ -998,7 +1091,7 @@
   animation: sl-cockpit-ring calc(var(--sl-alert-dur) / 2) var(--sl-ease-out) infinite;
 }
 
-.sl-cockpit.sl-knob-danger .sl-cockpit-plate img {
+.sl-cockpit.sl-knob-danger .sl-cockpit-mark {
   animation: sl-alert-beat calc(var(--sl-alert-dur) / 2) var(--sl-ease-in-out) infinite;
 }
 
@@ -1031,28 +1124,22 @@
   }
 }
 
-/* A narrow content column: the lamp over the gauges two by two, the note of a signal under its name */
+/* A narrow content column: the lamp over the gauges two by two */
 @media (max-width: 768px) {
   .sl-cockpit-gauges {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: var(--sl-space-6);
-    max-width: 324px;
+    max-width: calc(var(--sl-gauge-width) * 2 + var(--sl-space-6));
     margin-inline: auto;
   }
 
-  .sl-cockpit-plate {
+  .sl-cockpit-float:has(> .sl-cockpit-plate) {
     grid-column: 1 / -1;
     grid-row: 1;
-    width: 150px;
   }
 
-  .sl-cockpit-signals .sl-setup-checks li {
-    grid-template-columns: var(--sl-size-icon-sm) minmax(0, 1fr);
-    row-gap: var(--sl-space-1);
-  }
-
-  .sl-cockpit-signals .sl-setup-checks span {
-    grid-column: 2;
+  .sl-cockpit-plate {
+    width: var(--sl-gauge-width);
   }
 }
 

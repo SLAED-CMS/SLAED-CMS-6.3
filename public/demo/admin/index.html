@@ -129,46 +129,52 @@
             <h1 class="sl-sr">Главная</h1>
             <div class="sl-alert sl-alert-warn" id="sl-alert-setup" data-mark="Д4"><div class="sl-alert-body">setup.php должен был удалить себя после установки, но всё ещё лежит в корне сайта. Удалите его с сервера.</div></div>
             <div class="sl-alert sl-alert-info"><div class="sl-alert-body">Информация, которая будет доступна всем авторам. Отображение данной информации производится в верхней части панели администратора системы.</div></div>
-            <section class="sl-cockpit sl-knob-warn" aria-labelledby="sl-cockpit-cap" data-sl-cockpit>
+            <section class="sl-cockpit sl-knob-warn" aria-labelledby="sl-cockpit-cap" data-sl-cockpit data-sl-live-box data-mark="Г9">
               <div class="sl-cockpit-top">
-                <span id="sl-cockpit-cap"><i class="bi bi-hexagon-half" aria-hidden="true"></i>SLAED CMS · Состояние системы</span>
-                <span class="sl-cockpit-state" role="status" data-sl-cockpit-state><i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i><span>Требует внимания · 1</span></span>
-                <span>6.3.0 · Phoenix</span>
+                <span id="sl-cockpit-cap"><i class="bi bi-display" aria-hidden="true"></i>Состояние системы</span>
+                <span class="sl-cockpit-state" role="status" data-sl-cockpit-state data-mark="Г12"><i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i><span>Требует внимания · 1</span></span>
+                <div class="sl-tip sl-float sl-live-chip" tabindex="0" data-sl-float-align="end" data-mark="Г15"><span class="sl-live-icon"><i class="bi bi-activity sl-live-s-on" aria-hidden="true"></i><i class="bi bi-pause-circle-fill sl-live-s-paused" aria-hidden="true"></i></span><div class="sl-float-panel sl-live-panel"><dl><dt>Статус</dt><dd><span class="sl-live-s-on">В эфире</span><span class="sl-live-s-paused">На паузе</span></dd><dt>Интервал</dt><dd>10 сек</dd><dt>Обновлено</dt><dd><span data-sl-live-ago data-sl-live-unit="сек">&mdash;</span></dd></dl><span class="sl-live-action"><button type="button" class="sl-chip sl-chip-warn sl-live-act" data-sl-live-toggle><span class="sl-live-s-on"><i class="bi bi-pause-fill" aria-hidden="true"></i> Пауза</span><span class="sl-live-s-paused"><i class="bi bi-play-fill" aria-hidden="true"></i> Продолжить</span></button></span></div></div>
               </div>
-              <div class="sl-cockpit-gauges">
-                <div class="sl-cockpit-ring sl-knob sl-knob-ok" title="Загрузка процессора · 4 / 8 ядер" role="meter" aria-label="CPU" aria-valuemin="0" aria-valuemax="100" aria-valuenow="23" aria-valuetext="23 %" data-sl-gauge="cpu" data-sl-gauge-max="100" data-sl-gauge-tone>
-                  <svg class="sl-knob-svg" viewBox="0 0 44 44" aria-hidden="true"><path class="sl-knob-bg" d="M7.858 36.142 A20 20 0 1 1 36.142 36.142"></path><path class="sl-knob-val" d="M7.858 36.142 A20 20 0 1 1 36.142 36.142" pathLength="100" stroke-dasharray="23 100"></path><path d="M10.7 33.3 11.8 32.2 M7.2 28.1 8.7 27.5 M6 22 H7.6 M7.2 15.9 8.7 16.5 M10.7 10.7 11.8 11.8 M15.9 7.2 16.5 8.7 M22 6 V7.6 M28.1 7.2 27.5 8.7 M33.3 10.7 32.2 11.8 M36.8 15.9 35.3 16.5 M38 22 H36.4 M36.8 28.1 35.3 27.5 M33.3 33.3 32.2 32.2"></path></svg>
-                  <div><b><span data-sl-gauge-val>23</span><small>%</small></b><span>CPU</span></div>
-                </div>
-                <div class="sl-cockpit-ring sl-knob sl-knob-info" title="Оперативная память · 9.8 / 16 GB" role="meter" aria-label="RAM" aria-valuemin="0" aria-valuemax="100" aria-valuenow="61" aria-valuetext="61 %" data-sl-gauge="ram" data-sl-gauge-max="100" data-sl-gauge-tone>
-                  <svg class="sl-knob-svg" viewBox="0 0 44 44" aria-hidden="true"><path class="sl-knob-bg" d="M7.858 36.142 A20 20 0 1 1 36.142 36.142"></path><path class="sl-knob-val" d="M7.858 36.142 A20 20 0 1 1 36.142 36.142" pathLength="100" stroke-dasharray="61 100"></path><path d="M10.7 33.3 11.8 32.2 M7.2 28.1 8.7 27.5 M6 22 H7.6 M7.2 15.9 8.7 16.5 M10.7 10.7 11.8 11.8 M15.9 7.2 16.5 8.7 M22 6 V7.6 M28.1 7.2 27.5 8.7 M33.3 10.7 32.2 11.8 M36.8 15.9 35.3 16.5 M38 22 H36.4 M36.8 28.1 35.3 27.5 M33.3 33.3 32.2 32.2"></path></svg>
-                  <div><b><span data-sl-gauge-val>61</span><small>%</small></b><span>RAM</span></div>
-                </div>
-                <button type="button" class="sl-cockpit-plate" data-sl-toggle-control="sl-cockpit-signals" data-sl-toggle-effect="slide" title="Сигналы состояния" aria-label="Состояние системы: требует внимания. Сигналы" data-sl-cockpit-lamp><img src="../../templates/admin/images/logos/slaed-logo-mark-gradient-blue.svg" alt="" width="96" height="96"></button>
-                <div class="sl-cockpit-ring sl-knob sl-knob-ok" title="Диск · корень / · 230 / 480 GB" role="meter" aria-label="Диск" aria-valuemin="0" aria-valuemax="100" aria-valuenow="48" aria-valuetext="48 %">
-                  <svg class="sl-knob-svg" viewBox="0 0 44 44" aria-hidden="true"><path class="sl-knob-bg" d="M7.858 36.142 A20 20 0 1 1 36.142 36.142"></path><path class="sl-knob-val" d="M7.858 36.142 A20 20 0 1 1 36.142 36.142" pathLength="100" stroke-dasharray="48 100"></path><path d="M10.7 33.3 11.8 32.2 M7.2 28.1 8.7 27.5 M6 22 H7.6 M7.2 15.9 8.7 16.5 M10.7 10.7 11.8 11.8 M15.9 7.2 16.5 8.7 M22 6 V7.6 M28.1 7.2 27.5 8.7 M33.3 10.7 32.2 11.8 M36.8 15.9 35.3 16.5 M38 22 H36.4 M36.8 28.1 35.3 27.5 M33.3 33.3 32.2 32.2"></path></svg>
-                  <div><b><span>48</span><small>%</small></b><span>Диск</span></div>
-                </div>
-                <div class="sl-cockpit-ring sl-knob sl-knob-ok" title="Попадания в кеш" role="meter" aria-label="Кеш" aria-valuemin="0" aria-valuemax="100" aria-valuenow="88" aria-valuetext="88 %" data-sl-gauge="cache" data-sl-gauge-max="100">
-                  <svg class="sl-knob-svg" viewBox="0 0 44 44" aria-hidden="true"><path class="sl-knob-bg" d="M7.858 36.142 A20 20 0 1 1 36.142 36.142"></path><path class="sl-knob-val" d="M7.858 36.142 A20 20 0 1 1 36.142 36.142" pathLength="100" stroke-dasharray="88 100"></path><path d="M10.7 33.3 11.8 32.2 M7.2 28.1 8.7 27.5 M6 22 H7.6 M7.2 15.9 8.7 16.5 M10.7 10.7 11.8 11.8 M15.9 7.2 16.5 8.7 M22 6 V7.6 M28.1 7.2 27.5 8.7 M33.3 10.7 32.2 11.8 M36.8 15.9 35.3 16.5 M38 22 H36.4 M36.8 28.1 35.3 27.5 M33.3 33.3 32.2 32.2"></path></svg>
-                  <div><b><span data-sl-gauge-val>88</span><small>%</small></b><span>Кеш</span></div>
-                </div>
+              <div class="sl-cockpit-gauges" data-mark="Г10">
+                <span class="sl-float sl-cockpit-float">
+                  <div class="sl-cockpit-ring sl-knob sl-knob-ok" tabindex="0" role="meter" aria-label="CPU" data-mark="Г11" aria-valuemin="0" aria-valuemax="100" aria-valuenow="43" aria-valuetext="43%" data-sl-gauge="cpu" data-sl-gauge-max="100" data-sl-gauge-tone>
+                    <svg class="sl-knob-svg" viewBox="0 0 44 44" aria-hidden="true"><path class="sl-knob-bg" d="M7.858 36.142 A20 20 0 1 1 36.142 36.142"></path><path class="sl-knob-val" d="M7.858 36.142 A20 20 0 1 1 36.142 36.142" pathLength="100" stroke-dasharray="43 100"></path><path d="M10.7 33.3 11.8 32.2 M7.2 28.1 8.7 27.5 M6 22 H7.6 M7.2 15.9 8.7 16.5 M10.7 10.7 11.8 11.8 M15.9 7.2 16.5 8.7 M22 6 V7.6 M28.1 7.2 27.5 8.7 M33.3 10.7 32.2 11.8 M36.8 15.9 35.3 16.5 M38 22 H36.4 M36.8 28.1 35.3 27.5 M33.3 33.3 32.2 32.2"></path></svg>
+                    <div><b><span data-sl-gauge-val>43</span><small>%</small></b><span>CPU</span></div>
+                  </div>
+                  <span class="sl-float-panel sl-bell-tip" role="group" aria-labelledby="sl-cockpit-tip-cpu"><span class="sl-bell-cap" id="sl-cockpit-tip-cpu">Процессор</span><a href="../../admin.php?name=monitor"><i class="bi bi-cpu" aria-hidden="true"></i> Ядра <span class="sl-bell-num">6 / 12</span></a><a href="../../admin.php?name=monitor"><i class="bi bi-lightning-charge" aria-hidden="true"></i> Частота <span class="sl-bell-num">3.6 GHz</span></a></span>
+                </span>
+                <span class="sl-float sl-cockpit-float">
+                  <div class="sl-cockpit-ring sl-knob sl-knob-ok" tabindex="0" role="meter" aria-label="RAM" aria-valuemin="0" aria-valuemax="100" aria-valuenow="33" aria-valuetext="33%">
+                    <svg class="sl-knob-svg" viewBox="0 0 44 44" aria-hidden="true"><path class="sl-knob-bg" d="M7.858 36.142 A20 20 0 1 1 36.142 36.142"></path><path class="sl-knob-val" d="M7.858 36.142 A20 20 0 1 1 36.142 36.142" pathLength="100" stroke-dasharray="32.6 100"></path><path d="M10.7 33.3 11.8 32.2 M7.2 28.1 8.7 27.5 M6 22 H7.6 M7.2 15.9 8.7 16.5 M10.7 10.7 11.8 11.8 M15.9 7.2 16.5 8.7 M22 6 V7.6 M28.1 7.2 27.5 8.7 M33.3 10.7 32.2 11.8 M36.8 15.9 35.3 16.5 M38 22 H36.4 M36.8 28.1 35.3 27.5 M33.3 33.3 32.2 32.2"></path></svg>
+                    <div><b><span>33</span><small>%</small></b><span>RAM</span></div>
+                  </div>
+                  <span class="sl-float-panel sl-bell-tip" role="group" aria-labelledby="sl-cockpit-tip-ram"><span class="sl-bell-cap" id="sl-cockpit-tip-ram">Оперативная память</span><a href="../../admin.php?name=monitor"><i class="bi bi-memory" aria-hidden="true"></i> Занято <span class="sl-bell-num">20.81 GB</span></a><a href="../../admin.php?name=monitor"><i class="bi bi-stack" aria-hidden="true"></i> Всего <span class="sl-bell-num">63.91 GB</span></a><a href="../../admin.php?name=monitor"><i class="bi bi-check2-circle" aria-hidden="true"></i> Доступно <span class="sl-bell-num">43.1 GB</span></a></span>
+                </span>
+                <span class="sl-float sl-cockpit-float">
+                  <button type="button" class="sl-cockpit-plate" aria-label="Состояние системы" data-sl-cockpit-lamp data-mark="Г12 Г13"><span class="sl-cockpit-mark" aria-hidden="true"></span></button>
+                  <span class="sl-float-panel sl-bell-tip" role="group" aria-labelledby="sl-cockpit-tip-cap"><span class="sl-bell-cap" id="sl-cockpit-tip-cap" data-sl-signals-cap>Сигналы состояния</span><span data-sl-signals></span></span>
+                </span>
+                <span class="sl-float sl-cockpit-float">
+                  <div class="sl-cockpit-ring sl-knob sl-knob-ok" tabindex="0" role="meter" aria-label="Диск" aria-valuemin="0" aria-valuemax="100" aria-valuenow="27" aria-valuetext="27%">
+                    <svg class="sl-knob-svg" viewBox="0 0 44 44" aria-hidden="true"><path class="sl-knob-bg" d="M7.858 36.142 A20 20 0 1 1 36.142 36.142"></path><path class="sl-knob-val" d="M7.858 36.142 A20 20 0 1 1 36.142 36.142" pathLength="100" stroke-dasharray="26.8 100"></path><path d="M10.7 33.3 11.8 32.2 M7.2 28.1 8.7 27.5 M6 22 H7.6 M7.2 15.9 8.7 16.5 M10.7 10.7 11.8 11.8 M15.9 7.2 16.5 8.7 M22 6 V7.6 M28.1 7.2 27.5 8.7 M33.3 10.7 32.2 11.8 M36.8 15.9 35.3 16.5 M38 22 H36.4 M36.8 28.1 35.3 27.5 M33.3 33.3 32.2 32.2"></path></svg>
+                    <div><b><span>27</span><small>%</small></b><span>Диск</span></div>
+                  </div>
+                  <span class="sl-float-panel sl-bell-tip" role="group" aria-labelledby="sl-cockpit-tip-disk"><span class="sl-bell-cap" id="sl-cockpit-tip-disk">Диск</span><a href="../../admin.php?name=monitor"><i class="bi bi-hdd" aria-hidden="true"></i> Раздел <span class="sl-bell-num">/</span></a><a href="../../admin.php?name=monitor"><i class="bi bi-pie-chart" aria-hidden="true"></i> Занято <span class="sl-bell-num">63.89 GB</span></a><a href="../../admin.php?name=monitor"><i class="bi bi-box" aria-hidden="true"></i> Свободно <span class="sl-bell-num">174.46 GB</span></a></span>
+                </span>
+                <span class="sl-float sl-cockpit-float">
+                  <div class="sl-cockpit-ring sl-knob sl-knob-ok" tabindex="0" role="meter" aria-label="OPcache" aria-valuemin="0" aria-valuemax="100" aria-valuenow="96" aria-valuetext="96%">
+                    <svg class="sl-knob-svg" viewBox="0 0 44 44" aria-hidden="true"><path class="sl-knob-bg" d="M7.858 36.142 A20 20 0 1 1 36.142 36.142"></path><path class="sl-knob-val" d="M7.858 36.142 A20 20 0 1 1 36.142 36.142" pathLength="100" stroke-dasharray="95.6 100"></path><path d="M10.7 33.3 11.8 32.2 M7.2 28.1 8.7 27.5 M6 22 H7.6 M7.2 15.9 8.7 16.5 M10.7 10.7 11.8 11.8 M15.9 7.2 16.5 8.7 M22 6 V7.6 M28.1 7.2 27.5 8.7 M33.3 10.7 32.2 11.8 M36.8 15.9 35.3 16.5 M38 22 H36.4 M36.8 28.1 35.3 27.5 M33.3 33.3 32.2 32.2"></path></svg>
+                    <div><b><span>96</span><small>%</small></b><span>OPcache</span></div>
+                  </div>
+                  <span class="sl-float-panel sl-bell-tip" role="group" aria-labelledby="sl-cockpit-tip-cache"><span class="sl-bell-cap" id="sl-cockpit-tip-cache">OPcache</span><a href="../../admin.php?name=monitor"><i class="bi bi-bullseye" aria-hidden="true"></i> Попаданий <span class="sl-bell-num">95.6%</span></a><a href="../../admin.php?name=monitor"><i class="bi bi-memory" aria-hidden="true"></i> Память <span class="sl-bell-num">17.62 MB / 32 MB</span></a><a href="../../admin.php?name=monitor"><i class="bi bi-file-earmark-code" aria-hidden="true"></i> Скриптов <span class="sl-bell-num">304</span></a></span>
+                </span>
               </div>
-              <ul class="sl-cockpit-strip">
-                <li title="Генерация страницы" data-sl-gauge="gen" data-sl-gauge-max="400"><i class="bi bi-stopwatch" aria-hidden="true"></i><b data-sl-gauge-val>56</b> ms <span>генерация</span></li>
-                <li title="SQL запросов на страницу" data-sl-gauge="sql" data-sl-gauge-max="50"><i class="bi bi-database" aria-hidden="true"></i><b data-sl-gauge-val>31</b> sql <span>запросов</span></li>
-                <li title="Память PHP на запрос · лимит 128 MB" data-sl-gauge="mem" data-sl-gauge-max="128"><i class="bi bi-memory" aria-hidden="true"></i><b data-sl-gauge-val>18</b> MB <span>память PHP</span></li>
-                <li title="Посетителей онлайн" data-sl-gauge="online" data-sl-gauge-max="120"><i class="bi bi-people" aria-hidden="true"></i><b data-sl-gauge-val>65</b> <span>онлайн</span></li>
+              <ul class="sl-cockpit-strip" data-mark="Г14">
+                <li title="Генерация страницы" data-sl-gauge="gen" data-sl-gauge-max="400"><i class="bi bi-stopwatch" aria-hidden="true"></i><b data-sl-gauge-val>80</b> ms <span>генерация</span></li>
+                <li title="SQL запросов на страницу" data-sl-gauge="sql" data-sl-gauge-max="50"><i class="bi bi-database" aria-hidden="true"></i><b data-sl-gauge-val>20</b> sql <span>запросов</span></li>
+                <li title="Память PHP на запрос · лимит 128 MB" data-sl-gauge="mem" data-sl-gauge-max="128"><i class="bi bi-memory" aria-hidden="true"></i><b data-sl-gauge-val>2</b> MB <span>память PHP</span></li>
+                <li title="Посетителей онлайн" data-sl-gauge="online" data-sl-gauge-max="120"><i class="bi bi-people" aria-hidden="true"></i><b data-sl-gauge-val>1</b> <span>онлайн</span></li>
               </ul>
-              <div id="sl-cockpit-signals" class="sl-cockpit-signals" data-sl-toggle="sl-cockpit-signals" data-sl-toggle-default="closed">
-                <ul class="sl-setup-checks" aria-label="Сигналы состояния">
-                  <li class="sl-is-warn" data-sl-signal="setup"><i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i><b><a href="#sl-alert-setup">Файл установки</a></b><span>setup.php всё ещё лежит в корне сайта</span></li>
-                  <li data-sl-signal="backup"><i class="bi bi-check-circle-fill" aria-hidden="true"></i><b><a href="../../plugins/sxd/index.php" target="_blank" rel="noopener noreferrer">Резервная копия</a></b><span>сегодня в 03:10</span></li>
-                  <li data-sl-signal="db"><i class="bi bi-check-circle-fill" aria-hidden="true"></i><b><a href="../../admin.php?name=monitor">Ошибки базы данных</a></b><span>нет за 24 часа</span></li>
-                  <li data-sl-signal="disk"><i class="bi bi-check-circle-fill" aria-hidden="true"></i><b><a href="../../admin.php?name=monitor">Место на диске</a></b><span>занято 48 %</span></li>
-                  <li data-sl-signal="cache"><i class="bi bi-check-circle-fill" aria-hidden="true"></i><b><a href="../../admin.php?name=config">Кеш</a></b><span>включён, 88 % попаданий</span></li>
-                </ul>
-              </div>
             </section>
             <p class="sl-menu-empty" data-sl-menu-empty hidden>Раздел не найден.</p>
             <div data-mark="Г2 Г3 Г4 Г7 Д5 Д8">
@@ -486,6 +492,13 @@
         <li data-code="Г6" data-show="rail">В балке на главной строки «Ждут внимания» — все девять иконок с числом на углу, нули тоже; блоки через черту, как в меню (В09).</li>
         <li data-code="Г7">Кнопка «…» карточки появляется, только пока карточка под курсором или в фокусе; в покое сетка из 33 карточек стоит без кнопок. В живой панели «…» видна на каждой карточке всегда. Веер раскрывается, когда наводят на саму «…». На сенсорном экране «…» видна всегда (наведения там нет). Правило общее с меню (Э11).</li>
         <li data-code="Г8">«Новые» и «Ждут проверки» живой панели слиты в один блок «Ждут внимания» — с теми же строками, названиями, порядком и ссылками, что у колокольчика (Э04): сначала то, что ждёт, по убыванию числа, нули ниже, с зелёным 0. Колокольчик остаётся на всех страницах, блок — его развёрнутая версия на главной. Для переноса: в системе эти блоки собираются раздельно — нужен один источник очередей для колокольчика и блока.</li>
+        <li data-code="Г9">Над модулями — кокпит состояния системы, двойник кокпита презентации: строка состояния, четыре кольца, лампа в центре, строка цифр. Сворачивания нет. Данные стенда — заглушки; у каждой цифры есть источник в системе: монитор (core/monitor.php), самопроверка, журналы, планировщик.</li>
+        <li data-code="Г10">Кольцо — только для доли от предела: CPU, RAM, диск, OPcache. Кольцо темы sl-knob открытой дугой с рисками, концы круглые; число в центре, подпись в разрыве дуги, не поперёк шкалы; тон по порогам getPercentTone(); для экранного чтеца — meter со значением.</li>
+        <li data-code="Г11">Под курсором и в фокусе у каждого кольца — панель колокольчика (sl-float, строки Э04): подробности монитора — ядра и частота, занято и свободно, память и скрипты OPcache; строка ведёт в «Мониторинг».</li>
+        <li data-code="Г12" data-show="cockpit">Лампа — сводный сигнал: знак SLAED одним цветом — в тоне состояния (одноцветный знак темы маской), цветной логотип остаётся только в шапке; тон худшего сигнала одним классом на кокпите (sl-knob-ok / -warn / -danger), тот же тон у строки состояния с глифом алерта. Норма — ровный свет без пульса; внимание — яркое кольцо-пульс и дрожь, как у предупреждения; сбой — паника: красная рамка кокпита пульсирует, пульс вдвое чаще, логотип бьётся, как у ошибки. Переключатель — строка «Состояние» окна «Стенд».</li>
+        <li data-code="Г13" data-show="signals">Под курсором и в фокусе у лампы — панель колокольчика с сигналами: только сломанное, красное первым, факт справа («29 за сутки»); в норме одна строка «Все 12 проверок пройдены». Двенадцать проверок: защита каталогов, файл установки, ошибки PHP и БД, диск, резервная копия, неудачные входы, события безопасности, планировщик, HTTPS, OPcache, версия PHP.</li>
+        <li data-code="Г15">Справа в строке состояния вместо версии — живой чип блоков сайта (fragments/live-chip.html темы lite, механика slaed.js): пульс «в эфире», под курсором и в фокусе — статус, интервал 10 сек, «Обновлено N сек» и «Пауза» — пауза останавливает опрос кокпита, значок гаснет в тон внимания. Пульс — sl-led-pulse темы admin.</li>
+        <li data-code="Г14">Строка цифр под кольцами — величины без предела: генерация, SQL-запросы, память PHP, онлайн; на стенде меняются сами, как при опросе.</li>
       </ul>
       <h3>Э · оболочка: шапка, меню, сессия</h3>
       <ul class="sl-reset">

@@ -43,7 +43,7 @@ class Cache {
 
     # Create a missing directory of the cache and answer whether it exists; losing the race to a parallel request is the expected success, not a warning
     # Only a directory that is still missing afterwards is a failure, and that one is written to the log, since the silenced warning no longer tells it
-    private static function setDirPath(string $dir): bool {
+    public static function setDirPath(string $dir): bool {
         if (is_dir($dir)) return true;
         set_error_handler(static fn(): bool => true);
         $made = mkdir($dir, 0777, true);

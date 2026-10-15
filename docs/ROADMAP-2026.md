@@ -181,7 +181,8 @@ into the plan, then do whatever work the step names.
   2026-10-15). (2026-10-15)
 - [x] 77. UPDATE batch 1 — one entry: the branch `/api/` of `public/index.php`, `API_FILE` and the light core.
   (2026-10-15)
-- [ ] 78. UPDATE batch 2 — the core of the connector without clients, `checkApiFlood`, the reply mode `file`.
+- [x] 78. UPDATE batch 2 — the core of the connector without clients, `checkApiFlood`, the reply mode `file`. An
+  action names its reply mode by the key `reply` (owner, 2026-10-15). (2026-10-15)
 - [ ] 79. UPDATE batch 3 — signature, keys, `files.json`, `tools/release.php` and `tools/sign.php`.
 - [ ] 80. UPDATE batch 4 — the module `master`.
 - [ ] 81. UPDATE batch 5 — the client: the check, the page "Обновления", the notice, the light boot that runs the

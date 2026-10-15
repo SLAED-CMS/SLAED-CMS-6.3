@@ -762,11 +762,15 @@
   to { opacity: 0; transform: scale(1.12); }
 }
 
-#content .sl-pres-plate img {
-  width: 100%;
-  height: auto;
+/* The mark of the lamp is the one-colour mark of the theme cut out of the tone of the state, half the dial wide, so the
+   brand in colour stays with the logo of the header and the lamp reads as a signal, not as a second logo */
+.sl-pres-mark {
+  display: block;
+  width: calc(var(--sl-gauge-width) / 2);
+  max-width: 100%;
   aspect-ratio: 1;
-  object-fit: contain;
+  background: currentColor;
+  mask: url(../../images/logos/slaed-logo-mark-solid-black.svg) center / contain no-repeat;
   filter: drop-shadow(0 0 var(--sl-space-4) color-mix(in srgb, currentColor var(--sl-gauge-mix), transparent));
 }
 

@@ -18,6 +18,7 @@
 # API tokens and secrets
 /config/changelog.php
 /config/local.php
+/tools/.env
 
 # Markers of the self-check: a random body per installation, so a shipped copy would let a copy of the delivery pass for the site
 /check.txt
