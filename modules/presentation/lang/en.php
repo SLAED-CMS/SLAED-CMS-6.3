@@ -16,6 +16,7 @@ define('_PRES_NOMINAL', 'all systems nominal');
 define('_PRES_GEN', 'Generation');
 define('_PRES_CACHE', 'Cache');
 define('_PRES_QUERIES', 'SQL queries');
+define('_PRES_QUERY', 'Queries');
 define('_PRES_CONTROL', 'control / runtime');
 define('_PRES_MONITOR', 'System monitor');
 define('_PRES_CO_SYSTEM', 'System');

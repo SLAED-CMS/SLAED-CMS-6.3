@@ -88,7 +88,6 @@
 /* The monospace micro caption: one role wherever a small figure, a date, a sha or a note stands beside a value,
    so every element that carries it is listed here once and only its placement lives with its component */
 .sl-pres-mono,
-.sl-pres-plate small,
 .sl-pres-page-content > small,
 .sl-pres-router > span,
 .sl-pres-case > strong,
@@ -630,7 +629,8 @@
   color: var(--sl-danger);
 }
 
-.sl-pres .sl-pres-ring path.sl-knob-val {
+/* An open arc ends in the air, so its track and its value both take round ends; the butt end of the theme is for a closed ring */
+.sl-pres .sl-pres-ring path:is(.sl-knob-bg, .sl-knob-val) {
   stroke-linecap: round;
 }
 
@@ -710,50 +710,78 @@
   margin: var(--sl-space-7) 0 var(--sl-space-3);
 }
 
-/* The central plate: a centred mark inside a faint halo and a slow dashed orbit. The orbit runs outside the border, so
-   the plate steps in by the orbit's width and the orbit lands on the column edge, one gap from the rings either side */
+/* The central plate is the state lamp of the system: the mark alone, its halo, border, glow and slow dashed orbit all in
+   the tone data-sl-tone gives it, and one ring breathing out of it. The orbit runs outside the border, so the plate steps
+   in by the orbit's width and the orbit lands on the column edge, one gap from the rings either side */
 .sl-pres-plate {
   position: relative;
   display: grid;
   place-items: center;
-  align-content: center;
-  gap: var(--sl-space-2);
   aspect-ratio: 1;
   margin: var(--sl-space-2);
-  border: 1px solid var(--sl-pres-link-text);
+  border: 1px solid currentColor;
   border-radius: var(--sl-radius-circle);
   background: radial-gradient(circle at 50% 38%, var(--sl-pres-core-bg), var(--sl-pres-panel-bg) 68%);
-  padding: var(--sl-space-4) var(--sl-space-3);
-  box-shadow: 0 0 0 var(--sl-space-3) var(--sl-tint), inset 0 0 var(--sl-space-6) var(--sl-tint);
-  text-align: center;
+  padding: var(--sl-space-8);
+  box-shadow:
+    0 0 0 var(--sl-space-3) color-mix(in srgb, currentColor var(--sl-chip-mix), transparent),
+    inset 0 0 var(--sl-space-9) color-mix(in srgb, currentColor var(--sl-chip-tint-mix), transparent);
 }
 
-.sl-pres-plate::before {
+.sl-pres-plate::before,
+.sl-pres-plate::after {
   content: "";
   position: absolute;
   inset: calc(0px - var(--sl-space-2));
-  border: 1px dashed var(--sl-pres-link-text);
   border-radius: var(--sl-radius-circle);
+  pointer-events: none;
+}
+
+.sl-pres-plate::before {
+  border: 1px dashed color-mix(in srgb, currentColor var(--sl-pulse-mix), transparent);
   animation: sl-pres-spin calc(var(--sl-pres-dur) * 6) linear infinite;
+}
+
+.sl-pres-plate::after {
+  border: var(--sl-space-1) solid currentColor;
+  opacity: 0;
+  animation: sl-pres-lamp calc(var(--sl-pres-dur) * 0.6) var(--sl-ease-out) infinite;
+}
+
+/* The lamp breathes only while something waits: a calm system shows a steady glow, so motion itself is the alarm */
+.sl-pres-plate[data-sl-tone="success"]::after {
+  animation: none;
 }
 
 @keyframes sl-pres-spin {
   to { transform: rotate(360deg); }
 }
 
-#content .sl-pres-plate img {
-  width: var(--sl-size-icon-xl);
-  height: var(--sl-size-icon-xl);
-  object-fit: contain;
-  filter: drop-shadow(0 0 var(--sl-space-3) var(--sl-tint));
+@keyframes sl-pres-lamp {
+  from { opacity: var(--sl-fade-muted); transform: scale(0.92); }
+  to { opacity: 0; transform: scale(1.12); }
 }
 
+#content .sl-pres-plate img {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+  object-fit: contain;
+  filter: drop-shadow(0 0 var(--sl-space-4) color-mix(in srgb, currentColor var(--sl-gauge-mix), transparent));
+}
+
+/* The figure stands in the centre of the dial and its caption in the mouth of the arc, under the last ticks, as on an
+   instrument: the caption no longer crosses the scale whatever its length */
 .sl-pres-gauges > .sl-pres-ring > div {
+  position: static;
   width: 100%;
   padding: 0 var(--sl-space-5);
 }
 
 .sl-pres-gauges > .sl-pres-ring > div > b {
+  position: relative;
+  z-index: var(--sl-z-raised);
+  font-size: var(--sl-font-hero);
   display: flex;
   justify-content: center;
   align-items: baseline;
@@ -761,15 +789,12 @@
 }
 
 .sl-pres-gauges > .sl-pres-ring > div > span {
+  position: absolute;
+  inset-inline: 0;
+  bottom: var(--sl-space-2);
+  z-index: var(--sl-z-raised);
+  margin: 0;
   letter-spacing: 0;
-}
-
-.sl-pres-plate b {
-  font-family: var(--sl-face-mono);
-  font-size: var(--sl-font-micro);
-  letter-spacing: var(--sl-track-wide);
-  text-transform: uppercase;
-  color: var(--sl-pres-text);
 }
 
 .sl-pres-eyebrow {
@@ -5214,6 +5239,7 @@
     justify-items: center;
     gap: var(--sl-space-6);
     max-width: calc(var(--sl-gauge-width) * 2 + var(--sl-space-6));
+    margin-inline: auto;
   }
 
   .sl-pres-plate {

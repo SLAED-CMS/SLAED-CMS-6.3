@@ -16,6 +16,7 @@ define('_PRES_NOMINAL', 'wszystkie systemy w normie');
 define('_PRES_GEN', 'Generowanie');
 define('_PRES_CACHE', 'Cache');
 define('_PRES_QUERIES', 'Zapytań SQL');
+define('_PRES_QUERY', 'Zapytań');
 define('_PRES_CONTROL', 'sterowanie / środowisko');
 define('_PRES_MONITOR', 'Monitor systemu');
 define('_PRES_CO_SYSTEM', 'System');

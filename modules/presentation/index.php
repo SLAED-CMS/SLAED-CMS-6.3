@@ -379,9 +379,9 @@ function getPresentationData(): array {
         'cockpit' => _PRES_COCKPIT, 'nominal' => _PRES_NOMINAL, 'version' => $ver[0].(isset($ver[1]) ? ' · '.$ver[1] : ''),
         'gen_ring' => $ring((string)$gen, 'ms', _PRES_GEN, $gpart, '', false, '', 'info'),
         'cache_ring' => $ring((string)$hit, '%', _PRES_CACHE, $hit, '', false, '', 'ok'),
-        'qnum_ring' => $ring((string)$load['qnum'], '/'.$max['qnum'], _PRES_QUERIES, $qpart, '', false, '', 'warn'),
+        'qnum_ring' => $ring((string)$load['qnum'], 'sql', _PRES_QUERY, $qpart, '', false, '', 'warn'),
         'online_ring' => $ring((string)$live, '', _ONLINE, $share($live, 120), '', false, '', 'info'),
-        'plate' => ['theme' => $theme, 'logo' => $logo, 'name' => $ver[1] ?? $ver[0], 'text' => _PRES_CONTROL],
+        'plate' => ['theme' => $theme, 'logo' => $logo, 'tone' => 'success'],
         'eyebrow' => _PRES_EYEBROW, 'head_a' => _PRES_HEAD_A, 'head_b' => _PRES_HEAD_B, 'head_c' => _PRES_HEAD_C, 'lead' => _PRES_LEAD,
         'core' => [
             'title' => _PRES_CONTROL, 'route' => $menu[0]['path'], 'menu' => $menu, 'view' => _PRES_MONITOR, 'online' => _ONLINE,

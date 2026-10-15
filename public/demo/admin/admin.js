@@ -1027,6 +1027,61 @@
 
   /* ---------- Stand: data and marks, not part of the panel ---------- */
 
+  // The states the stand can put the cockpit in: the line of state, and the class, glyph and note of the two signals that move
+  const STATES = {
+    ok: { icon: 'check-circle-fill', text: 'Все системы в норме', setup: ['', 'check-circle-fill', 'удалён после установки'], db: ['', 'check-circle-fill', 'нет за 24 часа'] },
+    warn: { icon: 'exclamation-triangle-fill', text: 'Требует внимания · 1', setup: ['sl-is-warn', 'exclamation-triangle-fill', 'setup.php всё ещё лежит в корне сайта'], db: ['', 'check-circle-fill', 'нет за 24 часа'] },
+    danger: { icon: 'x-circle-fill', text: 'Сбой · 2', setup: ['sl-is-warn', 'exclamation-triangle-fill', 'setup.php всё ещё лежит в корне сайта'], db: ['sl-is-fail', 'x-circle-fill', '12 ошибок за последний час'] }
+  };
+
+  // Put the cockpit in one state: one ring tone class on the panel colours the lamp and the line, the signals follow
+  function setCockpitState(tone) {
+    const box = doc.querySelector('[data-sl-cockpit]');
+    const now = STATES[tone];
+    if (!box || !now) return;
+    box.classList.remove('sl-knob-ok', 'sl-knob-warn', 'sl-knob-danger');
+    box.classList.add('sl-knob-' + tone);
+    const line = box.querySelector('[data-sl-cockpit-state]');
+    line.firstElementChild.className = 'bi bi-' + now.icon;
+    line.lastElementChild.textContent = now.text;
+    box.querySelector('[data-sl-cockpit-lamp]').setAttribute('aria-label', 'Состояние системы: ' + now.text + '. Сигналы');
+    ['setup', 'db'].forEach((key) => {
+      const [cls, icon, note] = now[key];
+      const row = box.querySelector('[data-sl-signal="' + key + '"]');
+      row.className = cls;
+      row.querySelector('.bi').className = 'bi bi-' + icon;
+      row.querySelector('span').textContent = note;
+    });
+  }
+
+  // The cockpit of the home: the stand has no server behind it, so each gauge and each figure of the strip drifts round its own value as a live panel would
+  function setCockpit() {
+    const box = doc.querySelector('[data-sl-cockpit]');
+    if (!box) return;
+    const rings = [...box.querySelectorAll('[data-sl-gauge]')];
+    const base = rings.map((r) => Number(r.querySelector('[data-sl-gauge-val]').textContent));
+    setInterval(() => {
+      if (doc.hidden || root.hasAttribute('data-sl-still')) return;
+      rings.forEach((r, i) => {
+        const max = Number(r.dataset.slGaugeMax);
+        const val = Math.max(0, Math.min(max, Math.round(base[i] * (0.9 + Math.random() * 0.2))));
+        const part = Math.round(val / max * 100);
+        r.querySelector('[data-sl-gauge-val]').textContent = val;
+        r.querySelector('.sl-knob-val')?.setAttribute('stroke-dasharray', part + ' 100');
+        if (r.getAttribute('role') === 'meter') {
+          r.setAttribute('aria-valuenow', val);
+          r.setAttribute('aria-valuetext', val + ' %');
+        }
+        // The server gauges take their tone from the share, by the thresholds of getPercentTone() in core/system.php
+        if (r.hasAttribute('data-sl-gauge-tone')) {
+          const tone = part > 95 ? 'danger' : part > 75 ? 'warn' : part > 50 ? 'info' : 'ok';
+          r.classList.remove('sl-knob-ok', 'sl-knob-info', 'sl-knob-warn', 'sl-knob-danger');
+          r.classList.add('sl-knob-' + tone);
+        }
+      });
+    }, 3000);
+  }
+
   // Draw the stand page from its data: the other page of the file leaves the document, then menu, cards and rows fill their templates
   function setDemoRender() {
     const page = root.dataset.demoPage;
@@ -1275,6 +1330,10 @@
         setSeg('net', v);
         setStatus(state.down ? 'Сеть стенда отключена: запросы списка не доходят до сервера.' : 'Сеть стенда снова работает.');
       },
+      state: (v) => {
+        setCockpitState(v);
+        setSeg('state', v);
+      },
       session: (v) => (v === '1' ? setSessionEnd() : setWindow(sess, false)),
       sound: (v) => setSoundOn(v === '1'),
       sounds: (v) => { setSndDraw(); setWindow(sbox, v === '1'); },
@@ -1421,6 +1480,7 @@
     setWinSegs();
     setSeg('net', '0');
     setSeg('flow', '0');
+    setSeg('state', 'warn');
     setSeg('saver', '0');
     setSoundOn(false, false);
     panel.inert = true;
@@ -1432,6 +1492,7 @@
   }
 
   setDemoRender();
+  setCockpit();
   setPagerCopy();
   if (doc.readyState === 'loading') doc.addEventListener('DOMContentLoaded', () => { setPanel(); setDemoStand(); });
   else { setPanel(); setDemoStand(); }
