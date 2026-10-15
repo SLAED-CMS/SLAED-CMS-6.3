@@ -179,7 +179,8 @@ into the plan, then do whatever work the step names.
   `sodium_compat` for the signature and reads a zip through its own central directory with `PharData` beside
   `ZipArchive`; `public/sitemap.xml` leaves git and `public/robots.txt` is a site file; the whole tree ships (owner,
   2026-10-15). (2026-10-15)
-- [ ] 77. UPDATE batch 1 — one entry: the branch `/api/` of `public/index.php`, `API_FILE` and the light core.
+- [x] 77. UPDATE batch 1 — one entry: the branch `/api/` of `public/index.php`, `API_FILE` and the light core.
+  (2026-10-15)
 - [ ] 78. UPDATE batch 2 — the core of the connector without clients, `checkApiFlood`, the reply mode `file`.
 - [ ] 79. UPDATE batch 3 — signature, keys, `files.json`, `tools/release.php` and `tools/sign.php`.
 - [ ] 80. UPDATE batch 4 — the module `master`.

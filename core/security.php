@@ -12,8 +12,9 @@ if (ob_get_level() === 0) ob_start();
 # Retired addresses: a path after another script or a bare script name goes 301 to the address built from the script name, any other path finds no page
 # The cut of index.php, before the database: a path of up to five ASCII words is kept lowercased in $urlroute for public/index.php, which resolves it
 # A path of index.php that names only the script is its start page, and setSeoMove() answers it in the one 301 of the page with every other reason
+# A path under api/ is no page: the router of the API reads it, so the cut neither keeps it nor marks it as not found
 $urlroute = ['seg' => []];
-if (PHP_SAPI !== 'cli') {
+if (PHP_SAPI !== 'cli' && !defined('API_FILE')) {
     [$rpath, $rquery] = array_pad(explode('?', (string)($_SERVER['REQUEST_URI'] ?? ''), 2), 2, '');
     $sname = basename(str_replace('\\', '/', (string)($_SERVER['SCRIPT_NAME'] ?? '')));
     $sbase = rtrim(str_replace('\\', '/', dirname((string)($_SERVER['SCRIPT_NAME'] ?? '/'))), '/');
@@ -91,12 +92,15 @@ if ($conf['security']['error'] === 2) {
     error_reporting(0);
 }
 
-# Session start
-if (session_status() === PHP_SESSION_NONE) session_start();
+# The API prints no error into its JSON, whatever the setting: the detail stays in the journal
+if (defined('API_FILE')) ini_set('display_errors', '0');
+
+# Session start; the API is session-less, every request of it answers for itself
+if (session_status() === PHP_SESSION_NONE && !defined('API_FILE')) session_start();
 
 # Flood Protection
 # The report names the fields and does not quote them: Logger already stores the request data of the same entry with every secret masked, and a dump here would restore the password
-if (!defined('ADMIN_FILE') && $conf['security']['flood']) {
+if (!defined('ADMIN_FILE') && !defined('API_FILE') && $conf['security']['flood']) {
     $ctime = time();
     $ftime = $ctime - intval($conf['security']['flood_t']);
     $flood = (isset($_SESSION[$conf['user_c'].'-flood']) && $_SESSION[$conf['user_c'].'-flood'] > $ftime) ? 1 : 0;
@@ -109,8 +113,8 @@ if (!defined('ADMIN_FILE') && $conf['security']['flood']) {
 # Format admin variable
 $admin = (($tmp = base64_decode($_SESSION[$conf['admin_c']] ?? '', true)) && $tmp !== '') ? explode(':', $tmp) : [];
 
-# Format user variable
-$user = (($tmp = base64_decode($_COOKIE[$conf['user_c'].'-account'] ?? '', true)) && $tmp !== '') ? explode(':', $tmp) : [];
+# Format user variable; the API knows no visitor by a cookie, its rights come from the client of the request
+$user = (!defined('API_FILE') && ($tmp = base64_decode($_COOKIE[$conf['user_c'].'-account'] ?? '', true)) && $tmp !== '') ? explode(':', $tmp) : [];
 
 # Request journal: every request is one Logger line of request.log, so posted secrets are masked and cookies and the session leave only their names
 if ($conf['security']['log']) Logger::addRequest('info', 'Request', ['user' => $user[1] ?? '']);
@@ -160,7 +164,8 @@ if ($bcookie == 'block') {
 }
 
 # Render the branded error page for whitelisted ?error= codes (web server routes error_page/ErrorDocument to it); the whitelist blocks forged or invalid statuses
-$ecode = isset($_GET['error']) ? (int)$_GET['error'] : 0;
+# The API has no error page, so the parameter means nothing to it
+$ecode = (isset($_GET['error']) && !defined('API_FILE')) ? (int)$_GET['error'] : 0;
 if ($ecode && in_array($ecode, [400, 401, 402, 403, 404, 500, 502, 503, 504], true)) setError($ecode);
 
 # Add PHP errors to error_php.log
@@ -206,12 +211,13 @@ function addSqlLog($no, $mesg, $sql) {
     ]);
 }
 
-# Render a consistent response for uncaught errors: visible detail in debug, clean 500 in production, never inside non-HTML responses
+# Render a consistent response for uncaught errors: visible detail in debug, clean 500 in production, never inside non-HTML responses; the API answers its bare 500 in JSON
 function setErrorOut(string $detail = ''): void {
     global $conf;
     static $busy = false;
     if ($busy) return;
     $busy = true;
+    if (defined('API_FILE')) ApiRouter::setApiReply(['status' => 500, 'code' => 'internal']);
     if (in_array((string)($_REQUEST['go'] ?? ''), ['1', '3', '4', '5', 'captcha', 'file', 'rss', 'xsl'], true) || headers_sent()) {
         if (!headers_sent()) http_response_code(500);
         return;
@@ -241,7 +247,7 @@ set_exception_handler(function(Throwable $e) use (&$lexc) {
     setErrorOut(get_class($e).': '.$e->getMessage().' @ '.$e->getFile().':'.$e->getLine());
 });
 
-# Fatal shutdown errors are logged when enabled and carry a 500 status; no heavy render in shutdown (state may be broken)
+# Fatal shutdown errors are logged when enabled and carry a 500 status; no heavy render in shutdown (state may be broken), the API gets its bare 500 in JSON
 register_shutdown_function(function() use (&$lexc) {
     global $conf;
     if ($lexc) return;
@@ -255,12 +261,13 @@ register_shutdown_function(function() use (&$lexc) {
                 'line' => $e['line'],
             ]);
         }
+        if (defined('API_FILE')) ApiRouter::setApiReply(['status' => 500, 'code' => 'internal']);
         if (!headers_sent()) http_response_code(500);
     }
 });
 
-# Checking URL, GET, POST, COOKIE, FILES variables for safety
-if (!isAdmin(true)) {
+# Checking URL, GET, POST, COOKIE, FILES variables for safety; the API is left to ApiInput, its own filter, so a refused value is a 422 there and never a ban here
+if (!isAdmin(true) && !defined('API_FILE')) {
     $ruri = mb_strlen((string)($_SERVER['REQUEST_URI'] ?? ''), 'utf-8');
     if ($ruri > 2048) addWarnReport('Spam in URL - '.$ruri.' > 2048');
     if (isset($_GET)) {
@@ -437,9 +444,10 @@ function checkDebugView(): bool {
     return $view;
 }
 
-# Format exit and displaying information with an optional page heading
+# Format exit and displaying information with an optional page heading; the API answers a bare 403 in JSON, since the text may name what no client may read
 function setExit(string $msg, string $typ = '', string $title = ''): never {
     global $conf, $tpl;
+    if (defined('API_FILE')) ApiRouter::setApiReply(['status' => 403, 'code' => 'no_scope']);
     $file = defined('BASE_DIR') ? BASE_DIR.'/core/classes/template.php' : '';
     if (!class_exists('Template') && $file !== '' && is_file($file)) require_once $file;
     if (!class_exists('Template')) die('Template engine unavailable');
@@ -507,6 +515,7 @@ function setError(int $code = 404): never {
             'op' => isset($_GET['op']) ? substr((string)$_GET['op'], 0, 50) : null,
         ]);
     }
+    if (defined('API_FILE')) ApiRouter::setApiReply(['status' => $code]);
     if (ob_get_level() > 0) ob_clean();
     setExit(sprintf(_ERROR_PAGE, $code), '1', _ERROR.' '.$code);
 }
@@ -763,7 +772,7 @@ function getReferer(): string {
 function setLang(): void {
     global $locale, $conf;
     $mlang = $conf['language'] ?? 'en';
-    $mult = ((int)($conf['multilingual'] ?? 0) === 1);
+    $mult = ((int)($conf['multilingual'] ?? 0) === 1) && !defined('API_FILE');
     if ($mult) {
         $clang = getCookies('language');
         $locale = ($clang && is_readable(BASE_DIR.'/lang/'.$clang.'.php')) ? $clang : $mlang;

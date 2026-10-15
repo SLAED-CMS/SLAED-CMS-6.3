@@ -113,7 +113,9 @@ function getConfig(bool $fresh = false): array {
 }
 
 # Editor bootstrap must load before security POST processing, because security helpers may consult editor-aware functions during request analysis
-require_once BASE_DIR.'/core/classes/editor.php';
+# The API has no form and no request analysis of the site, so it takes the router instead, which writes every reply of it, the refusals of security.php included
+if (defined('API_FILE')) require_once BASE_DIR.'/core/classes/api/router.php';
+else require_once BASE_DIR.'/core/classes/editor.php';
 require_once BASE_DIR.'/core/classes/logger.php';
 
 # Load the generated runtime config cache
@@ -131,39 +133,42 @@ require_once BASE_DIR.'/core/security.php';
 # Server metrics shared by the admin monitor, the scheduler sampler and the presentation module
 require_once BASE_DIR.'/core/monitor.php';
 
-$theme = getTheme();
-if (is_file(PUBLIC_DIR.'/templates/'.$theme.'/index.php')) require_once PUBLIC_DIR.'/templates/'.$theme.'/index.php';
-require_once BASE_DIR.'/core/classes/template.php';
-require_once BASE_DIR.'/core/classes/parser.php';
 require_once BASE_DIR.'/core/classes/geoip.php';
-require_once BASE_DIR.'/core/classes/captcha.php';
 require_once BASE_DIR.'/core/classes/cache.php';
-require_once BASE_DIR.'/core/classes/oauth.php';
-require_once BASE_DIR.'/core/classes/field.php';
-require_once BASE_DIR.'/core/classes/point.php';
-require_once BASE_DIR.'/core/classes/rating.php';
-require_once BASE_DIR.'/core/classes/comment.php';
-require_once BASE_DIR.'/core/classes/quick.php';
-require_once BASE_DIR.'/core/classes/privat.php';
 require_once BASE_DIR.'/core/classes/route.php';
 # Only the closed class map of Node is registered here; its classes load when a request really uses one of them
 require_once BASE_DIR.'/core/classes/node/load.php';
-$tpl = new Template($theme);
-$prs = new Parser();
-# The one stateless instance of the extra fields; Node gets it handed in, so no second mechanism of fields ever appears
-$fld = new Field();
-# Points stay closed until the 6.3 data update has left its mark: an empty scope switches the class off and reports it
-$pnt = new Point($db, ($conf['update']['points'] ?? '') === '6.3.0' ? ($conf['points'] ?? []) : []);
-$com = new Comment($db, $prs, $pnt, $conf);
-$prv = new Privat($db, $conf);
 
 # Helpers include
 require_once BASE_DIR.'/core/helpers.php';
 
-if (defined('MODULE_FILE')) {
-    require_once BASE_DIR.'/core/user.php';
-} elseif (defined('ADMIN_FILE')) {
-    require_once BASE_DIR.'/core/admin.php';
+# The light core of the API ends here: no theme, no template, no parser, no visual class and no layer of the user or the panel, so no part of a page reaches its JSON
+# Field is the one stateless instance of the extra fields; Node gets it handed in, so no second mechanism of fields ever appears
+# Points stay closed until the 6.3 data update has left its mark: an empty scope switches the class off and reports it
+if (!defined('API_FILE')) {
+    $theme = getTheme();
+    if (is_file(PUBLIC_DIR.'/templates/'.$theme.'/index.php')) require_once PUBLIC_DIR.'/templates/'.$theme.'/index.php';
+    require_once BASE_DIR.'/core/classes/template.php';
+    require_once BASE_DIR.'/core/classes/parser.php';
+    require_once BASE_DIR.'/core/classes/captcha.php';
+    require_once BASE_DIR.'/core/classes/oauth.php';
+    require_once BASE_DIR.'/core/classes/field.php';
+    require_once BASE_DIR.'/core/classes/point.php';
+    require_once BASE_DIR.'/core/classes/rating.php';
+    require_once BASE_DIR.'/core/classes/comment.php';
+    require_once BASE_DIR.'/core/classes/quick.php';
+    require_once BASE_DIR.'/core/classes/privat.php';
+    $tpl = new Template($theme);
+    $prs = new Parser();
+    $fld = new Field();
+    $pnt = new Point($db, ($conf['update']['points'] ?? '') === '6.3.0' ? ($conf['points'] ?? []) : []);
+    $com = new Comment($db, $prs, $pnt, $conf);
+    $prv = new Privat($db, $conf);
+    if (defined('MODULE_FILE')) {
+        require_once BASE_DIR.'/core/user.php';
+    } elseif (defined('ADMIN_FILE')) {
+        require_once BASE_DIR.'/core/admin.php';
+    }
 }
 
 # Call an optional theme hook and return only array payloads

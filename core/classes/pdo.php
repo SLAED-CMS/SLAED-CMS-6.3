@@ -19,7 +19,7 @@ class Database {
     public ?string $qid = null;
     public ?PDOException $laste = null;
 
-    # Opens the PDO connection in the given collation, one SQL mode and the PHP zone, by name where MariaDB refuses the offset; a refusal is logged, thrown under SETUP_FILE
+    # Opens the PDO connection in the collation, one SQL mode and the PHP zone, by name where MariaDB refuses the offset; a refusal is logged, thrown for setup, bare for the API
     public function __construct(string $server, string $user, string $pass, string $dbname, string $collate) {
         $dsn = 'mysql:host='.$server.';dbname='.$dbname.';charset=utf8mb4';
         $mode = 'STRICT_TRANS_TABLES,ONLY_FULL_GROUP_BY,NO_ZERO_DATE,NO_ZERO_IN_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION';
@@ -38,7 +38,7 @@ class Database {
             $detail = _SQLERRORCON.' - '._ERROR.': '.$e->getCode().' - '.$e->getMessage();
             Logger::addSite('error', $detail, ['http_code' => 500]);
             if (defined('SETUP_FILE')) throw new RuntimeException($detail);
-            if ((int)($conf['security']['error'] ?? 0) > 0) setExit($detail);
+            if (!defined('API_FILE') && (int)($conf['security']['error'] ?? 0) > 0) setExit($detail);
             setError(500);
         }
     }

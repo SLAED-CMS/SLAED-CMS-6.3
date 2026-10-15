@@ -22,13 +22,12 @@ function getUploadUrl(string $path): string {
     return in_array(explode('/', $path)[0], getUploadPublic(), true) ? HOME_PATH.'uploads/'.$path : '';
 }
 
-# The path below uploads/ one request asks for, or null for a request of anything else; the prefix is the folder of the entry, and in the root-on-the-project mode its parent
-# The path is decoded once here, so a separator or a dot segment written as an escape is judged by setUploadStream() in the form the filesystem would see it
-function getUploadRequest(): ?string {
+# The path below the folder $dir of the site, decoded once as the filesystem would see it, or null; the prefix is the folder of the entry or, root on the project, its parent
+function getRequestPath(string $dir): ?string {
     $path = rawurldecode((string)parse_url((string)($_SERVER['REQUEST_URI'] ?? ''), PHP_URL_PATH));
     $base = rtrim(str_replace('\\', '/', dirname((string)($_SERVER['SCRIPT_NAME'] ?? '/'))), '/');
     foreach (array_unique([$base, (string)preg_replace('#/public$#', '', $base)]) as $root) {
-        if (str_starts_with($path, $root.'/uploads/')) return substr($path, strlen($root) + 9);
+        if (str_starts_with($path, $root.'/'.$dir.'/')) return substr($path, strlen($root) + strlen($dir) + 2);
     }
     return null;
 }

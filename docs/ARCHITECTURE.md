@@ -51,6 +51,12 @@ Role:
   defined them first
 - defines `MODULE_FILE`, loads `core/stream.php` and answers a request under `uploads/` there through the light
   path, before the core boots
+- answers a request under `api/` as the one entry of the API: it defines `API_FILE`, loads the light core of
+  `core/system.php` - configuration, database, security, logger, cache, mail and helpers, without theme, template,
+  parser, visual classes, session or the layer of the user - and `ApiRouter::setApiReply()` writes the JSON reply of
+  `ApiRouter::getResponse()`; in this mode `core/security.php` keeps no path, reads no account cookie, scans no input
+  (`ApiInput` is the filter of the API) and answers a ban, a lost database or an uncaught error in JSON without
+  detail (`.rules/api.md`)
 - loads `core/system.php`
 - resolves a path the cut of `core/security.php` kept into the route keys of `$_GET` (see "Address Boundary")
 - reads `go`, `name`, `op`, and `file` through `getVar()`

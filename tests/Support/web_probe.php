@@ -40,7 +40,7 @@ if ($wpath !== '/stream') {
         exit;
     }
     $_SERVER['SCRIPT_NAME'] = '/index.php';
-    setUploadStream((string)getUploadRequest());
+    setUploadStream((string)getRequestPath('uploads'));
 }
 parse_str((string)parse_url((string)($_SERVER['REQUEST_URI'] ?? ''), PHP_URL_QUERY), $wq);
 $wfile = (string)($wq['f'] ?? '');

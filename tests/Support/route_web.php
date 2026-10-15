@@ -6,7 +6,7 @@
 
 # The web server of tests/Support/route_probe.php, run as the router of the built-in server `php -S` with the scratch root in SLAED_ROUTE_ROOT
 # It serves the real index.php and admin.php with every writable directory and the configuration redirected into scratch, over the probe's disposable database
-# The visitor comes from the header X-Probe-Who and is one of the accounts the probe seeded
+# The visitor comes from the header X-Probe-Who and is one of the accounts the probe seeded; a path under api/ is answered by the branch of the API of index.php
 # The account helper is both a site account and the administrator of the support type, the way an operator answers requests on the site
 # The document root is public/, as on the stand: a file at its top is served as it is and every other path reaches index.php, or admin.php by its own address
 # There the light path serves a public folder of the scratch upload root and the core answers a path that is no address of the site
@@ -37,7 +37,16 @@ $rusers = ['anna' => '2:anna:hash-anna', 'boris' => '3:boris:hash-boris', 'clara
 $radmins = ['root' => '1:root:hash-root', 'moder' => '2:moder:hash-moder', 'boss' => '3:boss:hash-boss', 'docsman' => '4:docsman:hash-docsman',
     'helper' => '5:helper:hash-helper'];
 if (isset($rusers[$rwho])) $_COOKIE[$rglob['user_c'].'-account'] = base64_encode($rusers[$rwho]);
-session_start();
+# A request of the API opens no session here either; the files it loaded and the state of the session at its end go to api.json, so the probe sees what the core left out
+# The state is read at the end because the reply of the API removes every header, a session cookie included, so no cookie in the reply proves no session
+if (str_starts_with($rpath, '/api/')) {
+    register_shutdown_function(static function () use ($rroot): void {
+        $rload = array_map(static fn(string $v): string => str_replace('\\', '/', $v), get_included_files());
+        file_put_contents($rroot.'/api.json', json_encode(['files' => $rload, 'session' => session_status() === PHP_SESSION_ACTIVE]));
+    });
+} else {
+    session_start();
+}
 if (isset($radmins[$rwho])) $_SESSION[$rglob['admin_c']] = base64_encode($radmins[$rwho]);
 foreach (['HTTP_HOST', 'REQUEST_URI', 'HTTP_REFERER', 'HTTP_USER_AGENT'] as $rkey) if (isset($_SERVER[$rkey])) putenv($rkey.'='.$_SERVER[$rkey]);
 chdir(PUBLIC_DIR);

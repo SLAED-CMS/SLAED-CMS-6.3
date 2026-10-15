@@ -12,8 +12,15 @@ $sgtime = microtime(true);
 
 # The light path: no file lies under uploads/ in the document root, so such a request lands here and is answered before the core boots
 require_once BASE_DIR.'/core/stream.php';
-$upath = getUploadRequest();
+$upath = getRequestPath('uploads');
 if ($upath !== null) setUploadStream($upath);
+
+# The API: a path under api/ boots the light core without theme, template or session, and its router answers in JSON before a line of the site runs
+if (getRequestPath('api') !== null) {
+    define('API_FILE', true);
+    require_once BASE_DIR.'/core/system.php';
+    ApiRouter::setApiReply(ApiRouter::getResponse());
+}
 require_once BASE_DIR.'/core/system.php';
 
 if (!defined('ADMIN_FILE') && $conf['close'] && !isAdmin()) { http_response_code(503); setExit(_CLOSE_TEXT); }

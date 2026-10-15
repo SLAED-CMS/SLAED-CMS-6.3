@@ -25,6 +25,7 @@
 # The argument address runs the writers of the registry of addresses: every path given, moved and marked gone inside the write of its entity
 # The argument parse runs the resolution of a path: the pages of the address table, the grammar, the cut and the keys of a path over those of the query
 # The argument build runs the links the pages print on the registry, the statements of the lists and the warnings, and its child buildext asks the builder itself
+# The argument entry runs the branch of the API of index.php beside the site and the panel: its JSON, the light core, its refusals, a ban and a lost database
 if (PHP_SAPI !== 'cli') {
     http_response_code(404);
     exit;
@@ -3214,6 +3215,48 @@ function getRouteParse(): array {
     return $out;
 }
 
+# The entry of the API over real requests: the JSON of the light core, the files it loaded, its refusals, a ban and a lost database, and the site and the panel beside it
+function getRouteEntry(string $work): array {
+    $ask = function (string $path, string $method = 'GET', array $head = [], string $who = 'api') use ($work): array {
+        if (is_file($work.'/api.json')) unlink($work.'/api.json');
+        $got = getRouteReply($who, $method, $path, ($method === 'POST') ? ['probe' => '1 UNION SELECT', 'url' => 'http://x/<script>'] : [], $head);
+        $load = is_file($work.'/api.json') ? (json_decode((string)file_get_contents($work.'/api.json'), true) ?: []) : [];
+        return ['code' => $got['code'], 'type' => $got['head']['content-type'] ?? '', 'cache' => $got['head']['cache-control'] ?? '',
+            'cookie' => isset($got['head']['set-cookie']), 'rid' => $got['head']['x-request-id'] ?? '', 'body' => $got['body'], 'json' => json_decode($got['body'], true),
+            'files' => array_map(fn(string $v): string => str_replace(BASE_DIR.'/', '', $v), $load['files'] ?? []), 'session' => $load['session'] ?? null];
+    };
+    $sec = require $work.'/config/security.php';
+    $sec['security'] = array_replace($sec['security'], ['block' => '1', 'write_h' => '1', 'url_get' => '1', 'error' => 2, 'error_log' => '1']);
+    setRouteFile($work.'/config/security.php', $sec);
+    $glob = require $work.'/config/global.php';
+    setRouteFile($work.'/config/global.php', array_replace($glob, ['multilingual' => '1']));
+    if (is_file($work.'/config/local.php')) unlink($work.'/config/local.php');
+    $out = ['site' => $ask('news', 'GET', [], ''), 'start' => $ask('', 'GET', [], ''), 'bare' => $ask('api', 'GET', [], ''), 'beside' => $ask('apis/v1', 'GET', [], ''),
+        'admin' => $ask('admin.php', 'GET', [], 'root')];
+    $out['ping'] = $ask('api/v1/system/ping', 'GET', ['X-Request-Id: probe-request-01']);
+    $out['badid'] = $ask('api/v1/system/ping', 'GET', ['X-Request-Id: bad id']);
+    $out['deep'] = $ask('api/v1/a/b/c/d/e/f');
+    $out['query'] = $ask('api/v1/master/file?v=../8.0.1&kind=full&error=500');
+    $out['post'] = $ask('api/v1/system/ping', 'POST');
+    $out['head'] = $ask('api/v1/system/ping', 'HEAD');
+    $now = require $work.'/config/security.php';
+    $out['kept'] = ['ip' => $now['security']['blocker_ip'] === $sec['security']['blocker_ip'], 'hack' => is_file($work.'/logs/hack.log'),
+        'site' => $ask('news', 'GET', [], '')['code']];
+    $now['security']['blocker_ip'] .= '127.0.0.1|0|'.(time() + 3600).'|probe||';
+    setRouteFile($work.'/config/security.php', $now);
+    unlink($work.'/config/local.php');
+    $out['ban'] = $ask('api/v1/system/ping');
+    setRouteFile($work.'/config/security.php', $sec);
+    $base = require $work.'/config/db.php';
+    setRouteFile($work.'/config/db.php', array_replace_recursive($base, ['db' => ['pass' => 'probe-wrong-pass']]));
+    unlink($work.'/config/local.php');
+    $out['lost'] = $ask('api/v1/system/ping');
+    setRouteFile($work.'/config/db.php', $base);
+    unlink($work.'/config/local.php');
+    $out['back'] = $ask('api/v1/system/ping')['code'];
+    return $out;
+}
+
 # The registry of the build run is the one of the parse run, with the generation line of the footer on, and anna keeps a material and a topic of one id as favorites
 function addRouteBuildConf(PDO $pdo, string $work): void {
     addRouteParseConf($pdo, $work);
@@ -3458,6 +3501,8 @@ try {
         $report['runs']['parse'] = getRouteParse();
     } elseif (($argv[2] ?? '') === 'build') {
         $report['runs']['build'] = getRouteBuild($rwork);
+    } elseif (($argv[2] ?? '') === 'entry') {
+        $report['runs']['entry'] = getRouteEntry($rwork);
     } elseif (($argv[2] ?? '') === 'move') {
         $report['runs']['move'] = getRouteMove($rpdo, $rwork);
     } elseif (($argv[2] ?? '') === 'time') {
