@@ -174,20 +174,27 @@ into the plan, then do whatever work the step names.
 - [x] 75. URL batch 8 — reference; deletes `docs/10-URL-2026.md`. The reference is `docs/ARCHITECTURE.md`, "Address
   Boundary"; `docs/NODE.md`, "Addresses", `docs/TEMPLATES.md`, "Links In Templates", `docs/VERSIONS.md`,
   `UPGRADING.md` and `README.md` follow it. (2026-10-14)
-- [ ] 76. DIAL — *decision*: the options dial `sl-dial` of the panel lists is three Tab stops a row while closed
-  (found by the UI/UX audit of the groups stand, 2026-10-09); write a plan, then make its items reachable only once it
-  opens. Put last by the owner on 2026-10-13, since its plan is not written yet.
-- [ ] 77. UPDATE batch 0 — *decision*: the open questions of the plan, the probes, the baseline. Added by the owner on
+- [ ] 76. UPDATE batch 0 — *decision*: the open questions of the plan, the probes, the baseline. Added by the owner on
   2026-10-15: a site learns of an update only by code it already has, so the updater goes into 8.0.
-- [ ] 78. UPDATE batch 1 — one entry: the branch `/api/` of `public/index.php`, `API_FILE` and the light core.
-- [ ] 79. UPDATE batch 2 — the core of the connector without clients, `checkApiFlood`, the reply mode `file`.
-- [ ] 80. UPDATE batch 3 — signature, keys, `files.json`, `tools/release.php` and `tools/sign.php`.
-- [ ] 81. UPDATE batch 4 — the module `master`.
-- [ ] 82. UPDATE batch 5 — the client: the check, the page "Обновления", the notice.
-- [ ] 83. UPDATE batch 6 — the client: download, manual upload, verification, unpacking.
-- [ ] 84. UPDATE batch 7 — settings, languages and themes: the installer adds missing options and constants to the
-  site's files without a second layer, the themes `admin` and `lite` replaced whole, other themes untouched. One batch by the owner's wish, 2026-10-15.
-- [ ] 85. UPDATE batch 8 — the client: installation in steps and rollback.
-- [ ] 86. UPDATE batch 9 — the full rehearsal on the stand.
-- [ ] 87. UPDATE batch 10 — reference and the real keys; deletes `docs/11-UPDATE-2026.md`.
-- [ ] 88. Close — no `docs/*-2026.md` plan is left; delete this file and report that the work before 8.0 is done.
+- [ ] 77. UPDATE batch 1 — one entry: the branch `/api/` of `public/index.php`, `API_FILE` and the light core.
+- [ ] 78. UPDATE batch 2 — the core of the connector without clients, `checkApiFlood`, the reply mode `file`.
+- [ ] 79. UPDATE batch 3 — signature, keys, `files.json`, `tools/release.php` and `tools/sign.php`.
+- [ ] 80. UPDATE batch 4 — the module `master`.
+- [ ] 81. UPDATE batch 5 — the client: the check, the page "Обновления", the notice, the light boot that runs the
+  database steps.
+- [ ] 82. UPDATE batch 6 — the client: download, manual upload, verification, unpacking.
+- [ ] 83. UPDATE batch 7 — settings, languages and themes: the installer adds missing options at any depth to the
+  site's config files without a second layer (lists whole), the language files and the themes `admin` and `lite`
+  replaced whole, other themes untouched. One batch by the owner's wish, 2026-10-15.
+- [ ] 84. UPDATE batch 8 — the database: a resumable dump in portions and the restore from it, both callable without
+  the core, limited to the site's table prefix.
+- [ ] 85. UPDATE batch 9 — the client: installation in steps, the guard of all three entry points, and rollback of
+  files, `config/` and the database with the caches cleared.
+- [ ] 86. UPDATE batch 10 — the rehearsal script `tools/rehearse.php` that gates every publication, then the full
+  rehearsal on a copy of the stand, a key change included.
+- [ ] 87. UPDATE batch 11 — reference and the real keys; deletes `docs/11-UPDATE-2026.md`.
+- [ ] 88. DIAL — *decision*: the options dial `sl-dial` of the panel lists is three Tab stops a row while closed
+  (found by the UI/UX audit of the groups stand, 2026-10-09); write a plan, then make its items reachable only once it
+  opens. Put last by the owner on 2026-10-13, since its plan is not written yet, and again after the updater on
+  2026-10-15.
+- [ ] 89. Close — no `docs/*-2026.md` plan is left; delete this file and report that the work before 8.0 is done.
