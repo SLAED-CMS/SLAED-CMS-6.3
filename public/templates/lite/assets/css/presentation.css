@@ -699,47 +699,56 @@
   margin: var(--sl-space-7) 0 var(--sl-space-3);
 }
 
-/* The central plate is the state lamp of the system: the mark alone, its halo, border, glow and slow dashed orbit all in
-   the tone data-sl-tone gives it, and one ring breathing out of it. The orbit runs outside the border, so the plate steps
-   in by the orbit's width and the orbit lands on the column edge, one gap from the rings either side */
+/* The central plate is the state lamp of the system, the twin of the lamp of the admin cockpit: the mark alone, its line,
+   halo, inner glow and slow dashed orbit all in the tone data-sl-tone gives it, and one ring breathing out of it while
+   something waits. The plate draws no rounded line - no border, outline or box-shadow: Firefox paints a line round a
+   circle in four quarters, and their seams cross the plate as a cross hair through its middle. The line, the halo, the
+   glow and the ring are radial gradients with every edge fading over one pixel, the orbit a dashed SVG circle */
 .sl-pres-plate {
   position: relative;
   display: grid;
   place-items: center;
   aspect-ratio: 1;
-  margin: var(--sl-space-2);
-  border: 1px solid currentColor;
   border-radius: var(--sl-radius-circle);
-  background: radial-gradient(circle at 50% 38%, var(--sl-pres-core-bg), var(--sl-pres-panel-bg) 68%);
+  background:
+    radial-gradient(circle closest-side, transparent calc(100% - var(--sl-space-3) - 2px), currentColor calc(100% - var(--sl-space-3) - 1px)
+      calc(100% - var(--sl-space-3)), color-mix(in srgb, currentColor var(--sl-chip-mix), transparent) calc(100% - var(--sl-space-3) + 1px) calc(100% - 1px), transparent 100%),
+    radial-gradient(circle closest-side, transparent 60%, color-mix(in srgb, currentColor var(--sl-chip-tint-mix), transparent) calc(100% - var(--sl-space-3)), transparent calc(100% - var(--sl-space-3))),
+    radial-gradient(circle at 50% 38%, var(--sl-pres-core-bg), var(--sl-pres-panel-bg) 68%);
   padding: var(--sl-space-8);
-  box-shadow:
-    0 0 0 var(--sl-space-3) color-mix(in srgb, currentColor var(--sl-chip-mix), transparent),
-    inset 0 0 var(--sl-space-9) color-mix(in srgb, currentColor var(--sl-chip-tint-mix), transparent);
 }
 
-.sl-pres-plate::before,
 .sl-pres-plate::after {
   content: "";
   position: absolute;
-  inset: calc(0px - var(--sl-space-2));
-  border-radius: var(--sl-radius-circle);
-  pointer-events: none;
-}
-
-.sl-pres-plate::before {
-  border: 1px dashed color-mix(in srgb, currentColor var(--sl-pulse-mix), transparent);
-  animation: sl-pres-spin calc(var(--sl-pres-dur) * 6) linear infinite;
-}
-
-.sl-pres-plate::after {
-  border: var(--sl-space-1) solid currentColor;
+  inset: 0;
+  background: radial-gradient(circle closest-side, transparent calc(100% - var(--sl-space-1) - 1px), currentColor calc(100% - var(--sl-space-1)) calc(100% - 1px), transparent 100%);
   opacity: 0;
+  pointer-events: none;
   animation: sl-pres-lamp calc(var(--sl-pres-dur) * 0.6) var(--sl-ease-out) infinite;
 }
 
 /* The lamp breathes only while something waits: a calm system shows a steady glow, so motion itself is the alarm */
 .sl-pres-plate[data-sl-tone="success"]::after {
   animation: none;
+}
+
+.sl-pres-orbit {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+  animation: sl-pres-spin calc(var(--sl-pres-dur) * 6) linear infinite;
+}
+
+.sl-pres-orbit circle {
+  fill: none;
+  stroke: color-mix(in srgb, currentColor var(--sl-pulse-mix), transparent);
+  stroke-width: 1.5;
+  stroke-dasharray: 1.5 1.5;
+  vector-effect: non-scaling-stroke;
 }
 
 @keyframes sl-pres-spin {
@@ -760,7 +769,6 @@
   aspect-ratio: 1;
   background: currentColor;
   mask: url(../../images/logos/slaed-logo-mark-solid-black.svg) center / contain no-repeat;
-  filter: drop-shadow(0 0 var(--sl-space-4) color-mix(in srgb, currentColor var(--sl-gauge-mix), transparent));
 }
 
 /* The figure stands in the centre of the dial and its caption in the mouth of the arc, under the last ticks, as on an

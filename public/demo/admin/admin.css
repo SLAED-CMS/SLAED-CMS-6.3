@@ -998,6 +998,11 @@
   color: var(--sl-text-muted);
 }
 
+/* A lamp draws no rounded line at all - no border, outline or box-shadow: Firefox paints a line round a circle in four
+   quarters, and their seams cross the lamp as a cross hair through its middle. The line, the halo, the inner glow and the
+   pulse ring are radial gradients and the orbit an SVG circle, none of which has quarters; every gradient edge fades over
+   one pixel, because a hard stop is not smoothed as a border is and a hard ring reads ragged */
+
 /* The state lamp: a button with the mark alone, its border, halo, glow and dashed orbit in the tone of the state.
    In order it rests with a steady glow; while something waits a ring breaks out of it on the beat of the alerts and the
    mark shakes as the warning alert does; on a failure it panics - the rings come twice as often, the mark beats as the
@@ -1010,35 +1015,50 @@
   width: 100%;
   max-width: var(--sl-gauge-width);
   aspect-ratio: 1;
-  border: 1px solid var(--sl-knob-tone);
+  --sl-cockpit-mix: var(--sl-flash-mix);
+  border: 0;
   border-radius: var(--sl-radius-circle);
-  background: radial-gradient(circle at 50% 38%, var(--sl-bg-subtle), var(--sl-bg) 68%);
+  background:
+    radial-gradient(circle closest-side, transparent calc(100% - var(--sl-space-3) - 2px), var(--sl-knob-tone) calc(100% - var(--sl-space-3) - 1px)
+      calc(100% - var(--sl-space-3)), color-mix(in srgb, var(--sl-knob-tone) var(--sl-cockpit-mix), transparent) calc(100% - var(--sl-space-3) + 1px) calc(100% - 1px), transparent 100%),
+    radial-gradient(circle closest-side, transparent 60%, color-mix(in srgb, var(--sl-knob-tone) var(--sl-ring-mix), transparent) calc(100% - var(--sl-space-3)), transparent calc(100% - var(--sl-space-3))),
+    radial-gradient(circle at 50% 38%, var(--sl-bg-subtle), var(--sl-bg) 68%);
   padding: var(--sl-space-8);
   font: inherit;
   color: var(--sl-knob-tone);
-  box-shadow:
-    0 0 0 var(--sl-space-3) color-mix(in srgb, var(--sl-knob-tone) var(--sl-flash-mix), transparent),
-    inset 0 0 var(--sl-space-8) color-mix(in srgb, var(--sl-knob-tone) var(--sl-ring-mix), transparent);
   cursor: pointer;
   appearance: none;
 }
 
-.sl-cockpit-plate::before,
 .sl-cockpit-plate::after {
   content: "";
   position: absolute;
-  inset: calc(0px - var(--sl-space-2));
-  border-radius: var(--sl-radius-circle);
   pointer-events: none;
 }
 
-.sl-cockpit-plate::before {
-  border: 1px dashed color-mix(in srgb, currentColor var(--sl-ring-mix), transparent);
+/* The orbit runs in the middle of the halo: a dashed SVG circle, the means the rings of the cockpit are drawn with, which
+   both engines stroke in one piece and smooth alike */
+.sl-cockpit-orbit {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
   animation: sl-cockpit-spin calc(var(--sl-alert-dur) * 12) linear infinite;
 }
 
+.sl-cockpit-orbit circle {
+  fill: none;
+  stroke: color-mix(in srgb, currentColor var(--sl-ring-mix), transparent);
+  stroke-width: 1.5;
+  stroke-dasharray: 1.5 1.5;
+  vector-effect: non-scaling-stroke;
+}
+
 .sl-cockpit-plate::after {
-  border: var(--sl-ring-width) solid currentColor;
+  inset: 0;
+  background: radial-gradient(circle closest-side, transparent calc(100% - var(--sl-ring-width) - 1px), currentColor calc(100% - var(--sl-ring-width)) calc(100% - 1px), transparent 100%);
   opacity: 0;
 }
 
@@ -1050,20 +1070,22 @@
   aspect-ratio: 1;
   background: currentColor;
   mask: url(../../templates/admin/images/logos/slaed-logo-mark-solid-black.svg) center / contain no-repeat;
-  filter: drop-shadow(0 0 var(--sl-space-4) color-mix(in srgb, currentColor var(--sl-ring-mix), transparent));
 }
 
-.sl-cockpit-plate:focus-visible,
 .sl-cockpit-ring:focus-visible {
   outline: var(--sl-ring-width) solid var(--sl-ring-bg);
   outline-offset: var(--sl-space-3);
   border-radius: var(--sl-radius-circle);
 }
 
+/* The focus of the lamp is the focus ring of the theme, drawn only while the keyboard is on it */
+.sl-cockpit-plate:focus-visible {
+  outline: var(--sl-ring-width) solid var(--sl-ring-bg);
+  outline-offset: var(--sl-space-2);
+}
+
 .sl-cockpit-float.sl-is-open .sl-cockpit-plate {
-  box-shadow:
-    0 0 0 var(--sl-space-3) color-mix(in srgb, var(--sl-knob-tone) var(--sl-ring-mix), transparent),
-    inset 0 0 var(--sl-space-8) color-mix(in srgb, var(--sl-knob-tone) var(--sl-ring-mix), transparent);
+  --sl-cockpit-mix: var(--sl-ring-mix);
 }
 
 .sl-cockpit.sl-knob-warn .sl-cockpit-plate::after {
@@ -1080,10 +1102,10 @@
 }
 
 .sl-cockpit.sl-knob-danger .sl-cockpit-plate {
-  animation: sl-cockpit-alarm calc(var(--sl-alert-dur) / 2) var(--sl-ease-in-out) infinite alternate;
+  animation: sl-cockpit-throb calc(var(--sl-alert-dur) / 2) var(--sl-ease-in-out) infinite alternate;
 }
 
-.sl-cockpit.sl-knob-danger .sl-cockpit-plate::before {
+.sl-cockpit.sl-knob-danger .sl-cockpit-orbit {
   animation-duration: calc(var(--sl-alert-dur) * 2);
 }
 
@@ -1104,23 +1126,29 @@
   from {
     opacity: 1;
     transform: scale(0.94);
-    box-shadow: 0 0 var(--sl-space-6) currentColor, inset 0 0 var(--sl-space-4) currentColor;
+    filter: drop-shadow(0 0 var(--sl-space-3) currentColor);
   }
 
   to {
     opacity: 0;
     transform: scale(1.3);
-    box-shadow: 0 0 var(--sl-space-6) transparent, inset 0 0 var(--sl-space-4) transparent;
+    filter: drop-shadow(0 0 var(--sl-space-3) transparent);
   }
 }
 
-/* The throb of a failure: the red halo of whatever carries it swells and falls back */
+/* The throb of a failure on the lamp: its red halo flares and falls back, a blink of the halo strength */
+@keyframes sl-cockpit-throb {
+  to {
+    --sl-cockpit-mix: var(--sl-ladder-bar-mix);
+  }
+}
+
+/* The throb of a failure on the panel: the red halo of its frame swells and falls back */
 @keyframes sl-cockpit-alarm {
   to {
     box-shadow:
       0 0 0 var(--sl-space-3) color-mix(in srgb, var(--sl-danger) var(--sl-ring-mix), transparent),
-      0 0 var(--sl-space-8) color-mix(in srgb, var(--sl-danger) var(--sl-ring-mix), transparent),
-      inset 0 0 var(--sl-space-8) color-mix(in srgb, var(--sl-danger) var(--sl-ring-mix), transparent);
+      0 0 var(--sl-space-8) color-mix(in srgb, var(--sl-danger) var(--sl-ring-mix), transparent);
   }
 }
 
@@ -1146,7 +1174,6 @@
 @media (prefers-reduced-motion: reduce) {
   .sl-cockpit,
   .sl-cockpit *,
-  .sl-cockpit-plate::before,
   .sl-cockpit-plate::after {
     animation: none !important;
   }
