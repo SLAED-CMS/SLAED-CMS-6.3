@@ -195,8 +195,8 @@ into the plan, then do whatever work the step names.
   site's config files without a second layer (lists whole), the language files and the themes `admin` and `lite`
   replaced whole, other themes untouched. One batch by the owner's wish, 2026-10-15. The sections a site creates and
   deletes itself — Node types and field sets — are taken whole (owner, 2026-10-16). (2026-10-16)
-- [ ] 84. UPDATE batch 8 — the database: a resumable dump in portions and the restore from it, both callable without
-  the core, limited to the site's table prefix.
+- [x] 84. UPDATE batch 8 — the database: a resumable dump in portions and the restore from it, both callable without
+  the core, limited to the site's table prefix. (2026-10-16)
 - [ ] 85. UPDATE batch 9 — the client: installation in steps, the guard of all three entry points, and rollback of
   files, `config/` and the database with the caches cleared.
 - [ ] 86. UPDATE batch 10 — the rehearsal script `tools/rehearse.php` that gates every publication, then the full

@@ -6,8 +6,12 @@
 
 if (!defined('FUNC_FILE')) die('Illegal file access');
 
-# Creates one verified, restorable dump of the selected base tables (docs/BACKUP-2026.md)
+# Creates one verified dump of the selected base tables, or a portion dump of a site prefix and its restore without the core (contract v1)
 class Backup {
+    public const FORMAT = 1;
+    private const PARTSIZE = 4194304;
+    private const PARTROWS = 500;
+    private const INTTYPE = ['tinyint', 'smallint', 'mediumint', 'int', 'integer', 'bigint'];
     private const CHUNK = 1048576;
     private const BUFFER = 262144;
     private const TRIES = 5;
@@ -189,53 +193,37 @@ class Backup {
     # Establishes visibility per object class before any catalog query is trusted, because an empty catalog cannot tell absence from invisibility
     private function checkPrivileges(): void {
         $this->getServerInfo();
-        $miss = $this->checkGrantAccess($this->getGrantMatrix($this->getGrantLines()), $this->getDbName());
+        $miss = $this->checkGrantAccess(self::getGrantMatrix(self::getGrantText($this->getLink(), $this->vend)), $this->getDbName());
         if ($miss) throw new RuntimeException('Backup cannot prove object visibility: '.implode('; ', $miss));
     }
 
-    # Collects the grant lines of the session, per vendor branch; MariaDB has no USING clause at all and expands nested roles by itself, so one implementation cannot serve both
-    private function getGrantLines(): array {
-        $out = $this->getGrantRows('SHOW GRANTS FOR CURRENT_USER()');
-        $stmt = $this->getSqlRun('SELECT CURRENT_ROLE() AS role');
-        $row = $stmt->fetch(PDO::FETCH_ASSOC);
-        $stmt->closeCursor();
-        $role = is_array($row) && is_string($row['role'] ?? null) ? trim($row['role']) : '';
+    # Collects the grant lines of the session per vendor, never filtered by grantee and never written anywhere, since MariaDB embeds password hashes in them
+    private static function getGrantText(PDO $pdo, string $vend): array {
+        $read = static fn(string $sql): array => array_values(array_filter(array_column($pdo->query($sql)->fetchAll(PDO::FETCH_NUM), 0), 'is_string'));
+        $out = $read('SHOW GRANTS FOR CURRENT_USER()');
+        $role = trim((string)$pdo->query('SELECT CURRENT_ROLE()')->fetchColumn());
         if ($role === '' || strcasecmp($role, 'NONE') === 0 || strcasecmp($role, 'NULL') === 0) return $out;
-        if ($this->vend === 'mysql') return array_merge($out, $this->getGrantRows('SHOW GRANTS FOR CURRENT_USER() USING '.$role));
-        return array_merge($out, $this->getGrantRows('SHOW GRANTS FOR '.$this->db->getSqlValue($role)));
+        return array_merge($out, $read('SHOW GRANTS FOR '.(($vend === 'mysql') ? 'CURRENT_USER() USING '.$role : $pdo->quote($role))));
     }
 
-    # Reads one grant statement into plain lines
-    # The output may address several grantees, so it is never filtered by the requested name, and never written anywhere: MariaDB embeds password hashes in it
-    private function getGrantRows(string $sql): array {
-        $stmt = $this->getSqlRun($sql);
-        $out = [];
-        while ($row = $stmt->fetch(PDO::FETCH_NUM)) {
-            if (isset($row[0]) && is_string($row[0])) $out[] = $row[0];
-        }
-        $stmt->closeCursor();
-        return $out;
-    }
-
-    # Builds the effective privilege set by scope
-    # A standalone REVOKE becomes a denial rather than a removal: a MySQL partial revoke narrows a global grant that stays listed
-    private function getGrantMatrix(array $lines): array {
+    # Builds the effective privilege set by scope; a standalone REVOKE is a denial, since a MySQL partial revoke narrows a global grant that stays listed
+    private static function getGrantMatrix(array $lines): array {
         $out = ['grant' => [], 'deny' => []];
         foreach ($lines as $line) {
             $text = trim($line);
             $cut = stripos($text, ' IDENTIFIED BY');
             if ($cut !== false) $text = substr($text, 0, $cut);
             if (!preg_match('/^(GRANT|REVOKE)\s+(.+?)\s+ON\s+(.+?)\s+(?:TO|FROM)\s+/i', $text, $mat)) continue;
-            $scope = $this->getScopeKey($mat[3]);
+            $scope = self::getScopeKey($mat[3]);
             if ($scope === '') continue;
             $kind = strcasecmp($mat[1], 'GRANT') === 0 ? 'grant' : 'deny';
-            foreach ($this->getPrivList($mat[2]) as $priv) $out[$kind][$scope][$priv] = true;
+            foreach (self::getPrivList($mat[2]) as $priv) $out[$kind][$scope][$priv] = true;
         }
         return $out;
     }
 
     # Normalizes the privilege part of one grant line; column lists are dropped because a column grant never proves scope-wide visibility
-    private function getPrivList(string $text): array {
+    private static function getPrivList(string $text): array {
         $out = [];
         foreach (explode(',', preg_replace('/\([^)]*\)/', '', $text)) as $one) {
             $priv = preg_replace('/\s+/', ' ', strtoupper(trim($one)));
@@ -246,7 +234,7 @@ class Backup {
     }
 
     # Normalizes the target of one grant line into a scope key: * for global, the schema name for a schema grant, and an obj: prefix for anything narrower
-    private function getScopeKey(string $text): string {
+    private static function getScopeKey(string $text): string {
         $name = preg_replace('/^(?:TABLE|FUNCTION|PROCEDURE)\s+/i', '', trim($text));
         if ($name === '*.*') return '*';
         if (preg_match('/^`?([^`.]+)`?\.\*$/', $name, $mat)) return $mat[1];
@@ -254,16 +242,33 @@ class Backup {
         return '';
     }
 
-    # Evaluates the required visibility per object class against the effective set
-    # Every row is satisfied by any of its alternatives, a schema denial beats a global grant, and an object-level grant never satisfies a class-wide claim
+    # Whether one privilege holds on *.*, or with $wide false also on a schema grant covering the schema, and no denial removes it; an object grant never counts
+    private static function checkGrantPriv(array $mtrx, string $schema, string $priv, bool $wide = false): bool {
+        $on = static fn(string $kind, string $key): bool => isset($mtrx[$kind][$key][$priv]) || isset($mtrx[$kind][$key]['ALL']);
+        $keys = array_map('strval', array_keys($mtrx['grant'] + $mtrx['deny']));
+        $base = array_filter($keys, static fn(string $key): bool => $key !== '*' && !str_starts_with($key, 'obj:') && self::checkGrantBase($key, $schema));
+        foreach (['*', ...$base] as $key) if ($on('deny', $key)) return false;
+        if ($on('grant', '*')) return true;
+        if ($wide) return false;
+        foreach ($base as $key) if ($on('grant', $key)) return true;
+        return false;
+    }
+
+    # Whether the schema of a grant covers a database: the grant names it as a LIKE pattern, so hosting grants such as user\_db or user\_% match
+    private static function checkGrantBase(string $key, string $schema): bool {
+        $patt = '';
+        for ($i = 0, $size = strlen($key); $i < $size; $i++) {
+            $char = $key[$i];
+            if ($char === '\\' && $i + 1 < $size) $patt .= preg_quote($key[++$i], '#');
+            else $patt .= match ($char) { '_' => '.', '%' => '.*', default => preg_quote($char, '#') };
+        }
+        return preg_match('#^'.$patt.'$#sD', $schema) === 1;
+    }
+
+    # Evaluates the required visibility per object class against the effective set; every row is satisfied by any of its alternatives
     private function checkGrantAccess(array $mtrx, string $schema): array {
-        $glob = $mtrx['grant']['*'] ?? [];
-        $part = $mtrx['grant'][$schema] ?? [];
-        $dglob = $mtrx['deny']['*'] ?? [];
-        $dpart = $mtrx['deny'][$schema] ?? [];
-        $deny = static fn(string $priv): bool => isset($dglob[$priv]) || isset($dglob['ALL']) || isset($dpart[$priv]) || isset($dpart['ALL']);
-        $all = static fn(string $priv): bool => (isset($glob[$priv]) || isset($glob['ALL'])) && !$deny($priv);
-        $any = static fn(string $priv): bool => $all($priv) || ((isset($part[$priv]) || isset($part['ALL'])) && !$deny($priv));
+        $all = static fn(string $priv): bool => self::checkGrantPriv($mtrx, $schema, $priv, true);
+        $any = static fn(string $priv): bool => self::checkGrantPriv($mtrx, $schema, $priv);
         $miss = [];
         if (!$any('SELECT')) $miss['tables'] = 'base tables, columns, indexes and views need SELECT on *.* or on the schema';
         if (!$any('TRIGGER')) $miss['triggers'] = 'triggers need TRIGGER on *.* or on the schema';
@@ -276,11 +281,10 @@ class Backup {
 
     # Exports the selected scope into staging, verifies it, publishes it, and only then applies retention and cleanup
     private function addBackupRun(): array {
-        $pdo = $this->db->sqlconnid;
-        if (!$pdo instanceof PDO) throw new RuntimeException('Backup has no database connection');
+        $pdo = $this->getLink();
         if ($pdo->inTransaction()) throw new RuntimeException('Backup refuses to run inside a caller-owned transaction');
         $buff = $pdo->getAttribute(PDO::MYSQL_ATTR_USE_BUFFERED_QUERY);
-        $save = $this->getSessionState();
+        $save = self::getLinkState($pdo);
         $open = false;
         try {
             $pdo->setAttribute(PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, false);
@@ -301,30 +305,41 @@ class Backup {
         } finally {
             if ($open) $this->db->getSqlQuery('ROLLBACK');
             $pdo->setAttribute(PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, is_bool($buff) ? $buff : true);
-            $this->setSessionState($save);
+            self::setLinkState($pdo, $save);
         }
         return $this->addArtifact($dump);
     }
 
-    # Reads the session variables the export overwrites, so the shared connection is handed back exactly as it was found
-    private function getSessionState(): array {
-        $sql = 'SELECT @@session.sql_mode AS mode, @@session.time_zone AS zone, @@session.character_set_client AS cset,'
-            .' @@session.character_set_results AS rset, @@session.collation_connection AS coll';
-        $stmt = $this->getSqlRun($sql);
+    # Returns the connection of the full mode, which reads catalogs and session state through the same calls as the portion mode
+    private function getLink(): PDO {
+        if (!$this->db->sqlconnid instanceof PDO) throw new RuntimeException('Backup has no database connection');
+        return $this->db->sqlconnid;
+    }
+
+    # Reads the session variables both modes overwrite, so a shared connection is handed back exactly as it was found
+    private static function getLinkState(PDO $pdo): array {
+        $sql = 'SELECT @@session.sql_mode AS mode, @@session.time_zone AS zone, @@session.character_set_client AS cset, @@session.character_set_results AS rset,'
+            .' @@session.collation_connection AS coll, @@session.foreign_key_checks AS fkey, @@session.unique_checks AS uniq';
+        $stmt = $pdo->query($sql);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
         $stmt->closeCursor();
         if (!is_array($row)) throw new RuntimeException('Backup could not read the session state');
         return $row;
     }
 
-    # Restores the saved session state; this runs in a finally block, so it must never throw over the error that brought it here
-    private function setSessionState(array $save): void {
-        $sql = 'SET SESSION sql_mode = '.$this->db->getSqlValue($save['mode'] ?? '')
-            .', SESSION time_zone = '.$this->db->getSqlValue($save['zone'] ?? 'SYSTEM')
-            .', SESSION character_set_client = '.$this->db->getSqlValue($save['cset'] ?? 'utf8mb4')
-            .', SESSION character_set_results = '.$this->db->getSqlValue($save['rset'] ?? 'utf8mb4')
-            .', SESSION collation_connection = '.$this->db->getSqlValue($save['coll'] ?? 'utf8mb4_general_ci');
-        $this->db->getSqlQuery($sql);
+    # Restores a saved session state; it runs in finally blocks, so it never throws over the error that brought it there
+    private static function setLinkState(PDO $pdo, array $save): void {
+        $sql = 'SET SESSION sql_mode = '.$pdo->quote((string)($save['mode'] ?? ''))
+            .', SESSION time_zone = '.$pdo->quote((string)($save['zone'] ?? 'SYSTEM'))
+            .', SESSION character_set_client = '.$pdo->quote((string)($save['cset'] ?? 'utf8mb4'))
+            .', SESSION character_set_results = '.$pdo->quote((string)($save['rset'] ?? 'utf8mb4'))
+            .', SESSION collation_connection = '.$pdo->quote((string)($save['coll'] ?? 'utf8mb4_general_ci'))
+            .', SESSION foreign_key_checks = '.((int)($save['fkey'] ?? 1) ? 1 : 0)
+            .', SESSION unique_checks = '.((int)($save['uniq'] ?? 1) ? 1 : 0);
+        try {
+            $pdo->exec($sql);
+        } catch (Throwable) {
+        }
     }
 
     # Puts the session into the deterministic export state: UTC, a fixed SQL mode and a single connection charset
@@ -426,18 +441,27 @@ class Backup {
             $row = $stmt->fetch(PDO::FETCH_NUM);
             $stmt->closeCursor();
             if (!is_array($row) || !isset($row[1])) throw new RuntimeException('Backup could not read the definition of table '.$name);
-            $pkey = $this->getTableKeys($name);
+            $pkey = self::getTableKeys($this->getLink(), $this->getDbName(), $name);
             if (!$pkey && !in_array($name, $this->unord, true)) $this->unord[] = $name;
-            $out[$name] = ['create' => (string)$row[1], 'skip' => $info['skip'], 'cols' => $this->getTableCols($name), 'pkey' => $pkey];
+            $out[$name] = ['create' => (string)$row[1], 'skip' => $info['skip'], 'cols' => self::getTableCols($this->getLink(), $this->getDbName(), $name), 'pkey' => $pkey];
         }
         return $out;
     }
 
+    # Reads one catalog query bound to a schema into rows, for the metadata both modes share
+    private static function getCatalogList(PDO $pdo, string $sql, array $pars): array {
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($pars);
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $stmt->closeCursor();
+        return $rows;
+    }
+
     # Reads the column metadata that drives serialization: the storage class decides how a value is written, and a generated column is never inserted
-    private function getTableCols(string $name): array {
+    private static function getTableCols(PDO $pdo, string $base, string $name): array {
         $sql = 'SELECT COLUMN_NAME AS name, DATA_TYPE AS type, EXTRA AS extr FROM information_schema.COLUMNS'
             .' WHERE TABLE_SCHEMA = :db AND TABLE_NAME = :tab ORDER BY ORDINAL_POSITION';
-        $rows = $this->getCatalogRows($sql, ['tab' => $name]);
+        $rows = self::getCatalogList($pdo, $sql, ['db' => $base, 'tab' => $name]);
         $out = [];
         foreach ($rows as $row) {
             $type = strtolower((string)$row['type']);
@@ -450,10 +474,10 @@ class Backup {
     }
 
     # Reads the primary key columns of one table in key order; an empty result means the table is exported unordered (D3)
-    private function getTableKeys(string $name): array {
+    private static function getTableKeys(PDO $pdo, string $base, string $name): array {
         $sql = 'SELECT COLUMN_NAME AS name FROM information_schema.STATISTICS'
             .' WHERE TABLE_SCHEMA = :db AND TABLE_NAME = :tab AND INDEX_NAME = \'PRIMARY\' ORDER BY SEQ_IN_INDEX';
-        $rows = $this->getCatalogRows($sql, ['tab' => $name]);
+        $rows = self::getCatalogList($pdo, $sql, ['db' => $base, 'tab' => $name]);
         $out = [];
         foreach ($rows as $row) $out[] = (string)$row['name'];
         return $out;
@@ -558,16 +582,15 @@ class Backup {
     }
 
     # Selects the columns an INSERT may carry; a generated column is computed by the server on restore and must never be written
-    private function filterDumpCols(array $cols): array {
+    private static function filterDumpCols(array $cols): array {
         return array_values(array_filter($cols, static fn(array $col): bool => empty($col['gen'])));
     }
 
-    # Serializes one value: binary and bit values become hex, everything else is quoted by the driver
-    # A numeric literal is emitted only when both the column metadata and the value prove it is numeric
+    # Serializes one value: binary as hex, a number proven by metadata and value bare, a float in its shortest exact form, everything else quoted by the driver
     private function getRowLiteral(mixed $val, array $col): string {
         if ($val === null) return 'NULL';
         if ($col['bin']) return $val === '' ? '\'\'' : '0x'.bin2hex((string)$val);
-        if ($col['num'] && is_numeric($val)) return (string)$val;
+        if ($col['num'] && is_numeric($val)) return is_float($val) ? var_export($val, true) : (string)$val;
         return $this->db->getSqlValue($val);
     }
 
@@ -744,6 +767,248 @@ class Backup {
         ];
     }
 
+    # Lists the base tables of a site prefix without those of a longer prefix that has its own <prefix>_admins: the scope the portion mode fixes
+    public static function getSiteTables(PDO $pdo, string $prefix): array {
+        self::checkLinkMode($pdo);
+        if (!preg_match('/^[A-Za-z0-9_]{1,32}$/D', $prefix)) throw new RuntimeException('Backup prefix is not a table prefix: '.$prefix);
+        $fold = (int)$pdo->query('SELECT @@lower_case_table_names')->fetchColumn() > 0;
+        $same = static fn(string $name, string $head): bool => $fold ? strncasecmp($name, $head, strlen($head)) === 0 : str_starts_with($name, $head);
+        $sql = 'SELECT TABLE_NAME AS name FROM information_schema.TABLES'
+            .' WHERE TABLE_SCHEMA = DATABASE() AND TABLE_TYPE = \'BASE TABLE\' AND TABLE_NAME LIKE :patt ORDER BY TABLE_NAME';
+        $rows = array_column(self::getCatalogList($pdo, $sql, ['patt' => str_replace('_', '\_', $prefix).'\_%']), 'name');
+        $list = array_values(array_filter(array_map('strval', $rows), static fn(string $name): bool => $same($name, $prefix.'_')));
+        $own = [];
+        foreach ($list as $name) {
+            if (strlen($name) > strlen($prefix) + 8 && $same(substr($name, -7), '_admins')) $own[] = substr($name, 0, -6);
+        }
+        $out = [];
+        foreach ($list as $name) {
+            foreach ($own as $head) if ($same($name, $head)) continue 2;
+            $out[] = $name;
+        }
+        return $out;
+    }
+
+    # Lists what the account lacks to dump and recreate the fixed tables: SELECT, INSERT, CREATE and DROP on the schema, REFERENCES on MySQL for foreign keys
+    public static function checkDumpAccess(PDO $pdo, array $tabs): array {
+        self::checkLinkMode($pdo);
+        $vend = (stripos((string)$pdo->query('SELECT VERSION()')->fetchColumn(), 'mariadb') !== false) ? 'mariadb' : 'mysql';
+        $base = (string)$pdo->query('SELECT DATABASE()')->fetchColumn();
+        $mtrx = self::getGrantMatrix(self::getGrantText($pdo, $vend));
+        $sql = 'SELECT DISTINCT TABLE_NAME AS name FROM information_schema.REFERENTIAL_CONSTRAINTS WHERE CONSTRAINT_SCHEMA = :db';
+        $link = array_intersect(array_column(self::getCatalogList($pdo, $sql, ['db' => $base]), 'name'), $tabs);
+        $need = ['SELECT', 'INSERT', 'CREATE', 'DROP'];
+        if ($vend === 'mysql' && $link) $need[] = 'REFERENCES';
+        return array_values(array_filter($need, static fn(string $priv): bool => !self::checkGrantPriv($mtrx, $base, $priv)));
+    }
+
+    # Opens a portion dump of the fixed table list into its own directory; the returned state is the caller's to keep between requests (contract v1)
+    public static function getDumpState(string $dir, string $prefix, array $tabs, string $pack = 'auto'): array {
+        $dir = rtrim(str_replace('\\', '/', $dir), '/');
+        if (!preg_match('/^[A-Za-z0-9_]{1,32}$/D', $prefix)) throw new RuntimeException('Backup prefix is not a table prefix: '.$prefix);
+        $bad = array_filter($tabs, static fn(mixed $v): bool => !is_string($v) || $v === '');
+        if (!$tabs || !array_is_list($tabs) || $bad) throw new RuntimeException('Backup dump needs a list of tables');
+        if ($pack === 'auto') $pack = function_exists('gzencode') ? 'gz' : 'none';
+        if (!in_array($pack, ['gz', 'none'], true) || ($pack === 'gz' && !function_exists('gzencode'))) throw new RuntimeException('Backup dump cannot pack with '.$pack);
+        if (!is_dir($dir) && !mkdir($dir, 0700, true)) throw new RuntimeException('Backup dump directory cannot be created: '.$dir);
+        if (is_file($dir.'/dump.json')) throw new RuntimeException('Backup dump directory already holds a finished dump: '.$dir);
+        return ['ver' => self::FORMAT, 'dir' => $dir, 'prefix' => $prefix, 'pack' => $pack, 'tabs' => $tabs, 'tab' => 0, 'skip' => 0, 'last' => null, 'parts' => [],
+            'done' => false];
+    }
+
+    # Writes the next portion as one part file of one table and returns the advanced state; the portion that ends the last table writes the index dump.json
+    public static function addDumpPart(PDO $pdo, array $state): array {
+        self::checkLinkMode($pdo);
+        self::checkDumpState($state);
+        if ($state['done']) return $state;
+        $name = $state['tabs'][$state['tab']];
+        $save = self::getLinkState($pdo);
+        try {
+            $pdo->exec('SET SESSION sql_mode = \'NO_AUTO_VALUE_ON_ZERO\', SESSION time_zone = \'+00:00\'');
+            $pdo->exec('SET NAMES utf8mb4');
+            $part = self::getPartText($pdo, $name, $state['skip'], $state['last']);
+        } finally {
+            self::setLinkState($pdo, $save);
+        }
+        $data = ($state['pack'] === 'gz') ? gzencode($part['text'], 6) : $part['text'];
+        if (!is_string($data)) throw new RuntimeException('Backup dump could not pack a part of table '.$name);
+        $file = sprintf('%06d', count($state['parts']) + 1).'.sql'.(($state['pack'] === 'gz') ? '.gz' : '');
+        $hash = self::addPartFile($state['dir'].'/'.$file, $data);
+        $state['parts'][] = ['file' => $file, 'tab' => $name, 'rows' => $part['rows'], 'size' => strlen($data), 'hash' => $hash];
+        $state['skip'] += $part['rows'];
+        $state['last'] = $part['last'];
+        if (!$part['end']) return $state;
+        $state['tab']++;
+        $state['skip'] = 0;
+        $state['last'] = null;
+        if ($state['tab'] < count($state['tabs'])) return $state;
+        $index = ['ver' => self::FORMAT, 'prefix' => $state['prefix'], 'pack' => $state['pack'], 'tabs' => $state['tabs'], 'parts' => $state['parts'],
+            'rows' => array_sum(array_column($state['parts'], 'rows')), 'size' => array_sum(array_column($state['parts'], 'size')), 'made' => time(),
+            'server' => (string)$pdo->query('SELECT VERSION()')->fetchColumn()];
+        self::addPartFile($state['dir'].'/dump.json', json_encode($index, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR));
+        $state['done'] = true;
+        return $state;
+    }
+
+    # Refuses a dump state of another format or shape, so a newer caller cannot hand this version a progress it would misread
+    private static function checkDumpState(array $state): void {
+        $tabs = $state['tabs'] ?? null;
+        $last = $state['last'] ?? null;
+        $fail = ($state['ver'] ?? null) !== self::FORMAT || !is_string($state['dir'] ?? null) || !is_string($state['prefix'] ?? null)
+            || !in_array($state['pack'] ?? null, ['gz', 'none'], true) || !is_array($tabs) || !$tabs || !array_is_list($tabs) || !is_int($state['tab'] ?? null)
+            || $state['tab'] < 0 || $state['tab'] > count($tabs) || !is_int($state['skip'] ?? null) || $state['skip'] < 0 || ($last !== null && !is_int($last))
+            || !is_array($state['parts'] ?? null) || !is_bool($state['done'] ?? null) || (!$state['done'] && $state['tab'] === count($tabs));
+        if ($fail) throw new RuntimeException('Backup does not know this dump state; format '.self::FORMAT.' is the one it writes');
+    }
+
+    # Reads one portion of one table into SQL: the definition when the table starts, then rows in key order until the part size or the end of the table
+    private static function getPartText(PDO $pdo, string $name, int $skip, ?int $last): array {
+        $base = (string)$pdo->query('SELECT DATABASE()')->fetchColumn();
+        $cols = self::filterDumpCols(self::getTableCols($pdo, $base, $name));
+        $keys = self::getTableKeys($pdo, $base, $name);
+        $text = '';
+        $num = 0;
+        if ($skip === 0) {
+            $stmt = $pdo->query('SHOW CREATE TABLE '.self::getSqlName($name));
+            $row = $stmt->fetch(PDO::FETCH_NUM);
+            $stmt->closeCursor();
+            if (!is_array($row) || !isset($row[1])) throw new RuntimeException('Backup could not read the definition of table '.$name);
+            $text = 'DROP TABLE IF EXISTS '.self::getSqlName($name).';'."\n".$row[1].';'."\n";
+            $num = 2;
+        }
+        $pos = array_search($keys[0] ?? '', array_column($cols, 'name'), true);
+        $seek = count($keys) === 1 && $pos !== false && in_array($cols[$pos]['type'], self::INTTYPE, true);
+        $list = implode(',', array_map(static fn(array $col): string => self::getSqlName($col['name']), $cols));
+        $order = implode(',', array_map(static fn(string $col): string => self::getSqlName($col), $keys ?: array_column($cols, 'name')));
+        $head = 'INSERT INTO '.self::getSqlName($name).' ('.$list.') VALUES'."\n";
+        $chunk = '';
+        $rows = 0;
+        $end = !$cols;
+        while (!$end && strlen($text) + strlen($chunk) < self::PARTSIZE) {
+            $sql = 'SELECT '.$list.' FROM '.self::getSqlName($name).(($seek && $last !== null) ? ' WHERE '.self::getSqlName($keys[0]).' > :last' : '')
+                .' ORDER BY '.$order.' LIMIT '.self::PARTROWS.($seek ? '' : ' OFFSET '.($skip + $rows));
+            $stmt = $pdo->prepare($sql);
+            if ($seek && $last !== null) $stmt->bindValue('last', $last, PDO::PARAM_INT);
+            $stmt->execute();
+            $batch = $stmt->fetchAll(PDO::FETCH_NUM);
+            $stmt->closeCursor();
+            foreach ($batch as $row) {
+                $vals = [];
+                foreach ($cols as $i => $col) $vals[] = self::getPartLiteral($pdo, $row[$i] ?? null, $col);
+                $chunk .= (($chunk === '') ? $head : ','."\n").'('.implode(',', $vals).')';
+                $rows++;
+                if ($seek) $last = self::filterPartKey($row[$pos], $name);
+                if (strlen($chunk) < self::CHUNK) continue;
+                $text .= $chunk.';'."\n";
+                $chunk = '';
+                $num++;
+            }
+            $end = count($batch) < self::PARTROWS;
+        }
+        if ($chunk !== '') {
+            $text .= $chunk.';'."\n";
+            $num++;
+        }
+        if (substr_count($text, ';'."\n") !== $num) throw new RuntimeException('Backup cannot frame table '.$name.': a statement holds a semicolon before a line end');
+        return ['text' => $text, 'rows' => $rows, 'end' => $end, 'last' => $seek ? $last : null];
+    }
+
+    # Keeps the last integer key of a portion as an integer, so the next portion seeks it exactly instead of comparing a string as a float
+    private static function filterPartKey(mixed $val, string $name): int {
+        if (is_int($val)) return $val;
+        if (is_string($val) && preg_match('/^-?\d+$/D', $val) && (string)(int)$val === $val) return (int)$val;
+        throw new RuntimeException('Backup cannot seek table '.$name.': its key is beyond the integer range of PHP');
+    }
+
+    # Serializes one value the way the full mode does: NULL, binary as hex, proven numbers bare, other text quoted, and invalid UTF-8 as hex
+    private static function getPartLiteral(PDO $pdo, mixed $val, array $col): string {
+        if ($val === null) return 'NULL';
+        if ($col['bin']) return ($val === '') ? '\'\'' : '0x'.bin2hex((string)$val);
+        if ($col['num'] && is_numeric($val)) return is_float($val) ? var_export($val, true) : (string)$val;
+        if (is_string($val) && $val !== '' && !mb_check_encoding($val, 'UTF-8')) return '0x'.bin2hex($val);
+        return $pdo->quote((string)$val);
+    }
+
+    # Writes one file of a dump under a temporary name and renames it into place, so it exists whole or not at all; free space is checked where the host allows it
+    private static function addPartFile(string $path, string $data): string {
+        $free = function_exists('disk_free_space') ? disk_free_space(dirname($path)) : false;
+        if ($free !== false && $free < strlen($data)) throw new RuntimeException('Backup dump has no space left for '.basename($path));
+        $temp = $path.'.tmp';
+        $fh = fopen($temp, 'wb');
+        if ($fh === false) throw new RuntimeException('Backup dump could not create '.basename($temp));
+        $done = fwrite($fh, $data) === strlen($data) && fflush($fh) && fsync($fh);
+        $done = fclose($fh) && $done && chmod($temp, 0600) && rename($temp, $path);
+        if (!$done && is_file($temp)) unlink($temp);
+        if (!$done) throw new RuntimeException('Backup dump could not write '.basename($path).' completely');
+        return hash('sha256', $data);
+    }
+
+    # Opens the restore of a finished dump after reading and checking its index; the returned state is the caller's to keep between requests (contract v1)
+    public static function getRestoreState(string $dir): array {
+        $dir = rtrim(str_replace('\\', '/', $dir), '/');
+        self::getDumpIndex($dir);
+        return ['ver' => self::FORMAT, 'dir' => $dir, 'part' => 0, 'head' => 0, 'done' => false];
+    }
+
+    # Reads the index of a finished dump and refuses a format, a pack or a part list this version does not know
+    private static function getDumpIndex(string $dir): array {
+        $text = is_file($dir.'/dump.json') ? file_get_contents($dir.'/dump.json') : false;
+        $index = is_string($text) ? json_decode($text, true) : null;
+        if (!is_array($index)) throw new RuntimeException('Backup dump has no readable index in '.$dir);
+        if (($index['ver'] ?? null) !== self::FORMAT) throw new RuntimeException('Backup does not know dump format '.json_encode($index['ver'] ?? null));
+        $tabs = $index['tabs'] ?? null;
+        $parts = $index['parts'] ?? null;
+        $fail = !in_array($index['pack'] ?? null, ['gz', 'none'], true) || !is_string($index['prefix'] ?? null) || !is_array($tabs) || !$tabs
+            || !array_is_list($tabs) || !is_array($parts) || !$parts || !array_is_list($parts);
+        $ext = (($index['pack'] ?? '') === 'gz') ? '\.sql\.gz' : '\.sql';
+        foreach ($fail ? [] : $parts as $one) {
+            $fail = !is_array($one) || !preg_match('/^\d{6}'.$ext.'$/D', (string)($one['file'] ?? '')) || !in_array($one['tab'] ?? null, $tabs, true)
+                || !is_int($one['rows'] ?? null) || !preg_match('/^[0-9a-f]{64}$/D', (string)($one['hash'] ?? ''));
+            if ($fail) break;
+        }
+        $runs = $fail ? [] : array_column($parts, 'tab');
+        $runs = array_values(array_filter($runs, static fn(string $name, int $i): bool => $i === 0 || $runs[$i - 1] !== $name, ARRAY_FILTER_USE_BOTH));
+        if (!$fail && $runs !== $tabs) $fail = true;
+        if ($fail) throw new RuntimeException('Backup dump index in '.$dir.' is damaged');
+        return $index;
+    }
+
+    # Restores the next part and returns the advanced state; part 0 first drops every table of the prefix, so tables created after the list was fixed do not survive
+    public static function addRestorePart(PDO $pdo, array $state): array {
+        self::checkLinkMode($pdo);
+        $fail = ($state['ver'] ?? null) !== self::FORMAT || !is_string($state['dir'] ?? null) || !is_int($state['part'] ?? null) || !is_int($state['head'] ?? null)
+            || !is_bool($state['done'] ?? null);
+        if ($fail) throw new RuntimeException('Backup does not know this restore state; format '.self::FORMAT.' is the one it reads');
+        if ($state['done']) return $state;
+        $index = self::getDumpIndex($state['dir']);
+        $parts = $index['parts'];
+        $num = $state['part'];
+        if ($num < 0 || $num >= count($parts) || $state['head'] < 0 || $state['head'] > $num) throw new RuntimeException('Backup restore has no part '.$num);
+        $one = $parts[$num];
+        $data = is_file($state['dir'].'/'.$one['file']) ? file_get_contents($state['dir'].'/'.$one['file']) : false;
+        if (!is_string($data) || hash('sha256', $data) !== $one['hash']) throw new RuntimeException('Backup part '.$one['file'].' is missing or damaged');
+        $text = ($index['pack'] === 'gz') ? (function_exists('gzdecode') ? gzdecode($data) : false) : $data;
+        if (!is_string($text)) throw new RuntimeException('Backup part '.$one['file'].' does not unpack');
+        $save = self::getLinkState($pdo);
+        try {
+            $pdo->exec('SET SESSION foreign_key_checks = 0, SESSION unique_checks = 0, SESSION sql_mode = \'NO_AUTO_VALUE_ON_ZERO\', SESSION time_zone = \'+00:00\'');
+            $pdo->exec('SET NAMES utf8mb4');
+            if ($num === 0) foreach (self::getSiteTables($pdo, $index['prefix']) as $name) $pdo->exec('DROP TABLE '.self::getSqlName($name));
+            foreach (explode(';'."\n", $text) as $sql) if ($sql !== '') $pdo->exec($sql);
+        } finally {
+            self::setLinkState($pdo, $save);
+        }
+        $state['part'] = ++$num;
+        $state['done'] = $num >= count($parts);
+        if (!$state['done'] && $parts[$num]['tab'] !== $one['tab']) $state['head'] = $num;
+        return $state;
+    }
+
+    # Refuses a connection that does not throw, because every call of the portion mode relies on a failed statement stopping it
+    private static function checkLinkMode(PDO $pdo): void {
+        if ($pdo->getAttribute(PDO::ATTR_ERRMODE) !== PDO::ERRMODE_EXCEPTION) throw new RuntimeException('Backup needs a connection in PDO::ERRMODE_EXCEPTION');
+    }
+
     # Runs one statement and fails the run when it does not execute, so no unchecked database call can reach the artifact
     private function getSqlRun(string $sql, array $pars = []): PDOStatement {
         $stmt = $this->db->getSqlQuery($sql, $pars);
@@ -759,7 +1024,7 @@ class Backup {
     }
 
     # Quotes one identifier for the dump and for every statement this class builds
-    private function getSqlName(string $name): string {
+    private static function getSqlName(string $name): string {
         return '`'.str_replace('`', '``', $name).'`';
     }
 

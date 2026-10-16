@@ -430,6 +430,18 @@ final class BackupContractTest extends TestCase
         $this->assertSame('\'0x1A\'', $this->getCall($back, 'getRowLiteral', ['0x1A', $num]), 'A non-numeric value in a numeric column must be quoted, not emitted raw');
     }
 
+    # A native float keeps every digit it has: the cast of PHP stops at 14, which a DOUBLE does not survive
+    #[Test]
+    public function aFloatIsWrittenInItsShortestExactForm(): void
+    {
+        $back = $this->getBackup(self::SHIPPED);
+        $dbl = ['name' => 'ratio', 'type' => 'double', 'extr' => '', 'num' => true, 'bin' => false, 'gen' => false];
+        $this->assertSame('0.3333333333333333', $this->getCall($back, 'getRowLiteral', [1 / 3, $dbl]));
+        $this->assertSame(1 / 3, (float)$this->getCall($back, 'getRowLiteral', [1 / 3, $dbl]));
+        $this->assertSame('1.0E+25', $this->getCall($back, 'getRowLiteral', [1e25, $dbl]));
+        $this->assertSame('-2.5', $this->getCall($back, 'getRowLiteral', [-2.5, $dbl]));
+    }
+
     # A NULL stays a NULL and never becomes an empty string
     #[Test]
     public function nullIsSerializedAsNull(): void

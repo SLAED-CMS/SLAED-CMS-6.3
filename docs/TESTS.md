@@ -188,6 +188,7 @@ Current unit test files include:
 - `AdminSearchboxBridgeFlowTest.php`
 - `BackupContractTest.php`
 - `BackupIntegrationTest.php`
+- `BackupPartTest.php`
 - `CacheContractTest.php`
 - `CommentIsolationTest.php`
 - `CommentNotifyTest.php`
