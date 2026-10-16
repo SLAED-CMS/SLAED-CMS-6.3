@@ -11,7 +11,7 @@
         <div class="sl-pres-gauges">
           {% include 'fragments/presentation-ring.html' with gen_ring %}
           {% include 'fragments/presentation-ring.html' with cache_ring %}
-          <div class="sl-pres-plate" data-sl-tone="{{ plate.tone }}" title="{{ nominal }}"><span class="sl-pres-mark" role="img" aria-label="SLAED"></span></div>
+          <div class="sl-pres-plate" data-sl-tone="{{ plate.tone }}" title="{{ nominal }}"><svg class="sl-pres-plate-orbit" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="47.3" pathLength="120"></circle></svg><span class="sl-pres-mark" role="img" aria-label="SLAED"></span></div>
           {% include 'fragments/presentation-ring.html' with qnum_ring %}
           {% include 'fragments/presentation-ring.html' with online_ring %}
         </div>

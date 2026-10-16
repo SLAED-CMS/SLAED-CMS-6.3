@@ -743,11 +743,12 @@
 
 /* ---------- The cockpit: the state of the system over the home, the twin of the cockpit of the presentation ---------- */
 
-/* Two tokens the admin theme takes into base.css together with the cockpit, their first consumer, so the audit never
+/* Three tokens the admin theme takes into base.css together with the cockpit, their first consumer, so the audit never
    sees them dead: the hero step of the one font ladder of both themes (tools/ui-contract.php), the size of a dashboard
-   number, and the width of a gauge, the component the lite theme declares already */
+   number, the tight tracking the lite theme sets that number with, and the width of a gauge, a lite component already */
 :root {
   --sl-font-hero: 38px;
+  --sl-track-tight: -1px;
   --sl-gauge-width: 150px;
 }
 
@@ -762,12 +763,17 @@
   padding: var(--sl-space-6);
 }
 
+/* Three columns with equal sides: the state stands in the middle between the edges of the panel whatever the width of
+   the caption at the left and the chip at the right */
 .sl-cockpit-top {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
-  justify-content: space-between;
   gap: var(--sl-space-4);
+}
+
+.sl-cockpit-top > .sl-live-chip {
+  justify-self: end;
 }
 
 .sl-cockpit-top > span {
@@ -795,7 +801,7 @@
 .sl-tip.sl-live-chip {
   width: auto;
   height: auto;
-  margin: 0 0 0 auto;
+  margin: 0;
   cursor: pointer;
 }
 
@@ -971,13 +977,28 @@
 .sl-cockpit-ring > div > b {
   position: relative;
   z-index: var(--sl-z-raised);
-  display: flex;
-  justify-content: center;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: baseline;
-  gap: var(--sl-space-1);
-  font-size: var(--sl-font-hero);
+  column-gap: var(--sl-space-1);
+  font-size: calc(var(--sl-gauge-width) * 0.24);
+  font-weight: var(--sl-weight-bold);
   line-height: var(--sl-line-tight);
+  letter-spacing: var(--sl-track-tight);
   color: var(--sl-knob-tone);
+}
+
+/* The figure keeps the proportion of the presentation: a digit there takes 14 per cent of its dial, and the bold Tahoma
+   of this theme reaches it at 0.24 of the gauge width, 36 px on a 150 px gauge */
+
+/* The figure, not the figure with its unit, stands on the centre of the dial: an empty first column as wide as the
+   column of the unit keeps the digits in the middle and hangs the unit at their right */
+.sl-cockpit-ring > div > b::before {
+  content: "";
+}
+
+.sl-cockpit-ring > div > b > small {
+  justify-self: start;
 }
 
 .sl-cockpit-ring > div > b > small {
@@ -1019,9 +1040,19 @@
   border: 0;
   border-radius: var(--sl-radius-circle);
   background:
-    radial-gradient(circle closest-side, transparent calc(100% - var(--sl-space-3) - 2px), var(--sl-knob-tone) calc(100% - var(--sl-space-3) - 1px)
-      calc(100% - var(--sl-space-3)), color-mix(in srgb, var(--sl-knob-tone) var(--sl-cockpit-mix), transparent) calc(100% - var(--sl-space-3) + 1px) calc(100% - 1px), transparent 100%),
-    radial-gradient(circle closest-side, transparent 60%, color-mix(in srgb, var(--sl-knob-tone) var(--sl-ring-mix), transparent) calc(100% - var(--sl-space-3)), transparent calc(100% - var(--sl-space-3))),
+    radial-gradient(
+      circle closest-side,
+      transparent calc(100% - var(--sl-space-3) - 2px),
+      var(--sl-knob-tone) calc(100% - var(--sl-space-3) - 1px) calc(100% - var(--sl-space-3)),
+      color-mix(in srgb, var(--sl-knob-tone) var(--sl-cockpit-mix), transparent) calc(100% - var(--sl-space-3) + 1px) calc(100% - 1px),
+      transparent 100%
+    ),
+    radial-gradient(
+      circle closest-side,
+      transparent 60%,
+      color-mix(in srgb, var(--sl-knob-tone) var(--sl-ring-mix), transparent) calc(100% - var(--sl-space-3)),
+      transparent calc(100% - var(--sl-space-3))
+    ),
     radial-gradient(circle at 50% 38%, var(--sl-bg-subtle), var(--sl-bg) 68%);
   padding: var(--sl-space-8);
   font: inherit;
@@ -1058,7 +1089,12 @@
 
 .sl-cockpit-plate::after {
   inset: 0;
-  background: radial-gradient(circle closest-side, transparent calc(100% - var(--sl-ring-width) - 1px), currentColor calc(100% - var(--sl-ring-width)) calc(100% - 1px), transparent 100%);
+  background: radial-gradient(
+    circle closest-side,
+    transparent calc(100% - var(--sl-ring-width) - 1px),
+    currentColor calc(100% - var(--sl-ring-width)) calc(100% - 1px),
+    transparent 100%
+  );
   opacity: 0;
 }
 
@@ -1154,6 +1190,17 @@
 
 /* A narrow content column: the lamp over the gauges two by two */
 @media (max-width: 768px) {
+  /* A phone: the caption and the chip share the first line, the state takes the middle of the second */
+  .sl-cockpit-top {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .sl-cockpit-top > .sl-cockpit-state {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    justify-self: center;
+  }
+
   .sl-cockpit-gauges {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: var(--sl-space-6);

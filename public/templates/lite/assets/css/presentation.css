@@ -596,8 +596,13 @@
   overflow: visible;
 }
 
-.sl-pres .sl-pres-ring .sl-knob-val {
+/* The arc and, on the cockpit, the figure in its centre read one tone, so the number and its ring can never disagree */
+.sl-pres .sl-pres-ring .sl-knob-val,
+.sl-pres .sl-pres-gauges > .sl-pres-ring > div > b {
   color: var(--sl-pres-link-text);
+}
+
+.sl-pres .sl-pres-ring .sl-knob-val {
   stroke: currentColor;
   filter: drop-shadow(0 0 var(--sl-space-4) color-mix(in srgb, currentColor var(--sl-gauge-mix), transparent));
 }
@@ -606,15 +611,18 @@
   stroke: var(--sl-pres-border);
 }
 
-.sl-pres .sl-knob-ok .sl-knob-val {
+.sl-pres .sl-knob-ok .sl-knob-val,
+.sl-pres .sl-pres-gauges > .sl-knob-ok > div > b {
   color: var(--sl-pres-good-text);
 }
 
-.sl-pres .sl-knob-warn .sl-knob-val {
+.sl-pres .sl-knob-warn .sl-knob-val,
+.sl-pres .sl-pres-gauges > .sl-knob-warn > div > b {
   color: var(--sl-pres-warn-text);
 }
 
-.sl-pres .sl-knob-danger .sl-knob-val {
+.sl-pres .sl-knob-danger .sl-knob-val,
+.sl-pres .sl-pres-gauges > .sl-knob-danger > div > b {
   color: var(--sl-danger);
 }
 
@@ -711,9 +719,19 @@
   aspect-ratio: 1;
   border-radius: var(--sl-radius-circle);
   background:
-    radial-gradient(circle closest-side, transparent calc(100% - var(--sl-space-3) - 2px), currentColor calc(100% - var(--sl-space-3) - 1px)
-      calc(100% - var(--sl-space-3)), color-mix(in srgb, currentColor var(--sl-chip-mix), transparent) calc(100% - var(--sl-space-3) + 1px) calc(100% - 1px), transparent 100%),
-    radial-gradient(circle closest-side, transparent 60%, color-mix(in srgb, currentColor var(--sl-chip-tint-mix), transparent) calc(100% - var(--sl-space-3)), transparent calc(100% - var(--sl-space-3))),
+    radial-gradient(
+      circle closest-side,
+      transparent calc(100% - var(--sl-space-3) - 2px),
+      currentColor calc(100% - var(--sl-space-3) - 1px) calc(100% - var(--sl-space-3)),
+      color-mix(in srgb, currentColor var(--sl-chip-mix), transparent) calc(100% - var(--sl-space-3) + 1px) calc(100% - 1px),
+      transparent 100%
+    ),
+    radial-gradient(
+      circle closest-side,
+      transparent 60%,
+      color-mix(in srgb, currentColor var(--sl-chip-tint-mix), transparent) calc(100% - var(--sl-space-3)),
+      transparent calc(100% - var(--sl-space-3))
+    ),
     radial-gradient(circle at 50% 38%, var(--sl-pres-core-bg), var(--sl-pres-panel-bg) 68%);
   padding: var(--sl-space-8);
 }
@@ -722,7 +740,12 @@
   content: "";
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle closest-side, transparent calc(100% - var(--sl-space-1) - 1px), currentColor calc(100% - var(--sl-space-1)) calc(100% - 1px), transparent 100%);
+  background: radial-gradient(
+    circle closest-side,
+    transparent calc(100% - var(--sl-space-1) - 1px),
+    currentColor calc(100% - var(--sl-space-1)) calc(100% - 1px),
+    transparent 100%
+  );
   opacity: 0;
   pointer-events: none;
   animation: sl-pres-lamp calc(var(--sl-pres-dur) * 0.6) var(--sl-ease-out) infinite;
@@ -733,7 +756,7 @@
   animation: none;
 }
 
-.sl-pres-orbit {
+.sl-pres-plate-orbit {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -743,7 +766,7 @@
   animation: sl-pres-spin calc(var(--sl-pres-dur) * 6) linear infinite;
 }
 
-.sl-pres-orbit circle {
+.sl-pres-plate-orbit circle {
   fill: none;
   stroke: color-mix(in srgb, currentColor var(--sl-pulse-mix), transparent);
   stroke-width: 1.5;
@@ -783,10 +806,20 @@
   position: relative;
   z-index: var(--sl-z-raised);
   font-size: var(--sl-font-hero);
-  display: flex;
-  justify-content: center;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: baseline;
-  gap: var(--sl-space-1);
+  column-gap: var(--sl-space-1);
+}
+
+/* The figure, not the figure with its unit, stands on the centre of the dial: an empty first column as wide as the
+   column of the unit keeps the digits in the middle and hangs the unit at their right */
+.sl-pres-gauges > .sl-pres-ring > div > b::before {
+  content: "";
+}
+
+.sl-pres-gauges > .sl-pres-ring > div > b > small {
+  justify-self: start;
 }
 
 .sl-pres-gauges > .sl-pres-ring > div > span {
