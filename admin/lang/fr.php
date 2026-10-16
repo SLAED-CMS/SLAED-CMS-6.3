@@ -803,6 +803,8 @@ define('_UPDATE_EXTRA','Fichiers PHP qu\'aucune version ne livre, dans admin/, c
 define('_UPDATE_REJECT','L\'archive n\'a pas été acceptée : %s. L\'aide explique chaque raison.');
 define('_UPDATE_STAGEOK','La version %s est téléchargée, vérifiée et décompressée.');
 define('_UPDATE_FAULT','Dernier refus');
+define('_UPDATE_LANGS','Une mise à jour depuis le panneau remplace entièrement les fichiers de langue de la version : les modifications faites ici sont perdues, les anciens fichiers restent dans la sauvegarde de l\'installation.');
+define('_UPDATE_THEMES','Une mise à jour depuis le panneau remplace entièrement les thèmes admin et lite : les modifications faites ici sont perdues, les anciens fichiers restent dans la sauvegarde de l\'installation. Les autres thèmes ne sont pas touchés.');
 define('_UPLOADS','Télécharger');
 define('_URLS','Les liens');
 define('_USEREXIST',"L'utilisateur existe déjà!");

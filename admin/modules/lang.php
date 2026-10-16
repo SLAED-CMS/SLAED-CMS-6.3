@@ -44,6 +44,7 @@ function lang(): void {
 
     setHead();
     $cont = getTplAdminTabs(['ops' => ['name=lang', 'name=lang&op=config', 'name=lang&op=info'], 'tabs' => [_HOME, _PREFERENCES, _MANUAL]]);
+    $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _UPDATE_LANGS]);
     $rows = [];
     $rows[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
         'cells' => [
@@ -109,6 +110,7 @@ function fileedit(): void {
     global $afile, $conf, $tpl;
     setHead();
     $cont = getTplAdminTabs(['ops' => ['name=lang', 'name=lang&op=config', 'name=lang&op=info'], 'tabs' => [_HOME, _PREFERENCES, _MANUAL]]);
+    $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _UPDATE_LANGS]);
     $mod = getVar('get', 'mod', 'var', '');
     $typ = getVar('get', 'typ', 'var', '');
     $page = getVar('get', 'page', 'num', 1);

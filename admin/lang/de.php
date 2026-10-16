@@ -803,6 +803,8 @@ define('_UPDATE_EXTRA','PHP-Dateien, die kein Release ausliefert, in admin/, cor
 define('_UPDATE_REJECT','Das Archiv wurde nicht angenommen: %s. Die Hilfe erklärt jeden Grund.');
 define('_UPDATE_STAGEOK','Version %s ist heruntergeladen, geprüft und entpackt.');
 define('_UPDATE_FAULT','Letzte Ablehnung');
+define('_UPDATE_LANGS','Ein Update über das Panel ersetzt die Sprachdateien des Releases vollständig: hier gemachte Änderungen gehen verloren, die alten Dateien bleiben in der Sicherung der Installation.');
+define('_UPDATE_THEMES','Ein Update über das Panel ersetzt die Themes admin und lite vollständig: hier gemachte Änderungen gehen verloren, die alten Dateien bleiben in der Sicherung der Installation. Andere Themes bleiben unberührt.');
 define('_UPLOADS','Uploads');
 define('_URLS','Links');
 define('_USEREXIST','Der Benutzer existiert schon!');

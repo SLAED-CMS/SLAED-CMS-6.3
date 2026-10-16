@@ -191,9 +191,10 @@ into the plan, then do whatever work the step names.
 - [x] 81. UPDATE batch 5 — the client: the check, the page "Обновления", the notice, the light boot that runs the
   database steps. (2026-10-16)
 - [x] 82. UPDATE batch 6 — the client: download, manual upload, verification, unpacking. (2026-10-16)
-- [ ] 83. UPDATE batch 7 — settings, languages and themes: the installer adds missing options at any depth to the
+- [x] 83. UPDATE batch 7 — settings, languages and themes: the installer adds missing options at any depth to the
   site's config files without a second layer (lists whole), the language files and the themes `admin` and `lite`
-  replaced whole, other themes untouched. One batch by the owner's wish, 2026-10-15.
+  replaced whole, other themes untouched. One batch by the owner's wish, 2026-10-15. The sections a site creates and
+  deletes itself — Node types and field sets — are taken whole (owner, 2026-10-16). (2026-10-16)
 - [ ] 84. UPDATE batch 8 — the database: a resumable dump in portions and the restore from it, both callable without
   the core, limited to the site's table prefix.
 - [ ] 85. UPDATE batch 9 — the client: installation in steps, the guard of all three entry points, and rollback of

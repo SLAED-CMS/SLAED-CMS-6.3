@@ -40,6 +40,12 @@ final class Update {
     # The folders a package may hold at its top; a file of the top level passes by its name alone
     public const DIRS = ['admin', 'blocks', 'config', 'core', 'docs', 'lang', 'modules', 'public', 'storage', 'tests', 'tools', 'uploads'];
 
+    # The settings files Node shares, which setConfigFile() writes together in its Closure form only
+    private const SHARED = ['node', 'fields', 'uploads', 'ratings'];
+
+    # The themes a release ships and replaces whole; every other theme of public/templates/ is left as it is
+    public const THEMES = ['admin', 'lite'];
+
     # A range of versions in a note: bounds such as ">=8.0.0 <8.0.2" separated by one space, or empty for every version
     public const RANGE = '#^((<=|>=|<|>|=)?\d{1,5}\.\d{1,5}\.\d{1,5}( (<=|>=|<|>|=)?\d{1,5}\.\d{1,5}\.\d{1,5})*)?$#D';
 
@@ -173,6 +179,11 @@ final class Update {
     public static function isSiteFile(string $path): bool {
         if ($path === 'public/robots.txt') return true;
         return preg_match('#^config/[a-z0-9_]+\.php$#D', $path) === 1 && !in_array(basename($path), ['system.php', 'header.php', 'chmod.php', 'local.php'], true);
+    }
+
+    # Whether a shipped path is replaced whole even when the site changed it, its old copy kept by the backup: a language file and a file of the themes admin and lite
+    public static function isSwapFile(string $path): bool {
+        return preg_match('#^((modules/[^/]+/)?(admin/)?lang/[^/]+\.php|public/templates/('.implode('|', self::THEMES).')/.+)$#D', $path) === 1;
     }
 
     # The state of this installation in client/state.json, every field of STATE present; a missing or damaged file is an empty state
@@ -390,6 +401,77 @@ final class Update {
         return ['ok' => true, 'ver' => '', 'error' => ''];
     }
 
+    # The site value with every key of the shipped one it lacks at any depth, and the paths added; a list, a field set and a section of a Node type stay the site's
+    public static function getConfigMerge(array $site, array $pack, array $types, string $path = ''): array {
+        if ($pack !== [] && array_is_list($pack)) return ($site === []) ? ['data' => $pack, 'adds' => [$path]] : ['data' => $site, 'adds' => []];
+        $adds = [];
+        foreach ($pack as $key => $val) {
+            $at = ($path === '') ? (string)$key : $path.'.'.$key;
+            $rule = (preg_match('#^(node\.types|fields\.node|ratings\.node|uploads)\.(.+)$#D', $at, $hit) === 1 && in_array($hit[2], $types, true)) ? 'type'
+                : ((preg_match('#^fields\.[^.]+$#D', $at) === 1 && $at !== 'fields.node') ? 'whole' : '');
+            $deep = $rule === '' && is_array($val) && $val !== [] && !array_is_list($val);
+            if (!array_key_exists($key, $site)) {
+                if ($rule === 'type') continue;
+                $sub = $deep ? self::getConfigMerge([], $val, $types, $at) : ['data' => $val, 'adds' => [$at]];
+                if ($deep && $sub['data'] === []) continue;
+                $site[$key] = $sub['data'];
+                array_push($adds, ...(($sub['data'] === $val) ? [$at] : $sub['adds']));
+            } elseif ($deep && is_array($site[$key]) && ($site[$key] === [] || !array_is_list($site[$key]))) {
+                $sub = self::getConfigMerge($site[$key], $val, $types, $at);
+                $site[$key] = $sub['data'];
+                array_push($adds, ...$sub['adds']);
+            }
+        }
+        return ['data' => $site, 'adds' => $adds];
+    }
+
+    # Add to the settings of the site every option config/ of the package below $dir has and the site lacks; $test only names them, the Node files go in one save
+    public static function addConfigMerge(string $dir, bool $test = false): array {
+        $read = static function (string $file): mixed {
+            if (function_exists('opcache_invalidate')) opcache_invalidate($file, true);
+            return is_file($file) ? include $file : [];
+        };
+        $packs = [];
+        $sites = [];
+        foreach (glob($dir.'/config/*.php') ?: [] as $file) {
+            $name = basename($file);
+            if (!self::isSiteFile('config/'.$name)) continue;
+            $key = substr($name, 0, -4);
+            $pack = $read($file);
+            $site = $read(CONFIG_DIR.'/'.$name);
+            $flat = $key === 'global';
+            $bad = !is_array($pack) || (!$flat && (array_keys($pack) !== [$key] || !is_array($pack[$key])));
+            if ($bad) return ['ok' => false, 'error' => 'pack', 'name' => 'config/'.$name, 'adds' => []];
+            $bad = !is_array($site) || (!$flat && $site !== [] && (array_keys($site) !== [$key] || !is_array($site[$key])));
+            if ($bad) return ['ok' => false, 'error' => 'shape', 'name' => 'config/'.$name, 'adds' => []];
+            $packs[$key] = $flat ? $pack : $pack[$key];
+            $sites[$key] = $flat ? $site : ($site[$key] ?? []);
+        }
+        $lone = array_intersect_key($packs, array_flip(self::SHARED)) !== [] && !isset($packs['node']);
+        if ($lone) return ['ok' => false, 'error' => 'pack', 'name' => 'config/node.php', 'adds' => []];
+        $types = array_values(array_unique(array_merge(array_keys((array)($packs['node']['types'] ?? [])), array_keys((array)($sites['node']['types'] ?? [])))));
+        $adds = [];
+        $news = [];
+        foreach ($packs as $key => $pack) {
+            $res = self::getConfigMerge($sites[$key], $pack, $types, ($key === 'global') ? '' : $key);
+            if (!$res['adds']) continue;
+            $adds[$key.'.php'] = $res['adds'];
+            $news[$key] = $res['data'];
+        }
+        ksort($adds);
+        foreach ($test ? [] : array_diff_key($news, array_flip(self::SHARED)) as $key => $data) {
+            if (setConfigFile($key.'.php', $data)) continue;
+            return ['ok' => false, 'error' => 'write', 'name' => 'config/'.$key.'.php', 'adds' => $adds];
+        }
+        $writer = static function (array $base, Closure $save) use ($packs, $types): string {
+            foreach (self::SHARED as $one) $base[$one] = self::getConfigMerge($base[$one], $packs[$one] ?? [], $types, $one)['data'];
+            return $save($base) ? 'committed' : 'aborted';
+        };
+        $node = !$test && array_intersect_key($news, array_flip(self::SHARED)) !== [];
+        if ($node && !setConfigFile($writer)) return ['ok' => false, 'error' => 'write', 'name' => 'config/node.php', 'adds' => $adds];
+        return ['ok' => true, 'error' => '', 'name' => '', 'adds' => $adds];
+    }
+
     # The release found at the last check with its manifest verified again under the keys in force, or the refusal offer when the master offers none
     public static function getOffer(array $state, string $chan): array {
         $found = (array)$state['found'];
@@ -556,7 +638,7 @@ final class Update {
         }
         $touch = [];
         foreach ($olds['files'] ?? [] as $name => $one) {
-            if (($news['files'][$name]['sha256'] ?? '') !== $one['sha256']) $touch[$name] = $one;
+            if (($news['files'][$name]['sha256'] ?? '') !== $one['sha256'] && !self::isSwapFile($name)) $touch[$name] = $one;
         }
         $diff = array_map('strval', array_keys(array_filter(self::getChangedList($touch, $root), static fn(string $how): bool => $how === 'changed')));
         if (!rename($part, $dir)) return $fail('write');

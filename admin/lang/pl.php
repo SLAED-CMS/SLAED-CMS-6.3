@@ -803,6 +803,8 @@ define('_UPDATE_EXTRA','Pliki PHP, których nie dostarcza żadne wydanie, w admi
 define('_UPDATE_REJECT','Archiwum nie zostało przyjęte: %s. Pomoc opisuje każdy powód.');
 define('_UPDATE_STAGEOK','Wersja %s jest pobrana, sprawdzona i rozpakowana.');
 define('_UPDATE_FAULT','Ostatnia odmowa');
+define('_UPDATE_LANGS','Aktualizacja z panelu zastępuje w całości pliki językowe wydania: zmiany wprowadzone tutaj przepadną, poprzednie pliki zostaną w kopii instalacji.');
+define('_UPDATE_THEMES','Aktualizacja z panelu zastępuje w całości motywy admin i lite: zmiany wprowadzone tutaj przepadną, poprzednie pliki zostaną w kopii instalacji. Inne motywy pozostają nietknięte.');
 define('_UPLOADS','Pobierania');
 define('_URLS','Linki');
 define('_USEREXIST','Użytkownik już istnieje!');

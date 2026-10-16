@@ -123,14 +123,15 @@ function addArchive(string $tag, string $file, string $ver): array {
     return ['files' => $files, 'list' => $list, 'usize' => $usize + strlen($list)];
 }
 
-# The delta from a previous release: every file that list lacks or holds with another hash, and the full files.json, since a site deletes by the lists
+# The delta from a previous release: every file that list lacks or holds with another hash, every settings file of config/ for the merge, and the full files.json
 function addDelta(string $full, string $file, array $old, array $pack): int {
     $src = new ZipArchive();
     $zip = new ZipArchive();
     if ($src->open($full) !== true || $zip->open($file, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) setFailExit('cannot write '.$file);
     $usize = 0;
     foreach ($pack['files'] as $name => $one) {
-        if (($old[$name]['sha256'] ?? '') === $one['sha256']) continue;
+        $keep = !empty($one['site']) && str_starts_with($name, 'config/');
+        if (!$keep && ($old[$name]['sha256'] ?? '') === $one['sha256']) continue;
         $zip->addFromString($name, (string)$src->getFromName($name));
         $usize += $one['size'];
     }

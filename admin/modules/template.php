@@ -6,6 +6,8 @@
 
 if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 
+require_once BASE_DIR.'/core/classes/update.php';
+
 function getTemplateFiles(string $dir, string $ext): array {
     if (!is_dir($dir)) return [];
     $list = [];
@@ -125,6 +127,7 @@ function template(): void {
         'tabs' => [_TEMPLATES, _STYLES, _MANUAL],
         'subtitle_html' => getTemplateSearch($templ),
     ]);
+    if (in_array($templ, Update::THEMES, true)) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _UPDATE_THEMES]);
     $dir = PUBLIC_DIR.'/templates/'.$templ;
     if (is_dir($dir)) {
         $conts = '';
@@ -153,6 +156,7 @@ function style(): void {
         'tab' => 1,
         'subtitle_html' => getTemplateSearch($templ),
     ]);
+    if (in_array($templ, Update::THEMES, true)) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _UPDATE_THEMES]);
     $dir = PUBLIC_DIR.'/templates/'.$templ.'/assets/css';
     if (is_dir($dir)) {
         $conts = '';

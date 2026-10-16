@@ -243,13 +243,14 @@ final class UpdateFetchTest extends TestCase
         }
     }
 
-    # A delta brings only what changed and takes the rest from the installed list; the files the release replaces that the site changed are named, files of the site never
+    # A delta brings only what changed and takes the rest from the installed list; changed code it replaces is named, a language file and files of the site never
     #[Test]
     public function aDeltaLeansOnTheInstalledList(): void
     {
         $old = ['core/a.php' => "<?php\n# a\n", 'admin/b.php' => "<?php\n# b\n", 'lang/en.php' => "<?php\n# en\n", 'config/global.php' => "<?php\nreturn [];\n"];
         file_put_contents(UPDATE_DIR.'/files.json', self::getList(SL_VERSION, $old));
-        $this->setTree(['core/a.php' => "<?php\n# edited\n", 'admin/b.php' => "<?php\n# also edited\n", 'config/global.php' => "<?php\nreturn ['site' => 1];\n"]);
+        $this->setTree(['core/a.php' => "<?php\n# edited\n", 'admin/b.php' => "<?php\n# also edited\n", 'lang/en.php' => "<?php\n# en edited\n",
+            'config/global.php' => "<?php\nreturn ['site' => 1];\n"]);
         $new = ['core/a.php' => "<?php\n# a2\n", 'admin/b.php' => $old['admin/b.php'], 'lang/en.php' => "<?php\n# en2\n", 'config/global.php' => $old['config/global.php']];
         $file = self::getPack(['core/a.php' => $new['core/a.php'], 'lang/en.php' => $new['lang/en.php']], self::getList(self::VER, $new));
         $man = self::getMan($file);

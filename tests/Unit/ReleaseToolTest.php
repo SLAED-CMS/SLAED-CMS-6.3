@@ -260,7 +260,7 @@ final class ReleaseToolTest extends TestCase
         }
     }
 
-    # Growth beyond 20 % stops the build until --max; the delta holds changed, new and renamed files with the full list, not unchanged or export-ignore ones
+    # Growth beyond 20 % stops the build until --max; the delta holds changed, new and renamed files, every settings file and the full list, no other unchanged one
     #[Test]
     public function theDeltaFollowsTheTwoLists(): void
     {
@@ -270,7 +270,8 @@ final class ReleaseToolTest extends TestCase
         $this->assertSame(0, $run['second']['code'], 'The second release did not build: '.$run['second']['out']);
         $names = $run['delta']['names'];
         sort($names);
-        $this->assertSame(['core/system.php', 'core/version.php', 'docs/big.txt', 'modules/news/main.php', 'storage/update/files.json'], $names);
+        $this->assertSame(['config/global.php', 'core/system.php', 'core/version.php', 'docs/big.txt', 'modules/news/main.php', 'storage/update/files.json'], $names,
+            'The delta lost an unchanged settings file the merge reads, or took unchanged code, robots.txt or an export-ignore file');
         $this->assertArrayNotHasKey('modules/news/index.php', $run['delta']['list']['files'], 'The renamed file is still in the list');
         $this->assertArrayHasKey('docs/a.md', $run['delta']['list']['files'], 'The list of the delta is not the full list');
         $this->assertSame('8.0.0', $run['secondman']['delta']['from']);

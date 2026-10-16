@@ -803,6 +803,8 @@ define('_UPDATE_EXTRA','PHP files that no release ships, in admin/, core/, lang/
 define('_UPDATE_REJECT','The archive was not taken: %s. The help names each reason.');
 define('_UPDATE_STAGEOK','Version %s is downloaded, verified and unpacked.');
 define('_UPDATE_FAULT','Last refusal');
+define('_UPDATE_LANGS','An update from the panel replaces the language files of the release whole: edits made here are lost, the old files stay in the backup of the installation.');
+define('_UPDATE_THEMES','An update from the panel replaces the themes admin and lite whole: edits made here are lost, the old files stay in the backup of the installation. Other themes are not touched.');
 define('_UPLOADS','Uploads');
 define('_URLS','Links');
 define('_USEREXIST','the User already exists!');

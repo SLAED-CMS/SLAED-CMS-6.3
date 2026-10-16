@@ -474,6 +474,94 @@ function getProbeMarker(bool $gone): array {
     return ['held' => (new ReflectionMethod('NodeQuery', 'getHeldTypes'))->invoke($query), 'stats' => ProbeMarkStream::$stats, 'opens' => ProbeMarkStream::$opens];
 }
 
+# The merge of config/ an installation runs over shipped sources with one addition each, on a site that lost the type faq and a field and set its own values
+function getProbeMerge(): array {
+    global $probework;
+    require_once BASE_DIR.'/core/classes/update.php';
+    $pack = $probework.'/pack/config';
+    mkdir($pack, 0777, true);
+    $real = static fn(string $name): array => (static fn(string $file): mixed => include $file)(BASE_DIR.'/config/'.$name);
+    $write = static function (string $file, array $data): void {
+        file_put_contents($file, getConfigCode($data));
+        if (function_exists('opcache_invalidate')) opcache_invalidate($file, true);
+    };
+    $glob = $real('global.php');
+    $write(CONFIG_DIR.'/global.php', ['sitename' => 'Probe site'] + $glob);
+    $write($pack.'/global.php', $glob + ['probenew' => 'shipped']);
+    $data = $real('scheduler.php');
+    $data['scheduler']['jobs']['cachegc']['probekey'] = 'x';
+    $data['scheduler']['jobs']['probejob'] = $data['scheduler']['jobs']['cachegc'];
+    $write($pack.'/scheduler.php', $data);
+    $data = $real('modules.php');
+    $data['modules']['probemod'] = $data['modules']['account'];
+    $write($pack.'/modules.php', $data);
+    $data = $real('node.php');
+    $site = $data;
+    unset($site['node']['types']['faq']);
+    $write(CONFIG_DIR.'/node.php', $site);
+    $data['node']['defaults']['list']['probeopt'] = 5;
+    $data['node']['types']['probetype'] = ['version' => 1];
+    $data['node']['types']['news']['probeopt'] = 1;
+    $write($pack.'/node.php', $data);
+    $data = $real('fields.php');
+    $site = $data;
+    unset($site['fields']['account']['field2']);
+    $write(CONFIG_DIR.'/fields.php', $site);
+    $data['fields']['probeset'] = ['field1' => $data['fields']['account']['field1']];
+    $write($pack.'/fields.php', $data);
+    $data = $real('uploads.php');
+    $site = $data;
+    unset($site['uploads']['faq']);
+    $write(CONFIG_DIR.'/uploads.php', $site);
+    $data['uploads']['probetype'] = $data['uploads']['all'];
+    $data['uploads']['probenew'] = '1';
+    $write($pack.'/uploads.php', $data);
+    $data = $real('ratings.php');
+    $site = $data;
+    unset($site['ratings']['node.faq']);
+    $write(CONFIG_DIR.'/ratings.php', $site);
+    $data['ratings']['node.probetype'] = $data['ratings']['account'];
+    $write($pack.'/ratings.php', $data);
+    $data = $real('api.php');
+    $site = $data;
+    $site['api']['off'] = ['probe'];
+    $site['api']['cors'] = ['https://x.example'];
+    $write(CONFIG_DIR.'/api.php', $site);
+    $data['api']['cors'] = ['https://a.example', 'https://b.example'];
+    $write($pack.'/api.php', $data);
+    file_put_contents($pack.'/system.php', "<?php\nreturn ['probe' => 1];\n");
+    $write($pack.'/probefile.php', ['probefile' => ['one' => '1']]);
+    $before = getProbeHashes();
+    $test = Update::addConfigMerge($probework.'/pack', true);
+    $same = getProbeHashes() === $before;
+    $run = Update::addConfigMerge($probework.'/pack');
+    $after = getProbeHashes();
+    $src = static fn(string $name): array => (array)getProbeSource($name);
+    $node = $src('node.php')['node'];
+    $fields = $src('fields.php')['fields'];
+    $ups = $src('uploads.php')['uploads'];
+    $rates = $src('ratings.php')['ratings'];
+    $jobs = $src('scheduler.php')['scheduler']['jobs'];
+    return [
+        'test' => $test,
+        'same' => $same,
+        'run' => [$run['ok'], $run['error'], $run['name'], $run['adds'] === $test['adds']],
+        'again' => Update::addConfigMerge($probework.'/pack', true)['adds'],
+        'touched' => array_keys(array_diff_assoc($after, $before)),
+        'global' => [$src('global.php')['probenew'] ?? null, $src('global.php')['sitename'] ?? null],
+        'jobs' => [isset($jobs['probejob']), $jobs['cachegc']['probekey'] ?? null],
+        'module' => isset($src('modules.php')['modules']['probemod']),
+        'node' => [$node['defaults']['list']['probeopt'] ?? null, isset($node['types']['faq']), isset($node['types']['probetype']), isset($node['types']['news']['probeopt'])],
+        'fields' => [isset($fields['account']['field2']), isset($fields['probeset']['field1'])],
+        'uploads' => [isset($ups['faq']), isset($ups['probetype']), $ups['probenew'] ?? null],
+        'ratings' => [isset($rates['node.faq']), isset($rates['node.probetype'])],
+        'api' => [$src('api.php')['api']['off'], $src('api.php')['api']['cors']],
+        'file' => getProbeSource('probefile.php'),
+        'local' => [getProbeLocal()['probenew'] ?? null, getProbeLocal()['node']['defaults']['list']['probeopt'] ?? null],
+        'trace' => getProbeTrace(),
+    ];
+}
+
 # Remove the scratch tree of this probe
 function deleteProbeTree(string $dir): void {
     if (!is_dir($dir)) return;
@@ -497,6 +585,7 @@ try {
         'faults' => getProbeFaults(),
         'markergone' => getProbeMarker(true),
         'markerlocked' => getProbeMarker(false),
+        'merge' => getProbeMerge(),
         'run' => getProbeRun((string)($pargs[0] ?? ''), (int)($pargs[1] ?? 0)),
         'try' => getProbeTry((string)($pargs[0] ?? '')),
         'wait' => getProbeWait((string)($pargs[0] ?? '')),
