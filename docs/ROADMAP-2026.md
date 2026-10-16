@@ -190,7 +190,7 @@ into the plan, then do whatever work the step names.
   of slaed.net by the settings of the master, never shipped in `config/scheduler.php` (owner, 2026-10-16). (2026-10-16)
 - [x] 81. UPDATE batch 5 — the client: the check, the page "Обновления", the notice, the light boot that runs the
   database steps. (2026-10-16)
-- [ ] 82. UPDATE batch 6 — the client: download, manual upload, verification, unpacking.
+- [x] 82. UPDATE batch 6 — the client: download, manual upload, verification, unpacking. (2026-10-16)
 - [ ] 83. UPDATE batch 7 — settings, languages and themes: the installer adds missing options at any depth to the
   site's config files without a second layer (lists whole), the language files and the themes `admin` and `lite`
   replaced whole, other themes untouched. One batch by the owner's wish, 2026-10-15.

@@ -18,8 +18,15 @@ final class Update {
     # The largest answer of the master a site reads; a longer one is refused whole
     public const LIMIT = 1048576;
 
-    # The fields of client/state.json: id, hash of the address, last check and its refusal, newest time per channel, release found, journal sizes, failure to report
-    private const STATE = ['sid' => '', 'home' => '', 'last' => 0, 'error' => '', 'seen' => [], 'found' => [], 'logs' => [], 'fail' => []];
+    # The fields of client/state.json: id, address hash, last check, newest time per channel, release found, journals, failure, package, refusal, integrity
+    private const STATE = ['sid' => '', 'home' => '', 'last' => 0, 'error' => '', 'seen' => [], 'found' => [], 'logs' => [], 'fail' => [], 'stage' => [], 'fault' => [],
+        'audit' => []];
+
+    # The seconds one request downloads at most, so the time limit of a host never cuts it; the next click resumes where it stopped
+    public const SPAN = 40;
+
+    # The folders whose PHP files the integrity check holds against files.json; a PHP file there that the list does not name is foreign
+    public const AUDIT = ['admin', 'core', 'lang', 'public'];
 
     # The type tags every signed message starts with, so a signature of one kind never passes for another
     public const MANIFEST = "SLAED-UPDATE-MANIFEST-v1\n";
@@ -229,20 +236,29 @@ final class Update {
         return min($num, 1000000);
     }
 
-    # One GET to the master: HTTPS only, no redirect followed, the peer verified, the answer cut at LIMIT; its status, its body and why it failed
-    public static function getRemote(string $path, array $query): array {
-        $ctx = stream_context_create(['http' => ['method' => 'GET', 'timeout' => 15, 'follow_location' => 0, 'ignore_errors' => true,
-            'header' => 'User-Agent: SLAED/'.SL_VERSION."\r\nAccept: application/json\r\n"], 'ssl' => ['verify_peer' => true, 'verify_peer_name' => true]]);
+    # One GET to the master: HTTPS only, no redirect followed, the peer verified, from byte $from when it is above 0; its status, its open stream or null, its headers
+    public static function getRemoteLink(string $path, array $query, int $from = 0): array {
+        $head = 'User-Agent: SLAED/'.SL_VERSION."\r\nAccept: application/json, application/zip\r\n".(($from > 0) ? 'Range: bytes='.$from."-\r\n" : '');
+        $ctx = stream_context_create(['http' => ['method' => 'GET', 'timeout' => 15, 'follow_location' => 0, 'ignore_errors' => true, 'header' => $head],
+            'ssl' => ['verify_peer' => true, 'verify_peer_name' => true]]);
         set_error_handler(static fn(): bool => true);
         $link = fopen(self::HOST.$path.'?'.http_build_query($query, '', '&', PHP_QUERY_RFC3986), 'rb', false, $ctx);
         restore_error_handler();
-        if ($link === false) return ['code' => 0, 'body' => '', 'error' => 'master'];
-        $body = (string)stream_get_contents($link, self::LIMIT + 1);
+        if ($link === false) return ['code' => 0, 'link' => null, 'head' => []];
         $head = stream_get_meta_data($link)['wrapper_data'] ?? [];
-        fclose($link);
-        $code = (is_array($head) && preg_match('#^HTTP/\S+\s+(\d{3})#', (string)($head[0] ?? ''), $hit) === 1) ? (int)$hit[1] : 0;
-        if (strlen($body) > self::LIMIT) return ['code' => $code, 'body' => '', 'error' => 'size'];
-        return ['code' => $code, 'body' => $body, 'error' => ($code === 200) ? '' : 'master'];
+        $head = is_array($head) ? $head : [];
+        $code = (preg_match('#^HTTP/\S+\s+(\d{3})#', (string)($head[0] ?? ''), $hit) === 1) ? (int)$hit[1] : 0;
+        return ['code' => $code, 'link' => $link, 'head' => $head];
+    }
+
+    # One GET to the master for an answer in JSON, cut at LIMIT; its status, its body and why it failed
+    public static function getRemote(string $path, array $query): array {
+        $got = self::getRemoteLink($path, $query);
+        if ($got['link'] === null) return ['code' => 0, 'body' => '', 'error' => 'master'];
+        $body = (string)stream_get_contents($got['link'], self::LIMIT + 1);
+        fclose($got['link']);
+        if (strlen($body) > self::LIMIT) return ['code' => $got['code'], 'body' => '', 'error' => 'size'];
+        return ['code' => $got['code'], 'body' => $body, 'error' => ($got['code'] === 200) ? '' : 'master'];
     }
 
     # Ask the master once with what master/check lists, apply its answer and keep the result in the state; $fetch is the transport seam for tests
@@ -299,6 +315,9 @@ final class Update {
                 $state['error'] = $res['error'];
             }
         }
+        $keep = (string)($state['found']['version'] ?? '');
+        if (($state['stage']['version'] ?? '') !== $keep) $state['stage'] = [];
+        self::deleteStage($keep);
         $notes = [];
         $site = ['sid' => $state['sid'], 'version' => SL_VERSION, 'now' => $now];
         foreach (is_array($data['notes'] ?? null) ? $data['notes'] : [] as $one) {
@@ -369,6 +388,390 @@ final class Update {
             if (!setConfigFile('update.php', $data)) return ['ok' => false, 'ver' => $ver, 'error' => 'config/update.php'];
         }
         return ['ok' => true, 'ver' => '', 'error' => ''];
+    }
+
+    # The release found at the last check with its manifest verified again under the keys in force, or the refusal offer when the master offers none
+    public static function getOffer(array $state, string $chan): array {
+        $found = (array)$state['found'];
+        if (!self::isVersion($found['version'] ?? null)) return ['ok' => false, 'error' => 'offer', 'data' => []];
+        $site = ['channel' => $chan, 'version' => SL_VERSION, 'seen' => (array)$state['seen']];
+        return self::getManifest(self::getRawBytes($found['body'] ?? ''), is_string($found['sig'] ?? null) ? $found['sig'] : '', self::getKeyFile(), $site);
+    }
+
+    # The archive a site takes: the delta when it stands exactly on the version the delta starts from, the full archive otherwise
+    public static function getPackKind(array $man): string {
+        return (is_array($man['delta'] ?? null) && $man['delta']['from'] === SL_VERSION) ? 'delta' : 'full';
+    }
+
+    # The reader of an archive on this site: zip, phar where PharData reads through zlib, or empty when the panel cannot unpack at all
+    public static function getZipReader(): string {
+        if (class_exists('ZipArchive')) return 'zip';
+        return (extension_loaded('phar') && extension_loaded('zlib')) ? 'phar' : '';
+    }
+
+    # The space a download needs: archive and package less the $have bytes on disk, plus 10 per cent but at least 50 MB; free is null where the host hides it
+    public static function getSpaceNeed(array $pack, int $have = 0): array {
+        $sum = intval($pack['size'] ?? 0) + intval($pack['usize'] ?? 0);
+        $need = max(0, $sum - $have) + max(intdiv($sum, 10), 52428800);
+        $dir = UPDATE_DIR;
+        while (!is_dir($dir) && dirname($dir) !== $dir) $dir = dirname($dir);
+        set_error_handler(static fn(): bool => true);
+        $free = function_exists('disk_free_space') ? disk_free_space($dir) : false;
+        restore_error_handler();
+        $free = is_float($free) ? (int)$free : null;
+        return ['need' => $need, 'free' => $free, 'ok' => $free === null || $free >= $need];
+    }
+
+    # The file a download or an upload of a release fills in client/tmp/, one per version and kind of archive
+    public static function getTempFile(string $ver, string $kind): string {
+        return UPDATE_DIR.'/client/tmp/slaed-'.$ver.'-'.$kind.'.zip';
+    }
+
+    # Download the archive of $man into client/tmp/ from where a cut request stopped, for SPAN seconds or half the time limit, and unpack it once whole; $open is the test seam
+    public static function addDownload(array $man, ?callable $open = null, string $root = BASE_DIR): array {
+        $out = ['ok' => false, 'error' => '', 'name' => '', 'got' => 0, 'size' => $man[self::getPackKind($man)]['size'], 'done' => false];
+        $lock = self::getWorkLock();
+        if ($lock === null) return ['error' => 'busy'] + $out;
+        try {
+            return self::setFault(self::addPackFetch($man, $open, $root) + $out);
+        } finally {
+            fclose($lock);
+        }
+    }
+
+    # Take an archive uploaded by hand only as the full archive or the delta of the release the master offers now, by signed size and SHA-256, then unpack it like a download
+    public static function addUpload(string $temp, array $man, string $root = BASE_DIR): array {
+        $lock = self::getWorkLock();
+        if ($lock === null) return ['ok' => false, 'error' => 'busy', 'name' => ''];
+        try {
+            return self::setFault(self::addPackTake($temp, $man, $root));
+        } finally {
+            fclose($lock);
+        }
+    }
+
+    # The download under the lock: resume a part, append what the master sends until the archive is whole or the time is spent, then unpack it when time is left
+    private static function addPackFetch(array $man, ?callable $open, string $root): array {
+        if (self::getZipReader() === '') return ['error' => 'reader'];
+        $kind = self::getPackKind($man);
+        $pack = $man[$kind];
+        $file = self::getTempFile($man['version'], $kind);
+        $limit = intval(ini_get('max_execution_time'));
+        $span = ($limit > 0) ? min(self::SPAN, intdiv($limit, 2)) : self::SPAN;
+        $start = microtime(true);
+        self::deleteTemps($man['version']);
+        clearstatcache();
+        $have = is_file($file) ? (int)filesize($file) : 0;
+        if ($have > $pack['size'] && unlink($file)) $have = 0;
+        if (!self::getSpaceNeed($pack, $have)['ok']) return ['error' => 'space', 'got' => $have];
+        if ($have < $pack['size']) {
+            $got = ($open ?? [self::class, 'getRemoteLink'])('/api/v1/master/file', ['v' => $man['version'], 'kind' => $kind], $have);
+            $from = (preg_match('#^Content-Range:\s*bytes\s+(\d+)-#im', implode("\n", $got['head']), $hit) === 1) ? (int)$hit[1] : -1;
+            $more = $got['code'] === 206 && $from === $have;
+            if ($got['link'] === null || (!$more && $got['code'] !== 200)) {
+                if ($got['link'] !== null) fclose($got['link']);
+                return ['error' => 'master', 'got' => $have];
+            }
+            $have = $more ? $have : 0;
+            $dest = self::addDirPath(dirname($file)) ? fopen($file, $more ? 'ab' : 'wb') : false;
+            $why = ($dest === false) ? 'write' : '';
+            while ($why === '' && !feof($got['link']) && microtime(true) - $start < $span) {
+                $buf = fread($got['link'], 1048576);
+                if ($buf === false || $buf === '') break;
+                if ($have + strlen($buf) > $pack['size']) $why = 'size';
+                elseif (fwrite($dest, $buf) !== strlen($buf)) $why = 'write';
+                else $have += strlen($buf);
+            }
+            fclose($got['link']);
+            if ($dest !== false) fclose($dest);
+            if ($why !== '' && is_file($file)) unlink($file);
+            if ($why !== '') return ['error' => $why];
+        }
+        if ($have < $pack['size'] || microtime(true) - $start > $span / 2) return ['ok' => true, 'got' => $have];
+        $res = self::addStage($file, $man, $kind, '', $root);
+        return ['done' => $res['ok'], 'got' => $res['ok'] ? $have : 0] + $res;
+    }
+
+    # The upload under the lock: the archive told by its signed size and SHA-256, a delta only on its base version, then moved into client/tmp/ and unpacked
+    private static function addPackTake(string $temp, array $man, string $root): array {
+        $fail = static fn(string $why): array => ['ok' => false, 'error' => $why, 'name' => ''];
+        if (self::getZipReader() === '') return $fail('reader');
+        clearstatcache();
+        $size = is_file($temp) ? (int)filesize($temp) : 0;
+        $hash = ($size > 0) ? (string)hash_file('sha256', $temp) : '';
+        $kind = '';
+        foreach (['full', 'delta'] as $one) {
+            if (is_array($man[$one]) && $man[$one]['size'] === $size && hash_equals($man[$one]['sha256'], $hash)) $kind = $one;
+        }
+        if ($kind === '') return $fail('offer');
+        if ($kind === 'delta' && $man['delta']['from'] !== SL_VERSION) return $fail('delta');
+        if (!self::getSpaceNeed($man[$kind], $size)['ok']) return $fail('space');
+        self::deleteTemps('');
+        $file = self::getTempFile($man['version'], $kind);
+        if (!self::addDirPath(dirname($file)) || !rename($temp, $file)) return $fail('write');
+        return self::addStage($file, $man, $kind, '', $root);
+    }
+
+    # Keep the refusal of a download or an upload in the state for the panel, or clear it once one went through; the result passes unchanged
+    private static function setFault(array $res): array {
+        $state = self::getState();
+        $state['fault'] = $res['ok'] ? [] : ['error' => $res['error'], 'name' => $res['name'], 'time' => time()];
+        self::setState($state);
+        return $res;
+    }
+
+    # Check an archive by its signed size, SHA-256 and central directory, unpack it into stage/<version>/ and hold it to its files.json; the archive is deleted after
+    public static function addStage(string $file, array $man, string $kind, string $reader = '', string $root = BASE_DIR): array {
+        $pack = $man[$kind];
+        $ver = $man['version'];
+        $dir = UPDATE_DIR.'/client/stage/'.$ver;
+        $part = $dir.'.part';
+        $reader = ($reader !== '') ? $reader : self::getZipReader();
+        $read = false;
+        $fail = static function (string $why, string $name = '') use ($file, $part, &$read): array {
+            self::deleteArchive($file, $read);
+            self::deleteTree($part);
+            return ['ok' => false, 'error' => $why, 'name' => $name];
+        };
+        clearstatcache();
+        if (!is_file($file) || filesize($file) !== $pack['size']) return $fail('size');
+        if (!hash_equals($pack['sha256'], (string)hash_file('sha256', $file))) return $fail('hash');
+        $zip = self::getZipList($file, $pack['usize']);
+        if (!$zip['ok']) return $fail($zip['error'], $zip['name']);
+        self::deleteTree($part);
+        self::deleteTree($dir);
+        $read = $reader === 'phar';
+        $res = self::addZipFiles($file, $zip['list'], $part, $reader);
+        if (!$res['ok']) return $fail($res['error'], $res['name']);
+        $news = self::getFileList($part.'/storage/update/files.json');
+        if ($news === null || $news['version'] !== $ver) return $fail('list', 'storage/update/files.json');
+        $olds = self::getFileList(UPDATE_DIR.'/files.json');
+        foreach ($res['hash'] as $name => $hash) {
+            $want = $news['files'][$name] ?? null;
+            if ($name !== 'storage/update/files.json' && (!is_array($want) || !hash_equals($want['sha256'], $hash))) return $fail('list', (string)$name);
+        }
+        foreach ($news['files'] as $name => $one) {
+            if (isset($res['hash'][$name])) continue;
+            if ($kind === 'full' || ($olds !== null && !hash_equals($one['sha256'], (string)($olds['files'][$name]['sha256'] ?? '')))) return $fail('list', (string)$name);
+        }
+        $touch = [];
+        foreach ($olds['files'] ?? [] as $name => $one) {
+            if (($news['files'][$name]['sha256'] ?? '') !== $one['sha256']) $touch[$name] = $one;
+        }
+        $diff = array_map('strval', array_keys(array_filter(self::getChangedList($touch, $root), static fn(string $how): bool => $how === 'changed')));
+        if (!rename($part, $dir)) return $fail('write');
+        self::deleteArchive($file, $read);
+        $state = self::getState();
+        $state['stage'] = ['version' => $ver, 'kind' => $kind, 'from' => (string)($pack['from'] ?? ''), 'sha256' => $pack['sha256'], 'time' => time(),
+            'files' => count($news['files']), 'changed' => $diff, 'nolist' => $olds === null];
+        return self::setState($state) ? ['ok' => true, 'error' => '', 'name' => ''] : ['ok' => false, 'error' => 'write', 'name' => ''];
+    }
+
+    # The entries of an archive from its own central directory, before a reader opens it: paths a package may hold, no link, no encryption, no ZIP64, no twin, at most $usize
+    public static function getZipList(string $file, int $usize): array {
+        $fail = static fn(string $why, string $name = ''): array => ['ok' => false, 'error' => $why, 'name' => $name, 'list' => []];
+        clearstatcache();
+        $size = is_file($file) ? (int)filesize($file) : 0;
+        $link = ($size >= 22) ? fopen($file, 'rb') : false;
+        if ($link === false) return $fail('zip');
+        $tail = min($size, 65557);
+        fseek($link, $size - $tail);
+        $buf = (string)fread($link, $tail);
+        $at = strrpos($buf, "PK\x05\x06");
+        while ($at !== false && ($at + 22 > strlen($buf) || $at + 22 + unpack('v', $buf, $at + 20)[1] !== strlen($buf))) {
+            $at = ($at > 0) ? strrpos(substr($buf, 0, $at + 3), "PK\x05\x06") : false;
+        }
+        $end = ($at !== false) ? unpack('vdisk/vfirst/vhere/vcount/Vbytes/Voffset', $buf, $at + 4) : [];
+        $good = $end !== [] && $end['disk'] === 0 && $end['first'] === 0 && $end['here'] === $end['count'] && $end['count'] !== 0xFFFF && $end['bytes'] !== 0xFFFFFFFF
+            && $end['offset'] !== 0xFFFFFFFF && $end['offset'] + $end['bytes'] === $size - $tail + $at;
+        $dir = '';
+        if ($good) {
+            fseek($link, $end['offset']);
+            $dir = (string)fread($link, max(1, $end['bytes']));
+        }
+        fclose($link);
+        if (!$good || strlen($dir) !== $end['bytes']) return $fail('zip');
+        $list = [];
+        $seen = [];
+        $sum = 0;
+        $pos = 0;
+        for ($i = 0; $i < $end['count']; $i++) {
+            if ($pos + 46 > strlen($dir) || substr($dir, $pos, 4) !== "PK\x01\x02") return $fail('zip');
+            $one = unpack('vmade/vneed/vflag/vmethod/vtime/vdate/Vcrc/Vcsize/Vusize/vnlen/vxlen/vclen/vdisk/vinner/Vattr/Voffset', $dir, $pos + 4);
+            $name = substr($dir, $pos + 46, $one['nlen']);
+            $pos += 46 + $one['nlen'] + $one['xlen'] + $one['clen'];
+            $bad = $pos > strlen($dir) || ($one['flag'] & 1) || !in_array($one['method'], [0, 8], true);
+            if ($bad || in_array(0xFFFFFFFF, [$one['csize'], $one['usize'], $one['offset']], true)) return $fail('zip', $name);
+            if (!self::isPackagePath($name)) return $fail('path', $name);
+            $isdir = str_ends_with($name, '/');
+            $type = (($one['made'] >> 8) === 3) ? (($one['attr'] >> 16) & 0xF000) : 0;
+            if ($type !== 0 && $type !== ($isdir ? 0x4000 : 0x8000)) return $fail('link', $name);
+            $key = rtrim($name, '/');
+            if (($isdir && $one['usize'] !== 0) || isset($seen[strtolower($key)])) return $fail('zip', $name);
+            $seen[strtolower($key)] = true;
+            $sum += $one['usize'];
+            if ($sum > $usize) return $fail('usize', $name);
+            $list[] = ['name' => $key, 'size' => $one['usize'], 'dir' => $isdir];
+        }
+        return ($pos === strlen($dir)) ? ['ok' => true, 'error' => '', 'name' => '', 'list' => $list] : $fail('zip');
+    }
+
+    # Unpack the checked entries into $dir through ZipArchive or the phar stream of each, refusing an entry that yields other than its declared bytes; files 0644, folders 0755
+    public static function addZipFiles(string $file, array $list, string $dir, string $reader): array {
+        $fail = static fn(string $why, string $name = ''): array => ['ok' => false, 'error' => $why, 'name' => $name, 'hash' => []];
+        $zip = null;
+        if ($reader === 'zip') {
+            $zip = new ZipArchive();
+            if ($zip->open($file, ZipArchive::RDONLY) !== true) return $fail('zip');
+        } elseif ($reader !== 'phar') {
+            return $fail('reader');
+        }
+        $hash = [];
+        $base = 'phar://'.str_replace('\\', '/', $file).'/';
+        set_error_handler(static fn(): bool => true);
+        try {
+            if ($zip !== null && $zip->numFiles !== count($list)) return $fail('zip');
+            if (!self::addDirPath($dir)) return $fail('write');
+            foreach ($list as $i => $one) {
+                $path = $dir.'/'.$one['name'];
+                if (!self::addDirPath($one['dir'] ? $path : dirname($path))) return $fail('write', $one['name']);
+                if ($one['dir']) continue;
+                if ($zip !== null && rtrim((string)$zip->getNameIndex($i, ZipArchive::FL_UNCHANGED), '/') !== $one['name']) return $fail('zip', $one['name']);
+                $in = ($zip !== null) ? $zip->getStreamIndex($i) : fopen($base.$one['name'], 'rb');
+                $out = fopen($path, 'xb');
+                if ($in === false || $out === false) {
+                    if (is_resource($in)) fclose($in);
+                    if (is_resource($out)) fclose($out);
+                    return $fail(($out === false) ? 'write' : 'entry', $one['name']);
+                }
+                $ctx = hash_init('sha256');
+                $got = 0;
+                $why = '';
+                while ($why === '' && !feof($in)) {
+                    $buf = fread($in, 1048576);
+                    if ($buf === false || ($buf === '' && !feof($in))) $why = 'entry';
+                    elseif (($got += strlen($buf)) > $one['size']) $why = 'entry';
+                    elseif (fwrite($out, $buf) !== strlen($buf)) $why = 'write';
+                    else hash_update($ctx, $buf);
+                }
+                fclose($in);
+                fclose($out);
+                if ($why === '' && $got !== $one['size']) $why = 'entry';
+                if ($why !== '') return $fail($why, $one['name']);
+                chmod($path, 0644);
+                $hash[$one['name']] = hash_final($ctx);
+            }
+        } finally {
+            restore_error_handler();
+            $zip?->close();
+        }
+        return ['ok' => true, 'error' => '', 'name' => '', 'hash' => $hash];
+    }
+
+    # The shipped files a files.json lists, each path with its SHA-256, size and site mark, or null when the file is missing or holds no such list
+    public static function getFileList(string $file): ?array {
+        $data = is_file($file) ? self::getJsonData((string)file_get_contents($file)) : null;
+        if (!is_array($data) || !self::isVersion($data['version'] ?? null) || !is_array($data['files'] ?? null)) return null;
+        foreach ($data['files'] as $path => $one) {
+            if (!self::isPackagePath((string)$path) || !is_array($one) || !is_int($one['size'] ?? null) || preg_match('#^[0-9a-f]{64}$#D', (string)($one['sha256'] ?? '')) !== 1) {
+                return null;
+            }
+        }
+        return $data;
+    }
+
+    # The shipped files of a list that differ on disk below $root, each marked changed or missing; files of the site are theirs to change and never count
+    public static function getChangedList(array $files, string $root): array {
+        $out = [];
+        foreach ($files as $path => $one) {
+            $path = (string)$path;
+            if (!empty($one['site']) || self::isSiteFile($path)) continue;
+            $full = $root.'/'.$path;
+            if (!is_file($full)) $out[$path] = 'missing';
+            elseif (filesize($full) !== $one['size'] || !hash_equals($one['sha256'], (string)hash_file('sha256', $full))) $out[$path] = 'changed';
+        }
+        return $out;
+    }
+
+    # Hold the shipped files against the installed files.json and find the PHP files no list names in AUDIT; the panel entry is held under its name $afile
+    public static function addAudit(string $root = BASE_DIR, string $afile = 'admin'): array {
+        $list = self::getFileList(UPDATE_DIR.'/files.json');
+        $files = (array)($list['files'] ?? []);
+        if ($afile !== 'admin' && preg_match('#^[A-Za-z0-9_-]{1,50}$#D', $afile) === 1 && isset($files['public/admin.php'])) {
+            $files['public/'.$afile.'.php'] = $files['public/admin.php'];
+            unset($files['public/admin.php']);
+        }
+        $out = ['time' => time(), 'error' => ($list === null) ? 'nolist' : '', 'changed' => [], 'missing' => [], 'extra' => []];
+        foreach (self::getChangedList($files, $root) as $path => $how) $out[$how][] = (string)$path;
+        foreach (($list !== null) ? self::AUDIT : [] as $top) {
+            if (!is_dir($root.'/'.$top) || !is_readable($root.'/'.$top)) continue;
+            $walk = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($root.'/'.$top, FilesystemIterator::SKIP_DOTS), RecursiveIteratorIterator::LEAVES_ONLY,
+                RecursiveIteratorIterator::CATCH_GET_CHILD);
+            foreach ($walk as $item) {
+                $path = $top.'/'.str_replace('\\', '/', substr($item->getPathname(), strlen($root.'/'.$top) + 1));
+                if ($item->isFile() && preg_match('#\.(php\d?|phtml|phar)$#iD', $path) === 1 && !isset($files[$path])) $out['extra'][] = $path;
+            }
+        }
+        sort($out['extra']);
+        $state = self::getState();
+        $state['audit'] = $out;
+        if (!self::setState($state)) $out['error'] = 'write';
+        return $out;
+    }
+
+    # Remove the downloads and unpacked packages of every version but $keep, unless a download or an unpacking holds the lock right now
+    public static function deleteStage(string $keep = ''): bool {
+        $lock = self::getWorkLock();
+        if ($lock === null) return false;
+        self::deleteTemps($keep);
+        fclose($lock);
+        return true;
+    }
+
+    # Remove from client/tmp/ and client/stage/ all that belongs to no version $keep: older downloads and packages, an unpacking cut off midway
+    private static function deleteTemps(string $keep): void {
+        foreach (array_merge(glob(UPDATE_DIR.'/client/tmp/*') ?: [], glob(UPDATE_DIR.'/client/stage/*') ?: []) as $path) {
+            $name = basename($path);
+            if ($keep === '' || ($name !== $keep && !str_starts_with($name, 'slaed-'.$keep.'-'))) self::deleteTree($path);
+        }
+    }
+
+    # The lock of the work on packages, taken without waiting, so a second click or the daily check never touches a package being written; null while it is held
+    private static function getWorkLock(): mixed {
+        if (!self::addDirPath(UPDATE_DIR.'/client')) return null;
+        $link = fopen(UPDATE_DIR.'/client/work.lock', 'c');
+        if ($link === false) return null;
+        if (flock($link, LOCK_EX | LOCK_NB)) return $link;
+        fclose($link);
+        return null;
+    }
+
+    # Delete an archive once checked; one PharData has read is let go through Phar::unlinkArchive(), since phar keeps an archive it refused open until the request ends
+    private static function deleteArchive(string $file, bool $read): void {
+        if ($read) {
+            try {
+                Phar::unlinkArchive($file);
+            } catch (Throwable) {
+            }
+        }
+        if (is_file($file)) unlink($file);
+    }
+
+    # Create a folder with each missing parent at 0755, whatever the umask of the host
+    private static function addDirPath(string $dir): bool {
+        if (is_dir($dir)) return true;
+        if (!self::addDirPath(dirname($dir)) || (!mkdir($dir) && !is_dir($dir))) return false;
+        return chmod($dir, 0755);
+    }
+
+    # Remove a file or a folder with all below it, never following a link out of it
+    private static function deleteTree(string $path): bool {
+        if (is_link($path) || is_file($path)) return unlink($path);
+        if (!is_dir($path)) return true;
+        foreach (scandir($path) ?: [] as $name) {
+            if ($name !== '.' && $name !== '..' && !self::deleteTree($path.'/'.$name)) return false;
+        }
+        return rmdir($path);
     }
 
     # Write one JSON file of client/ by one rename, so a reader never sees half a file
