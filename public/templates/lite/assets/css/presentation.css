@@ -16,17 +16,6 @@
   font: var(--sl-font-body)/var(--sl-line-normal) Arial, system-ui, sans-serif;
 }
 
-@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
-  .sl-pres[data-sl-pres-pointer]::after {
-    content: "";
-    position: fixed;
-    inset: 0;
-    z-index: var(--sl-z-popover);
-    pointer-events: none;
-    background: radial-gradient(circle calc(var(--sl-gauge-width) * 3) at var(--sl-d-pointer-x) var(--sl-d-pointer-y), var(--sl-tint-strong), transparent 70%);
-  }
-}
-
 .sl-pres :is(h1, h2, h3) {
   font-family: inherit;
   font-weight: var(--sl-weight-bold);

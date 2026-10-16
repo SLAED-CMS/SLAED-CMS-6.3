@@ -175,18 +175,21 @@ into the plan, then do whatever work the step names.
   Boundary"; `docs/NODE.md`, "Addresses", `docs/TEMPLATES.md`, "Links In Templates", `docs/VERSIONS.md`,
   `UPGRADING.md` and `README.md` follow it. (2026-10-14)
 - [x] 76. UPDATE batch 0 — *decision*: the open questions of the plan, the probes, the baseline. Added by the owner on
-  2026-10-15: a site learns of an update only by code it already has, so the updater goes into 8.0. The core carries
-  `sodium_compat` for the signature and reads a zip through its own central directory with `PharData` beside
+  2026-10-15: a site learns of an update only by code it already has, so the updater goes into 8.0. The core checks
+  the signature without `sodium` by its own class `Signature` (replaced `sodium_compat`, owner, 2026-10-16) and reads a zip through its own central directory with `PharData` beside
   `ZipArchive`; `public/sitemap.xml` leaves git and `public/robots.txt` is a site file; the whole tree ships (owner,
   2026-10-15). (2026-10-15)
 - [x] 77. UPDATE batch 1 — one entry: the branch `/api/` of `public/index.php`, `API_FILE` and the light core.
   (2026-10-15)
 - [x] 78. UPDATE batch 2 — the core of the connector without clients, `checkApiFlood`, the reply mode `file`. An
   action names its reply mode by the key `reply` (owner, 2026-10-15). (2026-10-15)
-- [ ] 79. UPDATE batch 3 — signature, keys, `files.json`, `tools/release.php` and `tools/sign.php`.
-- [ ] 80. UPDATE batch 4 — the module `master`.
-- [ ] 81. UPDATE batch 5 — the client: the check, the page "Обновления", the notice, the light boot that runs the
-  database steps.
+- [x] 79. UPDATE batch 3 — signature, keys, `files.json`, `tools/release.php` and `tools/sign.php`. The version
+  constants are `SL_VERSION` and `SL_CODENAME`, within the 12 characters of `.rules/global.md` (owner, 2026-10-16).
+  (2026-10-16)
+- [x] 80. UPDATE batch 4 — the module `master`. Its scheduler jobs are known to the core and written into the scheduler
+  of slaed.net by the settings of the master, never shipped in `config/scheduler.php` (owner, 2026-10-16). (2026-10-16)
+- [x] 81. UPDATE batch 5 — the client: the check, the page "Обновления", the notice, the light boot that runs the
+  database steps. (2026-10-16)
 - [ ] 82. UPDATE batch 6 — the client: download, manual upload, verification, unpacking.
 - [ ] 83. UPDATE batch 7 — settings, languages and themes: the installer adds missing options at any depth to the
   site's config files without a second layer (lists whole), the language files and the themes `admin` and `lite`

@@ -187,6 +187,13 @@ final class NodeProfileTest extends TestCase
         $this->assertSame([false, false, false, false], $run['stale'], 'A type of an earlier installation came back with the profiles');
         $this->assertSame($order, $run['dirs'], 'A type does not carry its folder in uploads/node/<type>, or the folder carries a guard');
         $this->assertFalse($run['mark']);
+        require_once BASE_DIR.'/core/classes/update.php';
+        require_once BASE_DIR.'/core/version.php';
+        $this->assertSame(['upcheck' => '1', 'channel' => 'stable', 'keepbak' => '1', 'upsite' => '1'], $run['updater']['check'], 'The installer left no settings of the check');
+        $this->assertSame([SL_VERSION], $run['updater']['steps'], 'The installer did not mark the steps of its version');
+        $this->assertMatchesRegularExpression('#^[0-9a-f]{32}$#D', $run['updater']['sid'], 'The installer left no id of the installation');
+        $this->assertTrue($run['updater']['home'], 'The id does not belong to the address of the installation');
+        $this->assertSame(\Update::getCheckTime($run['updater']['sid']), $run['updater']['line'], 'The daily minute of updatecheck does not follow the id');
         $this->assertSame([['name' => 'news', 'cid' => 0, 'uid' => 0, 'aname' => 'SLAED', 'title' => 'Добро пожаловать в SLAED CMS', 'status' => 2, 'home' => 1,
             'comon' => 2]], $run['starter']);
         $want = [['user', 'users/probe']];

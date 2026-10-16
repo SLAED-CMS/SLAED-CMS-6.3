@@ -546,23 +546,14 @@ function updateAdminCategoryOrder(): void {
     getAdminCategoryList(filterVar(getVar('get', 'mod', 'var', '')), 0);
 }
 
-function catacess(string $name, string $class, string $selected, int $limit, string $sid = '', string $desc = ''): string {
+# Render the check list of who may do something in a category or a Node type: everyone, users, each group and the admins, the limit dropping the open levels
+function getTplAccessChecks(string $name, string $selected, int $limit, string $label = '', string $desc = ''): string {
     global $db, $tpl;
     $gids = explode('|', $selected);
-    $opts = '';
-    if ($limit < 1) {
-        $opts .= $tpl->getHtmlFrag('select-option', [
-            'value_attr' => '0|0',
-            'label_text' => _ALL,
-            'is_selected' => $selected == '0|0',
-        ]);
-    }
+    $boxes = [];
+    if ($limit < 1) $boxes[] = ['value_attr' => '0|0', 'label_text' => _ALL, 'is_checked' => $selected == '0|0'];
     if ($limit < 2) {
-        $opts .= $tpl->getHtmlFrag('select-option', [
-            'value_attr' => '1|0',
-            'label_text' => _USERS,
-            'is_selected' => $selected == '1|0',
-        ]);
+        $boxes[] = ['value_attr' => '1|0', 'label_text' => _USERS, 'is_checked' => $selected == '1|0'];
         $where  = '';
         $params = [];
     } else {
@@ -582,24 +573,11 @@ function catacess(string $name, string $class, string $selected, int $limit, str
             }
         }
         $title = ($extra) ? _SPEC_GROUP.' "'.$gname.'"' : _GROUP.' "'.$gname.'"';
-        $opts .= $tpl->getHtmlFrag('select-option', [
-            'value_attr' => '2|'.$id,
-            'label_text' => $title,
-            'is_selected' => $sel !== '',
-        ]);
+        $boxes[] = ['value_attr' => '2|'.$id, 'label_text' => $title, 'is_checked' => $sel !== ''];
     }
-    $opts .= $tpl->getHtmlFrag('select-option', [
-        'value_attr' => '3|0',
-        'label_text' => _ADMIN,
-        'is_selected' => $selected == '3|0',
-    ]);
-    return $tpl->getHtmlFrag('select', [
-        'name_attr' => $name.'[]',
-        'selectid' => $sid,
-        'describedby' => $desc,
-        'options_html' => $opts,
-        'select_attr' => 'multiple="multiple"',
-    ]);
+    $boxes[] = ['value_attr' => '3|0', 'label_text' => _ADMIN, 'is_checked' => $selected == '3|0'];
+    $boxes = array_map(fn(array $v): array => $v + ['name_attr' => $name.'[]'], $boxes);
+    return $tpl->getHtmlFrag('check-list', ['labelledby' => $label, 'describedby' => $desc, 'items' => $boxes]);
 }
 
 # Fold the posted level|group values of one category access select into its stored rule: groups collect every selected group, any other level keeps its first value
@@ -1712,4 +1690,60 @@ function addNodeProfiles(int $aid): string {
     }
     if (!setConfigFile('update.php', array_diff_key($conf['update'], ['node' => '']))) Logger::addSite('error', 'Node: the installation mark could not be removed');
     return $fail ? sprintf(_NODE_SETUP, implode(', ', $fail)) : '';
+}
+
+# The link tags of the admin theme for a card page, gathered as the core gathers them: the icon, the stylesheets of its vendor packages and its own
+function getCardLinks(): string {
+    global $tpl;
+    $base = PUBLIC_DIR.'/templates/admin/';
+    $out = [$tpl->getHtmlFrag('head-link', ['rel' => 'shortcut icon', 'href' => 'templates/admin/images/favicon.svg', 'type' => 'image/svg+xml', 'title' => ''])];
+    $list = glob($base.'*.css') ?: [];
+    foreach (glob($base.'assets/vendor/*/', GLOB_ONLYDIR) ?: [] as $sub) $list = array_merge($list, glob($sub.'*.css') ?: [], glob($sub.'*/*.css') ?: []);
+    foreach (array_merge($list, glob($base.'assets/css/*.css') ?: []) as $file) {
+        $out[] = $tpl->getHtmlFrag('head-link', ['rel' => 'stylesheet', 'href' => Template::getAssetUrl(substr($file, strlen(PUBLIC_DIR) + 1)), 'type' => '', 'title' => '']);
+    }
+    return implode("\n", $out);
+}
+
+# Render one stop on the card of the admin theme without the panel, as the installer and the light mode of the updater do; a stop outside $names has no counter
+function setCardPage(string $title, array $names, int $stop, array $view): void {
+    global $conf, $tpl;
+    $road = [];
+    foreach ($names as $i => $name) $road[] = ['title' => $name, 'is_done' => $stop >= 0 && $i < $stop, 'is_current' => $i === $stop];
+    $meta = $tpl->getHtmlFrag('head-title', ['title' => $title])."\n".$tpl->getHtmlFrag('head-meta', ['name' => 'robots', 'content' => 'noindex, nofollow']);
+    $script = $tpl->getHtmlFrag('head-script-src', ['src' => Template::getAssetUrl('plugins/system/slaed.js'), 'attr' => 'defer'])."\n"
+        .$tpl->getHtmlFrag('head-script-src', ['src' => Template::getAssetUrl('templates/admin/assets/js/admin-ui.js'), 'attr' => 'defer']);
+    $logo = 'templates/admin/images/logos/'.basename((string)($conf['admin_logo'] ?? ''));
+    if (!is_file(PUBLIC_DIR.'/'.$logo)) $logo = 'templates/admin/images/logos/slaed-logo-wordmark-gradient-blue.svg';
+    $link = $tpl->getHtmlFrag('link', ['href' => 'https://slaed.net', 'title' => 'SLAED CMS', 'label' => 'SLAED CMS', 'is_blank' => true]);
+    $view += ['road' => $road, 'title' => $names[$stop] ?? $title, 'step_text' => isset($names[$stop]) ? sprintf(_SETUP_STEP, $stop + 1, count($names)) : ''];
+    header('Content-Type: text/html; charset=utf-8');
+    header('Cache-Control: no-store');
+    echo $tpl->getHtmlPage('setup', $view + ['lang' => substr(_LOCALE, 0, 2), 'mode' => 'auto', 'meta' => $meta, 'links' => getCardLinks(), 'scripts' => $script,
+        'adlogo' => $logo, 'adalt' => 'SLAED CMS', 'adtitle' => 'SLAED CMS', 'license' => $link.' © 2005-'.date('Y').' Eduard Laas. Released under MIT License.']);
+}
+
+# The notices of the updater for a super-administrator: the release found, red when it fixes security, then the notes of the master, each with its hide button
+function getUpdateAlert(): string {
+    global $afile, $tpl;
+    if (!isAdmin(true)) return '';
+    require_once BASE_DIR.'/core/classes/update.php';
+    $found = Update::getState()['found'];
+    $cont = '';
+    $ver = (string)($found['version'] ?? '');
+    if (Update::isVersion($ver)) {
+        $page = $tpl->getHtmlFrag('link', ['href' => Update::PAGE.$ver, 'title' => _UPDATE_PAGE, 'label' => _UPDATE_PAGE, 'is_blank' => true]);
+        $open = $tpl->getHtmlFrag('link', ['href' => $afile.'.php?name=update', 'title' => _UPDATE_TITLE, 'label' => _UPDATE_TITLE]);
+        $text = sprintf(empty($found['security']) ? _UPDATE_NEW : _UPDATE_SECNEW, htmlspecialchars($ver, ENT_QUOTES, 'UTF-8'));
+        $cont .= $tpl->getHtmlFrag('alert', ['type' => empty($found['security']) ? 'info' : 'error', 'text' => $text.' '.$page.' · '.$open]);
+    }
+    $lang = (substr(_LOCALE, 0, 2) === 'ru') ? 'ru' : 'en';
+    $link = static fn(array $hit): string => preg_match('#^https://(slaed\.net/|github\.com/SLAED-CMS/)#', $url = html_entity_decode($hit[0], ENT_QUOTES, 'UTF-8')) === 1
+        ? $tpl->getHtmlFrag('link', ['href' => $url, 'title' => $url, 'label' => $url, 'is_blank' => true]) : $hit[0];
+    foreach (Update::getNoteList() as $one) {
+        $text = (string)preg_replace_callback('#https?://[^\s<>"\']+#', $link, htmlspecialchars($one[$lang], ENT_QUOTES, 'UTF-8'));
+        $hide = getTplPostButton(['name' => 'update', 'op' => 'hide', 'id' => $one['id'], 'refer' => 1], 'eye-slash', _UPDATE_HIDE);
+        $cont .= $tpl->getHtmlFrag('alert', ['type' => ($one['level'] === 'danger') ? 'error' : $one['level'], 'text' => $text.$hide]);
+    }
+    return $cont;
 }

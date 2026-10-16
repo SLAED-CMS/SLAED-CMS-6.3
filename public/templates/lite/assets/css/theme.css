@@ -1311,6 +1311,14 @@ select.sl-field {
   cursor: pointer;
 }
 
+/* A list that picks several options: one box a row, and a long list scrolls inside its height */
+.sl-check-list {
+  display: grid;
+  gap: var(--sl-space-2);
+  max-height: var(--sl-select-height);
+  overflow-y: auto;
+}
+
 .sl-field[type="file"] {
   height: auto;
   padding: var(--sl-field-pad-y) var(--sl-field-pad-x);
@@ -1698,11 +1706,11 @@ button.sl-but-mini:hover,
 }
 
 /* A tall field is read from its first line, so the label meets it there instead of floating at half its height */
-.sl-form-row:has(textarea) {
+.sl-form-row:has(textarea, .sl-check-list) {
   align-items: start;
 }
 
-.sl-form-row:has(textarea) .sl-form-label {
+.sl-form-row:has(textarea, .sl-check-list) .sl-form-label {
   padding-top: var(--sl-space-3);
 }
 
@@ -5815,6 +5823,18 @@ dialog.sl-editor-emoji-panel {
   }
 }
 
+/* The light that follows the pointer, as over the admin; slaed.js writes where it is */
+@media (prefers-reduced-motion: no-preference) {
+  body[data-sl-pointer]::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: var(--sl-z-popover);
+    background: radial-gradient(circle var(--sl-pointer-width) at var(--sl-d-pointer-x) var(--sl-d-pointer-y), var(--sl-tint), transparent 70%);
+    pointer-events: none;
+  }
+}
+
 /* Segmented switch: one component for every row of cells with one chosen - the colour mode, the view of a list, the
    pager. The plate under the chosen cell is always empty and the chosen cell recolours its own content over it */
 .sl-seg {
@@ -6977,7 +6997,7 @@ button.sl-seg-cell:hover {
   margin-bottom: var(--sl-space-8);
 }
 
-/* Comments: a reply is indented by its depth, which the row carries as a custom property rather than as one class per level */
+/* A reply and a row of a check list tree are indented by their depth, which the row carries as a custom property rather than as one class per level */
 [style*="--sl-d-depth"] {
   margin-left: min(calc(var(--sl-d-depth, 0) * var(--sl-space-8)), 50%);
 }

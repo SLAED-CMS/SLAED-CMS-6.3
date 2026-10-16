@@ -458,7 +458,8 @@
   --sl-mode-width: var(--sl-set-width);
   --sl-mode-height: var(--sl-size-control);
   --sl-set-width: 220px;
-  --sl-select-height: 100px;
+  /* A list that picks several options grows up to this height, and a longer one scrolls inside it */
+  --sl-select-height: 240px;
   --sl-shot-max-height: min(62vh, 460px);
   --sl-shot-side-height: 40vh;
   --sl-skel-height: 24px;
@@ -749,10 +750,6 @@ input,
 textarea,
 select {
   outline: none;
-}
-
-select[multiple] {
-  height: var(--sl-select-height);
 }
 
 /* Code reads in the face of code wherever it stands: inline, in a block, as a key or as the output of a program */

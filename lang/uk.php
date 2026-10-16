@@ -413,6 +413,7 @@ define('_LOGIN','Увійти');
 define('_LOGININCOR','Неправильний логін! Спробуйте ще...');
 define('_LOGOUT','Вихід');
 define('_MAN','Чоловік');
+define('_MASTER','Майстер');
 define('_MATERIALS','%s матеріал|%s матеріали|%s матеріалів');
 define('_MATERIALSOF','%s з %s матеріалу|%s з %s матеріалів|%s з %s матеріалів');
 define('_MEDIA','Медіа каталог');

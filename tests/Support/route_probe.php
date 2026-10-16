@@ -27,6 +27,8 @@
 # The argument build runs the links the pages print on the registry, the statements of the lists and the warnings, and its child buildext asks the builder itself
 # The argument entry runs the branch of the API of index.php beside the site and the panel: its JSON, the light core, its refusals, a ban and a lost database
 # The argument router runs the core of the connector over three modules it writes for the run: the route, the guards in their order, the input, the envelope and the file
+# The argument master runs the module master: its panel, master/check and master/file over its inbox/; its child masterext runs the two jobs of the master
+# The argument gate runs the closed site of a code newer than its step mark: every entry at 503, the light mode of the panel, its login and steps, then the notices and settings
 if (PHP_SAPI !== 'cli') {
     http_response_code(404);
     exit;
@@ -34,15 +36,17 @@ if (PHP_SAPI !== 'cli') {
 error_reporting(E_ALL);
 ini_set('display_errors', '0');
 $rwork = str_replace('\\', '/', (string)($argv[1] ?? sys_get_temp_dir().'/slaed_node_route'));
-if (in_array($argv[2] ?? '', ['view', 'comments', 'ext', 'syncext', 'integext', 'guardext', 'treeext', 'seoext', 'buildext'], true)) {
+if (in_array($argv[2] ?? '', ['view', 'comments', 'ext', 'syncext', 'integext', 'guardext', 'treeext', 'seoext', 'buildext', 'masterext'], true)) {
     $probework = $rwork.'/child';
-    foreach (['CONFIG_DIR' => 'config', 'BACKUP_DIR' => 'backup', 'CACHE_DIR' => 'cache', 'UPLOADS_DIR' => 'uploads'] as $rkey => $rdir) define($rkey, $rwork.'/'.$rdir);
+    foreach (['CONFIG_DIR' => 'config', 'BACKUP_DIR' => 'backup', 'CACHE_DIR' => 'cache', 'UPLOADS_DIR' => 'uploads', 'UPDATE_DIR' => 'update'] as $rkey => $rdir) {
+        define($rkey, $rwork.'/'.$rdir);
+    }
     require_once __DIR__.'/probe_boot.php';
     if (($argv[2] ?? '') === 'comments') setRouteChild((string)($argv[3] ?? ''));
     require_once BASE_DIR.'/core/system.php';
     $rchild = ['view' => 'getRouteViewData', 'comments' => 'getRouteCommentData', 'ext' => 'getRouteExtData', 'syncext' => 'getRouteSyncData',
         'integext' => 'getRouteIntegData', 'guardext' => 'getRouteGuardData', 'treeext' => 'getRouteTreeData',
-        'seoext' => 'getRouteSeoData', 'buildext' => 'getRouteBuildData'][$argv[2]];
+        'seoext' => 'getRouteSeoData', 'buildext' => 'getRouteBuildData', 'masterext' => 'getRouteMasterData'][$argv[2]];
     echo json_encode($rchild());
     exit;
 }
@@ -1384,11 +1388,12 @@ function getRouteIntegData(): array {
     }
 }
 
-# The seed of the guards on top of the integrations: the marks of the data update, a select field of accounts, a favorite worth points and a limit of two
+# The seed of the guards on top of the integrations: the marks of the data update with its step marks, a select field of accounts, a favorite worth points and a limit of two
 # It adds a hostile Node title, a script in an intro, three forum topics on a shelf of the site language, the poll screen for docsman and forum shelves of two languages
 function addRouteGuardRows(PDO $pdo, string $work): void {
     $pre = RPREF.'_';
-    setRouteFile($work.'/config/update.php', ['update' => ['fields' => '6.3.0', 'points' => '6.3.0', 'ratings' => '6.3.0']]);
+    $steps = (is_file($work.'/config/update.php') ? require $work.'/config/update.php' : [])['update']['steps'] ?? [];
+    setRouteFile($work.'/config/update.php', ['update' => ['fields' => '6.3.0', 'points' => '6.3.0', 'ratings' => '6.3.0', 'steps' => $steps]]);
     $item = fn(string $title, int $sort): array => ['title' => $title, 'active' => true, 'sort' => $sort];
     $data = require $work.'/config/fields.php';
     $data['fields']['account'] = ['city' => ['title' => 'City', 'intro' => '', 'type' => 'select', 'default' => '',
@@ -3258,6 +3263,92 @@ function getRouteEntry(string $work): array {
     return $out;
 }
 
+# The gate run: the database steps marked at 6.2.0 below the code, a super-administrator keeper with a known password, two step files and a broken one
+function addRouteGateConf(PDO $pdo, string $work): void {
+    $data = is_file($work.'/config/update.php') ? require $work.'/config/update.php' : ['update' => []];
+    $data['update']['steps'] = ['6.2.0' => '2026-01-01 00:00:00'];
+    setRouteFile($work.'/config/update.php', $data);
+    $sec = require $work.'/config/security.php';
+    $sec['security'] = array_replace($sec['security'], ['log' => '0', 'log_a' => '1']);
+    setRouteFile($work.'/config/security.php', $sec);
+    $pdo->exec('INSERT INTO '.RPREF.'_admins (id, name, email, password, super, smail, modules, ip) VALUES (6, \'keeper\', \'keeper@probe.test\', '
+        .$pdo->quote(password_hash('keeper-pass-1', PASSWORD_BCRYPT)).', 1, 0, \'\', \'127.0.0.1\')');
+    mkdir($work.'/update/step', 0777, true);
+    file_put_contents($work.'/update/step/6.2.5.sql', "CREATE TABLE {prefix}_probe_step (id INT NOT NULL PRIMARY KEY) ENGINE={engine};\n");
+    file_put_contents($work.'/update/step/6.2.7.sql', "INSERT INTO {prefix}_probe_nosuch (id) VALUES (1);\n");
+    file_put_contents($work.'/update/step/6.2.7.php', "<?php\nfile_put_contents(UPDATE_DIR.'/step.ran', 'ran');\nreturn true;\n");
+    if (is_file($work.'/config/local.php')) unlink($work.'/config/local.php');
+}
+
+# The gate over real requests: every entry closed while the code is newer than its step mark, the light mode of the panel with its login and steps, then the panel opened
+function getRouteGate(PDO $pdo, string $work): array {
+    $look = static fn(array $got): array => ['code' => $got['code'], 'type' => $got['head']['content-type'] ?? '', 'retry' => $got['head']['retry-after'] ?? '',
+        'card' => str_contains($got['body'], 'class="sl-setup"'), 'op' => getRouteField($got['body'], 'op'), 'error' => str_contains($got['body'], 'sl-alert-error'),
+        'body' => $got['body']];
+    $marks = static fn(): array => array_keys((include $work.'/config/update.php')['update']['steps'] ?? []);
+    $setup = static function () use ($work): int {
+        $code = 'define("BASE_DIR", '.var_export(BASE_DIR, true).'); define("PUBLIC_DIR", BASE_DIR."/public"); define("CONFIG_DIR", '.var_export($work.'/config', true).');'
+            .' register_shutdown_function(static function (): void { fwrite(STDERR, "code=".http_response_code()); }); ob_start(); include PUBLIC_DIR."/setup.php";';
+        file_put_contents($work.'/setup.php', '<?php '.$code);
+        $res = (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($work.'/setup.php').' 2>&1');
+        return preg_match('#code=(\d+)#', $res, $hit) ? intval($hit[1]) : 0;
+    };
+    $table = static fn(): int => intval($pdo->query('SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = '
+        .$pdo->quote(RPREF.'_probe_step'))->fetchColumn());
+    $out = ['closed' => ['site' => $look(getRouteReply('', 'GET', '')), 'news' => $look(getRouteReply('', 'GET', 'news')),
+        'api' => $look(getRouteReply('', 'GET', 'api/v1/system/ping')), 'cron' => $look(getRouteReply('', 'GET', 'index.php?go=3&op=scheduler')), 'setup' => $setup(),
+        'root' => $look(getRouteReply('root', 'GET', 'admin.php')), 'module' => $look(getRouteReply('root', 'GET', 'admin.php?name=update')),
+        'guest' => $look(getRouteReply('keeper', 'GET', 'admin.php'))]];
+    $token = getRouteToken($out['closed']['guest']['body'], 'login');
+    $out['wrong'] = $look(getRouteReply('keeper', 'POST', 'admin.php', ['op' => 'login', 'token' => $token, 'name' => 'keeper', 'pwd' => 'wrong-pass']));
+    $out['login'] = getRouteReply('keeper', 'POST', 'admin.php', ['op' => 'login', 'token' => $token, 'name' => 'keeper', 'pwd' => 'keeper-pass-1']);
+    $out['steps'] = $look(getRouteReply('keeper', 'GET', 'admin.php'));
+    $token = getRouteToken($out['steps']['body'], 'steps');
+    $out['fail'] = $look(getRouteReply('keeper', 'POST', 'admin.php', ['op' => 'steps', 'token' => $token])) + ['marks' => $marks(), 'table' => $table(),
+        'ran' => is_file($work.'/update/step.ran'), 'site' => getRouteReply('', 'GET', '')['code']];
+    file_put_contents($work.'/update/step/6.2.7.sql', "INSERT INTO {prefix}_probe_step (id) VALUES (1);\n");
+    $done = getRouteReply('keeper', 'POST', 'admin.php', ['op' => 'steps', 'token' => $token]);
+    $out['done'] = ['code' => $done['code'], 'move' => $done['head']['location'] ?? '', 'marks' => $marks(), 'ran' => is_file($work.'/update/step.ran'),
+        'rows' => intval($pdo->query('SELECT COUNT(*) FROM '.RPREF.'_probe_step')->fetchColumn()), 'backup' => count(glob($work.'/backup/*') ?: []),
+        'site' => getRouteReply('', 'GET', '')['code'], 'api' => getRouteReply('', 'GET', 'api/v1/system/ping')['code'],
+        'panel' => $look(getRouteReply('keeper', 'GET', 'admin.php'))];
+    $msgs = array_map(static fn(array $v): string => (string)($v['msg'] ?? ''), getRouteLines('admin'));
+    $out['log'] = array_values(array_filter($msgs, static fn(string $v): bool => str_starts_with($v, 'update') || str_starts_with($v, 'Login')));
+    $again = getRouteReply('keeper', 'POST', 'admin.php', ['op' => 'steps', 'token' => $token]);
+    $out['again'] = ['code' => $again['code'], 'backup' => count(glob($work.'/backup/*') ?: []), 'marks' => $marks()];
+    getRouteReply('root', 'GET', 'admin.php?name=update');
+    $note = ['type' => 'note', 'id' => 1760000001, 'level' => 'warn', 'ver' => '', 'sid' => '', 'until' => 0, 'ru' => '<b>bold</b> https://evil.test/x https://slaed.net/news',
+        'en' => '<b>bold</b> https://evil.test/x https://slaed.net/news'];
+    file_put_contents($work.'/update/client/notes.json', json_encode(['list' => [$note], 'hide' => []]));
+    $state = json_decode((string)file_get_contents($work.'/update/client/state.json'), true);
+    file_put_contents($work.'/update/client/state.json', json_encode(array_replace($state ?: [], ['found' => ['version' => '9.9.9', 'security' => true]])));
+    $home = getRouteReply('root', 'GET', 'admin.php')['body'];
+    $out['notice'] = ['red' => str_contains($home, 'sl-alert-error') && str_contains($home, '9.9.9'),
+        'page' => str_contains($home, 'href="https://github.com/SLAED-CMS/SLAED/releases/tag/v9.9.9"'),
+        'escaped' => str_contains($home, '&lt;b&gt;bold&lt;/b&gt;') && !str_contains($home, '<b>bold</b>'), 'link' => str_contains($home, 'href="https://slaed.net/news"'),
+        'text' => str_contains($home, 'https://evil.test/x') && !str_contains($home, 'href="https://evil.test/x"'), 'sid' => (string)($state['sid'] ?? '')];
+    $hide = getRouteReply('root', 'POST', 'admin.php', ['name' => 'update', 'op' => 'hide', 'id' => '1760000001', 'refer' => '1', 'token' => getRouteToken($home, 'hide')]);
+    $out['hide'] = ['code' => $hide['code'], 'gone' => !str_contains(getRouteReply('root', 'GET', 'admin.php')['body'], '&lt;b&gt;bold'),
+        'file' => json_decode((string)file_get_contents($work.'/update/client/notes.json'), true)['hide'] ?? []];
+    $view = getRouteReply('root', 'GET', 'admin.php?name=update');
+    $sets = getRouteReply('root', 'GET', 'admin.php?name=update&tab=1')['body'];
+    $save = getRouteReply('root', 'POST', 'admin.php?name=update&op=save', ['token' => getRouteToken($sets, 'name="upcheck"'), 'channel' => 'beta',
+        'upcheck' => '0', 'upsite' => '0', 'keepbak' => '1']);
+    $conf = (include $work.'/config/update.php')['update'] ?? [];
+    $sched = getRouteReply('root', 'GET', 'admin.php?name=scheduler')['body'];
+    getRouteReply('root', 'POST', 'admin.php', ['name' => 'scheduler', 'op' => 'run', 'job' => 'updatecheck', 'token' => getRouteToken($sched, 'value="updatecheck"')]);
+    $job = json_decode((string)(is_file($work.'/logs/scheduler/updatecheck.json') ? file_get_contents($work.'/logs/scheduler/updatecheck.json') : ''), true) ?: [];
+    $out['panel'] = ['code' => $view['code'], 'sid' => str_contains($view['body'], (string)($state['sid'] ?? 'x')), 'save' => $save['code'], 'check' => $conf['check'] ?? [],
+        'kept' => array_intersect_key($conf, array_flip(['fields', 'points', 'ratings'])), 'steps' => array_keys($conf['steps'] ?? []),
+        'job' => (string)($job['last_status'] ?? '')];
+    foreach (['closed', 'wrong', 'steps', 'fail'] as $key) {
+        if (isset($out[$key]['body'])) unset($out[$key]['body']);
+        foreach ($out[$key] as $one => $val) if (is_array($val)) unset($out[$key][$one]['body']);
+    }
+    unset($out['done']['panel']['body'], $out['login']['body']);
+    return $out;
+}
+
 # The modules of the router run, in modules/ for the run only: apiprobe declares every case, apibroken a key action without scope, apiidle stays inactive
 # No configuration but the scratch one names them, so the stand never routes to them, and they are removed when the probe ends, whatever it ended with
 function addRouteApiConf(string $work): void {
@@ -3392,6 +3483,234 @@ function getRouteApi(string $work): array {
     $out['flood'] = ['pass' => [$ask('api/v1/system/ping')['code'], $ask('api/v1/system/ping')['code'], $ask('api/v1/system/ping')['code']], 'stop' => $ask('api/v1/system/ping')];
     $out['flood'] += ['save' => $code($ask('api/v1/apiprobe/save', 'POST', $json, '{"num":1}')), 'off' => $code($ask('api/v1/apiprobe/off')),
         'action' => $code($ask('api/v1/apiprobe/nope')), 'pre' => $ask('api/v1/apiprobe/save', 'OPTIONS', $from)['code']];
+    return $out;
+}
+
+# The master run: the real module master, active in the scratch configuration only, its tables in the disposable database, its folder in the scratch update root
+# Its inbox/ holds releases and notes signed with the test factory keys of tests/Fixtures/update, among them a forged archive, a recovery signature and an expired manifest
+function addRouteMasterConf(PDO $pdo, string $work): void {
+    $sql = getSqlbatch((string)file_get_contents(BASE_DIR.'/modules/master/sql/table.sql'));
+    if ($sql['error'] !== '') throw new RuntimeException('modules/master/sql/table.sql does not split');
+    $dbc = (require $work.'/config/db.php')['db'];
+    foreach ($sql['statements'] as $one) $pdo->exec(str_replace(['{prefix}', '{engine}', '{charset}', '{collate}'], [RPREF, 'InnoDB', 'utf8mb4', $dbc['collate']], $one));
+    $data = require $work.'/config/modules.php';
+    $data['modules']['master'] = array_replace($data['modules']['account'], ['lang' => '_MASTER', 'active' => '1', 'menu' => '0']);
+    setRouteFile($work.'/config/modules.php', $data);
+    setRouteFile($work.'/config/api.php', ['api' => ['active' => '1', 'maint' => '0', 'off' => [], 'cors' => [], 'limits' => ['flood' => 6000, 'burst' => 6000, 'size' => 65536]]]);
+    foreach (['master.php', 'local.php'] as $name) if (is_file($work.'/config/'.$name)) unlink($work.'/config/'.$name);
+    $inbox = $work.'/update/master/inbox';
+    $pri = getRouteMasterKey('primary');
+    $rec = getRouteMasterKey('recovery');
+    addRouteMasterPack($inbox.'/8.0.1', '8.0.1', $pri, '8.0.0');
+    addRouteMasterPack($inbox.'/8.0.2', '8.0.2', $pri);
+    addRouteMasterPack($inbox.'/8.0.3', '8.0.3', $pri);
+    file_put_contents($inbox.'/8.0.3/slaed-8.0.3.zip', 'forged', FILE_APPEND);
+    addRouteMasterPack($inbox.'/8.0.4', '8.0.4', $rec);
+    addRouteMasterPack($inbox.'/8.0.5', '8.0.5', $pri, '', ['time' => time() - 100, 'expires' => time() - 10]);
+    mkdir($inbox.'/notes', 0777, true);
+    $notes = [1001 => [$pri, '<8.0.2', ''], 1002 => [$pri, '', str_repeat('a', 32)], 1003 => [$rec, '', '']];
+    foreach ($notes as $id => [$sec, $range, $sid]) {
+        $body = json_encode(['type' => 'note', 'id' => $id, 'level' => 'warn', 'ver' => $range, 'sid' => $sid, 'until' => 0, 'ru' => 'Текст '.$id, 'en' => 'Text '.$id],
+            JSON_UNESCAPED_UNICODE)."\n";
+        file_put_contents($inbox.'/notes/'.$id.'.json', $body);
+        file_put_contents($inbox.'/notes/'.$id.'.sig', base64_encode(sodium_crypto_sign_detached("SLAED-NOTE-v1\n".$body, $sec)));
+    }
+}
+
+# The secret key of a test factory key of tests/Fixtures/update, opened by its known password the way tools/sign.php opens a key file
+function getRouteMasterKey(string $role): string {
+    $data = json_decode((string)file_get_contents(BASE_DIR.'/tests/Fixtures/update/'.$role.'.key'), true);
+    $kek = sodium_crypto_pwhash(SODIUM_CRYPTO_SECRETBOX_KEYBYTES, 'slaed-test', base64_decode($data['salt']), (int)$data['ops'], (int)$data['mem'],
+        SODIUM_CRYPTO_PWHASH_ALG_ARGON2ID13);
+    $seed = sodium_crypto_secretbox_open(base64_decode($data['box']), base64_decode($data['nonce']), $kek);
+    if (!is_string($seed)) throw new RuntimeException('The test key '.$role.' does not open');
+    return sodium_crypto_sign_secretkey(sodium_crypto_sign_seed_keypair($seed));
+}
+
+# One release folder as tools/release.php publish leaves it in inbox/: the archives and both manifests signed by $sec, with fields of the manifest replaced by $over
+function addRouteMasterPack(string $dir, string $ver, string $sec, string $from = '', array $over = []): void {
+    mkdir($dir, 0777, true);
+    $full = 'full archive of '.$ver.str_repeat('.', 400);
+    file_put_contents($dir.'/slaed-'.$ver.'.zip', $full);
+    $delta = null;
+    if ($from !== '') {
+        $part = 'delta archive of '.$ver;
+        file_put_contents($dir.'/slaed-'.$ver.'-from-'.$from.'.zip', $part);
+        $delta = ['size' => strlen($part), 'usize' => 100, 'sha256' => hash('sha256', $part), 'from' => $from];
+    }
+    $now = time();
+    foreach (['beta', 'stable'] as $chan) {
+        $data = array_replace(['type' => 'release', 'version' => $ver, 'channel' => $chan, 'min' => '8.0.0', 'php' => '8.4', 'security' => false,
+            'full' => ['size' => strlen($full), 'usize' => 1000, 'sha256' => hash('sha256', $full)], 'delta' => $delta, 'commit' => str_repeat('c', 40), 'time' => $now,
+            'expires' => $now + 45 * 86400, 'kid' => substr(hash('sha256', substr($sec, 32)), 0, 16)], $over);
+        $body = json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)."\n";
+        file_put_contents($dir.'/manifest-'.$chan.'.json', $body);
+        file_put_contents($dir.'/manifest-'.$chan.'.json.sig', base64_encode(sodium_crypto_sign_detached("SLAED-UPDATE-MANIFEST-v1\n".$body, $sec))."\n");
+    }
+}
+
+# The master over real requests: acceptance from inbox/, the panel, master/check with its record, offer, share, pause, keys and notes, and master/file
+function getRouteMaster(PDO $pdo, string $work): array {
+    global $rport;
+    $ask = function (string $path, string $method = 'GET', array $head = []) use (&$rport): array {
+        $curl = curl_init('http://127.0.0.1:'.$rport.'/api/v1/master/'.$path);
+        curl_setopt_array($curl, [CURLOPT_RETURNTRANSFER => true, CURLOPT_HEADER => true, CURLOPT_HTTPHEADER => $head, CURLOPT_TIMEOUT => 60,
+            CURLOPT_CUSTOMREQUEST => $method, CURLOPT_NOBODY => $method === 'HEAD']);
+        $raw = (string)curl_exec($curl);
+        $size = (int)curl_getinfo($curl, CURLINFO_HEADER_SIZE);
+        $heads = [];
+        foreach (explode("\r\n", substr($raw, 0, $size)) as $line) {
+            if (str_contains($line, ':')) {
+                [$key, $val] = explode(':', $line, 2);
+                $heads[strtolower(trim($key))] = trim($val);
+            }
+        }
+        return ['code' => (int)curl_getinfo($curl, CURLINFO_RESPONSE_CODE), 'head' => $heads, 'body' => substr($raw, $size), 'json' => json_decode(substr($raw, $size), true)];
+    };
+    $sida = str_repeat('a', 32);
+    $sidb = str_repeat('b', 32);
+    $check = fn(string $sid, string $chan, string $ver, string $more = ''): array => $ask('check?sid='.$sid.'&v='.$ver.'&ch='.$chan.$more)['json']['data'] ?? [];
+    $offer = function (array $data): string {
+        $body = base64_decode((string)($data['manifest']['body'] ?? ''));
+        $man = json_decode($body, true);
+        return is_array($man) ? $man['version'].'/'.$man['channel'] : '';
+    };
+    $page = getRouteReply('root', 'GET', 'admin.php?name=master');
+    $tok = getRouteToken($page['body'], 'accept');
+    $post = fn(string $op, array $args): int => getRouteReply('root', 'POST', 'admin.php', ['name' => 'master', 'op' => $op, 'token' => $tok] + $args)['code'];
+    $row = fn(string $sql): array => $pdo->query($sql)->fetch(PDO::FETCH_ASSOC) ?: [];
+    $out = ['page' => ['code' => $page['code'], 'inbox' => substr_count($page['body'], 'inbox/8.0.')]];
+    $out['notoken'] = getRouteReply('root', 'POST', 'admin.php', ['name' => 'master', 'op' => 'accept', 'ver' => '8.0.1'])['code'];
+    $out['notokenrow'] = $row('SELECT COUNT(*) AS num FROM '.RPREF.'_master_release')['num'];
+    foreach (['8.0.1', '8.0.2', '8.0.3', '8.0.4', '8.0.5'] as $ver) $out['accept'][$ver] = $post('accept', ['ver' => $ver]);
+    $out['releases'] = $pdo->query('SELECT ver, state, share FROM '.RPREF.'_master_release ORDER BY ver')->fetchAll(PDO::FETCH_ASSOC);
+    $out['moved'] = ['8.0.1' => array_values(array_diff(scandir($work.'/update/master/8.0.1') ?: [], ['.', '..'])), 'inbox' => is_dir($work.'/update/master/inbox/8.0.1'),
+        'left' => array_values(array_diff(scandir($work.'/update/master/inbox') ?: [], ['.', '..']))];
+    $out['offer']['wait'] = $offer($check($sida, 'beta', '8.0.0'));
+    $post('state', ['ver' => '8.0.1', 'state' => 'beta']);
+    $out['offer']['betabeta'] = $offer($check($sida, 'beta', '8.0.0'));
+    $out['offer']['betastable'] = $offer($check($sidb, 'stable', '8.0.0'));
+    $post('state', ['ver' => '8.0.2', 'state' => 'stable']);
+    $out['offer']['stablebeta'] = $offer($check($sida, 'beta', '8.0.0'));
+    $out['offer']['stable'] = $offer($check($sidb, 'stable', '8.0.0'));
+    $out['offer']['above'] = $offer($check($sidb, 'stable', '8.0.2'));
+    $out['offer']['old'] = $offer($check($sidb, 'stable', '7.9.0'));
+    $out['signed'] = $check($sidb, 'stable', '8.0.0')['manifest'] ?? [];
+    $post('setshare', ['ver' => '8.0.2', 'share' => '0']);
+    $out['offer']['nobody'] = $offer($check($sidb, 'stable', '8.0.0'));
+    $out['offer']['nobodybeta'] = $offer($check($sida, 'beta', '8.0.0'));
+    $post('setshare', ['ver' => '8.0.2', 'share' => '100']);
+    $post('state', ['ver' => '8.0.2', 'state' => 'pause']);
+    $out['paused'] = ['offer' => $offer($check($sidb, 'stable', '8.0.0')), 'file' => $ask('file?v=8.0.2&kind=full')['code'],
+        'row' => $row('SELECT state, pauseby FROM '.RPREF.'_master_release WHERE ver = \'8.0.2\'')];
+    $post('state', ['ver' => '8.0.2', 'state' => 'stable']);
+    $out['back'] = $offer($check($sidb, 'stable', '8.0.0'));
+    $file = $ask('file?v=8.0.1&kind=full');
+    $out['file'] = ['code' => $file['code'], 'same' => $file['body'] === file_get_contents($work.'/update/master/8.0.1/slaed-8.0.1.zip'),
+        'type' => $file['head']['content-type'] ?? '', 'etag' => $file['head']['etag'] ?? '', 'cache' => $file['head']['cache-control'] ?? ''];
+    $out['range'] = $ask('file?v=8.0.1&kind=full', 'GET', ['Range: bytes=0-3']);
+    $out['fhead'] = $ask('file?v=8.0.1&kind=full', 'HEAD');
+    $out['delta'] = [$ask('file?v=8.0.1&kind=delta')['code'], $ask('file?v=8.0.2&kind=delta')['code'], $ask('file?v=8.0.9&kind=full')['code'],
+        $ask('file?v=8.0.3&kind=full')['code']];
+    $code = fn(array $one): array => [$one['code'], $one['json']['error']['code'] ?? 'ok', $one['json']['error']['details']['param'] ?? ''];
+    $bad = ['dots' => 'file?v=../8.0.1&kind=full', 'beta' => 'file?v=8.0.1-beta&kind=full', 'kind' => 'file?v=8.0.1&kind=zip', 'sid' => 'check?sid=xyz&v=8.0.0',
+        'upper' => 'check?sid='.strtoupper($sida).'&v=8.0.0', 'local' => 'check?sid='.$sida.'&v=8.0.0&host=localhost', 'ip' => 'check?sid='.$sida.'&v=8.0.0&host=192.168.0.1',
+        'chan' => 'check?sid='.$sida.'&v=8.0.0&ch=alpha', 'post' => 'check?sid='.$sida.'&v=8.0.0'];
+    foreach ($bad as $name => $path) $out['bad'][$name] = $code($ask($path, ($name === 'post') ? 'POST' : 'GET'));
+    $sidc = str_repeat('c', 32);
+    $full = '&host=example.com&php=8.4.13&db=mariadb&dbv=10.11.6&ext=3&ep=2&es=1&kseq=0';
+    $check($sidc, 'beta', '8.0.0', $full);
+    $site = 'SELECT host, ver, chan, php, db, dbver, ext, ep, es, failver, failstep, failed IS NOT NULL AS fail FROM '.RPREF.'_master_site WHERE sid = \''.$sidc.'\'';
+    $out['site']['first'] = $row($site);
+    $check($sidc, 'beta', '8.0.0', '&host=example.com&fv=8.0.1&fs=6');
+    $out['site']['fail'] = $row($site);
+    $check($sidc, 'beta', '8.0.1');
+    $out['site']['after'] = $row($site);
+    $out['site']['ip'] = $row('SELECT COUNT(*) AS num FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = \''.RPREF.'_master_site\''
+        .' AND column_name IN (\'ip\', \'addr\')')['num'];
+    foreach ([1001, 1002, 1003] as $id) $out['noteadd'][$id] = $post('noteadd', ['id' => $id]);
+    $ids = fn(array $data): array => array_column($data['notes'] ?? [], 'id');
+    $out['notes'] = ['a' => $ids($check($sida, 'stable', '8.0.0')), 'b' => $ids($check($sidb, 'stable', '8.0.0')), 'anew' => $ids($check($sida, 'stable', '8.0.2')),
+        'body' => base64_decode((string)($check($sida, 'stable', '8.0.0')['notes'][0]['body'] ?? '')), 'sig' => $check($sida, 'stable', '8.0.0')['notes'][0]['sig'] ?? '',
+        'left' => array_values(array_diff(scandir($work.'/update/master/inbox/notes') ?: [], ['.', '..']))];
+    $post('noteoff', ['id' => 1002]);
+    $out['notes']['off'] = $ids($check($sida, 'stable', '8.0.0'));
+    $rec = getRouteMasterKey('recovery');
+    $news = sodium_crypto_sign_keypair();
+    mkdir($work.'/update/master/inbox/keys', 0777, true);
+    $statement = function (int $kseq, string $sec) use ($work, $rec): void {
+        $body = json_encode(['type' => 'keychange', 'kseq' => $kseq, 'primary' => base64_encode(sodium_crypto_sign_publickey(sodium_crypto_sign_keypair())),
+            'recovery' => base64_encode(substr($rec, 32)), 'time' => time()], JSON_PRETTY_PRINT)."\n";
+        file_put_contents($work.'/update/master/inbox/keys/'.$kseq.'.json', $body);
+        file_put_contents($work.'/update/master/inbox/keys/'.$kseq.'.sig', base64_encode(sodium_crypto_sign_detached("SLAED-KEYCHANGE-v1\n".$body, $sec)));
+    };
+    $statement(1, $rec);
+    $statement(2, sodium_crypto_sign_secretkey($news));
+    $out['keys'] = ['zero' => array_column($check($sida, 'stable', '8.0.0')['keys'] ?? [], 'kseq'), 'one' => array_column($check($sida, 'stable', '8.0.0', '&kseq=1')['keys'] ?? [],
+        'kseq')];
+    $check($sidc, 'beta', '8.0.1', '&host=example.com');
+    foreach (['tab=0', 'tab=1', 'tab=1&q=example&quiet=0', 'tab=1&quiet=1', 'tab=2', 'tab=3', 'tab=4', 'tab=5', 'op=info', 'op=share&ver=8.0.1'] as $name) {
+        $one = getRouteReply('root', 'GET', 'admin.php?name=master&'.$name);
+        $out['tabs'][$name] = $one['code'];
+        $out['body'][$name] = $one['body'];
+    }
+    $keys = $out['body']['tab=4'];
+    $out['keytab'] = ['error' => str_contains($keys, 'sl-alert-error'), 'one' => str_contains($keys, 'inbox/keys/1.json'), 'two' => str_contains($keys, 'inbox/keys/2.json')];
+    $find = $out['body']['tab=1&q=example&quiet=0'];
+    $out['sitetab'] = ['hint' => str_contains($out['body']['tab=1'], 'release.php note --level info --sid '.$sidc),
+        'find' => str_contains($find, $sidc) && !str_contains($find, $sidb), 'quiet' => !str_contains($out['body']['tab=1&quiet=1'], $sidc)];
+    unset($out['body']);
+    $moder = getRouteReply('moder', 'GET', 'admin.php?name=master');
+    $out['moder'] = str_contains($moder['body'], 'inbox/8.0.');
+    $out['save'] = $post('save', ['silent' => '90', 'keep' => '365', 'limit' => '7']);
+    $out['config'] = is_file($work.'/config/master.php') ? (require $work.'/config/master.php') : [];
+    $sched = require $work.'/config/scheduler.php';
+    $jobs = array_intersect_key($sched['scheduler']['jobs'], ['masterclean' => 1, 'masterwatch' => 1]);
+    $out['jobs'] = array_map(fn(array $job): array => [$job['system'] ?? '', $job['active'] ?? ''], $jobs);
+    $log = is_file($work.'/logs/admin.log') ? (string)file_get_contents($work.'/logs/admin.log') : '';
+    $out['journal'] = ['state' => substr_count($log, '"master state"'), 'ver' => str_contains($log, '"ver":"8.0.2"')];
+    return $out;
+}
+
+# The jobs of the master over the disposable database: the daily totals with the terms of the saved settings, and the automatic pause on seeded sites and releases
+function addRouteMasterRows(PDO $pdo): void {
+    $pre = RPREF.'_master_';
+    $pdo->exec('INSERT INTO '.$pre.'release (ver, state, accepted, changed) VALUES (\'9.0.1\', \'stable\', NOW() - INTERVAL 1 DAY, NOW()),'
+        .' (\'9.0.2\', \'beta\', NOW() - INTERVAL 1 DAY, NOW()), (\'9.0.3\', \'stable\', NOW() - INTERVAL 1 DAY, NOW())');
+    $st = $pdo->prepare('INSERT INTO '.$pre.'site (sid, ver, chan, php, db, dbver, ext, ep, es, failver, failstep, failed, added, seen)'
+        .' VALUES (?, ?, \'stable\', \'8.4.13\', \'mariadb\', \'10.11.6\', 1, 1, 0, ?, ?, ?, NOW(), ?)');
+    $num = 0;
+    $add = function (int $count, string $ver, string $fver, int $step, string $seen = '') use ($st, &$num): void {
+        for ($i = 0; $i < $count; $i++) $st->execute([sprintf('%032x', ++$num), $ver, $fver, $step, $fver !== '' ? date('Y-m-d H:i:s') : null, $seen ?: date('Y-m-d H:i:s')]);
+    };
+    $add(50, '9.0.1', '', 0);
+    $add(3, '9.0.0', '9.0.1', 6);
+    $add(2, '9.0.0', '9.0.1', 5);
+    $add(4, '9.0.1', '9.0.2', 5);
+    $add(5, '9.0.3', '9.0.3', 6);
+    $add(3, '9.0.2', '9.0.1', 6);
+    $add(1, '8.0.0', '', 0, date('Y-m-d H:i:s', time() - 100 * 86400));
+    $pdo->exec('INSERT INTO '.$pre.'stat (day, chan, ver, php, db, sites) VALUES (CURDATE() - INTERVAL 400 DAY, \'stable\', \'8.0.0\', \'8.4\', \'mariadb 10.11\', 1)');
+}
+
+# The child masterext: the two jobs through the scheduler adapter of the core, run twice, and the adapter without the module; then what they left
+function getRouteMasterData(): array {
+    global $conf, $db;
+    $out = ['clean' => addSchedulerSystemJob('masterclean'), 'watch' => addSchedulerSystemJob('masterwatch'), 'again' => addSchedulerSystemJob('masterwatch')];
+    $rows = static fn(string $sql): array => $db->getSqlRows($db->getSqlQuery($sql)) ?: [];
+    $out['release'] = array_map(static fn(array $v): array => [$v['ver'], $v['state'], $v['pauseby'], (int)$v['pfail'], (int)$v['pok']],
+        $rows('SELECT ver, state, pauseby, pfail, pok FROM '.PREFIX_DB.'_master_release WHERE ver LIKE \'9.%\' ORDER BY ver'));
+    $out['stat'] = array_map(static fn(array $v): array => [$v['ver'], $v['php'], $v['db'], (int)$v['sites'], (int)$v['nosod'], (int)$v['nozip'], (int)$v['errs'],
+        (int)$v['fails']], $rows('SELECT ver, php, db, sites, nosod, nozip, errs, fails FROM '.PREFIX_DB.'_master_stat WHERE day = CURDATE() AND ver LIKE \'9.%\' ORDER BY ver'));
+    $out['old'] = (int)($rows('SELECT COUNT(*) AS num FROM '.PREFIX_DB.'_master_stat WHERE day < CURDATE()')[0]['num'] ?? -1);
+    $out['silent'] = (int)($rows('SELECT COUNT(*) AS num FROM '.PREFIX_DB.'_master_site WHERE ver = \'8.0.0\' AND seen < NOW() - INTERVAL 50 DAY')[0]['num'] ?? -1);
+    $out['mail'] = array_map(static fn(array $v): array => [$v['kind'], $v['email'], $v['title'], str_contains($v['body'], '9.0.1')],
+        $rows('SELECT kind, email, title, body FROM '.PREFIX_DB.'_mail WHERE kind = \'master\''));
+    $out['adminmail'] = (string)$conf['adminmail'];
+    $log = is_file(LOGS_DIR.'/admin.log') ? (string)file_get_contents(LOGS_DIR.'/admin.log') : '';
+    $out['journal'] = substr_count($log, 'master autopause');
+    $conf['modules']['master']['active'] = '0';
+    $out['off'] = addMasterTask('masterclean');
     return $out;
 }
 
@@ -3604,6 +3923,8 @@ try {
     if (($argv[2] ?? '') === 'build') addRouteBuildConf($rpdo, $rwork);
     if (($argv[2] ?? '') === 'move') addRouteMoveConf($rpdo, $rwork);
     if (($argv[2] ?? '') === 'router') addRouteApiConf($rwork);
+    if (($argv[2] ?? '') === 'gate') addRouteGateConf($rpdo, $rwork);
+    if (($argv[2] ?? '') === 'master') addRouteMasterConf($rpdo, $rwork);
     $rproc = addRouteServer($rwork, $rport);
     if (($argv[2] ?? '') === 'serve') {
         fwrite(STDERR, 'serving on '.$rport.' with '.$rbase."\n");
@@ -3642,8 +3963,14 @@ try {
         $report['runs']['build'] = getRouteBuild($rwork);
     } elseif (($argv[2] ?? '') === 'entry') {
         $report['runs']['entry'] = getRouteEntry($rwork);
+    } elseif (($argv[2] ?? '') === 'gate') {
+        $report['runs']['gate'] = getRouteGate($rpdo, $rwork);
     } elseif (($argv[2] ?? '') === 'router') {
         $report['runs']['router'] = getRouteApi($rwork);
+    } elseif (($argv[2] ?? '') === 'master') {
+        $report['runs']['master'] = getRouteMaster($rpdo, $rwork);
+        addRouteMasterRows($rpdo);
+        $report['runs']['jobs'] = json_decode((string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg(__FILE__).' '.escapeshellarg($rwork).' masterext 2>&1'), true);
     } elseif (($argv[2] ?? '') === 'move') {
         $report['runs']['move'] = getRouteMove($rpdo, $rwork);
     } elseif (($argv[2] ?? '') === 'time') {

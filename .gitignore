@@ -11,6 +11,16 @@
 /storage/baseline/*
 /storage/migrate/*
 
+# The updater: what a site writes for itself, what only the master holds, the list a release archive brings, and the releases the owner builds
+/storage/update/client/
+/storage/update/master/
+/config/master.php
+/storage/update/files.json
+/storage/release/
+
+# Written by the scheduler job sitemap on each site; a shipped copy would carry the addresses of the stand
+/public/sitemap.xml
+
 
 # Database configs (contains passwords)
 /config/db.php

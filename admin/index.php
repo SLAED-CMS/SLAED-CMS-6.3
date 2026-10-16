@@ -6,6 +6,7 @@
 
 if (!defined('ADMIN_FILE') || !defined('PUBLIC_DIR')) die('Illegal file access');
 require_once BASE_DIR.'/core/system.php';
+if (defined('UPDATE_FILE')) require_once BASE_DIR.'/admin/update.php';
 getLang('admin');
 Cache::setHeaders();
 checkAccess();
@@ -90,7 +91,7 @@ function getAdminPanelBlocks(): string {
     return '';
 }
 
-# Render the panel home: the setup, self-check and version warnings, the administrator notice, and the module grids this administrator may open
+# Render the panel home: the setup, self-check, update and version warnings, the administrator notice, and the module grids this administrator may open
 function getAdminPanel(): void {
     global $conf, $panel, $tpl;
     setHead();
@@ -98,7 +99,7 @@ function getAdminPanel(): void {
     $minver = '8.1.0';
     $info = sprintf(_PHPSETUP, $minver);
     if (file_exists(PUBLIC_DIR.'/setup.php')) $content .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _DELSETUP]);
-    $content .= getSelfCheckAlert();
+    $content .= getSelfCheckAlert().getUpdateAlert();
     if (PHP_VERSION < $minver) $content .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $info]);
     if ($conf['admininfo']) $content .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => $conf['admininfo']]);
     if ($panel) {

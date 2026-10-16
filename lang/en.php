@@ -413,6 +413,7 @@ define('_LOGIN','Login');
 define('_LOGININCOR','Login Incorrect! Please Try Again...');
 define('_LOGOUT','Logout');
 define('_MAN','Man');
+define('_MASTER','Master');
 define('_MATERIALS','%s material|%s materials');
 define('_MATERIALSOF','%s of %s material|%s of %s materials');
 define('_MEDIA','Media');

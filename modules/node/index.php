@@ -226,24 +226,20 @@ function getNodeFormVals(?Node $node, array $ext = []): array {
     ];
 }
 
-# The options of the category selects of the type, from the shared category map with its tree order, limited to the categories the reader offers the writer
+# The categories of the type with their depth, from the shared category map with its tree order, limited to the categories the reader offers the writer
 # A category left out keeps its place in the walk, so an offered subcategory of a hidden or closed parent stands at the level of that parent; the writer checks the post right again
 # Each category is visited once; a branch under a lost parent stands at the top level and a loop follows at the end, so an edit never loses its stored category
-function getNodeCatOptions(NodeType $type, array $pick, bool $empty, array $allow): string {
-    global $tpl;
+function getNodeCatItems(NodeType $type, array $allow): array {
     $map = getCategoryMap($type->name);
-    $out = $empty ? $tpl->getHtmlFrag('select-option', ['value_attr' => '0', 'label_text' => _NO, 'is_selected' => !$pick]) : '';
+    $out = [];
     $seen = [];
-    $walk = function (array $kids, int $deep) use (&$walk, &$out, &$seen, $map, $pick, $allow, $tpl): void {
+    $walk = function (array $kids, int $deep) use (&$walk, &$out, &$seen, $map, $allow): void {
         uasort($kids, fn(array $a, array $b): int => [$a['ordern'], $a['title']] <=> [$b['ordern'], $b['title']]);
         foreach ($kids as $cid => $one) {
             if (isset($seen[$cid])) continue;
             $seen[$cid] = true;
             $show = in_array($cid, $allow, true);
-            if ($show) {
-                $label = str_repeat(html_entity_decode('&nbsp;', ENT_QUOTES, 'UTF-8'), $deep * 4).html_entity_decode(getConst($one['title']), ENT_QUOTES | ENT_HTML5, 'UTF-8');
-                $out .= $tpl->getHtmlFrag('select-option', ['value_attr' => $cid, 'label_text' => $label, 'is_selected' => in_array($cid, $pick, true)]);
-            }
+            if ($show) $out[] = ['value_attr' => $cid, 'label_text' => html_entity_decode(getConst($one['title']), ENT_QUOTES | ENT_HTML5, 'UTF-8'), 'depth' => $deep];
             $walk(array_filter($map, fn(array $v): bool => $v['parent'] === $cid), $show ? $deep + 1 : $deep);
         }
     };
@@ -302,11 +298,16 @@ function getNodeFormRows(NodeType $type, array $vals, array $errs, bool $moder, 
             'value_attr' => $vals['aname'], 'maxlength_num' => 25])];
     }
     if ($feat['categories']) {
-        $allow = getNodeReader()->getNodePostCats($type);
-        $rows[] = ['label' => _CATEGORY, 'for' => 'f-cid', 'field' => $tpl->getHtmlFrag('select', ['name_attr' => 'cid', 'selectid' => 'f-cid',
-            'options_html' => getNodeCatOptions($type, [$vals['cid']], true, $allow)])];
-        $rows[] = ['label' => _NODE_CATS, 'for' => 'f-cids', 'field' => $tpl->getHtmlFrag('select', ['name_attr' => 'cids', 'selectid' => 'f-cids', 'is_multiple' => true,
-            'is_name_array' => true, 'options_html' => getNodeCatOptions($type, $vals['cids'], false, $allow)])];
+        $cats = getNodeCatItems($type, getNodeReader()->getNodePostCats($type));
+        $pad = html_entity_decode('&nbsp;', ENT_QUOTES, 'UTF-8');
+        $opts = $tpl->getHtmlFrag('select-option', ['value_attr' => '0', 'label_text' => _NO, 'is_selected' => !$vals['cid']]);
+        foreach ($cats as $one) {
+            $opts .= $tpl->getHtmlFrag('select-option', ['value_attr' => $one['value_attr'], 'label_text' => str_repeat($pad, $one['depth'] * 4).$one['label_text'],
+                'is_selected' => $one['value_attr'] === $vals['cid']]);
+        }
+        $boxes = array_map(fn(array $v): array => $v + ['name_attr' => 'cids[]', 'is_checked' => in_array($v['value_attr'], $vals['cids'], true)], $cats);
+        $rows[] = ['label' => _CATEGORY, 'for' => 'f-cid', 'field' => $tpl->getHtmlFrag('select', ['name_attr' => 'cid', 'selectid' => 'f-cid', 'options_html' => $opts])];
+        $rows[] = ['label' => _NODE_CATS, 'label_id' => 'f-cids-label', 'field' => $tpl->getHtmlFrag('check-list', ['labelledby' => 'f-cids-label', 'items' => $boxes])];
     }
     $rows[] = ['label' => _NODE_INTRO, 'field' => getNodeEditor($type, 'intro', $vals['intro'], _NODE_INTRO), 'full' => true];
     if ($type->ext !== 'sync') {
@@ -319,8 +320,8 @@ function getNodeFormRows(NodeType $type, array $vals, array $errs, bool $moder, 
             'is_required' => true, 'input_attr' => 'min="0" max="31536000"'])];
     }
     foreach ($fld->getFieldForm($tpl, $type->fields, $vals['fields'], $errs) as $one) {
-        $rows[] = ['label' => $one['label_text'], 'for' => $one['label_for'], 'hint' => trim($one['hint_text'].' '.$one['error_text']), 'hint_id' => $one['hint_id'],
-            'field' => $one['field_html']];
+        $rows[] = ['label' => $one['label_text'], 'for' => $one['label_for'], 'label_id' => $one['label_id'], 'hint' => trim($one['hint_text'].' '.$one['error_text']),
+            'hint_id' => $one['hint_id'], 'field' => $one['field_html']];
     }
     if ($feat['related']) {
         $near = implode(', ', array_column(array_filter($vals['rels'], fn(array $v): bool => $v['type'] === 'related'), 'rid'));
@@ -944,8 +945,8 @@ function setNodeForm(): void {
     setHead(['title' => _ADD, 'ctitle' => getModuleName($type->name)]);
     $rows = '';
     foreach (getNodeFormRows($type, $vals, $errs, checkNodeModer($type), false) as $one) {
-        $rows .= $tpl->getHtmlFrag('form-field-row', ['label' => $one['label'], 'label_for' => $one['for'] ?? '', 'hint' => $one['hint'] ?? '', 'hint_id' => $one['hint_id'] ?? '',
-            'field_html' => $one['field']]);
+        $rows .= $tpl->getHtmlFrag('form-field-row', ['label' => $one['label'], 'label_for' => $one['for'] ?? '', 'label_id' => $one['label_id'] ?? '',
+            'hint' => $one['hint'] ?? '', 'hint_id' => $one['hint_id'] ?? '', 'field_html' => $one['field']]);
     }
     $opts = $tpl->getHtmlFrag('select-option', ['value_attr' => 'preview', 'label_text' => _PREVIEW])
         .$tpl->getHtmlFrag('select-option', ['value_attr' => 'submit', 'label_text' => _SEND, 'is_selected' => true]);

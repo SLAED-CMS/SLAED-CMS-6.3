@@ -16,6 +16,27 @@ function getBlockTabsOps(): array {
     ];
 }
 
+# The where-to-show boxes of a block: every module with its code in a popover, then the home page, all pages, the denial and the fly places
+function getBlockWhereItems(array $where): array {
+    global $conf, $tpl;
+    $mods = [];
+    foreach ($conf['modules'] as $name => $info) {
+        if ((int)($info['type'] ?? 1) === 1) $mods[] = $name;
+    }
+    sort($mods);
+    $out = [];
+    foreach ($mods as $mod) {
+        $out[] = ['is_checked' => in_array($mod, $where, true), 'name_attr' => 'blockwhere[]', 'value_attr' => $mod,
+            'label_html' => $tpl->getHtmlFrag('popover', ['label_text' => getModuleName($mod), 'title_text' => _MODUL.': '.$mod])];
+    }
+    $home = in_array('home', $where, true);
+    $list = ['ihome' => _HOME, 'home' => _INHOME, 'all' => _BLOCK_ALL, 'otricanie' => _DENYING, 'infly' => _INFLY, 'flyfix' => _FLY_FIX];
+    foreach ($list as $key => $label) {
+        $out[] = ['is_checked' => in_array($key, $where, true) && !($key === 'all' && $home), 'name_attr' => 'blockwhere[]', 'value_attr' => $key, 'label_text' => $label];
+    }
+    return $out;
+}
+
 function blocks(): void {
     global $tpl;
     setHead();
@@ -96,36 +117,6 @@ function add(): void {
             }
         }
     }
-    $items = '';
-    $mods = [];
-    foreach ($conf['modules'] as $name => $info) {
-        if ((int)($info['type'] ?? 1) === 1) $mods[] = $name;
-    }
-    sort($mods);
-    foreach ($mods as $mod) {
-        $items .= $tpl->getHtmlFrag('checkbox', [
-            'name_attr' => 'blockwhere[]',
-            'value_attr' => $mod,
-            'label_html' => $tpl->getHtmlFrag('popover', [
-                'label_text' => getModuleName($mod),
-                'title_text' => _MODUL.': '.$mod,
-            ]),
-        ]);
-    }
-    foreach ([
-        ['value' => 'ihome', 'label' => _HOME],
-        ['value' => 'home', 'label' => _INHOME],
-        ['value' => 'all', 'label' => _BLOCK_ALL],
-        ['value' => 'otricanie', 'label' => _DENYING],
-        ['value' => 'infly', 'label' => _INFLY],
-        ['value' => 'flyfix', 'label' => _FLY_FIX],
-    ] as $item) {
-        $items .= $tpl->getHtmlFrag('checkbox', [
-            'name_attr' => 'blockwhere[]',
-            'value_attr' => $item['value'],
-            'label_html' => $item['label'],
-        ]);
-    }
     $rows[] = [
         'label_for' => 'f-bfile',
         'label_html' => _FILENAME, 'hint_html' => _FILENAMEIN, 'hint_id' => $hntid = getFieldIds('f-bfile')['hint'],
@@ -163,7 +154,7 @@ function add(): void {
     $rows[] = [
         'label_html' => _BLOCK_VIEW,
         'label_id' => $labid = getFieldIds('', 'blockwhere')['label'],
-        'field_html' => $tpl->getHtmlPart('div', ['is_radio_group' => true, 'labelledby' => $labid, 'content_html' => $items]),
+        'field_html' => $tpl->getHtmlFrag('check-list', ['labelledby' => $labid, 'items' => getBlockWhereItems([])]),
         'is_full' => true,
     ];
     if ($conf['multilingual'] == 1) {
@@ -610,44 +601,10 @@ function edit(): void {
                 .$tpl->getHtmlFrag('select-option', ['value_attr' => 'f', 'label_text' => _BANNERDOWN, 'is_selected' => (string)$bpos === 'f']),
         ]),
     ];
-    $where = explode(',', (string)($which ?? ''));
-    $items = '';
-    $mods = [];
-    foreach ($conf['modules'] as $name => $info) {
-        if ((int)($info['type'] ?? 1) === 1) $mods[] = $name;
-    }
-    sort($mods);
-    foreach ($mods as $mod) {
-        $items .= $tpl->getHtmlFrag('checkbox', [
-            'is_checked' => in_array($mod, $where),
-            'name_attr' => 'blockwhere[]',
-            'value_attr' => $mod,
-            'label_html' => $tpl->getHtmlFrag('popover', [
-                'label_text' => getModuleName($mod),
-                'title_text' => _MODUL.': '.$mod,
-            ]),
-        ]);
-    }
-    $homeon = in_array('home', $where);
-    foreach ([
-        ['value' => 'ihome', 'label' => _HOME, 'checked' => in_array('ihome', $where)],
-        ['value' => 'home', 'label' => _INHOME, 'checked' => $homeon],
-        ['value' => 'all', 'label' => _BLOCK_ALL, 'checked' => in_array('all', $where) && !$homeon],
-        ['value' => 'otricanie', 'label' => _DENYING, 'checked' => in_array('otricanie', $where)],
-        ['value' => 'infly', 'label' => _INFLY, 'checked' => in_array('infly', $where)],
-        ['value' => 'flyfix', 'label' => _FLY_FIX, 'checked' => in_array('flyfix', $where)],
-    ] as $item) {
-        $items .= $tpl->getHtmlFrag('checkbox', [
-            'is_checked' => $item['checked'],
-            'name_attr' => 'blockwhere[]',
-            'value_attr' => $item['value'],
-            'label_html' => $item['label'],
-        ]);
-    }
     $rows[] = [
         'label_html' => _BLOCK_VIEW,
         'label_id' => $labid = getFieldIds('', 'blockwhere')['label'],
-        'field_html' => $tpl->getHtmlPart('div', ['is_radio_group' => true, 'labelledby' => $labid, 'content_html' => $items]),
+        'field_html' => $tpl->getHtmlFrag('check-list', ['labelledby' => $labid, 'items' => getBlockWhereItems(explode(',', (string)($which ?? '')))]),
         'is_full' => true,
     ];
     if ($conf['multilingual'] == 1) {

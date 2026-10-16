@@ -424,32 +424,19 @@ function config(): void {
         'content_html' => $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _SEARCHADDSEL.': '.intval(getVar('get', 'pick', 'num', 0))]),
     ]);
     $cont .= checkPerms(CONFIG_DIR.'/search.php');
-    $modshtml = '';
+    $mods = [];
     $curr = getSearchcurr();
     foreach (scandir(BASE_DIR.'/modules') as $file) {
         if (str_contains($file, '.')) continue;
         if ($allow && !in_array($file, $allow, true)) continue;
-        $modshtml .= $tpl->getHtmlFrag('checkbox', [
-            'is_right' => true,
-            'describedby' => 'f-search-hint',
-            'name_attr' => 'search[]',
-            'value_attr' => $file,
-            'is_checked' => in_array($file, $curr, true),
-            'label_text' => getModuleName($file),
-            'code_text' => $file,
-        ]);
+        $mods[] = ['name_attr' => 'search[]', 'value_attr' => $file, 'is_checked' => in_array($file, $curr, true),
+            'label_text' => getModuleName($file), 'code_text' => $file];
     }
-    $typehtml = '';
+    $types = [];
     $hidden = [['nameattr' => 'token', 'valueattr' => getSiteToken('search')]];
     foreach (getNodeTypeMap() as $name => $type) {
-        $typehtml .= $tpl->getHtmlFrag('checkbox', [
-            'is_right' => true,
-            'name_attr' => 'ntype[]',
-            'value_attr' => $name,
-            'is_checked' => $type->settings['integrations']['search'],
-            'label_text' => getModuleName($name),
-            'code_text' => $name,
-        ]);
+        $types[] = ['name_attr' => 'ntype[]', 'value_attr' => $name, 'is_checked' => $type->settings['integrations']['search'],
+            'label_text' => getModuleName($name), 'code_text' => $name];
         $hidden[] = ['nameattr' => 'ver['.$name.']', 'valueattr' => (string)$type->version];
     }
     $cfgrows = [
@@ -460,8 +447,10 @@ function config(): void {
                 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]],
             ]),
         ],
-        ['label_html' => _SMODULE, 'hint_html' => _CTRLINFO, 'hint_id' => 'f-search-hint', 'field_html' => $modshtml, 'is_full' => true],
-        ...($typehtml !== '' ? [['label_html' => _NODE, 'field_html' => $typehtml, 'is_full' => true]] : []),
+        ['label_html' => _SMODULE, 'label_id' => $mid = getFieldIds('', 'search')['label'],
+            'field_html' => $tpl->getHtmlFrag('check-list', ['labelledby' => $mid, 'items' => $mods]), 'is_full' => true],
+        ...($types ? [['label_html' => _NODE, 'label_id' => $tid = getFieldIds('', 'ntype')['label'],
+            'field_html' => $tpl->getHtmlFrag('check-list', ['labelledby' => $tid, 'items' => $types]), 'is_full' => true]] : []),
         [
             'label_for' => 'f-slet', 'label_html' => _SEARCHLETMIN, 'hint_html' => _SEARCHLETINFO, 'hint_id' => $hntid = getFieldIds('f-slet')['hint'],
             'field_html' => $tpl->getHtmlFrag('input', [

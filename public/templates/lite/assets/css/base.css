@@ -145,6 +145,8 @@
 
   /* Components: form field, shared by input, textarea, select and file controls */
   --sl-field-height: 30px;
+  /* A list that picks several options grows up to this height, and a longer one scrolls inside it */
+  --sl-select-height: 240px;
   --sl-field-pad-x: var(--sl-space-5);
   --sl-field-pad-y: var(--sl-space-3);
   --sl-field-bg: var(--sl-bg);
@@ -395,6 +397,8 @@
   --sl-beam-width: 30%;
   --sl-beam-dur: 8s;
   --sl-beam-bg: light-dark(rgba(255, 255, 255, 0.46), rgba(255, 255, 255, 0.42));
+  /* The light that follows the pointer over the page */
+  --sl-pointer-width: 300px;
   --sl-edge-width: 40px;
   --sl-edge-height: 190px;
   --sl-editor-height: 100px;

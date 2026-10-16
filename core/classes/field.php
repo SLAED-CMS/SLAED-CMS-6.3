@@ -104,11 +104,13 @@ final class Field {
             $hint = $this->getFieldText($rule['intro']);
             $code = self::TEXTS[$errors[$name] ?? ''] ?? '';
             $error = ($code !== '' && defined($code)) ? constant($code) : '';
+            $group = self::TYPES[$rule['type']]['control'] === 'select' && $rule['multi'];
             $base = ['name_attr' => 'field['.$name.']', 'input_id' => $fid, 'is_required' => $rule['req'], 'describedby' => ($hint !== '' || $error !== '') ? $fid.'-hint' : ''];
             $rows[$name] = [
                 'name' => $name,
                 'type' => $rule['type'],
-                'label_for' => $fid,
+                'label_for' => $group ? '' : $fid,
+                'label_id' => $group ? $fid.'-label' : '',
                 'label_text' => $this->getFieldText($rule['title']),
                 'hint_id' => $base['describedby'],
                 'hint_text' => $hint,
@@ -406,13 +408,20 @@ final class Field {
         $control = self::TYPES[$rule['type']]['control'];
         if ($control === 'select') {
             $pick = array_flip(array_filter((array)$val, 'is_string'));
-            $html = $rule['multi'] ? '' : $tpl->getHtmlFrag('select-option', ['value_attr' => '', 'label_text' => _NO, 'is_selected' => !$pick]);
-            foreach ($opts['items'] as $key => $item) {
-                $text = $this->getFieldText($item['title']);
-                if ($item['active']) $html .= $tpl->getHtmlFrag('select-option', ['value_attr' => $key, 'label_text' => $text, 'is_selected' => isset($pick[$key])]);
+            $live = array_filter($opts['items'], fn(array $v): bool => $v['active']);
+            if ($rule['multi']) {
+                $boxes = [];
+                foreach ($live as $key => $item) {
+                    $boxes[] = ['name_attr' => $base['name_attr'].'[]', 'value_attr' => $key, 'label_text' => $this->getFieldText($item['title']),
+                        'is_checked' => isset($pick[$key])];
+                }
+                return $tpl->getHtmlFrag('check-list', ['labelledby' => $base['input_id'].'-label', 'describedby' => $base['describedby'], 'items' => $boxes]);
             }
-            $more = ['selectid' => $base['input_id'], 'options_html' => $html, 'is_multiple' => $rule['multi'], 'is_name_array' => $rule['multi']];
-            $more['select_attr'] = $rule['req'] ? 'required' : '';
+            $html = $tpl->getHtmlFrag('select-option', ['value_attr' => '', 'label_text' => _NO, 'is_selected' => !$pick]);
+            foreach ($live as $key => $item) {
+                $html .= $tpl->getHtmlFrag('select-option', ['value_attr' => $key, 'label_text' => $this->getFieldText($item['title']), 'is_selected' => isset($pick[$key])]);
+            }
+            $more = ['selectid' => $base['input_id'], 'options_html' => $html, 'select_attr' => $rule['req'] ? 'required' : ''];
             return $tpl->getHtmlFrag('select', $more + $base);
         }
         if ($control === 'checkbox') {

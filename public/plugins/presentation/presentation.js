@@ -6,10 +6,6 @@
 
     var STEP = 4000;
 
-    function isStill() {
-        return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    }
-
     // The position read out loud, from the format the module wrote on the gallery
     function getCount(form, at, all) {
         return form.replace('%d', at).replace('%d', all);
@@ -66,7 +62,7 @@
                 update();
                 return;
             }
-            track.scrollTo({ left: cards[next].offsetLeft, behavior: soft && !isStill() ? 'smooth' : 'instant' });
+            track.scrollTo({ left: cards[next].offsetLeft, behavior: soft && !window.isMotionStill() ? 'smooth' : 'instant' });
         };
         root.addEventListener('click', function (event) {
             var step = event.target.closest('[data-sl-pres-step]');
@@ -105,7 +101,7 @@
         var arm = function () {
             window.clearInterval(timer);
             timer = shown && !held ? window.setInterval(function () {
-                if (document.hidden || isStill()) return;
+                if (document.hidden || window.isMotionStill()) return;
                 step();
             }, STEP) : 0;
         };
@@ -382,7 +378,7 @@
             pen.globalAlpha = 0.22;
             pen.fill();
             pen.globalAlpha = 1;
-            if (!isStill()) window.requestAnimationFrame(paint);
+            if (!window.isMotionStill()) window.requestAnimationFrame(paint);
         };
         window.requestAnimationFrame(paint);
     }
@@ -390,7 +386,7 @@
     // A figure that breathes: the value the module wrote is the centre, and every few seconds it moves within an eighth of itself
     function setLive(node) {
         var base = parseInt(node.textContent, 10);
-        if (isNaN(base) || isStill()) return;
+        if (isNaN(base) || window.isMotionStill()) return;
         window.setInterval(function () {
             if (document.hidden) return;
             node.textContent = getFigure(base + Math.round((Math.random() - 0.5) * base / 4));
@@ -480,7 +476,7 @@
     // lights it. The plugin clones the cards the template rendered and writes positions as --sl-d-*; every phase is a share
     // of STEP, the beat the CSS transitions of the traveller carry, and the log grows by a clone of its own first row
     function setGuard(root) {
-        if (root.getAttribute('data-sl-pres-ready') === '1' || isStill()) return;
+        if (root.getAttribute('data-sl-pres-ready') === '1' || window.isMotionStill()) return;
         var scene = root.querySelector('.sl-pres-guard-scene');
         var gate = root.querySelector('.sl-pres-gate');
         var pool = root.querySelectorAll('.sl-pres-travelers > .sl-pres-traveler');
@@ -611,7 +607,7 @@
     // case and the row bars take fresh shares. Cloning the first param chip is the only
     // markup ever made here; everything else is text and attributes on what the template rendered
     function setPdo(root) {
-        if (root.getAttribute('data-sl-pres-ready') === '1' || isStill()) return;
+        if (root.getAttribute('data-sl-pres-ready') === '1' || window.isMotionStill()) return;
         var stage = root.querySelector('.sl-pres-pdo-stage');
         var cases = root.querySelectorAll('[data-sl-pres-cases] > div');
         var nodes = root.querySelectorAll('.sl-pres-pdo-stage > .sl-pres-node');
@@ -701,7 +697,7 @@
 
     // The event strip: the last card comes to the front with the time of now, so the five on screen keep changing
     function setEvents(root) {
-        if (root.getAttribute('data-sl-pres-ready') === '1' || isStill() || root.children.length < 2) return;
+        if (root.getAttribute('data-sl-pres-ready') === '1' || window.isMotionStill() || root.children.length < 2) return;
         root.setAttribute('data-sl-pres-ready', '1');
         setAutoplay(root, function () {
             var last = root.lastElementChild;
@@ -757,7 +753,7 @@
 
     // The poll heartbeat of the statistics board: the word the template wrote, then one to three dots, round and round
     function setSync(el) {
-        if (el.getAttribute('data-sl-pres-ready') === '1' || isStill()) return;
+        if (el.getAttribute('data-sl-pres-ready') === '1' || window.isMotionStill()) return;
         el.setAttribute('data-sl-pres-ready', '1');
         var base = el.textContent;
         var n = 0;
@@ -772,7 +768,7 @@
     // core lines, the words of the parser cache and the template, the four states of the side grid and the case of the
     // decision tree - and walks the packet's nodes one by one; a miss ends with the parser cache storing the markup
     function setFlow(root) {
-        if (root.getAttribute('data-sl-pres-ready') === '1' || isStill()) return;
+        if (root.getAttribute('data-sl-pres-ready') === '1' || window.isMotionStill()) return;
         var scene = root.querySelector('.sl-pres-flow');
         var pool = root.querySelectorAll('[data-sl-pres-flows] > div');
         var nodes = root.querySelectorAll('.sl-pres-flow > .sl-pres-node');
@@ -847,32 +843,6 @@
     }
 
     function setPresentation() {
-        var root = document.querySelector('.sl-pres');
-        if (root && root.getAttribute('data-sl-pres-light') !== '1') {
-            root.setAttribute('data-sl-pres-light', '1');
-            var frame = 0;
-            var point = { left: 0, top: 0 };
-            document.addEventListener('pointermove', function (event) {
-                if (event.pointerType === 'touch' || isStill()) return;
-                point.left = event.clientX;
-                point.top = event.clientY;
-                if (frame) return;
-                frame = window.requestAnimationFrame(function () {
-                    root.style.setProperty('--sl-d-pointer-x', point.left + 'px');
-                    root.style.setProperty('--sl-d-pointer-y', point.top + 'px');
-                    root.setAttribute('data-sl-pres-pointer', '');
-                    frame = 0;
-                });
-            }, { passive: true });
-            var clear = function () {
-                window.cancelAnimationFrame(frame);
-                frame = 0;
-                root.removeAttribute('data-sl-pres-pointer');
-            };
-            document.documentElement.addEventListener('pointerleave', clear);
-            document.addEventListener('pointercancel', clear);
-            window.addEventListener('blur', clear);
-        }
         var list = document.querySelectorAll('[data-sl-pres]');
         for (var i = 0; i < list.length; i++) {
             var kind = list[i].getAttribute('data-sl-pres');

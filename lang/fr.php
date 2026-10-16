@@ -413,6 +413,7 @@ define('_LOGIN','Se connecter');
 define('_LOGININCOR','Informations de connexion incorrectes! Essayez encore...');
 define('_LOGOUT','Sortie');
 define('_MAN','Homme');
+define('_MASTER','Master');
 define('_MATERIALS','%s publication|%s publications');
 define('_MATERIALSOF','%s sur %s publication|%s sur %s publications');
 define('_MEDIA','Catalogue de médias');

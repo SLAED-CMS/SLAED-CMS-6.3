@@ -143,7 +143,7 @@ function add(): void {
     setHead();
     $cont = getTplAdminTabs(['ops' => ['name=admins', 'name=admins&op=add', 'name=admins&op=info'], 'tabs' => [_HOME, _ADD, _MANUAL], 'tab' => 1]);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => array_values((array)$stop)]);
-    $items = '';
+    $items = [];
     $mods = getAdminModuleNames((string)$mods);
     $allow = [];
     foreach ($conf['modules'] as $mod => $info) {
@@ -153,30 +153,19 @@ function add(): void {
     }
     sort($allow);
     foreach ($allow as $mod) {
-        $items .= $tpl->getHtmlFrag('checkbox', [
-            'is_checked' => in_array($mod, $mods, true),
-            'name_attr' => 'modules[]',
-            'value_attr' => $mod,
-            'label_html' => $tpl->getHtmlFrag('popover', [
-                'label_text' => getModuleName($mod),
-                'title_text' => _MODUL.': '.$mod,
-            ]),
-        ]);
+        $items[] = ['is_checked' => in_array($mod, $mods, true), 'name_attr' => 'modules[]', 'value_attr' => $mod,
+            'label_html' => $tpl->getHtmlFrag('popover', ['label_text' => getModuleName($mod), 'title_text' => _MODUL.': '.$mod])];
     }
     $nodes = ['node' => [_NODE_MANAGE, 'node']];
     foreach (getNodeTypeMap() as $name => $type) {
         $nodes['node-'.$name] = [(str_starts_with($type->title, '_') && defined($type->title)) ? constant($type->title) : $type->title, $name];
     }
     foreach ($nodes as $key => [$label, $hint]) {
-        $items .= $tpl->getHtmlFrag('checkbox', [
-            'is_checked' => in_array($key, $mods, true),
-            'name_attr' => 'modules[]',
-            'value_attr' => $key,
-            'label_html' => $tpl->getHtmlFrag('popover', ['label_text' => $label, 'title_text' => _MODUL.': '.$hint]),
-        ]);
+        $items[] = ['is_checked' => in_array($key, $mods, true), 'name_attr' => 'modules[]', 'value_attr' => $key,
+            'label_html' => $tpl->getHtmlFrag('popover', ['label_text' => $label, 'title_text' => _MODUL.': '.$hint])];
     }
     $perid = getFieldIds('', 'modules')['label'];
-    $perm = $tpl->getHtmlPart('div', ['is_radio_group' => true, 'labelledby' => $perid, 'content_html' => $items]);
+    $perm = $tpl->getHtmlFrag('check-list', ['labelledby' => $perid, 'items' => $items]);
     $txt = _FOLLOWINGMEM."\n\n"
         ._NICKNAME.': [login]'."\n"
         ._PASSWORD.': [pass]';

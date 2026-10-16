@@ -558,11 +558,11 @@ function config(): void {
     ])];
     $fids = getFieldIds('f-module');
     $rows[] = [
-        'label_for' => $fids['input'],
         'label_html' => _PUTINHOME,
-        'hint_html' => _PUTINHOMEINFO.' '._CTRLINFO,
+        'label_id' => $fids['label'],
+        'hint_html' => _PUTINHOMEINFO,
         'hint_id' => $fids['hint'],
-        'field_html' => getTplModuleSelect('module', $conf['module'], 1, [], $fids['input'], $fids['hint']),
+        'field_html' => getTplModuleChecks('module', $conf['module'], [], $fids['label'], $fids['hint']),
     ];
     $rows[] = ['label_html' => _EDITORUSER, 'field_html' => Editor::getSelect('editor_user', (string)($conf['editor']['user'] ?? 'plain'), 'content', 'user')];
     $list = timezone_identifiers_list();
@@ -593,23 +593,10 @@ function config(): void {
         _AVARIABLES.': SERVER',
         _AQUERY_DB.': MySQL',
     ];
-    $opts = '';
-    foreach ($vals as $key => $val) {
-        if ($val != '') {
-            $opts .= $tpl->getHtmlFrag('select-option', [
-                'value_attr' => (string)$key,
-                'label_text' => $val,
-                'is_selected' => !empty($vars[$key]),
-            ]);
-        }
-    }
-    $rows[] = ['label_html' => _VARIABLES, 'hint_html' => _CTRLINFO, 'hint_id' => $hntid = getFieldIds('', 'variables[]')['hint'], 'field_html' => $tpl->getHtmlFrag('select', [
-        'describedby' => $hntid,
-        'name_attr' => 'variables[]',
-        'options_html' => $opts,
-        'is_config' => true,
-        'select_attr' => 'multiple="multiple"',
-    ])];
+    $boxes = [];
+    foreach ($vals as $key => $val) $boxes[] = ['name_attr' => 'variables[]', 'value_attr' => (string)$key, 'label_text' => $val, 'is_checked' => !empty($vars[$key])];
+    $rows[] = ['label_html' => _VARIABLES, 'label_id' => $labid = getFieldIds('', 'variables')['label'],
+        'field_html' => $tpl->getHtmlFrag('check-list', ['labelledby' => $labid, 'items' => $boxes])];
     $opts = $tpl->getHtmlFrag('select-option', [
         'value_attr' => '0',
         'label_text' => _MVADMIN,
@@ -1057,7 +1044,6 @@ function save(): void {
         }
 
         $cont = [
-            'version' => '6.3.0 Phoenix',
             'webroot' => ($conf['webroot'] ?? '') === 'project' ? 'project' : 'public',
             'sitename' => getVar('post', 'sitename', 'text'),
             'homeurl' => $xhomeurl,

@@ -1,5 +1,5 @@
 {
-    "generated": "2026-10-11T23:10:15Z",
+    "generated": "2026-10-16T10:27:30Z",
     "themes": {
         "admin": {
             "count": 0,
@@ -24,7 +24,7 @@
             "dup": 0,
             "names": 0,
             "dead": 0,
-            "single": 197,
+            "single": 198,
             "alias": 0,
             "unsat": 0,
             "unmet": 0,
@@ -32,7 +32,7 @@
             "clash": 0,
             "classes": 0,
             "important": 13,
-            "tokens": 443,
+            "tokens": 445,
             "contrast": 0
         }
     },
@@ -648,6 +648,7 @@
             "--sl-pmf-text-width",
             "--sl-pmf-who-height",
             "--sl-pmf-who-width",
+            "--sl-pointer-width",
             "--sl-popover-min-width",
             "--sl-pres-bg",
             "--sl-pres-border",
@@ -729,6 +730,7 @@
             "--sl-seg-pad-x",
             "--sl-seg-pad-y",
             "--sl-seg-text",
+            "--sl-select-height",
             "--sl-sep-height",
             "--sl-session-gap",
             "--sl-shadow-float",

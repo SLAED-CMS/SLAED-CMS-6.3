@@ -36,7 +36,7 @@
       "user": ".sl-block-login input[name=\"user_name\"]",
       "pass": ".sl-block-login input[name=\"user_password\"]",
       "submit": ".sl-block-login button[type=\"submit\"], .sl-block-login input[type=\"submit\"]",
-      "proof": "a[href*=\"op=logout\"], .sl-logout",
+      "proof": "a[href*=\"account/logout\"], a[href*=\"op=logout\"], .sl-logout",
       "gone": ".sl-block-login input[name=\"user_password\"]"
     },
     "admin": {

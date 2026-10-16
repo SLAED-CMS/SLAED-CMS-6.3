@@ -83,11 +83,11 @@ final class FieldViewTest extends TestCase
             ['site' => 'format', 'mail' => 'nonsense']
         );
         $this->assertSame(['name', 'kind', 'flag', 'note', 'site', 'mail', 'when'], array_keys($rows), 'A hidden field got a row or the order is not canonical');
-        $keys = ['name', 'type', 'label_for', 'label_text', 'hint_id', 'hint_text', 'error_text', 'is_required', 'field_html'];
+        $keys = ['name', 'type', 'label_for', 'label_id', 'label_text', 'hint_id', 'hint_text', 'error_text', 'is_required', 'field_html'];
         foreach ($rows as $row) $this->assertSame($keys, array_keys($row));
         $this->assertSame(
-            ['f-field-name', 'Name', 'f-field-name-hint', 'Your "name" & more', '', true],
-            array_slice(array_values($rows['name']), 2, 6),
+            ['f-field-name', '', 'Name', 'f-field-name-hint', 'Your "name" & more', '', true],
+            array_slice(array_values($rows['name']), 2, 7),
             'The hint is plain text and is never escaped by the class'
         );
         $this->assertStringContainsString('"name_attr":"field[name]"', $rows['name']['field_html']);
@@ -100,12 +100,15 @@ final class FieldViewTest extends TestCase
             'A known code gets its message and an unknown one none'
         );
         $kind = $rows['kind']['field_html'];
-        $this->assertStringStartsWith('[select:', $kind);
-        $this->assertStringContainsString('"is_multiple":true', $kind);
-        $this->assertStringContainsString('"is_name_array":true', $kind);
-        $this->assertSame(2, substr_count($kind, 'select-option'), 'A multiple select offers its two active options and no empty one');
+        $this->assertStringStartsWith('[check-list:', $kind, 'A multiple select is a list of boxes, so several options need no modifier key');
+        $list = json_decode(substr($kind, strlen('[check-list:'), -1), true);
+        $this->assertSame(['', 'f-field-kind-label'], [$rows['kind']['label_for'], $rows['kind']['label_id']], 'A label cannot point at a group of boxes, so it names one');
+        $this->assertSame('f-field-kind-label', $list['labelledby']);
+        $this->assertCount(2, $list['items'], 'A multiple select offers its two active options and no empty one');
         $this->assertStringNotContainsString('Old', $kind, 'A disabled option is offered for a new choice');
-        $this->assertMatchesRegularExpression('/select-option:\{\\\\"value_attr\\\\":\\\\"pdf\\\\",\\\\"label_text\\\\":\\\\"PDF\\\\",\\\\"is_selected\\\\":true/', $kind);
+        $boxes = array_column($list['items'], null, 'value_attr');
+        $this->assertSame(['name_attr' => 'field[kind][]', 'value_attr' => 'pdf', 'label_text' => 'PDF', 'is_checked' => true], $boxes['pdf']);
+        $this->assertFalse($boxes['doc']['is_checked']);
         $flag = $rows['flag']['field_html'];
         $this->assertStringStartsWith('[hidden:{"name_attr":"field[flag]","value_attr":"0"}][checkbox:', $flag, 'An unchecked switch would post nothing');
         $this->assertStringContainsString('"is_checked":true', $flag);

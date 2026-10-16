@@ -344,6 +344,11 @@ function getInstallSetup(PDO $pdo, string $base): array {
     $bare = fn(string $v): bool => is_dir($isite.'/uploads/node/'.$v) && !glob($isite.'/uploads/node/'.$v.'/{index.html,.htaccess}', GLOB_BRACE);
     $out['dirs'] = array_values(array_filter(IPROFS, $bare));
     $out['mark'] = array_key_exists('node', getInstallConf('update')['update'] ?? []);
+    $ustate = json_decode((string)(is_file($isite.'/storage/update/client/state.json') ? file_get_contents($isite.'/storage/update/client/state.json') : ''), true) ?: [];
+    $umark = getInstallConf('update')['update'] ?? [];
+    $out['updater'] = ['check' => $umark['check'] ?? null, 'steps' => array_keys($umark['steps'] ?? []), 'sid' => (string)($ustate['sid'] ?? ''),
+        'home' => hash_equals(hash('sha256', rtrim((string)(getInstallConf('global')['homeurl'] ?? ''), '/')), (string)($ustate['home'] ?? '')),
+        'line' => getInstallConf('scheduler')['scheduler']['jobs']['updatecheck']['schedule'] ?? ''];
     $out['starter'] = $pdo->query('SELECT t.name, n.cid, n.uid, n.aname, n.title, n.status, n.home, n.comon FROM '.IPREF.'_nodes AS n'
         .' INNER JOIN '.IPREF.'_node_types AS t ON t.id = n.tid')->fetchAll(PDO::FETCH_ASSOC);
     $out['routes'] = $pdo->query('SELECT kind, path, state FROM '.IPREF.'_routes ORDER BY id')->fetchAll(PDO::FETCH_NUM);

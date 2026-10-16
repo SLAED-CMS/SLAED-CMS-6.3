@@ -17,6 +17,18 @@ final class UpdateSiteTest extends TestCase
     # Over real HTTP update.php opens without a login, its run is refused by the preflight, stopped by a broken schema file, then runs three times
     # The result is compared with a clean installation, two guests vote in one poll, the panel and Node are walked, and a last run follows a deleted material
     # The fixture tests/Fixtures/update62early is an earlier 6.2 site with narrower and signed columns the same update brings to the same clean schema
+    public static function setUpBeforeClass(): void
+    {
+        require_once BASE_DIR.'/core/version.php';
+    }
+
+    # The marks of config/update.php with the step marks reduced to their versions, since each carries the moment of its run
+    private function getMarks(array $marks): array
+    {
+        if (isset($marks['steps'])) $marks['steps'] = array_keys($marks['steps']);
+        return $marks;
+    }
+
     # Run the update probe once per 6.2 fixture and memoize its update report; both use the configuration of update62, a probe that fails is a failure, not a skip
     private function getRun(string $name = 'update62'): array
     {
@@ -67,7 +79,7 @@ final class UpdateSiteTest extends TestCase
         $this->assertStringContainsString('module registry: old_modules could not be read', $run['nomods'][0]);
         $this->assertSame([[], true, 0], array_slice($run['nomods'], 1), 'A registry that could not be read left the mark modules or wrote the file');
         $this->checkBrokenRun($run);
-        $this->assertSame(['modules' => '6.3.0'], $run['broken']['marks']);
+        $this->assertSame(['modules' => '6.3.0'], $run['broken']['marks'], 'A run stopped at the schema file left a step mark of the code');
         $this->assertSame(['points' => 'missing', 'ratings' => 'missing', 'fields' => 'missing'], $run['broken']['manifest']);
         $this->assertSame(503, $run['broken']['guest']);
         $this->assertSame(1, $run['broken']['dupes'], 'The schema file did not remove the later poll vote of one address');
@@ -80,10 +92,10 @@ final class UpdateSiteTest extends TestCase
     public function aRealSiteFinishesOnTheFirstRun(): void
     {
         $run = $this->getRun();
-        $marks = ['fields' => '6.3.0', 'modules' => '6.3.0', 'points' => '6.3.0', 'ratings' => '6.3.0'];
+        $marks = ['fields' => '6.3.0', 'modules' => '6.3.0', 'points' => '6.3.0', 'ratings' => '6.3.0', 'steps' => [SL_VERSION]];
         foreach (['first', 'second', 'third'] as $name) {
             $this->assertSame([], $run[$name]['failed'], $name);
-            $this->assertSame($marks, $run[$name]['marks'], $name);
+            $this->assertSame($marks, $this->getMarks($run[$name]['marks']), $name);
             $this->assertSame(['points' => 'verified', 'ratings' => 'verified', 'fields' => 'verified'], $run[$name]['manifest'], $name);
             $this->assertSame('1', $run[$name]['close'], $name);
             $this->assertSame([3, 35], $run[$name]['users'], $name);
@@ -233,10 +245,10 @@ final class UpdateSiteTest extends TestCase
         $this->assertSame([[0, ''], [4, 30]], [$run['dump'], $run['before']]);
         $this->assertSame([[], true, 1], array_slice($run['nomods'], 1), 'The negative balance was not set to 0 and counted before the schema file');
         $this->checkBrokenRun($run);
-        $marks = ['fields' => '6.3.0', 'modules' => '6.3.0', 'points' => '6.3.0', 'ratings' => '6.3.0'];
+        $marks = ['fields' => '6.3.0', 'modules' => '6.3.0', 'points' => '6.3.0', 'ratings' => '6.3.0', 'steps' => [SL_VERSION]];
         foreach (['first', 'second', 'third'] as $name) {
             $this->assertSame([], $run[$name]['failed'], $name);
-            $this->assertSame($marks, $run[$name]['marks'], $name);
+            $this->assertSame($marks, $this->getMarks($run[$name]['marks']), $name);
             $this->assertSame(['points' => 'verified', 'ratings' => 'verified', 'fields' => 'verified'], $run[$name]['manifest'], $name);
             $this->assertSame([[4, 35], 0], [$run[$name]['users'], $run[$name]['negative']], $name);
         }

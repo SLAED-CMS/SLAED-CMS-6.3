@@ -413,6 +413,7 @@ define('_LOGIN','Login');
 define('_LOGININCOR','Login fehlerhaft! Bitte noch einmal versuchen...');
 define('_LOGOUT','Abmelden');
 define('_MAN','Mann');
+define('_MASTER','Master');
 define('_MATERIALS','%s Beitrag|%s Beiträge');
 define('_MATERIALSOF','%s von %s Beitrag|%s von %s Beiträgen');
 define('_MEDIA','Media');

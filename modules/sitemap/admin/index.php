@@ -170,27 +170,23 @@ function config(): void {
             ['value' => '0', 'label' => _NO],
         ],
     ]);
-    $typehtml = '';
+    $types = [];
     $hidden = [
         ['nameattr' => 'name', 'valueattr' => 'sitemap'],
         ['nameattr' => 'op', 'valueattr' => 'configsave'],
         ['nameattr' => 'token', 'valueattr' => getSiteToken('sitemap')],
     ];
     foreach (getNodeTypeMap() as $name => $type) {
-        $typehtml .= $tpl->getHtmlFrag('checkbox', [
-            'is_right' => true,
-            'name_attr' => 'ntype[]',
-            'value_attr' => $name,
-            'is_checked' => $type->settings['integrations']['sitemap'],
-            'label_text' => getModuleName($name),
-            'code_text' => $name,
-        ]);
+        $types[] = ['name_attr' => 'ntype[]', 'value_attr' => $name, 'is_checked' => $type->settings['integrations']['sitemap'],
+            'label_text' => getModuleName($name), 'code_text' => $name];
         $hidden[] = ['nameattr' => 'ver['.$name.']', 'valueattr' => (string)$type->version];
     }
     $mods = array_values(array_diff(scandir(BASE_DIR.'/modules') ?: [], ['.', '..', 'node']));
     $rows = [
-        ['label_html' => _MODULES, 'field_html' => getTplModuleSelect('mod', $conf['sitemap']['mod'] ?? '', 1, $mods), 'is_full' => true],
-        ...($typehtml !== '' ? [['label_html' => _NODE, 'field_html' => $typehtml, 'is_full' => true]] : []),
+        ['label_html' => _MODULES, 'label_id' => $labid = getFieldIds('', 'mod')['label'], 'field_html' => getTplModuleChecks('mod', $conf['sitemap']['mod'] ?? '', $mods, $labid),
+            'is_full' => true],
+        ...($types ? [['label_html' => _NODE, 'label_id' => $tid = getFieldIds('', 'ntype')['label'],
+            'field_html' => $tpl->getHtmlFrag('check-list', ['labelledby' => $tid, 'items' => $types]), 'is_full' => true]] : []),
         [
             'label_for' => 'f-auto-t', 'label_html' => _MAP_AUTO_T,
             'field_html' => $tpl->getHtmlFrag('input', [

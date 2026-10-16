@@ -507,7 +507,8 @@ function getFieldsInRows(array $data = []): array {
     $rows = [];
     foreach ($fld->getFieldForm($tpl, $rules, $vals, $post ? $fld->checkFieldValues($rules, $post) : []) as $row) {
         $hint = trim($row['hint_text'].' '.$row['error_text']);
-        $rows[] = ['label' => $row['label_text'], 'label_for' => $row['label_for'], 'hint' => $hint, 'hint_id' => $row['hint_id'], 'control_html' => $row['field_html']];
+        $rows[] = ['label' => $row['label_text'], 'label_for' => $row['label_for'], 'label_id' => $row['label_id'], 'hint' => $hint, 'hint_id' => $row['hint_id'],
+            'control_html' => $row['field_html']];
     }
     return $rows;
 }
@@ -1311,34 +1312,17 @@ function getTplLanguageOptions(string $lang = '', string $typ = ''): string {
     return $cont;
 }
 
-# Render a multi-select for modules: the directory node is the code of every registered type and has no route of its own, the active types stand beside the modules
-function getTplModuleSelect(string $name, string $mod, string $no = '', array $allow = [], string $sid = '', string $desc = ''): string {
+# Render a check list of modules: the directory node is the code of every registered type and has no route of its own, the active types stand beside the modules
+function getTplModuleChecks(string $name, string $mod, array $allow = [], string $label = '', string $desc = ''): string {
     global $tpl;
-    $cont = '';
-    if ($no !== '') $cont .= $tpl->getHtmlFrag('select-option', ['value_attr' => '0', 'label_text' => _NO, 'is_selected' => empty($mod)]);
     $mods = explode(',', $mod);
     $list = array_merge(array_diff(scandir(BASE_DIR.'/modules') ?: [], ['node']), array_keys(array_filter(getNodeTypeMap(), fn(NodeType $v): bool => $v->active)));
+    $boxes = [];
     foreach ($list as $file) {
-        if (str_contains($file, '.')) continue;
-        if ($allow && !in_array($file, $allow, true)) continue;
-        $isel = false;
-        foreach ($mods as $val) {
-            if ($val !== '' && $val === $file) {
-                $isel = true;
-                break;
-            }
-        }
-        $cont .= $tpl->getHtmlFrag('select-option', ['value_attr' => $file, 'label_text' => getModuleName($file), 'is_selected' => $isel]);
+        if (str_contains($file, '.') || ($allow && !in_array($file, $allow, true))) continue;
+        $boxes[] = ['name_attr' => $name.'[]', 'value_attr' => $file, 'label_text' => getModuleName($file), 'is_checked' => in_array($file, $mods, true)];
     }
-    return $tpl->getHtmlFrag('select', [
-        'name_attr' => $name,
-        'selectid' => $sid,
-        'describedby' => $desc,
-        'is_config' => true,
-        'options_html' => $cont,
-        'is_multiple' => true,
-        'is_name_array' => true,
-    ]);
+    return $tpl->getHtmlFrag('check-list', ['labelledby' => $label, 'describedby' => $desc, 'items' => $boxes]);
 }
 
 # Return the names of modules that support categories: the forum and every registered Node type with the category feature, as the administrative screens read them

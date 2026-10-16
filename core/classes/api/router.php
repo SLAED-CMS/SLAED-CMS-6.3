@@ -205,7 +205,7 @@ final class ApiRouter {
         $path = realpath((string)($data['path'] ?? ''));
         if ($path === false || !is_file($path) || !is_readable($path)) throw new ApiError('no_route');
         $path = str_replace('\\', '/', $path);
-        $roots = array_filter([realpath(BASE_DIR.'/storage/update'), realpath(UPLOADS_DIR)]);
+        $roots = array_filter([realpath(UPDATE_DIR), realpath(UPLOADS_DIR)]);
         $keep = array_filter($roots, fn(string $v): bool => str_starts_with($path, str_replace('\\', '/', $v).'/'));
         if ($keep === []) throw new LogicException('API handler '.$act['call'].' named a file outside storage/update and uploads');
         return ['mode' => 'file', 'path' => $path, 'name' => (string)($data['name'] ?? basename($path)), 'mime' => (string)($data['mime'] ?? 'application/octet-stream'),

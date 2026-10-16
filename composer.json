@@ -19,6 +19,7 @@
         "ext-json": "*"
     },
     "suggest": {
+        "ext-sodium": "Verifies the signature of an update directly; without it the class Signature of the core verifies it in pure PHP, about a tenth of a second per check",
         "ext-fileinfo": "Names an uploaded file by the magic database; without it the upload service falls back to its own structural validators",
         "ext-zip": "Opens an uploaded zip archive as a second proof beside the structural walk of its central directory",
         "ext-zlib": "Decompresses an uploaded gzip member to hold it against its own checksum and length"

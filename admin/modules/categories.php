@@ -76,7 +76,7 @@ function add(): void {
         'subtitle_html' => $subtitle,
     ]);
     $cont .= $tpl->getHtmlFrag('alert', ['text' => _CACESSI]);
-    $hint = _ACESSI.' '._CTRLINFO;
+    $hint = _ACESSI;
     $yesno = [
         ['value' => '1', 'label' => _YES],
         ['value' => '0', 'label' => _NO],
@@ -118,55 +118,55 @@ function add(): void {
     }
     $rows1 = [
         [
-            'label_for' => ($fids = getFieldIds('f-pview'))['input'],
+            'label_id' => ($fids = getFieldIds('f-pview'))['label'],
             'label_html' => _CAN.' '._AUTH_VIEW,
             'hint_html' => $hint,
             'hint_id' => $fids['hint'],
-            'field_html' => catacess('pview', 'sl-form-control', '', 0, $fids['input'], $fids['hint']),
+            'field_html' => getTplAccessChecks('pview', '', 0, $fids['label'], $fids['hint']),
         ],
         [
-            'label_for' => ($fids = getFieldIds('f-pread'))['input'],
+            'label_id' => ($fids = getFieldIds('f-pread'))['label'],
             'label_html' => _CAN.' '._AUTH_READ,
             'hint_html' => $hint,
             'hint_id' => $fids['hint'],
-            'field_html' => catacess('pread', 'sl-form-control', '', 0, $fids['input'], $fids['hint']),
+            'field_html' => getTplAccessChecks('pread', '', 0, $fids['label'], $fids['hint']),
         ],
     ];
     $rows2 = [
         [
-            'label_for' => ($fids = getFieldIds('f-ppost'))['input'],
+            'label_id' => ($fids = getFieldIds('f-ppost'))['label'],
             'label_html' => _CAN.' '._AUTH_POST,
             'hint_html' => $hint,
             'hint_id' => $fids['hint'],
-            'field_html' => catacess('ppost', 'sl-form-control', '', 0, $fids['input'], $fids['hint']),
+            'field_html' => getTplAccessChecks('ppost', '', 0, $fids['label'], $fids['hint']),
         ],
         [
-            'label_for' => ($fids = getFieldIds('f-preply'))['input'],
+            'label_id' => ($fids = getFieldIds('f-preply'))['label'],
             'label_html' => _CAN.' '._AUTH_REPLY,
             'hint_html' => $hint,
             'hint_id' => $fids['hint'],
-            'field_html' => catacess('preply', 'sl-form-control', '', 0, $fids['input'], $fids['hint']),
+            'field_html' => getTplAccessChecks('preply', '', 0, $fids['label'], $fids['hint']),
         ],
         [
-            'label_for' => ($fids = getFieldIds('f-pedit'))['input'],
+            'label_id' => ($fids = getFieldIds('f-pedit'))['label'],
             'label_html' => _CAN.' '._AUTH_EDIT,
             'hint_html' => $hint,
             'hint_id' => $fids['hint'],
-            'field_html' => catacess('pedit', 'sl-form-control', '', 1, $fids['input'], $fids['hint']),
+            'field_html' => getTplAccessChecks('pedit', '', 1, $fids['label'], $fids['hint']),
         ],
         [
-            'label_for' => ($fids = getFieldIds('f-pdelete'))['input'],
+            'label_id' => ($fids = getFieldIds('f-pdelete'))['label'],
             'label_html' => _CAN.' '._AUTH_DELETE,
             'hint_html' => $hint,
             'hint_id' => $fids['hint'],
-            'field_html' => catacess('pdelete', 'sl-form-control', '', 1, $fids['input'], $fids['hint']),
+            'field_html' => getTplAccessChecks('pdelete', '', 1, $fids['label'], $fids['hint']),
         ],
         [
-            'label_for' => ($fids = getFieldIds('f-pmod'))['input'],
+            'label_id' => ($fids = getFieldIds('f-pmod'))['label'],
             'label_html' => _CAN.' '._AUTH_MOD,
             'hint_html' => $hint,
             'hint_id' => $fids['hint'],
-            'field_html' => catacess('pmod', 'sl-form-control', '', 2, $fids['input'], $fids['hint']),
+            'field_html' => getTplAccessChecks('pmod', '', 2, $fids['label'], $fids['hint']),
         ],
     ];
     $tabs = $tpl->getHtmlPart('tabs', [
@@ -218,7 +218,7 @@ function subadd(): void {
             'subtitle_html' => $subtitle,
         ]);
         $cont .= $tpl->getHtmlFrag('alert', ['text' => _CACESSI]);
-        $hint = _ACESSI.' '._CTRLINFO;
+        $hint = _ACESSI;
         $yesno = [
             ['value' => '1', 'label' => _YES],
             ['value' => '0', 'label' => _NO],
@@ -261,55 +261,55 @@ function subadd(): void {
         }
         $rows1 = [
             [
-                'label_for' => ($fids = getFieldIds('f-pview'))['input'],
+                'label_id' => ($fids = getFieldIds('f-pview'))['label'],
                 'label_html' => _CAN.' '._AUTH_VIEW,
                 'hint_html' => $hint,
                 'hint_id' => $fids['hint'],
-                'field_html' => catacess('pview', 'sl-form-control', '', 0, $fids['input'], $fids['hint']),
+                'field_html' => getTplAccessChecks('pview', '', 0, $fids['label'], $fids['hint']),
             ],
             [
-                'label_for' => ($fids = getFieldIds('f-pread'))['input'],
+                'label_id' => ($fids = getFieldIds('f-pread'))['label'],
                 'label_html' => _CAN.' '._AUTH_READ,
                 'hint_html' => $hint,
                 'hint_id' => $fids['hint'],
-                'field_html' => catacess('pread', 'sl-form-control', '', 0, $fids['input'], $fids['hint']),
+                'field_html' => getTplAccessChecks('pread', '', 0, $fids['label'], $fids['hint']),
             ],
         ];
         $rows2 = [
             [
-                'label_for' => ($fids = getFieldIds('f-ppost'))['input'],
+                'label_id' => ($fids = getFieldIds('f-ppost'))['label'],
                 'label_html' => _CAN.' '._AUTH_POST,
                 'hint_html' => $hint,
                 'hint_id' => $fids['hint'],
-                'field_html' => catacess('ppost', 'sl-form-control', '', 0, $fids['input'], $fids['hint']),
+                'field_html' => getTplAccessChecks('ppost', '', 0, $fids['label'], $fids['hint']),
             ],
             [
-                'label_for' => ($fids = getFieldIds('f-preply'))['input'],
+                'label_id' => ($fids = getFieldIds('f-preply'))['label'],
                 'label_html' => _CAN.' '._AUTH_REPLY,
                 'hint_html' => $hint,
                 'hint_id' => $fids['hint'],
-                'field_html' => catacess('preply', 'sl-form-control', '', 0, $fids['input'], $fids['hint']),
+                'field_html' => getTplAccessChecks('preply', '', 0, $fids['label'], $fids['hint']),
             ],
             [
-                'label_for' => ($fids = getFieldIds('f-pedit'))['input'],
+                'label_id' => ($fids = getFieldIds('f-pedit'))['label'],
                 'label_html' => _CAN.' '._AUTH_EDIT,
                 'hint_html' => $hint,
                 'hint_id' => $fids['hint'],
-                'field_html' => catacess('pedit', 'sl-form-control', '', 1, $fids['input'], $fids['hint']),
+                'field_html' => getTplAccessChecks('pedit', '', 1, $fids['label'], $fids['hint']),
             ],
             [
-                'label_for' => ($fids = getFieldIds('f-pdelete'))['input'],
+                'label_id' => ($fids = getFieldIds('f-pdelete'))['label'],
                 'label_html' => _CAN.' '._AUTH_DELETE,
                 'hint_html' => $hint,
                 'hint_id' => $fids['hint'],
-                'field_html' => catacess('pdelete', 'sl-form-control', '', 1, $fids['input'], $fids['hint']),
+                'field_html' => getTplAccessChecks('pdelete', '', 1, $fids['label'], $fids['hint']),
             ],
             [
-                'label_for' => ($fids = getFieldIds('f-pmod'))['input'],
+                'label_id' => ($fids = getFieldIds('f-pmod'))['label'],
                 'label_html' => _CAN.' '._AUTH_MOD,
                 'hint_html' => $hint,
                 'hint_id' => $fids['hint'],
-                'field_html' => catacess('pmod', 'sl-form-control', '', 2, $fids['input'], $fids['hint']),
+                'field_html' => getTplAccessChecks('pmod', '', 2, $fids['label'], $fids['hint']),
             ],
         ];
         $tabs = $tpl->getHtmlPart('tabs', [
@@ -424,7 +424,7 @@ function edit(): void {
         'subtitle_html' => $subtitle,
     ]);
     $cont .= $tpl->getHtmlFrag('alert', ['text' => _CACESSI]);
-    $hint = _ACESSI.' '._CTRLINFO;
+    $hint = _ACESSI;
     $yesno = [
         ['value' => '1', 'label' => _YES],
         ['value' => '0', 'label' => _NO],
@@ -469,55 +469,55 @@ function edit(): void {
     }
     $rows1 = [
         [
-            'label_for' => ($fids = getFieldIds('f-pview'))['input'],
+            'label_id' => ($fids = getFieldIds('f-pview'))['label'],
             'label_html' => _CAN.' '._AUTH_VIEW,
             'hint_html' => $hint,
             'hint_id' => $fids['hint'],
-            'field_html' => catacess('pview', 'sl-form-control', $pview, 0, $fids['input'], $fids['hint']),
+            'field_html' => getTplAccessChecks('pview', $pview, 0, $fids['label'], $fids['hint']),
         ],
         [
-            'label_for' => ($fids = getFieldIds('f-pread'))['input'],
+            'label_id' => ($fids = getFieldIds('f-pread'))['label'],
             'label_html' => _CAN.' '._AUTH_READ,
             'hint_html' => $hint,
             'hint_id' => $fids['hint'],
-            'field_html' => catacess('pread', 'sl-form-control', $pread, 0, $fids['input'], $fids['hint']),
+            'field_html' => getTplAccessChecks('pread', $pread, 0, $fids['label'], $fids['hint']),
         ],
     ];
     $rows2 = [
         [
-            'label_for' => ($fids = getFieldIds('f-ppost'))['input'],
+            'label_id' => ($fids = getFieldIds('f-ppost'))['label'],
             'label_html' => _CAN.' '._AUTH_POST,
             'hint_html' => $hint,
             'hint_id' => $fids['hint'],
-            'field_html' => catacess('ppost', 'sl-form-control', $ppost, 0, $fids['input'], $fids['hint']),
+            'field_html' => getTplAccessChecks('ppost', $ppost, 0, $fids['label'], $fids['hint']),
         ],
         [
-            'label_for' => ($fids = getFieldIds('f-preply'))['input'],
+            'label_id' => ($fids = getFieldIds('f-preply'))['label'],
             'label_html' => _CAN.' '._AUTH_REPLY,
             'hint_html' => $hint,
             'hint_id' => $fids['hint'],
-            'field_html' => catacess('preply', 'sl-form-control', $preply, 0, $fids['input'], $fids['hint']),
+            'field_html' => getTplAccessChecks('preply', $preply, 0, $fids['label'], $fids['hint']),
         ],
         [
-            'label_for' => ($fids = getFieldIds('f-pedit'))['input'],
+            'label_id' => ($fids = getFieldIds('f-pedit'))['label'],
             'label_html' => _CAN.' '._AUTH_EDIT,
             'hint_html' => $hint,
             'hint_id' => $fids['hint'],
-            'field_html' => catacess('pedit', 'sl-form-control', $pedit, 1, $fids['input'], $fids['hint']),
+            'field_html' => getTplAccessChecks('pedit', $pedit, 1, $fids['label'], $fids['hint']),
         ],
         [
-            'label_for' => ($fids = getFieldIds('f-pdelete'))['input'],
+            'label_id' => ($fids = getFieldIds('f-pdelete'))['label'],
             'label_html' => _CAN.' '._AUTH_DELETE,
             'hint_html' => $hint,
             'hint_id' => $fids['hint'],
-            'field_html' => catacess('pdelete', 'sl-form-control', $pdelete, 1, $fids['input'], $fids['hint']),
+            'field_html' => getTplAccessChecks('pdelete', $pdelete, 1, $fids['label'], $fids['hint']),
         ],
         [
-            'label_for' => ($fids = getFieldIds('f-pmod'))['input'],
+            'label_id' => ($fids = getFieldIds('f-pmod'))['label'],
             'label_html' => _CAN.' '._AUTH_MOD,
             'hint_html' => $hint,
             'hint_id' => $fids['hint'],
-            'field_html' => catacess('pmod', 'sl-form-control', $pmod, 2, $fids['input'], $fids['hint']),
+            'field_html' => getTplAccessChecks('pmod', $pmod, 2, $fids['label'], $fids['hint']),
         ],
     ];
     $tabs = $tpl->getHtmlPart('tabs', [

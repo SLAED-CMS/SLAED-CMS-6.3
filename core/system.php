@@ -8,6 +8,7 @@ if (!defined('MODULE_FILE') && !defined('ADMIN_FILE')) die('Illegal file access'
 
 define('BLOCK_FILE', true);
 define('FUNC_FILE', true);
+require_once BASE_DIR.'/core/version.php';
 
 # Sentinel baked into cached HTML and replaced with live generation timing right before output
 define('GEN_MARK', "\x02SLGEN\x02");
@@ -26,6 +27,7 @@ if (!defined('COUNTER_DIR')) define('COUNTER_DIR', BASE_DIR.'/storage/counter');
 if (!defined('LOGS_DIR')) define('LOGS_DIR', BASE_DIR.'/storage/logs');
 if (!defined('SITEMAP_DIR')) define('SITEMAP_DIR', BASE_DIR.'/storage/sitemap');
 if (!defined('CAPTCHA_DIR')) define('CAPTCHA_DIR', BASE_DIR.'/storage/captcha');
+if (!defined('UPDATE_DIR')) define('UPDATE_DIR', BASE_DIR.'/storage/update');
 
 # The public part a browser fetches, the document root; an entry of public/ defines it, and a tool or a test without one reads the folder of the project
 if (!defined('PUBLIC_DIR')) define('PUBLIC_DIR', BASE_DIR.'/public');
@@ -118,8 +120,9 @@ if (defined('API_FILE')) require_once BASE_DIR.'/core/classes/api/router.php';
 else require_once BASE_DIR.'/core/classes/editor.php';
 require_once BASE_DIR.'/core/classes/logger.php';
 
-# Load the generated runtime config cache
+# Load the generated runtime config cache; the version comes from the code, never from a setting the site saved
 $conf = getConfig();
+$conf['version'] = SL_VERSION.' '.SL_CODENAME;
 
 # The path of the site below its host, from homeurl, with both slashes: every address the core builds starts here, so a page opened at any depth resolves it
 if (!defined('HOME_PATH')) define('HOME_PATH', rtrim('/'.trim((string)parse_url((string)($conf['homeurl'] ?? ''), PHP_URL_PATH), '/'), '/').'/');
@@ -143,9 +146,10 @@ require_once BASE_DIR.'/core/classes/node/load.php';
 require_once BASE_DIR.'/core/helpers.php';
 
 # The light core of the API ends here: no theme, no template, no parser, no visual class and no layer of the user or the panel, so no part of a page reaches its JSON
+# The light mode of the panel ends here too: the new code on the old schema reads no table but the administrators until its database steps have run
 # Field is the one stateless instance of the extra fields; Node gets it handed in, so no second mechanism of fields ever appears
 # Points stay closed until the 6.3 data update has left its mark: an empty scope switches the class off and reports it
-if (!defined('API_FILE')) {
+if (!defined('API_FILE') && !defined('UPDATE_FILE')) {
     $theme = getTheme();
     if (is_file(PUBLIC_DIR.'/templates/'.$theme.'/index.php')) require_once PUBLIC_DIR.'/templates/'.$theme.'/index.php';
     require_once BASE_DIR.'/core/classes/template.php';
@@ -292,7 +296,8 @@ function getSchedulerPlannedTime(array $job, array $state = []): int {
 function getSchedulerJob(string $name, ?array $job = null): array {
     global $conf;
     static $map = ['dbbackup' => 'backup', 'filescan' => 'filescan', 'maildrain' => 'maildrain', 'newsletter' => 'newsletter', 'selfcheck' => 'selfcheck', 'sitemap' => 'sitemap',
-        'cachegc' => 'cachegc', 'monitor' => 'monitor', 'nodepublish' => 'nodepublish', 'nodesync' => 'nodesync'];
+        'cachegc' => 'cachegc', 'monitor' => 'monitor', 'masterclean' => 'masterclean', 'masterwatch' => 'masterwatch', 'updatecheck' => 'updatecheck',
+        'nodepublish' => 'nodepublish', 'nodesync' => 'nodesync'];
     $read = $job === null;
     if ($read) $job = $conf['scheduler']['jobs'][$name] ?? [];
     if (!is_array($job)) $job = [];
@@ -671,8 +676,41 @@ function addSchedulerSystemJob(string $name): array {
         'nodepublish' => addNodePublishTask(),
         'nodesync' => addNodeSyncTask(),
         'selfcheck' => addSelfCheckTask(),
+        'masterclean', 'masterwatch' => addMasterTask($name),
+        'updatecheck' => addUpdateTask(),
         default => ['status' => 'failed', 'message' => 'Unknown system job: '.$name],
     };
+}
+
+# Run a job of the module master, which only slaed.net installs and writes into its scheduler: without the active module the job is disabled, never failed
+function addMasterTask(string $name): array {
+    global $conf;
+    $lib = BASE_DIR.'/modules/master/common.php';
+    if (intval($conf['modules']['master']['active'] ?? 0) !== 1 || !is_file($lib)) return ['status' => 'disabled', 'message' => 'The module master is not installed'];
+    require_once $lib;
+    return ($name === 'masterwatch') ? addMasterWatch() : addMasterClean();
+}
+
+# Run the job updatecheck at the minute of this site: with the daily check switched off it is disabled, and only the button of the panel asks the master
+function addUpdateTask(): array {
+    global $db, $conf;
+    if (intval($conf['update']['check']['upcheck'] ?? 1) !== 1) return ['status' => 'disabled', 'message' => 'The daily update check is switched off'];
+    $state = getUpdateSite();
+    $res = Update::addCheck($db, $conf, $state);
+    if (!$res['ok']) return ['status' => 'failed', 'message' => 'The update check failed: '.$res['error']];
+    return ['status' => 'success', 'message' => ($res['found'] !== '') ? 'Version '.$res['found'].' is available' : 'No newer version'];
+}
+
+# The update state of this site with its id; a new id, of a copied site or a lost state, moves the minute of updatecheck in config/scheduler.php with it
+function getUpdateSite(): array {
+    global $conf;
+    require_once BASE_DIR.'/core/classes/update.php';
+    $state = Update::getSite((string)($conf['homeurl'] ?? ''));
+    if (empty($state['new']) || !isset($conf['scheduler']['jobs']['updatecheck'])) return $state;
+    $data = $conf['scheduler'];
+    $data['jobs']['updatecheck']['schedule'] = Update::getCheckTime($state['sid']);
+    if (setConfigFile('scheduler.php', $data)) $conf['scheduler'] = $data;
+    return $state;
 }
 
 # Executes the next due scheduler job or a named job and returns a structured result

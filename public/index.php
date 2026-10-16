@@ -10,6 +10,10 @@ if (!defined('PUBLIC_DIR')) define('PUBLIC_DIR', str_replace('\\', '/', __DIR__)
 define('MODULE_FILE', true);
 $sgtime = microtime(true);
 
+# The gate comes first: while the code waits for its database steps the site, its API and the pseudo-cron answer 503 before a line of the core runs
+require_once BASE_DIR.'/core/gate.php';
+checkSiteGate();
+
 # The light path: no file lies under uploads/ in the document root, so such a request lands here and is answered before the core boots
 require_once BASE_DIR.'/core/stream.php';
 $upath = getRequestPath('uploads');

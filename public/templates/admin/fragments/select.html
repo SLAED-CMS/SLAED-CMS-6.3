@@ -1,9 +1,8 @@
 <select
-  name="{{ name_attr }}{% if is_name_array %}[]{% endif %}"
+  name="{{ name_attr }}"
   class="sl-select{% if select_class %} {{ select_class }}{% elseif is_config %} sl-select-config{% endif %}{% if is_inline_gap %} sl-inline-gap{% endif %}{% if is_search_sort %} sl-search-sort-select{% endif %}{% if is_search_order %} sl-search-order-select{% endif %}{% if is_search_filter %} sl-search-filter-field{% endif %}{% if is_save_action %} sl-save-action-select{% endif %}"
   {% if selectid %}id="{{ selectid }}"{% endif %}
   {% if imgtar %}data-sl-image-replace="{{ imgtar }}"{% endif %}
-  {% if is_multiple %}multiple{% endif %}
   {% if describedby %}aria-describedby="{{ describedby }}"{% endif %}
   {% if select_attr %}{{{ select_attr }}}{% endif %}
 >

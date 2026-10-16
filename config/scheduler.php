@@ -137,6 +137,18 @@ return [
                 'settings' => [
                 ],
             ],
+            'updatecheck' => [
+                'title' => 'Update check',
+                'type' => 'system',
+                'active' => '1',
+                'system' => 'updatecheck',
+                'schedule' => '40 4 * * *',
+                'priority' => '11',
+                'lock_timeout' => '300',
+                'manual' => '1',
+                'settings' => [
+                ],
+            ],
         ],
         'lock_timeout' => '1800',
         'pseudo' => '1',

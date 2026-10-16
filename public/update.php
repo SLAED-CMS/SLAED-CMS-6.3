@@ -1728,7 +1728,7 @@ function setUpdateSql(Database $db, string $file, string $prefix): array {
     return $rows;
 }
 
-# Run the 6.3 update of the site config/db.php names and answer its report rows; a refusal before the preflight changes nothing
+# Run the 6.3 update of the site config/db.php names and answer its report rows; a refusal before the preflight changes nothing, the schema file brings the step mark
 function setUpdateRun(): array {
     global $conf, $spanel;
     foreach (['db.php', 'global.php', 'security.php'] as $name) {
@@ -1906,6 +1906,10 @@ function setUpdateRun(): array {
     $rows = array_merge($rows, $ddl);
     $text = 'the update stopped at the schema file: no data unit ran and no mark was written, correct the failed statement and run the update again';
     if ($ddl === [] || checkUpdateFail($ddl)) return array_merge($rows, getUpdateRow($text, false));
+    $smark = getUpdateSource(CONFIG_DIR.'/update.php')['update'] ?? [];
+    if (!isset($smark['steps']) && !setUpdateFile('update.php', $smark + ['steps' => [SL_VERSION => date('Y-m-d H:i:s')]])) {
+        $rows = array_merge($rows, getUpdateRow('config/update.php: the step mark of the code could not be written, the site stays closed', false));
+    }
     $rows = array_merge($rows, setUpdatePoints($db, $pref), setUpdateRatings($db, $pref), setUpdateFields($db, $pref));
     $rows = array_merge($rows, setUpdateAttach($db, $pref, 'forum', 'forum'), setUpdateAttach($db, $pref, 'privat', 'account'), setUpdateLangs($db, $pref));
     $rdata = getUpdateSource(CONFIG_DIR.'/rss.php')['rss'] ?? [];
@@ -2012,6 +2016,7 @@ if (($_REQUEST['op'] ?? '') === 'update' || !isset($umark['points'], $umark['rat
     require_once BASE_DIR.'/core/classes/pdo.php';
     require_once BASE_DIR.'/core/classes/template.php';
     require_once BASE_DIR.'/lang/en.php';
+    require_once BASE_DIR.'/core/version.php';
     ini_set('display_errors', $conf['security']['error'] > 0 ? '1' : '0');
     error_reporting([0, E_ALL ^ E_NOTICE, E_ALL][intval($conf['security']['error'])] ?? 0);
     set_time_limit(0);

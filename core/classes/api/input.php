@@ -10,7 +10,7 @@ if (!defined('FUNC_FILE')) die('Illegal file access');
 final class ApiInput {
 
     # The types a declared param may take; a new type is added here and never checked inside a handler
-    public const TYPES = ['num', 'word', 'text', 'json', 'ver'];
+    public const TYPES = ['num', 'word', 'text', 'json', 'ver', 'hex', 'host'];
 
     # The declared params of one action from the query of a GET or HEAD, or from the JSON object of the body of any other method, read once and cut at $size bytes
     public static function getInput(array $params, string $method, int $size): array {
@@ -48,7 +48,7 @@ final class ApiInput {
         return $in;
     }
 
-    # Whether a declaration of a param is one this filter reads: a known type, an argument of the shape its type takes, and a default its own type accepts
+    # Whether a declaration of a param is one this filter reads: a known type, an argument of the shape its type takes, and a default its own type accepts or null for "not sent"
     public static function checkSpec(mixed $spec): bool {
         $spec = is_array($spec) ? $spec : [$spec];
         if (!in_array($spec[0] ?? null, self::TYPES, true) || array_diff(array_keys($spec), [0, 1, 'def']) !== []) return false;
@@ -57,9 +57,10 @@ final class ApiInput {
             'num' => $arg === null || (is_int($arg) && $arg >= 0),
             'word' => $arg === null || (is_array($arg) && $arg !== [] && array_filter($arg, fn($v): bool => self::filterValue($v, 'word', null) === null) === []),
             'text' => $arg === null || (is_int($arg) && $arg > 0),
+            'hex' => $arg === null || (is_int($arg) && $arg > 0 && $arg <= 128),
             default => $arg === null,
         };
-        return $good && (!array_key_exists('def', $spec) || self::filterValue($spec['def'], $spec[0], $arg) !== null);
+        return $good && (!array_key_exists('def', $spec) || $spec['def'] === null || self::filterValue($spec['def'], $spec[0], $arg) !== null);
     }
 
     # One value by its type, or null when the type refuses it; a query value that is an array is refused by every type
@@ -75,6 +76,9 @@ final class ApiInput {
                 && mb_strlen($val, 'UTF-8') <= ($arg ?? 255)) ? $val : null,
             'json' => is_array($val) ? $val : (is_string($val) ? self::getJsonValue($val) : null),
             'ver' => (is_string($val) && preg_match('#^\d{1,5}\.\d{1,5}\.\d{1,5}$#D', $val) === 1) ? $val : null,
+            'hex' => (is_string($val) && preg_match('#^[0-9a-f]{1,128}$#D', $val) === 1 && ($arg === null || strlen($val) === $arg)) ? $val : null,
+            'host' => (is_string($val) && ($val === '' || (strlen($val) <= 253
+                && preg_match('#^([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]([a-z0-9-]{0,61}[a-z0-9])?$#D', $val) === 1))) ? $val : null,
             default => null,
         };
     }

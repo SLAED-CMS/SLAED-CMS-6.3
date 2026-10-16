@@ -1091,54 +1091,12 @@
         var form = document.querySelector('[data-sl-rank-form]');
         if (form) setRankForm(form);
     }
-    /* Motion over the page: the place of every solid head in the order its beam crosses, and the light that follows the pointer.
-       The pointer is written once a frame and only where motion is welcome; a touch has no pointer to follow.
-       The installer card also learns where the pointer is inside it, so the light runs along its rim */
-    function isStill() {
-        return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    }
+    /* Motion over the page: the place of every solid head in the order its beam crosses; the light that follows the pointer is slaed.js's */
     function setBeamTurns() {
         document.querySelectorAll('.sl-dashboard-panel-head, .sl-block-sidebar h3').forEach(function (head, i) {
             head.style.setProperty('--sl-d-turn', i);
         });
     }
-    var point = { left: 0, top: 0 };
-    var frame = 0;
-    function getSetupCard() {
-        var form = document.querySelector('.sl-setup');
-        return form ? form.closest('.sl-admin-login-card') : null;
-    }
-    document.addEventListener('pointermove', function (event) {
-        if (event.pointerType === 'touch' || isStill()) return;
-        point.left = event.clientX;
-        point.top = event.clientY;
-        if (frame) return;
-        frame = window.requestAnimationFrame(function () {
-            document.body.style.setProperty('--sl-d-pointer-x', point.left + 'px');
-            document.body.style.setProperty('--sl-d-pointer-y', point.top + 'px');
-            document.body.setAttribute('data-sl-pointer', '');
-            var card = getSetupCard();
-            if (card) {
-                var box = card.getBoundingClientRect();
-                card.style.setProperty('--sl-d-rim-x', (point.left - box.left) + 'px');
-                card.style.setProperty('--sl-d-rim-y', (point.top - box.top) + 'px');
-            }
-            frame = 0;
-        });
-    }, { passive: true });
-    function setPointerOff() {
-        window.cancelAnimationFrame(frame);
-        frame = 0;
-        document.body.removeAttribute('data-sl-pointer');
-        var card = getSetupCard();
-        if (card) {
-            card.style.removeProperty('--sl-d-rim-x');
-            card.style.removeProperty('--sl-d-rim-y');
-        }
-    }
-    document.documentElement.addEventListener('pointerleave', setPointerOff);
-    document.addEventListener('pointercancel', setPointerOff);
-    window.addEventListener('blur', setPointerOff);
     /* The run of the installer: every part of the installation is its own POST of the run form, so the bar shows how far the server really got.
        An answer carries the per cent, the task just done and whether another part follows; the last answer, a failed part and a broken reply all hand the form back,
        and setup.php decides whether the closing stop, the refusal of the failed part or the run where it stands comes next */
@@ -1171,7 +1129,7 @@
                     }
                     if (json.task) task.textContent = json.task;
                     if (json.more) addSetupPart();
-                    else window.setTimeout(setSetupEnd, isStill() ? 0 : 400);
+                    else window.setTimeout(setSetupEnd, window.isMotionStill() ? 0 : 400);
                 })
                 .catch(setSetupEnd);
         }

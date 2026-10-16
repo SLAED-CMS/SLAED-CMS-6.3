@@ -305,7 +305,7 @@ final class NodeRouteTest extends TestCase
         $this->assertStringContainsString("require_once BASE_DIR.'/modules/node/index.php';", $index);
         $this->assertStringContainsString('getNodeTypeMap()[$con]', self::getBody('core/system.php', 'getModuleName'));
         $this->assertStringContainsString("if (isset(\$conf['node']['types'][\$modul])) \$modul = 'node-'.\$modul;", self::getBody('core/system.php', 'is_admin_modul'));
-        $this->assertStringContainsString('getNodeTypeMap()', self::getBody('core/helpers.php', 'getTplModuleSelect'));
+        $this->assertStringContainsString('getNodeTypeMap()', self::getBody('core/helpers.php', 'getTplModuleChecks'));
         $this->assertStringContainsString('getNodeTypeMap()', (string)file_get_contents(self::getRoot().'/blocks/modules.php'));
         foreach (['core/system.php', 'core/helpers.php', 'public/index.php', 'admin/index.php', 'blocks/modules.php'] as $file) {
             $this->assertDoesNotMatchRegularExpression("/'(?:news|docs|files|faq|pages|jokes|links|media|help|content)'\\s*=>\\s*'node/",

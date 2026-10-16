@@ -1254,7 +1254,7 @@
         if (!feed) return;
         view.setAttribute('data-sl-profile-ready', '1');
         var items = Array.prototype.slice.call(feed.children);
-        if (items.length <= 4 || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        if (items.length <= 4 || isMotionStill()) return;
         items.forEach(function (item) {
             var clone = item.cloneNode(true);
             clone.setAttribute('aria-hidden', 'true');
@@ -1312,7 +1312,7 @@
                 rail.style.setProperty('--sl-d-spy', (mark.offsetLeft + mark.offsetWidth / 2) + 'px');
                 document.documentElement.style.setProperty('--sl-d-rail', dock.getBoundingClientRect().height + 'px');
                 if (mark.offsetLeft < rail.scrollLeft || mark.offsetLeft + mark.offsetWidth > rail.scrollLeft + rail.clientWidth) {
-                    var still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+                    var still = isMotionStill();
                     rail.scrollTo({ left: mark.offsetLeft - rail.clientWidth / 2 + mark.offsetWidth / 2, behavior: still ? 'instant' : 'smooth' });
                 }
                 return;
@@ -1342,7 +1342,7 @@
             if (!mark) return;
             event.preventDefault();
             var sect = document.getElementById(mark.getAttribute('data-sl-spy-mark'));
-            if (sect) sect.scrollIntoView({ block: 'start', behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+            if (sect) sect.scrollIntoView({ block: 'start', behavior: isMotionStill() ? 'auto' : 'smooth' });
         });
         draw();
     }
@@ -1716,7 +1716,7 @@
     // Voting widgets: apply data-sl-percent/votes targets to bars and counters; first run counts up from zero
     function setVoteValues(vote, first) {
         var rows = vote.querySelectorAll('li[data-sl-percent]');
-        var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        var reduce = isMotionStill();
         for (var i = 0; i < rows.length; i++) {
             (function (row) {
                 var pct = parseFloat(row.getAttribute('data-sl-percent')) || 0;
@@ -1738,7 +1738,7 @@
 
     // Voting widgets: cold-start intro — bars and counters rise from zero after the first painted frame
     function setVoteIntro(vote) {
-        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        if (isMotionStill()) return;
         var rows = vote.querySelectorAll('li[data-sl-percent]');
         if (!rows.length) return;
         for (var i = 0; i < rows.length; i++) {
@@ -2243,7 +2243,7 @@
             if (elt && elt.closest && elt.closest('[data-sl-live-paused]')) event.preventDefault();
         });
         window.setInterval(function () {
-            if (document.hidden || (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches)) return;
+            if (document.hidden || isMotionStill()) return;
             var lists = document.querySelectorAll('[data-sl-live-scroll].sl-is-open');
             for (var i = 0; i < lists.length; i++) {
                 var list = lists[i];
@@ -2699,6 +2699,36 @@
         var done = from.getAttribute('data-sl-done') || '';
         if (done !== '') setToast(done);
     }
+
+    // Motion is welcome unless the reader asked for less of it; the theme scripts and the plugins read the same answer
+    function isMotionStill() {
+        return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    }
+    window.isMotionStill = isMotionStill;
+
+    // The light that follows the pointer: the place is written once a frame and only where motion is welcome, a touch
+    // has no pointer to follow, and the theme decides whether body[data-sl-pointer] shows any light at all
+    var pointer = { left: 0, top: 0, frame: 0 };
+    document.addEventListener('pointermove', function (event) {
+        if (event.pointerType === 'touch' || isMotionStill()) return;
+        pointer.left = event.clientX;
+        pointer.top = event.clientY;
+        if (pointer.frame) return;
+        pointer.frame = window.requestAnimationFrame(function () {
+            document.body.style.setProperty('--sl-d-pointer-x', pointer.left + 'px');
+            document.body.style.setProperty('--sl-d-pointer-y', pointer.top + 'px');
+            document.body.setAttribute('data-sl-pointer', '');
+            pointer.frame = 0;
+        });
+    }, { passive: true });
+    function setPointerOff() {
+        window.cancelAnimationFrame(pointer.frame);
+        pointer.frame = 0;
+        document.body.removeAttribute('data-sl-pointer');
+    }
+    document.documentElement.addEventListener('pointerleave', setPointerOff);
+    document.addEventListener('pointercancel', setPointerOff);
+    window.addEventListener('blur', setPointerOff);
 
     window.addEventListener('resize', refitFloating);
     window.addEventListener('scroll', refitFloating, true);

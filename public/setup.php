@@ -8,10 +8,13 @@ define('SETUP_FILE', true);
 # The installer in the document root: the project is the folder above it; a test or a tool may name both folders first
 if (!defined('BASE_DIR')) define('BASE_DIR', str_replace('\\', '/', dirname(__DIR__)));
 if (!defined('PUBLIC_DIR')) define('PUBLIC_DIR', str_replace('\\', '/', __DIR__));
+require_once BASE_DIR.'/core/gate.php';
+checkSiteGate();
 define('CONFIG_DIR', BASE_DIR.'/config');
 define('BACKUP_DIR', BASE_DIR.'/storage/backup');
 define('CACHE_DIR', BASE_DIR.'/storage/cache');
 define('LOGS_DIR', BASE_DIR.'/storage/logs');
+define('UPDATE_DIR', BASE_DIR.'/storage/update');
 
 # Read one request value through the only filter of the installer, because the core getVar() is not loaded before the last part
 # A value that is not a string is empty and control characters never pass; pass keeps the spaces of a password, every other value is trimmed
@@ -407,7 +410,7 @@ function deleteSetupTypes(): array|false {
 }
 
 # Run one part of statements of table.sql or insert.sql on the connection of config/db.php; the first failed statement stops the run with its table and the reason of the server
-# The last statement of insert.sql leaves the marks of config/update.php that open points, ratings and fields and let the first administrator create the Node types
+# The last statement of insert.sql leaves config/update.php: the marks of points, ratings, fields and Node types, the update check and the step mark of the version
 function setSetupTables(array &$state, array $item): array {
     $base = getSetupBase();
     try {
@@ -428,9 +431,23 @@ function setSetupTables(array &$state, array $item): array {
         $task = $name.' — '.$note;
     }
     if ($file === 'table.sql') $state['made'] += count($item['keys']);
-    $marks = ['points' => '6.3.0', 'ratings' => '6.3.0', 'fields' => '6.3.0', 'node' => 'new'];
-    if ($state['part'] === $state['count'] - 2 && !setSetupFile('update.php', $marks)) return ['task' => '', 'fail' => _FILE.' config/update.php — '._SETUP_NOWRITE];
+    $marks = ['points' => '6.3.0', 'ratings' => '6.3.0', 'fields' => '6.3.0', 'node' => 'new', 'check' => ['upcheck' => '1', 'channel' => 'stable', 'keepbak' => '1',
+        'upsite' => '1'], 'steps' => [SL_VERSION => date('Y-m-d H:i:s')]];
+    if ($state['part'] !== $state['count'] - 2) return ['task' => $task, 'fail' => ''];
+    if (!setSetupFile('update.php', $marks)) return ['task' => '', 'fail' => _FILE.' config/update.php — '._SETUP_NOWRITE];
+    if (!setSetupCheck($state['site']['url'])) return ['task' => '', 'fail' => _FILE.' storage/update/client/state.json, config/scheduler.php — '._SETUP_NOWRITE];
     return ['task' => $task, 'fail' => ''];
+}
+
+# The identity of the new installation for the updater: a fresh id in storage/update/client/state.json and the daily minute of updatecheck it gives
+function setSetupCheck(string $url): bool {
+    require_once BASE_DIR.'/core/classes/update.php';
+    $state = Update::getSite($url, true);
+    $sched = getSetupSource('scheduler.php')['scheduler'] ?? [];
+    if (empty($state['new']) || !is_array($sched)) return false;
+    if (!isset($sched['jobs']['updatecheck'])) return true;
+    $sched['jobs']['updatecheck']['schedule'] = Update::getCheckTime($state['sid']);
+    return setSetupFile('scheduler.php', $sched);
 }
 
 # The last part, run with the core: the first administrator, a site account of the same name when asked, the Node profiles, the paths of the seed and the self-check markers
@@ -610,43 +627,18 @@ function setSetupStep(array $state): void {
     setSetupPage($next, $extra + ($next === 6 ? [] : getSetupView($next, $state)));
 }
 
-# The link tags of the admin theme gathered as the core gathers them for the same card: the icon, the stylesheets of its vendor packages and its own
-function getSetupLinks(): string {
-    global $tpl;
-    $base = PUBLIC_DIR.'/templates/admin/';
-    $out = [$tpl->getHtmlFrag('head-link', ['rel' => 'shortcut icon', 'href' => 'templates/admin/images/favicon.svg', 'type' => 'image/svg+xml', 'title' => ''])];
-    $list = glob($base.'*.css') ?: [];
-    foreach (glob($base.'assets/vendor/*/', GLOB_ONLYDIR) ?: [] as $sub) $list = array_merge($list, glob($sub.'*.css') ?: [], glob($sub.'*/*.css') ?: []);
-    foreach (array_merge($list, glob($base.'assets/css/*.css') ?: []) as $file) {
-        $out[] = $tpl->getHtmlFrag('head-link', ['rel' => 'stylesheet', 'href' => Template::getAssetUrl(substr($file, strlen(PUBLIC_DIR) + 1)), 'type' => '', 'title' => '']);
-    }
-    return implode("\n", $out);
-}
-
-# Render one stop on the login card of the admin theme; the stop is data, and templates/admin/pages/setup.html shows only the blocks whose keys it gets
-# The road names the seven stops with the passed ones filled; a stop outside them, the refusal of an installed site, has no current segment and no counter
+# Render one of the seven stops on the card of the admin theme; the refusal of an installed site is a stop outside them
 function setSetupPage(int $stop, array $view): void {
-    global $conf, $tpl;
     $names = [_LANGUAGE, _SETUP_SERVER, _DATABASE, _SITE, _ADMIN, _SETUP_INSTALL, _SETUP_DONE];
-    $road = [];
-    foreach ($names as $i => $name) $road[] = ['title' => $name, 'is_done' => $stop >= 0 && $i < $stop, 'is_current' => $i === $stop];
     $hide = [['name_attr' => 'token', 'value_attr' => getSetupState()['token']], ['name_attr' => 'stop', 'value_attr' => (string)$stop]];
-    $meta = $tpl->getHtmlFrag('head-title', ['title' => _SETUP_TITLE])."\n".$tpl->getHtmlFrag('head-meta', ['name' => 'robots', 'content' => 'noindex, nofollow']);
-    $script = $tpl->getHtmlFrag('head-script-src', ['src' => Template::getAssetUrl('templates/admin/assets/js/admin-ui.js'), 'attr' => 'defer']);
-    $logo = 'templates/admin/images/logos/'.basename((string)($conf['admin_logo'] ?? ''));
-    if (!is_file(PUBLIC_DIR.'/'.$logo)) $logo = 'templates/admin/images/logos/slaed-logo-wordmark-gradient-blue.svg';
-    $link = $tpl->getHtmlFrag('link', ['href' => 'https://slaed.net', 'title' => 'SLAED CMS', 'label' => 'SLAED CMS', 'is_blank' => true]);
-    $view += ['action' => 'setup.php', 'hidden' => $hide, 'road' => $road, 'road_text' => _SETUP_PATH, 'title' => $names[$stop] ?? _SETUP_TITLE,
-        'step_text' => isset($names[$stop]) ? sprintf(_SETUP_STEP, $stop + 1, count($names)) : ''];
-    header('Content-Type: text/html; charset=utf-8');
-    header('Cache-Control: no-store');
-    echo $tpl->getHtmlPage('setup', $view + ['lang' => substr(_LOCALE, 0, 2), 'mode' => 'auto', 'meta' => $meta, 'links' => getSetupLinks(), 'scripts' => $script,
-        'adlogo' => $logo, 'adalt' => 'SLAED CMS', 'adtitle' => 'SLAED CMS', 'license' => $link.' © 2005-'.date('Y').' Eduard Laas. Released under MIT License.']);
+    setCardPage(_SETUP_TITLE, $names, $stop, $view + ['action' => 'setup.php', 'hidden' => $hide, 'road_text' => _SETUP_PATH]);
 }
 
 # The installer renders before the core and without a site address, so the root of its addresses is the folder it is served from
 define('HOME_PATH', rtrim(str_replace('\\', '/', dirname((string)($_SERVER['SCRIPT_NAME'] ?? '/'))), '/').'/');
 $conf = array_merge(require CONFIG_DIR.'/global.php', require CONFIG_DIR.'/security.php');
+require_once BASE_DIR.'/core/version.php';
+$conf['version'] = SL_VERSION.' '.SL_CODENAME;
 date_default_timezone_set($conf['gtime']);
 ini_set('display_errors', $conf['security']['error'] > 0 ? '1' : '0');
 error_reporting([0, E_ALL ^ E_NOTICE, E_ALL][intval($conf['security']['error'])] ?? 0);

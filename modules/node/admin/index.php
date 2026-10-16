@@ -122,7 +122,7 @@ function getNodeAdminForm(NodeType $type, array $vals, array $errs, int $id, int
     $feat = $type->settings['features'];
     $rows = [];
     foreach (getNodeFormRows($type, $vals, $errs, true, true) as $one) {
-        $rows[] = ['label_for' => $one['for'] ?? '', 'label_html' => htmlspecialchars($one['label'], ENT_QUOTES, 'UTF-8'),
+        $rows[] = ['label_for' => $one['for'] ?? '', 'label_id' => $one['label_id'] ?? '', 'label_html' => htmlspecialchars($one['label'], ENT_QUOTES, 'UTF-8'),
             'hint_html' => htmlspecialchars($one['hint'] ?? '', ENT_QUOTES, 'UTF-8'), 'hint_id' => $one['hint_id'] ?? '', 'field_html' => $one['field'],
                 'is_full' => !empty($one['full'])];
     }
@@ -760,8 +760,12 @@ function getNodeTypeRows(array $vals, bool $new): array {
     global $tpl;
     $set = $vals['set'];
     $esc = fn(string $text): string => htmlspecialchars($text, ENT_QUOTES, 'UTF-8');
-    $box = fn(string $name, bool $on, string $label): string => $tpl->getHtmlFrag('checkbox', ['name_attr' => $name, 'value_attr' => '1', 'is_checked' => $on,
-        'label_text' => $label]);
+    $item = fn(string $name, bool $on, string $label, string $value = '1'): array => ['name_attr' => $name, 'value_attr' => $value, 'is_checked' => $on,
+        'label_text' => $label];
+    $box = fn(string $name, bool $on, string $label): string => $tpl->getHtmlFrag('checkbox', $item($name, $on, $label));
+    $checks = fn(string $id, array $items): string => $tpl->getHtmlFrag('check-list', ['labelledby' => $id, 'items' => $items]);
+    $pick = fn(string $name, array $list, array $cur): array => array_map(fn(string $k, string $v): array => $item($name, in_array($k, $cur, true), $v, $k),
+        array_keys($list), $list);
     $opts = fn(array $list, string|array $cur): string => implode('', array_map(fn(int|string $k, string $v): string => $tpl->getHtmlFrag('select-option', [
         'value_attr' => $k, 'label_text' => $v, 'is_selected' => is_array($cur) ? in_array((string)$k, $cur, true) : (string)$k === (string)$cur]),
         array_keys($list), $list));
@@ -784,8 +788,7 @@ function getNodeTypeRows(array $vals, bool $new): array {
         'value_attr' => $vals['sort']])];
     $rows[] = $head(_LIST);
     $orders = ['published' => _NEW, 'updated' => _NODE_UPDATED, 'title' => _TITLE, 'views' => _POP, 'rating' => _BEST];
-    $rows[] = ['label_html' => _NODE_ORDERS, 'field_html' => implode(' ', array_map(fn(string $k, string $v): string => $tpl->getHtmlFrag('checkbox', ['name_attr' => 'orders[]',
-        'value_attr' => $k, 'is_checked' => in_array($k, $set['list']['orders'], true), 'label_text' => $v]), array_keys($orders), $orders))];
+    $rows[] = ['label_html' => _NODE_ORDERS, 'label_id' => 'f-orders-label', 'field_html' => $checks('f-orders-label', $pick('orders[]', $orders, $set['list']['orders']))];
     $rows[] = ['label_html' => _NODE_ORDER, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'order', 'options_html' => $opts($orders, $set['list']['order']),
         'is_inline_gap' => true])
         .$tpl->getHtmlFrag('select', ['name_attr' => 'dir', 'options_html' => $opts(['desc' => _DESC, 'asc' => _ASC], $set['list']['dir'])])];
@@ -794,12 +797,10 @@ function getNodeTypeRows(array $vals, bool $new): array {
         'value_attr' => $set['list']['limit']])];
     $rows[] = ['label_html' => _NODE_ALPHA, 'field_html' => $box('alpha', $set['list']['alpha'], _YES)];
     $show = ['category' => _CATEGORY, 'author' => _POSTEDBY, 'date' => _DATE, 'views' => _READS];
-    $rows[] = ['label_html' => _NODE_SHOW, 'field_html' => implode(' ', array_map(fn(string $k, string $v): string => $tpl->getHtmlFrag('checkbox', ['name_attr' => 'show[]',
-        'value_attr' => $k, 'is_checked' => in_array($k, $set['list']['show'], true), 'label_text' => $v]), array_keys($show), $show))];
+    $rows[] = ['label_html' => _NODE_SHOW, 'label_id' => 'f-show-label', 'field_html' => $checks('f-show-label', $pick('show[]', $show, $set['list']['show']))];
     $looks = array_combine(NodeQuery::VIEWS, [_NODE_VCARDS, _NODE_VCOMPACT, _LIST, _NODE_VACCORD, _NODE_VTILES, _NODE_VRAIL]);
     $have = $set['list']['views'] ?: [NodeQuery::MODEVIEW[$set['view']['mode']] ?? 'cards'];
-    $rows[] = ['label_html' => _NODE_VIEWS, 'field_html' => implode(' ', array_map(fn(string $k, string $v): string => $tpl->getHtmlFrag('checkbox', ['name_attr' => 'views[]',
-        'value_attr' => $k, 'is_checked' => in_array($k, $have, true), 'label_text' => $v]), array_keys($looks), $looks))];
+    $rows[] = ['label_html' => _NODE_VIEWS, 'label_id' => 'f-views-label', 'field_html' => $checks('f-views-label', $pick('views[]', $looks, $have))];
     $rows[] = ['label_for' => 'f-view', 'label_html' => _NODE_VIEWDEF, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'view', 'selectid' => 'f-view',
         'options_html' => $opts($looks, $have[0])])];
     $rows[] = ['label_for' => 'f-mode', 'label_html' => _NODE_MODE, 'hint_html' => $esc(_NODE_MODEHINT), 'hint_id' => 'f-mode-hint',
@@ -809,15 +810,16 @@ function getNodeTypeRows(array $vals, bool $new): array {
     $feats = ['categories' => _CATEGORIES, 'comments' => _COMMENTS, 'rating' => _RATING, 'favorites' => _FAVORITES, 'poll' => _VOTING, 'home' => _NODE_FHOME,
         'pinned' => _NODE_FPIN,
         'submit' => _NODE_FSUBMIT, 'moderation' => _NODE_FMOD, 'schedule' => _NODE_FSCHED, 'related' => _NODE_RELATED, 'tree' => _NODE_FTREE];
-    $rows[] = ['label_html' => _NODE_FEATURES, 'field_html' => getTplLines(array_map(fn(string $k, string $v): string => $box('feat_'.$k, $set['features'][$k], $v),
-        array_keys($feats), $feats), false, true)];
+    $rows[] = ['label_html' => _NODE_FEATURES, 'label_id' => 'f-feats-label', 'field_html' => $checks('f-feats-label',
+        array_map(fn(string $k, string $v): array => $item('feat_'.$k, $set['features'][$k], $v), array_keys($feats), $feats))];
     $rows[] = $head(_NODE_FLOW);
     $flow = $set['workflow'];
     $cur = ($flow['access'] === 'all') ? '0|0' : (($flow['access'] === 'user') ? '1|0' : '2|'.implode(',', $flow['groups']));
-    $rows[] = ['label_html' => _NODE_ACCESS, 'field_html' => catacess('access', '', $cur, 0)];
-    $rows[] = ['label_html' => _NODE_PUBLISH, 'field_html' => catacess('publish', '', '2|'.implode(',', $flow['publish']), 2)];
-    $rows[] = ['label_html' => _NODE_NOTIFY, 'field_html' => getTplLines([$box('notify_pending', $flow['notify']['pending'], _NODE_NOTIFYP),
-        $box('notify_result', $flow['notify']['result'], _NODE_NOTIFYR)], false, true)];
+    $rows[] = ['label_html' => _NODE_ACCESS, 'label_id' => 'f-access-label', 'field_html' => getTplAccessChecks('access', $cur, 0, 'f-access-label')];
+    $rows[] = ['label_html' => _NODE_PUBLISH, 'label_id' => 'f-publish-label', 'field_html' => getTplAccessChecks('publish', '2|'.implode(',', $flow['publish']), 2,
+        'f-publish-label')];
+    $rows[] = ['label_html' => _NODE_NOTIFY, 'label_id' => 'f-notify-label', 'field_html' => $checks('f-notify-label', [$item('notify_pending', $flow['notify']['pending'],
+        _NODE_NOTIFYP), $item('notify_result', $flow['notify']['result'], _NODE_NOTIFYR)])];
     $rows[] = ['label_html' => _NODE_GUESTOK, 'field_html' => $box('guestok', false, _YES)];
     $rows[] = $head(_NODE_ROLES);
     $group = [];
@@ -859,8 +861,8 @@ function getNodeTypeRows(array $vals, bool $new): array {
     $rows[] = ['label_html' => _NODE_ROLES, 'field_html' => $tpl->getHtmlFrag('repeat', ['rows' => $group, 'add_label' => _ADD]), 'is_full' => true];
     $rows[] = $head(_NODE_INTEG);
     $integ = ['search' => _SEARCH, 'rss' => _RSS, 'sitemap' => _SITEMAP, 'blocks' => _BLOCKS];
-    $rows[] = ['label_html' => _NODE_INTEG, 'field_html' => implode(' ', array_map(fn(string $k, string $v): string => $box('integ_'.$k, $set['integrations'][$k], $v),
-        array_keys($integ), $integ))];
+    $rows[] = ['label_html' => _NODE_INTEG, 'label_id' => 'f-integ-label', 'field_html' => $checks('f-integ-label', array_map(fn(string $k, string $v): array => $item('integ_'.$k,
+        $set['integrations'][$k], $v), array_keys($integ), $integ))];
     $rows[] = ['label_html' => _NODE_SEO, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'seo', 'options_html' => $opts(['website' => 'website',
         'article' => 'article',
         'news' => 'news'], $set['integrations']['seo'])])];

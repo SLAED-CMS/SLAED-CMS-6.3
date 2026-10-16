@@ -237,6 +237,8 @@ final class UpdateSetupTest extends TestCase
         $head = substr($code, $save, $conn - $save);
         foreach (['checkUpdateWrite($name)', "is_file(BACKUP_DIR.'/config/marker.json')"] as $one) $this->assertStringContainsString($one, $head);
         $this->assertStringContainsString("\$done = !\$first || checkUpdateFail(\$rows) || setUpdateFile('update.php', ['modules' => '6.3.0'] + \$mark);", $code);
+        $step = strpos($code, "['steps' => [SL_VERSION => ", $save);
+        $this->assertGreaterThan(strpos($code, 'if ($ddl === [] || checkUpdateFail($ddl))', $save), $step, 'The step mark of the code comes before the schema file');
         $ddl = strpos($code, "\$ddl = setUpdateSql(\$db, 'table_update6_3.sql', \$pref);");
         $unit = strpos($code, 'setUpdatePoints($db, $pref)', $save);
         $this->assertNotFalse($ddl, 'The run lost its schema file');

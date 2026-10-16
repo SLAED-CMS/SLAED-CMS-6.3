@@ -25,3 +25,15 @@ GET {{base}}/system/nope
 OPTIONS {{base}}/system/ping
 Origin: {{host}}
 Access-Control-Request-Method: GET
+
+### master/check - 200 on slaed.net with the module master: records the site, answers manifest, keys and notes (each empty when nothing is due)
+GET {{base}}/master/check?sid=0123456789abcdef0123456789abcdef&v=8.0.0&ch=stable&kseq=0&php=8.4.13&db=mariadb&dbv=10.11.6&ext=3&ep=0&es=0&host=example.com
+
+### master/check with a path as version - 422 invalid, details.param v
+GET {{base}}/master/check?sid=0123456789abcdef0123456789abcdef&v=../8.0.0
+
+### master/file - 200 the full archive of a served release, Range and If-None-Match honoured
+GET {{base}}/master/file?v=8.0.1&kind=full
+
+### master/file of a release that is paused, waiting or unknown - 404 no_route
+GET {{base}}/master/file?v=9.9.9&kind=delta

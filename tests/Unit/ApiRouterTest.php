@@ -202,10 +202,24 @@ final class ApiRouterTest extends TestCase
                 $this->assertSame($code, $err->name);
             }
         }
-        foreach (['num', ['num', 5, 'def' => 1], ['word', ['a']], ['text', 9], ['json', 'def' => []], 'ver'] as $spec) {
+        $more = ['s' => ['hex', 4], 'h' => ['host', 'def' => ''], 'f' => ['ver', 'def' => null]];
+        $this->assertSame(['s' => 'ab09', 'h' => '', 'f' => null], \ApiInput::getValues($more, ['s' => 'ab09']));
+        $this->assertSame(['s' => 'ab09', 'h' => 'xn--80ak6aa92e.xn--p1ai', 'f' => '8.0.1'],
+            \ApiInput::getValues($more, ['s' => 'ab09', 'h' => 'xn--80ak6aa92e.xn--p1ai', 'f' => '8.0.1']));
+        foreach ([['s' => 'AB09'], ['s' => 'ab0'], ['s' => 'ab0g'], ['h' => 'localhost'], ['h' => '10.0.0.1'], ['h' => 'Example.com'], ['h' => '-a.com'], ['h' => 'a..com'],
+            ['h' => str_repeat('a', 64).'.com'], ['f' => '']] as $one) {
+            try {
+                \ApiInput::getValues($more, $one + ['s' => 'ab09']);
+                $this->fail('Accepted '.json_encode($one));
+            } catch (\ApiError $err) {
+                $this->assertSame('invalid', $err->name, json_encode($one));
+            }
+        }
+        foreach (['num', ['num', 5, 'def' => 1], ['word', ['a']], ['text', 9], ['json', 'def' => []], 'ver', ['hex', 32], ['host', 'def' => ''], ['ver', 'def' => null]] as $spec) {
             $this->assertTrue(\ApiInput::checkSpec($spec), json_encode($spec));
         }
-        foreach (['int', ['num', -1], ['num', 'def' => 'x'], ['word', []], ['word', ['a b']], ['text', 0], ['ver', 'x'], ['num', 'max' => 1]] as $spec) {
+        foreach (['int', ['num', -1], ['num', 'def' => 'x'], ['word', []], ['word', ['a b']], ['text', 0], ['ver', 'x'], ['num', 'max' => 1], ['hex', 0], ['hex', 129],
+            ['host', 3], ['host', 'def' => 'localhost']] as $spec) {
             $this->assertFalse(\ApiInput::checkSpec($spec), json_encode($spec));
         }
     }

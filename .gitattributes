@@ -37,3 +37,9 @@
 *.gz binary
 *.bz2 binary
 *.pdf binary
+
+# Kept in the repository and on the stand, never in a release archive (docs/11-UPDATE-2026.md)
+/public/update.php export-ignore
+/storage/update/sql/table_update6_3.sql export-ignore
+# The master of updates runs only on slaed.net and reaches it by SFTP; a site never receives it
+/modules/master export-ignore

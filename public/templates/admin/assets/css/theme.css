@@ -1313,6 +1313,19 @@ tr.sl-row-collapsed {
   box-sizing: border-box;
 }
 
+/* A list that picks several options: one box a row, and a long list scrolls inside its height; a full row lays it out in columns as a radio group */
+.sl-check-list {
+  display: grid;
+  gap: var(--sl-space-2);
+  max-height: var(--sl-select-height);
+  overflow-y: auto;
+}
+
+/* A row of a tree is indented by its depth, which the row carries as a custom property rather than as one class per level */
+[style*="--sl-d-depth"] {
+  margin-left: min(calc(var(--sl-d-depth, 0) * var(--sl-space-8)), 50%);
+}
+
 .sl-save-action-select {
   width: auto;
   margin-right: var(--sl-space-3);
@@ -4709,7 +4722,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
     animation: sl-beam-once calc(var(--sl-beam-dur) / 8) var(--sl-ease-out);
   }
 
-  /* The light that follows the pointer, as on the presentation page; admin-ui.js writes where it is */
+  /* The light that follows the pointer, as over the site; slaed.js writes where it is */
   body[data-sl-pointer]::after {
     content: "";
     position: fixed;
@@ -4788,12 +4801,13 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   display: none;
 }
 
-.sl-div-item-full .sl-radio-group {
+.sl-div-item-full :is(.sl-radio-group, .sl-check-list) {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: var(--sl-space-3) var(--sl-space-7);
   width: 100%;
   min-width: 0;
+  max-height: none;
 }
 
 .sl-div-item-full .sl-radio {
@@ -4819,6 +4833,11 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   max-width: 100%;
   overflow-wrap: anywhere;
   word-break: break-word;
+}
+
+/* The code of a module stands under its name, so the column of the box keeps the width of the box */
+.sl-div-item-full .sl-radio code {
+  grid-column: 2;
 }
 
 .sl-radio-group.sl-radio-switch {
@@ -4910,17 +4929,6 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   box-shadow:
     inset 0 0 0 1px var(--sl-scrim-subtle),
     var(--sl-shadow-focus);
-}
-
-.sl-div-item-full .sl-div-field:has(> .sl-radio.sl-right) {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: var(--sl-space-3) var(--sl-space-7);
-  overflow: visible;
-}
-
-.sl-div-item-full .sl-div-field > .sl-radio.sl-right {
-  text-align: left;
 }
 
 .sl-div-item-full .sl-div-label:empty {
@@ -5017,7 +5025,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
 }
 
 @media (max-width: 1200px) {
-  .sl-div-item-full .sl-radio-group,
+  .sl-div-item-full :is(.sl-radio-group, .sl-check-list),
   .sl-div-item-full .sl-radio-group.sl-radio-switch {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -5030,7 +5038,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   }
 
   .sl-toggle-form-block-item,
-  .sl-div-item-full .sl-radio-group {
+  .sl-div-item-full :is(.sl-radio-group, .sl-check-list) {
     grid-template-columns: 1fr;
   }
 
@@ -7518,17 +7526,22 @@ body:has(.sl-admin-login-shell)::before {
   position: relative;
 }
 
-/* The rim of the card lights up where the pointer is; admin-ui.js writes that place inside the card, and without a pointer the light rests on the top edge */
+/* The rim of the card lights up where the pointer is: the light is pinned to the viewport, so the place slaed.js writes needs no
+   measuring of the card, and without a pointer the light rests on the top edge */
 .sl-admin-login-card:has(.sl-setup)::after {
   content: "";
   position: absolute;
   inset: 0;
   padding: 1px;
   border-radius: inherit;
-  background: radial-gradient(circle var(--sl-pointer-width) at var(--sl-d-rim-x, 50%) var(--sl-d-rim-y, 0), var(--sl-primary), transparent 70%);
+  background: radial-gradient(circle var(--sl-pointer-width) at 50% 0, var(--sl-primary), transparent 70%);
   pointer-events: none;
   mask: linear-gradient(var(--sl-bg) 0 0) content-box, linear-gradient(var(--sl-bg) 0 0);
   mask-composite: exclude;
+}
+
+body[data-sl-pointer] .sl-admin-login-card:has(.sl-setup)::after {
+  background: radial-gradient(circle var(--sl-pointer-width) at var(--sl-d-pointer-x) var(--sl-d-pointer-y), var(--sl-primary), transparent 70%) fixed;
 }
 
 .sl-setup .sl-admin-login-form-frame {

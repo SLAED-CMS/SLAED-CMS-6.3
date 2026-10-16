@@ -25,6 +25,7 @@ require_once BASE_DIR.'/core/stream.php';
 # The cache holds the lock files of the file layer, so a lock a test takes is never one the stand serializes its writers on
 define('LOGS_DIR', str_replace('\\', '/', sys_get_temp_dir()).'/slaed-phpunit-'.getmypid().'/logs');
 define('CACHE_DIR', dirname(LOGS_DIR).'/cache');
+define('UPDATE_DIR', dirname(LOGS_DIR).'/update');
 if (!is_dir(LOGS_DIR)) mkdir(LOGS_DIR, 0777, true);
 
 # Remove that directory when the run ends, whatever the tests left in it
