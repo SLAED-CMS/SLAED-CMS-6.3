@@ -45,6 +45,7 @@
 *.backup
 *.sql
 !storage/update/sql/*.sql
+!storage/update/step/*.sql
 !modules/*/sql/*.sql
 !tests/Fixtures/*/site.sql
 *.zip

@@ -777,6 +777,7 @@ define('_UPDATE_LEAD','Installiert ist der Code der Version %1$s; letzte Markier
 define('_UPDATE_APPLY','Datenbankschritte anwenden');
 define('_UPDATE_APPLIED','Die Datenbankschritte sind angewendet, die Seite ist wieder offen.');
 define('_UPDATE_NOBACK','Die Sicherung der Datenbank ist fehlgeschlagen, kein Schritt wurde ausgeführt: %s');
+define('_UPDATE_BACKPART','Die Sicherung der Datenbank ist noch nicht fertig: Tabelle %1$d von %2$d. Drücken Sie die Schaltfläche erneut, die Sicherung setzt dort fort, wo sie stand.');
 define('_UPDATE_STEPFAIL','Der Schritt der Version %1$s ist fehlgeschlagen: %2$s. Die Seite bleibt geschlossen; die vorher angelegte Sicherung liegt in storage/backup.');
 define('_UPDATE_PACK','Paket');
 define('_UPDATE_FULL','Vollarchiv');

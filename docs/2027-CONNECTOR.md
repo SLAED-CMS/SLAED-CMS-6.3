@@ -5,8 +5,8 @@ of the site — a Vine Monitor agent, a headless front end, a Telegram bot, an A
 updates — talks to the site through it, and the site talks to the outside world (update server, Telegram Bot API, AI
 providers) through the same layer.
 
-Status: planned, nothing implemented. The updates, the entry of the API and steps 1–2 moved into
-`docs/11-UPDATE-2026.md` before 8.0 (owner, 2026-10-15); this plan starts after them, with step 3.
+Status: planned, nothing implemented. The updates, the entry of the API and steps 1–2 were built
+before 8.0 with the updater, reference `docs/UPDATE.md` (owner, 2026-10-15); this plan starts after them, with step 3.
 The owner's decisions of 2026-10-07 and 2026-10-14 are in "Decisions"; "Recommended
 decisions" and everything below it is the working design, changed only through "Open questions". The steps are at the
 end, one per session. The binding coding rules are in `.rules/api.md`; where this plan and that file differ, the file
@@ -58,7 +58,7 @@ Taken by the owner on 2026-10-07; settled, not to be reopened by a step.
 - **One entry, the branch `/api/` of `public/index.php`** (owner, 2026-10-15, in place of the own entry
   `public/api.php` of 2026-10-07): no new rewrite rule on either server, one door for every machine client.
 - **slaed.net is the master:** the update server of every SLAED site — now the module `master` and the core page
-  "Обновления" of `docs/11-UPDATE-2026.md`, built before 8.0.
+  "Обновления", built before 8.0 (`docs/UPDATE.md`).
 - **Anonymous access only to safe actions:** an action is open without a key only if it is `GET`/`HEAD`, declared
   `'auth' => 'public'`, read-only and returns only data a guest may see on the site anyway; it is rate-limited per IP
   and cacheable. Everything else needs a key or, for an inbound webhook, its declared secret.
@@ -72,7 +72,7 @@ Taken by the owner on 2026-10-07; settled, not to be reopened by a step.
   fixed list of actions no agent ever gets, and an audit trail (section "Administrator access"). This supersedes
   "read-only or draft-only" for administrator keys; a user key stays draft-only.
 - **Update channels, the two signing keys and the check on by default with a notice** — decided here on 2026-10-07,
-  carried into `docs/11-UPDATE-2026.md`, which holds them now.
+  built before 8.0; `docs/UPDATE.md` holds them now.
 - **Step order:** Vine right after clients and guards; outbound, queue and events right before Telegram (section
   "Steps"). Vine needs none of the queue, and the queue is built for its first real consumer.
 - **Operations:** one key per caller (no shared keys), an audit log of admin actions, a status page, the server clock
@@ -91,7 +91,7 @@ Taken by the owner on 2026-10-07; settled, not to be reopened by a step.
   the boot pays off, and a fault in the API cannot render a site page.
 - **A light boot of the core:** the branch defines `API_FILE`; `core/system.php` accepts it beside `MODULE_FILE` and
   `ADMIN_FILE` and skips the theme, the template object and everything visual. Config, DB, security, logger, cache,
-  mail and the classes that services need stay loaded. Built by `docs/11-UPDATE-2026.md`, batch 1.
+  mail and the classes that services need stay loaded. Built before 8.0 (`docs/ARCHITECTURE.md`, "Entry Points").
 - **One client registry for every caller:** a client is a key with scopes. A Vine agent, a headless app, an AI agent
   and a partner site are rows of the same table; a service never invents its own key scheme.
 - **Inbound and outbound in one layer:** `ApiHttp` is the only place API code calls external hosts, with a host
@@ -313,7 +313,7 @@ access"), `master` (1 only on slaed.net), `dev` (1 only on a
 development host; `tools/apikey.php` refuses to run without it).
 
 The settings of updates, `upcheck` and `channel`, live in `config/update.php` beside the marks of the data updates
-(`docs/11-UPDATE-2026.md`); `config/api.php` holds none of them.
+(`docs/UPDATE.md`); `config/api.php` holds none of them.
 
 ## Services
 
@@ -346,7 +346,7 @@ Each service is its own plan or section; the connector only hosts it.
   - the client's `uid` decides read rights through the existing category rights — no second rights system;
   - writes later, scope `content:write`, only through the shared Node writer.
 - **`ai`:** see the next section.
-- **`master`:** the update server, a module installed on slaed.net only — `docs/11-UPDATE-2026.md`.
+- **`master`:** the update server, a module installed on slaed.net only — `docs/UPDATE.md`.
 
 ## Service `ai`
 
@@ -423,9 +423,9 @@ above.
 
 ## Service `update`
 
-Moved into `docs/11-UPDATE-2026.md` and built before 8.0 (owner, 2026-10-15): the master is the module `master`
+Built before 8.0 with the updater (owner, 2026-10-15), reference `docs/UPDATE.md`: the master is the module `master`
 on slaed.net, the client the core page "Обновления", the download a reply in the mode `file`. The signature,
-the keys, the channels, the manifest, the unpacking and the installation are designed there.
+the keys, the channels, the manifest, the unpacking and the installation are described there.
 
 ## Security
 
@@ -507,7 +507,7 @@ New admin module `admin/modules/api.php` (tabs through `getTplAdminTabs()`, ever
   from `{{$dotenv SLAED_API_KEY}}`, and `tools/.env` is added to `.gitignore` in the step that creates the file.
 - **`tools/apikey.php`:** CLI on the dev host — create a client with name and scopes and print the key once, list,
   revoke. Refuses to run unless `$conf['api']['dev']` is 1.
-- **`tools/release.php`, `tools/sign.php`:** build from a tag and sign offline (`docs/11-UPDATE-2026.md`).
+- **`tools/release.php`, `tools/sign.php`:** build from a tag and sign offline (`docs/UPDATE.md`).
 
 ## Later
 
@@ -530,8 +530,8 @@ The plan of 2026-10-07 is decided (section "Decisions"). A new question goes her
 
 Order decided on 2026-10-07: Vine right after clients and guards.
 
-- [x] 1. Light boot — moved to `docs/11-UPDATE-2026.md`, batch 1 (the branch `/api/` of `public/index.php`).
-- [x] 2. Core of the connector — moved to `docs/11-UPDATE-2026.md`, batch 2, with `checkApiFlood` and the reply
+- [x] 1. Light boot — built before 8.0 with the updater (the branch `/api/` of `public/index.php`).
+- [x] 2. Core of the connector — built before 8.0 with the updater, with `checkApiFlood` and the reply
   mode `file`.
 - [ ] 3. Clients and guards: `config/api.php` (`dev`), `api_client`, keys, scopes, `checkApiAuth`,
   `checkApiScope`, `checkApiOrigin`, `checkApiLimit`, `api_log`, `api_idem`, `api_audit`, `addApiAudit()`, the
@@ -547,7 +547,7 @@ Order decided on 2026-10-07: Vine right after clients and guards.
 - [ ] 6. Service `telegram`: webhook with the secret header, linking, alerts (Vine captcha and nobody working first),
   Vine finds to the phone, admin commands with `vine/hold` and `vine/resume`; admin tab Telegram.
 - [ ] 7. Service `content`: headless reads with rights, ETag, cursor paging; `docs/NODE.md` updated.
-- [x] 8. Service `update` — moved to `docs/11-UPDATE-2026.md` and built before 8.0.
+- [x] 8. Service `update` — built before 8.0 as the updater, `docs/UPDATE.md`.
 - [ ] 9. Service `ai`: tool table, MCP endpoint `/api/v1/ai/mcp` (`server/discover`, `tools/list`, `tools/call`,
   transport checks, older-client support, Bearer key), outbound provider calls through the queue. Done when Claude
   Code connects with the key, lists the flagged tools and calls `vine_stats`, a client of the older revision connects

@@ -4,7 +4,7 @@
 # License: MIT
 # Website: slaed.net
 
-# CLI probe of the installation from the panel over real HTTP, step 9 of docs/11-UPDATE-2026.md; nothing touches the site tree or the site database
+# CLI probe of the installation from the panel over real HTTP (docs/UPDATE.md, "Installation"); nothing touches the site tree or the site database
 # It copies the code of the tree into a disposable site with its own database, writes the files.json of 6.3.0 and unpacks a package of 6.3.1 into its stage/
 # The package is signed with a fresh key the copy trusts; the built-in server serves the copy's public/, and every exchange is a real request with its own cookies
 # Each run starts from the same pristine copy: a full installation and its way back, a failed database step, a failed dump, a cut batch continued or rolled back by the code

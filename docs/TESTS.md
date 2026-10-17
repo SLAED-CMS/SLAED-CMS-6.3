@@ -186,6 +186,8 @@ Current unit test files include:
 - `AdminPageRenderFlowTest.php`
 - `AdminPreviewBridgeFlowTest.php`
 - `AdminSearchboxBridgeFlowTest.php`
+- `ApiEntryTest.php`
+- `ApiRouterTest.php`
 - `BackupContractTest.php`
 - `BackupIntegrationTest.php`
 - `BackupPartTest.php`
@@ -221,12 +223,14 @@ Current unit test files include:
 - `MailQueueTest.php`
 - `MailSmtpTest.php`
 - `MailTransportTest.php`
+- `MasterTest.php`
 - `OauthLinkTest.php`
 - `OauthTest.php`
 - `ParserFixturesTest.php`
 - `PasswordHashTest.php`
 - `PrivatClassTest.php`
 - `PrivatMigrationTest.php`
+- `ReleaseToolTest.php`
 - `RouteBuildTest.php`
 - `RouteMoveTest.php`
 - `RouteParseTest.php`
@@ -238,11 +242,20 @@ Current unit test files include:
 - `ThemeContractTest.php`
 - `ThemeCreationTest.php`
 - `UiAuditTest.php`
+- `UpdateApplyTest.php`
+- `UpdateClientTest.php`
+- `UpdateFetchTest.php`
+- `UpdateGateTest.php`
+- `UpdateMergeTest.php`
+- `UpdateSignTest.php`
 - `UploadContractTest.php`
 - `UploadFallbackTest.php`
 - `UploadFormatTest.php`
 - `UploadIntegrationTest.php`
 - `ViewBridgeSmokeTest.php`
+
+The updater tests and what each holds are listed in `docs/UPDATE.md`, "Tests". A test run trusts the test keys of
+`tests/Fixtures/update/` through `UPDATE_KEYS`, which `tests/Support/test_keys.php` defines before the core.
 
 Contract tests (`CommentNotifyTest`, `CommentReadTest`, `CommentStateTest`, `CommentTargetTest`,
 `CommentThreadTest`, `CommentTrustBoundaryTest`, `CommentWriteTest`, `GeoipReaderTest`, `InputFilterTest`,

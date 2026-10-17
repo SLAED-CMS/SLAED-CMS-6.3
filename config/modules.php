@@ -171,17 +171,6 @@ return [
             'top' => '0',
             'type' => '0',
         ],
-        'master' => [
-            'lang' => '_MASTER',
-            'icon' => 'puzzle',
-            'active' => '0',
-            'view' => '0',
-            'menu' => '1',
-            'group' => '0',
-            'side' => '0',
-            'top' => '0',
-            'type' => '1',
-        ],
         'messages' => [
             'lang' => '_MESSAGES',
             'icon' => 'envelope',

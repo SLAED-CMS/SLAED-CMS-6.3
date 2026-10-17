@@ -777,6 +777,7 @@ define('_UPDATE_LEAD','Zainstalowany jest kod wersji %1$s; ostatni znacznik krok
 define('_UPDATE_APPLY','Zastosuj kroki bazy');
 define('_UPDATE_APPLIED','Kroki bazy danych zostały zastosowane, strona jest znowu otwarta.');
 define('_UPDATE_NOBACK','Kopia bazy danych nie powiodła się, żaden krok nie został wykonany: %s');
+define('_UPDATE_BACKPART','Kopia bazy danych nie jest jeszcze gotowa: tabela %1$d z %2$d. Naciśnij przycisk ponownie, kopia będzie kontynuowana od miejsca, w którym się zatrzymała.');
 define('_UPDATE_STEPFAIL','Krok wersji %1$s nie powiódł się: %2$s. Strona pozostaje zamknięta; kopia wykonana przed nim leży w storage/backup.');
 define('_UPDATE_PACK','Pakiet');
 define('_UPDATE_FULL','pełne archiwum');

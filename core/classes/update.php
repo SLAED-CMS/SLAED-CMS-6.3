@@ -42,7 +42,7 @@ final class Update {
     public const KEYCHANGE = "SLAED-KEYCHANGE-v1\n";
     public const NOTE = "SLAED-NOTE-v1\n";
 
-    # The factory keys in base64: the primary signs releases and notes, the recovery key only key statements; test keys until the key ceremony
+    # The factory keys in base64: the primary signs releases and notes, the recovery key only key statements
     public const PRIMARY = '59ubydnghcn58YwJIchp9O9rmPvkRhBfX1CssLJzopg=';
     public const RECOVERY = 'OpOGkJH+KEQehR5ZadvvlmTBtVb+WXOyLWM7yBndTA0=';
 
@@ -83,6 +83,12 @@ final class Update {
     # The fingerprint of a raw public key, its SHA-256 in hex; the first 16 characters are the key id a manifest names
     public static function getKeyPrint(string $key): string {
         return hash('sha256', $key);
+    }
+
+    # The factory keys every key chain starts from: the two constants above, or UPDATE_KEYS where a test run defines it before the core, as it relocates UPDATE_DIR
+    public static function getFactoryKeys(): array {
+        $keys = defined('UPDATE_KEYS') ? constant('UPDATE_KEYS') : ['primary' => self::PRIMARY, 'recovery' => self::RECOVERY];
+        return ['kseq' => 0, 'primary' => (string)($keys['primary'] ?? ''), 'recovery' => (string)($keys['recovery'] ?? ''), 'revoked' => []];
     }
 
     # Whether $sig signs $msg under the raw public $key; without the extension sodium the class Signature verifies, and only then is it loaded
@@ -162,7 +168,7 @@ final class Update {
     # The keys the site trusts: client/keys.json once a statement was applied, the factory keys before; a damaged file trusts no key at all
     public static function getKeyFile(): array {
         $file = UPDATE_DIR.'/client/keys.json';
-        if (!is_file($file)) return ['kseq' => 0, 'primary' => self::PRIMARY, 'recovery' => self::RECOVERY, 'revoked' => []];
+        if (!is_file($file)) return self::getFactoryKeys();
         $data = self::getJsonData((string)file_get_contents($file));
         $good = is_array($data) && is_int($data['kseq'] ?? null) && self::getRawBytes($data['primary'] ?? '', 32) !== '' && self::getRawBytes($data['recovery'] ?? '', 32) !== ''
             && is_array($data['revoked'] ?? null);
@@ -786,10 +792,11 @@ final class Update {
         return $out;
     }
 
-    # Hold the shipped files against the installed files.json and find the PHP files no list names in AUDIT; the panel entry is held under its name $afile
+    # Hold the shipped files against files.json and find the PHP files no list names in AUDIT; the panel entry counts as $afile, the installer that deleted itself as no loss
     public static function addAudit(string $root = BASE_DIR, string $afile = 'admin'): array {
         $list = self::getFileList(UPDATE_DIR.'/files.json');
         $files = (array)($list['files'] ?? []);
+        if (!is_file($root.'/public/setup.php')) unset($files['public/setup.php']);
         if ($afile !== 'admin' && preg_match('#^[A-Za-z0-9_-]{1,50}$#D', $afile) === 1 && isset($files['public/admin.php'])) {
             $files['public/'.$afile.'.php'] = $files['public/admin.php'];
             unset($files['public/admin.php']);

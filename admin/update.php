@@ -79,7 +79,28 @@ function setUpdateSteps(string $fail): void {
         'lead' => $lead, 'checks' => $checks, 'alert_html' => $alert, 'next_text' => _UPDATE_APPLY, 'is_install' => true]);
 }
 
-# Back up the database, then run the waiting steps under one lock, so a second click waits and finds nothing left; the mark of the code opens the site
+# The portion dump of the site tables before the steps, as step 4 of an installation takes it, resumed by the next click; a finished one stays the point of return
+function addUpdateBackup(PDO $pdo, string $dir): array {
+    require_once BASE_DIR.'/core/classes/backup.php';
+    $file = $dir.'.json';
+    if (is_file($dir.'/dump.json')) return ['done' => true, 'error' => '', 'tab' => 0, 'tabs' => 0];
+    $limit = intval(ini_get('max_execution_time'));
+    $end = microtime(true) + (($limit > 0) ? min(Update::SPAN, intdiv($limit, 2)) : Update::SPAN);
+    try {
+        $state = is_file($file) ? json_decode((string)file_get_contents($file), true) : null;
+        $state = is_array($state) ? $state : Backup::getDumpState($dir, PREFIX_DB, Backup::getSiteTables($pdo, PREFIX_DB));
+        do {
+            $state = Backup::addDumpPart($pdo, $state);
+        } while (!$state['done'] && microtime(true) < $end);
+    } catch (Throwable $error) {
+        if (is_file($file)) unlink($file);
+        return ['done' => false, 'error' => $error->getMessage(), 'tab' => 0, 'tabs' => 0];
+    }
+    $kept = $state['done'] ? (!is_file($file) || unlink($file)) : file_put_contents($file, json_encode($state)) !== false;
+    return ['done' => $state['done'], 'error' => $kept ? '' : $file, 'tab' => $state['tab'], 'tabs' => count($state['tabs'])];
+}
+
+# Back up the site tables, run the waiting steps under one lock and keep the backup under the time it served; the mark of the code opens the site
 function addUpdateSteps(): void {
     global $db, $afile, $conf;
     if (!checkAdminPost('update')) {
@@ -92,10 +113,14 @@ function addUpdateSteps(): void {
         return;
     }
     if (Update::getStepList((string)getStepMark(CONFIG_DIR)) === []) setRedirect($afile.'.php', false, 302, _UPDATE_APPLIED);
-    require_once BASE_DIR.'/core/classes/backup.php';
-    $sett = $conf['scheduler']['jobs']['dbbackup']['settings'] ?? [];
-    $back = (new Backup($db, ['name' => (string)($conf['db']['name'] ?? '')], is_array($sett) ? $sett : [], BACKUP_DIR))->addDatabaseBackup();
-    $res = (($back['status'] ?? '') === 'success') ? Update::addSteps($db, $conf) : ['ok' => false, 'ver' => '', 'error' => (string)($back['message'] ?? '')];
+    $dir = BACKUP_DIR.'/steps/'.SL_VERSION;
+    $back = addUpdateBackup($db->sqlconnid, $dir);
+    if ($back['error'] === '' && !$back['done']) {
+        setUpdateSteps(sprintf(_UPDATE_BACKPART, $back['tab'] + 1, $back['tabs']));
+        return;
+    }
+    $res = $back['done'] ? Update::addSteps($db, $conf) : ['ok' => false, 'ver' => '', 'error' => $back['error']];
+    if ($res['ok']) rename($dir, $dir.'-'.date('Ymd-His'));
     setAdminLog(['result' => $res['ok'] ? 'done' : 'failed', 'ver' => $res['ver']]);
     if ($res['ok']) setRedirect($afile.'.php', false, 302, _UPDATE_APPLIED);
     setUpdateSteps(($res['ver'] === '') ? sprintf(_UPDATE_NOBACK, $res['error']) : sprintf(_UPDATE_STEPFAIL, $res['ver'], $res['error']));

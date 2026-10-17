@@ -777,6 +777,7 @@ define('_UPDATE_LEAD','The code of version %1$s is installed; the last mark of t
 define('_UPDATE_APPLY','Apply database steps');
 define('_UPDATE_APPLIED','The database steps are applied, the site is open again.');
 define('_UPDATE_NOBACK','The backup of the database failed, no step has run: %s');
+define('_UPDATE_BACKPART','The backup of the database is not finished yet: table %1$d of %2$d. Press the button again, the backup goes on where it stopped.');
 define('_UPDATE_STEPFAIL','The step of version %1$s failed: %2$s. The site stays closed; the backup made before it is in storage/backup.');
 define('_UPDATE_PACK','Package');
 define('_UPDATE_FULL','full archive');

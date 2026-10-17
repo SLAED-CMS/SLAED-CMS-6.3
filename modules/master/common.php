@@ -84,7 +84,7 @@ function getMasterManifest(string $ver, string $chan): array {
 
 # The keys in force on the master: the factory keys after the statements of inbox/keys/ in their order, up to the first that fails; a signature needs no acceptance
 function getMasterKeys(): array {
-    $keys = ['kseq' => 0, 'primary' => Update::PRIMARY, 'recovery' => Update::RECOVERY, 'revoked' => []];
+    $keys = Update::getFactoryKeys();
     $list = [];
     $why = '';
     foreach (Update::getKeyList(MASTER_DIR.'/inbox/keys') as $one) {

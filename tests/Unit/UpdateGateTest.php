@@ -78,6 +78,11 @@ final class UpdateGateTest extends TestCase
         $this->assertTrue($run['done']['ran'], 'The PHP step did not run');
         $this->assertSame(1, $run['done']['rows'], 'The repaired SQL step did not run');
         $this->assertGreaterThan(0, $run['done']['backup'], 'No backup of the database was made before the steps');
+        $this->assertCount(1, $run['done']['dump'], 'The click after the failed step took a second backup of a half-changed database');
+        $this->assertMatchesRegularExpression('#^6\.3\.0-\d{8}-\d{6}$#', $run['done']['kept'][0] ?? '', 'The used backup was not set aside under its time');
+        $tabs = $run['done']['dump'][0] ?? [];
+        $this->assertContains('probe_admins', $tabs, 'The portion dump left out a table of the site');
+        $this->assertSame([], array_values(array_filter($tabs, static fn(string $v): bool => !str_starts_with($v, 'probe_'))), 'The dump took a table of another program');
         $this->assertSame([200, 200], [$run['done']['site'], $run['done']['api']], 'The site did not open after the steps');
         $this->assertFalse($run['done']['panel']['card'], 'The panel stayed in its light mode');
         $this->assertSame(['Login refused', 'Login accepted', 'update steps', 'update steps'], $run['log'], 'The light mode left its logins or steps out of admin.log');

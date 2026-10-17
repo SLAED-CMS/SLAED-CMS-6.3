@@ -31,6 +31,7 @@ define('PUBLIC_DIR', BASE_DIR.'/public');
 $rdirs = ['CONFIG_DIR' => 'config', 'BACKUP_DIR' => 'backup', 'CACHE_DIR' => 'cache', 'COUNTER_DIR' => 'counter', 'LOGS_DIR' => 'logs', 'SITEMAP_DIR' => 'sitemap',
     'CAPTCHA_DIR' => 'captcha', 'UPLOADS_DIR' => 'uploads', 'UPDATE_DIR' => 'update'];
 foreach ($rdirs as $rkey => $rdir) define($rkey, $rroot.'/'.$rdir);
+require_once __DIR__.'/test_keys.php';
 $rglob = require CONFIG_DIR.'/global.php';
 $rwho = (string)($_SERVER['HTTP_X_PROBE_WHO'] ?? '');
 $rusers = ['anna' => '2:anna:hash-anna', 'boris' => '3:boris:hash-boris', 'clara' => '4:clara:hash-clara', 'helper' => '5:helper:hash-helper'];

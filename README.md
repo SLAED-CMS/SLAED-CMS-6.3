@@ -271,6 +271,27 @@ For upgrade guidance and currently confirmed migration notes, see [UPGRADING.md]
 
 ---
 
+## Updates and Release Keys
+
+From 8.0 a site updates itself from the panel, page "Обновления": it learns of a new release once a day from
+`slaed.net`, downloads it, verifies its signature and installs it in steps at the click of its administrator, with a
+rollback of files, settings and database on any failure. A site accepts a release only under the signature of the
+SLAED primary key, whatever server or page the archive came from. How releases are built, signed and served is
+[docs/UPDATE.md](docs/UPDATE.md).
+
+The factory keys of the core (`Update::PRIMARY` and `Update::RECOVERY` in `core/classes/update.php`) have these
+fingerprints, the SHA-256 of the public key; compare them before you trust an archive you received by hand:
+
+| Key | Signs | Fingerprint |
+|-----|-------|-------------|
+| Primary | releases and notes | `KEY-PRIMARY-PENDING` |
+| Recovery | key statements only | `KEY-RECOVERY-PENDING` |
+
+A key change reaches sites as a statement signed by the recovery key; this table always names the factory keys a
+release ships.
+
+---
+
 ## Documentation
 
 | Document | Description |
@@ -284,6 +305,7 @@ For upgrade guidance and currently confirmed migration notes, see [UPGRADING.md]
 | [docs/PLUGINS.md](docs/PLUGINS.md) | Plugin architecture design note |
 | [docs/EDITORS.md](docs/EDITORS.md) | Pluggable Editor and Plugin system architecture |
 | [docs/PARSER.md](docs/PARSER.md) | Content parsing and Markdown/BBCode architecture |
+| [docs/UPDATE.md](docs/UPDATE.md) | Updates from the panel: releasing, signing, the master, installation, privacy |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | Contribution and coding rules |
 | [SECURITY.md](SECURITY.md) | Security policy |
 | [UPGRADING.md](UPGRADING.md) | Upgrade notes |

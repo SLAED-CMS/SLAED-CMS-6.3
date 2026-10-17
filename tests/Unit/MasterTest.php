@@ -50,7 +50,7 @@ final class MasterTest extends TestCase
         return self::$probe;
     }
 
-    # The secret key of a test factory key, opened by its known password
+    # The secret key of a test key, opened by its known password
     private static function getKey(string $role): string
     {
         $data = json_decode((string)file_get_contents(BASE_DIR.'/tests/Fixtures/update/'.$role.'.key'), true);
@@ -124,7 +124,7 @@ final class MasterTest extends TestCase
         $run = $this->getRun()['master'];
         $this->assertSame(['wait' => '', 'betabeta' => '8.0.1/beta', 'betastable' => '', 'stablebeta' => '8.0.2/stable', 'stable' => '8.0.2/stable', 'above' => '', 'old' => '',
             'nobody' => '', 'nobodybeta' => '8.0.1/beta'], $run['offer']);
-        $keys = ['kseq' => 0, 'primary' => Update::PRIMARY, 'recovery' => Update::RECOVERY, 'revoked' => []];
+        $keys = Update::getFactoryKeys();
         $res = Update::getManifest((string)base64_decode($run['signed']['body']), $run['signed']['sig'], $keys, ['version' => '8.0.0', 'channel' => 'stable']);
         $this->assertTrue($res['ok'], 'The served manifest does not verify under the factory key: '.$res['error']);
         $this->assertSame(['offer' => '', 'file' => 404, 'row' => ['state' => 'pause', 'pauseby' => 'owner']], $run['paused'], 'A paused release is still served');
@@ -181,7 +181,7 @@ final class MasterTest extends TestCase
         $this->assertSame(['a' => [1001, 1002], 'b' => [1001], 'anew' => [1002]], array_intersect_key($run['notes'], ['a' => 1, 'b' => 1, 'anew' => 1]));
         $this->assertSame(['1003.json', '1003.sig'], $run['notes']['left'], 'A note signed by the recovery key was accepted');
         $this->assertSame([1001], $run['notes']['off'], 'A withdrawn note is still served');
-        $keys = ['primary' => Update::PRIMARY];
+        $keys = Update::getFactoryKeys();
         $res = Update::getNote($run['notes']['body'], $run['notes']['sig'], $keys, ['sid' => str_repeat('a', 32), 'version' => '8.0.0']);
         $this->assertTrue($res['ok'], 'The served note does not verify: '.$res['error']);
         $this->assertSame(['zero' => [1], 'one' => []], $run['keys'], 'Key statements are not served by kseq, or a forged one passed');

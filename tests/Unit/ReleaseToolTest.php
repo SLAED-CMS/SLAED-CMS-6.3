@@ -54,10 +54,10 @@ final class ReleaseToolTest extends TestCase
         return ['code' => proc_close($proc), 'out' => $out.$err];
     }
 
-    # One tool of the scratch repository
+    # One tool of the scratch repository without OPcache: on Windows CLI processes share one cache, and a rewritten update.php could run as compiled two seconds before
     private static function getTool(string $tool, array $args, string $input = ''): array
     {
-        return self::getRun(array_merge([PHP_BINARY, 'tools/'.$tool.'.php'], $args), $input);
+        return self::getRun(array_merge([PHP_BINARY, '-d', 'opcache.enable_cli=0', 'tools/'.$tool.'.php'], $args), $input);
     }
 
     # git in the scratch repository, quiet and with a fixed author
@@ -125,6 +125,10 @@ final class ReleaseToolTest extends TestCase
         foreach ($copy as $path) {
             self::setFile($path, (string)file_get_contents(BASE_DIR.'/'.$path));
         }
+        $test = self::getFileKeys($repo.'/tests/Fixtures/update/primary.key', $repo.'/tests/Fixtures/update/recovery.key');
+        $code = (string)file_get_contents($repo.'/core/classes/update.php');
+        $code = preg_replace("#const PRIMARY = '[^']*'#", "const PRIMARY = '".$test['primary']."'", $code);
+        self::setFile('core/classes/update.php', preg_replace("#const RECOVERY = '[^']*'#", "const RECOVERY = '".$test['recovery']."'", $code));
         $files = ['public/sitemap.xml' => "<urlset/>\n", 'composer.json' => '{"require":{"php":">=8.4"}}', 'README.md' => "# Test\n", 'config/global.php' => "<?php\nreturn [];\n",
             'config/system.php' => "<?php\n", 'public/robots.txt' => "User-agent: *\n", 'public/index.php' => "<?php\n", 'public/update.php' => "<?php\n# one\n",
             'storage/update/sql/table.sql' => "-- table\n", 'storage/update/sql/table_update6_3.sql' => "-- 6.3\n", 'core/system.php' => "<?php\n# one\n",
@@ -201,13 +205,20 @@ final class ReleaseToolTest extends TestCase
         self::setGit(['tag', 'v8.0.2']);
         self::getTool('release', ['build', 'v8.0.2', '--max=5']);
         self::getTool('sign', ['8.0.2', '--key='.$kdir.'/p.key'], "y\nreal-secret\n");
+        $run['norehearse'] = self::getTool('release', ['publish', 'v8.0.2']);
+        $man = json_decode((string)file_get_contents($repo.'/storage/release/8.0.2/manifest-stable.json'), true);
+        $green = ['version' => '8.0.2', 'from' => '8.0.1', 'full' => $man['full']['sha256'], 'delta' => $man['delta']['sha256']];
+        self::setFile('storage/release/8.0.2/rehearsal.json', json_encode(['full' => str_repeat('0', 64)] + $green));
+        $run['otherhash'] = self::getTool('release', ['publish', 'v8.0.2']);
+        self::setFile('storage/release/8.0.2/rehearsal.json', json_encode($green));
         $run['noenv'] = self::getTool('release', ['publish', 'v8.0.2']);
         $run['note'] = self::getTool('release', ['note', '--level', 'warn', '--ver', '<8.0.2', '--until', '2099-12-31'], "Обновитесь\n.\nPlease update\n.\n");
         preg_match('#Note (\d+) written#', $run['note']['out'], $hit);
         $run['noteid'] = $hit[1] ?? '';
         $run['notesign'] = self::getTool('sign', ['--note', $run['noteid'], '--key='.$kdir.'/p.key'], "y\nreal-secret\n");
-        $nfile = $repo.'/storage/release/notes/'.$run['noteid'].'.json';
-        $run['noteres'] = is_file($nfile.'.sig') ? Update::getNote((string)file_get_contents($nfile), (string)file_get_contents($nfile.'.sig'), $real,
+        $nfile = $repo.'/storage/release/notes/'.$run['noteid'];
+        $run['notepub'] = self::getTool('release', ['publish', '--note='.$run['noteid']]);
+        $run['noteres'] = is_file($nfile.'.sig') ? Update::getNote((string)file_get_contents($nfile.'.json'), (string)file_get_contents($nfile.'.sig'), $real,
             ['sid' => '', 'version' => '8.0.1']) : ['ok' => false, 'error' => 'missing'];
         $run['change'] = self::getTool('sign', ['--keys', 'change', '--primary='.$kdir.'/p2.key', '--with='.$kdir.'/r.key'], "y\nreal-secret\n");
         $run['change2'] = self::getTool('sign', ['--keys', 'change', '--recovery='.$kdir.'/r2.key', '--with='.$kdir.'/r.key', '--key='.$kdir.'/p2.key'],
@@ -293,7 +304,7 @@ final class ReleaseToolTest extends TestCase
         $this->assertSame(0, $run['thirdsign']['code'], 'The real key did not sign: '.$run['thirdsign']['out']);
     }
 
-    # publish stops on test factory keys and on fingerprints missing from the README before it touches the network; a sound release gets to the SFTP settings
+    # publish stops on test keys, on fingerprints missing from the README and without a green rehearsal of these archives; a sound release gets to the SFTP settings
     #[Test]
     public function publishingRefusesTestKeys(): void
     {
@@ -302,6 +313,10 @@ final class ReleaseToolTest extends TestCase
         $this->assertStringContainsString('is the test key', $run['testkeys']['out'], 'A release with test keys got past publish');
         $this->assertSame(1, $run['noreadme']['code']);
         $this->assertStringContainsString('README.md does not publish the fingerprint', $run['noreadme']['out']);
+        foreach (['norehearse' => 'a release never rehearsed', 'otherhash' => 'a rehearsal of another archive'] as $name => $what) {
+            $this->assertSame(1, $run[$name]['code'], 'publish let through '.$what);
+            $this->assertStringContainsString('no green rehearsal', $run[$name]['out'], 'publish refused '.$what.' for another reason');
+        }
         $this->assertSame(1, $run['noenv']['code']);
         $this->assertStringContainsString('SLAED_SFTP', $run['noenv']['out'], 'A sound release was refused before the SFTP settings: '.$run['noenv']['out']);
     }
@@ -314,6 +329,7 @@ final class ReleaseToolTest extends TestCase
         $this->assertSame(0, $run['note']['code'], 'The note was not written: '.$run['note']['out']);
         $this->assertSame(0, $run['notesign']['code'], 'The note was not signed: '.$run['notesign']['out']);
         $this->assertTrue($run['noteres']['ok'], 'The signed note does not verify: '.$run['noteres']['error']);
+        $this->assertStringContainsString('SLAED_SFTP', $run['notepub']['out'], 'publish did not find the signed note sign.php wrote: '.$run['notepub']['out']);
         $this->assertSame(['Обновитесь', 'Please update', 'warn'], [$run['noteres']['data']['ru'], $run['noteres']['data']['en'], $run['noteres']['data']['level']]);
         foreach (['newp', 'newr', 'newp2', 'newr2', 'change', 'change2'] as $name) $this->assertSame(0, $run[$name]['code'], $name.' failed: '.$run[$name]['out']);
         $this->assertStringContainsString('seed for paper', $run['newr']['out'], 'A new recovery key showed no seed for paper');

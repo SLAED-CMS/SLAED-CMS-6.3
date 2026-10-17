@@ -165,8 +165,8 @@ final class UpdateSignTest extends TestCase
     #[Test]
     public function theSiteKeepsItsKeysInOneFile(): void
     {
-        $this->assertSame(['kseq' => 0, 'primary' => Update::PRIMARY, 'recovery' => Update::RECOVERY, 'revoked' => []], Update::getKeyFile());
-        $keys = ['kseq' => 3, 'primary' => self::$pri['b64'], 'recovery' => self::$rec['b64'], 'revoked' => [Update::PRIMARY]];
+        $this->assertSame(Update::getFactoryKeys(), Update::getKeyFile());
+        $keys = ['kseq' => 3, 'primary' => self::$pri['b64'], 'recovery' => self::$rec['b64'], 'revoked' => [Update::getFactoryKeys()['primary']]];
         $this->assertTrue(Update::setKeyFile($keys));
         $this->assertSame($keys, Update::getKeyFile());
         $this->assertSame([UPDATE_DIR.'/client/keys.json'], glob(UPDATE_DIR.'/client/*'), 'The write left a temporary file');
@@ -174,14 +174,19 @@ final class UpdateSignTest extends TestCase
         $this->assertSame('', Update::getKeyFile()['primary'], 'A damaged keys.json fell back to the factory keys');
     }
 
-    # The factory keys are the test keys of tests/Fixtures/update until the key ceremony, and each is a 32-byte key in canonical base64
+    # The core ships real factory keys, never the test keys of tests/Fixtures/update, and README.md publishes the fingerprint of each
+    # A test run trusts the test keys by UPDATE_KEYS
     #[Test]
-    public function theFactoryKeysAreTheTestKeys(): void
+    public function theFactoryKeysAreRealAndPublished(): void
     {
+        $readme = strtolower((string)preg_replace('#\s+#', '', (string)file_get_contents(BASE_DIR.'/README.md')));
         foreach (['primary' => Update::PRIMARY, 'recovery' => Update::RECOVERY] as $role => $key) {
             $file = json_decode((string)file_get_contents(BASE_DIR.'/tests/Fixtures/update/'.$role.'.key'), true);
-            $this->assertSame($file['pub'], $key, 'The factory '.$role.' key is not the test key');
-            $this->assertSame(32, strlen(Update::getRawBytes($key, 32)));
+            $this->assertNotSame($file['pub'], $key, 'The factory '.$role.' key is still the test key');
+            $this->assertSame(32, strlen(Update::getRawBytes($key, 32)), 'The factory '.$role.' key is no 32-byte key in canonical base64');
+            $print = Update::getKeyPrint(Update::getRawBytes($key, 32));
+            $this->assertStringContainsString($print, $readme, 'README.md does not publish the fingerprint of the '.$role.' factory key');
+            $this->assertSame($file['pub'], Update::getFactoryKeys()[$role], 'The test run does not trust the test '.$role.' key');
         }
         $this->assertNotSame(Update::PRIMARY, Update::RECOVERY);
     }

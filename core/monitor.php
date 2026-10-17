@@ -712,10 +712,10 @@ function getSecurityEventHours(int $hours = 24): string {
     return date('Y-m-d H:i:s', $bestts).' | '.$besttxt;
 }
 
-# Collects disk capacity and usage values used by both realtime and full dashboard render paths
+# Collects disk capacity and usage values used by both realtime and full dashboard render paths; a host that disables the disk functions reads as zero
 function getMonitorDiskSnapshot(): array {
-    $disksum = (float)disk_total_space('.');
-    $diskfree = (float)disk_free_space('.');
+    $disksum = function_exists('disk_total_space') ? (float)disk_total_space('.') : 0.0;
+    $diskfree = function_exists('disk_free_space') ? (float)disk_free_space('.') : 0.0;
     $diskused = max($disksum - $diskfree, 0);
     $diskpct = ($disksum > 0) ? round(($diskused / $disksum) * 100, 1) : 0;
     return [

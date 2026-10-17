@@ -147,7 +147,7 @@ function setManifestSign(string $ver, bool $again, string $kfile): void {
         setFileText($dir.'/'.$name.'.sig', base64_encode($sig));
     }
     sodium_memzero($pair['sec']);
-    fwrite(STDOUT, 'Signed until '.gmdate('Y-m-d', $now + $life).'; next: php tools/release.php publish v'.$ver."\n");
+    fwrite(STDOUT, 'Signed until '.gmdate('Y-m-d', $now + $life).'; next: php tools/'.($again ? 'release.php publish' : 'rehearse.php').' v'.$ver."\n");
 }
 
 # Sign a note as it was written, under the primary key in force
@@ -159,7 +159,7 @@ function setNoteSign(string $id, string $kfile): void {
     if (getInputLine('Sign this note? [y/N] ') !== 'y') setFailExit('no go');
     $pair = getKeyPair($kfile, 'primary');
     if (base64_encode($pair['pub']) !== getKeyState()['primary']) setFailExit($kfile.' is not the primary key in force');
-    setFileText($file.'.sig', base64_encode(sodium_crypto_sign_detached(Update::NOTE.$body, $pair['sec'])));
+    setFileText(RELEASE_DIR.'/notes/'.$id.'.sig', base64_encode(sodium_crypto_sign_detached(Update::NOTE.$body, $pair['sec'])));
     sodium_memzero($pair['sec']);
     fwrite(STDOUT, 'Signed; next: php tools/release.php publish --note='.$id."\n");
 }

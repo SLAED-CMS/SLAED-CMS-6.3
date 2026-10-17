@@ -349,14 +349,14 @@ final class UpdateFetchTest extends TestCase
         $this->assertFileDoesNotExist(Update::getTempFile(self::VER, 'full'));
     }
 
-    # The integrity check finds a changed, a missing and a foreign PHP file of the core; settings and robots.txt are the site's own, a clean site is clean
+    # The integrity check finds a changed, a missing and a foreign PHP file of the core; settings, robots.txt and the deleted installer are no finding on a clean site
     #[Test]
     public function theIntegrityCheckFindsChangedAndForeignFiles(): void
     {
         $this->assertSame('nolist', Update::addAudit($this->root)['error'], 'A site without files.json passed the check');
         $files = [];
         foreach (['core/a.php', 'admin/b.php', 'lang/en.php', 'config/global.php', 'public/robots.txt'] as $path) $files[$path] = (string)file_get_contents($this->root.'/'.$path);
-        file_put_contents(UPDATE_DIR.'/files.json', self::getList(SL_VERSION, $files));
+        file_put_contents(UPDATE_DIR.'/files.json', self::getList(SL_VERSION, $files + ['public/setup.php' => "<?php\n# the installer, deleted at its end\n"]));
         $res = Update::addAudit($this->root);
         $this->assertSame(['', [], [], []], [$res['error'], $res['changed'], $res['missing'], $res['extra']], 'A clean site has findings');
         $this->setTree(['core/a.php' => "<?php\n# edited\n", 'config/global.php' => "<?php\nreturn ['site' => 1];\n", 'public/robots.txt' => "Sitemap: https://x/s.xml\n",

@@ -3263,7 +3263,7 @@ function getRouteEntry(string $work): array {
     return $out;
 }
 
-# The gate run: the database steps marked at 6.2.0 below the code, a super-administrator keeper with a known password, two step files and a broken one
+# The gate run: steps marked at 6.2.0 below the code, a super-administrator keeper, two step files and a broken one, a MyISAM table of another program in the base
 function addRouteGateConf(PDO $pdo, string $work): void {
     $data = is_file($work.'/config/update.php') ? require $work.'/config/update.php' : ['update' => []];
     $data['update']['steps'] = ['6.2.0' => '2026-01-01 00:00:00'];
@@ -3277,6 +3277,7 @@ function addRouteGateConf(PDO $pdo, string $work): void {
     file_put_contents($work.'/update/step/6.2.5.sql', "CREATE TABLE {prefix}_probe_step (id INT NOT NULL PRIMARY KEY) ENGINE={engine};\n");
     file_put_contents($work.'/update/step/6.2.7.sql', "INSERT INTO {prefix}_probe_nosuch (id) VALUES (1);\n");
     file_put_contents($work.'/update/step/6.2.7.php', "<?php\nfile_put_contents(UPDATE_DIR.'/step.ran', 'ran');\nreturn true;\n");
+    $pdo->exec('CREATE TABLE gate_other (id INT NOT NULL PRIMARY KEY) ENGINE=MyISAM');
     if (is_file($work.'/config/local.php')) unlink($work.'/config/local.php');
 }
 
@@ -3310,6 +3311,8 @@ function getRouteGate(PDO $pdo, string $work): array {
     $done = getRouteReply('keeper', 'POST', 'admin.php', ['op' => 'steps', 'token' => $token]);
     $out['done'] = ['code' => $done['code'], 'move' => $done['head']['location'] ?? '', 'marks' => $marks(), 'ran' => is_file($work.'/update/step.ran'),
         'rows' => intval($pdo->query('SELECT COUNT(*) FROM '.RPREF.'_probe_step')->fetchColumn()), 'backup' => count(glob($work.'/backup/*') ?: []),
+        'dump' => array_map(static fn(string $file): array => json_decode((string)file_get_contents($file), true)['tabs'] ?? [], glob($work.'/backup/steps/*/dump.json') ?: []),
+        'kept' => array_map('basename', glob($work.'/backup/steps/*', GLOB_ONLYDIR) ?: []),
         'site' => getRouteReply('', 'GET', '')['code'], 'api' => getRouteReply('', 'GET', 'api/v1/system/ping')['code'],
         'panel' => $look(getRouteReply('keeper', 'GET', 'admin.php'))];
     $msgs = array_map(static fn(array $v): string => (string)($v['msg'] ?? ''), getRouteLines('admin'));
@@ -3487,7 +3490,8 @@ function getRouteApi(string $work): array {
 }
 
 # The master run: the real module master, active in the scratch configuration only, its tables in the disposable database, its folder in the scratch update root
-# Its inbox/ holds releases and notes signed with the test factory keys of tests/Fixtures/update, among them a forged archive, a recovery signature and an expired manifest
+# Its inbox/ holds releases and notes signed with the test keys of tests/Fixtures/update, the factory keys of the run by UPDATE_KEYS
+# Among them a forged archive, a recovery signature and an expired manifest
 function addRouteMasterConf(PDO $pdo, string $work): void {
     $sql = getSqlbatch((string)file_get_contents(BASE_DIR.'/modules/master/sql/table.sql'));
     if ($sql['error'] !== '') throw new RuntimeException('modules/master/sql/table.sql does not split');
@@ -3517,7 +3521,7 @@ function addRouteMasterConf(PDO $pdo, string $work): void {
     }
 }
 
-# The secret key of a test factory key of tests/Fixtures/update, opened by its known password the way tools/sign.php opens a key file
+# The secret key of a test key of tests/Fixtures/update, opened by its known password the way tools/sign.php opens a key file
 function getRouteMasterKey(string $role): string {
     $data = json_decode((string)file_get_contents(BASE_DIR.'/tests/Fixtures/update/'.$role.'.key'), true);
     $kek = sodium_crypto_pwhash(SODIUM_CRYPTO_SECRETBOX_KEYBYTES, 'slaed-test', base64_decode($data['salt']), (int)$data['ops'], (int)$data['mem'],

@@ -777,6 +777,7 @@ define('_UPDATE_LEAD','Le code de la version %1$s est installé ; dernière marq
 define('_UPDATE_APPLY','Appliquer les étapes de la base');
 define('_UPDATE_APPLIED','Les étapes de la base sont appliquées, le site est de nouveau ouvert.');
 define('_UPDATE_NOBACK','La sauvegarde de la base a échoué, aucune étape n\'a été exécutée : %s');
+define('_UPDATE_BACKPART','La sauvegarde de la base n\'est pas encore terminée : table %1$d sur %2$d. Appuyez de nouveau sur le bouton, la sauvegarde reprend là où elle s\'est arrêtée.');
 define('_UPDATE_STEPFAIL','L\'étape de la version %1$s a échoué : %2$s. Le site reste fermé ; la sauvegarde faite avant est dans storage/backup.');
 define('_UPDATE_PACK','Paquet');
 define('_UPDATE_FULL','archive complète');

@@ -18,6 +18,9 @@ define('UPLOADS_DIR', BASE_DIR.'/uploads');
 define('NODE_DIR', UPLOADS_DIR.'/node');
 define('HOME_PATH', '/');
 
+# The core ships the real factory keys; a test run trusts the test keys of tests/Fixtures/update it signs with
+require_once __DIR__.'/Support/test_keys.php';
+
 # The upload root, its public folders and the one sender, which the file layer and the parser ask without the rest of the core
 require_once BASE_DIR.'/core/stream.php';
 

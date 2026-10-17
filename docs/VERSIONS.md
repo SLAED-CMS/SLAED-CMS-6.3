@@ -1,5 +1,50 @@
 # Versions
 
+## 2026-10-18
+
+### A site updates itself from the panel under the signature of the SLAED key, and every failure rolls it back
+
+A site learns of an update only by code it already has, so the updater enters 8.0: without it every 8.0 site would stay
+blind to the next security fix. The reference is `docs/UPDATE.md`; the help of the panel is `admin/info/update/ru.md`,
+that of the master `modules/master/admin/info/ru.md`.
+
+- **The check.** The scheduler job `updatecheck` asks `https://slaed.net/api/v1/master/check` once a day at a minute of
+  its own, HTTPS only and without redirects. The site sends its identifier, channel, version, PHP and database versions,
+  three extension bits, two error counts and its domain unless switched off; no text and no path. A banner names the
+  release, red for a security fix; notes of the master arrive signed, as plain text.
+- **The signature.** A manifest, a note and a key statement verify under Ed25519 keys signed offline on the owner's
+  machine; the factory keys `Update::PRIMARY` and `Update::RECOVERY` ship in the core and their fingerprints in
+  `README.md`. Without `sodium` the class `Signature` verifies, without `zip` `PharData` unpacks under the site's own
+  reading of the central directory.
+- **The installation.** "Обновления" downloads with resume or takes an archive by hand only under the manifest the master
+  serves now, unpacks into `stage/`, shows what "Проверить установку" would change and installs in steps, each its own
+  request, while `apply.lock` closes all three entries: the database in portions of the site's own tables, the files by
+  renaming through the executor of the new package, the database steps in the light mode `UPDATE_FILE`, the merge of
+  `config/`, the self-check. A failure rolls back files, `config/` and database with the caches; a rollback code and the
+  file `rescue.now` reach the installed `core/rescue.php` when the core no longer boots; "Вернуть предыдущую версию"
+  restores the last installation. The format of `apply.lock`, the backup and the portion dump is frozen as contract
+  version 1.
+- **Settings, languages and themes.** An update adds the options a site lacks at any depth and keeps every saved value;
+  the language files and the themes `admin` and `lite` are replaced whole, other themes are not touched.
+- **The manual path.** While `SL_VERSION` is above the last database step done, every entry answers 503 and only the
+  light mode of the panel opens, with "Применить шаги базы" after a backup of the site's tables.
+- **The master.** The module `master` of slaed.net accepts releases and notes from `inbox/`, serves them by channel,
+  share and pause, keeps a minimal statistic without an IP, pauses a release by itself on failed installations and
+  mails the owner. It is in the repository and never in a release archive.
+- **The tools.** `tools/release.php` builds the full archive and the delta from a tag and publishes, `tools/sign.php`
+  signs and runs the key ceremony, `tools/rehearse.php` installs the previous release clean and updates it by both
+  archives; `publish` refuses without that green rehearsal and with test factory keys. Before the first release the
+  whole chain went through a real master on two OSPanel projects, a key change included.
+- **The API.** The branch `/api/` of `public/index.php` is the one entry: the light core, the guards of `.rules/api.md`,
+  the envelope, the reply mode `file`, `system/ping` and `system/schema`.
+
+Breaking for code outside the tree: `$conf['version']` is built from `SL_VERSION` and `SL_CODENAME` of
+`core/version.php` and is no key of `config/global.php`; every entry that loads the core calls `getSiteGate()` of
+`core/gate.php` first, before the core; the language files of the shipped modules and the themes `admin` and `lite` are
+overwritten by an update; `public/sitemap.xml` left git, `public/robots.txt` is a site file; `public/update.php` and
+`storage/update/sql/table_update6_3.sql` stay in the repository and leave the release archive, as `modules/master`
+does. The shipped `config/` carries no value of the stand: no test ban, no row `master`, error level 0.
+
 ## 2026-10-14
 
 ### Every page has one readable address without an id, and every other form of it answers one 301

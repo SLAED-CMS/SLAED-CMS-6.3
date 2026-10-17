@@ -154,6 +154,26 @@ registry. The reference is `docs/ARCHITECTURE.md`, "Address Boundary".
   template. A public list counts its pages by `page`, not `num`.
 - `getVar()` reads `$_GET` and `$_POST` itself, so the keys of a path reach every reader.
 
+### Updates From the Panel
+
+From 8.0 a site updates itself: the scheduler job `updatecheck` asks `slaed.net` once a day, and the page
+"Обновления" of the panel downloads, verifies and installs a release in steps, with a rollback of files, `config/` and
+database on any failure. The reference is `docs/UPDATE.md`; the help of the page is `admin/info/update/ru.md`.
+
+- The version is `SL_VERSION` and `SL_CODENAME` in `core/version.php`; `$conf['version']` is built from both at boot and
+  is no key of `config/global.php` any more, and the settings form no longer writes it.
+- `public/index.php`, `public/admin.php` and `public/setup.php` call `getSiteGate()` of `core/gate.php` first, before
+  the core; an entry of your own that loads the core does the same, or it opens while an installation is under way.
+- An update replaces the language files of the shipped modules and the themes `admin` and `lite` whole: keep edits in
+  a theme of your own. Every other changed core file stops an installation until "перезаписать" is ticked; a PHP file of
+  your own in `admin/`, `core/`, `lang/` or `public/` is reported by "Проверить целостность".
+- An update adds the options a site lacks to `config/` and keeps every value the site saved; code of your own reads a
+  new option with a fallback (`$conf['section']['option'] ?? …`), since a site updated by FTP without `config/` lacks it.
+- `public/sitemap.xml` is no file of the repository; the job `sitemap` writes it, and `public/robots.txt` is a site
+  file that an update never overwrites.
+- The API answers under `/api/v1/` of `public/index.php`; the server must send that path to `index.php` like every
+  other path that is no file.
+
 ### Points, Ratings and Extra Fields
 
 - Points run on the journal `{prefix}_points`; `{prefix}_users.points` is the balance.
@@ -281,6 +301,9 @@ Use this checklist when reviewing custom modules, custom admin code, or local pa
 
 ### Configuration
 
+- [ ] Read `$conf['version']` or `SL_VERSION`, never a `version` key of `config/global.php`
+- [ ] Read every new option with a fallback
+- [ ] Keep theme and language edits out of `admin`, `lite` and the shipped language files
 - [ ] Review local config overrides
 - [ ] Re-check file permissions after deployment
 

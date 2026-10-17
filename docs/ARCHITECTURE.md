@@ -1085,6 +1085,28 @@ requests (`tests/Support/route_probe.php journal`); `JournalSecretTest` and
 `JournalNameTest` that no secret reaches a journal and every file is named
 after what it holds.
 
+## Update Boundary
+
+The updater is part of the core, not a module. The reference is `docs/UPDATE.md`; this section names only what the
+runtime of every request carries.
+
+- **The gate.** `public/index.php`, `public/admin.php` and `public/setup.php` call `getSiteGate()` of `core/gate.php`
+  first, right after the folder constants, before the core and before the light path of `uploads/`, and `require` the
+  file it names at the top level: while `storage/update/client/apply.lock` lies, the installed `core/rescue.php`, the executor copy
+  `client/run/apply.php` under the token of the installation, or the static 503 of `public/error.html`. Then
+  `checkSiteGate()` closes the site with the same 503 while `SL_VERSION` is above the last database step done, and
+  `public/admin.php` goes to the light mode `UPDATE_FILE` (`admin/update.php`). Both calls stay first in every
+  entry of every version.
+- **The version.** `core/version.php` holds `SL_VERSION` and `SL_CODENAME`; the gate reads it without the core, and
+  `core/system.php` builds `$conf['version']` from both.
+- **The scheduler** starts no job while `apply.lock` lies (`addSchedulerRun()`).
+- **The class `Update`** (`core/classes/update.php`) loads only where it is used — the job `updatecheck`, the
+  panel ("Обновления", the banner, the warnings of "Шаблоны"), `setup.php`, the light mode, the executor and the
+  module `master` — never on a page view of the site, unless the pseudo-cron runs the job. Its one external request
+  goes to `Update::HOST` only. Its state lies in `storage/update/client/`, which no package may hold.
+- **Trust** starts from `Update::getFactoryKeys()`: the constants `Update::PRIMARY` and `Update::RECOVERY`, or
+  `UPDATE_KEYS` where a test run defines it before the core; no setting names a key or a server.
+
 ## Assets
 
 Theme-local assets belong under each theme:
@@ -1305,6 +1327,7 @@ Use these documents as the primary sources for their topics:
 | Performance | `docs/PERFORMANCE.md` |
 | Tests and quality gates | `docs/TESTS.md` |
 | Upgrades | `UPGRADING.md` |
+| Updates from the panel, releases and keys | `docs/UPDATE.md` |
 | Security policy | `SECURITY.md` |
 
 ## What Not To Assume

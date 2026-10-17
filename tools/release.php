@@ -9,7 +9,7 @@
 # Usage: php tools/release.php publish v8.0.1 | publish --note=<id> | publish --keys=<kseq>
 # Usage: php tools/release.php note --level info|warn|danger [--ver "<8.0.2"] [--until 2026-12-31] [--sid <sid>]
 # The output lies in storage/release/<version>/: slaed-<version>.zip, slaed-<version>-from-<from>.zip, files.json and the two manifests
-# Publishing pushes the local tag, creates the GitHub release for people and puts the files into inbox/ of the master by SFTP, then fetches them back
+# Publishing needs the green rehearsal of tools/rehearse.php for the same archives, then pushes the local tag, creates the GitHub release and fills inbox/ of the master
 # Settings of publishing in tools/.env: SLAED_SFTP=user@slaed.net:22 and SLAED_SFTP_PATH=<the folder storage/update/master of slaed.net>
 
 if (PHP_SAPI !== 'cli') die('CLI only');
@@ -268,7 +268,15 @@ function setInboxUpload(string $sub, array $files): void {
     fwrite(STDOUT, 'In inbox/'.$sub.' of the master: '.count($files)." files, each fetched back and compared\n");
 }
 
-# Publish a signed release: real factory keys published in the README, valid signatures, then the tag, the GitHub release and the inbox of the master
+# Stop unless tools/rehearse.php left a green record of exactly the archives the signed manifest names
+function checkRehearsal(string $dir, array $man): void {
+    $rec = is_file($dir.'/rehearsal.json') ? json_decode((string)file_get_contents($dir.'/rehearsal.json'), true) : null;
+    $green = is_array($rec) && ($rec['version'] ?? '') === $man['version'] && ($rec['full'] ?? '') === $man['full']['sha256']
+        && ($rec['delta'] ?? null) === ($man['delta']['sha256'] ?? null);
+    if (!$green) setFailExit('no green rehearsal of these archives; php tools/rehearse.php v'.$man['version']);
+}
+
+# Publish a signed release: real factory keys published in the README, valid signatures, a green rehearsal, then the tag, the GitHub release and the inbox of the master
 function setPublish(string $tag): void {
     $ver = substr($tag, 1);
     if (!str_starts_with($tag, 'v') || !Update::isVersion($ver)) setFailExit('the tag is vX.Y.Z');
@@ -293,6 +301,7 @@ function setPublish(string $tag): void {
         }
         $files[] = $dir.'/'.$name;
     }
+    checkRehearsal($dir, $data);
     if (getEnvValue('SLAED_SFTP') === '' || getEnvValue('SLAED_SFTP_PATH') === '') setFailExit('tools/.env names no SLAED_SFTP and SLAED_SFTP_PATH');
     if (trim(getGitText(['ls-remote', '--tags', 'origin', 'refs/tags/'.$tag])) === '') getGitText(['push', 'origin', 'refs/tags/'.$tag]);
     $gh = getGhPath();

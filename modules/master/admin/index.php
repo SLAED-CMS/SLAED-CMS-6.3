@@ -232,8 +232,9 @@ function getMasterNoteList(): string {
 # The tab of keys, read only: the fingerprints of the factory keys and of the keys in force, and every key statement in force with its kseq
 function getMasterKeyList(array $keys): string {
     $print = static fn(string $key): string => trim(chunk_split(Update::getKeyPrint(Update::getRawBytes($key, 32)), 4, ' '));
-    $rows = [[['content_text' => _MASTER_PRIMARY.' - '._MASTER_FACTORY], ['is_truncate' => true, 'content_text' => $print(Update::PRIMARY)]],
-        [['content_text' => _MASTER_RECOVERY.' - '._MASTER_FACTORY], ['is_truncate' => true, 'content_text' => $print(Update::RECOVERY)]],
+    $fact = Update::getFactoryKeys();
+    $rows = [[['content_text' => _MASTER_PRIMARY.' - '._MASTER_FACTORY], ['is_truncate' => true, 'content_text' => $print($fact['primary'])]],
+        [['content_text' => _MASTER_RECOVERY.' - '._MASTER_FACTORY], ['is_truncate' => true, 'content_text' => $print($fact['recovery'])]],
         [['content_text' => _MASTER_PRIMARY.' - '._MASTER_INFORCE], ['is_truncate' => true, 'content_text' => $print($keys['keys']['primary'])]],
         [['content_text' => _MASTER_RECOVERY.' - '._MASTER_INFORCE], ['is_truncate' => true, 'content_text' => $print($keys['keys']['recovery'])]],
         [['content_text' => 'kseq'], ['content_text' => $keys['keys']['kseq']]]];
