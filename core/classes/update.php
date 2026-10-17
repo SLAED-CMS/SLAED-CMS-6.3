@@ -18,9 +18,18 @@ final class Update {
     # The largest answer of the master a site reads; a longer one is refused whole
     public const LIMIT = 1048576;
 
-    # The fields of client/state.json: id, address hash, last check, newest time per channel, release found, journals, failure, package, refusal, integrity
+    # The fields of client/state.json: id, address hash, check, seen times, release, journals, failure, package, refusal, integrity, pending start, last install and rollback
     private const STATE = ['sid' => '', 'home' => '', 'last' => 0, 'error' => '', 'seen' => [], 'found' => [], 'logs' => [], 'fail' => [], 'stage' => [], 'fault' => [],
-        'audit' => []];
+        'audit' => [], 'apply' => [], 'done' => [], 'undo' => []];
+
+    # The format of client/apply.lock and of the plan of a backup; frozen in 8.0.0 as version 1, a new field is only ever added
+    public const APPLY = 1;
+
+    # The files an installation moves last, in this order, so the entries and the gate change only once every other file stands
+    private const TAIL = ['core/gate.php', 'core/apply.php'];
+
+    # The seconds a confirmed installation or rollback may wait for its start
+    public const WAIT = 1800;
 
     # The seconds one request downloads at most, so the time limit of a host never cuts it; the next click resumes where it stopped
     public const SPAN = 40;
@@ -365,15 +374,17 @@ final class Update {
         return self::setJsonFile('notes.json', $data);
     }
 
-    # The versions whose database steps wait after the mark: each step file of step/ up to the code, then the code itself, marked even without a file
-    public static function getStepList(string $mark): array {
-        $vers = [SL_VERSION];
-        foreach (array_merge(glob(UPDATE_DIR.'/step/*.sql') ?: [], glob(UPDATE_DIR.'/step/*.php') ?: []) as $file) $vers[] = pathinfo($file, PATHINFO_FILENAME);
+    # The versions whose database steps wait after the mark: each step file of $dir up to the code $code, then the code itself, marked even without a file
+    # The defaults are the installed steps and code; the preflight of an installation names the step folder and the version of the package instead
+    public static function getStepList(string $mark, string $dir = '', string $code = SL_VERSION): array {
+        $dir = ($dir !== '') ? $dir : UPDATE_DIR.'/step';
+        $vers = [$code];
+        foreach (array_merge(glob($dir.'/*.sql') ?: [], glob($dir.'/*.php') ?: []) as $file) $vers[] = pathinfo($file, PATHINFO_FILENAME);
         $vers = array_unique(array_filter($vers, static fn(string $v): bool => self::isVersion($v) && ($mark === '' || version_compare($v, $mark, '>'))
-            && version_compare($v, SL_VERSION, '<=')));
+            && version_compare($v, $code, '<=')));
         usort($vers, 'version_compare');
         $out = [];
-        foreach ($vers as $ver) $out[$ver] = ['sql' => is_file(UPDATE_DIR.'/step/'.$ver.'.sql'), 'php' => is_file(UPDATE_DIR.'/step/'.$ver.'.php')];
+        foreach ($vers as $ver) $out[$ver] = ['sql' => is_file($dir.'/'.$ver.'.sql'), 'php' => is_file($dir.'/'.$ver.'.php')];
         return $out;
     }
 
@@ -799,6 +810,233 @@ final class Update {
         $state['audit'] = $out;
         if (!self::setState($state)) $out['error'] = 'write';
         return $out;
+    }
+
+    # The moves an installation of the unpacked package $stage makes below $root: the files it replaces, adds and deletes, the folders it creates and what it cannot write
+    # A site file is placed only where it is missing, an identical file stays, a deleted installer never returns, the rescuer waits for step 8 and the gate and entries go last
+    # A replaced or deleted file whose hash on disk is not the one of the installed files.json is changed on the site now, so the stop never rests on an old list
+    public static function getApplyPlan(string $stage, string $afile, string $root = BASE_DIR): array {
+        $out = ['moves' => [], 'dirs' => [], 'swaps' => [], 'adds' => [], 'drops' => [], 'changed' => [], 'bsize' => 0, 'nsize' => 0, 'deny' => []];
+        $news = self::getFileList($stage.'/storage/update/files.json');
+        $olds = self::getFileList(UPDATE_DIR.'/files.json');
+        $entry = (preg_match('#^[A-Za-z0-9_-]{1,50}$#D', $afile) === 1) ? 'public/'.$afile.'.php' : 'public/admin.php';
+        $map = static fn(string $path): string => ($path === 'public/admin.php') ? $entry : $path;
+        $tail = [];
+        $dirs = [];
+        $walk = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($stage, FilesystemIterator::SKIP_DOTS), RecursiveIteratorIterator::LEAVES_ONLY);
+        foreach ($news === null ? [] : $walk as $item) {
+            $path = str_replace('\\', '/', substr($item->getPathname(), strlen($stage) + 1));
+            $dest = $map($path);
+            $full = $root.'/'.$dest;
+            $has = is_file($full);
+            if ((self::isSiteFile($path) && $has) || ($path === 'public/setup.php' && !$has)) continue;
+            $sum = $has ? (string)hash_file('sha256', $full) : '';
+            if ($has && $sum === hash_file('sha256', $item->getPathname())) continue;
+            if ($has && !self::isSwapFile($path) && isset($olds['files'][$path]) && $olds['files'][$path]['sha256'] !== $sum) $out['changed'][] = $dest;
+            if ($path === 'core/rescue.php') {
+                $out['swaps'][] = $path;
+                continue;
+            }
+            $one = ['op' => 'put', 'src' => $path, 'path' => $dest, 'old' => $has];
+            $out[$has ? 'swaps' : 'adds'][] = $dest;
+            $out['bsize'] += $has ? (int)filesize($full) : 0;
+            $out['nsize'] += (int)$item->getSize();
+            for ($dir = dirname($dest); $dir !== '.' && !is_dir($root.'/'.$dir); $dir = dirname($dir)) $dirs[$dir] = substr_count($dir, '/');
+            if (in_array($path, self::TAIL, true) || preg_match('#^public/[^/]+\.php$#D', $path) === 1) $tail[] = $one;
+            else $out['moves'][] = $one;
+        }
+        foreach ($olds['files'] ?? [] as $path => $one) {
+            $dest = $map((string)$path);
+            if (isset($news['files'][$path]) || self::isSiteFile((string)$path) || $path === 'core/rescue.php' || !is_file($root.'/'.$dest)) continue;
+            $out['drops'][] = $dest;
+            if (!self::isSwapFile((string)$path) && hash_file('sha256', $root.'/'.$dest) !== $one['sha256']) $out['changed'][] = $dest;
+            $out['bsize'] += (int)filesize($root.'/'.$dest);
+            $out['moves'][] = ['op' => 'drop', 'path' => $dest, 'old' => true];
+        }
+        usort($tail, static fn(array $one, array $two): int => (int)array_search($one['src'], self::TAIL, true) <=> (int)array_search($two['src'], self::TAIL, true));
+        $out['moves'] = array_merge($out['moves'], $tail);
+        asort($dirs);
+        $out['dirs'] = array_map('strval', array_keys($dirs));
+        $near = static function (string $dir): string {
+            while (!is_dir($dir) && dirname($dir) !== $dir) $dir = dirname($dir);
+            return $dir;
+        };
+        if (!is_writable($near(BACKUP_DIR.'/update'))) $out['deny'][] = 'storage/backup/update';
+        foreach ($out['moves'] as $one) {
+            $full = $root.'/'.$one['path'];
+            if ((is_file($full) && !is_writable($full)) || !is_writable($near(dirname($full)))) $out['deny'][] = $one['path'];
+        }
+        foreach (['swaps', 'adds', 'drops', 'changed'] as $key) sort($out[$key]);
+        return $out;
+    }
+
+    # Whether opcache lets an installation run: off, revalidating timestamps, or resettable from the entries; $ini replaces the settings of this PHP for a test
+    public static function getOpcacheState(?array $ini = null): array {
+        $ini ??= ['on' => extension_loaded('Zend OPcache') && (bool)ini_get('opcache.enable') && (PHP_SAPI !== 'cli' || (bool)ini_get('opcache.enable_cli')),
+            'check' => (bool)ini_get('opcache.validate_timestamps'), 'freq' => intval(ini_get('opcache.revalidate_freq')), 'limit' => (string)ini_get('opcache.restrict_api'),
+            'path' => PUBLIC_DIR];
+        $reset = $ini['limit'] === '' || str_starts_with(str_replace('\\', '/', $ini['path']), str_replace('\\', '/', $ini['limit']));
+        return ['on' => $ini['on'], 'check' => $ini['check'], 'freq' => $ini['freq'], 'reset' => $reset, 'ok' => !$ini['on'] || $ini['check'] || $reset];
+    }
+
+    # The bytes below a folder, 0 when it is missing
+    public static function getDirSize(string $dir): int {
+        if (!is_dir($dir)) return 0;
+        $sum = 0;
+        foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator($dir, FilesystemIterator::SKIP_DOTS)) as $item) $sum += $item->isFile() ? $item->getSize() : 0;
+        return $sum;
+    }
+
+    # The preflight of step 1 over the unpacked package, the site still open: version, PHP, rights, space, changed files, opcache and database rights, and what will happen
+    # It writes nothing, so the dry run of the panel shows the very list the installation then applies; the first refusal found is its error
+    public static function getApplyCheck(PDO $pdo, string $prefix, array $state, array $man, string $afile, array $opts = []): array {
+        require_once BASE_DIR.'/core/classes/backup.php';
+        $ver = $man['version'];
+        $dir = UPDATE_DIR.'/client/stage/'.$ver;
+        $stage = (array)$state['stage'];
+        $why = [];
+        if (($stage['version'] ?? '') !== $ver || !is_dir($dir)) return ['ok' => false, 'error' => 'stage', 'name' => '', 'plan' => [], 'room' => [], 'steps' => [], 'adds' => []];
+        if (is_file(UPDATE_DIR.'/client/apply.lock')) $why[] = ['lock', ''];
+        if (version_compare(PHP_VERSION, $man['php'], '<')) $why[] = ['php', $man['php']];
+        if (version_compare(SL_VERSION, $man['min'], '<')) $why[] = ['min', $man['min']];
+        $plan = self::getApplyPlan($dir, $afile);
+        if ($plan['deny']) $why[] = ['deny', $plan['deny'][0]];
+        if ($plan['changed'] && empty($opts['over'])) $why[] = ['changed', (string)count($plan['changed'])];
+        if (!self::getOpcacheState()['ok']) $why[] = ['opcache', ''];
+        $tabs = [];
+        $base = 0;
+        try {
+            $tabs = Backup::getSiteTables($pdo, $prefix);
+            $miss = Backup::checkDumpAccess($pdo, $tabs);
+            if ($miss) $why[] = ['grant', implode(', ', $miss)];
+            $base = self::getBaseSize($pdo, $tabs);
+        } catch (Throwable $error) {
+            $why[] = ['grant', $error->getMessage()];
+        }
+        $room = self::getApplySpace(intdiv($base * 6, 5), $plan, $dir, (string)($state['done']['back'] ?? ''));
+        if (!$room['ok']) $why[] = [($room['free'] === null) ? 'free' : 'space', ''];
+        if ($room['free'] === null && !empty($opts['free'])) $why = array_values(array_filter($why, static fn(array $one): bool => $one[0] !== 'free'));
+        $adds = self::addConfigMerge($dir, true);
+        if (!$adds['ok']) $why[] = ['config', $adds['error'].' '.$adds['name']];
+        $steps = self::getStepList((string)getStepMark(CONFIG_DIR), $dir.'/storage/update/step', $ver);
+        return ['ok' => $why === [], 'error' => $why[0][0] ?? '', 'name' => $why[0][1] ?? '', 'plan' => $plan, 'room' => $room, 'steps' => $steps, 'adds' => $adds['adds'],
+            'tabs' => $tabs];
+    }
+
+    # The data bytes of the site tables by information_schema, from which the size of the dump is estimated
+    public static function getBaseSize(PDO $pdo, array $tabs): int {
+        $stmt = $pdo->prepare('SELECT COALESCE(SUM(DATA_LENGTH), 0) FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = :name');
+        $sum = 0;
+        foreach ($tabs as $name) {
+            $stmt->execute(['name' => $name]);
+            $sum += (int)$stmt->fetchColumn();
+            $stmt->closeCursor();
+        }
+        return $sum;
+    }
+
+    # The space step 3 on needs: the dump D, on another disk than the tree also the old files B and the new N, plus 10 per cent but 50 MB at least; the last backup P is freed
+    public static function getApplySpace(int $dump, array $plan, string $stage, string $last): array {
+        $back = BACKUP_DIR;
+        while (!is_dir($back) && dirname($back) !== $back) $back = dirname($back);
+        $same = stat($stage)['dev'] === stat(BASE_DIR)['dev'] && stat($back)['dev'] === stat(BASE_DIR)['dev'];
+        $sum = $dump + ($same ? 0 : $plan['bsize'] + $plan['nsize']);
+        $need = $sum + max(intdiv($sum, 10), 52428800);
+        $old = ($last !== '') ? self::getDirSize(BASE_DIR.'/'.$last) : 0;
+        set_error_handler(static fn(): bool => true);
+        $free = function_exists('disk_free_space') ? disk_free_space(BASE_DIR) : false;
+        restore_error_handler();
+        $free = is_float($free) ? (int)$free : null;
+        return ['need' => $need, 'free' => $free, 'old' => $old, 'same' => $same, 'ok' => $free !== null && $free + $old >= $need];
+    }
+
+    # A fresh token of an installation or a rollback and its one-time rescue code; only their SHA-256 ever lies on the server
+    public static function getApplyCode(): array {
+        return ['token' => bin2hex(random_bytes(32)), 'code' => bin2hex(random_bytes(10))];
+    }
+
+    # Close the site for the installation confirmed by $pend: client/apply.lock is created atomically first, in phase prep, so a second click or tab is refused
+    # Only under the lock the backup folder, the plan and the run copy are written, the lock turns to dump, and then the backup of the last installation goes
+    # A delta carries core/apply.php only when it changed, so the installed copy runs it otherwise, held to the hash files.json of the package names
+    public static function addApplyStart(array $pend, array $check, array $man, string $afile, string $prefix): array {
+        $fail = static fn(string $why): array => ['ok' => false, 'error' => $why];
+        $ver = $man['version'];
+        $stage = UPDATE_DIR.'/client/stage/'.$ver;
+        $state = self::getState();
+        $news = self::getFileList($stage.'/storage/update/files.json');
+        $want = (string)($news['files']['core/apply.php']['sha256'] ?? '');
+        $rel = static fn(string $path): string => str_starts_with($path, BASE_DIR.'/') ? substr($path, strlen(BASE_DIR) + 1) : '';
+        $back = BACKUP_DIR.'/update/'.SL_VERSION.'-'.$ver;
+        $run = UPDATE_DIR.'/client/run/apply.php';
+        if ($rel($back) === '' || $rel($stage) === '' || $want === '') return $fail('back');
+        $lock = ['ver' => self::APPLY, 'from' => SL_VERSION, 'to' => $ver, 'kind' => (string)($state['stage']['kind'] ?? 'full'), 'time' => time(), 'token' => $pend['token'],
+            'code' => $pend['code'], 'entry' => $afile.'.php', 'run' => $want, 'back' => $rel($back), 'stage' => $rel($stage), 'prefix' => $prefix, 'tabs' => $check['tabs'],
+            'phase' => 'prep', 'dump' => null, 'at' => 0, 'upto' => 0, 'conf' => false, 'base' => false, 'roll' => null];
+        $link = fopen(UPDATE_DIR.'/client/apply.lock', 'x');
+        if ($link === false) return $fail('lock');
+        $made = fwrite($link, json_encode($lock, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)."\n") !== false;
+        fclose($link);
+        $plan = ['ver' => self::APPLY, 'from' => SL_VERSION, 'to' => $ver, 'moves' => $check['plan']['moves'], 'dirs' => $check['plan']['dirs']];
+        $text = json_encode($plan, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)."\n";
+        $src = is_file($stage.'/core/apply.php') ? $stage.'/core/apply.php' : BASE_DIR.'/core/apply.php';
+        $why = match (true) {
+            !$made => 'write',
+            !self::deleteTree($back) || !self::addDirPath($back) || file_put_contents($back.'/plan.json', $text) === false => 'back',
+            !self::addDirPath(dirname($run)) || !copy($src, $run) || !hash_equals($want, (string)hash_file('sha256', $run)) => 'run',
+            !self::setJsonFile('apply.lock', array_replace($lock, ['phase' => 'dump'])) => 'write',
+            default => '',
+        };
+        if ($why !== '') {
+            self::deleteTree($back);
+            self::deleteTree(dirname($run));
+            unlink(UPDATE_DIR.'/client/apply.lock');
+            return $fail($why);
+        }
+        if (($state['done']['back'] ?? '') !== '' && $state['done']['back'] !== $rel($back)) self::deleteTree(BASE_DIR.'/'.$state['done']['back']);
+        $state = array_replace(self::getState(), ['apply' => [], 'done' => [], 'undo' => []]);
+        return self::setState($state) ? ['ok' => true, 'error' => ''] : $fail('write');
+    }
+
+    # Close the site for going back to the version before the last installation: client/apply.lock names the whole plan of its backup for the installed rescuer to undo
+    public static function addApplyRevert(array $pend, string $afile): array {
+        $fail = static fn(string $why): array => ['ok' => false, 'error' => $why];
+        $done = (array)self::getState()['done'];
+        $back = (string)($done['back'] ?? '');
+        $plan = ($back !== '' && is_file(BASE_DIR.'/'.$back.'/plan.json')) ? json_decode((string)file_get_contents(BASE_DIR.'/'.$back.'/plan.json'), true) : null;
+        $whole = is_array($plan) && ($plan['ver'] ?? null) === self::APPLY && is_array($plan['moves'] ?? null) && is_file(BASE_DIR.'/'.$back.'/dump/dump.json')
+            && is_dir(BASE_DIR.'/'.$back.'/config') && ($done['to'] ?? '') === SL_VERSION;
+        if (!$whole) return $fail('back');
+        $num = count($plan['moves']);
+        $lock = ['ver' => self::APPLY, 'from' => (string)$done['from'], 'to' => SL_VERSION, 'kind' => (string)($done['kind'] ?? 'full'), 'time' => time(),
+            'token' => $pend['token'], 'code' => $pend['code'], 'entry' => $afile.'.php', 'run' => '', 'back' => $back, 'stage' => '', 'prefix' => '', 'tabs' => [],
+            'phase' => 'roll', 'dump' => null, 'at' => $num, 'upto' => $num, 'conf' => true, 'base' => true,
+            'roll' => ['why' => 'revert', 'step' => 0, 'error' => '', 'part' => 'base', 'rest' => null, 'at' => $num]];
+        if (!self::addDirPath(UPDATE_DIR.'/client')) return $fail('write');
+        $link = fopen(UPDATE_DIR.'/client/apply.lock', 'x');
+        if ($link === false) return $fail('lock');
+        $made = fwrite($link, json_encode($lock, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)."\n") !== false;
+        fclose($link);
+        return ($made && self::setState(array_replace(self::getState(), ['apply' => []]))) ? ['ok' => true, 'error' => ''] : $fail('write');
+    }
+
+    # The self-check after an installation: the home page and system/ping of the site asked over HTTP, down on a 5xx, none when the site cannot reach itself
+    public static function getSelfCheck(string $home, ?callable $fetch = null): array {
+        $fetch ??= static function (string $url): int {
+            $ctx = stream_context_create(['http' => ['method' => 'GET', 'timeout' => 5, 'follow_location' => 0, 'ignore_errors' => true,
+                'header' => 'User-Agent: SLAED/'.SL_VERSION." self-check\r\n"]]);
+            set_error_handler(static fn(): bool => true);
+            $link = fopen($url, 'rb', false, $ctx);
+            restore_error_handler();
+            if ($link === false) return 0;
+            $head = stream_get_meta_data($link)['wrapper_data'] ?? [];
+            fclose($link);
+            return (preg_match('#^HTTP/\S+\s+(\d{3})#', (string)(is_array($head) ? ($head[0] ?? '') : ''), $hit) === 1) ? (int)$hit[1] : 0;
+        };
+        $home = rtrim($home, '/');
+        $codes = [$fetch($home.'/'), $fetch($home.'/api/v1/system/ping')];
+        $code = max($codes);
+        $check = ($code >= 500) ? 'down' : (in_array(0, $codes, true) ? 'none' : 'ok');
+        return ['check' => $check, 'code' => $code];
     }
 
     # Remove the downloads and unpacked packages of every version but $keep, unless a download or an unpacking holds the lock right now

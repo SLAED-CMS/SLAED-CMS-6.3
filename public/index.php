@@ -10,8 +10,9 @@ if (!defined('PUBLIC_DIR')) define('PUBLIC_DIR', str_replace('\\', '/', __DIR__)
 define('MODULE_FILE', true);
 $sgtime = microtime(true);
 
-# The gate comes first: while the code waits for its database steps the site, its API and the pseudo-cron answer 503 before a line of the core runs
+# The gate comes first: while an installation lies or the code waits for its database steps the site, its API and the pseudo-cron answer 503 before the core
 require_once BASE_DIR.'/core/gate.php';
+if (($sgfile = getSiteGate()) !== '') require $sgfile;
 checkSiteGate();
 
 # The light path: no file lies under uploads/ in the document root, so such a request lands here and is answered before the core boots

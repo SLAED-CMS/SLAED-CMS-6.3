@@ -9,6 +9,7 @@ define('SETUP_FILE', true);
 if (!defined('BASE_DIR')) define('BASE_DIR', str_replace('\\', '/', dirname(__DIR__)));
 if (!defined('PUBLIC_DIR')) define('PUBLIC_DIR', str_replace('\\', '/', __DIR__));
 require_once BASE_DIR.'/core/gate.php';
+if (($sgfile = getSiteGate()) !== '') require $sgfile;
 checkSiteGate();
 define('CONFIG_DIR', BASE_DIR.'/config');
 define('BACKUP_DIR', BASE_DIR.'/storage/backup');

@@ -40,6 +40,9 @@ function getUpdateView(): string {
     $sid = $tpl->getHtmlFrag('code-block', ['lang_text' => 'sid', 'label_text' => _UPDATE_SID, 'copy_text' => _COPY, 'done_text' => _COPYDONE,
         'content_html' => htmlspecialchars((string)$state['sid'], ENT_QUOTES, 'UTF-8')]);
     $rows[] = ['label_html' => _UPDATE_SID, 'hint_html' => _UPDATE_SIDHINT, 'field_html' => $sid];
+    $last = getUpdateLast($state);
+    $rows = array_merge($rows, $last['rows']);
+    $cont .= $last['html'];
     $pack = getUpdatePack($state, (($sets['channel'] ?? '') === 'beta') ? 'beta' : 'stable');
     $acts = getTplPostButton(['name' => 'update', 'op' => 'check'], 'arrow-repeat', _UPDATE_CHECK).$pack['acts']
         .getTplPostButton(['name' => 'update', 'op' => 'audit'], 'shield-check', _UPDATE_AUDIT);
@@ -47,13 +50,87 @@ function getUpdateView(): string {
     return $cont.$tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('div', ['rows' => $rows])]).$pack['html'];
 }
 
+# One list under the overview: its heading with the count and at most 100 entries, the rest counted
+function getUpdateList(string $head, array $items, bool $warn = true): string {
+    global $tpl;
+    $items = array_map('strval', $items);
+    $more = (count($items) > 100) ? array_merge(array_slice($items, 0, 100), [sprintf(_UPDATE_MORE, count($items) - 100)]) : $items;
+    return $tpl->getHtmlFrag('alert', ['is_warn' => $warn, 'text' => sprintf($head, count($items)), 'messages' => $more]);
+}
+
+# The last installation and the last rollback: the self-check of a fresh installation runs once here, and its answer offers going back or confirming the site by hand
+function getUpdateLast(array $state): array {
+    global $conf, $tpl;
+    $out = ['rows' => [], 'html' => ''];
+    $line = static fn(string $label, string $text): array => ['label_html' => $label, 'has_field_text' => true, 'field_text' => $text];
+    $done = (array)$state['done'];
+    $undo = (array)$state['undo'];
+    if (Update::isVersion($undo['to'] ?? null)) {
+        $cause = (string)$undo['why'].(((string)$undo['error'] !== '') ? ': '.$undo['error'] : '');
+        $why = ($undo['why'] === 'revert') ? _UPDATE_UNDOREV : sprintf(_UPDATE_UNDOFAIL, intval($undo['step']), $cause);
+        $out['rows'][] = $line(_UPDATE_UNDO, sprintf(_UPDATE_RUN, $undo['from'], $undo['to'], date(_TIMESTRING, intval($undo['time']))).' - '.$why);
+    }
+    if (!Update::isVersion($done['to'] ?? null)) return $out;
+    if (($done['check'] ?? '') === 'wait') {
+        $res = Update::getSelfCheck((string)($conf['homeurl'] ?? ''));
+        $done['check'] = $res['check'];
+        $done['code'] = $res['code'];
+        Update::setState(array_replace(Update::getState(), ['done' => $done]));
+    }
+    $back = ($done['back'] ?? '') !== '' && is_dir(BASE_DIR.'/'.$done['back']);
+    $text = sprintf(_UPDATE_RUN, $done['from'], $done['to'], date(_TIMESTRING, intval($done['time'])));
+    $out['rows'][] = $line(_UPDATE_LASTRUN, $text.' - '.match ($done['check']) {
+        'ok' => _UPDATE_SELFOK,
+        'down' => sprintf(_UPDATE_SELFBAD, intval($done['code'] ?? 0)),
+        default => _UPDATE_SELFNONE,
+    });
+    $acts = ($done['check'] === 'none') ? getTplPostButton(['name' => 'update', 'op' => 'selfok'], 'check2-circle', _UPDATE_ALLOK) : '';
+    if ($back) $acts .= getTplPostButton(['name' => 'update', 'op' => 'revert'], 'arrow-counterclockwise', _UPDATE_REVERT);
+    if ($acts !== '') $out['rows'][] = ['label_html' => _UPDATE_LASTRUN, 'field_html' => $acts];
+    if ($done['check'] === 'down') $out['html'] = $tpl->getHtmlFrag('alert', ['type' => 'error', 'text' => _UPDATE_DOWN]);
+    return $out;
+}
+
+# The box of the installation under a ready package: the space step 3 needs, the marks the preflight asks for and the button, closed while the space is short
+function getUpdateInstall(array $state, array $man): string {
+    global $afile, $db, $tpl;
+    require_once BASE_DIR.'/core/classes/backup.php';
+    $dir = UPDATE_DIR.'/client/stage/'.$man['version'];
+    $last = (string)($state['done']['back'] ?? '');
+    try {
+        $dump = intdiv(Update::getBaseSize($db->sqlconnid, Backup::getSiteTables($db->sqlconnid, PREFIX_DB)) * 6, 5);
+    } catch (Throwable) {
+        $dump = 0;
+    }
+    $room = Update::getApplySpace($dump, ['bsize' => 0, 'nsize' => 0], $dir, $last);
+    if (!$room['same']) $room = Update::getApplySpace($dump, Update::getApplyPlan($dir, (string)$afile), $dir, $last);
+    $text = ($room['free'] === null) ? sprintf(_UPDATE_ROOMNO, filterSize($room['need'])) : sprintf(_UPDATE_ROOM, filterSize($room['need']), filterSize($room['free']));
+    if ($room['old'] > 0) $text .= ' '.sprintf(_UPDATE_ROOMBAK, filterSize($room['old']));
+    $short = !$room['ok'] && $room['free'] !== null;
+    if ($short) $text .= ' '.sprintf(_UPDATE_ROOMLOW, filterSize($room['need'] - $room['free'] - $room['old']));
+    $rows = [['label_html' => _UPDATE_SPACE, 'has_field_text' => true, 'field_text' => $text]];
+    $marks = [];
+    if (!empty($state['stage']['changed'])) $marks[] = ['over', _UPDATE_OVER];
+    if ($room['free'] === null) $marks[] = ['free', _UPDATE_FREEOK];
+    foreach ($marks as [$key, $label]) {
+        $rows[] = ['label_html' => _CONFIRM, 'field_html' => $tpl->getHtmlFrag('checkbox', ['name_attr' => $key, 'value_attr' => '1', 'label_text' => $label,
+            'is_required' => true])];
+    }
+    return $tpl->getHtmlPart('box', ['title' => _UPDATE_INSTALL, 'content_html' => $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _UPDATE_INSTHINT])
+        .$tpl->getHtmlPart('form', [
+            'action_url' => $afile.'.php?name=update&op=install',
+            'hidden' => [['name_attr' => 'token', 'value_attr' => getSiteToken('update')]],
+            'rows' => $rows,
+            'submit_label' => _UPDATE_INSTALL,
+            'is_disabled' => $short,
+        ])]);
+}
+
 # The package of the release found: the archive this site takes and the space it needs, a download cut midway, the unpacked package, the last refusal and integrity check
 function getUpdatePack(array $state, string $chan): array {
     global $afile, $tpl;
     $out = ['rows' => [], 'acts' => '', 'html' => ''];
     $line = static fn(string $label, string $text): array => ['label_html' => $label, 'has_field_text' => true, 'field_text' => $text];
-    $list = static fn(string $head, array $items): string => $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => sprintf($head, count($items)),
-        'messages' => (count($items) > 100) ? array_merge(array_slice($items, 0, 100), [sprintf(_UPDATE_MORE, count($items) - 100)]) : $items]);
     $man = Update::getOffer($state, $chan);
     $reader = Update::getZipReader();
     $stage = (array)$state['stage'];
@@ -68,7 +145,9 @@ function getUpdatePack(array $state, string $chan): array {
         if ($ready) {
             $out['rows'][] = $line(_UPDATE_PACK, $name.' - '.sprintf(_UPDATE_STAGED, intval($stage['files'] ?? 0), date(_TIMESTRING, intval($stage['time'] ?? 0))));
             if (!empty($stage['nolist'])) $out['html'] .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _UPDATE_NOLIST]);
-            if (!empty($stage['changed'])) $out['html'] .= $list(_UPDATE_CHANGED, array_map('strval', (array)$stage['changed']));
+            if (!empty($stage['changed'])) $out['html'] .= getUpdateList(_UPDATE_CHANGED, (array)$stage['changed']);
+            $out['acts'] = getTplPostButton(['name' => 'update', 'op' => 'test'], 'clipboard-check', _UPDATE_TEST);
+            $out['html'] .= getUpdateInstall($state, $data);
         } else {
             $temp = Update::getTempFile($data['version'], $kind);
             $have = is_file($temp) ? (int)filesize($temp) : 0;
@@ -97,7 +176,7 @@ function getUpdatePack(array $state, string $chan): array {
     };
     $out['rows'][] = $line(_UPDATE_INTEG, $text);
     foreach (['changed' => _UPDATE_MODIFIED, 'missing' => _UPDATE_MISSING, 'extra' => _UPDATE_EXTRA] as $key => $head) {
-        if (!empty($audit[$key])) $out['html'] .= $list($head, array_map('strval', (array)$audit[$key]));
+        if (!empty($audit[$key])) $out['html'] .= getUpdateList($head, (array)$audit[$key]);
     }
     if ($reader === '' || $ready) return $out;
     $hint = sprintf(_UPDATE_UPHINT, (string)ini_get('upload_max_filesize'), (string)ini_get('post_max_size'));
@@ -124,6 +203,7 @@ function getUpdateNote(array $res, string $ver): string {
 function getUpdateSettings(): string {
     global $afile, $conf, $tpl;
     $sets = $conf['update']['check'] ?? [];
+    $back = (string)(Update::getState()['done']['back'] ?? '');
     $radio = static function (string $name, string $label, string $value, array $opts, string $hint = ''): array {
         $lid = getFieldIds('', $name)['label'];
         $field = getTplRadioGroup(['labelledby' => $lid, 'name' => $name, 'value' => $value, 'options' => $opts]);
@@ -137,7 +217,8 @@ function getUpdateSettings(): string {
             ['value' => 'beta', 'label' => _UPDATE_BETA]]),
         $radio('upcheck', _UPDATE_UPCHECK, (string)intval($sets['upcheck'] ?? 1), $yesno),
         $radio('upsite', _UPDATE_UPSITE, (string)intval($sets['upsite'] ?? 1), $yesno, _UPDATE_SITEHINT),
-        $radio('keepbak', _UPDATE_KEEPBAK, (string)intval($sets['keepbak'] ?? 1), $yesno),
+        $radio('keepbak', _UPDATE_KEEPBAK, (string)intval($sets['keepbak'] ?? 1), $yesno, ($back !== '' && is_dir(BASE_DIR.'/'.$back))
+            ? sprintf(_UPDATE_BAKSIZE, filterSize(Update::getDirSize(BASE_DIR.'/'.$back))) : ''),
     ];
     $form = $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php?name=update&op=save',
@@ -215,6 +296,135 @@ function hide(): void {
     setRedirect($afile.'.php?name=update', true, 302, $done ? _SUCCSAVE : _ERROR, !$done);
 }
 
+# The preflight of the release found over its unpacked package; a manifest the keys in force no longer verify is the refusal offer
+function getUpdateCheck(array $opts = []): array {
+    global $afile, $conf, $db;
+    $state = Update::getState();
+    $man = Update::getOffer($state, (($conf['update']['check']['channel'] ?? '') === 'beta') ? 'beta' : 'stable');
+    if (!$man['ok']) return ['ok' => false, 'error' => $man['error'], 'name' => '', 'man' => []];
+    return Update::getApplyCheck($db->sqlconnid, PREFIX_DB, $state, $man['data'], (string)$afile, $opts) + ['man' => $man['data']];
+}
+
+# The refusal of a preflight as the flash text of the overview
+function getUpdateDeny(array $res): string {
+    return sprintf(_UPDATE_DENY, htmlspecialchars($res['error'].(($res['name'] !== '') ? ' - '.$res['name'] : ''), ENT_QUOTES, 'UTF-8'));
+}
+
+# The page of the rescue code, shown once before the site closes: the code, what it is for, and the form that starts the installation or the rollback with its token
+function setUpdateCode(string $title, string $lead, string $op, string $button, array $codes, bool $danger = false): void {
+    global $afile, $tpl;
+    $code = implode('-', str_split($codes['code'], 4));
+    $block = $tpl->getHtmlFrag('code-block', ['lang_text' => 'code', 'label_text' => _UPDATE_CODE, 'copy_text' => _COPY, 'done_text' => _COPYDONE,
+        'content_html' => htmlspecialchars($code, ENT_QUOTES, 'UTF-8')]);
+    $form = $tpl->getHtmlPart('form', [
+        'action_url' => $afile.'.php',
+        'hidden' => array_map(static fn(string $key, string $val): array => ['name_attr' => $key, 'value_attr' => $val], ['name', 'op', 'token', 'apply'],
+            ['update', $op, getSiteToken('update'), $codes['token']]),
+        'rows' => [['label_html' => _UPDATE_CODE, 'hint_html' => _UPDATE_CODEHINT, 'field_html' => $block]],
+        'submit_label' => $button,
+        'is_danger' => $danger,
+    ]);
+    setHead();
+    echo getUpdateHead(0).$tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $lead]).$tpl->getHtmlPart('box', ['title' => $title, 'content_html' => $form]);
+    setFoot();
+}
+
+# The pending installation or rollback a start carries: its kind, version and the token of the code page, not older than WAIT, and taken from the state at once
+function getUpdatePending(string $kind): array {
+    $state = Update::getState();
+    $pend = (array)$state['apply'];
+    $tok = getVar('post', 'apply', 'var', '');
+    $good = ($pend['kind'] ?? '') === $kind && is_string($pend['token'] ?? null) && strlen($tok) === 64 && hash_equals($pend['token'], hash('sha256', $tok))
+        && intval($pend['time'] ?? 0) > time() - Update::WAIT;
+    if (!$good) return [];
+    Update::setState(array_replace($state, ['apply' => []]));
+    return $pend;
+}
+
+# The report of the dry run: what the installation replaces, adds and deletes, the changed files, the options of config/, the database steps and the space
+function test(): void {
+    global $afile, $tpl;
+    if (!checkAdminPost('update')) setRedirect($afile.'.php?name=update', false, 302, _TOKENMISS, true);
+    $res = getUpdateCheck(['over' => true, 'free' => true]);
+    $cont = $tpl->getHtmlFrag('alert', $res['ok'] ? ['type' => 'success', 'text' => _UPDATE_READY] : ['type' => 'error', 'text' => getUpdateDeny($res)]);
+    if (($res['plan'] ?? []) !== []) {
+        $room = $res['room'];
+        $text = ($room['free'] === null) ? sprintf(_UPDATE_ROOMNO, filterSize($room['need'])) : sprintf(_UPDATE_ROOM, filterSize($room['need']), filterSize($room['free']));
+        if ($room['old'] > 0) $text .= ' '.sprintf(_UPDATE_ROOMBAK, filterSize($room['old']));
+        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => !$room['ok'], 'text' => _UPDATE_SPACE.': '.$text]);
+        $opts = [];
+        foreach ($res['adds'] as $file => $paths) foreach ($paths as $path) $opts[] = 'config/'.$file.': '.$path;
+        $steps = [];
+        foreach ($res['steps'] as $ver => $has) $steps[] = $ver.': '.(implode(' + ', array_keys(array_filter(['SQL' => $has['sql'], 'PHP' => $has['php']]))) ?: _UPDATE_MARK);
+        $lists = [[_UPDATE_PUTS, $res['plan']['swaps']], [_UPDATE_ADDS, $res['plan']['adds']], [_UPDATE_DROPS, $res['plan']['drops']],
+            [_UPDATE_CHANGED, $res['plan']['changed']], [_UPDATE_OPTS, $opts], [_UPDATE_RUNS, $steps], [_UPDATE_DENIED, $res['plan']['deny']]];
+        foreach ($lists as [$head, $items]) if ($items) $cont .= getUpdateList($head, $items, $head === _UPDATE_CHANGED || $head === _UPDATE_DENIED);
+    }
+    setHead();
+    echo getUpdateHead(0).$tpl->getHtmlPart('box', ['title' => _UPDATE_TEST, 'content_html' => $cont]);
+    setFoot();
+}
+
+function install(): void {
+    global $afile;
+    if (!checkAdminPost('update')) setRedirect($afile.'.php?name=update', false, 302, _TOKENMISS, true);
+    $opts = ['over' => getVar('post', 'over', 'num', 0) === 1, 'free' => getVar('post', 'free', 'num', 0) === 1];
+    $res = getUpdateCheck($opts);
+    $state = Update::getState();
+    if (isset($res['plan']['changed']) && $state['stage'] !== []) {
+        Update::setState(array_replace($state, ['stage' => array_replace((array)$state['stage'], ['changed' => $res['plan']['changed']])]));
+    }
+    if (!$res['ok']) setRedirect($afile.'.php?name=update', false, 302, getUpdateDeny($res), true);
+    $codes = Update::getApplyCode();
+    $pend = ['kind' => 'install', 'ver' => $res['man']['version'], 'token' => hash('sha256', $codes['token']), 'code' => hash('sha256', $codes['code']), 'time' => time()] + $opts;
+    if (!Update::setState(array_replace(Update::getState(), ['apply' => $pend]))) setRedirect($afile.'.php?name=update', false, 302, _ERROR, true);
+    setUpdateCode(_UPDATE_INSTALL.' '.$res['man']['version'], _UPDATE_STARTHINT, 'start', _UPDATE_START, $codes);
+}
+
+function start(): void {
+    global $afile;
+    if (!checkAdminPost('update')) setRedirect($afile.'.php?name=update', false, 302, _TOKENMISS, true);
+    $pend = getUpdatePending('install');
+    if (!$pend) setRedirect($afile.'.php?name=update', false, 302, _UPDATE_EXPIRED, true);
+    $res = getUpdateCheck(['over' => !empty($pend['over']), 'free' => !empty($pend['free'])]);
+    if (!$res['ok'] || $res['man']['version'] !== $pend['ver']) setRedirect($afile.'.php?name=update', false, 302, getUpdateDeny($res), true);
+    $made = Update::addApplyStart($pend, $res, $res['man'], (string)$afile, PREFIX_DB);
+    setAdminLog(['result' => $made['ok'] ? 'done' : 'failed', 'ver' => $pend['ver']]);
+    if (!$made['ok']) setRedirect($afile.'.php?name=update', false, 302, getUpdateDeny($made + ['name' => '']), true);
+    require UPDATE_DIR.'/client/run/apply.php';
+}
+
+function revert(): void {
+    global $afile;
+    if (!checkAdminPost('update')) setRedirect($afile.'.php?name=update', false, 302, _TOKENMISS, true);
+    $done = (array)Update::getState()['done'];
+    $deny = getUpdateDeny(['error' => 'back', 'name' => '']);
+    if (($done['back'] ?? '') === '' || !is_dir(BASE_DIR.'/'.$done['back'])) setRedirect($afile.'.php?name=update', false, 302, $deny, true);
+    $codes = Update::getApplyCode();
+    $pend = ['kind' => 'revert', 'ver' => (string)$done['from'], 'token' => hash('sha256', $codes['token']), 'code' => hash('sha256', $codes['code']), 'time' => time()];
+    if (!Update::setState(array_replace(Update::getState(), ['apply' => $pend]))) setRedirect($afile.'.php?name=update', false, 302, _ERROR, true);
+    setUpdateCode(_UPDATE_REVERT, sprintf(_UPDATE_REVHINT, (string)$done['from']), 'back', _UPDATE_REVGO, $codes, true);
+}
+
+function back(): void {
+    global $afile;
+    if (!checkAdminPost('update')) setRedirect($afile.'.php?name=update', false, 302, _TOKENMISS, true);
+    $pend = getUpdatePending('revert');
+    if (!$pend) setRedirect($afile.'.php?name=update', false, 302, _UPDATE_EXPIRED, true);
+    $made = Update::addApplyRevert($pend, (string)$afile);
+    setAdminLog(['result' => $made['ok'] ? 'done' : 'failed', 'ver' => $pend['ver']]);
+    if (!$made['ok']) setRedirect($afile.'.php?name=update', false, 302, getUpdateDeny($made + ['name' => '']), true);
+    require BASE_DIR.'/core/rescue.php';
+}
+
+function selfok(): void {
+    global $afile;
+    $state = Update::getState();
+    $done = checkAdminPost('update') && Update::isVersion($state['done']['to'] ?? null)
+        && Update::setState(array_replace($state, ['done' => array_replace((array)$state['done'], ['check' => 'ok'])]));
+    setRedirect($afile.'.php?name=update', false, 302, $done ? _SUCCSAVE : _ERROR, !$done);
+}
+
 function info(): void {
     $ops = array_map(static fn(int $i): string => 'name=update&tab='.$i, array_keys(UPDATE_TABS));
     setTplAdminInfoPage(['ops' => array_merge($ops, ['name=update&op=info']), 'tabs' => array_merge(array_map('constant', UPDATE_TABS), [_MANUAL])]);
@@ -228,5 +438,11 @@ switch ($op) {
     case 'upload': upload(); break;
     case 'audit': audit(); break;
     case 'hide': hide(); break;
+    case 'test': test(); break;
+    case 'install': install(); break;
+    case 'start': start(); break;
+    case 'revert': revert(); break;
+    case 'back': back(); break;
+    case 'selfok': selfok(); break;
     case 'info': info(); break;
 }

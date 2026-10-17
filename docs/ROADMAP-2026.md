@@ -197,8 +197,8 @@ into the plan, then do whatever work the step names.
   deletes itself — Node types and field sets — are taken whole (owner, 2026-10-16). (2026-10-16)
 - [x] 84. UPDATE batch 8 — the database: a resumable dump in portions and the restore from it, both callable without
   the core, limited to the site's table prefix. (2026-10-16)
-- [ ] 85. UPDATE batch 9 — the client: installation in steps, the guard of all three entry points, and rollback of
-  files, `config/` and the database with the caches cleared.
+- [x] 85. UPDATE batch 9 — the client: installation in steps, the guard of all three entry points, and rollback of
+  files, `config/` and the database with the caches cleared. (2026-10-17)
 - [ ] 86. UPDATE batch 10 — the rehearsal script `tools/rehearse.php` that gates every publication, then the full
   rehearsal on a copy of the stand, a key change included.
 - [ ] 87. UPDATE batch 11 — reference and the real keys; deletes `docs/11-UPDATE-2026.md`.

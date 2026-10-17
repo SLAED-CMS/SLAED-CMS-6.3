@@ -812,6 +812,10 @@ return [
             '/lang/' => 'a language file defines translated sentences, one file per locale; markup inside a sentence is part of that text and moves '
                 .'with the translation, not with a fragment. This is the general case of the RSS feed document the plan already excluded',
             'config/filetype.php' => 'attachment templates edited by the administrator through admin/modules/uploads.php: user data that happens to be markup',
+            'core/apply.php' => 'the executor of an installation runs while the files move, so no core, theme or template may load; it answers its few pages on the '
+                .'static shell of public/error.html, whose classes it reuses',
+            'core/rescue.php' => 'the rescuer of an installation must work when the core or the package is broken, so it loads nothing either and answers on the '
+                .'same static shell of public/error.html',
         ],
     ],
 ];

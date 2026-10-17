@@ -713,12 +713,13 @@ function getUpdateSite(): array {
     return $state;
 }
 
-# Executes the next due scheduler job or a named job and returns a structured result
+# Executes the next due scheduler job or a named job and returns a structured result; none runs while an installation holds client/apply.lock
 # The due check that selected the job ran before the lock existed, so a scheduled run asks again while holding it; a manual run is an operator decision and skips that question
 # A start or a result that cannot be written fails the run: a job that finishes but still looks due would be run again by the next pass, and a lost result hides what happened
 function addSchedulerRun(?string $name = null, string $type = 'manual'): array {
     global $conf;
     if ((int)($conf['scheduler']['active'] ?? 0) !== 1) return ['status' => 'disabled', 'message' => 'Scheduler is disabled'];
+    if (is_file(UPDATE_DIR.'/client/apply.lock')) return ['status' => 'paused', 'message' => 'An update is being installed'];
     if ($name !== null && $name !== '' && $type === 'manual') {
         $job = getSchedulerJob($name);
         if (($job['system'] ?? '') === '' && ($job['type'] ?? '') !== 'custom') $job = null;
