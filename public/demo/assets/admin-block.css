@@ -1,0 +1,978 @@
+/* The admin block of the stand, shared by the two etalons: the floating menu (М1–М14), the block "Администрация" (А1–А8)
+   and the window "Наблюдение" (А3, М13). The panel (demo/admin/) and the site (demo/site/) link this one file, so the
+   menu, the block and the window are one standard on both themes, as they will be after the transfer. Tokens only; what
+   differs by part stays in admin.css and site.css */
+
+/* ---------- М1–М14 The floating menu: a layer over the panel (variant 09 of the admin block series) ---------- */
+
+/* The tile of the pill is the tile of the theme; upright on a short screen the script lowers it for the bar alone */
+.sl-dock {
+  --sl-dock-tile: var(--sl-size-tile);
+  --sl-dock-gap: var(--sl-space-3);
+  position: fixed;
+  z-index: var(--sl-z-sticky);
+  top: var(--sl-dock-y, auto);
+  left: var(--sl-dock-x, 50%);
+  transform: translate(-50%, -50%);
+}
+
+.sl-dock:not([data-placed]) {
+  top: auto;
+  bottom: var(--sl-space-4);
+  transform: translateX(-50%);
+}
+
+/* М10 Off in Options the layer goes; the block of the home (А1) stands either way */
+:root[data-sl-dock-off] .sl-dock {
+  display: none;
+}
+
+/* М12 WCAG 2.4.11: a field reached by Tab never ends under the pill at the bottom */
+:root:not([data-sl-dock-off]) {
+  scroll-padding-bottom: calc(var(--sl-size-tile) + var(--sl-space-4) * 4);
+}
+
+.sl-dock-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--sl-space-1);
+  box-sizing: border-box;
+  padding: var(--sl-space-3) var(--sl-space-4);
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-pill);
+  background: var(--sl-bg);
+  box-shadow: var(--sl-shadow-float);
+}
+
+/* М6 Upright the pill is as thick as it is tall across: the same tile, the padding turned with the axis */
+.sl-dock[data-dir="col"] .sl-dock-bar {
+  flex-direction: column;
+  padding: var(--sl-space-4) var(--sl-space-3);
+}
+
+/* М7 The body that folds carries its own gap and the step after it, so a body run down to nothing leaves no seam */
+.sl-dock-body,
+.sl-dock-pins {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: var(--sl-dock-gap);
+}
+
+.sl-dock-body {
+  padding-inline: var(--sl-dock-gap);
+}
+
+.sl-dock[data-dir="col"] :is(.sl-dock-body, .sl-dock-pins) {
+  flex-direction: column;
+}
+
+.sl-dock[data-dir="col"] .sl-dock-body {
+  padding: var(--sl-dock-gap) 0;
+}
+
+.sl-dock[data-drag] .sl-dock-bar {
+  box-shadow: var(--sl-shadow-float), 0 0 0 3px var(--sl-tint-strong);
+}
+
+.sl-dock-sep {
+  flex: none;
+  width: 1px;
+  height: calc(var(--sl-dock-tile) * 0.7);
+  background: var(--sl-border);
+}
+
+.sl-dock[data-dir="col"] .sl-dock-sep {
+  width: calc(var(--sl-dock-tile) * 0.7);
+  height: 1px;
+}
+
+.sl-dock-sep-end {
+  margin-inline: var(--sl-space-2);
+}
+
+.sl-dock[data-dir="col"] .sl-dock-sep-end {
+  margin: var(--sl-space-2) 0;
+}
+
+/* ---------- A round app: it grows towards the room, the pill stays ---------- */
+
+.sl-dock-app {
+  --sl-dock-s: 1;
+  --sl-dock-c: var(--sl-primary);
+  position: relative;
+  z-index: var(--sl-dock-z, 0);
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: var(--sl-dock-tile);
+  height: var(--sl-dock-tile);
+  padding: 0;
+  border: 0;
+  border-radius: var(--sl-radius-circle);
+  background: linear-gradient(160deg, color-mix(in srgb, var(--sl-dock-c) 62%, var(--sl-solid-text)), var(--sl-dock-c) 72%);
+  box-shadow: var(--sl-shadow-xs);
+  color: var(--sl-solid-text);
+  font: inherit;
+  font-size: calc(var(--sl-dock-tile) * 0.44);
+  text-decoration: none;
+  cursor: pointer;
+  transform: scale(var(--sl-dock-s));
+  transform-origin: 50% 100%;
+  transition: transform var(--sl-time-fast) linear;
+}
+
+.sl-dock[data-to="down"] .sl-dock-app { transform-origin: 50% 0; }
+.sl-dock[data-to="right"] .sl-dock-app { transform-origin: 0 50%; }
+.sl-dock[data-to="left"] .sl-dock-app { transform-origin: 100% 50%; }
+
+.sl-dock-app img {
+  width: 62%;
+  height: 62%;
+}
+
+.sl-dock-plain {
+  background: linear-gradient(160deg, var(--sl-bg), var(--sl-bg-muted));
+  box-shadow: var(--sl-shadow-xs), inset 0 0 0 1px var(--sl-border);
+  color: var(--sl-dock-c);
+}
+
+.sl-dock-out {
+  --sl-dock-c: var(--sl-text-muted);
+}
+
+.sl-dock-out:hover,
+.sl-dock-out:focus-visible {
+  color: var(--sl-danger);
+}
+
+.sl-dock-launch {
+  --sl-dock-c: var(--sl-primary-strong);
+}
+
+.sl-dock-stack {
+  --sl-dock-c: var(--sl-primary);
+}
+
+.sl-dock-me {
+  padding: 2px;
+  background: conic-gradient(from 200deg, var(--sl-primary), var(--sl-accent), var(--sl-primary));
+}
+
+.sl-dock-me img {
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  border: 2px solid var(--sl-bg);
+  border-radius: var(--sl-radius-circle);
+  background: var(--sl-bg);
+}
+
+/* М13 А4 The watch: the ring of shares in the legend of the summary, the figure of the visitors in its hole */
+.sl-dock-watch {
+  background: radial-gradient(circle, var(--sl-bg) 54%, transparent 55%),
+    conic-gradient(var(--sl-accent) 0 var(--sl-d-adm), var(--sl-success) var(--sl-d-adm) var(--sl-d-people),
+      var(--sl-warning) var(--sl-d-people) var(--sl-d-bots), var(--sl-primary) var(--sl-d-bots) 100%);
+  color: var(--sl-text);
+  font-size: calc(var(--sl-dock-tile) * 0.3);
+  font-weight: var(--sl-weight-bold);
+}
+
+.sl-dock-badge {
+  position: absolute;
+  top: calc(var(--sl-space-2) * -1);
+  right: calc(var(--sl-space-2) * -1);
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  min-width: var(--sl-space-6);
+  height: var(--sl-space-6);
+  padding: 0 var(--sl-space-2);
+  border: 2px solid var(--sl-bg);
+  border-radius: var(--sl-radius-pill);
+  background: var(--sl-warning);
+  color: var(--sl-on-solid);
+  font-size: var(--sl-font-micro);
+  font-weight: var(--sl-weight-bold);
+  line-height: 1;
+}
+
+/* М9 The open section: a short bar of the brand with a soft glow on the side away from the room */
+.sl-dock-here::after {
+  position: absolute;
+  bottom: calc(var(--sl-space-3) * -1);
+  left: 50%;
+  width: var(--sl-space-6);
+  height: var(--sl-space-2);
+  border-radius: var(--sl-radius-pill);
+  background: var(--sl-primary);
+  box-shadow: 0 0 var(--sl-space-3) var(--sl-tint-strong);
+  transform: translateX(-50%);
+  content: "";
+}
+
+.sl-dock[data-to="down"] .sl-dock-here::after { top: calc(var(--sl-space-3) * -1); bottom: auto; }
+.sl-dock:is([data-to="right"], [data-to="left"]) .sl-dock-here::after { top: 50%; width: var(--sl-space-2); height: var(--sl-space-6); transform: translateY(-50%); }
+.sl-dock[data-to="right"] .sl-dock-here::after { bottom: auto; left: calc(var(--sl-space-3) * -1); }
+.sl-dock[data-to="left"] .sl-dock-here::after { right: calc(var(--sl-space-3) * -1); bottom: auto; left: auto; }
+
+/* М4 The tip on the side of the room, at its own size over a grown icon */
+.sl-dock-app[data-tip]::before {
+  position: absolute;
+  z-index: var(--sl-z-raised);
+  padding: var(--sl-space-2) var(--sl-space-4);
+  border-radius: var(--sl-radius-2);
+  background: var(--sl-text);
+  color: var(--sl-bg);
+  font-size: var(--sl-font-small);
+  font-weight: var(--sl-weight-normal);
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  scale: calc(1 / var(--sl-dock-s));
+  transition: opacity var(--sl-time-fast) var(--sl-ease-out);
+  content: attr(data-tip);
+}
+
+.sl-dock[data-to="up"] .sl-dock-app[data-tip]::before { bottom: calc(100% + var(--sl-space-4)); left: 50%; translate: -50% 0; transform-origin: 0 100%; }
+.sl-dock[data-to="down"] .sl-dock-app[data-tip]::before { top: calc(100% + var(--sl-space-4)); left: 50%; translate: -50% 0; transform-origin: 0 0; }
+.sl-dock[data-to="right"] .sl-dock-app[data-tip]::before { top: 50%; left: calc(100% + var(--sl-space-4)); translate: 0 -50%; transform-origin: 0 0; }
+.sl-dock[data-to="left"] .sl-dock-app[data-tip]::before { top: 50%; right: calc(100% + var(--sl-space-4)); translate: 0 -50%; transform-origin: 100% 0; }
+
+.sl-dock-app:hover::before,
+.sl-dock-app:focus-visible::before {
+  opacity: 1;
+}
+
+.sl-dock[data-open] .sl-dock-app::before,
+.sl-dock[data-drag] .sl-dock-app::before {
+  display: none;
+}
+
+/* ---------- М5 М6 М7 М8 The three tools: the buttons of the system window, each showing the icon of its axis ---------- */
+
+.sl-dock[data-dir="col"] .sl-dock-tools {
+  flex-direction: column;
+}
+
+.sl-dock-grip {
+  touch-action: none;
+}
+
+.sl-dock[data-drag] .sl-dock-grip {
+  cursor: grabbing;
+}
+
+.sl-dock-tool .bi {
+  display: none;
+}
+
+.sl-dock[data-dir="row"] :is(.sl-dock-grip, .sl-dock-turn) .sl-dock-ax-row,
+.sl-dock[data-dir="col"] :is(.sl-dock-grip, .sl-dock-turn) .sl-dock-ax-col,
+.sl-dock[data-dir="row"]:not([data-min]) .sl-dock-fold .sl-dock-ax-row.sl-dock-open,
+.sl-dock[data-dir="row"][data-min] .sl-dock-fold .sl-dock-ax-row.sl-dock-shut,
+.sl-dock[data-dir="col"]:not([data-min]) .sl-dock-fold .sl-dock-ax-col.sl-dock-open,
+.sl-dock[data-dir="col"][data-min] .sl-dock-fold .sl-dock-ax-col.sl-dock-shut {
+  display: inline-block;
+}
+
+/* ---------- The pops: on the side where the room is ---------- */
+
+.sl-dock-pop {
+  position: absolute;
+  box-sizing: border-box;
+  width: min(340px, calc(100vw - var(--sl-space-6) * 2));
+  max-height: min(72vh, 560px);
+  overflow: auto;
+  padding: var(--sl-space-5);
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-3);
+  background: var(--sl-bg);
+  box-shadow: var(--sl-shadow-float);
+}
+
+.sl-dock-pop[hidden] {
+  display: none;
+}
+
+.sl-dock[data-to="up"] .sl-dock-pop { bottom: calc(100% + var(--sl-space-5)); left: var(--sl-dock-px, 50%); translate: -50% 0; }
+.sl-dock[data-to="down"] .sl-dock-pop { top: calc(100% + var(--sl-space-5)); left: var(--sl-dock-px, 50%); translate: -50% 0; }
+.sl-dock[data-to="right"] .sl-dock-pop { top: var(--sl-dock-py, 50%); left: calc(100% + var(--sl-space-5)); translate: 0 -50%; }
+.sl-dock[data-to="left"] .sl-dock-pop { top: var(--sl-dock-py, 50%); right: calc(100% + var(--sl-space-5)); translate: 0 -50%; }
+
+/* The caption and its hint below it: the hint is a sentence, so it takes a line of its own */
+.sl-dock-cap {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sl-space-1) var(--sl-space-2);
+  margin: 0 0 var(--sl-space-4);
+  font-weight: var(--sl-weight-semibold);
+}
+
+.sl-dock-cap small {
+  flex-basis: 100%;
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-micro);
+  font-weight: var(--sl-weight-normal);
+}
+
+.sl-dock-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--sl-space-4) var(--sl-space-3);
+}
+
+.sl-dock-grid a {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: var(--sl-space-2);
+  color: var(--sl-text);
+  font-size: var(--sl-font-micro);
+  text-align: center;
+  text-decoration: none;
+}
+
+.sl-dock-grid a > span:first-child {
+  display: grid;
+  place-items: center;
+  width: var(--sl-size-tile);
+  height: var(--sl-size-tile);
+  border-radius: var(--sl-radius-circle);
+  background: linear-gradient(160deg, color-mix(in srgb, var(--sl-dock-c) 60%, var(--sl-solid-text)), var(--sl-dock-c) 72%);
+  color: var(--sl-solid-text);
+  font-size: var(--sl-font-h3);
+}
+
+.sl-dock-dead {
+  position: absolute;
+  top: 0;
+  right: var(--sl-space-6);
+  width: var(--sl-space-4);
+  height: var(--sl-space-4);
+  border: 2px solid var(--sl-bg);
+  border-radius: var(--sl-radius-circle);
+  background: var(--sl-warning);
+}
+
+.sl-dock-me-head {
+  display: grid;
+  justify-items: center;
+  gap: var(--sl-space-2);
+  margin-bottom: var(--sl-space-4);
+  text-align: center;
+}
+
+.sl-dock-me-head img {
+  width: calc(var(--sl-size-tile) + var(--sl-space-6));
+  height: calc(var(--sl-size-tile) + var(--sl-space-6));
+  padding: var(--sl-space-1);
+  border-radius: var(--sl-radius-circle);
+  background: conic-gradient(from 200deg, var(--sl-primary), var(--sl-accent), var(--sl-primary));
+}
+
+.sl-dock-me-head small,
+.sl-dock-facts dt,
+.sl-dock-note {
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-micro);
+}
+
+.sl-dock-facts {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--sl-space-2) var(--sl-space-4);
+  margin: 0 0 var(--sl-space-4);
+  font-size: var(--sl-font-small);
+}
+
+.sl-dock-facts dd {
+  margin: 0;
+  text-align: right;
+}
+
+.sl-dock-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sl-space-3);
+  box-sizing: border-box;
+  width: 100%;
+  padding: var(--sl-space-3) 0;
+  border: 0;
+  border-top: 1px solid var(--sl-border);
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-size: var(--sl-font-small);
+  text-align: left;
+}
+
+button.sl-dock-row {
+  cursor: pointer;
+}
+
+button.sl-dock-row:hover {
+  color: var(--sl-primary);
+}
+
+.sl-dock-pair {
+  display: flex;
+  gap: var(--sl-space-1);
+}
+
+.sl-dock-pair button {
+  display: grid;
+  place-items: center;
+  width: var(--sl-size-chip);
+  height: var(--sl-size-control);
+  padding: 0;
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-1);
+  background: var(--sl-bg);
+  color: var(--sl-text-muted);
+  cursor: pointer;
+}
+
+.sl-dock-pair button[aria-pressed="true"] {
+  border-color: var(--sl-primary);
+  background: var(--sl-primary);
+  color: var(--sl-on-solid);
+}
+
+.sl-dock-note {
+  margin: var(--sl-space-3) 0 0;
+  line-height: var(--sl-line-normal);
+}
+
+/* A phone: the pill lies across at the bottom; the pins go to the quick jump, the grip and the turn stay away, and it
+   gives the bottom edge to the bar of a pick (Э32) */
+@media (max-width: 560px) {
+  .sl-dock { --sl-dock-tile: var(--sl-size-control); --sl-dock-gap: var(--sl-space-2); }
+  .sl-dock[data-placed] { top: auto; bottom: var(--sl-space-3); left: 50%; transform: translateX(-50%); }
+  .sl-dock-pins, .sl-dock-pin, .sl-dock-grip, .sl-dock-turn, .sl-dock-me { display: none; }
+  .sl-dock-app { transform: none; }
+  body[data-sl-picking] .sl-dock { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sl-dock-app { transition: none; }
+}
+
+/* ---------- А1–А8 The block "Администрация": the admin and the watch as one (variant 08 of the series) ---------- */
+
+/* А2 А4 The summary: the lower half of the site's user block, the ring in the legend of the shares */
+.sl-adm-sum {
+  display: grid;
+  grid-template-columns: calc(var(--sl-size-tile) * 2 - var(--sl-space-3)) minmax(0, 1fr);
+  gap: var(--sl-space-5);
+  align-items: center;
+  padding-top: var(--sl-space-2);
+}
+
+.sl-adm-ring {
+  --sl-d-adm: 0%;
+  --sl-d-people: 0%;
+  --sl-d-bots: 0%;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  aspect-ratio: 1;
+  padding: 0;
+  border: 0;
+  border-radius: var(--sl-radius-circle);
+  background: conic-gradient(var(--sl-accent) 0 var(--sl-d-adm), var(--sl-success) var(--sl-d-adm) var(--sl-d-people),
+    var(--sl-warning) var(--sl-d-people) var(--sl-d-bots), var(--sl-primary) var(--sl-d-bots) 100%);
+  color: var(--sl-text);
+  font: inherit;
+  cursor: pointer;
+  transition: transform var(--sl-time-fast) var(--sl-ease-out), box-shadow var(--sl-time-fast) var(--sl-ease-out);
+}
+
+.sl-adm-ring:hover,
+.sl-adm-ring:focus-visible {
+  box-shadow: 0 0 0 var(--sl-space-2) var(--sl-tint);
+  transform: scale(1.04);
+}
+
+.sl-adm-ring > span {
+  display: grid;
+  place-items: center;
+  width: 78%;
+  aspect-ratio: 1;
+  border-radius: var(--sl-radius-circle);
+  background: var(--sl-bg);
+  line-height: 1;
+}
+
+.sl-adm-ring b {
+  align-self: end;
+  font-size: var(--sl-font-h3);
+}
+
+.sl-adm-ring small {
+  align-self: start;
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-micro);
+}
+
+.sl-adm-lines {
+  display: grid;
+  min-width: 0;
+}
+
+.sl-adm-line {
+  display: grid;
+  grid-template-columns: var(--sl-space-6) minmax(0, 1fr) auto;
+  gap: var(--sl-space-3);
+  align-items: center;
+  padding: var(--sl-space-1) 0;
+  color: var(--sl-text);
+  font-size: var(--sl-font-small);
+}
+
+.sl-adm-line > .bi { color: var(--sl-primary); }
+.sl-adm-line[data-kind="admin"] > .bi { color: var(--sl-accent); }
+.sl-adm-line[data-kind="user"] > .bi { color: var(--sl-success); }
+.sl-adm-line[data-kind="bot"] > .bi { color: var(--sl-warning); }
+
+/* The total is the whole ring, not a share of it */
+.sl-adm-line.sl-adm-total {
+  font-weight: var(--sl-weight-semibold);
+}
+
+.sl-adm-line.sl-adm-total > .bi {
+  color: var(--sl-text);
+}
+
+/* А5 Six square keys, icons only, each in the tone of its meaning */
+.sl-adm-keys {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: var(--sl-space-2);
+  margin-top: var(--sl-space-5);
+}
+
+.sl-adm-keys > :is(a, button) {
+  --sl-adm-c: var(--sl-primary);
+  position: relative;
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  padding: 0;
+  border: 1px solid color-mix(in srgb, var(--sl-adm-c) 25%, transparent);
+  border-radius: var(--sl-radius-2);
+  background: color-mix(in srgb, var(--sl-adm-c) 7%, var(--sl-bg));
+  color: var(--sl-adm-c);
+  font: inherit;
+  font-size: var(--sl-font-h4);
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color var(--sl-time-fast) var(--sl-ease-out), transform var(--sl-time-fast) var(--sl-ease-out);
+}
+
+.sl-adm-keys > :is(a, button):hover,
+.sl-adm-keys > :is(a, button):focus-visible {
+  background: color-mix(in srgb, var(--sl-adm-c) 15%, var(--sl-bg));
+  transform: translateY(calc(var(--sl-space-1) * -1));
+}
+
+.sl-adm-keys .sl-adm-stat { --sl-adm-c: var(--sl-accent); }
+.sl-adm-keys .sl-adm-site { --sl-adm-c: var(--sl-text-muted); }
+.sl-adm-keys .sl-adm-links { --sl-adm-c: var(--sl-success); }
+.sl-adm-keys .sl-adm-out { --sl-adm-c: var(--sl-danger); }
+
+.sl-adm-keys .sl-adm-links.sl-is-open {
+  background: color-mix(in srgb, var(--sl-adm-c) 18%, var(--sl-bg));
+}
+
+.sl-adm-n {
+  position: absolute;
+  top: calc(var(--sl-space-2) * -1);
+  right: calc(var(--sl-space-2) * -1);
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  min-width: var(--sl-space-6);
+  height: var(--sl-space-6);
+  padding: 0 var(--sl-space-2);
+  border: 2px solid var(--sl-bg);
+  border-radius: var(--sl-radius-pill);
+  background: var(--sl-success);
+  color: var(--sl-on-solid);
+  font-size: var(--sl-font-micro);
+  font-weight: var(--sl-weight-bold);
+  line-height: 1;
+}
+
+/* А7 A dead link of the owner's part puts a warning dot on its key */
+.sl-adm-dead::after {
+  position: absolute;
+  right: var(--sl-space-1);
+  bottom: var(--sl-space-1);
+  width: var(--sl-space-3);
+  height: var(--sl-space-3);
+  border-radius: var(--sl-radius-circle);
+  background: var(--sl-warning);
+  content: "";
+}
+
+/* А6 The owner's links as the rows of the site's user block (sl-block-pm of lite) */
+.sl-adm-own {
+  margin-top: var(--sl-space-3);
+}
+
+.sl-adm-pm {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* А6 The rows of the site's user block (sl-block-pm): the icon, the name, a flag when the row has one, the chevron at the edge */
+.sl-adm-pm a {
+  display: grid;
+  grid-template-columns: var(--sl-space-7) minmax(0, 1fr) auto auto;
+  align-items: center;
+  box-sizing: border-box;
+  height: var(--sl-item-height);
+  padding: var(--sl-space-3) var(--sl-space-2);
+  border-bottom: 1px solid var(--sl-border);
+  color: var(--sl-text-muted);
+  text-decoration: none;
+  transition: padding-left var(--sl-time-base) var(--sl-ease-out), color var(--sl-time-base) var(--sl-ease-out);
+}
+
+.sl-adm-pm a:hover,
+.sl-adm-pm a:focus-visible {
+  padding-left: var(--sl-space-3);
+  color: var(--sl-primary-strong);
+}
+
+.sl-adm-pm a > .bi:first-child {
+  color: var(--sl-primary);
+}
+
+.sl-adm-pm a > span:nth-child(2) {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sl-adm-pm a > .bi:last-child {
+  grid-column: 4;
+  font-size: var(--sl-font-micro);
+}
+
+.sl-adm-pm .sl-adm-flag {
+  grid-column: 3;
+  margin-right: var(--sl-space-3);
+}
+
+.sl-adm-flag {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sl-space-1);
+  padding: 0 var(--sl-space-3);
+  border-radius: var(--sl-radius-pill);
+  background: color-mix(in srgb, var(--sl-warning) 16%, transparent);
+  color: var(--sl-warning-strong);
+  font-size: var(--sl-font-micro);
+  font-weight: var(--sl-weight-medium);
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sl-adm-ring,
+  .sl-adm-keys > :is(a, button),
+  .sl-adm-pm a { transition: none; }
+}
+
+/* ---------- А3 М13 The window "Наблюдение": the live statistics of the visitors ---------- */
+
+.sl-stats.sl-modal {
+  width: min(960px, calc(100vw - var(--sl-space-6) * 2));
+}
+
+.sl-stats-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sl-space-3);
+}
+
+.sl-stats-segs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sl-space-2);
+}
+
+.sl-stats-seg,
+.sl-stats-live {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sl-space-2);
+  height: var(--sl-size-chip);
+  padding: 0 var(--sl-space-4);
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-pill);
+  background: var(--sl-bg);
+  color: var(--sl-text-muted);
+  font: inherit;
+  font-size: var(--sl-font-small);
+  cursor: pointer;
+}
+
+.sl-stats-seg b {
+  color: var(--sl-text);
+}
+
+.sl-stats-seg[aria-pressed="true"] {
+  border-color: var(--sl-primary);
+  background: var(--sl-primary);
+  color: var(--sl-on-solid);
+}
+
+.sl-stats-seg[aria-pressed="true"] b {
+  color: inherit;
+}
+
+.sl-stats-live {
+  color: var(--sl-danger);
+  font-weight: var(--sl-weight-semibold);
+}
+
+.sl-stats-live small {
+  color: var(--sl-text-muted);
+  font-weight: var(--sl-weight-normal);
+}
+
+.sl-stats-dot {
+  width: var(--sl-space-3);
+  height: var(--sl-space-3);
+  border-radius: var(--sl-radius-circle);
+  background: currentColor;
+}
+
+.sl-stats-live[aria-pressed="true"] {
+  color: var(--sl-text-muted);
+}
+
+.sl-stats-kpis {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--sl-space-3);
+  margin-bottom: var(--sl-space-4);
+}
+
+.sl-stats-kpis > div {
+  display: grid;
+  gap: var(--sl-space-1);
+  padding: var(--sl-space-4);
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-2);
+  background: var(--sl-bg);
+}
+
+.sl-stats-kpis small {
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-micro);
+}
+
+.sl-stats-kpis b {
+  font-size: var(--sl-font-h2);
+  line-height: 1;
+}
+
+.sl-stats-chart svg {
+  display: block;
+  width: 100%;
+  height: calc(var(--sl-size-tile) * 2);
+}
+
+.sl-stats-area {
+  fill: var(--sl-tint);
+}
+
+.sl-stats-line {
+  fill: none;
+  stroke: var(--sl-primary);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.sl-stats-axis {
+  display: flex;
+  justify-content: space-between;
+  margin-top: var(--sl-space-1);
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-micro);
+}
+
+/* А4 The bar of shares in the legend of the ring */
+.sl-stats-shares {
+  display: flex;
+  overflow: hidden;
+  height: var(--sl-space-3);
+  gap: 2px;
+  margin-top: var(--sl-space-3);
+  border-radius: var(--sl-radius-pill);
+}
+
+.sl-stats-shares i {
+  width: var(--sl-d-share);
+  background: var(--sl-primary);
+}
+
+.sl-stats-shares [data-kind="admin"] { background: var(--sl-accent); }
+.sl-stats-shares [data-kind="user"] { background: var(--sl-success); }
+.sl-stats-shares [data-kind="bot"] { background: var(--sl-warning); }
+
+.sl-stats-cols {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  gap: var(--sl-space-4);
+  margin-top: var(--sl-space-5);
+}
+
+.sl-stats-side {
+  display: grid;
+  gap: var(--sl-space-4);
+  align-content: start;
+}
+
+.sl-stats-box {
+  padding: var(--sl-space-4);
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-2);
+  background: var(--sl-bg);
+}
+
+.sl-stats-cap {
+  display: flex;
+  align-items: center;
+  gap: var(--sl-space-2);
+  margin: 0 0 var(--sl-space-3);
+  font-weight: var(--sl-weight-semibold);
+}
+
+.sl-stats-cap small {
+  margin-left: auto;
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-micro);
+  font-weight: var(--sl-weight-normal);
+}
+
+.sl-stats-rows,
+.sl-stats-top {
+  display: grid;
+  gap: var(--sl-space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sl-stats-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  gap: var(--sl-space-3);
+  align-items: center;
+  padding: var(--sl-space-2);
+  border-radius: var(--sl-radius-2);
+}
+
+.sl-stats-row:hover {
+  background: var(--sl-bg-muted);
+}
+
+.sl-stats-row > img {
+  width: var(--sl-size-control);
+  height: var(--sl-size-control);
+  border-radius: var(--sl-radius-circle);
+  box-shadow: 0 0 0 2px var(--sl-primary);
+}
+
+.sl-stats-row[data-kind="admin"] > img { box-shadow: 0 0 0 2px var(--sl-accent); }
+.sl-stats-row[data-kind="user"] > img { box-shadow: 0 0 0 2px var(--sl-success); }
+.sl-stats-row[data-kind="bot"] > img { box-shadow: 0 0 0 2px var(--sl-warning); }
+
+.sl-stats-row > span:nth-child(2) {
+  display: grid;
+  min-width: 0;
+  line-height: var(--sl-line-tight);
+}
+
+.sl-stats-row a,
+.sl-stats-where small {
+  overflow: hidden;
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-micro);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sl-stats-kind {
+  padding: 0 var(--sl-space-3);
+  border-radius: var(--sl-radius-pill);
+  background: var(--sl-bg-muted);
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-micro);
+}
+
+.sl-stats-where {
+  display: grid;
+  justify-items: end;
+}
+
+.sl-stats-top li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) calc(var(--sl-size-tile) * 2) auto;
+  gap: var(--sl-space-3);
+  align-items: center;
+  font-size: var(--sl-font-small);
+}
+
+.sl-stats-top span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sl-stats-top i {
+  height: var(--sl-space-2);
+  border-radius: var(--sl-radius-pill);
+  background: linear-gradient(90deg, var(--sl-primary) var(--sl-d-share), var(--sl-bg-muted) var(--sl-d-share));
+}
+
+.sl-stats-more {
+  margin: var(--sl-space-2) 0 0;
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-micro);
+  line-height: var(--sl-line-normal);
+}
+
+.sl-stats-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sl-space-3);
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-small);
+}
+
+.sl-stats-foot .sl-but {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sl-space-2);
+  margin: 0;
+  text-decoration: none;
+}
+
+@media (max-width: 768px) {
+  .sl-stats-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .sl-stats-cols { grid-template-columns: minmax(0, 1fr); }
+}

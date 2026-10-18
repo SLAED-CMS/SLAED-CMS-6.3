@@ -495,7 +495,9 @@ return [
         # The body of a preview panel beside the info block of a profile: two grids that close their gaps
         '.sl-preview-body, .sl-profile-info',
         # The subject of a commit beside the count of a result set: a title and a figure, in one screen but not in one component
-        '.sl-changelog-commit-header strong, .sl-changelog-results-info strong',
+        # The total of the visitor summary joined them when it took its own mark (2026-10-19): a sum in the text tone at the
+        # semibold step, a third component in a third place, and a selector list would file it under the changelog
+        '.sl-changelog-commit-header strong, .sl-changelog-results-info strong, .sl-session-summary .sl-session-total',
         # The name under a user avatar beside the points beside it: a name and a number, which read at one size today and need not tomorrow
         '.sl-block-user-ava p > a, .sl-block-user-ava p > b, .sl-user-points b',
         # The timestamp of a message slot, the note in a profile hub row and the unit beside a points figure: three smallest-step labels in three components

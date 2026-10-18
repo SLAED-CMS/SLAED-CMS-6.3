@@ -2008,6 +2008,25 @@
   opacity: var(--sl-fade-muted);
 }
 
+/* ---------- М12 А8 The panel's own part of the admin block: the rest is in ../assets/admin-block.css ---------- */
+
+/* М12 The notice with Undo steps over the pill when the pill stands on its place */
+.sl-toast-host {
+  bottom: var(--sl-dock-lift, var(--sl-space-6));
+}
+
+/* А8 In the rail the block is one icon; its panel opens beside it whole, wide enough for the keys. The block is the last
+   of the rail, so the panel grows upward from the foot of its icon and never runs under the bottom of the screen */
+@media (width > 900px) {
+  :root[data-sl-rail] .sl-menu .sl-adm > .sl-block-sidebar-content {
+    top: auto;
+    bottom: 0;
+    width: calc(var(--sl-size-tile) * 7);
+    max-height: calc(100dvh - var(--sl-space-6) * 2);
+    overflow-y: auto;
+  }
+}
+
 /* ---------- Stand marks: not part of the panel ---------- */
 
 /* One file serves the home and the comments page; the other page is unseen from the first paint and then removed */

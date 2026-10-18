@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="ru" data-theme="auto">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>06 &middot; Лица — стенд блока администратора SLAED CMS</title>
+  <script>document.write('<script src="assets/ablock.js?v=' + Date.now() + '"><\/script>');</script>
+  <style>
+    /* 06 Лица - who, before how many. Under the summary of the site stands a row of the faces of the people who are in -
+       their stored avatars with the country on the corner - and "+31" for the rest; a face is the way into the window of
+       the live statistics, its tip says the name and the page. The admin heads the block in one line with his two
+       buttons, and the owner's links close it as rows.
+
+       Transfer: the faces are the rows of getUserSessionAdminInfo() for members and administrators, avatars as the
+       user block shows them; the flags are Geoip::getFlagHtml() */
+
+    .v-top {
+      display: flex;
+      align-items: center;
+      gap: var(--sl-space-3);
+      margin-bottom: var(--sl-space-4);
+      padding-bottom: var(--sl-space-3);
+      border-bottom: 1px solid var(--sl-border);
+    }
+
+    .v-top img {
+      width: 32px;
+      height: 32px;
+      border-radius: var(--sl-radius-circle);
+      background: var(--sl-bg);
+      box-shadow: 0 0 0 2px var(--sl-primary);
+    }
+
+    .v-top b {
+      flex: 1;
+      overflow: hidden;
+      color: var(--sl-text);
+      font-size: var(--sl-font-small);
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .v-top a {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--sl-space-1);
+      padding: var(--sl-space-1) var(--sl-space-3);
+      border-radius: var(--sl-radius-pill);
+      background: var(--sl-bg-muted);
+      color: var(--sl-primary);
+      font-size: var(--sl-font-micro);
+      text-decoration: none;
+    }
+
+    .v-top a.ab-out {
+      color: var(--sl-text-muted);
+    }
+
+    .v-top a:hover {
+      background: var(--sl-primary);
+      color: var(--sl-on-solid);
+    }
+
+    .v-top a.ab-out:hover {
+      background: var(--sl-danger);
+      color: var(--sl-on-solid);
+    }
+
+    .v-faces {
+      display: flex;
+      align-items: center;
+      gap: var(--sl-space-3);
+      margin-top: var(--sl-space-4);
+      padding: var(--sl-space-3);
+      border-radius: var(--sl-radius-2);
+      background: var(--sl-bg-muted);
+    }
+
+    .v-faces > small {
+      color: var(--sl-text-muted);
+      font-size: var(--sl-font-micro);
+      white-space: nowrap;
+    }
+
+    .v-pile {
+      display: flex;
+      align-items: center;
+      padding-left: var(--sl-space-3);
+    }
+
+    .v-pile button {
+      position: relative;
+      width: 32px;
+      height: 32px;
+      margin-left: calc(var(--sl-space-3) * -1);
+      padding: 0;
+      border: 2px solid var(--sl-bg);
+      border-radius: var(--sl-radius-circle);
+      background: var(--sl-bg);
+      cursor: pointer;
+      transition: transform var(--sl-time-fast) var(--sl-ease-out);
+    }
+
+    .v-pile button:hover,
+    .v-pile button:focus-visible {
+      z-index: 1;
+      transform: translateY(calc(var(--sl-space-2) * -1)) scale(1.1);
+    }
+
+    .v-pile button > img:first-child {
+      width: 100%;
+      height: 100%;
+      border-radius: var(--sl-radius-circle);
+    }
+
+    .v-pile button > img + img {
+      position: absolute;
+      right: -4px;
+      bottom: -2px;
+      width: 13px;
+      border-radius: 2px;
+      box-shadow: 0 0 0 1px var(--sl-bg);
+    }
+
+    .v-pile .v-more {
+      display: grid;
+      place-items: center;
+      width: auto;
+      min-width: 32px;
+      padding: 0 var(--sl-space-2);
+      color: var(--sl-text-muted);
+      font-size: var(--sl-font-micro);
+      font-weight: var(--sl-weight-semibold);
+    }
+
+    .v-faces .ab-pm,
+    .v-faces + .ab-line {
+      margin-top: var(--sl-space-3);
+    }
+  </style>
+  <script>
+    window.AB_FACE = {
+      blocks(d) {
+        const { esc, ico, attrs, rows, line, free, block, summary } = window.AB;
+        const top = `<div class="v-top"><img src="${d.me.ava}" alt=""><b title="${d.me.role}">${esc(d.me.nick)}</b><a ${attrs(d.home)}>${ico(d.home.icon)} ${d.home.short}</a><a class="ab-out" ${attrs(d.logout)}>${ico(d.logout.icon)} ${d.logout.short}</a></div>`;
+        const people = d.sessions.filter((x) => x.kind === 'user' || x.kind === 'admin').slice(0, 6);
+        const rest = d.who.all - people.length;
+        const faces = `<div class="v-faces"><small>Сейчас здесь</small><div class="v-pile">` +
+          people.map((x) => `<button type="button" data-sl-open="ab-stats" title="${esc(x.name)} · ${x.page}" aria-label="${esc(x.name)}, ${x.page}"><img src="${d.ava(x.ava)}" alt="">${x.cc ? `<img src="${d.flagSrc(x.cc)}" alt="">` : ''}</button>`).join('') +
+          `<button type="button" class="v-more" data-sl-open="ab-stats" title="Все на сайте" aria-label="Ещё ${rest}, все на сайте">+${rest}</button></div></div>`;
+        return block(d, { id: 7, title: d.title }, top + summary(d) + faces + line(d) + rows(d, d.extras.items) + free(d));
+      },
+    };
+  </script>
+</head>
+<body>
+  <script>document.write('<script src="assets/demo.js?v=' + Date.now() + '"><\/script>');</script>
+</body>
+</html>

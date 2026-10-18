@@ -142,7 +142,7 @@ return [
                 'type' => 'system',
                 'active' => '1',
                 'system' => 'updatecheck',
-                'schedule' => '40 4 * * *',
+                'schedule' => '24 0 * * *',
                 'priority' => '11',
                 'lock_timeout' => '300',
                 'manual' => '1',

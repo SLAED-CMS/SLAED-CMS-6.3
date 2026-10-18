@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="ru" data-theme="auto">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>03 &middot; Двойник — стенд блока администратора SLAED CMS</title>
+  <script>document.write('<script src="assets/ablock.js?v=' + Date.now() + '"><\/script>');</script>
+  <style>
+    /* 03 Двойник - the user block of the site part for part, filled with what an admin needs: the head with the avatar
+       and on its right, where a user sees his points, the sum of what waits; the rows are the owner's links; the strip
+       of round icons (sl-user-nav) is the panel, the live statistics, this section and the logout; under it the summary
+       of the visitors. An admin who reads his user block reads this one without learning anything.
+
+       Transfer: on the site the classes ARE the user card's (sl-user-card, sl-block-user-ava, sl-user-points,
+       sl-block-pm, sl-user-nav); the panel needs the same set once in the admin theme */
+
+    [data-ab-ctx="admin"] .v-head {
+      display: grid;
+      grid-template-columns: 52px minmax(0, 1fr) auto;
+      gap: var(--sl-space-4);
+      align-items: center;
+      padding: var(--sl-space-2) 0 var(--sl-space-4);
+      border-bottom: 1px solid var(--sl-border);
+    }
+
+    [data-ab-ctx="admin"] .v-head img {
+      box-sizing: border-box;
+      width: 52px;
+      height: 52px;
+      padding: 3px;
+      border-radius: var(--sl-radius-circle);
+      background: conic-gradient(var(--sl-primary) 0 100%, var(--sl-border) 0);
+    }
+
+    [data-ab-ctx="admin"] .v-head p {
+      min-width: 0;
+      margin: 0;
+      line-height: var(--sl-line-tight);
+    }
+
+    [data-ab-ctx="admin"] .v-head p b {
+      display: block;
+      color: var(--sl-text);
+      font-size: var(--sl-font-h4);
+    }
+
+    .v-head small,
+    .v-wait small {
+      color: var(--sl-text-muted);
+      font-size: var(--sl-font-micro);
+    }
+
+    .v-wait {
+      text-align: right;
+      text-decoration: none;
+    }
+
+    .v-wait b {
+      display: block;
+      color: var(--sl-warning-strong);
+      font-size: var(--sl-font-h4);
+    }
+
+    .v-wait small {
+      display: block;
+    }
+
+    /* The strip of round icons, in the panel drawn as the site's sl-user-nav */
+    [data-ab-ctx="admin"] .v-nav {
+      display: grid;
+      grid-auto-flow: column;
+      grid-auto-columns: 1fr;
+      overflow: hidden;
+      margin-top: var(--sl-space-4);
+      border: 1px solid var(--sl-border);
+      border-radius: var(--sl-radius-pill);
+      background: var(--sl-bg-subtle);
+    }
+
+    [data-ab-ctx="admin"] .v-nav > a,
+    [data-ab-ctx="admin"] .v-nav > button {
+      display: grid;
+      place-items: center;
+      height: var(--sl-size-control);
+      padding: 0;
+      border: 0;
+      border-right: 1px solid var(--sl-border);
+      background: none;
+      color: var(--sl-text-muted);
+      font: inherit;
+      cursor: pointer;
+    }
+
+    [data-ab-ctx="admin"] .v-nav > :last-child {
+      border-right: 0;
+    }
+
+    .v-nav > button {
+      border: 0;
+      border-right: 1px solid var(--sl-border);
+      background: none;
+      font: inherit;
+      cursor: pointer;
+    }
+
+    .v-nav > :hover {
+      background: var(--sl-bg);
+      color: var(--sl-primary);
+    }
+
+    .v-nav > .ab-out:hover {
+      color: var(--sl-danger);
+    }
+
+    .v-twin .ab-sum {
+      margin-top: var(--sl-space-4);
+    }
+
+    .v-twin .ab-pm {
+      margin-top: var(--sl-space-3);
+    }
+  </style>
+  <script>
+    window.AB_FACE = {
+      blocks(d) {
+        const { esc, ico, attrs, rows, free, block, summary } = window.AB;
+        const site = d.ctx === 'site';
+        const wait = `<a class="${site ? 'sl-user-points ' : ''}v-wait" href="${d.home.href}" title="Ждут внимания"><b data-ab-n="waiting">${d.waiting}</b><small>ждут</small></a>`;
+        const head = site
+          ? `<div class="sl-block-user-ava"><span class="sl-live-avatar"><i class="sl-ava-min" style="background-image: url(${d.me.ava});"></i></span><p><a href="${d.home.href}">${esc(d.me.nick)}</a><small>${d.me.role}</small></p>${wait}</div>`
+          : `<div class="v-head"><img src="${d.me.ava}" alt=""><p><b>${esc(d.me.nick)}</b><small>${d.me.role}</small></p>${wait}</div>`;
+        const here = site ? d.page.admin : { ...d.page.site, blank: true };
+        const nav = `<nav class="${site ? 'sl-user-nav ' : ''}v-nav" aria-label="${esc(d.title)}">` +
+          `<a ${attrs(d.home)} aria-label="${d.home.label}">${ico('speedometer2')}</a>` +
+          `<button type="button" data-sl-open="ab-stats" title="Статистика посещаемости" aria-label="Статистика посещаемости">${ico('activity')}</button>` +
+          `<a ${attrs(here)} aria-label="${esc(here.label)}">${ico(here.icon)}</a>` +
+          `<a class="ab-out" ${attrs(d.logout)} aria-label="${d.logout.label}">${ico(d.logout.icon)}</a></nav>`;
+        const inner = `<div class="${site ? 'sl-user-card ' : ''}v-twin">${head}${rows(d, d.extras.items)}${free(d)}${nav}${summary(d)}</div>`;
+        return block(d, { id: 7, title: d.title }, inner);
+      },
+    };
+  </script>
+</head>
+<body>
+  <script>document.write('<script src="assets/demo.js?v=' + Date.now() + '"><\/script>');</script>
+</body>
+</html>

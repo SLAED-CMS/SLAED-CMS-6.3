@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="ru" data-theme="auto">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>02 &middot; Сводка первой — стенд блока администратора SLAED CMS</title>
+  <script>document.write('<script src="assets/ablock.js?v=' + Date.now() + '"><\/script>');</script>
+  <style>
+    /* 02 Сводка первой - what changes goes first. The block opens with the summary of the visitors (the ring is the way
+       into the live window), and the admin follows in one quiet strip: his face, his nick and two round buttons, the
+       panel and the logout. The owner's links stand under it as chips. The block reads as "Наблюдение" that also
+       carries the admin, not the other way round.
+
+       Transfer: the same fragment as 01 with the parts in another order; nothing new in the data */
+
+    .v-me {
+      display: grid;
+      grid-template-columns: 36px minmax(0, 1fr) auto;
+      gap: var(--sl-space-3);
+      align-items: center;
+      margin-top: var(--sl-space-4);
+      padding: var(--sl-space-3);
+      border-radius: var(--sl-radius-pill);
+      background: var(--sl-bg-muted);
+    }
+
+    .v-me img {
+      width: 36px;
+      height: 36px;
+      border-radius: var(--sl-radius-circle);
+      background: var(--sl-bg);
+      box-shadow: 0 0 0 2px var(--sl-success);
+    }
+
+    .v-me p {
+      min-width: 0;
+      margin: 0;
+      line-height: var(--sl-line-tight);
+    }
+
+    .v-me b {
+      display: block;
+      overflow: hidden;
+      color: var(--sl-text);
+      font-size: var(--sl-font-small);
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .v-me small {
+      color: var(--sl-text-muted);
+      font-size: var(--sl-font-micro);
+    }
+
+    .v-me nav {
+      display: flex;
+      gap: var(--sl-space-2);
+    }
+
+    .v-me nav a {
+      display: grid;
+      place-items: center;
+      width: 32px;
+      height: 32px;
+      border-radius: var(--sl-radius-circle);
+      background: var(--sl-bg);
+      box-shadow: var(--sl-shadow-xs);
+      color: var(--sl-primary);
+      text-decoration: none;
+    }
+
+    .v-me nav a:hover {
+      background: var(--sl-primary);
+      color: var(--sl-on-solid);
+    }
+
+    .v-me nav a.ab-out:hover {
+      background: var(--sl-danger);
+      color: var(--sl-on-solid);
+    }
+
+    .v-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--sl-space-2);
+      margin-top: var(--sl-space-3);
+    }
+
+    .v-chips a {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--sl-space-2);
+      padding: var(--sl-space-1) var(--sl-space-3);
+      border-radius: var(--sl-radius-pill);
+      background: var(--sl-primary-subtle);
+      color: var(--sl-primary-strong);
+      font-size: var(--sl-font-small);
+      text-decoration: none;
+    }
+
+    .v-chips a.v-dead {
+      background: color-mix(in srgb, var(--sl-warning) 16%, transparent);
+      color: var(--sl-warning-strong);
+    }
+  </style>
+  <script>
+    window.AB_FACE = {
+      blocks(d) {
+        const { esc, ico, attrs, line, free, block, summary } = window.AB;
+        const me = `<div class="v-me"><img src="${d.me.ava}" alt=""><p><b>${esc(d.me.nick)}</b><small>${d.me.role}</small></p>` +
+          `<nav aria-label="Администрация"><a ${attrs(d.home)} aria-label="${d.home.label}">${ico(d.home.icon)}</a><a class="ab-out" ${attrs(d.logout)} aria-label="${d.logout.label}">${ico(d.logout.icon)}</a></nav></div>`;
+        const chips = d.extras.items.length ? `<div class="v-chips">${d.extras.items.map((it) => `<a ${attrs({ ...it, title: it.dead ? 'Нет файла: ' + it.title : it.title })}${it.dead ? ' class="v-dead"' : ''}>${ico(it.dead ? 'exclamation-triangle' : it.icon)} ${esc(it.label)}</a>`).join('')}</div>` : '';
+        return block(d, { id: 7, title: d.title }, summary(d) + me + line(d) + chips + free(d));
+      },
+    };
+  </script>
+</head>
+<body>
+  <script>document.write('<script src="assets/demo.js?v=' + Date.now() + '"><\/script>');</script>
+</body>
+</html>

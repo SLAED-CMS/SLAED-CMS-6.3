@@ -1,0 +1,361 @@
+/* The site etalon of the stand (demo/site/): the news feed of the lite theme seen by a signed-in administrator. The menu,
+   the block "Администрация" and the window "Наблюдение" come from ../assets/admin-block.css, one file for both themes;
+   here is only what the site has of its own and the stand around it. Tokens only */
+
+/* ---------- С14 The token the shared file reads and the lite theme lacks: the text on a solid fill, as the admin theme declares it ---------- */
+
+:root {
+  --sl-solid-text: light-dark(var(--sl-on-solid), #ffffff);
+}
+
+/* ---------- С2 The block in the column of the site ---------- */
+
+.sl-adm-sum[aria-busy="true"] {
+  opacity: var(--sl-fade-muted);
+}
+
+/* ---------- С12 The pill of the site: it steps over the menu lying at the bottom and carries "Отменить" ---------- */
+
+.sl-toast {
+  bottom: var(--sl-dock-lift, calc(var(--sl-space-6) + var(--sl-space-3)));
+}
+
+.sl-toast.sl-is-visible {
+  pointer-events: auto;
+}
+
+.sl-toast-undo {
+  margin-left: var(--sl-space-2);
+  padding: var(--sl-space-1) var(--sl-space-4);
+  border: 1px solid color-mix(in srgb, var(--sl-band-text) 40%, transparent);
+  border-radius: var(--sl-radius-pill);
+  background: none;
+  color: var(--sl-band-text);
+  font: inherit;
+  font-weight: var(--sl-weight-semibold);
+  cursor: pointer;
+}
+
+.sl-toast-undo:hover,
+.sl-toast-undo:focus-visible {
+  background: color-mix(in srgb, var(--sl-band-text) 14%, transparent);
+}
+
+.sl-toast-undo[hidden] {
+  display: none;
+}
+
+/* ---------- С6 С7 С8 С9 What the menu carries on the site only ---------- */
+
+/* С6 Folded, the mark carries the sum of the queue */
+.sl-dock-badge.sl-dock-home-badge {
+  display: none;
+}
+
+.sl-dock[data-min] .sl-dock-badge.sl-dock-home-badge {
+  display: grid;
+}
+
+/* С8 The queue: four apps with their figures lying across, one bell with the sum standing upright */
+.sl-dock-queue {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: var(--sl-dock-gap);
+}
+
+.sl-dock[data-dir="col"] .sl-dock-queue {
+  flex-direction: column;
+}
+
+.sl-dock-badge.sl-dock-count {
+  background: var(--sl-danger);
+}
+
+.sl-dock-qone,
+.sl-dock[data-dir="col"] .sl-dock-qapp {
+  display: none;
+}
+
+.sl-dock[data-dir="col"] .sl-dock-qone {
+  display: flex;
+}
+
+.sl-dock-qlist {
+  display: grid;
+  gap: var(--sl-space-1);
+}
+
+.sl-dock-qlist a {
+  display: flex;
+  align-items: center;
+  gap: var(--sl-space-3);
+  padding: var(--sl-space-2) var(--sl-space-3);
+  border-radius: var(--sl-radius-2);
+  color: var(--sl-text);
+  text-decoration: none;
+}
+
+.sl-dock-qlist a:hover,
+.sl-dock-qlist a:focus-visible {
+  background: var(--sl-bg-muted);
+}
+
+.sl-dock-qlist b {
+  margin-left: auto;
+  padding: 0 var(--sl-space-3);
+  border-radius: var(--sl-radius-pill);
+  background: var(--sl-danger);
+  color: var(--sl-on-solid);
+  font-size: var(--sl-font-micro);
+}
+
+/* С9 "Все разделы": the sections of the panel as one grid with a search, each with its star */
+.sl-dock-pop.sl-dock-pop-wide {
+  width: min(600px, calc(100vw - var(--sl-space-6) * 2));
+}
+
+.sl-dock-find {
+  box-sizing: border-box;
+  width: 100%;
+  margin-bottom: var(--sl-space-3);
+}
+
+.sl-dock-lp-group {
+  margin: var(--sl-space-4) 0 var(--sl-space-3);
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-micro);
+  font-weight: var(--sl-weight-semibold);
+  letter-spacing: var(--sl-track-wide);
+  text-transform: uppercase;
+}
+
+.sl-dock-lp {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: var(--sl-space-3);
+}
+
+.sl-dock-lp-item {
+  position: relative;
+}
+
+.sl-dock-lp-item[hidden],
+.sl-dock-lp-group[hidden] {
+  display: none;
+}
+
+.sl-dock-lp-item > a {
+  display: grid;
+  justify-items: center;
+  gap: var(--sl-space-2);
+  padding: var(--sl-space-3) var(--sl-space-1);
+  border-radius: var(--sl-radius-2);
+  color: var(--sl-text);
+  font-size: var(--sl-font-micro);
+  line-height: var(--sl-line-tight);
+  text-align: center;
+  text-decoration: none;
+}
+
+.sl-dock-lp-item > a:hover,
+.sl-dock-lp-item > a:focus-visible {
+  background: var(--sl-bg-muted);
+}
+
+.sl-dock-lp-item > a > span:first-child {
+  display: grid;
+  place-items: center;
+  width: var(--sl-size-tile);
+  height: var(--sl-size-tile);
+  border-radius: var(--sl-radius-circle);
+  background: linear-gradient(160deg, color-mix(in srgb, var(--sl-dock-c) 60%, var(--sl-solid-text)), var(--sl-dock-c) 72%);
+  color: var(--sl-solid-text);
+  font-size: var(--sl-font-h3);
+}
+
+.sl-dock-star {
+  position: absolute;
+  top: var(--sl-space-1);
+  right: var(--sl-space-2);
+  display: grid;
+  place-items: center;
+  width: var(--sl-space-7);
+  height: var(--sl-space-7);
+  padding: 0;
+  border: 0;
+  border-radius: var(--sl-radius-circle);
+  background: none;
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-small);
+  cursor: pointer;
+  opacity: 0;
+}
+
+.sl-dock-lp-item:hover .sl-dock-star,
+.sl-dock-star:focus-visible,
+.sl-dock-star[aria-pressed="true"] {
+  opacity: 1;
+}
+
+.sl-dock-star[aria-pressed="true"] {
+  color: var(--sl-warning);
+}
+
+.sl-dock-lp-empty {
+  margin: var(--sl-space-4) 0 0;
+  color: var(--sl-text-muted);
+  text-align: center;
+}
+
+.sl-dock-lp-empty[hidden] {
+  display: none;
+}
+
+@media (max-width: 560px) {
+  .sl-dock-qapp { display: none; }
+  .sl-dock-qone { display: flex; }
+}
+
+/* ---------- Stand marks: not part of the site ---------- */
+
+.sl-linkbtn {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--sl-primary-strong);
+  font: inherit;
+  font-weight: var(--sl-weight-semibold);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.demo-marks {
+  position: fixed;
+  inset: 0;
+  z-index: var(--sl-z-popover);
+  pointer-events: none;
+}
+
+:root:not([data-demo-marks]) .demo-marks {
+  display: none;
+}
+
+.demo-mark-box {
+  position: absolute;
+  border: 1px dashed var(--sl-accent);
+  border-radius: var(--sl-radius-1);
+}
+
+.demo-mark-tag {
+  position: absolute;
+  padding: 0 var(--sl-space-2);
+  border: 0;
+  border-radius: var(--sl-radius-pill);
+  background: var(--sl-accent);
+  color: var(--sl-on-solid);
+  font: inherit;
+  font-size: var(--sl-font-micro);
+  font-weight: var(--sl-weight-bold);
+  line-height: var(--sl-line-normal);
+  white-space: nowrap;
+  box-shadow: var(--sl-shadow-xs);
+  cursor: pointer;
+}
+
+/* A code lets every click through to the site under it; held Alt makes the codes answer and open their description */
+:root[data-demo-tags-live] .demo-mark-tag {
+  pointer-events: auto;
+}
+
+.demo-mark-box[data-flash] {
+  border-style: solid;
+  border-width: 2px;
+  box-shadow: 0 0 0 var(--sl-space-2) var(--sl-tint-strong);
+}
+
+/* The helper window of the stand stands half clear at rest and comes up whole under the hand or the keyboard */
+.demo-panel {
+  --sl-modal-width: 300px;
+  transition: opacity var(--sl-time-base) var(--sl-ease-out);
+}
+
+.demo-panel:not(:hover, :focus-within, [data-moving]) {
+  opacity: var(--sl-fade-muted);
+}
+
+/* The option rows of the panel's settings window, which the lite theme does not carry */
+.demo-panel .sl-set-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sl-space-4);
+}
+
+.demo-panel .sl-set-row + .sl-set-row {
+  margin-top: var(--sl-space-3);
+}
+
+.demo-panel .sl-set-name {
+  display: flex;
+  align-items: center;
+  gap: var(--sl-space-2);
+  min-width: 0;
+}
+
+.demo-panel .sl-set-name .bi {
+  flex: 0 0 auto;
+  font-size: var(--sl-size-icon-sm);
+  line-height: 1;
+}
+
+.demo-panel .sl-set-pick {
+  display: flex;
+  justify-content: flex-end;
+  margin-left: auto;
+}
+
+.demo-seg-text {
+  font-size: var(--sl-font-small);
+}
+
+.demo-legend-note {
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-small);
+}
+
+.demo-legend-all {
+  display: flex;
+  align-items: center;
+  gap: var(--sl-space-3);
+  font-weight: var(--sl-weight-semibold);
+}
+
+.demo-legend h3 {
+  margin: var(--sl-space-7) 0 var(--sl-space-3);
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-micro);
+  letter-spacing: var(--sl-track-wide);
+  text-transform: uppercase;
+}
+
+.demo-legend li {
+  display: grid;
+  grid-template-columns: auto 4em minmax(0, 1fr);
+  align-items: start;
+  gap: var(--sl-space-3);
+  padding: var(--sl-space-3);
+  border-radius: var(--sl-radius-1);
+  font-size: var(--sl-font-small);
+}
+
+.demo-legend li[data-flash] {
+  background: var(--sl-tint);
+}
+
+.demo-legend-code {
+  justify-self: start;
+}
+
+.demo-legend-text .sl-linkbtn {
+  margin-left: var(--sl-space-2);
+}

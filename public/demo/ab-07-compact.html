@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="ru" data-theme="auto">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>07 &middot; Компактный — стенд блока администратора SLAED CMS</title>
+  <script>document.write('<script src="assets/ablock.js?v=' + Date.now() + '"><\/script>');</script>
+  <style>
+    /* 07 Компактный - the least height. One line carries the watch: a small ring with the figure, "на сайте" and the
+       live pulse, and the lines of the summary fold under it; the panel and the logout are two rows; the owner's links
+       fold under "Свои ссылки" - both folds are the toggle of the column blocks (data-sl-toggle, slide, 500 ms), so the
+       block opens and shuts the way the blocks around it do, and remembers it.
+
+       Transfer: no new mechanics: data-sl-toggle-control / data-sl-toggle of slaed.js over parts of the fragment */
+
+    .v-line {
+      display: grid;
+      grid-template-columns: 44px minmax(0, 1fr) auto;
+      gap: var(--sl-space-3);
+      align-items: center;
+    }
+
+    .v-line .ab-sum-ring {
+      width: 44px;
+      height: 44px;
+    }
+
+    .v-line .ab-sum-ring > span {
+      width: 34px;
+      height: 34px;
+    }
+
+    .v-line .ab-sum-ring b {
+      align-self: center;
+      font-size: var(--sl-font-small);
+    }
+
+    .v-line .ab-sum-ring small {
+      display: none;
+    }
+
+    .v-line p {
+      margin: 0;
+      line-height: var(--sl-line-tight);
+    }
+
+    .v-line p b {
+      display: block;
+      color: var(--sl-text);
+      font-size: var(--sl-font-small);
+    }
+
+    .v-line p small {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--sl-space-2);
+      color: var(--sl-danger);
+      font-size: var(--sl-font-micro);
+    }
+
+    .v-line p small i {
+      width: 6px;
+      height: 6px;
+      border-radius: var(--sl-radius-circle);
+      background: currentColor;
+    }
+
+    .v-fold {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--sl-space-1);
+      padding: var(--sl-space-1) var(--sl-space-3);
+      border: 0;
+      border-radius: var(--sl-radius-pill);
+      background: var(--sl-bg-muted);
+      color: var(--sl-text-muted);
+      font: inherit;
+      font-size: var(--sl-font-micro);
+      cursor: pointer;
+    }
+
+    .v-fold:hover {
+      color: var(--sl-primary);
+    }
+
+    .v-fold .bi {
+      transition: transform var(--sl-time-base) var(--sl-ease-out);
+    }
+
+    .v-fold.sl-is-open .bi {
+      transform: rotate(180deg);
+    }
+
+    .v-more {
+      padding-top: var(--sl-space-3);
+    }
+
+    .v-more .ab-sum-lines {
+      padding-left: calc(44px + var(--sl-space-3));
+    }
+
+    .v-compact > .ab-pm,
+    .v-compact > .sl-admin-block-links {
+      margin-top: var(--sl-space-3);
+    }
+
+    .v-own-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: var(--sl-space-2);
+      padding-top: var(--sl-space-3);
+      border-top: 1px solid var(--sl-border);
+      color: var(--sl-text-muted);
+      font-size: var(--sl-font-micro);
+      font-weight: var(--sl-weight-semibold);
+      letter-spacing: var(--sl-track-wide);
+      text-transform: uppercase;
+    }
+  </style>
+  <script>
+    window.AB_FACE = {
+      blocks(d) {
+        const { ico, rows, free, block, summary } = window.AB;
+        const fold = (id, label) => `<button type="button" class="v-fold" data-sl-toggle-control="${id}" data-sl-toggle-effect="slide" data-sl-toggle-duration="500" title="${label}">${label} ${ico('chevron-down')}</button>`;
+        const ring = summary(d, { lineless: true, chips: false, cls: 'ab-sum-only' });
+        const head = `<div class="v-line">${ring}<p><b><span data-ab-n="all">${d.who.all}</span> на сайте</b><small><i></i>в эфире</small></p>${fold('ab-c-more', 'Кто')}</div>` +
+          `<div id="ab-c-more" class="v-more" data-sl-toggle="ab-c-more" data-sl-toggle-default="closed">${summary(d, { ringless: true, cls: 'ab-sum-only' })}</div>`;
+        const own = d.extras.items.length || d.extras.rest
+          ? `<div class="v-own-head"><span>Свои ссылки · ${d.extras.items.length}</span>${fold('ab-c-own', 'Открыть')}</div><div id="ab-c-own" data-sl-toggle="ab-c-own" data-sl-toggle-default="closed">${rows(d, d.extras.items)}${free(d)}</div>`
+          : '';
+        return block(d, { id: 7, title: d.title }, `<div class="v-compact">${head}${rows(d, [d.home, { ...d.logout, cls: 'ab-out' }])}${own}</div>`);
+      },
+    };
+  </script>
+</head>
+<body>
+  <script>document.write('<script src="assets/demo.js?v=' + Date.now() + '"><\/script>');</script>
+</body>
+</html>

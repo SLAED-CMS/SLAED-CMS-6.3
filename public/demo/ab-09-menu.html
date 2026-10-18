@@ -1,0 +1,1231 @@
+<!doctype html>
+<html lang="ru" data-theme="auto">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>09 &middot; Плавающее меню — стенд блока администратора SLAED CMS</title>
+  <script>document.write('<script src="assets/ablock.js?v=' + Date.now() + '"><\/script>');</script>
+  <style>
+    /* 09 Плавающее меню (was 13 Гибрид until 2026-10-18) - the floating menu as a layer over the page the admin already has. Nothing under it changes: the
+       column keeps its words (the etalon folds it, В09), the header keeps "Главная", "Выход" and the bell. The menu
+       is a helper the admin may switch off in the panel options (top right, Э06), and while it is on it carries what
+       the two admin blocks carried - "Администрация" and "Наблюдение" - so those leave the column; switched off, they
+       come back.
+
+       It stands where the admin puts it: dragged by its grip to any point of the screen, and found there again after
+       a reload - one place for the site, one for the panel. It lays itself across or upright, and its tips, its pops
+       and the growth of its icons turn to where the room is: up from a pill low on the screen, down from one high up,
+       right from one on the left, left from one on the right. The arrows on the grip move it too, and Home brings it
+       back to the bottom centre - dragging is never the only way (WCAG 2.5.7).
+
+       A line after "Выход", then three tools at the far end - the turn (across by default, upright on a press), the
+       fold, the grip, the grip the last - which are the buttons of the system window (sl-modal-act): no ground at rest,
+       the window's hover ground and tone under the hand. Upright the pill is exactly as thick as it is tall across. Folding is the
+       motion of the admin column blocks (setSlideMotion of slaed.js: 500 ms, linear, overflow hidden, the size run from
+       what it is to nothing): the body of the pill slides shut along its axis - across by width, upright by height -
+       and leaves the SLAED mark, the grip and the fold; the end with the fold stays under the hand while it runs.
+
+       The pill is solid and keeps its size; only the icon under the hand grows. The toast of the site keeps its home
+       at the bottom centre and steps over the pill when the pill stands there.
+
+       What it carries: the panel, the page in the panel (site), the sections the admin pins (up to 8), the queue (site
+       only - in the panel the bell Э04 and "Ждут внимания" own it), "Все разделы" (in the panel the quick jump Ctrl+K,
+       Э08), the watch, the owner's links (common, block id 2), the admin, the logout, the fold.
+
+       Transfer: pins, place, direction, the fold and on/off per part are per admin - the panel options keep them like
+       the theme and the motion; the toast of slaed.js reads the step the pill leaves it in --v-toast-bottom; the fold
+       is setSlideMotion with one option more, data-sl-toggle-axis="x", animating width where it animates height */
+
+    :root {
+      --v-tile: 44px;
+      --v-gap: var(--sl-space-3);
+      --v-edge: var(--sl-border);
+      --v-tip-bg: var(--sl-bg-inverse, #2a303c);
+      --v-tip-text: var(--sl-band-text, #fff);
+      --v-lift: 0 1px 2px var(--sl-shadow-color, rgba(0, 0, 0, 0.18));
+    }
+
+    /* The open section of the column, as in the etalon (Э10) */
+    .sl-admin-sidebar .sl-menu-list-item:has(> a[aria-current="page"]) {
+      background: var(--sl-primary-subtle);
+    }
+
+    .sl-admin-sidebar .sl-menu-list-item > a[aria-current="page"] {
+      color: var(--sl-primary-strong);
+      font-weight: var(--sl-weight-semibold);
+    }
+
+    /* ---------- The layer: a point on the screen, the pill centred on it ---------- */
+
+    .v-wrap {
+      position: fixed;
+      z-index: var(--sl-z-sticky);
+      top: var(--v-top, auto);
+      left: var(--v-left, 50%);
+      transform: translate(-50%, -50%);
+    }
+
+    .v-wrap:not([data-v-placed]) {
+      top: auto;
+      bottom: var(--sl-space-4);
+      transform: translateX(-50%);
+    }
+
+    .v-dock {
+      display: flex;
+      align-items: center;
+      gap: var(--sl-space-1);
+      box-sizing: border-box;
+      padding: var(--sl-space-3) var(--sl-space-4);
+      border: 1px solid var(--v-edge);
+      border-radius: var(--sl-radius-pill);
+      background: var(--sl-bg);
+      box-shadow: var(--sl-shadow-float);
+    }
+
+    /* Upright the pill is as thick as it is tall across: the same tile and gap, the padding turned with the axis */
+    [data-dir="col"] .v-dock {
+      flex-direction: column;
+      padding: var(--sl-space-4) var(--sl-space-3);
+    }
+
+    /* The body that folds: everything between the mark and the tools. Its own gap and the step after it travel with
+       it, so a body run down to nothing leaves no seam, and taking it out at the end moves nothing */
+    .v-body {
+      display: flex;
+      flex: none;
+      align-items: center;
+      gap: var(--v-gap);
+      padding-inline: var(--v-gap) var(--v-gap);
+    }
+
+    [data-dir="col"] .v-body {
+      flex-direction: column;
+      padding: var(--v-gap) 0;
+    }
+
+    [data-drag] .v-dock {
+      box-shadow: var(--sl-shadow-float), 0 0 0 3px color-mix(in srgb, var(--sl-primary) 35%, transparent);
+    }
+
+    .v-sep {
+      flex: none;
+      width: 1px;
+      height: calc(var(--v-tile) * 0.7);
+      background: var(--v-edge);
+    }
+
+    [data-dir="col"] .v-sep {
+      width: calc(var(--v-tile) * 0.7);
+      height: 1px;
+    }
+
+    /* The three tools at the far end are the buttons of the system window (sl-modal-act of both themes): the same size,
+       no ground at rest, the window's hover ground under the hand, the tone by meaning - the grip takes the green of the
+       window's move. They stand in sl-modal-acts, as in a window head, upright in a column */
+    [data-dir="col"] .v-tools {
+      flex-direction: column;
+    }
+
+    .v-grip {
+      cursor: grab;
+      touch-action: none;
+    }
+
+    [data-drag] .v-grip {
+      cursor: grabbing;
+    }
+
+    /* The line after "Выход" parts the menu from its tools; it stays when the body is folded */
+    .v-sep-end {
+      margin-inline: var(--sl-space-2);
+    }
+
+    [data-dir="col"] .v-sep-end {
+      margin: var(--sl-space-2) 0;
+    }
+
+    /* Each tool shows the icon of its axis; the fold the one of its state, as the heads of the column blocks do */
+    .v-tool .bi {
+      display: none;
+    }
+
+    [data-dir="row"] .v-grip .v-ax-row,
+    [data-dir="col"] .v-grip .v-ax-col,
+    [data-dir="row"] .v-turn .v-ax-row,
+    [data-dir="col"] .v-turn .v-ax-col,
+    [data-dir="row"]:not([data-min]) .v-fold .v-ax-row.v-open,
+    [data-dir="row"][data-min] .v-fold .v-ax-row.v-shut,
+    [data-dir="col"]:not([data-min]) .v-fold .v-ax-col.v-open,
+    [data-dir="col"][data-min] .v-fold .v-ax-col.v-shut {
+      display: inline-block;
+    }
+
+    /* Folded on the site, the mark carries the sum of the queue */
+    .v-badge.v-home-badge {
+      display: none;
+    }
+
+    [data-min] .v-badge.v-home-badge {
+      display: grid;
+    }
+
+    /* ---------- A round app: it grows towards the room, the pill stays ---------- */
+
+    .v-app {
+      --v-s: 1;
+      --v-c: var(--sl-primary);
+      position: relative;
+      z-index: var(--v-z, 0);
+      display: flex;
+      flex: none;
+      align-items: center;
+      justify-content: center;
+      width: var(--v-tile);
+      height: var(--v-tile);
+      padding: 0;
+      border: 0;
+      border-radius: var(--sl-radius-circle);
+      background: linear-gradient(160deg, color-mix(in srgb, var(--v-c) 62%, #fff), var(--v-c) 72%);
+      box-shadow: var(--v-lift), inset 0 1px 0 color-mix(in srgb, #fff 45%, transparent);
+      color: #fff;
+      font: inherit;
+      font-size: calc(var(--v-tile) * 0.44);
+      cursor: pointer;
+      text-decoration: none;
+      transform: scale(var(--v-s));
+      transform-origin: 50% 100%;
+      transition: transform 90ms linear;
+    }
+
+    [data-to="down"] .v-app { transform-origin: 50% 0; }
+    [data-to="right"] .v-app { transform-origin: 0 50%; }
+    [data-to="left"] .v-app { transform-origin: 100% 50%; }
+
+    .v-app img {
+      width: 62%;
+      height: 62%;
+    }
+
+    .v-plain {
+      background: linear-gradient(160deg, var(--sl-bg), var(--sl-bg-muted));
+      box-shadow: var(--v-lift), inset 0 0 0 1px var(--sl-border);
+      color: var(--v-c);
+    }
+
+    .v-out { --v-c: var(--sl-text-muted); }
+
+    .v-out:hover,
+    .v-out:focus-visible {
+      color: var(--sl-danger);
+    }
+
+    .v-me {
+      padding: 2px;
+      background: conic-gradient(from 200deg, var(--sl-primary), var(--sl-accent), var(--sl-primary));
+    }
+
+    .v-me img {
+      width: 100%;
+      height: 100%;
+      box-sizing: border-box;
+      border: 2px solid var(--sl-bg);
+      border-radius: var(--sl-radius-circle);
+      background: var(--sl-bg);
+    }
+
+    .v-watch {
+      background: radial-gradient(circle, #1f2937 54%, transparent 55%),
+        conic-gradient(var(--sl-accent) 0 var(--v-a), var(--sl-success) 0 var(--v-u), var(--sl-warning) 0 var(--v-b), var(--sl-primary) 0 100%);
+      font-size: calc(var(--v-tile) * 0.3);
+      font-weight: var(--sl-weight-bold);
+    }
+
+    .v-launch {
+      --v-c: #6366f1;
+    }
+
+    .v-small {
+      --v-c: var(--sl-text-muted);
+      width: 26px;
+      height: 26px;
+      font-size: var(--sl-font-small);
+    }
+
+    .v-badge {
+      position: absolute;
+      top: -5px;
+      right: -5px;
+      display: grid;
+      place-items: center;
+      box-sizing: border-box;
+      min-width: 19px;
+      height: 19px;
+      padding: 0 var(--sl-space-2);
+      border: 2px solid var(--sl-bg);
+      border-radius: var(--sl-radius-pill);
+      background: #ff3b30;
+      color: #fff;
+      font-size: 10px;
+      font-weight: var(--sl-weight-bold);
+      line-height: 1;
+    }
+
+    /* The open section: a short bar of the brand tone with a soft glow under the icon, on the side away from the
+       room - the dot it replaced read as a speck of dust on the dark ground (owner, 2026-10-19) */
+    .v-run::after {
+      content: "";
+      position: absolute;
+      bottom: calc(var(--sl-space-3) * -1);
+      left: 50%;
+      width: 16px;
+      height: 4px;
+      margin-left: -8px;
+      border-radius: var(--sl-radius-pill);
+      background: var(--sl-primary);
+      box-shadow: 0 0 var(--sl-space-3) color-mix(in srgb, var(--sl-primary) 70%, transparent);
+    }
+
+    [data-to="down"] .v-run::after { top: calc(var(--sl-space-3) * -1); bottom: auto; }
+    [data-to="right"] .v-run::after,
+    [data-to="left"] .v-run::after { top: 50%; width: 4px; height: 16px; margin: -8px 0 0; }
+    [data-to="right"] .v-run::after { bottom: auto; left: calc(var(--sl-space-3) * -1); }
+    [data-to="left"] .v-run::after { right: calc(var(--sl-space-3) * -1); bottom: auto; left: auto; }
+
+    /* The queue (site): four apps across, one bell with the sum upright */
+    .v-qone,
+    [data-dir="col"] .v-qapp {
+      display: none;
+    }
+
+    [data-dir="col"] .v-qone {
+      display: flex;
+    }
+
+    /* The tip: to the side where the room is, at its own size over a grown icon */
+    .v-app[data-tip]::before {
+      content: attr(data-tip);
+      position: absolute;
+      z-index: 1;
+      padding: var(--sl-space-2) var(--sl-space-4);
+      border-radius: var(--sl-radius-2);
+      background: var(--v-tip-bg);
+      color: var(--v-tip-text);
+      font-size: var(--sl-font-small);
+      font-weight: var(--sl-weight-normal);
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      scale: calc(1 / var(--v-s));
+      transition: opacity var(--sl-time-fast) var(--sl-ease-out);
+    }
+
+    [data-to="up"] .v-app[data-tip]::before { bottom: calc(100% + var(--sl-space-4)); left: 50%; translate: -50% 0; transform-origin: 0 100%; }
+    [data-to="down"] .v-app[data-tip]::before { top: calc(100% + var(--sl-space-4)); left: 50%; translate: -50% 0; transform-origin: 0 0; }
+    [data-to="right"] .v-app[data-tip]::before { top: 50%; left: calc(100% + var(--sl-space-4)); translate: 0 -50%; transform-origin: 0 0; }
+    [data-to="left"] .v-app[data-tip]::before { top: 50%; right: calc(100% + var(--sl-space-4)); translate: 0 -50%; transform-origin: 100% 0; }
+
+    .v-app:hover::before,
+    .v-app:focus-visible::before {
+      opacity: 1;
+    }
+
+    [data-v-open] .v-app::before,
+    [data-drag] .v-app::before {
+      display: none;
+    }
+
+    .v-jump {
+      animation: v-jump 1.1s var(--sl-ease-out);
+    }
+
+    @keyframes v-jump {
+      0%, 40%, 74%, 100% { translate: 0 0; }
+      20% { translate: 0 -24px; }
+      58% { translate: 0 -12px; }
+    }
+
+    /* ---------- Pops: on the side where the room is ---------- */
+
+    .v-pop {
+      position: absolute;
+      box-sizing: border-box;
+      width: min(360px, calc(100vw - var(--sl-space-6) * 2));
+      max-height: min(72vh, 580px);
+      overflow: auto;
+      padding: var(--sl-space-5);
+      border: 1px solid var(--v-edge);
+      border-radius: var(--sl-radius-3);
+      background: var(--sl-bg);
+      box-shadow: var(--sl-shadow-float);
+    }
+
+    .v-pop-wide {
+      width: min(600px, calc(100vw - var(--sl-space-6) * 2));
+    }
+
+    [data-to="up"] .v-pop { bottom: calc(100% + var(--sl-space-5)); left: var(--v-x, 50%); translate: -50% 0; }
+    [data-to="down"] .v-pop { top: calc(100% + var(--sl-space-5)); left: var(--v-x, 50%); translate: -50% 0; }
+    [data-to="right"] .v-pop { top: var(--v-y, 50%); left: calc(100% + var(--sl-space-5)); translate: 0 -50%; }
+    [data-to="left"] .v-pop { top: var(--v-y, 50%); right: calc(100% + var(--sl-space-5)); translate: 0 -50%; }
+
+    .v-pop[hidden] {
+      display: none;
+    }
+
+    .v-pop-cap {
+      display: flex;
+      align-items: center;
+      gap: var(--sl-space-2);
+      margin: 0 0 var(--sl-space-4);
+      font-size: var(--sl-font-body);
+      font-weight: var(--sl-weight-semibold);
+    }
+
+    .v-pop-cap small {
+      margin-left: auto;
+      color: var(--sl-text-muted);
+      font-size: var(--sl-font-micro);
+      font-weight: var(--sl-weight-normal);
+    }
+
+    .v-find {
+      box-sizing: border-box;
+      width: 100%;
+      margin-bottom: var(--sl-space-4);
+    }
+
+    .v-lp-group {
+      margin: var(--sl-space-4) 0 var(--sl-space-3);
+      color: var(--sl-text-muted);
+      font-size: var(--sl-font-micro);
+      font-weight: var(--sl-weight-semibold);
+      letter-spacing: var(--sl-track-wide);
+      text-transform: uppercase;
+    }
+
+    .v-lp {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+      gap: var(--sl-space-3);
+    }
+
+    .v-lp-item {
+      position: relative;
+    }
+
+    .v-lp-item > a {
+      display: grid;
+      justify-items: center;
+      gap: var(--sl-space-2);
+      padding: var(--sl-space-3) var(--sl-space-1);
+      border-radius: var(--sl-radius-2);
+      color: var(--sl-text);
+      font-size: var(--sl-font-micro);
+      line-height: var(--sl-line-tight);
+      text-align: center;
+      text-decoration: none;
+    }
+
+    .v-lp-item > a:hover,
+    .v-lp-item > a:focus-visible {
+      background: var(--sl-bg-muted);
+    }
+
+    .v-lp-item > a > span:first-child {
+      display: grid;
+      place-items: center;
+      width: 44px;
+      height: 44px;
+      border-radius: var(--sl-radius-circle);
+      background: linear-gradient(160deg, color-mix(in srgb, var(--v-c) 62%, #fff), var(--v-c) 72%);
+      color: #fff;
+      font-size: var(--sl-font-h3);
+    }
+
+    .v-lp-item > a[aria-current="page"] > span:first-child {
+      box-shadow: 0 0 0 3px var(--sl-bg), 0 0 0 5px var(--sl-primary);
+    }
+
+    .v-pinb {
+      position: absolute;
+      top: var(--sl-space-1);
+      right: var(--sl-space-2);
+      display: grid;
+      place-items: center;
+      width: 24px;
+      height: 24px;
+      padding: 0;
+      border: 0;
+      border-radius: var(--sl-radius-circle);
+      background: none;
+      color: var(--sl-text-muted);
+      font-size: var(--sl-font-small);
+      cursor: pointer;
+      opacity: 0;
+    }
+
+    .v-lp-item:hover .v-pinb,
+    .v-pinb:focus-visible,
+    .v-pinb[aria-pressed="true"] {
+      opacity: 1;
+    }
+
+    .v-pinb[aria-pressed="true"] {
+      color: var(--sl-warning);
+    }
+
+    .v-lp-empty {
+      margin: var(--sl-space-4) 0 0;
+      color: var(--sl-text-muted);
+      text-align: center;
+    }
+
+    .v-note {
+      margin: var(--sl-space-4) 0 0;
+      color: var(--sl-text-muted);
+      font-size: var(--sl-font-micro);
+      line-height: var(--sl-line-normal);
+    }
+
+    .v-qlist a {
+      display: flex;
+      align-items: center;
+      gap: var(--sl-space-3);
+      padding: var(--sl-space-2) var(--sl-space-3);
+      border-radius: var(--sl-radius-2);
+      color: var(--sl-text);
+      text-decoration: none;
+    }
+
+    .v-qlist a:hover {
+      background: var(--sl-bg-muted);
+    }
+
+    .v-qlist b {
+      margin-left: auto;
+      padding: 0 var(--sl-space-2);
+      border-radius: var(--sl-radius-pill);
+      background: #ff3b30;
+      color: #fff;
+      font-size: var(--sl-font-micro);
+    }
+
+    .v-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: var(--sl-space-4) var(--sl-space-3);
+    }
+
+    .v-grid a {
+      position: relative;
+      display: grid;
+      justify-items: center;
+      gap: var(--sl-space-2);
+      color: var(--sl-text);
+      font-size: var(--sl-font-micro);
+      text-align: center;
+      text-decoration: none;
+    }
+
+    .v-grid a > span:first-child {
+      display: grid;
+      place-items: center;
+      width: 48px;
+      height: 48px;
+      border-radius: var(--sl-radius-circle);
+      background: linear-gradient(160deg, color-mix(in srgb, var(--v-c, var(--sl-primary)) 60%, #fff), var(--v-c, var(--sl-primary)) 72%);
+      color: #fff;
+      font-size: var(--sl-font-h3);
+    }
+
+    .v-grid .v-dead {
+      position: absolute;
+      top: 0;
+      right: var(--sl-space-4);
+      width: var(--sl-space-4);
+      height: var(--sl-space-4);
+      border: 2px solid var(--sl-bg);
+      border-radius: var(--sl-radius-circle);
+      background: var(--sl-warning);
+    }
+
+    .v-me-head {
+      display: grid;
+      justify-items: center;
+      gap: var(--sl-space-2);
+      margin-bottom: var(--sl-space-4);
+      text-align: center;
+    }
+
+    .v-me-head img {
+      width: 60px;
+      height: 60px;
+      padding: 3px;
+      border-radius: var(--sl-radius-circle);
+      background: conic-gradient(from 200deg, var(--sl-primary), var(--sl-accent), var(--sl-primary));
+    }
+
+    .v-me-head small,
+    .v-facts dt {
+      color: var(--sl-text-muted);
+      font-size: var(--sl-font-micro);
+    }
+
+    .v-facts {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      gap: var(--sl-space-2) var(--sl-space-4);
+      margin: 0 0 var(--sl-space-4);
+      font-size: var(--sl-font-small);
+    }
+
+    .v-facts dd {
+      margin: 0;
+      text-align: right;
+    }
+
+    .v-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--sl-space-3);
+      box-sizing: border-box;
+      width: 100%;
+      padding: var(--sl-space-3) 0;
+      border: 0;
+      border-top: 1px solid var(--sl-border);
+      background: none;
+      color: inherit;
+      font: inherit;
+      font-size: var(--sl-font-small);
+      text-align: left;
+    }
+
+    button.v-row {
+      cursor: pointer;
+    }
+
+    button.v-row:hover {
+      color: var(--sl-primary);
+    }
+
+    .v-pair {
+      display: flex;
+      gap: var(--sl-space-1);
+    }
+
+    .v-pair button {
+      display: grid;
+      place-items: center;
+      width: 32px;
+      height: 26px;
+      padding: 0;
+      border: 1px solid var(--sl-border);
+      border-radius: var(--sl-radius-1);
+      background: var(--sl-bg);
+      color: var(--sl-text-muted);
+      cursor: pointer;
+    }
+
+    .v-pair button[aria-pressed="true"] {
+      border-color: var(--sl-primary);
+      background: var(--sl-primary);
+      color: var(--sl-on-solid);
+    }
+
+    /* ---------- The toast: its home stays, it steps over the pill standing there ---------- */
+
+    [data-ab-ctx="admin"] .sl-toast {
+      position: fixed;
+      left: 50%;
+      z-index: var(--sl-z-toast);
+      display: flex;
+      align-items: center;
+      gap: var(--sl-space-3);
+      padding: var(--sl-space-4) var(--sl-space-6);
+      border-radius: var(--sl-radius-pill);
+      background: var(--v-tip-bg);
+      color: var(--v-tip-text);
+      box-shadow: var(--sl-shadow-float);
+      opacity: 0;
+      pointer-events: none;
+      transform: translate(-50%, 20px);
+      transition: opacity var(--sl-time-base) var(--sl-ease-out), transform var(--sl-time-base) var(--sl-ease-out), bottom var(--sl-time-base) var(--sl-ease-out);
+    }
+
+    [data-ab-ctx="admin"] .sl-toast.sl-is-visible {
+      opacity: 1;
+      transform: translate(-50%, 0);
+    }
+
+    [data-ab-ctx="admin"] .sl-toast > .bi {
+      color: var(--sl-success);
+    }
+
+    .sl-toast {
+      bottom: var(--v-toast-bottom, calc(var(--sl-space-6) + var(--sl-space-3)));
+    }
+
+    /* ---------- The options of the panel: two rows more ---------- */
+
+    .v-opt-note {
+      margin: var(--sl-space-3) 0 0;
+      color: var(--sl-text-muted);
+      font-size: var(--sl-font-micro);
+      line-height: var(--sl-line-normal);
+    }
+
+    .v-opt-reset {
+      padding: var(--sl-space-1) var(--sl-space-3);
+      border: 1px solid var(--sl-border);
+      border-radius: var(--sl-radius-pill);
+      background: var(--sl-bg);
+      color: var(--sl-primary);
+      font: inherit;
+      font-size: var(--sl-font-small);
+      cursor: pointer;
+    }
+
+    /* ---------- Fallback: the menu switched off, the blocks come back ---------- */
+
+    .v-back {
+      margin: 0 0 var(--sl-space-3);
+      color: var(--sl-text-muted);
+      font-size: var(--sl-font-micro);
+    }
+
+    .v-acts {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--sl-space-3);
+      margin-top: var(--sl-space-4);
+    }
+
+    .v-acts .sl-but {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--sl-space-2);
+      box-sizing: border-box;
+      width: 100%;
+      margin: 0;
+      text-decoration: none;
+    }
+
+    /* ---------- Phone: across at the bottom, the pins go to "Все разделы" ---------- */
+
+    @media (max-width: 560px) {
+      :root { --v-tile: 32px; --v-gap: var(--sl-space-2); }
+      .v-wrap[data-v-placed] { top: auto; bottom: var(--sl-space-3); left: 50%; transform: translateX(-50%); }
+      [data-dir] .v-dock { flex-direction: row; padding: var(--sl-space-2) var(--sl-space-3); }
+      [data-dir] .v-sep { width: 1px; height: calc(var(--v-tile) * 0.7); }
+      [data-dir] .v-qapp, .v-pin, .v-grip, .v-turn, .v-me { display: none; }
+      [data-dir] .v-body { flex-direction: row; padding: 0 var(--v-gap); }
+      [data-dir] .v-qone { display: flex; }
+      .v-app { transform: none; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .v-jump { animation: none; }
+      .v-app { transition: none; }
+    }
+
+    [data-demo-motion="off"] .v-jump {
+      animation: none;
+    }
+  </style>
+  <script>
+    const V_PINS_DEFAULT = ['blocks', 'comments', 'config', 'database', 'node', 'account'];
+    const V_PINS_MAX = 8;
+    const V_TONES = ['#2563eb', '#16a34a', '#ea580c', '#9333ea', '#0891b2', '#db2777', '#ca8a04', '#475569'];
+    const V_EDGE = 12;
+    const V_STILL = () => (window.isMotionStill && window.isMotionStill()) || document.documentElement.dataset.demoMotion === 'off' ||
+      matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const V_CTX = () => document.documentElement.dataset.abCtx;
+
+    const vGet = (k, def) => { try { const v = localStorage.getItem(k); return v === null ? def : v; } catch (e) { return def; } };
+    const vSet = (k, v) => { try { if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) { /* storage may be off */ } };
+    const vPins = () => { try { const p = JSON.parse(vGet('ab.dock.pins', 'null')); return Array.isArray(p) ? p : V_PINS_DEFAULT.slice(); } catch (e) { return V_PINS_DEFAULT.slice(); } };
+    // Per admin, per part: on or off, the point it stands on, across or upright
+    const vOn = (ctx) => vGet('ab.dock.on.' + (ctx || V_CTX()), '1') === '1';
+    const vAt = () => { try { const a = JSON.parse(vGet('ab.dock.at.' + V_CTX(), 'null')); return a && typeof a.x === 'number' ? a : null; } catch (e) { return null; } };
+    const vDir = () => (vGet('ab.dock.dir.' + V_CTX(), 'row') === 'col' ? 'col' : 'row');
+
+    function vSections() {
+      const { admin, modules } = window.AB.sections();
+      const map = {};
+      admin.concat(modules).forEach(([key, label, icon], i) => { map[key] = { key, label, icon, tone: V_TONES[i % V_TONES.length], href: '../admin.php?name=' + key }; });
+      return { admin, modules, map };
+    }
+
+    // The inside of the pill, rebuilt alone when a pin changes, so an open pop stays open
+    function vNav(d) {
+      const { esc, ico, attrs } = window.AB;
+      const site = d.ctx === 'site';
+      const w = d.who;
+      const pc = (n) => (w.all ? (n / w.all * 100).toFixed(1) : 0);
+      const app = (it, cls, inner, extra) => `<a class="v-app ${cls || ''}" ${attrs(it)} data-tip="${esc(it.tip || it.label)}"${extra || ''}>${inner || ico(it.icon)}${it.badge ? `<b class="v-badge" data-ab-n="${it.n}">${it.badge}</b>` : ''}</a>`;
+      const btn = (pop, cls, tip, inner, extra, badge) => `<button type="button" class="v-app ${cls}" data-v-pop="${pop}" aria-controls="v-pop-${pop}" aria-expanded="false" data-tip="${esc(tip)}"${extra || ''}>${inner}${badge || ''}</button>`;
+      const map = vSections().map;
+      const pins = vPins().filter((k) => map[k]).map((k) => app({ ...map[k], tip: map[k].label + (!site && k === 'blocks' ? ' · вы здесь' : '') }, 'v-pin' + (!site && k === 'blocks' ? ' v-run' : ''), ico(map[k].icon), ` style="--v-c: ${map[k].tone}"` + (!site && k === 'blocks' ? ' aria-current="page"' : ''))).join('');
+      // In the panel the bell (Э04) and "Ждут внимания" own the queue; the pill carries it on the site only
+      const busy = site ? d.queue.filter((q) => q.n).slice(0, 4) : [];
+      const tone = { users: 'var(--sl-success)', comments: 'var(--sl-primary)', help: 'var(--sl-danger)', news: 'var(--sl-accent)' };
+      const queue = busy.map((q) => app({ ...q, tip: `${q.title} · ${q.n}`, badge: q.n, n: 'q-' + q.key }, 'v-qapp v-q-' + q.key, ico(q.icon), ` style="--v-c: ${tone[q.key] || 'var(--sl-primary)'}"`)).join('');
+      const qone = site ? btn('queue', 'v-qone', d.waiting ? `Ждут внимания · ${d.waiting}` : 'Всё проверено', ico('bell-fill'), '', d.waiting ? `<b class="v-badge" data-ab-n="waiting">${d.waiting}</b>` : '') : '';
+      const min = vGet('ab.dock.min.' + d.ctx, '0') === '1';
+      const sum = site && d.waiting ? `<b class="v-badge v-home-badge" data-ab-n="waiting">${d.waiting}</b>` : '';
+      return `${app({ ...d.home, tip: site ? 'Панель администратора' : 'Главная панели' }, 'v-plain', '<img src="../templates/lite/images/logos/slaed-logo-mark-gradient-blue.svg" alt="">' + sum)}
+    <div class="v-body" id="v-fold-body" data-v-body${min ? ' hidden style="display: none"' : ''}>
+    ${site ? app({ ...d.page.admin, tip: 'Эта страница в панели · вы на ней' }, 'v-run', ico(d.page.admin.icon), ' style="--v-c: #0ea5e9" aria-current="page"') : ''}
+    ${pins ? '<span class="v-sep v-pin"></span>' + pins : ''}
+    <span class="v-sep"></span>
+    ${queue}${qone}
+    ${btn('launch', 'v-launch', site ? 'Все разделы' : 'Быстрый переход · Ctrl+K', ico('grid-3x3-gap-fill'))}
+    <button type="button" class="v-app v-watch" data-sl-open="ab-stats" data-tip="Статистика · на сайте ${w.all}" aria-label="Статистика посещаемости, на сайте ${w.all}"${` style="--v-a: ${pc(w.admins)}%; --v-u: ${pc(w.admins + w.users)}%; --v-b: ${pc(w.admins + w.users + w.bots)}%"`}><span data-ab-n="all">${w.all}</span></button>
+    ${btn('stack', '', `Свои ссылки · ${d.extras.items.length}`, ico('folder2-open'), ' style="--v-c: #0284c7"', d.extras.items.some((it) => it.dead) ? '<b class="v-badge">!</b>' : '')}
+    ${btn('me', 'v-me', d.me.nick, `<img src="${d.me.ava}" alt="">`)}
+    <span class="v-sep"></span>
+    ${app({ ...d.logout, tip: 'Выход' }, 'v-plain v-out')}
+    </div>
+    <span class="v-sep v-sep-end"></span>
+    <span class="sl-modal-acts v-tools">
+    <button type="button" class="sl-modal-act v-tool v-turn" data-v-turn title="Повернуть меню: горизонтально или вертикально" aria-label="Повернуть меню">${ico('distribute-vertical', 'v-ax-row')}${ico('distribute-horizontal', 'v-ax-col')}</button>
+    <button type="button" class="sl-modal-act v-tool v-fold" data-v-fold aria-controls="v-fold-body" aria-expanded="${!min}" title="Свернуть / Развернуть">${ico('arrows-collapse-vertical', 'v-ax-row v-open')}${ico('arrows-expand-vertical', 'v-ax-row v-shut')}${ico('arrows-collapse', 'v-ax-col v-open')}${ico('arrows-expand', 'v-ax-col v-shut')}</button>
+    <button type="button" class="sl-modal-act sl-modal-act-move v-tool v-grip" data-v-grip aria-label="Переместить меню: перетащите куда угодно; стрелки двигают, Home — вниз по центру" title="Перетащите куда угодно">${ico('grip-vertical', 'v-ax-row')}${ico('grip-horizontal', 'v-ax-col')}</button>
+    </span>`;
+    }
+
+    // "Все разделы" (site) or the quick jump (panel): the menu as one grid, searchable, each section with its star
+    function vLaunch(d) {
+      const { esc, ico } = window.AB;
+      const { admin, modules, map } = vSections();
+      const pins = vPins();
+      const tile = ([key]) => {
+        const s = map[key];
+        const on = pins.includes(key);
+        return `<div class="v-lp-item" data-v-lp="${esc(s.label.toLowerCase())}"><a href="${s.href}"${key === 'blocks' && d.ctx === 'admin' ? ' aria-current="page"' : ''} style="--v-c: ${s.tone}"><span>${ico(s.icon)}</span><span>${esc(s.label)}</span></a>` +
+          `<button type="button" class="v-pinb" data-v-pinkey="${key}" aria-pressed="${on}" title="${on ? 'Открепить от меню' : 'Закрепить в меню'}" aria-label="${on ? 'Открепить' : 'Закрепить'}: ${esc(s.label)}">${ico(on ? 'star-fill' : 'star')}</button></div>`;
+      };
+      return `<p class="v-pop-cap">${ico('grid-3x3-gap')} ${d.ctx === 'site' ? 'Все разделы' : 'Быстрый переход'}<small>${admin.length + modules.length} · звезда закрепляет в меню, до ${V_PINS_MAX}</small></p>
+  <input type="search" class="sl-field v-find" placeholder="Найти раздел" aria-label="Найти раздел" data-v-find>
+  <p class="v-lp-group">Администратор</p><div class="v-lp">${admin.map(tile).join('')}</div>
+  <p class="v-lp-group">Модули</p><div class="v-lp">${modules.map(tile).join('')}</div>
+  <p class="v-lp-empty" data-v-lp-empty hidden>Раздел не найден</p>`;
+    }
+
+    function vFilter(field) {
+      const q = field.value.trim().toLowerCase();
+      const pop = field.closest('.v-pop');
+      let seen = 0;
+      pop.querySelectorAll('[data-v-lp]').forEach((it) => {
+        const on = !q || it.dataset.vLp.includes(q);
+        it.hidden = !on;
+        if (on) seen += 1;
+      });
+      pop.querySelectorAll('.v-lp-group').forEach((g) => { g.hidden = !!q && !g.nextElementSibling.querySelector('[data-v-lp]:not([hidden])'); });
+      pop.querySelector('[data-v-lp-empty]').hidden = seen > 0;
+    }
+
+    function vRedrawNav() {
+      const w = document.querySelector('[data-v-dock]');
+      if (!w) return;
+      const d = window.AB.data();
+      w.querySelector('.v-dock').innerHTML = vNav(d);
+      const lp = w.querySelector('#v-pop-launch');
+      const q = lp.querySelector('[data-v-find]').value;
+      lp.innerHTML = vLaunch(d);
+      const field = lp.querySelector('[data-v-find]');
+      field.value = q;
+      vFilter(field);
+      vPlace();
+    }
+
+    // Stand the layer on its point, keep it whole inside the window, and turn its tips and pops to the room
+    function vPlace() {
+      const w = document.querySelector('[data-v-dock]');
+      if (!w) return;
+      const phone = matchMedia('(max-width: 560px)').matches;
+      w.dataset.dir = phone ? 'row' : vDir();
+      // Upright on a short screen the tiles give way just enough for the pill to stand whole, never under 32 px
+      const dock = w.querySelector('.v-dock');
+      dock.style.removeProperty('--v-tile');
+      if (w.dataset.dir === 'col') {
+        const room = innerHeight - V_EDGE * 2;
+        for (let tile = 44; tile >= 32 && dock.getBoundingClientRect().height > room; tile -= 2) dock.style.setProperty('--v-tile', (tile - 2) + 'px');
+      }
+      // Upright with no point of its own the pill stands at the middle of the right edge, not across the content
+      const at = vAt() || (w.dataset.dir === 'col' ? { x: 1, y: 0.5 } : null);
+      if (at && !phone && !w.hasAttribute('data-drag')) {
+        w.setAttribute('data-v-placed', '');
+        const box = w.getBoundingClientRect();
+        const x = Math.min(Math.max(at.x * innerWidth, box.width / 2 + V_EDGE), innerWidth - box.width / 2 - V_EDGE);
+        const y = Math.min(Math.max(at.y * innerHeight, box.height / 2 + V_EDGE), innerHeight - box.height / 2 - V_EDGE);
+        w.style.setProperty('--v-left', x + 'px');
+        w.style.setProperty('--v-top', y + 'px');
+      } else if (!w.hasAttribute('data-drag')) {
+        w.removeAttribute('data-v-placed');
+        w.style.removeProperty('--v-left');
+        w.style.removeProperty('--v-top');
+      }
+      vTurn(w);
+      vToast(w);
+    }
+
+    // The motion of the column blocks (setSlideMotion, slaed.js): cancel what runs, clip, run the size from what it is
+    // to its end in 500 ms linear, clean up; here along the axis of the pill, and with the far end held where it stood
+    function vSlide(w, show) {
+      const body = w.querySelector('[data-v-body]');
+      if (!body) return;
+      const col = w.dataset.dir === 'col';
+      const prop = col ? 'height' : 'width';
+      const size = () => (col ? body.offsetHeight : body.offsetWidth);
+      body.getAnimations().forEach((a) => a.cancel());
+      const r0 = w.getBoundingClientRect();
+      const end0 = col ? r0.bottom : r0.right;
+      // The layer stands on its point from here on, so the far end can be held while the size runs
+      w.setAttribute('data-v-placed', '');
+      w.style.setProperty('--v-left', (r0.left + r0.width / 2) + 'px');
+      w.style.setProperty('--v-top', (r0.top + r0.height / 2) + 'px');
+      if (show) {
+        body.hidden = false;
+        body.style.display = 'flex';
+        body.style[prop] = '0px';
+        body.style.overflow = 'hidden';
+        void body.offsetWidth;
+      } else {
+        body.style.overflow = 'hidden';
+        body.style[prop] = size() + 'px';
+      }
+      const from = show ? 0 : size();
+      const to = show ? (col ? body.scrollHeight : body.scrollWidth) : 0;
+      let raf = 0;
+      const hold = () => {
+        const r = w.getBoundingClientRect();
+        if (col) w.style.setProperty('--v-top', (end0 - r.height / 2) + 'px');
+        else w.style.setProperty('--v-left', (end0 - r.width / 2) + 'px');
+        raf = requestAnimationFrame(hold);
+      };
+      const run = body.animate([{ [prop]: from + 'px' }, { [prop]: to + 'px' }], { duration: V_STILL() ? 1 : 500, easing: 'linear' });
+      hold();
+      run.onfinish = () => {
+        cancelAnimationFrame(raf);
+        body.style.overflow = '';
+        body.style[prop] = '';
+        if (!show) {
+          body.style.display = 'none';
+          body.hidden = true;
+        }
+        const r = w.getBoundingClientRect();
+        const x = col ? r.left + r.width / 2 : end0 - r.width / 2;
+        const y = col ? end0 - r.height / 2 : r.top + r.height / 2;
+        vSet('ab.dock.at.' + V_CTX(), JSON.stringify({ x: +(x / innerWidth).toFixed(4), y: +(y / innerHeight).toFixed(4) }));
+        vPlace();
+      };
+    }
+
+    function vTurn(w) {
+      const r = w.getBoundingClientRect();
+      const cx = r.left + r.width / 2;
+      const cy = r.top + r.height / 2;
+      w.dataset.to = w.dataset.dir === 'col' ? (cx < innerWidth / 2 ? 'right' : 'left') : (cy > innerHeight * 0.45 ? 'up' : 'down');
+    }
+
+    // The toast keeps its home at the bottom centre and steps over the layer lying in its way; a layer standing tall
+    // through the lower part is passed beside, never climbed to the top of the screen
+    function vToast(w) {
+      const root = document.documentElement;
+      const r = w.getBoundingClientRect();
+      const home = { top: innerHeight - 110, left: innerWidth / 2 - 320, right: innerWidth / 2 + 320 };
+      const hit = r.bottom > home.top && r.top > innerHeight * 0.6 && r.right > home.left && r.left < home.right;
+      if (hit) root.style.setProperty('--v-toast-bottom', (innerHeight - r.top + 14) + 'px');
+      else root.style.removeProperty('--v-toast-bottom');
+    }
+
+    window.AB_FACE = {
+      menuOpen: true,
+      formAlert: 'Блок: Администрация (системный — выводится в плавающем меню на сайте и в панели)',
+      formHint: 'Ссылки, написанные здесь, стоят в меню стопкой «свои ссылки» — общие для всех суперадминистраторов. «Панель», «Выход» и «Наблюдение» меню выводит само.',
+      formTail() {
+        return `<div class="sl-div-item"><div class="sl-div-label"><span id="ab-active-l">Активировать?</span><span class="sl-small">«Нет» убирает меню с сайта у всех администраторов; в панели каждый включает его сам в «Опциях».</span></div>
+              <div class="sl-div-field"><div class="sl-radio-switch sl-radio-group" role="group" aria-labelledby="ab-active-l"><label class="sl-radio"><input type="radio" name="ab-active" value="1" checked> Да</label><label class="sl-radio"><input type="radio" name="ab-active" value="0"> Нет</label></div></div></div>
+            <div class="sl-div-item sl-div-item-full"><div class="sl-div-label"><span class="sl-small">Позиция, модули, язык, время работы и «Кто будет видеть?» у системного блока не показываются: его выводит меню, и только администратору.</span></div></div>`;
+      },
+      stageNote: (ctx) => (ctx === 'admin'
+        ? 'Плавающее меню — слой поверх панели: под ним ничего не меняется. Перетащите его за ручку ⋮ куда угодно — после обновления страницы оно там же. Выключается в «Опциях» справа вверху; выключенное, оно возвращает в колонку блок «Администрация».'
+        : 'Сайт глазами вошедшего администратора: меню — слой поверх страницы, в любом месте; блоки «Администрация» и «Наблюдение» из правой колонки ушли в него.'),
+      // The desk mirrors the option of this part, so the switch can be tried on the site too
+      stage() {
+        const on = vOn();
+        const b = (v, label) => `<button type="button" data-v-opt="${V_CTX()}" data-v-val="${v}" aria-pressed="${on === (v === '1')}">${label}</button>`;
+        return `<span>Плавающее меню</span><div class="ab-seg">${b('1', 'Включено')}${b('0', 'Выключено — блоки вернулись')}</div>`;
+      },
+      // Off: the blocks the menu stood in for come back - the watch and the owner's links in one block
+      blocks(d) {
+        if (vOn(d.ctx)) return '';
+        const { ico, attrs, rows, line, free, block } = window.AB;
+        const acts = `<div class="v-acts"><a class="sl-but" ${attrs(d.home)}>${ico(d.home.icon)} ${d.home.short}</a><a class="sl-but ab-out" ${attrs(d.logout)}>${ico(d.logout.icon)} ${d.logout.short}</a></div>`;
+        return block(d, { id: 7, title: d.title }, `<p class="v-back">Плавающее меню выключено в «Опциях» — блок снова здесь.</p>` + window.AB.summary(d) + acts + line(d) + rows(d, d.extras.items) + free(d));
+      },
+      dock(d) {
+        if (!vOn(d.ctx)) return '';
+        const { esc, ico, attrs, watch } = window.AB;
+        const own = d.extras.items;
+        const min = vGet('ab.dock.min.' + d.ctx, '0') === '1';
+        const pop = (id, html, wide) => `<div class="v-pop${wide ? ' v-pop-wide' : ''}" id="v-pop-${id}" data-v-pop-id="${id}" hidden>${html}</div>`;
+        const grid = own.length
+          ? `<div class="v-grid">${own.map((it, i) => `<a ${attrs(it)}><span style="--v-c: ${V_TONES[i % V_TONES.length]}">${ico(it.icon)}</span><span>${esc(it.label)}</span>${it.dead ? '<i class="v-dead" title="Нет файла"></i>' : ''}</a>`).join('')}</div>`
+          : '<p class="v-lp-empty">После черты в блоке пусто.</p>';
+        const busy = d.queue.filter((q) => q.n);
+        const qlist = busy.length
+          ? `<div class="v-qlist">${busy.map((q) => `<a ${attrs(q)}>${ico(q.icon)} ${q.label} <b data-ab-n="q-${q.key}">${q.n}</b></a>`).join('')}</div>`
+          : `<p class="v-lp-empty">${ico('check2-circle')} Всё проверено</p>`;
+        const dir = vDir();
+        const me = `<div class="v-me-head"><img src="${d.me.ava}" alt=""><b>${esc(d.me.nick)}</b><small>${d.me.role}</small></div>` +
+          `<dl class="v-facts"><dt>Вход</dt><dd>сегодня, ${d.me.since}</dd><dt>Прошлый вход</dt><dd>${d.me.last}</dd><dt>Адрес</dt><dd>${d.me.ip}</dd><dt>Сеанс</dt><dd>ещё ${d.me.left}</dd></dl>` +
+          `<div class="v-row">Меню лежит <span class="v-pair"><button type="button" data-v-dir="row" aria-pressed="${dir === 'row'}" title="Поперёк" aria-label="Поперёк">${ico('distribute-horizontal')}</button><button type="button" data-v-dir="col" aria-pressed="${dir === 'col'}" title="Стоймя" aria-label="Стоймя">${ico('distribute-vertical')}</button></span></div>` +
+          `<button type="button" class="v-row" data-v-home>Вернуть вниз по центру ${ico('arrow-down-circle')}</button>` +
+          `<label class="v-row">Увеличивать иконки под курсором <input type="checkbox" class="sl-check" data-v-mag-switch${vGet('ab.dock.mag', '1') === '0' ? '' : ' checked'}></label>` +
+          `<button type="button" class="v-row" data-v-fold>Свернуть меню ${ico('arrows-collapse-vertical')}</button>` +
+          `<p class="v-note">Меню тянется за ручку ⋮ в любое место и запоминает его; стрелки на ручке двигают его, Home возвращает вниз. ${d.ctx === 'admin' ? 'Выключить — «Опции» справа вверху.' : 'Выключить на сайте — «Опции» панели.'}</p>`;
+        return `<div class="v-wrap" data-v-dock data-dir="${dir}" data-to="up"${min ? ' data-min' : ''}>
+  ${pop('launch', vLaunch(d), true)}
+  ${pop('queue', `<p class="v-pop-cap">${ico('bell')} Ждут внимания<small data-ab-n="waiting">${d.waiting}</small></p>${qlist}`)}
+  ${pop('stack', `<p class="v-pop-cap">${ico('folder2-open')} ${esc(d.title)}<small>после черты · ${own.length}</small></p>${grid}`)}
+  ${pop('me', me)}
+  <nav class="v-dock" aria-label="${esc(d.title)}">${vNav(d)}</nav>
+</div>`;
+      },
+      // The options window of the panel (Э06): the rows it has, and the two the menu adds
+      bodyEnd() {
+        if (V_CTX() !== 'admin') return '';
+        const sel = (part) => `<select class="sl-select" data-v-opt-select="${part}"><option value="1"${vOn(part) ? ' selected' : ''}>Включено</option><option value="0"${vOn(part) ? '' : ' selected'}>Выключено</option></select>`;
+        return `<dialog class="sl-modal sl-modal-sm" id="sl-settings" aria-labelledby="v-set-cap">
+  <div class="sl-modal-title"><i class="bi bi-sliders" aria-hidden="true"></i> <span class="sl-modal-cap"><strong id="v-set-cap">Опции</strong></span> <span class="sl-modal-acts"><button type="button" class="sl-modal-act sl-modal-act-close" data-sl-close title="Закрыть" aria-label="Закрыть"><i class="bi bi-x-lg" aria-hidden="true"></i></button></span></div>
+  <div class="sl-modal-body">
+    <div class="sl-set-row"><label class="sl-set-name" for="v-o-mode"><i class="bi bi-circle-half" aria-hidden="true"></i>Тема оформления</label><span class="sl-set-pick"><select id="v-o-mode" class="sl-select"><option value="light">Светлая</option><option value="auto" selected>Системная</option><option value="dark">Тёмная</option></select></span></div>
+    <div class="sl-set-row"><label class="sl-set-name" for="v-o-admin"><i class="bi bi-capsule" aria-hidden="true"></i>Плавающее меню в панели</label><span class="sl-set-pick">${sel('admin').replace('<select', '<select id="v-o-admin"')}</span></div>
+    <div class="sl-set-row"><label class="sl-set-name" for="v-o-site"><i class="bi bi-globe2" aria-hidden="true"></i>Плавающее меню на сайте</label><span class="sl-set-pick">${sel('site').replace('<select', '<select id="v-o-site"')}</span></div>
+    <div class="sl-set-row"><span class="sl-set-name"><i class="bi bi-arrows-move" aria-hidden="true"></i>Позиция меню</span><span class="sl-set-pick"><button type="button" class="v-opt-reset" data-v-home>Вниз по центру</button></span></div>
+    <div class="sl-set-row"><label class="sl-set-name" for="v-o-lang"><i class="bi bi-translate" aria-hidden="true"></i>Язык</label><span class="sl-set-pick"><select id="v-o-lang" class="sl-select"><option value="ru" selected>Русский</option><option value="en">Английский</option><option value="de">Немецкий</option></select></span></div>
+    <p class="v-opt-note">Меню — помощник поверх панели и сайта. Выключенное в своей части, оно возвращает туда блок «Администрация» с «Наблюдением». Применяется сразу.</p>
+  </div>
+</dialog>`;
+      },
+      after() {
+        requestAnimationFrame(vPlace);
+        if (window.V_BOUND) return;
+        window.V_BOUND = true;
+        const root = document.documentElement;
+        const wrap = () => document.querySelector('[data-v-dock]');
+        const close = () => {
+          const w = wrap();
+          if (!w) return;
+          w.removeAttribute('data-v-open');
+          w.querySelectorAll('.v-pop').forEach((p) => { p.hidden = true; });
+          w.querySelectorAll('[data-v-pop]').forEach((b) => b.setAttribute('aria-expanded', 'false'));
+        };
+        const setAt = (x, y) => {
+          vSet('ab.dock.at.' + V_CTX(), x === null ? null : JSON.stringify({ x: +(x / innerWidth).toFixed(4), y: +(y / innerHeight).toFixed(4) }));
+          // Home is the whole first state: at the bottom centre and lying across
+          if (x === null) {
+            vSet('ab.dock.dir.' + V_CTX(), 'row');
+            const w = wrap();
+            if (w) w.querySelectorAll('[data-v-dir]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.vDir === 'row')));
+          }
+          vPlace();
+        };
+        const setMin = (on) => {
+          const w = wrap();
+          close();
+          w.toggleAttribute('data-min', on);
+          vSet('ab.dock.min.' + V_CTX(), on ? '1' : '0');
+          const fold = w.querySelector('.v-dock [data-v-fold]');
+          fold.setAttribute('aria-expanded', String(!on));
+          vSlide(w, !on);
+          fold.focus();
+        };
+        const setOn = (part, on) => {
+          vSet('ab.dock.on.' + part, on ? '1' : '0');
+          if (!on && part === V_CTX()) root.style.removeProperty('--v-toast-bottom');
+          document.querySelectorAll(`[data-v-opt="${part}"]`).forEach((b) => b.setAttribute('aria-pressed', String((b.dataset.vVal === '1') === on)));
+          document.querySelectorAll(`[data-v-opt-select="${part}"]`).forEach((s) => { s.value = on ? '1' : '0'; });
+          if (part === V_CTX()) window.AB.redraw();
+        };
+
+        // Magnification along the pill; the cell does not move, so the reading is steady
+        document.addEventListener('pointermove', (e) => {
+          const dock = document.querySelector('.v-dock');
+          const w = wrap();
+          if (!dock || !w || w.hasAttribute('data-drag')) return;
+          const box = dock.getBoundingClientRect();
+          const col = w.dataset.dir === 'col';
+          const near = e.clientY > box.top - 50 && e.clientY < box.bottom + 50 && e.clientX > box.left - 50 && e.clientX < box.right + 50;
+          const flat = vGet('ab.dock.mag', '1') === '0' || V_STILL() || e.pointerType === 'touch';
+          dock.querySelectorAll('.v-app:not(.v-small)').forEach((a) => {
+            if (!near || flat) { a.style.setProperty('--v-s', 1); a.style.removeProperty('--v-z'); return; }
+            // The scale grows from the middle of the axis, so the centre of the icon on it stays where the layout put it
+            const r = a.getBoundingClientRect();
+            const c = col ? r.top + r.height / 2 : r.left + r.width / 2;
+            const grow = Math.max(0, Math.cos(Math.min(Math.abs((col ? e.clientY : e.clientX) - c), 70) / 70 * Math.PI / 2));
+            a.style.setProperty('--v-s', (1 + 0.5 * grow).toFixed(3));
+            a.style.setProperty('--v-z', Math.round(grow * 10));
+          });
+        });
+
+        // Dragging by the grip or the circle: anywhere, and remembered
+        let drag = null;
+        document.addEventListener('pointerdown', (e) => {
+          const handle = e.target.closest('[data-v-grip]');
+          if (!handle || e.button !== 0) return;
+          const r = wrap().getBoundingClientRect();
+          drag = { x: e.clientX, y: e.clientY, dx: e.clientX - (r.left + r.width / 2), dy: e.clientY - (r.top + r.height / 2), moved: false, id: e.pointerId };
+          handle.setPointerCapture(e.pointerId);
+        });
+        document.addEventListener('pointermove', (e) => {
+          if (!drag || e.pointerId !== drag.id) return;
+          const w = wrap();
+          if (!drag.moved && Math.hypot(e.clientX - drag.x, e.clientY - drag.y) < 5) return;
+          if (!drag.moved) {
+            drag.moved = true;
+            close();
+            w.setAttribute('data-drag', '');
+            w.setAttribute('data-v-placed', '');
+          }
+          const r = w.getBoundingClientRect();
+          const x = Math.min(Math.max(e.clientX - drag.dx, r.width / 2 + V_EDGE), innerWidth - r.width / 2 - V_EDGE);
+          const y = Math.min(Math.max(e.clientY - drag.dy, r.height / 2 + V_EDGE), innerHeight - r.height / 2 - V_EDGE);
+          w.style.setProperty('--v-left', x + 'px');
+          w.style.setProperty('--v-top', y + 'px');
+          drag.at = [x, y];
+          vTurn(w);
+        });
+        document.addEventListener('pointerup', (e) => {
+          if (!drag || e.pointerId !== drag.id) return;
+          const w = wrap();
+          const done = drag;
+          drag = null;
+          if (!done.moved) return;
+          w.removeAttribute('data-drag');
+          setAt(done.at[0], done.at[1]);
+        });
+
+        document.addEventListener('click', (e) => {
+          const t = e.target;
+          if (t.closest('[data-v-fold]')) { setMin(!wrap().hasAttribute('data-min')); return; }
+          if (t.closest('[data-v-home]')) { setAt(null); return; }
+          // The turn: across by default, upright on a press, and back; the point the pill stands on stays
+          if (t.closest('[data-v-turn]')) {
+            const next = wrap().dataset.dir === 'col' ? 'row' : 'col';
+            vSet('ab.dock.dir.' + V_CTX(), next);
+            wrap().querySelectorAll('[data-v-dir]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.vDir === next)));
+            close();
+            vPlace();
+            wrap().querySelector('[data-v-turn]').focus();
+            return;
+          }
+          const dir = t.closest('[data-v-dir]');
+          if (dir) {
+            vSet('ab.dock.dir.' + V_CTX(), dir.dataset.vDir);
+            wrap().querySelectorAll('[data-v-dir]').forEach((b) => b.setAttribute('aria-pressed', String(b === dir)));
+            close();
+            vPlace();
+            return;
+          }
+          const opt = t.closest('[data-v-opt]');
+          if (opt) { setOn(opt.dataset.vOpt, opt.dataset.vVal === '1'); return; }
+          const mag = t.closest('[data-v-mag-switch]');
+          if (mag) { vSet('ab.dock.mag', mag.checked ? '1' : '0'); return; }
+          const pin = t.closest('[data-v-pinkey]');
+          if (pin) {
+            let pins = vPins();
+            const key = pin.dataset.vPinkey;
+            if (pins.includes(key)) pins = pins.filter((k) => k !== key);
+            else if (pins.length < V_PINS_MAX) pins.push(key);
+            else { window.AB.toast(`В меню уже ${V_PINS_MAX} разделов — открепите один`, true); return; }
+            vSet('ab.dock.pins', JSON.stringify(pins));
+            vRedrawNav();
+            const again = document.querySelector(`[data-v-pinkey="${key}"]`);
+            if (again) again.focus();
+            return;
+          }
+          const btn = t.closest('[data-v-pop]');
+          const w = wrap();
+          if (!btn) {
+            if (w && !t.closest('.v-pop')) close();
+            return;
+          }
+          const p = w.querySelector(`[data-v-pop-id="${btn.dataset.vPop}"]`);
+          const open = p.hidden;
+          close();
+          if (!open) return;
+          const wb = w.getBoundingClientRect();
+          const bb = btn.getBoundingClientRect();
+          p.hidden = false;
+          if (w.dataset.to === 'up' || w.dataset.to === 'down') {
+            const half = p.offsetWidth / 2;
+            p.style.setProperty('--v-x', (Math.min(Math.max(bb.left + bb.width / 2, half + 16), innerWidth - half - 16) - wb.left) + 'px');
+          } else {
+            const half = p.offsetHeight / 2;
+            p.style.setProperty('--v-y', (Math.min(Math.max(bb.top + bb.height / 2, half + 16), innerHeight - half - 16) - wb.top) + 'px');
+          }
+          w.setAttribute('data-v-open', '');
+          btn.setAttribute('aria-expanded', 'true');
+          const find = p.querySelector('[data-v-find]');
+          if (find) find.focus();
+        });
+
+        document.addEventListener('change', (e) => {
+          const sel = e.target.closest('[data-v-opt-select]');
+          if (sel) setOn(sel.dataset.vOptSelect, sel.value === '1');
+        });
+        document.addEventListener('input', (e) => { if (e.target.matches('[data-v-find]')) vFilter(e.target); });
+        document.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape') { close(); return; }
+          if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k' && V_CTX() === 'admin' && wrap()) {
+            e.preventDefault();
+            const launch = wrap().querySelector('[data-v-pop="launch"]');
+            if (launch && wrap().querySelector('#v-pop-launch').hidden) launch.click();
+            return;
+          }
+          if (e.target.matches('[data-v-find]') && e.key === 'Enter') {
+            const first = e.target.closest('.v-pop').querySelector('[data-v-lp]:not([hidden]) a');
+            if (first) first.click();
+            return;
+          }
+          // The grip moves the layer with the arrows (Shift for a long step), Home sends it back: no drag needed
+          if (e.target.matches('[data-v-grip]')) {
+            const step = e.shiftKey ? 96 : 24;
+            const mv = { ArrowLeft: [-step, 0], ArrowRight: [step, 0], ArrowUp: [0, -step], ArrowDown: [0, step] }[e.key];
+            if (e.key === 'Home') { e.preventDefault(); setAt(null); e.target.focus(); return; }
+            if (mv) {
+              e.preventDefault();
+              const r = wrap().getBoundingClientRect();
+              setAt(r.left + r.width / 2 + mv[0], r.top + r.height / 2 + mv[1]);
+              e.target.focus();
+            }
+          }
+        });
+        addEventListener('resize', () => vPlace());
+
+        document.addEventListener('ab:incoming', (e) => {
+          const { item } = e.detail;
+          window.AB.toast(`Новый комментарий · ${item.name}: «${item.text.length > 48 ? item.text.slice(0, 46) + '…' : item.text}»`);
+          const w = wrap();
+          if (!w || V_CTX() === 'admin') return;
+          const target = w.dataset.dir === 'col' ? w.querySelector('.v-qone') : w.querySelector('.v-q-comments');
+          if (!target) { vRedrawNav(); return; }
+          if (V_STILL()) return;
+          target.classList.remove('v-jump');
+          void target.offsetWidth;
+          target.classList.add('v-jump');
+        });
+      },
+    };
+  </script>
+</head>
+<body>
+  <script>document.write('<script src="assets/demo.js?v=' + Date.now() + '"><\/script>');</script>
+</body>
+</html>

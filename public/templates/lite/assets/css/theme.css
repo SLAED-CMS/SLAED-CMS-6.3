@@ -5224,9 +5224,8 @@ dialog.sl-editor-emoji-panel {
 .sl-session-line[data-sl-audience="bots"] > .bi { color: var(--sl-warning); }
 .sl-session-line[data-sl-audience="guests"] > .bi { color: var(--sl-primary); }
 
+/* The total carries its own mark, so it stands in the column of the lines above it instead of being indented to it */
 .sl-session-summary .sl-session-total {
-  grid-template-columns: minmax(0, 1fr) auto;
-  padding-left: var(--sl-space-8);
   color: var(--sl-text);
   font-weight: var(--sl-weight-semibold);
 }

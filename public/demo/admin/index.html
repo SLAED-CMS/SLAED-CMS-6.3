@@ -13,12 +13,14 @@
       if (keep('sl.rail') === '1') document.documentElement.setAttribute('data-sl-rail', '');
       if (keep('demo.marks') !== '0') document.documentElement.setAttribute('data-demo-marks', '');
       if (keep('sl.motion') === '0') document.documentElement.setAttribute('data-sl-still', '');
+      // М10 The floating menu switched off in Options: the block "Администрация" stands in the column from the first paint
+      if (keep('sl.dock') === '0') document.documentElement.setAttribute('data-sl-dock-off', '');
     } catch (e) { /* storage may be off */ }
   </script>
   <link rel="stylesheet" href="../../templates/admin/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
   <link rel="stylesheet" href="../../templates/admin/assets/css/base.css">
   <link rel="stylesheet" href="../../templates/admin/assets/css/theme.css">
-  <script>document.write('<link rel="stylesheet" href="admin.css?v=' + Date.now() + '"><link rel="stylesheet" href="../assets/phoenix-fx.css?v=' + Date.now() + '">');</script>
+  <script>document.write('<link rel="stylesheet" href="admin.css?v=' + Date.now() + '"><link rel="stylesheet" href="../assets/admin-block.css?v=' + Date.now() + '"><link rel="stylesheet" href="../assets/phoenix-fx.css?v=' + Date.now() + '">');</script>
   <script src="../../plugins/system/global-func.js"></script>
   <script src="../../plugins/tablesort/tablesort.min.js"></script>
   <script src="../../plugins/system/slaed.js"></script>
@@ -56,7 +58,7 @@
                     <a href="../../admin.php?name=node&amp;type=news&amp;status=1" title="Новости"><i class="bi bi-newspaper" aria-hidden="true"></i> Новости <span class="sl-bell-num" data-sl-bell-n>2</span></a>
                   </span>
                 </span></li>
-                <li class="sl-set-item" data-mark="Э05 Э06 П2 П3 В07.5 Д4 Д12"><button type="button" data-sl-open="sl-settings" title="Опции" aria-label="Опции"><i class="bi bi-sliders" aria-hidden="true"></i></button></li>
+                <li class="sl-set-item" data-mark="Э05 Э06 П2 П3 В07.5 Д4 Д12 М10"><button type="button" data-sl-open="sl-settings" title="Опции" aria-label="Опции"><i class="bi bi-sliders" aria-hidden="true"></i></button></li>
               </ul>
             </div>
           </div>
@@ -98,30 +100,38 @@
               <div class="sl-block-sidebar-count-row"><div class="sl-block-sidebar-count-label"><a href="../../admin.php?name=node&amp;type=docs&amp;status=1" title="Документация"><i class="bi bi-puzzle" aria-hidden="true"></i> <span class="sl-menu-name">Документация</span></a></div><div class="sl-block-sidebar-count-value"><span class="sl-chip sl-chip-success">0</span></div></div>
             </div></div>
           </div>
-          <div class="sl-block-sidebar" data-demo-page="home">
+          <!-- А1 "Администрация" and "Наблюдение" as one block (variant 08 of the admin block series): it stands while the floating menu is switched off in Options -->
+          <div class="sl-block-sidebar sl-menu-watch sl-adm" data-demo-page="home" data-mark="А1 А8">
             <h3><button type="button" class="sl-menu-head" title="Свёртывание / Развёртывание" data-sl-toggle-control="sl-block-7"><b><i class="bi bi-person-gear" aria-hidden="true"></i><span class="sl-menu-name">Администрация</span></b><i class="bi bi-arrows-collapse sl-panel-toggle sl-panel-toggle-open" aria-hidden="true"></i><i class="bi bi-arrows-expand sl-panel-toggle sl-panel-toggle-closed" aria-hidden="true"></i></button></h3>
-            <div id="sl-block-7" class="sl-block-sidebar-content" data-sl-toggle="sl-block-7" data-mark="Н5">
-              <div class="sl-admin-block-links">
-                <div class="sl-admin-block-link" data-sl-menu-item="home"><a href="../../admin.php" title="Панель администратора"><i class="bi bi-house-door" aria-hidden="true"></i> <span class="sl-menu-name">Панель администратора</span></a></div>
-                <div class="sl-admin-block-link" data-sl-menu-item="logout"><a href="../../admin.php?op=logout" title="Выход"><i class="bi bi-box-arrow-right" aria-hidden="true"></i> <span class="sl-menu-name">Выход</span></a></div>
+            <div id="sl-block-7" class="sl-block-sidebar-content" data-sl-toggle="sl-block-7">
+              <div class="sl-adm-sum" data-sl-sess-box data-mark="Н4 Э13 А2 А4">
+                <button type="button" class="sl-adm-ring" data-sl-open="sl-stats" title="Кто на сайте — подробная статистика" aria-label="На сайте 2 — открыть подробную статистику" style="--sl-d-adm: 50%; --sl-d-people: 50%; --sl-d-bots: 50%;" data-mark="А3"><span><b>2</b><small>на сайте</small></span></button>
+                <div class="sl-adm-lines">
+                  <div class="sl-adm-line" data-kind="admin"><i class="bi bi-person-gear" aria-hidden="true"></i><span>Администрация</span><b>1</b></div>
+                  <div class="sl-adm-line" data-kind="user"><i class="bi bi-person-fill" aria-hidden="true"></i><span>Пользователей</span><b class="sl-zero">0</b></div>
+                  <div class="sl-adm-line" data-kind="bot"><i class="bi bi-robot" aria-hidden="true"></i><span>Поисковых ботов</span><b class="sl-zero">0</b></div>
+                  <div class="sl-adm-line" data-kind="guest"><i class="bi bi-people-fill" aria-hidden="true"></i><span>Гостей</span><b>1</b></div>
+                  <div class="sl-adm-line sl-adm-total"><i class="bi bi-people" aria-hidden="true"></i><span>Всего</span><b>2</b></div>
+                </div>
               </div>
-              <hr>
-              <div class="sl-admin-block-links">
-                <div class="sl-admin-block-link" data-sl-menu-item="backup"><a href="../../plugins/sxd/index.php" title="DB Backup - Sypex Dumper" target="_blank" rel="noopener noreferrer"><i class="bi bi-database-down" aria-hidden="true"></i> <span class="sl-menu-name">DB Backup - Sypex Dumper</span></a></div>
+              <div class="sl-adm-keys" data-mark="А5">
+                <a href="index.html" title="Главная страница панели" aria-label="Главная страница панели"><i class="bi bi-speedometer2" aria-hidden="true"></i></a>
+                <button type="button" class="sl-adm-stat" data-sl-open="sl-stats" title="Статистика посещаемости" aria-label="Статистика посещаемости"><i class="bi bi-activity" aria-hidden="true"></i></button>
+                <button type="button" class="sl-adm-fresh" data-sl-sess-refresh title="Обновить счётчики" aria-label="Обновить счётчики"><i class="bi bi-arrow-repeat" aria-hidden="true"></i></button>
+                <a class="sl-adm-site" href="/" target="_blank" rel="noopener noreferrer" title="Открыть сайт в новой вкладке" aria-label="Открыть сайт в новой вкладке"><i class="bi bi-globe2" aria-hidden="true"></i></a>
+                <button type="button" class="sl-adm-links sl-adm-dead" data-sl-toggle-control="sl-adm-own" data-sl-toggle-effect="slide" data-sl-toggle-duration="500" title="Свои ссылки: 5 — показать или скрыть" aria-label="Свои ссылки: 5 — показать или скрыть"><i class="bi bi-link-45deg" aria-hidden="true"></i><b class="sl-adm-n">5</b></button>
+                <a class="sl-adm-out" href="../../admin.php?op=logout" title="Выход" aria-label="Выход"><i class="bi bi-box-arrow-right" aria-hidden="true"></i></a>
+              </div>
+              <div id="sl-adm-own" class="sl-adm-own" data-sl-toggle="sl-adm-own" data-sl-toggle-default="open" data-mark="Н5 А6 А7">
+                <ul class="sl-adm-pm">
+                  <li><a href="../../plugins/sxd/index.php" title="DB Backup - Sypex Dumper" target="_blank" rel="noopener noreferrer"><i class="bi bi-database-down" aria-hidden="true"></i><span>DB Backup - Sypex Dumper</span><span class="sl-adm-flag" title="Ссылка не работает: файла plugins/sxd/index.php нет на сервере"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i>нет файла</span><i class="bi bi-chevron-right" aria-hidden="true"></i></a></li>
+                  <li><a href="https://github.com/SLAED-CMS/SLAED-CMS-6.3" title="SLAED CMS на GitHub" target="_blank" rel="noopener noreferrer"><i class="bi bi-github" aria-hidden="true"></i><span>SLAED CMS на GitHub</span><i class="bi bi-chevron-right" aria-hidden="true"></i></a></li>
+                  <li><a href="https://pagespeed.web.dev/" title="PageSpeed Insights — проверка скорости сайта" target="_blank" rel="noopener noreferrer"><i class="bi bi-speedometer" aria-hidden="true"></i><span>PageSpeed Insights</span><i class="bi bi-chevron-right" aria-hidden="true"></i></a></li>
+                  <li><a href="https://search.google.com/search-console" title="Google Search Console" target="_blank" rel="noopener noreferrer"><i class="bi bi-google" aria-hidden="true"></i><span>Google Search Console</span><i class="bi bi-chevron-right" aria-hidden="true"></i></a></li>
+                  <li><a href="https://webmaster.yandex.ru/" title="Яндекс Вебмастер" target="_blank" rel="noopener noreferrer"><i class="bi bi-bar-chart-line" aria-hidden="true"></i><span>Яндекс Вебмастер</span><i class="bi bi-chevron-right" aria-hidden="true"></i></a></li>
+                </ul>
               </div>
             </div>
-          </div>
-          <div class="sl-block-sidebar sl-menu-watch" data-demo-page="home">
-            <h3><button type="button" class="sl-menu-head" title="Наблюдение" data-sl-toggle-control="sl-block-8"><b><i class="bi bi-eye" aria-hidden="true"></i><span class="sl-menu-name">Наблюдение</span></b><i class="bi bi-arrows-collapse sl-panel-toggle sl-panel-toggle-open" aria-hidden="true"></i><i class="bi bi-arrows-expand sl-panel-toggle sl-panel-toggle-closed" aria-hidden="true"></i></button></h3>
-            <div id="sl-block-8" class="sl-block-sidebar-content" data-sl-toggle="sl-block-8" data-mark="Э13 Н4"><div data-sl-sess-box>
-              <div class="sl-session-line sl-session-line--icon"><div class="sl-session-icon"><i class="bi bi-person-gear" aria-hidden="true"></i></div><div><button type="button" class="sl-session-toggle" data-sl-toggle-control="sl-sess-admins" title="Подробнее">Администрация:</button></div><div class="sl-session-right">1</div></div>
-              <div id="sl-sess-admins" class="sl-session-list sl-session-hidden" data-sl-toggle="sl-sess-admins" data-sl-toggle-default="closed"><div class="sl-session-row"><div class="sl-session-name"><a href="https://whatismyipaddress.com/ip/127.0.0.1" title="1 сек. - IP Адрес: 127.0.0.1" target="_blank" rel="noopener noreferrer">SLAED CMS</a></div><div class="sl-session-module sl-session-note"><a href="../../admin.php" title="/admin.php">/admin.php</a></div></div></div>
-              <div class="sl-session-line sl-session-line--icon"><div class="sl-session-icon"><i class="bi bi-person" aria-hidden="true"></i></div><div>Пользователей:</div><div class="sl-session-right sl-zero">0</div></div>
-              <div class="sl-session-line sl-session-line--icon"><div class="sl-session-icon"><i class="bi bi-person-slash" aria-hidden="true"></i></div><div>Гостей:</div><div class="sl-session-right">1</div></div>
-              <div class="sl-session-line sl-session-line--icon"><div class="sl-session-icon"><i class="bi bi-people" aria-hidden="true"></i></div><div>Всего:</div><div class="sl-session-right">2</div></div>
-              <hr>
-              <div class="sl-session-action"><button type="button" class="sl-but" data-sl-sess-refresh>Обновить</button></div>
-            </div></div>
           </div>
         </aside>
         <main class="sl-admin-content" id="sl-main" tabindex="-1"><div class="sl-admin-content-inner">
@@ -345,6 +355,9 @@
       <div class="sl-set-row"><label class="sl-set-name" for="sl-o-motion"><i class="bi bi-magic" aria-hidden="true"></i>Движение</label><span class="sl-set-pick"><select id="sl-o-motion" name="motion" class="sl-select" data-sl-option><option value="1" selected>Включено</option><option value="0">Выключено</option></select></span></div>
       <div class="sl-set-row"><label class="sl-set-name" for="sl-o-sound"><i class="bi bi-volume-up" aria-hidden="true"></i>Звук</label><span class="sl-set-pick"><select id="sl-o-sound" name="sound" class="sl-select" data-sl-option><option value="1" selected>Включено</option><option value="0">Выключено</option></select></span></div>
       <div class="sl-set-row"><label class="sl-set-name" for="sl-o-saver"><i class="bi bi-fire" aria-hidden="true"></i>Заставка</label><span class="sl-set-pick"><select id="sl-o-saver" name="saver" class="sl-select" data-sl-option><option value="0">Выключена</option><option value="60000" selected>Через 1 минуту</option><option value="300000">Через 5 минут</option><option value="900000">Через 15 минут</option></select></span></div>
+      <div class="sl-set-row"><label class="sl-set-name" for="sl-o-dock"><i class="bi bi-capsule" aria-hidden="true"></i>Плавающее меню</label><span class="sl-set-pick"><select id="sl-o-dock" name="dock" class="sl-select" data-sl-option><option value="1" selected>Включено</option><option value="0">Выключено</option></select></span></div>
+      <div class="sl-set-row"><label class="sl-set-name" for="sl-o-dock-site"><i class="bi bi-globe2" aria-hidden="true"></i>Меню на сайте</label><span class="sl-set-pick"><select id="sl-o-dock-site" name="dock_site" class="sl-select" data-sl-option><option value="1" selected>Включено</option><option value="0">Выключено</option></select></span></div>
+      <div class="sl-set-row"><label class="sl-set-name" for="sl-o-dock-side"><i class="bi bi-arrows-move" aria-hidden="true"></i>Позиция меню</label><span class="sl-set-pick"><select id="sl-o-dock-side" name="dock_side" class="sl-select" data-sl-option><option value="" disabled hidden>Произвольная</option><option value="top">Сверху</option><option value="right">Справа</option><option value="bottom" selected>Снизу</option><option value="left">Слева</option></select></span></div>
       <div class="sl-set-row"><label class="sl-set-name" for="sl-o-editor"><i class="bi bi-pencil-square" aria-hidden="true"></i>Редактор</label><span class="sl-set-pick"><select id="sl-o-editor" name="editor" class="sl-select" data-sl-option><option value="plain">Plain Plus</option><option value="toastui">TOAST UI Markdown 3</option><option value="codemirror" selected>CodeMirror 6</option><option value="tinymce">TinyMCE 8 Community</option><option value="ckeditor">CKEditor 5</option></select></span></div>
       <div class="sl-set-row"><label class="sl-set-name" for="sl-o-lang"><i class="bi bi-translate" aria-hidden="true"></i>Язык</label><span class="sl-set-pick"><select id="sl-o-lang" name="newlang" class="sl-select" data-sl-option><option value="de">Немецкий</option><option value="en">Английский</option><option value="fr">Французский</option><option value="pl">Польский</option><option value="ru" selected>Русский</option><option value="uk">Украинский</option></select></span></div>
     </div>
@@ -352,10 +365,10 @@
 
   <!-- One section of the menu and one row of the list: the page draws the rest from the data below -->
   <template id="sl-menu-tpl">
-    <div class="sl-menu-list-item" data-sl-menu-item><a href="" title=""><i class="bi" aria-hidden="true"></i> <span class="sl-menu-name"></span></a><span class="sl-dial"><button class="sl-dial-toggle sl-but-mini" type="button" title="Опции" aria-label="Опции раздела"><i class="bi bi-three-dots" aria-hidden="true"></i></button><a class="sl-dial-item sl-but-mini" href="" title="Полное редактирование" data-m="edit"><i class="bi bi-pencil-square" aria-hidden="true"></i></a><a class="sl-dial-item sl-but-mini" href="" title="Конфигурации" data-m="conf"><i class="bi bi-gear" aria-hidden="true"></i></a><a class="sl-dial-item sl-but-mini" href="" title="Справка" data-m="info"><i class="bi bi-info-circle" aria-hidden="true"></i></a><button class="sl-dial-item sl-but-mini" type="button" title="Деактивировать" data-sl-section-off><i class="bi bi-power" aria-hidden="true"></i></button></span></div>
+    <div class="sl-menu-list-item" data-sl-menu-item><a href="" title=""><i class="bi" aria-hidden="true"></i> <span class="sl-menu-name"></span></a><span class="sl-dial"><button class="sl-dial-toggle sl-but-mini" type="button" title="Опции" aria-label="Опции раздела"><i class="bi bi-three-dots" aria-hidden="true"></i></button><a class="sl-dial-item sl-but-mini" href="" title="Полное редактирование" data-m="edit"><i class="bi bi-pencil-square" aria-hidden="true"></i></a><a class="sl-dial-item sl-but-mini" href="" title="Конфигурации" data-m="conf"><i class="bi bi-gear" aria-hidden="true"></i></a><a class="sl-dial-item sl-but-mini" href="" title="Справка" data-m="info"><i class="bi bi-info-circle" aria-hidden="true"></i></a><button class="sl-dial-item sl-but-mini" type="button" title="Закрепить в плавающем меню" data-sl-pin><i class="bi bi-pin-angle" aria-hidden="true"></i></button><button class="sl-dial-item sl-but-mini" type="button" title="Деактивировать" data-sl-section-off><i class="bi bi-power" aria-hidden="true"></i></button></span></div>
   </template>
   <template id="sl-card-tpl">
-    <article class="sl-menu-grid-item sl-mcard" data-sl-menu-item><a class="sl-mcard-link" href="" title=""><span class="sl-ico"><i class="bi" aria-hidden="true"></i><i class="sl-led sl-led-ok" title="Активирован"></i></span><span class="sl-mbody"><strong><span class="sl-menu-name"></span></strong><span data-m="sub"></span></span></a><span class="sl-dial"><button class="sl-dial-toggle sl-but-mini" type="button" title="Опции" aria-label="Опции раздела"><i class="bi bi-three-dots" aria-hidden="true"></i></button><a class="sl-dial-item sl-but-mini" href="" title="Полное редактирование" data-m="edit"><i class="bi bi-pencil-square" aria-hidden="true"></i></a><a class="sl-dial-item sl-but-mini" href="" title="Конфигурации" data-m="conf"><i class="bi bi-gear" aria-hidden="true"></i></a><a class="sl-dial-item sl-but-mini" href="" title="Справка" data-m="info"><i class="bi bi-info-circle" aria-hidden="true"></i></a><button class="sl-dial-item sl-but-mini" type="button" title="Деактивировать" data-sl-section-off><i class="bi bi-power" aria-hidden="true"></i></button></span></article>
+    <article class="sl-menu-grid-item sl-mcard" data-sl-menu-item><a class="sl-mcard-link" href="" title=""><span class="sl-ico"><i class="bi" aria-hidden="true"></i><i class="sl-led sl-led-ok" title="Активирован"></i></span><span class="sl-mbody"><strong><span class="sl-menu-name"></span></strong><span data-m="sub"></span></span></a><span class="sl-dial"><button class="sl-dial-toggle sl-but-mini" type="button" title="Опции" aria-label="Опции раздела"><i class="bi bi-three-dots" aria-hidden="true"></i></button><a class="sl-dial-item sl-but-mini" href="" title="Полное редактирование" data-m="edit"><i class="bi bi-pencil-square" aria-hidden="true"></i></a><a class="sl-dial-item sl-but-mini" href="" title="Конфигурации" data-m="conf"><i class="bi bi-gear" aria-hidden="true"></i></a><a class="sl-dial-item sl-but-mini" href="" title="Справка" data-m="info"><i class="bi bi-info-circle" aria-hidden="true"></i></a><button class="sl-dial-item sl-but-mini" type="button" title="Закрепить в плавающем меню" data-sl-pin><i class="bi bi-pin-angle" aria-hidden="true"></i></button><button class="sl-dial-item sl-but-mini" type="button" title="Деактивировать" data-sl-section-off><i class="bi bi-power" aria-hidden="true"></i></button></span></article>
   </template>
   <template id="sl-row-tpl">
     <tr data-sl-row>
@@ -429,7 +442,7 @@
       <div class="sl-set-row"><span class="sl-set-name" id="demo-l-session"><i class="bi bi-hourglass-bottom" aria-hidden="true"></i>Конец сессии</span><span class="sl-set-pick"><span class="sl-seg sl-seg-view demo-seg-text" data-sl-knob="demo-session" role="group" aria-labelledby="demo-l-session" data-demo-seg="session"><button type="button" class="sl-seg-cell" data-demo-val="1" title="Да" aria-label="Да" aria-pressed="false">Да</button><button type="button" class="sl-seg-cell" data-demo-val="0" title="Нет" aria-label="Нет" aria-pressed="false">Нет</button><span class="sl-seg-knob" data-sl-knob-mark aria-hidden="true"></span></span></span></div>
       <div class="sl-set-row"><span class="sl-set-name" id="demo-l-flow"><i class="bi bi-inbox" aria-hidden="true"></i>Поток заявок</span><span class="sl-set-pick"><span class="sl-seg sl-seg-view demo-seg-text" data-sl-knob="demo-flow" role="group" aria-labelledby="demo-l-flow" data-demo-seg="flow"><button type="button" class="sl-seg-cell" data-demo-val="1" title="Да" aria-label="Да" aria-pressed="false">Да</button><button type="button" class="sl-seg-cell" data-demo-val="0" title="Нет" aria-label="Нет" aria-pressed="false">Нет</button><span class="sl-seg-knob" data-sl-knob-mark aria-hidden="true"></span></span></span></div>
     </div>
-    <div class="sl-modal-foot"><a class="sl-modal-btn" href="../index.html" title="Все варианты стенда">Варианты</a> <button type="button" class="sl-modal-btn" data-demo-reset title="Сбросить выбор: тема, движение, звук, заставка, меню, вид, сортировка, пометки, место окна">Сбросить</button></div>
+    <div class="sl-modal-foot"><a class="sl-modal-btn" href="../index.html" title="Все варианты стенда">Варианты</a> <a class="sl-modal-btn" href="../site/" title="Эталон сайта: блок «Администрация» и плавающее меню на теме lite">Сайт</a> <button type="button" class="sl-modal-btn" data-demo-reset title="Сбросить выбор: тема, движение, звук, заставка, меню, вид, сортировка, пометки, место окна">Сбросить</button></div>
   </dialog>
   <div class="demo-marks" data-demo-layer aria-hidden="true"></div>
   <dialog class="sl-modal demo-sounds" id="demo-sounds" data-sl-window data-demo-sounds aria-labelledby="demo-snd-cap">
@@ -450,10 +463,56 @@
     </div>
     <div class="sl-modal-foot"><a class="sl-modal-btn" href="../snd-01-lab.html" target="_blank" rel="noopener">Лаборатория</a></div>
   </dialog>
+  <!-- А3 М13 The window of the live statistics: fragments/window.html and the window mechanics of slaed.js; the stand gives its own two sessions -->
+  <dialog class="sl-modal sl-modal-lg sl-stats" id="sl-stats" data-sl-window aria-labelledby="sl-stats-cap">
+    <div class="sl-modal-title">
+      <i class="bi bi-activity" aria-hidden="true"></i>
+      <span class="sl-modal-cap"><strong id="sl-stats-cap">Наблюдение</strong><span class="sl-modal-sub">Посещаемость в реальном времени</span></span>
+      <span class="sl-modal-acts">
+        <span class="sl-modal-act sl-modal-act-move" title="Переместить" aria-hidden="true"><i class="bi bi-grip-vertical"></i></span>
+        <button type="button" class="sl-modal-act" data-sl-full data-expand="Развернуть" data-restore="Свернуть" title="Развернуть" aria-label="Развернуть"><i class="bi bi-arrows-angle-expand" aria-hidden="true"></i></button>
+        <button type="button" class="sl-modal-act sl-modal-act-close" data-sl-close title="Закрыть" aria-label="Закрыть"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
+      </span>
+    </div>
+    <div class="sl-modal-bar sl-stats-bar">
+      <div class="sl-stats-segs" role="group" aria-label="Кого показать">
+        <button type="button" class="sl-stats-seg" data-sl-stats-kind="all" aria-pressed="true">Все <b>2</b></button>
+        <button type="button" class="sl-stats-seg" data-sl-stats-kind="admin" aria-pressed="false">Админы <b>1</b></button>
+        <button type="button" class="sl-stats-seg" data-sl-stats-kind="user" aria-pressed="false">Пользователи <b>0</b></button>
+        <button type="button" class="sl-stats-seg" data-sl-stats-kind="bot" aria-pressed="false">Боты <b>0</b></button>
+        <button type="button" class="sl-stats-seg" data-sl-stats-kind="guest" aria-pressed="false">Гости <b>1</b></button>
+      </div>
+      <button type="button" class="sl-stats-live" data-sl-stats-pause aria-pressed="false" title="Пауза / продолжить"><i class="sl-stats-dot" aria-hidden="true"></i><span data-sl-stats-state>в эфире</span><small>· каждые 10 сек</small></button>
+    </div>
+    <div class="sl-modal-body">
+      <div class="sl-stats-kpis">
+        <div><small>На сайте сейчас</small><b>2</b></div>
+        <div><small>Пик за час</small><b>2</b></div>
+        <div><small>В среднем за час</small><b>2</b></div>
+        <div><small>Стран</small><b>0</b></div>
+      </div>
+      <div class="sl-stats-chart"><svg viewBox="0 0 120 36" preserveAspectRatio="none" role="img" aria-label="Посещаемость за последний час"><polygon points="0,36 0.0,20.1 10.9,6.2 21.8,20.1 32.7,20.1 43.6,6.2 54.5,6.2 65.5,20.1 76.4,6.2 87.3,6.2 98.2,20.1 109.1,6.2 120.0,6.2 120,36" class="sl-stats-area"/><polyline points="0.0,20.1 10.9,6.2 21.8,20.1 32.7,20.1 43.6,6.2 54.5,6.2 65.5,20.1 76.4,6.2 87.3,6.2 98.2,20.1 109.1,6.2 120.0,6.2" class="sl-stats-line"/></svg><div class="sl-stats-axis"><span>60 мин</span><span>45</span><span>30</span><span>15</span><span>сейчас</span></div></div>
+      <div class="sl-stats-shares" title="Доли: администрация, пользователи, боты, гости"><i data-kind="admin" style="--sl-d-share: 50%"></i><i data-kind="user" style="--sl-d-share: 0%"></i><i data-kind="bot" style="--sl-d-share: 0%"></i><i data-kind="guest" style="--sl-d-share: 50%"></i></div>
+      <div class="sl-stats-cols">
+        <div class="sl-stats-box"><p class="sl-stats-cap"><i class="bi bi-people" aria-hidden="true"></i> Кто и где <small>2</small></p>
+          <ul class="sl-stats-rows" data-sl-stats-rows>
+            <li class="sl-stats-row" data-kind="admin"><img src="../../templates/lite/images/avatars/presets/038.svg" alt=""><span><b>SLAED CMS</b><a href="../../admin.php" title="/admin.php">/admin.php</a></span><span class="sl-stats-kind">Админ</span><span class="sl-stats-where"><a href="https://whatismyipaddress.com/ip/127.0.0.1" target="_blank" rel="noopener noreferrer" title="IP Адрес: 127.0.0.1">127.0.0.1</a><small>1 сек</small></span></li>
+            <li class="sl-stats-row" data-kind="guest"><img src="../../templates/lite/images/avatars/system/guest.svg" alt=""><span><b>Гость</b><a href="/news" title="/news">/news</a></span><span class="sl-stats-kind">Гость</span><span class="sl-stats-where"><a href="https://whatismyipaddress.com/ip/127.0.0.1" target="_blank" rel="noopener noreferrer" title="IP Адрес: 127.0.0.1">127.0.0.1</a><small>12 сек</small></span></li>
+          </ul>
+          <p class="sl-stats-more" data-sl-stats-empty hidden>Сейчас таких на сайте нет</p>
+        </div>
+        <div class="sl-stats-side">
+          <div class="sl-stats-box"><p class="sl-stats-cap"><i class="bi bi-file-earmark-text" aria-hidden="true"></i> Открытые страницы</p><ol class="sl-stats-top"><li><span title="/admin.php">/admin.php</span><i style="--sl-d-share: 100%"></i><b>1</b></li><li><span title="/news">/news</span><i style="--sl-d-share: 100%"></i><b>1</b></li></ol></div>
+          <div class="sl-stats-box"><p class="sl-stats-cap"><i class="bi bi-globe2" aria-hidden="true"></i> Страны</p><p class="sl-stats-more">127.0.0.1 — локальный адрес стенда, по нему страну не определить (Geoip).</p></div>
+        </div>
+      </div>
+    </div>
+    <div class="sl-modal-foot sl-stats-foot"><span>Обновлено: <b data-sl-stats-ago>только что</b></span><a class="sl-but" href="../../admin.php?name=statistic" title="Статистика сайта"><i class="bi bi-graph-up" aria-hidden="true"></i> Статистика сайта</a></div>
+  </dialog>
   <dialog class="sl-modal sl-modal-sm demo-legend" id="demo-legend" data-sl-window data-demo-legend aria-labelledby="demo-legend-cap">
     <div class="sl-modal-title"><i class="bi bi-list-check" aria-hidden="true"></i> <span class="sl-modal-cap"><strong id="demo-legend-cap">Описание</strong><span class="sl-modal-sub">Перенесённые решения</span></span> <span class="sl-modal-acts"><span class="sl-modal-act sl-modal-act-move" title="Перетащить" aria-hidden="true"><i class="bi bi-grip-vertical"></i></span><button type="button" class="sl-modal-act sl-modal-act-close" data-sl-close title="Закрыть" aria-label="Закрыть"><i class="bi bi-x-lg" aria-hidden="true"></i></button></span></div>
     <div class="sl-modal-body">
-    <p class="demo-legend-note">Эталон главной панели (index.html) и «Комментариев» (index.html?name=comments) на компонентах темы admin, по серии «Эталон панели» (ux-01 … ux-09); пометки показаны для открытой страницы. Флажок прячет пометку кода, «Показать» ведёт к элементу или запускает механику; Alt+щелчок по метке на странице открывает её описание. Э — эталон 01, В — варианты 02, 07, 08, 09, Н — возвращено из живой панели, П — правки владельца на стенде, Д — дополнения к эталону, Г — главная панели.</p>
+    <p class="demo-legend-note">Эталон главной панели (index.html) и «Комментариев» (index.html?name=comments) на компонентах темы admin, по серии «Эталон панели» (ux-01 … ux-09); пометки показаны для открытой страницы. Флажок прячет пометку кода, «Показать» ведёт к элементу или запускает механику; Alt+щелчок по метке на странице открывает её описание. Э — эталон 01, В — варианты 02, 07, 08, 09, Н — возвращено из живой панели, П — правки владельца на стенде, Д — дополнения к эталону, Г — главная панели, М — плавающее меню, А — блок «Администрация» (серия «Блок администратора» стенда, варианты 09 и 08); их сайтовая сторона — в эталоне сайта ../site/ (кнопка «Сайт» окна «Стенд»).</p>
     <label class="demo-legend-all"><input type="checkbox" class="sl-check" data-demo-all checked> Все пометки</label>
     <div data-demo-list>
       <h3>П · правки владельца на стенде — перенять в оригинал</h3>
@@ -488,7 +547,7 @@
         <li data-code="Г2">«Найти раздел» и Ctrl+K на главной ищут по карточкам: неподходящие уходят, пустая панель прячется, иначе — «Раздел не найден» над панелями; колонка слева остаётся как есть; клавиша «/» ставит курсор в поиск.</li>
         <li data-code="Г3">Карточка раздела как в живой панели; веер как в меню (Н6): «Деактивировать» без вопроса, с «Отменить» — лампочка гаснет, карточка тускнеет.</li>
         <li data-code="Г4">На карточке «Комментарии» — чип очереди «3» (Э10).</li>
-        <li data-code="Г5">Колонка главной: «Ждут внимания» (Г8), «Администрация» (Н5), «Наблюдение» (Н4, Э13); строка «Комментарии» ведёт сразу на очередь. Меню разделов здесь заменяют карточки.</li>
+        <li data-code="Г5">Колонка главной: «Ждут внимания» (Г8) и блок «Администрация» (А1) — он стоит при любом состоянии плавающего меню и заменил прежние «Администрацию» и «Наблюдение»; строка «Комментарии» ведёт сразу на очередь. Меню разделов здесь заменяют карточки.</li>
         <li data-code="Г6" data-show="rail">В балке на главной строки «Ждут внимания» — все девять иконок с числом на углу, нули тоже; блоки через черту, как в меню (В09).</li>
         <li data-code="Г7">Кнопка «…» карточки появляется, только пока карточка под курсором или в фокусе; в покое сетка из 33 карточек стоит без кнопок. В живой панели «…» видна на каждой карточке всегда. Веер раскрывается, когда наводят на саму «…». На сенсорном экране «…» видна всегда (наведения там нет). Правило общее с меню (Э11).</li>
         <li data-code="Г8">«Новые» и «Ждут проверки» живой панели слиты в один блок «Ждут внимания» — с теми же строками, названиями, порядком и ссылками, что у колокольчика (Э04): сначала то, что ждёт, по убыванию числа, нули ниже, с зелёным 0. Колокольчик остаётся на всех страницах, блок — его развёрнутая версия на главной. Для переноса: в системе эти блоки собираются раздельно — нужен один источник очередей для колокольчика и блока.</li>
@@ -514,7 +573,7 @@
         <li data-code="Э10">Открытый раздел отмечен: заливка плашки, синий край во всю высоту поверх левой рамки — на концах он загибается по скруглённым углам плашки и сходит в острие, aria-current; на пункте чип очереди «3».</li>
         <li data-code="Э11">«…» у пунктов меню — только при наведении и в фокусе, в покое меню без кнопок.</li>
         <li data-code="Э12" data-show="phone">Телефон: кнопка «Меню» в шапке, меню выезжает панелью поверх, содержимое первым.</li>
-        <li data-code="Э13">«Наблюдение» (на главной): нули приглушены, а не теряются на фоне.</li>
+        <li data-code="Э13">Нули сводки посетителей приглушены, а не теряются на фоне — теперь в сводке блока «Администрация» (А2).</li>
         <li data-code="Э14" data-show="session">Конец сессии: окно с отсчётом, «Продлить сессию» и «Выйти» (в палитре — «Смоделировать конец сессии»).</li>
       </ul>
       <h3>Э · список «Комментариев»</h3>
@@ -539,8 +598,8 @@
       <ul class="sl-reset">
         <li data-code="Н1">Поиск по всем полям оригинала: №, «Комментарий», «Разместил», «Модуль», «IP Адрес»; в списке модулей есть «Вопросы и ответы».</li>
         <li data-code="Н3">В подсказке ⓘ IP с флагом страны и ссылкой на whatismyipaddress, как в оригинале.</li>
-        <li data-code="Н4">«Наблюдение» — на главной: «Администрация:» раскрывает список сессий (кнопкой), под счётчиками «Обновить».</li>
-        <li data-code="Н5">Блок «Администрация» — на главной: «Панель администратора», «Выход», «DB Backup — Sypex Dumper»; в балке — иконками.</li>
+        <li data-code="Н4" data-show="stats">«Наблюдение» живой панели перенесено: счётчики — сводкой блока «Администрация» (А2), «Обновить» — его клавишей (А5), список сессий — окном «Наблюдение» (А3), а в плавающем меню — кольцом «Наблюдения» (М13).</li>
+        <li data-code="Н5" data-show="adm">Блок «Администрация» живой панели: «Панель администратора», «Выход» и свои ссылки после черты («DB Backup — Sypex Dumper» из блока id 2) — теперь в плавающем меню (М2) и в объединённом блоке (А1: клавиши А5, свои ссылки А6).</li>
         <li data-code="Н6">Веер раздела как в оригинале: «Полное редактирование», «Конфигурации» (у 15 разделов), «Справка», «Деактивировать» — без вопроса, с «Отменить».</li>
       </ul>
       <h3>В02 · вид списка</h3>
@@ -571,10 +630,38 @@
       <ul class="sl-reset">
         <li data-code="В09.1" data-show="rail">Кнопка в шапке меню и клавиша [ сворачивают меню в узкую балку иконок; колонка 300 px уходит контенту (+242 px на 1440).</li>
         <li data-code="В09.2" data-show="rail">Балка в одежде верхней панели: градиент, рамка, сплошная плашка под рукой.</li>
-        <li data-code="В09.3" data-show="rail">В балке сразу все 33 раздела иконками, блоками «Администратор» и «Модули» через черту; на главной балка несёт блоки главной, «Наблюдение» — панелью счётчиков у иконки. Это то же меню, свёрнутое стилями, а не второе.</li>
+        <li data-code="В09.3" data-show="rail">В балке сразу все 33 раздела иконками, блоками «Администратор» и «Модули» через черту; на главной балка несёт блоки главной, блок «Администрация» (А1) — панелью у своей иконки (А8). Это то же меню, свёрнутое стилями, а не второе.</li>
         <li data-code="В09.4" data-show="rail">Под рукой у иконки справа — тот же веер, что в развёрнутом меню (Н6).</li>
         <li data-code="В09.5" data-show="rail">Стрелки ходят по иконкам; открытый раздел отмечен кромкой и очередью.</li>
         <li data-code="В09.6" data-show="rail">Выбор запоминается и ставится до первой отрисовки — страница не дёргается; на телефоне балки нет.</li>
+      </ul>
+      <h3>М · плавающее меню — серия «Блок администратора», вариант 09</h3>
+      <ul>
+        <li data-code="М1">Плавающее меню — слой поверх панели: колонка, шапка и контент под ним не меняются. Меню вспомогательное и несёт то, что несли блоки «Администрация» и «Наблюдение»; на сайте — такое же (серия стенда, ab-09-menu.html).</li>
+        <li data-code="М2">Сплошная таблетка круглых иконок: знак SLAED (главная панели), закреплённые разделы, «Быстрый переход», «Наблюдение», свои ссылки, админ, «Выход»; после «Выхода» черта и три кнопки управления.</li>
+        <li data-code="М3">Таблетка держит свой размер: растёт только иконка под курсором — над полкой, как в доке macOS; подпись иконки остаётся своего размера. Увеличение отключается в окне админа (М14).</li>
+        <li data-code="М4">Подписи, окна и рост иконок поворачиваются туда, где есть место: от таблетки внизу — вверх, наверху — вниз, у левого края — вправо, у правого — влево.</li>
+        <li data-code="М5" data-show="dockmove">Ручка — крайняя справа: тянет меню в любое место экрана, позиция запоминается и сохраняется после обновления страницы. Без мыши: стрелки на ручке двигают меню (с Shift — быстрее), Home возвращает его в позицию из «Опций» (М10); WCAG 2.5.7.</li>
+        <li data-code="М6" data-show="dockturn">Поворот: по умолчанию меню горизонтальное, кнопка делает его вертикальным той же толщины; вертикальное меню без своей позиции встаёт у правого края посередине, а не поверх контента; на низком экране иконки вертикального меню ужимаются до 32 px, чтобы меню стояло целиком.</li>
+        <li data-code="М7" data-show="dockfold">Сворачивание — движение левых блоков панели (slide 500 мс, линейно, как setSlideMotion в slaed.js) вдоль оси таблетки; остаются знак SLAED и кнопки, кнопка не уходит из-под руки. Для переноса — опция оси в setSlideMotion.</li>
+        <li data-code="М8">Три кнопки управления — кнопки системного окна (sl-modal-act в sl-modal-acts): без фона в покое, фон и тон окна под рукой, у ручки — зелёный тон «Переместить».</li>
+        <li data-code="М9">Закреплённые разделы, до восьми: «Закрепить в плавающем меню» в веере «…» раздела (Н6) — в меню и на карточках главной, с «Отменить» (Э23). Открытый раздел отмечен светящейся полоской бренда под иконкой и aria-current.</li>
+        <li data-code="М10" data-show="options">«Опции» (Э06): «Плавающее меню» — в панели, «Меню на сайте» — на сайте, «Позиция меню» — селектом «Сверху · Справа · Снизу · Слева», по умолчанию «Снизу»; применяется сразу. Сверху и снизу меню горизонтальное, по центру края; справа и слева — вертикальное, посередине края; если меню перетащили ручкой (М5), селект показывает «Произвольная» — это не выбор, а честное состояние: иначе он показывал бы край, у которого меню уже нет; выбор края возвращает меню к нему. Блок «Администрация» (А1) от меню не зависит.</li>
+        <li data-code="М11" data-show="palette">«Быстрый переход» в меню — палитра Ctrl+K (Э08), один механизм с двумя входами. Очереди в меню панели нет: её держат колокольчик (Э04) и «Ждут внимания» (Г8).</li>
+        <li data-code="М12">Уведомление «Отменить» (Э23) остаётся внизу по центру и поднимается над меню, когда горизонтальное меню стоит на его месте; высокое вертикальное меню оно обходит сбоку, а не уезжает к верху экрана; поле в фокусе не уходит под меню (scroll-padding, WCAG 2.4.11).</li>
+        <li data-code="М13" data-show="stats">«Наблюдение» в меню — кольцо долей с числом посетителей; щелчок открывает окно «Наблюдение» (А3).</li>
+        <li data-code="М14">Окно админа на аватаре: кто вошёл, когда вошёл, прошлый вход, IP-адрес, сколько осталось до конца сеанса; «Положение меню» — горизонтально или вертикально, «Вернуть на место» (край из «Опций», М10), увеличение иконок, «Свернуть меню».</li>
+      </ul>
+      <h3>А · блок «Администрация» — серия «Блок администратора», вариант 08</h3>
+      <ul>
+        <li data-code="А1" data-show="adm">«Администрация» и «Наблюдение» — один блок колонки главной. Он стоит всегда, при включённом и выключенном плавающем меню (М10): меню — быстрый доступ поверх панели, блок — постоянное место в колонке.</li>
+        <li data-code="А2">Сводка — нижняя часть блока пользователя сайта: кольцо долей и строки «Администрация · Пользователей · Поисковых ботов · Гостей · Всего»; нули приглушены (Э13).</li>
+        <li data-code="А3" data-show="stats">Кольцо и клавиша «Статистика» открывают окно «Наблюдение» — системное окно (fragments/window.html, механика окон slaed.js: перенос, «Развернуть», закрытие): фильтр по типу посетителей, «в эфире» с паузой и «Обновлено N сек назад», показатели, график часа, полоса долей, «Кто и где», «Открытые страницы», «Страны», «Статистика сайта».</li>
+        <li data-code="А4">Цвета — легенда кольца: администрация фиолетовая со своим сектором, пользователи зелёные, боты оранжевые, гости синие; «Всего» нейтральное, с иконкой bi-people, как в блоке пользователя на сайте. Красный — только опасность и «Выход».</li>
+        <li data-code="А5">Шесть квадратных клавиш, только иконки — с подсказкой и именем для чтеца: «Главная страница панели», «Статистика посещаемости», «Обновить счётчики» (Н4), «Открыть сайт в новой вкладке», «Свои ссылки — показать или скрыть» (число на углу), «Выход».</li>
+        <li data-code="А6">Свои ссылки — ссылки, добавленные в настройках блока «Администрация» (id 2, после черты), общие для всех суперадминистраторов: на стенде пять: DB Backup - Sypex Dumper (файла нет, А7), SLAED CMS на GitHub, PageSpeed Insights, Google Search Console, Яндекс Вебмастер; развёрнуты по умолчанию и стоят строками блока пользователя сайта — черта, сдвиг и тон бренда под рукой, шеврон; клавиша «Ссылки» сворачивает их слайдом.</li>
+        <li data-code="А7">Ремонт живого блока: ссылка на файл, которого нет на сервере, помечена «нет файла» (plugins/sxd) — блок видит только администратор; javascript:OpenWindow — обычная ссылка в новой вкладке, адрес без корня читается от корня сайта.</li>
+        <li data-code="А8" data-show="rail">В балке (В09) блок — одна иконка, под рукой и в фокусе открывается целиком рядом с ней.</li>
       </ul>
     </div>
     </div>

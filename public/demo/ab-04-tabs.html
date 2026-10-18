@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="ru" data-theme="auto">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>04 &middot; Вкладки — стенд блока администратора SLAED CMS</title>
+  <script>document.write('<script src="assets/ablock.js?v=' + Date.now() + '"><\/script>');</script>
+  <style>
+    /* 04 Вкладки - two blocks in the height of one. A segmented switch at the top picks "Наблюдение" (the summary of
+       the visitors, the default) or "Администрация" (the panel, the logout, the owner's links); the figure on the first
+       tab keeps counting while the other is open. The choice is remembered, as the theme's tabs remember theirs.
+
+       Transfer: the tab mechanics of slaed.js (data-sl-tab) over two panes of one fragment */
+
+    .v-seg {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--sl-space-1);
+      margin-bottom: var(--sl-space-4);
+      padding: var(--sl-space-1);
+      border-radius: var(--sl-radius-pill);
+      background: var(--sl-bg-muted);
+    }
+
+    .v-seg button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--sl-space-2);
+      height: var(--sl-size-chip);
+      border: 0;
+      border-radius: var(--sl-radius-pill);
+      background: none;
+      color: var(--sl-text-muted);
+      font: inherit;
+      font-size: var(--sl-font-small);
+      cursor: pointer;
+    }
+
+    .v-seg button[aria-selected="true"] {
+      background: var(--sl-bg);
+      box-shadow: var(--sl-shadow-xs);
+      color: var(--sl-text);
+      font-weight: var(--sl-weight-semibold);
+    }
+
+    .v-seg b {
+      padding: 0 var(--sl-space-2);
+      border-radius: var(--sl-radius-pill);
+      background: var(--sl-primary);
+      color: var(--sl-on-solid);
+      font-size: var(--sl-font-micro);
+    }
+
+    .v-pane[hidden] {
+      display: none;
+    }
+
+    .v-pane .ab-pm {
+      margin-top: 0;
+    }
+  </style>
+  <script>
+    const V_KEY = 'ab.tabs.pane';
+    window.AB_FACE = {
+      blocks(d) {
+        const { ico, rows, line, free, block, summary } = window.AB;
+        let pane = 'watch';
+        try { pane = localStorage.getItem(V_KEY) || 'watch'; } catch (e) { /* storage may be off */ }
+        const tab = (k, icon, label, extra) => `<button type="button" role="tab" id="v-tab-${k}" aria-controls="v-pane-${k}" aria-selected="${pane === k}" data-v-tab="${k}">${ico(icon)} ${label}${extra || ''}</button>`;
+        const seg = `<div class="v-seg" role="tablist" aria-label="${d.title}">${tab('watch', 'eye', 'Наблюдение', ` <b data-ab-n="all">${d.who.all}</b>`)}${tab('admin', 'person-gear', 'Администрация')}</div>`;
+        const watch = `<div class="v-pane" role="tabpanel" id="v-pane-watch" aria-labelledby="v-tab-watch"${pane === 'watch' ? '' : ' hidden'}>${summary(d)}</div>`;
+        const admin = `<div class="v-pane" role="tabpanel" id="v-pane-admin" aria-labelledby="v-tab-admin"${pane === 'admin' ? '' : ' hidden'}>${rows(d, [d.home, { ...d.logout, cls: 'ab-out' }])}${line(d)}${rows(d, d.extras.items)}${free(d)}</div>`;
+        return block(d, { id: 7, title: d.title }, seg + watch + admin);
+      },
+      after() {
+        if (window.V_BOUND) return;
+        window.V_BOUND = true;
+        document.addEventListener('click', (e) => {
+          const t = e.target.closest('[data-v-tab]');
+          if (!t) return;
+          const k = t.dataset.vTab;
+          try { localStorage.setItem(V_KEY, k); } catch (err) { /* storage may be off */ }
+          t.parentNode.querySelectorAll('[data-v-tab]').forEach((b) => b.setAttribute('aria-selected', String(b === t)));
+          document.querySelectorAll('.v-pane').forEach((p) => { p.hidden = p.id !== 'v-pane-' + k; });
+        });
+      },
+    };
+  </script>
+</head>
+<body>
+  <script>document.write('<script src="assets/demo.js?v=' + Date.now() + '"><\/script>');</script>
+</body>
+</html>

@@ -1,0 +1,992 @@
+/* The admin block series (ab-NN-*.html): the parts every face shares - the stand desk, the block form of the panel,
+   the news column of the site and the marks of a link that needs the owner's eye. A face carries its own look under
+   v-* in its own <style>; nothing here paints the block itself */
+
+.ab-stage {
+  display: grid;
+  gap: var(--sl-space-4);
+  margin-bottom: var(--sl-space-6);
+  padding: var(--sl-space-5);
+  border: 1px dashed var(--sl-border);
+  border-radius: var(--sl-radius-2);
+  background: var(--sl-surface);
+}
+
+.ab-stage-cap {
+  display: flex;
+  align-items: center;
+  gap: var(--sl-space-3);
+  margin: 0;
+  color: var(--sl-text);
+  font-size: var(--sl-font-h4);
+  font-weight: var(--sl-weight-semibold);
+}
+
+.ab-stage-cap small {
+  margin-left: auto;
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-small);
+  font-weight: var(--sl-weight-normal);
+}
+
+.ab-stage-rows {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: var(--sl-space-3) var(--sl-space-5);
+  align-items: center;
+}
+
+.ab-stage-rows > span {
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-small);
+}
+
+.ab-seg {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sl-space-2);
+}
+
+.ab-seg button,
+.ab-seg a {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sl-space-2);
+  height: var(--sl-size-chip);
+  padding: 0 var(--sl-space-4);
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-pill);
+  background: var(--sl-bg);
+  color: var(--sl-text-muted);
+  font: inherit;
+  font-size: var(--sl-font-small);
+  cursor: pointer;
+  text-decoration: none;
+  transition: background-color var(--sl-time-fast) var(--sl-ease-out), color var(--sl-time-fast) var(--sl-ease-out);
+}
+
+.ab-seg button:hover,
+.ab-seg a:hover {
+  color: var(--sl-primary);
+}
+
+.ab-seg [aria-pressed="true"],
+.ab-seg [aria-pressed="true"]:hover,
+.ab-seg [aria-current="page"],
+.ab-seg [aria-current="page"]:hover {
+  border-color: var(--sl-primary);
+  background: var(--sl-primary);
+  color: var(--sl-on-solid);
+}
+
+.ab-stage-note {
+  margin: 0;
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-small);
+  line-height: var(--sl-line-normal);
+}
+
+/* The two fields of the live block form that make the block: the title and the content after the line */
+.ab-form textarea {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 132px;
+  font-family: var(--sl-face-mono);
+  font-size: var(--sl-font-small);
+}
+
+.ab-form-hint {
+  display: block;
+  margin-top: var(--sl-space-2);
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-small);
+}
+
+/* A link the owner should look at: it leads nowhere, or it was a script popup the stand opens as a tab */
+.ab-flag {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sl-space-1);
+  margin-left: auto;
+  padding: 0 var(--sl-space-3);
+  border-radius: var(--sl-radius-pill);
+  background: color-mix(in srgb, var(--sl-warning) 16%, transparent);
+  color: var(--sl-warning-strong);
+  font-size: var(--sl-font-micro);
+  font-weight: var(--sl-weight-medium);
+  line-height: 1.45;
+  white-space: nowrap;
+}
+
+.ab-ext {
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-micro);
+}
+
+.ab-free {
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-small);
+  line-height: var(--sl-line-normal);
+}
+
+.ab-free p {
+  margin: 0 0 var(--sl-space-3);
+}
+
+/* The site column: a news page as the admin reads it */
+.ab-news {
+  padding: var(--sl-space-5) 0;
+  border-bottom: 1px solid var(--sl-border-subtle, var(--sl-border));
+}
+
+.ab-news h2 {
+  margin: 0 0 var(--sl-space-3);
+  font-size: var(--sl-font-h3);
+}
+
+.ab-news-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sl-space-3);
+  margin-bottom: var(--sl-space-3);
+}
+
+.ab-news p {
+  margin: 0;
+  color: var(--sl-text-muted);
+  line-height: var(--sl-line-loose);
+}
+
+/* "No column": the page of the site that carries no sidebar, where the block cannot reach the admin at all */
+[data-ab-nocol] #sidebar {
+  display: none;
+}
+
+[data-ab-nocol] #container.sl-has-right {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+[data-ab-nocol] #content {
+  max-width: none;
+}
+
+/* "Наблюдение" in the panel: a zero is quiet rather than lost on the ground (Э13 of the etalon) */
+.ab-zero {
+  color: var(--sl-text-muted);
+  opacity: var(--sl-fade-muted);
+}
+
+/* The line before the owner's links, with its caption */
+.ab-line {
+  display: flex;
+  align-items: center;
+  gap: var(--sl-space-3);
+  margin: var(--sl-space-3) 0 var(--sl-space-2);
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-micro);
+  font-weight: var(--sl-weight-semibold);
+  letter-spacing: var(--sl-track-wide);
+  text-transform: uppercase;
+}
+
+.ab-line::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--sl-border);
+}
+
+/* Site rows: the list of the user block, without the margin it keeps under the avatar and the rule under the last */
+.ab-pm.sl-block-pm {
+  margin-top: 0;
+}
+
+.ab-pm.sl-block-pm li:last-child a {
+  border-bottom: 0;
+}
+
+/* Leaving closes the session; under the hand it reads as that, not as one more way somewhere */
+.ab-out a:hover,
+.ab-out a:focus-visible,
+.ab-out a:hover > .bi:first-child,
+a.ab-out:hover,
+a.ab-out:focus-visible {
+  color: var(--sl-danger);
+}
+
+[data-ab-ctx="admin"] .ab-free {
+  padding: var(--sl-space-2);
+}
+
+[data-ab-ctx="site"] .ab-free {
+  padding: var(--sl-space-3) var(--sl-space-2) 0;
+}
+
+/* The admin theme has no info tone and no sl-chip-info: there the info chip of a face reads the primary tint */
+[data-ab-ctx="admin"] .sl-chip-info {
+  background: var(--sl-primary-subtle);
+  color: var(--sl-primary-strong);
+}
+
+.sl-chip:has(> .bi) {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sl-space-2);
+}
+
+/* A figure that changed under the eye: one short pop, no more */
+.ab-bump {
+  animation: ab-bump var(--sl-time-slow) var(--sl-ease-out);
+}
+
+@keyframes ab-bump {
+  40% { transform: scale(1.35); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ab-bump { animation: none; }
+}
+
+/* ---------- The watch (AB.watch): "Администрация" and "Наблюдение" as one piece ---------- */
+
+/* One legend for every part that tells the visitors apart - the ring of the summary, the bar of shares, the dots, the
+   rows of the window - declared for the page, since the window of the statistics stands outside the watch */
+:root {
+  --ab-w-admins: var(--sl-accent);
+  --ab-w-users: var(--sl-success);
+  --ab-w-bots: var(--sl-warning);
+  --ab-w-guests: var(--sl-primary);
+}
+
+.ab-w {
+  display: grid;
+  gap: var(--sl-space-4);
+  min-width: 0;
+  font-size: var(--sl-font-small);
+}
+
+.ab-w-me {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: var(--sl-space-3);
+  align-items: center;
+}
+
+.ab-w-ava {
+  position: relative;
+  display: block;
+  width: var(--sl-size-control);
+  height: var(--sl-size-control);
+  padding: 2px;
+  border-radius: var(--sl-radius-circle);
+  background: conic-gradient(from 200deg, var(--sl-primary), var(--sl-accent), var(--sl-primary));
+}
+
+.ab-w-ava img {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  border: 2px solid var(--sl-bg);
+  border-radius: var(--sl-radius-circle);
+  background: var(--sl-bg);
+}
+
+.ab-w-on {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: var(--sl-space-4);
+  height: var(--sl-space-4);
+  border: 2px solid var(--sl-bg);
+  border-radius: var(--sl-radius-circle);
+  background: var(--sl-success);
+  box-sizing: border-box;
+}
+
+.ab-w-me p {
+  min-width: 0;
+  margin: 0;
+  line-height: var(--sl-line-tight);
+}
+
+.ab-w-me b {
+  display: block;
+  overflow: hidden;
+  color: var(--sl-text);
+  font-size: var(--sl-font-body);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ab-w-me small,
+.ab-w small {
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-micro);
+}
+
+.ab-w-live {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sl-space-2);
+  padding: 0 var(--sl-space-3);
+  border-radius: var(--sl-radius-pill);
+  background: color-mix(in srgb, var(--sl-danger) 12%, transparent);
+  color: var(--sl-danger);
+  font-size: var(--sl-font-micro);
+  font-weight: var(--sl-weight-semibold);
+  line-height: 1.6;
+  white-space: nowrap;
+}
+
+.ab-w-live i {
+  width: var(--sl-space-2);
+  height: var(--sl-space-2);
+  border-radius: var(--sl-radius-circle);
+  background: currentColor;
+  animation: ab-w-pulse 1.6s var(--sl-ease-in-out) infinite;
+}
+
+@keyframes ab-w-pulse {
+  0% { box-shadow: 0 0 0 0 color-mix(in srgb, currentColor 60%, transparent); }
+  70% { box-shadow: 0 0 0 var(--sl-space-3) transparent; }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}
+
+.ab-w-now {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--sl-space-4);
+  align-items: end;
+}
+
+.ab-w-big {
+  margin: 0;
+  line-height: 1;
+}
+
+.ab-w-big b {
+  display: inline-block;
+  color: var(--sl-text);
+  font-size: var(--sl-font-hero, var(--sl-font-display));
+  font-weight: var(--sl-weight-bold);
+  letter-spacing: var(--sl-track-tight);
+}
+
+.ab-w-big small {
+  display: block;
+  margin-top: var(--sl-space-2);
+}
+
+.ab-w-spark {
+  width: 100%;
+  height: 44px;
+  overflow: visible;
+}
+
+.ab-w-area {
+  fill: color-mix(in srgb, var(--sl-primary) 16%, transparent);
+}
+
+.ab-w-line {
+  fill: none;
+  stroke: var(--sl-primary);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.ab-w-dot {
+  fill: var(--sl-primary);
+  stroke: var(--sl-bg);
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
+}
+
+.ab-w-bar {
+  display: flex;
+  overflow: hidden;
+  height: var(--sl-space-3);
+  gap: 2px;
+  border-radius: var(--sl-radius-pill);
+}
+
+.ab-w-bar i {
+  width: var(--ab-w);
+  min-width: 0;
+  transition: width var(--sl-time-slow) var(--sl-ease-out);
+}
+
+.ab-w-bar .ab-w-admins,
+.ab-w-legend .ab-w-admins i { background: var(--ab-w-admins); }
+.ab-w-bar .ab-w-users,
+.ab-w-legend .ab-w-users i { background: var(--ab-w-users); }
+.ab-w-bar .ab-w-bots,
+.ab-w-legend .ab-w-bots i { background: var(--ab-w-bots); }
+.ab-w-bar .ab-w-guests,
+.ab-w-legend .ab-w-guests i { background: var(--ab-w-guests); }
+
+.ab-w-legend {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+  gap: var(--sl-space-2);
+  margin: calc(var(--sl-space-2) * -1) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ab-w-legend li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  column-gap: var(--sl-space-2);
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-micro);
+}
+
+.ab-w-legend li i {
+  width: var(--sl-space-3);
+  height: var(--sl-space-3);
+  border-radius: var(--sl-radius-1);
+}
+
+.ab-w-legend li b {
+  grid-column: 1 / -1;
+  color: var(--sl-text);
+  font-size: var(--sl-font-h4);
+  line-height: var(--sl-line-tight);
+}
+
+.ab-w-legend .ab-w-zero b {
+  color: var(--sl-text-muted);
+  opacity: var(--sl-fade-muted);
+}
+
+.ab-w-pile {
+  display: flex;
+  align-items: center;
+  padding-left: var(--sl-space-3);
+}
+
+.ab-w-pile img,
+.ab-w-pile span {
+  box-sizing: border-box;
+  width: var(--sl-size-chip);
+  height: var(--sl-size-chip);
+  margin-left: calc(var(--sl-space-3) * -1);
+  border: 2px solid var(--sl-bg);
+  border-radius: var(--sl-radius-circle);
+  background: var(--sl-bg-muted);
+  transition: transform var(--sl-time-fast) var(--sl-ease-out);
+}
+
+.ab-w-pile img:hover {
+  position: relative;
+  transform: translateY(calc(var(--sl-space-2) * -1));
+}
+
+.ab-w-pile span {
+  display: grid;
+  place-items: center;
+  width: auto;
+  min-width: var(--sl-size-chip);
+  padding: 0 var(--sl-space-2);
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-micro);
+  font-weight: var(--sl-weight-semibold);
+}
+
+.ab-w-list summary {
+  display: flex;
+  align-items: center;
+  gap: var(--sl-space-2);
+  padding: var(--sl-space-2) 0;
+  color: var(--sl-primary);
+  cursor: pointer;
+  list-style: none;
+}
+
+.ab-w-list summary::-webkit-details-marker {
+  display: none;
+}
+
+.ab-w-list summary b {
+  color: var(--sl-text-muted);
+  font-weight: var(--sl-weight-normal);
+}
+
+.ab-w-chev {
+  margin-left: auto;
+  transition: transform var(--sl-time-base) var(--sl-ease-out);
+}
+
+.ab-w-list[open] .ab-w-chev {
+  transform: rotate(180deg);
+}
+
+.ab-w-list ul {
+  display: grid;
+  gap: var(--sl-space-1);
+  max-height: 260px;
+  margin: var(--sl-space-2) 0 0;
+  padding: 0;
+  overflow: auto;
+  list-style: none;
+}
+
+.ab-w-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: var(--sl-space-3);
+  align-items: center;
+  padding: var(--sl-space-2);
+  border-radius: var(--sl-radius-2);
+}
+
+.ab-w-row:hover {
+  background: var(--sl-bg-muted);
+}
+
+.ab-w-row > img {
+  width: var(--sl-size-icon-lg);
+  height: var(--sl-size-icon-lg);
+  border-radius: var(--sl-radius-circle);
+  box-shadow: 0 0 0 2px var(--ab-w-c, transparent);
+}
+
+.ab-w-admin { --ab-w-c: var(--ab-w-admins); }
+.ab-w-user { --ab-w-c: var(--ab-w-users); }
+.ab-w-bot { --ab-w-c: var(--ab-w-bots); }
+
+.ab-w-row > span:nth-child(2) {
+  display: grid;
+  min-width: 0;
+  line-height: var(--sl-line-tight);
+}
+
+.ab-w-row b {
+  overflow: hidden;
+  color: var(--sl-text);
+  font-weight: var(--sl-weight-medium);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ab-w-row a {
+  overflow: hidden;
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-micro);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ab-w-where {
+  display: grid;
+  justify-items: end;
+  gap: var(--sl-space-1);
+}
+
+.ab-w-where img {
+  width: var(--sl-space-6);
+  border-radius: 2px;
+  box-shadow: 0 0 0 1px var(--sl-border);
+}
+
+.ab-w-more {
+  margin: var(--sl-space-2) 0 0;
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-micro);
+  text-align: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ab-w-live i { animation: none; }
+  .ab-w-bar i { transition: none; }
+}
+
+[data-demo-motion="off"] .ab-w-live i {
+  animation: none;
+}
+
+/* ---------- The summary (AB.summary): the lower half of the site's user block ---------- */
+
+.ab-sum {
+  display: grid;
+  grid-template-columns: 76px minmax(0, 1fr);
+  gap: var(--sl-space-5);
+  align-items: center;
+}
+
+.ab-sum.ab-sum-only {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+/* The ring: the shares of the site's donut - people, bots, guests - and the figure in its hole; it is the way in */
+.ab-sum-ring {
+  --ab-a: 0%;
+  --ab-m: 0%;
+  --ab-b: 0%;
+  display: grid;
+  place-items: center;
+  width: 76px;
+  height: 76px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--sl-radius-circle);
+  background: conic-gradient(var(--sl-accent) 0 var(--ab-a), var(--sl-success) var(--ab-a) var(--ab-m),
+    var(--sl-warning) var(--ab-m) var(--ab-b), var(--sl-primary) var(--ab-b) 100%);
+  color: var(--sl-text);
+  font: inherit;
+  cursor: pointer;
+  transition: transform var(--sl-time-fast) var(--sl-ease-out), box-shadow var(--sl-time-fast) var(--sl-ease-out);
+}
+
+.ab-sum-ring:hover,
+.ab-sum-ring:focus-visible {
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--sl-primary) 18%, transparent);
+  transform: scale(1.04);
+}
+
+.ab-sum-ring > span {
+  display: grid;
+  place-items: center;
+  width: 60px;
+  height: 60px;
+  border-radius: var(--sl-radius-circle);
+  background: var(--sl-bg);
+  line-height: 1;
+}
+
+.ab-sum-ring b {
+  align-self: end;
+  font-size: var(--sl-font-h3);
+}
+
+.ab-sum-ring small {
+  align-self: start;
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-micro);
+}
+
+.ab-sum-lines {
+  display: grid;
+  min-width: 0;
+}
+
+.ab-sum-line {
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr) auto;
+  gap: var(--sl-space-3);
+  align-items: center;
+  padding: var(--sl-space-1) 0;
+  color: var(--sl-text);
+  font-size: var(--sl-font-small);
+}
+
+.ab-sum-line > .bi { color: var(--sl-primary); }
+.ab-sum-line[data-kind="admin"] > .bi { color: var(--sl-accent); }
+
+/* The total is the whole ring, not a share of it: its mark stays in the tone of the text */
+.ab-sum-line.ab-sum-total > .bi { color: var(--sl-text); }
+.ab-sum-line[data-kind="user"] > .bi { color: var(--sl-success); }
+.ab-sum-line[data-kind="bot"] > .bi { color: var(--sl-warning); }
+
+.ab-sum-line b {
+  font-variant-numeric: tabular-nums;
+}
+
+/* The total carries bi-people as the site's summary does since 2026-10-19, so it stands in the column of the lines */
+.ab-sum-total {
+  font-weight: var(--sl-weight-semibold);
+}
+
+
+.ab-sum-acts {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--sl-space-3);
+  padding-top: var(--sl-space-4);
+}
+
+.ab-sum-acts .sl-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sl-space-2);
+  border: 0;
+  font: inherit;
+  font-size: var(--sl-font-small);
+  cursor: pointer;
+}
+
+/* The two chip tones of the site's summary, lent to the panel theme which has no accent or info chip */
+.ab-chip-accent {
+  background: color-mix(in srgb, var(--sl-accent) 16%, transparent);
+  color: var(--sl-accent);
+}
+
+.ab-chip-info {
+  background: color-mix(in srgb, var(--sl-primary) 14%, transparent);
+  color: var(--sl-primary);
+}
+
+.ab-spin > .bi {
+  animation: ab-spin var(--sl-time-slow) linear;
+}
+
+@keyframes ab-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ---------- The window of the live statistics ---------- */
+
+.ab-sw.sl-modal {
+  width: min(960px, calc(100vw - var(--sl-space-6) * 2));
+}
+
+.ab-sw-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sl-space-3);
+}
+
+.ab-sw-segs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sl-space-2);
+}
+
+.ab-sw-seg,
+.ab-sw-live {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sl-space-2);
+  height: var(--sl-size-chip);
+  padding: 0 var(--sl-space-4);
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-pill);
+  background: var(--sl-bg);
+  color: var(--sl-text-muted);
+  font: inherit;
+  font-size: var(--sl-font-small);
+  cursor: pointer;
+}
+
+.ab-sw-seg b {
+  color: var(--sl-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.ab-sw-seg[aria-pressed="true"] {
+  border-color: var(--sl-primary);
+  background: var(--sl-primary);
+  color: var(--sl-on-solid);
+}
+
+.ab-sw-seg[aria-pressed="true"] b {
+  color: inherit;
+}
+
+.ab-sw-live {
+  color: var(--sl-danger);
+  font-weight: var(--sl-weight-semibold);
+}
+
+.ab-sw-live small {
+  color: var(--sl-text-muted);
+  font-weight: var(--sl-weight-normal);
+}
+
+.ab-sw-dot {
+  width: var(--sl-space-3);
+  height: var(--sl-space-3);
+  border-radius: var(--sl-radius-circle);
+  background: currentColor;
+  animation: ab-w-pulse 1.6s var(--sl-ease-in-out) infinite;
+}
+
+.ab-sw-live[aria-pressed="true"] {
+  color: var(--sl-text-muted);
+}
+
+.ab-sw-live[aria-pressed="true"] .ab-sw-dot {
+  animation: none;
+}
+
+.ab-sw-kpis {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--sl-space-3);
+  margin-bottom: var(--sl-space-4);
+}
+
+.ab-sw-kpis > div {
+  display: grid;
+  gap: var(--sl-space-1);
+  padding: var(--sl-space-4);
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-2);
+  background: var(--sl-bg);
+}
+
+.ab-sw-kpis small {
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-micro);
+}
+
+.ab-sw-kpis b {
+  color: var(--sl-text);
+  font-size: var(--sl-font-h2);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.ab-sw-chart {
+  margin-bottom: var(--sl-space-3);
+}
+
+.ab-sw-chart .ab-w-spark {
+  width: 100%;
+  height: 96px;
+}
+
+.ab-sw-axis {
+  display: flex;
+  justify-content: space-between;
+  margin-top: var(--sl-space-1);
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-micro);
+}
+
+.ab-sw-cols {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  gap: var(--sl-space-4);
+  margin-top: var(--sl-space-5);
+}
+
+.ab-sw-side {
+  display: grid;
+  gap: var(--sl-space-4);
+  align-content: start;
+}
+
+.ab-sw-box {
+  padding: var(--sl-space-4);
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-2);
+  background: var(--sl-bg);
+}
+
+.ab-sw-cap {
+  display: flex;
+  align-items: center;
+  gap: var(--sl-space-2);
+  margin: 0 0 var(--sl-space-3);
+  color: var(--sl-text);
+  font-weight: var(--sl-weight-semibold);
+}
+
+.ab-sw-cap small {
+  margin-left: auto;
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-micro);
+  font-weight: var(--sl-weight-normal);
+}
+
+.ab-sw-rows {
+  display: grid;
+  gap: var(--sl-space-1);
+  max-height: 300px;
+  margin: 0;
+  padding: 0;
+  overflow: auto;
+  list-style: none;
+}
+
+.ab-sw-rows .ab-w-row {
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+}
+
+.ab-sw-kind {
+  padding: 0 var(--sl-space-3);
+  border-radius: var(--sl-radius-pill);
+  background: var(--sl-bg-muted);
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-micro);
+}
+
+.ab-sw-top {
+  display: grid;
+  gap: var(--sl-space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ab-sw-top li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 80px auto;
+  gap: var(--sl-space-3);
+  align-items: center;
+  font-size: var(--sl-font-small);
+}
+
+.ab-sw-top span {
+  display: flex;
+  align-items: center;
+  gap: var(--sl-space-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ab-sw-top img {
+  width: var(--sl-space-6);
+  border-radius: 2px;
+}
+
+.ab-sw-top i {
+  height: var(--sl-space-2);
+  border-radius: var(--sl-radius-pill);
+  background: linear-gradient(90deg, var(--sl-primary) var(--ab-p), var(--sl-bg-muted) var(--ab-p));
+}
+
+.ab-sw-top b {
+  min-width: 2ch;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.ab-sw-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sl-space-3);
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-small);
+}
+
+.ab-sw-foot .sl-but {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sl-space-2);
+  margin: 0;
+  text-decoration: none;
+}
+
+@media (max-width: 768px) {
+  .ab-sw-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ab-sw-cols { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ab-sw-dot, .ab-spin > .bi { animation: none; }
+}
+
+/* The wide chart of the window is stretched; its point of "now" would turn into an ellipse, the line ends it instead */
+.ab-sw-chart .ab-w-dot {
+  display: none;
+}

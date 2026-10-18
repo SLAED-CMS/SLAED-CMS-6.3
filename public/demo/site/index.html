@@ -1,0 +1,1106 @@
+<!doctype html>
+<html lang="ru" data-theme="auto">
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="format-detection" content="telephone=no">
+  <meta charset="utf-8">
+<title>Новости — Название сайта</title>
+<meta name="robots" content="index, follow">
+<meta property="og:site_name" content="Название сайта">
+<meta property="og:locale" content="ru_RU">
+<meta property="og:title" content="Новости - Название сайта">
+<meta property="og:image" content="https://slaed.loc/templates/lite/images/logos/slaed-logo-wordmark-gradient-blue.svg">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://slaed.loc/news">
+<meta property="og:description" content="">
+  <link rel="preload" as="image" href="/templates/lite/images/seasons/autumn-cat.webp" fetchpriority="high">
+  <link rel="canonical" href="https://slaed.loc/news">
+<link rel="alternate" type="application/rss+xml" title="Название сайта - RSS каналы" href="https://slaed.loc/index.php?go=rss&amp;name=news">
+<link rel="search" type="application/opensearchdescription+xml" title="Название сайта - Поиск" href="https://slaed.loc/index.php?go=search">
+<link rel="shortcut icon" type="image/svg+xml" href="/templates/lite/images/favicon.svg">
+<link rel="stylesheet" href="/templates/lite/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css?v=85aa3f1c8d">
+<link rel="stylesheet" href="/templates/lite/assets/css/base.css?v=8c4d4cf061">
+<link rel="stylesheet" href="/templates/lite/assets/css/presentation.css?v=ffe1026016">
+<link rel="stylesheet" href="/templates/lite/assets/css/theme.css?v=b839fbc6e1">
+  <script defer src="/plugins/system/global-func.js?v=6e15b0942d"></script>
+<script defer src="/plugins/system/slaed.js?v=e7fe6f0fc4"></script>
+  <!-- Before the first paint: the colour mode, the stillness and the stand marks come back as they were left; the keys are
+       the panel etalon's, both etalons stand on one address -->
+  <script>
+    try {
+      const keep = (k) => localStorage.getItem(k);
+      if (['light', 'dark'].includes(keep('sl.mode'))) document.documentElement.dataset.theme = keep('sl.mode');
+      if (keep('demo.marks') !== '0') document.documentElement.setAttribute('data-demo-marks', '');
+      if (keep('sl.motion') === '0') document.documentElement.setAttribute('data-sl-still', '');
+      // С10 The menu of the site is switched by the row "Меню на сайте" of the panel's Options (М10)
+      if (keep('sl.dock.site') === '0') document.documentElement.setAttribute('data-sl-dock-off', '');
+    } catch (e) { /* storage may be off */ }
+  </script>
+  <script>document.write('<link rel="stylesheet" href="../assets/admin-block.css?v=' + Date.now() + '"><link rel="stylesheet" href="site.css?v=' + Date.now() + '">');</script>
+
+</head>
+<body class="sl-autumn">
+  <div id="topbar">
+    <div class="sl-wrp">
+      <ul class="sl-top-contact"><li class="sl-head-marquee"><a href="/faq/kak-pravilno-podklyuchit-integrirovat-storonnii-forum" title="Как правильно подключить/интегрировать сторонний форум?">
+                  <i class="bi bi-stars" aria-hidden="true"></i>&nbsp;      Как правильно подключить/интегрировать сторонний форум?  </a></li></ul>
+      <div class="sl-top-right">
+        <form action="/index.php" method="post" class="sl-mode">
+  <input type="hidden" name="op" value="mode">
+<input type="hidden" name="refer" value="1">
+<input type="hidden" name="token" value="">
+  <span class="sl-seg sl-seg-mode" data-sl-knob="mode">
+    <button type="submit" class="sl-seg-cell" name="mode" value="light" title="Светлая" aria-label="Светлая" aria-pressed="false"><i class="bi bi-sun" aria-hidden="true"></i></button><button type="submit" class="sl-seg-cell sl-is-active" name="mode" value="auto" title="Системная" aria-label="Системная" aria-pressed="true"><i class="bi bi-circle-half" aria-hidden="true"></i></button><button type="submit" class="sl-seg-cell" name="mode" value="dark" title="Тёмная" aria-label="Тёмная" aria-pressed="false"><i class="bi bi-moon" aria-hidden="true"></i></button>    <span class="sl-seg-knob" data-sl-knob-mark aria-hidden="true"></span>
+  </span>
+</form>
+        <div class="sl-top-social">
+          <a class="sl-thd sl-circle-action sl-cat-tone-0" rel="me noopener" target="_blank" href="https://github.com/SLAED-CMS/SLAED-CMS-6.3" title="Мы в GitHub" aria-label="Мы в GitHub"><i class="bi bi-github" aria-hidden="true"></i>Мы в GitHub</a>
+          <a class="sl-thd sl-circle-action sl-cat-tone-1" rel="me noopener" target="_blank" href="https://www.youtube.com/@SLAED-CMS" title="Мы в YouTube" aria-label="Мы в YouTube"><i class="bi bi-youtube" aria-hidden="true"></i>Мы в YouTube</a>
+          <a class="sl-thd sl-circle-action sl-cat-tone-2" rel="me noopener" target="_blank" href="https://x.com/slaed_cms" title="Мы в X" aria-label="Мы в X"><i class="bi bi-twitter-x" aria-hidden="true"></i>Мы в X</a>
+          <a class="sl-thd sl-circle-action sl-cat-tone-3" rel="me noopener" target="_blank" href="https://vk.com/slaed_cms" title="Мы вКонтакте" aria-label="Мы вКонтакте"><i class="bi bi-chat-square-text" aria-hidden="true"></i>Мы вКонтакте</a>
+          <a class="sl-thd sl-circle-action sl-cat-tone-4" rel="me noopener" target="_blank" href="https://slaed.de" title="Документация на немецком" aria-label="Документация на немецком"><i class="bi bi-book-half" aria-hidden="true"></i>Документация на немецком</a>
+          <a class="sl-thd sl-circle-action sl-cat-tone-5" rel="me noopener" target="_blank" href="https://slaed.info" title="Документация на английском" aria-label="Документация на английском"><i class="bi bi-book" aria-hidden="true"></i>Документация на английском</a>
+          <a class="sl-thd sl-circle-action sl-cat-tone-0" href="/recommend" title="Рекомендовать" aria-label="Рекомендовать"><i class="bi bi-star" aria-hidden="true"></i>Рекомендовать</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  <header id="header">
+    <div class="sl-wrp">
+      <a href="/" class="sl-thd sl-logo" title="Название сайта - SLAED CMS - Современная система управления содержимым динамичных сайтов и мощная система управления интернет-порталами.">
+        <img src="/templates/lite/images/logos/slaed-logo-wordmark-gradient-blue.svg" alt="Название сайта - SLAED CMS - Современная система управления содержимым динамичных сайтов и мощная система управления интернет-порталами." title="Название сайта - SLAED CMS - Современная система управления содержимым динамичных сайтов и мощная система управления интернет-порталами." width="8833" height="2699">
+      </a>
+      <p class="sl-font sl-slogan">Все великое<br>просто</p>
+      <ul class="sl-login-top sl-login-top--head">
+  <li class="sl-login-dropdown sl-float">
+    <span class="sl-login-toggle" role="button" tabindex="0" title="Войти"><i class="bi bi-box-arrow-in-right" aria-hidden="true"></i><b>Войти</b></span>
+    <form action="/account" method="post" class="sl-login-dropdown-form sl-float-panel">
+      <ul class="sl-login-form">
+        <li>
+          <input type="text" name="user_name" value="" class="sl-field sl-login-field" maxlength="25" placeholder="Ник" autocomplete="username" required>
+        </li>
+        <li>
+          <input type="password" name="user_password" value="" class="sl-field sl-login-field" maxlength="25" placeholder="Пароль" autocomplete="current-password" required>
+        </li>
+                <li>
+          <button type="submit" title="Войти" class="sl-but">Войти</button>
+        </li>
+        <li class="sl-login-links">
+          <a href="/account/passlost" title="Потеряли пароль?" class="sl-chip sl-chip-danger"><i class="bi bi-key" aria-hidden="true"></i>Потеряли пароль?</a>
+          <a href="/account/newuser" title="Регистрация" class="sl-chip sl-chip-success"><i class="bi bi-person-plus" aria-hidden="true"></i>Регистрация</a>
+        </li>
+              </ul>
+      <input type="hidden" name="token" value="">      <input type="hidden" name="refer" value="1">
+      <input type="hidden" name="op" value="login">
+    </form>
+  </li>
+  <li><a href="/account/newuser" title="Регистрация" class="sl-login-link sl-login-link-top sl-login-link-register">Регистрация</a></li>
+</ul>
+      <ul class="sl-d-pane">
+        <li class="sl-d-info sl-d-version sl-font">Aктуальная версия</li>
+        <li class="sl-d-num sl-font">6.2</li>
+        <li class="sl-d-btns"><a class="sl-but" href="/files" title="Скачать бесплатно актуальную версию системы">Скачать систему</a></li>
+      </ul>
+    </div>
+  </header>
+  <nav id="hmenu" aria-label="Главное меню">
+    <div class="sl-wrp">
+      <div id="topmenu">
+  <ul>
+    <li><a href="/" class="sl-home-link sl-circle-action" title="Главная"><i class="bi bi-house-door-fill" aria-hidden="true"></i><span class="sl-hidden">Главная</span></a></li>
+    <li>
+      <a href="#" title="Услуги">Услуги</a>
+      <ul>
+        <li><a href="https://slaed.de" target="_blank" title="Модификация и интеграция тем оформления">Темы и шаблоны</a></li>
+      </ul>
+    </li>
+    <li>
+      <a href="#" title="Поддержка">Поддержка</a>
+      <ul>
+        <li><a href="/faq" title="Вопросы и ответы">Вопросы и ответы</a></li>
+        <li><a href="/docs" title="Центр документации">Центр документации</a></li>
+        <li><a href="/forum" title="Общий форум проекта">Общий форум проекта</a></li>
+        <li><a href="https://slaed.info" target="_blank" title="Руководство по PHP">Руководство по PHP</a></li>
+        <li><a href="/help" title="Техническая поддержка клиентов">Техническая поддержка</a></li>
+        <li><a href="/contact" title="Обратная связь и контактная информация">Обратная связь</a></li>
+      </ul>
+    </li>
+    <li>
+      <a href="#" title="Каталог файлов">Каталог файлов</a>
+      <ul>
+        <li><a href="/files" title="Каталог файлов">Каталог файлов</a></li>
+      </ul>
+    </li>
+    <li>
+      <a href="#" title="Новости">Новости</a>
+      <ul>
+        <li><a href="/news" title="Все новости проекта">Все новости</a></li>
+      </ul>
+    </li>
+    <li>
+      <a href="#" title="Компания">Компания</a>
+      <ul>
+        <li><a href="/contact" title="Контактная информация">Контактные данные</a></li>
+        <li><a href="/presentation" title="Презентационная страница системы">Презентационная страница</a></li>
+        <li><a href="/recommend" title="Рекомендовать наш сайт"><i class="bi bi-chat-heart-fill" aria-hidden="true"></i>&nbsp;Рекомендовать наш сайт</a></li>
+        <li><a href="/links" title="Каталог сайтов системы">Каталог сайтов системы</a></li>
+        <li><a href="/users" title="Tоп пользователи проекта">Tоп пользователи проекта</a></li>
+        <li><a href="/voting" title="Опросы нашего проекта">Опросы нашего проекта</a></li>
+      </ul>
+    </li>
+  </ul>
+</div>
+      <form class="sl-search-form" role="search" action="/search" method="post">
+        <input type="hidden" value="news" name="mod">
+        <input type="text" value="" name="word" maxlength="100" placeholder="Поиск" aria-label="Поиск" class="sl-field" required>
+        <button type="submit" class="sl-search-btn sl-circle-action" aria-label="Поиск" title="Поиск"><i class="bi bi-search" aria-hidden="true"></i></button>
+      </form>
+    </div>
+  </nav>
+    <div id="head-content">
+    <div class="sl-wrp"><p class="sl-font">Новости</p></div>
+  </div>
+    <div class="sl-wrp">
+    <div id="container" class="sl-has-right">
+            <main id="content" data-mark="С1">
+<div id="sl-node-list" class="sl-node-list" hx-target="this" hx-swap="outerHTML show:none" hx-history-elt hx-history="false" data-sl-swap-reveal>
+<header class="sl-node-head" data-sl-sticky>
+  <div class="sl-node-head-row">
+    <div class="sl-node-head-title"><h1 class="sl-title">Новости</h1><span class="sl-chip sl-chip-neutral">97 материалов</span></div>
+    <div class="sl-node-head-acts">
+      <form action="/news" method="post" class="sl-mode" hx-post="/news">
+  <input type="hidden" name="token" value="">
+  <span class="sl-seg sl-seg-view" data-sl-knob="view" role="group" aria-label="Вид списка">
+    <button type="submit" class="sl-seg-cell sl-is-active" name="view" value="cards" title="Карточки" aria-label="Карточки" aria-pressed="true"><i class="bi bi-card-text" aria-hidden="true"></i></button><button type="submit" class="sl-seg-cell" name="view" value="compact" title="Компакт" aria-label="Компакт" aria-pressed="false"><i class="bi bi-view-list" aria-hidden="true"></i></button><button type="submit" class="sl-seg-cell" name="view" value="tiles" title="Плитки" aria-label="Плитки" aria-pressed="false"><i class="bi bi-grid-3x2-gap" aria-hidden="true"></i></button>    <span class="sl-seg-knob" data-sl-knob-mark aria-hidden="true"></span>
+  </span>
+</form>
+      <form class="sl-search-form" role="search" action="/search" method="post">
+        <input type="hidden" value="news" name="mod">
+        <input type="text" value="" name="word" maxlength="100" placeholder="Поиск в разделе" aria-label="Поиск в разделе" class="sl-field" id="sl-node-find" required role="combobox" aria-autocomplete="list" aria-controls="sl-node-hints" aria-expanded="false" autocomplete="off" hx-get="/index.php?go=1&amp;op=getNodeHint&amp;name=news" hx-trigger="input changed delay:300ms" hx-target="#sl-node-hints" hx-swap="innerHTML" hx-sync="this:replace" data-sl-hints="sl-node-hints">
+        <button type="submit" class="sl-search-btn sl-circle-action" aria-label="Поиск" title="Поиск"><i class="bi bi-search" aria-hidden="true"></i></button>
+        <div id="sl-node-hints" class="sl-node-hints" role="listbox" aria-label="Поиск в разделе" hidden></div>
+      </form>      <a class="sl-but-mini" href="/index.php?go=rss&amp;name=news" title="RSS каналы" aria-label="RSS каналы"><i class="bi bi-rss" aria-hidden="true"></i></a>      <button type="button" class="sl-but-mini" data-sl-lens="sl-node-find" aria-controls="sl-node-find" aria-expanded="false" title="Поиск в разделе" aria-label="Поиск в разделе"><i class="bi bi-search" aria-hidden="true"></i><i class="bi bi-x-lg" aria-hidden="true"></i></button>      <a class="sl-but-mini" href="#top" title="Наверх" aria-label="Наверх"><i class="bi bi-arrow-up" aria-hidden="true"></i></a>
+    </div>
+    <div class="sl-node-head-filters" role="toolbar" aria-label="Отбор материалов" hx-boost="true">
+      <span class="sl-node-head-pill"><button type="button" class="sl-but" data-sl-toggle-control="sl-node-cats" data-sl-toggle-scope="none" data-sl-toggle-effect="slide" data-sl-toggle-duration="250"><i class="bi bi-folder2-open" aria-hidden="true"></i>Категории<i class="bi bi-chevron-down" aria-hidden="true"></i></button></span>            <span class="sl-node-head-pill"><button type="button" class="sl-but" data-sl-toggle-control="sl-node-sort" data-sl-toggle-scope="none" data-sl-toggle-effect="slide" data-sl-toggle-duration="250"><i class="bi bi-filter" aria-hidden="true"></i>Новые<i class="bi bi-chevron-down" aria-hidden="true"></i></button></span>
+      <span class="sl-node-head-pill"><a class="sl-but" href="/news?dir=asc&amp;order=published" title="В порядке убывания" aria-label="В порядке убывания"><i class="bi bi-sort-down" aria-hidden="true"></i><span>Убывание</span></a></span>
+            <a class="sl-but" href="/news/add" title="Добавить" hx-boost="false"><i class="bi bi-plus-lg" aria-hidden="true"></i>Добавить</a>    </div>
+  </div>
+  <div id="sl-node-cats" class="sl-node-head-win" data-sl-toggle="sl-node-cats" data-sl-toggle-group="sl-node-head" data-sl-toggle-scope="none" data-sl-toggle-default="closed" hx-boost="true" hidden>
+    <p class="sl-node-head-cap">Категории</p>
+    <div class="sl-cat-grid"><div class="sl-cat-tile sl-cat-tone-0">
+  <a class="sl-cat-main" href="/news" title="Все материалы" aria-current="true">
+    <span class="sl-cat-ico"><i class="bi bi-collection" aria-hidden="true"></i></span>
+    <span class="sl-cat-info">
+      <span class="sl-cat-line"><span class="sl-cat-name">Все материалы</span><span class="sl-chip sl-chip-info">97</span></span>
+          </span>
+  </a>
+  </div>
+<div class="sl-cat-tile sl-cat-tone-1">
+  <a class="sl-cat-main" href="/news/nashi-novosti" title="Наши новости">
+    <span class="sl-cat-ico"><i class="bi bi-newspaper" aria-hidden="true"></i></span>
+    <span class="sl-cat-info">
+      <span class="sl-cat-line"><span class="sl-cat-name">Наши новости</span><span class="sl-chip sl-chip-info">72</span></span>
+      <span class="sl-cat-desc">Новости проекта</span>    </span>
+  </a>
+  </div>
+<div class="sl-cat-tile sl-cat-tone-2">
+  <a class="sl-cat-main" href="/news/internet" title="Интернет">
+    <span class="sl-cat-ico"><i class="bi bi-globe" aria-hidden="true"></i></span>
+    <span class="sl-cat-info">
+      <span class="sl-cat-line"><span class="sl-cat-name">Интернет</span><span class="sl-chip sl-chip-info">22</span></span>
+      <span class="sl-cat-desc">Мир интернета</span>    </span>
+  </a>
+  </div>
+<div class="sl-cat-tile sl-cat-tone-3">
+  <a class="sl-cat-main" href="/news/programmy" title="Программы">
+    <span class="sl-cat-ico"><i class="bi bi-pc-display-horizontal" aria-hidden="true"></i></span>
+    <span class="sl-cat-info">
+      <span class="sl-cat-line"><span class="sl-cat-name">Программы</span><span class="sl-chip sl-chip-info">11</span></span>
+      <span class="sl-cat-desc">Компьютерный мир</span>    </span>
+  </a>
+  </div>
+</div>
+  </div>    <div id="sl-node-sort" class="sl-node-head-win" data-sl-toggle="sl-node-sort" data-sl-toggle-group="sl-node-head" data-sl-toggle-scope="none" data-sl-toggle-default="closed" hx-boost="true" hidden>
+    <p class="sl-node-head-cap">Сортировка</p>
+    <div class="sl-node-head-sorts"><a class="sl-chip sl-chip-neutral" href="/news" title="Новые" aria-current="true"><i class="bi bi-clock-history" aria-hidden="true"></i>Новые</a><a class="sl-chip sl-chip-neutral" href="/news?dir=desc&amp;order=updated" title="Обновлённые"><i class="bi bi-arrow-repeat" aria-hidden="true"></i>Обновлённые</a><a class="sl-chip sl-chip-neutral" href="/news?dir=asc&amp;order=title" title="Заголовок"><i class="bi bi-sort-alpha-down" aria-hidden="true"></i>Заголовок</a><a class="sl-chip sl-chip-neutral" href="/news?dir=desc&amp;order=views" title="Популярные"><i class="bi bi-eye" aria-hidden="true"></i>Популярные</a><a class="sl-chip sl-chip-neutral" href="/news?dir=desc&amp;order=rating" title="Лучшие"><i class="bi bi-star" aria-hidden="true"></i>Лучшие</a></div>
+      </div>
+</header>
+<div id="sl-node-items">
+<p class="sl-date-head"><i class="bi bi-calendar3" aria-hidden="true"></i> Ноябрь 2025 <span class="sl-chip sl-chip-neutral">1</span></p>
+<article id="node-3918" class="sl-post sl-card">
+  <h2 class="sl-title"><a href="/news/slaed-cms-vozvrashchaetsya-moshchnee-bystree-bezopasnee" title="SLAED CMS возвращается - мощнее, быстрее, безопаснее">SLAED CMS возвращается - мощнее, быстрее, безопаснее</a></h2>
+  <div class="sl-meta">
+    <ul class="sl-pull-right">
+      <li><a href="/news/slaed-cms-vozvrashchaetsya-moshchnee-bystree-bezopasnee#comm" title="Комментарии" class="sl-chip sl-card-comment"><i class="bi bi-chat-text" aria-hidden="true"></i> 3</a></li>            <li><span title="Прочитано" class="sl-chip sl-card-reads"><i class="bi bi-eye" aria-hidden="true"></i> 2729</span></li>      <li><span title="Разместил" class="sl-chip sl-chip-info sl-card-post"><a href="/users/slaed-cms" title="SLAED CMS" class="sl-author"><i class="bi bi-person" aria-hidden="true"></i> SLAED CMS</a></span></li>      <li class="sl-meta-actions"><span class="sl-dial">
+  <button class="sl-dial-toggle sl-but-mini" type="button" title="Редактор"><i class="bi bi-gear-fill"></i></button>
+  <a class="sl-dial-item sl-but-mini" href="/admin.php?name=node&amp;op=edit&amp;id=3918&amp;type=news" title="Полное редактирование"     ><i class="bi bi-pencil"></i></a><button class="sl-dial-item sl-but-mini" type="submit" form="slpostadfee51" title="На проверку" ><i class="bi bi-hourglass-split"></i></button><button class="sl-dial-item sl-but-mini" type="submit" form="slpostadfee52" title="Отключить" ><i class="bi bi-eye-slash"></i></button><button class="sl-dial-item sl-but-mini" type="submit" form="slpostadfee53" title="В корзину" ><i class="bi bi-trash"></i></button></span>
+<form class="sl-dial-post" id="slpostadfee51" action="/admin.php" method="post"><input type="hidden" name="name" value="node">
+<input type="hidden" name="op" value="status">
+<input type="hidden" name="id" value="3918">
+<input type="hidden" name="type" value="news">
+<input type="hidden" name="status" value="1">
+<input type="hidden" name="version" value="1">
+<input type="hidden" name="refer" value="1">
+<input type="hidden" name="token" value="">
+</form><form class="sl-dial-post" id="slpostadfee52" action="/admin.php" method="post"><input type="hidden" name="name" value="node">
+<input type="hidden" name="op" value="status">
+<input type="hidden" name="id" value="3918">
+<input type="hidden" name="type" value="news">
+<input type="hidden" name="status" value="3">
+<input type="hidden" name="version" value="1">
+<input type="hidden" name="refer" value="1">
+<input type="hidden" name="token" value="">
+</form><form class="sl-dial-post" id="slpostadfee53" action="/admin.php" method="post"><input type="hidden" name="name" value="node">
+<input type="hidden" name="op" value="status">
+<input type="hidden" name="id" value="3918">
+<input type="hidden" name="type" value="news">
+<input type="hidden" name="status" value="4">
+<input type="hidden" name="version" value="1">
+<input type="hidden" name="refer" value="1">
+<input type="hidden" name="token" value="">
+</form><a href="#node-3918" title="3918" class="sl-but-mini">3918</a></li>    </ul>
+    <ul>
+      <li><time datetime="2025-11-28T22:55:00+01:00" title="Дата" class="sl-chip sl-chip-info sl-card-date"><i class="bi bi-calendar3" aria-hidden="true"></i> 28.11.2025</time></li>      <li><a href="/news/nashi-novosti" title="Наши новости" class="sl-chip sl-card-category"><i class="bi bi-folder" aria-hidden="true"></i> Наши новости</a></li>    </ul>
+  </div>
+  <div class="sl-entry-content">
+    <a href="/news/nashi-novosti" title="Наши новости" class="sl-card-image sl-cat-tone-1"><i class="bi bi-newspaper" aria-hidden="true"></i>
+</a>    <i class="bi bi-image sl-img-placeholder" role="img" aria-label="SLAED CMS возвращается мощнее быстрее безопаснее" title="SLAED CMS возвращается мощнее быстрее безопаснее"></i>
+<div style="text-align:justify;">
+<p><a href="//slaed.net/index.php?name=files&op=view&id=1529" title="SLAED CMS">SLAED CMS</a> переходит на новый этап развития — готовится версия 6.3. Это обновление направлено на повышение безопасности, ускорение работы и совместимость с современными версиями PHP, включая 8.x. Уже выполнена часть технических изменений: переработаны модули, обновлён код ядра, улучшена защита данных и оптимизирована работа админ-панели.</p>
+<p>Версия <a href="//slaed.net/index.php?name=files&op=view&id=1529" title="SLAED CMS">SLAED CMS</a> 6.3 станет более стабильной, быстрой и безопасной, сохраняя привычную структуру системы. Это важный шаг вперёд для всех пользователей платформы и основа дальнейшего обновления проекта.</p>
+<p>Началась масштабная модернизация системы — и мы движемся к релизу версии <strong>6.3</strong>. Она станет самой значимой за всю историю платформы.</p>
+</div>  </div>
+  <div class="sl-meta-foot">
+    <div class="sl-rate-box sl-pull-right"><div id="rep3918" class="sl-rate"><div title="Рейтинг: 5/9 Средняя оценка: 5" class="sl-urating" data-sl-rate hx-target="#rep3918" hx-swap="innerHTML transition:true" hx-push-url="false" hx-vals='{"mod": "node.news", "id": "3918", "typ": "stars", "token": ""}'>
+  <a class="sl-star" hx-post="/index.php?go=1&amp;op=getRatingView" hx-vals='{"rate": "1"}' hx-trigger="click" title="1"><i class="bi bi-star-fill" aria-hidden="true"></i></a><a class="sl-star" hx-post="/index.php?go=1&amp;op=getRatingView" hx-vals='{"rate": "2"}' hx-trigger="click" title="2"><i class="bi bi-star-fill" aria-hidden="true"></i></a><a class="sl-star" hx-post="/index.php?go=1&amp;op=getRatingView" hx-vals='{"rate": "3"}' hx-trigger="click" title="3"><i class="bi bi-star-fill" aria-hidden="true"></i></a><a class="sl-star" hx-post="/index.php?go=1&amp;op=getRatingView" hx-vals='{"rate": "4"}' hx-trigger="click" title="4"><i class="bi bi-star-fill" aria-hidden="true"></i></a><a class="sl-star" hx-post="/index.php?go=1&amp;op=getRatingView" hx-vals='{"rate": "5"}' hx-trigger="click" title="5"><i class="bi bi-star-fill" aria-hidden="true"></i></a></div>
+<span title="Голосов" class="sl-rate-num sl-rate-is">9</span>
+</div>
+</div>    <a href="/news/slaed-cms-vozvrashchaetsya-moshchnee-bystree-bezopasnee" title="SLAED CMS возвращается - мощнее, быстрее, безопаснее" class="sl-but">Подробнее</a>  </div></article>
+<p class="sl-date-head"><i class="bi bi-calendar3" aria-hidden="true"></i> Январь 2018 <span class="sl-chip sl-chip-neutral">1</span></p>
+<article id="node-3916" class="sl-post sl-card">
+  <h2 class="sl-title"><a href="/news/proizvoditelnost-slaed-cms-otnositelno-novykh-versii-php" title="Производительность SLAED CMS относительно новых версий PHP">Производительность SLAED CMS относительно новых версий PHP</a></h2>
+  <div class="sl-meta">
+    <ul class="sl-pull-right">
+      <li><a href="/news/proizvoditelnost-slaed-cms-otnositelno-novykh-versii-php#comm" title="Комментарии" class="sl-chip sl-card-comment"><i class="bi bi-chat-text" aria-hidden="true"></i> 6</a></li>            <li><span title="Прочитано" class="sl-chip sl-card-reads"><i class="bi bi-eye" aria-hidden="true"></i> 137288</span></li>      <li><span title="Разместил" class="sl-chip sl-chip-info sl-card-post"><a href="/users/slaed-cms" title="SLAED CMS" class="sl-author"><i class="bi bi-person" aria-hidden="true"></i> SLAED CMS</a></span></li>      <li class="sl-meta-actions"><span class="sl-dial">
+  <button class="sl-dial-toggle sl-but-mini" type="button" title="Редактор"><i class="bi bi-gear-fill"></i></button>
+  <a class="sl-dial-item sl-but-mini" href="/admin.php?name=node&amp;op=edit&amp;id=3916&amp;type=news" title="Полное редактирование"     ><i class="bi bi-pencil"></i></a><button class="sl-dial-item sl-but-mini" type="submit" form="slpostadfee54" title="На проверку" ><i class="bi bi-hourglass-split"></i></button><button class="sl-dial-item sl-but-mini" type="submit" form="slpostadfee55" title="Отключить" ><i class="bi bi-eye-slash"></i></button><button class="sl-dial-item sl-but-mini" type="submit" form="slpostadfee56" title="В корзину" ><i class="bi bi-trash"></i></button></span>
+<form class="sl-dial-post" id="slpostadfee54" action="/admin.php" method="post"><input type="hidden" name="name" value="node">
+<input type="hidden" name="op" value="status">
+<input type="hidden" name="id" value="3916">
+<input type="hidden" name="type" value="news">
+<input type="hidden" name="status" value="1">
+<input type="hidden" name="version" value="1">
+<input type="hidden" name="refer" value="1">
+<input type="hidden" name="token" value="">
+</form><form class="sl-dial-post" id="slpostadfee55" action="/admin.php" method="post"><input type="hidden" name="name" value="node">
+<input type="hidden" name="op" value="status">
+<input type="hidden" name="id" value="3916">
+<input type="hidden" name="type" value="news">
+<input type="hidden" name="status" value="3">
+<input type="hidden" name="version" value="1">
+<input type="hidden" name="refer" value="1">
+<input type="hidden" name="token" value="">
+</form><form class="sl-dial-post" id="slpostadfee56" action="/admin.php" method="post"><input type="hidden" name="name" value="node">
+<input type="hidden" name="op" value="status">
+<input type="hidden" name="id" value="3916">
+<input type="hidden" name="type" value="news">
+<input type="hidden" name="status" value="4">
+<input type="hidden" name="version" value="1">
+<input type="hidden" name="refer" value="1">
+<input type="hidden" name="token" value="">
+</form><a href="#node-3916" title="3916" class="sl-but-mini">3916</a></li>    </ul>
+    <ul>
+      <li><time datetime="2018-01-01T19:30:00+01:00" title="Дата" class="sl-chip sl-chip-info sl-card-date"><i class="bi bi-calendar3" aria-hidden="true"></i> 01.01.2018</time></li>      <li><a href="/news/nashi-novosti" title="Наши новости" class="sl-chip sl-card-category"><i class="bi bi-folder" aria-hidden="true"></i> Наши новости</a></li>    </ul>
+  </div>
+  <div class="sl-entry-content">
+    <a href="/news/nashi-novosti" title="Наши новости" class="sl-card-image sl-cat-tone-1"><i class="bi bi-newspaper" aria-hidden="true"></i>
+</a>    <p><i class="bi bi-image sl-img-placeholder" role="img" aria-label="Производительность CMS относительно новых и старых версий PHP" title="Производительность CMS относительно новых и старых версий PHP"></i>
+ <div style="text-align:justify;"><p>В последнее время выход новых версии PHP и количество произведённых в нем модификаций относительно функционала, а главное оптимизации скорости работы не могут не радовать. Казалось бы всё хорошо, в верном направлении «идём товарищи!». Но реакция не всегда позитивная, есть как не удивительно и отрицательные стороны, этого, казалось бы положительного события. Часто веб-мастерам и владельцам сайтов переход на новую версию PHP создаёт настоящую головную боль,  в виду того что обновление до актуальной версии не всегда возможно, по причине устаревшего функционала используемых ими CMS и скриптов.</p>
+</div></p>  </div>
+  <div class="sl-meta-foot">
+    <div class="sl-rate-box sl-pull-right"><div id="rep3916" class="sl-rate"><div title="Рейтинг: 4.72/18 Средняя оценка: 4.72" class="sl-urating" data-sl-rate hx-target="#rep3916" hx-swap="innerHTML transition:true" hx-push-url="false" hx-vals='{"mod": "node.news", "id": "3916", "typ": "stars", "token": ""}'>
+  <a class="sl-star" hx-post="/index.php?go=1&amp;op=getRatingView" hx-vals='{"rate": "1"}' hx-trigger="click" title="1"><i class="bi bi-star-fill" aria-hidden="true"></i></a><a class="sl-star" hx-post="/index.php?go=1&amp;op=getRatingView" hx-vals='{"rate": "2"}' hx-trigger="click" title="2"><i class="bi bi-star-fill" aria-hidden="true"></i></a><a class="sl-star" hx-post="/index.php?go=1&amp;op=getRatingView" hx-vals='{"rate": "3"}' hx-trigger="click" title="3"><i class="bi bi-star-fill" aria-hidden="true"></i></a><a class="sl-star" hx-post="/index.php?go=1&amp;op=getRatingView" hx-vals='{"rate": "4"}' hx-trigger="click" title="4"><i class="bi bi-star-fill" aria-hidden="true"></i></a><a class="sl-star" hx-post="/index.php?go=1&amp;op=getRatingView" hx-vals='{"rate": "5"}' hx-trigger="click" title="5"><i class="bi bi-star-half" aria-hidden="true"></i></a></div>
+<span title="Голосов" class="sl-rate-num sl-rate-is">18</span>
+</div>
+</div>    <a href="/news/proizvoditelnost-slaed-cms-otnositelno-novykh-versii-php" title="Производительность SLAED CMS относительно новых версий PHP" class="sl-but">Подробнее</a>  </div></article>
+<p class="sl-date-head"><i class="bi bi-calendar3" aria-hidden="true"></i> Апрель 2017 <span class="sl-chip sl-chip-neutral">2</span></p>
+<article id="node-3915" class="sl-post sl-card">
+  <h2 class="sl-title"><a href="/news/besplatnaya-sistema-upravleniya-soderzhimym-slaed-cms-6-2-pro" title="Бесплатная система управления содержимым SLAED CMS 6.2 Pro">Бесплатная система управления содержимым SLAED CMS 6.2 Pro</a></h2>
+  <div class="sl-meta">
+    <ul class="sl-pull-right">
+      <li><a href="/news/besplatnaya-sistema-upravleniya-soderzhimym-slaed-cms-6-2-pro#comm" title="Комментарии" class="sl-chip sl-card-comment"><i class="bi bi-chat-text" aria-hidden="true"></i> 5</a></li>            <li><span title="Прочитано" class="sl-chip sl-card-reads"><i class="bi bi-eye" aria-hidden="true"></i> 312500</span></li>      <li><span title="Разместил" class="sl-chip sl-chip-info sl-card-post"><a href="/users/slaed-cms" title="SLAED CMS" class="sl-author"><i class="bi bi-person" aria-hidden="true"></i> SLAED CMS</a></span></li>      <li class="sl-meta-actions"><span class="sl-dial">
+  <button class="sl-dial-toggle sl-but-mini" type="button" title="Редактор"><i class="bi bi-gear-fill"></i></button>
+  <a class="sl-dial-item sl-but-mini" href="/admin.php?name=node&amp;op=edit&amp;id=3915&amp;type=news" title="Полное редактирование"     ><i class="bi bi-pencil"></i></a><button class="sl-dial-item sl-but-mini" type="submit" form="slpostadfee57" title="На проверку" ><i class="bi bi-hourglass-split"></i></button><button class="sl-dial-item sl-but-mini" type="submit" form="slpostadfee58" title="Отключить" ><i class="bi bi-eye-slash"></i></button><button class="sl-dial-item sl-but-mini" type="submit" form="slpostadfee59" title="В корзину" ><i class="bi bi-trash"></i></button></span>
+<form class="sl-dial-post" id="slpostadfee57" action="/admin.php" method="post"><input type="hidden" name="name" value="node">
+<input type="hidden" name="op" value="status">
+<input type="hidden" name="id" value="3915">
+<input type="hidden" name="type" value="news">
+<input type="hidden" name="status" value="1">
+<input type="hidden" name="version" value="1">
+<input type="hidden" name="refer" value="1">
+<input type="hidden" name="token" value="">
+</form><form class="sl-dial-post" id="slpostadfee58" action="/admin.php" method="post"><input type="hidden" name="name" value="node">
+<input type="hidden" name="op" value="status">
+<input type="hidden" name="id" value="3915">
+<input type="hidden" name="type" value="news">
+<input type="hidden" name="status" value="3">
+<input type="hidden" name="version" value="1">
+<input type="hidden" name="refer" value="1">
+<input type="hidden" name="token" value="">
+</form><form class="sl-dial-post" id="slpostadfee59" action="/admin.php" method="post"><input type="hidden" name="name" value="node">
+<input type="hidden" name="op" value="status">
+<input type="hidden" name="id" value="3915">
+<input type="hidden" name="type" value="news">
+<input type="hidden" name="status" value="4">
+<input type="hidden" name="version" value="1">
+<input type="hidden" name="refer" value="1">
+<input type="hidden" name="token" value="">
+</form><a href="#node-3915" title="3915" class="sl-but-mini">3915</a></li>    </ul>
+    <ul>
+      <li><time datetime="2017-04-28T15:00:00+02:00" title="Дата" class="sl-chip sl-chip-info sl-card-date"><i class="bi bi-calendar3" aria-hidden="true"></i> 28.04.2017</time></li>      <li><a href="/news/nashi-novosti" title="Наши новости" class="sl-chip sl-card-category"><i class="bi bi-folder" aria-hidden="true"></i> Наши новости</a></li>    </ul>
+  </div>
+  <div class="sl-entry-content">
+    <a href="/news/nashi-novosti" title="Наши новости" class="sl-card-image sl-cat-tone-1"><i class="bi bi-newspaper" aria-hidden="true"></i>
+</a>    <p><i class="bi bi-image sl-img-placeholder" role="img" aria-label="Бесплатная система управления содержимым SLAED CMS 6.2 Pro" title="Бесплатная система управления содержимым SLAED CMS 6.2 Pro"></i>
+ <div style="text-align:justify;"><p>Три месяца назад мы объявили о переходе к Open Source модели распространения <a href="//slaed.net/index.php?name=files&op=view&id=1529" title="SLAED CMS">SLAED CMS</a> Pro и выложили бесплатную версию 6.1 (позже дополнили до 6.1.1). За это время версию 6.1 скачали 486 раз и предложили десятки свежих идей <a href="https://slaed.net/index.php?name=forum&amp;cat=95">в специальной ветке форума</a>.  </p>
+<p>Команда SLAED благодарна всем неравнодушным пользователям системы. Мы реализовали многие предложения и создали новую версию системы − <a href="//slaed.net/index.php?name=files&op=view&id=1529" title="SLAED CMS">SLAED CMS</a> 6.2 Pro.   </p>
+<p>Версия 6.2. имеет 30 изменений относительно 6.1.1. В новой версии <a href="//slaed.net/index.php?name=files&op=view&id=1529" title="SLAED CMS">SLAED CMS</a> реализована интеграция с соцсетями, код адаптирован под PHP 7+, улучшено кэширование страниц, добавлена sitemap.xml, система почищена от лишнего.  </p>
+<p><em>А что дальше!?</em>  </p>
+<p>Дальше мы начнём работать над новой версией <a href="//slaed.net/index.php?name=files&op=view&id=1529" title="SLAED CMS">SLAED CMS</a>, учитывая предложения пользователей.</p>
+</div></p>  </div>
+  <div class="sl-meta-foot">
+    <div class="sl-rate-box sl-pull-right"><div id="rep3915" class="sl-rate"><div title="Рейтинг: 4.9/20 Средняя оценка: 4.9" class="sl-urating" data-sl-rate hx-target="#rep3915" hx-swap="innerHTML transition:true" hx-push-url="false" hx-vals='{"mod": "node.news", "id": "3915", "typ": "stars", "token": ""}'>
+  <a class="sl-star" hx-post="/index.php?go=1&amp;op=getRatingView" hx-vals='{"rate": "1"}' hx-trigger="click" title="1"><i class="bi bi-star-fill" aria-hidden="true"></i></a><a class="sl-star" hx-post="/index.php?go=1&amp;op=getRatingView" hx-vals='{"rate": "2"}' hx-trigger="click" title="2"><i class="bi bi-star-fill" aria-hidden="true"></i></a><a class="sl-star" hx-post="/index.php?go=1&amp;op=getRatingView" hx-vals='{"rate": "3"}' hx-trigger="click" title="3"><i class="bi bi-star-fill" aria-hidden="true"></i></a><a class="sl-star" hx-post="/index.php?go=1&amp;op=getRatingView" hx-vals='{"rate": "4"}' hx-trigger="click" title="4"><i class="bi bi-star-fill" aria-hidden="true"></i></a><a class="sl-star" hx-post="/index.php?go=1&amp;op=getRatingView" hx-vals='{"rate": "5"}' hx-trigger="click" title="5"><i class="bi bi-star-fill" aria-hidden="true"></i></a></div>
+<span title="Голосов" class="sl-rate-num sl-rate-is">20</span>
+</div>
+</div>    <a href="/news/besplatnaya-sistema-upravleniya-soderzhimym-slaed-cms-6-2-pro" title="Бесплатная система управления содержимым SLAED CMS 6.2 Pro" class="sl-but">Подробнее</a>  </div></article>
+<article id="node-3914" class="sl-post sl-card">
+  <h2 class="sl-title"><a href="/news/sitemap-xml-karta-saita-seo-instrument-novoi-versii-sistemy" title="Sitemap, XML Карта сайта SEO инструмент новой версии системы">Sitemap, XML Карта сайта SEO инструмент новой версии системы</a></h2>
+  <div class="sl-meta">
+    <ul class="sl-pull-right">
+      <li><a href="/news/sitemap-xml-karta-saita-seo-instrument-novoi-versii-sistemy#comm" title="Комментарии" class="sl-chip sl-card-comment"><i class="bi bi-chat-text" aria-hidden="true"></i> 3</a></li>            <li><span title="Прочитано" class="sl-chip sl-card-reads"><i class="bi bi-eye" aria-hidden="true"></i> 182141</span></li>      <li><span title="Разместил" class="sl-chip sl-chip-info sl-card-post"><a href="/users/slaed-cms" title="SLAED CMS" class="sl-author"><i class="bi bi-person" aria-hidden="true"></i> SLAED CMS</a></span></li>      <li class="sl-meta-actions"><span class="sl-dial">
+  <button class="sl-dial-toggle sl-but-mini" type="button" title="Редактор"><i class="bi bi-gear-fill"></i></button>
+  <a class="sl-dial-item sl-but-mini" href="/admin.php?name=node&amp;op=edit&amp;id=3914&amp;type=news" title="Полное редактирование"     ><i class="bi bi-pencil"></i></a><button class="sl-dial-item sl-but-mini" type="submit" form="slpostadfee510" title="На проверку" ><i class="bi bi-hourglass-split"></i></button><button class="sl-dial-item sl-but-mini" type="submit" form="slpostadfee511" title="Отключить" ><i class="bi bi-eye-slash"></i></button><button class="sl-dial-item sl-but-mini" type="submit" form="slpostadfee512" title="В корзину" ><i class="bi bi-trash"></i></button></span>
+<form class="sl-dial-post" id="slpostadfee510" action="/admin.php" method="post"><input type="hidden" name="name" value="node">
+<input type="hidden" name="op" value="status">
+<input type="hidden" name="id" value="3914">
+<input type="hidden" name="type" value="news">
+<input type="hidden" name="status" value="1">
+<input type="hidden" name="version" value="1">
+<input type="hidden" name="refer" value="1">
+<input type="hidden" name="token" value="">
+</form><form class="sl-dial-post" id="slpostadfee511" action="/admin.php" method="post"><input type="hidden" name="name" value="node">
+<input type="hidden" name="op" value="status">
+<input type="hidden" name="id" value="3914">
+<input type="hidden" name="type" value="news">
+<input type="hidden" name="status" value="3">
+<input type="hidden" name="version" value="1">
+<input type="hidden" name="refer" value="1">
+<input type="hidden" name="token" value="">
+</form><form class="sl-dial-post" id="slpostadfee512" action="/admin.php" method="post"><input type="hidden" name="name" value="node">
+<input type="hidden" name="op" value="status">
+<input type="hidden" name="id" value="3914">
+<input type="hidden" name="type" value="news">
+<input type="hidden" name="status" value="4">
+<input type="hidden" name="version" value="1">
+<input type="hidden" name="refer" value="1">
+<input type="hidden" name="token" value="">
+</form><a href="#node-3914" title="3914" class="sl-but-mini">3914</a></li>    </ul>
+    <ul>
+      <li><time datetime="2017-04-02T16:00:00+02:00" title="Дата" class="sl-chip sl-chip-info sl-card-date"><i class="bi bi-calendar3" aria-hidden="true"></i> 02.04.2017</time></li>      <li><a href="/news/nashi-novosti" title="Наши новости" class="sl-chip sl-card-category"><i class="bi bi-folder" aria-hidden="true"></i> Наши новости</a></li>    </ul>
+  </div>
+  <div class="sl-entry-content">
+    <a href="/news/nashi-novosti" title="Наши новости" class="sl-card-image sl-cat-tone-1"><i class="bi bi-newspaper" aria-hidden="true"></i>
+</a>    <p><i class="bi bi-image sl-img-placeholder" role="img" aria-label="Sitemap XML Карта сайта SEO инструмент SLAED" title="Sitemap XML Карта сайта SEO инструмент SLAED"></i>
+ <div style="text-align:justify;"><p>Рад представить вашему вниманию новую, полезную возможность системы, а именно её новый SEO инструмент Sitemap XML Карта сайта, который будет входит в стандартную поставку, начиная с версии <a href="//slaed.net/index.php?name=files&op=view&id=1529" title="SLAED CMS">SLAED CMS</a> 6.2 Pro.   </p>
+<p>Что же представляет из себя sitemap.xml? Это XML-файл с структурированной информацией для поисковиков, таких как: Яндекс, Google, Bing, Yahoo, Ask, MSN и многих других. Говоря простым языком, это упорядоченный, древовидный список разделов и страниц сайта, который состоит из адресов на эти страницы и разделы. Наш генератор может создавать два типа карт сайта, для поисковых систем: XML версию и посетителей: HTML версию.</p>
+</div></p>  </div>
+  <div class="sl-meta-foot">
+    <div class="sl-rate-box sl-pull-right"><div id="rep3914" class="sl-rate"><div title="Рейтинг: 5/9 Средняя оценка: 5" class="sl-urating" data-sl-rate hx-target="#rep3914" hx-swap="innerHTML transition:true" hx-push-url="false" hx-vals='{"mod": "node.news", "id": "3914", "typ": "stars", "token": ""}'>
+  <a class="sl-star" hx-post="/index.php?go=1&amp;op=getRatingView" hx-vals='{"rate": "1"}' hx-trigger="click" title="1"><i class="bi bi-star-fill" aria-hidden="true"></i></a><a class="sl-star" hx-post="/index.php?go=1&amp;op=getRatingView" hx-vals='{"rate": "2"}' hx-trigger="click" title="2"><i class="bi bi-star-fill" aria-hidden="true"></i></a><a class="sl-star" hx-post="/index.php?go=1&amp;op=getRatingView" hx-vals='{"rate": "3"}' hx-trigger="click" title="3"><i class="bi bi-star-fill" aria-hidden="true"></i></a><a class="sl-star" hx-post="/index.php?go=1&amp;op=getRatingView" hx-vals='{"rate": "4"}' hx-trigger="click" title="4"><i class="bi bi-star-fill" aria-hidden="true"></i></a><a class="sl-star" hx-post="/index.php?go=1&amp;op=getRatingView" hx-vals='{"rate": "5"}' hx-trigger="click" title="5"><i class="bi bi-star-fill" aria-hidden="true"></i></a></div>
+<span title="Голосов" class="sl-rate-num sl-rate-is">9</span>
+</div>
+</div>    <a href="/news/sitemap-xml-karta-saita-seo-instrument-novoi-versii-sistemy" title="Sitemap, XML Карта сайта SEO инструмент новой версии системы" class="sl-but">Подробнее</a>  </div></article>
+<p class="sl-date-head"><i class="bi bi-calendar3" aria-hidden="true"></i> Март 2017 <span class="sl-chip sl-chip-neutral">1</span></p>
+<article id="node-3913" class="sl-post sl-card">
+  <h2 class="sl-title"><a href="/news/mozilla-firefox-prekrashchaet-podderzhku-plaginov" title="Mozilla Firefox прекращает поддержку плагинов">Mozilla Firefox прекращает поддержку плагинов</a></h2>
+  <div class="sl-meta">
+    <ul class="sl-pull-right">
+      <li><a href="/news/mozilla-firefox-prekrashchaet-podderzhku-plaginov#comm" title="Комментарии" class="sl-chip sl-card-comment"><i class="bi bi-chat-text" aria-hidden="true"></i> 2</a></li>            <li><span title="Прочитано" class="sl-chip sl-card-reads"><i class="bi bi-eye" aria-hidden="true"></i> 124612</span></li>      <li><span title="Разместил" class="sl-chip sl-chip-info sl-card-post"><a href="/users/slaed-cms" title="SLAED CMS" class="sl-author"><i class="bi bi-person" aria-hidden="true"></i> SLAED CMS</a></span></li>      <li class="sl-meta-actions"><span class="sl-dial">
+  <button class="sl-dial-toggle sl-but-mini" type="button" title="Редактор"><i class="bi bi-gear-fill"></i></button>
+  <a class="sl-dial-item sl-but-mini" href="/admin.php?name=node&amp;op=edit&amp;id=3913&amp;type=news" title="Полное редактирование"     ><i class="bi bi-pencil"></i></a><button class="sl-dial-item sl-but-mini" type="submit" form="slpostadfee513" title="На проверку" ><i class="bi bi-hourglass-split"></i></button><button class="sl-dial-item sl-but-mini" type="submit" form="slpostadfee514" title="Отключить" ><i class="bi bi-eye-slash"></i></button><button class="sl-dial-item sl-but-mini" type="submit" form="slpostadfee515" title="В корзину" ><i class="bi bi-trash"></i></button></span>
+<form class="sl-dial-post" id="slpostadfee513" action="/admin.php" method="post"><input type="hidden" name="name" value="node">
+<input type="hidden" name="op" value="status">
+<input type="hidden" name="id" value="3913">
+<input type="hidden" name="type" value="news">
+<input type="hidden" name="status" value="1">
+<input type="hidden" name="version" value="1">
+<input type="hidden" name="refer" value="1">
+<input type="hidden" name="token" value="">
+</form><form class="sl-dial-post" id="slpostadfee514" action="/admin.php" method="post"><input type="hidden" name="name" value="node">
+<input type="hidden" name="op" value="status">
+<input type="hidden" name="id" value="3913">
+<input type="hidden" name="type" value="news">
+<input type="hidden" name="status" value="3">
+<input type="hidden" name="version" value="1">
+<input type="hidden" name="refer" value="1">
+<input type="hidden" name="token" value="">
+</form><form class="sl-dial-post" id="slpostadfee515" action="/admin.php" method="post"><input type="hidden" name="name" value="node">
+<input type="hidden" name="op" value="status">
+<input type="hidden" name="id" value="3913">
+<input type="hidden" name="type" value="news">
+<input type="hidden" name="status" value="4">
+<input type="hidden" name="version" value="1">
+<input type="hidden" name="refer" value="1">
+<input type="hidden" name="token" value="">
+</form><a href="#node-3913" title="3913" class="sl-but-mini">3913</a></li>    </ul>
+    <ul>
+      <li><time datetime="2017-03-09T21:45:00+01:00" title="Дата" class="sl-chip sl-chip-info sl-card-date"><i class="bi bi-calendar3" aria-hidden="true"></i> 09.03.2017</time></li>      <li><a href="/news/programmy" title="Программы" class="sl-chip sl-card-category"><i class="bi bi-folder" aria-hidden="true"></i> Программы</a></li>    </ul>
+  </div>
+  <div class="sl-entry-content">
+    <a href="/news/programmy" title="Программы" class="sl-card-image sl-cat-tone-3"><i class="bi bi-pc-display-horizontal" aria-hidden="true"></i>
+</a>    <p><i class="bi bi-image sl-img-placeholder" role="img" aria-label="Новые стандарты HTML 5 и CSS 3 в SLAED" title="Новые стандарты HTML 5 и CSS 3 в SLAED"></i>
+ <div style="text-align:justify;"><p>Mozilla Firefox присоединяется к современным браузерам, таким как Google Chrome, Microsoft Edge и другим в прекращении поддержки NPAPI-плагинов. В марте 2017, был выпущен Firefox 52, начиная с данной версии закончилась поддержка всех NPAPI плагинов, кроме Adobe Flash. К таким не поддерживаемым плагинам по воспроизведению аудио и видео, а так же просмотра документов относятся: Java - Oracle, QuickTime - Apple, Silverlight - Microsoft, Acrobat - Adobe, Windows Media - Microsoft. Основной причиной отказа, по словам разработчиков являются: замедление работы браузера, снижение уровня безопасности, чувствительность к новым уязвимостям и частые падения в работе.</p>
+</div></p>  </div>
+  <div class="sl-meta-foot">
+    <div class="sl-rate-box sl-pull-right"><div id="rep3913" class="sl-rate"><div title="Рейтинг: 5/13 Средняя оценка: 5" class="sl-urating" data-sl-rate hx-target="#rep3913" hx-swap="innerHTML transition:true" hx-push-url="false" hx-vals='{"mod": "node.news", "id": "3913", "typ": "stars", "token": ""}'>
+  <a class="sl-star" hx-post="/index.php?go=1&amp;op=getRatingView" hx-vals='{"rate": "1"}' hx-trigger="click" title="1"><i class="bi bi-star-fill" aria-hidden="true"></i></a><a class="sl-star" hx-post="/index.php?go=1&amp;op=getRatingView" hx-vals='{"rate": "2"}' hx-trigger="click" title="2"><i class="bi bi-star-fill" aria-hidden="true"></i></a><a class="sl-star" hx-post="/index.php?go=1&amp;op=getRatingView" hx-vals='{"rate": "3"}' hx-trigger="click" title="3"><i class="bi bi-star-fill" aria-hidden="true"></i></a><a class="sl-star" hx-post="/index.php?go=1&amp;op=getRatingView" hx-vals='{"rate": "4"}' hx-trigger="click" title="4"><i class="bi bi-star-fill" aria-hidden="true"></i></a><a class="sl-star" hx-post="/index.php?go=1&amp;op=getRatingView" hx-vals='{"rate": "5"}' hx-trigger="click" title="5"><i class="bi bi-star-fill" aria-hidden="true"></i></a></div>
+<span title="Голосов" class="sl-rate-num sl-rate-is">13</span>
+</div>
+</div>    <a href="/news/mozilla-firefox-prekrashchaet-podderzhku-plaginov" title="Mozilla Firefox прекращает поддержку плагинов" class="sl-but">Подробнее</a>  </div></article>
+<p class="sl-date-head"><i class="bi bi-calendar3" aria-hidden="true"></i> Февраль 2017 <span class="sl-chip sl-chip-neutral">1</span></p>
+<article id="node-3912" class="sl-post sl-card">
+  <h2 class="sl-title"><a href="/news/versiya-slaed-cms-6-1-1-pro-s-mnogochislennymi-uluchsheniyami" title="Версия SLAED CMS 6.1.1 Pro с многочисленными улучшениями">Версия SLAED CMS 6.1.1 Pro с многочисленными улучшениями</a></h2>
+  <div class="sl-meta">
+    <ul class="sl-pull-right">
+      <li><a href="/news/versiya-slaed-cms-6-1-1-pro-s-mnogochislennymi-uluchsheniyami#comm" title="Комментарии" class="sl-chip sl-card-comment"><i class="bi bi-chat-text" aria-hidden="true"></i> 6</a></li>            <li><span title="Прочитано" class="sl-chip sl-card-reads"><i class="bi bi-eye" aria-hidden="true"></i> 126643</span></li>      <li><span title="Разместил" class="sl-chip sl-chip-info sl-card-post"><a href="/users/slaed-cms" title="SLAED CMS" class="sl-author"><i class="bi bi-person" aria-hidden="true"></i> SLAED CMS</a></span></li>      <li class="sl-meta-actions"><span class="sl-dial">
+  <button class="sl-dial-toggle sl-but-mini" type="button" title="Редактор"><i class="bi bi-gear-fill"></i></button>
+  <a class="sl-dial-item sl-but-mini" href="/admin.php?name=node&amp;op=edit&amp;id=3912&amp;type=news" title="Полное редактирование"     ><i class="bi bi-pencil"></i></a><button class="sl-dial-item sl-but-mini" type="submit" form="slpostadfee516" title="На проверку" ><i class="bi bi-hourglass-split"></i></button><button class="sl-dial-item sl-but-mini" type="submit" form="slpostadfee517" title="Отключить" ><i class="bi bi-eye-slash"></i></button><button class="sl-dial-item sl-but-mini" type="submit" form="slpostadfee518" title="В корзину" ><i class="bi bi-trash"></i></button></span>
+<form class="sl-dial-post" id="slpostadfee516" action="/admin.php" method="post"><input type="hidden" name="name" value="node">
+<input type="hidden" name="op" value="status">
+<input type="hidden" name="id" value="3912">
+<input type="hidden" name="type" value="news">
+<input type="hidden" name="status" value="1">
+<input type="hidden" name="version" value="1">
+<input type="hidden" name="refer" value="1">
+<input type="hidden" name="token" value="">
+</form><form class="sl-dial-post" id="slpostadfee517" action="/admin.php" method="post"><input type="hidden" name="name" value="node">
+<input type="hidden" name="op" value="status">
+<input type="hidden" name="id" value="3912">
+<input type="hidden" name="type" value="news">
+<input type="hidden" name="status" value="3">
+<input type="hidden" name="version" value="1">
+<input type="hidden" name="refer" value="1">
+<input type="hidden" name="token" value="">
+</form><form class="sl-dial-post" id="slpostadfee518" action="/admin.php" method="post"><input type="hidden" name="name" value="node">
+<input type="hidden" name="op" value="status">
+<input type="hidden" name="id" value="3912">
+<input type="hidden" name="type" value="news">
+<input type="hidden" name="status" value="4">
+<input type="hidden" name="version" value="1">
+<input type="hidden" name="refer" value="1">
+<input type="hidden" name="token" value="">
+</form><a href="#node-3912" title="3912" class="sl-but-mini">3912</a></li>    </ul>
+    <ul>
+      <li><time datetime="2017-02-10T20:30:00+01:00" title="Дата" class="sl-chip sl-chip-info sl-card-date"><i class="bi bi-calendar3" aria-hidden="true"></i> 10.02.2017</time></li>      <li><a href="/news/nashi-novosti" title="Наши новости" class="sl-chip sl-card-category"><i class="bi bi-folder" aria-hidden="true"></i> Наши новости</a></li>    </ul>
+  </div>
+  <div class="sl-entry-content">
+    <a href="/news/nashi-novosti" title="Наши новости" class="sl-card-image sl-cat-tone-1"><i class="bi bi-newspaper" aria-hidden="true"></i>
+</a>    <p><i class="bi bi-image sl-img-placeholder" role="img" aria-label="SLAED CMS 6.1.1 Pro с многочисленными улучшениями" title="SLAED CMS 6.1.1 Pro с многочисленными улучшениями"></i>
+ <div style="text-align:justify;"><p>Спешим обрадовать приверженцев <a href="//slaed.net/index.php?name=files&op=view&id=1529" title="SLAED CMS">SLAED CMS</a> и всех тех, кто ценит удобство администрирования сайтов и стабильность их работы. Версия системы 6.1.1 Pro, пришедшая на смену 6.1 Pro и распространяемая по модели Open Source на базе лицензии GPLv3, официально увидела свет.  </p>
+<p>Список нововведений, внесенных в новую версию, нельзя назвать внушительным, но они дают пользователю немного больше полезных возможностей и устраняют целый ряд выявленных ошибок и недочетов. Итак, обо всем по порядку!</p>
+</div></p>  </div>
+  <div class="sl-meta-foot">
+    <div class="sl-rate-box sl-pull-right"><div id="rep3912" class="sl-rate"><div title="Рейтинг: 5/8 Средняя оценка: 5" class="sl-urating" data-sl-rate hx-target="#rep3912" hx-swap="innerHTML transition:true" hx-push-url="false" hx-vals='{"mod": "node.news", "id": "3912", "typ": "stars", "token": ""}'>
+  <a class="sl-star" hx-post="/index.php?go=1&amp;op=getRatingView" hx-vals='{"rate": "1"}' hx-trigger="click" title="1"><i class="bi bi-star-fill" aria-hidden="true"></i></a><a class="sl-star" hx-post="/index.php?go=1&amp;op=getRatingView" hx-vals='{"rate": "2"}' hx-trigger="click" title="2"><i class="bi bi-star-fill" aria-hidden="true"></i></a><a class="sl-star" hx-post="/index.php?go=1&amp;op=getRatingView" hx-vals='{"rate": "3"}' hx-trigger="click" title="3"><i class="bi bi-star-fill" aria-hidden="true"></i></a><a class="sl-star" hx-post="/index.php?go=1&amp;op=getRatingView" hx-vals='{"rate": "4"}' hx-trigger="click" title="4"><i class="bi bi-star-fill" aria-hidden="true"></i></a><a class="sl-star" hx-post="/index.php?go=1&amp;op=getRatingView" hx-vals='{"rate": "5"}' hx-trigger="click" title="5"><i class="bi bi-star-fill" aria-hidden="true"></i></a></div>
+<span title="Голосов" class="sl-rate-num sl-rate-is">8</span>
+</div>
+</div>    <a href="/news/versiya-slaed-cms-6-1-1-pro-s-mnogochislennymi-uluchsheniyami" title="Версия SLAED CMS 6.1.1 Pro с многочисленными улучшениями" class="sl-but">Подробнее</a>  </div></article>
+<p class="sl-date-head"><i class="bi bi-calendar3" aria-hidden="true"></i> Январь 2017 <span class="sl-chip sl-chip-neutral">2</span></p>
+<article id="node-3911" class="sl-post sl-card">
+  <h2 class="sl-title"><a href="/news/slaed-cms-6-1-pro-pervaya-open-source-versiya-slaed-cms" title="SLAED CMS 6.1 Pro - первая Open Source версия SLAED CMS">SLAED CMS 6.1 Pro - первая Open Source версия SLAED CMS</a></h2>
+  <div class="sl-meta">
+    <ul class="sl-pull-right">
+      <li><a href="/news/slaed-cms-6-1-pro-pervaya-open-source-versiya-slaed-cms#comm" title="Комментарии" class="sl-chip sl-card-comment"><i class="bi bi-chat-text" aria-hidden="true"></i> 7</a></li>            <li><span title="Прочитано" class="sl-chip sl-card-reads"><i class="bi bi-eye" aria-hidden="true"></i> 288133</span></li>      <li><span title="Разместил" class="sl-chip sl-chip-info sl-card-post"><a href="/users/slaed-cms" title="SLAED CMS" class="sl-author"><i class="bi bi-person" aria-hidden="true"></i> SLAED CMS</a></span></li>      <li class="sl-meta-actions"><span class="sl-dial">
+  <button class="sl-dial-toggle sl-but-mini" type="button" title="Редактор"><i class="bi bi-gear-fill"></i></button>
+  <a class="sl-dial-item sl-but-mini" href="/admin.php?name=node&amp;op=edit&amp;id=3911&amp;type=news" title="Полное редактирование"     ><i class="bi bi-pencil"></i></a><button class="sl-dial-item sl-but-mini" type="submit" form="slpostadfee519" title="На проверку" ><i class="bi bi-hourglass-split"></i></button><button class="sl-dial-item sl-but-mini" type="submit" form="slpostadfee520" title="Отключить" ><i class="bi bi-eye-slash"></i></button><button class="sl-dial-item sl-but-mini" type="submit" form="slpostadfee521" title="В корзину" ><i class="bi bi-trash"></i></button></span>
+<form class="sl-dial-post" id="slpostadfee519" action="/admin.php" method="post"><input type="hidden" name="name" value="node">
+<input type="hidden" name="op" value="status">
+<input type="hidden" name="id" value="3911">
+<input type="hidden" name="type" value="news">
+<input type="hidden" name="status" value="1">
+<input type="hidden" name="version" value="1">
+<input type="hidden" name="refer" value="1">
+<input type="hidden" name="token" value="">
+</form><form class="sl-dial-post" id="slpostadfee520" action="/admin.php" method="post"><input type="hidden" name="name" value="node">
+<input type="hidden" name="op" value="status">
+<input type="hidden" name="id" value="3911">
+<input type="hidden" name="type" value="news">
+<input type="hidden" name="status" value="3">
+<input type="hidden" name="version" value="1">
+<input type="hidden" name="refer" value="1">
+<input type="hidden" name="token" value="">
+</form><form class="sl-dial-post" id="slpostadfee521" action="/admin.php" method="post"><input type="hidden" name="name" value="node">
+<input type="hidden" name="op" value="status">
+<input type="hidden" name="id" value="3911">
+<input type="hidden" name="type" value="news">
+<input type="hidden" name="status" value="4">
+<input type="hidden" name="version" value="1">
+<input type="hidden" name="refer" value="1">
+<input type="hidden" name="token" value="">
+</form><a href="#node-3911" title="3911" class="sl-but-mini">3911</a></li>    </ul>
+    <ul>
+      <li><time datetime="2017-01-26T16:35:00+01:00" title="Дата" class="sl-chip sl-chip-info sl-card-date"><i class="bi bi-calendar3" aria-hidden="true"></i> 26.01.2017</time></li>      <li><a href="/news/nashi-novosti" title="Наши новости" class="sl-chip sl-card-category"><i class="bi bi-folder" aria-hidden="true"></i> Наши новости</a></li>    </ul>
+  </div>
+  <div class="sl-entry-content">
+    <a href="/news/nashi-novosti" title="Наши новости" class="sl-card-image sl-cat-tone-1"><i class="bi bi-newspaper" aria-hidden="true"></i>
+</a>    <p><i class="bi bi-image sl-img-placeholder" role="img" aria-label="Первая Open Source версия SLAED CMS" title="Первая Open Source версия SLAED CMS"></i>
+ <div style="text-align:justify;"><p>Компания SLAED рада представить версию 6.1 нашего флагманского продукта <a href="//slaed.net/index.php?name=files&op=view&id=1529" title="SLAED CMS">SLAED CMS</a> Pro. Главное отличие новой версии от всех предыдущих заключается не в функциях, а в лицензии – распространяться версия 6.1 будет абсолютно бесплатно на базе лицензии GNU GPL 3. Более подробно о переходе на Open Source <a href="https://slaed.net/index.php?name=news&amp;op=view&amp;id=635">мы рассказали</a> совсем недавно и теперь перешли от слов к действиям.  </p>
+<p>Отпуская в свободное плавание <a href="//slaed.net/index.php?name=files&op=view&id=1529" title="SLAED CMS">SLAED CMS</a>, хочется вспомнить несколько интересных фактов о системе, накопившихся за 11 лет её существования (первая версия <a href="//slaed.net/index.php?name=files&op=view&id=1529" title="SLAED CMS">SLAED CMS</a> Pro вышла 03.01.2006).</p>
+</div></p>  </div>
+  <div class="sl-meta-foot">
+    <div class="sl-rate-box sl-pull-right"><div id="rep3911" class="sl-rate"><div title="Рейтинг: 5/13 Средняя оценка: 5" class="sl-urating" data-sl-rate hx-target="#rep3911" hx-swap="innerHTML transition:true" hx-push-url="false" hx-vals='{"mod": "node.news", "id": "3911", "typ": "stars", "token": ""}'>
+  <a class="sl-star" hx-post="/index.php?go=1&amp;op=getRatingView" hx-vals='{"rate": "1"}' hx-trigger="click" title="1"><i class="bi bi-star-fill" aria-hidden="true"></i></a><a class="sl-star" hx-post="/index.php?go=1&amp;op=getRatingView" hx-vals='{"rate": "2"}' hx-trigger="click" title="2"><i class="bi bi-star-fill" aria-hidden="true"></i></a><a class="sl-star" hx-post="/index.php?go=1&amp;op=getRatingView" hx-vals='{"rate": "3"}' hx-trigger="click" title="3"><i class="bi bi-star-fill" aria-hidden="true"></i></a><a class="sl-star" hx-post="/index.php?go=1&amp;op=getRatingView" hx-vals='{"rate": "4"}' hx-trigger="click" title="4"><i class="bi bi-star-fill" aria-hidden="true"></i></a><a class="sl-star" hx-post="/index.php?go=1&amp;op=getRatingView" hx-vals='{"rate": "5"}' hx-trigger="click" title="5"><i class="bi bi-star-fill" aria-hidden="true"></i></a></div>
+<span title="Голосов" class="sl-rate-num sl-rate-is">13</span>
+</div>
+</div>    <a href="/news/slaed-cms-6-1-pro-pervaya-open-source-versiya-slaed-cms" title="SLAED CMS 6.1 Pro - первая Open Source версия SLAED CMS" class="sl-but">Подробнее</a>  </div></article>
+<article id="node-3910" class="sl-post sl-card">
+  <h2 class="sl-title"><a href="/news/slaed-cms-perekhodit-k-open-source-modeli-na-baze-gnu-gpl-3" title="SLAED CMS переходит к Open Source модели на базе GNU GPL 3">SLAED CMS переходит к Open Source модели на базе GNU GPL 3</a></h2>
+  <div class="sl-meta">
+    <ul class="sl-pull-right">
+      <li><a href="/news/slaed-cms-perekhodit-k-open-source-modeli-na-baze-gnu-gpl-3#comm" title="Комментарии" class="sl-chip sl-card-comment"><i class="bi bi-chat-text" aria-hidden="true"></i> 10</a></li>            <li><span title="Прочитано" class="sl-chip sl-card-reads"><i class="bi bi-eye" aria-hidden="true"></i> 129602</span></li>      <li><span title="Разместил" class="sl-chip sl-chip-info sl-card-post"><a href="/users/slaed-cms" title="SLAED CMS" class="sl-author"><i class="bi bi-person" aria-hidden="true"></i> SLAED CMS</a></span></li>      <li class="sl-meta-actions"><span class="sl-dial">
+  <button class="sl-dial-toggle sl-but-mini" type="button" title="Редактор"><i class="bi bi-gear-fill"></i></button>
+  <a class="sl-dial-item sl-but-mini" href="/admin.php?name=node&amp;op=edit&amp;id=3910&amp;type=news" title="Полное редактирование"     ><i class="bi bi-pencil"></i></a><button class="sl-dial-item sl-but-mini" type="submit" form="slpostadfee522" title="На проверку" ><i class="bi bi-hourglass-split"></i></button><button class="sl-dial-item sl-but-mini" type="submit" form="slpostadfee523" title="Отключить" ><i class="bi bi-eye-slash"></i></button><button class="sl-dial-item sl-but-mini" type="submit" form="slpostadfee524" title="В корзину" ><i class="bi bi-trash"></i></button></span>
+<form class="sl-dial-post" id="slpostadfee522" action="/admin.php" method="post"><input type="hidden" name="name" value="node">
+<input type="hidden" name="op" value="status">
+<input type="hidden" name="id" value="3910">
+<input type="hidden" name="type" value="news">
+<input type="hidden" name="status" value="1">
+<input type="hidden" name="version" value="1">
+<input type="hidden" name="refer" value="1">
+<input type="hidden" name="token" value="">
+</form><form class="sl-dial-post" id="slpostadfee523" action="/admin.php" method="post"><input type="hidden" name="name" value="node">
+<input type="hidden" name="op" value="status">
+<input type="hidden" name="id" value="3910">
+<input type="hidden" name="type" value="news">
+<input type="hidden" name="status" value="3">
+<input type="hidden" name="version" value="1">
+<input type="hidden" name="refer" value="1">
+<input type="hidden" name="token" value="">
+</form><form class="sl-dial-post" id="slpostadfee524" action="/admin.php" method="post"><input type="hidden" name="name" value="node">
+<input type="hidden" name="op" value="status">
+<input type="hidden" name="id" value="3910">
+<input type="hidden" name="type" value="news">
+<input type="hidden" name="status" value="4">
+<input type="hidden" name="version" value="1">
+<input type="hidden" name="refer" value="1">
+<input type="hidden" name="token" value="">
+</form><a href="#node-3910" title="3910" class="sl-but-mini">3910</a></li>    </ul>
+    <ul>
+      <li><time datetime="2017-01-07T18:20:00+01:00" title="Дата" class="sl-chip sl-chip-info sl-card-date"><i class="bi bi-calendar3" aria-hidden="true"></i> 07.01.2017</time></li>      <li><a href="/news/nashi-novosti" title="Наши новости" class="sl-chip sl-card-category"><i class="bi bi-folder" aria-hidden="true"></i> Наши новости</a></li>    </ul>
+  </div>
+  <div class="sl-entry-content">
+    <a href="/news/nashi-novosti" title="Наши новости" class="sl-card-image sl-cat-tone-1"><i class="bi bi-newspaper" aria-hidden="true"></i>
+</a>    <p><i class="bi bi-image sl-img-placeholder" role="img" aria-label="SLAED CMS переходит к Open Source модели на базе лицензии GNU GPL 3" title="SLAED CMS переходит к Open Source модели на базе лицензии GNU GPL 3"></i>
+ <div style="text-align:justify;"><p>2017 год компания SLAED решила начать с отказа от проприетарной модели распространения <a href="//slaed.net/index.php?name=files&op=view&id=1529" title="SLAED CMS">SLAED CMS</a> в пользу Open Source. Новая версия <a href="//slaed.net/index.php?name=files&op=view&id=1529" title="SLAED CMS">SLAED CMS</a> переходит в общественную собственность и будет абсолютно бесплатно распространяться на базе лицензии GNU GPL 3.   </p>
+<p>«Столь кардинальный шаг в нашей лицензионной политике – это шаг вперёд, который позволит существенно расширить границы распространения <a href="//slaed.net/index.php?name=files&op=view&id=1529" title="SLAED CMS">SLAED CMS</a>, количество новых модулей и изменений, профессионально вносимых в систему. Мне, как автору проекта, важно, чтобы система была максимально доступной и как можно больше современных сайтов делалось на базе <a href="//slaed.net/index.php?name=files&op=view&id=1529" title="SLAED CMS">SLAED CMS</a>, поэтому я готов сделать этот большой шаг в сторону Open Source!» - прокомментировал изменения в лицензионной политике автор и идеолог проекта Eduard Laas.</p>
+</div></p>  </div>
+  <div class="sl-meta-foot">
+    <div class="sl-rate-box sl-pull-right"><div id="rep3910" class="sl-rate"><div title="Рейтинг: 5/34 Средняя оценка: 5" class="sl-urating" data-sl-rate hx-target="#rep3910" hx-swap="innerHTML transition:true" hx-push-url="false" hx-vals='{"mod": "node.news", "id": "3910", "typ": "stars", "token": ""}'>
+  <a class="sl-star" hx-post="/index.php?go=1&amp;op=getRatingView" hx-vals='{"rate": "1"}' hx-trigger="click" title="1"><i class="bi bi-star-fill" aria-hidden="true"></i></a><a class="sl-star" hx-post="/index.php?go=1&amp;op=getRatingView" hx-vals='{"rate": "2"}' hx-trigger="click" title="2"><i class="bi bi-star-fill" aria-hidden="true"></i></a><a class="sl-star" hx-post="/index.php?go=1&amp;op=getRatingView" hx-vals='{"rate": "3"}' hx-trigger="click" title="3"><i class="bi bi-star-fill" aria-hidden="true"></i></a><a class="sl-star" hx-post="/index.php?go=1&amp;op=getRatingView" hx-vals='{"rate": "4"}' hx-trigger="click" title="4"><i class="bi bi-star-fill" aria-hidden="true"></i></a><a class="sl-star" hx-post="/index.php?go=1&amp;op=getRatingView" hx-vals='{"rate": "5"}' hx-trigger="click" title="5"><i class="bi bi-star-fill" aria-hidden="true"></i></a></div>
+<span title="Голосов" class="sl-rate-num sl-rate-is">34</span>
+</div>
+</div>    <a href="/news/slaed-cms-perekhodit-k-open-source-modeli-na-baze-gnu-gpl-3" title="SLAED CMS переходит к Open Source модели на базе GNU GPL 3" class="sl-but">Подробнее</a>  </div></article>
+<p class="sl-date-head"><i class="bi bi-calendar3" aria-hidden="true"></i> Июнь 2015 <span class="sl-chip sl-chip-neutral">1</span></p>
+<article id="node-3909" class="sl-post sl-card">
+  <h2 class="sl-title"><a href="/news/shestaya-versiya-slaed-cms-ofitsialno-prishla-na-smenu-pyatoi" title="Шестая версия SLAED CMS официально пришла на смену пятой">Шестая версия SLAED CMS официально пришла на смену пятой</a></h2>
+  <div class="sl-meta">
+    <ul class="sl-pull-right">
+      <li><a href="/news/shestaya-versiya-slaed-cms-ofitsialno-prishla-na-smenu-pyatoi#comm" title="Комментарии" class="sl-chip sl-card-comment"><i class="bi bi-chat-text" aria-hidden="true"></i> 8</a></li>            <li><span title="Прочитано" class="sl-chip sl-card-reads"><i class="bi bi-eye" aria-hidden="true"></i> 372854</span></li>      <li><span title="Разместил" class="sl-chip sl-chip-info sl-card-post"><a href="/users/slaed-cms" title="SLAED CMS" class="sl-author"><i class="bi bi-person" aria-hidden="true"></i> SLAED CMS</a></span></li>      <li class="sl-meta-actions"><span class="sl-dial">
+  <button class="sl-dial-toggle sl-but-mini" type="button" title="Редактор"><i class="bi bi-gear-fill"></i></button>
+  <a class="sl-dial-item sl-but-mini" href="/admin.php?name=node&amp;op=edit&amp;id=3909&amp;type=news" title="Полное редактирование"     ><i class="bi bi-pencil"></i></a><button class="sl-dial-item sl-but-mini" type="submit" form="slpostadfee525" title="На проверку" ><i class="bi bi-hourglass-split"></i></button><button class="sl-dial-item sl-but-mini" type="submit" form="slpostadfee526" title="Отключить" ><i class="bi bi-eye-slash"></i></button><button class="sl-dial-item sl-but-mini" type="submit" form="slpostadfee527" title="В корзину" ><i class="bi bi-trash"></i></button></span>
+<form class="sl-dial-post" id="slpostadfee525" action="/admin.php" method="post"><input type="hidden" name="name" value="node">
+<input type="hidden" name="op" value="status">
+<input type="hidden" name="id" value="3909">
+<input type="hidden" name="type" value="news">
+<input type="hidden" name="status" value="1">
+<input type="hidden" name="version" value="1">
+<input type="hidden" name="refer" value="1">
+<input type="hidden" name="token" value="">
+</form><form class="sl-dial-post" id="slpostadfee526" action="/admin.php" method="post"><input type="hidden" name="name" value="node">
+<input type="hidden" name="op" value="status">
+<input type="hidden" name="id" value="3909">
+<input type="hidden" name="type" value="news">
+<input type="hidden" name="status" value="3">
+<input type="hidden" name="version" value="1">
+<input type="hidden" name="refer" value="1">
+<input type="hidden" name="token" value="">
+</form><form class="sl-dial-post" id="slpostadfee527" action="/admin.php" method="post"><input type="hidden" name="name" value="node">
+<input type="hidden" name="op" value="status">
+<input type="hidden" name="id" value="3909">
+<input type="hidden" name="type" value="news">
+<input type="hidden" name="status" value="4">
+<input type="hidden" name="version" value="1">
+<input type="hidden" name="refer" value="1">
+<input type="hidden" name="token" value="">
+</form><a href="#node-3909" title="3909" class="sl-but-mini">3909</a></li>    </ul>
+    <ul>
+      <li><time datetime="2015-06-26T18:15:00+02:00" title="Дата" class="sl-chip sl-chip-info sl-card-date"><i class="bi bi-calendar3" aria-hidden="true"></i> 26.06.2015</time></li>      <li><a href="/news/nashi-novosti" title="Наши новости" class="sl-chip sl-card-category"><i class="bi bi-folder" aria-hidden="true"></i> Наши новости</a></li>    </ul>
+  </div>
+  <div class="sl-entry-content">
+    <a href="/news/nashi-novosti" title="Наши новости" class="sl-card-image sl-cat-tone-1"><i class="bi bi-newspaper" aria-hidden="true"></i>
+</a>    <p><i class="bi bi-image sl-img-placeholder" role="img" aria-label="Шестая версия SLAED CMS официально пришла на смену" title="Шестая версия SLAED CMS официально пришла на смену"></i>
+ <div style="text-align:justify;"><p>Выпуск <a href="//slaed.net/index.php?name=files&op=view&id=1529" title="SLAED CMS">SLAED CMS</a> 6.0 мы <a href="https://slaed.net/index.php?name=news&amp;op=view&amp;id=633">анонсировали ещё в феврале</a>, и теперь компания SLAED рада сообщить, что официально выпущена шестая версия <a href="//slaed.net/index.php?name=files&op=view&id=1529" title="SLAED CMS">SLAED CMS</a>. Новая версия системы базируется на современных технологиях сайтостроения и полностью перешла на HTML5 и CSS3.  </p>
+<p>Модификации <a href="//slaed.net/index.php?name=files&op=view&id=1529" title="SLAED CMS">SLAED CMS</a>, произведённые для шестой версии, являются наиболее масштабными за последнее время. На разработку шестой версии команда проекта затратила 10 месяцев, в том числе 3 месяца полевых испытаний в режиме бета-тестирования. В процессе разработки были изменены все функциональные разделы системы, а также на уровне программного кода практически полностью разделены визуальный и логический разделы CMS.</p>
+</div></p>  </div>
+  <div class="sl-meta-foot">
+    <div class="sl-rate-box sl-pull-right"><div id="rep3909" class="sl-rate"><div title="Рейтинг: 4.48/27 Средняя оценка: 4.48" class="sl-urating" data-sl-rate hx-target="#rep3909" hx-swap="innerHTML transition:true" hx-push-url="false" hx-vals='{"mod": "node.news", "id": "3909", "typ": "stars", "token": ""}'>
+  <a class="sl-star" hx-post="/index.php?go=1&amp;op=getRatingView" hx-vals='{"rate": "1"}' hx-trigger="click" title="1"><i class="bi bi-star-fill" aria-hidden="true"></i></a><a class="sl-star" hx-post="/index.php?go=1&amp;op=getRatingView" hx-vals='{"rate": "2"}' hx-trigger="click" title="2"><i class="bi bi-star-fill" aria-hidden="true"></i></a><a class="sl-star" hx-post="/index.php?go=1&amp;op=getRatingView" hx-vals='{"rate": "3"}' hx-trigger="click" title="3"><i class="bi bi-star-fill" aria-hidden="true"></i></a><a class="sl-star" hx-post="/index.php?go=1&amp;op=getRatingView" hx-vals='{"rate": "4"}' hx-trigger="click" title="4"><i class="bi bi-star-fill" aria-hidden="true"></i></a><a class="sl-star" hx-post="/index.php?go=1&amp;op=getRatingView" hx-vals='{"rate": "5"}' hx-trigger="click" title="5"><i class="bi bi-star-half" aria-hidden="true"></i></a></div>
+<span title="Голосов" class="sl-rate-num sl-rate-is">27</span>
+</div>
+</div>    <a href="/news/shestaya-versiya-slaed-cms-ofitsialno-prishla-na-smenu-pyatoi" title="Шестая версия SLAED CMS официально пришла на смену пятой" class="sl-but">Подробнее</a>  </div></article>
+<p class="sl-date-head"><i class="bi bi-calendar3" aria-hidden="true"></i> Февраль 2015 <span class="sl-chip sl-chip-neutral">1</span></p>
+<article id="node-3908" class="sl-post sl-card">
+  <h2 class="sl-title"><a href="/news/adaptatsiya-k-sovremennym-tendentsiyam-v-dizaine-i-tekhnologiyakh" title="Адаптация к современным тенденциям в дизайне и технологиях">Адаптация к современным тенденциям в дизайне и технологиях</a></h2>
+  <div class="sl-meta">
+    <ul class="sl-pull-right">
+      <li><a href="/news/adaptatsiya-k-sovremennym-tendentsiyam-v-dizaine-i-tekhnologiyakh#comm" title="Комментарии" class="sl-chip sl-card-comment"><i class="bi bi-chat-text" aria-hidden="true"></i> 8</a></li>            <li><span title="Прочитано" class="sl-chip sl-card-reads"><i class="bi bi-eye" aria-hidden="true"></i> 169886</span></li>      <li><span title="Разместил" class="sl-chip sl-chip-info sl-card-post"><a href="/users/slaed-cms" title="SLAED CMS" class="sl-author"><i class="bi bi-person" aria-hidden="true"></i> SLAED CMS</a></span></li>      <li class="sl-meta-actions"><span class="sl-dial">
+  <button class="sl-dial-toggle sl-but-mini" type="button" title="Редактор"><i class="bi bi-gear-fill"></i></button>
+  <a class="sl-dial-item sl-but-mini" href="/admin.php?name=node&amp;op=edit&amp;id=3908&amp;type=news" title="Полное редактирование"     ><i class="bi bi-pencil"></i></a><button class="sl-dial-item sl-but-mini" type="submit" form="slpostadfee528" title="На проверку" ><i class="bi bi-hourglass-split"></i></button><button class="sl-dial-item sl-but-mini" type="submit" form="slpostadfee529" title="Отключить" ><i class="bi bi-eye-slash"></i></button><button class="sl-dial-item sl-but-mini" type="submit" form="slpostadfee530" title="В корзину" ><i class="bi bi-trash"></i></button></span>
+<form class="sl-dial-post" id="slpostadfee528" action="/admin.php" method="post"><input type="hidden" name="name" value="node">
+<input type="hidden" name="op" value="status">
+<input type="hidden" name="id" value="3908">
+<input type="hidden" name="type" value="news">
+<input type="hidden" name="status" value="1">
+<input type="hidden" name="version" value="1">
+<input type="hidden" name="refer" value="1">
+<input type="hidden" name="token" value="">
+</form><form class="sl-dial-post" id="slpostadfee529" action="/admin.php" method="post"><input type="hidden" name="name" value="node">
+<input type="hidden" name="op" value="status">
+<input type="hidden" name="id" value="3908">
+<input type="hidden" name="type" value="news">
+<input type="hidden" name="status" value="3">
+<input type="hidden" name="version" value="1">
+<input type="hidden" name="refer" value="1">
+<input type="hidden" name="token" value="">
+</form><form class="sl-dial-post" id="slpostadfee530" action="/admin.php" method="post"><input type="hidden" name="name" value="node">
+<input type="hidden" name="op" value="status">
+<input type="hidden" name="id" value="3908">
+<input type="hidden" name="type" value="news">
+<input type="hidden" name="status" value="4">
+<input type="hidden" name="version" value="1">
+<input type="hidden" name="refer" value="1">
+<input type="hidden" name="token" value="">
+</form><a href="#node-3908" title="3908" class="sl-but-mini">3908</a></li>    </ul>
+    <ul>
+      <li><time datetime="2015-02-21T21:00:00+01:00" title="Дата" class="sl-chip sl-chip-info sl-card-date"><i class="bi bi-calendar3" aria-hidden="true"></i> 21.02.2015</time></li>      <li><a href="/news/nashi-novosti" title="Наши новости" class="sl-chip sl-card-category"><i class="bi bi-folder" aria-hidden="true"></i> Наши новости</a></li>    </ul>
+  </div>
+  <div class="sl-entry-content">
+    <a href="/news/nashi-novosti" title="Наши новости" class="sl-card-image sl-cat-tone-1"><i class="bi bi-newspaper" aria-hidden="true"></i>
+</a>    <p><i class="bi bi-image sl-img-placeholder" role="img" aria-label="Современные тенденции в дизайне и технологиях" title="Современные тенденции в дизайне и технологиях"></i>
+ <div style="text-align:justify;"><p><strong><em>О завершении очередного этапа развития проекта: <a href="//slaed.net/index.php?name=files&op=view&id=1529" title="SLAED CMS">SLAED CMS</a> адаптирована к современным тенденциям в дизайне и технологиях</em></strong>  </p>
+<p>Постоянная аудитория и партнёры проекта уже заметили, что сайт проекта обновился, обновился кардинально. Новый сайт – это публичное отражение возможностей новой версии <a href="//slaed.net/index.php?name=files&op=view&id=1529" title="SLAED CMS">SLAED CMS</a> 6.0, выпуск релиза которой запланирован на дату десятилетия проекта.  </p>
+<p>Да! Проекту <a href="//slaed.net/index.php?name=files&op=view&id=1529" title="SLAED CMS">SLAED CMS</a> вот-вот исполнится 10 лет - 30.04.2015 г. мы будем праздновать юбилей. Десять лет – это серьёзный срок для CMS-системы, как и для любого ИТ-проекта. За 10 лет наш проект кардинально менялся, улучшался и постоянно внедрялся: именно в этот момент тысячи сайтов работают на базе <a href="//slaed.net/index.php?name=files&op=view&id=1529" title="SLAED CMS">SLAED CMS</a>.</p>
+</div></p>  </div>
+  <div class="sl-meta-foot">
+    <div class="sl-rate-box sl-pull-right"><div id="rep3908" class="sl-rate"><div title="Рейтинг: 4.97/88 Средняя оценка: 4.97" class="sl-urating" data-sl-rate hx-target="#rep3908" hx-swap="innerHTML transition:true" hx-push-url="false" hx-vals='{"mod": "node.news", "id": "3908", "typ": "stars", "token": ""}'>
+  <a class="sl-star" hx-post="/index.php?go=1&amp;op=getRatingView" hx-vals='{"rate": "1"}' hx-trigger="click" title="1"><i class="bi bi-star-fill" aria-hidden="true"></i></a><a class="sl-star" hx-post="/index.php?go=1&amp;op=getRatingView" hx-vals='{"rate": "2"}' hx-trigger="click" title="2"><i class="bi bi-star-fill" aria-hidden="true"></i></a><a class="sl-star" hx-post="/index.php?go=1&amp;op=getRatingView" hx-vals='{"rate": "3"}' hx-trigger="click" title="3"><i class="bi bi-star-fill" aria-hidden="true"></i></a><a class="sl-star" hx-post="/index.php?go=1&amp;op=getRatingView" hx-vals='{"rate": "4"}' hx-trigger="click" title="4"><i class="bi bi-star-fill" aria-hidden="true"></i></a><a class="sl-star" hx-post="/index.php?go=1&amp;op=getRatingView" hx-vals='{"rate": "5"}' hx-trigger="click" title="5"><i class="bi bi-star-fill" aria-hidden="true"></i></a></div>
+<span title="Голосов" class="sl-rate-num sl-rate-is">88</span>
+</div>
+</div>    <a href="/news/adaptatsiya-k-sovremennym-tendentsiyam-v-dizaine-i-tekhnologiyakh" title="Адаптация к современным тенденциям в дизайне и технологиях" class="sl-but">Подробнее</a>  </div></article>
+</div>
+<div id="sl-node-foot" hx-boost="true">
+  <p class="sl-center"><a id="sl-node-more" href="/news?page=2" title="Показать ещё" class="sl-but" hx-target="#sl-node-items" hx-swap="beforeend show:none" hx-select="#sl-node-items > *" hx-select-oob="#sl-node-foot"><i class="bi bi-arrow-down" aria-hidden="true"></i>Показать ещё</a></p>  <nav class="sl-pager" aria-label="Страницы">
+  <div class="sl-pager-main">
+    <div class="sl-pager-nav">
+        <span title="Назад" class="sl-but-mini sl-is-muted"><i class="bi bi-chevron-left" aria-hidden="true"></i></span>
+      <span class="sl-seg sl-seg-pager" data-sl-knob="pager"><span class="sl-seg-knob" data-sl-knob-mark aria-hidden="true"></span><span class="sl-seg-run sl-pager-pages">  <span title="1" aria-current="page" class="sl-seg-cell sl-is-active">1</span>
+  <a href="/news?page=2" title="2" class="sl-seg-cell sl-pager-near">2</a>
+  <a href="/news?page=3" title="3" class="sl-seg-cell sl-pager-far">3</a>
+  <a href="/news?page=4" title="4" class="sl-seg-cell sl-pager-far">4</a>
+  <a href="/news?page=5" title="5" class="sl-seg-cell sl-pager-far">5</a>
+  <a href="/news?page=6" title="6" class="sl-seg-cell sl-pager-far">6</a>
+  <a href="/news?page=7" title="7" class="sl-seg-cell sl-pager-far">7</a>
+  <a href="/news?page=8" title="8" class="sl-seg-cell sl-pager-far">8</a>
+  <span class="sl-seg-cell sl-is-muted" aria-hidden="true">&hellip;</span>
+  <a href="/news?page=10" title="10" class="sl-seg-cell">10</a>
+</span></span>
+        <a href="/news?page=2" title="Вперед" aria-label="Вперед" rel="next" aria-keyshortcuts="ArrowRight" class="sl-but-mini"><i class="bi bi-chevron-right" aria-hidden="true"></i></a>
+    </div>
+    <div class="sl-pager-side">
+      <span class="sl-pager-sep" aria-hidden="true"></span>
+      <a href="#top" title="Наверх" aria-label="Наверх" class="sl-but-mini"><i class="bi bi-arrow-up" aria-hidden="true"></i></a>
+      <div class="sl-tip sl-float sl-pager-keys" tabindex="0" role="button" aria-label="Листайте с клавиатуры"><span class="sl-but-mini" aria-hidden="true"><i class="bi bi-info-lg"></i></span><div class="sl-float-panel sl-pager-tip" role="tooltip"><p class="sl-pager-tip-head">Листайте с клавиатуры</p><ul class="sl-pager-tip-keys"><li><kbd><i class="bi bi-arrow-left" role="img" aria-label="Стрелка влево"></i></kbd>Предыдущая страница</li><li><kbd><i class="bi bi-arrow-right" role="img" aria-label="Стрелка вправо"></i></kbd>Следующая страница</li></ul><p class="sl-pager-tip-note">Пока курсор не стоит в поле ввода</p></div></div>
+    </div>
+  </div>
+  <p class="sl-pager-info">Страница <b>1 из 10</b><span class="sl-pager-range"> · Показаны 1–10</span> · Всего <b>97</b></p>
+</nav>
+</div>
+</div>
+              </main>
+            <aside id="sidebar"><!-- С2 The block "Администрация" of the panel etalon (А1–А8): the same markup and ../assets/admin-block.css, first in the column, always -->
+<section class="sl-block sl-adm" data-mark="С2">
+  <h2 class="sl-title" title="Свёртывание / Развёртывание" data-sl-toggle-control="sl-block-7">Администрация</h2>
+  <div id="sl-block-7" class="sl-block-content" data-sl-toggle="sl-block-7">
+    <div class="sl-adm-sum" data-sl-sess-box data-mark="С3">
+      <button type="button" class="sl-adm-ring" data-sl-open="sl-stats" title="Кто на сайте — подробная статистика" aria-label="На сайте 2 — открыть подробную статистику" style="--sl-d-adm: 50%; --sl-d-people: 50%; --sl-d-bots: 50%;" data-mark="С5"><span><b>2</b><small>на сайте</small></span></button>
+      <div class="sl-adm-lines">
+        <div class="sl-adm-line" data-kind="admin"><i class="bi bi-person-gear" aria-hidden="true"></i><span>Администрация</span><b>1</b></div>
+        <div class="sl-adm-line" data-kind="user"><i class="bi bi-person-fill" aria-hidden="true"></i><span>Пользователей</span><b class="sl-zero">0</b></div>
+        <div class="sl-adm-line" data-kind="bot"><i class="bi bi-robot" aria-hidden="true"></i><span>Поисковых ботов</span><b class="sl-zero">0</b></div>
+        <div class="sl-adm-line" data-kind="guest"><i class="bi bi-people-fill" aria-hidden="true"></i><span>Гостей</span><b>1</b></div>
+        <div class="sl-adm-line sl-adm-total"><i class="bi bi-people" aria-hidden="true"></i><span>Всего</span><b>2</b></div>
+      </div>
+    </div>
+    <div class="sl-adm-keys">
+      <a href="/admin.php" title="Панель администратора" aria-label="Панель администратора"><i class="bi bi-speedometer2" aria-hidden="true"></i></a>
+      <button type="button" class="sl-adm-stat" data-sl-open="sl-stats" title="Статистика посещаемости" aria-label="Статистика посещаемости"><i class="bi bi-activity" aria-hidden="true"></i></button>
+      <button type="button" class="sl-adm-fresh" data-sl-sess-refresh title="Обновить счётчики" aria-label="Обновить счётчики"><i class="bi bi-arrow-repeat" aria-hidden="true"></i></button>
+      <a class="sl-adm-site" href="/admin.php?name=node&amp;type=news" title="Эта страница в панели: «Новости» в разделе «Материалы»" aria-label="Эта страница в панели: «Новости» в разделе «Материалы»" data-mark="С4"><i class="bi bi-newspaper" aria-hidden="true"></i></a>
+      <button type="button" class="sl-adm-links sl-adm-dead" data-sl-toggle-control="sl-adm-own" data-sl-toggle-effect="slide" data-sl-toggle-duration="500" title="Свои ссылки: 5 — показать или скрыть" aria-label="Свои ссылки: 5 — показать или скрыть"><i class="bi bi-link-45deg" aria-hidden="true"></i><b class="sl-adm-n">5</b></button>
+      <a class="sl-adm-out" href="/admin.php?op=logout" title="Выход" aria-label="Выход"><i class="bi bi-box-arrow-right" aria-hidden="true"></i></a>
+    </div>
+    <div id="sl-adm-own" class="sl-adm-own" data-sl-toggle="sl-adm-own" data-sl-toggle-default="open" data-mark="С13">
+      <ul class="sl-adm-pm">
+        <li><a href="/plugins/sxd/index.php" title="DB Backup - Sypex Dumper" target="_blank" rel="noopener noreferrer"><i class="bi bi-database-down" aria-hidden="true"></i><span>DB Backup - Sypex Dumper</span><span class="sl-adm-flag" title="Ссылка не работает: файла plugins/sxd/index.php нет на сервере"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i>нет файла</span><i class="bi bi-chevron-right" aria-hidden="true"></i></a></li>
+        <li><a href="https://github.com/SLAED-CMS/SLAED-CMS-6.3" title="SLAED CMS на GitHub" target="_blank" rel="noopener noreferrer"><i class="bi bi-github" aria-hidden="true"></i><span>SLAED CMS на GitHub</span><i class="bi bi-chevron-right" aria-hidden="true"></i></a></li>
+        <li><a href="https://pagespeed.web.dev/" title="PageSpeed Insights — проверка скорости сайта" target="_blank" rel="noopener noreferrer"><i class="bi bi-speedometer" aria-hidden="true"></i><span>PageSpeed Insights</span><i class="bi bi-chevron-right" aria-hidden="true"></i></a></li>
+        <li><a href="https://search.google.com/search-console" title="Google Search Console" target="_blank" rel="noopener noreferrer"><i class="bi bi-google" aria-hidden="true"></i><span>Google Search Console</span><i class="bi bi-chevron-right" aria-hidden="true"></i></a></li>
+        <li><a href="https://webmaster.yandex.ru/" title="Яндекс Вебмастер" target="_blank" rel="noopener noreferrer"><i class="bi bi-bar-chart-line" aria-hidden="true"></i><span>Яндекс Вебмастер</span><i class="bi bi-chevron-right" aria-hidden="true"></i></a></li>
+      </ul>
+    </div>
+  </div>
+</section>
+<section class="sl-block">
+  <h2 class="sl-title">Опрос</h2>
+  <div class="sl-block-content"><div  id="repblockvoting"          ><div class="sl-vote">
+<form name="voting" id="formblockvoting" method="post"><input type="hidden" name="id" value="34"><input type="hidden" name="token" value=""><h3 class="sl-vote-title">Как часто должна выходить новая версия CMS?</h3><ul class="sl-vote-list"><li><label><input type="checkbox" name="body[]" value="1"> После реализации не менее десяти модификаций</label></li>
+<li><label><input type="checkbox" name="body[]" value="2"> На основании решения разработчика</label></li>
+<li><label><input type="checkbox" name="body[]" value="3"> Раз в несколько месяцев</label></li>
+<li><label><input type="checkbox" name="body[]" value="4"> Один раз в год</label></li>
+<li><label><input type="checkbox" name="body[]" value="5"> Не важно, лишь бы без глюков</label></li>
+<li><label><input type="checkbox" name="body[]" value="6"> Затрудняюсь ответить</label></li>
+</ul>
+<div class="sl-vote-actions sl-vote-actions-center"><span class="sl-dial">
+  <button class="sl-dial-toggle sl-but-mini" type="button" title="Редактор"><i class="bi bi-gear-fill"></i></button>
+  <a class="sl-dial-item sl-but-mini" href="/admin.php?name=voting&amp;op=add&amp;id=34" title="Полное редактирование"     ><i class="bi bi-pencil"></i></a><button class="sl-dial-item sl-but-mini" type="submit" form="sldel1" title="Удаление объекта" data-sl-confirm="Удалить &quot;Как часто должна выходить новая версия CMS?&quot;?"><i class="bi bi-trash"></i></button></span>
+<form class="sl-dial-post" id="sldel1" action="/admin.php" method="post"><input type="hidden" name="name" value="voting">
+<input type="hidden" name="op" value="delete">
+<input type="hidden" name="id" value="34">
+<input type="hidden" name="refer" value="1">
+<input type="hidden" name="token" value="">
+</form><a href="/index.php?go=1&amp;op=updateVotingResult&amp;votid=blockvoting" title="Голосовать" class="sl-but" hx-post="/index.php?go=1&amp;op=updateVotingResult&amp;votid=blockvoting" hx-target="#repblockvoting" hx-swap="innerHTML" hx-push-url="false" hx-include="#formblockvoting">
+                        Голосовать  </a></div><div class="sl-vote-links sl-vote-links-center"><a href="/voting/kak-chasto-dolzhna-vykhodit-novaya-versiya-cms" title="Голосов" class="sl-chip sl-votes">
+        <i class="bi bi-hand-thumbs-up" aria-hidden="true"></i>                 Голосов: 140  </a> <a href="/voting/kak-chasto-dolzhna-vykhodit-novaya-versiya-cms#comm" title="Комментарии" class="sl-coms sl-chip sl-chip-info">
+    <i class="bi bi-chat-text" aria-hidden="true"></i>                     Комментарии: 3  </a> <a href="/voting" title="Другие опросы" class="sl-chip sl-chip-accent">
+                  <i class="bi bi-card-checklist" aria-hidden="true"></i>       Другие опросы  </a></div>
+</form></div>
+</div></div>
+</section><section class="sl-block">
+  <h2 class="sl-title">Рекламные ссылки</h2>
+  <div class="sl-block-content"><div class="sl-center">Существует проблема с этим блоком!</div></div>
+</section><section class="sl-block">
+  <h2 class="sl-title">Пользователи</h2>
+  <div class="sl-block-content"><div class="sl-user-card">
+  <div class="sl-block-user-ava">
+    <i class="sl-ava-min" style="background-image: url(/templates/lite/images/avatars/system/guest.svg);"></i>    <p>
+            <small>Добро пожаловать,</small><b>Гость</b>
+          </p>
+      </div>
+    <form action="/account" method="post" class="sl-block-login">
+  <label class="sl-user-field"><i class="bi bi-person" aria-hidden="true"></i><span class="sl-visually-hidden">Ник</span><input type="text" name="user_name" value="" class="sl-field sl-field--block" maxlength="25" placeholder="Ник" autocomplete="username" required></label>
+  <label class="sl-user-field"><i class="bi bi-lock" aria-hidden="true"></i><span class="sl-visually-hidden">Пароль</span><input type="password" name="user_password" maxlength="25" class="sl-field sl-field--block" placeholder="Пароль" autocomplete="current-password" required></label>
+    <input type="hidden" name="refer" value="1">
+<input type="hidden" name="op" value="login">
+<input type="hidden" name="token" value="">
+    <button type="submit" class="sl-but"><i class="bi bi-box-arrow-in-right" aria-hidden="true"></i> Войти</button>
+</form>
+  <ul class="sl-block-pm">
+    <li><a href="/account/newuser"><i class="bi bi-person-plus" aria-hidden="true"></i><span>Регистрация или вход</span><i class="bi bi-chevron-right" aria-hidden="true"></i></a></li>
+    <li><a href="/account/passlost"><i class="bi bi-key" aria-hidden="true"></i><span>Потеряли пароль?</span><i class="bi bi-chevron-right" aria-hidden="true"></i></a></li>
+  </ul>
+    <div class="sl-block-session" id="repsinfo" data-sl-live-box><div class="sl-live-tools"><div class="sl-tip sl-float sl-live-chip" tabindex="0">
+  <span class="sl-live-icon"><i class="bi bi-activity sl-live-s-on" aria-hidden="true"></i><i class="bi bi-pause-circle-fill sl-live-s-paused" aria-hidden="true"></i></span>
+  <div class="sl-float-panel sl-live-panel">
+        <dl>
+      <dt>Статус</dt><dd><span class="sl-live-s-on">В эфире</span><span class="sl-live-s-paused">На паузе</span></dd>
+      <dt>Интервал</dt><dd>4 сек</dd>
+      <dt>Обновлено</dt><dd><span data-sl-live-ago data-sl-live-unit="сек">&mdash;</span></dd>
+    </dl>
+    <span class="sl-live-action"><button type="button" class="sl-chip sl-chip-warn sl-live-act" data-sl-live-toggle><span class="sl-live-s-on"><i class="bi bi-pause-fill" aria-hidden="true"></i> Пауза</span><span class="sl-live-s-paused"><i class="bi bi-play-fill" aria-hidden="true"></i> Продолжить</span></button></span>
+      </div>
+</div>
+</div><span class="sl-chip sl-chip-info" data-sl-session-online><i class="bi bi-people-fill" aria-hidden="true"></i><b>1</b> Онлайн</span><div class="sl-session-summary">
+  <div class="sl-session-donut" style="--sl-d-members: 0%; --sl-d-bots: 0%;">
+    <span><b>100%</b><small>Гостей</small></span>
+  </div>
+  <div>
+    <div class="sl-session-line" data-sl-audience="users"><i class="bi bi-person-fill" aria-hidden="true"></i><span>Пользователей</span><b>0</b></div>
+    <div class="sl-session-line" data-sl-audience="bots"><i class="bi bi-robot" aria-hidden="true"></i><span>Поисковых ботов</span><b>0</b></div>    <div class="sl-session-line" data-sl-audience="guests"><i class="bi bi-people-fill" aria-hidden="true"></i><span>Гостей</span><b>1</b></div>
+    <div class="sl-session-line sl-session-total"><i class="bi bi-people" aria-hidden="true"></i><span>Всего</span><b>1</b></div>
+  </div>
+</div>
+<div class="sl-session-action">
+    <a href="/index.php?go=1&amp;op=getUserSessionInfo" hx-get="/index.php?go=1&amp;op=getUserSessionInfo" hx-target="#repsinfo" hx-swap="innerHTML" hx-push-url="false" hx-trigger="click, every 4s" title="Обновить" class="sl-chip sl-chip-info sl-session-button"><i class="bi bi-arrow-repeat" aria-hidden="true"></i> Обновить</a>
+</div>
+</div></div>
+</div>
+</section></aside>
+          </div>
+  </div>
+  <section id="demo-line" aria-label="Хотите опробовать SLAED CMS в действии?">
+    <div class="sl-wrp">
+      <div class="sl-font sl-demo-line-title">Хотите опробовать SLAED CMS в действии?</div>
+      <ul class="sl-d-pane">
+        <li class="sl-d-info sl-d-version sl-font">Aктуальная версия</li>
+        <li class="sl-d-num sl-font">6.2</li>
+        <li class="sl-d-btns"><a class="sl-but" href="/files" title="Скачать бесплатно актуальную версию системы">Скачать систему</a></li>
+      </ul>
+    </div>
+  </section>
+  <footer id="footbox">
+    <div class="sl-wrp sl-grid-1-4">
+      <section class="sl-grid" aria-label="SLAED CMS">
+        <div class="sl-upper-wordmark" title="Название сайта - SLAED CMS - Современная система управления содержимым динамичных сайтов и мощная система управления интернет-порталами.">
+          <img class="sl-upper-wordmark-img" src="/templates/lite/images/logos/slaed-logo-wordmark-outline-blue.svg" alt="Название сайта - SLAED CMS - Современная система управления содержимым динамичных сайтов и мощная система управления интернет-порталами." title="Название сайта - SLAED CMS - Современная система управления содержимым динамичных сайтов и мощная система управления интернет-порталами." width="355" height="110">
+          <span class="sl-upper-tagline sl-font">Все великое просто</span>
+        </div>
+        <div class="sl-license"><a href="https://slaed.net" title="SLAED CMS" target="_blank" rel="noopener noreferrer">
+                        SLAED CMS  </a> © 2005-2026 Eduard Laas. Released under MIT License.</div>
+<div class="sl-generates">Генерация: 0.091 сек. и 27 запросов к базе данных за 0.012 сек.</div>
+        <div class="sl-thd sl-madein sl-madein-brand" title="Официальный патент на бренд SLAED в Германии">
+          <img src="/templates/lite/images/flags/de.svg" alt="Официальная регистрация бренда SLAED в Германии" width="60" height="40">
+          <span class="sl-madein-label sl-font">Made<br>in<br>Germany</span>
+        </div>
+      </section>
+      <div class="sl-grid">
+  <p title="Форум" class="sl-font sl-f-title">Форум</p>
+  <ul class="sl-list-item"><li>
+  <a href="/forum/pozhelaniya-k-versii-slaed-cms-6-3?last=1#16349" title="Пожелания к версии SLAED CMS 6.3">Пожелания к версии SLAED CMS 6.3</a>
+  <br>
+  <span class="sl-forum-meta">
+    <span class="sl-forum-meta-item">
+      <span class="sl-visually-hidden">Разместил:</span>
+      <a href="/users/slaed-cms" title="Персональная информация" class="sl-author">
+              <i class="bi bi-person" aria-hidden="true"></i>          SLAED CMS  </a>    </span>
+    <span class="sl-forum-meta-item">
+      <i class="bi bi-clock-history sl-forum-meta-icon" aria-hidden="true"></i>
+      <span class="sl-visually-hidden">Дата:</span>
+      30.09.2026 13:53:46    </span>
+  </span>
+</li>
+<li>
+  <a href="/forum/tsiklon?last=1#0" title="Циклон">Циклон</a>
+  <br>
+  <span class="sl-forum-meta">
+    <span class="sl-forum-meta-item">
+      <span class="sl-visually-hidden">Разместил:</span>
+      <a href="/users/olevpa" title="Персональная информация" class="sl-author">
+              <i class="bi bi-person" aria-hidden="true"></i>          olevpa  </a>    </span>
+    <span class="sl-forum-meta-item">
+      <i class="bi bi-clock-history sl-forum-meta-icon" aria-hidden="true"></i>
+      <span class="sl-visually-hidden">Дата:</span>
+      18.08.2026 21:36:25    </span>
+  </span>
+</li>
+<li>
+  <a href="/forum/data-vykhoda-novoi-versii-slaed-cms-6-3?last=1#16335" title="Дата выхода новой версии SLAED CMS 6.3">Дата выхода новой версии SLAED CMS 6.3</a>
+  <br>
+  <span class="sl-forum-meta">
+    <span class="sl-forum-meta-item">
+      <span class="sl-visually-hidden">Разместил:</span>
+      <a href="/users/slaed-cms" title="Персональная информация" class="sl-author">
+              <i class="bi bi-person" aria-hidden="true"></i>          SLAED CMS  </a>    </span>
+    <span class="sl-forum-meta-item">
+      <i class="bi bi-clock-history sl-forum-meta-icon" aria-hidden="true"></i>
+      <span class="sl-visually-hidden">Дата:</span>
+      01.02.2026 22:05:52    </span>
+  </span>
+</li>
+</ul>
+</div>
+      <section class="sl-grid" aria-label="Технологии">
+        <div class="sl-font sl-f-title">Технологии</div>
+        <div class="sl-partners">
+          <span title="SLAED CMS написана на языке PHP"><img src="/templates/lite/images/tmp/php.png" alt="PHP" width="74" height="74"></span>
+          <span title="SLAED CMS на СУБД MySQL"><img src="/templates/lite/images/tmp/mysql.png" alt="MySQL" width="74" height="74"></span>
+          <span title="Полная поддержка HTML5 в SLAED CMS"><img src="/templates/lite/images/tmp/html5.png" alt="HTML 5" width="74" height="74"></span>
+          <span title="Полная поддержка CSS3 в SLAED CMS"><img src="/templates/lite/images/tmp/css3.png" alt="CSS 3" width="74" height="74"></span>
+          <span title="SLAED CMS использует JavaScript Framework jQuery"><img src="/templates/lite/images/tmp/jquery.png" alt="jQuery" width="74" height="74"></span>
+          <span title="SLAED CMS использует JavaScript библиотеку jQuery UI"><img src="/templates/lite/images/tmp/jqueryui.png" alt="jQuery UI" width="74" height="74"></span>
+        </div>
+      </section>
+      <section class="sl-grid" aria-label="Контакты">
+        <div class="sl-font sl-f-title">Контакты</div>
+        <address>
+          <ul class="sl-block-contact">
+            <li><i class="bi bi-geo-alt sl-contact-icon" aria-hidden="true"></i>D-49179, Deutschland<br>Ostercappeln, Im Siek 6</li>
+            <li><i class="bi bi-telephone sl-contact-icon" aria-hidden="true"></i>+49 176 61966679</li>
+            <li><i class="bi bi-envelope sl-contact-icon" aria-hidden="true"></i><a href="mailto:support@slaed.net">support@slaed.net</a></li>
+            <li><i class="bi bi-globe sl-contact-icon" aria-hidden="true"></i><a href="https://slaed.net" title="Название сайта">https://slaed.net</a></li>
+          </ul>
+        </address>
+      </section>
+    </div>
+    <div class="sl-wrp">
+      <nav class="sl-fmenu" aria-label="Нижнее меню">
+        <ul>
+          <li><a href="/" title="Главная"><i class="bi bi-house-door" aria-hidden="true"></i>Главная</a></li>
+          <li><a href="/news" title="Новости"><i class="bi bi-newspaper" aria-hidden="true"></i>Новости</a></li>
+          <li><a href="/files" title="Каталог файлов"><i class="bi bi-file-earmark-arrow-down" aria-hidden="true"></i>Файлы</a></li>
+          <li><a href="/faq" title="Вопросы и ответы"><i class="bi bi-question-circle" aria-hidden="true"></i>Вопросы и ответы</a></li>
+          <li><a href="/docs" title="Центр документации"><i class="bi bi-book" aria-hidden="true"></i>Документация</a></li>
+          <li><a href="/presentation" title="Презентационная страница системы"><i class="bi bi-easel" aria-hidden="true"></i>Портфолио</a></li>
+          <li><a href="/sitemap" title="Карта сайта"><i class="bi bi-diagram-3" aria-hidden="true"></i>Карта сайта</a></li>
+        </ul>
+      </nav>
+    </div>
+  </footer>
+  <div id="block-idea"><a href="/forum/idei-i-predlozheniya-dlya-razrabotki" title="Идеи и предложения для разработки" class="sl-btn-idea"><span class="sl-font">Идеи и предложения</span></a></div>
+  <div id="block-feedback"><a href="/contact" title="Обратная связь" class="sl-btn-feedback"><span class="sl-font">Обратная связь</span></a></div>
+    <dialog class="sl-modal sl-modal-sm sl-modal-danger" id="sl-confirm" aria-label="Подтверждение">
+  <div class="sl-modal-title">
+    <i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i>
+    <span class="sl-modal-cap"><strong>Подтверждение</strong></span>
+    <span class="sl-modal-acts"><button type="button" class="sl-modal-act sl-modal-act-close" data-sl-close title="Закрыть" aria-label="Закрыть"><i class="bi bi-x-lg" aria-hidden="true"></i></button></span>
+  </div>
+    <div class="sl-modal-body"><p data-sl-confirm-text></p>
+</div>
+  <div class="sl-modal-foot"><button type="button" class="sl-modal-btn" data-sl-close data-sl-focus>Нет</button>
+<button type="button" class="sl-modal-btn sl-modal-btn-main" data-sl-confirm-ok>Да</button>
+</div></dialog>
+<dialog class="sl-modal" id="sl-share-sheet" aria-label="Поделиться">
+  <div class="sl-modal-title">
+    <i class="bi bi-share-fill" aria-hidden="true"></i>
+    <span class="sl-modal-cap"><strong>Поделиться</strong></span>
+    <span class="sl-modal-acts"><button type="button" class="sl-modal-act sl-modal-act-close" data-sl-close title="Закрыть" aria-label="Закрыть"><i class="bi bi-x-lg" aria-hidden="true"></i></button></span>
+  </div>
+    <div class="sl-modal-body"><div class="sl-share-grid">
+  <button type="button" class="sl-share-net" data-sl-net="telegram"><span class="sl-share-net-ico"><i class="bi bi-telegram" aria-hidden="true"></i></span>Telegram</button>
+  <button type="button" class="sl-share-net" data-sl-net="whatsapp"><span class="sl-share-net-ico"><i class="bi bi-whatsapp" aria-hidden="true"></i></span>WhatsApp</button>
+  <button type="button" class="sl-share-net" data-sl-net="viber"><span class="sl-share-net-ico"><svg class="sl-svg-ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.3c-3.5 0-6.4 2.4-6.4 5.4 0 1.6.8 3 2.2 4-.1.9-.4 2-1 2.8 1.2-.2 2.5-.7 3.3-1.3.6.1 1.2.2 1.9.2 3.5 0 6.4-2.4 6.4-5.4S11.5 1.3 8 1.3z" fill="none" stroke="currentColor" stroke-width="1.3"/><path transform="translate(4.9 3.6) scale(0.42)" fill="currentColor" d="M1.885.511a1.745 1.745 0 0 1 2.61.163L6.29 2.98c.329.423.445.974.315 1.494l-.547 2.19a.678.678 0 0 0 .178.643l2.457 2.457a.678.678 0 0 0 .644.178l2.189-.547a1.745 1.745 0 0 1 1.494.315l2.306 1.794c.829.645.905 1.87.163 2.611l-1.034 1.034c-.74.74-1.846 1.065-2.877.702a18.634 18.634 0 0 1-7.01-4.42 18.634 18.634 0 0 1-4.42-7.009c-.362-1.03-.037-2.137.703-2.877z"/></svg></span>Viber</button>
+  <button type="button" class="sl-share-net" data-sl-net="vk"><span class="sl-share-net-ico"><svg class="sl-svg-ico" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12.785 16.241s.288-.032.436-.194c.136-.148.132-.427.132-.427s-.02-1.304.576-1.496c.588-.19 1.341 1.26 2.14 1.818.605.422 1.064.33 1.064.33l2.137-.03s1.117-.071.587-.964c-.043-.073-.308-.661-1.588-1.87-1.34-1.264-1.16-1.059.454-3.246.983-1.332 1.376-2.145 1.253-2.493-.117-.332-.84-.244-.84-.244l-2.406.015s-.178-.025-.31.056c-.13.079-.212.262-.212.262s-.382 1.03-.89 1.907c-1.07 1.85-1.499 1.948-1.674 1.832-.407-.267-.305-1.075-.305-1.648 0-1.793.267-2.54-.521-2.733-.262-.065-.454-.107-1.123-.114-.858-.009-1.585.003-1.996.208-.274.136-.485.44-.356.457.159.022.519.099.71.363.246.341.237 1.107.237 1.107s.142 2.11-.33 2.371c-.325.18-.77-.187-1.725-1.865-.489-.859-.859-1.81-.859-1.81s-.07-.176-.198-.272c-.154-.115-.37-.151-.37-.151l-2.286.015s-.343.01-.469.161c-.112.135-.009.414-.009.414s1.79 4.258 3.817 6.403c1.858 1.967 3.968 1.838 3.968 1.838z"/></svg></span>VK</button>
+  <button type="button" class="sl-share-net" data-sl-net="ok"><span class="sl-share-net-ico"><svg class="sl-svg-ico" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M11.99 0C8.31 0 5.32 2.99 5.32 6.67c0 3.68 2.99 6.67 6.67 6.67 3.68 0 6.67-2.99 6.67-6.67C18.66 2.99 15.67 0 11.99 0zm0 3.91c1.52 0 2.76 1.24 2.76 2.76 0 1.52-1.24 2.76-2.76 2.76-1.52 0-2.76-1.24-2.76-2.76 0-1.52 1.24-2.76 2.76-2.76zm6.11 10.15c-.43-.87-1.62-1.6-3.2-.35 0 0-1.28 1.02-2.91 1.02-1.63 0-2.91-1.02-2.91-1.02-1.58-1.25-2.77-.52-3.2.35-.75 1.51.1 2.24 2.01 3.47.65.42 1.55.72 1.55.72l-2.06 2.06c-.75.75-.75 1.97 0 2.72.38.38.87.56 1.36.56s.99-.19 1.36-.56l2.09-2.09 2.09 2.09c.75.75 1.97.75 2.72 0 .75-.75.75-1.97 0-2.72l-2.06-2.06s.9-.3 1.55-.72c1.91-1.23 2.76-1.96 2.01-3.47z"/></svg></span>OK</button>
+  <button type="button" class="sl-share-net" data-sl-net="facebook"><span class="sl-share-net-ico"><i class="bi bi-facebook" aria-hidden="true"></i></span>Facebook</button>
+  <button type="button" class="sl-share-net" data-sl-net="x"><span class="sl-share-net-ico"><i class="bi bi-twitter-x" aria-hidden="true"></i></span>X</button>
+  <button type="button" class="sl-share-net" data-sl-net="pinterest"><span class="sl-share-net-ico"><i class="bi bi-pinterest" aria-hidden="true"></i></span>Pinterest</button>
+  <button type="button" class="sl-share-net" data-sl-net="reddit"><span class="sl-share-net-ico"><i class="bi bi-reddit" aria-hidden="true"></i></span>Reddit</button>
+  <button type="button" class="sl-share-net" data-sl-net="linkedin"><span class="sl-share-net-ico"><i class="bi bi-linkedin" aria-hidden="true"></i></span>LinkedIn</button>
+  <button type="button" class="sl-share-net" data-sl-net="mail"><span class="sl-share-net-ico"><i class="bi bi-envelope-at" aria-hidden="true"></i></span>E-Mail</button>
+</div>
+</div>
+  </dialog>
+<dialog class="sl-modal sl-modal-sm" id="sl-share-qr" aria-label="QR-код">
+  <div class="sl-modal-title">
+    <i class="bi bi-qr-code" aria-hidden="true"></i>
+    <span class="sl-modal-cap"><strong>QR-код</strong></span>
+    <span class="sl-modal-acts"><button type="button" class="sl-modal-act sl-modal-act-close" data-sl-close title="Закрыть" aria-label="Закрыть"><i class="bi bi-x-lg" aria-hidden="true"></i></button></span>
+  </div>
+    <div class="sl-modal-body"><div class="sl-qr-code" data-sl-qr></div>
+<p class="sl-modal-note"></p>
+</div>
+  <div class="sl-modal-foot"><button type="button" class="sl-modal-btn sl-modal-btn-main" data-sl-share-act="copy" data-sl-done="Ссылка скопирована" data-sl-focus><i class="bi bi-link-45deg" aria-hidden="true"></i> Копировать ссылку</button>
+</div></dialog>
+<dialog class="sl-modal sl-modal-xl" data-sl-shot="view" aria-label="Предварительный просмотр">
+  <div class="sl-modal-title">
+    <i class="bi bi-image" aria-hidden="true"></i>
+    <span class="sl-modal-cap"><strong>Предварительный просмотр</strong><span class="sl-modal-sub" data-sl-shot-name title=""></span></span>
+    <span class="sl-modal-acts"><button type="button" class="sl-modal-act sl-modal-act-close" data-sl-close title="Закрыть" aria-label="Закрыть"><i class="bi bi-x-lg" aria-hidden="true"></i></button></span>
+  </div>
+    <div class="sl-modal-body sl-modal-body-flush"><div class="sl-shot-grid">
+  <div class="sl-shot-stage">
+    <button type="button" class="sl-but-mini sl-shot-nav sl-shot-nav-prev" data-sl-shot-step="-1" title="" aria-label=""><i class="bi bi-chevron-left" aria-hidden="true"></i></button>    <span class="sl-shot-img"><img class="sl-modal-image" src="" alt="" data-sl-shot-img></span>
+    <button type="button" class="sl-but-mini sl-shot-nav sl-shot-nav-next" data-sl-shot-step="1" title="" aria-label=""><i class="bi bi-chevron-right" aria-hidden="true"></i></button>  </div>
+  </div>
+</div>
+  </dialog>
+  <!-- С5 The window "Наблюдение" of the panel etalon (А3), on the lite theme: fragments/window.html and the window mechanics of slaed.js -->
+  <dialog class="sl-modal sl-modal-lg sl-stats" id="sl-stats" data-sl-window aria-labelledby="sl-stats-cap">
+    <div class="sl-modal-title">
+      <i class="bi bi-activity" aria-hidden="true"></i>
+      <span class="sl-modal-cap"><strong id="sl-stats-cap">Наблюдение</strong><span class="sl-modal-sub">Посещаемость в реальном времени</span></span>
+      <span class="sl-modal-acts">
+        <span class="sl-modal-act sl-modal-act-move" title="Переместить" aria-hidden="true"><i class="bi bi-grip-vertical"></i></span>
+        <button type="button" class="sl-modal-act" data-sl-full data-expand="Развернуть" data-restore="Свернуть" title="Развернуть" aria-label="Развернуть"><i class="bi bi-arrows-angle-expand" aria-hidden="true"></i></button>
+        <button type="button" class="sl-modal-act sl-modal-act-close" data-sl-close title="Закрыть" aria-label="Закрыть"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
+      </span>
+    </div>
+    <div class="sl-modal-bar sl-stats-bar">
+      <div class="sl-stats-segs" role="group" aria-label="Кого показать">
+        <button type="button" class="sl-stats-seg" data-sl-stats-kind="all" aria-pressed="true">Все <b>2</b></button>
+        <button type="button" class="sl-stats-seg" data-sl-stats-kind="admin" aria-pressed="false">Админы <b>1</b></button>
+        <button type="button" class="sl-stats-seg" data-sl-stats-kind="user" aria-pressed="false">Пользователи <b>0</b></button>
+        <button type="button" class="sl-stats-seg" data-sl-stats-kind="bot" aria-pressed="false">Боты <b>0</b></button>
+        <button type="button" class="sl-stats-seg" data-sl-stats-kind="guest" aria-pressed="false">Гости <b>1</b></button>
+      </div>
+      <button type="button" class="sl-stats-live" data-sl-stats-pause aria-pressed="false" title="Пауза / продолжить"><i class="sl-stats-dot" aria-hidden="true"></i><span data-sl-stats-state>в эфире</span><small>· каждые 10 сек</small></button>
+    </div>
+    <div class="sl-modal-body">
+      <div class="sl-stats-kpis">
+        <div><small>На сайте сейчас</small><b>2</b></div>
+        <div><small>Пик за час</small><b>2</b></div>
+        <div><small>В среднем за час</small><b>2</b></div>
+        <div><small>Стран</small><b>0</b></div>
+      </div>
+      <div class="sl-stats-chart"><svg viewBox="0 0 120 36" preserveAspectRatio="none" role="img" aria-label="Посещаемость за последний час"><polygon points="0,36 0.0,20.1 10.9,6.2 21.8,20.1 32.7,20.1 43.6,6.2 54.5,6.2 65.5,20.1 76.4,6.2 87.3,6.2 98.2,20.1 109.1,6.2 120.0,6.2 120,36" class="sl-stats-area"/><polyline points="0.0,20.1 10.9,6.2 21.8,20.1 32.7,20.1 43.6,6.2 54.5,6.2 65.5,20.1 76.4,6.2 87.3,6.2 98.2,20.1 109.1,6.2 120.0,6.2" class="sl-stats-line"/></svg><div class="sl-stats-axis"><span>60 мин</span><span>45</span><span>30</span><span>15</span><span>сейчас</span></div></div>
+      <div class="sl-stats-shares" title="Доли: администрация, пользователи, боты, гости"><i data-kind="admin" style="--sl-d-share: 50%"></i><i data-kind="user" style="--sl-d-share: 0%"></i><i data-kind="bot" style="--sl-d-share: 0%"></i><i data-kind="guest" style="--sl-d-share: 50%"></i></div>
+      <div class="sl-stats-cols">
+        <div class="sl-stats-box"><p class="sl-stats-cap"><i class="bi bi-people" aria-hidden="true"></i> Кто и где <small>2</small></p>
+          <ul class="sl-stats-rows" data-sl-stats-rows>
+            <li class="sl-stats-row" data-kind="admin"><img src="/templates/lite/images/avatars/presets/038.svg" alt=""><span><b>SLAED CMS</b><a href="/admin.php" title="/admin.php">/admin.php</a></span><span class="sl-stats-kind">Админ</span><span class="sl-stats-where"><a href="https://whatismyipaddress.com/ip/127.0.0.1" target="_blank" rel="noopener noreferrer" title="IP Адрес: 127.0.0.1">127.0.0.1</a><small>1 сек</small></span></li>
+            <li class="sl-stats-row" data-kind="guest"><img src="/templates/lite/images/avatars/system/guest.svg" alt=""><span><b>Гость</b><a href="/news" title="/news">/news</a></span><span class="sl-stats-kind">Гость</span><span class="sl-stats-where"><a href="https://whatismyipaddress.com/ip/127.0.0.1" target="_blank" rel="noopener noreferrer" title="IP Адрес: 127.0.0.1">127.0.0.1</a><small>12 сек</small></span></li>
+          </ul>
+          <p class="sl-stats-more" data-sl-stats-empty hidden>Сейчас таких на сайте нет</p>
+        </div>
+        <div class="sl-stats-side">
+          <div class="sl-stats-box"><p class="sl-stats-cap"><i class="bi bi-file-earmark-text" aria-hidden="true"></i> Открытые страницы</p><ol class="sl-stats-top"><li><span title="/admin.php">/admin.php</span><i style="--sl-d-share: 100%"></i><b>1</b></li><li><span title="/news">/news</span><i style="--sl-d-share: 100%"></i><b>1</b></li></ol></div>
+          <div class="sl-stats-box"><p class="sl-stats-cap"><i class="bi bi-globe2" aria-hidden="true"></i> Страны</p><p class="sl-stats-more">127.0.0.1 — локальный адрес стенда, по нему страну не определить (Geoip).</p></div>
+        </div>
+      </div>
+    </div>
+    <div class="sl-modal-foot sl-stats-foot"><span>Обновлено: <b data-sl-stats-ago>только что</b></span><a class="sl-but" href="/admin.php?name=statistic" title="Статистика сайта"><i class="bi bi-graph-up" aria-hidden="true"></i> Статистика сайта</a></div>
+  </dialog>
+
+  <!-- The stand: a helper window of the system at the bottom right, the marks of every code and their description; not part of the site -->
+  <dialog class="sl-modal sl-modal-sm demo-panel" id="demo-panel" data-sl-window data-sl-static aria-labelledby="demo-panel-cap">
+    <div class="sl-modal-title"><i class="bi bi-sliders2" aria-hidden="true"></i> <span class="sl-modal-cap"><strong id="demo-panel-cap">Стенд</strong><span class="sl-modal-sub">Эталон · Сайт</span></span> <span class="sl-modal-acts"><span class="sl-modal-act sl-modal-act-move" title="Перетащить" aria-hidden="true"><i class="bi bi-grip-vertical"></i></span><button type="button" class="sl-modal-act" data-demo-fold aria-expanded="true" aria-controls="demo-panel-body" title="Свернуть" aria-label="Свернуть"><i class="bi bi-dash-lg" aria-hidden="true"></i></button></span></div>
+    <div class="sl-modal-body demo-panel-body" id="demo-panel-body">
+      <div class="sl-set-row"><span class="sl-set-name" id="demo-l-mode"><i class="bi bi-circle-half" aria-hidden="true"></i>Тема</span><span class="sl-set-pick"><span class="sl-seg sl-seg-view" data-sl-knob="demo-mode" role="group" aria-labelledby="demo-l-mode" data-demo-seg="mode"><button type="button" class="sl-seg-cell" data-demo-val="light" title="Светлая" aria-label="Светлая" aria-pressed="false"><i class="bi bi-sun" aria-hidden="true"></i></button><button type="button" class="sl-seg-cell" data-demo-val="auto" title="Системная" aria-label="Системная" aria-pressed="false"><i class="bi bi-circle-half" aria-hidden="true"></i></button><button type="button" class="sl-seg-cell" data-demo-val="dark" title="Тёмная" aria-label="Тёмная" aria-pressed="false"><i class="bi bi-moon" aria-hidden="true"></i></button><span class="sl-seg-knob" data-sl-knob-mark aria-hidden="true"></span></span></span></div>
+      <div class="sl-set-row"><span class="sl-set-name" id="demo-l-marks"><i class="bi bi-bookmark-star" aria-hidden="true"></i>Пометки</span><span class="sl-set-pick"><span class="sl-seg sl-seg-view demo-seg-text" data-sl-knob="demo-marks" role="group" aria-labelledby="demo-l-marks" data-demo-seg="marks"><button type="button" class="sl-seg-cell" data-demo-val="1" title="Да" aria-label="Да" aria-pressed="false">Да</button><button type="button" class="sl-seg-cell" data-demo-val="0" title="Нет" aria-label="Нет" aria-pressed="false">Нет</button><span class="sl-seg-knob" data-sl-knob-mark aria-hidden="true"></span></span></span></div>
+      <div class="sl-set-row"><span class="sl-set-name" id="demo-l-motion"><i class="bi bi-magic" aria-hidden="true"></i>Движение</span><span class="sl-set-pick"><span class="sl-seg sl-seg-view demo-seg-text" data-sl-knob="demo-motion" role="group" aria-labelledby="demo-l-motion" data-demo-seg="motion"><button type="button" class="sl-seg-cell" data-demo-val="1" title="Да" aria-label="Да" aria-pressed="false">Да</button><button type="button" class="sl-seg-cell" data-demo-val="0" title="Нет" aria-label="Нет" aria-pressed="false">Нет</button><span class="sl-seg-knob" data-sl-knob-mark aria-hidden="true"></span></span></span></div>
+      <div class="sl-set-row"><span class="sl-set-name" id="demo-l-dock"><i class="bi bi-capsule" aria-hidden="true"></i>Меню на сайте</span><span class="sl-set-pick"><span class="sl-seg sl-seg-view demo-seg-text" data-sl-knob="demo-dock" role="group" aria-labelledby="demo-l-dock" data-demo-seg="dock"><button type="button" class="sl-seg-cell" data-demo-val="1" title="Включено" aria-label="Включено" aria-pressed="false">Да</button><button type="button" class="sl-seg-cell" data-demo-val="0" title="Выключено" aria-label="Выключено" aria-pressed="false">Нет</button><span class="sl-seg-knob" data-sl-knob-mark aria-hidden="true"></span></span></span></div>
+      <div class="sl-set-row"><span class="sl-set-name" id="demo-l-legend"><i class="bi bi-list-check" aria-hidden="true"></i>Описание</span><span class="sl-set-pick"><span class="sl-seg sl-seg-view demo-seg-text" data-sl-knob="demo-legend" role="group" aria-labelledby="demo-l-legend" data-demo-seg="legend"><button type="button" class="sl-seg-cell" data-demo-val="1" title="Да" aria-label="Да" aria-pressed="false">Да</button><button type="button" class="sl-seg-cell" data-demo-val="0" title="Нет" aria-label="Нет" aria-pressed="false">Нет</button><span class="sl-seg-knob" data-sl-knob-mark aria-hidden="true"></span></span></span></div>
+    </div>
+    <div class="sl-modal-foot"><a class="sl-modal-btn" href="../index.html" title="Все варианты стенда">Варианты</a> <a class="sl-modal-btn" href="../admin/" title="Эталон панели администратора">Панель</a> <button type="button" class="sl-modal-btn" data-demo-reset title="Сбросить выбор: тема, движение, пометки, место окна, плавающее меню">Сбросить</button></div>
+  </dialog>
+  <div class="demo-marks" data-demo-layer aria-hidden="true"></div>
+  <dialog class="sl-modal sl-modal-sm demo-legend" id="demo-legend" data-sl-window data-demo-legend aria-labelledby="demo-legend-cap">
+    <div class="sl-modal-title"><i class="bi bi-list-check" aria-hidden="true"></i> <span class="sl-modal-cap"><strong id="demo-legend-cap">Описание</strong><span class="sl-modal-sub">Перенесённые решения</span></span> <span class="sl-modal-acts"><span class="sl-modal-act sl-modal-act-move" title="Перетащить" aria-hidden="true"><i class="bi bi-grip-vertical"></i></span><button type="button" class="sl-modal-act sl-modal-act-close" data-sl-close title="Закрыть" aria-label="Закрыть"><i class="bi bi-x-lg" aria-hidden="true"></i></button></span></div>
+    <div class="sl-modal-body">
+    <p class="demo-legend-note">Эталон сайта глазами вошедшего администратора: лента «Новости» темы lite с блоком «Администрация» (вариант 08) и плавающим меню (вариант 09) серии «Блок администратора». Пара к эталону панели (../admin/): общее у них — один файл стилей ../assets/admin-block.css и коды М и А эталона панели, здесь — только то, чем сайт отличается. Флажок прячет пометку кода, «Показать» ведёт к элементу или запускает механику; Alt+щелчок по метке на странице открывает её описание. С — сайт.</p>
+    <label class="demo-legend-all"><input type="checkbox" class="sl-check" data-demo-all checked> Все пометки</label>
+    <div data-demo-list>
+      <h3>С · сайт — серия «Блок администратора», комната «Сайт» вариантов 08 и 09</h3>
+      <ul class="sl-reset">
+        <li data-code="С1">Обвязка — живая страница «Новости» темы lite: ответ сервера под администратором (2026-10-19) — верхняя строка, шапка, полоса сезона, лента, колонка и подвал настоящие. Из скриптов — slaed.js и global-func.js, без htmx: стенд не ходит на сервер, формы не отправляются.</li>
+        <li data-code="С2" data-show="adm">Блок «Администрация» стоит первым в колонке и всегда — при включённом и выключенном меню, как в панели (А1). Разметка та же, что в эталоне панели (А2–А8), стили — один файл на обе темы; он заменил два живых блока, «Администрацию» и «Наблюдение».</li>
+        <li data-code="С3">Ремонт живых блоков на сайте. Было: у «Панели администратора» и «Выхода» маркеры списка и неразрывный пробел (ul.sl-login-top.sl-logged оформлен только в шапке); подсказка заголовка «Закрыть / Наблюдение» (константы _OPCL нет в языке сайта); кольцо «Наблюдения» пишет «%» без числа (partials/session-summary.html ждёт members_pct, а получает ключи панели), строки «Администрация» нет. Стало: сводка с долей администрации (А2), подсказка «Свёртывание / Развёртывание».</li>
+        <li data-code="С4">Клавиша «Сайт» на сайте становится «Эта страница в панели»: ведёт в раздел панели, который правит открытую страницу, — для ленты «Новости» это «Материалы» с типом «Новости».</li>
+        <li data-code="С5" data-show="stats">Кольцо, клавиша «Статистика» и кольцо в меню открывают то же окно «Наблюдение», что в панели (А3), — системное окно темы lite.</li>
+        <li data-code="С6" data-show="dockmove">Плавающее меню на сайте — тот же слой, что в панели (М1–М8, М13, М14): ручка, поворот, сворачивание, рост иконки под курсором. Знак SLAED ведёт в панель; у свёрнутого меню на знаке — сумма очереди.</li>
+        <li data-code="С7">Сразу за знаком — «Эта страница в панели» (С4) с отметкой открытой страницы: светящаяся полоса под иконкой и aria-current.</li>
+        <li data-code="С8" data-show="queue">Очередь — только на сайте: до четырёх иконок с числами — новые пользователи, комментарии, помощь, новости. В панели её держат колокольчик и «Ждут внимания». Вертикальное меню несёт один колокольчик с суммой и списком.</li>
+        <li data-code="С9" data-show="launch">«Все разделы» вместо Ctrl+K — палитры панели на сайте нет: разделы панели сеткой с поиском; звезда закрепляет раздел в меню (до восьми, список общий с панелью, М9) с «Отменить».</li>
+        <li data-code="С10" data-show="dockoff">Меню на сайте включается строкой «Меню на сайте» в «Опциях» панели (М10): эталоны стоят на одном адресе, и выбор в панели действует здесь сразу. На стенде та же строка есть в окне «Стенд».</li>
+        <li data-code="С11" data-show="dockturn">«Позиция меню» общая с панелью (М10): край из «Опций» панели. Место, перетащенное на сайте, своё у сайта — панель оно не сдвигает; Home и «Вернуть на место» возвращают к краю из «Опций».</li>
+        <li data-code="С12" data-show="pin">Уведомление сайта — пилюля slaed.js (setToast); закрепление и открепление раздела говорят ею, и в ней есть «Отменить». Для переноса: setToast получает третий параметр — действие отмены. Пилюля поднимается над меню, лежащим внизу (М12).</li>
+        <li data-code="С13">Свои ссылки — те же пять, что в панели (А6), в блоке и в стопке меню; ссылка на файл, которого нет, помечена «нет файла» (А7).</li>
+        <li data-code="С14">Для переноса в тему lite: токен --sl-solid-text (текст на сплошной заливке), объявленный в теме admin, — на стенде его объявляет site.css. Токен только добавляется, ничего не переименовывается.</li>
+      </ul>
+    </div>
+    </div>
+  </dialog>
+  <script>document.write('<script src="site.js?v=' + Date.now() + '"><\/script>');</script>
+</body>
+</html>

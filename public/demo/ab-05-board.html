@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="ru" data-theme="auto">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>05 &middot; Табло — стенд блока администратора SLAED CMS</title>
+  <script>document.write('<script src="assets/ablock.js?v=' + Date.now() + '"><\/script>');</script>
+  <style>
+    /* 05 Табло - the summary as a scoreboard. Instead of the ring: the figure of the moment large, "в эфире" beating
+       beside it and the last hour drawn under it; the bar of shares and four small counters - admins, users, bots,
+       guests - stand below. The whole board is one button into the window of the live statistics. The admin part is one
+       bar of three - panel, this section, logout - and the owner's links as small icons with their tips.
+
+       Transfer: the figures are those of getUserSessionAdminInfo(); the hour needs the online count kept per 5 minutes */
+
+    .v-board {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      gap: var(--sl-space-2) var(--sl-space-4);
+      align-items: end;
+      box-sizing: border-box;
+      width: 100%;
+      padding: var(--sl-space-4);
+      border: 1px solid var(--sl-border);
+      border-radius: var(--sl-radius-2);
+      background: var(--sl-bg);
+      color: var(--sl-text);
+      font: inherit;
+      text-align: left;
+      cursor: pointer;
+      transition: box-shadow var(--sl-time-fast) var(--sl-ease-out), border-color var(--sl-time-fast) var(--sl-ease-out);
+    }
+
+    .v-board:hover,
+    .v-board:focus-visible {
+      border-color: var(--sl-primary);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--sl-primary) 16%, transparent);
+    }
+
+    .v-big {
+      line-height: 1;
+    }
+
+    .v-big b {
+      display: block;
+      font-size: var(--sl-font-display);
+      font-weight: var(--sl-weight-bold);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .v-big small {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--sl-space-2);
+      margin-top: var(--sl-space-2);
+      color: var(--sl-text-muted);
+      font-size: var(--sl-font-micro);
+    }
+
+    .v-big small i {
+      width: 7px;
+      height: 7px;
+      border-radius: var(--sl-radius-circle);
+      background: var(--sl-danger);
+      animation: ab-w-pulse 1.6s var(--sl-ease-in-out) infinite;
+      color: var(--sl-danger);
+    }
+
+    .v-board .ab-w-spark {
+      height: 48px;
+    }
+
+    .v-board .ab-w-bar {
+      grid-column: 1 / -1;
+      margin-top: var(--sl-space-2);
+    }
+
+    .v-lamps {
+      display: grid;
+      grid-column: 1 / -1;
+      grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+      gap: var(--sl-space-2);
+    }
+
+    .v-lamps span {
+      display: grid;
+      color: var(--sl-text-muted);
+      font-size: var(--sl-font-micro);
+      line-height: var(--sl-line-tight);
+    }
+
+    .v-lamps b {
+      color: var(--sl-text);
+      font-size: var(--sl-font-h4);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .v-lamps .v-zero b {
+      color: var(--sl-text-muted);
+      opacity: var(--sl-fade-muted);
+    }
+
+    .v-bar {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      overflow: hidden;
+      margin-top: var(--sl-space-4);
+      border: 1px solid var(--sl-border);
+      border-radius: var(--sl-radius-pill);
+      background: var(--sl-bg-subtle);
+    }
+
+    .v-bar a {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--sl-space-2);
+      min-width: 0;
+      height: var(--sl-size-control);
+      border-right: 1px solid var(--sl-border);
+      color: var(--sl-text-muted);
+      font-size: var(--sl-font-small);
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .v-bar a:last-child {
+      border-right: 0;
+    }
+
+    .v-bar a:hover {
+      background: var(--sl-bg);
+      color: var(--sl-primary);
+    }
+
+    .v-bar .ab-out:hover {
+      color: var(--sl-danger);
+    }
+
+    .v-own {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--sl-space-2);
+      margin-top: var(--sl-space-3);
+    }
+
+    .v-own a {
+      position: relative;
+      display: grid;
+      place-items: center;
+      width: var(--sl-size-control);
+      height: var(--sl-size-control);
+      border-radius: var(--sl-radius-2);
+      background: var(--sl-primary-subtle);
+      color: var(--sl-primary-strong);
+    }
+
+    .v-own a.v-dead::after {
+      content: "";
+      position: absolute;
+      top: -3px;
+      right: -3px;
+      width: var(--sl-space-4);
+      height: var(--sl-space-4);
+      border: 2px solid var(--sl-bg);
+      border-radius: var(--sl-radius-circle);
+      background: var(--sl-warning);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .v-big small i { animation: none; }
+    }
+  </style>
+  <script>
+    window.AB_FACE = {
+      blocks(d) {
+        const { esc, ico, attrs, line, free, block } = window.AB;
+        const w = d.who;
+        const lamp = (k, label) => `<span${w[k] ? '' : ' class="v-zero"'}><b data-ab-n="${k}">${w[k]}</b>${label}</span>`;
+        const board = `<button type="button" class="v-board" data-sl-open="ab-stats" title="Подробная статистика посещаемости">` +
+          `<span class="v-big"><b data-ab-n="all">${w.all}</b><small><i></i>на сайте · в эфире</small></span>` +
+          `<svg class="ab-w-spark" viewBox="0 0 120 36" preserveAspectRatio="none" role="img" aria-label="Последний час" data-ab-spark></svg>` +
+          `<span class="ab-w ab-w-bar" data-ab-bar></span>` +
+          `<span class="v-lamps">${d.sup ? lamp('admins', 'админы') : ''}${lamp('users', 'польз.')}${lamp('bots', 'боты')}${lamp('guests', 'гости')}</span></button>`;
+        const here = d.ctx === 'site' ? { ...d.page.admin, label: 'Новости' } : { ...d.page.site, label: 'На сайте', blank: true };
+        const bar = `<div class="v-bar"><a ${attrs(d.home)}>${ico(d.home.icon)} ${d.home.short}</a><a ${attrs(here)}>${ico(here.icon)} ${esc(here.label)}</a><a class="ab-out" ${attrs(d.logout)}>${ico(d.logout.icon)} ${d.logout.short}</a></div>`;
+        const own = d.extras.items.length ? `<div class="v-own">${d.extras.items.map((it) => `<a ${attrs({ ...it, title: it.dead ? 'Нет файла: ' + it.label : it.label })}${it.dead ? ' class="v-dead"' : ''} aria-label="${esc(it.label)}">${ico(it.icon)}</a>`).join('')}</div>` : '';
+        return block(d, { id: 7, title: d.title }, board + bar + line(d) + own + free(d));
+      },
+      // The spark and the bar of the board are drawn by the series on the first tick; here they are drawn at once
+      after(host, d) {
+        host.querySelectorAll('[data-ab-spark]').forEach((svg) => { if (!svg.innerHTML) document.dispatchEvent(new CustomEvent('ab:tick', { detail: d })); });
+      },
+    };
+  </script>
+</head>
+<body>
+  <script>document.write('<script src="assets/demo.js?v=' + Date.now() + '"><\/script>');</script>
+</body>
+</html>

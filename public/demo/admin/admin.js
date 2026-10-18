@@ -290,6 +290,10 @@
     }
     if (sel.name === 'motion') setMotion(sel.value === '1');
     if (sel.name === 'sound') setSoundOn(sel.value === '1');
+    // М10 The floating menu: in the panel at once; the row of the site is kept for the site, which this stand does not draw
+    if (sel.name === 'dock') setDockOn(sel.value === '1');
+    if (sel.name === 'dock_site') setKept('sl.dock.site', sel.value);
+    if (sel.name === 'dock_side') setDockSide(sel.value);
   }
 
   // Э14 Д7 The end of a session: a countdown before the work is lost, a way to keep it, the warning tone
@@ -968,7 +972,9 @@
     doc.addEventListener('click', setRailGuard, true);
     doc.addEventListener('keydown', setRailGuard, true);
     doc.addEventListener('click', setClicks);
+    doc.addEventListener('click', setDockClicks);
     doc.addEventListener('keydown', setKeys);
+    doc.addEventListener('keydown', setDockKeys);
     doc.addEventListener('keydown', setRailKeys);
     doc.querySelectorAll('[data-sl-menu-find]').forEach((f) => f.addEventListener('input', setMenuFind));
     doc.querySelectorAll('[data-sl-option]').forEach((s) => s.addEventListener('change', () => setOption(s)));
@@ -1023,6 +1029,488 @@
     setList(true);
     setBell();
     setSaver();
+    setDock();
+    setDockOn(!root.hasAttribute('data-sl-dock-off'), false);
+    doc.querySelectorAll('#sl-o-dock-site').forEach((s) => { s.value = getKept('sl.dock.site') === '0' ? '0' : '1'; });
+    setDockSideMark();
+    setDockPinMarks();
+    setStats();
+  }
+
+  /* ---------- М1–М14 The floating menu (variant 09 of the admin block series) ---------- */
+
+  const DOCK_PINS = ['blocks', 'comments', 'config', 'database', 'node', 'account'];
+  const DOCK_MAX = 8;
+  const DOCK_EDGE = 12;
+  // М2 The sections take the semantic tones of the theme in turn; red stays for danger and the logout
+  const DOCK_TONES = ['var(--sl-primary)', 'var(--sl-success)', 'var(--sl-accent)', 'var(--sl-warning)'];
+  const DOCK_ICO = (name) => '<i class="bi bi-' + name + '" aria-hidden="true"></i>';
+
+  function getDockPins() {
+    try {
+      const p = JSON.parse(getKept('sl.dock.pins') || 'null');
+      return Array.isArray(p) ? p : DOCK_PINS.slice();
+    } catch (e) { return DOCK_PINS.slice(); }
+  }
+
+  function getDockAt() {
+    try {
+      const a = JSON.parse(getKept('sl.dock.at') || 'null');
+      return a && typeof a.x === 'number' ? a : null;
+    } catch (e) { return null; }
+  }
+
+  // М10 The edge chosen in Options; the bottom is the first state
+  function getDockSide() {
+    const side = getKept('sl.dock.side');
+    return ['top', 'right', 'left'].includes(side) ? side : 'bottom';
+  }
+
+  // Every section of the menu data by its key, with its href as the menu builds it and its tone by its place
+  function getDockSections() {
+    const menu = JSON.parse(doc.getElementById('demo-menu').textContent);
+    const map = {};
+    menu.admin.concat(menu.modules).forEach(([key, name, icon], i) => {
+      map[key] = { key, name, icon, tone: DOCK_TONES[i % DOCK_TONES.length], href: key === 'comments' ? '?name=comments' : '../../admin.php?name=' + key };
+    });
+    return map;
+  }
+
+  // М2 М9 М11 М13 The inside of the pill: the mark, the pins, the quick jump, the watch, the owner's links, the admin, the logout
+  function getDockNav() {
+    const map = getDockSections();
+    const page = root.dataset.demoPage;
+    const app = (cls, href, tip, inner, extra = '') => '<a class="sl-dock-app ' + cls + '" href="' + href + '" data-tip="' + getEsc(tip) + '" aria-label="' + getEsc(tip) + '"'
+      + extra + '>' + inner + '</a>';
+    const btn = (cls, tip, inner, extra = '') => '<button type="button" class="sl-dock-app ' + cls + '" data-tip="' + getEsc(tip) + '" aria-label="' + getEsc(tip) + '"' + extra
+      + '>' + inner + '</button>';
+    const pins = getDockPins().filter((k) => map[k]).map((k) => {
+      const s = map[k];
+      const here = page === 'comments' && k === 'comments';
+      return app('sl-dock-pin' + (here ? ' sl-dock-here' : ''), s.href, s.name + (here ? ' · вы здесь' : ''), DOCK_ICO(s.icon), ' style="--sl-dock-c: ' + s.tone + '"' + (here
+        ? ' aria-current="page"' : ''));
+    }).join('');
+    const home = page === 'home';
+    return app('sl-dock-plain' + (home ? ' sl-dock-here' : ''), 'index.html', 'Главная страница панели' + (home ? ' · вы здесь' : ''),
+      '<img src="../../templates/lite/images/logos/slaed-logo-mark-gradient-blue.svg" alt="">', home ? ' aria-current="page"' : '')
+      + '<div class="sl-dock-body" id="sl-dock-body" data-sl-dock-body' + (getKept('sl.dock.fold') === '1' ? ' hidden style="display: none"' : '') + '>'
+      + (pins ? '<span class="sl-dock-sep sl-dock-pin"></span><span class="sl-dock-pins" data-mark="М9">' + pins + '</span>' : '')
+      + '<span class="sl-dock-sep"></span>'
+      + btn('sl-dock-launch', 'Быстрый переход по разделам · Ctrl+K', DOCK_ICO('grid-3x3-gap-fill'), ' data-sl-pal-open data-mark="М11"')
+      + btn('sl-dock-watch', 'Кто на сайте: 2 — подробная статистика', '<span>2</span>',
+      ' data-sl-open="sl-stats" style="--sl-d-adm: 50%; --sl-d-people: 50%; --sl-d-bots: 50%" data-mark="М13"')
+      + btn('sl-dock-stack', 'Свои ссылки: 5', DOCK_ICO('folder2-open') + '<b class="sl-dock-badge" title="Одна ссылка не работает">!</b>',
+      ' data-sl-dock-pop="stack" aria-controls="sl-dock-pop-stack" aria-expanded="false"')
+      + btn('sl-dock-me', 'SLAED CMS', '<img src="../../templates/lite/images/avatars/presets/038.svg" alt="">',
+      ' data-sl-dock-pop="me" aria-controls="sl-dock-pop-me" aria-expanded="false" data-mark="М14"')
+      + '<span class="sl-dock-sep"></span>'
+      + app('sl-dock-plain sl-dock-out', '../../admin.php?op=logout', 'Выход', DOCK_ICO('box-arrow-right'))
+      + '</div>'
+      + '<span class="sl-dock-sep sl-dock-sep-end"></span>'
+      + '<span class="sl-modal-acts sl-dock-tools" data-mark="М5 М6 М7 М8">'
+      + '<button type="button" class="sl-modal-act sl-dock-tool sl-dock-turn" data-sl-dock-turn title="Повернуть меню: горизонтально или вертикально" aria-label="Повернуть меню">'
+      + DOCK_ICO('distribute-vertical sl-dock-ax-row') + DOCK_ICO('distribute-horizontal sl-dock-ax-col') + '</button>'
+      + '<button type="button" class="sl-modal-act sl-dock-tool sl-dock-fold" data-sl-dock-fold aria-controls="sl-dock-body" aria-expanded="' + (getKept('sl.dock.fold') !== '1')
+      + '" title="Свернуть или развернуть меню">'
+      + DOCK_ICO('arrows-collapse-vertical sl-dock-ax-row sl-dock-open') + DOCK_ICO('arrows-expand-vertical sl-dock-ax-row sl-dock-shut')
+      + DOCK_ICO('arrows-collapse sl-dock-ax-col sl-dock-open') + DOCK_ICO('arrows-expand sl-dock-ax-col sl-dock-shut') + '</button>'
+      + '<button type="button" class="sl-modal-act sl-modal-act-move sl-dock-tool sl-dock-grip" data-sl-dock-grip title="Перетащить меню" aria-label="Переместить меню: '
+      + 'перетащите мышью или двигайте стрелками; Home — вернуть на место">' + DOCK_ICO('grip-vertical sl-dock-ax-row') + DOCK_ICO('grip-horizontal sl-dock-ax-col') + '</button>'
+      + '</span>';
+  }
+
+  // М1 Build the layer once; it stands on its own point over the page and is put back there on every load
+  function setDock() {
+    const dir = getKept('sl.dock.dir') === 'col' ? 'col' : 'row';
+    const box = doc.createElement('div');
+    box.className = 'sl-dock';
+    box.setAttribute('data-sl-dock', '');
+    box.dataset.dir = dir;
+    box.dataset.to = 'up';
+    box.toggleAttribute('data-min', getKept('sl.dock.fold') === '1');
+    const mag = getKept('sl.dock.mag') !== '0';
+    box.innerHTML = '<div class="sl-dock-pop" id="sl-dock-pop-stack" data-sl-dock-pop-id="stack" hidden><p class="sl-dock-cap">' + DOCK_ICO('folder2-open')
+      + ' Свои ссылки<small>Добавляются в настройках блока «Администрация»</small></p>'
+      + '<div class="sl-dock-grid">'
+      + '<a href="../../plugins/sxd/index.php" target="_blank" rel="noopener noreferrer" title="Не работает: файла plugins/sxd/index.php нет на сервере"><span '
+      + 'style="--sl-dock-c: var(--sl-primary)">' + DOCK_ICO('database-down') + '</span><span>DB Backup - Sypex Dumper</span><i class="sl-dock-dead" title="Нет файла"></i></a>'
+      + '<a href="https://github.com/SLAED-CMS/SLAED-CMS-6.3" target="_blank" rel="noopener noreferrer" title="SLAED CMS на GitHub"><span style="--sl-dock-c: var(--sl-accent)">'
+      + DOCK_ICO('github') + '</span><span>SLAED CMS на GitHub</span></a>'
+      + '<a href="https://pagespeed.web.dev/" target="_blank" rel="noopener noreferrer" title="PageSpeed Insights — проверка скорости сайта"><span style="--sl-dock-c: '
+      + 'var(--sl-success)">' + DOCK_ICO('speedometer') + '</span><span>PageSpeed Insights</span></a>'
+      + '<a href="https://search.google.com/search-console" target="_blank" rel="noopener noreferrer" title="Google Search Console"><span style="--sl-dock-c: var(--sl-primary)">'
+      + DOCK_ICO('google') + '</span><span>Google Search Console</span></a>'
+      + '<a href="https://webmaster.yandex.ru/" target="_blank" rel="noopener noreferrer" title="Яндекс Вебмастер"><span style="--sl-dock-c: var(--sl-warning)">'
+      + DOCK_ICO('bar-chart-line') + '</span><span>Яндекс Вебмастер</span></a></div></div>'
+      + '<div class="sl-dock-pop" id="sl-dock-pop-me" data-sl-dock-pop-id="me" hidden><div class="sl-dock-me-head"><img '
+      + 'src="../../templates/lite/images/avatars/presets/038.svg" alt=""><b>SLAED CMS</b><small>Суперадминистратор</small></div>'
+      + '<dl class="sl-dock-facts"><dt>Вошёл</dt><dd>сегодня, 20:31</dd><dt>Прошлый вход</dt><dd>вчера, 21:14</dd><dt>IP-адрес</dt><dd>127.0.0.1</dd><dt>До конца сеанса</dt>'
+      + '<dd>47 мин</dd></dl>'
+      + '<div class="sl-dock-row">Положение меню <span class="sl-dock-pair"><button type="button" data-sl-dock-dir="row" aria-pressed="' + (dir === 'row')
+      + '" title="Горизонтально" aria-label="Горизонтально">' + DOCK_ICO('three-dots') + '</button><button type="button" data-sl-dock-dir="col" aria-pressed="' + (dir === 'col')
+      + '" title="Вертикально" aria-label="Вертикально">' + DOCK_ICO('three-dots-vertical') + '</button></span></div>'
+      + '<button type="button" class="sl-dock-row" data-sl-dock-home>Вернуть на место ' + DOCK_ICO('arrow-counterclockwise') + '</button>'
+      + '<label class="sl-dock-row">Увеличивать иконки под курсором <input type="checkbox" class="sl-check" data-sl-dock-mag' + (mag ? ' checked' : '') + '></label>'
+      + '<button type="button" class="sl-dock-row" data-sl-dock-fold>Свернуть меню ' + DOCK_ICO('arrows-collapse-vertical') + '</button>'
+      + '<p class="sl-dock-note">Меню можно перетащить за ручку в любое место экрана — оно запомнит позицию. С клавиатуры: стрелки двигают меню, Home возвращает его на '
+      + 'место. Позиция и отключение меню — в «Опциях» справа вверху.</p></div>'
+      + '<nav class="sl-dock-bar" aria-label="Плавающее меню администратора" data-mark="М1 М2 М3 М4">' + getDockNav() + '</nav>';
+    doc.body.append(box);
+    setDockPlace();
+    doc.addEventListener('pointermove', setDockGrow);
+    setDockDrag(box);
+    window.addEventListener('resize', setDockPlace);
+  }
+
+  // М5 М6 Stand the layer on its point, keep it whole in the window, turn it to the room; upright on a short screen the
+  // tiles give way just enough for the pill to stand whole, never under 32 px
+  function setDockPlace() {
+    const box = doc.querySelector('[data-sl-dock]');
+    if (!box) return;
+    const phone = window.matchMedia('(max-width: 560px)').matches;
+    box.dataset.dir = phone ? 'row' : (getKept('sl.dock.dir') === 'col' ? 'col' : 'row');
+    const bar = box.querySelector('.sl-dock-bar');
+    bar.style.removeProperty('--sl-dock-tile');
+    if (box.dataset.dir === 'col') {
+      const room = window.innerHeight - DOCK_EDGE * 2;
+      for (let tile = 44; tile >= 32 && bar.getBoundingClientRect().height > room; tile -= 2) bar.style.setProperty('--sl-dock-tile', (tile - 2) + 'px');
+    }
+    // М10 With no point of its own the pill stands on the edge from Options; upright on the top or the bottom edge it
+    // stands at the middle of the right one, not across the content
+    const side = getDockSide();
+    const col = box.dataset.dir === 'col';
+    const edge = { top: { x: 0.5, y: 0 }, right: { x: 1, y: 0.5 }, left: { x: 0, y: 0.5 } }[col && (side === 'top' || side === 'bottom') ? 'right' : side];
+    const at = getDockAt() || edge || null;
+    if (at && !phone && !box.hasAttribute('data-drag')) {
+      box.setAttribute('data-placed', '');
+      const r = box.getBoundingClientRect();
+      box.style.setProperty('--sl-dock-x', Math.min(Math.max(at.x * window.innerWidth, r.width / 2 + DOCK_EDGE), window.innerWidth - r.width / 2 - DOCK_EDGE) + 'px');
+      box.style.setProperty('--sl-dock-y', Math.min(Math.max(at.y * window.innerHeight, r.height / 2 + DOCK_EDGE), window.innerHeight - r.height / 2 - DOCK_EDGE) + 'px');
+    } else if (!box.hasAttribute('data-drag')) {
+      box.removeAttribute('data-placed');
+      box.style.removeProperty('--sl-dock-x');
+      box.style.removeProperty('--sl-dock-y');
+    }
+    setDockTurn(box);
+    setDockLift(box);
+  }
+
+  // М4 Tips, pops and the growth of the icons turn to where the room is
+  function setDockTurn(box) {
+    const r = box.getBoundingClientRect();
+    const cx = r.left + r.width / 2;
+    const cy = r.top + r.height / 2;
+    box.dataset.to = box.dataset.dir === 'col' ? (cx < window.innerWidth / 2 ? 'right' : 'left') : (cy > window.innerHeight * 0.45 ? 'up' : 'down');
+  }
+
+  // М12 The notice with Undo keeps its home at the bottom centre and steps over the pill lying there; a pill standing
+  // tall through the lower part is passed beside, never climbed to the top of the screen
+  function setDockLift(box) {
+    const r = box.getBoundingClientRect();
+    const hit = !root.hasAttribute('data-sl-dock-off') && r.bottom > window.innerHeight - 110 && r.top > window.innerHeight * 0.6 && r.right > window.innerWidth / 2 - 320
+      && r.left < window.innerWidth / 2 + 320;
+    if (hit) root.style.setProperty('--sl-dock-lift', (window.innerHeight - r.top + 14) + 'px');
+    else root.style.removeProperty('--sl-dock-lift');
+  }
+
+  // М3 Only the icon under the hand grows; the reading comes from the cell, which never moves
+  function setDockGrow(e) {
+    const box = doc.querySelector('[data-sl-dock]');
+    if (!box || box.hasAttribute('data-drag') || root.hasAttribute('data-sl-dock-off')) return;
+    const bar = box.querySelector('.sl-dock-bar');
+    const r = bar.getBoundingClientRect();
+    const col = box.dataset.dir === 'col';
+    const near = e.clientY > r.top - 50 && e.clientY < r.bottom + 50 && e.clientX > r.left - 50 && e.clientX < r.right + 50;
+    const flat = getKept('sl.dock.mag') === '0' || root.hasAttribute('data-sl-still') || e.pointerType === 'touch';
+    bar.querySelectorAll('.sl-dock-app').forEach((a) => {
+      if (!near || flat) { a.style.setProperty('--sl-dock-s', 1); a.style.removeProperty('--sl-dock-z'); return; }
+      // The scale grows from the middle of the axis, so the centre of the icon on it stays where the layout put it
+      const ar = a.getBoundingClientRect();
+      const c = col ? ar.top + ar.height / 2 : ar.left + ar.width / 2;
+      const grow = Math.max(0, Math.cos(Math.min(Math.abs((col ? e.clientY : e.clientX) - c), 70) / 70 * Math.PI / 2));
+      a.style.setProperty('--sl-dock-s', (1 + 0.5 * grow).toFixed(3));
+      a.style.setProperty('--sl-dock-z', Math.round(grow * 10));
+    });
+  }
+
+  // М5 Dragging by the grip: anywhere, and remembered
+  function setDockDrag(box) {
+    let drag = null;
+    box.addEventListener('pointerdown', (e) => {
+      const grip = e.target.closest('[data-sl-dock-grip]');
+      if (!grip || e.button !== 0) return;
+      const r = box.getBoundingClientRect();
+      drag = { x: e.clientX, y: e.clientY, dx: e.clientX - (r.left + r.width / 2), dy: e.clientY - (r.top + r.height / 2), moved: false, id: e.pointerId };
+      // The page would start its own drag and cancel the pointer after the first step; the grip still takes the focus
+      e.preventDefault();
+      grip.focus({ preventScroll: true });
+      grip.setPointerCapture(e.pointerId);
+    });
+    box.addEventListener('pointermove', (e) => {
+      if (!drag || e.pointerId !== drag.id) return;
+      if (!drag.moved && Math.hypot(e.clientX - drag.x, e.clientY - drag.y) < 5) return;
+      if (!drag.moved) {
+        drag.moved = true;
+        setDockClose();
+        box.setAttribute('data-drag', '');
+        box.setAttribute('data-placed', '');
+      }
+      const r = box.getBoundingClientRect();
+      const x = Math.min(Math.max(e.clientX - drag.dx, r.width / 2 + DOCK_EDGE), window.innerWidth - r.width / 2 - DOCK_EDGE);
+      const y = Math.min(Math.max(e.clientY - drag.dy, r.height / 2 + DOCK_EDGE), window.innerHeight - r.height / 2 - DOCK_EDGE);
+      box.style.setProperty('--sl-dock-x', x + 'px');
+      box.style.setProperty('--sl-dock-y', y + 'px');
+      drag.at = [x, y];
+      setDockTurn(box);
+    });
+    // A cancelled pointer ends the drag where it stands rather than leaving the pill held
+    const setDrop = (e) => {
+      if (!drag || e.pointerId !== drag.id) return;
+      const done = drag;
+      drag = null;
+      if (!done.moved) return;
+      box.removeAttribute('data-drag');
+      setDockAt(done.at[0], done.at[1]);
+    };
+    box.addEventListener('pointerup', setDrop);
+    box.addEventListener('pointercancel', setDrop);
+  }
+
+  // М5 Keep the point as shares of the window; a point set by the grip is the own place for Options, the one the fold
+  // holds is not
+  function setDockAt(x, y, own = true) {
+    const at = { x: +(x / window.innerWidth).toFixed(4), y: +(y / window.innerHeight).toFixed(4) };
+    const was = getDockAt();
+    if (!own && !(was && was.own !== false)) at.own = false;
+    setKept('sl.dock.at', JSON.stringify(at));
+    setDockSideMark();
+    setDockPlace();
+  }
+
+  // М10 An edge from Options drops the own point and lays the pill along the edge: across on the top and the bottom,
+  // upright on the sides; Home and "Вернуть на место" come back here
+  function setDockSide(side) {
+    if (!['top', 'right', 'bottom', 'left'].includes(side)) return;
+    const dir = side === 'right' || side === 'left' ? 'col' : 'row';
+    setKept('sl.dock.side', side);
+    setKept('sl.dock.dir', dir);
+    try { localStorage.removeItem('sl.dock.at'); } catch (e) { /* storage may be off */ }
+    doc.querySelectorAll('[data-sl-dock-dir]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.slDockDir === dir)));
+    setDockSideMark();
+    setDockClose();
+    setDockPlace();
+  }
+
+  // The select shows the chosen edge, or "Произвольная" once the grip has set a point of its own
+  function setDockSideMark() {
+    const at = getDockAt();
+    doc.querySelectorAll('#sl-o-dock-side').forEach((s) => { s.value = at && at.own !== false ? '' : getDockSide(); });
+  }
+
+  function setDockClose() {
+    const box = doc.querySelector('[data-sl-dock]');
+    if (!box) return;
+    box.removeAttribute('data-open');
+    box.querySelectorAll('.sl-dock-pop').forEach((p) => { p.hidden = true; });
+    box.querySelectorAll('[data-sl-dock-pop]').forEach((b) => b.setAttribute('aria-expanded', 'false'));
+  }
+
+  // The pop over (beside) its icon, held inside the window
+  function setDockPop(btn) {
+    const box = doc.querySelector('[data-sl-dock]');
+    const pop = box.querySelector('[data-sl-dock-pop-id="' + btn.dataset.slDockPop + '"]');
+    const open = pop.hidden;
+    setDockClose();
+    if (!open) return;
+    const wb = box.getBoundingClientRect();
+    const bb = btn.getBoundingClientRect();
+    pop.hidden = false;
+    if (box.dataset.to === 'up' || box.dataset.to === 'down') {
+      const half = pop.offsetWidth / 2;
+      pop.style.setProperty('--sl-dock-px', (Math.min(Math.max(bb.left + bb.width / 2, half + 16), window.innerWidth - half - 16) - wb.left) + 'px');
+    } else {
+      const half = pop.offsetHeight / 2;
+      pop.style.setProperty('--sl-dock-py', (Math.min(Math.max(bb.top + bb.height / 2, half + 16), window.innerHeight - half - 16) - wb.top) + 'px');
+    }
+    box.setAttribute('data-open', '');
+    btn.setAttribute('aria-expanded', 'true');
+  }
+
+  // М7 The motion of the column blocks (setSlideMotion, slaed.js): cancel what runs, clip, run the size from what it is
+  // to its end in 500 ms linear, clean up; here along the axis of the pill, with the far end held under the hand
+  function setDockFold(shut) {
+    const box = doc.querySelector('[data-sl-dock]');
+    const body = box.querySelector('[data-sl-dock-body]');
+    const col = box.dataset.dir === 'col';
+    const prop = col ? 'height' : 'width';
+    const size = () => (col ? body.offsetHeight : body.offsetWidth);
+    setDockClose();
+    box.toggleAttribute('data-min', shut);
+    setKept('sl.dock.fold', shut ? '1' : '0');
+    box.querySelector('.sl-dock-bar [data-sl-dock-fold]').setAttribute('aria-expanded', String(!shut));
+    body.getAnimations().forEach((a) => a.cancel());
+    const r0 = box.getBoundingClientRect();
+    const end0 = col ? r0.bottom : r0.right;
+    box.setAttribute('data-placed', '');
+    box.style.setProperty('--sl-dock-x', (r0.left + r0.width / 2) + 'px');
+    box.style.setProperty('--sl-dock-y', (r0.top + r0.height / 2) + 'px');
+    if (!shut) {
+      body.hidden = false;
+      body.style.display = 'flex';
+      body.style[prop] = '0px';
+      body.style.overflow = 'hidden';
+      void body.offsetWidth;
+    } else {
+      body.style.overflow = 'hidden';
+      body.style[prop] = size() + 'px';
+    }
+    const from = shut ? size() : 0;
+    const to = shut ? 0 : (col ? body.scrollHeight : body.scrollWidth);
+    let raf = 0;
+    const hold = () => {
+      const r = box.getBoundingClientRect();
+      if (col) box.style.setProperty('--sl-dock-y', (end0 - r.height / 2) + 'px');
+      else box.style.setProperty('--sl-dock-x', (end0 - r.width / 2) + 'px');
+      raf = requestAnimationFrame(hold);
+    };
+    const run = body.animate([{ [prop]: from + 'px' }, { [prop]: to + 'px' }], { duration: root.hasAttribute('data-sl-still') ? 1 : 500, easing: 'linear' });
+    hold();
+    run.onfinish = () => {
+      cancelAnimationFrame(raf);
+      body.style.overflow = '';
+      body.style[prop] = '';
+      if (shut) {
+        body.style.display = 'none';
+        body.hidden = true;
+      }
+      const r = box.getBoundingClientRect();
+      setDockAt(col ? r.left + r.width / 2 : end0 - r.width / 2, col ? end0 - r.height / 2 : r.top + r.height / 2, false);
+    };
+  }
+
+  // М6 Across by default, upright on a press, and back; the point the pill stands on stays
+  function setDockDir(dir) {
+    setKept('sl.dock.dir', dir);
+    doc.querySelectorAll('[data-sl-dock-dir]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.slDockDir === dir)));
+    setDockClose();
+    setDockPlace();
+  }
+
+  // М10 А1 Options switch the menu of the panel on or off; off, the block "Администрация" stands in the column of the home
+  function setDockOn(on, keep = true) {
+    root.toggleAttribute('data-sl-dock-off', !on);
+    if (keep) setKept('sl.dock', on ? '1' : '0');
+    doc.querySelectorAll('#sl-o-dock').forEach((s) => { s.value = on ? '1' : '0'; });
+    setDockClose();
+    setDockPlace();
+  }
+
+  // М9 Pin or unpin a section from the fan of its menu row or card; the change can be undone for ten seconds (Э23)
+  function setDockPin(btn) {
+    const item = btn.closest('[data-sl-menu-item]');
+    const key = item.dataset.slMenuItem;
+    const name = item.querySelector('.sl-menu-name').textContent;
+    const was = getDockPins();
+    let pins = was.slice();
+    if (pins.includes(key)) pins = pins.filter((k) => k !== key);
+    else if (pins.length < DOCK_MAX) pins.push(key);
+    else { setToast('В плавающем меню уже ' + DOCK_MAX + ' разделов. Чтобы добавить новый, открепите один из них.', null); return; }
+    const draw = (list) => {
+      setKept('sl.dock.pins', JSON.stringify(list));
+      setDockPinMarks();
+      const bar = doc.querySelector('[data-sl-dock] .sl-dock-bar');
+      if (bar) {
+        bar.innerHTML = getDockNav();
+        setDockPlace();
+      }
+    };
+    draw(pins);
+    setToast('Раздел «' + name + '» ' + (pins.includes(key) ? 'закреплён в плавающем меню' : 'откреплён от плавающего меню') + '.', () => draw(was));
+    setSound('alOk');
+  }
+
+  // М9 The pin item of every fan says what a press will do
+  function setDockPinMarks() {
+    const pins = getDockPins();
+    doc.querySelectorAll('[data-sl-pin]').forEach((b) => {
+      const on = pins.includes(b.closest('[data-sl-menu-item]').dataset.slMenuItem);
+      b.title = on ? 'Открепить от плавающего меню' : 'Закрепить в плавающем меню';
+      b.setAttribute('aria-pressed', String(on));
+      b.firstElementChild.className = 'bi ' + (on ? 'bi-pin-angle-fill' : 'bi-pin-angle');
+    });
+  }
+
+  // А3 The window of the statistics: the filter by kind, the pause of the live refresh, the age of the last refresh
+  function setStats() {
+    const win = doc.getElementById('sl-stats');
+    if (!win) return;
+    let stamp = Date.now();
+    let paused = false;
+    const ago = () => {
+      const el = win.querySelector('[data-sl-stats-ago]');
+      const sec = Math.round((Date.now() - stamp) / 1000);
+      el.textContent = paused ? 'на паузе' : sec < 2 ? 'только что' : sec + ' сек назад';
+    };
+    setInterval(() => {
+      if (!paused && !doc.hidden && Date.now() - stamp >= 10000) stamp = Date.now();
+      ago();
+    }, 1000);
+    win.addEventListener('click', (e) => {
+      const kind = e.target.closest('[data-sl-stats-kind]');
+      if (kind) {
+        const k = kind.dataset.slStatsKind;
+        win.querySelectorAll('[data-sl-stats-kind]').forEach((b) => b.setAttribute('aria-pressed', String(b === kind)));
+        let seen = 0;
+        win.querySelectorAll('[data-sl-stats-rows] > li').forEach((li) => {
+          li.hidden = !(k === 'all' || li.dataset.kind === k);
+          if (!li.hidden) seen += 1;
+        });
+        win.querySelector('[data-sl-stats-empty]').hidden = seen > 0;
+        return;
+      }
+      const pause = e.target.closest('[data-sl-stats-pause]');
+      if (pause) {
+        paused = !paused;
+        stamp = Date.now();
+        pause.setAttribute('aria-pressed', String(paused));
+        pause.querySelector('[data-sl-stats-state]').textContent = paused ? 'пауза' : 'в эфире';
+        ago();
+      }
+    });
+  }
+
+  // The clicks of the menu, the options row and the pins: one listener beside the screen's own
+  function setDockClicks(e) {
+    const t = e.target;
+    if (!t.closest) return;
+    const pin = t.closest('[data-sl-pin]');
+    if (pin) { setDockPin(pin); return; }
+    if (t.closest('[data-sl-dock-home]')) { setDockSide(getDockSide()); return; }
+    const box = doc.querySelector('[data-sl-dock]');
+    if (!box) return;
+    if (t.closest('[data-sl-dock-turn]')) { setDockDir(box.dataset.dir === 'col' ? 'row' : 'col'); box.querySelector('[data-sl-dock-turn]').focus(); return; }
+    if (t.closest('[data-sl-dock-fold]')) { setDockFold(!box.hasAttribute('data-min')); box.querySelector('.sl-dock-bar [data-sl-dock-fold]').focus(); return; }
+    const dir = t.closest('[data-sl-dock-dir]');
+    if (dir) { setDockDir(dir.dataset.slDockDir); return; }
+    const mag = t.closest('[data-sl-dock-mag]');
+    if (mag) { setKept('sl.dock.mag', mag.checked ? '1' : '0'); return; }
+    const popBtn = t.closest('[data-sl-dock-pop]');
+    if (popBtn) { setDockPop(popBtn); return; }
+    if (!t.closest('.sl-dock-pop')) setDockClose();
+  }
+
+  // М5 The grip moves the layer with the arrows (Shift for the long step), Home sends it back; Escape shuts a pop
+  function setDockKeys(e) {
+    if (e.key === 'Escape') { setDockClose(); return; }
+    if (!e.target.matches || !e.target.matches('[data-sl-dock-grip]')) return;
+    const step = e.shiftKey ? 96 : 24;
+    const mv = { ArrowLeft: [-step, 0], ArrowRight: [step, 0], ArrowUp: [0, -step], ArrowDown: [0, step] }[e.key];
+    if (e.key === 'Home') { e.preventDefault(); setDockSide(getDockSide()); e.target.focus(); return; }
+    if (!mv) return;
+    e.preventDefault();
+    const r = doc.querySelector('[data-sl-dock]').getBoundingClientRect();
+    setDockAt(r.left + r.width / 2 + mv[0], r.top + r.height / 2 + mv[1]);
+    e.target.focus();
   }
 
   /* ---------- Stand: data and marks, not part of the panel ---------- */
@@ -1430,6 +1918,32 @@
       rail: () => { if (!wide.matches) setToast('Балка есть только шире 900 px.', null); else setRail(true, true); },
       options: () => { setLegend(false); setWindow(doc.getElementById('sl-settings'), true); },
       queue: () => setDemoArrive(),
+      // А1 Н5 The block of the home stands either way: the stand brings it into view and lights it
+      adm: () => {
+        if (root.dataset.demoPage !== 'home') { location.assign('index.html'); return; }
+        setLegend(false);
+        doc.querySelector('.sl-adm').scrollIntoView({ block: 'center', behavior: 'instant' });
+        setTimeout(() => setFlash('А1'), 200);
+      },
+      stats: () => { setLegend(false); setWindow(doc.getElementById('sl-stats'), true); },
+      dockmove: () => {
+        setLegend(false);
+        if (root.hasAttribute('data-sl-dock-off')) setDockOn(true);
+        setTimeout(() => doc.querySelector('[data-sl-dock-grip]').focus(), 300);
+        setToast('Ручка меню выбрана: стрелки двигают меню, с Shift — быстрее, Home возвращает его на место.', null);
+      },
+      dockturn: () => {
+        setLegend(false);
+        if (root.hasAttribute('data-sl-dock-off')) setDockOn(true);
+        const box = doc.querySelector('[data-sl-dock]');
+        setDockDir(box.dataset.dir === 'col' ? 'row' : 'col');
+      },
+      dockfold: () => {
+        setLegend(false);
+        if (root.hasAttribute('data-sl-dock-off')) setDockOn(true);
+        const box = doc.querySelector('[data-sl-dock]');
+        setDockFold(!box.hasAttribute('data-min'));
+      },
       cockpit: () => {
         if (!doc.querySelector('[data-sl-cockpit]')) { location.assign('index.html'); return; }
         setLegend(false);
@@ -1482,7 +1996,8 @@
       if (cell) segs[cell.closest('[data-demo-seg]').dataset.demoSeg](cell.dataset.demoVal);
       else if (t.closest('[data-demo-fold]')) setFold(fold.getAttribute('aria-expanded') === 'true', true);
       else if (t.closest('[data-demo-reset]')) {
-        ['sl.mode', 'sl.rail', 'sl.density', 'sl.sort', 'demo.marks', 'demo.marks.off', 'sl.motion', 'sl.sound', 'sl.saver', 'demo.panel.at', 'demo.panel.fold']
+        ['sl.mode', 'sl.rail', 'sl.density', 'sl.sort', 'demo.marks', 'demo.marks.off', 'sl.motion', 'sl.sound', 'sl.saver', 'demo.panel.at', 'demo.panel.fold',
+          'sl.dock', 'sl.dock.site', 'sl.dock.side', 'sl.dock.at', 'sl.dock.dir', 'sl.dock.fold', 'sl.dock.mag', 'sl.dock.pins']
           .forEach((k) => { try { localStorage.removeItem(k); } catch (er) { /* storage may be off */ } });
         location.href = location.pathname + (root.dataset.demoPage === 'comments' ? '?name=comments' : '');
       } else if (t.closest('[data-demo-show]')) shows[t.closest('[data-demo-show]').dataset.demoShow]();

@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="ru" data-theme="auto">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>08 &middot; Пульт — стенд блока администратора SLAED CMS</title>
+  <script>document.write('<script src="assets/ablock.js?v=' + Date.now() + '"><\/script>');</script>
+  <style>
+    /* 08 Пульт - the owner's leader (2026-10-19). The summary of the site on top, without its two chips: "Подробнее" is
+       the statistics key and "Обновить" became a key too. Under it one row of six square keys, icon only, each with its
+       tip and its spoken name: the panel, the live statistics, refresh, the site (on the site: this page in the panel),
+       the owner's links with their count on the corner, the logout. The owner's links stand open under the keys as the
+       rows of the site's user block; "Ссылки" folds them with the slide of the column blocks; a dead link puts a
+       warning dot on the key. The total of the summary carries bi-people in the accent tone, as the site does.
+
+       Transfer: one fragment; the keys are links and buttons, the list is data-sl-toggle of slaed.js; "Обновить" is the
+       hx-get of the summary (go=5&op=getUserSessionAdminInfo) moved onto the key */
+
+    .v-keys {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: var(--sl-space-2);
+      margin-top: var(--sl-space-5);
+    }
+
+    .v-keys > a,
+    .v-keys > button {
+      --v-c: var(--sl-primary);
+      position: relative;
+      display: grid;
+      place-items: center;
+      aspect-ratio: 1;
+      padding: 0;
+      border: 1px solid color-mix(in srgb, var(--v-c) 25%, transparent);
+      border-radius: var(--sl-radius-2);
+      background: color-mix(in srgb, var(--v-c) 7%, var(--sl-bg));
+      color: var(--sl-text);
+      font: inherit;
+      font-size: var(--sl-font-micro);
+      line-height: var(--sl-line-tight);
+      text-align: center;
+      text-decoration: none;
+      cursor: pointer;
+      transition: background-color var(--sl-time-fast) var(--sl-ease-out), transform var(--sl-time-fast) var(--sl-ease-out);
+    }
+
+    .v-keys > :hover,
+    .v-keys > :focus-visible {
+      background: color-mix(in srgb, var(--v-c) 15%, var(--sl-bg));
+      transform: translateY(calc(var(--sl-space-1) * -1));
+    }
+
+    .v-keys .bi {
+      color: var(--v-c);
+      font-size: var(--sl-font-h4);
+    }
+
+    .v-keys .v-stat { --v-c: var(--sl-accent); }
+    .v-keys .v-fresh { --v-c: var(--sl-primary); }
+    .v-keys .v-site { --v-c: var(--sl-text-muted); }
+    .v-keys .v-links { --v-c: var(--sl-success); }
+    .v-keys .ab-out { --v-c: var(--sl-danger); }
+
+    /* The count of the owner's links on the corner of its key */
+    .v-keys .v-n {
+      position: absolute;
+      top: -5px;
+      right: -5px;
+      display: grid;
+      place-items: center;
+      box-sizing: border-box;
+      min-width: 18px;
+      height: 18px;
+      padding: 0 var(--sl-space-2);
+      border: 2px solid var(--sl-bg);
+      border-radius: var(--sl-radius-pill);
+      background: var(--sl-success);
+      color: var(--sl-on-solid);
+      font-size: 10px;
+      font-weight: var(--sl-weight-bold);
+      line-height: 1;
+    }
+
+    .v-keys .v-links.sl-is-open {
+      background: color-mix(in srgb, var(--v-c) 18%, var(--sl-bg));
+    }
+
+    .v-keys .v-dot::after {
+      content: "";
+      position: absolute;
+      bottom: var(--sl-space-1);
+      right: var(--sl-space-1);
+      width: var(--sl-space-3);
+      height: var(--sl-space-3);
+      border-radius: var(--sl-radius-circle);
+      background: var(--sl-warning);
+    }
+
+    .v-list {
+      margin-top: var(--sl-space-3);
+    }
+
+    /* The owner's links read as the rows of the site's user block (sl-block-pm): a rule under each row, the row steps
+       in and takes the brand tone under the hand, a chevron closes it. On the site these ARE the theme's classes; the
+       panel gets the same rows here, on tokens */
+    [data-ab-ctx="admin"] .v-pm {
+      margin: var(--sl-space-3) 0 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    [data-ab-ctx="admin"] .v-pm li {
+      margin: 0;
+    }
+
+    [data-ab-ctx="admin"] .v-pm a {
+      display: grid;
+      grid-template-columns: 20px minmax(0, 1fr) auto;
+      align-items: center;
+      box-sizing: border-box;
+      height: var(--sl-item-height);
+      padding: var(--sl-space-3) var(--sl-space-2);
+      border-bottom: 1px solid var(--sl-border);
+      color: var(--sl-text-muted);
+      font-size: var(--sl-font-body);
+      text-decoration: none;
+      transition: padding-left var(--sl-time-base) var(--sl-ease-out), color var(--sl-time-base) var(--sl-ease-out);
+    }
+
+    [data-ab-ctx="admin"] .v-pm a:hover,
+    [data-ab-ctx="admin"] .v-pm a:focus-visible {
+      padding-left: var(--sl-space-3);
+      color: var(--sl-primary-strong);
+    }
+
+    [data-ab-ctx="admin"] .v-pm a > .bi:first-child {
+      color: var(--sl-primary);
+    }
+
+    [data-ab-ctx="admin"] .v-pm a > .bi:last-child {
+      font-size: var(--sl-font-micro);
+    }
+
+    .v-pm .ab-flag {
+      margin-left: 0;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      [data-ab-ctx="admin"] .v-pm a { transition: none; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .v-keys > :hover, .v-keys > :focus-visible { transform: none; }
+    }
+  </style>
+  <script>
+    window.AB_FACE = {
+      blocks(d) {
+        const { esc, ico, attrs, flag, free, block, summary } = window.AB;
+        // The rows of the site's user block: a chevron closes a plain row, a flag or an arrow a marked one
+        const pm = (list) => (list.length ? `<ul class="sl-block-pm v-pm">${list.map((it) => `<li><a ${attrs(it)}>${ico(it.icon)}<span>${esc(it.label)}</span>${it.dead || it.blank ? flag(it) : ico('chevron-right')}</a></li>`).join('')}</ul>` : '');
+        const own = d.extras.items;
+        // The site key: in the panel the site in a new tab; on the site, where the admin already is, this page in the panel
+        const site = d.ctx === 'site'
+          ? { ...d.page.admin, title: 'Эта страница в панели', icon: d.page.admin.icon }
+          : { href: '../index.php', title: 'Сайт', label: 'Сайт', icon: 'globe2', blank: true };
+        const keys = `<div class="v-keys">` +
+          `<a ${attrs({ ...d.home, title: 'Панель администратора' })} aria-label="Панель администратора">${ico('speedometer2')}</a>` +
+          `<button type="button" class="v-stat" data-sl-open="ab-stats" title="Статистика посещаемости" aria-label="Статистика посещаемости">${ico('activity')}</button>` +
+          `<button type="button" class="v-fresh" data-ab-refresh title="Обновить наблюдение" aria-label="Обновить наблюдение">${ico('arrow-repeat')}</button>` +
+          `<a class="v-site" ${attrs(site)} aria-label="${site.title}">${ico(site.icon)}</a>` +
+          `<button type="button" class="v-links${own.some((it) => it.dead) ? ' v-dot' : ''}" data-sl-toggle-control="ab-k-own" data-sl-toggle-effect="slide" data-sl-toggle-duration="500" title="Свои ссылки: ${own.length}" aria-label="Свои ссылки: ${own.length}"${own.length || d.extras.rest ? '' : ' disabled'}>${ico('link-45deg')}${own.length ? `<b class="v-n">${own.length}</b>` : ''}</button>` +
+          `<a class="ab-out" ${attrs({ ...d.logout, title: 'Выход' })} aria-label="Выход">${ico(d.logout.icon)}</a></div>`;
+        // Open by default (owner, 2026-10-19); the key folds it, and the column remembers the choice as its blocks do
+        const list = `<div id="ab-k-own" class="v-list" data-sl-toggle="ab-k-own" data-sl-toggle-default="open">${pm(own)}${free(d)}</div>`;
+        return block(d, { id: 7, title: d.title }, summary(d, { chips: false }) + keys + list);
+      },
+    };
+  </script>
+</head>
+<body>
+  <script>document.write('<script src="assets/demo.js?v=' + Date.now() + '"><\/script>');</script>
+</body>
+</html>
