@@ -96,7 +96,7 @@ function logview(): void {
         $results = ['done' => _SEC_DONE, 'refused' => _SEC_REFUSED, 'open' => _SEC_OPEN, 'ok' => _ACCOUNT_LOGOK, 'password' => _ACCOUNT_LOGPASS, 'blocked' => _ACCOUNT_LOGBLOCK];
         $words = ['add' => _ADD, 'save' => _SAVE, 'delete' => _DELETE, 'status' => _STATUS, 'updateAdminBlockOrder' => _SORTORDER, 'updateAdminCategoryOrder' => _SORTORDER];
         $mods = [];
-        foreach ($conf['modules'] as $key => $mod) $mods[$key] = defined($mod['lang'] ?? '') ? constant($mod['lang']) : $key;
+        foreach (array_keys($conf['modules']) as $key) $mods[$key] = str_starts_with($name = getModuleLabel($key), '_') ? $key : $name;
         asort($mods);
         $day = static fn(string $v): string => (preg_match('/^\d{4}-\d{2}-\d{2}$/D', $v) && strtotime($v) !== false) ? $v : '';
         $isadm = $file === 'admin';

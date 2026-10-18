@@ -516,6 +516,13 @@ Frontend routing checks the configured module state and access flags before
 including module files. Admin routing uses access checks and file existence;
 inactive modules can still appear dimmed in admin navigation.
 
+The name of a module is the constant its row names, resolved by `getModuleLabel()`: when the common language lacks
+it, the language of the module itself is loaded for the current context (`modules/<name>/lang` on the site,
+`modules/<name>/admin/lang` in the panel), so a module that is not shipped carries its name in both. A module declares
+its scheduler jobs in `modules/<name>/scheduler.php` — the defaults of the row and the handler as a closure under
+`run`; `getSchedulerJob()` and `addSchedulerSystemJob()` take them after the jobs of the core, and a job of an inactive
+module answers disabled. `master` declares its two jobs this way.
+
 Modules are still PHP include targets, not isolated service packages. A module
 can use shared globals such as `$conf`, `$db`, `$tpl`, `$prs`, `$user`, and
 `$admin` when it runs inside the normal bootstrap.

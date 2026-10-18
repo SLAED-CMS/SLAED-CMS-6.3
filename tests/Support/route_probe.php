@@ -3308,8 +3308,11 @@ function getRouteGate(PDO $pdo, string $work): array {
     $out['fail'] = $look(getRouteReply('keeper', 'POST', 'admin.php', ['op' => 'steps', 'token' => $token])) + ['marks' => $marks(), 'table' => $table(),
         'ran' => is_file($work.'/update/step.ran'), 'site' => getRouteReply('', 'GET', '')['code']];
     file_put_contents($work.'/update/step/6.2.7.sql', "INSERT INTO {prefix}_probe_step (id) VALUES (1);\n");
+    if (!is_dir($work.'/cache')) mkdir($work.'/cache', 0777, true);
+    file_put_contents($work.'/cache/probe-old.html', 'a page of the old code');
     $done = getRouteReply('keeper', 'POST', 'admin.php', ['op' => 'steps', 'token' => $token]);
-    $out['done'] = ['code' => $done['code'], 'move' => $done['head']['location'] ?? '', 'marks' => $marks(), 'ran' => is_file($work.'/update/step.ran'),
+    $out['done'] = ['code' => $done['code'], 'move' => $done['head']['location'] ?? '', 'marks' => $marks(),
+        'clean' => ['local' => is_file($work.'/config/local.php'), 'cache' => is_file($work.'/cache/probe-old.html')], 'ran' => is_file($work.'/update/step.ran'),
         'rows' => intval($pdo->query('SELECT COUNT(*) FROM '.RPREF.'_probe_step')->fetchColumn()), 'backup' => count(glob($work.'/backup/*') ?: []),
         'dump' => array_map(static fn(string $file): array => json_decode((string)file_get_contents($file), true)['tabs'] ?? [], glob($work.'/backup/steps/*/dump.json') ?: []),
         'kept' => array_map('basename', glob($work.'/backup/steps/*', GLOB_ONLYDIR) ?: []),
@@ -3714,7 +3717,7 @@ function getRouteMasterData(): array {
     $log = is_file(LOGS_DIR.'/admin.log') ? (string)file_get_contents(LOGS_DIR.'/admin.log') : '';
     $out['journal'] = substr_count($log, 'master autopause');
     $conf['modules']['master']['active'] = '0';
-    $out['off'] = addMasterTask('masterclean');
+    $out['off'] = addSchedulerSystemJob('masterclean');
     return $out;
 }
 

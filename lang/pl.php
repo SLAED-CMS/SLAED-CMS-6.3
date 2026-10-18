@@ -68,7 +68,6 @@ define('_CERROR7','Odbiorca o podanej nazwie nie znaleziono! Sprawdź wprowadzon
 define('_CERROR8','Zabronione wysyłanie wiadomości do siebie!');
 define('_CERROR9','Umieszczanie linków w komentarzach zakaz palenia!');
 define('_CHANGE','Ustawienia');
-define('_CHANGELOG','Dziennik zmian');
 define('_CHANGEFREQ','Częstotliwość odświeżania');
 define('_CHARSET','utf-8');
 define('_CHECKALL','Zaznacz wszystko');
@@ -413,7 +412,6 @@ define('_LOGIN','Zaloguj się');
 define('_LOGININCOR','Błędny login! Spróbuj jeszcze...');
 define('_LOGOUT','Wyjście');
 define('_MAN','Mężczyzna');
-define('_MASTER','Master');
 define('_MATERIALS','%s materiał|%s materiały|%s materiałów');
 define('_MATERIALSOF','%s z %s materiału|%s z %s materiałów|%s z %s materiałów');
 define('_MEDIA','Katalog mediów');

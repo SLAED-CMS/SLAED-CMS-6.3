@@ -261,15 +261,14 @@ function getMasterSettings(): string {
     return checkPerms(CONFIG_DIR.'/master.php').$tpl->getHtmlPart('box', ['content_html' => $form]);
 }
 
-# Put the two jobs of the master into the scheduler of this site once: the shipped scheduler never carries them, since only slaed.net runs the master
+# Put the jobs modules/master/scheduler.php declares into the scheduler of this site once: the shipped scheduler never carries them, since only slaed.net runs the master
 function setMasterJobs(): bool {
     global $conf;
     $data = $conf['scheduler'] ?? [];
-    $jobs = ['masterclean' => ['title' => 'Master totals', 'schedule' => '20 4 * * *', 'priority' => '20', 'lock_timeout' => '600'],
-        'masterwatch' => ['title' => 'Master autopause', 'schedule' => '7 * * * *', 'priority' => '21', 'lock_timeout' => '300']];
     $add = false;
-    foreach ($jobs as $name => $job) {
-        if (isset($data['jobs'][$name])) continue;
+    foreach (getSchedulerModuleJobs() as $name => $job) {
+        if ($job['mod'] !== 'master' || isset($data['jobs'][$name])) continue;
+        unset($job['mod'], $job['run']);
         $data['jobs'][$name] = getSchedulerJob($name, $job + ['active' => '1', 'manual' => '1', 'settings' => []]);
         $add = true;
     }

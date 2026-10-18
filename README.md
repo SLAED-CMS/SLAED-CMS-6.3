@@ -284,8 +284,8 @@ fingerprints, the SHA-256 of the public key; compare them before you trust an ar
 
 | Key | Signs | Fingerprint |
 |-----|-------|-------------|
-| Primary | releases and notes | `KEY-PRIMARY-PENDING` |
-| Recovery | key statements only | `KEY-RECOVERY-PENDING` |
+| Primary | releases and notes | `f842 cafa 9f62 d439 0079 5d48 1413 9fb2 127a dc1c de74 13e3 6b60 e137 ebee a574` |
+| Recovery | key statements only | `95e7 dc3c de9e 10a8 5583 7afd 67b3 1e30 6ac8 149e 64d2 64fa c57f 2b37 2655 b7d5` |
 
 A key change reaches sites as a statement signed by the recovery key; this table always names the factory keys a
 release ships.

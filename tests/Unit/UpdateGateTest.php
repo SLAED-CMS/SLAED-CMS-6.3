@@ -83,6 +83,7 @@ final class UpdateGateTest extends TestCase
         $tabs = $run['done']['dump'][0] ?? [];
         $this->assertContains('probe_admins', $tabs, 'The portion dump left out a table of the site');
         $this->assertSame([], array_values(array_filter($tabs, static fn(string $v): bool => !str_starts_with($v, 'probe_'))), 'The dump took a table of another program');
+        $this->assertSame(['local' => false, 'cache' => false], $run['done']['clean'], 'The light mode left the configuration or a page of the old code cached');
         $this->assertSame([200, 200], [$run['done']['site'], $run['done']['api']], 'The site did not open after the steps');
         $this->assertFalse($run['done']['panel']['card'], 'The panel stayed in its light mode');
         $this->assertSame(['Login refused', 'Login accepted', 'update steps', 'update steps'], $run['log'], 'The light mode left its logins or steps out of admin.log');

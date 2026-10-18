@@ -263,8 +263,7 @@ function getTplAdminTabs(array $data = []): string {
     $name = filterWord(getVar('req', 'name', 'text', ''));
     $known = $name !== '' && isset($conf['modules'][$name]) && is_array($conf['modules'][$name]);
     if ($known) {
-        $lang = trim((string)($conf['modules'][$name]['lang'] ?? ''));
-        if ($lang !== '') $title = defined($lang) ? constant($lang) : $lang;
+        if (trim((string)($conf['modules'][$name]['lang'] ?? '')) !== '') $title = getModuleLabel($name);
         $ico = trim((string)($conf['modules'][$name]['icon'] ?? ''));
         if (preg_match('/^[a-z0-9-]+$/', $ico)) $icon = $ico;
     }

@@ -68,7 +68,6 @@ define('_CERROR7',"Одержувач із вказаним ім'ям не зн�
 define('_CERROR8','Заборонено надсилання повідомлень самому собі!');
 define('_CERROR9','Розміщення посилань у коментарях заборонено!');
 define('_CHANGE','Налаштування');
-define('_CHANGELOG','Журнал змін');
 define('_CHANGEFREQ','Частота поновлення');
 define('_CHARSET','utf-8');
 define('_CHECKALL','Позначити всі');
@@ -413,7 +412,6 @@ define('_LOGIN','Увійти');
 define('_LOGININCOR','Неправильний логін! Спробуйте ще...');
 define('_LOGOUT','Вихід');
 define('_MAN','Чоловік');
-define('_MASTER','Майстер');
 define('_MATERIALS','%s матеріал|%s матеріали|%s матеріалів');
 define('_MATERIALSOF','%s з %s матеріалу|%s з %s матеріалів|%s з %s матеріалів');
 define('_MEDIA','Медіа каталог');

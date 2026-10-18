@@ -296,7 +296,7 @@ function getSchedulerPlannedTime(array $job, array $state = []): int {
 function getSchedulerJob(string $name, ?array $job = null): array {
     global $conf;
     static $map = ['dbbackup' => 'backup', 'filescan' => 'filescan', 'maildrain' => 'maildrain', 'newsletter' => 'newsletter', 'selfcheck' => 'selfcheck', 'sitemap' => 'sitemap',
-        'cachegc' => 'cachegc', 'monitor' => 'monitor', 'masterclean' => 'masterclean', 'masterwatch' => 'masterwatch', 'updatecheck' => 'updatecheck',
+        'cachegc' => 'cachegc', 'monitor' => 'monitor', 'updatecheck' => 'updatecheck',
         'nodepublish' => 'nodepublish', 'nodesync' => 'nodesync'];
     $read = $job === null;
     if ($read) $job = $conf['scheduler']['jobs'][$name] ?? [];
@@ -305,6 +305,9 @@ function getSchedulerJob(string $name, ?array $job = null): array {
     if (isset($map[$name])) {
         $job['type'] = 'system';
         $job['system'] = $map[$name];
+    } elseif (isset(getSchedulerModuleJobs()[$name])) {
+        $job['type'] = 'system';
+        $job['system'] = $name;
     }
     if ($read) $job += ['name' => $name];
     return $job;
@@ -676,19 +679,34 @@ function addSchedulerSystemJob(string $name): array {
         'nodepublish' => addNodePublishTask(),
         'nodesync' => addNodeSyncTask(),
         'selfcheck' => addSelfCheckTask(),
-        'masterclean', 'masterwatch' => addMasterTask($name),
         'updatecheck' => addUpdateTask(),
-        default => ['status' => 'failed', 'message' => 'Unknown system job: '.$name],
+        default => addSchedulerModuleJob($name),
     };
 }
 
-# Run a job of the module master, which only slaed.net installs and writes into its scheduler: without the active module the job is disabled, never failed
-function addMasterTask(string $name): array {
+# The scheduler jobs the modules declare in modules/<name>/scheduler.php, by name, each with its module; read once per request
+# A declaration holds the defaults of its row (title, schedule, priority, lock_timeout) and its handler as a closure under run; the core knows no name of a module job
+function getSchedulerModuleJobs(): array {
+    static $list = null;
+    if ($list !== null) return $list;
+    $list = [];
+    foreach (glob(BASE_DIR.'/modules/*/scheduler.php') ?: [] as $file) {
+        $jobs = require $file;
+        if (!is_array($jobs)) continue;
+        foreach ($jobs as $name => $job) {
+            if (is_string($name) && is_array($job) && ($job['run'] ?? null) instanceof Closure && !isset($list[$name])) $list[$name] = ['mod' => basename(dirname($file))] + $job;
+        }
+    }
+    return $list;
+}
+
+# Run a job a module declares; while the module is inactive the job is disabled, never failed, so a site that carries its row counts no fault
+function addSchedulerModuleJob(string $name): array {
     global $conf;
-    $lib = BASE_DIR.'/modules/master/common.php';
-    if (intval($conf['modules']['master']['active'] ?? 0) !== 1 || !is_file($lib)) return ['status' => 'disabled', 'message' => 'The module master is not installed'];
-    require_once $lib;
-    return ($name === 'masterwatch') ? addMasterWatch() : addMasterClean();
+    $job = getSchedulerModuleJobs()[$name] ?? null;
+    if ($job === null) return ['status' => 'failed', 'message' => 'Unknown system job: '.$name];
+    if (intval($conf['modules'][$job['mod']]['active'] ?? 0) !== 1) return ['status' => 'disabled', 'message' => 'The module '.$job['mod'].' is not active'];
+    return ($job['run'])();
 }
 
 # Run the job updatecheck at the minute of this site: with the daily check switched off it is disabled, and only the button of the panel asks the master
@@ -3971,6 +3989,16 @@ function getConst(string $con): string {
     return ($con !== '' && $con[0] === '_' && defined($con)) ? constant($con) : $con;
 }
 
+# The name of a module from its row of config/modules.php; a constant the common language lacks is read from the language of the module for this context
+# A module outside the release keeps its name in modules/<name>/lang and modules/<name>/admin/lang alike, since only one of the two loads per request
+function getModuleLabel(string $mod): string {
+    global $conf;
+    $con = trim((string)($conf['modules'][$mod]['lang'] ?? ''));
+    if ($con === '') return $mod;
+    if ($con[0] === '_' && !defined($con)) getLang($mod, defined('ADMIN_FILE'));
+    return getConst($con);
+}
+
 # One of the forms a text carries separated by |, picked for the number by the plural rule of the locale: three forms for ru, uk and pl, two for the others
 function getPluralForm(int $num, string $forms): string {
     $list = explode('|', $forms);
@@ -3987,6 +4015,7 @@ function getPluralForm(int $num, string $forms): string {
 }
 
 # Resolve a module key to its localised name constant; a registered Node type answers its own title, a language constant or plain text, read from the shared type map
+# A site module the map lacks takes the name of its row through getModuleLabel(), so changelog keeps its name in its own language; a panel module stays its key
 function getModuleName(string $con): string {
     global $conf;
     if (isset($conf['node']['types'][$con])) {
@@ -3997,7 +4026,6 @@ function getModuleName(string $con): string {
         'account' => _ACCOUNT,
         'album' => _ALBUM,
         'all' => _ALL,
-        'changelog' => _CHANGELOG,
         'contact' => _FEEDBACK,
         'content' => _CONTENT,
         'faq' => _FAQ,
@@ -4022,7 +4050,7 @@ function getModuleName(string $con): string {
         'users' => _TOPUSERS,
         'voting' => _VOTING,
     ];
-    return $map[$con] ?? $con;
+    return $map[$con] ?? ((intval($conf['modules'][$con]['type'] ?? 0) === 1) ? getModuleLabel($con) : $con);
 }
 
 # Resolve a module key or a concept key to its Bootstrap Icons glyph: the one icon map of the site and the panel, read wherever PHP names an icon
@@ -4033,7 +4061,7 @@ function getIconName(string $con): string {
         'comm' => 'chat-text', 'faq' => 'question-circle', 'files' => 'file-earmark-arrow-down', 'forum' => 'window-stack', 'help' => 'life-preserver',
         'jokes' => 'emoji-smile', 'links' => 'link-45deg', 'media' => 'camera-reels', 'news' => 'newspaper', 'pages' => 'file-text',
         'account' => 'person', 'activity' => 'activity', 'all' => 'grid', 'blocks' => 'grid-3x3-gap', 'bookmark' => 'bookmark-fill', 'cabinet' => 'house',
-        'categories' => 'folder', 'delete' => 'trash', 'download' => 'download', 'editor' => 'pencil-square', 'favorites' => 'star',
+        'categories' => 'folder', 'commits' => 'journal-text', 'delete' => 'trash', 'download' => 'download', 'editor' => 'pencil-square', 'favorites' => 'star',
         'fields' => 'plus-square-dotted', 'fmcompress' => 'file-zip', 'fmcopy' => 'files', 'fmdelete' => 'trash3', 'fmedit' => 'pencil-square',
         'fmmove' => 'folder-symlink', 'fmrename' => 'input-cursor-text', 'focus' => 'lightning-charge', 'groups' => 'people', 'home' => 'house-door',
         'hub' => 'grid', 'image' => 'image', 'images' => 'images', 'items' => 'grid', 'keys' => 'key', 'language' => 'translate', 'logins' => 'box-arrow-in-right',

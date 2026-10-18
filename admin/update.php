@@ -100,6 +100,13 @@ function addUpdateBackup(PDO $pdo, string $dir): array {
     return ['done' => $state['done'], 'error' => $kept ? '' : $file, 'tab' => $state['tab'], 'tabs' => count($state['tabs'])];
 }
 
+# The caches of the old code go once the steps are done, as step 7 of an installation clears them: files uploaded by hand meet no configuration, page or asset of the old code
+function setUpdateClean(): void {
+    if (is_file(CONFIG_DIR.'/local.php')) unlink(CONFIG_DIR.'/local.php');
+    Cache::deleteAll();
+    if (function_exists('opcache_reset')) opcache_reset();
+}
+
 # Back up the site tables, run the waiting steps under one lock and keep the backup under the time it served; the mark of the code opens the site
 function addUpdateSteps(): void {
     global $db, $afile, $conf;
@@ -120,7 +127,10 @@ function addUpdateSteps(): void {
         return;
     }
     $res = $back['done'] ? Update::addSteps($db, $conf) : ['ok' => false, 'ver' => '', 'error' => $back['error']];
-    if ($res['ok']) rename($dir, $dir.'-'.date('Ymd-His'));
+    if ($res['ok']) {
+        rename($dir, $dir.'-'.date('Ymd-His'));
+        setUpdateClean();
+    }
     setAdminLog(['result' => $res['ok'] ? 'done' : 'failed', 'ver' => $res['ver']]);
     if ($res['ok']) setRedirect($afile.'.php', false, 302, _UPDATE_APPLIED);
     setUpdateSteps(($res['ver'] === '') ? sprintf(_UPDATE_NOBACK, $res['error']) : sprintf(_UPDATE_STEPFAIL, $res['ver'], $res['error']));

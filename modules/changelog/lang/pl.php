@@ -36,3 +36,4 @@ define('_CHLOG_ERR_GH_API_JSON', 'API GitHub: nieprawidłowy JSON.');
 define('_CHLOG_ERR_GIT_MISSING', 'Repozytorium Git nie znalezione: %1$s');
 define('_CHLOG_ERR_GIT_CHDIR', 'Nie można przejść do katalogu: %1$s');
 define('_CHLOG_ERR_GIT_CMD', 'Polecenie Git nie powiodło się (kod: %1$s)');
+define('_CHANGELOG', 'Dziennik zmian');

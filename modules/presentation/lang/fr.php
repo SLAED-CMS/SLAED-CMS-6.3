@@ -228,6 +228,7 @@ define('_PRES_DV_CODE', 'CODE');
 define('_PRES_DV_TEST', 'TEST');
 define('_PRES_DV_COMMIT', 'COMMIT');
 define('_PRES_DV_RELEASE', 'RELEASE');
+define('_PRES_DV_LOG', 'Journal des modifications');
 define('_PRES_DV_BRANCH', 'BRANCHE');
 define('_PRES_DV_LAST', 'DERNIER COMMIT');
 define('_PRES_DV_NONE', 'L\'historique des commits est indisponible pour le moment');

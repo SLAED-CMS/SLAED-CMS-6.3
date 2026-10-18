@@ -238,8 +238,10 @@ function getPresentationData(): array {
     ];
     $commits = [];
     $chlog = $conf['changelog'] ?? [];
-    if (($chlog['source'] ?? '') !== 'github' || (($chlog['ghowner'] ?? '') !== '' && ($chlog['ghrepo'] ?? '') !== '')) {
-        require_once BASE_DIR.'/modules/changelog/common.php';
+    $lib = BASE_DIR.'/modules/changelog/common.php';
+    if (is_file($lib) && (($chlog['source'] ?? '') !== 'github' || (($chlog['ghowner'] ?? '') !== '' && ($chlog['ghrepo'] ?? '') !== ''))) {
+        getLang('changelog');
+        require_once $lib;
         $log = chlogLoadCommits($conf, [], '');
         $base = ($log['source'] === 'github') ? 'https://github.com/'.$chlog['ghowner'].'/'.$chlog['ghrepo'].'/commit/' : '';
         $areas = ['presentation', 'theme', 'plugin', 'module', 'admin', 'template', 'cache', 'test', 'hero', 'contract', 'page', 'block', 'window', 'editor',
@@ -603,14 +605,14 @@ function getPresentationData(): array {
         ]),
     ];
     $dev = [
-        'head' => $head(5, getIconName('changelog'), _PRES_H_DEV, _PRES_L_DEV),
+        'head' => $head(5, getIconName('commits'), _PRES_H_DEV, _PRES_L_DEV),
         'version' => 'SLAED '.$conf['version'].($branch !== '' ? ' · '.$branch : ''), 'live' => _PRES_DV_ACTIVE,
         'commits' => $commits, 'has_commits' => $commits !== [], 'none' => _PRES_DV_NONE,
         'focus' => _PRES_DV_FOCUS, 'focus_state' => 'HEAD', 'focus_recent' => _PRES_DV_RECENT, 'first' => $commits[0] ?? [],
         'pipe' => _PRES_DV_PIPE, 'pipe_note' => _PRES_DV_PIPE_T,
         'steps' => [
             ['icon' => 'code-slash', 'label' => _PRES_DV_CODE], ['icon' => 'check2-square', 'label' => _PRES_DV_TEST], ['icon' => 'git', 'label' => _PRES_DV_COMMIT],
-            ['icon' => 'journal-code', 'label' => _CHANGELOG], ['icon' => 'box-seam', 'label' => _PRES_DV_RELEASE],
+            ['icon' => 'journal-code', 'label' => _PRES_DV_LOG], ['icon' => 'box-seam', 'label' => _PRES_DV_RELEASE],
         ],
         'foot' => [
             $stat($branch !== '' ? _PRES_DV_BRANCH : _PRES_DV_COMMIT, $branch !== '' ? $branch : ($commits[0]['short'] ?? _NO)),

@@ -43,3 +43,30 @@
 /storage/update/sql/table_update6_3.sql export-ignore
 # The master of updates runs only on slaed.net and reaches it by SFTP; a site never receives it
 /modules/master export-ignore
+# The changelog of the project is a module of slaed.net too, with the templates only it renders; tools/release.php build drops the rows of both from config/modules.php
+/modules/changelog export-ignore
+/public/templates/*/fragments/changelog-*.html export-ignore
+/public/templates/*/partials/changelog*.html export-ignore
+# A release carries only what a site runs: the tests, the tools, the documents, the stands and the files of development stay here
+/tests export-ignore
+/tools export-ignore
+/docs export-ignore
+/public/demo export-ignore
+/public/phoenix export-ignore
+/public/sound export-ignore
+/composer.json export-ignore
+/package.json export-ignore
+/phpunit.xml export-ignore
+/phpstan.neon export-ignore
+/phpstan-bootstrap.php export-ignore
+/phpstan-stubs.php export-ignore
+/.php-cs-fixer.dist.php export-ignore
+/.editorconfig export-ignore
+/.gitmessage export-ignore
+/.gitignore export-ignore
+/.gitattributes export-ignore
+/README.md export-ignore
+/UPGRADING.md export-ignore
+/SECURITY.md export-ignore
+/CONTRIBUTING.md export-ignore
+/CODE_OF_CONDUCT.md export-ignore

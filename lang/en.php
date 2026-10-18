@@ -68,7 +68,6 @@ define('_CERROR7','The recipient with the specified name is not found! Check the
 define('_CERROR8','Allow sending messages to yourself!');
 define('_CERROR9','Placement of the links in the comments is prohibited!');
 define('_CHANGE','Attitudes');
-define('_CHANGELOG','Changelog');
 define('_CHANGEFREQ','Change frequency');
 define('_CHARSET','utf-8');
 define('_CHECKALL','Mark all');
@@ -413,7 +412,6 @@ define('_LOGIN','Login');
 define('_LOGININCOR','Login Incorrect! Please Try Again...');
 define('_LOGOUT','Logout');
 define('_MAN','Man');
-define('_MASTER','Master');
 define('_MATERIALS','%s material|%s materials');
 define('_MATERIALSOF','%s of %s material|%s of %s materials');
 define('_MEDIA','Media');

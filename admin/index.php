@@ -24,7 +24,7 @@ function checkModuleConfig(string $name, int $typ): bool {
 function getAdminMenu(string $name, array $mod): string {
     global $panel, $afile, $tpl;
     $url = $afile.'.php?name='.$name;
-    $title = defined($mod['lang']) ? constant($mod['lang']) : $mod['lang'];
+    $title = getModuleLabel($name);
     $icon = preg_match('/^[a-z0-9-]+$/', $mod['icon'] ?? '') ? $mod['icon'] : 'puzzle';
     $off = empty($mod['active']);
     $ltitle = $off ? $title.' - '._DEACT : $title;

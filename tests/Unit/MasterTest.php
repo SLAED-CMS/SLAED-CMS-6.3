@@ -207,6 +207,10 @@ final class MasterTest extends TestCase
         $ship = require BASE_DIR.'/config/scheduler.php';
         $this->assertArrayNotHasKey('masterclean', $ship['scheduler']['jobs'], 'The shipped scheduler carries a job of the master');
         $this->assertArrayNotHasKey('masterwatch', $ship['scheduler']['jobs'], 'The shipped scheduler carries a job of the master');
+        $core = (string)file_get_contents(BASE_DIR.'/core/system.php');
+        foreach (['masterclean', 'masterwatch', 'modules/master'] as $word) {
+            $this->assertStringNotContainsString($word, $core, 'The core names the master, which only modules/master/scheduler.php may declare');
+        }
     }
 
     # masterclean writes today's totals and removes what outlived the saved terms; without the module the job is disabled, never failed

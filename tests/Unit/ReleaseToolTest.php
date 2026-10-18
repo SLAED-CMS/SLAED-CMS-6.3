@@ -92,8 +92,9 @@ final class ReleaseToolTest extends TestCase
         $names = [];
         for ($i = 0; $i < $zip->numFiles; $i++) $names[] = $zip->getNameIndex($i);
         $list = json_decode((string)$zip->getFromName('storage/update/files.json'), true);
+        $mods = (string)$zip->getFromName('config/modules.php');
         $zip->close();
-        return ['names' => $names, 'list' => $list];
+        return ['names' => $names, 'list' => $list, 'modules' => $mods];
     }
 
     # The two signed manifests of a version as a site of $ver would read them under $keys
@@ -132,7 +133,11 @@ final class ReleaseToolTest extends TestCase
         $files = ['public/sitemap.xml' => "<urlset/>\n", 'composer.json' => '{"require":{"php":">=8.4"}}', 'README.md' => "# Test\n", 'config/global.php' => "<?php\nreturn [];\n",
             'config/system.php' => "<?php\n", 'public/robots.txt' => "User-agent: *\n", 'public/index.php' => "<?php\n", 'public/update.php' => "<?php\n# one\n",
             'storage/update/sql/table.sql' => "-- table\n", 'storage/update/sql/table_update6_3.sql' => "-- 6.3\n", 'core/system.php' => "<?php\n# one\n",
-            'modules/news/index.php' => "<?php\n# news\n", 'docs/a.md' => "# a\n", 'modules/master/api.php' => "<?php\n# master\n"];
+            'modules/news/index.php' => "<?php\n# news\n", 'docs/a.md' => "# a\n", 'modules/master/api.php' => "<?php\n# master\n",
+            'modules/changelog/index.php' => "<?php\n# changelog\n", 'public/templates/lite/partials/changelog.html' => "<div></div>\n",
+            'config/modules.php' => "<?php\nreturn [\n    'modules' => [\n        'admins' => [\n            'lang' => '_ADMINS',\n            'active' => '1',\n        ],\n"
+                ."        'changelog' => [\n            'lang' => '_CHANGELOG',\n            'active' => '1',\n        ],\n        'news' => [\n            'lang' => '_NEWS',\n"
+                ."            'active' => '1',\n        ],\n    ],\n];\n"];
         foreach ($files as $path => $text) self::setFile($path, $text);
         self::setGit(['init', '-q']);
         self::setRelease('8.0.0');
@@ -152,7 +157,7 @@ final class ReleaseToolTest extends TestCase
         rename($repo.'/modules/news/index.php', $repo.'/modules/news/main.php');
         self::setFile('core/system.php', "<?php\n# two\n");
         self::setFile('public/update.php', "<?php\n# two\n");
-        self::setFile('docs/big.txt', bin2hex(random_bytes(8000)));
+        self::setFile('blocks/big.txt', bin2hex(random_bytes(8000)));
         self::setGit(['add', '-A']);
         self::setGit(['commit', '-q', '-m', 'Work']);
         self::setRelease('8.0.1');
@@ -212,6 +217,12 @@ final class ReleaseToolTest extends TestCase
         $run['otherhash'] = self::getTool('release', ['publish', 'v8.0.2']);
         self::setFile('storage/release/8.0.2/rehearsal.json', json_encode($green));
         $run['noenv'] = self::getTool('release', ['publish', 'v8.0.2']);
+        self::setFile('tools/.env', "SLAED_SFTP=nobody@example.invalid:22\nSLAED_SFTP_PATH=/none\n");
+        $run['noorigin'] = self::getTool('release', ['publish', 'v8.0.2']);
+        self::setGit(['remote', 'add', 'origin', 'https://github.com/SLAED-CMS/SLAED-CMS-6.3.git']);
+        $run['oldorigin'] = self::getTool('release', ['publish', 'v8.0.2']);
+        self::setGit(['remote', 'remove', 'origin']);
+        unlink($repo.'/tools/.env');
         $run['note'] = self::getTool('release', ['note', '--level', 'warn', '--ver', '<8.0.2', '--until', '2099-12-31'], "Обновитесь\n.\nPlease update\n.\n");
         preg_match('#Note (\d+) written#', $run['note']['out'], $hit);
         $run['noteid'] = $hit[1] ?? '';
@@ -246,6 +257,14 @@ final class ReleaseToolTest extends TestCase
         $this->assertNotContains('public/sitemap.xml', $names, 'public/sitemap.xml, which each site writes for itself, is in the archive');
         $this->assertNotContains('modules/master/api.php', $names, 'The module master of slaed.net is in the archive');
         $this->assertArrayNotHasKey('modules/master/api.php', $run['firstzip']['list']['files'], 'files.json lists the module master');
+        $this->assertNotContains('modules/changelog/index.php', $names, 'The module changelog of slaed.net is in the archive');
+        $this->assertNotContains('public/templates/lite/partials/changelog.html', $names, 'A template only the changelog renders is in the archive');
+        $mods = $run['firstzip']['modules'];
+        $tmp = self::$work.'/modules.php';
+        file_put_contents($tmp, $mods);
+        $this->assertSame(['admins', 'news'], array_keys((include $tmp)['modules']), 'config/modules.php of the archive lists a module it lacks, or lost a panel module');
+        $hash = $run['firstzip']['list']['files']['config/modules.php']['sha256'] ?? '';
+        $this->assertSame(hash('sha256', $mods), $hash, 'files.json holds the hash of the uncut config/modules.php');
         $this->assertContains('storage/update/sql/table.sql', $names);
         $list = $run['firstzip']['list'];
         $this->assertSame('8.0.0', $list['version']);
@@ -281,10 +300,14 @@ final class ReleaseToolTest extends TestCase
         $this->assertSame(0, $run['second']['code'], 'The second release did not build: '.$run['second']['out']);
         $names = $run['delta']['names'];
         sort($names);
-        $this->assertSame(['config/global.php', 'core/system.php', 'core/version.php', 'docs/big.txt', 'modules/news/main.php', 'storage/update/files.json'], $names,
+        $want = ['blocks/big.txt', 'config/global.php', 'config/modules.php', 'core/system.php', 'core/version.php', 'modules/news/main.php', 'storage/update/files.json'];
+        $this->assertSame($want, $names,
             'The delta lost an unchanged settings file the merge reads, or took unchanged code, robots.txt or an export-ignore file');
         $this->assertArrayNotHasKey('modules/news/index.php', $run['delta']['list']['files'], 'The renamed file is still in the list');
-        $this->assertArrayHasKey('docs/a.md', $run['delta']['list']['files'], 'The list of the delta is not the full list');
+        $this->assertArrayHasKey('config/system.php', $run['delta']['list']['files'], 'The list of the delta is not the full list');
+        foreach (['docs/a.md', 'tools/release.php', 'tests/Fixtures/update/primary.key', 'composer.json', 'README.md', '.gitattributes', '.gitignore'] as $path) {
+            $this->assertArrayNotHasKey($path, $run['delta']['list']['files'], 'A file the site does not need reached the release: '.$path);
+        }
         $this->assertSame('8.0.0', $run['secondman']['delta']['from']);
         $this->assertSame('8.0.0', $run['secondman']['min'], 'The lowest release with an updater is not the default min');
     }
@@ -319,6 +342,11 @@ final class ReleaseToolTest extends TestCase
         }
         $this->assertSame(1, $run['noenv']['code']);
         $this->assertStringContainsString('SLAED_SFTP', $run['noenv']['out'], 'A sound release was refused before the SFTP settings: '.$run['noenv']['out']);
+        foreach (['noorigin' => 'without origin', 'oldorigin' => 'with origin on another repository'] as $name => $what) {
+            $this->assertSame(1, $run[$name]['code'], 'publish went on '.$what);
+            $this->assertStringContainsString('origin is not github.com/SLAED-CMS/SLAED,', $run[$name]['out'], 'publish refused '.$what.' for another reason: '.$run[$name]['out']);
+            $this->assertStringNotContainsString('SLAED-CMS-6.3', $run[$name]['out'], 'publish printed the address of origin');
+        }
     }
 
     # A note is written from the console, signed and verified as a site verifies it; key statements chain under the recovery key and retire the old primary

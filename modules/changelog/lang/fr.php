@@ -36,3 +36,4 @@ define('_CHLOG_ERR_GH_API_JSON', 'API GitHub : JSON invalide.');
 define('_CHLOG_ERR_GIT_MISSING', 'Dépôt Git introuvable : %1$s');
 define('_CHLOG_ERR_GIT_CHDIR', 'Impossible de changer de répertoire : %1$s');
 define('_CHLOG_ERR_GIT_CMD', 'Commande Git échouée (code : %1$s)');
+define('_CHANGELOG', 'Journal des modifications');

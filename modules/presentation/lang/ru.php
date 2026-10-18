@@ -228,6 +228,7 @@ define('_PRES_DV_CODE', 'КОД');
 define('_PRES_DV_TEST', 'ТЕСТ');
 define('_PRES_DV_COMMIT', 'КОММИТ');
 define('_PRES_DV_RELEASE', 'РЕЛИЗ');
+define('_PRES_DV_LOG', 'Журнал изменений');
 define('_PRES_DV_BRANCH', 'ВЕТКА');
 define('_PRES_DV_LAST', 'ПОСЛЕДНИЙ КОММИТ');
 define('_PRES_DV_NONE', 'История коммитов сейчас недоступна');

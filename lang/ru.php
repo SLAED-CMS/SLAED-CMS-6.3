@@ -68,7 +68,6 @@ define('_CERROR7','Получатель с указанным именем не 
 define('_CERROR8','Запрещена отправка сообщений самому себе!');
 define('_CERROR9','Размещение ссылок в комментариях запрещено!');
 define('_CHANGE','Настройки');
-define('_CHANGELOG','Журнал изменений');
 define('_CHANGEFREQ','Частота обновления');
 define('_CHARSET','utf-8');
 define('_CHECKALL','Отметить все');
@@ -413,7 +412,6 @@ define('_LOGIN','Войти');
 define('_LOGININCOR','Неправильный логин! Попробуйте еще...');
 define('_LOGOUT','Выход');
 define('_MAN','Мужчина');
-define('_MASTER','Мастер');
 define('_MATERIALS','%s материал|%s материала|%s материалов');
 define('_MATERIALSOF','%s из %s материала|%s из %s материалов|%s из %s материалов');
 define('_MEDIA','Медиа каталог');

@@ -60,3 +60,4 @@ define('_MASTER_KEEPSITE', 'Przechowuj milczące strony, dni');
 define('_MASTER_KEEPSTAT', 'Przechowuj dzienne sumy, dni');
 define('_MASTER_LIMIT', 'Próg automatycznej pauzy (udział nieudanych instalacji w procentach)');
 define('_MASTER_JOBS', 'Zapisanie jednorazowo dodaje do harmonogramu zadania masterclean (dzienne sumy i czyszczenie) oraz masterwatch (automatyczna pauza, co godzinę).');
+define('_MASTER', 'Master');

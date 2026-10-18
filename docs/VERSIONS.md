@@ -27,7 +27,14 @@ that of the master `modules/master/admin/info/ru.md`.
 - **Settings, languages and themes.** An update adds the options a site lacks at any depth and keeps every saved value;
   the language files and the themes `admin` and `lite` are replaced whole, other themes are not touched.
 - **The manual path.** While `SL_VERSION` is above the last database step done, every entry answers 503 and only the
-  light mode of the panel opens, with "Применить шаги базы" after a backup of the site's tables.
+  light mode of the panel opens, with "Применить шаги базы" after a backup of the site's tables; after the steps it
+  clears `config/local.php`, the caches of pages and assets and OPcache, as an installation does.
+- **The release archive.** It carries only what a site runs. The modules `master` and `changelog` of slaed.net with the
+  changelog templates, `public/update.php`, `table_update6_3.sql`, `tests/`, `tools/`, `docs/`, the stands
+  `public/demo/`, `public/phoenix/` and `public/sound/`, `composer.json` and the other files of development and documents
+  of the root stay in the repository; the build cuts the rows of the modules it leaves out from `config/modules.php`.
+  Such a module keeps its name in its own languages, read by `getModuleLabel()`, and declares its scheduler jobs in its
+  `scheduler.php`. The GitHub release goes to the repository `Update::PAGE` names, with the two signed archives.
 - **The master.** The module `master` of slaed.net accepts releases and notes from `inbox/`, serves them by channel,
   share and pause, keeps a minimal statistic without an IP, pauses a release by itself on failed installations and
   mails the owner. It is in the repository and never in a release archive.
@@ -41,9 +48,10 @@ that of the master `modules/master/admin/info/ru.md`.
 Breaking for code outside the tree: `$conf['version']` is built from `SL_VERSION` and `SL_CODENAME` of
 `core/version.php` and is no key of `config/global.php`; every entry that loads the core calls `getSiteGate()` of
 `core/gate.php` first, before the core; the language files of the shipped modules and the themes `admin` and `lite` are
-overwritten by an update; `public/sitemap.xml` left git, `public/robots.txt` is a site file; `public/update.php` and
-`storage/update/sql/table_update6_3.sql` stay in the repository and leave the release archive, as `modules/master`
-does. The shipped `config/` carries no value of the stand: no test ban, no row `master`, error level 0.
+overwritten by an update; `public/sitemap.xml` left git, `public/robots.txt` is a site file; `_CHANGELOG` and `_MASTER`
+left `lang/*.php` for the languages of their modules; `addMasterTask()` is gone, a module job runs through
+`addSchedulerModuleJob()`; `getModuleName()` answers the name of a site module its map lacks, `node` included, instead
+of its key. The shipped `config/` carries no value of the stand: no test ban, no row `master`, error level 0.
 
 ## 2026-10-14
 

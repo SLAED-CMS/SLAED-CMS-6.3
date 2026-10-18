@@ -60,3 +60,4 @@ define('_MASTER_KEEPSITE', 'Stille Websites aufbewahren, Tage');
 define('_MASTER_KEEPSTAT', 'Tagessummen aufbewahren, Tage');
 define('_MASTER_LIMIT', 'Schwelle der automatischen Pause (Anteil fehlgeschlagener Installationen in Prozent)');
 define('_MASTER_JOBS', 'Beim Speichern werden einmalig die Planer-Aufgaben masterclean (Tagessummen und Bereinigung) und masterwatch (automatische Pause, stündlich) angelegt.');
+define('_MASTER', 'Master');

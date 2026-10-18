@@ -116,7 +116,7 @@ function modules(): void {
     $rows = [];
     $a = 1;
     foreach ($mods as $title => $mod) {
-        $lang = (defined($mod['lang']) ? constant($mod['lang']) : $mod['lang']);
+        $lang = getModuleLabel($title);
         $active = $mod['active'];
         $view = $mod['view'];
         $menu = $mod['menu'];

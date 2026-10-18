@@ -68,7 +68,6 @@ define('_CERROR7',"Le destinataire avec le nom spécifié est introuvable! Véri
 define('_CERROR8',"Interdit l'envoi de message vous-même!");
 define('_CERROR9','Le placement de liens dans les commentaires sont non-fumeurs!');
 define('_CHANGE','Paramètres');
-define('_CHANGELOG','Journal des modifications');
 define('_CHANGEFREQ','La fréquence de mise à jour');
 define('_CHARSET','utf-8');
 define('_CHECKALL','Marquer tous');
@@ -413,7 +412,6 @@ define('_LOGIN','Se connecter');
 define('_LOGININCOR','Informations de connexion incorrectes! Essayez encore...');
 define('_LOGOUT','Sortie');
 define('_MAN','Homme');
-define('_MASTER','Master');
 define('_MATERIALS','%s publication|%s publications');
 define('_MATERIALSOF','%s sur %s publication|%s sur %s publications');
 define('_MEDIA','Catalogue de médias');

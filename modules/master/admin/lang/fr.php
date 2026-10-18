@@ -60,3 +60,4 @@ define('_MASTER_KEEPSITE', 'Conserver les sites silencieux, jours');
 define('_MASTER_KEEPSTAT', 'Conserver les totaux journaliers, jours');
 define('_MASTER_LIMIT', 'Seuil de la pause automatique (part des installations échouées en pour cent)');
 define('_MASTER_JOBS', 'L\'enregistrement ajoute une fois au planificateur les tâches masterclean (totaux journaliers et nettoyage) et masterwatch (pause automatique, toutes les heures).');
+define('_MASTER', 'Master');

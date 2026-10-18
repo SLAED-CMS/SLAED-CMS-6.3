@@ -203,9 +203,9 @@ into the plan, then do whatever work the step names.
   rehearsal on a copy of the stand, a key change included. The rig is two OSPanel projects, `master.loc` and
   `rehearse.loc`; the light mode takes the portion dump of the site and the shipped `config/` lost the values of the
   stand (owner, 2026-10-17). (2026-10-17)
-- [ ] 87. UPDATE batch 11 — reference and the real keys; deletes `docs/11-UPDATE-2026.md`. The reference, the
-  documents and the seam `UPDATE_KEYS` were done 2026-10-18; the owner postponed the key ceremony, so the step waits
-  for the two public keys (what is left: the step of the plan).
+- [x] 87. UPDATE batch 11 — reference and the real keys; deletes `docs/11-UPDATE-2026.md`. The reference is
+  `docs/UPDATE.md`; a test run trusts the test keys through `UPDATE_KEYS` (owner, 2026-10-18); the owner held the key
+  ceremony and the factory keys with their fingerprints in `README.md` are real. (2026-10-18)
 - [ ] 88. DIAL — *decision*: the options dial `sl-dial` of the panel lists is three Tab stops a row while closed
   (found by the UI/UX audit of the groups stand, 2026-10-09); write a plan, then make its items reachable only once it
   opens. Put last by the owner on 2026-10-13, since its plan is not written yet, and again after the updater on

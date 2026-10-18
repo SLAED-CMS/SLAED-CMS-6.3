@@ -67,7 +67,7 @@ function getCommandRun(array $cmd): array {
 # The output of a git command, or a stop with its error text
 function getGitText(array $args): string {
     $res = getCommandRun(array_merge(['git'], $args));
-    if ($res['code'] !== 0) setFailExit('git '.implode(' ', $args).': '.$res['err']);
+    if ($res['code'] !== 0) setFailExit('git '.implode(' ', $args).': '.preg_replace('#(https?://)[^/@\s]+@#', '$1***@', $res['err']));
     return $res['out'];
 }
 
@@ -94,9 +94,47 @@ function deleteDirFiles(string $dir): void {
     if (is_dir($dir)) rmdir($dir);
 }
 
+# The array a settings file of the archive returns, read through a scratch copy; the file is the tag's own code
+function getConfigArray(string $text): array {
+    $tmp = tempnam(sys_get_temp_dir(), 'slaed-conf');
+    file_put_contents($tmp, $text);
+    $data = include $tmp;
+    unlink($tmp);
+    return is_array($data) ? $data : [];
+}
+
+# A module the tag holds whose folder export-ignore keeps out of the archive loses its row in config/modules.php of the archive, so no site lists a module it lacks
+# The row is cut out of the generated text, and the result must return the same array without those keys, or the build stops
+function setArchiveModules(string $tag, string $file): array {
+    $zip = new ZipArchive();
+    if ($zip->open($file) !== true) setFailExit('git archive wrote no zip for '.$tag);
+    $have = [];
+    for ($i = 0; $i < $zip->numFiles; $i++) {
+        if (preg_match('#^modules/([^/]+)/#', (string)$zip->getNameIndex($i), $hit) === 1) $have[$hit[1]] = true;
+    }
+    $gone = [];
+    foreach (preg_split('#\R#', trim(getGitText(['ls-tree', '--name-only', $tag, 'modules/'])), -1, PREG_SPLIT_NO_EMPTY) as $path) {
+        if (!isset($have[basename($path)])) $gone[] = basename($path);
+    }
+    $text = (string)$zip->getFromName('config/modules.php');
+    $data = getConfigArray($text);
+    $cut = array_values(array_filter($gone, static fn(string $mod): bool => isset($data['modules'][$mod])));
+    if ($cut !== []) {
+        $new = $text;
+        foreach ($cut as $mod) $new = (string)preg_replace("#^        '".preg_quote($mod, '#')."' => \[\n(?:            .*\n)*?        \],\n#m", '', $new, 1);
+        $want = $data;
+        foreach ($cut as $mod) unset($want['modules'][$mod]);
+        if (getConfigArray($new) !== $want) setFailExit('the rows of '.implode(', ', $cut).' do not leave config/modules.php of '.$tag.' cleanly');
+        $zip->addFromString('config/modules.php', $new);
+    }
+    if (!$zip->close()) setFailExit('cannot write '.$file);
+    return $cut;
+}
+
 # The archive of a tag: git archive honours export-ignore, every entry passes the path rules of a package, and files.json with SHA-256 and the site marks goes in
 function addArchive(string $tag, string $file, string $ver): array {
     getGitText(['archive', '--format=zip', '-o', $file, $tag]);
+    setArchiveModules($tag, $file);
     $zip = new ZipArchive();
     if ($zip->open($file) !== true) setFailExit('git archive wrote no zip for '.$tag);
     $files = [];
@@ -268,6 +306,33 @@ function setInboxUpload(string $sub, array $files): void {
     fwrite(STDOUT, 'In inbox/'.$sub.' of the master: '.count($files)." files, each fetched back and compared\n");
 }
 
+# The repository of the releases, read from the fixed address of a release page in the core, so the GitHub release and the links of the sites never part
+function getReleaseRepo(): string {
+    return (preg_match('#^https://github\.com/([^/]+/[^/]+)/releases/tag/v$#D', Update::PAGE, $hit) === 1) ? $hit[1] : '';
+}
+
+# Stop unless origin is the repository of the releases, where the tag goes and gh publishes; the address of origin may carry a token and is never printed
+function checkReleaseRepo(string $repo): void {
+    $res = getCommandRun(['git', 'remote', 'get-url', 'origin']);
+    $url = trim($res['out']);
+    $same = $repo !== '' && $res['code'] === 0 && preg_match('#github\.com[:/]([^/\s]+/[^/\s]+?)(\.git)?/?$#i', $url, $hit) === 1 && strcasecmp($hit[1], $repo) === 0;
+    if (!$same) setFailExit('origin is not github.com/'.$repo.', the repository the release page of the sites names (Update::PAGE)');
+}
+
+# The text of the GitHub release for people: which archive installs and which updates, their SHA-256, and that the archives GitHub adds are sources only
+function getReleaseNotes(string $repo, string $tag, array $packs): string {
+    $out = [];
+    foreach ($packs as $name => $one) {
+        $out[] = isset($one['from']) ? '- A site exactly on '.$one['from'].' may take the smaller delta `'.$name.'`, SHA-256 `'.$one['sha256'].'`'
+            : '- A new site, or an upload by hand on the page "Updates" of the panel: `'.$name.'`, SHA-256 `'.$one['sha256'].'`';
+    }
+    $out[] = '';
+    $out[] = 'The "Source code" archives GitHub adds are the sources for developers, not a release: they lack `storage/update/files.json`.';
+    $out[] = '';
+    $out[] = 'Changes: https://github.com/'.$repo.'/blob/'.$tag.'/docs/VERSIONS.md';
+    return implode("\n", $out);
+}
+
 # Stop unless tools/rehearse.php left a green record of exactly the archives the signed manifest names
 function checkRehearsal(string $dir, array $man): void {
     $rec = is_file($dir.'/rehearsal.json') ? json_decode((string)file_get_contents($dir.'/rehearsal.json'), true) : null;
@@ -303,16 +368,19 @@ function setPublish(string $tag): void {
     }
     checkRehearsal($dir, $data);
     if (getEnvValue('SLAED_SFTP') === '' || getEnvValue('SLAED_SFTP_PATH') === '') setFailExit('tools/.env names no SLAED_SFTP and SLAED_SFTP_PATH');
+    $repo = getReleaseRepo();
+    checkReleaseRepo($repo);
     if (trim(getGitText(['ls-remote', '--tags', 'origin', 'refs/tags/'.$tag])) === '') getGitText(['push', 'origin', 'refs/tags/'.$tag]);
     $gh = getGhPath();
     $zips = array_map(static fn(string $name): string => $dir.'/'.$name, array_keys($packs));
-    $view = getCommandRun([$gh, 'release', 'view', $tag]);
-    $res = ($view['code'] === 0) ? getCommandRun(array_merge([$gh, 'release', 'upload', $tag, '--clobber'], $zips))
-        : getCommandRun(array_merge([$gh, 'release', 'create', $tag, '--verify-tag', '--title', 'SLAED CMS '.$ver, '--notes', 'See docs/VERSIONS.md.'], $zips));
+    $view = getCommandRun([$gh, 'release', 'view', $tag, '--repo', $repo]);
+    $res = ($view['code'] === 0) ? getCommandRun(array_merge([$gh, 'release', 'upload', $tag, '--clobber', '--repo', $repo], $zips))
+        : getCommandRun(array_merge([$gh, 'release', 'create', $tag, '--verify-tag', '--repo', $repo, '--title', 'SLAED CMS '.$ver,
+            '--notes', getReleaseNotes($repo, $tag, $packs)], $zips));
     if ($res['code'] !== 0) setFailExit('gh release: '.$res['err']);
     $back = sys_get_temp_dir().'/slaed-gh-'.bin2hex(random_bytes(4));
     foreach (array_keys($packs) as $name) {
-        $res = getCommandRun([$gh, 'release', 'download', $tag, '--pattern', $name, '--dir', $back, '--clobber']);
+        $res = getCommandRun([$gh, 'release', 'download', $tag, '--pattern', $name, '--dir', $back, '--clobber', '--repo', $repo]);
         $same = $res['code'] === 0 && hash_file('sha256', $back.'/'.$name) === $packs[$name]['sha256'];
         if (is_file($back.'/'.$name)) unlink($back.'/'.$name);
         if (!$same) setFailExit($name.' came back from GitHub with another SHA-256');

@@ -61,7 +61,7 @@ CLIENT (every site 8.x)
 | Version | `SL_VERSION` and `SL_CODENAME` in `core/version.php`; `$conf['version']` is built from both at boot |
 | API | the branch `/api/` of `public/index.php`, `ApiRouter` and its classes in `core/classes/api/` |
 | Master | the module `modules/master/`, in the repository but never in a release archive |
-| Tools | `tools/release.php`, `tools/sign.php`, `tools/rehearse.php`, CLI only, shipped without a secret: a fork needs them for its own master |
+| Tools | `tools/release.php`, `tools/sign.php`, `tools/rehearse.php`, CLI only, in the repository without a secret but never in a release archive: a fork takes them from the repository for its own master |
 
 A fork changes the source of its updates by code only: the host `Update::HOST` and the factory keys `Update::PRIMARY`
 and `Update::RECOVERY`. The panel has no field for a server or a key, on purpose.
@@ -90,8 +90,10 @@ the other ideas after 8.0 are in `docs/2027-IDEAS.md`.
                 with the real signatures -> self-check, integrity, schema = schema of the clean install
                 -> "Вернуть предыдущую версию" -> rehearsal.json with the hashes of the archives
 6. Publish    php tools/release.php publish v8.0.1
-                refused: no green rehearsal of these hashes, or test factory keys in the archive
-                git push of the tag -> gh release create (both archives) -> SFTP into inbox/ through .part and rename
+                refused: no green rehearsal of these hashes, test factory keys in the archive,
+                         or origin is not the repository of Update::PAGE (github.com/SLAED-CMS/SLAED)
+                git push of the tag -> gh release create --repo (both archives, the notes) -> SFTP into inbox/
+                through .part and rename
                 -> downloads back from both places and compares the hashes
 7. Desk       Master -> Releases: Accept -> To beta -> (a few days later) To stable
 ```
@@ -116,6 +118,13 @@ the other ideas after 8.0 are in `docs/2027-IDEAS.md`.
   `SLAED_SFTP=user@slaed.net:22`, `SLAED_SFTP_PATH=<the folder storage/update/master of slaed.net>`. The machine needs
   PHP CLI with `sodium`, `git`, `gh` and `sftp`; how OSPanel switches `sodium` on is in `.rules/global.md`,
   "Toolchain". Publishing goes by SFTP only (the system OpenSSH `sftp`, a login by SSH key), never by FTP.
+- **The GitHub release** lives in the repository `Update::PAGE` names, the one the banner of every site links to, so
+  `publish` refuses while `origin` points elsewhere and passes that repository to every `gh` call; the address of
+  `origin` is never printed. It carries the two signed archives, byte for byte those of the master, and notes that name
+  which archive installs and which updates, with their SHA-256, and a link to `docs/VERSIONS.md` of the tag. GitHub adds
+  "Source code" archives of the tag by itself: they honour `export-ignore` but lack `storage/update/files.json` and the
+  cut of `config/modules.php`, so the notes call them sources for developers, not a release. Manifests and signatures
+  never go to GitHub: only the master serves them.
 - **Signing never runs in CI or on a server.** Build and publish never touch a key; signing is its own command with
   its own password.
 
@@ -202,10 +211,24 @@ draft; `sign.php` sets all three at the moment it signs, and again on `--refresh
   line) are site files: put only when absent, never checked by the integrity check, never in the list of changed
   files, never deleted by "missing from the new list". Only a PHP step of a version deletes a settings file.
   `public/sitemap.xml` is not in git at all.
-- **What the archive leaves out.** `modules/master`, `public/update.php` (the owner's internal tool) and
-  `storage/update/sql/table_update6_3.sql` are `export-ignore` in `.gitattributes`. Everything else ships, `public/demo/`,
-  `tests/`, `docs/`, `uploads/presentation/` and the GeoIP bases of `storage/geoip/` included; a delta carries a GeoIP
-  base only when it changed.
+- **What the archive leaves out** (owner, 2026-10-18: a release carries only what a site runs). `export-ignore` in
+  `.gitattributes` keeps in the repository and on the stand, out of every archive: the modules of slaed.net `master` and
+  `changelog` with the templates `changelog*.html` only the changelog renders in `admin` and `lite`, `public/update.php`
+  (the owner's internal tool) and `storage/update/sql/table_update6_3.sql`; `tests/`, `tools/`, `docs/`; the stands
+  `public/demo/`, `public/phoenix/` and `public/sound/`; the files of development of the root — `composer.json` (the
+  build reads the PHP of the manifest from the tag through `git show`, not from the archive), `package.json`,
+  `phpunit.xml`, `phpstan.neon`, `phpstan-bootstrap.php`, `phpstan-stubs.php`, `.php-cs-fixer.dist.php`,
+  `.editorconfig`, `.gitmessage`, `.gitignore`, `.gitattributes` — and the documents `README.md`, `UPGRADING.md`,
+  `SECURITY.md`, `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`. The root keeps `LICENSE` (the MIT licence travels with every
+  copy), `.htaccess` and `nginx.conf.example`. `uploads/presentation/` of the module `presentation` and the GeoIP bases
+  of `storage/geoip/` ship; a delta carries a GeoIP base only when it changed. A path left out later is deleted from the
+  sites by the next update, since the new list no longer names it.
+- **No word of a module the archive lacks** (owner, 2026-10-18). `release.php build` cuts from `config/modules.php` of
+  the archive the row of every module whose folder the tag holds and the archive does not (`setArchiveModules()`;
+  the result must return the same array without those keys, or the build stops); the stand keeps its rows. The names
+  of such a module live in its own language files, read by `getModuleLabel()`; its jobs in its `scheduler.php`. The
+  module `presentation` shows the commits of the changelog only while `modules/changelog/` is there. The CSS of the
+  changelog stays in the two themes: the tokens of `base.css` are a frozen API.
 - A site installed from git, without `files.json`, updates from the panel with a warning: old files are not deleted,
   changed files are not recognized.
 
@@ -243,7 +266,9 @@ files. Signature and manifest format come from the class `Update` of the core; t
 modules/master/
   api.php       the service: check, file (both auth public, GET)
   common.php    handlers, acceptance from inbox/, serving, the jobs
-  admin/        the panel, tabs through getTplAdminTabs()
+  scheduler.php the jobs masterclean and masterwatch, their rows and handlers
+  admin/        the panel, tabs through getTplAdminTabs(); admin/lang with the name _MASTER
+  lang/         the name _MASTER for the site context
   sql/table.sql _master_site, _master_stat, _master_release, _master_note
 ```
 
@@ -299,9 +324,11 @@ its acceptance, the failed installations (sites whose last failure is on this ve
 previous one) and the successful ones (sites that report this version); a site that failed and later installed counts
 only as success. At 5 failures or more with a share above the threshold, the release is paused with the mark
 "автопауза", the owner gets a mail at `adminmail` of slaed.net with the version, the figures and the most frequent
-steps, and `admin.log` gets an entry. The job never lifts a pause; only the owner does. The core knows both names
-(`getSchedulerJob()`, `addSchedulerSystemJob()`, the handler `addMasterTask()`, which answers "Отключено" without the
-active module), but the shipped `config/scheduler.php` holds neither: every site would carry two dead jobs.
+steps, and `admin.log` gets an entry. The job never lifts a pause; only the owner does. Both jobs are declared in
+`modules/master/scheduler.php` alone (owner, 2026-10-18): the core collects the `scheduler.php` of the modules
+(`getSchedulerModuleJobs()`), runs a job while its module is active and answers "Отключено" while it is not
+(`addSchedulerModuleJob()`), and names no job of the master itself. Saving "Настройки" writes the two rows into the
+scheduler of slaed.net; the shipped `config/scheduler.php` holds neither.
 
 ## The Client
 
@@ -406,7 +433,8 @@ entry with a static 503 before the core — `/api/` and the pseudo-cron included
 the light mode of `public/admin.php` passes. It shows "Применить шаги базы" with a backup taken on the closed site by the
 same portion dump of the tables of the site that an installation takes on step 4, into `storage/backup/steps/<version>/`
 (after the steps, renamed with the time); a backup that did not fit into one request continues with the next click, and
-a backup is not taken again after a failed step. The site opens by itself after the steps. `public/update.php` takes no
+a backup is not taken again after a failed step. After the steps the mode clears `config/local.php`, the caches of pages
+and assets and OPcache, as step 7 of an installation does, and the site opens by itself. `public/update.php` takes no
 part and does not ship.
 
 ## Storage
@@ -507,15 +535,15 @@ database.
   "место проверено вручную", and only the handling of write errors guards the course.
 
 **The gate of every entry.** `public/index.php` (with the branch `/api/`), `public/admin.php` and `public/setup.php`
-each call `getSiteGate()` of `core/gate.php` first, right after the folder constants, and `require` the file it names
-at the top level, so the new core that the executor loads on step 6 keeps its globals. While `apply.lock` lies: `rescue.now`, the field
-`rescue` of the form, `?rescue` or a started rollback with the right token -> the installed `core/rescue.php`, past the
-new executor, so a rollback works with a bad package; the field `apply` whose SHA-256 equals `token` of the lock and the
-copy `run/apply.php` with the hash `run` -> the executor; everything else and any `/api/` -> the static 503 of
-`public/error.html` with `Retry-After`, without the core. `$conf['close']` is not used: it needs the core, and an
-administrator in `admin.php` over a mixed core would end in a fatal error or in mixed code. Without `apply.lock` the same
-gate, `checkSiteGate()`, closes the site while the code is newer than its steps. Both calls stay first in every
-entry of every version (`.rules/architecture.md`).
+each call `getSiteGate()` of `core/gate.php` first, right after the folder constants, and `require` the file it names at
+the top level, so the new core that the executor loads on step 6 keeps its globals. While `apply.lock` lies:
+`rescue.now`, the field `rescue` of the form, `?rescue` or a started rollback with the right token -> the installed
+`core/rescue.php`, past the new executor, so a rollback works with a bad package; the field `apply` whose SHA-256 equals
+`token` of the lock and the copy `run/apply.php` with the hash `run` -> the executor; everything else and any `/api/` ->
+the static 503 of `public/error.html` with `Retry-After`, without the core. `$conf['close']` is not used: it needs the
+core, and an administrator in `admin.php` over a mixed core would end in a fatal error or in mixed code. Without
+`apply.lock` the same gate, `checkSiteGate()`, closes the site while the code is newer than its steps. Both calls stay
+first in every entry of every version (`.rules/architecture.md`).
 
 **Contract version 1** (`Update::APPLY` = 1, `Backup::FORMAT` = 1), frozen in 8.0.0. The executor comes from the new
 package, while the old version stays in two places: on step 4 the executor calls `Backup` of the old core, and a failure
@@ -622,11 +650,11 @@ symlink and throws in the middle of a walk on a backslash. Files get 0644, folde
   is off, so the master never sees it. The previous full archive is `storage/release/<previous>/` when its hash matches
   the signed manifest, otherwise the one of the GitHub release (`gh release download`). The first release with an
   updater has no previous one and ends after the clean run.
-- The rehearsal goes past the master on purpose. The path through a real master was proven once by the general
-  rehearsal of 2026-10-17: a clone under fresh keys with `Update::HOST` on a second OSPanel project `master.loc`, the site
-  copy on `rehearse.loc`, each with its own domain on nginx and php-cgi with OPcache and the HTTPS of the stand, releases
-  8.0.0 -> 8.0.1 -> 8.0.2 with a key change, a pause, the rescuer of 8.0.0 under the executor of 8.0.1, a failure on step
-  6, a foreign prefix in the same database, the manual path, forgeries, a broken download, missing rights, the fallbacks
+- The rehearsal goes past the master on purpose. The path through a real master was proven once by the general rehearsal
+  of 2026-10-17: a clone under fresh keys with `Update::HOST` on a second OSPanel project `master.loc`, the site copy on
+  `rehearse.loc`, each with its own domain on nginx and php-cgi with OPcache and the HTTPS of the stand, releases 8.0.0
+  -> 8.0.1 -> 8.0.2 with a key change, a pause, the rescuer of 8.0.0 under the executor of 8.0.1, a failure on step 6, a
+  foreign prefix in the same database, the manual path, forgeries, a broken download, missing rights, the fallbacks
   without `sodium` and without `zip`, a delta and a full archive, a personal note and the return after the next
   installation. What it did not cover: running out of space on a real disk; the same rollback path was proven by a
   failed move in the middle of a batch.

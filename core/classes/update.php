@@ -43,8 +43,8 @@ final class Update {
     public const NOTE = "SLAED-NOTE-v1\n";
 
     # The factory keys in base64: the primary signs releases and notes, the recovery key only key statements
-    public const PRIMARY = '59ubydnghcn58YwJIchp9O9rmPvkRhBfX1CssLJzopg=';
-    public const RECOVERY = 'OpOGkJH+KEQehR5ZadvvlmTBtVb+WXOyLWM7yBndTA0=';
+    public const PRIMARY = 'dl34okN8JkKac4WkXacmNe/XtfH8GkZeXIFL0UAdW88=';
+    public const RECOVERY = '7VQdwjJluNE5VwkbidK4gfZPLyTqS4iIGia6Nqk5+CA=';
 
     # The folders a package may hold at its top; a file of the top level passes by its name alone
     public const DIRS = ['admin', 'blocks', 'config', 'core', 'docs', 'lang', 'modules', 'public', 'storage', 'tests', 'tools', 'uploads'];
