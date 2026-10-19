@@ -221,9 +221,7 @@
     }
     function setGroupStates(root) {
         (root || document).querySelectorAll('tr[data-sl-group]').forEach(function (head) {
-            var closed = false;
-            try { closed = window.localStorage.getItem('sl-group-' + head.getAttribute('data-sl-group')) === '0'; } catch (err) {}
-            if (closed) setGroupRows(head, true);
+            if (window.getToggleState('group-' + head.getAttribute('data-sl-group'), '') === '0') setGroupRows(head, true);
         });
     }
     document.addEventListener('click', function (event) {
@@ -231,7 +229,7 @@
         if (!head) return;
         var closed = !head.classList.contains('sl-is-closed');
         setGroupRows(head, closed);
-        try { window.localStorage.setItem('sl-group-' + head.getAttribute('data-sl-group'), closed ? '0' : '1'); } catch (err) {}
+        window.setToggleState('group-' + head.getAttribute('data-sl-group'), '', closed ? '0' : '1');
     });
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', function () { setGroupStates(document); });
@@ -1135,6 +1133,43 @@
         }
         addSetupPart();
     }
+    var phone = window.matchMedia('(max-width: 900px)');
+    var held = [];
+    // The drawer of a phone: the rest of the page goes inert while it is open, the focus comes back to the menu button
+    function setDrawer(open) {
+        var menu = document.getElementById('sl-menu');
+        var btn = document.querySelector('[data-sl-menu-open]');
+        if (!menu || !btn) return;
+        var on = open && phone.matches;
+        document.body.toggleAttribute('data-sl-drawer', on);
+        btn.setAttribute('aria-expanded', on ? 'true' : 'false');
+        held.forEach(function (node) { node.inert = false; });
+        held = [];
+        if (on) {
+            for (var node = menu; node.parentElement; node = node.parentElement) {
+                Array.prototype.forEach.call(node.parentElement.children, function (item) {
+                    if (item === node || item.inert || item.hasAttribute('data-sl-menu-close') || item.tagName === 'SCRIPT') return;
+                    item.inert = true;
+                    held.push(item);
+                });
+                if (node.parentElement === document.body) break;
+            }
+            menu.querySelector('button, a').focus();
+        } else if (menu.contains(document.activeElement)) {
+            btn.focus();
+        }
+    }
+    document.addEventListener('click', function (event) {
+        if (!event.target.closest) return;
+        if (event.target.closest('[data-sl-menu-open]')) setDrawer(!document.body.hasAttribute('data-sl-drawer'));
+        else if (event.target.closest('[data-sl-menu-close]')) setDrawer(false);
+    });
+    document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape' && document.body.hasAttribute('data-sl-drawer')) setDrawer(false);
+    });
+    phone.addEventListener('change', function () {
+        if (!phone.matches && document.body.hasAttribute('data-sl-drawer')) setDrawer(false);
+    });
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', function () {
             addFileStep();

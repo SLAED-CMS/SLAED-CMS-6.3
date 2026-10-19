@@ -375,7 +375,7 @@
         }
     }
 
-    // A toggle remembers its state for the site, for one address with scope "path", or never with scope "none"
+    // A per-viewer choice kept for the site, for one address with scope "path", or never with scope "none"; refused storage keeps the defaults
     function getStorageKey(name, scope) {
         if (scope === 'none') return '';
         return scope === 'path' ? 'slaed-toggle:' + window.location.pathname + window.location.search + ':' + name : 'slaed-toggle:' + name;
@@ -399,6 +399,8 @@
         } catch (err) {
         }
     }
+    window.getToggleState = getToggleState;
+    window.setToggleState = setToggleState;
 
     function getToggleControls(id) {
         var controls = document.querySelectorAll('[data-sl-toggle-control]');
@@ -490,9 +492,10 @@
         if (!id) return;
         var scope = control.getAttribute('data-sl-toggle-scope') || '';
         var isCheckbox = control.type === 'checkbox';
+        var isNative = isCheckbox || control.tagName === 'BUTTON';
         control.setAttribute('data-sl-toggle-ready', '1');
         control.setAttribute('aria-controls', id);
-        if (!isCheckbox) {
+        if (!isNative) {
             control.setAttribute('role', 'button');
             control.setAttribute('tabindex', '0');
         }
@@ -504,7 +507,7 @@
             setToggleBlock(id, scope, isCheckbox ? control.checked : undefined, effect, duration);
         });
         control.addEventListener('keydown', function (event) {
-            if (isCheckbox) return;
+            if (isNative) return;
             if (event.key !== 'Enter' && event.key !== ' ') return;
             event.preventDefault();
             var effect = control.getAttribute('data-sl-toggle-effect');
@@ -513,36 +516,41 @@
         });
     }
 
-    function setSlideMotion(element, show, duration) {
+    // Slide a block open or shut along its height, or its width on the axis "x"; a still page arrives at once, and the run is returned
+    function setSlideMotion(element, show, duration, axis) {
+        var prop = axis === 'x' ? 'width' : 'height';
         var anims = element.getAnimations ? element.getAnimations() : [];
+        var from = {};
+        var to = {};
+        var run;
         for (var i = 0; i < anims.length; i++) anims[i].cancel();
         if (show) {
             element.hidden = false;
             element.style.display = getToggleDisplay(element);
-            element.style.height = '0px';
+            element.style[prop] = '0px';
             element.style.overflow = 'hidden';
             element.offsetHeight;
         } else {
             element.style.overflow = 'hidden';
-            element.style.height = element.offsetHeight + 'px';
+            element.style[prop] = (axis === 'x' ? element.offsetWidth : element.offsetHeight) + 'px';
         }
-        var startHeight = show ? 0 : element.offsetHeight;
-        var endHeight = show ? element.scrollHeight : 0;
-        element.animate([
-            { height: startHeight + 'px' },
-            { height: endHeight + 'px' }
-        ], {
-            duration: duration,
+        from[prop] = (show ? 0 : (axis === 'x' ? element.offsetWidth : element.offsetHeight)) + 'px';
+        to[prop] = (show ? (axis === 'x' ? element.scrollWidth : element.scrollHeight) : 0) + 'px';
+        run = element.animate([from, to], {
+            duration: isMotionStill() ? 0 : duration,
             easing: 'linear'
-        }).onfinish = function () {
+        });
+        run.onfinish = function () {
             element.style.overflow = '';
-            element.style.height = '';
+            element.style[prop] = '';
             if (!show) {
                 element.style.display = 'none';
                 element.hidden = true;
             }
         };
+        return run;
     }
+    window.setSlideMotion = setSlideMotion;
 
     function setFadeScale(element, show, duration) {
         if (show) {
@@ -553,7 +561,7 @@
             { opacity: show ? 0 : 1, transform: show ? 'scale(0.96)' : 'scale(1)' },
             { opacity: show ? 1 : 0, transform: show ? 'scale(1)' : 'scale(0.96)' }
         ], {
-            duration: duration,
+            duration: isMotionStill() ? 0 : duration,
             easing: 'ease'
         }).onfinish = function () {
             element.style.opacity = '';
@@ -1966,23 +1974,169 @@
         return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + dim + ' ' + dim + '" shape-rendering="crispEdges" role="img" aria-label="QR"><rect width="100%" height="100%" fill="#ffffff"/><path d="' + path + '" fill="#111827"/></svg>';
     }
 
-    // Toast: singleton pill, created on first use and reused; it confirms by default and warns when a refusal has to be told
-    function setToast(text, warn) {
-        if (!text) return;
-        var toast = document.querySelector('.sl-toast');
-        if (!toast) {
-            toast = document.createElement('div');
-            toast.className = 'sl-toast';
-            toast.setAttribute('role', 'status');
-            toast.innerHTML = '<i class="bi" aria-hidden="true"></i> <span></span>';
-            document.body.appendChild(toast);
+    // The one notice of the page from the template of the theme: it confirms or warns, offers Undo for opts.undo and stays opts.time ms
+    function setToast(text, opts) {
+        var tpl = document.querySelector('template[data-sl-toast]');
+        var conf = opts || {};
+        var time = conf.time || (conf.undo ? 10000 : 2600);
+        var box, undo, shut;
+        if (!text || !tpl) return;
+        tpl.parentNode.querySelectorAll(':scope > :not(template)').forEach(function (one) { one.remove(); });
+        box = tpl.content.firstElementChild.cloneNode(true);
+        box.classList.toggle('sl-toast-warn', !!conf.warn);
+        box.querySelector('[data-sl-toast-text]').textContent = text;
+        box.querySelectorAll('[data-sl-toast-tone]').forEach(function (one) { one.hidden = one.getAttribute('data-sl-toast-tone') !== (conf.warn ? 'warn' : 'done'); });
+        undo = box.querySelector('[data-sl-undo]');
+        if (undo && conf.undo) {
+            undo.hidden = false;
+            undo.addEventListener('click', function () { setToastDrop(box); conf.undo(); });
         }
-        toast.classList.toggle('sl-toast-warn', !!warn);
-        toast.querySelector('.bi').className = 'bi ' + (warn ? 'bi-exclamation-triangle' : 'bi-check-lg');
-        toast.querySelector('span').textContent = text;
-        toast.classList.add('sl-is-visible');
-        window.clearTimeout(toast.sltimer);
-        toast.sltimer = window.setTimeout(function () { toast.classList.remove('sl-is-visible'); }, 2600);
+        shut = box.querySelector('[data-sl-toast-close]');
+        if (shut) shut.addEventListener('click', function () { setToastDrop(box); });
+        box.style.setProperty('--sl-d-toast', time + 'ms');
+        tpl.parentNode.appendChild(box);
+        window.requestAnimationFrame(function () { box.classList.add('sl-is-visible'); });
+        box.sltimer = window.setTimeout(function () { setToastDrop(box); }, time);
+    }
+    window.setToast = setToast;
+
+    // Take a notice off by the leaving motion of its theme and remove it once that has played
+    function setToastDrop(box) {
+        window.clearTimeout(box.sltimer);
+        box.classList.remove('sl-is-visible');
+        box.classList.add('sl-is-hiding');
+        window.setTimeout(function () { box.remove(); }, isMotionStill() ? 0 : 400);
+    }
+
+    // Open a palette window, wired on its first opening; a row marked slOff is not offered, and run(row) follows once it has closed
+    function setPaletteOpen(pal, run, recent) {
+        var find = pal.querySelector('[role="combobox"]');
+        pal.slRun = run;
+        pal.slRecent = recent || '';
+        pal.slPick = null;
+        if (!pal.slWired) {
+            pal.slWired = true;
+            find.addEventListener('input', function () { setPaletteFilter(pal, find.value); });
+            pal.addEventListener('keydown', setPaletteKeys);
+            pal.addEventListener('close', function () {
+                var row = pal.slPick;
+                pal.slPick = null;
+                if (row && pal.slRun) pal.slRun(row);
+            });
+            pal.addEventListener('click', function (ev) {
+                var row = ev.target.closest ? ev.target.closest('[role="option"]') : null;
+                if (!row) return;
+                ev.preventDefault();
+                setPaletteRun(pal, row);
+            });
+        }
+        find.value = '';
+        setPaletteFilter(pal, '');
+        setWindowOpen(pal);
+    }
+    window.setPaletteOpen = setPaletteOpen;
+
+    // The places of the typed letters inside a name, in the order they were typed, or null where one of them is missing
+    function getPaletteHits(name, want) {
+        var hits = [];
+        var at = 0;
+        for (var i = 0; i < want.length; i++) {
+            at = name.indexOf(want.charAt(i), at);
+            if (at < 0) return null;
+            hits.push(at);
+            at++;
+        }
+        return hits;
+    }
+
+    // Write the name of a command with the matched letters in bold, from text nodes so nothing of the name is read as markup
+    function setPaletteName(node, name, hits) {
+        var run = '';
+        var mark;
+        node.textContent = '';
+        for (var i = 0; i < name.length; i++) {
+            if (hits.indexOf(i) < 0) {
+                run += name.charAt(i);
+                continue;
+            }
+            if (run) node.appendChild(document.createTextNode(run));
+            run = '';
+            mark = document.createElement('b');
+            mark.textContent = name.charAt(i);
+            node.appendChild(mark);
+        }
+        if (run) node.appendChild(document.createTextNode(run));
+    }
+
+    // Keep the commands whose name holds the typed letters in their order, hide the groups left empty and the keys while a search runs
+    function setPaletteFilter(pal, term) {
+        var want = term.trim().toLowerCase();
+        var first = null;
+        var help = pal.querySelector('[data-sl-pal-help]');
+        pal.querySelectorAll('[role="option"]').forEach(function (row) {
+            var name = row.querySelector('span');
+            var hits;
+            if (row.slName === undefined) row.slName = name.textContent;
+            hits = getPaletteHits(row.slName.toLowerCase(), want);
+            row.hidden = !!row.slOff || !hits;
+            setPaletteName(name, row.slName, hits || []);
+            if (!row.hidden && !first) first = row;
+        });
+        pal.querySelectorAll('[role="group"]').forEach(function (group) { group.hidden = !group.querySelector('[role="option"]:not([hidden])'); });
+        pal.querySelector('[data-sl-pal-empty]').hidden = !!first;
+        if (help) help.hidden = want !== '';
+        setPaletteActive(pal, first);
+    }
+
+    // Choose one command; the focus stays in the search, which names the chosen one to a screen reader
+    function setPaletteActive(pal, row) {
+        var find = pal.querySelector('[role="combobox"]');
+        pal.querySelectorAll('[role="option"][aria-selected]').forEach(function (one) { one.removeAttribute('aria-selected'); });
+        if (!row) {
+            find.removeAttribute('aria-activedescendant');
+            return;
+        }
+        row.setAttribute('aria-selected', 'true');
+        find.setAttribute('aria-activedescendant', row.id);
+        row.scrollIntoView({ block: 'nearest' });
+    }
+
+    // Step the chosen command up or down through the shown ones, round from the end to the start
+    function setPaletteStep(pal, step) {
+        var rows = Array.prototype.filter.call(pal.querySelectorAll('[role="option"]'), function (one) { return !one.hidden; });
+        var now;
+        if (!rows.length) return;
+        now = rows.indexOf(pal.querySelector('[role="option"][aria-selected]'));
+        setPaletteActive(pal, rows[(now + step + rows.length) % rows.length]);
+    }
+
+    // The keys of a palette: the arrows choose, Enter in the search runs, Escape closes at once over a typed search, Ctrl+K closes it again
+    function setPaletteKeys(ev) {
+        var pal = ev.currentTarget;
+        if (ev.isComposing) return;
+        if (ev.key === 'ArrowDown' || ev.key === 'ArrowUp') {
+            ev.preventDefault();
+            setPaletteStep(pal, ev.key === 'ArrowDown' ? 1 : -1);
+            return;
+        }
+        if (ev.key === 'Enter' && ev.target.getAttribute('role') === 'combobox') {
+            ev.preventDefault();
+            setPaletteRun(pal, pal.querySelector('[role="option"][aria-selected]'));
+            return;
+        }
+        if (ev.key !== 'Escape' && !((ev.ctrlKey || ev.metaKey) && ev.code === 'KeyK')) return;
+        ev.preventDefault();
+        setWindowClose(pal);
+    }
+
+    // Close the palette on the chosen command, a second press naming it again, and raise it in its group as the recent one
+    function setPaletteRun(pal, row) {
+        if (!row || row.hidden) return;
+        pal.querySelectorAll('[data-recent]').forEach(function (one) { one.removeAttribute('data-recent'); });
+        row.parentNode.insertBefore(row, row.parentNode.querySelector('[role="option"]'));
+        row.setAttribute('data-recent', pal.slRecent);
+        pal.slPick = row;
+        setWindowClose(pal);
     }
 
     // Share endpoints: {u} = encoded canonical url, {t} = encoded title
@@ -2332,7 +2486,7 @@
             if (xhr.status < 400) return;
             var box = new DOMParser().parseFromString(xhr.responseText || '', 'text/html').body;
             var line = box.querySelector('.sl-alert-text') || box;
-            setToast((line.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 200) || String(xhr.status), true);
+            setToast((line.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 200) || String(xhr.status), { warn: true });
         });
     }
 
@@ -2396,10 +2550,10 @@
                 return;
             }
             var line = box.querySelector('.sl-alert-text') || box;
-            setToast((line.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 200) || String(xhr.status), true);
+            setToast((line.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 200) || String(xhr.status), { warn: true });
         });
         document.addEventListener('sl-quick-note', function (event) {
-            setToast(event.detail ? String(event.detail.value || '') : '', true);
+            setToast(event.detail ? String(event.detail.value || '') : '', { warn: true });
         });
         ['input', 'change'].forEach(function (name) {
             document.addEventListener(name, function (event) {
@@ -2700,9 +2854,9 @@
         if (done !== '') setToast(done);
     }
 
-    // Motion is welcome unless the reader asked for less of it; the theme scripts and the plugins read the same answer
+    // Motion is welcome unless the reader asked for less of it or the options stilled the page; theme scripts and plugins read one answer
     function isMotionStill() {
-        return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        return document.documentElement.hasAttribute('data-sl-still') || window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     }
     window.isMotionStill = isMotionStill;
 

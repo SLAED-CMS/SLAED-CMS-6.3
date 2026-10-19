@@ -119,8 +119,9 @@ final class SegKnobTest extends TestCase
         $this->assertStringContainsString("'top_link' => ['href' => '#top'", $this->getFile('core/system.php'), $note);
         foreach (self::THEMES as $name) {
             $base = $this->getFile('public/templates/'.$name.'/assets/css/base.css');
-            $note = 'Theme '.$name.' does not scroll smoothly, or scrolls so for a reader who asked for less motion';
-            $this->assertMatchesRegularExpression('/@media \(prefers-reduced-motion: no-preference\) \{\s+html \{\s+scroll-behavior: smooth;/', $base, $note);
+            $note = 'Theme '.$name.' does not scroll smoothly, or scrolls so for a reader or a page that asked for stillness';
+            $want = '/@media \(prefers-reduced-motion: no-preference\) \{\s+html:not\(\[data-sl-still\]\) \{\s+scroll-behavior: smooth;/';
+            $this->assertMatchesRegularExpression($want, $base, $note);
         }
     }
 }

@@ -3,7 +3,7 @@
 
     var api = win.SlaedEmoji || {};
     // The key keeps the name it was given under Toast UI, so the recent row a visitor built there survives the move to the shared runtime
-    var key = 'slaed_toastui_recent_emoji';
+    var key = 'emoji-recent';
     var eds = new Map();
     var lab = null;
     var active = '';
@@ -276,7 +276,7 @@
 
     function getRecent() {
         try {
-            return JSON.parse(win.localStorage.getItem(key) || '[]').filter(Boolean);
+            return JSON.parse(win.getToggleState(key, '') || '[]').filter(Boolean);
         } catch (err) {
             return [];
         }
@@ -287,9 +287,7 @@
             return row !== emoji;
         });
         rows.unshift(emoji);
-        try {
-            win.localStorage.setItem(key, JSON.stringify(rows.slice(0, 24)));
-        } catch (err) {}
+        win.setToggleState(key, '', JSON.stringify(rows.slice(0, 24)));
     }
 
     function getRows() {

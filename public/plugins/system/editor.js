@@ -954,49 +954,32 @@
         else if (act === 'undo' || act === 'redo') doc.execCommand(act);
     }
 
-    // The palette of the page, made from the kit on the first call and wired once: typing filters, the keys choose and run, a click runs
+    // The palette of the page, made from the kit on the first call; the shared controller of slaed.js wires and runs it
     function getPalette() {
-        var find;
         if (pal || !getKit() || !kit.palette) return pal;
         pal = kit.palette.cloneNode(true);
         pal.slVarRow = pal.querySelector('[data-sl-editor-cmd="var"]');
         pal.slVarRow.remove();
         doc.body.appendChild(pal);
-        find = pal.querySelector('[data-sl-editor-find]');
-        find.addEventListener('input', function () { setPaletteFilter(find.value); });
-        pal.addEventListener('keydown', setPaletteKeys);
-        pal.addEventListener('close', function () {
-            var ed = pal.slEd;
-            var act = pal.slAct;
-            pal.slAct = '';
-            if (!act || !ed || eds.get(ed.frame) !== ed) return;
-            if (act === 'var') addVar(ed, pal.slVar);
-            else setAct(ed, act, ed.frame.querySelector('[data-sl-editor-act="' + act + '"]'));
-        });
-        pal.addEventListener('click', function (ev) {
-            var row = ev.target.closest ? ev.target.closest('[data-sl-editor-cmd]') : null;
-            if (!row) return;
-            ev.preventDefault();
-            setPaletteRun(row);
-        });
         return pal;
     }
 
     // Open the palette for one editor with only the commands and keys its engine serves, the search empty and the first command chosen
     function setPalette(ed) {
-        var find;
         if (!getPalette()) return;
-        pal.slEd = ed;
-        pal.slAct = '';
         setPaletteVars(ed);
         pal.querySelector('[data-sl-editor-pal-sub]').textContent = ed.frame.getAttribute('data-sl-editor-name') || '';
         pal.querySelectorAll('[data-sl-editor-cmd]').forEach(function (row) { row.slOff = !checkNeed(ed.can, row); });
-        pal.querySelectorAll('[data-sl-editor-pal-help] [data-sl-editor-need]').forEach(function (one) { one.hidden = !checkNeed(ed.can, one); });
-        find = pal.querySelector('[data-sl-editor-find]');
-        find.value = '';
-        setPaletteFilter('');
-        if (win.setWindowOpen) win.setWindowOpen(pal);
-        else pal.showModal();
+        pal.querySelectorAll('[data-sl-pal-help] [data-sl-editor-need]').forEach(function (one) { one.hidden = !checkNeed(ed.can, one); });
+        win.setPaletteOpen(pal, function (row) { setPaletteAct(ed, row); }, kit.words.recent || '');
+    }
+
+    // Run the command the palette chose on the editor that opened it, once the palette has closed and while that editor stands
+    function setPaletteAct(ed, row) {
+        var act = row.getAttribute('data-sl-editor-cmd');
+        if (eds.get(ed.frame) !== ed) return;
+        if (act === 'var') addVar(ed, row.getAttribute('data-sl-editor-var') || '');
+        else setAct(ed, act, ed.frame.querySelector('[data-sl-editor-act="' + act + '"]'));
     }
 
     // Put the variables of the frame into their group of the palette, rebuilt only when a frame with other variables opens it
@@ -1013,117 +996,6 @@
             row.querySelector('span').textContent = one[0] + ' — ' + one[1];
             group.appendChild(row);
         });
-    }
-
-    // The places of the typed letters inside a name, in the order they were typed, or null where one of them is missing
-    function getHits(name, want) {
-        var hits = [];
-        var at = 0;
-        for (var i = 0; i < want.length; i++) {
-            at = name.indexOf(want.charAt(i), at);
-            if (at < 0) return null;
-            hits.push(at);
-            at++;
-        }
-        return hits;
-    }
-
-    // Write the name of a command with the matched letters in bold, from text nodes so nothing of the name is read as markup
-    function setPaletteName(node, name, hits) {
-        var run = '';
-        var mark;
-        node.textContent = '';
-        for (var i = 0; i < name.length; i++) {
-            if (hits.indexOf(i) < 0) {
-                run += name.charAt(i);
-                continue;
-            }
-            if (run) node.appendChild(doc.createTextNode(run));
-            run = '';
-            mark = doc.createElement('b');
-            mark.textContent = name.charAt(i);
-            node.appendChild(mark);
-        }
-        if (run) node.appendChild(doc.createTextNode(run));
-    }
-
-    // Keep the commands whose name holds the typed letters in their order, hide the groups left empty and the keys while a search runs
-    function setPaletteFilter(term) {
-        var want = term.trim().toLowerCase();
-        var first = null;
-        pal.querySelectorAll('[data-sl-editor-cmd]').forEach(function (row) {
-            var name = row.querySelector('span');
-            var hits;
-            if (row.slName === undefined) row.slName = name.textContent;
-            hits = getHits(row.slName.toLowerCase(), want);
-            row.hidden = row.slOff || !hits;
-            setPaletteName(name, row.slName, hits || []);
-            if (!row.hidden && !first) first = row;
-        });
-        pal.querySelectorAll('[role="group"]').forEach(function (group) { group.hidden = !group.querySelector('[data-sl-editor-cmd]:not([hidden])'); });
-        pal.querySelector('[data-sl-editor-pal-empty]').hidden = !!first;
-        pal.querySelector('[data-sl-editor-pal-help]').hidden = want !== '';
-        setPaletteActive(first);
-    }
-
-    // Choose one command; the focus stays in the search, which names the chosen one to a screen reader
-    function setPaletteActive(row) {
-        var find = pal.querySelector('[data-sl-editor-find]');
-        pal.querySelectorAll('[data-sl-editor-cmd][aria-selected]').forEach(function (one) { one.removeAttribute('aria-selected'); });
-        if (!row) {
-            find.removeAttribute('aria-activedescendant');
-            return;
-        }
-        row.setAttribute('aria-selected', 'true');
-        find.setAttribute('aria-activedescendant', row.id);
-        row.scrollIntoView({ block: 'nearest' });
-    }
-
-    // Step the chosen command up or down through the shown ones, round from the end to the start
-    function setPaletteStep(step) {
-        var rows = Array.prototype.filter.call(pal.querySelectorAll('[data-sl-editor-cmd]'), function (one) { return !one.hidden; });
-        var now;
-        if (!rows.length) return;
-        now = rows.indexOf(pal.querySelector('[data-sl-editor-cmd][aria-selected]'));
-        setPaletteActive(rows[(now + step + rows.length) % rows.length]);
-    }
-
-    // The keys of the palette: the arrows choose, Enter in the search runs, Escape closes at once over a typed search, Ctrl+K closes it again
-    function setPaletteKeys(ev) {
-        if (ev.isComposing) return;
-        if (ev.key === 'ArrowDown' || ev.key === 'ArrowUp') {
-            ev.preventDefault();
-            setPaletteStep(ev.key === 'ArrowDown' ? 1 : -1);
-            return;
-        }
-        if (ev.key === 'Enter' && ev.target.hasAttribute('data-sl-editor-find')) {
-            ev.preventDefault();
-            setPaletteRun(pal.querySelector('[data-sl-editor-cmd][aria-selected]'));
-            return;
-        }
-        if (ev.key !== 'Escape' && !((ev.ctrlKey || ev.metaKey) && ev.code === 'KeyK')) return;
-        ev.preventDefault();
-        setPaletteShut();
-    }
-
-    // Name the command the palette runs once it has closed and given the focus back, a second press naming it again, and raise it in its group
-    function setPaletteRun(row) {
-        var ed = pal.slEd;
-        var act;
-        if (!row || row.hidden || !ed) return;
-        act = row.getAttribute('data-sl-editor-cmd');
-        pal.slVar = row.getAttribute('data-sl-editor-var') || '';
-        pal.querySelectorAll('[data-recent]').forEach(function (one) { one.removeAttribute('data-recent'); });
-        row.parentNode.insertBefore(row, row.parentNode.querySelector('[data-sl-editor-cmd]'));
-        row.setAttribute('data-recent', kit.words.recent || '');
-        pal.slAct = act;
-        setPaletteShut();
-    }
-
-    // Close the palette through the canon, which plays the exit first
-    function setPaletteShut() {
-        if (win.setWindowClose) win.setWindowClose(pal);
-        else pal.close();
     }
 
     // Cut a text into variables, words, runs of space and single signs, the units the comparison counts in

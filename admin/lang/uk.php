@@ -21,6 +21,8 @@ define('_ADDSUBCATEGORY','Додати-під категорію');
 define('_ADIR','Каталог зображень від кореня сайту');
 define('_ACCOUNT_ADIR','Тека аватарів усередині uploads/');
 define('_ADMCOL','Кількість колонок при виведенні модулів панелі адміністратора');
+define('_ADM_MENU','Меню');
+define('_ADM_SKIP','До вмісту');
 define('_ADMINEMAIL','E-Mail адміністратора');
 define('_ADMINFOEDIT','Активувати редактор відділу інформації?');
 define('_ADMININFO','Нотатки адміністратора');

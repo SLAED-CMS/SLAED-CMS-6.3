@@ -21,6 +21,8 @@ define('_ADDSUBCATEGORY','Add under-category');
 define('_ADIR','Path under your root dir');
 define('_ACCOUNT_ADIR','Avatar folder below uploads/');
 define('_ADMCOL','The number of columns in the output modules the admin panel');
+define('_ADM_MENU','Menu');
+define('_ADM_SKIP','Skip to content');
 define('_ADMINEMAIL','Administrator Email');
 define('_ADMINFOEDIT','Activate the editor of the Department of information?');
 define('_ADMININFO','Note of the manager');

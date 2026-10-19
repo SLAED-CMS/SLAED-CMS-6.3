@@ -21,6 +21,8 @@ define('_ADDSUBCATEGORY','Dodaj pod-kategorii');
 define('_ADIR','Katalog obrazów w katalogu głównym strony');
 define('_ACCOUNT_ADIR','Folder awatarów w uploads/');
 define('_ADMCOL','Liczba kolumn po wyświetleniu modułów panelu administratora');
+define('_ADM_MENU','Menu');
+define('_ADM_SKIP','Przejdź do treści');
 define('_ADMINEMAIL','E-Mail admin');
 define('_ADMINFOEDIT','Aktywacja redaktor działu informacji?');
 define('_ADMININFO','Notatki admin');

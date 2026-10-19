@@ -257,7 +257,7 @@ class Editor {
         ];
         return [
             'words_json' => json_encode($words, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
-            'undo_text' => _EDITOR_UNDO,
+            'undo_text' => _UNDO,
             'redo_text' => _EDITOR_REDO,
             'search_text' => _EDITOR_SEARCH,
             'fold_text' => _EDITOR_FOLDALL,

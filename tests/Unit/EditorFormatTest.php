@@ -13,7 +13,7 @@ final class EditorFormatTest extends TestCase
         require_once BASE_DIR.'/public/plugins/editors/codemirror/driver.php';
         if (!class_exists('Template', false)) require_once BASE_DIR.'/core/classes/template.php';
         $words = ['_TEXT', '_EDITOR_DIRTY', '_EDITOR_TOOLS', '_EDITOR_POS', '_EDITOR_SEL', '_EDITOR_SIZE', '_COPYDONE', '_EDITOR_NOCLIP', '_EDITOR_RESTORED',
-            '_EDITOR_UNDO', '_EDITOR_REDO', '_EDITOR_WRAP', '_COPY', '_EDITOR_RESET', '_EMOVEWIN',
+            '_UNDO', '_EDITOR_REDO', '_EDITOR_WRAP', '_COPY', '_EDITOR_RESET', '_EMOVEWIN',
             '_EEXPAND', '_ERESTORE', '_EDITOR_DRAFT', '_EDITOR_DRAFTBACK', '_EDITOR_DRAFTDROP', '_EUPLOAD', '_EEMOJI', '_CLOSE', '_EEMOJIRECENT',
             '_EEMOJISMILE', '_EEMOJIREACT', '_EEMOJINOTICE', '_EEMOJISYMBOL', '_EEMOJIEMPTY', '_EDITOR_RECENT', '_EDITOR_LEFT', '_ETEXTLONG',
             '_EDITOR_SEARCH', '_EDITOR_FOLDALL', '_EDITOR_UNFOLDALL', '_EDITOR_BOLD', '_EDITOR_ITALIC', '_CODE', '_URL', '_LIST', '_QUOTE', '_EDITOR_FILES',
@@ -290,7 +290,7 @@ final class EditorFormatTest extends TestCase
     }
 
     # The capsule and the palette carry every command once, each marked with what its engine needs, and the runtime keeps of them what the frame serves
-    # The palette is a window of the canon printed inside the kit, so a page of many editors carries one; Ctrl+K reaches it only from inside a frame
+    # The palette is a window of the canon printed inside the kit and run by the shared controller of slaed.js; Ctrl+K reaches it only from inside a frame
     #[Test]
     public function capsuleAndPaletteFollowTheEngine(): void
     {
@@ -316,9 +316,13 @@ final class EditorFormatTest extends TestCase
         $this->assertMatchesRegularExpression('#<dialog class="sl-modal sl-editor-pal" data-sl-editor-palette#', $tpl, 'The palette is not a window of the canon');
         $this->assertStringContainsString('data-sl-focus', $tpl, 'The keyboard does not land in the search of the palette');
         $run = (string)file_get_contents(PUBLIC_DIR.'/plugins/system/editor.js');
-        foreach (["frame.addEventListener('keydown', function (ev) { setKeys(ed, ev); }, true)", "ev.code === 'KeyK'", "ev.key !== 'Escape'", "pal.addEventListener('close'",
+        foreach (["frame.addEventListener('keydown', function (ev) { setKeys(ed, ev); }, true)", "ev.code === 'KeyK'", 'win.setPaletteOpen(pal, ',
             "area.addEventListener('keydown', function (ev) { setListEnter(ed, ev); })", 'enc.encode(text).length'] as $part) {
             $this->assertStringContainsString($part, $run, 'The runtime lost '.$part);
+        }
+        $base = (string)file_get_contents(PUBLIC_DIR.'/plugins/system/slaed.js');
+        foreach (["ev.key !== 'Escape'", "pal.addEventListener('close'", 'window.setPaletteOpen = setPaletteOpen'] as $part) {
+            $this->assertStringContainsString($part, $base, 'The shared palette lost '.$part);
         }
         $this->assertStringNotContainsString("doc.addEventListener('keydown'", $run, 'Ctrl+K is heard outside the editors');
     }

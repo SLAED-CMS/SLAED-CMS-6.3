@@ -254,9 +254,9 @@ function getTplPager(array $data = []): string {
     return getTplPagerView($num, $pages, $maxpg, $target, ['count' => $cnt, 'limit' => $limit, 'page' => $limit]);
 }
 
-# Render one full admin module header with title, icon and top-level tabs; a super-admin also gets the action log of the module
+# Render one full admin module header with title, icon and tabs, the action log for a super-admin; the title and a later open tab name the browser tab
 function getTplAdminTabs(array $data = []): string {
-    global $afile, $conf, $tpl;
+    global $afile, $conf, $tpl, $adminvars;
     $title = _ADMINMENU;
     $icon = 'grid';
     $subtitle = (string)($data['subtitle_html'] ?? '');
@@ -282,8 +282,11 @@ function getTplAdminTabs(array $data = []): string {
         }
     }
     if ($known && isAdmin(true)) $links[] = ['href' => HOME_PATH.$afile.'.php?name=security&op=logview&file=admin&modul='.$name, 'label' => _SEC_STAT_A];
+    $adminvars['section'] = $title;
+    $adminvars['view'] = '';
     $tabs = '';
-    foreach ($links as $link) {
+    foreach ($links as $idx => $link) {
+        if ($idx > 0 && !empty($link['is_active'])) $adminvars['view'] = (string)($link['label'] ?? '');
         $tabs .= $tpl->getHtmlFrag('tabs-link', [
             'href' => (string)($link['href'] ?? '#'),
             'is_active' => !empty($link['is_active']),
@@ -1026,11 +1029,12 @@ function getWindowShot(array $data = []): string {
     ]);
 }
 
-# Build the windows a page carries whatever it shows: the question every screen asks, and on the site the share sheet, the QR code and the image viewer
+# Build the windows a page carries whatever it shows: the notice, the question every screen asks, and on the site the share sheet, the QR code and the image viewer
 # Each is the one window frame filled differently, and the layout prints the set
 function getWindowSet(bool $admin = false): string {
     global $tpl;
-    $out = $tpl->getHtmlFrag('window', [
+    $out = $tpl->getHtmlFrag('toast', ['undo_text' => _UNDO, 'close_text' => _CLOSE]);
+    $out .= $tpl->getHtmlFrag('window', [
         'win_id' => 'sl-confirm',
         'size_class' => 'sl-modal-sm',
         'tone_class' => 'sl-modal-danger',

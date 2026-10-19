@@ -161,7 +161,7 @@
   --sl-solid-link-text: light-dark(var(--sl-primary-subtle), #d9eef6);
   /* The beam that crosses a solid head: how wide the shaft is, how long one cycle takes, and its light */
   --sl-beam-width: 34%;
-  --sl-beam-dur: 7s;
+  --sl-beam-dur: calc(7s * var(--sl-time-scale));
   --sl-beam-bg: rgba(255, 255, 255, 0.42);
   /* The light that follows the pointer over the page */
   --sl-pointer-width: 300px;
@@ -178,10 +178,11 @@
   --sl-field-shadow:
     inset 0 1px 0 light-dark(rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.06)), 0 1px 1px light-dark(rgba(43, 87, 112, 0.08), rgba(0, 0, 0, 0.45));
 
-  /* Motion: three durations and two curves; the property a transition animates stays literal */
-  --sl-time-fast: 0.15s;
-  --sl-time-base: 0.2s;
-  --sl-time-slow: 0.35s;
+  /* Motion: the switch every duration is multiplied by, three durations and two curves; the property a transition animates stays literal */
+  --sl-time-scale: 1;
+  --sl-time-fast: calc(0.15s * var(--sl-time-scale));
+  --sl-time-base: calc(0.2s * var(--sl-time-scale));
+  --sl-time-slow: calc(0.35s * var(--sl-time-scale));
   --sl-ease-out: ease;
   --sl-ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
 
@@ -265,8 +266,9 @@
     light-dark(rgba(208, 240, 254, 0.08), rgba(60, 100, 140, 0.08)) 100%
   );
 
-  /* Layout: the widest the page shell ever grows */
+  /* Layout: the widest the page shell ever grows, and the column of its menu */
   --sl-layout-container: 1440px;
+  --sl-layout-sidebar: 300px;
 
   /* Components: the focus ring. One width, one gap and one alpha; a ring in a status colour mixes that colour at
      the same alpha instead of carrying a fourth spelling of the same idea */
@@ -277,21 +279,21 @@
 
   /* Components: the motions that carry the character of one element rather than a step of the ladder. A duration here is
      the animation's own; the two the modal opens and closes with are a transition step and read the ladder instead */
-  --sl-dial-dur: 0.05s;
-  --sl-loading-dur: 0.8s;
-  --sl-drift-dur: 1.1s;
-  --sl-row-dur: 0.9s;
-  --sl-led-dur: 2s;
-  --sl-alert-dur: 1.8s;
-  --sl-skel-dur: 1.2s;
-  --sl-flash-dur: 5s;
-  --sl-modal-dur: 0.22s;
+  --sl-dial-dur: calc(0.05s * var(--sl-time-scale));
+  --sl-loading-dur: calc(0.8s * var(--sl-time-scale));
+  --sl-drift-dur: calc(1.1s * var(--sl-time-scale));
+  --sl-row-dur: calc(0.9s * var(--sl-time-scale));
+  --sl-led-dur: calc(2s * var(--sl-time-scale));
+  --sl-alert-dur: calc(1.8s * var(--sl-time-scale));
+  --sl-skel-dur: calc(1.2s * var(--sl-time-scale));
+  --sl-flash-dur: calc(5s * var(--sl-time-scale));
+  --sl-modal-dur: calc(0.22s * var(--sl-time-scale));
   /* The overshoot a dialog opens with: a curve leaving the 0-1 range is a different kind of motion, not a ladder step */
   --sl-modal-ease: cubic-bezier(0.34, 1.3, 0.64, 1);
   /* The overshoot of an alert: a flash springs onto its place and a success tick lands from its turn; the ticks and the chosen flag of the installer land on it too */
   --sl-alert-ease: cubic-bezier(0.34, 1.56, 0.64, 1);
   /* The installer card: the beat its stops move to, every motion of it measured in that beat */
-  --sl-setup-dur: 0.5s;
+  --sl-setup-dur: calc(0.5s * var(--sl-time-scale));
 
   /* Components: geometry, tints and shadows. A figure sizing a control, a panel or a column has one address here */
   --sl-alert-height: 40px;
@@ -493,6 +495,17 @@
   --sl-wrap-shadow: 0 2px 6px light-dark(rgba(41, 86, 109, 0.28), rgba(0, 0, 0, 0.7));
 }
 
+/* Motion off: the reduced-motion setting and the option of the panel set the one switch every duration of the API block is multiplied by */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --sl-time-scale: 0;
+  }
+}
+
+:root[data-sl-still] {
+  --sl-time-scale: 0;
+}
+
 /* --- end tokens --- */
 
 /* The mode switch itself, and the only rules that name it. data-theme carries light, dark or auto; anything else,
@@ -507,7 +520,7 @@
 
 /* Navigation: an in-page anchor, the link back to #top among them, scrolls smoothly unless the reader asked for less motion */
 @media (prefers-reduced-motion: no-preference) {
-  html {
+  html:not([data-sl-still]) {
     scroll-behavior: smooth;
   }
 }

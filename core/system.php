@@ -1847,7 +1847,7 @@ function getRssFeeds(): array {
 # The category of the breadcrumb and of the theme header is the one the page names; without it the category of the query counts only when the visitor may read it
 # That read is judged by the reader of a Node type or by the read right and, on a multilingual site, the language of any other module, so a closed category never shows its title
 function setHead(array $seo = []): void {
-    global $db, $home, $conf, $user, $name, $theme, $tpl, $adminpage, $adminvars, $sitepage, $sitevars, $locale;
+    global $db, $home, $conf, $user, $name, $theme, $tpl, $afile, $adminpage, $adminvars, $sitepage, $sitevars, $locale;
     setSeoMove($seo);
     $name = $name ?? '';
     $ctime = time();
@@ -1882,7 +1882,6 @@ function setHead(array $seo = []): void {
     $licens = getLicenseHtml();
     $strmeta = '<meta charset="'._CHARSET.'">'."\n";
     $strlink = $stscript = '';
-    $sep = urldecode($conf['defis']);
     if (!defined('ADMIN_FILE')) {
         $seomap = getSeoRoute($seo);
         $site = filterSeoText((string)($conf['sitename'] ?? ''));
@@ -1988,8 +1987,6 @@ function setHead(array $seo = []): void {
                 ])."\n";
             }
         }
-    } else {
-        $strmeta .= $tpl->getHtmlFrag('head-title', ['title' => $conf['sitename'].' '.$sep.' '._ADMIN])."\n";
     }
     $favicon = 'templates/'.(defined('ADMIN_FILE') ? 'admin' : $theme).'/images/favicon.svg';
     if (is_file(PUBLIC_DIR.'/'.$favicon)) {
@@ -2024,6 +2021,10 @@ function setHead(array $seo = []): void {
             'blocks_down' => '',
             'debug_html' => '',
             'adlogo' => HOME_PATH.$adpath,
+            'adhome' => HOME_PATH.$afile.'.php',
+            'section' => $adminvars['section'] ?? '',
+            'view' => $adminvars['view'] ?? '',
+            'is_home' => false,
             'adalt' => $conf['sitename'] ?? 'SLAED CMS',
             'adtitle' => $conf['sitename'] ?? 'SLAED CMS',
         ];
@@ -2163,6 +2164,8 @@ function setFoot(): void {
             'debug_html' => $debug,
             'windows_html' => getWindowSet(true),
         ]);
+        $head = getSeoTitle([$vars['section'] ?? '', $vars['view'] ?? '', _ADMIN, $conf['sitename'] ?? ''], urldecode($conf['defis']));
+        $vars['meta'] = ($vars['meta'] ?? '').$tpl->getHtmlFrag('head-title', ['title' => $head])."\n";
         $page = (is_string($adminpage ?? '') && $adminpage !== '') ? $adminpage : 'admin';
         echo getTimedHtml($tpl->getHtmlPage($page, $vars, $page === 'login' ? 'bare' : 'admin'));
         unset($adminpage, $adminvars);

@@ -699,13 +699,6 @@ a.sl-crumb:hover + .sl-crumb-sep {
   transform: translateX(3px);
 }
 
-@media (prefers-reduced-motion: reduce) {
-  a.sl-crumb::after,
-  .sl-crumb-sep {
-    transition: none;
-  }
-}
-
 /* Section divider: horizontal rule */
 .sl-section {
   margin-bottom: var(--sl-space-4);
@@ -1042,14 +1035,6 @@ a.sl-crumb:hover + .sl-crumb-sep {
 
   to {
     transform: scaleX(0);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .sl-alert::before,
-  .sl-alert::after,
-  .sl-alert-flash-bar {
-    animation: none !important;
   }
 }
 
@@ -2892,12 +2877,6 @@ pre code.hljs {
 
   50% {
     opacity: var(--sl-fade-disabled);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .sl-skel {
-    animation: none;
   }
 }
 
@@ -5175,10 +5154,6 @@ dialog.sl-editor-emoji-panel {
   gap: var(--sl-space-2);
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .sl-block-pm a { transition: none; }
-}
-
 .sl-session-summary {
   display: grid;
   grid-template-columns: 76px minmax(0, 1fr);
@@ -5731,12 +5706,9 @@ dialog.sl-editor-emoji-panel {
   position: absolute;
   width: 1px;
   height: 1px;
-  padding: 0;
-  margin: -1px;
   overflow: hidden;
-  clip: rect(0, 0, 0, 0);
+  clip-path: inset(50%);
   white-space: nowrap;
-  border: 0;
 }
 
 /* Layout: content/sidebar container grid */
@@ -6610,14 +6582,6 @@ button.sl-seg-cell:hover {
   44%,
   100% {
     transform: translate3d(100vw, 0, 0);
-    opacity: 0;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  #head-content::after,
-  #demo-line::after {
-    animation: none;
     opacity: 0;
   }
 }
@@ -9129,6 +9093,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
 
 .sl-toast.sl-is-visible {
   opacity: 1;
+  pointer-events: auto;
   transform: translate(-50%, 0);
 }
 
@@ -9139,6 +9104,25 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
 
 .sl-toast-warn > .bi {
   color: var(--sl-warning);
+}
+
+/* Undo on the pill is an outlined chip in the band colour, filled with it under the hand */
+.sl-toast-undo {
+  margin-left: var(--sl-space-2);
+  padding: var(--sl-space-1) var(--sl-space-4);
+  border: 1px solid currentcolor;
+  border-radius: var(--sl-radius-pill);
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-weight: var(--sl-weight-semibold);
+  cursor: pointer;
+}
+
+.sl-toast-undo:hover,
+.sl-toast-undo:focus-visible {
+  background: var(--sl-band-text);
+  color: var(--sl-bg-inverse);
 }
 
 .sl-live-tools {
@@ -9321,29 +9305,6 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   50% {
     opacity: var(--sl-fade-disabled);
     transform: scale(0.9);
-  }
-}
-
-/* Everything this theme stops moving when the reader asks for less motion, at one address */
-@media (prefers-reduced-motion: reduce) {
-  dialog.sl-modal,
-  dialog.sl-modal::backdrop,
-  .sl-modal-btn,
-  .sl-modal-act,
-  .sl-is-burst,
-  .sl-is-burst::before,
-  .sl-is-burst::after,
-  .sl-is-burst > .bi,
-  .sl-share-net-ico,
-  .sl-toast,
-  .sl-live-icon,
-  .sl-live-avatar::after,
-  .sl-fresh,
-  .sl-fresh > .bi,
-  .sl-opt-save,
-  .sl-opt-rail::after {
-    animation: none !important;
-    transition: none !important;
   }
 }
 
@@ -10375,12 +10336,6 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   animation: sl-profile-feed-spin var(--sl-spin-dur) linear infinite;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .sl-profile-feed-live i {
-    animation: none;
-  }
-}
-
 @keyframes sl-profile-feed-spin {
   to {
     transform: rotate(360deg);
@@ -10461,7 +10416,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
 }
 
 .sl-profile-scroll.sl-is-scrolling .sl-profile-scroll-feed {
-  animation: sl-profile-auto-scroll var(--sl-d-duration) linear infinite;
+  animation: sl-profile-auto-scroll calc(var(--sl-d-duration) * var(--sl-time-scale)) linear infinite;
 }
 
 .sl-profile-scroll:hover .sl-profile-scroll-feed {
@@ -10761,14 +10716,6 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
 .sl-pmf-fold .sl-cab-badge {
   top: 7px;
   right: 9px;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .sl-pmf-fold,
-  .sl-knob-val,
-  .sl-knob > .bi {
-    transition: none;
-  }
 }
 
 /* Narrow layout: the tiles become a snapping row instead of two stacked pairs, because four tiles in two rows eat half the screen before the first message */
@@ -11389,10 +11336,6 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   color: var(--sl-text-muted);
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .sl-pmf-item { transition: none; }
-}
-
 /* Tablet: the list column gives up width the reading pane needs more than it does */
 @container (max-width: 1040px) {
   .sl-duo { grid-template-columns: 330px minmax(0, 1fr); }
@@ -11532,17 +11475,6 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   .sl-cab-row.sl-profile-entry {
     grid-template-columns: auto 22px minmax(0, 1fr) auto;
     gap: var(--sl-space-3);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .sl-profile-scroll.sl-is-scrolling .sl-profile-scroll-feed {
-    animation: none;
-  }
-
-  .sl-profile-status,
-  .sl-profile-feed-live i {
-    animation: none;
   }
 }
 

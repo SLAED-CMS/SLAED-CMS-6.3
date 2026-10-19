@@ -21,6 +21,8 @@ define('_ADDSUBCATEGORY','Unter - Kategorie zu ergänzen');
 define('_ADIR','Der Pfad in deinem Verzeichnis, in dem die Bilder liegen');
 define('_ACCOUNT_ADIR','Avatar-Ordner unter uploads/');
 define('_ADMCOL','Die Anzahl der Spalten bei der Ausgabe von Modulen in Admin-Panel');
+define('_ADM_MENU','Menü');
+define('_ADM_SKIP','Zum Inhalt springen');
 define('_ADMINEMAIL','Administrator E-Mail');
 define('_ADMINFOEDIT','Aktivieren Herausgeber mit der Abteilung für Informationen?');
 define('_ADMININFO','Notizen des Administrators');

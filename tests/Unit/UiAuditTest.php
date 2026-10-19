@@ -213,6 +213,20 @@ final class UiAuditTest extends TestCase
         $this->assertSame([], $model['scoped'], 'nothing below the marker declares a custom property here');
     }
 
+    # A mode of the root above the marker may set an API name again, as the motion switch does; any other name there, and the same rule below the marker, stay scoped
+    #[Test]
+    public function testAModeOfTheRootSetsApiNamesWithoutScoping(): void
+    {
+        $css = ':root{--sl-time-scale:1;--sl-time-fast:calc(.15s * var(--sl-time-scale))}'
+            .'@media (prefers-reduced-motion: reduce){:root{--sl-time-scale:0}}'
+            .':root[data-sl-still]{--sl-time-scale:0;--sl-stray:1}'
+            .'/* --- end tokens --- */'
+            .':root[data-sl-still]{--sl-time-scale:0}.a{--sl-local:1}';
+        $model = getTextModel(['api.css' => $css], 'api.css');
+        $this->assertCount(2, $model['api'], 'a mode never adds a name to the API block nor changes the value it declares');
+        $this->assertSame(['--sl-stray', '--sl-time-scale', '--sl-local'], array_column($model['scoped'], 'name'));
+    }
+
     # One declaration per row with the answer read off the row, not off the tool
     # This table caught `z-index: 0` being swallowed by the neutral-value allowlist before the bare-number rule could see it
     # A stacking context is a decision, and the count was quietly four low in admin and eight in lite

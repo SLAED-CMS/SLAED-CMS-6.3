@@ -61,7 +61,7 @@
       <span class="sl-modal-cap"><strong id="sl-editor-pal-title">{{ cmds_text }}</strong><span class="sl-modal-sub" data-sl-editor-pal-sub></span></span>
       <span class="sl-modal-acts"><button type="button" class="sl-modal-act sl-modal-act-close" data-sl-close title="{{ close_text }}" aria-label="{{ close_text }}"><i class="bi bi-x-lg" aria-hidden="true"></i></button></span>
     </div>
-    <div class="sl-modal-bar"><i class="bi bi-search" aria-hidden="true"></i><input type="search" class="sl-editor-pal-find" data-sl-editor-find data-sl-focus role="combobox" aria-expanded="true" aria-controls="sl-editor-pal-list" aria-autocomplete="list" placeholder="{{ find_text }}" aria-label="{{ find_text }}" autocomplete="off" spellcheck="false"></div>
+    <div class="sl-modal-bar"><i class="bi bi-search" aria-hidden="true"></i><input type="search" class="sl-editor-pal-find" data-sl-focus role="combobox" aria-expanded="true" aria-controls="sl-editor-pal-list" aria-autocomplete="list" placeholder="{{ find_text }}" aria-label="{{ find_text }}" autocomplete="off" spellcheck="false"></div>
     <div class="sl-modal-body sl-modal-body-flush sl-editor-pal-body">
       <div id="sl-editor-pal-list" role="listbox" aria-labelledby="sl-editor-pal-title">
         <div class="sl-editor-pal-group" role="group" aria-labelledby="sl-editor-pal-edit">
@@ -106,8 +106,8 @@
           <button type="button" role="option" tabindex="-1" class="sl-editor-pal-row" id="sl-editor-cmd-full" data-sl-editor-cmd="full"><i class="bi bi-arrows-angle-expand" aria-hidden="true"></i><span class="sl-editor-pal-name">{{ full_text }}</span><span class="sl-editor-pal-keys"></span></button>
         </div>
       </div>
-      <p class="sl-editor-pal-empty" data-sl-editor-pal-empty hidden>{{ none_text }}</p>
-      <section class="sl-editor-pal-help" data-sl-editor-pal-help aria-labelledby="sl-editor-pal-keys">
+      <p class="sl-editor-pal-empty" data-sl-pal-empty hidden>{{ none_text }}</p>
+      <section class="sl-editor-pal-help" data-sl-pal-help aria-labelledby="sl-editor-pal-keys">
         <div class="sl-editor-pal-cap" id="sl-editor-pal-keys"><i class="bi bi-keyboard" aria-hidden="true"></i>{{ keys_text }}</div>
         <dl class="sl-editor-pal-keymap">
           <div data-sl-editor-need="cm"><dt><kbd>Ctrl</kbd><kbd>D</kbd></dt><dd>{{ keynext_text }}</dd></div>

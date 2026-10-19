@@ -259,7 +259,8 @@ A member in the lite theme gets the same capsule as the panel.
 The palette is a `dialog.sl-modal` cloned from the kit on its first call, one per page: groups Правка, Формат, Вставка,
 Вид and the variables, a filter by letters in their order, the last command raised in its group, the keys of the engine
 under the list. Ctrl+K opens it only from a frame; Esc closes it at once, even over a typed search. A command runs once
-the window has closed and given the focus back.
+the window has closed and given the focus back. The filter, the keys and the run are the shared controller
+`setPaletteOpen()` of `slaed.js`; the editor only says which commands its engine serves and runs the chosen one.
 
 ### Markdown commands and the counter
 

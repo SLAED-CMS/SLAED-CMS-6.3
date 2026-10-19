@@ -439,8 +439,10 @@ function getTextModel(array $list, string $api = ''): array {
                 continue;
             }
             if (str_starts_with($rule['sel'], '@')) continue;
+            $mode = $path === $api && str_starts_with($rule['sel'], ':root') && ($mark === false || $rule['pos'] < $mark);
             foreach ($rule['decls'] as $decl) {
                 if (!str_starts_with($decl['prop'], '--')) continue;
+                if ($mode && isset($out['api'][$decl['prop']])) continue;
                 $out['scoped'][] = ['name' => $decl['prop'], 'sel' => $rule['sel'], 'file' => $path, 'line' => $rule['line']];
             }
             $out['rules'][] = $rule;

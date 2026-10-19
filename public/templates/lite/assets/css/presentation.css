@@ -1337,7 +1337,13 @@
   overflow-x: auto;
   overflow-anchor: none;
   scrollbar-width: none;
-  scroll-behavior: smooth;
+}
+
+/* The rail scrolls smoothly only where motion is welcome, as the page does */
+@media (prefers-reduced-motion: no-preference) {
+  :root:not([data-sl-still]) .sl-pres-rail-nav {
+    scroll-behavior: smooth;
+  }
 }
 
 .sl-pres-rail-nav::-webkit-scrollbar {
@@ -5546,16 +5552,3 @@
   }
 }
 
-/* No motion at all where the reader asked for none: every sweep, orbit, lane and packet stands still */
-@media (prefers-reduced-motion: reduce) {
-  .sl-pres *,
-  .sl-pres *::before,
-  .sl-pres *::after {
-    animation: none;
-    transition: none;
-  }
-
-  .sl-pres-rail-nav {
-    scroll-behavior: auto;
-  }
-}

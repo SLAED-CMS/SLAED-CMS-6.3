@@ -4433,13 +4433,6 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   .sl-modal-act { width: calc(var(--sl-modal-act-width) + var(--sl-space-3)); height: calc(var(--sl-modal-act-height) + var(--sl-space-3)); }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  dialog.sl-modal,
-  dialog.sl-modal::backdrop,
-  .sl-modal-btn,
-  .sl-modal-act { animation: none !important; transition: none !important; }
-}
-
 /* Gallery on the window canon: the picture between two arrows, the properties of the object beside it, the counter in the status line of the foot */
 /* The layout is the one the editor gallery already had, because the canon takes its values from the editor and not from the file browser */
 .sl-shot-grid {
@@ -4696,8 +4689,29 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   background: none;
 }
 
-.sl-dashboard-panel-head.sl-is-open {
+/* The head is a real button filling the solid plate; the plate keeps its border while open and carries the ring of its focus */
+.sl-dashboard-panel-head > .sl-menu-head {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  text-shadow: inherit;
+  cursor: pointer;
+}
+
+.sl-dashboard-panel-head:has(> .sl-is-open) {
   border-color: var(--sl-solid-border);
+}
+
+.sl-dashboard-panel-head:has(> .sl-menu-head:focus-visible) {
+  outline: var(--sl-ring-width) solid var(--sl-ring-bg);
+  outline-offset: var(--sl-ring-gap);
 }
 
 /* Motion over the page: nothing here changes a colour or a measure, and where motion is reduced it is not there */
@@ -5130,11 +5144,13 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
     sl-alert-glow var(--sl-alert-dur) var(--sl-ease-in-out) calc(var(--sl-time-slow) * 3) infinite;
 }
 
-.sl-alert-warn {
+.sl-alert-warn,
+.sl-toast-warn {
   --sl-alert-c: var(--sl-warning);
 }
 
-.sl-alert-warn::before {
+.sl-alert-warn::before,
+.sl-toast-warn::before {
   content: "\f33a";
   animation: sl-alert-shake var(--sl-alert-dur) var(--sl-ease-in-out) infinite;
 }
@@ -5297,15 +5313,6 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .sl-alert::before,
-  .sl-alert::after,
-  .sl-alert-flash,
-  .sl-alert-flash-bar circle {
-    animation: none !important;
-  }
-}
-
 /* A flash springs onto its place, counts its five seconds down on a ring round its tick and leaves collapsing */
 .sl-alert-flash {
   position: relative;
@@ -5363,6 +5370,35 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   padding-top: 0;
   padding-bottom: 0;
   max-height: 0;
+}
+
+/* The notice of the panel is a flash alert over the foot of the page, its ring counting the time the script gave it */
+.sl-toast-host {
+  position: fixed;
+  bottom: var(--sl-space-6);
+  left: 50%;
+  z-index: var(--sl-z-toast);
+  width: max-content;
+  max-width: calc(100vw - var(--sl-space-8));
+  border-radius: var(--sl-radius-2);
+  background: var(--sl-surface);
+  transform: translateX(-50%);
+}
+
+.sl-toast {
+  margin: 0;
+  box-shadow: var(--sl-shadow-float);
+}
+
+.sl-toast .sl-alert-body {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sl-space-4);
+}
+
+.sl-toast .sl-alert-flash-bar circle {
+  animation-duration: calc(var(--sl-d-toast) * var(--sl-time-scale));
 }
 
 @keyframes sl-alert-pop {
@@ -7388,11 +7424,6 @@ body:has(.sl-admin-login-shell)::before {
   margin: 0;
 }
 
-.sl-admin-login-header h1 a {
-  display: block;
-  width: var(--sl-brand-width);
-}
-
 .sl-admin-login-header h1 img,
 .sl-admin-login-shell .sl-admin-brand {
   width: 100%;
@@ -8075,8 +8106,34 @@ body[data-sl-pointer] .sl-admin-login-card:has(.sl-setup)::after {
   display: none;
 }
 
+/* Text for a screen reader alone, as in the site theme */
+.sl-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* The first stop of Tab: off screen until focused */
+.sl-skip {
+  position: absolute;
+  top: var(--sl-space-3);
+  left: var(--sl-space-3);
+  z-index: var(--sl-z-toast);
+  padding: var(--sl-space-3) var(--sl-space-5);
+  border-radius: var(--sl-radius-1);
+  background: var(--sl-primary-strong);
+  color: var(--sl-on-solid);
+  transform: translateY(-200%);
+}
+
+.sl-skip:focus {
+  transform: none;
+}
+
 /* Common: inline header pieces and collapsed-text helper */
-.sl-header h1,
 .sl-admin-brand,
 .sl-admin-toolbar,
 .sl-toolbar ul {
@@ -8123,7 +8180,7 @@ body[data-sl-pointer] .sl-admin-login-card:has(.sl-setup)::after {
 .sl-admin-header {
   position: relative;
   display: grid;
-  grid-template-columns: 300px minmax(0, 1fr);
+  grid-template-columns: var(--sl-layout-sidebar) minmax(0, 1fr);
   align-items: start;
   padding-left: 0;
   overflow: visible;
@@ -8144,6 +8201,7 @@ body[data-sl-pointer] .sl-admin-login-card:has(.sl-setup)::after {
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: var(--sl-space-3);
   min-width: 0;
   height: var(--sl-brand-height);
 }
@@ -8155,17 +8213,68 @@ body[data-sl-pointer] .sl-admin-login-card:has(.sl-setup)::after {
   min-height: var(--sl-brand-height);
 }
 
-/* Logo: brand image placement */
-.sl-header h1 a {
+/* Logo: a link home to the panel, the one h1 of a page is its section; on the login card the logo is the h1 */
+.sl-admin-login-header h1 a,
+.sl-brand {
   display: block;
-  margin: 0 auto;
   width: var(--sl-brand-width);
 }
 
-.sl-header h1 img {
-  display: block;
-  width: var(--sl-brand-width);
+.sl-brand img {
+  width: 100%;
   height: auto;
+  vertical-align: top;
+}
+
+/* The menu button of a phone and the close of its drawer; both rest hidden on a wide screen */
+.sl-menu-btn,
+.sl-menu-tool {
+  align-items: center;
+  justify-content: center;
+  gap: var(--sl-space-2);
+  height: var(--sl-size-control);
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-1);
+  background: var(--sl-surface);
+  font: inherit;
+  cursor: pointer;
+}
+
+.sl-menu-btn {
+  display: none;
+  padding: 0 var(--sl-space-4);
+  color: var(--sl-primary-strong);
+  font-weight: var(--sl-weight-semibold);
+}
+
+.sl-menu-btn .bi {
+  font-size: var(--sl-font-h3);
+}
+
+.sl-menu-tool {
+  display: inline-flex;
+  flex: 0 0 auto;
+  min-width: var(--sl-size-control);
+  padding: 0 var(--sl-space-3);
+  color: var(--sl-text-muted);
+}
+
+.sl-menu-tool:hover,
+.sl-menu-tool:focus-visible {
+  border-color: var(--sl-primary);
+  color: var(--sl-primary-strong);
+}
+
+.sl-menu-btn:focus-visible,
+.sl-menu-tool:focus-visible,
+.sl-brand:focus-visible {
+  outline: var(--sl-ring-width) solid var(--sl-ring-bg);
+  outline-offset: var(--sl-ring-gap);
+}
+
+.sl-menu-close,
+.sl-menu-scrim {
+  display: none;
 }
 
 /* Menu: admin toolbar and language switcher row */
@@ -8363,7 +8472,7 @@ body[data-sl-pointer] .sl-admin-login-card:has(.sl-setup)::after {
 
 .sl-admin-main {
   display: grid;
-  grid-template-columns: 300px minmax(0, 1fr);
+  grid-template-columns: var(--sl-layout-sidebar) minmax(0, 1fr);
   align-items: stretch;
   width: 100%;
   min-height: 1px;
@@ -8522,7 +8631,7 @@ body[data-sl-pointer] .sl-admin-login-card:has(.sl-setup)::after {
 
   .sl-wrapper:not(.sl-admin-login-shell) .sl-toolbar ul {
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     gap: var(--sl-space-2);
   }
 
@@ -8543,9 +8652,81 @@ body[data-sl-pointer] .sl-admin-login-card:has(.sl-setup)::after {
     grid-template-columns: 1fr;
   }
 
+  /* A phone: the content first, the menu behind its button sliding in over the page */
+  .sl-menu-btn {
+    display: inline-flex;
+  }
+
+  .sl-wrapper:not(.sl-admin-login-shell) .sl-admin-brand {
+    justify-content: flex-start;
+  }
+
+  .sl-brand {
+    flex: 0 1 var(--sl-brand-width);
+    min-width: 0;
+  }
+
   .sl-wrapper:not(.sl-admin-login-shell) .sl-admin-sidebar {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: var(--sl-z-modal);
+    width: min(var(--sl-layout-sidebar), calc(100vw - var(--sl-space-8)));
+    padding: var(--sl-space-5);
+    overflow-y: auto;
     border-right: 0;
     border-bottom: 0;
+    background: var(--sl-bg);
+    box-shadow: var(--sl-shadow-float);
+    transform: translateX(-100%);
+    visibility: hidden;
+    transition: transform var(--sl-time-slow) var(--sl-ease-out), visibility var(--sl-time-slow) var(--sl-ease-out);
+  }
+
+  /* Shown at once, so the focus can enter; hidden only once the slide out has ended */
+  body[data-sl-drawer] .sl-wrapper .sl-admin-sidebar {
+    transform: none;
+    visibility: visible;
+    transition: transform var(--sl-time-slow) var(--sl-ease-out);
+  }
+
+  body[data-sl-drawer] .sl-menu-scrim {
+    position: fixed;
+    inset: 0;
+    z-index: var(--sl-z-overlay);
+    display: block;
+    background: var(--sl-scrim);
+  }
+
+  .sl-menu-close {
+    display: flex;
+    width: var(--sl-size-control);
+    margin: 0 0 var(--sl-space-4) auto;
+  }
+
+  /* The quick links shrink to their icons on one line; each keeps its name for a screen reader */
+  .sl-wrapper:not(.sl-admin-login-shell) .sl-toolbar li.sl-split-item {
+    margin-left: var(--sl-space-3);
+  }
+
+  .sl-wrapper:not(.sl-admin-login-shell) .sl-toolbar li.sl-split-item::before {
+    left: calc((var(--sl-space-3) + var(--sl-space-2)) / -2);
+  }
+
+  .sl-wrapper:not(.sl-admin-login-shell) .sl-toolbar li a,
+  .sl-wrapper:not(.sl-admin-login-shell) .sl-toolbar li button {
+    padding-right: var(--sl-space-3);
+    padding-left: var(--sl-space-3);
+  }
+
+  .sl-wrapper:not(.sl-admin-login-shell) .sl-toolbar li b {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
   }
 
   .sl-wrapper:not(.sl-admin-login-shell) .sl-block-sidebar {
@@ -9356,12 +9537,6 @@ button.sl-fm-thumb:hover .bi-zoom-in {
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .sl-skel {
-    animation: none;
-  }
-}
-
 /* A list that never arrived says so and offers the way back to it; an empty directory and an empty filter are other states and carry other words */
 .sl-fm-empty.sl-is-fail .bi {
   color: var(--sl-danger);
@@ -9678,18 +9853,6 @@ button.sl-fm-thumb:hover .bi-zoom-in {
 
   .sl-statx-dims {
     grid-template-columns: 1fr;
-  }
-}
-
-/* Accessibility: honor reduced-motion preference */
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
   }
 }
 

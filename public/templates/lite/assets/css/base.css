@@ -265,43 +265,44 @@
   --sl-tint: color-mix(in srgb, var(--sl-primary) 10%, transparent);
   --sl-tint-strong: color-mix(in srgb, var(--sl-primary) 24%, transparent);
 
-  /* Motion: three durations and two curves; the property a transition animates stays literal */
-  --sl-time-fast: 0.15s;
-  --sl-time-base: 0.2s;
-  --sl-time-slow: 0.35s;
+  /* Motion: the switch every duration is multiplied by, three durations and two curves; the property a transition animates stays literal */
+  --sl-time-scale: 1;
+  --sl-time-fast: calc(0.15s * var(--sl-time-scale));
+  --sl-time-base: calc(0.2s * var(--sl-time-scale));
+  --sl-time-slow: calc(0.35s * var(--sl-time-scale));
   --sl-ease-out: ease;
   --sl-ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
 
   /* Components: the step a fan opens its items by. Every transition duration in this theme sits on the ladder above,
      so this is a stagger and not a duration of its own, and the curve below is the one shape the ladder cannot hold */
-  --sl-dial-dur: 0.05s;
+  --sl-dial-dur: calc(0.05s * var(--sl-time-scale));
   /* The overshoot a poll option answers a click with: a curve leaving the 0-1 range is a different kind of motion */
   --sl-vote-ease: cubic-bezier(0.3, 1.6, 0.5, 1);
-  --sl-alert-dur: 1.8s;
-  --sl-fav-dur: 0.55s;
+  --sl-alert-dur: calc(1.8s * var(--sl-time-scale));
+  --sl-fav-dur: calc(0.55s * var(--sl-time-scale));
   /* The overshoot the favourite icon pops with, the same kind of motion as the poll option above */
   --sl-fav-ease: cubic-bezier(0.34, 1.56, 0.64, 1);
-  --sl-flash-dur: 5s;
+  --sl-flash-dur: calc(5s * var(--sl-time-scale));
   /* Freshness is read as a rate: the chip glows at one, and each step of age breathes at its own, from the
      fastest flame to the slowest turn. Five steps, five characters, which is why no ladder governs them */
-  --sl-fresh-dur: 1.5s;
-  --sl-fresh-now-dur: 0.8s;
-  --sl-fresh-day-dur: 1.5s;
-  --sl-fresh-days-dur: 1.9s;
-  --sl-fresh-week-dur: 4s;
-  --sl-fresh-month-dur: 2.6s;
-  --sl-loading-dur: 0.8s;
-  --sl-marquee-dur: 5s;
+  --sl-fresh-dur: calc(1.5s * var(--sl-time-scale));
+  --sl-fresh-now-dur: calc(0.8s * var(--sl-time-scale));
+  --sl-fresh-day-dur: calc(1.5s * var(--sl-time-scale));
+  --sl-fresh-days-dur: calc(1.9s * var(--sl-time-scale));
+  --sl-fresh-week-dur: calc(4s * var(--sl-time-scale));
+  --sl-fresh-month-dur: calc(2.6s * var(--sl-time-scale));
+  --sl-loading-dur: calc(0.8s * var(--sl-time-scale));
+  --sl-marquee-dur: calc(5s * var(--sl-time-scale));
   /* A marquee moves in discrete steps, one per character of the line it carries, so its curve is a step function */
   --sl-marquee-ease: steps(50);
-  --sl-modal-dur: 0.22s;
+  --sl-modal-dur: calc(0.22s * var(--sl-time-scale));
   /* The overshoot a dialog opens with: a curve leaving the 0-1 range is a different kind of motion, not a ladder step */
   --sl-modal-ease: cubic-bezier(0.34, 1.3, 0.64, 1);
   /* The overshoot of an alert: a success tick lands from its turn */
   --sl-alert-ease: cubic-bezier(0.34, 1.56, 0.64, 1);
-  --sl-pulse-dur: 2s;
-  --sl-skel-dur: 1.2s;
-  --sl-spin-dur: 6s;
+  --sl-pulse-dur: calc(2s * var(--sl-time-scale));
+  --sl-skel-dur: calc(1.2s * var(--sl-time-scale));
+  --sl-spin-dur: calc(6s * var(--sl-time-scale));
 
   /* Layers: the roles a stack may take, in the order they overlap. A value between two of them is a
      layer the ladder is missing, never a number picked to win one argument */
@@ -395,7 +396,7 @@
      carries. It travels upright and at an even rate, because a band is far wider than it is tall and an eased
      pass hurries through the middle — the half the eye actually watches. */
   --sl-beam-width: 30%;
-  --sl-beam-dur: 8s;
+  --sl-beam-dur: calc(8s * var(--sl-time-scale));
   --sl-beam-bg: light-dark(rgba(255, 255, 255, 0.46), rgba(255, 255, 255, 0.42));
   /* The light that follows the pointer over the page */
   --sl-pointer-width: 300px;
@@ -500,7 +501,7 @@
   /* Components: the presentation page. One beat for every animation it carries - a sweep, an orbit, a lane, a breathing
      bar - each a multiple of it; the glow a live element throws; the grid ground of an illustrated scene; the height a
      scene stands at; the width of a node inside one; the floor of a card that must hold its row even when short */
-  --sl-pres-dur: 4s;
+  --sl-pres-dur: calc(4s * var(--sl-time-scale));
   --sl-pres-shadow: 0 0 var(--sl-space-5) var(--sl-tint-strong);
   --sl-pres-bg: linear-gradient(color-mix(in srgb, var(--sl-pres-border) 20%, transparent) 1px, transparent 1px),
     linear-gradient(90deg, color-mix(in srgb, var(--sl-pres-border) 20%, transparent) 1px, transparent 1px);
@@ -636,6 +637,17 @@
   --sl-switch-bg: color-mix(in srgb, var(--sl-primary) 35%, var(--sl-bg));
 }
 
+/* Motion off: the reduced-motion setting and the option of the panel set the one switch every duration of the API block is multiplied by */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --sl-time-scale: 0;
+  }
+}
+
+:root[data-sl-still] {
+  --sl-time-scale: 0;
+}
+
 /* --- end tokens --- */
 
 /* The mode switch itself, and the only rules that name it. data-theme carries light, dark or auto; anything else,
@@ -650,7 +662,7 @@
 
 /* Navigation: an in-page anchor, the link back to #top among them, scrolls smoothly unless the reader asked for less motion */
 @media (prefers-reduced-motion: no-preference) {
-  html {
+  html:not([data-sl-still]) {
     scroll-behavior: smooth;
   }
 }

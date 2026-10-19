@@ -306,8 +306,8 @@ Client side (`plugins/system/slaed.js`, `setRatingVotes()`):
   `crypto.getRandomValues()`, shared with comments), stored in `data-sl-rate-key` and sent as `request`.
 - On `htmx:afterRequest` a status from 1 to 499 drops the key, so the next click is a new intention; a lost
   connection or a 5xx keeps it, and the repeat of the same click is idempotent.
-- A status of 400 or more keeps the widget in place and shows `setToast(text, true)`: the shared `.sl-toast` in its
-  warn variant `.sl-toast-warn` with the icon `bi-exclamation-triangle`, the text taken from `.sl-alert-text` of the
+- A status of 400 or more keeps the widget in place and shows `setToast(text, { warn: true })`: the shared `.sl-toast` in its
+  warn variant `.sl-toast-warn` with the warning tone of the theme, the text taken from `.sl-alert-text` of the
   refusal body (at most 200 characters, the status code when empty).
 
 ## Admin screens

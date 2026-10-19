@@ -93,8 +93,10 @@ function getAdminPanelBlocks(): string {
 
 # Render the panel home: the setup, self-check, update and version warnings, the administrator notice, and the module grids this administrator may open
 function getAdminPanel(): void {
-    global $conf, $panel, $tpl;
+    global $conf, $panel, $tpl, $adminvars;
     setHead();
+    $adminvars['section'] = _HOME;
+    $adminvars['is_home'] = true;
     $content = '';
     $minver = '8.1.0';
     $info = sprintf(_PHPSETUP, $minver);

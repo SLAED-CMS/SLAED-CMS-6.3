@@ -21,6 +21,8 @@ define('_ADDSUBCATEGORY','Ajouter une sous-catégorie');
 define('_ADIR',"L'annuaire de l'image de la racine du site");
 define('_ACCOUNT_ADIR','Dossier des avatars sous uploads/');
 define('_ADMCOL',"Le nombre de colonnes lors de la sortie de l'admin des modules");
+define('_ADM_MENU','Menu');
+define('_ADM_SKIP','Aller au contenu');
 define('_ADMINEMAIL','E-Mail admin');
 define('_ADMINFOEDIT',"Activer le rédacteur en chef du département de l'information?");
 define('_ADMININFO','Notes administrateur');

@@ -63,7 +63,8 @@ return [
         # The role `caption` is the shade under a caption on a picture: clear at the top, the surface at the foot, so the picture darkens towards the words, not under a box
         # It is one role, because the site strip and the brand archive carry the same caption and the stops are one decision
         'grad' => ['prefix' => 'grad', 'roles' => ['line', 'gloss', 'stripe', 'caption', 'progress-1', 'progress-2', 'progress-3', 'progress-4', 'progress-5']],
-        'time' => ['prefix' => 'time', 'roles' => ['fast', 'base', 'slow']],
+        # The role `scale` is the motion switch: every API duration is multiplied by it, and only reduced motion and :root[data-sl-still] set it to 0
+        'time' => ['prefix' => 'time', 'roles' => ['fast', 'base', 'slow', 'scale']],
         'ease' => ['prefix' => 'ease', 'roles' => ['out', 'in-out']],
         # The layer `raised` is the one measurement asked for: a component whose decorative floor opens a local stack needs a name for what sits on that floor
         # Every other role is a layer that leaves the flow
@@ -260,7 +261,8 @@ return [
         '--sl-d-share' => 'share of members a group holds against the largest group, as a fraction, templates/admin/fragments/group-step.html',
         '--sl-d-spy' => 'settings rail progress width, and the presentation rail progress in pixels, plugins/system/slaed.js',
         '--sl-d-swatch' => 'colour one swatch of a palette shows, and the value the own-colour wheel holds, templates/admin/partials/group-form.html and assets/js/admin-ui.js',
-        '--sl-d-turn' => 'place of a node in a staggered row: a solid head its beam crosses, templates/admin/assets/js/admin-ui.js,'
+        '--sl-d-toast' => 'time a notice stays, which the ring of the panel notice counts down, plugins/system/slaed.js',
+        '--sl-d-turn' =>'place of a node in a staggered row: a solid head its beam crosses, templates/admin/assets/js/admin-ui.js,'
             .' a rating star that bursts, plugins/system/slaed.js, and a check row of the installer, templates/admin/pages/setup.html',
         '--sl-d-user' => 'user group colour, templates/lite/partials/block-user-info.html',
         '--sl-d-usrlevel' => 'user group progress, templates/lite/partials/block-user-info.html',
@@ -495,8 +497,8 @@ return [
         # The body of a preview panel beside the info block of a profile: two grids that close their gaps
         '.sl-preview-body, .sl-profile-info',
         # The subject of a commit beside the count of a result set: a title and a figure, in one screen but not in one component
-        # The total of the visitor summary joined them when it took its own mark (2026-10-19): a sum in the text tone at the
-        # semibold step, a third component in a third place, and a selector list would file it under the changelog
+        # The total of the visitor summary joined them when it took its own mark (2026-10-19): a sum in the text tone at the semibold step
+        # It is a third component in a third place, and a selector list would file it under the changelog
         '.sl-changelog-commit-header strong, .sl-changelog-results-info strong, .sl-session-summary .sl-session-total',
         # The name under a user avatar beside the points beside it: a name and a number, which read at one size today and need not tomorrow
         '.sl-block-user-ava p > a, .sl-block-user-ava p > b, .sl-user-points b',
@@ -583,6 +585,9 @@ return [
         '.sl-chip' =>
             'the panel chip is a count badge with a minimum width and a bold micro type; the site chip is a label with an icon, its own gap and a pointer '
             .'transition. They share a name and a shape and nothing else',
+        '.sl-toast' =>
+            'one notice, two looks by the owner\x27s answer of 2026-10-19: the panel notice is a flash alert inside a fixed host and takes the alert\x27s '
+            .'box, the site notice is the fixed inverse pill that carries its own place, fill and fade',
         '.sl-dial' =>
             'the speed dial is two mechanisms: in admin an absolutely placed row that grows its items in place, in lite an inline toggle with an '
             .'absolutely placed fan. Everything below follows from that, and the two were built that way on purpose',
@@ -777,6 +782,9 @@ return [
         'fragments/textarea.html' =>
             'the same field split as the input: the site gives every textarea sl-field and marks the one the editor mounts on, the panel names the config row '
             .'instead. The site also lets the name be absent, because an editor area posts through the control it is mounted in',
+        'fragments/toast.html' =>
+            'the template slaed.js clones for every notice: the panel clones a flash alert with its countdown ring and a close button into a fixed host, the '
+            .'site clones the pill with its two tone icons into a bare live region. The hooks the script reads - the text, Undo, the tone - are the same',
         'fragments/voting-view.html' =>
             'the result row of a poll: the panel prints the answer and its share as a header over the bar, the site draws the leading answer with a trophy and '
             .'hangs the raw counts on the element as data attributes for the live swap to read. One producer feeds both and passes is_lead either way',

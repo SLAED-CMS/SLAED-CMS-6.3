@@ -7,22 +7,24 @@
 {{{ scripts }}}
 </head>
 <body>
+  <a class="sl-skip" href="#sl-main">{{ _ADM_SKIP }}</a>
   <div class="sl-wrapper sl-admin-shell">
     <div class="sl-wraptop"></div>
     <div class="sl-wrapmid">
-      <div class="sl-header sl-admin-header">
-        <div class="sl-admin-brand"><h1><a href="//slaed.net" target="_blank" title="{{ adtitle }}"><img src="{{ adlogo }}" alt="{{ adalt }}" title="{{ adtitle }}"></a></h1></div>
+      <header class="sl-header sl-admin-header">
+        <div class="sl-admin-brand"><button type="button" class="sl-menu-btn" data-sl-menu-open aria-controls="sl-menu" aria-expanded="false"><i class="bi bi-list" aria-hidden="true"></i><span>{{ _ADM_MENU }}</span></button><a class="sl-brand" href="{{ adhome }}" title="{{ _HOME }}"><img src="{{ adlogo }}" alt="{{ adalt }}"></a></div>
         <div class="sl-admin-toolbar">
           <div class="sl-toolbar">
             <div>
-              <ul class="sl-reset">{{{ menu }}}<li class="sl-set-item"><button type="button" data-sl-open="sl-settings" title="{{ _FUNCTIONS }}"><i class="bi bi-sliders" aria-hidden="true"></i> <b>{{ _FUNCTIONS }}</b></button></li></ul>
+              <ul class="sl-reset">{{{ menu }}}<li class="sl-set-item"><button type="button" data-sl-open="sl-settings" title="{{ _FUNCTIONS }}" aria-label="{{ _FUNCTIONS }}"><i class="bi bi-sliders" aria-hidden="true"></i></button></li></ul>
             </div>
           </div>
         </div>
-      </div>
+      </header>
       <div class="sl-admin-main">
-        <aside class="sl-admin-sidebar">{{{ admin_blocks }}}</aside>
-        <main class="sl-admin-content"><div class="sl-admin-content-inner">{% block content %}{% endblock %}</div></main>
+        <div class="sl-menu-scrim" data-sl-menu-close aria-hidden="true"></div>
+        <aside class="sl-admin-sidebar" id="sl-menu" aria-label="{{ _ADM_MENU }}"><button type="button" class="sl-menu-tool sl-menu-close" data-sl-menu-close title="{{ _CLOSE }}" aria-label="{{ _CLOSE }}"><i class="bi bi-x-lg" aria-hidden="true"></i></button>{{{ admin_blocks }}}</aside>
+        <main class="sl-admin-content" id="sl-main" tabindex="-1"><div class="sl-admin-content-inner">{% if is_home %}<h1 class="sl-visually-hidden">{{ section }}</h1>{% endif %}{% block content %}{% endblock %}</div></main>
       </div>
       <div class="sl-footer sl-admin-footer">
         <div class="sl-copyright">{% if time_html %}{{{ time_html }}}<br>{% endif %}{{{ license }}}</div>

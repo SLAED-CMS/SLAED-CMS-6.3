@@ -1,5 +1,5 @@
 {
-    "generated": "2026-10-16T10:27:30Z",
+    "generated": "2026-10-19T13:16:26Z",
     "themes": {
         "admin": {
             "count": 0,
@@ -7,15 +7,15 @@
             "dup": 0,
             "names": 0,
             "dead": 0,
-            "single": 161,
+            "single": 159,
             "alias": 0,
             "unsat": 0,
             "unmet": 0,
             "scoped": 54,
             "clash": 0,
             "classes": 0,
-            "important": 21,
-            "tokens": 340,
+            "important": 14,
+            "tokens": 342,
             "contrast": 0
         },
         "lite": {
@@ -24,15 +24,15 @@
             "dup": 0,
             "names": 0,
             "dead": 0,
-            "single": 198,
+            "single": 199,
             "alias": 0,
             "unsat": 0,
             "unmet": 0,
             "scoped": 89,
             "clash": 0,
             "classes": 0,
-            "important": 13,
-            "tokens": 445,
+            "important": 10,
+            "tokens": 446,
             "contrast": 0
         }
     },
@@ -186,6 +186,7 @@
             "--sl-ladder-width",
             "--sl-lang-shadow",
             "--sl-layout-container",
+            "--sl-layout-sidebar",
             "--sl-led-border",
             "--sl-led-dur",
             "--sl-led-height",
@@ -351,6 +352,7 @@
             "--sl-thumb-height",
             "--sl-time-base",
             "--sl-time-fast",
+            "--sl-time-scale",
             "--sl-time-slow",
             "--sl-tint",
             "--sl-tint-strong",
@@ -794,6 +796,7 @@
             "--sl-tile-mix",
             "--sl-time-base",
             "--sl-time-fast",
+            "--sl-time-scale",
             "--sl-time-slow",
             "--sl-tint",
             "--sl-tint-strong",

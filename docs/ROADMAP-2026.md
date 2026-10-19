@@ -215,9 +215,13 @@ into the plan, then do whatever work the step names.
   (owner, 2026-10-19); `axe-core` joined `tools/browser-audit.mjs` as `--axe`. The label crawl reads readable paths
   again through `tests/Support/address_probe.php` and its baseline was rebuilt green, 442 routes and no violation
   (owner, 2026-10-19). (2026-10-19)
-- [ ] 89. ADMIN-UI batch 1 — the base in JS: one notice with undo, one motion switch, the axis of `setSlideMotion()`,
-  the toggle storage helper, the shared palette controller.
-- [ ] 90. ADMIN-UI batch 2 — the header: logo without `h1`, tab title, skip link, icons, the phone drawer.
+- [x] 89. ADMIN-UI batch 1 — the base in JS: one notice with undo, one motion switch, the axis of `setSlideMotion()`,
+  the toggle storage helper, the shared palette controller. The motion switch is `--sl-time-scale`, every duration of
+  the API block multiplied by it; the notice is `fragments/toast.html` of each theme; `_EDITOR_UNDO` became `_UNDO`
+  (owner, 2026-10-19). (2026-10-19)
+- [x] 90. ADMIN-UI batch 2 — the header: logo without `h1`, tab title, skip link, icons, the phone drawer. The tab
+  title joins its parts by `$conf['defis']` and keeps `_ADMIN`; the classes come from the etalon, the hidden text is
+  `sl-visually-hidden` as in lite (owner, 2026-10-19). (2026-10-19)
 - [ ] 91. ADMIN-UI batch 3 — the menu and DIAL: filter, current section, "…" on hover and focus; a closed dial is one
   Tab stop.
 - [ ] 92. ADMIN-UI batch 4 — one source of the queues: the bell, "Ждут внимания", the chips, the count in the tab title.
