@@ -1133,6 +1133,44 @@
         }
         addSetupPart();
     }
+    // A block of the menu folded by hand shows its sections while a search runs, and takes its own state back once the field is empty
+    function setMenuOpen(box, force) {
+        if (force && !box.hasAttribute('data-sl-keep')) {
+            box.setAttribute('data-sl-keep', JSON.stringify([box.hidden, box.style.display]));
+            box.hidden = false;
+            box.style.display = '';
+        } else if (!force && box.hasAttribute('data-sl-keep')) {
+            var was = JSON.parse(box.getAttribute('data-sl-keep'));
+            box.removeAttribute('data-sl-keep');
+            box.hidden = was[0];
+            box.style.display = was[1];
+        }
+    }
+    // The find field narrows the sections of the menu by name and module word; the other blocks of the column step aside meanwhile
+    function setMenuFind() {
+        var find = document.querySelector('[data-sl-menu-find]');
+        var menu = document.getElementById('sl-menu');
+        if (!find || !menu) return;
+        var term = find.value.trim().toLowerCase();
+        var seen = 0;
+        menu.querySelectorAll('[data-sl-find-group]').forEach(function (group) {
+            var hits = 0;
+            var box = group.querySelector('[data-sl-toggle]');
+            group.querySelectorAll('[data-sl-menu-item]').forEach(function (item) {
+                var hit = !term || (item.textContent + ' ' + item.getAttribute('data-sl-menu-item')).toLowerCase().indexOf(term) !== -1;
+                item.hidden = !hit;
+                if (hit) hits += 1;
+            });
+            group.hidden = term !== '' && hits === 0;
+            seen += hits;
+            if (box) setMenuOpen(box, term !== '');
+        });
+        menu.querySelectorAll('.sl-block-sidebar:not([data-sl-find-group])').forEach(function (block) { block.hidden = term !== ''; });
+        menu.querySelectorAll('[data-sl-menu-empty]').forEach(function (note) { note.textContent = (term !== '' && seen === 0) ? note.getAttribute('data-sl-menu-empty') : ''; });
+    }
+    document.addEventListener('input', function (event) {
+        if (event.target && event.target.matches && event.target.matches('[data-sl-menu-find]')) setMenuFind();
+    });
     var phone = window.matchMedia('(max-width: 900px)');
     var held = [];
     // The drawer of a phone: the rest of the page goes inert while it is open, the focus comes back to the menu button
@@ -1154,7 +1192,7 @@
                 });
                 if (node.parentElement === document.body) break;
             }
-            menu.querySelector('button, a').focus();
+            menu.querySelector('input, button, a').focus();
         } else if (menu.contains(document.activeElement)) {
             btn.focus();
         }
@@ -1170,17 +1208,100 @@
     phone.addEventListener('change', function () {
         if (!phone.matches && document.body.hasAttribute('data-sl-drawer')) setDrawer(false);
     });
+    var queue = { sum: -1, unseen: 0, title: '' };
+    // The rows of one list in the order of their numbers, the fullest first; equal numbers keep the order the page gave them
+    function setQueueOrder(box) {
+        var rows = Array.prototype.filter.call(box.children, function (row) { return row.hasAttribute('data-sl-queue-row'); });
+        if (rows.length < 2) return;
+        var after = rows[rows.length - 1].nextSibling;
+        rows.forEach(function (row, i) { if (!row.hasAttribute('data-sl-queue-at')) row.setAttribute('data-sl-queue-at', i); });
+        rows.sort(function (one, two) {
+            var diff = Number(two.querySelector('[data-sl-queue-n]').textContent) - Number(one.querySelector('[data-sl-queue-n]').textContent);
+            return diff || one.getAttribute('data-sl-queue-at') - two.getAttribute('data-sl-queue-at');
+        });
+        rows.forEach(function (row) { box.insertBefore(row, after); });
+    }
+    // The title of the tab counts the arrivals of the queues while the tab is not seen, and gives the count up once it is
+    function setQueueTitle() {
+        if (!queue.title) queue.title = document.title;
+        document.title = (queue.unseen ? '(' + queue.unseen + ') ' : '') + queue.title;
+    }
+    // The tab is in sight again: the count leaves its title
+    function setQueueSeen() {
+        if (document.hidden || !queue.unseen) return;
+        queue.unseen = 0;
+        setQueueTitle();
+    }
+    // One answer of the poll feeds every place of the queues: the rows of the bell and of the waiting block, the chips of the menu and the cards, the sum
+    function setQueueView(list) {
+        var bell = document.querySelector('[data-sl-bell]');
+        var mods = {};
+        var sum = 0;
+        list.forEach(function (row) {
+            sum += row.num;
+            mods[row.mod] = (mods[row.mod] || 0) + row.num;
+            document.querySelectorAll('[data-sl-queue-row="' + CSS.escape(row.key) + '"]').forEach(function (node) {
+                var num = node.querySelector('[data-sl-queue-n]');
+                num.textContent = row.num;
+                if (num.classList.contains('sl-chip')) {
+                    num.classList.toggle('sl-chip-warn', row.num > 0);
+                    num.classList.toggle('sl-chip-success', row.num === 0);
+                }
+                if (node.tagName === 'A') node.hidden = row.num === 0;
+            });
+        });
+        document.querySelectorAll('[data-sl-queue]').forEach(function (chip) {
+            var num = mods[chip.getAttribute('data-sl-queue')] || 0;
+            chip.querySelector('[data-sl-queue-n]').textContent = num;
+            chip.hidden = num === 0;
+        });
+        var boxes = [];
+        document.querySelectorAll('[data-sl-queue-row]').forEach(function (row) { if (boxes.indexOf(row.parentNode) === -1) boxes.push(row.parentNode); });
+        boxes.forEach(setQueueOrder);
+        document.querySelectorAll('[data-sl-bell-sum]').forEach(function (node) {
+            node.textContent = sum;
+            node.hidden = sum === 0;
+        });
+        document.querySelectorAll('[data-sl-bell-none]').forEach(function (node) { node.hidden = sum !== 0; });
+        bell.setAttribute('aria-label', bell.getAttribute('data-sl-bell-label') + ': ' + sum);
+        if (queue.sum >= 0 && sum > queue.sum) {
+            bell.removeAttribute('data-sl-ping');
+            void bell.offsetWidth;
+            bell.setAttribute('data-sl-ping', '');
+            if (document.hidden || !document.hasFocus()) {
+                queue.unseen += sum - queue.sum;
+                setQueueTitle();
+            }
+        }
+        queue.sum = sum;
+    }
+    // The bell asks the server for the queues once a minute, on a hidden tab too, since that is where the count of the title is made
+    function setQueuePoll() {
+        var bell = document.querySelector('[data-sl-bell]');
+        if (!bell) return;
+        queue.sum = Number(bell.querySelector('[data-sl-bell-sum]').textContent) || 0;
+        window.setInterval(function () {
+            fetch(bell.getAttribute('data-sl-bell'), { credentials: 'same-origin', headers: { 'Accept': 'application/json' } })
+                .then(function (res) { return res.ok ? res.json() : null; })
+                .then(function (list) { if (Array.isArray(list)) setQueueView(list); })
+                .catch(function () {});
+        }, 60000);
+        document.addEventListener('visibilitychange', setQueueSeen);
+        window.addEventListener('focus', setQueueSeen);
+    }
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', function () {
             addFileStep();
             setBeamTurns();
             setSetupRun();
             addRankForm();
+            setQueuePoll();
         });
     } else {
         addFileStep();
         setBeamTurns();
         setSetupRun();
         addRankForm();
+        setQueuePoll();
     }
 })();

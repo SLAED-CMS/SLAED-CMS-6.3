@@ -1,5 +1,5 @@
-<div class="sl-block-sidebar">
-  <h3 title="{{ close }}" data-sl-toggle-control="sl-block-{{ id }}" data-sl-toggle-effect="slide" data-sl-toggle-duration="500"><b>{% if icon_name %}<i class="bi bi-{{ icon_name }}"></i>{% endif %}{{ title }}</b><i class="bi bi-arrows-collapse sl-panel-toggle sl-panel-toggle-open" aria-hidden="true"></i><i class="bi bi-arrows-expand sl-panel-toggle sl-panel-toggle-closed" aria-hidden="true"></i></h3>
+<div class="sl-block-sidebar{% if is_find %} sl-block-menu{% endif %}{% if is_queue %} sl-block-queue{% endif %}"{% if is_find %} data-sl-find-group{% endif %}>
+  <h3><button type="button" class="sl-menu-head" title="{{ close }}" data-sl-toggle-control="sl-block-{{ id }}" data-sl-toggle-effect="slide" data-sl-toggle-duration="500"><b>{% if icon_name %}<i class="bi bi-{{ icon_name }}" aria-hidden="true"></i>{% endif %}{{ title }}</b><i class="bi bi-arrows-collapse sl-panel-toggle sl-panel-toggle-open" aria-hidden="true"></i><i class="bi bi-arrows-expand sl-panel-toggle sl-panel-toggle-closed" aria-hidden="true"></i></button></h3>
   <div
     id="sl-block-{{ id }}"
     class="sl-block-sidebar-content"

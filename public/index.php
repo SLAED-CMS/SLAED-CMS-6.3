@@ -287,7 +287,7 @@ if (empty($go)) {
             die('Illegal file access');
         }
     } elseif ($go == 5) {
-        if (isAdmin(true)) {
+        if (isAdmin(true) || (isAdmin() && $op === 'getAdminQueueData')) {
             define('ADMIN_FILE', true);
             getLang('admin');
             Cache::setHeaders();
@@ -301,6 +301,7 @@ if (empty($go)) {
                 case 'getAdminFavoriteList': getAdminFavoriteList(); break;
                 case 'getAdminPrivateList': getAdminPrivateList(); break;
                 case 'getUserSessionAdminInfo': getUserSessionAdminInfo(); break;
+                case 'getAdminQueueData': getAdminQueueData(); exit;
                 case 'getAdminFileList': getAdminFileList(); break;
                 case 'getAdminFileData': getAdminFileData(); break;
                 case 'getAdminFilePreview': getAdminFilePreview(); break;

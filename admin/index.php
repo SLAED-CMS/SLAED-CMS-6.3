@@ -19,14 +19,17 @@ function checkModuleConfig(string $name, int $typ): bool {
     return strpos((string)file_get_contents($file), "case 'config'") !== false;
 }
 
-# Build one dashboard module card or one sidebar menu row from a module config entry
+# Build one dashboard module card or one sidebar menu row from a module config entry; the row of the open section is marked current
 # The module node has no public route of its own: its types carry their site links on its list of types
-function getAdminMenu(string $name, array $mod): string {
+function getAdminMenu(string $name, array $mod, bool $open = false): string {
     global $panel, $afile, $tpl;
     $url = $afile.'.php?name='.$name;
     $title = getModuleLabel($name);
     $icon = preg_match('/^[a-z0-9-]+$/', $mod['icon'] ?? '') ? $mod['icon'] : 'puzzle';
     $off = empty($mod['active']);
+    $rows = array_filter(getAdminQueues(), static fn(array $row): bool => $row['mod'] === $name);
+    $queue = $rows ? $name : '';
+    $qnum = array_sum(array_column($rows, 'num'));
     $ltitle = $off ? $title.' - '._DEACT : $title;
     $dial = [];
     if (isAdmin(true)) {
@@ -51,41 +54,50 @@ function getAdminMenu(string $name, array $mod): string {
             'led_title' => $off ? _DEACT : _ACT,
             'dial' => $dial,
             'dial_title' => _FUNCTIONS,
+            'queue_key' => $queue,
+            'queue_num' => $qnum,
         ]);
     }
     return $tpl->getHtmlFrag('menu-list-item', [
+        'key' => $name,
         'is_off' => $off,
-        'link' => ['href' => $url, 'title' => $ltitle, 'icon_name' => $icon, 'label' => $title],
+        'link' => ['href' => $url, 'title' => $ltitle, 'icon_name' => $icon, 'label' => $title, 'is_current' => $open],
         'dial' => $dial,
         'dial_title' => _FUNCTIONS,
+        'queue_key' => $queue,
+        'queue_num' => $qnum,
     ]);
 }
 
 # Build the sidebar menu blocks of a module screen: the panel modules for a super-admin, then every site module this administrator may open
 function getAdminPanelBlocks(): string {
-    global $panel, $conf, $tpl;
+    global $panel, $conf, $tpl, $name;
     if (!$panel) {
         $cont = '';
         $block = '';
         if (isAdmin(true)) {
-            foreach ($conf['modules'] as $name => $mod) {
-                if (($mod['type'] ?? 1) == 0) $cont .= getAdminMenu($name, $mod);
+            foreach ($conf['modules'] as $key => $mod) {
+                if (($mod['type'] ?? 1) == 0) $cont .= getAdminMenu($key, $mod, $key === $name);
             }
-            $block = $tpl->getHtmlPart('block-sidebar', ['title' => _ADMIN, 'icon_name' => 'person-gear', 'content_html' => $cont, 'id' => '1', 'close' => _OPCL]);
+            $block = $tpl->getHtmlPart('block-sidebar', [
+                'title' => _ADMIN, 'icon_name' => 'person-gear', 'content_html' => $cont, 'id' => '1', 'close' => _OPCL, 'is_find' => true,
+            ]);
             $cont = '';
         }
-        foreach ($conf['modules'] as $name => $mod) {
+        foreach ($conf['modules'] as $key => $mod) {
             if (($mod['type'] ?? 1) == 1) {
-                if (isAdmin(true) || is_admin_modul($name)) {
-                    $path = BASE_DIR.'/modules/'.$name.'/admin';
+                if (isAdmin(true) || is_admin_modul($key)) {
+                    $path = BASE_DIR.'/modules/'.$key.'/admin';
                     if (file_exists($path.'/index.php')) {
-                        $cont .= getAdminMenu($name, $mod);
-                        getLang($name, true);
+                        $cont .= getAdminMenu($key, $mod, $key === $name);
+                        getLang($key, true);
                     }
                 }
             }
         }
-        $block .= $tpl->getHtmlPart('block-sidebar', ['title' => _MODULES, 'icon_name' => 'people', 'content_html' => $cont, 'id' => '2', 'close' => _OPCL]);
+        $block .= $tpl->getHtmlPart('block-sidebar', [
+            'title' => _MODULES, 'icon_name' => 'people', 'content_html' => $cont, 'id' => '2', 'close' => _OPCL, 'is_find' => true,
+        ]);
         return $block;
     }
     return '';

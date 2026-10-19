@@ -87,10 +87,10 @@ final class CommentIsolationTest extends TestCase
         $rows = [];
         foreach ($this->getFiles() as $name => $src) {
             foreach (explode("\n", $this->getCode($src)) as $num => $line) {
-                if (str_contains($line, 'getAdminCountRow(') && str_contains($line, '\'comment\'')) $rows[] = $name.':'.($num + 1);
+                if (str_contains($line, 'getTableCount(') && str_contains($line, '\'comment\'')) $rows[] = $name.':'.($num + 1);
             }
         }
-        $this->assertSame([], $rows, 'The sidebar count helper is handed the comment table as a name again');
+        $this->assertSame([], $rows, 'The comment table is counted by its name again instead of through the comment class');
     }
 
     # The three globals the class absorbed are defined nowhere and called nowhere

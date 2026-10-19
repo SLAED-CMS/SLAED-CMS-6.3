@@ -49,7 +49,8 @@ final class DeskKeysTest extends TestCase
         $this->assertStringContainsString('if (list.length > 1) return null;', $part, $note);
         $point = $this->getPart('public/plugins/system/slaed.js', 'function setDialPoint(', 900);
         $note = 'The fan is not opened at the pointer, which is the whole of what a context menu adds';
-        $this->assertStringContainsString("classList.add('sl-dial-point', 'sl-open')", $point, $note);
+        $this->assertStringContainsString("classList.add('sl-dial-point')", $point, $note);
+        $this->assertStringContainsString('setDialState(dial, true)', $point, $note);
         $note = 'The placement is not measured against the box the fan stands in, so a scrolled work area would cut it away';
         $this->assertStringContainsString('offsetParent', $point, $note);
         $note = 'A screen places the context menu itself, beside the component that owns the fan';

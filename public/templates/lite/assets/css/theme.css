@@ -1553,15 +1553,18 @@ button.sl-but-mini:hover,
   color: var(--sl-on-solid);
 }
 
+/* A closed fan is one stop of Tab: its items stay hidden until it opens, and hide only once they have faded */
 .sl-dial .sl-dial-item {
   position: absolute;
   top: 50%;
   right: calc(100% + var(--sl-space-2));
   opacity: 0;
+  visibility: hidden;
   transform: translateY(-50%) translateX(8px) scale(0.6);
   pointer-events: none;
   color: var(--sl-band-text);
   transition:
+    visibility var(--sl-time-base) var(--sl-ease-out),
     background-color var(--sl-time-base) var(--sl-ease-out),
     color var(--sl-time-base) var(--sl-ease-out),
     transform var(--sl-time-base) var(--sl-ease-out),
@@ -1597,6 +1600,7 @@ button.sl-but-mini:hover,
 .sl-dial.sl-open .sl-dial-item,
 .sl-dial:hover .sl-dial-item {
   opacity: 1;
+  visibility: visible;
   transform: translateY(-50%);
   pointer-events: auto;
 }

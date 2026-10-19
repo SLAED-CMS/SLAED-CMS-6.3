@@ -156,7 +156,7 @@ Admin layout assembly still performs live work:
 
 - `getAdminPanelBlocks()` scans configured modules and checks admin entry files
 - `getAdminPanel()` repeats module/menu assembly for dashboard panels
-- `getAdminInfo()` issues per-module pending-content COUNT queries
+- `getAdminQueues()` issues one pending-content COUNT query per queue (new users, comments, every Node type) on every panel page, for the bell, and again on its poll once a minute
 - admin menu rendering resolves icon paths and template fragments repeatedly
 
 Performance risk:

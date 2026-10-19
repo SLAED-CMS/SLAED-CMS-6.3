@@ -336,71 +336,36 @@ function getAdminTopMenu(): string {
 
 # Return standard variables used by admin layouts
 function getAdminLayoutVars(): array {
-    global $db, $afile;
+    global $db, $afile, $tpl;
     if (!isAdmin()) {
         $login = ($db->getSqlRowCount($db->getSqlQuery('SELECT 1 FROM '.PREFIX_DB.'_admins LIMIT 1')) == 0) ? _ADMINLOGIN_NEW : _ADMINLOGIN;
         return ['login' => $login];
     }
+    $rows = getAdminQueues();
+    $bell = ['rows' => $rows, 'sum' => array_sum(array_column($rows, 'num')), 'url' => 'index.php?go=5&op=getAdminQueueData&token='.getSiteToken()];
     return [
         'settings_win' => getAdminSettingsWindow(),
         'menu' => getAdminTopMenu(),
+        'bell_html' => $tpl->getHtmlFrag('bell', $bell),
         'admin_blocks' => getAdminPanelBlocks().getAdminInfo().adminblock(),
     ];
 }
 
-# Render one sidebar pending-count row: active-content link plus a live COUNT chip; title and label are constant names resolved here for the active module, or ready texts
-# A caller whose table is owned by a subsystem class hands the number over in $num and leaves the table empty, so the row can be built without this helper reaching that table
-function getAdminCountRow(string $href, string $titlec, string $labelc, string $icon, string $table = '', string $where = '', ?int $num = null): string {
-    global $db, $afile, $tpl;
-    if ($num === null) $num = getTableCount($table, $where);
-    return $tpl->getHtmlFrag('block-sidebar-count-row', [
-        'label_html' => $tpl->getHtmlFrag('link', ['href' => $afile.'.php?'.$href, 'title' => getConst($titlec), 'label' => getConst($labelc), 'icon_name' => $icon]),
-        'value_html' => $tpl->getHtmlFrag('inline-badge', ['chip_tone' => (int)$num >= 1 ? 'warn' : 'success', 'label' => (string)$num]),
-    ]);
+# Render the waiting block of the home: every queue of getAdminQueues(), the waiting ones first and the empty ones green below
+function getAdminInfo(): string {
+    global $panel, $tpl;
+    if (!$panel || !isAdmin()) return '';
+    $rows = '';
+    foreach (getAdminQueues() as $row) $rows .= $tpl->getHtmlFrag('block-sidebar-count-row', $row);
+    if ($rows === '') return '';
+    return $tpl->getHtmlPart('block-sidebar', ['title' => _ADM_WAIT, 'icon_name' => 'bell', 'content_html' => $tpl->getHtmlFrag('block-content', [
+        'is_sidebar_count_list' => true, 'content' => $rows]), 'id' => '3', 'close' => _OPCL, 'is_queue' => true]);
 }
 
-# Build the admin sidebar info blocks: pending-content counters and waiting content; the editor moved to the settings window and is offered there alone
-# Every Node type the administrator moderates adds its materials waiting for moderation, a type with support requests the requests waiting for the staff
-function getAdminInfo(): string {
-    global $conf, $com, $panel, $tpl;
-    if (isAdmin()) {
-        $ablocks = '';
-        if ($panel) {
-            $groups = [
-                'account' => [['name=account&op=newuser', '_NEW_USER', '_USERS', 'person-plus', 'users_temp', '']],
-            ];
-            $fresh = [];
-            foreach ($groups as $mod => $defs) {
-                if (!is_active($mod) || !is_admin_modul($mod)) continue;
-                foreach ($defs as $def) $fresh[] = getAdminCountRow(...$def);
-            }
-            $ctx = getNodeContext();
-            foreach (getNodeTypeMap() as $name => $type) {
-                if (!$ctx->super && !in_array($name, $ctx->mods, true)) continue;
-                try {
-                    $hand = getNodeHandler($type);
-                    if ($type->ext === 'support') {
-                        $num = $hand->getNodeSupportList($type, 1, 1, (int)($conf['node']['support']['state']['staff'] ?? 0))['count'];
-                        $href = 'name=node&type='.$name;
-                    } else {
-                        $num = getNodeReader()->setNodeType($type)->setNodeExtension($hand)->setNodeStatus(NodeStatus::Pending)->getNodeCount();
-                        $href = 'name=node&type='.$name.'&status='.NodeStatus::Pending->value;
-                    }
-                } catch (NodeException $err) {
-                    Logger::addSite('error', 'Admin: the waiting Node materials cannot be counted', ['type' => $name, 'code' => $err->getCode()]);
-                    continue;
-                }
-                $fresh[] = getAdminCountRow($href, getModuleName($name), getModuleName($name), getIconName($name), '', '', $num);
-            }
-            $ablocks = $tpl->getHtmlPart('block-sidebar', ['title' => _NEW, 'icon_name' => 'stars', 'content_html' => $tpl->getHtmlFrag('block-content', [
-                'is_sidebar_count_list' => true, 'content' => implode('', $fresh)]), 'id' => '3', 'close' => _OPCL]);
-            $wait = [getAdminCountRow('name=comments&status=1', '_COMMENTS', '_COMMENTS', 'chat-dots', '', '', $com->getStatusCount(CommentStatus::Pending))];
-            $ablocks .= $tpl->getHtmlPart('block-sidebar', ['title' => _WAITINGCONT, 'icon_name' => 'hourglass-split', 'content_html' => $tpl->getHtmlFrag('block-content', [
-                'is_sidebar_count_list' => true, 'content' => implode('', $wait)]), 'id' => '4', 'close' => _OPCL]);
-        }
-        return $ablocks;
-    }
-    return '';
+# Answer the poll of the bell: the number of every queue this administrator may open, with the module whose chip it feeds
+function getAdminQueueData(): void {
+    header('Content-Type: application/json; charset=UTF-8');
+    echo json_encode(array_map(static fn(array $row): array => ['key' => $row['key'], 'mod' => $row['mod'], 'num' => $row['num']], getAdminQueues()));
 }
 
 # Return the database server version string reported by the SQL engine

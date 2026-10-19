@@ -4334,6 +4334,45 @@ function getUserSessionAdminInfo(string $id = ''): string {
     return '';
 }
 
+# Answer the queues this administrator may open, the fullest first: the one source of the bell, the block, the chips and the poll
+function getAdminQueues(): array {
+    global $conf, $com, $afile;
+    static $rows = null;
+    if ($rows !== null) return $rows;
+    $rows = [];
+    if (!isAdmin()) return $rows;
+    $base = HOME_PATH.$afile.'.php?';
+    if (is_active('account') && is_admin_modul('account')) {
+        $rows[] = ['key' => 'account', 'mod' => 'account', 'label' => getConst('_USERS'), 'title' => getConst('_NEW_USER'), 'icon' => 'person-plus',
+            'href' => $base.'name=account&op=newuser', 'num' => getTableCount('users_temp')];
+    }
+    if (isAdmin(true)) {
+        $rows[] = ['key' => 'comments', 'mod' => 'comments', 'label' => _COMMENTS, 'title' => _COMMENTS, 'icon' => 'chat-dots',
+            'href' => $base.'name=comments&status=1', 'num' => $com->getStatusCount(CommentStatus::Pending)];
+    }
+    $ctx = getNodeContext();
+    foreach (getNodeTypeMap() as $name => $type) {
+        if (!$ctx->super && !in_array($name, $ctx->mods, true)) continue;
+        try {
+            $hand = getNodeHandler($type);
+            if ($type->ext === 'support') {
+                $num = $hand->getNodeSupportList($type, 1, 1, (int)($conf['node']['support']['state']['staff'] ?? 0))['count'];
+                $href = $base.'name=node&type='.$name;
+            } else {
+                $num = getNodeReader()->setNodeType($type)->setNodeExtension($hand)->setNodeStatus(NodeStatus::Pending)->getNodeCount();
+                $href = $base.'name=node&type='.$name.'&status='.NodeStatus::Pending->value;
+            }
+        } catch (NodeException $err) {
+            Logger::addSite('error', 'Admin: the waiting Node materials cannot be counted', ['type' => $name, 'code' => $err->getCode()]);
+            continue;
+        }
+        $label = getModuleName($name);
+        $rows[] = ['key' => $name, 'mod' => 'node', 'label' => $label, 'title' => $label, 'icon' => getIconName($name), 'href' => $href, 'num' => $num];
+    }
+    usort($rows, static fn(array $one, array $two): int => $two['num'] <=> $one['num']);
+    return $rows;
+}
+
 # Format admin block
 function adminblock(): string {
  global $db, $afile, $tpl;

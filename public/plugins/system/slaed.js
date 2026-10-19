@@ -802,9 +802,17 @@
         setWindowOpen(dlg);
     };
 
+    // A fan says on its toggle whether it stands open, so a reader hears the state the eye sees; only an open fan lets Tab into its items
+    function setDialState(dial, open) {
+        var btn = dial.querySelector('.sl-dial-toggle');
+        dial.classList.toggle('sl-open', open);
+        if (btn) btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    }
+
     // A fan opened at the pointer gives its placement back when it goes down, because it belongs to the corner of its own object and stands there again next time
     function deleteDialPoint(dial) {
-        dial.classList.remove('sl-open', 'sl-dial-point');
+        setDialState(dial, false);
+        dial.classList.remove('sl-dial-point');
         dial.style.left = '';
         dial.style.top = '';
     }
@@ -842,7 +850,8 @@
         var left = event.clientX - box.left;
         var top = event.clientY - box.top;
         setDialsOff(dial);
-        dial.classList.add('sl-dial-point', 'sl-open');
+        dial.classList.add('sl-dial-point');
+        setDialState(dial, true);
         // Which way the fan grows is a decision of the theme: an absolute item opens to the left of the toggle, an item in the flow follows it to the right
         if (item && window.getComputedStyle(item).position === 'absolute') left = Math.max(left, wide);
         else left = Math.min(left, Math.max(0, host.clientWidth - wide));
@@ -873,8 +882,25 @@
             event.preventDefault();
             setDialPoint(dial, event);
         });
+        // Escape folds every fan, and a focus inside one goes back to its toggle instead of being dropped on the page
         document.addEventListener('keydown', function (event) {
-            if (event.key === 'Escape') setDialsOff(null);
+            if (event.key !== 'Escape') return;
+            var near = document.activeElement && document.activeElement.closest ? document.activeElement.closest('.sl-dial.sl-open') : null;
+            setDialsOff(null);
+            if (near && near.querySelector('.sl-dial-toggle')) near.querySelector('.sl-dial-toggle').focus();
+        });
+        // An item a hover showed keeps its fan open while it holds the focus, and the fan folds once the focus has left it
+        document.addEventListener('focusin', function (event) {
+            var item = event.target && event.target.closest ? event.target.closest('.sl-dial-item') : null;
+            var dial = item ? item.closest('.sl-dial') : null;
+            if (!dial || dial.classList.contains('sl-open')) return;
+            setDialsOff(dial);
+            setDialState(dial, true);
+        });
+        document.addEventListener('focusout', function (event) {
+            var dial = event.target && event.target.closest ? event.target.closest('.sl-dial.sl-open') : null;
+            if (!dial || (event.relatedTarget && dial.contains(event.relatedTarget))) return;
+            deleteDialPoint(dial);
         });
         document.addEventListener('scroll', function () {
             document.querySelectorAll('.sl-dial.sl-dial-point').forEach(deleteDialPoint);
@@ -907,7 +933,7 @@
             if (!own) return;
             // A press on the toggle brings the fan back to the place it belongs to, and only a fan already standing there closes on it
             deleteDialPoint(own);
-            own.classList.toggle('sl-open', !open);
+            setDialState(own, !open);
         });
     }
 

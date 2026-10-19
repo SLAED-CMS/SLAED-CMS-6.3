@@ -379,6 +379,9 @@ return [
         # The key list of the pager tip and the feature list of the panel login: two bare lists laid out as a grid with one gap, which share nothing else
         # Merging would file the login card inside the pager, two files apart from where either is edited
         '.sl-admin-login-list, .sl-pager-tip-keys',
+        # The open section of the panel menu and the name of an editor palette row: two labels in the strong brand tone that share nothing else
+        # Merging would file the menu column inside the editor palette, a thousand lines from where either is edited
+        '.sl-editor-pal-name b, .sl-wrapper.sl-admin-shell .sl-admin-sidebar .sl-menu-list-item > a[aria-current="page"]',
         # The paragraph reset of base.css and the list item of the markdown block: one is the element default every page inherits, the other a rule scoped to markdown
         # They meet at one step by chance
         '.sl-markdown li, p',

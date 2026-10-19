@@ -222,9 +222,14 @@ into the plan, then do whatever work the step names.
 - [x] 90. ADMIN-UI batch 2 — the header: logo without `h1`, tab title, skip link, icons, the phone drawer. The tab
   title joins its parts by `$conf['defis']` and keeps `_ADMIN`; the classes come from the etalon, the hidden text is
   `sl-visually-hidden` as in lite (owner, 2026-10-19). (2026-10-19)
-- [ ] 91. ADMIN-UI batch 3 — the menu and DIAL: filter, current section, "…" on hover and focus; a closed dial is one
-  Tab stop.
-- [ ] 92. ADMIN-UI batch 4 — one source of the queues: the bell, "Ждут внимания", the chips, the count in the tab title.
+- [x] 91. ADMIN-UI batch 3 — the menu and DIAL: filter, current section, "…" on hover and focus; a closed dial is one
+  Tab stop. The classes of the filter come from the etalon, `sl-menu-top`, `sl-menu-find`, `sl-menu-empty`, and the
+  filter stands on module screens only until batch 6 brings it to the home (owner, 2026-10-19). Tab stops fell from
+  233 to 104 on the home and from 470 to 242 on "Комментарии". (2026-10-19)
+- [x] 92. ADMIN-UI batch 4 — one source of the queues: the bell, "Ждут внимания", the chips, the count in the tab title.
+  The source is `getAdminQueues()`, the bell `fragments/bell.html`, the chip `sl-queue` on every section with a queue
+  ("Материалы" sums its types), the block tone `sl-block-menu` / `sl-block-queue`; the poll `getAdminQueueData` runs once
+  a minute for every administrator (owner, 2026-10-19). (2026-10-19)
 - [ ] 93. ADMIN-UI batch 5 — the option op and its cookie, "Опции" without reload, the row "Движение".
 - [ ] 94. ADMIN-UI batch 6 — Ctrl+K and the rail.
 - [ ] 95. ADMIN-UI batch 7 — the end of the session.

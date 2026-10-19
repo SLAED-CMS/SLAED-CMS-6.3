@@ -16,14 +16,14 @@
         <div class="sl-admin-toolbar">
           <div class="sl-toolbar">
             <div>
-              <ul class="sl-reset">{{{ menu }}}<li class="sl-set-item"><button type="button" data-sl-open="sl-settings" title="{{ _FUNCTIONS }}" aria-label="{{ _FUNCTIONS }}"><i class="bi bi-sliders" aria-hidden="true"></i></button></li></ul>
+              <ul class="sl-reset">{{{ menu }}}{{{ bell_html }}}<li class="sl-set-item"><button type="button" data-sl-open="sl-settings" title="{{ _FUNCTIONS }}" aria-label="{{ _FUNCTIONS }}"><i class="bi bi-sliders" aria-hidden="true"></i></button></li></ul>
             </div>
           </div>
         </div>
       </header>
       <div class="sl-admin-main">
         <div class="sl-menu-scrim" data-sl-menu-close aria-hidden="true"></div>
-        <aside class="sl-admin-sidebar" id="sl-menu" aria-label="{{ _ADM_MENU }}"><button type="button" class="sl-menu-tool sl-menu-close" data-sl-menu-close title="{{ _CLOSE }}" aria-label="{{ _CLOSE }}"><i class="bi bi-x-lg" aria-hidden="true"></i></button>{{{ admin_blocks }}}</aside>
+        <aside class="sl-admin-sidebar" id="sl-menu" aria-label="{{ _ADM_MENU }}"><div class="sl-menu-top">{% if not is_home %}<div class="sl-menu-find"><label class="sl-visually-hidden" for="sl-menu-q">{{ _ADM_FIND }}</label><i class="bi bi-search" aria-hidden="true"></i><input type="search" id="sl-menu-q" placeholder="{{ _ADM_FIND }}" autocomplete="off" data-sl-menu-find></div>{% endif %}<button type="button" class="sl-menu-tool sl-menu-close" data-sl-menu-close title="{{ _CLOSE }}" aria-label="{{ _CLOSE }}"><i class="bi bi-x-lg" aria-hidden="true"></i></button></div>{% if not is_home %}<p class="sl-menu-empty" data-sl-menu-empty="{{ _ADM_NOFIND }}" role="status"></p>{% endif %}{{{ admin_blocks }}}</aside>
         <main class="sl-admin-content" id="sl-main" tabindex="-1"><div class="sl-admin-content-inner">{% if is_home %}<h1 class="sl-visually-hidden">{{ section }}</h1>{% endif %}{% block content %}{% endblock %}</div></main>
       </div>
       <div class="sl-footer sl-admin-footer">

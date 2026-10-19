@@ -768,7 +768,7 @@ thead tr th[data-sort-method="none"]::after {
   border: 1px solid transparent;
   cursor: pointer;
   box-shadow: var(--sl-btn-shadow);
-  transition: opacity var(--sl-time-base) var(--sl-ease-out);
+  transition: opacity var(--sl-time-base) var(--sl-ease-out), transform var(--sl-time-fast) var(--sl-ease-out);
   box-sizing: border-box;
   vertical-align: middle;
 }
@@ -810,6 +810,7 @@ input[type="submit"].sl-but-back {
 .sl-but-back:active {
   box-shadow: var(--sl-shadow-inset);
   opacity: 1;
+  transform: scale(0.94);
 }
 
 .sl-but {
@@ -2223,7 +2224,9 @@ pre code.hljs {
 .sl-editor-pill .sl-modal-act[aria-pressed="true"],
 .sl-editor-pill .sl-modal-act[aria-expanded="true"],
 .sl-pager-keys:hover > .sl-but-mini,
-.sl-pager-keys.sl-is-open > .sl-but-mini {
+.sl-pager-keys.sl-is-open > .sl-but-mini,
+.sl-wrapper .sl-toolbar li .sl-bell-tip a:hover,
+.sl-wrapper .sl-toolbar li .sl-bell-tip a:focus-visible {
   background: var(--sl-tint);
   color: var(--sl-primary-strong);
 }
@@ -3611,14 +3614,13 @@ dialog.sl-editor-emoji-panel {
   justify-content: flex-end;
 }
 
-.sl-block-sidebar:has([data-sl-toggle-control="sl-block-3"]) h3,
-.sl-block-sidebar:has([data-sl-toggle-control="sl-block-4"]) h3 {
+/* The head of a column block takes the tone of its role: the menus blue, the queues orange, every other block the green it has by default */
+.sl-block-sidebar.sl-block-queue h3 {
   background: var(--sl-solid-warn-bg);
   border-color: var(--sl-solid-warn-border);
 }
 
-.sl-block-sidebar:has([data-sl-toggle-control="sl-block-1"]) h3,
-.sl-block-sidebar:has([data-sl-toggle-control="sl-block-2"]) h3 {
+.sl-block-sidebar.sl-block-menu h3 {
   background: var(--sl-solid-bg);
   border-color: var(--sl-solid-border);
 }
@@ -3650,7 +3652,7 @@ dialog.sl-editor-emoji-panel {
 }
 
 .sl-wrapper.sl-admin-shell .sl-admin-sidebar .sl-block-sidebar h3 {
-  padding: var(--sl-admin-tight-title-pad) 0;
+  padding: 0;
   border-radius: var(--sl-admin-tight-title-radius);
   height: auto;
   line-height: 1;
@@ -3788,6 +3790,78 @@ dialog.sl-editor-emoji-panel {
   );
   border-color: var(--sl-border-strong);
   box-shadow: var(--sl-shadow-raised);
+}
+
+/* The open section: the plate takes the tint and the brand bar along its whole height */
+.sl-wrapper.sl-admin-shell .sl-admin-sidebar .sl-menu-list-item > a[aria-current="page"] {
+  color: var(--sl-primary-strong);
+  font-weight: var(--sl-weight-semibold);
+}
+
+.sl-wrapper.sl-admin-shell .sl-admin-sidebar .sl-menu-list-item:has(> a[aria-current="page"]) {
+  border-color: var(--sl-primary);
+  background: var(--sl-tint);
+}
+
+/* The bar runs the whole height over the left border and turns round the corners of the plate into a point; it is drawn once its block stands open */
+.sl-wrapper.sl-admin-shell .sl-admin-sidebar .sl-menu-list-item:has(> a[aria-current="page"])::before {
+  position: absolute;
+  inset: -1px;
+  border-left: var(--sl-rail-width) solid var(--sl-primary);
+  border-radius: inherit;
+  content: "";
+  pointer-events: none;
+  animation: sl-bar-draw calc(var(--sl-time-slow) * 2) var(--sl-ease-out) var(--sl-time-slow) backwards;
+}
+
+@keyframes sl-bar-draw {
+  from {
+    transform: scaleY(0);
+  }
+}
+
+/* The fan of a section only under the pointer and in focus: the menu column and the grid of cards rest without a button on every row; a touch screen has no hover and keeps it */
+.sl-admin-sidebar .sl-menu-list-item > .sl-dial,
+.sl-mcard > .sl-dial {
+  opacity: 0;
+  transition:
+    opacity var(--sl-time-fast) var(--sl-ease-out),
+    background-color var(--sl-time-base) var(--sl-ease-out),
+    border-color var(--sl-time-base) var(--sl-ease-out),
+    box-shadow var(--sl-time-base) var(--sl-ease-out);
+}
+
+.sl-admin-sidebar .sl-menu-list-item:is(:hover, :focus-within) > .sl-dial,
+.sl-mcard:is(:hover, :focus-within) > .sl-dial,
+.sl-admin-sidebar .sl-menu-list-item > .sl-dial.sl-open,
+.sl-mcard > .sl-dial.sl-open {
+  opacity: 1;
+}
+
+@media (hover: none) {
+  .sl-admin-sidebar .sl-menu-list-item > .sl-dial,
+  .sl-mcard > .sl-dial {
+    opacity: 1;
+  }
+}
+
+/* The queue of a section on its menu row and its card: there while something waits, gone at zero; on a card it stands right after the name */
+.sl-queue {
+  display: inline-grid;
+  place-items: center;
+  min-width: var(--sl-chip-width);
+  margin-left: auto;
+  padding: 0 var(--sl-space-2);
+  border-radius: var(--sl-radius-pill);
+  background: var(--sl-warning-subtle);
+  color: var(--sl-text-strong);
+  font-size: var(--sl-font-micro);
+  font-weight: var(--sl-weight-bold);
+  font-variant-numeric: tabular-nums;
+}
+
+.sl-mcard .sl-queue {
+  margin-left: var(--sl-space-2);
 }
 
 /* Admin home: menu grid, module cards and LED indicators */
@@ -3989,6 +4063,7 @@ dialog.sl-editor-emoji-panel {
   border: 0;
 }
 
+/* A closed fan is one stop of Tab: its items stay hidden until it opens, and hide only once they have faded */
 .sl-dial .sl-dial-item {
   min-width: 0;
   max-width: 0;
@@ -3996,9 +4071,11 @@ dialog.sl-editor-emoji-panel {
   padding-inline: 0;
   overflow: hidden;
   opacity: 0;
+  visibility: hidden;
   transform: translateX(8px) scale(0.6);
   pointer-events: none;
   transition:
+    visibility var(--sl-time-base) var(--sl-ease-out),
     background-color var(--sl-time-base) var(--sl-ease-out),
     color var(--sl-time-base) var(--sl-ease-out),
     transform var(--sl-time-base) var(--sl-ease-out),
@@ -4014,6 +4091,7 @@ dialog.sl-editor-emoji-panel {
   max-width: var(--sl-size-chip);
   margin-inline-end: var(--sl-space-2);
   opacity: 1;
+  visibility: visible;
   transform: none;
   pointer-events: auto;
 }
@@ -4690,7 +4768,8 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
 }
 
 /* The head is a real button filling the solid plate; the plate keeps its border while open and carries the ring of its focus */
-.sl-dashboard-panel-head > .sl-menu-head {
+.sl-dashboard-panel-head > .sl-menu-head,
+.sl-block-sidebar h3 > .sl-menu-head {
   display: flex;
   align-items: center;
   width: 100%;
@@ -4712,6 +4791,16 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
 .sl-dashboard-panel-head:has(> .sl-menu-head:focus-visible) {
   outline: var(--sl-ring-width) solid var(--sl-ring-bg);
   outline-offset: var(--sl-ring-gap);
+}
+
+/* A block of the menu column: the button takes the padding of its head, so the whole plate answers, and draws its ring inside the plate the column clips */
+.sl-wrapper.sl-admin-shell .sl-admin-sidebar .sl-block-sidebar h3 > .sl-menu-head {
+  padding: var(--sl-admin-tight-title-pad) 0;
+}
+
+.sl-block-sidebar h3 > .sl-menu-head:focus-visible {
+  outline: var(--sl-ring-width) solid var(--sl-on-solid);
+  outline-offset: calc(var(--sl-ring-gap) * -1);
 }
 
 /* Motion over the page: nothing here changes a colour or a measure, and where motion is reduced it is not there */
@@ -6145,10 +6234,28 @@ button.sl-but-mini {
   flex: 0 0 auto;
 }
 
+/* The icon of the section bounces in with the page */
 .sl-module-head-icon .bi {
   color: var(--sl-primary);
   font-size: var(--sl-size-icon-lg);
   line-height: 1;
+  animation: sl-icon-pop calc(var(--sl-time-slow) * 2) var(--sl-ease-out) both;
+}
+
+@keyframes sl-icon-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+
+  70% {
+    transform: scale(1.15);
+  }
+
+  100% {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 .sl-module-head-body {
@@ -6314,6 +6421,12 @@ button.sl-but-mini {
     var(--sl-surface) 0%,
     var(--sl-bg-muted) 100%
   );
+  transition: transform var(--sl-time-fast) var(--sl-ease-out);
+}
+
+/* A tab gives under a press, as a button does */
+.sl-tabs-link:active {
+  transform: scale(0.94);
 }
 
 .sl-tabs-link:hover,
@@ -8277,6 +8390,52 @@ body[data-sl-pointer] .sl-admin-login-card:has(.sl-setup)::after {
   display: none;
 }
 
+/* The row above the blocks of the menu: the find field, and on a phone the close of the drawer */
+.sl-menu-top {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--sl-space-3);
+}
+
+.sl-menu-top:has(> .sl-menu-find) {
+  margin: 0 0 var(--sl-space-5);
+}
+
+/* The find field narrows the sections of the menu by name and by module word */
+.sl-menu-find {
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.sl-menu-find > .bi {
+  position: absolute;
+  top: 50%;
+  left: var(--sl-space-4);
+  color: var(--sl-text-muted);
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.sl-menu-find input {
+  width: 100%;
+  height: var(--sl-size-control);
+  padding-left: calc(var(--sl-space-4) * 2 + var(--sl-size-icon-xs));
+  box-sizing: border-box;
+}
+
+.sl-menu-empty {
+  margin: 0 0 var(--sl-space-5);
+  color: var(--sl-text-muted);
+  text-align: center;
+}
+
+/* The note is a live region standing in the page from the start, so a reader hears it; empty, it takes no room */
+.sl-menu-empty:empty {
+  margin: 0;
+}
+
 /* Menu: admin toolbar and language switcher row */
 .sl-toolbar {
   width: 100%;
@@ -8391,6 +8550,93 @@ body[data-sl-pointer] .sl-admin-login-card:has(.sl-setup)::after {
 /* .sl-reset zeroes the margin of every item it holds, so the push has to answer at the strength of that reset */
 .sl-toolbar li.sl-set-item {
   margin-left: auto;
+}
+
+/* The bell stands before Options at the right edge and takes the push itself; the sum of the queues stands out of the corner of its icon */
+.sl-toolbar li.sl-bell-item {
+  margin-left: auto;
+  overflow: visible;
+}
+
+.sl-toolbar li.sl-bell-item + li.sl-set-item {
+  margin-left: 0;
+}
+
+.sl-bell-float {
+  display: flex;
+  height: 100%;
+}
+
+.sl-bell-ic {
+  position: relative;
+  display: inline-flex;
+}
+
+.sl-bell-n {
+  position: absolute;
+  top: calc(var(--sl-space-3) * -1);
+  left: 50%;
+  min-width: var(--sl-size-icon-xs);
+  padding: 0 var(--sl-space-1);
+  border-radius: var(--sl-radius-pill);
+  background: var(--sl-danger-strong);
+  color: var(--sl-on-solid);
+  font-size: var(--sl-font-micro);
+  font-weight: var(--sl-weight-bold);
+  line-height: var(--sl-line-normal);
+  text-align: center;
+}
+
+/* The panel of the bell is the tip of the theme as wide as the menu column; it holds spans and links only, so the bar rules for its items stay out */
+.sl-bell-tip {
+  width: var(--sl-layout-sidebar);
+  text-align: left;
+}
+
+.sl-bell-cap {
+  display: block;
+  margin: 0 0 var(--sl-space-3);
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-small);
+}
+
+.sl-wrapper .sl-toolbar li .sl-bell-tip a {
+  display: flex;
+  align-items: center;
+  gap: var(--sl-space-3);
+  padding: var(--sl-space-3);
+  border-radius: var(--sl-radius-1);
+  background: transparent;
+  color: var(--sl-text);
+  line-height: var(--sl-line-normal);
+  text-shadow: none;
+}
+
+/* A row of the bell in hand takes the tint with the pressed controls of the editor pill */
+.sl-bell-num {
+  margin-left: auto;
+  font-weight: var(--sl-weight-bold);
+  font-variant-numeric: tabular-nums;
+}
+
+/* A queue that grew while the page stood open stirs the bell: the icon swings once from its top */
+.sl-bell[data-sl-ping] .sl-bell-ic > .bi {
+  transform-origin: 50% 0;
+  animation: sl-bell-swing calc(var(--sl-time-slow) * 2) var(--sl-ease-out);
+}
+
+@keyframes sl-bell-swing {
+  20% {
+    transform: rotate(16deg);
+  }
+
+  45% {
+    transform: rotate(-12deg);
+  }
+
+  70% {
+    transform: rotate(6deg);
+  }
 }
 
 /* An item in hand is a solid bar, as a panel head is */
@@ -8699,10 +8945,13 @@ body[data-sl-pointer] .sl-admin-login-card:has(.sl-setup)::after {
     background: var(--sl-scrim);
   }
 
+  .sl-menu-top {
+    margin: 0 0 var(--sl-space-5);
+  }
+
   .sl-menu-close {
     display: flex;
     width: var(--sl-size-control);
-    margin: 0 0 var(--sl-space-4) auto;
   }
 
   /* The quick links shrink to their icons on one line; each keeps its name for a screen reader */
@@ -8812,6 +9061,13 @@ body[data-sl-pointer] .sl-admin-login-card:has(.sl-setup)::after {
   .sl-admin-login-content {
     padding-right: var(--sl-space-6);
     padding-left: var(--sl-space-6);
+  }
+
+  /* Nine icons with the bell do not fit a narrow phone at the padding of a tablet, so each gives up half of it */
+  .sl-wrapper:not(.sl-admin-login-shell) .sl-toolbar li a,
+  .sl-wrapper:not(.sl-admin-login-shell) .sl-toolbar li button {
+    padding-right: var(--sl-space-2);
+    padding-left: var(--sl-space-2);
   }
 }
 

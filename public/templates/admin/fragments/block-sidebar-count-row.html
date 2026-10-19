@@ -1,4 +1,4 @@
-<div class="sl-block-sidebar-count-row">
-  <div class="sl-block-sidebar-count-label">{{{ label_html }}}</div>
-  <div class="sl-block-sidebar-count-value">{{{ value_html }}}</div>
+<div class="sl-block-sidebar-count-row" data-sl-queue-row="{{ key }}" data-sl-queue-mod="{{ mod }}">
+  <div class="sl-block-sidebar-count-label"><a href="{{ href }}" title="{{ title }}"><i class="bi bi-{{ icon }}" aria-hidden="true"></i> {{ label }}</a></div>
+  <div class="sl-block-sidebar-count-value"><span class="sl-chip {% if num %}sl-chip-warn{% else %}sl-chip-success{% endif %}" data-sl-queue-n>{{ num }}</span></div>
 </div>
