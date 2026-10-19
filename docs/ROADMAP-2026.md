@@ -23,6 +23,7 @@ more: where a plan and this file disagree about the order, this file wins.
 | `docs/9-ADMIN-LOG-2026.md` | every journal of the site: the actions of the panel in `storage/logs/admin.log` in the one JSON format of `Logger`, written in `checkAdminPost()` with the logins; `user.log` and `oauth.log` on the same format; the login table `_login_log` for the profile and the panel; read on "Безопасность", linked from each module |
 | `docs/10-URL-2026.md` | readable addresses without `id` — `/files/adaptivnyi-shablon-pure` — in one registry of routes; one address per page, 301 for every other form, an address never reused |
 | `docs/11-UPDATE-2026.md` | updates from the panel: signed releases, the module `master` on slaed.net, the page "Обновления" in the core, the API as the branch `/api/` of `public/index.php` (written in Russian by the owner's wish) |
+| `docs/12-ADMIN-UI-2026.md` | the etalons `demo/admin/` and `demo/site/` moved into the themes `admin` and `lite`: the shell, one canon of the list and the form, the home cockpit, the merged block "Администрация", the floating menu in the panel and on the site, sounds in each theme's `sound/`, the screensaver; DIAL folded in (written in Russian, like the etalons) |
 
 ## How a session runs
 
@@ -206,8 +207,33 @@ into the plan, then do whatever work the step names.
 - [x] 87. UPDATE batch 11 — reference and the real keys; deletes `docs/11-UPDATE-2026.md`. The reference is
   `docs/UPDATE.md`; a test run trusts the test keys through `UPDATE_KEYS` (owner, 2026-10-18); the owner held the key
   ceremony and the factory keys with their fingerprints in `README.md` are real. (2026-10-18)
-- [ ] 88. DIAL — *decision*: the options dial `sl-dial` of the panel lists is three Tab stops a row while closed
-  (found by the UI/UX audit of the groups stand, 2026-10-09); write a plan, then make its items reachable only once it
-  opens. Put last by the owner on 2026-10-13, since its plan is not written yet, and again after the updater on
-  2026-10-15.
-- [ ] 89. Close — no `docs/*-2026.md` plan is left; delete this file and report that the work before 8.0 is done.
+- [ ] 88. ADMIN-UI batch 0 — *decision*: the nineteen open questions of the plan, the inventory of the panel lists for
+  the canon, the baseline. Added by the owner on 2026-10-19 with the etalons `demo/admin/` and `demo/site/`; the former
+  step 88 DIAL (the closed options dial `sl-dial` is three Tab stops a row, found 2026-10-09) is folded into batch 3.
+- [ ] 89. ADMIN-UI batch 1 — the base in JS: one notice with undo, one motion switch, the axis of `setSlideMotion()`,
+  the toggle storage helper, the shared palette controller.
+- [ ] 90. ADMIN-UI batch 2 — the header: logo without `h1`, tab title, skip link, icons, the phone drawer.
+- [ ] 91. ADMIN-UI batch 3 — the menu and DIAL: filter, current section, "…" on hover and focus; a closed dial is one
+  Tab stop.
+- [ ] 92. ADMIN-UI batch 4 — one source of the queues: the bell, "Ждут внимания", the chips, the count in the tab title.
+- [ ] 93. ADMIN-UI batch 5 — the option op and its cookie, "Опции" without reload, the row "Движение".
+- [ ] 94. ADMIN-UI batch 6 — Ctrl+K and the rail.
+- [ ] 95. ADMIN-UI batch 7 — the end of the session.
+- [ ] 96. ADMIN-UI batch 8 — the list canon, frame, on "Комментарии": fragment, filter, address, tabs, pagers.
+- [ ] 97. ADMIN-UI batch 9 — the list canon, row and view, on "Комментарии".
+- [ ] 98. ADMIN-UI batch 10 — the list canon, actions with undo, on "Комментарии".
+- [ ] 99. ADMIN-UI batch 11 — the form canon on "Конфигурации".
+- [ ] 100. ADMIN-UI batch 12 — the panel lists onto the canon, part 1.
+- [ ] 101. ADMIN-UI batch 13 — the panel lists onto the canon, part 2.
+- [ ] 102. ADMIN-UI batch 14 — the data of the cockpit: the monitor functions in `core/monitor.php`, the signals, the
+  cache, the poll.
+- [ ] 103. ADMIN-UI batch 15 — the cockpit of the home.
+- [ ] 104. ADMIN-UI batch 16 — the merged block "Администрация" in both themes, `dock.css` of each theme.
+- [ ] 105. ADMIN-UI batch 17 — the window "Наблюдение" in both themes.
+- [ ] 106. ADMIN-UI batch 18 — the floating menu in the panel: the layer.
+- [ ] 107. ADMIN-UI batch 19 — the floating menu in the panel: pins, palette entry, watch ring, admin window.
+- [ ] 108. ADMIN-UI batch 20 — the floating menu on the site.
+- [ ] 109. ADMIN-UI batch 21 — sounds in `sound/` of each theme, `getThemeFileUrl()`, `public/sound/` retired.
+- [ ] 110. ADMIN-UI batch 22 — the screensaver "Возрождение".
+- [ ] 111. ADMIN-UI batch 23 — reference; deletes `docs/12-ADMIN-UI-2026.md`.
+- [ ] 112. Close — no `docs/*-2026.md` plan is left; delete this file and report that the work before 8.0 is done.
