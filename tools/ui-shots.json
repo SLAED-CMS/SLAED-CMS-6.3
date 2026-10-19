@@ -74,8 +74,7 @@
     },
     { "name": "voting", "url": "/index.php?name=voting" },
     { "name": "node-list", "url": "/index.php?name=docs" },
-    { "name": "node-view", "url": "/index.php?name=docs&op=view&id=23" },
-    { "name": "node-media", "url": "/index.php?name=media&op=view&id=25" },
+    { "name": "node-view", "url": "/index.php?name=docs&op=view&id=3919" },
     {
       "name": "login",
       "url": "/index.php?name=account",

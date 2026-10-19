@@ -74,8 +74,8 @@
       <div class="sl-div-item"><div class="sl-div-label"><label for="f-grname">{{ grname_label }}</label></div><div class="sl-div-field">{{{ name_html }}}</div></div>
       <div class="sl-div-item"><div class="sl-div-label"><label for="f-description">{{ intro_label }}</label></div><div class="sl-div-field">{{{ intro_html }}}</div></div>
       <div class="sl-div-item">
-        <div class="sl-div-label"><span id="f-color-label">{{ color_label }}</span><span class="sl-small">{{ color_hint }}</span></div>
-        <div class="sl-div-field"><div class="sl-rank-tones" role="toolbar" aria-labelledby="f-color-label" data-sl-roving>
+        <div class="sl-div-label"><span id="f-color-label">{{ color_label }}</span><span class="sl-small" id="f-color-hint">{{ color_hint }}</span></div>
+        <div class="sl-div-field"><div class="sl-rank-tones" role="toolbar" aria-labelledby="f-color-label" aria-describedby="f-color-hint" data-sl-roving>
           {% for tone in group_tones %}<button type="button" data-sl-group-tone="{{ tone.color }}" style="--sl-d-swatch: {{ tone.color }}" title="{{ tone.label }}" aria-label="{{ tone.label }}" aria-pressed="{% if tone.is_on %}true{% else %}false{% endif %}"></button>{% endfor %}
           <label class="sl-rank-custom{% if is_group_own %} sl-is-active{% endif %}" title="{{ own_text }}" style="--sl-d-swatch: {{ color }}" data-sl-tone-custom="group"><input type="color" name="color" id="f-color" value="{{ color }}" aria-label="{{ own_text }}"></label>
         </div></div>

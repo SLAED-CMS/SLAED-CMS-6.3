@@ -102,7 +102,12 @@ php -l path/to/file.php
 npm run browser:audit
 npm run browser:inspect
 npm run browser:attach
+node tools/browser-audit.mjs --as admin --axe "/admin.php?name=comments"
 ```
+
+`--as admin` or `--as site` signs in through the form of `tools/ui-shots.json` with `SLAED_UI_USER` and
+`SLAED_UI_PASS`, and a path starting with `/` is read from its `base`. `--axe` runs `axe-core` against WCAG 2.2 AA
+after load and reports one finding per broken rule. In Git Bash set `MSYS_NO_PATHCONV=1`, or the path becomes a file.
 
 ### Theme Independence Audits
 

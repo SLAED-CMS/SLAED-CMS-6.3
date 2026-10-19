@@ -32,7 +32,7 @@ import { chromium } from 'playwright';
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { setSeededState, deleteSeededState } from './ui-probe.mjs';
+import { getProbeAnswer, setSeededState, deleteSeededState, setSession } from './ui-probe.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const conf = JSON.parse(readFileSync(join(root, 'tools/ui-shots.json'), 'utf8'));
@@ -71,6 +71,39 @@ const SEED = ['/index.php?name=account&op=newuser', '/index.php?name=account&op=
 const REC = new Set(['id', 'cid', 'pid', 'qid']);
 const LOOSE = new Set([...REC, 'name', 'op', 'num', 'cat', 'token', 'sid', 'page', 'uname', 'redirect', 'go', 'prov',
     'mod', 'modul', 'new_ip', 'search', 'last', 'pnum', 'com', 'typ', 'let']);
+// What a readable path of the site names, asked of the stand once per path: an operation of its prefix, or the kind of
+// the registry entity. The address alone cannot tell /news/internet, a category, from /news/<slug>, a material, nor
+// /account/logout from a page - and an operation the walk does not know must stay a skipped op, not become a record
+const kinds = new Map();
+
+// The readable path of a site address without its leading slash, or '' for the root, index.php, the panel and a file
+function getSitePath(url) {
+  if (url.pathname === '/' || url.pathname === '/index.php' || url.pathname === adminPath) return '';
+  const hit = /^\/([a-z0-9_-]+(?:\/[a-z0-9_-]+)*)$/.exec(url.pathname);
+  return hit ? hit[1] : '';
+}
+
+// Ask the stand about every path of the list it has not answered yet
+function setPathKinds(list) {
+  const want = [...new Set(list.map((href) => getSitePath(new URL(href))).filter((one) => one.includes('/') && !kinds.has(one)))];
+  for (let i = 0; i < want.length; i += 100) {
+    const said = getProbeAnswer('address', 'paths', ...want.slice(i, i + 100));
+    for (const [path, one] of Object.entries(said)) kinds.set(path, one);
+  }
+}
+
+// The name and the operation an address renders, from its query or its path; a path the stand does not know is null
+function getRouteOp(url) {
+  const path = getSitePath(url);
+  if (path === '') return { name: (url.searchParams.get('name') || 'home').toLowerCase(), op: (url.searchParams.get('op') || '').toLowerCase(), rec: false };
+  const parts = path.split('/');
+  if (parts.length === 1) return { name: parts[0], op: '', rec: false };
+  const seen = kinds.get(path) || { op: '', kind: '' };
+  if (seen.op !== '') return { name: parts[0], op: seen.op, rec: parts.length > 2 };
+  // A category or a forum section is the list of its prefix, as cat= of a query address was
+  if (seen.kind === 'cat') return { name: parts[0], op: '', rec: false };
+  return seen.kind === '' ? null : { name: parts[0], op: 'view', rec: true };
+}
 
 // One route, named by what it renders rather than by which record it happened to open, and by who was looking. The
 // side is told rather than read off the address because one address is two screens: signed in, index.php?name=account
@@ -78,10 +111,9 @@ const LOOSE = new Set([...REC, 'name', 'op', 'num', 'cat', 'token', 'sid', 'page
 // a member never opens the three forms a guest is shown, and those are lite form rows like any other
 function getRouteSig(href, side) {
   const url = new URL(href);
-  const name = (url.searchParams.get('name') || 'home').toLowerCase();
-  const op = (url.searchParams.get('op') || '').toLowerCase();
+  const { name, op, rec: bound } = getRouteOp(url) || { name: 'home', op: '', rec: false };
   const rest = [];
-  let rec = false;
+  let rec = bound;
   for (const [raw, val] of url.searchParams) {
     // An href carrying a double-escaped ampersand arrives as a parameter literally named `amp;page`, which is a
     // different name from `page` and would walk the pager as if it were a screen of its own
@@ -91,27 +123,6 @@ function getRouteSig(href, side) {
   }
   rest.sort();
   return side + ':' + name + ':' + op + (rec ? '#rec' : '') + (rest.length ? '?' + rest.join('&') : '');
-}
-
-// Sign one context in through the form the manifest names and prove the session took two ways, the way the screenshot
-// rig proves it: something only a session shows must appear, and the password field must be gone. Either alone passes
-// for a login that never happened, and a crawl that believes it is signed in reports the login page as a clean panel.
-// The wait is on the password field leaving rather than on a load event: the altcha widget of the panel solves its
-// proof of work on submit, so the navigation arrives seconds after the click and a load state that already fired
-// resolves at once - which read as a finished login and handed the crawl the login form to audit
-async function setSession(page, kind) {
-  const form = conf.auth[kind];
-  await page.goto(conf.base + form.url, { waitUntil: 'domcontentloaded' });
-  await page.fill(form.user, user);
-  await page.fill(form.pass, pass);
-  await page.locator(form.submit).first().click();
-  try {
-    await page.locator(form.gone).first().waitFor({ state: 'detached', timeout: 60000 });
-  } catch {
-    throw new Error('login as ' + kind + ' did not take: ' + form.gone + ' is still on the page after 60s');
-  }
-  await page.waitForLoadState('load');
-  if (!(await page.locator(form.proof).first().count())) throw new Error('login as ' + kind + ' did not take: ' + form.proof + ' is absent');
 }
 
 // Everything one document has to answer for. Run per frame and not per page: TinyMCE puts its editable body in a
@@ -288,7 +299,7 @@ try {
     if (kind === 'guest') continue;
     const page = await ctx.newPage();
     await page.setViewportSize({ width: 1280, height: 1000 });
-    await setSession(page, kind);
+    await setSession(page, conf, kind);
     await page.close();
   }
   // The manifest carries pages a link never leads to, and one of them - the OAuth card - renders only for a browser
@@ -335,6 +346,7 @@ try {
       await page.waitForTimeout(conf.settle || 500);
       // The signature of what was served, not of what was asked for: a route that redirects rendered something else,
       // and recording the address would put a page nobody can reach into the coverage the next run is measured against
+      setPathKinds([page.url()]);
       const sig = getRouteSig(page.url(), step.kind);
       if (routes.has(sig)) {
         await page.close();
@@ -366,16 +378,12 @@ try {
           }
         }
       }
-      for (const href of await page.$$eval('a[href]', (list) => list.map((one) => one.href))) {
-        let url;
-        try {
-          url = new URL(href);
-        } catch {
-          continue;
-        }
-        if (url.origin !== origin) continue;
-        if (url.pathname !== adminPath && url.pathname !== '/index.php' && url.pathname !== '/') continue;
-        const op = (url.searchParams.get('op') || '').toLowerCase();
+      const hrefs = (await page.$$eval('a[href]', (list) => list.map((one) => one.href))).filter((href) => URL.canParse(href) && new URL(href).origin === origin);
+      setPathKinds(hrefs);
+      for (const href of hrefs) {
+        const url = new URL(href);
+        if (url.pathname !== adminPath && url.pathname !== '/index.php' && url.pathname !== '/' && getSitePath(url) === '') continue;
+        const op = getRouteOp(url)?.op ?? '?path';
         if (!OPEN.has(op)) {
           skipped.set(op, (skipped.get(op) || 0) + 1);
           continue;

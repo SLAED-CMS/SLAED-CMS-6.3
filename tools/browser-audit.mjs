@@ -3,12 +3,17 @@
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { createRequire } from 'node:module';
+import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
+import { setSession } from './ui-probe.mjs';
 
 const argv = process.argv.slice(2);
 const DEFAULT_URL = 'http://slaed.loc/';
 const DEFAULT_CDP_URL = 'http://127.0.0.1:9222';
 const RELEVANT_RESOURCE_TYPES = new Set(['document', 'stylesheet', 'script', 'xhr', 'fetch', 'font']);
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const AXE_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
 
 function parseArgs(args) {
   const options = {
@@ -23,6 +28,8 @@ function parseArgs(args) {
     cdpUrl: process.env.BROWSER_AUDIT_CDP_URL || DEFAULT_CDP_URL,
     timeoutMs: 15000,
     waitMs: 2000,
+    as: '',
+    axe: false,
   };
 
   for (let i = 0; i < args.length; i += 1) {
@@ -59,6 +66,16 @@ function parseArgs(args) {
 
     if (arg === '--wait' && args[i + 1]) {
       options.waitMs = Number(args[++i]);
+      continue;
+    }
+
+    if (arg === '--as' && args[i + 1]) {
+      options.as = args[++i];
+      continue;
+    }
+
+    if (arg === '--axe') {
+      options.axe = true;
       continue;
     }
 
@@ -225,8 +242,20 @@ async function resolveBrowser(options, executablePath) {
   });
 }
 
-async function resolveContext(browser) {
-  return browser.contexts()[0] || browser.newContext();
+async function resolveContext(browser, options) {
+  return browser.contexts()[0] || browser.newContext({ ignoreHTTPSErrors: true, bypassCSP: options.axe });
+}
+
+// Run axe-core on the loaded page against WCAG 2.2 AA and add one finding per broken rule
+async function checkAxe(page, addFinding) {
+  const file = createRequire(import.meta.url).resolve('axe-core/axe.min.js');
+  await page.addScriptTag({ path: file });
+  const res = await page.evaluate((tags) => window.axe.run(document, { runOnly: { type: 'tag', values: tags } }), AXE_TAGS);
+  const nodes = res.violations.reduce((sum, rule) => sum + rule.nodes.length, 0);
+  console.log(`[browser-audit] axe violations=${res.violations.length} nodes=${nodes}`);
+  for (const rule of res.violations) {
+    addFinding(`axe ${rule.impact} ${rule.id} x${rule.nodes.length}: ${rule.help} (${rule.nodes[0]?.target.join(' ') ?? ''})`);
+  }
 }
 
 async function resolvePage(context, options, targetUrl) {
@@ -344,7 +373,8 @@ async function wirePage(context, page, options, addFinding, consoleMessages) {
 
 async function main() {
   const options = parseArgs(argv);
-  const targetUrl = options.url || DEFAULT_URL;
+  const conf = options.as ? JSON.parse(fs.readFileSync(path.join(ROOT, 'tools/ui-shots.json'), 'utf8')) : null;
+  const targetUrl = conf && options.url.startsWith('/') ? conf.base + options.url : options.url || DEFAULT_URL;
   const executablePath = options.attach ? '' : chooseExecutable(options.browser);
   const findings = [];
   const consoleMessages = [];
@@ -362,9 +392,10 @@ async function main() {
 
   try {
     browser = await resolveBrowser(options, executablePath);
-    const context = await resolveContext(browser);
+    const context = await resolveContext(browser, options);
     const page = await resolvePage(context, options, targetUrl);
     console.log(`[browser-audit] page=${page.url() || '(new page)'}`);
+    if (conf) await setSession(page, conf, options.as);
 
     await wirePage(context, page, options, addFinding, consoleMessages);
 
@@ -376,6 +407,7 @@ async function main() {
     }
 
     await page.waitForTimeout(Math.max(0, options.waitMs));
+    if (options.axe) await checkAxe(page, addFinding);
 
     console.log(`[browser-audit] console warnings/errors=${consoleMessages.length}`);
     for (const message of consoleMessages) {

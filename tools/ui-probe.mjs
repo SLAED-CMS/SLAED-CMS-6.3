@@ -12,6 +12,8 @@
 // here once rather than twice. A page names its probe; the seed runs `make` before the walk and answers with the cookie
 // every context is then handed, and `gone` takes the state away afterwards. A run that dies before that leaves nothing
 // behind for long - the probe stamps its row with its own expiry.
+//
+// The login lives here too: the screenshot rig, the label crawl and the browser audit sign in and prove it one way.
 
 import { execFileSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
@@ -50,4 +52,20 @@ export function deleteSeededState(seed) {
       console.log('  the ' + kind + ' probe could not clear its own state: ' + err.message);
     }
   }
+}
+
+// Sign one context in through the form of tools/ui-shots.json and prove it: the password field leaves, the proof appears
+export async function setSession(page, conf, kind) {
+  const form = conf.auth[kind];
+  await page.goto(conf.base + form.url, { waitUntil: 'domcontentloaded' });
+  await page.fill(form.user, process.env[conf.env.user] || '');
+  await page.fill(form.pass, process.env[conf.env.pass] || '');
+  await page.locator(form.submit).first().click();
+  try {
+    await page.locator(form.gone).first().waitFor({ state: 'detached', timeout: 60000 });
+  } catch {
+    throw new Error('login as ' + kind + ' did not take: ' + form.gone + ' is still on the page after 60s');
+  }
+  await page.waitForLoadState('load');
+  if (!(await page.locator(form.proof).first().count())) throw new Error('login as ' + kind + ' did not take: ' + form.proof + ' is absent');
 }

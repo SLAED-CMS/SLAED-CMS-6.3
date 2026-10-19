@@ -207,9 +207,14 @@ into the plan, then do whatever work the step names.
 - [x] 87. UPDATE batch 11 — reference and the real keys; deletes `docs/11-UPDATE-2026.md`. The reference is
   `docs/UPDATE.md`; a test run trusts the test keys through `UPDATE_KEYS` (owner, 2026-10-18); the owner held the key
   ceremony and the factory keys with their fingerprints in `README.md` are real. (2026-10-18)
-- [ ] 88. ADMIN-UI batch 0 — *decision*: the nineteen open questions of the plan, the inventory of the panel lists for
+- [x] 88. ADMIN-UI batch 0 — *decision*: the nineteen open questions of the plan, the inventory of the panel lists for
   the canon, the baseline. Added by the owner on 2026-10-19 with the etalons `demo/admin/` and `demo/site/`; the former
   step 88 DIAL (the closed options dial `sl-dial` is three Tab stops a row, found 2026-10-09) is folded into batch 3.
+  The answers stand in the plan, "Ответы шага 0"; the window "Наблюдение" shows only the present, the session limit is
+  done now on the PHP session, every site sound with an event ships, the file manager stays outside the list canon
+  (owner, 2026-10-19); `axe-core` joined `tools/browser-audit.mjs` as `--axe`. The label crawl reads readable paths
+  again through `tests/Support/address_probe.php` and its baseline was rebuilt green, 442 routes and no violation
+  (owner, 2026-10-19). (2026-10-19)
 - [ ] 89. ADMIN-UI batch 1 — the base in JS: one notice with undo, one motion switch, the axis of `setSlideMotion()`,
   the toggle storage helper, the shared palette controller.
 - [ ] 90. ADMIN-UI batch 2 — the header: logo without `h1`, tab title, skip link, icons, the phone drawer.

@@ -37,9 +37,10 @@ function getUpdateView(): string {
     ];
     $rows = [];
     foreach ($list as [$label, $text]) $rows[] = ['label_html' => $label, 'has_field_text' => true, 'field_text' => $text];
+    $hid = getFieldIds('', 'sid')['hint'];
     $sid = $tpl->getHtmlFrag('code-block', ['lang_text' => 'sid', 'label_text' => _UPDATE_SID, 'copy_text' => _COPY, 'done_text' => _COPYDONE,
-        'content_html' => htmlspecialchars((string)$state['sid'], ENT_QUOTES, 'UTF-8')]);
-    $rows[] = ['label_html' => _UPDATE_SID, 'hint_html' => _UPDATE_SIDHINT, 'field_html' => $sid];
+        'describedby' => $hid, 'content_html' => htmlspecialchars((string)$state['sid'], ENT_QUOTES, 'UTF-8')]);
+    $rows[] = ['label_html' => _UPDATE_SID, 'hint_html' => _UPDATE_SIDHINT, 'hint_id' => $hid, 'field_html' => $sid];
     $last = getUpdateLast($state);
     $rows = array_merge($rows, $last['rows']);
     $cont .= $last['html'];
@@ -205,9 +206,10 @@ function getUpdateSettings(): string {
     $sets = $conf['update']['check'] ?? [];
     $back = (string)(Update::getState()['done']['back'] ?? '');
     $radio = static function (string $name, string $label, string $value, array $opts, string $hint = ''): array {
-        $lid = getFieldIds('', $name)['label'];
-        $field = getTplRadioGroup(['labelledby' => $lid, 'name' => $name, 'value' => $value, 'options' => $opts]);
-        return ['label_html' => $label, 'label_id' => $lid, 'hint_html' => $hint, 'field_html' => $field];
+        $ids = getFieldIds('', $name);
+        $hid = ($hint !== '') ? $ids['hint'] : '';
+        $field = getTplRadioGroup(['labelledby' => $ids['label'], 'describedby' => $hid, 'name' => $name, 'value' => $value, 'options' => $opts]);
+        return ['label_html' => $label, 'label_id' => $ids['label'], 'hint_html' => $hint, 'hint_id' => $hid, 'field_html' => $field];
     };
     $yesno = [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]];
     $sent = $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _UPDATE_SENT, 'messages' => [_UPDATE_S_ID, _UPDATE_S_VER, _UPDATE_S_ENV, _UPDATE_S_ERR, _UPDATE_S_HOST,
@@ -314,13 +316,14 @@ function getUpdateDeny(array $res): string {
 function setUpdateCode(string $title, string $lead, string $op, string $button, array $codes, bool $danger = false): void {
     global $afile, $tpl;
     $code = implode('-', str_split($codes['code'], 4));
+    $hid = getFieldIds('', 'code')['hint'];
     $block = $tpl->getHtmlFrag('code-block', ['lang_text' => 'code', 'label_text' => _UPDATE_CODE, 'copy_text' => _COPY, 'done_text' => _COPYDONE,
-        'content_html' => htmlspecialchars($code, ENT_QUOTES, 'UTF-8')]);
+        'describedby' => $hid, 'content_html' => htmlspecialchars($code, ENT_QUOTES, 'UTF-8')]);
     $form = $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php',
         'hidden' => array_map(static fn(string $key, string $val): array => ['name_attr' => $key, 'value_attr' => $val], ['name', 'op', 'token', 'apply'],
             ['update', $op, getSiteToken('update'), $codes['token']]),
-        'rows' => [['label_html' => _UPDATE_CODE, 'hint_html' => _UPDATE_CODEHINT, 'field_html' => $block]],
+        'rows' => [['label_html' => _UPDATE_CODE, 'hint_html' => _UPDATE_CODEHINT, 'hint_id' => $hid, 'field_html' => $block]],
         'submit_label' => $button,
         'is_danger' => $danger,
     ]);

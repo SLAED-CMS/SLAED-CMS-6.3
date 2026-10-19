@@ -43,7 +43,7 @@ import { createHash } from 'node:crypto';
 import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync, statSync, rmSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { getProbeAnswer, setSeededState, deleteSeededState } from './ui-probe.mjs';
+import { getProbeAnswer, setSeededState, deleteSeededState, setSession } from './ui-probe.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const conf = JSON.parse(readFileSync(join(root, 'tools/ui-shots.json'), 'utf8'));
@@ -463,20 +463,6 @@ async function getShotReason(page, was, now) {
   return match ? 'a changed rule matches ' + match : '';
 }
 
-// Sign one context in through the form the manifest names, and prove the session took two ways: something
-// only a session shows must appear, and the password field must be gone. One alone is not proof - the first
-// version of this asserted `.sl-user-card`, which the anonymous page also carries, so a login that never
-// happened passed and three states were baselined as the logged-out page nobody noticed they were
-async function setSession(page, kind) {
-  const form = conf.auth[kind];
-  await page.goto(conf.base + form.url, { waitUntil: 'domcontentloaded' });
-  await page.fill(form.user, user);
-  await page.fill(form.pass, pass);
-  await page.locator(form.submit).first().click();
-  await page.waitForLoadState('load');
-  await checkSession(page, kind);
-}
-
 // Throw unless the page shows the session of one kind by both of the proofs the manifest names
 async function checkSession(page, kind) {
   const form = conf.auth[kind];
@@ -821,7 +807,7 @@ async function checkNewTheme(browser, report) {
     const ctx = await browser.newContext({ ignoreHTTPSErrors: true, reducedMotion: 'reduce' });
     const page = await ctx.newPage();
     await page.setViewportSize({ width: 1200, height: 1000 });
-    await setSession(page, 'site');
+    await setSession(page, conf, 'site');
     for (const item of conf.pages) {
       if (item.theme === 'admin' || item.auth === 'admin') continue;
       const res = await page.goto(conf.base + item.url, { waitUntil: 'load' });
@@ -913,7 +899,7 @@ async function getSessionContext(kind, slot) {
     if (i === 2) await ctx.clearCookies();
     const page = await ctx.newPage();
     try {
-      await setSession(page, kind);
+      await setSession(page, conf, kind);
       await page.close();
       mkdirSync(guardDir, { recursive: true });
       await ctx.storageState({ path: keep });
