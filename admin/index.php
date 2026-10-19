@@ -366,29 +366,35 @@ function getAdminLoginForm(): void {
     setFoot();
 }
 
-# Store the editor an administrator picked, on the row and in the session, so every screen of the panel opens the same one
-function updateAdminEditor(): void {
-    global $db, $admin, $afile, $conf;
-    if (!checkAdminPost('changeeditor')) setRedirect($afile.'.php', true);
-    $key = getVar('post', 'editor', 'var', $conf['editor']['admin'] ?? 'plain');
-    $aid = (int)($admin[0] ?? 0);
-    $raw = base64_decode($_SESSION[$conf['admin_c']] ?? '', true);
-    if ($raw === false) {
-        setRedirect($afile.'.php', true);
+# Store one answer of the settings window the page has already applied, so the reply is a status: mode and motion as cookies, the editor on the row and in the session
+function setAdminOption(): void {
+    global $db, $admin, $conf;
+    if (!checkAdminPost('option')) {
+        http_response_code(403);
+        exit;
     }
-    $part = explode(':', $raw, 4);
-    if (count($part) !== 4) {
-        setRedirect($afile.'.php', true);
+    $key = getVar('post', 'key', 'var', '');
+    $val = getVar('post', 'value', 'var', '');
+    $part = explode(':', base64_decode($_SESSION[$conf['admin_c']] ?? '', true), 4);
+    if (!in_array($key, ['mode', 'still', 'editor'], true) || ($key === 'editor' && count($part) !== 4)) {
+        setAdminLog(['result' => 'refused']);
+        http_response_code(400);
+        exit;
     }
-    if (!Editor::isValidEditor($key, 'admin')) {
-        $key = $conf['editor']['admin'] ?? 'plain';
-        if (!Editor::isValidEditor($key, 'admin')) $key = 'plain';
+    if ($key === 'mode') {
+        setThemeMode($val);
+    } elseif ($key === 'still') {
+        if ($val === '1') setCookies('still', time() + 31536000, '1');
+        else setCookiesDelete('still');
+    } else {
+        if (!Editor::isValidEditor($val, 'admin')) $val = Editor::isValidEditor($conf['editor']['admin'] ?? '', 'admin') ? $conf['editor']['admin'] : 'plain';
+        $part[3] = $val;
+        $_SESSION[$conf['admin_c']] = base64_encode(implode(':', $part));
+        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_admins SET editor = :editor WHERE id = :id', ['editor' => $val, 'id' => (int)($admin[0] ?? 0)]);
     }
-    $part[3] = $key;
-    unset($_SESSION[$conf['admin_c']]);
-    $_SESSION[$conf['admin_c']] = base64_encode(implode(':', $part));
-    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_admins SET editor = :editor WHERE id = :id', ['editor' => $key, 'id' => $aid]);
-    setRedirect($afile.'.php', true);
+    setAdminLog(['result' => 'done']);
+    http_response_code(204);
+    exit;
 }
 
 # End the panel session: drop the session row, forget the administrator, and hand the browser back to the login page
@@ -398,13 +404,6 @@ function deleteAdminSession(): void {
     $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_session WHERE uname = :name AND guest = :guest', ['name' => $aname, 'guest' => '3']);
     unset($_SESSION[$conf['admin_c']], $admin);
     setRedirect($afile.'.php');
-}
-
-# Store the colour mode the toolbar toggle asked for; anything but light or dark drops the cookie and hands the page back to the operating system
-function setAdminThemeMode(): void {
-    global $afile;
-    if (checkAdminPost('mode')) setThemeMode(getVar('post', 'mode', 'var'));
-    setRedirect($afile.'.php', true);
 }
 
 # The language row of the settings window posts here; the choice is stored and the POST turns back into a GET, so the redirected request is the one that renders in the new locale
@@ -421,10 +420,8 @@ if (isAdmin()) {
     $id = getVar('req', 'id', 'num');
     $act = getVar('req', 'act', 'num');
     $pagetitle = $conf['defis'].' '._ADMINMENU;
-    if ($op == 'changeeditor') {
-        updateAdminEditor();
-    } elseif ($op == 'mode') {
-        setAdminThemeMode();
+    if ($op == 'option') {
+        setAdminOption();
     } elseif ($op == 'newlang') {
         setAdminLanguage();
     } elseif ($op == 'logout') {

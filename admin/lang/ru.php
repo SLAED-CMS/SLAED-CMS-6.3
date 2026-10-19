@@ -27,6 +27,7 @@ define('_ADM_FIND','Найти раздел');
 define('_ADM_NOFIND','Раздел не найден.');
 define('_ADM_BELL','Уведомления');
 define('_ADM_WAIT','Ждут внимания');
+define('_ADM_MOTION','Движение');
 define('_ADMINEMAIL','E-Mail администратора');
 define('_ADMINFOEDIT','Активировать редактор отдела информации?');
 define('_ADMININFO','Заметки администратора');

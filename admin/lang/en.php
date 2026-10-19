@@ -27,6 +27,7 @@ define('_ADM_FIND','Find a section');
 define('_ADM_NOFIND','No section found.');
 define('_ADM_BELL','Notifications');
 define('_ADM_WAIT','Awaiting attention');
+define('_ADM_MOTION','Motion');
 define('_ADMINEMAIL','Administrator Email');
 define('_ADMINFOEDIT','Activate the editor of the Department of information?');
 define('_ADMININFO','Note of the manager');

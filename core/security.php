@@ -474,6 +474,7 @@ function setExit(string $msg, string $typ = '', string $title = ''): never {
         'lang' => substr(_LOCALE, 0, 2),
         'theme' => $theme,
         'mode' => getThemeMode(),
+        'is_still' => isThemeStill(),
         'sitename' => $conf['sitename'] ?? '',
         'homeurl' => $conf['homeurl'] ?? '',
         'slogan' => $conf['slogan'] ?? '',

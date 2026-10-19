@@ -226,57 +226,55 @@ function getLanguageList(): array {
     return $list;
 }
 
-# Render one row of the settings window: the caption, the icon and the list of one axis, in the form that posts it to the handler that already owns that axis
-# The three axes differ in the handler, the field name, the icon, the caption and where the options come from, so they are one table rather than three functions
-# An axis with nothing to offer returns an empty string and the window draws one row fewer: the language axis when the site is not multilingual, any axis with no options
+# Render one settings row, the list captioned by its field: the language posts newlang and reloads, the rest go to op option and apply at once
 function getAdminSettingsRow(string $axis): string {
     global $admin, $conf, $afile, $locale, $tpl;
-    $opts = '';
+    $list = [];
     if ($axis === 'mode') {
-        $mode = getThemeMode();
-        $icon = ['light' => 'sun', 'auto' => 'circle-half', 'dark' => 'moon'];
-        $name = ['light' => _MODE_LIGHT, 'auto' => _MODE_AUTO, 'dark' => _MODE_DARK];
-        foreach (['light', 'auto', 'dark'] as $step) {
-            $opts .= $tpl->getHtmlFrag('select-option', ['value_attr' => $step, 'label_text' => $name[$step], 'is_selected' => $step === $mode]);
-        }
-        $row = ['op' => 'mode', 'field' => 'mode', 'icon' => $icon[$mode], 'title' => _THEME, 'hint' => $name[$mode]];
+        $list = ['light' => _MODE_LIGHT, 'auto' => _MODE_AUTO, 'dark' => _MODE_DARK];
+        $row = ['icon' => 'circle-half', 'title' => _THEME, 'now' => getThemeMode()];
+    } elseif ($axis === 'still') {
+        $list = ['0' => _ON, '1' => _OFF];
+        $row = ['icon' => 'magic', 'title' => _ADM_MOTION, 'now' => isThemeStill() ? '1' : '0'];
     } elseif ($axis === 'editor') {
-        $edkey = (string)($admin[3] ?? $conf['editor']['admin'] ?? 'plain');
-        $row = ['op' => 'changeeditor', 'field' => 'editor', 'icon' => getIconName('editor'), 'title' => _EDITOR, 'hint' => _EDITOR];
+        $row = ['icon' => getIconName('editor'), 'title' => _EDITOR, 'now' => (string)($admin[3] ?? $conf['editor']['admin'] ?? 'plain')];
     } else {
         if (($conf['multilingual'] ?? 0) != 1) return '';
-        foreach (getLanguageList() as $lang => $label) {
-            $opts .= $tpl->getHtmlFrag('select-option', ['value_attr' => $lang, 'label_text' => $label, 'is_selected' => $lang === $locale]);
-        }
-        $row = ['op' => 'newlang', 'field' => 'newlang', 'icon' => getIconName('language'), 'title' => _LANGUAGE, 'hint' => _LANGUAGE];
+        $list = getLanguageList();
+        $row = ['icon' => getIconName('language'), 'title' => _LANGUAGE, 'now' => $locale];
     }
-    $safe = htmlspecialchars($row['hint'], ENT_QUOTES, 'UTF-8');
-    $send = 'this.form.requestSubmit ? this.form.requestSubmit() : this.form.submit()';
-    $attr = 'onchange="'.$send.'" title="'.$safe.'" aria-label="'.$safe.'"';
+    $op = $axis === 'language' ? 'newlang' : 'option';
+    $field = $axis === 'language' ? 'newlang' : 'value';
+    $pid = 'sl-set-'.$axis;
     if ($axis === 'editor') {
-        $pick = Editor::getSelect('editor', $edkey, 'content', 'admin', $attr);
+        $pick = Editor::getSelect($field, $row['now'], 'content', 'admin', 'id="'.$pid.'"');
     } else {
-        if ($opts === '') return '';
-        $pick = $tpl->getHtmlFrag('select', ['name_attr' => $row['field'], 'select_class' => '', 'select_attr' => $attr, 'options_html' => $opts]);
+        if (!$list) return '';
+        $opts = '';
+        foreach ($list as $val => $label) {
+            $opts .= $tpl->getHtmlFrag('select-option', ['value_attr' => $val, 'label_text' => $label, 'is_selected' => (string)$val === $row['now']]);
+        }
+        $pick = $tpl->getHtmlFrag('select', ['name_attr' => $field, 'select_class' => '', 'selectid' => $pid, 'options_html' => $opts]);
     }
-    $hide = ['op' => $row['op'], 'refer' => '1', 'token' => getSiteToken($row['op'])];
+    $hide = ['op' => $op, 'token' => getSiteToken($op)] + ($op === 'option' ? ['key' => $axis] : ['refer' => '1']);
     $html = '';
     foreach ($hide as $key => $val) $html .= $tpl->getHtmlFrag('hidden', ['name_attr' => $key, 'value_attr' => $val, 'input_attr' => '']);
     return $tpl->getHtmlFrag('settings-row', [
         'action' => $afile.'.php',
         'hidden' => $html,
+        'axis' => $axis,
         'is_mode' => $axis === 'mode',
         'icon_name' => $row['icon'],
         'title' => $row['title'],
+        'pick_id' => $pid,
         'pick_html' => $pick,
     ]);
 }
 
-# Render the settings window of the panel: the three answers an administrator changes from any screen, each row posting to the handler that already owns it
-# Nothing is stored here and no handler learns about the others: the colour mode writes its cookie, the editor writes the administrator row, the language writes its own cookie
+# Render the settings window of the panel: the answers an administrator changes from any screen, applied where they stand except the language, which reloads
 function getAdminSettingsWindow(): string {
     global $tpl;
-    $rows = getAdminSettingsRow('mode').getAdminSettingsRow('editor').getAdminSettingsRow('language');
+    $rows = getAdminSettingsRow('mode').getAdminSettingsRow('still').getAdminSettingsRow('editor').getAdminSettingsRow('language');
     return $tpl->getHtmlFrag('window', [
         'win_id' => 'sl-settings',
         'size_class' => 'sl-modal-sm',

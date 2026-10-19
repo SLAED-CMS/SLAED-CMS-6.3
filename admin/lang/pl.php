@@ -27,6 +27,7 @@ define('_ADM_FIND','Znajdź sekcję');
 define('_ADM_NOFIND','Nie znaleziono sekcji.');
 define('_ADM_BELL','Powiadomienia');
 define('_ADM_WAIT','Wymaga uwagi');
+define('_ADM_MOTION','Ruch');
 define('_ADMINEMAIL','E-Mail admin');
 define('_ADMINFOEDIT','Aktywacja redaktor działu informacji?');
 define('_ADMININFO','Notatki admin');

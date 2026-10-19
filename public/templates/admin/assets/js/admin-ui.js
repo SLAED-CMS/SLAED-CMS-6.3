@@ -1289,6 +1289,33 @@
         document.addEventListener('visibilitychange', setQueueSeen);
         window.addEventListener('focus', setQueueSeen);
     }
+    // One answer of the settings window shows on the page itself: the colour mode and the motion are attributes of the root, the editor waits for the next screen
+    function setOptionView(axis, value) {
+        var root = document.documentElement;
+        if (axis === 'mode') root.setAttribute('data-theme', value);
+        if (axis === 'still') root.toggleAttribute('data-sl-still', value === '1');
+    }
+    // A settings row applies its answer at once and stores it silently, a refusal puts it back; the language posts its form, as only a new page renders a new locale
+    document.addEventListener('change', function (event) {
+        var pick = event.target;
+        var form = pick && pick.tagName === 'SELECT' ? pick.closest('form[data-sl-option]') : null;
+        if (!form) return;
+        var axis = form.getAttribute('data-sl-option');
+        if (axis === 'language') return form.requestSubmit ? form.requestSubmit() : form.submit();
+        var was = pick.querySelector('option[selected]');
+        setOptionView(axis, pick.value);
+        fetch(form.getAttribute('action'), { method: 'POST', body: new FormData(form), credentials: 'same-origin' })
+            .then(function (res) {
+                if (!res.ok) throw new Error('refused');
+                if (was) was.removeAttribute('selected');
+                pick.options[pick.selectedIndex].setAttribute('selected', '');
+            })
+            .catch(function () {
+                if (!was) return;
+                pick.value = was.value;
+                setOptionView(axis, was.value);
+            });
+    });
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', function () {
             addFileStep();

@@ -2001,6 +2001,7 @@ function setHead(array $seo = []): void {
         $adminvars = [
             'theme' => getTheme(),
             'mode' => getThemeMode(),
+            'is_still' => isThemeStill(),
             'lang' => substr(_LOCALE, 0, 2),
             'sitename' => $conf['sitename'] ?? '',
             'homeurl' => $conf['homeurl'] ?? '',
@@ -2099,6 +2100,7 @@ function setHead(array $seo = []): void {
     $sitevars = [
         'theme' => getTheme(),
         'mode' => getThemeMode(),
+        'is_still' => isThemeStill(),
         'mode_html' => getThemeModeSwitch(HOME_PATH.'index.php'),
         'lang' => substr(_LOCALE, 0, 2),
         'sitename' => $conf['sitename'] ?? '',
@@ -3716,6 +3718,11 @@ function getThemeMode(): string {
 function setThemeMode(string $mode): void {
     if (in_array($mode, ['light', 'dark'], true)) setCookies('mode', time() + 31536000, $mode);
     else setCookiesDelete('mode');
+}
+
+# Whether the visitor switched the motion off in the options of the panel; read before the first byte, so the page is still from its first paint
+function isThemeStill(): bool {
+    return getCookies('still') === '1';
 }
 
 # Render the colour mode control: the three modes with the one in force marked, so any of them is one press away and none of them has to be guessed

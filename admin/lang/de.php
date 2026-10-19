@@ -27,6 +27,7 @@ define('_ADM_FIND','Bereich finden');
 define('_ADM_NOFIND','Kein Bereich gefunden.');
 define('_ADM_BELL','Benachrichtigungen');
 define('_ADM_WAIT','Erfordert Aufmerksamkeit');
+define('_ADM_MOTION','Bewegung');
 define('_ADMINEMAIL','Administrator E-Mail');
 define('_ADMINFOEDIT','Aktivieren Herausgeber mit der Abteilung für Informationen?');
 define('_ADMININFO','Notizen des Administrators');

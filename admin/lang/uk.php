@@ -27,6 +27,7 @@ define('_ADM_FIND','Знайти розділ');
 define('_ADM_NOFIND','Розділ не знайдено.');
 define('_ADM_BELL','Сповіщення');
 define('_ADM_WAIT','Чекають уваги');
+define('_ADM_MOTION','Рух');
 define('_ADMINEMAIL','E-Mail адміністратора');
 define('_ADMINFOEDIT','Активувати редактор відділу інформації?');
 define('_ADMININFO','Нотатки адміністратора');

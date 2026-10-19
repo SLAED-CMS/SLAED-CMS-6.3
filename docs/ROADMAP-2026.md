@@ -230,7 +230,11 @@ into the plan, then do whatever work the step names.
   The source is `getAdminQueues()`, the bell `fragments/bell.html`, the chip `sl-queue` on every section with a queue
   ("Материалы" sums its types), the block tone `sl-block-menu` / `sl-block-queue`; the poll `getAdminQueueData` runs once
   a minute for every administrator (owner, 2026-10-19). (2026-10-19)
-- [ ] 93. ADMIN-UI batch 5 — the option op and its cookie, "Опции" without reload, the row "Движение".
+- [x] 93. ADMIN-UI batch 5 — the option op and its cookie, "Опции" without reload, the row "Движение". The op is
+  `option` (`setAdminOption()`, 204), the motion cookie `still` read by `isThemeStill()` into `data-sl-still` of all
+  five documents; `mode` and `changeeditor` of the panel are gone, the language keeps `newlang` and its reload; `_ON`,
+  `_OFF`, `_ADM_MOTION` (owner, 2026-10-19). The stand's `config/local.php` was rebuilt for the version map and issued
+  a new master (owner, 2026-10-20). (2026-10-20)
 - [ ] 94. ADMIN-UI batch 6 — Ctrl+K and the rail.
 - [ ] 95. ADMIN-UI batch 7 — the end of the session.
 - [ ] 96. ADMIN-UI batch 8 — the list canon, frame, on "Комментарии": fragment, filter, address, tabs, pagers.

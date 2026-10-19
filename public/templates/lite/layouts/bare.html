@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="{{ lang }}" data-theme="{{ mode }}">
+<html lang="{{ lang }}" data-theme="{{ mode }}"{% if is_still %} data-sl-still{% endif %}>
 <head>
   <title>{% block title %}{% if title %}{{ title }}{% else %}{{ sitename }}{% endif %}{% endblock %}</title>
   {{{ meta }}}

@@ -27,6 +27,7 @@ define('_ADM_FIND','Trouver une section');
 define('_ADM_NOFIND','Aucune section trouvée.');
 define('_ADM_BELL','Notifications');
 define('_ADM_WAIT','Requiert votre attention');
+define('_ADM_MOTION','Mouvement');
 define('_ADMINEMAIL','E-Mail admin');
 define('_ADMINFOEDIT',"Activer le rédacteur en chef du département de l'information?");
 define('_ADMININFO','Notes administrateur');
