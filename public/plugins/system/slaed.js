@@ -2415,6 +2415,12 @@
                 setWindowOpen(more);
             }
         });
+        // A request htmx fires on its own clock is a poll, which the panel session does not count as an action
+        document.addEventListener('htmx:configRequest', function (event) {
+            var elt = event.detail.elt;
+            if (event.detail.triggeringEvent || !elt || !/\bevery\b/.test(elt.getAttribute('hx-trigger') || '')) return;
+            event.detail.headers['X-SL-Poll'] = '1';
+        });
         // Paused live boxes swallow their htmx polls; direct clicks keep working
         document.addEventListener('htmx:beforeRequest', function (event) {
             var trig = event.detail && event.detail.requestConfig ? event.detail.requestConfig.triggeringEvent : null;

@@ -45,6 +45,7 @@ function getAdminMenu(string $name, array $mod, bool $open = false): string {
         $view = (int)($mod['view'] ?? 0);
         $who = ($view === 2) ? _MVADMIN : (($view === 1) ? _MVUSERS : _MVALL);
         return $tpl->getHtmlFrag('menu-grid-item', [
+            'key' => $name,
             'url' => $url,
             'title' => $title,
             'title_attr' => $ltitle,
@@ -126,6 +127,7 @@ function getAdminPanel(): void {
                 'panel_id' => 'sl_panel_admin',
                 'title' => _MODADMINPANEL,
                 'icon_name' => 'person-gear',
+                'is_find' => true,
                 'content_html' => $tpl->getHtmlPart('div', ['is_menu_grid' => true, 'content_html' => implode('', $items)]),
             ]);
         }
@@ -145,6 +147,7 @@ function getAdminPanel(): void {
             'panel_id' => 'sl_panel_site',
             'title' => _MODSITEPANEL,
             'icon_name' => 'people',
+            'is_find' => true,
             'content_html' => $tpl->getHtmlPart('div', ['is_menu_grid' => true, 'content_html' => implode('', $items)]),
         ]);
     }
@@ -247,6 +250,7 @@ function checkAdminLogin(): void {
         unset($_SESSION[$conf['admin_c']]);
         $info = base64_encode($aid.':'.$aname.':'.$apwd.':'.$aeditor);
         $_SESSION[$conf['admin_c']] = $info;
+        $_SESSION[$conf['admin_c'].'-time'] = time();
         $ip = getip();
         $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_session WHERE uname = :ip', ['ip' => $ip]);
         $db->getSqlQuery('UPDATE '.PREFIX_DB.'_admins SET ip = :ip, lastvis = now() WHERE id = :id', ['ip' => $ip, 'id' => $aid]);
@@ -366,7 +370,7 @@ function getAdminLoginForm(): void {
     setFoot();
 }
 
-# Store one answer of the settings window the page has already applied, so the reply is a status: mode and motion as cookies, the editor on the row and in the session
+# Store one answer the page has already applied, so the reply is a status: mode, motion and the rail as cookies, the editor on the row and in the session
 function setAdminOption(): void {
     global $db, $admin, $conf;
     if (!checkAdminPost('option')) {
@@ -376,16 +380,16 @@ function setAdminOption(): void {
     $key = getVar('post', 'key', 'var', '');
     $val = getVar('post', 'value', 'var', '');
     $part = explode(':', base64_decode($_SESSION[$conf['admin_c']] ?? '', true), 4);
-    if (!in_array($key, ['mode', 'still', 'editor'], true) || ($key === 'editor' && count($part) !== 4)) {
+    if (!in_array($key, ['mode', 'still', 'rail', 'editor'], true) || ($key === 'editor' && count($part) !== 4)) {
         setAdminLog(['result' => 'refused']);
         http_response_code(400);
         exit;
     }
     if ($key === 'mode') {
         setThemeMode($val);
-    } elseif ($key === 'still') {
-        if ($val === '1') setCookies('still', time() + 31536000, '1');
-        else setCookiesDelete('still');
+    } elseif ($key !== 'editor') {
+        if ($val === '1') setCookies($key, time() + 31536000, '1');
+        else setCookiesDelete($key);
     } else {
         if (!Editor::isValidEditor($val, 'admin')) $val = Editor::isValidEditor($conf['editor']['admin'] ?? '', 'admin') ? $conf['editor']['admin'] : 'plain';
         $part[3] = $val;
@@ -397,12 +401,23 @@ function setAdminOption(): void {
     exit;
 }
 
+# Keep the panel session from its end window: the request itself is the action core/security.php counts, so the answer is a status
+function updateAdminSession(): void {
+    if (!checkAdminPost('keep')) {
+        http_response_code(403);
+        exit;
+    }
+    setAdminLog(['result' => 'done']);
+    http_response_code(204);
+    exit;
+}
+
 # End the panel session: drop the session row, forget the administrator, and hand the browser back to the login page
 function deleteAdminSession(): void {
     global $db, $admin, $afile, $conf;
     $aname = filterText(substr($admin[1], 0, 25), 1);
     $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_session WHERE uname = :name AND guest = :guest', ['name' => $aname, 'guest' => '3']);
-    unset($_SESSION[$conf['admin_c']], $admin);
+    unset($_SESSION[$conf['admin_c']], $_SESSION[$conf['admin_c'].'-time'], $admin);
     setRedirect($afile.'.php');
 }
 
@@ -424,6 +439,8 @@ if (isAdmin()) {
         setAdminOption();
     } elseif ($op == 'newlang') {
         setAdminLanguage();
+    } elseif ($op == 'keep') {
+        updateAdminSession();
     } elseif ($op == 'logout') {
         deleteAdminSession();
     } elseif ($panel) {

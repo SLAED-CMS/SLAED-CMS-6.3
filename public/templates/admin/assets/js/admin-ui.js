@@ -1133,7 +1133,12 @@
         }
         addSetupPart();
     }
-    // A block of the menu folded by hand shows its sections while a search runs, and takes its own state back once the field is empty
+    var phone = window.matchMedia('(max-width: 900px)');
+    // Whether the menu stands folded into the rail; a phone keeps its drawer and has none
+    function isMenuRail() {
+        return document.documentElement.hasAttribute('data-sl-rail') && !phone.matches;
+    }
+    // A block folded by hand shows its sections while a search runs or the rail stands, and takes its own state back after
     function setMenuOpen(box, force) {
         if (force && !box.hasAttribute('data-sl-keep')) {
             box.setAttribute('data-sl-keep', JSON.stringify([box.hidden, box.style.display]));
@@ -1146,32 +1151,132 @@
             box.style.display = was[1];
         }
     }
-    // The find field narrows the sections of the menu by name and module word; the other blocks of the column step aside meanwhile
+    // The find field narrows the sections where they are listed, the menu of a screen or the cards of the home; the other blocks of the menu step aside
     function setMenuFind() {
         var find = document.querySelector('[data-sl-menu-find]');
-        var menu = document.getElementById('sl-menu');
-        if (!find || !menu) return;
-        var term = find.value.trim().toLowerCase();
-        var seen = 0;
-        menu.querySelectorAll('[data-sl-find-group]').forEach(function (group) {
-            var hits = 0;
-            var box = group.querySelector('[data-sl-toggle]');
-            group.querySelectorAll('[data-sl-menu-item]').forEach(function (item) {
-                var hit = !term || (item.textContent + ' ' + item.getAttribute('data-sl-menu-item')).toLowerCase().indexOf(term) !== -1;
-                item.hidden = !hit;
-                if (hit) hits += 1;
+        var term = find ? find.value.trim().toLowerCase() : '';
+        document.querySelectorAll('#sl-menu, .sl-admin-content').forEach(function (scope) {
+            var groups = scope.querySelectorAll('[data-sl-find-group]');
+            var seen = 0;
+            groups.forEach(function (group) {
+                var hits = 0;
+                group.querySelectorAll('[data-sl-menu-item]').forEach(function (item) {
+                    var hit = !term || (item.textContent + ' ' + item.getAttribute('data-sl-menu-item')).toLowerCase().indexOf(term) !== -1;
+                    item.hidden = !hit;
+                    if (hit) hits += 1;
+                });
+                group.hidden = term !== '' && hits === 0;
+                seen += hits;
             });
-            group.hidden = term !== '' && hits === 0;
-            seen += hits;
-            if (box) setMenuOpen(box, term !== '');
+            if (groups.length && scope.id === 'sl-menu') {
+                scope.querySelectorAll('.sl-block-sidebar:not([data-sl-find-group])').forEach(function (block) { block.hidden = term !== ''; });
+            }
+            scope.querySelectorAll('[data-sl-menu-empty]').forEach(function (note) {
+                note.textContent = (groups.length && term !== '' && seen === 0) ? note.getAttribute('data-sl-menu-empty') : '';
+            });
         });
-        menu.querySelectorAll('.sl-block-sidebar:not([data-sl-find-group])').forEach(function (block) { block.hidden = term !== ''; });
-        menu.querySelectorAll('[data-sl-menu-empty]').forEach(function (note) { note.textContent = (term !== '' && seen === 0) ? note.getAttribute('data-sl-menu-empty') : ''; });
+        document.querySelectorAll('#sl-menu .sl-block-sidebar-content[data-sl-toggle]').forEach(function (box) { setMenuOpen(box, term !== '' || isMenuRail()); });
+        document.querySelectorAll('.sl-admin-content .sl-dashboard-panel-content[data-sl-toggle]').forEach(function (box) { setMenuOpen(box, term !== ''); });
     }
     document.addEventListener('input', function (event) {
         if (event.target && event.target.matches && event.target.matches('[data-sl-menu-find]')) setMenuFind();
     });
-    var phone = window.matchMedia('(max-width: 900px)');
+    // Fold the menu into the rail and back: the root attribute at once, the width moving only under a hand, the choice kept in its cookie
+    function setMenuRail(on) {
+        var root = document.documentElement;
+        root.setAttribute('data-sl-rail-anim', '');
+        window.setTimeout(function () { root.removeAttribute('data-sl-rail-anim'); }, 400);
+        root.toggleAttribute('data-sl-rail', on);
+        document.querySelectorAll('[data-sl-rail-toggle]').forEach(function (btn) {
+            var name = btn.getAttribute(on ? 'data-sl-unfold' : 'data-sl-fold');
+            btn.setAttribute('aria-expanded', on ? 'false' : 'true');
+            btn.setAttribute('aria-label', name);
+            btn.title = name + ' ( [ )';
+            btn.querySelector('.bi').className = 'bi ' + (on ? 'bi-layout-sidebar' : 'bi-layout-sidebar-inset');
+        });
+        setMenuFind();
+        setOptionSend('rail', on ? '1' : '0').catch(function () {});
+    }
+    // Arrows walk the icons of the rail as in a menu; Tab still passes through them in order
+    function setRailStep(event) {
+        var sel = '#sl-menu .sl-menu-tool, #sl-menu [data-sl-menu-item] > a, #sl-menu .sl-block-sidebar-count-label a';
+        var items = Array.prototype.filter.call(document.querySelectorAll(sel), function (one) { return one.getClientRects().length > 0; });
+        var at = items.indexOf(document.activeElement);
+        if (at < 0) return;
+        event.preventDefault();
+        items[(at + (event.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length].focus();
+    }
+    // One row of the palette for every section the page links, its icon and name taken from the link, each address once
+    function setPaletteParts(pal) {
+        var group = pal.querySelector('[data-sl-pal-parts]');
+        var tpl = group.querySelector('template[data-sl-pal-part]');
+        var seen = {};
+        document.querySelectorAll('#sl-menu [data-sl-menu-item] > a, .sl-admin-content [data-sl-menu-item] > a').forEach(function (link, i) {
+            var row, icon, name;
+            if (seen[link.href]) return;
+            seen[link.href] = true;
+            icon = link.querySelector('.bi');
+            name = link.querySelector('.sl-menu-name');
+            row = tpl.content.firstElementChild.cloneNode(true);
+            row.id = 'sl-pal-part-' + i;
+            row.setAttribute('data-sl-pal-href', link.href);
+            if (icon) row.querySelector('.bi').className = icon.className;
+            row.querySelector('.sl-editor-pal-name').textContent = (name || link).textContent.trim();
+            group.appendChild(row);
+        });
+    }
+    // Open the palette of the panel: its sections gathered once, the fold named for what it will do and offered only where a rail can stand
+    function setPanelPalette() {
+        var pal = document.getElementById('sl-palette');
+        var fold;
+        if (!pal || !window.setPaletteOpen) return;
+        if (!pal.slParts) {
+            pal.slParts = true;
+            setPaletteParts(pal);
+        }
+        fold = pal.querySelector('[data-sl-pal-act="rail"]');
+        fold.slOff = phone.matches || !document.querySelector('[data-sl-rail-toggle]');
+        fold.slName = fold.getAttribute(isMenuRail() ? 'data-sl-unfold' : 'data-sl-fold');
+        window.setPaletteOpen(pal, setPaletteRun, '');
+    }
+    // Run the command the palette chose once it has closed: a section opens, an action goes through the control it stands for
+    function setPaletteRun(row) {
+        var act = row.getAttribute('data-sl-pal-act');
+        var href = row.getAttribute('data-sl-pal-href');
+        var pick;
+        if (href) return window.location.assign(href);
+        if (act === 'rail') return setMenuRail(!isMenuRail());
+        if (act === 'options') return window.setWindowOpen(document.getElementById('sl-settings'));
+        pick = document.getElementById('sl-set-' + act);
+        if (!pick) return;
+        pick.value = act === 'mode' ? row.getAttribute('data-sl-pal-arg') : (pick.value === '1' ? '0' : '1');
+        pick.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+    // Keys of the whole panel: Ctrl+K the palette, [ the rail, / the find field, arrows in the rail; a field, a window or an editor keeps its own
+    document.addEventListener('keydown', function (event) {
+        var find;
+        if (event.defaultPrevented || event.isComposing) return;
+        if ((event.ctrlKey || event.metaKey) && !event.altKey && !event.shiftKey && event.code === 'KeyK') {
+            if (!document.getElementById('sl-palette') || document.querySelector('dialog[open]')) return;
+            event.preventDefault();
+            setPanelPalette();
+            return;
+        }
+        if (event.ctrlKey || event.metaKey || event.altKey) return;
+        if (isMenuRail() && (event.key === 'ArrowDown' || event.key === 'ArrowUp')) return setRailStep(event);
+        if (event.target.closest && event.target.closest('input, select, textarea, dialog, [contenteditable]')) return;
+        if (event.code === 'BracketLeft' && !phone.matches && document.querySelector('[data-sl-rail-toggle]')) {
+            event.preventDefault();
+            setMenuRail(!isMenuRail());
+            return;
+        }
+        find = document.querySelector('[data-sl-menu-find]');
+        if (event.key === '/' && find && find.getClientRects().length && window.getComputedStyle(find).visibility === 'visible') {
+            event.preventDefault();
+            find.focus();
+        }
+    });
+    phone.addEventListener('change', setMenuFind);
     var held = [];
     // The drawer of a phone: the rest of the page goes inert while it is open, the focus comes back to the menu button
     function setDrawer(open) {
@@ -1201,6 +1306,8 @@
         if (!event.target.closest) return;
         if (event.target.closest('[data-sl-menu-open]')) setDrawer(!document.body.hasAttribute('data-sl-drawer'));
         else if (event.target.closest('[data-sl-menu-close]')) setDrawer(false);
+        else if (event.target.closest('[data-sl-pal-open]')) setPanelPalette();
+        else if (event.target.closest('[data-sl-rail-toggle]')) setMenuRail(!isMenuRail());
     });
     document.addEventListener('keydown', function (event) {
         if (event.key === 'Escape' && document.body.hasAttribute('data-sl-drawer')) setDrawer(false);
@@ -1281,19 +1388,71 @@
         if (!bell) return;
         queue.sum = Number(bell.querySelector('[data-sl-bell-sum]').textContent) || 0;
         window.setInterval(function () {
-            fetch(bell.getAttribute('data-sl-bell'), { credentials: 'same-origin', headers: { 'Accept': 'application/json' } })
+            fetch(bell.getAttribute('data-sl-bell'), { credentials: 'same-origin', headers: { 'Accept': 'application/json', 'X-SL-Poll': '1' } })
                 .then(function (res) { return res.ok ? res.json() : null; })
-                .then(function (list) { if (Array.isArray(list)) setQueueView(list); })
+                .then(function (data) {
+                    if (!data || !Array.isArray(data.rows)) return;
+                    setQueueView(data.rows);
+                    setSessionLeft(data.left);
+                })
                 .catch(function () {});
         }, 60000);
         document.addEventListener('visibilitychange', setQueueSeen);
         window.addEventListener('focus', setQueueSeen);
     }
+    var sess = { end: 0, max: 0, warn: 0 };
+    // The server names the seconds the session has left: on the page, after "Extend" and in every answer of the poll, which an action in another tab moves
+    function setSessionLeft(left) {
+        if (!sess.max || typeof left !== 'number') return;
+        sess.end = Date.now() + left * 1000;
+        setSessionTick();
+    }
+    // Э14 The window of the session end opens before the idle limit and counts down; at zero the page leaves for the login form
+    function setSessionTick() {
+        var box = document.getElementById('sl-session');
+        var left = Math.max(0, Math.round((sess.end - Date.now()) / 1000));
+        if (left === 0) return window.location.assign(window.location.href.split('#')[0]);
+        if (left > sess.warn) {
+            if (box.open) window.setWindowClose(box);
+            return;
+        }
+        box.querySelectorAll('[data-sl-sess-left]').forEach(function (node) { node.textContent = Math.floor(left / 60) + ':' + String(left % 60).padStart(2, '0'); });
+        if (!box.open) window.setWindowOpen(box);
+    }
+    // The count starts from the limit the page was rendered with, as rendering it was an action
+    function setSessionWatch() {
+        var box = document.getElementById('sl-session');
+        sess.max = box ? Number(box.getAttribute('data-sl-sess')) || 0 : 0;
+        if (!sess.max) return;
+        sess.warn = Math.min(120, Math.floor(sess.max / 2));
+        setSessionLeft(sess.max);
+        window.setInterval(setSessionTick, 1000);
+    }
+    // "Extend" posts op keep without leaving the page; the answer 204 restarts the count from the full limit
+    document.addEventListener('submit', function (event) {
+        var form = event.target.closest ? event.target.closest('form[data-sl-sess-keep]') : null;
+        if (!form) return;
+        event.preventDefault();
+        fetch(form.getAttribute('action'), { method: 'POST', body: new FormData(form), credentials: 'same-origin' })
+            .then(function (res) { if (res.ok) setSessionLeft(sess.max); })
+            .catch(function () {});
+    });
     // One answer of the settings window shows on the page itself: the colour mode and the motion are attributes of the root, the editor waits for the next screen
     function setOptionView(axis, value) {
         var root = document.documentElement;
         if (axis === 'mode') root.setAttribute('data-theme', value);
         if (axis === 'still') root.toggleAttribute('data-sl-still', value === '1');
+    }
+    // Store one answer through op option with the token of the settings window, whose rows all carry the same one; a refusal rejects
+    function setOptionSend(key, value) {
+        var form = document.querySelector('form[data-sl-option]:not([data-sl-option="language"])');
+        var body;
+        if (!form) return Promise.reject(new Error('no form'));
+        body = new FormData(form);
+        body.set('key', key);
+        body.set('value', value);
+        return fetch(form.getAttribute('action'), { method: 'POST', body: body, credentials: 'same-origin' })
+            .then(function (res) { if (!res.ok) throw new Error('refused'); });
     }
     // A settings row applies its answer at once and stores it silently, a refusal puts it back; the language posts its form, as only a new page renders a new locale
     document.addEventListener('change', function (event) {
@@ -1304,9 +1463,8 @@
         if (axis === 'language') return form.requestSubmit ? form.requestSubmit() : form.submit();
         var was = pick.querySelector('option[selected]');
         setOptionView(axis, pick.value);
-        fetch(form.getAttribute('action'), { method: 'POST', body: new FormData(form), credentials: 'same-origin' })
-            .then(function (res) {
-                if (!res.ok) throw new Error('refused');
+        setOptionSend(axis, pick.value)
+            .then(function () {
                 if (was) was.removeAttribute('selected');
                 pick.options[pick.selectedIndex].setAttribute('selected', '');
             })
@@ -1323,6 +1481,8 @@
             setSetupRun();
             addRankForm();
             setQueuePoll();
+            setSessionWatch();
+            setMenuFind();
         });
     } else {
         addFileStep();
@@ -1330,5 +1490,7 @@
         setSetupRun();
         addRankForm();
         setQueuePoll();
+        setSessionWatch();
+        setMenuFind();
     }
 })();

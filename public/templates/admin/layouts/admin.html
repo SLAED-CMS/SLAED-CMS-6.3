@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="{{ lang }}" data-theme="{{ mode }}"{% if is_still %} data-sl-still{% endif %}>
+<html lang="{{ lang }}" data-theme="{{ mode }}"{% if is_still %} data-sl-still{% endif %}{% if is_rail %} data-sl-rail{% endif %}>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 {{{ meta }}}
@@ -23,8 +23,8 @@
       </header>
       <div class="sl-admin-main">
         <div class="sl-menu-scrim" data-sl-menu-close aria-hidden="true"></div>
-        <aside class="sl-admin-sidebar" id="sl-menu" aria-label="{{ _ADM_MENU }}"><div class="sl-menu-top">{% if not is_home %}<div class="sl-menu-find"><label class="sl-visually-hidden" for="sl-menu-q">{{ _ADM_FIND }}</label><i class="bi bi-search" aria-hidden="true"></i><input type="search" id="sl-menu-q" placeholder="{{ _ADM_FIND }}" autocomplete="off" data-sl-menu-find></div>{% endif %}<button type="button" class="sl-menu-tool sl-menu-close" data-sl-menu-close title="{{ _CLOSE }}" aria-label="{{ _CLOSE }}"><i class="bi bi-x-lg" aria-hidden="true"></i></button></div>{% if not is_home %}<p class="sl-menu-empty" data-sl-menu-empty="{{ _ADM_NOFIND }}" role="status"></p>{% endif %}{{{ admin_blocks }}}</aside>
-        <main class="sl-admin-content" id="sl-main" tabindex="-1"><div class="sl-admin-content-inner">{% if is_home %}<h1 class="sl-visually-hidden">{{ section }}</h1>{% endif %}{% block content %}{% endblock %}</div></main>
+        <aside class="sl-admin-sidebar" id="sl-menu" aria-label="{{ _ADM_MENU }}"><div class="sl-menu-top"><div class="sl-menu-find"><label class="sl-visually-hidden" for="sl-menu-q">{{ _ADM_FIND }}</label><i class="bi bi-search" aria-hidden="true"></i><input type="search" id="sl-menu-q" placeholder="{{ _ADM_FIND }}" autocomplete="off" aria-keyshortcuts="/" data-sl-menu-find></div><button type="button" class="sl-menu-tool sl-menu-pal" data-sl-pal-open title="{{ _ADM_GOTO }} (Ctrl+K)" aria-keyshortcuts="Control+K"><span class="sl-visually-hidden">{{ _ADM_GOTO }}</span><kbd>Ctrl</kbd><kbd>K</kbd><i class="bi bi-search" aria-hidden="true"></i></button><button type="button" class="sl-menu-tool sl-menu-fold" data-sl-rail-toggle data-sl-fold="{{ _ADM_FOLD }}" data-sl-unfold="{{ _ADM_UNFOLD }}" aria-controls="sl-menu" aria-keyshortcuts="[" {% if is_rail %}aria-expanded="false" title="{{ _ADM_UNFOLD }} ( [ )" aria-label="{{ _ADM_UNFOLD }}"><i class="bi bi-layout-sidebar" aria-hidden="true"></i>{% else %}aria-expanded="true" title="{{ _ADM_FOLD }} ( [ )" aria-label="{{ _ADM_FOLD }}"><i class="bi bi-layout-sidebar-inset" aria-hidden="true"></i>{% endif %}</button><button type="button" class="sl-menu-tool sl-menu-close" data-sl-menu-close title="{{ _CLOSE }}" aria-label="{{ _CLOSE }}"><i class="bi bi-x-lg" aria-hidden="true"></i></button></div>{% if not is_home %}<p class="sl-menu-empty" data-sl-menu-empty="{{ _ADM_NOFIND }}" role="status"></p>{% endif %}{{{ admin_blocks }}}</aside>
+        <main class="sl-admin-content" id="sl-main" tabindex="-1"><div class="sl-admin-content-inner">{% if is_home %}<h1 class="sl-visually-hidden">{{ section }}</h1><p class="sl-menu-empty" data-sl-menu-empty="{{ _ADM_NOFIND }}" role="status"></p>{% endif %}{% block content %}{% endblock %}</div></main>
       </div>
       <div class="sl-footer sl-admin-footer">
         <div class="sl-copyright">{% if time_html %}{{{ time_html }}}<br>{% endif %}{{{ license }}}</div>
@@ -34,6 +34,14 @@
     <div class="sl-wrapfoot"></div>
     {{{ windows_html }}}
     {{{ settings_win }}}
+    {% include 'fragments/palette.html' %}
+    {% if sess_max %}
+    <dialog class="sl-modal sl-modal-sm sl-modal-warn" id="sl-session" data-sl-sess="{{ sess_max }}" data-sl-static aria-labelledby="sl-sess-cap" aria-describedby="sl-sess-text">
+      <div class="sl-modal-title"><i class="bi bi-hourglass-split" aria-hidden="true"></i> <span class="sl-modal-cap"><strong id="sl-sess-cap">{{ _ADM_END }}</strong></span></div>
+      <div class="sl-modal-body"><p id="sl-sess-text">{{ _ADM_LEFT }} <b data-sl-sess-left></b>. {{ _ADM_LOST }}</p></div>
+      <form class="sl-modal-foot" method="post" action="{{ sess_url }}" data-sl-sess-keep><input type="hidden" name="op" value="keep"><input type="hidden" name="token" value="{{ sess_token }}"><a class="sl-modal-btn" href="{{ sess_url }}?op=logout">{{ _LOGOUT }}</a> <button type="submit" class="sl-modal-btn sl-modal-btn-main" data-sl-focus>{{ _ADM_KEEP }}</button></form>
+    </dialog>
+    {% endif %}
     {% if debug_html %}
     <div id="sl_debugger" data-sl-toggle="sl_debugger" data-sl-toggle-default="open">
     {{{ debug_html }}}

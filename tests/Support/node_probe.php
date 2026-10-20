@@ -482,7 +482,7 @@ function setProbeVisitor(string $who): void {
     $_REQUEST = $_GET + $_POST;
     if (isset($users[$who])) $_COOKIE[$glob['user_c'].'-account'] = base64_encode($users[$who]);
     if (session_status() === PHP_SESSION_NONE) session_start();
-    if (isset($admins[$who])) $_SESSION[$glob['admin_c']] = base64_encode($admins[$who]);
+    if (isset($admins[$who])) [$_SESSION[$glob['admin_c']], $_SESSION[$glob['admin_c'].'-time']] = [base64_encode($admins[$who]), time()];
 }
 
 # The context the booted request of one visitor gets, twice, with the statements the second call cost

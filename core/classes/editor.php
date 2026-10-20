@@ -288,7 +288,7 @@ class Editor {
             'format_text' => _EDITOR_GRPFORMAT,
             'insert_text' => _EDITOR_GRPINSERT,
             'view_text' => _EDITOR_GRPVIEW,
-            'none_text' => _EDITOR_NONE,
+            'none_text' => _NONE_FOUND,
             'keys_text' => _EDITOR_KEYS,
             'keynext_text' => _EDITOR_KEYNEXT,
             'keyline_text' => _EDITOR_KEYLINE,

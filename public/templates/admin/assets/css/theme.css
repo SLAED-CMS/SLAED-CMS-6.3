@@ -2715,7 +2715,8 @@ pre code.hljs {
   font-size: var(--sl-font-small);
 }
 
-.sl-editor-pal kbd {
+.sl-editor-pal kbd,
+.sl-menu-pal kbd {
   display: inline-block;
   padding: 0 var(--sl-space-1);
   border: 1px solid var(--sl-border-strong);
@@ -8385,6 +8386,7 @@ body[data-sl-pointer] .sl-admin-login-card:has(.sl-setup)::after {
   outline-offset: var(--sl-ring-gap);
 }
 
+.sl-menu-pal > .bi,
 .sl-menu-close,
 .sl-menu-scrim {
   display: none;
@@ -8434,6 +8436,209 @@ body[data-sl-pointer] .sl-admin-login-card:has(.sl-setup)::after {
 /* The note is a live region standing in the page from the start, so a reader hears it; empty, it takes no room */
 .sl-menu-empty:empty {
   margin: 0;
+}
+
+/* The rail: the same menu folded into a bar of icons dressed as the top toolbar; a phone keeps its drawer and has no rail */
+@media (width > 900px) {
+  /* The width moves only under a hand: a page that opens folded is folded from its first paint */
+  :root[data-sl-rail-anim] .sl-admin-main {
+    transition: grid-template-columns var(--sl-time-slow) var(--sl-ease-out);
+  }
+
+  :root[data-sl-rail] .sl-admin-main {
+    grid-template-columns: calc(var(--sl-size-control) + var(--sl-space-2) * 3 + var(--sl-space-1) + var(--sl-space-3) * 2) minmax(0, 1fr);
+  }
+
+  :root[data-sl-rail] .sl-wrapper.sl-admin-shell .sl-admin-sidebar {
+    align-self: start;
+    margin: var(--sl-space-3);
+    padding: var(--sl-space-2);
+    border: 1px solid var(--sl-border);
+    border-radius: var(--sl-radius-2);
+    background: linear-gradient(to bottom, var(--sl-bg) 0%, var(--sl-bg-muted) 100%);
+    box-shadow: var(--sl-bar-shadow);
+  }
+
+  :root[data-sl-rail] .sl-menu-top {
+    flex-direction: column;
+    gap: var(--sl-space-2);
+    margin: 0;
+  }
+
+  /* Only icons stand in the rail: the field, the keys, the note, the heads of the blocks and the blocks that are no menu step out */
+  :root[data-sl-rail] .sl-menu-find,
+  :root[data-sl-rail] .sl-menu-pal kbd,
+  :root[data-sl-rail] .sl-admin-sidebar .sl-menu-empty,
+  :root[data-sl-rail] .sl-admin-sidebar .sl-block-sidebar h3,
+  :root[data-sl-rail] .sl-admin-sidebar .sl-block-sidebar:not(.sl-block-menu, .sl-block-queue) {
+    display: none;
+  }
+
+  :root[data-sl-rail] .sl-menu-pal > .bi {
+    display: inline;
+  }
+
+  /* A name leaves the eye and stays with a screen reader */
+  :root[data-sl-rail] .sl-admin-sidebar .sl-menu-name {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  /* Every icon of the rail is one size: the tools above, the sections, the queues of the home */
+  :root[data-sl-rail] .sl-menu-tool,
+  :root[data-sl-rail] .sl-wrapper.sl-admin-shell .sl-admin-sidebar :is(.sl-menu-list-item, .sl-block-sidebar-count-row) {
+    position: relative;
+    width: calc(var(--sl-size-control) + var(--sl-space-2));
+    min-width: 0;
+    height: calc(var(--sl-size-control) + var(--sl-space-2));
+    min-height: 0;
+    margin: 0 auto;
+    padding: 0;
+    border: 1px solid transparent;
+    border-radius: var(--sl-radius-1);
+    background: transparent;
+    box-shadow: none;
+    color: var(--sl-primary);
+    font-size: var(--sl-font-h3);
+  }
+
+  :root[data-sl-rail] .sl-wrapper.sl-admin-shell .sl-admin-sidebar .sl-menu-list-item + .sl-menu-list-item {
+    margin-top: var(--sl-space-2);
+  }
+
+  :root[data-sl-rail] .sl-wrapper.sl-admin-shell .sl-admin-sidebar .sl-menu-list-item > a,
+  :root[data-sl-rail] .sl-wrapper.sl-admin-shell .sl-admin-sidebar .sl-block-sidebar-count-label a {
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    color: inherit;
+  }
+
+  :root[data-sl-rail] .sl-wrapper.sl-admin-shell .sl-admin-sidebar .sl-block-sidebar-count-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  :root[data-sl-rail] .sl-wrapper.sl-admin-shell .sl-admin-sidebar .sl-block-sidebar-count-label {
+    width: 100%;
+    height: 100%;
+  }
+
+  :root[data-sl-rail] .sl-wrapper.sl-admin-shell .sl-admin-sidebar :is(.sl-menu-list-item > a, .sl-block-sidebar-count-label) .bi {
+    width: auto;
+    height: auto;
+    font-size: inherit;
+  }
+
+  /* A queue sits on the corner of its icon; the home shows every one of them, the empty ones too */
+  :root[data-sl-rail] .sl-admin-sidebar :is(.sl-block-sidebar-count-value, .sl-queue) {
+    position: absolute;
+    top: calc(var(--sl-space-3) * -1);
+    right: calc(var(--sl-space-3) * -1);
+    z-index: var(--sl-z-raised);
+  }
+
+  :root[data-sl-rail] .sl-admin-sidebar .sl-queue {
+    margin: 0;
+    padding: 0 var(--sl-space-1);
+    line-height: var(--sl-line-normal);
+  }
+
+  :root[data-sl-rail] .sl-admin-sidebar .sl-block-sidebar-count-value .sl-chip {
+    font-size: var(--sl-font-micro);
+  }
+
+  /* The blocks lose their plates; a short rule, as on the toolbar, parts the tools, the menus and the queues */
+  :root[data-sl-rail] .sl-wrapper.sl-admin-shell .sl-admin-sidebar .sl-block-sidebar {
+    position: relative;
+    margin: 0;
+    padding: 0;
+    overflow: visible;
+    border: 0;
+    background: none;
+    box-shadow: none;
+  }
+
+  :root[data-sl-rail] .sl-wrapper.sl-admin-shell .sl-admin-sidebar > * + .sl-block-sidebar {
+    margin-top: var(--sl-space-3);
+    padding-top: var(--sl-space-5);
+  }
+
+  :root[data-sl-rail] .sl-wrapper.sl-admin-shell .sl-admin-sidebar > * + .sl-block-sidebar::before {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: var(--sl-size-icon-sm);
+    height: 1px;
+    background: var(--sl-border-strong);
+    transform: translateX(-50%);
+    content: "";
+  }
+
+  /* The open section: an edge and a tint drawn by the rail itself, so the bar of the full menu steps aside */
+  :root[data-sl-rail] .sl-wrapper.sl-admin-shell .sl-admin-sidebar .sl-menu-list-item:has(> a[aria-current="page"]) {
+    background: var(--sl-tint-strong);
+    box-shadow: inset var(--sl-rail-width) 0 0 var(--sl-primary);
+    color: var(--sl-primary-strong);
+  }
+
+  :root[data-sl-rail] .sl-wrapper.sl-admin-shell .sl-admin-sidebar .sl-menu-list-item:has(> a[aria-current="page"])::before {
+    content: none;
+  }
+
+  /* An icon in hand is a solid plate, as a toolbar item is */
+  :root[data-sl-rail] .sl-menu-tool:hover,
+  :root[data-sl-rail] .sl-wrapper.sl-admin-shell .sl-admin-sidebar :is(.sl-menu-list-item, .sl-block-sidebar-count-row):hover,
+  :root[data-sl-rail] .sl-wrapper.sl-admin-shell .sl-admin-sidebar .sl-menu-list-item:has(> a[aria-current="page"]):hover {
+    border-color: var(--sl-solid-border);
+    background: var(--sl-solid-bg);
+    box-shadow: var(--sl-solid-shadow);
+    color: var(--sl-solid-text);
+  }
+
+  /* The fan of the full menu stands right of its icon and opens under the hand; in focus it is the one stop of a closed fan */
+  :root[data-sl-rail] .sl-admin-sidebar .sl-menu-list-item > .sl-dial {
+    right: auto;
+    left: calc(100% + var(--sl-space-4));
+    z-index: var(--sl-z-dropdown);
+    flex-direction: row;
+    border-color: var(--sl-border-strong);
+    background: var(--sl-bg);
+    box-shadow: var(--sl-shadow-raised);
+    font-size: var(--sl-font-body);
+    pointer-events: none;
+  }
+
+  /* An unseen bridge carries the pointer from the icon over the gap to its fan */
+  :root[data-sl-rail] .sl-admin-sidebar .sl-menu-list-item > .sl-dial::before {
+    position: absolute;
+    top: 0;
+    right: 100%;
+    bottom: 0;
+    width: var(--sl-space-5);
+    content: "";
+  }
+
+  :root[data-sl-rail] .sl-admin-sidebar .sl-menu-list-item:is(:hover, :focus-within) > .sl-dial {
+    pointer-events: auto;
+  }
+
+  :root[data-sl-rail] .sl-admin-sidebar .sl-menu-list-item:hover .sl-dial-item,
+  :root[data-sl-rail] .sl-admin-sidebar .sl-menu-list-item > .sl-dial.sl-open .sl-dial-item {
+    min-width: var(--sl-size-chip);
+    max-width: var(--sl-size-chip);
+    margin-inline: var(--sl-space-2) 0;
+    opacity: 1;
+    visibility: visible;
+    transform: none;
+    pointer-events: auto;
+  }
 }
 
 /* Menu: admin toolbar and language switcher row */
@@ -8952,6 +9157,10 @@ body[data-sl-pointer] .sl-admin-login-card:has(.sl-setup)::after {
   .sl-menu-close {
     display: flex;
     width: var(--sl-size-control);
+  }
+
+  .sl-menu-fold {
+    display: none;
   }
 
   /* The quick links shrink to their icons on one line; each keeps its name for a screen reader */

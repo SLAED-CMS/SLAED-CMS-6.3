@@ -48,7 +48,7 @@ if (str_starts_with($rpath, '/api/')) {
 } else {
     session_start();
 }
-if (isset($radmins[$rwho])) $_SESSION[$rglob['admin_c']] = base64_encode($radmins[$rwho]);
+if (isset($radmins[$rwho])) [$_SESSION[$rglob['admin_c']], $_SESSION[$rglob['admin_c'].'-time']] = [base64_encode($radmins[$rwho]), time()];
 foreach (['HTTP_HOST', 'REQUEST_URI', 'HTTP_REFERER', 'HTTP_USER_AGENT'] as $rkey) if (isset($_SERVER[$rkey])) putenv($rkey.'='.$_SERVER[$rkey]);
 chdir(PUBLIC_DIR);
 $radmin = $rpath === '/admin.php' || str_starts_with($rpath, '/admin.php/');

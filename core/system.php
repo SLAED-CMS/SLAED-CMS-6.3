@@ -2001,7 +2001,8 @@ function setHead(array $seo = []): void {
         $adminvars = [
             'theme' => getTheme(),
             'mode' => getThemeMode(),
-            'is_still' => isThemeStill(),
+            'is_still' => isThemeFlag('still'),
+            'is_rail' => isThemeFlag('rail'),
             'lang' => substr(_LOCALE, 0, 2),
             'sitename' => $conf['sitename'] ?? '',
             'homeurl' => $conf['homeurl'] ?? '',
@@ -2100,7 +2101,7 @@ function setHead(array $seo = []): void {
     $sitevars = [
         'theme' => getTheme(),
         'mode' => getThemeMode(),
-        'is_still' => isThemeStill(),
+        'is_still' => isThemeFlag('still'),
         'mode_html' => getThemeModeSwitch(HOME_PATH.'index.php'),
         'lang' => substr(_LOCALE, 0, 2),
         'sitename' => $conf['sitename'] ?? '',
@@ -3720,9 +3721,9 @@ function setThemeMode(string $mode): void {
     else setCookiesDelete('mode');
 }
 
-# Whether the visitor switched the motion off in the options of the panel; read before the first byte, so the page is still from its first paint
-function isThemeStill(): bool {
-    return getCookies('still') === '1';
+# Whether a shell flag of the panel options is on: still motion or the folded rail, read before the first byte, so the first paint carries it
+function isThemeFlag(string $key): bool {
+    return getCookies($key) === '1';
 }
 
 # Render the colour mode control: the three modes with the one in force marked, so any of them is one press away and none of them has to be guessed

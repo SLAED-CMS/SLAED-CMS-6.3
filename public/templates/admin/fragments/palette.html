@@ -1,0 +1,26 @@
+<dialog class="sl-modal sl-editor-pal" id="sl-palette" aria-labelledby="sl-pal-title">
+  <div class="sl-modal-title">
+    <i class="bi bi-command" aria-hidden="true"></i>
+    <span class="sl-modal-cap"><strong id="sl-pal-title">{{ _ADM_GOTO }}</strong></span>
+    <span class="sl-modal-acts"><button type="button" class="sl-modal-act sl-modal-act-close" data-sl-close title="{{ _CLOSE }}" aria-label="{{ _CLOSE }}"><i class="bi bi-x-lg" aria-hidden="true"></i></button></span>
+  </div>
+  <div class="sl-modal-bar"><i class="bi bi-search" aria-hidden="true"></i><input type="search" class="sl-editor-pal-find" data-sl-focus role="combobox" aria-expanded="true" aria-controls="sl-pal-list" aria-autocomplete="list" placeholder="{{ _ADM_GOFIND }}" aria-label="{{ _ADM_GOFIND }}" autocomplete="off" spellcheck="false"></div>
+  <div class="sl-modal-body sl-modal-body-flush sl-editor-pal-body">
+    <div id="sl-pal-list" role="listbox" aria-labelledby="sl-pal-title">
+      <div class="sl-editor-pal-group" role="group" aria-labelledby="sl-pal-acts">
+        <div class="sl-editor-pal-cap" id="sl-pal-acts">{{ _ADM_ACTS }}</div>
+        <button type="button" role="option" tabindex="-1" class="sl-editor-pal-row" id="sl-pal-rail" data-sl-pal-act="rail" data-sl-fold="{{ _ADM_FOLD }}" data-sl-unfold="{{ _ADM_UNFOLD }}"><i class="bi bi-layout-sidebar" aria-hidden="true"></i><span class="sl-editor-pal-name">{{ _ADM_FOLD }}</span><span class="sl-editor-pal-keys"><kbd>[</kbd></span></button>
+        <button type="button" role="option" tabindex="-1" class="sl-editor-pal-row" id="sl-pal-light" data-sl-pal-act="mode" data-sl-pal-arg="light"><i class="bi bi-sun" aria-hidden="true"></i><span class="sl-editor-pal-name">{{ _THEME }}: {{ _MODE_LIGHT }}</span><span class="sl-editor-pal-keys"></span></button>
+        <button type="button" role="option" tabindex="-1" class="sl-editor-pal-row" id="sl-pal-auto" data-sl-pal-act="mode" data-sl-pal-arg="auto"><i class="bi bi-circle-half" aria-hidden="true"></i><span class="sl-editor-pal-name">{{ _THEME }}: {{ _MODE_AUTO }}</span><span class="sl-editor-pal-keys"></span></button>
+        <button type="button" role="option" tabindex="-1" class="sl-editor-pal-row" id="sl-pal-dark" data-sl-pal-act="mode" data-sl-pal-arg="dark"><i class="bi bi-moon" aria-hidden="true"></i><span class="sl-editor-pal-name">{{ _THEME }}: {{ _MODE_DARK }}</span><span class="sl-editor-pal-keys"></span></button>
+        <button type="button" role="option" tabindex="-1" class="sl-editor-pal-row" id="sl-pal-still" data-sl-pal-act="still"><i class="bi bi-magic" aria-hidden="true"></i><span class="sl-editor-pal-name">{{ _ADM_MOTION }}</span><span class="sl-editor-pal-keys"></span></button>
+        <button type="button" role="option" tabindex="-1" class="sl-editor-pal-row" id="sl-pal-options" data-sl-pal-act="options"><i class="bi bi-sliders" aria-hidden="true"></i><span class="sl-editor-pal-name">{{ _FUNCTIONS }}</span><span class="sl-editor-pal-keys"></span></button>
+      </div>
+      <div class="sl-editor-pal-group" role="group" aria-labelledby="sl-pal-parts" data-sl-pal-parts>
+        <div class="sl-editor-pal-cap" id="sl-pal-parts">{{ _ADM_PARTS }}</div>
+        <template data-sl-pal-part><button type="button" role="option" tabindex="-1" class="sl-editor-pal-row"><i class="bi" aria-hidden="true"></i><span class="sl-editor-pal-name"></span><span class="sl-editor-pal-keys"></span></button></template>
+      </div>
+    </div>
+    <p class="sl-editor-pal-empty" data-sl-pal-empty hidden>{{ _NONE_FOUND }}</p>
+  </div>
+</dialog>

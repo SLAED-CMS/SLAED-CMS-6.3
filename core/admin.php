@@ -235,7 +235,7 @@ function getAdminSettingsRow(string $axis): string {
         $row = ['icon' => 'circle-half', 'title' => _THEME, 'now' => getThemeMode()];
     } elseif ($axis === 'still') {
         $list = ['0' => _ON, '1' => _OFF];
-        $row = ['icon' => 'magic', 'title' => _ADM_MOTION, 'now' => isThemeStill() ? '1' : '0'];
+        $row = ['icon' => 'magic', 'title' => _ADM_MOTION, 'now' => isThemeFlag('still') ? '1' : '0'];
     } elseif ($axis === 'editor') {
         $row = ['icon' => getIconName('editor'), 'title' => _EDITOR, 'now' => (string)($admin[3] ?? $conf['editor']['admin'] ?? 'plain')];
     } else {
@@ -346,6 +346,9 @@ function getAdminLayoutVars(): array {
         'menu' => getAdminTopMenu(),
         'bell_html' => $tpl->getHtmlFrag('bell', $bell),
         'admin_blocks' => getAdminPanelBlocks().getAdminInfo().adminblock(),
+        'sess_max' => getAdminIdle(),
+        'sess_url' => $afile.'.php',
+        'sess_token' => getSiteToken('keep'),
     ];
 }
 
@@ -360,10 +363,14 @@ function getAdminInfo(): string {
         'is_sidebar_count_list' => true, 'content' => $rows]), 'id' => '3', 'close' => _OPCL, 'is_queue' => true]);
 }
 
-# Answer the poll of the bell: the number of every queue this administrator may open, with the module whose chip it feeds
+# Answer the poll of the bell: the number of every queue this administrator may open, with the module whose chip it feeds, and the seconds the session has left
 function getAdminQueueData(): void {
+    global $conf;
     header('Content-Type: application/json; charset=UTF-8');
-    echo json_encode(array_map(static fn(array $row): array => ['key' => $row['key'], 'mod' => $row['mod'], 'num' => $row['num']], getAdminQueues()));
+    echo json_encode([
+        'left' => getAdminIdle() - time() + intval($_SESSION[$conf['admin_c'].'-time'] ?? 0),
+        'rows' => array_map(static fn(array $row): array => ['key' => $row['key'], 'mod' => $row['mod'], 'num' => $row['num']], getAdminQueues()),
+    ]);
 }
 
 # Return the database server version string reported by the SQL engine

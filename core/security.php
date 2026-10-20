@@ -113,6 +113,14 @@ if (!defined('ADMIN_FILE') && !defined('API_FILE') && $conf['security']['flood']
 # Format admin variable
 $admin = (($tmp = base64_decode($_SESSION[$conf['admin_c']] ?? '', true)) && $tmp !== '') ? explode(':', $tmp) : [];
 
+# The panel session ends after the idle limit on the panel and the site alike; a request of the panel is an action unless it marks itself a poll by X-SL-Poll
+if ($admin && time() - intval($_SESSION[$conf['admin_c'].'-time'] ?? 0) >= getAdminIdle()) {
+    unset($_SESSION[$conf['admin_c']], $_SESSION[$conf['admin_c'].'-time']);
+    $admin = [];
+} elseif ($admin && (defined('ADMIN_FILE') || getVar('req', 'go', 'num') == 5) && !isset($_SERVER['HTTP_X_SL_POLL'])) {
+    $_SESSION[$conf['admin_c'].'-time'] = time();
+}
+
 # Format user variable; the API knows no visitor by a cookie, its rights come from the client of the request
 $user = (!defined('API_FILE') && ($tmp = base64_decode($_COOKIE[$conf['user_c'].'-account'] ?? '', true)) && $tmp !== '') ? explode(':', $tmp) : [];
 
@@ -405,6 +413,12 @@ if (!isAdmin(true) && !defined('API_FILE')) {
     }
 }
 
+# Return the idle limit of the panel session in seconds: the lesser of the key idle and the life PHP gives the session file, never under a minute
+function getAdminIdle(): int {
+    global $conf;
+    return max(60, min(intval($conf['security']['idle']), intval(ini_get('session.gc_maxlifetime'))));
+}
+
 # Return true if the current session has valid admin credentials (result cached per request)
 function isAdmin(bool $super = false): bool {
     global $db, $admin;
@@ -474,7 +488,7 @@ function setExit(string $msg, string $typ = '', string $title = ''): never {
         'lang' => substr(_LOCALE, 0, 2),
         'theme' => $theme,
         'mode' => getThemeMode(),
-        'is_still' => isThemeStill(),
+        'is_still' => isThemeFlag('still'),
         'sitename' => $conf['sitename'] ?? '',
         'homeurl' => $conf['homeurl'] ?? '',
         'slogan' => $conf['slogan'] ?? '',

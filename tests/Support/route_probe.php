@@ -674,7 +674,7 @@ function setRouteChild(string $who): void {
     $admins = ['root' => '1:root:hash-root', 'docsman' => '4:docsman:hash-docsman', 'helper' => '5:helper:hash-helper'];
     if (isset($users[$who])) $_COOKIE[$glob['user_c'].'-account'] = base64_encode($users[$who]);
     if (session_status() === PHP_SESSION_NONE) session_start();
-    if (isset($admins[$who])) $_SESSION[$glob['admin_c']] = base64_encode($admins[$who]);
+    if (isset($admins[$who])) [$_SESSION[$glob['admin_c']], $_SESSION[$glob['admin_c'].'-time']] = [base64_encode($admins[$who]), time()];
 }
 
 # The comment reads of one visitor in a child process: the moderation list and its module selector, and the profile feed of anna

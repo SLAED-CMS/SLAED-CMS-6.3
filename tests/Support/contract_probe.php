@@ -19,6 +19,7 @@ if (in_array($argv[1] ?? '', ['commentstage', 'commentthread'], true)) {
         $_SERVER['REMOTE_ADDR'] = (string)$arow['ip'];
         if (session_status() === PHP_SESSION_NONE) session_start();
         $_SESSION[$akey] = base64_encode($arow['id'].':'.$arow['name'].':'.$arow['password']);
+        $_SESSION[$akey.'-time'] = time();
     }
     $apdo = null;
 }

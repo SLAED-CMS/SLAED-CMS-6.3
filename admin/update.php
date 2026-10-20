@@ -50,6 +50,7 @@ function checkUpdateLogin(): void {
         return;
     }
     $_SESSION[$conf['admin_c']] = base64_encode($row[0].':'.$row[1].':'.$row[2].':'.$row[3]);
+    $_SESSION[$conf['admin_c'].'-time'] = time();
     $db->getSqlQuery('UPDATE '.PREFIX_DB.'_admins SET ip = :ip, lastvis = now() WHERE id = :id', ['ip' => getIp(), 'id' => $row[0]]);
     Captcha::clearLoginFailures('admin');
     addUpdateLogin(intval($row[0]), 'ok', $name);

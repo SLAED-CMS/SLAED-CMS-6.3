@@ -181,7 +181,6 @@ define('_EDITOR_NOUP','Dieser Gruppe ist das Hochladen von Dateien nicht erlaubt
 define('_EDITOR_NOMY','Der Katalog öffnet sich nur zusammen mit dem Recht zum Hochladen');
 define('_EDITOR_EMPTY','Der Katalog ist noch leer');
 define('_EDITOR_EMPTYWHY','Hochgeladene Dateien erscheinen hier gleich nach dem ersten Hochladen.');
-define('_EDITOR_NONE','Nichts gefunden');
 define('_EDITOR_NONEWHY','In diesem Verzeichnis passt keine Datei zum Filter.');
 define('_EDITOR_FAIL','Die Liste kam nicht an');
 define('_EDITOR_FAILWHY','Der Server hat die Anfrage nach dem Katalog nicht beantwortet. Die Dateien liegen dort, die Liste konnte nicht gelesen werden.');
@@ -481,6 +480,7 @@ define('_NODE_TOPEND','Zur Prüfung');
 define('_NODE_TOPUB','Veröffentlichen');
 define('_NODE_YEAR','Jahr');
 define('_NONE','Keine');
+define('_NONE_FOUND','Nichts gefunden');
 define('_NOPASS','You have not specified and have not repeated the password!');
 define('_NOTE','Anmerkung');
 define('_NO_INFO','Keine Information');

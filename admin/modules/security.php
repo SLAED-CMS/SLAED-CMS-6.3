@@ -720,6 +720,19 @@ function config(): void {
             'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'log_size', 'input_id' => 'f-log-size', 'value_attr' => $conf['security']['log_size']]),
         ],
         [
+            'label_for' => 'f-idle',
+            'label_html' => _SEC_IDLE,
+            'hint_html' => _SEC_IDLE_ON.': '.intval(getAdminIdle() / 60),
+            'hint_id' => $hntid = getFieldIds('f-idle')['hint'],
+            'field_html' => $tpl->getHtmlFrag('input', [
+                'describedby' => $hntid,
+                'itype' => 'number',
+                'name_attr' => 'idle',
+                'input_id' => 'f-idle',
+                'value_attr' => intval($conf['security']['idle'] / 60),
+            ]),
+        ],
+        [
             'label_for' => 'f-sess-d',
             'label_html' => _SEC_LOG_DS,
             'field_html' => $tpl->getHtmlFrag('input', [
@@ -1049,6 +1062,7 @@ function configsave(): void {
         $afile = $nfile;
         $flood_t = getVar('post', 'flood_t', 'num', '1');
         $log_size = getVar('post', 'log_size', 'num', '1048576');
+        $idle = getVar('post', 'idle', 'num', 60) * 60;
         $sess_d = getVar('post', 'sess_d', 'num', 1440) * 60;
         $sess_b = getVar('post', 'sess_b', 'num', 1440) * 60;
         $rawskip = str_replace(["\r\n", "\r"], "\n", getVar('post', 'dump_skip', 'raw', ''));
@@ -1069,6 +1083,7 @@ function configsave(): void {
             'flood' => getVar('post', 'flood', 'num'),
             'error' => getVar('post', 'error', 'num'),
             'flood_t' => $flood_t,
+            'idle' => $idle,
             'blocker_cookie' => getVar('post', 'blocker_cookie', 'text'),
             'afile' => $afile,
             'log_size' => $log_size,

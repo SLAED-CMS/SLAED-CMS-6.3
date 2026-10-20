@@ -81,7 +81,7 @@ foreach (['HTTP_HOST', 'REQUEST_URI', 'HTTP_REFERER', 'HTTP_USER_AGENT', 'REMOTE
 $iglob = require __DIR__.'/config/global.php';
 if (isset($_SERVER['HTTP_X_PROBE_USER'])) $_COOKIE[$iglob['user_c'].'-account'] = $_SERVER['HTTP_X_PROBE_USER'];
 session_start();
-if (isset($_SERVER['HTTP_X_PROBE_ADMIN'])) $_SESSION[$iglob['admin_c']] = $_SERVER['HTTP_X_PROBE_ADMIN'];
+if (isset($_SERVER['HTTP_X_PROBE_ADMIN'])) [$_SESSION[$iglob['admin_c']], $_SESSION[$iglob['admin_c'].'-time']] = [$_SERVER['HTTP_X_PROBE_ADMIN'], time()];
 chdir(__DIR__.'/public');
 require __DIR__.'/public'.$ifile;
 PHP;

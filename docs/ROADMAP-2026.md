@@ -235,8 +235,17 @@ into the plan, then do whatever work the step names.
   five documents; `mode` and `changeeditor` of the panel are gone, the language keeps `newlang` and its reload; `_ON`,
   `_OFF`, `_ADM_MOTION` (owner, 2026-10-19). The stand's `config/local.php` was rebuilt for the version map and issued
   a new master (owner, 2026-10-20). (2026-10-20)
-- [ ] 94. ADMIN-UI batch 6 — Ctrl+K and the rail.
-- [ ] 95. ADMIN-UI batch 7 — the end of the session.
+- [x] 94. ADMIN-UI batch 6 — Ctrl+K and the rail. The palette is `fragments/palette.html` of the theme admin on
+  `setPaletteOpen()`, its sections gathered from the menu or the cards; the rail cookie `rail` goes through op
+  `option` and one reader `isThemeFlag()` replaced `isThemeStill()`; the blocks that are no menu step out of the rail
+  until batches 16 and 19 (owner, 2026-10-20). `_EDITOR_NONE` became the global `_NONE_FOUND`, which both palettes
+  read. (2026-10-20)
+- [x] 95. ADMIN-UI batch 7 — the end of the session. The limit is the key `idle` of `config/security.php` read by
+  `getAdminIdle()` (the lesser of it and `session.gc_maxlifetime`), the time of the last action
+  `$_SESSION[admin_c.'-time']`, which `core/security.php` checks on every request and renews on every request of the
+  panel that carries no `X-SL-Poll`; op `keep` is `updateAdminSession()`, the window `#sl-session` stands in
+  `layouts/admin.html`, the poll of the bell answers `{left, rows}` (owner, 2026-10-20). The texts are `_ADM_END`,
+  `_ADM_LEFT`, `_ADM_LOST`, `_ADM_KEEP`, since a template reads no constant longer than 12 characters. (2026-10-20)
 - [ ] 96. ADMIN-UI batch 8 — the list canon, frame, on "Комментарии": fragment, filter, address, tabs, pagers.
 - [ ] 97. ADMIN-UI batch 9 — the list canon, row and view, on "Комментарии".
 - [ ] 98. ADMIN-UI batch 10 — the list canon, actions with undo, on "Комментарии".

@@ -181,7 +181,6 @@ define('_EDITOR_NOUP','Le chargement de fichiers n\'est pas autorisé pour ce gr
 define('_EDITOR_NOMY','Le catalogue ne s\'ouvre qu\'avec le droit de chargement');
 define('_EDITOR_EMPTY','Le catalogue est encore vide');
 define('_EDITOR_EMPTYWHY','Les fichiers chargés apparaissent ici dès le premier chargement.');
-define('_EDITOR_NONE','Rien trouvé');
 define('_EDITOR_NONEWHY','Aucun fichier de ce répertoire ne correspond au filtre.');
 define('_EDITOR_FAIL','La liste n\'est pas arrivée');
 define('_EDITOR_FAILWHY','Le serveur n\'a pas répondu à la demande du catalogue. Les fichiers sont en place, la liste n\'a pas pu être lue.');
@@ -481,6 +480,7 @@ define('_NODE_TOPEND','À vérifier');
 define('_NODE_TOPUB','Publier');
 define('_NODE_YEAR','Année');
 define('_NONE','Non');
+define('_NONE_FOUND','Rien trouvé');
 define('_NOPASS',"Vous n'avez pas indiqué, et n'ont pas répété mot de passe!");
 define('_NOTE','Remarque');
 define('_NO_INFO','Aucune information');
