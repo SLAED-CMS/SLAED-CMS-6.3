@@ -7,7 +7,7 @@
     </div>
     <div class="sl-pager-side">
       <span class="sl-pager-sep" aria-hidden="true"></span>
-      <a href="#top" title="{{ _PAGETOP }}" aria-label="{{ _PAGETOP }}" class="sl-but-mini"><i class="bi bi-arrow-up" aria-hidden="true"></i></a>
+      {% if is_top %}<a href="#sl-list-end" title="{{ _PAGEEND }}" aria-label="{{ _PAGEEND }}" class="sl-but-mini"><i class="bi bi-arrow-down" aria-hidden="true"></i></a>{% else %}<a href="#top" title="{{ _PAGETOP }}" aria-label="{{ _PAGETOP }}" class="sl-but-mini"><i class="bi bi-arrow-up" aria-hidden="true"></i></a>{% endif %}
       <div class="sl-tip sl-float sl-pager-keys" tabindex="0" role="button" aria-label="{{ _PAGEKEYS }}"><span class="sl-but-mini" aria-hidden="true"><i class="bi bi-info-lg"></i></span><div class="sl-float-panel sl-pager-tip" role="tooltip"><p class="sl-pager-tip-head">{{ _PAGEKEYS }}</p><ul class="sl-pager-tip-keys"><li><kbd><i class="bi bi-arrow-left" role="img" aria-label="{{ _KEYLEFT }}"></i></kbd>{{ _PAGEPREV }}</li><li><kbd><i class="bi bi-arrow-right" role="img" aria-label="{{ _KEYRIGHT }}"></i></kbd>{{ _PAGENEXT }}</li></ul><p class="sl-pager-tip-note">{{ _PAGEKEYNOTE }}</p></div></div>
     </div>
   </div>

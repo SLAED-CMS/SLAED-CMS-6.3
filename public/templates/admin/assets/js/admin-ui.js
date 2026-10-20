@@ -1400,6 +1400,58 @@
         document.addEventListener('visibilitychange', setQueueSeen);
         window.addEventListener('focus', setQueueSeen);
     }
+    var listretry = null;
+    // The list of the canon a request comes from or lands in
+    function getListBox(event) {
+        var elt = event.detail ? event.detail.elt : null;
+        return elt && elt.closest ? elt.closest('[data-sl-list]') : null;
+    }
+    // Э28 While a list loads its rows dim under the loading mark of the theme and the reader hears aria-busy
+    function setListBusy(box, busy) {
+        box.setAttribute('aria-busy', busy ? 'true' : 'false');
+        box.querySelector('[data-sl-list-busy]').hidden = !busy;
+    }
+    // Э15 A filter field that acts at once sends its form: htmx carries it inside a live list, the browser elsewhere
+    document.addEventListener('change', function (event) {
+        var pick = event.target;
+        if (!pick || !pick.matches || !pick.matches('[data-sl-filter-now]') || !pick.form) return;
+        if (pick.form.requestSubmit) pick.form.requestSubmit(); else pick.form.submit();
+    });
+    document.addEventListener('htmx:beforeRequest', function (event) {
+        var box = getListBox(event);
+        if (!box) return;
+        setListBusy(box, true);
+        box.querySelector('[data-sl-list-error]').hidden = true;
+    });
+    // Э28 A list that did not come keeps its rows, marks and filters and offers the same request again
+    document.addEventListener('htmx:afterRequest', function (event) {
+        var box = getListBox(event);
+        if (!box || !box.isConnected || event.detail.successful) return;
+        var note = box.querySelector('[data-sl-list-error]');
+        setListBusy(box, false);
+        listretry = event.detail.elt;
+        note.hidden = false;
+        note.focus();
+    });
+    document.addEventListener('click', function (event) {
+        var btn = event.target.closest ? event.target.closest('[data-sl-list-retry]') : null;
+        if (!btn || !listretry || !listretry.isConnected) return;
+        btn.closest('[data-sl-list-error]').hidden = true;
+        if (listretry.tagName === 'FORM') listretry.requestSubmit();
+        else listretry.click();
+    });
+    // Э15 A list drawn anew tells the reader what it shows, and the tab title, now the one of the new view, takes the count of the queues again
+    document.addEventListener('htmx:afterSettle', function (event) {
+        var box = event.target;
+        var said = document.querySelector('[data-sl-said]');
+        var line = box && box.matches && box.matches('[data-sl-list]') ? box.querySelector('[data-sl-list-said]') : null;
+        if (!line) return;
+        queue.title = '';
+        setQueueTitle();
+        if (!said) return;
+        said.textContent = '';
+        window.setTimeout(function () { said.textContent = line.getAttribute('data-sl-list-said') || ''; }, 100);
+    });
     var sess = { end: 0, max: 0, warn: 0 };
     // The server names the seconds the session has left: on the page, after "Extend" and in every answer of the poll, which an action in another tab moves
     function setSessionLeft(left) {

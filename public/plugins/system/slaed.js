@@ -2875,6 +2875,14 @@
         setFavoriteBurst();
         setSwapDone(event);
     });
+    // Back or Forward redraws the history element without the swap events, so its parts are set up and settled as after any swap
+    document.addEventListener('htmx:historyRestore', function () {
+        var box = document.querySelector('[hx-history-elt]');
+        if (!box) return;
+        ['htmx:afterSwap', 'htmx:afterSettle'].forEach(function (name) {
+            box.dispatchEvent(new CustomEvent(name, { bubbles: true, detail: { target: box, elt: box } }));
+        });
+    });
 
     // A request whose source carries the done text confirms its swap with the toast; the favorite star has its own
     // moment for that, after the burst, and is left to it

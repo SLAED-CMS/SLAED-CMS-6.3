@@ -38,6 +38,8 @@ define('_ADM_END','La session se termine');
 define('_ADM_LEFT','Vous quitterez le panneau dans');
 define('_ADM_LOST','Les modifications non enregistrées seront perdues.');
 define('_ADM_KEEP','Prolonger la session');
+define('_ADM_LISTERR','Impossible de charger la liste : le serveur n\'a pas répondu. Les sélections et les filtres sont conservés.');
+define('_ADM_CLEAN','Tout est vérifié : la file est vide.');
 define('_ADMINEMAIL','E-Mail admin');
 define('_ADMINFOEDIT',"Activer le rédacteur en chef du département de l'information?");
 define('_ADMININFO','Notes administrateur');

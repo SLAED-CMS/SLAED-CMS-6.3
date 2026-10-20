@@ -1,0 +1,13 @@
+<form class="sl-searchbox sl-filter" action="{{ action_url }}" method="get" role="search" aria-label="{{ label }}"{% if is_part %} hx-boost="true"{% endif %}>
+  {% for item in hidden %}{% include 'fragments/hidden.html' with item %}{% endfor %}
+  {% for field in fields %}
+  <span class="sl-filter-field">
+    <label for="{{ field.field_id }}" id="{{ field.field_id }}-label">{{ field.label }}</label>
+    <select id="{{ field.field_id }}" name="{{ field.name_attr }}" class="sl-select"{% if field.is_now %} data-sl-filter-now{% endif %}>
+      {% for item in field.options %}{% include 'fragments/select-option.html' with item %}{% endfor %}
+    </select>
+    {% if field.find_id %}<input type="search" id="{{ field.find_id }}" name="{{ field.find_name }}" value="{{ field.find_value }}" maxlength="60" aria-labelledby="{{ field.field_id }}-label {{ field.field_id }}">{% endif %}
+  </span>
+  {% endfor %}
+  <button type="submit" class="sl-but-blue">{{ _OK }}</button>
+</form>

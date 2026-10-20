@@ -2152,13 +2152,23 @@ function setHead(array $seo = []): void {
     return;
 }
 
-# Format foot
+# Format foot; a panel list asking by X-SL-Part gets its title and content only, and a lost session makes it reload
 # A one-time notice of the visitor opens the content of both surfaces and is cleared by it
 function setFoot(): void {
     global $home, $name, $conf, $tpl, $adminpage, $adminvars, $sitepage, $sitevars, $blocks, $blocks_c, $foot;
     if (defined('ADMIN_FILE')) {
         $vars = is_array($adminvars ?? null) ? $adminvars : [];
-        $vars['content'] = getFlashHtml().((ob_get_level() > 0) ? (string)ob_get_clean() : '');
+        $page = (is_string($adminpage ?? '') && $adminpage !== '') ? $adminpage : 'admin';
+        $head = getSeoTitle([$vars['section'] ?? '', $vars['view'] ?? '', _ADMIN, $conf['sitename'] ?? ''], urldecode($conf['defis']));
+        $body = (ob_get_level() > 0) ? (string)ob_get_clean() : '';
+        $part = isset($_SERVER['HTTP_X_SL_PART']);
+        if ($part && $page === 'admin') {
+            echo $tpl->getHtmlFrag('head-title', ['title' => $head]).$body;
+            unset($adminpage, $adminvars);
+            return;
+        }
+        if ($part) header('HX-Refresh: true');
+        $vars['content'] = getFlashHtml().$body;
         $time = ($conf['db_t'] == '1') ? GEN_MARK : '';
         $debug = checkDebugView() ? getVariables() : '';
         $vars = array_replace($vars, [
@@ -2167,9 +2177,7 @@ function setFoot(): void {
             'debug_html' => $debug,
             'windows_html' => getWindowSet(true),
         ]);
-        $head = getSeoTitle([$vars['section'] ?? '', $vars['view'] ?? '', _ADMIN, $conf['sitename'] ?? ''], urldecode($conf['defis']));
         $vars['meta'] = ($vars['meta'] ?? '').$tpl->getHtmlFrag('head-title', ['title' => $head])."\n";
-        $page = (is_string($adminpage ?? '') && $adminpage !== '') ? $adminpage : 'admin';
         echo getTimedHtml($tpl->getHtmlPage($page, $vars, $page === 'login' ? 'bare' : 'admin'));
         unset($adminpage, $adminvars);
         return;

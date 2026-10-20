@@ -38,6 +38,8 @@ define('_ADM_END','Sesja dobiega końca');
 define('_ADM_LEFT','Opuścisz panel za');
 define('_ADM_LOST','Niezapisane zmiany przepadną.');
 define('_ADM_KEEP','Przedłuż sesję');
+define('_ADM_LISTERR','Nie udało się wczytać listy: serwer nie odpowiedział. Zaznaczenia i filtry zostały zachowane.');
+define('_ADM_CLEAN','Wszystko sprawdzone: kolejka jest pusta.');
 define('_ADMINEMAIL','E-Mail admin');
 define('_ADMINFOEDIT','Aktywacja redaktor działu informacji?');
 define('_ADMININFO','Notatki admin');

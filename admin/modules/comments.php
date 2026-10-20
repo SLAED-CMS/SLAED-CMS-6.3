@@ -6,233 +6,177 @@
 
 if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 
-function getCommentsSearch(): string {
-    global $afile, $tpl, $com;
-    $status = getVar('req', 'status', 'num') ? 1 : 0;
-    $modul = getVar('req', 'modul', 'var');
-    $search = getVar('req', 'search', 'num', 2);
+# The filter of the moderation list as the request carries it, the modules it is checked against and the addresses that keep it
+function getCommentsFilter(string $src = 'get'): array {
+    global $com;
+    $mods = $com->getModuleList();
+    $modul = strtolower(getVar($src, 'modul', 'var'));
+    if (!in_array($modul, $mods, true)) $modul = '';
+    $search = getVar($src, 'search', 'num', 2);
     $search = ($search >= 1 && $search <= 5) ? $search : 2;
-    $chng = getVar('req', 'chng');
-    $modopts = $tpl->getHtmlFrag('select-option', [
-        'value_attr' => '',
-        'label_text' => _ALL,
-        'is_selected' => $modul === '',
-    ]);
-    foreach ($com->getModuleList() as $one) {
-        $modopts .= $tpl->getHtmlFrag('select-option', [
-            'value_attr' => $one,
-            'label_text' => getModuleName($one).' - '.$one,
-            'is_selected' => $modul === $one,
-        ]);
-    }
-    $searchopts =
-        $tpl->getHtmlFrag('select-option', ['value_attr' => '1', 'label_text' => _ID, 'is_selected' => $search === 1]).
-        $tpl->getHtmlFrag('select-option', ['value_attr' => '2', 'label_text' => _COMMENT, 'is_selected' => $search === 2]).
-        $tpl->getHtmlFrag('select-option', ['value_attr' => '3', 'label_text' => _POSTEDBY, 'is_selected' => $search === 3]).
-        $tpl->getHtmlFrag('select-option', ['value_attr' => '4', 'label_text' => _MODUL, 'is_selected' => $search === 4]).
-        $tpl->getHtmlFrag('select-option', ['value_attr' => '5', 'label_text' => _IP, 'is_selected' => $search === 5]);
-    $form = $tpl->getHtmlPart('form', [
-        'action_url' => $afile.'.php',
-        'hidden' => array_values(array_filter([
-            ['nameattr' => 'name', 'valueattr' => 'comments'],
-            $status ? ['nameattr' => 'status', 'valueattr' => '1'] : null,
-        ])),
-        'content_html' =>
-            _MODUL.': '.$tpl->getHtmlFrag('select', [
-                'name_attr' => 'modul',
-                'select_attr' => ' OnChange="submit()"',
-                'options_html' => $modopts,
-            ]).
-            ' '._SEARCH.': '.$tpl->getHtmlFrag('select', [
-                'name_attr' => 'search',
-                'options_html' => $searchopts,
-            ]).
-            ' '.$tpl->getHtmlFrag('input', [
-                'itype' => 'text',
-                'name_attr' => 'chng',
-                'value_attr' => $chng,
-                'maxlength_num' => 60,
-            ]).
-            ' '.$tpl->getHtmlFrag('button', [
-                'submit_label' => _OK,
-                'button_type' => 'submit',
-            ]),
-    ]);
-    return $tpl->getHtmlPart('div', ['is_searchbox' => true, 'content_html' => $form]);
+    $chng = trim(getVar($src, 'chng'));
+    $status = getVar($src, 'status', 'num') ? 1 : 0;
+    $num = max(1, intval(getVar($src, 'num', 'num', 1)));
+    $base = 'name=comments'.(($modul !== '') ? '&modul='.rawurlencode($modul) : '').'&search='.$search.(($chng !== '') ? '&chng='.rawurlencode($chng) : '');
+    $cur = $base.($status ? '&status=1' : '');
+    return ['mods' => $mods, 'modul' => $modul, 'search' => $search, 'chng' => $chng, 'status' => $status, 'num' => $num, 'base' => $base, 'cur' => $cur,
+        'back' => $cur.(($num > 1) ? '&num='.$num : '')];
 }
 
-# The moderation overview: the drifted counters, the bulk form and the comment table
+function getCommentsSearch(array $flt, bool $part): string {
+    global $afile, $tpl;
+    $mods = [['value_attr' => '', 'label_text' => _ALL, 'is_selected' => $flt['modul'] === '']];
+    foreach ($flt['mods'] as $one) $mods[] = ['value_attr' => $one, 'label_text' => getModuleName($one).' - '.$one, 'is_selected' => $flt['modul'] === $one];
+    $finds = [];
+    foreach ([1 => _ID, 2 => _COMMENT, 3 => _POSTEDBY, 4 => _MODUL, 5 => _IP] as $key => $label) {
+        $finds[] = ['value_attr' => (string)$key, 'label_text' => $label, 'is_selected' => $flt['search'] === $key];
+    }
+    return $tpl->getHtmlFrag('list-filter', [
+        'action_url' => $afile.'.php',
+        'label' => _SEARCH,
+        'is_part' => $part,
+        'hidden' => array_values(array_filter([
+            ['nameattr' => 'name', 'valueattr' => 'comments'],
+            $flt['status'] ? ['nameattr' => 'status', 'valueattr' => '1'] : null,
+        ])),
+        'fields' => [
+            ['field_id' => 'sl-com-mod', 'label' => _MODUL, 'name_attr' => 'modul', 'options' => $mods, 'is_now' => true],
+            ['field_id' => 'sl-com-in', 'label' => _SEARCH, 'name_attr' => 'search', 'options' => $finds,
+                'find_id' => 'sl-com-q', 'find_name' => 'chng', 'find_value' => $flt['chng']],
+        ],
+    ]);
+}
+
+# The moderation overview: the drifted counters, the bulk form and the comment table, redrawn in place by the list canon
 # Every write recomputes the counter of its own target, so a drift left here belongs to a target nobody has commented on since; it is shown rather than repaired, as a symptom
 # The table sits outside the bulk form, since the row actions are POST forms of their own and a browser drops a nested form; the checkboxes stay bound through the form attribute
 function comments(): void {
     global $conf, $afile, $tpl, $prs, $com;
     setHead();
-    $status = getVar('get', 'status', 'num') ? 1 : 0;
-    $modul = strtolower(getVar('get', 'modul', 'var'));
-    if (!in_array($modul, $com->getModuleList(), true)) $modul = '';
-    $search = getVar('get', 'search', 'num', 2);
-    $search = ($search >= 1 && $search <= 5) ? $search : 2;
-    $chng = trim(getVar('get', 'chng'));
-    $subtitle = getCommentsSearch();
-    $baseq = 'name=comments';
-    if ($modul !== '') $baseq .= '&modul='.rawurlencode($modul);
-    $baseq .= '&search='.$search;
-    if ($chng !== '') $baseq .= '&chng='.rawurlencode($chng);
-    $curq = $baseq.($status ? '&status=1' : '');
-    $cont = getTplAdminTabs([
-        'ops' => [
-            $baseq,
-            $baseq.'&status=1',
-            $curq.'&op=config',
-            $curq.'&op=info',
-        ],
+    $flt = getCommentsFilter();
+    $status = $flt['status'];
+    $chng = $flt['chng'];
+    $head = getTplAdminTabs([
+        'ops' => [$flt['base'], $flt['base'].'&status=1', $flt['cur'].'&op=config', $flt['cur'].'&op=info'],
         'tabs' => [_HOME, _WAITINGCONT, _PREFERENCES, _MANUAL],
         'tab' => $status,
-        'subtitle_html' => $subtitle,
+        'part' => [0, 1],
+        'subtitle_html' => getCommentsSearch($flt, true),
     ]);
     $drift = $com->getCountDrift();
-    if ($drift) {
-        $cont .= $tpl->getHtmlFrag('alert', [
-            'is_warn' => true,
-            'text' => sprintf(_COMMENTS_DRIFT, count($drift)).' '.getTplPostButton(['name' => 'comments', 'op' => 'recount'], 'arrow-repeat', _COMMENTS_SYNC),
-        ]);
-    }
-    $anump = (int)($conf['comments']['anump'] ?? 8);
-    $num = getVar('get', 'num', 'num', 1);
-    $field = $curq.'&';
-    $data = $com->getAdminList($status ? CommentStatus::Pending : CommentStatus::Published, $modul, $search, $chng, $num);
-    if ($data['rows']) {
-        $rows = '';
-        foreach ($data['rows'] as $val) {
-            $id = $val['id'];
-            $cid = $val['cid'];
-            $cmod = $val['modul'];
-            $time = $val['time'];
-            $ip = $val['ip'];
-            $stat = $val['status'];
-            $nick = $val['nick'];
-            $modname = trim((string)getModuleName($cmod));
-            $modlabel = ($modname !== '') ? $modname.' - '.$cmod : $cmod;
-            $post = $nick ? filterTextHighlight(user_info($nick, null), $chng) : filterTextHighlight($val['name'] ?: _ANONYM, $chng);
-            $comment = trim(strip_tags((string)$prs->filterContent($val['body'], true, $cmod, 0, 'breaks')));
-            $comment = cutstr($comment, 120);
-            $comment = filterTextHighlight($comment, $chng);
-            $iptext = $ip ? Geoip::getIpHtml($ip) : _NO;
-            $act = $stat ? 0 : 1;
-            $items = [
-                ['href' => 'index.php?name='.$cmod.'&op=view&id='.$cid.'#'.$id, 'icon_name' => 'eye', 'title' => _MVIEW],
-                ['href' => $afile.'.php?'.$curq.'&op=edit&id='.$id, 'icon_name' => 'pencil', 'title' => _FULLEDIT],
-            ];
-            $acttxt = $stat ? _DEACTIVATE : _ACTIVATE;
-            parse_str($curq, $keep);
-            $items[] = getTplPostAction($keep + ['op' => 'approve', 'id[]' => $id, 'typ' => $act], 'power', $acttxt);
-            $items[] = getTplPostAction($keep + ['op' => 'delete', 'id[]' => $id], 'trash', _ONDELETE, _DELETE.' "'.$comment.'"?');
-            $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
-                'cells' => [
-                    ['is_col_id' => true, 'content_html' => filterTextHighlight((string)$id, $chng)],
-                    ['is_truncate' => true, 'title_text' => $comment, 'content_html' => $tpl->getHtmlFrag('popover', [
-                        'items' => [
-                            ['label' => _MODUL, 'value' => $modlabel],
-                            ['label' => 'CID', 'value' => (string)$cid],
-                            ['label' => _DATE, 'value' => format_time($time, _TIMESTRING)],
-                            ['label' => _IP, 'value' => $iptext, 'is_last' => true],
-                        ],
-                        'title_text' => $comment,
-                    ]).$comment],
-                    ['class_name' => 'sl-col-module', 'is_truncate' => true, 'title_text' => $modlabel, 'content_html' => filterTextHighlight($modlabel, $chng)],
-                    ['is_col_author' => true, 'content_html' => $post],
-                    ['is_col_date' => true, 'content_html' => format_time($time, _TIMESTRING)],
-                    ['is_col_status' => true, 'content_html' => ad_status('', $stat)],
-                    ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('dial', ['dial_title' => _FUNCTIONS, 'dial' => $items])],
-                    ['is_col_check' => true, 'content_html' => $tpl->getHtmlFrag('checkbox',
-                        ['name_attr' => 'id[]', 'value_attr' => (string)$id, 'is_check' => true, 'input_attr' => 'form="combulk"'])],
-                ],
-            ])]);
-        }
-        $bulk = $tpl->getHtmlFrag('inline-badge', ['label' => _CHECKOP]).' '
-            .$tpl->getHtmlFrag('select', [
-                'name_attr' => 'typ',
-                'options_html' => $tpl->getHtmlFrag('select-option', [
-                    'value_attr' => 'a'.($status ? '1' : '0'),
-                    'label_text' => $status ? _ACTIVATE : _DEACTIVATE,
-                ]).$tpl->getHtmlFrag('select-option', [
-                    'value_attr' => 'd',
-                    'label_text' => _DELETE,
-                ]),
-            ])
-            .$tpl->getHtmlFrag('button', [
-                'submit_label' => _OK,
-                'button_type' => 'submit',
-            ]);
-        $pager = getTplPagerView($data['page'], $data['pages'], $anump, static fn(int $i): array => ['href' => $afile.'.php?'.$field.'num='.$i], [
-            'count' => $data['total'],
-            'limit' => $data['limit'],
-            'page' => $data['limit'],
-        ]);
-        $table = $tpl->getHtmlFrag('table', [
-            'is_wrapless' => true,
-            'is_fixed' => true,
-            'head' => [
-                ['content' => _ID, 'is_col_id' => true],
-                ['content' => _COMMENT, 'is_truncate' => true],
-                ['content' => _MODUL, 'is_truncate' => true],
-                ['content' => _POSTEDBY, 'is_col_author' => true],
-                ['content' => _DATE, 'is_col_date' => true],
-                ['content' => _STATUS, 'is_col_status' => true, 'nosort' => true],
-                ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true],
-                ['is_col_check' => true, 'nosort' => true, 'content' => $tpl->getHtmlFrag('checkbox', ['name_attr' => 'markcheck',
-                    'input_id' => 'markcheck', 'is_check' => true, 'input_attr' => 'title="'._CHECKALL.'" form="combulk"'])],
+    $note = $drift ? $tpl->getHtmlFrag('alert', [
+        'is_warn' => true,
+        'text' => sprintf(_COMMENTS_DRIFT, count($drift)).' '.getTplPostButton(['name' => 'comments', 'op' => 'recount'], 'arrow-repeat', _COMMENTS_SYNC),
+    ]) : '';
+    $data = $com->getAdminList($status ? CommentStatus::Pending : CommentStatus::Published, $flt['modul'], $flt['search'], $chng, $flt['num']);
+    $back = $flt['cur'].(($data['page'] > 1) ? '&num='.$data['page'] : '');
+    parse_str($back, $keep);
+    $rows = '';
+    foreach ($data['rows'] as $val) {
+        $id = $val['id'];
+        $cid = $val['cid'];
+        $cmod = $val['modul'];
+        $time = $val['time'];
+        $ip = $val['ip'];
+        $stat = $val['status'];
+        $nick = $val['nick'];
+        $modname = trim((string)getModuleName($cmod));
+        $modlabel = ($modname !== '') ? $modname.' - '.$cmod : $cmod;
+        $post = $nick ? filterTextHighlight(user_info($nick, null), $chng) : filterTextHighlight($val['name'] ?: _ANONYM, $chng);
+        $comment = trim(strip_tags((string)$prs->filterContent($val['body'], true, $cmod, 0, 'breaks')));
+        $comment = cutstr($comment, 120);
+        $comment = filterTextHighlight($comment, $chng);
+        $iptext = $ip ? Geoip::getIpHtml($ip) : _NO;
+        $act = $stat ? 0 : 1;
+        $items = [
+            ['href' => 'index.php?name='.$cmod.'&op=view&id='.$cid.'#'.$id, 'icon_name' => 'eye', 'title' => _MVIEW],
+            ['href' => $afile.'.php?'.$back.'&op=edit&id='.$id, 'icon_name' => 'pencil', 'title' => _FULLEDIT],
+        ];
+        $acttxt = $stat ? _DEACTIVATE : _ACTIVATE;
+        $items[] = getTplPostAction($keep + ['op' => 'approve', 'id[]' => $id, 'typ' => $act], 'power', $acttxt);
+        $items[] = getTplPostAction($keep + ['op' => 'delete', 'id[]' => $id], 'trash', _ONDELETE, _DELETE.' "'.$comment.'"?');
+        $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
+            'cells' => [
+                ['is_col_id' => true, 'content_html' => filterTextHighlight((string)$id, $chng)],
+                ['is_truncate' => true, 'title_text' => $comment, 'content_html' => $tpl->getHtmlFrag('popover', [
+                    'items' => [
+                        ['label' => _MODUL, 'value' => $modlabel],
+                        ['label' => 'CID', 'value' => (string)$cid],
+                        ['label' => _DATE, 'value' => format_time($time, _TIMESTRING)],
+                        ['label' => _IP, 'value' => $iptext, 'is_last' => true],
+                    ],
+                    'title_text' => $comment,
+                ]).$comment],
+                ['class_name' => 'sl-col-module', 'is_truncate' => true, 'title_text' => $modlabel, 'content_html' => filterTextHighlight($modlabel, $chng)],
+                ['is_col_author' => true, 'content_html' => $post],
+                ['is_col_date' => true, 'content_html' => format_time($time, _TIMESTRING)],
+                ['is_col_status' => true, 'content_html' => ad_status('', $stat)],
+                ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('dial', ['dial_title' => _FUNCTIONS, 'dial' => $items])],
+                ['is_col_check' => true, 'content_html' => $tpl->getHtmlFrag('checkbox',
+                    ['name_attr' => 'id[]', 'value_attr' => (string)$id, 'is_check' => true, 'input_attr' => 'form="combulk"'])],
             ],
-            'rows_html' => $rows,
+        ])]);
+    }
+    $bulk = $tpl->getHtmlFrag('inline-badge', ['label' => _CHECKOP]).' '
+        .$tpl->getHtmlFrag('select', [
+            'name_attr' => 'typ',
+            'options_html' => $tpl->getHtmlFrag('select-option', [
+                'value_attr' => 'a'.($status ? '1' : '0'),
+                'label_text' => $status ? _ACTIVATE : _DEACTIVATE,
+            ]).$tpl->getHtmlFrag('select-option', [
+                'value_attr' => 'd',
+                'label_text' => _DELETE,
+            ]),
+        ])
+        .$tpl->getHtmlFrag('button', [
+            'submit_label' => _OK,
+            'button_type' => 'submit',
         ]);
-        $body = $table.$tpl->getHtmlPart('form', [
+    $keep['token'] = getSiteToken('comments');
+    echo getTplAdminList([
+        'head_html' => $head,
+        'note_html' => $note,
+        'is_fixed' => true,
+        'head' => [
+            ['content' => _ID, 'is_col_id' => true],
+            ['content' => _COMMENT, 'is_truncate' => true],
+            ['content' => _MODUL, 'is_truncate' => true],
+            ['content' => _POSTEDBY, 'is_col_author' => true],
+            ['content' => _DATE, 'is_col_date' => true],
+            ['content' => _STATUS, 'is_col_status' => true, 'nosort' => true],
+            ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true],
+            ['is_col_check' => true, 'nosort' => true, 'content' => $tpl->getHtmlFrag('checkbox', ['name_attr' => 'markcheck',
+                'input_id' => 'markcheck', 'is_check' => true, 'input_attr' => 'title="'._CHECKALL.'" form="combulk"'])],
+        ],
+        'rows_html' => $rows,
+        'href' => $afile.'.php?'.$flt['cur'].'&',
+        'page' => $data['page'],
+        'pages' => $data['pages'],
+        'maxpg' => (int)($conf['comments']['anump'] ?? 8),
+        'count' => $data['total'],
+        'limit' => $data['limit'],
+        'actions_html' => $tpl->getHtmlPart('form', [
             'action_url' => $afile.'.php?name=comments&op=actions',
             'form_attr' => 'id="combulk"',
-            'hidden' => array_filter([
-                ['nameattr' => 'token', 'valueattr' => getSiteToken('comments')],
-                ['nameattr' => 'status', 'valueattr' => (string)$status],
-                $modul !== '' ? ['nameattr' => 'modul', 'valueattr' => $modul] : null,
-                ['nameattr' => 'search', 'valueattr' => (string)$search],
-                $chng !== '' ? ['nameattr' => 'chng', 'valueattr' => $chng] : null,
-            ]),
-            'actions_html' => $tpl->getHtmlFrag('module-foot', [
-                'is_list' => true,
-                'pager_html' => $pager,
-                'actions_html' => $bulk,
-            ]),
-        ]);
-        $cont .= $tpl->getHtmlPart('box', ['content_html' => $body]);
-    } else {
-        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
-    }
-    echo $cont;
+            'hidden' => array_map(static fn($k, $v): array => ['nameattr' => $k, 'valueattr' => (string)$v], array_keys($keep), $keep),
+            'content_html' => $bulk,
+        ]),
+        'none_text' => ($flt['modul'] !== '' || $chng !== '') ? _NONE_FOUND : ($status ? _ADM_CLEAN : _NO_INFO),
+        'is_calm' => $status && $flt['modul'] === '' && $chng === '',
+    ]);
     setFoot();
 }
 
 function edit(): void {
     global $afile, $tpl, $com;
     $id = getVar('get', 'id', 'num');
-    $status = getVar('get', 'status', 'num', 0);
-    $modul = getVar('get', 'modul', 'var');
-    $search = getVar('get', 'search', 'num', 2);
-    $search = ($search >= 1 && $search <= 5) ? $search : 2;
-    $chng = getVar('get', 'chng', 'raw', '');
+    $flt = getCommentsFilter();
     setHead();
-    $baseq = 'name=comments';
-    if ($modul !== '') $baseq .= '&modul='.rawurlencode($modul);
-    $baseq .= '&search='.$search;
-    if ($chng !== '') $baseq .= '&chng='.rawurlencode($chng);
-    $curq = $baseq.($status ? '&status=1' : '');
     $cont = getTplAdminTabs([
-        'ops' => [
-            $baseq,
-            $baseq.'&status=1',
-            $curq.'&op=config',
-            $curq.'&op=info',
-        ],
+        'ops' => [$flt['base'], $flt['base'].'&status=1', $flt['cur'].'&op=config', $flt['cur'].'&op=info'],
         'tabs' => [_HOME, _WAITINGCONT, _PREFERENCES, _MANUAL],
-        'tab' => $status,
-        'subtitle_html' => getCommentsSearch(),
+        'tab' => $flt['status'],
+        'subtitle_html' => getCommentsSearch($flt, false),
     ]);
     $row = $com->getComment($id);
     $cmod = (string)($row['modul'] ?? '');
@@ -262,18 +206,14 @@ function edit(): void {
             'is_full' => true,
         ],
     ];
+    parse_str($flt['back'], $keep);
     $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
-        'action_url' => $afile.'.php?'.$curq.'&op=editsave',
-        'hidden' => array_filter([
+        'action_url' => $afile.'.php?'.$flt['back'].'&op=editsave',
+        'hidden' => array_merge([
             ['nameattr' => 'id', 'valueattr' => (string)($row['id'] ?? '')],
-            ['nameattr' => 'name', 'valueattr' => 'comments'],
             ['nameattr' => 'op', 'valueattr' => 'editsave'],
             ['nameattr' => 'token', 'valueattr' => getSiteToken('comments')],
-            $status ? ['nameattr' => 'status', 'valueattr' => '1'] : null,
-            $modul !== '' ? ['nameattr' => 'modul', 'valueattr' => $modul] : null,
-            ['nameattr' => 'search', 'valueattr' => (string)$search],
-            $chng !== '' ? ['nameattr' => 'chng', 'valueattr' => $chng] : null,
-        ]),
+        ], array_map(static fn($k, $v): array => ['nameattr' => $k, 'valueattr' => (string)$v], array_keys($keep), $keep)),
         'rows' => $rows,
         'submit_label' => _SAVECHANGES,
     ])]);
@@ -286,28 +226,15 @@ function editsave(): void {
     $warn = !checkAdminPost('comments');
     $id = getVar('post', 'id', 'num');
     $text = trim(getVar('post', 'comment', 'raw', ''));
-    $status = getVar('post', 'status', 'num', 0);
-    $modul = getVar('post', 'modul', 'var');
-    $search = getVar('post', 'search', 'num', 2);
-    $search = ($search >= 1 && $search <= 5) ? $search : 2;
-    $chng = getVar('post', 'chng', 'raw', '');
+    $flt = getCommentsFilter('post');
     $room = $warn ? '' : $com->updateBody($id, $text);
-    $back = 'name=comments';
-    if ($status) $back .= '&status=1';
-    if ($modul !== '') $back .= '&modul='.rawurlencode($modul);
-    $back .= '&search='.$search;
-    if ($chng !== '') $back .= '&chng='.rawurlencode($chng);
-    setRedirect($afile.'.php?'.$back, false, 302, $warn ? _TOKENMISS : ($room ?: _SUCCSAVE), $warn || $room !== '');
+    setRedirect($afile.'.php?'.$flt['back'], false, 302, $warn ? _TOKENMISS : ($room ?: _SUCCSAVE), $warn || $room !== '');
 }
 
 function actions(): void {
     global $afile, $com;
     $warn = !checkAdminPost('comments');
-    $status = getVar('post', 'status', 'num', 0);
-    $modul = getVar('post', 'modul', 'var');
-    $search = getVar('post', 'search', 'num', 2);
-    $search = ($search >= 1 && $search <= 5) ? $search : 2;
-    $chng = getVar('post', 'chng', 'raw', '');
+    $flt = getCommentsFilter('post');
     $typ = getVar('post', 'typ', 'text', '');
     $id = getVar('post', 'id[]', 'num');
     if (!$warn && is_array($id) && $typ !== '') {
@@ -317,15 +244,11 @@ function actions(): void {
             elseif ($typ[0] === 'd') $com->deleteComment(intval($val));
         }
     }
-    $tab = $status;
+    $tab = $flt['status'];
     if ($typ === 'a1') $tab = 0;
     if ($typ === 'a0') $tab = 1;
-    $back = 'name=comments';
-    if ($tab) $back .= '&status=1';
-    if ($modul !== '') $back .= '&modul='.rawurlencode($modul);
-    $back .= '&search='.$search;
-    if ($chng !== '') $back .= '&chng='.rawurlencode($chng);
-    $succ = ($typ[0] === 'd') ? _SUCCDELETE : _SUCCSTATUS;
+    $back = ($tab === $flt['status']) ? $flt['back'] : $flt['base'].($tab ? '&status=1' : '');
+    $succ = ($typ !== '' && $typ[0] === 'd') ? _SUCCDELETE : _SUCCSTATUS;
     setRedirect($afile.'.php?'.$back, true, 302, $warn ? _TOKENMISS : $succ, $warn);
 }
 
@@ -558,44 +481,29 @@ function approve(): void {
     global $afile, $com;
     $warn = !checkAdminPost('comments');
     $typ = getVar('post', 'typ', 'num');
-    $modul = getVar('post', 'modul', 'var');
-    $search = getVar('post', 'search', 'num', 2);
-    $search = ($search >= 1 && $search <= 5) ? $search : 2;
-    $chng = getVar('post', 'chng', 'raw', '');
+    $flt = getCommentsFilter('post');
     $id = getVar('post', 'id[]', 'num');
     if (!$warn && is_array($id)) {
         foreach ($id as $val) {
             if (intval($val)) $com->setStatus(intval($val), (bool)$typ);
         }
     }
-    $back = 'name=comments';
-    if (!$typ) $back .= '&status=1';
-    if ($modul !== '') $back .= '&modul='.rawurlencode($modul);
-    $back .= '&search='.$search;
-    if ($chng !== '') $back .= '&chng='.rawurlencode($chng);
+    $tab = $typ ? 0 : 1;
+    $back = ($tab === $flt['status']) ? $flt['back'] : $flt['base'].($tab ? '&status=1' : '');
     setRedirect($afile.'.php?'.$back, true, 302, $warn ? _TOKENMISS : _SUCCSTATUS, $warn);
 }
 
 function delete(): void {
     global $afile, $com;
     $warn = !checkAdminPost('comments');
-    $status = getVar('post', 'status', 'num', 0);
-    $modul = getVar('post', 'modul', 'var');
-    $search = getVar('post', 'search', 'num', 2);
-    $search = ($search >= 1 && $search <= 5) ? $search : 2;
-    $chng = getVar('post', 'chng', 'raw', '');
+    $flt = getCommentsFilter('post');
     $id = getVar('post', 'id[]', 'num');
     if (!$warn && is_array($id)) {
         foreach ($id as $val) {
             if (intval($val)) $com->deleteComment(intval($val));
         }
     }
-    $back = 'name=comments';
-    if ($status) $back .= '&status=1';
-    if ($modul !== '') $back .= '&modul='.rawurlencode($modul);
-    $back .= '&search='.$search;
-    if ($chng !== '') $back .= '&chng='.rawurlencode($chng);
-    setRedirect($afile.'.php?'.$back, true, 302, $warn ? _TOKENMISS : _SUCCDELETE, $warn);
+    setRedirect($afile.'.php?'.$flt['back'], true, 302, $warn ? _TOKENMISS : _SUCCDELETE, $warn);
 }
 
 function recount(): void {

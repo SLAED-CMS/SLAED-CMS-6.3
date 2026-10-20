@@ -38,6 +38,8 @@ define('_ADM_END','Die Sitzung läuft ab');
 define('_ADM_LEFT','Sie verlassen das Panel in');
 define('_ADM_LOST','Nicht gespeicherte Änderungen gehen verloren.');
 define('_ADM_KEEP','Sitzung verlängern');
+define('_ADM_LISTERR','Die Liste konnte nicht geladen werden: Der Server hat nicht geantwortet. Markierungen und Filter bleiben erhalten.');
+define('_ADM_CLEAN','Alles geprüft: Die Warteschlange ist leer.');
 define('_ADMINEMAIL','Administrator E-Mail');
 define('_ADMINFOEDIT','Aktivieren Herausgeber mit der Abteilung für Informationen?');
 define('_ADMININFO','Notizen des Administrators');

@@ -246,7 +246,11 @@ into the plan, then do whatever work the step names.
   panel that carries no `X-SL-Poll`; op `keep` is `updateAdminSession()`, the window `#sl-session` stands in
   `layouts/admin.html`, the poll of the bell answers `{left, rows}` (owner, 2026-10-20). The texts are `_ADM_END`,
   `_ADM_LEFT`, `_ADM_LOST`, `_ADM_KEEP`, since a template reads no constant longer than 12 characters. (2026-10-20)
-- [ ] 96. ADMIN-UI batch 8 — the list canon, frame, on "Комментарии": fragment, filter, address, tabs, pagers.
+- [x] 96. ADMIN-UI batch 8 — the list canon, frame, on "Комментарии": fragment, filter, address, tabs, pagers. The
+  frame is `getTplAdminList()` on `partials/admin-list.html`, `#sl-list` asking by `X-SL-Part`, which `setFoot()` answers
+  with the title and the content; the filter is `fragments/list-filter.html`, the tabs of a list take `part` of
+  `getTplAdminTabs()`, both pagers stay under a filter (owner, 2026-10-20). Back redraws the parts of a restored list
+  through `htmx:historyRestore` in `slaed.js`, the Node list included. (2026-10-20)
 - [ ] 97. ADMIN-UI batch 9 — the list canon, row and view, on "Комментарии".
 - [ ] 98. ADMIN-UI batch 10 — the list canon, actions with undo, on "Комментарии".
 - [ ] 99. ADMIN-UI batch 11 — the form canon on "Конфигурации".

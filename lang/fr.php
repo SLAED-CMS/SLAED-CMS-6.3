@@ -500,6 +500,7 @@ define('_ORTYPEURL','Lien vers le flux RSS/XML');
 define('_OVERALL','Total');
 define('_PADD','Ajoute');
 define('_PAGE','Page');
+define('_PAGEEND','Vers le bas');
 define('_PAGEHOME','Début');
 define('_PAGEKEYNOTE','Tant que le curseur n\'est pas dans un champ de saisie');
 define('_PAGEKEYS','Feuilletez au clavier');

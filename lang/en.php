@@ -500,6 +500,7 @@ define('_ORTYPEURL','Headlines RSS/XML');
 define('_OVERALL','In total');
 define('_PADD','Added');
 define('_PAGE','Page');
+define('_PAGEEND','Down');
 define('_PAGEHOME','Home');
 define('_PAGEKEYNOTE','While the cursor is not in an input field');
 define('_PAGEKEYS','Page with the keyboard');

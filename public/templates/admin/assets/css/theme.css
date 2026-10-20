@@ -2223,8 +2223,6 @@ pre code.hljs {
 
 .sl-editor-pill .sl-modal-act[aria-pressed="true"],
 .sl-editor-pill .sl-modal-act[aria-expanded="true"],
-.sl-pager-keys:hover > .sl-but-mini,
-.sl-pager-keys.sl-is-open > .sl-but-mini,
 .sl-wrapper .sl-toolbar li .sl-bell-tip a:hover,
 .sl-wrapper .sl-toolbar li .sl-bell-tip a:focus-visible {
   background: var(--sl-tint);
@@ -3453,7 +3451,8 @@ dialog.sl-editor-emoji-panel {
   width: 100%;
 }
 
-.sl-list-bottom-pager {
+.sl-list-bottom-pager,
+.sl-list-head-pager {
   flex: 1 1 auto;
   min-width: 0;
 }
@@ -3485,6 +3484,91 @@ dialog.sl-editor-emoji-panel {
   .sl-list-bottom-pager {
     flex-basis: 100%;
   }
+}
+
+/* Э15 The filter of a canon list in the module head: every control named, a field acting at once, the search on its button */
+.sl-filter {
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sl-space-3) var(--sl-space-6);
+}
+
+.sl-filter-field {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sl-space-3);
+}
+
+.sl-filter-field label {
+  margin: 0;
+  white-space: nowrap;
+}
+
+.sl-filter input[type="search"] {
+  width: auto;
+  min-width: var(--sl-search-min-width);
+  max-width: var(--sl-search-max-width);
+  height: var(--sl-size-control);
+  box-sizing: border-box;
+}
+
+/* П5 П8 The pager over a canon list repeats the one under it at its left edge, its way back to the top turned into the way down */
+.sl-list-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sl-space-4);
+  margin: 0 0 var(--sl-space-4);
+}
+
+.sl-list-head .sl-pager {
+  padding: 0;
+}
+
+/* П7 The page line stands in the row of its pager, centred between the key tip and what closes the row */
+:is(.sl-list-head, .sl-list-bottom) .sl-pager-info {
+  margin-inline: auto;
+}
+
+/* The bulk form of a canon list lends its controls to the row of the actions */
+.sl-list-bottom-actions > .sl-div-form {
+  display: contents;
+}
+
+.sl-list-note {
+  margin: 0 0 var(--sl-space-4);
+}
+
+.sl-list-note .sl-but {
+  margin-left: var(--sl-space-3);
+}
+
+.sl-list-none {
+  margin: 0;
+  padding: var(--sl-space-7);
+  color: var(--sl-text-muted);
+  text-align: center;
+}
+
+/* Э17 An empty queue is good news, said calmly */
+.sl-list-calm {
+  color: var(--sl-success-strong);
+}
+
+/* Э28 A request on its way: the rows dim under the loading mark of the theme, the reader hears aria-busy */
+.sl-table-shell:has(> .sl-list-busy) {
+  position: relative;
+}
+
+.sl-list-busy {
+  position: absolute;
+  inset: 0;
+  z-index: var(--sl-z-raised);
+  margin: auto;
+}
+
+[data-sl-list][aria-busy="true"] .sl-table-shell tbody {
+  opacity: var(--sl-fade-muted);
 }
 
 /* Chips: unified tinted pill labels — shared vocabulary with the lite theme (sl-chip + tone modifiers) */
@@ -5104,14 +5188,11 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
 }
 
 .sl-div-actions .sl-inline-gap,
-.sl-module-foot-side .sl-inline-gap,
-.sl-div-actions .sl-save-action-select,
-.sl-module-foot-side .sl-save-action-select {
+.sl-div-actions .sl-save-action-select {
   margin-right: 0;
 }
 
-.sl-div-actions .sl-select,
-.sl-module-foot-side .sl-select {
+.sl-div-actions .sl-select {
   width: auto;
   min-width: max-content;
   max-width: 100%;
@@ -5119,10 +5200,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
 
 .sl-div-actions input[type="submit"].sl-but,
 .sl-div-actions input[type="submit"].sl-but-blue,
-.sl-div-actions input[type="submit"].sl-but-green,
-.sl-module-foot-side input[type="submit"].sl-but,
-.sl-module-foot-side input[type="submit"].sl-but-blue,
-.sl-module-foot-side input[type="submit"].sl-but-green {
+.sl-div-actions input[type="submit"].sl-but-green {
   min-width: var(--sl-btn-mini-width);
   height: var(--sl-size-control);
   min-height: var(--sl-size-control);
@@ -5679,7 +5757,9 @@ button.sl-seg-cell:hover {
 }
 
 .sl-pager-nav > a.sl-but-mini:hover,
-.sl-pager-nav > a.sl-but-mini:focus-visible {
+.sl-pager-nav > a.sl-but-mini:focus-visible,
+.sl-pager-side > a.sl-but-mini:hover,
+.sl-pager-side > a.sl-but-mini:focus-visible {
   background: var(--sl-primary-strong);
   color: var(--sl-on-solid);
 }
@@ -5696,6 +5776,23 @@ button.sl-seg-cell:hover {
   padding: 0;
   background: transparent;
   color: var(--sl-text-muted);
+}
+
+/* П6 The key tip is useful at once: its trigger rests in the subtle system green and lights up in the full green under the pointer or while open */
+.sl-pager .sl-pager-keys > .sl-but-mini {
+  background: var(--sl-success-subtle);
+  color: var(--sl-success-strong);
+}
+
+.sl-pager .sl-pager-keys:is(:hover, .sl-is-open) > .sl-but-mini {
+  background: var(--sl-success);
+  color: var(--sl-on-solid);
+}
+
+/* П6 The ways up and down follow the key tip in the colour of the pager: subtle at rest, full like its arrows under the pointer or the focus */
+.sl-pager-side > a.sl-but-mini {
+  background: var(--sl-primary-subtle);
+  color: var(--sl-primary-strong);
 }
 
 .sl-pager-sep {
@@ -6326,67 +6423,6 @@ button.sl-but-mini {
   min-height: var(--sl-size-control);
 }
 
-.sl-module-foot {
-  display: flex;
-  align-items: stretch;
-  justify-content: space-between;
-  gap: var(--sl-space-6);
-  margin-top: var(--sl-space-6);
-}
-
-.sl-module-foot-main {
-  display: flex;
-  align-items: center;
-  flex: 1 1 0;
-  min-width: 0;
-}
-
-.sl-module-foot .sl-pager {
-  padding: 0;
-  width: 100%;
-}
-
-.sl-module-foot-side {
-  display: flex;
-  align-items: stretch;
-  flex: 1 1 0;
-  min-width: 0;
-}
-
-.sl-module-foot-side .sl-div-grid {
-  display: block;
-  width: 100%;
-}
-
-.sl-module-foot-side .sl-div-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--sl-space-3);
-  min-height: 100%;
-  padding: var(--sl-space-3);
-  border-radius: var(--sl-radius-2);
-  background: var(--sl-surface);
-}
-
-.sl-module-foot-side .sl-div-label,
-.sl-module-foot-side .sl-div-field {
-  padding: 0;
-}
-
-.sl-module-foot-side .sl-div-field {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--sl-space-3);
-  min-width: 0;
-  flex: 1 1 auto;
-  justify-content: flex-end;
-}
-
-.sl-module-foot-side .sl-select {
-  flex: 0 1 auto;
-}
-
 /* Tabs: tab strip and panels */
 .sl-tabs-nav {
   display: flex;
@@ -6433,6 +6469,25 @@ button.sl-but-mini {
 .sl-tabs-link:hover,
 .sl-tabs-link.sl-is-active {
   color: var(--sl-primary-strong);
+}
+
+/* On a narrow screen the head stacks: the title over its filter, both from the left edge */
+@media (max-width: 900px) {
+  .sl-module-head {
+    align-items: flex-start;
+  }
+
+  .sl-module-head-body {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--sl-space-4);
+  }
+
+  .sl-module-head-subtitle,
+  .sl-filter,
+  .sl-filter-field {
+    flex-wrap: wrap;
+    justify-content: flex-start;
+  }
 }
 
 @media (max-width: 768px) {

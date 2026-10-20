@@ -500,6 +500,7 @@ define('_ORTYPEURL','Cсылка на RSS/XML');
 define('_OVERALL','Всего');
 define('_PADD','Добавлено');
 define('_PAGE','Страница');
+define('_PAGEEND','Вниз');
 define('_PAGEHOME','Начало');
 define('_PAGEKEYNOTE','Пока курсор не стоит в поле ввода');
 define('_PAGEKEYS','Листайте с клавиатуры');

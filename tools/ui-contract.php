@@ -366,8 +366,8 @@ return [
         # A utility that puts a gap after any inline element, beside the input of one form field
         # Merging would move the field's definition into the utility block, where nobody editing the field would look
         '.sl-div-field label input, .sl-inline-gap',
-        # The head of the monitor and the count badge of a sidebar block: two components that share three declarations by coincidence and nothing else
-        '.sl-monitor-head-left, .sl-wrapper.sl-admin-shell .sl-admin-sidebar .sl-block-sidebar-count-label',
+        # The head of the monitor, the count badge of a sidebar block and one field of a list filter: three components sharing three declarations by coincidence
+        '.sl-filter-field, .sl-monitor-head-left, .sl-wrapper.sl-admin-shell .sl-admin-sidebar .sl-block-sidebar-count-label',
         # The tab strip of the icon picker and the filter row of the file manager window: two rows of one gap, met by two components that share nothing else
         # They were in two files until the window became the theme's
         '.sl-fm-win .sl-fm-filters, .sl-icon-modal-tabs',
@@ -468,6 +468,10 @@ return [
         '.sl-but-mini.sl-fm-main, .sl-fm-bar .sl-but-mini[aria-pressed="true"]',
         # The open node of the file tree beside the picture kind of a thumbnail: a place the window is standing in and a kind of file, a coincidence of one tint
         '.sl-fm-node[aria-current="true"], .sl-fm-thumb-img',
+        # The open node of the file tree beside the way up or down of a pager: a place the window stands in and a resting control, a coincidence of one tint
+        '.sl-fm-node[aria-current="true"], .sl-pager-side > a.sl-but-mini',
+        # The zip kind of a thumbnail beside the resting key tip of a pager: a kind of file and a control of the list, a coincidence of the subtle system green
+        '.sl-fm-thumb-zip, .sl-pager .sl-pager-keys > .sl-but-mini',
         # A selected tile beside a drop target under a dragged file: two states of the same panel that mean different things and are free to part
         '.sl-fm-cell[aria-selected="true"] .sl-fm-tile, .sl-fm-drop.sl-drag-over',
         # The caption of the drop zone beside the caption of an empty list: two states of the panel, one inviting and one reporting
@@ -529,10 +533,10 @@ return [
         # Five columns grow into the room their neighbours leave and may shrink below their own text: a notice body, the cabinet RSS field and a comment's right half
         # The words of a rail item and the right half of a footprint row are the other two; the pair is the whole way flexbox is told a column may shrink, which is need
         '.sl-alert-body, .sl-cab-rss-form .sl-form-control, .sl-com-right, .sl-fm-win .sl-fm-rail-item > span, .sl-fp-right',
-        # The same growing column in the administrative theme, reached by a search field, the bottom pager, three language editor controls and the file browser name field
+        # The same growing column in the administrative theme: a search field, the pagers over and under a list, three language editor controls, the file browser name
         '.sl-alert-body, .sl-fm-ops input[type="text"], .sl-fm-win .sl-fm-rail-item > span, '
             .'.sl-lang-edit-row .sl-div-field input[type="text"], .sl-lang-edit-row .sl-div-field .sl-select-config, '
-            .'.sl-lang-edit-row .sl-div-field .sl-select, .sl-list-bottom-pager, .sl-modal-bar [data-sl-icon-search]',
+            .'.sl-lang-edit-row .sl-div-field .sl-select, .sl-list-bottom-pager, .sl-list-head-pager, .sl-modal-bar [data-sl-icon-search]',
         # A filter field, the row list of the window, a panel of the profile facts and the frame every modal opens as: four boxes that stack their children
         # The dialog is the canon of the window, and filing it inside one component's block would hide it from whoever edits either
         '.sl-changelog-filter-field, .sl-fm-win .sl-fm-rows, .sl-profile-facts .sl-profile-panel, dialog.sl-modal[open]',

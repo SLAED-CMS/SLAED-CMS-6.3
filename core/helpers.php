@@ -272,9 +272,12 @@ function getTplAdminTabs(array $data = []): string {
         $ops = $data['ops'] ?? [];
         $tabs = $data['tabs'] ?? [];
         $active = (int)($data['tab'] ?? 0);
+        $part = (array)($data['part'] ?? []);
         foreach ($tabs as $idx => $label) {
+            $href = HOME_PATH.$afile.'.php?'.($ops[$idx] ?? '');
             $links[] = [
-                'href' => HOME_PATH.$afile.'.php?'.($ops[$idx] ?? ''),
+                'href' => $href,
+                'hx_get' => in_array($idx, $part, true) ? $href : '',
                 'is_active' => $idx === $active,
                 'label' => $label,
                 'title' => $label,
@@ -289,6 +292,7 @@ function getTplAdminTabs(array $data = []): string {
         if ($idx > 0 && !empty($link['is_active'])) $adminvars['view'] = (string)($link['label'] ?? '');
         $tabs .= $tpl->getHtmlFrag('tabs-link', [
             'href' => (string)($link['href'] ?? '#'),
+            'hx_get' => (string)($link['hx_get'] ?? ''),
             'is_active' => !empty($link['is_active']),
             'label' => (string)($link['label'] ?? ''),
             'link_attr' => (string)($link['link_attr'] ?? ''),
@@ -306,6 +310,38 @@ function getTplAdminTabs(array $data = []): string {
         'tabs_html' => $tabs,
         'tabs_sync_selector' => (string)($data['tabs_sync_selector'] ?? ''),
         'title' => $title,
+    ]);
+}
+
+# Render one panel list of the canon in place: its head and notes, the table or the empty state, a pager over and under it, the line a reader hears
+function getTplAdminList(array $data): string {
+    global $tpl;
+    $href = (string)($data['href'] ?? '');
+    $count = intval($data['count'] ?? 0);
+    $limit = intval($data['limit'] ?? 0);
+    $page = max(1, intval($data['page'] ?? 1));
+    $pages = intval($data['pages'] ?? 1);
+    $maxpg = intval($data['maxpg'] ?? 8);
+    $rows = (string)($data['rows_html'] ?? '');
+    $none = (string)($data['none_text'] ?? _NO_INFO);
+    $link = static fn(int $i): array => ['href' => $href.'num='.$i];
+    $meta = ['count' => $count, 'limit' => $limit];
+    $said = ($limit > 0) ? sprintf(_PAGERANGE, ($page - 1) * $limit + 1, min($page * $limit, $count)).' · ' : '';
+    return $tpl->getHtmlPart('admin-list', [
+        'head_html' => (string)($data['head_html'] ?? ''),
+        'note_html' => (string)($data['note_html'] ?? ''),
+        'top_html' => ($rows !== '') ? getTplPagerView($page, $pages, $maxpg, $link, $meta + ['is_top' => true]) : '',
+        'pager_html' => ($rows !== '') ? getTplPagerView($page, $pages, $maxpg, $link, $meta) : '',
+        'table_html' => ($rows !== '') ? $tpl->getHtmlFrag('table', [
+            'is_wrapless' => true,
+            'is_fixed' => !empty($data['is_fixed']),
+            'head' => (array)($data['head'] ?? []),
+            'rows_html' => $rows,
+        ]) : '',
+        'actions_html' => ($rows !== '') ? (string)($data['actions_html'] ?? '') : '',
+        'none_text' => $none,
+        'is_calm' => !empty($data['is_calm']),
+        'said' => ($rows !== '') ? $said._OVERALL.' '.$count : $none,
     ]);
 }
 
