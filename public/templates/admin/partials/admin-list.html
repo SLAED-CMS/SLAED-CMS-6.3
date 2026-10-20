@@ -4,7 +4,17 @@
 <div class="sl-box sl-table-shell" data-sl-list-said="{{ said }}">
   <div class="sl-alert sl-alert-error sl-list-note" role="alert" tabindex="-1" data-sl-list-error hidden><div class="sl-alert-body">{{ _ADM_LISTERR }} <button type="button" class="sl-but" data-sl-list-retry><i class="bi bi-arrow-clockwise" aria-hidden="true"></i>{{ _RETRY }}</button></div></div>
   <div class="sl-loading sl-list-busy" aria-hidden="true" data-sl-list-busy hidden></div>
-  {% if top_html %}<div class="sl-list-head"><div class="sl-list-head-pager" hx-boost="true">{{{ top_html }}}</div></div>{% endif %}
+  {% if table_html %}
+  <div class="sl-list-head">
+    <div class="sl-list-head-pager" hx-boost="true">{{{ top_html }}}</div>
+    <div class="sl-list-view">
+      <span class="sl-seg sl-seg-view" data-sl-knob="density" role="group" aria-label="{{ _ADM_VIEW }}">
+        {% for item in views %}<button type="button" class="sl-seg-cell{% if item.is_now %} sl-is-active{% endif %}" data-sl-density="{{ item.key }}" title="{{ item.title }}" aria-label="{{ item.title }}" aria-pressed="{% if item.is_now %}true{% else %}false{% endif %}"{% if item.is_now %}{% else %} tabindex="-1"{% endif %}><i class="bi bi-{{ item.icon_name }}" aria-hidden="true"></i></button>{% endfor %}
+        <span class="sl-seg-knob" data-sl-knob-mark aria-hidden="true"></span>
+      </span>
+    </div>
+  </div>
+  {% endif %}
   {% if table_html %}{{{ table_html }}}{% else %}<p class="sl-list-none{% if is_calm %} sl-list-calm{% endif %}">{{ none_text }}</p>{% endif %}
   {% if pager_html or actions_html %}
   <div class="sl-div-actions">

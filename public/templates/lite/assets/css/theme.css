@@ -2727,7 +2727,22 @@ pre code.hljs {
   line-height: 1;
 }
 
-.sl-tip:focus-visible {
+/* A popover opens from a real button beside its panel: the panel is no part of the button, so its links stay links */
+.sl-tip > button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: inherit;
+}
+
+.sl-tip:focus-visible,
+.sl-tip > button:focus-visible {
   outline: var(--sl-ring-width) solid var(--sl-ring-bg);
   outline-offset: var(--sl-ring-gap);
   border-radius: var(--sl-radius-circle);

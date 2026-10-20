@@ -40,6 +40,11 @@ define('_ADM_LOST','Незбережені зміни буде втрачено.
 define('_ADM_KEEP','Продовжити сесію');
 define('_ADM_LISTERR','Не вдалося завантажити список: сервер не відповів. Позначки й фільтри збережено.');
 define('_ADM_CLEAN','Усе перевірено: черга порожня.');
+define('_ADM_VIEW','Вигляд списку');
+define('_ADM_STD','Стандартний');
+define('_ADM_FULL','Повний');
+define('_ADM_DENSE','Компактний');
+define('_ADM_CARDS','Картки');
 define('_ADMINEMAIL','E-Mail адміністратора');
 define('_ADMINFOEDIT','Активувати редактор відділу інформації?');
 define('_ADMININFO','Нотатки адміністратора');

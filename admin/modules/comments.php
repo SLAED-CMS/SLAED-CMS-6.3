@@ -71,7 +71,7 @@ function comments(): void {
     $data = $com->getAdminList($status ? CommentStatus::Pending : CommentStatus::Published, $flt['modul'], $flt['search'], $chng, $flt['num']);
     $back = $flt['cur'].(($data['page'] > 1) ? '&num='.$data['page'] : '');
     parse_str($back, $keep);
-    $rows = '';
+    $rows = [];
     foreach ($data['rows'] as $val) {
         $id = $val['id'];
         $cid = $val['cid'];
@@ -95,27 +95,26 @@ function comments(): void {
         $acttxt = $stat ? _DEACTIVATE : _ACTIVATE;
         $items[] = getTplPostAction($keep + ['op' => 'approve', 'id[]' => $id, 'typ' => $act], 'power', $acttxt);
         $items[] = getTplPostAction($keep + ['op' => 'delete', 'id[]' => $id], 'trash', _ONDELETE, _DELETE.' "'.$comment.'"?');
-        $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
-            'cells' => [
-                ['is_col_id' => true, 'content_html' => filterTextHighlight((string)$id, $chng)],
-                ['is_truncate' => true, 'title_text' => $comment, 'content_html' => $tpl->getHtmlFrag('popover', [
-                    'items' => [
-                        ['label' => _MODUL, 'value' => $modlabel],
-                        ['label' => 'CID', 'value' => (string)$cid],
-                        ['label' => _DATE, 'value' => format_time($time, _TIMESTRING)],
-                        ['label' => _IP, 'value' => $iptext, 'is_last' => true],
-                    ],
-                    'title_text' => $comment,
-                ]).$comment],
-                ['class_name' => 'sl-col-module', 'is_truncate' => true, 'title_text' => $modlabel, 'content_html' => filterTextHighlight($modlabel, $chng)],
-                ['is_col_author' => true, 'content_html' => $post],
-                ['is_col_date' => true, 'content_html' => format_time($time, _TIMESTRING)],
-                ['is_col_status' => true, 'content_html' => ad_status('', $stat)],
-                ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('dial', ['dial_title' => _FUNCTIONS, 'dial' => $items])],
-                ['is_col_check' => true, 'content_html' => $tpl->getHtmlFrag('checkbox',
-                    ['name_attr' => 'id[]', 'value_attr' => (string)$id, 'is_check' => true, 'input_attr' => 'form="combulk"'])],
-            ],
-        ])]);
+        $rows[] = ['cells' => [
+            ['is_col_id' => true, 'content_html' => filterTextHighlight((string)$id, $chng)],
+            ['is_truncate' => true, 'title_text' => strip_tags($comment), 'prefix_html' => $tpl->getHtmlFrag('popover', [
+                'items' => [
+                    ['label' => _MODUL, 'value' => $modlabel],
+                    ['label' => 'CID', 'value' => (string)$cid],
+                    ['label' => _DATE, 'value' => format_time($time, _TIMESTRING)],
+                    ['label' => _IP, 'value' => $iptext, 'is_last' => true],
+                ],
+                'tip_label' => _DETAILS.': '._COMMENT.' '.$id,
+                'tip_id' => 'sl-tip-'.$id,
+            ]), 'text_html' => $comment],
+            ['class_name' => 'sl-col-module', 'is_truncate' => true, 'title_text' => $modlabel, 'content_html' => filterTextHighlight($modlabel, $chng)],
+            ['is_col_author' => true, 'content_html' => $post],
+            ['is_col_date' => true, 'stamp' => format_time($time, 'c'), 'content_text' => format_time($time, _TIMESTRING)],
+            ['is_col_status' => true, 'content_html' => ad_status('', $stat)],
+            ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('dial', ['dial_title' => _FUNCTIONS, 'dial' => $items])],
+            ['is_col_check' => true, 'content_html' => $tpl->getHtmlFrag('checkbox',
+                ['name_attr' => 'id[]', 'value_attr' => (string)$id, 'is_check' => true, 'input_attr' => 'form="combulk"'])],
+        ]];
     }
     $bulk = $tpl->getHtmlFrag('inline-badge', ['label' => _CHECKOP]).' '
         .$tpl->getHtmlFrag('select', [
@@ -148,7 +147,7 @@ function comments(): void {
             ['is_col_check' => true, 'nosort' => true, 'content' => $tpl->getHtmlFrag('checkbox', ['name_attr' => 'markcheck',
                 'input_id' => 'markcheck', 'is_check' => true, 'input_attr' => 'title="'._CHECKALL.'" form="combulk"'])],
         ],
-        'rows_html' => $rows,
+        'rows' => $rows,
         'href' => $afile.'.php?'.$flt['cur'].'&',
         'page' => $data['page'],
         'pages' => $data['pages'],

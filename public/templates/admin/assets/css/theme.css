@@ -1492,7 +1492,21 @@ pre code.hljs {
   transition: color var(--sl-time-base) var(--sl-ease-out);
 }
 
-.sl-tip > .bi {
+/* Э21 A popover opens from a real button beside its panel: the panel is no part of the button, so its links stay links */
+.sl-tip > button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: inherit;
+}
+
+.sl-tip > button > .bi {
   display: block;
   pointer-events: none;
   transition: transform var(--sl-time-base) var(--sl-ease-out);
@@ -1502,11 +1516,12 @@ pre code.hljs {
   color: var(--sl-primary-strong);
 }
 
-.sl-tip:hover > .bi {
+.sl-tip:hover > button > .bi {
   transform: scale(1.1);
 }
 
-.sl-tip:focus-visible {
+.sl-tip:focus-visible,
+.sl-tip > button:focus-visible {
   outline: var(--sl-ring-width) solid var(--sl-ring-bg);
   outline-offset: var(--sl-ring-gap);
   border-radius: var(--sl-radius-circle);
@@ -3569,6 +3584,314 @@ dialog.sl-editor-emoji-panel {
 
 [data-sl-list][aria-busy="true"] .sl-table-shell tbody {
   opacity: var(--sl-fade-muted);
+}
+
+/* В02.1 The view of a canon list stands at the right end of the row over it */
+.sl-list-view {
+  flex: 0 0 auto;
+  margin-left: auto;
+}
+
+/* В02.5 В02.6 В07.4 The head of a canon list stays in view; the row in hand takes the tint softly, a picked row a stronger one */
+.sl-table-list-sort[data-sl-density] thead th {
+  position: sticky;
+  top: 0;
+  z-index: var(--sl-z-raised);
+}
+
+.sl-table-list-sort[data-sl-density] tbody td {
+  transition: background-color var(--sl-time-base) var(--sl-ease-out);
+}
+
+.sl-table-list-sort[data-sl-density] tbody tr:hover > td {
+  background-color: var(--sl-tint);
+}
+
+.sl-table-list-sort[data-sl-density] tbody tr:has(> .sl-col-check input:checked) > td {
+  background-color: var(--sl-tint-strong);
+}
+
+/* В07.1 The rows a filter, a tab or a page brings enter one after another; motion off makes the cascade instant */
+/* Backwards only: an animation held after its end keeps every row a stacking context, and a row would cover the tip of the one above */
+.sl-table-list-sort[data-sl-density] tbody tr[data-sl-enter] {
+  animation: sl-row-in calc(var(--sl-time-slow) + var(--sl-time-fast)) var(--sl-ease-out) backwards;
+  animation-delay: calc(min(var(--sl-d-order, 0), 12) * var(--sl-time-fast) / 3);
+}
+
+@keyframes sl-row-in {
+  from {
+    opacity: 0;
+    transform: translateY(var(--sl-space-5));
+  }
+}
+
+/* В02.2 В02.3 В02.4 The views apply above a phone; a phone draws its own cards */
+@media (width > 560px) {
+  /* В02.3 Compact: a row 24px high in smaller type */
+  .sl-table-list-sort[data-sl-density="compact"] tbody td {
+    height: calc(var(--sl-size-control) - var(--sl-space-2));
+    min-height: 0;
+    font-size: var(--sl-font-small);
+    line-height: var(--sl-line-tight);
+  }
+
+  .sl-table-list-sort[data-sl-density="compact"] .sl-dial-toggle {
+    width: var(--sl-size-icon-sm);
+    height: var(--sl-size-icon-sm);
+    min-width: 0;
+  }
+
+  /* В02.2 Full: the text and the module wrap instead of ending in an ellipsis, a row grows to its text */
+  .sl-table-list-sort[data-sl-density="full"] .sl-cell-ellipsis {
+    overflow: visible;
+    white-space: normal;
+    text-overflow: clip;
+    overflow-wrap: anywhere;
+  }
+
+  .sl-table-list-sort[data-sl-density="full"] tbody td {
+    padding-top: var(--sl-space-3);
+    padding-bottom: var(--sl-space-3);
+    line-height: var(--sl-line-normal);
+  }
+
+  /* В02.4 Cards: one order in every card - status, number, module; the text in two lines; author, date and the fan */
+  .sl-table-list-sort[data-sl-density="cards"] {
+    display: block;
+  }
+
+  .sl-table-list-sort[data-sl-density="cards"] thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .sl-table-list-sort[data-sl-density="cards"] tbody {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: var(--sl-space-4);
+  }
+
+  .sl-table-list-sort[data-sl-density="cards"] tbody tr {
+    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--sl-space-3) var(--sl-space-2);
+    padding: var(--sl-space-5);
+    border: 1px solid var(--sl-border);
+    border-radius: var(--sl-radius-2);
+    background: var(--sl-surface);
+    box-shadow: var(--sl-shadow-xs);
+  }
+
+  .sl-table-list-sort[data-sl-density="cards"] tbody tr:hover {
+    border-color: var(--sl-border-strong);
+    box-shadow: var(--sl-shadow-raised);
+  }
+
+  .sl-table-list-sort[data-sl-density="cards"] tbody tr:has(> .sl-col-check input:checked) {
+    border-color: var(--sl-primary);
+    background: var(--sl-tint);
+  }
+
+  .sl-table-list-sort[data-sl-density="cards"] tbody tr:is(:hover, :has(> .sl-col-check input:checked)) > td,
+  .sl-table-list-sort[data-sl-density="cards"] tbody tr > td {
+    display: block;
+    width: auto;
+    max-width: none;
+    height: auto;
+    min-height: 0;
+    padding: 0;
+    overflow: visible;
+    border: 0;
+    background: none;
+    line-height: var(--sl-line-normal);
+    text-align: left;
+    white-space: nowrap;
+  }
+
+  .sl-table-list-sort[data-sl-density="cards"] td.sl-col-status {
+    order: 1;
+    display: flex;
+    margin-right: var(--sl-space-2);
+  }
+
+  .sl-table-list-sort[data-sl-density="cards"] td.sl-col-id {
+    order: 2;
+    color: var(--sl-text-muted);
+    font-size: var(--sl-font-small);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .sl-table-list-sort[data-sl-density="cards"] td.sl-col-id::before {
+    content: attr(data-label) " ";
+  }
+
+  .sl-table-list-sort[data-sl-density="cards"] td.sl-col-module {
+    order: 3;
+    flex: 1 1 0;
+    min-width: 0;
+    overflow: hidden;
+    color: var(--sl-text-muted);
+    font-size: var(--sl-font-small);
+    text-overflow: ellipsis;
+  }
+
+  .sl-table-list-sort[data-sl-density="cards"] td.sl-col-check {
+    order: 4;
+    display: flex;
+    align-self: flex-start;
+    justify-content: center;
+  }
+
+  .sl-table-list-sort[data-sl-density="cards"] td.sl-cell-ellipsis:not(.sl-col-module) {
+    order: 5;
+    flex: 1 0 100%;
+    display: flex;
+    align-items: flex-start;
+    gap: var(--sl-space-3);
+    font-weight: var(--sl-weight-semibold);
+    white-space: normal;
+  }
+
+  .sl-table-list-sort[data-sl-density="cards"] .sl-cell-text {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    overflow-wrap: anywhere;
+  }
+
+  .sl-table-list-sort[data-sl-density="cards"] td.sl-cell-ellipsis:not(.sl-col-module) .sl-float {
+    flex: 0 0 auto;
+    margin: 0;
+  }
+
+  .sl-table-list-sort[data-sl-density="cards"] td.sl-col-author {
+    order: 6;
+    min-width: 0;
+    overflow: hidden;
+    font-size: var(--sl-font-small);
+    text-overflow: ellipsis;
+  }
+
+  .sl-table-list-sort[data-sl-density="cards"] td.sl-col-date {
+    order: 7;
+    flex: 1 1 auto;
+    color: var(--sl-text-muted);
+    font-size: var(--sl-font-small);
+  }
+
+  .sl-table-list-sort[data-sl-density="cards"] td.sl-col-module::before,
+  .sl-table-list-sort[data-sl-density="cards"] td.sl-col-date::before {
+    content: "· ";
+  }
+
+  .sl-table-list-sort[data-sl-density="cards"] td.sl-col-actions {
+    order: 8;
+    position: relative;
+    width: var(--sl-size-control);
+    height: var(--sl-size-control);
+  }
+
+  .sl-table-list-sort[data-sl-density="cards"] td.sl-col-actions .sl-dial {
+    right: 0;
+  }
+}
+
+/* Э32 A phone: a row is a card with the names of its columns, whatever view was chosen; the switch steps aside */
+@media (max-width: 560px) {
+  .sl-list-view {
+    display: none;
+  }
+
+  .sl-table-list-sort[data-sl-density] thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .sl-table-list-sort[data-sl-density],
+  .sl-table-list-sort[data-sl-density] tbody {
+    display: block;
+    width: 100%;
+  }
+
+  .sl-table-list-sort[data-sl-density] tbody tr {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: var(--sl-space-2) var(--sl-space-4);
+    margin: 0 0 var(--sl-space-4);
+    padding: var(--sl-space-4);
+    border: 1px solid var(--sl-border);
+    border-radius: var(--sl-radius-2);
+    background: var(--sl-surface);
+  }
+
+  .sl-table-list-sort[data-sl-density] tbody tr:has(> .sl-col-check input:checked) {
+    border-color: var(--sl-primary);
+    background: var(--sl-tint);
+  }
+
+  .sl-table-list-sort[data-sl-density] tbody tr:is(:hover, :has(> .sl-col-check input:checked)) > td,
+  .sl-table-list-sort[data-sl-density] tbody tr > td {
+    display: block;
+    width: auto;
+    max-width: none;
+    height: auto;
+    min-height: 0;
+    padding: 0;
+    overflow: visible;
+    border: 0;
+    background: none;
+    line-height: var(--sl-line-normal);
+    text-align: left;
+    white-space: normal;
+  }
+
+  .sl-table-list-sort[data-sl-density] td[data-label]::before {
+    display: block;
+    color: var(--sl-text-muted);
+    font-size: var(--sl-font-micro);
+    content: attr(data-label);
+  }
+
+  .sl-table-list-sort[data-sl-density] td.sl-cell-ellipsis:not(.sl-col-module) {
+    grid-column: 1 / -1;
+  }
+
+  .sl-table-list-sort[data-sl-density] :is(td.sl-col-actions, td.sl-col-check) {
+    position: relative;
+    min-height: var(--sl-size-control);
+  }
+}
+
+/* Э32 A phone with a pick: the bulk action stands at the foot of the screen, in reach of the thumb, and the notice steps over it */
+@media (max-width: 900px) {
+  body:has([data-sl-density] tbody .sl-col-check input:checked) .sl-list-bottom-actions {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: var(--sl-z-sticky);
+    flex-wrap: wrap;
+    padding: var(--sl-space-4) var(--sl-space-5);
+    border-top: 1px solid var(--sl-border);
+    border-radius: 0;
+    box-shadow: var(--sl-shadow-float);
+  }
+
+  body:has([data-sl-density] tbody .sl-col-check input:checked) .sl-toast-host {
+    bottom: calc(var(--sl-size-control) + var(--sl-space-8) * 2);
+  }
 }
 
 /* Chips: unified tinted pill labels — shared vocabulary with the lite theme (sl-chip + tone modifiers) */

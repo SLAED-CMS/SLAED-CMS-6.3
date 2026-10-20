@@ -1448,10 +1448,69 @@
         if (!line) return;
         queue.title = '';
         setQueueTitle();
+        if (event.detail && event.detail.requestConfig) setRowsEnter(box);
         if (!said) return;
         said.textContent = '';
         window.setTimeout(function () { said.textContent = line.getAttribute('data-sl-list-said') || ''; }, 100);
     });
+    // В07.1 The rows a filter, a tab or a page brings enter one after another; a list Back restores only stands
+    function setRowsEnter(box) {
+        box.querySelectorAll('table[data-sl-density] > tbody > tr').forEach(function (row, i) {
+            row.style.setProperty('--sl-d-order', String(i));
+            row.setAttribute('data-sl-enter', '');
+        });
+    }
+    // В02.1 The view of a canon list changes the table at once and is stored through op option; a refusal puts the view back
+    function setListDensity(btn) {
+        var seg = btn.closest('[data-sl-knob="density"]');
+        var box = btn.closest('[data-sl-list]');
+        var table = box ? box.querySelector('table[data-sl-density]') : null;
+        var key = btn.getAttribute('data-sl-density');
+        if (!seg || !table) return;
+        var was = table.getAttribute('data-sl-density');
+        var draw = function (now) {
+            table.setAttribute('data-sl-density', now);
+            seg.querySelectorAll('[data-sl-density]').forEach(function (cell) {
+                var on = cell.getAttribute('data-sl-density') === now;
+                cell.classList.toggle('sl-is-active', on);
+                cell.setAttribute('aria-pressed', on ? 'true' : 'false');
+                cell.tabIndex = on ? 0 : -1;
+            });
+        };
+        if (key === was) return;
+        draw(key);
+        setOptionSend('density', key).catch(function () { draw(was); });
+    }
+    document.addEventListener('click', function (event) {
+        var btn = event.target.closest ? event.target.closest('.sl-seg-view [data-sl-density]') : null;
+        if (btn) setListDensity(btn);
+    });
+    // В02.1 The views are one stop of Tab and the arrows walk them; caught first, so the arrows do not turn the page as well
+    document.addEventListener('keydown', function (event) {
+        var btn = event.target.closest ? event.target.closest('.sl-seg-view [data-sl-density]') : null;
+        var step = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[event.key];
+        if (!btn || !step) return;
+        event.preventDefault();
+        var list = Array.prototype.slice.call(btn.parentNode.querySelectorAll('[data-sl-density]'));
+        var next = list[(list.indexOf(btn) + step + list.length) % list.length];
+        setListDensity(next);
+        next.focus();
+    }, true);
+    // Э20 A date of a list reads relative in the language of the page; the exact moment stays in its title and datetime
+    function setTimeAgo(node) {
+        var list = (node && node.querySelectorAll ? node : document).querySelectorAll('time[data-sl-ago]');
+        if (!list.length || !window.Intl || !window.Intl.RelativeTimeFormat) return;
+        var fmt = new window.Intl.RelativeTimeFormat(document.documentElement.lang || undefined, { numeric: 'auto' });
+        var steps = [['year', 31536000], ['month', 2592000], ['week', 604800], ['day', 86400], ['hour', 3600], ['minute', 60]];
+        list.forEach(function (time) {
+            var sec = (Date.parse(time.dateTime) - Date.now()) / 1000;
+            var step = steps.find(function (one) { return Math.abs(sec) >= one[1]; }) || steps[steps.length - 1];
+            if (isNaN(sec)) return;
+            if (!time.title) time.title = time.textContent.trim();
+            time.textContent = fmt.format(Math.round(sec / step[1]), step[0]);
+        });
+    }
+    document.addEventListener('htmx:afterSwap', function (event) { setTimeAgo(event.target); });
     var sess = { end: 0, max: 0, warn: 0 };
     // The server names the seconds the session has left: on the page, after "Extend" and in every answer of the poll, which an action in another tab moves
     function setSessionLeft(left) {
@@ -1535,6 +1594,7 @@
             setQueuePoll();
             setSessionWatch();
             setMenuFind();
+            setTimeAgo(document);
         });
     } else {
         addFileStep();
@@ -1544,5 +1604,6 @@
         setQueuePoll();
         setSessionWatch();
         setMenuFind();
+        setTimeAgo(document);
     }
 })();

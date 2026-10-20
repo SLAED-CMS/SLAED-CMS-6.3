@@ -368,11 +368,44 @@
                 new window.Tablesort(table);
                 table.addEventListener('afterSort', function (event) {
                     setTableSortState(event.currentTarget);
+                    setTableSortSaid(event.currentTarget);
                 });
                 table.setAttribute('data-sort-ready', '1');
+                setTableSortKept(table);
             }
             setTableSortState(table);
         }
+    }
+
+    // Э19 A table naming its key gets back the sort its viewer chose last, quietly, as nothing was asked
+    function setTableSortKept(table) {
+        var key = table.getAttribute('data-sl-sort-keep');
+        var kept = null;
+        if (!key) return;
+        try {
+            kept = JSON.parse(getToggleState('sort-' + key, 'site') || 'null');
+        } catch (err) {
+            kept = null;
+        }
+        var cell = kept && table.tHead.rows[0] ? table.tHead.rows[0].cells[kept.at] : null;
+        if (!cell || cell.getAttribute('data-sort-method') === 'none') return;
+        table.slSortQuiet = true;
+        cell.click();
+        if (cell.getAttribute('aria-sort') !== kept.dir) cell.click();
+        table.slSortQuiet = false;
+    }
+
+    // Э19 A sort the viewer made is kept for the table's key and said on the status line of the page
+    function setTableSortSaid(table) {
+        var key = table.getAttribute('data-sl-sort-keep');
+        var cell = table.tHead ? table.tHead.querySelector('th[aria-sort]') : null;
+        var said = document.querySelector('[data-sl-said]');
+        if (!key || !cell || table.slSortQuiet) return;
+        var dir = cell.getAttribute('aria-sort');
+        setToggleState('sort-' + key, 'site', JSON.stringify({ at: cell.cellIndex, dir: dir }));
+        if (!said) return;
+        said.textContent = (table.getAttribute('data-sl-sort-said') || '') + ': ' + cell.textContent.trim() + ', '
+            + (table.getAttribute(dir === 'ascending' ? 'data-sl-sort-asc' : 'data-sl-sort-desc') || '');
     }
 
     // A per-viewer choice kept for the site, for one address with scope "path", or never with scope "none"; refused storage keeps the defaults
@@ -2927,9 +2960,11 @@
     window.addEventListener('resize', refitFloating);
     window.addEventListener('scroll', refitFloating, true);
 
+    // A deferred bundle runs this file before the scripts that follow it, Tablesort among them, so the tables wait for the end of the bundle
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', setSlaedUi);
     } else {
         setSlaedUi();
+        if (typeof window.Tablesort === 'undefined') document.addEventListener('DOMContentLoaded', function () { setTableSort(document); });
     }
 })();

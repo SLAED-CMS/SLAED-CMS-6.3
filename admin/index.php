@@ -370,7 +370,7 @@ function getAdminLoginForm(): void {
     setFoot();
 }
 
-# Store one answer the page has already applied, so the reply is a status: mode, motion and the rail as cookies, the editor on the row and in the session
+# Store one answer the page has already applied, so the reply is a status: mode, motion, rail and list view as cookies, the editor on the row and in the session
 function setAdminOption(): void {
     global $db, $admin, $conf;
     if (!checkAdminPost('option')) {
@@ -380,13 +380,16 @@ function setAdminOption(): void {
     $key = getVar('post', 'key', 'var', '');
     $val = getVar('post', 'value', 'var', '');
     $part = explode(':', base64_decode($_SESSION[$conf['admin_c']] ?? '', true), 4);
-    if (!in_array($key, ['mode', 'still', 'rail', 'editor'], true) || ($key === 'editor' && count($part) !== 4)) {
+    if (!in_array($key, ['mode', 'still', 'rail', 'density', 'editor'], true) || ($key === 'editor' && count($part) !== 4)) {
         setAdminLog(['result' => 'refused']);
         http_response_code(400);
         exit;
     }
     if ($key === 'mode') {
         setThemeMode($val);
+    } elseif ($key === 'density') {
+        if (in_array($val, ['full', 'compact', 'cards'], true)) setCookies($key, time() + 31536000, $val);
+        else setCookiesDelete($key);
     } elseif ($key !== 'editor') {
         if ($val === '1') setCookies($key, time() + 31536000, '1');
         else setCookiesDelete($key);

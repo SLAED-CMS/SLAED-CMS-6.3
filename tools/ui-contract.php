@@ -249,6 +249,7 @@ return [
         '--sl-d-view-height' => 'height of what the editor preview shows, measured in its sandboxed frame, plugins/system/editor.js',
         '--sl-d-members' => 'session donut member share, templates/lite/partials/session-summary.html',
         '--sl-d-meter' => 'profile completeness percentage, templates/lite/partials/account-settings.html and plugins/system/slaed.js',
+        '--sl-d-order' => 'place of a row of a canon list in the cascade it enters by, templates/admin/assets/js/admin-ui.js',
         '--sl-d-at' => 'settings rail mark index, templates/lite/partials/account-settings.html',
         '--sl-d-of' => 'settings rail mark count less one, templates/lite/partials/account-settings.html',
         '--sl-d-part' => 'share of a measured figure as a percentage, templates/lite/fragments/presentation-stat.html, partials/presentation-stats.html'

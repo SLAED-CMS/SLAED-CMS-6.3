@@ -6,6 +6,8 @@
   class="sl-table-list-sort{% if is_fixed %} sl-table-fixed{% endif %}"
   {% if attr %}{{{ attr }}}{% endif %}
   {% if disable_sort %}{% else %}data-sl-table-sort{% endif %}
+  {% if density %}data-sl-density="{{ density }}"{% endif %}
+  {% if sort_key %}data-sl-sort-keep="{{ sort_key }}" data-sl-sort-said="{{ _SORT }}" data-sl-sort-asc="{{ _ASC }}" data-sl-sort-desc="{{ _DESC }}"{% endif %}
 >
 <thead>
   <tr>

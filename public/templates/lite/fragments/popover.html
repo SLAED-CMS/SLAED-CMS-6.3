@@ -1,10 +1,10 @@
 {% if content_html %}
-<div class="sl-float sl-tip" tabindex="0"><span class="sl-tip-icon"><i class="bi bi-info-circle-fill" aria-hidden="true"></i></span><div class="sl-float-panel">{{{ content_html }}}</div></div>
+<div class="sl-float sl-tip"><button type="button" aria-label="{% if tip_label %}{{ tip_label }}{% else %}{{ _DETAILS }}{% endif %}"{% if tip_id %} aria-describedby="{{ tip_id }}"{% endif %}><span class="sl-tip-icon"><i class="bi bi-info-circle-fill" aria-hidden="true"></i></span></button><div class="sl-float-panel" role="tooltip"{% if tip_id %} id="{{ tip_id }}"{% endif %}>{{{ content_html }}}</div></div>
 {% endif %}
 {% if items %}
-<div class="sl-float sl-tip" tabindex="0">
-  <span class="sl-tip-icon"><i class="bi bi-info-circle-fill" aria-hidden="true"></i></span>
-  <div class="sl-float-panel">
+<div class="sl-float sl-tip">
+  <button type="button" aria-label="{% if tip_label %}{{ tip_label }}{% else %}{{ _DETAILS }}{% endif %}"{% if tip_id %} aria-describedby="{{ tip_id }}"{% endif %}><span class="sl-tip-icon"><i class="bi bi-info-circle-fill" aria-hidden="true"></i></span></button>
+  <div class="sl-float-panel" role="tooltip"{% if tip_id %} id="{{ tip_id }}"{% endif %}>
     <dl>
       {% for item in items %}
       {% if item.label %}<dt>{{ item.label }}</dt>{% endif %}

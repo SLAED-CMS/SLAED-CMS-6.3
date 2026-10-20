@@ -313,7 +313,7 @@ function getTplAdminTabs(array $data = []): string {
     ]);
 }
 
-# Render one panel list of the canon in place: its head and notes, the table or the empty state, a pager over and under it, the line a reader hears
+# Render one panel list of the canon in place, its rows from cells named by their column for a phone; rows_html serves the screens not yet on the canon
 function getTplAdminList(array $data): string {
     global $tpl;
     $href = (string)($data['href'] ?? '');
@@ -322,7 +322,19 @@ function getTplAdminList(array $data): string {
     $page = max(1, intval($data['page'] ?? 1));
     $pages = intval($data['pages'] ?? 1);
     $maxpg = intval($data['maxpg'] ?? 8);
+    $head = (array)($data['head'] ?? []);
+    $names = array_map(static fn(array $col): string => trim(html_entity_decode(strip_tags((string)($col['content'] ?? '')), ENT_QUOTES, 'UTF-8')), $head);
     $rows = (string)($data['rows_html'] ?? '');
+    foreach ((array)($data['rows'] ?? []) as $row) {
+        $cells = [];
+        foreach ((array)($row['cells'] ?? []) as $i => $cell) $cells[] = $cell + ['label' => $names[$i] ?? ''];
+        $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', ['cells' => $cells])] + array_diff_key($row, ['cells' => 0]));
+    }
+    $density = getCookies('density');
+    if (!in_array($density, ['full', 'compact', 'cards'], true)) $density = 'standard';
+    $views = [];
+    $kinds = ['standard' => [_ADM_STD, 'table'], 'full' => [_ADM_FULL, 'text-wrap'], 'compact' => [_ADM_DENSE, 'list'], 'cards' => [_ADM_CARDS, 'grid-3x2-gap']];
+    foreach ($kinds as $key => [$title, $icon]) $views[] = ['key' => $key, 'title' => $title, 'icon_name' => $icon, 'is_now' => $key === $density];
     $none = (string)($data['none_text'] ?? _NO_INFO);
     $link = static fn(int $i): array => ['href' => $href.'num='.$i];
     $meta = ['count' => $count, 'limit' => $limit];
@@ -335,9 +347,12 @@ function getTplAdminList(array $data): string {
         'table_html' => ($rows !== '') ? $tpl->getHtmlFrag('table', [
             'is_wrapless' => true,
             'is_fixed' => !empty($data['is_fixed']),
-            'head' => (array)($data['head'] ?? []),
+            'density' => $density,
+            'sort_key' => (string)($data['key'] ?? filterWord(getVar('get', 'name', 'text', ''))),
+            'head' => $head,
             'rows_html' => $rows,
         ]) : '',
+        'views' => $views,
         'actions_html' => ($rows !== '') ? (string)($data['actions_html'] ?? '') : '',
         'none_text' => $none,
         'is_calm' => !empty($data['is_calm']),

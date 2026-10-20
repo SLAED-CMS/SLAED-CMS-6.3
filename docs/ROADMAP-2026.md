@@ -251,7 +251,13 @@ into the plan, then do whatever work the step names.
   with the title and the content; the filter is `fragments/list-filter.html`, the tabs of a list take `part` of
   `getTplAdminTabs()`, both pagers stay under a filter (owner, 2026-10-20). Back redraws the parts of a restored list
   through `htmx:historyRestore` in `slaed.js`, the Node list included. (2026-10-20)
-- [ ] 97. ADMIN-UI batch 9 — the list canon, row and view, on "Комментарии".
+- [x] 97. ADMIN-UI batch 9 — the list canon, row and view, on "Комментарии". The view is the cookie `density` through op
+  `option`, one for every panel list; `getTplAdminList()` draws the rows from their cells and gives each the name of its
+  column; the sort is kept per module in `localStorage` and said on `data-sl-said`; the names `sl-list-view`,
+  `sl-cell-text`, `data-sl-density`, `data-sl-enter`, `--sl-d-order`, `_ADM_VIEW`, `_ADM_STD`, `_ADM_FULL`, `_ADM_DENSE`,
+  `_ADM_CARDS`, `_DETAILS` (owner, 2026-10-20). Tablesort now binds once the deferred bundle has run, on every sortable
+  table of the panel and the site; the popover opens from a real button beside its panel, `tip_id` naming the panel
+  (owner, 2026-10-20). (2026-10-20)
 - [ ] 98. ADMIN-UI batch 10 — the list canon, actions with undo, on "Комментарии".
 - [ ] 99. ADMIN-UI batch 11 — the form canon on "Конфигурации".
 - [ ] 100. ADMIN-UI batch 12 — the panel lists onto the canon, part 1.

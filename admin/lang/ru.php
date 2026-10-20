@@ -40,6 +40,11 @@ define('_ADM_LOST','Несохранённые изменения пропаду
 define('_ADM_KEEP','Продлить сессию');
 define('_ADM_LISTERR','Не удалось загрузить список: сервер не ответил. Отметки и фильтры сохранены.');
 define('_ADM_CLEAN','Всё проверено: очередь пуста.');
+define('_ADM_VIEW','Вид списка');
+define('_ADM_STD','Стандартный');
+define('_ADM_FULL','Полный');
+define('_ADM_DENSE','Компактный');
+define('_ADM_CARDS','Карточки');
 define('_ADMINEMAIL','E-Mail администратора');
 define('_ADMINFOEDIT','Активировать редактор отдела информации?');
 define('_ADMININFO','Заметки администратора');

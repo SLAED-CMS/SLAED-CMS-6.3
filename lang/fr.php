@@ -109,6 +109,7 @@ define('_DOWNLOAD','Télécharger');
 define('_DESC',"Dans l'ordre décroissant");
 define('_DESCENDING','Décroissant');
 define('_DESCRIPTION','Description');
+define('_DETAILS','Détails');
 define('_DOWN','Télécharger');
 define('_DOWNLLINK','Visiter le site web');
 define('_D_DEL','Supprimé le fichier');

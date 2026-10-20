@@ -109,6 +109,7 @@ define('_DOWNLOAD','Скачать');
 define('_DESC','В порядке убывания');
 define('_DESCENDING','Убывание');
 define('_DESCRIPTION','Описание');
+define('_DETAILS','Подробности');
 define('_DOWN','Скачать');
 define('_DOWNLLINK','Посетить сайт');
 define('_D_DEL','Удалён файл');
