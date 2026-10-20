@@ -10,7 +10,7 @@ $probework = (string)($argv[2] ?? '');
 require_once __DIR__.'/probe_boot.php';
 # The moderator half of the comment class needs a signed-in administrator, and isAdmin() memoizes its verdict on the first call the boot itself makes
 # So the session is opened and filled here, before core/security.php reads it: the boot then skips its own session_start() and finds the administrator already there
-if (in_array($argv[1] ?? '', ['commentstage', 'commentthread'], true)) {
+if (in_array($argv[1] ?? '', ['commentstage', 'commentsweep', 'commentthread'], true)) {
     $acon = (require BASE_DIR.'/config/db.php')['db'];
     $akey = (string)((require BASE_DIR.'/config/global.php')['admin_c'] ?? 'panel');
     $apdo = new PDO('mysql:host='.$acon['host'].';dbname='.$acon['name'].';charset=utf8mb4', $acon['uname'], $acon['pass']);
@@ -434,6 +434,88 @@ function getProbeCommentStage2(): array {
     for ($i = 0; $i < 2; $i++) {
         $out['sort'][] = array_column($com->getList('voting', $tid, 1)['rows'], 'id');
     }
+    $db->setSqlRollback();
+    $out['clean'] = ($all === getProbeCommentCount());
+    return $out;
+}
+
+# Report a sweep of the moderation scope beside the single write: its portions, its scope, and the points it moves against one set moderated row by row
+function getProbeCommentSweep(): array {
+    global $db, $com, $conf, $user;
+    $out = ['admin' => isAdmin(true), 'clean' => false];
+    if (!$out['admin']) return $out;
+    $sql = 'SELECT id, name, password FROM '.PREFIX_DB.'_users WHERE access = 0 AND password != \'\' AND name REGEXP \'^[A-Za-z0-9_.-]+$\' ORDER BY id ASC LIMIT 1';
+    $one = $db->getSqlRow($db->getSqlQuery($sql));
+    $uid = $one ? intval($one['id']) : 0;
+    if ($one) $user = [(string)$one['id'], (string)$one['name'], (string)$one['password']];
+    $out['gain'] = (($conf['update']['points'] ?? '') === '6.3.0' && $conf['points']['active'] === '1') ? intval($conf['points']['actions']['comment']['points']) : 0;
+    $all = getProbeCommentCount();
+    $db->setSqlBegin();
+    $addr = getIp();
+    $tid = 0;
+    foreach ($db->getSqlRows($db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_voting WHERE modul = \'\' ORDER BY id DESC LIMIT 25')) ?: [] as $row) {
+        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_voting SET acomm = 2 WHERE id = :id', ['id' => intval($row['id'])]);
+        if ($com->getTargetMode('voting', intval($row['id'])) === CommentMode::Open) {
+            $tid = intval($row['id']);
+            break;
+        }
+    }
+    $out['target'] = $tid;
+    if (!$tid) {
+        $db->setSqlRollback();
+        return $out;
+    }
+    $mark = 'sweepprobe'.bin2hex(random_bytes(4));
+    $seed = static function (string $tag, int $num) use ($db, $com, $tid, $addr, $mark): array {
+        $ids = [];
+        for ($i = 1; $i <= $num; $i++) {
+            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_comment SET time = DATE_SUB(NOW(), INTERVAL 1 DAY) WHERE ip = :ip', ['ip' => $addr]);
+            $ids[] = $id = intval($com->addComment('voting', $tid, $mark.' '.$tag.' '.$i, 'Probe')['id']);
+            $com->setStatus($id, false);
+        }
+        return $ids;
+    };
+    $read = static function () use ($db, $uid): int {
+        $row = $db->getSqlRow($db->getSqlQuery('SELECT points FROM '.PREFIX_DB.'_users WHERE id = :id', ['id' => $uid]));
+        return intval($row['points'] ?? 0);
+    };
+    $state = static function (array $ids) use ($db): array {
+        $out = [];
+        foreach ($ids as $id) {
+            $row = $db->getSqlRow($db->getSqlQuery('SELECT status, deleted FROM '.PREFIX_DB.'_comment WHERE id = :id', ['id' => $id]));
+            $out[] = [intval($row['status'] ?? -1), ($row['deleted'] ?? null) !== null];
+        }
+        return $out;
+    };
+    $sweep = static function (CommentStatus $stat, string $act, int $upto) use ($com, $mark): array {
+        $runs = [];
+        $after = 0;
+        do {
+            $one = $com->setAdminPortion($stat, 'voting', 2, $mark.' swept', $act, $after, $upto, 2);
+            $runs[] = $one;
+            $after = $one['after'];
+        } while ($one['more'] && count($runs) < 10);
+        return $runs;
+    };
+    $swept = $seed('swept', 3);
+    $plain = $seed('plain', 3);
+    $other = $seed('other', 1);
+    $out['seeded'] = count(array_filter(array_merge($swept, $plain, $other)));
+    $upto = intval($com->getAdminList(CommentStatus::Pending, 'voting', 2, $mark.' swept', 1)['upto']);
+    $late = $seed('swept', 1);
+    $was = $read();
+    $out['open'] = $sweep(CommentStatus::Pending, 'a1', $upto);
+    $mid = $read();
+    foreach ($plain as $id) $com->setStatus($id, true);
+    $out['opened'] = [$mid - $was, $read() - $mid, $state($swept), $state($plain)];
+    $was = $read();
+    $out['drop'] = $sweep(CommentStatus::Published, 'd', $upto);
+    $mid = $read();
+    foreach ($plain as $id) $com->deleteComment($id);
+    $out['dropped'] = [$mid - $was, $read() - $mid, $state($swept), $state($plain)];
+    $out['other'] = $state($other);
+    $out['late'] = [$upto === max($swept), $state($late)];
+    $out['nothing'] = $com->setAdminPortion(CommentStatus::Published, 'voting', 2, $mark.' swept', 'x', 0, $upto, 2);
     $db->setSqlRollback();
     $out['clean'] = ($all === getProbeCommentCount());
     return $out;
@@ -1042,6 +1124,8 @@ if ($mode === 'statscookie') {
     $out = getProbeCommentTarget();
 } elseif ($mode === 'commentstage') {
     $out = getProbeCommentStage2();
+} elseif ($mode === 'commentsweep') {
+    $out = getProbeCommentSweep();
 } elseif ($mode === 'commentthread') {
     $out = getProbeCommentThread();
 } elseif ($mode === 'commentnotify') {

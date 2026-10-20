@@ -209,4 +209,68 @@ final class CommentStateTest extends TestCase
         $this->assertStringContainsString('href="#"', $data['url'], 'A script scheme survived a bracket link');
         $this->assertStringNotContainsString('<b>raw</b>', $data['usehtml'], 'The trusted html escape hatch fired for a comment body');
     }
+
+    # Return the sweep report, or skip when this installation has no administrator or no writable poll for the probe
+    private function getSweep(): array
+    {
+        $data = $this->getProbe('commentsweep');
+        if (!$data['admin']) $this->markTestSkipped('No super administrator with a stored address on this installation');
+        if (empty($data['target'])) $this->markTestSkipped('No writable poll on this installation');
+        $this->assertSame(7, $data['seeded'], 'The probe could not seed its comments');
+        return $data;
+    }
+
+    # The sweep writes real rows and may not leave one behind
+    #[Test]
+    public function theSweepProbeLeavesTheTableUntouched(): void
+    {
+        $this->assertTrue($this->getProbe('commentsweep')['clean']);
+    }
+
+    # A sweep goes portion by portion behind its cursor: three rows in portions of two are two calls, and the second says nothing is left
+    #[Test]
+    public function aSweepEndsPortionByPortion(): void
+    {
+        $data = $this->getSweep();
+        foreach (['open', 'drop'] as $step) {
+            $this->assertCount(2, $data[$step], 'The '.$step.' sweep did not take three rows in two portions');
+            [$one, $two] = $data[$step];
+            $this->assertSame([2, 0, true], [$one['done'], $one['fail'], $one['more']], 'The first portion of the '.$step.' sweep');
+            $this->assertSame([1, 0, false], [$two['done'], $two['fail'], $two['more']], 'The last portion of the '.$step.' sweep');
+            $this->assertGreaterThan($one['after'], $two['after'], 'The cursor of the '.$step.' sweep did not move on');
+        }
+        $this->assertSame(['done' => 0, 'fail' => 0, 'after' => 0, 'more' => false], $data['nothing'], 'An unknown action touched a row');
+    }
+
+    # A sweep moves what the single write moves: the same state on every row and the same points as three rows moderated one by one
+    #[Test]
+    public function aSweepMovesWhatTheSingleWriteMoves(): void
+    {
+        $data = $this->getSweep();
+        [$sweep, $plain, $swept, $single] = $data['opened'];
+        $this->assertSame($plain, $sweep, 'Publishing by a sweep moved other points than publishing row by row');
+        $this->assertSame(array_fill(0, 3, [1, false]), $swept, 'A swept row is not published');
+        $this->assertSame($single, $swept);
+        [$sweep, $plain, $swept, $single] = $data['dropped'];
+        $this->assertSame($plain, $sweep, 'Deleting by a sweep moved other points than deleting row by row');
+        $this->assertSame(-3 * $data['gain'], $sweep, 'Deleting three published comments did not compensate three awards');
+        $this->assertSame(array_fill(0, 3, [1, true]), $swept, 'A swept row is not deleted');
+        $this->assertSame($single, $swept);
+    }
+
+    # A sweep keeps to the scope it was given: a comment of the same target that the search does not name stays pending and in place
+    #[Test]
+    public function aSweepKeepsToItsScope(): void
+    {
+        $this->assertSame([[0, false]], $this->getSweep()['other']);
+    }
+
+    # A sweep acts on what the moderator saw: a comment that arrived after the list was drawn matches the search and still stays pending
+    #[Test]
+    public function aSweepStopsAtTheLastRowTheModeratorSaw(): void
+    {
+        [$bound, $late] = $this->getSweep()['late'];
+        $this->assertTrue($bound, 'The list does not hand over the newest id of its scope as the bound of a sweep');
+        $this->assertSame([[0, false]], $late, 'A comment written after the list was drawn was moderated by the sweep');
+    }
 }

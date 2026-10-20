@@ -1270,7 +1270,11 @@
             setMenuRail(!isMenuRail());
             return;
         }
-        find = document.querySelector('[data-sl-menu-find]');
+        if (setListKeys(event)) {
+            event.preventDefault();
+            return;
+        }
+        find = document.querySelector('[data-sl-list] .sl-filter input[type="search"]') || document.querySelector('[data-sl-menu-find]');
         if (event.key === '/' && find && find.getClientRects().length && window.getComputedStyle(find).visibility === 'visible') {
             event.preventDefault();
             find.focus();
@@ -1428,6 +1432,7 @@
         var box = getListBox(event);
         if (!box || !box.isConnected || event.detail.successful) return;
         var note = box.querySelector('[data-sl-list-error]');
+        quiet = '';
         setListBusy(box, false);
         listretry = event.detail.elt;
         note.hidden = false;
@@ -1445,9 +1450,18 @@
         var box = event.target;
         var said = document.querySelector('[data-sl-said]');
         var line = box && box.matches && box.matches('[data-sl-list]') ? box.querySelector('[data-sl-list-said]') : null;
+        var held = quiet;
+        var row;
         if (!line) return;
+        quiet = '';
         queue.title = '';
         setQueueTitle();
+        setListPicked();
+        if (held) {
+            row = held !== '-' ? box.querySelector('tr[data-sl-row="' + CSS.escape(held) + '"] [data-sl-check-item]') : null;
+            if (row) row.focus();
+            return;
+        }
         if (event.detail && event.detail.requestConfig) setRowsEnter(box);
         if (!said) return;
         said.textContent = '';
@@ -1511,6 +1525,278 @@
         });
     }
     document.addEventListener('htmx:afterSwap', function (event) { setTimeAgo(event.target); });
+    var later = [];
+    var sweep = { all: false, on: false, hold: false, step: null };
+    var quiet = '';
+    // The toast host carries the words of the canon actions: what an action did, the name of a turn and the state of a lamp
+    function getLaterWord(kind, key) {
+        var host = document.querySelector('.sl-toast-host');
+        return host ? host.getAttribute('data-sl-' + kind + '-' + key) || '' : '';
+    }
+    // The word of a deferred form: fixed on a row or a section, read from the chosen action on a bulk form ("gone d=del a1=on a0=off")
+    function getLaterKey(form) {
+        var pick = form.elements.typ ? form.elements.typ.value : '';
+        var hit = form.getAttribute('data-sl-later').split(' ').slice(1).map(function (one) { return one.split('='); }).find(function (one) {
+            return one.length === 1 || one[0] === pick;
+        });
+        return hit ? hit[hit.length - 1] : '';
+    }
+    // One row by its name, many by their number: "Комментарий 20679 — удалено", "Удалено: 3"
+    function getLaterText(name, key, num) {
+        var word = getLaterWord('did', key);
+        return name ? name + ' — ' + word.toLocaleLowerCase() : word + ': ' + num;
+    }
+    // The rows a deferred form acts on: its own row, or the picked rows of a bulk form, which owns their boxes through the form attribute
+    function getLaterRows(form) {
+        var row = form.closest('tr');
+        if (row) return [row];
+        return Array.prototype.filter.call(form.elements, function (box) {
+            return box.type === 'checkbox' && box.checked && !!box.closest('tbody');
+        }).map(function (box) { return box.closest('tr'); });
+    }
+    // Э29 The focus a leaving row held goes to the next row still standing, the last one when none follows
+    function setRowFocus(held) {
+        var rows = Array.prototype.filter.call(held.parentNode.children, function (one) { return !one.hidden; });
+        var next = rows.find(function (one) { return held.compareDocumentPosition(one) & Node.DOCUMENT_POSITION_FOLLOWING; }) || rows[rows.length - 1];
+        var box = next ? next.querySelector('[data-sl-check-item]') || next.querySelector('a, button') : null;
+        if (box) box.focus();
+    }
+    // Э23 Rows that leave go at once, their boxes unpicked and out of every form; the way back puts them where they stood
+    function setRowsGone(rows, gone) {
+        var held = document.activeElement && document.activeElement.closest ? document.activeElement.closest('tr') : null;
+        rows.forEach(function (row) {
+            var box = row.querySelector('[data-sl-check-item]');
+            row.hidden = gone;
+            row.removeAttribute('data-sl-cursor');
+            if (!box) return;
+            box.checked = false;
+            box.disabled = gone;
+        });
+        setListPicked();
+        if (gone && held && rows.indexOf(held) > -1) setRowFocus(held);
+    }
+    // Н6 Г3 A section turned off or on shows it at once: its lamp, the dimmed card or row, the titles, and its form set for the way back
+    function setItemFlip(form) {
+        var item = form.closest('[data-sl-menu-item]');
+        var link = item.querySelector('a');
+        var name = item.querySelector('.sl-menu-name').textContent.trim();
+        var off = form.elements.act.value === '0';
+        var btn = document.querySelector('[form="' + form.id + '"]');
+        form.elements.act.value = off ? '1' : '0';
+        form.setAttribute('data-sl-later', 'flip ' + (off ? 'on' : 'off'));
+        if (item.classList.contains('sl-mcard')) item.classList.toggle('sl-mcard-off', off);
+        else item.classList.toggle('sl-dimmed', off);
+        item.querySelectorAll('.sl-led').forEach(function (led) {
+            led.classList.toggle('sl-led-ok', !off);
+            led.classList.toggle('sl-led-off', off);
+            led.title = getLaterWord('led', off ? 'off' : 'on');
+        });
+        if (btn) btn.title = getLaterWord('turn', off ? 'on' : 'off');
+        link.title = off ? name + ' - ' + getLaterWord('led', 'off') : name;
+    }
+    // Send one deferred action now: by fetch while the page stays, by a beacon when it goes; a refusal brings its rows back and says so
+    function setLaterSend(job, beacon) {
+        var at = later.indexOf(job);
+        if (at < 0) return Promise.resolve();
+        window.clearTimeout(job.timer);
+        later.splice(at, 1);
+        job.body.set('later', '1');
+        if (beacon) {
+            navigator.sendBeacon(job.form.action, job.body);
+            return Promise.resolve();
+        }
+        return fetch(job.form.action, { method: 'POST', body: job.body, credentials: 'same-origin' })
+            .then(function (res) { if (res.status !== 204) throw new Error('refused'); })
+            .catch(function () {
+                job.back();
+                window.setToast(getLaterText(job.name, 'fail', job.num), { warn: true });
+            });
+    }
+    // Once nothing waits any more a canon list is drawn again in place and quietly, so its pager and counts say what the server holds now
+    function setLaterDone() {
+        var box = document.querySelector('[data-sl-list]');
+        var held = document.activeElement && document.activeElement.closest ? document.activeElement.closest('tr[data-sl-row]') : null;
+        if (later.length || sweep.on || !box || !window.htmx || box.querySelector('tbody [data-sl-check-item]:checked')) return;
+        quiet = held ? held.getAttribute('data-sl-row') : '-';
+        window.htmx.ajax('GET', window.location.href, { source: box, target: box, swap: 'outerHTML' });
+    }
+    // Э22 Э23 A form marked data-sl-later acts at once and leaves for the server after ten seconds, which Undo can still take back
+    document.addEventListener('submit', function (event) {
+        var form = event.target;
+        if (!form.matches || !form.matches('form[data-sl-later]') || !window.setToast) return;
+        var kind = form.getAttribute('data-sl-later').split(' ')[0];
+        var key = getLaterKey(form);
+        var rows = kind === 'gone' ? getLaterRows(form) : [];
+        var job = { form: form, body: new FormData(form), name: '', num: rows.length, timer: 0, back: null };
+        event.preventDefault();
+        if (kind === 'gone' && !rows.length) return;
+        if (sweep.all && !form.closest('tr')) return setSweepLater(form, key, rows);
+        if (kind === 'flip') {
+            job.name = form.closest('[data-sl-menu-item]').querySelector('.sl-menu-name').textContent.trim();
+            setItemFlip(form);
+            job.back = function () { setItemFlip(form); };
+        } else {
+            job.name = rows.length === 1 ? rows[0].getAttribute('data-sl-row') || '' : '';
+            setRowsGone(rows, true);
+            job.back = function () { setRowsGone(rows, false); };
+        }
+        later.push(job);
+        job.timer = window.setTimeout(function () { setLaterSend(job, false).then(setLaterDone); }, 10000);
+        window.setToast(getLaterText(job.name, key, job.num), { undo: function () {
+            if (later.indexOf(job) < 0) return;
+            window.clearTimeout(job.timer);
+            later.splice(later.indexOf(job), 1);
+            job.back();
+            setLaterDone();
+        } });
+    });
+    // A list about to be drawn anew takes the waiting actions along first, so it never shows a row the server has not lost yet
+    document.addEventListener('htmx:confirm', function (event) {
+        if (!getListBox(event) || !later.length) return;
+        event.preventDefault();
+        document.querySelectorAll('.sl-toast-host [data-sl-undo]').forEach(function (btn) { btn.hidden = true; });
+        Promise.all(later.slice().map(function (job) { return setLaterSend(job, false); })).then(function () { event.detail.issueRequest(true); });
+    });
+    window.addEventListener('pagehide', function () {
+        later.slice().forEach(function (job) { setLaterSend(job, true); });
+    });
+    // Э24 Э25 The pick of a canon list: the head box whole or partial, the count beside the action, OK only with something picked
+    function setListPicked() {
+        var list = document.querySelector('[data-sl-list]');
+        var items, num, head, count, go;
+        if (!list) return;
+        items = Array.prototype.filter.call(list.querySelectorAll('tbody [data-sl-check-item]'), function (one) { return !one.disabled; });
+        num = items.filter(function (one) { return one.checked; }).length;
+        head = list.querySelector('thead [data-sl-check-all] input');
+        count = list.querySelector('[data-sl-picked]');
+        go = list.querySelector('[data-sl-pick-go]');
+        if (head) {
+            head.checked = num > 0 && num === items.length;
+            head.indeterminate = num > 0 && num < items.length;
+        }
+        if (num < items.length || !num) sweep.all = false;
+        if (count) count.textContent = count.getAttribute('data-sl-picked').replace('%s', getSweepNum(sweep.all ? getSweepTotal(list) : num));
+        if (go) go.disabled = num === 0;
+        setAllPages(list, num > 0 && num === items.length, num);
+    }
+    // A number as the page writes it, with the grouping of its language
+    function getSweepNum(num) {
+        return Number(num).toLocaleString(document.documentElement.lang || undefined);
+    }
+    // The size of the whole list the offer of all pages stands for
+    function getSweepTotal(list) {
+        var note = list.querySelector('[data-sl-allpages]');
+        return note ? Number(note.getAttribute('data-sl-allpages-num')) || 0 : 0;
+    }
+    // Э26 A whole page picked offers the whole list; taking it says so and offers to give it back
+    function setAllPages(list, whole, num) {
+        var note = list.querySelector('[data-sl-allpages]');
+        var text;
+        if (!note || sweep.on) return;
+        text = note.querySelector('[data-sl-allpages-text]');
+        note.hidden = !whole;
+        text.textContent = sweep.all ? text.getAttribute('data-sl-all-on').replace('%s', getSweepNum(getSweepTotal(list)))
+            : text.getAttribute('data-sl-page-all').replace('%s', getSweepNum(num));
+        note.querySelector('[data-sl-allpages-go]').hidden = sweep.all;
+        note.querySelector('[data-sl-allpages-off]').hidden = !sweep.all;
+    }
+    // Э26 The whole list goes like a page does: its rows leave at once, Undo stands for ten seconds, and only then the portions start
+    function setSweepLater(form, key, rows) {
+        var list = form.closest('[data-sl-list]') || document.querySelector('[data-sl-list]');
+        var total = getSweepTotal(list);
+        var timer;
+        setRowsGone(rows, true);
+        sweep.on = true;
+        timer = window.setTimeout(function () { setSweepRun(list, form, key, total); }, 10000);
+        window.setToast(getLaterText('', key, getSweepNum(total)), { undo: function () {
+            if (!sweep.on || sweep.step) return;
+            window.clearTimeout(timer);
+            sweep.on = false;
+            sweep.all = false;
+            setRowsGone(rows, false);
+        } });
+    }
+    // Э26 The portions of op sweep follow one another behind the cursor the server hands back, with a progress line and a pause; a closed tab simply stops them
+    function setSweepRun(list, form, key, total) {
+        var note = list.querySelector('[data-sl-allpages]');
+        var text = note.querySelector('[data-sl-allpages-text]');
+        var hold = note.querySelector('[data-sl-sweep-hold]');
+        var body = new FormData(form);
+        var seen = 0;
+        var end = function (fail) {
+            sweep.on = false;
+            sweep.all = false;
+            sweep.step = null;
+            sweep.hold = false;
+            hold.hidden = true;
+            if (fail) window.setToast(getLaterText('', 'fail', getSweepNum(total - seen)), { warn: true });
+            setLaterDone();
+        };
+        body.delete('id[]');
+        body.set('op', note.getAttribute('data-sl-allpages'));
+        body.set('after', '0');
+        body.set('upto', note.getAttribute('data-sl-allpages-upto') || '0');
+        note.hidden = false;
+        note.querySelector('[data-sl-allpages-go]').hidden = true;
+        note.querySelector('[data-sl-allpages-off]').hidden = true;
+        hold.hidden = false;
+        sweep.step = function () {
+            if (sweep.hold) return;
+            fetch(form.action, { method: 'POST', body: body, credentials: 'same-origin' })
+                .then(function (res) {
+                    if (!res.ok) throw new Error('refused');
+                    return res.json();
+                })
+                .then(function (data) {
+                    seen += data.done + data.fail;
+                    body.set('after', String(data.after));
+                    text.textContent = text.getAttribute('data-sl-swept').replace('%s', getSweepNum(seen)).replace('%s', getSweepNum(total));
+                    if (data.more) sweep.step();
+                    else end(data.fail > 0);
+                })
+                .catch(function () { end(true); });
+        };
+        sweep.step();
+    }
+    document.addEventListener('click', function (event) {
+        var btn = event.target.closest ? event.target.closest('[data-sl-allpages-go], [data-sl-allpages-off], [data-sl-sweep-hold]') : null;
+        var list = btn ? btn.closest('[data-sl-list]') : null;
+        if (!list) return;
+        if (btn.hasAttribute('data-sl-sweep-hold')) {
+            sweep.hold = !sweep.hold;
+            btn.textContent = btn.getAttribute(sweep.hold ? 'data-sl-resume' : 'data-sl-pause');
+            if (!sweep.hold && sweep.step) sweep.step();
+            return;
+        }
+        sweep.all = btn.hasAttribute('data-sl-allpages-go');
+        if (!sweep.all) list.querySelectorAll('tbody [data-sl-check-item]').forEach(function (box) { box.checked = false; });
+        setListPicked();
+    });
+    // Counted once every listener of the change has run, the head box of slaed.js among them
+    document.addEventListener('change', function (event) {
+        if (event.target.type === 'checkbox' && event.target.closest && event.target.closest('[data-sl-list] table')) window.setTimeout(setListPicked, 0);
+    });
+    // Э27 J and K walk the rows of a canon list, X picks the row in hand and E opens its edit; the row in hand is outlined and holds the focus
+    function setListKeys(event) {
+        var list = document.querySelector('[data-sl-list]');
+        var rows, at, row, hit;
+        if (!list || ['KeyJ', 'KeyK', 'KeyX', 'KeyE'].indexOf(event.code) < 0) return false;
+        rows = Array.prototype.filter.call(list.querySelectorAll('tbody > tr'), function (one) { return !one.hidden; });
+        at = rows.findIndex(function (one) { return one.hasAttribute('data-sl-cursor'); });
+        row = rows[at] || null;
+        if (event.code === 'KeyJ' || event.code === 'KeyK') {
+            if (!rows.length) return true;
+            rows.forEach(function (one) { one.removeAttribute('data-sl-cursor'); });
+            row = rows[Math.max(0, Math.min(rows.length - 1, at + (event.code === 'KeyJ' ? 1 : -1)))];
+            row.setAttribute('data-sl-cursor', '');
+            row.tabIndex = -1;
+            row.focus();
+            return true;
+        }
+        hit = row ? row.querySelector(event.code === 'KeyX' ? '[data-sl-check-item]' : '[data-sl-edit]') : null;
+        if (hit) hit.click();
+        return true;
+    }
     var sess = { end: 0, max: 0, warn: 0 };
     // The server names the seconds the session has left: on the page, after "Extend" and in every answer of the poll, which an action in another tab moves
     function setSessionLeft(left) {
@@ -1595,6 +1881,7 @@
             setSessionWatch();
             setMenuFind();
             setTimeAgo(document);
+            setListPicked();
         });
     } else {
         addFileStep();
@@ -1605,5 +1892,6 @@
         setSessionWatch();
         setMenuFind();
         setTimeAgo(document);
+        setListPicked();
     }
 })();

@@ -767,6 +767,9 @@ return [
             'the largest of the two vocabularies: twelve names the panel maps against thirty-three the site does, and not one is in both. The site link is the '
             .'whole card, cart, category and login language of a public page; the panel link is a row action. This is the pair the plan measured at over a hundred '
             .'lines, and it is two contracts rather than one contract with two spellings',
+        'fragments/pager-keys.html' =>
+            'one key tip under one pager: the panel adds the keys of a canon list - rows, pick, edit, search, quick jump, the fold of the menu - and draws the tip '
+            .'alone over and under a list without pages, where no arrow key turns a page; the site has no list keys and names only the two arrows',
         'fragments/popover.html' =>
             'the hint is a control in the panel and a modifier on the site, which the .sl-tip rules already answer for: the panel draws the glyph itself and gives '
             .'the whole thing a nav element, the site wraps the glyph in its own span so the hint can sit on whatever element carries it. The note under the panel '

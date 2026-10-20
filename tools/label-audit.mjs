@@ -70,7 +70,7 @@ const OPEN = new Set(['', 'view', 'edit', 'add', 'new', 'newuser', 'passlost', '
 const SEED = ['/index.php?name=account&op=newuser', '/index.php?name=account&op=passlost'];
 const REC = new Set(['id', 'cid', 'pid', 'qid']);
 const LOOSE = new Set([...REC, 'name', 'op', 'num', 'cat', 'token', 'sid', 'page', 'uname', 'redirect', 'go', 'prov',
-    'mod', 'modul', 'new_ip', 'search', 'last', 'pnum', 'com', 'typ', 'let']);
+    'mod', 'modul', 'new_ip', 'search', 'at', 'last', 'pnum', 'com', 'typ', 'let']);
 // What a readable path of the site names, asked of the stand once per path: an operation of its prefix, or the kind of
 // the registry entity. The address alone cannot tell /news/internet, a category, from /news/<slug>, a material, nor
 // /account/logout from a page - and an operation the walk does not know must stay a skipped op, not become a record
@@ -119,7 +119,8 @@ function getRouteSig(href, side) {
     // different name from `page` and would walk the pager as if it were a screen of its own
     const key = raw.startsWith('amp;') ? raw.slice(4) : raw;
     if (REC.has(key)) rec = true;
-    if (!LOOSE.has(key)) rest.push(key + '=' + val);
+    // chng beside a search field is the term a list is searched for - an author, an address, a number - so one screen, however many rows link to it
+    if (!LOOSE.has(key) && !(key === 'chng' && url.searchParams.has('search'))) rest.push(key + '=' + val);
   }
   rest.sort();
   return side + ':' + name + ':' + op + (rec ? '#rec' : '') + (rest.length ? '?' + rest.join('&') : '');

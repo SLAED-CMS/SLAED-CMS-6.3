@@ -313,7 +313,7 @@ function getTplAdminTabs(array $data = []): string {
     ]);
 }
 
-# Render one panel list of the canon in place, its rows from cells named by their column for a phone; rows_html serves the screens not yet on the canon
+# Render one panel list of the canon in place, its rows from cells named by their column for a phone and its bulk row from data; rows_html serves the rest
 function getTplAdminList(array $data): string {
     global $tpl;
     $href = (string)($data['href'] ?? '');
@@ -337,13 +337,22 @@ function getTplAdminList(array $data): string {
     foreach ($kinds as $key => [$title, $icon]) $views[] = ['key' => $key, 'title' => $title, 'icon_name' => $icon, 'is_now' => $key === $density];
     $none = (string)($data['none_text'] ?? _NO_INFO);
     $link = static fn(int $i): array => ['href' => $href.'num='.$i];
-    $meta = ['count' => $count, 'limit' => $limit];
+    $meta = ['count' => $count, 'limit' => $limit, 'is_list' => true];
     $said = ($limit > 0) ? sprintf(_PAGERANGE, ($page - 1) * $limit + 1, min($page * $limit, $count)).' · ' : '';
+    $bulk = (array)($data['bulk'] ?? []);
+    $wide = number_format($count, 0, '', ' ');
     return $tpl->getHtmlPart('admin-list', [
         'head_html' => (string)($data['head_html'] ?? ''),
         'note_html' => (string)($data['note_html'] ?? ''),
         'top_html' => ($rows !== '') ? getTplPagerView($page, $pages, $maxpg, $link, $meta + ['is_top' => true]) : '',
         'pager_html' => ($rows !== '') ? getTplPagerView($page, $pages, $maxpg, $link, $meta) : '',
+        'is_list' => true,
+        'bulk' => $bulk,
+        'count' => $count,
+        'picked' => sprintf(_ADM_PICKED, 0),
+        'picked_wide' => sprintf(_ADM_PICKED, $wide),
+        'is_sweep' => !empty($bulk['sweep']) && $pages > 1,
+        'all_text' => sprintf(_ADM_ALLN, $wide),
         'table_html' => ($rows !== '') ? $tpl->getHtmlFrag('table', [
             'is_wrapless' => true,
             'is_fixed' => !empty($data['is_fixed']),
@@ -353,7 +362,6 @@ function getTplAdminList(array $data): string {
             'rows_html' => $rows,
         ]) : '',
         'views' => $views,
-        'actions_html' => ($rows !== '') ? (string)($data['actions_html'] ?? '') : '',
         'none_text' => $none,
         'is_calm' => !empty($data['is_calm']),
         'said' => ($rows !== '') ? $said._OVERALL.' '.$count : $none,

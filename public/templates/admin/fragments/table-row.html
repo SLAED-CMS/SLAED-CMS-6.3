@@ -8,5 +8,6 @@
   "
   {% endif %}
   {% if is_no_sort %}data-sort-method="none"{% endif %}
+  {% if name %}data-sl-row="{{ name }}"{% endif %}
   {% if attr %}{{{ attr }}}{% endif %}
 >{{{ cells_html }}}</tr>

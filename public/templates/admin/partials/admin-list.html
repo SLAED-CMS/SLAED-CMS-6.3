@@ -2,11 +2,12 @@
 {{{ head_html }}}
 {{{ note_html }}}
 <div class="sl-box sl-table-shell" data-sl-list-said="{{ said }}">
+  {% if is_sweep %}<div class="sl-alert sl-alert-info sl-list-note" data-sl-allpages="{{ bulk.sweep }}" data-sl-allpages-num="{{ count }}" data-sl-allpages-upto="{{ bulk.upto }}" hidden><div class="sl-alert-body"><span role="status" data-sl-allpages-text data-sl-page-all="{{ _ADM_PAGEALL }}" data-sl-all-on="{{ _ADM_ALLON }}" data-sl-swept="{{ _ADM_SWEPT }}"></span><button type="button" class="sl-but" data-sl-allpages-go>{{ all_text }}</button><button type="button" class="sl-but" data-sl-allpages-off hidden>{{ _ADM_UNPICK }}</button><button type="button" class="sl-but" data-sl-sweep-hold data-sl-pause="{{ _PAUSE }}" data-sl-resume="{{ _RESUME }}" hidden>{{ _PAUSE }}</button></div></div>{% endif %}
   <div class="sl-alert sl-alert-error sl-list-note" role="alert" tabindex="-1" data-sl-list-error hidden><div class="sl-alert-body">{{ _ADM_LISTERR }} <button type="button" class="sl-but" data-sl-list-retry><i class="bi bi-arrow-clockwise" aria-hidden="true"></i>{{ _RETRY }}</button></div></div>
   <div class="sl-loading sl-list-busy" aria-hidden="true" data-sl-list-busy hidden></div>
   {% if table_html %}
   <div class="sl-list-head">
-    <div class="sl-list-head-pager" hx-boost="true">{{{ top_html }}}</div>
+    <div class="sl-list-head-pager" hx-boost="true">{% if top_html %}{{{ top_html }}}{% else %}{% include 'fragments/pager-keys.html' %}{% endif %}</div>
     <div class="sl-list-view">
       <span class="sl-seg sl-seg-view" data-sl-knob="density" role="group" aria-label="{{ _ADM_VIEW }}">
         {% for item in views %}<button type="button" class="sl-seg-cell{% if item.is_now %} sl-is-active{% endif %}" data-sl-density="{{ item.key }}" title="{{ item.title }}" aria-label="{{ item.title }}" aria-pressed="{% if item.is_now %}true{% else %}false{% endif %}"{% if item.is_now %}{% else %} tabindex="-1"{% endif %}><i class="bi bi-{{ item.icon_name }}" aria-hidden="true"></i></button>{% endfor %}
@@ -14,15 +15,23 @@
       </span>
     </div>
   </div>
-  {% endif %}
-  {% if table_html %}{{{ table_html }}}{% else %}<p class="sl-list-none{% if is_calm %} sl-list-calm{% endif %}">{{ none_text }}</p>{% endif %}
-  {% if pager_html or actions_html %}
+  {{{ table_html }}}
   <div class="sl-div-actions">
     <div class="sl-list-bottom" id="sl-list-end">
-      <div class="sl-list-bottom-pager" hx-boost="true" hx-swap="outerHTML show:window:top">{{{ pager_html }}}</div>
-      {% if actions_html %}<div class="sl-list-bottom-actions">{{{ actions_html }}}</div>{% endif %}
+      <div class="sl-list-bottom-pager" hx-boost="true" hx-swap="outerHTML show:window:top">{% if pager_html %}{{{ pager_html }}}{% else %}{% include 'fragments/pager-keys.html' %}{% endif %}</div>
+      {% if bulk %}<div class="sl-list-bottom-actions">
+        <span class="sl-list-picked" data-sl-widest="{{ picked_wide }}"><span role="status" data-sl-picked="{{ _ADM_PICKED }}">{{ picked }}</span></span>
+        <form class="sl-div-form" id="{{ bulk.form_id }}" action="{{ bulk.action_url }}" method="post" data-sl-later="{{ bulk.later }}">
+          {% for item in bulk.hidden %}{% include 'fragments/hidden.html' with item %}{% endfor %}
+          <label class="sl-visually-hidden" for="{{ bulk.form_id }}-typ">{{ _ADM_PICKACT }}</label>
+          <select name="typ" id="{{ bulk.form_id }}-typ" class="sl-select">{% for item in bulk.options %}{% include 'fragments/select-option.html' with item %}{% endfor %}</select>
+          <button type="submit" class="sl-but-blue" data-sl-pick-go>{{ _OK }}</button>
+        </form>
+      </div>{% endif %}
     </div>
   </div>
+  {% else %}
+  <p class="sl-list-none{% if is_calm %} sl-list-calm{% endif %}">{{ none_text }}</p>
   {% endif %}
 </div>
 </div>

@@ -644,7 +644,7 @@
             var scope = master.closest('form') || document;
             var items = scope.querySelectorAll('[data-sl-check-item]');
             for (var i = 0; i < items.length; i++) {
-                if (items[i] !== master) items[i].checked = !!master.checked;
+                if (items[i] !== master && !items[i].disabled) items[i].checked = !!master.checked;
             }
         });
     }
@@ -2663,6 +2663,21 @@
         if (text && text.focus) text.focus();
     }
 
+    // An address ending in #reply-ID opens the page in the answer to that comment, as its reply button would; a comment that takes no reply is only brought into view
+    function setCommentHash() {
+        var hit = /^#reply-(\d+)$/.exec(window.location.hash);
+        var form = document.getElementById('formcsave');
+        var host = hit ? document.getElementById(hit[1]) : null;
+        if (!hit) return;
+        if (form && document.querySelector('[data-sl-reply="' + hit[1] + '"]')) {
+            setCommentTarget(hit[1]);
+            form.scrollIntoView({ block: 'center', behavior: 'instant' });
+        } else if (host) {
+            host.scrollIntoView({ block: 'center', behavior: 'instant' });
+        }
+    }
+    window.addEventListener('hashchange', setCommentHash);
+
     // Only a stored comment clears the form: a refused submit keeps the text the visitor typed, the reply target it named and the key it was refused with
     document.addEventListener('sl-comment-add', function () {
         var form = document.getElementById('formcsave');
@@ -2864,6 +2879,7 @@
         setCodeBlocks(document);
         setCodeActions();
         setCommentKeys(document);
+        setCommentHash();
         setRatingVotes();
         setQuickEdit();
         setPrivatCarry(document);

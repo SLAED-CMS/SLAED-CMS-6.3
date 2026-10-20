@@ -3472,6 +3472,11 @@ dialog.sl-editor-emoji-panel {
   min-width: 0;
 }
 
+/* Э27 A list without pages keeps its key tip at the left edge, over and under the rows alike */
+.sl-list-bottom-pager {
+  text-align: left;
+}
+
 .sl-list-bottom .sl-pager {
   padding: 0;
 }
@@ -3568,6 +3573,40 @@ dialog.sl-editor-emoji-panel {
 /* Э17 An empty queue is good news, said calmly */
 .sl-list-calm {
   color: var(--sl-success-strong);
+}
+
+/* Э22 The status in one press: the mark of the theme inside a bare round button */
+.sl-stat {
+  display: inline-grid;
+  place-items: center;
+  padding: var(--sl-space-1);
+  border: 0;
+  border-radius: var(--sl-radius-circle);
+  background: none;
+  cursor: pointer;
+}
+
+.sl-stat:hover,
+.sl-stat:focus-visible {
+  background: var(--sl-tint);
+}
+
+/* Э25 The count holds the width of its widest figure, so the row beside it never moves */
+.sl-list-picked {
+  display: inline-grid;
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-small);
+  white-space: nowrap;
+}
+
+.sl-list-picked::before {
+  visibility: hidden;
+  content: attr(data-sl-widest);
+}
+
+.sl-list-picked::before,
+.sl-list-picked > * {
+  grid-area: 1 / 1;
 }
 
 /* Э28 A request on its way: the rows dim under the loading mark of the theme, the reader hears aria-busy */
@@ -5973,7 +6012,9 @@ button.sl-seg-cell:hover {
   cursor: default;
 }
 
-.sl-seg-cell:focus-visible {
+/* A focused cell and the row the list keys point at (Э27) take the ring inside their own edge */
+.sl-seg-cell:focus-visible,
+.sl-table-list-sort tbody tr[data-sl-cursor] {
   outline: var(--sl-ring-width) solid var(--sl-ring-bg);
   outline-offset: calc(var(--sl-ring-gap) * -1);
 }
@@ -6101,13 +6142,16 @@ button.sl-seg-cell:hover {
   color: var(--sl-text-muted);
 }
 
-/* П6 The key tip is useful at once: its trigger rests in the subtle system green and lights up in the full green under the pointer or while open */
-.sl-pager .sl-pager-keys > .sl-but-mini {
+/* П6 Э27 The key tip is useful at once: its trigger rests in the subtle system green, lights up in the full green under the pointer or while open,
+   and carries its own size, since a list without pages keeps it alone over and under its rows */
+.sl-pager-keys > .sl-but-mini {
+  width: var(--sl-size-chip);
+  padding: 0;
   background: var(--sl-success-subtle);
   color: var(--sl-success-strong);
 }
 
-.sl-pager .sl-pager-keys:is(:hover, .sl-is-open) > .sl-but-mini {
+.sl-pager-keys:is(:hover, .sl-is-open) > .sl-but-mini {
   background: var(--sl-success);
   color: var(--sl-on-solid);
 }
@@ -6140,7 +6184,7 @@ button.sl-seg-cell:hover {
 }
 
 /* The key tip: the system tip on a quiet round trigger, which lights up in the tint of a pressed control while its panel is open */
-.sl-pager .sl-pager-keys {
+.sl-pager-keys {
   width: auto;
   height: auto;
   margin: 0;
@@ -6203,6 +6247,10 @@ button.sl-seg-cell:hover {
 /* A touch screen has no arrow keys to explain */
 @media (pointer: coarse) {
   .sl-pager .sl-pager-keys {
+    display: none;
+  }
+
+  :is(.sl-list-head-pager, .sl-list-bottom-pager) > .sl-pager-keys {
     display: none;
   }
 }

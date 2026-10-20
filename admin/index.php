@@ -39,7 +39,8 @@ function getAdminMenu(string $name, array $mod, bool $open = false): string {
         if (in_array($name, getCategoryModules(), true)) $dial[] = ['href' => $afile.'.php?name=categories&modul='.$name, 'title' => _CATEGORIES, 'icon_name' => 'folder2'];
         if ($typ === 1 && !$off && $name !== 'node') $dial[] = ['href' => 'index.php?name='.$name, 'title' => _VIEWSITE, 'icon_name' => 'arrow-up-right-circle'];
         $dial[] = ['href' => $url.'&op=info', 'title' => _MANUAL, 'icon_name' => 'info-circle'];
-        $dial[] = getTplPostAction(['name' => 'modules', 'op' => 'status', 'mod' => $name, 'act' => $off ? '1' : '0', 'refer' => 1], 'power', $off ? _ACTIVATE : _DEACTIVATE);
+        $dial[] = getTplPostAction(['name' => 'modules', 'op' => 'status', 'mod' => $name, 'act' => $off ? '1' : '0', 'refer' => 1], 'power', $off ? _ACTIVATE : _DEACTIVATE)
+            + ['later' => 'flip '.($off ? 'on' : 'off')];
     }
     if ($panel) {
         $view = (int)($mod['view'] ?? 0);

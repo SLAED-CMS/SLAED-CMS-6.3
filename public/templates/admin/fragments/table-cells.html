@@ -43,7 +43,7 @@
       {% if cell.attr %}{{{ cell.attr }}}{% endif %}
     >
       {% if cell.prefix_html %}{{{ cell.prefix_html }}}{% endif %}
-      {% if cell.stamp %}<time datetime="{{ cell.stamp }}" data-sl-ago>{{ cell.content_text }}</time>{% elseif cell.text_html %}<span class="sl-cell-text">{{{ cell.text_html }}}</span>{% elseif cell.has_content_text %}{{ cell.content_text }}{% else %}{{{ cell.content_html }}}{% endif %}
+      {% if cell.stat %}<button type="submit" form="{{ cell.stat.form_id }}" class="sl-stat" title="{{ cell.stat.title }}" aria-label="{{ cell.stat.label }}" aria-pressed="{% if cell.stat.is_on %}true{% else %}false{% endif %}"><span class="{% if cell.stat.is_on %}sl-status-active{% else %}sl-status-inactive{% endif %}"></span></button><form class="sl-dial-post" id="{{ cell.stat.form_id }}" action="{{ cell.stat.href }}" method="post"{% if cell.stat.later %} data-sl-later="{{ cell.stat.later }}"{% endif %}>{{{ cell.stat.hidden }}}</form>{% elseif cell.stamp %}<time datetime="{{ cell.stamp }}" data-sl-ago>{{ cell.content_text }}</time>{% elseif cell.text_html %}<span class="sl-cell-text">{{{ cell.text_html }}}</span>{% elseif cell.has_content_text %}{{ cell.content_text }}{% else %}{{{ cell.content_html }}}{% endif %}
     </td>
   {% endif %}
 {% endfor %}

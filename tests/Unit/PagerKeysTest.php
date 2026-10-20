@@ -77,14 +77,19 @@ final class PagerKeysTest extends TestCase
         $lite = $this->getFile('public/templates/lite/fragments/pager.html');
         $note = 'The pager fragments of the two themes differ, though the mechanism and the classes are one';
         $this->assertSame($lite, $this->getFile('public/templates/admin/fragments/pager.html'), $note);
-        $note = 'The pager carries no tip of the system for its keys';
-        $this->assertStringContainsString('class="sl-tip sl-float sl-pager-keys"', $lite, $note);
-        $this->assertStringContainsString('<div class="sl-float-panel sl-pager-tip" role="tooltip">', $lite, $note);
-        $note = 'A key of the tip is not drawn as an icon labelled for a screen reader';
-        $this->assertStringContainsString('<kbd><i class="bi bi-arrow-left" role="img" aria-label="{{ _KEYLEFT }}"></i></kbd>', $lite, $note);
-        $this->assertStringContainsString('<kbd><i class="bi bi-arrow-right" role="img" aria-label="{{ _KEYRIGHT }}"></i></kbd>', $lite, $note);
-        $note = 'The keys of the tip stand in a definition list, which each theme lays out as label and value';
-        $this->assertStringNotContainsString('<dl', $lite, $note);
+        $note = 'The pager does not take its key tip from the fragment of its theme';
+        $this->assertStringContainsString("{% include 'fragments/pager-keys.html' %}", $lite, $note);
+        foreach (self::THEMES as $name) {
+            $keys = $this->getFile('public/templates/'.$name.'/fragments/pager-keys.html');
+            $note = 'The key tip of theme '.$name.' is no tip of the system';
+            $this->assertStringContainsString('class="sl-tip sl-float sl-pager-keys"', $keys, $note);
+            $this->assertStringContainsString('<div class="sl-float-panel sl-pager-tip" role="tooltip">', $keys, $note);
+            $note = 'A key of the tip of theme '.$name.' is not drawn as an icon labelled for a screen reader';
+            $this->assertStringContainsString('<kbd><i class="bi bi-arrow-left" role="img" aria-label="{{ _KEYLEFT }}"></i></kbd>', $keys, $note);
+            $this->assertStringContainsString('<kbd><i class="bi bi-arrow-right" role="img" aria-label="{{ _KEYRIGHT }}"></i></kbd>', $keys, $note);
+            $note = 'The keys of the tip of theme '.$name.' stand in a definition list, which each theme lays out as label and value';
+            $this->assertStringNotContainsString('<dl', $keys, $note);
+        }
         $link = $this->getFile('public/templates/lite/fragments/pager-link.html');
         $note = 'An arrow link does not name the key that follows it';
         $this->assertStringContainsString('aria-keyshortcuts="{{ key_name }}"', $link, $note);

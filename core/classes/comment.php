@@ -288,12 +288,33 @@ class Comment {
         $join = PREFIX_DB.'_comment AS s LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid = u.id) '.$where;
         $out = $this->getPager($this->getTotal($join, $pars), $page, intval($this->conf['anum'] ?? 25));
         $out['rows'] = [];
+        $out['upto'] = 0;
         if ($out['total'] < 1) return $out;
+        $out['upto'] = intval($this->db->getSqlRow($this->db->getSqlQuery('SELECT MAX(s.id) AS top FROM '.$join, $pars))['top'] ?? 0);
         $dir = $out['isasc'] ? 'ASC' : 'DESC';
         $sql = 'SELECT s.'.str_replace(', ', ', s.', self::FIELDS).', u.name AS unam FROM '.$join
             .' ORDER BY s.time '.$dir.', s.id '.$dir.' LIMIT '.$out['offset'].', '.$out['limit'];
         foreach ($this->db->getSqlRows($this->db->getSqlQuery($sql, $pars)) ?: [] as $row) {
             $out['rows'][] = $this->getRowData($row) + ['nick' => (string)($row['unam'] ?? '')];
+        }
+        return $out;
+    }
+
+    # Moderate the next portion of the scope by ascending id between the cursor and the last id the moderator saw, row by row, so a refusing row is passed over
+    public function setAdminPortion(CommentStatus $stat, string $mod, int $find, string $term, string $act, int $after, int $upto, int $limit): array {
+        $out = ['done' => 0, 'fail' => 0, 'after' => $after, 'more' => false];
+        if (!in_array($act, ['a0', 'a1', 'd'], true) || $upto < 1 || $limit < 1) return $out;
+        [$where, $pars] = $this->getAdminScope($stat, $mod, $find, $term);
+        $pars['after'] = $after;
+        $pars['upto'] = $upto;
+        $sql = 'SELECT s.id FROM '.PREFIX_DB.'_comment AS s LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid = u.id) '.$where
+            .' AND s.id > :after AND s.id <= :upto ORDER BY s.id ASC LIMIT '.($limit + 1);
+        $ids = array_map('intval', array_column($this->db->getSqlRows($this->db->getSqlQuery($sql, $pars)) ?: [], 'id'));
+        $out['more'] = count($ids) > $limit;
+        foreach (array_slice($ids, 0, $limit) as $id) {
+            $done = ($act === 'd') ? $this->deleteComment($id) : $this->setStatus($id, $act === 'a1');
+            $out[$done ? 'done' : 'fail']++;
+            $out['after'] = $id;
         }
         return $out;
     }

@@ -258,7 +258,12 @@ into the plan, then do whatever work the step names.
   `_ADM_CARDS`, `_DETAILS` (owner, 2026-10-20). Tablesort now binds once the deferred bundle has run, on every sortable
   table of the panel and the site; the popover opens from a real button beside its panel, `tip_id` naming the panel
   (owner, 2026-10-20). (2026-10-20)
-- [ ] 98. ADMIN-UI batch 10 — the list canon, actions with undo, on "Комментарии".
+- [x] 98. ADMIN-UI batch 10 — the list canon, actions with undo, on "Комментарии". A deferred action posts its own
+  form with `later=1`, which `setRedirect()` answers 204 or 409 alone; the whole list goes by op `sweep` and
+  `Comment::setAdminPortion()` in portions of 100, bounded by the newest id the list showed; the key tip is
+  `fragments/pager-keys.html` of each theme, the pagers stay one file; the classes `sl-stat`, `sl-list-picked`, the row
+  attribute `data-sl-cursor`; the label crawl reads `chng` beside `search` as data and its baseline holds 432 routes
+  (owner, 2026-10-20). (2026-10-20)
 - [ ] 99. ADMIN-UI batch 11 — the form canon on "Конфигурации".
 - [ ] 100. ADMIN-UI batch 12 — the panel lists onto the canon, part 1.
 - [ ] 101. ADMIN-UI batch 13 — the panel lists onto the canon, part 2.

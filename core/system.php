@@ -2257,10 +2257,14 @@ function getFlashHtml(): string {
     ]);
 }
 
-# Safe redirect with optional referer fallback; it also gives an open action of the panel its result, a warning being a refusal
+# Safe redirect with optional referer fallback; it also gives an open action of the panel its result, a warning being a refusal; a POST with later gets 204 or 409 alone
 # A relative target is taken from the root of the site, since a browser would resolve it against the path of the page that redirects
 function setRedirect(string $url, bool $refer = false, int $code = 302, string $text = '', bool $warn = false): never {
     setAdminLog(['result' => $warn ? 'refused' : 'done']);
+    if (getVar('post', 'later', 'num')) {
+        http_response_code($warn ? 409 : 204);
+        exit;
+    }
     if (!in_array($code, [301, 302, 303, 307, 308], true)) $code = 302;
     if ($code === 302 && strtoupper((string)($_SERVER['REQUEST_METHOD'] ?? '')) === 'POST') $code = 303;
     if ($text !== '') setFlash($text, $warn);
