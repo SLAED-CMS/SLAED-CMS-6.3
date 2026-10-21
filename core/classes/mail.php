@@ -474,9 +474,11 @@ class Mail {
         $this->lock = '';
     }
 
-    # Count what is still waiting, which is the number a drain reports and the one that says whether a run ended because the queue was empty
-    private function getPending(): int {
-        $row = $this->db->getSqlRow($this->db->getSqlQuery('SELECT COUNT(id) AS num FROM '.PREFIX_DB.'_mail WHERE status = 0 AND hold = 0'));
+    # Count what is still waiting, as a drain reports it; $age counts only rows waiting longer, how the cockpit tells a stalled queue from a busy one
+    public function getPending(int $age = 0): int {
+        if (!$this->db instanceof Database) return 0;
+        $sql = 'SELECT COUNT(id) AS num FROM '.PREFIX_DB.'_mail WHERE status = 0 AND hold = 0'.(($age > 0) ? ' AND time < NOW() - INTERVAL :age SECOND' : '');
+        $row = $this->db->getSqlRow($this->db->getSqlQuery($sql, ($age > 0) ? ['age' => $age] : []));
         return intval($row['num'] ?? 0);
     }
 

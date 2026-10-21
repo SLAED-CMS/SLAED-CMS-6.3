@@ -196,103 +196,6 @@ function getMonitorChartSvg(array $snap): string {
     ]);
 }
 
-# Collects raw CPU metadata including logical and physical cores and current base frequency
-function getCpuDetailsRaw(): array {
-    $logical = getCpuCores();
-    $physical = 0;
-    $freq = 'N/A';
-    if (str_starts_with(strtoupper(PHP_OS), 'WIN')) {
-        if (function_exists('exec')) {
-            $out = [];
-            exec(
-                'powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command "(Get-CimInstance Win32_Processor | Measure-Object -Property NumberOfCores -Sum).Sum"',
-                $out
-            );
-            if (!empty($out) && is_numeric(trim((string)$out[0]))) $physical = (int)trim((string)$out[0]);
-            $out = [];
-            exec(
-                'powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command "(Get-CimInstance Win32_Processor | Select-Object -First 1 -ExpandProperty MaxClockSpeed)"',
-                $out
-            );
-            if (!empty($out) && is_numeric(trim((string)$out[0]))) {
-                $mhz = (int)trim((string)$out[0]);
-                if ($mhz > 0) $freq = round($mhz / 1000, 2).' GHz';
-            }
-        }
-    } else {
-        $cpuinfo = getFileSafe('/proc/cpuinfo');
-        $corespersocket = 0;
-        $sockets = 0;
-        if (($cpuinfo === false || $cpuinfo === '') && function_exists('exec')) {
-            $out = [];
-            exec('cat /proc/cpuinfo 2>/dev/null', $out);
-            if (!empty($out)) $cpuinfo = implode("\n", $out);
-        }
-        if ($cpuinfo !== false) {
-            preg_match_all('/^physical id\s*:\s*(\d+)/m', $cpuinfo, $physids);
-            preg_match_all('/^core id\s*:\s*(\d+)/m', $cpuinfo, $coreids);
-            if (!empty($physids[1]) && !empty($coreids[1]) && count($physids[1]) === count($coreids[1])) {
-                $pairs = [];
-                foreach ($physids[1] as $kx => $pid) {
-                    $pairs[] = $pid.'-'.$coreids[1][$kx];
-                }
-                $physical = count(array_unique($pairs));
-            }
-            if ($physical <= 0) {
-                preg_match('/^cpu cores\s*:\s*(\d+)/m', $cpuinfo, $mx);
-                if (!empty($mx[1])) $physical = (int)$mx[1];
-            }
-            preg_match('/^cpu MHz\s*:\s*([0-9.]+)/m', $cpuinfo, $mhz);
-            if (!empty($mhz[1])) $freq = round(((float)$mhz[1]) / 1000, 2).' GHz';
-        }
-        if (($physical <= 0 || $freq === 'N/A') && function_exists('exec')) {
-            $out = [];
-            exec('LC_ALL=C lscpu 2>/dev/null', $out);
-            if (!empty($out)) {
-                foreach ($out as $line) {
-                    if ($physical <= 0 && preg_match('/^Core\\(s\\) per socket:\\s*(\\d+)/i', $line, $mx)) {
-                        $corespersocket = (int)$mx[1];
-                    }
-                    if ($physical <= 0 && preg_match('/^Socket\\(s\\):\\s*(\\d+)/i', $line, $mx)) {
-                        $sockets = (int)$mx[1];
-                    }
-                    if ($freq === 'N/A' && preg_match('/^(CPU max MHz|CPU MHz):\\s*([0-9.]+)/i', $line, $mx)) {
-                        $freq = round(((float)$mx[2]) / 1000, 2).' GHz';
-                    }
-                }
-                if ($physical <= 0 && !empty($corespersocket) && !empty($sockets)) $physical = $corespersocket * $sockets;
-            }
-        }
-    }
-    return [
-        'logical' => max($logical, 1),
-        'physical' => ($physical > 0) ? (string)$physical : 'N/A',
-        'freq' => $freq,
-    ];
-}
-
-# Returns cached CPU metadata when fresh, otherwise refreshes and persists CPU details cache
-function getCpuDetails(): array {
-    static $reqcache = null;
-    if (is_array($reqcache)) return $reqcache;
-    $ttl = 120;
-    $cachekey = 'slaed_monitor_cpu_details_v1';
-    if (is_callable('apcu_fetch') && is_callable('apcu_store') && (bool)ini_get('apc.enabled')) {
-        $ok = false;
-        $cached = apcu_fetch($cachekey, $ok);
-        if ($ok && is_array($cached) && isset($cached['data'], $cached['ts']) && (time() - (int)$cached['ts']) <= $ttl) {
-            $reqcache = $cached['data'];
-            return $reqcache;
-        }
-    }
-    $fresh = getCpuDetailsRaw();
-    $reqcache = $fresh;
-    if (is_callable('apcu_store') && (bool)ini_get('apc.enabled')) {
-        apcu_store($cachekey, ['ts' => time(), 'data' => $fresh], $ttl);
-    }
-    return $fresh;
-}
-
 # Formats boolean status into colored HTML badges used by monitor status indicators
 function getStatusHtml(?bool $state): string {
     global $tpl;
@@ -304,169 +207,51 @@ function getStatusHtml(?bool $state): string {
     ]);
 }
 
-# Calculates the cumulative size of regular files in a readable directory tree; returns null when unavailable
-function getDirectorySizeBytes(string $path): int|null {
-    if (!is_dir($path) || !is_readable($path)) return null;
-    $size = 0;
-    try {
-        $iterator = new RecursiveIteratorIterator(
-            new RecursiveDirectoryIterator($path, FilesystemIterator::SKIP_DOTS)
-        );
-        foreach ($iterator as $item) {
-            if (!$item instanceof SplFileInfo) continue;
-            if ($item->isLink() || !$item->isFile()) continue;
-            $size += $item->getSize();
-        }
-    } catch (Throwable) {
-        return null;
-    }
-    return max($size, 0);
-}
-
-# Returns the published backup artifacts of the current database with their size and timestamp, ignoring staging directories, foreign files and artifacts of another database
-function getBackupArtifacts(): array {
-    global $conf;
-    require_once BASE_DIR.'/core/classes/backup.php';
-    $dir = defined('BACKUP_DIR') ? (string)BACKUP_DIR : BASE_DIR.'/storage/backup';
-    if (!is_dir($dir) || !is_readable($dir)) return [];
-    $stem = Backup::getArtifactStem((string)($conf['db']['name'] ?? ''));
-    $out = [];
-    foreach (scandir($dir) ?: [] as $file) {
-        $path = $dir.'/'.$file;
-        if (!is_file($path) || is_link($path)) continue;
-        $mark = Backup::getArtifactMark($file, $stem);
-        if ($mark === '') continue;
-        $out[$file] = ['size' => (int)filesize($path), 'mark' => $mark, 'mtime' => (int)filemtime($path)];
-    }
-    return $out;
-}
-
-# Returns size metrics for key storage folders and null when folders are unavailable; the backup figure counts published artifacts only, so staging never inflates it
-function getStorageDirectorySizes(): array {
-    $baksize = null;
-    if (defined('BACKUP_DIR') && is_dir((string)BACKUP_DIR) && is_readable((string)BACKUP_DIR)) {
-        $baksize = 0;
-        foreach (getBackupArtifacts() as $one) $baksize += $one['size'];
-    }
-    $cachesz = defined('CACHE_DIR') ? getDirectorySizeBytes((string)CACHE_DIR) : null;
-    $logsize = defined('LOGS_DIR') ? getDirectorySizeBytes((string)LOGS_DIR) : null;
-    return [
-        'backup' => $baksize,
-        'cache' => $cachesz,
-        'logs' => $logsize,
-    ];
-}
-
-# Returns the timestamp of the last backup, taken from the last successful run and otherwise from the newest published artifact rather than from any file in the directory tree
-function getLastBackupRunLabel(): string {
-    $state = getSchedulerState('dbbackup');
-    $ts = (int)($state['last_success'] ?? 0);
-    if ($ts > 0) return date('Y-m-d H:i:s', $ts);
-    $marks = array_column(getBackupArtifacts(), 'mark');
-    if (!$marks) return 'N/A';
-    rsort($marks);
-    $when = date_create_from_format('Y-m-d_H-i-s', (string)$marks[0]);
-    return ($when !== false) ? $when->format('Y-m-d H:i:s') : 'N/A';
-}
-
-# Returns formatted uploads directory size or N/A when directory size is unavailable
-function getUploadsSizeLabel(): string {
-    $updir = defined('UPLOADS_DIR') ? (string)UPLOADS_DIR : BASE_DIR.'/uploads';
-    $bytes = getDirectorySizeBytes($updir);
-    return ($bytes === null) ? 'N/A' : filterSize((int)$bytes);
-}
-
-# Returns latest recent database-related issue event matched by error patterns
-function getDbIssueEventHours(int $hours = 24): string {
-    $logsdir = defined('LOGS_DIR') ? (string)LOGS_DIR : BASE_DIR.'/storage/logs';
-    $files = ['error_sql.log', 'error_file.log', 'error_php.log'];
-    $thresh = time() - ($hours * 3600);
-    $bestts = 0;
-    $besttxt = '';
-    $seen = false;
-    $dbmatch = '/(sqlstate|mysql|mysqli|mariadb|database|pdo|deadlock|lock wait|too many connections|connection refused|access denied)/iu';
-    foreach ($files as $name) {
-        $path = $logsdir.'/'.$name;
-        if (!is_file($path) || !is_readable($path)) continue;
-        $seen = true;
-        $tail = getFileTailChunk($path, 262144);
-        $lines = getTailLines($tail, 2500);
-        if (!$lines) continue;
-        for ($ix = count($lines) - 1; $ix >= 0; $ix--) {
-            $line = $lines[$ix];
-            if (preg_match($dbmatch, $line) !== 1) continue;
-            $ts = getLogLineTimestamp($line);
-            if ($ts === null || $ts < $thresh) continue;
-            if ($ts <= $bestts) continue;
-            $bestts = $ts;
-            $besttxt = strtoupper(pathinfo($name, PATHINFO_FILENAME)).': '.(string)preg_replace('/\s+/', ' ', trim($line));
-            break;
-        }
-    }
-    if (!$seen) return 'N/A';
-    if ($bestts <= 0) return '0';
-    return date('Y-m-d H:i:s', $bestts).' | '.$besttxt;
-}
-
 # Builds complete monitor snapshot with system, network, and chart path values
 function getMonitorPanelSnapshot(): array {
-    static $reqcache = null;
-    if (is_array($reqcache)) return $reqcache;
-    $ttl = 3;
-    $cachekey = 'slaed_monitor_panel_snapshot_v1';
-    if (is_callable('apcu_fetch') && is_callable('apcu_store') && (bool)ini_get('apc.enabled')) {
-        $ok = false;
-        $cached = apcu_fetch($cachekey, $ok);
-        if ($ok && is_array($cached) && isset($cached['data'], $cached['ts']) && (time() - (int)$cached['ts']) <= $ttl) {
-            $reqcache = $cached['data'];
-            return $reqcache;
-        }
-    }
-    [$cpup] = getCpuLoad();
-    $cpu = getCpuDetails();
-    $mem = getMemoryInfo();
-    $disk = getMonitorDiskSnapshot();
-    $live = getRealtimePanelMetrics((float)$cpup, (float)$mem['percent']);
-    $netmax = max(array_merge([1.0], $live['hist_up'], $live['hist_down']));
-    $pathup = getSmoothAreaPath($live['hist_up'], $netmax);
-    $pathdown = getSmoothAreaPath($live['hist_down'], $netmax);
-    $upline = getSmoothLinePath($live['hist_up'], $netmax);
-    $downlin = getSmoothLinePath($live['hist_down'], $netmax);
-    $pathcpu = getSmoothAreaPath($live['hist_cpu'], 100.0);
-    $pathram = getSmoothAreaPath($live['hist_ram'], 100.0);
-    $cpuline = getSmoothLinePath($live['hist_cpu'], 100.0);
-    $ramline = getSmoothLinePath($live['hist_ram'], 100.0);
-    $reqcache = [
-        'cpu_p' => (float)$cpup,
-        'cpu' => $cpu,
-        'mem' => $mem,
-        'disk_total' => $disk['disk_total'],
-        'disk_free' => $disk['disk_free'],
-        'disk_used' => $disk['disk_used'],
-        'disk_pct' => $disk['disk_pct'],
-        'net' => [
-            'rx_total' => $live['rx_total'],
-            'tx_total' => $live['tx_total'],
-            'rx_rate' => $live['rx_rate'],
-            'tx_rate' => $live['tx_rate'],
-        ],
-        'hist_down' => $live['hist_down'],
-        'hist_up' => $live['hist_up'],
-        'hist_cpu' => $live['hist_cpu'],
-        'hist_ram' => $live['hist_ram'],
-        'path_up' => $pathup,
-        'path_down' => $pathdown,
-        'path_cpu' => $pathcpu,
-        'path_ram' => $pathram,
-        'path_up_line' => $upline,
-        'path_down_line' => $downlin,
-        'path_cpu_line' => $cpuline,
-        'path_ram_line' => $ramline,
-    ];
-    if (is_callable('apcu_store') && (bool)ini_get('apc.enabled')) {
-        apcu_store($cachekey, ['ts' => time(), 'data' => $reqcache], $ttl);
-    }
-    return $reqcache;
+    return getMonitorCache('panel_snapshot', 3, static function (): array {
+        [$cpup] = getCpuLoad();
+        $cpu = getCpuDetails();
+        $mem = getMemoryInfo();
+        $disk = getMonitorDiskSnapshot();
+        $live = getRealtimePanelMetrics((float)$cpup, (float)$mem['percent']);
+        $netmax = max(array_merge([1.0], $live['hist_up'], $live['hist_down']));
+        $pathup = getSmoothAreaPath($live['hist_up'], $netmax);
+        $pathdown = getSmoothAreaPath($live['hist_down'], $netmax);
+        $upline = getSmoothLinePath($live['hist_up'], $netmax);
+        $downlin = getSmoothLinePath($live['hist_down'], $netmax);
+        $pathcpu = getSmoothAreaPath($live['hist_cpu'], 100.0);
+        $pathram = getSmoothAreaPath($live['hist_ram'], 100.0);
+        $cpuline = getSmoothLinePath($live['hist_cpu'], 100.0);
+        $ramline = getSmoothLinePath($live['hist_ram'], 100.0);
+        return [
+            'cpu_p' => (float)$cpup,
+            'cpu' => $cpu,
+            'mem' => $mem,
+            'disk_total' => $disk['disk_total'],
+            'disk_free' => $disk['disk_free'],
+            'disk_used' => $disk['disk_used'],
+            'disk_pct' => $disk['disk_pct'],
+            'net' => [
+                'rx_total' => $live['rx_total'],
+                'tx_total' => $live['tx_total'],
+                'rx_rate' => $live['rx_rate'],
+                'tx_rate' => $live['tx_rate'],
+            ],
+            'hist_down' => $live['hist_down'],
+            'hist_up' => $live['hist_up'],
+            'hist_cpu' => $live['hist_cpu'],
+            'hist_ram' => $live['hist_ram'],
+            'path_up' => $pathup,
+            'path_down' => $pathdown,
+            'path_cpu' => $pathcpu,
+            'path_ram' => $pathram,
+            'path_up_line' => $upline,
+            'path_down_line' => $downlin,
+            'path_cpu_line' => $cpuline,
+            'path_ram_line' => $ramline,
+        ];
+    });
 }
 
 # Builds template variables for realtime traffic panel including paths and tooltips
@@ -640,36 +425,6 @@ function getMonitorServerStats(): array {
         'srvhttps' => $srvhttps,
         'serverip' => getServerValue('SERVER_ADDR', 'N/A'),
     ];
-}
-
-# Caches expensive runtime extras such as directory scans and log counters across short monitor refresh windows
-function getMonitorRuntimeExtras(): array {
-    static $reqcache = null;
-    if (is_array($reqcache)) return $reqcache;
-    $ttl = 60;
-    $cachekey = 'slaed_monitor_runtime_extras_v1';
-    if (is_callable('apcu_fetch') && is_callable('apcu_store') && (bool)ini_get('apc.enabled')) {
-        $ok = false;
-        $cached = apcu_fetch($cachekey, $ok);
-        if ($ok && is_array($cached) && isset($cached['data'], $cached['ts']) && (time() - (int)$cached['ts']) <= $ttl) {
-            $reqcache = $cached['data'];
-            return $reqcache;
-        }
-    }
-    $fresh = [
-        'storages' => getStorageDirectorySizes(),
-        'lastbackup' => getLastBackupRunLabel(),
-        'error24' => getErrorLogCountHours(24),
-        'uploadsz' => getUploadsSizeLabel(),
-        'failed24' => getFailedLoginCountHours(24),
-        'seclast24' => getSecurityEventHours(24),
-        'dblast24' => getDbIssueEventHours(24),
-    ];
-    $reqcache = $fresh;
-    if (is_callable('apcu_store') && (bool)ini_get('apc.enabled')) {
-        apcu_store($cachekey, ['ts' => time(), 'data' => $fresh], $ttl);
-    }
-    return $fresh;
 }
 
 # Collects runtime diagnostics, opcache, storage, and timing metrics for monitor

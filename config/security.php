@@ -24,6 +24,7 @@ return [
             'difficulty' => 'normal',
             'storage' => 'file',
         ],
+        'dump_age' => '7',
         'dump_skip' => '.git/
 vendor/
 tests/',

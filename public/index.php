@@ -300,6 +300,7 @@ if (empty($go)) {
                 case 'updateAdminBlockOrder': updateAdminBlockOrder(); break;
                 case 'getUserSessionAdminInfo': getUserSessionAdminInfo(); break;
                 case 'getAdminQueueData': getAdminQueueData(); exit;
+                case 'getCockpitData': header('Content-Type: application/json; charset=UTF-8'); echo json_encode(getCockpitData()); exit;
                 case 'getAdminFileList': getAdminFileList(); break;
                 case 'getAdminFileData': getAdminFileData(); break;
                 case 'getAdminFilePreview': getAdminFilePreview(); break;

@@ -701,6 +701,16 @@ function config(): void {
             ]),
         ],
         [
+            'label_for' => 'f-dump-age',
+            'label_html' => _SEC_DUMP_AGE,
+            'field_html' => $tpl->getHtmlFrag('input', [
+                'itype' => 'number',
+                'name_attr' => 'dump_age',
+                'input_id' => 'f-dump-age',
+                'value_attr' => intval($conf['security']['dump_age']),
+            ]),
+        ],
+        [
             'label_html' => _SEC_STAT,
             'label_id' => $labid = getFieldIds('', 'error_log')['label'],
             'field_html' => getTplRadioGroup([
@@ -1028,6 +1038,7 @@ function configsave(): void {
             'sess_d' => $sess_d,
             'sess_b' => $sess_b,
             'log_b' => getVar('post', 'log_b', 'num'),
+            'dump_age' => max(1, intval(getVar('post', 'dump_age', 'num', 7))),
             'error_log' => getVar('post', 'error_log', 'num'),
             'url_get' => getVar('post', 'url_get', 'num'),
             'url_post' => getVar('post', 'url_post', 'num'),

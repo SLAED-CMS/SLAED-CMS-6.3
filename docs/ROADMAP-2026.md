@@ -285,8 +285,13 @@ into the plan, then do whatever work the step names.
   `repair`), which redirects to the tab showing the result once; the ban lists are
   `op=banlist&kind=ip|user`, each with its form under the list through the new key `foot_html` of `admin-list`; the
   file manager filter is the canon one and its boxes name their file (owner, 2026-10-21). (2026-10-21)
-- [ ] 102. ADMIN-UI batch 14 — the data of the cockpit: the monitor functions in `core/monitor.php`, the signals, the
-  cache, the poll.
+- [x] 102. ADMIN-UI batch 14 — the data of the cockpit: the monitor functions in `core/monitor.php`, the signals, the
+  cache, the poll. The data functions of the monitor moved to `core/monitor.php`; one store `getMonitorCache()` (APCu,
+  otherwise a file of `Cache`, per site) replaced four copies of the APCu block; `getCockpitData()` gives four rings
+  with their panel rows, the strip and the tone, `getSystemSignals()` fourteen signals — the twelve of the etalon, mail
+  and update — by the thresholds of the owner; `getSelfCheckState()` feeds `getSelfCheckAlert()`; the poll is
+  `go=5&op=getCockpitData` with the token, super-administrator only; `dump_age` (days, 7) in `config/security.php`
+  with its field; `Mail::getPending($age)` is public (owner, 2026-10-21). (2026-10-21)
 - [ ] 103. ADMIN-UI batch 15 — the cockpit of the home.
 - [ ] 104. ADMIN-UI batch 16 — the merged block "Администрация" in both themes, `dock.css` of each theme.
 - [ ] 105. ADMIN-UI batch 17 — the window "Наблюдение" in both themes.
@@ -296,4 +301,9 @@ into the plan, then do whatever work the step names.
 - [ ] 109. ADMIN-UI batch 21 — sounds in `sound/` of each theme, `getThemeFileUrl()`, `public/sound/` retired.
 - [ ] 110. ADMIN-UI batch 22 — the screensaver "Возрождение".
 - [ ] 111. ADMIN-UI batch 23 — reference; deletes `docs/12-ADMIN-UI-2026.md`.
+- [ ] 111a. Route race on MariaDB 11.6.2+ — found in step 102 (owner, 2026-10-21): with `innodb_snapshot_isolation=1`,
+  the default since MariaDB 11.6.2 (stand 11.7.2), the second writer of one free path gets error 1020 "Record has changed
+  since last read" from `Route::addRoute()` instead of waiting on the unique key, so the write ends in a 500 and
+  `RouteRegistryTest::twoWritersRaceForOnePath` fails. Done when the writer takes 1020 like the key conflict (rollback
+  of its point, next suffix) and the test is green on MariaDB 11.7 and on MySQL 8.
 - [ ] 112. Close — no `docs/*-2026.md` plan is left; delete this file and report that the work before 8.0 is done.

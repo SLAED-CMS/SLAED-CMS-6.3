@@ -681,7 +681,7 @@ final class BackupContractTest extends TestCase
     #[Test]
     public function theMonitorUsesTheSharedRecognizer(): void
     {
-        $code = (string)file_get_contents(dirname(__DIR__, 2).'/admin/modules/monitor.php');
+        $code = (string)file_get_contents(dirname(__DIR__, 2).'/core/monitor.php');
         $this->assertStringContainsString('Backup::getArtifactMark(', $code, 'The monitor does not use the shared artifact recognizer');
         $this->assertStringContainsString('Backup::getArtifactStem(', $code);
         $this->assertStringNotContainsString('getLatestFileMTime', $code, 'The monitor still derives the last backup from directory mtime');

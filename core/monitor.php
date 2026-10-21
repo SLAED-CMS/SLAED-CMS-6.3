@@ -155,61 +155,45 @@ function getMemoryInfo(): array {
 
 # Reads total and free physical memory on Windows via PowerShell CIM and WMIC fallback paths
 function getMemoryInfoWindows(): array {
-    static $reqcache = null;
-    if (is_array($reqcache)) return $reqcache;
-    $ttl = 10;
-    $cachekey = 'slaed_monitor_memory_windows_v1';
-    if (is_callable('apcu_fetch') && is_callable('apcu_store') && (bool)ini_get('apc.enabled')) {
-        $ok = false;
-        $cached = apcu_fetch($cachekey, $ok);
-        if ($ok && is_array($cached) && isset($cached['data'], $cached['ts']) && (time() - (int)$cached['ts']) <= $ttl) {
-            $reqcache = $cached['data'];
-            return $reqcache;
+    return getMonitorCache('memory_windows', 10, static function (): array {
+        $free = 0;
+        $total = 0;
+        $ps = [];
+        if (function_exists('exec')) exec(
+            'powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command'
+            .' "(Get-CimInstance Win32_OperatingSystem | Select-Object TotalVisibleMemorySize,FreePhysicalMemory | Format-List)"',
+            $ps
+        );
+        foreach ($ps as $line) {
+            if (str_contains($line, 'TotalVisibleMemorySize')) {
+                $parts = explode(':', $line, 2);
+                $total = intval(trim($parts[1] ?? '0')) * 1024;
+            } elseif (str_contains($line, 'FreePhysicalMemory')) {
+                $parts = explode(':', $line, 2);
+                $free = intval(trim($parts[1] ?? '0')) * 1024;
+            }
         }
-    }
-    $free = 0;
-    $total = 0;
-    $ps = [];
-    if (function_exists('exec')) exec(
-        'powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command'
-        .' "(Get-CimInstance Win32_OperatingSystem | Select-Object TotalVisibleMemorySize,FreePhysicalMemory | Format-List)"',
-        $ps
-    );
-    foreach ($ps as $line) {
-        if (str_contains($line, 'TotalVisibleMemorySize')) {
-            $parts = explode(':', $line, 2);
-            $total = intval(trim($parts[1] ?? '0')) * 1024;
-        } elseif (str_contains($line, 'FreePhysicalMemory')) {
-            $parts = explode(':', $line, 2);
-            $free = intval(trim($parts[1] ?? '0')) * 1024;
+        if ($total > 0 && $free > 0) return [$total, $free];
+        $outtot = [];
+        if (function_exists('exec')) exec('wmic ComputerSystem get TotalPhysicalMemory /Value', $outtot);
+        foreach ($outtot as $line) {
+            if (str_contains($line, 'TotalPhysicalMemory')) {
+                $parts = explode('=', $line);
+                $total = intval($parts[1] ?? 0);
+                break;
+            }
         }
-    }
-    if ($total > 0 && $free > 0) {
-        $reqcache = [$total, $free];
-        if (is_callable('apcu_store') && (bool)ini_get('apc.enabled')) apcu_store($cachekey, ['ts' => time(), 'data' => $reqcache], $ttl);
-        return $reqcache;
-    }
-    $outtot = [];
-    if (function_exists('exec')) exec('wmic ComputerSystem get TotalPhysicalMemory /Value', $outtot);
-    foreach ($outtot as $line) {
-        if (str_contains($line, 'TotalPhysicalMemory')) {
-            $parts = explode('=', $line);
-            $total = intval($parts[1] ?? 0);
-            break;
+        $outfree = [];
+        if (function_exists('exec')) exec('wmic OS get FreePhysicalMemory /Value', $outfree);
+        foreach ($outfree as $line) {
+            if (str_contains($line, 'FreePhysicalMemory')) {
+                $parts = explode('=', $line);
+                $free = intval($parts[1] ?? 0) * 1024;
+                break;
+            }
         }
-    }
-    $outfree = [];
-    if (function_exists('exec')) exec('wmic OS get FreePhysicalMemory /Value', $outfree);
-    foreach ($outfree as $line) {
-        if (str_contains($line, 'FreePhysicalMemory')) {
-            $parts = explode('=', $line);
-            $free = intval($parts[1] ?? 0) * 1024;
-            break;
-        }
-    }
-    $reqcache = [$total, $free];
-    if (is_callable('apcu_store') && (bool)ini_get('apc.enabled')) apcu_store($cachekey, ['ts' => time(), 'data' => $reqcache], $ttl);
-    return $reqcache;
+        return [$total, $free];
+    });
 }
 
 # Parses /proc/meminfo on Linux and computes total and available memory with compatibility fallback
@@ -586,13 +570,13 @@ function getDbHealth(object $db): array {
     return $data;
 }
 
-# Counts the warning, error and critical lines Logger wrote into the error journals within a time window, reading the tail of each
-function getErrorLogCountHours(int $hours = 24): int|string {
+# Counts the warning, error and critical lines Logger wrote into the given error journals within a time window, reading the tail of each
+function getErrorLogCountHours(int $hours = 24, array $files = ['error_php.log', 'error_sql.log', 'error_site.log', 'error_file.log']): int|string {
     $logsdir = defined('LOGS_DIR') ? (string)LOGS_DIR : BASE_DIR.'/storage/logs';
     $thresh = time() - ($hours * 3600);
     $count = 0;
     $seen = false;
-    foreach (['error_php.log', 'error_sql.log', 'error_site.log', 'error_file.log'] as $name) {
+    foreach ($files as $name) {
         $path = $logsdir.'/'.$name;
         if (!is_file($path) || !is_readable($path)) continue;
         $seen = true;
@@ -724,4 +708,323 @@ function getMonitorDiskSnapshot(): array {
         'disk_used' => $diskused,
         'disk_pct' => (float)$diskpct,
     ];
+}
+
+# Collects raw CPU metadata including logical and physical cores and current base frequency
+function getCpuDetailsRaw(): array {
+    $logical = getCpuCores();
+    $physical = 0;
+    $freq = 'N/A';
+    if (str_starts_with(strtoupper(PHP_OS), 'WIN')) {
+        if (function_exists('exec')) {
+            $out = [];
+            exec(
+                'powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command "(Get-CimInstance Win32_Processor | Measure-Object -Property NumberOfCores -Sum).Sum"',
+                $out
+            );
+            if (!empty($out) && is_numeric(trim((string)$out[0]))) $physical = (int)trim((string)$out[0]);
+            $out = [];
+            exec(
+                'powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command "(Get-CimInstance Win32_Processor | Select-Object -First 1 -ExpandProperty MaxClockSpeed)"',
+                $out
+            );
+            if (!empty($out) && is_numeric(trim((string)$out[0]))) {
+                $mhz = (int)trim((string)$out[0]);
+                if ($mhz > 0) $freq = round($mhz / 1000, 2).' GHz';
+            }
+        }
+    } else {
+        $cpuinfo = getFileSafe('/proc/cpuinfo');
+        $corespersocket = 0;
+        $sockets = 0;
+        if (($cpuinfo === false || $cpuinfo === '') && function_exists('exec')) {
+            $out = [];
+            exec('cat /proc/cpuinfo 2>/dev/null', $out);
+            if (!empty($out)) $cpuinfo = implode("\n", $out);
+        }
+        if ($cpuinfo !== false) {
+            preg_match_all('/^physical id\s*:\s*(\d+)/m', $cpuinfo, $physids);
+            preg_match_all('/^core id\s*:\s*(\d+)/m', $cpuinfo, $coreids);
+            if (!empty($physids[1]) && !empty($coreids[1]) && count($physids[1]) === count($coreids[1])) {
+                $pairs = [];
+                foreach ($physids[1] as $kx => $pid) {
+                    $pairs[] = $pid.'-'.$coreids[1][$kx];
+                }
+                $physical = count(array_unique($pairs));
+            }
+            if ($physical <= 0) {
+                preg_match('/^cpu cores\s*:\s*(\d+)/m', $cpuinfo, $mx);
+                if (!empty($mx[1])) $physical = (int)$mx[1];
+            }
+            preg_match('/^cpu MHz\s*:\s*([0-9.]+)/m', $cpuinfo, $mhz);
+            if (!empty($mhz[1])) $freq = round(((float)$mhz[1]) / 1000, 2).' GHz';
+        }
+        if (($physical <= 0 || $freq === 'N/A') && function_exists('exec')) {
+            $out = [];
+            exec('LC_ALL=C lscpu 2>/dev/null', $out);
+            if (!empty($out)) {
+                foreach ($out as $line) {
+                    if ($physical <= 0 && preg_match('/^Core\\(s\\) per socket:\\s*(\\d+)/i', $line, $mx)) {
+                        $corespersocket = (int)$mx[1];
+                    }
+                    if ($physical <= 0 && preg_match('/^Socket\\(s\\):\\s*(\\d+)/i', $line, $mx)) {
+                        $sockets = (int)$mx[1];
+                    }
+                    if ($freq === 'N/A' && preg_match('/^(CPU max MHz|CPU MHz):\\s*([0-9.]+)/i', $line, $mx)) {
+                        $freq = round(((float)$mx[2]) / 1000, 2).' GHz';
+                    }
+                }
+                if ($physical <= 0 && !empty($corespersocket) && !empty($sockets)) $physical = $corespersocket * $sockets;
+            }
+        }
+    }
+    return [
+        'logical' => max($logical, 1),
+        'physical' => ($physical > 0) ? (string)$physical : 'N/A',
+        'freq' => $freq,
+    ];
+}
+
+# Returns the CPU metadata, read again only every two minutes because the cores and the clock do not change between polls
+function getCpuDetails(): array {
+    return getMonitorCache('cpu_details', 120, 'getCpuDetailsRaw');
+}
+
+# Calculates the cumulative size of regular files in a readable directory tree; returns null when unavailable
+function getDirectorySizeBytes(string $path): int|null {
+    if (!is_dir($path) || !is_readable($path)) return null;
+    $size = 0;
+    try {
+        $iterator = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator($path, FilesystemIterator::SKIP_DOTS)
+        );
+        foreach ($iterator as $item) {
+            if (!$item instanceof SplFileInfo) continue;
+            if ($item->isLink() || !$item->isFile()) continue;
+            $size += $item->getSize();
+        }
+    } catch (Throwable) {
+        return null;
+    }
+    return max($size, 0);
+}
+
+# Returns the published backup artifacts of the current database with their size and timestamp, ignoring staging directories, foreign files and artifacts of another database
+function getBackupArtifacts(): array {
+    global $conf;
+    require_once BASE_DIR.'/core/classes/backup.php';
+    $dir = defined('BACKUP_DIR') ? (string)BACKUP_DIR : BASE_DIR.'/storage/backup';
+    if (!is_dir($dir) || !is_readable($dir)) return [];
+    $stem = Backup::getArtifactStem((string)($conf['db']['name'] ?? ''));
+    $out = [];
+    foreach (scandir($dir) ?: [] as $file) {
+        $path = $dir.'/'.$file;
+        if (!is_file($path) || is_link($path)) continue;
+        $mark = Backup::getArtifactMark($file, $stem);
+        if ($mark === '') continue;
+        $out[$file] = ['size' => (int)filesize($path), 'mark' => $mark, 'mtime' => (int)filemtime($path)];
+    }
+    return $out;
+}
+
+# Returns size metrics for key storage folders and null when folders are unavailable; the backup figure counts published artifacts only, so staging never inflates it
+function getStorageDirectorySizes(): array {
+    $baksize = null;
+    if (defined('BACKUP_DIR') && is_dir((string)BACKUP_DIR) && is_readable((string)BACKUP_DIR)) {
+        $baksize = 0;
+        foreach (getBackupArtifacts() as $one) $baksize += $one['size'];
+    }
+    $cachesz = defined('CACHE_DIR') ? getDirectorySizeBytes((string)CACHE_DIR) : null;
+    $logsize = defined('LOGS_DIR') ? getDirectorySizeBytes((string)LOGS_DIR) : null;
+    return [
+        'backup' => $baksize,
+        'cache' => $cachesz,
+        'logs' => $logsize,
+    ];
+}
+
+# Returns the timestamp of the last backup, taken from the last successful run and otherwise from the newest published artifact rather than from any file in the directory tree
+function getLastBackupRunLabel(): string {
+    $state = getSchedulerState('dbbackup');
+    $ts = (int)($state['last_success'] ?? 0);
+    if ($ts > 0) return date('Y-m-d H:i:s', $ts);
+    $marks = array_column(getBackupArtifacts(), 'mark');
+    if (!$marks) return 'N/A';
+    rsort($marks);
+    $when = date_create_from_format('Y-m-d_H-i-s', (string)$marks[0]);
+    return ($when !== false) ? $when->format('Y-m-d H:i:s') : 'N/A';
+}
+
+# Returns formatted uploads directory size or N/A when directory size is unavailable
+function getUploadsSizeLabel(): string {
+    $updir = defined('UPLOADS_DIR') ? (string)UPLOADS_DIR : BASE_DIR.'/uploads';
+    $bytes = getDirectorySizeBytes($updir);
+    return ($bytes === null) ? 'N/A' : filterSize((int)$bytes);
+}
+
+# Returns latest recent database-related issue event matched by error patterns
+function getDbIssueEventHours(int $hours = 24): string {
+    $logsdir = defined('LOGS_DIR') ? (string)LOGS_DIR : BASE_DIR.'/storage/logs';
+    $files = ['error_sql.log', 'error_file.log', 'error_php.log'];
+    $thresh = time() - ($hours * 3600);
+    $bestts = 0;
+    $besttxt = '';
+    $seen = false;
+    $dbmatch = '/(sqlstate|mysql|mysqli|mariadb|database|pdo|deadlock|lock wait|too many connections|connection refused|access denied)/iu';
+    foreach ($files as $name) {
+        $path = $logsdir.'/'.$name;
+        if (!is_file($path) || !is_readable($path)) continue;
+        $seen = true;
+        $tail = getFileTailChunk($path, 262144);
+        $lines = getTailLines($tail, 2500);
+        if (!$lines) continue;
+        for ($ix = count($lines) - 1; $ix >= 0; $ix--) {
+            $line = $lines[$ix];
+            if (preg_match($dbmatch, $line) !== 1) continue;
+            $ts = getLogLineTimestamp($line);
+            if ($ts === null || $ts < $thresh) continue;
+            if ($ts <= $bestts) continue;
+            $bestts = $ts;
+            $besttxt = strtoupper(pathinfo($name, PATHINFO_FILENAME)).': '.(string)preg_replace('/\s+/', ' ', trim($line));
+            break;
+        }
+    }
+    if (!$seen) return 'N/A';
+    if ($bestts <= 0) return '0';
+    return date('Y-m-d H:i:s', $bestts).' | '.$besttxt;
+}
+
+# Caches expensive runtime extras such as directory scans and log counters across short monitor refresh windows
+function getMonitorRuntimeExtras(): array {
+    return getMonitorCache('runtime_extras', 60, static fn(): array => [
+        'storages' => getStorageDirectorySizes(),
+        'lastbackup' => getLastBackupRunLabel(),
+        'error24' => getErrorLogCountHours(24),
+        'uploadsz' => getUploadsSizeLabel(),
+        'failed24' => getFailedLoginCountHours(24),
+        'seclast24' => getSecurityEventHours(24),
+        'dblast24' => getDbIssueEventHours(24),
+    ]);
+}
+
+# One short-lived store of the monitor per site: APCu when it is on, otherwise a JSON file of Cache, the request itself above both; $ttl 0 always reads fresh
+function getMonitorCache(string $key, int $ttl, callable $make): array {
+    static $seen = [];
+    if ($ttl <= 0) return $make();
+    if (isset($seen[$key])) return $seen[$key];
+    $apcu = function_exists('apcu_enabled') && apcu_enabled();
+    $name = 'slaed_monitor_'.md5(BASE_DIR).'_'.$key;
+    $file = $apcu ? '' : Cache::getFile(['monitor', $key], 'json');
+    $data = $apcu ? apcu_fetch($name) : (Cache::isFresh($file, $ttl) ? json_decode(Cache::getBody($file), true) : null);
+    if (!is_array($data)) {
+        $data = $make();
+        if ($apcu) apcu_store($name, $data, $ttl);
+        else Cache::setBody($file, (string)json_encode($data));
+    }
+    return $seen[$key] = $data;
+}
+
+# The figures of the home cockpit for a super-administrator: four shares with the rows of their panels, the strip of this request and the signals, toned by the worst
+function getCockpitData(): array {
+    global $afile;
+    $snap = getMonitorCache('cockpit', 3, static function (): array {
+        [$cpup] = getCpuLoad();
+        $opc = function_exists('opcache_get_status') ? opcache_get_status(false) : false;
+        $mem = is_array($opc) ? ($opc['memory_usage'] ?? []) : [];
+        return ['cpu_p' => is_numeric($cpup) ? (float)$cpup : 0.0, 'cpu' => getCpuDetails(), 'mem' => getMemoryInfo(), 'op_on' => is_array($opc) && !empty($opc['opcache_enabled']),
+            'op_hit' => (float)($opc['opcache_statistics']['opcache_hit_rate'] ?? 0), 'op_used' => (int)($mem['used_memory'] ?? 0),
+            'op_total' => (int)($mem['used_memory'] ?? 0) + (int)($mem['free_memory'] ?? 0) + (int)($mem['wasted_memory'] ?? 0),
+            'op_files' => (int)($opc['opcache_statistics']['num_cached_scripts'] ?? 0)] + getMonitorDiskSnapshot();
+    });
+    $row = static fn(string $icon, string $label, string $value): array => ['icon' => $icon, 'label' => $label, 'value' => $value];
+    $ring = static fn(string $label, string $title, float $part, string $tone, array $rows): array => [
+        'label' => $label, 'title' => $title, 'value' => round($part, 1), 'tone' => $tone, 'rows' => $rows];
+    $cpu = $snap['cpu'];
+    $mem = $snap['mem'];
+    $hit = $snap['op_on'] ? $snap['op_hit'] : 0.0;
+    $opcrow = $snap['op_on'] ? [$row('memory', _ADM_MEMORY, filterSize($snap['op_used']).' / '.filterSize($snap['op_total'])),
+        $row('file-earmark-code', _ADM_SCRIPTS, (string)$snap['op_files'])] : [];
+    $sigs = getSystemSignals();
+    $lvls = array_column($sigs, 'level');
+    $online = getTableCount('session');
+    $load = getLoadStats();
+    return [
+        'tone' => in_array('danger', $lvls, true) ? 'danger' : (in_array('warn', $lvls, true) ? 'warn' : 'ok'),
+        'href' => HOME_PATH.$afile.'.php?name=monitor',
+        'gauges' => [
+            'cpu' => $ring('CPU', _ADM_CPU, $snap['cpu_p'], getPercentTone($snap['cpu_p']), [$row('cpu', _ADM_CORES, $cpu['physical'].' / '.$cpu['logical']),
+                $row('lightning-charge', _ADM_FREQ, (string)$cpu['freq'])]),
+            'ram' => $ring('RAM', _ADM_RAM, (float)$mem['percent'], getPercentTone((float)$mem['percent']), [$row('memory', _ADM_USED, filterSize($mem['used'])),
+                $row('stack', _OVERALL, filterSize($mem['total'])), $row('check2-circle', _ADM_AVAIL, filterSize($mem['free']))]),
+            'disk' => $ring(_ADM_DISK, _ADM_DISK, (float)$snap['disk_pct'], getPercentTone((float)$snap['disk_pct']), [$row('pie-chart', _ADM_USED,
+                filterSize($snap['disk_used'])), $row('box', _ADM_FREE, filterSize($snap['disk_free']))]),
+            'opcache' => $ring('OPcache', 'OPcache', $hit, $snap['op_on'] ? getPercentTone(100 - $hit) : 'warn', array_merge([$row('bullseye', _ADM_HITS,
+                $snap['op_on'] ? round($hit, 1).'%' : _OFF)], $opcrow)),
+        ],
+        'strip' => [
+            'gen' => ['icon' => 'stopwatch', 'label' => _GENERATION, 'value' => (int)round($load['gen'] * 1000), 'unit' => 'ms'],
+            'sql' => ['icon' => 'database', 'label' => _ADM_QUERIES, 'value' => $load['qnum'], 'unit' => 'sql'],
+            'mem' => ['icon' => 'memory', 'label' => _ADM_PHPMEM, 'value' => round($load['mem'] / 1048576, 1), 'unit' => 'MB'],
+            'online' => ['icon' => 'people', 'label' => _ONLINE, 'value' => $online, 'unit' => ''],
+        ],
+        'signals' => $sigs,
+    ];
+}
+
+# The fourteen signals of the lamp, failures first, each with check, level, fact of a failure and page; journals and queues kept $ttl seconds, 0 fresh
+function getSystemSignals(int $ttl = 60): array {
+    global $conf, $afile;
+    require_once BASE_DIR.'/core/classes/update.php';
+    $runs = getMonitorCache('signals', $ttl, static function (): array {
+        global $mailer;
+        $late = 0;
+        foreach (getSchedulerJobs() as $name => $job) {
+            $next = ((int)($job['active'] ?? 0) === 1) ? getSchedulerPlannedTime($job, getSchedulerState($name)) : 0;
+            if ($next > 0 && $next < time() - 3600) $late++;
+        }
+        return ['php' => getErrorLogCountHours(24, ['error_php.log', 'error_site.log', 'error_file.log']), 'sql' => getErrorLogCountHours(24, ['error_sql.log']),
+            'login' => getFailedLoginCountHours(24), 'attack' => getSecurityEventCount(24), 'late' => $late, 'backup' => (int)strtotime(getLastBackupRunLabel()),
+            'mail' => $mailer->getPending(3600)];
+    });
+    $base = HOME_PATH.$afile.'.php?name=';
+    $self = getSelfCheckState();
+    $disk = getMonitorDiskSnapshot();
+    $free = ($disk['disk_total'] > 0) ? $disk['disk_free'] * 100 / $disk['disk_total'] : 100;
+    $opc = function_exists('opcache_get_status') ? opcache_get_status(false) : false;
+    $found = Update::getState()['found'];
+    $ver = Update::isVersion((string)($found['version'] ?? '')) ? (string)$found['version'] : '';
+    $age = time() - $runs['backup'];
+    $past = date('Y-m-d', strtotime('-1 day'));
+    $when = match (true) {
+        date('Y-m-d', $runs['backup']) === date('Y-m-d') => date('H:i', $runs['backup']),
+        date('Y-m-d', $runs['backup']) === $past => _YESTERDAY,
+        default => date('d.m', $runs['backup']),
+    };
+    $bak = empty($conf['security']['log_b']) ? ['warn', _OFF] : (($runs['backup'] <= 0) ? ['danger', _ADM_SIG_NOBAK]
+        : [($age > 86400 * max(1, intval($conf['security']['dump_age']))) ? 'warn' : 'ok', $when]);
+    $day = static fn(int|string $num): string => sprintf(_ADM_SIG_DAY, $num);
+    $count = static fn(int|string $num, int $warn, int $fail = 0): string => !is_int($num) ? 'ok'
+        : (($fail > 0 && $num >= $fail) ? 'danger' : (($num >= $warn) ? 'warn' : 'ok'));
+    $rows = [
+        ['dirs', _ADM_SIG_DIRS, 'security', $self['open'] ? 'danger' : (($self['none'] || $self['unknown']) ? 'warn' : 'ok'),
+            $self['open'] ? _ADM_SIG_OPEN : ($self['none'] ? _ADM_SIG_NONE : _ADM_SIG_UNK)],
+        ['setup', _ADM_SIG_SETUP, '', is_file(PUBLIC_DIR.'/setup.php') ? 'warn' : 'ok', _ADM_SIG_ROOT],
+        ['php', _ADM_SIG_PHP, 'monitor', $count($runs['php'], 1, 100), $day($runs['php'])],
+        ['sql', _ADM_SIG_DB, 'database', $count($runs['sql'], 1, 10), $day($runs['sql'])],
+        ['disk', _ADM_DISK, 'monitor', ($free < 10) ? 'danger' : (($disk['disk_pct'] > 75) ? 'warn' : 'ok'), $disk['disk_pct'].'%'],
+        ['backup', _ADM_SIG_BACKUP, 'database&op=dump', $bak[0], $bak[1]],
+        ['login', _ADM_SIG_LOGIN, 'security&op=logins', $count($runs['login'], 20), $day($runs['login'])],
+        ['attack', _ADM_SIG_ATTACK, 'security', $count($runs['attack'], 1), $day($runs['attack'])],
+        ['cron', _SCHEDULER, 'scheduler', ($runs['late'] > 0) ? 'warn' : 'ok', sprintf(_ADM_SIG_LATE, $runs['late'])],
+        ['https', 'HTTPS', 'config', str_starts_with(strtolower((string)$conf['homeurl']), 'https://') ? 'ok' : 'warn', _OFF],
+        ['opcache', 'OPcache', 'monitor', (is_array($opc) && !empty($opc['opcache_enabled'])) ? 'ok' : 'warn', _OFF],
+        ['phpver', _ADM_SIG_PHPVER, 'monitor', version_compare(PHP_VERSION, '8.1.0', '<') ? 'warn' : 'ok', PHP_VERSION],
+        ['mail', _MAILOPT, 'newsletter&op=queue', ($runs['mail'] > 0) ? 'warn' : 'ok', sprintf(_ADM_SIG_WAIT, $runs['mail'])],
+        ['update', _UPDATE_TITLE, 'update', ($ver === '') ? 'ok' : (empty($found['security']) ? 'warn' : 'danger'), $ver],
+    ];
+    $rank = ['danger' => 0, 'warn' => 1, 'ok' => 2];
+    $out = array_map(static fn(array $one): array => ['key' => $one[0], 'label' => $one[1], 'href' => ($one[2] !== '') ? $base.$one[2] : '', 'level' => $one[3],
+        'fact' => ($one[3] === 'ok') ? '' : $one[4]], $rows);
+    usort($out, static fn(array $one, array $two): int => $rank[$one['level']] <=> $rank[$two['level']]);
+    return $out;
 }

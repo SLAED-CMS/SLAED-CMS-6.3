@@ -627,18 +627,25 @@ function addSelfCheckTask(): array {
     return ['status' => $bad ? 'failed' : 'success', 'message' => $bad ? $mess : count($list).' closed', 'extra' => ['roots' => $list]];
 }
 
+# The verdict of the last self-check: none when no check ran within a day, otherwise the addresses of the open and the unknown roots and the time of the run
+function getSelfCheckState(): array {
+    $state = getSchedulerState('selfcheck');
+    $list = is_array($state['roots'] ?? null) ? $state['roots'] : [];
+    $out = ['none' => !$list || time() - (int)$state['last_run'] > 86400, 'time' => (int)$state['last_run']];
+    foreach (['open', 'unknown'] as $key) $out[$key] = array_column(array_filter($list, fn(mixed $v): bool => is_array($v) && ($v['state'] ?? '') === $key), 'url');
+    return $out;
+}
+
 # Alerts of the last self-check, a verdict older than a day counting as none; $full adds the all-clear of the security section
 function getSelfCheckAlert(bool $full = false): string {
     global $tpl;
-    $state = getSchedulerState('selfcheck');
-    $list = is_array($state['roots'] ?? null) ? $state['roots'] : [];
-    if (!$list || time() - (int)$state['last_run'] > 86400) return $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _SEC_CHECK_NONE]);
+    $check = getSelfCheckState();
+    if ($check['none']) return $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _SEC_CHECK_NONE]);
     $cont = '';
     foreach (['open' => _SEC_CHECK_OPEN, 'unknown' => _SEC_CHECK_UNK] as $key => $text) {
-        $urls = array_column(array_filter($list, fn(mixed $v): bool => is_array($v) && ($v['state'] ?? '') === $key), 'url');
-        if ($urls) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $text, 'messages' => $urls]);
+        if ($check[$key]) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $text, 'messages' => $check[$key]]);
     }
-    if ($cont === '' && $full) $cont = $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => sprintf(_SEC_CHECK_DONE, date(_TIMESTRING, (int)$state['last_run']))]);
+    if ($cont === '' && $full) $cont = $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => sprintf(_SEC_CHECK_DONE, date(_TIMESTRING, $check['time']))]);
     return $cont;
 }
 
