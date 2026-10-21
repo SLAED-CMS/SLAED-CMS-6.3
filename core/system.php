@@ -636,8 +636,8 @@ function getSelfCheckState(): array {
     return $out;
 }
 
-# Alerts of the last self-check, a verdict older than a day counting as none; $full adds the all-clear of the security section
-function getSelfCheckAlert(bool $full = false): string {
+# Alerts of the last self-check for the security section: a verdict older than a day counts as none, a clean one gives the all-clear
+function getSelfCheckAlert(): string {
     global $tpl;
     $check = getSelfCheckState();
     if ($check['none']) return $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _SEC_CHECK_NONE]);
@@ -645,7 +645,7 @@ function getSelfCheckAlert(bool $full = false): string {
     foreach (['open' => _SEC_CHECK_OPEN, 'unknown' => _SEC_CHECK_UNK] as $key => $text) {
         if ($check[$key]) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $text, 'messages' => $check[$key]]);
     }
-    if ($cont === '' && $full) $cont = $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => sprintf(_SEC_CHECK_DONE, date(_TIMESTRING, $check['time']))]);
+    if ($cont === '') $cont = $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => sprintf(_SEC_CHECK_DONE, date(_TIMESTRING, $check['time']))]);
     return $cont;
 }
 
@@ -807,7 +807,7 @@ function addSchedulerBatch(string $type): array {
     return ['status' => 'done', 'message' => count($runs).' job(s) run', 'jobs' => $runs];
 }
 
-# Format block
+# Render the blocks of one column by weight; the admin block stands first in its column whatever its weight
 function getBlocks(string $side, string $fly = ''): void {
     global $db, $conf, $locale, $name, $home, $pos, $bfile, $prs;
     static $barr;
@@ -832,6 +832,7 @@ function getBlocks(string $side, string $fly = ''): void {
             $where = explode(',', $which);
             $barr[] = [$bid, $bkey, $title, $content, $url, $bfile, $view, $expire, $action, $bpos, $where, (string)$param];
         }
+        usort($barr, static fn(array $one, array $two): int => ($two[1] === 'admin') <=> ($one[1] === 'admin'));
         Parser::$freeoff = false;
     }
     if ($fly != '') {
@@ -4179,13 +4180,13 @@ function replace_break(string $text): string {
     return '';
 }
 
-# Counts the live sessions in one query as members, bots and all rows; the raw bot figure is returned and the caller decides whether bots are shown
+# Counts the live sessions in one query as administrators, members, bots and all rows; the raw bot figure is returned and the caller decides whether bots are shown
 function getSessionCounts(): array {
     global $db;
-    [$mem, $bots, $all] = $db->getSqlRow($db->getSqlQuery(
-        'SELECT COUNT(CASE WHEN guest = 2 THEN 1 END), COUNT(CASE WHEN guest = 1 THEN 1 END), COUNT(*) FROM '.PREFIX_DB.'_session'
+    [$adm, $mem, $bots, $all] = $db->getSqlRow($db->getSqlQuery(
+        'SELECT COUNT(CASE WHEN guest = 3 THEN 1 END), COUNT(CASE WHEN guest = 2 THEN 1 END), COUNT(CASE WHEN guest = 1 THEN 1 END), COUNT(*) FROM '.PREFIX_DB.'_session'
     ));
-    return ['users' => (int)$mem, 'bots' => (int)$bots, 'all' => (int)$all];
+    return ['admins' => (int)$adm, 'users' => (int)$mem, 'bots' => (int)$bots, 'all' => (int)$all];
 }
 
 # User information for user
@@ -4267,98 +4268,102 @@ function getUserSessionRows(): void {
     echo $rows;
 }
 
-# User information for admin
+# The summary of the admin block as one ring of shares; administration is its own share for a super administrator and a guest to anyone else
 function getUserSessionAdminInfo(string $id = ''): string {
- global $db, $conf, $tpl;
-    if ($conf['session'] && isAdmin()) {
-        $a = $b = $m = $u = $i = 0;
-        $who_online = ['0' => '', '1' => '', '2' => '', '3' => ''];
-        $content_who = '';
-        $result = $db->getSqlQuery('SELECT s.uname, s.time, s.ip, s.guest, s.modul, s.url, r.path FROM '.PREFIX_DB.'_session AS s'
-            .' LEFT JOIN '.PREFIX_DB.'_users AS u ON s.guest = 2 AND u.name = s.uname LEFT JOIN '.PREFIX_DB.'_routes AS r ON r.kind = \'user\' AND r.oid = u.id AND r.cur = 1'
-            .' ORDER BY s.uname');
-        while ([$uname, $time, $host, $guest, $module, $url, $route] = $db->getSqlRow($result)) {
-            $time = time() - $time;
-            $namestrip = cutstr($uname, 15);
-            $lstrip = cutstr($module, 15);
-            $alink = urldecode($url);
-            $alstrip = cutstr($alink, 15);
-            $guest = intval($guest);
-            if ($guest == 3) {
-                $title_who = $tpl->getHtmlFrag('session-row', [
-                    'geo_html'    => Geoip::getFlagHtml($host),
-                    'name_link'   => ['href' => $conf['ip_link'].$host, 'title' => getDuration($time).' - '._IP.': '.$host, 'label' => $namestrip, 'is_blank' => true],
-                    'module_link' => ['href' => $alink, 'title' => $alink, 'label' => $alstrip, 'is_blank' => true],
-                    'is_module_right' => true,
-                ]);
-                $a++;
-            } elseif ($guest == 2) {
-                $title_who = $tpl->getHtmlFrag('session-row', [
-                    'geo_html'    => Geoip::getFlagHtml($host),
-                    'name_link'   => [
-                        'href' => getSeoUrl(['name' => 'account', 'op' => 'view', 'uname' => rawurlencode($uname), 'route' => $route]),
-                        'title' => getDuration($time).' - '._IP.': '.$host,
-                        'label' => $namestrip,
-                        'is_blank' => true,
-                    ],
-                    'module_link' => ['href' => $alink, 'title' => $alink, 'label' => ($lstrip !== '' ? $lstrip : $alstrip), 'is_blank' => true],
-                    'is_module_right' => true,
-                ]);
-                $m++;
-            } elseif ($guest == 1) {
-                $title_who = $tpl->getHtmlFrag('session-row', [
-                    'geo_html'    => Geoip::getFlagHtml($host),
-                    'name_link'   => ['href' => $conf['ip_link'].$host, 'title' => getDuration($time).' - '._IP.': '.$host, 'label' => $namestrip, 'is_blank' => true],
-                    'module_link' => ['href' => $alink, 'title' => $alink, 'label' => $lstrip, 'is_blank' => true],
-                    'is_module_right' => true,
-                ]);
-                $b++;
-            } else {
-                $title_who = ($u < 250) ? $tpl->getHtmlFrag('session-row', [
-                    'geo_html'    => Geoip::getFlagHtml($host),
-                    'name_link'   => ['href' => $conf['ip_link'].$host, 'title' => getDuration($time), 'label' => $uname, 'is_blank' => true],
-                    'module_link' => ['href' => $alink, 'title' => $alink, 'label' => $lstrip, 'is_blank' => true],
-                    'is_module_right' => true,
-                ]) : '';
-                $u++;
-            }
-            $who_online[$guest] .= $title_who;
-            $i++;
-        }
-        $content_who .= $tpl->getHtmlPart('session-summary', [
-            'show_admins' => isAdmin(true),
-            'admins_icon_name'   => 'person-gear',
-            'members_icon_name'  => 'person',
-            'bots_icon_name'     => 'robot',
-            'visitors_icon_name' => 'person-slash',
-            'overall_icon_name'  => 'people',
-            'admins_label' => _ADMINS,
-            'admins_count' => $a,
-            'admins_rows_html' => $who_online[3],
-            'admins_toggle_id' => 'ad-block',
-            'members_label' => _BMEM,
-            'members_count' => $m,
-            'members_rows_html' => $who_online[2],
-            'members_toggle_id' => 'us-block',
-            'bots_label' => _BOTS,
-            'bots_count' => $b,
-            'bots_rows_html' => $who_online[1],
-            'bots_toggle_id' => 'bo-block',
-            'visitors_label' => _BVIS,
-            'visitors_count' => $u,
-            'visitors_rows_html' => $who_online[0],
-            'visitors_toggle_id' => 'an-block',
-            'overall_label' => _OVERALL,
-            'overall_count' => $i,
-            'readmore_title' => _READMORE,
-            'update_title' => _UPDATE,
-            'update_label' => _UPDATE,
-            'update_target' => 'sainfo',
-            'update_query' => 'go=5&op=getUserSessionAdminInfo',
-        ]);
-        if ($id) { return $content_who; } else { echo $content_who; }
-    }
+    global $conf, $tpl;
+    if (!$conf['session'] || !isAdmin()) return '';
+    $cnt = getSessionCounts();
+    $all = $cnt['all'];
+    $adm = isAdmin(true) ? $cnt['admins'] : 0;
+    $mem = $cnt['users'];
+    $bot = $cnt['bots'];
+    $cont = $tpl->getHtmlPart('session-summary', [
+        'show_admins' => isAdmin(true),
+        'admins_label' => _ADMINS,
+        'admins_count' => $adm,
+        'admins_pct' => ($all > 0) ? intval(round($adm / $all * 100)) : 0,
+        'members_label' => _BMEM,
+        'members_count' => $mem,
+        'members_pct' => ($all > 0) ? intval(round(($adm + $mem) / $all * 100)) : 0,
+        'show_bots' => true,
+        'bots_label' => _BOTS,
+        'bots_count' => $bot,
+        'bots_end_pct' => ($all > 0) ? intval(round(($adm + $mem + $bot) / $all * 100)) : 0,
+        'visitors_label' => _BVIS,
+        'visitors_count' => $all - $adm - $mem - $bot,
+        'overall_label' => _OVERALL,
+        'overall_count' => $all,
+        'ring_label' => _ONLINE,
+        'stats_id' => isAdmin(true) ? 'sl-stats' : '',
+    ]);
+    if ($id) return $cont;
+    echo $cont;
     return '';
+}
+
+# Answer the watch window of a super administrator: the kinds as a filter that polls itself, the figures, the shares, who is where, the pages and the countries
+function getSessionStats(): void {
+    global $db, $conf, $tpl;
+    if (!$conf['session'] || !isAdmin(true)) return;
+    $every = 10;
+    $kind = getVar('get', 'kind', 'var', 'all');
+    $map = [3 => 'admin', 2 => 'user', 1 => 'bot', 0 => 'guest'];
+    if ($kind !== 'all' && !in_array($kind, $map, true)) $kind = 'all';
+    $icon = ['admin' => 'person-gear', 'user' => 'person-fill', 'bot' => 'robot', 'guest' => 'people-fill'];
+    $text = ['all' => _ALL, 'admin' => _ADMINS, 'user' => _BMEM, 'bot' => _BOTS, 'guest' => _BVIS];
+    $nums = ['all' => 0, 'admin' => 0, 'user' => 0, 'bot' => 0, 'guest' => 0];
+    $rows = $pages = $lands = [];
+    $href = static fn(string $link): string => preg_match('#^/(?![/\\\\])#', $link) ? $link : '';
+    $result = $db->getSqlQuery('SELECT s.uname, s.time, s.ip, s.guest, s.url, u.avatar, r.path FROM '.PREFIX_DB.'_session AS s'
+        .' LEFT JOIN '.PREFIX_DB.'_users AS u ON s.guest IN (2, 3) AND u.name = s.uname'
+        .' LEFT JOIN '.PREFIX_DB.'_routes AS r ON s.guest = 2 AND r.kind = \'user\' AND r.oid = u.id AND r.cur = 1 ORDER BY s.time DESC');
+    while ([$uname, $time, $host, $guest, $url, $ava, $route] = $db->getSqlRow($result)) {
+        $one = $map[intval($guest)] ?? 'guest';
+        $link = urldecode((string)$url);
+        $nums['all']++;
+        $nums[$one]++;
+        if ($link !== '') $pages[$link] = ($pages[$link] ?? 0) + 1;
+        $geo = Geoip::getInfo((string)$host);
+        if ($geo['country'] !== '') {
+            $code = $geo['country'];
+            $lands[$code] ??= ['name' => $geo['country_name'] ?: $code, 'flag_html' => Geoip::getFlagHtml((string)$host), 'num' => 0];
+            $lands[$code]['num']++;
+        }
+        if (($kind !== 'all' && $one !== $kind) || count($rows) >= 100) continue;
+        $rows[] = [
+            'kind' => $one,
+            'icon' => $icon[$one],
+            'kind_label' => $text[$one],
+            'avatar' => getUserAvatarUrl(in_array($one, ['admin', 'user'], true) ? ['avatar' => (string)$ava] : []),
+            'name' => ($one === 'guest') ? _ANONYM : $uname,
+            'name_url' => ($one === 'user') ? getSeoUrl(['name' => 'account', 'op' => 'view', 'uname' => rawurlencode($uname), 'route' => $route]) : '',
+            'url' => $link,
+            'href' => $href($link),
+            'ip' => $host,
+            'ip_url' => $conf['ip_link'].$host,
+            'flag_html' => Geoip::getFlagHtml((string)$host),
+            'ago' => getDuration(max(0, time() - intval($time))),
+        ];
+    }
+    arsort($pages);
+    usort($lands, static fn(array $one, array $two): int => $two['num'] <=> $one['num']);
+    $top = max($pages ?: [1]);
+    $base = HOME_PATH.'index.php?go='.(defined('ADMIN_FILE') ? '5' : '1').'&op=getSessionStats&token='.getSiteToken().'&kind=';
+    $all = max(1, $nums['all']);
+    echo $tpl->getHtmlPart('session-stats', [
+        'every' => $every,
+        'kinds' => array_map(static fn(string $key): array => ['key' => $key, 'label' => $text[$key], 'icon' => $icon[$key] ?? '', 'num' => $nums[$key],
+            'url' => $base.$key, 'is_now' => $key === $kind], array_keys($nums)),
+        'all_num' => $nums['all'],
+        'pages_num' => count($pages),
+        'lands_num' => count($lands),
+        'shares' => array_map(static fn(string $key): array => ['key' => $key, 'pct' => intval(round($nums[$key] / $all * 100))], array_values($map)),
+        'rows' => $rows,
+        'rows_num' => ($kind === 'all') ? $nums['all'] : $nums[$kind],
+        'pages' => array_map(static fn(string $link, int $num): array => ['url' => $link, 'href' => $href($link), 'num' => $num, 'pct' => intval(round($num / $top * 100))],
+            array_slice(array_keys($pages), 0, 10), array_slice(array_values($pages), 0, 10)),
+        'lands' => array_map(static fn(array $one): array => $one + ['pct' => intval(round($one['num'] / $all * 100))], array_slice($lands, 0, 10)),
+    ]);
 }
 
 # Answer the queues this administrator may open, the fullest first: the one source of the bell, the block, the chips and the poll
@@ -4400,35 +4405,50 @@ function getAdminQueues(): array {
     return $rows;
 }
 
-# Format admin block
+# Render the admin block: the summary of the visitors, the keys of the panel, the links a super administrator keeps in the admin row of _blocks
 function adminblock(): string {
- global $db, $afile, $tpl;
-    if (isAdmin()) {
-        $cltit = defined('_OPCL') ? _OPCL : ((defined('_CLOSE') ? _CLOSE : 'Close').' / '.(defined('_WHO') ? _WHO : 'Open'));
-        $title = '';
-        $content = '';
-        $block = '';
-        if (isAdmin(true)) {
-            [$title, $content] = $db->getSqlRow($db->getSqlQuery('SELECT title, content FROM '.PREFIX_DB."_blocks WHERE bkey = 'admin'"));
-            $block = (string)$content;
-        }
-        $cont = $tpl->getHtmlFrag('admin-block-links', [
-            'admin_link'  => ['href' => HOME_PATH.$afile.'.php', 'title' => (string)_ADMINMENU, 'label' => (string)_ADMINMENU, 'icon_name' => 'house-door'],
-            'logout_link' => ['href' => HOME_PATH.$afile.'.php?op=logout', 'title' => (string)_LOGOUT, 'label' => (string)_LOGOUT, 'icon_name' => 'box-arrow-right'],
-            'block_html'  => $block,
-        ]);
-        $a_title = ($title) ? $title : _ADMINS;
-        return $tpl->getHtmlPart('block-sidebar', ['title' => $a_title, 'icon_name' => 'person-gear', 'content_html' => $cont, 'id' => '7', 'close' => $cltit])
-            .$tpl->getHtmlPart('block-sidebar', [
-                'title' => _WHO,
-                'icon_name' => 'eye',
-                'content_html' => getUserSessionAdminInfo(1),
-                'content_id' => 'repsainfo',
-                'id' => '8',
-                'close' => $cltit,
-            ]);
+    global $db, $afile, $tpl;
+    if (!isAdmin()) return '';
+    $title = $content = '';
+    if (isAdmin(true)) [$title, $content] = $db->getSqlRow($db->getSqlQuery('SELECT title, content FROM '.PREFIX_DB."_blocks WHERE bkey = 'admin'"));
+    $links = getAdminBlockLinks((string)$content);
+    $sum = getUserSessionAdminInfo('1');
+    $cont = $tpl->getHtmlFrag('admin-block', [
+        'summary_html' => $sum,
+        'home_url' => HOME_PATH.$afile.'.php',
+        'stats_id' => (isAdmin(true) && $sum !== '') ? 'sl-stats' : '',
+        'fresh_query' => ($sum !== '') ? (defined('ADMIN_FILE') ? 'go=5' : 'go=1').'&op=getUserSessionAdminInfo' : '',
+        'site_url' => defined('ADMIN_FILE') ? HOME_PATH : '',
+        'logout_url' => HOME_PATH.$afile.'.php?op=logout',
+        'links' => $links,
+        'links_num' => count($links),
+        'is_dead' => in_array(true, array_map(static fn(array $row): bool => $row['dead_title'] !== '', $links), true),
+    ]);
+    return $tpl->getHtmlPart('block-sidebar', ['title' => $title ?: _ADMINS, 'icon_name' => 'person-gear', 'content_html' => $cont, 'id' => '7', 'close' => _OPCL]);
+}
+
+# Read the links of the admin row of _blocks: javascript:OpenWindow becomes its address, an address without a root reads from the root of the site, a missing file is marked
+function getAdminBlockLinks(string $html): array {
+    global $conf;
+    $rows = [];
+    $site = strtolower((string)parse_url((string)($conf['homeurl'] ?? ''), PHP_URL_HOST));
+    preg_match_all('#<a\b([^>]*)>(.*?)</a>#is', $html, $hits, PREG_SET_ORDER);
+    foreach ($hits as [, $attr, $text]) {
+        $href = preg_match('#\bhref\s*=\s*(["\'])(.*?)\1#is', $attr, $one) ? trim(html_entity_decode($one[2], ENT_QUOTES | ENT_HTML5, 'UTF-8')) : '';
+        if (preg_match('#^javascript:#i', $href)) $href = preg_match('#\(\s*(["\'])(.*?)\1#s', $href, $one) ? trim($one[2]) : '';
+        if ($href === '' || $href[0] === '#') continue;
+        $host = strtolower((string)parse_url($href, PHP_URL_HOST));
+        $local = !preg_match('#^([a-z][a-z0-9+.-]*:|//)#i', $href) || $host === $site;
+        if ($local && $host === '' && $href[0] !== '/') $href = HOME_PATH.$href;
+        $path = $local ? (string)parse_url($href, PHP_URL_PATH) : '';
+        $rel = str_starts_with($path, HOME_PATH) ? substr($path, strlen(HOME_PATH)) : '';
+        $dead = $rel !== '' && pathinfo($rel, PATHINFO_EXTENSION) !== '' && !is_file(PUBLIC_DIR.'/'.rawurldecode($rel));
+        $label = trim(preg_replace('#\s+#u', ' ', html_entity_decode(strip_tags($text), ENT_QUOTES | ENT_HTML5, 'UTF-8')));
+        $title = preg_match('#\btitle\s*=\s*(["\'])(.*?)\1#is', $attr, $one) ? trim(html_entity_decode($one[2], ENT_QUOTES | ENT_HTML5, 'UTF-8')) : '';
+        $rows[] = ['href' => $href, 'label' => ($label !== '') ? $label : $href, 'title' => ($title !== '') ? $title : $label,
+            'icon' => $local ? 'link-45deg' : 'box-arrow-up-right', 'dead_title' => $dead ? _ADM_NOFILE.': '.$rel : ''];
     }
-    return '';
+    return $rows;
 }
 
 # The link to a profile on the path its reader joined; $icon is off beside an info tip, whose "i" already marks the user block

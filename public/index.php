@@ -220,6 +220,7 @@ if (empty($go)) {
         switch($op) {
             case 'getRatingView': getRatingView(); break;
             case 'getUserSessionAdminInfo': getUserSessionAdminInfo(); break;
+            case 'getSessionStats': getSessionStats(); exit;
             case 'getUserSessionInfo': getUserSessionInfo(); break;
             case 'getUserSessionRows': getUserSessionRows(); break;
             case 'getUserList': getUserList(); break;
@@ -299,6 +300,7 @@ if (empty($go)) {
                 case 'getAdminBlockList': getAdminBlockList(); break;
                 case 'updateAdminBlockOrder': updateAdminBlockOrder(); break;
                 case 'getUserSessionAdminInfo': getUserSessionAdminInfo(); break;
+                case 'getSessionStats': getSessionStats(); exit;
                 case 'getAdminQueueData': getAdminQueueData(); exit;
                 case 'getCockpitData': header('Content-Type: application/json; charset=UTF-8'); echo json_encode(getCockpitData()); exit;
                 case 'getAdminFileList': getAdminFileList(); break;

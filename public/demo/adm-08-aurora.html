@@ -1,0 +1,1276 @@
+<!doctype html>
+<html lang="ru" data-theme="auto">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>08 &middot; Аврора — стенд панели администратора SLAED CMS</title>
+  <link rel="stylesheet" href="../templates/admin/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../templates/admin/assets/css/base.css">
+  <link rel="stylesheet" href="../templates/admin/assets/css/theme.css">
+  <!-- The stand is served without Cache-Control; its sheet and script are stamped so an edit is seen at once -->
+  <script>document.write('<link rel="stylesheet" href="assets/demo.css?v=' + Date.now() + '">');</script>
+  <script src="../plugins/system/global-func.js"></script>
+  <script src="../plugins/system/slaed.js"></script>
+  <script src="../templates/admin/assets/js/admin-ui.js"></script>
+  <style>
+    /* Aurora - the live page as it is, in the palette of signpath.io: a black ground, neutral plates a few per cent
+       lighter than it, white and grey type, and colour spent only where the eye should land - the violet of its
+       call to action and the teal of its marks. Not one element is added, moved or removed: the markup below is the
+       source admin.php sends, with the theme's own scripts behind it. Almost the whole change is the token block:
+
+         · ground    pure black in dark, white in light; no gradient, no glow
+         · plates    panels, tiles and bars are one neutral step above the ground, divided by hairlines
+         · accent    violet for links, icons and the active line; teal for live marks and counts
+         · line      one thin ribbon magenta -> violet -> teal under the head, the only gradient on the page
+
+       Transfer: the token block goes into the API block of templates/admin/assets/css/base.css, the component rules
+       replace their counterparts in theme.css one to one - the selectors are the theme's own. */
+
+    /* --- tokens -------------------------------------------------------------------------------------------------- */
+    :root {
+      --v-violet: light-dark(#7a1fc0, #cf57ff);
+      --v-teal: light-dark(#02838a, #02b1ba);
+      --v-indigo: light-dark(#4b5bd6, #8e9bff);
+      --v-magenta: light-dark(#a8239e, #e46be0);
+      --v-ground: light-dark(#f4f4f6, #000000);
+      --v-hair: light-dark(#e4e4e8, #1f1f23);
+
+      --sl-bg: light-dark(#ffffff, #0b0b0c);
+      --sl-bg-subtle: light-dark(#f4f4f6, #141416);
+      --sl-bg-muted: light-dark(#fafafb, #0f0f11);
+      --sl-surface: light-dark(#fafafb, #111113);
+      --sl-border: light-dark(#e4e4e8, #1f1f23);
+      --sl-border-strong: light-dark(#cfcfd6, #2e2e34);
+      --sl-text: light-dark(#111114, #ffffff);
+      --sl-text-muted: light-dark(#5c5c66, #969696);
+      --sl-text-subtle: light-dark(#8e8e98, #66666e);
+      --sl-primary: var(--v-violet);
+      --sl-primary-strong: light-dark(#5b00ab, #e0a0ff);
+      --sl-primary-muted: light-dark(#d9c2ef, #3a1f52);
+      --sl-primary-subtle: light-dark(#f4ecfb, #170d1f);
+      --sl-success: var(--v-teal);
+      --sl-success-strong: light-dark(#016a70, #4fd6dd);
+      --sl-success-subtle: light-dark(#e6f6f7, #061a1b);
+      --sl-warning: light-dark(#b8620f, #e8a35a);
+      --sl-warning-strong: light-dark(#94490a, #f2bf86);
+      --sl-warning-subtle: light-dark(#fbf3ea, #17110a);
+      --sl-danger: light-dark(#c4304f, #ff6b86);
+      --sl-danger-strong: light-dark(#a1203e, #ff9aac);
+      --sl-accent: var(--v-magenta);
+      --sl-info-subtle: light-dark(#f6f1fb, #120c17);
+      --sl-on-solid: light-dark(#ffffff, #000000);
+      --sl-shadow-color: light-dark(rgba(20, 20, 30, 0.12), rgba(0, 0, 0, 0.8));
+      --sl-shadow-xs: none;
+      --sl-shadow-raised: 0 2px 8px light-dark(rgba(20, 20, 30, 0.08), rgba(0, 0, 0, 0.6));
+      --sl-shadow-float: 0 8px 24px light-dark(rgba(20, 20, 30, 0.1), rgba(0, 0, 0, 0.7));
+      --sl-shadow-focus: 0 0 0 2px light-dark(rgba(122, 31, 192, 0.25), rgba(207, 87, 255, 0.4));
+      --sl-field-ring: light-dark(rgba(122, 31, 192, 0.25), rgba(207, 87, 255, 0.4));
+      --sl-wrap-shadow: none;
+
+      /* The solid bars stop being solid: a plate one step above the page, white type, a hairline. Which role a bar
+         plays - menu, queue, other - is told by the colour of its icon, not by a fill */
+      --sl-solid-bg: light-dark(#f4f4f6, #141416);
+      --sl-solid-border: var(--v-hair);
+      --sl-solid-good-bg: var(--sl-solid-bg);
+      --sl-solid-good-border: var(--v-hair);
+      --sl-solid-warn-bg: var(--sl-solid-bg);
+      --sl-solid-warn-border: var(--v-hair);
+      --sl-solid-bad-bg: var(--sl-solid-bg);
+      --sl-solid-bad-border: var(--v-hair);
+      --sl-solid-text: var(--sl-text);
+      --sl-solid-shadow: none;
+      --sl-solid-link-text: var(--v-violet);
+      --sl-beam-bg: transparent;
+      --sl-footer-border: var(--v-hair);
+      --sl-btn-shadow: none;
+      --sl-bar-shadow: none;
+
+      --sl-grad-line: linear-gradient(90deg, transparent, var(--v-magenta) 25%, var(--v-violet) 50%, var(--v-teal) 75%, transparent);
+      /* The rule under the head keeps the theme's shape - its light over the brand column - and fades to a hairline */
+      --sl-header-bg: linear-gradient(90deg,
+        transparent 0%,
+        var(--v-magenta) 5%,
+        var(--v-violet) 10%,
+        var(--v-teal) 16%,
+        var(--v-hair) 30%,
+        var(--v-hair) 100%);
+      --sl-grad-stripe: linear-gradient(var(--sl-solid-bg), var(--sl-solid-bg));
+    }
+
+    /* --- ground and shell ---------------------------------------------------------------------------------------- */
+    html:has(.v-aurora) {
+      background: var(--v-ground);
+    }
+
+    .v-aurora .sl-wrapper {
+      border-color: var(--v-hair);
+      background: var(--sl-bg);
+    }
+
+    .v-aurora :is(.sl-wraptop, .sl-wrapmid, .sl-header, .sl-admin-main, .sl-admin-content) {
+      background: transparent;
+    }
+
+    /* The wordmark loses the theme's blue and goes neutral, as the mark of the site does: near white on black, near
+       black on white. A filter cannot read light-dark(), so the scheme picks it by the theme's own switch */
+    :root {
+      --v-logo: grayscale(1) brightness(0.32);
+    }
+
+    :root[data-theme="dark"] {
+      --v-logo: grayscale(1) brightness(4) contrast(0.8);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) {
+        --v-logo: grayscale(1) brightness(4) contrast(0.8);
+      }
+    }
+
+    .v-aurora .sl-admin-brand img {
+      filter: var(--v-logo);
+    }
+
+    /* --- toolbar: quiet type, the icon carries the colour -------------------------------------------------------- */
+    .v-aurora .sl-toolbar {
+      border-color: var(--v-hair);
+      background: var(--sl-bg-muted);
+      box-shadow: none;
+    }
+
+    .v-aurora .sl-toolbar li :is(a, button) {
+      color: var(--sl-text-muted);
+      text-shadow: none;
+    }
+
+    .v-aurora .sl-toolbar li :is(a, button) .bi {
+      color: var(--v-violet);
+    }
+
+    .v-aurora .sl-toolbar li:hover {
+      border-color: transparent;
+      background: var(--sl-bg-subtle);
+      box-shadow: none;
+    }
+
+    .v-aurora .sl-toolbar li:hover :is(a, button),
+    .v-aurora .sl-toolbar li :is(a, button):hover {
+      color: var(--sl-text);
+      text-shadow: none;
+    }
+
+    /* --- bars: a plate, a hairline, the icon in the role's colour ------------------------------------------------ */
+    .v-aurora :is(.sl-block-sidebar h3, .sl-dashboard-panel-head) {
+      border-radius: var(--sl-radius-1);
+      text-shadow: none;
+    }
+
+    .v-aurora :is(.sl-block-sidebar h3, .sl-dashboard-panel-head) .bi {
+      color: var(--v-teal);
+    }
+
+    .v-aurora .sl-dashboard-panel-head .bi,
+    .v-aurora .sl-block-sidebar.sl-block-menu h3 .bi {
+      color: var(--v-violet);
+    }
+
+    .v-aurora .sl-block-sidebar.sl-block-queue h3 .bi {
+      color: var(--sl-warning);
+    }
+
+    .v-aurora .sl-block-sidebar {
+      border-color: var(--v-hair);
+      background: var(--sl-bg);
+      box-shadow: none;
+    }
+
+    /* Links in the column are type, not colour: grey at rest, white under the hand, the icon keeps the violet */
+    .v-aurora .sl-admin-sidebar a:not(.sl-but) {
+      color: var(--sl-text-muted);
+    }
+
+    .v-aurora .sl-admin-sidebar a:not(.sl-but):hover {
+      color: var(--sl-text);
+    }
+
+    .v-aurora .sl-admin-sidebar a .bi {
+      color: var(--v-violet);
+    }
+
+    /* --- tiles: neutral plates, white names, the icon is the only colour ----------------------------------------- */
+    .v-aurora .sl-menu-grid > .sl-mcard:nth-child(4n + 1) {
+      --tone: var(--v-violet);
+    }
+
+    .v-aurora .sl-menu-grid > .sl-mcard:nth-child(4n + 2) {
+      --tone: var(--v-teal);
+    }
+
+    .v-aurora .sl-menu-grid > .sl-mcard:nth-child(4n + 3) {
+      --tone: var(--v-indigo);
+    }
+
+    .v-aurora .sl-menu-grid > .sl-mcard:nth-child(4n) {
+      --tone: var(--v-magenta);
+    }
+
+    .v-aurora .sl-mcard {
+      border-color: var(--v-hair);
+      background: var(--sl-surface);
+      box-shadow: none;
+    }
+
+    .v-aurora .sl-mcard:hover {
+      border-color: color-mix(in srgb, var(--tone) 45%, var(--v-hair));
+      background: var(--sl-bg-subtle);
+      box-shadow: none;
+      transform: none;
+    }
+
+    .v-aurora .sl-ico {
+      border-color: var(--v-hair);
+      background: var(--sl-bg);
+    }
+
+    .v-aurora .sl-mbody strong {
+      color: var(--sl-text);
+    }
+
+    .v-aurora .sl-mcard:hover .sl-mbody strong {
+      color: var(--sl-text);
+    }
+
+    .v-aurora .sl-mbody > span {
+      color: var(--sl-text-subtle);
+    }
+
+    /* --- the one call to action: the site's own violet button ---------------------------------------------------- */
+    .v-aurora .sl-but {
+      border-color: transparent;
+      background: linear-gradient(260deg, #9716c9 0%, #5b00ab 100%);
+      color: #ffffff;
+      text-shadow: none;
+    }
+
+    .v-aurora .sl-but:hover {
+      background: linear-gradient(260deg, #a62ad6 0%, #6a0cbd 100%);
+    }
+
+    /* --- alerts: a plate with a coloured edge -------------------------------------------------------------------- */
+    .v-aurora .sl-alert {
+      box-shadow: none;
+    }
+  </style>
+</head>
+<body class="v-aurora">
+  <div class="sl-wrapper sl-admin-shell">
+    <div class="sl-wraptop"></div>
+    <div class="sl-wrapmid">
+      <div class="sl-header sl-admin-header">
+        <div class="sl-admin-brand"><h1><a href="//slaed.net" target="_blank" title="Название сайта"><img src="../templates/admin/images/logos/slaed-logo-wordmark-gradient-blue.svg" alt="Название сайта" title="Название сайта"></a></h1></div>
+        <div class="sl-admin-toolbar">
+          <div class="sl-toolbar">
+            <div>
+              <ul class="sl-reset"><li><a
+  href="../admin.php"
+  title="Главная"
+  >
+    <i class="bi bi-house-door"></i>        <b>Главная</b>
+  </a></li>
+<li><a
+  href="../admin.php?name=blocks"
+  title="Блоки и баннеры"
+  >
+    <i class="bi bi-grid-3x3-gap"></i>        <b>Блоки и баннеры</b>
+  </a></li>
+<li><a
+  href="../admin.php?name=modules"
+  title="Модули"
+  >
+    <i class="bi bi-gpu-card"></i>        <b>Модули</b>
+  </a></li>
+<li><a
+  href="../admin.php?name=categories"
+  title="Категории"
+  >
+    <i class="bi bi-folder"></i>        <b>Категории</b>
+  </a></li>
+<li class="sl-split-item"><a
+  href="/"
+  title="Сайт"
+      target="_blank"
+    rel="noopener noreferrer"
+  >
+    <i class="bi bi-globe2"></i>        <b>Сайт</b>
+  </a></li>
+<li><a
+  href="../index.php?name=account"
+  title="Профиль"
+      target="_blank"
+    rel="noopener noreferrer"
+  >
+    <i class="bi bi-person"></i>        <b>Профиль</b>
+  </a></li>
+<li class="sl-split-item"><a
+  href="../admin.php?op=logout"
+  title="Выход"
+  >
+    <i class="bi bi-box-arrow-right"></i>        <b>Выход</b>
+  </a></li>
+<li class="sl-set-item"><button type="button" data-sl-open="sl-settings" title="Опции"><i class="bi bi-sliders" aria-hidden="true"></i> <b>Опции</b></button></li></ul>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="sl-admin-main">
+        <aside class="sl-admin-sidebar"><div class="sl-block-sidebar">
+  <h3 title="Свёртывание / Развёртывание" data-sl-toggle-control="sl-block-3" data-sl-toggle-effect="slide" data-sl-toggle-duration="500"><b><i class="bi bi-stars"></i>Новые</b><i class="bi bi-arrows-collapse sl-panel-toggle sl-panel-toggle-open" aria-hidden="true"></i><i class="bi bi-arrows-expand sl-panel-toggle sl-panel-toggle-closed" aria-hidden="true"></i></h3>
+  <div
+    id="sl-block-3"
+    class="sl-block-sidebar-content"
+    data-sl-toggle="sl-block-3"
+  >  <div
+            class="
+                                                 sl-block-sidebar-count-list    "
+                  ><div class="sl-block-sidebar-count-row">
+  <div class="sl-block-sidebar-count-label"><a
+  href="../admin.php?name=account&amp;op=newuser"
+  title="Новые пользователи"
+  >
+    <i class="bi bi-person-plus"></i>        Пользователи  </a></div>
+  <div class="sl-block-sidebar-count-value"><span
+    class="
+                 sl-chip sl-chip-warn                                                                                                "
+    >30</span>
+</div>
+</div>
+<div class="sl-block-sidebar-count-row">
+  <div class="sl-block-sidebar-count-label"><a
+  href="../admin.php?name=shop&amp;op=clients"
+  title="Клиенты"
+  >
+    <i class="bi bi-bag-plus"></i>        Клиенты  </a></div>
+  <div class="sl-block-sidebar-count-value"><span
+    class="
+                 sl-chip sl-chip-warn                                                                                                "
+    >10</span>
+</div>
+</div>
+<div class="sl-block-sidebar-count-row">
+  <div class="sl-block-sidebar-count-label"><a
+  href="../admin.php?name=shop&amp;op=partners"
+  title="Партнеры"
+  >
+    <i class="bi bi-shop"></i>        Партнеры  </a></div>
+  <div class="sl-block-sidebar-count-value"><span
+    class="
+                 sl-chip sl-chip-warn                                                                                                "
+    >1</span>
+</div>
+</div>
+</div>
+  </div>
+  <div class="sl-block-sidebar-bottom"></div>
+</div>
+<div class="sl-block-sidebar">
+  <h3 title="Свёртывание / Развёртывание" data-sl-toggle-control="sl-block-4" data-sl-toggle-effect="slide" data-sl-toggle-duration="500"><b><i class="bi bi-hourglass-split"></i>Ждут проверки</b><i class="bi bi-arrows-collapse sl-panel-toggle sl-panel-toggle-open" aria-hidden="true"></i><i class="bi bi-arrows-expand sl-panel-toggle sl-panel-toggle-closed" aria-hidden="true"></i></h3>
+  <div
+    id="sl-block-4"
+    class="sl-block-sidebar-content"
+    data-sl-toggle="sl-block-4"
+  >  <div
+            class="
+                                                 sl-block-sidebar-count-list    "
+                  ><div class="sl-block-sidebar-count-row">
+  <div class="sl-block-sidebar-count-label"><a
+  href="../admin.php?name=comments&amp;status=1"
+  title="Комментарии"
+  >
+    <i class="bi bi-chat-dots"></i>        Комментарии  </a></div>
+  <div class="sl-block-sidebar-count-value"><span
+    class="
+                 sl-chip sl-chip-warn                                                                                                "
+    >3</span>
+</div>
+</div>
+</div>
+  </div>
+  <div class="sl-block-sidebar-bottom"></div>
+</div>
+<div class="sl-block-sidebar">
+  <h3 title="Свёртывание / Развёртывание" data-sl-toggle-control="sl-block-7" data-sl-toggle-effect="slide" data-sl-toggle-duration="500"><b><i class="bi bi-person-gear"></i>Администрация</b><i class="bi bi-arrows-collapse sl-panel-toggle sl-panel-toggle-open" aria-hidden="true"></i><i class="bi bi-arrows-expand sl-panel-toggle sl-panel-toggle-closed" aria-hidden="true"></i></h3>
+  <div
+    id="sl-block-7"
+    class="sl-block-sidebar-content"
+    data-sl-toggle="sl-block-7"
+  ><div class="sl-admin-block-links">
+  <div class="sl-admin-block-link"><a
+  href="../admin.php"
+  title="Панель администратора"
+  >
+    <i class="bi bi-house-door"></i>        Панель администратора  </a></div>
+  <div class="sl-admin-block-link"><a
+  href="../admin.php?op=logout"
+  title="Выход"
+  >
+    <i class="bi bi-box-arrow-right"></i>        Выход  </a></div>
+</div>
+<hr><a href="javascript:OpenWindow('plugins/sxd/index.php', 'DB Backup - Sypex Dumper', '600', '500')" title="DB Backup - Sypex Dumper">DB Backup - Sypex Dumper</a></div>
+  <div class="sl-block-sidebar-bottom"></div>
+</div>
+<div class="sl-block-sidebar">
+  <h3 title="Свёртывание / Развёртывание" data-sl-toggle-control="sl-block-8" data-sl-toggle-effect="slide" data-sl-toggle-duration="500"><b><i class="bi bi-eye"></i>Наблюдение</b><i class="bi bi-arrows-collapse sl-panel-toggle sl-panel-toggle-open" aria-hidden="true"></i><i class="bi bi-arrows-expand sl-panel-toggle sl-panel-toggle-closed" aria-hidden="true"></i></h3>
+  <div
+    id="sl-block-8"
+    class="sl-block-sidebar-content"
+    data-sl-toggle="sl-block-8"
+  ><div id="repsainfo"><div class="sl-session-line sl-session-line--icon">
+  <div class="sl-session-icon"><i class="bi bi-person-gear"></i></div>  <div><a data-sl-toggle-control="ad-block" data-sl-toggle-effect="slide" data-sl-toggle-duration="500" title="Подробнее" class="sl-session-toggle">Администрация:</a></div>
+  <div class="sl-session-right">1</div>
+</div>
+<div id="ad-block" class="sl-session-list sl-session-hidden"><div class="sl-session-row">
+    <div class="sl-session-name">
+        <a
+  href="https://whatismyipaddress.com/ip/127.0.0.1"
+  title="0 сек. - IP Адрес: 127.0.0.1"
+      target="_blank"
+    rel="noopener noreferrer"
+  >
+            SLAED CMS  </a>      </div>
+  <div title="" class="sl-session-module sl-session-note">
+        <a
+  href="/admin.php"
+  title="/admin.php"
+      target="_blank"
+    rel="noopener noreferrer"
+  >
+            /admin.php  </a>      </div>
+</div>
+</div>
+<div class="sl-session-line sl-session-line--icon">
+  <div class="sl-session-icon"><i class="bi bi-person"></i></div>  <div>Пользователей:</div>
+  <div class="sl-session-right">0</div>
+</div>
+<div class="sl-session-line sl-session-line--icon">
+  <div class="sl-session-icon"><i class="bi bi-person-slash"></i></div>  <div>Гостей:</div>
+  <div class="sl-session-right">0</div>
+</div>
+<div class="sl-session-line sl-session-line--icon">
+  <div class="sl-session-icon"><i class="bi bi-people"></i></div>  <div>Всего:</div>
+  <div class="sl-session-right">1</div>
+</div>
+<hr>
+<div class="sl-session-action">
+  <a
+    href="../index.php?go=5&amp;op=getUserSessionAdminInfo"
+    hx-get="../index.php?go=5&amp;op=getUserSessionAdminInfo"
+    hx-target="#repsainfo"
+    hx-swap="innerHTML"
+    hx-push-url="false"
+    title="Обновить"
+    class="sl-but"
+  >Обновить</a>
+</div>
+</div></div>
+  <div class="sl-block-sidebar-bottom"></div>
+</div>
+</aside>
+        <main class="sl-admin-content"><div class="sl-admin-content-inner">
+  <div
+    class="sl-alert sl-alert-warn"
+      >
+        <div class="sl-alert-body">
+      В целях повышения безопасности необходимо удалить или переименовать файл установки системы setup.php в основной директории сайта!          </div>
+  </div>
+  <div
+    class="sl-alert sl-alert-info"
+      >
+        <div class="sl-alert-body">
+      Информация, которая будет доступна всем авторам. Отображение данной информации производится в верхней части панели администратора системы.          </div>
+  </div>
+<div class="sl-dashboard-panel">
+  <h1 class="sl-dashboard-panel-head" title="Административные и системные модули панели управления" data-sl-toggle-control="sl_panel_admin" data-sl-toggle-effect="slide" data-sl-toggle-duration="500"><b><i class="bi bi-person-gear" aria-hidden="true"></i>Административные и системные модули панели управления</b><i class="bi bi-arrows-collapse sl-panel-toggle sl-panel-toggle-open" aria-hidden="true"></i><i class="bi bi-arrows-expand sl-panel-toggle sl-panel-toggle-closed" aria-hidden="true"></i></h1>
+  <div id="sl_panel_admin" class="sl-dashboard-panel-content" data-sl-toggle="sl_panel_admin">
+    <div class="sl-menu-grid"><article class="sl-menu-grid-item sl-mcard">
+  <a class="sl-mcard-link" href="../admin.php?name=admins" title="Администрация">
+    <span class="sl-ico">
+      <i class="bi bi-person-gear"></i>
+      <i class="sl-led sl-led-ok" title="Активирован"></i>
+    </span>
+    <span class="sl-mbody">
+      <strong>Администрация</strong>
+      <span>admins · Только администраторы</span>    </span>
+  </a>
+  <span class="sl-dial">
+  <button class="sl-dial-toggle sl-but-mini" type="button" title="Опции"><i class="bi bi-three-dots"></i></button>
+  <a class="sl-dial-item sl-but-mini" href="../admin.php?name=modules&amp;op=edit&amp;mod=admins" title="Полное редактирование"     ><i class="bi bi-pencil-square"></i></a><a class="sl-dial-item sl-but-mini" href="../admin.php?name=admins&amp;op=info" title="Справка"     ><i class="bi bi-info-circle"></i></a><button class="sl-dial-item sl-but-mini" type="button" title="Деактивировать"  ><i class="bi bi-power"></i></button></span>
+</article>
+<article class="sl-menu-grid-item sl-mcard">
+  <a class="sl-mcard-link" href="../admin.php?name=blocks" title="Блоки и баннеры">
+    <span class="sl-ico">
+      <i class="bi bi-grid-3x3-gap"></i>
+      <i class="sl-led sl-led-ok" title="Активирован"></i>
+    </span>
+    <span class="sl-mbody">
+      <strong>Блоки и баннеры</strong>
+      <span>blocks · Все посетители</span>    </span>
+  </a>
+  <span class="sl-dial">
+  <button class="sl-dial-toggle sl-but-mini" type="button" title="Опции"><i class="bi bi-three-dots"></i></button>
+  <a class="sl-dial-item sl-but-mini" href="../admin.php?name=modules&amp;op=edit&amp;mod=blocks" title="Полное редактирование"     ><i class="bi bi-pencil-square"></i></a><a class="sl-dial-item sl-but-mini" href="../admin.php?name=blocks&amp;op=info" title="Справка"     ><i class="bi bi-info-circle"></i></a><button class="sl-dial-item sl-but-mini" type="button" title="Деактивировать"  ><i class="bi bi-power"></i></button></span>
+</article>
+<article class="sl-menu-grid-item sl-mcard">
+  <a class="sl-mcard-link" href="../admin.php?name=categories" title="Категории">
+    <span class="sl-ico">
+      <i class="bi bi-folder"></i>
+      <i class="sl-led sl-led-ok" title="Активирован"></i>
+    </span>
+    <span class="sl-mbody">
+      <strong>Категории</strong>
+      <span>categories · Все посетители</span>    </span>
+  </a>
+  <span class="sl-dial">
+  <button class="sl-dial-toggle sl-but-mini" type="button" title="Опции"><i class="bi bi-three-dots"></i></button>
+  <a class="sl-dial-item sl-but-mini" href="../admin.php?name=modules&amp;op=edit&amp;mod=categories" title="Полное редактирование"     ><i class="bi bi-pencil-square"></i></a><a class="sl-dial-item sl-but-mini" href="../admin.php?name=categories&amp;op=info" title="Справка"     ><i class="bi bi-info-circle"></i></a><button class="sl-dial-item sl-but-mini" type="button" title="Деактивировать"  ><i class="bi bi-power"></i></button></span>
+</article>
+<article class="sl-menu-grid-item sl-mcard">
+  <a class="sl-mcard-link" href="../admin.php?name=comments" title="Комментарии">
+    <span class="sl-ico">
+      <i class="bi bi-chat-dots"></i>
+      <i class="sl-led sl-led-ok" title="Активирован"></i>
+    </span>
+    <span class="sl-mbody">
+      <strong>Комментарии</strong>
+      <span>comments · Все посетители</span>    </span>
+  </a>
+  <span class="sl-dial">
+  <button class="sl-dial-toggle sl-but-mini" type="button" title="Опции"><i class="bi bi-three-dots"></i></button>
+  <a class="sl-dial-item sl-but-mini" href="../admin.php?name=modules&amp;op=edit&amp;mod=comments" title="Полное редактирование"     ><i class="bi bi-pencil-square"></i></a><a class="sl-dial-item sl-but-mini" href="../admin.php?name=comments&amp;op=config" title="Конфигурации"     ><i class="bi bi-gear"></i></a><a class="sl-dial-item sl-but-mini" href="../admin.php?name=comments&amp;op=info" title="Справка"     ><i class="bi bi-info-circle"></i></a><button class="sl-dial-item sl-but-mini" type="button" title="Деактивировать"  ><i class="bi bi-power"></i></button></span>
+</article>
+<article class="sl-menu-grid-item sl-mcard">
+  <a class="sl-mcard-link" href="../admin.php?name=config" title="Конфигурации">
+    <span class="sl-ico">
+      <i class="bi bi-gear"></i>
+      <i class="sl-led sl-led-ok" title="Активирован"></i>
+    </span>
+    <span class="sl-mbody">
+      <strong>Конфигурации</strong>
+      <span>config · Все посетители</span>    </span>
+  </a>
+  <span class="sl-dial">
+  <button class="sl-dial-toggle sl-but-mini" type="button" title="Опции"><i class="bi bi-three-dots"></i></button>
+  <a class="sl-dial-item sl-but-mini" href="../admin.php?name=modules&amp;op=edit&amp;mod=config" title="Полное редактирование"     ><i class="bi bi-pencil-square"></i></a><a class="sl-dial-item sl-but-mini" href="../admin.php?name=config&amp;op=info" title="Справка"     ><i class="bi bi-info-circle"></i></a><button class="sl-dial-item sl-but-mini" type="button" title="Деактивировать"  ><i class="bi bi-power"></i></button></span>
+</article>
+<article class="sl-menu-grid-item sl-mcard">
+  <a class="sl-mcard-link" href="../admin.php?name=database" title="База данных">
+    <span class="sl-ico">
+      <i class="bi bi-database"></i>
+      <i class="sl-led sl-led-ok" title="Активирован"></i>
+    </span>
+    <span class="sl-mbody">
+      <strong>База данных</strong>
+      <span>database · Все посетители</span>    </span>
+  </a>
+  <span class="sl-dial">
+  <button class="sl-dial-toggle sl-but-mini" type="button" title="Опции"><i class="bi bi-three-dots"></i></button>
+  <a class="sl-dial-item sl-but-mini" href="../admin.php?name=modules&amp;op=edit&amp;mod=database" title="Полное редактирование"     ><i class="bi bi-pencil-square"></i></a><a class="sl-dial-item sl-but-mini" href="../admin.php?name=database&amp;op=info" title="Справка"     ><i class="bi bi-info-circle"></i></a><button class="sl-dial-item sl-but-mini" type="button" title="Деактивировать"  ><i class="bi bi-power"></i></button></span>
+</article>
+<article class="sl-menu-grid-item sl-mcard">
+  <a class="sl-mcard-link" href="../admin.php?name=editor" title="Редактор">
+    <span class="sl-ico">
+      <i class="bi bi-pencil-square"></i>
+      <i class="sl-led sl-led-ok" title="Активирован"></i>
+    </span>
+    <span class="sl-mbody">
+      <strong>Редактор</strong>
+      <span>editor · Все посетители</span>    </span>
+  </a>
+  <span class="sl-dial">
+  <button class="sl-dial-toggle sl-but-mini" type="button" title="Опции"><i class="bi bi-three-dots"></i></button>
+  <a class="sl-dial-item sl-but-mini" href="../admin.php?name=modules&amp;op=edit&amp;mod=editor" title="Полное редактирование"     ><i class="bi bi-pencil-square"></i></a><a class="sl-dial-item sl-but-mini" href="../admin.php?name=editor&amp;op=info" title="Справка"     ><i class="bi bi-info-circle"></i></a><button class="sl-dial-item sl-but-mini" type="button" title="Деактивировать"  ><i class="bi bi-power"></i></button></span>
+</article>
+<article class="sl-menu-grid-item sl-mcard">
+  <a class="sl-mcard-link" href="../admin.php?name=favorites" title="Фавориты">
+    <span class="sl-ico">
+      <i class="bi bi-star"></i>
+      <i class="sl-led sl-led-ok" title="Активирован"></i>
+    </span>
+    <span class="sl-mbody">
+      <strong>Фавориты</strong>
+      <span>favorites · Все посетители</span>    </span>
+  </a>
+  <span class="sl-dial">
+  <button class="sl-dial-toggle sl-but-mini" type="button" title="Опции"><i class="bi bi-three-dots"></i></button>
+  <a class="sl-dial-item sl-but-mini" href="../admin.php?name=modules&amp;op=edit&amp;mod=favorites" title="Полное редактирование"     ><i class="bi bi-pencil-square"></i></a><a class="sl-dial-item sl-but-mini" href="../admin.php?name=favorites&amp;op=config" title="Конфигурации"     ><i class="bi bi-gear"></i></a><a class="sl-dial-item sl-but-mini" href="../admin.php?name=favorites&amp;op=info" title="Справка"     ><i class="bi bi-info-circle"></i></a><button class="sl-dial-item sl-but-mini" type="button" title="Деактивировать"  ><i class="bi bi-power"></i></button></span>
+</article>
+<article class="sl-menu-grid-item sl-mcard">
+  <a class="sl-mcard-link" href="../admin.php?name=fields" title="Дополнительные поля">
+    <span class="sl-ico">
+      <i class="bi bi-input-cursor-text"></i>
+      <i class="sl-led sl-led-ok" title="Активирован"></i>
+    </span>
+    <span class="sl-mbody">
+      <strong>Дополнительные поля</strong>
+      <span>fields · Все посетители</span>    </span>
+  </a>
+  <span class="sl-dial">
+  <button class="sl-dial-toggle sl-but-mini" type="button" title="Опции"><i class="bi bi-three-dots"></i></button>
+  <a class="sl-dial-item sl-but-mini" href="../admin.php?name=modules&amp;op=edit&amp;mod=fields" title="Полное редактирование"     ><i class="bi bi-pencil-square"></i></a><a class="sl-dial-item sl-but-mini" href="../admin.php?name=fields&amp;op=info" title="Справка"     ><i class="bi bi-info-circle"></i></a><button class="sl-dial-item sl-but-mini" type="button" title="Деактивировать"  ><i class="bi bi-power"></i></button></span>
+</article>
+<article class="sl-menu-grid-item sl-mcard">
+  <a class="sl-mcard-link" href="../admin.php?name=groups" title="Группы">
+    <span class="sl-ico">
+      <i class="bi bi-people-fill"></i>
+      <i class="sl-led sl-led-ok" title="Активирован"></i>
+    </span>
+    <span class="sl-mbody">
+      <strong>Группы</strong>
+      <span>groups · Все посетители</span>    </span>
+  </a>
+  <span class="sl-dial">
+  <button class="sl-dial-toggle sl-but-mini" type="button" title="Опции"><i class="bi bi-three-dots"></i></button>
+  <a class="sl-dial-item sl-but-mini" href="../admin.php?name=modules&amp;op=edit&amp;mod=groups" title="Полное редактирование"     ><i class="bi bi-pencil-square"></i></a><a class="sl-dial-item sl-but-mini" href="../admin.php?name=groups&amp;op=info" title="Справка"     ><i class="bi bi-info-circle"></i></a><button class="sl-dial-item sl-but-mini" type="button" title="Деактивировать"  ><i class="bi bi-power"></i></button></span>
+</article>
+<article class="sl-menu-grid-item sl-mcard">
+  <a class="sl-mcard-link" href="../admin.php?name=lang" title="Редактор языков">
+    <span class="sl-ico">
+      <i class="bi bi-translate"></i>
+      <i class="sl-led sl-led-ok" title="Активирован"></i>
+    </span>
+    <span class="sl-mbody">
+      <strong>Редактор языков</strong>
+      <span>lang · Все посетители</span>    </span>
+  </a>
+  <span class="sl-dial">
+  <button class="sl-dial-toggle sl-but-mini" type="button" title="Опции"><i class="bi bi-three-dots"></i></button>
+  <a class="sl-dial-item sl-but-mini" href="../admin.php?name=modules&amp;op=edit&amp;mod=lang" title="Полное редактирование"     ><i class="bi bi-pencil-square"></i></a><a class="sl-dial-item sl-but-mini" href="../admin.php?name=lang&amp;op=config" title="Конфигурации"     ><i class="bi bi-gear"></i></a><a class="sl-dial-item sl-but-mini" href="../admin.php?name=lang&amp;op=info" title="Справка"     ><i class="bi bi-info-circle"></i></a><button class="sl-dial-item sl-but-mini" type="button" title="Деактивировать"  ><i class="bi bi-power"></i></button></span>
+</article>
+<article class="sl-menu-grid-item sl-mcard">
+  <a class="sl-mcard-link" href="../admin.php?name=messages" title="Сообщения">
+    <span class="sl-ico">
+      <i class="bi bi-envelope"></i>
+      <i class="sl-led sl-led-ok" title="Активирован"></i>
+    </span>
+    <span class="sl-mbody">
+      <strong>Сообщения</strong>
+      <span>messages · Только пользователи</span>    </span>
+  </a>
+  <span class="sl-dial">
+  <button class="sl-dial-toggle sl-but-mini" type="button" title="Опции"><i class="bi bi-three-dots"></i></button>
+  <a class="sl-dial-item sl-but-mini" href="../admin.php?name=modules&amp;op=edit&amp;mod=messages" title="Полное редактирование"     ><i class="bi bi-pencil-square"></i></a><a class="sl-dial-item sl-but-mini" href="../admin.php?name=messages&amp;op=info" title="Справка"     ><i class="bi bi-info-circle"></i></a><button class="sl-dial-item sl-but-mini" type="button" title="Деактивировать"  ><i class="bi bi-power"></i></button></span>
+</article>
+<article class="sl-menu-grid-item sl-mcard">
+  <a class="sl-mcard-link" href="../admin.php?name=modules" title="Модули">
+    <span class="sl-ico">
+      <i class="bi bi-puzzle"></i>
+      <i class="sl-led sl-led-ok" title="Активирован"></i>
+    </span>
+    <span class="sl-mbody">
+      <strong>Модули</strong>
+      <span>modules · Все посетители</span>    </span>
+  </a>
+  <span class="sl-dial">
+  <button class="sl-dial-toggle sl-but-mini" type="button" title="Опции"><i class="bi bi-three-dots"></i></button>
+  <a class="sl-dial-item sl-but-mini" href="../admin.php?name=modules&amp;op=edit&amp;mod=modules" title="Полное редактирование"     ><i class="bi bi-pencil-square"></i></a><a class="sl-dial-item sl-but-mini" href="../admin.php?name=modules&amp;op=info" title="Справка"     ><i class="bi bi-info-circle"></i></a><button class="sl-dial-item sl-but-mini" type="button" title="Деактивировать"  ><i class="bi bi-power"></i></button></span>
+</article>
+<article class="sl-menu-grid-item sl-mcard">
+  <a class="sl-mcard-link" href="../admin.php?name=monitor" title="Мониторинг">
+    <span class="sl-ico">
+      <i class="bi bi-display"></i>
+      <i class="sl-led sl-led-ok" title="Активирован"></i>
+    </span>
+    <span class="sl-mbody">
+      <strong>Мониторинг</strong>
+      <span>monitor · Все посетители</span>    </span>
+  </a>
+  <span class="sl-dial">
+  <button class="sl-dial-toggle sl-but-mini" type="button" title="Опции"><i class="bi bi-three-dots"></i></button>
+  <a class="sl-dial-item sl-but-mini" href="../admin.php?name=modules&amp;op=edit&amp;mod=monitor" title="Полное редактирование"     ><i class="bi bi-pencil-square"></i></a><a class="sl-dial-item sl-but-mini" href="../admin.php?name=monitor&amp;op=info" title="Справка"     ><i class="bi bi-info-circle"></i></a><button class="sl-dial-item sl-but-mini" type="button" title="Деактивировать"  ><i class="bi bi-power"></i></button></span>
+</article>
+<article class="sl-menu-grid-item sl-mcard">
+  <a class="sl-mcard-link" href="../admin.php?name=newsletter" title="Рассылка">
+    <span class="sl-ico">
+      <i class="bi bi-send"></i>
+      <i class="sl-led sl-led-ok" title="Активирован"></i>
+    </span>
+    <span class="sl-mbody">
+      <strong>Рассылка</strong>
+      <span>newsletter · Все посетители</span>    </span>
+  </a>
+  <span class="sl-dial">
+  <button class="sl-dial-toggle sl-but-mini" type="button" title="Опции"><i class="bi bi-three-dots"></i></button>
+  <a class="sl-dial-item sl-but-mini" href="../admin.php?name=modules&amp;op=edit&amp;mod=newsletter" title="Полное редактирование"     ><i class="bi bi-pencil-square"></i></a><a class="sl-dial-item sl-but-mini" href="../admin.php?name=newsletter&amp;op=config" title="Конфигурации"     ><i class="bi bi-gear"></i></a><a class="sl-dial-item sl-but-mini" href="../admin.php?name=newsletter&amp;op=info" title="Справка"     ><i class="bi bi-info-circle"></i></a><button class="sl-dial-item sl-but-mini" type="button" title="Деактивировать"  ><i class="bi bi-power"></i></button></span>
+</article>
+<article class="sl-menu-grid-item sl-mcard">
+  <a class="sl-mcard-link" href="../admin.php?name=privat" title="Личные сообщения">
+    <span class="sl-ico">
+      <i class="bi bi-incognito"></i>
+      <i class="sl-led sl-led-ok" title="Активирован"></i>
+    </span>
+    <span class="sl-mbody">
+      <strong>Личные сообщения</strong>
+      <span>privat · Только пользователи</span>    </span>
+  </a>
+  <span class="sl-dial">
+  <button class="sl-dial-toggle sl-but-mini" type="button" title="Опции"><i class="bi bi-three-dots"></i></button>
+  <a class="sl-dial-item sl-but-mini" href="../admin.php?name=modules&amp;op=edit&amp;mod=privat" title="Полное редактирование"     ><i class="bi bi-pencil-square"></i></a><a class="sl-dial-item sl-but-mini" href="../admin.php?name=privat&amp;op=config" title="Конфигурации"     ><i class="bi bi-gear"></i></a><a class="sl-dial-item sl-but-mini" href="../admin.php?name=privat&amp;op=info" title="Справка"     ><i class="bi bi-info-circle"></i></a><button class="sl-dial-item sl-but-mini" type="button" title="Деактивировать"  ><i class="bi bi-power"></i></button></span>
+</article>
+<article class="sl-menu-grid-item sl-mcard">
+  <a class="sl-mcard-link" href="../admin.php?name=ratings" title="Рейтинги">
+    <span class="sl-ico">
+      <i class="bi bi-star-half"></i>
+      <i class="sl-led sl-led-ok" title="Активирован"></i>
+    </span>
+    <span class="sl-mbody">
+      <strong>Рейтинги</strong>
+      <span>ratings · Все посетители</span>    </span>
+  </a>
+  <span class="sl-dial">
+  <button class="sl-dial-toggle sl-but-mini" type="button" title="Опции"><i class="bi bi-three-dots"></i></button>
+  <a class="sl-dial-item sl-but-mini" href="../admin.php?name=modules&amp;op=edit&amp;mod=ratings" title="Полное редактирование"     ><i class="bi bi-pencil-square"></i></a><a class="sl-dial-item sl-but-mini" href="../admin.php?name=ratings&amp;op=info" title="Справка"     ><i class="bi bi-info-circle"></i></a><button class="sl-dial-item sl-but-mini" type="button" title="Деактивировать"  ><i class="bi bi-power"></i></button></span>
+</article>
+<article class="sl-menu-grid-item sl-mcard">
+  <a class="sl-mcard-link" href="../admin.php?name=referers" title="Переходы">
+    <span class="sl-ico">
+      <i class="bi bi-box-arrow-in-right"></i>
+      <i class="sl-led sl-led-ok" title="Активирован"></i>
+    </span>
+    <span class="sl-mbody">
+      <strong>Переходы</strong>
+      <span>referers · Все посетители</span>    </span>
+  </a>
+  <span class="sl-dial">
+  <button class="sl-dial-toggle sl-but-mini" type="button" title="Опции"><i class="bi bi-three-dots"></i></button>
+  <a class="sl-dial-item sl-but-mini" href="../admin.php?name=modules&amp;op=edit&amp;mod=referers" title="Полное редактирование"     ><i class="bi bi-pencil-square"></i></a><a class="sl-dial-item sl-but-mini" href="../admin.php?name=referers&amp;op=config" title="Конфигурации"     ><i class="bi bi-gear"></i></a><a class="sl-dial-item sl-but-mini" href="../admin.php?name=referers&amp;op=info" title="Справка"     ><i class="bi bi-info-circle"></i></a><button class="sl-dial-item sl-but-mini" type="button" title="Деактивировать"  ><i class="bi bi-power"></i></button></span>
+</article>
+<article class="sl-menu-grid-item sl-mcard">
+  <a class="sl-mcard-link" href="../admin.php?name=replace" title="Замена слов">
+    <span class="sl-ico">
+      <i class="bi bi-arrow-left-right"></i>
+      <i class="sl-led sl-led-ok" title="Активирован"></i>
+    </span>
+    <span class="sl-mbody">
+      <strong>Замена слов</strong>
+      <span>replace · Все посетители</span>    </span>
+  </a>
+  <span class="sl-dial">
+  <button class="sl-dial-toggle sl-but-mini" type="button" title="Опции"><i class="bi bi-three-dots"></i></button>
+  <a class="sl-dial-item sl-but-mini" href="../admin.php?name=modules&amp;op=edit&amp;mod=replace" title="Полное редактирование"     ><i class="bi bi-pencil-square"></i></a><a class="sl-dial-item sl-but-mini" href="../admin.php?name=replace&amp;op=info" title="Справка"     ><i class="bi bi-info-circle"></i></a><button class="sl-dial-item sl-but-mini" type="button" title="Деактивировать"  ><i class="bi bi-power"></i></button></span>
+</article>
+<article class="sl-menu-grid-item sl-mcard">
+  <a class="sl-mcard-link" href="../admin.php?name=scheduler" title="Планировщик">
+    <span class="sl-ico">
+      <i class="bi bi-clock-history"></i>
+      <i class="sl-led sl-led-ok" title="Активирован"></i>
+    </span>
+    <span class="sl-mbody">
+      <strong>Планировщик</strong>
+      <span>scheduler · Все посетители</span>    </span>
+  </a>
+  <span class="sl-dial">
+  <button class="sl-dial-toggle sl-but-mini" type="button" title="Опции"><i class="bi bi-three-dots"></i></button>
+  <a class="sl-dial-item sl-but-mini" href="../admin.php?name=modules&amp;op=edit&amp;mod=scheduler" title="Полное редактирование"     ><i class="bi bi-pencil-square"></i></a><a class="sl-dial-item sl-but-mini" href="../admin.php?name=scheduler&amp;op=info" title="Справка"     ><i class="bi bi-info-circle"></i></a><button class="sl-dial-item sl-but-mini" type="button" title="Деактивировать"  ><i class="bi bi-power"></i></button></span>
+</article>
+<article class="sl-menu-grid-item sl-mcard">
+  <a class="sl-mcard-link" href="../admin.php?name=security" title="Безопасность">
+    <span class="sl-ico">
+      <i class="bi bi-shield-lock"></i>
+      <i class="sl-led sl-led-ok" title="Активирован"></i>
+    </span>
+    <span class="sl-mbody">
+      <strong>Безопасность</strong>
+      <span>security · Все посетители</span>    </span>
+  </a>
+  <span class="sl-dial">
+  <button class="sl-dial-toggle sl-but-mini" type="button" title="Опции"><i class="bi bi-three-dots"></i></button>
+  <a class="sl-dial-item sl-but-mini" href="../admin.php?name=modules&amp;op=edit&amp;mod=security" title="Полное редактирование"     ><i class="bi bi-pencil-square"></i></a><a class="sl-dial-item sl-but-mini" href="../admin.php?name=security&amp;op=config" title="Конфигурации"     ><i class="bi bi-gear"></i></a><a class="sl-dial-item sl-but-mini" href="../admin.php?name=security&amp;op=info" title="Справка"     ><i class="bi bi-info-circle"></i></a><button class="sl-dial-item sl-but-mini" type="button" title="Деактивировать"  ><i class="bi bi-power"></i></button></span>
+</article>
+<article class="sl-menu-grid-item sl-mcard">
+  <a class="sl-mcard-link" href="../admin.php?name=statistic" title="Статистика">
+    <span class="sl-ico">
+      <i class="bi bi-graph-up"></i>
+      <i class="sl-led sl-led-ok" title="Активирован"></i>
+    </span>
+    <span class="sl-mbody">
+      <strong>Статистика</strong>
+      <span>statistic · Все посетители</span>    </span>
+  </a>
+  <span class="sl-dial">
+  <button class="sl-dial-toggle sl-but-mini" type="button" title="Опции"><i class="bi bi-three-dots"></i></button>
+  <a class="sl-dial-item sl-but-mini" href="../admin.php?name=modules&amp;op=edit&amp;mod=statistic" title="Полное редактирование"     ><i class="bi bi-pencil-square"></i></a><a class="sl-dial-item sl-but-mini" href="../admin.php?name=statistic&amp;op=config" title="Конфигурации"     ><i class="bi bi-gear"></i></a><a class="sl-dial-item sl-but-mini" href="../admin.php?name=statistic&amp;op=info" title="Справка"     ><i class="bi bi-info-circle"></i></a><button class="sl-dial-item sl-but-mini" type="button" title="Деактивировать"  ><i class="bi bi-power"></i></button></span>
+</article>
+<article class="sl-menu-grid-item sl-mcard">
+  <a class="sl-mcard-link" href="../admin.php?name=template" title="Шаблон">
+    <span class="sl-ico">
+      <i class="bi bi-palette"></i>
+      <i class="sl-led sl-led-ok" title="Активирован"></i>
+    </span>
+    <span class="sl-mbody">
+      <strong>Шаблон</strong>
+      <span>template · Все посетители</span>    </span>
+  </a>
+  <span class="sl-dial">
+  <button class="sl-dial-toggle sl-but-mini" type="button" title="Опции"><i class="bi bi-three-dots"></i></button>
+  <a class="sl-dial-item sl-but-mini" href="../admin.php?name=modules&amp;op=edit&amp;mod=template" title="Полное редактирование"     ><i class="bi bi-pencil-square"></i></a><a class="sl-dial-item sl-but-mini" href="../admin.php?name=template&amp;op=info" title="Справка"     ><i class="bi bi-info-circle"></i></a><button class="sl-dial-item sl-but-mini" type="button" title="Деактивировать"  ><i class="bi bi-power"></i></button></span>
+</article>
+<article class="sl-menu-grid-item sl-mcard">
+  <a class="sl-mcard-link" href="../admin.php?name=uploads" title="Загрузки">
+    <span class="sl-ico">
+      <i class="bi bi-cloud-arrow-up"></i>
+      <i class="sl-led sl-led-ok" title="Активирован"></i>
+    </span>
+    <span class="sl-mbody">
+      <strong>Загрузки</strong>
+      <span>uploads · Все посетители</span>    </span>
+  </a>
+  <span class="sl-dial">
+  <button class="sl-dial-toggle sl-but-mini" type="button" title="Опции"><i class="bi bi-three-dots"></i></button>
+  <a class="sl-dial-item sl-but-mini" href="../admin.php?name=modules&amp;op=edit&amp;mod=uploads" title="Полное редактирование"     ><i class="bi bi-pencil-square"></i></a><a class="sl-dial-item sl-but-mini" href="../admin.php?name=uploads&amp;op=config" title="Конфигурации"     ><i class="bi bi-gear"></i></a><a class="sl-dial-item sl-but-mini" href="../admin.php?name=uploads&amp;op=info" title="Справка"     ><i class="bi bi-info-circle"></i></a><button class="sl-dial-item sl-but-mini" type="button" title="Деактивировать"  ><i class="bi bi-power"></i></button></span>
+</article>
+</div>
+  </div>
+</div>
+<div class="sl-dashboard-panel">
+  <h1 class="sl-dashboard-panel-head" title="Пользовательские и публичные модули сайта" data-sl-toggle-control="sl_panel_site" data-sl-toggle-effect="slide" data-sl-toggle-duration="500"><b><i class="bi bi-people" aria-hidden="true"></i>Пользовательские и публичные модули сайта</b><i class="bi bi-arrows-collapse sl-panel-toggle sl-panel-toggle-open" aria-hidden="true"></i><i class="bi bi-arrows-expand sl-panel-toggle sl-panel-toggle-closed" aria-hidden="true"></i></h1>
+  <div id="sl_panel_site" class="sl-dashboard-panel-content" data-sl-toggle="sl_panel_site">
+    <div class="sl-menu-grid"><article class="sl-menu-grid-item sl-mcard">
+  <a class="sl-mcard-link" href="../admin.php?name=account" title="Пользователи">
+    <span class="sl-ico">
+      <i class="bi bi-people"></i>
+      <i class="sl-led sl-led-ok" title="Активирован"></i>
+    </span>
+    <span class="sl-mbody">
+      <strong>Пользователи</strong>
+      <span>account · Все посетители</span>    </span>
+  </a>
+  <span class="sl-dial">
+  <button class="sl-dial-toggle sl-but-mini" type="button" title="Опции"><i class="bi bi-three-dots"></i></button>
+  <a class="sl-dial-item sl-but-mini" href="../admin.php?name=modules&amp;op=edit&amp;mod=account" title="Полное редактирование"     ><i class="bi bi-pencil-square"></i></a><a class="sl-dial-item sl-but-mini" href="../index.php?name=account" title="Просмотр на сайте"     ><i class="bi bi-arrow-up-right-circle"></i></a><a class="sl-dial-item sl-but-mini" href="../admin.php?name=account&amp;op=info" title="Справка"     ><i class="bi bi-info-circle"></i></a><button class="sl-dial-item sl-but-mini" type="button" title="Деактивировать"  ><i class="bi bi-power"></i></button></span>
+</article>
+<article class="sl-menu-grid-item sl-mcard">
+  <a class="sl-mcard-link" href="../admin.php?name=auto_links" title="Обмен ссылками">
+    <span class="sl-ico">
+      <i class="bi bi-link"></i>
+      <i class="sl-led sl-led-ok" title="Активирован"></i>
+    </span>
+    <span class="sl-mbody">
+      <strong>Обмен ссылками</strong>
+      <span>auto_links · Все посетители</span>    </span>
+  </a>
+  <span class="sl-dial">
+  <button class="sl-dial-toggle sl-but-mini" type="button" title="Опции"><i class="bi bi-three-dots"></i></button>
+  <a class="sl-dial-item sl-but-mini" href="../admin.php?name=modules&amp;op=edit&amp;mod=auto_links" title="Полное редактирование"     ><i class="bi bi-pencil-square"></i></a><a class="sl-dial-item sl-but-mini" href="../admin.php?name=auto_links&amp;op=config" title="Конфигурации"     ><i class="bi bi-gear"></i></a><a class="sl-dial-item sl-but-mini" href="../index.php?name=auto_links" title="Просмотр на сайте"     ><i class="bi bi-arrow-up-right-circle"></i></a><a class="sl-dial-item sl-but-mini" href="../admin.php?name=auto_links&amp;op=info" title="Справка"     ><i class="bi bi-info-circle"></i></a><button class="sl-dial-item sl-but-mini" type="button" title="Деактивировать"  ><i class="bi bi-power"></i></button></span>
+</article>
+<article class="sl-menu-grid-item sl-mcard">
+  <a class="sl-mcard-link" href="../admin.php?name=changelog" title="Журнал изменений">
+    <span class="sl-ico">
+      <i class="bi bi-journal-text"></i>
+      <i class="sl-led sl-led-ok" title="Активирован"></i>
+    </span>
+    <span class="sl-mbody">
+      <strong>Журнал изменений</strong>
+      <span>changelog · Все посетители</span>    </span>
+  </a>
+  <span class="sl-dial">
+  <button class="sl-dial-toggle sl-but-mini" type="button" title="Опции"><i class="bi bi-three-dots"></i></button>
+  <a class="sl-dial-item sl-but-mini" href="../admin.php?name=modules&amp;op=edit&amp;mod=changelog" title="Полное редактирование"     ><i class="bi bi-pencil-square"></i></a><a class="sl-dial-item sl-but-mini" href="../admin.php?name=changelog&amp;op=config" title="Конфигурации"     ><i class="bi bi-gear"></i></a><a class="sl-dial-item sl-but-mini" href="../index.php?name=changelog" title="Просмотр на сайте"     ><i class="bi bi-arrow-up-right-circle"></i></a><a class="sl-dial-item sl-but-mini" href="../admin.php?name=changelog&amp;op=info" title="Справка"     ><i class="bi bi-info-circle"></i></a><button class="sl-dial-item sl-but-mini" type="button" title="Деактивировать"  ><i class="bi bi-power"></i></button></span>
+</article>
+<article class="sl-menu-grid-item sl-mcard">
+  <a class="sl-mcard-link" href="../admin.php?name=clients" title="Клиенты">
+    <span class="sl-ico">
+      <i class="bi bi-briefcase"></i>
+      <i class="sl-led sl-led-ok" title="Активирован"></i>
+    </span>
+    <span class="sl-mbody">
+      <strong>Клиенты</strong>
+      <span>clients · Только пользователи</span>    </span>
+  </a>
+  <span class="sl-dial">
+  <button class="sl-dial-toggle sl-but-mini" type="button" title="Опции"><i class="bi bi-three-dots"></i></button>
+  <a class="sl-dial-item sl-but-mini" href="../admin.php?name=modules&amp;op=edit&amp;mod=clients" title="Полное редактирование"     ><i class="bi bi-pencil-square"></i></a><a class="sl-dial-item sl-but-mini" href="../index.php?name=clients" title="Просмотр на сайте"     ><i class="bi bi-arrow-up-right-circle"></i></a><a class="sl-dial-item sl-but-mini" href="../admin.php?name=clients&amp;op=info" title="Справка"     ><i class="bi bi-info-circle"></i></a><button class="sl-dial-item sl-but-mini" type="button" title="Деактивировать"  ><i class="bi bi-power"></i></button></span>
+</article>
+<article class="sl-menu-grid-item sl-mcard">
+  <a class="sl-mcard-link" href="../admin.php?name=contact" title="Обратная связь">
+    <span class="sl-ico">
+      <i class="bi bi-envelope-open"></i>
+      <i class="sl-led sl-led-ok" title="Активирован"></i>
+    </span>
+    <span class="sl-mbody">
+      <strong>Обратная связь</strong>
+      <span>contact · Только пользователи</span>    </span>
+  </a>
+  <span class="sl-dial">
+  <button class="sl-dial-toggle sl-but-mini" type="button" title="Опции"><i class="bi bi-three-dots"></i></button>
+  <a class="sl-dial-item sl-but-mini" href="../admin.php?name=modules&amp;op=edit&amp;mod=contact" title="Полное редактирование"     ><i class="bi bi-pencil-square"></i></a><a class="sl-dial-item sl-but-mini" href="../index.php?name=contact" title="Просмотр на сайте"     ><i class="bi bi-arrow-up-right-circle"></i></a><a class="sl-dial-item sl-but-mini" href="../admin.php?name=contact&amp;op=info" title="Справка"     ><i class="bi bi-info-circle"></i></a><button class="sl-dial-item sl-but-mini" type="button" title="Деактивировать"  ><i class="bi bi-power"></i></button></span>
+</article>
+<article class="sl-menu-grid-item sl-mcard">
+  <a class="sl-mcard-link" href="../admin.php?name=forum" title="Форум">
+    <span class="sl-ico">
+      <i class="bi bi-chat-square-text"></i>
+      <i class="sl-led sl-led-ok" title="Активирован"></i>
+    </span>
+    <span class="sl-mbody">
+      <strong>Форум</strong>
+      <span>forum · Все посетители</span>    </span>
+  </a>
+  <span class="sl-dial">
+  <button class="sl-dial-toggle sl-but-mini" type="button" title="Опции"><i class="bi bi-three-dots"></i></button>
+  <a class="sl-dial-item sl-but-mini" href="../admin.php?name=modules&amp;op=edit&amp;mod=forum" title="Полное редактирование"     ><i class="bi bi-pencil-square"></i></a><a class="sl-dial-item sl-but-mini" href="../admin.php?name=forum&amp;op=config" title="Конфигурации"     ><i class="bi bi-gear"></i></a><a class="sl-dial-item sl-but-mini" href="../admin.php?name=categories&amp;modul=forum" title="Категории"     ><i class="bi bi-folder2"></i></a><a class="sl-dial-item sl-but-mini" href="../index.php?name=forum" title="Просмотр на сайте"     ><i class="bi bi-arrow-up-right-circle"></i></a><a class="sl-dial-item sl-but-mini" href="../admin.php?name=forum&amp;op=info" title="Справка"     ><i class="bi bi-info-circle"></i></a><button class="sl-dial-item sl-but-mini" type="button" title="Деактивировать"  ><i class="bi bi-power"></i></button></span>
+</article>
+<article class="sl-menu-grid-item sl-mcard">
+  <a class="sl-mcard-link" href="../admin.php?name=money" title="Обмен WebMoney">
+    <span class="sl-ico">
+      <i class="bi bi-currency-exchange"></i>
+      <i class="sl-led sl-led-ok" title="Активирован"></i>
+    </span>
+    <span class="sl-mbody">
+      <strong>Обмен WebMoney</strong>
+      <span>money · Все посетители</span>    </span>
+  </a>
+  <span class="sl-dial">
+  <button class="sl-dial-toggle sl-but-mini" type="button" title="Опции"><i class="bi bi-three-dots"></i></button>
+  <a class="sl-dial-item sl-but-mini" href="../admin.php?name=modules&amp;op=edit&amp;mod=money" title="Полное редактирование"     ><i class="bi bi-pencil-square"></i></a><a class="sl-dial-item sl-but-mini" href="../admin.php?name=money&amp;op=config" title="Конфигурации"     ><i class="bi bi-gear"></i></a><a class="sl-dial-item sl-but-mini" href="../index.php?name=money" title="Просмотр на сайте"     ><i class="bi bi-arrow-up-right-circle"></i></a><a class="sl-dial-item sl-but-mini" href="../admin.php?name=money&amp;op=info" title="Справка"     ><i class="bi bi-info-circle"></i></a><button class="sl-dial-item sl-but-mini" type="button" title="Деактивировать"  ><i class="bi bi-power"></i></button></span>
+</article>
+<article class="sl-menu-grid-item sl-mcard">
+  <a class="sl-mcard-link" href="../admin.php?name=order" title="Форма заказа">
+    <span class="sl-ico">
+      <i class="bi bi-receipt"></i>
+      <i class="sl-led sl-led-ok" title="Активирован"></i>
+    </span>
+    <span class="sl-mbody">
+      <strong>Форма заказа</strong>
+      <span>order · Все посетители</span>    </span>
+  </a>
+  <span class="sl-dial">
+  <button class="sl-dial-toggle sl-but-mini" type="button" title="Опции"><i class="bi bi-three-dots"></i></button>
+  <a class="sl-dial-item sl-but-mini" href="../admin.php?name=modules&amp;op=edit&amp;mod=order" title="Полное редактирование"     ><i class="bi bi-pencil-square"></i></a><a class="sl-dial-item sl-but-mini" href="../admin.php?name=order&amp;op=config" title="Конфигурации"     ><i class="bi bi-gear"></i></a><a class="sl-dial-item sl-but-mini" href="../index.php?name=order" title="Просмотр на сайте"     ><i class="bi bi-arrow-up-right-circle"></i></a><a class="sl-dial-item sl-but-mini" href="../admin.php?name=order&amp;op=info" title="Справка"     ><i class="bi bi-info-circle"></i></a><button class="sl-dial-item sl-but-mini" type="button" title="Деактивировать"  ><i class="bi bi-power"></i></button></span>
+</article>
+<article class="sl-menu-grid-item sl-mcard">
+  <a class="sl-mcard-link" href="../admin.php?name=rss" title="RSS каналы">
+    <span class="sl-ico">
+      <i class="bi bi-rss"></i>
+      <i class="sl-led sl-led-ok" title="Активирован"></i>
+    </span>
+    <span class="sl-mbody">
+      <strong>RSS каналы</strong>
+      <span>rss · Все посетители</span>    </span>
+  </a>
+  <span class="sl-dial">
+  <button class="sl-dial-toggle sl-but-mini" type="button" title="Опции"><i class="bi bi-three-dots"></i></button>
+  <a class="sl-dial-item sl-but-mini" href="../admin.php?name=modules&amp;op=edit&amp;mod=rss" title="Полное редактирование"     ><i class="bi bi-pencil-square"></i></a><a class="sl-dial-item sl-but-mini" href="../index.php?name=rss" title="Просмотр на сайте"     ><i class="bi bi-arrow-up-right-circle"></i></a><a class="sl-dial-item sl-but-mini" href="../admin.php?name=rss&amp;op=info" title="Справка"     ><i class="bi bi-info-circle"></i></a><button class="sl-dial-item sl-but-mini" type="button" title="Деактивировать"  ><i class="bi bi-power"></i></button></span>
+</article>
+<article class="sl-menu-grid-item sl-mcard">
+  <a class="sl-mcard-link" href="../admin.php?name=search" title="Поиск">
+    <span class="sl-ico">
+      <i class="bi bi-search"></i>
+      <i class="sl-led sl-led-ok" title="Активирован"></i>
+    </span>
+    <span class="sl-mbody">
+      <strong>Поиск</strong>
+      <span>search · Все посетители</span>    </span>
+  </a>
+  <span class="sl-dial">
+  <button class="sl-dial-toggle sl-but-mini" type="button" title="Опции"><i class="bi bi-three-dots"></i></button>
+  <a class="sl-dial-item sl-but-mini" href="../admin.php?name=modules&amp;op=edit&amp;mod=search" title="Полное редактирование"     ><i class="bi bi-pencil-square"></i></a><a class="sl-dial-item sl-but-mini" href="../admin.php?name=search&amp;op=config" title="Конфигурации"     ><i class="bi bi-gear"></i></a><a class="sl-dial-item sl-but-mini" href="../index.php?name=search" title="Просмотр на сайте"     ><i class="bi bi-arrow-up-right-circle"></i></a><a class="sl-dial-item sl-but-mini" href="../admin.php?name=search&amp;op=info" title="Справка"     ><i class="bi bi-info-circle"></i></a><button class="sl-dial-item sl-but-mini" type="button" title="Деактивировать"  ><i class="bi bi-power"></i></button></span>
+</article>
+<article class="sl-menu-grid-item sl-mcard">
+  <a class="sl-mcard-link" href="../admin.php?name=shop" title="Магазин">
+    <span class="sl-ico">
+      <i class="bi bi-cart3"></i>
+      <i class="sl-led sl-led-ok" title="Активирован"></i>
+    </span>
+    <span class="sl-mbody">
+      <strong>Магазин</strong>
+      <span>shop · Все посетители</span>    </span>
+  </a>
+  <span class="sl-dial">
+  <button class="sl-dial-toggle sl-but-mini" type="button" title="Опции"><i class="bi bi-three-dots"></i></button>
+  <a class="sl-dial-item sl-but-mini" href="../admin.php?name=modules&amp;op=edit&amp;mod=shop" title="Полное редактирование"     ><i class="bi bi-pencil-square"></i></a><a class="sl-dial-item sl-but-mini" href="../admin.php?name=shop&amp;op=config" title="Конфигурации"     ><i class="bi bi-gear"></i></a><a class="sl-dial-item sl-but-mini" href="../admin.php?name=categories&amp;modul=shop" title="Категории"     ><i class="bi bi-folder2"></i></a><a class="sl-dial-item sl-but-mini" href="../index.php?name=shop" title="Просмотр на сайте"     ><i class="bi bi-arrow-up-right-circle"></i></a><a class="sl-dial-item sl-but-mini" href="../admin.php?name=shop&amp;op=info" title="Справка"     ><i class="bi bi-info-circle"></i></a><button class="sl-dial-item sl-but-mini" type="button" title="Деактивировать"  ><i class="bi bi-power"></i></button></span>
+</article>
+<article class="sl-menu-grid-item sl-mcard">
+  <a class="sl-mcard-link" href="../admin.php?name=sitemap" title="Карта сайта">
+    <span class="sl-ico">
+      <i class="bi bi-diagram-3"></i>
+      <i class="sl-led sl-led-ok" title="Активирован"></i>
+    </span>
+    <span class="sl-mbody">
+      <strong>Карта сайта</strong>
+      <span>sitemap · Все посетители</span>    </span>
+  </a>
+  <span class="sl-dial">
+  <button class="sl-dial-toggle sl-but-mini" type="button" title="Опции"><i class="bi bi-three-dots"></i></button>
+  <a class="sl-dial-item sl-but-mini" href="../admin.php?name=modules&amp;op=edit&amp;mod=sitemap" title="Полное редактирование"     ><i class="bi bi-pencil-square"></i></a><a class="sl-dial-item sl-but-mini" href="../admin.php?name=sitemap&amp;op=config" title="Конфигурации"     ><i class="bi bi-gear"></i></a><a class="sl-dial-item sl-but-mini" href="../index.php?name=sitemap" title="Просмотр на сайте"     ><i class="bi bi-arrow-up-right-circle"></i></a><a class="sl-dial-item sl-but-mini" href="../admin.php?name=sitemap&amp;op=info" title="Справка"     ><i class="bi bi-info-circle"></i></a><button class="sl-dial-item sl-but-mini" type="button" title="Деактивировать"  ><i class="bi bi-power"></i></button></span>
+</article>
+<article class="sl-menu-grid-item sl-mcard">
+  <a class="sl-mcard-link" href="../admin.php?name=voting" title="Опросы">
+    <span class="sl-ico">
+      <i class="bi bi-bar-chart"></i>
+      <i class="sl-led sl-led-ok" title="Активирован"></i>
+    </span>
+    <span class="sl-mbody">
+      <strong>Опросы</strong>
+      <span>voting · Все посетители</span>    </span>
+  </a>
+  <span class="sl-dial">
+  <button class="sl-dial-toggle sl-but-mini" type="button" title="Опции"><i class="bi bi-three-dots"></i></button>
+  <a class="sl-dial-item sl-but-mini" href="../admin.php?name=modules&amp;op=edit&amp;mod=voting" title="Полное редактирование"     ><i class="bi bi-pencil-square"></i></a><a class="sl-dial-item sl-but-mini" href="../admin.php?name=voting&amp;op=config" title="Конфигурации"     ><i class="bi bi-gear"></i></a><a class="sl-dial-item sl-but-mini" href="../index.php?name=voting" title="Просмотр на сайте"     ><i class="bi bi-arrow-up-right-circle"></i></a><a class="sl-dial-item sl-but-mini" href="../admin.php?name=voting&amp;op=info" title="Справка"     ><i class="bi bi-info-circle"></i></a><button class="sl-dial-item sl-but-mini" type="button" title="Деактивировать"  ><i class="bi bi-power"></i></button></span>
+</article>
+<article class="sl-menu-grid-item sl-mcard">
+  <a class="sl-mcard-link" href="../admin.php?name=whois" title="Жалобы">
+    <span class="sl-ico">
+      <i class="bi bi-geo-alt"></i>
+      <i class="sl-led sl-led-ok" title="Активирован"></i>
+    </span>
+    <span class="sl-mbody">
+      <strong>Жалобы</strong>
+      <span>whois · Только пользователи</span>    </span>
+  </a>
+  <span class="sl-dial">
+  <button class="sl-dial-toggle sl-but-mini" type="button" title="Опции"><i class="bi bi-three-dots"></i></button>
+  <a class="sl-dial-item sl-but-mini" href="../admin.php?name=modules&amp;op=edit&amp;mod=whois" title="Полное редактирование"     ><i class="bi bi-pencil-square"></i></a><a class="sl-dial-item sl-but-mini" href="../admin.php?name=whois&amp;op=config" title="Конфигурации"     ><i class="bi bi-gear"></i></a><a class="sl-dial-item sl-but-mini" href="../index.php?name=whois" title="Просмотр на сайте"     ><i class="bi bi-arrow-up-right-circle"></i></a><a class="sl-dial-item sl-but-mini" href="../admin.php?name=whois&amp;op=info" title="Справка"     ><i class="bi bi-info-circle"></i></a><button class="sl-dial-item sl-but-mini" type="button" title="Деактивировать"  ><i class="bi bi-power"></i></button></span>
+</article>
+</div>
+  </div>
+</div>
+</div></main>
+      </div>
+      <div class="sl-footer sl-admin-footer">
+        <div class="sl-copyright">Генерация: 0.245 сек. и 7 запросов к базе данных за 0.002 сек.<br><a
+  href="https://slaed.net"
+  title="SLAED CMS"
+      target="_blank"
+    rel="noopener noreferrer"
+  >
+            SLAED CMS  </a> © 2005-2026 Eduard Laas. Released under MIT License.</div>
+        <span><a
+  href="//slaed.net"
+  title="SLAED CMS"
+    class="
+                                                         sl-thide         sl-slaed-home  "
+      target="_blank"
+    rel="noopener noreferrer"
+  >
+            SLAED CMS  </a><a
+  href="#"
+  title="Панель диагностики"
+    class="
+                                                         sl-thide     sl-debugger-toggle      "
+        data-sl-toggle-control="sl_debugger"
+    data-sl-toggle-effect="slide"
+    data-sl-toggle-duration="500"
+  >
+    <i class="bi bi-bug"></i>        Панель диагностики  </a><a
+  href="#"
+  title="Наверх"
+    class="
+                                                         sl-thide          "
+      OnClick="Upper('html, body', 600); return false;"
+  >
+            Наверх  </a></span>
+      </div>
+    </div>
+    <div class="sl-wrapfoot"></div>
+    <dialog class="sl-modal sl-modal-sm sl-modal-danger" id="sl-confirm" aria-label="Подтверждение">
+  <div class="sl-modal-title">
+    <i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i>
+    <span class="sl-modal-cap"><strong>Подтверждение</strong></span>
+    <span class="sl-modal-acts"><button type="button" class="sl-modal-act sl-modal-act-close" data-sl-close title="Закрыть" aria-label="Закрыть"><i class="bi bi-x-lg" aria-hidden="true"></i></button></span>
+  </div>
+    <div class="sl-modal-body"><p data-sl-confirm-text></p>
+</div>
+  <div class="sl-modal-foot"><button type="button" class="sl-modal-btn" data-sl-close data-sl-focus>Нет</button>
+<button type="button" class="sl-modal-btn sl-modal-btn-main" data-sl-confirm-ok>Да</button>
+</div></dialog>
+    <dialog class="sl-modal sl-modal-sm" id="sl-settings" aria-label="Опции">
+  <div class="sl-modal-title">
+    <i class="bi bi-sliders" aria-hidden="true"></i>
+    <span class="sl-modal-cap"><strong>Опции</strong></span>
+    <span class="sl-modal-acts"><button type="button" class="sl-modal-act sl-modal-act-close" data-sl-close title="Закрыть" aria-label="Закрыть"><i class="bi bi-x-lg" aria-hidden="true"></i></button></span>
+  </div>
+    <div class="sl-modal-body"><form action="../admin.php" method="post" class="sl-set-row sl-mode">
+  <input
+  type="hidden"
+    name="op"
+  value="mode"
+  >
+<input
+  type="hidden"
+    name="refer"
+  value="1"
+  >
+<input
+  type="hidden"
+    name="token"
+  value=""
+  >
+  <span class="sl-set-name"><i class="bi bi-circle-half" aria-hidden="true"></i>Тема оформления</span>
+  <span class="sl-set-pick"><select
+  name="mode"
+  class="sl-select"
+          onchange="this.form.requestSubmit ? this.form.requestSubmit() : this.form.submit()" title="Системная" aria-label="Системная">
+      <option value="light">Светлая</option>
+<option value="auto" selected>Системная</option>
+<option value="dark">Тёмная</option>
+  </select>
+</span>
+</form>
+<form action="../admin.php" method="post" class="sl-set-row">
+  <input
+  type="hidden"
+    name="op"
+  value="changeeditor"
+  >
+<input
+  type="hidden"
+    name="refer"
+  value="1"
+  >
+<input
+  type="hidden"
+    name="token"
+  value=""
+  >
+  <span class="sl-set-name"><i class="bi bi-pencil-square" aria-hidden="true"></i>Редактор</span>
+  <span class="sl-set-pick"><select
+  name="editor"
+  class="sl-select"
+          onchange="this.form.requestSubmit ? this.form.requestSubmit() : this.form.submit()" title="Редактор" aria-label="Редактор">
+      <option value="plain">Plain Textarea</option>
+<option value="toastui" selected>TOAST UI Markdown 3</option>
+<option value="tinymce">TinyMCE 8 Community</option>
+<option value="ckeditor">CKEditor 5</option>
+  </select>
+</span>
+</form>
+<form action="../admin.php" method="post" class="sl-set-row">
+  <input
+  type="hidden"
+    name="op"
+  value="newlang"
+  >
+<input
+  type="hidden"
+    name="refer"
+  value="1"
+  >
+<input
+  type="hidden"
+    name="token"
+  value=""
+  >
+  <span class="sl-set-name"><i class="bi bi-translate" aria-hidden="true"></i>Язык</span>
+  <span class="sl-set-pick"><select
+  name="newlang"
+  class="sl-select"
+          onchange="this.form.requestSubmit ? this.form.requestSubmit() : this.form.submit()" title="Язык" aria-label="Язык">
+      <option value="de">Немецкий</option>
+<option value="en">Английский</option>
+<option value="fr">Французский</option>
+<option value="pl">Польский</option>
+<option value="ru" selected>Русский</option>
+<option value="uk">Украинский</option>
+  </select>
+</span>
+</form>
+</div>
+  </dialog>
+        <div id="sl_debugger" data-sl-toggle="sl_debugger" data-sl-toggle-default="open">
+    <fieldset class="sl-debug-section sl-debug-section-info">
+  <legend>Производительность системы</legend>
+  <dl class="sl-debug-stats">
+  <dt>
+    <span>Использование и объём памяти</span>
+    <span class="sl-debug-value sl-debug-success">6.06 MB / 1 GB (0.6%)</span>
+  </dt>
+  <dd>
+    <div class="sl-progress-line sl-progress-2"><div style="width: 0.6%;">0.6%</div></div>
+  </dd>
+  <dt>
+    <span>Время генерации страницы</span>
+    <span class="sl-debug-value sl-debug-success">0.245 сек.</span>
+  </dt>
+  <dd>
+    <div class="sl-progress-line sl-progress-2"><div style="width: 12.3%;">12.3%</div></div>
+  </dd>
+  <dt>
+    <span>Всего запросов к базе данных</span>
+    <span class="sl-debug-value sl-debug-success">7</span>
+  </dt>
+  <dd>
+    <div class="sl-progress-line sl-progress-2"><div style="width: 14.0%;">14.0%</div></div>
+  </dd>
+  <dt>
+    <span>Время запросов к базе данных</span>
+    <span class="sl-debug-value sl-debug-success">0.002 сек. / Ø 0.0003 сек.</span>
+  </dt>
+  <dd>
+    <div class="sl-progress-line sl-progress-2"><div style="width: 2.8%;">2.8%</div></div>
+  </dd>
+</dl>
+</fieldset>
+<fieldset class="sl-debug-section sl-debug-section-danger">
+  <legend>Ошибки и предупреждения</legend>
+  <ul class="sl-list"><li><span
+  >
+      20.09.2026 22:25:44 PHP: include(): Read of 4096 bytes failed with errno=13 Permission denied - /admin.php</span></li>
+<li><span
+  >
+      20.09.2026 22:25:44 PHP: include(): Failed opening &#039;C:\OSPanel\home\slaed.loc\public\storage\cache\templates\admin\e1f02e20ffd66d9ee8a81d2e216dd1c934f7021a.php&#039; for inclusion (include_path=&#039;.;C:/OSPanel/da... - /admin.php</span></li>
+<li><span
+  >
+      20.09.2026 22:25:42 PHP: include(): Read of 41 bytes failed with errno=13 Permission denied - /index.php?name=account</span></li>
+<li><span
+  >
+      20.09.2026 22:25:42 PHP: include(): Failed opening &#039;C:\OSPanel\home\slaed.loc\public\storage\cache\templates\lite\inline-5b5945eb2923a38738bc51c835cbf69faa4fd7ab.php&#039; for inclusion (include_path=&#039;.;C:/OSPa... - /index.php?name=account</span></li>
+</ul>
+</fieldset>
+<fieldset class="sl-debug-section sl-debug-section-success">
+  <legend>Запросы к базе данных</legend>
+  <span
+    class="
+                                 sl-text-success              "
+  >
+      0.00026 сек.</span><span
+  >
+       - [PDO with :name] - SELECT name, password, ip, super FROM sport_admins WHERE id = 5;</span><br><span
+    class="
+                                 sl-text-success              "
+  >
+      0.00033 сек.</span><span
+  >
+       - [PDO] - SELECT COUNT(id) FROM sport_users_temp;</span><br><span
+    class="
+                                 sl-text-success              "
+  >
+      0.00023 сек.</span><span
+  >
+       - [PDO] - SELECT COUNT(id) FROM sport_clients WHERE status = &#039;2&#039;;</span><br><span
+    class="
+                                 sl-text-success              "
+  >
+      0.00016 сек.</span><span
+  >
+       - [PDO] - SELECT COUNT(id) FROM sport_partners WHERE status = &#039;2&#039;;</span><br><span
+    class="
+                                 sl-text-success              "
+  >
+      0.00029 сек.</span><span
+  >
+       - [PDO with :name] - SELECT COUNT(*) AS num FROM sport_comment WHERE status = 0 AND deleted IS NULL;</span><br><span
+    class="
+                                 sl-text-success              "
+  >
+      0.00026 сек.</span><span
+  >
+       - [PDO] - SELECT title, content FROM sport_blocks WHERE bkey = &#039;admin&#039;;</span><br><span
+    class="
+                                 sl-text-success              "
+  >
+      0.00039 сек.</span><span
+  >
+       - [PDO] - SELECT uname, time, ip, guest, modul, url FROM sport_session ORDER BY uname;</span><br></fieldset>
+    </div>
+      </div>
+  <script>document.write('<script src="assets/demo.js?v=' + Date.now() + '"><\/script>');</script>
+</body>
+</html>

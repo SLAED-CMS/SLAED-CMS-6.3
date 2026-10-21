@@ -103,24 +103,21 @@ final class SelfCheckTest extends TestCase
             $url = 'probe.test/'.ltrim($root.'/check.txt', '/');
             $this->assertSame(['url' => $url, 'state' => 'unknown', 'error' => 'The site address is no http(s) URL'], $one);
             $this->assertStringContainsString('unknown: '.$url, $data['job']['message']);
-            $this->assertStringContainsString('<li>'.$url.'</li>', $data['alert'][0]);
+            $this->assertStringContainsString('<li>'.$url.'</li>', $data['alert']);
         }
-        $this->assertStringContainsString($data['text']['unknown'], $data['alert'][0]);
-        $this->assertStringNotContainsString($data['text']['open'], $data['alert'][0]);
-        $this->assertSame($data['alert'][0], $data['alert'][1], 'The security section adds an all-clear to a problem');
-        $this->assertSame('', $data['clear'][0], 'The home of the panel speaks of a closed site');
-        $this->assertStringContainsString($data['text']['done'], $data['clear'][1]);
-        $this->assertStringContainsString('sl-alert-info', $data['clear'][1]);
+        $this->assertStringContainsString($data['text']['unknown'], $data['alert']);
+        $this->assertStringNotContainsString($data['text']['open'], $data['alert']);
+        $this->assertStringNotContainsString($data['text']['done'], $data['alert'], 'The security section adds an all-clear to a problem');
+        $this->assertStringContainsString($data['text']['done'], $data['clear']);
+        $this->assertStringContainsString('sl-alert-info', $data['clear']);
     }
 
-    # A verdict older than a day is no verdict: a stopped scheduler leaves no old all-clear standing, the home of the panel and the security section both warn
+    # A verdict older than a day is no verdict: a stopped scheduler leaves no old all-clear standing in the security section
     #[Test]
     public function aStaleVerdictCountsAsNone(): void
     {
         $data = $this->getProbe();
-        foreach ($data['stale'] as $one) {
-            $this->assertStringContainsString($data['text']['none'], $one);
-            $this->assertStringNotContainsString($data['text']['done'], $one);
-        }
+        $this->assertStringContainsString($data['text']['none'], $data['stale']);
+        $this->assertStringNotContainsString($data['text']['done'], $data['stale']);
     }
 }

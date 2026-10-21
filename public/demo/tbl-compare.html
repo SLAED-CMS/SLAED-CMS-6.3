@@ -1,0 +1,415 @@
+<!doctype html>
+<html lang="ru" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Сравнение таблиц &middot; Таблицы панели — стенд SLAED CMS</title>
+  <link rel="stylesheet" href="../templates/admin/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../templates/admin/assets/css/base.css">
+  <style>
+    /* The compare page of the table series: one variant opened twice — as the theme of today (?skin=off) and as itself —
+       both frames drawn at the width of a desktop and scaled into place, scrolled together; the figures under them are
+       read from the two live documents, not typed in */
+    body {
+      margin: 0;
+      background: var(--sl-bg-subtle);
+      font-family: Tahoma, Arial, Verdana, sans-serif;
+      color: var(--sl-text);
+    }
+
+    .c-bar {
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: var(--sl-space-4) var(--sl-space-6);
+      padding: var(--sl-space-5) var(--sl-space-6);
+      background: var(--sl-bg);
+      border-bottom: 1px solid var(--sl-border);
+    }
+
+    .c-bar h1 {
+      margin: 0 var(--sl-space-4) 0 0;
+      font-size: var(--sl-font-h4);
+    }
+
+    .c-bar a {
+      color: var(--sl-primary);
+    }
+
+    .c-seg {
+      display: inline-flex;
+      padding: 2px;
+      background: var(--sl-bg-muted);
+      border-radius: var(--sl-radius-pill);
+    }
+
+    .c-seg button {
+      min-height: 0;
+      height: 30px;
+      padding: 0 var(--sl-space-5);
+      font: inherit;
+      font-size: var(--sl-font-small);
+      color: var(--sl-text-muted);
+      background: transparent;
+      border: 0;
+      border-radius: var(--sl-radius-pill);
+      cursor: pointer;
+    }
+
+    .c-seg button[aria-pressed="true"] {
+      color: var(--sl-text-strong);
+      background: var(--sl-bg);
+      box-shadow: var(--sl-shadow-xs);
+    }
+
+    .c-bar select {
+      height: 34px;
+      padding: 0 var(--sl-space-4);
+    }
+
+    .c-note {
+      margin-left: auto;
+      font-size: var(--sl-font-small);
+      color: var(--sl-text-muted);
+    }
+
+    .c-stage {
+      padding: var(--sl-space-6);
+    }
+
+    .c-side {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--sl-space-6);
+    }
+
+    .c-pane {
+      min-width: 0;
+    }
+
+    .c-pane h2 {
+      display: flex;
+      align-items: center;
+      gap: var(--sl-space-3);
+      margin: 0 0 var(--sl-space-3);
+      font-size: var(--sl-font-body);
+    }
+
+    .c-pane h2 span {
+      font-weight: normal;
+      color: var(--sl-text-muted);
+    }
+
+    /* A frame keeps the desktop width of the panel and is scaled to its box, so both halves show the layout of a real screen */
+    .c-view {
+      position: relative;
+      height: var(--c-h, 640px);
+      overflow: hidden;
+      background: var(--sl-bg);
+      border: 1px solid var(--sl-border);
+      border-radius: var(--sl-radius-2);
+    }
+
+    .c-view iframe {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 1280px;
+      height: calc(var(--c-h, 640px) / var(--c-k, 1));
+      border: 0;
+      transform: scale(var(--c-k, 1));
+      transform-origin: 0 0;
+    }
+
+    /* The wipe: the variant lies over the theme of today and the handle uncovers it from the left */
+    .c-wipe .c-view iframe[data-c="var"] {
+      clip-path: inset(0 0 0 var(--c-x, 50%));
+    }
+
+    .c-handle {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: var(--c-x, 50%);
+      z-index: 2;
+      width: 2px;
+      margin-left: -1px;
+      background: var(--sl-primary);
+      pointer-events: none;
+    }
+
+    .c-handle::after {
+      content: "\F12C";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      display: grid;
+      place-items: center;
+      width: 32px;
+      height: 32px;
+      font-family: "bootstrap-icons";
+      color: #fff;
+      background: var(--sl-primary);
+      border-radius: var(--sl-radius-circle);
+      box-shadow: var(--sl-shadow-raised);
+      transform: translate(-50%, -50%);
+    }
+
+    .c-tags {
+      position: absolute;
+      top: var(--sl-space-3);
+      left: var(--sl-space-3);
+      right: var(--sl-space-3);
+      z-index: 3;
+      display: flex;
+      justify-content: space-between;
+      pointer-events: none;
+    }
+
+    .c-tags span {
+      padding: var(--sl-space-1) var(--sl-space-4);
+      font-size: var(--sl-font-micro);
+      font-weight: var(--sl-weight-bold);
+      color: #fff;
+      background: rgb(17 24 39 / 0.72);
+      border-radius: var(--sl-radius-pill);
+    }
+
+    .c-range {
+      display: block;
+      width: 100%;
+      margin: var(--sl-space-4) 0 0;
+    }
+
+    /* The wipe is as wide as the frame it covers, so the handle and the slider travel over the same pixels */
+    .c-wipe {
+      max-width: 1280px;
+      margin: 0 auto;
+    }
+
+    [hidden] {
+      display: none !important;
+    }
+
+    /* The figures: what was measured in both frames, the difference marked when it is more than a pixel */
+    .c-figs {
+      margin-top: var(--sl-space-7);
+      padding: var(--sl-space-6);
+      background: var(--sl-bg);
+      border: 1px solid var(--sl-border);
+      border-radius: var(--sl-radius-2);
+    }
+
+    .c-figs h2 {
+      margin: 0 0 var(--sl-space-4);
+      font-size: var(--sl-font-body);
+    }
+
+    .c-figs table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: var(--sl-font-small);
+    }
+
+    .c-figs th,
+    .c-figs td {
+      padding: var(--sl-space-3) var(--sl-space-4);
+      text-align: left;
+      border-bottom: 1px solid var(--sl-border);
+    }
+
+    .c-figs th {
+      color: var(--sl-text-muted);
+      font-weight: var(--sl-weight-bold);
+    }
+
+    .c-figs td:first-child {
+      color: var(--sl-text-muted);
+    }
+
+    .c-figs code {
+      font-size: var(--sl-font-micro);
+    }
+
+    .c-diff {
+      color: light-dark(#9a5d00, #f5c26b);
+      font-weight: var(--sl-weight-bold);
+    }
+
+    .c-same {
+      color: var(--sl-success);
+    }
+
+    @media (max-width: 900px) {
+      .c-side {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="c-bar">
+    <h1>Сравнение таблицы</h1>
+    <label>Вариант <select data-c-file></select></label>
+    <span class="c-seg" role="group" aria-label="Вид сравнения"><button type="button" data-c-mode="side" aria-pressed="true">Рядом</button><button type="button" data-c-mode="wipe" aria-pressed="false">Шторка</button></span>
+    <span class="c-seg" role="group" aria-label="Схема"><button type="button" data-c-theme="light" aria-pressed="true">Светлая</button><button type="button" data-c-theme="dark" aria-pressed="false">Тёмная</button></span>
+    <span class="c-seg" role="group" aria-label="Масштаб"><button type="button" data-c-zoom="fit" aria-pressed="true">По ширине</button><button type="button" data-c-zoom="1" aria-pressed="false">1:1</button></span>
+    <a href="index.html">Все варианты</a>
+    <span class="c-note">Прокрутка общая: листайте любую половину</span>
+  </div>
+  <div class="c-stage">
+    <div class="c-side" data-c-side>
+      <div class="c-pane"><h2>Как сейчас <span>тема admin без изменений</span></h2><div class="c-view"><iframe data-c="now" title="Как сейчас"></iframe></div></div>
+      <div class="c-pane"><h2 data-c-title>Вариант</h2><div class="c-view"><iframe data-c="var" title="Вариант"></iframe></div></div>
+    </div>
+    <div class="c-wipe" data-c-wipe hidden>
+      <div class="c-view"><div class="c-tags"><span>Как сейчас</span><span data-c-title-wipe>Вариант</span></div><iframe data-c="now" title="Как сейчас"></iframe><iframe data-c="var" title="Вариант"></iframe><span class="c-handle" aria-hidden="true"></span></div>
+      <input type="range" class="c-range" min="0" max="100" value="50" aria-label="Положение шторки" data-c-range>
+    </div>
+    <div class="c-figs">
+      <h2>Замеры из обоих фреймов</h2>
+      <table><thead><tr><th>Что</th><th>Как сейчас</th><th>Вариант</th><th>Разница</th></tr></thead><tbody data-c-figs><tr><td colspan="4">Загружается…</td></tr></tbody></table>
+    </div>
+  </div>
+  <!-- demo.js is read for the manifest only: marked as a gallery, the page gets no stand panel and keeps its own theme -->
+  <script>document.body.dataset.demoGallery = '';</script>
+  <script>document.write('<script src="assets/demo.js?v=' + Date.now() + '"><\/script>');</script>
+  <script>
+    const cState = { file: '', mode: 'side', theme: 'light', zoom: 'fit', x: 50 };
+    const cParams = new URLSearchParams(location.search);
+    const cList = DEMO_TABLES;
+    const cPick = document.querySelector('[data-c-file]');
+    cPick.innerHTML = cList.map((v, i) => `<option value="${v.file}">${String(i + 1).padStart(2, '0')} · ${v.title}</option>`).join('');
+    cState.file = (cList.find((v) => v.file.startsWith('tbl-' + (cParams.get('v') || '09'))) || cList[cList.length - 1]).file;
+    cPick.value = cState.file;
+
+    const getFrames = () => [...document.querySelectorAll(cState.mode === 'side' ? '[data-c-side] iframe' : '[data-c-wipe] iframe')];
+
+    function setFrames() {
+      const title = cList.find((v) => v.file === cState.file).title;
+      document.querySelector('[data-c-title]').innerHTML = `${title} <span>${cState.file}</span>`;
+      document.querySelector('[data-c-title-wipe]').textContent = title;
+      document.documentElement.dataset.theme = cState.theme;
+      getFrames().forEach((f) => {
+        const off = f.dataset.c === 'now' ? '&skin=off' : '';
+        f.src = `${cState.file}?bare&focus&mode=${cState.theme}${off}`;
+      });
+      document.querySelector('[data-c-figs]').innerHTML = '<tr><td colspan="4">Загружается…</td></tr>';
+    }
+
+    function setScale() {
+      document.querySelectorAll('.c-view').forEach((view) => {
+        const k = cState.zoom === 'fit' ? Math.min(1, view.clientWidth / 1280) : 1;
+        view.style.setProperty('--c-k', k);
+        view.style.setProperty('--c-h', Math.round(Math.max(420, window.innerHeight - 240)) + 'px');
+      });
+    }
+
+    // One scroll for both halves: whichever frame moves, the other follows
+    let cSync = false;
+    function setSync(frames) {
+      frames.forEach((f) => {
+        f.contentWindow.addEventListener('scroll', () => {
+          if (cSync) return;
+          cSync = true;
+          frames.forEach((o) => { if (o !== f) o.contentWindow.scrollTo(f.contentWindow.scrollX, f.contentWindow.scrollY); });
+          requestAnimationFrame(() => { cSync = false; });
+        });
+      });
+    }
+
+    function getFigs(doc) {
+      const t = doc.querySelector('table.sl-table-list-sort');
+      const rows = t.querySelectorAll('tbody tr');
+      const r2 = rows[1].getBoundingClientRect();
+      const r3 = rows[2].getBoundingClientRect();
+      const th = t.querySelector('thead th:nth-child(2)');
+      const td = rows[1].querySelector('td:nth-child(2)');
+      const tx = rows[1].querySelector('.sl-cell-text');
+      const cs = (el) => doc.defaultView.getComputedStyle(el);
+      const line = cs(td).borderBottomStyle === 'none' ? 'нет' : `${cs(td).borderBottomWidth} ${cs(td).borderBottomStyle}`;
+      const ts = cs(t);
+      return [
+        ['Высота строки', Math.round(r2.height) + ' px'],
+        ['Шаг строк', Math.round(r3.top - r2.top) + ' px'],
+        ['Высота шапки', Math.round(th.getBoundingClientRect().height) + ' px'],
+        ['Шапка: шрифт', `${cs(th).fontSize} ${cs(th).fontWeight}`],
+        ['Шапка: фон', cs(th).backgroundColor],
+        ['Ячейка: поля (верх прав. низ лев.)', `${cs(td).paddingTop} ${cs(td).paddingRight} ${cs(td).paddingBottom} ${cs(td).paddingLeft}`],
+        ['Текст комментария от края ячейки', Math.round(tx.getBoundingClientRect().left - td.getBoundingClientRect().left) + ' px (с ⓘ)'],
+        ['Ячейка: шрифт и цвет', `${cs(td).fontSize} ${cs(td).color}`],
+        ['Линия между строками', line + (line === 'нет' ? '' : ' ' + cs(td).borderBottomColor)],
+        ['Рамки у ячеек', cs(td).borderTopStyle === 'none' && cs(td).borderLeftStyle === 'none' ? 'нет' : `${cs(td).borderLeftWidth} ${cs(td).borderLeftStyle}, радиус ${cs(td).borderRadius}`],
+        ['Зазор между ячейками', ts.borderSpacing],
+        ['Рамка таблицы', ts.borderTopStyle === 'none' ? 'нет' : `${ts.borderTopWidth} ${ts.borderTopStyle}, радиус ${ts.borderRadius}`],
+        ['Ширины колонок', [...t.querySelectorAll('thead th')].map((h) => Math.round(h.getBoundingClientRect().width)).join(' · ')],
+      ];
+    }
+
+    function setFigs(frames) {
+      const now = getFigs(frames.find((f) => f.dataset.c === 'now').contentDocument);
+      const nu = getFigs(frames.find((f) => f.dataset.c === 'var').contentDocument);
+      document.querySelector('[data-c-figs]').innerHTML = now.map(([name, a], i) => {
+        const b = nu[i][1];
+        const na = parseFloat(a);
+        const nb = parseFloat(b);
+        let d = a === b ? '<span class="c-same">так же</span>' : '<span class="c-diff">иначе</span>';
+        if (!Number.isNaN(na) && !Number.isNaN(nb) && /^\d+(\.\d+)? px/.test(a)) d = Math.abs(nb - na) <= 1 ? `<span class="c-same">${nb - na >= 0 ? '+' : ''}${Math.round(nb - na)} px</span>` : `<span class="c-diff">${nb - na > 0 ? '+' : ''}${Math.round(nb - na)} px</span>`;
+        return `<tr><td>${name}</td><td><code>${a}</code></td><td><code>${b}</code></td><td>${d}</td></tr>`;
+      }).join('');
+    }
+
+    // Each redraw is a generation: a load that belongs to an earlier click is ignored, so a quick second click cannot align stale halves
+    let cGen = 0;
+    function setLoad() {
+      const frames = getFrames();
+      const gen = ++cGen;
+      let left = frames.length;
+      frames.forEach((f) => f.addEventListener('load', () => {
+        if (gen !== cGen) return;
+        left -= 1;
+        if (left) return;
+        setTimeout(() => {
+          if (gen !== cGen) return;
+          // Both halves start at the head of the list, one height for both, before the scroll is joined
+          const doc = frames[0].contentDocument;
+          const shell = doc.querySelector('[data-tb-shell]');
+          const y = shell.getBoundingClientRect().top + frames[0].contentWindow.scrollY - 8;
+          frames.forEach((f) => f.contentWindow.scrollTo(0, y));
+          setSync(frames);
+          setFigs(frames);
+        }, 300);
+      }, { once: true }));
+    }
+
+    function setAll() {
+      document.querySelector('[data-c-side]').hidden = cState.mode !== 'side';
+      document.querySelector('[data-c-wipe]').hidden = cState.mode !== 'wipe';
+      document.querySelectorAll('[data-c-mode]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.cMode === cState.mode)));
+      document.querySelectorAll('[data-c-theme]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.cTheme === cState.theme)));
+      document.querySelectorAll('[data-c-zoom]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.cZoom === cState.zoom)));
+      setScale();
+      setLoad();
+      setFrames();
+    }
+
+    document.addEventListener('click', (e) => {
+      const b = e.target.closest('[data-c-mode], [data-c-theme], [data-c-zoom]');
+      if (!b) return;
+      if (b.dataset.cMode) cState.mode = b.dataset.cMode;
+      if (b.dataset.cTheme) cState.theme = b.dataset.cTheme;
+      if (b.dataset.cZoom) { cState.zoom = b.dataset.cZoom; setScale(); return; }
+      setAll();
+    });
+    cPick.addEventListener('change', () => { cState.file = cPick.value; setAll(); });
+    document.querySelector('[data-c-range]').addEventListener('input', (e) => {
+      document.querySelector('[data-c-wipe] .c-view').style.setProperty('--c-x', e.target.value + '%');
+    });
+    window.addEventListener('resize', setScale);
+    setAll();
+  </script>
+</body>
+</html>

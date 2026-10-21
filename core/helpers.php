@@ -1090,11 +1090,32 @@ function getWindowShot(array $data = []): string {
     ]);
 }
 
-# Build the windows a page carries whatever it shows: the notice, the question every screen asks, and on the site the share sheet, the QR code and the image viewer
-# Each is the one window frame filled differently, and the layout prints the set
+# The windows the layout prints on every page, one frame filled differently: notice, question, watch window of a super administrator; on the site share, QR, image viewer
 function getWindowSet(bool $admin = false): string {
-    global $tpl;
+    global $conf, $tpl, $afile;
     $out = $tpl->getHtmlFrag('toast', ['undo_text' => _UNDO, 'close_text' => _CLOSE]);
+    if ($conf['session'] && isAdmin(true)) {
+        $out .= $tpl->getHtmlFrag('window', [
+            'win_id' => 'sl-stats',
+            'size_class' => 'sl-modal-lg',
+            'win_class' => 'sl-stats',
+            'win_attr' => 'data-sl-window data-sl-live-box',
+            'icon_name' => 'activity',
+            'title_text' => _WHO,
+            'has_sub' => true,
+            'sub_text' => _ADM_LIVE,
+            'move_text' => _EMOVEWIN,
+            'full_text' => _EEXPAND,
+            'restore_text' => _ERESTORE,
+            'close_text' => _CLOSE,
+            'bar_html' => $tpl->getHtmlPart('session-stats', ['is_bar' => true, 'live_html' => $tpl->getHtmlFrag('live-chip', ['live_every' => 10])]),
+            'body_html' => $tpl->getHtmlPart('session-stats', [
+                'is_wait' => true,
+                'url' => HOME_PATH.'index.php?go='.($admin ? '5' : '1').'&op=getSessionStats&token='.getSiteToken(),
+            ]),
+            'foot_html' => $tpl->getHtmlPart('session-stats', ['is_foot' => true, 'url' => HOME_PATH.$afile.'.php?name=statistic']),
+        ]);
+    }
     $out .= $tpl->getHtmlFrag('window', [
         'win_id' => 'sl-confirm',
         'size_class' => 'sl-modal-sm',

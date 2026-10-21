@@ -361,6 +361,8 @@
   --sl-chip-bg: color-mix(in srgb, currentColor var(--sl-chip-mix), transparent);
   --sl-chip-tint-mix: 24%;
   --sl-chip-tint-bg: color-mix(in srgb, currentColor var(--sl-chip-tint-mix), transparent);
+  /* The keys of the admin block are washed in their own tone: the ground carries this much of it, the border three times, a pointer twice */
+  --sl-adm-mix: 8%;
   --sl-col-amount-width: 15%;
   --sl-col-check-width: 36px;
   --sl-col-form-width: 35%;

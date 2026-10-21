@@ -1,17 +1,6 @@
 {
-  "generated": "2026-10-19T13:13:11.522Z",
+  "generated": "2026-10-21T20:54:23.745Z",
   "pairs": [
-    {
-      "theme": "admin",
-      "page": "admin-monitor-knob-hover",
-      "mode": "light",
-      "sel": "a",
-      "bgsel": "div.sl-menu-list-item",
-      "fg": "rgb(8, 119, 177)",
-      "bg": "rgb(244, 246, 248)",
-      "size": 14,
-      "weight": 400
-    },
     {
       "theme": "admin",
       "page": "admin-config-field-focus",
@@ -31,17 +20,6 @@
       "bgsel": "div.sl-searchbox.sl-fm-bar",
       "fg": "rgb(8, 119, 177)",
       "bg": "rgb(247, 251, 253)",
-      "size": 14,
-      "weight": 400
-    },
-    {
-      "theme": "admin",
-      "page": "admin-monitor-knob-hover",
-      "mode": "dark",
-      "sel": "a",
-      "bgsel": "div.sl-menu-list-item",
-      "fg": "rgb(56, 169, 222)",
-      "bg": "rgb(24, 32, 48)",
       "size": 14,
       "weight": 400
     },
@@ -69,50 +47,6 @@
     },
     {
       "theme": "admin",
-      "page": "admin-monitor",
-      "mode": "light",
-      "sel": "a.sl-but",
-      "bgsel": "a.sl-but",
-      "fg": "rgb(17, 24, 39)",
-      "bg": "rgb(232, 235, 238)",
-      "size": 14,
-      "weight": 400
-    },
-    {
-      "theme": "admin",
-      "page": "admin-monitor",
-      "mode": "dark",
-      "sel": "a.sl-but",
-      "bgsel": "a.sl-but",
-      "fg": "rgb(229, 231, 235)",
-      "bg": "rgb(42, 52, 68)",
-      "size": 14,
-      "weight": 400
-    },
-    {
-      "theme": "admin",
-      "page": "admin-monitor-knob-hover",
-      "mode": "light",
-      "sel": "a.sl-but",
-      "bgsel": "a.sl-but",
-      "fg": "rgb(28, 110, 158)",
-      "bg": "rgb(232, 235, 238)",
-      "size": 14,
-      "weight": 400
-    },
-    {
-      "theme": "admin",
-      "page": "admin-monitor-knob-hover",
-      "mode": "dark",
-      "sel": "a.sl-but",
-      "bgsel": "a.sl-but",
-      "fg": "rgb(92, 188, 234)",
-      "bg": "rgb(42, 52, 68)",
-      "size": 14,
-      "weight": 400
-    },
-    {
-      "theme": "admin",
       "page": "admin-sysfile",
       "mode": "light",
       "sel": "a.sl-modal-btn",
@@ -201,29 +135,7 @@
     },
     {
       "theme": "admin",
-      "page": "admin-monitor-knob-hover",
-      "mode": "light",
-      "sel": "a.sl-session-toggle",
-      "bgsel": "div.sl-block-sidebar",
-      "fg": "rgb(8, 119, 177)",
-      "bg": "rgb(244, 246, 248)",
-      "size": 14,
-      "weight": 400
-    },
-    {
-      "theme": "admin",
-      "page": "admin-monitor-knob-hover",
-      "mode": "dark",
-      "sel": "a.sl-session-toggle",
-      "bgsel": "div.sl-block-sidebar",
-      "fg": "rgb(56, 169, 222)",
-      "bg": "rgb(24, 32, 48)",
-      "size": 14,
-      "weight": 400
-    },
-    {
-      "theme": "admin",
-      "page": "admin-monitor-knob-hover",
+      "page": "admin-blockfile-code",
       "mode": "light",
       "sel": "a.sl-skip",
       "bgsel": "a.sl-skip",
@@ -234,7 +146,7 @@
     },
     {
       "theme": "admin",
-      "page": "admin-monitor-knob-hover",
+      "page": "admin-blockfile-code",
       "mode": "dark",
       "sel": "a.sl-skip",
       "bgsel": "a.sl-skip",
@@ -245,7 +157,7 @@
     },
     {
       "theme": "admin",
-      "page": "admin-monitor-knob-hover",
+      "page": "admin-blockfile-code",
       "mode": "light",
       "sel": "a.sl-tabs-link",
       "bgsel": "a.sl-tabs-link",
@@ -256,7 +168,7 @@
     },
     {
       "theme": "admin",
-      "page": "admin-monitor-knob-hover",
+      "page": "admin-blockfile-code",
       "mode": "dark",
       "sel": "a.sl-tabs-link",
       "bgsel": "a.sl-tabs-link",
@@ -267,7 +179,7 @@
     },
     {
       "theme": "admin",
-      "page": "admin-monitor-knob-hover",
+      "page": "admin-blockfile-code",
       "mode": "light",
       "sel": "a.sl-tabs-link.sl-is-active",
       "bgsel": "a.sl-tabs-link.sl-is-active",
@@ -278,7 +190,7 @@
     },
     {
       "theme": "admin",
-      "page": "admin-monitor-knob-hover",
+      "page": "admin-blockfile-code",
       "mode": "dark",
       "sel": "a.sl-tabs-link.sl-is-active",
       "bgsel": "a.sl-tabs-link.sl-is-active",
@@ -289,10 +201,21 @@
     },
     {
       "theme": "admin",
-      "page": "admin-monitor-knob-hover",
+      "page": "admin-home",
       "mode": "light",
       "sel": "b",
-      "bgsel": "h3.sl-is-open",
+      "bgsel": "section.sl-cockpit.sl-knob-danger",
+      "fg": "rgb(17, 24, 39)",
+      "bg": "rgb(247, 251, 253)",
+      "size": 18,
+      "weight": 700
+    },
+    {
+      "theme": "admin",
+      "page": "admin-blockfile-code",
+      "mode": "light",
+      "sel": "b",
+      "bgsel": "h3",
       "fg": "rgb(255, 255, 255)",
       "bg": "rgb(8, 119, 177)",
       "size": 14,
@@ -300,7 +223,7 @@
     },
     {
       "theme": "admin",
-      "page": "admin-monitor-knob-hover",
+      "page": "admin-blockfile-code",
       "mode": "light",
       "sel": "b",
       "bgsel": "div.sl-toolbar",
@@ -314,7 +237,7 @@
       "page": "admin-home",
       "mode": "light",
       "sel": "b",
-      "bgsel": "h3.sl-is-open",
+      "bgsel": "h3",
       "fg": "rgb(255, 255, 255)",
       "bg": "rgb(217, 119, 6)",
       "size": 14,
@@ -322,10 +245,10 @@
     },
     {
       "theme": "admin",
-      "page": "admin-monitor-knob-hover",
+      "page": "admin-home",
       "mode": "light",
       "sel": "b",
-      "bgsel": "h3.sl-is-open",
+      "bgsel": "h3",
       "fg": "rgb(255, 255, 255)",
       "bg": "rgb(38, 134, 55)",
       "size": 14,
@@ -347,9 +270,9 @@
       "page": "admin-node",
       "mode": "light",
       "sel": "b",
-      "bgsel": "nav.sl-pager",
+      "bgsel": "main.sl-admin-content",
       "fg": "rgb(17, 24, 39)",
-      "bg": "rgb(247, 251, 253)",
+      "bg": "rgb(255, 255, 255)",
       "size": 13,
       "weight": 600
     },
@@ -388,10 +311,21 @@
     },
     {
       "theme": "admin",
-      "page": "admin-monitor-knob-hover",
+      "page": "admin-home",
       "mode": "dark",
       "sel": "b",
-      "bgsel": "h3.sl-is-open",
+      "bgsel": "section.sl-cockpit.sl-knob-danger",
+      "fg": "rgb(229, 231, 235)",
+      "bg": "rgb(21, 29, 43)",
+      "size": 18,
+      "weight": 700
+    },
+    {
+      "theme": "admin",
+      "page": "admin-blockfile-code",
+      "mode": "dark",
+      "sel": "b",
+      "bgsel": "h3",
       "fg": "rgb(255, 255, 255)",
       "bg": "rgb(6, 83, 124)",
       "size": 14,
@@ -399,7 +333,7 @@
     },
     {
       "theme": "admin",
-      "page": "admin-monitor-knob-hover",
+      "page": "admin-blockfile-code",
       "mode": "dark",
       "sel": "b",
       "bgsel": "div.sl-toolbar",
@@ -413,7 +347,7 @@
       "page": "admin-home",
       "mode": "dark",
       "sel": "b",
-      "bgsel": "h3.sl-is-open",
+      "bgsel": "h3",
       "fg": "rgb(255, 255, 255)",
       "bg": "rgb(152, 83, 4)",
       "size": 14,
@@ -421,10 +355,10 @@
     },
     {
       "theme": "admin",
-      "page": "admin-monitor-knob-hover",
+      "page": "admin-home",
       "mode": "dark",
       "sel": "b",
-      "bgsel": "h3.sl-is-open",
+      "bgsel": "h3",
       "fg": "rgb(255, 255, 255)",
       "bg": "rgb(27, 94, 39)",
       "size": 14,
@@ -446,9 +380,9 @@
       "page": "admin-node",
       "mode": "dark",
       "sel": "b",
-      "bgsel": "nav.sl-pager",
+      "bgsel": "main.sl-admin-content",
       "fg": "rgb(229, 231, 235)",
-      "bg": "rgb(21, 29, 43)",
+      "bg": "rgb(17, 24, 39)",
       "size": 13,
       "weight": 600
     },
@@ -487,6 +421,28 @@
     },
     {
       "theme": "admin",
+      "page": "admin-home",
+      "mode": "light",
+      "sel": "b.sl-adm-n",
+      "bgsel": "b.sl-adm-n",
+      "fg": "rgb(255, 255, 255)",
+      "bg": "rgb(38, 134, 55)",
+      "size": 12,
+      "weight": 700
+    },
+    {
+      "theme": "admin",
+      "page": "admin-home",
+      "mode": "dark",
+      "sel": "b.sl-adm-n",
+      "bgsel": "b.sl-adm-n",
+      "fg": "rgb(11, 18, 32)",
+      "bg": "rgb(70, 201, 93)",
+      "size": 12,
+      "weight": 700
+    },
+    {
+      "theme": "admin",
       "page": "admin-node-type",
       "mode": "light",
       "sel": "button.sl-but",
@@ -504,6 +460,28 @@
       "bgsel": "button.sl-but",
       "fg": "rgb(229, 231, 235)",
       "bg": "rgb(42, 52, 68)",
+      "size": 14,
+      "weight": 400
+    },
+    {
+      "theme": "admin",
+      "page": "admin-account-add",
+      "mode": "light",
+      "sel": "button.sl-but-blue",
+      "bgsel": "button.sl-but-blue",
+      "fg": "rgb(255, 255, 255)",
+      "bg": "rgb(8, 119, 177)",
+      "size": 14,
+      "weight": 400
+    },
+    {
+      "theme": "admin",
+      "page": "admin-account-add",
+      "mode": "dark",
+      "sel": "button.sl-but-blue",
+      "bgsel": "button.sl-but-blue",
+      "fg": "rgb(255, 255, 255)",
+      "bg": "rgb(6, 83, 124)",
       "size": 14,
       "weight": 400
     },
@@ -553,28 +531,6 @@
     },
     {
       "theme": "admin",
-      "page": "admin-monitor-knob-hover",
-      "mode": "light",
-      "sel": "div",
-      "bgsel": "div.sl-block-sidebar",
-      "fg": "rgb(17, 24, 39)",
-      "bg": "rgb(244, 246, 248)",
-      "size": 14,
-      "weight": 400
-    },
-    {
-      "theme": "admin",
-      "page": "admin-monitor-knob-hover",
-      "mode": "dark",
-      "sel": "div",
-      "bgsel": "div.sl-block-sidebar",
-      "fg": "rgb(229, 231, 235)",
-      "bg": "rgb(24, 32, 48)",
-      "size": 14,
-      "weight": 400
-    },
-    {
-      "theme": "admin",
       "page": "admin-blockfile-code",
       "mode": "light",
       "sel": "div.cm-gutterElement",
@@ -729,7 +685,7 @@
     },
     {
       "theme": "admin",
-      "page": "admin-monitor-knob-hover",
+      "page": "admin-monitor-tab-hover",
       "mode": "light",
       "sel": "div.sl-overview-label",
       "bgsel": "div.sl-monitor-overview-strip",
@@ -740,7 +696,7 @@
     },
     {
       "theme": "admin",
-      "page": "admin-monitor-knob-hover",
+      "page": "admin-monitor-tab-hover",
       "mode": "dark",
       "sel": "div.sl-overview-label",
       "bgsel": "div.sl-monitor-overview-strip",
@@ -751,7 +707,7 @@
     },
     {
       "theme": "admin",
-      "page": "admin-monitor-knob-hover",
+      "page": "admin-monitor-tab-hover",
       "mode": "light",
       "sel": "div.sl-overview-val",
       "bgsel": "div.sl-monitor-overview-strip",
@@ -762,7 +718,7 @@
     },
     {
       "theme": "admin",
-      "page": "admin-monitor-knob-hover",
+      "page": "admin-monitor-tab-hover",
       "mode": "dark",
       "sel": "div.sl-overview-val",
       "bgsel": "div.sl-monitor-overview-strip",
@@ -773,7 +729,7 @@
     },
     {
       "theme": "admin",
-      "page": "admin-monitor-knob-hover",
+      "page": "admin-monitor-tab-hover",
       "mode": "light",
       "sel": "div.sl-status-compact-left",
       "bgsel": "a.sl-status-compact-item",
@@ -784,7 +740,7 @@
     },
     {
       "theme": "admin",
-      "page": "admin-monitor-knob-hover",
+      "page": "admin-monitor-tab-hover",
       "mode": "dark",
       "sel": "div.sl-status-compact-left",
       "bgsel": "a.sl-status-compact-item",
@@ -817,7 +773,7 @@
     },
     {
       "theme": "admin",
-      "page": "admin-account-add",
+      "page": "admin-template-style",
       "mode": "light",
       "sel": "form.sl-div-form",
       "bgsel": "div.sl-searchbox",
@@ -828,7 +784,7 @@
     },
     {
       "theme": "admin",
-      "page": "admin-account-add",
+      "page": "admin-template-style",
       "mode": "dark",
       "sel": "form.sl-div-form",
       "bgsel": "div.sl-searchbox",
@@ -839,7 +795,7 @@
     },
     {
       "theme": "admin",
-      "page": "admin-monitor-knob-hover",
+      "page": "admin-blockfile-code",
       "mode": "light",
       "sel": "h1.sl-module-head-title",
       "bgsel": "main.sl-admin-content",
@@ -850,7 +806,7 @@
     },
     {
       "theme": "admin",
-      "page": "admin-monitor-knob-hover",
+      "page": "admin-blockfile-code",
       "mode": "dark",
       "sel": "h1.sl-module-head-title",
       "bgsel": "main.sl-admin-content",
@@ -883,12 +839,56 @@
     },
     {
       "theme": "admin",
+      "page": "admin-blockfile-code",
+      "mode": "light",
+      "sel": "kbd",
+      "bgsel": "kbd",
+      "fg": "rgb(17, 24, 39)",
+      "bg": "rgb(247, 251, 253)",
+      "size": 12,
+      "weight": 400
+    },
+    {
+      "theme": "admin",
+      "page": "admin-blockfile-code",
+      "mode": "dark",
+      "sel": "kbd",
+      "bgsel": "kbd",
+      "fg": "rgb(229, 231, 235)",
+      "bg": "rgb(21, 29, 43)",
+      "size": 12,
+      "weight": 400
+    },
+    {
+      "theme": "admin",
+      "page": "admin-account-add",
+      "mode": "light",
+      "sel": "label",
+      "bgsel": "form.sl-searchbox.sl-filter",
+      "fg": "rgb(17, 24, 39)",
+      "bg": "rgb(247, 251, 253)",
+      "size": 14,
+      "weight": 400
+    },
+    {
+      "theme": "admin",
       "page": "admin-blockfile",
       "mode": "light",
       "sel": "label",
       "bgsel": "div.sl-div-item",
       "fg": "rgb(17, 24, 39)",
       "bg": "rgb(255, 255, 255)",
+      "size": 14,
+      "weight": 400
+    },
+    {
+      "theme": "admin",
+      "page": "admin-account-add",
+      "mode": "dark",
+      "sel": "label",
+      "bgsel": "form.sl-searchbox.sl-filter",
+      "fg": "rgb(229, 231, 235)",
+      "bg": "rgb(21, 29, 43)",
       "size": 14,
       "weight": 400
     },
@@ -971,6 +971,17 @@
     },
     {
       "theme": "admin",
+      "page": "admin-home",
+      "mode": "light",
+      "sel": "li",
+      "bgsel": "section.sl-cockpit.sl-knob-danger",
+      "fg": "rgb(99, 105, 118)",
+      "bg": "rgb(247, 251, 253)",
+      "size": 13,
+      "weight": 400
+    },
+    {
+      "theme": "admin",
       "page": "admin-tplconfig",
       "mode": "light",
       "sel": "li",
@@ -978,6 +989,17 @@
       "fg": "rgb(17, 24, 39)",
       "bg": "rgb(255, 255, 255)",
       "size": 14,
+      "weight": 400
+    },
+    {
+      "theme": "admin",
+      "page": "admin-home",
+      "mode": "dark",
+      "sel": "li",
+      "bgsel": "section.sl-cockpit.sl-knob-danger",
+      "fg": "rgb(154, 164, 178)",
+      "bg": "rgb(21, 29, 43)",
+      "size": 13,
       "weight": 400
     },
     {
@@ -996,9 +1018,9 @@
       "page": "admin-node",
       "mode": "light",
       "sel": "p.sl-pager-info",
-      "bgsel": "nav.sl-pager",
+      "bgsel": "main.sl-admin-content",
       "fg": "rgb(99, 105, 118)",
-      "bg": "rgb(247, 251, 253)",
+      "bg": "rgb(255, 255, 255)",
       "size": 13,
       "weight": 400
     },
@@ -1007,7 +1029,29 @@
       "page": "admin-node",
       "mode": "dark",
       "sel": "p.sl-pager-info",
-      "bgsel": "nav.sl-pager",
+      "bgsel": "main.sl-admin-content",
+      "fg": "rgb(154, 164, 178)",
+      "bg": "rgb(17, 24, 39)",
+      "size": 13,
+      "weight": 400
+    },
+    {
+      "theme": "admin",
+      "page": "admin-home",
+      "mode": "light",
+      "sel": "small",
+      "bgsel": "section.sl-cockpit.sl-knob-danger",
+      "fg": "rgb(99, 105, 118)",
+      "bg": "rgb(247, 251, 253)",
+      "size": 13,
+      "weight": 400
+    },
+    {
+      "theme": "admin",
+      "page": "admin-home",
+      "mode": "dark",
+      "sel": "small",
+      "bgsel": "section.sl-cockpit.sl-knob-danger",
       "fg": "rgb(154, 164, 178)",
       "bg": "rgb(21, 29, 43)",
       "size": 13,
@@ -1015,7 +1059,7 @@
     },
     {
       "theme": "admin",
-      "page": "admin-monitor",
+      "page": "admin-blockfile-code",
       "mode": "light",
       "sel": "span",
       "bgsel": "button.sl-menu-btn",
@@ -1023,28 +1067,6 @@
       "bg": "rgb(247, 251, 253)",
       "size": 14,
       "weight": 600
-    },
-    {
-      "theme": "admin",
-      "page": "admin-home",
-      "mode": "light",
-      "sel": "span",
-      "bgsel": "article.sl-menu-grid-item.sl-mcard",
-      "fg": "rgb(99, 105, 118)",
-      "bg": "rgb(244, 246, 248)",
-      "size": 13,
-      "weight": 400
-    },
-    {
-      "theme": "admin",
-      "page": "admin-monitor-knob-hover",
-      "mode": "light",
-      "sel": "span",
-      "bgsel": "a.sl-status-compact-item",
-      "fg": "rgb(99, 105, 118)",
-      "bg": "rgb(255, 255, 255)",
-      "size": 13,
-      "weight": 400
     },
     {
       "theme": "admin",
@@ -1059,13 +1081,35 @@
     },
     {
       "theme": "admin",
-      "page": "admin-account-add",
+      "page": "admin-home",
       "mode": "light",
       "sel": "span",
-      "bgsel": "div.sl-div-item",
-      "fg": "rgb(17, 24, 39)",
-      "bg": "rgb(255, 255, 255)",
-      "size": 14,
+      "bgsel": "section.sl-cockpit.sl-knob-danger",
+      "fg": "rgb(199, 53, 53)",
+      "bg": "rgb(247, 251, 253)",
+      "size": 12,
+      "weight": 400
+    },
+    {
+      "theme": "admin",
+      "page": "admin-home",
+      "mode": "light",
+      "sel": "span",
+      "bgsel": "section.sl-cockpit.sl-knob-danger",
+      "fg": "rgb(38, 134, 55)",
+      "bg": "rgb(247, 251, 253)",
+      "size": 38,
+      "weight": 700
+    },
+    {
+      "theme": "admin",
+      "page": "admin-home",
+      "mode": "light",
+      "sel": "span",
+      "bgsel": "article.sl-menu-grid-item.sl-mcard",
+      "fg": "rgb(99, 105, 118)",
+      "bg": "rgb(244, 246, 248)",
+      "size": 13,
       "weight": 400
     },
     {
@@ -1073,21 +1117,54 @@
       "page": "admin-blockfile-code",
       "mode": "light",
       "sel": "span",
-      "bgsel": "span.sl-editor-tab",
-      "fg": "rgb(99, 105, 118)",
-      "bg": "rgb(247, 251, 253)",
+      "bgsel": "span.sl-queue",
+      "fg": "rgb(17, 24, 39)",
+      "bg": "rgb(255, 244, 229)",
+      "size": 12,
+      "weight": 700
+    },
+    {
+      "theme": "admin",
+      "page": "admin-home",
+      "mode": "light",
+      "sel": "span",
+      "bgsel": "div.sl-block-sidebar",
+      "fg": "rgb(17, 24, 39)",
+      "bg": "rgb(244, 246, 248)",
       "size": 13,
       "weight": 400
     },
     {
       "theme": "admin",
-      "page": "admin-tplconfig",
+      "page": "admin-home",
       "mode": "light",
       "sel": "span",
-      "bgsel": "button.sl-editor-lint",
-      "fg": "rgb(31, 128, 49)",
-      "bg": "rgb(234, 247, 237)",
-      "size": 12,
+      "bgsel": "div.sl-block-sidebar",
+      "fg": "rgb(99, 105, 118)",
+      "bg": "rgb(244, 246, 248)",
+      "size": 14,
+      "weight": 400
+    },
+    {
+      "theme": "admin",
+      "page": "admin-sysfile",
+      "mode": "light",
+      "sel": "span",
+      "bgsel": "div.sl-fm-shell",
+      "fg": "rgb(99, 105, 118)",
+      "bg": "rgb(255, 255, 255)",
+      "size": 13,
+      "weight": 400
+    },
+    {
+      "theme": "admin",
+      "page": "admin-account-add",
+      "mode": "light",
+      "sel": "span",
+      "bgsel": "div.sl-div-item",
+      "fg": "rgb(17, 24, 39)",
+      "bg": "rgb(255, 255, 255)",
+      "size": 14,
       "weight": 400
     },
     {
@@ -1125,7 +1202,29 @@
     },
     {
       "theme": "admin",
-      "page": "admin-monitor",
+      "page": "admin-blockfile-code",
+      "mode": "light",
+      "sel": "span",
+      "bgsel": "span.sl-editor-tab",
+      "fg": "rgb(99, 105, 118)",
+      "bg": "rgb(247, 251, 253)",
+      "size": 13,
+      "weight": 400
+    },
+    {
+      "theme": "admin",
+      "page": "admin-tplconfig",
+      "mode": "light",
+      "sel": "span",
+      "bgsel": "button.sl-editor-lint",
+      "fg": "rgb(31, 128, 49)",
+      "bg": "rgb(234, 247, 237)",
+      "size": 12,
+      "weight": 400
+    },
+    {
+      "theme": "admin",
+      "page": "admin-blockfile-code",
       "mode": "dark",
       "sel": "span",
       "bgsel": "button.sl-menu-btn",
@@ -1133,17 +1232,6 @@
       "bg": "rgb(21, 29, 43)",
       "size": 14,
       "weight": 600
-    },
-    {
-      "theme": "admin",
-      "page": "admin-home",
-      "mode": "dark",
-      "sel": "span",
-      "bgsel": "article.sl-menu-grid-item.sl-mcard",
-      "fg": "rgb(154, 164, 178)",
-      "bg": "rgb(24, 32, 48)",
-      "size": 13,
-      "weight": 400
     },
     {
       "theme": "admin",
@@ -1158,7 +1246,73 @@
     },
     {
       "theme": "admin",
-      "page": "admin-monitor-knob-hover",
+      "page": "admin-home",
+      "mode": "dark",
+      "sel": "span",
+      "bgsel": "section.sl-cockpit.sl-knob-danger",
+      "fg": "rgb(255, 139, 139)",
+      "bg": "rgb(21, 29, 43)",
+      "size": 12,
+      "weight": 400
+    },
+    {
+      "theme": "admin",
+      "page": "admin-home",
+      "mode": "dark",
+      "sel": "span",
+      "bgsel": "section.sl-cockpit.sl-knob-danger",
+      "fg": "rgb(70, 201, 93)",
+      "bg": "rgb(21, 29, 43)",
+      "size": 38,
+      "weight": 700
+    },
+    {
+      "theme": "admin",
+      "page": "admin-home",
+      "mode": "dark",
+      "sel": "span",
+      "bgsel": "article.sl-menu-grid-item.sl-mcard",
+      "fg": "rgb(154, 164, 178)",
+      "bg": "rgb(24, 32, 48)",
+      "size": 13,
+      "weight": 400
+    },
+    {
+      "theme": "admin",
+      "page": "admin-blockfile-code",
+      "mode": "dark",
+      "sel": "span",
+      "bgsel": "span.sl-queue",
+      "fg": "rgb(229, 231, 235)",
+      "bg": "rgb(58, 42, 18)",
+      "size": 12,
+      "weight": 700
+    },
+    {
+      "theme": "admin",
+      "page": "admin-home",
+      "mode": "dark",
+      "sel": "span",
+      "bgsel": "div.sl-block-sidebar",
+      "fg": "rgb(229, 231, 235)",
+      "bg": "rgb(24, 32, 48)",
+      "size": 13,
+      "weight": 400
+    },
+    {
+      "theme": "admin",
+      "page": "admin-home",
+      "mode": "dark",
+      "sel": "span",
+      "bgsel": "div.sl-block-sidebar",
+      "fg": "rgb(154, 164, 178)",
+      "bg": "rgb(24, 32, 48)",
+      "size": 14,
+      "weight": 400
+    },
+    {
+      "theme": "admin",
+      "page": "admin-monitor-tab-hover",
       "mode": "dark",
       "sel": "span",
       "bgsel": "a.sl-status-compact-item",
@@ -1176,28 +1330,6 @@
       "fg": "rgb(229, 231, 235)",
       "bg": "rgb(17, 24, 39)",
       "size": 14,
-      "weight": 400
-    },
-    {
-      "theme": "admin",
-      "page": "admin-blockfile-code",
-      "mode": "dark",
-      "sel": "span",
-      "bgsel": "span.sl-editor-tab",
-      "fg": "rgb(154, 164, 178)",
-      "bg": "rgb(21, 29, 43)",
-      "size": 13,
-      "weight": 400
-    },
-    {
-      "theme": "admin",
-      "page": "admin-tplconfig",
-      "mode": "dark",
-      "sel": "span",
-      "bgsel": "button.sl-editor-lint",
-      "fg": "rgb(106, 218, 125)",
-      "bg": "rgb(20, 48, 27)",
-      "size": 12,
       "weight": 400
     },
     {
@@ -1235,6 +1367,116 @@
     },
     {
       "theme": "admin",
+      "page": "admin-blockfile-code",
+      "mode": "dark",
+      "sel": "span",
+      "bgsel": "span.sl-editor-tab",
+      "fg": "rgb(154, 164, 178)",
+      "bg": "rgb(21, 29, 43)",
+      "size": 13,
+      "weight": 400
+    },
+    {
+      "theme": "admin",
+      "page": "admin-tplconfig",
+      "mode": "dark",
+      "sel": "span",
+      "bgsel": "button.sl-editor-lint",
+      "fg": "rgb(106, 218, 125)",
+      "bg": "rgb(20, 48, 27)",
+      "size": 12,
+      "weight": 400
+    },
+    {
+      "theme": "admin",
+      "page": "admin-home",
+      "mode": "light",
+      "sel": "span.sl-adm-flag",
+      "bgsel": "div.sl-block-sidebar",
+      "fg": "rgb(194, 65, 12)",
+      "bg": "rgb(244, 246, 248)",
+      "size": 12,
+      "weight": 500
+    },
+    {
+      "theme": "admin",
+      "page": "admin-home",
+      "mode": "dark",
+      "sel": "span.sl-adm-flag",
+      "bgsel": "div.sl-block-sidebar",
+      "fg": "rgb(255, 176, 87)",
+      "bg": "rgb(24, 32, 48)",
+      "size": 12,
+      "weight": 500
+    },
+    {
+      "theme": "admin",
+      "page": "admin-blockfile-code",
+      "mode": "light",
+      "sel": "span.sl-bell-n",
+      "bgsel": "span.sl-bell-n",
+      "fg": "rgb(255, 255, 255)",
+      "bg": "rgb(199, 53, 53)",
+      "size": 12,
+      "weight": 700
+    },
+    {
+      "theme": "admin",
+      "page": "admin-blockfile-code",
+      "mode": "dark",
+      "sel": "span.sl-bell-n",
+      "bgsel": "span.sl-bell-n",
+      "fg": "rgb(11, 18, 32)",
+      "bg": "rgb(255, 139, 139)",
+      "size": 12,
+      "weight": 700
+    },
+    {
+      "theme": "admin",
+      "page": "admin-account",
+      "mode": "light",
+      "sel": "span.sl-cell-text",
+      "bgsel": "tr",
+      "fg": "rgb(17, 24, 39)",
+      "bg": "rgb(247, 251, 253)",
+      "size": 14,
+      "weight": 400
+    },
+    {
+      "theme": "admin",
+      "page": "admin-account",
+      "mode": "light",
+      "sel": "span.sl-cell-text",
+      "bgsel": "main.sl-admin-content",
+      "fg": "rgb(17, 24, 39)",
+      "bg": "rgb(255, 255, 255)",
+      "size": 14,
+      "weight": 400
+    },
+    {
+      "theme": "admin",
+      "page": "admin-account",
+      "mode": "dark",
+      "sel": "span.sl-cell-text",
+      "bgsel": "tr",
+      "fg": "rgb(229, 231, 235)",
+      "bg": "rgb(21, 29, 43)",
+      "size": 14,
+      "weight": 400
+    },
+    {
+      "theme": "admin",
+      "page": "admin-account",
+      "mode": "dark",
+      "sel": "span.sl-cell-text",
+      "bgsel": "main.sl-admin-content",
+      "fg": "rgb(229, 231, 235)",
+      "bg": "rgb(17, 24, 39)",
+      "size": 14,
+      "weight": 400
+    },
+    {
+      "theme": "admin",
       "page": "admin-sysfile",
       "mode": "light",
       "sel": "span.sl-chip.sl-chip-neutral",
@@ -1260,7 +1502,7 @@
       "page": "admin-home",
       "mode": "light",
       "sel": "span.sl-chip.sl-chip-success",
-      "bgsel": "div.sl-block-sidebar",
+      "bgsel": "div.sl-block-sidebar.sl-block-queue",
       "fg": "rgb(31, 128, 49)",
       "bg": "rgb(244, 246, 248)",
       "size": 12,
@@ -1282,7 +1524,7 @@
       "page": "admin-home",
       "mode": "dark",
       "sel": "span.sl-chip.sl-chip-success",
-      "bgsel": "div.sl-block-sidebar",
+      "bgsel": "div.sl-block-sidebar.sl-block-queue",
       "fg": "rgb(106, 218, 125)",
       "bg": "rgb(24, 32, 48)",
       "size": 12,
@@ -1304,7 +1546,7 @@
       "page": "admin-home",
       "mode": "light",
       "sel": "span.sl-chip.sl-chip-warn",
-      "bgsel": "div.sl-block-sidebar",
+      "bgsel": "div.sl-block-sidebar.sl-block-queue",
       "fg": "rgb(194, 65, 12)",
       "bg": "rgb(244, 246, 248)",
       "size": 12,
@@ -1315,7 +1557,7 @@
       "page": "admin-home",
       "mode": "dark",
       "sel": "span.sl-chip.sl-chip-warn",
-      "bgsel": "div.sl-block-sidebar",
+      "bgsel": "div.sl-block-sidebar.sl-block-queue",
       "fg": "rgb(255, 176, 87)",
       "bg": "rgb(24, 32, 48)",
       "size": 12,
@@ -1411,6 +1653,94 @@
     },
     {
       "theme": "admin",
+      "page": "admin-home",
+      "mode": "light",
+      "sel": "span.sl-menu-name",
+      "bgsel": "article.sl-menu-grid-item.sl-mcard",
+      "fg": "rgb(28, 110, 158)",
+      "bg": "rgb(244, 246, 248)",
+      "size": 14,
+      "weight": 700
+    },
+    {
+      "theme": "admin",
+      "page": "admin-home",
+      "mode": "light",
+      "sel": "span.sl-menu-name",
+      "bgsel": "article.sl-menu-grid-item.sl-mcard.sl-mcard-off",
+      "fg": "rgb(99, 105, 118)",
+      "bg": "rgb(244, 246, 248)",
+      "size": 14,
+      "weight": 700
+    },
+    {
+      "theme": "admin",
+      "page": "admin-blockfile-code",
+      "mode": "light",
+      "sel": "span.sl-menu-name",
+      "bgsel": "div.sl-menu-list-item",
+      "fg": "rgb(8, 119, 177)",
+      "bg": "rgb(244, 246, 248)",
+      "size": 14,
+      "weight": 400
+    },
+    {
+      "theme": "admin",
+      "page": "admin-blockfile-code",
+      "mode": "light",
+      "sel": "span.sl-menu-name",
+      "bgsel": "div.sl-block-sidebar.sl-block-menu",
+      "fg": "rgb(28, 110, 158)",
+      "bg": "rgb(244, 246, 248)",
+      "size": 14,
+      "weight": 600
+    },
+    {
+      "theme": "admin",
+      "page": "admin-home",
+      "mode": "dark",
+      "sel": "span.sl-menu-name",
+      "bgsel": "article.sl-menu-grid-item.sl-mcard",
+      "fg": "rgb(92, 188, 234)",
+      "bg": "rgb(24, 32, 48)",
+      "size": 14,
+      "weight": 700
+    },
+    {
+      "theme": "admin",
+      "page": "admin-home",
+      "mode": "dark",
+      "sel": "span.sl-menu-name",
+      "bgsel": "article.sl-menu-grid-item.sl-mcard.sl-mcard-off",
+      "fg": "rgb(154, 164, 178)",
+      "bg": "rgb(24, 32, 48)",
+      "size": 14,
+      "weight": 700
+    },
+    {
+      "theme": "admin",
+      "page": "admin-blockfile-code",
+      "mode": "dark",
+      "sel": "span.sl-menu-name",
+      "bgsel": "div.sl-menu-list-item",
+      "fg": "rgb(56, 169, 222)",
+      "bg": "rgb(24, 32, 48)",
+      "size": 14,
+      "weight": 400
+    },
+    {
+      "theme": "admin",
+      "page": "admin-blockfile-code",
+      "mode": "dark",
+      "sel": "span.sl-menu-name",
+      "bgsel": "div.sl-block-sidebar.sl-block-menu",
+      "fg": "rgb(92, 188, 234)",
+      "bg": "rgb(24, 32, 48)",
+      "size": 14,
+      "weight": 600
+    },
+    {
+      "theme": "admin",
       "page": "admin-sysfile",
       "mode": "light",
       "sel": "span.sl-modal-sub",
@@ -1433,7 +1763,7 @@
     },
     {
       "theme": "admin",
-      "page": "admin-monitor-knob-hover",
+      "page": "admin-monitor-tab-hover",
       "mode": "light",
       "sel": "span.sl-monitor-head-left",
       "bgsel": "div.sl-monitor-card",
@@ -1444,7 +1774,7 @@
     },
     {
       "theme": "admin",
-      "page": "admin-monitor-knob-hover",
+      "page": "admin-monitor-tab-hover",
       "mode": "dark",
       "sel": "span.sl-monitor-head-left",
       "bgsel": "div.sl-monitor-card",
@@ -1455,7 +1785,7 @@
     },
     {
       "theme": "admin",
-      "page": "admin-monitor-knob-hover",
+      "page": "admin-monitor-tab-hover",
       "mode": "light",
       "sel": "span.sl-note",
       "bgsel": "div.sl-monitor-card",
@@ -1466,7 +1796,7 @@
     },
     {
       "theme": "admin",
-      "page": "admin-monitor-knob-hover",
+      "page": "admin-monitor-tab-hover",
       "mode": "dark",
       "sel": "span.sl-note",
       "bgsel": "div.sl-monitor-card",
@@ -1480,9 +1810,9 @@
       "page": "admin-node",
       "mode": "light",
       "sel": "span.sl-pager-range",
-      "bgsel": "nav.sl-pager",
+      "bgsel": "main.sl-admin-content",
       "fg": "rgb(99, 105, 118)",
-      "bg": "rgb(247, 251, 253)",
+      "bg": "rgb(255, 255, 255)",
       "size": 13,
       "weight": 400
     },
@@ -1491,9 +1821,9 @@
       "page": "admin-node",
       "mode": "dark",
       "sel": "span.sl-pager-range",
-      "bgsel": "nav.sl-pager",
+      "bgsel": "main.sl-admin-content",
       "fg": "rgb(154, 164, 178)",
-      "bg": "rgb(21, 29, 43)",
+      "bg": "rgb(17, 24, 39)",
       "size": 13,
       "weight": 400
     },
@@ -1609,7 +1939,7 @@
     },
     {
       "theme": "admin",
-      "page": "admin-monitor-knob-hover",
+      "page": "admin-monitor-tab-hover",
       "mode": "light",
       "sel": "span.sl-text-danger",
       "bgsel": "div.sl-monitor-card",
@@ -1620,7 +1950,7 @@
     },
     {
       "theme": "admin",
-      "page": "admin-monitor-knob-hover",
+      "page": "admin-monitor-tab-hover",
       "mode": "dark",
       "sel": "span.sl-text-danger",
       "bgsel": "div.sl-monitor-card",
@@ -1631,7 +1961,7 @@
     },
     {
       "theme": "admin",
-      "page": "admin-monitor-knob-hover",
+      "page": "admin-monitor-tab-hover",
       "mode": "light",
       "sel": "span.sl-text-success",
       "bgsel": "div.sl-monitor-card",
@@ -1642,7 +1972,7 @@
     },
     {
       "theme": "admin",
-      "page": "admin-monitor-knob-hover",
+      "page": "admin-monitor-tab-hover",
       "mode": "dark",
       "sel": "span.sl-text-success",
       "bgsel": "div.sl-monitor-card",
@@ -2027,28 +2357,6 @@
     },
     {
       "theme": "admin",
-      "page": "admin-home",
-      "mode": "light",
-      "sel": "strong",
-      "bgsel": "article.sl-menu-grid-item.sl-mcard",
-      "fg": "rgb(28, 110, 158)",
-      "bg": "rgb(244, 246, 248)",
-      "size": 14,
-      "weight": 700
-    },
-    {
-      "theme": "admin",
-      "page": "admin-home",
-      "mode": "light",
-      "sel": "strong",
-      "bgsel": "article.sl-menu-grid-item.sl-mcard.sl-mcard-off",
-      "fg": "rgb(99, 105, 118)",
-      "bg": "rgb(244, 246, 248)",
-      "size": 14,
-      "weight": 700
-    },
-    {
-      "theme": "admin",
       "page": "admin-statistic",
       "mode": "light",
       "sel": "strong",
@@ -2068,28 +2376,6 @@
       "bg": "rgb(247, 251, 253)",
       "size": 14,
       "weight": 600
-    },
-    {
-      "theme": "admin",
-      "page": "admin-home",
-      "mode": "dark",
-      "sel": "strong",
-      "bgsel": "article.sl-menu-grid-item.sl-mcard",
-      "fg": "rgb(92, 188, 234)",
-      "bg": "rgb(24, 32, 48)",
-      "size": 14,
-      "weight": 700
-    },
-    {
-      "theme": "admin",
-      "page": "admin-home",
-      "mode": "dark",
-      "sel": "strong",
-      "bgsel": "article.sl-menu-grid-item.sl-mcard.sl-mcard-off",
-      "fg": "rgb(154, 164, 178)",
-      "bg": "rgb(24, 32, 48)",
-      "size": 14,
-      "weight": 700
     },
     {
       "theme": "admin",
@@ -2115,7 +2401,18 @@
     },
     {
       "theme": "admin",
-      "page": "admin-monitor-knob-hover",
+      "page": "admin-sysfile",
+      "mode": "light",
+      "sel": "td",
+      "bgsel": "div.sl-fm-shell",
+      "fg": "rgb(17, 24, 39)",
+      "bg": "rgb(255, 255, 255)",
+      "size": 14,
+      "weight": 400
+    },
+    {
+      "theme": "admin",
+      "page": "admin-monitor-tab-hover",
       "mode": "light",
       "sel": "td",
       "bgsel": "div.sl-monitor-card",
@@ -2126,14 +2423,25 @@
     },
     {
       "theme": "admin",
-      "page": "admin-sysfile",
+      "page": "admin-node",
       "mode": "light",
       "sel": "td",
-      "bgsel": "div.sl-fm-shell",
+      "bgsel": "tr",
       "fg": "rgb(17, 24, 39)",
-      "bg": "rgb(255, 255, 255)",
+      "bg": "rgb(247, 251, 253)",
       "size": 14,
       "weight": 400
+    },
+    {
+      "theme": "admin",
+      "page": "admin-monitor-tab-hover",
+      "mode": "dark",
+      "sel": "td",
+      "bgsel": "div.sl-monitor-card",
+      "fg": "rgb(229, 231, 235)",
+      "bg": "rgb(17, 24, 39)",
+      "size": 14,
+      "weight": 600
     },
     {
       "theme": "admin",
@@ -2148,14 +2456,25 @@
     },
     {
       "theme": "admin",
-      "page": "admin-monitor-knob-hover",
+      "page": "admin-node",
       "mode": "dark",
       "sel": "td",
-      "bgsel": "div.sl-monitor-card",
+      "bgsel": "tr",
       "fg": "rgb(229, 231, 235)",
-      "bg": "rgb(17, 24, 39)",
+      "bg": "rgb(21, 29, 43)",
       "size": 14,
-      "weight": 600
+      "weight": 400
+    },
+    {
+      "theme": "admin",
+      "page": "admin-node",
+      "mode": "light",
+      "sel": "td.sl-cell-ellipsis",
+      "bgsel": "tr",
+      "fg": "rgb(17, 24, 39)",
+      "bg": "rgb(247, 251, 253)",
+      "size": 14,
+      "weight": 400
     },
     {
       "theme": "admin",
@@ -2165,6 +2484,17 @@
       "bgsel": "main.sl-admin-content",
       "fg": "rgb(17, 24, 39)",
       "bg": "rgb(255, 255, 255)",
+      "size": 14,
+      "weight": 400
+    },
+    {
+      "theme": "admin",
+      "page": "admin-node",
+      "mode": "dark",
+      "sel": "td.sl-cell-ellipsis",
+      "bgsel": "tr",
+      "fg": "rgb(229, 231, 235)",
+      "bg": "rgb(21, 29, 43)",
       "size": 14,
       "weight": 400
     },
@@ -2184,9 +2514,31 @@
       "page": "admin-node",
       "mode": "light",
       "sel": "td.sl-cell-ellipsis.sl-col-title",
+      "bgsel": "tr",
+      "fg": "rgb(17, 24, 39)",
+      "bg": "rgb(247, 251, 253)",
+      "size": 14,
+      "weight": 400
+    },
+    {
+      "theme": "admin",
+      "page": "admin-node",
+      "mode": "light",
+      "sel": "td.sl-cell-ellipsis.sl-col-title",
       "bgsel": "main.sl-admin-content",
       "fg": "rgb(17, 24, 39)",
       "bg": "rgb(255, 255, 255)",
+      "size": 14,
+      "weight": 400
+    },
+    {
+      "theme": "admin",
+      "page": "admin-node",
+      "mode": "dark",
+      "sel": "td.sl-cell-ellipsis.sl-col-title",
+      "bgsel": "tr",
+      "fg": "rgb(229, 231, 235)",
+      "bg": "rgb(21, 29, 43)",
       "size": 14,
       "weight": 400
     },
@@ -2206,9 +2558,31 @@
       "page": "admin-node",
       "mode": "light",
       "sel": "td.sl-col-author",
+      "bgsel": "tr",
+      "fg": "rgb(17, 24, 39)",
+      "bg": "rgb(247, 251, 253)",
+      "size": 14,
+      "weight": 400
+    },
+    {
+      "theme": "admin",
+      "page": "admin-node",
+      "mode": "light",
+      "sel": "td.sl-col-author",
       "bgsel": "main.sl-admin-content",
       "fg": "rgb(17, 24, 39)",
       "bg": "rgb(255, 255, 255)",
+      "size": 14,
+      "weight": 400
+    },
+    {
+      "theme": "admin",
+      "page": "admin-node",
+      "mode": "dark",
+      "sel": "td.sl-col-author",
+      "bgsel": "tr",
+      "fg": "rgb(229, 231, 235)",
+      "bg": "rgb(21, 29, 43)",
       "size": 14,
       "weight": 400
     },
@@ -2250,9 +2624,31 @@
       "page": "admin-node",
       "mode": "light",
       "sel": "td.sl-col-id",
+      "bgsel": "tr",
+      "fg": "rgb(17, 24, 39)",
+      "bg": "rgb(247, 251, 253)",
+      "size": 14,
+      "weight": 400
+    },
+    {
+      "theme": "admin",
+      "page": "admin-node",
+      "mode": "light",
+      "sel": "td.sl-col-id",
       "bgsel": "main.sl-admin-content",
       "fg": "rgb(17, 24, 39)",
       "bg": "rgb(255, 255, 255)",
+      "size": 14,
+      "weight": 400
+    },
+    {
+      "theme": "admin",
+      "page": "admin-node",
+      "mode": "dark",
+      "sel": "td.sl-col-id",
+      "bgsel": "tr",
+      "fg": "rgb(229, 231, 235)",
+      "bg": "rgb(21, 29, 43)",
       "size": 14,
       "weight": 400
     },
@@ -2291,10 +2687,10 @@
     },
     {
       "theme": "admin",
-      "page": "admin-sysfile",
+      "page": "admin-node",
       "mode": "light",
-      "sel": "th",
-      "bgsel": "th",
+      "sel": "th.sl-cell-ellipsis.sl-col-title.sl-sort",
+      "bgsel": "th.sl-cell-ellipsis.sl-col-title.sl-sort",
       "fg": "rgb(17, 24, 39)",
       "bg": "rgb(244, 246, 248)",
       "size": 14,
@@ -2302,10 +2698,10 @@
     },
     {
       "theme": "admin",
-      "page": "admin-sysfile",
+      "page": "admin-node",
       "mode": "dark",
-      "sel": "th",
-      "bgsel": "th",
+      "sel": "th.sl-cell-ellipsis.sl-col-title.sl-sort",
+      "bgsel": "th.sl-cell-ellipsis.sl-col-title.sl-sort",
       "fg": "rgb(229, 231, 235)",
       "bg": "rgb(24, 32, 48)",
       "size": 14,
@@ -2315,8 +2711,8 @@
       "theme": "admin",
       "page": "admin-node",
       "mode": "light",
-      "sel": "th.sl-cell-ellipsis",
-      "bgsel": "th.sl-cell-ellipsis",
+      "sel": "th.sl-cell-ellipsis.sl-sort",
+      "bgsel": "th.sl-cell-ellipsis.sl-sort",
       "fg": "rgb(17, 24, 39)",
       "bg": "rgb(244, 246, 248)",
       "size": 14,
@@ -2326,30 +2722,8 @@
       "theme": "admin",
       "page": "admin-node",
       "mode": "dark",
-      "sel": "th.sl-cell-ellipsis",
-      "bgsel": "th.sl-cell-ellipsis",
-      "fg": "rgb(229, 231, 235)",
-      "bg": "rgb(24, 32, 48)",
-      "size": 14,
-      "weight": 700
-    },
-    {
-      "theme": "admin",
-      "page": "admin-node",
-      "mode": "light",
-      "sel": "th.sl-cell-ellipsis.sl-col-title",
-      "bgsel": "th.sl-cell-ellipsis.sl-col-title",
-      "fg": "rgb(17, 24, 39)",
-      "bg": "rgb(244, 246, 248)",
-      "size": 14,
-      "weight": 700
-    },
-    {
-      "theme": "admin",
-      "page": "admin-node",
-      "mode": "dark",
-      "sel": "th.sl-cell-ellipsis.sl-col-title",
-      "bgsel": "th.sl-cell-ellipsis.sl-col-title",
+      "sel": "th.sl-cell-ellipsis.sl-sort",
+      "bgsel": "th.sl-cell-ellipsis.sl-sort",
       "fg": "rgb(229, 231, 235)",
       "bg": "rgb(24, 32, 48)",
       "size": 14,
@@ -2381,8 +2755,8 @@
       "theme": "admin",
       "page": "admin-node",
       "mode": "light",
-      "sel": "th.sl-col-author",
-      "bgsel": "th.sl-col-author",
+      "sel": "th.sl-col-author.sl-sort",
+      "bgsel": "th.sl-col-author.sl-sort",
       "fg": "rgb(17, 24, 39)",
       "bg": "rgb(244, 246, 248)",
       "size": 14,
@@ -2392,8 +2766,8 @@
       "theme": "admin",
       "page": "admin-node",
       "mode": "dark",
-      "sel": "th.sl-col-author",
-      "bgsel": "th.sl-col-author",
+      "sel": "th.sl-col-author.sl-sort",
+      "bgsel": "th.sl-col-author.sl-sort",
       "fg": "rgb(229, 231, 235)",
       "bg": "rgb(24, 32, 48)",
       "size": 14,
@@ -2403,8 +2777,8 @@
       "theme": "admin",
       "page": "admin-sysfile",
       "mode": "light",
-      "sel": "th.sl-col-date",
-      "bgsel": "th.sl-col-date",
+      "sel": "th.sl-col-date.sl-sort",
+      "bgsel": "th.sl-col-date.sl-sort",
       "fg": "rgb(17, 24, 39)",
       "bg": "rgb(244, 246, 248)",
       "size": 14,
@@ -2414,8 +2788,8 @@
       "theme": "admin",
       "page": "admin-sysfile",
       "mode": "dark",
-      "sel": "th.sl-col-date",
-      "bgsel": "th.sl-col-date",
+      "sel": "th.sl-col-date.sl-sort",
+      "bgsel": "th.sl-col-date.sl-sort",
       "fg": "rgb(229, 231, 235)",
       "bg": "rgb(24, 32, 48)",
       "size": 14,
@@ -2425,8 +2799,8 @@
       "theme": "admin",
       "page": "admin-node",
       "mode": "light",
-      "sel": "th.sl-col-id",
-      "bgsel": "th.sl-col-id",
+      "sel": "th.sl-col-id.sl-sort",
+      "bgsel": "th.sl-col-id.sl-sort",
       "fg": "rgb(17, 24, 39)",
       "bg": "rgb(244, 246, 248)",
       "size": 14,
@@ -2436,8 +2810,30 @@
       "theme": "admin",
       "page": "admin-node",
       "mode": "dark",
-      "sel": "th.sl-col-id",
-      "bgsel": "th.sl-col-id",
+      "sel": "th.sl-col-id.sl-sort",
+      "bgsel": "th.sl-col-id.sl-sort",
+      "fg": "rgb(229, 231, 235)",
+      "bg": "rgb(24, 32, 48)",
+      "size": 14,
+      "weight": 700
+    },
+    {
+      "theme": "admin",
+      "page": "admin-sysfile",
+      "mode": "light",
+      "sel": "th.sl-sort",
+      "bgsel": "th.sl-sort",
+      "fg": "rgb(17, 24, 39)",
+      "bg": "rgb(244, 246, 248)",
+      "size": 14,
+      "weight": 700
+    },
+    {
+      "theme": "admin",
+      "page": "admin-sysfile",
+      "mode": "dark",
+      "sel": "th.sl-sort",
+      "bgsel": "th.sl-sort",
       "fg": "rgb(229, 231, 235)",
       "bg": "rgb(24, 32, 48)",
       "size": 14,
@@ -2451,50 +2847,6 @@
       "bgsel": "nav",
       "fg": "rgb(34, 51, 69)",
       "bg": "rgb(248, 249, 251)",
-      "size": 16,
-      "weight": 400
-    },
-    {
-      "theme": "lite",
-      "page": "forum-list",
-      "mode": "light",
-      "sel": "a",
-      "bgsel": "body.sl-autumn",
-      "fg": "rgb(34, 34, 34)",
-      "bg": "rgb(255, 255, 255)",
-      "size": 20,
-      "weight": 400
-    },
-    {
-      "theme": "lite",
-      "page": "favorites",
-      "mode": "light",
-      "sel": "a",
-      "bgsel": "div.sl-opt-tile.sl-opt-w6.sl-cat-tone-0",
-      "fg": "rgb(28, 110, 158)",
-      "bg": "rgb(255, 255, 255)",
-      "size": 14,
-      "weight": 400
-    },
-    {
-      "theme": "lite",
-      "page": "oauth-finish",
-      "mode": "dark",
-      "sel": "a",
-      "bgsel": "footer",
-      "fg": "rgb(255, 255, 255)",
-      "bg": "rgb(42, 48, 60)",
-      "size": 13,
-      "weight": 400
-    },
-    {
-      "theme": "lite",
-      "page": "oauth-finish",
-      "mode": "dark",
-      "sel": "a",
-      "bgsel": "div.sl-wrp",
-      "fg": "rgb(170, 179, 191)",
-      "bg": "rgb(34, 39, 47)",
       "size": 16,
       "weight": 400
     },
@@ -2522,7 +2874,51 @@
     },
     {
       "theme": "lite",
+      "page": "front-search-focus",
+      "mode": "dark",
+      "sel": "a",
+      "bgsel": "footer",
+      "fg": "rgb(255, 255, 255)",
+      "bg": "rgb(42, 48, 60)",
+      "size": 13,
+      "weight": 400
+    },
+    {
+      "theme": "lite",
       "page": "oauth-finish",
+      "mode": "dark",
+      "sel": "a",
+      "bgsel": "div.sl-wrp",
+      "fg": "rgb(170, 179, 191)",
+      "bg": "rgb(34, 39, 47)",
+      "size": 16,
+      "weight": 400
+    },
+    {
+      "theme": "lite",
+      "page": "forum-list",
+      "mode": "light",
+      "sel": "a",
+      "bgsel": "body.sl-autumn",
+      "fg": "rgb(34, 34, 34)",
+      "bg": "rgb(255, 255, 255)",
+      "size": 20,
+      "weight": 400
+    },
+    {
+      "theme": "lite",
+      "page": "favorites",
+      "mode": "light",
+      "sel": "a",
+      "bgsel": "div.sl-opt-tile.sl-opt-w6.sl-cat-tone-0",
+      "fg": "rgb(28, 110, 158)",
+      "bg": "rgb(255, 255, 255)",
+      "size": 14,
+      "weight": 400
+    },
+    {
+      "theme": "lite",
+      "page": "front-search-focus",
       "mode": "dark",
       "sel": "a",
       "bgsel": "div.sl-wrp",
@@ -2654,24 +3050,13 @@
     },
     {
       "theme": "lite",
-      "page": "oauth-finish",
+      "page": "front-search-focus",
       "mode": "dark",
       "sel": "a",
       "bgsel": "nav",
       "fg": "rgb(243, 244, 246)",
       "bg": "rgb(21, 29, 43)",
       "size": 16,
-      "weight": 400
-    },
-    {
-      "theme": "lite",
-      "page": "front-search-focus",
-      "mode": "dark",
-      "sel": "a",
-      "bgsel": "div.sl-pres-voices",
-      "fg": "rgb(111, 200, 255)",
-      "bg": "rgb(11, 29, 44)",
-      "size": 12,
       "weight": 400
     },
     {
@@ -2709,14 +3094,14 @@
     },
     {
       "theme": "lite",
-      "page": "forum-topic-button-hover",
+      "page": "front-search-focus",
       "mode": "dark",
       "sel": "a",
-      "bgsel": "body.sl-autumn",
-      "fg": "rgb(92, 188, 234)",
-      "bg": "rgb(17, 24, 39)",
-      "size": 14,
-      "weight": 700
+      "bgsel": "div.sl-pres-voices",
+      "fg": "rgb(111, 200, 255)",
+      "bg": "rgb(11, 29, 44)",
+      "size": 12,
+      "weight": 400
     },
     {
       "theme": "lite",
@@ -2728,6 +3113,17 @@
       "bg": "rgb(17, 24, 39)",
       "size": 16,
       "weight": 400
+    },
+    {
+      "theme": "lite",
+      "page": "forum-topic-button-hover",
+      "mode": "dark",
+      "sel": "a",
+      "bgsel": "body.sl-autumn",
+      "fg": "rgb(92, 188, 234)",
+      "bg": "rgb(17, 24, 39)",
+      "size": 14,
+      "weight": 700
     },
     {
       "theme": "lite",
@@ -2797,23 +3193,23 @@
     },
     {
       "theme": "lite",
+      "page": "front-search-focus",
+      "mode": "dark",
+      "sel": "a.sl-author",
+      "bgsel": "footer",
+      "fg": "rgb(124, 196, 238)",
+      "bg": "rgb(42, 48, 60)",
+      "size": 13,
+      "weight": 400
+    },
+    {
+      "theme": "lite",
       "page": "forum-list",
       "mode": "light",
       "sel": "a.sl-author",
       "bgsel": "body.sl-autumn",
       "fg": "rgb(28, 110, 158)",
       "bg": "rgb(255, 255, 255)",
-      "size": 13,
-      "weight": 400
-    },
-    {
-      "theme": "lite",
-      "page": "oauth-finish",
-      "mode": "dark",
-      "sel": "a.sl-author",
-      "bgsel": "footer",
-      "fg": "rgb(124, 196, 238)",
-      "bg": "rgb(42, 48, 60)",
       "size": 13,
       "weight": 400
     },
@@ -2874,7 +3270,7 @@
     },
     {
       "theme": "lite",
-      "page": "oauth-finish",
+      "page": "front-search-focus",
       "mode": "dark",
       "sel": "a.sl-but",
       "bgsel": "a.sl-but",
@@ -3017,7 +3413,7 @@
     },
     {
       "theme": "lite",
-      "page": "oauth-finish",
+      "page": "front-search-focus",
       "mode": "dark",
       "sel": "a.sl-login-link.sl-login-link-top.sl-login-link-register",
       "bgsel": "body.sl-autumn",
@@ -3369,6 +3765,28 @@
     },
     {
       "theme": "lite",
+      "page": "oauth-finish",
+      "mode": "dark",
+      "sel": "b",
+      "bgsel": "section.sl-block",
+      "fg": "rgb(229, 231, 235)",
+      "bg": "rgb(21, 29, 43)",
+      "size": 16,
+      "weight": 700
+    },
+    {
+      "theme": "lite",
+      "page": "front-search-focus",
+      "mode": "dark",
+      "sel": "b",
+      "bgsel": "span.sl-login-toggle",
+      "fg": "rgb(243, 244, 246)",
+      "bg": "rgb(26, 33, 48)",
+      "size": 14,
+      "weight": 700
+    },
+    {
+      "theme": "lite",
       "page": "front-search-focus",
       "mode": "dark",
       "sel": "b",
@@ -3487,28 +3905,6 @@
       "bg": "rgb(8, 24, 36)",
       "size": 12,
       "weight": 500
-    },
-    {
-      "theme": "lite",
-      "page": "oauth-finish",
-      "mode": "dark",
-      "sel": "b",
-      "bgsel": "section.sl-block",
-      "fg": "rgb(229, 231, 235)",
-      "bg": "rgb(21, 29, 43)",
-      "size": 16,
-      "weight": 700
-    },
-    {
-      "theme": "lite",
-      "page": "oauth-finish",
-      "mode": "dark",
-      "sel": "b",
-      "bgsel": "span.sl-login-toggle",
-      "fg": "rgb(243, 244, 246)",
-      "bg": "rgb(26, 33, 48)",
-      "size": 14,
-      "weight": 700
     },
     {
       "theme": "lite",
@@ -3919,7 +4315,7 @@
     },
     {
       "theme": "lite",
-      "page": "oauth-finish",
+      "page": "front-search-focus",
       "mode": "dark",
       "sel": "div.sl-font.sl-demo-line-title",
       "bgsel": "section",
@@ -3930,7 +4326,7 @@
     },
     {
       "theme": "lite",
-      "page": "oauth-finish",
+      "page": "front-search-focus",
       "mode": "dark",
       "sel": "div.sl-font.sl-f-title",
       "bgsel": "footer",
@@ -3941,7 +4337,7 @@
     },
     {
       "theme": "lite",
-      "page": "oauth-finish",
+      "page": "front-search-focus",
       "mode": "dark",
       "sel": "div.sl-license",
       "bgsel": "footer",
@@ -4205,6 +4601,17 @@
     },
     {
       "theme": "lite",
+      "page": "forum-topic-button-hover",
+      "mode": "dark",
+      "sel": "em",
+      "bgsel": "body.sl-autumn",
+      "fg": "rgb(229, 231, 235)",
+      "bg": "rgb(17, 24, 39)",
+      "size": 16,
+      "weight": 400
+    },
+    {
+      "theme": "lite",
       "page": "front-search-focus",
       "mode": "dark",
       "sel": "em",
@@ -4256,17 +4663,6 @@
       "fg": "rgb(240, 106, 106)",
       "bg": "rgb(11, 29, 44)",
       "size": 12,
-      "weight": 400
-    },
-    {
-      "theme": "lite",
-      "page": "forum-topic-button-hover",
-      "mode": "dark",
-      "sel": "em",
-      "bgsel": "body.sl-autumn",
-      "fg": "rgb(229, 231, 235)",
-      "bg": "rgb(17, 24, 39)",
-      "size": 16,
       "weight": 400
     },
     {
@@ -4684,7 +5080,7 @@
       "bgsel": "section.sl-oauth-card",
       "fg": "rgb(34, 34, 34)",
       "bg": "rgb(248, 249, 251)",
-      "size": 14,
+      "size": 16,
       "weight": 400
     },
     {
@@ -4695,7 +5091,7 @@
       "bgsel": "section.sl-oauth-card",
       "fg": "rgb(34, 34, 34)",
       "bg": "rgb(248, 249, 251)",
-      "size": 16,
+      "size": 14,
       "weight": 400
     },
     {
@@ -4788,11 +5184,11 @@
     },
     {
       "theme": "lite",
-      "page": "forum-list",
+      "page": "forum-topic-button-hover",
       "mode": "light",
       "sel": "li",
       "bgsel": "body.sl-autumn",
-      "fg": "rgb(34, 51, 69)",
+      "fg": "rgb(34, 34, 34)",
       "bg": "rgb(255, 255, 255)",
       "size": 13,
       "weight": 400
@@ -4810,18 +5206,18 @@
     },
     {
       "theme": "lite",
-      "page": "forum-topic-button-hover",
+      "page": "forum-list",
       "mode": "light",
       "sel": "li",
       "bgsel": "body.sl-autumn",
-      "fg": "rgb(34, 34, 34)",
+      "fg": "rgb(34, 51, 69)",
       "bg": "rgb(255, 255, 255)",
       "size": 13,
       "weight": 400
     },
     {
       "theme": "lite",
-      "page": "oauth-finish",
+      "page": "front-search-focus",
       "mode": "dark",
       "sel": "li",
       "bgsel": "footer",
@@ -4898,7 +5294,7 @@
     },
     {
       "theme": "lite",
-      "page": "oauth-finish",
+      "page": "front-search-focus",
       "mode": "dark",
       "sel": "li.sl-d-info.sl-d-version.sl-font",
       "bgsel": "section",
@@ -4920,7 +5316,7 @@
     },
     {
       "theme": "lite",
-      "page": "oauth-finish",
+      "page": "front-search-focus",
       "mode": "dark",
       "sel": "li.sl-d-info.sl-d-version.sl-font",
       "bgsel": "body.sl-autumn",
@@ -4931,7 +5327,7 @@
     },
     {
       "theme": "lite",
-      "page": "oauth-finish",
+      "page": "front-search-focus",
       "mode": "dark",
       "sel": "li.sl-d-num.sl-font",
       "bgsel": "section",
@@ -4953,7 +5349,7 @@
     },
     {
       "theme": "lite",
-      "page": "oauth-finish",
+      "page": "front-search-focus",
       "mode": "dark",
       "sel": "li.sl-d-num.sl-font",
       "bgsel": "body.sl-autumn",
@@ -5107,28 +5503,6 @@
     },
     {
       "theme": "lite",
-      "page": "front-search-focus",
-      "mode": "dark",
-      "sel": "p",
-      "bgsel": "section.sl-pres-section",
-      "fg": "rgb(131, 165, 186)",
-      "bg": "rgb(11, 29, 44)",
-      "size": 13,
-      "weight": 400
-    },
-    {
-      "theme": "lite",
-      "page": "front-search-focus",
-      "mode": "dark",
-      "sel": "p",
-      "bgsel": "article.sl-pres-voice",
-      "fg": "rgb(236, 248, 255)",
-      "bg": "rgb(11, 29, 44)",
-      "size": 13,
-      "weight": 400
-    },
-    {
-      "theme": "lite",
       "page": "node-view",
       "mode": "dark",
       "sel": "p",
@@ -5147,6 +5521,28 @@
       "fg": "rgb(154, 164, 178)",
       "bg": "rgb(17, 24, 39)",
       "size": 16,
+      "weight": 400
+    },
+    {
+      "theme": "lite",
+      "page": "front-search-focus",
+      "mode": "dark",
+      "sel": "p",
+      "bgsel": "section.sl-pres-section",
+      "fg": "rgb(131, 165, 186)",
+      "bg": "rgb(11, 29, 44)",
+      "size": 13,
+      "weight": 400
+    },
+    {
+      "theme": "lite",
+      "page": "front-search-focus",
+      "mode": "dark",
+      "sel": "p",
+      "bgsel": "article.sl-pres-voice",
+      "fg": "rgb(236, 248, 255)",
+      "bg": "rgb(11, 29, 44)",
+      "size": 13,
       "weight": 400
     },
     {
@@ -5294,7 +5690,7 @@
     },
     {
       "theme": "lite",
-      "page": "oauth-finish",
+      "page": "front-search-focus",
       "mode": "dark",
       "sel": "p.sl-font",
       "bgsel": "div",
@@ -5305,7 +5701,7 @@
     },
     {
       "theme": "lite",
-      "page": "oauth-finish",
+      "page": "front-search-focus",
       "mode": "dark",
       "sel": "p.sl-font.sl-f-title",
       "bgsel": "footer",
@@ -5327,7 +5723,7 @@
     },
     {
       "theme": "lite",
-      "page": "oauth-finish",
+      "page": "front-search-focus",
       "mode": "dark",
       "sel": "p.sl-font.sl-slogan",
       "bgsel": "body.sl-autumn",
@@ -5613,6 +6009,17 @@
     },
     {
       "theme": "lite",
+      "page": "oauth-finish",
+      "mode": "dark",
+      "sel": "small",
+      "bgsel": "section.sl-block",
+      "fg": "rgb(154, 164, 178)",
+      "bg": "rgb(21, 29, 43)",
+      "size": 12,
+      "weight": 400
+    },
+    {
+      "theme": "lite",
       "page": "front-search-focus",
       "mode": "dark",
       "sel": "small",
@@ -5663,17 +6070,6 @@
       "bgsel": "div.sl-pres-tile-copy",
       "fg": "rgb(111, 200, 255)",
       "bg": "rgb(8, 24, 36)",
-      "size": 12,
-      "weight": 400
-    },
-    {
-      "theme": "lite",
-      "page": "oauth-finish",
-      "mode": "dark",
-      "sel": "small",
-      "bgsel": "section.sl-block",
-      "fg": "rgb(154, 164, 178)",
-      "bg": "rgb(21, 29, 43)",
       "size": 12,
       "weight": 400
     },
@@ -5833,17 +6229,6 @@
     },
     {
       "theme": "lite",
-      "page": "front-search-focus",
-      "mode": "light",
-      "sel": "span",
-      "bgsel": "div.sl-pres-hero",
-      "fg": "rgb(28, 110, 158)",
-      "bg": "rgb(255, 255, 255)",
-      "size": 38,
-      "weight": 700
-    },
-    {
-      "theme": "lite",
       "page": "profile",
       "mode": "light",
       "sel": "span",
@@ -5877,6 +6262,17 @@
     },
     {
       "theme": "lite",
+      "page": "front-search-focus",
+      "mode": "light",
+      "sel": "span",
+      "bgsel": "div.sl-pres-hero",
+      "fg": "rgb(28, 110, 158)",
+      "bg": "rgb(255, 255, 255)",
+      "size": 38,
+      "weight": 700
+    },
+    {
+      "theme": "lite",
       "page": "favorites",
       "mode": "light",
       "sel": "span",
@@ -5885,6 +6281,17 @@
       "bg": "rgb(255, 255, 255)",
       "size": 13,
       "weight": 400
+    },
+    {
+      "theme": "lite",
+      "page": "settings",
+      "mode": "light",
+      "sel": "span",
+      "bgsel": "nav.sl-opt-rail",
+      "fg": "rgb(34, 51, 69)",
+      "bg": "rgb(255, 255, 255)",
+      "size": 12,
+      "weight": 600
     },
     {
       "theme": "lite",
@@ -5910,14 +6317,25 @@
     },
     {
       "theme": "lite",
-      "page": "settings",
-      "mode": "light",
+      "page": "oauth-finish",
+      "mode": "dark",
       "sel": "span",
-      "bgsel": "nav.sl-opt-rail",
-      "fg": "rgb(34, 51, 69)",
-      "bg": "rgb(255, 255, 255)",
-      "size": 12,
-      "weight": 600
+      "bgsel": "section.sl-block",
+      "fg": "rgb(154, 164, 178)",
+      "bg": "rgb(21, 29, 43)",
+      "size": 14,
+      "weight": 400
+    },
+    {
+      "theme": "lite",
+      "page": "oauth-finish",
+      "mode": "dark",
+      "sel": "span",
+      "bgsel": "section.sl-block",
+      "fg": "rgb(229, 231, 235)",
+      "bg": "rgb(21, 29, 43)",
+      "size": 14,
+      "weight": 400
     },
     {
       "theme": "lite",
@@ -6064,39 +6482,6 @@
     },
     {
       "theme": "lite",
-      "page": "oauth-finish",
-      "mode": "dark",
-      "sel": "span",
-      "bgsel": "section.sl-block",
-      "fg": "rgb(154, 164, 178)",
-      "bg": "rgb(21, 29, 43)",
-      "size": 14,
-      "weight": 400
-    },
-    {
-      "theme": "lite",
-      "page": "oauth-finish",
-      "mode": "dark",
-      "sel": "span",
-      "bgsel": "section.sl-block",
-      "fg": "rgb(229, 231, 235)",
-      "bg": "rgb(21, 29, 43)",
-      "size": 14,
-      "weight": 400
-    },
-    {
-      "theme": "lite",
-      "page": "front-search-focus",
-      "mode": "dark",
-      "sel": "span",
-      "bgsel": "div.sl-pres-hero",
-      "fg": "rgb(111, 200, 255)",
-      "bg": "rgb(8, 24, 36)",
-      "size": 38,
-      "weight": 700
-    },
-    {
-      "theme": "lite",
       "page": "node-list",
       "mode": "dark",
       "sel": "span",
@@ -6138,6 +6523,17 @@
       "bg": "rgb(21, 29, 43)",
       "size": 13,
       "weight": 400
+    },
+    {
+      "theme": "lite",
+      "page": "front-search-focus",
+      "mode": "dark",
+      "sel": "span",
+      "bgsel": "div.sl-pres-hero",
+      "fg": "rgb(111, 200, 255)",
+      "bg": "rgb(8, 24, 36)",
+      "size": 38,
+      "weight": 700
     },
     {
       "theme": "lite",
@@ -6460,7 +6856,7 @@
     },
     {
       "theme": "lite",
-      "page": "oauth-finish",
+      "page": "front-search-focus",
       "mode": "dark",
       "sel": "span.sl-font",
       "bgsel": "span.sl-font",
@@ -6471,7 +6867,7 @@
     },
     {
       "theme": "lite",
-      "page": "oauth-finish",
+      "page": "front-search-focus",
       "mode": "dark",
       "sel": "span.sl-font",
       "bgsel": "span.sl-font",
@@ -6592,7 +6988,7 @@
     },
     {
       "theme": "lite",
-      "page": "oauth-finish",
+      "page": "front-search-focus",
       "mode": "dark",
       "sel": "span.sl-forum-meta-item",
       "bgsel": "footer",
@@ -6790,7 +7186,7 @@
     },
     {
       "theme": "lite",
-      "page": "oauth-finish",
+      "page": "front-search-focus",
       "mode": "dark",
       "sel": "span.sl-madein-label.sl-font",
       "bgsel": "footer",
@@ -7329,7 +7725,7 @@
     },
     {
       "theme": "lite",
-      "page": "private",
+      "page": "oauth-finish",
       "mode": "dark",
       "sel": "span.sl-session-open",
       "bgsel": "section.sl-block",
@@ -7340,7 +7736,7 @@
     },
     {
       "theme": "lite",
-      "page": "oauth-finish",
+      "page": "front-search-focus",
       "mode": "dark",
       "sel": "span.sl-upper-tagline.sl-font",
       "bgsel": "footer",
@@ -7494,6 +7890,17 @@
     },
     {
       "theme": "lite",
+      "page": "oauth-finish",
+      "mode": "dark",
+      "sel": "strong",
+      "bgsel": "body.sl-autumn",
+      "fg": "rgb(229, 231, 235)",
+      "bg": "rgb(17, 24, 39)",
+      "size": 16,
+      "weight": 700
+    },
+    {
+      "theme": "lite",
       "page": "front-search-focus",
       "mode": "dark",
       "sel": "strong",
@@ -7544,17 +7951,6 @@
       "bgsel": "body.sl-autumn",
       "fg": "rgb(229, 231, 235)",
       "bg": "rgb(17, 24, 39)",
-      "size": 16,
-      "weight": 700
-    },
-    {
-      "theme": "lite",
-      "page": "oauth-finish",
-      "mode": "dark",
-      "sel": "strong",
-      "bgsel": "body.sl-autumn",
-      "fg": "rgb(229, 231, 235)",
-      "bg": "rgb(17, 24, 39)",
       "size": 14,
       "weight": 700
     },
@@ -7582,7 +7978,7 @@
     },
     {
       "theme": "lite",
-      "page": "voting",
+      "page": "forum-list",
       "mode": "light",
       "sel": "th",
       "bgsel": "th",
@@ -7593,7 +7989,7 @@
     },
     {
       "theme": "lite",
-      "page": "voting",
+      "page": "forum-list",
       "mode": "dark",
       "sel": "th",
       "bgsel": "th",
@@ -7604,7 +8000,7 @@
     },
     {
       "theme": "lite",
-      "page": "voting",
+      "page": "forum-list",
       "mode": "light",
       "sel": "th.sl-fl-col-stat",
       "bgsel": "th.sl-fl-col-stat",
@@ -7615,7 +8011,7 @@
     },
     {
       "theme": "lite",
-      "page": "voting",
+      "page": "forum-list",
       "mode": "dark",
       "sel": "th.sl-fl-col-stat",
       "bgsel": "th.sl-fl-col-stat",
@@ -7628,8 +8024,8 @@
       "theme": "lite",
       "page": "voting",
       "mode": "light",
-      "sel": "th.sl-table-col-num",
-      "bgsel": "th.sl-table-col-num",
+      "sel": "th.sl-fl-col-stat.sl-sort",
+      "bgsel": "th.sl-fl-col-stat.sl-sort",
       "fg": "rgb(34, 34, 34)",
       "bg": "rgb(242, 244, 247)",
       "size": 13,
@@ -7639,8 +8035,52 @@
       "theme": "lite",
       "page": "voting",
       "mode": "dark",
-      "sel": "th.sl-table-col-num",
-      "bgsel": "th.sl-table-col-num",
+      "sel": "th.sl-fl-col-stat.sl-sort",
+      "bgsel": "th.sl-fl-col-stat.sl-sort",
+      "fg": "rgb(229, 231, 235)",
+      "bg": "rgb(26, 33, 48)",
+      "size": 13,
+      "weight": 700
+    },
+    {
+      "theme": "lite",
+      "page": "voting",
+      "mode": "light",
+      "sel": "th.sl-sort",
+      "bgsel": "th.sl-sort",
+      "fg": "rgb(34, 34, 34)",
+      "bg": "rgb(242, 244, 247)",
+      "size": 13,
+      "weight": 700
+    },
+    {
+      "theme": "lite",
+      "page": "voting",
+      "mode": "dark",
+      "sel": "th.sl-sort",
+      "bgsel": "th.sl-sort",
+      "fg": "rgb(229, 231, 235)",
+      "bg": "rgb(26, 33, 48)",
+      "size": 13,
+      "weight": 700
+    },
+    {
+      "theme": "lite",
+      "page": "voting",
+      "mode": "light",
+      "sel": "th.sl-table-col-num.sl-sort",
+      "bgsel": "th.sl-table-col-num.sl-sort",
+      "fg": "rgb(34, 34, 34)",
+      "bg": "rgb(242, 244, 247)",
+      "size": 13,
+      "weight": 700
+    },
+    {
+      "theme": "lite",
+      "page": "voting",
+      "mode": "dark",
+      "sel": "th.sl-table-col-num.sl-sort",
+      "bgsel": "th.sl-table-col-num.sl-sort",
       "fg": "rgb(229, 231, 235)",
       "bg": "rgb(26, 33, 48)",
       "size": 13,

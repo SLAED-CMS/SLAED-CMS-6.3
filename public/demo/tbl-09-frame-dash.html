@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="ru" data-theme="auto">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Рамка и пунктир &middot; Таблицы панели — стенд SLAED CMS</title>
+  <link rel="stylesheet" href="../templates/admin/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../templates/admin/assets/css/base.css">
+  <link rel="stylesheet" href="../templates/admin/assets/css/theme.css">
+  <!-- The stand is served without Cache-Control; its sheets and scripts are stamped so an edit is seen at once -->
+  <script>document.write('<link rel="stylesheet" href="assets/demo.css?v=' + Date.now() + '"><link rel="stylesheet" href="assets/tbl.css?v=' + Date.now() + '">');</script>
+  <script src="../plugins/system/global-func.js"></script>
+  <script src="../plugins/system/slaed.js"></script>
+  <script src="../templates/admin/assets/js/admin-ui.js"></script>
+  <style>
+    /* Рамка и пунктир: only the lines change. One rounded frame instead of a frame round every cell, a dotted line between
+       rows instead of the 2px gap; everything else is the theme of today in its own tokens — the row height, the head
+       in the body type on the muted fill, the hover and pick tints, the column measures, the tip, the dial and the sort
+       marks. The cell padding keeps the distance of today between the texts of two columns: 4px padding, 1px frame,
+       2px gap, 1px frame and 4px padding are 12px, --sl-space-2 at the start and --sl-space-3 at the end are 12px too,
+       and the head keeps the padding of the theme */
+    @media (width > 560px) {
+      .tb-skin .sl-table-list-sort {
+        border-collapse: separate;
+        border: 1px solid var(--sl-border);
+        border-radius: var(--sl-radius-2);
+        box-shadow: var(--sl-shadow-xs);
+      }
+
+      /* The measures of the theme, so the columns stand where they stand today */
+      .tb-skin .sl-table-list-sort :is(th, td) {
+        box-sizing: content-box;
+      }
+
+      .tb-skin .sl-table-list-sort thead th.sl-col-id { width: var(--sl-col-id-width); }
+      .tb-skin .sl-table-list-sort thead th:nth-child(3) { width: auto; max-width: 0; }
+      .tb-skin .sl-table-list-sort thead th.sl-col-author { width: var(--sl-col-author-width); }
+      .tb-skin .sl-table-list-sort thead th.sl-col-date { width: var(--sl-col-date-width); }
+      .tb-skin .sl-table-list-sort thead th.sl-col-status { width: var(--sl-col-status-width); }
+      .tb-skin .sl-table-list-sort thead th.sl-col-actions { width: var(--sl-col-actions-width); }
+      .tb-skin .sl-table-list-sort thead th.sl-col-check { width: var(--sl-col-check-width); }
+
+      /* The head: the type of today on the muted fill, closed by a solid line */
+      .tb-skin .sl-table-list-sort th {
+        height: calc(var(--sl-table-height) + var(--sl-space-1) + 1px);
+        padding: 0 var(--sl-space-6) 0 var(--sl-space-2);
+        background: var(--sl-bg-muted);
+        border-bottom: 1px solid var(--sl-border);
+      }
+
+      .tb-skin .sl-table-list-sort th:first-child {
+        border-top-left-radius: calc(var(--sl-radius-2) - 1px);
+      }
+
+      .tb-skin .sl-table-list-sort th:last-child {
+        border-top-right-radius: calc(var(--sl-radius-2) - 1px);
+      }
+
+      /* The rows: the step of today — a 32px tile and a 2px gap are one 33px row and its 1px line — with the dotted line
+         between them, so a row stands where it stands today all the way down the page */
+      .tb-skin .sl-table-list-sort td {
+        height: calc(var(--sl-table-height) + var(--sl-space-1) + 1px);
+        padding: 0 var(--sl-space-3) 0 var(--sl-space-2);
+        border-bottom: 1px dashed var(--sl-border-strong);
+      }
+
+      .tb-skin .sl-table-list-sort :is(th, td):is(.sl-col-status, .sl-col-actions) {
+        padding: 0 var(--sl-space-2);
+      }
+
+      .tb-skin .sl-table-list-sort :is(th, td).sl-col-check {
+        padding: 0 var(--sl-space-3);
+      }
+
+      .tb-skin .sl-table-list-sort tbody tr:last-child > td {
+        border-bottom: 0;
+      }
+
+      .tb-skin .sl-table-list-sort tbody tr:last-child > td:first-child {
+        border-bottom-left-radius: calc(var(--sl-radius-2) - 1px);
+      }
+
+      .tb-skin .sl-table-list-sort tbody tr:last-child > td:last-child {
+        border-bottom-right-radius: calc(var(--sl-radius-2) - 1px);
+      }
+
+      /* The content as it is today: the filled tip, the solid dial, the sort marks in every head cell */
+      .tb-skin .sl-table-list-sort .sl-sort::after,
+      .tb-skin .sl-table-list-sort th.sl-sort:hover::after {
+        opacity: var(--sl-fade-muted);
+      }
+
+      .tb-skin .sl-table-list-sort .sl-tip,
+      .tb-skin .sl-table-list-sort tr:hover .sl-tip {
+        color: var(--sl-primary-strong);
+      }
+
+      .tb-skin .sl-table-list-sort .sl-tip .bi-info-circle-fill::before {
+        content: "\f430";
+      }
+
+      .tb-skin .sl-table-list-sort .sl-dial-toggle,
+      .tb-skin .sl-table-list-sort tr:hover .sl-dial-toggle {
+        color: var(--sl-on-solid);
+        background: var(--sl-border-strong);
+      }
+
+      .tb-skin .sl-table-list-sort .sl-dial.sl-open .sl-dial-toggle,
+      .tb-skin .sl-table-list-sort .sl-dial:hover .sl-dial-toggle {
+        background: var(--sl-solid-bg);
+        color: var(--sl-solid-text);
+      }
+    }
+  </style>
+</head>
+<body>
+  <script>document.write('<script src="assets/tbl.js?v=' + Date.now() + '"><\/script>');</script>
+  <script>document.write('<script src="assets/demo.js?v=' + Date.now() + '"><\/script>');</script>
+</body>
+</html>

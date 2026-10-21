@@ -52,7 +52,7 @@ function security(): void {
     setHead();
     echo getTplAdminList([
         'head_html' => getTplAdminTabs($tabset + ['part' => [0, 1, 2]]),
-        'note_html' => checkPerms(CONFIG_DIR.'/security.php').getSelfCheckAlert(true),
+        'note_html' => checkPerms(CONFIG_DIR.'/security.php').getSelfCheckAlert(),
         'is_fixed' => true,
         'head' => [
             ['content' => _TITLE, 'is_truncate' => true],

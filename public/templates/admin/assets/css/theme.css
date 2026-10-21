@@ -945,10 +945,6 @@ input.sl-but-blue[value="ОК"] {
   cursor: help;
 }
 
-.sl-session-note {
-  opacity: var(--sl-fade-subtle);
-}
-
 .sl-code-row-odd,
 .hljs-ln tr:nth-child(odd) {
   background-color: var(--sl-surface);
@@ -2240,6 +2236,8 @@ pre code.hljs {
 .sl-editor-pill .sl-modal-act[aria-expanded="true"],
 .sl-wrapper .sl-toolbar li .sl-bell-tip a:hover,
 .sl-wrapper .sl-toolbar li .sl-bell-tip a:focus-visible,
+.sl-cockpit .sl-bell-tip a[href]:hover,
+.sl-cockpit .sl-bell-tip a[href]:focus-visible,
 .sl-form-hits [role="option"][aria-selected="true"],
 .sl-form-hits [role="option"]:hover {
   background: var(--sl-tint);
@@ -4125,17 +4123,13 @@ dialog.sl-editor-emoji-panel {
 }
 
 .sl-menu-list-item,
-.sl-block-sidebar-count-row,
-.sl-admin-block-link,
-.sl-block-sidebar .sl-session-row {
+.sl-block-sidebar-count-row {
   border-radius: var(--sl-radius-2);
   transition: background-color var(--sl-time-fast) var(--sl-ease-out);
 }
 
 .sl-menu-list-item:hover,
-.sl-block-sidebar-count-row:hover,
-.sl-admin-block-link:hover,
-.sl-block-sidebar .sl-session-row:hover {
+.sl-block-sidebar-count-row:hover {
   background-color: var(--sl-surface);
 }
 
@@ -4226,9 +4220,6 @@ dialog.sl-editor-emoji-panel {
   .sl-admin-sidebar
   :is(
     .sl-block-sidebar-count-row,
-    .sl-admin-block-link,
-    .sl-session-line,
-    .sl-block-sidebar .sl-session-row,
     .sl-menu-list-item
   ) {
   border-radius: var(--sl-admin-tight-radius);
@@ -4251,41 +4242,6 @@ dialog.sl-editor-emoji-panel {
   line-height: 1;
   width: var(--sl-size-icon-xs);
   height: var(--sl-size-icon-xs);
-}
-
-.sl-wrapper.sl-admin-shell .sl-admin-sidebar .sl-admin-block-links {
-  display: grid;
-  gap: var(--sl-admin-tight-item-gap);
-}
-
-.sl-wrapper.sl-admin-shell
-  .sl-admin-sidebar
-  :is(.sl-block-sidebar-count-row, .sl-admin-block-link) {
-  padding: var(--sl-admin-tight-row-pad);
-}
-
-.sl-wrapper.sl-admin-shell .sl-admin-sidebar .sl-admin-block-link a {
-  display: flex;
-  align-items: center;
-  gap: var(--sl-space-3);
-  min-height: var(--sl-admin-tight-line-height);
-  padding: 0;
-  border: 0;
-  border-radius: 0;
-  background: none;
-  box-shadow: none;
-  line-height: var(--sl-admin-tight-line-height);
-  box-sizing: border-box;
-}
-
-.sl-wrapper.sl-admin-shell .sl-admin-sidebar .sl-admin-block-link a .bi {
-  font-size: var(--sl-size-icon-xs);
-}
-
-.sl-wrapper.sl-admin-shell
-  .sl-admin-sidebar
-  :is(.sl-block-sidebar .sl-session-row, .sl-session-line) {
-  padding: var(--sl-admin-tight-row-pad) 0;
 }
 
 .sl-wrapper.sl-admin-shell .sl-admin-sidebar .sl-menu-list-item {
@@ -7075,71 +7031,14 @@ button.sl-but-mini {
   min-width: var(--sl-ratings-width);
 }
 
-/* Admin sidebar links block: quick navigation list */
-.sl-admin-block-links {
-  display: grid;
-  gap: var(--sl-space-2);
-}
-
-.sl-admin-block-link {
-  min-width: 0;
-  padding: var(--sl-space-2);
-}
-
-.sl-admin-block-link a {
-  display: flex;
-  align-items: center;
-  gap: var(--sl-space-3);
-  color: var(--sl-primary);
-}
-
-/* Sessions: whois/online rows shared by monitor and module lists */
-.sl-session-line,
-.sl-session-row {
+/* Sessions: the lines of the visitor summary */
+.sl-session-line {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   gap: var(--sl-space-3);
   align-items: center;
   width: 100%;
-}
-
-.sl-session-line--icon,
-.sl-session-row--icon {
-  grid-template-columns: 20px minmax(0, 1fr) auto;
-}
-
-.sl-session-line,
-.sl-session-row {
   padding: var(--sl-space-2) 0;
-}
-
-.sl-block-sidebar .sl-session-row {
-  padding: var(--sl-space-2);
-}
-
-.sl-session-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--sl-primary);
-  flex-shrink: 0;
-}
-
-.sl-session-icon .sl-geo-flag {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.sl-session-name,
-.sl-session-module {
-  min-width: 0;
-  overflow-wrap: anywhere;
-}
-
-.sl-session-module,
-.sl-session-right {
-  text-align: right;
 }
 
 .sl-session-action {
@@ -7565,6 +7464,483 @@ body:has(.sl-monitor-wrapper) .sl-monitor-wrapper * {
   color: var(--sl-knob-tone);
   font-size: var(--sl-font-h3);
   font-weight: var(--sl-weight-bold);
+}
+
+/* The cockpit of the home: the state of the system over the module grids, the twin of the cockpit of the presentation */
+/* Its state is one class of the ring vocabulary on the panel itself, sl-knob-ok, -warn or -danger: --sl-knob-tone colours the line of state and the lamp, */
+/* while every ring keeps the class of its own share */
+.sl-cockpit {
+  position: relative;
+  margin-bottom: var(--sl-space-6);
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-3);
+  background: linear-gradient(var(--sl-surface), var(--sl-bg));
+  padding: var(--sl-space-6);
+}
+
+/* Three columns with equal sides: the state stands in the middle between the edges whatever the width of the caption at the left and the chip at the right */
+.sl-cockpit-top {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: var(--sl-space-4);
+}
+
+.sl-cockpit-top > .sl-live-chip {
+  justify-self: end;
+}
+
+.sl-cockpit-top > span {
+  font-family: var(--sl-face-mono);
+  font-size: var(--sl-font-micro);
+  letter-spacing: var(--sl-track-wide);
+  text-transform: uppercase;
+  color: var(--sl-text-muted);
+}
+
+.sl-cockpit-top > span .bi {
+  display: inline-block;
+  margin-right: var(--sl-space-3);
+  color: var(--sl-primary);
+}
+
+/* The line of state carries the glyph of the alert of its tone and moves as that alert moves; its small words take the strong step of the tone, */
+/* which holds 4.5:1 on the panel where the plain step of red and orange does not */
+.sl-cockpit-top > .sl-cockpit-state .bi {
+  color: var(--sl-knob-tone);
+}
+
+.sl-cockpit.sl-knob-ok > .sl-cockpit-top > .sl-cockpit-state { color: var(--sl-success-strong); }
+.sl-cockpit.sl-knob-warn > .sl-cockpit-top > .sl-cockpit-state { color: var(--sl-warning-strong); }
+.sl-cockpit.sl-knob-danger > .sl-cockpit-top > .sl-cockpit-state { color: var(--sl-danger-strong); }
+
+.sl-cockpit.sl-knob-warn .sl-cockpit-state .bi {
+  animation: sl-alert-shake var(--sl-alert-dur) var(--sl-ease-in-out) infinite;
+}
+
+.sl-cockpit.sl-knob-danger .sl-cockpit-state .bi {
+  animation: sl-alert-beat calc(var(--sl-alert-dur) / 2) var(--sl-ease-in-out) infinite;
+}
+
+/* The live chip of the blocks of the site on the components of this theme: the tip with the state, the interval, the age of the figures and the pause; */
+/* its beat is the led pulse, and a pause stills it in the warning tone. It opens on a press as the rings do, so it takes the pointer and not the help mark */
+.sl-tip.sl-live-chip {
+  width: auto;
+  height: auto;
+  margin: 0;
+  cursor: pointer;
+}
+
+.sl-live-icon {
+  display: grid;
+  place-items: center;
+  width: var(--sl-size-chip);
+  height: var(--sl-size-chip);
+  border-radius: var(--sl-radius-circle);
+  background: var(--sl-chip-bg);
+  color: var(--sl-success);
+  font-size: var(--sl-size-icon-xs);
+  line-height: 1;
+  animation: sl-led-pulse var(--sl-led-dur) var(--sl-ease-in-out) infinite;
+}
+
+.sl-live-chip.sl-is-paused .sl-live-icon {
+  color: var(--sl-warning);
+  animation: none;
+}
+
+.sl-live-panel {
+  min-width: var(--sl-popover-min-width);
+}
+
+/* The rows of the live chip read as on the site: the label muted at the left, the value flushed right, no colon */
+.sl-tip .sl-live-panel dl {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: var(--sl-space-2) var(--sl-space-5);
+}
+
+.sl-tip .sl-live-panel dt {
+  color: var(--sl-text-muted);
+}
+
+.sl-tip .sl-live-panel dt::after,
+.sl-tip .sl-live-panel dd::after {
+  content: none;
+}
+
+.sl-tip .sl-live-panel dd {
+  color: var(--sl-text);
+  text-align: right;
+}
+
+.sl-live-action {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: var(--sl-space-5);
+  padding-top: var(--sl-space-3);
+  border-top: 1px solid var(--sl-border);
+}
+
+.sl-live-chip .sl-live-s-paused,
+.sl-live-chip.sl-is-paused .sl-live-s-on {
+  display: none;
+}
+
+.sl-live-chip.sl-is-paused .sl-live-s-paused {
+  display: inline;
+}
+
+.sl-live-chip.sl-is-paused .sl-live-act {
+  background: var(--sl-chip-bg);
+  color: var(--sl-success);
+}
+
+/* One row round the lamp: a ring only for a share of a limit; the lamp comes first for the reader and stands in the middle column for the eye, */
+/* the rings flowing into the four cells it leaves free */
+.sl-cockpit-gauges {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: var(--sl-space-8);
+  align-items: center;
+  justify-items: center;
+  margin: var(--sl-space-7) 0 var(--sl-space-3);
+}
+
+.sl-cockpit-float:has(> .sl-cockpit-plate) {
+  grid-column: 3;
+  grid-row: 1;
+}
+
+/* A figure with no limit of its own stands in the strip under the rings as a plain number */
+.sl-cockpit-strip {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--sl-space-3) var(--sl-space-8);
+  margin: var(--sl-space-6) 0 0;
+  border-top: 1px solid var(--sl-border);
+  padding: var(--sl-space-5) 0 0;
+  list-style: none;
+  font-family: var(--sl-face-mono);
+  font-size: var(--sl-font-small);
+  color: var(--sl-text-muted);
+}
+
+.sl-cockpit-strip > li {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sl-space-2);
+}
+
+.sl-cockpit-strip .bi {
+  align-self: center;
+  margin-right: var(--sl-space-1);
+  color: var(--sl-primary);
+}
+
+.sl-cockpit-strip b {
+  font-size: var(--sl-font-h3);
+  color: var(--sl-text);
+}
+
+.sl-cockpit-strip span {
+  font-size: var(--sl-font-micro);
+  text-transform: uppercase;
+}
+
+/* The lamp and every ring open the bell panel on the pointer or the focus: the signals of the lamp, the details of a ring, */
+/* each row a link with its mark in the tone of its level, or the brand tone for a detail, and the figure at the right */
+.sl-cockpit-float {
+  display: grid;
+  justify-items: center;
+  width: 100%;
+}
+
+.sl-cockpit .sl-bell-tip .bi {
+  color: var(--sl-primary);
+}
+
+.sl-cockpit .sl-bell-tip :is(.sl-knob-warn, .sl-knob-danger) .bi {
+  color: var(--sl-knob-tone);
+}
+
+/* The gauge: the theme ring drawn as an open arc with its scale, the figure in the centre, the caption in the mouth of the arc; */
+/* it opens its panel as the bell does, so it takes the pointer of the bell */
+.sl-cockpit-ring.sl-knob {
+  cursor: pointer;
+  width: 100%;
+  max-width: var(--sl-gauge-width);
+  height: auto;
+  aspect-ratio: 1;
+  margin: 0;
+}
+
+.sl-cockpit-ring .sl-knob-svg {
+  overflow: visible;
+  transform: none;
+}
+
+/* A thin line with round ends on a quiet track: an open arc has no join for a round cap to close */
+.sl-cockpit-ring path:is(.sl-knob-bg, .sl-knob-val) {
+  stroke-width: 4;
+  stroke-linecap: round;
+}
+
+.sl-cockpit-ring .sl-knob-bg {
+  stroke: var(--sl-border);
+}
+
+.sl-cockpit-ring .sl-knob-val {
+  filter: drop-shadow(0 0 var(--sl-space-4) color-mix(in srgb, var(--sl-knob-tone) var(--sl-ring-mix), transparent));
+}
+
+.sl-cockpit-ring path:not([class]) {
+  fill: none;
+  stroke: var(--sl-text-subtle);
+  stroke-width: 0.2;
+}
+
+/* The figure, not the figure with its unit, stands on the centre of the dial: an empty first column as wide as the column of the unit */
+/* keeps the digits in the middle and hangs the unit at their right */
+.sl-cockpit-ring > span > b {
+  position: relative;
+  z-index: var(--sl-z-raised);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: baseline;
+  column-gap: var(--sl-space-1);
+  font-size: var(--sl-font-hero);
+  font-weight: var(--sl-weight-bold);
+  line-height: var(--sl-line-tight);
+  letter-spacing: var(--sl-track-tight);
+  color: var(--sl-knob-tone);
+}
+
+.sl-cockpit-ring > span > b::before {
+  content: "";
+}
+
+.sl-cockpit-ring > span > b > small {
+  justify-self: start;
+  font-size: var(--sl-font-small);
+  font-weight: var(--sl-weight-normal);
+  letter-spacing: var(--sl-track-wide);
+  color: var(--sl-text-muted);
+}
+
+.sl-cockpit-ring > span > span {
+  position: absolute;
+  inset-inline: 0;
+  bottom: var(--sl-space-2);
+  z-index: var(--sl-z-raised);
+  font-family: var(--sl-face-mono);
+  font-size: var(--sl-font-micro);
+  text-align: center;
+  text-transform: uppercase;
+  color: var(--sl-text-muted);
+}
+
+/* A lamp draws no rounded line at all - no border, outline or box-shadow: Firefox paints a line round a circle in four quarters and their seams */
+/* cross the lamp as a cross hair. The line, the halo, the glow and the pulse are radial gradients and the orbit an SVG circle, none of which has quarters */
+/* In order the lamp rests with a steady glow; while something waits a ring breaks out of it on the beat of the alerts and the mark shakes; */
+/* on a failure the rings come twice as often, the mark beats and the halo and the panel border throb in red. Motion itself is the alarm */
+.sl-cockpit-plate {
+  position: relative;
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: var(--sl-gauge-width);
+  aspect-ratio: 1;
+  border: 0;
+  border-radius: var(--sl-radius-circle);
+  background:
+    radial-gradient(
+      circle closest-side,
+      transparent calc(100% - var(--sl-space-3) - var(--sl-space-1)),
+      var(--sl-knob-tone) calc(100% - var(--sl-space-3) - 1px) calc(100% - var(--sl-space-3)),
+      transparent calc(100% - var(--sl-space-3) + 1px)
+    ),
+    radial-gradient(
+      circle closest-side,
+      transparent 60%,
+      color-mix(in srgb, var(--sl-knob-tone) var(--sl-ring-mix), transparent) calc(100% - var(--sl-space-3)),
+      transparent calc(100% - var(--sl-space-3))
+    ),
+    radial-gradient(circle at 50% 38%, var(--sl-bg-subtle), var(--sl-bg) 68%);
+  padding: var(--sl-space-8);
+  font: inherit;
+  color: var(--sl-knob-tone);
+  cursor: pointer;
+  appearance: none;
+}
+
+/* The halo outside the line: a layer of its own, so its strength is an opacity - dim at rest, full while the panel of the lamp is open */
+.sl-cockpit-plate::before,
+.sl-cockpit-plate::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.sl-cockpit-plate::before {
+  background: radial-gradient(
+    circle closest-side,
+    transparent calc(100% - var(--sl-space-3)),
+    color-mix(in srgb, var(--sl-knob-tone) var(--sl-ring-mix), transparent) calc(100% - var(--sl-space-3) + 1px) calc(100% - 1px),
+    transparent 100%
+  );
+  opacity: var(--sl-fade-muted);
+  transition: opacity var(--sl-time-base) var(--sl-ease-out);
+}
+
+.sl-cockpit-float.sl-is-open .sl-cockpit-plate::before {
+  opacity: 1;
+}
+
+/* The pulse ring: invisible at rest, so a still panel shows none */
+.sl-cockpit-plate::after {
+  background: radial-gradient(
+    circle closest-side,
+    transparent calc(100% - var(--sl-ring-width) - 1px),
+    currentColor calc(100% - var(--sl-ring-width)) calc(100% - 1px),
+    transparent 100%
+  );
+  opacity: 0;
+}
+
+/* The orbit runs in the middle of the halo: a dashed SVG circle, which both engines stroke in one piece and smooth alike */
+.sl-cockpit-orbit {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+  animation: sl-cockpit-spin calc(var(--sl-alert-dur) * 12) linear infinite;
+}
+
+.sl-cockpit-orbit circle {
+  fill: none;
+  stroke: color-mix(in srgb, currentColor var(--sl-ring-mix), transparent);
+  stroke-width: 1.5;
+  stroke-dasharray: 1.5 1.5;
+  vector-effect: non-scaling-stroke;
+}
+
+/* The mark of the lamp is the one-colour mark of the theme cut out of the tone of the state: the brand in colour stays with the logo of the header */
+.sl-cockpit-mark {
+  display: block;
+  width: calc(var(--sl-gauge-width) / 2);
+  aspect-ratio: 1;
+  background: currentColor;
+  mask: url(../../images/logos/slaed-logo-mark-solid-black.svg) center / contain no-repeat;
+}
+
+.sl-cockpit-ring:focus-visible {
+  outline: var(--sl-ring-width) solid var(--sl-ring-bg);
+  outline-offset: var(--sl-space-3);
+  border-radius: var(--sl-radius-circle);
+}
+
+.sl-cockpit-plate:focus-visible {
+  outline: var(--sl-ring-width) solid var(--sl-ring-bg);
+  outline-offset: var(--sl-space-2);
+}
+
+.sl-cockpit.sl-knob-warn .sl-cockpit-plate::after {
+  animation: sl-cockpit-ring var(--sl-alert-dur) var(--sl-ease-out) infinite;
+}
+
+.sl-cockpit.sl-knob-warn .sl-cockpit-mark {
+  animation: sl-alert-shake var(--sl-alert-dur) var(--sl-ease-in-out) infinite;
+}
+
+.sl-cockpit.sl-knob-danger {
+  border-color: var(--sl-danger);
+  animation: sl-cockpit-alarm calc(var(--sl-alert-dur) / 2) var(--sl-ease-in-out) infinite alternate;
+}
+
+.sl-cockpit.sl-knob-danger .sl-cockpit-plate::before {
+  animation: sl-cockpit-throb calc(var(--sl-alert-dur) / 2) var(--sl-ease-in-out) infinite alternate;
+}
+
+.sl-cockpit.sl-knob-danger .sl-cockpit-orbit {
+  animation-duration: calc(var(--sl-alert-dur) * 2);
+}
+
+.sl-cockpit.sl-knob-danger .sl-cockpit-plate::after {
+  animation: sl-cockpit-ring calc(var(--sl-alert-dur) / 2) var(--sl-ease-out) infinite;
+}
+
+.sl-cockpit.sl-knob-danger .sl-cockpit-mark {
+  animation: sl-alert-beat calc(var(--sl-alert-dur) / 2) var(--sl-ease-in-out) infinite;
+}
+
+@keyframes sl-cockpit-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* The ring leaves the lamp at full strength with its own glow and fades as it widens */
+@keyframes sl-cockpit-ring {
+  from {
+    opacity: 1;
+    transform: scale(0.94);
+    filter: drop-shadow(0 0 var(--sl-space-3) currentColor);
+  }
+
+  to {
+    opacity: 0;
+    transform: scale(1.3);
+    filter: drop-shadow(0 0 var(--sl-space-3) transparent);
+  }
+}
+
+/* The throb of a failure on the lamp: its red halo flares and falls back */
+@keyframes sl-cockpit-throb {
+  to {
+    opacity: 1;
+    filter: drop-shadow(0 0 var(--sl-space-3) currentColor);
+  }
+}
+
+/* The throb of a failure on the panel: the red halo of its frame swells and falls back */
+@keyframes sl-cockpit-alarm {
+  to {
+    box-shadow:
+      0 0 0 var(--sl-space-3) color-mix(in srgb, var(--sl-danger) var(--sl-ring-mix), transparent),
+      0 0 var(--sl-space-8) color-mix(in srgb, var(--sl-danger) var(--sl-ring-mix), transparent);
+  }
+}
+
+/* A narrow content column: the caption and the chip share the first line and the state the middle of the second; the lamp over the gauges two by two */
+@media (max-width: 768px) {
+  .sl-cockpit-top {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .sl-cockpit-top > .sl-cockpit-state {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    justify-self: center;
+  }
+
+  .sl-cockpit-gauges {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--sl-space-6);
+    max-width: calc(var(--sl-gauge-width) * 2 + var(--sl-space-6));
+    margin-inline: auto;
+  }
+
+  .sl-cockpit-float:has(> .sl-cockpit-plate) {
+    grid-column: 1 / -1;
+  }
+
+  .sl-cockpit-plate {
+    width: var(--sl-gauge-width);
+  }
 }
 
 .sl-system-label {
@@ -9319,7 +9695,8 @@ body[data-sl-pointer] .sl-admin-login-card:has(.sl-setup)::after {
   font-size: var(--sl-font-small);
 }
 
-.sl-wrapper .sl-toolbar li .sl-bell-tip a {
+.sl-wrapper .sl-toolbar li .sl-bell-tip a,
+.sl-cockpit .sl-bell-tip a {
   display: flex;
   align-items: center;
   gap: var(--sl-space-3);

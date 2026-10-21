@@ -105,19 +105,30 @@ function getAdminPanelBlocks(): string {
     return '';
 }
 
-# Render the panel home: the setup, self-check, update and version warnings, the administrator notice, and the module grids this administrator may open
+# Render the panel home: the update warning, the administrator notice, the cockpit of a super-administrator with its lamp drawn now and its rings by the poll, and the module grids
 function getAdminPanel(): void {
-    global $conf, $panel, $tpl, $adminvars;
+    global $conf, $panel, $tpl, $adminvars, $afile;
     setHead();
     $adminvars['section'] = _HOME;
     $adminvars['is_home'] = true;
-    $content = '';
-    $minver = '8.1.0';
-    $info = sprintf(_PHPSETUP, $minver);
-    if (file_exists(PUBLIC_DIR.'/setup.php')) $content .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _DELSETUP]);
-    $content .= getSelfCheckAlert().getUpdateAlert();
-    if (PHP_VERSION < $minver) $content .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $info]);
+    $content = getUpdateAlert();
     if ($conf['admininfo']) $content .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => $conf['admininfo']]);
+    if (isAdmin(true)) {
+        $sigs = getSystemSignals();
+        $tone = $sigs[0]['level'] ?? 'ok';
+        $every = 10;
+        $flag = static fn(string $level): array => ['is_ok' => $level === 'ok', 'is_warn' => $level === 'warn', 'is_danger' => $level === 'danger'];
+        $content .= $tpl->getHtmlPart('cockpit', [
+            'url' => 'index.php?go=5&op=getCockpitData&token='.getSiteToken(),
+            'monitor_url' => HOME_PATH.$afile.'.php?name=monitor',
+            'every' => $every,
+            'tone' => $tone,
+            'loud' => count(array_filter($sigs, static fn(array $v): bool => $v['level'] !== 'ok')),
+            'passed' => sprintf(_ADM_PASSED, count($sigs)),
+            'signals' => array_map(static fn(array $v): array => $v + $flag($v['level']), $sigs),
+            'live_html' => $tpl->getHtmlFrag('live-chip', ['live_every' => $every]),
+        ] + $flag($tone));
+    }
     if ($panel) {
         if (isAdmin(true)) {
             $items = [];

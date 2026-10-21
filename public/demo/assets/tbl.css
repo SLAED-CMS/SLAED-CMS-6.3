@@ -1,0 +1,126 @@
+/* Table series (tbl-NN): the stand desk and the ground every variant starts from. The tiles of today come from four
+   rules of the theme — a frame and a radius on every th and td, the browser's 2px border-spacing between them and the
+   muted fill of the head — so .tb-skin takes those away; a variant then draws its own lines, fills and rhythm. Above a
+   phone only: at 560px and below the theme turns rows into cards, and those stay as they are */
+.tb-desk {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sl-space-3) var(--sl-space-4);
+  padding: var(--sl-space-4) var(--sl-space-5);
+  background: var(--sl-bg-subtle);
+  border: 1px dashed var(--sl-border-strong);
+  border-radius: var(--sl-radius-2);
+}
+
+.tb-desk-cap {
+  font-size: var(--sl-font-micro);
+  font-weight: var(--sl-weight-bold);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--sl-text-muted);
+}
+
+.tb-desk [aria-pressed="true"] {
+  background: var(--sl-primary);
+  border-color: var(--sl-primary);
+  color: var(--sl-on-solid, #fff);
+}
+
+.tb-desk-hint {
+  font-size: var(--sl-font-small);
+  color: var(--sl-text-muted);
+}
+
+@media (width > 560px) {
+  .tb-skin .sl-table-list-sort {
+    border-collapse: collapse;
+    border-spacing: 0;
+  }
+
+  .tb-skin .sl-table-list-sort th,
+  .tb-skin .sl-table-list-sort td {
+    border: 0;
+    border-radius: 0;
+  }
+
+  .tb-skin .sl-table-list-sort th {
+    background: var(--sl-bg);
+  }
+
+  .tb-skin .sl-table-list-sort tr:hover {
+    background: none;
+  }
+
+  /* The columns get measures that hold their padding, the module one of its own; the comment, the reason of the list,
+     takes the rest instead of sharing it half and half with the module */
+  .tb-skin .sl-table-list-sort :is(th, td) {
+    box-sizing: border-box;
+  }
+
+  .tb-skin .sl-table-list-sort thead th.sl-col-id { width: 76px; }
+  .tb-skin .sl-table-list-sort thead th:nth-child(3) { width: 172px; max-width: none; }
+  .tb-skin .sl-table-list-sort thead th.sl-col-author { width: 136px; }
+  .tb-skin .sl-table-list-sort thead th.sl-col-date { width: 148px; }
+  .tb-skin .sl-table-list-sort td.sl-col-date { white-space: nowrap; }
+  .tb-skin .sl-table-list-sort thead th.sl-col-status { width: 76px; }
+  .tb-skin .sl-table-list-sort thead th.sl-col-actions { width: 72px; }
+  .tb-skin .sl-table-list-sort thead th.sl-col-check { width: 44px; }
+
+  /* The sort arrows wait for the hand instead of standing in every head cell */
+  .tb-skin .sl-table-list-sort .sl-sort::after {
+    opacity: 0;
+    transition: opacity var(--sl-time-fast) var(--sl-ease-out);
+  }
+
+  .tb-skin .sl-table-list-sort th.sl-sort:hover::after {
+    opacity: 0.6;
+  }
+
+  .tb-skin .sl-table-list-sort :is(.sl-sort-asc, .sl-sort-desc)::after {
+    opacity: 1;
+  }
+
+  /* The tip is an outline in a quiet tone, the colour comes with the hand */
+  .tb-skin .sl-table-list-sort .sl-tip {
+    color: var(--sl-text-subtle);
+  }
+
+  .tb-skin .sl-table-list-sort .sl-tip .bi-info-circle-fill::before {
+    content: "\f431";
+  }
+
+  .tb-skin .sl-table-list-sort tr:hover .sl-tip,
+  .tb-skin .sl-table-list-sort .sl-tip:focus-within {
+    color: var(--sl-primary);
+  }
+
+  /* The dial stands in the middle of "Опции". The theme pins it --sl-space-3 from the right edge, 16px off the centre
+     of the column, because the fan opens to the left of the toggle; the pin stays on the right, so the fan still opens
+     leftward and the toggle keeps its place, only its distance is half the cell less half the closed dial — the chip,
+     the dial's padding and its 1px border on each side */
+  .tb-skin .sl-table-list-sort td.sl-col-actions .sl-dial {
+    right: calc(50% - var(--sl-size-chip) / 2 - var(--sl-space-1) - 1px);
+  }
+
+  .tb-skin .sl-table-list-sort[data-sl-density="compact"] td.sl-col-actions .sl-dial {
+    right: calc(50% - var(--sl-size-icon-sm) / 2 - var(--sl-space-1) - 1px);
+  }
+
+  /* The dial toggle is a bare glyph until it is used; the open fan keeps the theme's solid pills */
+  .tb-skin .sl-table-list-sort .sl-dial-toggle {
+    color: var(--sl-text-muted);
+    background: transparent;
+  }
+
+  .tb-skin .sl-table-list-sort tr:hover .sl-dial-toggle {
+    color: var(--sl-text-strong);
+    background: var(--sl-bg-muted);
+  }
+
+  .tb-skin .sl-table-list-sort .sl-dial.sl-open .sl-dial-toggle,
+  .tb-skin .sl-table-list-sort .sl-dial:hover .sl-dial-toggle {
+    background: var(--sl-solid-bg);
+    color: var(--sl-solid-text);
+  }
+}

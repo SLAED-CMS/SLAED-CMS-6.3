@@ -907,19 +907,16 @@ function getMonitorRuntimeExtras(): array {
     ]);
 }
 
-# One short-lived store of the monitor per site: APCu when it is on, otherwise a JSON file of Cache, the request itself above both; $ttl 0 always reads fresh
+# One short-lived store of the monitor per site: a JSON file of Cache under the request itself, never APCu, which each php-cgi of a Windows pool keeps to itself; $ttl 0 reads fresh
 function getMonitorCache(string $key, int $ttl, callable $make): array {
     static $seen = [];
     if ($ttl <= 0) return $make();
     if (isset($seen[$key])) return $seen[$key];
-    $apcu = function_exists('apcu_enabled') && apcu_enabled();
-    $name = 'slaed_monitor_'.md5(BASE_DIR).'_'.$key;
-    $file = $apcu ? '' : Cache::getFile(['monitor', $key], 'json');
-    $data = $apcu ? apcu_fetch($name) : (Cache::isFresh($file, $ttl) ? json_decode(Cache::getBody($file), true) : null);
+    $file = Cache::getFile(['monitor', $key], 'json');
+    $data = Cache::isFresh($file, $ttl) ? json_decode(Cache::getBody($file), true) : null;
     if (!is_array($data)) {
         $data = $make();
-        if ($apcu) apcu_store($name, $data, $ttl);
-        else Cache::setBody($file, (string)json_encode($data));
+        Cache::setBody($file, (string)json_encode($data));
     }
     return $seen[$key] = $data;
 }

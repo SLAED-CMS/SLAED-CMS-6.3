@@ -1,0 +1,27 @@
+{% if is_bar %}<span id="sl-stats-kinds"></span><span class="sl-modal-bar-gap"></span>{{{ live_html }}}
+{% elseif is_wait %}<div id="sl-stats-body" hx-get="{{ url }}" hx-trigger="intersect once" hx-swap="innerHTML" hx-push-url="false" aria-busy="true"></div>
+{% elseif is_foot %}<a class="sl-but" href="{{ url }}" title="{{ _STATISTIC }}"><i class="bi bi-graph-up" aria-hidden="true"></i> {{ _STATISTIC }}</a>
+{% else %}<span class="sl-seg sl-stats-kinds" id="sl-stats-kinds" data-sl-knob="stats" role="group" aria-label="{{ _ADM_WHERE }}" hx-swap-oob="true">{% for item in kinds %}<button type="button" id="sl-stats-{{ item.key }}" class="sl-seg-cell{% if item.is_now %} sl-is-active{% endif %}" hx-get="{{ item.url }}" hx-target="#sl-stats-body" hx-swap="innerHTML" hx-push-url="false"{% if item.is_now %} hx-trigger="click, every {{ every }}s"{% endif %} title="{{ item.label }}" aria-pressed="{% if item.is_now %}true{% else %}false{% endif %}">{% if item.icon %}<i class="bi bi-{{ item.icon }}" aria-hidden="true"></i><span class="sl-visually-hidden">{{ item.label }}</span>{% else %}{{ item.label }}{% endif %}<b>{{ item.num }}</b></button>{% endfor %}<span class="sl-seg-knob" data-sl-knob-mark aria-hidden="true"></span></span>
+<div class="sl-stats-kpis">
+  <div><small>{{ _ADM_NOW }}</small><b>{{ all_num }}</b></div>
+  <div><small>{{ _ADM_PAGES }}</small><b>{{ pages_num }}</b></div>
+  <div><small>{{ _ADM_LANDS }}</small><b>{% if lands_num %}{{ lands_num }}{% else %}&mdash;{% endif %}</b></div>
+</div>
+<div class="sl-stats-shares" aria-hidden="true">{% for share in shares %}<i data-kind="{{ share.key }}" style="--sl-d-part: {{ share.pct }}%"></i>{% endfor %}</div>
+<div class="sl-stats-cols">
+  <section class="sl-stats-box" aria-labelledby="sl-stats-where">
+    <h3 class="sl-stats-cap" id="sl-stats-where"><i class="bi bi-people" aria-hidden="true"></i>{{ _ADM_WHERE }}<small>{{ rows_num }}</small></h3>
+    {% if rows %}<ul class="sl-stats-rows">{% for row in rows %}<li class="sl-stats-row" data-kind="{{ row.kind }}"><img src="{{ row.avatar }}" alt="" loading="lazy"><span><b>{% if row.name_url %}<a href="{{ row.name_url }}" target="_blank" rel="noopener noreferrer">{{ row.name }}</a>{% else %}{{ row.name }}{% endif %}</b>{% if row.href %}<a href="{{ row.href }}" title="{{ row.url }}" target="_blank" rel="noopener noreferrer">{{ row.url }}</a>{% elseif row.url %}<span title="{{ row.url }}">{{ row.url }}</span>{% endif %}</span><i class="bi bi-{{ row.icon }} sl-stats-kind" title="{{ row.kind_label }}" aria-hidden="true"></i><span class="sl-stats-where">{{{ row.flag_html }}}<a href="{{ row.ip_url }}" target="_blank" rel="noopener noreferrer" title="{{ _IP }}: {{ row.ip }}">{{ row.ip }}</a><small>{{ row.ago }}</small></span></li>{% endfor %}</ul>{% else %}<p class="sl-stats-more">{{ _ADM_NOBODY }}</p>{% endif %}
+  </section>
+  <div class="sl-stats-side">
+    <section class="sl-stats-box" aria-labelledby="sl-stats-pages">
+      <h3 class="sl-stats-cap" id="sl-stats-pages"><i class="bi bi-file-earmark-text" aria-hidden="true"></i>{{ _ADM_PAGES }}</h3>
+      {% if pages %}<ol class="sl-stats-top">{% for page in pages %}<li>{% if page.href %}<a href="{{ page.href }}" title="{{ page.url }}" target="_blank" rel="noopener noreferrer">{{ page.url }}</a>{% else %}<span title="{{ page.url }}">{{ page.url }}</span>{% endif %}<i style="--sl-d-part: {{ page.pct }}%" aria-hidden="true"></i><b>{{ page.num }}</b></li>{% endfor %}</ol>{% else %}<p class="sl-stats-more">{{ _ADM_NOBODY }}</p>{% endif %}
+    </section>
+    <section class="sl-stats-box" aria-labelledby="sl-stats-lands">
+      <h3 class="sl-stats-cap" id="sl-stats-lands"><i class="bi bi-globe2" aria-hidden="true"></i>{{ _ADM_LANDS }}</h3>
+      {% if lands %}<ol class="sl-stats-top">{% for land in lands %}<li><span>{{{ land.flag_html }}}{{ land.name }}</span><i style="--sl-d-part: {{ land.pct }}%" aria-hidden="true"></i><b>{{ land.num }}</b></li>{% endfor %}</ol>{% else %}<p class="sl-stats-more">{{ _ADM_NOGEO }}</p>{% endif %}
+    </section>
+  </div>
+</div>
+{% endif %}

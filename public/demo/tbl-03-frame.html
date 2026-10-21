@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="ru" data-theme="auto">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Рамка &middot; Таблицы панели — стенд SLAED CMS</title>
+  <link rel="stylesheet" href="../templates/admin/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../templates/admin/assets/css/base.css">
+  <link rel="stylesheet" href="../templates/admin/assets/css/theme.css">
+  <!-- The stand is served without Cache-Control; its sheets and scripts are stamped so an edit is seen at once -->
+  <script>document.write('<link rel="stylesheet" href="assets/demo.css?v=' + Date.now() + '"><link rel="stylesheet" href="assets/tbl.css?v=' + Date.now() + '">');</script>
+  <script src="../plugins/system/global-func.js"></script>
+  <script src="../plugins/system/slaed.js"></script>
+  <script src="../templates/admin/assets/js/admin-ui.js"></script>
+  <style>
+    /* Рамка: one rounded frame around the whole table instead of a frame around every cell; a pale head, hairlines inside */
+    @media (width > 560px) {
+      .tb-skin .sl-table-list-sort {
+        border-collapse: separate;
+        border: 1px solid var(--sl-border);
+        border-radius: var(--sl-radius-2);
+        box-shadow: 0 1px 2px rgb(0 0 0 / 0.04), 0 6px 18px rgb(0 0 0 / 0.04);
+      }
+
+      .tb-skin .sl-table-list-sort th {
+        height: 42px;
+        padding: 0 var(--sl-space-6) 0 var(--sl-space-6);
+        font-size: var(--sl-font-small);
+        color: var(--sl-text-muted);
+        background: var(--sl-bg-subtle);
+        border-bottom: 1px solid var(--sl-border);
+      }
+
+      .tb-skin .sl-table-list-sort th:first-child {
+        border-top-left-radius: calc(var(--sl-radius-2) - 1px);
+      }
+
+      .tb-skin .sl-table-list-sort th:last-child {
+        border-top-right-radius: calc(var(--sl-radius-2) - 1px);
+      }
+
+      .tb-skin .sl-table-list-sort td {
+        height: 44px;
+        padding: 0 var(--sl-space-6);
+        background: var(--sl-bg);
+        border-bottom: 1px solid var(--sl-border);
+      }
+
+      .tb-skin .sl-table-list-sort :is(th, td):is(.sl-col-status, .sl-col-actions, .sl-col-check) {
+        padding: 0 var(--sl-space-3);
+      }
+
+      .tb-skin .sl-table-list-sort tbody tr:last-child > td {
+        border-bottom: 0;
+      }
+
+      .tb-skin .sl-table-list-sort tbody tr:last-child > td:first-child {
+        border-bottom-left-radius: calc(var(--sl-radius-2) - 1px);
+      }
+
+      .tb-skin .sl-table-list-sort tbody tr:last-child > td:last-child {
+        border-bottom-right-radius: calc(var(--sl-radius-2) - 1px);
+      }
+
+      .tb-skin .sl-table-list-sort tbody tr:hover > td {
+        background: color-mix(in srgb, var(--sl-primary) 4%, var(--sl-bg));
+      }
+
+      .tb-skin .sl-table-list-sort tbody tr:has(> .sl-col-check input:checked) > td {
+        background: color-mix(in srgb, var(--sl-primary) 12%, var(--sl-bg));
+      }
+
+      .tb-skin .sl-table-list-sort td:is(.sl-col-id, .sl-col-module, .sl-col-date) {
+        color: var(--sl-text-muted);
+      }
+    }
+  </style>
+</head>
+<body>
+  <script>document.write('<script src="assets/tbl.js?v=' + Date.now() + '"><\/script>');</script>
+  <script>document.write('<script src="assets/demo.js?v=' + Date.now() + '"><\/script>');</script>
+</body>
+</html>

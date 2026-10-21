@@ -1,0 +1,13 @@
+<div class="sl-tip sl-float sl-live-chip{% if is_closed %} sl-is-closed{% endif %}" tabindex="0">
+  <span class="sl-live-icon">{% if is_closed %}<i class="bi bi-stop-circle-fill" aria-hidden="true"></i>{% else %}<i class="bi bi-activity sl-live-s-on" aria-hidden="true"></i><i class="bi bi-pause-circle-fill sl-live-s-paused" aria-hidden="true"></i>{% endif %}</span>
+  <div class="sl-float-panel sl-live-panel">
+    {% if is_closed %}{{ end_label }}{% else %}
+    <dl>
+      <dt>{{ _STATUS }}</dt><dd><span class="sl-live-s-on">{{ _LIVE }}</span><span class="sl-live-s-paused">{{ _PAUSED }}</span></dd>
+      <dt>{{ _INTERVAL }}</dt><dd>{{ live_every }} {{ _SEC }}</dd>
+      <dt>{{ _UPDATED }}</dt><dd><span data-sl-live-ago data-sl-live-unit="{{ _SEC }}">&mdash;</span></dd>
+    </dl>
+    <span class="sl-live-action"><button type="button" class="sl-chip sl-chip-warn sl-live-act" data-sl-live-toggle><span class="sl-live-s-on"><i class="bi bi-pause-fill" aria-hidden="true"></i> {{ _PAUSE }}</span><span class="sl-live-s-paused"><i class="bi bi-play-fill" aria-hidden="true"></i> {{ _RESUME }}</span></button></span>
+    {% endif %}
+  </div>
+</div>

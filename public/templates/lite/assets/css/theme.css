@@ -5064,9 +5064,10 @@ dialog.sl-editor-emoji-panel {
 
 .sl-block-pm li { margin: 0; }
 
+/* The fourth track holds the flag of an owner's link in the block "Administration"; a row without one leaves it empty */
 .sl-block-pm a {
   display: grid;
-  grid-template-columns: 20px minmax(0, 1fr) auto;
+  grid-template-columns: var(--sl-space-7) minmax(0, 1fr) auto auto;
   align-items: center;
   box-sizing: border-box;
   height: var(--sl-item-height);
@@ -5083,6 +5084,13 @@ dialog.sl-editor-emoji-panel {
 }
 
 .sl-block-pm a > .bi:first-child { color: var(--sl-primary); }
+
+.sl-block-pm a > span:nth-child(2) {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .sl-block-pm a > .bi:last-child { font-size: var(--sl-font-micro); }
 
 .sl-pm-new {
@@ -5188,7 +5196,8 @@ dialog.sl-editor-emoji-panel {
   height: var(--sl-donut-height);
   border-radius: var(--sl-radius-circle);
   background: conic-gradient(
-    var(--sl-success) 0 var(--sl-d-members),
+    var(--sl-accent) 0 var(--sl-d-admins, 0%),
+    var(--sl-success) var(--sl-d-admins, 0%) var(--sl-d-members),
     var(--sl-warning) var(--sl-d-members) var(--sl-d-bots),
     var(--sl-primary) var(--sl-d-bots) 100%
   );
@@ -5214,6 +5223,7 @@ dialog.sl-editor-emoji-panel {
   font-size: var(--sl-font-body);
 }
 
+.sl-session-line[data-sl-audience="admins"] > .bi { color: var(--sl-accent); }
 .sl-session-line[data-sl-audience="users"] > .bi { color: var(--sl-success); }
 .sl-session-line[data-sl-audience="bots"] > .bi { color: var(--sl-warning); }
 .sl-session-line[data-sl-audience="guests"] > .bi { color: var(--sl-primary); }
@@ -5223,6 +5233,9 @@ dialog.sl-editor-emoji-panel {
   color: var(--sl-text);
   font-weight: var(--sl-weight-semibold);
 }
+
+/* A zero stays readable and steps back in tone, so the figures that count stand out */
+.sl-session-summary .sl-zero { color: var(--sl-text-muted); }
 
 .sl-user-card .sl-session-action {
   display: flex;
@@ -9151,8 +9164,10 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   z-index: var(--sl-z-overlay);
 }
 
+/* The live chip opens its panel on a press, so it takes the pointer and not the help mark of the tip */
 .sl-live-chip {
   margin-right: 0;
+  cursor: pointer;
 }
 
 .sl-live-icon {

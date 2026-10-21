@@ -1,0 +1,53 @@
+/* The stage of the series "pick all pages", the same in all eight faces: the desk that reaches every state, the rows
+   that leave while the sweep runs and the wrapper a face may lay something over the table head in. A face carries
+   only its own offer, under the names v-* in its own <style> */
+.pk-desk {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sl-space-2);
+}
+
+.pk-desk-cap {
+  margin-right: var(--sl-space-3);
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-small);
+}
+
+.pk-desk .sl-but[aria-pressed="true"] {
+  border-color: var(--sl-primary);
+  color: var(--sl-primary);
+  box-shadow: inset 0 0 0 1px var(--sl-primary);
+}
+
+.pk-desk-hint {
+  flex-basis: 100%;
+  margin: var(--sl-space-2) 0 0;
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-small);
+}
+
+.pk-desk-hint kbd {
+  padding: 0 var(--sl-space-2);
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-1);
+  font-family: var(--sl-face-mono);
+  font-size: var(--sl-font-micro);
+}
+
+.pk-table {
+  position: relative;
+}
+
+/* The rows of a running sweep leave at once, as on the live list; on the stand they stay faint so the face can be judged */
+[data-pk] tbody tr {
+  transition: opacity var(--sl-time-base) var(--sl-ease-out);
+}
+
+[data-pk]:is([data-pk-state="run"], [data-pk-state="hold"]) tbody tr {
+  opacity: 0.35;
+}
+
+[data-pk][data-pk-state="done"] tbody tr {
+  opacity: 1;
+}

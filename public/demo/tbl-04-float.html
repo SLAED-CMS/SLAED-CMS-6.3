@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="ru" data-theme="auto">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Парящие строки &middot; Таблицы панели — стенд SLAED CMS</title>
+  <link rel="stylesheet" href="../templates/admin/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../templates/admin/assets/css/base.css">
+  <link rel="stylesheet" href="../templates/admin/assets/css/theme.css">
+  <!-- The stand is served without Cache-Control; its sheets and scripts are stamped so an edit is seen at once -->
+  <script>document.write('<link rel="stylesheet" href="assets/demo.css?v=' + Date.now() + '"><link rel="stylesheet" href="assets/tbl.css?v=' + Date.now() + '">');</script>
+  <script src="../plugins/system/global-func.js"></script>
+  <script src="../plugins/system/slaed.js"></script>
+  <script src="../templates/admin/assets/js/admin-ui.js"></script>
+  <style>
+    /* Парящие строки: the rows stand apart by six pixels, each a soft rounded strip without a single line; the head is bare text */
+    @media (width > 560px) {
+      .tb-skin .sl-table-list-sort {
+        border-collapse: separate;
+        border-spacing: 0 6px;
+        margin-top: -6px;
+      }
+
+      .tb-skin .sl-table-list-sort th {
+        height: 34px;
+        padding: 0 var(--sl-space-6) 0 var(--sl-space-6);
+        font-size: var(--sl-font-micro);
+        color: var(--sl-text-subtle);
+      }
+
+      .tb-skin .sl-table-list-sort td {
+        height: 46px;
+        padding: 0 var(--sl-space-6);
+        background: light-dark(#f5f8fb, #172033);
+        transition: background-color var(--sl-time-fast) var(--sl-ease-out), box-shadow var(--sl-time-fast) var(--sl-ease-out);
+      }
+
+      .tb-skin .sl-table-list-sort :is(th, td):is(.sl-col-status, .sl-col-actions, .sl-col-check) {
+        padding: 0 var(--sl-space-3);
+      }
+
+      .tb-skin .sl-table-list-sort tbody tr > td:first-child {
+        border-radius: var(--sl-radius-2) 0 0 var(--sl-radius-2);
+      }
+
+      .tb-skin .sl-table-list-sort tbody tr > td:last-child {
+        border-radius: 0 var(--sl-radius-2) var(--sl-radius-2) 0;
+      }
+
+      .tb-skin .sl-table-list-sort tbody tr:hover > td {
+        background: light-dark(#ffffff, #1d2840);
+        box-shadow: 0 1px 0 var(--sl-border), 0 -1px 0 var(--sl-border);
+      }
+
+      .tb-skin .sl-table-list-sort tbody tr:hover > td:first-child {
+        box-shadow: inset 3px 0 0 var(--sl-primary), 0 1px 0 var(--sl-border), 0 -1px 0 var(--sl-border);
+      }
+
+      .tb-skin .sl-table-list-sort tbody tr:has(> .sl-col-check input:checked) > td {
+        background: var(--sl-tint);
+      }
+
+      .tb-skin .sl-table-list-sort td:is(.sl-col-id, .sl-col-date) {
+        color: var(--sl-text-muted);
+      }
+    }
+  </style>
+</head>
+<body>
+  <script>document.write('<script src="assets/tbl.js?v=' + Date.now() + '"><\/script>');</script>
+  <script>document.write('<script src="assets/demo.js?v=' + Date.now() + '"><\/script>');</script>
+</body>
+</html>

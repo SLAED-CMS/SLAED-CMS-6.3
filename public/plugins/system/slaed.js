@@ -1508,6 +1508,15 @@
         if (event.detail && event.detail.target) setKnobKeep(event.detail.target);
     });
 
+    // A rail an answer swaps out of band, as the filter of the watch window, hands its place over and travels like any other
+    document.addEventListener('htmx:oobBeforeSwap', function (event) {
+        if (event.detail && event.detail.target) setKnobKeep(event.detail.target);
+    });
+
+    document.addEventListener('htmx:oobAfterSwap', function () {
+        setKnobs(document);
+    });
+
     // A data-sl-sticky block wears data-sl-stuck once its mark passes its top line, the band reaching down so no jump skips it; unsticking closes the lens
     function setStickyBars(node) {
         var root = node && node.querySelectorAll ? node : document;
@@ -2542,12 +2551,24 @@
             if (event.detail.triggeringEvent || !elt || !/\bevery\b/.test(elt.getAttribute('hx-trigger') || '')) return;
             event.detail.headers['X-SL-Poll'] = '1';
         });
-        // Paused live boxes swallow their htmx polls; direct clicks keep working
+        // Paused live boxes swallow their htmx polls, and a window that is shut or out of sight swallows its timed polls; direct clicks keep working
         document.addEventListener('htmx:beforeRequest', function (event) {
             var trig = event.detail && event.detail.requestConfig ? event.detail.requestConfig.triggeringEvent : null;
             if (trig && trig.type === 'click') return;
             var elt = event.detail ? event.detail.elt : null;
+            var win = elt && elt.closest ? elt.closest('dialog') : null;
+            var poll = !trig && !!win && /\bevery\b/.test(elt.getAttribute('hx-trigger') || '');
             if (elt && elt.closest && elt.closest('[data-sl-live-paused]')) event.preventDefault();
+            else if (poll && (!win.open || document.hidden)) event.preventDefault();
+        });
+        // A target that carries aria-busy tells the reader while its own request runs, as the summary of the admin block does
+        document.addEventListener('htmx:beforeRequest', function (event) {
+            var box = event.detail ? event.detail.target : null;
+            if (!event.defaultPrevented && box && box.hasAttribute && box.hasAttribute('aria-busy')) box.setAttribute('aria-busy', 'true');
+        });
+        document.addEventListener('htmx:afterRequest', function (event) {
+            var box = event.detail ? event.detail.target : null;
+            if (box && box.hasAttribute && box.hasAttribute('aria-busy')) box.setAttribute('aria-busy', 'false');
         });
         window.setInterval(function () {
             if (document.hidden || isMotionStill()) return;

@@ -1,0 +1,10 @@
+{% if summary_html %}<div id="repsainfo" aria-busy="false">{{{ summary_html }}}</div>{% endif %}
+<div class="sl-adm-keys">
+  <a href="{{ home_url }}" title="{{ _ADMINMENU }}" aria-label="{{ _ADMINMENU }}"><i class="bi bi-speedometer2" aria-hidden="true"></i></a>
+  {% if stats_id %}<button type="button" class="sl-adm-stat" data-sl-open="{{ stats_id }}" title="{{ _WHO }}" aria-label="{{ _WHO }}"><i class="bi bi-activity" aria-hidden="true"></i></button>{% endif %}
+  {% if fresh_query %}<button type="button" class="sl-adm-fresh" hx-get="{{ root }}index.php?{{ fresh_query }}" hx-target="#repsainfo" hx-swap="innerHTML" hx-push-url="false" title="{{ _UPDATE }}" aria-label="{{ _UPDATE }}"><i class="bi bi-arrow-repeat" aria-hidden="true"></i></button>{% endif %}
+  {% if site_url %}<a class="sl-adm-site" href="{{ site_url }}" target="_blank" rel="noopener noreferrer" title="{{ _SITE }}" aria-label="{{ _SITE }}"><i class="bi bi-globe2" aria-hidden="true"></i></a>{% endif %}
+  {% if links %}<button type="button" class="sl-adm-links{% if is_dead %} sl-adm-dead{% endif %}" data-sl-toggle-control="sl-adm-own" data-sl-toggle-effect="slide" data-sl-toggle-duration="500" title="{{ _ADM_LINKS }}: {{ links_num }}" aria-label="{{ _ADM_LINKS }}: {{ links_num }}"><i class="bi bi-link-45deg" aria-hidden="true"></i><b class="sl-adm-n">{{ links_num }}</b></button>{% endif %}
+  <a class="sl-adm-out" href="{{ logout_url }}" title="{{ _LOGOUT }}" aria-label="{{ _LOGOUT }}"><i class="bi bi-box-arrow-right" aria-hidden="true"></i></a>
+</div>
+{% if links %}<div id="sl-adm-own" class="sl-adm-own" data-sl-toggle="sl-adm-own" data-sl-toggle-default="open"><ul class="sl-block-pm">{% for link in links %}<li><a href="{{ link.href }}" title="{{ link.title }}" target="_blank" rel="noopener noreferrer"><i class="bi bi-{{ link.icon }}" aria-hidden="true"></i><span>{{ link.label }}</span>{% if link.dead_title %}<span class="sl-adm-flag" title="{{ link.dead_title }}"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i>{{ _ADM_NOFILE }}</span>{% endif %}<i class="bi bi-chevron-right" aria-hidden="true"></i></a></li>{% endfor %}</ul></div>{% endif %}

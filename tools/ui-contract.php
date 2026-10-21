@@ -23,7 +23,11 @@ return [
         'admin' => [
             'root' => 'public/templates/admin',
             'api' => 'public/templates/admin/assets/css/base.css',
-            'css' => ['public/templates/admin/assets/css/base.css', 'public/templates/admin/assets/css/theme.css', 'public/templates/admin/assets/editors/toastui/skin.css'],
+            # The file dock.css dresses the block "Administration", the floating menu and the watch window, which the site theme carries a file of its own for
+            'css' => [
+                'public/templates/admin/assets/css/base.css', 'public/templates/admin/assets/css/dock.css',
+                'public/templates/admin/assets/css/theme.css', 'public/templates/admin/assets/editors/toastui/skin.css',
+            ],
             'kind' => 'admin',
         ],
         'lite' => [
@@ -32,7 +36,7 @@ return [
             # The file presentation.css dresses the one page of the presentation module and lands between base and theme, because the runtime bundles the directory by name
             # The audit walks a list instead, so the file is named here or it is bundled and never checked
             'css' => [
-                'public/templates/lite/assets/css/base.css', 'public/templates/lite/assets/css/presentation.css',
+                'public/templates/lite/assets/css/base.css', 'public/templates/lite/assets/css/dock.css', 'public/templates/lite/assets/css/presentation.css',
                 'public/templates/lite/assets/css/theme.css', 'public/templates/lite/assets/editors/toastui/skin.css',
             ],
             'kind' => 'frontend',
@@ -200,11 +204,11 @@ return [
     # The eleven `col-*` entries are the column widths of a fixed admin list table: the track list of `table-layout: fixed`
     # CSS spells that track list as one width per cell instead of one `grid-template-columns`, and each is a figure an author retunes
     'components' => [
-        'alert', 'arrow', 'aside', 'ava', 'avatar', 'badge', 'band', 'bar', 'beam', 'brand', 'btn', 'btn-mini', 'bullet', 'cab-act', 'cab-msg', 'cab-ring',
+        'adm', 'alert', 'arrow', 'aside', 'ava', 'avatar', 'badge', 'band', 'bar', 'beam', 'brand', 'btn', 'btn-mini', 'bullet', 'cab-act', 'cab-msg', 'cab-ring',
         'calc', 'capsule', 'card', 'changelog', 'changelog-body', 'changelog-date',
         'changelog-files', 'changelog-stat', 'check', 'check-list', 'check-tick', 'chip', 'chip-tint', 'code', 'col-actions', 'col-amount', 'col-author',
         'col-check', 'col-count', 'col-date', 'col-form', 'col-id', 'col-ip', 'col-lang', 'col-last', 'col-module', 'col-num', 'col-sent',
-        'col-status', 'com', 'com-arrow', 'com-ava', 'com-item', 'count', 'crumb', 'crumb-bar', 'demo', 'dial', 'donut', 'drift', 'drift-dot',
+        'col-status', 'com', 'com-arrow', 'com-ava', 'com-item', 'count', 'crumb', 'crumb-bar', 'demo', 'dial', 'dock', 'donut', 'drift', 'drift-dot',
         'drop', 'edge', 'editor', 'editor-mode', 'editor-tab', 'emoji', 'emoji-full', 'emoji-grid', 'entry', 'f-title', 'fav', 'feedback',
         'field', 'flash', 'flash-bar', 'fm-as',
         'fm-bar', 'fm-body', 'fm-busy', 'fm-drop', 'fm-edit', 'fm-empty', 'fm-field', 'fm-filter', 'fm-kind', 'fm-mode',
@@ -219,7 +223,7 @@ return [
         'popover', 'pres', 'pres-panel', 'pres-ground', 'pres-inset', 'pres-core', 'pres-frame', 'pres-muted', 'pres-link', 'pres-good', 'pres-warn',
         'preview', 'profile-ava', 'profile-dot', 'progress', 'proof', 'pulse', 'qr', 'quote', 'radio',
         'rail', 'rank', 'ratings', 'ring', 'row', 'scroll', 'search', 'search-filter', 'search-order', 'search-sort', 'seg', 'seg-knob', 'select', 'set', 'sep',
-        'session', 'setup', 'setup-seal', 'shot', 'shot-side', 'site', 'site-img', 'skel', 'statx',
+        'session', 'setup', 'setup-seal', 'shot', 'shot-side', 'site', 'site-img', 'skel', 'stats', 'statx',
         'skel-row', 'skel-tile', 'slide', 'slide-cont', 'solid', 'solid-bad', 'solid-good', 'solid-link', 'solid-warn',
         'sort', 'spark', 'spin', 'sublist', 'sublist-two', 'switch', 'switch-knob',
         't-icon', 'table', 'tab', 'thumb', 'tile', 'toast',
@@ -229,7 +233,8 @@ return [
     # Written from outside CSS by a template or a script, read only by CSS. Never API
     'data' => [
         '--sl-d-arrow' => 'popover arrow offset, plugins/system/slaed.js',
-        '--sl-d-bots' => 'session donut bot share, templates/lite/partials/session-summary.html',
+        '--sl-d-admins' => 'session donut end of the administration share, templates/*/partials/session-summary.html',
+        '--sl-d-bots' => 'session donut end of the bot share, templates/*/partials/session-summary.html',
         '--sl-d-count' => 'speed dial item count, plugins/system/filemanager.js',
         '--sl-d-depth' => 'nesting depth of a comment or of a check list row, templates/lite/fragments/comment.html and templates/*/fragments/check-list.html',
         '--sl-d-duration' => 'profile feed scroll duration, plugins/system/slaed.js',
@@ -247,13 +252,13 @@ return [
         '--sl-d-pill-y' => 'editor capsule vertical offset the grip moved it by, plugins/system/editor.js',
         '--sl-d-rank' => 'colour of the lit marks of a group rank, templates/*/fragments/rank.html',
         '--sl-d-view-height' => 'height of what the editor preview shows, measured in its sandboxed frame, plugins/system/editor.js',
-        '--sl-d-members' => 'session donut member share, templates/lite/partials/session-summary.html',
+        '--sl-d-members' => 'session donut end of the member share, templates/*/partials/session-summary.html',
         '--sl-d-meter' => 'profile completeness percentage, templates/lite/partials/account-settings.html and plugins/system/slaed.js',
         '--sl-d-order' => 'place of a row of a canon list in the cascade it enters by, templates/admin/assets/js/admin-ui.js',
         '--sl-d-at' => 'settings rail mark index, templates/lite/partials/account-settings.html',
         '--sl-d-of' => 'settings rail mark count less one, templates/lite/partials/account-settings.html',
         '--sl-d-part' => 'share of a measured figure as a percentage, templates/lite/fragments/presentation-stat.html, partials/presentation-stats.html'
-            .' and partials/presentation-runtime.html',
+            .' and partials/presentation-runtime.html, and the shares of the watch window, templates/*/partials/session-stats.html',
         '--sl-d-gate-y' => 'height the request guard gate patrols at inside its scene, plugins/presentation/presentation.js',
         '--sl-d-pointer-x' => 'pointer viewport horizontal position, plugins/system/slaed.js',
         '--sl-d-pointer-y' => 'pointer viewport vertical position, plugins/system/slaed.js',
@@ -289,6 +294,9 @@ return [
         'public/templates/lite/partials/account-settings.html',
         'public/templates/lite/partials/block-user-info.html',
         'public/templates/lite/partials/session-summary.html',
+        'public/templates/admin/partials/session-summary.html',
+        'public/templates/lite/partials/session-stats.html',
+        'public/templates/admin/partials/session-stats.html',
         'public/templates/lite/partials/presentation-hero.html',
         'public/templates/lite/partials/presentation-stats.html',
         'public/templates/lite/fragments/presentation-ring.html',
@@ -393,10 +401,9 @@ return [
             .'.sl-fm-win .sl-fm-rail-item small, .sl-fm-win .sl-fm-rows-head span:nth-child(4), '
             .'.sl-fm-win .sl-fm-row span:nth-child(4), .sl-fm-win .sl-fm-rows-head span:nth-child(5), '
             .'.sl-fm-win .sl-fm-row span:nth-child(5)',
-        # Three hover states and one static note that all fade to the same step
-        # The note is not a hover, so merging would put a resting style inside a list of pointer states and hide it from whoever edits either one
+        # Three hover states that fade to the same step, each beside the component it belongs to
         '.sl-block-sidebar h3:hover, .sl-but:hover, .sl-but-blue:hover, .sl-but-red:hover, .sl-but-green:hover, .sl-but-foot:hover, .sl-but-back:hover, '
-            .'.sl-dashboard-panel-head:hover, .sl-session-note',
+            .'.sl-dashboard-panel-head:hover',
         # A body that is one declaration reaching one ladder step is need and not repetition, the same way `display: flex` under 122 flex containers is
         # These three met when lite's type sizes landed on the ladder: an element default beside three small labels, three places at the smallest step, four glyphs at one icon step
         # Merging any of them would file an element reset or one component's glyph inside a list that names nothing
@@ -457,14 +464,8 @@ return [
             .'.toastui-editor-md-table, .toastui-editor-md-block-quote',
         # The item of a tab strip beside the definition list inside a hint: two components that both open as a block with no margin and share nothing else
         '.sl-tabs-item, .sl-tip dl',
-        # The link list of an admin block beside the count list of a sidebar block: two lists of a sidebar that happen to take the same track and gap
-        '.sl-admin-block-links, .sl-block-sidebar-count-list',
-        # The same pair one level down, on the link each list holds
-        '.sl-admin-block-link a, .sl-block-sidebar-count-label a',
         # The control of a live chip beside the thumbnail of a file row: two buttons stripped of their browser chrome, which is need and not one component
         '.sl-live-act, button.sl-fm-thumb',
-        # The wordmark of the login card beside the flag of a session line: two boxes that centre one child, in two screens that never meet
-        '.sl-admin-login-card .sl-admin-brand, .sl-session-icon .sl-geo-flag',
         # The primary action of the file manager beside a pressed filter of its bar: one is a rank, the other a state, and they part the moment either stops being solid
         '.sl-but-mini.sl-fm-main, .sl-fm-bar .sl-but-mini[aria-pressed="true"]',
         # The open node of the file tree beside the picture kind of a thumbnail: a place the window is standing in and a kind of file, a coincidence of one tint
@@ -656,13 +657,6 @@ return [
         '.sl-value-row' =>
             'both read-only rows put the caption left and the value right; the panel builds the pair out of a flex box whose caption carries the width, '
             .'the site out of two grid tracks. Both collapse to one track on a narrow screen, and the panel row did not until it was given a name of its own',
-        '.sl-session-line, .sl-session-row' =>
-            'the site lays the session line out as a grid of two tracks so the count keeps its column; the panel lets it flow, because the sidebar it '
-            .'sits in is already narrow enough to hold the pair',
-        '.sl-session-icon' =>
-            'the panel tints the session glyph and holds its width; the site lets it take the line\'s own colour',
-        '.sl-session-name, .sl-session-module' =>
-            'the panel lets a long module name shrink to nothing rather than push the count off the row; the site breaks it inside the word',
         '.sl-session-action' =>
             'the site gives the action its own vertical room inside the grid cell; in the panel the row already has it',
         '.sl-changelog-filter-actions' =>
@@ -724,10 +718,6 @@ return [
     # Unifying without reconciling the key sets first silently drops data or changes what is escaped
     # Every entry here is therefore the answer to a call-site audit and not an excuse for one
     'templates' => [
-        'fragments/admin-block-links.html' =>
-            'one producer hands both themes the same two links and the editable block under them. The panel draws them as two rows of its sidebar block and rules '
-            .'the editable text off with a line; the site draws them as the logged-in half of its login list, which is the same ul the header already fills when '
-            .'nobody is logged in, so the two cannot be one element',
         'fragments/alert.html' =>
             'the fading flash notice is the panel alone: is_flash with alert_attr are what place it, fade it and start its countdown, and the site shows the same '
             .'one-time notice of getFlashHtml() as a plain notice at the top of its content. Under that the panel prints the text as handed and the site wraps it in '
@@ -817,10 +807,6 @@ return [
         'partials/preview.html' =>
             'the panel draws its preview inside the sl-box card every panel block sits in, and the site has no such card at all - sl-box appears nowhere in its '
             .'CSS. Everything inside the wrapper is already byte-identical, so this entry is the wrapper and nothing else',
-        'partials/session-summary.html' =>
-            'two readings of the same numbers: the panel lists who is online and lets a moderator open each audience, so it needs a row list, a toggle id and a '
-            .'label per audience; the site draws one donut of the three shares and refreshes it on a timer. The panel has no producer for the percentages and the '
-            .'site none for the row lists',
         'partials/voting-widget.html' =>
             'the site widget is live - it re-fetches itself on a timer, closes itself when the poll ends and picks its heading rank from where it stands; the panel '
             .'widget is a still section with a fixed h4. The one producer hands both themes poll_id and token and the panel file draws neither, which is safe only '

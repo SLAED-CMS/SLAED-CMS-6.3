@@ -173,8 +173,8 @@ Role:
   that the release does not ship (`docs/NODE.md`, "The 6.3 update").
 - When the run is over, the closing stop deletes `setup.php`. This is the only
   place it deletes itself. A file the server would not let go, or one that stays on
-  an installed site, leaves the `_DELSETUP` warning on the closing stop and on the
-  dashboard of the panel.
+  an installed site, leaves the `_DELSETUP` warning on the closing stop and turns the
+  lamp of the cockpit on the home of the panel yellow (signal `setup`).
 
 Boot:
 - the installer is `public/setup.php`; every request defines `SETUP_FILE`, `BASE_DIR`, `PUBLIC_DIR`, `CONFIG_DIR`, `BACKUP_DIR` and
@@ -916,9 +916,10 @@ address for each marker through `getSchedulerFetch()` and judges by the body
 alone, since a site can answer an error page with 200 or a file with 404:
 `open` when the body carries the marker, `closed` when it does not, `unknown`
 when no request could run. The system job `selfcheck` runs it every hour and
-keeps the verdicts in its scheduler state; `getSelfCheckAlert()` warns on the
-home of the panel about an `open` or `unknown` root and about no verdict within
-a day, and the security section adds the all-clear. A Node type is switched on
+keeps the verdicts in its scheduler state; `getSelfCheckState()` reads them, the
+lamp of the cockpit on the home of the panel turns red on an `open` root and yellow
+on an `unknown` one or on no verdict within a day (signal `dirs`), and
+`getSelfCheckAlert()` prints the same verdict, or the all-clear, in the security section. A Node type is switched on
 only while the upload root is `closed` (`NodeService::checkTypeGuard()`).
 
 **Journals.** No secret reaches `storage/logs/`. `Logger` masks the value of

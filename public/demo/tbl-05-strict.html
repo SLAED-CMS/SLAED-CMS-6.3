@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="ru" data-theme="auto">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Строгая &middot; Таблицы панели — стенд SLAED CMS</title>
+  <link rel="stylesheet" href="../templates/admin/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../templates/admin/assets/css/base.css">
+  <link rel="stylesheet" href="../templates/admin/assets/css/theme.css">
+  <!-- The stand is served without Cache-Control; its sheets and scripts are stamped so an edit is seen at once -->
+  <script>document.write('<link rel="stylesheet" href="assets/demo.css?v=' + Date.now() + '"><link rel="stylesheet" href="assets/tbl.css?v=' + Date.now() + '">');</script>
+  <script src="../plugins/system/global-func.js"></script>
+  <script src="../plugins/system/slaed.js"></script>
+  <script src="../templates/admin/assets/js/admin-ui.js"></script>
+  <style>
+    /* Строгая: a dense data table — 34px rows, a small capital head, the number in mono, the status as a dot; the tip, the dial and the free ticks come with the hand */
+    @media (width > 560px) {
+      .tb-skin .sl-table-list-sort th {
+        height: 34px;
+        padding: 0 var(--sl-space-6) 0 var(--sl-space-4);
+        font-size: 11px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--sl-text-subtle);
+        border-bottom: 1px solid var(--sl-border);
+      }
+
+      .tb-skin .sl-table-list-sort td {
+        height: 34px;
+        padding: 0 var(--sl-space-4);
+        font-size: var(--sl-font-small);
+        border-bottom: 1px solid color-mix(in srgb, var(--sl-border) 70%, transparent);
+      }
+
+      .tb-skin .sl-table-list-sort :is(th, td):is(.sl-col-status, .sl-col-actions, .sl-col-check) {
+        padding: 0 var(--sl-space-2);
+      }
+
+      .tb-skin .sl-table-list-sort tbody tr:last-child > td {
+        border-bottom: 0;
+      }
+
+      .tb-skin .sl-table-list-sort tbody tr:hover > td {
+        background: var(--sl-bg-subtle);
+      }
+
+      .tb-skin .sl-table-list-sort tbody tr:has(> .sl-col-check input:checked) > td {
+        background: var(--sl-tint);
+      }
+
+      .tb-skin .sl-table-list-sort td.sl-col-id {
+        font-family: var(--sl-face-mono, monospace);
+        font-size: var(--sl-font-micro);
+        color: var(--sl-text-subtle);
+      }
+
+      .tb-skin .sl-table-list-sort td:is(.sl-col-module, .sl-col-date) {
+        color: var(--sl-text-muted);
+      }
+
+      .tb-skin .sl-table-list-sort .sl-status-active::before,
+      .tb-skin .sl-table-list-sort .sl-status-inactive::before {
+        content: "";
+        width: 8px;
+        height: 8px;
+        border-radius: var(--sl-radius-circle);
+        vertical-align: middle;
+      }
+
+      .tb-skin .sl-table-list-sort .sl-status-active::before {
+        background: var(--sl-success);
+      }
+
+      .tb-skin .sl-table-list-sort .sl-status-inactive::before {
+        box-shadow: inset 0 0 0 2px var(--sl-danger);
+      }
+
+      .tb-skin .sl-table-list-sort :is(.sl-tip, .sl-dial, td.sl-col-check input:not(:checked)) {
+        opacity: 0.25;
+        transition: opacity var(--sl-time-fast) var(--sl-ease-out);
+      }
+
+      .tb-skin .sl-table-list-sort tr:is(:hover, :focus-within) :is(.sl-tip, .sl-dial, td.sl-col-check input),
+      .tb-skin .sl-table-list-sort .sl-dial.sl-open {
+        opacity: 1;
+      }
+    }
+  </style>
+</head>
+<body>
+  <script>document.write('<script src="assets/tbl.js?v=' + Date.now() + '"><\/script>');</script>
+  <script>document.write('<script src="assets/demo.js?v=' + Date.now() + '"><\/script>');</script>
+</body>
+</html>

@@ -1,0 +1,139 @@
+/* The series "action in an alert": every alert of the panel that carries a button, drawn from one markup. Today the
+   button is glued to the text of the alert (`text . ' ' . getTplPostButton()`), so it wraps under a long sentence at the
+   left, wears the bevel of a form button and has no place of its own. The contract the eight faces share gives it one:
+
+     <div class="sl-alert ...">
+       <div class="sl-alert-body">text</div>
+       <div class="ac-acts">                      - later sl-alert-acts, filled from acts_html of the fragment alert
+         <form class="sl-post-button"><button class="ac-act">...</button></form>
+         <button class="ac-act ac-act-quiet">...</button>   - a second, quiet action
+       </div>
+       <span class="ac-meter" style="--ac-run: .38"></span>  - progress of a running job, optional
+     </div>
+
+   The text takes the room, the actions keep the end of the line and go under the text, at its right edge, once the
+   alert is too narrow for both. A face changes only how the actions look; this file is the stage and the contract */
+.ac-cap {
+  margin: 0 0 var(--sl-space-2);
+  font-size: var(--sl-font-h4);
+}
+
+.ac-src {
+  margin: 0 0 var(--sl-space-4);
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-small);
+}
+
+.ac-src code {
+  font-family: var(--sl-face-mono);
+  font-size: var(--sl-font-micro);
+}
+
+.ac-group + .ac-group {
+  margin-top: var(--sl-space-6);
+}
+
+.ac-group .sl-alert:last-child {
+  margin-bottom: 0;
+}
+
+.ac-narrow {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 340px));
+  gap: var(--sl-space-5);
+  align-items: start;
+}
+
+.ac-narrow .sl-alert {
+  margin: 0;
+}
+
+/* The contract. The alert is the container its slot asks about, so a face may lay its actions out by the width of the
+   alert itself, not of the window - the same alert stands in a wide list, a side panel and a phone */
+.sl-alert.ac-alert {
+  flex-wrap: wrap;
+  row-gap: var(--sl-space-3);
+  container-type: inline-size;
+}
+
+.ac-alert .sl-alert-body {
+  flex: 1 1 12em;
+}
+
+/* A narrow alert keeps its text beside the sign and gives the actions a line of their own */
+@container (width < 480px) {
+  .ac-acts {
+    flex-basis: 100%;
+  }
+}
+
+.ac-acts {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--sl-space-2);
+  margin-left: auto;
+}
+
+.ac-acts .sl-post-button {
+  display: contents;
+}
+
+.ac-act {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sl-space-2);
+  white-space: nowrap;
+  font: inherit;
+  cursor: pointer;
+}
+
+.ac-act:focus-visible {
+  outline: var(--sl-ring-width) solid var(--sl-ring-bg);
+  outline-offset: var(--sl-ring-gap);
+}
+
+/* The cross of a toast is not an action: it stays a bare round key in every face */
+.ac-acts .ac-act.ac-act-close {
+  width: var(--sl-size-control);
+  height: var(--sl-size-control);
+  padding: 0;
+  border: 0;
+  border-radius: var(--sl-radius-circle);
+  background: none;
+  box-shadow: none;
+  color: var(--sl-text-muted);
+  text-decoration: none;
+}
+
+.ac-acts .ac-act.ac-act-close:hover {
+  background: var(--sl-tint);
+  color: var(--sl-text-strong);
+}
+
+.ac-acts .ac-act.ac-act-close::after {
+  content: none;
+}
+
+.ac-meter {
+  position: absolute;
+  inset: auto 0 0;
+  height: 3px;
+  background: color-mix(in srgb, var(--sl-alert-c) 20%, transparent);
+}
+
+.ac-meter::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: calc(var(--ac-run, 0) * 100%);
+  background: var(--sl-alert-c);
+}
+
+.ac-alert b {
+  color: var(--sl-text-strong);
+  font-weight: var(--sl-weight-semibold);
+  font-variant-numeric: tabular-nums;
+}

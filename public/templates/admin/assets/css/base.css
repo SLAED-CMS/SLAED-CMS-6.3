@@ -69,6 +69,8 @@
   --sl-font-h2: 20px;
   --sl-font-h1: 24px;
   --sl-font-display: 32px;
+  /* The step above every heading: the figure inside a gauge of the cockpit, the largest type the panel carries */
+  --sl-font-hero: 38px;
   --sl-line-tight: 1.2;
   --sl-line-normal: 1.45;
   --sl-line-loose: 1.6;
@@ -81,6 +83,8 @@
   --sl-weight-semibold: 600;
   --sl-weight-bold: 700;
   --sl-track-wide: 0.4px;
+  /* A figure at the hero step is set tighter than the face spaces it, so the digits read as one number */
+  --sl-track-tight: -1px;
 
   /* Opacity: the three steps a faded element sits on; 0 and 1 stay neutral */
   --sl-fade-subtle: 0.8;
@@ -351,6 +355,8 @@
   /* The countdown of a flash is a ring round its tick: how thick the ring is, and how much of the tone its track carries */
   --sl-flash-ring: 3px;
   --sl-flash-mix: 16%;
+  /* The keys of the admin block are washed in their own tone: the ground carries this much of it, the border three times, a pointer twice */
+  --sl-adm-mix: 8%;
   --sl-fm-as-height: 30px;
   --sl-fm-bar-width: 250px;
   --sl-fm-body-height: 56vh;
@@ -384,6 +390,8 @@
   --sl-footer-shadow: 0 1px 0 light-dark(rgba(255, 255, 255, 0.25), rgba(0, 0, 0, 0.35));
   --sl-form-width: 545px;
   --sl-form-label-width: 160px;
+  /* The width a gauge of the home cockpit grows to; the lamp in their row takes the same and its mark half of it */
+  --sl-gauge-width: 150px;
   --sl-graph-height: 285px;
   /* A painted group name keeps the hue of its group, taken from its parent, and the lightness its scheme reads: 4.5:1 for any stored colour */
   --sl-group-text: light-dark(oklch(from currentColor min(l, 0.5) c h), oklch(from currentColor max(l, 0.7) c h));
@@ -412,6 +420,10 @@
   --sl-drift-dot-width: 8px;
   --sl-drift-dot-height: 8px;
   --sl-drift-gap: 14px;
+  --sl-donut-width: 76px;
+  --sl-donut-height: 76px;
+  /* The thickness of the session ring, which is the donut less its hole, halved */
+  --sl-donut-ring: 8px;
   --sl-login-width: 420px;
   --sl-login-max-width: 390px;
   --sl-login-header-height: 104px;

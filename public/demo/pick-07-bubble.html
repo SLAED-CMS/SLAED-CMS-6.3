@@ -1,0 +1,688 @@
+<!doctype html>
+<html lang="ru" data-theme="auto">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Выноска &middot; Отметка всех страниц — стенд панели администратора SLAED CMS</title>
+  <link rel="stylesheet" href="../templates/admin/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../templates/admin/assets/css/base.css">
+  <link rel="stylesheet" href="../templates/admin/assets/css/theme.css">
+  <!-- The stand is served without Cache-Control; its sheets and scripts are stamped so an edit is seen at once -->
+  <script>document.write('<link rel="stylesheet" href="assets/demo.css?v=' + Date.now() + '"><link rel="stylesheet" href="assets/pick.css?v=' + Date.now() + '">');</script>
+  <script src="../plugins/system/global-func.js"></script>
+  <script src="../plugins/system/slaed.js"></script>
+  <script src="../templates/admin/assets/js/admin-ui.js"></script>
+  <style>
+    /* 07 Выноска. The offer appears where the click was: a callout under the head box, its tail pointing at it, asking one
+       question with one answer button and a way to say no. The list does not move, the pointer has a few pixels to travel,
+       and "No" makes it leave for good until the picks change. Once all 8 411 are taken the head box wears their number as
+       a badge, and the sweep goes on in the same callout */
+    .v-bubble {
+      --v-tail: 22px;
+      position: absolute;
+      top: calc(var(--pk-head-y, 0px) + var(--pk-head, 34px) + 12px);
+      right: calc(var(--pk-check-x, 30px) - var(--v-tail));
+      z-index: var(--sl-z-popover);
+      width: min(340px, calc(100% - var(--sl-space-5)));
+      box-sizing: border-box;
+      padding: var(--sl-space-4) var(--sl-space-4) var(--sl-space-4) var(--sl-space-5);
+      border: 1px solid color-mix(in srgb, var(--sl-primary) 45%, var(--sl-border-strong));
+      border-radius: var(--sl-radius-3);
+      background: var(--sl-bg);
+      box-shadow: var(--sl-shadow-float);
+      color: var(--sl-text);
+      font-size: var(--sl-font-small);
+      transform-origin: calc(100% - var(--v-tail)) -12px;
+    }
+
+    .v-bubble::before {
+      content: "";
+      position: absolute;
+      top: -7px;
+      right: calc(var(--v-tail) - 6px);
+      width: 12px;
+      height: 12px;
+      border-top: 1px solid color-mix(in srgb, var(--sl-primary) 45%, var(--sl-border-strong));
+      border-left: 1px solid color-mix(in srgb, var(--sl-primary) 45%, var(--sl-border-strong));
+      background: inherit;
+      transform: rotate(45deg);
+    }
+
+    [data-pk-hush] .v-bubble {
+      display: none;
+    }
+
+    .v-bubble p {
+      margin: 0 0 var(--sl-space-3);
+      line-height: var(--sl-line-normal);
+    }
+
+    .v-bubble b {
+      color: var(--sl-text-strong);
+      font-weight: var(--sl-weight-semibold);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .v-bubble-head {
+      display: flex;
+      align-items: center;
+      gap: var(--sl-space-2);
+      margin: 0 0 var(--sl-space-2);
+      color: var(--sl-text-strong);
+      font-weight: var(--sl-weight-semibold);
+    }
+
+    .v-bubble-head .bi {
+      color: var(--sl-primary);
+    }
+
+    .v-bubble .bi-check-circle-fill {
+      color: var(--sl-success);
+    }
+
+    .v-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: var(--sl-space-2);
+    }
+
+    .v-row .sl-but-blue {
+      border-radius: var(--sl-radius-pill);
+    }
+
+    .v-no {
+      height: var(--sl-size-control);
+      padding: 0 var(--sl-space-3);
+      border: 0;
+      border-radius: var(--sl-radius-pill);
+      background: none;
+      color: var(--sl-text-muted);
+      font: inherit;
+      cursor: pointer;
+    }
+
+    .v-no:hover {
+      background: var(--sl-tint);
+      color: var(--sl-text-strong);
+    }
+
+    .v-no:focus-visible {
+      outline: var(--sl-ring-width) solid var(--sl-ring-bg);
+      outline-offset: var(--sl-ring-gap);
+    }
+
+    .v-track {
+      height: 6px;
+      margin: 0 0 var(--sl-space-3);
+      border-radius: var(--sl-radius-pill);
+      background: var(--sl-tint);
+      overflow: hidden;
+    }
+
+    .v-track::before {
+      content: "";
+      display: block;
+      width: calc(var(--pk-run) * 100%);
+      height: 100%;
+      border-radius: inherit;
+      background: var(--sl-primary);
+      transition: width var(--sl-time-fast) linear;
+    }
+
+    [data-pk-state="done"] .v-track::before {
+      background: var(--sl-success);
+    }
+
+    .v-headbox {
+      position: relative;
+      display: inline-block;
+    }
+
+    .v-badge {
+      position: absolute;
+      bottom: calc(100% + 5px);
+      left: 50%;
+      translate: -50% 0;
+      padding: 1px var(--sl-space-2);
+      border-radius: var(--sl-radius-pill);
+      background: var(--sl-primary);
+      color: var(--sl-on-solid);
+      font-size: var(--sl-font-micro);
+      font-weight: var(--sl-weight-bold);
+      line-height: 1.4;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+      .v-bubble:not([hidden]) {
+        animation: v-pop var(--sl-time-slow) cubic-bezier(0.34, 1.4, 0.64, 1);
+      }
+
+      .v-badge:not([hidden]) {
+        animation: v-pop var(--sl-time-slow) cubic-bezier(0.34, 1.6, 0.64, 1);
+      }
+    }
+
+    @keyframes v-pop {
+      from { opacity: 0; transform: scale(0.6); }
+    }
+
+    /* A phone shows cards without a head box to point at: the callout stands over them as a card of its own */
+    @media (max-width: 560px) {
+      .v-bubble {
+        position: static;
+        width: auto;
+        margin: 0 0 var(--sl-space-3);
+      }
+
+      .v-bubble::before {
+        content: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <a class="sl-skip" href="#sl-main">К содержимому</a>
+  <div class="sl-wrapper sl-admin-shell">
+    <div class="sl-wraptop"></div>
+    <div class="sl-wrapmid">
+      <header class="sl-header sl-admin-header">
+        <div class="sl-admin-brand"><button type="button" class="sl-menu-btn" data-sl-menu-open aria-controls="sl-menu" aria-expanded="false"><i class="bi bi-list" aria-hidden="true"></i><span>Меню</span></button><a class="sl-brand" href="../admin.php" title="Главная"><img src="../templates/admin/images/logos/slaed-logo-wordmark-gradient-blue.svg" alt="Название сайта"></a></div>
+        <div class="sl-admin-toolbar">
+          <div class="sl-toolbar">
+            <div>
+              <ul class="sl-reset">
+<li><a href="../admin.php" title="Главная"><i class="bi bi-house-door" aria-hidden="true"></i> <b>Главная</b></a></li>
+<li><a href="../admin.php?name=blocks" title="Блоки и баннеры"><i class="bi bi-grid-3x3-gap" aria-hidden="true"></i> <b>Блоки и баннеры</b></a></li>
+<li><a href="../admin.php?name=modules" title="Модули"><i class="bi bi-gpu-card" aria-hidden="true"></i> <b>Модули</b></a></li>
+<li><a href="../admin.php?name=categories" title="Категории"><i class="bi bi-folder" aria-hidden="true"></i> <b>Категории</b></a></li>
+<li class="sl-split-item"><a href="/" title="Сайт"><i class="bi bi-globe2" aria-hidden="true"></i> <b>Сайт</b></a></li>
+<li><a href="../index.php?name=account" title="Профиль"><i class="bi bi-person" aria-hidden="true"></i> <b>Профиль</b></a></li>
+<li class="sl-split-item"><a href="../admin.php?op=logout" title="Выход"><i class="bi bi-box-arrow-right" aria-hidden="true"></i> <b>Выход</b></a></li>
+<li class="sl-set-item"><button type="button" title="Опции" aria-label="Опции"><i class="bi bi-sliders" aria-hidden="true"></i></button></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </header>
+      <div class="sl-admin-main">
+        <div class="sl-menu-scrim" data-sl-menu-close aria-hidden="true"></div>
+        <aside class="sl-admin-sidebar" id="sl-menu" aria-label="Меню"><div class="sl-menu-top"><div class="sl-menu-find"><label class="sl-visually-hidden" for="sl-menu-q">Найти раздел</label><i class="bi bi-search" aria-hidden="true"></i><input type="search" id="sl-menu-q" placeholder="Найти раздел" autocomplete="off" aria-keyshortcuts="/" data-sl-menu-find=""></div><button type="button" class="sl-menu-tool sl-menu-pal" data-sl-pal-open="" title="Быстрый переход (Ctrl+K)" aria-keyshortcuts="Control+K"><span class="sl-visually-hidden">Быстрый переход</span><kbd>Ctrl</kbd><kbd>K</kbd><i class="bi bi-search" aria-hidden="true"></i></button><button type="button" class="sl-menu-tool sl-menu-fold" data-sl-rail-toggle="" data-sl-fold="Свернуть меню" data-sl-unfold="Развернуть меню" aria-controls="sl-menu" aria-keyshortcuts="[" aria-expanded="true" title="Свернуть меню ( [ )" aria-label="Свернуть меню"><i class="bi bi-layout-sidebar-inset" aria-hidden="true"></i></button><button type="button" class="sl-menu-tool sl-menu-close" data-sl-menu-close="" title="Закрыть" aria-label="Закрыть"><i class="bi bi-x-lg" aria-hidden="true"></i></button></div><p class="sl-menu-empty" data-sl-menu-empty="Раздел не найден." role="status"></p><div class="sl-block-sidebar sl-block-menu">
+  <h3><button type="button" class="sl-menu-head sl-is-open" title="Свёртывание / Развёртывание" data-sl-toggle-control="sl-block-1" data-sl-toggle-effect="slide" data-sl-toggle-duration="500" aria-controls="sl-block-1" aria-expanded="true"><b><i class="bi bi-person-gear" aria-hidden="true"></i>Администратор</b><i class="bi bi-arrows-collapse sl-panel-toggle sl-panel-toggle-open" aria-hidden="true"></i><i class="bi bi-arrows-expand sl-panel-toggle sl-panel-toggle-closed" aria-hidden="true"></i></button></h3>
+  <div id="sl-block-1" class="sl-block-sidebar-content sl-is-open" data-sl-toggle="sl-block-1">
+<div class="sl-menu-list-item" data-sl-menu-item="admins"><a href="../admin.php?name=admins" title="Администрация"><i class="bi bi-person-gear" aria-hidden="true"></i> <span class="sl-menu-name">Администрация</span></a></div>
+<div class="sl-menu-list-item" data-sl-menu-item="blocks"><a href="../admin.php?name=blocks" title="Блоки и баннеры"><i class="bi bi-grid-3x3-gap" aria-hidden="true"></i> <span class="sl-menu-name">Блоки и баннеры</span></a></div>
+<div class="sl-menu-list-item" data-sl-menu-item="categories"><a href="../admin.php?name=categories" title="Категории"><i class="bi bi-folder" aria-hidden="true"></i> <span class="sl-menu-name">Категории</span></a></div>
+<div class="sl-menu-list-item" data-sl-menu-item="comments"><a href="../admin.php?name=comments" title="Комментарии" aria-current="page"><i class="bi bi-chat-dots" aria-hidden="true"></i> <span class="sl-menu-name">Комментарии</span> <span class="sl-queue"><span>6</span><span class="sl-visually-hidden"> Ждут проверки</span></span></a></div>
+<div class="sl-menu-list-item" data-sl-menu-item="config"><a href="../admin.php?name=config" title="Конфигурации"><i class="bi bi-gear" aria-hidden="true"></i> <span class="sl-menu-name">Конфигурации</span></a></div>
+<div class="sl-menu-list-item" data-sl-menu-item="database"><a href="../admin.php?name=database" title="База данных"><i class="bi bi-database" aria-hidden="true"></i> <span class="sl-menu-name">База данных</span></a></div>
+<div class="sl-menu-list-item" data-sl-menu-item="editor"><a href="../admin.php?name=editor" title="Редактор"><i class="bi bi-pencil-square" aria-hidden="true"></i> <span class="sl-menu-name">Редактор</span></a></div>
+<div class="sl-menu-list-item" data-sl-menu-item="favorites"><a href="../admin.php?name=favorites" title="Фавориты"><i class="bi bi-star" aria-hidden="true"></i> <span class="sl-menu-name">Фавориты</span></a></div>
+<div class="sl-menu-list-item" data-sl-menu-item="fields"><a href="../admin.php?name=fields" title="Дополнительные поля"><i class="bi bi-input-cursor-text" aria-hidden="true"></i> <span class="sl-menu-name">Дополнительные поля</span></a></div>
+<div class="sl-menu-list-item" data-sl-menu-item="groups"><a href="../admin.php?name=groups" title="Группы"><i class="bi bi-people-fill" aria-hidden="true"></i> <span class="sl-menu-name">Группы</span></a></div>
+<div class="sl-menu-list-item" data-sl-menu-item="lang"><a href="../admin.php?name=lang" title="Редактор языков"><i class="bi bi-translate" aria-hidden="true"></i> <span class="sl-menu-name">Редактор языков</span></a></div>
+<div class="sl-menu-list-item" data-sl-menu-item="messages"><a href="../admin.php?name=messages" title="Сообщения"><i class="bi bi-envelope" aria-hidden="true"></i> <span class="sl-menu-name">Сообщения</span></a></div>
+<div class="sl-menu-list-item" data-sl-menu-item="modules"><a href="../admin.php?name=modules" title="Модули"><i class="bi bi-puzzle" aria-hidden="true"></i> <span class="sl-menu-name">Модули</span></a></div>
+<div class="sl-menu-list-item" data-sl-menu-item="monitor"><a href="../admin.php?name=monitor" title="Мониторинг"><i class="bi bi-display" aria-hidden="true"></i> <span class="sl-menu-name">Мониторинг</span></a></div>
+<div class="sl-menu-list-item" data-sl-menu-item="newsletter"><a href="../admin.php?name=newsletter" title="Рассылка"><i class="bi bi-send" aria-hidden="true"></i> <span class="sl-menu-name">Рассылка</span></a></div>
+<div class="sl-menu-list-item" data-sl-menu-item="privat"><a href="../admin.php?name=privat" title="Личные сообщения"><i class="bi bi-incognito" aria-hidden="true"></i> <span class="sl-menu-name">Личные сообщения</span></a></div>
+<div class="sl-menu-list-item" data-sl-menu-item="ratings"><a href="../admin.php?name=ratings" title="Рейтинги"><i class="bi bi-star-half" aria-hidden="true"></i> <span class="sl-menu-name">Рейтинги</span></a></div>
+<div class="sl-menu-list-item" data-sl-menu-item="referers"><a href="../admin.php?name=referers" title="Переходы"><i class="bi bi-box-arrow-in-right" aria-hidden="true"></i> <span class="sl-menu-name">Переходы</span></a></div>
+<div class="sl-menu-list-item" data-sl-menu-item="replace"><a href="../admin.php?name=replace" title="Замена слов"><i class="bi bi-arrow-left-right" aria-hidden="true"></i> <span class="sl-menu-name">Замена слов</span></a></div>
+<div class="sl-menu-list-item" data-sl-menu-item="scheduler"><a href="../admin.php?name=scheduler" title="Планировщик"><i class="bi bi-clock-history" aria-hidden="true"></i> <span class="sl-menu-name">Планировщик</span></a></div>
+<div class="sl-menu-list-item" data-sl-menu-item="security"><a href="../admin.php?name=security" title="Безопасность"><i class="bi bi-shield-lock" aria-hidden="true"></i> <span class="sl-menu-name">Безопасность</span></a></div>
+<div class="sl-menu-list-item" data-sl-menu-item="statistic"><a href="../admin.php?name=statistic" title="Статистика"><i class="bi bi-graph-up" aria-hidden="true"></i> <span class="sl-menu-name">Статистика</span></a></div>
+<div class="sl-menu-list-item" data-sl-menu-item="template"><a href="../admin.php?name=template" title="Шаблон"><i class="bi bi-palette" aria-hidden="true"></i> <span class="sl-menu-name">Шаблон</span></a></div>
+<div class="sl-menu-list-item" data-sl-menu-item="update"><a href="../admin.php?name=update" title="Обновления"><i class="bi bi-cloud-arrow-down" aria-hidden="true"></i> <span class="sl-menu-name">Обновления</span></a></div>
+<div class="sl-menu-list-item" data-sl-menu-item="uploads"><a href="../admin.php?name=uploads" title="Загрузки"><i class="bi bi-cloud-arrow-up" aria-hidden="true"></i> <span class="sl-menu-name">Загрузки</span></a></div>
+  </div>
+</div>
+</aside>
+        <main class="sl-admin-content" id="sl-main" tabindex="-1"><div class="sl-admin-content-inner">
+<div id="sl-list" data-pk data-pk-total="8411" data-pk-start="page">
+<div class="sl-box">
+  <div class="sl-module-head">
+    <div class="sl-module-head-icon"><i class="bi bi-chat-dots" title="Комментарии"></i></div>
+    <div class="sl-module-head-body">
+      <h1 class="sl-module-head-title">Комментарии</h1>
+      <div class="sl-module-head-subtitle"><form class="sl-searchbox sl-filter" action="../admin.php" method="get" role="search" aria-label="Поиск">
+  <input type="hidden" name="name" value="comments">
+    <span class="sl-filter-field">
+    <label for="sl-com-mod" id="sl-com-mod-label">Модуль</label>
+        <select id="sl-com-mod" name="modul" class="sl-select" data-sl-filter-now="">
+      <option value="" selected="">Все</option>
+<option value="docs">Документация - docs</option>
+<option value="faq">Вопросы и ответы - faq</option>
+<option value="files">Каталог файлов - files</option>
+<option value="help">Помощь - help</option>
+<option value="links">Каталог сайтов - links</option>
+<option value="news">Новости - news</option>
+<option value="voting">Опросы - voting</option>
+    </select>
+          </span>
+    <span class="sl-filter-field">
+    <label for="sl-com-in" id="sl-com-in-label">Поиск</label>
+        <select id="sl-com-in" name="search" class="sl-select">
+      <option value="1">№</option>
+<option value="2" selected="">Комментарий</option>
+<option value="3">Разместил</option>
+<option value="4">Модуль</option>
+<option value="5">IP Адрес</option>
+    </select>
+        <input type="search" id="sl-com-q" name="chng" value="" maxlength="60" aria-labelledby="sl-com-in-label sl-com-in">  </span>
+    <button type="submit" class="sl-but-blue">OK</button>
+</form>
+</div>          </div>
+  </div>
+    <ul class="sl-tabs-nav sl-tabs-nav-main">
+    <li class="sl-tabs-item">
+  <a href="../admin.php?name=comments" title="Главная" class="sl-tabs-link sl-is-active">Главная</a>
+</li>
+<li class="sl-tabs-item">
+  <a href="../admin.php?name=comments&amp;status=1" title="Ждут проверки" class="sl-tabs-link">Ждут проверки</a>
+</li>
+<li class="sl-tabs-item">
+  <a href="../admin.php?name=comments&amp;op=config" title="Конфигурации" class="sl-tabs-link">Конфигурации</a>
+</li>
+<li class="sl-tabs-item">
+  <a href="../admin.php?name=comments&amp;op=info" title="Справка" class="sl-tabs-link">Справка</a>
+</li>
+<li class="sl-tabs-item">
+  <a href="../admin.php?name=security&amp;op=logview&amp;file=admin&amp;modul=comments" title="Журнал действий" class="sl-tabs-link">Журнал действий</a>
+</li>
+  </ul>
+  </div>
+<div class="sl-box">
+  <div class="pk-desk" role="group" aria-label="Пульт стенда">
+    <span class="pk-desk-cap">Пульт стенда</span>
+    <button type="button" class="sl-but" data-pk-set="none" aria-pressed="false">Ничего</button>
+    <button type="button" class="sl-but" data-pk-set="some" aria-pressed="false">Часть страницы</button>
+    <button type="button" class="sl-but" data-pk-set="page" aria-pressed="false">Вся страница</button>
+    <button type="button" class="sl-but" data-pk-set="all" aria-pressed="false">Все 8 411</button>
+    <button type="button" class="sl-but" data-pk-set="run" aria-pressed="false">Обработка</button>
+    <button type="button" class="sl-but" data-pk-set="hold" aria-pressed="false">Пауза</button>
+    <button type="button" class="sl-but" data-pk-set="done" aria-pressed="false">Готово</button>
+    <p class="pk-desk-hint">Флажок в шапке отмечает страницу, действие внизу запускает обработку порциями по 100, <kbd>Esc</kbd> снимает отметку.</p>
+  </div>
+</div>
+<div class="sl-box sl-table-shell">
+
+  <div class="sl-list-head">
+    <div class="sl-list-head-pager"><nav class="sl-pager" aria-label="Страницы">
+  <div class="sl-pager-main">
+    <div class="sl-pager-nav">
+        <span title="Назад" class="sl-but-mini sl-is-muted"><i class="bi bi-chevron-left" aria-hidden="true"></i></span>
+      <span class="sl-seg sl-seg-pager" data-sl-knob="pager" style="--sl-d-knob-x: 2px; --sl-d-knob-w: 26px;"><span class="sl-seg-knob" data-sl-knob-mark="" aria-hidden="true"></span><span class="sl-seg-run sl-pager-pages">  <span title="1" aria-current="page" class="sl-seg-cell sl-is-active">1</span>
+  <a href="../admin.php?name=comments&amp;num=2" title="2" class="sl-seg-cell sl-pager-near">2</a>
+  <a href="../admin.php?name=comments&amp;num=3" title="3" class="sl-seg-cell sl-pager-far">3</a>
+  <a href="../admin.php?name=comments&amp;num=4" title="4" class="sl-seg-cell sl-pager-far">4</a>
+  <a href="../admin.php?name=comments&amp;num=5" title="5" class="sl-seg-cell sl-pager-far">5</a>
+  <a href="../admin.php?name=comments&amp;num=6" title="6" class="sl-seg-cell sl-pager-far">6</a>
+  <a href="../admin.php?name=comments&amp;num=7" title="7" class="sl-seg-cell sl-pager-far">7</a>
+  <a href="../admin.php?name=comments&amp;num=8" title="8" class="sl-seg-cell sl-pager-far">8</a>
+  <span class="sl-seg-cell sl-is-muted" aria-hidden="true">…</span>
+  <a href="../admin.php?name=comments&amp;num=337" title="337" class="sl-seg-cell">337</a>
+</span></span>
+        <a href="../admin.php?name=comments&amp;num=2" title="Вперед" aria-label="Вперед" rel="next" aria-keyshortcuts="ArrowRight" class="sl-but-mini"><i class="bi bi-chevron-right" aria-hidden="true"></i></a>
+    </div>
+    <div class="sl-pager-side">
+      <span class="sl-pager-sep" aria-hidden="true"></span>
+      <a href="#sl-list-end" title="Вниз" aria-label="Вниз" class="sl-but-mini"><i class="bi bi-arrow-down" aria-hidden="true"></i></a>      <div class="sl-tip sl-float sl-pager-keys" tabindex="0" role="button" aria-label="Листайте с клавиатуры"><span class="sl-but-mini" aria-hidden="true"><i class="bi bi-info-lg"></i></span><div class="sl-float-panel sl-pager-tip" role="tooltip"><p class="sl-pager-tip-head">Листайте с клавиатуры</p><ul class="sl-pager-tip-keys"><li><kbd><i class="bi bi-arrow-left" role="img" aria-label="Стрелка влево"></i></kbd>Предыдущая страница</li><li><kbd><i class="bi bi-arrow-right" role="img" aria-label="Стрелка вправо"></i></kbd>Следующая страница</li><li><kbd>J</kbd><kbd>K</kbd>Строка ниже и выше</li><li><kbd>X</kbd>Отметить строку</li><li><kbd>E</kbd>Править строку</li><li><kbd>/</kbd>Поиск</li><li><kbd>Ctrl</kbd><kbd>K</kbd>Быстрый переход</li><li><kbd>[</kbd>Свернуть меню</li></ul><p class="sl-pager-tip-note">Пока курсор не стоит в поле ввода</p></div></div>
+    </div>
+  </div>
+  <p class="sl-pager-info">Страница <b>1 из 337</b><span class="sl-pager-range"> · Показаны 1–25</span> · Всего <b>8411</b></p>
+</nav></div>
+
+    <div class="sl-list-view">
+      <span class="sl-seg sl-seg-view" data-sl-knob="density" role="group" aria-label="Вид списка" style="--sl-d-knob-x: 0px; --sl-d-knob-w: 28px;">
+        <button type="button" class="sl-seg-cell sl-is-active" data-sl-density="standard" title="Стандартный" aria-label="Стандартный" aria-pressed="true"><i class="bi bi-table" aria-hidden="true"></i></button><button type="button" class="sl-seg-cell" data-sl-density="full" title="Полный" aria-label="Полный" aria-pressed="false" tabindex="-1"><i class="bi bi-text-wrap" aria-hidden="true"></i></button><button type="button" class="sl-seg-cell" data-sl-density="compact" title="Компактный" aria-label="Компактный" aria-pressed="false" tabindex="-1"><i class="bi bi-list" aria-hidden="true"></i></button><button type="button" class="sl-seg-cell" data-sl-density="cards" title="Карточки" aria-label="Карточки" aria-pressed="false" tabindex="-1"><i class="bi bi-grid-3x2-gap" aria-hidden="true"></i></button>        <span class="sl-seg-knob" data-sl-knob-mark="" aria-hidden="true"></span>
+      </span>
+    </div>
+  </div>
+
+  <div class="pk-table">
+  <div class="v-bubble" role="dialog" aria-label="Отметка всех страниц" data-pk-when="page all run hold done">
+    <div data-pk-when="page">
+      <p class="v-bubble-head"><i class="bi bi-check2-square" aria-hidden="true"></i>Отмечена вся страница — <span data-pk-n="page">25</span></p>
+      <p>Взять и остальные? Всего по фильтру <b data-pk-n="total">8 411</b> комментариев на 337 страницах.</p>
+      <div class="v-row"><button type="button" class="sl-but-blue" data-pk-do="all">Отметить все <span data-pk-n="total">8 411</span></button><button type="button" class="v-no" data-pk-do="hush">Только страницу</button></div>
+    </div>
+    <div data-pk-when="all">
+      <p class="v-bubble-head"><i class="bi bi-check2-all" aria-hidden="true"></i>Отмечены все <span data-pk-n="total">8 411</span></p>
+      <p>Выберите действие внизу списка — оно пройдёт по всему фильтру порциями по 100.</p>
+      <div class="v-row"><button type="button" class="v-no" data-pk-do="page">Только эта страница</button><button type="button" class="v-no" data-pk-do="off">Снять отметку</button></div>
+    </div>
+    <div data-pk-when="run hold done">
+      <p class="v-bubble-head"><span data-pk-when="run hold"><span data-pk-n="act">Деактивация</span>: <b data-pk-n="seen">0</b> из <b data-pk-n="todo">0</b></span><span data-pk-when="done"><i class="bi bi-check-circle-fill" aria-hidden="true"></i> Готово: обработано <span data-pk-n="todo">0</span></span></p>
+      <div class="v-track" aria-hidden="true"></div>
+      <div class="v-row" data-pk-when="run hold"><button type="button" class="v-no" data-pk-do="hold" data-pk-when="run"><i class="bi bi-pause-fill" aria-hidden="true"></i> Пауза</button><button type="button" class="v-no" data-pk-do="go" data-pk-when="hold"><i class="bi bi-play-fill" aria-hidden="true"></i> Продолжить</button><button type="button" class="v-no" data-pk-do="stop" data-pk-when="hold"><i class="bi bi-stop-fill" aria-hidden="true"></i> Остановить</button></div>
+    </div>
+  </div>
+  <table class="sl-table-list-sort sl-table-fixed" data-sl-density="standard">
+<thead>
+  <tr>
+<th class="sl-col-id sl-sort">№</th>
+<th class="sl-cell-ellipsis sl-sort">Комментарий</th>
+<th class="sl-cell-ellipsis sl-sort">Модуль</th>
+<th class="sl-col-author sl-sort">Разместил</th>
+<th class="sl-col-date sl-sort">Дата</th>
+<th class="sl-col-status">Статус</th>
+<th class="sl-col-actions">Опции</th>
+<th class="sl-col-check"><span class="v-headbox"><input type="checkbox" class="sl-check" data-pk-head aria-label="Отметить все на странице" title="Отметить все на странице"><span class="v-badge" data-pk-when="all run hold" data-pk-n="total">8 411</span></span></th>
+  </tr>
+</thead>
+<tbody>
+<tr data-sl-row="Комментарий 20679">
+<td class="sl-col-id" data-label="№">20679</td>
+<td class="sl-cell-ellipsis" title="Ну что там,  сколько уже процентов?" data-label="Комментарий"><div class="sl-float sl-tip"><button type="button" aria-label="Подробности: Комментарий 20679" aria-describedby="sl-tip-20679"><i class="bi bi-info-circle-fill" aria-hidden="true"></i></button><div class="sl-float-panel" role="tooltip" id="sl-tip-20679"><dl><dt>Модуль</dt><dd>Новости - news</dd><dt>CID</dt><dd>3918</dd><dt>Дата</dt><dd>01.02.2026 19:48:27</dd><dt>IP Адрес</dt><dd><span><span title="Germany" class="sl-geo-flag"><img src="../templates/admin/images/flags/de.svg" alt="Germany" title="Germany"></span>195.181.175.177</span></dd></dl></div></div> <span class="sl-cell-text">Ну что там,  сколько уже процентов?</span></td>
+<td class="sl-col-module sl-cell-ellipsis" title="Новости - news" data-label="Модуль">Новости - news</td>
+<td class="sl-col-author" data-label="Разместил"><a href="../account/view?uname=olevpa" title="Персональная информация">olevpa</a></td>
+<td class="sl-col-date" data-label="Дата" data-sort="2026-02-01T19:48:27+01:00"><time datetime="2026-02-01T19:48:27+01:00" title="01.02.2026 19:48:27">9 месяцев назад</time></td>
+<td class="sl-col-status" data-label="Статус"><button type="button" class="sl-stat" title="Деактивировать" aria-label="Статус: Комментарий 20679" aria-pressed="true"><span class="sl-status-active"></span></button></td>
+<td class="sl-col-actions" data-label="Опции"><span class="sl-dial"><button class="sl-dial-toggle sl-but-mini" type="button" title="Опции" aria-expanded="false"><i class="bi bi-three-dots"></i></button><a class="sl-dial-item sl-but-mini" href="#" title="Подробный просмотр"><i class="bi bi-eye"></i></a><a class="sl-dial-item sl-but-mini" href="#" title="Ответить на сайте"><i class="bi bi-reply"></i></a><a class="sl-dial-item sl-but-mini" href="#" title="Полное редактирование"><i class="bi bi-pencil"></i></a><button class="sl-dial-item sl-but-mini" type="button" title="Удалить"><i class="bi bi-trash"></i></button></span></td>
+<td class="sl-col-check"><input type="checkbox" class="sl-check" data-pk-box aria-label="Выбрать комментарий 20679"></td>
+</tr>
+<tr data-sl-row="Комментарий 20678">
+<td class="sl-col-id" data-label="№">20678</td>
+<td class="sl-cell-ellipsis" title="Нечасто рассылки 
+
+Все конечно классно. Но придется менять хостинги или клоуд.
+С двух сторон забаннены (санкции) эти хос..." data-label="Комментарий"><div class="sl-float sl-tip"><button type="button" aria-label="Подробности: Комментарий 20678" aria-describedby="sl-tip-20678"><i class="bi bi-info-circle-fill" aria-hidden="true"></i></button><div class="sl-float-panel" role="tooltip" id="sl-tip-20678"><dl><dt>Модуль</dt><dd>Новости - news</dd><dt>CID</dt><dd>3918</dd><dt>Дата</dt><dd>19.12.2025 07:04:04</dd><dt>IP Адрес</dt><dd><span><span title="Singapore" class="sl-geo-flag"><img src="../templates/admin/images/flags/sg.svg" alt="Singapore" title="Singapore"></span>2a10:1fc0:12::68b0:c0b</span></dd></dl></div></div> <span class="sl-cell-text">Нечасто рассылки 
+
+Все конечно классно. Но придется менять хостинги или клоуд.
+С двух сторон забаннены (санкции) эти хос...</span></td>
+<td class="sl-col-module sl-cell-ellipsis" title="Новости - news" data-label="Модуль">Новости - news</td>
+<td class="sl-col-author" data-label="Разместил"><a href="../account/view?uname=garry" title="Персональная информация">garry</a></td>
+<td class="sl-col-date" data-label="Дата" data-sort="2025-12-19T07:04:04+01:00"><time datetime="2025-12-19T07:04:04+01:00" title="19.12.2025 07:04:04">10 месяцев назад</time></td>
+<td class="sl-col-status" data-label="Статус"><button type="button" class="sl-stat" title="Деактивировать" aria-label="Статус: Комментарий 20678" aria-pressed="true"><span class="sl-status-active"></span></button></td>
+<td class="sl-col-actions" data-label="Опции"><span class="sl-dial"><button class="sl-dial-toggle sl-but-mini" type="button" title="Опции" aria-expanded="false"><i class="bi bi-three-dots"></i></button><a class="sl-dial-item sl-but-mini" href="#" title="Подробный просмотр"><i class="bi bi-eye"></i></a><a class="sl-dial-item sl-but-mini" href="#" title="Ответить на сайте"><i class="bi bi-reply"></i></a><a class="sl-dial-item sl-but-mini" href="#" title="Полное редактирование"><i class="bi bi-pencil"></i></a><button class="sl-dial-item sl-but-mini" type="button" title="Удалить"><i class="bi bi-trash"></i></button></span></td>
+<td class="sl-col-check"><input type="checkbox" class="sl-check" data-pk-box aria-label="Выбрать комментарий 20678"></td>
+</tr>
+<tr data-sl-row="Комментарий 20677">
+<td class="sl-col-id" data-label="№">20677</td>
+<td class="sl-cell-ellipsis" title="Отличная новость!" data-label="Комментарий"><div class="sl-float sl-tip"><button type="button" aria-label="Подробности: Комментарий 20677" aria-describedby="sl-tip-20677"><i class="bi bi-info-circle-fill" aria-hidden="true"></i></button><div class="sl-float-panel" role="tooltip" id="sl-tip-20677"><dl><dt>Модуль</dt><dd>Новости - news</dd><dt>CID</dt><dd>3918</dd><dt>Дата</dt><dd>05.12.2025 11:23:16</dd><dt>IP Адрес</dt><dd><span><span title="Russia" class="sl-geo-flag"><img src="../templates/admin/images/flags/ru.svg" alt="Russia" title="Russia"></span>188.68.83.202</span></dd></dl></div></div> <span class="sl-cell-text">Отличная новость!</span></td>
+<td class="sl-col-module sl-cell-ellipsis" title="Новости - news" data-label="Модуль">Новости - news</td>
+<td class="sl-col-author" data-label="Разместил"><a href="../account/view?uname=Aquamarine" title="Персональная информация">Aquamarine</a></td>
+<td class="sl-col-date" data-label="Дата" data-sort="2025-12-05T11:23:16+01:00"><time datetime="2025-12-05T11:23:16+01:00" title="05.12.2025 11:23:16">11 месяцев назад</time></td>
+<td class="sl-col-status" data-label="Статус"><button type="button" class="sl-stat" title="Деактивировать" aria-label="Статус: Комментарий 20677" aria-pressed="true"><span class="sl-status-active"></span></button></td>
+<td class="sl-col-actions" data-label="Опции"><span class="sl-dial"><button class="sl-dial-toggle sl-but-mini" type="button" title="Опции" aria-expanded="false"><i class="bi bi-three-dots"></i></button><a class="sl-dial-item sl-but-mini" href="#" title="Подробный просмотр"><i class="bi bi-eye"></i></a><a class="sl-dial-item sl-but-mini" href="#" title="Ответить на сайте"><i class="bi bi-reply"></i></a><a class="sl-dial-item sl-but-mini" href="#" title="Полное редактирование"><i class="bi bi-pencil"></i></a><button class="sl-dial-item sl-but-mini" type="button" title="Удалить"><i class="bi bi-trash"></i></button></span></td>
+<td class="sl-col-check"><input type="checkbox" class="sl-check" data-pk-box aria-label="Выбрать комментарий 20677"></td>
+</tr>
+<tr data-sl-row="Комментарий 20676">
+<td class="sl-col-id" data-label="№">20676</td>
+<td class="sl-cell-ellipsis" title="rvg, да, это возможно. Обновлять нужно последовательно, с версии до версии." data-label="Комментарий"><div class="sl-float sl-tip"><button type="button" aria-label="Подробности: Комментарий 20676" aria-describedby="sl-tip-20676"><i class="bi bi-info-circle-fill" aria-hidden="true"></i></button><div class="sl-float-panel" role="tooltip" id="sl-tip-20676"><dl><dt>Модуль</dt><dd>Каталог файлов - files</dd><dt>CID</dt><dd>5056</dd><dt>Дата</dt><dd>22.12.2024 17:27:36</dd><dt>IP Адрес</dt><dd><span><span title="Germany" class="sl-geo-flag"><img src="../templates/admin/images/flags/de.svg" alt="Germany" title="Germany"></span>84.178.138.17</span></dd></dl></div></div> <span class="sl-cell-text">rvg, да, это возможно. Обновлять нужно последовательно, с версии до версии.</span></td>
+<td class="sl-col-module sl-cell-ellipsis" title="Каталог файлов - files" data-label="Модуль">Каталог файлов - files</td>
+<td class="sl-col-author" data-label="Разместил"><a href="../account/view?uname=SLAED%20CMS" title="Персональная информация">SLAED CMS</a></td>
+<td class="sl-col-date" data-label="Дата" data-sort="2024-12-22T17:27:36+01:00"><time datetime="2024-12-22T17:27:36+01:00" title="22.12.2024 17:27:36">2 года назад</time></td>
+<td class="sl-col-status" data-label="Статус"><button type="button" class="sl-stat" title="Деактивировать" aria-label="Статус: Комментарий 20676" aria-pressed="true"><span class="sl-status-active"></span></button></td>
+<td class="sl-col-actions" data-label="Опции"><span class="sl-dial"><button class="sl-dial-toggle sl-but-mini" type="button" title="Опции" aria-expanded="false"><i class="bi bi-three-dots"></i></button><a class="sl-dial-item sl-but-mini" href="#" title="Подробный просмотр"><i class="bi bi-eye"></i></a><a class="sl-dial-item sl-but-mini" href="#" title="Ответить на сайте"><i class="bi bi-reply"></i></a><a class="sl-dial-item sl-but-mini" href="#" title="Полное редактирование"><i class="bi bi-pencil"></i></a><button class="sl-dial-item sl-but-mini" type="button" title="Удалить"><i class="bi bi-trash"></i></button></span></td>
+<td class="sl-col-check"><input type="checkbox" class="sl-check" data-pk-box aria-label="Выбрать комментарий 20676"></td>
+</tr>
+<tr data-sl-row="Комментарий 20675">
+<td class="sl-col-id" data-label="№">20675</td>
+<td class="sl-cell-ellipsis" title="SLAED CMS, Подскажите, можно-ли обновить 2.6 Lite до 6.2 Pro?" data-label="Комментарий"><div class="sl-float sl-tip"><button type="button" aria-label="Подробности: Комментарий 20675" aria-describedby="sl-tip-20675"><i class="bi bi-info-circle-fill" aria-hidden="true"></i></button><div class="sl-float-panel" role="tooltip" id="sl-tip-20675"><dl><dt>Модуль</dt><dd>Каталог файлов - files</dd><dt>CID</dt><dd>5056</dd><dt>Дата</dt><dd>19.12.2024 16:54:23</dd><dt>IP Адрес</dt><dd><span><span title="Ukraine" class="sl-geo-flag"><img src="../templates/admin/images/flags/ua.svg" alt="Ukraine" title="Ukraine"></span>46.175.253.108</span></dd></dl></div></div> <span class="sl-cell-text">SLAED CMS, Подскажите, можно-ли обновить 2.6 Lite до 6.2 Pro?</span></td>
+<td class="sl-col-module sl-cell-ellipsis" title="Каталог файлов - files" data-label="Модуль">Каталог файлов - files</td>
+<td class="sl-col-author" data-label="Разместил"><a href="../account/view?uname=rvg" title="Персональная информация">rvg</a></td>
+<td class="sl-col-date" data-label="Дата" data-sort="2024-12-19T16:54:23+01:00"><time datetime="2024-12-19T16:54:23+01:00" title="19.12.2024 16:54:23">2 года назад</time></td>
+<td class="sl-col-status" data-label="Статус"><button type="button" class="sl-stat" title="Деактивировать" aria-label="Статус: Комментарий 20675" aria-pressed="true"><span class="sl-status-active"></span></button></td>
+<td class="sl-col-actions" data-label="Опции"><span class="sl-dial"><button class="sl-dial-toggle sl-but-mini" type="button" title="Опции" aria-expanded="false"><i class="bi bi-three-dots"></i></button><a class="sl-dial-item sl-but-mini" href="#" title="Подробный просмотр"><i class="bi bi-eye"></i></a><a class="sl-dial-item sl-but-mini" href="#" title="Ответить на сайте"><i class="bi bi-reply"></i></a><a class="sl-dial-item sl-but-mini" href="#" title="Полное редактирование"><i class="bi bi-pencil"></i></a><button class="sl-dial-item sl-but-mini" type="button" title="Удалить"><i class="bi bi-trash"></i></button></span></td>
+<td class="sl-col-check"><input type="checkbox" class="sl-check" data-pk-box aria-label="Выбрать комментарий 20675"></td>
+</tr>
+<tr data-sl-row="Комментарий 20674">
+<td class="sl-col-id" data-label="№">20674</td>
+<td class="sl-cell-ellipsis" title="Ну что-то прям совсем какая-то простенькая тема. Нет, как-бы сказать, какой-то изюминка, что-ли? Ну хотя, на в кус и цве..." data-label="Комментарий"><div class="sl-float sl-tip"><button type="button" aria-label="Подробности: Комментарий 20674" aria-describedby="sl-tip-20674"><i class="bi bi-info-circle-fill" aria-hidden="true"></i></button><div class="sl-float-panel" role="tooltip" id="sl-tip-20674"><dl><dt>Модуль</dt><dd>Каталог файлов - files</dd><dt>CID</dt><dd>5057</dd><dt>Дата</dt><dd>07.12.2024 23:19:47</dd><dt>IP Адрес</dt><dd><span><span title="Russia" class="sl-geo-flag"><img src="../templates/admin/images/flags/ru.svg" alt="Russia" title="Russia"></span>87.225.94.53</span></dd></dl></div></div> <span class="sl-cell-text">Ну что-то прям совсем какая-то простенькая тема. Нет, как-бы сказать, какой-то изюминка, что-ли? Ну хотя, на в кус и цве...</span></td>
+<td class="sl-col-module sl-cell-ellipsis" title="Каталог файлов - files" data-label="Модуль">Каталог файлов - files</td>
+<td class="sl-col-author" data-label="Разместил"><a href="../account/view?uname=o5Tolik" title="Персональная информация">o5Tolik</a></td>
+<td class="sl-col-date" data-label="Дата" data-sort="2024-12-07T23:19:47+01:00"><time datetime="2024-12-07T23:19:47+01:00" title="07.12.2024 23:19:47">2 года назад</time></td>
+<td class="sl-col-status" data-label="Статус"><button type="button" class="sl-stat" title="Деактивировать" aria-label="Статус: Комментарий 20674" aria-pressed="true"><span class="sl-status-active"></span></button></td>
+<td class="sl-col-actions" data-label="Опции"><span class="sl-dial"><button class="sl-dial-toggle sl-but-mini" type="button" title="Опции" aria-expanded="false"><i class="bi bi-three-dots"></i></button><a class="sl-dial-item sl-but-mini" href="#" title="Подробный просмотр"><i class="bi bi-eye"></i></a><a class="sl-dial-item sl-but-mini" href="#" title="Ответить на сайте"><i class="bi bi-reply"></i></a><a class="sl-dial-item sl-but-mini" href="#" title="Полное редактирование"><i class="bi bi-pencil"></i></a><button class="sl-dial-item sl-but-mini" type="button" title="Удалить"><i class="bi bi-trash"></i></button></span></td>
+<td class="sl-col-check"><input type="checkbox" class="sl-check" data-pk-box aria-label="Выбрать комментарий 20674"></td>
+</tr>
+<tr data-sl-row="Комментарий 20673">
+<td class="sl-col-id" data-label="№">20673</td>
+<td class="sl-cell-ellipsis" title="Проголосовал за Каталог сайтов, есть небольшая задумка сделать отличную вещь, какую пока говорить не буду. Если, кто-то ..." data-label="Комментарий"><div class="sl-float sl-tip"><button type="button" aria-label="Подробности: Комментарий 20673" aria-describedby="sl-tip-20673"><i class="bi bi-info-circle-fill" aria-hidden="true"></i></button><div class="sl-float-panel" role="tooltip" id="sl-tip-20673"><dl><dt>Модуль</dt><dd>Опросы - voting</dd><dt>CID</dt><dd>26</dd><dt>Дата</dt><dd>03.12.2024 08:44:51</dd><dt>IP Адрес</dt><dd><span><span title="Russia" class="sl-geo-flag"><img src="../templates/admin/images/flags/ru.svg" alt="Russia" title="Russia"></span>87.225.94.53</span></dd></dl></div></div> <span class="sl-cell-text">Проголосовал за Каталог сайтов, есть небольшая задумка сделать отличную вещь, какую пока говорить не буду. Если, кто-то ...</span></td>
+<td class="sl-col-module sl-cell-ellipsis" title="Опросы - voting" data-label="Модуль">Опросы - voting</td>
+<td class="sl-col-author" data-label="Разместил"><a href="../account/view?uname=o5Tolik" title="Персональная информация">o5Tolik</a></td>
+<td class="sl-col-date" data-label="Дата" data-sort="2024-12-03T08:44:51+01:00"><time datetime="2024-12-03T08:44:51+01:00" title="03.12.2024 08:44:51">2 года назад</time></td>
+<td class="sl-col-status" data-label="Статус"><button type="button" class="sl-stat" title="Деактивировать" aria-label="Статус: Комментарий 20673" aria-pressed="true"><span class="sl-status-active"></span></button></td>
+<td class="sl-col-actions" data-label="Опции"><span class="sl-dial"><button class="sl-dial-toggle sl-but-mini" type="button" title="Опции" aria-expanded="false"><i class="bi bi-three-dots"></i></button><a class="sl-dial-item sl-but-mini" href="#" title="Подробный просмотр"><i class="bi bi-eye"></i></a><a class="sl-dial-item sl-but-mini" href="#" title="Ответить на сайте"><i class="bi bi-reply"></i></a><a class="sl-dial-item sl-but-mini" href="#" title="Полное редактирование"><i class="bi bi-pencil"></i></a><button class="sl-dial-item sl-but-mini" type="button" title="Удалить"><i class="bi bi-trash"></i></button></span></td>
+<td class="sl-col-check"><input type="checkbox" class="sl-check" data-pk-box aria-label="Выбрать комментарий 20673"></td>
+</tr>
+<tr data-sl-row="Комментарий 20672">
+<td class="sl-col-id" data-label="№">20672</td>
+<td class="sl-cell-ellipsis" title="На данный момент времени версия CMS для PHP 8.*, находится в разработке." data-label="Комментарий"><div class="sl-float sl-tip"><button type="button" aria-label="Подробности: Комментарий 20672" aria-describedby="sl-tip-20672"><i class="bi bi-info-circle-fill" aria-hidden="true"></i></button><div class="sl-float-panel" role="tooltip" id="sl-tip-20672"><dl><dt>Модуль</dt><dd>Новости - news</dd><dt>CID</dt><dd>3916</dd><dt>Дата</dt><dd>16.11.2023 17:07:05</dd><dt>IP Адрес</dt><dd><span><span title="Germany" class="sl-geo-flag"><img src="../templates/admin/images/flags/de.svg" alt="Germany" title="Germany"></span>79.196.72.151</span></dd></dl></div></div> <span class="sl-cell-text">На данный момент времени версия CMS для PHP 8.*, находится в разработке.</span></td>
+<td class="sl-col-module sl-cell-ellipsis" title="Новости - news" data-label="Модуль">Новости - news</td>
+<td class="sl-col-author" data-label="Разместил"><a href="../account/view?uname=SLAED%20CMS" title="Персональная информация">SLAED CMS</a></td>
+<td class="sl-col-date" data-label="Дата" data-sort="2023-11-16T17:07:05+01:00"><time datetime="2023-11-16T17:07:05+01:00" title="16.11.2023 17:07:05">3 года назад</time></td>
+<td class="sl-col-status" data-label="Статус"><button type="button" class="sl-stat" title="Деактивировать" aria-label="Статус: Комментарий 20672" aria-pressed="true"><span class="sl-status-active"></span></button></td>
+<td class="sl-col-actions" data-label="Опции"><span class="sl-dial"><button class="sl-dial-toggle sl-but-mini" type="button" title="Опции" aria-expanded="false"><i class="bi bi-three-dots"></i></button><a class="sl-dial-item sl-but-mini" href="#" title="Подробный просмотр"><i class="bi bi-eye"></i></a><a class="sl-dial-item sl-but-mini" href="#" title="Ответить на сайте"><i class="bi bi-reply"></i></a><a class="sl-dial-item sl-but-mini" href="#" title="Полное редактирование"><i class="bi bi-pencil"></i></a><button class="sl-dial-item sl-but-mini" type="button" title="Удалить"><i class="bi bi-trash"></i></button></span></td>
+<td class="sl-col-check"><input type="checkbox" class="sl-check" data-pk-box aria-label="Выбрать комментарий 20672"></td>
+</tr>
+<tr data-sl-row="Комментарий 20671">
+<td class="sl-col-id" data-label="№">20671</td>
+<td class="sl-cell-ellipsis" title="Это очень просто. Добавьте свои языковые файлы в систему, назовите их в соответствии с языком, латинскими буквами. Можно..." data-label="Комментарий"><div class="sl-float sl-tip"><button type="button" aria-label="Подробности: Комментарий 20671" aria-describedby="sl-tip-20671"><i class="bi bi-info-circle-fill" aria-hidden="true"></i></button><div class="sl-float-panel" role="tooltip" id="sl-tip-20671"><dl><dt>Модуль</dt><dd>Каталог файлов - files</dd><dt>CID</dt><dd>4911</dd><dt>Дата</dt><dd>16.11.2023 17:04:42</dd><dt>IP Адрес</dt><dd><span><span title="Germany" class="sl-geo-flag"><img src="../templates/admin/images/flags/de.svg" alt="Germany" title="Germany"></span>79.196.72.151</span></dd></dl></div></div> <span class="sl-cell-text">Это очень просто. Добавьте свои языковые файлы в систему, назовите их в соответствии с языком, латинскими буквами. Можно...</span></td>
+<td class="sl-col-module sl-cell-ellipsis" title="Каталог файлов - files" data-label="Модуль">Каталог файлов - files</td>
+<td class="sl-col-author" data-label="Разместил"><a href="../account/view?uname=SLAED%20CMS" title="Персональная информация">SLAED CMS</a></td>
+<td class="sl-col-date" data-label="Дата" data-sort="2023-11-16T17:04:42+01:00"><time datetime="2023-11-16T17:04:42+01:00" title="16.11.2023 17:04:42">3 года назад</time></td>
+<td class="sl-col-status" data-label="Статус"><button type="button" class="sl-stat" title="Деактивировать" aria-label="Статус: Комментарий 20671" aria-pressed="true"><span class="sl-status-active"></span></button></td>
+<td class="sl-col-actions" data-label="Опции"><span class="sl-dial"><button class="sl-dial-toggle sl-but-mini" type="button" title="Опции" aria-expanded="false"><i class="bi bi-three-dots"></i></button><a class="sl-dial-item sl-but-mini" href="#" title="Подробный просмотр"><i class="bi bi-eye"></i></a><a class="sl-dial-item sl-but-mini" href="#" title="Ответить на сайте"><i class="bi bi-reply"></i></a><a class="sl-dial-item sl-but-mini" href="#" title="Полное редактирование"><i class="bi bi-pencil"></i></a><button class="sl-dial-item sl-but-mini" type="button" title="Удалить"><i class="bi bi-trash"></i></button></span></td>
+<td class="sl-col-check"><input type="checkbox" class="sl-check" data-pk-box aria-label="Выбрать комментарий 20671"></td>
+</tr>
+<tr data-sl-row="Комментарий 20670">
+<td class="sl-col-id" data-label="№">20670</td>
+<td class="sl-cell-ellipsis" title="Я хочу попробовать бесплатную версию и добавить в систему Туркменский язык. Можно перевести самостоятельно?" data-label="Комментарий"><div class="sl-float sl-tip"><button type="button" aria-label="Подробности: Комментарий 20670" aria-describedby="sl-tip-20670"><i class="bi bi-info-circle-fill" aria-hidden="true"></i></button><div class="sl-float-panel" role="tooltip" id="sl-tip-20670"><dl><dt>Модуль</dt><dd>Каталог файлов - files</dd><dt>CID</dt><dd>4911</dd><dt>Дата</dt><dd>01.03.2023 09:46:41</dd><dt>IP Адрес</dt><dd><span><span title="Turkmenistan" class="sl-geo-flag"><img src="../templates/admin/images/flags/tm.svg" alt="Turkmenistan" title="Turkmenistan"></span>185.69.185.31</span></dd></dl></div></div> <span class="sl-cell-text">Я хочу попробовать бесплатную версию и добавить в систему Туркменский язык. Можно перевести самостоятельно?</span></td>
+<td class="sl-col-module sl-cell-ellipsis" title="Каталог файлов - files" data-label="Модуль">Каталог файлов - files</td>
+<td class="sl-col-author" data-label="Разместил"><a href="../account/view?uname=arassa" title="Персональная информация">arassa</a></td>
+<td class="sl-col-date" data-label="Дата" data-sort="2023-03-01T09:46:41+01:00"><time datetime="2023-03-01T09:46:41+01:00" title="01.03.2023 09:46:41">4 года назад</time></td>
+<td class="sl-col-status" data-label="Статус"><button type="button" class="sl-stat" title="Деактивировать" aria-label="Статус: Комментарий 20670" aria-pressed="true"><span class="sl-status-active"></span></button></td>
+<td class="sl-col-actions" data-label="Опции"><span class="sl-dial"><button class="sl-dial-toggle sl-but-mini" type="button" title="Опции" aria-expanded="false"><i class="bi bi-three-dots"></i></button><a class="sl-dial-item sl-but-mini" href="#" title="Подробный просмотр"><i class="bi bi-eye"></i></a><a class="sl-dial-item sl-but-mini" href="#" title="Ответить на сайте"><i class="bi bi-reply"></i></a><a class="sl-dial-item sl-but-mini" href="#" title="Полное редактирование"><i class="bi bi-pencil"></i></a><button class="sl-dial-item sl-but-mini" type="button" title="Удалить"><i class="bi bi-trash"></i></button></span></td>
+<td class="sl-col-check"><input type="checkbox" class="sl-check" data-pk-box aria-label="Выбрать комментарий 20670"></td>
+</tr>
+<tr data-sl-row="Комментарий 20669">
+<td class="sl-col-id" data-label="№">20669</td>
+<td class="sl-cell-ellipsis" title="А время генерации в PHP 8 тесты будут?" data-label="Комментарий"><div class="sl-float sl-tip"><button type="button" aria-label="Подробности: Комментарий 20669" aria-describedby="sl-tip-20669"><i class="bi bi-info-circle-fill" aria-hidden="true"></i></button><div class="sl-float-panel" role="tooltip" id="sl-tip-20669"><dl><dt>Модуль</dt><dd>Новости - news</dd><dt>CID</dt><dd>3916</dd><dt>Дата</dt><dd>01.03.2023 06:12:55</dd><dt>IP Адрес</dt><dd><span><span title="Russia" class="sl-geo-flag"><img src="../templates/admin/images/flags/ru.svg" alt="Russia" title="Russia"></span>128.72.8.174</span></dd></dl></div></div> <span class="sl-cell-text">А время генерации в PHP 8 тесты будут?</span></td>
+<td class="sl-col-module sl-cell-ellipsis" title="Новости - news" data-label="Модуль">Новости - news</td>
+<td class="sl-col-author" data-label="Разместил"><a href="../account/view?uname=hiphell" title="Персональная информация">hiphell</a></td>
+<td class="sl-col-date" data-label="Дата" data-sort="2023-03-01T06:12:55+01:00"><time datetime="2023-03-01T06:12:55+01:00" title="01.03.2023 06:12:55">4 года назад</time></td>
+<td class="sl-col-status" data-label="Статус"><button type="button" class="sl-stat" title="Деактивировать" aria-label="Статус: Комментарий 20669" aria-pressed="true"><span class="sl-status-active"></span></button></td>
+<td class="sl-col-actions" data-label="Опции"><span class="sl-dial"><button class="sl-dial-toggle sl-but-mini" type="button" title="Опции" aria-expanded="false"><i class="bi bi-three-dots"></i></button><a class="sl-dial-item sl-but-mini" href="#" title="Подробный просмотр"><i class="bi bi-eye"></i></a><a class="sl-dial-item sl-but-mini" href="#" title="Ответить на сайте"><i class="bi bi-reply"></i></a><a class="sl-dial-item sl-but-mini" href="#" title="Полное редактирование"><i class="bi bi-pencil"></i></a><button class="sl-dial-item sl-but-mini" type="button" title="Удалить"><i class="bi bi-trash"></i></button></span></td>
+<td class="sl-col-check"><input type="checkbox" class="sl-check" data-pk-box aria-label="Выбрать комментарий 20669"></td>
+</tr>
+<tr data-sl-row="Комментарий 20668">
+<td class="sl-col-id" data-label="№">20668</td>
+<td class="sl-cell-ellipsis" title="1920x1080. Одно из самых распространенных разрешений, а в списке нет..." data-label="Комментарий"><div class="sl-float sl-tip"><button type="button" aria-label="Подробности: Комментарий 20668" aria-describedby="sl-tip-20668"><i class="bi bi-info-circle-fill" aria-hidden="true"></i></button><div class="sl-float-panel" role="tooltip" id="sl-tip-20668"><dl><dt>Модуль</dt><dd>Опросы - voting</dd><dt>CID</dt><dd>22</dd><dt>Дата</dt><dd>30.06.2022 10:38:13</dd><dt>IP Адрес</dt><dd><span><span title="Ukraine" class="sl-geo-flag"><img src="../templates/admin/images/flags/ua.svg" alt="Ukraine" title="Ukraine"></span>176.104.48.144</span></dd></dl></div></div> <span class="sl-cell-text">1920x1080. Одно из самых распространенных разрешений, а в списке нет...</span></td>
+<td class="sl-col-module sl-cell-ellipsis" title="Опросы - voting" data-label="Модуль">Опросы - voting</td>
+<td class="sl-col-author" data-label="Разместил"><a href="../account/view?uname=potapchik" title="Персональная информация">potapchik</a></td>
+<td class="sl-col-date" data-label="Дата" data-sort="2022-06-30T10:38:13+02:00"><time datetime="2022-06-30T10:38:13+02:00" title="30.06.2022 10:38:13">4 года назад</time></td>
+<td class="sl-col-status" data-label="Статус"><button type="button" class="sl-stat" title="Деактивировать" aria-label="Статус: Комментарий 20668" aria-pressed="true"><span class="sl-status-active"></span></button></td>
+<td class="sl-col-actions" data-label="Опции"><span class="sl-dial"><button class="sl-dial-toggle sl-but-mini" type="button" title="Опции" aria-expanded="false"><i class="bi bi-three-dots"></i></button><a class="sl-dial-item sl-but-mini" href="#" title="Подробный просмотр"><i class="bi bi-eye"></i></a><a class="sl-dial-item sl-but-mini" href="#" title="Ответить на сайте"><i class="bi bi-reply"></i></a><a class="sl-dial-item sl-but-mini" href="#" title="Полное редактирование"><i class="bi bi-pencil"></i></a><button class="sl-dial-item sl-but-mini" type="button" title="Удалить"><i class="bi bi-trash"></i></button></span></td>
+<td class="sl-col-check"><input type="checkbox" class="sl-check" data-pk-box aria-label="Выбрать комментарий 20668"></td>
+</tr>
+<tr data-sl-row="Комментарий 20667">
+<td class="sl-col-id" data-label="№">20667</td>
+<td class="sl-cell-ellipsis" title="Тоже ничего не понял!" data-label="Комментарий"><div class="sl-float sl-tip"><button type="button" aria-label="Подробности: Комментарий 20667" aria-describedby="sl-tip-20667"><i class="bi bi-info-circle-fill" aria-hidden="true"></i></button><div class="sl-float-panel" role="tooltip" id="sl-tip-20667"><dl><dt>Модуль</dt><dd>Опросы - voting</dd><dt>CID</dt><dd>10</dd><dt>Дата</dt><dd>29.06.2022 15:46:42</dd><dt>IP Адрес</dt><dd><span><span title="Ukraine" class="sl-geo-flag"><img src="../templates/admin/images/flags/ua.svg" alt="Ukraine" title="Ukraine"></span>176.104.48.144</span></dd></dl></div></div> <span class="sl-cell-text">Тоже ничего не понял!</span></td>
+<td class="sl-col-module sl-cell-ellipsis" title="Опросы - voting" data-label="Модуль">Опросы - voting</td>
+<td class="sl-col-author" data-label="Разместил"><a href="../account/view?uname=potapchik" title="Персональная информация">potapchik</a></td>
+<td class="sl-col-date" data-label="Дата" data-sort="2022-06-29T15:46:42+02:00"><time datetime="2022-06-29T15:46:42+02:00" title="29.06.2022 15:46:42">4 года назад</time></td>
+<td class="sl-col-status" data-label="Статус"><button type="button" class="sl-stat" title="Деактивировать" aria-label="Статус: Комментарий 20667" aria-pressed="true"><span class="sl-status-active"></span></button></td>
+<td class="sl-col-actions" data-label="Опции"><span class="sl-dial"><button class="sl-dial-toggle sl-but-mini" type="button" title="Опции" aria-expanded="false"><i class="bi bi-three-dots"></i></button><a class="sl-dial-item sl-but-mini" href="#" title="Подробный просмотр"><i class="bi bi-eye"></i></a><a class="sl-dial-item sl-but-mini" href="#" title="Ответить на сайте"><i class="bi bi-reply"></i></a><a class="sl-dial-item sl-but-mini" href="#" title="Полное редактирование"><i class="bi bi-pencil"></i></a><button class="sl-dial-item sl-but-mini" type="button" title="Удалить"><i class="bi bi-trash"></i></button></span></td>
+<td class="sl-col-check"><input type="checkbox" class="sl-check" data-pk-box aria-label="Выбрать комментарий 20667"></td>
+</tr>
+<tr data-sl-row="Комментарий 20666">
+<td class="sl-col-id" data-label="№">20666</td>
+<td class="sl-cell-ellipsis" title="ничего не понятно" data-label="Комментарий"><div class="sl-float sl-tip"><button type="button" aria-label="Подробности: Комментарий 20666" aria-describedby="sl-tip-20666"><i class="bi bi-info-circle-fill" aria-hidden="true"></i></button><div class="sl-float-panel" role="tooltip" id="sl-tip-20666"><dl><dt>Модуль</dt><dd>Опросы - voting</dd><dt>CID</dt><dd>10</dd><dt>Дата</dt><dd>09.06.2022 14:07:18</dd><dt>IP Адрес</dt><dd><span><span title="Ukraine" class="sl-geo-flag"><img src="../templates/admin/images/flags/ua.svg" alt="Ukraine" title="Ukraine"></span>176.104.48.144</span></dd></dl></div></div> <span class="sl-cell-text">ничего не понятно</span></td>
+<td class="sl-col-module sl-cell-ellipsis" title="Опросы - voting" data-label="Модуль">Опросы - voting</td>
+<td class="sl-col-author" data-label="Разместил"><a href="../account/view?uname=globo" title="Персональная информация">globo</a></td>
+<td class="sl-col-date" data-label="Дата" data-sort="2022-06-09T14:07:18+02:00"><time datetime="2022-06-09T14:07:18+02:00" title="09.06.2022 14:07:18">4 года назад</time></td>
+<td class="sl-col-status" data-label="Статус"><button type="button" class="sl-stat" title="Деактивировать" aria-label="Статус: Комментарий 20666" aria-pressed="true"><span class="sl-status-active"></span></button></td>
+<td class="sl-col-actions" data-label="Опции"><span class="sl-dial"><button class="sl-dial-toggle sl-but-mini" type="button" title="Опции" aria-expanded="false"><i class="bi bi-three-dots"></i></button><a class="sl-dial-item sl-but-mini" href="#" title="Подробный просмотр"><i class="bi bi-eye"></i></a><a class="sl-dial-item sl-but-mini" href="#" title="Ответить на сайте"><i class="bi bi-reply"></i></a><a class="sl-dial-item sl-but-mini" href="#" title="Полное редактирование"><i class="bi bi-pencil"></i></a><button class="sl-dial-item sl-but-mini" type="button" title="Удалить"><i class="bi bi-trash"></i></button></span></td>
+<td class="sl-col-check"><input type="checkbox" class="sl-check" data-pk-box aria-label="Выбрать комментарий 20666"></td>
+</tr>
+<tr data-sl-row="Комментарий 21662">
+<td class="sl-col-id" data-label="№">21662</td>
+<td class="sl-cell-ellipsis" title="test 2" data-label="Комментарий"><div class="sl-float sl-tip"><button type="button" aria-label="Подробности: Комментарий 21662" aria-describedby="sl-tip-21662"><i class="bi bi-info-circle-fill" aria-hidden="true"></i></button><div class="sl-float-panel" role="tooltip" id="sl-tip-21662"><dl><dt>Модуль</dt><dd>Помощь - help</dd><dt>CID</dt><dd>4187</dd><dt>Дата</dt><dd>31.05.2022 13:55:24</dd><dt>IP Адрес</dt><dd><span><span title="Germany" class="sl-geo-flag"><img src="../templates/admin/images/flags/de.svg" alt="Germany" title="Germany"></span>87.179.54.121</span></dd></dl></div></div> <span class="sl-cell-text">test 2</span></td>
+<td class="sl-col-module sl-cell-ellipsis" title="Помощь - help" data-label="Модуль">Помощь - help</td>
+<td class="sl-col-author" data-label="Разместил"><a href="../account/view?uname=SLAED%20CMS" title="Персональная информация">SLAED CMS</a></td>
+<td class="sl-col-date" data-label="Дата" data-sort="2022-05-31T13:55:24+02:00"><time datetime="2022-05-31T13:55:24+02:00" title="31.05.2022 13:55:24">4 года назад</time></td>
+<td class="sl-col-status" data-label="Статус"><button type="button" class="sl-stat" title="Деактивировать" aria-label="Статус: Комментарий 21662" aria-pressed="true"><span class="sl-status-active"></span></button></td>
+<td class="sl-col-actions" data-label="Опции"><span class="sl-dial"><button class="sl-dial-toggle sl-but-mini" type="button" title="Опции" aria-expanded="false"><i class="bi bi-three-dots"></i></button><a class="sl-dial-item sl-but-mini" href="#" title="Подробный просмотр"><i class="bi bi-eye"></i></a><a class="sl-dial-item sl-but-mini" href="#" title="Ответить на сайте"><i class="bi bi-reply"></i></a><a class="sl-dial-item sl-but-mini" href="#" title="Полное редактирование"><i class="bi bi-pencil"></i></a><button class="sl-dial-item sl-but-mini" type="button" title="Удалить"><i class="bi bi-trash"></i></button></span></td>
+<td class="sl-col-check"><input type="checkbox" class="sl-check" data-pk-box aria-label="Выбрать комментарий 21662"></td>
+</tr>
+<tr data-sl-row="Комментарий 20664">
+<td class="sl-col-id" data-label="№">20664</td>
+<td class="sl-cell-ellipsis" title="SLAED CMS, добрый день. Скажите а реально ли получить исходники логотипа стандартной темы от Open SLAED 1.3.1?" data-label="Комментарий"><div class="sl-float sl-tip"><button type="button" aria-label="Подробности: Комментарий 20664" aria-describedby="sl-tip-20664"><i class="bi bi-info-circle-fill" aria-hidden="true"></i></button><div class="sl-float-panel" role="tooltip" id="sl-tip-20664"><dl><dt>Модуль</dt><dd>Каталог файлов - files</dd><dt>CID</dt><dd>4984</dd><dt>Дата</dt><dd>30.08.2021 11:04:23</dd><dt>IP Адрес</dt><dd><span><span title="Russia" class="sl-geo-flag"><img src="../templates/admin/images/flags/ru.svg" alt="Russia" title="Russia"></span>176.102.2.202</span></dd></dl></div></div> <span class="sl-cell-text">SLAED CMS, добрый день. Скажите а реально ли получить исходники логотипа стандартной темы от Open SLAED 1.3.1?</span></td>
+<td class="sl-col-module sl-cell-ellipsis" title="Каталог файлов - files" data-label="Модуль">Каталог файлов - files</td>
+<td class="sl-col-author" data-label="Разместил"><a href="../account/view?uname=viris42" title="Персональная информация">viris42</a></td>
+<td class="sl-col-date" data-label="Дата" data-sort="2021-08-30T11:04:23+02:00"><time datetime="2021-08-30T11:04:23+02:00" title="30.08.2021 11:04:23">5 лет назад</time></td>
+<td class="sl-col-status" data-label="Статус"><button type="button" class="sl-stat" title="Деактивировать" aria-label="Статус: Комментарий 20664" aria-pressed="true"><span class="sl-status-active"></span></button></td>
+<td class="sl-col-actions" data-label="Опции"><span class="sl-dial"><button class="sl-dial-toggle sl-but-mini" type="button" title="Опции" aria-expanded="false"><i class="bi bi-three-dots"></i></button><a class="sl-dial-item sl-but-mini" href="#" title="Подробный просмотр"><i class="bi bi-eye"></i></a><a class="sl-dial-item sl-but-mini" href="#" title="Ответить на сайте"><i class="bi bi-reply"></i></a><a class="sl-dial-item sl-but-mini" href="#" title="Полное редактирование"><i class="bi bi-pencil"></i></a><button class="sl-dial-item sl-but-mini" type="button" title="Удалить"><i class="bi bi-trash"></i></button></span></td>
+<td class="sl-col-check"><input type="checkbox" class="sl-check" data-pk-box aria-label="Выбрать комментарий 20664"></td>
+</tr>
+<tr data-sl-row="Комментарий 20663">
+<td class="sl-col-id" data-label="№">20663</td>
+<td class="sl-cell-ellipsis" title="goolybad, в таких случаях Яндекс рекомендует создавать несколько каналов. Можно добавить дополнительный GET параметр нач..." data-label="Комментарий"><div class="sl-float sl-tip"><button type="button" aria-label="Подробности: Комментарий 20663" aria-describedby="sl-tip-20663"><i class="bi bi-info-circle-fill" aria-hidden="true"></i></button><div class="sl-float-panel" role="tooltip" id="sl-tip-20663"><dl><dt>Модуль</dt><dd>Документация - docs</dd><dt>CID</dt><dd>3977</dd><dt>Дата</dt><dd>26.03.2021 21:02:18</dd><dt>IP Адрес</dt><dd><span><span title="United States" class="sl-geo-flag"><img src="../templates/admin/images/flags/us.svg" alt="United States" title="United States"></span>92.192.101.1</span></dd></dl></div></div> <span class="sl-cell-text">goolybad, в таких случаях Яндекс рекомендует создавать несколько каналов. Можно добавить дополнительный GET параметр нач...</span></td>
+<td class="sl-col-module sl-cell-ellipsis" title="Документация - docs" data-label="Модуль">Документация - docs</td>
+<td class="sl-col-author" data-label="Разместил"><a href="../account/view?uname=SLAED%20CMS" title="Персональная информация">SLAED CMS</a></td>
+<td class="sl-col-date" data-label="Дата" data-sort="2021-03-26T21:02:18+01:00"><time datetime="2021-03-26T21:02:18+01:00" title="26.03.2021 21:02:18">6 лет назад</time></td>
+<td class="sl-col-status" data-label="Статус"><button type="button" class="sl-stat" title="Деактивировать" aria-label="Статус: Комментарий 20663" aria-pressed="true"><span class="sl-status-active"></span></button></td>
+<td class="sl-col-actions" data-label="Опции"><span class="sl-dial"><button class="sl-dial-toggle sl-but-mini" type="button" title="Опции" aria-expanded="false"><i class="bi bi-three-dots"></i></button><a class="sl-dial-item sl-but-mini" href="#" title="Подробный просмотр"><i class="bi bi-eye"></i></a><a class="sl-dial-item sl-but-mini" href="#" title="Ответить на сайте"><i class="bi bi-reply"></i></a><a class="sl-dial-item sl-but-mini" href="#" title="Полное редактирование"><i class="bi bi-pencil"></i></a><button class="sl-dial-item sl-but-mini" type="button" title="Удалить"><i class="bi bi-trash"></i></button></span></td>
+<td class="sl-col-check"><input type="checkbox" class="sl-check" data-pk-box aria-label="Выбрать комментарий 20663"></td>
+</tr>
+<tr data-sl-row="Комментарий 20662">
+<td class="sl-col-id" data-label="№">20662</td>
+<td class="sl-cell-ellipsis" title="Как быть с тем, что яндекс требует в одной ленте rss не более 1000 материалов?" data-label="Комментарий"><div class="sl-float sl-tip"><button type="button" aria-label="Подробности: Комментарий 20662" aria-describedby="sl-tip-20662"><i class="bi bi-info-circle-fill" aria-hidden="true"></i></button><div class="sl-float-panel" role="tooltip" id="sl-tip-20662"><dl><dt>Модуль</dt><dd>Документация - docs</dd><dt>CID</dt><dd>3977</dd><dt>Дата</dt><dd>21.03.2021 12:48:10</dd><dt>IP Адрес</dt><dd><span><span title="Belarus" class="sl-geo-flag"><img src="../templates/admin/images/flags/by.svg" alt="Belarus" title="Belarus"></span>178.121.191.87</span></dd></dl></div></div> <span class="sl-cell-text">Как быть с тем, что яндекс требует в одной ленте rss не более 1000 материалов?</span></td>
+<td class="sl-col-module sl-cell-ellipsis" title="Документация - docs" data-label="Модуль">Документация - docs</td>
+<td class="sl-col-author" data-label="Разместил"><a href="../account/view?uname=goolybad" title="Персональная информация">goolybad</a></td>
+<td class="sl-col-date" data-label="Дата" data-sort="2021-03-21T12:48:10+01:00"><time datetime="2021-03-21T12:48:10+01:00" title="21.03.2021 12:48:10">6 лет назад</time></td>
+<td class="sl-col-status" data-label="Статус"><button type="button" class="sl-stat" title="Деактивировать" aria-label="Статус: Комментарий 20662" aria-pressed="true"><span class="sl-status-active"></span></button></td>
+<td class="sl-col-actions" data-label="Опции"><span class="sl-dial"><button class="sl-dial-toggle sl-but-mini" type="button" title="Опции" aria-expanded="false"><i class="bi bi-three-dots"></i></button><a class="sl-dial-item sl-but-mini" href="#" title="Подробный просмотр"><i class="bi bi-eye"></i></a><a class="sl-dial-item sl-but-mini" href="#" title="Ответить на сайте"><i class="bi bi-reply"></i></a><a class="sl-dial-item sl-but-mini" href="#" title="Полное редактирование"><i class="bi bi-pencil"></i></a><button class="sl-dial-item sl-but-mini" type="button" title="Удалить"><i class="bi bi-trash"></i></button></span></td>
+<td class="sl-col-check"><input type="checkbox" class="sl-check" data-pk-box aria-label="Выбрать комментарий 20662"></td>
+</tr>
+<tr data-sl-row="Комментарий 20659">
+<td class="sl-col-id" data-label="№">20659</td>
+<td class="sl-cell-ellipsis" title="Спасибо!" data-label="Комментарий"><div class="sl-float sl-tip"><button type="button" aria-label="Подробности: Комментарий 20659" aria-describedby="sl-tip-20659"><i class="bi bi-info-circle-fill" aria-hidden="true"></i></button><div class="sl-float-panel" role="tooltip" id="sl-tip-20659"><dl><dt>Модуль</dt><dd>Каталог файлов - files</dd><dt>CID</dt><dd>5060</dd><dt>Дата</dt><dd>11.02.2020 12:32:47</dd><dt>IP Адрес</dt><dd><span><span title="Ukraine" class="sl-geo-flag"><img src="../templates/admin/images/flags/ua.svg" alt="Ukraine" title="Ukraine"></span>94.178.97.250</span></dd></dl></div></div> <span class="sl-cell-text">Спасибо!</span></td>
+<td class="sl-col-module sl-cell-ellipsis" title="Каталог файлов - files" data-label="Модуль">Каталог файлов - files</td>
+<td class="sl-col-author" data-label="Разместил"><a href="../account/view?uname=nafania_19" title="Персональная информация">nafania_19</a></td>
+<td class="sl-col-date" data-label="Дата" data-sort="2020-02-11T12:32:47+01:00"><time datetime="2020-02-11T12:32:47+01:00" title="11.02.2020 12:32:47">7 лет назад</time></td>
+<td class="sl-col-status" data-label="Статус"><button type="button" class="sl-stat" title="Деактивировать" aria-label="Статус: Комментарий 20659" aria-pressed="true"><span class="sl-status-active"></span></button></td>
+<td class="sl-col-actions" data-label="Опции"><span class="sl-dial"><button class="sl-dial-toggle sl-but-mini" type="button" title="Опции" aria-expanded="false"><i class="bi bi-three-dots"></i></button><a class="sl-dial-item sl-but-mini" href="#" title="Подробный просмотр"><i class="bi bi-eye"></i></a><a class="sl-dial-item sl-but-mini" href="#" title="Ответить на сайте"><i class="bi bi-reply"></i></a><a class="sl-dial-item sl-but-mini" href="#" title="Полное редактирование"><i class="bi bi-pencil"></i></a><button class="sl-dial-item sl-but-mini" type="button" title="Удалить"><i class="bi bi-trash"></i></button></span></td>
+<td class="sl-col-check"><input type="checkbox" class="sl-check" data-pk-box aria-label="Выбрать комментарий 20659"></td>
+</tr>
+<tr data-sl-row="Комментарий 20658">
+<td class="sl-col-id" data-label="№">20658</td>
+<td class="sl-cell-ellipsis" title="Очень давно имела с ним дело, не самая удобная вещь." data-label="Комментарий"><div class="sl-float sl-tip"><button type="button" aria-label="Подробности: Комментарий 20658" aria-describedby="sl-tip-20658"><i class="bi bi-info-circle-fill" aria-hidden="true"></i></button><div class="sl-float-panel" role="tooltip" id="sl-tip-20658"><dl><dt>Модуль</dt><dd>Опросы - voting</dd><dt>CID</dt><dd>18</dd><dt>Дата</dt><dd>09.02.2020 17:13:35</dd><dt>IP Адрес</dt><dd><span><span title="Russia" class="sl-geo-flag"><img src="../templates/admin/images/flags/ru.svg" alt="Russia" title="Russia"></span>178.70.121.81</span></dd></dl></div></div> <span class="sl-cell-text">Очень давно имела с ним дело, не самая удобная вещь.</span></td>
+<td class="sl-col-module sl-cell-ellipsis" title="Опросы - voting" data-label="Модуль">Опросы - voting</td>
+<td class="sl-col-author" data-label="Разместил"><a href="../account/view?uname=Amikta" title="Персональная информация">Amikta</a></td>
+<td class="sl-col-date" data-label="Дата" data-sort="2020-02-09T17:13:35+01:00"><time datetime="2020-02-09T17:13:35+01:00" title="09.02.2020 17:13:35">7 лет назад</time></td>
+<td class="sl-col-status" data-label="Статус"><button type="button" class="sl-stat" title="Деактивировать" aria-label="Статус: Комментарий 20658" aria-pressed="true"><span class="sl-status-active"></span></button></td>
+<td class="sl-col-actions" data-label="Опции"><span class="sl-dial"><button class="sl-dial-toggle sl-but-mini" type="button" title="Опции" aria-expanded="false"><i class="bi bi-three-dots"></i></button><a class="sl-dial-item sl-but-mini" href="#" title="Подробный просмотр"><i class="bi bi-eye"></i></a><a class="sl-dial-item sl-but-mini" href="#" title="Ответить на сайте"><i class="bi bi-reply"></i></a><a class="sl-dial-item sl-but-mini" href="#" title="Полное редактирование"><i class="bi bi-pencil"></i></a><button class="sl-dial-item sl-but-mini" type="button" title="Удалить"><i class="bi bi-trash"></i></button></span></td>
+<td class="sl-col-check"><input type="checkbox" class="sl-check" data-pk-box aria-label="Выбрать комментарий 20658"></td>
+</tr>
+<tr data-sl-row="Комментарий 20657">
+<td class="sl-col-id" data-label="№">20657</td>
+<td class="sl-cell-ellipsis" title="Очень интересно, спасибо!" data-label="Комментарий"><div class="sl-float sl-tip"><button type="button" aria-label="Подробности: Комментарий 20657" aria-describedby="sl-tip-20657"><i class="bi bi-info-circle-fill" aria-hidden="true"></i></button><div class="sl-float-panel" role="tooltip" id="sl-tip-20657"><dl><dt>Модуль</dt><dd>Каталог сайтов - links</dd><dt>CID</dt><dd>4349</dd><dt>Дата</dt><dd>03.02.2020 10:11:05</dd><dt>IP Адрес</dt><dd><span><span title="Norway" class="sl-geo-flag"><img src="../templates/admin/images/flags/no.svg" alt="Norway" title="Norway"></span>77.111.247.157</span></dd></dl></div></div> <span class="sl-cell-text">Очень интересно, спасибо!</span></td>
+<td class="sl-col-module sl-cell-ellipsis" title="Каталог сайтов - links" data-label="Модуль">Каталог сайтов - links</td>
+<td class="sl-col-author" data-label="Разместил"><a href="../account/view?uname=Badboy" title="Персональная информация">Badboy</a></td>
+<td class="sl-col-date" data-label="Дата" data-sort="2020-02-03T10:11:05+01:00"><time datetime="2020-02-03T10:11:05+01:00" title="03.02.2020 10:11:05">7 лет назад</time></td>
+<td class="sl-col-status" data-label="Статус"><button type="button" class="sl-stat" title="Деактивировать" aria-label="Статус: Комментарий 20657" aria-pressed="true"><span class="sl-status-active"></span></button></td>
+<td class="sl-col-actions" data-label="Опции"><span class="sl-dial"><button class="sl-dial-toggle sl-but-mini" type="button" title="Опции" aria-expanded="false"><i class="bi bi-three-dots"></i></button><a class="sl-dial-item sl-but-mini" href="#" title="Подробный просмотр"><i class="bi bi-eye"></i></a><a class="sl-dial-item sl-but-mini" href="#" title="Ответить на сайте"><i class="bi bi-reply"></i></a><a class="sl-dial-item sl-but-mini" href="#" title="Полное редактирование"><i class="bi bi-pencil"></i></a><button class="sl-dial-item sl-but-mini" type="button" title="Удалить"><i class="bi bi-trash"></i></button></span></td>
+<td class="sl-col-check"><input type="checkbox" class="sl-check" data-pk-box aria-label="Выбрать комментарий 20657"></td>
+</tr>
+<tr data-sl-row="Комментарий 20655">
+<td class="sl-col-id" data-label="№">20655</td>
+<td class="sl-cell-ellipsis" title="Вот это здорово!" data-label="Комментарий"><div class="sl-float sl-tip"><button type="button" aria-label="Подробности: Комментарий 20655" aria-describedby="sl-tip-20655"><i class="bi bi-info-circle-fill" aria-hidden="true"></i></button><div class="sl-float-panel" role="tooltip" id="sl-tip-20655"><dl><dt>Модуль</dt><dd>Новости - news</dd><dt>CID</dt><dd>3915</dd><dt>Дата</dt><dd>10.09.2019 14:28:14</dd><dt>IP Адрес</dt><dd><span><span title="Ukraine" class="sl-geo-flag"><img src="../templates/admin/images/flags/ua.svg" alt="Ukraine" title="Ukraine"></span>159.224.229.27</span></dd></dl></div></div> <span class="sl-cell-text">Вот это здорово!</span></td>
+<td class="sl-col-module sl-cell-ellipsis" title="Новости - news" data-label="Модуль">Новости - news</td>
+<td class="sl-col-author" data-label="Разместил"><a href="../account/view?uname=alexvoronglass" title="Персональная информация">alexvoronglass</a></td>
+<td class="sl-col-date" data-label="Дата" data-sort="2019-09-10T14:28:14+02:00"><time datetime="2019-09-10T14:28:14+02:00" title="10.09.2019 14:28:14">7 лет назад</time></td>
+<td class="sl-col-status" data-label="Статус"><button type="button" class="sl-stat" title="Деактивировать" aria-label="Статус: Комментарий 20655" aria-pressed="true"><span class="sl-status-active"></span></button></td>
+<td class="sl-col-actions" data-label="Опции"><span class="sl-dial"><button class="sl-dial-toggle sl-but-mini" type="button" title="Опции" aria-expanded="false"><i class="bi bi-three-dots"></i></button><a class="sl-dial-item sl-but-mini" href="#" title="Подробный просмотр"><i class="bi bi-eye"></i></a><a class="sl-dial-item sl-but-mini" href="#" title="Ответить на сайте"><i class="bi bi-reply"></i></a><a class="sl-dial-item sl-but-mini" href="#" title="Полное редактирование"><i class="bi bi-pencil"></i></a><button class="sl-dial-item sl-but-mini" type="button" title="Удалить"><i class="bi bi-trash"></i></button></span></td>
+<td class="sl-col-check"><input type="checkbox" class="sl-check" data-pk-box aria-label="Выбрать комментарий 20655"></td>
+</tr>
+<tr data-sl-row="Комментарий 20654">
+<td class="sl-col-id" data-label="№">20654</td>
+<td class="sl-cell-ellipsis" title="roma, пожалуйста воспользуйтесь службой обратной связи." data-label="Комментарий"><div class="sl-float sl-tip"><button type="button" aria-label="Подробности: Комментарий 20654" aria-describedby="sl-tip-20654"><i class="bi bi-info-circle-fill" aria-hidden="true"></i></button><div class="sl-float-panel" role="tooltip" id="sl-tip-20654"><dl><dt>Модуль</dt><dd>Новости - news</dd><dt>CID</dt><dd>3916</dd><dt>Дата</dt><dd>22.07.2019 14:45:55</dd><dt>IP Адрес</dt><dd><span><span title="Germany" class="sl-geo-flag"><img src="../templates/admin/images/flags/de.svg" alt="Germany" title="Germany"></span>92.252.31.173</span></dd></dl></div></div> <span class="sl-cell-text">roma, пожалуйста воспользуйтесь службой обратной связи.</span></td>
+<td class="sl-col-module sl-cell-ellipsis" title="Новости - news" data-label="Модуль">Новости - news</td>
+<td class="sl-col-author" data-label="Разместил"><a href="../account/view?uname=SLAED%20CMS" title="Персональная информация">SLAED CMS</a></td>
+<td class="sl-col-date" data-label="Дата" data-sort="2019-07-22T14:45:55+02:00"><time datetime="2019-07-22T14:45:55+02:00" title="22.07.2019 14:45:55">7 лет назад</time></td>
+<td class="sl-col-status" data-label="Статус"><button type="button" class="sl-stat" title="Деактивировать" aria-label="Статус: Комментарий 20654" aria-pressed="true"><span class="sl-status-active"></span></button></td>
+<td class="sl-col-actions" data-label="Опции"><span class="sl-dial"><button class="sl-dial-toggle sl-but-mini" type="button" title="Опции" aria-expanded="false"><i class="bi bi-three-dots"></i></button><a class="sl-dial-item sl-but-mini" href="#" title="Подробный просмотр"><i class="bi bi-eye"></i></a><a class="sl-dial-item sl-but-mini" href="#" title="Ответить на сайте"><i class="bi bi-reply"></i></a><a class="sl-dial-item sl-but-mini" href="#" title="Полное редактирование"><i class="bi bi-pencil"></i></a><button class="sl-dial-item sl-but-mini" type="button" title="Удалить"><i class="bi bi-trash"></i></button></span></td>
+<td class="sl-col-check"><input type="checkbox" class="sl-check" data-pk-box aria-label="Выбрать комментарий 20654"></td>
+</tr>
+<tr data-sl-row="Комментарий 20653">
+<td class="sl-col-id" data-label="№">20653</td>
+<td class="sl-cell-ellipsis" title="Скажите пожалуйста, сколько будет стоить перенос этого сайта: xpower.ua, на самописном движке на SLAED CMS?" data-label="Комментарий"><div class="sl-float sl-tip"><button type="button" aria-label="Подробности: Комментарий 20653" aria-describedby="sl-tip-20653"><i class="bi bi-info-circle-fill" aria-hidden="true"></i></button><div class="sl-float-panel" role="tooltip" id="sl-tip-20653"><dl><dt>Модуль</dt><dd>Новости - news</dd><dt>CID</dt><dd>3916</dd><dt>Дата</dt><dd>15.07.2019 12:39:08</dd><dt>IP Адрес</dt><dd><span><span title="Ukraine" class="sl-geo-flag"><img src="../templates/admin/images/flags/ua.svg" alt="Ukraine" title="Ukraine"></span>128.124.54.84</span></dd></dl></div></div> <span class="sl-cell-text">Скажите пожалуйста, сколько будет стоить перенос этого сайта: xpower.ua, на самописном движке на SLAED CMS?</span></td>
+<td class="sl-col-module sl-cell-ellipsis" title="Новости - news" data-label="Модуль">Новости - news</td>
+<td class="sl-col-author" data-label="Разместил"><a href="../account/view?uname=roma" title="Персональная информация">roma</a></td>
+<td class="sl-col-date" data-label="Дата" data-sort="2019-07-15T12:39:08+02:00"><time datetime="2019-07-15T12:39:08+02:00" title="15.07.2019 12:39:08">7 лет назад</time></td>
+<td class="sl-col-status" data-label="Статус"><button type="button" class="sl-stat" title="Деактивировать" aria-label="Статус: Комментарий 20653" aria-pressed="true"><span class="sl-status-active"></span></button></td>
+<td class="sl-col-actions" data-label="Опции"><span class="sl-dial"><button class="sl-dial-toggle sl-but-mini" type="button" title="Опции" aria-expanded="false"><i class="bi bi-three-dots"></i></button><a class="sl-dial-item sl-but-mini" href="#" title="Подробный просмотр"><i class="bi bi-eye"></i></a><a class="sl-dial-item sl-but-mini" href="#" title="Ответить на сайте"><i class="bi bi-reply"></i></a><a class="sl-dial-item sl-but-mini" href="#" title="Полное редактирование"><i class="bi bi-pencil"></i></a><button class="sl-dial-item sl-but-mini" type="button" title="Удалить"><i class="bi bi-trash"></i></button></span></td>
+<td class="sl-col-check"><input type="checkbox" class="sl-check" data-pk-box aria-label="Выбрать комментарий 20653"></td>
+</tr>
+<tr data-sl-row="Комментарий 20652">
+<td class="sl-col-id" data-label="№">20652</td>
+<td class="sl-cell-ellipsis" title="У меня перестало работать расширение с почтой Яндекс. При чем, и на чистой почте от Яндекса и через почту для домена. В ..." data-label="Комментарий"><div class="sl-float sl-tip"><button type="button" aria-label="Подробности: Комментарий 20652" aria-describedby="sl-tip-20652"><i class="bi bi-info-circle-fill" aria-hidden="true"></i></button><div class="sl-float-panel" role="tooltip" id="sl-tip-20652"><dl><dt>Модуль</dt><dd>Каталог файлов - files</dd><dt>CID</dt><dd>5058</dd><dt>Дата</dt><dd>15.05.2019 06:02:22</dd><dt>IP Адрес</dt><dd><span><span title="Russia" class="sl-geo-flag"><img src="../templates/admin/images/flags/ru.svg" alt="Russia" title="Russia"></span>77.37.138.248</span></dd></dl></div></div> <span class="sl-cell-text">У меня перестало работать расширение с почтой Яндекс. При чем, и на чистой почте от Яндекса и через почту для домена. В ...</span></td>
+<td class="sl-col-module sl-cell-ellipsis" title="Каталог файлов - files" data-label="Модуль">Каталог файлов - files</td>
+<td class="sl-col-author" data-label="Разместил"><a href="../account/view?uname=otherside" title="Персональная информация">otherside</a></td>
+<td class="sl-col-date" data-label="Дата" data-sort="2019-05-15T06:02:22+02:00"><time datetime="2019-05-15T06:02:22+02:00" title="15.05.2019 06:02:22">7 лет назад</time></td>
+<td class="sl-col-status" data-label="Статус"><button type="button" class="sl-stat" title="Деактивировать" aria-label="Статус: Комментарий 20652" aria-pressed="true"><span class="sl-status-active"></span></button></td>
+<td class="sl-col-actions" data-label="Опции"><span class="sl-dial"><button class="sl-dial-toggle sl-but-mini" type="button" title="Опции" aria-expanded="false"><i class="bi bi-three-dots"></i></button><a class="sl-dial-item sl-but-mini" href="#" title="Подробный просмотр"><i class="bi bi-eye"></i></a><a class="sl-dial-item sl-but-mini" href="#" title="Ответить на сайте"><i class="bi bi-reply"></i></a><a class="sl-dial-item sl-but-mini" href="#" title="Полное редактирование"><i class="bi bi-pencil"></i></a><button class="sl-dial-item sl-but-mini" type="button" title="Удалить"><i class="bi bi-trash"></i></button></span></td>
+<td class="sl-col-check"><input type="checkbox" class="sl-check" data-pk-box aria-label="Выбрать комментарий 20652"></td>
+</tr>
+</tbody>
+</table>
+  </div>
+  <div class="sl-div-actions">
+    <div class="sl-list-bottom" id="sl-list-end">
+      <div class="sl-list-bottom-pager"><nav class="sl-pager" aria-label="Страницы">
+  <div class="sl-pager-main">
+    <div class="sl-pager-nav">
+        <span title="Назад" class="sl-but-mini sl-is-muted"><i class="bi bi-chevron-left" aria-hidden="true"></i></span>
+      <span class="sl-seg sl-seg-pager" data-sl-knob="pager" style="--sl-d-knob-x: 2px; --sl-d-knob-w: 26px;"><span class="sl-seg-knob" data-sl-knob-mark="" aria-hidden="true"></span><span class="sl-seg-run sl-pager-pages">  <span title="1" aria-current="page" class="sl-seg-cell sl-is-active">1</span>
+  <a href="../admin.php?name=comments&amp;num=2" title="2" class="sl-seg-cell sl-pager-near">2</a>
+  <a href="../admin.php?name=comments&amp;num=3" title="3" class="sl-seg-cell sl-pager-far">3</a>
+  <a href="../admin.php?name=comments&amp;num=4" title="4" class="sl-seg-cell sl-pager-far">4</a>
+  <a href="../admin.php?name=comments&amp;num=5" title="5" class="sl-seg-cell sl-pager-far">5</a>
+  <a href="../admin.php?name=comments&amp;num=6" title="6" class="sl-seg-cell sl-pager-far">6</a>
+  <a href="../admin.php?name=comments&amp;num=7" title="7" class="sl-seg-cell sl-pager-far">7</a>
+  <a href="../admin.php?name=comments&amp;num=8" title="8" class="sl-seg-cell sl-pager-far">8</a>
+  <span class="sl-seg-cell sl-is-muted" aria-hidden="true">…</span>
+  <a href="../admin.php?name=comments&amp;num=337" title="337" class="sl-seg-cell">337</a>
+</span></span>
+        <a href="../admin.php?name=comments&amp;num=2" title="Вперед" aria-label="Вперед" rel="next" aria-keyshortcuts="ArrowRight" class="sl-but-mini"><i class="bi bi-chevron-right" aria-hidden="true"></i></a>
+    </div>
+    <div class="sl-pager-side">
+      <span class="sl-pager-sep" aria-hidden="true"></span>
+      <a href="#top" title="Наверх" aria-label="Наверх" class="sl-but-mini"><i class="bi bi-arrow-up" aria-hidden="true"></i></a>      <div class="sl-tip sl-float sl-pager-keys" tabindex="0" role="button" aria-label="Листайте с клавиатуры"><span class="sl-but-mini" aria-hidden="true"><i class="bi bi-info-lg"></i></span><div class="sl-float-panel sl-pager-tip" role="tooltip"><p class="sl-pager-tip-head">Листайте с клавиатуры</p><ul class="sl-pager-tip-keys"><li><kbd><i class="bi bi-arrow-left" role="img" aria-label="Стрелка влево"></i></kbd>Предыдущая страница</li><li><kbd><i class="bi bi-arrow-right" role="img" aria-label="Стрелка вправо"></i></kbd>Следующая страница</li><li><kbd>J</kbd><kbd>K</kbd>Строка ниже и выше</li><li><kbd>X</kbd>Отметить строку</li><li><kbd>E</kbd>Править строку</li><li><kbd>/</kbd>Поиск</li><li><kbd>Ctrl</kbd><kbd>K</kbd>Быстрый переход</li><li><kbd>[</kbd>Свернуть меню</li></ul><p class="sl-pager-tip-note">Пока курсор не стоит в поле ввода</p></div></div>
+    </div>
+  </div>
+  <p class="sl-pager-info">Страница <b>1 из 337</b><span class="sl-pager-range"> · Показаны 1–25</span> · Всего <b>8411</b></p>
+</nav></div>
+      <div class="sl-list-bottom-actions">
+        <span class="sl-list-picked" data-sl-widest="Отмечено: 8 411"><span>Отмечено: <span data-pk-n="picked">0</span></span></span>
+        <div class="sl-div-form">
+          <label class="sl-visually-hidden" for="pk-typ">Действие с отмеченными</label>
+          <select id="pk-typ" class="sl-select" data-pk-act><option value="a0" data-pk-noun="Деактивация">Деактивировать</option><option value="d" data-pk-noun="Удаление">Удалить</option></select>
+          <button type="button" class="sl-but-blue" data-pk-do="run">OK</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+<p class="sl-visually-hidden" role="status" data-pk-said></p>
+</div>
+<div class="sl-box" data-demo-about></div>
+</div></main>
+      </div>
+      <footer class="sl-footer sl-admin-footer">
+        <div class="sl-copyright">Генерация: 0.251 сек. и 15 запросов к базе данных за 0.005 сек.<br><a href="https://slaed.net" title="SLAED CMS" target="_blank" rel="noopener noreferrer">SLAED CMS</a> © 2005-2026 Eduard Laas. Released under MIT License.</div>
+      </footer>
+    </div>
+    <div class="sl-wrapfoot"></div>
+  </div>
+
+  <script>document.write('<script src="assets/demo.js?v=' + Date.now() + '"><\/script><script src="assets/pick.js?v=' + Date.now() + '"><\/script>');</script>
+</body>
+</html>

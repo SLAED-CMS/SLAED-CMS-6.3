@@ -1473,6 +1473,11 @@
         else if (event.target.closest('[data-sl-pal-open]')) setPanelPalette();
         else if (event.target.closest('[data-sl-rail-toggle]')) setMenuRail(!isMenuRail());
     });
+    // A window opened from the drawer, as the watch window from the admin block, needs the page back: the drawer shuts before the window opens,
+    // so the window is not left inert and gives the focus back to the menu button when it closes
+    document.addEventListener('click', function (event) {
+        if (event.target.closest && event.target.closest('#sl-menu [data-sl-open]') && document.body.hasAttribute('data-sl-drawer')) setDrawer(false);
+    }, true);
     document.addEventListener('keydown', function (event) {
         if (event.key === 'Escape' && document.body.hasAttribute('data-sl-drawer')) setDrawer(false);
     });
@@ -1563,6 +1568,78 @@
         }, 60000);
         document.addEventListener('visibilitychange', setQueueSeen);
         window.addEventListener('focus', setQueueSeen);
+    }
+    // Г9-Г14 One answer of the cockpit poll: the tone of the panel and its line of state, the signals of the lamp in the order of the server, each ring and the strip
+    function setCockpitView(box, data) {
+        var loud = data.signals.filter(function (sig) { return sig.level !== 'ok'; }).length;
+        var list = box.querySelector('[data-sl-signals]');
+        var cap = box.querySelector('[data-sl-signals-cap]');
+        var sample = box.querySelector('template[data-sl-cockpit-row]').content.firstElementChild;
+        box.classList.remove('sl-knob-ok', 'sl-knob-warn', 'sl-knob-danger');
+        box.classList.add('sl-knob-' + data.tone);
+        box.querySelectorAll('[data-sl-tone]').forEach(function (node) { node.hidden = node.getAttribute('data-sl-tone') !== data.tone; });
+        box.querySelector('[data-sl-cockpit-loud]').hidden = loud === 0;
+        box.querySelector('[data-sl-cockpit-n]').textContent = loud;
+        cap.textContent = cap.getAttribute(loud ? 'data-sl-loud' : 'data-sl-calm');
+        data.signals.forEach(function (sig) {
+            var line = list.querySelector('[data-sl-signal="' + CSS.escape(sig.key) + '"]');
+            if (!line) return;
+            line.className = 'sl-knob-' + sig.level;
+            line.hidden = sig.level === 'ok';
+            line.querySelectorAll('[data-sl-level]').forEach(function (icon) { icon.hidden = icon.getAttribute('data-sl-level') !== sig.level; });
+            line.querySelector('[data-sl-signal-fact]').textContent = sig.fact;
+            list.appendChild(line);
+        });
+        Object.keys(data.gauges).forEach(function (key) {
+            var ring = box.querySelector('[data-sl-gauge="' + CSS.escape(key) + '"]');
+            var gauge = data.gauges[key];
+            var num = Math.round(gauge.value);
+            var rows;
+            if (!ring) return;
+            rows = ring.parentNode.querySelector('[data-sl-gauge-rows]');
+            ring.classList.remove('sl-knob-ok', 'sl-knob-info', 'sl-knob-warn', 'sl-knob-danger');
+            ring.classList.add('sl-knob-' + gauge.tone);
+            ring.querySelector('[data-sl-gauge-val]').textContent = num;
+            ring.querySelector('.sl-knob-val').setAttribute('stroke-dasharray', gauge.value + ' 100');
+            ring.setAttribute('aria-valuenow', num);
+            ring.setAttribute('aria-valuetext', num + '%');
+            rows.replaceChildren.apply(rows, gauge.rows.map(function (one) {
+                var link = sample.cloneNode(true);
+                var parts = link.querySelectorAll('span');
+                link.querySelector('.bi').classList.add('bi-' + one.icon);
+                parts[0].textContent = one.label;
+                parts[1].textContent = one.value;
+                return link;
+            }));
+        });
+        Object.keys(data.strip).forEach(function (key) {
+            var item = box.querySelector('[data-sl-strip="' + CSS.escape(key) + '"] [data-sl-strip-val]');
+            if (item) item.textContent = data.strip[key].value;
+        });
+        box.querySelectorAll('[aria-busy]').forEach(function (node) { node.setAttribute('aria-busy', 'false'); });
+        box.setAttribute('data-sl-live-stamp', Date.now());
+    }
+    // Г9 Г15 The cockpit asks for its figures at once and then at its interval while the tab is in sight and the live chip runs; a poll renews no session
+    function setCockpitPoll() {
+        var box = document.querySelector('[data-sl-cockpit]');
+        var busy = false;
+        var ask;
+        if (!box) return;
+        ask = function () {
+            if (busy || document.hidden || box.hasAttribute('data-sl-live-paused')) return;
+            busy = true;
+            fetch(box.getAttribute('data-sl-cockpit'), { credentials: 'same-origin', headers: { 'Accept': 'application/json', 'X-SL-Poll': '1' } })
+                .then(function (res) { return res.ok ? res.json() : null; })
+                .then(function (data) { if (data && data.gauges && Array.isArray(data.signals)) setCockpitView(box, data); })
+                .catch(function () {})
+                .then(function () { busy = false; });
+        };
+        ask();
+        window.setInterval(ask, (Number(box.getAttribute('data-sl-cockpit-every')) || 10) * 1000);
+        document.addEventListener('visibilitychange', ask);
+        box.addEventListener('click', function (event) {
+            if (event.target.closest('[data-sl-live-toggle]')) window.setTimeout(ask);
+        });
     }
     var listretry = null;
     // The list of the canon a request comes from or lands in
@@ -2066,6 +2143,7 @@
             addRankForm();
             addFormCanon();
             setQueuePoll();
+            setCockpitPoll();
             setSessionWatch();
             setMenuFind();
             setTimeAgo(document);
@@ -2078,6 +2156,7 @@
         addRankForm();
         addFormCanon();
         setQueuePoll();
+        setCockpitPoll();
         setSessionWatch();
         setMenuFind();
         setTimeAgo(document);

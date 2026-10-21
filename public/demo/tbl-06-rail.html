@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="ru" data-theme="auto">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Полоса статуса &middot; Таблицы панели — стенд SLAED CMS</title>
+  <link rel="stylesheet" href="../templates/admin/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../templates/admin/assets/css/base.css">
+  <link rel="stylesheet" href="../templates/admin/assets/css/theme.css">
+  <!-- The stand is served without Cache-Control; its sheets and scripts are stamped so an edit is seen at once -->
+  <script>document.write('<link rel="stylesheet" href="assets/demo.css?v=' + Date.now() + '"><link rel="stylesheet" href="assets/tbl.css?v=' + Date.now() + '">');</script>
+  <script src="../plugins/system/global-func.js"></script>
+  <script src="../plugins/system/slaed.js"></script>
+  <script src="../templates/admin/assets/js/admin-ui.js"></script>
+  <style>
+    /* Полоса статуса: hairlines, a head underlined in the accent; a comment waiting for a check carries an amber bar at the row start and a faint warm band */
+    @media (width > 560px) {
+      .tb-skin .sl-table-list-sort th {
+        height: 40px;
+        padding: 0 var(--sl-space-6) 0 var(--sl-space-5);
+        font-size: var(--sl-font-small);
+        color: var(--sl-primary-strong);
+        border-bottom: 2px solid var(--sl-primary);
+      }
+
+      .tb-skin .sl-table-list-sort td {
+        height: 42px;
+        padding: 0 var(--sl-space-5);
+        border-bottom: 1px solid var(--sl-border);
+      }
+
+      .tb-skin .sl-table-list-sort :is(th, td):is(.sl-col-status, .sl-col-actions, .sl-col-check) {
+        padding: 0 var(--sl-space-3);
+      }
+
+      .tb-skin .sl-table-list-sort tbody tr:last-child > td {
+        border-bottom: 0;
+      }
+
+      .tb-skin .sl-table-list-sort tbody tr:has(.sl-status-inactive) > td {
+        background: color-mix(in srgb, var(--sl-warning) 8%, transparent);
+      }
+
+      .tb-skin .sl-table-list-sort tbody tr:has(.sl-status-inactive) > td:first-child {
+        box-shadow: inset 3px 0 0 var(--sl-warning);
+      }
+
+      .tb-skin .sl-table-list-sort tbody tr:has(.sl-status-inactive) .sl-cell-text {
+        color: var(--sl-text-strong);
+        font-weight: var(--sl-weight-bold);
+      }
+
+      .tb-skin .sl-table-list-sort .sl-status-inactive {
+        color: var(--sl-warning);
+      }
+
+      .tb-skin .sl-table-list-sort tbody tr:hover > td {
+        background: color-mix(in srgb, var(--sl-primary) 5%, transparent);
+      }
+
+      .tb-skin .sl-table-list-sort tbody tr:hover > td:first-child {
+        box-shadow: inset 3px 0 0 var(--sl-primary);
+      }
+
+      .tb-skin .sl-table-list-sort tbody tr:has(> .sl-col-check input:checked) > td {
+        background: var(--sl-tint);
+      }
+
+      .tb-skin .sl-table-list-sort td:is(.sl-col-id, .sl-col-module, .sl-col-date) {
+        color: var(--sl-text-muted);
+      }
+    }
+  </style>
+</head>
+<body>
+  <script>document.write('<script src="assets/tbl.js?v=' + Date.now() + '"><\/script>');</script>
+  <script>document.write('<script src="assets/demo.js?v=' + Date.now() + '"><\/script>');</script>
+</body>
+</html>

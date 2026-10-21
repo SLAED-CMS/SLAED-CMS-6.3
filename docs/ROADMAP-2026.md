@@ -23,7 +23,7 @@ more: where a plan and this file disagree about the order, this file wins.
 | `docs/9-ADMIN-LOG-2026.md` | every journal of the site: the actions of the panel in `storage/logs/admin.log` in the one JSON format of `Logger`, written in `checkAdminPost()` with the logins; `user.log` and `oauth.log` on the same format; the login table `_login_log` for the profile and the panel; read on "Безопасность", linked from each module |
 | `docs/10-URL-2026.md` | readable addresses without `id` — `/files/adaptivnyi-shablon-pure` — in one registry of routes; one address per page, 301 for every other form, an address never reused |
 | `docs/11-UPDATE-2026.md` | updates from the panel: signed releases, the module `master` on slaed.net, the page "Обновления" in the core, the API as the branch `/api/` of `public/index.php` (written in Russian by the owner's wish) |
-| `docs/12-ADMIN-UI-2026.md` | the etalons `demo/admin/` and `demo/site/` moved into the themes `admin` and `lite`: the shell, one canon of the list and the form, the home cockpit, the merged block "Администрация", the floating menu in the panel and on the site, sounds in each theme's `sound/`, the screensaver; DIAL folded in (written in Russian, like the etalons) |
+| `docs/12-ADMIN-UI-2026.md` | the etalons `demo/admin/` and `demo/site/` moved into the themes `admin` and `lite`: the shell, one canon of the list and the form, the home cockpit, the merged block "Администрация", the floating menu in the panel and on the site, sounds in each theme's `sound/`, the screensaver, the action slot of an alert; DIAL folded in (written in Russian, like the etalons) |
 
 ## How a session runs
 
@@ -292,14 +292,56 @@ into the plan, then do whatever work the step names.
   and update — by the thresholds of the owner; `getSelfCheckState()` feeds `getSelfCheckAlert()`; the poll is
   `go=5&op=getCockpitData` with the token, super-administrator only; `dump_age` (days, 7) in `config/security.php`
   with its field; `Mail::getPending($age)` is public (owner, 2026-10-21). (2026-10-21)
-- [ ] 103. ADMIN-UI batch 15 — the cockpit of the home.
-- [ ] 104. ADMIN-UI batch 16 — the merged block "Администрация" in both themes, `dock.css` of each theme.
-- [ ] 105. ADMIN-UI batch 17 — the window "Наблюдение" in both themes.
+- [x] 103. ADMIN-UI batch 15 — the cockpit of the home. `partials/cockpit.html` and `fragments/live-chip.html` of the
+  theme admin; the lamp, its line of state and the fourteen signal rows come with the page from `getSystemSignals()`,
+  the rings and the strip from the poll, at once and every 10 s while the tab is seen and the chip runs; the home lost
+  the alerts of `setup.php`, the self-check and the PHP version to the lamp, `getSelfCheckAlert()` its `$full` and the
+  language `_PHPSETUP`; `_ADM_STATE`, `_ADM_CALM`, `_ADM_HEED`, `_ADM_FAULT`, `_ADM_PASSED` (owner, 2026-10-21). APCu is
+  private to each php-cgi of the Windows pool, so `getMonitorCache()` is a file of `Cache` alone (owner, 2026-10-21); the stand's
+  `config/local.php` was rebuilt for `dump_age` and issued a new master (owner, 2026-10-21). (2026-10-21)
+- [x] 104. ADMIN-UI batch 16 — the merged block "Администрация" in both themes, `dock.css` of each theme. One block of
+  `adminblock()` on `fragments/admin-block.html`, one file in both themes: the summary is `partials/session-summary.html`
+  of lite in both themes with the share of the administration (`--sl-d-admins`), the keys `sl-adm-*`, the links of the
+  admin row read by `getAdminBlockLinks()`; in the panel on the home only, on the site first in its column whatever its
+  weight, `status`, `which` and `lang` still deciding; the window and its key wait for batch 17, `--sl-solid-text` of
+  lite for batch 20; `_OPCL` moved to `lang/*.php` beside `_ADM_LINKS` and `_ADM_NOFILE` (owner, 2026-10-21). The
+  stand's `config/local.php` was rebuilt for the asset map of `dock.css` and issued a new master (owner, 2026-10-21).
+  (2026-10-21)
+- [x] 105. ADMIN-UI batch 17 — the window "Наблюдение" in both themes. The window is `fragments/window.html` with the
+  keys `move_text`, `full_text`, `restore_text`, printed by `getWindowSet()` for a super administrator on every page,
+  since inside the block it slid off a phone with the drawer; its body is `partials/session-stats.html` answered by
+  `getSessionStats()` (op `getSessionStats`, `go=5` and `go=1`, with the token), loaded on the first opening and polled
+  every 10 s by the chosen cell of the kind filter only while the window is open and seen; the filter is `sl-seg`, the
+  pause the live chip, three figures of the present (owner, 2026-10-21); `_ADM_LIVE`, `_ADM_NOW`, `_ADM_PAGES`,
+  `_ADM_LANDS`, `_ADM_WHERE`, `_ADM_NOBODY`, `_ADM_NOGEO`, `_STATISTIC` moved to `lang/*.php`, the admin
+  `fragments/session-row.html` is gone. (2026-10-21)
 - [ ] 106. ADMIN-UI batch 18 — the floating menu in the panel: the layer.
 - [ ] 107. ADMIN-UI batch 19 — the floating menu in the panel: pins, palette entry, watch ring, admin window.
 - [ ] 108. ADMIN-UI batch 20 — the floating menu on the site.
 - [ ] 109. ADMIN-UI batch 21 — sounds in `sound/` of each theme, `getThemeFileUrl()`, `public/sound/` retired.
 - [ ] 110. ADMIN-UI batch 22 — the screensaver "Возрождение".
+- [ ] 110a. ADMIN-UI batch 22a — the action of an alert. Added by the owner on 2026-10-21: one slot `sl-alert-acts` for
+  every alert of the panel that carries a button, in the look "Чип" of the stand `act-07-chip`, in both themes. The six
+  places that glue `getTplPostButton()` to the text of an alert, the offer Э26, "Повторить" and the "Отменить" of the toast
+  move onto it; the sort action of "Категории" moves to the alert `_CATDRAGSORT`, "Переходы" get `_REF_TOTAL`. The plan's
+  section is "Устройство", "Действие в алерте".
+- [ ] 110b. ADMIN-UI batch 22b — the dress of the list table. Added by the owner on 2026-10-21: every
+  `sl-table-list-sort` of the theme `admin` takes the look of the stand `tbl-09-frame-dash` (the series `tbl-*`, checked
+  against the theme of today on `demo/tbl-compare.html?v=09`); the theme `lite` stays as it is (owner, 2026-10-21). Only
+  the lines change: one frame round the table — `1px solid --sl-border`, `--sl-radius-2`, `--sl-shadow-xs`, the corner
+  cells `calc(var(--sl-radius-2) - 1px)` as the head plate of a modal — instead of a frame and a radius on every cell
+  and the 2px `border-spacing`; a `1px dashed --sl-border-strong` line between rows, the head on `--sl-bg-muted` closed
+  by `1px solid --sl-border`. Everything else stays as today, in its tokens: the row step of 34px
+  (`calc(var(--sl-table-height) + var(--sl-space-1) + 1px)`, the 1px being the line that replaces the gap), the type and
+  colours of head and cells, the hover `--sl-tint` and the pick `--sl-tint-strong`, the measures `--sl-col-*`, the tip,
+  the dial and the sort marks; the cells `0 --sl-space-3 0 --sl-space-2` keep the 12px between the texts of two
+  columns, the head keeps `0 --sl-space-6 0 --sl-space-2`, status and options `--sl-space-2`, the tick `--sl-space-3`.
+  The closed dial "…" stands in the middle of "Опции", pinned on the right as now so the fan still opens leftward:
+  `right: calc(50% - var(--sl-size-chip) / 2 - var(--sl-space-1) - 1px)`, the compact view with `--sl-size-icon-sm`.
+  The three views keep working; at 560px and below the cards of the theme are untouched. Done when every panel list of
+  groups A and B shows the frame without a cell tile, the figures of the compare page hold on "Комментарии" (row step
+  as today, text inset within 1px, column gap 12px), and `npm run ui:before` / `ui:after` and `npm run ui:gates` are
+  green with the contrast of the dashed line checked in both modes.
 - [ ] 111. ADMIN-UI batch 23 — reference; deletes `docs/12-ADMIN-UI-2026.md`.
 - [ ] 111a. Route race on MariaDB 11.6.2+ — found in step 102 (owner, 2026-10-21): with `innodb_snapshot_isolation=1`,
   the default since MariaDB 11.6.2 (stand 11.7.2), the second writer of one free path gets error 1020 "Record has changed

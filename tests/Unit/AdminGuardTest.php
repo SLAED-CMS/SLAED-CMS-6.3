@@ -230,4 +230,17 @@ final class AdminGuardTest extends TestCase
         $this->assertStringContainsString("checkAdminPost('forum')", $sync);
         $this->assertStringContainsString('updateForumSync()', $sync);
     }
+
+    # The watch window lists the address and the page of every visitor: a super administrator alone gets the window and its answer, never without the token
+    #[Test]
+    public function theWatchWindowIsForTheSuperAdmin(): void
+    {
+        $this->assertStringContainsString("if (!\$conf['session'] || !isAdmin(true)) return;", $this->getBody('core/system.php', 'getSessionStats'));
+        $set = $this->getBody('core/helpers.php', 'getWindowSet');
+        $this->assertLessThan(strpos($set, "'sl-stats'"), strpos($set, "if (\$conf['session'] && isAdmin(true))"), 'The watch window is printed for any visitor');
+        $index = $this->getFile('public/index.php');
+        $open = substr($index, (int)strpos($index, '$public = '), 400);
+        $this->assertStringNotContainsString('getSessionStats', substr($open, 0, (int)strpos($open, ';')), 'The watch window answers without the token');
+        $this->assertSame(2, substr_count($index, "case 'getSessionStats': getSessionStats(); exit;"));
+    }
 }

@@ -334,7 +334,7 @@ function getAdminTopMenu(): string {
 
 # Return standard variables used by admin layouts
 function getAdminLayoutVars(): array {
-    global $db, $afile, $tpl;
+    global $db, $afile, $tpl, $panel;
     if (!isAdmin()) {
         $login = ($db->getSqlRowCount($db->getSqlQuery('SELECT 1 FROM '.PREFIX_DB.'_admins LIMIT 1')) == 0) ? _ADMINLOGIN_NEW : _ADMINLOGIN;
         return ['login' => $login];
@@ -345,7 +345,7 @@ function getAdminLayoutVars(): array {
         'settings_win' => getAdminSettingsWindow(),
         'menu' => getAdminTopMenu(),
         'bell_html' => $tpl->getHtmlFrag('bell', $bell),
-        'admin_blocks' => getAdminPanelBlocks().getAdminInfo().adminblock(),
+        'admin_blocks' => getAdminPanelBlocks().getAdminInfo().($panel ? adminblock() : ''),
         'sess_max' => getAdminIdle(),
         'sess_url' => $afile.'.php',
         'sess_token' => getSiteToken('keep'),

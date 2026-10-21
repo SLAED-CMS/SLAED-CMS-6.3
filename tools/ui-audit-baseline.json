@@ -1,5 +1,5 @@
 {
-    "generated": "2026-10-21T11:22:50Z",
+    "generated": "2026-10-21T21:44:48Z",
     "themes": {
         "admin": {
             "count": 0,
@@ -7,7 +7,7 @@
             "dup": 0,
             "names": 0,
             "dead": 0,
-            "single": 153,
+            "single": 151,
             "alias": 0,
             "unsat": 0,
             "unmet": 0,
@@ -15,7 +15,7 @@
             "clash": 0,
             "classes": 0,
             "important": 14,
-            "tokens": 342,
+            "tokens": 349,
             "contrast": 0
         },
         "lite": {
@@ -32,13 +32,14 @@
             "clash": 0,
             "classes": 0,
             "important": 10,
-            "tokens": 446,
+            "tokens": 447,
             "contrast": 0
         }
     },
     "api": {
         "admin": [
             "--sl-accent",
+            "--sl-adm-mix",
             "--sl-alert-border",
             "--sl-alert-dur",
             "--sl-alert-ease",
@@ -91,6 +92,9 @@
             "--sl-danger",
             "--sl-danger-strong",
             "--sl-dial-dur",
+            "--sl-donut-height",
+            "--sl-donut-ring",
+            "--sl-donut-width",
             "--sl-drift-dot-height",
             "--sl-drift-dot-width",
             "--sl-drift-dur",
@@ -158,6 +162,7 @@
             "--sl-font-h2",
             "--sl-font-h3",
             "--sl-font-h4",
+            "--sl-font-hero",
             "--sl-font-micro",
             "--sl-font-small",
             "--sl-footer-border",
@@ -165,6 +170,7 @@
             "--sl-footer-shadow",
             "--sl-form-label-width",
             "--sl-form-width",
+            "--sl-gauge-width",
             "--sl-grad-line",
             "--sl-grad-progress-1",
             "--sl-grad-progress-2",
@@ -359,6 +365,7 @@
             "--sl-toolbar-height",
             "--sl-toolbar-min-height",
             "--sl-toolbar-row-height",
+            "--sl-track-tight",
             "--sl-track-wide",
             "--sl-tree-width",
             "--sl-warning",
@@ -383,6 +390,7 @@
         ],
         "lite": [
             "--sl-accent",
+            "--sl-adm-mix",
             "--sl-alert-border",
             "--sl-alert-dur",
             "--sl-alert-ease",

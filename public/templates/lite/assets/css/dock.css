@@ -1,0 +1,286 @@
+/* The block "Administration", and after it the floating menu on the site and the watch window: one component file the
+   bundle lands between base and theme */
+
+/* The summary dims while the key that refreshes it waits for the answer */
+[aria-busy="true"] > .sl-session-summary {
+  opacity: var(--sl-fade-muted);
+}
+
+/* ---------- The keys: square, icons only, each washed in the tone of its meaning ---------- */
+
+.sl-adm-keys {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: var(--sl-space-2);
+  margin-top: var(--sl-space-5);
+}
+
+.sl-adm-keys > :is(a, button) {
+  position: relative;
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  padding: 0;
+  border: 1px solid color-mix(in srgb, currentColor calc(var(--sl-adm-mix) * 3), transparent);
+  border-radius: var(--sl-radius-2);
+  background: color-mix(in srgb, currentColor var(--sl-adm-mix), var(--sl-bg));
+  color: var(--sl-primary);
+  font: inherit;
+  font-size: var(--sl-font-h4);
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color var(--sl-time-fast) var(--sl-ease-out), transform var(--sl-time-fast) var(--sl-ease-out);
+}
+
+.sl-adm-keys > :is(a, button):hover,
+.sl-adm-keys > :is(a, button):focus-visible,
+.sl-adm-keys > .sl-adm-links.sl-is-open {
+  background: color-mix(in srgb, currentColor calc(var(--sl-adm-mix) * 2), var(--sl-bg));
+}
+
+.sl-adm-keys > :is(a, button):hover,
+.sl-adm-keys > :is(a, button):focus-visible {
+  transform: translateY(calc(var(--sl-space-1) * -1));
+}
+
+.sl-adm-keys > .sl-adm-site { color: var(--sl-text-muted); }
+.sl-adm-keys > .sl-adm-links { color: var(--sl-success); }
+.sl-adm-keys > .sl-adm-out { color: var(--sl-danger); }
+
+/* The number of the owner's links on the corner of their key */
+.sl-adm-n {
+  position: absolute;
+  top: calc(var(--sl-space-2) * -1);
+  right: calc(var(--sl-space-2) * -1);
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  min-width: var(--sl-space-6);
+  height: var(--sl-space-6);
+  padding: 0 var(--sl-space-2);
+  border-radius: var(--sl-radius-pill);
+  background: var(--sl-success);
+  box-shadow: 0 0 0 var(--sl-space-1) var(--sl-bg);
+  color: var(--sl-on-solid);
+  font-size: var(--sl-font-micro);
+  font-weight: var(--sl-weight-bold);
+  line-height: 1;
+}
+
+/* A dead link among the owner's ones puts a warning dot on their key */
+.sl-adm-dead::after {
+  position: absolute;
+  right: var(--sl-space-1);
+  bottom: var(--sl-space-1);
+  width: var(--sl-space-3);
+  height: var(--sl-space-3);
+  border-radius: var(--sl-radius-circle);
+  background: var(--sl-warning);
+  content: "";
+}
+
+/* ---------- The owner's links: the rows of the user block, a flag where a file is missing ---------- */
+
+.sl-adm-own {
+  margin-top: var(--sl-space-3);
+}
+
+.sl-adm-flag {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sl-space-1);
+  margin-right: var(--sl-space-3);
+  padding: 0 var(--sl-space-3);
+  border-radius: var(--sl-radius-pill);
+  border: 1px solid color-mix(in srgb, currentColor calc(var(--sl-adm-mix) * 3), transparent);
+  color: var(--sl-warning-strong);
+  font-size: var(--sl-font-micro);
+  font-weight: var(--sl-weight-medium);
+  white-space: nowrap;
+}
+
+/* ---------- The watch window: who is on the site now, read from the live sessions alone ---------- */
+
+/* The ring of the summary opens the window, so it is a button that keeps the look of the ring */
+button.sl-session-donut {
+  padding: 0;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+button.sl-session-donut:focus-visible {
+  outline: var(--sl-ring-width) solid var(--sl-ring-bg);
+  outline-offset: var(--sl-ring-gap);
+}
+
+.sl-adm-keys > .sl-adm-stat { color: var(--sl-accent); }
+
+/* The kinds are cells of the segmented switch with words or an icon and their count */
+.sl-stats-kinds .sl-seg-cell {
+  gap: var(--sl-space-2);
+  padding: 0 var(--sl-space-4);
+  font-size: var(--sl-font-small);
+}
+
+.sl-stats-kpis {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--sl-space-3);
+}
+
+.sl-stats-kpis > div,
+.sl-stats-box {
+  padding: var(--sl-space-4);
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-2);
+  background: var(--sl-bg);
+}
+
+.sl-stats-kpis > div {
+  display: grid;
+  gap: var(--sl-space-1);
+}
+
+.sl-stats-kpis b {
+  font-size: var(--sl-font-h2);
+  line-height: var(--sl-line-tight);
+}
+
+/* The bar of shares under the figures, in the tones of the ring */
+.sl-stats-shares {
+  display: flex;
+  overflow: hidden;
+  height: var(--sl-space-3);
+  gap: var(--sl-space-1);
+  margin-top: var(--sl-space-4);
+  border-radius: var(--sl-radius-pill);
+}
+
+.sl-stats-shares > i {
+  width: var(--sl-d-part);
+  background: currentColor;
+}
+
+.sl-stats-shares > i,
+.sl-stats-row > :is(img, .sl-stats-kind) { color: var(--sl-primary); }
+
+.sl-stats-shares > [data-kind="admin"],
+.sl-stats-row[data-kind="admin"] > :is(img, .sl-stats-kind) { color: var(--sl-accent); }
+
+.sl-stats-shares > [data-kind="user"],
+.sl-stats-row[data-kind="user"] > :is(img, .sl-stats-kind) { color: var(--sl-success); }
+
+.sl-stats-shares > [data-kind="bot"],
+.sl-stats-row[data-kind="bot"] > :is(img, .sl-stats-kind) { color: var(--sl-warning); }
+
+.sl-stats-cols {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  gap: var(--sl-space-4);
+  margin-top: var(--sl-space-5);
+}
+
+.sl-stats-side {
+  display: grid;
+  gap: var(--sl-space-4);
+  align-content: start;
+}
+
+.sl-stats-cap {
+  display: flex;
+  align-items: center;
+  gap: var(--sl-space-2);
+  margin: 0 0 var(--sl-space-3);
+  font-size: var(--sl-font-body);
+  font-weight: var(--sl-weight-semibold);
+}
+
+.sl-stats-cap small {
+  margin-left: auto;
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-micro);
+  font-weight: var(--sl-weight-normal);
+}
+
+.sl-stats-rows,
+.sl-stats-top {
+  display: grid;
+  gap: var(--sl-space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sl-stats-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  gap: var(--sl-space-3);
+  align-items: center;
+  padding: var(--sl-space-2);
+  border-radius: var(--sl-radius-2);
+}
+
+.sl-stats-row:hover {
+  background: var(--sl-bg-muted);
+}
+
+.sl-stats-row > img {
+  width: var(--sl-size-control);
+  height: var(--sl-size-control);
+  border-radius: var(--sl-radius-circle);
+  box-shadow: 0 0 0 var(--sl-ring-width) currentColor;
+}
+
+.sl-stats-row > span:nth-child(2) {
+  display: grid;
+  min-width: 0;
+  line-height: var(--sl-line-tight);
+}
+
+.sl-stats-row > span > :is(a, span),
+.sl-stats-where small,
+.sl-stats-top > li > :first-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sl-stats-kpis small,
+.sl-stats-row > span > :is(a, span),
+.sl-stats-where small {
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-micro);
+}
+
+.sl-stats-where {
+  display: grid;
+  justify-items: end;
+  font-size: var(--sl-font-small);
+}
+
+.sl-stats-top > li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) calc(var(--sl-size-tile) * 2) auto;
+  gap: var(--sl-space-3);
+  align-items: center;
+  font-size: var(--sl-font-small);
+}
+
+.sl-stats-top > li > i {
+  height: var(--sl-space-2);
+  border-radius: var(--sl-radius-pill);
+  background: linear-gradient(to right, var(--sl-primary) var(--sl-d-part), var(--sl-bg-muted) var(--sl-d-part));
+}
+
+.sl-stats-more {
+  margin: 0;
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-small);
+  line-height: var(--sl-line-normal);
+}
+
+@media (max-width: 768px) {
+  .sl-stats-cols { grid-template-columns: minmax(0, 1fr); }
+}
