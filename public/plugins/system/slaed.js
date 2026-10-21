@@ -1705,24 +1705,32 @@
         draw();
     }
 
-    // The save bar of the shared form: nothing is offered until something has actually been touched, and the touch is
-    // any input or change that reaches the form - which is every control it holds, the editors included, because a
-    // contenteditable emits the same event the plain field does
-    // The hidden state is armed here and never in the markup: a page whose script did not run keeps a bar that is
-    // simply always there, instead of a form whose only button can no longer be made to appear
+    // Arm every form that tracks its changes once, here and never in the markup, so a page without this script keeps its save bar shown
     function setDirtyForms(node) {
         var root = node && node.querySelectorAll ? node : document;
-        var list = root.querySelectorAll('[data-sl-dirty=""]');
-        for (var i = 0; i < list.length; i++) setDirtyScope(list[i]);
+        var list = root.querySelectorAll('[data-sl-dirty]');
+        for (var i = 0; i < list.length; i++) {
+            if (!list[i].slArmed) setDirtyScope(list[i]);
+        }
     }
 
     // A control that saves itself the moment it changes - the gallery pick posting over htmx - is not an unsaved change
     function setDirtyScope(scope) {
-        scope.setAttribute('data-sl-dirty', '0');
         var wake = function (event) {
-            if (event.target && event.target.closest && event.target.closest('[hx-post]')) return;
-            scope.setAttribute('data-sl-dirty', '1');
+            var node = event.target;
+            if (!node || !node.closest || isDirtyFree(node)) return;
+            if (node === scope || node.isContentEditable) {
+                scope.slTouch = true;
+                if (node.closest('[data-sl-tab-panel]')) node.closest('[data-sl-tab-panel]').slTouch = true;
+            } else if (!node.name) {
+                return;
+            }
+            setDirtyState(scope);
         };
+        scope.slArmed = true;
+        scope.slTouch = scope.getAttribute('data-sl-dirty') === '1';
+        getDirtyFields(scope).forEach(function (field) { field.slSaved = getDirtyValue(field); });
+        scope.setAttribute('data-sl-dirty', scope.slTouch ? '1' : '0');
         scope.addEventListener('input', wake);
         scope.addEventListener('change', wake);
         scope.addEventListener('click', function (event) {
@@ -1731,7 +1739,87 @@
             event.preventDefault();
             if (typeof scope.reset === 'function') scope.reset();
             setEditorsBack(scope);
-            scope.setAttribute('data-sl-dirty', '0');
+            scope.slTouch = false;
+            scope.querySelectorAll('[data-sl-tab-panel]').forEach(function (pane) { pane.slTouch = false; });
+            setDirtyState(scope);
+        });
+    }
+
+    // A pick of rows, the choice of what to do with them and a control saving itself over htmx change nothing the form would lose
+    function isDirtyFree(node) {
+        return !!node.closest('[hx-post], [data-sl-check-item], [data-sl-check-all], .sl-div-actions');
+    }
+
+    // The named controls of a form that carry its data; a hidden field is written by scripts and a tab index, never by a hand
+    function getDirtyFields(scope) {
+        return Array.prototype.filter.call(scope.querySelectorAll('input[name], select[name], textarea[name]'), function (field) {
+            return field.type !== 'hidden' && field.type !== 'submit' && field.type !== 'button' && !isDirtyFree(field);
+        });
+    }
+
+    // What a control holds now, in one string a later state can be told from
+    function getDirtyValue(field) {
+        if (field.type === 'checkbox' || field.type === 'radio') return String(field.checked);
+        if (!field.multiple) return field.value;
+        return Array.prototype.filter.call(field.options, function (one) { return one.selected; }).map(function (one) { return one.value; }).join(',');
+    }
+
+    // Changed is measured against the values the page brought, so a change put back leaves the form and its tab clean again
+    function setDirtyState(scope) {
+        var held = getDirtyFields(scope).filter(function (field) { return getDirtyValue(field) !== field.slSaved; });
+        scope.setAttribute('data-sl-dirty', held.length || scope.slTouch ? '1' : '0');
+        document.querySelectorAll('[data-sl-dirty-dot]').forEach(function (dot) {
+            var link = dot.closest('[data-sl-tab-target]');
+            var pane = link ? document.getElementById(link.getAttribute('data-sl-tab-target')) : null;
+            if (!pane || !scope.contains(pane)) return;
+            dot.hidden = !pane.slTouch && !held.some(function (field) { return pane.contains(field); });
+        });
+    }
+
+    // The form whose changes a step away would lose, unless it is already on its way to the server or was let go
+    function getDirtyHeld() {
+        var list = document.querySelectorAll('[data-sl-leave][data-sl-dirty="1"]');
+        for (var i = 0; i < list.length; i++) {
+            if (!list[i].slFree) return list[i];
+        }
+        return null;
+    }
+
+    // Leaving a changed form asks first: a link and another form through the system dialog, a reload or a closed tab through the browser
+    function setDirtyLeave() {
+        document.addEventListener('click', function (event) {
+            var link = event.target && event.target.closest ? event.target.closest('a[href]') : null;
+            var held = link ? getDirtyHeld() : null;
+            var href = link ? link.getAttribute('href') : '';
+            if (!held || event.defaultPrevented || event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+            if (href.charAt(0) === '#' || /^javascript:/i.test(href) || link.target === '_blank' || link.hasAttribute('download')) return;
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            window.setConfirmTask(held.getAttribute('data-sl-leave'), function () {
+                held.slFree = true;
+                link.click();
+            });
+        }, true);
+        document.addEventListener('submit', function (event) {
+            var form = event.target;
+            var held = getDirtyHeld();
+            var send = event.submitter || null;
+            if (!held || form === held || form.closest('dialog') || form.matches('[hx-post], [hx-get], [hx-boost]')) return;
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            window.setConfirmTask(held.getAttribute('data-sl-leave'), function () {
+                held.slFree = true;
+                if (form.requestSubmit) form.requestSubmit(send);
+                else form.submit();
+            });
+        }, true);
+        document.addEventListener('submit', function (event) {
+            if (!event.defaultPrevented && event.target.hasAttribute('data-sl-leave')) event.target.slFree = true;
+        });
+        window.addEventListener('beforeunload', function (event) {
+            if (!getDirtyHeld()) return;
+            event.preventDefault();
+            event.returnValue = '';
         });
     }
 
@@ -2876,6 +2964,7 @@
         setPagerKeys();
         setFillMeters();
         setDirtyForms(document);
+        setDirtyLeave();
         setCodeBlocks(document);
         setCodeActions();
         setCommentKeys(document);
@@ -2899,6 +2988,7 @@
         setTabs(event.target);
         setFieldShows(event.target);
         setRepeatRows(event.target);
+        setDirtyForms(event.target);
         setAlerts(event.target);
         setVoteBlocks(event.target);
         var live = event.target && event.target.closest ? event.target.closest('[data-sl-live-box]') : null;

@@ -2239,7 +2239,9 @@ pre code.hljs {
 .sl-editor-pill .sl-modal-act[aria-pressed="true"],
 .sl-editor-pill .sl-modal-act[aria-expanded="true"],
 .sl-wrapper .sl-toolbar li .sl-bell-tip a:hover,
-.sl-wrapper .sl-toolbar li .sl-bell-tip a:focus-visible {
+.sl-wrapper .sl-toolbar li .sl-bell-tip a:focus-visible,
+.sl-form-hits [role="option"][aria-selected="true"],
+.sl-form-hits [role="option"]:hover {
   background: var(--sl-tint);
   color: var(--sl-primary-strong);
 }
@@ -3524,12 +3526,105 @@ dialog.sl-editor-emoji-panel {
   white-space: nowrap;
 }
 
-.sl-filter input[type="search"] {
+.sl-filter input {
   width: auto;
   min-width: var(--sl-search-min-width);
   max-width: var(--sl-search-max-width);
   height: var(--sl-size-control);
   box-sizing: border-box;
+}
+
+/* В08.7 The settings find stands in the module head like the filter of a list, its hits under the field */
+.sl-form-find {
+  position: relative;
+  display: inline-block;
+}
+
+.sl-form-hits {
+  position: absolute;
+  top: calc(100% + var(--sl-space-2));
+  right: 0;
+  z-index: var(--sl-z-dropdown);
+  width: max-content;
+  min-width: 100%;
+  max-width: min(var(--sl-popover-max-width), calc(100vw - var(--sl-space-8) * 2));
+  margin: 0;
+  padding: var(--sl-space-2);
+  list-style: none;
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-2);
+  background: var(--sl-surface);
+  box-shadow: var(--sl-shadow-float);
+  white-space: normal;
+}
+
+/* On a phone the field stands at the left under the heading, so its hits open to the right */
+@media (max-width: 900px) {
+  .sl-form-hits {
+    right: auto;
+    left: 0;
+  }
+}
+
+.sl-form-hits li {
+  display: block;
+  padding: var(--sl-space-3);
+  border-radius: var(--sl-radius-1);
+}
+
+.sl-form-hits [role="option"] {
+  cursor: pointer;
+}
+
+.sl-form-hits .sl-form-none {
+  color: var(--sl-text-muted);
+}
+
+/* A row the find, the summary or the palette led to lights up once */
+.sl-div-item[data-sl-found] {
+  animation: sl-form-found var(--sl-flash-dur) var(--sl-ease-out);
+}
+
+@keyframes sl-form-found {
+  from {
+    background: var(--sl-tint-strong);
+  }
+}
+
+/* В08.6 A tab with unsaved changes carries a dot in its upper right corner */
+.sl-tabs-link:has(> .sl-tab-dot:not([hidden])) {
+  position: relative;
+}
+
+.sl-tab-dot {
+  position: absolute;
+  top: calc(var(--sl-space-2) * -1);
+  right: calc(var(--sl-space-2) * -1);
+  width: var(--sl-space-4);
+  height: var(--sl-space-4);
+  border: 1px solid var(--sl-bg);
+  border-radius: var(--sl-radius-circle);
+  background: var(--sl-warning-strong);
+}
+
+/* В08.5 A field judged wrong says why under itself and in the summary above the form */
+.sl-form-sum {
+  margin: 0 0 var(--sl-space-5);
+}
+
+.sl-form-sum a {
+  color: inherit;
+}
+
+.sl-field-err {
+  display: block;
+  margin-top: var(--sl-space-2);
+  color: var(--sl-danger-strong);
+  font-size: var(--sl-font-small);
+}
+
+.sl-div-field [aria-invalid="true"] {
+  border-color: var(--sl-danger-strong);
 }
 
 /* П5 П8 The pager over a canon list repeats the one under it at its left edge, its way back to the top turned into the way down */
@@ -6949,13 +7044,6 @@ button.sl-but-mini {
   margin-right: var(--sl-space-3);
 }
 
-.sl-inline-filter-form {
-  display: flex;
-  align-items: center;
-  gap: var(--sl-space-3);
-  flex-wrap: wrap;
-}
-
 .sl-associated-option {
   display: inline-flex;
   align-items: center;
@@ -9667,14 +9755,6 @@ body[data-sl-pointer] .sl-admin-login-card:has(.sl-setup)::after {
   .sl-search-order-select,
   .sl-search-filter-field {
     width: 100%;
-  }
-
-  .sl-inline-filter-form {
-    align-items: stretch;
-  }
-
-  .sl-inline-filter-form > * {
-    flex: 1 1 100%;
   }
 
   .sl-monitor-info-grid {

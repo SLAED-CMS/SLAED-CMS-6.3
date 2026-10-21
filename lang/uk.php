@@ -99,6 +99,8 @@ define('_CONTENT','Зміст');
 define('_COUNTRY','Країна');
 define('_C_12','Кількість публікацій на сторінку');
 define('_DATE','Дата');
+define('_DATEFROM','Дата з');
+define('_DATETO','Дата по');
 define('_DATESTRING','d.m.Y');
 define('_DAYS','діб');
 define('_DEACT','Деактивовано');
@@ -693,6 +695,7 @@ define('_UACESS','Перевірка модератором повідомлен
 define('_UKRAINIAN','Український');
 define('_UNDO','Скасувати');
 define('_UNLIMITED','Необмежено');
+define('_EXPIRED','Минув');
 define('_UPDATE','Оновити');
 define('_UPDATED','Оновлено');
 define('_URANK','Звання');

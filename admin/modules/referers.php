@@ -9,53 +9,28 @@ if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 function getRefererSearch(): string {
     global $afile, $tpl;
     $priv = [_REF_ID, _REF_URL, _IN_ID, _IN_URL, _NAME_ID, _NAME_REF, _IP_ID, _IP_REF, _TIME_ID, _TIME_REF];
-    $sort = getVar('req', 'sort', 'num', 0);
-    $order = getVar('req', 'order', 'num', 0);
-    $sortopts = '';
-    foreach ($priv as $key => $value) {
-        $idx = $key + 1;
-        $sortopts .= $tpl->getHtmlFrag('select-option', [
-            'value_attr' => (string)$idx,
-            'label_text' => $value,
-            'is_selected' => $sort == $idx,
-        ]);
-    }
-    $orderopts = '';
-    $privs = [_ASC, _DESC];
-    foreach ($privs as $key => $value) {
-        $idx = $key + 1;
-        $orderopts .= $tpl->getHtmlFrag('select-option', [
-            'value_attr' => (string)$idx,
-            'label_text' => $value,
-            'is_selected' => $order == $idx,
-        ]);
-    }
-    return $tpl->getHtmlPart('div', [
-        'is_searchbox' => true,
-        'content_html' => $tpl->getHtmlPart('form', [
-            'action_url' => $afile.'.php',
-            'hidden' => [
-                ['nameattr' => 'name', 'valueattr' => 'referers'],
-            ],
-            'content_html' =>
-                _SORTE.': '.
-                $tpl->getHtmlFrag('select', ['name_attr' => 'sort', 'options_html' => $sortopts]).
-                ' '.
-                _SORTORDER.': '.
-                $tpl->getHtmlFrag('select', ['name_attr' => 'order', 'options_html' => $orderopts]).
-                ' '.
-                $tpl->getHtmlFrag('button', ['submit_label' => _OK, 'button_type' => 'submit']),
-        ]),
+    $sort = getVar('get', 'sort', 'num', 10);
+    $order = getVar('get', 'order', 'num', 2);
+    $sorts = [];
+    foreach ($priv as $key => $value) $sorts[] = ['value_attr' => (string)($key + 1), 'label_text' => $value, 'is_selected' => $sort === $key + 1];
+    $orders = [];
+    foreach ([_ASC, _DESC] as $key => $value) $orders[] = ['value_attr' => (string)($key + 1), 'label_text' => $value, 'is_selected' => $order === $key + 1];
+    return $tpl->getHtmlFrag('list-filter', [
+        'action_url' => $afile.'.php',
+        'label' => _SEARCH,
+        'is_part' => true,
+        'hidden' => [['nameattr' => 'name', 'valueattr' => 'referers']],
+        'fields' => [
+            ['field_id' => 'sl-ref-sort', 'label' => _SORTE, 'name_attr' => 'sort', 'options' => $sorts],
+            ['field_id' => 'sl-ref-order', 'label' => _SORTORDER, 'name_attr' => 'order', 'options' => $orders],
+        ],
     ]);
 }
 
 function referers(): void {
-    global $db, $conf, $tpl;
-    $sort = getVar('req', 'sort', 'num', 10);
-    $order = getVar('req', 'order', 'num', 2);
-    $num = getVar('get', 'num', 'num', 1);
-    $offset = ($num - 1) * $conf['referers']['anum'];
-    $tnum = ($offset) ? $conf['referers']['anum'] + $offset : $conf['referers']['anum'];
+    global $db, $afile, $conf, $tpl;
+    $sort = getVar('get', 'sort', 'num', 10);
+    $order = getVar('get', 'order', 'num', 2);
     $sortmap = [
         1 => ['referer', 'hits'], 2 => ['referer', 'referer'],
         3 => ['url', 'hits'], 4 => ['url', 'url'],
@@ -66,60 +41,52 @@ function referers(): void {
     $count = $sortmap[$sort][0] ?? 'time';
     $ordby = $sortmap[$sort][1] ?? 'time';
     $ordsc = ($order == 1) ? 'ASC' : 'DESC';
-    $sql = 'SELECT t.hits, r.uid, r.name, r.ip, r.referer, r.url, r.time FROM (SELECT Count('.$count.') AS hits, MAX(id) AS id FROM '.PREFIX_DB.'_referer GROUP BY '.$count.') t';
-    $result = $db->getSqlQuery($sql.' JOIN '.PREFIX_DB.'_referer r ON r.id = t.id ORDER BY '.$ordby.' '.$ordsc);
-    setHead();
-    $cont = getTplAdminTabs([
-        'ops' => ['name=referers', 'name=referers&op=config', 'name=referers&op=info'],
-        'tabs' => [_HOME, _PREFERENCES, _MANUAL],
-        'subtitle_html' => getRefererSearch(),
-    ]);
-    $cont .= $tpl->getHtmlFrag('alert', ['text' => getTplPostButton(['name' => 'referers', 'op' => 'delete'], 'trash', _DELETE)]);
-    if ($db->getSqlRowCount($result) > 0) {
-        $a = 0;
-        $massiv = [];
-        while ([$hits, $uid, $name, $ip, $referer, $url, $date] = $db->getSqlRow($result)) {
-            $massiv[] = [$hits, $uid, $name, $ip, $referer, $url, $date];
-            $a++;
-        }
-        $rows = [];
-        for ($i = $offset; $i < $tnum; $i++) {
-            if (isset($massiv[$i]) && $massiv[$i] != '') {
-                $name = ($massiv[$i][1]) ? user_info($massiv[$i][2], null) : $massiv[$i][2];
-                $words = engines_word($massiv[$i][4]) ?: _NO;
-                $rows[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
-                    'cells' => [
-                        ['content_html' => $tpl->getHtmlFrag('popover', [
-                            'label_text' => $massiv[$i][3],
-                            'title_text' => _NICKNAME.': '.$name.' | '._DATE.': '.format_time($massiv[$i][6], _TIMESTRING),
-                        ])],
-                        ['is_truncate' => true, 'title_text' => domain($massiv[$i][5]), 'content_html' => domain($massiv[$i][5], 30)],
-                        ['is_truncate' => true, 'title_text' => domain($massiv[$i][4]), 'content_html' => domain($massiv[$i][4], 30)],
-                        ['is_truncate' => true, 'title_text' => $words, 'content_html' => $tpl->getHtmlFrag('popover', [
-                            'label_text' => $words,
-                            'title_text' => $words,
-                        ])],
-                        ['content_html' => (string)$massiv[$i][0]],
-                    ],
-                ])]);
-            }
-        }
-        $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('table', [
-        'is_fixed' => true,
-            'head' => [
-                ['content' => _IP],
-                ['content' => _IN_URL, 'is_truncate' => true],
-                ['content' => _REF_URL, 'is_truncate' => true],
-                ['content' => _SWORD, 'is_truncate' => true],
-                ['content' => _HITS, 'nosort' => true],
-            ],
-            'rows_html' => implode('', $rows),
-            'is_wrapless' => true,
-        ]).getPageNumbers('', $a, ceil($a / $conf['referers']['anum']), $conf['referers']['anum'], 'name=referers&sort='.$sort.'&order='.$order.'&', $conf['referers']['anump'])]);
-    } else {
-        $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('alert', ['text' => _NO_INFO])]);
+    $limit = max(1, intval($conf['referers']['anum']));
+    $group = 'SELECT COUNT('.$count.') AS hits, MAX(id) AS id FROM '.PREFIX_DB.'_referer GROUP BY '.$count;
+    $total = intval($db->getSqlQuery('SELECT COUNT(*) FROM ('.$group.') t')->fetchColumn());
+    $pages = max(1, (int)ceil($total / $limit));
+    $num = min(max(1, getVar('get', 'num', 'num', 1)), $pages);
+    $result = $db->getSqlQuery('SELECT t.hits, r.uid, r.name, r.ip, r.referer, r.url, r.time FROM ('.$group.') t JOIN '.PREFIX_DB.'_referer r ON r.id = t.id'
+        .' ORDER BY '.$ordby.' '.$ordsc.' LIMIT '.(($num - 1) * $limit).', '.$limit);
+    $rows = [];
+    while ([$hits, $uid, $name, $ip, $referer, $url, $date] = $db->getSqlRow($result)) {
+        $who = $uid ? user_info($name, null) : $name;
+        $words = engines_word($referer) ?: _NO;
+        $rows[] = ['cells' => [
+            ['content_html' => $tpl->getHtmlFrag('popover', ['label_text' => $ip, 'title_text' => _NICKNAME.': '.$who.' | '._DATE.': '.format_time($date, _TIMESTRING)])],
+            ['is_truncate' => true, 'title_text' => domain($url), 'content_html' => domain($url, 30)],
+            ['is_truncate' => true, 'title_text' => domain($referer), 'content_html' => domain($referer, 30)],
+            ['is_truncate' => true, 'title_text' => $words, 'content_html' => $tpl->getHtmlFrag('popover', ['label_text' => $words, 'title_text' => $words])],
+            ['is_col_count' => true, 'has_content_text' => true, 'content_text' => $hits],
+        ]];
     }
-    echo $cont;
+    $clear = $total ? $tpl->getHtmlFrag('alert', ['text' => getTplPostButton(['name' => 'referers', 'op' => 'delete'], 'trash', _DELETE,
+        'data-sl-confirm="'.htmlspecialchars(_CLEAN.' "'._REFERERS.'"?', ENT_QUOTES, 'UTF-8').'"')]) : '';
+    setHead();
+    echo getTplAdminList([
+        'head_html' => getTplAdminTabs([
+            'ops' => ['name=referers', 'name=referers&op=config', 'name=referers&op=info'],
+            'tabs' => [_HOME, _PREFERENCES, _MANUAL],
+            'subtitle_html' => getRefererSearch(),
+            'part' => [0],
+        ]),
+        'note_html' => $clear,
+        'is_fixed' => true,
+        'head' => [
+            ['content' => _IP],
+            ['content' => _IN_URL, 'is_truncate' => true],
+            ['content' => _REF_URL, 'is_truncate' => true],
+            ['content' => _SWORD, 'is_truncate' => true],
+            ['content' => _HITS, 'is_col_count' => true],
+        ],
+        'rows' => $rows,
+        'href' => $afile.'.php?name=referers&sort='.$sort.'&order='.$order.'&',
+        'page' => $num,
+        'pages' => $pages,
+        'maxpg' => intval($conf['referers']['anump']),
+        'count' => $total,
+        'limit' => $limit,
+    ]);
     setFoot();
 }
 

@@ -237,7 +237,8 @@ final class RatingTest extends TestCase
         $this->assertTrue($run['ids']);
         $this->assertSame(['denied', 'denied'], $run['deny']['user']);
         $this->assertSame(['denied', 'denied'], $run['deny']['guest']);
-        $this->assertSame(['denied', ['ok' => false, 'code' => 'denied', 'rows' => [], 'next' => 0]], $run['deny']['admin'], 'An ordinary administrator reached the journal');
+        $deny = ['ok' => false, 'code' => 'denied', 'rows' => [], 'total' => 0, 'page' => 1];
+        $this->assertSame(['denied', $deny], $run['deny']['admin'], 'An ordinary administrator reached the journal');
         $form = array_fill_keys(['zero', 'sign', 'void', 'blank', 'long', 'html', 'line'], 'invalid') + ['none' => 'unavailable'];
         $this->assertSame($form, $run['form']);
         $this->assertSame([['ok', true, 5, 1, '5', false, true], true, [5, 1], [['read', 'node.story', true, true], ['write', 'node.story', 5, 1]], true], $run['done']);
@@ -250,18 +251,18 @@ final class RatingTest extends TestCase
         $this->assertSame(['storage', null, true], $run['broken']);
     }
 
-    # The journal pages by the vote id for the main administrator alone: everything, one scope, one target, a cursor, a closed set of arguments and the stored columns
+    # The journal pages newest first for the main administrator alone: everything, one scope, one target, a counted page, a closed set of arguments and the stored columns
     #[Test]
-    public function theJournalPagesByACursor(): void
+    public function theJournalPagesNewestFirst(): void
     {
         $run = $this->getRun('annul');
         $keys = ['id', 'scope', 'mid', 'actor', 'uid', 'value', 'request', 'created', 'annulled', 'aid', 'reason'];
         $this->assertSame([true, 'ok', true, true, $keys], $run['list']['all']);
         $this->assertSame(['node.story', 1, 'u:2', 2, 5, null, 0, ''], array_values(array_diff_key($run['list']['first'], ['id' => 0, 'request' => 0, 'created' => 0])));
-        $this->assertSame([[1, 1, 2], [2, 3], ['account', 'node.probe'], [2, true]], [$run['list']['scope'], $run['list']['target'], $run['list']['after'], $run['list']['page']]);
-        $this->assertSame(['ok' => true, 'code' => 'ok', 'rows' => [], 'next' => 0], $run['list']['past']);
+        $this->assertSame([[2, 1, 1], [3, 2], ['node.probe', 'account'], [2, true]], [$run['list']['scope'], $run['list']['target'], $run['list']['head'], $run['list']['page']]);
+        $this->assertSame([3, true], $run['list']['past'], 'A page past the last does not answer the last one');
         $this->assertSame('ok', $run['list']['oldtype'], 'The history of a type that is gone cannot be read');
-        $bad = ['idbare' => 'invalid', 'scope' => 'invalid', 'idsign' => 'invalid', 'after' => 'invalid', 'limzero' => 'invalid', 'limover' => 'invalid', 'limtop' => 'ok'];
+        $bad = ['idbare' => 'invalid', 'scope' => 'invalid', 'idsign' => 'invalid', 'page' => 'invalid', 'limzero' => 'invalid', 'limover' => 'invalid', 'limtop' => 'ok'];
         $this->assertSame($bad, $run['badlist']);
     }
 

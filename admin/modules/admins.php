@@ -52,64 +52,49 @@ function checkAdminlast(int $aid): bool {
 function admins(): void {
     global $db, $afile, $conf, $tpl;
     setHead();
-    $cont = getTplAdminTabs(['ops' => ['name=admins', 'name=admins&op=add', 'name=admins&op=info'], 'tabs' => [_HOME, _ADD, _MANUAL]]);
-    $head = [
-        ['content' => _NICKNAME],
-        ['content' => _URANK],
-        ['content' => _EMAIL],
-        ['content' => _LANGUAGE],
-        ['content' => _ACCESS, 'is_col_status' => true],
-        ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true],
-    ];
-    $rows = '';
-    $result = $db->getSqlQuery(
-        'SELECT id, name, title, email, lang, regdate, lastvis, super, modules FROM '.PREFIX_DB.'_admins ORDER BY id'
-    );
+    $rows = [];
+    $result = $db->getSqlQuery('SELECT id, name, title, email, lang, regdate, lastvis, super, modules FROM '.PREFIX_DB.'_admins ORDER BY id');
     while ([$aid, $name, $title, $email, $lang, $rdate, $vdate, $super, $mods] = $db->getSqlRow($result)) {
-        $lang = $lang ? getLangName($lang) : _ALL;
         $mods = filterAdminmods(getAdminModuleNames((string)$mods));
         $stat = ((int)$super === 1) ? 2 : ($mods ? 1 : 0);
-        $tip = $tpl->getHtmlFrag('popover', [
-            'items' => [
-                ['label' => _REG, 'value' => format_time((string)$rdate, _TIMESTRING), 'is_last' => false],
-                ['label' => _LAST_VISIT, 'value' => format_time((string)$vdate, _TIMESTRING), 'is_last' => true],
-            ],
-        ]);
-        $acts = $tpl->getHtmlFrag('dial', [
-            'dial_title' => _EDITOR,
-            'dial' => [
-                [
-                    'href' => $afile.'.php?name=admins&op=add&id='.$aid,
-                    'icon_name' => 'pencil',
-                    'title' => _FULLEDIT,
-                ],
+        $rows[] = ['name' => (string)$name, 'cells' => [
+            ['prefix_html' => $tpl->getHtmlFrag('popover', ['items' => [
+                ['label' => _REG, 'value' => format_time((string)$rdate, _TIMESTRING)],
+                ['label' => _LAST_VISIT, 'value' => format_time((string)$vdate, _TIMESTRING)],
+            ], 'tip_label' => _DETAILS.': '.$name, 'tip_id' => 'sl-tip-'.$aid]), 'text_html' => htmlspecialchars((string)$name, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')],
+            ['is_truncate' => true, 'title_text' => (string)$title, 'has_content_text' => true, 'content_text' => (string)$title],
+            ['content_html' => $tpl->getHtmlFrag('link', [
+                'href' => 'mailto:'.$email.'?subject='.rawurlencode((string)($conf['sitename'].' - '._MODULESADMIN)),
+                'is_blank' => true,
+                'label' => $email,
+                'title' => $email,
+            ])],
+            ['has_content_text' => true, 'content_text' => $lang ? getLangName($lang) : _ALL],
+            ['is_col_status' => true, 'attr' => 'data-sort="'.$stat.'"', 'content_html' => $tpl->getHtmlFrag('bootstrap-icon', [
+                'icon_name' => 'shield-fill-check',
+                'title_text' => ($stat === 2) ? _SUPERUSER : (($stat === 1) ? _ADMIN : _NO),
+                'color_attr' => ($stat === 2) ? 'var(--sl-danger)' : (($stat === 1) ? 'var(--sl-success)' : 'var(--sl-text-muted)'),
+            ])],
+            ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('dial', ['dial_title' => _EDITOR, 'dial' => [
+                ['href' => $afile.'.php?name=admins&op=add&id='.$aid, 'icon_name' => 'pencil', 'title' => _FULLEDIT],
                 getTplPostAction(['name' => 'admins', 'op' => 'delete', 'aid' => $aid], 'trash', _ONDELETE, _DELETE.' "'.(string)$name.'"?'),
-            ],
-        ]);
-        $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
-            'cells' => [
-                ['prefix_html' => $tip, 'has_content_text' => true, 'content_text' => (string)$name],
-                ['is_truncate' => true, 'title_text' => (string)$title, 'has_content_text' => true, 'content_text' => (string)$title],
-                ['content_html' => $tpl->getHtmlFrag('link', [
-                    'href' => 'mailto:'.$email.'?subject='.rawurlencode((string)($conf['sitename'].' - '._MODULESADMIN)),
-                    'is_blank' => true,
-                    'label' => $email,
-                    'title' => $email,
-                ])],
-                ['has_content_text' => true, 'content_text' => (string)$lang],
-                ['is_col_status' => true, 'attr' => 'data-sort="'.$stat.'"', 'content_html' => $tpl->getHtmlFrag('bootstrap-icon', [
-                    'icon_name' => 'shield-fill-check',
-                    'title_text' => ($stat === 2) ? _SUPERUSER : (($stat === 1) ? _ADMIN : _NO),
-                    'color_attr' => ($stat === 2) ? 'var(--sl-danger)' : (($stat === 1) ? 'var(--sl-success)' : 'var(--sl-text-muted)'),
-                ])],
-                ['is_col_actions' => true, 'content_html' => $acts],
-            ],
-        ])]);
+            ]])],
+        ]];
     }
-    $head[1]['is_truncate'] = true;
-    $cont .= $tpl->getHtmlFrag('table', [
-        'is_fixed' => true,'head' => $head, 'rows_html' => $rows]);
-    echo $cont;
+    echo getTplAdminList([
+        'head_html' => getTplAdminTabs(['ops' => ['name=admins', 'name=admins&op=add', 'name=admins&op=info'], 'tabs' => [_HOME, _ADD, _MANUAL], 'part' => [0]]),
+        'is_fixed' => true,
+        'head' => [
+            ['content' => _NICKNAME],
+            ['content' => _URANK, 'is_truncate' => true],
+            ['content' => _EMAIL],
+            ['content' => _LANGUAGE],
+            ['content' => _ACCESS, 'is_col_status' => true],
+            ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true],
+        ],
+        'rows' => $rows,
+        'count' => count($rows),
+    ]);
     setFoot();
 }
 
@@ -473,7 +458,8 @@ function delete(): void {
             $warn = true;
             $text = _ADMINLASTSUPER;
         } else {
-            $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_admins WHERE id = :id', ['id' => $aid]);
+            $res = $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_admins WHERE id = :id', ['id' => $aid]);
+            if (!$res || $res->rowCount() < 1) [$warn, $text] = [true, _ERROR];
         }
     } else {
         $text = _TOKENMISS;

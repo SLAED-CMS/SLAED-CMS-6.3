@@ -316,6 +316,7 @@ function getProbeAdmin(): array {
     $out['names'] = [(string)($list['rows'][0]['namein'] ?? ''), (string)($list['rows'][0]['nameout'] ?? '')];
     $out['erased'] = [$prv->deleteAdminMessage([6]), getProbeRow(6)];
     $out['zero'] = $prv->deleteAdminMessage([0]);
+    $out['gone'] = $prv->deleteAdminMessage([6]);
     return $out;
 }
 

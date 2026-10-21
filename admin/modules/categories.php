@@ -13,13 +13,15 @@ function categories(): void {
     $modlink = $modul ? '&modul='.$modul : '';
     $ops = ['name=categories'.$modlink, 'name=categories&op=add'.$modlink, 'name=categories&op=subadd'.$modlink, 'name=categories&op=addedit'.$modlink,
         'name=categories&op=info'.$modlink];
-    $subtitle = $tpl->getHtmlPart('div', ['is_searchbox' => true, 'content_html' => $tpl->getHtmlPart('form', [
+    $opts = [['value_attr' => '', 'label_text' => _ALLMODULES, 'is_selected' => $modul === '']];
+    foreach (getCategoryModules() as $mod) $opts[] = ['value_attr' => $mod, 'label_text' => getModuleName($mod).' - '.$mod, 'is_selected' => $mod === $modul];
+    $subtitle = $tpl->getHtmlFrag('list-filter', [
         'action_url' => $afile.'.php',
-        'hidden' => [
-            ['nameattr' => 'name', 'valueattr' => 'categories'],
-        ],
-        'content_html' => _MODUL.': '.getTplCategoryModule('modul', '', $modul, true, true),
-    ])]);
+        'label' => _CATEGORIES,
+        'is_part' => true,
+        'hidden' => [['nameattr' => 'name', 'valueattr' => 'categories']],
+        'fields' => [['field_id' => 'sl-cat-mod', 'label' => _MODUL, 'name_attr' => 'modul', 'options' => $opts, 'is_now' => true]],
+    ]);
     setHead();
     $cont = getTplAdminTabs([
         'ops' => $ops,
@@ -700,8 +702,10 @@ function change(): void {
             };
         }
     }
-    if (!$node) {
-        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_categories SET status = :status WHERE id = :id', ['status' => $act ? 0 : 1, 'id' => $id]);
+    if (!$warn && !$row) [$warn, $text] = [true, _ERROR];
+    if (!$node && $row) {
+        $res = $db->getSqlQuery('UPDATE '.PREFIX_DB.'_categories SET status = :status WHERE id = :id', ['status' => $act ? 0 : 1, 'id' => $id]);
+        if (!$res || $res->rowCount() < 1) [$warn, $text] = [true, _ERROR];
     }
     setRedirect($afile.'.php?name=categories'.($modul ? '&modul='.$modul : ''), false, 302, $text, $warn);
 }
@@ -709,8 +713,8 @@ function change(): void {
 function delete(): void {
     global $db, $afile;
     $id = getVar('post', 'id', 'num');
-    $modul = getVar('post', 'modul', 'var', 'forum');
-    if (!in_array($modul, getCategoryModules(), true)) $modul = 'forum';
+    $modul = getVar('post', 'modul', 'var', '');
+    if (!in_array($modul, getCategoryModules(), true)) $modul = '';
     $warn = !checkAdminPost('categories');
     $text = $warn ? _TOKENMISS : _SUCCDELETE;
     $was = (!$warn && $id) ? (string)$db->getSqlQuery('SELECT modul FROM '.PREFIX_DB.'_categories WHERE id = :id', ['id' => $id])->fetchColumn() : '';
@@ -738,10 +742,10 @@ function delete(): void {
         foreach ($ids as $one) $done = $done && $rte->deleteRoute('cat', $one);
         $done = $done && $db->setSqlCommit();
         if ($open && !$done) $db->setSqlRollback();
-        if (!$done) [$warn, $text] = [true, _ERROR];
+        if (!$done || !$ids) [$warn, $text] = [true, _ERROR];
         deleteCategoryMap($was);
     }
-    setRedirect($afile.'.php?name=categories&modul='.$modul, false, 302, $text, $warn);
+    setRedirect($afile.'.php?name=categories'.($modul ? '&modul='.$modul : ''), false, 302, $text, $warn);
 }
 
 function info(): void {

@@ -6,18 +6,61 @@
 
 if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 
-
+# The favorites of every user, newest first, each with the title of the material it marks, read per module in one query
 function favorites(): void {
-    global $tpl;
-    if (strtolower($_SERVER['HTTP_HX_REQUEST'] ?? '') === 'true') {
-        echo getAdminFavoriteList(1);
-        return;
-    }
+    global $afile, $db, $conf, $tpl;
     setHead();
-    $cont = getTplAdminTabs(['ops' => ['name=favorites', 'name=favorites&op=config', 'name=favorites&op=info'], 'tabs' => [_HOME, _PREFERENCES, _MANUAL]]);
-    echo $cont.$tpl->getHtmlPart('box', [
-        'box_id' => 'repadminFavoriteList',
-        'content_html' => getAdminFavoriteList(1),
+    $limit = max(1, intval($conf['favorites']['anum']));
+    $total = intval($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_favorites')->fetchColumn());
+    $pages = max(1, (int)ceil($total / $limit));
+    $num = min(max(1, getVar('get', 'num', 'num', 1)), $pages);
+    $sql = 'SELECT f.id, f.fid, f.modul, u.name FROM '.PREFIX_DB.'_favorites AS f LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.id) ORDER BY f.id DESC';
+    $list = $db->getSqlQuery($sql.' LIMIT '.(($num - 1) * $limit).', '.$limit)->fetchAll(PDO::FETCH_NUM);
+    $want = [];
+    foreach ($list as [, $fid, $mod]) $want[$mod][intval($fid)] = $mod;
+    $names = [];
+    foreach ($want as $mod => $refs) {
+        if ($mod === 'forum') {
+            $pars = [];
+            foreach (array_keys($refs) as $i => $one) $pars['f'.$i] = $one;
+            $res = $db->getSqlQuery('SELECT id, title FROM '.PREFIX_DB.'_forum WHERE id IN (:'.implode(', :', array_keys($pars)).')', $pars);
+            $names[$mod] = $res ? $res->fetchAll(PDO::FETCH_KEY_PAIR) : [];
+        } else {
+            $names[$mod] = getNodeTitleMap($refs);
+        }
+    }
+    $rows = [];
+    foreach ($list as [$id, $fid, $mod, $uname]) {
+        $title = getDecodedText((string)($names[$mod][intval($fid)] ?? ''));
+        $rows[] = ['name' => ($title !== '') ? cutstr($title, 60) : _ID.' '.$id, 'cells' => [
+            ['is_col_id' => true, 'has_content_text' => true, 'content_text' => $id],
+            ['is_col_title' => true, 'is_truncate' => true, 'title_text' => $title, 'has_content_text' => true, 'content_text' => $title],
+            ['is_truncate' => true, 'has_content_text' => true, 'content_text' => getModuleName($mod)],
+            ['is_col_author' => true, 'content_html' => $uname ? user_info($uname, null) : _ANONYM],
+            ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('dial', ['dial_title' => _FUNCTIONS, 'dial' => [
+                ['href' => 'index.php?name='.$mod.'&op=view&id='.$fid.'#'.$fid, 'icon_name' => 'eye', 'title' => _MVIEW],
+                getTplPostAction(['name' => 'favorites', 'op' => 'delete', 'id' => $id, 'num' => $num], 'trash', _ONDELETE) + ['later' => 'gone del'],
+            ]])],
+        ]];
+    }
+    echo getTplAdminList([
+        'head_html' => getTplAdminTabs(['ops' => ['name=favorites', 'name=favorites&op=config', 'name=favorites&op=info'], 'tabs' => [_HOME, _PREFERENCES, _MANUAL],
+            'part' => [0]]),
+        'is_fixed' => true,
+        'head' => [
+            ['content' => _ID, 'is_col_id' => true],
+            ['content' => _TITLE, 'is_col_title' => true, 'is_truncate' => true],
+            ['content' => _MODUL, 'is_truncate' => true],
+            ['content' => _POSTEDBY, 'is_col_author' => true],
+            ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true],
+        ],
+        'rows' => $rows,
+        'href' => $afile.'.php?name=favorites&',
+        'page' => $num,
+        'pages' => $pages,
+        'maxpg' => intval($conf['favorites']['anump']),
+        'count' => $total,
+        'limit' => $limit,
     ]);
     setFoot();
 }
@@ -124,26 +167,13 @@ function save(): void {
 }
 
 function delete(): void {
-    global $afile, $db, $tpl;
+    global $afile, $db;
     $id = getVar('post', 'id', 'num', 0);
     $num = getVar('post', 'num', 'num', 1);
-    $ishtmx = strtolower($_SERVER['HTTP_HX_REQUEST'] ?? '') === 'true';
-    if (!checkAdminPost('favorites')) {
-        if ($ishtmx) {
-            echo $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _TOKENMISS]);
-            return;
-        }
-        setRedirect($afile.'.php?name=favorites&num='.$num, false, 302, _TOKENMISS, true);
-        return;
-    }
-    if ($id > 0) {
-        $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_favorites WHERE id = :id', ['id' => $id]);
-    }
-    if ($ishtmx) {
-        echo getAdminFavoriteList(1);
-        return;
-    }
-    setRedirect($afile.'.php?name=favorites&num='.$num, false, 302, _SUCCDELETE);
+    $warn = !checkAdminPost('favorites');
+    $res = (!$warn && $id > 0) ? $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_favorites WHERE id = :id', ['id' => $id]) : false;
+    $done = $res && $res->rowCount() > 0;
+    setRedirect($afile.'.php?name=favorites&num='.$num, false, 302, $warn ? _TOKENMISS : ($done ? _SUCCDELETE : _ERROR), !$done);
 }
 
 function info(): void {

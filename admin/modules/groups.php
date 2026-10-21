@@ -170,7 +170,6 @@ function add(): void {
         'gid' => (string)$gid,
         'next_html' => ($after !== '') ? $tpl->getHtmlFrag('alert', ['text' => sprintf(_GROUPS_NEXT, htmlspecialchars($after))]) : '',
         'steps_json' => json_encode($ladder, JSON_UNESCAPED_UNICODE),
-        'leave_text' => _GROUPS_LEAVE,
         'title_group' => _GROUP.': ',
         'title_rank' => _RANK,
         'presets_title' => _GROUPS_PRESET,
@@ -284,11 +283,7 @@ function save(): void {
 function points(): void {
     global $afile, $conf, $tpl;
     setHead();
-    $cont = getTplAdminTabs(['ops' => ['name=groups', 'name=groups&op=add', 'name=groups&op=points', 'name=groups&op=info'],
-        'tabs' => [_HOME, _ADD, _POINTS, _MANUAL], 'tab' => 2]);
-    $cont .= checkPerms(CONFIG_DIR.'/points.php');
     $mark = ($conf['update']['points'] ?? '') === '6.3.0';
-    if (!$mark) $cont .= $tpl->getHtmlFrag('alert', ['text' => _POINTS_NOMARK, 'meta' => '', 'type' => 'warn', 'is_warn' => true]);
     $phead = [
         ['content' => _NAME],
         ['content' => _POINTS, 'nosort' => 1],
@@ -331,16 +326,22 @@ function points(): void {
         ]),
         'submit_label' => _SAVE,
     ]);
-    echo $cont.$tpl->getHtmlPart('box', ['content_html' => $pointv]).($mark ? getPointsJournal() : '');
+    $box = $tpl->getHtmlPart('box', ['content_html' => $pointv]);
+    if ($mark) {
+        echo getPointsJournal($box);
+    } else {
+        echo getTplAdminTabs(['ops' => ['name=groups', 'name=groups&op=add', 'name=groups&op=points', 'name=groups&op=info'], 'tabs' => [_HOME, _ADD, _POINTS, _MANUAL],
+            'tab' => 2]).checkPerms(CONFIG_DIR.'/points.php').$tpl->getHtmlFrag('alert', ['text' => _POINTS_NOMARK, 'is_warn' => true]).$box;
+    }
     setFoot();
 }
 
-function getPointsJournal(): string {
+# The journal of the points under its filter as a list of the canon, the rules form above it; the count stops at 5000 rows and the pages at 100
+function getPointsJournal(string $note): string {
     global $db, $afile, $conf, $tpl;
     $uid = getVar('get', 'uid', 'num', 0);
     $act = getVar('get', 'act', 'word', '');
     $day = getVar('get', 'day', 'text', '');
-    $num = min(100, max(1, getVar('get', 'num', 'num', 1)));
     $names = array_keys($conf['points']['actions']);
     $act = in_array($act, $names, true) ? $act : '';
     $day = (preg_match('/^\d{4}-\d{2}-\d{2}$/D', $day) && strtotime($day) !== false) ? $day : '';
@@ -350,51 +351,62 @@ function getPointsJournal(): string {
     if ($act !== '') [$where[], $pars['act']] = ['p.action = :act', $act];
     if ($day !== '') [$where[], $pars['from'], $pars['to']] = ['p.created >= :from AND p.created < :to', $day.' 00:00:00', date('Y-m-d', strtotime($day.' +1 day')).' 00:00:00'];
     $cond = $where ? ' WHERE '.implode(' AND ', $where) : '';
-    [$count] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(*) FROM (SELECT 1 FROM '.PREFIX_DB.'_points AS p'.$cond.' LIMIT 5000) AS q', $pars));
-    $sql = 'SELECT p.id, p.uid, u.name, p.aid, p.action, p.scope, p.mid, p.source, p.points, p.rid, p.note, p.created FROM '.PREFIX_DB.'_points AS p'
-        .' LEFT JOIN '.PREFIX_DB.'_users AS u ON (u.id = p.uid)'.$cond.' ORDER BY p.created DESC, p.id DESC LIMIT :offset, :limit';
-    $result = $db->getSqlQuery($sql, $pars + ['offset' => ($num - 1) * 50, 'limit' => 50]);
+    $count = intval($db->getSqlQuery('SELECT COUNT(*) FROM (SELECT 1 FROM '.PREFIX_DB.'_points AS p'.$cond.' LIMIT 5000) AS q', $pars)->fetchColumn());
+    $pages = min(100, max(1, (int)ceil($count / 50)));
+    $num = min($pages, max(1, getVar('get', 'num', 'num', 1)));
+    $sql = 'SELECT p.id, p.uid, u.name, p.action, p.scope, p.source, p.points, p.note, p.created FROM '.PREFIX_DB.'_points AS p'
+        .' LEFT JOIN '.PREFIX_DB.'_users AS u ON (u.id = p.uid)'.$cond.' ORDER BY p.created DESC, p.id DESC LIMIT '.(($num - 1) * 50).', 50';
+    $result = $db->getSqlQuery($sql, $pars);
+    $label = static fn(string $name): string => defined('_POINTS_'.strtoupper($name)) ? constant('_POINTS_'.strtoupper($name)) : $name;
     $opts = [['value_attr' => '', 'label_text' => _ALL, 'is_selected' => $act === '']];
-    foreach ($names as $name) $opts[] = ['value_attr' => $name, 'label_text' => constant('_POINTS_'.strtoupper($name)), 'is_selected' => $name === $act];
-    $form = $tpl->getHtmlPart('form', [
-        'action_url' => $afile.'.php',
-        'method' => 'get',
-        'is_inline_filter' => true,
-        'hidden' => [
-            ['nameattr' => 'name', 'valueattr' => 'groups'],
-            ['nameattr' => 'op', 'valueattr' => 'points'],
-        ],
-        'content_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'uid', 'value_attr' => $uid ? (string)$uid : '', 'placeholder_text' => _USER.' '._ID])
-            .$tpl->getHtmlFrag('select', ['name_attr' => 'act', 'options' => $opts])
-            .$tpl->getHtmlFrag('input', ['itype' => 'date', 'name_attr' => 'day', 'value_attr' => $day, 'placeholder_text' => _DATE])
-            .$tpl->getHtmlFrag('button', ['button_type' => 'submit', 'submit_label' => _OK]),
-    ]);
-    $rows = '';
-    while ($result && ($row = $db->getSqlRow($result))) {
-        $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', ['cells' => [
-            ['is_col_id' => true, 'content_html' => (string)intval($row['id'])],
-            ['is_col_date' => true, 'has_content_text' => true, 'content_text' => (string)$row['created']],
+    foreach ($names as $name) $opts[] = ['value_attr' => $name, 'label_text' => $label($name), 'is_selected' => $name === $act];
+    $rows = [];
+    foreach (($result ? $result->fetchAll(PDO::FETCH_ASSOC) : []) as $row) {
+        $rows[] = ['cells' => [
+            ['is_col_id' => true, 'has_content_text' => true, 'content_text' => intval($row['id'])],
+            ['is_col_date' => true, 'stamp' => format_time((string)$row['created'], 'c'), 'content_text' => format_time((string)$row['created'], _TIMESTRING)],
             ['is_truncate' => true, 'has_content_text' => true, 'content_text' => (string)($row['name'] ?? '').' #'.intval($row['uid'])],
-            ['has_content_text' => true, 'content_text' => (string)$row['action']],
+            ['has_content_text' => true, 'content_text' => $label((string)$row['action'])],
             ['is_truncate' => true, 'has_content_text' => true, 'content_text' => (string)$row['scope'].' / '.(string)$row['source']],
-            ['is_col_count' => true, 'content_html' => (string)intval($row['points'])],
+            ['is_col_count' => true, 'has_content_text' => true, 'content_text' => intval($row['points'])],
             ['is_truncate' => true, 'has_content_text' => true, 'title_text' => (string)$row['note'], 'content_text' => (string)$row['note']],
-        ]])]);
+        ]];
     }
-    $none = $tpl->getHtmlFrag('alert', ['text' => _NO_INFO, 'meta' => '', 'type' => 'info', 'is_warn' => false]);
-    if ($rows === '') return $tpl->getHtmlPart('box', ['title' => _POINTS_JOURNAL, 'content_html' => $form.$none]);
-    $head = [
-        ['content' => _ID],
-        ['content' => _DATE],
-        ['content' => _USER],
-        ['content' => _TYPE],
-        ['content' => _POINTS_SCOPE.' / '._POINTS_SOURCE],
-        ['content' => _POINTS],
-        ['content' => _NOTE],
-    ];
-    $link = 'name=groups&op=points'.($uid ? '&uid='.$uid : '').($act !== '' ? '&act='.$act : '').($day !== '' ? '&day='.$day : '').'&';
-    $body = $form.$tpl->getHtmlFrag('table', ['head' => $head, 'rows_html' => $rows]).getPageNumbers('', (int)$count, (int)ceil($count / 50), 50, $link, 10, $num, '', 'num');
-    return $tpl->getHtmlPart('box', ['title' => _POINTS_JOURNAL, 'content_html' => $body]);
+    $keep = array_filter(['uid' => $uid, 'act' => $act, 'day' => $day]);
+    return getTplAdminList([
+        'head_html' => getTplAdminTabs(['ops' => ['name=groups', 'name=groups&op=add', 'name=groups&op=points', 'name=groups&op=info'],
+            'tabs' => [_HOME, _ADD, _POINTS, _MANUAL], 'tab' => 2, 'part' => [2], 'subtitle_html' => $tpl->getHtmlFrag('list-filter', [
+                'action_url' => $afile.'.php',
+                'label' => _POINTS_JOURNAL,
+                'is_part' => true,
+                'hidden' => [['nameattr' => 'name', 'valueattr' => 'groups'], ['nameattr' => 'op', 'valueattr' => 'points']],
+                'fields' => [
+                    ['field_id' => 'sl-pts-uid', 'label' => _USER.' '._ID, 'name_attr' => 'uid', 'itype' => 'number', 'is_count' => true, 'value' => $uid ? (string)$uid : ''],
+                    ['field_id' => 'sl-pts-act', 'label' => _TYPE, 'name_attr' => 'act', 'options' => $opts, 'is_now' => true],
+                    ['field_id' => 'sl-pts-day', 'label' => _DATE, 'name_attr' => 'day', 'itype' => 'date', 'value' => $day],
+                ],
+            ])]).checkPerms(CONFIG_DIR.'/points.php'),
+        'note_html' => $note,
+        'is_fixed' => true,
+        'key' => 'groups-points',
+        'head' => [
+            ['content' => _ID, 'is_col_id' => true],
+            ['content' => _DATE, 'is_col_date' => true],
+            ['content' => _USER, 'is_truncate' => true],
+            ['content' => _TYPE],
+            ['content' => _POINTS_SCOPE.' / '._POINTS_SOURCE, 'is_truncate' => true],
+            ['content' => _POINTS, 'is_col_count' => true],
+            ['content' => _NOTE, 'is_truncate' => true],
+        ],
+        'rows' => $rows,
+        'href' => $afile.'.php?name=groups&op=points'.($keep ? '&'.http_build_query($keep) : '').'&',
+        'page' => $num,
+        'pages' => $pages,
+        'maxpg' => 10,
+        'count' => $count,
+        'limit' => 50,
+        'none_text' => $keep ? _NONE_FOUND : _NO_INFO,
+    ]);
 }
 
 function pointssave(): void {
@@ -424,18 +436,20 @@ function delete(): void {
     global $db, $afile, $conf;
     $warn = !checkAdminPost('groups');
     $id = getVar('post', 'id', 'num');
-    if (!$warn && $id) {
-        $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_groups WHERE id = :id', ['id' => $id]);
-        $changed = false;
-        foreach ($conf['modules'] as $name => $info) {
-            if ((int)($info['group'] ?? 0) === $id) {
-                $conf['modules'][$name]['group'] = 0;
-                $changed = true;
-            }
-        }
-        if ($changed) setConfigFile('modules.php', $conf['modules']);
+    $text = $warn ? _TOKENMISS : _SUCCDELETE;
+    if (!$warn) {
+        $open = $db->setSqlBegin();
+        $gone = $open && $id ? $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_groups WHERE id = :id', ['id' => $id]) : false;
+        $done = $gone && $gone->rowCount() > 0 && $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET grp = 0 WHERE grp = :id', ['id' => $id]) !== false
+            && $db->setSqlCommit();
+        if ($open && !$done) $db->setSqlRollback();
+        $mods = $conf['modules'];
+        foreach ($mods as $name => $info) if ((int)($info['group'] ?? 0) === $id) $mods[$name]['group'] = 0;
+        if ($done && $mods !== $conf['modules'] && !setConfigFile('modules.php', $mods)) $text = getConfigJournal() ? _CONFIG_PENDING : _ERROR_UP;
+        if (!$done) $text = _ERROR;
+        $warn = $text !== _SUCCDELETE;
     }
-    setRedirect($afile.'.php?name=groups', false, 302, $warn ? _TOKENMISS : _SUCCDELETE, $warn);
+    setRedirect($afile.'.php?name=groups', false, 302, $text, $warn);
 }
 
 function info(): void {

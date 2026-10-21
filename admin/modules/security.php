@@ -30,58 +30,39 @@ $tabset = [
 
 function security(): void {
     global $afile, $labels, $tabset, $tpl;
-    setHead();
-    $cont = getTplAdminTabs($tabset);
-    $cont .= checkPerms(CONFIG_DIR.'/security.php').getSelfCheckAlert(true);
-    $head = [
-        ['content' => _TITLE],
-        ['content' => _SIZE],
-        ['content' => _DATE],
-        ['content' => _FUNCTIONS, 'nosort' => true],
-    ];
-    $rows = '';
+    $rows = [];
     $files = is_dir(LOGS_DIR) ? scandir(LOGS_DIR) : [];
     foreach ($files as $file) {
-        if (preg_match('#(.*)\.log$#', $file)) {
-            $name = (string)pathinfo($file, PATHINFO_FILENAME);
-            $title = $labels[$name] ?? $name;
-            $path = LOGS_DIR.'/'.$file;
-            $filesize = filesize($path);
-            $acts = $tpl->getHtmlFrag('dial', [
-                'dial_title' => _EDITOR,
-                'dial' => [
-                    [
-                        'href' => $afile.'.php?name=security&op=logview&file='.urlencode($name),
-                        'icon_name' => 'file-text',
-                        'title' => _SHOW,
-                    ],
-                    [
-                        'href' => $afile.'.php?name=security&op=download&file='.urlencode($name),
-                        'icon_name' => 'download',
-                        'title' => _DOWN,
-                    ],
-                    getTplPostAction(['name' => 'security', 'op' => 'delete', 'file' => $name], 'trash', _ONDELETE, _DELETE.' "'.$title.'"?'),
-                ],
-            ]);
-            $titleHtml = $tpl->getHtmlFrag('popover', [
-                'items' => [
-                    ['label' => _FILE, 'value' => 'storage/logs/'.$file, 'is_last' => true],
-                ],
-            ]).$title;
-            $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
-                'cells' => [
-                    ['is_truncate' => true, 'title_text' => $title, 'content_html' => $titleHtml],
-                    ['content_html' => filterSize($filesize)],
-                    ['content_html' => date(_TIMESTRING, filemtime($path))],
-                    ['content_html' => $acts],
-                ],
-            ])]);
-        }
+        if (!preg_match('#(.*)\.log$#', $file)) continue;
+        $name = (string)pathinfo($file, PATHINFO_FILENAME);
+        $title = $labels[$name] ?? $name;
+        $path = LOGS_DIR.'/'.$file;
+        $rows[] = ['name' => $title, 'cells' => [
+            ['is_truncate' => true, 'title_text' => $title, 'has_content_text' => true, 'content_text' => $title,
+                'prefix_html' => $tpl->getHtmlFrag('popover', ['items' => [['label' => _FILE, 'value' => 'storage/logs/'.$file, 'is_last' => true]]])],
+            ['is_col_count' => true, 'has_content_text' => true, 'content_text' => filterSize(filesize($path))],
+            ['is_col_date' => true, 'stamp' => date('c', filemtime($path)), 'content_text' => date(_TIMESTRING, filemtime($path))],
+            ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('dial', ['dial_title' => _EDITOR, 'dial' => [
+                ['href' => $afile.'.php?name=security&op=logview&file='.urlencode($name), 'icon_name' => 'file-text', 'title' => _SHOW],
+                ['href' => $afile.'.php?name=security&op=download&file='.urlencode($name), 'icon_name' => 'download', 'title' => _DOWN],
+                getTplPostAction(['name' => 'security', 'op' => 'delete', 'file' => $name], 'trash', _ONDELETE) + ['later' => 'gone del'],
+            ]])],
+        ]];
     }
-    $head[0]['is_truncate'] = true;
-    $cont .= $tpl->getHtmlFrag('table', [
-        'is_fixed' => true,'head' => $head, 'rows_html' => $rows]);
-    echo $cont;
+    setHead();
+    echo getTplAdminList([
+        'head_html' => getTplAdminTabs($tabset + ['part' => [0, 1, 2]]),
+        'note_html' => checkPerms(CONFIG_DIR.'/security.php').getSelfCheckAlert(true),
+        'is_fixed' => true,
+        'head' => [
+            ['content' => _TITLE, 'is_truncate' => true],
+            ['content' => _SIZE, 'is_col_count' => true],
+            ['content' => _DATE, 'is_col_date' => true],
+            ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true],
+        ],
+        'rows' => $rows,
+        'count' => count($rows),
+    ]);
     setFoot();
 }
 
@@ -116,30 +97,26 @@ function logview(): void {
         $filt = array_filter(['level' => $levl ?: $levs[0], 'ip' => $ip, 'from' => $from, 'to' => $to, 'event' => $isadm ? ($event === '' ? 'action' : $event) : '',
             'modul' => $modul, 'result' => $res], static fn($v) => $v !== '' && $v !== 'all');
         $log = Logger::getEntries($chans[$file], $filt, $num, 50);
-        setHead();
-        $cont = getTplAdminTabs($tabset);
-        $pick = static function(string $name, array $list, string $cur, string $all) use ($tpl): string {
-            $opts = $all !== '' ? [['value_attr' => '', 'label_text' => $all, 'is_selected' => $cur === '']] : [];
-            foreach ($list as $key => $label) $opts[] = ['value_attr' => $key, 'label_text' => $label, 'is_selected' => $key === $cur];
-            return $tpl->getHtmlFrag('select', ['name_attr' => $name, 'options' => $opts, 'is_config' => true]);
+        $pages = max(1, (int)ceil($log['total'] / 50));
+        $num = min($num, $pages);
+        $pick = static function(string $name, string $label, array $list, string $cur, string $all): array {
+            $opts = ($all !== '') ? [['value_attr' => '', 'label_text' => $all, 'is_selected' => $cur === '']] : [];
+            foreach ($list as $key => $text) $opts[] = ['value_attr' => (string)$key, 'label_text' => $text, 'is_selected' => (string)$key === $cur];
+            return ['field_id' => 'sl-log-'.$name, 'label' => $label, 'name_attr' => $name, 'options' => $opts];
         };
-        $form = $tpl->getHtmlPart('form', [
+        $fields = $isadm ? [$pick('event', _TYPE, $events, $event, ''), $pick('modul', _MODUL, $mods, $modul, _ALL), $pick('res', _STATUS, $results, $res, _ALL)] : [];
+        $fields[] = $pick('level', _SEC_LEVEL, array_combine($levs, array_map(static fn($v) => "\u{2265} ".$v, $levs)), $levl, _ALL);
+        $fields[] = ['field_id' => 'sl-log-ip', 'label' => _IP, 'name_attr' => 'ip', 'itype' => 'text', 'value' => $ip];
+        $fields[] = ['field_id' => 'sl-log-from', 'label' => _DATEFROM, 'name_attr' => 'from', 'itype' => 'date', 'value' => $from];
+        $fields[] = ['field_id' => 'sl-log-to', 'label' => _DATETO, 'name_attr' => 'to', 'itype' => 'date', 'value' => $to];
+        $form = $tpl->getHtmlFrag('list-filter', [
             'action_url' => $afile.'.php',
-            'method' => 'get',
-            'is_inline_filter' => true,
-            'hidden' => [
-                ['nameattr' => 'name', 'valueattr' => 'security'],
-                ['nameattr' => 'op', 'valueattr' => 'logview'],
-                ['nameattr' => 'file', 'valueattr' => $file],
-            ],
-            'content_html' => ($isadm ? $pick('event', $events, $event, '').$pick('modul', $mods, $modul, _MODUL).$pick('res', $results, $res, _STATUS) : '')
-                .$pick('level', array_combine($levs, array_map(static fn($v) => "\u{2265} ".$v, $levs)), $levl, _SEC_LEVEL)
-                .$tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'ip', 'value_attr' => $ip, 'placeholder_text' => _IP])
-                .$tpl->getHtmlFrag('input', ['itype' => 'date', 'name_attr' => 'from', 'value_attr' => $from, 'placeholder_text' => _DATE])
-                .$tpl->getHtmlFrag('input', ['itype' => 'date', 'name_attr' => 'to', 'value_attr' => $to, 'placeholder_text' => _DATE])
-                .$tpl->getHtmlFrag('button', ['button_type' => 'submit', 'submit_label' => _OK]),
+            'label' => _SEARCH,
+            'is_part' => true,
+            'hidden' => [['nameattr' => 'name', 'valueattr' => 'security'], ['nameattr' => 'op', 'valueattr' => 'logview'], ['nameattr' => 'file', 'valueattr' => $file]],
+            'fields' => $fields,
         ]);
-        $rows = '';
+        $rows = [];
         foreach ($log['rows'] as $row) {
             $cells = [['is_col_date' => true, 'has_content_text' => true, 'content_text' => format_time((string)$row['ts'], _TIMESTRING)],
                 ['is_col_status' => true, 'has_content_text' => true, 'content_text' => (string)$row['level']]];
@@ -158,21 +135,28 @@ function logview(): void {
                 $cells[] = ['is_truncate' => true, 'has_content_text' => true, 'title_text' => (string)$row['msg'], 'content_text' => (string)$row['msg']];
             }
             $cells[] = ['content_html' => Geoip::getIpHtml((string)($row['ip'] ?? ''))];
-            $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', ['cells' => $cells])]);
+            $rows[] = ['cells' => $cells];
         }
-        if ($rows === '') {
-            $body = $form.$tpl->getHtmlFrag('alert', ['text' => _NO_INFO, 'meta' => '', 'type' => 'info', 'is_warn' => false]);
-        } else {
-            $head = $isadm ? [['content' => _ADMIN, 'is_truncate' => true], ['content' => _MODUL], ['content' => _CHECKOP], ['content' => _SEC_OBJECT, 'is_col_status' => true],
-                ['content' => _STATUS]] : [['content' => _MESSAGE, 'is_truncate' => true]];
-            $head = array_merge([['content' => _DATE, 'is_col_date' => true], ['content' => _SEC_LEVEL, 'is_col_status' => true]], $head,
-                [['content' => _IP, 'is_col_date' => true]]);
-            $link = 'name=security&op=logview&file='.$file.($event !== '' ? '&event='.$event : '').($modul !== '' ? '&modul='.$modul : '').($res !== '' ? '&res='.$res : '')
-                .($levl !== '' ? '&level='.$levl : '').($ip !== '' ? '&ip='.urlencode($ip) : '').($from !== '' ? '&from='.$from : '').($to !== '' ? '&to='.$to : '').'&';
-            $body = $form.$tpl->getHtmlFrag('table', ['is_fixed' => true, 'head' => $head, 'rows_html' => $rows])
-                .getPageNumbers('', $log['total'], (int)ceil($log['total'] / 50), 50, $link, 10, $num, '', 'num');
-        }
-        echo $cont.checkPerms(LOGS_DIR.'/'.$file.'.log').$tpl->getHtmlPart('box', ['title' => $labels[$file] ?? $file, 'content_html' => $body]);
+        $head = $isadm ? [['content' => _ADMIN, 'is_truncate' => true], ['content' => _MODUL], ['content' => _CHECKOP], ['content' => _SEC_OBJECT, 'is_col_status' => true],
+            ['content' => _STATUS]] : [['content' => _MESSAGE, 'is_truncate' => true]];
+        $head = array_merge([['content' => _DATE, 'is_col_date' => true], ['content' => _SEC_LEVEL, 'is_col_status' => true]], $head, [['content' => _IP, 'is_col_date' => true]]);
+        $link = 'name=security&op=logview&file='.$file.($event !== '' ? '&event='.$event : '').($modul !== '' ? '&modul='.$modul : '').($res !== '' ? '&res='.$res : '')
+            .($levl !== '' ? '&level='.$levl : '').($ip !== '' ? '&ip='.urlencode($ip) : '').($from !== '' ? '&from='.$from : '').($to !== '' ? '&to='.$to : '').'&';
+        setHead();
+        echo getTplAdminList([
+            'head_html' => getTplAdminTabs($tabset + ['part' => [0, 1, 2], 'subtitle_html' => $form]),
+            'key' => 'security-'.$file,
+            'note_html' => checkPerms(LOGS_DIR.'/'.$file.'.log').$tpl->getHtmlFrag('alert', ['text' => $labels[$file] ?? $file]),
+            'is_fixed' => true,
+            'head' => $head,
+            'rows' => $rows,
+            'href' => $afile.'.php?'.$link,
+            'page' => $num,
+            'pages' => $pages,
+            'maxpg' => 10,
+            'count' => $log['total'],
+            'limit' => 50,
+        ]);
         setFoot();
         return;
     }
@@ -227,32 +211,30 @@ function logins(): void {
         'to' => ($to !== '') ? date('Y-m-d', strtotime($to.' +1 day')).' 00:00:00' : '',
     ], static fn($v) => $v !== null && $v !== '');
     $log = getLoginLog($filt, $num, 50);
-    setHead();
-    $cont = getTplAdminTabs($tabset + ['tab' => 1]);
-    $pick = static function(string $name, array $list, string $cur, string $all) use ($tpl): string {
-        $opts = [['value_attr' => '', 'label_text' => $all, 'is_selected' => $cur === '']];
-        foreach ($list as $key => $label) $opts[] = ['value_attr' => $key, 'label_text' => $label, 'is_selected' => $key === $cur];
-        return $tpl->getHtmlFrag('select', ['name_attr' => $name, 'options' => $opts, 'is_config' => true]);
+    $pages = max(1, (int)ceil($log['total'] / 50));
+    $num = min($num, $pages);
+    $pick = static function(string $name, string $label, array $list, string $cur): array {
+        $opts = [['value_attr' => '', 'label_text' => _ALL, 'is_selected' => $cur === '']];
+        foreach ($list as $key => $text) $opts[] = ['value_attr' => $key, 'label_text' => $text, 'is_selected' => $key === $cur];
+        return ['field_id' => 'sl-login-'.$name, 'label' => $label, 'name_attr' => $name, 'options' => $opts];
     };
-    $form = $tpl->getHtmlPart('form', [
+    $form = $tpl->getHtmlFrag('list-filter', [
         'action_url' => $afile.'.php',
-        'method' => 'get',
-        'is_inline_filter' => true,
-        'hidden' => [
-            ['nameattr' => 'name', 'valueattr' => 'security'],
-            ['nameattr' => 'op', 'valueattr' => 'logins'],
+        'label' => _SEARCH,
+        'is_part' => true,
+        'hidden' => [['nameattr' => 'name', 'valueattr' => 'security'], ['nameattr' => 'op', 'valueattr' => 'logins']],
+        'fields' => [
+            ['field_id' => 'sl-login-uid', 'label' => _ACCOUNT.' '._ID, 'name_attr' => 'uid', 'itype' => 'number', 'value' => $uid ? (string)$uid : '', 'is_count' => true],
+            $pick('side', _ADMIN.' / '._USER, $sides, $side), $pick('res', _STATUS, $results, $res), $pick('way', _TYPE, $ways, $way),
+            ['field_id' => 'sl-login-from', 'label' => _DATEFROM, 'name_attr' => 'from', 'itype' => 'date', 'value' => $from],
+            ['field_id' => 'sl-login-to', 'label' => _DATETO, 'name_attr' => 'to', 'itype' => 'date', 'value' => $to],
         ],
-        'content_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'uid', 'value_attr' => $uid ? (string)$uid : '', 'placeholder_text' => _ACCOUNT.' '._ID])
-            .$pick('side', $sides, $side, _ADMIN.' / '._USER).$pick('res', $results, $res, _STATUS).$pick('way', $ways, $way, _TYPE)
-            .$tpl->getHtmlFrag('input', ['itype' => 'date', 'name_attr' => 'from', 'value_attr' => $from, 'placeholder_text' => _DATE])
-            .$tpl->getHtmlFrag('input', ['itype' => 'date', 'name_attr' => 'to', 'value_attr' => $to, 'placeholder_text' => _DATE])
-            .$tpl->getHtmlFrag('button', ['button_type' => 'submit', 'submit_label' => _OK]),
     ]);
-    $rows = '';
+    $rows = [];
     foreach ($log['rows'] as $row) {
         $agent = html_entity_decode((string)$row['agent'], ENT_QUOTES, 'UTF-8');
         $info = getAgentInfo($agent, 0);
-        $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', ['cells' => [
+        $rows[] = ['cells' => [
             ['is_col_date' => true, 'has_content_text' => true, 'content_text' => format_time((string)$row['time'], _TIMESTRING)],
             ['is_truncate' => true, 'has_content_text' => true, 'content_text' => trim((string)$row['name'].' #'.intval($row['uid']))],
             ['has_content_text' => true, 'content_text' => $row['admin'] ? _ADMIN : _USER],
@@ -260,19 +242,24 @@ function logins(): void {
             ['has_content_text' => true, 'content_text' => $ways[$row['way']] ?? (string)$row['way']],
             ['content_html' => Geoip::getIpHtml((string)$row['ip'])],
             ['is_truncate' => true, 'has_content_text' => true, 'title_text' => $agent, 'content_text' => $info['browser'].' / '.$info['os']],
-        ]])]);
+        ]];
     }
-    if ($rows === '') {
-        $body = $form.$tpl->getHtmlFrag('alert', ['text' => _NO_INFO, 'meta' => '', 'type' => 'info', 'is_warn' => false]);
-    } else {
-        $head = [['content' => _DATE], ['content' => _ACCOUNT], ['content' => _ADMIN.' / '._USER], ['content' => _STATUS], ['content' => _TYPE],
-            ['content' => _IP], ['content' => _BROWSER]];
-        $link = 'name=security&op=logins'.($uid ? '&uid='.$uid : '').($side !== '' ? '&side='.$side : '').($res !== '' ? '&res='.$res : '')
-            .($way !== '' ? '&way='.$way : '').($from !== '' ? '&from='.$from : '').($to !== '' ? '&to='.$to : '').'&';
-        $body = $form.$tpl->getHtmlFrag('table', ['head' => $head, 'rows_html' => $rows])
-            .getPageNumbers('', $log['total'], (int)ceil($log['total'] / 50), 50, $link, 10, $num, '', 'num');
-    }
-    echo $cont.$tpl->getHtmlPart('box', ['title' => _ACCOUNT_LOGINS, 'content_html' => $body]);
+    $link = 'name=security&op=logins'.($uid ? '&uid='.$uid : '').($side !== '' ? '&side='.$side : '').($res !== '' ? '&res='.$res : '')
+        .($way !== '' ? '&way='.$way : '').($from !== '' ? '&from='.$from : '').($to !== '' ? '&to='.$to : '').'&';
+    setHead();
+    echo getTplAdminList([
+        'head_html' => getTplAdminTabs($tabset + ['tab' => 1, 'part' => [0, 1, 2], 'subtitle_html' => $form]),
+        'key' => 'security-logins',
+        'head' => [['content' => _DATE, 'is_col_date' => true], ['content' => _ACCOUNT, 'is_truncate' => true], ['content' => _ADMIN.' / '._USER], ['content' => _STATUS],
+            ['content' => _TYPE], ['content' => _IP], ['content' => _BROWSER, 'is_truncate' => true]],
+        'rows' => $rows,
+        'href' => $afile.'.php?'.$link,
+        'page' => $num,
+        'pages' => $pages,
+        'maxpg' => 10,
+        'count' => $log['total'],
+        'limit' => 50,
+    ]);
     setFoot();
 }
 
@@ -281,244 +268,189 @@ function banlist(): void {
     $time = getVar('req', 'time', 'num');
     $info = getVar('req', 'info', 'text');
     $hash = getVar('req', 'hash', 'text');
-    $cidr = getVar('req', 'cidr', 'text');
-    setHead();
-    $cont = getTplAdminTabs($tabset + ['tab' => 2]);
-    $cont .= checkPerms(CONFIG_DIR.'/security.php');
-    if (getVar('get', 'send', 'var')) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _MAIL_SEND]);
-    $tabone = '';
-    $bip = explode('||', $conf['security']['blocker_ip']);
-    if ($conf['security']['blocker_ip']) {
-        $head = [
-            ['content' => _IP],
-            ['content' => _HASH],
-            ['content' => _DATE],
-            ['content' => _FUNCTIONS, 'nosort' => true],
-        ];
-        $rows = '';
-        foreach ($bip as $val) {
-            if ($val != '') {
-                $binfo = explode('|', $val, 4);
-                if (count($binfo) < 4) continue;
-                $tcidr = getIpCidr($binfo[0]);
-                if ($tcidr === false) continue;
-                [$tip] = explode('/', $tcidr, 2);
-                $reason = $tpl->getHtmlFrag('popover', [
-                    'items' => [
-                        ['label' => _IP_CIDR, 'has_value_text' => true, 'value_text' => $tcidr, 'is_last' => false],
-                        ['label' => _BANN_REAS, 'has_value_text' => true, 'value_text' => (string)$binfo[3], 'is_last' => true],
-                    ],
-                ]).Geoip::getIpHtml($tip);
-                $acts = $tpl->getHtmlFrag('dial', [
-                    'dial_title' => _EDITOR,
-                    'dial' => [getTplPostAction(['name' => 'security', 'op' => 'bansave', 'cidr' => $tcidr, 'hash' => $binfo[1],
-                        'time' => (int)$binfo[2], 'id' => 1], 'trash', _ONDELETE, _DELETE.' "'.$tcidr.'"?')],
-                ]);
-                $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
-                    'cells' => [
-                        ['is_truncate' => true, 'title_text' => $tcidr, 'content_html' => $reason],
-                        ['is_truncate' => true, 'title_text' => (string)$binfo[1], 'content_html' => $binfo[1]],
-                        ['content_html' => getTimeLeft((int)$binfo[2])],
-                        ['content_html' => $acts],
-                    ],
-                ])]);
-            }
-        }
-        $head[0]['is_truncate'] = true;
-        $head[1]['is_truncate'] = true;
-        $tabone .= $tpl->getHtmlFrag('table', [
-        'is_fixed' => true,'head' => $head, 'rows_html' => $rows]);
+    $cidr = getVar('req', 'cidr', 'text', getVar('get', 'new_ip', 'text', ''));
+    $user = getVar('get', 'kind', 'word', '') === 'user' || getVar('get', 'uname', 'name', '') !== '';
+    $base = $afile.'.php?name=security&op=banlist&kind=';
+    $subs = '';
+    foreach (['ip' => _BANNED_IP, 'user' => _BANNED_USERS] as $key => $label) {
+        $subs .= $tpl->getHtmlFrag('tabs-link', ['href' => $base.$key, 'hx_get' => $base.$key, 'is_active' => ($key === 'user') === $user, 'label' => $label, 'title' => $label]);
     }
-    $iprows = [
-        [
-            'label_for' => 'f-cidr',
-            'label_html' => _IP_CIDR, 'hint_html' => _IP_CIDR_TIP, 'hint_id' => $hntid = getFieldIds('f-cidr')['hint'],
-            'field_html' => $tpl->getHtmlFrag('textarea', ['describedby' => $hntid,
-                'name_attr' => 'cidr',
-                'input_id' => 'f-cidr',
-                'value_text' => $cidr,
-            ]),
-        ],
-        [
-            'label_for' => 'f-hash',
-            'label_html' => _HASH,
-            'field_html' => $tpl->getHtmlFrag('input', [
-                'itype' => 'text',
-                'name_attr' => 'hash',
-                'input_id' => 'f-hash',
-                'placeholder_text' => _HASH,
-                'value_attr' => $hash,
-            ]),
-        ],
-        [
-            'label_for' => 'f-time',
-            'label_html' => _TIME,
-            'field_html' => $tpl->getHtmlFrag('input', [
-                'is_required' => true,
-                'itype' => 'number',
-                'name_attr' => 'time',
-                'input_id' => 'f-time',
-                'placeholder_text' => _TIME,
-                'value_attr' => (string)$time,
-            ]),
-        ],
-        [
-            'label_for' => 'f-info',
-            'label_html' => _BANN_REAS,
-            'field_html' => $tpl->getHtmlFrag('textarea', [
-                'name_attr' => 'info',
-                'input_id' => 'f-info',
-                'value_text' => $info,
-            ]),
-        ],
-    ];
-    $tabone .= $tpl->getHtmlPart('form', [
-        'action_url' => $afile.'.php?name=security&op=bansave',
-        'hidden' => [
-            ['nameattr' => 'id', 'valueattr' => '2'],
-            ['nameattr' => 'token', 'valueattr' => getSiteToken('security')],
-        ],
-        'rows' => $iprows,
-        'submit_label' => _ADD,
-    ]);
-    $tabtwo = '';
-    $busers = explode('||', $conf['security']['blocker_user']);
-    if ($conf['security']['blocker_user']) {
-        $head = [
-            ['content' => _NICKNAME],
-            ['content' => _BANN_REAS],
-            ['content' => _DATE],
-            ['content' => _FUNCTIONS, 'nosort' => true],
-        ];
-        $rows = '';
-        foreach ($busers as $val) {
-            if ($val != '') {
-                $binfo = explode('|', $val);
-                $acts = $tpl->getHtmlFrag('dial', [
-                    'dial_title' => _EDITOR,
-                    'dial' => [getTplPostAction(['name' => 'security', 'op' => 'bansave', 'uname' => (string)$binfo[0],
-                        'time' => (int)($binfo[1] ?? 0), 'id' => 3], 'trash', _ONDELETE, _DELETE.' "'.(string)$binfo[0].'"?')],
-                ]);
-                $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
-                    'cells' => [
-                        ['is_truncate' => true, 'title_text' => (string)$binfo[0], 'content_html' => user_info($binfo[0], null)],
-                        ['is_truncate' => true, 'title_text' => (string)($binfo[2] ?? ''), 'has_content_text' => true, 'content_text' => (string)($binfo[2] ?? '')],
-                        ['content_html' => getTimeLeft((int)($binfo[1] ?? 0))],
-                        ['content_html' => $acts],
-                    ],
-                ])]);
-            }
+    $note = checkPerms(CONFIG_DIR.'/security.php');
+    if (getVar('get', 'send', 'var')) $note .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _MAIL_SEND]);
+    $rows = [];
+    if (!$user) {
+        foreach (explode('||', (string)$conf['security']['blocker_ip']) as $val) {
+            $binfo = explode('|', $val, 4);
+            if ($val === '' || count($binfo) < 4) continue;
+            $tcidr = getIpCidr($binfo[0]);
+            if ($tcidr === false) continue;
+            [$tip] = explode('/', $tcidr, 2);
+            $reason = $tpl->getHtmlFrag('popover', ['items' => [
+                ['label' => _IP_CIDR, 'has_value_text' => true, 'value_text' => $tcidr, 'is_last' => false],
+                ['label' => _BANN_REAS, 'has_value_text' => true, 'value_text' => (string)$binfo[3], 'is_last' => true],
+            ]]);
+            $rows[] = ['name' => $tcidr, 'cells' => [
+                ['is_truncate' => true, 'title_text' => $tcidr, 'content_html' => $reason.Geoip::getIpHtml($tip)],
+                ['is_truncate' => true, 'title_text' => (string)$binfo[1], 'has_content_text' => true, 'content_text' => (string)$binfo[1]],
+                ['is_col_date' => true, 'has_content_text' => true, 'content_text' => getTimeLeft((int)$binfo[2])],
+                ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('dial', ['dial_title' => _EDITOR, 'dial' => [getTplPostAction(['name' => 'security',
+                    'op' => 'bansave', 'cidr' => $tcidr, 'hash' => $binfo[1], 'time' => (int)$binfo[2], 'id' => 1], 'trash', _ONDELETE) + ['later' => 'gone del']]])],
+            ]];
         }
-        $head[0]['is_truncate'] = true;
-        $head[1]['is_truncate'] = true;
-        $tabtwo .= $tpl->getHtmlFrag('table', [
-        'is_fixed' => true,'head' => $head, 'rows_html' => $rows]);
-    }
-    $name = getVar('get', 'uname', 'name');
-    $mailTextId = 'sl_form_security_mail';
-    $check = '';
-    $mailtext = replace_break(str_replace('[text]', _BANN_INFO."\n\n"._BANN_TERM.': [time]'."\n"._BANN_REAS.': [info]', $conf['mtemp']));
-    $userrows = [
-        [
-            'label_html' => _NICKNAME,
-            'field_html' => getTplUserSearchInput([
-                'input_id' => 'uname',
-                'list_id' => 'uname_list',
-                'maxlength' => 25,
-                'minlength' => (int)$conf['search']['slet'],
-                'name' => 'uname',
-                'tip' => sprintf(_USERSEARCHTIP, (int)$conf['search']['slet']),
-                'value' => $name,
-            ]),
-        ],
-        [
-            'label_for' => 'f-utime',
-            'label_html' => _TIME,
-            'field_html' => $tpl->getHtmlFrag('input', [
-                'is_required' => true,
-                'itype' => 'number',
-                'name_attr' => 'time',
-                'input_id' => 'f-utime',
-                'placeholder_text' => _TIME,
-                'value_attr' => (string)$time,
-            ]),
-        ],
-        [
-            'label_for' => 'f-uinfo',
-            'label_html' => _BANN_REAS,
-            'field_html' => $tpl->getHtmlFrag('textarea', [
-                'input_attr' => 'placeholder="'._BANN_REAS.'" required',
-                'name_attr' => 'info',
-                'input_id' => 'f-uinfo',
-                'value_text' => $info,
-            ]),
-        ],
-        [
-            'label_for' => 'f-mail',
-            'label_html' => _MAIL_SENDE,
-            'field_html' => $tpl->getHtmlFrag('checkbox', [
-                'input_attr' => 'data-sl-toggle-control="'.$mailTextId.'"',
-                'is_checked' => $check !== '',
-                'name_attr' => 'mail',
-                'input_id' => 'f-mail',
-                'value_attr' => '1',
-            ]),
-        ],
-        [
-            'label_for' => 'f-mailtext',
-            'label_html' => _MAIL_TEXT, 'hint_html' => _MAIL_INFO, 'hint_id' => 'f-mailtext-hint',
-            'field_html' => $tpl->getHtmlPart('div', [
-                'content_html' => $tpl->getHtmlFrag('textarea', [
-                    'name_attr' => 'mailtext',
-                    'input_id' => 'f-mailtext',
-                    'describedby' => 'f-mailtext-hint',
-                    'rows_num' => 10,
-                    'value_text' => $mailtext,
+        $head = [['content' => _IP, 'is_truncate' => true], ['content' => _HASH, 'is_truncate' => true]];
+        $iprows = [
+            [
+                'label_for' => 'f-cidr',
+                'label_html' => _IP_CIDR, 'hint_html' => _IP_CIDR_TIP, 'hint_id' => $hntid = getFieldIds('f-cidr')['hint'],
+                'field_html' => $tpl->getHtmlFrag('textarea', ['describedby' => $hntid,
+                    'name_attr' => 'cidr',
+                    'input_id' => 'f-cidr',
+                    'value_text' => $cidr,
                 ]),
-                'id' => $mailTextId,
-                'is_collapsible' => true,
-            ]),
-            'is_full' => true,
-        ],
-    ];
-    $tabtwo .= $tpl->getHtmlPart('form', [
-        'action_url' => $afile.'.php?name=security&op=bansave',
-        'hidden' => [
-            ['nameattr' => 'id', 'valueattr' => '4'],
-            ['nameattr' => 'token', 'valueattr' => getSiteToken('security')],
-        ],
-        'rows' => $userrows,
-        'submit_label' => _ADD,
+            ],
+            [
+                'label_for' => 'f-hash',
+                'label_html' => _HASH,
+                'field_html' => $tpl->getHtmlFrag('input', [
+                    'itype' => 'text',
+                    'name_attr' => 'hash',
+                    'input_id' => 'f-hash',
+                    'placeholder_text' => _HASH,
+                    'value_attr' => $hash,
+                ]),
+            ],
+            [
+                'label_for' => 'f-time',
+                'label_html' => _TIME,
+                'field_html' => $tpl->getHtmlFrag('input', [
+                    'is_required' => true,
+                    'itype' => 'number',
+                    'name_attr' => 'time',
+                    'input_id' => 'f-time',
+                    'placeholder_text' => _TIME,
+                    'value_attr' => (string)$time,
+                ]),
+            ],
+            [
+                'label_for' => 'f-info',
+                'label_html' => _BANN_REAS,
+                'field_html' => $tpl->getHtmlFrag('textarea', [
+                    'name_attr' => 'info',
+                    'input_id' => 'f-info',
+                    'value_text' => $info,
+                ]),
+            ],
+        ];
+        $form = $tpl->getHtmlPart('form', [
+            'action_url' => $afile.'.php?name=security&op=bansave',
+            'hidden' => [
+                ['nameattr' => 'id', 'valueattr' => '2'],
+                ['nameattr' => 'token', 'valueattr' => getSiteToken('security')],
+            ],
+            'rows' => $iprows,
+            'submit_label' => _ADD,
+        ]);
+    } else {
+        foreach (explode('||', (string)$conf['security']['blocker_user']) as $val) {
+            if ($val === '') continue;
+            $binfo = explode('|', $val);
+            $rows[] = ['name' => (string)$binfo[0], 'cells' => [
+                ['is_truncate' => true, 'title_text' => (string)$binfo[0], 'content_html' => user_info($binfo[0], null)],
+                ['is_truncate' => true, 'title_text' => (string)($binfo[2] ?? ''), 'has_content_text' => true, 'content_text' => (string)($binfo[2] ?? '')],
+                ['is_col_date' => true, 'has_content_text' => true, 'content_text' => getTimeLeft((int)($binfo[1] ?? 0))],
+                ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('dial', ['dial_title' => _EDITOR, 'dial' => [getTplPostAction(['name' => 'security',
+                    'op' => 'bansave', 'uname' => (string)$binfo[0], 'time' => (int)($binfo[1] ?? 0), 'id' => 3], 'trash', _ONDELETE) + ['later' => 'gone del']]])],
+            ]];
+        }
+        $head = [['content' => _NICKNAME, 'is_truncate' => true], ['content' => _BANN_REAS, 'is_truncate' => true]];
+        $name = getVar('get', 'uname', 'name');
+        $mailTextId = 'sl_form_security_mail';
+        $check = '';
+        $mailtext = replace_break(str_replace('[text]', _BANN_INFO."\n\n"._BANN_TERM.': [time]'."\n"._BANN_REAS.': [info]', $conf['mtemp']));
+        $userrows = [
+            [
+                'label_html' => _NICKNAME,
+                'field_html' => getTplUserSearchInput([
+                    'input_id' => 'uname',
+                    'list_id' => 'uname_list',
+                    'maxlength' => 25,
+                    'minlength' => (int)$conf['search']['slet'],
+                    'name' => 'uname',
+                    'tip' => sprintf(_USERSEARCHTIP, (int)$conf['search']['slet']),
+                    'value' => $name,
+                ]),
+            ],
+            [
+                'label_for' => 'f-utime',
+                'label_html' => _TIME,
+                'field_html' => $tpl->getHtmlFrag('input', [
+                    'is_required' => true,
+                    'itype' => 'number',
+                    'name_attr' => 'time',
+                    'input_id' => 'f-utime',
+                    'placeholder_text' => _TIME,
+                    'value_attr' => (string)$time,
+                ]),
+            ],
+            [
+                'label_for' => 'f-uinfo',
+                'label_html' => _BANN_REAS,
+                'field_html' => $tpl->getHtmlFrag('textarea', [
+                    'input_attr' => 'placeholder="'._BANN_REAS.'" required',
+                    'name_attr' => 'info',
+                    'input_id' => 'f-uinfo',
+                    'value_text' => $info,
+                ]),
+            ],
+            [
+                'label_for' => 'f-mail',
+                'label_html' => _MAIL_SENDE,
+                'field_html' => $tpl->getHtmlFrag('checkbox', [
+                    'input_attr' => 'data-sl-toggle-control="'.$mailTextId.'"',
+                    'is_checked' => $check !== '',
+                    'name_attr' => 'mail',
+                    'input_id' => 'f-mail',
+                    'value_attr' => '1',
+                ]),
+            ],
+            [
+                'label_for' => 'f-mailtext',
+                'label_html' => _MAIL_TEXT, 'hint_html' => _MAIL_INFO, 'hint_id' => 'f-mailtext-hint',
+                'field_html' => $tpl->getHtmlPart('div', [
+                    'content_html' => $tpl->getHtmlFrag('textarea', [
+                        'name_attr' => 'mailtext',
+                        'input_id' => 'f-mailtext',
+                        'describedby' => 'f-mailtext-hint',
+                        'rows_num' => 10,
+                        'value_text' => $mailtext,
+                    ]),
+                    'id' => $mailTextId,
+                    'is_collapsible' => true,
+                ]),
+                'is_full' => true,
+            ],
+        ];
+        $form = $tpl->getHtmlPart('form', [
+            'action_url' => $afile.'.php?name=security&op=bansave',
+            'hidden' => [
+                ['nameattr' => 'id', 'valueattr' => '4'],
+                ['nameattr' => 'token', 'valueattr' => getSiteToken('security')],
+            ],
+            'rows' => $userrows,
+            'submit_label' => _ADD,
+        ]);
+    }
+    setHead();
+    echo getTplAdminList([
+        'head_html' => getTplAdminTabs($tabset + ['tab' => 2, 'part' => [0, 1, 2]]).$tpl->getHtmlPart('tabs', ['id' => 'sl-ban-kind', 'is_subtabs' => true, 'tabs_html' => $subs]),
+        'note_html' => $note,
+        'key' => 'security-ban-'.($user ? 'user' : 'ip'),
+        'is_fixed' => true,
+        'head' => array_merge($head, [['content' => _DATE, 'is_col_date' => true], ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true]]),
+        'rows' => $rows,
+        'count' => count($rows),
+        'foot_html' => $tpl->getHtmlPart('box', ['content_html' => $form]),
     ]);
-    $banv = $tpl->getHtmlPart('tabs', [
-        'id' => 'securitys',
-        'is_runtime' => true,
-        'is_subtabs' => true,
-        'tabs_html' =>
-            $tpl->getHtmlFrag('tabs-link', [
-                'href' => '#',
-                'is_active' => true,
-                'label' => _BANNED_IP,
-                'rel' => 'security-sub-panel-0',
-                'title' => _BANNED_IP,
-            ])
-            .$tpl->getHtmlFrag('tabs-link', [
-                'href' => '#',
-                'label' => _BANNED_USERS,
-                'rel' => 'security-sub-panel-1',
-                'title' => _BANNED_USERS,
-            ]),
-        'content_html' =>
-            $tpl->getHtmlFrag('tabs-panel', [
-                'panel_id' => 'security-sub-panel-0',
-                'content_html' => $tabone,
-            ])
-            .$tpl->getHtmlFrag('tabs-panel', [
-                'panel_id' => 'security-sub-panel-1',
-                'content_html' => $tabtwo,
-            ]),
-    ]);
-    echo $cont.$tpl->getHtmlPart('box', ['content_html' => $banv]);
     setFoot();
 }
 
@@ -526,8 +458,9 @@ function bansave(): void {
     global $db, $conf, $afile, $tpl, $prs, $mailer;
     $warn = !checkAdminPost('security');
     $send = '';
+    $id = getVar('post', 'id', 'num');
+    $done = false;
     if (!$warn) {
-        $id = getVar('post', 'id', 'num');
         $cidr = getVar('post', 'cidr', 'text');
         $name = getVar('post', 'uname', 'name');
         $mail = getVar('post', 'mail', 'bool');
@@ -550,16 +483,20 @@ function bansave(): void {
                 if ($tcidr === $cidr && $binfo[1] === $hash && (int)$binfo[2] === (int)$time) continue;
                 $new .= $val.'||';
             }
+            $done = $new !== $cont['blocker_ip'];
             $cont['blocker_ip'] = $new;
         } elseif ($id == 2 && $cidr) {
             $time = (is_numeric($time)) ? time() + ($time * 86400) : time() + 2592000;
             $cont['blocker_ip'] .= $cidr.'|'.$hash.'|'.$time.'|'.$info.'||';
+            $done = true;
         } elseif ($id == 3 && $name) {
-            $blocker_user = preg_replace('#'.$name.'\|'.$time.'\|(.*)\|\|#iU', '', $cont['blocker_user']);
-            $cont['blocker_user'] = $blocker_user;
+            $left = (string)preg_replace('#'.preg_quote($name, '#').'\|'.$time.'\|(.*)\|\|#iU', '', $cont['blocker_user']);
+            $done = $left !== $cont['blocker_user'];
+            $cont['blocker_user'] = $left;
         } elseif ($id == 4 && $name) {
             $time = (is_numeric($time)) ? time() + ($time * 86400) : time() + 2592000;
             $cont['blocker_user'] .= $name.'|'.$time.'|'.$info.'||';
+            $done = true;
             if ($mail) {
                 [$mail_addr] = $db->getSqlRow($db->getSqlQuery('SELECT email FROM '.PREFIX_DB.'_users WHERE name = :name', ['name' => $name]));
                 $subject = $conf['sitename'].' - '._SECURITY;
@@ -568,9 +505,10 @@ function bansave(): void {
                 $send = '&send=1';
             }
         }
-        setConfigFile('security.php', $cont);
+        if ($done) setConfigFile('security.php', $cont);
     }
-    setRedirect($afile.'.php?name=security&op=banlist'.$send, false, 302, $warn ? _TOKENMISS : '', $warn);
+    $kind = ($id === 3 || $id === 4) ? 'user' : 'ip';
+    setRedirect($afile.'.php?name=security&op=banlist&kind='.$kind.$send, false, 302, $warn ? _TOKENMISS : ($done ? '' : _ERROR), !$done);
 }
 
 function passwd(): void {
@@ -1150,14 +1088,10 @@ function download(): void {
 function delete(): void {
     global $afile;
     $warn = !checkAdminPost('security');
-    if (!$warn) {
-        $file = getVar('post', 'file', 'var');
-        if ($file) {
-            $path = LOGS_DIR.'/'.$file.'.log';
-            if (is_file($path)) unlink($path);
-        }
-    }
-    setRedirect($afile.'.php?name=security', false, 302, $warn ? _TOKENMISS : _SUCCDELETE, $warn);
+    $file = getVar('post', 'file', 'var');
+    $path = LOGS_DIR.'/'.$file.'.log';
+    $done = !$warn && $file && is_file($path) && unlink($path);
+    setRedirect($afile.'.php?name=security', false, 302, $warn ? _TOKENMISS : ($done ? _SUCCDELETE : _ERROR), !$done);
 }
 
 switch ($op) {

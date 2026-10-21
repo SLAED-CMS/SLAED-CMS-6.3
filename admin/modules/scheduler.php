@@ -12,7 +12,7 @@ const SCHED_LIMITS = ['nodepublish' => 500, 'nodesync' => 50];
 function scheduler(): void {
     global $afile, $conf, $tpl;
     $jobs = getSchedulerJobs();
-    $cont = getTplAdminTabs(['ops' => ['name=scheduler', 'name=scheduler&op=add', 'name=scheduler&op=info'], 'tabs' => [_HOME, _ADD, _MANUAL]]);
+    $cont = '';
     $wargo = $tpl->getHtmlFrag('link', [
         'href' => $afile.'.php?name=security&op=config',
         'label' => _SCHEDULER_WARN_GO,
@@ -28,7 +28,7 @@ function scheduler(): void {
         ['content' => _STATUS, 'is_col_status' => true],
         ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true],
     ];
-    $rows = '';
+    $rows = [];
     foreach ($jobs as $job) {
         $name = $job['name'];
         $state = getSchedulerState($name);
@@ -81,23 +81,27 @@ function scheduler(): void {
         $keys = ['name' => 'scheduler', 'job' => $name];
         if ((int)($job['manual'] ?? 0) === 1) $acts[] = getTplPostAction(['op' => 'run'] + $keys, 'play-fill', _SCHEDULER_RUN);
         $acts[] = getTplPostAction(['op' => 'unlock'] + $keys, 'unlock', _SCHEDULER_UNLOCK);
-        if (($job['type'] ?? '') === 'custom') $acts[] = getTplPostAction(['op' => 'delete'] + $keys, 'trash', _DELETE, _DELETE.' "'.(string)$title.'"?');
-        $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
-            'cells' => [
-                ['is_truncate' => true, 'title_text' => (string)$title, 'has_content_text' => true, 'content_text' => (string)$title,
-                    'prefix_html' => $tpl->getHtmlFrag('popover', ['items' => $tips])],
-                ['is_col_date' => true, 'has_content_text' => true, 'content_text' => (string)$nextr],
-                ['is_col_status' => true, 'has_content_text' => true, 'content_text' => (string)$stat],
-                ['is_col_count' => true, 'has_content_text' => true, 'content_text' => (string)($job['priority'] ?? '100')],
-                ['is_col_status' => true, 'content_html' => ((int)$isactive === 1) ? _YES : _NO],
-                ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('dial', ['dial_title' => _EDITOR, 'dial' => $acts])],
-            ],
-        ])]);
+        if (($job['type'] ?? '') === 'custom') $acts[] = getTplPostAction(['op' => 'delete'] + $keys, 'trash', _DELETE) + ['later' => 'gone del'];
+        $rows[] = ['name' => (string)$title, 'cells' => [
+            ['is_truncate' => true, 'title_text' => (string)$title, 'has_content_text' => true, 'content_text' => (string)$title,
+                'prefix_html' => $tpl->getHtmlFrag('popover', ['items' => $tips])],
+            ['is_col_date' => true, 'has_content_text' => true, 'content_text' => (string)$nextr],
+            ['is_col_status' => true, 'has_content_text' => true, 'content_text' => (string)$stat],
+            ['is_col_count' => true, 'has_content_text' => true, 'content_text' => (string)($job['priority'] ?? '100')],
+            ['is_col_status' => true, 'has_content_text' => true, 'content_text' => ((int)$isactive === 1) ? _YES : _NO],
+            ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('dial', ['dial_title' => _EDITOR, 'dial' => $acts])],
+        ]];
     }
     $head[0]['is_truncate'] = true;
-    $cont .= $tpl->getHtmlFrag('table', ['is_fixed' => true, 'head' => $head, 'rows_html' => $rows]);
     setHead();
-    echo $cont;
+    echo getTplAdminList([
+        'head_html' => getTplAdminTabs(['ops' => ['name=scheduler', 'name=scheduler&op=add', 'name=scheduler&op=info'], 'tabs' => [_HOME, _ADD, _MANUAL], 'part' => [0]]),
+        'note_html' => $cont,
+        'is_fixed' => true,
+        'head' => $head,
+        'rows' => $rows,
+        'count' => count($rows),
+    ]);
     setFoot();
 }
 
@@ -374,18 +378,20 @@ function delete(): void {
     global $conf, $afile;
     $warn = !checkAdminPost('scheduler');
     $name = preg_replace('#[^a-z]#', '', strtolower(getVar('post', 'job', 'var', '')));
+    $done = false;
     if (!$warn) {
         $cfg = is_readable(CONFIG_DIR.'/scheduler.php') ? (require CONFIG_DIR.'/scheduler.php') : [];
         $schedcfg = is_array($cfg) && isset($cfg['scheduler']) && is_array($cfg['scheduler']) ? $cfg['scheduler'] : ($conf['scheduler'] ?? []);
         $jobs = $schedcfg['jobs'] ?? [];
-        if ($name !== '' && isset($jobs[$name]) && (($jobs[$name]['type'] ?? '') === 'custom')) {
+        $done = $name !== '' && isset($jobs[$name]) && (($jobs[$name]['type'] ?? '') === 'custom');
+        if ($done) {
             unset($jobs[$name]);
             $data = $schedcfg;
             $data['jobs'] = $jobs;
             setConfigFile('scheduler.php', $data);
         }
     }
-    setRedirect($afile.'.php?name=scheduler', false, 302, $warn ? _TOKENMISS : _SUCCSAVE, $warn);
+    setRedirect($afile.'.php?name=scheduler', false, 302, $warn ? _TOKENMISS : ($done ? _SUCCDELETE : _ERROR), !$done);
 }
 
 function info(): void {

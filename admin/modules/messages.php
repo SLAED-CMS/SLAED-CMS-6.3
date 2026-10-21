@@ -9,75 +9,43 @@ if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 
 function messages(): void {
     global $db, $afile, $tpl;
-    setHead();
-    $cont = getTplAdminTabs(['ops' => ['name=messages', 'name=messages&op=add', 'name=messages&op=info'], 'tabs' => [_HOME, _ADD, _MANUAL]]);
-    $result = $db->getSqlQuery('SELECT id, title, body, expire, status, view, lang FROM '.PREFIX_DB.'_message ORDER BY id');
-    if ($db->getSqlRowCount($result) > 0) {
-        $rows = [];
-        while ([$mid, $title, $body, $expire, $active, $view, $lang] = $db->getSqlRow($result)) {
-            $exp = $expire ? strtotime($expire) - time() : 0;
-            if (($expire && $exp < 0) || (!$active && $expire)) {
-                $db->getSqlQuery('UPDATE '.PREFIX_DB.'_message SET status = 0, expire = NULL WHERE id = :mid', ['mid' => $mid]);
-            }
-            if ($view == 1) {
-                $mview = _MVALL;
-            } elseif ($view == 2) {
-                $mview = _MVANON;
-            } elseif ($view == 3) {
-                $mview = _MVUSERS;
-            } else {
-                $mview = _MVADMIN;
-            }
-            $lang = (!$lang) ? _ALL : $lang;
-            $exp = ($exp > 0) ? getDuration($exp) : _UNLIMITED;
-            $rows[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
-                'cells' => [
-                    ['is_col_id' => true, 'content_html' => (string)$mid],
-                    [
-                        'is_truncate' => true,
-                        'title_text' => $title,
-                        'content_html' => $tpl->getHtmlFrag('inline-badge', ['is_note' => true, 'label' => $title, 'title_text' => $title]),
-                    ],
-                    ['content_html' => $exp],
-                    ['content_html' => $mview],
-                    ['content_html' => getLangName($lang)],
-                    ['is_col_status' => true, 'content_html' => ad_status('', $active)],
-                    ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('dial', [
-                        'dial_title' => _FUNCTIONS,
-                        'dial' => [
-                            getTplPostAction(
-                                ['name' => 'messages', 'op' => 'status', 'id' => $mid, 'act' => $active ? '0' : '1'],
-                                'power',
-                                $active ? _DEACTIVATE : _ACTIVATE
-                            ),
-                            [
-                                'href' => $afile.'.php?name=messages&op=add&id='.$mid,
-                                'icon_name' => 'pencil',
-                                'title' => _FULLEDIT,
-                            ],
-                            getTplPostAction(['name' => 'messages', 'op' => 'delete', 'id' => $mid], 'trash', _ONDELETE, _DELETE.' "'.$title.'"?'),
-                        ],
-                    ])],
-                ],
-            ])]);
-        }
-        $cont .= $tpl->getHtmlFrag('table', [
-            'is_fixed' => true,
-            'head' => [
-                ['content' => _ID, 'is_col_id' => true],
-                ['content' => _TITLE, 'is_truncate' => true],
-                ['content' => _PURCHASED],
-                ['content' => _VIEW],
-                ['content' => _LANGUAGE],
-                ['content' => _STATUS, 'is_col_status' => true, 'nosort' => true],
-                ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true],
-            ],
-            'rows_html' => implode('', $rows),
-        ]);
-    } else {
-        $cont .= $tpl->getHtmlFrag('alert', ['text' => _NO_INFO]);
+    $views = [1 => _MVALL, 2 => _MVANON, 3 => _MVUSERS];
+    $result = $db->getSqlQuery('SELECT id, title, expire, status, view, lang FROM '.PREFIX_DB.'_message ORDER BY id');
+    $rows = [];
+    while ([$mid, $title, $expire, $active, $view, $lang] = $db->getSqlRow($result)) {
+        $exp = $expire ? strtotime($expire) - time() : 0;
+        $gone = $expire && $exp < 0;
+        $keep = ['name' => 'messages', 'id' => $mid];
+        $rows[] = ['name' => $title, 'cells' => [
+            ['is_col_id' => true, 'has_content_text' => true, 'content_text' => $mid],
+            ['is_truncate' => true, 'title_text' => $title, 'content_html' => $tpl->getHtmlFrag('inline-badge', ['is_note' => true, 'label' => $title, 'title_text' => $title])],
+            ['has_content_text' => true, 'content_text' => $gone ? _EXPIRED : (($exp > 0) ? getDuration($exp) : _UNLIMITED)],
+            ['has_content_text' => true, 'content_text' => $views[$view] ?? _MVADMIN],
+            ['has_content_text' => true, 'content_text' => getLangName($lang ?: _ALL)],
+            ['is_col_status' => true, 'stat' => getTplPostAction($keep + ['op' => 'status', 'act' => ($active && !$gone) ? '0' : '1'], 'power',
+                ($active && !$gone) ? _DEACTIVATE : _ACTIVATE) + ['is_on' => $active && !$gone, 'label' => _STATUS.': '.$title, 'later' => 'lamp act']],
+            ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('dial', ['dial_title' => _FUNCTIONS, 'dial' => [
+                ['href' => $afile.'.php?name=messages&op=add&id='.$mid, 'icon_name' => 'pencil', 'title' => _FULLEDIT],
+                getTplPostAction($keep + ['op' => 'delete'], 'trash', _ONDELETE) + ['later' => 'gone del'],
+            ]])],
+        ]];
     }
-    echo $cont;
+    setHead();
+    echo getTplAdminList([
+        'head_html' => getTplAdminTabs(['ops' => ['name=messages', 'name=messages&op=add', 'name=messages&op=info'], 'tabs' => [_HOME, _ADD, _MANUAL], 'part' => [0]]),
+        'is_fixed' => true,
+        'head' => [
+            ['content' => _ID, 'is_col_id' => true],
+            ['content' => _TITLE, 'is_truncate' => true],
+            ['content' => _PURCHASED],
+            ['content' => _VIEW],
+            ['content' => _LANGUAGE],
+            ['content' => _STATUS, 'is_col_status' => true, 'nosort' => true],
+            ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true],
+        ],
+        'rows' => $rows,
+        'count' => count($rows),
+    ]);
     setFoot();
 }
 
@@ -250,18 +218,21 @@ function save(): void {
 function status(): void {
     global $db, $afile;
     $id = getVar('post', 'id', 'num');
-    $act = getVar('post', 'act', 'num');
+    $act = getVar('post', 'act', 'num') ? 1 : 0;
     $warn = !checkAdminPost('messages');
-    if (!$warn && $id) $db->getSqlQuery('UPDATE '.PREFIX_DB.'_message SET status = :active WHERE id = :mid', ['active' => $act, 'mid' => $id]);
-    setRedirect($afile.'.php?name=messages', false, 302, $warn ? _TOKENMISS : _SUCCSTATUS, $warn);
+    $wipe = $act ? ', expire = CASE WHEN expire < NOW() THEN NULL ELSE expire END' : '';
+    $res = (!$warn && $id) ? $db->getSqlQuery('UPDATE '.PREFIX_DB.'_message SET status = :active'.$wipe.' WHERE id = :mid', ['active' => $act, 'mid' => $id]) : false;
+    $done = $res && $res->rowCount() > 0;
+    setRedirect($afile.'.php?name=messages', false, 302, $warn ? _TOKENMISS : ($done ? _SUCCSTATUS : _ERROR), !$done);
 }
 
 function delete(int $mid = 0): void {
     global $db, $afile;
     $id = $mid ?: getVar('post', 'id', 'num');
     $warn = !checkAdminPost('messages');
-    if (!$warn && $id) $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_message WHERE id = :mid', ['mid' => $id]);
-    setRedirect($afile.'.php?name=messages', false, 302, $warn ? _TOKENMISS : _SUCCDELETE, $warn);
+    $res = (!$warn && $id) ? $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_message WHERE id = :mid', ['mid' => $id]) : false;
+    $done = $res && $res->rowCount() > 0;
+    setRedirect($afile.'.php?name=messages', false, 302, $warn ? _TOKENMISS : ($done ? _SUCCDELETE : _ERROR), !$done);
 }
 
 function info(): void {

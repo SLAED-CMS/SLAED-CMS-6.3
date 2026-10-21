@@ -264,9 +264,27 @@ into the plan, then do whatever work the step names.
   `fragments/pager-keys.html` of each theme, the pagers stay one file; the classes `sl-stat`, `sl-list-picked`, the row
   attribute `data-sl-cursor`; the label crawl reads `chng` beside `search` as data and its baseline holds 432 routes
   (owner, 2026-10-20). (2026-10-20)
-- [ ] 99. ADMIN-UI batch 11 — the form canon on "Конфигурации".
-- [ ] 100. ADMIN-UI batch 12 — the panel lists onto the canon, part 1.
-- [ ] 101. ADMIN-UI batch 13 — the panel lists onto the canon, part 2.
+- [x] 99. ADMIN-UI batch 11 — the form canon on "Конфигурации". The check is the key `is_valid` of `partials/form.html`
+  (`novalidate`, `data-sl-valid`, the summary `sl-form-sum`), given to "Конфигурации" alone; the find is the key `find`
+  of `partials/module-head.html` through `getTplAdminTabs()`, its settings also a group of Ctrl+K; every POST form of the
+  panel carries `data-sl-dirty` and `data-sl-leave`, measured against its loaded values in `setDirtyForms()`, and asks
+  `_ADM_LEAVE` before a link, another form or the window takes the page; the group form moved onto it and `_GROUPS_LEAVE`
+  is gone (owner, 2026-10-21). Every field of the tab "Почта" got its label. (2026-10-21)
+- [x] 100. ADMIN-UI batch 12 — the panel lists onto the canon, part 1. Fourteen screens of group A are drawn by
+  `getTplAdminList()`; "Категории" stays a component of its own with the canon filter, a lamp and deferred deletion,
+  the group ladder stays its own and a deleted group clears `grp` of its users; deferred deletion without a question
+  for content, the question kept for a Node type, remains, a group and an administrator; a lamp that stays in its row
+  is `data-sl-later="lamp <field>"`, a Node move says `_ADM_MOVED`; the votes of "Оценки" page by number newest first
+  through `Rating::getRatingList($scope, $id, $page, $limit)`; "Новые" and "OAuth" have filters of their own; a
+  write that did not happen is refused (owner, 2026-10-21). (2026-10-21)
+- [x] 101. ADMIN-UI batch 13 — the panel lists onto the canon, part 2. Sixteen screens of group B are drawn by
+  `getTplAdminList()`; "Блоки" stays a component of its own with a lamp and deferred deletion; every deletion of the
+  group is deferred without a question, the question kept for TRUNCATE/DROP, clearing "Рефереры", module tables,
+  releasing or stopping a mailing and the master; a list writes no expiry, an expired row says `_EXPIRED` and turning
+  it on clears the past date; "Оптимизация" and "Ремонт" run only by POST (op `optimize`,
+  `repair`), which redirects to the tab showing the result once; the ban lists are
+  `op=banlist&kind=ip|user`, each with its form under the list through the new key `foot_html` of `admin-list`; the
+  file manager filter is the canon one and its boxes name their file (owner, 2026-10-21). (2026-10-21)
 - [ ] 102. ADMIN-UI batch 14 — the data of the cockpit: the monitor functions in `core/monitor.php`, the signals, the
   cache, the poll.
 - [ ] 103. ADMIN-UI batch 15 — the cockpit of the home.

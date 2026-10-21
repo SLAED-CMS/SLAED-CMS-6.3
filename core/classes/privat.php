@@ -615,15 +615,16 @@ final class Privat {
         return true;
     }
 
-    # Erase a batch of messages as an administrator, which is the one deletion that answers to no mailbox state
+    # Erase a batch of messages as an administrator, which is the one deletion that answers to no mailbox state; a batch none of whose rows was there is refused
     public function deleteAdminMessage(array $ids): bool {
         $ids = $this->getIdList($ids);
         if (!$ids) return false;
         [$keys, $pars] = $this->getIdBind($ids);
         $own = !$this->db->checkSqlActive();
         if ($own && !$this->db->setSqlBegin()) return false;
-        if ($this->db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_privat WHERE id IN ('.$keys.')', $pars) === false) return $this->getFailed($own);
+        $res = $this->db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_privat WHERE id IN ('.$keys.')', $pars);
+        if ($res === false) return $this->getFailed($own);
         if ($own && !$this->db->setSqlCommit()) return $this->getFailed($own);
-        return true;
+        return $res->rowCount() > 0;
     }
 }

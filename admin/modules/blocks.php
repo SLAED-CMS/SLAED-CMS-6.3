@@ -798,19 +798,19 @@ function change(): void {
     $id = getVar('post', 'id', 'num');
     $act = getVar('post', 'act', 'num', 0);
     $warn = !checkAdminPost('blocks');
-    if (!$warn && $id) {
-        $active = ($act) ? 0 : 1;
-        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_blocks SET status = :active WHERE id = :id', ['active' => $active, 'id' => $id]);
-    }
-    setRedirect($afile.'.php?name=blocks', false, 302, $warn ? _TOKENMISS : _SUCCSTATUS, $warn);
+    $wipe = $act ? '' : ', expire = CASE WHEN expire < NOW() THEN NULL ELSE expire END';
+    $res = (!$warn && $id) ? $db->getSqlQuery('UPDATE '.PREFIX_DB.'_blocks SET status = :active'.$wipe.' WHERE id = :id', ['active' => $act ? 0 : 1, 'id' => $id]) : false;
+    $done = $res && $res->rowCount() > 0;
+    setRedirect($afile.'.php?name=blocks', false, 302, $warn ? _TOKENMISS : ($done ? _SUCCSTATUS : _ERROR), !$done);
 }
 
 function delete(): void {
     global $db, $afile;
     $id = getVar('post', 'id', 'num');
     $warn = !checkAdminPost('blocks');
-    if (!$warn && $id) {
-        [$bpos, $weight] = $db->getSqlRow($db->getSqlQuery('SELECT bpos, weight FROM '.PREFIX_DB.'_blocks WHERE id = :id', ['id' => $id]));
+    $row = (!$warn && $id) ? $db->getSqlRow($db->getSqlQuery('SELECT bpos, weight FROM '.PREFIX_DB.'_blocks WHERE id = :id', ['id' => $id])) : false;
+    if ($row) {
+        [$bpos, $weight] = $row;
         $result = $db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_blocks WHERE weight > :weight AND bpos = :bpos', ['weight' => $weight, 'bpos' => $bpos]);
         while ([$nbid] = $db->getSqlRow($result)) {
             $db->getSqlQuery('UPDATE '.PREFIX_DB.'_blocks SET weight = :weight WHERE id = :bid', ['weight' => $weight, 'bid' => $nbid]);
@@ -818,7 +818,7 @@ function delete(): void {
         }
         $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_blocks WHERE id = :id', ['id' => $id]);
     }
-    setRedirect($afile.'.php?name=blocks', false, 302, $warn ? _TOKENMISS : _SUCCDELETE, $warn);
+    setRedirect($afile.'.php?name=blocks', false, 302, $warn ? _TOKENMISS : ($row ? _SUCCDELETE : _ERROR), !$row);
 }
 
 function info(): void {

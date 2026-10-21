@@ -12,26 +12,17 @@ function modules(): void {
     $mtype = getVar('req', 'type', 'num', 2);
     $mtype = in_array($mtype, [2, 1, 0], true) ? $mtype : 2;
     $typelink = ($mtype !== 2) ? '&type='.$mtype : '';
-    $search = $tpl->getHtmlPart('div', [
-        'is_searchbox' => true,
-        'content_html' => $tpl->getHtmlPart('form', [
-            'action_url' => $afile.'.php',
-            'hidden' => [
-                ['nameattr' => 'name', 'valueattr' => 'modules'],
-            ],
-            'content_html' => _TYPE.': '.$tpl->getHtmlFrag('select', [
-                'name_attr' => 'type',
-                'options_html' =>
-                    $tpl->getHtmlFrag('select-option', ['value_attr' => '2', 'label_text' => _ALL, 'is_selected' => $mtype === 2]).
-                    $tpl->getHtmlFrag('select-option', ['value_attr' => '1', 'label_text' => _USERS, 'is_selected' => $mtype === 1]).
-                    $tpl->getHtmlFrag('select-option', ['value_attr' => '0', 'label_text' => _ADMINS, 'is_selected' => $mtype === 0]),
-                'select_attr' => 'OnChange="submit()"',
-            ]),
-        ]),
+    $opts = [];
+    foreach ([2 => _ALL, 1 => _USERS, 0 => _ADMINS] as $key => $label) $opts[] = ['value_attr' => (string)$key, 'label_text' => $label, 'is_selected' => $mtype === $key];
+    $search = $tpl->getHtmlFrag('list-filter', [
+        'action_url' => $afile.'.php',
+        'label' => _SEARCH,
+        'is_part' => true,
+        'hidden' => [['nameattr' => 'name', 'valueattr' => 'modules']],
+        'fields' => [['field_id' => 'sl-mod-type', 'label' => _TYPE, 'name_attr' => 'type', 'options' => $opts]],
     ]);
-    setHead();
-    $cont = getTplAdminTabs(['ops' => ['name=modules'.$typelink, 'name=modules&op=info'], 'tabs' => [_HOME, _MANUAL], 'subtitle_html' => $search]);
-    if (!empty($infos)) $cont .= $tpl->getHtmlFrag('alert', ['text' => $infos]);
+    $head = getTplAdminTabs(['ops' => ['name=modules'.$typelink, 'name=modules&op=info'], 'tabs' => [_HOME, _MANUAL], 'subtitle_html' => $search, 'part' => [0]]);
+    $cont = !empty($infos) ? $tpl->getHtmlFrag('alert', ['text' => $infos]) : '';
     $config = false;
     $modlist = [];
     $new = [];
@@ -145,8 +136,7 @@ function modules(): void {
         } else {
             $group_name = _NONE;
         }
-        $items = [getTplPostAction(['name' => 'modules', 'op' => 'status', 'mod' => $title, 'act' => $active ? '0' : '1', 'type' => $mtype], 'power',
-            $active ? _DEACTIVATE : _ACTIVATE), [
+        $items = [[
             'href' => $afile.'.php?name=modules&op=edit&mod='.$title.'&type='.$mtype,
             'icon_name' => 'pencil',
             'title' => _FULLEDIT,
@@ -162,20 +152,22 @@ function modules(): void {
             $items[] = getTplPostAction(['name' => 'modules', 'op' => 'add', 'mod' => $title, 'id' => '3', 'type' => $mtype], 'database-up', _DB_UPDATE,
                 _DB_UPDATE.' "'.$title.'"?');
         }
-        $rows[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
-            'cells' => [
-                ['is_col_id' => true, 'content_html' => (string)$a],
-                ['is_truncate' => true, 'title_text' => $lang, 'content_html' => $tpl->getHtmlFrag('bootstrap-icon', ['icon_name' => $typel]).' '.$titlel],
-                ['is_truncate' => true, 'title_text' => $title, 'content_html' => $title],
-                ['content_html' => $who_view],
-                ['content_html' => $group_name],
-                ['is_col_status' => true, 'content_html' => ad_status('', $active)],
-                ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('dial', ['dial_title' => _FUNCTIONS, 'dial' => $items])],
-            ],
-        ])]);
+        $rows[] = ['name' => $lang, 'cells' => [
+            ['is_col_id' => true, 'has_content_text' => true, 'content_text' => $a],
+            ['is_truncate' => true, 'title_text' => $lang, 'content_html' => $tpl->getHtmlFrag('bootstrap-icon', ['icon_name' => $typel]).' '.$titlel],
+            ['is_truncate' => true, 'title_text' => $title, 'has_content_text' => true, 'content_text' => $title],
+            ['has_content_text' => true, 'content_text' => $who_view],
+            ['has_content_text' => true, 'content_text' => $group_name],
+            ['is_col_status' => true, 'stat' => getTplPostAction(['name' => 'modules', 'op' => 'status', 'mod' => $title, 'act' => $active ? '0' : '1', 'type' => $mtype],
+                'power', $active ? _DEACTIVATE : _ACTIVATE) + ['is_on' => (bool)$active, 'label' => _STATUS.': '.$lang, 'later' => 'lamp act']],
+            ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('dial', ['dial_title' => _FUNCTIONS, 'dial' => $items])],
+        ]];
         $a++;
     }
-    $cont .= $tpl->getHtmlFrag('table', [
+    setHead();
+    echo getTplAdminList([
+        'head_html' => $head,
+        'note_html' => $cont,
         'is_fixed' => true,
         'head' => [
             ['content' => _ID, 'is_col_id' => true],
@@ -186,9 +178,9 @@ function modules(): void {
             ['content' => _STATUS, 'is_col_status' => true, 'nosort' => true],
             ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true],
         ],
-        'rows_html' => implode('', $rows),
+        'rows' => $rows,
+        'count' => count($rows),
     ]);
-    echo $cont;
     setFoot();
 }
 
@@ -331,11 +323,12 @@ function status(): void {
     $act = getVar('post', 'act', 'num');
     $type = getVar('post', 'type', 'num', 2);
     $warn = !checkAdminPost('modules');
-    if (!$warn && isset($conf['modules'][$mod])) {
+    $done = !$warn && isset($conf['modules'][$mod]);
+    if ($done) {
         $conf['modules'][$mod]['active'] = $act;
         setConfigFile('modules.php', $conf['modules']);
     }
-    setRedirect($afile.'.php?name=modules'.($type !== 2 ? '&type='.$type : ''), true, 302, $warn ? _TOKENMISS : _SUCCSTATUS, $warn);
+    setRedirect($afile.'.php?name=modules'.($type !== 2 ? '&type='.$type : ''), true, 302, $warn ? _TOKENMISS : ($done ? _SUCCSTATUS : _ERROR), !$done);
 }
 
 function save(): void {

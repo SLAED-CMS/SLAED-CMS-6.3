@@ -313,6 +313,7 @@ final class PrivatClassTest extends TestCase
         $run = $this->getRun('admin');
         $this->assertSame([true, []], $run['erased'], 'The row survived the administrator deleting it');
         $this->assertFalse($run['zero'], 'A deletion without an id was accepted');
+        $this->assertFalse($run['gone'], 'A deletion of a message that is no longer there was reported done');
     }
 
     # A statement the server refuses rolls its own transaction back, writes nothing, and leaves the connection usable

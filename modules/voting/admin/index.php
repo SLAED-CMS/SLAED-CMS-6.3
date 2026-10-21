@@ -81,62 +81,50 @@ function getVotingBlockSelect(string $bval): string {
 function voting(): void {
     global $db, $afile, $conf, $tpl;
     setHead();
-    $cont = getTplAdminTabs([
-        'ops' => ['name=voting', 'name=voting&op=add', 'name=voting&op=config', 'name=voting&op=info'],
-        'tabs' => [_HOME, _ADD, _PREFERENCES, _MANUAL],
-    ]);
-    $num = getVar('get', 'num', 'num', 1);
-    $anum = (int)$conf['voting']['anum'];
-    $anump = (int)$conf['voting']['anump'];
-    $offset = (int)(($num - 1) * $anum);
-    $result = $db->getSqlQuery('SELECT id, modul, time, enddate, title, lang, typ FROM '.PREFIX_DB.'_voting ORDER BY id DESC LIMIT '.$offset.', '.$anum);
-    if ($db->getSqlRowCount($result) > 0) {
-        $head = [
-            ['content' => _ID, 'is_col_id' => true],
-            ['content' => _TITLE, 'is_col_title' => true],
+    $anum = max(1, (int)$conf['voting']['anum']);
+    $total = intval($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_voting')->fetchColumn());
+    $pages = max(1, (int)ceil($total / $anum));
+    $num = min(max(1, getVar('get', 'num', 'num', 1)), $pages);
+    $result = $db->getSqlQuery('SELECT id, modul, time, enddate, title, lang, typ FROM '.PREFIX_DB.'_voting ORDER BY id DESC LIMIT '.(($num - 1) * $anum).', '.$anum);
+    $multi = $conf['multilingual'] == 1;
+    $head = [['content' => _ID, 'is_col_id' => true], ['content' => _TITLE, 'is_col_title' => true, 'is_truncate' => true]];
+    if ($multi) $head[] = ['content' => _LANGUAGE, 'class_name' => 'sl-col-lang'];
+    $head[] = ['content' => _MODUL, 'class_name' => 'sl-col-module'];
+    $head[] = ['content' => _STATUS, 'is_col_status' => true, 'nosort' => true];
+    $head[] = ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true];
+    $rows = [];
+    while ([$id, $modul, $date, $enddate, $title, $lang, $typ] = $db->getSqlRow($result)) {
+        $live = time() >= strtotime($date) && time() <= strtotime($enddate);
+        $items = ($live && !$modul) ? [['href' => 'index.php?name=voting&op=view&id='.$id, 'icon_name' => 'eye', 'title' => _MVIEW]] : [];
+        $items[] = ['href' => $afile.'.php?name=voting&op=add&id='.$id, 'icon_name' => 'pencil', 'title' => _FULLEDIT];
+        $items[] = getTplPostAction(['name' => 'voting', 'op' => 'delete', 'id' => $id, 'num' => $num], 'trash', _ONDELETE) + ['later' => 'gone del'];
+        $cells = [
+            ['is_col_id' => true, 'has_content_text' => true, 'content_text' => $id],
+            ['is_col_title' => true, 'is_truncate' => true, 'title_text' => (string)$title, 'prefix_html' => $tpl->getHtmlFrag('popover', ['items' => [
+                ['label' => _CHNGSTORY, 'value' => format_time($date, _TIMESTRING)],
+                ['label' => _ENDDATE, 'value' => format_time($enddate, _TIMESTRING)],
+                ['label' => _TYPE, 'value' => ($typ == '1') ? _VOPEN : _VCLOSE],
+            ], 'tip_label' => _DETAILS.': '.$title, 'tip_id' => 'sl-tip-'.$id]), 'text_html' => htmlspecialchars((string)$title, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')],
         ];
-        if ($conf['multilingual'] == 1) $head[] = ['content' => _LANGUAGE, 'class_name' => 'sl-col-lang'];
-        $head[] = ['content' => _MODUL, 'class_name' => 'sl-col-module'];
-        $head[] = ['content' => _STATUS, 'is_col_status' => true, 'nosort' => true];
-        $head[] = ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true];
-        $rows = '';
-        while ([$id, $modul, $date, $enddate, $title, $lang, $typ] = $db->getSqlRow($result)) {
-            if (time() >= strtotime($date) && time() <= strtotime($enddate)) {
-                $view = (!$modul) ? [['href' => 'index.php?name=voting&op=view&id='.$id, 'icon_name' => 'eye', 'title' => _MVIEW]] : [];
-                $active = '1';
-            } else {
-                $view = [];
-                $active = '0';
-            }
-            $type = ($typ == '1') ? _VOPEN : _VCLOSE;
-            $items = array_merge($view, [
-                ['href' => $afile.'.php?name=voting&op=add&id='.$id, 'icon_name' => 'pencil', 'title' => _FULLEDIT],
-                getTplPostAction(['name' => 'voting', 'op' => 'delete', 'id' => $id, 'refer' => 1], 'trash', _ONDELETE, _DELETE.' "'.$title.'"?'),
-            ]);
-            $cells = [
-                ['is_col_id' => true, 'content_html' => (string)$id],
-                ['is_col_title' => true, 'is_truncate' => true, 'title_text' => (string)$title, 'prefix_html' => $tpl->getHtmlFrag('popover', ['items' => [
-                    ['label' => _CHNGSTORY, 'value' => format_time($date, _TIMESTRING), 'is_last' => false],
-                    ['label' => _ENDDATE, 'value' => format_time($enddate, _TIMESTRING), 'is_last' => false],
-                    ['label' => _TYPE, 'value' => $type, 'is_last' => true],
-                ]]), 'has_content_text' => true, 'content_text' => (string)$title],
-            ];
-            if ($conf['multilingual'] == 1) {
-                $cells[] = ['class_name' => 'sl-col-lang', 'content_html' => getLangName((!$lang) ? _ALL : $lang)];
-            }
-            $cells[] = ['class_name' => 'sl-col-module', 'content_html' => $modul ? getModuleName($modul) : _NONE];
-            $cells[] = ['is_col_status' => true, 'content_html' => ad_status('', $active)];
-            $cells[] = ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('dial', ['dial_title' => _FUNCTIONS, 'dial' => $items])];
-            $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', ['cells' => $cells])]);
-        }
-        $head[1]['is_truncate'] = true;
-        $body = $tpl->getHtmlFrag('table', ['is_wrapless' => true, 'is_fixed' => true, 'head' => $head, 'rows_html' => $rows]);
-        $body .= getTplPager(['limit' => $anum, 'maxpg' => $anump, 'url' => 'name=voting&', 'table' => '_voting', 'field' => 'id']);
-        $cont .= $tpl->getHtmlPart('box', ['content_html' => $body]);
-    } else {
-        $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO])]);
+        if ($multi) $cells[] = ['class_name' => 'sl-col-lang', 'content_html' => getLangName((!$lang) ? _ALL : $lang)];
+        $cells[] = ['class_name' => 'sl-col-module', 'content_html' => $modul ? getModuleName($modul) : _NONE];
+        $cells[] = ['is_col_status' => true, 'content_html' => ad_status('', $live ? '1' : '0')];
+        $cells[] = ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('dial', ['dial_title' => _FUNCTIONS, 'dial' => $items])];
+        $rows[] = ['name' => cutstr((string)$title, 60), 'cells' => $cells];
     }
-    echo $cont;
+    echo getTplAdminList([
+        'head_html' => getTplAdminTabs(['ops' => ['name=voting', 'name=voting&op=add', 'name=voting&op=config', 'name=voting&op=info'],
+            'tabs' => [_HOME, _ADD, _PREFERENCES, _MANUAL], 'part' => [0]]),
+        'is_fixed' => true,
+        'head' => $head,
+        'rows' => $rows,
+        'href' => $afile.'.php?name=voting&',
+        'page' => $num,
+        'pages' => $pages,
+        'maxpg' => (int)$conf['voting']['anump'],
+        'count' => $total,
+        'limit' => $anum,
+    ]);
     setFoot();
 }
 
@@ -332,7 +320,8 @@ function delete(int $id = 0): void {
     $fail = false;
     if (!$iswarn && $id && empty($conf['node']['types'])) {
         $open = $db->setSqlBegin();
-        $done = $open && $com->deleteTarget('voting', [$id]) && $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_voting WHERE id = :id', ['id' => $id]) !== false
+        $gone = $open && $com->deleteTarget('voting', [$id]) ? $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_voting WHERE id = :id', ['id' => $id]) : false;
+        $done = $gone && $gone->rowCount() > 0
             && (new Route($db))->deleteRoute('poll', intval($id)) && $db->setSqlCommit();
         if ($open && !$done) $db->setSqlRollback();
         $fail = !$done;
@@ -348,7 +337,7 @@ function delete(int $id = 0): void {
             $serv->deleteNodePoll($id);
             if (!$com->deleteTarget('voting', [$id])) throw new NodeException('The comments of the poll were not deleted', NodeException::STORAGE);
             $gone = $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_voting WHERE id = :id', ['id' => $id]);
-            if ($gone === false) throw new NodeException('The poll row was not deleted', NodeException::STORAGE);
+            if (!$gone || $gone->rowCount() < 1) throw new NodeException('The poll row was not deleted', NodeException::STORAGE);
             if (!(new Route($db))->deleteRoute('poll', intval($id))) throw new NodeException('The paths of the poll were not marked gone', NodeException::STORAGE);
             $step = 'unknown';
             if (!$db->setSqlCommit()) throw new NodeException('The commit of a poll deletion is uncertain', NodeException::STORAGE);
@@ -359,7 +348,7 @@ function delete(int $id = 0): void {
         }
         if ($held) $db->getSqlQuery('SELECT RELEASE_LOCK(:name)', ['name' => $lock]);
     }
-    setRedirect($afile.'.php?name=voting', false, 302, $iswarn ? _TOKENMISS : ($fail ? _ERROR : _SUCCSAVE), $iswarn || $fail);
+    setRedirect($afile.'.php?name=voting&num='.getVar('post', 'num', 'num', 1), false, 302, $iswarn ? _TOKENMISS : ($fail ? _ERROR : _SUCCDELETE), $iswarn || $fail);
 }
 
 function config(): void {

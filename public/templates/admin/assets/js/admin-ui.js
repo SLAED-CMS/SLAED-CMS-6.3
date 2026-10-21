@@ -1011,18 +1011,15 @@
         each('[data-sl-rank-place-text]', function (node) { node.textContent = getRankPlace(form, Math.max(0, parseInt(field.points.value, 10) || 0)); });
         each('[data-sl-roving]', setRankRoving);
     }
-    /* Wire the choices, the arrows of the rows (up and down by a measured line) and the leave question; the save is not a way out */
+    /* Wire the choices and the arrows of the rows (up and down by a measured line); a choice written into the hidden fields tells the leave question of slaed.js */
     function setRankForm(form) {
         var field = form.elements;
-        var dirty = form.hasAttribute('data-sl-rank-dirty');
-        var free = false;
         var setDirty = function () {
-            dirty = true;
-            setRankView(form);
+            form.dispatchEvent(new Event('change'));
         };
         form.addEventListener('input', function (event) {
             if (event.target.name === 'rank_color') field.rank_sync.value = '0';
-            setDirty();
+            setRankView(form);
         });
         form.addEventListener('change', function () { setRankView(form); });
         form.addEventListener('click', function (event) {
@@ -1067,27 +1064,180 @@
             items.forEach(function (item, n) { item.tabIndex = n === to ? 0 : -1; });
             items[to].focus();
         });
-        form.addEventListener('submit', function () { free = true; });
-        document.addEventListener('click', function (event) {
-            var link = event.target && event.target.closest ? event.target.closest('.sl-tabs-nav a[href], [data-sl-rank-cancel]') : null;
-            if (!link || !dirty || free || !window.setConfirmTask) return;
-            event.preventDefault();
-            window.setConfirmTask(form.getAttribute('data-sl-rank-leave'), function () {
-                free = true;
-                window.location.href = link.href;
-            });
-        });
-        window.addEventListener('beforeunload', function (event) {
-            if (!dirty || free) return;
-            event.preventDefault();
-            event.returnValue = '';
-        });
         setRankView(form);
     }
     /* Wire the group form when the page carries one */
     function addRankForm() {
         var form = document.querySelector('[data-sl-rank-form]');
         if (form) setRankForm(form);
+    }
+    /* The name a field carries in its row, without the hint under it; a field outside a row says its own */
+    function getFieldName(field) {
+        var row = field.closest('.sl-div-item');
+        var cap = row ? row.querySelector('.sl-div-label label, .sl-div-label > span[id]') : null;
+        return (cap ? cap.textContent : (field.getAttribute('aria-label') || field.name)).trim();
+    }
+    /* Whether the row of a field stands on its tab; a row another choice of the form hides holds nothing to go to or to judge */
+    function isFieldShown(field) {
+        var row = field.closest('.sl-div-item');
+        return !row || window.getComputedStyle(row).display !== 'none';
+    }
+    /* The first field of every shown row of the changeable forms of the page, the ones a find or the palette can lead to */
+    function getFormFields() {
+        return Array.prototype.map.call(document.querySelectorAll('[data-sl-dirty] .sl-div-item'), function (row) {
+            return row.querySelector('input:not([type="hidden"]), select, textarea');
+        }).filter(function (field) { return field && isFieldShown(field); });
+    }
+    /* Open every tab around a field, light its row and put the focus in it: the summary, the settings find and the palette lead here */
+    function setFormJump(field) {
+        var panes = [];
+        var row = field.closest('.sl-div-item');
+        for (var pane = field.closest('[data-sl-tab-panel]'); pane; pane = pane.parentElement.closest('[data-sl-tab-panel]')) panes.unshift(pane);
+        panes.forEach(function (one) {
+            var tab = one.hidden ? document.querySelector('[data-sl-tab-target="' + one.id + '"]') : null;
+            if (tab) tab.click();
+        });
+        if (row) {
+            row.removeAttribute('data-sl-found');
+            void row.offsetWidth;
+            row.setAttribute('data-sl-found', '');
+        }
+        field.focus();
+    }
+    /* Judge one field by the rules its markup states, in the words of the summary: empty where required, or a value of the wrong kind */
+    function getFieldCheck(sum, field) {
+        if (!field.willValidate || field.validity.valid || !isFieldShown(field)) return '';
+        return sum.getAttribute(field.validity.valueMissing ? 'data-sl-fill' : 'data-sl-bad').replace('%s', getFieldName(field));
+    }
+    /* Say under a field what is wrong with it and name the words in its description; an empty text takes them back */
+    function setFieldError(sum, field, text) {
+        var err = field.slErr;
+        var ids;
+        if (!err && !text) return;
+        if (!err) {
+            err = field.slErr = sum.querySelector('template').content.querySelector('span').cloneNode(true);
+            err.id = (field.id || field.name) + '-err';
+            (field.closest('.sl-div-field') || field.parentNode).appendChild(err);
+        }
+        err.textContent = text;
+        err.hidden = !text;
+        if (text) field.setAttribute('aria-invalid', 'true');
+        else field.removeAttribute('aria-invalid');
+        ids = (field.getAttribute('aria-describedby') || '').split(' ').filter(function (one) { return one && one !== err.id; });
+        if (text) ids.push(err.id);
+        if (ids.length) field.setAttribute('aria-describedby', ids.join(' '));
+        else field.removeAttribute('aria-describedby');
+    }
+    /* The check of the form canon: judged on the first save and then on leaving each field, a summary above the form leading into hidden tabs */
+    function setFormCheck(form) {
+        var sum = form.querySelector('[data-sl-valid-sum]');
+        var judged = false;
+        if (!sum) return;
+        form.addEventListener('submit', function (event) {
+            var seen = {};
+            var bad = [];
+            var list = sum.querySelector('ul');
+            judged = true;
+            Array.prototype.forEach.call(form.elements, function (field) {
+                var text;
+                if (!field.name || (field.type === 'radio' && seen[field.name])) return;
+                seen[field.name] = true;
+                text = getFieldCheck(sum, field);
+                setFieldError(sum, field, text);
+                if (text) bad.push([field, text]);
+            });
+            list.textContent = '';
+            sum.hidden = !bad.length;
+            if (!bad.length) return;
+            event.preventDefault();
+            event.stopPropagation();
+            bad.forEach(function (one) {
+                var item = sum.querySelector('template').content.querySelector('li').cloneNode(true);
+                var link = item.querySelector('a');
+                link.textContent = one[1];
+                link.slField = one[0];
+                list.appendChild(item);
+            });
+            sum.querySelector('b').textContent = sum.getAttribute('data-sl-valid-sum').replace('%s', bad.length);
+            sum.focus();
+        });
+        form.addEventListener('focusout', function (event) {
+            var field = event.target;
+            if (judged && field.name && field.type !== 'radio' && field.willValidate) setFieldError(sum, field, getFieldCheck(sum, field));
+        });
+        sum.addEventListener('click', function (event) {
+            var link = event.target.closest ? event.target.closest('a') : null;
+            if (!link || !link.slField) return;
+            event.preventDefault();
+            setFormJump(link.slField);
+        });
+    }
+    /* The settings find in the module head: rows whose name or hint hold the typed letters, walked by the arrows, Enter or a click leading to the field */
+    function setFormFind() {
+        var find = document.getElementById('sl-form-find');
+        var list = document.getElementById('sl-form-hits');
+        var at = -1;
+        var draw = function () {
+            var term = find.value.trim().toLowerCase();
+            var tpl = list.parentNode.querySelector('template').content;
+            list.textContent = '';
+            if (term.length > 1) {
+                getFormFields().filter(function (field) {
+                    return field.closest('.sl-div-item').querySelector('.sl-div-label').textContent.toLowerCase().indexOf(term) >= 0;
+                }).slice(0, 8).forEach(function (field, n) {
+                    var hit = tpl.querySelector('[role="option"]').cloneNode(true);
+                    hit.id = 'sl-form-hit-' + n;
+                    hit.textContent = getFieldName(field);
+                    hit.slField = field;
+                    list.appendChild(hit);
+                });
+                if (!list.children.length) list.appendChild(tpl.querySelector('li:not([role])').cloneNode(true));
+            }
+            list.hidden = !list.children.length;
+            find.setAttribute('aria-expanded', list.hidden ? 'false' : 'true');
+            find.removeAttribute('aria-activedescendant');
+            at = -1;
+        };
+        var jump = function (hit) {
+            find.value = '';
+            draw();
+            setFormJump(hit.slField);
+        };
+        if (!find || !list) return;
+        find.addEventListener('input', draw);
+        find.addEventListener('keydown', function (event) {
+            var hits = Array.prototype.slice.call(list.querySelectorAll('[role="option"]'));
+            if (event.key === 'Escape' && find.value !== '') {
+                event.preventDefault();
+                find.value = '';
+                draw();
+                return;
+            }
+            if (!hits.length) return;
+            if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+                event.preventDefault();
+                at = (at + (event.key === 'ArrowDown' ? 1 : -1) + hits.length) % hits.length;
+                hits.forEach(function (hit, n) { hit.setAttribute('aria-selected', n === at ? 'true' : 'false'); });
+                find.setAttribute('aria-activedescendant', hits[at].id);
+            } else if (event.key === 'Enter') {
+                event.preventDefault();
+                jump(hits[Math.max(0, at)]);
+            }
+        });
+        list.addEventListener('mousedown', function (event) { event.preventDefault(); });
+        list.addEventListener('click', function (event) {
+            var hit = event.target.closest ? event.target.closest('[role="option"]') : null;
+            if (hit) jump(hit);
+        });
+        find.addEventListener('blur', function () {
+            list.hidden = true;
+            find.setAttribute('aria-expanded', 'false');
+        });
+    }
+    /* Wire the form canon where the page carries it: the check of each form that asks for one and the settings find */
+    function addFormCanon() {
+        document.querySelectorAll('form[data-sl-valid]').forEach(setFormCheck);
+        setFormFind();
     }
     /* Motion over the page: the place of every solid head in the order its beam crosses; the light that follows the pointer is slaed.js's */
     function setBeamTurns() {
@@ -1206,7 +1356,7 @@
         event.preventDefault();
         items[(at + (event.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length].focus();
     }
-    // One row of the palette for every section the page links, its icon and name taken from the link, each address once
+    // One row of the palette for every section the page links, its icon and name taken from the link, each address once, and one for each setting a find serves
     function setPaletteParts(pal) {
         var group = pal.querySelector('[data-sl-pal-parts]');
         var tpl = group.querySelector('template[data-sl-pal-part]');
@@ -1224,6 +1374,15 @@
             row.querySelector('.sl-editor-pal-name').textContent = (name || link).textContent.trim();
             group.appendChild(row);
         });
+        if (!document.getElementById('sl-form-find')) return;
+        getFormFields().forEach(function (field, i) {
+            var row = tpl.content.firstElementChild.cloneNode(true);
+            row.id = 'sl-pal-set-' + i;
+            row.slField = field;
+            row.querySelector('.bi').className = 'bi bi-gear';
+            row.querySelector('.sl-editor-pal-name').textContent = getFieldName(field);
+            pal.querySelector('[data-sl-pal-sets]').appendChild(row);
+        });
     }
     // Open the palette of the panel: its sections gathered once, the fold named for what it will do and offered only where a rail can stand
     function setPanelPalette() {
@@ -1239,11 +1398,12 @@
         fold.slName = fold.getAttribute(isMenuRail() ? 'data-sl-unfold' : 'data-sl-fold');
         window.setPaletteOpen(pal, setPaletteRun, '');
     }
-    // Run the command the palette chose once it has closed: a section opens, an action goes through the control it stands for
+    // Run the command the palette chose once it has closed: a section opens, a setting is gone to, an action goes through the control it stands for
     function setPaletteRun(row) {
         var act = row.getAttribute('data-sl-pal-act');
         var href = row.getAttribute('data-sl-pal-href');
         var pick;
+        if (row.slField) return setFormJump(row.slField);
         if (href) return window.location.assign(href);
         if (act === 'rail') return setMenuRail(!isMenuRail());
         if (act === 'options') return window.setWindowOpen(document.getElementById('sl-settings'));
@@ -1274,7 +1434,7 @@
             event.preventDefault();
             return;
         }
-        find = document.querySelector('[data-sl-list] .sl-filter input[type="search"]') || document.querySelector('[data-sl-menu-find]');
+        find = document.querySelector('[data-sl-list] .sl-filter input[type="search"]') || document.getElementById('sl-form-find') || document.querySelector('[data-sl-menu-find]');
         if (event.key === '/' && find && find.getClientRects().length && window.getComputedStyle(find).visibility === 'visible') {
             event.preventDefault();
             find.focus();
@@ -1581,7 +1741,7 @@
         var link = item.querySelector('a');
         var name = item.querySelector('.sl-menu-name').textContent.trim();
         var off = form.elements.act.value === '0';
-        var btn = document.querySelector('[form="' + form.id + '"]');
+        var btn = document.querySelector('[form="' + form.getAttribute('id') + '"]');
         form.elements.act.value = off ? '1' : '0';
         form.setAttribute('data-sl-later', 'flip ' + (off ? 'on' : 'off'));
         if (item.classList.contains('sl-mcard')) item.classList.toggle('sl-mcard-off', off);
@@ -1593,6 +1753,18 @@
         });
         if (btn) btn.title = getLaterWord('turn', off ? 'on' : 'off');
         link.title = off ? name + ' - ' + getLaterWord('led', 'off') : name;
+    }
+    // Э22 A lamp in a row that stays turns at once: its mark, its pressed state, its title and the value its form sends next ("lamp act")
+    function setLampFlip(form) {
+        var btn = document.querySelector('[form="' + form.getAttribute('id') + '"]');
+        var field = form.elements[form.getAttribute('data-sl-later').split(' ')[1]];
+        var on = btn.getAttribute('aria-pressed') !== 'true';
+        var mark = btn.querySelector('span');
+        btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+        btn.title = getLaterWord('turn', on ? 'off' : 'on');
+        mark.classList.toggle('sl-status-active', on);
+        mark.classList.toggle('sl-status-inactive', !on);
+        field.value = field.value === '1' ? '0' : '1';
     }
     // Send one deferred action now: by fetch while the page stays, by a beacon when it goes; a refusal brings its rows back and says so
     function setLaterSend(job, beacon) {
@@ -1628,13 +1800,25 @@
         var key = getLaterKey(form);
         var rows = kind === 'gone' ? getLaterRows(form) : [];
         var job = { form: form, body: new FormData(form), name: '', num: rows.length, timer: 0, back: null };
+        var held = later.find(function (one) { return one.form === form; });
         event.preventDefault();
         if (kind === 'gone' && !rows.length) return;
         if (sweep.all && !form.closest('tr')) return setSweepLater(form, key, rows);
+        if (kind === 'lamp' && held) {
+            window.clearTimeout(held.timer);
+            later.splice(later.indexOf(held), 1);
+            held.back();
+            return;
+        }
         if (kind === 'flip') {
             job.name = form.closest('[data-sl-menu-item]').querySelector('.sl-menu-name').textContent.trim();
             setItemFlip(form);
             job.back = function () { setItemFlip(form); };
+        } else if (kind === 'lamp') {
+            key = document.querySelector('[form="' + form.getAttribute('id') + '"]').getAttribute('aria-pressed') === 'true' ? 'off' : 'on';
+            job.name = form.closest('tr').getAttribute('data-sl-row') || '';
+            setLampFlip(form);
+            job.back = function () { setLampFlip(form); };
         } else {
             job.name = rows.length === 1 ? rows[0].getAttribute('data-sl-row') || '' : '';
             setRowsGone(rows, true);
@@ -1804,11 +1988,14 @@
         sess.end = Date.now() + left * 1000;
         setSessionTick();
     }
-    // Э14 The window of the session end opens before the idle limit and counts down; at zero the page leaves for the login form
+    // Э14 The window of the session end opens before the idle limit and counts down; at zero the page leaves for the login form, which no leave question may hold up
     function setSessionTick() {
         var box = document.getElementById('sl-session');
         var left = Math.max(0, Math.round((sess.end - Date.now()) / 1000));
-        if (left === 0) return window.location.assign(window.location.href.split('#')[0]);
+        if (left === 0) {
+            document.querySelectorAll('[data-sl-leave]').forEach(function (form) { form.removeAttribute('data-sl-leave'); });
+            return window.location.assign(window.location.href.split('#')[0]);
+        }
         if (left > sess.warn) {
             if (box.open) window.setWindowClose(box);
             return;
@@ -1877,6 +2064,7 @@
             setBeamTurns();
             setSetupRun();
             addRankForm();
+            addFormCanon();
             setQueuePoll();
             setSessionWatch();
             setMenuFind();
@@ -1888,6 +2076,7 @@
         setBeamTurns();
         setSetupRun();
         addRankForm();
+        addFormCanon();
         setQueuePoll();
         setSessionWatch();
         setMenuFind();

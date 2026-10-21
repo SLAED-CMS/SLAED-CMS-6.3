@@ -118,66 +118,76 @@ function votes(): void {
     $scope = getVar('get', 'scope', 'raw', '');
     $scope = (is_string($scope) && isset($names[$scope])) ? $scope : '';
     $mid = $scope !== '' ? getVar('get', 'mid', 'num', 0) : 0;
-    $after = getVar('get', 'after', 'num', 0);
     $vote = getVar('get', 'vote', 'num', 0);
-    $link = $afile.'.php?name=ratings&op=votes'.($scope !== '' ? '&scope='.$scope : '').($mid ? '&mid='.$mid : '');
+    $keep = array_filter(['scope' => $scope, 'mid' => $mid]);
+    $list = getRatingService()->getRatingList($scope, $mid, max(1, getVar('get', 'num', 'num', 1)), 50);
+    $link = $afile.'.php?name=ratings&op=votes'.($keep ? '&'.http_build_query($keep) : '');
     setHead();
-    $cont = getTplAdminTabs(['ops' => ['name=ratings', 'name=ratings&op=votes', 'name=ratings&op=info'], 'tabs' => [_HOME, _RATINGS_VOTES, _MANUAL], 'tab' => 1]);
+    $note = $list['ok'] ? '' : $tpl->getHtmlFrag('alert', ['text' => _RATINGS_FAIL, 'is_warn' => true]);
     if ($vote) {
-        $field = $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'reason', 'value_attr' => '', 'maxlength_num' => '255', 'is_config' => true, 'is_required' => true]);
-        $cont .= $tpl->getHtmlPart('box', ['title' => _RATINGS_ANNUL.' #'.$vote, 'content_html' => $tpl->getHtmlPart('form', [
+        $field = $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'reason', 'input_id' => 'f-reason', 'value_attr' => '', 'maxlength_num' => '255',
+            'is_config' => true, 'is_required' => true]);
+        $note .= $tpl->getHtmlPart('box', ['title' => _RATINGS_ANNUL.' #'.$vote, 'content_html' => $tpl->getHtmlPart('form', [
             'action_url' => $afile.'.php',
-            'hidden' => [
+            'hidden' => array_merge([
                 ['nameattr' => 'name', 'valueattr' => 'ratings'],
                 ['nameattr' => 'op', 'valueattr' => 'annul'],
                 ['nameattr' => 'vote', 'valueattr' => (string)$vote],
+                ['nameattr' => 'num', 'valueattr' => (string)$list['page']],
                 ['nameattr' => 'token', 'valueattr' => getSiteToken('ratings')],
-            ],
-            'content_html' => $tpl->getHtmlPart('div', ['rows' => [['label_html' => _RATINGS_REASON, 'field_html' => $field]]]),
+            ], array_map(static fn($k, $v): array => ['nameattr' => $k, 'valueattr' => (string)$v], array_keys($keep), $keep)),
+            'rows' => [['label_for' => 'f-reason', 'label_html' => _RATINGS_REASON, 'field_html' => $field]],
             'submit_label' => _RATINGS_ANNUL,
         ])]);
     }
     $opts = [['value_attr' => '', 'label_text' => _ALL, 'is_selected' => $scope === '']];
     foreach ($names as $name => $label) $opts[] = ['value_attr' => $name, 'label_text' => $label, 'is_selected' => $name === $scope];
-    $form = $tpl->getHtmlPart('form', [
-        'action_url' => $afile.'.php',
-        'method' => 'get',
-        'is_inline_filter' => true,
-        'hidden' => [
-            ['nameattr' => 'name', 'valueattr' => 'ratings'],
-            ['nameattr' => 'op', 'valueattr' => 'votes'],
-        ],
-        'content_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'scope', 'options' => $opts])
-            .$tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'mid', 'value_attr' => $mid ? (string)$mid : '', 'placeholder_text' => _RATINGS_TARGET.' '._ID])
-            .$tpl->getHtmlFrag('button', ['button_type' => 'submit', 'submit_label' => _OK]),
-    ]);
-    $list = getRatingService()->getRatingList($scope, $mid, $after, 50);
-    $rows = '';
+    $rows = [];
     foreach ($list['rows'] as $row) {
         $state = $row['annulled'] ? format_time($row['annulled'], 'Y-m-d H:i').' #'.$row['aid'].': '.$row['reason'] : '';
-        $href = $link.'&after='.$after.'&vote='.$row['id'];
-        $cells = [
+        $dial = $row['annulled'] ? [] : [['href' => $link.'&num='.$list['page'].'&vote='.$row['id'], 'icon_name' => 'x-circle', 'title' => _RATINGS_ANNUL]];
+        $rows[] = ['cells' => [
             ['is_col_id' => true, 'has_content_text' => true, 'content_text' => $row['id']],
-            ['is_col_date' => true, 'has_content_text' => true, 'content_text' => format_time($row['created'], 'Y-m-d H:i')],
+            ['is_col_date' => true, 'stamp' => format_time($row['created'], 'c'), 'content_text' => format_time($row['created'], 'Y-m-d H:i')],
             ['has_content_text' => true, 'content_text' => $row['scope'].' #'.$row['mid']],
             ['is_truncate' => true, 'has_content_text' => true, 'content_text' => $row['actor']],
             ['is_col_count' => true, 'has_content_text' => true, 'content_text' => $row['value']],
             ['is_truncate' => true, 'has_content_text' => true, 'title_text' => $state, 'content_text' => $state],
-            ['content_html' => $row['annulled'] ? '' : $tpl->getHtmlFrag('link', ['href' => $href, 'title' => _RATINGS_ANNUL, 'label' => _RATINGS_ANNUL])],
-        ];
-        $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', ['cells' => $cells])]);
+            ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('dial', ['dial_title' => _FUNCTIONS, 'dial' => $dial])],
+        ]];
     }
-    if (!$list['ok']) {
-        $body = $form.$tpl->getHtmlFrag('alert', ['text' => _RATINGS_FAIL, 'meta' => '', 'type' => 'warn', 'is_warn' => true]);
-    } elseif ($rows === '') {
-        $body = $form.$tpl->getHtmlFrag('alert', ['text' => _NO_INFO, 'meta' => '', 'type' => 'info', 'is_warn' => false]);
-    } else {
-        $head = [['content' => _ID], ['content' => _DATE], ['content' => _RATINGS_TARGET], ['content' => _RATINGS_ACTOR], ['content' => _VALUE], ['content' => _STATUS]];
-        $head[] = ['content' => _FUNCTIONS, 'nosort' => 1];
-        $more = count($list['rows']) === 50 ? $tpl->getHtmlFrag('link', ['href' => $link.'&after='.$list['next'], 'title' => _NEXT, 'label' => _NEXT]) : '';
-        $body = $form.$tpl->getHtmlFrag('table', ['head' => $head, 'rows_html' => $rows]).$more;
-    }
-    echo $cont.$tpl->getHtmlPart('box', ['title' => _RATINGS_VOTES, 'content_html' => $body]);
+    echo getTplAdminList([
+        'head_html' => getTplAdminTabs(['ops' => ['name=ratings', 'name=ratings&op=votes', 'name=ratings&op=info'], 'tabs' => [_HOME, _RATINGS_VOTES, _MANUAL], 'tab' => 1,
+            'part' => [1], 'subtitle_html' => $tpl->getHtmlFrag('list-filter', [
+                'action_url' => $afile.'.php',
+                'label' => _SEARCH,
+                'is_part' => true,
+                'hidden' => [['nameattr' => 'name', 'valueattr' => 'ratings'], ['nameattr' => 'op', 'valueattr' => 'votes']],
+                'fields' => [
+                    ['field_id' => 'sl-rate-scope', 'label' => _RATINGS_TARGET, 'name_attr' => 'scope', 'options' => $opts, 'is_now' => true],
+                    ['field_id' => 'sl-rate-mid', 'label' => _ID, 'name_attr' => 'mid', 'itype' => 'number', 'is_count' => true, 'value' => $mid ? (string)$mid : ''],
+                ],
+            ])]),
+        'note_html' => $note,
+        'is_fixed' => true,
+        'key' => 'ratings-votes',
+        'head' => [
+            ['content' => _ID, 'is_col_id' => true],
+            ['content' => _DATE, 'is_col_date' => true],
+            ['content' => _RATINGS_TARGET],
+            ['content' => _RATINGS_ACTOR, 'is_truncate' => true],
+            ['content' => _VALUE, 'is_col_count' => true],
+            ['content' => _STATUS, 'is_truncate' => true],
+            ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true],
+        ],
+        'rows' => $rows,
+        'href' => $link.'&',
+        'page' => $list['page'],
+        'pages' => max(1, (int)ceil($list['total'] / 50)),
+        'count' => $list['total'],
+        'limit' => 50,
+        'none_text' => $keep ? _NONE_FOUND : _NO_INFO,
+    ]);
     setFoot();
 }
 
@@ -190,7 +200,10 @@ function annul(): void {
         $texts = ['ok' => _RATINGS_DONE, 'invalid' => _RATINGS_FORM, 'unavailable' => _RATINGS_GONE, 'denied' => _RATINGS_DENY];
         [$warn, $text] = [!$res['ok'], $texts[$res['code']] ?? _RATINGS_FAIL];
     }
-    setRedirect($afile.'.php?name=ratings&op=votes', false, 302, $text, $warn);
+    $scope = getVar('post', 'scope', 'raw', '');
+    $scope = (is_string($scope) && preg_match('/^(?:account|forum|node\.[a-z0-9_-]+)$/D', $scope)) ? $scope : '';
+    $keep = array_filter(['scope' => $scope, 'mid' => getVar('post', 'mid', 'num', 0), 'num' => getVar('post', 'num', 'num', 0)]);
+    setRedirect($afile.'.php?name=ratings&op=votes'.($keep ? '&'.http_build_query($keep) : ''), false, 302, $text, $warn);
 }
 
 function info(): void {

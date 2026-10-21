@@ -41,56 +41,41 @@ function lang(): void {
             $who_view[$ttl] = _MVADMIN;
         }
     }
-
-    setHead();
-    $cont = getTplAdminTabs(['ops' => ['name=lang', 'name=lang&op=config', 'name=lang&op=info'], 'tabs' => [_HOME, _PREFERENCES, _MANUAL]]);
-    $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _UPDATE_LANGS]);
-    $rows = [];
-    $rows[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
-        'cells' => [
-            ['is_col_id' => true, 'content_html' => '1'],
-            ['content_html' => _SYSTEM],
-            ['content_html' => _ALL],
-            ['content_html' => _MVALL],
-            ['is_col_status' => true, 'content_html' => ad_status('', 1)],
-            ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('dial', [
-                'dial_title' => _FUNCTIONS,
-                'dial' => [
-                    ['href' => $afile.'.php?name=lang&op=fileedit&typ=admin', 'icon_name' => 'person-gear', 'title' => _FULLEDIT.': '._ADMIN],
-                    ['href' => $afile.'.php?name=lang&op=fileedit', 'icon_name' => 'puzzle', 'title' => _FULLEDIT.': '._MODUL],
-                ],
-            ])],
-        ],
-    ])]);
+    $rows = [['name' => _SYSTEM, 'cells' => [
+        ['is_col_id' => true, 'has_content_text' => true, 'content_text' => '1'],
+        ['has_content_text' => true, 'content_text' => _SYSTEM],
+        ['has_content_text' => true, 'content_text' => _ALL],
+        ['has_content_text' => true, 'content_text' => _MVALL],
+        ['is_col_status' => true, 'content_html' => ad_status('', 1)],
+        ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('dial', ['dial_title' => _FUNCTIONS, 'dial' => [
+            ['href' => $afile.'.php?name=lang&op=fileedit&typ=admin', 'icon_name' => 'person-gear', 'title' => _FULLEDIT.': '._ADMIN],
+            ['href' => $afile.'.php?name=lang&op=fileedit', 'icon_name' => 'puzzle', 'title' => _FULLEDIT.': '._MODUL],
+        ]])],
+    ]]];
     $mod = [];
-    $files = scandir(BASE_DIR.'/modules');
-    foreach ($files as $file) {
+    foreach (scandir(BASE_DIR.'/modules') as $file) {
         if ($file !== '.' && $file !== '..' && is_dir(BASE_DIR.'/modules/'.$file) && is_file(BASE_DIR.'/modules/'.$file.'/index.php')) $mod[] = $file;
     }
     sort($mod);
-    $ci = count($mod);
-    for ($i = 0; $i < $ci; $i++) {
-        $a = $i + 2;
-        $act = isset($modbase[$mod[$i]]) && $modbase[$mod[$i]] ? 1 : 0;
-        $view = $who_view[$mod[$i]] ?? _MVALL;
-        $mod_path = BASE_DIR.'/modules/'.$mod[$i];
+    foreach ($mod as $i => $one) {
+        $path = BASE_DIR.'/modules/'.$one;
         $items = [];
-        if (is_dir($mod_path.'/admin/lang')) {
-            $items[] = ['href' => $afile.'.php?name=lang&op=fileedit&mod='.$mod[$i].'&typ=admin', 'icon_name' => 'person-gear', 'title' => _FULLEDIT.': '._ADMIN];
-        }
-        if (is_dir($mod_path.'/lang')) $items[] = ['href' => $afile.'.php?name=lang&op=fileedit&mod='.$mod[$i], 'icon_name' => 'puzzle', 'title' => _FULLEDIT.': '._MODUL];
-        $rows[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
-            'cells' => [
-                ['is_col_id' => true, 'content_html' => (string)$a],
-                ['is_truncate' => true, 'title_text' => getModuleName($mod[$i]), 'content_html' => getModuleName($mod[$i])],
-                ['is_truncate' => true, 'title_text' => $mod[$i], 'content_html' => $mod[$i]],
-                ['content_html' => $view],
-                ['is_col_status' => true, 'content_html' => ad_status('', $act)],
-                ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('dial', ['dial_title' => _FUNCTIONS, 'dial' => $items])],
-            ],
-        ])]);
+        $link = $afile.'.php?name=lang&op=fileedit&mod='.$one;
+        if (is_dir($path.'/admin/lang')) $items[] = ['href' => $link.'&typ=admin', 'icon_name' => 'person-gear', 'title' => _FULLEDIT.': '._ADMIN];
+        if (is_dir($path.'/lang')) $items[] = ['href' => $link, 'icon_name' => 'puzzle', 'title' => _FULLEDIT.': '._MODUL];
+        $rows[] = ['name' => getModuleName($one), 'cells' => [
+            ['is_col_id' => true, 'has_content_text' => true, 'content_text' => $i + 2],
+            ['is_truncate' => true, 'title_text' => getModuleName($one), 'has_content_text' => true, 'content_text' => getModuleName($one)],
+            ['is_truncate' => true, 'title_text' => $one, 'has_content_text' => true, 'content_text' => $one],
+            ['has_content_text' => true, 'content_text' => $who_view[$one] ?? _MVALL],
+            ['is_col_status' => true, 'content_html' => ad_status('', empty($modbase[$one]) ? 0 : 1)],
+            ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('dial', ['dial_title' => _FUNCTIONS, 'dial' => $items])],
+        ]];
     }
-    $cont .= $tpl->getHtmlFrag('table', [
+    setHead();
+    echo getTplAdminList([
+        'head_html' => getTplAdminTabs(['ops' => ['name=lang', 'name=lang&op=config', 'name=lang&op=info'], 'tabs' => [_HOME, _PREFERENCES, _MANUAL], 'part' => [0]]),
+        'note_html' => $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _UPDATE_LANGS]),
         'is_fixed' => true,
         'head' => [
             ['content' => _ID, 'is_col_id' => true],
@@ -100,9 +85,9 @@ function lang(): void {
             ['content' => _STATUS, 'is_col_status' => true, 'nosort' => true],
             ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true],
         ],
-        'rows_html' => implode('', $rows),
+        'rows' => $rows,
+        'count' => count($rows),
     ]);
-    echo $cont;
     setFoot();
 }
 

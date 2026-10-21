@@ -6,171 +6,104 @@
 
 if (!defined('ADMIN_FILE') || !is_admin_modul('account')) die('Illegal file access');
 
-function getAccountSearch(): string {
+function getAccountSearch(string $op = ''): string {
     global $afile, $tpl;
-    $search = getVar('req', 'search', 'num', 2);
-    $chng = getVar('req', 'chng');
-    $search = $search > 0 ? $search : 2;
-    $searchopts =
-        $tpl->getHtmlFrag('select-option', ['value_attr' => '1', 'label_text' => _ID, 'is_selected' => $search === 1]).
-        $tpl->getHtmlFrag('select-option', ['value_attr' => '2', 'label_text' => _NICKNAME, 'is_selected' => $search === 2]).
-        $tpl->getHtmlFrag('select-option', ['value_attr' => '3', 'label_text' => _EMAIL, 'is_selected' => $search === 3]).
-        $tpl->getHtmlFrag('select-option', ['value_attr' => '4', 'label_text' => _IP, 'is_selected' => $search === 4]).
-        $tpl->getHtmlFrag('select-option', ['value_attr' => '5', 'label_text' => _URL, 'is_selected' => $search === 5]);
-    $form = $tpl->getHtmlPart('form', [
-        'action_url' => $afile.'.php?name=account',
-        'content_html' =>
-            _SEARCH.': '.
-            $tpl->getHtmlFrag('select', ['name_attr' => 'search', 'options_html' => $searchopts]).
-            ' '.
-            $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'chng', 'value_attr' => $chng, 'maxlength_num' => 30]).
-            ' '.
-            $tpl->getHtmlFrag('button', ['submit_label' => _OK, 'button_type' => 'submit']),
+    $kinds = match ($op) {
+        'newuser' => [2 => _NICKNAME, 3 => _EMAIL],
+        'oauthlist' => [1 => _ID, 2 => _NICKNAME, 3 => _EMAIL, 8 => _MODUL],
+        default => [1 => _ID, 2 => _NICKNAME, 3 => _EMAIL, 4 => _IP, 5 => _URL, 6 => _SPEC_GROUP, 7 => _POINTS],
+    };
+    $search = getVar('get', 'search', 'num', 2);
+    $opts = [];
+    foreach ($kinds as $key => $label) $opts[] = ['value_attr' => (string)$key, 'label_text' => $label, 'is_selected' => $search === $key];
+    return $tpl->getHtmlFrag('list-filter', [
+        'action_url' => $afile.'.php',
+        'label' => _SEARCH,
+        'is_part' => true,
+        'hidden' => array_values(array_filter([['nameattr' => 'name', 'valueattr' => 'account'], ($op !== '') ? ['nameattr' => 'op', 'valueattr' => $op] : null])),
+        'fields' => [['field_id' => 'sl-acc-in', 'label' => _SEARCH, 'name_attr' => 'search', 'options' => $opts, 'find_id' => 'sl-acc-q', 'find_name' => 'chng',
+            'find_value' => trim(getVar('get', 'chng'))]],
     ]);
-    return $tpl->getHtmlPart('div', ['is_searchbox' => true, 'content_html' => $form]);
 }
-
 
 function account(): void {
     global $db, $afile, $conf, $tpl;
-    $search = getVar('req', 'search', 'num');
-    $chng = getVar('req', 'chng');
-    $search = $search > 0 ? $search : 2;
+    $search = getVar('get', 'search', 'num', 2);
+    $chng = trim(getVar('get', 'chng'));
+    $cols = [1 => 'id', 2 => 'name', 3 => 'email', 4 => 'ip', 5 => 'website'];
+    $where = '';
+    $order = 'u.id DESC';
+    $pars = [];
+    if ($chng !== '' && isset($cols[$search])) {
+        $where = ' WHERE u.'.$cols[$search].' LIKE :search';
+        $order = 'u.'.$cols[$search].' ASC';
+        $pars['search'] = '%'.$chng.'%';
+    } elseif ($chng !== '' && ($search === 6 || $search === 7)) {
+        $where = ($search === 6) ? ' WHERE u.grp = :grp' : ' WHERE u.points >= :pts';
+        $order = 'u.id ASC';
+        $pars[($search === 6) ? 'grp' : 'pts'] = intval($chng);
+    }
+    $anum = max(1, (int)$conf['users']['anum']);
+    $count = intval($db->getSqlQuery('SELECT COUNT(u.id) FROM '.PREFIX_DB.'_users AS u'.$where, $pars)->fetchColumn());
+    $pages = max(1, (int)ceil($count / $anum));
+    $num = min(max(1, getVar('get', 'num', 'num', 1)), $pages);
+    $sql = 'SELECT u.id, u.name, u.email, u.website, u.regdate, u.lastvis, u.points, u.ip, u.gender, u.agent, g.name FROM '.PREFIX_DB.'_users AS u'
+        .' LEFT JOIN '.PREFIX_DB.'_groups AS g ON (g.id = u.grp)'.$where.' ORDER BY '.$order.' LIMIT '.(($num - 1) * $anum).', '.$anum;
+    $res = $db->getSqlQuery($sql, $pars);
     setHead();
-    $cont = getTplAdminTabs([
-        'ops'  => ['name=account', 'name=account&op=add', 'name=account&op=newuser', 'name=account&op=pointreset', 'name=account&op=config', 'name=account&op=info'],
-        'tabs' => [_HOME, _ADD, _NEW_USER, _NULLPOINTS, _PREFERENCES, _MANUAL],
-        'subtitle_html' => getAccountSearch(),
-    ]);
-    $where = '1 = 1';
-    $wcnt = '1 = 1';
-    $order = 'ORDER BY u.id DESC';
-    $params = [];
-    if ($search == 1 && $chng) {
-        $where = 'u.id LIKE :search';
-        $wcnt = 'id LIKE :search';
-        $order = 'ORDER BY u.id ASC';
-        $params['search'] = '%'.$chng.'%';
-    } elseif ($search == 2 && $chng) {
-        $where = 'u.name LIKE :search';
-        $wcnt = 'name LIKE :search';
-        $order = 'ORDER BY u.name ASC';
-        $params['search'] = '%'.$chng.'%';
-    } elseif ($search == 3 && $chng) {
-        $where = 'u.email LIKE :search';
-        $wcnt = 'email LIKE :search';
-        $order = 'ORDER BY u.email ASC';
-        $params['search'] = '%'.$chng.'%';
-    } elseif ($search == 4 && $chng) {
-        $where = 'u.ip LIKE :search';
-        $wcnt = 'ip LIKE :search';
-        $order = 'ORDER BY u.ip ASC';
-        $params['search'] = '%'.$chng.'%';
-    } elseif ($search == 5 && $chng) {
-        $where = 'u.website LIKE :search';
-        $wcnt = 'website LIKE :search';
-        $order = 'ORDER BY u.website ASC';
-        $params['search'] = '%'.$chng.'%';
-    } elseif ($search == 6 && $chng) {
-        $where = 'u.grp = :grp';
-        $wcnt = 'grp = :grp';
-        $order = 'ORDER BY u.id ASC';
-        $params['grp'] = $chng;
-    } elseif ($search == 7 && $chng) {
-        $where = 'u.points >= :pts';
-        $wcnt = 'points >= :pts';
-        $order = 'ORDER BY u.id ASC';
-        $params['pts'] = $chng;
-    }
-    $num = getVar('get', 'num', 'num', '1');
-    $num = $num > 0 ? $num : 1;
-    $offset = ($num - 1) * $conf['users']['anum'];
-    $pars = $params;
-    $params['offset'] = $offset;
-    $params['limit'] = $conf['users']['anum'];
-    $sql = 'SELECT u.id, u.name, u.email, u.website, u.regdate, u.lastvis, u.points, u.ip, u.gender, u.agent, g.name, g.color FROM '.PREFIX_DB.'_users AS u'
-        .' LEFT JOIN '.PREFIX_DB.'_groups AS g ON (g.id = u.grp) WHERE '.$where.' '.$order.' LIMIT :offset, :limit';
-    $res = $db->getSqlQuery($sql,$params);
-    $body = '';
-    if ($db->getSqlRowCount($res) > 0) {
-        $rows = [];
-        while ([$uid, $name, $mail, $site, $reg, $last, $point, $ip, $gender, $agent, $gname, $gcolor] = $db->getSqlRow($res)) {
-            $sgroup = $gname ?: _NO;
-            $web = $site ? domain($site, 40) : _NO;
-            $titleitems = [
-                ['label' => _HASH, 'value' => md5($agent)],
+    $back = 'name=account'.(($chng !== '') ? '&search='.$search.'&chng='.urlencode($chng) : '');
+    $esc = static fn(string $text): string => filterTextHighlight(htmlspecialchars($text, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'), $chng);
+    $rows = [];
+    while ([$uid, $name, $mail, $site, $reg, $last, $point, $ip, $gender, $agent, $gname] = $db->getSqlRow($res)) {
+        $dial = [
+            ['href' => $afile.'.php?name=account&op=add&id='.$uid, 'icon_name' => 'pencil', 'title' => _FULLEDIT],
+            ['href' => $afile.'.php?name=account&op=oauthlist&search=1&chng='.$uid, 'icon_name' => 'key', 'title' => _OAUTHLIST],
+        ];
+        if ($ip) $dial[] = ['href' => $afile.'.php?name=security&op=banlist&new_ip='.rawurlencode((string)$ip), 'icon_name' => 'ban', 'title' => _BANIPSENDER];
+        $dial[] = getTplPostAction(['name' => 'account', 'op' => 'delete', 'id' => $uid, 'num' => $num] + ($chng !== '' ? ['search' => $search, 'chng' => $chng] : []),
+            'trash', _ONDELETE) + ['later' => 'gone del'];
+        $rows[] = ['name' => (string)$name, 'cells' => [
+            ['is_col_id' => true, 'content_html' => filterTextHighlight((string)$uid, $chng)],
+            ['is_truncate' => true, 'title_text' => (string)$name, 'prefix_html' => $tpl->getHtmlFrag('popover', ['items' => [
+                ['label' => _HASH, 'value' => md5((string)$agent)],
                 ['label' => _LAST_VISIT, 'value' => format_time($last, _TIMESTRING)],
-                ['label' => _SPEC_GROUP, 'value' => $sgroup],
-                ['label' => _SITE, 'value' => filterTextHighlight($web, $chng)],
+                ['label' => _SPEC_GROUP, 'has_value_text' => true, 'value_text' => $gname ?: _NO],
+                ['label' => _SITE, 'value' => $site ? filterTextHighlight(domain($site, 40), $chng) : _NO],
                 ['label' => _GENDER, 'value' => getGenderText($gender)],
-                ['label' => _POINTS, 'value' => (string)$point, 'is_last' => true],
-            ];
-            $rows[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
-                'cells' => [
-                    ['is_col_id' => true, 'content_html' => filterTextHighlight((string)$uid, $chng)],
-                    ['is_truncate' => true, 'title_text' => $name, 'content_html' => $tpl->getHtmlFrag('popover', [
-                        'items' => $titleitems,
-                        'title_text' => $name,
-                    ]).filterTextHighlight($name, $chng)],
-                    ['class_name' => 'sl-col-ip', 'content_html' => filterTextHighlight(Geoip::getIpHtml($ip), $chng)],
-                    ['is_truncate' => true, 'title_text' => (string)$mail, 'content_html' => filterTextHighlight((string)$mail, $chng)],
-                    ['is_col_date' => true, 'content_html' => format_time($reg, _TIMESTRING)],
-                    ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('dial', [
-                        'dial_title' => _FUNCTIONS,
-                        'dial' => [
-                            [
-                                'href' => $afile.'.php?name=account&op=add&id='.$uid,
-                                'icon_name' => 'pencil',
-                                'title' => _FULLEDIT,
-                            ],
-                            [
-                                'href' => $afile.'.php?name=account&op=oauthlist&id='.$uid,
-                                'icon_name' => 'key',
-                                'title' => _OAUTHLIST,
-                            ],
-                            [
-                                'href' => $afile.'.php?name=security&op=banlist&new_ip='.$ip,
-                                'icon_name' => 'ban',
-                                'title' => _BANIPSENDER,
-                                'confirm_text' => _BANIPSENDER.' "'.$ip.'"?',
-                            ],
-                            getTplPostAction(['name' => 'account', 'op' => 'delete', 'id' => $uid], 'trash', _ONDELETE, _DELETE.' "'.$name.'"?'),
-                        ],
-                    ])],
-                ],
-            ])]);
-        }
-        $body .= $tpl->getHtmlFrag('table', [
-            'is_fixed' => true,
-            'head' => [
-                ['content' => _ID, 'is_col_id' => true],
-                ['content' => _NICKNAME, 'is_truncate' => true],
-                ['content' => _IP, 'class_name' => 'sl-col-ip'],
-                ['content' => _EMAIL, 'is_truncate' => true],
-                ['content' => _REG, 'is_col_date' => true],
-                ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true],
-            ],
-            'rows_html' => implode('', $rows),
-            'is_wrapless' => true,
-        ]);
-        [$count] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_users WHERE '.$wcnt, $pars));
-        $count = (int)$count;
-        $body .= getPageNumbers(
-            '',
-            $count,
-            (int)ceil($count / (int)$conf['users']['anum']),
-            (int)$conf['users']['anum'],
-            'name=account'.($search ? '&search='.$search : '').($chng !== '' ? '&chng='.urlencode($chng) : '').'&',
-            (int)$conf['users']['anump'],
-            $num,
-            '',
-            'num'
-        );
-    } else {
-        $body .= $tpl->getHtmlFrag('alert', ['text' => _USERNOEXIST]);
+                ['label' => _POINTS, 'value' => (string)$point],
+            ], 'tip_label' => _DETAILS.': '.$name, 'tip_id' => 'sl-tip-'.$uid]), 'text_html' => $esc((string)$name)],
+            ['class_name' => 'sl-col-ip', 'content_html' => $ip ? filterTextHighlight(Geoip::getIpHtml($ip), $chng) : _NO],
+            ['is_truncate' => true, 'title_text' => (string)$mail, 'content_html' => $esc((string)$mail)],
+            ['is_col_date' => true, 'stamp' => format_time($reg, 'c'), 'content_text' => format_time($reg, _TIMESTRING)],
+            ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('dial', ['dial_title' => _FUNCTIONS, 'dial' => $dial])],
+        ]];
     }
-    $cont .= $tpl->getHtmlPart('box', ['content_html' => $body]);
-    echo $cont;
+    echo getTplAdminList([
+        'head_html' => getTplAdminTabs([
+            'ops' => ['name=account', 'name=account&op=add', 'name=account&op=newuser', 'name=account&op=pointreset', 'name=account&op=config', 'name=account&op=info'],
+            'tabs' => [_HOME, _ADD, _NEW_USER, _NULLPOINTS, _PREFERENCES, _MANUAL],
+            'part' => [0, 2],
+            'subtitle_html' => getAccountSearch(),
+        ]),
+        'is_fixed' => true,
+        'key' => 'account',
+        'head' => [
+            ['content' => _ID, 'is_col_id' => true],
+            ['content' => _NICKNAME, 'is_truncate' => true],
+            ['content' => _IP, 'class_name' => 'sl-col-ip'],
+            ['content' => _EMAIL, 'is_truncate' => true],
+            ['content' => _REG, 'is_col_date' => true],
+            ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true],
+        ],
+        'rows' => $rows,
+        'href' => $afile.'.php?'.$back.'&',
+        'page' => $num,
+        'pages' => $pages,
+        'maxpg' => (int)$conf['users']['anump'],
+        'count' => $count,
+        'limit' => $anum,
+        'none_text' => ($where !== '') ? _NONE_FOUND : _USERNOEXIST,
+    ]);
     setFoot();
 }
 
@@ -717,70 +650,62 @@ function addsave(): void {
 }
 
 function newuser(): void {
-    global $db, $conf, $tpl;
+    global $db, $afile, $conf, $tpl;
+    $search = getVar('get', 'search', 'num', 2);
+    $chng = trim(getVar('get', 'chng'));
+    $where = ($chng !== '') ? ' WHERE '.(($search === 3) ? 'email' : 'name').' LIKE :search' : '';
+    $pars = ($chng !== '') ? ['search' => '%'.$chng.'%'] : [];
+    $anum = max(1, (int)$conf['users']['anum']);
+    $count = intval($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_users_temp'.$where, $pars)->fetchColumn());
+    $pages = max(1, (int)ceil($count / $anum));
+    $num = min(max(1, getVar('get', 'num', 'num', 1)), $pages);
+    $res = $db->getSqlQuery('SELECT id, name, email, regdate, code FROM '.PREFIX_DB.'_users_temp'.$where.' ORDER BY id DESC LIMIT '.(($num - 1) * $anum).', '.$anum, $pars);
     setHead();
-    $cont = getTplAdminTabs([
-        'ops'  => ['name=account', 'name=account&op=add', 'name=account&op=newuser', 'name=account&op=pointreset', 'name=account&op=config', 'name=account&op=info'],
-        'tabs' => [_HOME, _ADD, _NEW_USER, _NULLPOINTS, _PREFERENCES, _MANUAL],
-        'subtitle_html' => getAccountSearch(),
-        'tab'  => 2,
-    ]);
-    $num = getVar('get', 'num', 'num', '1');
-    $offset = ($num - 1) * $conf['users']['anum'];
-    $result = $db->getSqlQuery(
-        'SELECT id, name, email, regdate, code FROM '.PREFIX_DB.'_users_temp LIMIT :offset, :limit',
-        ['offset' => $offset, 'limit' => $conf['users']['anum']]
-    );
-    $body = '';
-    if ($db->getSqlRowCount($result) > 0) {
-        $rows = [];
-        while ([$uid, $name, $mail, $reg, $check] = $db->getSqlRow($result)) {
-            $rows[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
-                'cells' => [
-                    ['is_col_id' => true, 'content_html' => (string)$uid],
-                    ['is_truncate' => true, 'title_text' => $name, 'content_html' => $name],
-                    ['is_truncate' => true, 'title_text' => $mail, 'content_html' => $mail],
-                    ['is_truncate' => true, 'title_text' => $check, 'content_html' => $check],
-                    ['is_col_date' => true, 'content_html' => $reg],
-                    ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('dial', [
-                        'dial_title' => _FUNCTIONS,
-                        'dial' => [
-                            [
-                                'href' => $conf['homeurl'].'/index.php?name=account&op=activate&user='.urlencode($name).'&num='.$check,
-                                'icon_name' => 'power',
-                                'title' => _ACTIVATE,
-                            ],
-                            getTplPostAction(['name' => 'account', 'op' => 'newdrop', 'id' => $uid], 'trash', _ONDELETE, _DELETE.' "'.$name.'"?'),
-                        ],
-                    ])],
-                ],
-            ])]);
-        }
-        $body .= $tpl->getHtmlFrag('table', [
-            'is_fixed' => true,
-            'head' => [
-                ['content' => _ID, 'is_col_id' => true],
-                ['content' => _NICKNAME, 'is_truncate' => true],
-                ['content' => _EMAIL, 'is_truncate' => true],
-                ['content' => _CODE, 'is_truncate' => true],
-                ['content' => _REG, 'is_col_date' => true],
-                ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true],
-            ],
-            'rows_html' => implode('', $rows),
-            'is_wrapless' => true,
-        ]);
-        $cont .= getTplPager([
-            'table' => '_users_temp',
-            'field' => 'id',
-            'limit' => (int)$conf['users']['anum'],
-            'maxpg' => (int)$conf['users']['anump'],
-            'url' => 'name=account&op=newuser&',
-        ]);
-    } else {
-        $body .= $tpl->getHtmlFrag('alert', ['text' => _NO_INFO]);
+    $back = 'name=account&op=newuser'.(($chng !== '') ? '&search='.$search.'&chng='.urlencode($chng) : '');
+    $esc = static fn(string $text): string => filterTextHighlight(htmlspecialchars($text, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'), $chng);
+    $rows = [];
+    while ([$uid, $name, $mail, $reg, $check] = $db->getSqlRow($res)) {
+        $rows[] = ['name' => (string)$name, 'cells' => [
+            ['is_col_id' => true, 'has_content_text' => true, 'content_text' => $uid],
+            ['is_truncate' => true, 'title_text' => (string)$name, 'content_html' => $esc((string)$name)],
+            ['is_truncate' => true, 'title_text' => (string)$mail, 'content_html' => $esc((string)$mail)],
+            ['is_truncate' => true, 'title_text' => (string)$check, 'has_content_text' => true, 'content_text' => (string)$check],
+            ['is_col_date' => true, 'stamp' => format_time($reg, 'c'), 'content_text' => format_time($reg, _TIMESTRING)],
+            ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('dial', ['dial_title' => _FUNCTIONS, 'dial' => [
+                ['href' => $conf['homeurl'].'/index.php?name=account&op=activate&user='.urlencode((string)$name).'&num='.urlencode((string)$check), 'icon_name' => 'power',
+                    'title' => _ACTIVATE],
+                getTplPostAction(['name' => 'account', 'op' => 'newdrop', 'id' => $uid, 'num' => $num] + ($chng !== '' ? ['search' => $search, 'chng' => $chng] : []),
+                    'trash', _ONDELETE) + ['later' => 'gone del'],
+            ]])],
+        ]];
     }
-    $cont .= $tpl->getHtmlPart('box', ['content_html' => $body]);
-    echo $cont;
+    echo getTplAdminList([
+        'head_html' => getTplAdminTabs([
+            'ops' => ['name=account', 'name=account&op=add', 'name=account&op=newuser', 'name=account&op=pointreset', 'name=account&op=config', 'name=account&op=info'],
+            'tabs' => [_HOME, _ADD, _NEW_USER, _NULLPOINTS, _PREFERENCES, _MANUAL],
+            'tab' => 2,
+            'part' => [0, 2],
+            'subtitle_html' => getAccountSearch('newuser'),
+        ]),
+        'is_fixed' => true,
+        'key' => 'account-new',
+        'head' => [
+            ['content' => _ID, 'is_col_id' => true],
+            ['content' => _NICKNAME, 'is_truncate' => true],
+            ['content' => _EMAIL, 'is_truncate' => true],
+            ['content' => _CODE, 'is_truncate' => true],
+            ['content' => _REG, 'is_col_date' => true],
+            ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true],
+        ],
+        'rows' => $rows,
+        'href' => $afile.'.php?'.$back.'&',
+        'page' => $num,
+        'pages' => $pages,
+        'maxpg' => (int)$conf['users']['anump'],
+        'count' => $count,
+        'limit' => $anum,
+        'none_text' => ($where !== '') ? _NONE_FOUND : _NO_INFO,
+    ]);
     setFoot();
 }
 
@@ -1262,104 +1187,97 @@ function save(): void {
 function newdrop(): void {
     global $db, $afile;
     $iswarn = !checkAdminPost('account');
-    if (!$iswarn) {
-        $id = getVar('post', 'id', 'num');
-        if ($id) $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_users_temp WHERE id = :id', ['id' => $id]);
-    }
-    setRedirect($afile.'.php?name=account&op=newuser', false, 302, $iswarn ? _TOKENMISS : _SUCCDELETE, $iswarn);
+    $id = getVar('post', 'id', 'num');
+    $res = (!$iswarn && $id) ? $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_users_temp WHERE id = :id', ['id' => $id]) : false;
+    $done = $res && $res->rowCount() > 0;
+    $keep = array_filter(['op' => 'newuser', 'search' => getVar('post', 'search', 'num', 0), 'chng' => trim(getVar('post', 'chng')), 'num' => getVar('post', 'num', 'num', 0)]);
+    setRedirect($afile.'.php?name=account&'.http_build_query($keep), false, 302, $iswarn ? _TOKENMISS : ($done ? _SUCCDELETE : _ERROR), !$done);
 }
 
 function delete(): void {
     global $db, $afile, $com, $prv;
     $iswarn = !checkAdminPost('account');
-    $done = true;
-    if (!$iswarn) {
-        $id = getVar('post', 'id', 'num');
-        if ($id) {
-            $open = $db->setSqlBegin();
-            $done = $open
-                && $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_users WHERE id = :id', ['id' => $id]) !== false
-                && $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_favorites WHERE uid = :id', ['id' => $id]) !== false
-                && $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_user_oauth WHERE uid = :id', ['id' => $id]) !== false
-                && (new Route($db))->deleteRoute('user', intval($id))
-                && $com->deleteUser($id)
-                && $prv->deleteUser($id)
-                && $db->setSqlCommit();
-            if ($open && !$done) $db->setSqlRollback();
-        }
+    $id = getVar('post', 'id', 'num');
+    $done = false;
+    if (!$iswarn && $id) {
+        $open = $db->setSqlBegin();
+        $gone = $open ? $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_users WHERE id = :id', ['id' => $id]) : false;
+        $done = $gone && $gone->rowCount() > 0
+            && $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_favorites WHERE uid = :id', ['id' => $id]) !== false
+            && $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_user_oauth WHERE uid = :id', ['id' => $id]) !== false
+            && (new Route($db))->deleteRoute('user', intval($id))
+            && $com->deleteUser($id)
+            && $prv->deleteUser($id)
+            && $db->setSqlCommit();
+        if ($open && !$done) $db->setSqlRollback();
     }
-    setRedirect($afile.'.php?name=account', false, 302, $iswarn ? _TOKENMISS : ($done ? _SUCCDELETE : _ERROR), $iswarn || !$done);
+    $keep = array_filter(['search' => getVar('post', 'search', 'num', 0), 'chng' => trim(getVar('post', 'chng')), 'num' => getVar('post', 'num', 'num', 0)]);
+    setRedirect($afile.'.php?name=account&'.http_build_query($keep), false, 302, $iswarn ? _TOKENMISS : ($done ? _SUCCDELETE : _ERROR), !$done);
 }
 
 function oauthlist(): void {
-    global $db, $afile, $tpl;
+    global $db, $afile, $conf, $tpl;
+    $search = getVar('get', 'search', 'num', 2);
+    $chng = trim(getVar('get', 'chng'));
+    $cols = [1 => 'o.uid = :search', 2 => 'u.name LIKE :search', 3 => 'o.email LIKE :search', 8 => 'o.provider LIKE :search'];
+    $where = ($chng !== '' && isset($cols[$search])) ? ' WHERE '.$cols[$search] : '';
+    $pars = ($where !== '') ? ['search' => ($search === 1) ? intval($chng) : '%'.$chng.'%'] : [];
+    $from = ' FROM '.PREFIX_DB.'_user_oauth AS o LEFT JOIN '.PREFIX_DB.'_users AS u ON (u.id = o.uid)'.$where;
+    $anum = max(1, (int)$conf['users']['anum']);
+    $count = intval($db->getSqlQuery('SELECT COUNT(o.id)'.$from, $pars)->fetchColumn());
+    $pages = max(1, (int)ceil($count / $anum));
+    $num = min(max(1, getVar('get', 'num', 'num', 1)), $pages);
+    $res = $db->getSqlQuery('SELECT o.uid, o.provider, o.puid, o.email, o.linked, o.lastlog, u.name'.$from.' ORDER BY o.id DESC LIMIT '.(($num - 1) * $anum).', '.$anum, $pars);
     setHead();
-    $cont = getTplAdminTabs([
-        'ops'  => ['name=account', 'name=account&op=add', 'name=account&op=newuser', 'name=account&op=pointreset', 'name=account&op=config', 'name=account&op=info'],
-        'tabs' => [_HOME, _ADD, _NEW_USER, _NULLPOINTS, _PREFERENCES, _MANUAL],
-        'subtitle_html' => getAccountSearch(),
+    $back = 'name=account&op=oauthlist'.(($chng !== '') ? '&search='.$search.'&chng='.urlencode($chng) : '');
+    $esc = static fn(string $text): string => filterTextHighlight(htmlspecialchars($text, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'), $chng);
+    $rows = [];
+    while ([$uid, $prov, $puid, $mail, $linked, $lastlog, $name] = $db->getSqlRow($res)) {
+        $prov = (string)$prov;
+        $rows[] = ['name' => ucfirst($prov).(($name !== null) ? ' · '.$name : ''), 'cells' => [
+            ['is_col_id' => true, 'has_content_text' => true, 'content_text' => $uid],
+            ['is_truncate' => true, 'title_text' => (string)$name, 'content_html' => ($name !== null)
+                ? $tpl->getHtmlFrag('link', ['href' => $afile.'.php?name=account&op=add&id='.$uid, 'title' => _FULLEDIT, 'label_html' => $esc((string)$name)]) : _NO],
+            ['content_html' => $esc(ucfirst($prov))],
+            ['is_truncate' => true, 'title_text' => (string)$puid, 'has_content_text' => true, 'content_text' => (string)$puid],
+            ['is_truncate' => true, 'title_text' => (string)$mail, 'content_html' => $esc((string)$mail)],
+            ['is_col_date' => true, 'stamp' => format_time($linked, 'c'), 'content_text' => format_time($linked, _TIMESTRING)],
+            ['is_col_date' => true, 'stamp' => format_time($lastlog, 'c'), 'content_text' => format_time($lastlog, _TIMESTRING)],
+            ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('dial', ['dial_title' => _FUNCTIONS, 'dial' => [
+                getTplPostAction(['name' => 'account', 'op' => 'oauthunlink', 'id' => $uid, 'prov' => $prov, 'num' => $num]
+                    + ($chng !== '' ? ['search' => $search, 'chng' => $chng] : []), 'trash', _ONDELETE) + ['later' => 'gone del'],
+            ]])],
+        ]];
+    }
+    echo getTplAdminList([
+        'head_html' => getTplAdminTabs([
+            'ops' => ['name=account', 'name=account&op=add', 'name=account&op=newuser', 'name=account&op=pointreset', 'name=account&op=config', 'name=account&op=info'],
+            'tabs' => [_HOME, _ADD, _NEW_USER, _NULLPOINTS, _PREFERENCES, _MANUAL],
+            'tab' => -1,
+            'part' => [0, 2],
+            'subtitle_html' => getAccountSearch('oauthlist'),
+        ]),
+        'is_fixed' => true,
+        'key' => 'account-oauth',
+        'head' => [
+            ['content' => _ID, 'is_col_id' => true],
+            ['content' => _NICKNAME, 'is_truncate' => true],
+            ['content' => _MODUL],
+            ['content' => 'ID', 'is_truncate' => true],
+            ['content' => _EMAIL, 'is_truncate' => true],
+            ['content' => _REG, 'is_col_date' => true],
+            ['content' => _LAST_VISIT, 'is_col_date' => true],
+            ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true],
+        ],
+        'rows' => $rows,
+        'href' => $afile.'.php?'.$back.'&',
+        'page' => $num,
+        'pages' => $pages,
+        'maxpg' => (int)$conf['users']['anump'],
+        'count' => $count,
+        'limit' => $anum,
+        'none_text' => ($where !== '') ? _NONE_FOUND : _NO_INFO,
     ]);
-    $id = getVar('get', 'id', 'num');
-    $query = 'SELECT o.uid, o.provider, o.puid, o.email, o.linked, o.lastlog, u.name FROM '.PREFIX_DB.'_user_oauth AS o LEFT JOIN '.PREFIX_DB.'_users AS u ON (u.id = o.uid)';
-    $params = [];
-    if ($id) {
-        $query .= ' WHERE o.uid = :id';
-        $params['id'] = $id;
-    }
-    $result = $db->getSqlQuery($query.' ORDER BY o.id DESC LIMIT 100', $params);
-    $body = '';
-    if ($db->getSqlRowCount($result) > 0) {
-        $rows = [];
-        while ([$uid, $prov, $puid, $mail, $linked, $lastlog, $name] = $db->getSqlRow($result)) {
-            $hidden = $tpl->getHtmlFrag('hidden', ['name_attr' => 'name', 'value_attr' => 'account'])
-                .$tpl->getHtmlFrag('hidden', ['name_attr' => 'op', 'value_attr' => 'oauthunlink'])
-                .$tpl->getHtmlFrag('hidden', ['name_attr' => 'id', 'value_attr' => (string)$uid])
-                .$tpl->getHtmlFrag('hidden', ['name_attr' => 'prov', 'value_attr' => $prov])
-                .$tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken('account')]);
-            $rows[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
-                'cells' => [
-                    ['is_col_id' => true, 'content_html' => (string)$uid],
-                    [
-                        'is_truncate' => true,
-                        'title_text' => (string)$name,
-                        'content_html' => $tpl->getHtmlFrag('link', ['href' => $afile.'.php?name=account&op=add&id='.$uid, 'title' => _FULLEDIT, 'label' => (string)$name]),
-                    ],
-                    ['has_content_text' => true, 'content_text' => ucfirst((string)$prov)],
-                    ['is_truncate' => true, 'title_text' => (string)$puid, 'has_content_text' => true, 'content_text' => (string)$puid],
-                    ['is_truncate' => true, 'title_text' => (string)$mail, 'has_content_text' => true, 'content_text' => (string)$mail],
-                    ['is_col_date' => true, 'content_html' => format_time($linked, _TIMESTRING)],
-                    ['is_col_date' => true, 'content_html' => format_time($lastlog, _TIMESTRING)],
-                    ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('post-button', [
-                        'action' => $afile.'.php',
-                        'hidden' => $hidden,
-                        'is_mini' => true,
-                        'icon_name' => 'trash',
-                        'title' => _ONDELETE,
-                        'confirm_text' => _DELETE.' '.ucfirst((string)$prov).' ("'.$name.'")?',
-                    ])],
-                ],
-            ])]);
-        }
-        $body .= $tpl->getHtmlFrag('table', [
-            'is_fixed' => true,
-            'head' => [
-                ['content' => _ID, 'is_col_id' => true],
-                ['content' => _NICKNAME, 'is_truncate' => true],
-                ['content' => _MODUL],
-                ['content' => 'ID', 'is_truncate' => true],
-                ['content' => _EMAIL, 'is_truncate' => true],
-                ['content' => _REG, 'is_col_date' => true],
-                ['content' => _LAST_VISIT, 'is_col_date' => true],
-                ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true],
-            ],
-            'rows_html' => implode('', $rows),
-            'is_wrapless' => true,
-        ]);
-    } else {
-        $body .= $tpl->getHtmlFrag('alert', ['text' => _NO_INFO]);
-    }
-    $cont .= $tpl->getHtmlPart('box', ['content_html' => $body]);
-    echo $cont;
     setFoot();
 }
 
@@ -1368,11 +1286,12 @@ function oauthunlink(): void {
     $iswarn = !checkAdminPost('account');
     $id = getVar('post', 'id', 'num');
     $prov = strtolower(getVar('post', 'prov', 'word'));
-    if (!$iswarn && $id && $prov !== '') {
-        $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_user_oauth WHERE uid = :id AND provider = :prov', ['id' => $id, 'prov' => $prov]);
-        Logger::addOauth('info', 'oauth_admin_unlink', ['prov' => $prov, 'uid' => $id, 'actor' => (int)($admin[0] ?? 0)]);
-    }
-    setRedirect($afile.'.php?name=account&op=oauthlist'.($id ? '&id='.$id : ''), false, 302, $iswarn ? _TOKENMISS : _SUCCDELETE, $iswarn);
+    $sql = 'DELETE FROM '.PREFIX_DB.'_user_oauth WHERE uid = :id AND provider = :prov';
+    $res = (!$iswarn && $id && $prov !== '') ? $db->getSqlQuery($sql, ['id' => $id, 'prov' => $prov]) : false;
+    $done = $res && $res->rowCount() > 0;
+    if ($done) Logger::addOauth('info', 'oauth_admin_unlink', ['prov' => $prov, 'uid' => $id, 'actor' => (int)($admin[0] ?? 0)]);
+    $keep = array_filter(['op' => 'oauthlist', 'search' => getVar('post', 'search', 'num', 0), 'chng' => trim(getVar('post', 'chng')), 'num' => getVar('post', 'num', 'num', 0)]);
+    setRedirect($afile.'.php?name=account&'.http_build_query($keep), false, 302, $iswarn ? _TOKENMISS : ($done ? _SUCCDELETE : _ERROR), !$done);
 }
 
 function info(): void {

@@ -1,9 +1,17 @@
 <form
   action="{{ action_url }}"
   method="{% if method %}{{ method }}{% else %}post{% endif %}"
-  class="sl-div-form{% if form_class %} {{ form_class }}{% endif %}{% if is_inline_filter %} sl-inline-filter-form{% endif %}"
+  class="sl-div-form{% if form_class %} {{ form_class }}{% endif %}"
+  {% if method %}{% else %}data-sl-dirty data-sl-leave="{{ _ADM_LEAVE }}"{% endif %}
+  {% if is_valid %}novalidate data-sl-valid{% endif %}
   {% if form_attr %}{{{ form_attr }}}{% endif %}
 >
+  {% if is_valid %}
+  <div class="sl-alert sl-alert-error sl-form-sum" role="alert" tabindex="-1" data-sl-valid-sum="{{ _ADM_UNSAVED }}" data-sl-fill="{{ _ADM_FILL }}" data-sl-bad="{{ _ADM_BADVAL }}" hidden>
+    <div class="sl-alert-body"><b></b><ul class="sl-alert-list"></ul></div>
+    <template><li><a href="#"></a></li><span class="sl-field-err"></span></template>
+  </div>
+  {% endif %}
   {% for item in hidden %}
   {% include 'fragments/hidden.html' with item %}
   {% endfor %}

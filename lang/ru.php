@@ -99,6 +99,8 @@ define('_CONTENT','Содержание');
 define('_COUNTRY','Страна');
 define('_C_12','Количество публикаций на страницу');
 define('_DATE','Дата');
+define('_DATEFROM','Дата с');
+define('_DATETO','Дата по');
 define('_DATESTRING','d.m.Y');
 define('_DAYS','Суток');
 define('_DEACT','Деактивирован');
@@ -693,6 +695,7 @@ define('_UACESS','Проверка модератором сообщений п�
 define('_UKRAINIAN','Украинский');
 define('_UNDO','Отменить');
 define('_UNLIMITED','Неограниченно');
+define('_EXPIRED','Истёк');
 define('_UPDATE','Обновить');
 define('_UPDATED','Обновлено');
 define('_URANK','Звание');

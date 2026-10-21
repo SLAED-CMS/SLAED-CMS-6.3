@@ -167,10 +167,10 @@ final class PointOwnersTest extends TestCase
     public function theJournalCountStopsAtOneHundredPages(): void
     {
         $body = $this->getBody('admin/modules/groups.php', 'getPointsJournal');
-        $this->assertStringContainsString("\$num = min(100, max(1, getVar('get', 'num', 'num', 1)));", $body);
+        $this->assertStringContainsString("\$pages = min(100, max(1, (int)ceil(\$count / 50)));", $body);
         $this->assertStringContainsString("'SELECT COUNT(*) FROM (SELECT 1 FROM '.PREFIX_DB.'_points AS p'.\$cond.' LIMIT 5000) AS q'", $body);
         $this->assertStringNotContainsString("'SELECT COUNT(*) FROM '.PREFIX_DB.'_points", $body, 'No count over the whole journal remains');
-        $this->assertStringContainsString("'offset' => (\$num - 1) * 50, 'limit' => 50", $body);
+        $this->assertStringContainsString("LIMIT '.((\$num - 1) * 50).', 50'", $body);
     }
 
     # The interface of points follows the open class, never the stored switch alone: before the data update left its mark the class stays closed and so does the interface

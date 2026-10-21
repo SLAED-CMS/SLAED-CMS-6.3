@@ -4,6 +4,20 @@
     <div class="sl-module-head-body">
       <h1 class="sl-module-head-title">{{ title }}</h1>
       {% if subtitle_html %}<div class="sl-module-head-subtitle">{{{ subtitle_html }}}</div>{% endif %}
+      {% if find %}
+      <div class="sl-module-head-subtitle">
+        <div class="sl-searchbox sl-filter" role="search" aria-label="{{ find }}">
+          <span class="sl-filter-field">
+            <label for="sl-form-find">{{ find }}</label>
+            <span class="sl-form-find">
+              <input type="search" id="sl-form-find" autocomplete="off" spellcheck="false" role="combobox" aria-expanded="false" aria-controls="sl-form-hits" aria-autocomplete="list">
+              <ul class="sl-form-hits" id="sl-form-hits" role="listbox" aria-label="{{ find }}" hidden></ul>
+              <template><li role="option" aria-selected="false"></li><li class="sl-form-none">{{ _NONE_FOUND }}</li></template>
+            </span>
+          </span>
+        </div>
+      </div>
+      {% endif %}
     </div>
   </div>
   {% if tabs_html %}

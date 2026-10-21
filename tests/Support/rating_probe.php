@@ -547,23 +547,23 @@ function getProbeAnnul(): array {
     $out['broken'] = [$sup->deleteRating($ids[0], 'broken')['code'], getProbeRows('votes')[0][8], checkProbeLog('would turn the aggregate negative')];
     $all = $sup->getRatingList();
     $out['list'] = [
-        'all' => [$all['ok'], $all['code'], array_column($all['rows'], 'id') === $ids, $all['next'] === $ids[4], array_keys($all['rows'][0] ?? [])],
-        'first' => $all['rows'][0] ?? [],
+        'all' => [$all['ok'], $all['code'], array_column($all['rows'], 'id') === array_reverse($ids), $all['total'] === 5, array_keys($all['rows'][0] ?? [])],
+        'first' => $all['rows'][4] ?? [],
         'scope' => array_column($sup->getRatingList('node.story')['rows'], 'mid'),
         'target' => array_column($sup->getRatingList('node.story', 1)['rows'], 'uid'),
-        'after' => array_column($sup->getRatingList('', 0, $ids[2])['rows'], 'scope'),
-        'page' => [count($sup->getRatingList('', 0, 0, 2)['rows']), $sup->getRatingList('', 0, 0, 2)['next'] === $ids[1]],
-        'past' => $sup->getRatingList('', 0, $ids[4]),
+        'head' => array_column($sup->getRatingList('', 0, 1, 2)['rows'], 'scope'),
+        'page' => [count($sup->getRatingList('', 0, 2, 2)['rows']), array_column($sup->getRatingList('', 0, 2, 2)['rows'], 'id') === [$ids[2], $ids[1]]],
+        'past' => (fn(array $one): array => [$one['page'], array_column($one['rows'], 'id') === [$ids[0]]])($sup->getRatingList('', 0, 9, 2)),
         'oldtype' => $sup->getRatingList('node.ghost')['code'],
     ];
     $out['badlist'] = [
         'idbare' => $sup->getRatingList('', 1)['code'],
         'scope' => $sup->getRatingList('nodes')['code'],
         'idsign' => $sup->getRatingList('node.story', -1)['code'],
-        'after' => $sup->getRatingList('', 0, -1)['code'],
-        'limzero' => $sup->getRatingList('', 0, 0, 0)['code'],
-        'limover' => $sup->getRatingList('', 0, 0, 101)['code'],
-        'limtop' => $sup->getRatingList('', 0, 0, 100)['code'],
+        'page' => $sup->getRatingList('', 0, 0)['code'],
+        'limzero' => $sup->getRatingList('', 0, 1, 0)['code'],
+        'limover' => $sup->getRatingList('', 0, 1, 101)['code'],
+        'limtop' => $sup->getRatingList('', 0, 1, 100)['code'],
     ];
     return $out;
 }

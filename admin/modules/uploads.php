@@ -28,23 +28,14 @@ function getUploadsFolders(): array {
 
 function getUploadsSearch(string $mod): string {
     global $afile, $tpl;
-    $opts = '';
-    foreach (getUploadsFolders() as $file) {
-        $opts .= $tpl->getHtmlFrag('select-option', [
-            'value_attr' => $file,
-            'label_text' => getUploadUrl($file) ?: $file,
-            'is_selected' => $mod === $file,
-        ]);
-    }
-    $form = $tpl->getHtmlPart('form', [
-        'action_url' => $afile.'.php?name=uploads',
-        'content_html' => _DIR.': '.$tpl->getHtmlFrag('select', [
-            'name_attr' => 'dir',
-            'options_html' => $opts,
-            'select_attr' => ' onchange="submit()"',
-        ]),
+    $opts = [];
+    foreach (getUploadsFolders() as $file) $opts[] = ['value_attr' => $file, 'label_text' => getUploadUrl($file) ?: $file, 'is_selected' => $mod === $file];
+    return $tpl->getHtmlFrag('list-filter', [
+        'action_url' => $afile.'.php',
+        'label' => _SEARCH,
+        'hidden' => [['nameattr' => 'name', 'valueattr' => 'uploads']],
+        'fields' => [['field_id' => 'sl-up-dir', 'label' => _DIR, 'name_attr' => 'dir', 'options' => $opts]],
     ]);
-    return $tpl->getHtmlPart('div', ['is_searchbox' => true, 'content_html' => $form]);
 }
 
 function uploads(): void {

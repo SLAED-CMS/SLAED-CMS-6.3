@@ -5,12 +5,11 @@
 {% elseif content_html %}
 <div
   {% if id %}id="{{ id }}"{% endif %}
-  {% if class or is_collapsible or is_code or is_search_line or is_rate_box %}
+  {% if class or is_collapsible or is_code or is_rate_box %}
   class="
     {% if class %}{{ class }}{% endif %}
     {% if is_collapsible %}{% if class %} {% endif %}sl-collapsible{% endif %}
     {% if is_code %}{% if class or is_collapsible %} {% endif %}sl-code{% endif %}
-    {% if is_search_line %} sl-search-line{% endif %}
     {% if is_rate_box %} rate-box pull-right{% endif %}
   "
   {% endif %}

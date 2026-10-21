@@ -6,18 +6,58 @@
 
 if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 
-
+# Every private message newest first with the state its columns add up to, deleted copies too, the body rendered as its recipient reads it
 function privat(): void {
-    global $tpl;
-    if (strtolower($_SERVER['HTTP_HX_REQUEST'] ?? '') === 'true') {
-        echo getAdminPrivateList(1);
-        return;
-    }
+    global $afile, $conf, $tpl, $prs, $prv;
     setHead();
-    $cont = getTplAdminTabs(['ops' => ['name=privat', 'name=privat&op=config', 'name=privat&op=info'], 'tabs' => [_HOME, _PREFERENCES, _MANUAL]]);
-    echo $cont.$tpl->getHtmlPart('box', [
-        'box_id' => 'repadminPrivateList',
-        'content_html' => getAdminPrivateList(1),
+    $data = $prv->getAdminList(getVar('get', 'num', 'num', 1));
+    $rows = [];
+    foreach ($data['rows'] as $one) {
+        $id = $one['id'];
+        $title = $one['title'];
+        $tone = match ($one['state']) {'delin', 'delout' => 'danger', 'saved' => 'accent', 'read' => 'success', default => 'warn'};
+        $note = match ($one['state']) {
+            'delin' => (string)_PRIVAT_DELIN,
+            'delout' => (string)_PRIVAT_DELOUT,
+            'saved' => (string)_PRMOVE,
+            'read' => (string)_PROLD,
+            default => (string)_PROUTNEW,
+        };
+        $rows[] = ['name' => ($title !== '') ? cutstr($title, 60) : _ID.' '.$id, 'cells' => [
+            ['is_col_id' => true, 'has_content_text' => true, 'content_text' => $id],
+            ['is_col_title' => true, 'is_truncate' => true, 'title_text' => $title, 'prefix_html' => $tpl->getHtmlFrag('popover', [
+                'content_html' => $prs->filterContent($one['body'], true, 'account', 0, 'breaks', ['privat', $id]),
+                'tip_label' => _DETAILS.': '.$title,
+                'tip_id' => 'sl-tip-'.$id,
+            ]), 'text_html' => htmlspecialchars($title, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')],
+            ['is_col_author' => true, 'content_html' => ($one['nameout'] !== '') ? user_info($one['nameout'], null) : _ANONYM],
+            ['is_col_author' => true, 'content_html' => ($one['namein'] !== '') ? user_info($one['namein'], null) : _ANONYM],
+            ['is_col_date' => true, 'stamp' => format_time($one['time'], 'c'), 'content_text' => format_time($one['time'], _TIMESTRING)],
+            ['is_col_status' => true, 'content_html' => $tpl->getHtmlFrag('inline-badge', ['chip_tone' => $tone, 'label' => $note, 'title_text' => $note])],
+            ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('dial', ['dial_title' => _FUNCTIONS, 'dial' => [
+                getTplPostAction(['name' => 'privat', 'op' => 'delete', 'id' => $id, 'num' => $data['page']], 'trash', _ONDELETE) + ['later' => 'gone del'],
+            ]])],
+        ]];
+    }
+    echo getTplAdminList([
+        'head_html' => getTplAdminTabs(['ops' => ['name=privat', 'name=privat&op=config', 'name=privat&op=info'], 'tabs' => [_HOME, _PREFERENCES, _MANUAL], 'part' => [0]]),
+        'is_fixed' => true,
+        'head' => [
+            ['content' => _ID, 'is_col_id' => true],
+            ['content' => _TITLE, 'is_col_title' => true, 'is_truncate' => true],
+            ['content' => _PRSE, 'is_col_author' => true],
+            ['content' => _PRRE, 'is_col_author' => true],
+            ['content' => _DATE, 'is_col_date' => true],
+            ['content' => _STATUS, 'is_col_status' => true, 'nosort' => true],
+            ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true],
+        ],
+        'rows' => $rows,
+        'href' => $afile.'.php?name=privat&',
+        'page' => $data['page'],
+        'pages' => $data['pages'],
+        'maxpg' => intval($conf['privat']['anump']),
+        'count' => $data['total'],
+        'limit' => $data['limit'],
     ]);
     setFoot();
 }
@@ -218,24 +258,12 @@ function save(): void {
 }
 
 function delete(): void {
-    global $afile, $tpl, $prv;
+    global $afile, $prv;
     $id = getVar('post', 'id', 'num', 0);
     $num = getVar('post', 'num', 'num', 1);
-    $ishtmx = strtolower($_SERVER['HTTP_HX_REQUEST'] ?? '') === 'true';
-    if (!checkAdminPost('privat')) {
-        if ($ishtmx) {
-            echo $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _TOKENMISS]);
-            return;
-        }
-        setRedirect($afile.'.php?name=privat&num='.$num, false, 302, _TOKENMISS, true);
-        return;
-    }
-    $done = ($id > 0) && $prv->deleteAdminMessage([$id]);
-    if ($ishtmx) {
-        echo ($done ? '' : $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _ERROR])).getAdminPrivateList(1);
-        return;
-    }
-    setRedirect($afile.'.php?name=privat&num='.$num, false, 302, $done ? _SUCCDELETE : _ERROR, !$done);
+    $warn = !checkAdminPost('privat');
+    $done = !$warn && $id > 0 && $prv->deleteAdminMessage([$id]);
+    setRedirect($afile.'.php?name=privat&num='.$num, false, 302, $warn ? _TOKENMISS : ($done ? _SUCCDELETE : _ERROR), !$done);
 }
 
 function info(): void {

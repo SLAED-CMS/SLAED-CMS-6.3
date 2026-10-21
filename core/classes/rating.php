@@ -342,27 +342,29 @@ final class Rating {
         return $this->setUnitRun(fn(): array => $this->deleteVoteRow($vote, $reason, $row), ['vote' => $vote, 'aid' => $this->actor['aid']]);
     }
 
-    # Page through the stored votes for the main administrator: of everything, of one scope, or of one target, by a cursor of the vote id and without a count
-    # The rows are the stored columns as they are, with the reason and the state of every vote; next is the last id of the page and zero when the page is empty
-    public function getRatingList(string $scope = '', int $id = 0, int $after = 0, int $limit = 50): array {
-        $out = ['ok' => false, 'code' => 'denied', 'rows' => [], 'next' => 0];
+    # Page the stored votes of everything, one scope or one target newest first for the main administrator; a page past the last answers the last one
+    public function getRatingList(string $scope = '', int $id = 0, int $page = 1, int $limit = 50): array {
+        $out = ['ok' => false, 'code' => 'denied', 'rows' => [], 'total' => 0, 'page' => 1];
         if (!$this->actor || !$this->actor['super']) return $out;
-        $good = $after >= 0 && $limit >= 1 && $limit <= self::MAXLIST && $id >= 0 && $id <= self::MAXID && ($scope === '' ? $id === 0 : preg_match(self::SCOPE, $scope));
+        $good = $page >= 1 && $limit >= 1 && $limit <= self::MAXLIST && $id >= 0 && $id <= self::MAXID && ($scope === '' ? $id === 0 : preg_match(self::SCOPE, $scope));
         if (!$good) return array_replace($out, ['code' => 'invalid']);
-        $sql = 'SELECT id, scope, mid, actor, uid, value, request, created, annulled, aid, reason FROM '.PREFIX_DB.'_rating_votes WHERE id > :after';
-        $pars = ['after' => $after];
+        $pars = [];
         if ($scope !== '') $pars['scope'] = $scope;
         if ($id) $pars['mid'] = $id;
-        $sql .= ($scope !== '' ? ' AND scope = :scope' : '').($id ? ' AND mid = :mid' : '').' ORDER BY id LIMIT '.$limit;
-        $res = $this->db->getSqlQuery($sql, $pars);
+        $where = $pars ? ' WHERE '.implode(' AND ', array_map(static fn(string $key): string => $key.' = :'.$key, array_keys($pars))) : '';
+        $num = $this->db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_rating_votes'.$where, $pars);
+        if ($num === false) return array_replace($out, ['code' => 'storage']);
+        $total = intval($num->fetchColumn());
+        $page = min($page, max(1, (int)ceil($total / $limit)));
+        $sql = 'SELECT id, scope, mid, actor, uid, value, request, created, annulled, aid, reason FROM '.PREFIX_DB.'_rating_votes'.$where;
+        $res = $this->db->getSqlQuery($sql.' ORDER BY id DESC LIMIT '.(($page - 1) * $limit).', '.$limit, $pars);
         if ($res === false) return array_replace($out, ['code' => 'storage']);
         foreach ($this->db->getSqlRows($res) ?: [] as $row) {
             $one = ['id' => 0, 'scope' => '', 'mid' => 0, 'actor' => '', 'uid' => 0, 'value' => 0, 'request' => '', 'created' => '', 'annulled' => null, 'aid' => 0,
                 'reason' => ''];
             foreach ($one as $key => $void) $one[$key] = is_int($void) ? intval($row[$key]) : $row[$key];
             $out['rows'][] = $one;
-            $out['next'] = $one['id'];
         }
-        return array_replace($out, ['ok' => true, 'code' => 'ok']);
+        return array_replace($out, ['ok' => true, 'code' => 'ok', 'total' => $total, 'page' => $page]);
     }
 }

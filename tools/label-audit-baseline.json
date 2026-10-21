@@ -1,8 +1,8 @@
 {
-  "generated": "2026-10-19T10:20:28Z",
+  "generated": "2026-10-21T11:22:03Z",
   "_": "What the label crawl finds today, so a run fails on what it finds tomorrow. Each key is kind|route|id-or-selector and each value how often it was seen. Every entry is a defect a plan names; the file shrinks and never grows. Coverage is judged apart from it: a route that stopped rendering hides violations rather than fixing them.",
   "coverage": {
-    "pages": 432,
+    "pages": 434,
     "routes": [
       "admin:account:",
       "admin:account:add",
@@ -10,7 +10,7 @@
       "admin:account:config",
       "admin:account:info",
       "admin:account:newuser",
-      "admin:account:oauthlist#rec",
+      "admin:account:oauthlist",
       "admin:admins:",
       "admin:admins:add",
       "admin:admins:add#rec",
@@ -186,6 +186,8 @@
       "admin:search:info",
       "admin:security:",
       "admin:security:banlist",
+      "admin:security:banlist?kind=ip",
+      "admin:security:banlist?kind=user",
       "admin:security:config",
       "admin:security:info",
       "admin:sitemap:",
@@ -439,7 +441,6 @@
     ],
     "records": [
       "admin:account:add#rec",
-      "admin:account:oauthlist#rec",
       "admin:admins:add#rec",
       "admin:blocks:edit#rec",
       "admin:categories:edit#rec",

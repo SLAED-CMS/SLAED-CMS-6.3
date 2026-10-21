@@ -86,112 +86,104 @@ function getSqlsum(array $items, string $mode, string $name): string {
     return $tpl->getHtmlFrag('alert', ['messages' => $lines]);
 }
 
-# List every table of the site database with engine, collation, rows, size and free space; the optimize and repair tabs run that action on each table instead of the actions menu
-# InnoDB free space is shown dimmed because optimizing does not reclaim it, and after an optimize run the totals of the info box are counted again from a fresh table status
-function database(): void {
-    global $db, $conf, $afile, $tpl;
-    $type = getVar('get', 'type', 'var');
-    $ops = ['name=database', 'name=database&type=optimize', 'name=database&type=repair', 'name=database&op=dump', 'name=database&op=info'];
-    $tabs = [_HOME, _OPTIMIZE, _REPAIR, _INQUIRY, _MANUAL];
-    $headtag = ($type === 'optimize' || $type === 'repair') ? _STATUS : _FUNCTIONS;
+# List every table of the database with its size and free space; a post runs optimize or repair and redirects to its tab, which shows the result per table once
+function database(string $run = ''): void {
+    global $db, $conf, $tpl, $afile;
+    $type = ($run !== '') ? $run : getVar('get', 'type', 'var');
+    $type = in_array($type, ['optimize', 'repair'], true) ? $type : '';
     $dbname = preg_replace('#[^a-zA-Z0-9_]#', '', (string)($conf['db']['name'] ?? ''));
+    $keep = $conf['admin_c'].'-dbrun';
+    if ($run !== '') {
+        $warn = !checkAdminPost('database') || $dbname === '';
+        $marks = [];
+        $result = $warn ? false : $db->getSqlQuery('SHOW TABLE STATUS FROM `'.$dbname.'`');
+        while ($result && $info = $db->getSqlRow($result)) {
+            $name = (string)$info['Name'];
+            if (!preg_match('#^[a-zA-Z0-9_]+$#', $name)) continue;
+            if ($run === 'repair' && $info['Engine'] === 'InnoDB') {
+                $marks[$name] = 'none';
+                continue;
+            }
+            if ($run === 'optimize') $db->getSqlQuery('ANALYZE TABLE `'.$dbname.'`.`'.$name.'`');
+            $res = $db->getSqlQuery(strtoupper($run).' TABLE `'.$dbname.'`.`'.$name.'`');
+            $marks[$name] = !$res ? 'fail' : (($run === 'optimize' && $info['Engine'] === 'MyISAM' && !$info['Data_free']) ? 'same' : 'done');
+        }
+        if ($run === 'optimize' && $marks) $db->getSqlQuery('FLUSH TABLES');
+        if (!$warn) $_SESSION[$keep] = $marks;
+        setRedirect($afile.'.php?name=database&type='.$run, false, 302, $warn ? _TOKENMISS : _SUCCSAVE, $warn);
+    }
+    $marks = ($type !== '') ? (array)($_SESSION[$keep] ?? []) : [];
+    if ($type !== '') unset($_SESSION[$keep]);
+    $words = ['done' => [($type === 'repair') ? _OK : _OPTIMIZED, 'is_success'], 'same' => [_ALREADYOPTIMIZED, 'is_danger'], 'fail' => [_ERROR, 'is_danger'],
+        'none' => [_NO, 'is_dimmed']];
+    $ops = ['name=database', 'name=database&type=optimize', 'name=database&type=repair', 'name=database&op=dump', 'name=database&op=info'];
+    $head = getTplAdminTabs(['ops' => $ops, 'tabs' => [_HOME, _OPTIMIZE, _REPAIR, _INQUIRY, _MANUAL], 'tab' => ['' => 0, 'optimize' => 1, 'repair' => 2][$type],
+        'part' => [0, 1, 2]]);
     if ($dbname === '') {
         setHead();
-        $cont = getTplAdminTabs(['ops' => $ops, 'tabs' => $tabs]);
-        echo $cont.$tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _ERROR]);
+        echo getTplAdminList(['head_html' => $head, 'none_text' => _ERROR]);
         setFoot();
         return;
     }
     $result = $db->getSqlQuery('SHOW TABLE STATUS FROM `'.$dbname.'`');
     $tables = [];
-    while ($info = $db->getSqlRow($result)) {
-        $tables[] = $info;
-    }
+    while ($info = $db->getSqlRow($result)) $tables[] = $info;
     $total = 0;
     $sumfree = 0;
     $allrows = 0;
-    $item = 0;
-    $dbrows = [];
+    $rows = [];
     foreach ($tables as $info) {
         $name = $info['Name'];
+        if (!preg_match('#^[a-zA-Z0-9_]+$#', (string)$name)) continue;
         $tabeng = $info['Engine'];
         $tabloc = $info['Collation'];
-        $crtime = $info['Create_time'];
-        $rows = (int) $info['Rows'];
+        $num = (int)$info['Rows'];
         $res = $db->getSqlQuery('SELECT COUNT(*) AS cnt FROM `'.$dbname.'`.`'.$name.'`');
-        if ($res && $row = $db->getSqlRow($res)) $rows = (int) $row['cnt'];
-        $allrows += $rows;
-        $tabsize = (int) $info['Data_length'] + (int) $info['Index_length'];
-        $tabfree = (int) ($info['Data_free'] ?: 0);
+        if ($res && $row = $db->getSqlRow($res)) $num = (int)$row['cnt'];
+        $allrows += $num;
+        $tabsize = (int)$info['Data_length'] + (int)$info['Index_length'];
+        $tabfree = (int)($info['Data_free'] ?: 0);
         $total += $tabsize;
         $sumfree += $tabfree;
         $freetag = $tabeng === 'InnoDB'
             ? $tpl->getHtmlFrag('inline-badge', ['is_dimmed' => true, 'label' => filterSize($tabfree)])
             : $tpl->getHtmlFrag('inline-badge', ['is_danger' => (bool)$tabfree, 'is_success' => !$tabfree, 'label' => filterSize($tabfree)]);
-        if (!preg_match('#^[a-zA-Z0-9_]+$#', (string)$name)) {
-            continue;
+        $mark = $words[$marks[$name] ?? ''] ?? [];
+        $stattag = $mark ? $tpl->getHtmlFrag('inline-badge', [$mark[1] => true, 'label' => $mark[0]]) : '';
+        if ($type === '') {
+            $stattag = $tpl->getHtmlFrag('dial', ['dial_title' => _EDITOR, 'dial' => [
+                getTplPostAction(['name' => 'database', 'op' => 'delete', 'tb' => $name, 'id' => 1], 'eraser', _CLEAN, _CLEAN.' "'.$name.'"?'),
+                getTplPostAction(['name' => 'database', 'op' => 'delete', 'tb' => $name, 'id' => 2], 'trash', _ONDELETE, _DELETE.' "'.$name.'"?'),
+            ]]);
         }
-        if ($type === 'optimize') {
-            $db->getSqlQuery('ANALYZE TABLE `'.$dbname.'`.`'.$name.'`');
-            $oresult = $db->getSqlQuery('OPTIMIZE TABLE `'.$dbname.'`.`'.$name.'`');
-            if (!$oresult) {
-                $stattag = $tpl->getHtmlFrag('inline-badge', ['is_danger' => true, 'label' => _ERROR]);
-            } elseif ($tabeng === 'InnoDB') {
-                $stattag = $tpl->getHtmlFrag('inline-badge', ['is_success' => true, 'label' => _OPTIMIZED]);
-            } elseif ($tabeng === 'MyISAM' && !$info['Data_free']) {
-                $stattag = $tpl->getHtmlFrag('inline-badge', ['is_danger' => true, 'label' => _ALREADYOPTIMIZED]);
-            } else {
-                $stattag = $tpl->getHtmlFrag('inline-badge', ['is_success' => true, 'label' => _OPTIMIZED]);
-            }
-        } elseif ($type === 'repair') {
-            if ($tabeng === 'InnoDB') {
-                $stattag = $tpl->getHtmlFrag('inline-badge', ['is_dimmed' => true, 'label' => _NO]);
-            } else {
-                $rresult = $db->getSqlQuery('REPAIR TABLE `'.$dbname.'`.`'.$name.'`');
-                $stattag = $tpl->getHtmlFrag('inline-badge', ['is_success' => (bool)$rresult, 'is_danger' => !$rresult, 'label' => $rresult ? _OK : _ERROR]);
-            }
-        } else {
-            $stattag = $tpl->getHtmlFrag('dial', [
-                'dial_title' => _EDITOR,
-                'dial' => [
-                    getTplPostAction(['name' => 'database', 'op' => 'delete', 'tb' => $name, 'id' => 1], 'eraser', _CLEAN, _CLEAN.' "'.$name.'"?'),
-                    getTplPostAction(['name' => 'database', 'op' => 'delete', 'tb' => $name, 'id' => 2], 'trash', _ONDELETE, _DELETE.' "'.$name.'"?'),
-                ],
-            ]);
-        }
-        $item++;
-        $dbrows[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
-            'cells' => [
-                ['is_col_id' => true, 'content_html' => (string)$item],
-                ['title_text' => $name, 'has_content_text' => true, 'content_text' => $name],
-                ['has_content_text' => true, 'content_text' => $tabeng],
-                ['title_text' => $tabloc, 'has_content_text' => true, 'content_text' => $tabloc],
-                ['is_col_count' => true, 'has_content_text' => true, 'content_text' => (string)$rows],
-                ['is_col_date' => true, 'has_content_text' => true, 'content_text' => format_time($crtime, _TIMESTRING)],
-                ['is_col_count' => true, 'has_content_text' => true, 'content_text' => filterSize($tabsize)],
-                ['is_col_count' => true, 'content_html' => $freetag],
-                ['is_col_actions' => true, 'content_html' => $stattag],
-            ],
-        ])]);
+        $rows[] = ['name' => $name, 'cells' => [
+            ['is_col_id' => true, 'has_content_text' => true, 'content_text' => count($rows) + 1],
+            ['title_text' => $name, 'has_content_text' => true, 'content_text' => $name],
+            ['has_content_text' => true, 'content_text' => $tabeng],
+            ['title_text' => $tabloc, 'has_content_text' => true, 'content_text' => $tabloc],
+            ['is_col_count' => true, 'has_content_text' => true, 'content_text' => $num],
+            ['is_col_date' => true, 'has_content_text' => true, 'content_text' => format_time($info['Create_time'], _TIMESTRING)],
+            ['is_col_count' => true, 'has_content_text' => true, 'content_text' => filterSize($tabsize)],
+            ['is_col_count' => true, 'content_html' => $freetag],
+            ['is_col_actions' => true, 'content_html' => $stattag],
+        ]];
     }
-    $dbrows[] = $tpl->getHtmlFrag('table-row', [
-        'is_no_sort' => true,
-        'cells_html' => $tpl->getHtmlFrag('table-cells', [
-            'is_summary' => true,
-            'cells' => [
-                ['is_col_id' => true, 'content_html' => $tpl->getHtmlFrag('span', ['is_bold' => true, 'text' => (string)$item])],
-                ['has_content_text' => true, 'content_text' => ''],
-                ['has_content_text' => true, 'content_text' => ''],
-                ['has_content_text' => true, 'content_text' => ''],
-                ['is_col_count' => true, 'content_html' => $tpl->getHtmlFrag('span', ['is_bold' => true, 'text' => (string)$allrows])],
-                ['is_col_date' => true, 'has_content_text' => true, 'content_text' => ''],
-                ['is_col_count' => true, 'content_html' => $tpl->getHtmlFrag('span', ['is_bold' => true, 'text' => filterSize($total)])],
-                ['is_col_count' => true, 'content_html' => $tpl->getHtmlFrag('span', ['is_bold' => true, 'text' => filterSize($sumfree)])],
-                ['is_col_actions' => true, 'has_content_text' => true, 'content_text' => ''],
-            ],
-        ]),
-    ]);
-    $content = $tpl->getHtmlFrag('table', [
+    $sums = $tpl->getHtmlFrag('alert', ['messages' => [
+        (['' => _DATABASE, 'optimize' => _OPTIMIZE, 'repair' => _REPAIR][$type]).': '.$conf['db']['name'],
+        _ROWS.': '.$allrows,
+        _TOTALSPACE.': '.filterSize($total),
+        _TOTALFREE.': '.filterSize($sumfree),
+    ]]);
+    $note = match ($type) {
+        'optimize' => $tpl->getHtmlFrag('alert', ['is_warn' => true,
+            'text' => _OPTTEXT.' '.getTplPostButton(['name' => 'database', 'op' => 'optimize'], 'speedometer2', _OPTIMIZE)]),
+        'repair' => $tpl->getHtmlFrag('alert', ['text' => _REPTEXT.' '.getTplPostButton(['name' => 'database', 'op' => 'repair'], 'wrench', _REPAIR)]),
+        default => $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _OPTTEXT]).$tpl->getHtmlFrag('alert', ['text' => _REPTEXT]),
+    };
+    setHead();
+    echo getTplAdminList([
+        'head_html' => $head,
+        'note_html' => $note.$sums,
         'head' => [
             ['content' => _ID, 'is_col_id' => true],
             ['content' => _TABLE],
@@ -201,46 +193,11 @@ function database(): void {
             ['content' => _DATE, 'is_col_date' => true],
             ['content' => _SIZE, 'is_col_count' => true],
             ['content' => _DBFREE, 'is_col_count' => true, 'nosort' => true],
-            ['content' => $headtag, 'is_col_actions' => true, 'nosort' => true],
+            ['content' => ($type !== '') ? _STATUS : _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true],
         ],
-        'rows_html' => implode('', $dbrows),
-        'is_wrapless' => true,
+        'rows' => $rows,
+        'count' => count($rows),
     ]);
-    if ($type === 'optimize') {
-        $result = $db->getSqlQuery('SHOW TABLE STATUS FROM `'.$dbname.'`');
-        $total = 0;
-        $sumfree = 0;
-        while ($info = $db->getSqlRow($result)) {
-            $tabsize = (int) $info['Data_length'] + (int) $info['Index_length'];
-            $tabfree = (int) ($info['Data_free'] ?: 0);
-            $total += $tabsize;
-            $sumfree += $tabfree;
-        }
-    }
-    setHead();
-    if (empty($type)) {
-        $cont = getTplAdminTabs(['ops' => $ops, 'tabs' => $tabs]);
-        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _OPTTEXT]);
-        $cont .= $tpl->getHtmlFrag('alert', ['text' => _REPTEXT]);
-    } elseif ($type === 'optimize') {
-        $db->getSqlQuery('FLUSH TABLES');
-        $cont = getTplAdminTabs(['ops' => $ops, 'tabs' => $tabs, 'tab' => 1]);
-        $cont .= $tpl->getHtmlFrag('alert', ['messages' => [
-            _OPTIMIZE.': '.$conf['db']['name'],
-            _TOTALSPACE.': '.filterSize($total),
-            _TOTALFREE.': '.filterSize($sumfree),
-        ]]);
-    } elseif ($type === 'repair') {
-        $cont = getTplAdminTabs(['ops' => $ops, 'tabs' => $tabs, 'tab' => 2]);
-        $cont .= $tpl->getHtmlFrag('alert', ['messages' => [
-            _REPAIR.': '.$conf['db']['name'],
-            _TOTALSPACE.': '.filterSize($total),
-            _TOTALFREE.': '.filterSize($sumfree),
-        ]]);
-    } else {
-        $cont = getTplAdminTabs(['ops' => $ops, 'tabs' => $tabs]);
-    }
-    echo $cont.$tpl->getHtmlPart('box', ['content_html' => $content]);
     setFoot();
 }
 
@@ -359,6 +316,8 @@ function delete(): void {
 
 switch ($op) {
     default: database(); break;
+    case 'optimize': database('optimize'); break;
+    case 'repair': database('repair'); break;
     case 'dump': dump(); break;
     case 'delete': delete(); break;
     case 'info': info(); break;

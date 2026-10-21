@@ -254,7 +254,7 @@ function getTplPager(array $data = []): string {
     return getTplPagerView($num, $pages, $maxpg, $target, ['count' => $cnt, 'limit' => $limit, 'page' => $limit]);
 }
 
-# Render one full admin module header with title, icon and tabs, the action log for a super-admin; the title and a later open tab name the browser tab
+# Render one full admin module header with title, icon, tabs and a settings find, the action log for a super-admin; the title and a later open tab name the browser tab
 function getTplAdminTabs(array $data = []): string {
     global $afile, $conf, $tpl, $adminvars;
     $title = _ADMINMENU;
@@ -301,6 +301,7 @@ function getTplAdminTabs(array $data = []): string {
         ]);
     }
     return $tpl->getHtmlPart('module-head', [
+        'find' => (string)($data['find'] ?? ''),
         'flash_html' => getFlashHtml(),
         'icon' => $icon,
         'is_runtime' => !empty($data['is_runtime']),
@@ -313,7 +314,7 @@ function getTplAdminTabs(array $data = []): string {
     ]);
 }
 
-# Render one panel list of the canon in place, its rows from cells named by their column for a phone and its bulk row from data; rows_html serves the rest
+# Render one panel list of the canon in place, its rows from cells named by their column for a phone, its bulk row from data and a form under it; rows_html serves the rest
 function getTplAdminList(array $data): string {
     global $tpl;
     $href = (string)($data['href'] ?? '');
@@ -364,6 +365,7 @@ function getTplAdminList(array $data): string {
         'views' => $views,
         'none_text' => $none,
         'is_calm' => !empty($data['is_calm']),
+        'foot_html' => (string)($data['foot_html'] ?? ''),
         'said' => ($rows !== '') ? $said._OVERALL.' '.$count : $none,
     ]);
 }
@@ -1395,10 +1397,10 @@ function getCategoryModules(): array {
 }
 
 # Render a select with category-enabled modules
-function getTplCategoryModule(string $name, string $clas = '', string $sel = '', bool $auto = false, bool $all = false): string {
+function getTplCategoryModule(string $name, string $clas = '', string $sel = '', bool $auto = false): string {
     global $tpl;
     $attr = $auto ? 'OnChange="submit()"' : '';
-    $cont = $all ? $tpl->getHtmlFrag('select-option', ['value_attr' => '', 'label_text' => _ALLMODULES, 'is_selected' => $sel === '']) : '';
+    $cont = '';
     $mods = getCategoryModules();
     foreach ($mods as $mod) {
         $cont .= $tpl->getHtmlFrag('select-option', [

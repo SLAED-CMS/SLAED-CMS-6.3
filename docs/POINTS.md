@@ -405,7 +405,8 @@ Tab `_POINTS` of the groups screen, ops `points` and `pointssave`.
   50 rows per page. Filters: `uid`, `act` (one of the configured actions), `day` (`YYYY-MM-DD`). The page number is
   clamped to 1..100 and the total is counted by `SELECT COUNT(*) FROM (SELECT 1 ... LIMIT 5000)`, so the screen
   costs the same on a journal of any length; older rows are reached through the filters. Columns: id, date, user
-  and uid, action, scope / source, points, note.
+  and uid, action by its label, scope / source, points, note. The list canon `getTplAdminList()` draws it, the
+  filter in the module head and the rules form above the rows.
 
 ### Account form: `modules/account/admin/index.php`
 

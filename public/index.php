@@ -298,8 +298,6 @@ if (empty($go)) {
                 case 'updateAdminCategoryOrder': updateAdminCategoryOrder(); break;
                 case 'getAdminBlockList': getAdminBlockList(); break;
                 case 'updateAdminBlockOrder': updateAdminBlockOrder(); break;
-                case 'getAdminFavoriteList': getAdminFavoriteList(); break;
-                case 'getAdminPrivateList': getAdminPrivateList(); break;
                 case 'getUserSessionAdminInfo': getUserSessionAdminInfo(); break;
                 case 'getAdminQueueData': getAdminQueueData(); exit;
                 case 'getAdminFileList': getAdminFileList(); break;

@@ -790,6 +790,9 @@ return [
             'the panel table is one shape - a sortable list inside a card, optionally unwrapped - and the site table is nine, from a cart to an FAQ to an avatar '
             .'grid. The site also splits on an open flag so a looped row lands inside the tbody, which the panel has no producer for. The head is the same split '
             .'again: ready markup in the panel, a column list on the site',
+        'fragments/tabs-link.html' =>
+            'one link with one extra in the panel: a tab that opens a pane in place carries the dot of the form canon, which marks a pane holding '
+            .'unsaved changes; the site asks nothing before a form is left, so its tab has no dot to show and no constant to read it from',
         'fragments/textarea.html' =>
             'the same field split as the input: the site gives every textarea sl-field and marks the one the editor mounts on, the panel names the config row '
             .'instead. The site also lets the name be absent, because an editor area posts through the control it is mounted in',

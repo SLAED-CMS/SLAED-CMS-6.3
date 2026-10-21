@@ -1,4 +1,4 @@
-<form action="{{ action_url }}" method="post" class="sl-div-form sl-rank-form" style="--sl-d-group: {{ color }}" data-sl-rank-form data-sl-rank-steps="{{ steps_json }}" data-sl-rank-leave="{{ leave_text }}" data-sl-rank-group="{{ title_group }}" data-sl-rank-none="{{ title_rank }}" data-sl-rank-blank="{{ group_title }}"{% if is_dirty %} data-sl-rank-dirty{% endif %}>
+<form action="{{ action_url }}" method="post" class="sl-div-form sl-rank-form" style="--sl-d-group: {{ color }}" data-sl-rank-form data-sl-rank-steps="{{ steps_json }}" data-sl-leave="{{ _ADM_LEAVE }}" data-sl-rank-group="{{ title_group }}" data-sl-rank-none="{{ title_rank }}" data-sl-rank-blank="{{ group_title }}" data-sl-dirty{% if is_dirty %}="1"{% endif %}>
   <input type="hidden" name="gid" value="{{ gid }}">
   <input type="hidden" name="name" value="groups">
   <input type="hidden" name="op" value="save">
@@ -90,7 +90,7 @@
       </div>
     </div>
     <div class="sl-div-actions">
-      <a class="sl-but" href="{{ list_url }}" data-sl-rank-cancel>{{ cancel_label }}</a>
+      <a class="sl-but" href="{{ list_url }}">{{ cancel_label }}</a>
       <button type="submit" class="sl-but-blue">{{ submit_label }}</button>
     </div>
   </div>

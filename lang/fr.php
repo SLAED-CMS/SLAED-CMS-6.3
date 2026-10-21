@@ -99,6 +99,8 @@ define('_CONTENT','Contenu');
 define('_COUNTRY','Pays');
 define('_C_12','Le nombre de publications sur la page de');
 define('_DATE','Date');
+define('_DATEFROM','Date du');
+define('_DATETO','Date au');
 define('_DATESTRING','d.m.Y');
 define('_DAYS','journée');
 define('_DEACT','Désactivé');
@@ -693,6 +695,7 @@ define('_UACESS',"La vérification de modérateur, les messages de l'utilisateur
 define('_UKRAINIAN','Ukrainien');
 define('_UNDO','Annuler');
 define('_UNLIMITED','Illimité');
+define('_EXPIRED','Expiré');
 define('_UPDATE','Mettre à jour');
 define('_UPDATED','Mis à jour');
 define('_URANK','Titre');

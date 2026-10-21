@@ -26,11 +26,12 @@ function getNodeAdminOps(): array {
     return $ops + ['info' => [_MANUAL, 'name=node&op=info']];
 }
 
-# The head of every screen of the module with the tab of the current operation marked
-function getNodeAdminTabs(string $cur): string {
+# The head of every screen of the module with the tab of the current operation marked, a list adding its filter and its live tabs
+function getNodeAdminTabs(string $cur, array $data = []): string {
     $ops = getNodeAdminOps();
     $tab = array_search($cur, array_keys($ops), true);
-    return getTplAdminTabs(['ops' => array_column($ops, 1), 'tabs' => array_column($ops, 0), 'tab' => ($tab === false) ? -1 : $tab]);
+    if (!empty($data['part'])) $data['part'] = array_keys(array_intersect(array_keys($ops), ['', 'types']));
+    return getTplAdminTabs(['ops' => array_column($ops, 1), 'tabs' => array_column($ops, 0), 'tab' => ($tab === false) ? -1 : $tab] + $data);
 }
 
 # Answer a refused request inside the panel with its status and a safe text, and where the refusal asks for it a link to the current record
@@ -205,10 +206,9 @@ function getNodeReportRows(NodeType $type, Node $node): string {
 }
 
 # The options of one select of the working card or of the queue filter: a choice for all where asked, then value => label with the picked one marked
-function getNodeSupportOpts(array $list, ?int $pick, string $all = ''): string {
-    global $tpl;
-    $out = ($all !== '') ? $tpl->getHtmlFrag('select-option', ['value_attr' => 'all', 'label_text' => $all, 'is_selected' => $pick === null]) : '';
-    foreach ($list as $key => $label) $out .= $tpl->getHtmlFrag('select-option', ['value_attr' => $key, 'label_text' => $label, 'is_selected' => $pick === $key]);
+function getNodeSupportOpts(array $list, ?int $pick, string $all = ''): array {
+    $out = ($all !== '') ? [['value_attr' => 'all', 'label_text' => $all, 'is_selected' => $pick === null]] : [];
+    foreach ($list as $key => $label) $out[] = ['value_attr' => (string)$key, 'label_text' => $label, 'is_selected' => $pick === $key];
     return $out;
 }
 
@@ -238,46 +238,55 @@ function setNodeSupportQueue(NodeType $type): void {
     $labs = getNodeSupportLabels();
     $who = getAdminNames('node-'.$type->name);
     setHead();
-    $cont = getNodeAdminTabs('');
-    $cont .= $tpl->getHtmlPart('div', ['is_searchbox' => true, 'content_html' => $tpl->getHtmlPart('form', [
+    $head = getNodeAdminTabs('', ['part' => true, 'subtitle_html' => $tpl->getHtmlFrag('list-filter', [
         'action_url' => $afile.'.php',
-        'method' => 'get',
-        'hidden' => [['name_attr' => 'name', 'value_attr' => 'node'], ['name_attr' => 'type', 'value_attr' => $type->name]],
-        'content_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'state', 'options_html' => getNodeSupportOpts($labs['state'], $state, _ALL), 'is_inline_gap' => true])
-            .$tpl->getHtmlFrag('select', ['name_attr' => 'prio', 'options_html' => getNodeSupportOpts($labs['prio'], $prio, _ALL), 'is_inline_gap' => true])
-            .$tpl->getHtmlFrag('select', ['name_attr' => 'aid', 'options_html' => getNodeSupportOpts([0 => _NODE_NOBODY] + $who, $aid, _ALL), 'is_inline_gap' => true])
-            .$tpl->getHtmlFrag('button', ['submit_label' => _OK, 'button_type' => 'submit']),
+        'label' => _SEARCH,
+        'is_part' => true,
+        'hidden' => [['nameattr' => 'name', 'valueattr' => 'node'], ['nameattr' => 'type', 'valueattr' => $type->name]],
+        'fields' => [
+            ['field_id' => 'sl-node-state', 'label' => _NODE_STATE, 'name_attr' => 'state', 'options' => getNodeSupportOpts($labs['state'], $state, _ALL), 'is_now' => true],
+            ['field_id' => 'sl-node-prio', 'label' => _PRIORITY, 'name_attr' => 'prio', 'options' => getNodeSupportOpts($labs['prio'], $prio, _ALL), 'is_now' => true],
+            ['field_id' => 'sl-node-aid', 'label' => _NODE_ASSIGN, 'name_attr' => 'aid', 'options' => getNodeSupportOpts([0 => _NODE_NOBODY] + $who, $aid, _ALL), 'is_now' => true],
+        ],
     ])]);
-    $rows = '';
+    $rows = [];
     foreach ($data['nodes'] as $one) {
         $card = $data['ext'][$one->id];
         $dial = [['href' => $afile.'.php?name=node&op=support&id='.$one->id, 'icon_name' => 'kanban', 'title' => _NODE_CARD],
             ['href' => getSeoUrl(['name' => $type->name, 'op' => 'view', 'id' => $one->id, 'route' => null]), 'icon_name' => 'eye', 'title' => _MVIEW]];
-        $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', ['cells' => [
+        $rows[] = ['name' => cutstr($one->title, 60), 'cells' => [
             ['is_col_id' => true, 'has_content_text' => true, 'content_text' => $one->id],
             ['is_col_title' => true, 'is_truncate' => true, 'title_text' => $one->title, 'has_content_text' => true, 'content_text' => $one->title],
             ['is_col_author' => true, 'has_content_text' => true, 'content_text' => ($card['uname'] !== '') ? $card['uname'] : _ANONYM],
             ['has_content_text' => true, 'content_text' => $labs['state'][$card['state']] ?? ''],
             ['has_content_text' => true, 'content_text' => $labs['prio'][$card['prio']] ?? ''],
             ['is_truncate' => true, 'has_content_text' => true, 'content_text' => ($card['aname'] !== '') ? $card['aname'] : _NODE_NOBODY],
-            ['is_col_date' => true, 'has_content_text' => true, 'content_text' => format_time($card['activity'], _TIMESTRING)],
+            ['is_col_date' => true, 'stamp' => format_time($card['activity'], 'c'), 'content_text' => format_time($card['activity'], _TIMESTRING)],
             ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('dial', ['dial_title' => _FUNCTIONS, 'dial' => $dial])],
-        ]])]);
+        ]];
     }
-    if ($rows === '') {
-        $cont .= $tpl->getHtmlPart('box', ['title' => _NODE_QUEUE, 'content_html' => $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO])]);
-    } else {
-        $head = [['content' => _ID, 'is_col_id' => true], ['content' => _TITLE, 'is_col_title' => true, 'is_truncate' => true], ['content' => _POSTEDBY, 'is_col_author' => true],
-            ['content' => _NODE_STATE], ['content' => _PRIORITY], ['content' => _NODE_ASSIGN, 'is_truncate' => true], ['content' => _LASTACTIVITY, 'is_col_date' => true],
-            ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true]];
-        $keep = ['state' => ($state === null) ? 'all' : $state, 'aid' => ($aid === null) ? 'all' : $aid, 'prio' => ($prio === null) ? 'all' : $prio];
-        $link = static fn(int $i): array => ['href' => $afile.'.php?name=node&type='.$type->name.'&'.http_build_query($keep).'&num='.$i];
-        $pages = max(1, (int)ceil($data['count'] / $lim));
-        $body = $tpl->getHtmlFrag('table', ['is_wrapless' => true, 'is_fixed' => true, 'head' => $head, 'rows_html' => $rows])
-            .getTplPagerView($num, $pages, 8, $link, ['count' => $data['count'], 'limit' => $lim]);
-        $cont .= $tpl->getHtmlPart('box', ['title' => _NODE_QUEUE, 'content_html' => $body]);
-    }
-    echo $cont;
+    $keep = ['state' => ($state === null) ? 'all' : $state, 'aid' => ($aid === null) ? 'all' : $aid, 'prio' => ($prio === null) ? 'all' : $prio];
+    echo getTplAdminList([
+        'head_html' => $head,
+        'is_fixed' => true,
+        'key' => 'node-queue',
+        'head' => [
+            ['content' => _ID, 'is_col_id' => true],
+            ['content' => _TITLE, 'is_col_title' => true, 'is_truncate' => true],
+            ['content' => _POSTEDBY, 'is_col_author' => true],
+            ['content' => _NODE_STATE],
+            ['content' => _PRIORITY],
+            ['content' => _NODE_ASSIGN, 'is_truncate' => true],
+            ['content' => _LASTACTIVITY, 'is_col_date' => true],
+            ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true],
+        ],
+        'rows' => $rows,
+        'href' => $afile.'.php?name=node&type='.$type->name.'&'.http_build_query($keep).'&',
+        'page' => $num,
+        'pages' => max(1, (int)ceil($data['count'] / $lim)),
+        'count' => $data['count'],
+        'limit' => $lim,
+    ]);
     setFoot();
 }
 
@@ -295,67 +304,76 @@ function show(): void {
     $state = ($raw === '') ? NodeStatus::Published : (ctype_digit($raw) ? NodeStatus::tryFrom((int)$raw) : null);
     if ($state === null) setNodeAdminFault(400, _NODE_INVALID);
     $num = max(1, getVar('get', 'num', 'num', 1));
+    $topts = [['value_attr' => '', 'label_text' => _ALL, 'is_selected' => $name === '']];
+    foreach ($types as $key => $one) $topts[] = ['value_attr' => $key, 'label_text' => getModuleName($key), 'is_selected' => $key === $name];
+    $sopts = [];
+    foreach (NodeStatus::cases() as $one) $sopts[] = ['value_attr' => (string)$one->value, 'label_text' => getNodeStateLabel($one), 'is_selected' => $one === $state];
     setHead();
-    $cont = getNodeAdminTabs('');
-    $topts = $tpl->getHtmlFrag('select-option', ['value_attr' => '', 'label_text' => _ALL, 'is_selected' => $name === '']);
-    foreach ($types as $key => $one) $topts .= $tpl->getHtmlFrag('select-option', ['value_attr' => $key, 'label_text' => getModuleName($key), 'is_selected' => $key === $name]);
-    $sopts = '';
-    foreach (NodeStatus::cases() as $one) $sopts .= $tpl->getHtmlFrag('select-option', ['value_attr' => $one->value, 'label_text' => getNodeStateLabel($one),
-        'is_selected' => $one === $state]);
-    $cont .= $tpl->getHtmlPart('div', ['is_searchbox' => true, 'content_html' => $tpl->getHtmlPart('form', [
-        'action_url' => $afile.'.php',
-        'method' => 'get',
-        'hidden' => [['name_attr' => 'name', 'value_attr' => 'node']],
-        'content_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'type', 'options_html' => $topts, 'is_inline_gap' => true])
-            .$tpl->getHtmlFrag('select', ['name_attr' => 'status', 'options_html' => $sopts, 'is_inline_gap' => true])
-            .$tpl->getHtmlFrag('button', ['submit_label' => _OK, 'button_type' => 'submit']),
-    ])]);
-    if (!$types) {
-        $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NODE_NOTYPES])]);
-        echo $cont;
-        setFoot();
-        return;
+    $head = getNodeAdminTabs('', ['part' => true, 'subtitle_html' => $types ? $tpl->getHtmlFrag('list-filter', [
+            'action_url' => $afile.'.php',
+            'label' => _SEARCH,
+            'is_part' => true,
+            'hidden' => [['nameattr' => 'name', 'valueattr' => 'node']],
+            'fields' => [
+                ['field_id' => 'sl-node-type', 'label' => _TYPE, 'name_attr' => 'type', 'options' => $topts, 'is_now' => true],
+                ['field_id' => 'sl-node-state', 'label' => _STATUS, 'name_attr' => 'status', 'options' => $sopts, 'is_now' => true],
+            ],
+        ]) : '']);
+    $rows = [];
+    $count = 0;
+    $lim = 1;
+    if ($types) {
+        $pick = ($name !== '') ? [$types[$name]] : array_values($types);
+        $lim = min(array_map(fn(NodeType $v): int => $v->settings['list']['limit'], $pick));
+        $query = getNodeReader((count($pick) === 1) ? $pick[0] : null);
+        if (count($pick) === 1) $query->setNodeType($pick[0]);
+        else $query->setNodeTypes($pick);
+        $query->setNodeStatus($state)->setNodeSets(false)->setNodePage($num, $lim);
+        $count = $query->getNodeCount();
+        $num = min($num, max(1, (int)ceil($count / $lim)));
+        $query->setNodePage($num, $lim);
+        $tmap = [];
+        foreach ($types as $one) $tmap[$one->id] = $one;
+        foreach ($count ? $query->getNodeList() : [] as $node) {
+            $type = $tmap[$node->tid];
+            $dial = [['href' => getSeoUrl(['name' => $type->name, 'op' => 'view', 'id' => $node->id, 'route' => $node->path]), 'icon_name' => 'eye', 'title' => _MVIEW]];
+            foreach (getNodeModerDial($type, $node) as $one) $dial[] = isset($one['form_id']) ? $one + ['later' => 'gone move'] : $one;
+            $dial[] = getTplPostAction(['name' => 'node', 'op' => 'delete', 'id' => $node->id, 'type' => $type->name, 'version' => $node->version], 'x-octagon', _DELETE)
+                + ['later' => 'gone del'];
+            $who = ($node->uid > 0) ? (string)$node->uname : (($node->aname !== '') ? $node->aname : _ANONYM);
+            $rows[] = ['name' => cutstr($node->title, 60), 'cells' => [
+                ['is_col_id' => true, 'has_content_text' => true, 'content_text' => $node->id],
+                ['is_col_title' => true, 'is_truncate' => true, 'title_text' => $node->title, 'has_content_text' => true, 'content_text' => $node->title],
+                ['is_truncate' => true, 'has_content_text' => true, 'content_text' => getModuleName($type->name)],
+                ['has_content_text' => true, 'content_text' => getNodeStateLabel($node->status)],
+                ['is_col_date' => true, 'stamp' => ($node->pubdate !== null) ? format_time($node->pubdate, 'c') : '', 'has_content_text' => true,
+                    'content_text' => ($node->pubdate !== null) ? format_time($node->pubdate, _TIMESTRING) : ''],
+                ['is_col_author' => true, 'has_content_text' => true, 'content_text' => $who],
+                ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('dial', ['dial_title' => _FUNCTIONS, 'dial' => $dial])],
+            ]];
+        }
     }
-    $pick = ($name !== '') ? [$types[$name]] : array_values($types);
-    $lim = min(array_map(fn(NodeType $v): int => $v->settings['list']['limit'], $pick));
-    $query = getNodeReader((count($pick) === 1) ? $pick[0] : null);
-    if (count($pick) === 1) $query->setNodeType($pick[0]);
-    else $query->setNodeTypes($pick);
-    $query->setNodeStatus($state)->setNodeSets(false)->setNodePage($num, $lim);
-    $count = $query->getNodeCount();
-    $pages = max(1, (int)ceil($count / $lim));
-    $rows = '';
-    $tmap = [];
-    foreach ($types as $one) $tmap[$one->id] = $one;
-    foreach ($count ? $query->getNodeList() : [] as $node) {
-        $type = $tmap[$node->tid];
-        $dial = [['href' => getSeoUrl(['name' => $type->name, 'op' => 'view', 'id' => $node->id, 'route' => $node->path]), 'icon_name' => 'eye', 'title' => _MVIEW],
-            ...getNodeModerDial($type, $node)];
-        $dial[] =getTplPostAction(['name' => 'node', 'op' => 'delete', 'id' => $node->id, 'type' => $type->name, 'version' => $node->version], 'x-octagon', _DELETE,
-            _DELETE.' "'.$node->title.'"?');
-        $who = ($node->uid > 0) ? (string)$node->uname : (($node->aname !== '') ? $node->aname : _ANONYM);
-        $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', ['cells' => [
-            ['is_col_id' => true, 'has_content_text' => true, 'content_text' => $node->id],
-            ['is_col_title' => true, 'is_truncate' => true, 'title_text' => $node->title, 'has_content_text' => true, 'content_text' => $node->title],
-            ['is_truncate' => true, 'has_content_text' => true, 'content_text' => getModuleName($type->name)],
-            ['has_content_text' => true, 'content_text' => getNodeStateLabel($node->status)],
-            ['is_col_date' => true, 'has_content_text' => true, 'content_text' => ($node->pubdate !== null) ? format_time($node->pubdate, _TIMESTRING) : ''],
-            ['is_col_author' => true, 'has_content_text' => true, 'content_text' => $who],
-            ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('dial', ['dial_title' => _FUNCTIONS, 'dial' => $dial])],
-        ]])]);
-    }
-    if ($rows === '') {
-        $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO])]);
-    } else {
-        $head = [['content' => _ID, 'is_col_id' => true], ['content' => _TITLE, 'is_col_title' => true, 'is_truncate' => true], ['content' => _TYPE,
-            'is_truncate' => true], ['content' => _STATUS], ['content' => _DATE, 'is_col_date' => true], ['content' => _POSTEDBY, 'is_col_author' => true],
-            ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true]];
-        $link = static fn(int $i): array => ['href' => $afile.'.php?name=node'.(($name !== '') ? '&type='.$name : '').'&status='.$state->value.'&num='.$i];
-        $body = $tpl->getHtmlFrag('table', ['is_wrapless' => true, 'is_fixed' => true, 'head' => $head, 'rows_html' => $rows])
-            .getTplPagerView($num, $pages, 8, $link, ['count' => $count, 'limit' => $lim]);
-        $cont .= $tpl->getHtmlPart('box', ['content_html' => $body]);
-    }
-    echo $cont;
+    echo getTplAdminList([
+        'head_html' => $head,
+        'is_fixed' => true,
+        'key' => 'node',
+        'head' => [
+            ['content' => _ID, 'is_col_id' => true],
+            ['content' => _TITLE, 'is_col_title' => true, 'is_truncate' => true],
+            ['content' => _TYPE, 'is_truncate' => true],
+            ['content' => _STATUS],
+            ['content' => _DATE, 'is_col_date' => true],
+            ['content' => _POSTEDBY, 'is_col_author' => true],
+            ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true],
+        ],
+        'rows' => $rows,
+        'href' => $afile.'.php?name=node'.(($name !== '') ? '&type='.$name : '').'&status='.$state->value.'&',
+        'page' => $num,
+        'pages' => max(1, (int)ceil($count / $lim)),
+        'count' => $count,
+        'limit' => $lim,
+        'none_text' => $types ? _NO_INFO : _NODE_NOTYPES,
+    ]);
     setFoot();
 }
 
@@ -574,9 +592,13 @@ function types(): void {
     global $afile, $tpl;
     checkNodeMethod(['GET', 'HEAD']);
     checkNodeTypes('types');
+    try {
+        $gone = getNodeWriter()->getNodeRemains();
+    } catch (NodeException $err) {
+        setNodeAdminFault(getNodeStatus($err), getNodeTypeFault($err, ''), 'types');
+    }
     setHead();
-    $cont = getNodeAdminTabs('types');
-    $rows = '';
+    $rows = [];
     foreach (getNodeTypeMap() as $name => $type) {
         $base = ['name' => 'node', 'type' => $name, 'version' => $type->version];
         $dial = [['href' => $afile.'.php?name=node&op=type&type='.$name, 'icon_name' => 'pencil', 'title' => _FULLEDIT]];
@@ -585,48 +607,50 @@ function types(): void {
         $dial[] = ['href' => $afile.'.php?name=fields', 'icon_name' => 'plus-square-dotted', 'title' => _NODE_FIELDS];
         $dial[] = ['href' => $afile.'.php?name=node&op=clone&type='.$name, 'icon_name' => 'files', 'title' => _NODE_CLONE];
         $dial[] = ['href' => $afile.'.php?name=node&op=export&type='.$name, 'icon_name' => 'download', 'title' => _NODE_EXPORT];
-        $dial[] = getTplPostAction($base + ['op' => 'typestatus', 'active' => $type->active ? 0 : 1], 'power', $type->active ? _DEACTIVATE : _ACTIVATE);
         $dial[] = getTplPostAction($base + ['op' => 'typedelete'], 'x-octagon', _DELETE, _DELETE.' "'.$name.'"?');
-        $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', ['cells' => [
+        $rows[] = ['name' => getModuleName($name), 'cells' => [
             ['is_col_id' => true, 'has_content_text' => true, 'content_text' => $type->id],
             ['has_content_text' => true, 'content_text' => $name],
             ['is_col_title' => true, 'is_truncate' => true, 'has_content_text' => true, 'content_text' => getModuleName($name)],
             ['has_content_text' => true, 'content_text' => $type->settings['view']['mode']],
             ['has_content_text' => true, 'content_text' => $type->version],
-            ['is_col_status' => true, 'content_html' => ad_status('', $type->active ? '1' : '0')],
+            ['is_col_status' => true, 'stat' => getTplPostAction($base + ['op' => 'typestatus', 'active' => $type->active ? 0 : 1], 'power',
+                $type->active ? _DEACTIVATE : _ACTIVATE)
+                + ['is_on' => $type->active, 'label' => _STATUS.': '.getModuleName($name), 'later' => 'lamp active']],
             ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('dial', ['dial_title' => _FUNCTIONS, 'dial' => $dial])],
-        ]])]);
+        ]];
     }
-    if ($rows === '') {
-        $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NODE_NOTYPES])]);
-    } else {
-        $head = [['content' => _ID, 'is_col_id' => true], ['content' => _NODE_NAME], ['content' => _TITLE, 'is_col_title' => true, 'is_truncate' => true],
-            ['content' => _NODE_MODE], ['content' => _VERSION], ['content' => _STATUS, 'is_col_status' => true, 'nosort' => true],
-            ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true]];
-        $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('table', ['is_wrapless' => true, 'is_fixed' => true, 'head' => $head, 'rows_html' => $rows])]);
-    }
-    try {
-        $gone = getNodeWriter()->getNodeRemains();
-    } catch (NodeException $err) {
-        setNodeAdminFault(getNodeStatus($err), getNodeTypeFault($err, ''), 'types');
-    }
-    $rows = '';
+    $left = '';
     foreach ($gone as $name => $num) {
         $dial = [getTplPostAction(['name' => 'node', 'op' => 'remains', 'modul' => $name], 'x-octagon', _DELETE, _DELETE.' "'.$name.'"?')];
-        $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', ['cells' => [
+        $left .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', ['cells' => [
             ['is_col_title' => true, 'has_content_text' => true, 'content_text' => $name],
             ['has_content_text' => true, 'content_text' => $num['comments']],
             ['has_content_text' => true, 'content_text' => $num['favorites']],
             ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('dial', ['dial_title' => _FUNCTIONS, 'dial' => $dial])],
         ]])]);
     }
-    if ($rows !== '') {
-        $head = [['content' => _NODE_NAME, 'is_col_title' => true], ['content' => _COMMENTS], ['content' => _FAVORITES],
-            ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true]];
-        $cont .= $tpl->getHtmlPart('box', ['title' => _NODE_REMAINS, 'content_html' => $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NODE_REMHINT])
-            .$tpl->getHtmlFrag('table', ['is_wrapless' => true, 'is_fixed' => true, 'head' => $head, 'rows_html' => $rows])]);
-    }
-    echo $cont;
+    $note = ($left !== '') ? $tpl->getHtmlPart('box', ['title' => _NODE_REMAINS, 'content_html' => $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NODE_REMHINT])
+        .$tpl->getHtmlFrag('table', ['is_wrapless' => true, 'is_fixed' => true, 'disable_sort' => true, 'head' => [['content' => _NODE_NAME, 'is_col_title' => true],
+            ['content' => _COMMENTS], ['content' => _FAVORITES], ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true]], 'rows_html' => $left])]) : '';
+    echo getTplAdminList([
+        'head_html' => getNodeAdminTabs('types', ['part' => true]),
+        'note_html' => $note,
+        'is_fixed' => true,
+        'key' => 'node-types',
+        'head' => [
+            ['content' => _ID, 'is_col_id' => true],
+            ['content' => _NODE_NAME],
+            ['content' => _TITLE, 'is_col_title' => true, 'is_truncate' => true],
+            ['content' => _NODE_MODE],
+            ['content' => _VERSION],
+            ['content' => _STATUS, 'is_col_status' => true, 'nosort' => true],
+            ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true],
+        ],
+        'rows' => $rows,
+        'count' => count($rows),
+        'none_text' => _NODE_NOTYPES,
+    ]);
     setFoot();
 }
 
@@ -1196,11 +1220,11 @@ function support(): void {
     }
     $rows = [
         ['label_for' => 'f-aid', 'label_html' => _NODE_ASSIGN, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'aid', 'selectid' => 'f-aid',
-            'options_html' => getNodeSupportOpts([0 => _NODE_NOBODY] + getAdminNames('node-'.$type->name), $card['aid'])])],
+            'options' => getNodeSupportOpts([0 => _NODE_NOBODY] + getAdminNames('node-'.$type->name), $card['aid'])])],
         ['label_for' => 'f-state', 'label_html' => _NODE_STATE, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'state', 'selectid' => 'f-state',
-            'options_html' => getNodeSupportOpts($labs['state'], $card['state'])])],
+            'options' => getNodeSupportOpts($labs['state'], $card['state'])])],
         ['label_for' => 'f-prio', 'label_html' => _PRIORITY, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'prio', 'selectid' => 'f-prio',
-            'options_html' => getNodeSupportOpts($labs['prio'], $card['prio'])])],
+            'options' => getNodeSupportOpts($labs['prio'], $card['prio'])])],
         ['label_html' => _LASTACTIVITY, 'field_html' => htmlspecialchars(format_time($card['activity'], _TIMESTRING), ENT_QUOTES, 'UTF-8')],
     ];
     $hidden = [['name_attr' => 'name', 'value_attr' => 'node'], ['name_attr' => 'op', 'value_attr' => 'support'], ['name_attr' => 'id', 'value_attr' => $node->id],

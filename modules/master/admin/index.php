@@ -14,11 +14,12 @@ const MASTER_TABS = ['_MASTER_RELEASES', '_MASTER_SITES', '_STATISTIC', '_MASTER
 # Days without a check after which a site counts as silent on the tab of the sites
 const MASTER_QUIET = 7;
 
-# The header of the master with its tabs and the manual
-function getMasterHead(int $tab): string {
+# The header of the master with its tabs, the manual and the filter of a list; on a list the tabs of the three lists redraw in place
+function getMasterHead(int $tab, string $find = '', bool $part = false): string {
     $ops = array_map(static fn(int $i): string => 'name=master&tab='.$i, array_keys(MASTER_TABS));
     $tabs = array_map('constant', MASTER_TABS);
-    return getTplAdminTabs(['ops' => array_merge($ops, ['name=master&op=info']), 'tabs' => array_merge($tabs, [_MANUAL]), 'tab' => $tab]);
+    return getTplAdminTabs(['ops' => array_merge($ops, ['name=master&op=info']), 'tabs' => array_merge($tabs, [_MANUAL]), 'tab' => $tab,
+        'part' => $part ? [0, 1, 3] : [], 'subtitle_html' => $find]);
 }
 
 # A moment of the database as the panel prints it, or the dash of a moment never recorded
@@ -53,33 +54,31 @@ function master(): void {
     global $tpl;
     $tab = getVar('get', 'tab', 'num', 0);
     if ($tab < 0 || $tab >= count(MASTER_TABS)) $tab = 0;
-    setHead();
-    $cont = getMasterHead($tab);
+    $head = getMasterHead($tab, '', in_array($tab, [0, 3], true));
     $keys = getMasterKeys();
-    if ($keys['error'] !== '') $cont .= $tpl->getHtmlFrag('alert', ['type' => 'error', 'text' => sprintf(_MASTER_KEYERR, htmlspecialchars($keys['error'], ENT_QUOTES))]);
-    $cont .= match ($tab) {
-        1 => getMasterSites(),
-        2 => getMasterStats(),
-        3 => getMasterNoteList(),
-        4 => getMasterKeyList($keys),
-        5 => getMasterSettings(),
-        default => getMasterReleases(),
+    $note = ($keys['error'] !== '') ? $tpl->getHtmlFrag('alert', ['type' => 'error', 'text' => sprintf(_MASTER_KEYERR, htmlspecialchars($keys['error'], ENT_QUOTES))]) : '';
+    setHead();
+    echo match ($tab) {
+        0 => getMasterReleases($head, $note),
+        1 => getMasterSites($note),
+        3 => getMasterNoteList($head, $note),
+        2 => $head.$note.getMasterStats(),
+        4 => $head.$note.getMasterKeyList($keys),
+        default => $head.$note.getMasterSettings(),
     };
-    echo $cont;
     setFoot();
 }
 
-# The tab of releases: what waits in inbox/, then every accepted release with its state, share and the deadline of its served manifest
-function getMasterReleases(): string {
+# The tab of releases: what waits in inbox/ above, then every accepted release with its state, share and the deadline of its served manifest
+function getMasterReleases(string $head, string $note): string {
     global $afile, $db, $tpl;
-    $cont = '';
     $rows = [];
     foreach (getMasterInbox()['releases'] as $ver) {
         $act = getTplPostAction(['name' => 'master', 'op' => 'accept', 'ver' => $ver], 'box-arrow-in-down', _MASTER_ACCEPT, _MASTER_ACCEPT.' '.$ver.'?');
         $rows[] = [['content_text' => $ver], ['content_text' => 'inbox/'.$ver.'/'],
             ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('dial', ['dial_title' => _FUNCTIONS, 'dial' => [$act]])]];
     }
-    if ($rows) $cont .= getMasterTable([['content' => _VERSION], ['content' => _MASTER_INBOX, 'is_truncate' => true], ['content' => _FUNCTIONS, 'is_col_actions' => true,
+    if ($rows) $note .= getMasterTable([['content' => _VERSION], ['content' => _MASTER_INBOX, 'is_truncate' => true], ['content' => _FUNCTIONS, 'is_col_actions' => true,
         'nosort' => true]], $rows);
     $res = $db->getSqlQuery('SELECT ver, state, pauseby, pfail, pok, share, accepted, changed FROM '.PREFIX_DB.'_master_release');
     $list = $res ? ($db->getSqlRows($res) ?: []) : [];
@@ -103,24 +102,34 @@ function getMasterReleases(): string {
         if ($row['state'] !== 'stable') $acts[] = getTplPostAction($keys + ['state' => 'stable'], 'check2-circle', _MASTER_TOSTABLE);
         if ($served) $acts[] = getTplPostAction($keys + ['state' => 'pause'], 'pause-circle', _PAUSE, _PAUSE.' '.$ver.'?');
         $acts[] = ['href' => $afile.'.php?name=master&op=share&ver='.$ver, 'icon_name' => 'percent', 'title' => _MASTER_SHARE];
-        $rows[] = [['content_text' => $ver], ['is_truncate' => true, 'content_text' => $state], ['is_col_count' => true, 'content_text' => $row['share'].' %'],
-            ['is_col_date' => true, 'content_text' => getMasterTime($row['accepted'])], ['is_col_date' => true, 'content_text' => getMasterTime($row['changed'])],
-            ['is_col_date' => true, 'content_text' => $ends ? date(_TIMESTRING, $ends) : '-'],
-            ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('dial', ['dial_title' => _FUNCTIONS, 'dial' => $acts])]];
+        $rows[] = ['name' => $ver, 'cells' => [
+            ['has_content_text' => true, 'content_text' => $ver],
+            ['is_truncate' => true, 'has_content_text' => true, 'content_text' => $state],
+            ['is_col_count' => true, 'has_content_text' => true, 'content_text' => $row['share'].' %'],
+            ['is_col_date' => true, 'has_content_text' => true, 'content_text' => getMasterTime($row['accepted'])],
+            ['is_col_date' => true, 'has_content_text' => true, 'content_text' => getMasterTime($row['changed'])],
+            ['is_col_date' => true, 'has_content_text' => true, 'content_text' => $ends ? date(_TIMESTRING, $ends) : '-'],
+            ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('dial', ['dial_title' => _FUNCTIONS, 'dial' => $acts])],
+        ]];
     }
-    if ($warn) $cont = $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => $warn]).$cont;
-    if (!$rows) return $cont.$tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('alert', ['text' => _NO_INFO])]);
-    return $cont.getMasterTable([['content' => _VERSION], ['content' => _STATUS, 'is_truncate' => true], ['content' => _MASTER_SHARE, 'is_col_count' => true],
-        ['content' => _MASTER_ACCEPTED, 'is_col_date' => true], ['content' => _MASTER_CHANGED, 'is_col_date' => true], ['content' => _MASTER_EXPIRES, 'is_col_date' => true],
-        ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true]], $rows);
+    if ($warn) $note = $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => $warn]).$note;
+    return getTplAdminList([
+        'head_html' => $head,
+        'note_html' => $note,
+        'is_fixed' => true,
+        'head' => [['content' => _VERSION], ['content' => _STATUS, 'is_truncate' => true], ['content' => _MASTER_SHARE, 'is_col_count' => true],
+            ['content' => _MASTER_ACCEPTED, 'is_col_date' => true], ['content' => _MASTER_CHANGED, 'is_col_date' => true], ['content' => _MASTER_EXPIRES, 'is_col_date' => true],
+            ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true]],
+        'rows' => $rows,
+        'count' => count($rows),
+    ]);
 }
 
 # The tab of sites: a search by domain, the silent ones on request, a page of rows with the sid and the hint for a personal note
-function getMasterSites(): string {
+function getMasterSites(string $note): string {
     global $afile, $db, $tpl;
     $find = mb_substr(trim(getVar('get', 'q', 'text', '')), 0, 100);
     $quiet = getVar('get', 'quiet', 'num', 0) === 1;
-    $num = max(1, getVar('get', 'num', 'num', 1));
     $where = [];
     $args = [];
     if ($find !== '') {
@@ -131,6 +140,8 @@ function getMasterSites(): string {
     $cond = $where ? ' WHERE '.implode(' AND ', $where) : '';
     $res = $db->getSqlQuery('SELECT COUNT(*) FROM '.PREFIX_DB.'_master_site'.$cond, $args);
     $all = intval(($res ? $db->getSqlRow($res) : [0])[0] ?? 0);
+    $pages = max(1, (int)ceil($all / 50));
+    $num = min(max(1, getVar('get', 'num', 'num', 1)), $pages);
     $res = $db->getSqlQuery('SELECT sid, host, ver, chan, kseq, php, db, dbver, ext, ep, es, failver, failstep, failed, added, seen FROM '.PREFIX_DB.'_master_site'.$cond
         .' ORDER BY seen DESC LIMIT 50 OFFSET '.(($num - 1) * 50), $args);
     $rows = [];
@@ -142,25 +153,43 @@ function getMasterSites(): string {
         }
         $tips[] = ['label' => _MASTER_NOTES, 'has_value_text' => true, 'value_text' => 'php tools/release.php note --level info --sid '.$row['sid']];
         $ext = implode(', ', array_keys(array_filter(['sodium' => $row['ext'] & 1, 'zip' => $row['ext'] & 2, 'phar' => $row['ext'] & 4]))) ?: '-';
-        $rows[] = [['is_truncate' => true, 'title_text' => $row['host'], 'content_text' => ($row['host'] !== '') ? $row['host'] : _MASTER_NOHOST,
-            'prefix_html' => $tpl->getHtmlFrag('popover', ['items' => $tips])], ['content_text' => $row['ver']], ['content_text' => $row['chan']],
-            ['content_text' => $row['php']], ['content_text' => trim($row['db'].' '.$row['dbver'])], ['content_text' => $ext],
-            ['is_col_count' => true, 'content_text' => $row['ep'].' / '.$row['es']], ['is_col_date' => true, 'content_text' => getMasterTime($row['added'])],
-            ['is_col_date' => true, 'content_text' => getMasterTime($row['seen'])]];
+        $host = ($row['host'] !== '') ? $row['host'] : _MASTER_NOHOST;
+        $rows[] = ['name' => $host, 'cells' => [
+            ['is_truncate' => true, 'title_text' => $row['host'], 'has_content_text' => true, 'content_text' => $host,
+                'prefix_html' => $tpl->getHtmlFrag('popover', ['items' => $tips])],
+            ['has_content_text' => true, 'content_text' => $row['ver']], ['has_content_text' => true, 'content_text' => $row['chan']],
+            ['has_content_text' => true, 'content_text' => $row['php']], ['has_content_text' => true, 'content_text' => trim($row['db'].' '.$row['dbver'])],
+            ['has_content_text' => true, 'content_text' => $ext], ['is_col_count' => true, 'has_content_text' => true, 'content_text' => $row['ep'].' / '.$row['es']],
+            ['is_col_date' => true, 'has_content_text' => true, 'content_text' => getMasterTime($row['added'])],
+            ['is_col_date' => true, 'has_content_text' => true, 'content_text' => getMasterTime($row['seen'])],
+        ]];
     }
-    $form = $tpl->getHtmlPart('div', ['is_searchbox' => true, 'content_html' => $tpl->getHtmlPart('form', [
+    $form = $tpl->getHtmlFrag('list-filter', [
         'action_url' => $afile.'.php',
+        'label' => _SEARCH,
+        'is_part' => true,
         'hidden' => [['nameattr' => 'name', 'valueattr' => 'master'], ['nameattr' => 'tab', 'valueattr' => '1']],
-        'content_html' => $tpl->getHtmlFrag('input', ['itype' => 'search', 'name_attr' => 'q', 'value_attr' => $find, 'placeholder_text' => _MASTER_DOMAIN]).' '
-            .$tpl->getHtmlFrag('select', ['name_attr' => 'quiet', 'options_html' => $tpl->getHtmlFrag('select-option', ['value_attr' => '0', 'label_text' => _ALL,
-            'is_selected' => !$quiet]).$tpl->getHtmlFrag('select-option', ['value_attr' => '1', 'label_text' => sprintf(_MASTER_SILENT, MASTER_QUIET), 'is_selected' => $quiet])])
-            .' '.$tpl->getHtmlFrag('button', ['submit_label' => _SEARCH, 'button_type' => 'submit']),
-    ])]);
-    if (!$rows) return $form.$tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('alert', ['text' => _NO_INFO])]);
-    $url = 'name=master&tab=1&'.http_build_query(['q' => $find, 'quiet' => $quiet ? 1 : 0]).'&';
-    return $form.getMasterTable([['content' => _MASTER_DOMAIN, 'is_truncate' => true], ['content' => _VERSION], ['content' => _MASTER_CHAN], ['content' => 'PHP'],
-        ['content' => _DATABASE], ['content' => _MASTER_EXT], ['content' => _MASTER_ERRS, 'is_col_count' => true], ['content' => _MASTER_FIRST, 'is_col_date' => true],
-        ['content' => _MASTER_LAST, 'is_col_date' => true]], $rows).getTplPager(['count' => $all, 'limit' => 50, 'url' => $url]);
+        'fields' => [
+            ['field_id' => 'sl-master-q', 'label' => _MASTER_DOMAIN, 'name_attr' => 'q', 'itype' => 'search', 'value' => $find],
+            ['field_id' => 'sl-master-quiet', 'label' => _STATUS, 'name_attr' => 'quiet', 'options' => [['value_attr' => '0', 'label_text' => _ALL, 'is_selected' => !$quiet],
+                ['value_attr' => '1', 'label_text' => sprintf(_MASTER_SILENT, MASTER_QUIET), 'is_selected' => $quiet]]],
+        ],
+    ]);
+    return getTplAdminList([
+        'head_html' => getMasterHead(1, $form, true),
+        'key' => 'master-sites',
+        'note_html' => $note,
+        'is_fixed' => true,
+        'head' => [['content' => _MASTER_DOMAIN, 'is_truncate' => true], ['content' => _VERSION], ['content' => _MASTER_CHAN], ['content' => 'PHP'],
+            ['content' => _DATABASE], ['content' => _MASTER_EXT], ['content' => _MASTER_ERRS, 'is_col_count' => true], ['content' => _MASTER_FIRST, 'is_col_date' => true],
+            ['content' => _MASTER_LAST, 'is_col_date' => true]],
+        'rows' => $rows,
+        'href' => $afile.'.php?name=master&tab=1&'.http_build_query(['q' => $find, 'quiet' => $quiet ? 1 : 0]).'&',
+        'page' => $num,
+        'pages' => $pages,
+        'count' => $all,
+        'limit' => 50,
+    ]);
 }
 
 # The tab of statistics: the totals of one day by channel, version, PHP and database, and the failed installations by version and step from the sites
@@ -199,34 +228,52 @@ function getMasterStats(): string {
     return $cont;
 }
 
-# The tab of notes: what waits in inbox/notes/, then the accepted notes with their addressee, range, level and deadline
-function getMasterNoteList(): string {
-    global $db, $tpl;
-    $cont = '';
+# The tab of notes: what waits in inbox/notes/ above, then the accepted notes newest first with their addressee, range, level and deadline, fifty to a page
+function getMasterNoteList(string $head, string $note): string {
+    global $afile, $db, $tpl;
     $rows = [];
     foreach (getMasterInbox()['notes'] as $id) {
         $act = getTplPostAction(['name' => 'master', 'op' => 'noteadd', 'id' => $id], 'box-arrow-in-down', _MASTER_ACCEPT);
         $rows[] = [['is_col_id' => true, 'content_text' => $id], ['content_text' => 'inbox/notes/'.$id.'.json'],
             ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('dial', ['dial_title' => _FUNCTIONS, 'dial' => [$act]])]];
     }
-    if ($rows) $cont .= getMasterTable([['content' => _ID, 'is_col_id' => true], ['content' => _MASTER_INBOX, 'is_truncate' => true],
+    if ($rows) $note .= getMasterTable([['content' => _ID, 'is_col_id' => true], ['content' => _MASTER_INBOX, 'is_truncate' => true],
         ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true]], $rows);
-    $res = $db->getSqlQuery('SELECT id, sid, ver, level, until, active, body FROM '.PREFIX_DB.'_master_note ORDER BY id DESC LIMIT 200');
+    $res = $db->getSqlQuery('SELECT COUNT(*) FROM '.PREFIX_DB.'_master_note');
+    $all = intval(($res ? $db->getSqlRow($res) : [0])[0] ?? 0);
+    $pages = max(1, (int)ceil($all / 50));
+    $num = min(max(1, getVar('get', 'num', 'num', 1)), $pages);
+    $res = $db->getSqlQuery('SELECT id, sid, ver, level, until, active, body FROM '.PREFIX_DB.'_master_note ORDER BY id DESC LIMIT 50 OFFSET '.(($num - 1) * 50));
     $rows = [];
     foreach (($res ? ($db->getSqlRows($res) ?: []) : []) as $row) {
         $data = json_decode($row['body'], true);
-        $acts = $row['active'] ? [getTplPostAction(['name' => 'master', 'op' => 'noteoff', 'id' => $row['id']], 'x-circle', _DEACTIVATE, _DEACTIVATE.'?')] : [];
-        $rows[] = [['is_col_id' => true, 'content_text' => $row['id']], ['content_text' => $row['level']],
-            ['is_truncate' => true, 'content_text' => ($row['sid'] !== '') ? $row['sid'] : _MASTER_TOALL], ['content_text' => ($row['ver'] !== '') ? $row['ver'] : _ALL],
-            ['is_col_date' => true, 'content_text' => ($row['until'] !== null) ? getMasterTime($row['until']) : _MASTER_NOEND],
-            ['is_truncate' => true, 'title_text' => (string)($data['ru'] ?? ''), 'content_text' => (string)($data['ru'] ?? '')],
-            ['is_col_status' => true, 'content_html' => $row['active'] ? _YES : _NO],
-            ['is_col_actions' => true, 'content_html' => $acts ? $tpl->getHtmlFrag('dial', ['dial_title' => _FUNCTIONS, 'dial' => $acts]) : '']];
+        $acts = $row['active'] ? [getTplPostAction(['name' => 'master', 'op' => 'noteoff', 'id' => $row['id'], 'num' => $num], 'x-circle', _DEACTIVATE, _DEACTIVATE.'?')] : [];
+        $rows[] = ['name' => '#'.$row['id'], 'cells' => [
+            ['is_col_id' => true, 'has_content_text' => true, 'content_text' => $row['id']],
+            ['has_content_text' => true, 'content_text' => $row['level']],
+            ['is_truncate' => true, 'has_content_text' => true, 'content_text' => ($row['sid'] !== '') ? $row['sid'] : _MASTER_TOALL],
+            ['has_content_text' => true, 'content_text' => ($row['ver'] !== '') ? $row['ver'] : _ALL],
+            ['is_col_date' => true, 'has_content_text' => true, 'content_text' => ($row['until'] !== null) ? getMasterTime($row['until']) : _MASTER_NOEND],
+            ['is_truncate' => true, 'title_text' => (string)($data['ru'] ?? ''), 'has_content_text' => true, 'content_text' => (string)($data['ru'] ?? '')],
+            ['is_col_status' => true, 'has_content_text' => true, 'content_text' => $row['active'] ? _YES : _NO],
+            ['is_col_actions' => true, 'content_html' => $acts ? $tpl->getHtmlFrag('dial', ['dial_title' => _FUNCTIONS, 'dial' => $acts]) : ''],
+        ]];
     }
-    if (!$rows) return $cont.$tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('alert', ['text' => _NO_INFO])]);
-    return $cont.getMasterTable([['content' => _ID, 'is_col_id' => true], ['content' => _MASTER_LEVEL], ['content' => _MASTER_TO, 'is_truncate' => true],
-        ['content' => _MASTER_RANGE], ['content' => _MASTER_UNTIL, 'is_col_date' => true], ['content' => _TEXT, 'is_truncate' => true],
-        ['content' => _STATUS, 'is_col_status' => true], ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true]], $rows);
+    return getTplAdminList([
+        'head_html' => $head,
+        'note_html' => $note,
+        'is_fixed' => true,
+        'head' => [['content' => _ID, 'is_col_id' => true], ['content' => _MASTER_LEVEL], ['content' => _MASTER_TO, 'is_truncate' => true],
+            ['content' => _MASTER_RANGE], ['content' => _MASTER_UNTIL, 'is_col_date' => true], ['content' => _TEXT, 'is_truncate' => true],
+            ['content' => _STATUS, 'is_col_status' => true], ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true]],
+        'rows' => $rows,
+        'href' => $afile.'.php?name=master&tab=3&',
+        'key' => 'master-notes',
+        'page' => $num,
+        'pages' => $pages,
+        'count' => $all,
+        'limit' => 50,
+    ]);
 }
 
 # The tab of keys, read only: the fingerprints of the factory keys and of the keys in force, and every key statement in force with its kseq
@@ -372,7 +419,8 @@ function noteoff(): void {
         return;
     }
     $res = $db->getSqlQuery('UPDATE '.PREFIX_DB.'_master_note SET active = 0 WHERE id = :id', ['id' => $id]);
-    setRedirect($afile.'.php?name=master&tab=3', false, 302, $res ? _SUCCSAVE : _ERROR, !$res);
+    $done = $res && $res->rowCount() > 0;
+    setRedirect($afile.'.php?name=master&tab=3&num='.getVar('post', 'num', 'num', 1), false, 302, $done ? _SUCCSAVE : _ERROR, !$done);
 }
 
 function info(): void {

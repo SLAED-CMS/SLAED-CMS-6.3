@@ -48,10 +48,11 @@ function getCampOption(string $audit, string $apar, string $label, string $pick)
     return ['value_attr' => $key, 'label_text' => $text, 'is_selected' => $key === $pick];
 }
 
-# Build the tab strip every screen of this module shows, with only its own index changed
-function getCampTabs(int $tab): string {
+# Build the tab strip every screen of this module shows, with only its own index and the filter of a list changed; the three lists redraw in place
+function getCampTabs(int $tab, string $find = ''): string {
     $ops = ['name=newsletter', 'name=newsletter&op=add', 'name=newsletter&op=queue', 'name=newsletter&op=dead', 'name=newsletter&op=config', 'name=newsletter&op=info'];
-    return getTplAdminTabs(['ops' => $ops, 'tabs' => [_HOME, _ADD, _NLQUEUE, _MAIL_DEAD, _PREFERENCES, _MANUAL], 'tab' => $tab]);
+    return getTplAdminTabs(['ops' => $ops, 'tabs' => [_HOME, _ADD, _NLQUEUE, _MAIL_DEAD, _PREFERENCES, _MANUAL], 'tab' => $tab,
+        'part' => in_array($tab, [0, 2, 3], true) ? [0, 2, 3] : [], 'subtitle_html' => $find]);
 }
 
 # Offer every audience the installation can address as a criterion, never as a list of addresses
@@ -68,111 +69,70 @@ function getCampOptions(string $pick, int $days): array {
     return $opts;
 }
 
-# Render the actions one campaign offers in the state it is in, all of them as posts because every one of them changes something
-function getCampActions(array $camp, int $left): string {
-    global $afile, $tpl;
+# The fan of one campaign in the state it is in: release and stop ask first, the edit or clone is a link, the removal of a drained one waits ten seconds for Undo
+function getCampActions(array $camp, int $left): array {
+    global $afile;
     $id = intval($camp['id']);
     $stat = intval($camp['status']);
-    $hide = $tpl->getHtmlFrag('hidden', ['name_attr' => 'name', 'value_attr' => 'newsletter'])
-        .$tpl->getHtmlFrag('hidden', ['name_attr' => 'id', 'value_attr' => (string)$id])
-        .$tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken('newsletter')]);
-    $cont = '';
-    if (in_array($stat, [4, 7], true)) {
-        $cont .= $tpl->getHtmlFrag('post-button', [
-            'action' => $afile.'.php',
-            'hidden' => $hide.$tpl->getHtmlFrag('hidden', ['name_attr' => 'op', 'value_attr' => 'release']),
-            'is_mini' => true,
-            'icon_name' => 'play',
-            'title' => _NLFREE,
-            'confirm_text' => _NLFREE.' "'.$camp['title'].'"?',
-        ]);
-    }
-    if (in_array($stat, [1, 3, 4, 5], true)) {
-        $cont .= $tpl->getHtmlFrag('post-button', [
-            'action' => $afile.'.php',
-            'hidden' => $hide.$tpl->getHtmlFrag('hidden', ['name_attr' => 'op', 'value_attr' => 'stop']),
-            'is_mini' => true,
-            'icon_name' => 'pause',
-            'title' => _NLSTOP,
-            'confirm_text' => _NLSTOP.' "'.$camp['title'].'"?',
-        ]);
-    }
-    $cont .= $tpl->getHtmlFrag('link', [
-        'href' => $afile.'.php?name=newsletter&op=add&id='.$id,
-        'title' => ($stat === 0) ? _FULLEDIT : _NLCLONE,
-        'label' => '',
-        'icon_name' => ($stat === 0) ? 'pencil' : 'files',
-        'is_mini' => true,
-    ]);
-    if ($left < 1) {
-        $cont .= $tpl->getHtmlFrag('post-button', [
-            'action' => $afile.'.php',
-            'hidden' => $hide.$tpl->getHtmlFrag('hidden', ['name_attr' => 'op', 'value_attr' => 'delete']),
-            'is_mini' => true,
-            'icon_name' => 'trash',
-            'title' => _ONDELETE,
-            'confirm_text' => _DELETE.' "'.$camp['title'].'"?',
-        ]);
-    }
-    return $cont;
+    $keys = ['name' => 'newsletter', 'id' => $id];
+    $acts = [];
+    if (in_array($stat, [4, 7], true)) $acts[] = getTplPostAction(['op' => 'release'] + $keys, 'play', _NLFREE, _NLFREE.' "'.$camp['title'].'"?');
+    if (in_array($stat, [1, 3, 4, 5], true)) $acts[] = getTplPostAction(['op' => 'stop'] + $keys, 'pause', _NLSTOP, _NLSTOP.' "'.$camp['title'].'"?');
+    $acts[] = ['href' => $afile.'.php?name=newsletter&op=add&id='.$id, 'icon_name' => ($stat === 0) ? 'pencil' : 'files', 'title' => ($stat === 0) ? _FULLEDIT : _NLCLONE];
+    if ($left < 1) $acts[] = getTplPostAction(['op' => 'delete'] + $keys, 'trash', _ONDELETE) + ['later' => 'gone del'];
+    return $acts;
 }
 
 function newsletter(): void {
     global $db, $conf, $tpl;
-    setHead();
-    $cont = getCampTabs(0);
-    if (intval($conf['scheduler']['jobs']['newsletter']['active'] ?? 0) !== 1) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _NLNOJOB]);
+    $note = (intval($conf['scheduler']['jobs']['newsletter']['active'] ?? 0) !== 1) ? $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _NLNOJOB]) : '';
     $left = [];
     $rows = $db->getSqlRows($db->getSqlQuery('SELECT ref, COUNT(id) AS num FROM '.PREFIX_DB.'_mail WHERE kind = \'newsletter\' AND status = 0 GROUP BY ref')) ?: [];
     foreach ($rows as $row) $left[intval($row['ref'])] = intval($row['num']);
     $sql = 'SELECT id, title, audit, apar, send, fails, total, expect, status, note, time, endtime FROM '.PREFIX_DB.'_newsletter ORDER BY id';
-    $camps = $db->getSqlRows($db->getSqlQuery($sql)) ?: [];
-    if ($camps) {
-        $list = [];
-        foreach ($camps as $camp) {
-            $id = intval($camp['id']);
-            $num = intval($camp['send']) + intval($camp['fails']);
-            $rate = ($num > 0) ? round(intval($camp['fails']) * 100 / $num, 1) : 0;
-            $span = ($camp['endtime'] > $camp['time']) ? strtotime((string)$camp['endtime']) - strtotime((string)$camp['time']) : 0;
-            $list[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
-                'cells' => [
-                    ['is_col_id' => true, 'content_html' => (string)$id],
-                    ['is_truncate' => true, 'title_text' => (string)$camp['title'], 'content_html' => $tpl->getHtmlFrag('popover', [
-                        'items' => [
-                            ['label' => _DATE, 'value' => format_time((string)$camp['time'], _TIMESTRING), 'is_last' => false],
-                            ['label' => _TIMENL, 'value' => getDuration($span), 'is_last' => ((string)$camp['note'] === '')],
-                            ['label' => _NLNOTE, 'value' => (string)$camp['note'], 'is_last' => true],
-                        ],
-                        'label_text' => (string)$camp['title'],
-                        'title_text' => (string)$camp['title'],
-                    ])],
-                    ['is_truncate' => true, 'has_content_text' => true, 'content_text' => getCampAudit((string)$camp['audit'], (string)$camp['apar'])],
-                    ['is_col_count' => true, 'has_content_text' => true, 'content_text' => $camp['total'].' / '.$camp['expect']],
-                    ['class_name' => 'sl-col-sent', 'is_col_count' => true, 'content_html' => $camp['send'].' '._NLUSER],
-                    ['is_col_count' => true, 'has_content_text' => true, 'content_text' => $camp['fails'].' ('.$rate.'%)'],
-                    ['is_col_status' => true, 'has_content_text' => true, 'content_text' => getCampState(intval($camp['status']))],
-                    ['is_col_actions' => true, 'content_html' => getCampActions($camp, $left[$id] ?? 0)],
+    $list = [];
+    foreach ($db->getSqlRows($db->getSqlQuery($sql)) ?: [] as $camp) {
+        $id = intval($camp['id']);
+        $num = intval($camp['send']) + intval($camp['fails']);
+        $rate = ($num > 0) ? round(intval($camp['fails']) * 100 / $num, 1) : 0;
+        $span = ($camp['endtime'] > $camp['time']) ? strtotime((string)$camp['endtime']) - strtotime((string)$camp['time']) : 0;
+        $list[] = ['name' => (string)$camp['title'], 'cells' => [
+            ['is_col_id' => true, 'has_content_text' => true, 'content_text' => $id],
+            ['is_truncate' => true, 'title_text' => (string)$camp['title'], 'content_html' => $tpl->getHtmlFrag('popover', [
+                'items' => [
+                    ['label' => _DATE, 'value' => format_time((string)$camp['time'], _TIMESTRING), 'is_last' => false],
+                    ['label' => _TIMENL, 'value' => getDuration($span), 'is_last' => ((string)$camp['note'] === '')],
+                    ['label' => _NLNOTE, 'value' => (string)$camp['note'], 'is_last' => true],
                 ],
-            ])]);
-        }
-        $cont .= $tpl->getHtmlFrag('table', [
-            'is_fixed' => true,
-            'head' => [
-                ['content' => _ID, 'is_col_id' => true],
-                ['content' => _TITLE, 'is_truncate' => true],
-                ['content' => _NLWHERE, 'is_truncate' => true],
-                ['content' => _NLPROGRESS, 'is_col_count' => true],
-                ['content' => _NLEND, 'class_name' => 'sl-col-sent', 'is_col_count' => true],
-                ['content' => _NLFAILS, 'is_col_count' => true],
-                ['content' => _STATUS, 'is_col_status' => true, 'nosort' => true],
-                ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true],
-            ],
-            'rows_html' => implode('', $list),
-        ]);
-    } else {
-        $cont .= $tpl->getHtmlFrag('alert', ['text' => _NO_INFO]);
+                'label_text' => (string)$camp['title'],
+                'title_text' => (string)$camp['title'],
+            ])],
+            ['is_truncate' => true, 'has_content_text' => true, 'content_text' => getCampAudit((string)$camp['audit'], (string)$camp['apar'])],
+            ['is_col_count' => true, 'has_content_text' => true, 'content_text' => $camp['total'].' / '.$camp['expect']],
+            ['class_name' => 'sl-col-sent', 'is_col_count' => true, 'content_html' => $camp['send'].' '._NLUSER],
+            ['is_col_count' => true, 'has_content_text' => true, 'content_text' => $camp['fails'].' ('.$rate.'%)'],
+            ['is_col_status' => true, 'has_content_text' => true, 'content_text' => getCampState(intval($camp['status']))],
+            ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('dial', ['dial_title' => _FUNCTIONS, 'dial' => getCampActions($camp, $left[$id] ?? 0)])],
+        ]];
     }
-    echo $cont;
+    setHead();
+    echo getTplAdminList([
+        'head_html' => getCampTabs(0),
+        'note_html' => $note,
+        'is_fixed' => true,
+        'head' => [
+            ['content' => _ID, 'is_col_id' => true],
+            ['content' => _TITLE, 'is_truncate' => true],
+            ['content' => _NLWHERE, 'is_truncate' => true],
+            ['content' => _NLPROGRESS, 'is_col_count' => true],
+            ['content' => _NLEND, 'class_name' => 'sl-col-sent', 'is_col_count' => true],
+            ['content' => _NLFAILS, 'is_col_count' => true],
+            ['content' => _STATUS, 'is_col_status' => true, 'nosort' => true],
+            ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true],
+        ],
+        'rows' => $list,
+        'count' => count($list),
+    ]);
     setFoot();
 }
 
@@ -312,13 +272,10 @@ function delete(): void {
     global $db, $afile, $mailer;
     $id = getVar('post', 'id', 'num');
     $warn = !checkAdminPost('newsletter');
-    $text = _TOKENMISS;
-    if (!$warn && $id) {
-        $warn = $mailer->getCampLeft($id) > 0;
-        $text = $warn ? _NLBUSY : _SUCCDELETE;
-        if (!$warn) $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_newsletter WHERE id = :id', ['id' => $id]);
-    }
-    setRedirect($afile.'.php?name=newsletter', false, 302, $text, $warn);
+    $busy = !$warn && $id && $mailer->getCampLeft($id) > 0;
+    $res = (!$warn && $id && !$busy) ? $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_newsletter WHERE id = :id', ['id' => $id]) : false;
+    $done = $res && $res->rowCount() > 0;
+    setRedirect($afile.'.php?name=newsletter', false, 302, $warn ? _TOKENMISS : ($done ? _SUCCDELETE : ($busy ? _NLBUSY : _ERROR)), !$done);
 }
 
 # Release the audience a sample or an abort left holding, which is the transition no measured rate is allowed to perform on its own
@@ -361,19 +318,16 @@ function getQueueSearch(string $kind, string $stat): string {
     foreach ([_MAIL_PEND, _MAIL_ACCEPT, _MAIL_FAILED] as $num => $label) {
         $stats[] = ['value_attr' => (string)$num, 'label_text' => $label, 'is_selected' => $stat === (string)$num];
     }
-    $form = $tpl->getHtmlPart('form', [
+    return $tpl->getHtmlFrag('list-filter', [
         'action_url' => $afile.'.php',
-        'method' => 'get',
-        'is_inline_filter' => true,
-        'hidden' => [
-            ['nameattr' => 'name', 'valueattr' => 'newsletter'],
-            ['nameattr' => 'op', 'valueattr' => 'queue'],
+        'label' => _SEARCH,
+        'is_part' => true,
+        'hidden' => [['nameattr' => 'name', 'valueattr' => 'newsletter'], ['nameattr' => 'op', 'valueattr' => 'queue']],
+        'fields' => [
+            ['field_id' => 'sl-queue-kind', 'label' => _MODUL, 'name_attr' => 'kind', 'options' => $kinds],
+            ['field_id' => 'sl-queue-stat', 'label' => _STATUS, 'name_attr' => 'status', 'options' => $stats],
         ],
-        'content_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'kind', 'options' => $kinds])
-            .$tpl->getHtmlFrag('select', ['name_attr' => 'status', 'options' => $stats])
-            .$tpl->getHtmlFrag('button', ['button_type' => 'submit', 'submit_label' => _OK]),
     ]);
-    return $tpl->getHtmlPart('div', ['is_searchbox' => true, 'content_html' => $form]);
 }
 
 # List the kinds the queue actually holds, so the filter offers what is there rather than a table of names kept by hand
@@ -387,74 +341,47 @@ function getQueueKinds(): array {
     return $out;
 }
 
-# Render the retry and delete actions of one queue row, both as posts because both change state
-function getQueueActions(array $row, string $back): string {
-    global $afile, $tpl;
-    $hide = $tpl->getHtmlFrag('hidden', ['name_attr' => 'name', 'value_attr' => 'newsletter'])
-        .$tpl->getHtmlFrag('hidden', ['name_attr' => 'id', 'value_attr' => (string)$row['id']])
-        .$tpl->getHtmlFrag('hidden', ['name_attr' => 'back', 'value_attr' => $back])
-        .$tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken('newsletter')]);
-    $cont = '';
-    if (intval($row['status']) === 2) {
-        $cont .= $tpl->getHtmlFrag('post-button', [
-            'action' => $afile.'.php',
-            'hidden' => $hide.$tpl->getHtmlFrag('hidden', ['name_attr' => 'op', 'value_attr' => 'requeue']),
-            'is_mini' => true,
-            'icon_name' => 'arrow-clockwise',
-            'title' => _MAIL_RETRY,
-        ]);
-    }
-    return $cont.$tpl->getHtmlFrag('post-button', [
-        'action' => $afile.'.php',
-        'hidden' => $hide.$tpl->getHtmlFrag('hidden', ['name_attr' => 'op', 'value_attr' => 'drop']),
-        'is_mini' => true,
-        'icon_name' => 'trash',
-        'title' => _ONDELETE,
-        'confirm_text' => _DELETE.' #'.$row['id'].'?',
-    ]);
+# The fan of one queue row: a retry of a failed one reloads the list, a removal waits ten seconds for Undo
+function getQueueActions(array $row, string $back): array {
+    $keys = ['name' => 'newsletter', 'id' => $row['id'], 'back' => $back];
+    $acts = (intval($row['status']) === 2) ? [getTplPostAction(['op' => 'requeue'] + $keys, 'arrow-clockwise', _MAIL_RETRY)] : [];
+    $acts[] = getTplPostAction(['op' => 'drop'] + $keys, 'trash', _ONDELETE) + ['later' => 'gone del'];
+    return $acts;
 }
 
 # Show what the queue holds and what happened to it, in the vocabulary the system can stand behind: accepted, failed, pending, never delivered
 function queue(): void {
     global $afile, $mailer, $tpl;
-    setHead();
     $kind = getVar('get', 'kind', 'var');
     $stat = trim(getVar('get', 'status', 'raw', ''));
     if (!in_array($stat, ['0', '1', '2'], true)) $stat = '';
-    $page = getVar('get', 'num', 'num', 1);
-    $back = 'kind='.rawurlencode($kind).'&status='.$stat.'&num='.$page;
-    $cont = getCampTabs(2).getQueueAlarm();
+    $data = $mailer->getList(['kind' => $kind, 'status' => $stat, 'page' => getVar('get', 'num', 'num', 1)]);
+    $back = 'kind='.rawurlencode($kind).'&status='.$stat.'&num='.$data['page'];
     $tally = $mailer->getStats();
     $items = [];
     foreach ([_MAIL_PEND => 'pend', _MAIL_HELD => 'hold', _MAIL_ACCEPT => 'sent', _MAIL_FAILED => 'fail'] as $label => $key) {
         $items[] = ['label_html' => $label, 'field_text' => (string)$tally[$key], 'has_field_text' => true];
     }
-    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('div', ['rows' => $items])]);
-    $cont .= getQueueSearch($kind, $stat);
-    $data = $mailer->getList(['kind' => $kind, 'status' => $stat, 'page' => $page]);
-    if (!$data['rows']) {
-        echo $cont.$tpl->getHtmlFrag('alert', ['text' => _NO_INFO]);
-        setFoot();
-        return;
-    }
     $rows = [];
     foreach ($data['rows'] as $row) {
         $note = trim((string)$row['phase'].' '.$row['code'].' '.$row['error']);
-        $rows[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
-            'cells' => [
-                ['is_col_id' => true, 'content_html' => (string)$row['id']],
-                ['has_content_text' => true, 'content_text' => (string)$row['kind']],
-                ['is_truncate' => true, 'title_text' => (string)$row['email'], 'has_content_text' => true, 'content_text' => (string)$row['email']],
-                ['is_truncate' => true, 'title_text' => (string)$row['title'], 'has_content_text' => true, 'content_text' => (string)$row['title']],
-                ['is_col_count' => true, 'has_content_text' => true, 'content_text' => (string)$row['tries']],
-                ['is_col_date' => true, 'content_html' => format_time((string)$row['time'], _TIMESTRING)],
-                ['is_col_status' => true, 'has_content_text' => true, 'content_text' => getQueueState($row)],
-                ['is_truncate' => true, 'title_text' => $note, 'has_content_text' => true, 'content_text' => $note],
-                ['is_col_actions' => true, 'content_html' => getQueueActions($row, $back)],
-            ],
-        ])]);
+        $rows[] = ['name' => '#'.$row['id'], 'cells' => [
+            ['is_col_id' => true, 'has_content_text' => true, 'content_text' => $row['id']],
+            ['has_content_text' => true, 'content_text' => (string)$row['kind']],
+            ['is_truncate' => true, 'title_text' => (string)$row['email'], 'has_content_text' => true, 'content_text' => (string)$row['email']],
+            ['is_truncate' => true, 'title_text' => (string)$row['title'], 'has_content_text' => true, 'content_text' => (string)$row['title']],
+            ['is_col_count' => true, 'has_content_text' => true, 'content_text' => (string)$row['tries']],
+            ['is_col_date' => true, 'stamp' => format_time((string)$row['time'], 'c'), 'content_text' => format_time((string)$row['time'], _TIMESTRING)],
+            ['is_col_status' => true, 'has_content_text' => true, 'content_text' => getQueueState($row)],
+            ['is_truncate' => true, 'title_text' => $note, 'has_content_text' => true, 'content_text' => $note],
+            ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('dial', ['dial_title' => _FUNCTIONS, 'dial' => getQueueActions($row, $back)])],
+        ]];
     }
-    $cont .= $tpl->getHtmlFrag('table', [
+    setHead();
+    echo getTplAdminList([
+        'head_html' => getCampTabs(2, getQueueSearch($kind, $stat)),
+        'key' => 'newsletter-queue',
+        'note_html' => getQueueAlarm().$tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('div', ['rows' => $items])]),
         'is_fixed' => true,
         'head' => [
             ['content' => _ID, 'is_col_id' => true],
@@ -467,11 +394,13 @@ function queue(): void {
             ['content' => _ERROR, 'is_truncate' => true, 'nosort' => true],
             ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true],
         ],
-        'rows_html' => implode('', $rows),
+        'rows' => $rows,
+        'href' => $afile.'.php?name=newsletter&op=queue&kind='.rawurlencode($kind).'&status='.$stat.'&',
+        'page' => $data['page'],
+        'pages' => $data['pages'],
+        'count' => $data['total'],
+        'limit' => $data['limit'],
     ]);
-    $link = static fn(int $i): array => ['href' => $afile.'.php?name=newsletter&op=queue&kind='.rawurlencode($kind).'&status='.$stat.'&num='.$i];
-    $cont .= getTplPagerView($data['page'], $data['pages'], 8, $link, ['count' => $data['total'], 'limit' => $data['limit'], 'page' => $data['limit']]);
-    echo $cont;
     setFoot();
 }
 
@@ -499,8 +428,8 @@ function drop(): void {
     $id = getVar('post', 'id', 'num');
     $back = getVar('post', 'back', 'raw');
     $warn = !checkAdminPost('newsletter');
-    if (!$warn && $id) $mailer->deleteQueueRows([$id]);
-    setRedirect($afile.'.php?name=newsletter&op=queue&'.getQueueQuery($back), false, 302, $warn ? _TOKENMISS : _SUCCDELETE, $warn);
+    $done = !$warn && $id && $mailer->deleteQueueRows([$id]) > 0;
+    setRedirect($afile.'.php?name=newsletter&op=queue&'.getQueueQuery($back), false, 302, $warn ? _TOKENMISS : ($done ? _SUCCDELETE : _ERROR), !$done);
 }
 
 # Rebuild the filter state of the list an action was started from, taking only the three keys it may carry
@@ -515,40 +444,24 @@ function getQueueQuery(string $back): string {
 
 function dead(): void {
     global $afile, $mailer, $tpl;
-    setHead();
-    $cont = getCampTabs(3);
     $data = $mailer->getDeadList(getVar('get', 'num', 'num', 1));
-    if (!$data['rows']) {
-        echo $cont.$tpl->getHtmlFrag('alert', ['text' => _NO_INFO]);
-        setFoot();
-        return;
-    }
     $rows = [];
     foreach ($data['rows'] as $row) {
-        $hide = $tpl->getHtmlFrag('hidden', ['name_attr' => 'name', 'value_attr' => 'newsletter'])
-            .$tpl->getHtmlFrag('hidden', ['name_attr' => 'op', 'value_attr' => 'revive'])
-            .$tpl->getHtmlFrag('hidden', ['name_attr' => 'id', 'value_attr' => (string)$row['id']])
-            .$tpl->getHtmlFrag('hidden', ['name_attr' => 'num', 'value_attr' => (string)$data['page']])
-            .$tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken('newsletter')]);
         $note = trim((string)$row['phase'].' '.$row['code']);
-        $rows[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
-            'cells' => [
-                ['is_col_id' => true, 'content_html' => (string)$row['id']],
-                ['is_truncate' => true, 'title_text' => (string)$row['email'], 'has_content_text' => true, 'content_text' => (string)$row['email']],
-                ['is_col_count' => true, 'has_content_text' => true, 'content_text' => (string)$row['fails']],
-                ['is_truncate' => true, 'title_text' => $note, 'has_content_text' => true, 'content_text' => $note],
-                ['is_col_date' => true, 'content_html' => format_time((string)$row['time'], _TIMESTRING)],
-                ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('post-button', [
-                    'action' => $afile.'.php',
-                    'hidden' => $hide,
-                    'is_mini' => true,
-                    'icon_name' => 'arrow-counterclockwise',
-                    'title' => _MAIL_REVIVE,
-                ])],
-            ],
-        ])]);
+        $rows[] = ['name' => (string)$row['email'], 'cells' => [
+            ['is_col_id' => true, 'has_content_text' => true, 'content_text' => $row['id']],
+            ['is_truncate' => true, 'title_text' => (string)$row['email'], 'has_content_text' => true, 'content_text' => (string)$row['email']],
+            ['is_col_count' => true, 'has_content_text' => true, 'content_text' => (string)$row['fails']],
+            ['is_truncate' => true, 'title_text' => $note, 'has_content_text' => true, 'content_text' => $note],
+            ['is_col_date' => true, 'stamp' => format_time((string)$row['time'], 'c'), 'content_text' => format_time((string)$row['time'], _TIMESTRING)],
+            ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('dial', ['dial_title' => _FUNCTIONS, 'dial' => [getTplPostAction(['name' => 'newsletter',
+                'op' => 'revive', 'id' => $row['id'], 'num' => $data['page']], 'arrow-counterclockwise', _MAIL_REVIVE) + ['later' => 'gone move']]])],
+        ]];
     }
-    $cont .= $tpl->getHtmlFrag('table', [
+    setHead();
+    echo getTplAdminList([
+        'head_html' => getCampTabs(3),
+        'key' => 'newsletter-dead',
         'is_fixed' => true,
         'head' => [
             ['content' => _ID, 'is_col_id' => true],
@@ -558,11 +471,13 @@ function dead(): void {
             ['content' => _DATE, 'is_col_date' => true],
             ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true],
         ],
-        'rows_html' => implode('', $rows),
+        'rows' => $rows,
+        'href' => $afile.'.php?name=newsletter&op=dead&',
+        'page' => $data['page'],
+        'pages' => $data['pages'],
+        'count' => $data['total'],
+        'limit' => $data['limit'],
     ]);
-    $link = static fn(int $i): array => ['href' => $afile.'.php?name=newsletter&op=dead&num='.$i];
-    $cont .= getTplPagerView($data['page'], $data['pages'], 8, $link, ['count' => $data['total'], 'limit' => $data['limit'], 'page' => $data['limit']]);
-    echo $cont;
     setFoot();
 }
 
@@ -571,8 +486,8 @@ function revive(): void {
     $id = getVar('post', 'id', 'num');
     $page = getVar('post', 'num', 'num', 1);
     $warn = !checkAdminPost('newsletter');
-    if (!$warn && $id) $mailer->deleteDeadMail([$id]);
-    setRedirect($afile.'.php?name=newsletter&op=dead&num='.$page, false, 302, $warn ? _TOKENMISS : _SUCCSAVE, $warn);
+    $done = !$warn && $id && $mailer->deleteDeadMail([$id]) > 0;
+    setRedirect($afile.'.php?name=newsletter&op=dead&num='.$page, false, 302, $warn ? _TOKENMISS : ($done ? _SUCCSAVE : _ERROR), !$done);
 }
 
 function config(): void {

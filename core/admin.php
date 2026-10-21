@@ -448,9 +448,8 @@ function getAdminCategoryList(string $modul = '', int $obj = 0): string {
                 'label_text' => $cat['title'],
                 'title_text' => $cat['title'],
             ]);
-            $keep = ['name' => 'categories', 'id' => $cid] + ($cmod !== '' ? ['modul' => $cmod] : []);
+            $keep = ['name' => 'categories', 'id' => $cid] + ($modul !== '' ? ['modul' => $modul] : []);
             $dial = [
-                getTplPostAction(['op' => 'change', 'act' => $cat['status']] + $keep, 'power', $cat['status'] ? _DEACTIVATE : _ACTIVATE),
                 [
                     'href' => $afile.'.php?name=categories&op=edit&cid='.$cid.$modlink,
                     'icon_name' => 'pencil',
@@ -458,9 +457,10 @@ function getAdminCategoryList(string $modul = '', int $obj = 0): string {
                 ],
             ];
             if (!$pnum && !$subs && !$held) {
-                $dial[] = getTplPostAction(['op' => 'delete'] + $keep, 'trash', _ONDELETE, _DELETE.' "'.$cat['title'].'"?');
+                $dial[] = getTplPostAction(['op' => 'delete'] + $keep, 'trash', _ONDELETE) + ['later' => 'gone del'];
             }
             $rows[] = $tpl->getHtmlFrag('table-row', [
+                'name' => $cat['title'],
                 'attr' => 'data-sl-drag-id="'.$cid.'" data-sl-drag-group="'.$cmod.'-'.$cat['parent'].'"'
                     .' data-sl-drag-scope="'.$cmod.'" data-sl-drag-parent="'.$cat['parent'].'"',
                 'cells_html' => $tpl->getHtmlFrag('table-cells', [
@@ -470,7 +470,8 @@ function getAdminCategoryList(string $modul = '', int $obj = 0): string {
                         ['content_html' => (string)$pnum],
                         ['content_html' => $img],
                         ['content_html' => $tpl->getHtmlFrag('span', ['is_drag_handle' => true]).' '.$num],
-                        ['content_html' => ad_status('', $cat['status']), 'is_col_status' => true],
+                        ['is_col_status' => true, 'stat' => getTplPostAction(['op' => 'change', 'act' => $cat['status']] + $keep, 'power',
+                            $cat['status'] ? _DEACTIVATE : _ACTIVATE) + ['is_on' => (bool)$cat['status'], 'label' => _STATUS.': '.$cat['title'], 'later' => 'lamp act']],
                         ['content_html' => $tpl->getHtmlFrag('dial', ['dial_title' => _EDITOR, 'dial' => $dial]), 'is_col_actions' => true],
                     ],
                 ]),
@@ -567,7 +568,7 @@ function getCategoryAccess(array $auth): string {
     return $acess.'|'.implode(',', $select);
 }
 
-# Render the admin block list grouped by position with drag ordering, a trailing free (infly) section, expiry state and action links
+# Render the admin block list grouped by position with drag ordering, a trailing free (infly) section, a lamp, expiry state and action links; it never writes
 function getAdminBlockList(): string {
     global $db, $afile, $tpl;
     $posmap = [
@@ -584,17 +585,12 @@ function getAdminBlockList(): string {
     $result = $db->getSqlQuery('SELECT id, bkey, title, url, bpos, weight, status, lang, bfile, view, expire, action, which FROM '.PREFIX_DB.'_blocks ORDER BY bpos, weight');
     while ([$bid, $bkey, $title, $url, $bpos, $weight, $active, $lang, $bfile, $view, $expire, $action, $which] = $db->getSqlRow($result)) {
         $exp = $expire ? strtotime($expire) - time() : 0;
-        if (($expire && $exp < 0) || (!$active && $expire)) {
-            if ($action == 'd') {
-                $db->getSqlQuery('UPDATE '.PREFIX_DB.'_blocks SET status = 0, expire = NULL WHERE id = :bid', ['bid' => $bid]);
-            } elseif ($action == 'r') {
-                $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_blocks WHERE id = :bid', ['bid' => $bid]);
-            }
-        }
+        $gone = $expire && $exp < 0;
+        $live = $active && !$gone;
         $marks = explode(',', (string)$which);
         $isfly = in_array('infly', $marks, true);
         $isfix = $isfly && in_array('flyfix', $marks, true);
-        $exp = ($exp > 0) ? getDuration($exp) : _UNLIMITED;
+        $exp = $gone ? _EXPIRED : (($exp > 0) ? getDuration($exp) : _UNLIMITED);
         $tips = [['label' => _NAME, 'value' => $title, 'is_last' => false]];
         if ($lang !== '') $tips[] = ['label' => _LANGUAGE, 'value' => getLangName($lang), 'is_last' => false];
         $tips[] = ['label' => _PURCHASED, 'value' => $exp, 'is_last' => true];
@@ -625,6 +621,7 @@ function getAdminBlockList(): string {
             $order = $tpl->getHtmlFrag('span', ['is_drag_handle' => true]).' '.$weight;
         }
         $row = $tpl->getHtmlFrag('table-row', [
+            'name' => getConst($title),
             'attr' => $isfly ? '' : 'data-sl-drag-id="'.$bid.'" data-sl-drag-group="'.$bpos.'" data-sl-drag-scope="'.$bpos.'"',
             'cells_html' => $tpl->getHtmlFrag('table-cells', [
                 'cells' => [
@@ -637,17 +634,17 @@ function getAdminBlockList(): string {
                     ['content_html' => $type],
                     ['content_html' => $who],
                     ['content_html' => $order],
-                    ['content_html' => ad_status('', $active), 'is_col_status' => true],
+                    ['is_col_status' => true, 'stat' => getTplPostAction(['name' => 'blocks', 'op' => 'change', 'id' => $bid, 'act' => $live ? 1 : 0], 'power',
+                        $live ? _DEACTIVATE : _ACTIVATE) + ['is_on' => $live, 'label' => _STATUS.': '.getConst($title), 'later' => 'lamp act']],
                     ['content_html' => $tpl->getHtmlFrag('dial', [
                         'dial_title' => _EDITOR,
                         'dial' => [
-                            getTplPostAction(['name' => 'blocks', 'op' => 'change', 'id' => $bid, 'act' => $active], 'power', $active ? _DEACTIVATE : _ACTIVATE),
                             [
                                 'href' => $afile.'.php?name=blocks&op=edit&id='.$bid,
                                 'icon_name' => 'pencil',
                                 'title' => _FULLEDIT,
                             ],
-                            getTplPostAction(['name' => 'blocks', 'op' => 'delete', 'id' => $bid], 'trash', _ONDELETE, _DELETE.' "'.$title.'"?'),
+                            getTplPostAction(['name' => 'blocks', 'op' => 'delete', 'id' => $bid], 'trash', _ONDELETE) + ['later' => 'gone del'],
                         ],
                     ]), 'is_col_actions' => true],
                 ],
@@ -710,176 +707,6 @@ function updateAdminBlockOrder(): void {
         }
     }
     echo getAdminBlockList();
-}
-
-# Favorites list view
-function getAdminFavoriteList(int $obj = 0): string {
-    global $db, $conf, $tpl;
-    $perpage = intval($conf['favorites']['anum']);
-    $cid = getVar('get', 'num', 'num', getVar('get', 'cid', 'num', 1));
-    $offset = ($cid - 1) * $perpage;
-    $offset = intval($offset);
-    [$total] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_favorites'));
-    $result = $db->getSqlQuery('SELECT id, modul FROM '.PREFIX_DB.'_favorites ORDER BY id DESC LIMIT '.intval($offset).', '.intval($perpage));
-    $groups = [];
-    $items = [];
-    while ([$id, $modul] = $db->getSqlRow($result)) $groups[$modul][] = $id;
-    if ($groups) {
-        foreach ($groups as $key => $val) {
-            $ids = array_values(array_filter(array_map('intval', $val), static fn($v) => $v > 0));
-            if (!$ids) continue;
-            $pp = [];
-            $pm = [];
-            foreach ($ids as $k => $v) {
-                $ph = 'f'.$k;
-                $pp[] = ':'.$ph;
-                $pm[$ph] = $v;
-            }
-            $in = implode(', ', $pp);
-            $numl = count($val);
-            if ($key == 'forum') {
-                $sql = 'SELECT f.id, f.fid, f.modul, n.title, u.name FROM '.PREFIX_DB.'_favorites AS f LEFT JOIN '.PREFIX_DB.'_forum AS n ON (f.fid = n.id)';
-                $result = $db->getSqlQuery($sql.' LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.id) WHERE f.id IN ('.$in.') ORDER BY f.id DESC LIMIT 0, '.intval($numl), $pm);
-                while ([$id, $fid, $modul, $title, $uname] = $db->getSqlRow($result)) $items[] = [$id, $fid, $modul, $title, $uname];
-            } elseif (isset($conf['node']['types'][$key])) {
-                $sql = 'SELECT f.id, f.fid, f.modul, u.name FROM '.PREFIX_DB.'_favorites AS f LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.id) WHERE f.id IN ('.$in.')';
-                $res = $db->getSqlQuery($sql.' ORDER BY f.id DESC', $pm);
-                $rows = $res ? ($db->getSqlRows($res) ?: []) : [];
-                $titles = getNodeTitleMap(array_fill_keys(array_map(fn(array $v): int => intval($v[1]), $rows), $key));
-                foreach ($rows as $row) $items[] = [$row[0], $row[1], $row[2], $titles[intval($row[1])] ?? '', $row[3]];
-            }
-        }
-        if ($items) {
-            $rows = [];
-            foreach ($items as $key => $val) {
-                $id = $val[0];
-                $fid = $val[1];
-                $modul = $val[2];
-                $title = getDecodedText((string)$val[3]);
-                $uname = ($val[4]) ? user_info($val[4], null) : _ANONYM;
-                $delattr = getTplPostVals(['name' => 'favorites', 'op' => 'delete', 'id' => $id, 'num' => $cid], '#repadminFavoriteList');
-                $rows[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
-                    'cells' => [
-                        ['content_html' => (string) $id],
-                        ['content_html' => $tpl->getHtmlFrag('inline-badge', ['is_note' => true, 'label' => $title, 'title_text' => $title])],
-                        ['content_html' => getModuleName($modul)],
-                        ['content_html' => $uname],
-                        ['content_html' => $tpl->getHtmlFrag('dial', [
-                            'dial_title' => _FUNCTIONS,
-                            'dial' => [[
-                                'href' => 'index.php?name='.$modul.'&op=view&id='.$fid.'#'.$fid,
-                                'icon_name' => 'eye',
-                                'title' => _MVIEW,
-                            ], [
-                                'href' => '#',
-                                'icon_name' => 'trash',
-                                'title' => _ONDELETE,
-                                'link_attr' => $delattr,
-                                'confirm_text' => _DELETE.' "'.$title.'"?',
-                            ]],
-                        ]), 'is_col_actions' => true],
-                    ],
-                ])]);
-            }
-            $cont = $tpl->getHtmlFrag('table', [
-                'head' => [
-                    ['content' => _ID],
-                    ['content' => _TITLE],
-                    ['content' => _MODUL],
-                    ['content' => _POSTEDBY],
-                    ['content' => _FUNCTIONS, 'nosort' => true],
-                ],
-                'rows_html' => implode('', $rows),
-                'is_wrapless' => true,
-            ]);
-            $cont .= getTplPager([
-                'count' => intval($total),
-                'limit' => $perpage,
-                'maxpg' => intval($conf['favorites']['anump']),
-                'url' => 'name=favorites&',
-                'n' => 'num',
-                'target_id' => 'repadminFavoriteList',
-                'push_url' => true,
-            ]);
-        } else {
-            $cont = $tpl->getHtmlFrag('alert', ['text' => _NO_INFO]);
-        }
-    } else {
-        $cont = $tpl->getHtmlFrag('alert', ['text' => _NO_INFO]);
-    }
-    if ($obj) { return $cont; }
-    echo $cont;
-    return '';
-}
-
-# Private messages list view
-# The rows come from the private-message subsystem, which owns that table, so this list restates no mailbox predicate and filters no state: deleted copies show too
-# The state of one row is the one the four columns add up to, and the page is read from the request itself so a list rebuilt by a POST action stays on the page it was asked from
-# An administrator reads a message through the renderer its recipient does: the body is source rendered safe in the format its own row names, the title escaped by its template
-function getAdminPrivateList(int $obj = 0): string {
-    global $afile, $conf, $tpl, $prs, $prv;
-    $cid = getVar('req', 'num', 'num', getVar('req', 'cid', 'num', 1));
-    $data = $prv->getAdminList($cid);
-    if ($data['rows']) {
-        $rows = [];
-        foreach ($data['rows'] as $one) {
-            $title = $one['title'];
-            $tone = match ($one['state']) {'delin', 'delout' => 'danger', 'saved' => 'accent', 'read' => 'success', default => 'warn'};
-            $note = match ($one['state']) {
-                'delin' => (string)_PRIVAT_DELIN,
-                'delout' => (string)_PRIVAT_DELOUT,
-                'saved' => (string)_PRMOVE,
-                'read' => (string)_PROLD,
-                default => (string)_PROUTNEW,
-            };
-            $info = $prs->filterContent($one['body'], true, 'account', 0, 'breaks', ['privat', $one['id']]);
-            $delattr = getTplPostVals(['name' => 'privat', 'op' => 'delete', 'id' => $one['id'], 'num' => $data['page']], '#repadminPrivateList');
-            $rows[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
-                'cells' => [
-                    ['content_html' => (string)$one['id']],
-                    ['content_html' => $tpl->getHtmlFrag('popover', ['content_html' => $info])
-                        .$tpl->getHtmlFrag('inline-badge', ['is_note' => true, 'label' => $title, 'title_text' => $title])],
-                    ['content_html' => ($one['nameout'] !== '') ? user_info($one['nameout'], null) : (string)_ANONYM],
-                    ['content_html' => ($one['namein'] !== '') ? user_info($one['namein'], null) : (string)_ANONYM],
-                    ['content_html' => format_time($one['time'], _TIMESTRING)],
-                    ['content_html' => $tpl->getHtmlFrag('inline-badge', ['chip_tone' => $tone, 'label' => $note, 'title_text' => $note]), 'is_col_status' => true],
-                    ['content_html' => $tpl->getHtmlFrag('dial', [
-                        'dial_title' => _FUNCTIONS,
-                        'dial' => [[
-                            'href' => '#',
-                            'icon_name' => 'trash',
-                            'title' => _ONDELETE,
-                            'link_attr' => $delattr,
-                            'confirm_text' => _DELETE.' "'.$title.'"?',
-                        ]],
-                    ]), 'is_col_actions' => true],
-                ],
-            ])]);
-        }
-        $cont = $tpl->getHtmlFrag('table', [
-            'head' => [
-                ['content' => _ID],
-                ['content' => _TITLE],
-                ['content' => _PRSE],
-                ['content' => _PRRE],
-                ['content' => _DATE],
-                ['content' => _STATUS, 'nosort' => true],
-                ['content' => _FUNCTIONS, 'nosort' => true],
-            ],
-            'rows_html' => implode('', $rows),
-            'is_wrapless' => true,
-        ]);
-        $cont .= getTplPagerView($data['page'], $data['pages'], intval($conf['privat']['anump']), static fn(int $i): array => [
-            'query' => $afile.'.php?name=privat&num='.$i,
-            'target_id' => 'repadminPrivateList',
-            'push_url' => 'true',
-        ], ['count' => $data['total'], 'limit' => $data['limit'], 'page' => $data['limit']]);
-    } else {
-        $cont = $tpl->getHtmlFrag('alert', ['text' => _NO_INFO]);
-    }
-    if ($obj) { return $cont; }
-    echo $cont;
-    return '';
 }
 
 # Add voting
@@ -1475,7 +1302,7 @@ function getAdminFileShell(bool $full = false, array $edit = []): string {
             'is_mark' => $mark && !$isdir,
             'is_move' => !empty($row['capabilities']['move']),
             'pick_value' => $row['path'],
-            'mark_text' => _UPLOADS_MARK,
+            'mark_text' => _UPLOADS_MARK.': '.$row['name'],
             'shot_text' => _UPLOADS_PREVIEW,
             'kind_text' => $isdir ? _DIR : strtoupper($row['extension']),
             'size_text' => $isdir ? '—' : filterSize($row['size']),
