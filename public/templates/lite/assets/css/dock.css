@@ -284,3 +284,634 @@ button.sl-session-donut:focus-visible {
 @media (max-width: 768px) {
   .sl-stats-cols { grid-template-columns: minmax(0, 1fr); }
 }
+
+/* ---------- С6 The floating menu on the site: the layer of the panel over the page, its own place, the edge of the panel ---------- */
+
+.sl-dock {
+  position: fixed;
+  z-index: var(--sl-z-sticky);
+  top: var(--sl-d-dock-y, auto);
+  left: var(--sl-d-dock-x, 50%);
+  transform: translate(-50%, -50%);
+}
+
+.sl-dock:not([data-placed]) {
+  top: auto;
+  bottom: var(--sl-space-4);
+  transform: translateX(-50%);
+}
+
+/* The script stands the layer on its place before it shows, so a pill kept on another edge never jumps there */
+.sl-dock:not([data-to]) {
+  visibility: hidden;
+}
+
+/* М12 WCAG 2.4.11: a field reached by Tab never ends under the pill at the bottom */
+:root:has(.sl-dock) {
+  scroll-padding-bottom: calc(var(--sl-dock-height) + var(--sl-space-4) * 4);
+}
+
+.sl-dock-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--sl-space-1);
+  box-sizing: border-box;
+  padding: var(--sl-space-3) var(--sl-space-4);
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-pill);
+  background: var(--sl-bg);
+  box-shadow: var(--sl-shadow-float);
+}
+
+/* М6 Upright the pill is as thick as it is long across: the same tile, the padding turned with the axis */
+.sl-dock[data-dir="col"] .sl-dock-bar {
+  flex-direction: column;
+  padding: var(--sl-space-4) var(--sl-space-3);
+}
+
+.sl-dock[data-drag] .sl-dock-bar {
+  box-shadow: var(--sl-shadow-float), 0 0 0 var(--sl-ring-width) var(--sl-tint-strong);
+}
+
+/* М7 The body that folds carries its own gap and the step after it, so a body run down to nothing leaves no seam */
+.sl-dock-body {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: var(--sl-dock-gap);
+  padding-inline: var(--sl-dock-gap);
+}
+
+.sl-dock[data-dir="col"] .sl-dock-body {
+  flex-direction: column;
+  padding: var(--sl-dock-gap) 0;
+}
+
+.sl-dock-sep {
+  flex: none;
+  width: 1px;
+  height: calc(var(--sl-d-dock-tile, var(--sl-dock-height)) * 0.7);
+  background: var(--sl-border);
+}
+
+.sl-dock[data-dir="col"] .sl-dock-sep {
+  width: calc(var(--sl-d-dock-tile, var(--sl-dock-height)) * 0.7);
+  height: 1px;
+}
+
+.sl-dock-sep-end {
+  margin-inline: var(--sl-space-2);
+}
+
+.sl-dock[data-dir="col"] .sl-dock-sep-end {
+  margin: var(--sl-space-2) 0;
+}
+
+/* ---------- М2 М3 A round app in the tone it carries: it grows towards the room, the pill keeps its size ---------- */
+
+.sl-dock-app {
+  position: relative;
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: var(--sl-d-dock-tile, var(--sl-dock-height));
+  height: var(--sl-d-dock-tile, var(--sl-dock-height));
+  padding: 0;
+  border: 0;
+  border-radius: var(--sl-radius-circle);
+  background: linear-gradient(160deg, color-mix(in srgb, currentColor var(--sl-dock-mix), var(--sl-solid-text)), currentColor);
+  box-shadow: var(--sl-shadow-xs);
+  color: var(--sl-primary);
+  font: inherit;
+  font-size: calc(var(--sl-d-dock-tile, var(--sl-dock-height)) * 0.44);
+  text-decoration: none;
+  cursor: pointer;
+  transform: scale(var(--sl-d-dock-s, 1));
+  transform-origin: bottom;
+  transition: transform var(--sl-time-fast) linear;
+}
+
+.sl-dock-app:hover,
+.sl-dock-app:focus-visible {
+  z-index: var(--sl-z-raised);
+}
+
+.sl-dock-app:not(.sl-dock-plain) > .bi {
+  color: var(--sl-solid-text);
+}
+
+.sl-dock[data-to="down"] .sl-dock-app { transform-origin: top; }
+.sl-dock[data-to="right"] .sl-dock-app { transform-origin: left; }
+.sl-dock[data-to="left"] .sl-dock-app { transform-origin: right; }
+
+.sl-dock-app img {
+  width: var(--sl-size-icon-md);
+  height: var(--sl-size-icon-md);
+}
+
+.sl-dock-plain {
+  background: linear-gradient(160deg, var(--sl-bg), var(--sl-bg-muted));
+  box-shadow: var(--sl-shadow-xs), inset 0 0 0 1px var(--sl-border);
+}
+
+.sl-dock-out {
+  color: var(--sl-text-muted);
+}
+
+.sl-dock-out:hover,
+.sl-dock-out:focus-visible {
+  color: var(--sl-danger);
+}
+
+/* М9 The pins are a group of their own, each in the next of four tones; with none the group and its rule step away */
+.sl-dock-pins,
+.sl-dock-queue {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: var(--sl-dock-gap);
+}
+.sl-dock[data-dir="col"] :is(.sl-dock-pins, .sl-dock-queue) {
+  flex-direction: column;
+}
+.sl-dock-pins:empty,
+.sl-dock-pins:empty + .sl-dock-sep {
+  display: none;
+}
+.sl-dock-pins > :nth-child(4n + 2) { color: var(--sl-success); }
+.sl-dock-pins > :nth-child(4n + 3) { color: var(--sl-accent); }
+.sl-dock-pins > :nth-child(4n) { color: var(--sl-warning); }
+/* М9 The open section: a short bar of the brand with a soft glow, on the side of the icon away from the room */
+.sl-dock-here::after {
+  position: absolute;
+  bottom: calc(var(--sl-space-3) * -1);
+  left: 50%;
+  width: var(--sl-space-6);
+  height: var(--sl-space-2);
+  border-radius: var(--sl-radius-pill);
+  background: var(--sl-primary);
+  box-shadow: 0 0 var(--sl-space-3) var(--sl-tint-strong);
+  transform: translateX(-50%);
+  content: "";
+}
+.sl-dock[data-to="down"] .sl-dock-here::after { top: calc(var(--sl-space-3) * -1); bottom: auto; }
+.sl-dock:is([data-to="right"], [data-to="left"]) .sl-dock-here::after { top: 50%; bottom: auto; width: var(--sl-space-2); height: var(--sl-space-6); transform: translateY(-50%); }
+.sl-dock[data-to="right"] .sl-dock-here::after { left: calc(var(--sl-space-3) * -1); }
+.sl-dock[data-to="left"] .sl-dock-here::after { right: calc(var(--sl-space-3) * -1); left: auto; }
+/* С9 All the sections of the panel in one pop */
+.sl-dock-launch {
+  color: var(--sl-primary-strong);
+}
+/* М13 The watch: the ring of shares of the summary, the figure of the visitors in its hole */
+.sl-dock-watch {
+  background: conic-gradient(
+    var(--sl-accent) 0 var(--sl-d-admins, 0%),
+    var(--sl-success) var(--sl-d-admins, 0%) var(--sl-d-members),
+    var(--sl-warning) var(--sl-d-members) var(--sl-d-bots),
+    var(--sl-primary) var(--sl-d-bots) 100%
+  );
+  color: var(--sl-text);
+  font-size: var(--sl-font-small);
+  font-weight: var(--sl-weight-bold);
+}
+.sl-dock-watch > span {
+  display: grid;
+  place-items: center;
+  width: calc(100% - var(--sl-space-4));
+  height: calc(100% - var(--sl-space-4));
+  border-radius: var(--sl-radius-circle);
+  background: var(--sl-bg);
+}
+/* М14 The admin: the mark of a role in a ring of the brand, no picture of a person */
+.sl-dock-me {
+  color: var(--sl-accent);
+  box-shadow: var(--sl-shadow-xs), 0 0 0 var(--sl-ring-width) var(--sl-primary);
+}
+.sl-dock-me-head {
+  display: grid;
+  justify-items: center;
+  gap: var(--sl-space-2);
+  margin-bottom: var(--sl-space-4);
+  text-align: center;
+}
+.sl-dock-me-head > .bi {
+  display: grid;
+  place-items: center;
+  width: var(--sl-size-tile);
+  height: var(--sl-size-tile);
+  border-radius: var(--sl-radius-circle);
+  background: linear-gradient(160deg, color-mix(in srgb, var(--sl-accent) var(--sl-dock-mix), var(--sl-solid-text)), var(--sl-accent));
+  box-shadow: 0 0 0 var(--sl-ring-width) var(--sl-primary);
+  color: var(--sl-solid-text);
+  font-size: var(--sl-font-h3);
+}
+.sl-dock-facts {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--sl-space-2) var(--sl-space-4);
+  margin: 0 0 var(--sl-space-4);
+  font-size: var(--sl-font-small);
+}
+.sl-dock-facts dd {
+  margin: 0;
+  text-align: right;
+}
+.sl-dock-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sl-space-3);
+  box-sizing: border-box;
+  width: 100%;
+  padding: var(--sl-space-3) 0;
+  border: 0;
+  border-top: 1px solid var(--sl-border);
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-size: var(--sl-font-small);
+  text-align: left;
+}
+button.sl-dock-row {
+  cursor: pointer;
+}
+button.sl-dock-row:hover,
+button.sl-dock-row:focus-visible {
+  color: var(--sl-primary);
+}
+.sl-dock-pair {
+  display: flex;
+  gap: var(--sl-space-1);
+}
+.sl-dock-pair button {
+  display: grid;
+  place-items: center;
+  width: var(--sl-size-chip);
+  height: var(--sl-size-control);
+  padding: 0;
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-1);
+  background: var(--sl-bg);
+  color: var(--sl-text-muted);
+  cursor: pointer;
+}
+.sl-dock-pair button[aria-pressed="true"] {
+  border-color: var(--sl-primary);
+  background: var(--sl-primary);
+  color: var(--sl-on-solid);
+}
+.sl-dock-note {
+  margin: var(--sl-space-3) 0 0;
+  line-height: var(--sl-line-normal);
+}
+/* A dead own link puts a warning mark on the key of the links */
+.sl-dock-badge {
+  position: absolute;
+  top: calc(var(--sl-space-2) * -1);
+  right: calc(var(--sl-space-2) * -1);
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  min-width: var(--sl-space-6);
+  height: var(--sl-space-6);
+  padding: 0 var(--sl-space-2);
+  border: var(--sl-ring-width) solid var(--sl-bg);
+  border-radius: var(--sl-radius-pill);
+  background: var(--sl-warning-strong);
+  color: var(--sl-on-solid);
+  font-size: var(--sl-font-micro);
+  font-weight: var(--sl-weight-bold);
+  line-height: var(--sl-line-tight);
+}
+
+/* М4 The tip on the side of the room, at its own size over a grown icon */
+.sl-dock-app[data-tip]::before {
+  position: absolute;
+  z-index: var(--sl-z-raised);
+  padding: var(--sl-space-2) var(--sl-space-4);
+  border-radius: var(--sl-radius-2);
+  background: var(--sl-text);
+  color: var(--sl-bg);
+  font-size: var(--sl-font-small);
+  font-weight: var(--sl-weight-normal);
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  scale: calc(1 / var(--sl-d-dock-s, 1));
+  transition: opacity var(--sl-time-fast) var(--sl-ease-out);
+  content: attr(data-tip);
+}
+
+.sl-dock[data-to="up"] .sl-dock-app[data-tip]::before { bottom: calc(100% + var(--sl-space-4)); left: 50%; transform: translateX(-50%); transform-origin: bottom left; }
+.sl-dock[data-to="down"] .sl-dock-app[data-tip]::before { top: calc(100% + var(--sl-space-4)); left: 50%; transform: translateX(-50%); transform-origin: top left; }
+.sl-dock[data-to="right"] .sl-dock-app[data-tip]::before { top: 50%; left: calc(100% + var(--sl-space-4)); transform: translateY(-50%); transform-origin: top left; }
+.sl-dock[data-to="left"] .sl-dock-app[data-tip]::before { top: 50%; right: calc(100% + var(--sl-space-4)); transform: translateY(-50%); transform-origin: top right; }
+
+.sl-dock-app:hover::before,
+.sl-dock-app:focus-visible::before {
+  opacity: 1;
+}
+
+.sl-dock[data-open] .sl-dock-app::before,
+.sl-dock[data-drag] .sl-dock-app::before {
+  display: none;
+}
+
+/* ---------- М5 М6 М7 М8 The three tools: the buttons of the system window, each showing the icon of its axis ---------- */
+
+.sl-dock[data-dir="col"] .sl-dock-tools {
+  flex-direction: column;
+}
+
+.sl-dock-grip {
+  touch-action: none;
+}
+
+.sl-dock[data-drag] .sl-dock-grip {
+  cursor: grabbing;
+}
+
+.sl-dock-tool .bi {
+  display: none;
+}
+
+.sl-dock[data-dir="row"] :is(.sl-dock-grip, .sl-dock-turn) .sl-dock-ax-row,
+.sl-dock[data-dir="col"] :is(.sl-dock-grip, .sl-dock-turn) .sl-dock-ax-col,
+.sl-dock[data-dir="row"]:not([data-min]) .sl-dock-fold .sl-dock-ax-row.sl-dock-open,
+.sl-dock[data-dir="row"][data-min] .sl-dock-fold .sl-dock-ax-row.sl-dock-shut,
+.sl-dock[data-dir="col"]:not([data-min]) .sl-dock-fold .sl-dock-ax-col.sl-dock-open,
+.sl-dock[data-dir="col"][data-min] .sl-dock-fold .sl-dock-ax-col.sl-dock-shut {
+  display: inline-block;
+}
+
+/* ---------- The pops: on the side where the room is ---------- */
+
+.sl-dock-pop {
+  position: absolute;
+  box-sizing: border-box;
+  width: min(var(--sl-dock-max-width), calc(100vw - var(--sl-space-6) * 2));
+  max-height: var(--sl-dock-max-height);
+  overflow: auto;
+  padding: var(--sl-space-5);
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-3);
+  background: var(--sl-bg);
+  box-shadow: var(--sl-shadow-float);
+}
+
+.sl-dock-pop[hidden] {
+  display: none;
+}
+
+.sl-dock[data-to="up"] .sl-dock-pop { bottom: calc(100% + var(--sl-space-5)); left: var(--sl-d-dock-px, 50%); transform: translateX(-50%); }
+.sl-dock[data-to="down"] .sl-dock-pop { top: calc(100% + var(--sl-space-5)); left: var(--sl-d-dock-px, 50%); transform: translateX(-50%); }
+.sl-dock[data-to="right"] .sl-dock-pop { top: var(--sl-d-dock-py, 50%); left: calc(100% + var(--sl-space-5)); transform: translateY(-50%); }
+.sl-dock[data-to="left"] .sl-dock-pop { top: var(--sl-d-dock-py, 50%); right: calc(100% + var(--sl-space-5)); transform: translateY(-50%); }
+
+.sl-dock-cap {
+  display: flex;
+  align-items: center;
+  gap: var(--sl-space-2);
+  margin: 0 0 var(--sl-space-4);
+  font-weight: var(--sl-weight-semibold);
+}
+
+.sl-dock-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--sl-space-4) var(--sl-space-3);
+}
+
+.sl-dock-grid a {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: var(--sl-space-2);
+  color: var(--sl-text);
+  font-size: var(--sl-font-micro);
+  text-align: center;
+  text-decoration: none;
+}
+
+.sl-dock-grid a > span:first-child,
+.sl-dock-lp-item > a > span:first-child {
+  display: grid;
+  place-items: center;
+  width: var(--sl-size-tile);
+  height: var(--sl-size-tile);
+  border-radius: var(--sl-radius-circle);
+  background: linear-gradient(160deg, color-mix(in srgb, currentColor var(--sl-dock-mix), var(--sl-solid-text)), currentColor);
+  color: var(--sl-primary);
+  font-size: var(--sl-font-h3);
+}
+
+.sl-dock-grid a > span:first-child > .bi,
+.sl-dock-lp-item > a > span:first-child > .bi {
+  color: var(--sl-solid-text);
+}
+
+.sl-dock-grid a:hover > span:last-of-type,
+.sl-dock-grid a:focus-visible > span:last-of-type {
+  color: var(--sl-primary);
+}
+
+.sl-dock-dead {
+  position: absolute;
+  top: 0;
+  right: var(--sl-space-6);
+  width: var(--sl-space-4);
+  height: var(--sl-space-4);
+  box-sizing: border-box;
+  border: var(--sl-ring-width) solid var(--sl-bg);
+  border-radius: var(--sl-radius-circle);
+  background: var(--sl-warning);
+}
+
+/* ---------- С6 С7 С8 С9 What the menu carries on the site only ---------- */
+
+/* An app the script or the page sets aside stays away whatever its display */
+.sl-dock-app[hidden] {
+  display: none;
+}
+
+/* С6 Folded, the mark carries the sum of the queue */
+.sl-dock-home-badge {
+  display: none;
+}
+
+.sl-dock[data-min] .sl-dock-home-badge:not([hidden]) {
+  display: grid;
+}
+
+/* С8 The queue: up to four apps with their figures lying across, one bell with the sum standing upright */
+.sl-dock-queue:not(:has(> :not([hidden]))) {
+  display: none;
+}
+
+.sl-dock-qapp { color: var(--sl-success); }
+.sl-dock-qapp:nth-child(4n + 2 of :not([hidden])) { color: var(--sl-primary); }
+.sl-dock-qapp:nth-child(4n + 3 of :not([hidden])) { color: var(--sl-accent); }
+.sl-dock-qapp:nth-child(4n of :not([hidden])) { color: var(--sl-warning); }
+
+.sl-dock-qone {
+  display: none;
+  color: var(--sl-danger);
+}
+
+.sl-dock[data-dir="col"] .sl-dock-qapp {
+  display: none;
+}
+
+.sl-dock[data-dir="col"] .sl-dock-qone:not([hidden]) {
+  display: flex;
+}
+
+.sl-dock-badge.sl-dock-count {
+  background: var(--sl-danger);
+}
+
+.sl-dock-qlist {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sl-space-1);
+}
+
+.sl-dock-qlist a {
+  display: flex;
+  align-items: center;
+  gap: var(--sl-space-3);
+  padding: var(--sl-space-2) var(--sl-space-3);
+  border-radius: var(--sl-radius-2);
+  color: var(--sl-text);
+  text-decoration: none;
+}
+
+.sl-dock-qlist a[hidden] {
+  display: none;
+}
+
+.sl-dock-qlist a:hover,
+.sl-dock-qlist a:focus-visible {
+  background: var(--sl-bg-muted);
+}
+
+.sl-dock-qlist b {
+  margin-left: auto;
+  padding: 0 var(--sl-space-3);
+  border-radius: var(--sl-radius-pill);
+  background: var(--sl-danger);
+  color: var(--sl-on-solid);
+  font-size: var(--sl-font-micro);
+}
+
+/* С9 All the sections: one grid with a search, each tile with its star */
+.sl-dock-pop.sl-dock-pop-wide {
+  width: min(var(--sl-dock-width), calc(100vw - var(--sl-space-6) * 2));
+}
+
+.sl-dock-pop-wide > .sl-dock-note {
+  margin: 0 0 var(--sl-space-3);
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-small);
+}
+
+.sl-dock-find {
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.sl-dock-lp-group {
+  margin: var(--sl-space-4) 0 var(--sl-space-3);
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-micro);
+  font-weight: var(--sl-weight-semibold);
+  letter-spacing: var(--sl-track-wide);
+  text-transform: uppercase;
+}
+
+.sl-dock-lp {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: var(--sl-space-3);
+}
+
+.sl-dock-lp-item {
+  position: relative;
+}
+
+.sl-dock-lp-item[hidden],
+.sl-dock-lp-group[hidden],
+.sl-dock-lp[hidden],
+.sl-dock-none[hidden] {
+  display: none;
+}
+
+.sl-dock-lp-item > a {
+  display: grid;
+  justify-items: center;
+  gap: var(--sl-space-2);
+  padding: var(--sl-space-3) var(--sl-space-1);
+  border-radius: var(--sl-radius-2);
+  color: var(--sl-text);
+  font-size: var(--sl-font-micro);
+  line-height: var(--sl-line-tight);
+  text-align: center;
+  text-decoration: none;
+}
+
+.sl-dock-lp-item > a:hover,
+.sl-dock-lp-item > a:focus-visible {
+  background: var(--sl-bg-muted);
+}
+
+.sl-dock-lp-item:nth-child(4n + 2) > a > span:first-child { color: var(--sl-success); }
+.sl-dock-lp-item:nth-child(4n + 3) > a > span:first-child { color: var(--sl-accent); }
+.sl-dock-lp-item:nth-child(4n) > a > span:first-child { color: var(--sl-warning); }
+
+/* The star stays out of the way until the tile is under the hand or in focus; a pinned one stays lit */
+.sl-dock-star {
+  position: absolute;
+  top: var(--sl-space-1);
+  right: var(--sl-space-2);
+  display: grid;
+  place-items: center;
+  width: var(--sl-space-7);
+  height: var(--sl-space-7);
+  padding: 0;
+  border: 0;
+  border-radius: var(--sl-radius-circle);
+  background: none;
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-small);
+  cursor: pointer;
+  opacity: 0;
+}
+
+.sl-dock-lp-item:hover .sl-dock-star,
+.sl-dock-star:focus-visible,
+.sl-dock-star[aria-pressed="true"] {
+  opacity: 1;
+}
+
+.sl-dock-star[aria-pressed="true"] {
+  color: var(--sl-warning);
+}
+
+.sl-dock-none {
+  margin: var(--sl-space-4) 0 0;
+  color: var(--sl-text-muted);
+  text-align: center;
+}
+
+/* A phone: the pill lies across at the bottom with the tile of a control; the pins go to all the sections, the queue to its bell, the card, the grip and the turn stay away */
+@media (max-width: 560px) {
+  .sl-dock-pins, .sl-dock-pins + .sl-dock-sep, .sl-dock-me, .sl-dock-qapp { display: none; }
+  .sl-dock-qone:not([hidden]) { display: flex; }
+  .sl-dock-app { width: var(--sl-size-control); height: var(--sl-size-control); font-size: var(--sl-font-body); transform: none; }
+  .sl-dock-app img { width: var(--sl-size-icon-xs); height: var(--sl-size-icon-xs); }
+  .sl-dock-sep { height: calc(var(--sl-size-control) * 0.7); }
+  .sl-dock-body { gap: var(--sl-space-2); padding-inline: var(--sl-space-2); }
+  .sl-dock-tools > :is(.sl-dock-grip, .sl-dock-turn) { display: none; }
+}

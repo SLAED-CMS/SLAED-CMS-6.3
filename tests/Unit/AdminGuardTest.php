@@ -243,4 +243,34 @@ final class AdminGuardTest extends TestCase
         $this->assertStringNotContainsString('getSessionStats', substr($open, 0, (int)strpos($open, ';')), 'The watch window answers without the token');
         $this->assertSame(2, substr_count($index, "case 'getSessionStats': getSessionStats(); exit;"));
     }
+
+    # The pins of the floating menu come from a cookie: the option stores only eight plain keys, and the menu draws only a section its administrator may open
+    #[Test]
+    public function thePinsOfTheMenuAreHeldAtBothEnds(): void
+    {
+        $option = $this->getBody('admin/index.php', 'setAdminOption');
+        $this->assertStringContainsString("count(\$pins) > 8 || preg_grep('#[^a-z0-9_]#', \$pins)", $option, 'The option stores a list of pins it never checked');
+        $store = strpos($option, "setCookies(\$key, time() + 31536000, implode('-', \$pins))");
+        $this->assertLessThan($store, strpos($option, 'http_response_code(400)'), 'The pins are stored before they are checked');
+        $dock = $this->getBody('core/system.php', 'getAdminDock');
+        $this->assertStringContainsString('if (!isset($list[$key]) || count($pins) === 8) continue;', $dock, 'The menu draws a pin of a closed section or a ninth one');
+        $open = "((\$typ === 0) ? !isAdmin(true) : (!is_admin_modul(\$key) || !is_file(BASE_DIR.'/modules/'.\$key.'/admin/index.php')))";
+        $this->assertStringContainsString($open, $this->getBody('core/system.php', 'getAdminSectionList'), 'A section its administrator may not open is listed');
+    }
+
+    # The menu on the site serves an administrator alone: its script, its sections behind the token, its link into the panel only where its moderator may go
+    #[Test]
+    public function theMenuOnTheSiteIsForTheAdministrator(): void
+    {
+        $this->assertStringContainsString("if (isAdmin() && (defined('ADMIN_FILE') || !isThemeFlag('dock-site-off')))", $this->getBody('core/system.php', 'doScript'));
+        $index = $this->getFile('public/index.php');
+        $open = substr($index, (int)strpos($index, '$public = '), 400);
+        $this->assertStringNotContainsString('getAdminSectionData', substr($open, 0, (int)strpos($open, ';')), 'All the sections answer without the token');
+        $this->assertStringContainsString("isAdmin() && in_array(\$op, ['getAdminQueueData', 'getAdminSectionData'], true)", $index);
+        $page = $this->getBody('core/system.php', 'getAdminPageLink');
+        $this->assertStringContainsString("if (defined('ADMIN_FILE') || !isAdmin() || \$key === '') return [];", $page);
+        $rule = 'if (!$ctx->super && !in_array($key, $ctx->mods, true)) return [];';
+        $this->assertStringContainsString($rule, $page, 'The link edits a material of a type its administrator does not moderate');
+        $this->assertStringContainsString("'dock-site-off'", $this->getBody('admin/index.php', 'setAdminOption'));
+    }
 }

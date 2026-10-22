@@ -473,8 +473,8 @@ function setExit(string $msg, string $typ = '', string $title = ''): never {
         .$tpl->getHtmlFrag('head-meta', ['name' => 'robots', 'content' => 'noindex, follow'])."\n";
     $license = getLicenseHtml();
     $adlogo = basename((string)($conf['admin_logo'] ?? 'slaed_logo_256x73.png'));
-    $adpath = getThemeImagePath('logos/'.$adlogo);
-    if (!is_file(PUBLIC_DIR.'/'.$adpath)) $adpath = getThemeImagePath('logos/slaed_logo_256x73.png');
+    $adpath = getThemeFilePath('images/logos/'.$adlogo);
+    if (!is_file(PUBLIC_DIR.'/'.$adpath)) $adpath = getThemeFilePath('images/logos/slaed_logo_256x73.png');
     $linksrc = [];
     $favicon = 'templates/'.$theme.'/images/favicon.svg';
     if (is_file(PUBLIC_DIR.'/'.$favicon)) {

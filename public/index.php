@@ -234,6 +234,7 @@ if (empty($go)) {
             case 'getPrivateMessageView': echo getPrivateMessageView(); break;
             case 'setPrivateMessageRead': setPrivateMessageRead(); break;
             case 'addPrivateMessage': addPrivateMessage(); break;
+            case 'getPrivateCountData': getPrivateCountData(); exit;
             case 'updatePrivatBox': updatePrivatBox(); break;
             case 'addFavorite': addFavorite(); break;
             case 'getFavoriteList': getFavoriteList(); break;
@@ -288,7 +289,7 @@ if (empty($go)) {
             die('Illegal file access');
         }
     } elseif ($go == 5) {
-        if (isAdmin(true) || (isAdmin() && $op === 'getAdminQueueData')) {
+        if (isAdmin(true) || (isAdmin() && in_array($op, ['getAdminQueueData', 'getAdminSectionData'], true))) {
             define('ADMIN_FILE', true);
             getLang('admin');
             Cache::setHeaders();
@@ -302,6 +303,7 @@ if (empty($go)) {
                 case 'getUserSessionAdminInfo': getUserSessionAdminInfo(); break;
                 case 'getSessionStats': getSessionStats(); exit;
                 case 'getAdminQueueData': getAdminQueueData(); exit;
+                case 'getAdminSectionData': getAdminSectionData(); exit;
                 case 'getCockpitData': header('Content-Type: application/json; charset=UTF-8'); echo json_encode(getCockpitData()); exit;
                 case 'getAdminFileList': getAdminFileList(); break;
                 case 'getAdminFileData': getAdminFileData(); break;

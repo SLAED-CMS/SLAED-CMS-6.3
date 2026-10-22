@@ -19,7 +19,7 @@ function checkModuleConfig(string $name, int $typ): bool {
     return strpos((string)file_get_contents($file), "case 'config'") !== false;
 }
 
-# Build one dashboard module card or one sidebar menu row from a module config entry; the row of the open section is marked current
+# Build one dashboard module card or one sidebar menu row from a module config entry; the row of the open section is marked current, every fan can pin it
 # The module node has no public route of its own: its types carry their site links on its list of types
 function getAdminMenu(string $name, array $mod, bool $open = false): string {
     global $panel, $afile, $tpl;
@@ -32,6 +32,9 @@ function getAdminMenu(string $name, array $mod, bool $open = false): string {
     $qnum = array_sum(array_column($rows, 'num'));
     $ltitle = $off ? $title.' - '._DEACT : $title;
     $dial = [];
+    $pinned = in_array($name, explode('-', getCookies('pins')), true);
+    $pin = ['pin' => $name, 'is_pinned' => $pinned, 'title' => $pinned ? _ADM_UNPIN : _ADM_PIN, 'icon_name' => $pinned ? 'pin-angle-fill' : 'pin-angle'];
+    if (!isAdmin(true)) $dial[] = $pin;
     if (isAdmin(true)) {
         $typ = (int)($mod['type'] ?? 1);
         $dial[] = ['href' => $afile.'.php?name=modules&op=edit&mod='.$name, 'title' => _FULLEDIT, 'icon_name' => 'pencil-square'];
@@ -39,6 +42,7 @@ function getAdminMenu(string $name, array $mod, bool $open = false): string {
         if (in_array($name, getCategoryModules(), true)) $dial[] = ['href' => $afile.'.php?name=categories&modul='.$name, 'title' => _CATEGORIES, 'icon_name' => 'folder2'];
         if ($typ === 1 && !$off && $name !== 'node') $dial[] = ['href' => 'index.php?name='.$name, 'title' => _VIEWSITE, 'icon_name' => 'arrow-up-right-circle'];
         $dial[] = ['href' => $url.'&op=info', 'title' => _MANUAL, 'icon_name' => 'info-circle'];
+        $dial[] = $pin;
         $dial[] = getTplPostAction(['name' => 'modules', 'op' => 'status', 'mod' => $name, 'act' => $off ? '1' : '0', 'refer' => 1], 'power', $off ? _ACTIVATE : _DEACTIVATE)
             + ['later' => 'flip '.($off ? 'on' : 'off')];
     }
@@ -77,25 +81,18 @@ function getAdminPanelBlocks(): string {
     if (!$panel) {
         $cont = '';
         $block = '';
+        $list = getAdminSectionList();
         if (isAdmin(true)) {
-            foreach ($conf['modules'] as $key => $mod) {
-                if (($mod['type'] ?? 1) == 0) $cont .= getAdminMenu($key, $mod, $key === $name);
-            }
+            foreach ($list as $key => $row) if ($row['is_panel']) $cont .= getAdminMenu($key, $conf['modules'][$key], $key === $name);
             $block = $tpl->getHtmlPart('block-sidebar', [
                 'title' => _ADMIN, 'icon_name' => 'person-gear', 'content_html' => $cont, 'id' => '1', 'close' => _OPCL, 'is_find' => true,
             ]);
             $cont = '';
         }
-        foreach ($conf['modules'] as $key => $mod) {
-            if (($mod['type'] ?? 1) == 1) {
-                if (isAdmin(true) || is_admin_modul($key)) {
-                    $path = BASE_DIR.'/modules/'.$key.'/admin';
-                    if (file_exists($path.'/index.php')) {
-                        $cont .= getAdminMenu($key, $mod, $key === $name);
-                        getLang($key, true);
-                    }
-                }
-            }
+        foreach ($list as $key => $row) {
+            if ($row['is_panel']) continue;
+            $cont .= getAdminMenu($key, $conf['modules'][$key], $key === $name);
+            getLang($key, true);
         }
         $block .= $tpl->getHtmlPart('block-sidebar', [
             'title' => _MODULES, 'icon_name' => 'people', 'content_html' => $cont, 'id' => '2', 'close' => _OPCL, 'is_find' => true,
@@ -132,9 +129,7 @@ function getAdminPanel(): void {
     if ($panel) {
         if (isAdmin(true)) {
             $items = [];
-            foreach ($conf['modules'] as $name => $mod) {
-                if (($mod['type'] ?? 1) == 0) $items[] = getAdminMenu($name, $mod);
-            }
+            foreach (getAdminSectionList() as $name => $row) if ($row['is_panel']) $items[] = getAdminMenu($name, $conf['modules'][$name]);
             $content .= $tpl->getHtmlPart('dashboard-panel', [
                 'panel_id' => 'sl_panel_admin',
                 'title' => _MODADMINPANEL,
@@ -144,16 +139,10 @@ function getAdminPanel(): void {
             ]);
         }
         $items = [];
-        foreach ($conf['modules'] as $name => $mod) {
-            if (($mod['type'] ?? 1) == 1) {
-                if (isAdmin(true) || is_admin_modul($name)) {
-                    $path = BASE_DIR.'/modules/'.$name.'/admin';
-                    if (file_exists($path.'/index.php')) {
-                        $items[] = getAdminMenu($name, $mod);
-                        getLang($name, true);
-                    }
-                }
-            }
+        foreach (getAdminSectionList() as $name => $row) {
+            if ($row['is_panel']) continue;
+            $items[] = getAdminMenu($name, $conf['modules'][$name]);
+            getLang($name, true);
         }
         $content .= $tpl->getHtmlPart('dashboard-panel', [
             'panel_id' => 'sl_panel_site',
@@ -382,7 +371,7 @@ function getAdminLoginForm(): void {
     setFoot();
 }
 
-# Store one answer the page has already applied, so the reply is a status: mode, motion, rail and list view as cookies, the editor on the row and in the session
+# Store one answer the page has already applied, so the reply is a status: shell states, menu pins and list view as cookies, the editor on the row and in the session
 function setAdminOption(): void {
     global $db, $admin, $conf;
     if (!checkAdminPost('option')) {
@@ -392,7 +381,9 @@ function setAdminOption(): void {
     $key = getVar('post', 'key', 'var', '');
     $val = getVar('post', 'value', 'var', '');
     $part = explode(':', base64_decode($_SESSION[$conf['admin_c']] ?? '', true), 4);
-    if (!in_array($key, ['mode', 'still', 'rail', 'density', 'editor'], true) || ($key === 'editor' && count($part) !== 4)) {
+    $pins = ($key === 'pins') ? array_unique(array_filter(explode('-', $val))) : [];
+    if (!in_array($key, ['mode', 'still', 'rail', 'dock-off', 'dock-site-off', 'density', 'pins', 'editor'], true) || ($key === 'editor' && count($part) !== 4)
+        || count($pins) > 8 || preg_grep('#[^a-z0-9_]#', $pins)) {
         setAdminLog(['result' => 'refused']);
         http_response_code(400);
         exit;
@@ -401,6 +392,9 @@ function setAdminOption(): void {
         setThemeMode($val);
     } elseif ($key === 'density') {
         if (in_array($val, ['full', 'compact', 'cards'], true)) setCookies($key, time() + 31536000, $val);
+        else setCookiesDelete($key);
+    } elseif ($key === 'pins') {
+        if ($pins) setCookies($key, time() + 31536000, implode('-', $pins));
         else setCookiesDelete($key);
     } elseif ($key !== 'editor') {
         if ($val === '1') setCookies($key, time() + 31536000, '1');

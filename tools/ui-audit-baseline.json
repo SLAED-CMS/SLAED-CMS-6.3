@@ -1,5 +1,5 @@
 {
-    "generated": "2026-10-21T21:44:48Z",
+    "generated": "2026-10-22T12:29:28Z",
     "themes": {
         "admin": {
             "count": 0,
@@ -7,7 +7,7 @@
             "dup": 0,
             "names": 0,
             "dead": 0,
-            "single": 151,
+            "single": 153,
             "alias": 0,
             "unsat": 0,
             "unmet": 0,
@@ -15,7 +15,7 @@
             "clash": 0,
             "classes": 0,
             "important": 14,
-            "tokens": 349,
+            "tokens": 354,
             "contrast": 0
         },
         "lite": {
@@ -24,7 +24,7 @@
             "dup": 0,
             "names": 0,
             "dead": 0,
-            "single": 199,
+            "single": 202,
             "alias": 0,
             "unsat": 0,
             "unmet": 0,
@@ -32,7 +32,7 @@
             "clash": 0,
             "classes": 0,
             "important": 10,
-            "tokens": 447,
+            "tokens": 454,
             "contrast": 0
         }
     },
@@ -92,6 +92,11 @@
             "--sl-danger",
             "--sl-danger-strong",
             "--sl-dial-dur",
+            "--sl-dock-gap",
+            "--sl-dock-height",
+            "--sl-dock-max-height",
+            "--sl-dock-max-width",
+            "--sl-dock-mix",
             "--sl-donut-height",
             "--sl-donut-ring",
             "--sl-donut-width",
@@ -466,6 +471,12 @@
             "--sl-demo-height",
             "--sl-dial-dur",
             "--sl-dial-gap",
+            "--sl-dock-gap",
+            "--sl-dock-height",
+            "--sl-dock-max-height",
+            "--sl-dock-max-width",
+            "--sl-dock-mix",
+            "--sl-dock-width",
             "--sl-donut-height",
             "--sl-donut-ring",
             "--sl-donut-width",
@@ -765,6 +776,7 @@
             "--sl-skel-row-height",
             "--sl-skel-tile-height",
             "--sl-skel-width",
+            "--sl-solid-text",
             "--sl-sort-width",
             "--sl-space-1",
             "--sl-space-10",

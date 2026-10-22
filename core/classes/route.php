@@ -38,7 +38,7 @@ final class Route {
     private const COMMON = ['mode', 'newlang'];
 
     # Names no type takes besides the modules: the entries of public/, the uploads the light path answers before the core, the prefix of the connector
-    private const TYPES = ['admin', 'api', 'demo', 'error', 'favicon', 'index', 'phoenix', 'plugins', 'robots', 'setup', 'sitemap', 'sound', 'templates',
+    private const TYPES = ['admin', 'api', 'demo', 'error', 'favicon', 'index', 'phoenix', 'plugins', 'robots', 'setup', 'sitemap', 'templates',
         'update', 'uploads'];
 
     # How many paths a racing writer may take first before this one gives up

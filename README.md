@@ -75,8 +75,8 @@ an older release is not updated by this release, see [UPGRADING.md](UPGRADING.md
 ### Document Root and Web Server
 
 The browser may reach the folder `public/` and nothing else. It holds the entries (`index.php`, `admin.php`,
-`setup.php`, `update.php`), `.htaccess`, `robots.txt`, `error.html`, the sitemap files, `templates/`, `plugins/` and
-`sound/`. Everything else stays outside: the code in `core/`, `modules/`, `admin/`, the settings in `config/`, the
+`setup.php`, `update.php`), `.htaccess`, `robots.txt`, `error.html`, the sitemap files, `templates/` and
+`plugins/`. Everything else stays outside: the code in `core/`, `modules/`, `admin/`, the settings in `config/`, the
 logs and database backups in `storage/`, and every uploaded file in `uploads/`. The files of the public folders of
 `uploads/` (avatars, `all/` and `presentation/`) are still served at `/uploads/...` by `index.php`; the files of a
 content type, the forum, the private messages, the profiles and the poll comments only through the checked route of
@@ -226,7 +226,6 @@ slaed-cms/
 ├── modules/               # Frontend modules
 ├── public/                # The document root: the only part a browser reaches
 │   ├── plugins/           # Bundled JS/editor/plugin assets
-│   ├── sound/             # Bundled sound assets
 │   ├── templates/         # Themes and template trees
 │   ├── .htaccess          # Rewrite rules of the document root
 │   ├── admin.php          # Admin entry point, runs admin/index.php

@@ -449,11 +449,11 @@ function getUserInfo(): array {
 # The avatar folder is named relative to UPLOADS_DIR, a leading uploads/ of a stored value dropped, and its address is the one of getUploadUrl(), as for every public owner
 function getUserAvatarUrl(array $userinfo = [], bool $deleted = false): string {
     global $conf;
-    $base = getThemeImageUrl('avatars/');
+    $base = getThemeFileUrl('images/avatars/');
     if ($deleted) return $base.'system/deleted.svg';
     if (!$userinfo) return $base.'system/guest.svg';
     $ava = $userinfo['avatar'] ?? '';
-    $preset = preg_match('#^presets/[\w.-]+\.(gif|png|jpe?g|svg)$#i', $ava) && file_exists(PUBLIC_DIR.'/'.getThemeImagePath('avatars/'.$ava));
+    $preset = preg_match('#^presets/[\w.-]+\.(gif|png|jpe?g|svg)$#i', $ava) && file_exists(PUBLIC_DIR.'/'.getThemeFilePath('images/avatars/'.$ava));
     if (str_starts_with($ava, 'presets/')) return $preset ? $base.$ava : $base.'system/user.svg';
     $room = preg_replace('#^uploads(?:/|$)#', '', trim(str_replace('\\', '/', (string)($conf['users']['adirectory'] ?? '')), '/'));
     $href = ($ava !== '' && $room !== '' && is_file(UPLOADS_DIR.'/'.$room.'/'.$ava)) ? getUploadUrl($room.'/'.$ava) : '';
@@ -1284,7 +1284,15 @@ function addPrivateMessage(): void {
             ]);
         }
     }
+    header('HX-Trigger: '.json_encode(['sl-sound' => 'send']));
     echo getPrivateMessageView('', sprintf(_PRSENDED, $name), 4);
+}
+
+# Answer the poll of the private messages: the unread number the badges show, so a new message is heard and counted without a reload
+function getPrivateCountData(): void {
+    global $user, $conf, $prv;
+    header('Content-Type: application/json; charset=UTF-8');
+    echo json_encode(['num' => (is_user() && $conf['privat']['act']) ? $prv->getUnreadCount(intval($user[0])) : 0]);
 }
 
 # Open one message of a mailbox and answer the right column of the layout, with the row it changed and the navigation counters as out-of-band swaps beside it
@@ -1848,7 +1856,7 @@ switch(getVar('get', 'stat', 'num', 0)) {
     case 1:
     $img = getVar('get', 'img', 'num', 0) ? '_'.getVar('get', 'img', 'num', 0) : '';
     $stat = getStatsToday();
-    $image = imagecreatefrompng(PUBLIC_DIR.'/'.getThemeImagePath('banners/stat'.$img.'.png'));
+    $image = imagecreatefrompng(PUBLIC_DIR.'/'.getThemeFilePath('images/banners/stat'.$img.'.png'));
     $white = imagecolorallocate($image, 255, 255, 255);
     imagestring($image, 1, 22, 4, $stat['visits'].'/'.$stat['hosts'], $white);
     header('Content-type: image/png');

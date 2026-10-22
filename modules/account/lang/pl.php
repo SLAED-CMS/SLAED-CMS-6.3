@@ -44,6 +44,11 @@ define('_ACCOUNT_UNSUBOK','Adres %s nie otrzymuje już newslettera serwisu. Pono
 define('_ACCOUNT_VIEWNOTE','Ukryty adres nie jest pokazywany nawet w Twoich informacjach.');
 define('_ACCOUNT_WORK','Zawód');
 define('_ACCOUNT_YEARS','Lat z projektem');
+define('_ACCOUNT_SOUND','Dźwięk');
+define('_ACCOUNT_SOUNDNOTE','Zapisywane w tej przeglądarce dla strony i panelu: które zdarzenia słychać na tym urządzeniu.');
+define('_ACCOUNT_SNDALERT','Powiadomienia i pytania');
+define('_ACCOUNT_SNDQUEUE','Kolejka moderacji');
+define('_ACCOUNT_SNDWIN','Opróżniona kolejka');
 define('_ACTERROR1','Dane użytkownika są niepoprawne.<br>Proszę sprawdzić wprowadzone dane, lub jeśli nie Jesteś jeszcze zarejestrowany, to zarejestruj się już teraz <a href="%s">tutaj</a>.');
 define('_ACTERROR2','Użytkownika z takimi danymi w bazie danych nie odnaleziono.<br>możesz zarejestrować się <a href="%s">tutaj</a>.');
 define('_ACTIVATIONERROR','Błąd podczas aktywacji nowego użytkownika');

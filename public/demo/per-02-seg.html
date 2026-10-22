@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="ru" data-theme="auto">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Сегмент &middot; Строк на странице — стенд SLAED CMS</title>
+  <link rel="stylesheet" href="../templates/admin/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../templates/admin/assets/css/base.css">
+  <link rel="stylesheet" href="../templates/admin/assets/css/theme.css">
+  <!-- The stand is served without Cache-Control; its sheets and scripts are stamped so an edit is seen at once -->
+  <script>document.write('<link rel="stylesheet" href="assets/demo.css?v=' + Date.now() + '"><link rel="stylesheet" href="assets/tbl.css?v=' + Date.now() + '"><link rel="stylesheet" href="assets/per.css?v=' + Date.now() + '">');</script>
+  <script src="../plugins/system/global-func.js"></script>
+  <script src="../plugins/system/slaed.js"></script>
+  <script src="../templates/admin/assets/js/admin-ui.js"></script>
+  <style>
+    /* Сегмент: a segmented rail of the theme beside the view switch, the plate travels to the number in force */
+    .sl-list-view { display: flex; align-items: center; gap: var(--sl-space-2); }
+    .v-rows { display: inline-flex; align-items: center; gap: var(--sl-space-2); }
+    .v-cap { color: var(--sl-text-muted); font-size: var(--sl-font-small); }
+    .v-seg .sl-seg-cell { position: relative; padding: 0 var(--sl-space-3); font-size: var(--sl-font-small); font-variant-numeric: tabular-nums; }
+    /* The default of the module: a dot under its number */
+    .v-seg [data-per-is-def]::after { content: ""; position: absolute; bottom: var(--sl-space-1); left: 50%; width: var(--sl-space-1); height: var(--sl-space-1); border-radius: var(--sl-radius-circle); background: currentColor; opacity: var(--sl-fade-muted); transform: translateX(-50%); }
+    .v-back { width: var(--sl-size-chip); padding: 0; background: transparent; color: var(--sl-text-muted); }
+    .v-back:disabled { display: none; }
+  </style>
+</head>
+<body>
+  <template data-per-face data-per-slot="view">
+    <span class="v-rows"><span class="v-cap" id="per-cap-{n}">Строк</span><span class="sl-seg v-seg" data-sl-knob="rows" role="group" aria-labelledby="per-cap-{n}"><span class="sl-seg-knob" data-sl-knob-mark aria-hidden="true"></span><button type="button" class="sl-seg-cell" data-per-set="10" title="10 строк на странице">10</button><button type="button" class="sl-seg-cell" data-per-set="25" title="25 строк на странице">25</button><button type="button" class="sl-seg-cell" data-per-set="50" title="50 строк на странице">50</button><button type="button" class="sl-seg-cell" data-per-set="100" title="100 строк на странице">100</button><button type="button" class="sl-seg-cell" data-per-set="250" title="250 строк на странице">250</button></span><button type="button" class="sl-but-mini v-back" data-per-reset title="По умолчанию модуля" aria-label="По умолчанию модуля"><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i></button><span class="sl-pager-sep" aria-hidden="true"></span></span>
+  </template>
+  <script>document.write('<script src="assets/tbl.js?v=' + Date.now() + '"><\/script>');</script>
+  <script>document.write('<script src="assets/per.js?v=' + Date.now() + '"><\/script>');</script>
+  <script>document.write('<script src="assets/demo.js?v=' + Date.now() + '"><\/script>');</script>
+</body>
+</html>

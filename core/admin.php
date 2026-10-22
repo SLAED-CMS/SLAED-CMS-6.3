@@ -226,7 +226,7 @@ function getLanguageList(): array {
     return $list;
 }
 
-# Render one settings row, the list captioned by its field: the language posts newlang and reloads, the rest go to op option and apply at once
+# Render one settings row, the list captioned by its field: the language posts newlang and reloads, the menu edge and the sound stay in the browser, the rest go to op option
 function getAdminSettingsRow(string $axis): string {
     global $admin, $conf, $afile, $locale, $tpl;
     $list = [];
@@ -236,6 +236,18 @@ function getAdminSettingsRow(string $axis): string {
     } elseif ($axis === 'still') {
         $list = ['0' => _ON, '1' => _OFF];
         $row = ['icon' => 'magic', 'title' => _ADM_MOTION, 'now' => isThemeFlag('still') ? '1' : '0'];
+    } elseif ($axis === 'sound') {
+        $list = ['1' => _ON, '0' => _OFF];
+        $row = ['icon' => 'volume-up', 'title' => _ADM_SOUND, 'now' => '1'];
+    } elseif ($axis === 'dock-off') {
+        $list = ['0' => _ON, '1' => _OFF];
+        $row = ['icon' => 'capsule', 'title' => _ADM_DOCK, 'now' => isThemeFlag('dock-off') ? '1' : '0'];
+    } elseif ($axis === 'dock-site-off') {
+        $list = ['0' => _ON, '1' => _OFF];
+        $row = ['icon' => 'globe2', 'title' => _ADM_DOCKSITE, 'now' => isThemeFlag('dock-site-off') ? '1' : '0'];
+    } elseif ($axis === 'dock-side') {
+        $list = ['' => _ADM_DOCKFREE, 'top' => _TOP, 'right' => _RIGHT, 'bottom' => _BOTTOM, 'left' => _LEFT];
+        $row = ['icon' => 'arrows-move', 'title' => _ADM_DOCKPOS, 'now' => 'bottom'];
     } elseif ($axis === 'editor') {
         $row = ['icon' => getIconName('editor'), 'title' => _EDITOR, 'now' => (string)($admin[3] ?? $conf['editor']['admin'] ?? 'plain')];
     } else {
@@ -252,11 +264,11 @@ function getAdminSettingsRow(string $axis): string {
         if (!$list) return '';
         $opts = '';
         foreach ($list as $val => $label) {
-            $opts .= $tpl->getHtmlFrag('select-option', ['value_attr' => $val, 'label_text' => $label, 'is_selected' => (string)$val === $row['now']]);
+            $opts .= $tpl->getHtmlFrag('select-option', ['value_attr' => $val, 'label_text' => $label, 'is_selected' => (string)$val === $row['now'], 'is_hidden' => $val === '']);
         }
         $pick = $tpl->getHtmlFrag('select', ['name_attr' => $field, 'select_class' => '', 'selectid' => $pid, 'options_html' => $opts]);
     }
-    $hide = ['op' => $op, 'token' => getSiteToken($op)] + ($op === 'option' ? ['key' => $axis] : ['refer' => '1']);
+    $hide = in_array($axis, ['dock-side', 'sound'], true) ? [] : ['op' => $op, 'token' => getSiteToken($op)] + ($op === 'option' ? ['key' => $axis] : ['refer' => '1']);
     $html = '';
     foreach ($hide as $key => $val) $html .= $tpl->getHtmlFrag('hidden', ['name_attr' => $key, 'value_attr' => $val, 'input_attr' => '']);
     return $tpl->getHtmlFrag('settings-row', [
@@ -274,7 +286,8 @@ function getAdminSettingsRow(string $axis): string {
 # Render the settings window of the panel: the answers an administrator changes from any screen, applied where they stand except the language, which reloads
 function getAdminSettingsWindow(): string {
     global $tpl;
-    $rows = getAdminSettingsRow('mode').getAdminSettingsRow('still').getAdminSettingsRow('editor').getAdminSettingsRow('language');
+    $rows = '';
+    foreach (['mode', 'still', 'sound', 'dock-off', 'dock-site-off', 'dock-side', 'editor', 'language'] as $axis) $rows .= getAdminSettingsRow($axis);
     return $tpl->getHtmlFrag('window', [
         'win_id' => 'sl-settings',
         'size_class' => 'sl-modal-sm',
@@ -343,6 +356,7 @@ function getAdminLayoutVars(): array {
     $bell = ['rows' => $rows, 'sum' => array_sum(array_column($rows, 'num')), 'url' => 'index.php?go=5&op=getAdminQueueData&token='.getSiteToken()];
     return [
         'settings_win' => getAdminSettingsWindow(),
+        'dock_html' => getAdminDock(),
         'menu' => getAdminTopMenu(),
         'bell_html' => $tpl->getHtmlFrag('bell', $bell),
         'admin_blocks' => getAdminPanelBlocks().getAdminInfo().($panel ? adminblock() : ''),
@@ -371,6 +385,18 @@ function getAdminQueueData(): void {
         'left' => getAdminIdle() - time() + intval($_SESSION[$conf['admin_c'].'-time'] ?? 0),
         'rows' => array_map(static fn(array $row): array => ['key' => $row['key'], 'mod' => $row['mod'], 'num' => $row['num']], getAdminQueues()),
     ]);
+}
+
+# Answer "All sections" of the menu on the site: the sections this administrator may open in the two groups of the panel menu
+function getAdminSectionData(): void {
+    $out = [];
+    foreach (getAdminSectionList() as $key => $row) {
+        $grp = $row['is_panel'] ? 0 : 1;
+        $out[$grp] ??= ['title' => $row['is_panel'] ? _ADMIN : _MODULES, 'rows' => []];
+        $out[$grp]['rows'][] = ['key' => $key, 'href' => $row['href'], 'label' => getModuleLabel($key), 'icon' => $row['icon']];
+    }
+    header('Content-Type: application/json; charset=UTF-8');
+    echo json_encode(array_values($out));
 }
 
 # Return the database server version string reported by the SQL engine

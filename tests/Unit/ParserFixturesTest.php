@@ -16,8 +16,8 @@ namespace {
     if (!defined('_SHOWALL'))  define('_SHOWALL',  'Show all');
     if (!defined('_COLLAPSE')) define('_COLLAPSE', 'Collapse');
 
-    if (!function_exists('getThemeImagePath')) {
-        function getThemeImagePath(string $path): string { return '/img/'.$path; }
+    if (!function_exists('getThemeFileUrl')) {
+        function getThemeFileUrl(string $path): string { return '/'.$path; }
     }
     if (!function_exists('replace_break')) {
         function replace_break(string $s): string { return $s; }

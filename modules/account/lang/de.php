@@ -44,6 +44,11 @@ define('_ACCOUNT_UNSUBOK','Die Adresse %s erhält den Newsletter der Website nic
 define('_ACCOUNT_VIEWNOTE','Eine verborgene Adresse wird auch in Ihren Angaben nicht gezeigt.');
 define('_ACCOUNT_WORK','Beruf');
 define('_ACCOUNT_YEARS','Jahre im Projekt');
+define('_ACCOUNT_SOUND','Ton');
+define('_ACCOUNT_SOUNDNOTE','Wird in diesem Browser für die Website und das Panel gespeichert: welche Ereignisse auf diesem Gerät zu hören sind.');
+define('_ACCOUNT_SNDALERT','Hinweise und Rückfragen');
+define('_ACCOUNT_SNDQUEUE','Moderationswarteschlange');
+define('_ACCOUNT_SNDWIN','Geleerte Warteschlange');
 define('_ACTERROR1','Die Prüfzahl zur Freischaltung Ihres neuen Accounts ist nicht korrekt.<br>Sie müssen auf den per eMail erhaltenen Link klicken, damit Ihr Benutzerkonto freigeschaltet wird - <a href="%s">hier</a>.');
 define('_ACTERROR2','Es existiert kein Benutzer mit diesen Angaben in unserer Datenbank.<br>Sie können sich <a href="%s">hier</a> als neuen Benutzer kostenlos anmelden.');
 define('_ACTIVATIONERROR','Fehler bei der Benutzeraktivierung');

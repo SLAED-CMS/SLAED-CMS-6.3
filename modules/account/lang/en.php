@@ -44,6 +44,11 @@ define('_ACCOUNT_UNSUBOK','The address %s no longer receives the site newsletter
 define('_ACCOUNT_VIEWNOTE','A hidden address is not shown even in your information.');
 define('_ACCOUNT_WORK','Profession');
 define('_ACCOUNT_YEARS','Years with the project');
+define('_ACCOUNT_SOUND','Sound');
+define('_ACCOUNT_SOUNDNOTE','Kept in this browser for the site and the panel: which events of this device are heard.');
+define('_ACCOUNT_SNDALERT','Notices and questions');
+define('_ACCOUNT_SNDQUEUE','Moderation queue');
+define('_ACCOUNT_SNDWIN','An emptied queue');
 define('_ACTERROR1','New user verification number is invalid.<br>Please be sure to click on the link you received by email or apply for a new account <a href="%s">here</a>.');
 define('_ACTERROR2','There is no user in the database with this information.<br>You can register a new user from <a href="%s">here</a>.');
 define('_ACTIVATIONERROR','New User Activation Error');

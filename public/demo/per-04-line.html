@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="ru" data-theme="auto">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ряд чисел &middot; Строк на странице — стенд SLAED CMS</title>
+  <link rel="stylesheet" href="../templates/admin/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../templates/admin/assets/css/base.css">
+  <link rel="stylesheet" href="../templates/admin/assets/css/theme.css">
+  <!-- The stand is served without Cache-Control; its sheets and scripts are stamped so an edit is seen at once -->
+  <script>document.write('<link rel="stylesheet" href="assets/demo.css?v=' + Date.now() + '"><link rel="stylesheet" href="assets/tbl.css?v=' + Date.now() + '"><link rel="stylesheet" href="assets/per.css?v=' + Date.now() + '">');</script>
+  <script src="../plugins/system/global-func.js"></script>
+  <script src="../plugins/system/slaed.js"></script>
+  <script src="../templates/admin/assets/js/admin-ui.js"></script>
+  <style>
+    /* Ряд чисел: a quiet row of numbers under the bottom pager, the number in force is plain text, the others are links */
+    .v-line { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: var(--sl-space-1) var(--sl-space-2); margin: var(--sl-space-2) 0 0; color: var(--sl-text-muted); font-size: var(--sl-font-small); }
+    .v-num { padding: var(--sl-space-1) var(--sl-space-2); border: 0; border-radius: var(--sl-radius-1); background: transparent; color: var(--sl-primary-strong); font: inherit; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; font-variant-numeric: tabular-nums; }
+    .v-num:hover, .v-num:focus-visible { background: var(--sl-tint); }
+    .v-num.sl-is-active { color: var(--sl-text-strong); font-weight: var(--sl-weight-semibold); text-decoration: none; cursor: default; background: transparent; }
+    .v-num[data-per-is-def]::after { content: "*"; color: var(--sl-text-muted); }
+    .v-num:disabled { display: none; }
+    .v-dot { color: var(--sl-border-strong); }
+  </style>
+</head>
+<body>
+  <template data-per-face data-per-slot="foot" data-per-where="bottom">
+    <div class="v-line" role="group" aria-label="Строк на странице"><span>Показывать по</span><button type="button" class="v-num" data-per-set="10">10</button><button type="button" class="v-num" data-per-set="25">25</button><button type="button" class="v-num" data-per-set="50">50</button><button type="button" class="v-num" data-per-set="100">100</button><button type="button" class="v-num" data-per-set="250">250</button><span class="v-dot" aria-hidden="true">·</span><span>* умолчание модуля</span><button type="button" class="v-num" data-per-reset>вернуть <span data-per-base></span></button></div>
+  </template>
+  <script>document.write('<script src="assets/tbl.js?v=' + Date.now() + '"><\/script>');</script>
+  <script>document.write('<script src="assets/per.js?v=' + Date.now() + '"><\/script>');</script>
+  <script>document.write('<script src="assets/demo.js?v=' + Date.now() + '"><\/script>');</script>
+</body>
+</html>

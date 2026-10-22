@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="{{ lang }}" data-theme="{{ mode }}"{% if is_still %} data-sl-still{% endif %}>
+<html lang="{{ lang }}" data-theme="{{ mode }}"{% if is_still %} data-sl-still{% endif %}{% if sound_url %} data-sl-sound="{{ sound_url }}"{% endif %}{% if pm_poll %} data-sl-pm-poll="{{ pm_poll }}"{% endif %}>
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="format-detection" content="telephone=no">

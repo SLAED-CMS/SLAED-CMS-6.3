@@ -23,7 +23,7 @@ more: where a plan and this file disagree about the order, this file wins.
 | `docs/9-ADMIN-LOG-2026.md` | every journal of the site: the actions of the panel in `storage/logs/admin.log` in the one JSON format of `Logger`, written in `checkAdminPost()` with the logins; `user.log` and `oauth.log` on the same format; the login table `_login_log` for the profile and the panel; read on "Безопасность", linked from each module |
 | `docs/10-URL-2026.md` | readable addresses without `id` — `/files/adaptivnyi-shablon-pure` — in one registry of routes; one address per page, 301 for every other form, an address never reused |
 | `docs/11-UPDATE-2026.md` | updates from the panel: signed releases, the module `master` on slaed.net, the page "Обновления" in the core, the API as the branch `/api/` of `public/index.php` (written in Russian by the owner's wish) |
-| `docs/12-ADMIN-UI-2026.md` | the etalons `demo/admin/` and `demo/site/` moved into the themes `admin` and `lite`: the shell, one canon of the list and the form, the home cockpit, the merged block "Администрация", the floating menu in the panel and on the site, sounds in each theme's `sound/`, the screensaver, the action slot of an alert; DIAL folded in (written in Russian, like the etalons) |
+| `docs/12-ADMIN-UI-2026.md` | the etalons `demo/admin/` and `demo/site/` moved into the themes `admin` and `lite`: the shell, one canon of the list and the form, the home cockpit, the merged block "Администрация", the floating menu in the panel and on the site, sounds in each theme's `sound/`, the screensaver, the action slot of an alert, the rows per page; DIAL folded in (written in Russian, like the etalons) |
 
 ## How a session runs
 
@@ -315,10 +315,33 @@ into the plan, then do whatever work the step names.
   pause the live chip, three figures of the present (owner, 2026-10-21); `_ADM_LIVE`, `_ADM_NOW`, `_ADM_PAGES`,
   `_ADM_LANDS`, `_ADM_WHERE`, `_ADM_NOBODY`, `_ADM_NOGEO`, `_STATISTIC` moved to `lang/*.php`, the admin
   `fragments/session-row.html` is gone. (2026-10-21)
-- [ ] 106. ADMIN-UI batch 18 — the floating menu in the panel: the layer.
-- [ ] 107. ADMIN-UI batch 19 — the floating menu in the panel: pins, palette entry, watch ring, admin window.
-- [ ] 108. ADMIN-UI batch 20 — the floating menu on the site.
-- [ ] 109. ADMIN-UI batch 21 — sounds in `sound/` of each theme, `getThemeFileUrl()`, `public/sound/` retired.
+- [x] 106. ADMIN-UI batch 18 — the floating menu in the panel: the layer. `getAdminDock()` draws
+  `fragments/dock.html` of the theme admin for a logged administrator: the mark of the home, the own links of a super
+  administrator from `getAdminBlockLinks()` in a pop, the logout, a line and the three window tools; the pill grows the
+  icon under the hand, turns its tips and pops to the room, moves by the grip and its keys, folds along its axis by
+  `setSlideMotion()`, lifts the notice and sets `scroll-padding`; "Плавающее меню" is the cookie `dock-off` through op
+  `option` and `data-sl-dock-off` from the first byte, "Позиция меню" stays in the browser; Escape shuts an open
+  `sl-float` and gives the focus back to its launcher; `_ADM_DOCK`, `_ADM_TURN`, `_ADM_GRIP`, `_ADM_DOCKPOS`,
+  `_ADM_DOCKFREE`, `_TOP`, `_BOTTOM` (owner, 2026-10-22). The stand's `config/local.php`, built before step 16 without
+  `dock.css`, was rebuilt (owner, 2026-10-22). (2026-10-22)
+- [x] 107. ADMIN-UI batch 19 — the floating menu in the panel: pins, palette entry, watch ring, admin window. The pins
+  are the cookie `pins` through op `option`, at most eight keys joined by `-`, none by default, drawn by `getAdminDock()`
+  only for sections the administrator may open, pinned from the fan by every administrator; the avatar is the icon
+  `bi-person-gear` in a ring of the brand (owner, 2026-10-22). The admin card reads its two logins from `getLoginLog()`;
+  in the rail the block "Администрация" is one icon with its panel, found by `:has(.sl-adm-keys)`. (2026-10-22)
+- [x] 108. ADMIN-UI batch 20 — the floating menu on the site. One mechanism for both menus: `public/plugins/system/dock.js`
+  took the menu out of `admin-ui.js` with the one `setOptionSend()`, loaded for an administrator only; `getAdminDock()`
+  moved to `core/system.php` and draws `fragments/dock.html` of the theme, the site one with "Эта страница в панели"
+  (`getAdminPageLink()`: the editor of a material its moderator may change, else the list of its type or the section
+  of its module, also the key of the block), the queue live by the poll of the bell, "Все разделы" asked on opening
+  (op `getAdminSectionData`, `getAdminSectionList()` the one check of rights for the panel menu, the home and the pins)
+  with a star each, its own place and the edge of the panel; the row "Меню на сайте" is the cookie `dock-site-off`;
+  `getAdminBlockLinks()` reads the row of `_blocks` once a request (owner, 2026-10-22). (2026-10-22)
+- [x] 109. ADMIN-UI batch 21 — sounds in `sound/` of each theme, `getThemeFileUrl()`, `public/sound/` retired. The voices
+  the owner chose (2026-10-22) are `<voice>.mp3` rendered from the stand synth, the win a cut of the anthem at 72.3 s;
+  `plugins/system/sound.js` plays them, the row "Звук" of Options and the zones in the profile settings are kept by
+  `getToggleState()`; the PM count is polled by `getPrivateCountData()`; the win sounds in the panel when a deferred
+  action has reached the server and emptied a queue, on the site by `HX-Trigger` of `updateCommentStatus()`. (2026-10-22)
 - [ ] 110. ADMIN-UI batch 22 — the screensaver "Возрождение".
 - [ ] 110a. ADMIN-UI batch 22a — the action of an alert. Added by the owner on 2026-10-21: one slot `sl-alert-acts` for
   every alert of the panel that carries a button, in the look "Чип" of the stand `act-07-chip`, in both themes. The six
@@ -342,6 +365,18 @@ into the plan, then do whatever work the step names.
   groups A and B shows the frame without a cell tile, the figures of the compare page hold on "Комментарии" (row step
   as today, text inset within 1px, column gap 12px), and `npm run ui:before` / `ui:after` and `npm run ui:gates` are
   green with the contrast of the dashed line checked in both modes.
+- [ ] 110c. ADMIN-UI batch 22c — rows per page. Added by the owner on 2026-10-22: one personal number of rows for every
+  panel list, chosen on the list itself, in the look of the stand leader `per-03-range` (series `per-*`). The cookie
+  `$conf['user_c'].'-rows'` through op `option` (key `rows` beside `density`): `10`, `25`, `50`, `100`, `250`, `all` or
+  an own integer 5–1000, anything else drops it; without a choice the list's own number of today holds. One function
+  returns the limit and replaces all five sources the lists of groups A and B read today — the module's `anum`, the
+  Node type's `settings['list']['limit']`, the 20 of `Mail::getList()` (its clamp to 200 goes) and `getDeadList()`,
+  the fixed 50 of groups, ratings, security and master — and feeds the pagers. "All" holds only while the filter has
+  at most 1 000 rows, no page ever carries more. The trigger is the range of the page line as a chip in the pager's
+  colour; its panel is the system `sl-float` of the key tip "i", open on hover and focus. After a change the list is
+  swapped by htmx with the new `num` and the reader stays on the same row; the toast says so with Undo. Escape
+  shutting an `sl-float` under the pointer and the focus (`data-sl-float-shut`) was made on the stand on 2026-10-22 on
+  top of step 106 and travels with it. The plan's section is "Устройство", "Строк на странице".
 - [ ] 111. ADMIN-UI batch 23 — reference; deletes `docs/12-ADMIN-UI-2026.md`.
 - [ ] 111a. Route race on MariaDB 11.6.2+ — found in step 102 (owner, 2026-10-21): with `innodb_snapshot_isolation=1`,
   the default since MariaDB 11.6.2 (stand 11.7.2), the second writer of one free path gets error 1020 "Record has changed

@@ -33,10 +33,16 @@ function setUserThemeName(string $user, string $theme): array {
     return ['was' => (string)$row[1], 'now' => $theme];
 }
 
+# The files of the active theme from its root: the address and the path the helpers give, and whether the head loads the sound engine for it
+function getProbeFiles(): array {
+    return ['theme' => getTheme(), 'home' => HOME_PATH, 'url' => getThemeFileUrl('sound/'), 'path' => getThemeFilePath('images/favicon.svg'), 'script' => doScript()];
+}
+
 $job = (string)($argv[1] ?? '');
 $args = array_slice($argv, 3);
 $data = match ($job) {
     'assets' => getProbeThemes($args),
+    'file' => getProbeFiles(),
     'make' => setScratchTheme((string)($args[0] ?? 'lite')),
     'gone' => ['gone' => deleteScratchTheme((string)($args[0] ?? ''))],
     'pick' => setUserThemeName((string)($args[0] ?? ''), (string)($args[1] ?? '')),

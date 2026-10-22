@@ -66,6 +66,8 @@
   /* The colour that reads on a solid brand fill. In light the fill is dark and the text is white; in dark the ramp
      reverses and the fill is the bright one, so the text goes dark. The role holds, the value turns over with it */
   --sl-on-solid: light-dark(#ffffff, #0b1220);
+  /* The text on a tinted disc of the floating menu, as the admin theme declares it: white in light, the solid text in dark */
+  --sl-solid-text: light-dark(var(--sl-on-solid), #ffffff);
 
   /* Categorical: the season skins, a set with no order. A season paints the photo band of the page head under a
      white headline, so each of the five carries that headline at AA large and none of them turns over with the mode */
@@ -363,6 +365,13 @@
   --sl-chip-tint-bg: color-mix(in srgb, currentColor var(--sl-chip-tint-mix), transparent);
   /* The keys of the admin block are washed in their own tone: the ground carries this much of it, the border three times, a pointer twice */
   --sl-adm-mix: 8%;
+  /* The floating menu: a round app is one tile, the light end of its disc keeps this much of its tone, a pop stops at this size, all sections at the wide one */
+  --sl-dock-height: var(--sl-size-tile);
+  --sl-dock-gap: var(--sl-space-3);
+  --sl-dock-mix: 62%;
+  --sl-dock-width: 600px;
+  --sl-dock-max-width: 340px;
+  --sl-dock-max-height: min(72vh, 560px);
   --sl-col-amount-width: 15%;
   --sl-col-check-width: 36px;
   --sl-col-form-width: 35%;

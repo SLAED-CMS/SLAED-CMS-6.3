@@ -357,6 +357,12 @@
   --sl-flash-mix: 16%;
   /* The keys of the admin block are washed in their own tone: the ground carries this much of it, the border three times, a pointer twice */
   --sl-adm-mix: 8%;
+  /* The floating menu: a round app is one tile, the light end of its disc keeps this much of its tone, a pop stops at this size */
+  --sl-dock-height: var(--sl-size-tile);
+  --sl-dock-gap: var(--sl-space-3);
+  --sl-dock-mix: 62%;
+  --sl-dock-max-width: 340px;
+  --sl-dock-max-height: min(72vh, 560px);
   --sl-fm-as-height: 30px;
   --sl-fm-bar-width: 250px;
   --sl-fm-body-height: 56vh;

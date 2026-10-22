@@ -169,9 +169,9 @@ class Geoip {
     private static function getFlagSrc(string $code): string {
         static $cache = [];
         if (isset($cache[$code])) return $cache[$code];
-        $path = 'flags/'.$code.'.svg';
-        $file = getThemeImagePath($path);
-        $cache[$code] = HOME_PATH.(file_exists(PUBLIC_DIR.'/'.$file) ? $file : getThemeImagePath('flags/unknown.svg'));
+        $path = 'images/flags/'.$code.'.svg';
+        $file = getThemeFilePath($path);
+        $cache[$code] = HOME_PATH.(file_exists(PUBLIC_DIR.'/'.$file) ? $file : getThemeFilePath('images/flags/unknown.svg'));
         return $cache[$code];
     }
 

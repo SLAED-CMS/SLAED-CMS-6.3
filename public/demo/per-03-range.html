@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="ru" data-theme="auto">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Диапазон &middot; Строк на странице — стенд SLAED CMS</title>
+  <link rel="stylesheet" href="../templates/admin/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../templates/admin/assets/css/base.css">
+  <link rel="stylesheet" href="../templates/admin/assets/css/theme.css">
+  <!-- The stand is served without Cache-Control; its sheets and scripts are stamped so an edit is seen at once -->
+  <script>document.write('<link rel="stylesheet" href="assets/demo.css?v=' + Date.now() + '"><link rel="stylesheet" href="assets/tbl.css?v=' + Date.now() + '"><link rel="stylesheet" href="assets/per.css?v=' + Date.now() + '">');</script>
+  <script src="../plugins/system/global-func.js"></script>
+  <script src="../plugins/system/slaed.js"></script>
+  <script src="../templates/admin/assets/js/admin-ui.js"></script>
+  <style>
+    /* Диапазон: the range of the page line is the trigger, and its panel is the key tip of the pager — the system float of
+       slaed.js, open at once under the pointer or the focus, the same plate, arrow, head, list rhythm and note */
+    .v-range { display: inline-flex; vertical-align: middle; }
+
+    /* The trigger is a chip in the colour of the pager: subtle at rest like the ways up and down, full under the pointer, the focus
+       or while its panel is open, as the round "i" lights up in its green */
+    .v-range-btn { display: inline-flex; align-items: center; gap: var(--sl-space-2); height: var(--sl-size-chip); padding: 0 var(--sl-space-3); border: 0; border-radius: var(--sl-radius-pill); background: var(--sl-primary-subtle); color: var(--sl-primary-strong); font: inherit; cursor: pointer; transition: background-color var(--sl-time-base) var(--sl-ease-out), color var(--sl-time-base) var(--sl-ease-out); }
+    .v-range-btn b { color: inherit; font-weight: var(--sl-weight-semibold); font-variant-numeric: tabular-nums; }
+    .v-range-btn .bi { font-size: var(--sl-size-icon-xs); transition: transform var(--sl-time-base) var(--sl-ease-out); }
+    .v-range:is(:hover, .sl-is-open) > .v-range-btn, .v-range-btn:focus-visible { background: var(--sl-primary-strong); color: var(--sl-on-solid); }
+    .v-range:is(:hover, .sl-is-open) > .v-range-btn .bi { transform: rotate(180deg); }
+
+    /* The panel speaks in the size of the key tip, not in the small size of the line it hangs from; spans stand as the blocks of the tip */
+    .v-range > .sl-float-panel { font-size: var(--sl-font-body); font-weight: var(--sl-weight-normal); white-space: normal; }
+    .v-range :is(.sl-pager-tip-head, .sl-pager-tip-note) { display: block; }
+    /* The list is one grid of three columns — plate, words, note — and every row lays itself on it, so the words stand in one
+       column, the notes in another, and a row may wrap its words but never grow out of the panel */
+    .v-list { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: var(--sl-space-1) var(--sl-space-3); margin: 0 calc(var(--sl-space-3) * -1); }
+    .v-row { display: grid; grid-column: 1 / -1; grid-template-columns: subgrid; align-items: center; min-width: 0; padding: var(--sl-space-1) var(--sl-space-3); border: 0; border-radius: var(--sl-radius-1); background: transparent; color: var(--sl-text); font: inherit; text-align: left; cursor: pointer; }
+    .v-row:hover, .v-row:focus-visible { background: var(--sl-tint); color: var(--sl-text-strong); outline: none; }
+    .v-row:disabled { opacity: var(--sl-fade-disabled); background: transparent; cursor: default; }
+    .v-text { min-width: 0; }
+    .v-reset > .v-text { grid-column: 2 / -1; }
+
+    /* The plate of the key tip carries the number; every plate is as wide as the field of the own number */
+    .v-key { position: relative; display: inline-flex; align-items: center; justify-content: center; min-width: calc(var(--sl-size-chip) * 2); height: var(--sl-size-chip); padding: 0 var(--sl-space-2); box-sizing: border-box; border: 1px solid var(--sl-border); border-bottom-width: var(--sl-space-1); border-radius: var(--sl-radius-1); background: var(--sl-surface); color: var(--sl-text-strong); font-size: var(--sl-font-small); font-variant-numeric: tabular-nums; transition: background-color var(--sl-time-base) var(--sl-ease-out), color var(--sl-time-base) var(--sl-ease-out); }
+    .v-key .bi { font-size: var(--sl-size-icon-xs); line-height: 1; }
+    .v-row.sl-is-active { color: var(--sl-text-strong); font-weight: var(--sl-weight-semibold); }
+    .v-row.sl-is-active .v-key { border-color: var(--sl-primary-strong); background: var(--sl-primary-strong); color: var(--sl-on-solid); }
+
+    /* The note column: the pages a number makes, the count of "all" or why it is off, the bounds of the own number */
+    .v-hint { justify-self: end; color: var(--sl-text-muted); font-size: var(--sl-font-small); font-weight: var(--sl-weight-normal); white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+    /* The default of the module is a dot on the corner of its plate, explained by the same dot in the note under the list */
+    .v-row[data-per-is-def] > .v-key::after, .v-mark { content: ""; width: var(--sl-space-4); height: var(--sl-space-4); box-sizing: border-box; border: var(--sl-space-1) solid var(--sl-bg); border-radius: var(--sl-radius-circle); background: var(--sl-success); }
+    .v-row[data-per-is-def] > .v-key::after { position: absolute; top: calc(var(--sl-space-2) * -1); right: calc(var(--sl-space-2) * -1); }
+    .v-mark { display: inline-block; margin-right: var(--sl-space-2); vertical-align: middle; }
+
+    /* A number that holds the whole filter here changes nothing on this list: quiet, still choosable, since the choice serves every list */
+    .v-row[data-per-same]:not(.sl-is-active) { color: var(--sl-text-muted); }
+    .v-row[data-per-same]:not(.sl-is-active) > .v-key { color: var(--sl-text-muted); background: transparent; }
+
+    /* The own number: the plate itself is the field, Enter or the tick applies it, the row is lit while an own number holds */
+    .v-own { cursor: default; }
+    .v-own > label { cursor: text; }
+    .v-own:focus-within { background: var(--sl-tint); }
+    .v-field { width: calc(var(--sl-size-chip) * 2); padding: 0 var(--sl-space-1); min-height: 0; font: inherit; font-size: var(--sl-font-small); text-align: center; appearance: textfield; }
+    .v-field::-webkit-inner-spin-button, .v-field::-webkit-outer-spin-button { margin: 0; appearance: none; }
+    .v-field:focus-visible { border-color: var(--sl-primary-strong); outline: none; box-shadow: var(--sl-shadow-focus); }
+    .v-own.sl-is-active .v-field { border-color: var(--sl-primary-strong); background: var(--sl-primary-strong); color: var(--sl-on-solid); }
+    .v-end { display: inline-flex; align-items: center; gap: var(--sl-space-2); justify-self: end; }
+    .v-go { display: inline-flex; align-items: center; justify-content: center; width: var(--sl-size-chip); height: var(--sl-size-chip); padding: 0; border: 0; border-radius: var(--sl-radius-circle); background: var(--sl-primary-subtle); color: var(--sl-primary-strong); cursor: pointer; }
+    .v-go .bi { font-size: var(--sl-size-icon-xs); }
+    .v-go:hover, .v-go:focus-visible { background: var(--sl-primary-strong); color: var(--sl-on-solid); outline: none; }
+    .v-sep { grid-column: 1 / -1; height: 1px; margin: var(--sl-space-2) var(--sl-space-3); background: var(--sl-border); }
+  </style>
+</head>
+<body>
+  <template data-per-face data-per-slot="range">
+    <span class="v-said"> · <span class="sl-float v-range" data-per-float><button type="button" class="v-range-btn" aria-describedby="per-head-{n}">Показаны <b data-per-range></b><i class="bi bi-chevron-down" aria-hidden="true"></i></button><span class="sl-float-panel sl-pager-tip" role="group" aria-labelledby="per-head-{n}"><span class="sl-pager-tip-head" id="per-head-{n}">Строк на странице</span><span class="v-list"><button type="button" class="v-row" data-per-set="10"><span class="v-key">10</span><span class="v-text">строк</span><span class="v-hint" data-per-pages-of="10"></span></button><button type="button" class="v-row" data-per-set="25"><span class="v-key">25</span><span class="v-text">строк</span><span class="v-hint" data-per-pages-of="25"></span></button><button type="button" class="v-row" data-per-set="50"><span class="v-key">50</span><span class="v-text">строк</span><span class="v-hint" data-per-pages-of="50"></span></button><button type="button" class="v-row" data-per-set="100"><span class="v-key">100</span><span class="v-text">строк</span><span class="v-hint" data-per-pages-of="100"></span></button><button type="button" class="v-row" data-per-set="250"><span class="v-key">250</span><span class="v-text">строк</span><span class="v-hint" data-per-pages-of="250"></span></button><button type="button" class="v-row" data-per-set="all"><span class="v-key">все</span><span class="v-text">на одной странице</span><span class="v-hint" data-per-all-hint></span></button><span class="v-row v-own" data-per-custom><input type="number" class="v-key v-field" id="per-own-{n}" min="5" max="1000" step="1" placeholder="…" data-per-input="custom" title="От 5 до 1 000, Enter — применить" aria-describedby="per-own-hint-{n}"><label class="v-text" for="per-own-{n}">своё число</label><span class="v-end"><span class="v-hint" id="per-own-hint-{n}">5–1 000</span><button type="button" class="v-go" data-per-apply title="Применить" aria-label="Применить"><i class="bi bi-check-lg" aria-hidden="true"></i></button></span></span><span class="v-sep" aria-hidden="true"></span><button type="button" class="v-row v-reset" data-per-reset><span class="v-key"><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i></span><span class="v-text">Вернуть умолчание · <span data-per-base></span></span></button></span><span class="sl-pager-tip-note"><span class="v-mark" aria-hidden="true"></span>Умолчание модуля. Один выбор на все списки панели</span></span></span></span>
+  </template>
+  <script>document.write('<script src="assets/tbl.js?v=' + Date.now() + '"><\/script>');</script>
+  <script>document.write('<script src="assets/per.js?v=' + Date.now() + '"><\/script>');</script>
+  <script>document.write('<script src="assets/demo.js?v=' + Date.now() + '"><\/script>');</script>
+</body>
+</html>

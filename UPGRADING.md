@@ -87,8 +87,8 @@ not a path.
 ### The Document Root Is `public/`
 
 The browser reaches `public/` and nothing else: the entries `index.php`, `admin.php` and `setup.php`,
-`.htaccess`, `robots.txt`, `favicon.ico`, `error.html`, the sitemap files, `templates/`, `plugins/`,
-`sound/` and `demo/`. `core/`, `modules/`, `admin/` with the body of the panel, `config/`, `storage/` and the whole
+`.htaccess`, `robots.txt`, `favicon.ico`, `error.html`, the sitemap files, `templates/`, `plugins/`
+and `demo/`. `core/`, `modules/`, `admin/` with the body of the panel, `config/`, `storage/` and the whole
 `uploads/` stay at the project level. Point the document root of the server at `public/`; where a host cannot move
 it, the `.htaccess` of the project rewrites every request into `public/` (Apache and LiteSpeed with `mod_rewrite`
 only, and without the module it refuses everything). The server settings and the variants for shared hosting are in

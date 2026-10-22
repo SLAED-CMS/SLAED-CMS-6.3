@@ -215,7 +215,7 @@ draft; `sign.php` sets all three at the moment it signs, and again on `--refresh
   `.gitattributes` keeps in the repository and on the stand, out of every archive: the modules of slaed.net `master` and
   `changelog` with the templates `changelog*.html` only the changelog renders in `admin` and `lite`, `public/update.php`
   (the owner's internal tool) and `storage/update/sql/table_update6_3.sql`; `tests/`, `tools/`, `docs/`; the stands
-  `public/demo/`, `public/phoenix/` and `public/sound/`; the files of development of the root — `composer.json` (the
+  `public/demo/` and `public/phoenix/`; the files of development of the root — `composer.json` (the
   build reads the PHP of the manifest from the tag through `git show`, not from the archive), `package.json`,
   `phpunit.xml`, `phpstan.neon`, `phpstan-bootstrap.php`, `phpstan-stubs.php`, `.php-cs-fixer.dist.php`,
   `.editorconfig`, `.gitmessage`, `.gitignore`, `.gitattributes` — and the documents `README.md`, `UPGRADING.md`,

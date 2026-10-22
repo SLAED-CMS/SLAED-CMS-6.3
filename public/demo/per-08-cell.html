@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="ru" data-theme="auto">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ячейка пейджера &middot; Строк на странице — стенд SLAED CMS</title>
+  <link rel="stylesheet" href="../templates/admin/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../templates/admin/assets/css/base.css">
+  <link rel="stylesheet" href="../templates/admin/assets/css/theme.css">
+  <!-- The stand is served without Cache-Control; its sheets and scripts are stamped so an edit is seen at once -->
+  <script>document.write('<link rel="stylesheet" href="assets/demo.css?v=' + Date.now() + '"><link rel="stylesheet" href="assets/tbl.css?v=' + Date.now() + '"><link rel="stylesheet" href="assets/per.css?v=' + Date.now() + '">');</script>
+  <script src="../plugins/system/global-func.js"></script>
+  <script src="../plugins/system/slaed.js"></script>
+  <script src="../templates/admin/assets/js/admin-ui.js"></script>
+  <style>
+    /* Ячейка пейджера: the number is one more step of the pager after its arrows; it opens a row of chips */
+    .v-pill { display: inline-flex; align-items: center; gap: var(--sl-space-2); height: var(--sl-size-chip); margin-left: var(--sl-space-2); padding: 0 var(--sl-space-3); border: 0; border-radius: var(--sl-radius-pill); background: var(--sl-surface); color: var(--sl-text-muted); box-shadow: var(--sl-shadow-xs); font: inherit; font-size: var(--sl-font-small); white-space: nowrap; cursor: pointer; }
+    .v-pill b { color: var(--sl-text-strong); font-weight: var(--sl-weight-semibold); font-variant-numeric: tabular-nums; }
+    .v-pill .bi { font-size: var(--sl-size-icon-xs); }
+    .v-pill:hover, .v-pill:focus-visible, .sl-is-open > .v-pill { background: var(--sl-primary-strong); color: var(--sl-on-solid); }
+    .v-pill:hover b, .v-pill:focus-visible b, .sl-is-open > .v-pill b { color: var(--sl-on-solid); }
+    .v-cell .pp-menu-panel { left: 0; right: auto; }
+    .v-chips { display: flex; gap: var(--sl-space-2); padding: 0 var(--sl-space-3); }
+    .v-chip { min-width: 40px; height: var(--sl-size-chip); padding: 0 var(--sl-space-3); border: 1px solid var(--sl-border); border-radius: var(--sl-radius-pill); background: var(--sl-surface); color: var(--sl-text); font: inherit; font-size: var(--sl-font-small); font-variant-numeric: tabular-nums; cursor: pointer; position: relative; }
+    .v-chip:hover, .v-chip:focus-visible { border-color: var(--sl-primary); outline: none; }
+    .v-chip.sl-is-active { border-color: var(--sl-primary-strong); background: var(--sl-primary-strong); color: var(--sl-on-solid); font-weight: var(--sl-weight-semibold); }
+    .v-chip[data-per-is-def]::after { content: ""; position: absolute; top: -2px; right: -2px; width: var(--sl-space-3); height: var(--sl-space-3); border: 2px solid var(--sl-bg); border-radius: var(--sl-radius-circle); background: var(--sl-success); box-sizing: border-box; }
+    .v-legend { display: flex; align-items: center; gap: var(--sl-space-2); padding: 0 var(--sl-space-3); color: var(--sl-text-muted); font-size: var(--sl-font-micro); }
+    .v-legend::before { content: ""; width: var(--sl-space-3); height: var(--sl-space-3); border-radius: var(--sl-radius-circle); background: var(--sl-success); }
+  </style>
+</head>
+<body>
+  <template data-per-face data-per-slot="nav">
+    <span data-per-menu class="v-cell"><button type="button" class="v-pill" data-per-menu-toggle aria-haspopup="menu" aria-expanded="false" aria-controls="per-menu-{n}" title="Строк на странице">по <b data-per-cur></b><i class="bi bi-chevron-expand" aria-hidden="true"></i></button><span class="pp-menu-panel" id="per-menu-{n}" role="menu" aria-label="Строк на странице" data-per-menu-panel hidden><span class="pp-menu-head">Строк на странице</span><span class="v-chips"><button type="button" role="menuitemradio" class="v-chip" data-per-set="10">10</button><button type="button" role="menuitemradio" class="v-chip" data-per-set="25">25</button><button type="button" role="menuitemradio" class="v-chip" data-per-set="50">50</button><button type="button" role="menuitemradio" class="v-chip" data-per-set="100">100</button><button type="button" role="menuitemradio" class="v-chip" data-per-set="250">250</button></span><span class="v-legend">умолчание модуля</span><span class="pp-menu-sep" role="separator"></span><button type="button" role="menuitem" class="pp-menu-item" data-per-reset><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i>По умолчанию модуля · <span data-per-base></span></button><span class="pp-menu-note">Один выбор на все списки панели</span></span></span>
+  </template>
+  <script>document.write('<script src="assets/tbl.js?v=' + Date.now() + '"><\/script>');</script>
+  <script>document.write('<script src="assets/per.js?v=' + Date.now() + '"><\/script>');</script>
+  <script>document.write('<script src="assets/demo.js?v=' + Date.now() + '"><\/script>');</script>
+</body>
+</html>

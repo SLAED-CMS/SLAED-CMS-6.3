@@ -1,0 +1,134 @@
+/* Rows-per-page series (per-NN): the rows of the stand desk and the menu panel the faces with a menu share. A face
+   draws its trigger and its cells itself; the panel is one look so the menus differ in where they stand and what they
+   hold, not in the plate under them */
+.pp-desk-row {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sl-space-2) var(--sl-space-3);
+  font-size: var(--sl-font-small);
+}
+
+.pp-desk-row [data-per-reset]:disabled {
+  opacity: var(--sl-fade-disabled);
+  cursor: default;
+}
+
+[data-per-menu] {
+  position: relative;
+  display: inline-flex;
+}
+
+.pp-menu-panel {
+  position: absolute;
+  top: calc(100% + var(--sl-space-2));
+  right: 0;
+  z-index: var(--sl-z-popover);
+  display: grid;
+  gap: var(--sl-space-1);
+  min-width: var(--sl-popover-min-width);
+  padding: var(--sl-space-3);
+  box-sizing: border-box;
+  background: var(--sl-bg);
+  border: 1px solid var(--sl-border-strong);
+  border-radius: var(--sl-radius-2);
+  box-shadow: var(--sl-popover-shadow);
+  white-space: nowrap;
+  text-align: left;
+}
+
+.pp-menu-panel[hidden] {
+  display: none;
+}
+
+/* Under the rows the page ends close by, so the menu of the bottom pager opens upwards */
+.sl-list-bottom .pp-menu-panel {
+  top: auto;
+  bottom: calc(100% + var(--sl-space-2));
+}
+
+.pp-menu-head {
+  margin: 0 0 var(--sl-space-1);
+  padding: 0 var(--sl-space-3);
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-micro);
+  font-weight: var(--sl-weight-semibold);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.pp-menu-item {
+  display: flex;
+  align-items: center;
+  gap: var(--sl-space-3);
+  width: 100%;
+  min-height: var(--sl-size-control);
+  padding: 0 var(--sl-space-3);
+  border: 0;
+  border-radius: var(--sl-radius-1);
+  background: transparent;
+  color: var(--sl-text);
+  font: inherit;
+  font-size: var(--sl-font-body);
+  text-align: left;
+  cursor: pointer;
+}
+
+.pp-menu-item:hover,
+.pp-menu-item:focus-visible {
+  background: var(--sl-tint);
+  color: var(--sl-text-strong);
+  outline: none;
+}
+
+.pp-menu-item:disabled {
+  opacity: var(--sl-fade-disabled);
+  cursor: default;
+  background: transparent;
+}
+
+/* The mark of the number in force: a check in front, the row itself unchanged */
+.pp-menu-item > .bi-check2 {
+  visibility: hidden;
+  width: var(--sl-size-icon-sm);
+  color: var(--sl-primary-strong);
+  font-size: var(--sl-size-icon-sm);
+}
+
+.pp-menu-item.sl-is-active > .bi-check2 {
+  visibility: visible;
+}
+
+.pp-menu-item.sl-is-active {
+  color: var(--sl-text-strong);
+  font-weight: var(--sl-weight-semibold);
+}
+
+.pp-menu-def {
+  margin-left: auto;
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-micro);
+  font-weight: var(--sl-weight-normal);
+}
+
+.pp-menu-item:not([data-per-is-def]) > .pp-menu-def {
+  display: none;
+}
+
+.pp-menu-sep {
+  height: 1px;
+  margin: var(--sl-space-2) 0;
+  background: var(--sl-border);
+}
+
+/* The note takes the width the items give the panel and never widens it */
+.pp-menu-note {
+  width: 0;
+  min-width: 100%;
+  box-sizing: border-box;
+  margin: var(--sl-space-1) 0 0;
+  padding: 0 var(--sl-space-3);
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-micro);
+  white-space: normal;
+}

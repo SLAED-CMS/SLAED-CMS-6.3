@@ -1160,6 +1160,7 @@
             });
             sum.querySelector('b').textContent = sum.getAttribute('data-sl-valid-sum').replace('%s', bad.length);
             sum.focus();
+            window.setSoundPlay('error');
         });
         form.addEventListener('focusout', function (event) {
             var field = event.target;
@@ -1345,7 +1346,7 @@
             btn.querySelector('.bi').className = 'bi ' + (on ? 'bi-layout-sidebar' : 'bi-layout-sidebar-inset');
         });
         setMenuFind();
-        setOptionSend('rail', on ? '1' : '0').catch(function () {});
+        window.setOptionSend('rail', on ? '1' : '0').catch(function () {});
     }
     // Arrows walk the icons of the rail as in a menu; Tab still passes through them in order
     function setRailStep(event) {
@@ -1484,7 +1485,7 @@
     phone.addEventListener('change', function () {
         if (!phone.matches && document.body.hasAttribute('data-sl-drawer')) setDrawer(false);
     });
-    var queue = { sum: -1, unseen: 0, title: '' };
+    var queue = { sum: -1, unseen: 0, title: '', mods: {} };
     // The rows of one list in the order of their numbers, the fullest first; equal numbers keep the order the page gave them
     function setQueueOrder(box) {
         var rows = Array.prototype.filter.call(box.children, function (row) { return row.hasAttribute('data-sl-queue-row'); });
@@ -1508,8 +1509,8 @@
         queue.unseen = 0;
         setQueueTitle();
     }
-    // One answer of the poll feeds every place of the queues: the rows of the bell and of the waiting block, the chips of the menu and the cards, the sum
-    function setQueueView(list) {
+    // Д8 Д9 One poll answer feeds the bell, the waiting block, the chips and the sum; a grown queue is heard, one emptied by an action of this page sounds the win
+    function setQueueView(list, acted) {
         var bell = document.querySelector('[data-sl-bell]');
         var mods = {};
         var sum = 0;
@@ -1548,24 +1549,34 @@
                 queue.unseen += sum - queue.sum;
                 setQueueTitle();
             }
+            window.setSoundPlay('queue');
         }
+        if (acted && Object.keys(queue.mods).some(function (mod) { return queue.mods[mod] > 0 && !mods[mod]; })) window.setSoundPlay('win');
         queue.sum = sum;
+        queue.mods = mods;
+    }
+    // Ask the server for the queues now; acted says an action of this page has just reached it
+    function setQueueFetch(acted) {
+        var bell = document.querySelector('[data-sl-bell]');
+        if (!bell) return;
+        fetch(bell.getAttribute('data-sl-bell'), { credentials: 'same-origin', headers: { 'Accept': 'application/json', 'X-SL-Poll': '1' } })
+            .then(function (res) { return res.ok ? res.json() : null; })
+            .then(function (data) {
+                if (!data || !Array.isArray(data.rows)) return;
+                setQueueView(data.rows, acted);
+                setSessionLeft(data.left);
+            })
+            .catch(function () {});
     }
     // The bell asks the server for the queues once a minute, on a hidden tab too, since that is where the count of the title is made
     function setQueuePoll() {
         var bell = document.querySelector('[data-sl-bell]');
         if (!bell) return;
         queue.sum = Number(bell.querySelector('[data-sl-bell-sum]').textContent) || 0;
-        window.setInterval(function () {
-            fetch(bell.getAttribute('data-sl-bell'), { credentials: 'same-origin', headers: { 'Accept': 'application/json', 'X-SL-Poll': '1' } })
-                .then(function (res) { return res.ok ? res.json() : null; })
-                .then(function (data) {
-                    if (!data || !Array.isArray(data.rows)) return;
-                    setQueueView(data.rows);
-                    setSessionLeft(data.left);
-                })
-                .catch(function () {});
-        }, 60000);
+        document.querySelectorAll('[data-sl-queue]').forEach(function (chip) {
+            queue.mods[chip.getAttribute('data-sl-queue')] = Number(chip.querySelector('[data-sl-queue-n]').textContent) || 0;
+        });
+        window.setInterval(function () { setQueueFetch(false); }, 60000);
         document.addEventListener('visibilitychange', setQueueSeen);
         window.addEventListener('focus', setQueueSeen);
     }
@@ -1674,6 +1685,7 @@
         listretry = event.detail.elt;
         note.hidden = false;
         note.focus();
+        window.setSoundPlay('error');
     });
     document.addEventListener('click', function (event) {
         var btn = event.target.closest ? event.target.closest('[data-sl-list-retry]') : null;
@@ -1730,7 +1742,7 @@
         };
         if (key === was) return;
         draw(key);
-        setOptionSend('density', key).catch(function () { draw(was); });
+        window.setOptionSend('density', key).catch(function () { draw(was); });
     }
     document.addEventListener('click', function (event) {
         var btn = event.target.closest ? event.target.closest('.sl-seg-view [data-sl-density]') : null;
@@ -1747,21 +1759,6 @@
         setListDensity(next);
         next.focus();
     }, true);
-    // Э20 A date of a list reads relative in the language of the page; the exact moment stays in its title and datetime
-    function setTimeAgo(node) {
-        var list = (node && node.querySelectorAll ? node : document).querySelectorAll('time[data-sl-ago]');
-        if (!list.length || !window.Intl || !window.Intl.RelativeTimeFormat) return;
-        var fmt = new window.Intl.RelativeTimeFormat(document.documentElement.lang || undefined, { numeric: 'auto' });
-        var steps = [['year', 31536000], ['month', 2592000], ['week', 604800], ['day', 86400], ['hour', 3600], ['minute', 60]];
-        list.forEach(function (time) {
-            var sec = (Date.parse(time.dateTime) - Date.now()) / 1000;
-            var step = steps.find(function (one) { return Math.abs(sec) >= one[1]; }) || steps[steps.length - 1];
-            if (isNaN(sec)) return;
-            if (!time.title) time.title = time.textContent.trim();
-            time.textContent = fmt.format(Math.round(sec / step[1]), step[0]);
-        });
-    }
-    document.addEventListener('htmx:afterSwap', function (event) { setTimeAgo(event.target); });
     var later = [];
     var sweep = { all: false, on: false, hold: false, step: null };
     var quiet = '';
@@ -1902,7 +1899,12 @@
             job.back = function () { setRowsGone(rows, false); };
         }
         later.push(job);
-        job.timer = window.setTimeout(function () { setLaterSend(job, false).then(setLaterDone); }, 10000);
+        job.timer = window.setTimeout(function () {
+            setLaterSend(job, false).then(function () {
+                setLaterDone();
+                setQueueFetch(true);
+            });
+        }, 10000);
         window.setToast(getLaterText(job.name, key, job.num), { undo: function () {
             if (later.indexOf(job) < 0) return;
             window.clearTimeout(job.timer);
@@ -1992,6 +1994,7 @@
             hold.hidden = true;
             if (fail) window.setToast(getLaterText('', 'fail', getSweepNum(total - seen)), { warn: true });
             setLaterDone();
+            setQueueFetch(true);
         };
         body.delete('id[]');
         body.set('op', note.getAttribute('data-sl-allpages'));
@@ -2065,7 +2068,7 @@
         sess.end = Date.now() + left * 1000;
         setSessionTick();
     }
-    // Э14 The window of the session end opens before the idle limit and counts down; at zero the page leaves for the login form, which no leave question may hold up
+    // Э14 М14 Every place of the rest counts down, the admin card of the menu too; the end window opens before the limit and at zero the page leaves for the login form
     function setSessionTick() {
         var box = document.getElementById('sl-session');
         var left = Math.max(0, Math.round((sess.end - Date.now()) / 1000));
@@ -2073,12 +2076,14 @@
             document.querySelectorAll('[data-sl-leave]').forEach(function (form) { form.removeAttribute('data-sl-leave'); });
             return window.location.assign(window.location.href.split('#')[0]);
         }
+        document.querySelectorAll('[data-sl-sess-left]').forEach(function (node) { node.textContent = Math.floor(left / 60) + ':' + String(left % 60).padStart(2, '0'); });
         if (left > sess.warn) {
             if (box.open) window.setWindowClose(box);
             return;
         }
-        box.querySelectorAll('[data-sl-sess-left]').forEach(function (node) { node.textContent = Math.floor(left / 60) + ':' + String(left % 60).padStart(2, '0'); });
-        if (!box.open) window.setWindowOpen(box);
+        if (box.open) return;
+        window.setWindowOpen(box);
+        window.setSoundPlay('warn');
     }
     // The count starts from the limit the page was rendered with, as rendering it was an action
     function setSessionWatch() {
@@ -2103,28 +2108,22 @@
         var root = document.documentElement;
         if (axis === 'mode') root.setAttribute('data-theme', value);
         if (axis === 'still') root.toggleAttribute('data-sl-still', value === '1');
+        if (axis !== 'dock-off') return;
+        root.toggleAttribute('data-sl-dock-off', value === '1');
+        window.setDockPlace();
     }
-    // Store one answer through op option with the token of the settings window, whose rows all carry the same one; a refusal rejects
-    function setOptionSend(key, value) {
-        var form = document.querySelector('form[data-sl-option]:not([data-sl-option="language"])');
-        var body;
-        if (!form) return Promise.reject(new Error('no form'));
-        body = new FormData(form);
-        body.set('key', key);
-        body.set('value', value);
-        return fetch(form.getAttribute('action'), { method: 'POST', body: body, credentials: 'same-origin' })
-            .then(function (res) { if (!res.ok) throw new Error('refused'); });
-    }
-    // A settings row applies its answer at once and stores it silently, a refusal puts it back; the language posts its form, as only a new page renders a new locale
+    // A settings row applies its answer at once and stores it silently through setOptionSend of dock.js, a refusal puts it back; the menu edge and the sound stay in the browser
     document.addEventListener('change', function (event) {
         var pick = event.target;
         var form = pick && pick.tagName === 'SELECT' ? pick.closest('form[data-sl-option]') : null;
         if (!form) return;
         var axis = form.getAttribute('data-sl-option');
         if (axis === 'language') return form.requestSubmit ? form.requestSubmit() : form.submit();
+        if (axis === 'dock-side') return window.setDockSide(pick.value);
+        if (axis === 'sound') return window.setSoundOn(pick.value === '1');
         var was = pick.querySelector('option[selected]');
         setOptionView(axis, pick.value);
-        setOptionSend(axis, pick.value)
+        window.setOptionSend(axis, pick.value)
             .then(function () {
                 if (was) was.removeAttribute('selected');
                 pick.options[pick.selectedIndex].setAttribute('selected', '');
@@ -2135,6 +2134,15 @@
                 setOptionView(axis, was.value);
             });
     });
+    // А8 While the rail stands, a block head only stands for its icon and opens its panel beside it; it never folds the block away
+    function setRailGuard(event) {
+        if (!isMenuRail() || !event.target.closest || !event.target.closest('#sl-menu [data-sl-toggle-control]')) return;
+        if (event.type === 'keydown' && event.key !== 'Enter' && event.key !== ' ') return;
+        event.preventDefault();
+        event.stopPropagation();
+    }
+    document.addEventListener('click', setRailGuard, true);
+    document.addEventListener('keydown', setRailGuard, true);
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', function () {
             addFileStep();
@@ -2146,7 +2154,6 @@
             setCockpitPoll();
             setSessionWatch();
             setMenuFind();
-            setTimeAgo(document);
             setListPicked();
         });
     } else {
@@ -2159,7 +2166,6 @@
         setCockpitPoll();
         setSessionWatch();
         setMenuFind();
-        setTimeAgo(document);
         setListPicked();
     }
 })();

@@ -57,11 +57,22 @@ templates/<theme>/
     css/
     js/
     vendor/
+  images/
+  sound/           # optional voices of the theme
   layouts/
   pages/
   partials/
   fragments/
 ```
+
+`sound/` holds the voices `plugins/system/sound.js` plays: `success`, `error`, `warn`, `queue`, `win` in both themes,
+`inbox` and `send` in `lite`, each `<voice>.mp3`. The layout names the folder on `<html>` as `data-sl-sound` from
+`getThemeFileUrl('sound/')`, and `getAssetList()` adds the engine to the derived script list only for a theme that has
+the folder, so no request looks at the disk and a theme without it stays silent; `checkThemeAssets()` does not ask for it. A voice sounds only in answer to an action or an
+event, not before the first touch of the page, at most once in 2.5 s per kind, and only while the switch "Звук" of
+the panel Options and its zone in the profile settings are on — both kept in this browser through
+`getToggleState()` (`sound`, `sound-zones`). Scripts call `window.setSoundPlay(voice)`; a response of the server
+names its voice by `HX-Trigger: {"sl-sound": "<voice>"}`.
 
 `index.html` is not the main architectural entry for the active template runtime.
 
@@ -402,7 +413,7 @@ A page is opened at a path such as `/news/internet`, so a relative address in it
 - the address of an entity comes from PHP, built by `getSeoUrl()` from the path its reader joined; a template never assembles one from an `id`
 - a fixed page link is a path: `{{ root }}account/privat`, `{{ root }}files`, `{{ root }}search`
 - endpoints, forms and htmx attributes keep their query behind the root: `{{ root }}index.php?go=1&op=…`, `action="{{ root }}index.php"`
-- an image of the theme is `{{ root }}templates/{{ theme }}/images/…` in a template and `getThemeImageUrl()` in PHP; `getThemeImagePath()` stays the path of the file below `PUBLIC_DIR`
+- a file of the theme is `{{ root }}templates/{{ theme }}/images/…` in a template and `getThemeFileUrl('images/…')` in PHP, from the root of the theme; `getThemeFilePath()` stays the path of the file below `PUBLIC_DIR`
 - an asset reaches the template versioned and rooted from `Template::getAssetUrl()` (see "Versioned Addresses And Order")
 - a fragment link `href="#…"` stays as it is; there is no `<base>` tag, which would send it to the start page
 

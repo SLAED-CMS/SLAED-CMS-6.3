@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="{{ lang }}" data-theme="{{ mode }}"{% if is_still %} data-sl-still{% endif %}{% if is_rail %} data-sl-rail{% endif %}>
+<html lang="{{ lang }}" data-theme="{{ mode }}"{% if is_still %} data-sl-still{% endif %}{% if is_rail %} data-sl-rail{% endif %}{% if is_dock_off %} data-sl-dock-off{% endif %}{% if sound_url %} data-sl-sound="{{ sound_url }}"{% endif %}>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 {{{ meta }}}
@@ -34,6 +34,7 @@
     <div class="sl-wrapfoot"></div>
     {{{ windows_html }}}
     {{{ settings_win }}}
+    {{{ dock_html }}}
     {% include 'fragments/palette.html' %}
     {% if sess_max %}
     <dialog class="sl-modal sl-modal-sm sl-modal-warn" id="sl-session" data-sl-sess="{{ sess_max }}" data-sl-static aria-labelledby="sl-sess-cap" aria-describedby="sl-sess-text">

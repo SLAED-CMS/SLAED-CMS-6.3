@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="ru" data-theme="auto">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Число в строке &middot; Строк на странице — стенд SLAED CMS</title>
+  <link rel="stylesheet" href="../templates/admin/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../templates/admin/assets/css/base.css">
+  <link rel="stylesheet" href="../templates/admin/assets/css/theme.css">
+  <!-- The stand is served without Cache-Control; its sheets and scripts are stamped so an edit is seen at once -->
+  <script>document.write('<link rel="stylesheet" href="assets/demo.css?v=' + Date.now() + '"><link rel="stylesheet" href="assets/tbl.css?v=' + Date.now() + '"><link rel="stylesheet" href="assets/per.css?v=' + Date.now() + '">');</script>
+  <script src="../plugins/system/global-func.js"></script>
+  <script src="../plugins/system/slaed.js"></script>
+  <script src="../templates/admin/assets/js/admin-ui.js"></script>
+  <style>
+    /* Число в строке: the page line says how many rows a page holds and the number is a field: any number from 5 to 200, the ladder as suggestions */
+    .v-said { display: inline-flex; align-items: center; gap: var(--sl-space-1); }
+    .v-said b { color: var(--sl-text-strong); font-weight: var(--sl-weight-semibold); font-variant-numeric: tabular-nums; }
+    .v-num { appearance: textfield; width: 64px; height: var(--sl-size-chip); padding: 0 var(--sl-space-2); box-sizing: border-box; border: 1px dashed var(--sl-border-strong); border-radius: var(--sl-radius-1); background: transparent; color: var(--sl-text-strong); font: inherit; font-weight: var(--sl-weight-semibold); text-align: center; font-variant-numeric: tabular-nums; }
+    .v-num::-webkit-inner-spin-button, .v-num::-webkit-outer-spin-button { margin: 0; appearance: none; }
+    .v-num:hover { border-style: solid; }
+    .v-num:focus-visible { border: 1px solid var(--sl-primary-strong); background: var(--sl-bg); outline: none; box-shadow: var(--sl-shadow-focus); }
+    .v-back { display: inline-flex; align-items: center; justify-content: center; width: var(--sl-size-chip); height: var(--sl-size-chip); padding: 0; border: 0; border-radius: var(--sl-radius-circle); background: transparent; color: var(--sl-text-muted); cursor: pointer; }
+    .v-back .bi { font-size: var(--sl-size-icon-xs); }
+    .v-back:hover, .v-back:focus-visible { background: var(--sl-tint); color: var(--sl-primary-strong); }
+    .v-back:disabled { display: none; }
+  </style>
+</head>
+<body>
+  <template data-per-face data-per-slot="range">
+    <span class="v-said"> · <span>Показаны <b data-per-range></b>, по</span><input type="number" class="v-num" id="per-num-{n}" data-per-input min="5" max="1000" step="5" list="per-ladder-{n}" aria-label="Строк на странице" title="От 5 до 1 000, Enter — применить"><span>на странице</span><datalist id="per-ladder-{n}"><option value="10"></option><option value="25"></option><option value="50"></option><option value="100"></option><option value="250"></option></datalist><button type="button" class="v-back" data-per-reset title="По умолчанию модуля" aria-label="По умолчанию модуля"><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i></button></span>
+  </template>
+  <script>document.write('<script src="assets/tbl.js?v=' + Date.now() + '"><\/script>');</script>
+  <script>document.write('<script src="assets/per.js?v=' + Date.now() + '"><\/script>');</script>
+  <script>document.write('<script src="assets/demo.js?v=' + Date.now() + '"><\/script>');</script>
+</body>
+</html>

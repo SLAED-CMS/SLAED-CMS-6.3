@@ -545,7 +545,7 @@ class Parser {
                 '/(?<!\*)\*(0[1-9]|1[0-8])(?!\d)/',
                 function(array $m): string {
                     $num = $this->filterEsc($m[1]);
-                    $img = getThemeImageUrl('smilies/'.$num.'.gif');
+                    $img = getThemeFileUrl('images/smilies/'.$num.'.gif');
                     $ttl = _SMILIE.' - '.$num;
                     return $this->addStash($this->getParserImage($img, $ttl, $ttl));
                 },

@@ -44,6 +44,11 @@ define('_ACCOUNT_UNSUBOK','L\'adresse %s ne reçoit plus la lettre d\'informatio
 define('_ACCOUNT_VIEWNOTE','Une adresse masquée n\'apparaît même pas dans vos informations.');
 define('_ACCOUNT_WORK','Profession');
 define('_ACCOUNT_YEARS','Années avec le projet');
+define('_ACCOUNT_SOUND','Son');
+define('_ACCOUNT_SOUNDNOTE','Conservé dans ce navigateur pour le site et le panneau : quels événements sont entendus sur cet appareil.');
+define('_ACCOUNT_SNDALERT','Notifications et questions');
+define('_ACCOUNT_SNDQUEUE','File de modération');
+define('_ACCOUNT_SNDWIN','File vidée');
 define('_ACTERROR1',"Données de l'utilisateur ne sont pas valides.<br>S'il vous Plaît, vérifiez les données saisies, ou si Vous n'êtes pas encore membre, alors cliquez inscription <a href=\"%s\">ici</a>.");
 define('_ACTERROR2',"Utilisateur à ces données dans notre base de données n'est pas trouvé.<br>Vous pouvez Vous enregistrer de <a href=\"%s\">ici</a>.");
 define('_ACTIVATIONERROR','Erreur lors de la revitalisation nouvel utilisateur');

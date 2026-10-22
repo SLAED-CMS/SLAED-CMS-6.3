@@ -2004,13 +2004,15 @@ function setHead(array $seo = []): void {
     $script = doScript()."\n".$stscript;
     if (defined('ADMIN_FILE')) {
         $adlogo = basename((string)($conf['admin_logo'] ?? 'slaed_logo_256x73.png'));
-        $adpath = getThemeImagePath('logos/'.$adlogo);
-        if (!is_file(PUBLIC_DIR.'/'.$adpath)) $adpath = getThemeImagePath('logos/slaed_logo_256x73.png');
+        $adpath = getThemeFilePath('images/logos/'.$adlogo);
+        if (!is_file(PUBLIC_DIR.'/'.$adpath)) $adpath = getThemeFilePath('images/logos/slaed_logo_256x73.png');
         $adminvars = [
             'theme' => getTheme(),
             'mode' => getThemeMode(),
             'is_still' => isThemeFlag('still'),
             'is_rail' => isThemeFlag('rail'),
+            'is_dock_off' => isThemeFlag('dock-off'),
+            'sound_url' => getThemeFileUrl('sound/'),
             'lang' => substr(_LOCALE, 0, 2),
             'sitename' => $conf['sitename'] ?? '',
             'homeurl' => $conf['homeurl'] ?? '',
@@ -2110,6 +2112,8 @@ function setHead(array $seo = []): void {
         'theme' => getTheme(),
         'mode' => getThemeMode(),
         'is_still' => isThemeFlag('still'),
+        'sound_url' => getThemeFileUrl('sound/'),
+        'pm_poll' => (is_user() && $conf['privat']['act']) ? HOME_PATH.'index.php?go=1&op=getPrivateCountData&token='.getSiteToken() : '',
         'mode_html' => getThemeModeSwitch(HOME_PATH.'index.php'),
         'lang' => substr(_LOCALE, 0, 2),
         'sitename' => $conf['sitename'] ?? '',
@@ -2230,6 +2234,7 @@ function setFoot(): void {
         'foot_html' => $foot,
         'debug_html' => $debug,
         'windows_html' => getWindowSet(),
+        'dock_html' => (isAdmin() && !isThemeFlag('dock-site-off')) ? getAdminDock() : '',
     ]);
     $page = (is_string($sitepage ?? '') && $sitepage !== '') ? $sitepage : ($home ? 'home' : 'module');
     $html = getOutputHtml($tpl->getHtmlPage($page, $vars, $page === 'home' ? 'home' : 'app'));
@@ -2882,7 +2887,7 @@ function getThemeAssets(string $theme, string $ext): array {
 }
 
 # The stylesheets or scripts a page links in their order: the comma list of files and directories from css_f or script_f, [theme] read as the theme, then the package
-# An entry is an address relative to the document root, so it is looked up below PUBLIC_DIR and answered in the same relative form
+# An entry is an address relative to the document root, so it is looked up below PUBLIC_DIR and answered in the same relative form; a theme with sound/ adds sound.js
 function getAssetList(string $theme, string $ext, string $list): array {
     $out = [];
     foreach (explode(',', str_replace('[theme]', $theme, $list)) as $entry) {
@@ -2892,13 +2897,16 @@ function getAssetList(string $theme, string $ext, string $list): array {
         if (is_dir($full)) array_push($out, ...array_map(static fn(string $v): string => $entry.'/'.basename($v), glob($full.'/*.'.$ext) ?: []));
         if (is_file($full) && strtolower(pathinfo($entry, PATHINFO_EXTENSION)) === $ext) $out[] = $entry;
     }
-    return array_values(array_unique(array_merge($out, getThemeAssets($theme, $ext))));
+    $out = array_merge($out, getThemeAssets($theme, $ext));
+    if ($ext === 'js' && is_dir(PUBLIC_DIR.'/templates/'.$theme.'/sound')) $out[] = 'plugins/system/sound.js';
+    return array_values(array_unique($out));
 }
 
-# The deferred script tags of the page head: the versioned files of getAssetList() run in their order after the parser, and on the site the head of config/header.php
+# The deferred script tags of the page head: the files of getAssetList(), dock.js for the menu of an administrator, and on the site the head of config/header.php
 function doScript(): string {
     global $theme, $conf, $tpl;
     $array = $conf['derived']['assets'][$theme]['js'] ?? getAssetList($theme, 'js', $conf['script_f']);
+    if (isAdmin() && (defined('ADMIN_FILE') || !isThemeFlag('dock-site-off'))) $array[] = 'plugins/system/dock.js';
     $arr = [];
     foreach ($array as $file) $arr[] = $tpl->getHtmlFrag('head-script-src', ['src' => Template::getAssetUrl($file), 'attr' => 'defer']);
     $cont = implode("\n", $arr);
@@ -4020,13 +4028,13 @@ function getConst(string $con): string {
     return ($con !== '' && $con[0] === '_' && defined($con)) ? constant($con) : $con;
 }
 
-# The name of a module from its row of config/modules.php; a constant the common language lacks is read from the language of the module for this context
+# The name of a module from its row of config/modules.php; a constant the common language lacks is read from the language of the panel or of the module for this context
 # A module outside the release keeps its name in modules/<name>/lang and modules/<name>/admin/lang alike, since only one of the two loads per request
 function getModuleLabel(string $mod): string {
     global $conf;
     $con = trim((string)($conf['modules'][$mod]['lang'] ?? ''));
     if ($con === '') return $mod;
-    if ($con[0] === '_' && !defined($con)) getLang($mod, defined('ADMIN_FILE'));
+    if ($con[0] === '_' && !defined($con)) getLang((($conf['modules'][$mod]['type'] ?? 1) == 0) ? 'admin' : $mod, defined('ADMIN_FILE'));
     return getConst($con);
 }
 
@@ -4115,8 +4123,8 @@ function getLangName(string $con): string {
 function getLanguageFlagSrc(string $lang): string {
     $map = ['en' => 'gb', 'uk' => 'ua'];
     $code = $map[$lang] ?? $lang;
-    $path = 'flags/'.$code.'.svg';
-    return file_exists(PUBLIC_DIR.'/'.getThemeImagePath($path)) ? getThemeImageUrl($path) : getThemeImageUrl('flags/unknown.svg');
+    $path = 'images/flags/'.$code.'.svg';
+    return file_exists(PUBLIC_DIR.'/'.getThemeFilePath($path)) ? getThemeFileUrl($path) : getThemeFileUrl('images/flags/unknown.svg');
 }
 
 # Hash a user password with bcrypt
@@ -4407,11 +4415,10 @@ function getAdminQueues(): array {
 
 # Render the admin block: the summary of the visitors, the keys of the panel, the links a super administrator keeps in the admin row of _blocks
 function adminblock(): string {
-    global $db, $afile, $tpl;
+    global $afile, $tpl;
     if (!isAdmin()) return '';
-    $title = $content = '';
-    if (isAdmin(true)) [$title, $content] = $db->getSqlRow($db->getSqlQuery('SELECT title, content FROM '.PREFIX_DB."_blocks WHERE bkey = 'admin'"));
-    $links = getAdminBlockLinks((string)$content);
+    $own = getAdminBlockLinks();
+    $links = $own['links'];
     $sum = getUserSessionAdminInfo('1');
     $cont = $tpl->getHtmlFrag('admin-block', [
         'summary_html' => $sum,
@@ -4419,20 +4426,26 @@ function adminblock(): string {
         'stats_id' => (isAdmin(true) && $sum !== '') ? 'sl-stats' : '',
         'fresh_query' => ($sum !== '') ? (defined('ADMIN_FILE') ? 'go=5' : 'go=1').'&op=getUserSessionAdminInfo' : '',
         'site_url' => defined('ADMIN_FILE') ? HOME_PATH : '',
+        'page' => getAdminPageLink(),
         'logout_url' => HOME_PATH.$afile.'.php?op=logout',
         'links' => $links,
         'links_num' => count($links),
         'is_dead' => in_array(true, array_map(static fn(array $row): bool => $row['dead_title'] !== '', $links), true),
     ]);
-    return $tpl->getHtmlPart('block-sidebar', ['title' => $title ?: _ADMINS, 'icon_name' => 'person-gear', 'content_html' => $cont, 'id' => '7', 'close' => _OPCL]);
+    return $tpl->getHtmlPart('block-sidebar', ['title' => $own['title'] ?: _ADMINS, 'icon_name' => 'person-gear', 'content_html' => $cont, 'id' => '7', 'close' => _OPCL]);
 }
 
-# Read the links of the admin row of _blocks: javascript:OpenWindow becomes its address, an address without a root reads from the root of the site, a missing file is marked
-function getAdminBlockLinks(string $html): array {
-    global $conf;
+# Read the admin row of _blocks once a request for a super administrator: its title and its links, javascript:OpenWindow read as its address, a missing file marked
+function getAdminBlockLinks(): array {
+    global $db, $conf;
+    static $out = null;
+    if ($out !== null) return $out;
+    $out = ['title' => '', 'links' => []];
+    if (!isAdmin(true)) return $out;
+    [$head, $html] = $db->getSqlRow($db->getSqlQuery('SELECT title, content FROM '.PREFIX_DB."_blocks WHERE bkey = 'admin'")) ?: ['', ''];
     $rows = [];
     $site = strtolower((string)parse_url((string)($conf['homeurl'] ?? ''), PHP_URL_HOST));
-    preg_match_all('#<a\b([^>]*)>(.*?)</a>#is', $html, $hits, PREG_SET_ORDER);
+    preg_match_all('#<a\b([^>]*)>(.*?)</a>#is', (string)$html, $hits, PREG_SET_ORDER);
     foreach ($hits as [, $attr, $text]) {
         $href = preg_match('#\bhref\s*=\s*(["\'])(.*?)\1#is', $attr, $one) ? trim(html_entity_decode($one[2], ENT_QUOTES | ENT_HTML5, 'UTF-8')) : '';
         if (preg_match('#^javascript:#i', $href)) $href = preg_match('#\(\s*(["\'])(.*?)\1#s', $href, $one) ? trim($one[2]) : '';
@@ -4448,7 +4461,100 @@ function getAdminBlockLinks(string $html): array {
         $rows[] = ['href' => $href, 'label' => ($label !== '') ? $label : $href, 'title' => ($title !== '') ? $title : $label,
             'icon' => $local ? 'link-45deg' : 'box-arrow-up-right', 'dead_title' => $dead ? _ADM_NOFILE.': '.$rel : ''];
     }
+    $out = ['title' => (string)$head, 'links' => $rows];
+    return $out;
+}
+
+# The sections of the panel this administrator may open, by key: the panel modules for a super administrator, then each site module with an admin part
+function getAdminSectionList(): array {
+    global $conf, $afile;
+    static $rows = null;
+    if ($rows !== null) return $rows;
+    $rows = [];
+    if (!isAdmin()) return $rows;
+    foreach ([0, 1] as $typ) {
+        foreach ($conf['modules'] as $key => $mod) {
+            if (($mod['type'] ?? 1) != $typ) continue;
+            if (($typ === 0) ? !isAdmin(true) : (!is_admin_modul($key) || !is_file(BASE_DIR.'/modules/'.$key.'/admin/index.php'))) continue;
+            $rows[$key] = ['key' => $key, 'is_panel' => $typ === 0, 'href' => HOME_PATH.$afile.'.php?name='.$key,
+                'icon' => preg_match('/^[a-z0-9-]+$/', $mod['icon'] ?? '') ? $mod['icon'] : 'puzzle'];
+        }
+    }
     return $rows;
+}
+
+# The section of the panel behind the open page of the site: the editor of a material its moderator may change, the list of its Node type, the panel of its module
+function getAdminPageLink(): array {
+    global $conf, $afile, $op;
+    $key = (string)($conf['name'] ?? '');
+    if (defined('ADMIN_FILE') || !isAdmin() || $key === '') return [];
+    $base = HOME_PATH.$afile.'.php?name=';
+    if (isset(getNodeTypeMap()[$key])) {
+        $ctx = getNodeContext();
+        if (!$ctx->super && !in_array($key, $ctx->mods, true)) return [];
+        $id = ($op === 'view') ? intval(getVar('get', 'id', 'num', 0)) : 0;
+        if ($id > 0) return ['href' => $base.'node&op=edit&id='.$id.'&type='.$key, 'label' => getModuleName($key).' · '._FULLEDIT, 'icon' => 'pencil-square'];
+        return ['href' => $base.'node&type='.$key, 'label' => getModuleName($key), 'icon' => getIconName($key)];
+    }
+    $row = getAdminSectionList()[$key] ?? null;
+    return $row ? ['href' => $row['href'], 'label' => getModuleLabel($key), 'icon' => $row['icon']] : [];
+}
+
+# Render the floating menu of an administrator in the theme of the page: the home, this page and the queue on the site, the pins, the watch, the own links, the card, the tools
+function getAdminDock(): string {
+    global $afile, $tpl, $conf, $admin, $name, $panel;
+    $own = getAdminBlockLinks();
+    $list = getAdminSectionList();
+    $pins = [];
+    foreach (array_unique(explode('-', getCookies('pins'))) as $key) {
+        if (!isset($list[$key]) || count($pins) === 8) continue;
+        $here = defined('ADMIN_FILE') && $key === $name;
+        $pins[] = ['key' => $key, 'href' => $list[$key]['href'], 'label' => getModuleLabel($key), 'is_here' => $here, 'icon_name' => $list[$key]['icon']];
+    }
+    $queue = [];
+    $shown = 0;
+    foreach (getAdminQueues() as $row) {
+        $show = $row['num'] > 0 && $shown < 4;
+        $shown += $show ? 1 : 0;
+        $queue[] = $row + ['is_shown' => $show];
+    }
+    $cnt = ($conf['session'] && isAdmin(true)) ? getSessionCounts() : [];
+    $all = $cnt['all'] ?? 0;
+    $pct = static fn(int $num): int => ($all > 0) ? intval(round($num / $all * 100)) : 0;
+    $log = getLoginLog(['uid' => intval($admin[0] ?? 0), 'admin' => true, 'result' => ['ok']], 1, 2)['rows'];
+    $stamp = static fn(int $i): array => isset($log[$i]) ? ['stamp' => format_time($log[$i]['time'], 'c'), 'text' => format_time($log[$i]['time'], _TIMESTRING)] : [];
+    $idle = max(0, getAdminIdle() - time() + intval($_SESSION[$conf['admin_c'].'-time'] ?? 0));
+    $links = $own['links'];
+    return $tpl->getHtmlFrag('dock', [
+        'home_url' => HOME_PATH.$afile.'.php',
+        'is_home' => defined('ADMIN_FILE') && !empty($panel),
+        'mark_src' => getThemeFileUrl('images/logos/slaed-logo-mark-gradient-blue.svg'),
+        'logout_url' => HOME_PATH.$afile.'.php?op=logout',
+        'option_url' => HOME_PATH.$afile.'.php',
+        'option_token' => getSiteToken('option'),
+        'page' => getAdminPageLink(),
+        'queue' => $queue,
+        'queue_sum' => array_sum(array_column($queue, 'num')),
+        'queue_url' => HOME_PATH.'index.php?go=5&op=getAdminQueueData&token='.getSiteToken(),
+        'sections_url' => HOME_PATH.'index.php?go=5&op=getAdminSectionData&token='.getSiteToken(),
+        'star_note' => sprintf(_ADM_STARTIP, 8),
+        'pins' => $pins,
+        'pin_max' => sprintf(_ADM_PINMAX, 8),
+        'is_watch' => $cnt !== [],
+        'watch_num' => $all,
+        'admins_pct' => $pct($cnt['admins'] ?? 0),
+        'members_pct' => $pct(($cnt['admins'] ?? 0) + ($cnt['users'] ?? 0)),
+        'bots_pct' => $pct(($cnt['admins'] ?? 0) + ($cnt['users'] ?? 0) + ($cnt['bots'] ?? 0)),
+        'me_name' => (string)($admin[1] ?? ''),
+        'me_role' => isAdmin(true) ? _SUPERUSER : _ADMIN,
+        'sign_in' => $stamp(0),
+        'last_in' => $stamp(1),
+        'me_ip' => getIp(),
+        'sess_left' => intdiv($idle, 60).':'.str_pad($idle % 60, 2, '0', STR_PAD_LEFT),
+        'links' => $links,
+        'links_num' => count($links),
+        'is_dead' => in_array(true, array_map(static fn(array $row): bool => $row['dead_title'] !== '', $links), true),
+    ]);
 }
 
 # The link to a profile on the path its reader joined; $icon is off beside an info tip, whose "i" already marks the user block
@@ -5122,16 +5228,16 @@ function ad_status(mixed $link, mixed $id, string $text = ''): string {
         : $tpl->getHtmlFrag('inline-badge', ['title_text' => _DEACT, 'is_status_inactive' => true, 'label' => '']);
 }
 
-# The path of an image of the active theme below the document root, for a file check behind PUBLIC_DIR; getThemeImageUrl() gives its address
-function getThemeImagePath(string $img): string {
+# The path of a file of the active theme from its root below the document root, for a file check behind PUBLIC_DIR; getThemeFileUrl() gives its address
+function getThemeFilePath(string $file): string {
     static $base;
-    if (!$base) $base = 'templates/'.getTheme().'/images/';
-    return $base.$img;
+    if (!$base) $base = 'templates/'.getTheme().'/';
+    return $base.$file;
 }
 
-# The address of an image of the active theme from the root of the site
-function getThemeImageUrl(string $img): string {
-    return HOME_PATH.getThemeImagePath($img);
+# The address of a file of the active theme from the root of the site
+function getThemeFileUrl(string $file): string {
+    return HOME_PATH.getThemeFilePath($file);
 }
 
 # Render a category icon from its stored Bootstrap Icons name, empty string when no icon is set
@@ -6431,6 +6537,7 @@ function updateCommentStatus(): void {
     $id = getVar('req', 'id', 'num', 0);
     $typ = getVar('req', 'typ', 'num', 0);
     $numb = getVar('req', 'numb', 'num', 0);
+    $wait = $typ ? $com->getStatusCount(CommentStatus::Pending) : 0;
     $row = $com->setStatus($id, (bool)$typ) ? $com->getComment($id) : [];
     if (!$row) {
         header('HX-Retarget: #repcstat');
@@ -6439,6 +6546,7 @@ function updateCommentStatus(): void {
         return;
     }
     header('HX-Reswap: outerHTML');
+    if ($wait && !$com->getStatusCount(CommentStatus::Pending)) header('HX-Trigger: '.json_encode(['sl-sound' => 'win']));
     echo getCommentView($row, $numb, getSiteToken());
 }
 

@@ -38,7 +38,6 @@ function getRobotsTemplate(): string {
         'Disallow: /lang/',
         'Disallow: /modules/',
         'Disallow: /setup.php',
-        'Disallow: /sound/',
         'Disallow: /storage/',
     ];
     $rows[] = '';

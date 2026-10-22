@@ -461,7 +461,7 @@ it.
   `error_site.log` with its caller.
 - Every address the site prints starts at the root: page links through `getSeoUrl()`, mails through
   `getPublicUrl()`, and every endpoint `go=…`, form, htmx attribute, script address, theme image
-  (`getThemeImageUrl()`), avatar and favicon from `HOME_PATH`, so a page opened two segments deep resolves nothing
+  (`getThemeFileUrl()`), avatar and favicon from `HOME_PATH`, so a page opened two segments deep resolves nothing
   against its own path. Templates take `{{ root }}` (`docs/TEMPLATES.md`, "Links In Templates"). Stored texts keep
   the form `./index.php?go=file…`, which `Parser::filterUrl()` reads from the root.
 - The `redirect_uri` of OAuth, the panel and its scripts, and the absolute addresses of the feed and the sitemap keep
@@ -862,7 +862,7 @@ server may ignore, and the installation checks that it is.
 **The tree.** The document root is `public/`. It holds the entries
 `index.php`, `admin.php`, `setup.php` and, in this repository, `update.php`,
 then `.htaccess`, `favicon.ico`, `robots.txt`, `error.html`, the sitemap files,
-`templates/`, `plugins/`, `sound/` and `demo/`. Everything else stays at the
+`templates/`, `plugins/` and `demo/`. Everything else stays at the
 project level. Every entry defines `BASE_DIR` (the folder above its own) and
 `PUBLIC_DIR` (its own folder) — all but `admin.php` only when a test or a tool
 has not defined them first — so the root may carry any name, `public_html/`

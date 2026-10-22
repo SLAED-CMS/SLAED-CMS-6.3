@@ -1386,9 +1386,9 @@ select.sl-field {
   color: var(--sl-text-muted);
 }
 
-/* Floating panels: shared hover, focus and JS-open model */
-.sl-float:hover > .sl-float-panel,
-.sl-float:focus-within > .sl-float-panel {
+/* Floating panels: shared hover, focus and JS-open model; a float shut with Escape stays shut until it opens again */
+.sl-float:not([data-sl-float-shut]):hover > .sl-float-panel,
+.sl-float:not([data-sl-float-shut]):focus-within > .sl-float-panel {
   display: block;
   opacity: 1;
 }
@@ -2850,8 +2850,8 @@ pre code.hljs {
 
 /* Floating transitions: display-driven fade-in entry point */
 @starting-style {
-  .sl-float:hover > .sl-float-panel,
-  .sl-float:focus-within > .sl-float-panel,
+  .sl-float:not([data-sl-float-shut]):hover > .sl-float-panel,
+  .sl-float:not([data-sl-float-shut]):focus-within > .sl-float-panel,
   .sl-float.sl-is-open > .sl-float-panel {
     opacity: 0;
   }
@@ -9105,7 +9105,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
 .sl-toast {
   position: fixed;
   left: 50%;
-  bottom: calc(var(--sl-space-6) + var(--sl-space-3));
+  bottom: var(--sl-d-dock-lift, calc(var(--sl-space-6) + var(--sl-space-3)));
   z-index: var(--sl-z-toast);
   display: flex;
   align-items: center;

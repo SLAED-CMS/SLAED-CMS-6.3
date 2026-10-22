@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="ru" data-theme="auto">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Шаг &middot; Строк на странице — стенд SLAED CMS</title>
+  <link rel="stylesheet" href="../templates/admin/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../templates/admin/assets/css/base.css">
+  <link rel="stylesheet" href="../templates/admin/assets/css/theme.css">
+  <!-- The stand is served without Cache-Control; its sheets and scripts are stamped so an edit is seen at once -->
+  <script>document.write('<link rel="stylesheet" href="assets/demo.css?v=' + Date.now() + '"><link rel="stylesheet" href="assets/tbl.css?v=' + Date.now() + '"><link rel="stylesheet" href="assets/per.css?v=' + Date.now() + '">');</script>
+  <script src="../plugins/system/global-func.js"></script>
+  <script src="../plugins/system/slaed.js"></script>
+  <script src="../templates/admin/assets/js/admin-ui.js"></script>
+  <style>
+    /* Шаг: a stepper in the side group of the pager: minus and plus walk the ladder 10, 25, 50, 100 */
+    .v-step { display: inline-flex; align-items: center; height: var(--sl-size-chip); border-radius: var(--sl-radius-pill); background: var(--sl-surface); box-shadow: var(--sl-shadow-xs); }
+    .v-step-btn { display: inline-flex; align-items: center; justify-content: center; width: var(--sl-size-chip); height: var(--sl-size-chip); padding: 0; border: 0; border-radius: var(--sl-radius-circle); background: transparent; color: var(--sl-text-strong); cursor: pointer; }
+    .v-step-btn .bi { font-size: var(--sl-size-icon-xs); }
+    .v-step-btn:hover:not(:disabled), .v-step-btn:focus-visible { background: var(--sl-primary-strong); color: var(--sl-on-solid); }
+    .v-step-btn:disabled { opacity: var(--sl-fade-disabled); cursor: default; }
+    .v-step-val { min-width: 64px; padding: 0 var(--sl-space-1); color: var(--sl-text-muted); font-size: var(--sl-font-small); text-align: center; white-space: nowrap; }
+    .v-step-val b { color: var(--sl-text-strong); font-weight: var(--sl-weight-semibold); font-variant-numeric: tabular-nums; }
+    .sl-pager-side .v-back:disabled { display: none; }
+  </style>
+</head>
+<body>
+  <template data-per-face data-per-slot="side">
+    <span class="v-step" role="group" aria-label="Строк на странице"><button type="button" class="v-step-btn" data-per-step="-1" title="Меньше строк" aria-label="Меньше строк"><i class="bi bi-dash-lg" aria-hidden="true"></i></button><span class="v-step-val" aria-live="polite"><b data-per-cur></b> строк</span><button type="button" class="v-step-btn" data-per-step="1" title="Больше строк" aria-label="Больше строк"><i class="bi bi-plus-lg" aria-hidden="true"></i></button></span><button type="button" class="sl-but-mini v-back" data-per-reset title="По умолчанию модуля" aria-label="По умолчанию модуля"><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i></button>
+  </template>
+  <script>document.write('<script src="assets/tbl.js?v=' + Date.now() + '"><\/script>');</script>
+  <script>document.write('<script src="assets/per.js?v=' + Date.now() + '"><\/script>');</script>
+  <script>document.write('<script src="assets/demo.js?v=' + Date.now() + '"><\/script>');</script>
+</body>
+</html>

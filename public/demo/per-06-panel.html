@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="ru" data-theme="auto">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Настройки списка &middot; Строк на странице — стенд SLAED CMS</title>
+  <link rel="stylesheet" href="../templates/admin/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../templates/admin/assets/css/base.css">
+  <link rel="stylesheet" href="../templates/admin/assets/css/theme.css">
+  <!-- The stand is served without Cache-Control; its sheets and scripts are stamped so an edit is seen at once -->
+  <script>document.write('<link rel="stylesheet" href="assets/demo.css?v=' + Date.now() + '"><link rel="stylesheet" href="assets/tbl.css?v=' + Date.now() + '"><link rel="stylesheet" href="assets/per.css?v=' + Date.now() + '">');</script>
+  <script src="../plugins/system/global-func.js"></script>
+  <script src="../plugins/system/slaed.js"></script>
+  <script src="../templates/admin/assets/js/admin-ui.js"></script>
+  <style>
+    /* Настройки списка: one button with the sliders before the view switch opens the settings of the list: four tiles that draw how dense the page gets */
+    .sl-list-view { display: flex; align-items: center; gap: var(--sl-space-2); }
+    .v-gear-btn { display: inline-flex; align-items: center; gap: var(--sl-space-2); height: var(--sl-size-chip); padding: 0 var(--sl-space-3); border: 0; border-radius: var(--sl-radius-pill); background: var(--sl-surface); color: var(--sl-text-strong); box-shadow: var(--sl-shadow-xs); font: inherit; font-size: var(--sl-font-small); cursor: pointer; }
+    .v-gear-btn .bi { font-size: var(--sl-size-icon-xs); }
+    .v-gear-btn b { font-weight: var(--sl-weight-semibold); font-variant-numeric: tabular-nums; }
+    .v-gear-btn:hover, .v-gear-btn:focus-visible, .sl-is-open > .v-gear-btn { background: var(--sl-primary-strong); color: var(--sl-on-solid); }
+    .v-cards { display: grid; grid-template-columns: repeat(5, 1fr); gap: var(--sl-space-2); }
+    .v-card { display: grid; justify-items: center; gap: var(--sl-space-2); padding: var(--sl-space-3) var(--sl-space-2) var(--sl-space-2); border: 1px solid var(--sl-border); border-radius: var(--sl-radius-2); background: var(--sl-surface); color: var(--sl-text); font: inherit; cursor: pointer; }
+    .v-card:hover, .v-card:focus-visible { border-color: var(--sl-primary); outline: none; }
+    .v-card.sl-is-active { border-color: var(--sl-primary-strong); background: var(--sl-tint); box-shadow: var(--sl-shadow-focus); }
+    .v-card b { font-size: var(--sl-font-h4); font-weight: var(--sl-weight-semibold); font-variant-numeric: tabular-nums; }
+    .v-card .pp-menu-def { margin: 0; }
+    .v-card:not([data-per-is-def]) .pp-menu-def { visibility: hidden; display: inline; }
+    /* The preview keeps its frame and spreads its lines evenly: more rows, denser lines, never out of the frame */
+    .v-bars { display: grid; align-content: space-evenly; width: 32px; height: 28px; padding: 0 var(--sl-space-1); box-sizing: border-box; border: 1px solid var(--sl-border); border-radius: var(--sl-radius-1); background: var(--sl-bg); }
+    .v-bars i { height: 2px; border-radius: var(--sl-radius-pill); background: var(--sl-text-muted); }
+    .v-card.sl-is-active .v-bars i { background: var(--sl-primary-strong); }
+  </style>
+</head>
+<body>
+  <template data-per-face data-per-slot="view">
+    <span data-per-menu><button type="button" class="v-gear-btn" data-per-menu-toggle aria-haspopup="menu" aria-expanded="false" aria-controls="per-menu-{n}" title="Настройки списка"><i class="bi bi-sliders" aria-hidden="true"></i><b data-per-cur></b></button><span class="pp-menu-panel" id="per-menu-{n}" role="menu" aria-label="Настройки списка" data-per-menu-panel hidden><span class="pp-menu-head">Строк на странице</span><span class="v-cards"><button type="button" role="menuitemradio" class="v-card" data-per-set="10" aria-label="10 строк"><span class="v-bars" aria-hidden="true"><i></i><i></i></span><b>10</b><span class="pp-menu-def">умолчание</span></button><button type="button" role="menuitemradio" class="v-card" data-per-set="25" aria-label="25 строк"><span class="v-bars" aria-hidden="true"><i></i><i></i><i></i></span><b>25</b><span class="pp-menu-def">умолчание</span></button><button type="button" role="menuitemradio" class="v-card" data-per-set="50" aria-label="50 строк"><span class="v-bars" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span><b>50</b><span class="pp-menu-def">умолчание</span></button><button type="button" role="menuitemradio" class="v-card" data-per-set="100" aria-label="100 строк"><span class="v-bars" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span><b>100</b><span class="pp-menu-def">умолчание</span></button><button type="button" role="menuitemradio" class="v-card" data-per-set="250" aria-label="250 строк"><span class="v-bars" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span><b>250</b><span class="pp-menu-def">умолчание</span></button></span><span class="pp-menu-sep" role="separator"></span><button type="button" role="menuitem" class="pp-menu-item" data-per-reset><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i>По умолчанию модуля · <span data-per-base></span></button><span class="pp-menu-note">Один выбор на все списки панели</span></span></span>
+  </template>
+  <script>document.write('<script src="assets/tbl.js?v=' + Date.now() + '"><\/script>');</script>
+  <script>document.write('<script src="assets/per.js?v=' + Date.now() + '"><\/script>');</script>
+  <script>document.write('<script src="assets/demo.js?v=' + Date.now() + '"><\/script>');</script>
+</body>
+</html>

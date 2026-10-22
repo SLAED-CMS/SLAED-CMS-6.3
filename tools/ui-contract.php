@@ -237,6 +237,13 @@ return [
         '--sl-d-bots' => 'session donut end of the bot share, templates/*/partials/session-summary.html',
         '--sl-d-count' => 'speed dial item count, plugins/system/filemanager.js',
         '--sl-d-depth' => 'nesting depth of a comment or of a check list row, templates/lite/fragments/comment.html and templates/*/fragments/check-list.html',
+        '--sl-d-dock-lift' => 'height the notice of the panel and the site climbs over a floating menu lying under it, plugins/system/dock.js',
+        '--sl-d-dock-px' => 'left of a pop of the floating menu over its icon inside the window, plugins/system/dock.js',
+        '--sl-d-dock-py' => 'top of a pop of the upright floating menu beside its icon inside the window, plugins/system/dock.js',
+        '--sl-d-dock-s' => 'growth of one icon of the floating menu under the pointer, plugins/system/dock.js',
+        '--sl-d-dock-tile' => 'tile of the upright floating menu lowered to stand whole on a short screen, plugins/system/dock.js',
+        '--sl-d-dock-x' => 'centre of the floating menu across the window, plugins/system/dock.js',
+        '--sl-d-dock-y' => 'centre of the floating menu down the window, plugins/system/dock.js',
         '--sl-d-duration' => 'profile feed scroll duration, plugins/system/slaed.js',
         '--sl-d-editor-floor' => 'height of the field CodeMirror takes the place of, plugins/system/editor.js',
         '--sl-d-float-left' => 'floating panel viewport left, plugins/system/slaed.js',
@@ -742,6 +749,10 @@ return [
             'two mechanisms under one name, which the .sl-dial rules already answer for: the panel dial drives the file manager through data-sl-fm-act, -file, -arg '
             .'and -run, and the site dial swaps a fragment over htmx with its own target, swap and CSRF header. Neither set is inert in the other theme - each is '
             .'the half of the dial that theme is built on',
+        'fragments/dock.html' =>
+            'one producer, getAdminDock(), and one mechanism, dock.js, under two menus: the panel menu marks its own sections and opens the palette of Ctrl+K, '
+            .'the site menu marks the page it stands on, carries the queue the panel keeps in its bell and opens all the sections with a star each, since the site '
+            .'has no palette, and keeps a place of its own by data-sl-dock-site. The keys of the two are one set and each theme draws its half',
         'fragments/inline-badge.html' =>
             'two badge vocabularies: fourteen names the panel maps and twenty the site does, with no name in both. The site badge tells a reader what a topic is - '
             .'new, hot, closed, moderated - and carries the glyph for it; the panel badge tells a moderator what a record is. A union would be thirty-four branches '

@@ -53,7 +53,6 @@
 /docs export-ignore
 /public/demo export-ignore
 /public/phoenix export-ignore
-/public/sound export-ignore
 /composer.json export-ignore
 /package.json export-ignore
 /phpunit.xml export-ignore

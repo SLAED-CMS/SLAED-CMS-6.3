@@ -9,6 +9,9 @@
     // How much of a window has to stay on screen for a hand to reach its head again
     var WINHIGH = 42;
     var WINWIDE = 120;
+    // A theme without sounds loads no sound.js, so its places of sound stay silent
+    window.setSoundPlay = window.setSoundPlay || function () {};
+    window.setSoundOn = window.setSoundOn || function () {};
 
     // The presentation is a boolean of the markup: a window is either modal or stands beside the page
     function isWindowModal(box) {
@@ -825,6 +828,7 @@
     // The text comes from the caller and never from this file, because every visible word of the project lives in a language constant
     window.setConfirmTask = function (text, run) {
         var dlg = document.getElementById('sl-confirm');
+        window.setSoundPlay('warn');
         if (!dlg) {
             if (window.confirm(text)) run();
             return;
@@ -1061,6 +1065,7 @@
         var panel = getFloatPanel(node);
         if (!panel) return;
 
+        node.removeAttribute('data-sl-float-shut');
         if (node.slFloatClose) {
             window.clearTimeout(node.slFloatClose);
             node.slFloatClose = null;
@@ -1120,7 +1125,13 @@
                 if (item.getAttribute('data-sl-float-ready') === '1') return;
                 item.setAttribute('data-sl-float-ready', '1');
                 item.addEventListener('mouseenter', function () { placeFloat(item); });
-                item.addEventListener('focusin', function () { placeFloat(item); });
+                item.addEventListener('focusin', function () {
+                    if (item.slFloatHush) {
+                        item.slFloatHush = false;
+                        return;
+                    }
+                    placeFloat(item);
+                });
                 item.addEventListener('mouseleave', function () {
                     if (item.contains(document.activeElement)) return;
                     if (item.slFloatClose) window.clearTimeout(item.slFloatClose);
@@ -1145,6 +1156,23 @@
             var list = document.querySelectorAll('.sl-float.sl-is-open:not([data-sl-float-event="click"])');
             for (var i = 0; i < list.length; i++) {
                 if (!list[i].contains(e.target)) clearFloatState(list[i]);
+            }
+        });
+        // WCAG 1.4.13: Escape shuts an open float even under the pointer or the focus, and a focus inside its panel goes back to its launcher
+        document.addEventListener('keydown', function (e) {
+            if (e.key !== 'Escape') return;
+            var list = document.querySelectorAll('.sl-float.sl-is-open:not([data-sl-float-event="click"])');
+            for (var i = 0; i < list.length; i++) {
+                var item = list[i];
+                var panel = getFloatPanel(item);
+                var back = item.matches('[tabindex]') ? item : item.querySelector('button, [href], [tabindex]');
+                e.preventDefault();
+                if (panel && back && panel.contains(document.activeElement)) {
+                    item.slFloatHush = true;
+                    back.focus();
+                }
+                clearFloatState(item);
+                item.setAttribute('data-sl-float-shut', '');
             }
         });
     }
@@ -2151,6 +2179,7 @@
         if (shut) shut.addEventListener('click', function () { setToastDrop(box); });
         box.style.setProperty('--sl-d-toast', time + 'ms');
         tpl.parentNode.appendChild(box);
+        window.setSoundPlay(conf.warn ? 'error' : 'success');
         window.requestAnimationFrame(function () { box.classList.add('sl-is-visible'); });
         box.sltimer = window.setTimeout(function () { setToastDrop(box); }, time);
     }
@@ -2958,6 +2987,20 @@
         if (item) setPrivatOpen(item);
     });
 
+    // Э20 A date of a panel list or of the admin card of the floating menu reads relative in the language of the page; the exact moment stays in its title
+    function setTimeAgo(node) {
+        var list = (node && node.querySelectorAll ? node : document).querySelectorAll('time[data-sl-ago]');
+        if (!list.length || !window.Intl || !window.Intl.RelativeTimeFormat) return;
+        var fmt = new window.Intl.RelativeTimeFormat(document.documentElement.lang || undefined, { numeric: 'auto' });
+        var steps = [['year', 31536000], ['month', 2592000], ['week', 604800], ['day', 86400], ['hour', 3600], ['minute', 60]];
+        list.forEach(function (time) {
+            var sec = (Date.parse(time.dateTime) - Date.now()) / 1000;
+            var step = steps.find(function (one) { return Math.abs(sec) >= one[1]; }) || steps[steps.length - 1];
+            if (isNaN(sec)) return;
+            if (!time.title) time.title = time.textContent.trim();
+            time.textContent = fmt.format(Math.round(sec / step[1]), step[0]);
+        });
+    }
     function setSlaedUi() {
         setWindowKeys();
         setTableSort(document);
@@ -2984,6 +3027,7 @@
         setHintKeys();
         setPagerKeys();
         setFillMeters();
+        setTimeAgo(document);
         setDirtyForms(document);
         setDirtyLeave();
         setCodeBlocks(document);
@@ -2993,6 +3037,7 @@
         setRatingVotes();
         setQuickEdit();
         setPrivatCarry(document);
+        setPrivatPoll();
         setWindowBack();
     }
 
@@ -3012,6 +3057,7 @@
         setDirtyForms(event.target);
         setAlerts(event.target);
         setVoteBlocks(event.target);
+        setTimeAgo(event.target);
         var live = event.target && event.target.closest ? event.target.closest('[data-sl-live-box]') : null;
         if (live) live.setAttribute('data-sl-live-stamp', Date.now());
         setLiveChips(event.target);
@@ -3052,6 +3098,33 @@
         if (!from || from.closest('[data-sl-fav]')) return;
         var done = from.getAttribute('data-sl-done') || '';
         if (done !== '') setToast(done);
+    }
+
+    // Answer 14: a member's unread messages are asked once a minute, on a hidden tab too; a grown number is heard and counted on the badges
+    function setPrivatPoll() {
+        var url = document.documentElement.getAttribute('data-sl-pm-poll');
+        var mark = document.querySelector('[data-sl-pm-num]');
+        var seen = mark ? Number(mark.textContent) || 0 : -1;
+        if (!url) return;
+        window.setInterval(function () {
+            fetch(url, { credentials: 'same-origin', headers: { 'Accept': 'application/json', 'X-SL-Poll': '1' } })
+                .then(function (res) { return res.ok ? res.json() : null; })
+                .then(function (data) {
+                    var num = data ? Number(data.num) : NaN;
+                    var nav = document.getElementById('pmbadgenav');
+                    if (isNaN(num)) return;
+                    if (seen >= 0 && num > seen) window.setSoundPlay('inbox');
+                    seen = num;
+                    document.querySelectorAll('[data-sl-pm-num]').forEach(function (node) {
+                        node.textContent = num;
+                        node.classList.toggle('sl-pm-new', num > 0);
+                    });
+                    if (!nav) return;
+                    nav.textContent = num > 99 ? '99+' : String(num);
+                    nav.classList.toggle('sl-hidden', !num);
+                })
+                .catch(function () {});
+        }, 60000);
     }
 
     // Motion is welcome unless the reader asked for less of it or the options stilled the page; theme scripts and plugins read one answer

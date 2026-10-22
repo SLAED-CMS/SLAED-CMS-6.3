@@ -367,7 +367,7 @@ characters of its SHA-1.
 | Kind | Where | Cache-Control |
 | --- | --- | --- |
 | CSS and JS with `v=` in the query | `templates/`, `plugins/` | `public, max-age=31536000, immutable` |
-| CSS and JS without a version, fonts, images, icons, sounds | `templates/`, `plugins/`, `sound/` | `public, max-age=604800`, revalidated by `ETag` |
+| CSS and JS without a version, fonts, images, icons, sounds | `templates/`, `plugins/` | `public, max-age=604800`, revalidated by `ETag` |
 | Public uploads | `uploads/` of a public owner, through the light path of `index.php` | `public, max-age=86400` with the validators |
 | Pages | every route of PHP | `no-store` |
 | Files of the routes | `go=file` of a stored target, `op=asset` | `private, no-cache, must-revalidate` with `ETag` |

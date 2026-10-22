@@ -15,7 +15,7 @@
   {% if is_user %}
   <ul class="sl-block-pm">
     {% if has_privat %}
-    <li><a href="{{ root }}account/privat"><i class="bi bi-envelope" aria-hidden="true"></i><span>{{ inbox_label }}</span><b{% if has_new_in %} class="sl-pm-new"{% endif %}>{{ inbox_count }}</b></a></li>
+    <li><a href="{{ root }}account/privat"><i class="bi bi-envelope" aria-hidden="true"></i><span>{{ inbox_label }}</span><b{% if has_new_in %} class="sl-pm-new"{% endif %} data-sl-pm-num>{{ inbox_count }}</b></a></li>
     <li><a href="{{ root }}account/privat"><i class="bi bi-send" aria-hidden="true"></i><span>{{ outbox_label }}</span><b>{{ outbox_count }}</b></a></li>
     {% endif %}
     {% if has_fav %}<li><a href="{{ root }}account/favorites"><i class="bi bi-star" aria-hidden="true"></i><span>{{ favorites_label }}</span><i class="bi bi-chevron-right" aria-hidden="true"></i></a></li>{% endif %}

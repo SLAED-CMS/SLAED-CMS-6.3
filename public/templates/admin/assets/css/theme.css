@@ -1654,16 +1654,17 @@ pre code.hljs {
   display: none;
 }
 
-.sl-float:hover > .sl-float-panel,
-.sl-float:focus-within > .sl-float-panel {
+/* A float the reader shut with Escape stays shut under the pointer and the focus until it opens again (data-sl-float-shut) */
+.sl-float:not([data-sl-float-shut]):hover > .sl-float-panel,
+.sl-float:not([data-sl-float-shut]):focus-within > .sl-float-panel {
   display: block;
   opacity: 1;
 }
 
 /* Tooltip transitions: display-driven fade-in entry point */
 @starting-style {
-  .sl-float:hover > .sl-float-panel,
-  .sl-float:focus-within > .sl-float-panel,
+  .sl-float:not([data-sl-float-shut]):hover > .sl-float-panel,
+  .sl-float:not([data-sl-float-shut]):focus-within > .sl-float-panel,
   .sl-float.sl-is-open > .sl-float-panel {
     opacity: 0;
   }
@@ -5956,7 +5957,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
 /* The notice of the panel is a flash alert over the foot of the page, its ring counting the time the script gave it */
 .sl-toast-host {
   position: fixed;
-  bottom: var(--sl-space-6);
+  bottom: var(--sl-d-dock-lift, var(--sl-space-6));
   left: 50%;
   z-index: var(--sl-z-toast);
   width: max-content;
@@ -9360,7 +9361,7 @@ body[data-sl-pointer] .sl-admin-login-card:has(.sl-setup)::after {
   :root[data-sl-rail] .sl-menu-pal kbd,
   :root[data-sl-rail] .sl-admin-sidebar .sl-menu-empty,
   :root[data-sl-rail] .sl-admin-sidebar .sl-block-sidebar h3,
-  :root[data-sl-rail] .sl-admin-sidebar .sl-block-sidebar:not(.sl-block-menu, .sl-block-queue) {
+  :root[data-sl-rail] .sl-admin-sidebar .sl-block-sidebar:not(.sl-block-menu, .sl-block-queue, :has(.sl-adm-keys)) {
     display: none;
   }
 
@@ -9471,6 +9472,69 @@ body[data-sl-pointer] .sl-admin-login-card:has(.sl-setup)::after {
     content: "";
   }
 
+  /* А8 The admin block is one icon of the rail: its head keeps only the mark, as a section does */
+  :root[data-sl-rail] .sl-wrapper.sl-admin-shell .sl-admin-sidebar .sl-block-sidebar:has(.sl-adm-keys) h3 {
+    display: block;
+    width: calc(var(--sl-size-control) + var(--sl-space-2));
+    height: calc(var(--sl-size-control) + var(--sl-space-2));
+    margin: 0 auto;
+    border: 1px solid transparent;
+    border-radius: var(--sl-radius-1);
+    background: transparent;
+    box-shadow: none;
+    color: var(--sl-primary);
+    text-shadow: none;
+  }
+
+  :root[data-sl-rail] .sl-wrapper.sl-admin-shell .sl-admin-sidebar .sl-block-sidebar:has(.sl-adm-keys) h3 > .sl-menu-head {
+    justify-content: center;
+    padding: 0;
+  }
+
+  :root[data-sl-rail] .sl-wrapper.sl-admin-shell .sl-admin-sidebar .sl-block-sidebar:has(.sl-adm-keys) h3 b {
+    padding: 0;
+  }
+
+  :root[data-sl-rail] .sl-wrapper.sl-admin-shell .sl-admin-sidebar .sl-block-sidebar:has(.sl-adm-keys) h3 .bi {
+    font-size: var(--sl-font-h3);
+  }
+
+  :root[data-sl-rail] .sl-admin-sidebar .sl-block-sidebar:has(.sl-adm-keys) .sl-panel-toggle {
+    display: none;
+  }
+
+  /* А8 Its panel opens whole beside the icon under the hand or in focus; the block is the last of the rail, so the panel grows upward from its foot */
+  :root[data-sl-rail] .sl-wrapper.sl-admin-shell .sl-admin-sidebar .sl-block-sidebar:has(.sl-adm-keys) > .sl-block-sidebar-content {
+    position: absolute;
+    bottom: 0;
+    left: calc(100% + var(--sl-space-4));
+    z-index: var(--sl-z-dropdown);
+    display: none;
+    box-sizing: border-box;
+    width: var(--sl-layout-sidebar);
+    max-height: calc(100dvh - var(--sl-space-6) * 2);
+    overflow-y: auto;
+    padding: var(--sl-space-4);
+    border: 1px solid var(--sl-border);
+    border-radius: var(--sl-radius-2);
+    background: var(--sl-bg);
+    box-shadow: var(--sl-shadow-float);
+  }
+
+  :root[data-sl-rail] .sl-wrapper.sl-admin-shell .sl-admin-sidebar .sl-block-sidebar:has(.sl-adm-keys):is(:hover, :focus-within) > .sl-block-sidebar-content {
+    display: block;
+  }
+
+  /* An unseen bridge carries the pointer from the icon over the gap to its panel */
+  :root[data-sl-rail] .sl-admin-sidebar .sl-block-sidebar:has(.sl-adm-keys)::after {
+    position: absolute;
+    top: 0;
+    left: 100%;
+    width: var(--sl-space-4);
+    height: 100%;
+    content: "";
+  }
+
   /* The open section: an edge and a tint drawn by the rail itself, so the bar of the full menu steps aside */
   :root[data-sl-rail] .sl-wrapper.sl-admin-shell .sl-admin-sidebar .sl-menu-list-item:has(> a[aria-current="page"]) {
     background: var(--sl-tint-strong);
@@ -9485,7 +9549,8 @@ body[data-sl-pointer] .sl-admin-login-card:has(.sl-setup)::after {
   /* An icon in hand is a solid plate, as a toolbar item is */
   :root[data-sl-rail] .sl-menu-tool:hover,
   :root[data-sl-rail] .sl-wrapper.sl-admin-shell .sl-admin-sidebar :is(.sl-menu-list-item, .sl-block-sidebar-count-row):hover,
-  :root[data-sl-rail] .sl-wrapper.sl-admin-shell .sl-admin-sidebar .sl-menu-list-item:has(> a[aria-current="page"]):hover {
+  :root[data-sl-rail] .sl-wrapper.sl-admin-shell .sl-admin-sidebar .sl-menu-list-item:has(> a[aria-current="page"]):hover,
+  :root[data-sl-rail] .sl-wrapper.sl-admin-shell .sl-admin-sidebar .sl-block-sidebar:has(.sl-adm-keys):is(:hover, :focus-within) h3 {
     border-color: var(--sl-solid-border);
     background: var(--sl-solid-bg);
     box-shadow: var(--sl-solid-shadow);

@@ -1308,6 +1308,16 @@ function edithome(): void {
                 'options_html' => $topt,
             ])];
         }
+        if (is_dir(PUBLIC_DIR.'/'.getThemeFilePath('sound'))) {
+            $zone = ['alert' => _ACCOUNT_SNDALERT, 'msg' => _PRIVAT] + (isAdmin() ? ['mod' => _ACCOUNT_SNDQUEUE, 'win' => _ACCOUNT_SNDWIN] : []);
+            $boxes = [];
+            foreach ($zone as $key => $label) {
+                $boxes[] = ['label_text' => $label, 'input_id' => 'f-sound-'.$key, 'input_attr' => 'data-sl-sound-zone="'.$key.'"', 'is_checked' => $key !== 'mod'];
+            }
+            $sids = getFieldIds('', 'sound');
+            $lins[] = ['label' => _ACCOUNT_SOUND, 'label_id' => $sids['label'], 'hint' => _ACCOUNT_SOUNDNOTE, 'hint_id' => $sids['hint'],
+                'control_html' => $tpl->getHtmlFrag('check-list', ['labelledby' => $sids['label'], 'describedby' => $sids['hint'], 'items' => $boxes])];
+        }
         $tils = [['icon' => getIconName('privacy'), 'title' => _ACCOUNT_PRIVHEAD, 'width' => 6, 'tone' => 2, 'fields' => $lins]];
         $secs[] = ['id' => 'privacy', 'icon' => getIconName('privacy'), 'title' => _ACCOUNT_PRIVACY, 'inform' => true, 'tiles' => $tils];
         if (str_starts_with((string)($info['password'] ?? ''), '!')) {

@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="ru" data-theme="auto">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ползунок &middot; Строк на странице — стенд SLAED CMS</title>
+  <link rel="stylesheet" href="../templates/admin/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../templates/admin/assets/css/base.css">
+  <link rel="stylesheet" href="../templates/admin/assets/css/theme.css">
+  <!-- The stand is served without Cache-Control; its sheets and scripts are stamped so an edit is seen at once -->
+  <script>document.write('<link rel="stylesheet" href="assets/demo.css?v=' + Date.now() + '"><link rel="stylesheet" href="assets/tbl.css?v=' + Date.now() + '"><link rel="stylesheet" href="assets/per.css?v=' + Date.now() + '">');</script>
+  <script src="../plugins/system/global-func.js"></script>
+  <script src="../plugins/system/slaed.js"></script>
+  <script src="../templates/admin/assets/js/admin-ui.js"></script>
+  <style>
+    /* Ползунок: a slider of the ladder before the view switch, its numbers under the track are its stops and can be pressed */
+    .sl-list-view { display: flex; align-items: center; gap: var(--sl-space-2); }
+    .v-scale { display: inline-flex; align-items: center; gap: var(--sl-space-3); }
+    .v-cap { color: var(--sl-text-muted); font-size: var(--sl-font-small); }
+    .v-track { display: grid; width: 160px; padding-top: var(--sl-space-2); }
+    .v-track input { width: 100%; margin: 0; accent-color: var(--sl-primary-strong); cursor: pointer; }
+    .v-ticks { display: flex; justify-content: space-between; margin: 0 -6px; }
+    .v-ticks button { min-width: 24px; padding: 0; border: 0; background: transparent; color: var(--sl-text-muted); font: inherit; font-size: var(--sl-font-micro); font-variant-numeric: tabular-nums; cursor: pointer; }
+    .v-ticks button.sl-is-active { color: var(--sl-primary-strong); font-weight: var(--sl-weight-semibold); }
+    .v-ticks button[data-per-is-def] { text-decoration: underline dotted; text-underline-offset: 3px; }
+    .v-out { min-width: var(--sl-size-chip); padding: var(--sl-space-1) var(--sl-space-2); border-radius: var(--sl-radius-1); background: var(--sl-tint); color: var(--sl-text-strong); font-size: var(--sl-font-small); font-weight: var(--sl-weight-semibold); text-align: center; font-variant-numeric: tabular-nums; }
+    .v-back { width: var(--sl-size-chip); padding: 0; background: transparent; color: var(--sl-text-muted); }
+    .v-back:disabled { display: none; }
+  </style>
+</head>
+<body>
+  <template data-per-face data-per-slot="view">
+    <span class="v-scale"><label class="v-cap" for="per-scale-{n}">Строк</label><span class="v-track"><input type="range" id="per-scale-{n}" min="0" max="3" step="1" data-per-scale><span class="v-ticks" aria-hidden="true"><button type="button" tabindex="-1" data-per-set="10">10</button><button type="button" tabindex="-1" data-per-set="25">25</button><button type="button" tabindex="-1" data-per-set="50">50</button><button type="button" tabindex="-1" data-per-set="100">100</button><button type="button" tabindex="-1" data-per-set="250">250</button></span></span><output class="v-out" for="per-scale-{n}" data-per-cur></output><button type="button" class="sl-but-mini v-back" data-per-reset title="По умолчанию модуля" aria-label="По умолчанию модуля"><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i></button><span class="sl-pager-sep" aria-hidden="true"></span></span>
+  </template>
+  <script>document.write('<script src="assets/tbl.js?v=' + Date.now() + '"><\/script>');</script>
+  <script>document.write('<script src="assets/per.js?v=' + Date.now() + '"><\/script>');</script>
+  <script>document.write('<script src="assets/demo.js?v=' + Date.now() + '"><\/script>');</script>
+</body>
+</html>
