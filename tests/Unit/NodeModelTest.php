@@ -18,6 +18,7 @@ use PHPUnit\Framework\TestCase;
 use ReflectionClass;
 use ReflectionEnum;
 use ReflectionFunctionAbstract;
+use ReflectionMethod;
 use RuntimeException;
 
 require_once dirname(__DIR__, 2).'/core/classes/pdo.php';
@@ -42,12 +43,14 @@ final class NodeModelTest extends TestCase
         return (string)file_get_contents(dirname(__DIR__, 2).'/storage/update/sql/'.$name);
     }
 
-    # A function or method as its parameters, each written as type, name and default
+    # A function or method as its parameters, each written as type, name and default, its own class as self, which PHP 8.5 reflection names
     private static function getShape(ReflectionFunctionAbstract $fn): array
     {
+        $own = $fn instanceof ReflectionMethod ? $fn->getDeclaringClass()->getName() : '';
         $out = [];
         foreach ($fn->getParameters() as $one) {
-            $out[] = $one->getType().' '.$one->getName().($one->isDefaultValueAvailable() ? ' = '.var_export($one->getDefaultValue(), true) : '');
+            $type = $own === '' ? (string)$one->getType() : preg_replace('/\b'.$own.'\b/', 'self', (string)$one->getType());
+            $out[] = $type.' '.$one->getName().($one->isDefaultValueAvailable() ? ' = '.var_export($one->getDefaultValue(), true) : '');
         }
         return $out;
     }

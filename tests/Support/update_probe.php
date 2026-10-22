@@ -55,7 +55,7 @@ final class ProbeBase extends Database {
     }
 
     # Answer the named version in place of the real one
-    function getSqlRow(PDOStatement|int $query_id = 0): array|false {
+    function getSqlRow(PDOStatement|int $query_id = 0): ?array {
         if (!$this->asked) return parent::getSqlRow($query_id);
         $this->asked = false;
         return [$this->fake];

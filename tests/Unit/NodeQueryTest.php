@@ -105,7 +105,7 @@ final class NodeQueryTest extends TestCase
             foreach ($one->getParameters() as $arg) {
                 $shape[] = $arg->getType().' '.$arg->getName().($arg->isDefaultValueAvailable() ? ' = '.var_export($arg->getDefaultValue(), true) : '');
             }
-            $shape[] = (string)$one->getReturnType();
+            $shape[] = preg_replace('/\bNodeQuery\b/', 'self', (string)$one->getReturnType());
             $have[$one->getName()] = $shape;
         }
         ksort($have);

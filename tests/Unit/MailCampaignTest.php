@@ -33,10 +33,10 @@ final class MailCampDatabase extends \Database
         return new MailCampStatement();
     }
 
-    public function getSqlRow(PDOStatement|int $query_id = 0): array|false
+    public function getSqlRow(PDOStatement|int $query_id = 0): ?array
     {
         $row = array_shift($this->rows);
-        return is_array($row) ? $row : false;
+        return is_array($row) ? $row : null;
     }
 
     public function getSqlRows(PDOStatement|int $query_id = 0): array|false

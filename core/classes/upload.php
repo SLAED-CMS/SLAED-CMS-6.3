@@ -233,9 +233,7 @@ class Upload {
         if ($curl === false) return ['ok' => false, 'peer' => ''];
         curl_setopt_array($curl, $opts);
         $done = curl_exec($curl);
-        $out = ['ok' => $done !== false, 'peer' => (string)curl_getinfo($curl, CURLINFO_PRIMARY_IP)];
-        curl_close($curl);
-        return $out;
+        return ['ok' => $done !== false, 'peer' => (string)curl_getinfo($curl, CURLINFO_PRIMARY_IP)];
     }
 
     # Checks the submitted file against the rule: a malformed shape, a PHP upload error, a source that is not an upload and an oversized file all stop here

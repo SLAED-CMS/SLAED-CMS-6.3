@@ -487,7 +487,6 @@ function chlogGhRequest(string $url, string $token, string $etag, string &$error
     $response = curl_exec($ch);
     $code = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
     $hsize = (int)curl_getinfo($ch, CURLINFO_HEADER_SIZE);
-    curl_close($ch);
 
     if ($response === false) {
         $error = defined('_CHLOG_ERR_GH_CONNECT') ? _CHLOG_ERR_GH_CONNECT : 'CURL Fehler: Verbindung fehlgeschlagen';

@@ -41,7 +41,6 @@ function getRegistryBody(): string {
     ]);
     $body = curl_exec($curl);
     $code = (int)curl_getinfo($curl, CURLINFO_RESPONSE_CODE);
-    curl_close($curl);
     return ($body !== false && $code === 200) ? (string)$body : '';
 }
 

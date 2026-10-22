@@ -41,7 +41,6 @@ function getSeoAuditPage(string $url): array {
         'final' => (string)curl_getinfo($ch, CURLINFO_EFFECTIVE_URL),
         'error' => curl_error($ch),
     ];
-    curl_close($ch);
     return $data;
 }
 

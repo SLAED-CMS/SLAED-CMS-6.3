@@ -238,7 +238,6 @@ final class Feed {
         $done = curl_exec($curl);
         $code = (int)curl_getinfo($curl, CURLINFO_RESPONSE_CODE);
         $peer = (string)curl_getinfo($curl, CURLINFO_PRIMARY_IP);
-        curl_close($curl);
         if (strlen($body) > $max) return ['code' => $code, 'headers' => $head, 'body' => $body];
         if ($done === false) throw new RuntimeException('transfer');
         if ($peer === '' || inet_pton($peer) !== inet_pton($addr)) throw new RuntimeException('peer');

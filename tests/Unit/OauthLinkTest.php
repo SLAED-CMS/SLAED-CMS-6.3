@@ -34,11 +34,11 @@ final class OauthLinkDatabase
     }
 
     # Returns the simulated user lock row or other-link existence row
-    public function getSqlRow(object $query): array|false
+    public function getSqlRow(object $query): ?array
     {
         if (str_contains($this->last, '_users WHERE')) return ['id' => 7, 'password' => $this->password];
-        if (str_starts_with($this->last, 'SELECT 1')) return $this->hasmore ? [1] : false;
-        return false;
+        if (str_starts_with($this->last, 'SELECT 1')) return $this->hasmore ? [1] : null;
+        return null;
     }
 
     # Returns the configured commit outcome

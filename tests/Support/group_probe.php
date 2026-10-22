@@ -76,8 +76,8 @@ final class ProbeDb {
     }
 
     # Answer the row of the statement, or none
-    public function getSqlRow(array $res): array|false {
-        return $res ?: false;
+    public function getSqlRow(array $res): ?array {
+        return $res ?: null;
     }
 }
 

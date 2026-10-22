@@ -195,7 +195,7 @@ function checkSetupDone(array $state): bool {
     }
     $res = $db->getSqlQuery('SELECT id FROM `'.($base['prefix'] ?? '').'_admins` LIMIT 1');
     if ($res === false) return $db->getSqlError()['sqlstate'] !== '42S02';
-    return $db->getSqlRow($res) !== false;
+    return $db->getSqlRow($res) !== null;
 }
 
 # The check rows of the server stop: PHP 8.4 and the extensions the system needs, the three directories PHP has to write into and the protocol the site answers by

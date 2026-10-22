@@ -203,14 +203,14 @@ class Database {
         return $meta['native_type'] ?? 'unknown';
     }
 
-    # Fetches a single row
-    function getSqlRow(PDOStatement|int $query_id = 0): array|false {
+    # Fetches a single row, or null past the last one so that a destructuring loop ends without a warning
+    function getSqlRow(PDOStatement|int $query_id = 0): ?array {
         if (!$query_id) $query_id = $this->qresult;
         if ($query_id) {
-            $this->qrow[$this->qid] = $query_id->fetch(PDO::FETCH_BOTH);
+            $this->qrow[$this->qid] = $query_id->fetch(PDO::FETCH_BOTH) ?: null;
             return $this->qrow[$this->qid];
         }
-        return false;
+        return null;
     }
 
     # Fetches all rows

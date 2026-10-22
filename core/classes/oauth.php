@@ -87,7 +87,6 @@ class Oauth {
         $err = curl_error($curl);
         $code = (int)curl_getinfo($curl, CURLINFO_RESPONSE_CODE);
         $ctype = (string)curl_getinfo($curl, CURLINFO_CONTENT_TYPE);
-        curl_close($curl);
         if ($over) return ['ok' => false, 'code' => $code, 'data' => [], 'error' => 'response too large'];
         if ($ok === false || $err !== '') return ['ok' => false, 'code' => $code, 'data' => [], 'error' => ($err !== '') ? $err : 'transport error'];
         if ($code !== 200) return ['ok' => false, 'code' => $code, 'data' => [], 'error' => 'http '.$code];
@@ -383,7 +382,7 @@ class Oauth {
                 $db->setSqlRollback();
                 return 'link_failed';
             }
-            if ($db->getSqlRow($other) === false) {
+            if ($db->getSqlRow($other) === null) {
                 $db->setSqlRollback();
                 return 'unlink_last_method';
             }
