@@ -226,7 +226,7 @@ function getLanguageList(): array {
     return $list;
 }
 
-# Render one settings row, the list captioned by its field: the language posts newlang and reloads, the menu edge and the sound stay in the browser, the rest go to op option
+# Render one settings row captioned by its field: the language posts newlang and reloads, the menu edge, sound and screensaver stay in the browser, the rest go to op option
 function getAdminSettingsRow(string $axis): string {
     global $admin, $conf, $afile, $locale, $tpl;
     $list = [];
@@ -239,6 +239,10 @@ function getAdminSettingsRow(string $axis): string {
     } elseif ($axis === 'sound') {
         $list = ['1' => _ON, '0' => _OFF];
         $row = ['icon' => 'volume-up', 'title' => _ADM_SOUND, 'now' => '1'];
+    } elseif ($axis === 'saver') {
+        $list = ['0' => _OFF];
+        foreach ([1, 5, 15] as $min) $list[$min] = sprintf(getPluralForm($min, _ADM_SAVERIN), $min);
+        $row = ['icon' => 'fire', 'title' => _ADM_SAVER, 'now' => '1'];
     } elseif ($axis === 'dock-off') {
         $list = ['0' => _ON, '1' => _OFF];
         $row = ['icon' => 'capsule', 'title' => _ADM_DOCK, 'now' => isThemeFlag('dock-off') ? '1' : '0'];
@@ -268,7 +272,7 @@ function getAdminSettingsRow(string $axis): string {
         }
         $pick = $tpl->getHtmlFrag('select', ['name_attr' => $field, 'select_class' => '', 'selectid' => $pid, 'options_html' => $opts]);
     }
-    $hide = in_array($axis, ['dock-side', 'sound'], true) ? [] : ['op' => $op, 'token' => getSiteToken($op)] + ($op === 'option' ? ['key' => $axis] : ['refer' => '1']);
+    $hide = in_array($axis, ['dock-side', 'sound', 'saver'], true) ? [] : ['op' => $op, 'token' => getSiteToken($op)] + ($op === 'option' ? ['key' => $axis] : ['refer' => '1']);
     $html = '';
     foreach ($hide as $key => $val) $html .= $tpl->getHtmlFrag('hidden', ['name_attr' => $key, 'value_attr' => $val, 'input_attr' => '']);
     return $tpl->getHtmlFrag('settings-row', [
@@ -287,7 +291,7 @@ function getAdminSettingsRow(string $axis): string {
 function getAdminSettingsWindow(): string {
     global $tpl;
     $rows = '';
-    foreach (['mode', 'still', 'sound', 'dock-off', 'dock-site-off', 'dock-side', 'editor', 'language'] as $axis) $rows .= getAdminSettingsRow($axis);
+    foreach (['mode', 'still', 'sound', 'saver', 'dock-off', 'dock-site-off', 'dock-side', 'editor', 'language'] as $axis) $rows .= getAdminSettingsRow($axis);
     return $tpl->getHtmlFrag('window', [
         'win_id' => 'sl-settings',
         'size_class' => 'sl-modal-sm',

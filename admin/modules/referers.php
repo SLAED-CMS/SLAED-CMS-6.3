@@ -60,8 +60,10 @@ function referers(): void {
             ['is_col_count' => true, 'has_content_text' => true, 'content_text' => $hits],
         ]];
     }
-    $clear = $total ? $tpl->getHtmlFrag('alert', ['text' => getTplPostButton(['name' => 'referers', 'op' => 'delete'], 'trash', _DELETE,
-        'data-sl-confirm="'.htmlspecialchars(_CLEAN.' "'._REFERERS.'"?', ENT_QUOTES, 'UTF-8').'"')]) : '';
+    $all = $total ? intval($db->getSqlQuery('SELECT COUNT(*) FROM '.PREFIX_DB.'_referer')->fetchColumn()) : 0;
+    $clear = $all ? $tpl->getHtmlFrag('alert', ['text' => sprintf(_REF_TOTAL, $all),
+        'acts_html' => getTplPostButton(['name' => 'referers', 'op' => 'delete'], 'trash', _CLEAN,
+            'data-sl-confirm="'.htmlspecialchars(_CLEAN.' "'._REFERERS.'"?', ENT_QUOTES, 'UTF-8').'"', 'danger')]) : '';
     setHead();
     echo getTplAdminList([
         'head_html' => getTplAdminTabs([

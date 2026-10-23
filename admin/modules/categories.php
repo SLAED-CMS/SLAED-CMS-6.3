@@ -29,9 +29,9 @@ function categories(): void {
         'subtitle_html' => $subtitle,
     ]);
     echo $cont
-        .$tpl->getHtmlFrag('alert', ['text' => _CATDRAGSORT])
-        .$tpl->getHtmlFrag('alert',
-            ['text' => _INFOCATDEL.' '.getTplPostButton(['name' => 'categories', 'op' => 'fix'] + ($modul ? ['modul' => $modul] : []), 'arrow-repeat', _FIX)])
+        .$tpl->getHtmlFrag('alert', ['text' => _CATDRAGSORT,
+            'acts_html' => getTplPostButton(['name' => 'categories', 'op' => 'fix'] + ($modul ? ['modul' => $modul] : []), 'arrow-repeat', _FIX, '', 'act')])
+        .$tpl->getHtmlFrag('alert', ['text' => _INFOCATDEL])
         .$tpl->getHtmlPart('box', [
             'box_id' => 'repajax_cat',
             'content_html' => getAdminCategoryList($modul, 1),

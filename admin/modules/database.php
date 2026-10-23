@@ -176,8 +176,9 @@ function database(string $run = ''): void {
     ]]);
     $note = match ($type) {
         'optimize' => $tpl->getHtmlFrag('alert', ['is_warn' => true,
-            'text' => _OPTTEXT.' '.getTplPostButton(['name' => 'database', 'op' => 'optimize'], 'speedometer2', _OPTIMIZE)]),
-        'repair' => $tpl->getHtmlFrag('alert', ['text' => _REPTEXT.' '.getTplPostButton(['name' => 'database', 'op' => 'repair'], 'wrench', _REPAIR)]),
+            'text' => _OPTTEXT, 'acts_html' => getTplPostButton(['name' => 'database', 'op' => 'optimize'], 'speedometer2', _OPTIMIZE, '', 'act')]),
+        'repair' => $tpl->getHtmlFrag('alert', ['text' => _REPTEXT,
+            'acts_html' => getTplPostButton(['name' => 'database', 'op' => 'repair'], 'wrench', _REPAIR, '', 'act')]),
         default => $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _OPTTEXT]).$tpl->getHtmlFrag('alert', ['text' => _REPTEXT]),
     };
     setHead();

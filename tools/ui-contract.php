@@ -24,9 +24,10 @@ return [
             'root' => 'public/templates/admin',
             'api' => 'public/templates/admin/assets/css/base.css',
             # The file dock.css dresses the block "Administration", the floating menu and the watch window, which the site theme carries a file of its own for
+            # The file phoenix.css dresses the screensaver of the panel, which only the admin theme carries
             'css' => [
                 'public/templates/admin/assets/css/base.css', 'public/templates/admin/assets/css/dock.css',
-                'public/templates/admin/assets/css/theme.css', 'public/templates/admin/assets/editors/toastui/skin.css',
+                'public/templates/admin/assets/css/phoenix.css', 'public/templates/admin/assets/css/theme.css', 'public/templates/admin/assets/editors/toastui/skin.css',
             ],
             'kind' => 'admin',
         ],
@@ -204,7 +205,7 @@ return [
     # The eleven `col-*` entries are the column widths of a fixed admin list table: the track list of `table-layout: fixed`
     # CSS spells that track list as one width per cell instead of one `grid-template-columns`, and each is a figure an author retunes
     'components' => [
-        'adm', 'alert', 'arrow', 'aside', 'ava', 'avatar', 'badge', 'band', 'bar', 'beam', 'brand', 'btn', 'btn-mini', 'bullet', 'cab-act', 'cab-msg', 'cab-ring',
+        'adm', 'alert', 'alert-act', 'arrow', 'aside', 'ava', 'avatar', 'badge', 'band', 'bar', 'beam', 'brand', 'btn', 'btn-mini', 'bullet', 'cab-act', 'cab-msg', 'cab-ring',
         'calc', 'capsule', 'card', 'changelog', 'changelog-body', 'changelog-date',
         'changelog-files', 'changelog-stat', 'check', 'check-list', 'check-tick', 'chip', 'chip-tint', 'code', 'col-actions', 'col-amount', 'col-author',
         'col-check', 'col-count', 'col-date', 'col-form', 'col-id', 'col-ip', 'col-lang', 'col-last', 'col-module', 'col-num', 'col-sent',
@@ -218,7 +219,8 @@ return [
         'ico', 'idea', 'info-row', 'item', 'knob', 'ladder', 'ladder-bar', 'lang', 'led', 'letter', 'live-dot', 'loading',
         'loading-dot', 'login', 'login-drop', 'login-footer', 'login-header', 'logo', 'madein', 'marquee', 'menu', 'meta',
         'meter', 'modal', 'modal-act', 'modal-btn', 'mode', 'module-head', 'monitor-table', 'move', 'msg', 'msg-brand', 'nav', 'node-find', 'opt', 'opt-lamp', 'opt-rail',
-        'pager', 'pager-dot', 'pager-item', 'panel', 'panel-feed', 'placeholder', 'plot', 'pointer', 'pmf-ava', 'pmf-blank', 'pmf-chip', 'pmf-day', 'pmf-filter',
+        'pager', 'pager-dot', 'pager-item', 'panel', 'panel-feed', 'phx', 'phx-badge', 'phx-ground', 'phx-pop', 'phx-shine',
+        'placeholder', 'plot', 'pointer', 'pmf-ava', 'pmf-blank', 'pmf-chip', 'pmf-day', 'pmf-filter',
         'pmf-head', 'pmf-mate', 'pmf-meta', 'pmf-pane', 'pmf-slot', 'pmf-text', 'pmf-who',
         'popover', 'pres', 'pres-panel', 'pres-ground', 'pres-inset', 'pres-core', 'pres-frame', 'pres-muted', 'pres-link', 'pres-good', 'pres-warn',
         'preview', 'profile-ava', 'profile-dot', 'progress', 'proof', 'pulse', 'qr', 'quote', 'radio',
@@ -269,6 +271,7 @@ return [
         '--sl-d-gate-y' => 'height the request guard gate patrols at inside its scene, plugins/presentation/presentation.js',
         '--sl-d-pointer-x' => 'pointer viewport horizontal position, plugins/system/slaed.js',
         '--sl-d-pointer-y' => 'pointer viewport vertical position, plugins/system/slaed.js',
+        '--sl-d-run' => 'share of a whole-list job done, which the line along the foot of its alert fills, templates/admin/assets/js/admin-ui.js',
         '--sl-d-rail' => 'height of the sticky section rail of the presentation page, plugins/system/slaed.js',
         '--sl-d-ring' => 'profile ring colour, templates/lite/partials/account-home.html and account-profile.html',
         '--sl-d-share' => 'share of members a group holds against the largest group, as a fraction, templates/admin/fragments/group-step.html',

@@ -806,6 +806,105 @@ a.sl-crumb:hover + .sl-crumb-sep {
   margin-top: var(--sl-space-5);
 }
 
+/* An alert with actions wraps: the text takes the room and the slot keeps the end of the line. The alert is the container
+   its slot asks about, so the same alert in a column, a window or on a phone puts its actions under the text by its own width */
+.sl-alert:has(> .sl-alert-acts) {
+  flex-wrap: wrap;
+  row-gap: var(--sl-space-3);
+  container-type: inline-size;
+}
+
+.sl-alert:has(> .sl-alert-acts) > .sl-alert-body {
+  flex: 1 1 12em;
+}
+
+.sl-alert-acts {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--sl-space-2);
+  margin-left: auto;
+}
+
+@container (width < 480px) {
+  .sl-alert-acts {
+    flex-basis: 100%;
+  }
+}
+
+.sl-alert-acts > .sl-post-button {
+  display: contents;
+}
+
+/* The action is a chip: its icon in a disc of the alert's tone, concentric in the pill and 4px from the word as on every chip */
+.sl-alert-act {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sl-space-2);
+  height: var(--sl-size-chip);
+  padding: 0 var(--sl-space-4) 0 calc(var(--sl-space-3) / 2 - 1px);
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-pill);
+  background: var(--sl-chip-bg);
+  color: var(--sl-text-strong);
+  font: inherit;
+  font-size: var(--sl-font-small);
+  font-weight: var(--sl-weight-medium);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: border-color var(--sl-time-fast) var(--sl-ease-out), box-shadow var(--sl-time-fast) var(--sl-ease-out);
+}
+
+.sl-alert-act > .bi {
+  display: inline-grid;
+  place-items: center;
+  width: calc(var(--sl-size-chip) - var(--sl-space-3));
+  aspect-ratio: 1;
+  border-radius: var(--sl-radius-circle);
+  background: var(--sl-alert-c);
+  color: var(--sl-on-solid);
+  font-size: var(--sl-font-micro);
+}
+
+.sl-alert-act:hover {
+  border-color: var(--sl-alert-c);
+  box-shadow: 0 0 0 var(--sl-alert-act-ring) color-mix(in srgb, var(--sl-alert-c) var(--sl-alert-act-mix), transparent);
+}
+
+.sl-alert-act:focus-visible {
+  outline: var(--sl-ring-width) solid var(--sl-ring-bg);
+  outline-offset: var(--sl-ring-gap);
+}
+
+/* A second action steps back: no face of its own and a neutral disc, the face shows only under the hand */
+.sl-alert-act-quiet {
+  border-color: transparent;
+  background: none;
+  color: var(--sl-text-muted);
+}
+
+.sl-alert-act-quiet > .bi {
+  background: color-mix(in srgb, var(--sl-text) var(--sl-alert-act-mix), transparent);
+  color: var(--sl-text-strong);
+}
+
+.sl-alert-act-quiet:hover {
+  border-color: var(--sl-border);
+  box-shadow: none;
+  color: var(--sl-text-strong);
+}
+
+/* A dangerous action takes the danger tone whatever the tone of its alert */
+.sl-alert-act-danger > .bi {
+  background: var(--sl-danger);
+}
+
+.sl-alert-act-danger:hover {
+  border-color: var(--sl-danger);
+  box-shadow: 0 0 0 var(--sl-alert-act-ring) color-mix(in srgb, var(--sl-danger) var(--sl-alert-act-mix), transparent);
+}
+
 /* Tones: remap accent token + ::before glyph and always-on motion */
 .sl-alert-info {
   --sl-alert-c: var(--sl-info);

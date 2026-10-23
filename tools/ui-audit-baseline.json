@@ -1,5 +1,5 @@
 {
-    "generated": "2026-10-22T12:29:28Z",
+    "generated": "2026-10-22T23:49:11Z",
     "themes": {
         "admin": {
             "count": 0,
@@ -7,7 +7,7 @@
             "dup": 0,
             "names": 0,
             "dead": 0,
-            "single": 153,
+            "single": 157,
             "alias": 0,
             "unsat": 0,
             "unmet": 0,
@@ -15,7 +15,7 @@
             "clash": 0,
             "classes": 0,
             "important": 14,
-            "tokens": 354,
+            "tokens": 364,
             "contrast": 0
         },
         "lite": {
@@ -32,7 +32,7 @@
             "clash": 0,
             "classes": 0,
             "important": 10,
-            "tokens": 454,
+            "tokens": 456,
             "contrast": 0
         }
     },
@@ -40,6 +40,8 @@
         "admin": [
             "--sl-accent",
             "--sl-adm-mix",
+            "--sl-alert-act-mix",
+            "--sl-alert-act-ring",
             "--sl-alert-border",
             "--sl-alert-dur",
             "--sl-alert-ease",
@@ -241,6 +243,14 @@
             "--sl-pager-height",
             "--sl-panel-height",
             "--sl-panel-shadow",
+            "--sl-phx-badge-bg",
+            "--sl-phx-badge-dur",
+            "--sl-phx-badge-shadow",
+            "--sl-phx-dur",
+            "--sl-phx-ground-dur",
+            "--sl-phx-pop-dur",
+            "--sl-phx-shine-bg",
+            "--sl-phx-shine-dur",
             "--sl-placeholder-height",
             "--sl-pointer-width",
             "--sl-popover-max-width",
@@ -396,6 +406,8 @@
         "lite": [
             "--sl-accent",
             "--sl-adm-mix",
+            "--sl-alert-act-mix",
+            "--sl-alert-act-ring",
             "--sl-alert-border",
             "--sl-alert-dur",
             "--sl-alert-ease",

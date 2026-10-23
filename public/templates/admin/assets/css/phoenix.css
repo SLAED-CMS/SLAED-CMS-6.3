@@ -1,0 +1,161 @@
+/* The screensaver "Phoenix" of the panel: the badge shows under :root[data-sl-phx], set while the option is on; the layers exist only with a scene */
+:root[data-sl-phx] .sl-brand {
+  position: relative;
+}
+
+:root[data-sl-phx] .sl-brand img {
+  transition: opacity var(--sl-phx-dur), filter var(--sl-phx-dur);
+}
+
+/* Until its ash has gathered into it the logo waits as a dark shadow of itself */
+:root[data-sl-phx]:not(.sl-phx-lit) .sl-brand img {
+  opacity: var(--sl-fade-disabled);
+  filter: grayscale(1) brightness(0.4);
+}
+
+/* The canvases of the ground fill it; the top one lies over the whole window for the glints of the logo */
+.sl-phx-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+}
+
+.sl-phx-layer.sl-phx-top {
+  position: fixed;
+  z-index: var(--sl-z-popover);
+}
+
+/* The name of the release on the corner of the logo */
+.sl-phx-badge {
+  position: absolute;
+  top: calc(var(--sl-space-5) * -1);
+  right: calc(var(--sl-space-4) * -1);
+  z-index: var(--sl-z-raised);
+  display: none;
+  align-items: baseline;
+  gap: var(--sl-space-2);
+  padding: 1px var(--sl-space-3);
+  border-radius: var(--sl-radius-pill);
+  background: var(--sl-phx-badge-bg);
+  color: var(--sl-bg);
+  font-size: var(--sl-font-micro);
+  line-height: var(--sl-line-loose);
+  white-space: nowrap;
+  overflow: hidden;
+  box-shadow: var(--sl-shadow-xs);
+  opacity: 0;
+  transform: scale(0.3);
+  transition:
+    opacity var(--sl-phx-badge-dur),
+    transform var(--sl-phx-badge-dur) var(--sl-alert-ease),
+    box-shadow var(--sl-phx-badge-dur),
+    filter var(--sl-phx-badge-dur);
+  pointer-events: none;
+}
+
+:root[data-sl-phx] .sl-phx-badge {
+  display: inline-flex;
+}
+
+/* A phone puts the logo against the top and the edge of the window, so the badge keeps inside its corner */
+@media (max-width: 900px) {
+  .sl-phx-badge {
+    top: 0;
+    right: 0;
+  }
+}
+
+/* The release comes last and loud: it springs out with a warm flash */
+:root.sl-phx-crown .sl-phx-badge {
+  opacity: 1;
+  transform: none;
+  animation: sl-phx-badge-in var(--sl-phx-pop-dur) var(--sl-alert-ease);
+}
+
+@keyframes sl-phx-badge-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+
+  55% {
+    opacity: 1;
+    transform: scale(1.25);
+    box-shadow: var(--sl-phx-badge-shadow);
+  }
+
+  100% {
+    transform: none;
+  }
+}
+
+/* Every glint of the logo crosses the release too: it swells, glows and a light runs over it */
+.sl-phx-badge::after {
+  position: absolute;
+  inset: 0;
+  background: var(--sl-phx-shine-bg) 150% 0 / 250% 100% no-repeat;
+  opacity: 0;
+  content: "";
+}
+
+:root.sl-phx-glint .sl-phx-badge {
+  transform: scale(1.12);
+  box-shadow: var(--sl-phx-badge-shadow);
+  filter: brightness(1.12);
+}
+
+:root.sl-phx-glint .sl-phx-badge::after {
+  animation: sl-phx-shine var(--sl-phx-shine-dur) var(--sl-ease-in-out);
+}
+
+@keyframes sl-phx-shine {
+  0% {
+    opacity: var(--sl-fade-subtle);
+    background-position: 150% 0;
+  }
+
+  100% {
+    opacity: var(--sl-fade-subtle);
+    background-position: -50% 0;
+  }
+}
+
+/* The ground of the page plays the scene over the page, then settles under the content, between blocks and at the edges */
+.sl-phx-host {
+  isolation: isolate;
+}
+
+/* The main column and the content repeat the ground of the page; left painted, they would hide the ground between the blocks */
+:root[data-sl-phx] .sl-admin-main,
+:root[data-sl-phx] .sl-admin-content {
+  background: transparent;
+}
+
+/* Under the content the ground sits one layer below the base of its host */
+.sl-phx-ground {
+  position: fixed;
+  inset: 0;
+  z-index: calc(var(--sl-z-base) - var(--sl-z-raised));
+  overflow: hidden;
+  pointer-events: none;
+  transition: opacity var(--sl-phx-ground-dur);
+}
+
+.sl-phx-ground.sl-phx-over {
+  z-index: var(--sl-z-popover);
+}
+
+.sl-phx-ground.sl-phx-fade {
+  opacity: 0;
+}
+
+/* The page dims while the scene plays over it; the dimming lies just before the ground, so every effect plays over it */
+.sl-phx-veil {
+  position: fixed;
+  inset: 0;
+  z-index: var(--sl-z-popover);
+  background: var(--sl-bg);
+  opacity: 0;
+  pointer-events: none;
+}

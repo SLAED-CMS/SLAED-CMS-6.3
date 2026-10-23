@@ -1984,6 +1984,7 @@
         var note = list.querySelector('[data-sl-allpages]');
         var text = note.querySelector('[data-sl-allpages-text]');
         var hold = note.querySelector('[data-sl-sweep-hold]');
+        var meter = note.querySelector('[data-sl-sweep-meter]');
         var body = new FormData(form);
         var seen = 0;
         var end = function (fail) {
@@ -1992,6 +1993,7 @@
             sweep.step = null;
             sweep.hold = false;
             hold.hidden = true;
+            meter.hidden = true;
             if (fail) window.setToast(getLaterText('', 'fail', getSweepNum(total - seen)), { warn: true });
             setLaterDone();
             setQueueFetch(true);
@@ -2004,6 +2006,9 @@
         note.querySelector('[data-sl-allpages-go]').hidden = true;
         note.querySelector('[data-sl-allpages-off]').hidden = true;
         hold.hidden = false;
+        setSweepHold(hold);
+        meter.style.setProperty('--sl-d-run', '0');
+        meter.hidden = false;
         sweep.step = function () {
             if (sweep.hold) return;
             fetch(form.action, { method: 'POST', body: body, credentials: 'same-origin' })
@@ -2015,6 +2020,7 @@
                     seen += data.done + data.fail;
                     body.set('after', String(data.after));
                     text.textContent = text.getAttribute('data-sl-swept').replace('%s', getSweepNum(seen)).replace('%s', getSweepNum(total));
+                    meter.style.setProperty('--sl-d-run', String(total ? Math.min(1, seen / total) : 1));
                     if (data.more) sweep.step();
                     else end(data.fail > 0);
                 })
@@ -2022,13 +2028,19 @@
         };
         sweep.step();
     }
+    // Э26 The pause key says what a press does next: its word, its icon and its pressed state follow the hold of the run
+    function setSweepHold(btn) {
+        btn.querySelector('span').textContent = btn.getAttribute(sweep.hold ? 'data-sl-resume' : 'data-sl-pause');
+        btn.setAttribute('aria-pressed', String(sweep.hold));
+        btn.querySelectorAll('i').forEach(function (one, i) { one.hidden = (i === 1) !== sweep.hold; });
+    }
     document.addEventListener('click', function (event) {
         var btn = event.target.closest ? event.target.closest('[data-sl-allpages-go], [data-sl-allpages-off], [data-sl-sweep-hold]') : null;
         var list = btn ? btn.closest('[data-sl-list]') : null;
         if (!list) return;
         if (btn.hasAttribute('data-sl-sweep-hold')) {
             sweep.hold = !sweep.hold;
-            btn.textContent = btn.getAttribute(sweep.hold ? 'data-sl-resume' : 'data-sl-pause');
+            setSweepHold(btn);
             if (!sweep.hold && sweep.step) sweep.step();
             return;
         }
@@ -2103,16 +2115,87 @@
             .then(function (res) { if (res.ok) setSessionLeft(sess.max); })
             .catch(function () {});
     });
+    var saver = { kit: null, ctl: null, run: 0, last: Date.now(), asleep: false, grace: 0 };
+    // Д12 The rest of the hand before the screensaver in ms, kept in minutes on this device; 0 keeps it off, one minute unless chosen
+    function getSaverWait() {
+        var kept = window.getToggleState('saver', '');
+        return (kept === null ? 1 : Number(kept) || 0) * 60000;
+    }
+    // Д11 While the screensaver is on, the badge and the quiet ground stand and the scene waits for the rest of the hand; off — none, still — the badge alone
+    function setSaver() {
+        var root = document.documentElement;
+        var run = ++saver.run;
+        var kit;
+        if (saver.kit) saver.kit.reset();
+        saver.kit = null;
+        saver.ctl = null;
+        root.classList.remove('sl-phx-lit', 'sl-phx-crown', 'sl-phx-glint');
+        root.toggleAttribute('data-sl-phx', getSaverWait() > 0);
+        if (!getSaverWait()) return;
+        root.classList.add('sl-phx-lit', 'sl-phx-crown');
+        if (window.isMotionStill() || !window.getPhoenixKit) return;
+        kit = window.getPhoenixKit();
+        if (!kit) return;
+        saver.kit = kit;
+        window.getPhoenixScene(kit).then(function (ctl) {
+            if (run === saver.run) saver.ctl = ctl;
+        }, function () {
+            if (run === saver.run) kit.reset();
+        });
+    }
+    // Д11 A move of the hand starts the rest over and fades a running scene out; the quiet stays as the ground
+    function setSaverTouch() {
+        saver.last = Date.now();
+        if (!saver.ctl || Date.now() <= saver.grace) return;
+        saver.asleep = false;
+        saver.ctl.wake();
+    }
+    // Д11 After the rest the scene starts and runs in a circle while the hand rests, never under a modal window or on a hidden tab
+    function setSaverTick() {
+        var ctl = saver.ctl;
+        var wait = getSaverWait();
+        if (!ctl || !wait || ctl.busy || document.hidden || document.querySelector('dialog:modal')) return;
+        if (saver.asleep ? !ctl.ended : Date.now() - saver.last < wait) return;
+        saver.asleep = true;
+        saver.grace = Date.now() + 1000;
+        ctl.start();
+    }
+    // Д12 The row of Options shows what this device keeps
+    function setSaverView() {
+        document.querySelectorAll('#sl-set-saver').forEach(function (pick) { pick.value = String(getSaverWait() / 60000); });
+    }
+    // Д11 The screensaver lives where the layout of the panel carries its badge; it starts once phoenix.js, deferred after this file, has run
+    function setSaverWatch() {
+        if (!document.querySelector('.sl-phx-badge')) return;
+        ['pointermove', 'pointerdown', 'keydown', 'wheel'].forEach(function (name) {
+            document.addEventListener(name, setSaverTouch, { passive: true });
+        });
+        window.addEventListener('scroll', setSaverTouch, { passive: true });
+        window.setInterval(setSaverTick, 250);
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function () {
+            if ((document.documentElement.getAttribute('data-theme') || 'auto') === 'auto') setSaver();
+        });
+        window.matchMedia('(prefers-reduced-motion: reduce)').addEventListener('change', setSaver);
+        window.addEventListener('storage', function (event) {
+            if (event.key !== null && event.key !== 'slaed-toggle:saver') return;
+            setSaverView();
+            setSaver();
+        });
+        setSaverView();
+        if (document.readyState === 'complete') setSaver();
+        else window.addEventListener('load', setSaver, { once: true });
+    }
     // One answer of the settings window shows on the page itself: the colour mode and the motion are attributes of the root, the editor waits for the next screen
     function setOptionView(axis, value) {
         var root = document.documentElement;
         if (axis === 'mode') root.setAttribute('data-theme', value);
         if (axis === 'still') root.toggleAttribute('data-sl-still', value === '1');
+        if (axis === 'mode' || axis === 'still') setSaver();
         if (axis !== 'dock-off') return;
         root.toggleAttribute('data-sl-dock-off', value === '1');
         window.setDockPlace();
     }
-    // A settings row applies its answer at once and stores it silently through setOptionSend of dock.js, a refusal puts it back; the menu edge and the sound stay in the browser
+    // A settings row applies its answer at once and stores it silently through setOptionSend of dock.js, a refusal puts it back; edge, sound and saver stay in the browser
     document.addEventListener('change', function (event) {
         var pick = event.target;
         var form = pick && pick.tagName === 'SELECT' ? pick.closest('form[data-sl-option]') : null;
@@ -2121,6 +2204,10 @@
         if (axis === 'language') return form.requestSubmit ? form.requestSubmit() : form.submit();
         if (axis === 'dock-side') return window.setDockSide(pick.value);
         if (axis === 'sound') return window.setSoundOn(pick.value === '1');
+        if (axis === 'saver') {
+            window.setToggleState('saver', '', pick.value);
+            return setSaver();
+        }
         var was = pick.querySelector('option[selected]');
         setOptionView(axis, pick.value);
         window.setOptionSend(axis, pick.value)
@@ -2155,6 +2242,7 @@
             setSessionWatch();
             setMenuFind();
             setListPicked();
+            setSaverWatch();
         });
     } else {
         addFileStep();
@@ -2167,5 +2255,6 @@
         setSessionWatch();
         setMenuFind();
         setListPicked();
+        setSaverWatch();
     }
 })();

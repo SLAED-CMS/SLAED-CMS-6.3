@@ -98,6 +98,8 @@ define('_ADM_DOCKPOS','Позиція меню');
 define('_ADM_DOCKFREE','Довільна');
 define('_ADM_DOCKSITE','Меню на сайті');
 define('_ADM_SOUND','Звук');
+define('_ADM_SAVER','Заставка');
+define('_ADM_SAVERIN','Через %s хвилину|Через %s хвилини|Через %s хвилин');
 define('_ADMINEMAIL','E-Mail адміністратора');
 define('_ADMINFOEDIT','Активувати редактор відділу інформації?');
 define('_ADMININFO','Нотатки адміністратора');
@@ -537,6 +539,7 @@ define('_REFINFO','Має значення тільки при використ�
 define('_REFRESHTIME','Час оновлення');
 define('_REF_ID','Ідентичні переходи');
 define('_REF_URL','Адреса переходів');
+define('_REF_TOTAL','Записів у журналі переходів: %s. Очищення видаляє їх усі.');
 define('_REGACT','Активувати реєстрацію нових користувачів?');
 define('_REPAIR','Ремонт');
 define('_REPLACE','Заміна слів');

@@ -464,4 +464,27 @@ class TemplateValidationTest extends TestCase
         }
         $this->assertSame([], $errors, 'A caller of the select fragment names input_id, which neither theme reads');
     }
+
+    # A button glued to the text of an alert wrapped under a long sentence at the left and wore the bevel of a form button
+    # Every action of a panel alert stands in its slot acts_html, and both alert fragments draw that slot after the body
+    public function testAlertActionsStandInTheirSlot(): void
+    {
+        foreach (['admin', 'lite'] as $theme) {
+            $frag = (string)file_get_contents(self::$templatesPath.'/'.$theme.'/fragments/alert.html');
+            $this->assertMatchesRegularExpression('#</div>\R\{% if acts_html %\}<div class="sl-alert-acts">\{\{\{ acts_html \}\}\}</div>\{% endif %\}\s*</div>#', $frag,
+                'The alert fragment of '.$theme.' has no action slot after its body');
+        }
+        $files = array_merge(glob(self::$basePath.'/admin/modules/*.php') ?: [], glob(self::$basePath.'/modules/*/admin/*.php') ?: []);
+        $this->assertNotEmpty($files, 'No admin module was found');
+        $errors = [];
+        foreach ($files as $path) {
+            $code = (string)file_get_contents($path);
+            if (!preg_match_all("#getHtmlFrag\('alert',\s*\[(.{0,600}?)\]\)#s", $code, $hits, PREG_OFFSET_CAPTURE)) continue;
+            foreach ($hits[1] as [$args, $at]) {
+                if (!preg_match("#'text'\s*=>((?:(?!'\w+'\s*=>).)*)#s", $args, $text) || !str_contains($text[1], 'getTplPostButton(')) continue;
+                $errors[] = substr(str_replace('\\', '/', $path), strlen(self::$basePath) + 1).':'.(substr_count(substr($code, 0, $at), "\n") + 1);
+            }
+        }
+        $this->assertSame([], $errors, 'An alert glues getTplPostButton() to its text instead of passing it as acts_html');
+    }
 }

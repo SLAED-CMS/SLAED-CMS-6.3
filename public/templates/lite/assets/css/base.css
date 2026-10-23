@@ -328,6 +328,9 @@
   /* Components: geometry. A figure sizing a control, a panel, a column or a page region has one address here.
      What the figure sizes decides whether it is a token, never how large it is */
   --sl-alert-border: 3px;
+  /* The action of an alert is a chip: under the hand a ring of the alert tone this wide, and the share of a tone its ring and a quiet disc carry */
+  --sl-alert-act-ring: 3px;
+  --sl-alert-act-mix: 18%;
   --sl-arrow-width: 8px;
   --sl-aside-width: 170px;
   --sl-ava-border: 4px;

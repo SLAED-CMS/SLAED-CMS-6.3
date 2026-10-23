@@ -6,8 +6,7 @@
 
 if (!defined('FUNC_FILE')) die('Illegal file access');
 
-# Render the body of one stored comment and its edited mark, shared by the comment itself and the quick edit, so a save answers exactly what the page shows
-# The mark stands in a wrapper the page always prints, empty while the comment is unedited, because an out-of-band swap can only replace an element already there
+# Render the body of one stored comment and its edited mark; the mark wrapper is printed even when empty, because an out-of-band swap only replaces an element already there
 function getCommentBody(array $val, bool $oob = false): array {
     global $conf, $tpl, $prs;
     $own = isset($conf['node']['types'][$val['modul']]) ? ['node', intval($val['cid'] ?? 0)] : ['comment', intval($val['id'])];
@@ -20,10 +19,7 @@ function getCommentBody(array $val, bool $oob = false): array {
     ];
 }
 
-# Render one stored comment from the row the comment subsystem answered with: the author card, the moderation actions and the body
-# The running number belongs to the page the row is shown on and the token to the actions inside it, so both are passed in rather than resolved here
-# Every action posts to its own route and carries no token in its URL; the token travels as a request header the comment element declares once for all of them
-# A comment that offers no action declares no token either, so a reader who may change nothing is served no credential at all
+# Render one stored comment with author card, actions and body; the token rides a request header the element declares, and a comment offering no action declares none
 function getCommentView(array $val, int $numb, string $token): string {
     global $conf, $user, $tpl;
     $cmid = $val['id'];
@@ -137,9 +133,7 @@ function getCommentView(array $val, int $numb, string $token): string {
     ]);
 }
 
-# Render the comment rows of one page and, while the discussion continues, the control that appends the next page to the list the reader is on
-# The control replaces itself with the answer, so it always stands at the end of what is loaded and no second element has to be kept in step with it
-# Its href is the ordinary page URL the numbered pager also links to, so a reader without HTMX follows it as a plain link and lands on that page
+# Render the comment rows of one page and the control that appends the next one; it replaces itself, and its href is the plain page URL for a reader without HTMX
 function getCommentRows(array $data, string $mod, int $cid, string $token, array $pag): string {
     global $conf, $tpl;
     $numb = $data['first'];
@@ -184,9 +178,7 @@ function getCommentRows(array $data, string $mod, int $cid, string $token, array
     ]);
 }
 
-# Render the comment list of one target: the rows, the pagination and the author records come from the comment subsystem, this function only assembles the markup
-# The page counts root comments and every root arrives with its branch behind it, so the running number follows the roots and a reply carries none
-# The rows have a container of their own, because a fragment response appends to them and the pager below them is not a comment
+# Render the comment list of one target from the comment subsystem; the rows get a container of their own, because a fragment appends to them and the pager is no comment
 function getCommentList(int $cid, string $mod, int $page, int $full, ?string $route): string {
     global $conf, $tpl, $com;
     $mod = filterVar($mod);
@@ -200,8 +192,7 @@ function getCommentList(int $cid, string $mod, int $page, int $full, ?string $ro
     return $out.getPageNumbers($mod, $data['total'], $data['pages'], $data['limit'], $pag, $conf['comments']['nump'], $data['page'], '#comm', 'com');
 }
 
-# Answer one page of the comment list as the sequence of fragments the reader appends to the list already on the page
-# A page beyond the last is refused rather than clamped, because the clamp would answer the last page a second time and duplicate every row of it
+# Answer one further page of comments as fragments; a page beyond the last is refused, not clamped, as the clamp would answer the last page again and duplicate its rows
 function getCommentPage(): void {
     global $com, $db;
     $id = getVar('req', 'id', 'num', 0);
@@ -213,8 +204,7 @@ function getCommentPage(): void {
     echo getCommentRows($data, $mod, $id, getSiteToken(), ['name' => $mod, 'op' => 'view', 'id' => $id, 'route' => $path]);
 }
 
-# Answer the replies of one comment the reader has not been shown yet, as the sequence of fragments appended in place of the control that asked for them
-# The control the answer ends with carries the new offset, so a branch can be walked in slices without the page ever loading a whole discussion at once
+# Answer the next slice of replies of one comment as fragments; the closing control carries the new offset, so a branch is walked in slices and never loaded whole
 function getCommentBranch(): void {
     global $conf, $tpl, $com;
     $id = getVar('req', 'id', 'num', 0);
@@ -242,10 +232,7 @@ function getCommentBranch(): void {
     echo $cont;
 }
 
-# Render the comment list and submission form for an item
-# The list, the status zone and the form are three regions a fragment response addresses on its own, so an add never replaces the region it was submitted from
-# The editor field is named rather than numbered, because a view page already carries the target id and every comment id as element ids and a numeric one collides with them
-# A disabled mode keeps the discussion readable without a form, which is how a target that takes no new comment any more, such as a closed request, is shown
+# Render the comment list, status zone and form of an item as three regions; the editor field is named, not numbered, because a numeric id collides with comment ids
 function setComShow(int $id, int $acomm, ?string $route): string {
     global $conf, $user, $tpl, $com;
     $full = getVar('get', 'all', 'num', 0);
@@ -359,9 +346,7 @@ function setMessageShow(): string {
     return '';
 }
 
-# Build the account navigation items with icon, tone, tooltip and optional badge/sub texts per active module; $home prepends the cabinet home link for inner pages
-# The unread badge is capped at 99+ because the counter sits in a round badge on the tile and a four-digit number would stretch it across the label
-# Only the inner strip names its unread badge: that is the one an out-of-band swap reaches, and the cabinet home page draws its own tiles from the same items
+# Build the account navigation items; only the inner strip names its unread badge, the one an out-of-band swap reaches, and the badge caps at 99+ for the round tile
 function getUserNavItems(bool $home = false): array {
     global $db, $conf, $prv;
     $info = getUserInfo();
@@ -410,30 +395,17 @@ function getUserNav(): string {
     return $tpl->getHtmlFrag('account-nav', ['items' => getUserNavItems(true)]);
 }
 
-# Check if the logged-in user meets the group or points requirement for a module
+# Check whether the signed-in user may enter a module its group limits: a special group (extra) by membership, a point group by the points reached
 function isModGroup(string $name): int {
-    global $db, $user;
-    if (is_user()) {
-        $uid = intval($user[0]);
-        $row = $db->getSqlRow($db->getSqlQuery('SELECT points, grp FROM '.PREFIX_DB.'_users WHERE id = :id', ['id' => $uid]));
-        $points = $row['points'] ?? 0;
-        $group = $row['grp'] ?? 0;
-        $mod_conf = $conf['modules'][$name] ?? [];
-        $mgroup = intval($mod_conf['group'] ?? 0);
-        $grpoints = 0;
-        $grextra = 0;
-        if ($mgroup) {
-            $ginfo = $db->getSqlRow($db->getSqlQuery('SELECT points, extra FROM '.PREFIX_DB.'_groups WHERE id = :id', ['id' => $mgroup]));
-            $grpoints = intval($ginfo['points'] ?? 0);
-            $grextra = $ginfo['extra'] ?? 0;
-        }
-        if (intval($group) && $group !== '' && $group == $mgroup && $grextra === '1') {
-            return 1;
-        } elseif ((intval($points) && $points >= $grpoints && $grextra !== '1') || $mgroup === 0) {
-            return 1;
-        }
-    }
-    return 0;
+    global $db, $conf, $user;
+    if (!is_user()) return 0;
+    $mgroup = intval($conf['modules'][$name]['group'] ?? 0);
+    if ($mgroup === 0) return 1;
+    $row = $db->getSqlRow($db->getSqlQuery('SELECT points, grp FROM '.PREFIX_DB.'_users WHERE id = :id', ['id' => intval($user[0])]));
+    $ginfo = $db->getSqlRow($db->getSqlQuery('SELECT points, extra FROM '.PREFIX_DB.'_groups WHERE id = :id', ['id' => $mgroup]));
+    if (intval($ginfo['extra'] ?? 0) === 1) return (intval($row['grp'] ?? 0) === $mgroup) ? 1 : 0;
+    $points = intval($row['points'] ?? 0);
+    return ($points > 0 && $points >= intval($ginfo['points'] ?? 0)) ? 1 : 0;
 }
 
 # Fetch the full database record for the currently logged-in user, or an empty array for a guest and for an account that no longer exists
@@ -445,8 +417,7 @@ function getUserInfo(): array {
         .' LEFT JOIN '.PREFIX_DB.'_routes AS r ON r.kind = \'user\' AND r.oid = u.id AND r.cur = 1 WHERE u.id = :uid', ['uid' => $uid])) ?: [];
 }
 
-# Resolve the avatar URL for a user record; system avatars (user/guest/deleted) and presets come from the active theme, uploaded files from the avatar upload directory
-# The avatar folder is named relative to UPLOADS_DIR, a leading uploads/ of a stored value dropped, and its address is the one of getUploadUrl(), as for every public owner
+# Resolve the avatar URL of a user record: system avatars and presets from the active theme, uploads in the avatar folder relative to UPLOADS_DIR through getUploadUrl()
 function getUserAvatarUrl(array $userinfo = [], bool $deleted = false): string {
     global $conf;
     $base = getThemeFileUrl('images/avatars/');
@@ -512,10 +483,7 @@ function getUserBlock(): string {
     return '';
 }
 
-# Validate and save a new comment together with the notification of the admins subscribed to its module; answers the one comment that was stored instead of the whole list
-# The handler owns the transaction the comment and its queue row share: a comment that never commits leaves no mail behind, and a job is written once per stored comment
-# A reply to a request of support is announced by the extension of its type alone, which knows the sides of the request and never copies the private text
-# The queue row is a stored job and nothing more, so no message is delivered inside the request and no delivery outcome can reach this path or take the comment with it
+# Store a new comment and queue the admin mail in the transaction the handler owns, so an uncommitted comment leaves no mail; a support reply notifies through its extension
 function addComment(): void {
     global $conf, $tpl, $com, $db;
     $id   = getVar('req', 'id',   'num',  0);
@@ -594,8 +562,7 @@ function addComment(): void {
     echo getCommentView($row, $row['pid'] ? 0 : $numb, getSiteToken()).$oob;
 }
 
-# The stored place of one forum post: its category, its topic with the status of that topic, and its author, read from the rows and never from the request
-# A post that does not exist has no category, so a handler that names a post stops before it reads any right
+# Read the place of one forum post from its rows, never from the request: category, topic with its status, author; a missing post answers category 0 and no right is read
 function getForumPlace(int $id): array {
     global $db;
     $row = ($id > 0) ? $db->getSqlRow($db->getSqlQuery('SELECT pid, cid, uid, status FROM '.PREFIX_DB.'_forum WHERE id = :id', ['id' => $id])) : false;
@@ -605,17 +572,13 @@ function getForumPlace(int $id): array {
     return ['cid' => intval($row['cid']), 'topic' => $top, 'uid' => intval($row['uid']), 'status' => intval($stat['status'] ?? 0)];
 }
 
-# One right over a forum post, shared by the buttons of the view and every handler that acts on it: the moderator of its category always holds it
-# Its author holds it only signed in, with the category right, while the topic stays open; a guest never matches a post written without an account
-# A right the state of the topic does not limit, such as deleting, leaves the status at its open default
+# One right over a forum post for the buttons and every handler: the category moderator always, the author only signed in, with the category right, while the topic is open
 function checkForumRight(bool $mod, bool $may, int $uid, int $stat = 3): bool {
     global $user;
     return $mod || ($may && is_user() && $uid > 0 && $uid === intval($user[0]) && $stat > 2);
 }
 
-# Read one forum post for the quick edit from its rows: whether the actor may edit it, its stored body and edit time with their stamp, and whether edit times are shown
-# The right is the one of the buttons, checkForumRight() over the stored place, behind the forum gate; a post that does not exist answers nothing
-# The moderator of the forum is asked by name, because a fragment request names no module and is_acess() alone would ask the moderator of none, as the page never does
+# Read one forum post for the quick edit with its right and stamp; the forum moderator is asked by name, because a fragment request names no module for is_acess() to ask
 function getForumSource(int $id): array {
     global $db, $conf;
     $place = getForumPlace($id);
@@ -630,9 +593,7 @@ function getForumSource(int $id): array {
         'body' => $body, 'etime' => $time, 'stamp' => QuickEdit::getStamp($body, $time), 'see' => $mod || !empty($conf['forum']['ledit'])];
 }
 
-# Render the body of one forum post and its edited mark, shared by the topic page and the quick edit, so a save answers exactly what the page shows
-# The mark stands in a wrapper the page always prints, empty while the post is unedited or the reader may not see edit times, so an out-of-band swap finds it
-# The page wraps the body in the highlight of its search word; the quick edit renders without one, and its Cancel restores the highlighted HTML it kept
+# Render the body of one forum post and its edited mark; the mark wrapper is printed even when empty for the out-of-band swap, and the quick edit skips the search highlight
 function getForumBody(int $id, string $body, string $etime, bool $see, string $word = '', bool $oob = false): array {
     global $tpl, $prs;
     $badge = ($see && $etime !== '') ? $tpl->getHtmlFrag('inline-badge', ['title_text' => _PEDIT, 'is_topic_edit' => true, 'label' => format_time($etime, _TIMESTRING)]) : '';
@@ -642,10 +603,7 @@ function getForumBody(int $id, string $body, string $etime, bool $see, string $w
     ];
 }
 
-# Store one quick edit of a forum post at the stamp its editor was opened with and answer the closed result code; the place and the right come from the locked rows
-# The forum gate, the longest word in characters, the stored form of filterHtml() and the room of the column depend on the text alone and are checked first
-# Inside its transaction the topic row is locked before the post row, the order the forum rating takes, and the category right and the topic status are read there again
-# A topic closed or a post moved after the editor opened is refused; an equal text answers saved without a write, and only then a stale stamp is a conflict
+# Store one quick edit of a forum post at its stamp; the topic row is locked before the post row, the order the forum rating takes, and right and topic status are read again there
 function updateForumBody(int $id, string $text, string $stamp): array {
     global $db, $conf, $user;
     $long = 0;
@@ -689,8 +647,7 @@ function updateForumBody(int $id, string $text, string $stamp): array {
     return ['code' => 'saved', 'error' => []];
 }
 
-# Answer whether the reader gets one forum file: the names a post carries to whom its topic page shows it, a preview the own upload to whom may list the folder
-# The upload rule decides the preview alone: a name a stored post carries is served whatever extensions the rule takes today
+# Answer whether the reader gets one forum file: a name a visible post carries is served whatever extensions the upload rule takes today, a preview only by that rule
 function checkForumFile(string $mod, int $id, string $key): bool {
     global $db, $conf;
     $mods = checkUploadModer('forum');
@@ -722,8 +679,7 @@ function checkForumNames(string $text, string $old, int $topic): string {
     return checkUploadNames('forum', $fresh, $seen);
 }
 
-# Answer whether the reader gets one file of a private message: the names a message carries to its sender and its recipient while their side holds it
-# A moderator of account reads the files of every message, as the message list of the panel shows every body; a preview serves the own upload to a member
+# Answer whether the reader gets one file of a private message: sender and recipient while their side holds it, any to a moderator of account, a preview the own upload
 function checkPrivatFile(string $mod, int $id, string $key): bool {
     global $conf, $user, $prv;
     $mods = checkUploadModer('account');
@@ -733,8 +689,7 @@ function checkPrivatFile(string $mod, int $id, string $key): bool {
     return in_array($key, (new Parser())->getAttachList($body), true);
 }
 
-# Answer the refusal of the first [attach] name of a message, or an empty string
-# An own upload, any file for a moderator of account and a name that a message the writer still reads carries pass, so a reply quotes and a forward carries its files
+# Answer the refusal of the first [attach] name of a message, or an empty string; a name another message of the writer carries passes, so a reply quotes and a forward keeps files
 function checkPrivatNames(string $text): string {
     global $user, $prv;
     $prs = new Parser();
@@ -783,14 +738,7 @@ function getUserSign(string $sig, int $uid, int $hoff = 0): string {
     return ($sig === '') ? '' : $prs->filterContent($sig, false, 'profile', $hoff, '', ($uid > 0) ? ['profile', $uid] : []);
 }
 
-# The shelf strip of the private message page: the three mailboxes and the compose action, each with the quota ring that replaced the half-capacity alert
-# Tone comes from the one ladder of getPercentTone(), the same one the server gauges and the debug panel read, and part is the per cent the template draws as the arc
-# A shelf answers a solid ring where nothing can be measured and where nothing is left: under a whole arc the track carries its tone, so the join of the two ends never shows
-# The unread badge belongs to the inbox and the saved box, never to the outbox, whose unread means the other side has not read it
-# Count and note are two texts and never one: the theme decides whether a separator stands between them, and a shelf that answers only one of them gets no separator at all
-# The ring reads as a whole sentence where there is a per cent to read out, and as the label with its note where there is none: no locale composes that from punctuation
-# A shelf is a link to its own mailbox and «write» is the fourth one, because a mailbox the reader cannot reach is a picture and not a strip of navigation
-# The badge of a shelf keeps its box even at zero: an out-of-band swap replaces an element that is there, and a counter that vanished has nothing left to replace
+# Render the mailbox shelves of the private message page with their quota rings; a shelf badge keeps its element at zero, because an out-of-band swap needs one to replace
 function getPrivatShelves(int $typ = 1): string {
     global $conf, $user, $tpl, $prv;
     if (!is_user() || !$conf['privat']['act']) return '';
@@ -828,14 +776,7 @@ function getPrivatShelves(int $typ = 1): string {
     return $tpl->getHtmlFrag('privat-shelves', ['nav_label' => _PRIVAT, 'items' => $items]);
 }
 
-# The focus deck: the unread of both received mailboxes as cards above the list, so what still wants attention is not buried on page four of a mailbox
-# It reads the predicate of the cabinet badge and never a mailbox, because a message saved without being read is exactly the one that still needs answering
-# The deck is a snapshot like everything else the page renders: an action taken inside it moves the badges and redraws the list, and the deck itself stays as it was drawn
-# Nothing unread means no deck at all rather than an empty one, which is why this answers an empty string and the shell prints nothing where it stood
-# It stands over the inbox and nowhere else: the outbox has no unread of its own to answer for, a saved message is not going anywhere, and «write» is an action and not a mailbox
-# Every action of a slot names the inbox, because that is the list under the deck and the one an answer redraws; the subsystem authorizes each of them by the reader's own side
-# Each of them carries the page, the search, the filters and the sort the reader is holding, so acting from the deck lands back on the selection the list was drawn under
-# The tail counts what the cap left out and sends the reader to the mailbox filter that comes closest to the deck, which is the inbox unread and not the saved one
+# Render the focus deck of unread received messages over the inbox; it reads the unread predicate of the cabinet badge, not a mailbox, so a saved unread message shows too
 function getPrivatFocus(int $typ = 1): string {
     global $conf, $user, $tpl, $prv;
     if (!is_user() || !$conf['privat']['act'] || $typ !== 1) return '';
@@ -892,9 +833,7 @@ function getPrivatFocus(int $typ = 1): string {
     ]);
 }
 
-# The three navigation counters one mutation moves, rendered as out-of-band swaps beside the answer that carries them
-# They answer the mailbox and never the current selection, so a filter that hides everything still leaves the shelves counting what is really there
-# The two shelf badges split the unread between the inbox and the saved box and add up to the cabinet one, which is why all three travel together
+# Render the three unread counters as out-of-band swaps; they count the mailbox, never the current selection, and the two shelf badges add up to the cabinet one
 function getPrivatBadges(): string {
     global $user, $tpl, $prv;
     $uid = intval($user[0] ?? 0);
@@ -915,9 +854,7 @@ function getPrivatBadges(): string {
     return $out;
 }
 
-# The selection a request carries, read under fixed names and reduced to a fixed set of values: a sort and a filter are conditions, never SQL fragments from an address
-# The term keeps the per cent and the underscore a reader typed: the subsystem escapes both against the escape character it declares in the statement rather than dropping them here
-# The ready query string travels beside the values, because the pager, every row action and the bulk route all have to carry the same selection back with them
+# Read the mailbox selection under fixed names and values; the term keeps % and _ because the subsystem escapes them against the escape character its statement declares
 function getPrivatPick(): array {
     $stat = getVar('req', 'stat', 'var', '');
     $perd = getVar('req', 'perd', 'var', '');
@@ -935,11 +872,7 @@ function getPrivatPick(): array {
     return $out + ['link' => $link];
 }
 
-# Build one dense list row of a mailbox, which is the same shape whether it is drawn inside its list or swapped out of band beside the answer that changed it
-# The mailbox decides the state flag and the action set, so a row never has to be told twice which box it stands in, and only a received one can carry the unread mark
-# Today and yesterday are read as a time and an older day as a date, because the day header standing above the row already carries the day itself
-# The subject is a link to the deep route as well as the swap, so the row still opens its message where the swap cannot run
-# Every row action names its own id and act in the address and sends no body: the row stands inside the selection form, whose values would otherwise override both
+# Build one mailbox list row, the same in the list and out of band; row actions put id and act in the address and send no body, as the selection form would override both
 function getPrivatRowData(array $row, int $typ, string $tok, int $pick = 0, string $state = ''): array {
     global $tpl;
     $when = strtotime($row['time']);
@@ -1025,8 +958,7 @@ function getCabinetNotes(string|array $stop, string $info, int $typ, bool $oob =
     return $tpl->getHtmlFrag('cabinet-notes', ['notes_html' => $note, 'is_oob' => $oob]);
 }
 
-# The column an htmx call asked for, followed by the notice slot out of band: a mailbox always carries it, because its quota may have changed under the action
-# A message or the compose state carries the notice slot only when it has something to say
+# Answer the column an htmx call asked for with the notice slot out of band: a mailbox always, as its quota may have moved, a message or compose only with something to say
 function getPrivateMessageView(string|array $stop = '', string $info = '', int $typ = -1, array $view = []): string {
     global $tpl;
     if ($typ < 0) $typ = getVar('req', 'typ', 'num', 0);
@@ -1037,14 +969,7 @@ function getPrivateMessageView(string|array $stop = '', string $info = '', int $
     return $cont;
 }
 
-# Render one column of the private message layout: a mailbox as the left one for typ 1 to 3, one message or the compose state as the right one, the empty pane for nothing at all
-# Every mailbox read runs through the private-message subsystem, so no state column is restated here and a list, its counter and its quota can never disagree
-# This function only reads: opening a message marks it read on a POST route of its own, which hands down the row it already loaded instead of reading it twice
-# A stored message is source from stage 2 on: the body is rendered safe in the format its own row names, and the title is plain text the template escapes where it prints it
-# The right column carries the reply text in a hidden textarea of its own: the reply form stands below the swapped region and is filled through the editor API only
-# The bulk action and its button stand in the column footer while the selection lives in the scrolling form above, so both are bound to that form by name, not nesting
-# Only a caller that names no column is answered from the request: zero means the empty pane, and a page asking for it must not get the mailbox of the address instead
-# The compose state names what bounds a send before the writer runs into it: the interval out of the settings, and the two lengths the stored columns allow
+# Render one private message column: a mailbox for typ 1-3, a message or compose for 4, the empty pane for 0; the bulk controls reach the selection form by name, not nesting
 function getPrivateMessagePane(string|array $stop, string $info, int $typ, array $view): string {
     global $db, $user, $conf, $tpl, $prs, $prv;
     if (!is_user() || !$conf['privat']['act']) return $tpl->getHtmlFrag('alert', ['text' => _ERROR, 'meta' => '', 'type' => 'warn', 'is_warn' => true]);
@@ -1230,12 +1155,7 @@ function getPrivateMessagePane(string|array $stop, string $info, int $typ, array
     ]);
 }
 
-# Validate and send a new private message; answers the compose view with the outcome of the send
-# The subsystem answers a machine code and the id it stored, so the notification links the message that was really written instead of the newest row of the table
-# The recipient of the notification is read back from the stored message rather than resolved from the name again, so the mail reaches the account the message went to
-# The preference the notification asks is psmail, the private-message one the profile form offers, and no longer the forum preference fsmail that this path used to read
-# Points and the queued mail are side effects of a send that was really stored: both run after the subsystem answered ok, and neither can take an accepted message back
-# Both fields travel to the subsystem as the author submitted them: from stage 2 on a message stores source, and the writer that used to escape it on the way in is gone
+# Send a new private message and answer the compose view; the notice mail goes to the recipient read back from the stored message, under its psmail preference
 function addPrivateMessage(): void {
     global $user, $conf, $tpl, $mailer, $db, $prv, $pnt;
     $name = filterText(mb_substr(getVar('post', 'name', 'raw', ''), 0, 25));
@@ -1295,14 +1215,7 @@ function getPrivateCountData(): void {
     echo json_encode(['num' => (is_user() && $conf['privat']['act']) ? $prv->getUnreadCount(intval($user[0])) : 0]);
 }
 
-# Open one message of a mailbox and answer the right column of the layout, with the row it changed and the navigation counters as out-of-band swaps beside it
-# Opening a received message is what marks it read, so this is a POST route and not a link: the row is read once here and handed to the view instead of being read a second time
-# Only a read that really changed something carries the out-of-band part: a message that was open already moves no counter and leaves its row exactly as the list drew it
-# The row travels back only where the caller stands on it: a list row asks, the deck and the deep link do not, because a swap with no target is an error and not a no-op
-# What that costs is one stale mark in a list the reader is not looking at, which is the snapshot the whole page already is, and the next list request draws it right
-# Nothing else follows the mutation: the filtered total, the pager and the row set are what the last list request answered, and they come back into line on the next one
-# A message the reader holds no copy of answers the empty pane, because an id alone is not a permission and a refusal has nothing to show
-# The row it swaps back carries the selection it was drawn under, so its own actions still answer the same page, filter, search and sort the reader is looking at
+# Open one message and answer the right column; reading marks it read, so this is a POST route, and the row swaps back only where the caller stands on it
 function setPrivateMessageRead(): void {
     global $conf, $user, $tpl, $prv;
     $uid = (is_user()) ? intval($user[0]) : 0;
@@ -1328,12 +1241,7 @@ function setPrivateMessageRead(): void {
     echo getPrivatBadges();
 }
 
-# Apply one mailbox action to the messages a view has selected and answer that mailbox again
-# One row action and a bulk action are the same request with one id or many, so a mailbox has one mutation route and every selection travels through the same checks
-# The action is taken from the fixed set its own mailbox offers, and every submitted id is rechecked against the reader inside the transaction of the subsystem
-# The inbox offers unsave too, because the focus deck stands over it and shows saved messages never read: the write authorizes itself by the reader's own side either way
-# An empty selection is a mistake and says so; an action a mailbox never offered can only come from a forged request and answers the generic error
-# The full-folder message is kept for a folder that really cannot take the batch, so a save refused for any other reason is not reported as a quota that was never reached
+# Apply one mailbox action to the selected messages and answer that mailbox; the action comes from the set its box offers, and the inbox offers unsave for the focus deck
 function updatePrivatBox(): void {
     global $conf, $user, $prv;
     $uid = (is_user()) ? intval($user[0]) : 0;
@@ -1369,9 +1277,7 @@ function updatePrivatBox(): void {
     echo getPrivatBadges();
 }
 
-# Per-module map for profile contribution views: label constant, icon name, table, where clause and rating column pair (count, total); fav marks the favorites modul key
-# The comment entry carries no table, where or rate: its rows are read through the comment subsystem, and a table name left here would be a second way into a table with one owner
-# Every active Node type but the private support requests follows with its type and, for an author, the numbers of getNodeAuthorStat() read once per request and author
+# Map the modules of the profile contribution views; comments carry no table, because their rows are read through the comment subsystem that owns it
 function getProfileModules(int $uid = 0): array {
     static $memo = [];
     $out = [
@@ -1405,7 +1311,7 @@ function getProfileModules(int $uid = 0): array {
     return $out;
 }
 
-# Build the "last activity" feed with per-module tabs for a public profile as one UNION ALL round-trip; shared by the profile view page and the own-profile page
+# Build the "last activity" feed with per-module tabs for a public profile, the fixed modules read in one UNION ALL round-trip
 function getProfileLastView(int $uid): string {
     global $db, $conf, $tpl, $prs, $com;
     if ($uid < 1 || ($conf['users']['prof'] == 1 && !is_user() && !isAdmin())) return '';
@@ -1480,9 +1386,7 @@ function getProfileLastView(int $uid): string {
     ]);
 }
 
-# Render the favorites star button for an item as a round mini toggle (add/on/limit-reached state) with a tooltip panel
-# The switch changes state, so it posts with the page token in its header and its address carries no token; a plain visit of the address is refused
-# The whole favorites set of the user is loaded once per request into a static cache, so list pages render many stars without per-item SQL
+# Render the favorites star of an item; it posts with the page token in its header, and the favorites of the user load once per request so a list needs no query per star
 function getFavoriteButton(?int $fid, string $mod): string {
     global $db, $conf, $user, $tpl;
     static $cache = null;
@@ -1507,11 +1411,7 @@ function getFavoriteButton(?int $fid, string $mod): string {
     return $tpl->getHtmlFrag('favorite', ['rep_id' => $repid, 'href' => HOME_PATH.'index.php?go=1&op=addFavorite&id='.$fid.'&mod='.$mod, 'token' => getSiteToken()]);
 }
 
-# Add an item to the user's favorites list and echo the updated toggle button
-# A Node material is added in one transaction: type and material locks, the favorites feature and the extension, the row, the extension reaction and the award
-# A material the user may not read, a switched-off feature or a refusal of the extension adds nothing
-# The account row is locked after the material and before the first plain read, so the recount sees every parallel request and two never pass the limit together
-# A forum topic or a product takes the same account lock and recount in a transaction of its own, since its limit is the same shared count
+# Add an item to the favorites and echo the star; the account row is locked after the material and before the recount, so parallel requests never pass the limit together
 function addFavorite(): void {
     global $db, $conf, $user, $pnt;
     $id = getVar('get', 'id', 'num', 0);
@@ -1572,14 +1472,7 @@ function addFavorite(): void {
     echo getFavoriteButton($id, $mod);
 }
 
-# Render the favorites of the logged-in user as shelves, one per module, under a lamp row and a search tile
-# The whole list is read in one pass because a shelf and the lamps need every row of the member
-# The mod parameter narrows the shelves to one module and q to the titles that carry the words
-# The part=shelves call of the search field and the chips answers the shelves alone plus the out-of-band tally and chips
-# The chips list every module the member has; the view keeps the shelves the module and the words leave standing
-# A bookmark stored before the time column existed has no date: the lamp then names its module where the date would stand
-# A fixed module is read from its table, a Node type through its light targets, which leaves out a material its viewer may no longer read
-# It only reads the list of the member, so its address carries no token, and a guest gets nothing
+# Render the favorites of the user as shelves per module; it only reads, so its address carries no token, and a bookmark stored before the time column shows its module
 function getFavoriteList(int $obj = 0): string {
     global $db, $conf, $user, $tpl;
     if (!is_user()) return '';
@@ -1718,12 +1611,7 @@ function deleteFavorite(): string {
     return getFavoriteList(0);
 }
 
-# Output the RSS 2.0 feed for the specified module and optional category
-# Every address is escaped before it enters the document: the ampersand of a query string is a character reference in XML, and a reader that parses strictly rejects the whole feed
-# A registered Node type with the rss integration is read through the shared reader and prepared by the shared view preparer, at most one list page of the type
-# A name without a feed is not found; no name takes the start module when it has a feed, else the first feed of the site
-# A reader resolves no address of a description against the site, so every relative link and image source of a description is made absolute
-# A closed category is not found; the tag of the head and the items is taken before rendering and alone answers 304, a date misses an item that left the channel
+# Output the RSS 2.0 feed of a Node type and an optional category; every address is escaped for XML, where a bare ampersand makes a strict reader reject the whole feed
 function getRssChannel(): string {
     global $conf, $prs, $fld;
     $feeds = getRssFeeds();
@@ -1814,8 +1702,7 @@ function getNodeHint(): string {
     return $hints ? $tpl->getHtmlPart('node/hints', ['hints' => $hints]) : '';
 }
 
-# Output the OpenSearch description XML for browser search integration
-# Every address is escaped before it enters the document: an ampersand of a query string is a character reference in XML, and a strict parser drops the whole file
+# Output the OpenSearch description XML; every address is escaped, because a bare ampersand of a query string makes a strict parser drop the whole file
 function getOpenSearch() {
     global $conf;
     header('Content-Type: application/opensearchdescription+xml');

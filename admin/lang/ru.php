@@ -98,6 +98,8 @@ define('_ADM_DOCKPOS','Позиция меню');
 define('_ADM_DOCKFREE','Произвольная');
 define('_ADM_DOCKSITE','Меню на сайте');
 define('_ADM_SOUND','Звук');
+define('_ADM_SAVER','Заставка');
+define('_ADM_SAVERIN','Через %s минуту|Через %s минуты|Через %s минут');
 define('_ADMINEMAIL','E-Mail администратора');
 define('_ADMINFOEDIT','Активировать редактор отдела информации?');
 define('_ADMININFO','Заметки администратора');
@@ -537,6 +539,7 @@ define('_REFINFO','Имеет значение только при исполь�
 define('_REFRESHTIME','Время обновления');
 define('_REF_ID','Идентичные переходы');
 define('_REF_URL','Адреса переходов');
+define('_REF_TOTAL','Записей в журнале переходов: %s. Очистка удаляет их все.');
 define('_REGACT','Активировать регистрацию новых пользователей?');
 define('_REPAIR','Ремонт');
 define('_REPLACE','Замена слов');

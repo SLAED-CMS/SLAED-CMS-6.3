@@ -294,14 +294,23 @@
   --sl-modal-dur: calc(0.22s * var(--sl-time-scale));
   /* The overshoot a dialog opens with: a curve leaving the 0-1 range is a different kind of motion, not a ladder step */
   --sl-modal-ease: cubic-bezier(0.34, 1.3, 0.64, 1);
-  /* The overshoot of an alert: a flash springs onto its place and a success tick lands from its turn; the ticks and the chosen flag of the installer land on it too */
+  /* The overshoot of an alert: a flash springs onto its place and a success tick lands from its turn; the installer and the screensaver badge land on it too */
   --sl-alert-ease: cubic-bezier(0.34, 1.56, 0.64, 1);
   /* The installer card: the beat its stops move to, every motion of it measured in that beat */
   --sl-setup-dur: calc(0.5s * var(--sl-time-scale));
+  /* The screensaver: the logo wakes from its shadow, the release badge springs, pops and shines, the ground fades under the page */
+  --sl-phx-dur: calc(0.8s * var(--sl-time-scale));
+  --sl-phx-badge-dur: calc(0.5s * var(--sl-time-scale));
+  --sl-phx-pop-dur: calc(1s * var(--sl-time-scale));
+  --sl-phx-shine-dur: calc(0.9s * var(--sl-time-scale));
+  --sl-phx-ground-dur: calc(0.4s * var(--sl-time-scale));
 
   /* Components: geometry, tints and shadows. A figure sizing a control, a panel or a column has one address here */
   --sl-alert-height: 40px;
   --sl-alert-border: 4px;
+  /* The action of an alert is a chip: under the hand a ring of the alert tone this wide, and the share of a tone its ring and a quiet disc carry */
+  --sl-alert-act-ring: 3px;
+  --sl-alert-act-mix: 18%;
   --sl-arrow-width: 8px;
   --sl-bar-shadow:
     0 1px 3px light-dark(rgba(43, 87, 112, 0.18), rgba(0, 0, 0, 0.58)), inset 0 1px 0 light-dark(rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.06));
@@ -328,6 +337,10 @@
   --sl-col-author-width: 100px;
   --sl-col-status-width: 80px;
   --sl-col-actions-width: 72px;
+  /* The release badge of the screensaver: a warm pill, the glow of a glint and the light that runs over it, white in both modes */
+  --sl-phx-badge-bg: linear-gradient(to right, var(--sl-warning-strong), var(--sl-danger));
+  --sl-phx-badge-shadow: 0 0 18px var(--sl-warning);
+  --sl-phx-shine-bg: linear-gradient(100deg, transparent 30%, #fff 50%, transparent 70%);
   --sl-col-date-width: 150px;
   --sl-col-count-width: 64px;
   --sl-col-sent-width: 118px;

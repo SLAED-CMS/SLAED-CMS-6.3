@@ -41,7 +41,7 @@ function blocks(): void {
     global $tpl;
     setHead();
     $cont = getTplAdminTabs(['ops' => getBlockTabsOps(), 'tabs' => [_HOME, _ADDNEWBLOCK, _ADDNEWFILEBLOCK, _EDITBLOCK, _MANUAL]]);
-    $cont .= $tpl->getHtmlFrag('alert', ['text' => _DRAGSORT.' '.getTplPostButton(['name' => 'blocks', 'op' => 'fix'], 'arrow-repeat', _FIX)]);
+    $cont .= $tpl->getHtmlFrag('alert', ['text' => _DRAGSORT, 'acts_html' => getTplPostButton(['name' => 'blocks', 'op' => 'fix'], 'arrow-repeat', _FIX, '', 'act')]);
     echo $cont.$tpl->getHtmlPart('box', [
         'box_id' => 'repajax_block',
         'content_html' => getAdminBlockList(),

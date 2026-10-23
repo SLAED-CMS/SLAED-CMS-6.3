@@ -8,6 +8,6 @@
       {% if text %}{{{ text }}}{% endif %}
       {% if messages %}<ul class="sl-alert-list">{% for message in messages %}<li>{{ message }}</li>{% endfor %}</ul>{% endif %}
     </div>
-  </div>
+{% if acts_html %}<div class="sl-alert-acts">{{{ acts_html }}}</div>{% endif %}  </div>
 {% endif %}
 {% if meta %}{{{ meta }}}{% endif %}

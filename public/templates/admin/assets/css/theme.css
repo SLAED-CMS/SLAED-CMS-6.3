@@ -3653,10 +3653,6 @@ dialog.sl-editor-emoji-panel {
   margin: 0 0 var(--sl-space-4);
 }
 
-.sl-list-note .sl-but {
-  margin-left: var(--sl-space-3);
-}
-
 .sl-list-none {
   margin: 0;
   padding: var(--sl-space-7);
@@ -5705,6 +5701,124 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   line-height: var(--sl-line-normal);
 }
 
+/* An alert with actions wraps: the text takes the room and the slot keeps the end of the line. The alert is the container
+   its slot asks about, so the same alert in a list, a help window or on a phone puts its actions under the text by its own width */
+.sl-alert:has(> .sl-alert-acts) {
+  flex-wrap: wrap;
+  row-gap: var(--sl-space-3);
+  container-type: inline-size;
+}
+
+.sl-alert:has(> .sl-alert-acts) > .sl-alert-body {
+  flex: 1 1 12em;
+}
+
+.sl-alert-acts {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--sl-space-2);
+  margin-left: auto;
+}
+
+@container (width < 480px) {
+  .sl-alert-acts {
+    flex-basis: 100%;
+  }
+}
+
+.sl-alert-acts > .sl-post-button {
+  display: contents;
+}
+
+/* The action is a chip: its icon in a disc of the alert's tone, concentric in the pill and 4px from the word as on every chip */
+.sl-alert-act {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sl-space-2);
+  height: var(--sl-size-chip);
+  padding: 0 var(--sl-space-4) 0 calc(var(--sl-space-3) / 2 - 1px);
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-pill);
+  background: var(--sl-chip-bg);
+  color: var(--sl-text-strong);
+  font: inherit;
+  font-size: var(--sl-font-small);
+  font-weight: var(--sl-weight-medium);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: border-color var(--sl-time-fast) var(--sl-ease-out), box-shadow var(--sl-time-fast) var(--sl-ease-out);
+}
+
+.sl-alert-act > .bi {
+  display: inline-grid;
+  place-items: center;
+  width: calc(var(--sl-size-chip) - var(--sl-space-3));
+  aspect-ratio: 1;
+  border-radius: var(--sl-radius-circle);
+  background: var(--sl-alert-c);
+  color: var(--sl-on-solid);
+  font-size: var(--sl-font-micro);
+}
+
+.sl-alert-act:hover {
+  border-color: var(--sl-alert-c);
+  box-shadow: 0 0 0 var(--sl-alert-act-ring) color-mix(in srgb, var(--sl-alert-c) var(--sl-alert-act-mix), transparent);
+}
+
+.sl-alert-act:focus-visible {
+  outline: var(--sl-ring-width) solid var(--sl-ring-bg);
+  outline-offset: var(--sl-ring-gap);
+}
+
+/* A second action steps back: no face of its own and a neutral disc, the face shows only under the hand */
+.sl-alert-act-quiet {
+  border-color: transparent;
+  background: none;
+  color: var(--sl-text-muted);
+}
+
+.sl-alert-act-quiet > .bi {
+  background: color-mix(in srgb, var(--sl-text) var(--sl-alert-act-mix), transparent);
+  color: var(--sl-text-strong);
+}
+
+.sl-alert-act-quiet:hover {
+  border-color: var(--sl-border);
+  box-shadow: none;
+  color: var(--sl-text-strong);
+}
+
+/* A dangerous action takes the danger tone whatever the tone of its alert */
+.sl-alert-act-danger > .bi {
+  background: var(--sl-danger);
+}
+
+.sl-alert-act-danger:hover {
+  border-color: var(--sl-danger);
+  box-shadow: 0 0 0 var(--sl-alert-act-ring) color-mix(in srgb, var(--sl-danger) var(--sl-alert-act-mix), transparent);
+}
+
+/* The run of a job is a line along the foot of its alert, on a track of the same tone; the script writes the share done */
+.sl-alert-meter {
+  position: absolute;
+  inset: auto 0 0;
+  height: var(--sl-flash-ring);
+  overflow: hidden;
+  border-radius: 0 0 var(--sl-radius-2) 0;
+  background: color-mix(in srgb, var(--sl-alert-c) var(--sl-flash-mix), transparent);
+}
+
+.sl-alert-meter::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: calc(var(--sl-d-run, 0) * 100%);
+  background: var(--sl-alert-c);
+  transition: width var(--sl-time-base) var(--sl-ease-out);
+}
+
 .sl-alert-info {
   --sl-alert-c: var(--sl-primary);
 }
@@ -5972,11 +6086,13 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   box-shadow: var(--sl-shadow-float);
 }
 
-.sl-toast .sl-alert-body {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--sl-space-4);
+/* The notice is as wide as its words, and a container would size it by nothing: its actions simply wrap when the window is narrow */
+.sl-alert.sl-toast {
+  container-type: normal;
+}
+
+.sl-alert.sl-toast > .sl-alert-body {
+  flex-basis: auto;
 }
 
 .sl-toast .sl-alert-flash-bar circle {

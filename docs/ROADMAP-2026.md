@@ -342,12 +342,19 @@ into the plan, then do whatever work the step names.
   `plugins/system/sound.js` plays them, the row "Звук" of Options and the zones in the profile settings are kept by
   `getToggleState()`; the PM count is polled by `getPrivateCountData()`; the win sounds in the panel when a deferred
   action has reached the server and emptied a queue, on the site by `HX-Trigger` of `updateCommentStatus()`. (2026-10-22)
-- [ ] 110. ADMIN-UI batch 22 — the screensaver "Возрождение".
-- [ ] 110a. ADMIN-UI batch 22a — the action of an alert. Added by the owner on 2026-10-21: one slot `sl-alert-acts` for
+- [x] 110. ADMIN-UI batch 22 — the screensaver "Возрождение". The scene is `assets/js/phoenix.js` and its styles
+  `assets/css/phoenix.css` of the theme admin, the idle timer in `admin-ui.js`; the row "Заставка" of Options is kept
+  in `localStorage` (`slaed-toggle:saver`, minutes) like the sound and reaches other tabs; the badge is the first two
+  parts of `SL_VERSION` with `SL_CODENAME` in `layouts/admin.html` (owner, 2026-10-22). The stand's `config/local.php`
+  was rebuilt for the asset map and issued a new master (owner, 2026-10-22). (2026-10-22)
+- [x] 110a. ADMIN-UI batch 22a — the action of an alert. Added by the owner on 2026-10-21: one slot `sl-alert-acts` for
   every alert of the panel that carries a button, in the look "Чип" of the stand `act-07-chip`, in both themes. The six
   places that glue `getTplPostButton()` to the text of an alert, the offer Э26, "Повторить" and the "Отменить" of the toast
   move onto it; the sort action of "Категории" moves to the alert `_CATDRAGSORT`, "Переходы" get `_REF_TOTAL`. The plan's
-  section is "Устройство", "Действие в алерте".
+  section is "Устройство", "Действие в алерте". The look of a button is the fifth parameter `$look` of
+  `getTplPostButton()` (`'act'`, `'danger'`) and the flags `is_act`, `is_danger` of `post-button.html`, not a class from
+  PHP; the toast of the site stays a pill (owner, 2026-10-22). `TemplateValidationTest::testAlertActionsStandInTheirSlot`
+  holds the modules, `ViewBridgeSmokeTest::viewRendersAlertActionSlot` the fragments. (2026-10-23)
 - [ ] 110b. ADMIN-UI batch 22b — the dress of the list table. Added by the owner on 2026-10-21: every
   `sl-table-list-sort` of the theme `admin` takes the look of the stand `tbl-09-frame-dash` (the series `tbl-*`, checked
   against the theme of today on `demo/tbl-compare.html?v=09`); the theme `lite` stays as it is (owner, 2026-10-21). Only

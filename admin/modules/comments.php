@@ -66,7 +66,8 @@ function comments(): void {
     $drift = $com->getCountDrift();
     $note = $drift ? $tpl->getHtmlFrag('alert', [
         'is_warn' => true,
-        'text' => sprintf(_COMMENTS_DRIFT, count($drift)).' '.getTplPostButton(['name' => 'comments', 'op' => 'recount'], 'arrow-repeat', _COMMENTS_SYNC),
+        'text' => sprintf(_COMMENTS_DRIFT, count($drift)),
+        'acts_html' => getTplPostButton(['name' => 'comments', 'op' => 'recount'], 'arrow-repeat', _COMMENTS_SYNC, '', 'act'),
     ]) : '';
     $data = $com->getAdminList($status ? CommentStatus::Pending : CommentStatus::Published, $flt['modul'], $flt['search'], $chng, $flt['num']);
     $back = $flt['cur'].(($data['page'] > 1) ? '&num='.$data['page'] : '');

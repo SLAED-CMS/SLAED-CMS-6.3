@@ -1154,8 +1154,8 @@ function getTplPostVals(array $hide, string $target): string {
 }
 
 # Build one standalone admin button that submits a POST form, for actions that are not part of a speed dial
-# $attr carries behaviour attributes for the form itself, so a caller never has to wrap the button in markup of its own
-function getTplPostButton(array $hide, string $icon, string $label, string $attr = ''): string {
+# $attr carries behaviour attributes for the form itself; $look 'act' or 'danger' draws the button as the action of an alert
+function getTplPostButton(array $hide, string $icon, string $label, string $attr = '', string $look = ''): string {
     global $afile, $tpl;
     $hide['token'] = getSiteToken((string)($hide['name'] ?? 'ajax'));
     $html = '';
@@ -1169,6 +1169,8 @@ function getTplPostButton(array $hide, string $icon, string $label, string $attr
         'title' => $label,
         'label' => $label,
         'form_attr' => $attr,
+        'is_act' => $look !== '',
+        'is_danger' => $look === 'danger',
     ]);
 }
 
