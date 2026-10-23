@@ -14,6 +14,9 @@ require_once BASE_DIR.'/core/version.php';
 define('GEN_MARK', "\x02SLGEN\x02");
 define('DBG_MARK', "\x02SLDBG\x02");
 
+# The most rows one page of a panel list carries: the cap of an own number and of "all", and the ceiling of the reads of the panel
+define('LIST_MAX', 1000);
+
 # Frozen salt for verifying legacy md5 password hashes; never change it or stored legacy hashes stop matching
 define('PASS_SALT', 'IFNMQUVELiBBbGwgcmlnaHRzIHJlc2VydmVkLg==');
 

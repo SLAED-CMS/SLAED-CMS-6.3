@@ -525,11 +525,9 @@ class Mail {
         return $out;
     }
 
-    # Read one page of the queue for the admin view, filtered by kind and by status, and report what its pager needs
-    # The same predicate builds the page and the count, so the list, the pager and the selected filter can never describe different sets
+    # Read one page of the queue for the panel by kind and status; one predicate builds the page and the count, so list, pager and filter describe one set
     public function getList(array $filt): array {
-        $lim = max(1, min(200, intval($filt['limit'] ?? 0) ?: 20));
-        $out = ['rows' => [], 'total' => 0, 'page' => 1, 'pages' => 1, 'limit' => $lim];
+        $out = ['rows' => [], 'total' => 0, 'page' => 1, 'pages' => 1, 'limit' => 20, 'base' => 20];
         if (!$this->db instanceof Database) return $out;
         $kind = substr($this->filterHeader((string)($filt['kind'] ?? '')), 0, self::KINDLEN);
         $stat = (string)($filt['status'] ?? '');
@@ -546,6 +544,7 @@ class Mail {
         $where = $cond ? ' WHERE '.implode(' AND ', $cond) : '';
         $row = $this->db->getSqlRow($this->db->getSqlQuery('SELECT COUNT(id) AS num FROM '.PREFIX_DB.'_mail'.$where, $pars));
         $out['total'] = intval($row['num'] ?? 0);
+        $out['limit'] = $lim = getListLimit($out['base'], $out['total']);
         $out['pages'] = max(1, (int)ceil($out['total'] / $lim));
         $out['page'] = max(1, min($out['pages'], intval($filt['page'] ?? 1)));
         $sql = 'SELECT id, kind, email, title, ref, prio, tries, status, hold, camp, phase, code, error, time, ntime FROM '.PREFIX_DB.'_mail'.$where
@@ -574,11 +573,11 @@ class Mail {
 
     # List the addresses the registry holds, newest verdict first and paged like the queue, so an operator can see why an address stopped receiving mailings
     public function getDeadList(int $page): array {
-        $lim = 20;
-        $out = ['rows' => [], 'total' => 0, 'page' => 1, 'pages' => 1, 'limit' => $lim];
+        $out = ['rows' => [], 'total' => 0, 'page' => 1, 'pages' => 1, 'limit' => 20, 'base' => 20];
         if (!$this->db instanceof Database) return $out;
         $row = $this->db->getSqlRow($this->db->getSqlQuery('SELECT COUNT(id) AS num FROM '.PREFIX_DB.'_maildead'));
         $out['total'] = intval($row['num'] ?? 0);
+        $out['limit'] = $lim = getListLimit($out['base'], $out['total']);
         $out['pages'] = max(1, (int)ceil($out['total'] / $lim));
         $out['page'] = max(1, min($out['pages'], $page));
         $sql = 'SELECT id, email, fails, phase, code, time FROM '.PREFIX_DB.'_maildead ORDER BY time DESC, id DESC LIMIT '.(($out['page'] - 1) * $lim).', '.$lim;

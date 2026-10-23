@@ -461,10 +461,11 @@ final class Privat {
         return array_map(static fn(array $row): string => (string)$row['body'], $this->db->getSqlRows($res) ?: []);
     }
 
-    # Return one page of the administrator list, newest first, with both account names and the state the four columns add up to
-    # It filters no state on purpose: what an administrator has to see includes the copies the participants have already deleted
+    # Return one page of the administrator list newest first with both names and its state; no state is filtered, the panel sees copies the participants deleted
     public function getAdminList(int $page = 1): array {
-        $out = $this->getPager($this->getTotal('', []), $page, intval($this->conf['anum'] ?? 50));
+        $total = $this->getTotal('', []);
+        $base = intval($this->conf['anum'] ?? 50);
+        $out = $this->getPager($total, $page, getListLimit($base, $total)) + ['base' => $base];
         if ($out['total'] < 1) return $out;
         $sql = 'SELECT p.'.str_replace(', ', ', p.', self::FIELDS).', p.body, i.name AS namein, o.name AS nameout FROM '.PREFIX_DB.'_privat AS p'
             .' LEFT JOIN '.PREFIX_DB.'_users AS i ON (p.uidin = i.id) LEFT JOIN '.PREFIX_DB.'_users AS o ON (p.uidout = o.id)'

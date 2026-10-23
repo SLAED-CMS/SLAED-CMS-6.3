@@ -1689,9 +1689,10 @@
     });
     document.addEventListener('click', function (event) {
         var btn = event.target.closest ? event.target.closest('[data-sl-list-retry]') : null;
-        if (!btn || !listretry || !listretry.isConnected) return;
+        if (!btn || !listretry || listretry.isConnected === false) return;
         btn.closest('[data-sl-list-error]').hidden = true;
-        if (listretry.tagName === 'FORM') listretry.requestSubmit();
+        if (typeof listretry === 'function') listretry();
+        else if (listretry.tagName === 'FORM') listretry.requestSubmit();
         else listretry.click();
     });
     // Э15 A list drawn anew tells the reader what it shows, and the tab title, now the one of the new view, takes the count of the queues again
@@ -1758,6 +1759,115 @@
         var next = list[(list.indexOf(btn) + step + list.length) % list.length];
         setListDensity(next);
         next.focus();
+    }, true);
+    // The form of a constant split by "|" that a number asks for, one, few or many, by the plural rule of the page language
+    function getPluralWord(num, forms) {
+        var lang = document.documentElement.lang || 'en';
+        var list = forms.split('|');
+        var kind = new Intl.PluralRules(lang).select(num);
+        var at = kind === 'one' ? 0 : (kind === 'few' ? 1 : list.length - 1);
+        return list[Math.min(at, list.length - 1)].replace('%s', num.toLocaleString(lang));
+    }
+    // The row the reader is on: the first one whose bottom is below the sticky head of the table, with its place in the window
+    function getRowsAnchor(box) {
+        var head = box.querySelector('table[data-sl-density] > thead');
+        var edge = head ? Math.max(head.getBoundingClientRect().bottom, 0) : 0;
+        var rows = Array.prototype.slice.call(box.querySelectorAll('table[data-sl-density] > tbody > tr'));
+        var at = rows.findIndex(function (row) { return row.getBoundingClientRect().bottom > edge; });
+        return at < 0 ? null : { at: at, top: rows[at].getBoundingClientRect().top };
+    }
+    // A stored number brings the list again on the page of the row the reader is on, floor(row / number) + 1, with that row where it stood in the window
+    function setRowsPick(host, pick, back) {
+        var box = host.closest('[data-sl-list]');
+        var was = host.getAttribute('data-sl-rows');
+        var base = parseInt(host.getAttribute('data-sl-rows-base'), 10);
+        var limit = parseInt(host.getAttribute('data-sl-rows-limit'), 10);
+        var mark = box ? getRowsAnchor(box) : null;
+        var pos = (parseInt(host.getAttribute('data-sl-rows-page'), 10) - 1) * limit + (mark ? mark.at : 0);
+        var size = (pick === 'all') ? Infinity : (parseInt(pick, 10) || base);
+        var url = host.getAttribute('data-sl-rows-href') + 'num=' + (Math.floor(pos / size) + 1);
+        var low = !!host.closest('.sl-list-bottom');
+        var keyed = host.contains(document.activeElement) && !host.matches(':hover');
+        var text = (pick === 'all') ? host.getAttribute('data-sl-rows-all')
+            : getPluralWord(parseInt(pick, 10) || base, host.getAttribute(pick ? 'data-sl-rows-new' : 'data-sl-rows-def'));
+        if (!box || pick === was) return;
+        window.setOptionSend('rows', pick).then(function () {
+            var settle = function (event) {
+                var now = event.target;
+                var pager, rows, first, row;
+                if (!now || !now.matches || !now.matches('[data-sl-list]')) return;
+                document.removeEventListener('htmx:afterSettle', settle);
+                history.replaceState(history.state, '', url);
+                pager = now.querySelector((low ? '.sl-list-bottom' : '.sl-list-head') + ' .sl-pager-rows') || now.querySelector('.sl-pager-rows');
+                rows = now.querySelectorAll('table[data-sl-density] > tbody > tr');
+                first = pager ? (parseInt(pager.getAttribute('data-sl-rows-page'), 10) - 1) * parseInt(pager.getAttribute('data-sl-rows-limit'), 10) : 0;
+                row = mark ? rows[pos - first] : null;
+                if (row) window.scrollBy({ top: row.getBoundingClientRect().top - mark.top, behavior: 'instant' });
+                if (keyed && pager) pager.querySelector('.sl-pager-rows-btn').focus();
+                if (!back) window.setToast(text, { undo: function () {
+                    var held = document.querySelector('[data-sl-list] .sl-pager-rows');
+                    if (held) setRowsPick(held, was, true);
+                } });
+            };
+            var done = function (event) {
+                if (!event.detail || event.detail.elt !== box) return;
+                document.removeEventListener('htmx:afterRequest', done);
+                if (event.detail.successful) return;
+                document.removeEventListener('htmx:afterSettle', settle);
+                listretry = function () { setRowsPick(host, pick, back); };
+            };
+            quiet = '-';
+            document.addEventListener('htmx:afterSettle', settle);
+            document.addEventListener('htmx:afterRequest', done);
+            window.htmx.ajax('GET', url, { source: box, target: box, swap: 'outerHTML show:none', headers: { 'X-SL-Part': '1' } });
+        }).catch(function () {});
+    }
+    // The own number is held to 5…LIST_MAX and applied by Enter or the tick; an empty or unreadable field changes nothing
+    function setRowsOwn(field) {
+        var num = parseInt(field.value, 10);
+        var host = field.closest('.sl-pager-rows');
+        if (!host || isNaN(num)) {
+            field.value = field.defaultValue;
+            return;
+        }
+        setRowsPick(host, String(Math.max(5, Math.min(parseInt(field.max, 10), num))));
+    }
+    document.addEventListener('click', function (event) {
+        var btn = event.target.closest ? event.target.closest('.sl-pager-rows [data-sl-rows-set], .sl-pager-rows [data-sl-rows-go]') : null;
+        if (!btn || btn.disabled) return;
+        if (btn.hasAttribute('data-sl-rows-go')) setRowsOwn(btn.closest('.sl-pager-rows').querySelector('[data-sl-rows-own]'));
+        else setRowsPick(btn.closest('.sl-pager-rows'), btn.getAttribute('data-sl-rows-set'));
+    });
+    // The tick applies without taking the focus from the field, so the field does not forget the number on its way to the tick
+    document.addEventListener('mousedown', function (event) {
+        if (event.target.closest && event.target.closest('[data-sl-rows-go]')) event.preventDefault();
+    });
+    // A field left without Enter or the tick returns to the number in force: a click beside it applies nothing
+    document.addEventListener('focusout', function (event) {
+        if (event.target.matches && event.target.matches('[data-sl-rows-own]')) event.target.value = event.target.defaultValue;
+    });
+    // The arrows walk the panel, but in the field left and right move the caret and on the chip they stay the keys of the pager; Escape is the float's own
+    document.addEventListener('keydown', function (event) {
+        var host = event.target.closest ? event.target.closest('.sl-pager-rows') : null;
+        var step = { ArrowDown: 1, ArrowRight: 1, ArrowUp: -1, ArrowLeft: -1 }[event.key];
+        var vert = event.key === 'ArrowDown' || event.key === 'ArrowUp';
+        var list, at, here, next;
+        if (!host) return;
+        if (event.key === 'Enter' && event.target.matches('[data-sl-rows-own]')) {
+            event.preventDefault();
+            setRowsOwn(event.target);
+            return;
+        }
+        if (!step && event.key !== 'Home' && event.key !== 'End') return;
+        if (event.target.matches('input') && !vert) return;
+        list = Array.prototype.slice.call(host.querySelectorAll('.sl-float-panel button:not(:disabled), .sl-float-panel input'));
+        at = list.indexOf(document.activeElement);
+        if (at < 0 && !vert) return;
+        if (at < 0 && host.hasAttribute('data-sl-float-shut')) host.dispatchEvent(new MouseEvent('mouseenter'));
+        here = Math.max(0, list.findIndex(function (one) { return one.closest('.sl-pager-rows-item').classList.contains('sl-is-active'); }));
+        next = at < 0 ? here : event.key === 'Home' ? 0 : event.key === 'End' ? list.length - 1 : (at + step + list.length) % list.length;
+        event.preventDefault();
+        if (list[next]) list[next].focus();
     }, true);
     var later = [];
     var sweep = { all: false, on: false, hold: false, step: null };

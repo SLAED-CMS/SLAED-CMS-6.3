@@ -402,8 +402,9 @@ Tab `_POINTS` of the groups screen, ops `points` and `pointssave`.
   and its boolean is checked: false gives `_CONFIG_PENDING` when an interrupted configuration operation is pending
   (`getConfigJournal()`), otherwise `_ERROR_UP`. The redirect shows the values read back.
 - `getPointsJournal()` (only with the mark) lists `_points` with `_users.name`, ordered `created DESC, id DESC`,
-  50 rows per page. Filters: `uid`, `act` (one of the configured actions), `day` (`YYYY-MM-DD`). The page number is
-  clamped to 1..100 and the total is counted by `SELECT COUNT(*) FROM (SELECT 1 ... LIMIT 5000)`, so the screen
+  50 rows per page unless the administrator chose another number (`getListLimit()`). Filters: `uid`, `act` (one of the
+  configured actions), `day` (`YYYY-MM-DD`). The total is counted by `SELECT COUNT(*) FROM (SELECT 1 ... LIMIT 5000)`
+  and the page number is clamped to the pages of that count, so the screen
   costs the same on a journal of any length; older rows are reached through the filters. Columns: id, date, user
   and uid, action by its label, scope / source, points, note. The list canon `getTplAdminList()` draws it, the
   filter in the module head and the rules form above the rows.

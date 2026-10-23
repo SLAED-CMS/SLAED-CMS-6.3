@@ -380,7 +380,7 @@ Project configuration:
 - PHPUnit config: `phpunit.xml`
 - PHPStan config: `phpstan.neon`
 - Composer dev tools: `composer.json`
-- Composer scripts: `composer test`, `composer analyse`, `composer quality`
+- Composer scripts: `composer test`, `composer test:fast` (parallel), `composer analyse`, `composer quality`
 
 ### Theme And Markup Gates
 

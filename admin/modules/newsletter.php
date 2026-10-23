@@ -400,6 +400,7 @@ function queue(): void {
         'pages' => $data['pages'],
         'count' => $data['total'],
         'limit' => $data['limit'],
+        'base' => $data['base'],
     ]);
     setFoot();
 }
@@ -477,6 +478,7 @@ function dead(): void {
         'pages' => $data['pages'],
         'count' => $data['total'],
         'limit' => $data['limit'],
+        'base' => $data['base'],
     ]);
     setFoot();
 }

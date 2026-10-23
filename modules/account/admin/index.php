@@ -43,8 +43,8 @@ function account(): void {
         $order = 'u.id ASC';
         $pars[($search === 6) ? 'grp' : 'pts'] = intval($chng);
     }
-    $anum = max(1, (int)$conf['users']['anum']);
     $count = intval($db->getSqlQuery('SELECT COUNT(u.id) FROM '.PREFIX_DB.'_users AS u'.$where, $pars)->fetchColumn());
+    $anum = getListLimit((int)$conf['users']['anum'], $count);
     $pages = max(1, (int)ceil($count / $anum));
     $num = min(max(1, getVar('get', 'num', 'num', 1)), $pages);
     $sql = 'SELECT u.id, u.name, u.email, u.website, u.regdate, u.lastvis, u.points, u.ip, u.gender, u.agent, g.name FROM '.PREFIX_DB.'_users AS u'
@@ -102,6 +102,7 @@ function account(): void {
         'maxpg' => (int)$conf['users']['anump'],
         'count' => $count,
         'limit' => $anum,
+        'base' => (int)$conf['users']['anum'],
         'none_text' => ($where !== '') ? _NONE_FOUND : _USERNOEXIST,
     ]);
     setFoot();
@@ -655,8 +656,8 @@ function newuser(): void {
     $chng = trim(getVar('get', 'chng'));
     $where = ($chng !== '') ? ' WHERE '.(($search === 3) ? 'email' : 'name').' LIKE :search' : '';
     $pars = ($chng !== '') ? ['search' => '%'.$chng.'%'] : [];
-    $anum = max(1, (int)$conf['users']['anum']);
     $count = intval($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_users_temp'.$where, $pars)->fetchColumn());
+    $anum = getListLimit((int)$conf['users']['anum'], $count);
     $pages = max(1, (int)ceil($count / $anum));
     $num = min(max(1, getVar('get', 'num', 'num', 1)), $pages);
     $res = $db->getSqlQuery('SELECT id, name, email, regdate, code FROM '.PREFIX_DB.'_users_temp'.$where.' ORDER BY id DESC LIMIT '.(($num - 1) * $anum).', '.$anum, $pars);
@@ -704,6 +705,7 @@ function newuser(): void {
         'maxpg' => (int)$conf['users']['anump'],
         'count' => $count,
         'limit' => $anum,
+        'base' => (int)$conf['users']['anum'],
         'none_text' => ($where !== '') ? _NONE_FOUND : _NO_INFO,
     ]);
     setFoot();
@@ -1223,8 +1225,8 @@ function oauthlist(): void {
     $where = ($chng !== '' && isset($cols[$search])) ? ' WHERE '.$cols[$search] : '';
     $pars = ($where !== '') ? ['search' => ($search === 1) ? intval($chng) : '%'.$chng.'%'] : [];
     $from = ' FROM '.PREFIX_DB.'_user_oauth AS o LEFT JOIN '.PREFIX_DB.'_users AS u ON (u.id = o.uid)'.$where;
-    $anum = max(1, (int)$conf['users']['anum']);
     $count = intval($db->getSqlQuery('SELECT COUNT(o.id)'.$from, $pars)->fetchColumn());
+    $anum = getListLimit((int)$conf['users']['anum'], $count);
     $pages = max(1, (int)ceil($count / $anum));
     $num = min(max(1, getVar('get', 'num', 'num', 1)), $pages);
     $res = $db->getSqlQuery('SELECT o.uid, o.provider, o.puid, o.email, o.linked, o.lastlog, u.name'.$from.' ORDER BY o.id DESC LIMIT '.(($num - 1) * $anum).', '.$anum, $pars);
@@ -1276,6 +1278,7 @@ function oauthlist(): void {
         'maxpg' => (int)$conf['users']['anump'],
         'count' => $count,
         'limit' => $anum,
+        'base' => (int)$conf['users']['anum'],
         'none_text' => ($where !== '') ? _NONE_FOUND : _NO_INFO,
     ]);
     setFoot();

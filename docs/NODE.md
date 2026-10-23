@@ -1133,7 +1133,7 @@ column name or SQL.
 | `setNodeTypes` | non-empty `NodeType[]`, no repeated ID, each readable; each branch uses the factory extension; an assigned `setNodeExtension()` is refused for a mixed set |
 | `setNodeCategory` | `cid >= 1`, main or extra category without duplicates; needs `features.categories`; an unreadable category yields nothing |
 | `setNodeLetter` | `''` or one Unicode letter or digit; needs `list.alpha`; escaped `LIKE`, table collation |
-| `setNodePage` | page and size from 1; the size may not exceed `limits.maxlist` or any selected `list.limit`; without it the smallest of them |
+| `setNodePage` | page and size from 1; the size may not exceed `limits.maxlist` or any selected `list.limit`, in the panel (`ADMIN_FILE`) `LIST_MAX`; without it the smallest of them |
 | `setNodeSets` | `false` drops fields and the page batches of categories, relations and resources (`null` in models) |
 | `setNodeAuthor` | `uid >= 1` on `_nodes.uid` |
 | `setNodeFavorite` | `uid >= 1`; the materials among the `_favorites` rows of that account for the type; every selected type must offer favorites when the read runs |
@@ -2941,7 +2941,7 @@ public function getNodeSupportList(NodeType $type, int $page, int $limit, ?int $
   `DENIED`, stale version `CONFLICT`, unreadable request `NOTFOUND`. Closing and reopening move `activity`;
   repeating stored values writes nothing; card changes send no mail.
 - `getNodeSupportList()` is the administrative queue, moderators only: published requests, `null` filter lifted,
-  `aid = 0` for unassigned, `limit` up to `limits.maxlist`, order `s.prio DESC, s.activity ASC, s.id ASC`;
+  `aid = 0` for unassigned, `limit` up to `limits.maxlist`, in the panel up to `LIST_MAX`, order `s.prio DESC, s.activity ASC, s.id ASC`;
   returns `['nodes' => NodeTarget[], 'ext' => [id => card], 'count' => int]`.
 - Routes: public `POST op=support` (owner, CSRF, card version, state `staff` or `closed`; `aid`/`prio` come from
   the stored card); administrative `GET|POST op=support` for the full card, whose discussion is read whole in one

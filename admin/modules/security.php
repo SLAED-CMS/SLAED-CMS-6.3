@@ -96,8 +96,9 @@ function logview(): void {
         $num = max(1, getVar('get', 'num', 'num', 1));
         $filt = array_filter(['level' => $levl ?: $levs[0], 'ip' => $ip, 'from' => $from, 'to' => $to, 'event' => $isadm ? ($event === '' ? 'action' : $event) : '',
             'modul' => $modul, 'result' => $res], static fn($v) => $v !== '' && $v !== 'all');
-        $log = Logger::getEntries($chans[$file], $filt, $num, 50);
-        $pages = max(1, (int)ceil($log['total'] / 50));
+        $lim = getListLimit(50, fn(): int => Logger::getEntries($chans[$file], $filt, 1, 0)['total']);
+        $log = Logger::getEntries($chans[$file], $filt, $num, $lim);
+        $pages = max(1, (int)ceil($log['total'] / $lim));
         $num = min($num, $pages);
         $pick = static function(string $name, string $label, array $list, string $cur, string $all): array {
             $opts = ($all !== '') ? [['value_attr' => '', 'label_text' => $all, 'is_selected' => $cur === '']] : [];
@@ -155,7 +156,8 @@ function logview(): void {
             'pages' => $pages,
             'maxpg' => 10,
             'count' => $log['total'],
-            'limit' => 50,
+            'limit' => $lim,
+            'base' => 50,
         ]);
         setFoot();
         return;
@@ -210,8 +212,9 @@ function logins(): void {
         'from' => ($from !== '') ? $from.' 00:00:00' : '',
         'to' => ($to !== '') ? date('Y-m-d', strtotime($to.' +1 day')).' 00:00:00' : '',
     ], static fn($v) => $v !== null && $v !== '');
-    $log = getLoginLog($filt, $num, 50);
-    $pages = max(1, (int)ceil($log['total'] / 50));
+    $lim = getListLimit(50, fn(): int => getLoginLog($filt, 1, 0)['total']);
+    $log = getLoginLog($filt, $num, $lim);
+    $pages = max(1, (int)ceil($log['total'] / $lim));
     $num = min($num, $pages);
     $pick = static function(string $name, string $label, array $list, string $cur): array {
         $opts = [['value_attr' => '', 'label_text' => _ALL, 'is_selected' => $cur === '']];
@@ -258,7 +261,8 @@ function logins(): void {
         'pages' => $pages,
         'maxpg' => 10,
         'count' => $log['total'],
-        'limit' => 50,
+        'limit' => $lim,
+        'base' => 50,
     ]);
     setFoot();
 }

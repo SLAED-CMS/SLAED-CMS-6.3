@@ -24,6 +24,7 @@ more: where a plan and this file disagree about the order, this file wins.
 | `docs/10-URL-2026.md` | readable addresses without `id` — `/files/adaptivnyi-shablon-pure` — in one registry of routes; one address per page, 301 for every other form, an address never reused |
 | `docs/11-UPDATE-2026.md` | updates from the panel: signed releases, the module `master` on slaed.net, the page "Обновления" in the core, the API as the branch `/api/` of `public/index.php` (written in Russian by the owner's wish) |
 | `docs/12-ADMIN-UI-2026.md` | the etalons `demo/admin/` and `demo/site/` moved into the themes `admin` and `lite`: the shell, one canon of the list and the form, the home cockpit, the merged block "Администрация", the floating menu in the panel and on the site, sounds in each theme's `sound/`, the screensaver, the action slot of an alert, the rows per page; DIAL folded in (written in Russian, like the etalons) |
+| `docs/13-LIST-PARITY-2026.md` | every panel list brought to the etalon "Комментарии" from the canon itself: the row by meaning (moment, details, drop, the edit and find flags of the dial), relative dates, "i", key E, row picks with the bulk foot and "Отметить все N" wherever a row has the deferred delete, filters where rows grow (written in Russian) |
 
 ## How a session runs
 
@@ -355,7 +356,7 @@ into the plan, then do whatever work the step names.
   `getTplPostButton()` (`'act'`, `'danger'`) and the flags `is_act`, `is_danger` of `post-button.html`, not a class from
   PHP; the toast of the site stays a pill (owner, 2026-10-22). `TemplateValidationTest::testAlertActionsStandInTheirSlot`
   holds the modules, `ViewBridgeSmokeTest::viewRendersAlertActionSlot` the fragments. (2026-10-23)
-- [ ] 110b. ADMIN-UI batch 22b — the dress of the list table. Added by the owner on 2026-10-21: every
+- [x] 110b. ADMIN-UI batch 22b — the dress of the list table. Added by the owner on 2026-10-21: every
   `sl-table-list-sort` of the theme `admin` takes the look of the stand `tbl-09-frame-dash` (the series `tbl-*`, checked
   against the theme of today on `demo/tbl-compare.html?v=09`); the theme `lite` stays as it is (owner, 2026-10-21). Only
   the lines change: one frame round the table — `1px solid --sl-border`, `--sl-radius-2`, `--sl-shadow-xs`, the corner
@@ -371,8 +372,12 @@ into the plan, then do whatever work the step names.
   The three views keep working; at 560px and below the cards of the theme are untouched. Done when every panel list of
   groups A and B shows the frame without a cell tile, the figures of the compare page hold on "Комментарии" (row step
   as today, text inset within 1px, column gap 12px), and `npm run ui:before` / `ui:after` and `npm run ui:gates` are
-  green with the contrast of the dashed line checked in both modes.
-- [ ] 110c. ADMIN-UI batch 22c — rows per page. Added by the owner on 2026-10-22: one personal number of rows for every
+  green with the contrast of the dashed line checked in both modes. The frame sits on the table itself and the cards
+  of both widths drop it; the last row shown closes on the frame, the head of a closed last group too ("Блоки",
+  "Категории"); the compact step stays one control, 28px. The dashed line stands at 1.53:1 on `--sl-bg` and
+  1.47:1 on `--sl-surface` in light, 1.88:1 and 1.79:1 in dark, above the old tile frame (1.20 and 1.41); a row
+  separator is decoration, outside the 3:1 of WCAG 1.4.11. (2026-10-23)
+- [x] 110c. ADMIN-UI batch 22c — rows per page. Added by the owner on 2026-10-22: one personal number of rows for every
   panel list, chosen on the list itself, in the look of the stand leader `per-03-range` (series `per-*`). The cookie
   `$conf['user_c'].'-rows'` through op `option` (key `rows` beside `density`): `10`, `25`, `50`, `100`, `250`, `all` or
   an own integer 5–1000, anything else drops it; without a choice the list's own number of today holds. One function
@@ -383,7 +388,23 @@ into the plan, then do whatever work the step names.
   colour; its panel is the system `sl-float` of the key tip "i", open on hover and focus. After a change the list is
   swapped by htmx with the new `num` and the reader stays on the same row; the toast says so with Undo. Escape
   shutting an `sl-float` under the pointer and the focus (`data-sl-float-shut`) was made on the stand on 2026-10-22 on
-  top of step 106 and travels with it. The plan's section is "Устройство", "Строк на странице".
+  top of step 106 and travels with it. The plan's section is "Устройство", "Строк на странице". The reads of the panel
+  take up to `LIST_MAX` rows in Node, the support queue and the ratings; a list of one page keeps its pager for the chip
+  (owner, 2026-10-23). (2026-10-23)
+- [ ] 110d. LIST-PARITY batch 0 — *decision*: the names of the row keys and of the sweep helper, the filter fields of the
+  six lists, the date columns of "Избранное" and "Голосования", which deferred actions join the bulk foot and how the
+  one op `actions` of "Комментарии" meets the foot actions of `drop` and `stat`; the
+  baseline (the matrix of "Анализ", `npm run ui:before`, `ui-audit`). Added by the owner on 2026-10-23: every list of
+  the panel gets what "Комментарии" have, from the canon, before the reference of ADMIN-UI.
+- [ ] 110e. LIST-PARITY batch 1 — the row by meaning in `getTplAdminList()`; "Комментарии" move onto it first.
+- [ ] 110f. LIST-PARITY batch 2 — dates and "i" on every list.
+- [ ] 110g. LIST-PARITY batch 3 — edit and key E, filters from the dial.
+- [ ] 110h. LIST-PARITY batch 4 — row picks and the bulk foot wherever a row can be deleted; `delete()` takes `id[]`.
+- [ ] 110i. LIST-PARITY batch 5 — "Отметить все N" through one core helper of portions.
+- [ ] 110j. LIST-PARITY batch 6 — filters of the six growing lists.
+- [ ] 110k. LIST-PARITY batch 7 — empty states and findings; the matrix gives every list in scope the row of
+  "Комментарии".
+- [ ] 110l. LIST-PARITY batch 8 — reference; deletes `docs/13-LIST-PARITY-2026.md`.
 - [ ] 111. ADMIN-UI batch 23 — reference; deletes `docs/12-ADMIN-UI-2026.md`.
 - [ ] 111a. Route race on MariaDB 11.6.2+ — found in step 102 (owner, 2026-10-21): with `innodb_snapshot_isolation=1`,
   the default since MariaDB 11.6.2 (stand 11.7.2), the second writer of one free path gets error 1020 "Record has changed

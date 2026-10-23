@@ -140,10 +140,11 @@ function getMasterSites(string $note): string {
     $cond = $where ? ' WHERE '.implode(' AND ', $where) : '';
     $res = $db->getSqlQuery('SELECT COUNT(*) FROM '.PREFIX_DB.'_master_site'.$cond, $args);
     $all = intval(($res ? $db->getSqlRow($res) : [0])[0] ?? 0);
-    $pages = max(1, (int)ceil($all / 50));
+    $lim = getListLimit(50, $all);
+    $pages = max(1, (int)ceil($all / $lim));
     $num = min(max(1, getVar('get', 'num', 'num', 1)), $pages);
     $res = $db->getSqlQuery('SELECT sid, host, ver, chan, kseq, php, db, dbver, ext, ep, es, failver, failstep, failed, added, seen FROM '.PREFIX_DB.'_master_site'.$cond
-        .' ORDER BY seen DESC LIMIT 50 OFFSET '.(($num - 1) * 50), $args);
+        .' ORDER BY seen DESC LIMIT '.$lim.' OFFSET '.(($num - 1) * $lim), $args);
     $rows = [];
     foreach (($res ? ($db->getSqlRows($res) ?: []) : []) as $row) {
         $tips = [['label' => _MASTER_SID, 'has_value_text' => true, 'value_text' => $row['sid']], ['label' => 'kseq', 'has_value_text' => true, 'value_text' => $row['kseq']]];
@@ -188,7 +189,8 @@ function getMasterSites(string $note): string {
         'page' => $num,
         'pages' => $pages,
         'count' => $all,
-        'limit' => 50,
+        'limit' => $lim,
+        'base' => 50,
     ]);
 }
 
@@ -241,9 +243,10 @@ function getMasterNoteList(string $head, string $note): string {
         ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true]], $rows);
     $res = $db->getSqlQuery('SELECT COUNT(*) FROM '.PREFIX_DB.'_master_note');
     $all = intval(($res ? $db->getSqlRow($res) : [0])[0] ?? 0);
-    $pages = max(1, (int)ceil($all / 50));
+    $lim = getListLimit(50, $all);
+    $pages = max(1, (int)ceil($all / $lim));
     $num = min(max(1, getVar('get', 'num', 'num', 1)), $pages);
-    $res = $db->getSqlQuery('SELECT id, sid, ver, level, until, active, body FROM '.PREFIX_DB.'_master_note ORDER BY id DESC LIMIT 50 OFFSET '.(($num - 1) * 50));
+    $res = $db->getSqlQuery('SELECT id, sid, ver, level, until, active, body FROM '.PREFIX_DB.'_master_note ORDER BY id DESC LIMIT '.$lim.' OFFSET '.(($num - 1) * $lim));
     $rows = [];
     foreach (($res ? ($db->getSqlRows($res) ?: []) : []) as $row) {
         $data = json_decode($row['body'], true);
@@ -272,7 +275,8 @@ function getMasterNoteList(string $head, string $note): string {
         'page' => $num,
         'pages' => $pages,
         'count' => $all,
-        'limit' => 50,
+        'limit' => $lim,
+        'base' => 50,
     ]);
 }
 

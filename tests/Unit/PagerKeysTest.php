@@ -98,7 +98,7 @@ final class PagerKeysTest extends TestCase
             $note = 'Theme '.$name.' shows the "i" on a touch screen, which has no arrow keys to explain';
             $this->assertMatchesRegularExpression('/@media \(pointer: coarse\) \{\s+\.sl-pager \.sl-pager-keys \{\s+display: none;/', $css, $note);
             $note = 'Theme '.$name.' has no face for the keys of the tip';
-            $this->assertStringContainsString('.sl-pager-tip kbd {', $css, $note);
+            $this->assertMatchesRegularExpression('/^\.sl-pager-tip kbd(,\n[^{]+)? \{/m', $css, $note);
         }
         foreach (self::LOCALES as $loc) {
             $lang = $this->getFile('lang/'.$loc.'.php');

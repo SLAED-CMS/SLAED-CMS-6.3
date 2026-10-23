@@ -229,8 +229,9 @@ function setNodeSupportQueue(NodeType $type): void {
     $aid = getNodeSupportFilter('aid', null);
     $prio = getNodeSupportFilter('prio', null);
     $num = max(1, getVar('get', 'num', 'num', 1));
-    $lim = $type->settings['list']['limit'];
+    $base = $type->settings['list']['limit'];
     try {
+        $lim = getListLimit($base, fn(): int => $hand->getNodeSupportList($type, 1, 1, $state, $aid, $prio)['count']);
         $data = $hand->getNodeSupportList($type, $num, $lim, $state, $aid, $prio);
     } catch (NodeException $err) {
         setNodeAdminFault(getNodeStatus($err), getNodeFault($err));
@@ -286,6 +287,7 @@ function setNodeSupportQueue(NodeType $type): void {
         'pages' => max(1, (int)ceil($data['count'] / $lim)),
         'count' => $data['count'],
         'limit' => $lim,
+        'base' => $base,
     ]);
     setFoot();
 }
@@ -321,15 +323,16 @@ function show(): void {
         ]) : '']);
     $rows = [];
     $count = 0;
-    $lim = 1;
+    $base = $lim = 1;
     if ($types) {
         $pick = ($name !== '') ? [$types[$name]] : array_values($types);
-        $lim = min(array_map(fn(NodeType $v): int => $v->settings['list']['limit'], $pick));
+        $base = min(array_map(fn(NodeType $v): int => $v->settings['list']['limit'], $pick));
         $query = getNodeReader((count($pick) === 1) ? $pick[0] : null);
         if (count($pick) === 1) $query->setNodeType($pick[0]);
         else $query->setNodeTypes($pick);
-        $query->setNodeStatus($state)->setNodeSets(false)->setNodePage($num, $lim);
+        $query->setNodeStatus($state)->setNodeSets(false)->setNodePage($num, $base);
         $count = $query->getNodeCount();
+        $lim = getListLimit($base, $count);
         $num = min($num, max(1, (int)ceil($count / $lim)));
         $query->setNodePage($num, $lim);
         $tmap = [];
@@ -372,6 +375,7 @@ function show(): void {
         'pages' => max(1, (int)ceil($count / $lim)),
         'count' => $count,
         'limit' => $lim,
+        'base' => $base,
         'none_text' => $types ? _NO_INFO : _NODE_NOTYPES,
     ]);
     setFoot();

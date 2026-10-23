@@ -25,6 +25,7 @@
         "ext-zlib": "Decompresses an uploaded gzip member to hold it against its own checksum and length"
     },
     "require-dev": {
+        "brianium/paratest": "^7.17",
         "friendsofphp/php-cs-fixer": "^3.93",
         "phpstan/phpstan": "^2.1",
         "phpunit/phpunit": "^12.5"
@@ -40,6 +41,7 @@
     },
     "scripts": {
         "test": "phpunit",
+        "test:fast": "paratest --processes=8 --order-by=duration,reverse",
         "analyse": "phpstan analyse",
         "quality": [
             "@analyse",

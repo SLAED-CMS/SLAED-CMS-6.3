@@ -774,6 +774,9 @@ return [
         'fragments/pager-keys.html' =>
             'one key tip under one pager: the panel adds the keys of a canon list - rows, pick, edit, search, quick jump, the fold of the menu - and draws the tip '
             .'alone over and under a list without pages, where no arrow key turns a page; the site has no list keys and names only the two arrows',
+        'fragments/pager-rows.html' =>
+            'the range of the page line under two owners: in the panel it is the chip of the rows per page, a float with the ladder, the own number and the '
+            .'way back to the default of the module, fed by getTplAdminList() alone; the site has no personal number of rows and keeps the plain range',
         'fragments/popover.html' =>
             'the hint is a control in the panel and a modifier on the site, which the .sl-tip rules already answer for: the panel draws the glyph itself and gives '
             .'the whole thing a nav element, the site wraps the glyph in its own span so the hint can sit on whatever element carries it. The note under the panel '

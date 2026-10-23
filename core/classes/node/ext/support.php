@@ -278,15 +278,14 @@ final class NodeSupport implements NodeExtension {
         }
     }
 
-    # Read one page of the administrative queue of the type with its total, for a moderator of the type alone: published requests filtered by state, assignment and priority
-    # A null filter is lifted and an assignment of 0 means the unassigned requests; the order is priority down, then the oldest activity and the row id
+    # One page of the queue of the type with its total for its moderator: published requests by state, assignment (0 none) and priority, a page of the panel to LIST_MAX
     public function getNodeSupportList(NodeType $type, int $page, int $limit, ?int $state = null, ?int $aid = null, ?int $prio = null): array {
         global $conf;
         if (!$this->checkModer($type)) throw new NodeException('The context does not moderate the type', NodeException::DENIED);
         if ($type->ext !== 'support') throw $this->getInvalid('type');
         $max = $conf['node']['limits']['maxlist'] ?? null;
         if (!is_int($max) || $max < 1) throw $this->getStorage('The limits of the Node configuration are broken');
-        if ($page < 1 || $limit < 1 || $limit > $max || $page > intdiv(4294967295, $limit) + 1) throw $this->getInvalid('page');
+        if ($page < 1 || $limit < 1 || $limit > (defined('ADMIN_FILE') ? LIST_MAX : $max) || $page > intdiv(4294967295, $limit) + 1) throw $this->getInvalid('page');
         $maps = $this->getMaps();
         if ($state !== null && !in_array($state, $maps['state'], true)) throw $this->getInvalid('state');
         if ($prio !== null && !in_array($prio, $maps['prio'], true)) throw $this->getInvalid('prio');

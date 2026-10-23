@@ -120,7 +120,8 @@ function votes(): void {
     $mid = $scope !== '' ? getVar('get', 'mid', 'num', 0) : 0;
     $vote = getVar('get', 'vote', 'num', 0);
     $keep = array_filter(['scope' => $scope, 'mid' => $mid]);
-    $list = getRatingService()->getRatingList($scope, $mid, max(1, getVar('get', 'num', 'num', 1)), 50);
+    $lim = getListLimit(50, fn(): int => getRatingService()->getRatingList($scope, $mid, 1, 1)['total']);
+    $list = getRatingService()->getRatingList($scope, $mid, max(1, getVar('get', 'num', 'num', 1)), $lim);
     $link = $afile.'.php?name=ratings&op=votes'.($keep ? '&'.http_build_query($keep) : '');
     setHead();
     $note = $list['ok'] ? '' : $tpl->getHtmlFrag('alert', ['text' => _RATINGS_FAIL, 'is_warn' => true]);
@@ -183,9 +184,10 @@ function votes(): void {
         'rows' => $rows,
         'href' => $link.'&',
         'page' => $list['page'],
-        'pages' => max(1, (int)ceil($list['total'] / 50)),
+        'pages' => max(1, (int)ceil($list['total'] / $lim)),
         'count' => $list['total'],
-        'limit' => 50,
+        'limit' => $lim,
+        'base' => 50,
         'none_text' => $keep ? _NONE_FOUND : _NO_INFO,
     ]);
     setFoot();

@@ -23,7 +23,12 @@ if (!defined('BASE_DIR')) define('BASE_DIR', str_replace('\\', '/', dirname(__DI
 if (!defined('PUBLIC_DIR')) define('PUBLIC_DIR', BASE_DIR.'/public');
 require_once __DIR__.'/test_keys.php';
 $probework = str_replace('\\', '/', (string)$probework);
-if ($probework === '') $probework = str_replace('\\', '/', sys_get_temp_dir()).'/slaed_probe';
+# A probe without its own scratch shares this one and the database of the stand, so a parallel run lines such probes up on a lock held until exit
+if ($probework === '') {
+    $probework = str_replace('\\', '/', sys_get_temp_dir()).'/slaed_probe';
+    $plock = fopen($probework.'.lock', 'c');
+    flock($plock, LOCK_EX);
+}
 if (!defined('COUNTER_DIR')) define('COUNTER_DIR', $probework);
 if (!defined('LOGS_DIR')) define('LOGS_DIR', $probework.'/logs');
 if (!is_dir(LOGS_DIR)) mkdir(LOGS_DIR, 0777, true);

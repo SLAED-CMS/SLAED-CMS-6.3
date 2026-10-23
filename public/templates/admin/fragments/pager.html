@@ -11,5 +11,5 @@
       {% include 'fragments/pager-keys.html' %}
     </div>
   </div>
-  <p class="sl-pager-info">{{ page_label }} <b>{{ page_of }}</b>{% if range_text %}<span class="sl-pager-range"> · {{ range_text }}</span>{% endif %}{% if count %} · {{ overall }} <b>{{ count }}</b>{% endif %}</p>
+  <p class="sl-pager-info">{{ page_label }} <b>{{ page_of }}</b>{% if range_text %}{% include 'fragments/pager-rows.html' %}{% endif %}{% if count %} · {{ overall }} <b>{{ count }}</b>{% endif %}</p>
 </nav>

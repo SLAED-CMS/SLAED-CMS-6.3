@@ -10,8 +10,8 @@ if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 function favorites(): void {
     global $afile, $db, $conf, $tpl;
     setHead();
-    $limit = max(1, intval($conf['favorites']['anum']));
     $total = intval($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_favorites')->fetchColumn());
+    $limit = getListLimit(intval($conf['favorites']['anum']), $total);
     $pages = max(1, (int)ceil($total / $limit));
     $num = min(max(1, getVar('get', 'num', 'num', 1)), $pages);
     $sql = 'SELECT f.id, f.fid, f.modul, u.name FROM '.PREFIX_DB.'_favorites AS f LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.id) ORDER BY f.id DESC';
@@ -61,6 +61,7 @@ function favorites(): void {
         'maxpg' => intval($conf['favorites']['anump']),
         'count' => $total,
         'limit' => $limit,
+        'base' => intval($conf['favorites']['anum']),
     ]);
     setFoot();
 }

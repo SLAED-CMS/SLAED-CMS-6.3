@@ -342,11 +342,12 @@ final class Rating {
         return $this->setUnitRun(fn(): array => $this->deleteVoteRow($vote, $reason, $row), ['vote' => $vote, 'aid' => $this->actor['aid']]);
     }
 
-    # Page the stored votes of everything, one scope or one target newest first for the main administrator; a page past the last answers the last one
+    # Page the stored votes newest first for the main administrator, a page of the panel up to LIST_MAX; a page past the last answers the last one
     public function getRatingList(string $scope = '', int $id = 0, int $page = 1, int $limit = 50): array {
         $out = ['ok' => false, 'code' => 'denied', 'rows' => [], 'total' => 0, 'page' => 1];
         if (!$this->actor || !$this->actor['super']) return $out;
-        $good = $page >= 1 && $limit >= 1 && $limit <= self::MAXLIST && $id >= 0 && $id <= self::MAXID && ($scope === '' ? $id === 0 : preg_match(self::SCOPE, $scope));
+        $good = $page >= 1 && $limit >= 1 && $limit <= (defined('ADMIN_FILE') ? LIST_MAX : self::MAXLIST) && $id >= 0 && $id <= self::MAXID
+            && ($scope === '' ? $id === 0 : preg_match(self::SCOPE, $scope));
         if (!$good) return array_replace($out, ['code' => 'invalid']);
         $pars = [];
         if ($scope !== '') $pars['scope'] = $scope;

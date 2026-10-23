@@ -81,8 +81,8 @@ function getVotingBlockSelect(string $bval): string {
 function voting(): void {
     global $db, $afile, $conf, $tpl;
     setHead();
-    $anum = max(1, (int)$conf['voting']['anum']);
     $total = intval($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_voting')->fetchColumn());
+    $anum = getListLimit((int)$conf['voting']['anum'], $total);
     $pages = max(1, (int)ceil($total / $anum));
     $num = min(max(1, getVar('get', 'num', 'num', 1)), $pages);
     $result = $db->getSqlQuery('SELECT id, modul, time, enddate, title, lang, typ FROM '.PREFIX_DB.'_voting ORDER BY id DESC LIMIT '.(($num - 1) * $anum).', '.$anum);
@@ -124,6 +124,7 @@ function voting(): void {
         'maxpg' => (int)$conf['voting']['anump'],
         'count' => $total,
         'limit' => $anum,
+        'base' => (int)$conf['voting']['anum'],
     ]);
     setFoot();
 }

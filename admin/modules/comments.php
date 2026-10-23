@@ -147,6 +147,7 @@ function comments(): void {
         'maxpg' => (int)($conf['comments']['anump'] ?? 8),
         'count' => $data['total'],
         'limit' => $data['limit'],
+        'base' => $data['base'],
         'bulk' => [
             'form_id' => 'combulk',
             'action_url' => $afile.'.php?name=comments&op=actions',

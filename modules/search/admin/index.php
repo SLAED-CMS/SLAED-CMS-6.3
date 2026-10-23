@@ -253,10 +253,10 @@ function search(bool $top = false): void {
     $sort = getVar('req', 'sort', 'num', $top ? 4 : 3);
     $order = getVar('req', 'order', 'num', 2);
     [$where, $pars, $clink, $find, $fmod] = getSearchwhere();
-    $anum = max(intval($conf['search']['anum'] ?? 50), 1);
     $sets = [1 => 'word', 2 => 'modul', 3 => 'time', 4 => 'hits'];
     $ordby = ($sets[$sort] ?? ($top ? 'hits' : 'time')).' '.(($order == 1) ? 'ASC' : 'DESC');
     $total = intval($db->getSqlQuery('SELECT COUNT('.($top ? 'DISTINCT word' : 'id').') FROM '.PREFIX_DB.'_search'.$where, $pars)->fetchColumn());
+    $anum = getListLimit(intval($conf['search']['anum'] ?? 50), $total);
     $pages = max(1, (int)ceil($total / $anum));
     $num = min(max(1, getVar('get', 'num', 'num', 1)), $pages);
     $limit = ' LIMIT '.(($num - 1) * $anum).', '.$anum;
@@ -308,6 +308,7 @@ function search(bool $top = false): void {
         'maxpg' => max(intval($conf['search']['anump'] ?? 10), 1),
         'count' => $total,
         'limit' => $anum,
+        'base' => intval($conf['search']['anum'] ?? 50),
         'none_text' => ($clink !== '') ? _NONE_FOUND : _NO_INFO,
     ]);
     setFoot();

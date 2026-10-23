@@ -352,10 +352,11 @@ function getPointsJournal(string $note): string {
     if ($day !== '') [$where[], $pars['from'], $pars['to']] = ['p.created >= :from AND p.created < :to', $day.' 00:00:00', date('Y-m-d', strtotime($day.' +1 day')).' 00:00:00'];
     $cond = $where ? ' WHERE '.implode(' AND ', $where) : '';
     $count = intval($db->getSqlQuery('SELECT COUNT(*) FROM (SELECT 1 FROM '.PREFIX_DB.'_points AS p'.$cond.' LIMIT 5000) AS q', $pars)->fetchColumn());
-    $pages = min(100, max(1, (int)ceil($count / 50)));
+    $lim = getListLimit(50, $count);
+    $pages = max(1, (int)ceil($count / $lim));
     $num = min($pages, max(1, getVar('get', 'num', 'num', 1)));
     $sql = 'SELECT p.id, p.uid, u.name, p.action, p.scope, p.source, p.points, p.note, p.created FROM '.PREFIX_DB.'_points AS p'
-        .' LEFT JOIN '.PREFIX_DB.'_users AS u ON (u.id = p.uid)'.$cond.' ORDER BY p.created DESC, p.id DESC LIMIT '.(($num - 1) * 50).', 50';
+        .' LEFT JOIN '.PREFIX_DB.'_users AS u ON (u.id = p.uid)'.$cond.' ORDER BY p.created DESC, p.id DESC LIMIT '.(($num - 1) * $lim).', '.$lim;
     $result = $db->getSqlQuery($sql, $pars);
     $label = static fn(string $name): string => defined('_POINTS_'.strtoupper($name)) ? constant('_POINTS_'.strtoupper($name)) : $name;
     $opts = [['value_attr' => '', 'label_text' => _ALL, 'is_selected' => $act === '']];
@@ -404,7 +405,8 @@ function getPointsJournal(string $note): string {
         'pages' => $pages,
         'maxpg' => 10,
         'count' => $count,
-        'limit' => 50,
+        'limit' => $lim,
+        'base' => 50,
         'none_text' => $keep ? _NONE_FOUND : _NO_INFO,
     ]);
 }

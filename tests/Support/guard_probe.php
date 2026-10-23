@@ -7,7 +7,7 @@
 # CLI probe for guards of the panel: the escaping of the debug panel, the rename of the admin file, the parent of a category and the repair of the forum last message
 # It lifts the shipped function out of its source and runs it over stubs and an in-memory table, so no scenario boots the core or touches a database
 # BASE_DIR is the scratch root the caller passed, so every rename the scenarios ask for happens inside it and nothing below the site moves
-# Modes: debug prints the panel over a hostile cookie; afile <name> posts that admin file name; catparent <id:parent> saves a forum category; forumlast repairs a cycle
+# Modes: debug prints the panel over a hostile cookie; afile <name> renames; catparent <id:parent> saves a category; forumlast repairs a cycle; rows [value] reads and posts rows
 if (PHP_SAPI !== 'cli') {
     http_response_code(404);
     exit;
@@ -19,7 +19,7 @@ $pmode = (string)($argv[1] ?? '');
 $pwork = str_replace('\\', '/', (string)($argv[2] ?? ''));
 $pname = (string)($argv[3] ?? '');
 $psite = str_replace('\\', '/', dirname(__DIR__, 2));
-if ($pwork === '' || !in_array($pmode, ['debug', 'afile', 'catparent', 'forumlast'], true)) {
+if ($pwork === '' || !in_array($pmode, ['debug', 'afile', 'catparent', 'forumlast', 'rows'], true)) {
     echo json_encode(['error' => 'usage']);
     exit;
 }
@@ -106,6 +106,26 @@ function getCategoryModules(): array {
 # Answer the locales of the tree as the panel lists them
 function getLanguageList(): array {
     return ['en' => 'English', 'ru' => 'Russian'];
+}
+
+# Answer the cookie of the scenario, which is what the panel would have stored
+function getCookies(string $name): string {
+    return $GLOBALS['pcook'][$name] ?? '';
+}
+
+# Record the cookie the option would store
+function setCookies(string $name, int $time, string|array $value): void {
+    $GLOBALS['pdone']['data']['set'] = [$name, $value];
+}
+
+# Record the cookie the option would drop
+function setCookiesDelete(string $name): void {
+    $GLOBALS['pdone']['data']['drop'] = $name;
+}
+
+# Record the verdict the option writes into the journal
+function setAdminLog(array $data): void {
+    $GLOBALS['pdone']['data']['log'] = $data['result'] ?? '';
 }
 
 # Record every module whose stored category map a write drops, instead of touching the data cache
@@ -222,6 +242,32 @@ try {
         ]);
         setForumLast(3, 9);
         $pdone['data']['done'] = true;
+    } elseif ($pmode === 'rows') {
+        define('ADMIN_FILE', true);
+        define('LIST_MAX', 1000);
+        setProbeLift($psite.'/core/helpers.php', 'getListLimit', $pwork.'/lift_limit.php');
+        $pcall = 0;
+        $pcount = static function() use (&$pcall): int {
+            $pcall++;
+            return 640;
+        };
+        foreach (['', '10', '25', '250', '5', '1000', '4', '1001', '07', '-5', '1e3', 'abc', 'all'] as $one) {
+            $pcook = ['rows' => $one];
+            $pdone['data']['limit'][$one] = [getListLimit(25, 300), getListLimit(25, 1000), getListLimit(25, 1001), getListLimit(0, 300)];
+        }
+        foreach (['', '50', 'all'] as $one) {
+            $pcook = ['rows' => $one];
+            $pdone['data']['lazy'][$one] = [getListLimit(25, $pcount), $pcall];
+        }
+        if ($pname !== '') {
+            setProbeLift($psite.'/admin/index.php', 'setAdminOption', $pwork.'/lift_option.php');
+            $conf = ['admin_c' => 'probe', 'user_c' => 'probe'];
+            $ppost = ['key' => 'rows', 'value' => $pname];
+            register_shutdown_function(static function(): void {
+                echo json_encode($GLOBALS['pdone']);
+            });
+            setAdminOption();
+        }
     } else {
         foreach (['admin', 'index'] as $file) file_put_contents(PUBLIC_DIR.'/'.$file.'.php', $file);
         setProbeLift($psite.'/admin/modules/security.php', 'configsave', $pwork.'/lift_afile.php');

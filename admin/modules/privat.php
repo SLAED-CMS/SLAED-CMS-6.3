@@ -58,6 +58,7 @@ function privat(): void {
         'maxpg' => intval($conf['privat']['anump']),
         'count' => $data['total'],
         'limit' => $data['limit'],
+        'base' => $data['base'],
     ]);
     setFoot();
 }

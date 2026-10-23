@@ -730,13 +730,13 @@ final class NodeQuery {
         return implode(', ', array_map(fn(array $v): string => $pre.$v[0].' '.$v[1], $cols));
     }
 
-    # The page size of the current selection: the requested size within the system limit and the page size of every selected type, or that smallest size by default
+    # The page size of the selection: within maxlist and the size of every selected type, a list of the panel within LIST_MAX, else that smallest size
     private function getPageSize(): int {
         global $conf;
         $lims = $this->getNodeLimits($conf['node'] ?? null);
         $max = $lims['maxlist'] ?? 0;
         foreach ($this->list as $type) $max = min($max, $type->settings['list']['limit']);
-        if ($this->limit > $max) throw $this->getInvalid('limit');
+        if ($this->limit > (defined('ADMIN_FILE') ? LIST_MAX : $max)) throw $this->getInvalid('limit');
         return $this->limit ?: $max;
     }
 

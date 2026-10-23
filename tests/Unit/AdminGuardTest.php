@@ -273,4 +273,43 @@ final class AdminGuardTest extends TestCase
         $this->assertStringContainsString($rule, $page, 'The link edits a material of a type its administrator does not moderate');
         $this->assertStringContainsString("'dock-site-off'", $this->getBody('admin/index.php', 'setAdminOption'));
     }
+
+    # The rows of a list page: an own number from 5 to the cap, "all" while the filter fits under it, the list's own number for anything else
+    #[Test]
+    public function theRowsOfAListHoldTheirBounds(): void
+    {
+        $data = $this->getProbe('rows');
+        $base = [25, 25, 25, 1];
+        $want = [
+            '' => $base, '10' => [10, 10, 10, 10], '25' => [25, 25, 25, 25], '250' => [250, 250, 250, 250], '5' => [5, 5, 5, 5],
+            '1000' => [1000, 1000, 1000, 1000], '4' => $base, '1001' => $base, '07' => $base, '-5' => $base, '1e3' => $base, 'abc' => $base,
+            'all' => [1000, 1000, 25, 1000],
+        ];
+        $this->assertSame($want, $data['limit'], 'A stored choice outside the rules changed the rows, or "all" held over a filter above the cap');
+        $note = 'The filter is counted although no "all" asks for it, or "all" did not count it';
+        $this->assertSame(['' => [25, 0], '50' => [50, 0], 'all' => [1000, 1]], $data['lazy'], $note);
+        $limit = $this->getBody('core/helpers.php', 'getListLimit');
+        $this->assertStringContainsString("if (!defined('ADMIN_FILE')) return \$base;", $limit, 'The site reads the choice of the panel');
+        $this->assertStringContainsString("define('LIST_MAX', 1000);", $this->getFile('core/system.php'), 'The cap of a list page moved without its probe');
+    }
+
+    # Values of the rows a page may post, each with whether the option keeps it
+    public static function getRowsValues(): array
+    {
+        return [
+            'all' => ['all', true], 'ladder' => ['25', true], 'floor' => ['5', true], 'cap' => ['1000', true], 'own' => ['37', true], 'under' => ['4', false],
+            'over' => ['1001', false], 'zero' => ['07', false], 'word' => ['abc', false], 'sign' => ['+25', false],
+        ];
+    }
+
+    # The option stores the rows only as "all" or a plain number from 5 to the cap and drops the cookie for anything else
+    #[Test]
+    #[DataProvider('getRowsValues')]
+    public function theOptionStoresOnlyRowsItMayRead(string $value, bool $kept): void
+    {
+        $data = $this->getProbe('rows', $value);
+        $this->assertSame('done', $data['log'] ?? '', 'The option refused the key rows');
+        if ($kept) $this->assertSame(['rows', $value], $data['set'] ?? [], $value.' was not stored');
+        else $this->assertSame('rows', $data['drop'] ?? '', $value.' was stored or left in place');
+    }
 }

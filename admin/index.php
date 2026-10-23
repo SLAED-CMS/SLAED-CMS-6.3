@@ -382,7 +382,7 @@ function setAdminOption(): void {
     $val = getVar('post', 'value', 'var', '');
     $part = explode(':', base64_decode($_SESSION[$conf['admin_c']] ?? '', true), 4);
     $pins = ($key === 'pins') ? array_unique(array_filter(explode('-', $val))) : [];
-    if (!in_array($key, ['mode', 'still', 'rail', 'dock-off', 'dock-site-off', 'density', 'pins', 'editor'], true) || ($key === 'editor' && count($part) !== 4)
+    if (!in_array($key, ['mode', 'still', 'rail', 'dock-off', 'dock-site-off', 'density', 'rows', 'pins', 'editor'], true) || ($key === 'editor' && count($part) !== 4)
         || count($pins) > 8 || preg_grep('#[^a-z0-9_]#', $pins)) {
         setAdminLog(['result' => 'refused']);
         http_response_code(400);
@@ -392,6 +392,9 @@ function setAdminOption(): void {
         setThemeMode($val);
     } elseif ($key === 'density') {
         if (in_array($val, ['full', 'compact', 'cards'], true)) setCookies($key, time() + 31536000, $val);
+        else setCookiesDelete($key);
+    } elseif ($key === 'rows') {
+        if ($val === 'all' || (string)max(5, min(LIST_MAX, intval($val))) === $val) setCookies($key, time() + 31536000, $val);
         else setCookiesDelete($key);
     } elseif ($key === 'pins') {
         if ($pins) setCookies($key, time() + 31536000, implode('-', $pins));

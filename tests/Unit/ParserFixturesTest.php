@@ -25,6 +25,10 @@ namespace {
     if (!function_exists('is_user')) {
         function is_user(): bool { return false; }
     }
+    # The hidden block of a guest links the login page through the router of core/system.php, which a unit run does not load
+    if (!function_exists('getSeoUrl')) {
+        function getSeoUrl(array $params): string { return '/index.php?'.http_build_query($params); }
+    }
     if (!function_exists('getDecodedText')) {
         function getDecodedText(string $text): string { return html_entity_decode($text, ENT_QUOTES | ENT_HTML5, 'UTF-8'); }
     }

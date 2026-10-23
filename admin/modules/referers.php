@@ -41,9 +41,9 @@ function referers(): void {
     $count = $sortmap[$sort][0] ?? 'time';
     $ordby = $sortmap[$sort][1] ?? 'time';
     $ordsc = ($order == 1) ? 'ASC' : 'DESC';
-    $limit = max(1, intval($conf['referers']['anum']));
     $group = 'SELECT COUNT('.$count.') AS hits, MAX(id) AS id FROM '.PREFIX_DB.'_referer GROUP BY '.$count;
     $total = intval($db->getSqlQuery('SELECT COUNT(*) FROM ('.$group.') t')->fetchColumn());
+    $limit = getListLimit(intval($conf['referers']['anum']), $total);
     $pages = max(1, (int)ceil($total / $limit));
     $num = min(max(1, getVar('get', 'num', 'num', 1)), $pages);
     $result = $db->getSqlQuery('SELECT t.hits, r.uid, r.name, r.ip, r.referer, r.url, r.time FROM ('.$group.') t JOIN '.PREFIX_DB.'_referer r ON r.id = t.id'
@@ -88,6 +88,7 @@ function referers(): void {
         'maxpg' => intval($conf['referers']['anump']),
         'count' => $total,
         'limit' => $limit,
+        'base' => intval($conf['referers']['anum']),
     ]);
     setFoot();
 }

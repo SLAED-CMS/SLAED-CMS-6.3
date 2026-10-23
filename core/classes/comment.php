@@ -282,11 +282,13 @@ class Comment {
         return $out;
     }
 
-    # Return one page of the moderation list, narrowed by state, by module and by one of the five search fields
+    # Return one page of the moderation list, narrowed by state, by module and by one of the five search fields, with the module's own number of rows as base
     public function getAdminList(CommentStatus $stat, string $mod, int $find, string $term, int $page): array {
         [$where, $pars] = $this->getAdminScope($stat, $mod, $find, $term);
         $join = PREFIX_DB.'_comment AS s LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid = u.id) '.$where;
-        $out = $this->getPager($this->getTotal($join, $pars), $page, intval($this->conf['anum'] ?? 25));
+        $total = $this->getTotal($join, $pars);
+        $base = intval($this->conf['anum'] ?? 25);
+        $out = $this->getPager($total, $page, getListLimit($base, $total)) + ['base' => $base];
         $out['rows'] = [];
         $out['upto'] = 0;
         if ($out['total'] < 1) return $out;

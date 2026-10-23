@@ -174,7 +174,7 @@ function getEditorPreview(): void {
 # The one pager of both themes: maxpg numbers round the current page between the first and the last, each marked far or near so a narrow pager can drop them
 function getTplPagerView(int $num, int $pages, int $maxpg, callable $target, array $meta = []): string {
     global $tpl;
-    if ($pages <= 1) return '';
+    if ($pages <= 1 && empty($meta['rows'])) return '';
     $num = max(1, min($num, $pages));
     $maxpg = max(1, $maxpg);
     $from = max(1, $num - intdiv($maxpg, 2));
@@ -314,12 +314,22 @@ function getTplAdminTabs(array $data = []): string {
     ]);
 }
 
-# Render one panel list of the canon in place, its rows from cells named by their column for a phone, its bulk row from data and a form under it; rows_html serves the rest
+# The rows of one panel list page from the cookie rows, else the list's own number; "all" holds while the filter fits in LIST_MAX, and a closure counts it only then
+function getListLimit(int $base, int|Closure $total): int {
+    $base = max(1, $base);
+    if (!defined('ADMIN_FILE')) return $base;
+    $pick = getCookies('rows');
+    if ($pick === 'all') return ((is_int($total) ? $total : $total()) <= LIST_MAX) ? LIST_MAX : $base;
+    return ((string)max(5, min(LIST_MAX, intval($pick))) === $pick) ? intval($pick) : $base;
+}
+
+# Render one panel list of the canon in place, cells named by their column for a phone; a list with an own number in base gets the rows chip, its pagers shown over one page too
 function getTplAdminList(array $data): string {
     global $tpl;
     $href = (string)($data['href'] ?? '');
     $count = intval($data['count'] ?? 0);
     $limit = intval($data['limit'] ?? 0);
+    $base = intval($data['base'] ?? 0);
     $page = max(1, intval($data['page'] ?? 1));
     $pages = intval($data['pages'] ?? 1);
     $maxpg = intval($data['maxpg'] ?? 8);
@@ -339,14 +349,36 @@ function getTplAdminList(array $data): string {
     $none = (string)($data['none_text'] ?? _NO_INFO);
     $link = static fn(int $i): array => ['href' => $href.'num='.$i];
     $meta = ['count' => $count, 'limit' => $limit, 'is_list' => true];
-    $said = ($limit > 0) ? sprintf(_PAGERANGE, ($page - 1) * $limit + 1, min($page * $limit, $count)).' · ' : '';
+    $range = ($limit > 0) ? sprintf(_PAGERANGE, ($page - 1) * $limit + 1, min($page * $limit, $count)) : '';
+    $said = ($range !== '') ? $range.' · ' : '';
     $bulk = (array)($data['bulk'] ?? []);
     $wide = number_format($count, 0, '', ' ');
+    $per = [];
+    if ($base > 0 && $limit > 0) {
+        $fmt = static fn(int $num): string => number_format($num, 0, '', ' ');
+        $pick = getCookies('rows');
+        $all = $pick === 'all' && $count <= LIST_MAX;
+        $word = mb_strtolower(_ALL);
+        $ladder = [];
+        foreach ([10, 25, 50, 100, 250] as $num) {
+            $ladder[] = ['value' => $num, 'key' => $num, 'text' => _ADM_ROWWORD, 'is_now' => !$all && $num === $limit, 'is_home' => $num === $base, 'is_same' => $num >= $count,
+                'hint' => ($num >= $count) ? '= '.$word : sprintf(_ADM_ROWSPG, $fmt((int)ceil($count / $num)))];
+        }
+        $ladder[] = ['value' => 'all', 'key' => $word, 'text' => _ADM_ROWSONE, 'is_now' => $all, 'is_off' => $count > LIST_MAX,
+            'hint' => ($count > LIST_MAX) ? sprintf(_ADM_ROWSCAP, $fmt(LIST_MAX)) : $wide];
+        $per = [
+            'pick' => $pick, 'base' => $base, 'limit' => $limit, 'page' => $page, 'href' => $href, 'ladder' => $ladder, 'said' => trim(strstr(_PAGERANGE, '%', true)),
+            'shown' => $all ? $word : (($page - 1) * $limit + 1).'–'.min($page * $limit, $count),
+            'own' => (!in_array($limit, [10, 25, 50, 100, 250], true) && (string)$limit === $pick) ? $limit : '', 'is_free' => $pick === '', 'max' => LIST_MAX,
+            'span' => '5–'.$fmt(LIST_MAX), 'tip' => sprintf(_ADM_ROWSTIP, 5, $fmt(LIST_MAX)), 'back' => sprintf(_ADM_ROWSBACK, $base), 'note' => _ADM_ROWSNOTE,
+            'say_new' => _ADM_ROWSNEW, 'say_all' => sprintf(_ADM_ROWSALLN, $fmt(LIST_MAX)), 'say_def' => _ADM_ROWSDEF,
+        ];
+    }
     return $tpl->getHtmlPart('admin-list', [
         'head_html' => (string)($data['head_html'] ?? ''),
         'note_html' => (string)($data['note_html'] ?? ''),
-        'top_html' => ($rows !== '') ? getTplPagerView($page, $pages, $maxpg, $link, $meta + ['is_top' => true]) : '',
-        'pager_html' => ($rows !== '') ? getTplPagerView($page, $pages, $maxpg, $link, $meta) : '',
+        'top_html' => ($rows !== '') ? getTplPagerView($page, $pages, $maxpg, $link, $meta + ['is_top' => true, 'rows' => $per ? $per + ['id' => 'sl-rows-top'] : []]) : '',
+        'pager_html' => ($rows !== '') ? getTplPagerView($page, $pages, $maxpg, $link, $meta + ['rows' => $per ? $per + ['id' => 'sl-rows-end', 'is_up' => true] : []]) : '',
         'is_list' => true,
         'bulk' => $bulk,
         'count' => $count,

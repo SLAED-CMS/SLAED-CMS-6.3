@@ -19,6 +19,7 @@ Configuration files:
 Composer scripts currently present in `composer.json`:
 
 - `composer test`
+- `composer test:fast`
 - `composer analyse`
 - `composer quality`
 
@@ -65,6 +66,19 @@ If you use the Composer scripts instead of direct binaries, they resolve to the 
 ```bash
 vendor/bin/phpunit
 ```
+
+### PHPUnit In Parallel
+```bash
+vendor/bin/paratest --processes=8 --order-by=duration,reverse
+```
+
+The same suite through ParaTest (`composer test:fast`): one test class per worker,
+the longest classes first by the durations PHPUnit keeps in `.phpunit.cache`, about
+four times faster than the serial run. Every probe that creates its own disposable
+database and scratch runs alongside the others; a probe started without a scratch
+of its own shares the database of the stand, so `tests/Support/probe_boot.php`
+lines such probes up on one lock. A test class must therefore stand alone: what
+it calls it stubs or loads itself, never relying on a class that ran before it.
 
 ### PHPUnit By Suite
 ```bash

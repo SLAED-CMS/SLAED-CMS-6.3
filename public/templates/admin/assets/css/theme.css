@@ -3756,9 +3756,18 @@ dialog.sl-editor-emoji-panel {
 
 /* В02.2 В02.3 В02.4 The views apply above a phone; a phone draws its own cards */
 @media (width > 560px) {
-  /* В02.3 Compact: a row 24px high in smaller type */
+  /* The closed dial stands in the middle of "Опции", pinned on the right so the fan still opens leftward */
+  .sl-table-list-sort td.sl-col-actions .sl-dial {
+    right: calc(50% - var(--sl-size-chip) / 2 - var(--sl-space-1) - 1px);
+  }
+
+  .sl-table-list-sort[data-sl-density="compact"] td.sl-col-actions .sl-dial {
+    right: calc(50% - var(--sl-size-icon-sm) / 2 - var(--sl-space-1) - 1px);
+  }
+
+  /* В02.3 Compact: a row step of one control in smaller type, the line under the row included */
   .sl-table-list-sort[data-sl-density="compact"] tbody td {
-    height: calc(var(--sl-size-control) - var(--sl-space-2));
+    height: calc(var(--sl-size-control) - 1px);
     min-height: 0;
     font-size: var(--sl-font-small);
     line-height: var(--sl-line-tight);
@@ -3787,6 +3796,8 @@ dialog.sl-editor-emoji-panel {
   /* В02.4 Cards: one order in every card - status, number, module; the text in two lines; author, date and the fan */
   .sl-table-list-sort[data-sl-density="cards"] {
     display: block;
+    border: 0;
+    box-shadow: none;
   }
 
   .sl-table-list-sort[data-sl-density="cards"] thead {
@@ -3952,6 +3963,11 @@ dialog.sl-editor-emoji-panel {
   .sl-table-list-sort[data-sl-density] tbody {
     display: block;
     width: 100%;
+  }
+
+  .sl-table-list-sort[data-sl-density] {
+    border: 0;
+    box-shadow: none;
   }
 
   .sl-table-list-sort[data-sl-density] tbody tr {
@@ -6291,11 +6307,7 @@ button.sl-seg-cell:hover {
 .sl-pager-nav > a.sl-but-mini:hover,
 .sl-pager-nav > a.sl-but-mini:focus-visible,
 .sl-pager-side > a.sl-but-mini:hover,
-.sl-pager-side > a.sl-but-mini:focus-visible {
-  background: var(--sl-primary-strong);
-  color: var(--sl-on-solid);
-}
-
+.sl-pager-side > a.sl-but-mini:focus-visible,
 .sl-pager-nav > span.sl-but-mini.sl-is-muted {
   background: transparent;
   box-shadow: none;
@@ -6384,7 +6396,9 @@ button.sl-seg-cell:hover {
   margin: 0;
 }
 
-.sl-pager-tip kbd {
+/* The plate of a key, and of a number in the rows of a page */
+.sl-pager-tip kbd,
+.sl-pager-rows-key {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -6401,7 +6415,8 @@ button.sl-seg-cell:hover {
   font-size: var(--sl-font-small);
 }
 
-.sl-pager-tip kbd .bi {
+.sl-pager-tip kbd .bi,
+.sl-pager-rows-key .bi {
   font-size: var(--sl-size-icon-xs);
   line-height: 1;
 }
@@ -6410,6 +6425,233 @@ button.sl-seg-cell:hover {
   margin: var(--sl-space-3) 0 0;
   color: var(--sl-text-muted);
   font-size: var(--sl-font-small);
+}
+
+/* The rows of a page: the range of the page line is a chip in the colour of the pager, subtle at rest like the ways up and down,
+   full under the pointer, the focus or while its panel is open */
+.sl-pager-rows {
+  display: inline-flex;
+  vertical-align: middle;
+}
+
+.sl-pager-rows-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sl-space-2);
+  height: var(--sl-size-chip);
+  padding: 0 var(--sl-space-3);
+  border: 0;
+  border-radius: var(--sl-radius-pill);
+  background: var(--sl-primary-subtle);
+  color: var(--sl-primary-strong);
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  transition: background-color var(--sl-time-base) var(--sl-ease-out), color var(--sl-time-base) var(--sl-ease-out);
+}
+
+.sl-pager-rows-btn b {
+  color: inherit;
+}
+
+.sl-pager-rows-btn .bi {
+  font-size: var(--sl-size-icon-xs);
+  transition: transform var(--sl-time-base) var(--sl-ease-out);
+}
+
+.sl-pager-rows:is(:hover, .sl-is-open) > .sl-pager-rows-btn,
+.sl-pager-rows-btn:focus-visible {
+  background: var(--sl-primary-strong);
+  color: var(--sl-on-solid);
+}
+
+.sl-pager-rows:is(:hover, .sl-is-open) > .sl-pager-rows-btn .bi {
+  transform: rotate(180deg);
+}
+
+/* The panel is the key tip: it speaks in the size of the tip, not in the small unbroken size of the line it hangs from */
+.sl-pager-rows > .sl-float-panel {
+  font-size: var(--sl-font-body);
+  white-space: normal;
+}
+
+.sl-pager-rows :is(.sl-pager-tip-head, .sl-pager-tip-note) {
+  display: block;
+}
+
+/* One grid of three columns - plate, words, note - that every row lays itself on, so a row may wrap its words but never grow out of the panel */
+.sl-pager-rows-list {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: var(--sl-space-1) var(--sl-space-3);
+  margin: 0 calc(var(--sl-space-3) * -1);
+}
+
+.sl-pager-rows-item {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;
+  align-items: center;
+  min-width: 0;
+  padding: var(--sl-space-1) var(--sl-space-3);
+  border: 0;
+  border-radius: var(--sl-radius-1);
+  background: transparent;
+  color: var(--sl-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.sl-pager-rows-item:is(:hover, :focus-visible),
+.sl-pager-rows-own:focus-within {
+  background: var(--sl-tint);
+  color: var(--sl-text-strong);
+  outline: none;
+}
+
+.sl-pager-rows-item:disabled {
+  background: transparent;
+  opacity: var(--sl-fade-disabled);
+  cursor: default;
+}
+
+.sl-pager-rows-text {
+  min-width: 0;
+}
+
+.sl-pager-rows-list > :last-child > .sl-pager-rows-text {
+  grid-column: 2 / -1;
+}
+
+/* Every plate is as wide as the field of the own number; the one in force is filled */
+.sl-pager-rows-key {
+  position: relative;
+  min-width: calc(var(--sl-size-chip) * 2);
+  font-variant-numeric: tabular-nums;
+  transition: background-color var(--sl-time-base) var(--sl-ease-out), color var(--sl-time-base) var(--sl-ease-out);
+}
+
+.sl-pager-rows-item.sl-is-active {
+  color: var(--sl-text-strong);
+  font-weight: var(--sl-weight-semibold);
+}
+
+.sl-pager-rows-item.sl-is-active > .sl-pager-rows-key {
+  border-color: var(--sl-primary-strong);
+  background: var(--sl-primary-strong);
+  color: var(--sl-on-solid);
+}
+
+/* The note column: the pages a number makes, the count of "all" or why it is off, the bounds of the own number */
+.sl-pager-rows-hint {
+  justify-self: end;
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-small);
+  font-weight: var(--sl-weight-normal);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+/* The default of the module is a dot on the corner of its plate, explained by the same dot in the note under the list */
+.sl-pager-rows-item[data-sl-rows-home] > .sl-pager-rows-key::after,
+.sl-pager-rows-mark {
+  content: "";
+  width: var(--sl-space-4);
+  height: var(--sl-space-4);
+  box-sizing: border-box;
+  border: var(--sl-space-1) solid var(--sl-bg);
+  border-radius: var(--sl-radius-circle);
+  background: var(--sl-success);
+}
+
+.sl-pager-rows-item[data-sl-rows-home] > .sl-pager-rows-key::after {
+  position: absolute;
+  top: calc(var(--sl-space-2) * -1);
+  right: calc(var(--sl-space-2) * -1);
+}
+
+.sl-pager-rows-mark {
+  display: inline-block;
+  margin-right: var(--sl-space-2);
+  vertical-align: middle;
+}
+
+/* A number that holds the whole filter changes nothing on this list: quiet, still choosable, since the choice serves every list */
+.sl-pager-rows-item[data-sl-rows-same]:not(.sl-is-active),
+.sl-pager-rows-item[data-sl-rows-same]:not(.sl-is-active) > .sl-pager-rows-key {
+  color: var(--sl-text-muted);
+}
+
+.sl-pager-rows-item[data-sl-rows-same]:not(.sl-is-active) > .sl-pager-rows-key {
+  background: transparent;
+}
+
+/* The own number: the plate itself is the field, Enter or the tick applies it */
+.sl-pager-rows-own {
+  cursor: default;
+}
+
+.sl-pager-rows-own > label {
+  cursor: text;
+}
+
+input.sl-pager-rows-key {
+  width: calc(var(--sl-size-chip) * 2);
+  min-height: 0;
+  padding: 0 var(--sl-space-1);
+  text-align: center;
+  appearance: textfield;
+}
+
+input.sl-pager-rows-key::-webkit-inner-spin-button,
+input.sl-pager-rows-key::-webkit-outer-spin-button {
+  margin: 0;
+  appearance: none;
+}
+
+input.sl-pager-rows-key:focus-visible {
+  border-color: var(--sl-primary-strong);
+  outline: none;
+  box-shadow: var(--sl-shadow-focus);
+}
+
+.sl-pager-rows-end {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sl-space-2);
+  justify-self: end;
+}
+
+.sl-pager-rows-go {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--sl-size-chip);
+  height: var(--sl-size-chip);
+  padding: 0;
+  border: 0;
+  border-radius: var(--sl-radius-circle);
+  background: var(--sl-primary-subtle);
+  color: var(--sl-primary-strong);
+  cursor: pointer;
+}
+
+.sl-pager-rows-go .bi {
+  font-size: var(--sl-size-icon-xs);
+}
+
+.sl-pager-rows-go:is(:hover, :focus-visible) {
+  background: var(--sl-primary-strong);
+  color: var(--sl-on-solid);
+  outline: none;
+}
+
+.sl-pager-rows-sep {
+  grid-column: 1 / -1;
+  height: 1px;
+  margin: var(--sl-space-2) var(--sl-space-3);
+  background: var(--sl-border);
 }
 
 /* A touch screen has no arrow keys to explain */
@@ -6536,9 +6778,14 @@ button.sl-but-mini {
   color: var(--sl-on-solid);
 }
 
-/* Tables: list view */
+/* Tables: list view; one frame round the table and a line between rows, the cards keep their own frames */
 .sl-table-list-sort {
   width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-2);
+  box-shadow: var(--sl-shadow-xs);
 }
 
 /* Selected row: hover says where the pointer is, this says which row the side panel is describing */
@@ -6550,10 +6797,32 @@ button.sl-but-mini {
   background-color: var(--sl-surface);
 }
 
+/* The end padding is larger than the start one, so the texts of two columns stand 12px apart */
 .sl-table-list-sort td {
-  padding: var(--sl-space-2);
-  border: 1px solid var(--sl-border);
-  border-radius: var(--sl-radius-1);
+  padding: 0 var(--sl-space-3) 0 var(--sl-space-2);
+  border-bottom: 1px dashed var(--sl-border-strong);
+}
+
+/* The corner cells are rounded inside the frame, as the head plate of a modal */
+.sl-table-list-sort thead th:first-child {
+  border-top-left-radius: calc(var(--sl-radius-2) - 1px);
+}
+
+.sl-table-list-sort thead th:last-child {
+  border-top-right-radius: calc(var(--sl-radius-2) - 1px);
+}
+
+/* The last row shown closes on the frame; a closed last group leaves its head as that row */
+.sl-table-list-sort tbody :is(tr:last-child, tr.sl-is-closed:not(:has(~ tr[data-sl-group]))) > :is(td, th) {
+  border-bottom: 0;
+}
+
+.sl-table-list-sort tbody :is(tr:last-child, tr.sl-is-closed:not(:has(~ tr[data-sl-group]))) > :first-child {
+  border-bottom-left-radius: calc(var(--sl-radius-2) - 1px);
+}
+
+.sl-table-list-sort tbody :is(tr:last-child, tr.sl-is-closed:not(:has(~ tr[data-sl-group]))) > :last-child {
+  border-bottom-right-radius: calc(var(--sl-radius-2) - 1px);
 }
 
 .sl-table-list-sort td:last-child {
@@ -6587,11 +6856,10 @@ button.sl-but-mini {
 
 .sl-table-list-sort th {
   font-weight: var(--sl-weight-bold);
-  border: 1px solid var(--sl-border);
+  border-bottom: 1px solid var(--sl-border);
   padding: 0 var(--sl-space-6) 0 var(--sl-space-2);
   text-align: left;
   background-color: var(--sl-bg-muted);
-  border-radius: var(--sl-radius-1);
 }
 
 .sl-table-list-sort th:last-child {
@@ -6606,26 +6874,15 @@ button.sl-but-mini {
 }
 
 .sl-table-list-sort tbody th:last-child,
-.sl-table-list-sort th.sl-col-status,
-.sl-table-list-sort th.sl-col-actions {
+.sl-table-list-sort :is(th, td):is(.sl-col-status, .sl-col-actions) {
   padding-right: var(--sl-space-2);
   padding-left: var(--sl-space-2);
 }
 
-.sl-table-list-sort th.sl-col-status,
-.sl-table-list-sort th.sl-col-actions,
-.sl-table-list-sort td.sl-col-status,
-.sl-table-list-sort td.sl-col-actions {
-  height: var(--sl-table-height);
-  min-height: var(--sl-table-height);
-  padding-top: 0;
-  padding-bottom: 0;
-  vertical-align: middle;
-}
-
+/* A row step of 34px: the table height, 3px and the 1px line under the row */
 .sl-table-list-sort th,
 .sl-table-list-sort td {
-  height: var(--sl-table-height);
+  height: calc(var(--sl-table-height) + var(--sl-space-1) + 1px);
   min-height: var(--sl-table-height);
   padding-top: 0;
   padding-bottom: 0;
