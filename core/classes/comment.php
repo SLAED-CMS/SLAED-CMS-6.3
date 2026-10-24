@@ -284,8 +284,8 @@ class Comment {
 
     # Return one page of the moderation list, narrowed by state, by module and by one of the five search fields, with the module's own number of rows as base
     public function getAdminList(CommentStatus $stat, string $mod, int $find, string $term, int $page): array {
-        [$where, $pars] = $this->getAdminScope($stat, $mod, $find, $term);
-        $join = PREFIX_DB.'_comment AS s LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid = u.id) '.$where;
+        [$from, $where, $pars] = $this->getAdminScope($stat, $mod, $find, $term);
+        $join = $from.' '.$where;
         $total = $this->getTotal($join, $pars);
         $base = intval($this->conf['anum'] ?? 25);
         $out = $this->getPager($total, $page, getListLimit($base, $total)) + ['base' => $base];
@@ -298,25 +298,6 @@ class Comment {
             .' ORDER BY s.time '.$dir.', s.id '.$dir.' LIMIT '.$out['offset'].', '.$out['limit'];
         foreach ($this->db->getSqlRows($this->db->getSqlQuery($sql, $pars)) ?: [] as $row) {
             $out['rows'][] = $this->getRowData($row) + ['nick' => (string)($row['unam'] ?? '')];
-        }
-        return $out;
-    }
-
-    # Moderate the next portion of the scope by ascending id between the cursor and the last id the moderator saw, row by row, so a refusing row is passed over
-    public function setAdminPortion(CommentStatus $stat, string $mod, int $find, string $term, string $act, int $after, int $upto, int $limit): array {
-        $out = ['done' => 0, 'fail' => 0, 'after' => $after, 'more' => false];
-        if (!in_array($act, ['a0', 'a1', 'd'], true) || $upto < 1 || $limit < 1) return $out;
-        [$where, $pars] = $this->getAdminScope($stat, $mod, $find, $term);
-        $pars['after'] = $after;
-        $pars['upto'] = $upto;
-        $sql = 'SELECT s.id FROM '.PREFIX_DB.'_comment AS s LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid = u.id) '.$where
-            .' AND s.id > :after AND s.id <= :upto ORDER BY s.id ASC LIMIT '.($limit + 1);
-        $ids = array_map('intval', array_column($this->db->getSqlRows($this->db->getSqlQuery($sql, $pars)) ?: [], 'id'));
-        $out['more'] = count($ids) > $limit;
-        foreach (array_slice($ids, 0, $limit) as $id) {
-            $done = ($act === 'd') ? $this->deleteComment($id) : $this->setStatus($id, $act === 'a1');
-            $out[$done ? 'done' : 'fail']++;
-            $out['after'] = $id;
         }
         return $out;
     }
@@ -901,10 +882,9 @@ class Comment {
         return $rows;
     }
 
-    # Build the moderation scope against the comment and account join, so the count query carries exactly the predicate the result query carries
-    # The author search needs two placeholders for one term because a native prepared statement rejects a named placeholder used twice
-    # The comments of a Node type stay out for an administrator who does not moderate that type, so a private reply of support reaches the moderators of its type alone
-    private function getAdminScope(CommentStatus $stat, string $mod, int $find, string $term): array {
+    # The join, condition and values of the moderation list, its count and a sweep; the author term is bound twice, as a native statement takes a name once
+    public function getAdminScope(CommentStatus $stat, string $mod, int $find, string $term): array {
+        $from = PREFIX_DB.'_comment AS s LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid = u.id)';
         $where = 'WHERE s.status = :stat AND s.deleted IS NULL';
         $pars = ['stat' => $stat->value];
         $deny = array_values(array_filter($this->kinds, fn(string $v): bool => !isset(self::MODULES[$v]) && !is_moder($v)));
@@ -920,11 +900,11 @@ class Comment {
             $where .= ' AND s.modul = :mod';
             $pars['mod'] = $mod;
         }
-        if ($term === '') return [$where, $pars];
+        if ($term === '') return [$from, $where, $pars];
         if ($find === 3) {
             $pars['fnam'] = '%'.$term.'%';
             $pars['fusr'] = '%'.$term.'%';
-            return [$where.' AND (s.name LIKE :fnam OR u.name LIKE :fusr)', $pars];
+            return [$from, $where.' AND (s.name LIKE :fnam OR u.name LIKE :fusr)', $pars];
         }
         $pars['find'] = '%'.(($find === 4) ? strtolower($term) : $term).'%';
         $where .= match ($find) {
@@ -933,7 +913,7 @@ class Comment {
             5 => ' AND s.ip LIKE :find',
             default => ' AND s.body LIKE :find',
         };
-        return [$where, $pars];
+        return [$from, $where, $pars];
     }
 
     # Normalize a submitted comment into the source the row stores: the shared writer escapes, breaks lines and hides quotes for a render model comments no longer use

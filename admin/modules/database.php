@@ -162,7 +162,7 @@ function database(string $run = ''): void {
             ['has_content_text' => true, 'content_text' => $tabeng],
             ['title_text' => $tabloc, 'has_content_text' => true, 'content_text' => $tabloc],
             ['is_col_count' => true, 'has_content_text' => true, 'content_text' => $num],
-            ['is_col_date' => true, 'has_content_text' => true, 'content_text' => format_time($info['Create_time'], _TIMESTRING)],
+            ['is_col_date' => true, 'moment' => $info['Create_time']],
             ['is_col_count' => true, 'has_content_text' => true, 'content_text' => filterSize($tabsize)],
             ['is_col_count' => true, 'content_html' => $freetag],
             ['is_col_actions' => true, 'content_html' => $stattag],

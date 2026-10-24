@@ -198,7 +198,6 @@ define('_COMMENTS_FIXED','Counters repaired: %d.');
 define('_COMMENTS_AUTHOR','All comments of the author');
 define('_COMMENTS_ADDR','All comments from this IP');
 define('_COMMENTS_ONSITE','Reply on the site');
-define('_COMMENTS_PICK','Select comment %s');
 define('_CONFIG_BLOCKED','The restore cannot decide by itself, reason: %s. Check the operation files in storage/backup/config manually.');
 define('_CONFIG_CLEAN','No interrupted configuration operation was found, the configuration is consistent.');
 define('_CONFIG_OP','Operation');

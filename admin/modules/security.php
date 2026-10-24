@@ -29,7 +29,7 @@ $tabset = [
 ];
 
 function security(): void {
-    global $afile, $labels, $tabset, $tpl;
+    global $afile, $labels, $tabset;
     $rows = [];
     $files = is_dir(LOGS_DIR) ? scandir(LOGS_DIR) : [];
     foreach ($files as $file) {
@@ -37,16 +37,15 @@ function security(): void {
         $name = (string)pathinfo($file, PATHINFO_FILENAME);
         $title = $labels[$name] ?? $name;
         $path = LOGS_DIR.'/'.$file;
-        $rows[] = ['name' => $title, 'cells' => [
-            ['is_truncate' => true, 'title_text' => $title, 'has_content_text' => true, 'content_text' => $title,
-                'prefix_html' => $tpl->getHtmlFrag('popover', ['items' => [['label' => _FILE, 'value' => 'storage/logs/'.$file, 'is_last' => true]]])],
+        $rows[] = ['name' => $title, 'details' => [['label' => _FILE, 'value' => 'storage/logs/'.$file]],
+            'drop' => getTplPostAction(['name' => 'security', 'op' => 'delete', 'id[]' => $name], 'trash', _ONDELETE), 'cells' => [
+            ['is_truncate' => true, 'title_text' => $title, 'has_content_text' => true, 'content_text' => $title],
             ['is_col_count' => true, 'has_content_text' => true, 'content_text' => filterSize(filesize($path))],
-            ['is_col_date' => true, 'stamp' => date('c', filemtime($path)), 'content_text' => date(_TIMESTRING, filemtime($path))],
-            ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('dial', ['dial_title' => _EDITOR, 'dial' => [
+            ['is_col_date' => true, 'moment' => filemtime($path)],
+            ['is_col_actions' => true, 'dial' => [
                 ['href' => $afile.'.php?name=security&op=logview&file='.urlencode($name), 'icon_name' => 'file-text', 'title' => _SHOW],
                 ['href' => $afile.'.php?name=security&op=download&file='.urlencode($name), 'icon_name' => 'download', 'title' => _DOWN],
-                getTplPostAction(['name' => 'security', 'op' => 'delete', 'file' => $name], 'trash', _ONDELETE) + ['later' => 'gone del'],
-            ]])],
+            ]],
         ]];
     }
     setHead();
@@ -119,7 +118,7 @@ function logview(): void {
         ]);
         $rows = [];
         foreach ($log['rows'] as $row) {
-            $cells = [['is_col_date' => true, 'has_content_text' => true, 'content_text' => format_time((string)$row['ts'], _TIMESTRING)],
+            $cells = [['is_col_date' => true, 'moment' => $row['ts']],
                 ['is_col_status' => true, 'has_content_text' => true, 'content_text' => (string)$row['level']]];
             if ($isadm) {
                 $login = ($row['event'] ?? '') === 'login';
@@ -238,7 +237,7 @@ function logins(): void {
         $agent = html_entity_decode((string)$row['agent'], ENT_QUOTES, 'UTF-8');
         $info = getAgentInfo($agent, 0);
         $rows[] = ['cells' => [
-            ['is_col_date' => true, 'has_content_text' => true, 'content_text' => format_time((string)$row['time'], _TIMESTRING)],
+            ['is_col_date' => true, 'moment' => $row['time']],
             ['is_truncate' => true, 'has_content_text' => true, 'content_text' => trim((string)$row['name'].' #'.intval($row['uid']))],
             ['has_content_text' => true, 'content_text' => $row['admin'] ? _ADMIN : _USER],
             ['has_content_text' => true, 'content_text' => $results[$row['result']] ?? (string)$row['result']],
@@ -289,16 +288,15 @@ function banlist(): void {
             $tcidr = getIpCidr($binfo[0]);
             if ($tcidr === false) continue;
             [$tip] = explode('/', $tcidr, 2);
-            $reason = $tpl->getHtmlFrag('popover', ['items' => [
-                ['label' => _IP_CIDR, 'has_value_text' => true, 'value_text' => $tcidr, 'is_last' => false],
-                ['label' => _BANN_REAS, 'has_value_text' => true, 'value_text' => (string)$binfo[3], 'is_last' => true],
-            ]]);
-            $rows[] = ['name' => $tcidr, 'cells' => [
-                ['is_truncate' => true, 'title_text' => $tcidr, 'content_html' => $reason.Geoip::getIpHtml($tip)],
+            $rows[] = ['name' => $tcidr, 'details' => [
+                ['label' => _IP_CIDR, 'has_value_text' => true, 'value_text' => $tcidr],
+                ['label' => _BANN_REAS, 'has_value_text' => true, 'value_text' => (string)$binfo[3]],
+            ], 'drop' => getTplPostAction(['name' => 'security', 'op' => 'bansave', 'kind' => 'ip', 'id[]' => $tcidr.'|'.$binfo[1].'|'.(int)$binfo[2]], 'trash',
+                _ONDELETE), 'cells' => [
+                ['is_truncate' => true, 'title_text' => $tcidr, 'content_html' => Geoip::getIpHtml($tip)],
                 ['is_truncate' => true, 'title_text' => (string)$binfo[1], 'has_content_text' => true, 'content_text' => (string)$binfo[1]],
-                ['is_col_date' => true, 'has_content_text' => true, 'content_text' => getTimeLeft((int)$binfo[2])],
-                ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('dial', ['dial_title' => _EDITOR, 'dial' => [getTplPostAction(['name' => 'security',
-                    'op' => 'bansave', 'cidr' => $tcidr, 'hash' => $binfo[1], 'time' => (int)$binfo[2], 'id' => 1], 'trash', _ONDELETE) + ['later' => 'gone del']]])],
+                ['is_col_date' => true, 'moment' => (int)$binfo[2]],
+                ['is_col_actions' => true, 'dial' => []],
             ]];
         }
         $head = [['content' => _IP, 'is_truncate' => true], ['content' => _HASH, 'is_truncate' => true]];
@@ -358,12 +356,13 @@ function banlist(): void {
         foreach (explode('||', (string)$conf['security']['blocker_user']) as $val) {
             if ($val === '') continue;
             $binfo = explode('|', $val);
-            $rows[] = ['name' => (string)$binfo[0], 'cells' => [
+            $rows[] = ['name' => (string)$binfo[0],
+                'drop' => getTplPostAction(['name' => 'security', 'op' => 'bansave', 'kind' => 'user', 'id[]' => $binfo[0].'|'.(int)($binfo[1] ?? 0)], 'trash', _ONDELETE),
+                'cells' => [
                 ['is_truncate' => true, 'title_text' => (string)$binfo[0], 'content_html' => user_info($binfo[0], null)],
                 ['is_truncate' => true, 'title_text' => (string)($binfo[2] ?? ''), 'has_content_text' => true, 'content_text' => (string)($binfo[2] ?? '')],
-                ['is_col_date' => true, 'has_content_text' => true, 'content_text' => getTimeLeft((int)($binfo[1] ?? 0))],
-                ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('dial', ['dial_title' => _EDITOR, 'dial' => [getTplPostAction(['name' => 'security',
-                    'op' => 'bansave', 'uname' => (string)$binfo[0], 'time' => (int)($binfo[1] ?? 0), 'id' => 3], 'trash', _ONDELETE) + ['later' => 'gone del']]])],
+                ['is_col_date' => true, 'moment' => (int)($binfo[1] ?? 0)],
+                ['is_col_actions' => true, 'dial' => []],
             ]];
         }
         $head = [['content' => _NICKNAME, 'is_truncate' => true], ['content' => _BANN_REAS, 'is_truncate' => true]];
@@ -463,6 +462,8 @@ function bansave(): void {
     $warn = !checkAdminPost('security');
     $send = '';
     $id = getVar('post', 'id', 'num');
+    $kind = getVar('post', 'kind', 'word', '');
+    $keys = getVar('post', 'id[]', 'raw');
     $done = false;
     if (!$warn) {
         $cidr = getVar('post', 'cidr', 'text');
@@ -475,7 +476,7 @@ function bansave(): void {
         $time = getVar('post', 'time', 'num');
         $cidr = $cidr ? getIpCidr($cidr) : '';
         $cont = $conf['security'];
-        if ($id == 1 && $cidr) {
+        if ($kind === 'ip' && $keys) {
             $bip = explode('||', $cont['blocker_ip']);
             $new = '';
             foreach ($bip as $val) {
@@ -483,8 +484,7 @@ function bansave(): void {
                 $binfo = explode('|', $val, 4);
                 if (count($binfo) < 4) continue;
                 $tcidr = getIpCidr($binfo[0]);
-                if ($tcidr === false) continue;
-                if ($tcidr === $cidr && $binfo[1] === $hash && (int)$binfo[2] === (int)$time) continue;
+                if ($tcidr === false || in_array($tcidr.'|'.$binfo[1].'|'.(int)$binfo[2], $keys, true)) continue;
                 $new .= $val.'||';
             }
             $done = $new !== $cont['blocker_ip'];
@@ -493,8 +493,13 @@ function bansave(): void {
             $time = (is_numeric($time)) ? time() + ($time * 86400) : time() + 2592000;
             $cont['blocker_ip'] .= $cidr.'|'.$hash.'|'.$time.'|'.$info.'||';
             $done = true;
-        } elseif ($id == 3 && $name) {
-            $left = (string)preg_replace('#'.preg_quote($name, '#').'\|'.$time.'\|(.*)\|\|#iU', '', $cont['blocker_user']);
+        } elseif ($kind === 'user' && $keys) {
+            $left = '';
+            foreach (explode('||', (string)$cont['blocker_user']) as $val) {
+                $binfo = explode('|', $val);
+                if ($val === '' || in_array($binfo[0].'|'.(int)($binfo[1] ?? 0), $keys, true)) continue;
+                $left .= $val.'||';
+            }
             $done = $left !== $cont['blocker_user'];
             $cont['blocker_user'] = $left;
         } elseif ($id == 4 && $name) {
@@ -511,7 +516,7 @@ function bansave(): void {
         }
         if ($done) setConfigFile('security.php', $cont);
     }
-    $kind = ($id === 3 || $id === 4) ? 'user' : 'ip';
+    $kind = ($id === 4 || $kind === 'user') ? 'user' : 'ip';
     setRedirect($afile.'.php?name=security&op=banlist&kind='.$kind.$send, false, 302, $warn ? _TOKENMISS : ($done ? '' : _ERROR), !$done);
 }
 
@@ -1103,9 +1108,11 @@ function download(): void {
 function delete(): void {
     global $afile;
     $warn = !checkAdminPost('security');
-    $file = getVar('post', 'file', 'var');
-    $path = LOGS_DIR.'/'.$file.'.log';
-    $done = !$warn && $file && is_file($path) && unlink($path);
+    $files = getVar('post', 'id[]', 'var');
+    $done = !$warn && $files;
+    foreach ($done ? $files : [] as $file) {
+        if (!is_string($file) || !is_file(LOGS_DIR.'/'.$file.'.log') || !unlink(LOGS_DIR.'/'.$file.'.log')) $done = false;
+    }
     setRedirect($afile.'.php?name=security', false, 302, $warn ? _TOKENMISS : ($done ? _SUCCDELETE : _ERROR), !$done);
 }
 

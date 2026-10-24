@@ -149,7 +149,7 @@ function votes(): void {
         $dial = $row['annulled'] ? [] : [['href' => $link.'&num='.$list['page'].'&vote='.$row['id'], 'icon_name' => 'x-circle', 'title' => _RATINGS_ANNUL]];
         $rows[] = ['cells' => [
             ['is_col_id' => true, 'has_content_text' => true, 'content_text' => $row['id']],
-            ['is_col_date' => true, 'stamp' => format_time($row['created'], 'c'), 'content_text' => format_time($row['created'], 'Y-m-d H:i')],
+            ['is_col_date' => true, 'moment' => $row['created']],
             ['has_content_text' => true, 'content_text' => $row['scope'].' #'.$row['mid']],
             ['is_truncate' => true, 'has_content_text' => true, 'content_text' => $row['actor']],
             ['is_col_count' => true, 'has_content_text' => true, 'content_text' => $row['value']],

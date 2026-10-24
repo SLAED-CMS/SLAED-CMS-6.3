@@ -391,16 +391,49 @@ into the plan, then do whatever work the step names.
   top of step 106 and travels with it. The plan's section is "Устройство", "Строк на странице". The reads of the panel
   take up to `LIST_MAX` rows in Node, the support queue and the ratings; a list of one page keeps its pager for the chip
   (owner, 2026-10-23). (2026-10-23)
-- [ ] 110d. LIST-PARITY batch 0 — *decision*: the names of the row keys and of the sweep helper, the filter fields of the
+- [x] 110d. LIST-PARITY batch 0 — *decision*: the names of the row keys and of the sweep helper, the filter fields of the
   six lists, the date columns of "Избранное" and "Голосования", which deferred actions join the bulk foot and how the
   one op `actions` of "Комментарии" meets the foot actions of `drop` and `stat`; the
   baseline (the matrix of "Анализ", `npm run ui:before`, `ui-audit`). Added by the owner on 2026-10-23: every list of
-  the panel gets what "Комментарии" have, from the canon, before the reference of ADMIN-UI.
-- [ ] 110e. LIST-PARITY batch 1 — the row by meaning in `getTplAdminList()`; "Комментарии" move onto it first.
-- [ ] 110f. LIST-PARITY batch 2 — dates and "i" on every list.
-- [ ] 110g. LIST-PARITY batch 3 — edit and key E, filters from the dial.
-- [ ] 110h. LIST-PARITY batch 4 — row picks and the bulk foot wherever a row can be deleted; `delete()` takes `id[]`.
-- [ ] 110i. LIST-PARITY batch 5 — "Отметить все N" through one core helper of portions.
+  the panel gets what "Комментарии" have, from the canon, before the reference of ADMIN-UI. The names of the plan
+  stand, the helper is `setListPortion()`; op `actions` goes, the foot posts `delete` and `approve`; "Голосования" date
+  by `enddate`; "Вернуть" joins the foot, "Аннулировать" stays single; the filter fields stand in the plan, "Ответы
+  шага 0" (owner, 2026-10-23). (2026-10-23)
+- [x] 110e. LIST-PARITY batch 1 — the row by meaning in `getTplAdminList()`; "Комментарии" move onto it first. The foot
+  is one form `sl-list-pick` with a `fieldset data-sl-pick` per action — `del` from `drop`, `on` and `off` from the
+  `stat` of a row turned off and on — and the select `pick` sends its group alone; `sweep()` reads `pick`;
+  `getTplPostAction()` also answers its raw `fields`, the actions cell hands its items as `dial`, the "i" stands in the
+  first cell past the id, the box is named by the row; op `actions` and `_COMMENTS_PICK` are gone (owner, 2026-10-23).
+  `AdminListRowTest` holds every key with and without it and the comment row against its glued form. (2026-10-23)
+- [x] 110f. LIST-PARITY batch 2 — dates and "i" on every list. Every list of groups A and B hands the canon `moment`
+  and `details`; the "i" stands only where a row has data outside its cells, no list gets invented details (owner,
+  2026-10-23). An empty moment keeps the text of its module; "Голосования" date by `enddate`, "Избранное" by
+  `_favorites.time`; the bans read as the moment they end. `AdminListRowTest` reads every function that renders a list
+  for `'popover'`, `'stamp'` and a date cell without a moment. (2026-10-23)
+- [x] 110g. LIST-PARITY batch 3 — edit and key E, filters from the dial. The pencil of every list dial carries
+  `is_edit` — "Администраторы", "Сообщения", "Модули", "Рассылка" (a draft only: a sent campaign holds "Клонировать"
+  there), "Планировщик", "Пользователи", Node (materials through `getNodeModerDial()`, and types), "Поиск",
+  "Голосования"; on "Языки", whose rows hold two edits, E opens the file of the module (owner, 2026-10-23); `is_find`
+  stays with "Комментарии", the only list that filters from its dial. `AdminListRowTest` reads every module file for
+  `data-sl-edit` and `hx-boost` and every edit item for `is_edit`; in the browser J and E open the edit of the row in
+  hand on twelve lists. (2026-10-23)
+- [x] 110h. LIST-PARITY batch 4 — row picks and the bulk foot wherever a row can be deleted; `delete()` takes `id[]`.
+  Seventeen lists hand the canon `drop`; their handlers take `id[]`, the key of the row in it (a job, a log file, a ban
+  entry, the row of `_user_oauth`), and a ban removal names its list by `kind`. Node reads the type and the version of
+  each material itself (owner, 2026-10-23). The lamp of "Сообщения" joins the foot and turns in place; "Вернуть" of
+  the undelivered is the foot action `move`. The delete of a user from the profile and the poll menu of the site post
+`id[]` too: `getTplEditMenu()` writes a list of its address back as `key[]`. `ListPickTest` runs the handlers over `pick_probe.php` with and without
+  the token; in the browser X, "Отмечено: N" and Undo hold on the fourteen lists with rows on the stand, bulk delete on "Избранное" and the
+  search log and the bulk lamp on "Сообщения" reach the database. (2026-10-23)
+- [x] 110i. LIST-PARITY batch 5 — "Отметить все N" through one core helper of portions. The foot handler runs the
+  portions itself, as `select_across` of Django admin: the group posts its own op with `upto` instead of `id[]`, the
+  handler holds its row action once as a closure, `setListPortion($key, $from, $where, $pars, $act)` answers
+  `{done, fail, after, more}`; op `sweep` and `Comment::setAdminPortion()` are gone, the canon takes the bound as `upto`
+  (owner, 2026-10-24). The scope of a list is read once by `getAccountScope()`, `NodeQuery::getNodeScope()`,
+  `Mail::getQueueScope()` and `Comment::getAdminScope()`; the twelve paged lists of the foot sweep, the five of one
+  page show every row already. `ListPortionTest` holds the portions against the count of every list on the stand,
+  `ListPickTest` every handler posted with `upto`; in the browser "Отметить все N" with pause, resume and "Снять
+  отметку" ran on "Избранное" and on 250 probe accounts of "Пользователи", Undo on them too. (2026-10-24)
 - [ ] 110j. LIST-PARITY batch 6 — filters of the six growing lists.
 - [ ] 110k. LIST-PARITY batch 7 — empty states and findings; the matrix gives every list in scope the row of
   "Комментарии".

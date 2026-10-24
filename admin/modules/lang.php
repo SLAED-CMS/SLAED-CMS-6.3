@@ -49,7 +49,7 @@ function lang(): void {
         ['is_col_status' => true, 'content_html' => ad_status('', 1)],
         ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('dial', ['dial_title' => _FUNCTIONS, 'dial' => [
             ['href' => $afile.'.php?name=lang&op=fileedit&typ=admin', 'icon_name' => 'person-gear', 'title' => _FULLEDIT.': '._ADMIN],
-            ['href' => $afile.'.php?name=lang&op=fileedit', 'icon_name' => 'puzzle', 'title' => _FULLEDIT.': '._MODUL],
+            ['href' => $afile.'.php?name=lang&op=fileedit', 'icon_name' => 'puzzle', 'title' => _FULLEDIT.': '._MODUL, 'is_edit' => true],
         ]])],
     ]]];
     $mod = [];
@@ -62,7 +62,7 @@ function lang(): void {
         $items = [];
         $link = $afile.'.php?name=lang&op=fileedit&mod='.$one;
         if (is_dir($path.'/admin/lang')) $items[] = ['href' => $link.'&typ=admin', 'icon_name' => 'person-gear', 'title' => _FULLEDIT.': '._ADMIN];
-        if (is_dir($path.'/lang')) $items[] = ['href' => $link, 'icon_name' => 'puzzle', 'title' => _FULLEDIT.': '._MODUL];
+        if (is_dir($path.'/lang')) $items[] = ['href' => $link, 'icon_name' => 'puzzle', 'title' => _FULLEDIT.': '._MODUL, 'is_edit' => true];
         $rows[] = ['name' => getModuleName($one), 'cells' => [
             ['is_col_id' => true, 'has_content_text' => true, 'content_text' => $i + 2],
             ['is_truncate' => true, 'title_text' => getModuleName($one), 'has_content_text' => true, 'content_text' => getModuleName($one)],

@@ -1877,9 +1877,9 @@
         var host = document.querySelector('.sl-toast-host');
         return host ? host.getAttribute('data-sl-' + kind + '-' + key) || '' : '';
     }
-    // The word of a deferred form: fixed on a row or a section, read from the chosen action on a bulk form ("gone d=del a1=on a0=off")
+    // The word of a deferred form: fixed on a row or a section, read from the chosen action on a bulk form ("gone on=on off=off del=del")
     function getLaterKey(form) {
-        var pick = form.elements.typ ? form.elements.typ.value : '';
+        var pick = form.elements.pick ? form.elements.pick.value : '';
         var hit = form.getAttribute('data-sl-later').split(' ').slice(1).map(function (one) { return one.split('='); }).find(function (one) {
             return one.length === 1 || one[0] === pick;
         });
@@ -1950,6 +1950,14 @@
         mark.classList.toggle('sl-status-inactive', !on);
         field.value = field.value === '1' ? '0' : '1';
     }
+    // Э22 The status the foot picked for rows whose lamp stays: the lamp forms of those rows still standing the other way, or null when a row has no lamp
+    function getLampForms(rows, key) {
+        var forms = rows.map(function (row) { return row.querySelector('form[data-sl-later^="lamp "]'); });
+        if ((key !== 'on' && key !== 'off') || !rows.length || forms.indexOf(null) > -1) return null;
+        return forms.filter(function (form) {
+            return (document.querySelector('[form="' + form.getAttribute('id') + '"]').getAttribute('aria-pressed') === 'true') !== (key === 'on');
+        });
+    }
     // Send one deferred action now: by fetch while the page stays, by a beacon when it goes; a refusal brings its rows back and says so
     function setLaterSend(job, beacon) {
         var at = later.indexOf(job);
@@ -1976,13 +1984,24 @@
         quiet = held ? held.getAttribute('data-sl-row') : '-';
         window.htmx.ajax('GET', window.location.href, { source: box, target: box, swap: 'outerHTML' });
     }
+    // The action picked in the foot of a canon list sends its own group of fields alone: its op, its direction, the filter and the token
+    function setPickGroup(form) {
+        var pick = form.elements.pick;
+        if (!pick) return;
+        form.querySelectorAll('fieldset[data-sl-pick]').forEach(function (set) { set.disabled = set.getAttribute('data-sl-pick') !== pick.value; });
+    }
+    document.addEventListener('change', function (event) {
+        if (event.target.name === 'pick' && event.target.form) setPickGroup(event.target.form);
+    });
     // Э22 Э23 A form marked data-sl-later acts at once and leaves for the server after ten seconds, which Undo can still take back
     document.addEventListener('submit', function (event) {
         var form = event.target;
         if (!form.matches || !form.matches('form[data-sl-later]') || !window.setToast) return;
+        setPickGroup(form);
         var kind = form.getAttribute('data-sl-later').split(' ')[0];
         var key = getLaterKey(form);
         var rows = kind === 'gone' ? getLaterRows(form) : [];
+        var lamps = (kind === 'gone' && !form.closest('tr')) ? getLampForms(rows, key) : null;
         var job = { form: form, body: new FormData(form), name: '', num: rows.length, timer: 0, back: null };
         var held = later.find(function (one) { return one.form === form; });
         event.preventDefault();
@@ -2003,6 +2022,10 @@
             job.name = form.closest('tr').getAttribute('data-sl-row') || '';
             setLampFlip(form);
             job.back = function () { setLampFlip(form); };
+        } else if (lamps) {
+            job.name = rows.length === 1 ? rows[0].getAttribute('data-sl-row') || '' : '';
+            lamps.forEach(setLampFlip);
+            job.back = function () { lamps.forEach(setLampFlip); };
         } else {
             job.name = rows.length === 1 ? rows[0].getAttribute('data-sl-row') || '' : '';
             setRowsGone(rows, true);
@@ -2089,7 +2112,7 @@
             setRowsGone(rows, false);
         } });
     }
-    // Э26 The portions of op sweep follow one another behind the cursor the server hands back, with a progress line and a pause; a closed tab simply stops them
+    // Э26 The portions of the picked foot action follow one another behind the cursor the server hands back, with a progress line and a pause; a closed tab simply stops them
     function setSweepRun(list, form, key, total) {
         var note = list.querySelector('[data-sl-allpages]');
         var text = note.querySelector('[data-sl-allpages-text]');
@@ -2109,7 +2132,7 @@
             setQueueFetch(true);
         };
         body.delete('id[]');
-        body.set('op', note.getAttribute('data-sl-allpages'));
+        body.set('later', '1');
         body.set('after', '0');
         body.set('upto', note.getAttribute('data-sl-allpages-upto') || '0');
         note.hidden = false;

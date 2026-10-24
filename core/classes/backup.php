@@ -283,11 +283,11 @@ class Backup {
     private function addBackupRun(): array {
         $pdo = $this->getLink();
         if ($pdo->inTransaction()) throw new RuntimeException('Backup refuses to run inside a caller-owned transaction');
-        $buff = $pdo->getAttribute(PDO::MYSQL_ATTR_USE_BUFFERED_QUERY);
+        $buff = $pdo->getAttribute(Pdo\Mysql::ATTR_USE_BUFFERED_QUERY);
         $save = self::getLinkState($pdo);
         $open = false;
         try {
-            $pdo->setAttribute(PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, false);
+            $pdo->setAttribute(Pdo\Mysql::ATTR_USE_BUFFERED_QUERY, false);
             $this->setExportState();
             $this->getSqlRun('SET TRANSACTION ISOLATION LEVEL REPEATABLE READ');
             $this->getSqlRun('START TRANSACTION WITH CONSISTENT SNAPSHOT, READ ONLY');
@@ -304,7 +304,7 @@ class Backup {
             $open = false;
         } finally {
             if ($open) $this->db->getSqlQuery('ROLLBACK');
-            $pdo->setAttribute(PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, is_bool($buff) ? $buff : true);
+            $pdo->setAttribute(Pdo\Mysql::ATTR_USE_BUFFERED_QUERY, is_bool($buff) ? $buff : true);
             self::setLinkState($pdo, $save);
         }
         return $this->addArtifact($dump);

@@ -465,8 +465,9 @@ final class Privat {
     public function getAdminList(int $page = 1): array {
         $total = $this->getTotal('', []);
         $base = intval($this->conf['anum'] ?? 50);
-        $out = $this->getPager($total, $page, getListLimit($base, $total)) + ['base' => $base];
+        $out = $this->getPager($total, $page, getListLimit($base, $total)) + ['base' => $base, 'upto' => 0];
         if ($out['total'] < 1) return $out;
+        $out['upto'] = intval($this->db->getSqlRow($this->db->getSqlQuery('SELECT MAX(id) AS top FROM '.PREFIX_DB.'_privat'))['top'] ?? 0);
         $sql = 'SELECT p.'.str_replace(', ', ', p.', self::FIELDS).', p.body, i.name AS namein, o.name AS nameout FROM '.PREFIX_DB.'_privat AS p'
             .' LEFT JOIN '.PREFIX_DB.'_users AS i ON (p.uidin = i.id) LEFT JOIN '.PREFIX_DB.'_users AS o ON (p.uidout = o.id)'
             .' ORDER BY p.time DESC, p.id DESC LIMIT '.$out['offset'].', '.$out['limit'];

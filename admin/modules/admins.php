@@ -57,11 +57,11 @@ function admins(): void {
     while ([$aid, $name, $title, $email, $lang, $rdate, $vdate, $super, $mods] = $db->getSqlRow($result)) {
         $mods = filterAdminmods(getAdminModuleNames((string)$mods));
         $stat = ((int)$super === 1) ? 2 : ($mods ? 1 : 0);
-        $rows[] = ['name' => (string)$name, 'cells' => [
-            ['prefix_html' => $tpl->getHtmlFrag('popover', ['items' => [
-                ['label' => _REG, 'value' => format_time((string)$rdate, _TIMESTRING)],
-                ['label' => _LAST_VISIT, 'value' => format_time((string)$vdate, _TIMESTRING)],
-            ], 'tip_label' => _DETAILS.': '.$name, 'tip_id' => 'sl-tip-'.$aid]), 'text_html' => htmlspecialchars((string)$name, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')],
+        $rows[] = ['name' => (string)$name, 'details' => [
+            ['label' => _REG, 'value' => format_time((string)$rdate, _TIMESTRING)],
+            ['label' => _LAST_VISIT, 'value' => format_time((string)$vdate, _TIMESTRING)],
+        ], 'cells' => [
+            ['text_html' => htmlspecialchars((string)$name, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')],
             ['is_truncate' => true, 'title_text' => (string)$title, 'has_content_text' => true, 'content_text' => (string)$title],
             ['content_html' => $tpl->getHtmlFrag('link', [
                 'href' => 'mailto:'.$email.'?subject='.rawurlencode((string)($conf['sitename'].' - '._MODULESADMIN)),
@@ -76,7 +76,7 @@ function admins(): void {
                 'color_attr' => ($stat === 2) ? 'var(--sl-danger)' : (($stat === 1) ? 'var(--sl-success)' : 'var(--sl-text-muted)'),
             ])],
             ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('dial', ['dial_title' => _EDITOR, 'dial' => [
-                ['href' => $afile.'.php?name=admins&op=add&id='.$aid, 'icon_name' => 'pencil', 'title' => _FULLEDIT],
+                ['href' => $afile.'.php?name=admins&op=add&id='.$aid, 'icon_name' => 'pencil', 'title' => _FULLEDIT, 'is_edit' => true],
                 getTplPostAction(['name' => 'admins', 'op' => 'delete', 'aid' => $aid], 'trash', _ONDELETE, _DELETE.' "'.(string)$name.'"?'),
             ]])],
         ]];

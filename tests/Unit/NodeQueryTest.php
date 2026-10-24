@@ -66,6 +66,7 @@ final class NodeQueryTest extends TestCase
             'getNodeCount' => ['int'],
             'getNodeLegacy' => ['string mod', 'int id = 0', '?array'],
             'getNodeLetters' => ['array'],
+            'getNodeScope' => ['array'],
             'getNodeList' => ['array'],
             'getNodeOwnCount' => ['string since', 'int uid', 'array'],
             'getNodeReadSet' => ['NodeType type', 'string'],

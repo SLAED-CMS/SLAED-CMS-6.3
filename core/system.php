@@ -3335,7 +3335,7 @@ function getVotingView(int $id = 0, string $votid = '', bool $force = false): st
     $admin = '';
     if (!$force && is_moder('voting')) {
         $edit = HOME_PATH.$afile.'.php?name=voting&op=';
-        $admin = $tpl->getHtmlFrag('dial', getTplEditMenu($edit.'add&id='.$id, $edit.'delete&id='.$id.'&refer=1', $title));
+        $admin = $tpl->getHtmlFrag('dial', getTplEditMenu($edit.'add&id='.$id, $edit.'delete&id[]='.$id.'&refer=1', $title));
     }
 
     $post = (!$force && !$rate) ? $tpl->getHtmlFrag('link', [
@@ -6198,7 +6198,7 @@ function getNodeQuickItems(NodeType $type, Node $node): array {
 function getNodeModerDial(NodeType $type, Node $node, bool $back = false, bool $quick = false): array {
     global $afile;
     $out = $quick ? getNodeQuickItems($type, $node) : [];
-    $out[] = ['href' => HOME_PATH.$afile.'.php?name=node&op=edit&id='.$node->id.'&type='.$type->name, 'icon_name' => 'pencil', 'title' => _FULLEDIT];
+    $out[] = ['href' => HOME_PATH.$afile.'.php?name=node&op=edit&id='.$node->id.'&type='.$type->name, 'icon_name' => 'pencil', 'title' => _FULLEDIT, 'is_edit' => true];
     foreach (NodeStatus::cases() as $to) {
         if (!$node->status->checkStatusMove($to)) continue;
         [$label, $icon] = getNodeMoveLabel($to);

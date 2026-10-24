@@ -8,13 +8,13 @@ if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 
 # The favorites of every user, newest first, each with the title of the material it marks, read per module in one query
 function favorites(): void {
-    global $afile, $db, $conf, $tpl;
+    global $afile, $db, $conf;
     setHead();
-    $total = intval($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_favorites')->fetchColumn());
+    [$total, $upto] = array_map('intval', $db->getSqlQuery('SELECT COUNT(id), MAX(id) FROM '.PREFIX_DB.'_favorites')->fetch(PDO::FETCH_NUM));
     $limit = getListLimit(intval($conf['favorites']['anum']), $total);
     $pages = max(1, (int)ceil($total / $limit));
     $num = min(max(1, getVar('get', 'num', 'num', 1)), $pages);
-    $sql = 'SELECT f.id, f.fid, f.modul, u.name FROM '.PREFIX_DB.'_favorites AS f LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.id) ORDER BY f.id DESC';
+    $sql = 'SELECT f.id, f.fid, f.modul, u.name, f.time FROM '.PREFIX_DB.'_favorites AS f LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.id) ORDER BY f.id DESC';
     $list = $db->getSqlQuery($sql.' LIMIT '.(($num - 1) * $limit).', '.$limit)->fetchAll(PDO::FETCH_NUM);
     $want = [];
     foreach ($list as [, $fid, $mod]) $want[$mod][intval($fid)] = $mod;
@@ -30,17 +30,16 @@ function favorites(): void {
         }
     }
     $rows = [];
-    foreach ($list as [$id, $fid, $mod, $uname]) {
+    foreach ($list as [$id, $fid, $mod, $uname, $time]) {
         $title = getDecodedText((string)($names[$mod][intval($fid)] ?? ''));
-        $rows[] = ['name' => ($title !== '') ? cutstr($title, 60) : _ID.' '.$id, 'cells' => [
+        $rows[] = ['name' => ($title !== '') ? cutstr($title, 60) : _ID.' '.$id,
+            'drop' => getTplPostAction(['name' => 'favorites', 'op' => 'delete', 'id[]' => $id, 'num' => $num], 'trash', _ONDELETE), 'cells' => [
             ['is_col_id' => true, 'has_content_text' => true, 'content_text' => $id],
             ['is_col_title' => true, 'is_truncate' => true, 'title_text' => $title, 'has_content_text' => true, 'content_text' => $title],
             ['is_truncate' => true, 'has_content_text' => true, 'content_text' => getModuleName($mod)],
             ['is_col_author' => true, 'content_html' => $uname ? user_info($uname, null) : _ANONYM],
-            ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('dial', ['dial_title' => _FUNCTIONS, 'dial' => [
-                ['href' => 'index.php?name='.$mod.'&op=view&id='.$fid.'#'.$fid, 'icon_name' => 'eye', 'title' => _MVIEW],
-                getTplPostAction(['name' => 'favorites', 'op' => 'delete', 'id' => $id, 'num' => $num], 'trash', _ONDELETE) + ['later' => 'gone del'],
-            ]])],
+            ['is_col_date' => true, 'moment' => $time],
+            ['is_col_actions' => true, 'dial' => [['href' => 'index.php?name='.$mod.'&op=view&id='.$fid.'#'.$fid, 'icon_name' => 'eye', 'title' => _MVIEW]]],
         ]];
     }
     echo getTplAdminList([
@@ -52,6 +51,7 @@ function favorites(): void {
             ['content' => _TITLE, 'is_col_title' => true, 'is_truncate' => true],
             ['content' => _MODUL, 'is_truncate' => true],
             ['content' => _POSTEDBY, 'is_col_author' => true],
+            ['content' => _DATE, 'is_col_date' => true],
             ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true],
         ],
         'rows' => $rows,
@@ -62,6 +62,7 @@ function favorites(): void {
         'count' => $total,
         'limit' => $limit,
         'base' => intval($conf['favorites']['anum']),
+        'upto' => $upto,
     ]);
     setFoot();
 }
@@ -169,11 +170,18 @@ function save(): void {
 
 function delete(): void {
     global $afile, $db;
-    $id = getVar('post', 'id', 'num', 0);
+    $ids = getVar('post', 'id[]', 'num');
     $num = getVar('post', 'num', 'num', 1);
     $warn = !checkAdminPost('favorites');
-    $res = (!$warn && $id > 0) ? $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_favorites WHERE id = :id', ['id' => $id]) : false;
-    $done = $res && $res->rowCount() > 0;
+    $act = static function (int $id) use ($db): bool {
+        $res = $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_favorites WHERE id = :id', ['id' => $id]);
+        return $res && $res->rowCount() > 0;
+    };
+    if (!$warn && setListPortion('id', PREFIX_DB.'_favorites', '', [], $act)) exit;
+    $done = !$warn && $ids;
+    foreach ($done ? $ids : [] as $id) {
+        if (!$act(intval($id))) $done = false;
+    }
     setRedirect($afile.'.php?name=favorites&num='.$num, false, 302, $warn ? _TOKENMISS : ($done ? _SUCCDELETE : _ERROR), !$done);
 }
 

@@ -546,7 +546,7 @@ function getRouteAdmin(PDO $pdo): array {
     $out['save'] = [$last['code'], (string)getRouteCol($pdo, 102, 'title'), (int)getRouteCol($pdo, 102, 'version')];
     $page = getRouteReply('root', 'GET', 'admin.php?name=node');
     $tok = getRouteToken($page['body'], 'delete');
-    $gone = getRouteReply('root', 'POST', 'admin.php', ['name' => 'node', 'op' => 'delete', 'id' => '105', 'type' => 'news', 'version' => '1', 'token' => $tok]);
+    $gone = getRouteReply('root', 'POST', 'admin.php', ['name' => 'node', 'op' => 'delete', 'id' => ['105'], 'type' => 'news', 'version' => '1', 'token' => $tok]);
     $out['delete'] = [$gone['code'], getRouteCol($pdo, 105, 'id')];
     return $out;
 }
@@ -1268,12 +1268,12 @@ function getRouteInteg(PDO $pdo, string $work): array {
     $out['favlist'] = [$shown, $hidden, str_contains(getRouteReply('root', 'GET', 'admin.php?name=favorites')['body'], 'Beta'),
         str_contains($bare, 'op=deleteFavorite') && str_contains($bare, 'op=addFavorite'), (bool)preg_match('#href="[^"]*op=(?:add|delete)Favorite#', $bare)];
     $page = getRouteReply('root', 'GET', 'admin.php?name=node');
-    $gone = getRouteReply('root', 'POST', 'admin.php', ['name' => 'node', 'op' => 'delete', 'id' => '105', 'type' => 'news', 'version' => '1',
+    $gone = getRouteReply('root', 'POST', 'admin.php', ['name' => 'node', 'op' => 'delete', 'id' => ['105'], 'type' => 'news', 'version' => '1',
         'token' => getRouteToken($page['body'], 'delete')]);
     $out['delete'] = [$gone['code'], getRouteCol($pdo, 105, 'id'), $favs(2, 105)];
     $was = (int)getRouteCol($pdo, 102, 'version');
     $page = getRouteReply('root', 'GET', 'admin.php?name=voting');
-    $drop = getRouteReply('root', 'POST', 'admin.php', ['name' => 'voting', 'op' => 'delete', 'id' => '7', 'token' => getRouteToken($page['body'], 'delete')]);
+    $drop = getRouteReply('root', 'POST', 'admin.php', ['name' => 'voting', 'op' => 'delete', 'id' => ['7'], 'token' => getRouteToken($page['body'], 'delete')]);
     $out['poll'] = [$drop['code'], (int)getRouteCol($pdo, 102, 'poll'), (int)getRouteCol($pdo, 102, 'version') - $was,
         (int)$pdo->query('SELECT COUNT(*) FROM '.$pre.'voting WHERE id = 7')->fetchColumn(),
         str_contains(getRouteReply('', 'GET', 'index.php?name=news&op=view&id=102')['body'], 'Probe poll')];
@@ -1500,7 +1500,7 @@ function getRouteGuard(PDO $pdo, string $work): array {
     }
     $out['fields']['int'] = [$slot !== '', $size['code'], $conf['fields']['node']['docs']['size']['default'] ?? null, $journal];
     $page = getRouteReply('root', 'GET', 'admin.php?name=node')['body'];
-    $drop = getRouteReply('root', 'POST', 'admin.php', ['name' => 'node', 'op' => 'delete', 'id' => '201', 'type' => 'news', 'version' => '1',
+    $drop = getRouteReply('root', 'POST', 'admin.php', ['name' => 'node', 'op' => 'delete', 'id' => ['201'], 'type' => 'news', 'version' => '1',
         'token' => getRouteToken($page, 'delete')]);
     $out['delete'] = [$drop['code'], $count('SELECT COUNT(*) FROM '.$pre.'nodes WHERE id = 201')];
     [, $fav, $ftok] = getRoutePageBits(getRouteReply('anna', 'GET', 'index.php?name=news&op=view&id=102')['body']);
@@ -1523,7 +1523,7 @@ function getRouteGuard(PDO $pdo, string $work): array {
         'imgcat' => '', 'lang' => '', 'parent' => '0', 'status' => '1', 'ppost' => ['2|1'], 'pread' => ['0|0'], 'token' => getRouteToken($edit, 'save')]);
     $out['cats']['save'] = $pdo->query('SELECT ppost, pread FROM '.$pre.'categories WHERE id = 1')->fetch(PDO::FETCH_NUM);
     $vote = getRouteReply('docsman', 'GET', 'admin.php?name=voting')['body'];
-    $gone = getRouteReply('docsman', 'POST', 'admin.php', ['name' => 'voting', 'op' => 'delete', 'id' => '7', 'token' => getRouteToken($vote, 'delete')]);
+    $gone = getRouteReply('docsman', 'POST', 'admin.php', ['name' => 'voting', 'op' => 'delete', 'id' => ['7'], 'token' => getRouteToken($vote, 'delete')]);
     $out['poll'] = [$gone['code'], (int)getRouteCol($pdo, 102, 'poll'), $count('SELECT COUNT(*) FROM '.$pre.'voting WHERE id = 7')];
     $forum = getRouteReply('root', 'GET', 'admin.php?name=forum')['body'];
     $drift = $count('SELECT topics + posts FROM '.$pre.'categories WHERE id = 70');
@@ -2882,8 +2882,8 @@ function getRouteJournal(PDO $pdo, string $work): array {
         'status' => '1', 'view' => '1', 'token' => $tok];
     $codes = [getRouteReply('root', 'POST', 'admin.php', $base)['code']];
     $mid = (int)$pdo->query('SELECT id FROM '.$pre.'message WHERE title = \'Journal one\'')->fetchColumn();
-    $codes[] = getRouteReply('root', 'POST', 'admin.php', ['name' => 'messages', 'op' => 'status', 'id' => (string)$mid, 'act' => '0', 'token' => $tok])['code'];
-    $codes[] = getRouteReply('root', 'POST', 'admin.php', ['name' => 'messages', 'op' => 'delete', 'id' => (string)$mid, 'token' => str_repeat('0', 64)])['code'];
+    $codes[] = getRouteReply('root', 'POST', 'admin.php', ['name' => 'messages', 'op' => 'status', 'id' => [(string)$mid], 'act' => '0', 'token' => $tok])['code'];
+    $codes[] = getRouteReply('root', 'POST', 'admin.php', ['name' => 'messages', 'op' => 'delete', 'id' => [(string)$mid], 'token' => str_repeat('0', 64)])['code'];
     $codes[] = getRouteReply('root', 'POST', 'admin.php', array_replace($base, ['mid' => (string)$mid, 'title' => '']))['code'];
     $codes[] = getRouteReply('root', 'POST', 'admin.php', array_replace($base, ['mid' => (string)$mid, 'posttype' => 'delete']))['code'];
     $when = date('Y-m-d H:i:s');
@@ -2892,7 +2892,7 @@ function getRouteJournal(PDO $pdo, string $work): array {
             ->execute([$when, $text, $when]);
     }
     $cids = $pdo->query('SELECT id FROM '.$pre.'comment ORDER BY id')->fetchAll(PDO::FETCH_COLUMN);
-    $ctok = getRouteToken(getRouteReply('root', 'GET', 'admin.php?name=comments')['body'], 'id="combulk"');
+    $ctok = getRouteToken(getRouteReply('root', 'GET', 'admin.php?name=comments')['body'], 'id="sl-list-pick"');
     $codes[] = getRouteReply('root', 'POST', 'admin.php', ['name' => 'comments', 'op' => 'delete', 'id' => array_map('strval', $cids), 'token' => $ctok])['code'];
     $blocks = getRouteReply('root', 'GET', 'admin.php?name=blocks')['body'];
     $btok = preg_match('#data-sl-drag-token="([a-f0-9]{64})"#', $blocks, $hit) ? $hit[1] : '';
@@ -3035,7 +3035,7 @@ function getRouteWriters(PDO $pdo, string $work): array {
         'action' => 'submit', 'token' => $tok]);
     $hid = (int)$one('SELECT id FROM '.$pre.'nodes WHERE title = \'Private request\'');
     $out['node']['private'] = [$priv['code'], (int)$one('SELECT status FROM '.$pre.'nodes WHERE id = '.$hid), getRouteAddress($pdo, 'node', $hid)];
-    $gone = getRouteReply('root', 'POST', 'admin.php', ['name' => 'node', 'op' => 'delete', 'id' => (string)$nid, 'type' => 'news',
+    $gone = getRouteReply('root', 'POST', 'admin.php', ['name' => 'node', 'op' => 'delete', 'id' => [(string)$nid], 'type' => 'news',
         'version' => (string)$one('SELECT version FROM '.$pre.'nodes WHERE id = '.$nid), 'token' => getRouteToken($list, 'delete')]);
     $out['node']['delete'] = [$gone['code'], (int)$one('SELECT COUNT(*) FROM '.$pre.'nodes WHERE id = '.$nid), getRouteAddress($pdo, 'node', $nid)];
     $again = getRouteReply('root', 'POST', 'admin.php', $base + ['title' => 'Адаптивный шаблон Pure', 'status' => '2']);
@@ -3112,7 +3112,7 @@ function getRouteWriters(PDO $pdo, string $work): array {
         'pass' => 'Secret-123', 'pass2' => 'Secret-123']) + ['sig' => '', 'block' => '']);
     $out['user']['taken'] = [$taken['code'], getRouteAddress($pdo, 'user', (int)$one('SELECT id FROM '.$pre.'users WHERE name = \'Eduard\''))];
     $list = getRouteReply('root', 'GET', 'admin.php?name=account')['body'];
-    $drop = getRouteReply('root', 'POST', 'admin.php', ['name' => 'account', 'op' => 'delete', 'id' => (string)$uid, 'token' => getRouteToken($list, 'delete')]);
+    $drop = getRouteReply('root', 'POST', 'admin.php', ['name' => 'account', 'op' => 'delete', 'id' => [(string)$uid], 'token' => getRouteToken($list, 'delete')]);
     $out['user']['delete'] = [$drop['code'], (int)$one('SELECT COUNT(*) FROM '.$pre.'users WHERE id = '.$uid), getRouteAddress($pdo, 'user', $uid)];
     $pdo->exec('INSERT INTO '.$pre.'users_temp (name, email, password, regdate, code) VALUES (\'dora\', \'dora@probe.test\', \'x\', NOW(), \'probecode\')');
     $act = getRouteReply('', 'GET', 'index.php?name=account&op=activate&user=dora&num=probecode');

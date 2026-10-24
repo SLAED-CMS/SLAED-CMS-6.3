@@ -121,15 +121,6 @@ function modules(): void {
             $who_view = _MVADMIN;
         }
         $typel = ($type == 0) ? 'person-gear' : 'people';
-        $titlel = ($menu == 0)
-            ? $tpl->getHtmlFrag('popover', [
-                'items' => [
-                    ['label' => _STATUS, 'value' => _NO_SICHT, 'is_last' => true],
-                ],
-                'label_text' => $lang,
-                'title_text' => $lang,
-            ])
-            : $lang;
         if ($group != 0) {
             $grp = $db->getSqlRow($db->getSqlQuery('SELECT name FROM '.PREFIX_DB.'_groups WHERE id = :id', ['id' => $group]));
             $group_name = $grp['name'] ?? _NONE;
@@ -140,6 +131,7 @@ function modules(): void {
             'href' => $afile.'.php?name=modules&op=edit&mod='.$title.'&type='.$mtype,
             'icon_name' => 'pencil',
             'title' => _FULLEDIT,
+            'is_edit' => true,
         ]];
         if (file_exists(BASE_DIR.'/modules/'.$title.'/sql/table.sql')) {
             $made = getSqlFileTables((string)file_get_contents(BASE_DIR.'/modules/'.$title.'/sql/table.sql'), 'CREATE');
@@ -152,9 +144,9 @@ function modules(): void {
             $items[] = getTplPostAction(['name' => 'modules', 'op' => 'add', 'mod' => $title, 'id' => '3', 'type' => $mtype], 'database-up', _DB_UPDATE,
                 _DB_UPDATE.' "'.$title.'"?');
         }
-        $rows[] = ['name' => $lang, 'cells' => [
+        $rows[] = ['name' => $lang, 'details' => ($menu == 0) ? [['label' => _STATUS, 'value' => _NO_SICHT]] : [], 'cells' => [
             ['is_col_id' => true, 'has_content_text' => true, 'content_text' => $a],
-            ['is_truncate' => true, 'title_text' => $lang, 'content_html' => $tpl->getHtmlFrag('bootstrap-icon', ['icon_name' => $typel]).' '.$titlel],
+            ['is_truncate' => true, 'title_text' => $lang, 'content_html' => $tpl->getHtmlFrag('bootstrap-icon', ['icon_name' => $typel]).' '.$lang],
             ['is_truncate' => true, 'title_text' => $title, 'has_content_text' => true, 'content_text' => $title],
             ['has_content_text' => true, 'content_text' => $who_view],
             ['has_content_text' => true, 'content_text' => $group_name],

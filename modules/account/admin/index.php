@@ -26,28 +26,37 @@ function getAccountSearch(string $op = ''): string {
     ]);
 }
 
+# The table, condition, values and order of the accounts, the new accounts or the OAuth links by the search the request carries, for the list and its sweep
+function getAccountScope(string $op, string $src = 'get'): array {
+    $search = getVar($src, 'search', 'num', 2);
+    $chng = trim(getVar($src, 'chng'));
+    if ($op === 'newuser') {
+        $where = ($chng !== '') ? ' WHERE '.(($search === 3) ? 'email' : 'name').' LIKE :search' : '';
+        return [PREFIX_DB.'_users_temp', $where, ($where !== '') ? ['search' => '%'.$chng.'%'] : [], 'id DESC'];
+    }
+    if ($op === 'oauthlist') {
+        $cols = [1 => 'o.uid = :search', 2 => 'u.name LIKE :search', 3 => 'o.email LIKE :search', 8 => 'o.provider LIKE :search'];
+        $where = ($chng !== '' && isset($cols[$search])) ? ' WHERE '.$cols[$search] : '';
+        $pars = ($where !== '') ? ['search' => ($search === 1) ? intval($chng) : '%'.$chng.'%'] : [];
+        return [PREFIX_DB.'_user_oauth AS o LEFT JOIN '.PREFIX_DB.'_users AS u ON (u.id = o.uid)', $where, $pars, 'o.id DESC'];
+    }
+    $from = PREFIX_DB.'_users AS u';
+    $cols = [1 => 'id', 2 => 'name', 3 => 'email', 4 => 'ip', 5 => 'website'];
+    if ($chng !== '' && isset($cols[$search])) return [$from, ' WHERE u.'.$cols[$search].' LIKE :search', ['search' => '%'.$chng.'%'], 'u.'.$cols[$search].' ASC'];
+    if ($chng === '' || ($search !== 6 && $search !== 7)) return [$from, '', [], 'u.id DESC'];
+    return [$from, ($search === 6) ? ' WHERE u.grp = :grp' : ' WHERE u.points >= :pts', [($search === 6) ? 'grp' : 'pts' => intval($chng)], 'u.id ASC'];
+}
+
 function account(): void {
-    global $db, $afile, $conf, $tpl;
+    global $db, $afile, $conf;
     $search = getVar('get', 'search', 'num', 2);
     $chng = trim(getVar('get', 'chng'));
-    $cols = [1 => 'id', 2 => 'name', 3 => 'email', 4 => 'ip', 5 => 'website'];
-    $where = '';
-    $order = 'u.id DESC';
-    $pars = [];
-    if ($chng !== '' && isset($cols[$search])) {
-        $where = ' WHERE u.'.$cols[$search].' LIKE :search';
-        $order = 'u.'.$cols[$search].' ASC';
-        $pars['search'] = '%'.$chng.'%';
-    } elseif ($chng !== '' && ($search === 6 || $search === 7)) {
-        $where = ($search === 6) ? ' WHERE u.grp = :grp' : ' WHERE u.points >= :pts';
-        $order = 'u.id ASC';
-        $pars[($search === 6) ? 'grp' : 'pts'] = intval($chng);
-    }
-    $count = intval($db->getSqlQuery('SELECT COUNT(u.id) FROM '.PREFIX_DB.'_users AS u'.$where, $pars)->fetchColumn());
+    [$from, $where, $pars, $order] = getAccountScope('');
+    [$count, $upto] = array_map('intval', $db->getSqlQuery('SELECT COUNT(u.id), MAX(u.id) FROM '.$from.$where, $pars)->fetch(PDO::FETCH_NUM));
     $anum = getListLimit((int)$conf['users']['anum'], $count);
     $pages = max(1, (int)ceil($count / $anum));
     $num = min(max(1, getVar('get', 'num', 'num', 1)), $pages);
-    $sql = 'SELECT u.id, u.name, u.email, u.website, u.regdate, u.lastvis, u.points, u.ip, u.gender, u.agent, g.name FROM '.PREFIX_DB.'_users AS u'
+    $sql = 'SELECT u.id, u.name, u.email, u.website, u.regdate, u.lastvis, u.points, u.ip, u.gender, u.agent, g.name FROM '.$from
         .' LEFT JOIN '.PREFIX_DB.'_groups AS g ON (g.id = u.grp)'.$where.' ORDER BY '.$order.' LIMIT '.(($num - 1) * $anum).', '.$anum;
     $res = $db->getSqlQuery($sql, $pars);
     setHead();
@@ -56,26 +65,26 @@ function account(): void {
     $rows = [];
     while ([$uid, $name, $mail, $site, $reg, $last, $point, $ip, $gender, $agent, $gname] = $db->getSqlRow($res)) {
         $dial = [
-            ['href' => $afile.'.php?name=account&op=add&id='.$uid, 'icon_name' => 'pencil', 'title' => _FULLEDIT],
+            ['href' => $afile.'.php?name=account&op=add&id='.$uid, 'icon_name' => 'pencil', 'title' => _FULLEDIT, 'is_edit' => true],
             ['href' => $afile.'.php?name=account&op=oauthlist&search=1&chng='.$uid, 'icon_name' => 'key', 'title' => _OAUTHLIST],
         ];
         if ($ip) $dial[] = ['href' => $afile.'.php?name=security&op=banlist&new_ip='.rawurlencode((string)$ip), 'icon_name' => 'ban', 'title' => _BANIPSENDER];
-        $dial[] = getTplPostAction(['name' => 'account', 'op' => 'delete', 'id' => $uid, 'num' => $num] + ($chng !== '' ? ['search' => $search, 'chng' => $chng] : []),
-            'trash', _ONDELETE) + ['later' => 'gone del'];
-        $rows[] = ['name' => (string)$name, 'cells' => [
+        $drop = getTplPostAction(['name' => 'account', 'op' => 'delete', 'id[]' => $uid, 'num' => $num] + ($chng !== '' ? ['search' => $search, 'chng' => $chng] : []),
+            'trash', _ONDELETE);
+        $rows[] = ['name' => (string)$name, 'drop' => $drop, 'details' => [
+            ['label' => _HASH, 'value' => md5((string)$agent)],
+            ['label' => _LAST_VISIT, 'value' => format_time($last, _TIMESTRING)],
+            ['label' => _SPEC_GROUP, 'has_value_text' => true, 'value_text' => $gname ?: _NO],
+            ['label' => _SITE, 'value' => $site ? filterTextHighlight(domain($site, 40), $chng) : _NO],
+            ['label' => _GENDER, 'value' => getGenderText($gender)],
+            ['label' => _POINTS, 'value' => (string)$point],
+        ], 'cells' => [
             ['is_col_id' => true, 'content_html' => filterTextHighlight((string)$uid, $chng)],
-            ['is_truncate' => true, 'title_text' => (string)$name, 'prefix_html' => $tpl->getHtmlFrag('popover', ['items' => [
-                ['label' => _HASH, 'value' => md5((string)$agent)],
-                ['label' => _LAST_VISIT, 'value' => format_time($last, _TIMESTRING)],
-                ['label' => _SPEC_GROUP, 'has_value_text' => true, 'value_text' => $gname ?: _NO],
-                ['label' => _SITE, 'value' => $site ? filterTextHighlight(domain($site, 40), $chng) : _NO],
-                ['label' => _GENDER, 'value' => getGenderText($gender)],
-                ['label' => _POINTS, 'value' => (string)$point],
-            ], 'tip_label' => _DETAILS.': '.$name, 'tip_id' => 'sl-tip-'.$uid]), 'text_html' => $esc((string)$name)],
+            ['is_truncate' => true, 'title_text' => (string)$name, 'text_html' => $esc((string)$name)],
             ['class_name' => 'sl-col-ip', 'content_html' => $ip ? filterTextHighlight(Geoip::getIpHtml($ip), $chng) : _NO],
             ['is_truncate' => true, 'title_text' => (string)$mail, 'content_html' => $esc((string)$mail)],
-            ['is_col_date' => true, 'stamp' => format_time($reg, 'c'), 'content_text' => format_time($reg, _TIMESTRING)],
-            ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('dial', ['dial_title' => _FUNCTIONS, 'dial' => $dial])],
+            ['is_col_date' => true, 'moment' => $reg],
+            ['is_col_actions' => true, 'dial' => $dial],
         ]];
     }
     echo getTplAdminList([
@@ -103,6 +112,7 @@ function account(): void {
         'count' => $count,
         'limit' => $anum,
         'base' => (int)$conf['users']['anum'],
+        'upto' => $upto,
         'none_text' => ($where !== '') ? _NONE_FOUND : _USERNOEXIST,
     ]);
     setFoot();
@@ -651,33 +661,32 @@ function addsave(): void {
 }
 
 function newuser(): void {
-    global $db, $afile, $conf, $tpl;
+    global $db, $afile, $conf;
     $search = getVar('get', 'search', 'num', 2);
     $chng = trim(getVar('get', 'chng'));
-    $where = ($chng !== '') ? ' WHERE '.(($search === 3) ? 'email' : 'name').' LIKE :search' : '';
-    $pars = ($chng !== '') ? ['search' => '%'.$chng.'%'] : [];
-    $count = intval($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_users_temp'.$where, $pars)->fetchColumn());
+    [$from, $where, $pars, $order] = getAccountScope('newuser');
+    [$count, $upto] = array_map('intval', $db->getSqlQuery('SELECT COUNT(id), MAX(id) FROM '.$from.$where, $pars)->fetch(PDO::FETCH_NUM));
     $anum = getListLimit((int)$conf['users']['anum'], $count);
     $pages = max(1, (int)ceil($count / $anum));
     $num = min(max(1, getVar('get', 'num', 'num', 1)), $pages);
-    $res = $db->getSqlQuery('SELECT id, name, email, regdate, code FROM '.PREFIX_DB.'_users_temp'.$where.' ORDER BY id DESC LIMIT '.(($num - 1) * $anum).', '.$anum, $pars);
+    $res = $db->getSqlQuery('SELECT id, name, email, regdate, code FROM '.$from.$where.' ORDER BY '.$order.' LIMIT '.(($num - 1) * $anum).', '.$anum, $pars);
     setHead();
     $back = 'name=account&op=newuser'.(($chng !== '') ? '&search='.$search.'&chng='.urlencode($chng) : '');
     $esc = static fn(string $text): string => filterTextHighlight(htmlspecialchars($text, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'), $chng);
     $rows = [];
     while ([$uid, $name, $mail, $reg, $check] = $db->getSqlRow($res)) {
-        $rows[] = ['name' => (string)$name, 'cells' => [
+        $drop = getTplPostAction(['name' => 'account', 'op' => 'newdrop', 'id[]' => $uid, 'num' => $num] + ($chng !== '' ? ['search' => $search, 'chng' => $chng] : []),
+            'trash', _ONDELETE);
+        $rows[] = ['name' => (string)$name, 'drop' => $drop, 'cells' => [
             ['is_col_id' => true, 'has_content_text' => true, 'content_text' => $uid],
             ['is_truncate' => true, 'title_text' => (string)$name, 'content_html' => $esc((string)$name)],
             ['is_truncate' => true, 'title_text' => (string)$mail, 'content_html' => $esc((string)$mail)],
             ['is_truncate' => true, 'title_text' => (string)$check, 'has_content_text' => true, 'content_text' => (string)$check],
-            ['is_col_date' => true, 'stamp' => format_time($reg, 'c'), 'content_text' => format_time($reg, _TIMESTRING)],
-            ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('dial', ['dial_title' => _FUNCTIONS, 'dial' => [
+            ['is_col_date' => true, 'moment' => $reg],
+            ['is_col_actions' => true, 'dial' => [
                 ['href' => $conf['homeurl'].'/index.php?name=account&op=activate&user='.urlencode((string)$name).'&num='.urlencode((string)$check), 'icon_name' => 'power',
                     'title' => _ACTIVATE],
-                getTplPostAction(['name' => 'account', 'op' => 'newdrop', 'id' => $uid, 'num' => $num] + ($chng !== '' ? ['search' => $search, 'chng' => $chng] : []),
-                    'trash', _ONDELETE) + ['later' => 'gone del'],
-            ]])],
+            ]],
         ]];
     }
     echo getTplAdminList([
@@ -706,6 +715,7 @@ function newuser(): void {
         'count' => $count,
         'limit' => $anum,
         'base' => (int)$conf['users']['anum'],
+        'upto' => $upto,
         'none_text' => ($where !== '') ? _NONE_FOUND : _NO_INFO,
     ]);
     setFoot();
@@ -1189,9 +1199,17 @@ function save(): void {
 function newdrop(): void {
     global $db, $afile;
     $iswarn = !checkAdminPost('account');
-    $id = getVar('post', 'id', 'num');
-    $res = (!$iswarn && $id) ? $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_users_temp WHERE id = :id', ['id' => $id]) : false;
-    $done = $res && $res->rowCount() > 0;
+    $act = static function (int $id) use ($db): bool {
+        $res = $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_users_temp WHERE id = :id', ['id' => $id]);
+        return $res && $res->rowCount() > 0;
+    };
+    [$from, $where, $pars] = getAccountScope('newuser', 'post');
+    if (!$iswarn && setListPortion('id', $from, $where, $pars, $act)) exit;
+    $ids = getVar('post', 'id[]', 'num');
+    $done = !$iswarn && $ids;
+    foreach ($done ? $ids : [] as $id) {
+        if (!$act(intval($id))) $done = false;
+    }
     $keep = array_filter(['op' => 'newuser', 'search' => getVar('post', 'search', 'num', 0), 'chng' => trim(getVar('post', 'chng')), 'num' => getVar('post', 'num', 'num', 0)]);
     setRedirect($afile.'.php?name=account&'.http_build_query($keep), false, 302, $iswarn ? _TOKENMISS : ($done ? _SUCCDELETE : _ERROR), !$done);
 }
@@ -1199,19 +1217,25 @@ function newdrop(): void {
 function delete(): void {
     global $db, $afile, $com, $prv;
     $iswarn = !checkAdminPost('account');
-    $id = getVar('post', 'id', 'num');
-    $done = false;
-    if (!$iswarn && $id) {
+    $act = static function (int $id) use ($db, $com, $prv): bool {
         $open = $db->setSqlBegin();
         $gone = $open ? $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_users WHERE id = :id', ['id' => $id]) : false;
-        $done = $gone && $gone->rowCount() > 0
+        $ok = $gone && $gone->rowCount() > 0
             && $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_favorites WHERE uid = :id', ['id' => $id]) !== false
             && $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_user_oauth WHERE uid = :id', ['id' => $id]) !== false
-            && (new Route($db))->deleteRoute('user', intval($id))
+            && (new Route($db))->deleteRoute('user', $id)
             && $com->deleteUser($id)
             && $prv->deleteUser($id)
             && $db->setSqlCommit();
-        if ($open && !$done) $db->setSqlRollback();
+        if ($open && !$ok) $db->setSqlRollback();
+        return $ok;
+    };
+    [$from, $where, $pars] = getAccountScope('', 'post');
+    if (!$iswarn && setListPortion('u.id', $from, $where, $pars, $act)) exit;
+    $ids = getVar('post', 'id[]', 'num');
+    $done = !$iswarn && $ids;
+    foreach ($done ? array_map('intval', $ids) : [] as $id) {
+        if (!$act($id)) $done = false;
     }
     $keep = array_filter(['search' => getVar('post', 'search', 'num', 0), 'chng' => trim(getVar('post', 'chng')), 'num' => getVar('post', 'num', 'num', 0)]);
     setRedirect($afile.'.php?name=account&'.http_build_query($keep), false, 302, $iswarn ? _TOKENMISS : ($done ? _SUCCDELETE : _ERROR), !$done);
@@ -1221,34 +1245,31 @@ function oauthlist(): void {
     global $db, $afile, $conf, $tpl;
     $search = getVar('get', 'search', 'num', 2);
     $chng = trim(getVar('get', 'chng'));
-    $cols = [1 => 'o.uid = :search', 2 => 'u.name LIKE :search', 3 => 'o.email LIKE :search', 8 => 'o.provider LIKE :search'];
-    $where = ($chng !== '' && isset($cols[$search])) ? ' WHERE '.$cols[$search] : '';
-    $pars = ($where !== '') ? ['search' => ($search === 1) ? intval($chng) : '%'.$chng.'%'] : [];
-    $from = ' FROM '.PREFIX_DB.'_user_oauth AS o LEFT JOIN '.PREFIX_DB.'_users AS u ON (u.id = o.uid)'.$where;
-    $count = intval($db->getSqlQuery('SELECT COUNT(o.id)'.$from, $pars)->fetchColumn());
+    [$from, $where, $pars, $order] = getAccountScope('oauthlist');
+    [$count, $upto] = array_map('intval', $db->getSqlQuery('SELECT COUNT(o.id), MAX(o.id) FROM '.$from.$where, $pars)->fetch(PDO::FETCH_NUM));
     $anum = getListLimit((int)$conf['users']['anum'], $count);
     $pages = max(1, (int)ceil($count / $anum));
     $num = min(max(1, getVar('get', 'num', 'num', 1)), $pages);
-    $res = $db->getSqlQuery('SELECT o.uid, o.provider, o.puid, o.email, o.linked, o.lastlog, u.name'.$from.' ORDER BY o.id DESC LIMIT '.(($num - 1) * $anum).', '.$anum, $pars);
+    $res = $db->getSqlQuery('SELECT o.id, o.uid, o.provider, o.puid, o.email, o.linked, o.lastlog, u.name FROM '.$from.$where.' ORDER BY '.$order
+        .' LIMIT '.(($num - 1) * $anum).', '.$anum, $pars);
     setHead();
     $back = 'name=account&op=oauthlist'.(($chng !== '') ? '&search='.$search.'&chng='.urlencode($chng) : '');
     $esc = static fn(string $text): string => filterTextHighlight(htmlspecialchars($text, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'), $chng);
     $rows = [];
-    while ([$uid, $prov, $puid, $mail, $linked, $lastlog, $name] = $db->getSqlRow($res)) {
+    while ([$oid, $uid, $prov, $puid, $mail, $linked, $lastlog, $name] = $db->getSqlRow($res)) {
         $prov = (string)$prov;
-        $rows[] = ['name' => ucfirst($prov).(($name !== null) ? ' · '.$name : ''), 'cells' => [
+        $drop = getTplPostAction(['name' => 'account', 'op' => 'oauthunlink', 'id[]' => $oid, 'num' => $num] + ($chng !== '' ? ['search' => $search, 'chng' => $chng] : []),
+            'trash', _ONDELETE);
+        $rows[] = ['name' => ucfirst($prov).(($name !== null) ? ' · '.$name : ''), 'drop' => $drop, 'cells' => [
             ['is_col_id' => true, 'has_content_text' => true, 'content_text' => $uid],
             ['is_truncate' => true, 'title_text' => (string)$name, 'content_html' => ($name !== null)
                 ? $tpl->getHtmlFrag('link', ['href' => $afile.'.php?name=account&op=add&id='.$uid, 'title' => _FULLEDIT, 'label_html' => $esc((string)$name)]) : _NO],
             ['content_html' => $esc(ucfirst($prov))],
             ['is_truncate' => true, 'title_text' => (string)$puid, 'has_content_text' => true, 'content_text' => (string)$puid],
             ['is_truncate' => true, 'title_text' => (string)$mail, 'content_html' => $esc((string)$mail)],
-            ['is_col_date' => true, 'stamp' => format_time($linked, 'c'), 'content_text' => format_time($linked, _TIMESTRING)],
-            ['is_col_date' => true, 'stamp' => format_time($lastlog, 'c'), 'content_text' => format_time($lastlog, _TIMESTRING)],
-            ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('dial', ['dial_title' => _FUNCTIONS, 'dial' => [
-                getTplPostAction(['name' => 'account', 'op' => 'oauthunlink', 'id' => $uid, 'prov' => $prov, 'num' => $num]
-                    + ($chng !== '' ? ['search' => $search, 'chng' => $chng] : []), 'trash', _ONDELETE) + ['later' => 'gone del'],
-            ]])],
+            ['is_col_date' => true, 'moment' => $linked],
+            ['is_col_date' => true, 'moment' => $lastlog],
+            ['is_col_actions' => true, 'dial' => []],
         ]];
     }
     echo getTplAdminList([
@@ -1279,6 +1300,7 @@ function oauthlist(): void {
         'count' => $count,
         'limit' => $anum,
         'base' => (int)$conf['users']['anum'],
+        'upto' => $upto,
         'none_text' => ($where !== '') ? _NONE_FOUND : _NO_INFO,
     ]);
     setFoot();
@@ -1287,12 +1309,20 @@ function oauthlist(): void {
 function oauthunlink(): void {
     global $db, $afile, $admin;
     $iswarn = !checkAdminPost('account');
-    $id = getVar('post', 'id', 'num');
-    $prov = strtolower(getVar('post', 'prov', 'word'));
-    $sql = 'DELETE FROM '.PREFIX_DB.'_user_oauth WHERE uid = :id AND provider = :prov';
-    $res = (!$iswarn && $id && $prov !== '') ? $db->getSqlQuery($sql, ['id' => $id, 'prov' => $prov]) : false;
-    $done = $res && $res->rowCount() > 0;
-    if ($done) Logger::addOauth('info', 'oauth_admin_unlink', ['prov' => $prov, 'uid' => $id, 'actor' => (int)($admin[0] ?? 0)]);
+    $act = static function (int $id) use ($db, $admin): bool {
+        $link = $db->getSqlRow($db->getSqlQuery('SELECT uid, provider FROM '.PREFIX_DB.'_user_oauth WHERE id = :id', ['id' => $id]));
+        $res = $link ? $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_user_oauth WHERE id = :id', ['id' => $id]) : false;
+        if (!$res || $res->rowCount() < 1) return false;
+        Logger::addOauth('info', 'oauth_admin_unlink', ['prov' => (string)$link['provider'], 'uid' => intval($link['uid']), 'actor' => (int)($admin[0] ?? 0)]);
+        return true;
+    };
+    [$from, $where, $pars] = getAccountScope('oauthlist', 'post');
+    if (!$iswarn && setListPortion('o.id', $from, $where, $pars, $act)) exit;
+    $ids = getVar('post', 'id[]', 'num');
+    $done = !$iswarn && $ids;
+    foreach ($done ? array_map('intval', $ids) : [] as $id) {
+        if (!$act($id)) $done = false;
+    }
     $keep = array_filter(['op' => 'oauthlist', 'search' => getVar('post', 'search', 'num', 0), 'chng' => trim(getVar('post', 'chng')), 'num' => getVar('post', 'num', 'num', 0)]);
     setRedirect($afile.'.php?name=account&'.http_build_query($keep), false, 302, $iswarn ? _TOKENMISS : ($done ? _SUCCDELETE : _ERROR), !$done);
 }

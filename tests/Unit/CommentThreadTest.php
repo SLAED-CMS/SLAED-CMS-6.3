@@ -350,7 +350,7 @@ final class CommentThreadTest extends TestCase
     #[Test]
     public function theModerationHandlersReadOnlyTheBody(): void
     {
-        foreach (['approve', 'delete', 'actions', 'recount', 'editsave', 'save'] as $name) {
+        foreach (['approve', 'delete', 'recount', 'editsave', 'save'] as $name) {
             $code = $this->getSource('admin/modules/comments.php', $name);
             $this->assertStringNotContainsString("getVar('get'", $code, $name.'() still reads the query string');
             $this->assertStringNotContainsString("getVar('req'", $code, $name.'() still accepts request-scope input');

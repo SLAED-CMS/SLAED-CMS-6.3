@@ -255,7 +255,8 @@ function search(bool $top = false): void {
     [$where, $pars, $clink, $find, $fmod] = getSearchwhere();
     $sets = [1 => 'word', 2 => 'modul', 3 => 'time', 4 => 'hits'];
     $ordby = ($sets[$sort] ?? ($top ? 'hits' : 'time')).' '.(($order == 1) ? 'ASC' : 'DESC');
-    $total = intval($db->getSqlQuery('SELECT COUNT('.($top ? 'DISTINCT word' : 'id').') FROM '.PREFIX_DB.'_search'.$where, $pars)->fetchColumn());
+    $res = $db->getSqlQuery('SELECT COUNT('.($top ? 'DISTINCT word' : 'id').'), MAX(id) FROM '.PREFIX_DB.'_search'.$where, $pars);
+    [$total, $upto] = array_map('intval', $res->fetch(PDO::FETCH_NUM));
     $anum = getListLimit(intval($conf['search']['anum'] ?? 50), $total);
     $pages = max(1, (int)ceil($total / $anum));
     $num = min(max(1, getVar('get', 'num', 'num', 1)), $pages);
@@ -273,20 +274,19 @@ function search(bool $top = false): void {
         $mod = trim((string)$mod);
         $mlab = ($mod ? getModuleName($mod) : _ALL) ?: $mod;
         $hword = filterTextHighlight(htmlspecialchars($word, ENT_QUOTES, 'UTF-8'), $find);
-        $drop = ['name' => 'search', 'op' => 'drop', 'id' => $id, 'sort' => $sort, 'order' => $order, 'num' => $num, 'find' => $find, 'fmod' => $fmod];
-        $rows[] = ['name' => $word, 'cells' => [
-            ['is_truncate' => true, 'title_text' => $word, 'prefix_html' => $top ? '' : $tpl->getHtmlFrag('popover', [
-                'items' => [['label' => _MODUL, 'has_value_text' => true, 'value_text' => $mlab], ['label' => _DATE, 'value' => format_time((string)$time, _TIMESTRING)]],
-                'tip_label' => _DETAILS.': '.$word,
-                'tip_id' => 'sl-tip-'.$id,
-            ]), 'text_html' => $top ? $tpl->getHtmlFrag('link', ['href' => $afile.'.php?'.getSearchlink(3, 2, 1, $word), 'label_html' => $hword]) : $hword],
+        $drop = ['name' => 'search', 'op' => 'drop', 'id[]' => $id, 'sort' => $sort, 'order' => $order, 'num' => $num, 'find' => $find, 'fmod' => $fmod]
+            + ($top ? ['top' => 1] : []);
+        $tips = [['label' => _MODUL, 'has_value_text' => true, 'value_text' => $mlab], ['label' => _DATE, 'value' => format_time((string)$time, _TIMESTRING)]];
+        $rows[] = ['name' => $word, 'details' => $top ? [] : $tips, 'drop' => getTplPostAction($drop, 'trash', _ONDELETE), 'cells' => [
+            ['is_truncate' => true, 'title_text' => $word,
+                'text_html' => $top ? $tpl->getHtmlFrag('link', ['href' => $afile.'.php?'.getSearchlink(3, 2, 1, $word), 'label_html' => $hword]) : $hword],
             ['is_truncate' => true, 'title_text' => $mlab, 'content_html' => filterTextHighlight(htmlspecialchars($mlab, ENT_QUOTES, 'UTF-8'), $find)],
             ['is_col_count' => true, 'has_content_text' => true, 'content_text' => intval($hits)],
-            ['is_col_date' => true, 'stamp' => format_time((string)$time, 'c'), 'content_text' => format_time((string)$time, _TIMESTRING)],
-            ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('dial', ['dial_title' => _FUNCTIONS, 'dial' => [
-                ['href' => $afile.'.php?'.getSearchlink($sort, $order, $num, $find, $fmod, $op).'&op=edit&id='.$id, 'icon_name' => 'pencil', 'title' => _FULLEDIT],
-                getTplPostAction($drop + ($top ? ['top' => 1] : []), 'trash', _ONDELETE) + ['later' => 'gone del'],
-            ]])],
+            ['is_col_date' => true, 'moment' => $time],
+            ['is_col_actions' => true, 'dial' => [
+                ['href' => $afile.'.php?'.getSearchlink($sort, $order, $num, $find, $fmod, $op).'&op=edit&id='.$id, 'icon_name' => 'pencil', 'title' => _FULLEDIT,
+                    'is_edit' => true],
+            ]],
         ]];
     }
     echo getTplAdminList([
@@ -309,6 +309,7 @@ function search(bool $top = false): void {
         'count' => $total,
         'limit' => $anum,
         'base' => intval($conf['search']['anum'] ?? 50),
+        'upto' => $upto,
         'none_text' => ($clink !== '') ? _NONE_FOUND : _NO_INFO,
     ]);
     setFoot();
@@ -644,7 +645,7 @@ function clear(): void {
 
 function drop(): void {
     global $db, $afile;
-    $id = getVar('post', 'id', 'num', 0);
+    $ids = getVar('post', 'id[]', 'num');
     $top = getVar('post', 'top', 'num', 0) ? 1 : 0;
     $sort = getVar('post', 'sort', 'num', $top ? 4 : 3);
     $order = getVar('post', 'order', 'num', 2);
@@ -652,15 +653,19 @@ function drop(): void {
     $find = trim(getVar('post', 'find', 'text', ''));
     $fmod = getVar('post', 'fmod', 'var', '');
     $iswarn = !checkAdminPost('search');
-    $res = false;
-    if (!$iswarn && $id && $top) {
-        $word = $db->getSqlQuery('SELECT word FROM '.PREFIX_DB.'_search WHERE id = :id', ['id' => $id])->fetchColumn();
-        [$where, $pars] = getSearchwhere();
-        if ($word !== false) $res = $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_search WHERE word = :word'.str_replace(' WHERE ', ' AND ', $where), ['word' => $word] + $pars);
-    } elseif (!$iswarn && $id) {
-        $res = $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_search WHERE id = :id', ['id' => $id]);
+    [$where, $pars] = getSearchwhere();
+    $act = static function (int $id) use ($db, $top, $where, $pars): bool {
+        $word = $top ? $db->getSqlQuery('SELECT word FROM '.PREFIX_DB.'_search WHERE id = :id', ['id' => $id])->fetchColumn() : false;
+        $sql = $top ? 'DELETE FROM '.PREFIX_DB.'_search WHERE word = :word'.str_replace(' WHERE ', ' AND ', $where) : 'DELETE FROM '.PREFIX_DB.'_search WHERE id = :id';
+        $res = (!$top || $word !== false) ? $db->getSqlQuery($sql, $top ? ['word' => $word] + $pars : ['id' => $id]) : false;
+        return $res && $res->rowCount() > 0;
+    };
+    $from = $top ? '(SELECT MAX(id) AS id FROM '.PREFIX_DB.'_search'.$where.' GROUP BY word) AS q' : PREFIX_DB.'_search';
+    if (!$iswarn && setListPortion($top ? 'q.id' : 'id', $from, $top ? '' : $where, $pars, $act)) exit;
+    $done = !$iswarn && $ids;
+    foreach ($done ? array_map('intval', $ids) : [] as $id) {
+        if (!$act($id)) $done = false;
     }
-    $done = $res && $res->rowCount() > 0;
     setRedirect($afile.'.php?'.getSearchlink($sort, $order, $num, $find, $fmod, $top ? 'toplist' : ''), false, 302, $iswarn ? _TOKENMISS : ($done ? _SUCCDELETE : _ERROR), !$done);
 }
 

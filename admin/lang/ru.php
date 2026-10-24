@@ -198,7 +198,6 @@ define('_COMMENTS_FIXED','Исправлено счётчиков: %d.');
 define('_COMMENTS_AUTHOR','Все комментарии автора');
 define('_COMMENTS_ADDR','Все комментарии с этого IP');
 define('_COMMENTS_ONSITE','Ответить на сайте');
-define('_COMMENTS_PICK','Выбрать комментарий %s');
 define('_CONFIG_BLOCKED','Восстановление не может решить само, причина: %s. Проверьте файлы операции в storage/backup/config вручную.');
 define('_CONFIG_CLEAN','Прерванная операция конфигурации не найдена, конфигурация согласована.');
 define('_CONFIG_OP','Операция');

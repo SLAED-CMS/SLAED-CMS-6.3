@@ -15,8 +15,8 @@ function messages(): void {
     while ([$mid, $title, $expire, $active, $view, $lang] = $db->getSqlRow($result)) {
         $exp = $expire ? strtotime($expire) - time() : 0;
         $gone = $expire && $exp < 0;
-        $keep = ['name' => 'messages', 'id' => $mid];
-        $rows[] = ['name' => $title, 'cells' => [
+        $keep = ['name' => 'messages', 'id[]' => $mid];
+        $rows[] = ['name' => $title, 'drop' => getTplPostAction($keep + ['op' => 'delete'], 'trash', _ONDELETE), 'cells' => [
             ['is_col_id' => true, 'has_content_text' => true, 'content_text' => $mid],
             ['is_truncate' => true, 'title_text' => $title, 'content_html' => $tpl->getHtmlFrag('inline-badge', ['is_note' => true, 'label' => $title, 'title_text' => $title])],
             ['has_content_text' => true, 'content_text' => $gone ? _EXPIRED : (($exp > 0) ? getDuration($exp) : _UNLIMITED)],
@@ -24,10 +24,7 @@ function messages(): void {
             ['has_content_text' => true, 'content_text' => getLangName($lang ?: _ALL)],
             ['is_col_status' => true, 'stat' => getTplPostAction($keep + ['op' => 'status', 'act' => ($active && !$gone) ? '0' : '1'], 'power',
                 ($active && !$gone) ? _DEACTIVATE : _ACTIVATE) + ['is_on' => $active && !$gone, 'label' => _STATUS.': '.$title, 'later' => 'lamp act']],
-            ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('dial', ['dial_title' => _FUNCTIONS, 'dial' => [
-                ['href' => $afile.'.php?name=messages&op=add&id='.$mid, 'icon_name' => 'pencil', 'title' => _FULLEDIT],
-                getTplPostAction($keep + ['op' => 'delete'], 'trash', _ONDELETE) + ['later' => 'gone del'],
-            ]])],
+            ['is_col_actions' => true, 'dial' => [['href' => $afile.'.php?name=messages&op=add&id='.$mid, 'icon_name' => 'pencil', 'title' => _FULLEDIT, 'is_edit' => true]]],
         ]];
     }
     setHead();
@@ -209,7 +206,7 @@ function save(): void {
     } elseif ($warn) {
         setRedirect($afile.'.php?name=messages&op=add'.($mid ? '&id='.$mid : ''), false, 302, _TOKENMISS, true);
     } elseif ($posttype == 'delete') {
-        delete($mid);
+        delete([$mid]);
     } else {
         add();
     }
@@ -217,21 +214,26 @@ function save(): void {
 
 function status(): void {
     global $db, $afile;
-    $id = getVar('post', 'id', 'num');
+    $ids = getVar('post', 'id[]', 'num');
     $act = getVar('post', 'act', 'num') ? 1 : 0;
     $warn = !checkAdminPost('messages');
     $wipe = $act ? ', expire = CASE WHEN expire < NOW() THEN NULL ELSE expire END' : '';
-    $res = (!$warn && $id) ? $db->getSqlQuery('UPDATE '.PREFIX_DB.'_message SET status = :active'.$wipe.' WHERE id = :mid', ['active' => $act, 'mid' => $id]) : false;
-    $done = $res && $res->rowCount() > 0;
+    $done = !$warn && $ids;
+    foreach ($done ? $ids : [] as $id) {
+        if (!$db->getSqlQuery('UPDATE '.PREFIX_DB.'_message SET status = :active'.$wipe.' WHERE id = :mid', ['active' => $act, 'mid' => intval($id)])) $done = false;
+    }
     setRedirect($afile.'.php?name=messages', false, 302, $warn ? _TOKENMISS : ($done ? _SUCCSTATUS : _ERROR), !$done);
 }
 
-function delete(int $mid = 0): void {
+function delete(array $ids = []): void {
     global $db, $afile;
-    $id = $mid ?: getVar('post', 'id', 'num');
+    $ids = $ids ?: getVar('post', 'id[]', 'num');
     $warn = !checkAdminPost('messages');
-    $res = (!$warn && $id) ? $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_message WHERE id = :mid', ['mid' => $id]) : false;
-    $done = $res && $res->rowCount() > 0;
+    $done = !$warn && $ids;
+    foreach ($done ? $ids : [] as $id) {
+        $res = $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_message WHERE id = :mid', ['mid' => intval($id)]);
+        if (!$res || $res->rowCount() < 1) $done = false;
+    }
     setRedirect($afile.'.php?name=messages', false, 302, $warn ? _TOKENMISS : ($done ? _SUCCDELETE : _ERROR), !$done);
 }
 

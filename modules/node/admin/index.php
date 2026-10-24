@@ -262,7 +262,7 @@ function setNodeSupportQueue(NodeType $type): void {
             ['has_content_text' => true, 'content_text' => $labs['state'][$card['state']] ?? ''],
             ['has_content_text' => true, 'content_text' => $labs['prio'][$card['prio']] ?? ''],
             ['is_truncate' => true, 'has_content_text' => true, 'content_text' => ($card['aname'] !== '') ? $card['aname'] : _NODE_NOBODY],
-            ['is_col_date' => true, 'stamp' => format_time($card['activity'], 'c'), 'content_text' => format_time($card['activity'], _TIMESTRING)],
+            ['is_col_date' => true, 'moment' => $card['activity']],
             ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('dial', ['dial_title' => _FUNCTIONS, 'dial' => $dial])],
         ]];
     }
@@ -322,7 +322,7 @@ function show(): void {
             ],
         ]) : '']);
     $rows = [];
-    $count = 0;
+    $count = $upto = 0;
     $base = $lim = 1;
     if ($types) {
         $pick = ($name !== '') ? [$types[$name]] : array_values($types);
@@ -335,24 +335,23 @@ function show(): void {
         $lim = getListLimit($base, $count);
         $num = min($num, max(1, (int)ceil($count / $lim)));
         $query->setNodePage($num, $lim);
+        $upto = ($count > $lim) ? $query->getNodeScope()[2] : 0;
         $tmap = [];
         foreach ($types as $one) $tmap[$one->id] = $one;
         foreach ($count ? $query->getNodeList() : [] as $node) {
             $type = $tmap[$node->tid];
             $dial = [['href' => getSeoUrl(['name' => $type->name, 'op' => 'view', 'id' => $node->id, 'route' => $node->path]), 'icon_name' => 'eye', 'title' => _MVIEW]];
             foreach (getNodeModerDial($type, $node) as $one) $dial[] = isset($one['form_id']) ? $one + ['later' => 'gone move'] : $one;
-            $dial[] = getTplPostAction(['name' => 'node', 'op' => 'delete', 'id' => $node->id, 'type' => $type->name, 'version' => $node->version], 'x-octagon', _DELETE)
-                + ['later' => 'gone del'];
+            $drop = getTplPostAction(['name' => 'node', 'op' => 'delete', 'id[]' => $node->id, 'type' => $name, 'status' => $state->value, 'num' => $num], 'x-octagon', _DELETE);
             $who = ($node->uid > 0) ? (string)$node->uname : (($node->aname !== '') ? $node->aname : _ANONYM);
-            $rows[] = ['name' => cutstr($node->title, 60), 'cells' => [
+            $rows[] = ['name' => cutstr($node->title, 60), 'drop' => $drop, 'cells' => [
                 ['is_col_id' => true, 'has_content_text' => true, 'content_text' => $node->id],
                 ['is_col_title' => true, 'is_truncate' => true, 'title_text' => $node->title, 'has_content_text' => true, 'content_text' => $node->title],
                 ['is_truncate' => true, 'has_content_text' => true, 'content_text' => getModuleName($type->name)],
                 ['has_content_text' => true, 'content_text' => getNodeStateLabel($node->status)],
-                ['is_col_date' => true, 'stamp' => ($node->pubdate !== null) ? format_time($node->pubdate, 'c') : '', 'has_content_text' => true,
-                    'content_text' => ($node->pubdate !== null) ? format_time($node->pubdate, _TIMESTRING) : ''],
+                ['is_col_date' => true, 'moment' => $node->pubdate],
                 ['is_col_author' => true, 'has_content_text' => true, 'content_text' => $who],
-                ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('dial', ['dial_title' => _FUNCTIONS, 'dial' => $dial])],
+                ['is_col_actions' => true, 'dial' => $dial],
             ]];
         }
     }
@@ -376,6 +375,7 @@ function show(): void {
         'count' => $count,
         'limit' => $lim,
         'base' => $base,
+        'upto' => $upto,
         'none_text' => $types ? _NO_INFO : _NODE_NOTYPES,
     ]);
     setFoot();
@@ -545,16 +545,39 @@ function delete(): void {
     global $afile, $com;
     checkNodeMethod(['POST']);
     if (!checkAdminPost('node')) setNodeAdminFault(403, _TOKENMISS);
-    $id = getVar('post', 'id', 'num', 0);
     $types = array_filter(getNodeTypeMap(), fn(NodeType $v): bool => checkNodeModer($v));
-    $type = $types[getVar('post', 'type', 'var', '')] ?? setNodeAdminFault(404, _NODE_GONE);
-    getNodeReader($type)->getNodeContent($id, $type) ?? setNodeAdminFault(404, _NODE_GONE);
-    try {
-        getNodeWriter($type)->deleteNode($id, getVar('post', 'version', 'num', 0), $com);
-    } catch (NodeException $err) {
-        setNodeActFault($err, $type, $id);
+    $list = getVar('post', 'type', 'var', '');
+    $pick = array_values(isset($types[$list]) ? [$types[$list]] : $types);
+    $tmap = [];
+    foreach ($pick as $one) $tmap[$one->id] = $one;
+    $err = null;
+    $act = static function (int $id) use ($pick, $tmap, $com, &$err): bool {
+        $node = null;
+        foreach ($pick as $one) $node ??= getNodeReader($one)->getNodeContent($id, $one);
+        if (!$node) return false;
+        try {
+            getNodeWriter($tmap[$node->tid])->deleteNode($id, $node->version, $com);
+        } catch (NodeException $fault) {
+            $err = [$fault, $tmap[$node->tid]];
+            return false;
+        }
+        return true;
+    };
+    $raw = getVar('post', 'status', 'raw', '');
+    $state = ($raw === '') ? NodeStatus::Published : (ctype_digit($raw) ? NodeStatus::tryFrom((int)$raw) : null);
+    if ($pick && $state) {
+        $query = getNodeReader((count($pick) === 1) ? $pick[0] : null);
+        if (count($pick) === 1) $query->setNodeType($pick[0]);
+        else $query->setNodeTypes($pick);
+        [$from, $pars] = $query->setNodeStatus($state)->getNodeScope();
+        if (setListPortion('q.id', $from, '', $pars, $act)) exit;
     }
-    setRedirect($afile.'.php?name=node&type='.$type->name, true, 302, _NODE_REMOVED);
+    $ids = array_map('intval', getVar('post', 'id[]', 'num')) ?: setNodeAdminFault(404, _NODE_GONE);
+    foreach ($ids as $id) {
+        if (!$act($id)) $err ? setNodeActFault($err[0], $err[1], $id) : setNodeAdminFault(404, _NODE_GONE);
+    }
+    $back = array_filter(['type' => $list, 'status' => getVar('post', 'status', 'raw', ''), 'num' => getVar('post', 'num', 'num', 0)], fn(mixed $v): bool => $v !== '' && $v !== 0);
+    setRedirect($afile.'.php?name=node'.($back ? '&'.http_build_query($back) : ''), true, 302, _NODE_REMOVED);
 }
 
 function report(): void {
@@ -605,7 +628,7 @@ function types(): void {
     $rows = [];
     foreach (getNodeTypeMap() as $name => $type) {
         $base = ['name' => 'node', 'type' => $name, 'version' => $type->version];
-        $dial = [['href' => $afile.'.php?name=node&op=type&type='.$name, 'icon_name' => 'pencil', 'title' => _FULLEDIT]];
+        $dial = [['href' => $afile.'.php?name=node&op=type&type='.$name, 'icon_name' => 'pencil', 'title' => _FULLEDIT, 'is_edit' => true]];
         if ($type->active) $dial[] = ['href' => getSeoUrl(['name' => $name]), 'icon_name' => 'arrow-up-right-circle', 'title' => _VIEWSITE];
         if ($type->settings['features']['categories']) $dial[] = ['href' => $afile.'.php?name=categories&modul='.$name, 'icon_name' => 'folder2', 'title' => _CATEGORIES];
         $dial[] = ['href' => $afile.'.php?name=fields', 'icon_name' => 'plus-square-dotted', 'title' => _NODE_FIELDS];
@@ -1218,7 +1241,7 @@ function support(): void {
         $name = (string)($one['user']['name'] ?? '') ?: ($one['name'] ?: _ANONYM);
         $talk .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', ['cells' => [
             ['is_col_author' => true, 'has_content_text' => true, 'content_text' => $name],
-            ['is_col_date' => true, 'has_content_text' => true, 'content_text' => format_time($one['time'], _TIMESTRING)],
+            ['is_col_date' => true, 'stamp' => format_time($one['time'], 'c'), 'content_text' => format_time($one['time'], _TIMESTRING)],
             ['content_html' => ($one['deleted'] !== '') ? '' : $prs->filterContent($one['body'], true, $type->name, 2, 'breaks')],
         ]])]);
     }

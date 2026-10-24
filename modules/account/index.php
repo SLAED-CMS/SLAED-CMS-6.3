@@ -498,7 +498,7 @@ function view(): void {
                     'icon_name' => 'shield-x',
                     'confirm_text' => _BANIPSENDER.' "'.$userIpRaw.'"?',
                 ],
-                getTplPostAction(['name' => 'account', 'op' => 'delete', 'id' => $uid], 'trash', _ONDELETE, _DELETE.' "'.$nick.'"?'),
+                getTplPostAction(['name' => 'account', 'op' => 'delete', 'id[]' => $uid], 'trash', _ONDELETE, _DELETE.' "'.$nick.'"?'),
             ]) : '';
             $pmhref = (($conf['privat']['act'] ?? 0) && !empty($nick)) ? getSeoUrl(['name' => $conf['name'], 'op' => 'privat', 'uname' => urlencode($nick)]) : '';
             $uacts = [];

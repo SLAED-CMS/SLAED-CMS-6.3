@@ -103,7 +103,7 @@ function getProbeSession(): array {
     $sql = 'SELECT @@session.sql_mode AS mode, @@session.time_zone AS zone, @@session.character_set_client AS cset,'
         .' @@session.character_set_results AS rset, @@session.collation_connection AS coll';
     $row = $pdo->query($sql)->fetch(PDO::FETCH_ASSOC);
-    $row['buffered'] = $pdo->getAttribute(PDO::MYSQL_ATTR_USE_BUFFERED_QUERY);
+    $row['buffered'] = $pdo->getAttribute(Pdo\Mysql::ATTR_USE_BUFFERED_QUERY);
     try {
         $row['intrx'] = (int)$pdo->query('SELECT @@in_transaction')->fetchColumn();
     } catch (Throwable) {

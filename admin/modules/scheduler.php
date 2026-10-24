@@ -60,36 +60,36 @@ function scheduler(): void {
         $sched = trim($job['schedule'] ?? '');
         $isactive = $job['active'] ?? 1;
         $tips = [
-            ['label' => _SCHEDULER_JOBKEY, 'value' => $name, 'is_last' => false],
-            ['label' => _TYPE, 'value' => $type, 'is_last' => false],
-            ['label' => _STATUS, 'value' => $stat, 'is_last' => false],
+            ['label' => _SCHEDULER_JOBKEY, 'value' => $name],
+            ['label' => _TYPE, 'value' => $type],
+            ['label' => _STATUS, 'value' => $stat],
         ];
-        if ($sched !== '') $tips[] = ['label' => _SCHEDULER_SCHED, 'value' => $sched, 'is_last' => false];
-        $tips[] = ['label' => _SCHEDULER_LASTRUN, 'value' => $last, 'is_last' => false];
-        $tips[] = ['label' => _SCHEDULER_LAST_OK, 'value' => $lastok, 'is_last' => false];
-        $tips[] = ['label' => _SCHEDULER_NEXTRUN, 'value' => $nextr, 'is_last' => false];
-        $tips[] = ['label' => _SCHEDULER_TRIGGER, 'value' => ($trig !== '' ? $trig : _NO), 'is_last' => false];
-        $tips[] = ['label' => _SCHEDULER_RUNTIME, 'value' => (string)$time, 'is_last' => false];
-        $tips[] = ['label' => _SCHEDULER_FAILS, 'value' => (string)$fail, 'is_last' => $note === ''];
-        if ($note !== '') $tips[] = ['label' => _DESCRIPTION, 'value' => $note, 'is_last' => true];
+        if ($sched !== '') $tips[] = ['label' => _SCHEDULER_SCHED, 'value' => $sched];
+        $tips[] = ['label' => _SCHEDULER_LASTRUN, 'value' => $last];
+        $tips[] = ['label' => _SCHEDULER_LAST_OK, 'value' => $lastok];
+        $tips[] = ['label' => _SCHEDULER_NEXTRUN, 'value' => $nextr];
+        $tips[] = ['label' => _SCHEDULER_TRIGGER, 'value' => ($trig !== '' ? $trig : _NO)];
+        $tips[] = ['label' => _SCHEDULER_RUNTIME, 'value' => (string)$time];
+        $tips[] = ['label' => _SCHEDULER_FAILS, 'value' => (string)$fail];
+        if ($note !== '') $tips[] = ['label' => _DESCRIPTION, 'value' => $note];
         $title = $job['title'];
         $acts = [[
             'href' => $afile.'.php?name=scheduler&op=add&job='.$name,
             'icon_name' => 'pencil',
             'title' => _EDIT,
+            'is_edit' => true,
         ]];
         $keys = ['name' => 'scheduler', 'job' => $name];
         if ((int)($job['manual'] ?? 0) === 1) $acts[] = getTplPostAction(['op' => 'run'] + $keys, 'play-fill', _SCHEDULER_RUN);
         $acts[] = getTplPostAction(['op' => 'unlock'] + $keys, 'unlock', _SCHEDULER_UNLOCK);
-        if (($job['type'] ?? '') === 'custom') $acts[] = getTplPostAction(['op' => 'delete'] + $keys, 'trash', _DELETE) + ['later' => 'gone del'];
-        $rows[] = ['name' => (string)$title, 'cells' => [
-            ['is_truncate' => true, 'title_text' => (string)$title, 'has_content_text' => true, 'content_text' => (string)$title,
-                'prefix_html' => $tpl->getHtmlFrag('popover', ['items' => $tips])],
-            ['is_col_date' => true, 'has_content_text' => true, 'content_text' => (string)$nextr],
+        $drop = (($job['type'] ?? '') === 'custom') ? getTplPostAction(['name' => 'scheduler', 'op' => 'delete', 'id[]' => $name], 'trash', _DELETE) : [];
+        $rows[] = ['name' => (string)$title, 'details' => $tips, 'drop' => $drop, 'cells' => [
+            ['is_truncate' => true, 'title_text' => (string)$title, 'has_content_text' => true, 'content_text' => (string)$title],
+            ['is_col_date' => true, 'moment' => $next, 'has_content_text' => true, 'content_text' => _NO],
             ['is_col_status' => true, 'has_content_text' => true, 'content_text' => (string)$stat],
             ['is_col_count' => true, 'has_content_text' => true, 'content_text' => (string)($job['priority'] ?? '100')],
             ['is_col_status' => true, 'has_content_text' => true, 'content_text' => ((int)$isactive === 1) ? _YES : _NO],
-            ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('dial', ['dial_title' => _EDITOR, 'dial' => $acts])],
+            ['is_col_actions' => true, 'dial' => $acts],
         ]];
     }
     $head[0]['is_truncate'] = true;
@@ -377,15 +377,16 @@ function unlock(): void {
 function delete(): void {
     global $conf, $afile;
     $warn = !checkAdminPost('scheduler');
-    $name = preg_replace('#[^a-z]#', '', strtolower(getVar('post', 'job', 'var', '')));
+    $names = array_map(static fn(mixed $v): string => is_string($v) ? (string)preg_replace('#[^a-z]#', '', strtolower($v)) : '', getVar('post', 'id[]', 'var'));
     $done = false;
     if (!$warn) {
         $cfg = is_readable(CONFIG_DIR.'/scheduler.php') ? (require CONFIG_DIR.'/scheduler.php') : [];
         $schedcfg = is_array($cfg) && isset($cfg['scheduler']) && is_array($cfg['scheduler']) ? $cfg['scheduler'] : ($conf['scheduler'] ?? []);
         $jobs = $schedcfg['jobs'] ?? [];
-        $done = $name !== '' && isset($jobs[$name]) && (($jobs[$name]['type'] ?? '') === 'custom');
-        if ($done) {
-            unset($jobs[$name]);
+        $drop = array_filter($names, static fn(string $v): bool => ($jobs[$v]['type'] ?? '') === 'custom');
+        $done = $names && count($drop) === count($names);
+        if ($drop) {
+            $jobs = array_diff_key($jobs, array_flip($drop));
             $data = $schedcfg;
             $data['jobs'] = $jobs;
             setConfigFile('scheduler.php', $data);

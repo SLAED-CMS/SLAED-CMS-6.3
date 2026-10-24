@@ -227,7 +227,7 @@ final class CommentStateTest extends TestCase
         $this->assertTrue($this->getProbe('commentsweep')['clean']);
     }
 
-    # A sweep goes portion by portion behind its cursor: three rows in portions of two are two calls, and the second says nothing is left
+    # A sweep goes portion by portion behind its cursor: three rows in portions of two are two calls, the second says nothing is left, and no bound is no sweep
     #[Test]
     public function aSweepEndsPortionByPortion(): void
     {
@@ -239,7 +239,7 @@ final class CommentStateTest extends TestCase
             $this->assertSame([1, 0, false], [$two['done'], $two['fail'], $two['more']], 'The last portion of the '.$step.' sweep');
             $this->assertGreaterThan($one['after'], $two['after'], 'The cursor of the '.$step.' sweep did not move on');
         }
-        $this->assertSame(['done' => 0, 'fail' => 0, 'after' => 0, 'more' => false], $data['nothing'], 'An unknown action touched a row');
+        $this->assertSame([false, ''], $data['nothing'], 'A post without a bound ran a portion');
     }
 
     # A sweep moves what the single write moves: the same state on every row and the same points as three rows moderated one by one

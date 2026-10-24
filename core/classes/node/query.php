@@ -1000,6 +1000,15 @@ final class NodeQuery {
         return intval($this->getQueryRows($query, $pars)[0]['num'] ?? 0);
     }
 
+    # The ids of the selection as one derived table q, its values and its newest id, over the same disjoint parts the count adds up, for a sweep of the panel list
+    public function getNodeScope(): array {
+        $parts = $this->getListParts('list');
+        $pars = [];
+        foreach ($parts as $part) $pars += $part['pars'];
+        $from = '('.implode(' UNION ALL ', array_map(static fn(array $v): string => 'SELECT n.id FROM '.PREFIX_DB.'_nodes AS n'.$v['join'].' WHERE '.$v['where'], $parts)).') AS q';
+        return [$from, $pars, intval($this->getQueryRows('SELECT MAX(q.id) AS top FROM '.$from, $pars)[0]['top'] ?? 0)];
+    }
+
     # Count the selection with the conditions of the list per first letter of the title, upper case, as letter => number
     public function getNodeLetters(): array {
         $pars = [];

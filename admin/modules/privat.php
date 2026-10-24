@@ -23,20 +23,16 @@ function privat(): void {
             'read' => (string)_PROLD,
             default => (string)_PROUTNEW,
         };
-        $rows[] = ['name' => ($title !== '') ? cutstr($title, 60) : _ID.' '.$id, 'cells' => [
+        $rows[] = ['name' => ($title !== '') ? cutstr($title, 60) : _ID.' '.$id, 'details' => [
+            ['value' => $prs->filterContent($one['body'], true, 'account', 0, 'breaks', ['privat', $id])],
+        ], 'drop' => getTplPostAction(['name' => 'privat', 'op' => 'delete', 'id[]' => $id, 'num' => $data['page']], 'trash', _ONDELETE), 'cells' => [
             ['is_col_id' => true, 'has_content_text' => true, 'content_text' => $id],
-            ['is_col_title' => true, 'is_truncate' => true, 'title_text' => $title, 'prefix_html' => $tpl->getHtmlFrag('popover', [
-                'content_html' => $prs->filterContent($one['body'], true, 'account', 0, 'breaks', ['privat', $id]),
-                'tip_label' => _DETAILS.': '.$title,
-                'tip_id' => 'sl-tip-'.$id,
-            ]), 'text_html' => htmlspecialchars($title, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')],
+            ['is_col_title' => true, 'is_truncate' => true, 'title_text' => $title, 'text_html' => htmlspecialchars($title, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')],
             ['is_col_author' => true, 'content_html' => ($one['nameout'] !== '') ? user_info($one['nameout'], null) : _ANONYM],
             ['is_col_author' => true, 'content_html' => ($one['namein'] !== '') ? user_info($one['namein'], null) : _ANONYM],
-            ['is_col_date' => true, 'stamp' => format_time($one['time'], 'c'), 'content_text' => format_time($one['time'], _TIMESTRING)],
+            ['is_col_date' => true, 'moment' => $one['time']],
             ['is_col_status' => true, 'content_html' => $tpl->getHtmlFrag('inline-badge', ['chip_tone' => $tone, 'label' => $note, 'title_text' => $note])],
-            ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('dial', ['dial_title' => _FUNCTIONS, 'dial' => [
-                getTplPostAction(['name' => 'privat', 'op' => 'delete', 'id' => $id, 'num' => $data['page']], 'trash', _ONDELETE) + ['later' => 'gone del'],
-            ]])],
+            ['is_col_actions' => true, 'dial' => []],
         ]];
     }
     echo getTplAdminList([
@@ -59,6 +55,7 @@ function privat(): void {
         'count' => $data['total'],
         'limit' => $data['limit'],
         'base' => $data['base'],
+        'upto' => $data['upto'],
     ]);
     setFoot();
 }
@@ -260,10 +257,11 @@ function save(): void {
 
 function delete(): void {
     global $afile, $prv;
-    $id = getVar('post', 'id', 'num', 0);
+    $ids = getVar('post', 'id[]', 'num');
     $num = getVar('post', 'num', 'num', 1);
     $warn = !checkAdminPost('privat');
-    $done = !$warn && $id > 0 && $prv->deleteAdminMessage([$id]);
+    if (!$warn && setListPortion('id', PREFIX_DB.'_privat', '', [], static fn(int $id): bool => $prv->deleteAdminMessage([$id]))) exit;
+    $done = !$warn && $ids && $prv->deleteAdminMessage(array_map('intval', $ids));
     setRedirect($afile.'.php?name=privat&num='.$num, false, 302, $warn ? _TOKENMISS : ($done ? _SUCCDELETE : _ERROR), !$done);
 }
 

@@ -365,7 +365,7 @@ function getPointsJournal(string $note): string {
     foreach (($result ? $result->fetchAll(PDO::FETCH_ASSOC) : []) as $row) {
         $rows[] = ['cells' => [
             ['is_col_id' => true, 'has_content_text' => true, 'content_text' => intval($row['id'])],
-            ['is_col_date' => true, 'stamp' => format_time((string)$row['created'], 'c'), 'content_text' => format_time((string)$row['created'], _TIMESTRING)],
+            ['is_col_date' => true, 'moment' => $row['created']],
             ['is_truncate' => true, 'has_content_text' => true, 'content_text' => (string)($row['name'] ?? '').' #'.intval($row['uid'])],
             ['has_content_text' => true, 'content_text' => $label((string)$row['action'])],
             ['is_truncate' => true, 'has_content_text' => true, 'content_text' => (string)$row['scope'].' / '.(string)$row['source']],

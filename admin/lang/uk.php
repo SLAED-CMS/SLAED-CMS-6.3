@@ -198,7 +198,6 @@ define('_COMMENTS_FIXED','Виправлено лічильників: %d.');
 define('_COMMENTS_AUTHOR','Усі коментарі автора');
 define('_COMMENTS_ADDR','Усі коментарі з цієї IP');
 define('_COMMENTS_ONSITE','Відповісти на сайті');
-define('_COMMENTS_PICK','Вибрати коментар %s');
 define('_CONFIG_BLOCKED','Відновлення не може вирішити саме, причина: %s. Перевірте файли операції в storage/backup/config вручну.');
 define('_CONFIG_CLEAN','Перервану операцію конфігурації не знайдено, конфігурація узгоджена.');
 define('_CONFIG_OP','Операція');

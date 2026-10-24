@@ -50,13 +50,13 @@ function referers(): void {
         .' ORDER BY '.$ordby.' '.$ordsc.' LIMIT '.(($num - 1) * $limit).', '.$limit);
     $rows = [];
     while ([$hits, $uid, $name, $ip, $referer, $url, $date] = $db->getSqlRow($result)) {
-        $who = $uid ? user_info($name, null) : $name;
+        $who = $uid ? user_info($name, null) : htmlspecialchars((string)$name, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
         $words = engines_word($referer) ?: _NO;
-        $rows[] = ['cells' => [
-            ['content_html' => $tpl->getHtmlFrag('popover', ['label_text' => $ip, 'title_text' => _NICKNAME.': '.$who.' | '._DATE.': '.format_time($date, _TIMESTRING)])],
+        $rows[] = ['name' => (string)$ip, 'details' => [['label' => _NICKNAME, 'value' => $who], ['label' => _DATE, 'value' => format_time($date, _TIMESTRING)]], 'cells' => [
+            ['has_content_text' => true, 'content_text' => $ip],
             ['is_truncate' => true, 'title_text' => domain($url), 'content_html' => domain($url, 30)],
             ['is_truncate' => true, 'title_text' => domain($referer), 'content_html' => domain($referer, 30)],
-            ['is_truncate' => true, 'title_text' => $words, 'content_html' => $tpl->getHtmlFrag('popover', ['label_text' => $words, 'title_text' => $words])],
+            ['is_truncate' => true, 'title_text' => $words, 'has_content_text' => true, 'content_text' => $words],
             ['is_col_count' => true, 'has_content_text' => true, 'content_text' => $hits],
         ]];
     }

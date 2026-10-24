@@ -106,9 +106,9 @@ function getMasterReleases(string $head, string $note): string {
             ['has_content_text' => true, 'content_text' => $ver],
             ['is_truncate' => true, 'has_content_text' => true, 'content_text' => $state],
             ['is_col_count' => true, 'has_content_text' => true, 'content_text' => $row['share'].' %'],
-            ['is_col_date' => true, 'has_content_text' => true, 'content_text' => getMasterTime($row['accepted'])],
-            ['is_col_date' => true, 'has_content_text' => true, 'content_text' => getMasterTime($row['changed'])],
-            ['is_col_date' => true, 'has_content_text' => true, 'content_text' => $ends ? date(_TIMESTRING, $ends) : '-'],
+            ['is_col_date' => true, 'moment' => $row['accepted'], 'has_content_text' => true, 'content_text' => '-'],
+            ['is_col_date' => true, 'moment' => $row['changed'], 'has_content_text' => true, 'content_text' => '-'],
+            ['is_col_date' => true, 'moment' => $ends, 'has_content_text' => true, 'content_text' => '-'],
             ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('dial', ['dial_title' => _FUNCTIONS, 'dial' => $acts])],
         ]];
     }
@@ -155,14 +155,13 @@ function getMasterSites(string $note): string {
         $tips[] = ['label' => _MASTER_NOTES, 'has_value_text' => true, 'value_text' => 'php tools/release.php note --level info --sid '.$row['sid']];
         $ext = implode(', ', array_keys(array_filter(['sodium' => $row['ext'] & 1, 'zip' => $row['ext'] & 2, 'phar' => $row['ext'] & 4]))) ?: '-';
         $host = ($row['host'] !== '') ? $row['host'] : _MASTER_NOHOST;
-        $rows[] = ['name' => $host, 'cells' => [
-            ['is_truncate' => true, 'title_text' => $row['host'], 'has_content_text' => true, 'content_text' => $host,
-                'prefix_html' => $tpl->getHtmlFrag('popover', ['items' => $tips])],
+        $rows[] = ['name' => $host, 'details' => $tips, 'cells' => [
+            ['is_truncate' => true, 'title_text' => $row['host'], 'has_content_text' => true, 'content_text' => $host],
             ['has_content_text' => true, 'content_text' => $row['ver']], ['has_content_text' => true, 'content_text' => $row['chan']],
             ['has_content_text' => true, 'content_text' => $row['php']], ['has_content_text' => true, 'content_text' => trim($row['db'].' '.$row['dbver'])],
             ['has_content_text' => true, 'content_text' => $ext], ['is_col_count' => true, 'has_content_text' => true, 'content_text' => $row['ep'].' / '.$row['es']],
-            ['is_col_date' => true, 'has_content_text' => true, 'content_text' => getMasterTime($row['added'])],
-            ['is_col_date' => true, 'has_content_text' => true, 'content_text' => getMasterTime($row['seen'])],
+            ['is_col_date' => true, 'moment' => $row['added'], 'has_content_text' => true, 'content_text' => '-'],
+            ['is_col_date' => true, 'moment' => $row['seen'], 'has_content_text' => true, 'content_text' => '-'],
         ]];
     }
     $form = $tpl->getHtmlFrag('list-filter', [
@@ -256,7 +255,7 @@ function getMasterNoteList(string $head, string $note): string {
             ['has_content_text' => true, 'content_text' => $row['level']],
             ['is_truncate' => true, 'has_content_text' => true, 'content_text' => ($row['sid'] !== '') ? $row['sid'] : _MASTER_TOALL],
             ['has_content_text' => true, 'content_text' => ($row['ver'] !== '') ? $row['ver'] : _ALL],
-            ['is_col_date' => true, 'has_content_text' => true, 'content_text' => ($row['until'] !== null) ? getMasterTime($row['until']) : _MASTER_NOEND],
+            ['is_col_date' => true, 'moment' => $row['until'], 'has_content_text' => true, 'content_text' => _MASTER_NOEND],
             ['is_truncate' => true, 'title_text' => (string)($data['ru'] ?? ''), 'has_content_text' => true, 'content_text' => (string)($data['ru'] ?? '')],
             ['is_col_status' => true, 'has_content_text' => true, 'content_text' => $row['active'] ? _YES : _NO],
             ['is_col_actions' => true, 'content_html' => $acts ? $tpl->getHtmlFrag('dial', ['dial_title' => _FUNCTIONS, 'dial' => $acts]) : ''],

@@ -10,7 +10,7 @@ $probework = (string)($argv[2] ?? '');
 require_once __DIR__.'/probe_boot.php';
 # The moderator half of the comment class needs a signed-in administrator, and isAdmin() memoizes its verdict on the first call the boot itself makes
 # So the session is opened and filled here, before core/security.php reads it: the boot then skips its own session_start() and finds the administrator already there
-if (in_array($argv[1] ?? '', ['commentstage', 'commentsweep', 'commentthread'], true)) {
+if (in_array($argv[1] ?? '', ['commentstage', 'commentsweep', 'commentthread', 'listparity'], true)) {
     $acon = (require BASE_DIR.'/config/db.php')['db'];
     $akey = (string)((require BASE_DIR.'/config/global.php')['admin_c'] ?? 'panel');
     $apdo = new PDO('mysql:host='.$acon['host'].';dbname='.$acon['name'].';charset=utf8mb4', $acon['uname'], $acon['pass']);
@@ -487,14 +487,18 @@ function getProbeCommentSweep(): array {
         }
         return $out;
     };
-    $sweep = static function (CommentStatus $stat, string $act, int $upto) use ($com, $mark): array {
+    $sweep = static function (CommentStatus $stat, Closure $act, int $upto) use ($com, $mark): array {
+        [$from, $where, $pars] = $com->getAdminScope($stat, 'voting', 2, $mark.' swept');
         $runs = [];
-        $after = 0;
+        $_POST = ['upto' => (string)$upto, 'after' => '0'];
         do {
-            $one = $com->setAdminPortion($stat, 'voting', 2, $mark.' swept', $act, $after, $upto, 2);
+            ob_start();
+            setListPortion('s.id', $from, $where, $pars, $act, 2);
+            $one = json_decode((string)ob_get_clean(), true);
             $runs[] = $one;
-            $after = $one['after'];
+            $_POST['after'] = (string)$one['after'];
         } while ($one['more'] && count($runs) < 10);
+        $_POST = [];
         return $runs;
     };
     $swept = $seed('swept', 3);
@@ -504,18 +508,20 @@ function getProbeCommentSweep(): array {
     $upto = intval($com->getAdminList(CommentStatus::Pending, 'voting', 2, $mark.' swept', 1)['upto']);
     $late = $seed('swept', 1);
     $was = $read();
-    $out['open'] = $sweep(CommentStatus::Pending, 'a1', $upto);
+    $out['open'] = $sweep(CommentStatus::Pending, static fn(int $id): bool => $com->setStatus($id, true), $upto);
     $mid = $read();
     foreach ($plain as $id) $com->setStatus($id, true);
     $out['opened'] = [$mid - $was, $read() - $mid, $state($swept), $state($plain)];
     $was = $read();
-    $out['drop'] = $sweep(CommentStatus::Published, 'd', $upto);
+    $out['drop'] = $sweep(CommentStatus::Published, static fn(int $id): bool => $com->deleteComment($id), $upto);
     $mid = $read();
     foreach ($plain as $id) $com->deleteComment($id);
     $out['dropped'] = [$mid - $was, $read() - $mid, $state($swept), $state($plain)];
     $out['other'] = $state($other);
     $out['late'] = [$upto === max($swept), $state($late)];
-    $out['nothing'] = $com->setAdminPortion(CommentStatus::Published, 'voting', 2, $mark.' swept', 'x', 0, $upto, 2);
+    [$from, $where, $pars] = $com->getAdminScope(CommentStatus::Published, 'voting', 2, $mark.' swept');
+    ob_start();
+    $out['nothing'] = [setListPortion('s.id', $from, $where, $pars, static fn(int $id): bool => $com->deleteComment($id), 2), (string)ob_get_clean()];
     $db->setSqlRollback();
     $out['clean'] = ($all === getProbeCommentCount());
     return $out;
@@ -1002,6 +1008,72 @@ function getProbeFieldPost(): array {
     $out['view'] = [str_contains($rows, '[usephp]'), str_contains($rows, '42-proof')];
     return $out;
 }
+
+# Report for every paged list with a sweep its count and bound beside the keys the portions of its scope reach, read only, the action touching no row
+function getProbeListParity(): array {
+    global $db, $com, $prv, $mailer, $probework;
+    $out = ['admin' => isAdmin(true), 'lists' => []];
+    if (!$out['admin']) return $out;
+    foreach (['modules/account/admin/index.php' => 'getAccountScope', 'modules/search/admin/index.php' => 'getSearchwhere'] as $file => $func) {
+        $code = (string)file_get_contents(BASE_DIR.'/'.$file);
+        $from = strpos($code, "\nfunction ".$func.'(');
+        file_put_contents($probework.'/lift_'.$func.'.php', "<?php\n".substr($code, $from, strpos($code, "\n}\n", $from) - $from + 3));
+        require $probework.'/lift_'.$func.'.php';
+    }
+    $walk = static function (string $key, string $from, string $where, array $pars, int $upto): array {
+        $seen = $last = $runs = 0;
+        $_POST = ['upto' => (string)$upto, 'after' => '0'];
+        while ($upto > 0 && $runs++ < 1000) {
+            ob_start();
+            setListPortion($key, $from, $where, $pars, static fn(int $id): bool => true, 100);
+            $one = json_decode((string)ob_get_clean(), true);
+            $seen += $one['done'];
+            $last = $one['after'];
+            $_POST['after'] = (string)$last;
+            if (!$one['more']) break;
+        }
+        $_POST = [];
+        return [$seen, $last];
+    };
+    $tally = static fn(string $sql, array $pars = []): array => array_map('intval', $db->getSqlQuery($sql, $pars)->fetch(PDO::FETCH_NUM));
+    foreach ([CommentStatus::Published, CommentStatus::Pending] as $stat) {
+        $list = $com->getAdminList($stat, '', 2, '', 1);
+        [$from, $where, $pars] = $com->getAdminScope($stat, '', 2, '');
+        $out['lists']['comments '.$stat->value] = [$list['total'], $list['upto'], ...$walk('s.id', $from, $where, $pars, $list['upto'])];
+    }
+    [$num, $top] = $tally('SELECT COUNT(id), MAX(id) FROM '.PREFIX_DB.'_favorites');
+    $out['lists']['favorites'] = [$num, $top, ...$walk('id', PREFIX_DB.'_favorites', '', [], $top)];
+    $list = $prv->getAdminList(1);
+    $out['lists']['privat'] = [$list['total'], $list['upto'], ...$walk('id', PREFIX_DB.'_privat', '', [], $list['upto'])];
+    $list = $mailer->getList([]);
+    [$from, $where, $pars] = $mailer->getQueueScope([]);
+    $out['lists']['queue'] = [$list['total'], $list['upto'], ...$walk('id', $from, $where, $pars, $list['upto'])];
+    $list = $mailer->getDeadList(1);
+    $out['lists']['dead'] = [$list['total'], $list['upto'], ...$walk('id', PREFIX_DB.'_maildead', '', [], $list['upto'])];
+    foreach (['users' => ['', []], 'found' => ['', ['search' => '2', 'chng' => 'a']], 'newuser' => ['newuser', []], 'oauthlist' => ['oauthlist', []]] as $name => [$op, $get]) {
+        $_GET = $get;
+        [$from, $where, $pars] = getAccountScope($op);
+        $key = ['newuser' => 'id', 'oauthlist' => 'o.id'][$op] ?? 'u.id';
+        [$num, $top] = $tally('SELECT COUNT('.$key.'), MAX('.$key.') FROM '.$from.$where, $pars);
+        $out['lists']['account '.$name] = [$num, $top, ...$walk($key, $from, $where, $pars, $top)];
+    }
+    $_GET = [];
+    [$where, $pars] = getSearchwhere();
+    [$num, $top] = $tally('SELECT COUNT(id), MAX(id) FROM '.PREFIX_DB.'_search'.$where, $pars);
+    $out['lists']['search'] = [$num, $top, ...$walk('id', PREFIX_DB.'_search', $where, $pars, $top)];
+    [$num, $top] = $tally('SELECT COUNT(DISTINCT word), MAX(id) FROM '.PREFIX_DB.'_search'.$where, $pars);
+    $out['lists']['search top'] = [$num, $top, ...$walk('q.id', '(SELECT MAX(id) AS id FROM '.PREFIX_DB.'_search'.$where.' GROUP BY word) AS q', '', $pars, $top)];
+    $types = array_values(array_filter(getNodeTypeMap(), fn(NodeType $v): bool => getNodeContext()->super || in_array($v->name, getNodeContext()->mods, true)));
+    foreach ($types ? [$types, [$types[0]]] : [] as $pick) {
+        $query = getNodeReader((count($pick) === 1) ? $pick[0] : null);
+        if (count($pick) === 1) $query->setNodeType($pick[0]);
+        else $query->setNodeTypes($pick);
+        $query->setNodeStatus(NodeStatus::Published);
+        [$from, $pars, $top] = $query->getNodeScope();
+        $out['lists']['node '.count($pick)] = [$query->getNodeCount(), $top, ...$walk('q.id', $from, '', $pars, $top)];
+    }
+    return $out;
+}
 $mode = $argv[1] ?? 'statscookie';
 $conf = $GLOBALS['conf'];
 $chost = strtolower((string)parse_url((string)$conf['homeurl'], PHP_URL_HOST));
@@ -1126,6 +1198,8 @@ if ($mode === 'statscookie') {
     $out = getProbeCommentStage2();
 } elseif ($mode === 'commentsweep') {
     $out = getProbeCommentSweep();
+} elseif ($mode === 'listparity') {
+    $out = getProbeListParity();
 } elseif ($mode === 'commentthread') {
     $out = getProbeCommentThread();
 } elseif ($mode === 'commentnotify') {

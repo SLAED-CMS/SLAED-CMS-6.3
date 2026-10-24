@@ -323,9 +323,9 @@ function getListLimit(int $base, int|Closure $total): int {
     return ((string)max(5, min(LIST_MAX, intval($pick))) === $pick) ? intval($pick) : $base;
 }
 
-# Render one panel list of the canon in place, cells named by their column for a phone; a list with an own number in base gets the rows chip, its pagers shown over one page too
+# Render one panel list of the canon from the meaning of its rows; the foot sends one field group per action, and an own number in base brings the rows chip
 function getTplAdminList(array $data): string {
-    global $tpl;
+    global $afile, $tpl;
     $href = (string)($data['href'] ?? '');
     $count = intval($data['count'] ?? 0);
     $limit = intval($data['limit'] ?? 0);
@@ -333,13 +333,71 @@ function getTplAdminList(array $data): string {
     $page = max(1, intval($data['page'] ?? 1));
     $pages = intval($data['pages'] ?? 1);
     $maxpg = intval($data['maxpg'] ?? 8);
+    $list = array_values((array)($data['rows'] ?? []));
+    $form = 'sl-list-pick';
+    $check = array_filter($list, static fn(array $row): bool => !empty($row['drop'])) !== [];
     $head = (array)($data['head'] ?? []);
+    if ($check) {
+        $head[] = ['is_col_check' => true, 'nosort' => true, 'content' => $tpl->getHtmlFrag('checkbox', ['name_attr' => 'markcheck', 'input_id' => 'markcheck', 'is_check' => true,
+            'aria_label' => _CHECKALL, 'input_attr' => 'title="'._CHECKALL.'" form="'.$form.'"'])];
+    }
     $names = array_map(static fn(array $col): string => trim(html_entity_decode(strip_tags((string)($col['content'] ?? '')), ENT_QUOTES, 'UTF-8')), $head);
     $rows = (string)($data['rows_html'] ?? '');
-    foreach ((array)($data['rows'] ?? []) as $row) {
+    $sets = [];
+    $words = [];
+    foreach ($list as $at => $row) {
+        $drop = (array)($row['drop'] ?? []);
+        $tip = (array)($row['details'] ?? []);
         $cells = [];
-        foreach ((array)($row['cells'] ?? []) as $i => $cell) $cells[] = $cell + ['label' => $names[$i] ?? ''];
-        $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', ['cells' => $cells])] + array_diff_key($row, ['cells' => 0]));
+        foreach ((array)($row['cells'] ?? []) as $i => $cell) {
+            if (array_key_exists('moment', $cell)) {
+                $mark = is_int($cell['moment']) ? $cell['moment'] : (int)strtotime((string)$cell['moment']);
+                $time = ['stamp' => date('c', $mark), 'content_text' => date(_TIMESTRING, $mark)];
+                $cell = ($mark > 0) ? $time + $cell : $cell + ['has_content_text' => true, 'content_text' => ''];
+            }
+            if ($tip && empty($cell['is_col_id'])) {
+                $cell['prefix_html'] = $tpl->getHtmlFrag('popover', ['items' => $tip, 'tip_label' => _DETAILS.': '.($row['name'] ?? ''), 'tip_id' => 'sl-tip-'.($at + 1)])
+                    .($cell['prefix_html'] ?? '');
+                $tip = [];
+            }
+            if (isset($cell['dial'])) {
+                $items = $drop ? [...$cell['dial'], $drop + ['later' => 'gone del']] : $cell['dial'];
+                $cell['content_html'] = $tpl->getHtmlFrag('dial', ['dial_title' => $names[$i] ?? '', 'dial' => $items]);
+            }
+            $stat = (array)($cell['stat'] ?? []);
+            if (preg_match('#^(gone|lamp) #', (string)($stat['later'] ?? ''))) $sets[empty($stat['is_on']) ? 'on' : 'off'] ??= (array)($stat['fields'] ?? []);
+            $cells[] = $cell + ['label' => $names[$i] ?? ''];
+        }
+        if ($drop) {
+            $verb = (($drop['later'] ?? '') === 'gone move') ? 'move' : 'del';
+            $sets[$verb] ??= (array)($drop['fields'] ?? []);
+            $words[$verb] ??= ($verb === 'move') ? (string)($drop['title'] ?? '') : _DELETE;
+        }
+        if ($check) {
+            $box = ['name_attr' => 'id[]', 'value_attr' => (string)($drop['fields']['id[]'] ?? ''), 'is_check' => true, 'aria_label' => (string)($row['name'] ?? ''),
+                'input_attr' => 'form="'.$form.'"'];
+            $cells[] = ['is_col_check' => true, 'content_html' => $drop ? $tpl->getHtmlFrag('checkbox', $box) : ''];
+        }
+        $keep = array_diff_key($row, ['cells' => 0, 'details' => 0, 'drop' => 0]);
+        $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', ['cells' => $cells])] + $keep);
+    }
+    $bulk = [];
+    if ($check) {
+        $acts = array_intersect_key(['on' => _ACTIVATE, 'off' => _DEACTIVATE] + $words, $sets);
+        $groups = [];
+        foreach (array_keys($acts) as $key) {
+            $hide = array_diff_key($sets[$key], ['id[]' => 0]);
+            $groups[] = ['key' => $key, 'is_off' => $groups !== [], 'hidden' => array_map(static fn($k, $v): array => ['nameattr' => (string)$k, 'valueattr' => (string)$v],
+                array_keys($hide), $hide)];
+        }
+        $bulk = [
+            'form_id' => $form,
+            'action_url' => HOME_PATH.$afile.'.php',
+            'groups' => $groups,
+            'options' => array_map(static fn(string $key, string $label): array => ['value_attr' => $key, 'label_text' => $label], array_keys($acts), $acts),
+            'later' => 'gone '.implode(' ', array_map(static fn(string $key): string => $key.'='.$key, array_keys($acts))),
+            'upto' => intval($data['upto'] ?? 0),
+        ];
     }
     $density = getCookies('density');
     if (!in_array($density, ['full', 'compact', 'cards'], true)) $density = 'standard';
@@ -351,7 +409,6 @@ function getTplAdminList(array $data): string {
     $meta = ['count' => $count, 'limit' => $limit, 'is_list' => true];
     $range = ($limit > 0) ? sprintf(_PAGERANGE, ($page - 1) * $limit + 1, min($page * $limit, $count)) : '';
     $said = ($range !== '') ? $range.' · ' : '';
-    $bulk = (array)($data['bulk'] ?? []);
     $wide = number_format($count, 0, '', ' ');
     $per = [];
     if ($base > 0 && $limit > 0) {
@@ -384,7 +441,7 @@ function getTplAdminList(array $data): string {
         'count' => $count,
         'picked' => sprintf(_ADM_PICKED, 0),
         'picked_wide' => sprintf(_ADM_PICKED, $wide),
-        'is_sweep' => !empty($bulk['sweep']) && $pages > 1,
+        'is_sweep' => !empty($bulk['upto']) && $pages > 1,
         'all_text' => sprintf(_ADM_ALLN, $wide),
         'table_html' => ($rows !== '') ? $tpl->getHtmlFrag('table', [
             'is_wrapless' => true,
@@ -400,6 +457,27 @@ function getTplAdminList(array $data): string {
         'foot_html' => (string)($data['foot_html'] ?? ''),
         'said' => ($rows !== '') ? $said._OVERALL.' '.$count : $none,
     ]);
+}
+
+# Answer one portion of "pick all N" when a foot handler is posted with upto: ascending keys of the list above the cursor up to the bound, each passed to the action
+function setListPortion(string $key, string $from, string $where, array $pars, Closure $act, int $limit = 100): bool {
+    global $db;
+    $upto = getVar('post', 'upto', 'num', 0);
+    if ($upto < 1) return false;
+    $after = getVar('post', 'after', 'num', 0);
+    $cond = (string)preg_replace('/^WHERE\s+/i', '', trim($where));
+    $sql = 'SELECT '.$key.' AS id FROM '.$from.' WHERE '.(($cond !== '') ? '('.$cond.') AND ' : '').$key.' > :after AND '.$key.' <= :upto'
+        .' ORDER BY '.$key.' ASC LIMIT '.($limit + 1);
+    $ids = array_map('intval', array_column($db->getSqlRows($db->getSqlQuery($sql, $pars + ['after' => $after, 'upto' => $upto])) ?: [], 'id'));
+    $out = ['done' => 0, 'fail' => 0, 'after' => $after, 'more' => count($ids) > $limit];
+    foreach (array_slice($ids, 0, $limit) as $id) {
+        $out[$act($id) ? 'done' : 'fail']++;
+        $out['after'] = $id;
+    }
+    setAdminLog(['result' => $out['fail'] ? 'refused' : 'done', 'num' => $out['done'] + $out['fail']]);
+    header('Content-Type: application/json; charset=UTF-8');
+    echo json_encode($out);
+    return true;
 }
 
 # Render one full admin info page from a module info file with optional in-place editor
@@ -705,9 +783,7 @@ function getTplNewGraphic(string $time): string {
     return $tpl->getHtmlFrag('fresh', ['tier' => $tier, 'is_'.$tier => true, 'title' => (string)$label, 'date_text' => format_time($time), 'date_iso' => date('c', $mark)]);
 }
 
-# Build one admin speed-dial action that submits a POST form instead of following a link, with the CSRF token scoped to the module named in the hidden fields
-# A state-changing address is followed by prefetchers, scanners and link previews, and its token ends up in history, logs and the Referer header; a form body has none of that
-# The identifier carries a mark of its own answer, because a fragment counts from one again and a button naming slpost1 would own the first form of the page it was swapped into
+# One admin dial action as a POST form, never a link a prefetcher follows; the form id carries a salt, since a swapped fragment counts from one again
 function getTplPostAction(array $hide, string $icon, string $title, string $confirm = ''): array {
     global $afile, $tpl;
     static $seq = 0;
@@ -718,7 +794,7 @@ function getTplPostAction(array $hide, string $icon, string $title, string $conf
     foreach ($hide as $key => $val) {
         $html .= $tpl->getHtmlFrag('hidden', ['name_attr' => (string)$key, 'value_attr' => (string)$val, 'input_attr' => '']);
     }
-    $out = ['href' => HOME_PATH.$afile.'.php', 'form_id' => 'slpost'.$salt.(++$seq), 'hidden' => $html, 'icon_name' => $icon, 'title' => $title];
+    $out = ['href' => HOME_PATH.$afile.'.php', 'form_id' => 'slpost'.$salt.(++$seq), 'hidden' => $html, 'fields' => $hide, 'icon_name' => $icon, 'title' => $title];
     if ($confirm !== '') $out['confirm_text'] = $confirm;
     return $out;
 }
@@ -1207,8 +1283,7 @@ function getTplPostButton(array $hide, string $icon, string $label, string $attr
 }
 
 # Build the standard moderator speed-dial keys for any front-end content row or card; callers pass the exact admin hrefs
-# The edit half stays a link, the delete half becomes a form: a removal must not travel as an address a browser may prefetch, and its token must not sit in history or logs
-# The caller keeps passing the address it always passed, taken apart here with its own token dropped and a fresh one added, so all twenty-five call sites are corrected in one place
+# The delete half becomes a form with a fresh token, never an address a browser may prefetch; a list of the address (id[]=5) goes back as fields of key[]
 function getTplEditMenu(string $edithref, string $delhref, string $title): array {
     global $tpl;
     static $seq = 0;
@@ -1219,7 +1294,9 @@ function getTplEditMenu(string $edithref, string $delhref, string $title): array
     $pars['token'] = getSiteToken();
     $hide = '';
     foreach ($pars as $key => $val) {
-        $hide .= $tpl->getHtmlFrag('hidden', ['name_attr' => (string)$key, 'value_attr' => (string)$val, 'input_attr' => '']);
+        foreach ((array)$val as $one) {
+            $hide .= $tpl->getHtmlFrag('hidden', ['name_attr' => is_array($val) ? $key.'[]' : (string)$key, 'value_attr' => (string)$one, 'input_attr' => '']);
+        }
     }
     return [
         'is_moder' => true,

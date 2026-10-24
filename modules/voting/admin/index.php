@@ -79,9 +79,9 @@ function getVotingBlockSelect(string $bval): string {
 }
 
 function voting(): void {
-    global $db, $afile, $conf, $tpl;
+    global $db, $afile, $conf;
     setHead();
-    $total = intval($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_voting')->fetchColumn());
+    [$total, $upto] = array_map('intval', $db->getSqlQuery('SELECT COUNT(id), MAX(id) FROM '.PREFIX_DB.'_voting')->fetch(PDO::FETCH_NUM));
     $anum = getListLimit((int)$conf['voting']['anum'], $total);
     $pages = max(1, (int)ceil($total / $anum));
     $num = min(max(1, getVar('get', 'num', 'num', 1)), $pages);
@@ -90,27 +90,27 @@ function voting(): void {
     $head = [['content' => _ID, 'is_col_id' => true], ['content' => _TITLE, 'is_col_title' => true, 'is_truncate' => true]];
     if ($multi) $head[] = ['content' => _LANGUAGE, 'class_name' => 'sl-col-lang'];
     $head[] = ['content' => _MODUL, 'class_name' => 'sl-col-module'];
+    $head[] = ['content' => _ENDDATE, 'is_col_date' => true];
     $head[] = ['content' => _STATUS, 'is_col_status' => true, 'nosort' => true];
     $head[] = ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true];
     $rows = [];
     while ([$id, $modul, $date, $enddate, $title, $lang, $typ] = $db->getSqlRow($result)) {
         $live = time() >= strtotime($date) && time() <= strtotime($enddate);
         $items = ($live && !$modul) ? [['href' => 'index.php?name=voting&op=view&id='.$id, 'icon_name' => 'eye', 'title' => _MVIEW]] : [];
-        $items[] = ['href' => $afile.'.php?name=voting&op=add&id='.$id, 'icon_name' => 'pencil', 'title' => _FULLEDIT];
-        $items[] = getTplPostAction(['name' => 'voting', 'op' => 'delete', 'id' => $id, 'num' => $num], 'trash', _ONDELETE) + ['later' => 'gone del'];
+        $items[] = ['href' => $afile.'.php?name=voting&op=add&id='.$id, 'icon_name' => 'pencil', 'title' => _FULLEDIT, 'is_edit' => true];
         $cells = [
             ['is_col_id' => true, 'has_content_text' => true, 'content_text' => $id],
-            ['is_col_title' => true, 'is_truncate' => true, 'title_text' => (string)$title, 'prefix_html' => $tpl->getHtmlFrag('popover', ['items' => [
-                ['label' => _CHNGSTORY, 'value' => format_time($date, _TIMESTRING)],
-                ['label' => _ENDDATE, 'value' => format_time($enddate, _TIMESTRING)],
-                ['label' => _TYPE, 'value' => ($typ == '1') ? _VOPEN : _VCLOSE],
-            ], 'tip_label' => _DETAILS.': '.$title, 'tip_id' => 'sl-tip-'.$id]), 'text_html' => htmlspecialchars((string)$title, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')],
+            ['is_col_title' => true, 'is_truncate' => true, 'title_text' => (string)$title, 'text_html' => htmlspecialchars((string)$title, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')],
         ];
         if ($multi) $cells[] = ['class_name' => 'sl-col-lang', 'content_html' => getLangName((!$lang) ? _ALL : $lang)];
         $cells[] = ['class_name' => 'sl-col-module', 'content_html' => $modul ? getModuleName($modul) : _NONE];
+        $cells[] = ['is_col_date' => true, 'moment' => $enddate];
         $cells[] = ['is_col_status' => true, 'content_html' => ad_status('', $live ? '1' : '0')];
-        $cells[] = ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('dial', ['dial_title' => _FUNCTIONS, 'dial' => $items])];
-        $rows[] = ['name' => cutstr((string)$title, 60), 'cells' => $cells];
+        $cells[] = ['is_col_actions' => true, 'dial' => $items];
+        $rows[] = ['name' => cutstr((string)$title, 60), 'details' => [
+            ['label' => _CHNGSTORY, 'value' => format_time($date, _TIMESTRING)],
+            ['label' => _TYPE, 'value' => ($typ == '1') ? _VOPEN : _VCLOSE],
+        ], 'drop' => getTplPostAction(['name' => 'voting', 'op' => 'delete', 'id[]' => $id, 'num' => $num], 'trash', _ONDELETE), 'cells' => $cells];
     }
     echo getTplAdminList([
         'head_html' => getTplAdminTabs(['ops' => ['name=voting', 'name=voting&op=add', 'name=voting&op=config', 'name=voting&op=info'],
@@ -125,6 +125,7 @@ function voting(): void {
         'count' => $total,
         'limit' => $anum,
         'base' => (int)$conf['voting']['anum'],
+        'upto' => $upto,
     ]);
     setFoot();
 }
@@ -308,46 +309,53 @@ function save(): void {
         if ($open && !$done) $db->setSqlRollback();
         setRedirect($afile.'.php?name=voting', false, 302, $done ? _SUCCSAVE : _ERROR, !$done);
     } elseif ($posttype == 'delete') {
-        delete($id);
+        delete([$id]);
     } else {
         add();
     }
 }
 
-function delete(int $id = 0): void {
+function delete(array $ids = []): void {
     global $db, $afile, $com, $conf;
     $iswarn = !checkAdminPost('voting');
-    if (!$id) $id = getVar('post', 'id', 'num', 0);
-    $fail = false;
-    if (!$iswarn && $id && empty($conf['node']['types'])) {
-        $open = $db->setSqlBegin();
-        $gone = $open && $com->deleteTarget('voting', [$id]) ? $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_voting WHERE id = :id', ['id' => $id]) : false;
-        $done = $gone && $gone->rowCount() > 0
-            && (new Route($db))->deleteRoute('poll', intval($id)) && $db->setSqlCommit();
-        if ($open && !$done) $db->setSqlRollback();
-        $fail = !$done;
-    } elseif (!$iswarn && $id) {
+    $act = static function (int $id) use ($db, $com, $conf): bool {
+        if (empty($conf['node']['types'])) {
+            $open = $db->setSqlBegin();
+            $gone = $open && $com->deleteTarget('voting', [$id]) ? $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_voting WHERE id = :id', ['id' => $id]) : false;
+            $done = $gone && $gone->rowCount() > 0
+                && (new Route($db))->deleteRoute('poll', $id) && $db->setSqlCommit();
+            if ($open && !$done) $db->setSqlRollback();
+            return $done;
+        }
         $lock = 'node.poll.'.$id;
         $held = $db->getSqlQuery('SELECT GET_LOCK(:name, 5)', ['name' => $lock]);
-        $fail = !$held || intval($held->fetchColumn()) !== 1;
+        $miss = !$held || intval($held->fetchColumn()) !== 1;
         $step = 'before';
+        $done = true;
         try {
             $serv = getNodeWriter();
-            if ($fail || !$db->setSqlBegin()) throw new NodeException('The deletion of a poll cannot start', NodeException::STORAGE);
+            if ($miss || !$db->setSqlBegin()) throw new NodeException('The deletion of a poll cannot start', NodeException::STORAGE);
             $step = 'open';
             $serv->deleteNodePoll($id);
             if (!$com->deleteTarget('voting', [$id])) throw new NodeException('The comments of the poll were not deleted', NodeException::STORAGE);
             $gone = $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_voting WHERE id = :id', ['id' => $id]);
             if (!$gone || $gone->rowCount() < 1) throw new NodeException('The poll row was not deleted', NodeException::STORAGE);
-            if (!(new Route($db))->deleteRoute('poll', intval($id))) throw new NodeException('The paths of the poll were not marked gone', NodeException::STORAGE);
+            if (!(new Route($db))->deleteRoute('poll', $id)) throw new NodeException('The paths of the poll were not marked gone', NodeException::STORAGE);
             $step = 'unknown';
             if (!$db->setSqlCommit()) throw new NodeException('The commit of a poll deletion is uncertain', NodeException::STORAGE);
         } catch (Throwable $err) {
             if ($step === 'open') $db->setSqlRollback();
-            $fail = true;
+            $done = false;
             Logger::addSite('error', 'Voting: a poll could not be deleted', ['id' => $id, 'error' => $err->getMessage()]);
         }
         if ($held) $db->getSqlQuery('SELECT RELEASE_LOCK(:name)', ['name' => $lock]);
+        return $done;
+    };
+    if (!$iswarn && setListPortion('id', PREFIX_DB.'_voting', '', [], $act)) exit;
+    $ids = $iswarn ? [] : array_map('intval', $ids ?: getVar('post', 'id[]', 'num'));
+    $fail = !$iswarn && !$ids;
+    foreach ($ids as $id) {
+        if (!$act($id)) $fail = true;
     }
     setRedirect($afile.'.php?name=voting&num='.getVar('post', 'num', 'num', 1), false, 302, $iswarn ? _TOKENMISS : ($fail ? _ERROR : _SUCCDELETE), $iswarn || $fail);
 }

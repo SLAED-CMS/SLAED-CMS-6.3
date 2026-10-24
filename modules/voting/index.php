@@ -59,7 +59,7 @@ function voting(): void {
             ];
             if ($ismoder) {
                 $edit = HOME_PATH.$afile.'.php?name=voting&op=add&id='.$id;
-                $del = HOME_PATH.$afile.'.php?name=voting&op=delete&id='.$id.'&refer=1';
+                $del = HOME_PATH.$afile.'.php?name=voting&op=delete&id[]='.$id.'&refer=1';
                 $row += getTplEditMenu($edit, $del, $stitle);
             }
             $rows .= $tpl->getHtmlPart('voting-home', $row);

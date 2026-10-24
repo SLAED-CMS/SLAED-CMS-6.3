@@ -218,7 +218,7 @@ final class AdminGuardTest extends TestCase
         foreach (['op=users_add', 'op=security_block', 'op=users_del'] as $gone) $this->assertStringNotContainsString($gone, $body, 'The profile still links to '.$gone);
         $this->assertStringContainsString("'.php?name=account&op=add&id='.\$uid", $body);
         $this->assertStringContainsString("'.php?name=security&op=banlist&new_ip='", $body);
-        $this->assertStringContainsString("getTplPostAction(['name' => 'account', 'op' => 'delete', 'id' => \$uid]", $body);
+        $this->assertStringContainsString("getTplPostAction(['name' => 'account', 'op' => 'delete', 'id[]' => \$uid]", $body);
     }
 
     # The forum list only reads; the repair of the counters is a posted op of its own behind the admin POST guard

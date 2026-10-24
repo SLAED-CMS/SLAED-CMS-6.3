@@ -198,7 +198,6 @@ define('_COMMENTS_FIXED','Reparierte Zähler: %d.');
 define('_COMMENTS_AUTHOR','Alle Kommentare des Autors');
 define('_COMMENTS_ADDR','Alle Kommentare von dieser IP');
 define('_COMMENTS_ONSITE','Auf der Website antworten');
-define('_COMMENTS_PICK','Kommentar %s auswählen');
 define('_CONFIG_BLOCKED','Die Wiederherstellung kann nicht selbst entscheiden, Grund: %s. Prüfen Sie die Dateien des Vorgangs in storage/backup/config manuell.');
 define('_CONFIG_CLEAN','Kein unterbrochener Konfigurationsvorgang gefunden, die Konfiguration ist konsistent.');
 define('_CONFIG_OP','Vorgang');

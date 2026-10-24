@@ -198,7 +198,6 @@ define('_COMMENTS_FIXED','Compteurs réparés : %d.');
 define('_COMMENTS_AUTHOR','Tous les commentaires de l\'auteur');
 define('_COMMENTS_ADDR','Tous les commentaires de cette IP');
 define('_COMMENTS_ONSITE','Répondre sur le site');
-define('_COMMENTS_PICK','Sélectionner le commentaire %s');
 define('_CONFIG_BLOCKED','La restauration ne peut pas décider seule, raison : %s. Vérifiez manuellement les fichiers de l\'opération dans storage/backup/config.');
 define('_CONFIG_CLEAN','Aucune opération de configuration interrompue n\'a été trouvée, la configuration est cohérente.');
 define('_CONFIG_OP','Opération');

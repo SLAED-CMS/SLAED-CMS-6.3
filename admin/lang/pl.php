@@ -198,7 +198,6 @@ define('_COMMENTS_FIXED','Naprawione liczniki: %d.');
 define('_COMMENTS_AUTHOR','Wszystkie komentarze autora');
 define('_COMMENTS_ADDR','Wszystkie komentarze z tego IP');
 define('_COMMENTS_ONSITE','Odpowiedz na stronie');
-define('_COMMENTS_PICK','Wybierz komentarz %s');
 define('_CONFIG_BLOCKED','Przywracanie nie może samo rozstrzygnąć, powód: %s. Sprawdź ręcznie pliki operacji w storage/backup/config.');
 define('_CONFIG_CLEAN','Nie znaleziono przerwanej operacji konfiguracji, konfiguracja jest spójna.');
 define('_CONFIG_OP','Operacja');

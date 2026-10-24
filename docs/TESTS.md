@@ -278,7 +278,7 @@ The updater tests and what each holds are listed in `docs/UPDATE.md`, "Tests". A
 
 Contract tests (`CommentNotifyTest`, `CommentReadTest`, `CommentStateTest`, `CommentTargetTest`,
 `CommentThreadTest`, `CommentTrustBoundaryTest`, `CommentWriteTest`, `GeoipReaderTest`, `InputFilterTest`,
-`InputVarContractTest`, `StatsContractTest`) drive
+`InputVarContractTest`, `ListPortionTest`, `StatsContractTest`) drive
 production code through `tests/Support/contract_probe.php`, which boots the real
 core in an isolated CLI process per scenario. Prefer that route over copying an algorithm into a test:
 the previous replica-based `InputFilterTest` silently drifted away from the
