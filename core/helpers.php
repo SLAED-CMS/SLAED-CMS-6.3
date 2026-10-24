@@ -480,7 +480,7 @@ function setListPortion(string $key, string $from, string $where, array $pars, C
     return true;
 }
 
-# Render one full admin info page from a module info file with optional in-place editor
+# Render one full admin info page from a module info file with optional in-place editor; can_edit false keeps the editor away from a reader of a core page
 # Info docs are Markdown rendered in trusted mode, so they are stored raw with LF line endings: filterHtml would mangle Markdown and HTML forms submit CRLF
 function setTplAdminInfoPage(array $data = []): void {
     global $afile, $locale, $conf, $tpl, $prs;
@@ -492,6 +492,7 @@ function setTplAdminInfoPage(array $data = []): void {
     $action = $data['action_url'] ?? (HOME_PATH.$afile.'.php?name='.$name.'&op=info');
     $save = $data['save_flag'] ?? 'save_info';
     $submit = $data['submit_label'] ?? _SAVECHANGES;
+    $edit = !empty($conf['adminfo']) && ($data['can_edit'] ?? true);
     $fdoc = static function(string $path): string {
         foreach (['.html', '.md'] as $ext) {
             if (file_exists($path.$ext)) return $path.$ext;
@@ -517,7 +518,7 @@ function setTplAdminInfoPage(array $data = []): void {
     if ($path === '') $path = $base.'/'.$locale.'.html';
     $text = file_exists($path) ? (string)file_get_contents($path) : _NO_INFO;
     $alert = '';
-    if (!empty($conf['adminfo']) && getVar('post', $save, 'num', 0)) {
+    if ($edit && getVar('post', $save, 'num', 0)) {
         if (!checkSiteToken()) {
             $alert = $tpl->getHtmlFrag('alert', [
                 'alert_attr' => 'data-sl-autohide="5000"',
@@ -569,9 +570,9 @@ function setTplAdminInfoPage(array $data = []): void {
         'tabs' => $tabs,
         'tab' => $tab,
     ]);
-    if (!empty($conf['adminfo']) && file_exists($path)) $cont .= checkPerms($path);
+    if ($edit && file_exists($path)) $cont .= checkPerms($path);
     $cont .= $body;
-    if (!empty($conf['adminfo'])) {
+    if ($edit) {
         $rows = [[
             'label_html' => '',
             'field_html' => getTplTextarea(['label' => _ADMININFO, 'id' => '1', 'name' => 'text', 'value' => $text, 'mod' => $mod, 'rows' => '25', 'store' => 'config']),

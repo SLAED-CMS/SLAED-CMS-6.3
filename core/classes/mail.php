@@ -578,18 +578,36 @@ class Mail {
     }
 
     # List the addresses the registry holds, newest verdict first and paged like the queue, so an operator can see why an address stopped receiving mailings
-    public function getDeadList(int $page): array {
+    public function getDeadList(array $filt): array {
         $out = ['rows' => [], 'total' => 0, 'page' => 1, 'pages' => 1, 'limit' => 20, 'base' => 20, 'upto' => 0];
         if (!$this->db instanceof Database) return $out;
-        $row = $this->db->getSqlRow($this->db->getSqlQuery('SELECT COUNT(id) AS num, MAX(id) AS top FROM '.PREFIX_DB.'_maildead'));
+        [, $where, $pars] = $this->getDeadScope($filt);
+        $row = $this->db->getSqlRow($this->db->getSqlQuery('SELECT COUNT(id) AS num, MAX(id) AS top FROM '.PREFIX_DB.'_maildead'.$where, $pars));
         $out['total'] = intval($row['num'] ?? 0);
         $out['upto'] = intval($row['top'] ?? 0);
         $out['limit'] = $lim = getListLimit($out['base'], $out['total']);
         $out['pages'] = max(1, (int)ceil($out['total'] / $lim));
-        $out['page'] = max(1, min($out['pages'], $page));
-        $sql = 'SELECT id, email, fails, phase, code, time FROM '.PREFIX_DB.'_maildead ORDER BY time DESC, id DESC LIMIT '.(($out['page'] - 1) * $lim).', '.$lim;
-        $out['rows'] = $this->db->getSqlRows($this->db->getSqlQuery($sql)) ?: [];
+        $out['page'] = max(1, min($out['pages'], intval($filt['page'] ?? 1)));
+        $sql = 'SELECT id, email, fails, phase, code, time FROM '.PREFIX_DB.'_maildead'.$where.' ORDER BY time DESC, id DESC LIMIT '.(($out['page'] - 1) * $lim).', '.$lim;
+        $out['rows'] = $this->db->getSqlRows($this->db->getSqlQuery($sql, $pars)) ?: [];
         return $out;
+    }
+
+    # The dead addresses by phase and a part of the address for the list, its count and a sweep; the column compares bytes and keeps the local case, so both sides are lowered
+    public function getDeadScope(array $filt): array {
+        $phase = mb_substr(trim((string)($filt['phase'] ?? '')), 0, 10, self::CHARSET);
+        $find = mb_strtolower(trim((string)($filt['chng'] ?? '')), self::CHARSET);
+        $cond = [];
+        $pars = [];
+        if ($phase !== '') {
+            $cond[] = 'phase = :phase';
+            $pars['phase'] = $phase;
+        }
+        if ($find !== '') {
+            $cond[] = 'LOWER(email) LIKE :find';
+            $pars['find'] = '%'.$find.'%';
+        }
+        return [PREFIX_DB.'_maildead', $cond ? ' WHERE '.implode(' AND ', $cond) : '', $pars];
     }
 
     # Forget the verdicts held against named addresses, which is what an operator does once a mailbox is known to work again; the next failure counts from one

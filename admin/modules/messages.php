@@ -6,19 +6,82 @@
 
 if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 
+# The filter of the messages as the request carries it: the condition the list reads, a lamp turned on matching neither an expired row nor an off one, and the query that keeps it
+function getMessagesFilter(string $src = 'get'): array {
+    global $conf;
+    $status = getVar($src, 'status', 'var');
+    if (!in_array($status, ['on', 'off', 'gone'], true)) $status = '';
+    $view = getVar($src, 'view', 'num', 0);
+    if ($view > 4) $view = 0;
+    $lang = ($conf['multilingual'] == 1) ? getVar($src, 'lang', 'var') : '';
+    $chng = trim(getVar($src, 'chng'));
+    $live = '(expire IS NULL OR expire >= NOW())';
+    $cond = ($status !== '') ? [match ($status) {'on' => 'status = 1 AND '.$live, 'off' => 'status = 0 AND '.$live, default => 'expire < NOW()'}] : [];
+    $pars = [];
+    if ($view) {
+        $cond[] = 'view = :view';
+        $pars['view'] = $view;
+    }
+    if ($lang !== '') {
+        $cond[] = '(lang = :lang OR lang = \'\')';
+        $pars['lang'] = $lang;
+    }
+    if ($chng !== '') {
+        $cond[] = 'title LIKE :find';
+        $pars['find'] = '%'.$chng.'%';
+    }
+    $keys = array_filter(['status' => $status, 'view' => $view, 'lang' => $lang, 'chng' => $chng], static fn($v) => $v !== '' && $v !== 0);
+    return ['status' => $status, 'view' => $view, 'lang' => $lang, 'chng' => $chng, 'where' => $cond ? ' WHERE '.implode(' AND ', $cond) : '', 'pars' => $pars,
+        'base' => 'name=messages'.($keys ? '&'.http_build_query($keys, '', '&', PHP_QUERY_RFC3986) : '')];
+}
+
+# The filter bar of the messages: status, audience, the languages the rows name when the site has several, and the title
+function getMessagesSearch(array $flt): string {
+    global $afile, $db, $conf, $tpl;
+    $opts = static function (array $list, string|int $cur): array {
+        $out = [['value_attr' => '', 'label_text' => _ALL, 'is_selected' => $cur === '' || $cur === 0]];
+        foreach ($list as $key => $label) $out[] = ['value_attr' => (string)$key, 'label_text' => $label, 'is_selected' => (string)$cur === (string)$key];
+        return $out;
+    };
+    $fields = [
+        ['field_id' => 'sl-msg-stat', 'label' => _STATUS, 'name_attr' => 'status', 'options' => $opts(['on' => _ON, 'off' => _OFF, 'gone' => _EXPIRED], $flt['status']),
+            'is_now' => true],
+        ['field_id' => 'sl-msg-view', 'label' => _VIEW, 'name_attr' => 'view', 'options' => $opts([1 => _MVALL, 2 => _MVANON, 3 => _MVUSERS, 4 => _MVADMIN], $flt['view']),
+            'is_now' => true],
+    ];
+    if ($conf['multilingual'] == 1) {
+        $langs = [];
+        foreach ($db->getSqlRows($db->getSqlQuery('SELECT DISTINCT lang FROM '.PREFIX_DB.'_message WHERE lang != \'\' ORDER BY lang')) ?: [] as $row) {
+            $langs[$row['lang']] = getLangName((string)$row['lang']);
+        }
+        $fields[] = ['field_id' => 'sl-msg-lang', 'label' => _LANGUAGE, 'name_attr' => 'lang', 'options' => $opts($langs, $flt['lang']), 'is_now' => true];
+    }
+    $fields[] = ['field_id' => 'sl-msg-q', 'label' => _TITLE, 'name_attr' => 'chng', 'itype' => 'search', 'value' => $flt['chng']];
+    return $tpl->getHtmlFrag('list-filter', [
+        'action_url' => $afile.'.php',
+        'label' => _SEARCH,
+        'is_part' => true,
+        'hidden' => [['nameattr' => 'name', 'valueattr' => 'messages']],
+        'fields' => $fields,
+    ]);
+}
 
 function messages(): void {
     global $db, $afile, $tpl;
+    $flt = getMessagesFilter();
+    parse_str($flt['base'], $keys);
     $views = [1 => _MVALL, 2 => _MVANON, 3 => _MVUSERS];
-    $result = $db->getSqlQuery('SELECT id, title, expire, status, view, lang FROM '.PREFIX_DB.'_message ORDER BY id');
+    $result = $db->getSqlQuery('SELECT id, title, expire, status, view, lang FROM '.PREFIX_DB.'_message'.$flt['where'].' ORDER BY id', $flt['pars']);
     $rows = [];
     while ([$mid, $title, $expire, $active, $view, $lang] = $db->getSqlRow($result)) {
         $exp = $expire ? strtotime($expire) - time() : 0;
         $gone = $expire && $exp < 0;
-        $keep = ['name' => 'messages', 'id[]' => $mid];
+        $keep = $keys + ['id[]' => $mid];
+        $text = filterTextHighlight(htmlspecialchars($title, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'), $flt['chng']);
         $rows[] = ['name' => $title, 'drop' => getTplPostAction($keep + ['op' => 'delete'], 'trash', _ONDELETE), 'cells' => [
             ['is_col_id' => true, 'has_content_text' => true, 'content_text' => $mid],
-            ['is_truncate' => true, 'title_text' => $title, 'content_html' => $tpl->getHtmlFrag('inline-badge', ['is_note' => true, 'label' => $title, 'title_text' => $title])],
+            ['is_truncate' => true, 'title_text' => $title,
+                'content_html' => $tpl->getHtmlFrag('inline-badge', ['is_note' => true, 'label_html' => $text, 'title_text' => $title])],
             ['has_content_text' => true, 'content_text' => $gone ? _EXPIRED : (($exp > 0) ? getDuration($exp) : _UNLIMITED)],
             ['has_content_text' => true, 'content_text' => $views[$view] ?? _MVADMIN],
             ['has_content_text' => true, 'content_text' => getLangName($lang ?: _ALL)],
@@ -29,7 +92,8 @@ function messages(): void {
     }
     setHead();
     echo getTplAdminList([
-        'head_html' => getTplAdminTabs(['ops' => ['name=messages', 'name=messages&op=add', 'name=messages&op=info'], 'tabs' => [_HOME, _ADD, _MANUAL], 'part' => [0]]),
+        'head_html' => getTplAdminTabs(['ops' => ['name=messages', 'name=messages&op=add', 'name=messages&op=info'], 'tabs' => [_HOME, _ADD, _MANUAL], 'part' => [0],
+            'subtitle_html' => getMessagesSearch($flt)]),
         'is_fixed' => true,
         'head' => [
             ['content' => _ID, 'is_col_id' => true],
@@ -42,6 +106,7 @@ function messages(): void {
         ],
         'rows' => $rows,
         'count' => count($rows),
+        'none_text' => ($flt['where'] !== '') ? _NONE_FOUND : _NO_INFO,
     ]);
     setFoot();
 }
@@ -222,7 +287,7 @@ function status(): void {
     foreach ($done ? $ids : [] as $id) {
         if (!$db->getSqlQuery('UPDATE '.PREFIX_DB.'_message SET status = :active'.$wipe.' WHERE id = :mid', ['active' => $act, 'mid' => intval($id)])) $done = false;
     }
-    setRedirect($afile.'.php?name=messages', false, 302, $warn ? _TOKENMISS : ($done ? _SUCCSTATUS : _ERROR), !$done);
+    setRedirect($afile.'.php?'.getMessagesFilter('post')['base'], false, 302, $warn ? _TOKENMISS : ($done ? _SUCCSTATUS : _ERROR), !$done);
 }
 
 function delete(array $ids = []): void {
@@ -234,7 +299,7 @@ function delete(array $ids = []): void {
         $res = $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_message WHERE id = :mid', ['mid' => intval($id)]);
         if (!$res || $res->rowCount() < 1) $done = false;
     }
-    setRedirect($afile.'.php?name=messages', false, 302, $warn ? _TOKENMISS : ($done ? _SUCCDELETE : _ERROR), !$done);
+    setRedirect($afile.'.php?'.getMessagesFilter('post')['base'], false, 302, $warn ? _TOKENMISS : ($done ? _SUCCDELETE : _ERROR), !$done);
 }
 
 function info(): void {

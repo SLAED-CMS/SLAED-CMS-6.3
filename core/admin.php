@@ -288,8 +288,9 @@ function getAdminSettingsRow(string $axis): string {
 }
 
 # Render the settings window of the panel: the answers an administrator changes from any screen, applied where they stand except the language, which reloads
+# Its foot leads to the help of the panel, which describes every row of it
 function getAdminSettingsWindow(): string {
-    global $tpl;
+    global $tpl, $afile;
     $rows = '';
     foreach (['mode', 'still', 'sound', 'saver', 'dock-off', 'dock-site-off', 'dock-side', 'editor', 'language'] as $axis) $rows .= getAdminSettingsRow($axis);
     return $tpl->getHtmlFrag('window', [
@@ -299,6 +300,7 @@ function getAdminSettingsWindow(): string {
         'title_text' => _FUNCTIONS,
         'close_text' => _CLOSE,
         'body_html' => $rows,
+        'foot_html' => $tpl->getHtmlFrag('window-foot-options', ['help_url' => HOME_PATH.$afile.'.php?op=info', 'help_text' => _MANUAL]),
     ]);
 }
 
@@ -364,6 +366,7 @@ function getAdminLayoutVars(): array {
         'menu' => getAdminTopMenu(),
         'bell_html' => $tpl->getHtmlFrag('bell', $bell),
         'admin_blocks' => getAdminPanelBlocks().getAdminInfo().($panel ? adminblock() : ''),
+        'help_url' => HOME_PATH.$afile.'.php?op=info',
         'sess_max' => getAdminIdle(),
         'sess_url' => $afile.'.php',
         'sess_token' => getSiteToken('keep'),

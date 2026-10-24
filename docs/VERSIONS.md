@@ -1,5 +1,81 @@
 # Versions
 
+## 2026-10-24
+
+### The panel gets one shell: the options in place, Ctrl+K, a cockpit, a floating menu, voices and a list canon
+
+The etalons of the panel and of the site under an administrator moved into the themes `admin` and `lite`, so the first
+8.0 release brings them to every site. The references are `docs/ARCHITECTURE.md`, "Admin Shell Boundary",
+`docs/TEMPLATES.md`, "Panel Shell", "Admin List Contract", "Admin Form Contract" and "Alert Action Slot", and
+`docs/WINDOW.md`, "Where the windows are"; the help of the panel is `admin/info/panel/ru.md`, opened from "Опции" and
+from Ctrl+K.
+
+- **The shell.** One `h1` on a page, a skip link, the tab title by section, the menu as a drawer on a phone, a filter
+  and the current section in the menu, the dial "…" one Tab stop. "Опции" apply in place through op `option` — the
+  colour mode, "Движение", "Звук", "Заставка", the floating menu in the panel and on the site, its position, the
+  editor; only the language reloads. Ctrl+K opens the sections, the actions and the settings of the page; `[` folds the
+  menu into a rail.
+- **Queues and the session.** One source of the queues feeds the bell, "Ждут внимания", the chips of the menu and the
+  cards and the floating menu, polled once a minute. The panel session ends after the key `idle` of
+  `config/security.php` (60 minutes) without an action; a window warns before the end and keeps the session, and no
+  poll counts as an action.
+- **The home.** The cockpit of a super administrator: four rings, a lamp of fourteen signals with the age of a backup
+  against `dump_age`, the strip of the request and a live chip; the warnings about `setup.php`, the self-check and the
+  PHP version are signals of the lamp.
+- **The block and the menu.** One block "Администрация" in both themes — in the panel on the home only, on the site
+  first in its column; the window "Наблюдение" with the present of the visitors; a floating menu in the panel and on
+  the site with the pins, the queue, "Все разделы", "Эта страница в панели", the card of the administrator, the own
+  links and the window tools.
+- **Lists and forms.** Every list of the panel is drawn by one canon: the filter bar, the address with the page, four
+  views, a kept sort, relative dates, cards on a phone, deferred actions with Undo, the keys J, K, X, E and "/", and a
+  personal number of rows per page; every POST form asks before its changes are left behind, and "Конфигурации" check
+  their fields with a summary and find a setting. An alert carries its action in one slot.
+- **Voices and the screensaver.** Short voices in `sound/` of each theme answer actions and events after the first
+  touch and are switched in "Опции" and by zones in the profile; the screensaver "Возрождение" starts after the chosen
+  idle minutes.
+
+Breaking for code outside the tree: `getThemeImageUrl()` and `getThemeImagePath()` became `getThemeFileUrl()` and
+`getThemeFilePath()` from the root of the theme (`images/…` in the argument); `isThemeStill()` became
+`isThemeFlag($key)`; `setToast(text, warn)` became `setToast(text, opts)` with `{warn, undo, time}`;
+`getTplPostButton()` takes the look as its fifth parameter; `Rating::getRatingList($scope, $id, $page, $limit)` pages
+by number; `getSelfCheckAlert()` takes no argument; the ops `mode` and `changeeditor` of the panel, the function
+`toplist()` of "Поиск" (its op stays on `search(true)`), `getAdminFavoriteList()`, `getAdminPrivateList()`, `getAdminCountRow()`, `_EDITOR_UNDO`
+(now `_UNDO`), `_GROUPS_LEAVE` (now `_ADM_LEAVE`) and `_PHPSETUP` are gone; `fragments/admin-block-links.html` is
+`fragments/admin-block.html`; "Оптимизация" and "Ремонт" of "База данных" run only by POST, the ban lists are
+`op=banlist&kind=ip|user`; `public/sound/` is gone and its address answers 404.
+
+### Every panel list does what "Комментарии" do, and takes it from the canon instead of its module
+
+Until now only "Комментарии" had a filter bar, a relative date, the "i", the key E, row picks with a bulk foot and
+"Отметить все N"; every other list glued its date and its tip into its cells and deleted one row at a time. The list
+canon `getTplAdminList()` now builds all of it from the meaning a module hands it. The reference is `docs/TEMPLATES.md`,
+"Admin List Contract"; the help of each section in `admin/info/` and `modules/*/admin/info/` says what its list does.
+
+- **The row by meaning.** A row hands `name`, a cell `moment`, `details`, the dial items with `is_edit` and `is_find`,
+  `drop` and `stat`; the canon draws `<time datetime>` with its relative reading, the "i" in the first cell past the id,
+  `data-sl-edit` for the key E and the dial with the delete last. No list function writes a `popover`, a `stamp`, a
+  `data-sl-edit` or an `hx-boost`. "Избранное" date by `_favorites.time`, "Голосования" by `enddate`; the bans read as
+  the moment they end.
+- **Picks and the bulk foot.** Seventeen lists with a deferred delete carry a box per row, "Отмечено: N", the choice of
+  the action and OK, with Undo for ten seconds; the lamp of "Сообщения" turns in place, "Вернуть" of the undelivered is
+  the action `move`. A delete under a question, "Аннулировать" of a rating vote and a campaign with mail in its queue
+  stay single.
+- **"Отметить все N".** The twelve paged lists of the foot act on the whole list under its filter: the foot handler is
+  posted with `upto` and walks the list in portions of 100 by `setListPortion()`, with a progress line and a pause;
+  rows added after the page was drawn are not touched.
+- **Filters.** "Избранное", the private messages, "Сообщения", "Голосования", the campaigns and the undeliverable
+  addresses of "Рассылка" got the filter bar; the list, its count, the pager, the foot and "Отметить все N" read one condition. A
+  language picks its own rows and the rows for every language.
+- **Empty states.** An empty list under its filter says "ничего не найдено", without one "нет информации"; the four
+  queues of the bell say "всё проверено" in the calm tone. The OAuth provider column is `_OAUTH_PROVIDER`, no longer
+  `_MODUL`.
+
+Breaking for code outside the tree: a delete or status handler of the panel lists takes `id[]` (one id is a list of
+one), and the delete of a user from the profile and the poll menu of the site post `id[]` too; `getTplEditMenu()`
+writes a list of its address back as `key[]`; a ban removal names its list by `kind` (`ip`, `user`) instead of `id` 1
+and 3; op `actions` and op `sweep` of "Комментарии", `Comment::setAdminPortion()` and `_COMMENTS_PICK` are gone;
+`Privat::getAdminList()` and `Mail::getDeadList()` take the filter.
+
 ## 2026-10-18
 
 ### A site updates itself from the panel under the signature of the SLAED key, and every failure rolls it back

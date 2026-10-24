@@ -380,6 +380,38 @@ namespace Tests\Unit {
             $this->assertGreaterThanOrEqual(13, $seen, 'The scan found too few edits to hold anything');
         }
 
+        # A list under a filter bar tells an empty result from an empty list, the queues of getAdminQueues() say they are clean (owner, 2026-10-24); the referers only sort
+        #[Test]
+        public function everyFilteredListTellsNothingFound(): void
+        {
+            $root = dirname(__DIR__, 2);
+            $files = [...glob($root.'/admin/modules/*.php'), ...glob($root.'/modules/*/admin/index.php')];
+            $lists = [];
+            foreach ($files as $file) {
+                $parts = [];
+                foreach (preg_split('#^(?=function\s+\w+\s*\()#m', (string)file_get_contents($file)) as $part) {
+                    if (preg_match('#^function\s+(\w+)#', $part, $mat)) $parts[$mat[1]] = $part;
+                }
+                $bars = array_keys(array_filter($parts, static fn($v) => str_contains($v, "'list-filter'")));
+                foreach ($parts as $func => $part) {
+                    if (!str_contains($part, 'getTplAdminList(')) continue;
+                    $name = substr($file, strlen($root) + 1).' '.$func.'()';
+                    $lists[$name] = $part;
+                    $bar = str_contains($part, "'list-filter'") || array_filter($bars, static fn($v) => str_contains($part, $v.'('));
+                    if (!$bar || $name === 'admin/modules/referers.php referers()') continue;
+                    $this->assertMatchesRegularExpression("#'none_text' => .*_NONE_FOUND#", $part, $name.' says no info under its filter');
+                }
+            }
+            $this->assertArrayHasKey('admin/modules/referers.php referers()', $lists);
+            $queues = ['admin/modules/comments.php comments()', 'modules/account/admin/index.php newuser()', 'modules/node/admin/index.php show()',
+                'modules/node/admin/index.php setNodeSupportQueue()'];
+            foreach ($queues as $name) {
+                $this->assertArrayHasKey($name, $lists);
+                $this->assertStringContainsString('_ADM_CLEAN', $lists[$name], $name.' is a queue that does not say it is clean');
+                $this->assertStringContainsString("'is_calm' =>", $lists[$name], $name.' is a queue whose empty state is not calm');
+            }
+        }
+
         # The array literal around every item of one icon in a file, read by tokens so a bracket inside a string never moves its bounds
         private static function getIconItems(string $code, string $icon): array
         {

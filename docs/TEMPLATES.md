@@ -502,6 +502,199 @@ keys in `docs/EDITORS.md`, "The Shell".
 | `data-sl-meter` with `data-sl-meter-fill`, `data-sl-meter-num`, `data-sl-meter-left` | the ring, the lamp and each counted control | recomputes profile completeness as the member types; `data-sl-meter-fill` carries the value that counts as empty, so one rule serves a text field and a select whose zero is a real option |
 | `data-sl-dirty` with `data-sl-clean` | the shared form and the discard button | raises the save bar on the first change and reverts on discard. The hidden state is armed by the script and never by the markup: a page whose JavaScript never ran keeps a bar that is simply always there, instead of a form whose only submit can no longer be made to appear |
 
+## Admin List Contract
+
+A list of the panel is `getTplAdminList()` of `core/helpers.php` on `partials/admin-list.html` of the theme `admin`.
+The module hands the meaning of each row — its name, its moment, its details, its edit, its delete, its status — and
+the canon builds the markup from it: the relative date, the "i", the key E, the boxes, the foot "Отмечено: N" with its
+action and "Отметить все N". No list of the canon glues a `popover`, a `stamp`, a `data-sl-edit`, an `hx-boost` or
+the box of a row pick into a cell of its own. The etalon is "Комментарии" (`admin/modules/comments.php`), the shortest full example
+"Избранное" (`admin/modules/favorites.php`). "Группы" (the ladder), "Блоки", "Категории" and the file manager are
+components of their own and stand outside this contract.
+
+| Key | On | The module hands | The canon builds |
+|---|---|---|---|
+| `name` | the row | the name of the row as a reader says it | `data-sl-row`, the label of its box, the label of its "i", the name in the toast |
+| `moment` | a cell | a `DATETIME` string or a Unix time | `<time datetime data-sl-ago>` with the text in `_TIMESTRING` and the sort key; an empty or zero moment keeps the `content_text` of its module, else the cell is empty |
+| `details` | the row | the items of `fragments/popover.html` | the "i" in the first cell past `is_col_id`, `tip_id` `sl-tip-<row number>`, labelled `_DETAILS: <name>` |
+| `dial` | the actions cell | the items of `fragments/dial.html` | the dial titled by its column, with the item of `drop` appended last |
+| `is_edit` | a dial item | the pencil of the row | `data-sl-edit`, which the key E clicks |
+| `is_find` | a dial item | the address of a filter by the value of the row | `hx-boost="true"`, the list swaps in place |
+| `drop` | the row | `getTplPostAction()` of the delete, `id[]` holding the key of the row | the dial item with `later` `gone del`, the box `id[]` of the row and the action `del` of the foot; `later` `gone move` makes it the action `move` titled by the item |
+| `stat` | a cell | the status action with `later` `gone …` or `lamp …` and `is_on` | the lamp; beside a `drop`, the actions `on` and `off` of the foot from the fields of a row turned off and on |
+| `upto` | the list | the greatest key of the list under its condition | the offer "Отметить все N" when the list has more than one page |
+| `none_text`, `is_calm` | the list | the text of the empty list, and whether empty is the calm state of a queue | `sl-list-none`, with `sl-list-calm` |
+
+- **One row has a box only by its `drop`.** A list whose rows carry no `drop` has no box column and no foot. The key in
+  `id[]` is the key of the row in its own list: an id, the name of a scheduler job, the file of a journal, the entry
+  of a ban (`cidr|hash|time`, `nick|time`), the row of `_user_oauth`. A field that changes from row to row — the type
+  and version of a Node material, the provider of an OAuth link — is not put into `drop`: the handler reads it itself.
+- **The foot is one form and sends one group.** `sl-list-pick` holds a `<fieldset data-sl-pick>` per action (`on`,
+  `off`, `del`, `move`) with the hidden fields of the first row that offers it, `id[]` taken off: op, direction, the
+  keys of the filter and the token. The boxes stand in the table and join the form by `form="sl-list-pick"`. The select
+  `pick` enables its own group and disables the others, so the browser posts that group alone; without a script the
+  first action is sent. The form carries `data-sl-later`: the rows leave or the lamps turn at once, Undo stands for ten
+  seconds, then the form goes with `later=1`, which `setRedirect()` answers 204 or 409 alone.
+- **A handler of the foot takes `id[]` and refuses whole.** It reads `id[]` by the type of the key of its rows — `num`
+  for ids, `var` for the files of a journal, `raw` for a ban entry, the job names of "Планировщик" filtered to their
+  letters — so one id is a list of one; it checks the token once for all of them and returns to its filter and its
+  page. A handler that serves "Отметить все N" holds its row action once as a closure, for the picked rows and for the
+  portions alike.
+- **"Отметить все N" is the handler posted with `upto`.** A whole page picked offers the whole list; taken, its rows
+  leave at once and Undo stands for ten seconds, then `admin-ui.js` posts the group of the foot without `id[]`, with
+  `later=1`, `after` and `upto`. `setListPortion($key, $from, $where, $pars, $act, $limit = 100)` runs first in the
+  handler: without `upto` it answers `false` and the handler goes on with `id[]`; with it, it passes the next portion of
+  ascending keys above `after` and up to `upto` under the same condition as the list to the closure, writes one record
+  of `setAdminLog()` and answers `{done, fail, after, more}` as JSON. The script follows the cursor with a progress line
+  and a pause until `more` is false, and warns when a portion failed or was refused. Rows added after the page was drawn lie above
+  `upto` and are not touched.
+- **The filter is one condition.** The list, its count, the address of the pager, the foot and its portions read one
+  condition of the filter, never a copy of it. "Комментарии" and the six growing lists — "Избранное", the private
+  messages, "Сообщения", "Голосования", the campaigns and the undeliverable addresses of "Рассылка" — have
+  `get<X>Filter($src)` in their module: the state of the request and the query `base` that keeps it, with the `from`,
+  the `where` and its `pars` where the module owns the query; the foot reads it with `'post'`. `get<X>Search($flt)`
+  draws `fragments/list-filter.html` into the `subtitle_html` of the tabs. Where a class owns the query, it answers the
+  condition itself: `Comment::getAdminScope()`, `Privat::getAdminScope()`, `Mail::getQueueScope()`,
+  `Mail::getDeadScope()`, `NodeQuery::getNodeScope()`; the three lists of "Пользователи" read `getAccountScope()` of the
+  account admin, "Поиск" `getSearchwhere()`. The highlight of the found text is `filterTextHighlight()` on the column
+  searched.
+- **Empty says why.** An empty list under a condition of its filter says `_NONE_FOUND`, without one `_NO_INFO` (the
+  default of `none_text`). The queues of `getAdminQueues()` — comments waiting, new accounts, Node "Ждут проверки", the
+  default support queue — say `_ADM_CLEAN` with `is_calm`; the mail queue is a delivery journal and is not one of them.
+  A text with a meaning of its own stays: `_NODE_NOTYPES` for Node without types, `_ERROR` for "База данных".
+- **What stays single.** A delete under a question — TRUNCATE and DROP of "База данных", an administrator, a Node type,
+  "Рефереры — удалить всё", the tables of a module — has no box, as has "Аннулировать" of a rating vote, which asks for a
+  reason, and a campaign with mail in its queue. Short service lists — "Языки", "База данных", "Планировщик",
+  "Администраторы", the Node types, the journals of "Безопасность" — have no filter bar.
+
+**The frame swaps itself.** `partials/admin-list.html` is `#sl-list` with `hx-target="this"`,
+`hx-swap="outerHTML show:none"`, `hx-history-elt` and the header `X-SL-Part`; on that header `setFoot()` answers the
+`<title>` and the content of the module alone, so a module writes no code for a partial answer, and a page that is not
+the panel layout (the login after a lost session) answers `HX-Refresh`. Back redraws a restored list through
+`htmx:historyRestore` in `slaed.js`. The module passes the rest of the frame:
+
+| Key | Carries |
+|---|---|
+| `head`, `rows` | the columns and the rows by meaning; the canon writes the name of each column into `label` of its cells, which the cards read on a phone |
+| `href` | the address of a page without `num`, ending in `&`; both pagers and the rows chip append to it |
+| `count`, `page`, `pages`, `maxpg` | the rows under the filter and the pager window |
+| `limit`, `base` | the rows of this page from `getListLimit()` and the list's own number; `base` brings the rows chip |
+| `key` | the key the sort is kept under, the module name by default; the second list of a module names its own (`security-logins`, `newsletter-dead`) |
+| `head_html`, `note_html`, `foot_html` | the tabs with the filter bar, a note above the table, a form under it that has to live inside `#sl-list` (the ban lists) |
+| `is_fixed` | the fixed table layout |
+
+- **The filter is a GET form.** `fragments/list-filter.html` draws labelled fields with no `onchange`; the tabs that
+  change the list in place are the indexes in `part` of `getTplAdminTabs()`. The filter stays in the address with `num`,
+  and both pagers stand whenever there is more than one page, the filter applied by the server. Without a pager the key
+  tip "i" (`fragments/pager-keys.html`) stands alone above and below the table.
+- **The view is one for every list.** The switch `sl-seg sl-seg-view` writes the cookie `density` through op `option`:
+  `standard` (no cookie), `full`, `compact`, `cards`; `getTplAdminList()` writes `data-sl-density` on the table from the
+  first byte and the script changes the attribute at once. The sort is kept per `key` by `getToggleState()` and said on
+  the line `data-sl-said` of `layouts/admin.html`, which also says the range after every swap; the rows that a filter, a
+  tab or a page brings enter one after another by `--sl-d-order`.
+- **A failed swap says so.** The alert `data-sl-list-error` with "Повторить" (`_ADM_LISTERR`, `_RETRY`) replaces a list
+  that did not come, and the list carries `aria-busy` while it is asked; "Повторить" repeats the same request.
+- **A deferred action names its kind.** `data-sl-later` on a form of the row, the dial or the foot: `gone <what>` takes
+  the rows away (`del`, `move`, or the foot's `del=del on=on …`), `lamp <field>` turns the lamp in place, `flip on|off`
+  turns a section of the panel menu. The action happens on the page at once, the toast offers Undo for ten seconds,
+  then the form leaves with `later=1` by `fetch`, or by `navigator.sendBeacon` when the page is left; after the last
+  deferred action the list redraws itself in place, so the pager and the counts are true.
+
+**Rows per page.** One number of rows for every list of the panel, chosen on the list itself. The cookie
+`$conf['user_c'].'-rows'` goes through op `option` (key `rows`): `10`, `25`, `50`, `100`, `250`, `all` or an own integer
+5–1000; anything else deletes it, and without it a list keeps its own number.
+`getListLimit(int $base, int|Closure $total): int` in `core/helpers.php` is the one source: it answers `$base` outside
+the panel, the chosen number inside it, and `LIST_MAX` (1000, `core/system.php`) for "all" only while the filter holds
+at most `LIST_MAX` rows — `$total` is the count or a closure called only then. In the panel the readers of Node
+(`getPageSize()` of `NodeQuery`), the support queue (`getNodeSupportList()`) and the rating votes
+(`Rating::getRatingList()`) take up to `LIST_MAX` rows a page; the site stays at `limits.maxlist` and the `list.limit`
+of a type.
+
+- **The chip is the range of the page line.** `fragments/pager-rows.html` of the theme `admin` draws "Показаны 1–25"
+  as a chip in the colour of the pager; its panel is the system `sl-float` of the key tip, open on hover and focus, the
+  lower one opening upward by `data-sl-float-up`. The rows are 10, 25, 50, 100, 250 with the pages each would give, "all"
+  with the count (off above `LIST_MAX`), an own number in a field, and "Вернуть умолчание · N"; the list's own number is
+  marked by a dot. A list of one page keeps its pager for the chip. The lite twin of the fragment prints the range text
+  alone, since `PagerKeysTest` holds `pager.html` byte-identical in both themes.
+- **The reader stays on the same row.** After a choice the page is counted from the first row under the table head,
+  `#sl-list` is swapped by htmx with the new `num`, the script puts that row back where it stood, and the toast says the
+  new number with Undo.
+
+**The keys of a list live in `admin-ui.js`.** J and K walk the rows and outline the row in hand (`data-sl-cursor`), X
+clicks its box and E its `data-sl-edit`; "/" puts the focus into the search field of the filter bar.
+
+`AdminListRowTest` holds every key with and without it, the composition of the comment row, that no list function
+glues `popover`, `stamp`, `data-sl-edit` or `hx-boost`, that every edit item carries `is_edit`, and that every list
+with a filter bar passes `_NONE_FOUND` and the four queues `_ADM_CLEAN` with `is_calm`. `ListPickTest` posts every
+foot handler through `tests/Support/pick_probe.php` with `id[]` and with `upto`, with and without the token;
+`ListPortionTest` holds the portions of every list against its count.
+
+## Admin Form Contract
+
+Every POST form of the panel that `partials/form.html` draws, and the group form, carries `data-sl-dirty` and
+`data-sl-leave`. `setDirtyForms()` in `slaed.js` measures a change against the values the form loaded with — a field
+put back is clean again — and a form written with `data-sl-dirty="1"` (the group form after a refusal of the server)
+starts changed. Before a link, the submit of another form or the window takes the page, `setConfirmTask()` asks the one
+text `_ADM_LEAVE`; the window itself is asked by the browser. The boxes of rows, "Отметить все" and the action of a list
+foot are no change; GET filters, htmx forms and forms inside windows never ask.
+
+| Key | On | Carries |
+|---|---|---|
+| `is_valid` | `partials/form.html` | `novalidate` and `data-sl-valid`: a field is checked after the first attempt and when it is left, and the summary `sl-form-sum` (`data-sl-valid-sum`, the texts `_ADM_UNSAVED`, `_ADM_FILL`, `_ADM_BADVAL`) links into the field even on a hidden tab, whose `sl-tab-dot` (`_ADM_EDITED`) marks a change. Today only "Конфигурации" passes it |
+| `find` | `partials/module-head.html` through `getTplAdminTabs()` | "Найти настройку" (`_ADM_SETFIND`): the combobox `sl-form-find` with its list `sl-form-hits` and `sl-form-none`, "/" focuses it, and Ctrl+K gets the group `_CHANGE` with every setting of the page (`data-sl-pal-sets`) |
+
+A row that another choice of the form hides (the SMTP fields under the PHP transport) is offered neither by the find,
+nor by the palette, nor by the check. The mechanism is shared in `admin-ui.js`; a form takes it by its keys, not by
+code of its own.
+
+## Alert Action Slot
+
+An alert that carries a button carries it in one slot: the fragment `alert` of both themes takes `acts_html` and draws
+it in `<div class="sl-alert-acts">` after `sl-alert-body`; without the key the alert is the plain one. The face is
+"Чип": a pill of `--sl-size-chip` with the icon in a circle of the alert's tone; the quiet action
+(`sl-alert-act-quiet`) has no frame, the dangerous one (`sl-alert-act-danger`) a circle of `--sl-danger`. An alert with
+the slot is a container of inline size: the slot holds the end of the line and, in an alert narrower than 480 px, goes
+under the text to the right — the width of the alert decides, not that of the window. The tokens are the component
+`alert-act` of `tools/ui-contract.php`.
+
+- **A module names the look, never the class.** `getTplPostButton($hide, $icon, $label, $attr, $look)` takes
+  `$look` `'act'` or `'danger'`; `post-button.html` turns the flags `is_act` and `is_danger` into its classes. No module
+  glues `getTplPostButton()` to the text of an alert — `TemplateValidationTest::testAlertActionsStandInTheirSlot` reads
+  `admin/modules/*.php` for it, `ViewBridgeSmokeTest::viewRendersAlertActionSlot` renders the fragment with and without
+  the slot.
+- **Where it stands.** "Сортировка" of "Категории" (`_CATDRAGSORT`) and "Блоки", "Исправить счётчики" of
+  "Комментарии", "Оптимизация" and "Ремонт" of "База данных", "Очистить" of "Переходы" (`_REF_TOTAL`, dangerous, with
+  its question), "Отметить все N" with the progress line `sl-alert-meter` (`--sl-d-run`), "Повторить" of a list that
+  did not come, and "Отменить" of the toast of the panel. The toast of the site is a pill with `sl-toast-undo`, not an
+  alert.
+
+## Panel Shell
+
+The shell of the panel is drawn by the theme `admin` from data PHP passes; what the site shares (the floating menu, the
+admin block, the watch window) stands in each theme as a file of its own. The runtime behind it — the cookies, the
+queues, the session, the cockpit, the menu, the voices — is `docs/ARCHITECTURE.md`, "Admin Shell Boundary".
+
+| File | Theme | Drawn by | Holds |
+|---|---|---|---|
+| `layouts/admin.html` | admin | `setFoot()` | the skip link, the logo without `h1`, the phone drawer of the menu, the line `data-sl-said`, the window `#sl-session`, the badge of the screensaver, the root attributes `data-sl-still`, `data-sl-rail`, `data-sl-dock-off` from the first byte |
+| `fragments/bell.html` | admin | `getAdminLayoutVars()` | the bell with the queues of `getAdminQueues()` and the address of their poll |
+| `fragments/palette.html` | admin | the layout | Ctrl+K: the actions, the sections gathered from the menu or the cards, the settings of the page |
+| `fragments/toast.html` | both | `getWindowSet()` | the one notice: in admin a flash alert with a ring of `--sl-d-toast` and "Отменить" in the slot, in lite a pill |
+| `partials/cockpit.html`, `fragments/live-chip.html` | admin | `getAdminPanel()` | the four rings, the lamp with the fourteen signal rows, the strip and the live chip of the home |
+| `fragments/admin-block.html`, `partials/session-summary.html` | both | `adminblock()` | the block "Администрация": the summary ring, the keys, the own links |
+| `partials/session-stats.html` | both | `getSessionStats()` | the body of the watch window `#sl-stats` |
+| `fragments/dock.html` | both | `getAdminDock()` | the floating menu: the home, "Эта страница в панели" on the site, the pins, the queue, "Все разделы", the watch ring, the card of the administrator, the own links, the tools |
+
+- **The menu of the panel.** `getAdminMenu()` marks the current section with `aria-current`, carries the key of its
+  module and the chip `sl-queue` of its queue; the filter `sl-menu-find` stands in `sl-menu-top`. The dial `sl-dial`
+  closed is one Tab stop, its items reachable once it opens; "…" shows on hover and focus.
+- **The tone of a column block is its role.** `partials/block-sidebar.html` writes `sl-block-menu` for the menu and
+  `sl-block-queue` for "Ждут внимания" (`is_queue`); every other block is green. No rule reads the number of a block.
+- **The styles of the block, the menu and the window** are `assets/css/dock.css` of each theme, the screensaver
+  `assets/css/phoenix.css` and `assets/js/phoenix.js` of the theme `admin`; each file is listed under `themes.*.css` of
+  `tools/ui-contract.php` with its components `dock`, `adm`, `stats`, `phx`; the rings of the cockpit stand on the
+  component `gauge`.
+
 ## Node List Contract
 
 The list of a Node type is one part that swaps itself: `partials/node/list.html` of `lite` is `#sl-node-list`, the

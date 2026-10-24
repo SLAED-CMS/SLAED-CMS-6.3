@@ -758,6 +758,7 @@ define('_VOTE','Голосовать');
 define('_VOTES','Голосов');
 define('_VOTING_ACT','Идёт голосование');
 define('_VOTING_END','Голосование завершено');
+define('_VOTING_SOON','Голосование ещё не началось');
 define('_VOTING','Опросы');
 define('_WAITINGCONT','Ждут проверки');
 define('_WARN','Запрещенное действие');

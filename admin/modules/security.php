@@ -157,6 +157,7 @@ function logview(): void {
             'count' => $log['total'],
             'limit' => $lim,
             'base' => 50,
+            'none_text' => ($event.$modul.$res.$levl.$ip.$from.$to !== '') ? _NONE_FOUND : _NO_INFO,
         ]);
         setFoot();
         return;
@@ -262,6 +263,7 @@ function logins(): void {
         'count' => $log['total'],
         'limit' => $lim,
         'base' => 50,
+        'none_text' => $filt ? _NONE_FOUND : _NO_INFO,
     ]);
     setFoot();
 }

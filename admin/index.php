@@ -156,6 +156,18 @@ function getAdminPanel(): void {
     setFoot();
 }
 
+# Render the help of the panel itself, the shell every screen shares: every administrator reads it, a super administrator edits it
+function getAdminPanelInfo(): void {
+    global $afile;
+    setTplAdminInfoPage([
+        'base' => BASE_DIR.'/admin/info/panel',
+        'ops' => ['', 'op=info'],
+        'tabs' => [_HOME, _MANUAL],
+        'action_url' => HOME_PATH.$afile.'.php?op=info',
+        'can_edit' => isAdmin(true),
+    ]);
+}
+
 # Create an administrator from the form the login page shows while the admins table is empty, the way back into a panel whose last administrator row is gone
 # The form carries a token of its own scope like every state-changing form, and the password is hashed as typed, as the admins module and the login take it
 function addAdminAccount(): void {
@@ -455,6 +467,8 @@ if (isAdmin()) {
         updateAdminSession();
     } elseif ($op == 'logout') {
         deleteAdminSession();
+    } elseif ($panel && $op == 'info') {
+        getAdminPanelInfo();
     } elseif ($panel) {
         getAdminPanel();
     } else {

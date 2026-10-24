@@ -758,6 +758,7 @@ define('_VOTE','Abstimmen');
 define('_VOTES','Stimmen');
 define('_VOTING_ACT','Abstimmung läuft');
 define('_VOTING_END','Abstimmung beendet');
+define('_VOTING_SOON','Abstimmung hat noch nicht begonnen');
 define('_VOTING','Umfragen');
 define('_WAITINGCONT','Warten auf Überprüfung');
 define('_WARN','Untersagte Aktion');

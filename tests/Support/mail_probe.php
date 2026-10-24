@@ -245,12 +245,12 @@ function getProbeBounce(): array {
         'noid' => $mailer->addBounce(str_replace('Message-ID: <'.$mid.">\n", '', $dsn('gone@slaed.net', '5.1.1', $mid))),
         'plain' => $mailer->addBounce("From: someone@mail.example\nSubject: Out of office\n\nI am away until Monday.\n"),
     ];
-    $out['afterforged'] = $mailer->getDeadList(1)['total'];
+    $out['afterforged'] = $mailer->getDeadList(['page' => 1])['total'];
     $out['first'] = $mailer->addBounce(str_replace("\n", "\r\n", $dsn('gone@slaed.net', '5.1.1', $mid)));
     $out['stillsends'] = $mailer->checkAddress('gone@slaed.net');
     $out['second'] = $mailer->addBounce($dsn('gone@slaed.net', '5.1.1', $mid));
     $out['excluded'] = !$mailer->checkAddress('gone@slaed.net');
-    $list = $mailer->getDeadList(1);
+    $list = $mailer->getDeadList(['page' => 1]);
     $one = $list['rows'][0] ?? [];
     $out['row'] = [$list['total'], (string)($one['email'] ?? ''), intval($one['fails'] ?? 0), (string)($one['phase'] ?? ''), (string)($one['code'] ?? '')];
     $out['revived'] = $mailer->deleteDeadMail([intval($one['id'] ?? 0)]);
@@ -260,10 +260,10 @@ function getProbeBounce(): array {
     $out['pop'] = [
         'badpass' => getProbePop([$real], '', 'wrong'),
         'broken' => getProbePop([$real, $away], 'drop', 'secret'),
-        'afterbroken' => $mailer->getDeadList(1)['total'],
+        'afterbroken' => $mailer->getDeadList(['page' => 1])['total'],
         'normal' => getProbePop([$real, $away, $dsn('victim@slaed.net', '5.1.1', $mid)], '', 'secret'),
     ];
-    $list = $mailer->getDeadList(1);
+    $list = $mailer->getDeadList(['page' => 1]);
     $out['pop']['row'] = [$list['total'], (string)($list['rows'][0]['email'] ?? ''), intval($list['rows'][0]['fails'] ?? 0)];
     $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_maildead WHERE email LIKE :mail', ['mail' => '%@slaed.net']);
     $out['clean'] = deleteProbeRows($ntime);

@@ -434,11 +434,36 @@ into the plan, then do whatever work the step names.
   page show every row already. `ListPortionTest` holds the portions against the count of every list on the stand,
   `ListPickTest` every handler posted with `upto`; in the browser "Отметить все N" with pause, resume and "Снять
   отметку" ran on "Избранное" and on 250 probe accounts of "Пользователи", Undo on them too. (2026-10-24)
-- [ ] 110j. LIST-PARITY batch 6 — filters of the six growing lists.
-- [ ] 110k. LIST-PARITY batch 7 — empty states and findings; the matrix gives every list in scope the row of
-  "Комментарии".
-- [ ] 110l. LIST-PARITY batch 8 — reference; deletes `docs/13-LIST-PARITY-2026.md`.
-- [ ] 111. ADMIN-UI batch 23 — reference; deletes `docs/12-ADMIN-UI-2026.md`.
+- [x] 110j. LIST-PARITY batch 6 — filters of the six growing lists. Each list has `get<X>Filter($src)` — the state of
+  the request, the condition with its values and the query that keeps it, read by the list, the count, the pager, the
+  foot and its sweep — and `get<X>Search($flt)`, the bar `list-filter`; the classes answer `Privat::getAdminScope()` and
+  `Mail::getDeadScope()`, which `Privat::getAdminList()` and `Mail::getDeadList()` read; a language picks its own rows
+  and the rows for every language (owner, 2026-10-24). A search of one column is a plain search field named by that
+  column; "без модуля" of the polls is `-`, the poll that has not begun says `_VOTING_SOON`; the IP of a private
+  message stands in its "i". `ListPortionTest` holds the sweep of the filtered favorites, private messages, polls and dead
+  addresses against their count; in the browser the count, the selected state, the pager, the foot fields, the
+  highlight and "/" held against hand-written SQL on the five lists with rows (the dead addresses are empty on the
+  stand: their bar, state and "/" only), every handler of the foot returns to its filter, and the foot turned the lamps of a filtered message list
+  on and off in the database. (2026-10-24)
+- [x] 110k. LIST-PARITY batch 7 — empty states and findings; the matrix gives every list in scope the row of
+  "Комментарии". An empty list under its filter says `_NONE_FOUND`, without one `_NO_INFO`; the queues of
+  `getAdminQueues()` — pending comments, new accounts, Node "Ждут проверки" and the default support queue — say
+  `_ADM_CLEAN` calm, the mail queue is a delivery journal and is not one of them (owner, 2026-10-24); "Модули" got the
+  same text for its type filter; the OAuth provider is `_OAUTH_PROVIDER`. `AdminListRowTest` holds every list with a
+  filter bar and the four queues; the crawl of the matrix is in "Матрица шага 7" of the plan. (2026-10-24)
+- [x] 110l. LIST-PARITY batch 8 — reference; deletes `docs/13-LIST-PARITY-2026.md`. The reference is
+  `docs/TEMPLATES.md`, "Admin List Contract" (the row keys, the foot, `setListPortion()`, the filter helpers, the empty
+  states); `docs/VERSIONS.md` has the entry of 2026-10-24; the help of the six filtered lists got their filter bar,
+  and "Связь" of `docs/2027-ADMIN-UX.md` says done. (2026-10-24)
+- [x] 111. ADMIN-UI batch 23 — reference; deletes `docs/12-ADMIN-UI-2026.md`. The reference is `docs/ARCHITECTURE.md`,
+  "Admin Shell Boundary" (the cookies of op `option`, the queues, the session, the cockpit, the menu, the voices),
+  `docs/TEMPLATES.md`, "Panel Shell", "Admin List Contract" (the frame, rows per page), "Admin Form Contract" and "Alert
+  Action Slot", `docs/WINDOW.md`, "Where the windows are" (the one frame `fragments/window.html`, the palettes);
+  `docs/VERSIONS.md` has the entry of 2026-10-24. The shell got its own help `admin/info/panel/ru.md` at
+  `admin.php?op=info`, linked from the foot of "Опции" (`fragments/window-foot-options.html`) and from Ctrl+K, read by
+  every administrator and edited by a super administrator through the key `can_edit` of `setTplAdminInfoPage()`
+  (owner, 2026-10-24); the help of "Конфигурации" got the form canon, that of "Безопасность" the fields `idle` and
+  `dump_age`. (2026-10-24)
 - [ ] 111a. Route race on MariaDB 11.6.2+ — found in step 102 (owner, 2026-10-21): with `innodb_snapshot_isolation=1`,
   the default since MariaDB 11.6.2 (stand 11.7.2), the second writer of one free path gets error 1020 "Record has changed
   since last read" from `Route::addRoute()` instead of waiting on the unique key, so the write ends in a 500 and

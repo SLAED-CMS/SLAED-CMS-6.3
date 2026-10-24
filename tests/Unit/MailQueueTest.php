@@ -216,7 +216,7 @@ final class MailQueueTest extends TestCase
         $want = ['__construct', '__destruct', 'addQueue', 'getError', 'getBatch', 'setResult', 'updateQueue', 'deleteQueue'];
         $want = array_merge($want, ['checkAddress', 'getCampLeft', 'setCampAbort', 'setCampFree', 'setCampReady']);
         $want = array_merge($want, ['getList', 'getQueueScope', 'getStats', 'getPending', 'setQueueRetry', 'deleteQueueRows']);
-        $want = array_merge($want, ['addBounce', 'updateBounce', 'getDeadList', 'deleteDeadMail']);
+        $want = array_merge($want, ['addBounce', 'updateBounce', 'getDeadList', 'getDeadScope', 'deleteDeadMail']);
         $have = [];
         foreach ((new \ReflectionClass(\Mail::class))->getMethods(\ReflectionMethod::IS_PUBLIC) as $meth) {
             $have[] = $meth->getName();

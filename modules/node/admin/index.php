@@ -267,6 +267,7 @@ function setNodeSupportQueue(NodeType $type): void {
         ]];
     }
     $keep = ['state' => ($state === null) ? 'all' : $state, 'aid' => ($aid === null) ? 'all' : $aid, 'prio' => ($prio === null) ? 'all' : $prio];
+    $calm = $state === (int)($conf['node']['support']['state']['staff'] ?? 0) && $aid === null && $prio === null;
     echo getTplAdminList([
         'head_html' => $head,
         'is_fixed' => true,
@@ -288,6 +289,8 @@ function setNodeSupportQueue(NodeType $type): void {
         'count' => $data['count'],
         'limit' => $lim,
         'base' => $base,
+        'none_text' => $calm ? _ADM_CLEAN : _NONE_FOUND,
+        'is_calm' => $calm,
     ]);
     setFoot();
 }
@@ -376,7 +379,8 @@ function show(): void {
         'limit' => $lim,
         'base' => $base,
         'upto' => $upto,
-        'none_text' => $types ? _NO_INFO : _NODE_NOTYPES,
+        'none_text' => $types ? (($state === NodeStatus::Pending) ? _ADM_CLEAN : (($name !== '') ? _NONE_FOUND : _NO_INFO)) : _NODE_NOTYPES,
+        'is_calm' => $types && $state === NodeStatus::Pending,
     ]);
     setFoot();
 }

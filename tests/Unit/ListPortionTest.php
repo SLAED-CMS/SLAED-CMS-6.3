@@ -24,13 +24,13 @@ final class ListPortionTest extends TestCase
         return $data['lists'];
     }
 
-    # Every list counts what its sweep visits and draws the bound its last portion ends on, the filtered accounts, the word top and the Node union included
+    # Every list counts what its sweep visits and draws the bound its last portion ends on, the filtered lists, the word top and the Node union included
     #[Test]
     public function aSweepVisitsWhatItsListCounts(): void
     {
         $lists = $this->getParity();
-        foreach (['comments 1', 'comments 0', 'favorites', 'privat', 'queue', 'dead', 'account users', 'account found', 'account newuser', 'account oauthlist', 'search',
-            'search top'] as $name) $this->assertArrayHasKey($name, $lists, 'The probe did not measure '.$name);
+        foreach (['comments 1', 'comments 0', 'favorites', 'favorites found', 'privat', 'privat found', 'voting', 'voting found', 'queue', 'dead', 'dead found', 'account users',
+            'account found', 'account newuser', 'account oauthlist', 'search', 'search top'] as $name) $this->assertArrayHasKey($name, $lists, 'The probe did not measure '.$name);
         foreach ($lists as $name => [$count, $upto, $seen, $last]) {
             $this->assertSame($count, $seen, 'The sweep of '.$name.' visits another number of rows than the list counts');
             $this->assertSame($upto, $last, 'The last portion of '.$name.' does not end on the bound of the list');

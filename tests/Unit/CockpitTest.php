@@ -7,7 +7,7 @@ namespace Tests\Unit;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-# The data of the home cockpit, docs/12-ADMIN-UI-2026.md step 14: fourteen signals by the thresholds of the owner, the snapshot and the one store of the monitor
+# The data of the home cockpit, docs/ARCHITECTURE.md "Admin Shell Boundary": fourteen signals by the thresholds of the owner, the snapshot and the one store of the monitor
 final class CockpitTest extends TestCase
 {
     private const KEYS = ['attack', 'backup', 'cron', 'dirs', 'disk', 'https', 'login', 'mail', 'opcache', 'php', 'phpver', 'setup', 'sql', 'update'];

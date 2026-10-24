@@ -140,17 +140,41 @@ in `fragments/`.
 
 ## Where the windows are
 
-| Window | File | Theme |
-|---|---|---|
-| Confirmation | `fragments/window-confirm.html` | lite, admin |
-| Share sheet | `fragments/window-share.html` | lite |
-| QR code | `fragments/window-qr.html` | lite |
-| Gallery and lightbox | `partials/window-gallery.html` | lite, admin |
-| Icon picker | `partials/window-icons.html` | admin |
-| File Manager | `partials/file-manager.html` | lite, admin |
-| Emoji panel | `partials/emoji-panel.html` | lite, admin |
-| Editor palette | `fragments/editor-kit.html` | lite, admin |
-| Editor comparison | `fragments/editor-kit.html` | lite, admin |
+Most windows are one frame, `fragments/window.html` of each theme, filled by PHP: the keys `win_id`, `size_class`,
+`tone_class`, `win_class`, `win_attr`, `is_static`, `icon_name`, `title_text`, `sub_text` with `has_sub`, the head
+actions `move_text`, `full_text` with `restore_text` and `close_text` (or `close_url`), `bar_html`, `body_html` with
+`is_flush`, and `foot_html`. The body and the foot of a window are fragments named `window-body-<purpose>.html` and
+`window-foot-<purpose>.html`.
+
+| Window | Built by | Frame and parts | Theme |
+|---|---|---|---|
+| Confirmation `#sl-confirm` | `getWindowSet()` | `window`, `window-body-confirm`, `window-foot-confirm` | lite, admin |
+| Watch `#sl-stats`, windowed | `getWindowSet()`, super administrator with sessions on | `window`, `partials/session-stats.html` as bar, body and foot | lite, admin |
+| Share sheet `#sl-share-sheet` | `getWindowSet()` | `window`, `window-body-share` | lite |
+| QR code `#sl-share-qr` | `getWindowSet()` | `window`, `window-body-qr`, `window-foot-qr` | lite |
+| Gallery and image viewer | `getWindowShot()` | `window`, `window-body-shot`, `window-foot-shot` | lite, admin |
+| Options `#sl-settings` | `getAdminSettingsWindow()` | `window`, the rows of `fragments/settings-row.html`, `window-foot-options` | admin |
+| Icon picker `#sl-icon-window` | `getAdminIconWindow()` | `window`, `window-bar-icons`, `window-body-icons` | admin |
+| File editor of the file desk, static | `getAdminFileEditor()` | `window`, `window-foot-edit` | admin |
+| Insert options of an editor | `getEditorFileKit()` | `window`, `window-body-insert`, `window-foot-insert` | lite, admin |
+| Quick navigation (Ctrl+K) `#sl-palette` | the panel layout | `fragments/palette.html` | admin |
+| End of session `#sl-session`, static | the panel layout | written in `layouts/admin.html` | admin |
+| File Manager | `getFileManagerWindow()` | `partials/file-manager.html` | lite, admin |
+| Emoji panel | `Editor::getEmojiPanel()` | `partials/emoji-panel.html` | lite, admin |
+| Editor palette | `Editor::getFrame()` | `fragments/editor-kit.html` | lite, admin |
+| Editor comparison | `Editor::getFrame()` | `fragments/editor-kit.html` | lite, admin |
+
+`getWindowSet()` prints what every page carries — the notice of `fragments/toast.html` (not a window), the watch
+window, the confirmation and, on the site, the share sheet, the QR code and the image viewer; `setFoot()` of the panel
+and the site footer place it at the page level, since inside a column a fixed window would be measured from the
+drawer of the phone.
+
+**The palettes share one controller.** `window.setPaletteOpen(pal, run, recent)` of `slaed.js` wires a palette
+window on its first opening: the search is a `role="combobox"` over a `role="listbox"` of `role="option"` rows,
+`data-sl-pal-empty` stands when nothing matches, and `run(row)` follows once the window has closed. The editor palette
+and Ctrl+K of the panel call it; the panel gathers its sections once from the links of the menu or the cards of the
+home, a row with `data-sl-pal-href` is a link, `data-sl-pal-act` an action, and the group `data-sl-pal-sets` lists the
+settings of a page that has "Найти настройку". Ctrl+K is read by `ev.code`, so it works on every keyboard layout.
 
 The editor palette and the editor comparison are modal and live inside the `<template>` of the editor kit, which
 `Editor::getFrame()` prints once per answer; the runtime clones each into the page on its first call, so a page of many

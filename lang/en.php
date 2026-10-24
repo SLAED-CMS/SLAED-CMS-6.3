@@ -758,6 +758,7 @@ define('_VOTE','Vote');
 define('_VOTES','Votes');
 define('_VOTING_ACT','Voting in progress');
 define('_VOTING_END','Voting has ended');
+define('_VOTING_SOON','Voting has not started yet');
 define('_VOTING','Surveys');
 define('_WAITINGCONT','Awaiting verification');
 define('_WARN','Forbidden action');

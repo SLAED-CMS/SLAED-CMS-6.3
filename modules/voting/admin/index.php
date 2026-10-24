@@ -78,14 +78,79 @@ function getVotingBlockSelect(string $bval): string {
     ]);
 }
 
+# The filter of the polls as the request carries it: "-" stands for a poll of no module, the state follows the dates as the status column does, and the query keeps it
+function getVotingFilter(string $src = 'get'): array {
+    global $conf;
+    $modul = getVar($src, 'modul', 'var');
+    $status = getVar($src, 'status', 'var');
+    if (!in_array($status, ['live', 'soon', 'done'], true)) $status = '';
+    $lang = ($conf['multilingual'] == 1) ? getVar($src, 'lang', 'var') : '';
+    $chng = trim(getVar($src, 'chng'));
+    $cond = ($status !== '') ? [match ($status) {'live' => 'time <= NOW() AND enddate >= NOW()', 'soon' => 'time > NOW()', default => 'time <= NOW() AND enddate < NOW()'}] : [];
+    $pars = [];
+    if ($modul !== '') {
+        $cond[] = 'modul = :modul';
+        $pars['modul'] = ($modul === '-') ? '' : $modul;
+    }
+    if ($lang !== '') {
+        $cond[] = '(lang = :lang OR lang = \'\')';
+        $pars['lang'] = $lang;
+    }
+    if ($chng !== '') {
+        $cond[] = 'title LIKE :find';
+        $pars['find'] = '%'.$chng.'%';
+    }
+    $keys = array_filter(['modul' => $modul, 'status' => $status, 'lang' => $lang, 'chng' => $chng], static fn($v) => $v !== '');
+    return ['modul' => $modul, 'status' => $status, 'lang' => $lang, 'chng' => $chng, 'where' => $cond ? ' WHERE '.implode(' AND ', $cond) : '', 'pars' => $pars,
+        'base' => 'name=voting'.($keys ? '&'.http_build_query($keys, '', '&', PHP_QUERY_RFC3986) : '')];
+}
+
+# The filter bar of the polls: the modules and languages their rows name, the state and the title
+function getVotingSearch(array $flt): string {
+    global $afile, $db, $conf, $tpl;
+    $opts = static function (array $list, string $cur): array {
+        $out = [['value_attr' => '', 'label_text' => _ALL, 'is_selected' => $cur === '']];
+        foreach ($list as $key => $label) $out[] = ['value_attr' => (string)$key, 'label_text' => $label, 'is_selected' => $cur === (string)$key];
+        return $out;
+    };
+    $mods = ['-' => _NONE];
+    foreach ($db->getSqlRows($db->getSqlQuery('SELECT DISTINCT modul FROM '.PREFIX_DB.'_voting WHERE modul != \'\' ORDER BY modul')) ?: [] as $row) {
+        $mods[$row['modul']] = getModuleName((string)$row['modul']);
+    }
+    $fields = [
+        ['field_id' => 'sl-vot-mod', 'label' => _MODUL, 'name_attr' => 'modul', 'options' => $opts($mods, $flt['modul']), 'is_now' => true],
+        ['field_id' => 'sl-vot-stat', 'label' => _STATUS, 'name_attr' => 'status', 'options' => $opts(['live' => _VOTING_ACT, 'soon' => _VOTING_SOON, 'done' => _VOTING_END],
+            $flt['status']), 'is_now' => true],
+    ];
+    if ($conf['multilingual'] == 1) {
+        $langs = [];
+        foreach ($db->getSqlRows($db->getSqlQuery('SELECT DISTINCT lang FROM '.PREFIX_DB.'_voting WHERE lang != \'\' ORDER BY lang')) ?: [] as $row) {
+            $langs[$row['lang']] = getLangName((string)$row['lang']);
+        }
+        $fields[] = ['field_id' => 'sl-vot-lang', 'label' => _LANGUAGE, 'name_attr' => 'lang', 'options' => $opts($langs, $flt['lang']), 'is_now' => true];
+    }
+    $fields[] = ['field_id' => 'sl-vot-q', 'label' => _TITLE, 'name_attr' => 'chng', 'itype' => 'search', 'value' => $flt['chng']];
+    return $tpl->getHtmlFrag('list-filter', [
+        'action_url' => $afile.'.php',
+        'label' => _SEARCH,
+        'is_part' => true,
+        'hidden' => [['nameattr' => 'name', 'valueattr' => 'voting']],
+        'fields' => $fields,
+    ]);
+}
+
 function voting(): void {
     global $db, $afile, $conf;
     setHead();
-    [$total, $upto] = array_map('intval', $db->getSqlQuery('SELECT COUNT(id), MAX(id) FROM '.PREFIX_DB.'_voting')->fetch(PDO::FETCH_NUM));
+    $flt = getVotingFilter();
+    $res = $db->getSqlQuery('SELECT COUNT(id), MAX(id) FROM '.PREFIX_DB.'_voting'.$flt['where'], $flt['pars']);
+    [$total, $upto] = array_map('intval', $res->fetch(PDO::FETCH_NUM));
     $anum = getListLimit((int)$conf['voting']['anum'], $total);
     $pages = max(1, (int)ceil($total / $anum));
     $num = min(max(1, getVar('get', 'num', 'num', 1)), $pages);
-    $result = $db->getSqlQuery('SELECT id, modul, time, enddate, title, lang, typ FROM '.PREFIX_DB.'_voting ORDER BY id DESC LIMIT '.(($num - 1) * $anum).', '.$anum);
+    $sql = 'SELECT id, modul, time, enddate, title, lang, typ FROM '.PREFIX_DB.'_voting'.$flt['where'].' ORDER BY id DESC LIMIT '.(($num - 1) * $anum).', '.$anum;
+    $result = $db->getSqlQuery($sql, $flt['pars']);
+    parse_str($flt['base'].'&num='.$num, $keep);
     $multi = $conf['multilingual'] == 1;
     $head = [['content' => _ID, 'is_col_id' => true], ['content' => _TITLE, 'is_col_title' => true, 'is_truncate' => true]];
     if ($multi) $head[] = ['content' => _LANGUAGE, 'class_name' => 'sl-col-lang'];
@@ -100,7 +165,8 @@ function voting(): void {
         $items[] = ['href' => $afile.'.php?name=voting&op=add&id='.$id, 'icon_name' => 'pencil', 'title' => _FULLEDIT, 'is_edit' => true];
         $cells = [
             ['is_col_id' => true, 'has_content_text' => true, 'content_text' => $id],
-            ['is_col_title' => true, 'is_truncate' => true, 'title_text' => (string)$title, 'text_html' => htmlspecialchars((string)$title, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')],
+            ['is_col_title' => true, 'is_truncate' => true, 'title_text' => (string)$title,
+                'text_html' => filterTextHighlight(htmlspecialchars((string)$title, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'), $flt['chng'])],
         ];
         if ($multi) $cells[] = ['class_name' => 'sl-col-lang', 'content_html' => getLangName((!$lang) ? _ALL : $lang)];
         $cells[] = ['class_name' => 'sl-col-module', 'content_html' => $modul ? getModuleName($modul) : _NONE];
@@ -110,15 +176,15 @@ function voting(): void {
         $rows[] = ['name' => cutstr((string)$title, 60), 'details' => [
             ['label' => _CHNGSTORY, 'value' => format_time($date, _TIMESTRING)],
             ['label' => _TYPE, 'value' => ($typ == '1') ? _VOPEN : _VCLOSE],
-        ], 'drop' => getTplPostAction(['name' => 'voting', 'op' => 'delete', 'id[]' => $id, 'num' => $num], 'trash', _ONDELETE), 'cells' => $cells];
+        ], 'drop' => getTplPostAction($keep + ['op' => 'delete', 'id[]' => $id], 'trash', _ONDELETE), 'cells' => $cells];
     }
     echo getTplAdminList([
         'head_html' => getTplAdminTabs(['ops' => ['name=voting', 'name=voting&op=add', 'name=voting&op=config', 'name=voting&op=info'],
-            'tabs' => [_HOME, _ADD, _PREFERENCES, _MANUAL], 'part' => [0]]),
+            'tabs' => [_HOME, _ADD, _PREFERENCES, _MANUAL], 'part' => [0], 'subtitle_html' => getVotingSearch($flt)]),
         'is_fixed' => true,
         'head' => $head,
         'rows' => $rows,
-        'href' => $afile.'.php?name=voting&',
+        'href' => $afile.'.php?'.$flt['base'].'&',
         'page' => $num,
         'pages' => $pages,
         'maxpg' => (int)$conf['voting']['anump'],
@@ -126,6 +192,7 @@ function voting(): void {
         'limit' => $anum,
         'base' => (int)$conf['voting']['anum'],
         'upto' => $upto,
+        'none_text' => ($flt['where'] !== '') ? _NONE_FOUND : _NO_INFO,
     ]);
     setFoot();
 }
@@ -351,13 +418,14 @@ function delete(array $ids = []): void {
         if ($held) $db->getSqlQuery('SELECT RELEASE_LOCK(:name)', ['name' => $lock]);
         return $done;
     };
-    if (!$iswarn && setListPortion('id', PREFIX_DB.'_voting', '', [], $act)) exit;
+    $flt = getVotingFilter('post');
+    if (!$iswarn && setListPortion('id', PREFIX_DB.'_voting', $flt['where'], $flt['pars'], $act)) exit;
     $ids = $iswarn ? [] : array_map('intval', $ids ?: getVar('post', 'id[]', 'num'));
     $fail = !$iswarn && !$ids;
     foreach ($ids as $id) {
         if (!$act($id)) $fail = true;
     }
-    setRedirect($afile.'.php?name=voting&num='.getVar('post', 'num', 'num', 1), false, 302, $iswarn ? _TOKENMISS : ($fail ? _ERROR : _SUCCDELETE), $iswarn || $fail);
+    setRedirect($afile.'.php?'.$flt['base'].'&num='.getVar('post', 'num', 'num', 1), false, 302, $iswarn ? _TOKENMISS : ($fail ? _ERROR : _SUCCDELETE), $iswarn || $fail);
 }
 
 function config(): void {

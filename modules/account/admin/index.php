@@ -10,7 +10,7 @@ function getAccountSearch(string $op = ''): string {
     global $afile, $tpl;
     $kinds = match ($op) {
         'newuser' => [2 => _NICKNAME, 3 => _EMAIL],
-        'oauthlist' => [1 => _ID, 2 => _NICKNAME, 3 => _EMAIL, 8 => _MODUL],
+        'oauthlist' => [1 => _ID, 2 => _NICKNAME, 3 => _EMAIL, 8 => _OAUTH_PROVIDER],
         default => [1 => _ID, 2 => _NICKNAME, 3 => _EMAIL, 4 => _IP, 5 => _URL, 6 => _SPEC_GROUP, 7 => _POINTS],
     };
     $search = getVar('get', 'search', 'num', 2);
@@ -113,7 +113,7 @@ function account(): void {
         'limit' => $anum,
         'base' => (int)$conf['users']['anum'],
         'upto' => $upto,
-        'none_text' => ($where !== '') ? _NONE_FOUND : _USERNOEXIST,
+        'none_text' => ($where !== '') ? _NONE_FOUND : _NO_INFO,
     ]);
     setFoot();
 }
@@ -716,7 +716,8 @@ function newuser(): void {
         'limit' => $anum,
         'base' => (int)$conf['users']['anum'],
         'upto' => $upto,
-        'none_text' => ($where !== '') ? _NONE_FOUND : _NO_INFO,
+        'none_text' => ($where !== '') ? _NONE_FOUND : _ADM_CLEAN,
+        'is_calm' => $where === '',
     ]);
     setFoot();
 }
@@ -1285,7 +1286,7 @@ function oauthlist(): void {
         'head' => [
             ['content' => _ID, 'is_col_id' => true],
             ['content' => _NICKNAME, 'is_truncate' => true],
-            ['content' => _MODUL],
+            ['content' => _OAUTH_PROVIDER],
             ['content' => 'ID', 'is_truncate' => true],
             ['content' => _EMAIL, 'is_truncate' => true],
             ['content' => _REG, 'is_col_date' => true],

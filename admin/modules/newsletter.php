@@ -83,15 +83,54 @@ function getCampActions(array $camp): array {
     return $acts;
 }
 
+# The filter of the campaigns as the request carries it: one of the eight states getCampState() names and a part of the title, and the query that keeps it
+function getCampFilter(string $src = 'get'): array {
+    $status = trim(getVar($src, 'status', 'raw', ''));
+    if (!in_array($status, ['0', '1', '2', '3', '4', '5', '6', '7'], true)) $status = '';
+    $chng = trim(getVar($src, 'chng'));
+    $cond = [];
+    $pars = [];
+    if ($status !== '') {
+        $cond[] = 'status = :stat';
+        $pars['stat'] = intval($status);
+    }
+    if ($chng !== '') {
+        $cond[] = 'title LIKE :find';
+        $pars['find'] = '%'.$chng.'%';
+    }
+    $keys = array_filter(['status' => $status, 'chng' => $chng], static fn($v) => $v !== '');
+    return ['status' => $status, 'chng' => $chng, 'where' => $cond ? ' WHERE '.implode(' AND ', $cond) : '', 'pars' => $pars,
+        'base' => 'name=newsletter'.($keys ? '&'.http_build_query($keys, '', '&', PHP_QUERY_RFC3986) : '')];
+}
+
+# The filter bar of the campaigns: the state and the title
+function getCampSearch(array $flt): string {
+    global $afile, $tpl;
+    $stats = [['value_attr' => '', 'label_text' => _ALL, 'is_selected' => $flt['status'] === '']];
+    for ($i = 0; $i <= 7; $i++) $stats[] = ['value_attr' => (string)$i, 'label_text' => getCampState($i), 'is_selected' => $flt['status'] === (string)$i];
+    return $tpl->getHtmlFrag('list-filter', [
+        'action_url' => $afile.'.php',
+        'label' => _SEARCH,
+        'is_part' => true,
+        'hidden' => [['nameattr' => 'name', 'valueattr' => 'newsletter']],
+        'fields' => [
+            ['field_id' => 'sl-camp-stat', 'label' => _STATUS, 'name_attr' => 'status', 'options' => $stats, 'is_now' => true],
+            ['field_id' => 'sl-camp-q', 'label' => _TITLE, 'name_attr' => 'chng', 'itype' => 'search', 'value' => $flt['chng']],
+        ],
+    ]);
+}
+
 function newsletter(): void {
     global $db, $conf, $tpl;
+    $flt = getCampFilter();
+    parse_str($flt['base'], $keep);
     $note = (intval($conf['scheduler']['jobs']['newsletter']['active'] ?? 0) !== 1) ? $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _NLNOJOB]) : '';
     $left = [];
     $rows = $db->getSqlRows($db->getSqlQuery('SELECT ref, COUNT(id) AS num FROM '.PREFIX_DB.'_mail WHERE kind = \'newsletter\' AND status = 0 GROUP BY ref')) ?: [];
     foreach ($rows as $row) $left[intval($row['ref'])] = intval($row['num']);
-    $sql = 'SELECT id, title, audit, apar, send, fails, total, expect, status, note, time, endtime FROM '.PREFIX_DB.'_newsletter ORDER BY id';
+    $sql = 'SELECT id, title, audit, apar, send, fails, total, expect, status, note, time, endtime FROM '.PREFIX_DB.'_newsletter'.$flt['where'].' ORDER BY id';
     $list = [];
-    foreach ($db->getSqlRows($db->getSqlQuery($sql)) ?: [] as $camp) {
+    foreach ($db->getSqlRows($db->getSqlQuery($sql, $flt['pars'])) ?: [] as $camp) {
         $id = intval($camp['id']);
         $num = intval($camp['send']) + intval($camp['fails']);
         $rate = ($num > 0) ? round(intval($camp['fails']) * 100 / $num, 1) : 0;
@@ -100,9 +139,10 @@ function newsletter(): void {
             ['label' => _DATE, 'value' => format_time((string)$camp['time'], _TIMESTRING)],
             ['label' => _TIMENL, 'value' => getDuration($span)],
             ['label' => _NLNOTE, 'value' => (string)$camp['note']],
-        ], 'drop' => (($left[$id] ?? 0) < 1) ? getTplPostAction(['name' => 'newsletter', 'op' => 'delete', 'id[]' => $id], 'trash', _ONDELETE) : [], 'cells' => [
+        ], 'drop' => (($left[$id] ?? 0) < 1) ? getTplPostAction($keep + ['op' => 'delete', 'id[]' => $id], 'trash', _ONDELETE) : [], 'cells' => [
             ['is_col_id' => true, 'has_content_text' => true, 'content_text' => $id],
-            ['is_truncate' => true, 'title_text' => (string)$camp['title'], 'text_html' => htmlspecialchars((string)$camp['title'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')],
+            ['is_truncate' => true, 'title_text' => (string)$camp['title'],
+                'text_html' => filterTextHighlight(htmlspecialchars((string)$camp['title'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'), $flt['chng'])],
             ['is_truncate' => true, 'has_content_text' => true, 'content_text' => getCampAudit((string)$camp['audit'], (string)$camp['apar'])],
             ['is_col_count' => true, 'has_content_text' => true, 'content_text' => $camp['total'].' / '.$camp['expect']],
             ['class_name' => 'sl-col-sent', 'is_col_count' => true, 'content_html' => $camp['send'].' '._NLUSER],
@@ -113,7 +153,7 @@ function newsletter(): void {
     }
     setHead();
     echo getTplAdminList([
-        'head_html' => getCampTabs(0),
+        'head_html' => getCampTabs(0, getCampSearch($flt)),
         'note_html' => $note,
         'is_fixed' => true,
         'head' => [
@@ -128,6 +168,7 @@ function newsletter(): void {
         ],
         'rows' => $list,
         'count' => count($list),
+        'none_text' => ($flt['where'] !== '') ? _NONE_FOUND : _NO_INFO,
     ]);
     setFoot();
 }
@@ -276,7 +317,7 @@ function delete(): void {
         if ($held) $busy = true;
         if (!$res || $res->rowCount() < 1) $done = false;
     }
-    setRedirect($afile.'.php?name=newsletter', false, 302, $warn ? _TOKENMISS : ($done ? _SUCCDELETE : ($busy ? _NLBUSY : _ERROR)), !$done);
+    setRedirect($afile.'.php?'.getCampFilter('post')['base'], false, 302, $warn ? _TOKENMISS : ($done ? _SUCCDELETE : ($busy ? _NLBUSY : _ERROR)), !$done);
 }
 
 # Release the audience a sample or an abort left holding, which is the transition no measured rate is allowed to perform on its own
@@ -402,6 +443,7 @@ function queue(): void {
         'limit' => $data['limit'],
         'base' => $data['base'],
         'upto' => $data['upto'],
+        'none_text' => ($kind !== '' || $stat !== '') ? _NONE_FOUND : _NO_INFO,
     ]);
     setFoot();
 }
@@ -447,16 +489,46 @@ function getQueueQuery(string $back): string {
     return 'kind='.rawurlencode($kind).'&status='.$stat.'&num='.max(1, intval($vars['num'] ?? 1));
 }
 
+# The filter of the dead addresses as the request carries it, by the names Mail::getDeadScope() reads, and the query that keeps it
+function getDeadFilter(string $src = 'get'): array {
+    $phase = getVar($src, 'phase', 'var');
+    $chng = trim(getVar($src, 'chng'));
+    $keys = array_filter(['phase' => $phase, 'chng' => $chng], static fn($v) => $v !== '');
+    return ['phase' => $phase, 'chng' => $chng, 'base' => 'name=newsletter&op=dead'.($keys ? '&'.http_build_query($keys, '', '&', PHP_QUERY_RFC3986) : '')];
+}
+
+# The filter bar of the dead addresses: the phases their rows hold and a part of the address
+function getDeadSearch(array $flt): string {
+    global $afile, $db, $tpl;
+    $opts = [['value_attr' => '', 'label_text' => _ALL, 'is_selected' => $flt['phase'] === '']];
+    foreach ($db->getSqlRows($db->getSqlQuery('SELECT DISTINCT phase FROM '.PREFIX_DB.'_maildead WHERE phase != \'\' ORDER BY phase')) ?: [] as $row) {
+        $opts[] = ['value_attr' => (string)$row['phase'], 'label_text' => (string)$row['phase'], 'is_selected' => $flt['phase'] === $row['phase']];
+    }
+    return $tpl->getHtmlFrag('list-filter', [
+        'action_url' => $afile.'.php',
+        'label' => _SEARCH,
+        'is_part' => true,
+        'hidden' => [['nameattr' => 'name', 'valueattr' => 'newsletter'], ['nameattr' => 'op', 'valueattr' => 'dead']],
+        'fields' => [
+            ['field_id' => 'sl-dead-phase', 'label' => _ERROR, 'name_attr' => 'phase', 'options' => $opts, 'is_now' => true],
+            ['field_id' => 'sl-dead-q', 'label' => _EMAIL, 'name_attr' => 'chng', 'itype' => 'search', 'value' => $flt['chng']],
+        ],
+    ]);
+}
+
 function dead(): void {
     global $afile, $mailer;
-    $data = $mailer->getDeadList(getVar('get', 'num', 'num', 1));
+    $flt = getDeadFilter();
+    $data = $mailer->getDeadList($flt + ['page' => getVar('get', 'num', 'num', 1)]);
+    parse_str($flt['base'].'&num='.$data['page'], $keep);
     $rows = [];
     foreach ($data['rows'] as $row) {
         $note = trim((string)$row['phase'].' '.$row['code']);
-        $drop = getTplPostAction(['name' => 'newsletter', 'op' => 'revive', 'id[]' => $row['id'], 'num' => $data['page']], 'arrow-counterclockwise', _MAIL_REVIVE);
+        $drop = getTplPostAction(['op' => 'revive', 'id[]' => $row['id']] + $keep, 'arrow-counterclockwise', _MAIL_REVIVE);
+        $mail = filterTextHighlight(htmlspecialchars((string)$row['email'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'), $flt['chng']);
         $rows[] = ['name' => (string)$row['email'], 'drop' => $drop + ['later' => 'gone move'], 'cells' => [
             ['is_col_id' => true, 'has_content_text' => true, 'content_text' => $row['id']],
-            ['is_truncate' => true, 'title_text' => (string)$row['email'], 'has_content_text' => true, 'content_text' => (string)$row['email']],
+            ['is_truncate' => true, 'title_text' => (string)$row['email'], 'text_html' => $mail],
             ['is_col_count' => true, 'has_content_text' => true, 'content_text' => (string)$row['fails']],
             ['is_truncate' => true, 'title_text' => $note, 'has_content_text' => true, 'content_text' => $note],
             ['is_col_date' => true, 'moment' => $row['time']],
@@ -465,7 +537,7 @@ function dead(): void {
     }
     setHead();
     echo getTplAdminList([
-        'head_html' => getCampTabs(3),
+        'head_html' => getCampTabs(3, getDeadSearch($flt)),
         'key' => 'newsletter-dead',
         'is_fixed' => true,
         'head' => [
@@ -477,13 +549,14 @@ function dead(): void {
             ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true],
         ],
         'rows' => $rows,
-        'href' => $afile.'.php?name=newsletter&op=dead&',
+        'href' => $afile.'.php?'.$flt['base'].'&',
         'page' => $data['page'],
         'pages' => $data['pages'],
         'count' => $data['total'],
         'limit' => $data['limit'],
         'base' => $data['base'],
         'upto' => $data['upto'],
+        'none_text' => ($flt['phase'] !== '' || $flt['chng'] !== '') ? _NONE_FOUND : _NO_INFO,
     ]);
     setFoot();
 }
@@ -493,9 +566,11 @@ function revive(): void {
     $ids = getVar('post', 'id[]', 'num');
     $page = getVar('post', 'num', 'num', 1);
     $warn = !checkAdminPost('newsletter');
-    if (!$warn && setListPortion('id', PREFIX_DB.'_maildead', '', [], static fn(int $id): bool => $mailer->deleteDeadMail([$id]) > 0)) exit;
+    $flt = getDeadFilter('post');
+    [$from, $where, $pars] = $mailer->getDeadScope($flt);
+    if (!$warn && setListPortion('id', $from, $where, $pars, static fn(int $id): bool => $mailer->deleteDeadMail([$id]) > 0)) exit;
     $done = !$warn && $ids && $mailer->deleteDeadMail(array_map('intval', $ids)) > 0;
-    setRedirect($afile.'.php?name=newsletter&op=dead&num='.$page, false, 302, $warn ? _TOKENMISS : ($done ? _SUCCSAVE : _ERROR), !$done);
+    setRedirect($afile.'.php?'.$flt['base'].'&num='.$page, false, 302, $warn ? _TOKENMISS : ($done ? _SUCCSAVE : _ERROR), !$done);
 }
 
 function config(): void {

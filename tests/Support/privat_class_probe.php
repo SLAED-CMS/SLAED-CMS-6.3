@@ -307,7 +307,7 @@ function getProbeUser(): array {
 function getProbeAdmin(): array {
     setProbeSeed();
     $prv = getProbeMail();
-    $list = $prv->getAdminList(1);
+    $list = $prv->getAdminList('', 2, '', 1);
     $out = ['total' => $list['total'], 'ids' => getProbeIds($list)];
     $out['state'] = [];
     foreach ($list['rows'] as $row) {

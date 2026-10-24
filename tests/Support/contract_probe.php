@@ -1014,7 +1014,9 @@ function getProbeListParity(): array {
     global $db, $com, $prv, $mailer, $probework;
     $out = ['admin' => isAdmin(true), 'lists' => []];
     if (!$out['admin']) return $out;
-    foreach (['modules/account/admin/index.php' => 'getAccountScope', 'modules/search/admin/index.php' => 'getSearchwhere'] as $file => $func) {
+    foreach (['modules/account/admin/index.php' => 'getAccountScope', 'modules/search/admin/index.php' => 'getSearchwhere', 'admin/modules/favorites.php' => 'getFavoritesFilter',
+        'admin/modules/privat.php' => 'getPrivatFilter', 'modules/voting/admin/index.php' => 'getVotingFilter',
+        'admin/modules/newsletter.php' => 'getDeadFilter'] as $file => $func) {
         $code = (string)file_get_contents(BASE_DIR.'/'.$file);
         $from = strpos($code, "\nfunction ".$func.'(');
         file_put_contents($probework.'/lift_'.$func.'.php', "<?php\n".substr($code, $from, strpos($code, "\n}\n", $from) - $from + 3));
@@ -1041,15 +1043,35 @@ function getProbeListParity(): array {
         [$from, $where, $pars] = $com->getAdminScope($stat, '', 2, '');
         $out['lists']['comments '.$stat->value] = [$list['total'], $list['upto'], ...$walk('s.id', $from, $where, $pars, $list['upto'])];
     }
-    [$num, $top] = $tally('SELECT COUNT(id), MAX(id) FROM '.PREFIX_DB.'_favorites');
-    $out['lists']['favorites'] = [$num, $top, ...$walk('id', PREFIX_DB.'_favorites', '', [], $top)];
-    $list = $prv->getAdminList(1);
-    $out['lists']['privat'] = [$list['total'], $list['upto'], ...$walk('id', PREFIX_DB.'_privat', '', [], $list['upto'])];
+    foreach (['favorites' => [], 'favorites found' => ['modul' => 'forum', 'search' => '2', 'chng' => 'a']] as $name => $get) {
+        $_GET = $get;
+        $flt = getFavoritesFilter();
+        [$num, $top] = $tally('SELECT COUNT(f.id), MAX(f.id) FROM '.$flt['from'].$flt['where'], $flt['pars']);
+        $out['lists'][$name] = [$num, $top, ...$walk('f.id', $flt['from'], $flt['where'], $flt['pars'], $top)];
+    }
+    foreach (['privat' => [], 'privat found' => ['status' => 'read', 'search' => '3', 'chng' => 'a']] as $name => $get) {
+        $_GET = $get;
+        $flt = getPrivatFilter();
+        $list = $prv->getAdminList($flt['status'], $flt['search'], $flt['chng'], 1);
+        [$from, $where, $pars] = $prv->getAdminScope($flt['status'], $flt['search'], $flt['chng']);
+        $out['lists'][$name] = [$list['total'], $list['upto'], ...$walk('p.id', $from, $where, $pars, $list['upto'])];
+    }
+    foreach (['voting' => [], 'voting found' => ['modul' => '-', 'status' => 'done']] as $name => $get) {
+        $_GET = $get;
+        $flt = getVotingFilter();
+        [$num, $top] = $tally('SELECT COUNT(id), MAX(id) FROM '.PREFIX_DB.'_voting'.$flt['where'], $flt['pars']);
+        $out['lists'][$name] = [$num, $top, ...$walk('id', PREFIX_DB.'_voting', $flt['where'], $flt['pars'], $top)];
+    }
     $list = $mailer->getList([]);
     [$from, $where, $pars] = $mailer->getQueueScope([]);
     $out['lists']['queue'] = [$list['total'], $list['upto'], ...$walk('id', $from, $where, $pars, $list['upto'])];
-    $list = $mailer->getDeadList(1);
-    $out['lists']['dead'] = [$list['total'], $list['upto'], ...$walk('id', PREFIX_DB.'_maildead', '', [], $list['upto'])];
+    foreach (['dead' => [], 'dead found' => ['chng' => '@']] as $name => $get) {
+        $_GET = $get;
+        $flt = getDeadFilter();
+        $list = $mailer->getDeadList($flt);
+        [$from, $where, $pars] = $mailer->getDeadScope($flt);
+        $out['lists'][$name] = [$list['total'], $list['upto'], ...$walk('id', $from, $where, $pars, $list['upto'])];
+    }
     foreach (['users' => ['', []], 'found' => ['', ['search' => '2', 'chng' => 'a']], 'newuser' => ['newuser', []], 'oauthlist' => ['oauthlist', []]] as $name => [$op, $get]) {
         $_GET = $get;
         [$from, $where, $pars] = getAccountScope($op);

@@ -1115,6 +1115,72 @@ runtime of every request carries.
 - **Trust** starts from `Update::getFactoryKeys()`: the constants `Update::PRIMARY` and `Update::RECOVERY`, or
   `UPDATE_KEYS` where a test run defines it before the core; no setting names a key or a server.
 
+## Admin Shell Boundary
+
+The shell is what every screen of the panel shares — the options, the queues, the end of the session, the cockpit of
+the home, the admin block, the floating menu, the voices and the screensaver. The markup is the theme's
+(`docs/TEMPLATES.md`, "Panel Shell", "Admin List Contract", "Admin Form Contract"); this section names the state and
+the requests behind it. The help of the panel is `admin/info/panel/ru.md`, opened by `admin.php?op=info`.
+
+- **State that changes the first paint is a cookie.** `$conf['user_c'].'-<key>'` through `setCookies()`, written by op
+  `option` of `admin/index.php` (`setAdminOption()`: POST with the token of scope `option`, 204, 400 for an unknown key
+  or a bad value). The keys: `mode` (the colour mode), `still`, `rail`, `dock-off`, `dock-site-off` (`1` or no cookie),
+  `density`, `rows`, `pins` (up to eight section keys joined by `-`), and `editor`, which lands in `_admins.editor` and
+  the session instead of a cookie. `isThemeFlag($key)` of `core/system.php` reads a flag before the first byte, and the
+  five layouts that open a document write `data-sl-still` on `<html>`, the panel layout also `data-sl-rail` and
+  `data-sl-dock-off`; the script changes the attribute at once and does not wait for the answer. One sender,
+  `setOptionSend()` of `plugins/system/dock.js`, takes the address and the token from the root of the menu
+  (`data-sl-option`, `data-sl-option-token`) for the options, the rail and the view of the lists. The language keeps
+  its own form, op `newlang`, and the only reload.
+- **What belongs to a device is `localStorage`.** `getToggleState()` and `setToggleState()` of `slaed.js`
+  (`slaed-toggle:<name>`, every access in `try`) hold the sound and its zones, the screensaver, the place, edge, axis,
+  fold and growth of the floating menu (the site keeps its own place, axis and fold) and the sort of every list.
+  PHP never reads them.
+- **One motion switch.** Every duration of the API block of `base.css` is multiplied by `--sl-time-scale`;
+  `prefers-reduced-motion: reduce` and `:root[data-sl-still]` set it to 0 and nothing else, and `isMotionStill()` of
+  `slaed.js` is the one answer for scripts. `setSlideMotion()` takes an axis.
+- **The queues have one source.** `getAdminQueues()` of `core/system.php` answers the queues this administrator may
+  open, the fullest first — new accounts, comments waiting (super administrator only), the waiting materials of each
+  Node type and the default support queue — as rows `key, mod, label, title, icon, href, num`. The bell, the block
+  "Ждут внимания" (`getAdminInfo()`), the chips `sl-queue` of the menu and the cards and the queue of the floating menu
+  read it. The poll is `index.php?go=5&op=getAdminQueueData` with the token, once a
+  minute for every administrator, answering `{left, rows}`.
+- **A poll is no action.** The limit is the key `idle` of `config/security.php`; `getAdminIdle()` of
+  `core/security.php` answers the lesser of it and `session.gc_maxlifetime`, never under a minute.
+  `$_SESSION[$conf['admin_c'].'-time']` is renewed by every request of the panel (`admin.php` or `go=5`) that does not
+  carry `X-SL-Poll`, and `core/security.php` ends an expired session on any request of the panel and the site. Every
+  timed request marks itself — the bell, the cockpit, the watch window, the count of private messages, the htmx
+  `every` polls through `htmx:configRequest` of `slaed.js`. The window `#sl-session` of the panel layout counts down
+  from `left`; op `keep` (`updateAdminSession()`, POST with its token, 204) renews, and at 0:00 the page goes to the
+  login by a GET of its own address.
+- **The cockpit reads the monitor.** The data functions of the monitor live in `core/monitor.php`, read by
+  "Мониторинг" and the home alike. `getMonitorCache($key, $ttl, $make)` is the one store: a JSON file of `Cache` per
+  site under the memory of the request, never APCu, which each php-cgi of a Windows pool keeps to itself.
+  `getSystemSignals()` answers the fourteen signals of the lamp (`key, level, label, fact, href`, failures first, kept
+  60 s), the age of a backup measured against `dump_age` of `config/security.php`; `getSelfCheckState()` feeds both the
+  signal and `getSelfCheckAlert()`. The home draws the lamp and the signals with the page and never calls
+  `getCockpitData()` itself — a snapshot costs seconds on Windows — so the rings come from the poll
+  `go=5&op=getCockpitData` at once and every 10 s while the tab is seen; super administrator only.
+- **The admin block and the floating menu read one row.** `getAdminBlockLinks()` reads the row `bkey = 'admin'` of
+  `_blocks` once a request, for a super administrator only, and parses its links (`javascript:OpenWindow` read as its
+  address, a missing file inside the site marked). `adminblock()` draws the block — in the panel on the home only, on
+  the site first in its column whatever its weight. `getAdminDock()` draws the floating menu of the theme of the page
+  for a logged administrator: the panel always prints it and hides it under `data-sl-dock-off`, the site neither prints
+  it nor loads `dock.js` while `dock-site-off` is set. `getAdminSectionList()` is the
+  one check of the sections an administrator may open, read by the menu and the home of the panel, the pins and "Все
+  разделы" (`go=5&op=getAdminSectionData`); `getAdminPageLink()` answers "Эта страница в панели". A module administrator
+  sees only the sections and queues of their own modules, without own links and without the watch.
+- **The watch window** `#sl-stats` is printed by `getWindowSet()` on every page of a super administrator while
+  sessions are on; its body is `getSessionStats()` (`go=5` in the panel, `go=1` on the site, with the token), asked on
+  the first opening and polled every 10 s only while the window is open and seen. It shows the present of `_session`
+  only, without history.
+- **Voices.** `plugins/system/sound.js` plays `<voice>.mp3` of the theme's `sound/` (`docs/TEMPLATES.md`, "Theme
+  Structure"); `getAssetList()` adds it only for a theme that has the folder. The count of private messages of a logged
+  member is polled by `go=1&op=getPrivateCountData` once a minute; a response names its voice by `HX-Trigger`.
+- **The screensaver** "Возрождение" is the scene `assets/js/phoenix.js` of the theme `admin`, started by the idle timer
+  of `admin-ui.js` after the minutes of `slaed-toggle:saver`; it never starts over an open window, and its badge is the
+  first two parts of `SL_VERSION` with `SL_CODENAME`.
+
 ## Assets
 
 Theme-local assets belong under each theme:

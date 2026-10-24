@@ -507,6 +507,7 @@ define('_OAUTHLIST','OAuth-Verknüpfungen');
 define('_OAUTHMACT','Anmeldung über Microsoft aktivieren?');
 define('_OAUTHMID','Microsoft Client ID');
 define('_OAUTHMKEY','Microsoft Client Secret');
+define('_OAUTH_PROVIDER','Anbieter');
 define('_OPTIMIZE','Optimierung');
 define('_OPTIMIZED','Optimiert');
 define('_OPTTEXT','Durch die Optimierung werden Tabellen neu aufgebaut und interne Strukturen aktualisiert, was in manchen Fällen die Leistung verbessern kann. Bei modernen InnoDB-Tabellen ist diese Funktion jedoch nur nach umfangreichen Änderungen notwendig (z. B. nach großen Löschvorgängen), nicht regelmäßig.');

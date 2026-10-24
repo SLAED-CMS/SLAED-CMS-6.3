@@ -172,6 +172,7 @@ function modules(): void {
         ],
         'rows' => $rows,
         'count' => count($rows),
+        'none_text' => ($mtype !== 2) ? _NONE_FOUND : _NO_INFO,
     ]);
     setFoot();
 }

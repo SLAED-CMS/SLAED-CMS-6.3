@@ -507,6 +507,7 @@ define('_OAUTHLIST','Liaisons OAuth');
 define('_OAUTHMACT','Activer la connexion via Microsoft?');
 define('_OAUTHMID','Microsoft Client ID');
 define('_OAUTHMKEY','Microsoft Client Secret');
+define('_OAUTH_PROVIDER','Fournisseur');
 define('_OPTIMIZE','Optimisation');
 define('_OPTIMIZED','Optimisé');
 define('_OPTTEXT','La reconstruction des tables met à jour les statistiques et les structures internes, ce qui peut améliorer les performances dans certains cas. Avec InnoDB moderne, cette opération n\'est nécessaire qu\'après de grandes modifications (par exemple des suppressions massives) et non régulièrement.');

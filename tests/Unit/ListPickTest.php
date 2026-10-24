@@ -34,15 +34,17 @@ final class ListPickTest extends TestCase
     public static function getHandlers(): array
     {
         $jobs = ['scheduler' => ['jobs' => ['alpha' => ['type' => 'custom'], 'beta' => ['type' => 'custom'], 'gamma' => ['type' => 'system']]]];
+        $msgs = ['multilingual' => '1'];
         $bans = ['security' => ['blocker_ip' => '10.0.0.1|0|100|a||10.0.0.2|h|200|b||10.0.0.3|0|300|c||', 'blocker_user' => 'ann|100|a||bob|200|b||cid|300|c||']];
         return [
-            'favorites' => [['file' => 'admin/modules/favorites.php', 'func' => 'delete', 'post' => ['id' => [3, 5]]]],
-            'privat' => [['file' => 'admin/modules/privat.php', 'func' => 'delete', 'post' => ['id' => [3, 5]]]],
-            'messages delete' => [['file' => 'admin/modules/messages.php', 'func' => 'delete', 'post' => ['id' => [3, 5]]]],
-            'messages status' => [['file' => 'admin/modules/messages.php', 'func' => 'status', 'post' => ['id' => [3, 5], 'act' => 1]]],
-            'newsletter campaigns' => [['file' => 'admin/modules/newsletter.php', 'func' => 'delete', 'post' => ['id' => [3, 5]]]],
+            'favorites' => [['file' => 'admin/modules/favorites.php', 'func' => 'delete', 'lift' => ['getFavoritesFilter'], 'post' => ['id' => [3, 5]]]],
+            'privat' => [['file' => 'admin/modules/privat.php', 'func' => 'delete', 'lift' => ['getPrivatFilter'], 'post' => ['id' => [3, 5]]]],
+            'messages delete' => [['file' => 'admin/modules/messages.php', 'func' => 'delete', 'lift' => ['getMessagesFilter'], 'conf' => $msgs, 'post' => ['id' => [3, 5]]]],
+            'messages status' => [['file' => 'admin/modules/messages.php', 'func' => 'status', 'lift' => ['getMessagesFilter'], 'conf' => $msgs,
+                'post' => ['id' => [3, 5], 'act' => 1]]],
+            'newsletter campaigns' => [['file' => 'admin/modules/newsletter.php', 'func' => 'delete', 'lift' => ['getCampFilter'], 'post' => ['id' => [3, 5]]]],
             'newsletter queue' => [['file' => 'admin/modules/newsletter.php', 'func' => 'drop', 'lift' => ['getQueueQuery'], 'post' => ['id' => [3, 5]]]],
-            'newsletter dead' => [['file' => 'admin/modules/newsletter.php', 'func' => 'revive', 'post' => ['id' => [3, 5]]]],
+            'newsletter dead' => [['file' => 'admin/modules/newsletter.php', 'func' => 'revive', 'lift' => ['getDeadFilter'], 'post' => ['id' => [3, 5]]]],
             'search' => [['file' => 'modules/search/admin/index.php', 'func' => 'drop', 'lift' => ['getSearchlink', 'getSearchwhere'], 'conf' => ['search' => ['mods' => '']],
                 'post' => ['id' => [3, 5]]]],
             'new users' => [['file' => 'modules/account/admin/index.php', 'func' => 'newdrop', 'lift' => ['getAccountScope'], 'post' => ['id' => [3, 5]]]],
@@ -102,9 +104,9 @@ final class ListPickTest extends TestCase
             'keys' => [3, 5], 'from' => $from, 'acted' => $acted])];
         return [
             'favorites' => $sweep($cases['favorites'][0], 'probe_favorites', [3, 5]),
-            'privat' => $sweep($cases['privat'][0], 'probe_privat', [3, 5]),
+            'privat' => $sweep($cases['privat'][0], 'probe_getAdminScope WHERE (kind = :kind OR status = :stat) AND p.id > :after', [3, 5]),
             'newsletter queue' => $sweep($cases['newsletter queue'][0], 'probe_getQueueScope WHERE (kind = :kind OR status = :stat) AND id > :after', [3, 5]),
-            'newsletter dead' => $sweep($cases['newsletter dead'][0], 'probe_maildead', [3, 5]),
+            'newsletter dead' => $sweep($cases['newsletter dead'][0], 'probe_getDeadScope WHERE (kind = :kind OR status = :stat) AND id > :after', [3, 5]),
             'search' => $sweep($cases['search'][0], 'probe_search', [3, 5]),
             'search top' => $sweep($cases['search'][0] + ['read' => ['3' => 'alpha', '5' => 'beta']], 'GROUP BY word) AS q', ['alpha', 'beta'], ['top' => 1]),
             'new users' => $sweep($cases['new users'][0], 'probe_users_temp', [3, 5]),
@@ -148,7 +150,8 @@ final class ListPickTest extends TestCase
     #[Test]
     public function aBusyCampaignStays(): void
     {
-        $data = $this->getProbe(['file' => 'admin/modules/newsletter.php', 'func' => 'delete', 'post' => ['id' => [3, 5]], 'left' => ['5' => 2], 'token' => true]);
+        $data = $this->getProbe(['file' => 'admin/modules/newsletter.php', 'func' => 'delete', 'lift' => ['getCampFilter'], 'post' => ['id' => [3, 5]],
+            'left' => ['5' => 2], 'token' => true]);
         $this->assertSame([['sql' => 'DELETE', 'pars' => ['id' => 3]]], $data['write']);
         $this->assertTrue($data['warn'], 'A busy campaign counted as deleted');
     }

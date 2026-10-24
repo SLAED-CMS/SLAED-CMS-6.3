@@ -371,7 +371,7 @@ return [
                 ],
             ],
             'news' => [
-                'version' => 2,
+                'version' => 4,
                 'list' => [
                     'orders' => [
                         0 => 'published',

@@ -190,6 +190,7 @@ function getMasterSites(string $note): string {
         'count' => $all,
         'limit' => $lim,
         'base' => 50,
+        'none_text' => ($cond !== '') ? _NONE_FOUND : _NO_INFO,
     ]);
 }
 

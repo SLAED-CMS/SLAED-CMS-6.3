@@ -507,6 +507,7 @@ define('_OAUTHLIST','OAuth links');
 define('_OAUTHMACT','Activate sign-in via Microsoft?');
 define('_OAUTHMID','Microsoft Client ID');
 define('_OAUTHMKEY','Microsoft Client Secret');
+define('_OAUTH_PROVIDER','Provider');
 define('_OPTIMIZE','Optimization');
 define('_OPTIMIZED','Optimized');
 define('_OPTTEXT','Rebuilding tables updates statistics and internal structures, which may improve performance in certain cases. With modern InnoDB storage engines this action is only required after major data changes (e.g., mass deletions) and not on a regular basis.');

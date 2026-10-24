@@ -461,25 +461,48 @@ final class Privat {
         return array_map(static fn(array $row): string => (string)$row['body'], $this->db->getSqlRows($res) ?: []);
     }
 
-    # Return one page of the administrator list newest first with both names and its state; no state is filtered, the panel sees copies the participants deleted
-    public function getAdminList(int $page = 1): array {
-        $total = $this->getTotal('', []);
+    # Return one page of the administrator list newest first with both names and its state; the panel also sees copies the participants deleted
+    public function getAdminList(string $state, int $find, string $term, int $page): array {
+        [$from, $where, $pars] = $this->getAdminScope($state, $find, $term);
+        $top = $this->db->getSqlRow($this->db->getSqlQuery('SELECT COUNT(p.id) AS num, MAX(p.id) AS top FROM '.$from.$where, $pars));
+        $total = intval($top['num'] ?? 0);
         $base = intval($this->conf['anum'] ?? 50);
         $out = $this->getPager($total, $page, getListLimit($base, $total)) + ['base' => $base, 'upto' => 0];
         if ($out['total'] < 1) return $out;
-        $out['upto'] = intval($this->db->getSqlRow($this->db->getSqlQuery('SELECT MAX(id) AS top FROM '.PREFIX_DB.'_privat'))['top'] ?? 0);
-        $sql = 'SELECT p.'.str_replace(', ', ', p.', self::FIELDS).', p.body, i.name AS namein, o.name AS nameout FROM '.PREFIX_DB.'_privat AS p'
-            .' LEFT JOIN '.PREFIX_DB.'_users AS i ON (p.uidin = i.id) LEFT JOIN '.PREFIX_DB.'_users AS o ON (p.uidout = o.id)'
+        $out['upto'] = intval($top['top'] ?? 0);
+        $sql = 'SELECT p.'.str_replace(', ', ', p.', self::FIELDS).', p.body, p.ip, i.name AS namein, o.name AS nameout FROM '.$from.$where
             .' ORDER BY p.time DESC, p.id DESC LIMIT '.$out['offset'].', '.$out['limit'];
-        foreach ($this->db->getSqlRows($this->db->getSqlQuery($sql)) ?: [] as $row) {
+        foreach ($this->db->getSqlRows($this->db->getSqlQuery($sql, $pars)) ?: [] as $row) {
             $out['rows'][] = $this->getRowData($row) + [
                 'body' => (string)$row['body'],
+                'ip' => (string)$row['ip'],
                 'state' => $this->getRowState($row),
                 'namein' => (string)($row['namein'] ?? ''),
                 'nameout' => (string)($row['nameout'] ?? ''),
             ];
         }
         return $out;
+    }
+
+    # The table, condition and values of the administrator list by the state getRowState() names and a search, which its count and a sweep of the panel read
+    public function getAdminScope(string $state, int $find, string $term): array {
+        $from = PREFIX_DB.'_privat AS p LEFT JOIN '.PREFIX_DB.'_users AS i ON (p.uidin = i.id) LEFT JOIN '.PREFIX_DB.'_users AS o ON (p.uidout = o.id)';
+        $live = 'p.delin = 0 AND p.delout = 0';
+        $cond = match ($state) {
+            'delin' => ['p.delin = 1'],
+            'delout' => ['p.delin = 0 AND p.delout = 1'],
+            'saved' => [$live.' AND p.saved = 1'],
+            'read' => [$live.' AND p.saved = 0 AND p.viewed = 1'],
+            'new' => [$live.' AND p.saved = 0 AND p.viewed = 0'],
+            default => [],
+        };
+        $pars = [];
+        $text = $this->filterFindText($term);
+        if ($text !== '') {
+            $cond[] = match ($find) {1 => 'p.id', 3 => 'o.name', 4 => 'i.name', 5 => 'p.ip', default => 'p.title'}.' LIKE :find ESCAPE \''.self::LIKEMARK.'\'';
+            $pars['find'] = $text;
+        }
+        return [$from, $cond ? ' WHERE '.implode(' AND ', $cond) : '', $pars];
     }
 
     # Store one private message and answer its id, or the machine code that says why it was refused

@@ -6,16 +6,62 @@
 
 if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 
+# The filter of the favorites as the request carries it: the table and condition the list, its count and a sweep of the foot read, and the query that keeps it
+function getFavoritesFilter(string $src = 'get'): array {
+    $modul = getVar($src, 'modul', 'var');
+    $search = (getVar($src, 'search', 'num', 2) === 1) ? 1 : 2;
+    $chng = trim(getVar($src, 'chng'));
+    $cond = [];
+    $pars = [];
+    if ($modul !== '') {
+        $cond[] = 'f.modul = :modul';
+        $pars['modul'] = $modul;
+    }
+    if ($chng !== '') {
+        $cond[] = (($search === 1) ? 'f.id' : 'u.name').' LIKE :find';
+        $pars['find'] = '%'.$chng.'%';
+    }
+    $keys = array_filter(['modul' => $modul, 'search' => $search, 'chng' => $chng], static fn($v) => $v !== '');
+    return ['modul' => $modul, 'search' => $search, 'chng' => $chng, 'from' => PREFIX_DB.'_favorites AS f LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.id)',
+        'where' => $cond ? ' WHERE '.implode(' AND ', $cond) : '', 'pars' => $pars, 'base' => 'name=favorites&'.http_build_query($keys, '', '&', PHP_QUERY_RFC3986)];
+}
+
+# The filter bar of the favorites: the modules their rows hold, then the column and the text of the search
+function getFavoritesSearch(array $flt): string {
+    global $afile, $db, $tpl;
+    $mods = [['value_attr' => '', 'label_text' => _ALL, 'is_selected' => $flt['modul'] === '']];
+    foreach ($db->getSqlRows($db->getSqlQuery('SELECT DISTINCT modul FROM '.PREFIX_DB.'_favorites ORDER BY modul')) ?: [] as $row) {
+        $mods[] = ['value_attr' => (string)$row['modul'], 'label_text' => getModuleName((string)$row['modul']), 'is_selected' => $flt['modul'] === $row['modul']];
+    }
+    $finds = [];
+    foreach ([1 => _ID, 2 => _POSTEDBY] as $key => $label) $finds[] = ['value_attr' => (string)$key, 'label_text' => $label, 'is_selected' => $flt['search'] === $key];
+    return $tpl->getHtmlFrag('list-filter', [
+        'action_url' => $afile.'.php',
+        'label' => _SEARCH,
+        'is_part' => true,
+        'hidden' => [['nameattr' => 'name', 'valueattr' => 'favorites']],
+        'fields' => [
+            ['field_id' => 'sl-fav-mod', 'label' => _MODUL, 'name_attr' => 'modul', 'options' => $mods, 'is_now' => true],
+            ['field_id' => 'sl-fav-in', 'label' => _SEARCH, 'name_attr' => 'search', 'options' => $finds, 'find_id' => 'sl-fav-q', 'find_name' => 'chng',
+                'find_value' => $flt['chng']],
+        ],
+    ]);
+}
+
 # The favorites of every user, newest first, each with the title of the material it marks, read per module in one query
 function favorites(): void {
     global $afile, $db, $conf;
     setHead();
-    [$total, $upto] = array_map('intval', $db->getSqlQuery('SELECT COUNT(id), MAX(id) FROM '.PREFIX_DB.'_favorites')->fetch(PDO::FETCH_NUM));
+    $flt = getFavoritesFilter();
+    $chng = $flt['chng'];
+    $res = $db->getSqlQuery('SELECT COUNT(f.id), MAX(f.id) FROM '.$flt['from'].$flt['where'], $flt['pars']);
+    [$total, $upto] = array_map('intval', $res->fetch(PDO::FETCH_NUM));
     $limit = getListLimit(intval($conf['favorites']['anum']), $total);
     $pages = max(1, (int)ceil($total / $limit));
     $num = min(max(1, getVar('get', 'num', 'num', 1)), $pages);
-    $sql = 'SELECT f.id, f.fid, f.modul, u.name, f.time FROM '.PREFIX_DB.'_favorites AS f LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.id) ORDER BY f.id DESC';
-    $list = $db->getSqlQuery($sql.' LIMIT '.(($num - 1) * $limit).', '.$limit)->fetchAll(PDO::FETCH_NUM);
+    $sql = 'SELECT f.id, f.fid, f.modul, u.name, f.time FROM '.$flt['from'].$flt['where'].' ORDER BY f.id DESC';
+    $list = $db->getSqlQuery($sql.' LIMIT '.(($num - 1) * $limit).', '.$limit, $flt['pars'])->fetchAll(PDO::FETCH_NUM);
+    parse_str($flt['base'].'&num='.$num, $keep);
     $want = [];
     foreach ($list as [, $fid, $mod]) $want[$mod][intval($fid)] = $mod;
     $names = [];
@@ -31,20 +77,21 @@ function favorites(): void {
     }
     $rows = [];
     foreach ($list as [$id, $fid, $mod, $uname, $time]) {
+        $who = $uname ? user_info($uname, null) : '';
         $title = getDecodedText((string)($names[$mod][intval($fid)] ?? ''));
         $rows[] = ['name' => ($title !== '') ? cutstr($title, 60) : _ID.' '.$id,
-            'drop' => getTplPostAction(['name' => 'favorites', 'op' => 'delete', 'id[]' => $id, 'num' => $num], 'trash', _ONDELETE), 'cells' => [
-            ['is_col_id' => true, 'has_content_text' => true, 'content_text' => $id],
+            'drop' => getTplPostAction($keep + ['op' => 'delete', 'id[]' => $id], 'trash', _ONDELETE), 'cells' => [
+            ['is_col_id' => true, 'content_html' => ($flt['search'] === 1) ? filterTextHighlight((string)$id, $chng) : (string)$id],
             ['is_col_title' => true, 'is_truncate' => true, 'title_text' => $title, 'has_content_text' => true, 'content_text' => $title],
             ['is_truncate' => true, 'has_content_text' => true, 'content_text' => getModuleName($mod)],
-            ['is_col_author' => true, 'content_html' => $uname ? user_info($uname, null) : _ANONYM],
+            ['is_col_author' => true, 'content_html' => $uname ? (($flt['search'] === 2) ? filterTextHighlight($who, $chng) : $who) : _ANONYM],
             ['is_col_date' => true, 'moment' => $time],
             ['is_col_actions' => true, 'dial' => [['href' => 'index.php?name='.$mod.'&op=view&id='.$fid.'#'.$fid, 'icon_name' => 'eye', 'title' => _MVIEW]]],
         ]];
     }
     echo getTplAdminList([
         'head_html' => getTplAdminTabs(['ops' => ['name=favorites', 'name=favorites&op=config', 'name=favorites&op=info'], 'tabs' => [_HOME, _PREFERENCES, _MANUAL],
-            'part' => [0]]),
+            'part' => [0], 'subtitle_html' => getFavoritesSearch($flt)]),
         'is_fixed' => true,
         'head' => [
             ['content' => _ID, 'is_col_id' => true],
@@ -55,7 +102,7 @@ function favorites(): void {
             ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true],
         ],
         'rows' => $rows,
-        'href' => $afile.'.php?name=favorites&',
+        'href' => $afile.'.php?'.$flt['base'].'&',
         'page' => $num,
         'pages' => $pages,
         'maxpg' => intval($conf['favorites']['anump']),
@@ -63,6 +110,7 @@ function favorites(): void {
         'limit' => $limit,
         'base' => intval($conf['favorites']['anum']),
         'upto' => $upto,
+        'none_text' => ($flt['where'] !== '') ? _NONE_FOUND : _NO_INFO,
     ]);
     setFoot();
 }
@@ -173,16 +221,17 @@ function delete(): void {
     $ids = getVar('post', 'id[]', 'num');
     $num = getVar('post', 'num', 'num', 1);
     $warn = !checkAdminPost('favorites');
+    $flt = getFavoritesFilter('post');
     $act = static function (int $id) use ($db): bool {
         $res = $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_favorites WHERE id = :id', ['id' => $id]);
         return $res && $res->rowCount() > 0;
     };
-    if (!$warn && setListPortion('id', PREFIX_DB.'_favorites', '', [], $act)) exit;
+    if (!$warn && setListPortion('f.id', $flt['from'], $flt['where'], $flt['pars'], $act)) exit;
     $done = !$warn && $ids;
     foreach ($done ? $ids : [] as $id) {
         if (!$act(intval($id))) $done = false;
     }
-    setRedirect($afile.'.php?name=favorites&num='.$num, false, 302, $warn ? _TOKENMISS : ($done ? _SUCCDELETE : _ERROR), !$done);
+    setRedirect($afile.'.php?'.$flt['base'].'&num='.$num, false, 302, $warn ? _TOKENMISS : ($done ? _SUCCDELETE : _ERROR), !$done);
 }
 
 function info(): void {
