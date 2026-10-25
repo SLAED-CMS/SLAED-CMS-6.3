@@ -4,9 +4,7 @@
 # License: MIT
 # Website: slaed.net
 
-# The executor of an installation, contract v1: the panel copies it from the package to client/run/apply.php, and the gate or the panel requires it with no argument
-# All it needs lies in client/apply.lock and the plan of the backup; each request does one portion of one phase, writes the lock and answers its own page
-# It loads the core only in the phase that runs the database steps, so the files move while no code of the mixed tree runs; the rollback is the installed core/rescue.php
+# The executor of an installation, contract v1, run from its copy in client/run/: it loads the core only for the database steps, so no code of the mixed tree runs
 if (!defined('BASE_DIR') || !defined('PUBLIC_DIR')) die('Illegal file access');
 
 # The folder of the client state, named by the core or by the default layout when no core has run

@@ -26,9 +26,7 @@ class Cache {
         return (time() - $ttl) < filemtime($file);
     }
 
-    # Read a cache file and return its body or an empty string when it cannot be read
-    # A stored file that cannot be read is the one cache failure nothing else reports: the caller renders the page again and the guard prevents the warning that would name it
-    # It is recorded once per process, because a site whose cache directory lost its permissions would otherwise pay a locked append for every read of every page
+    # Read a cache file or answer ''; an unreadable file is logged once per process, as nothing else reports it and a lost permission would otherwise log every read
     public static function getBody(string $file): string {
         static $told = false;
         if (!is_file($file)) return '';
@@ -41,8 +39,7 @@ class Cache {
         return ($body !== false) ? $body : '';
     }
 
-    # Create a missing directory of the cache and answer whether it exists; losing the race to a parallel request is the expected success, not a warning
-    # Only a directory that is still missing afterwards is a failure, and that one is written to the log, since the silenced warning no longer tells it
+    # Create a missing cache directory; losing the race to a parallel request is the expected success, and only a directory still missing afterwards is logged
     public static function setDirPath(string $dir): bool {
         if (is_dir($dir)) return true;
         set_error_handler(static fn(): bool => true);
@@ -75,8 +72,7 @@ class Cache {
         return self::deleteStale(CACHE_DIR, 0);
     }
 
-    # Recursively remove the cached files under one directory not rewritten for ttl seconds, every file for zero, keeping the lock files and the tree
-    # A lock keeps its time while processes take it, and unlinking one still held lets the next process lock a new file beside it; an evicted entry only costs a rebuild
+    # Remove cached files not rewritten for ttl seconds, every file for zero, keeping lock files: unlinking a held lock lets the next process lock a new one beside it
     public static function deleteStale(string $dir, int $ttl): int {
         if ($ttl < 0 || !is_dir($dir)) return 0;
         $num = 0;
@@ -90,9 +86,7 @@ class Cache {
         return $num;
     }
 
-    # Emit the content type, the cache policy and security headers: none forbids a copy, private lets one browser keep it revalidated, public lets anyone keep it $age seconds
-    # A public answer lives STATICDAYS days unless the caller names its own age, and carries the entity tag it is given, so a shared cache can revalidate it as a browser does
-    # A public answer drops every pending cookie so a shared proxy never hands one visitor state to another; a kept answer drops the Pragma and Expires a session emits
+    # Emit the content type, cache policy and security headers; a public answer drops every pending cookie, so a shared proxy never hands one visitor state to another
     public static function setHeaders(string $mode = 'none', string $type = 'text/html', int $mtime = 0, string $etag = '', int $age = 0): void {
         header('Content-Type: '.(($type === 'text/html') ? $type.'; charset='._CHARSET : $type));
         header_remove('Pragma');
@@ -118,8 +112,7 @@ class Cache {
         header('Referrer-Policy: strict-origin-when-cross-origin');
     }
 
-    # Send a 304 status and report a match when the client cached copy is still current; a given entity tag decides an If-None-Match on its own
-    # Only a request without If-None-Match falls back to the If-Modified-Since date, and a call without a tag ignores If-None-Match as before
+    # Send 304 when the cached copy is current; a given entity tag decides an If-None-Match alone, and If-Modified-Since counts only without that header
     public static function checkNotModified(int $mtime, string $etag = ''): bool {
         $none = trim((string)($_SERVER['HTTP_IF_NONE_MATCH'] ?? ''));
         if ($etag !== '' && $none !== '') {

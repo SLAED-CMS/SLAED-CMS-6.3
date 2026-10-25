@@ -6,11 +6,7 @@
 
 if (!defined('ADMIN_FILE') || !is_admin_modul('forum')) die('Illegal file access');
 
-# Bring the denormalised forum totals back in line with the rows they describe, and answer how much had to be repaired
-# The wanted values are computed in full before anything is written, so a forum that is already in order costs no write at all rather than a rewrite of every category
-# The reply count of a topic is repaired here too: nothing else ever recounted it, which is why topics could carry a wrong number for years
-# Totals are added rather than assigned, so a category listed before its own children still ends up with their totals
-# The last message is asked of the branch through the same function the delete path uses, so both answer alike
+# Repair the forum totals and reply counts, computed in full before any write so a forum in order costs none; the last message comes from getForumLast()
 function updateForumSync(): array {
     global $db;
     $query = $db->getSqlQuery('SELECT id, parent, topics, posts, lpost FROM '.PREFIX_DB.'_categories WHERE modul = \'forum\' ORDER BY ordern');

@@ -1,12 +1,11 @@
-/* The block "Administration", and after it the floating menu on the site and the watch window: one component file the
-   bundle lands between base and theme */
+/* The block "Administration", the floating menu on the site and the watch window: one component bundled between base and theme */
 
 /* The summary dims while the key that refreshes it waits for the answer */
 [aria-busy="true"] > .sl-session-summary {
   opacity: var(--sl-fade-muted);
 }
 
-/* ---------- The keys: square, icons only, each washed in the tone of its meaning ---------- */
+/* Keys: square, icons only, each washed in the tone of its meaning */
 
 .sl-adm-keys {
   display: grid;
@@ -79,7 +78,7 @@
   content: "";
 }
 
-/* ---------- The owner's links: the rows of the user block, a flag where a file is missing ---------- */
+/* Owner links: the rows of the user block, a flag where a file is missing */
 
 .sl-adm-own {
   margin-top: var(--sl-space-3);
@@ -99,7 +98,7 @@
   white-space: nowrap;
 }
 
-/* ---------- The watch window: who is on the site now, read from the live sessions alone ---------- */
+/* Watch window: who is on the site now, read from the live sessions alone */
 
 /* The ring of the summary opens the window, so it is a button that keeps the look of the ring */
 button.sl-session-donut {
@@ -285,7 +284,7 @@ button.sl-session-donut:focus-visible {
   .sl-stats-cols { grid-template-columns: minmax(0, 1fr); }
 }
 
-/* ---------- С6 The floating menu on the site: the layer of the panel over the page, its own place, the edge of the panel ---------- */
+/* Floating menu: the layer of the panel over the page, with its own place and the edge of the panel */
 
 .sl-dock {
   position: fixed;
@@ -306,7 +305,7 @@ button.sl-session-donut:focus-visible {
   visibility: hidden;
 }
 
-/* М12 WCAG 2.4.11: a field reached by Tab never ends under the pill at the bottom */
+/* WCAG 2.4.11: a field reached by Tab never ends under the pill at the bottom */
 :root:has(.sl-dock) {
   scroll-padding-bottom: calc(var(--sl-dock-height) + var(--sl-space-4) * 4);
 }
@@ -323,7 +322,7 @@ button.sl-session-donut:focus-visible {
   box-shadow: var(--sl-shadow-float);
 }
 
-/* М6 Upright the pill is as thick as it is long across: the same tile, the padding turned with the axis */
+/* Upright the pill is as thick as it is long across: the same tile, the padding turned with the axis */
 .sl-dock[data-dir="col"] .sl-dock-bar {
   flex-direction: column;
   padding: var(--sl-space-4) var(--sl-space-3);
@@ -333,7 +332,7 @@ button.sl-session-donut:focus-visible {
   box-shadow: var(--sl-shadow-float), 0 0 0 var(--sl-ring-width) var(--sl-tint-strong);
 }
 
-/* М7 The body that folds carries its own gap and the step after it, so a body run down to nothing leaves no seam */
+/* The body that folds carries its own gap and the step after it, so a body run down to nothing leaves no seam */
 .sl-dock-body {
   display: flex;
   flex: none;
@@ -367,7 +366,7 @@ button.sl-session-donut:focus-visible {
   margin: var(--sl-space-2) 0;
 }
 
-/* ---------- М2 М3 A round app in the tone it carries: it grows towards the room, the pill keeps its size ---------- */
+/* Apps: a round app in the tone it carries grows towards the room, the pill keeps its size */
 
 .sl-dock-app {
   position: relative;
@@ -425,7 +424,7 @@ button.sl-session-donut:focus-visible {
   color: var(--sl-danger);
 }
 
-/* М9 The pins are a group of their own, each in the next of four tones; with none the group and its rule step away */
+/* The pins are a group of their own, each in the next of four tones; with none the group and its rule step away */
 .sl-dock-pins,
 .sl-dock-queue {
   display: flex;
@@ -443,7 +442,7 @@ button.sl-session-donut:focus-visible {
 .sl-dock-pins > :nth-child(4n + 2) { color: var(--sl-success); }
 .sl-dock-pins > :nth-child(4n + 3) { color: var(--sl-accent); }
 .sl-dock-pins > :nth-child(4n) { color: var(--sl-warning); }
-/* М9 The open section: a short bar of the brand with a soft glow, on the side of the icon away from the room */
+/* The open section: a short bar of the brand with a soft glow, on the side of the icon away from the room */
 .sl-dock-here::after {
   position: absolute;
   bottom: calc(var(--sl-space-3) * -1);
@@ -460,11 +459,11 @@ button.sl-session-donut:focus-visible {
 .sl-dock:is([data-to="right"], [data-to="left"]) .sl-dock-here::after { top: 50%; bottom: auto; width: var(--sl-space-2); height: var(--sl-space-6); transform: translateY(-50%); }
 .sl-dock[data-to="right"] .sl-dock-here::after { left: calc(var(--sl-space-3) * -1); }
 .sl-dock[data-to="left"] .sl-dock-here::after { right: calc(var(--sl-space-3) * -1); left: auto; }
-/* С9 All the sections of the panel in one pop */
+/* All the sections of the panel in one pop */
 .sl-dock-launch {
   color: var(--sl-primary-strong);
 }
-/* М13 The watch: the ring of shares of the summary, the figure of the visitors in its hole */
+/* The watch: the ring of shares of the summary, the figure of the visitors in its hole */
 .sl-dock-watch {
   background: conic-gradient(
     var(--sl-accent) 0 var(--sl-d-admins, 0%),
@@ -484,7 +483,7 @@ button.sl-session-donut:focus-visible {
   border-radius: var(--sl-radius-circle);
   background: var(--sl-bg);
 }
-/* М14 The admin: the mark of a role in a ring of the brand, no picture of a person */
+/* The admin: the mark of a role in a ring of the brand, no picture of a person */
 .sl-dock-me {
   color: var(--sl-accent);
   box-shadow: var(--sl-shadow-xs), 0 0 0 var(--sl-ring-width) var(--sl-primary);
@@ -586,7 +585,7 @@ button.sl-dock-row:focus-visible {
   line-height: var(--sl-line-tight);
 }
 
-/* М4 The tip on the side of the room, at its own size over a grown icon */
+/* The tip on the side of the room, at its own size over a grown icon */
 .sl-dock-app[data-tip]::before {
   position: absolute;
   z-index: var(--sl-z-raised);
@@ -619,7 +618,7 @@ button.sl-dock-row:focus-visible {
   display: none;
 }
 
-/* ---------- М5 М6 М7 М8 The three tools: the buttons of the system window, each showing the icon of its axis ---------- */
+/* Tools: the buttons of the system window, each showing the icon of its axis */
 
 .sl-dock[data-dir="col"] .sl-dock-tools {
   flex-direction: column;
@@ -646,7 +645,7 @@ button.sl-dock-row:focus-visible {
   display: inline-block;
 }
 
-/* ---------- The pops: on the side where the room is ---------- */
+/* Pops: on the side where the room is */
 
 .sl-dock-pop {
   position: absolute;
@@ -729,14 +728,14 @@ button.sl-dock-row:focus-visible {
   background: var(--sl-warning);
 }
 
-/* ---------- С6 С7 С8 С9 What the menu carries on the site only ---------- */
+/* Site only: what the menu carries on the site alone */
 
 /* An app the script or the page sets aside stays away whatever its display */
 .sl-dock-app[hidden] {
   display: none;
 }
 
-/* С6 Folded, the mark carries the sum of the queue */
+/* Folded, the mark carries the sum of the queue */
 .sl-dock-home-badge {
   display: none;
 }
@@ -745,7 +744,7 @@ button.sl-dock-row:focus-visible {
   display: grid;
 }
 
-/* С8 The queue: up to four apps with their figures lying across, one bell with the sum standing upright */
+/* The queue: up to four apps with their figures lying across, one bell with the sum standing upright */
 .sl-dock-queue:not(:has(> :not([hidden]))) {
   display: none;
 }
@@ -806,7 +805,7 @@ button.sl-dock-row:focus-visible {
   font-size: var(--sl-font-micro);
 }
 
-/* С9 All the sections: one grid with a search, each tile with its star */
+/* All the sections: one grid with a search, each tile with its star */
 .sl-dock-pop.sl-dock-pop-wide {
   width: min(var(--sl-dock-width), calc(100vw - var(--sl-space-6) * 2));
 }

@@ -31,18 +31,13 @@ final class Feed {
     private array $conf;
     private ?Closure $send;
 
-    # Keep the loaded rss scope and the optional trusted transport; nothing here reads the request or the configuration for a callback, so only code can hand a transport in
-    # The transport is one closure with the two operations resolve and get; null selects the cURL implementation, and a test hands in its own so no test reaches the network
+    # Keep the rss scope and the trusted transport; only code hands a transport in, null selects cURL, and a test passes its own so none reaches the network
     public function __construct(array $conf, ?Closure $send = null) {
         $this->conf = $conf;
         $this->send = $send;
     }
 
-    # Fetch one feed and answer the seven keys of the contract; a 304 on the validators of the requested address is ok without a body, every refusal is ok = false with a short code
-    # The validators belong to the address they came from: they are sent on the first hop only and returned only when no redirect intervened
-    # Every hop resolves its host again, refuses a non-public address and is pinned to the checked one; size, total time and redirects are bounded by config/rss.php
-    # The time bound covers every step: a lookup starts only while time is left, and one that used up the bound is a timeout whatever it answered
-    # Too many redirects report the code of the last one that arrived
+    # Fetch one feed into the seven keys of the contract; every hop resolves its host again and is pinned to the checked public address, bounded by config/rss.php
     public function getFeedContent(string $url, string $etag = '', string $modified = ''): array {
         $lim = $this->getFeedLimits();
         if ($lim === []) return $this->getFeedFail('config');
@@ -132,9 +127,7 @@ final class Feed {
         return $done ? $val : '';
     }
 
-    # Normalize the address of one hop before any lookup: http or https, no credentials, the default port only and a host by the DNS grammar or an address literal
-    # The fragment is never sent, and a byte a request line cannot carry is percent-encoded rather than handed to the transport
-    # Public and static because NodeSync stores exactly this canonical form before any request; the answer is the address and its host, or [] when the address is refused
+    # Normalize the address of one hop or answer []; public and static because NodeSync stores exactly this canonical form before any request
     public static function getFeedUrl(string $url): array {
         $url = trim($url);
         if ($url === '' || strlen($url) > self::URLMAX || preg_match('/[\x00-\x20\x7f]/', $url)) return [];
@@ -164,15 +157,13 @@ final class Feed {
         return preg_match('/^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$/', $host) ? $host : '';
     }
 
-    # Percent-encode every byte an address may not carry as it stands, and a percent sign that starts no escape; a Markdown link also encodes the characters Parser reads
-    # Those are the parentheses and brackets that would close the link or open a tag, the asterisk of a smilie, the backslash of a literal and the backtick of a code span
+    # Percent-encode what an address may not carry; a Markdown link also encodes the characters Parser reads, so the link never closes or opens a tag
     private static function getFeedCode(string $val, bool $md): string {
         $pat = $md ? '/[^A-Za-z0-9\-._~:\/?#@!$&\'+,;=%]|%(?![0-9A-Fa-f]{2})/' : '/[^A-Za-z0-9\-._~:\/?#@!$&\'()*+,;=%\[\]]|%(?![0-9A-Fa-f]{2})/';
         return preg_replace_callback($pat, fn(array $m): string => rawurlencode($m[0]), $val) ?? '';
     }
 
-    # Resolve one host to the address the request is pinned to: a literal is judged as itself, a name by every address of its answer, and one non-public address refuses the host
-    # An IPv4 address is preferred when the answer holds both families, and the choice is stable because each family is sorted
+    # Resolve one host to the address the request is pinned to; one non-public address in the answer refuses the host, and IPv4 is preferred when both come
     private function getFeedAddress(string $host): string {
         if (filter_var($host, FILTER_VALIDATE_IP) !== false) return Upload::checkPublicAddress($host) ? $host : '';
         $res = $this->getFeedReply('resolve', ['host' => $host]);
@@ -192,9 +183,7 @@ final class Feed {
         return ($this->send !== null) ? ($this->send)($op, $req) : $this->getSystemReply($op, $req);
     }
 
-    # The standard transport: resolve asks the system resolver, get runs one cURL request pinned to the checked address, without redirects or proxies and with TLS verification kept
-    # The stream stops one chunk past the byte bound so the caller sees the overflow; a connection that reached any other address than the pinned one is refused
-    # A host that is already an address carries no pin: nothing was resolved, and libcurl refuses a resolve entry whose host part is an IPv6 literal
+    # The standard transport, cURL pinned to the checked address; an address host carries no pin, since libcurl refuses a resolve entry with an IPv6 literal
     private function getSystemReply(string $op, array $req): array {
         if ($op === 'resolve') return ['addresses' => $this->getHostList($req['host'])];
         if ($op !== 'get') throw new RuntimeException('operation');
@@ -244,8 +233,7 @@ final class Feed {
         return ['code' => $code, 'headers' => $head, 'body' => $body];
     }
 
-    # Ask the system resolver for the A and AAAA records of one name, and the IPv4 lookup of the host database only when the records gave no address; a failed lookup answers []
-    # Neither lookup takes a time limit, so the resolver of the system bounds its own wait; the caller measures it against the time bound of the fetch
+    # The A and AAAA records of one name, the IPv4 host database only when they gave none; neither lookup takes a time limit, so the caller measures it against the fetch bound
     private function getHostList(string $host): array {
         set_error_handler(static fn(): bool => true);
         try {
@@ -280,8 +268,7 @@ final class Feed {
         return in_array($type, self::TYPES, true) || str_ends_with($type, '+xml');
     }
 
-    # Parse the document without network, DTD or entities and write its first entries as Markdown; a document that is not RSS 2.0, RSS 1.0 or Atom is refused, an empty feed is ''
-    # The byte scan only spares the parser an obvious DTD; a UTF-16 document hides one from it, so a parsed document type refuses the feed as well
+    # Parse the document without network, DTD or entities into Markdown; a UTF-16 document hides a DTD from the byte scan, so a parsed document type refuses it too
     private function getFeedBody(string $xml, string $base, int $max): ?string {
         if (trim($xml) === '' || preg_match('/<!(DOCTYPE|ENTITY)/i', $xml)) return null;
         $doc = new DOMDocument();
@@ -406,8 +393,7 @@ final class Feed {
         return $out;
     }
 
-    # Write one entry: the heading, the optional UTC date, the checked link under its host and the description paragraphs, received text escaped and blank lines between
-    # An entry without a title is headed by the host of its link, and an entry with neither says nothing a reader could find again, so it is left out
+    # Write one entry as Markdown, received text escaped; an entry with neither title nor link says nothing a reader could find again and is left out
     private function getFeedEntry(string $title, string $date, string $link, string $base, array $desc): string {
         $href = ($link === '') ? '' : $this->getFeedLink($link, $base, true);
         $host = ($href === '') ? '' : (string)parse_url($href, PHP_URL_HOST);
@@ -421,8 +407,7 @@ final class Feed {
         return implode("\n\n", $out);
     }
 
-    # Resolve one reference against the address it arrived on into an absolute http or https address with a checked host, or '' when it is not one
-    # A Markdown link keeps no address literal of IPv6, whose brackets it cannot carry, and encodes the characters Parser reads; a redirect target is normalized by the next hop
+    # Resolve one reference into an absolute http or https address or ''; a Markdown link keeps no IPv6 literal, whose brackets it cannot carry
     private function getFeedLink(string $ref, string $base, bool $md = false): string {
         $ref = trim(preg_replace('/[\x00-\x1f\x7f]/', '', $ref) ?? '');
         if ($ref === '') return '';
@@ -462,8 +447,7 @@ final class Feed {
         return '';
     }
 
-    # Escape one received text for the canonical document: line endings become LF, control characters other than LF and TAB go, and every ASCII punctuation mark gets a backslash
-    # Received text is data and never markup: the escaping makes Parser show it literally, so no BB, Markdown or HTML command survives
+    # Escape received text for the canonical document; every ASCII punctuation mark gets a backslash, so Parser shows it literally and no command survives
     private function getFeedText(string $text): string {
         $text = str_replace(["\r\n", "\r"], "\n", $text);
         $text = preg_replace('/(?![\n\t])\p{Cc}/u', '', $text) ?? '';

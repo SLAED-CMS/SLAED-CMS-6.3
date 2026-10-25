@@ -783,8 +783,7 @@ function pointreset(): void {
     setFoot();
 }
 
-# Debit every positive balance through adjust events in batches of 500 accounts, one transaction per account and one part per million points
-# The operation id and the confirmed cursor live in the admin session, so a repeat after a failure resumes with the same sources and debits nothing twice
+# Debit every positive balance in batches; the operation id in the admin session is part of the event key, so a repeat resumes at the cursor and Point skips a written debit
 function setPointsReset(): bool {
     global $db, $conf, $pnt, $admin;
     $skey = $conf['admin_c'].'-reset';

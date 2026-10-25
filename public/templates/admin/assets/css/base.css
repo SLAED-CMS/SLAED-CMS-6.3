@@ -1,7 +1,6 @@
 /* Root variables: the theme API. A new theme repaints this block and nothing below the marker */
 :root {
-  /* Both modes live in one declaration through light-dark(), so they cannot drift apart. It resolves against the used
-     color-scheme, which is why the scheme is declared here and switched by the two selectors under the marker */
+  /* Both modes resolve through light-dark() against the used color-scheme, so the scheme is declared here */
   color-scheme: light dark;
 
   /* Colour: page, surfaces, borders */
@@ -33,8 +32,7 @@
   --sl-warning-subtle: light-dark(#fff4e5, #3a2a12);
   --sl-accent: light-dark(#8e44ad, #b370cf);
   --sl-info-subtle: light-dark(#e8f4fd, #14283a);
-  /* The colour that reads on a solid brand fill. In light the fill is dark and the text is white; in dark the ramp
-     reverses and the fill is the bright one, so the text goes dark. The role holds, the value turns over with it */
+  /* Text on a solid brand fill: white in light, dark in dark, where the ramp reverses and the fill is the bright one */
   --sl-on-solid: light-dark(#ffffff, #0b1220);
   --sl-scrim-subtle: light-dark(rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.4));
   --sl-scrim: color-mix(in srgb, var(--sl-text-strong) 34%, transparent);
@@ -126,11 +124,7 @@
   --sl-btn-shadow:
     0 2px 4px light-dark(rgba(0, 0, 0, 0.28), rgba(0, 0, 0, 0.7)), inset 0 1px 0 light-dark(rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0.05)),
     inset 0 -1px 0 light-dark(rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.55));
-  /* The solid bars - a panel head, a sidebar block head, the footer band - carry white text on a deep fill in both
-     schemes. In dark the tone tokens turn into light tints, right for a glyph and glaring as the fill of a whole bar, so
-     a bar reads its own fill: the tone of the light scheme, and in dark that tone under a seventy per cent shade,
-     because against a dark page one fill reads brighter than against white. Its border and its bevel keep the light
-     scheme's values unshaded, and the text stays white */
+  /* A solid bar reads its own fill, the light tone under a 70% shade in dark, where the tone tokens turn into glaring tints */
   --sl-solid-bg: linear-gradient(
     to bottom,
     light-dark(var(--sl-primary-strong), #144d6f) 0%,
@@ -190,8 +184,7 @@
   --sl-ease-out: ease;
   --sl-ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
 
-  /* Layers: the roles a stack may take, in the order they overlap. A value between two of them is a
-     layer the ladder is missing, never a number picked to win one argument */
+  /* Layers in overlap order: a value between two of them is a missing step, never a number picked to win */
   --sl-z-base: 0;
   --sl-z-raised: 1;
   --sl-z-overlay: 3;
@@ -215,8 +208,7 @@
     light-dark(rgba(208, 240, 254, 0.35), rgba(60, 100, 140, 0.35)) 90%,
     light-dark(rgba(208, 240, 254, 0), rgba(60, 100, 140, 0)) 100%
   );
-  /* The hatch over the footer band is decoration and the band under it carries white text, so its alpha is what the
-     ratio allows and not what looks best on its own: eight per cent over the bottom stop of the band reads 4.26:1 */
+  /* The stripe alpha is bound by the white text of the footer band: 8% over its bottom stop reads 4.26:1 */
   --sl-grad-stripe:
     repeating-linear-gradient(
       135deg,
@@ -236,8 +228,7 @@
   --sl-grad-progress-4: linear-gradient(to top, light-dark(#dd5f5f, #f08c8c) 10%, var(--sl-progress-4) 90%);
   --sl-grad-progress-5: linear-gradient(to top, light-dark(#bf5fdd, #d494ea) 10%, var(--sl-progress-5) 90%);
 
-  /* Categorical: the five tones of the level meter. A poll cycles them by option number, so they
-     are told apart by colour and never by rank */
+  /* Categorical: the five level-meter tones; a poll cycles them by option number, so none carries a rank */
   --sl-progress-1: light-dark(#0078a5, #33a6cf);
   --sl-progress-2: light-dark(#5c9425, #8cc44f);
   --sl-progress-3: light-dark(#f47a20, #ffa054);
@@ -250,8 +241,7 @@
   --sl-progress-radius: var(--sl-radius-1);
   --sl-progress-height: 10px;
 
-  /* Components: the rule under the admin header, a second line gradient whose bright centre sits over
-     the brand column instead of the middle of the page */
+  /* Components: the header rule, its bright centre over the brand column rather than the middle of the page */
   --sl-header-bg: linear-gradient(
     90deg,
     light-dark(rgba(208, 240, 254, 0), rgba(60, 100, 140, 0)) 0%,
@@ -274,15 +264,13 @@
   --sl-layout-container: 1440px;
   --sl-layout-sidebar: 300px;
 
-  /* Components: the focus ring. One width, one gap and one alpha; a ring in a status colour mixes that colour at
-     the same alpha instead of carrying a fourth spelling of the same idea */
+  /* Components: the focus ring; a status ring mixes its colour at the same alpha, never a fourth spelling */
   --sl-ring-width: 2px;
   --sl-ring-gap: 2px;
   --sl-ring-mix: 30%;
   --sl-ring-bg: color-mix(in srgb, var(--sl-primary-strong) var(--sl-ring-mix), transparent);
 
-  /* Components: the motions that carry the character of one element rather than a step of the ladder. A duration here is
-     the animation's own; the two the modal opens and closes with are a transition step and read the ladder instead */
+  /* Components: the animation durations of one element; the modal opens and closes on a transition step instead */
   --sl-dial-dur: calc(0.05s * var(--sl-time-scale));
   --sl-loading-dur: calc(0.8s * var(--sl-time-scale));
   --sl-drift-dur: calc(1.1s * var(--sl-time-scale));
@@ -505,8 +493,7 @@
   --sl-switch-height: 24px;
   --sl-switch-gap: 2px;
   --sl-switch-knob-shadow: 0 1px 3px light-dark(rgba(0, 0, 0, 0.22), rgba(0, 0, 0, 0.6));
-  /* Components: the extended statistics panel - the widest a ring is drawn, the stroke of its arc, the label column
-     of a dimension bar, the height of its track and the floor under the two figure columns beside it */
+  /* Components: the extended statistics panel - ring, arc, dimension bar and figure columns */
   --sl-statx-max-width: 120px;
   --sl-statx-ring: 12px;
   --sl-statx-width: 120px;
@@ -539,8 +526,7 @@
 
 /* --- end tokens --- */
 
-/* The mode switch itself, and the only rules that name it. data-theme carries light, dark or auto; anything else,
-   including an absent attribute, leaves the page on the operating system's answer */
+/* The mode switch: data-theme is light, dark or auto; any other value or none follows the operating system */
 :root[data-theme="light"] {
   color-scheme: light;
 }
@@ -671,8 +657,7 @@ hr {
   border-top: 1px solid var(--sl-border);
 }
 
-/* The type is left to the browser on purpose: a nested list is meant to change its mark, and the shorthand cannot
-   say that - every longhand it omits is reset to its initial value, which flattens the second level back to a disc */
+/* The type is left to the browser: a list-style shorthand would reset it and flatten a nested list's mark back to a disc */
 ul {
   padding-left: var(--sl-space-6);
   list-style-position: outside;

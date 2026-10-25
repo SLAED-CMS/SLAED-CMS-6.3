@@ -336,8 +336,7 @@ function getMonitorPartial(array $snapshot, bool $showstat, bool $showtraf, bool
     return $tpl->getHtmlPart('basic-monitor', $vars);
 }
 
-# Collects monitor counts and database size statistics needed for dashboard summary
-# The website and files tiles count the published materials of the first active type of the display modes article and files through the shared reader, or stay out
+# Monitor counts and database size; the site and files tiles count the materials of the first active type of the article and files modes, or stay out
 function getMonitorDbStats(object $db, array $conf): array {
     $userson = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_session'));
     $count = static function (string $mode): ?int {

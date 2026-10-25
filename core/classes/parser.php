@@ -21,8 +21,7 @@ class Parser {
         'apache' => 'Apache', 'nginx' => 'Nginx', 'plain' => '', 'plaintext' => '', 'text' => ''];
     # A code block of more lines than this opens folded, with a button to show the rest
     private const CODELONG = 25;
-    # One backslash turns the ASCII punctuation after it into a literal; raw regions keep every backslash: the four raw BB pairs, an HTML tag and a script or style element
-    # Alternative one is the pair, so group 1 is set for a literal alone; the raw regions are matched only to be stepped over, which is what keeps scripts and attributes intact
+    # A backslash makes the ASCII punctuation after it literal; the pair stays the first alternative of LITERAL, so group 1 is set for a literal alone
     private const PAIR = '\\\\([!-\/:-@\[-`{-~])';
     private const LITERAL = '/'.self::PAIR.'|\[(code|php|usephp|usehtml)(?:=[^\]]*)?\].*?\[\/\2\]|<(script|style)\b.*?<\/\3\s*>|<[a-zA-Z\/!][^>]*>/si';
     # The attachment grammar: file name, alignment and title always, width and height together, a relation only after both, and last the full-size form of an image
@@ -45,12 +44,7 @@ class Parser {
     private array $hids = [];
     private bool $vary = false;
 
-    # Parse src through the pipeline; heading offset raises Markdown levels inside an already titled container and caps them at H6
-    # The format names how the source is to be read, not who wrote it: plain recognizes no Markdown construct and turns every line ending into a break
-    # The breaks format is Markdown that also breaks on a single line ending, and anything else is plain Markdown, where a lone line ending joins the lines around it
-    # A conversation channel asks for breaks: a reader of a comment or a message typed the line endings they meant, and every one renders the same way whoever wrote it
-    # The file context names the owner and the target of the text, [node, id] of a material or target 0 of an unsaved one; attachments take the address FileAccess answers
-    # Trust makes a safe rendering honour the trusted tags: only what [usehtml] and [usephp] enclose becomes markup or runs, everything around them stays escaped
+    # Parse src through the pipeline; the format names how the source is read, not who wrote it, and trust makes a safe rendering honour [usehtml] and [usephp] alone
     public function filterDoc(string $src, bool $safe = true, string $mod = '', int $hoff = 0, string $fmt = '', array $own = [], bool $trust = false): string {
         $hoff = max(0, min(5, $hoff));
         $fmt = in_array($fmt, ['plain', 'breaks'], true) ? $fmt : '';
@@ -100,9 +94,7 @@ class Parser {
         }, $src) ?? $src;
     }
 
-    # Standard rendering pipeline: filterDoc() plus replace rules and img repair; call filterDoc() directly when replacement rules must not apply (changelog, search)
-    # Stored is the finished rendering of a source of at least CACHEMIN bytes whose parse does not vary; a [block=] or [usephp] source is rendered anew on every serve
-    # The stored rendering lives here and not in a caller, because the key is built from what this class itself reads and only this class knows whether a parse may be reused at all
+    # The standard pipeline, filterDoc() plus replace rules; the stored rendering lives here, as only this class knows whether a parse may be reused
     public function filterContent(string $src, bool $safe, string $mod, int $hoff = 0, string $fmt = '', array $own = [], bool $trust = false): string {
         $own = (is_string($own[0] ?? null) && is_int($own[1] ?? null) && $own[1] >= 0) ? [$own[0], $own[1]] : [];
         $trust = $safe && $trust;
@@ -174,8 +166,7 @@ class Parser {
         return $tags ? strtr($src, $tags) : $src;
     }
 
-    # Store a protected fragment and return its salted control-char stash token
-    # A literal token carries an L before its number, so a line holding one still counts as text and the block and paragraph scanners never mistake it for a stashed element
+    # Stash a protected fragment behind a salted control-char token; a literal token carries an L, so the block and paragraph scanners read its line as text
     private function addStash(string $val, bool $lit = false): string {
         $key = $this->salt.':'.($lit ? 'L' : '').$this->scnt;
         $this->stash[$key] = $val;
@@ -183,18 +174,14 @@ class Parser {
         return "\x02{$key}\x03";
     }
 
-    # Turn every backslash pair outside the raw regions into a literal token that returns HTML-escaped after the whole parse, so no BB, Markdown or HTML pass sees it
-    # It runs after the Markdown code layer and before the bracket layer; a feed document escapes every punctuation mark it received, so remote text never becomes a command
-    # When the engine gives up on the raw regions every pair becomes a literal, so a failed match hides markup instead of handing an escaped tag to the bracket layer
+    # Turn backslash pairs outside raw regions into literal tokens; when the engine gives up on raw regions every pair becomes literal, hiding markup rather than leaking it
     private function filterLiteral(string $src): string {
         if (!str_contains($src, '\\')) return $src;
         $put = fn(array $m): string => ($m[1] ?? '') !== '' ? $this->addStash($this->filterEsc($m[1]), true) : $m[0];
         return preg_replace_callback(self::LITERAL, $put, $src) ?? preg_replace_callback('/'.self::PAIR.'/', $put, $src) ?? $src;
     }
 
-    # Return the unique attachment names of a source in order of appearance, read by the grammar filterAttach() renders and the literal rule of filterLiteral()
-    # The code layer decides where that rule reaches, so the text is read the way each rendering reads it - plain, trusted and safe Markdown - and the names are united
-    # The plain reading lists a tag inside code too: naming a file the text will not display costs a check, and a failed match lists more rather than less
+    # The unique attachment names of a source, read the way each rendering reads it; a failed match lists more rather than less, which costs only a check
     public function getAttachList(string $src): array {
         if (stripos($src, '[attach=') === false) return [];
         $src = str_replace(["\r\n", "\r"], "\n", $src);
@@ -283,8 +270,7 @@ class Parser {
         return trim((string)($iswrap ? $tpl->getHtmlPart($name, $data) : $tpl->getHtmlFrag($name, $data)));
     }
 
-    # One inline element whose content is a placeholder instead of text, so the flags are a closed set and the answer may be memoized
-    # The engine instance is part of the key: two themes can spell one element differently and a request may hold more than one of them
+    # One inline element with a placeholder for content, memoized; the engine instance is part of the key, since two themes can spell one element differently
     private function getPartTag(array $data): string {
         global $tpl;
         static $memo = [];
@@ -306,8 +292,7 @@ class Parser {
         return $this->getPartHtml('parser-link', $data);
     }
 
-    # Memoized wrapper so repeated image paths hit the filesystem only once per request; the key is hashed because an inline data URI would otherwise be kept twice in memory
-    # Resolving an image reads the filesystem, so the rendering it produces answers for a file that may appear or vanish later and is marked as one no stored copy may answer for
+    # Memoized image resolution; it reads the filesystem, so its rendering is marked as one no stored copy may answer for
     private function normalizeImageSource(string $src): ?string {
         static $memo = [];
         $this->vary = true;
@@ -316,8 +301,7 @@ class Parser {
         return $memo[$key] = $this->checkImageSource($src);
     }
 
-    # Convert a local/absolute image source into a stable address from the root of the site; data URIs survive only as whitelisted, length-capped base64 rasters
-    # The whitelist is EMBEDIMG, matched as a subtype rather than spelled into the pattern, so the editor, the upload adapter and this render read one list
+    # A local image source as an address from the site root; data URIs pass only as EMBEDIMG rasters, the one list the editor and the upload adapter read too
     private function checkImageSource(string $src): ?string {
         global $conf;
         $raw = trim($this->filterDec($src));
@@ -486,9 +470,7 @@ class Parser {
         return [$this->getPartHtml('parser-table', ['head' => $head, 'rows' => $rows])."\n", $i];
     }
 
-    # Render one [php] or [code=language] block through the highlighter the site configured: highlight_string in modes 0 and 1, highlight.js in mode 2
-    # A raw line break an editor stored right before a line end is dropped and the entities of stored legacy text are decoded, so every mode escapes the code once
-    # Mode 2 escapes the code itself, because its fragment takes the code as markup; a language outside the name grammar gives no language at all
+    # Render one [php] or [code=language] block by the configured highlighter; mode 2 escapes the code itself, because its fragment takes the code as markup
     private function getCodeHtml(string $src, string $lang): string {
         global $conf;
         static $sname = '';
@@ -536,9 +518,7 @@ class Parser {
         ]);
     }
 
-    # Process BB block tags: bracket-free *NN smilies first, then behind the [ guard: [hr], [li], [usehtml], [usephp], [tabs], [code], [php], [quote]/[hide]/alignment, [attach=]
-    # Both trusted tags act in trusted rendering and in a safe rendering that trusts its tags
-    # The right to author them belongs to the super administrator alone and is settled by filterTrustedTags() at every write
+    # Process the BB block tags; the right to author the trusted tags is settled by filterTrustedTags() at every write, never here
     private function filterBbBlocks(string $src): string {
         if (preg_match('/(?<!\*)\*(0[1-9]|1[0-8])(?!\d)/', $src)) {
             $src = preg_replace_callback(
@@ -738,9 +718,7 @@ class Parser {
         return $src;
     }
 
-    # Protect code from parsing in order fenced → indented (safe mode only) → inline; unclosed fences and backticks stay as-is
-    # This runs before the bracket layer, so a BB tag written inside code stays the text the author typed instead of being executed as markup
-    # A backslash pair is stepped over rather than read, so an escaped backtick opens no span, while a backslash inside a span stays as typed and filterLiteral() never sees it
+    # Protect code from parsing before the bracket layer, so a BB tag inside code stays the text typed; an escaped backtick opens no span
     private function filterCode(string $src): string {
         $src = preg_replace_callback(
             '/(^(`{3,}|~{3,})[ \t]*([\w\-]*)[^\n]*\n(.*?)\n^\2[ \t]*$)/ms',
@@ -769,8 +747,7 @@ class Parser {
         return $src;
     }
 
-    # Convert block-level Markdown to HTML; each element is stashed so the top-level filterSafe() never escapes parser output, raw HTML blocks only pass when safe=false
-    # A line opening with a break is no raw HTML block: the plain editor stores one at every line end, and such a block would swallow the rest of the text unparsed
+    # Convert block Markdown to stashed HTML; a line opening with a break is no raw HTML block, since the plain editor stores one at every line end
     private function filterBlocks(string $src): string {
         $lines = explode("\n", $src);
         $n     = count($lines);
@@ -947,8 +924,7 @@ class Parser {
         return $src;
     }
 
-    # Bracket inline tags: ed2k before generic [url], then BB pairs and markdown links/images; stashed tags bypass the safe check, non-stashed ([b], [color]) get escaped
-    # A plain body returns before the markdown pair, because [t](u) is Markdown syntax and means nothing in the format the author wrote in
+    # Bracket inline tags, ed2k before generic [url]; a plain body returns before the Markdown pair, as [t](u) means nothing in the plain format
     private function filterBbInline(string $src): string {
         $src = preg_replace_callback(
             '/\[url\](ed2k:\/\/\|file\|(.*?)\|\d+\|\w+\|(h=\w+\|)?\/?)\[\/url\]/si',

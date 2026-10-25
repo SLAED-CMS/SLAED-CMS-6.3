@@ -1,7 +1,5 @@
 (function () {
-    // Window canon: one mechanism for every window of the system, the native dialog
-    // showModal() for decisions, show() for tools worked alongside; the focus trap, the top layer and the return of the focus are the work of the browser
-    // Only what the platform does not give is written here: the scroll lock, the animated exit, the placing, the stacking, the drag and the key a non-modal dialog does not answer
+    // Window canon: the native dialog gives the focus trap, the top layer and the return of the focus; only what the platform does not give is written here
     var winstack = [];
     var winlayer = 10050;
     var windrag = null;
@@ -31,7 +29,6 @@
         root.style.paddingRight = '';
     }
 
-    // The keyboard lands where the window named it, otherwise on the first control of its content
     // The actions of the head are chrome and never the first stop: a window that opens on its own close button reads as a window asking to be shut
     function setFirstFocus(box) {
         var pick = box.querySelector('[data-sl-focus]');
@@ -45,9 +42,7 @@
         if (pick) pick.focus();
     }
 
-    // A window standing beside the page has no place of its own in the flow, so it is given one on first sight
-    // On a phone no coordinates are handed out at all: there the window lies as a sheet at the bottom edge and an inline style would beat that rule
-    // Every size here is read off the layout and never off a client rect: the entry animation still holds the window at scale(0.97), and a rect measured through it is short by 3%
+    // Every size here is read off the layout, never off a client rect: the entry animation holds the window at scale(0.97), and a rect through it is short
     function setWindowPlace(box) {
         if (window.matchMedia('(max-width: 600px)').matches) {
             box.style.left = '';
@@ -59,7 +54,6 @@
         box.style.top = '40px';
     }
 
-    // A modal window is raised by the top layer of the browser; a window beside the page is raised by the canon
     // The raised window becomes the top one for Escape as well, or the key would close what lies visually below
     function setWindowFront(box) {
         var at;
@@ -95,11 +89,7 @@
         window.requestAnimationFrame(function () { setFirstFocus(box); });
     }
 
-    // A row of the settings window posts and the page comes back: the browser closes every dialog on a navigation,
-    // so an administrator changing two answers had to open the window again for the second one
-    // The window that was open when the form left is named here and opened again on the next load, once
-    // Only a window carrying an id can come back, and only a form that really navigates leaves a mark:
-    // a form driven by htmx swaps in place, and marking it would open a window on some later ordinary navigation
+    // A navigation closes every dialog, so the window open when its form left opens again on the next load; an htmx form swaps in place and leaves no mark
     var winmark = 'slaed-window:reopen';
 
     function setWindowMark(box) {
@@ -127,8 +117,7 @@
         if (box && box.open) setWindowMark(box);
     });
 
-    // The exit is played out first and only then made real, otherwise the window blinks
-    // There is nothing to wait for when there is no animation: with motion switched off the window has to leave at once instead of sitting out a fallback timer
+    // The exit plays before it is made real, or the window blinks; with motion switched off it leaves at once instead of sitting out a fallback timer
     function setWindowClose(box) {
         var shut = false;
         var runs;
@@ -160,7 +149,6 @@
         box.backnode = null;
     }
 
-    // A window with nowhere left to move stops promising a drag: the plate loses its cursor and the grip goes with the freedom it stood for
     // The place the window stood in is remembered and given back, or a moved window collapses into a corner it never came from
     function setWindowExpand(box, button) {
         var full = !box.classList.contains('sl-is-full');
@@ -216,8 +204,7 @@
             event.preventDefault();
             setWindowClose(box);
         });
-        // Any approach to a window beside the page raises it, by pointer and by keyboard alike
-        // The capture phase is needed so the order is settled before the drag takes over
+        // Any approach to a window beside the page raises it; the capture phase settles the order before the drag takes over
         document.addEventListener('pointerdown', function (event) {
             var box = event.target.closest ? event.target.closest('dialog.sl-modal[data-sl-window]') : null;
             if (box) setWindowFront(box);
@@ -226,8 +213,7 @@
             var box = event.target.closest ? event.target.closest('dialog.sl-modal[data-sl-window]') : null;
             if (box) setWindowFront(box);
         });
-        // The whole plate of the head is the handle; a control standing on it keeps its own press, and the grip is a sign of what the plate does rather than a control
-        // The place the drag starts from is the layout one: a grip taken while the window is still animating in would pin it where the transform draws it and not where it stands
+        // The drag starts from the layout place: a grip taken while the window still animates in would pin it where the transform draws it
         document.addEventListener('pointerdown', function (event) {
             var box = event.target.closest ? event.target.closest('dialog.sl-modal[data-sl-window]') : null;
             var head = event.target.closest ? event.target.closest('.sl-modal-title') : null;
@@ -687,9 +673,7 @@
         }
     }
 
-    // Editor assets: a page load carries the engines as plain tags the parser runs in order; a fragment answered over htmx names them to this loader instead
-    // Only what the page does not carry yet is added, as ordered scripts, so no engine and no global listener of an editor runs twice on one page
-    // The init of an instance waits here for the assets named before it, and registers how it is destroyed, so a region swapped away takes its instances with it
+    // Editor assets: a page load carries the engines as plain tags; a fragment over htmx names them to this loader, which adds only what the page lacks
     var edwait = null;
     var edseen = {};
     var edowns = [];
@@ -824,7 +808,6 @@
         });
     }
 
-    // Ask again through the system dialog for something that is neither a link nor a form of its own: the caller hands over the question and what to run on yes
     // The text comes from the caller and never from this file, because every visible word of the project lives in a language constant
     window.setConfirmTask = function (text, run) {
         var dlg = document.getElementById('sl-confirm');
@@ -861,8 +844,7 @@
         });
     }
 
-    // The fan of an object is its context menu: the actions it already carries are the ones a right click must offer, so no second list of them is drawn anywhere
-    // The object is the nearest box around the pointer holding exactly one fan; a box holding several is the list around them, and there the menu belongs to the browser
+    // The fan of an object is its context menu; a box holding several fans is the list around them, and there the menu belongs to the browser
     function getDialOwn(node) {
         var box = node && node.closest ? node.closest('.sl-dial') : null;
         var list;
@@ -896,7 +878,6 @@
         dial.style.top = top + 'px';
     }
 
-    // Speed dial: click on the toggle pins the fan open, any other click closes every open dial;
     // An element that issues its own htmx request instead of following its address
     function isHtmxOwn(node) {
         return ['hx-get', 'hx-post', 'hx-put', 'hx-patch', 'hx-delete'].some(function (name) { return node.hasAttribute(name); });
@@ -1306,8 +1287,7 @@
         }
     }
 
-    // Repeatable rows of any form: the server writes every row the form may take and marks the empty ones, and this only folds all but the first empty row
-    // behind the add button, which reveals the next one; a page without this script shows every row, so the form works the same with fewer clicks
+    // Repeatable rows: the server writes every row and marks the empty ones, so a page without this script shows them all and the form works the same
     function setRepeatRows(node) {
         var root = node && node.querySelectorAll ? node : document;
         var groups = root.querySelectorAll('[data-sl-repeat]');
@@ -1368,19 +1348,14 @@
         for (var i = 0; i < views.length; i++) initProfileScroll(views[i]);
     }
 
-    // The rail of the settings page marks where the reader stands: a section counts as the one being read when its top
-    // has passed the fold but its body still fills the screen, which is the band the eye is actually in
+    // A section counts as read when its top has passed the fold but its body still fills the screen, the band the eye is actually in
     function setSectionSpy(node) {
         var root = node && node.querySelectorAll ? node : document;
         var list = root.querySelectorAll('[data-sl-spy]');
         for (var i = 0; i < list.length; i++) setSpyRail(list[i]);
     }
 
-    // One rail: the marks name their sections by id, and a rail whose sections are not all on the page is left alone.
-    // The band alone cannot reach the last section - a short one at the foot of the page never rises into it - so the
-    // bottom of the document is read as the last mark, which is where the reader plainly is.
-    // A rail marked px is a scrolling dock of pills: the road is written in pixels to the middle of the current pill, the pill
-    // is pulled into the visible band, and the height of the dock is published on the document so the sections can clear it
+    // The band cannot reach a short last section, so the bottom of the document reads as the last mark; a px rail publishes the height of its dock
     function setSpyRail(rail) {
         if (rail.getAttribute('data-sl-spy-ready') === '1' || !window.IntersectionObserver) return;
         var marks = rail.querySelectorAll('[data-sl-spy-mark]');
@@ -1395,8 +1370,7 @@
         var at = 0;
         var px = rail.getAttribute('data-sl-spy') === 'px';
         var dock = px && rail.parentElement ? rail.parentElement : rail;
-        // The road walked so far is the distance to the icon of the current mark, written as a share of the rail's width so the
-        // stylesheet can draw it; the marks land where their fractions put them, which is why the figure is measured and not derived
+        // The road is measured to the icon of the current mark, not derived: the marks land where their fractions put them
         var draw = function () {
             for (var j = 0; j < marks.length; j++) {
                 marks[j].setAttribute('aria-current', j === at ? 'true' : 'false');
@@ -1714,9 +1688,7 @@
         });
     }
 
-    // How far the profile is filled, over the fields the server marked as counting. It draws the same rule the server drew,
-    // so the figure the page arrives with and the one after the first keystroke are the same figure and cannot drift apart
-    // Each field carries the value that counts as empty for it, which is how a select whose zero is a real option is counted
+    // The fill meter draws the rule the server drew, so the figure the page arrives with and the one after the first keystroke cannot drift apart
     function setFillMeters() {
         var meters = document.querySelectorAll('[data-sl-meter]');
         var fields = document.querySelectorAll('[data-sl-meter-fill]');
@@ -1861,8 +1833,7 @@
         });
     }
 
-    // Resetting a form puts the default back into every textarea, but an editor draws what it shows from its own
-    // instance and would keep the typed text - and write it back over the restored value on its next change
+    // A form reset puts the default back into the textarea, but an editor draws from its own instance and would write the typed text back over it
     function setEditorsBack(scope) {
         var api = window.SlaedToastUi;
         if (!api || typeof api.getEditor !== 'function') return;
@@ -2623,8 +2594,7 @@
         window.setInterval(setLiveTick, 1000);
     }
 
-    // Comment submits carry a per-attempt idempotency key: the server stores it once, so a retried POST answers the first comment instead of writing a second one
-    // The key is minted here rather than rendered by PHP, so every attempt from one rendered form gets a value of its own
+    // The idempotency key is minted here rather than rendered by PHP, so every attempt from one rendered form gets a value of its own
     function setCommentKeys(root) {
         var list = (root && root.querySelectorAll) ? root.querySelectorAll('[data-sl-reqkey]') : [];
         for (var i = 0; i < list.length; i++) {
@@ -2645,10 +2615,7 @@
         return key;
     }
 
-    // Rating votes: every intended click carries a fresh delivery key, and the key stays on the control while the outcome is unknown - a lost connection or a
-    // server failure - so the repeat of the same click answers the stored vote instead of placing a second one. A refusal keeps the block and is told by the warning toast
-    // A vote is remembered with the box it lands in: once the counted rating is swapped in, a star vote bursts the stars up
-    // to the chosen one in a row and a thumb vote bursts the thumb that was pressed; a refused vote swaps nothing and forgets it
+    // A vote key stays on the control while the outcome is unknown, so a repeat of the click answers the stored vote instead of placing a second one
     var ratepending = null;
 
     function setRatingBurst(box) {
@@ -2694,9 +2661,7 @@
         });
     }
 
-    // Quick edit: the dial of an item turns its rendered text into the editor in the same region, a save puts the rendered text back and Cancel restores it with no request
-    // A refusal is told on the warning toast and leaves the editor and the typed text in place; a conflict takes the current text and its stamp and asks once
-    // The keys belong to the editor only while nothing stands in front of it: a window, the confirm dialog, the fullscreen and an open editor popup take them first
+    // Quick edit takes its keys only while nothing stands in front of the editor: a window, the confirm dialog, the fullscreen and an editor popup come first
     function getQuickOp(event) {
         var conf = event.detail ? event.detail.requestConfig : null;
         var path = conf ? String(conf.path || '') : '';
@@ -2833,8 +2798,7 @@
         setCommentKeys(form);
     });
 
-    // The two panels of the private message page trade places below 800 px: the container query hides one of them and this attribute decides which
-    // The focus follows only where the switch is really visible, because on a wide layout both panels stay on screen and moving the focus would only jump the page
+    // The focus follows the pane switch only where it is visible: on a wide layout both panels stay on screen and moving the focus would jump the page
     function setPrivatPane(name) {
         var split = document.getElementById('prpage');
         if (!split) return;
@@ -2847,10 +2811,7 @@
         box.focus();
     }
 
-    // The reply form stands below the swapped region and lives the whole visit, so the answer that opened a message hands its source over in a carrier textarea instead of redrawing the form
-    // The editor is filled through its own API: writing the hidden textarea alone changes what the form would send but not a character of what the writer sees
-    // The carrier is removed once it has been read, so a later swap never finds the text of the message before it
-    // The recipient is announced only when it really changed: reading three messages from one person would otherwise cost three identical card lookups over that person's mailbox
+    // The editor is filled through its own API: writing the hidden textarea changes what the form sends but not what the writer sees
     function setPrivatCarry(root) {
         var carry = root && root.querySelector ? root.querySelector('[data-sl-pm-carry]') : null;
         if (!carry) return;
@@ -2878,8 +2839,7 @@
         if (carry.parentNode) carry.parentNode.removeChild(carry);
     }
 
-    // «Clear the form» empties the compose state through the editor API the carrier fills it with, because writing the hidden textarea leaves what the writer sees untouched
-    // The recipient is cleared through an input event, so the card beside the field leaves with the name it was drawn for instead of standing under an empty field
+    // Clearing the form goes through the editor API and the recipient through an input event, so the card beside the field leaves with its name
     function setPrivatWipe() {
         var form = document.getElementById('prform');
         if (!form) return;
@@ -2901,7 +2861,6 @@
         to.dispatchEvent(new Event('input', { bubbles: true }));
     }
 
-    // Where the reader continues after asking to answer: the editor itself when there is one, and the form otherwise
     // The carrier fills the editor after the swap, so focusing it before the answer arrives costs nothing and saves the reader the scroll
     function setPrivatReply() {
         var form = document.getElementById('prform');
@@ -2919,9 +2878,7 @@
         item.setAttribute('aria-current', 'true');
     }
 
-    // The filter bar is an organ of control and not a scoreboard: a chip is always on the page and only changes state, or a filter once taken off could never be put back
-    // Each group keeps its value in one hidden field, so the two state chips exclude each other by construction and the period chip stands beside them on its own
-    // The numbers on the chips are facets of the mailbox and stay as the page drew them; only the list and its counter answer the selection
+    // A filter chip is always on the page and only changes state, or a filter once taken off could never be put back; the chip numbers stay as drawn
     function setPrivatChip(chip) {
         var form = document.getElementById('prtools');
         if (!form) return;
@@ -3091,8 +3048,7 @@
         });
     });
 
-    // A request whose source carries the done text confirms its swap with the toast; the favorite star has its own
-    // moment for that, after the burst, and is left to it
+    // A request whose source carries the done text confirms its swap with the toast; the favorite star has its own moment, after the burst
     function setSwapDone(event) {
         var conf = event.detail ? event.detail.requestConfig : null;
         var from = conf && conf.elt && conf.elt.getAttribute ? conf.elt : null;
@@ -3134,8 +3090,7 @@
     }
     window.isMotionStill = isMotionStill;
 
-    // The light that follows the pointer: the place is written once a frame and only where motion is welcome, a touch
-    // has no pointer to follow, and the theme decides whether body[data-sl-pointer] shows any light at all
+    // The pointer light is written once a frame and only where motion is welcome; the theme decides whether body[data-sl-pointer] shows it
     var pointer = { left: 0, top: 0, frame: 0 };
     document.addEventListener('pointermove', function (event) {
         if (event.pointerType === 'touch' || isMotionStill()) return;

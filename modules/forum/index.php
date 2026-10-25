@@ -474,8 +474,7 @@ function forum(): void {
     setFoot();
 }
 
-# The quick-reply token travels in a header rather than in the address, which keeps it out of history, logs and referrers
-# A removal is a write, so it is submitted rather than followed: a link would delete on a prefetch and carry its token through history and logs
+# A removal is submitted, never followed: a link would delete on a prefetch and carry its token through history and logs
 function view(): void {
     global $db, $conf, $tpl, $prs;
     $rows = [];
@@ -915,10 +914,7 @@ function quickreply(int|string|null $id, int|string|null $catid, string $subject
     return '';
 }
 
-# Mass moderation moves, hides and deletes topics, so it is a write and answers to the same token rule as the rest
-# A hidden topic stops being visible activity, so whoever advertised it has to be asked again
-# A moved topic only updates the totals: both branches are asked what they really hold once the topic has changed hands
-# A moderator acts only on the topics stored in the category whose moderator they are, whatever else the form lists
+# A moderator acts only on the topics stored in the category they moderate, whatever else the form lists
 function move(): void {
     global $db, $conf;
     if (!checkSiteToken()) {
@@ -1140,10 +1136,7 @@ function pmoder(int|string $status, int $subh): string {
     return $tpl->getHtmlFrag('select', ['name_attr' => 'status', 'options_html' => $opts, 'select_attr' => 'title="'._CHECKOP.'"']);
 }
 
-# Both forms that reach this handler carry the token of the page they were rendered on, and neither may write without it
-# The letter limit bounds the longest word of the post in characters; a limit of zero bounds no word at all
-# A named post or topic brings its own category and topic through getForumPlace(); only a new topic takes the category of the form
-# A reply always answers the topic of the post it names, so neither the rights nor the counters can be pointed at another category
+# A named post or topic brings its own category and topic through getForumPlace(), so neither the rights nor the counters can be pointed at another category
 function send(): void {
     global $db, $user, $conf, $stop, $tpl, $mailer, $pnt;
     if (!checkSiteToken()) {
@@ -1307,11 +1300,7 @@ function send(): void {
     }
 }
 
-# A request that names its own target must carry the token; a call from move() was already checked by the handler that owns the request
-# Deleting a whole topic only updates the category totals: which topic each category advertises is settled by setForumLast() once the rows have really left
-# The branch is asked for its last message only once the rows have gone or moved, otherwise it would still answer with what was just removed
-# A removed topic also invalidates every category that pointed at it, which a walk from this one would never reach
-# The category whose rights and totals apply is the one the post is stored in, whoever names it
+# A call from move() skips the token check, because the handler that owns the request has already made it
 function delete(int|string|null $id = null): void {
     global $db, $conf, $pnt;
     $hasargs = ($id !== null);

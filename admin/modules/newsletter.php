@@ -55,9 +55,7 @@ function getCampTabs(int $tab, string $find = ''): string {
         'part' => in_array($tab, [0, 2, 3], true) ? [0, 2, 3] : [], 'subtitle_html' => $find]);
 }
 
-# Offer every audience the installation can address as a criterion, never as a list of addresses
-# The activity window is one more option and deliberately not the default: only the site owner knows whether dormant accounts are dead weight or their customers
-# The window option carries the days of the form, so its value, its count and the row that shows the days field all name the same window
+# Audiences as criteria, never address lists; the activity window is deliberately not the default, as only the owner knows whether dormant accounts are dead weight
 function getCampOptions(string $pick, int $days): array {
     global $db;
     $opts = [getCampOption('all', '', _MASSMAIL, $pick), getCampOption('subs', '', _ANEWSLETTER, $pick), getCampOption('active', (string)$days, _NLACTIVE, $pick)];
@@ -264,8 +262,7 @@ function add(): void {
     setFoot();
 }
 
-# Store the criterion of one mailing and hand it to the producer, which is what starts it: nothing is expanded inside this request
-# A campaign that has left draft is frozen, delivered rows included, because its body is what the queue still refers to and rewriting it would rewrite the record of what was sent
+# Store a mailing for the producer, nothing expanded here; a campaign past draft is never rewritten, because the queue still refers to its body
 function save(): void {
     global $db, $afile, $stop;
     $stop = [];
@@ -338,8 +335,7 @@ function stop(): void {
     setRedirect($afile.'.php?name=newsletter', false, 302, $warn ? _TOKENMISS : _SUCCSAVE, $warn);
 }
 
-# Warn when the queue has nobody to drain it, because an installation must not be able to accumulate mail silently
-# A job that is off says so plainly; a job that is on but has not run within three of its own intervals is stale, which looks the same from the queue
+# Warn when nobody drains the queue: the job is off, or it has not run within its lock timeout, five minutes at least
 function getQueueAlarm(): string {
     global $conf, $tpl;
     $job = $conf['scheduler']['jobs']['maildrain'] ?? [];

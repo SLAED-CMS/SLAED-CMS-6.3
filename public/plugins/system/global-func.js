@@ -15,8 +15,7 @@ function syncNativeDateTimeInput(input) {
 	hidden.value = normalizeDateTimeValue(input.value, input.dataset.slDatetimeKind || '');
 }
 
-/* The card of the resolved account: the markup and its class names belong to the theme and stand on the page already, so only the named slots and the tone are written here */
-/* An answer that carries no card hides the container again, because a card left standing under a changed name would describe somebody else */
+/* The card markup and its class names belong to the theme and stand on the page already, so only the named slots and the tone are written here */
 function setUserCard(input, card) {
 	var boxId = input.dataset.slUserCard || '';
 	var box = boxId ? document.getElementById(boxId) : null;
@@ -88,7 +87,7 @@ function fetchUserSuggestions(input) {
 		});
 }
 
-/* The lookup waits for the typing to settle: every keystroke used to open a request of its own and only the answers were dropped, never the requests themselves */
+/* The lookup waits for the typing to settle, so a keystroke opens no request of its own */
 var userSuggestTimers = new WeakMap();
 
 function setUserSuggestTimer(input) {

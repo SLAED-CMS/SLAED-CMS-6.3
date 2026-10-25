@@ -1,7 +1,6 @@
 import { StreamLanguage } from '@codemirror/language'
 
-// The rules for robots: a directive, a colon and its value on each line, the wildcards of a path and comments;
-// a line that is none of these is marked, since a robot ignores it silently
+// The rules for robots: a line that is no directive is marked, since a robot ignores it silently
 const robots = {
     name: 'robots',
     startState: () => ({ value: false }),

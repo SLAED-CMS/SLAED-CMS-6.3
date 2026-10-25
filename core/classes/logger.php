@@ -195,9 +195,7 @@ class Logger {
         ];
     }
 
-    # Get bounded request context
-    # Request data is masked by key name before it is bounded, so a value named after a password, a secret, a token or a code never reaches a log line whatever raised the entry
-    # The name decides, not the module: every posted field of a request a journal of errors records passes here, and a false positive such as a captcha code loses nothing
+    # Bounded request context; data is masked by key name before it is bounded, so a value named like a password, secret, token or code never reaches a log line
     protected static function getContext(): array {
         $data = ['query' => $_GET ?? [], 'post' => $_POST ?? []];
         foreach ($data as $part => $rows) {
@@ -219,8 +217,7 @@ class Logger {
         return $row;
     }
 
-    # Get common request fields
-    # The address is masked like the posted data: a one-time code, an OAuth callback or a reset link carries its secret in the query, and the referer carries the previous one
+    # Common request fields; the address is masked like posted data, as a one-time code or reset link carries its secret in the query and the referer the previous one
     protected static function getRequest(): array {
         $ref = function_exists('getReferer') ? (string)getReferer() : (string)($_SERVER['HTTP_REFERER'] ?? '');
         $ip = function_exists('getIp') ? (string)getIp() : (string)($_SERVER['REMOTE_ADDR'] ?? '0.0.0.0');

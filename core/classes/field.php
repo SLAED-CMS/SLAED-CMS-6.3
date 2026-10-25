@@ -42,15 +42,12 @@ final class Field {
         'required' => '_FIELDS_REQ', 'type' => '_FIELDS_TYPE', 'format' => '_FIELDS_FORMAT', 'choice' => '_FIELDS_CHOICE', 'min' => '_FIELDS_MIN', 'max' => '_FIELDS_MAX',
     ];
 
-    # Answer the closed registry of field types; a new type is added here in code together with its tests and never through the administration form
-    # The class has no constructor, reads neither the configuration nor the database and writes nothing; definitions and values are always handed in by the caller
+    # The closed registry of field types; a new type is added here in code with its tests, never through the administration form
     public function getFieldTypeList(): array {
         return self::TYPES;
     }
 
-    # Check a whole set of definitions and answer it canonical, ordered by sort and then by name, or throw InvalidArgumentException with the path of the first error
-    # Nothing is completed, cut or repaired: a missing key, an unknown key and a value of the wrong native type are each an error of the definition
-    # A definition set is accepted as a whole or refused with the path of its first error
+    # Check a whole definition set and answer it canonical or throw with the path of the first error; nothing is completed, cut or repaired
     public function filterFieldList(array $fields): array {
         if (count($fields) > self::MAXSET) throw new InvalidArgumentException('fields');
         $out = [];
@@ -62,8 +59,7 @@ final class Field {
         return $out;
     }
 
-    # Check the values of the active fields and answer field name => first error code, an empty array meaning success; unknown input names are no error
-    # Type, format and limits are always checked; $required = false only lifts the demand to fill a field of an unfinished draft
+    # Check the values of the active fields into name => first error code; $required = false lifts only the demand to fill a field of an unfinished draft
     public function checkFieldValues(array $fields, array $values, bool $required = true): array {
         $errs = [];
         $data = [];
@@ -79,9 +75,7 @@ final class Field {
         return [array_search(max($size), $size, true) => 'max'];
     }
 
-    # Answer the canonical typed values of the active fields for storing: unknown names are dropped and absent values are left out
-    # The caller checks first; a value that still fails here is thrown as InvalidArgumentException and never stored repaired
-    # A value is never repaired silently: it is canonical, absent, or an error code
+    # The canonical typed values for storing; the caller checks first, and a value that still fails throws and is never stored repaired
     public function filterFieldValues(array $fields, array $values): array {
         $out = [];
         foreach ($this->filterFieldList($fields) as $name => $rule) {
@@ -94,8 +88,7 @@ final class Field {
         return $out;
     }
 
-    # Prepare the standard form rows of the active fields, indexed by field name; values and error codes always come from the controller and POST is never read here
-    # A value is shown as it was given, canonical or just posted, and an error code becomes the shared language message of its row
+    # The standard form rows of the active fields; values and error codes come from the controller and POST is never read here
     public function getFieldForm(Template $tpl, array $fields, array $values = [], array $errors = []): array {
         $rows = [];
         foreach ($this->filterFieldList($fields) as $name => $rule) {
@@ -122,8 +115,7 @@ final class Field {
         return $rows;
     }
 
-    # Prepare the safe public view of the stored values, indexed by field name in canonical order; templates keep the HTML and only a textarea gets parser output
-    # Inactive fields, absent values, stored names without a definition and removed options are left out, while false, 0 and a stored disabled option are shown
+    # The safe public view of stored values; templates keep the HTML and only a textarea gets parser output, while false, 0 and a stored disabled option are shown
     public function getFieldView(Parser $prs, array $fields, array $values, string $module): array {
         $out = [];
         foreach ($this->filterFieldList($fields) as $name => $rule) {
@@ -178,9 +170,7 @@ final class Field {
         return $text === trim($text) && $text === strip_tags($text) && !preg_match('/[\x00-\x1F\x7F<>]/', $text);
     }
 
-    # A caption constant has to live in the site dictionary: a site page loads lang/<language>.php alone, so there defined() is the answer
-    # The panel and the installer load dictionaries of their own on top, and a constant of those would pass a save and then empty the whole set on the site
-    # The loaded site file is read once per request
+    # A caption must live in the site dictionary lang/<language>.php; in the panel defined() would pass an admin/lang constant that then empties the whole set on the site
     private function checkSiteWord(string $name): bool {
         static $words = null;
         if (!defined('ADMIN_FILE') && !defined('SETUP_FILE')) return true;
@@ -198,8 +188,7 @@ final class Field {
         return isset($words[$name]);
     }
 
-    # Check one definition and answer it canonical: the nine keys in fixed order, native types only, options of the type, and a default that is itself a valid value
-    # No default is an empty string for the string based types, an empty array for a multiple select and null for bool and int, whose every native value is a real value
+    # Check one definition into canonical form; the default is itself a valid value, and bool and int take null as no default, since every native value is real
     private function filterFieldRule(string $name, mixed $def): array {
         if (!is_array($def)) throw new InvalidArgumentException($name);
         foreach (self::KEYS as $key) {
@@ -239,8 +228,7 @@ final class Field {
         return $rule;
     }
 
-    # Check the options of one definition against its type and answer them canonical in the order items, min, max, scale; any key the type does not accept is an error
-    # Limits are inclusive and typed: characters for strings, whole numbers for int, exact strings for decimal, canonical moments for dates, a count for a multiple select
+    # Check the options of one definition against its type; limits are inclusive and typed, and any key the type does not accept is an error
     private function filterFieldOpts(string $name, array $rule, array $opts): array {
         $type = $rule['type'];
         $path = $name.'.options.';
@@ -300,8 +288,7 @@ final class Field {
         return $out;
     }
 
-    # The one normalization behind both the check and the filter: answer [error code, canonical value], an empty code with null meaning the value is absent
-    # Null, an empty string and an empty array are absence, while false, 0 and 0.00 are values; $old reads a stored value and so keeps a disabled select option
+    # The one normalization behind both check and filter; null, '' and [] are absence while false, 0 and 0.00 are values, and $old keeps a disabled select option
     private function getFieldValue(array $rule, mixed $raw, bool $old = false): array {
         if ($raw === null || $raw === '' || $raw === []) return ['', null];
         $opts = $rule['options'];
@@ -346,8 +333,7 @@ final class Field {
         return ($size > min($opts['max'] ?? self::LENGTH[$rule['type']], self::LENGTH[$rule['type']])) ? ['max', null] : ['', $val];
     }
 
-    # Normalize the choice of a select: one stored key, or the chosen keys of a multiple select without repeats and in the order of the definition
-    # A disabled option cannot be chosen anew; read as a stored value it keeps its place, and a stored key whose option is gone is left out instead of failing the rest
+    # Normalize a select choice in the order of the definition; a disabled option cannot be chosen anew, and a stored key whose option is gone is left out
     private function getSelectValue(array $rule, mixed $raw, bool $old): array {
         $items = $rule['options']['items'];
         $list = $rule['multi'] ? $raw : [$raw];
@@ -401,8 +387,7 @@ final class Field {
         return preg_match('#^https?://[^/?\#@]+(?:[/?\#].*)?$#iD', $url) === 1;
     }
 
-    # Build the standard control of one field from the shared fragments; the semantic control key of the registry picks it and the theme keeps every class
-    # A checkbox is preceded by a hidden zero, so an unchecked box posts false instead of nothing; a moment is shown in the HTML form its input expects
+    # Build the standard control of one field; a checkbox is preceded by a hidden zero, so an unchecked box posts false instead of nothing
     private function getFieldControl(Template $tpl, array $rule, array $base, mixed $val): string {
         $opts = $rule['options'];
         $control = self::TYPES[$rule['type']]['control'];

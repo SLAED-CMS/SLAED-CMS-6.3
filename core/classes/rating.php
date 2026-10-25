@@ -33,10 +33,7 @@ final class Rating {
     private Closure $read;
     private Closure $write;
 
-    # Build the subsystem over the connection of the request, the ratings scope of the configuration, the trusted actor of the session and the two trusted target callbacks
-    # Every rule is checked and converted exactly once; a wrong or missing rule blocks the rating of its own scope and is reported, and a wrong actor blocks every operation
-    # An exactly empty scope is a rating closed on purpose, which is how the core builds it before the data update left its mark: nothing is blocked and nothing is logged
-    # The callbacks are given once by the bootstrap, so no scope ever becomes a table or a path and the class knows neither nodes nor points
+    # Build the subsystem; an exactly empty scope is closed on purpose, as getRatingService() passes it before the update mark, so nothing is blocked or logged
     public function __construct(Database $db, array $conf, array $actor, Closure $read, Closure $write) {
         $this->db = $db;
         $this->rules = $this->filterConfig($conf);
@@ -51,8 +48,7 @@ final class Rating {
         Logger::addSite('error', 'Rating: '.$text, $ctx);
     }
 
-    # Check one rule and answer it converted, or an empty array: exactly four keys, three switches stored as the strings 0 or 1, and a canonical period of seconds
-    # The period is compared as a string against the largest whole number of days an integer holds, so a value that would overflow is refused before it is ever converted
+    # Convert one rule or answer []; the period is compared as a string against the largest whole day count an integer holds, so an overflow is refused before conversion
     private function filterRule(mixed $rule): array {
         if (!is_array($rule) || count($rule) !== 4) return [];
         foreach (['active', 'detail', 'guests'] as $key) {
@@ -65,8 +61,7 @@ final class Rating {
         return ['active' => $rule['active'] === '1', 'period' => intval($per), 'detail' => $rule['detail'] === '1', 'guests' => $rule['guests'] === '1'];
     }
 
-    # Check the whole ratings scope and answer the usable rules by scope; a rule that fails, a key outside the grammar and a missing fixed scope are each reported once here
-    # A scope of the grammar whose rule fails and a missing fixed scope are remembered as blocked, so a vote there answers blocked and never a missing target
+    # Check the ratings scope; a failing rule and a missing fixed scope are remembered as blocked, so a vote there answers blocked and never a missing target
     private function filterConfig(array $conf): array {
         $out = [];
         if ($conf === []) return $out;
@@ -96,8 +91,7 @@ final class Rating {
         return [];
     }
 
-    # Build the stored identity of the actor: the account when there is one, otherwise the normalized address of the guest, otherwise nothing
-    # An account is the same actor from every address and device, and a missing or unspecified address identifies no guest at all
+    # The stored identity of the actor: the account when there is one, else the normalized guest address; an unspecified address identifies no guest
     private function getActorKey(): string {
         if (!$this->actor) return '';
         if ($this->actor['uid']) return 'u:'.$this->actor['uid'];
@@ -116,9 +110,7 @@ final class Rating {
         return $text === strip_tags($text) && !preg_match('/[\x00-\x1F\x7F]/', $text);
     }
 
-    # The average of an aggregate as a decimal string with up to six fraction digits, rounded half up and without trailing zeros, or null while nobody voted
-    # It is derived by long division on integers, so no float takes part; the whole sum and the whole count stay the only source of truth
-    # Public because every display of an average uses this one rule: a vote and the Node view answer six digits, the shared rating block asks for two
+    # The average as a decimal string by long division on integers, so no float takes part; public, because every display of an average uses this one rule
     public static function getAverage(int $score, int $num, int $digits = 6): ?string {
         if ($num < 1) return null;
         $digits = max(1, min(6, $digits));
@@ -141,8 +133,7 @@ final class Rating {
         return array_replace($out, $more);
     }
 
-    # Ask the trusted adapter for one target: null is a target the actor may not reach, false is an answer outside the contract, which is reported and never used
-    # With the lock the adapter repeats the current rights and locks the row of the owner, which is the first lock of every write and what serializes one target
+    # Ask the trusted adapter for one target; an answer outside the contract is reported and never used, and with the lock it is the first lock of every write
     private function getTarget(string $scope, int $id, bool $lock): array|false|null {
         $row = ($this->read)($scope, $id, $this->actor, $lock);
         if ($row === null) return null;
@@ -160,8 +151,7 @@ final class Rating {
         return $row ? intval($row['now']) : false;
     }
 
-    # Read the last participation of one actor in one target together with the clock of the server: last is null while the actor never took part, and false means a failed read
-    # With the lock the row is held for the rest of the transaction; it is always taken after the row of the target and before any vote
+    # Read the last participation of the actor with the server clock; its lock is always taken after the target row and before any vote
     private function getActorLast(string $scope, int $id, string $key, bool $lock): array|false {
         $sql = 'SELECT last, UNIX_TIMESTAMP() AS now FROM '.PREFIX_DB.'_rating_actors WHERE scope = :scope AND mid = :mid AND actor = :actor'.($lock ? ' FOR UPDATE' : '');
         $res = $this->db->getSqlQuery($sql, ['scope' => $scope, 'mid' => $id, 'actor' => $key]);
@@ -170,8 +160,7 @@ final class Rating {
         return $row ? ['last' => intval($row['last']), 'now' => intval($row['now'])] : ['last' => null, 'now' => 0];
     }
 
-    # Answer whether the actor could place a new vote in the given state, and the seconds its interval still runs: the wait speaks of the interval alone, never of another refusal
-    # The interval is measured as now minus last against the period, which cannot overflow; a last that lies in the future is broken data and never an open vote
+    # Whether a new vote is open and the seconds left; measured as now minus last, which cannot overflow, and a last in the future is broken data, never an open vote
     private function getVoteState(array $rule, array $target, ?int $last, int $now): array {
         $sane = $last === null || $last <= $now;
         $wait = ($last !== null && $sane && $rule['period'] > 0 && $now - $last < $rule['period']) ? $rule['period'] - ($now - $last) : 0;
@@ -187,8 +176,7 @@ final class Rating {
         return $this->db->getSqlRow($res) ? true : null;
     }
 
-    # Make sure the target is known before its first vote: a new empty target gets a row with a zero starting balance
-    # An aggregate that is not zero without such a row was never carried over by the update, so it is no new target and the vote is refused and reported
+    # Give a new target its row before the first vote; a non-zero aggregate without a row was never carried over by the update, so the vote is refused and reported
     private function addTargetRow(string $scope, int $id, array $target, int $now): bool {
         $seen = $this->getTargetRow($scope, $id);
         if ($seen !== null) return $seen;
@@ -200,9 +188,7 @@ final class Rating {
         return $this->db->getSqlQuery($sql, ['scope' => $scope, 'mid' => $id, 'now' => $now]) !== false;
     }
 
-    # Run one vote under the locks of the fixed order - owner, target, actor, request - and answer its result with the word whether anything was written
-    # A delivery key the actor already used answers the stored vote again, or a conflict when it carries another value; only a new key meets the own-vote rule and the interval
-    # The interval never extends on a refusal, because last moves only together with an accepted vote, and the aggregate is checked before it is handed to the adapter
+    # Run one vote under the fixed lock order owner, target, actor, request; last moves only with an accepted vote, so a refusal never extends the interval
     private function addVoteRow(string $scope, int $id, int $value, string $request, array $rule): array {
         $fail = [$this->getResult('storage'), false];
         $target = $this->getTarget($scope, $id, true);
@@ -240,9 +226,7 @@ final class Rating {
         return [$this->getResult('ok', $next, ['vote' => $vote, 'wait' => $wait, 'canvote' => $can]), true];
     }
 
-    # Annul one vote under the same order of locks, which is why the vote is read twice: first without a lock to learn its target, then again under the locks of that target
-    # Exactly the stored value leaves the aggregate, the administrator, the reason and the moment are recorded, and the last participation of the voter stays as it was
-    # A vote that is already annulled is an empty success, and an aggregate that would turn negative is broken data that is reported and left alone
+    # Annul one vote, read twice: unlocked to learn its target, then again under the locks of that target, so the fixed lock order holds
     private function deleteVoteRow(int $vote, string $reason, array $row): array {
         $fail = [$this->getResult('storage'), false];
         $scope = $row['scope'];
@@ -273,8 +257,7 @@ final class Rating {
         return [$this->getResult('ok', $next, ['vote' => $vote, 'wait' => $wait, 'canvote' => $can]), true];
     }
 
-    # Run one writing unit inside the transaction of the subsystem: BEGIN, the unit, COMMIT; a unit that wrote nothing, failed or threw is rolled back
-    # The subsystem owns this transaction, takes its locks in one fixed order and reads the clock of the database only; an unknown commit answers storage
+    # Run one writing unit in a transaction of its own; a unit that wrote nothing, failed or threw is rolled back, and an unknown commit answers storage
     private function setUnitRun(Closure $unit, array $ctx): array {
         if ($this->db->checkSqlActive()) {
             $this->addRatingLog('a write was called inside a foreign open transaction and is refused', $ctx);
@@ -303,8 +286,7 @@ final class Rating {
         return $this->rules[$scope] ?? [];
     }
 
-    # Read the state of one target for the actor without writing anything: the aggregate of every reachable target, the rest of its interval and whether a new vote would be taken
-    # A target whose rating is switched off, closed to guests, owned by the actor or still waiting answers ok with canvote false; only an unreachable target hides its counters
+    # Read the state of one target for the actor without writing; only an unreachable target hides its counters, any other refusal answers ok with canvote false
     public function getRating(string $scope, int $id): array {
         if (!$this->actor) return $this->getResult('denied');
         if (!$this->checkTargetKey($scope, $id)) return $this->getResult('invalid');
@@ -318,9 +300,7 @@ final class Rating {
         return $this->getResult('ok', $target, ['wait' => $wait, 'canvote' => $can]);
     }
 
-    # Place one vote of the actor on one target; the request is the key of one delivery, so a network repeat answers the stored vote and never a second one
-    # Everything that can be refused without the database is refused first: the form, a blocked scope, a rating that is switched off, a guest who may not vote or has no address
-    # A vote is a value from 1 to 5 of one server-made actor, an account or a guest address; nobody changes or removes a vote, only the main administrator annuls one
+    # Place one vote; the request is the key of one delivery, so a network repeat answers the stored vote and never a second one
     public function addRating(string $scope, int $id, int $value, string $request): array {
         if (!$this->actor) return $this->getResult('denied');
         if (!$this->checkTargetKey($scope, $id) || $value < 1 || $value > 5 || !preg_match(self::REQUEST, $request)) return $this->getResult('invalid');
@@ -330,8 +310,7 @@ final class Rating {
         return $this->setUnitRun(fn(): array => $this->addVoteRow($scope, $id, $value, $request, $rule), ['scope' => $scope, 'mid' => $id, 'actor' => $this->akey]);
     }
 
-    # Annul one vote as the main administrator, with a reason; it needs neither an active rating nor an open interval, and a repeat is an empty success
-    # A vote that does not exist and a target that is physically gone both answer unavailable, and the history stays whatever happens to the target
+    # Annul one vote as the main administrator with a reason; a repeat is an empty success and the history stays whatever happens to the target
     public function deleteRating(int $vote, string $reason): array {
         if (!$this->actor || !$this->actor['super']) return $this->getResult('denied');
         if ($vote < 1 || !$this->checkReason($reason)) return $this->getResult('invalid');

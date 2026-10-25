@@ -380,8 +380,7 @@ final class Update {
         return self::setJsonFile('notes.json', $data);
     }
 
-    # The versions whose database steps wait after the mark: each step file of $dir up to the code $code, then the code itself, marked even without a file
-    # The defaults are the installed steps and code; the preflight of an installation names the step folder and the version of the package instead
+    # The versions whose database steps wait after the mark: each step file up to $code, then $code itself, marked even without a file
     public static function getStepList(string $mark, string $dir = '', string $code = SL_VERSION): array {
         $dir = ($dir !== '') ? $dir : UPDATE_DIR.'/step';
         $vers = [$code];
@@ -819,9 +818,7 @@ final class Update {
         return $out;
     }
 
-    # The moves an installation of the unpacked package $stage makes below $root: the files it replaces, adds and deletes, the folders it creates and what it cannot write
-    # A site file is placed only where it is missing, an identical file stays, a deleted installer never returns, the rescuer waits for step 8 and the gate and entries go last
-    # A replaced or deleted file whose hash on disk is not the one of the installed files.json is changed on the site now, so the stop never rests on an old list
+    # The moves of installing the unpacked package below $root; a site file is placed only where it is missing, and the gate and the entries go last
     public static function getApplyPlan(string $stage, string $afile, string $root = BASE_DIR): array {
         $out = ['moves' => [], 'dirs' => [], 'swaps' => [], 'adds' => [], 'drops' => [], 'changed' => [], 'bsize' => 0, 'nsize' => 0, 'deny' => []];
         $news = self::getFileList($stage.'/storage/update/files.json');
@@ -894,8 +891,7 @@ final class Update {
         return $sum;
     }
 
-    # The preflight of step 1 over the unpacked package, the site still open: version, PHP, rights, space, changed files, opcache and database rights, and what will happen
-    # It writes nothing, so the dry run of the panel shows the very list the installation then applies; the first refusal found is its error
+    # The preflight of step 1 over the unpacked package; it writes nothing, so the dry run of the panel shows the very list the installation then applies
     public static function getApplyCheck(PDO $pdo, string $prefix, array $state, array $man, string $afile, array $opts = []): array {
         require_once BASE_DIR.'/core/classes/backup.php';
         $ver = $man['version'];
@@ -962,9 +958,7 @@ final class Update {
         return ['token' => bin2hex(random_bytes(32)), 'code' => bin2hex(random_bytes(10))];
     }
 
-    # Close the site for the installation confirmed by $pend: client/apply.lock is created atomically first, in phase prep, so a second click or tab is refused
-    # Only under the lock the backup folder, the plan and the run copy are written, the lock turns to dump, and then the backup of the last installation goes
-    # A delta carries core/apply.php only when it changed, so the installed copy runs it otherwise, held to the hash files.json of the package names
+    # Close the site for a confirmed installation; client/apply.lock is created atomically first, so a second click or tab is refused before anything is written
     public static function addApplyStart(array $pend, array $check, array $man, string $afile, string $prefix): array {
         $fail = static fn(string $why): array => ['ok' => false, 'error' => $why];
         $ver = $man['version'];

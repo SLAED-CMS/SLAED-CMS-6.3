@@ -167,10 +167,7 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
     border-radius: 0;
 }
 
-/* !important below overrides the inline display/width styles set by the engine and SLAED JS at runtime.
-   The strip also refuses to shrink: it is the last item of a fixed-height flex column, and the wysiwyg pane
-   asks for more room than the markdown one, which shaved five pixels off the strip and dropped the two mode
-   tabs onto the bottom edge of the frame on every switch */
+/* !important beats the inline display and width set at runtime; no shrink, or the wysiwyg pane pushes the mode tabs off the frame */
 
 .toastui-editor-mode-switch {
     align-items: flex-start;
@@ -211,8 +208,7 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
     color: var(--sl-text);
 }
 
-/* Two dialogs of the editor are mounted inside the vendor root, which gives every button one fixed height and a font
-   stack of its own; the cure belongs where the vendor is. The window itself is the theme's, under .sl-fm-win */
+/* Two editor dialogs mount inside the vendor root, which forces its button height and font; the window itself is .sl-fm-win */
 .sl-toastui-upload {
     font-family: inherit;
     font-size: var(--sl-font-body);
@@ -228,7 +224,7 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
     content: "\f327";
 }
 
-/* ===== Vendor alignment: engine surfaces mapped to theme tokens (chrome) ===== */
+/* Vendor alignment: engine surfaces mapped to theme tokens (chrome) */
 /* The theme font everywhere: kills the vendor font stack so every window inherits one chain from the page */
 .toastui-editor-defaultUI {
     border: 1px solid var(--sl-border);
@@ -300,9 +296,7 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
     border-radius: 0 0 var(--sl-radius-2) var(--sl-radius-2);
 }
 
-/* All four tabs of the strip wear one dress, the pane pair inside the md container included: the vendor frames the
-   two mode tabs in a light tone of its own, which stayed light on a dark page and made that pair read as a foreign
-   box pinned over the strip. An active tab drops its top edge into the panel it hangs from */
+/* One dress for all four tabs: the vendor's light frame on the two mode tabs stayed light on a dark page */
 .toastui-editor-mode-switch .tab-item {
     background: var(--sl-surface);
     border: 1px solid var(--sl-border);
@@ -315,9 +309,7 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
     color: var(--sl-text);
 }
 
-/* The file manager window is moved inside the editor root so it survives the fullscreen editor, and the vendor sizes
-   and paints every button under that root: 28px tall, 13px type, a 2px corner and #333. That outranks a component
-   class, so each control the window carries names its own height, corner, type and tone again here */
+/* The vendor sizes every button under its root (28px, 13px, a 2px corner, #333) above a component class, so each control restates its own */
 .toastui-editor-defaultUI .sl-modal-act {
     border-radius: var(--sl-radius-1);
     color: var(--sl-text);
@@ -347,8 +339,7 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
     height: var(--sl-size-chip);
 }
 
-/* Tone is named only where the vendor took it away, which is the button and never the anchor: a dial item and a page
-   link are anchors and keep what the theme gives them, hovered and pointed states included */
+/* Tone only on the button the vendor repainted; a dial item and a page link are anchors and keep the theme's */
 .toastui-editor-defaultUI .sl-chip {
     color: var(--sl-text-strong);
 }
@@ -378,7 +369,7 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
     color: var(--sl-danger);
 }
 
-/* ===== Vendor alignment: dialogs and controls ===== */
+/* Vendor alignment: dialogs and controls */
 .toastui-editor-popup {
     background: var(--sl-bg);
     border: 1px solid var(--sl-border-strong);
@@ -475,7 +466,7 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
     background-color: var(--sl-surface);
 }
 
-/* ===== Vendor alignment: states, focus, markdown syntax ===== */
+/* Vendor alignment: states, focus, markdown syntax */
 .ProseMirror .placeholder,
 .toastui-editor-contents-placeholder::before {
     color: var(--sl-field-text);
@@ -536,9 +527,8 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
     background-color: var(--sl-text);
 }
 
-/* ===== Vendor alignment: WYSIWYG content, light color pass only ===== */
-/* The typing surface itself. The vendor paints .ProseMirror #222, and markdown source is written as bare lines with no
-   paragraph around them, so the rules further down never reached the text an author is actually typing */
+/* Vendor alignment: WYSIWYG content, light colour pass only */
+/* The vendor paints .ProseMirror #222, and markdown source lines carry no paragraph the rules below would reach */
 .toastui-editor-md-container .ProseMirror,
 .toastui-editor-ww-container .ProseMirror {
     color: var(--sl-text);

@@ -1,13 +1,4 @@
-// ALTCHA widget bootstrap, worker and localization.
-// Targets ALTCHA widget v3.x (verified against 3.0.11). Uses the *external* build so the
-// proof-of-work runs in a self-hosted same-origin Worker instead of a blob: Worker. This keeps
-// the captcha working under a strict Content-Security-Policy (default-src 'self') without any
-// per-site CSP change — important for a CMS shipped to many installations.
-// Version-sensitive contract:
-//   - widget challenge source is the `challenge` attribute (was `challengeurl` in v2)
-//   - footer/logo are hidden via the `configuration` attribute, not `hidefooter`/`hidelogo`
-//   - the PoW worker is registered through `$altcha.algorithms.set(algorithm, factory)`
-//   - custom strings are registered through `$altcha.i18n` (this build ships English only)
+// ALTCHA widget v3 bootstrap: the external build runs the proof of work in a same-origin worker, so the captcha works under a strict CSP with no change per site
 import './altcha.min.js';
 
 if (globalThis.$altcha) {

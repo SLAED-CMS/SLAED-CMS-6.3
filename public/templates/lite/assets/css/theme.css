@@ -422,8 +422,7 @@ td.sl-cell-ellipsis {
   background: none;
 }
 
-/* Sort indicators. The three classes are the whole contract between a sortable head and the eye, so they hang on the
-   class alone: a table head wears them through Tablesort, and the head of the file list wears the same three by hand */
+/* Sort indicators: three classes on the class alone, worn by Tablesort heads and by hand in the file list */
 .sl-sort,
 .sl-sort-asc,
 .sl-sort-desc {
@@ -432,8 +431,7 @@ td.sl-cell-ellipsis {
   padding-right: var(--sl-space-8);
 }
 
-/* The three marks are drawn in the icon font the rest of the interface is drawn in: the arrows of the text font are
-   missing from more than one system face, and a mark that falls back to a hex box is not a mark */
+/* The marks are drawn in the icon font: several system text faces lack these arrows and fall back to a hex box */
 .sl-sort::after,
 .sl-sort-asc::after,
 .sl-sort-desc::after {
@@ -475,8 +473,7 @@ thead tr th[data-sort-method="none"]::after {
   margin-bottom: 0;
 }
 
-/* Pagination: the arrows and the rail centred in the column, the side group beside them, the page line under them.
-   The pager is the container its steps measure, so it narrows by the room its column gives it and not by the window */
+/* Pagination: the pager is the container its steps measure, so it narrows with its column and not the window */
 .sl-pager {
   display: flex;
   flex-flow: column;
@@ -735,8 +732,7 @@ a.sl-crumb:hover + .sl-crumb-sep {
   content: "\f430";
 }
 
-/* The one part of a row that takes what the others leave and may shrink below its content: the body of an alert, the
-   right pane of a comment and of a forum post, the field of the RSS form, the label of a file-manager rail item */
+/* The one part of a row that takes what the others leave and may shrink below its content */
 .sl-alert-body,
 .sl-com-right,
 .sl-fp-right,
@@ -806,8 +802,7 @@ a.sl-crumb:hover + .sl-crumb-sep {
   margin-top: var(--sl-space-5);
 }
 
-/* An alert with actions wraps: the text takes the room and the slot keeps the end of the line. The alert is the container
-   its slot asks about, so the same alert in a column, a window or on a phone puts its actions under the text by its own width */
+/* An alert with actions is the container its slot asks about, so it puts the actions under the text by its own width */
 .sl-alert:has(> .sl-alert-acts) {
   flex-wrap: wrap;
   row-gap: var(--sl-space-3);
@@ -949,9 +944,7 @@ a.sl-crumb:hover + .sl-crumb-sep {
   --sl-alert-c: var(--sl-accent);
 }
 
-/* The accent megaphone announces: it tips up from its grip and rocks back, and two arcs of voice leave its bell,
-   which opens to the right, into the gap before the text. The glyph stands on the first line here, so the arc is set
-   on the middle of the glyph rather than of the alert, and ends a hair past the bell */
+/* The glyph stands on the first line here, so the arc is set on the middle of the glyph, not of the alert */
 .sl-alert-accent::before {
   content: "\f483";
   transform-origin: 30% 60%;
@@ -1344,8 +1337,7 @@ input[type="checkbox"]:disabled {
   margin: 0;
   padding: 0;
   gap: 0;
-  /* The side that is not chosen is still a choice and still has to be read: muted grey on this track measures
-     4.17 at twelve points, which is below AA, and the body colour is the nearest role that clears it */
+  /* Muted grey on this track measures 4.17 at twelve points, below AA, so the side not chosen reads the body colour */
   color: var(--sl-text);
   font-size: var(--sl-font-small);
   line-height: var(--sl-radio-height);
@@ -1364,10 +1356,6 @@ input[type="checkbox"]:disabled {
   .sl-radio:has(input:checked) {
   color: var(--sl-success);
 }
-
-/* The chosen side of an off switch says so by standing on the knob, not by going quiet: muted grey there measured
-   4.17 against the track the crawler can see behind it, and the knob is a pseudo-element no crawler can look through.
-   It takes the body colour the rule above already gives it, so the rule that dimmed it is gone rather than retuned */
 
 /* The same disappearance serves the preset gallery of the settings page, where each option is its picture and nothing else */
 .sl-radio-group.sl-radio-switch input,
@@ -1621,7 +1609,6 @@ button.sl-but-mini:hover,
   pointer-events: auto;
 }
 
-/* The form of a dial action lives outside the fan, because .sl-dial-item is placed by its child index */
 /* Inline edit: the editor widget carries no outer margin of its own, so its action row would sit on the tab bar */
 .sl-inline-edit > .sl-but,
 .sl-inline-edit > .sl-but-green,
@@ -1670,8 +1657,7 @@ button.sl-but-mini:hover,
     opacity var(--sl-time-base) var(--sl-ease-out);
 }
 
-/* Keyboard focus paints the chip solid, and a mark on a solid chip is the one the theme turns over; the fixed light
-   tone above is declared later than the shared chip rule, so it has to step aside here by hand */
+/* Focus paints the chip solid, and the fixed light tone above comes later than the shared chip rule, so it steps aside here */
 .sl-dial .sl-dial-item:focus-visible {
   color: var(--sl-on-solid);
 }
@@ -1737,10 +1723,7 @@ button.sl-but-mini:hover,
   font-weight: var(--sl-weight-bold);
 }
 
-/* Forms: add form layout. The form lays the two tracks of its rows - a caption column as wide as the longest caption
-   and no wider than the ceiling the token sets, and the field column taking the rest - and every row standing directly
-   in it inherits them, so the captions of one form line up on one edge and the fields on another. Anything else the
-   form holds spans both tracks and reads as before */
+/* Forms: the form lays two tracks, captions up to the token's ceiling and fields taking the rest, for every row directly in it */
 .sl-form {
   display: grid;
   grid-template-columns: fit-content(var(--sl-form-label-width)) minmax(0, 1fr);
@@ -1765,9 +1748,7 @@ button.sl-but-mini:hover,
   width: 100%;
 }
 
-/* A row standing directly in a form, or in a settings tile, draws the tracks its parent laid instead of a quarter of its
-   own. A browser without subgrid drops the declaration and keeps the quarter. The selector carries no weight of its own,
-   so every rule below that stacks a row - the editor, the narrow box, the phone - still wins on order alone */
+/* A direct row draws its parent's tracks through subgrid, or keeps a quarter without it; the selector carries no weight */
 :where(.sl-form, .sl-opt-tile) > .sl-form-row {
   grid-template-columns: subgrid;
 }
@@ -1777,11 +1758,7 @@ button.sl-but-mini:hover,
   display: none;
 }
 
-/* The editor is the one field a half row cannot hold: it takes both tracks and the label moves above it */
-/* The track has a floor of zero and not of its content: a bare 1fr cannot shrink below the toolbar, which at 768 is
-   thirty points wider than the row and made the page scroll sideways under every form carrying an editor */
-/* The mount point of the editor is on the list too: the row folds on the first frame and not when the script arrives,
-   so the caption column of the form is not sized by the editor's hint for the moments in between */
+/* The editor takes both tracks with its label above, from the first frame through its mount; the track floor is zero, since a bare 1fr overflowed at 768 */
 .sl-form-row:has([id$="_toast"]),
 .sl-form-row:has(.toastui-editor-defaultUI),
 .sl-form-row:has(.ck-editor),
@@ -2425,7 +2402,7 @@ button.sl-but-mini:hover,
   scrollbar-width: none;
 }
 
-/* "Добавить" closes the filter row at its right edge */
+/* The add button closes the filter row at its right edge */
 .sl-node-head-filters > .sl-but {
   margin: 0 0 0 auto;
 }
@@ -2532,8 +2509,7 @@ button.sl-but-mini:hover,
   }
 }
 
-/* A stuck bar narrower than the title, the pills and the search together keeps the pills, the lens and the way up; the lens lays the search over the pills */
-/* The bar is measured, not the window: beside the sidebar of a wide screen the list column is as narrow as a tablet */
+/* A stuck bar too narrow for title, pills and search keeps the pills, the lens and the way up; it is measured, since a list column can be tablet-narrow */
 @container (max-width: 900px) {
   .sl-node-head[data-sl-stuck] .sl-node-head-row {
     grid-template-columns: minmax(0, 1fr) auto;
@@ -2733,8 +2709,7 @@ td.hljs-ln-numbers {
   width: 100%;
 }
 
-/* A [code] block highlighted by highlight.js: the face of code on the surface of the theme, its rows striped and numbered
-   as the rows of highlight_string are, the rail of the editor at its left and the tones of its tokens shared with CodeMirror above */
+/* A [code] block by highlight.js: rows striped and numbered like highlight_string, token tones shared with CodeMirror */
 pre code.hljs {
   display: block;
   padding: 0;
@@ -2962,7 +2937,7 @@ pre code.hljs {
   color: var(--sl-text-muted);
 }
 
-/* The list on its way: the place of the rows is held by a skeleton, so the work area neither empties nor jumps while the answer is still travelling (§31) */
+/* The list on its way: a skeleton holds the place of the rows, so the work area neither empties nor jumps */
 .sl-skel {
   animation: sl-skel-pulse var(--sl-skel-dur) var(--sl-ease-in-out) infinite;
 }
@@ -3043,8 +3018,7 @@ pre code.hljs {
   }
 }
 
-/* Editor shell: one frame for Plain and CodeMirror, the format tab and the capsule over the card, the status line under the
-   text; the rail of the card follows the state the runtime writes on the frame */
+/* Editor shell: one frame for Plain and CodeMirror; the card rail follows the state the runtime writes on the frame */
 .sl-editor {
   display: flex;
   flex-direction: column;
@@ -3053,8 +3027,7 @@ pre code.hljs {
   min-width: 0;
 }
 
-/* The tab and the capsule share one line, the tab cutting its words where the capsule needs the room, so a capsule unseen at rest
-   never wraps and makes an editor taller. In a reversed wrap the start of the cross axis is the bottom, so flex-start sets both on the card */
+/* The tab yields its words to the capsule, so the row never wraps; a reversed wrap starts the cross axis at the bottom, so flex-start sets both on the card */
 .sl-editor-row {
   display: flex;
   flex-wrap: wrap-reverse;
@@ -3109,9 +3082,7 @@ pre code.hljs {
   color: var(--sl-warning);
 }
 
-/* The capsule stays out of the way at rest and comes up under the hand, on focus and in the full screen. It keeps to one
-   line and to the larger part of the row, scrolling what does not fit, so a capsule that is not shown does not push the
-   tab off its line and make the editor taller; the palette carries every command it hides */
+/* The capsule rests hidden on one scrolling line, so it never pushes the tab off and makes the editor taller */
 .sl-editor-pill {
   display: inline-flex;
   flex-wrap: nowrap;
@@ -3437,8 +3408,7 @@ pre code.hljs {
   background: var(--sl-bg);
 }
 
-/* The page inside the frame: the ground of the theme over the whole frame, and a body with no floor of its own and its floats held,
-   so the runtime measures what it shows */
+/* The frame page: theme ground, no floor of its own and floats held, so the runtime measures what it shows */
 .sl-editor-sheet {
   min-height: 0;
   background: var(--sl-bg);
@@ -3452,8 +3422,7 @@ pre code.hljs {
   background: transparent;
 }
 
-/* The variables of a template, under the caret or under the button of the capsule, placed by the runtime inside the card;
-   the chosen one stands on the brand colour and a variable the text already uses carries a tick */
+/* Template variables, placed by the runtime inside the card; a variable the text already uses carries a tick */
 .sl-editor-hint {
   position: absolute;
   top: var(--sl-d-hint-y);
@@ -3515,8 +3484,7 @@ pre code.hljs {
   color: inherit;
 }
 
-/* The palette of the editors: a window of the canon whose bar searches the commands, the body lists them by group
-   with their keys, and the keys of the engine stand under the list until a search narrows it */
+/* Editor palette: a canon window whose bar searches the commands; the engine keys stand under the list until a search narrows it */
 .sl-editor-pal .sl-editor-pal-find,
 .sl-editor-pal .sl-editor-pal-find:focus {
   flex: 1 1 auto;
@@ -3665,8 +3633,7 @@ pre code.hljs {
   line-height: var(--sl-line-normal);
 }
 
-/* The comparison of an editor: a window of the canon with the loaded text against the present one, in one text or in
-   two columns, the count of the units gone and new in the bar */
+/* Editor comparison: the loaded text against the present one, in one text or in two columns */
 .sl-editor-diff-modes {
   display: inline-flex;
   gap: var(--sl-space-1);
@@ -3962,8 +3929,7 @@ dialog.sl-editor-emoji-panel {
   max-height: none;
 }
 
-/* CodeMirror as a text editor of the site, painted by the theme: the engine writes tok-* classes through classHighlighter,
-   these rules colour them, and the scheme of the page switches the text with it */
+/* CodeMirror as a text editor of the site: these rules colour the tok-* classes classHighlighter writes */
 .sl-editor .cm-editor {
   padding-left: var(--sl-rail-width);
   background: transparent;
@@ -3976,8 +3942,7 @@ dialog.sl-editor-emoji-panel {
   line-height: var(--sl-line-normal);
 }
 
-/* CodeMirror keeps the height of the field it takes the place of, measured by the runtime, so the form does not jump;
-   the floor stands on the text and its gutters, the way CodeMirror asks, so the gutter runs to the bottom of a short text */
+/* CodeMirror keeps the measured height of the field it replaces; the floor stands on text and gutters, so the gutter reaches the bottom */
 .sl-editor .cm-editor .cm-content,
 .sl-editor .cm-editor .cm-gutter {
   min-height: var(--sl-d-editor-floor, var(--sl-editor-height));
@@ -4056,8 +4021,7 @@ dialog.sl-editor-emoji-panel {
   color: var(--sl-text-muted);
 }
 
-/* Markdown: headings and links in the primary tone, marks and addresses receding, strong text heavier;
-   the HTML inside a text keeps the colours of code */
+/* Markdown tones; the HTML inside a text keeps the colours of code */
 .sl-editor .cm-editor .tok-heading,
 .sl-editor .cm-editor .tok-link,
 .sl-editor .cm-editor .tok-typeName,
@@ -5031,9 +4995,7 @@ dialog.sl-editor-emoji-panel {
   align-items: center;
 }
 
-/* Language block: the flags are submit buttons of one form, because the switch answers only to a POST carrying a
-   token in its body, and a link could carry one only in the query string, which this tree does not allow;
-   the form itself lays out nothing, so the buttons stay flex items of the block */
+/* The flags are submit buttons of one form: the switch answers only a POST with a token in its body, which a link cannot carry */
 .sl-lang {
   display: contents;
 }
@@ -5343,8 +5305,7 @@ dialog.sl-editor-emoji-panel {
   padding: var(--sl-space-4) 0 0;
 }
 
-/* A control that folds a block shows one of two marks: the session toggle swaps its open and close labels, the shelf
-   head of the favourites swaps its chevrons on the sl-is-closed state the toggle mechanic of slaed.js sets */
+/* A fold control shows one of two marks; the favourites shelf swaps its chevrons on the sl-is-closed state slaed.js sets */
 .sl-session-close,
 .sl-panel-toggle-closed,
 .sl-session-toggle.sl-is-open .sl-session-open,
@@ -5635,8 +5596,7 @@ dialog.sl-editor-emoji-panel {
   border-radius: var(--sl-radius-2);
 }
 
-/* The head of a code block names the language and carries the copy button; the button and the fold wait for the script
-   that runs them, so a page without it shows the whole code */
+/* The copy button and the fold wait for their script, so a page without it shows the whole code */
 .sl-code-head {
   display: flex;
   align-items: center;
@@ -5686,8 +5646,7 @@ dialog.sl-editor-emoji-panel {
   border-radius: 0 0 var(--sl-radius-2) var(--sl-radius-2);
 }
 
-/* Tables: generic content table backgrounds and borders. Nothing in the theme paints a cell, so this declaration is not
-   fighting another rule: it is what puts a table pasted into an article, with its own cell background, back onto the page */
+/* Tables: nothing in the theme paints a cell; this puts a pasted table with its own cell background back onto the page */
 .sl-table td,
 .sl-table th {
   background-color: var(--sl-bg) !important;
@@ -5787,16 +5746,14 @@ dialog.sl-editor-emoji-panel {
   display: block;
 }
 
-/* On paper every panel is printed, and the tab script writes display none inline on the ones it closed: nothing but an
-   important declaration reaches past an inline style */
+/* The tab script writes display none inline on closed panels, and only !important prints them past it */
 @media print {
   .sl-tab-panel {
     display: block !important;
   }
 }
 
-/* Grid system: 1-3/1-4 column containers */
-/* Grid system: percentage column gaps without overflowing row gaps */
+/* Grid system: 1-3 and 1-4 column containers, their percentage gaps never overflowing the row */
 .sl-grid-1-3,
 .sl-grid-1-4 {
   display: grid;
@@ -5909,8 +5866,7 @@ dialog.sl-editor-emoji-panel {
   flex: 0 0 auto;
 }
 
-/* The knob: the plate of a rail travels to the chosen cell by the place slaed.js measured; a rail not measured yet
-   keeps what its own sheet does, and a rail handed a place from the page before stands still once */
+/* The knob: a measured rail moves its plate to the place slaed.js wrote; a rail handed a place from the page before stands still once */
 [data-sl-knob][data-sl-knob-ready] > [data-sl-knob-mark] {
   left: 0;
   width: var(--sl-d-knob-w);
@@ -5937,8 +5893,7 @@ dialog.sl-editor-emoji-panel {
   }
 }
 
-/* Segmented switch: one component for every row of cells with one chosen - the colour mode, the view of a list, the
-   pager. The plate under the chosen cell is always empty and the chosen cell recolours its own content over it */
+/* Segmented switch: the plate under the chosen cell is always empty, and the chosen cell recolours its own content over it */
 .sl-seg {
   position: relative;
   display: inline-flex;
@@ -6137,8 +6092,7 @@ button.sl-seg-cell:hover {
   color: var(--sl-band-text);
 }
 
-/* Social row: the ground a button takes under the cursor rotates through the category palette, the same six tones
-   a category list spends. One rule replaces eight hand-picked colours, and a ninth link needs no CSS to join them */
+/* Social row: the hover ground rotates through the category palette, so a new link needs no CSS */
 .sl-top-social .sl-circle-action:hover,
 .sl-top-social .sl-circle-action:focus-visible {
   background-color: var(--sl-cat-tone);
@@ -6414,8 +6368,7 @@ button.sl-seg-cell:hover {
   flex-wrap: wrap;
 }
 
-/* The gutter takes the step below 15px, not the one above: eight items fill the bar exactly at 900px, and the
-   upward tie added a pixel a side that wrapped the last one onto a second row */
+/* The gutter takes the step below 15px: eight items fill the bar exactly at 900px, and the step above wrapped the last one */
 #topmenu > ul > li > a {
   display: block;
   border-radius: calc(var(--sl-size-control) / 2);
@@ -6647,9 +6600,7 @@ button.sl-seg-cell:hover {
   height: var(--sl-demo-height);
 }
 
-/* Both photo bands: a veil the dark mode lays over the photograph, and one beam crossing it every --sl-beam-dur.
-   Each band is its own stacking context, so both layers stay under the text however tall the wrapper grows. The
-   two pseudo-elements share a layer and order by source: the veil is written first and the beam lies over it. */
+/* Each photo band is its own stacking context; the veil is written before the beam and lies under it */
 #head-content,
 #demo-line {
   position: relative;
@@ -6673,8 +6624,7 @@ button.sl-seg-cell:hover {
   background: var(--sl-band-bg);
 }
 
-/* The shaft starts its own width to the left of the band and ends a window past it, which is the same journey
-   whatever the band is carrying: both bands run the full width of the page. */
+/* The shaft runs from its own width left of the band to a window past it, the same journey on both full-width bands */
 #head-content::after,
 #demo-line::after {
   content: "";
@@ -6914,9 +6864,7 @@ button.sl-seg-cell:hover {
   margin-left: auto;
 }
 
-/* An icon in front of every label does the separating the bar used to do, and it does it at every width: a bar
-   drawn by ::before survives a line break and hangs at the start of the next row, an icon cannot. The icons ride
-   in the markup rather than in nth-child rules, or the two lists drift apart the first time a section is added. */
+/* An icon before every label separates the items at every width, where a ::before bar would hang at the start of a wrapped row */
 .sl-fmenu ul li a,
 .sl-fmenu .sl-pull-right {
   display: inline-flex;
@@ -6931,15 +6879,12 @@ button.sl-seg-cell:hover {
   opacity: var(--sl-fade-subtle);
 }
 
-/* No column gap on the widest step: the separator carries its own margin, and adding a gap on top of it
-   pushed the row past the container and dropped the advertising link onto a line of its own */
+/* No column gap on the widest step: the separator carries its own margin, and a gap pushed the advertising link onto its own line */
 #footbox > .sl-wrp:last-child > .sl-fmenu ul {
   row-gap: var(--sl-space-3);
 }
 
-/* On the widest step the menu is one row, and there a bar between two items is what it always was: a separator
-   that cannot wrap, because the row does not wrap. Every narrower step lays the block out as a grid, where the
-   column edge separates and the bar would only hang. */
+/* On the widest step the menu is one row that does not wrap, so the bar between two items can never hang */
 .sl-fmenu ul li::before {
   content: "";
   display: inline-block;
@@ -6954,8 +6899,7 @@ button.sl-seg-cell:hover {
   display: none;
 }
 
-/* Below the wide step the row becomes four columns, and the advertising link takes a line of its own. It leans on
-   float: right, which is inert inside the flex row above and wakes up the moment this block stops being one. */
+/* Below the wide step the advertising link leans on float: right, inert in the flex row above */
 @media (max-width: 1200px) {
   #footbox > .sl-wrp:last-child > .sl-fmenu {
     display: block;
@@ -7002,10 +6946,7 @@ button.sl-seg-cell:hover {
   padding: var(--sl-space-8) 0;
 }
 
-/* A side track exists only when the module rendered that side; a module that switched its blocks off gives the whole width to the content instead of holding the empty column */
-/* The layout names the sides it rendered on the container, because the aside stands after the content in the document: a
-   first frame painted before the parser reached it saw no aside, laid the content over the full width and then pulled
-   it back, and a long page was seen to jump on every arrival */
+/* A side track exists only where the module rendered that side, named on the container, since the aside comes after the content */
 @media (width > 900px) {
   #container.sl-has-left {
     grid-template-columns: var(--sl-layout-sidebar) minmax(0, 1fr);
@@ -7484,10 +7425,7 @@ td.sl-fl-col-stat {
   font-weight: var(--sl-weight-normal);
 }
 
-/* Seasonal: holiday decoration hooks. The two bands take colour and photo as longhands on purpose: the
-   `background` shorthand resets background-size, and with it the `cover` their base rules declare — on a narrow
-   screen the band grows taller than the photo and the photo hangs as a strip with the page showing above and
-   below it. #head-content also restates its position, because its base rule centres on 50% 0. */
+/* Seasonal: the bands take colour and photo as longhands, because the shorthand resets the cover size their base rules declare */
 .sl-winter #demo-line {
   background-color: var(--sl-season-winter);
   background-image: url(../../images/seasons/winter-foot.webp);
@@ -7561,7 +7499,7 @@ td.sl-fl-col-stat {
   }
 }
 
-/* Chips: one pill component for every meta label - 26px tall, tone by semantics; emitters add sl-chip plus a tone, legacy meta names stay in markup as semantic hooks only */
+/* Chips: one pill for every meta label, toned by meaning; emitters add sl-chip and a tone */
 /* The tabs of the activity feed wear the chip, so the feed carries no pill of its own */
 .sl-chip,
 .sl-profile-feed .sl-tabs-link {
@@ -7607,8 +7545,7 @@ a.sl-author {
   }
 }
 
-/* Clickable meta chips (links) default to the system success tone. Every tone paints one wash of its own
-   colour, so the ground is one declaration and the tone class names nothing but the colour it carries */
+/* Clickable meta chips default to the success tone; a tone class names only its colour */
 a.sl-chip {
   background: var(--sl-chip-bg);
   color: var(--sl-success);
@@ -7818,8 +7755,7 @@ a.sl-chip-neutral {
   }
 }
 
-/* A row inside a box that is narrow by design - an OAuth card in a minmax(280px, 1fr) column, the composer in the
-   right pane of a two-pane split - reads that box and not the window, which is wide while the box is not */
+/* A row inside a box narrow by design reads that box and not the window */
 @container sl-form-box (max-width: 900px) {
   .sl-form-row {
     grid-template-columns: 1fr;
@@ -8128,9 +8064,7 @@ a.sl-chip-neutral {
     --sl-login-width: 100%;
   }
 
-  /* Closed dropdown is viewport-fixed so its off-screen box never widens the page; the JS-opened state
-     (.sl-is-open) overrides position/coords to stay in view. It stands at the left edge here instead of
-     under the bar, and takes the viewport less one page gutter */
+  /* The closed dropdown is viewport-fixed so its off-screen box never widens the page; .sl-is-open brings it into view */
   .sl-login-top--head .sl-login-dropdown-form {
     position: fixed;
     left: 0;
@@ -8554,7 +8488,7 @@ a.sl-chip-neutral {
   max-width: var(--sl-msg-width);
 }
 
-/* 2026 compact article controls: favourite, share, live status and freshness indicators */
+/* Article controls: favourite, share, live status and freshness */
 /* Favourites star: round mini toggle in the title; on = browser-bookmark blue, limit = muted and inert */
 .sl-fav {
   margin-right: 0;
@@ -8579,9 +8513,7 @@ a.sl-chip-neutral {
   cursor: not-allowed;
 }
 
-/* Burst: a node pops its glyph, throws a ring wave and six sparks. It was drawn for the favourite star and serves the
-   rating stars as well, so its figures keep the favourite's names; a turn staggers a node behind the ones before it,
-   and the sparks stay hidden until their node's turn comes */
+/* Burst: drawn for the favourite star and serving the rating stars, so its figures keep the favourite's names */
 .sl-is-burst {
   animation: sl-burst-ring var(--sl-fav-dur) var(--sl-ease-out) calc(var(--sl-d-turn, 0) * var(--sl-fav-dur) / 6);
 }
@@ -8612,8 +8544,7 @@ a.sl-chip-neutral {
   box-shadow: var(--sl-spark-shadow);
 }
 
-/* A rating star is a bare glyph and a thumb an inline chip, so both take the round the ring wave needs only while they
-   burst; a thumb bursts in the tone its hover promised, the up thumb with the copy feedback below */
+/* A rating star and a thumb take the round the ring wave needs only while they burst */
 .sl-urating .sl-is-burst,
 .sl-rate-like .sl-is-burst {
   position: relative;
@@ -8793,7 +8724,6 @@ button.sl-but-mini.sl-is-copied:hover {
 }
 
 /* Window canon: the one project-wide window - a native dialog with four axes (size, presentation, tone, foot) */
-/* Values are copied from the editor File Manager, so a window styled by the canon looks the way that panel already looks */
 /* Values internal to the component: the axis classes set them, a theme author never does, so they sit on the component root and not in the API block */
 .sl-modal {
   --sl-modal-tone: var(--sl-primary);
@@ -9116,7 +9046,6 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
 }
 
 /* Gallery on the window canon: the picture between two arrows, the properties of the object beside it, the counter in the status line of the foot */
-/* The layout is the one the editor gallery already had, because the canon takes its values from the editor and not from the file browser */
 .sl-shot-grid {
   display: grid;
   align-items: start;
@@ -9584,16 +9513,8 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   --sl-cat-tone: var(--sl-danger);
 }
 
-/* Account settings: six sections of tiles read top to bottom, one form for everything that is a setting.
-   The cabinet leaves this page a content column of about 896 points and not the whole container, and that single
-   figure decides the composition: the grid is six columns, so a tile of two is about 290 and one of three about 440,
-   which is why a rail down the left was never an option and the widths below are measured against those numbers */
-/* What the account is before anything on this page changes it: four tiles read at a glance, each pointing at the section
-   that would change it. Nothing here is a control, which is why a lamp carries no link and no button */
-/* The track count is written down and not fitted: the lamps are four, and an auto-fit over four passes through three at
-   some width whatever the minimum says - which leaves the fourth alone on a row of its own. The column this page gets is
-   not monotonic in the window either, 838 points at the 900 step where the side column is gone and 707 at 1200 where it
-   is back, so the widest window was the one that broke */
+/* Account settings: six columns, measured against the content column of about 896 points the cabinet leaves this page */
+/* Four lamps read at a glance, none a control; the track count is fixed, since an auto-fit passes through three and strands the fourth */
 .sl-opt-lamps {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -9609,10 +9530,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   background: var(--sl-bg);
 }
 
-/* The state is the tone a category tile carries, and the edge and the figure both read it. The figure is text over the
-   page, so a state takes the step of its colour that passes AA for large bold type: the success and the strong primary
-   of the category classes as they are, and for the warning state - whose base step is the pair the crawler fails - the
-   strong step, which no category class names and the lamp therefore scopes for itself */
+/* A lamp takes the step of its state colour that passes AA for large bold type; the warning base fails, so it scopes the strong step */
 .sl-opt-lamp.sl-is-warn { --sl-cat-tone: var(--sl-warning-strong); }
 
 .sl-opt-lamp small {
@@ -9623,8 +9541,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   text-transform: uppercase;
 }
 
-/* The figure and the note each keep to one line, so every lamp of a row stands the same height whatever it names -
-   a long title or a list of modules ends in an ellipsis rather than a taller lamp */
+/* The figure and the note keep to one line, so every lamp of a row stands the same height */
 .sl-opt-lamp b {
   display: block;
   margin: var(--sl-space-1) 0;
@@ -9647,9 +9564,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   white-space: nowrap;
 }
 
-/* The table of contents of the page, laid across the top because the cabinet leaves the content about 896 points and
-   a rail down the left would leave the form 556. It hides nothing - the marks only say where the reader stands - and
-   it sticks, because a table of contents that scrolls away is a table of contents used once */
+/* The contents of the page run across the top: a rail down the left of the 896-point column would leave the form 556 */
 .sl-opt-rail {
   position: sticky;
   top: 0;
@@ -9662,9 +9577,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   border-bottom: 1px solid var(--sl-border);
 }
 
-/* The road runs behind every mark from edge to edge, and the part already walked is drawn over it up to the mark the
-   reader stands at: a width the script measures and writes as --sl-d-spy, because a stylesheet that does not know where
-   the marks landed cannot draw a line to one of them */
+/* The road walked is drawn to --sl-d-spy, a width the script measures, because the stylesheet cannot know where the marks landed */
 .sl-opt-rail::before,
 .sl-opt-rail::after {
   content: "";
@@ -9683,10 +9596,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   transition: width var(--sl-time-slow) var(--sl-ease-out);
 }
 
-/* Every mark shares the one cell of the rail and stands at its own fraction of the width, written on it as --sl-d-at of
-   --sl-d-of, so the marks are spaced evenly whatever their captions weigh: the first keeps to the left edge, the last to
-   the right, and the ones between are centred on their fraction. A mark may not be wider than one step of the road,
-   which is what keeps two captions from meeting */
+/* Each mark stands at its fraction --sl-d-at of --sl-d-of, spaced evenly whatever its caption weighs, and no wider than one step */
 .sl-opt-mark {
   position: relative;
   z-index: var(--sl-z-raised);
@@ -9745,9 +9655,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   color: var(--sl-on-solid);
 }
 
-/* The caption keeps to one line whatever it says, because the height of the rail is the margin every section scrolls
-   to and a caption that wraps in one locale and not in another would move that figure out from under it. What the cut
-   takes off is still in the title the button carries, which is also where its name comes from */
+/* The caption keeps to one line, because the rail height is the margin every section scrolls to; the full name is in the title */
 .sl-opt-mark span {
   max-width: 100%;
   overflow: hidden;
@@ -9766,8 +9674,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   color: var(--sl-on-solid);
 }
 
-/* The rail above stands over the top of the window, so a section scrolled to would start under it: the margin the
-   scroll leaves is the height of the rail and a step of air, and not a spacing step alone */
+/* A section scrolled to clears the rail: the margin is the rail height and a step of air */
 .sl-opt-sec {
   margin-bottom: var(--sl-space-9);
   scroll-margin-top: calc(var(--sl-opt-rail-height) + var(--sl-space-4));
@@ -9796,8 +9703,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   gap: var(--sl-space-4);
 }
 
-/* The tile is the box its rows watch, under a name of its own - see the fold below the rows - and, like a form, it lays
-   the two tracks its rows inherit: everything it holds spans both, so the head, the face and the text read as a column */
+/* The tile is the container its rows watch, under a name of its own, and lays the two tracks they inherit */
 .sl-opt-tile,
 .sl-profile-panel {
   container-type: inline-size;
@@ -9840,9 +9746,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   grid-column: span 6;
 }
 
-/* The one head of the cabinet, fragments/panel-head.html: a settings tile, a cabinet panel, the activity feed, the
-   profile hub and a favourites shelf all open with the same row - a heading with the chip of tone on the left, and on
-   the right whatever the head carries: chips, actions, the live mark or the chevrons of a fold */
+/* The one head of the cabinet, fragments/panel-head.html, shared by the tiles, the panels, the feed, the hub and the shelves */
 .sl-profile-hub-head h3 > .bi {
   display: grid;
   place-items: center;
@@ -9873,14 +9777,12 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   line-height: var(--sl-line-normal);
 }
 
-/* A row standing directly in the tile is spaced by the tile's own gap and drops the margin the row carries; a row
-   inside a form the tile holds - the password form - keeps it, because there nothing else spaces the rows */
+/* A direct row of the tile is spaced by the tile's gap; a row inside its form keeps its own margin */
 .sl-opt-tile > .sl-form-row {
   margin-bottom: 0;
 }
 
-/* The face of the account: a value the page shows rather than a control, at the size the account pages already
-   give an avatar they mean to be looked at */
+/* The face of the account: a value shown, not a control, at the avatar size of the account pages */
 .sl-opt-face {
   display: grid;
   place-items: center;
@@ -9897,10 +9799,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   box-shadow: var(--sl-avatar-shadow);
 }
 
-/* The rows of a tile are the rows of every form in the tree - caption left, control right, the same two tracks and the
-   same air - and they fold on the tile and never on the window: a tile of two columns is about 250 points, where a
-   caption track of a quarter cannot hold a word. The tile watches itself under a name of its own, because the shared
-   name folds at 900 and would stack every tile there is */
+/* The rows of a tile fold on the tile, not the window, under its own container name, since the shared name folds at 900 */
 @container sl-opt-box (width <= 420px) {
   .sl-opt-tile .sl-form-row {
     grid-template-columns: minmax(0, 1fr);
@@ -9914,10 +9813,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   align-items: start;
 }
 
-/* The hint of a row stands under its caption, in the muted colour every hint of the tree wears and at the size the
-   element already has; the caption and the hint share one cell so the row keeps its two tracks. The hint wraps to the
-   cell and asks for no width of its own: a hint long enough to ask would size the caption column of the whole form,
-   and it did, for the moments the parser stood on the scripts of the editor before the row could fold */
+/* The hint shares the caption cell and asks for no width, or it sizes the caption column of the whole form */
 .sl-opt-tile .sl-form-row > div > small {
   display: block;
   width: 0;
@@ -9926,17 +9822,13 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   color: var(--sl-text-muted);
 }
 
-/* A control that does not fill its track - the switch - stands at the right edge of it, where the edge of every full
-   field is */
+/* A control narrower than its track, the switch, stands at its right edge, where every full field ends */
 .sl-opt-tile .sl-form-field:has(> .sl-radio-switch) {
   display: flex;
   justify-content: flex-end;
 }
 
-/* The gallery of theme presets is 127 options and not the two dozen a picture can show, so the pick area is capped
-   and scrolls; the switch of a yes/no line is a group too and keeps its own geometry */
-/* A step of air inside the scroll box, because the ring around the picked plate stands outside the plate and a box that
-   scrolls clips whatever crosses its edge */
+/* The preset gallery is capped and scrolls with a step of air for the ring of the picked plate; a yes/no switch keeps its own geometry */
 .sl-opt-tile .sl-radio-group:not(.sl-radio-switch) {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(var(--sl-avatar-width), 1fr));
@@ -9945,9 +9837,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   overflow-y: auto;
 }
 
-/* Each option is its picture and nothing else: the radio is out of sight the way the one under a switch is (the rule beside
-   that switch), the picture takes the plate, the plate lifts with the tile (the rule beside the tile), and the pick is the ring
-   the file manager draws around a picked tile (the rule beside that tile) */
+/* Each option is its picture: the radio hidden, the picture on the plate, the file manager's ring around the pick */
 .sl-opt-tile .sl-radio-group:not(.sl-radio-switch) .sl-radio {
   position: relative;
   display: grid;
@@ -9971,11 +9861,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   border-radius: inherit;
 }
 
-/* The save bar of the shared form, and of that form alone: the password tile keeps its own button, because a bar
-   that rose over the whole page would be promising to save something it does not carry. It sticks to the foot of the
-   window while the form is on screen and leaves with it, which is the boundary of what it can save drawn in pixels */
-/* The tone is the edge here as it is on a lamp: `--sl-warning` as text over `--sl-bg` is 2.75:1, so the word and the
-   icon take the body colours and the ring around them carries the state */
+/* The save bar of the shared form alone sticks to the window foot; its tone is the edge, since `--sl-warning` as text over `--sl-bg` is 2.75:1 */
 .sl-opt-save {
   position: sticky;
   bottom: var(--sl-space-4);
@@ -9997,11 +9883,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
     visibility 0s;
 }
 
-/* Out of the tab order as well as out of sight: an invisible submit the keyboard still reaches is a button the reader
-   cannot see themselves press. The visibility waits for the fade on the way out and never on the way in, which is the
-   one delay in the list and the reason the shorthand is not repeated */
-/* And out of the flow: a bar that is not there may not hold its height at the foot of the form, where the next section
-   would otherwise start a bar's height too low */
+/* Out of the tab order and the flow; the visibility waits for the fade on the way out only, so the shorthand is not repeated */
 [data-sl-dirty="0"] .sl-opt-save {
   visibility: hidden;
   max-height: 0;
@@ -10029,8 +9911,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   margin: 0;
 }
 
-/* Below the step the grid loses four of its six tracks: a tile of two is the narrowest one that still holds a
-   field, so every wider tile falls back to the pair rather than to a column of six */
+/* Below the step the grid keeps two of six tracks, the narrowest tile that still holds a field */
 @media (max-width: 768px) {
   .sl-opt-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -10041,10 +9922,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  /* Six marks over a phone leave under ninety points each, which the caption cannot have without wrapping to a second
-     line. It goes, and the name of the mark comes from the title the button already carries, so the reader is never
-     handed a button that announces nothing. What the caption gave back in height is paid as a floor, so the thumb
-     still aims at the size of a control */
+  /* The caption leaves on a phone and the name comes from the title; the height it gave back is paid as a floor for the thumb */
   .sl-opt-mark {
     min-height: var(--sl-size-control);
     align-content: center;
@@ -10062,8 +9940,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
 }
 
 /* Account profile: dense split card with identity rail, trust strip, fact panels and module hub */
-/* The card of the profile and the deck of the cabinet are boxed like the tile they hold: the same border and the same
-   radius, and no shadow at rest */
+/* The profile card and the cabinet deck are boxed like the tile: the same border and radius, no shadow at rest */
 .sl-profile-card,
 .sl-cab-deck {
   overflow: hidden;
@@ -10166,8 +10043,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   margin-top: var(--sl-space-5);
 }
 
-/* A chip of the rail is the one flex chip of the theme, held to the rail width; its label stands in a span of its own so a long
-   special group or level hint ends in an ellipsis where an anonymous flex text item could not, and the full text stays in the title */
+/* A rail chip holds its label in a span, so a long text ends in an ellipsis an anonymous flex item could not take */
 .sl-profile-chips .sl-chip {
   max-width: 100%;
   margin: 0;
@@ -10316,9 +10192,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   grid-auto-rows: minmax(var(--sl-info-row-height), 1fr);
 }
 
-/* The panel of the cabinet and of the profile is the tile of the settings page - one box, one head - and the rules
-   are the tile's, joined by selector; only the margin under the head is the panel's own, the room the panel's content
-   asks for beyond the gap of the box. In the settings tile and the favourites shelf the gap alone spaces the head */
+/* The cabinet and profile panel shares the rules of the settings tile; only the margin under its head is its own */
 .sl-profile-panel > .sl-profile-hub-head,
 .sl-profile-feed > .sl-profile-hub-head {
   margin-bottom: var(--sl-space-4);
@@ -10446,9 +10320,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   margin: 0;
 }
 
-/* A row of the hub is an entry of the activity feed - the count where the entry keeps its date, the module where it
-   keeps its text, the rating and the favourites where it keeps its rating - in the same scroll; it is a step taller,
-   because it carries a chip at either end */
+/* A hub row is a feed entry with the count, the module and the rating in its slots, a step taller for its two chips */
 .sl-cab-row.sl-profile-hub-row {
   min-height: var(--sl-hub-row-height);
 }
@@ -10511,8 +10383,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   padding: 0;
 }
 
-/* The feed is doubled by the script, so half of its own height is exactly one pass and no figure has to be measured:
-   a distance taken before the avatars had loaded fell short and the loop turned back before the last rows */
+/* The script doubles the feed, so half its height is exactly one pass and no distance is measured */
 .sl-profile-scroll {
   --sl-d-duration: 18s;
   position: relative;
@@ -10561,9 +10432,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   animation-play-state: paused;
 }
 
-/* The one row of the cabinet lists: an icon column, the title and a right slot, at the entry height. The activity feed
-   and the profile hub put a date or a count chip before the icon and say so with the entry modifier, which opens the
-   fourth track; the message row of the private page keeps its own tracks, padding and states as a modifier further on */
+/* The one row of the cabinet lists; the entry modifier opens the fourth track for a date or count chip */
 .sl-cab-row {
   display: grid;
   grid-template-columns: 30px minmax(0, 1fr) auto;
@@ -10669,10 +10538,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   white-space: nowrap;
 }
 
-/* Counter badge: centered like sl-pm-new, because a single digit is narrower than the min-width and would otherwise sit against the left padding */
-/* The theme has no global border-box, so the badge declares its own: without it the padding is added to the 20px minimum and one digit gets a 32px oval instead of a circle */
-/* A badge asked to hide has to outrank the display the badge itself sets, as the form row does: with one class alone
-   the empty counter of the inner strip stayed on the tile as a red dot with nothing in it */
+/* Counter badge: its own border-box and centring, since the theme has none and one digit would sit left in an oval; hidden outranks its display */
 .sl-cab-badge.sl-hidden {
   display: none;
 }
@@ -10695,11 +10561,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   line-height: 1;
 }
 
-/* The one progress ring of this theme, named as the admin theme already names it: an SVG arc over a track, with whatever the consumer puts in the middle */
-/* Geometry belongs to the markup and appearance to this block: every consumer draws its own viewBox and radius, and sets the size and the stroke width through the two variables */
-/* pathLength="100" normalizes the circle, so PHP answers one percentage and the markup makes it the drawn half of stroke-dasharray */
-/* The dash carries the arc rather than an offset carrying the rest of it: an offset of a whole dash leaves a hairline where an empty ring must show none */
-/* Arc, glyph and centre text read one tone variable on purpose: a ring whose parts disagree says two different things about one number */
+/* Progress ring: pathLength="100" lets PHP answer one percentage; the dash carries the arc, since an offset leaves a hairline on an empty ring */
 .sl-knob {
   --sl-knob-size: 46px;
   --sl-knob-width: 4;
@@ -10751,8 +10613,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
 .sl-knob-danger { --sl-knob-tone: var(--sl-danger); }
 .sl-knob-none { --sl-knob-tone: var(--sl-text-subtle); }
 
-/* Community progress ring: the shared sl-knob at cabinet size, the centre shows the points and the reached group; shadowed exactly like sl-profile-avatar */
-/* Its own track is the pale disc of the cabinet rather than the progress track, because the ring sits on a panel and not on a form */
+/* Community ring: the shared sl-knob at cabinet size, on the pale cabinet disc because it sits on a panel, not a form */
 .sl-cab-ring {
   --sl-knob-size: 124px;
   --sl-knob-width: 6;
@@ -10786,9 +10647,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   font-size: var(--sl-font-micro);
 }
 
-/* The inner cabinet pages carry the same tiles as the cabinet home, at the same size - one standard - and the strip
-   only adds the air under it. The floor the tiles had as a compact strip stays as the one reader of its token; the
-   grid track is wider than it wherever the tiles render */
+/* The inner cabinet pages carry the home tiles at the same size; the strip only adds the air under it */
 .sl-cab-nav {
   margin-bottom: var(--sl-space-6);
 }
@@ -10797,8 +10656,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   min-width: var(--sl-cab-act-width);
 }
 
-/* The shelf strip is the cabinet tile strip with a wider minimum: the box, the border, the radius, the hover lift and the badge all come from sl-cab-actions and sl-cab-act */
-/* Only the shape is its own — the ring stands beside the text instead of above it — and the tone the tile hovers in is the tone of its own ring */
+/* The shelf strip is the cabinet tile strip with a wider minimum; only the ring beside the text and the hover tone of that ring are its own */
 .sl-pmf-folders {
   grid-template-columns: repeat(auto-fit, minmax(178px, 1fr));
   margin-bottom: var(--sl-space-6);
@@ -10851,8 +10709,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   right: 9px;
 }
 
-/* Narrow layout: the tiles become a snapping row instead of two stacked pairs, because four tiles in two rows eat half the screen before the first message */
-/* The query answers the layout container of the page, so it starts working with the split that declares one; until then the auto-fit grid stacks the tiles */
+/* Narrow layout: the tiles become a snapping row by the page's layout container; until the split declares one, the auto-fit grid stacks them */
 @container (max-width: 800px) {
   .sl-pmf-folders {
     display: flex;
@@ -11002,8 +10859,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   backdrop-filter: blur(4px);
 }
 
-/* Two levels instead of three: the row carries the subject with its time above the sender with the snippet, which puts twice as many messages on one screen without losing either of them */
-/* The message row is the cabinet row with a checkbox and an avatar before the body, which is why it opens with its own tracks, sits its cells at the top and keeps a padding the flush cabinet rows do not have */
+/* Two levels, not three, double the messages per screen; the row is the cabinet row with a checkbox and an avatar, hence its own tracks */
 .sl-cab-row.sl-pmf-item {
   position: relative;
   grid-template-columns: 22px 26px minmax(0, 1fr) auto;
@@ -11169,8 +11025,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   margin-left: auto;
 }
 
-/* The focus deck: a strip of the unread above the list, folded by the cabinet head through the toggle mechanic of slaed.js, the way a favourites shelf folds, so the state outlives the page */
-/* The strip scrolls sideways inside, and paint containment keeps it inside its own border box — overflow: clip on this element does not */
+/* The focus deck folds through the toggle mechanic of slaed.js so its state outlives the page; paint containment keeps the strip in, overflow: clip does not */
 .sl-pmf-focus {
   contain: paint;
   margin-bottom: var(--sl-space-6);
@@ -11194,8 +11049,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   scroll-snap-type: x mandatory;
 }
 
-/* A slot is a card and not a row: the deck is read across, so the subject and the snippet are clamped instead of cut to one line */
-/* A slot takes the tone of its place in the deck through the category rotation the template writes on it; the wash fades from that tone into the page as it always did */
+/* A slot is a card read across, so its subject and snippet are clamped; its tone comes from the category rotation the template writes */
 .sl-pmf-slot {
   display: grid;
   flex: 0 0 248px;
@@ -11357,8 +11211,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   font-style: italic;
 }
 
-/* The send form stands below the swapped region and is built once per visit, which is what keeps the editor from being created again on every message that is opened */
-/* The reply form is the foot of the right column and grows down to the frame when the list beside it is taller, so its surface reaches the border instead of leaving a strip of page under the button; its rows stay packed at the top */
+/* The send form stands below the swapped region and is built once per visit, so the editor is never created twice; it grows down to the frame */
 .sl-pmf-reply {
   container-type: inline-size;
   container-name: sl-form-box;
@@ -11382,8 +11235,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
 
 .sl-pmf-reply-foot .sl-but { margin: 0; }
 
-/* The recipient card: the name the autocomplete resolved becomes a person, and the ring beside them says how much room their mailbox still has */
-/* The ring is solid rather than an arc, because the card answers a grade and never a per cent: how full another member's mailbox is belongs to them */
+/* The recipient ring is solid, not an arc: the card answers a grade, never a per cent of another member's mailbox */
 .sl-pmf-mate {
   --sl-mate-tone: var(--sl-success);
   display: grid;
@@ -11700,9 +11552,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   display: inline-flex;
 }
 
-/* The door of a form row onto that window: one button wherever the system asks for a file, the chip of what came back
-   beside it and the limits of the place spelled out after both (docs/WINDOW.md). It carries none of the window's own
-   component names, because the administrative browser owns those and this row stands outside the window root */
+/* The file door of a form row carries none of the window's component names, which the administrative browser owns (docs/WINDOW.md) */
 .sl-file-door {
   display: flex;
   flex-wrap: wrap;
@@ -11723,11 +11573,8 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   color: inherit;
 }
 
-/* The window of the file manager: the rail of insertion ways on the left, the work area on the right, one permanent
-   status line below (docs/WINDOW.md). It is the one door the whole system asks for a file through and it opens on
-   pages carrying no editor at all, so the theme dresses it and the skin of one plugin no longer can */
-/* Every rule below is scoped under the window root: the administrative browser owns the same component names in its
-   own theme, and the two must never reach each other */
+/* File manager window: the one door the system asks for a file through, on pages with no editor too, so the theme dresses it */
+/* Scoped under the window root: the administrative browser owns the same component names in its own theme */
 .sl-fm-win .sl-fm-split {
   flex: 1 1 auto;
   min-height: 0;
@@ -11762,8 +11609,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   text-transform: uppercase;
 }
 
-/* The window is mounted inside the editor root, where the vendor stylesheet gives every button one fixed height */
-/* A section of the rail is as tall as its own words, so it takes its height back; every other control of the window names its own and is therefore left alone */
+/* The window sits in the editor root, where the vendor gives every button one height; a rail section takes its own height back */
 .sl-fm-win .sl-fm-rail-item {
   align-items: flex-start;
   background: transparent;
@@ -12344,8 +12190,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   text-transform: uppercase;
 }
 
-/* A sortable column of the head is a button so the keyboard reaches it, and it has to read as the label it replaced:
-   the frame, the ground and the type of the head are the head's own, the sort glyph comes from the shared classes */
+/* A sortable head column is a button for the keyboard, dressed as the label it replaced */
 .sl-fm-win .sl-fm-rows-head [data-sl-sort] {
   background: none;
   border: 0;
@@ -12438,8 +12283,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   text-transform: uppercase;
 }
 
-/* The picture of the properties holds the zoom overlay of a tile, so it has to be the frame that overlay is measured
-   against; with no picture to show it holds one glyph, and a glyph alone in a frame this size is drawn at the top step */
+/* The properties picture is the frame of a tile's zoom overlay; with no picture its one glyph is drawn at the top step */
 .sl-fm-win .sl-fm-props-img {
   align-items: center;
   background: var(--sl-bg-subtle);
@@ -12496,8 +12340,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   white-space: nowrap;
 }
 
-/* The fan of the object stands under its properties, opened upward: below it there is only the note, and a fan that
-   opened downward would leave the panel */
+/* The object fan opens upward: below it there is only the note, and a fan opening down would leave the panel */
 .sl-fm-win .sl-fm-props-acts {
   display: flex;
   justify-content: flex-end;
@@ -12676,9 +12519,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   display: none;
 }
 
-/* Expanded, the window is as tall as the screen and the body takes what the head and the foot leave. It drops its own
-   ceiling and takes the one the window gives it instead, or a catalogue of a full page grows past the frame and the
-   last rows stand below the bottom edge with nothing to scroll */
+/* Expanded, the body takes the window's ceiling instead of its own, or a full catalogue grows past the frame */
 .sl-fm-win.sl-is-full .sl-fm-body {
   flex: 1 1 auto;
   max-height: none;
@@ -12686,8 +12527,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   overflow-y: auto;
 }
 
-/* The column between the frame and the body is a grid item, and a grid item is as tall as what it holds unless it is
-   told otherwise: without this the body never learns it has a ceiling and the last rows stand below the bottom edge */
+/* The column is a grid item as tall as its content unless told otherwise, so without this the body never learns its ceiling */
 .sl-fm-win.sl-is-full .sl-fm-main {
   min-height: 0;
 }

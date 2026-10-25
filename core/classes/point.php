@@ -54,10 +54,7 @@ final class Point {
     # Whether rewards are given: a checked configuration that is switched on; the interface of points follows it, never the stored switch alone
     public private(set) bool $active;
 
-    # Build the subsystem over the connection of the request and the points scope of the configuration, which is checked whole and exactly once
-    # A scope that fails the check switches the class off and is reported to the site log; no partly usable rule is ever applied
-    # An exactly empty scope is a subsystem closed on purpose, which is how the core builds it before the data update left its mark: switched off the same way, without a log line
-    # The class holds no HTTP, template, rating or node dependency, and reads the clock of the database only, because the journal is stamped by that server
+    # Build over the points scope, checked whole once; an exactly empty scope, which getConfig() passes before the update mark, switches it off without a log line
     public function __construct(Database $db, array $conf) {
         $this->db = $db;
         $this->rules = $this->filterConfig($conf);
@@ -95,8 +92,7 @@ final class Point {
         return mb_check_encoding($note, 'UTF-8') && mb_strlen($note) <= self::MAXNOTE && $note === strip_tags($note) && !preg_match('/[\x00-\x1F\x7F]/', $note);
     }
 
-    # Check the key and the data of one event and answer them as one flat event, or false for an unknown action, a wrong recipient, a bad scope or source, or a foreign data key
-    # An explicit amount belongs to adjust alone, with an administrator and a reason; a compensation names its origin and the source reverse:<rid>, a prefix no other event may use
+    # Check one event into a flat event or false; an explicit amount belongs to adjust alone, and the source prefix reverse: to a compensation alone
     private function filterEvent(string $action, string $scope, string $source, int $uid, array $data): array|false {
         if (!in_array($action, self::ACTIONS, true) || !preg_match(self::SCOPE, $scope) || !preg_match(self::SOURCE, $source)) return false;
         if ($uid < 1 || $uid > self::MAXID || array_diff(array_keys($data), self::DATAKEYS)) return false;
@@ -123,8 +119,7 @@ final class Point {
         Logger::addSite('error', 'Point: '.$text, $ctx);
     }
 
-    # Lock the account row and answer its balance, null when the account does not exist, or false when the statement failed
-    # The account is always the first lock of the unit, which is what serializes every event of one recipient and keeps the lock order fixed
+    # Lock the account row and answer its balance; the account is always the first lock of the unit, which serializes every event of one recipient
     private function getUserLock(int $uid): int|false|null {
         $res = $this->db->getSqlQuery('SELECT points FROM '.PREFIX_DB.'_users WHERE id = :uid FOR UPDATE', ['uid' => $uid]);
         if ($res === false) return false;
@@ -132,8 +127,7 @@ final class Point {
         return $row ? intval($row['points']) : null;
     }
 
-    # Answer the id of the journal row that carries the key of an event, 0 when there is none, or false when the statement failed
-    # Asked for an origin, it answers only a positive row that is no compensation and locks it with a current read for the rest of the transaction
+    # The id of the journal row carrying the key of an event, 0 for none; asked for an origin, it locks a positive non-compensation row with a current read
     private function getEventRow(array $event, bool $origin = false): int|false {
         $sql = 'SELECT id FROM '.PREFIX_DB.'_points WHERE uid = :uid AND action = :action AND scope = :scope AND source = :source';
         if ($origin) $sql .= ' AND rid IS NULL AND points > 0 FOR UPDATE';
@@ -153,8 +147,7 @@ final class Point {
         return $row ? intval($row['num']) : false;
     }
 
-    # Write the journal row with the amount that was really applied and move the balance by the same amount, as the two halves of one unit
-    # A zero amount writes nothing, except for a compensation, whose row has to exist so the same origin can never be reversed again
+    # Write the journal row with the amount really applied and move the balance by it; a zero compensation still writes its row, so an origin is never reversed twice
     private function addEventSum(array $event, int $sum, int $bal): ?bool {
         if (!$sum && !$event['rid']) return true;
         if ($bal + $sum > self::MAXID) {
@@ -184,9 +177,7 @@ final class Point {
         return $this->addEventSum($event, -min(intval($row['points']), $bal), $bal);
     }
 
-    # Run one event under the account lock and answer true for a stored or an empty success, false for a refusal, and null for a statement that failed
-    # A key the journal already carries and a reached limit are both a success that writes nothing; a negative correction takes no more than the balance holds
-    # A non-zero event locks the account row, then writes the journal row and the balance in one unit, so the starting balance plus the journal adds up to the aggregate
+    # Run one event under the account lock; a known key and a reached limit succeed empty, and a negative correction takes no more than the balance holds
     private function addEventRow(array $event, array $rule): ?bool {
         $bal = $this->getUserLock($event['uid']);
         if (!is_int($bal)) return $bal === false ? null : false;
@@ -206,17 +197,14 @@ final class Point {
         return $this->db->getSqlQuery('DO 1') !== false && $this->db->checkSqlActive();
     }
 
-    # Open the unit: a transaction of its own, or a savepoint inside the transaction of the owner, whose failure leaves that transaction unknown and therefore throws
-    # Inside a transaction of its owner a refusal the unit can prove rolled back answers false, and anything it cannot prove throws and stops the owner
+    # Open the unit as its own transaction or a savepoint in that of the owner; a failed savepoint leaves the owner transaction unknown and therefore throws
     private function setEventBegin(bool $own): bool {
         if ($own) return $this->db->setSqlBegin();
         if ($this->db->getSqlQuery('SAVEPOINT '.self::SAVE) === false) throw new RuntimeException('Point: the savepoint was refused and the outer transaction is unknown');
         return true;
     }
 
-    # Close the unit: keep it by commit or release, or take it back by rollback, and answer false only when that rollback is proven and the outer transaction still stands
-    # A violated unique key is a repeat the snapshot of the owner could not see: the unit is taken back the same proven way and the repeat answers the empty success it is
-    # The error of a failed statement is read before anything else runs, because the connection keeps its last error until another one replaces it
+    # Close the unit; the error of a failed statement is read first, because the connection keeps its last error until another one replaces it
     private function setEventEnd(bool $own, ?bool $done, array $event): bool {
         if ($done) {
             $kept = $own ? $this->db->setSqlCommit() : $this->db->getSqlQuery('RELEASE SAVEPOINT '.self::SAVE) !== false;
@@ -232,9 +220,7 @@ final class Point {
         return $twin;
     }
 
-    # Register one event of an approved action for its recipient and answer whether it succeeded; a repeat, a reached limit and a zero or disabled reward all succeed empty
-    # An ordinary reward that is zero or switched off costs no statement at all, while a compensation and a correction work on the existing balance whatever the settings say
-    # The owner names an approved action, a scope, a server-made unique source and the recipient; the amount of an ordinary action comes from the configuration alone
+    # Register one event of an approved action; the amount of an ordinary action comes from the configuration alone, and a zero or disabled reward costs no statement
     public function addEvent(string $action, string $scope, string $source, int $uid, array $data = []): bool {
         if (!$this->valid) return false;
         $event = $this->filterEvent($action, $scope, $source, $uid, $data);
@@ -249,9 +235,7 @@ final class Point {
         return $this->setEventEnd($own, $this->addEventRow($event, $rule), $event);
     }
 
-    # Lock the account rows of every recipient one operation will move, by ascending id inside the open transaction of its owner, before the first event of that operation
-    # An event locks its own recipient first; an owner reaching several recipients calls this beforehand, so two operations over the same accounts never lock them crosswise
-    # A set of one account costs no statement, because the event of that account takes the same lock as its first step
+    # Lock every recipient of one operation by ascending id before its first event, so two operations over the same accounts never lock them crosswise
     public function setUserLocks(array $uids): bool {
         $ids = array_values(array_unique(array_filter(array_map('intval', $uids), static fn(int $v): bool => $v > 0 && $v <= self::MAXID)));
         if (count($ids) < 2) return true;
@@ -266,8 +250,7 @@ final class Point {
         return $this->db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_users WHERE id IN ('.implode(', ', $keys).') ORDER BY id FOR UPDATE', $pars) !== false;
     }
 
-    # Answer the id of the positive origin award behind a trusted event key, 0 when there is confirmed none, or false for a wrong key, a missing transaction or a failed read
-    # It needs the open transaction of the owner, locks the account first and the origin row second, holds both until that transaction ends, and works with rewards switched off
+    # The id of the positive origin award behind a trusted event key; it needs the open transaction of the owner, locks account then origin, and works with rewards off
     public function getEventId(string $action, string $scope, string $source, int $uid): int|false {
         $event = $this->valid && $action !== 'adjust' ? $this->filterEvent($action, $scope, $source, $uid, []) : false;
         if ($event === false || !$this->db->checkSqlActive()) return false;

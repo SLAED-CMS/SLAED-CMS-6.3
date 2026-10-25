@@ -111,8 +111,7 @@ function getConfig(bool $fresh = false): array {
     }
 }
 
-# Editor bootstrap must load before security POST processing, because security helpers may consult editor-aware functions during request analysis
-# The API has no form and no request analysis of the site, so it takes the router instead, which writes every reply of it, the refusals of security.php included
+# The editor loads before security.php, whose request analysis may consult it; the API takes its router instead, which writes the refusals of security.php too
 if (defined('API_FILE')) require_once BASE_DIR.'/core/classes/api/router.php';
 else require_once BASE_DIR.'/core/classes/editor.php';
 require_once BASE_DIR.'/core/classes/logger.php';
@@ -142,10 +141,7 @@ require_once BASE_DIR.'/core/classes/node/load.php';
 # Helpers include
 require_once BASE_DIR.'/core/helpers.php';
 
-# The light core of the API ends here: no theme, no template, no parser, no visual class and no layer of the user or the panel, so no part of a page reaches its JSON
-# The light mode of the panel ends here too: the new code on the old schema reads no table but the administrators until its database steps have run
-# Field is the one stateless instance of the extra fields; Node gets it handed in, so no second mechanism of fields ever appears
-# Points stay closed until the 6.3 data update has left its mark: an empty scope switches the class off and reports it
+# The light core of the API and the light mode of the panel end here, so no part of a page reaches the JSON and no table but the administrators is read on the old schema
 if (!defined('API_FILE') && !defined('UPDATE_FILE')) {
     $theme = getTheme();
     if (is_file(PUBLIC_DIR.'/templates/'.$theme.'/index.php')) require_once PUBLIC_DIR.'/templates/'.$theme.'/index.php';
@@ -3959,7 +3955,7 @@ function getConst(string $con): string {
     return ($con !== '' && $con[0] === '_' && defined($con)) ? constant($con) : $con;
 }
 
-# Return the name of a module from its config row; a module outside the release keeps its name in both of its lang folders, as only one of them loads per request
+# Return the name of a module from its config row
 function getModuleLabel(string $mod): string {
     global $conf;
     $con = trim((string)($conf['modules'][$mod]['lang'] ?? ''));
@@ -4066,10 +4062,6 @@ function checkPassHash(string $pass, string $hash): bool {
     if (strlen($hash) === 32 && ctype_xdigit($hash)) return md5(md5(PASS_SALT).md5($pass)) === $hash;
     return false;
 }
-
-####
-# OLD FUNCTIONS (for backward compatibility, not recommended for use in new code)
-####
 
 # Format a moment with the default or given pattern; a moment never recorded formats as empty
 function format_time(?string $time, string $string = ''): string {

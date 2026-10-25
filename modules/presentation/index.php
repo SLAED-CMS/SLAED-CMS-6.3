@@ -119,32 +119,7 @@ function getPresentationVoices(): array {
 }
 
 
-# Collects every figure and caption of the page for partials/presentation.html: tables and counters first, the live request figures last, so the SQL of the sections is counted
-# Every text is a constant, every number has a source named in the plan; the template receives words, urls, attribute values and flags and owns every tag and class
-# Two cockpit figures are demonstration: cache hit ratio and online floor are seeded from the day's visits, as the runtime keeps no hit counter and a stand has one visitor
-# The traces of the control window are staged operations carrying the real counts of this install
-# The content figures come from the first active type of a display mode through the shared reader: article for the news, docs for the documentation, files for the archive
-# A mode no active type shows leaves its card, its console row and its figure out, and a failed read counts as nothing
-# A stand carries days of statistics where a site carries years, so a short window is padded in front with days around the mean of the real ones
-# The padding is dated back from the first real day, and every headline still counts the real rows
-# The wire of a block node runs from its card to the slot it fills, in the 760 x 340 viewBox of the stage
-# Four rows of nodes run down each side, the page mock sits in the middle, a slot is entered from the side the node stands on
-# The eight modules of the map put the ones a reader knows a CMS by first, whatever their place in the config, the rest follow in config order
-# The build presets over the map are a demo that lights the set of a build on the nodes, cut to the modules the map carries
-# The chips of a commit are read off its subject, the kind before the colon then the areas it names, and its focus text is the first paragraph of its body
-# The hours of a stand cluster around one visit, so the day is blended half and half with a typical diurnal profile carrying the day's own total
-# The blended burst stays visible, the sum stays the counted one, and the curve reads like a site
-# The monitor row reads what costs nothing on a public page: CPU and RAM histories of the admin sampler, the disk snapshot, the web server from the request
-# The core count and the uptime spawn a shell on Windows, so they show only when the sampler has stored them
-# The two bands under the visits are a demonstration share the caches answered and the rest that reached the database
-# Neither band is counted per hour, so both are read off the visits through the demonstration hit ratio, which drifts a little from point to point
-# The requests the guard scene plays, in order, are a staged mix of the traffic classes over the routes of this install
-# Each request is bound for the window of the house it belongs to (a pane by number, or the door), the bad ones for quarantine
-# No request keeps a history of its generation time, so the forty points of the response spark breathe around the time of this one
-# The PDO cases are the four shapes a query takes in this install, played by the plugin over the real prefix
-# The runtime strip carries eight staged events, the first five on screen, stamped a few seconds apart back from now, and the plugin turns it
-# The scenarios the pipeline flow plays in turn are a hit, a miss and a bypass of the parser cache with the cache on, and one parse without it when it is off
-# Each scenario names mode, badge, route, two core lines, two words of the parser cache node, the template word, the side grid states with tones and the visited nodes
+# The data of partials/presentation.html; cache ratio, online floor, hour profile, traces and scenes are staged, and padded days leave every headline on real rows
 function getPresentationData(): array {
     global $conf, $db, $theme;
     $cnt = getSessionCounts();

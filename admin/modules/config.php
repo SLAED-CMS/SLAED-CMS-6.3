@@ -141,8 +141,7 @@ function getMailRow(string $label, string $field, string $trans = '', string $hi
     ];
 }
 
-# Render the mail delivery settings: transport, sender identity, SMTP, the Sendmail path, the test send and the message template
-# An extension the host does not provide is reported beside the control it disables, because a choice that cannot work must not look like one that can
+# Render the mail settings; an extension the host lacks is reported beside the control it disables, so a choice that cannot work does not look like one that can
 function getMailPanel(): string {
     global $conf, $tpl;
     $mail = is_array($conf['mail'] ?? null) ? $conf['mail'] : [];
@@ -374,8 +373,7 @@ function getMailPanel(): string {
     return $tpl->getHtmlPart('div', ['rows' => $rows]);
 }
 
-# Render the seven settings tabs of the site configuration inside one form, with the cache clear button of the cache tab after it
-# The cache action is a POST form of its own and stands after the settings form with its own tab attributes: a nested form is dropped by the browser
+# Render the settings tabs in one form; the cache button stands after it as a form of its own, because the browser drops a nested form
 function config(): void {
     global $afile, $conf, $tpl;
     setHead();
@@ -1207,8 +1205,7 @@ function save(): void {
     setRedirect($afile.'.php?name=config&tab='.$ctab, false, 302, $warn ? _TOKENMISS : _SUCCSAVE, $warn);
 }
 
-# The message is queued like every other one and the drain is then run inside this request, because a button that only stored a row would stop proving that the settings work
-# A run that sent nothing is reported as such: the rate window or the time budget can end a drain before the test message leaves, and success would be a claim nobody verified
+# Queue a test message and drain the queue in this request; a run that sent nothing says so, as the rate window or the time budget can end it first
 function mailtest(): void {
     global $afile, $conf, $mailer;
     $ctab = getVar('post', 'tab', 'num', 6);
@@ -1240,9 +1237,7 @@ function clearcache(): void {
     setRedirect($afile.'.php?name=config&tab='.$ctab, false, 302, $warn ? _TOKENMISS : _SUCCCLEAR, $warn);
 }
 
-# The restore entry of the configuration journal: GET shows what the unfinished operation left, POST with the scoped token lets setConfigRestore() finish it
-# It is an entry of its own and reads nothing but the journal, so it still opens when the configuration it would repair cannot render the settings screen
-# A Node operation has no verdict of its own: its side is decided by the database when the restore runs, so its button is offered as well
+# The restore entry reads nothing but the configuration journal, so it opens when the configuration it repairs cannot render the settings screen
 function restore(): void {
     global $afile, $tpl;
     if (getVar('post', 'op', 'var') === 'restore') {

@@ -1013,8 +1013,7 @@ function logout(): void {
     setRedirect(HOME_PATH, true);
 }
 
-# Build one yes/no line of the settings page: the caption names the group, the hint under it says what the yes costs, and the group is two radios sharing one name
-# Anything that is not the stored zero is a yes, which is the reading every one of these switches had before they met here
+# One yes/no line of the settings page; anything but the stored zero reads as yes
 function getSetupSwitch(string $capt, string $name, string $valu, string $hint = ''): array {
     $ids = getFieldIds('', $name);
     return [
@@ -1032,16 +1031,14 @@ function getSetupSwitch(string $capt, string $name, string $valu, string $hint =
     ];
 }
 
-# The one reading of a preset picked from the gallery: a file name of a picture that really lies in the presets of the current theme, or nothing
-# Both writers of the avatar column - the settings form and the pick that saves itself - read this, so a name neither of them would take is refused in one place
+# The stored path of a preset picked from the gallery, or '' unless the picture lies in the presets of the current theme
 function getAvatarPreset(string $avat): string {
     $avat = basename($avat);
     if ($avat === '' || !preg_match("#\.(gif|png|jpe?g|svg)$#is", $avat)) return '';
     return file_exists(PUBLIC_DIR.'/templates/'.getTheme().'/images/avatars/presets/'.$avat) ? 'presets/'.$avat : '';
 }
 
-# The one declaration of what a filled profile is: the counted controls of the settings form against the columns behind them, each with the value that counts as empty
-# The birthday is out because its date control takes no fill mark, and the signature is out because the editor owns its textarea and no attribute reaches it
+# What counts as a filled profile; the birthday and the signature stay out, as neither the date control nor the textarea of the editor takes the fill mark
 function getProfileFillRate(array $info): array {
     $list = ['gender' => ['gender', '0'], 'mail' => ['email', ''], 'site' => ['website', ''], 'occ' => ['occ', ''], 'from' => ['origin', ''], 'inter' => ['interest', '']];
     $full = 0;
@@ -1055,8 +1052,7 @@ function getProfileFillRate(array $info): array {
     return ['rate' => (int)round($full / $tot * 100), 'left' => $tot - $full, 'zero' => $zero];
 }
 
-# The state of the account before anything on the page changes it: what protects it, who sees the address, how many notices are on and how far the profile is filled
-# A state names the category tone it paints with where that tone passes contrast as text (success, strong primary); warning carries none, its tone needs its own step
+# The state lamps of the account; a lamp names the category tone it paints with only where that tone passes contrast as text, so warning carries none
 function getAccountLamps(array $info, array $lnks, array $fill): array {
     global $conf;
     $haspw = !str_starts_with((string)($info['password'] ?? ''), '!');
@@ -1439,8 +1435,7 @@ function edithome(): void {
     }
 }
 
-# The account cookie carries what the member chose and never what the site defaults to
-# An empty cookie slot means no preference, which every reader already resolves for itself, while a name written in means a decision
+# Save the profile; an empty slot of the account cookie means no preference, which every reader resolves for itself
 function savehome(): void {
     global $db, $user, $conf, $stop;
     if (!is_user()) {

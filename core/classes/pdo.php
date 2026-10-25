@@ -68,8 +68,7 @@ class Database {
         return $query;
     }
 
-    # Quote value for SQL output
-    # A binary value is rendered as a hex literal, not quoted: it is not text, and a raw byte string would make the interpolation a subject no UTF-8 pattern can match
+    # Quote a value for SQL output; a binary value becomes a hex literal, as raw bytes would leave the interpolation a subject no UTF-8 pattern matches
     private function filterSqlValue(mixed $value): string {
         if (is_null($value)) return 'NULL';
         if (is_bool($value)) return $value ? '1' : '0';

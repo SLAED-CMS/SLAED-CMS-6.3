@@ -9,8 +9,7 @@
 
 /* Root variables: the theme API. A new theme repaints this block and nothing below the marker */
 :root {
-  /* Both modes live in one declaration through light-dark(), so they cannot drift apart. It resolves against the used
-     color-scheme, which is why the scheme is declared here and switched by the two selectors under the marker */
+  /* Both modes resolve through light-dark() against the used color-scheme, so the scheme is declared here */
   color-scheme: light dark;
 
   /* Layout */
@@ -23,8 +22,7 @@
   --sl-bg: light-dark(#ffffff, #111827);
   --sl-bg-subtle: light-dark(#f2f4f7, #1a2130);
   --sl-bg-muted: light-dark(#e4e9ef, #212a3a);
-  /* The band the page is not. It holds its colour in both modes, because the artwork standing on it cannot follow:
-     the footer wordmark and the flag are images with white baked into them, and no token can repaint a picture */
+  /* The one band dark in both modes: the footer wordmark and the flag are images with white baked in */
   --sl-bg-inverse: #2a303c;
   --sl-surface: light-dark(#f8f9fb, #151d2b);
   /* The well inside the inverse band, one step below it, and fixed for the same reason the band is */
@@ -35,9 +33,7 @@
   --sl-border-strong: light-dark(#cad2da, #3b4757);
   --sl-border-inverse: #3b4049;
 
-  /* Colour: text. Every tone here is read as text on the page ground or on a panel, so every one of them sits at
-     or above AA against the darkest ground it meets; `subtle` reads the same tone, because a second faint step
-     below this one cannot be spelled without falling under the floor */
+  /* Colour: text; every tone clears AA on the darkest ground it meets, so `subtle` reads the same tone */
   --sl-text: light-dark(#222222, #e5e7eb);
   --sl-text-strong: light-dark(#223345, #f3f4f6);
   --sl-text-muted: light-dark(#64717e, #9aa4b2);
@@ -45,9 +41,7 @@
   /* The muted text and the link that read on the inverse band. The band does not turn over, so neither do they */
   --sl-text-inverse: #aab3bf;
 
-  /* Colour: brand and status. Every step turns over with the page: the base of a family carries its marks and its
-     solid fills, and the `-subtle` and `-muted` steps are the tinted grounds, light on a light page and deep on a
-     dark one. A mark never reads a tint step, because a tint that follows the page cannot also stand on it */
+  /* Colour: brand and status; a mark never reads a `-subtle` or `-muted` tint, which turns over with the page */
   --sl-primary: light-dark(#30a2f6, #38a9de);
   --sl-primary-subtle: light-dark(#64b1e1, #16323f);
   --sl-primary-strong: light-dark(#1c6e9e, #5cbcea);
@@ -63,14 +57,12 @@
   --sl-info: light-dark(#1d9bf0, #4cb2f0);
   --sl-info-subtle: light-dark(#78c6fb, #14283a);
   --sl-info-muted: light-dark(#6dbaf7, #1a3348);
-  /* The colour that reads on a solid brand fill. In light the fill is dark and the text is white; in dark the ramp
-     reverses and the fill is the bright one, so the text goes dark. The role holds, the value turns over with it */
+  /* Text on a solid brand fill: white in light, dark in dark, where the ramp reverses and the fill is the bright one */
   --sl-on-solid: light-dark(#ffffff, #0b1220);
   /* The text on a tinted disc of the floating menu, as the admin theme declares it: white in light, the solid text in dark */
   --sl-solid-text: light-dark(var(--sl-on-solid), #ffffff);
 
-  /* Categorical: the season skins, a set with no order. A season paints the photo band of the page head under a
-     white headline, so each of the five carries that headline at AA large and none of them turns over with the mode */
+  /* Categorical: the season skins carry a white headline at AA large and do not turn over with the mode */
   --sl-season-winter: #4c8cc9;
   --sl-season-spring: #5d82b7;
   --sl-season-summer: #789e66;
@@ -88,8 +80,7 @@
   --sl-size-icon-lg: 32px;
   --sl-size-icon-xl: 48px;
 
-  /* Type sizes. `hero` is the step above every heading: the largest type a page carries, which is the slider
-     headline and the version number of the dashboard, and folding it onto `display` would size a hero like an h1 */
+  /* Type sizes: `hero` is above every heading, the slider headline and the dashboard version; on `display` it would size as an h1 */
   --sl-font-hero: 38px;
   --sl-font-display: 32px;
   --sl-font-h1: 24px;
@@ -157,8 +148,7 @@
   --sl-field-text: var(--sl-text-muted);
   --sl-field-ring: var(--sl-ring-bg);
   --sl-field-shadow: inset 0 1px 2px light-dark(rgba(0, 0, 0, 0.06), rgba(0, 0, 0, 0.45));
-  /* The ceiling of the caption column of a form: the column is as wide as its longest caption and never wider than this
-     share of the form, so a short caption does not hold a quarter of the row and a long one wraps here and not sooner */
+  /* The caption column grows to its longest caption up to this share of the form */
   --sl-form-label-width: 40%;
 
   /* Components: the window canon, one dialog with four axes */
@@ -175,8 +165,7 @@
   --sl-forum-width: 64px;
   /* The meta row of an article: a row height and no control, so the component is what names it */
   --sl-meta-height: 24px;
-  /* The thumbnail of a list row is square, so one name carries both sides, and the row reserves a column
-     of exactly that width plus one rhythm step for the image standing in it */
+  /* The list thumbnail is square, so one name carries both sides */
   --sl-thumb-height: 60px;
   --sl-placeholder-height: 64px;
   --sl-avatar-border: 6px;
@@ -193,8 +182,7 @@
   --sl-drop-pad-y: 20px;
   --sl-drop-radius: 6px;
 
-  /* Components: the button. Its face is one gradient, its bevel one shadow carrying both edges and the lift under
-     them, and its label a highlight one step brighter than the face; the mix is how much of that brightness it takes */
+  /* Components: the button - one gradient face, one shadow for both bevel edges and the lift, a label one step brighter */
   --sl-btn-bg: linear-gradient(to top, light-dark(#f8f9fb, #232d3d) 0%, light-dark(#ebedf1, #1a2230) 100%);
   --sl-btn-text: light-dark(#2a303c, #e5e7eb);
   --sl-btn-shadow:
@@ -219,9 +207,7 @@
     light-dark(rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.07)),
     rgba(255, 255, 255, 0)
   );
-  /* The shade a caption lies on when it stands on a picture: clear over the top of the picture, the surface at the
-     foot, so the picture darkens towards the words rather than under a box. The site strip and the brand archive
-     carry the same caption, so the stops are one decision at one address */
+  /* The caption shade over a picture, shared by the site strip and the brand archive */
   --sl-grad-caption: linear-gradient(
     to bottom,
     transparent 20%,
@@ -234,8 +220,7 @@
   --sl-grad-progress-4: linear-gradient(to top, #dd5f5f 10%, var(--sl-progress-4) 90%);
   --sl-grad-progress-5: linear-gradient(to top, #bf5fdd 10%, var(--sl-progress-5) 90%);
 
-  /* Categorical: the five tones of the level meter. A poll cycles them by option number, so they
-     are told apart by colour and never by rank */
+  /* Categorical: the five level-meter tones; a poll cycles them by option number, so none carries a rank */
   --sl-progress-1: #0078a5;
   --sl-progress-2: #5c9425;
   --sl-progress-3: #f47a20;
@@ -248,17 +233,13 @@
   --sl-progress-radius: 3px;
   --sl-progress-height: 10px;
 
-  /* Components: the three gradients a single component owns. The head of a changelog day and the two edge tabs,
-     each a face nothing else paints, so each lives at the address of the component that wears it */
+  /* Components: the gradients one component owns each - the changelog day head and the two edge tabs */
   --sl-changelog-date-bg: linear-gradient(135deg, var(--sl-info-subtle) 0%, var(--sl-info-muted) 100%);
   --sl-feedback-bg: linear-gradient(to right, var(--sl-info-subtle) 0%, var(--sl-info-muted) 100%);
   --sl-idea-bg: linear-gradient(to right, var(--sl-success-subtle) 0%, var(--sl-success-muted) 100%);
 
-  /* Colour: the washes and veils. A tint lies over what is behind it, a scrim hides it. The two lighter steps are
-     the veils the theme's own shadows and darkened discs are drawn in; the base is the one the editor package reads */
-  /* The bar between two items of the lower menu. It survives only on the widest step, where that menu is a
-     single row and the bar can never be pushed to the start of a wrapped line; below it the block is a grid and
-     the icons do the separating. */
+  /* Colour: washes and veils; a tint lies over what is behind it, a scrim hides it, and the editor package reads the base */
+  /* The bar between lower menu items survives only on the widest step, where the menu is one row that cannot wrap */
   --sl-sep-height: 16px;
   --sl-scrim-subtle: light-dark(rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.4));
   --sl-scrim-muted: light-dark(rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.55));
@@ -275,8 +256,7 @@
   --sl-ease-out: ease;
   --sl-ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
 
-  /* Components: the step a fan opens its items by. Every transition duration in this theme sits on the ladder above,
-     so this is a stagger and not a duration of its own, and the curve below is the one shape the ladder cannot hold */
+  /* Components: the stagger a fan opens its items by, not a duration; the curve is the one shape the ladder cannot hold */
   --sl-dial-dur: calc(0.05s * var(--sl-time-scale));
   /* The overshoot a poll option answers a click with: a curve leaving the 0-1 range is a different kind of motion */
   --sl-vote-ease: cubic-bezier(0.3, 1.6, 0.5, 1);
@@ -285,8 +265,7 @@
   /* The overshoot the favourite icon pops with, the same kind of motion as the poll option above */
   --sl-fav-ease: cubic-bezier(0.34, 1.56, 0.64, 1);
   --sl-flash-dur: calc(5s * var(--sl-time-scale));
-  /* Freshness is read as a rate: the chip glows at one, and each step of age breathes at its own, from the
-     fastest flame to the slowest turn. Five steps, five characters, which is why no ladder governs them */
+  /* Freshness is read as a rate: each age step breathes at its own speed, so no ladder governs them */
   --sl-fresh-dur: calc(1.5s * var(--sl-time-scale));
   --sl-fresh-now-dur: calc(0.8s * var(--sl-time-scale));
   --sl-fresh-day-dur: calc(1.5s * var(--sl-time-scale));
@@ -306,8 +285,7 @@
   --sl-skel-dur: calc(1.2s * var(--sl-time-scale));
   --sl-spin-dur: calc(6s * var(--sl-time-scale));
 
-  /* Layers: the roles a stack may take, in the order they overlap. A value between two of them is a
-     layer the ladder is missing, never a number picked to win one argument */
+  /* Layers in overlap order: a value between two of them is a missing step, never a number picked to win */
   --sl-z-base: 0;
   --sl-z-raised: 1;
   --sl-z-overlay: 3;
@@ -318,15 +296,13 @@
   --sl-z-modal: 3000;
   --sl-z-toast: 10000;
 
-  /* The focus ring: one width, one gap and one alpha for the whole theme, so an outline and a box-shadow
-     draw the same ring. A ring in a status colour mixes that colour at the same alpha at the sites that need one */
+  /* The focus ring: one width, gap and alpha for outline and box-shadow alike */
   --sl-ring-width: 2px;
   --sl-ring-gap: 2px;
   --sl-ring-mix: 18%;
   --sl-ring-bg: color-mix(in srgb, var(--sl-primary) var(--sl-ring-mix), transparent);
 
-  /* Components: geometry. A figure sizing a control, a panel, a column or a page region has one address here.
-     What the figure sizes decides whether it is a token, never how large it is */
+  /* Components: geometry; what a figure sizes decides whether it is a token, never how large it is */
   --sl-alert-border: 3px;
   /* The action of an alert is a chip: under the hand a ring of the alert tone this wide, and the share of a tone its ring and a quiet disc carry */
   --sl-alert-act-ring: 3px;
@@ -358,8 +334,7 @@
   --sl-check-tick-border: 2px;
   --sl-check-tick-width: 4px;
   --sl-check-tick-height: 8px;
-  /* Every tinted pill in this theme paints one wash of its own colour, so one declaration serves every tone,
-     and the pointer deepens the same wash rather than naming a second colour */
+  /* A tinted pill paints one wash of its own colour, and the pointer deepens that wash rather than naming a second colour */
   /* A code block opens folded to this height when it is long: twenty of its lines */
   --sl-code-max-height: 20lh;
   --sl-chip-mix: 14%;
@@ -396,24 +371,17 @@
   --sl-donut-height: 76px;
   /* The thickness of the session ring, which is the donut less its hole, halved */
   --sl-donut-ring: 8px;
-  /* The two tabs standing on the page edges: how tall one is, and the gutter a wide page reserves for one per side */
-  /* The veil the dark mode lays over the photo bands, so white text stands on a photograph shot for daylight.
-     The light mode gets none of it: there the photo reads as a postcard and needs no help, which is why the token
-     is transparent on that side rather than pale. */
+  /* The dark mode veil over the photo bands; transparent in light, where the photograph needs no help */
   --sl-band-bg: light-dark(transparent, rgba(8, 16, 26, 0.5));
-  /* The one tone that does not turn over, and the only white this theme spells out. The photo band of the page head is
-     a photograph, the footer wordmark is a picture with white baked into it, an edge tab stands on its own gradient and
-     a dial chip on its own fill: not one of those grounds has a light and a dark variant, so the marks on them hold
-     their colour in both modes. Every other ground here turns over, and its text turns over with it */
+  /* The one white that never turns over: the photo band, the footer wordmark, the edge tabs and the dial chips have no dark variant */
   --sl-band-text: #ffffff;
-  /* The beam that crosses both photo bands: how wide the shaft is, how long one pass takes, and the light it
-     carries. It travels upright and at an even rate, because a band is far wider than it is tall and an eased
-     pass hurries through the middle — the half the eye actually watches. */
+  /* The beam across both photo bands runs at an even rate, because an eased pass hurries through the middle the eye watches */
   --sl-beam-width: 30%;
   --sl-beam-dur: calc(8s * var(--sl-time-scale));
   --sl-beam-bg: light-dark(rgba(255, 255, 255, 0.46), rgba(255, 255, 255, 0.42));
   /* The light that follows the pointer over the page */
   --sl-pointer-width: 300px;
+  /* The two tabs standing on the page edges: how tall one is, and the gutter a wide page reserves for one per side */
   --sl-edge-width: 40px;
   --sl-edge-height: 190px;
   --sl-editor-height: 100px;
@@ -421,18 +389,12 @@
   /* The command capsule of an editor beside its tab: wider than this it scrolls instead of pushing the tab off its line */
   --sl-capsule-max-width: 60%;
   --sl-entry-height: 42px;
-  /* The lower menu: how tall one link stands. It is a thumb target on a phone and a row height on a desktop,
-     which is one decision and therefore one value — the icon in front of the label does the separating that the
-     bar used to do, at every width. */
-  /* The lower menu stands as tall as the top bar, so the page closes on the same edge it opens with. One value
-     for both: retune the top bar and the footer follows, which is what keeps the two symmetric rather than equal
-     by coincidence. Like the top bar it is a floor, not a fixed height — below the wide step both blocks grow. */
+  /* The lower menu is as tall as the top bar, a floor below the wide step; its link height is a thumb target on a phone */
   --sl-fmenu-height: var(--sl-topbar-height);
   --sl-fmenu-min-height: 44px;
   --sl-f-title-width: 28px;
   --sl-f-title-height: 3px;
-  /* The favourite burst: the ring it throws off, how much of the brand colour that ring carries, and the two
-     sets of sparks, one per pseudo-element, each a single artwork living at a single address */
+  /* The favourite burst: the ring, its share of the brand colour and two spark sets, one per pseudo-element */
   --sl-fav-ring: 14px;
   --sl-fav-mix: 60%;
   --sl-fav-shadow:
@@ -446,8 +408,7 @@
   --sl-fp-ava-width: 100px;
   --sl-fp-ava-height: 100px;
   --sl-header-height: 116px;
-  /* A tile paints its ground and its border from its own colour, which is what makes one rule serve every tone.
-     Where that colour is itself a scoped tone, only the ratio can be hoisted, and these two are it */
+  /* A tile paints ground and border from its own colour; where that colour is a scoped tone only the ratio can be hoisted */
   --sl-ico-mix: 12%;
   --sl-ico-bg: color-mix(in srgb, currentColor var(--sl-ico-mix), var(--sl-bg));
   --sl-ico-border: color-mix(in srgb, currentColor 26%, var(--sl-border));
@@ -484,14 +445,11 @@
   --sl-modal-btn-height: 32px;
   --sl-msg-width: 440px;
   --sl-msg-brand-width: 240px;
-  /* The tone of a state lamp is the bar down its left edge and nothing else: an amber figure on the page background
-     is the pair the contrast crawler fails, while an edge carries the same word without a colour anyone must read */
+  /* A state lamp's tone is its left edge alone: an amber figure on the page ground fails the contrast crawler */
   --sl-opt-lamp-border: 3px;
-  /* The preset gallery of the settings page is 127 options: the pick area is capped here and scrolls, so one
-     field cannot run its tile past a thousand points */
+  /* The preset gallery of the settings page is capped and scrolls, or one field runs its tile past a thousand points */
   --sl-opt-max-height: 280px;
-  /* The section rail stands over the top of the window, so a section scrolled to must clear it. Its height is a sum of
-     tokens and not of text - the caption is held to one line for exactly that reason - so it can be named once here */
+  /* The rail height is a sum of tokens, not of text, which is why its caption is held to one line */
   --sl-opt-rail-height: 68px;
   --sl-panel-feed-height: 150px;
   --sl-pmf-ava-width: 26px;
@@ -512,9 +470,7 @@
   --sl-pmf-who-width: 44px;
   --sl-pmf-who-height: 44px;
   --sl-popover-min-width: 220px;
-  /* Components: the presentation page. One beat for every animation it carries - a sweep, an orbit, a lane, a breathing
-     bar - each a multiple of it; the glow a live element throws; the grid ground of an illustrated scene; the height a
-     scene stands at; the width of a node inside one; the floor of a card that must hold its row even when short */
+  /* Components: the presentation page; every animation is a multiple of the one beat --sl-pres-dur */
   --sl-pres-dur: calc(4s * var(--sl-time-scale));
   --sl-pres-shadow: 0 0 var(--sl-space-5) var(--sl-tint-strong);
   --sl-pres-bg: linear-gradient(color-mix(in srgb, var(--sl-pres-border) 20%, transparent) 1px, transparent 1px),
@@ -534,15 +490,13 @@
   --sl-pres-link-text: light-dark(var(--sl-primary-strong), #6fc8ff);
   --sl-pres-good-text: light-dark(color-mix(in srgb, var(--sl-success) 90%, var(--sl-text)), #72e6b0);
   --sl-pres-warn-text: light-dark(var(--sl-warning-strong), #ffd37d);
-  /* The gauge rings of the presentation: the cockpit and vitals size, the small size of the statistics rings, and how
-     much of its tone the glow behind an arc carries */
+  /* The presentation gauge rings: the cockpit and vitals size, the small statistics size and the glow share */
   --sl-gauge-width: 128px;
   --sl-gauge-height: 128px;
   --sl-gauge-min-width: 56px;
   --sl-gauge-min-height: 56px;
   --sl-gauge-mix: 50%;
-  /* The request guard scene: the height the court stands at, and the width of the house every other part of the
-     drawing is measured against */
+  /* The guard scene: the court height and the house width every other part is measured against */
   --sl-guard-height: 420px;
   --sl-guard-width: 224px;
   /* The chart plot of the rhythm section and the hourly bars, and the sparkline floor of a runtime card */
@@ -562,10 +516,9 @@
   --sl-profile-dot-border: 3px;
   --sl-profile-dot-width: 16px;
   --sl-profile-dot-height: 16px;
-  /* A live element answers with a ring that grows out of it and fades: how far it reaches, and how much
-     of its own colour it starts with */
   --sl-proof-bg: color-mix(in srgb, var(--sl-danger) 6%, var(--sl-surface));
   --sl-proof-border: color-mix(in srgb, var(--sl-danger) 35%, var(--sl-border-subtle));
+  /* A live element answers with a ring that grows and fades: its reach and its starting share of colour */
   --sl-pulse-ring: 8px;
   --sl-pulse-mix: 55%;
   --sl-qr-width: min(64vw, 256px);
@@ -574,8 +527,7 @@
   --sl-scroll-height: 190px;
   --sl-search-width: 340px;
   --sl-search-min-width: 180px;
-  /* The round search button carries one bevel: an inner highlight and the drop under it. The pointer changes
-     its face, never its lift, which is the law every other control in this theme already follows */
+  /* The round search button keeps one bevel; the pointer changes its face, never its lift */
   --sl-search-shadow:
     inset 0 1px 1px 0 light-dark(rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.07)),
     0 1px 2px light-dark(rgba(42, 48, 60, 0.12), rgba(0, 0, 0, 0.5));
@@ -664,8 +616,7 @@
 
 /* --- end tokens --- */
 
-/* The mode switch itself, and the only rules that name it. data-theme carries light, dark or auto; anything else,
-   including an absent attribute, leaves the page on the operating system's answer */
+/* The mode switch: data-theme is light, dark or auto; any other value or none follows the operating system */
 :root[data-theme="light"] {
   color-scheme: light;
 }

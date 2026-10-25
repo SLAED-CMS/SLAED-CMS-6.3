@@ -698,8 +698,7 @@
   margin-right: 0;
 }
 
-/* Sort indicators. The three classes are the whole contract between a sortable head and the eye, so they hang on the
-   class alone: a table head wears them through Tablesort, and the head of the file list wears the same three by hand */
+/* Sort indicators: three classes on the class alone, worn by Tablesort heads and by hand in the file list */
 .sl-sort,
 .sl-sort-asc,
 .sl-sort-desc {
@@ -708,8 +707,7 @@
   padding-right: var(--sl-space-6);
 }
 
-/* The three marks are drawn in the icon font the rest of the interface is drawn in: a text font is not required to
-   carry these arrows, and this theme had lost the escape of all three and printed a control character and the hex */
+/* The marks are drawn in the icon font: a text font is not required to carry these arrows */
 .sl-sort::after,
 .sl-sort-asc::after,
 .sl-sort-desc::after {
@@ -976,8 +974,7 @@ input.sl-but-blue[value="ОК"] {
   background-color: var(--sl-warning-subtle);
 }
 
-/* Loading: shared green base dots. The lit dot is the strong step and the two waiting ones the base tone, which is the
-   shape lite carries in its own colour; the gap between them is one step and the other two are that step doubled */
+/* Loading: the lit dot takes the strong step and the waiting ones the base tone, the shape lite carries in its colour */
 .sl-loading {
   display: flex;
   align-items: center;
@@ -1023,8 +1020,7 @@ input.sl-but-blue[value="ОК"] {
   }
 }
 
-/* Loading: four-dot drift variant, which lite has no page for. It carries its own width, dot and gap and spells its
-   four stops the way the three base ones are spelled: one gap step, doubled and tripled */
+/* Loading: the four-dot drift variant, which lite has no page for */
 .sl-loading.sl-loading-drift {
   width: var(--sl-drift-width);
   height: var(--sl-drift-height);
@@ -1097,8 +1093,7 @@ input.sl-but-blue[value="ОК"] {
   vertical-align: middle;
 }
 
-/* The glyph face has to win over the element font: these pseudo-elements sit inside buttons and links that set their own
-   family and weight, and a glyph drawn in the text face is a missing-character box rather than an icon */
+/* The glyph face must beat the font of the button or link it sits in, or the icon is a missing-character box */
 .sl-status-active::before,
 .sl-status-inactive::before,
 .sl-drag-handle::before,
@@ -1436,8 +1431,7 @@ td.hljs-ln-numbers {
   width: 100%;
 }
 
-/* A [code] block highlighted by highlight.js: the face of code on the surface of the theme, its rows striped and numbered
-   as the rows of highlight_string are, the rail of the editor at its left and the tones of its tokens shared with CodeMirror above */
+/* A [code] block by highlight.js: rows striped and numbered like highlight_string, token tones shared with CodeMirror */
 pre code.hljs {
   display: block;
   padding: 0;
@@ -1488,7 +1482,7 @@ pre code.hljs {
   transition: color var(--sl-time-base) var(--sl-ease-out);
 }
 
-/* Э21 A popover opens from a real button beside its panel: the panel is no part of the button, so its links stay links */
+/* A popover opens from a real button beside its panel: the panel is no part of the button, so its links stay links */
 .sl-tip > button {
   display: inline-flex;
   align-items: center;
@@ -2073,8 +2067,7 @@ pre code.hljs {
   min-height: 0;
 }
 
-/* The editor engine writes its own height inline on the element it mounts, so the second editor of a form can only be given
-   twice the room by beating that inline value */
+/* The engine writes its height inline on its mount, so only !important gives the second editor of a form twice the room */
 .sl-div-form
   .sl-div-item:has(.ck-editor):nth-child(2 of .sl-div-item:has(.ck-editor))
   .ck.ck-editor__main
@@ -2124,8 +2117,7 @@ pre code.hljs {
   cursor: pointer;
 }
 
-/* Editor shell: one frame for Plain and CodeMirror, the format tab and the capsule over the card, the status line under the
-   text; the rail of the card follows the state the runtime writes on the frame */
+/* Editor shell: one frame for Plain and CodeMirror; the card rail follows the state the runtime writes on the frame */
 .sl-editor {
   display: flex;
   flex-direction: column;
@@ -2134,8 +2126,7 @@ pre code.hljs {
   min-width: 0;
 }
 
-/* The tab and the capsule share one line, the tab cutting its words where the capsule needs the room, so a capsule unseen at rest
-   never wraps and makes an editor taller. In a reversed wrap the start of the cross axis is the bottom, so flex-start sets both on the card */
+/* The tab yields its words to the capsule, so the row never wraps; a reversed wrap starts the cross axis at the bottom, so flex-start sets both on the card */
 .sl-editor-row {
   display: flex;
   flex-wrap: wrap-reverse;
@@ -2190,9 +2181,7 @@ pre code.hljs {
   color: var(--sl-warning);
 }
 
-/* The capsule stays out of the way at rest and comes up under the hand, on focus and in the full screen. It keeps to one
-   line and to the larger part of the row, scrolling what does not fit, so a capsule that is not shown does not push the
-   tab off its line and make the editor taller; the palette carries every command it hides */
+/* The capsule rests hidden on one scrolling line, so it never pushes the tab off and makes the editor taller */
 .sl-editor-pill {
   display: inline-flex;
   flex-wrap: nowrap;
@@ -2520,8 +2509,7 @@ pre code.hljs {
   background: var(--sl-bg);
 }
 
-/* The page inside the frame: the ground of the theme over the whole frame, and a body with no floor of its own and its floats held,
-   so the runtime measures what it shows */
+/* The frame page: theme ground, no floor of its own and floats held, so the runtime measures what it shows */
 .sl-editor-sheet {
   min-height: 0;
   background: var(--sl-bg);
@@ -2535,8 +2523,7 @@ pre code.hljs {
   background: transparent;
 }
 
-/* The variables of a template, under the caret or under the button of the capsule, placed by the runtime inside the card;
-   the chosen one stands on the brand colour and a variable the text already uses carries a tick */
+/* Template variables, placed by the runtime inside the card; a variable the text already uses carries a tick */
 .sl-editor-hint {
   position: absolute;
   top: var(--sl-d-hint-y);
@@ -2590,8 +2577,7 @@ pre code.hljs {
   color: inherit;
 }
 
-/* The palette of the editors: a window of the canon whose bar searches the commands, the body lists them by group
-   with their keys, and the keys of the engine stand under the list until a search narrows it */
+/* Editor palette: a canon window whose bar searches the commands; the engine keys stand under the list until a search narrows it */
 .sl-editor-pal .sl-editor-pal-find,
 .sl-editor-pal .sl-editor-pal-find:focus {
   flex: 1 1 auto;
@@ -2741,8 +2727,7 @@ pre code.hljs {
   line-height: var(--sl-line-normal);
 }
 
-/* The comparison of an editor: a window of the canon with the loaded text against the present one, in one text or in
-   two columns, the count of the units gone and new in the bar */
+/* Editor comparison: the loaded text against the present one, in one text or in two columns */
 .sl-editor-diff-modes {
   display: inline-flex;
   gap: var(--sl-space-1);
@@ -3050,8 +3035,7 @@ dialog.sl-editor-emoji-panel {
   max-height: none;
 }
 
-/* CodeMirror painted by the theme: the engine writes tok-* classes through classHighlighter, these rules colour them,
-   and the scheme of the page switches the code with it */
+/* CodeMirror painted by the theme: these rules colour the tok-* classes classHighlighter writes */
 .sl-editor .cm-editor {
   padding-left: var(--sl-rail-width);
   background: transparent;
@@ -3065,8 +3049,7 @@ dialog.sl-editor-emoji-panel {
   line-height: var(--sl-line-normal);
 }
 
-/* CodeMirror keeps the height of the field it takes the place of, measured by the runtime, so the form does not jump;
-   the floor stands on the text and its gutters, the way CodeMirror asks, so the gutter runs to the bottom of a short text */
+/* CodeMirror keeps the measured height of the field it replaces; the floor stands on text and gutters, so the gutter reaches the bottom */
 .sl-editor .cm-editor .cm-content,
 .sl-editor .cm-editor .cm-gutter {
   min-height: var(--sl-d-editor-floor, var(--sl-editor-height));
@@ -3157,9 +3140,7 @@ dialog.sl-editor-emoji-panel {
   color: var(--sl-text-muted);
 }
 
-/* The code itself: tags in the primary tone, attributes in the accent, values in success, punctuation receding; keywords
-   and values take the strong step, which holds AA on the surface of the card. A Markdown text takes the same tones,
-   headings and links primary, marks and addresses receding */
+/* Code tones: keywords and values take the strong step, which holds AA on the card surface */
 .sl-editor .cm-editor .tok-heading,
 .sl-editor .cm-editor .tok-link,
 .sl-editor .cm-editor .tok-typeName,
@@ -3473,7 +3454,7 @@ dialog.sl-editor-emoji-panel {
   min-width: 0;
 }
 
-/* Э27 A list without pages keeps its key tip at the left edge, over and under the rows alike */
+/* A list without pages keeps its key tip at the left edge, over and under the rows alike */
 .sl-list-bottom-pager {
   text-align: left;
 }
@@ -3507,7 +3488,7 @@ dialog.sl-editor-emoji-panel {
   }
 }
 
-/* Э15 The filter of a canon list in the module head: every control named, a field acting at once, the search on its button */
+/* The filter of a canon list in the module head: every control named, a field acting at once, the search on its button */
 .sl-filter {
   flex-wrap: wrap;
   align-items: center;
@@ -3533,7 +3514,7 @@ dialog.sl-editor-emoji-panel {
   box-sizing: border-box;
 }
 
-/* В08.7 The settings find stands in the module head like the filter of a list, its hits under the field */
+/* The settings find stands in the module head like the filter of a list, its hits under the field */
 .sl-form-find {
   position: relative;
   display: inline-block;
@@ -3590,7 +3571,7 @@ dialog.sl-editor-emoji-panel {
   }
 }
 
-/* В08.6 A tab with unsaved changes carries a dot in its upper right corner */
+/* A tab with unsaved changes carries a dot in its upper right corner */
 .sl-tabs-link:has(> .sl-tab-dot:not([hidden])) {
   position: relative;
 }
@@ -3606,7 +3587,7 @@ dialog.sl-editor-emoji-panel {
   background: var(--sl-warning-strong);
 }
 
-/* В08.5 A field judged wrong says why under itself and in the summary above the form */
+/* A field judged wrong says why under itself and in the summary above the form */
 .sl-form-sum {
   margin: 0 0 var(--sl-space-5);
 }
@@ -3626,7 +3607,7 @@ dialog.sl-editor-emoji-panel {
   border-color: var(--sl-danger-strong);
 }
 
-/* П5 П8 The pager over a canon list repeats the one under it at its left edge, its way back to the top turned into the way down */
+/* The pager over a canon list repeats the one under it at its left edge, its way back to the top turned into the way down */
 .sl-list-head {
   display: flex;
   align-items: center;
@@ -3639,7 +3620,7 @@ dialog.sl-editor-emoji-panel {
   padding: 0;
 }
 
-/* П7 The page line stands in the row of its pager, centred between the key tip and what closes the row */
+/* The page line stands in the row of its pager, centred between the key tip and what closes the row */
 :is(.sl-list-head, .sl-list-bottom) .sl-pager-info {
   margin-inline: auto;
 }
@@ -3660,12 +3641,12 @@ dialog.sl-editor-emoji-panel {
   text-align: center;
 }
 
-/* Э17 An empty queue is good news, said calmly */
+/* An empty queue is good news, said calmly */
 .sl-list-calm {
   color: var(--sl-success-strong);
 }
 
-/* Э22 The status in one press: the mark of the theme inside a bare round button */
+/* The status in one press: the mark of the theme inside a bare round button */
 .sl-stat {
   display: inline-grid;
   place-items: center;
@@ -3681,7 +3662,7 @@ dialog.sl-editor-emoji-panel {
   background: var(--sl-tint);
 }
 
-/* Э25 The count holds the width of its widest figure, so the row beside it never moves */
+/* The count holds the width of its widest figure, so the row beside it never moves */
 .sl-list-picked {
   display: inline-grid;
   color: var(--sl-text-muted);
@@ -3699,7 +3680,7 @@ dialog.sl-editor-emoji-panel {
   grid-area: 1 / 1;
 }
 
-/* Э28 A request on its way: the rows dim under the loading mark of the theme, the reader hears aria-busy */
+/* A request on its way: the rows dim under the loading mark of the theme, the reader hears aria-busy */
 .sl-table-shell:has(> .sl-list-busy) {
   position: relative;
 }
@@ -3715,13 +3696,13 @@ dialog.sl-editor-emoji-panel {
   opacity: var(--sl-fade-muted);
 }
 
-/* В02.1 The view of a canon list stands at the right end of the row over it */
+/* The view of a canon list stands at the right end of the row over it */
 .sl-list-view {
   flex: 0 0 auto;
   margin-left: auto;
 }
 
-/* В02.5 В02.6 В07.4 The head of a canon list stays in view; the row in hand takes the tint softly, a picked row a stronger one */
+/* The head of a canon list stays in view; the row in hand takes the tint softly, a picked row a stronger one */
 .sl-table-list-sort[data-sl-density] thead th {
   position: sticky;
   top: 0;
@@ -3740,8 +3721,7 @@ dialog.sl-editor-emoji-panel {
   background-color: var(--sl-tint-strong);
 }
 
-/* В07.1 The rows a filter, a tab or a page brings enter one after another; motion off makes the cascade instant */
-/* Backwards only: an animation held after its end keeps every row a stacking context, and a row would cover the tip of the one above */
+/* Rows a filter, a tab or a page brings enter in turn, backwards only: a held end keeps each row a stacking context over the tip above */
 .sl-table-list-sort[data-sl-density] tbody tr[data-sl-enter] {
   animation: sl-row-in calc(var(--sl-time-slow) + var(--sl-time-fast)) var(--sl-ease-out) backwards;
   animation-delay: calc(min(var(--sl-d-order, 0), 12) * var(--sl-time-fast) / 3);
@@ -3754,9 +3734,9 @@ dialog.sl-editor-emoji-panel {
   }
 }
 
-/* В02.2 В02.3 В02.4 The views apply above a phone; a phone draws its own cards */
+/* The views apply above a phone; a phone draws its own cards */
 @media (width > 560px) {
-  /* The closed dial stands in the middle of "Опции", pinned on the right so the fan still opens leftward */
+  /* The closed dial stands in the middle of the actions column, pinned on the right so the fan still opens leftward */
   .sl-table-list-sort td.sl-col-actions .sl-dial {
     right: calc(50% - var(--sl-size-chip) / 2 - var(--sl-space-1) - 1px);
   }
@@ -3765,7 +3745,7 @@ dialog.sl-editor-emoji-panel {
     right: calc(50% - var(--sl-size-icon-sm) / 2 - var(--sl-space-1) - 1px);
   }
 
-  /* В02.3 Compact: a row step of one control in smaller type, the line under the row included */
+  /* Compact: a row step of one control in smaller type, the line under the row included */
   .sl-table-list-sort[data-sl-density="compact"] tbody td {
     height: calc(var(--sl-size-control) - 1px);
     min-height: 0;
@@ -3779,7 +3759,7 @@ dialog.sl-editor-emoji-panel {
     min-width: 0;
   }
 
-  /* В02.2 Full: the text and the module wrap instead of ending in an ellipsis, a row grows to its text */
+  /* Full: the text and the module wrap instead of ending in an ellipsis, a row grows to its text */
   .sl-table-list-sort[data-sl-density="full"] .sl-cell-ellipsis {
     overflow: visible;
     white-space: normal;
@@ -3793,7 +3773,7 @@ dialog.sl-editor-emoji-panel {
     line-height: var(--sl-line-normal);
   }
 
-  /* В02.4 Cards: one order in every card - status, number, module; the text in two lines; author, date and the fan */
+  /* Cards: one order in every card - status, number, module; the text in two lines; author, date and the fan */
   .sl-table-list-sort[data-sl-density="cards"] {
     display: block;
     border: 0;
@@ -3944,7 +3924,7 @@ dialog.sl-editor-emoji-panel {
   }
 }
 
-/* Э32 A phone: a row is a card with the names of its columns, whatever view was chosen; the switch steps aside */
+/* A phone: a row is a card with the names of its columns, whatever view was chosen; the switch steps aside */
 @media (max-width: 560px) {
   .sl-list-view {
     display: none;
@@ -4019,7 +3999,7 @@ dialog.sl-editor-emoji-panel {
   }
 }
 
-/* Э32 A phone with a pick: the bulk action stands at the foot of the screen, in reach of the thumb, and the notice steps over it */
+/* A phone with a pick: the bulk action stands at the foot of the screen, in reach of the thumb, and the notice steps over it */
 @media (max-width: 900px) {
   body:has([data-sl-density] tbody .sl-col-check input:checked) .sl-list-bottom-actions {
     position: fixed;
@@ -4555,7 +4535,6 @@ dialog.sl-editor-emoji-panel {
   box-shadow: var(--sl-shadow-raised);
 }
 
-/* The form of a dial action lives outside the fan, because .sl-dial-item is placed by its child index */
 /* Inline edit: the editor widget carries no outer margin of its own, so its action row would sit on the tab bar */
 .sl-inline-edit > .sl-but,
 .sl-inline-edit > .sl-but-green,
@@ -4700,7 +4679,6 @@ dialog.sl-editor-emoji-panel {
 }
 
 /* Window canon: the one project-wide window - a native dialog with four axes (size, presentation, tone, foot) */
-/* Values are copied from the editor File Manager, so a window styled by the canon looks the way that panel already looks */
 /* Values internal to the component: the axis classes set them, a theme author never does, so they sit on the component root and not in the API block */
 .sl-modal {
   --sl-modal-tone: var(--sl-primary);
@@ -5023,7 +5001,6 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
 }
 
 /* Gallery on the window canon: the picture between two arrows, the properties of the object beside it, the counter in the status line of the foot */
-/* The layout is the one the editor gallery already had, because the canon takes its values from the editor and not from the file browser */
 .sl-shot-grid {
   display: grid;
   align-items: start;
@@ -5655,9 +5632,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   }
 }
 
-/* A grid inside the field cell of another row is half a row wide whatever the window does - measured 496, 704, 816 and
-   591px at the four rig widths, and narrower at the widest window than at the one it used to fold on. It folded at the
-   wrong end of the ladder, and no threshold tells it apart from the outer grid, so it is named instead of measured */
+/* A grid inside another row's field cell is half a row wide at every window, so it is named, not measured by a threshold */
 .sl-div-field .sl-div-grid .sl-div-item {
   grid-template-columns: 1fr;
   gap: var(--sl-space-3);
@@ -5717,8 +5692,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   line-height: var(--sl-line-normal);
 }
 
-/* An alert with actions wraps: the text takes the room and the slot keeps the end of the line. The alert is the container
-   its slot asks about, so the same alert in a list, a help window or on a phone puts its actions under the text by its own width */
+/* An alert with actions is the container its slot asks about, so it puts the actions under the text by its own width */
 .sl-alert:has(> .sl-alert-acts) {
   flex-wrap: wrap;
   row-gap: var(--sl-space-3);
@@ -5880,9 +5854,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   --sl-alert-c: var(--sl-accent);
 }
 
-/* The accent megaphone announces: it tips up from its grip and rocks back, and two arcs of voice leave its bell,
-   which opens to the right, into the gap before the text. Set at the glyph size from the padding edge, the arc sits
-   a step to the left of the glyph end, so its curve rises just past the bell and fades before the text */
+/* The megaphone arc sits a step left of the glyph end, so its curve rises just past the bell and fades before the text */
 .sl-alert-accent::before {
   content: "\f483";
   transform-origin: 30% 60%;
@@ -6054,8 +6026,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   pointer-events: none;
 }
 
-/* The circle fills its SVG, and the SVG stands half a ring in from the edge, so the stroke lies exactly on the track;
-   turned and mirrored, the dash starts at the top and runs out counter-clockwise, leaving the arc on the right */
+/* The SVG stands half a ring in, so the stroke lies on the track; turned and mirrored, the dash runs counter-clockwise from the top */
 .sl-alert-flash-bar svg {
   display: block;
   width: calc(100% - var(--sl-flash-ring));
@@ -6128,8 +6099,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   }
 }
 
-/* The knob: the plate of a rail travels to the chosen cell by the place slaed.js measured; a rail not measured yet
-   keeps what its own sheet does, and a rail handed a place from the page before stands still once */
+/* The knob: a measured rail moves its plate to the place slaed.js wrote; a rail handed a place from the page before stands still once */
 [data-sl-knob][data-sl-knob-ready] > [data-sl-knob-mark] {
   left: 0;
   width: var(--sl-d-knob-w);
@@ -6144,8 +6114,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   }
 }
 
-/* Segmented switch: one component for every row of cells with one chosen - the colour mode, the view of a list, the
-   pager. The plate under the chosen cell is always empty and the chosen cell recolours its own content over it */
+/* Segmented switch: the plate under the chosen cell is always empty, and the chosen cell recolours its own content over it */
 .sl-seg {
   position: relative;
   display: inline-flex;
@@ -6196,7 +6165,7 @@ button.sl-seg-cell:hover {
   cursor: default;
 }
 
-/* A focused cell and the row the list keys point at (Э27) take the ring inside their own edge */
+/* A focused cell and the row the list keys point at take the ring inside their own edge */
 .sl-seg-cell:focus-visible,
 .sl-table-list-sort tbody tr[data-sl-cursor] {
   outline: var(--sl-ring-width) solid var(--sl-ring-bg);
@@ -6268,8 +6237,7 @@ button.sl-seg-cell:hover {
   background: var(--sl-primary-strong);
 }
 
-/* Pagination: the row of the arrows and the rail starts at the left edge of its foot, the page line is pushed to the right
-   and goes under the row in a narrow container. The pager is the container its steps measure, not the window */
+/* Pagination: the pager is the container its steps measure, not the window; the page line drops under the row when narrow */
 .sl-pager {
   display: flex;
   flex-flow: row wrap;
@@ -6322,8 +6290,7 @@ button.sl-seg-cell:hover {
   color: var(--sl-text-muted);
 }
 
-/* П6 Э27 The key tip is useful at once: its trigger rests in the subtle system green, lights up in the full green under the pointer or while open,
-   and carries its own size, since a list without pages keeps it alone over and under its rows */
+/* The key tip rests in the subtle system green and carries its own size, since a list without pages keeps it alone */
 .sl-pager-keys > .sl-but-mini {
   width: var(--sl-size-chip);
   padding: 0;
@@ -6336,7 +6303,7 @@ button.sl-seg-cell:hover {
   color: var(--sl-on-solid);
 }
 
-/* П6 The ways up and down follow the key tip in the colour of the pager: subtle at rest, full like its arrows under the pointer or the focus */
+/* The ways up and down follow the key tip in the colour of the pager: subtle at rest, full like its arrows under the pointer or the focus */
 .sl-pager-side > a.sl-but-mini {
   background: var(--sl-primary-subtle);
   color: var(--sl-primary-strong);
@@ -6427,8 +6394,7 @@ button.sl-seg-cell:hover {
   font-size: var(--sl-font-small);
 }
 
-/* The rows of a page: the range of the page line is a chip in the colour of the pager, subtle at rest like the ways up and down,
-   full under the pointer, the focus or while its panel is open */
+/* The rows of a page: the range chip in the pager colour, subtle at rest, full under the pointer, the focus or an open panel */
 .sl-pager-rows {
   display: inline-flex;
   vertical-align: middle;
@@ -7324,8 +7290,7 @@ button.sl-but-mini {
   display: block;
 }
 
-/* On paper every panel is printed, and the tab script writes display none inline on the ones it closed: nothing but an
-   important declaration reaches past an inline style */
+/* The tab script writes display none inline on closed panels, and only !important prints them past it */
 @media print {
   .sl-tab-panel {
     display: block !important;
@@ -7787,10 +7752,7 @@ body:has(.sl-monitor-wrapper) .sl-monitor-wrapper * {
   align-items: center;
 }
 
-/* The one progress ring of this theme, under the same names the lite theme gives it: an SVG arc over a track, with whatever the consumer puts in the middle */
-/* Geometry belongs to the markup and appearance to this block: the consumer draws its own viewBox and radius, and sets the size and the stroke width through the two variables */
-/* pathLength="100" normalizes the circle, so PHP answers one percentage and the markup makes it the drawn half of stroke-dasharray, with no circumference to compute */
-/* Butt ends: a rounded cap adds half the stroke width at each end and at 96 per cent it closes the very gap that tells "almost full" from "full" */
+/* Progress ring: pathLength="100" lets PHP answer one percentage; butt ends, since a round cap closes the gap between almost full and full */
 .sl-knob {
   --sl-knob-size: 100px;
   --sl-knob-width: 8;
@@ -7840,9 +7802,7 @@ body:has(.sl-monitor-wrapper) .sl-monitor-wrapper * {
   font-weight: var(--sl-weight-bold);
 }
 
-/* The cockpit of the home: the state of the system over the module grids, the twin of the cockpit of the presentation */
-/* Its state is one class of the ring vocabulary on the panel itself, sl-knob-ok, -warn or -danger: --sl-knob-tone colours the line of state and the lamp, */
-/* while every ring keeps the class of its own share */
+/* Cockpit: the twin of the presentation cockpit; its state is one sl-knob-ok, -warn or -danger class on the panel, each ring keeps its own share's */
 .sl-cockpit {
   position: relative;
   margin-bottom: var(--sl-space-6);
@@ -7878,8 +7838,7 @@ body:has(.sl-monitor-wrapper) .sl-monitor-wrapper * {
   color: var(--sl-primary);
 }
 
-/* The line of state carries the glyph of the alert of its tone and moves as that alert moves; its small words take the strong step of the tone, */
-/* which holds 4.5:1 on the panel where the plain step of red and orange does not */
+/* The line of state moves with the alert of its tone; its small words take the strong step, which holds 4.5:1 where red and orange do not */
 .sl-cockpit-top > .sl-cockpit-state .bi {
   color: var(--sl-knob-tone);
 }
@@ -7896,8 +7855,7 @@ body:has(.sl-monitor-wrapper) .sl-monitor-wrapper * {
   animation: sl-alert-beat calc(var(--sl-alert-dur) / 2) var(--sl-ease-in-out) infinite;
 }
 
-/* The live chip of the blocks of the site on the components of this theme: the tip with the state, the interval, the age of the figures and the pause; */
-/* its beat is the led pulse, and a pause stills it in the warning tone. It opens on a press as the rings do, so it takes the pointer and not the help mark */
+/* The live chip of the site blocks: its beat is the led pulse, a pause stills it in warning, and it opens on a press as the rings do */
 .sl-tip.sl-live-chip {
   width: auto;
   height: auto;
@@ -7970,8 +7928,7 @@ body:has(.sl-monitor-wrapper) .sl-monitor-wrapper * {
   color: var(--sl-success);
 }
 
-/* One row round the lamp: a ring only for a share of a limit; the lamp comes first for the reader and stands in the middle column for the eye, */
-/* the rings flowing into the four cells it leaves free */
+/* One row round the lamp: the lamp comes first for the reader and stands in the middle column, the rings fill the four free cells */
 .sl-cockpit-gauges {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -8023,8 +7980,7 @@ body:has(.sl-monitor-wrapper) .sl-monitor-wrapper * {
   text-transform: uppercase;
 }
 
-/* The lamp and every ring open the bell panel on the pointer or the focus: the signals of the lamp, the details of a ring, */
-/* each row a link with its mark in the tone of its level, or the brand tone for a detail, and the figure at the right */
+/* The lamp and every ring open the bell panel on the pointer or the focus, each row a link marked in the tone of its level */
 .sl-cockpit-float {
   display: grid;
   justify-items: center;
@@ -8039,8 +7995,7 @@ body:has(.sl-monitor-wrapper) .sl-monitor-wrapper * {
   color: var(--sl-knob-tone);
 }
 
-/* The gauge: the theme ring drawn as an open arc with its scale, the figure in the centre, the caption in the mouth of the arc; */
-/* it opens its panel as the bell does, so it takes the pointer of the bell */
+/* The gauge: the theme ring as an open arc with its scale; it opens its panel as the bell does, so it takes the bell's pointer */
 .sl-cockpit-ring.sl-knob {
   cursor: pointer;
   width: 100%;
@@ -8075,8 +8030,7 @@ body:has(.sl-monitor-wrapper) .sl-monitor-wrapper * {
   stroke-width: 0.2;
 }
 
-/* The figure, not the figure with its unit, stands on the centre of the dial: an empty first column as wide as the column of the unit */
-/* keeps the digits in the middle and hangs the unit at their right */
+/* An empty first column as wide as the unit keeps the digits, not the digits with their unit, on the dial centre */
 .sl-cockpit-ring > span > b {
   position: relative;
   z-index: var(--sl-z-raised);
@@ -8115,10 +8069,7 @@ body:has(.sl-monitor-wrapper) .sl-monitor-wrapper * {
   color: var(--sl-text-muted);
 }
 
-/* A lamp draws no rounded line at all - no border, outline or box-shadow: Firefox paints a line round a circle in four quarters and their seams */
-/* cross the lamp as a cross hair. The line, the halo, the glow and the pulse are radial gradients and the orbit an SVG circle, none of which has quarters */
-/* In order the lamp rests with a steady glow; while something waits a ring breaks out of it on the beat of the alerts and the mark shakes; */
-/* on a failure the rings come twice as often, the mark beats and the halo and the panel border throb in red. Motion itself is the alarm */
+/* A lamp draws no rounded line: Firefox paints a circle's line in four quarters whose seams cross it, so every line is a radial gradient */
 .sl-cockpit-plate {
   position: relative;
   display: grid;
@@ -8935,8 +8886,7 @@ body:has(.sl-admin-login-shell)::before {
   position: relative;
 }
 
-/* The rim of the card lights up where the pointer is: the light is pinned to the viewport, so the place slaed.js writes needs no
-   measuring of the card, and without a pointer the light rests on the top edge */
+/* The light on the card rim is pinned to the viewport, so the place slaed.js writes needs no measuring of the card */
 .sl-admin-login-card:has(.sl-setup)::after {
   content: "";
   position: absolute;
@@ -9407,8 +9357,7 @@ body[data-sl-pointer] .sl-admin-login-card:has(.sl-setup)::after {
   border-radius: var(--sl-radius-1);
 }
 
-/* The head of a code block names the language and carries the copy button; the button and the fold wait for the script
-   that runs them, so a page without it shows the whole code */
+/* The copy button and the fold wait for their script, so a page without it shows the whole code */
 .sl-code-head {
   display: flex;
   align-items: center;
@@ -9845,7 +9794,7 @@ body[data-sl-pointer] .sl-admin-login-card:has(.sl-setup)::after {
     content: "";
   }
 
-  /* А8 The admin block is one icon of the rail: its head keeps only the mark, as a section does */
+  /* The admin block is one icon of the rail: its head keeps only the mark, as a section does */
   :root[data-sl-rail] .sl-wrapper.sl-admin-shell .sl-admin-sidebar .sl-block-sidebar:has(.sl-adm-keys) h3 {
     display: block;
     width: calc(var(--sl-size-control) + var(--sl-space-2));
@@ -9876,7 +9825,7 @@ body[data-sl-pointer] .sl-admin-login-card:has(.sl-setup)::after {
     display: none;
   }
 
-  /* А8 Its panel opens whole beside the icon under the hand or in focus; the block is the last of the rail, so the panel grows upward from its foot */
+  /* Its panel opens whole beside the icon under the hand or in focus; the block is the last of the rail, so the panel grows upward from its foot */
   :root[data-sl-rail] .sl-wrapper.sl-admin-shell .sl-admin-sidebar .sl-block-sidebar:has(.sl-adm-keys) > .sl-block-sidebar-content {
     position: absolute;
     bottom: 0;
@@ -9987,8 +9936,7 @@ body[data-sl-pointer] .sl-admin-login-card:has(.sl-setup)::after {
   box-sizing: border-box;
 }
 
-/* The row wraps rather than squeezing: the menu, the flags and the mode toggle all keep their labels, and the bar
-   grows by one line only on the widths where they do not fit beside each other */
+/* The toolbar row wraps rather than squeezing, so the menu, the flags and the mode toggle keep their labels */
 .sl-toolbar div {
   display: flex;
   align-items: center;
@@ -10059,10 +10007,7 @@ body[data-sl-pointer] .sl-admin-login-card:has(.sl-setup)::after {
   background: none;
 }
 
-/* The settings item leaves the menu behind and sits against the right edge of the row, where the flags used to end */
-/* The menu holds three kinds of destination: screens of the panel, places outside it, and the way out. The row is
-   ruled where the kind changes, so the eye does not read seven equal items where there are three groups.
-   The rule stands outside the item, or the plate an item takes under the cursor would swallow it */
+/* The settings item sits against the right edge of the row; the rule between kinds stands outside it, or the hover plate swallows it */
 .sl-toolbar li.sl-split-item {
   position: relative;
   margin-left: var(--sl-space-6);
@@ -10195,8 +10140,7 @@ body[data-sl-pointer] .sl-admin-login-card:has(.sl-setup)::after {
   background: transparent;
 }
 
-/* Settings window: one row per answer the panel lets an administrator change from any screen. The name stands on
-   the left and the list on the right, and every list takes the same width so the three read as one column */
+/* Settings window: every list takes one width, so the lists read as one column */
 .sl-set-row {
   display: flex;
   align-items: center;
@@ -10228,8 +10172,7 @@ body[data-sl-pointer] .sl-admin-login-card:has(.sl-setup)::after {
   cursor: pointer;
 }
 
-/* Colour mode: in the panel the mode is one row of the settings window rather than a control of the toolbar, and
-   the two figures its API froze are what that row spends - the width of its list and the height of the list itself */
+/* Colour mode: a row of the settings window in the panel, spending the two figures its API froze */
 .sl-mode .sl-set-pick {
   flex: 0 0 var(--sl-mode-width);
 }
@@ -10723,7 +10666,7 @@ body[data-sl-pointer] .sl-admin-login-card:has(.sl-setup)::after {
   margin-bottom: var(--sl-space-7);
 }
 
-/* File browser: the shell of the system file tab — toolbar, three columns, capability row and status line (docs/FILE-MANAGER-CONCEPT-2026.md) */
+/* File browser: the shell of the system file tab - toolbar, three columns, capability row and status line */
 /* The card clips to its own rounded corners with clip and never with hidden: hidden makes a scroll container of it, and a scroll container swallows the sticky columns inside */
 .sl-fm-shell {
   border: 1px solid var(--sl-border-strong);
@@ -10741,8 +10684,7 @@ body[data-sl-pointer] .sl-admin-login-card:has(.sl-setup)::after {
   border-radius: 0;
 }
 
-/* The filter and the two view buttons stand over the properties column: the field takes what is left of that column once the two buttons and the gaps between them are counted */
-/* The right inset of the toolbar is the one the whole bar keeps, so the group ends where every other control of the bar ends and begins where the column beside it begins */
+/* The filter group stands over the properties column and ends on the bar's own right inset, where every other control of the bar ends */
 .sl-fm-bar input[type="text"] {
   box-sizing: border-box;
   width: calc(var(--sl-fm-bar-width) - var(--sl-space-3) - 2 * (var(--sl-size-chip) + var(--sl-space-3)));
@@ -10800,8 +10742,7 @@ body[data-sl-pointer] .sl-admin-login-card:has(.sl-setup)::after {
   overflow: auto;
 }
 
-/* The page is what scrolls, so the two side columns hold themselves in the window while the list passes: what they say belongs to the object in view, not to the top of the directory */
-/* Each is as tall as the window and never taller than the row it stands in, because a column taller than its own row would hang below the panel on a short directory */
+/* The side columns stick while the page scrolls, as tall as the window and never taller than their row, or they hang below a short directory */
 .sl-fm-tree,
 .sl-fm-side {
   position: sticky;
@@ -10939,8 +10880,7 @@ body[data-sl-pointer] .sl-admin-login-card:has(.sl-setup)::after {
   position: relative;
 }
 
-/* A fan of a tile opens as one row, the shape it has in a row of the list: the work area no longer scrolls inside itself, so nothing cuts a fan that reaches past its own tile */
-/* Its own layer keeps it over the neighbouring tiles it reaches across, which the tiles beside it would otherwise paint over */
+/* A tile fan opens as one row on a layer of its own, so neither its tile nor the tiles it reaches across cut or cover it */
 .sl-fm-cell > .sl-dial {
   top: auto;
   bottom: 8px;
@@ -10948,8 +10888,7 @@ body[data-sl-pointer] .sl-admin-login-card:has(.sl-setup)::after {
   transform: none;
 }
 
-/* The same fan opened as a context menu: it leaves the corner of its object and stands where the pointer is, so the toggle meets the pointer and the actions follow it */
-/* The rule stands after both placements of a fan on purpose: a menu at the pointer overrules the anchor of a row as much as the anchor of a tile */
+/* The fan as a context menu stands at the pointer; this rule follows both fan placements so it overrules either anchor */
 .sl-dial.sl-dial-point {
   right: auto;
   bottom: auto;
@@ -11078,8 +11017,7 @@ body[data-sl-pointer] .sl-admin-login-card:has(.sl-setup)::after {
   color: var(--sl-text-muted);
 }
 
-/* The picture of the panel carries the overlay that opens the gallery, so it is the frame that overlay is measured
-   against; with no picture to show it holds one glyph, and a glyph alone in a frame this size is drawn at the top step */
+/* The panel picture is the frame of the gallery overlay; with no picture its one glyph is drawn at the top step */
 .sl-fm-preview {
   display: flex;
   align-items: center;
@@ -11192,7 +11130,7 @@ body[data-sl-pointer] .sl-admin-login-card:has(.sl-setup)::after {
   color: var(--sl-text-muted);
 }
 
-/* Empty directory and empty filter result: one block, different words (§31) */
+/* Empty directory and empty filter result: one block, different words */
 .sl-fm-empty {
   display: flex;
   flex-direction: column;
@@ -11219,9 +11157,8 @@ body[data-sl-pointer] .sl-admin-login-card:has(.sl-setup)::after {
   color: var(--sl-text-muted);
 }
 
-/* Source editor of the system area: it takes the place of the list and the tree stays beside it (§10) */
-/* The source editor is a window of the canon, and the form inside it is the column the canon expects: the body between
-   the plate and the buttons is the only part that scrolls, and the code area takes whatever height that body has */
+/* Source editor of the system area: it takes the place of the list and the tree stays beside it */
+/* The source editor form is the canon column: only the body scrolls, and the code area takes its height */
 .sl-fm-edit-form {
   display: flex;
   flex-direction: column;
@@ -11234,7 +11171,7 @@ body[data-sl-pointer] .sl-admin-login-card:has(.sl-setup)::after {
   min-height: var(--sl-fm-edit-height);
 }
 
-/* A shown object announces itself under the pointer: the kind icon gives way to the glass, and the thumbnail is the button that opens the gallery (§9.1) */
+/* A shown object announces itself under the pointer: the kind icon gives way to the glass, and the thumbnail opens the gallery */
 button.sl-fm-thumb {
   border: 0;
   cursor: pointer;
@@ -11277,7 +11214,7 @@ button.sl-fm-thumb:hover .bi-zoom-in {
   z-index: var(--sl-z-raised);
 }
 
-/* The list on its way: the place of the rows is held by a skeleton, so the work area neither empties nor jumps while the answer is still travelling (§31) */
+/* The list on its way: a skeleton holds the place of the rows, so the work area neither empties nor jumps */
 .sl-skel {
   animation: sl-skel-pulse var(--sl-skel-dur) var(--sl-ease-in-out) infinite;
 }
@@ -11362,7 +11299,7 @@ button.sl-fm-thumb:hover .bi-zoom-in {
   cursor: pointer;
 }
 
-/* A drag is over the target: the same state name the window of the editor uses, because the two screens draw one component and not two (§32) */
+/* A drag is over the target: the state name the editor window uses, because the two screens draw one component */
 .sl-fm-drop.sl-drag-over {
   border-color: var(--sl-primary);
   background-color: var(--sl-primary-subtle);
@@ -11389,7 +11326,7 @@ button.sl-fm-thumb:hover .bi-zoom-in {
     inset 0 calc(var(--sl-row-border) * -1) 0 var(--sl-primary);
 }
 
-/* Upload queue: one line per file with its own bar, its own reason and one counter over the set (§31) */
+/* Upload queue: one line per file with its own bar, its own reason and one counter over the set */
 .sl-fm-queue {
   padding: var(--sl-space-3);
   border-bottom: 1px solid var(--sl-border);
@@ -11642,9 +11579,7 @@ button.sl-fm-thumb:hover .bi-zoom-in {
   }
 }
 
-/* The door of a form row onto that window: one button wherever the system asks for a file, the chip of what came back
-   beside it and the limits of the place spelled out after both (docs/WINDOW.md). It carries none of the window's own
-   component names, because the administrative browser owns those and this row stands outside the window root */
+/* The file door of a form row carries none of the window's component names, which the administrative browser owns (docs/WINDOW.md) */
 .sl-file-door {
   display: flex;
   flex-wrap: wrap;
@@ -11665,11 +11600,8 @@ button.sl-fm-thumb:hover .bi-zoom-in {
   color: inherit;
 }
 
-/* The window of the file manager: the rail of insertion ways on the left, the work area on the right, one permanent
-   status line below (docs/WINDOW.md). It is the one door the whole system asks for a file through and it opens on
-   pages carrying no editor at all, so the theme dresses it and the skin of one plugin no longer can */
-/* Every rule below is scoped under the window root: the administrative browser owns the same component names in its
-   own theme, and the two must never reach each other */
+/* File manager window: the one door the system asks for a file through, on pages with no editor too, so the theme dresses it */
+/* Scoped under the window root: the administrative browser owns the same component names in its own theme */
 .sl-fm-win .sl-fm-split {
   flex: 1 1 auto;
   min-height: 0;
@@ -11704,8 +11636,7 @@ button.sl-fm-thumb:hover .bi-zoom-in {
   text-transform: uppercase;
 }
 
-/* The window is mounted inside the editor root, where the vendor stylesheet gives every button one fixed height */
-/* A section of the rail is as tall as its own words, so it takes its height back; every other control of the window names its own and is therefore left alone */
+/* The window sits in the editor root, where the vendor gives every button one height; a rail section takes its own height back */
 .sl-fm-win .sl-fm-rail-item {
   align-items: flex-start;
   background: transparent;
@@ -12289,8 +12220,7 @@ button.sl-fm-thumb:hover .bi-zoom-in {
   text-transform: uppercase;
 }
 
-/* A sortable column of the head is a button so the keyboard reaches it, and it has to read as the label it replaced:
-   the frame, the ground and the type of the head are the head's own, the sort glyph comes from the shared classes */
+/* A sortable head column is a button for the keyboard, dressed as the label it replaced */
 .sl-fm-win .sl-fm-rows-head [data-sl-sort] {
   background: none;
   border: 0;
@@ -12383,8 +12313,7 @@ button.sl-fm-thumb:hover .bi-zoom-in {
   text-transform: uppercase;
 }
 
-/* The picture of the properties holds the zoom overlay of a tile, so it has to be the frame that overlay is measured
-   against; with no picture to show it holds one glyph, and a glyph alone in a frame this size is drawn at the top step */
+/* The properties picture is the frame of a tile's zoom overlay; with no picture its one glyph is drawn at the top step */
 .sl-fm-win .sl-fm-props-img {
   align-items: center;
   background: var(--sl-bg-subtle);
@@ -12441,8 +12370,7 @@ button.sl-fm-thumb:hover .bi-zoom-in {
   white-space: nowrap;
 }
 
-/* The fan of the object stands under its properties, opened upward: below it there is only the note, and a fan that
-   opened downward would leave the panel */
+/* The object fan opens upward: below it there is only the note, and a fan opening down would leave the panel */
 .sl-fm-win .sl-fm-props-acts {
   display: flex;
   justify-content: flex-end;
@@ -12621,9 +12549,7 @@ button.sl-fm-thumb:hover .bi-zoom-in {
   display: none;
 }
 
-/* Expanded, the window is as tall as the screen and the body takes what the head and the foot leave. It drops its own
-   ceiling and takes the one the window gives it instead, or a catalogue of a full page grows past the frame and the
-   last rows stand below the bottom edge with nothing to scroll */
+/* Expanded, the body takes the window's ceiling instead of its own, or a full catalogue grows past the frame */
 .sl-fm-win.sl-is-full .sl-fm-body {
   flex: 1 1 auto;
   max-height: none;
@@ -12631,8 +12557,7 @@ button.sl-fm-thumb:hover .bi-zoom-in {
   overflow-y: auto;
 }
 
-/* The column between the frame and the body is a grid item, and a grid item is as tall as what it holds unless it is
-   told otherwise: without this the body never learns it has a ceiling and the last rows stand below the bottom edge */
+/* The column is a grid item as tall as its content unless told otherwise, so without this the body never learns its ceiling */
 .sl-fm-win.sl-is-full .sl-fm-main {
   min-height: 0;
 }

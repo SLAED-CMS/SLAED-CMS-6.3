@@ -307,8 +307,7 @@
         if (key === 'ArrowUp') return at - (grid ? getFileCols(walk) : 1);
         return at + (grid ? getFileCols(walk) : 1);
     }
-    /* One form serves every operation needing a word from the administrator: which operation, what it runs on and what it starts from are read off the item that opened it */
-    /* The item names the operation exactly as the route does, so the value travels into the form untouched and no second table of names has to agree with the module */
+    /* The item names the operation exactly as the route does, so the value travels into the form untouched and no second table of names has to agree */
     function setFileOps(node) {
         var form = document.querySelector('.sl-fm-ops');
         var arg = form ? form.querySelector('[name="arg"]') : null;
@@ -343,8 +342,7 @@
         fmback.pop();
         return fmback.pop();
     }
-    /* The source editor is a window over the browser and the route that opens it is a page of its own, so the window is
-       raised as soon as that page is drawn; the screen underneath keeps the directory the file belongs to */
+    /* The source editor route is a page of its own, so the window is raised as soon as that page is drawn over the directory of the file */
     function setFileEditWin() {
         var box = document.getElementById('slfmedit');
         if (box && !box.open && window.setWindowOpen) window.setWindowOpen(box);
@@ -409,8 +407,7 @@
         if (count) count.textContent = count.getAttribute('data-sl-fm-count') + ': ' + seen.length;
         return seen;
     }
-    /* A marked set travels in the form one object travels in: the operation is named the same way and only the number of paths in the body differs */
-    /* The panel of marks and the pointer dragging a set onto a directory fill the same form, so what a set is written into the form with is said once and in one place */
+    /* A marked set travels in the form one object travels in: only the number of paths in the body differs */
     function setFileSet(act, name, paths, val) {
         var form = document.querySelector('.sl-fm-ops');
         var box = form ? form.querySelector('[data-sl-fm-marks]') : null;
@@ -451,8 +448,7 @@
         if (ask && window.setConfirmTask) return window.setConfirmTask(ask, run);
         run();
     }
-    /* Files go up one after another: each carries its own bar and its own reason, a refused one does not stop the rest, and the reason is the one the server answered */
-    /* The body of every job is taken from the form before the first byte leaves, because the answer of the last job replaces the list and the form standing in it */
+    /* The body of every job is taken before the first byte leaves, because the answer of the last job replaces the list and the form standing in it */
     var fmsend = null;
     var fmstop = false;
     function setFileLoad(form) {
@@ -529,9 +525,7 @@
         fmsend = null;
         if (box) box.hidden = true;
     }
-    /* The target really takes a drop: a label around a file field opens the picker on a click, but a dropped file reaches nobody unless the page takes it off the event itself */
-    /* The whole browser is that target and not the label alone: a file dragged onto the list belongs to the directory the list shows, and the panel opens with the drag */
-    /* so its limits and its second field are read before the pointer is let go; a panel opened by the drag closes with it, one opened by the administrator stays */
+    /* A dropped file reaches nobody unless the page takes it off the event, so the whole browser is the target and the panel opens with the drag */
     function checkFileDrag(event) {
         var kind = event.dataTransfer ? event.dataTransfer.types : null;
         return !drag && fmdrag.length < 1 && !!kind && Array.prototype.indexOf.call(kind, 'Files') >= 0;
@@ -573,8 +567,7 @@
         pick.files = event.dataTransfer.files;
         form.requestSubmit ? form.requestSubmit() : form.submit();
     });
-    /* A modifier turns a press on an object into a mark: alone it marks and unmarks one, with the shift it marks everything between the object it started from and this one */
-    /* The press is taken in the capture phase, because the address of the object carries a request of its own and it must not leave while the press means marking */
+    /* The press is taken in the capture phase, because the address of the object carries a request of its own and must not leave while the press marks */
     document.addEventListener('click', function (event) {
         var node = (event.shiftKey || event.ctrlKey || event.metaKey) && event.target.closest ? event.target.closest('[data-sl-fm-pick],[data-sl-fm-mark]') : null;
         var host = getFileHost(node);
@@ -586,13 +579,12 @@
         if (at < 0) return;
         event.preventDefault();
         event.stopPropagation();
-        /* The mark is not the current object: the current one is the object whose properties stand on the right, and a marking press asks the server for nothing (§9.1) */
+        /* The mark is not the current object: the current one is the object whose properties stand on the right, and a marking press asks the server for nothing */
         if (event.shiftKey && fmfrom >= 0) return setFileSpan(fmfrom, at);
         setFileMark(walk[at], null);
         fmfrom = at;
     }, true);
-    /* A desk drags: an object taken by the pointer and let go on a directory moves there, and the whole marked set travels with it when the object dragged is one of them */
-    /* The move is never run behind the administrator: the form opens with the target already in it, because a moved file leaves its published address behind (§8) */
+    /* A drag never moves behind the administrator: the form opens with the target in it, because a moved file leaves its published address behind */
     var fmdrag = [];
     function setFileOver(box) {
         document.querySelectorAll('.sl-drag-over[data-sl-fm-dir]').forEach(function (one) {
@@ -646,8 +638,7 @@
         setFilePick(node);
         setFileSide(node);
     });
-    /* The keys walk the list the pointer walks: an arrow moves the current object, the shift with it drags the marks along, a space marks one and Enter does what a press does */
-    /* Only an object of the list answers to these keys: a fan item and the field of an operation stand inside the body too and keep the keys they came with */
+    /* Only an object of the list answers these keys: a fan item and the field of an operation stand inside the body too and keep their own keys */
     document.addEventListener('keydown', function (event) {
         var box = document.querySelector('dialog[data-sl-shot="files"]');
         var node = document.activeElement;
@@ -785,8 +776,7 @@
             run();
         });
     }
-    /* The three states a list can be in besides being there: it is on its way, it did not arrive, or it arrived and takes the place of both (§31) */
-    /* The answer replaces the whole body, so the marks below belong to the body that is leaving and never have to be taken back on a swap that succeeded */
+    /* The answer replaces the whole body, so the marks below belong to the body that is leaving and are never taken back on a swap that succeeded */
     function setFileWait(mode) {
         /* The three states belong to the list and are looked for inside it: a refused file of the queue carries the same mark, and the queue stands above the body */
         var skel = document.querySelector('#slfmbody .sl-skel');
@@ -816,8 +806,7 @@
             addFileStep();
         }
     });
-    /* A swap of the browser body replaces the editor as silently as a navigation drops the page, so both ways out ask first; a save is not a way out and never asks */
-    /* Only a request of the browser itself is guarded: every admin page carries panels of its own, and their refresh does not touch the editor and must not be asked about */
+    /* Only a request of the browser itself is guarded: the panels of every admin page refresh without touching the editor and must not ask */
     document.addEventListener('htmx:confirm', function (event) {
         var from = (event.detail && event.detail.elt && event.detail.elt.closest) ? event.detail.elt : null;
         if (!from || !from.closest('#slfmbody, .sl-fm-bar') || !checkFileEdit()) return;
@@ -1246,9 +1235,7 @@
             head.style.setProperty('--sl-d-turn', i);
         });
     }
-    /* The run of the installer: every part of the installation is its own POST of the run form, so the bar shows how far the server really got.
-       An answer carries the per cent, the task just done and whether another part follows; the last answer, a failed part and a broken reply all hand the form back,
-       and setup.php decides whether the closing stop, the refusal of the failed part or the run where it stands comes next */
+    /* Every part of the installation is its own POST of the run form, so the bar shows how far the server really got */
     function setSetupRun() {
         var run = document.querySelector('[data-sl-setup-run]');
         var form = run ? run.closest('form') : null;
@@ -1474,8 +1461,7 @@
         else if (event.target.closest('[data-sl-pal-open]')) setPanelPalette();
         else if (event.target.closest('[data-sl-rail-toggle]')) setMenuRail(!isMenuRail());
     });
-    // A window opened from the drawer, as the watch window from the admin block, needs the page back: the drawer shuts before the window opens,
-    // so the window is not left inert and gives the focus back to the menu button when it closes
+    // A window opened from the drawer needs the page back: the drawer shuts first, so the window is not left inert and returns the focus to the menu button
     document.addEventListener('click', function (event) {
         if (event.target.closest && event.target.closest('#sl-menu [data-sl-open]') && document.body.hasAttribute('data-sl-drawer')) setDrawer(false);
     }, true);

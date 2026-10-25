@@ -8,15 +8,19 @@ if (!defined('FUNC_FILE')) die('Illegal file access');
 
 # Contract for all content editors
 interface ContentDriver {
+    # The asset tags of the engine; Editor prints them before every widget, so a driver answers them once per request and '' after
     public function getAssets(string $profile): string;
 
+    # Render one content editor; $data carries the accessible name getNameData() settled, which the driver uses as given
     public function getWidget(string $id, string $name, string $value, string $profile, array $data = []): string;
 }
 
 # Contract for all code/syntax editors; the label is the accessible name of the editable area and is never empty
 interface CodeDriver {
+    # The asset tags of the engine; Editor prints them before every widget, so a driver answers them once per request and '' after
     public function getAssets(string $profile): string;
 
+    # Render one code editor; $lang and $label arrive checked by Editor::getCode()
     public function getWidget(string $id, string $name, string $value, string $lang, string $profile, string $label): string;
 }
 
@@ -102,10 +106,7 @@ class Editor {
         return $driver instanceof ContentDriver ? $driver->getAssets($profile).self::getThemeSkin($key).$driver->getWidget($id, $name, $value, $profile, $data) : '';
     }
 
-    # Settle the accessible name of one editor once, so four drivers cannot answer it four ways and none of them has to guess
-    # A caption of its own row is pointed at, because a reference follows the caption when it changes; a row with no caption at all is named by its own text instead
-    # An empty target is a worse answer than no attribute, since the name computes to the empty string with the attribute visibly in place, so the text can never be empty here
-    # The text is kept beside the reference, not instead of it: TinyMCE puts its editable in a second document where an IDREF resolves to nothing, so only a text copy crosses
+    # Settle the accessible name once for every driver; the text stays beside the reference, as TinyMCE edits in a second document where an IDREF resolves to nothing
     private static function getNameData(array $data): array {
         $data['labelledby'] = (string)($data['labelledby'] ?? '');
         $data['label'] = (string)($data['label'] ?? '');
@@ -115,8 +116,7 @@ class Editor {
         return $data;
     }
 
-    # Render code editor widget; lang required, validated against manifest
-    # The label names the editable area for a screen reader, and falls back to the same generic text a content editor gets, since no code editor has a caption of its own
+    # Render the code editor widget, lang checked against the manifest; with no caption of its own the label falls back to the generic text of a content editor
     public static function getCode(array $data): string {
         global $conf;
         $key = (string)($conf['editor']['code'] ?? 'codemirror');
@@ -375,8 +375,7 @@ class Editor {
         ]);
     }
 
-    # Emit the stylesheets and scripts of an editor: plain tags on a page load, where the parser runs them in order before the inline init of an instance
-    # A fragment answered over htmx names the same versioned addresses to the client loader, which adds only what the page lacks, so no engine and no listener runs twice
+    # Emit editor assets: plain tags on a page load, versioned addresses to the client loader for an htmx fragment, so no engine and no listener runs twice
     public static function getAssetTags(array $css, array $js): string {
         global $tpl;
         $css = array_map(Template::getAssetUrl(...), $css);
@@ -391,9 +390,7 @@ class Editor {
         return $out;
     }
 
-    # Wrap the init of one editor instance so it runs once its engine is there: after the deferred head on a page load, after the assets of an htmx fragment otherwise
-    # The node is captured when the script runs and checked when the init does, so a region swapped away while the engine loaded binds no instance to a removed node
-    # The teardown is handed to the client, which destroys every instance inside a region before that region is swapped away or restored
+    # Wrap the init of one instance to run once its engine is there; the node is checked at init, so a region swapped away meanwhile binds no instance
     public static function getInitScript(string $id, string $run, string $kill): string {
         global $tpl;
         $js = '(function(){var el=document.getElementById('.json_encode($id).');if(!el){return;}var go=function(){if(!el.isConnected){return;}'.$run;

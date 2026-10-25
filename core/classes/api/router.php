@@ -23,8 +23,7 @@ final class ApiRouter {
     # The checked declarations read in this request by service name, false for a refused one
     private static array $list = [];
 
-    # The reply of the current request: the guards of .rules/api.md in their fixed order, then the handler; every refusal is an ApiError turned into its reply
-    # The guards of the clients - auth by key or secret, scope, origin, limit - come with the clients; until then an action that is not public is 401
+    # The reply of the current request: the guards in their fixed order, then the handler; every refusal is an ApiError turned into its reply
     public static function getResponse(): array {
         self::$head = self::getCorsHead();
         $ver = 'v1';
@@ -43,8 +42,7 @@ final class ApiRouter {
         }
     }
 
-    # The live reference of system/schema from the declarations of every service the site runs: what a guest may call, never the handler behind it
-    # A service or action switched off and a service whose declaration is refused are left out
+    # The live reference of system/schema: what a guest may call, never the handler behind it; switched-off and refused services are left out
     public static function getSchemaData(): array {
         global $conf;
         $names = array_map(fn(string $v): string => basename($v, '.php'), glob(BASE_DIR.'/core/classes/api/services/*.php') ?: []);
@@ -70,8 +68,7 @@ final class ApiRouter {
         return ['services' => (object)$out];
     }
 
-    # Write the one reply of a request under api/ and end it: a file through getFileStream(), otherwise the envelope with the data or the code of the refusal
-    # A reply without a known code takes the code of its status, an unknown one being the 500 internal; a 204 carries no body, and a HEAD loses its body at the server
+    # Write the one reply of a request under api/ and end it; a 204 carries no body, and a HEAD loses its body at the server, not here
     public static function setApiReply(array $reply): never {
         while (ob_get_level() > 0) ob_end_clean();
         if (headers_sent()) exit;
@@ -107,8 +104,7 @@ final class ApiRouter {
         exit;
     }
 
-    # Guard 1: the path v<n>/<service>/<action> to an action declared for that version: 404 no_route for anything else, 405 no_method with Allow for another method
-    # An OPTIONS passes to the guard of CORS, and a HEAD is the GET of the same action
+    # Guard 1: the path v<n>/<service>/<action> to a declared action, else 404 or 405 with Allow; a HEAD is the GET of the same action
     private static function checkApiRoute(): array {
         if (!preg_match('#^v([1-9]\d?)/([a-z][a-z0-9]{1,23})/([a-z][a-z0-9]{0,31})$#D', (string)getRequestPath('api'), $hit)) throw new ApiError('no_route');
         $one = self::getApiService($hit[2])['actions'][$hit[3]] ?? null;
@@ -121,8 +117,7 @@ final class ApiRouter {
         return ['service' => $hit[2], 'action' => $hit[3], 'vnum' => (int)$hit[1], 'meth' => $meth, 'allow' => $allow] + $one;
     }
 
-    # Guard 2: the API switched off answers 503 disabled everywhere, maintenance 503 maintenance to all but the service system, a switched-off service or action 503 disabled
-    # A site without config/api.php runs the API on, as a missing option always reads its shipped value
+    # Guard 2: switched off or maintenance answers 503, system exempt from maintenance; a missing option reads its shipped value, so no config/api.php runs the API on
     private static function checkApiMaint(array $act): void {
         global $conf;
         $api = $conf['api'] ?? [];
@@ -199,8 +194,7 @@ final class ApiRouter {
         }
     }
 
-    # The reply of the mode file: a missing file is 404, one outside storage/update/ and the upload root a fault, so a slip never sends code, configuration, a dump or a journal
-    # Any cache of the action is the private mode of getFileStream(): one browser keeps the file and revalidates it by its entity tag
+    # The reply of the mode file; a file outside storage/update/ and the upload root is a fault, so a slip never sends code, configuration, a dump or a journal
     private static function getFileReply(array $data, array $act): array {
         $path = realpath((string)($data['path'] ?? ''));
         if ($path === false || !is_file($path) || !is_readable($path)) throw new ApiError('no_route');
@@ -212,8 +206,7 @@ final class ApiRouter {
             'cache' => ($act['cache'] > 0) ? 'private' : 'none'];
     }
 
-    # The checked declaration of one service, a core service before a module of the same name; [] when there is none or its module is not active
-    # A declaration the router refuses answers 500 internal, so a broken service never passes for a missing one
+    # The checked declaration of one service, a core service before a module of the same name; a refused one answers 500, so it never passes for a missing one
     private static function getApiService(string $name): array {
         global $conf;
         if (!array_key_exists($name, self::$list)) {
@@ -225,7 +218,7 @@ final class ApiRouter {
         return self::$list[$name];
     }
 
-    # A declaration checked against .rules/api.md with the defaults of its actions filled in; a refused one is logged with the reason and kept as false
+    # A declaration checked against the contract with the defaults of its actions filled in; a refused one is logged with the reason and kept as false
     private static function checkApiDeclare(string $name, mixed $decl): array|false {
         $acts = is_array($decl) ? ($decl['actions'] ?? null) : null;
         $scope = is_array($decl) ? ($decl['scopes'] ?? []) : [];

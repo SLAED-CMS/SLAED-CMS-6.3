@@ -1039,7 +1039,7 @@ final class NodeService {
         return $path;
     }
 
-    # Whether a material came from a removed module, which already rewarded its publication, so Node never rewards it a second time
+    # Whether a material came from a removed module, so Node never rewards its publication
     private function checkNodeLegacy(int $id): bool {
         return $this->getRowCount('SELECT COUNT(*) FROM '.PREFIX_DB.'_node_legacy WHERE nid = :id', ['id' => $id]) > 0;
     }

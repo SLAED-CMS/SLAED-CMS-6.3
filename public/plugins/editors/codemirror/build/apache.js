@@ -1,7 +1,6 @@
 import { StreamLanguage } from '@codemirror/language'
 
-// The configuration of Apache: a directive opens its line, sections stand in angle brackets, and the arguments carry
-// variables, back references, flags in square brackets, quoted strings, numbers and the switch words
+// The configuration of Apache: a directive opens its line and sections stand in angle brackets
 const apache = {
     name: 'apache',
     startState: () => ({ head: true }),

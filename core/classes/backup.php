@@ -98,8 +98,7 @@ class Backup {
         return $out;
     }
 
-    # Compiles a comma-separated glob list into anchored expressions
-    # The legacy caret form is rejected rather than reinterpreted: it used to switch the whole list between include and exclude mode
+    # Compile a comma-separated glob list into anchored expressions; the legacy caret form is refused rather than reinterpreted
     private function getGlobList(string $text, string $key): array {
         $out = [];
         foreach (explode(',', $text) as $one) {
@@ -386,10 +385,7 @@ class Backup {
         }
     }
 
-    # Classifies the object classes this class does not serialize and applies D1 to them
-    # Views, triggers, events and routines are never serialized, so the artifact restores the declared scope and nothing else
-    # Views are counted through information_schema.TABLES, not information_schema.VIEWS
-    # The latter additionally needs SHOW VIEW on MySQL, and without it an empty list would read as proof that no view exists
+    # Classify the objects this class never serializes; views are counted through information_schema.TABLES, as VIEWS needs SHOW VIEW on MySQL and would read empty
     private function checkScopeObjects(array $tabs): void {
         $objs = [];
         foreach ($this->getCatalogRows('SELECT TABLE_NAME AS name FROM information_schema.TABLES WHERE TABLE_SCHEMA = :db AND TABLE_TYPE = \'VIEW\' ORDER BY TABLE_NAME') as $row) {
@@ -650,8 +646,7 @@ class Backup {
         if (!fclose($fh) || !$done) throw new RuntimeException('Backup could not durably persist the compressed candidate');
     }
 
-    # Publishes with link(), which fails rather than replacing when the name exists; a collision regenerates the suffix instead of overwriting an existing artifact (D6)
-    # The mode is set on the candidate before linking, because a hard link shares the inode: setting it after would leave the artifact readable under its public name in between
+    # Publish by link(), which fails rather than replaces an existing name; the mode is set before linking, as a hard link shares the inode
     private function addArtifactFile(string $cand, string $ext): string {
         if (!chmod($cand, 0600)) throw new RuntimeException('Backup could not restrict the artifact before publishing it');
         for ($i = 0; $i < self::TRIES; $i++) {
@@ -695,8 +690,7 @@ class Backup {
         return preg_replace('/[^a-zA-Z0-9_-]/', '_', $dbname);
     }
 
-    # Recognizes one artifact of the given database and returns the timestamp its name carries, or an empty string when the file is not an artifact at all
-    # Both naming schemes are answered here, and this is the only place that knows them, so retention and the monitor cannot drift apart
+    # The timestamp an artifact name of the database carries, or ''; the one place that knows both naming schemes, so retention and the monitor cannot drift apart
     public static function getArtifactMark(string $file, string $stem): string {
         $stem = preg_quote($stem, '#');
         $curr = '#^'.$stem.'_(\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2})_[0-9a-f]{8}\.sql(?:\.(?:zip|gz|bz2))?$#';

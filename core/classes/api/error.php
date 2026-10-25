@@ -9,7 +9,7 @@ if (!defined('FUNC_FILE')) die('Illegal file access');
 # The one exception a guard or a handler of the API throws: a code of the closed list, its details for the client and the headers its reply carries
 final class ApiError extends RuntimeException {
 
-    # Every code of the API with its status and its short English text; a client localizes by the code, and a new code changes .rules/api.md first
+    # Every code of the API with its status and its short English text; a client localizes by the code
     public const CODES = [
         'bad_request' => [400, 'Bad request'],
         'no_auth' => [401, 'Unauthorized'],

@@ -33,8 +33,7 @@ function setTemplateForum(): string {
     return $tpl->getHtmlPart('forum-teaser', ['items' => $items, 'label' => _FORUM]);
 }
 
-# The marquee of the header: the latest published material of the first active type this theme shows in its faq mode, read through the shared Node reader
-# The mode is a name of this theme, so the core knows no type here; a type with an extension or a failed read leaves the marquee empty
+# The header marquee: the latest material of the first active type in the faq mode of this theme; the mode is a theme name, so the core knows no type here
 function getTemplateFaq(): string {
     global $tpl;
     $type = getNodeModeType('faq');
@@ -55,8 +54,7 @@ function getTemplateFaq(): string {
     ]);
 }
 
-# Provide head-time variables for the lite theme layout
-# The banner category is the one the head resolved by the read right of the visitor; the title of the item follows it only on a page the query names no category for
+# Head-time variables of the lite layout; the banner category is the one the head resolved by the read right of the visitor, joined by the item title only without cat
 function getThemeHeadVars(): array {
     global $conf, $tpl, $sitevars;
     $mname = $conf['name'] ? getModuleName($conf['name']) : '';

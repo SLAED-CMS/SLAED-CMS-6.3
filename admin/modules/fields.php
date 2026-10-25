@@ -6,8 +6,7 @@
 
 if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 
-# The areas whose extra fields this manager owns, as area => caption and saved definitions; a later owner of fields joins here and nowhere else
-# Every registered Node type is the area node.<name> with the checked definitions of its type, which only its service writes
+# The areas whose extra fields this manager owns, area => caption and definitions; a Node type is the area node.<name>, saved through the Node writer
 function getFieldAreas(): array {
     global $conf;
     $out = [];
@@ -58,8 +57,7 @@ function getFieldInput(array $post): array {
     ];
 }
 
-# Render one block of the form from a definition, stored or just posted: every value is shown as text, so a refused form comes back exactly as it was sent
-# A stored field keeps its name and its type, because the name is the key of every stored value and another type would turn those values into refusals
+# One block of the form from a stored or posted definition; a stored field keeps its name and type, as the name keys every stored value and another type refuses them
 function getFieldBlock(string $area, int $pos, string $name, array $def, bool $kept, bool $hide): string {
     global $tpl, $fld;
     $base = 'def['.$area.']['.$pos.']';

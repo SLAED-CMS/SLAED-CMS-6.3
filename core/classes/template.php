@@ -21,8 +21,7 @@ class Template {
     protected static ?bool $devMode = null;
     protected static ?int $mtime = null;
 
-    # Set base template and cache paths for the selected theme; resolve the real base path once per instance
-    # The theme lives in the document root, PUBLIC_DIR, and its compiled copy in the cache of the project, which no browser reaches
+    # Set the template and cache paths of the theme; the theme lives in PUBLIC_DIR and its compiled copy in the project cache, which no browser reaches
     public function __construct(string $theme = 'default') {
         $this->theme = $this->checkName($theme) ? $theme : 'default';
         $root = defined('BASE_DIR') ? BASE_DIR : dirname(__DIR__, 2);
@@ -128,9 +127,7 @@ class Template {
         }
     }
 
-    # Compile the template when needed and return rendered HTML; file validation and freshness run once per file per request
-    # The compiled file is written to a temporary file beside it and renamed over it, so a parallel include never meets a half-written or locked file
-    # A stale file is compiled under compile.lock of the theme and checked again once the lock is held, so a burst compiles once and never renames over a file in use
+    # Compile when needed and render; the compiled file is renamed over the old one under compile.lock, so a parallel include never meets a half-written file
     protected function getHtml(string $type, string $name, array $data = []): string {
         $file = $this->getFile($type, $name);
         if ($file !== '' && isset($this->fresh[$file])) return $this->getView($this->fresh[$file], $data, false, $type, $name);

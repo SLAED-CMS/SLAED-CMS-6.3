@@ -4,9 +4,7 @@
 # License: MIT
 # Website: slaed.net
 
-# The rescuer of an installation, contract v1: the installed copy, which an installation replaces only on its last step, so a broken package never breaks its own rollback
-# The gate requires it with no argument for a rescue code, a rescue.now put by FTP or a rollback under way; the panel requires it to go back to the previous version
-# It reads all it needs from client/apply.lock and the plan of the backup and restores the database, config/ and the files in portions, one request each, without the core
+# The rescuer of an installation, contract v1: an installation replaces this copy only on its last step, so a broken package never breaks its own rollback
 if (!defined('BASE_DIR') || !defined('PUBLIC_DIR')) die('Illegal file access');
 
 # The folder of the client state, named by the core or by the default layout when no core has run

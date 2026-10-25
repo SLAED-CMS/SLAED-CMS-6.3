@@ -31,8 +31,6 @@ require_once BASE_DIR.'/core/system.php';
 if (!defined('ADMIN_FILE') && $conf['close'] && !isAdmin()) { http_response_code(503); setExit(_CLOSE_TEXT); }
 
 # A path the cut of core/security.php kept resolves by one grammar, first match wins, and its keys replace the same keys of the query in $_GET
-# A type or module alone is its home, with a reserved operation that operation, with digits after the operation also the id; any other path is asked of the registry
-# A former path opens its entity, whose page answers 301 to its current path through setSeoMove(); a gone path answers 410 and a path never given 404
 if ($urlroute['seg'] !== []) {
     $rseg = $urlroute['seg'];
     $rlen = count($rseg);
@@ -80,15 +78,7 @@ if (empty($go) && $op === 'newlang') {
     setRedirect('index.php', true);
 }
 
-# A registered Node type reaches the one fixed entry point of Node by its name or as the start page; the registry is the loaded configuration, so no query runs here
-# A Node type takes the layout and block positions of the module node and keeps the public name of its type; the reserved name node has no public route at all
-# The block positions a module allows go into globals that setFoot() reads to skip the sides the module switched off
-# The start page listens to the same block positions as the named route, so admin.php?name=modules governs both
-# Ajax handlers in the public list guard themselves: their reads answer nothing to a visitor who may not see them, so a token would only add one to an address
-# The rating vote checks its method before its token and answers both refusals with a status of their own
-# The ajax writes that answer only a POST refuse any other method before the token, so a followed link reads as the wrong method it is and not as a lost token
-# The scheduler releases the session lock so long-running jobs do not block parallel requests of the same visitor
-# The file route serves every uploaded file of a closed owner, Node included, through FileAccess; every refusal is the same not found
+# Ajax handlers of the public list take no token: they guard themselves, and their reads answer nothing to a visitor who may not see them
 if (empty($go)) {
     Cache::setHeaders();
     if ($conf['alang']) {

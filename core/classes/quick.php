@@ -17,10 +17,7 @@ class QuickEdit {
 
     private array $kinds;
 
-    # Build the protocol from the adapters of the kinds, each a list of its fields, the closed form of its stamp and the closures source, write and view
-    # A kind takes part through three closures, the way the rating subsystem is built from its read and write closures; nothing here knows a table or a column
-    # The source answers the right, the stored text, the stamp and the rendered editor from the stored row; the write stores at a stamp under the lock of the kind
-    # The view renders the stored text exactly as the page renders it, together with the edited mark the page always prints, so a save can refresh both
+    # Build the protocol from the adapters of the kinds; a kind takes part through the closures source, write and view, so nothing here knows a table or a column
     public function __construct(array $kinds) {
         $this->kinds = $kinds;
     }
@@ -46,9 +43,7 @@ class QuickEdit {
         return ['code' => 'ready', 'stamp' => (string)$src['stamp'], 'editor' => (string)$src['editor']];
     }
 
-    # Store one text at the stamp its editor was opened with and answer the closed code; a save and a conflict carry the stored text rendered, its mark and its current stamp
-    # A save may carry a note for its author, such as a material sent back to moderation by the edit
-    # The order of the checks under the lock belongs to the writer of the kind: existence, the right, an equal text answering saved without a write, then the stamp
+    # Store one text at the stamp its editor opened with and answer the closed code; the order of the checks under the lock belongs to the writer of the kind
     public function updateText(array $sub, string $text): array {
         $one = $this->kinds[$sub['kind']];
         $res = ($one['write'])($sub['id'], $sub['field'], $sub['stamp'], $text);

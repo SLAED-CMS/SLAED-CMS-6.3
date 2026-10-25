@@ -1,6 +1,4 @@
-// The presentation page: the site strip that turns by itself, the brand archive with its featured material, and the
-// rhythm chart drawn from the series the module wrote into the page. The rail is the scroll spy of slaed.js, the
-// viewer is its lightbox, and the sections rise by the CSS scroll timeline: nothing here is decided twice
+// The presentation page: the rail is the scroll spy of slaed.js and the viewer is its lightbox, so nothing here is decided twice
 (function () {
     'use strict';
 
@@ -16,8 +14,7 @@
         return String(Math.round(val)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
     }
 
-    // One gallery: the range and the arrows drive the same position, the strip scrolls by card and the archive shows a
-    // feature with four neighbours. The order of the site cards is the module's, so nothing is shuffled here
+    // One gallery: the order of the site cards is the module's, so nothing is shuffled here
     function setGallery(root) {
         if (root.getAttribute('data-sl-pres-ready') === '1') return;
         var track = root.querySelector('.sl-pres-gallery-track');
@@ -92,8 +89,7 @@
         if (root.getAttribute('data-sl-pres') === 'sites') setAutoplay(root, function () { slide(at >= last ? 0 : at + 1, true); });
     }
 
-    // The strip turns by itself while it is on screen and nobody points at it or holds focus in it; a hidden tab and a
-    // reader who asked for no motion get no step at all
+    // The strip turns only while it is on screen and nobody points at it or holds focus in it; a hidden tab and a reader who asked for no motion get no step
     function setAutoplay(root, step) {
         var held = false;
         var shown = false;
@@ -135,9 +131,7 @@
         return tone || '#888888';
     }
 
-    // The rhythm chart: the visits by hour, day of the week or day of the month, and under them the demonstration share the caches
-    // answered and the rest that reached the database, all three written by the module. The headline follows the period,
-    // and the change is shown only where a like period precedes it. The spark of the runtime section draws the visits alone
+    // The rhythm chart: every series is written by the module, and the change is shown only where a like period precedes it
     function setChart(root) {
         if (root.getAttribute('data-sl-pres-ready') === '1') return;
         var face = root.querySelector('canvas');
@@ -315,9 +309,7 @@
         draw();
     }
 
-    // The pulse strip of the control window: a band of figures drifting towards fresh targets the way a load monitor
-    // breathes. Nothing here is measured, so the strip says so by never standing still; a reader who asked for no motion
-    // gets one still band
+    // The pulse strip: nothing here is measured, so it says so by never standing still; a reader who asked for no motion gets one still band
     function setPulse(root) {
         if (root.getAttribute('data-sl-pres-ready') === '1') return;
         var face = root.querySelector('canvas');
@@ -393,8 +385,7 @@
         }, 2700);
     }
 
-    // The control window: every section of its menu carries its own trace, the log and the path of the bar follow the
-    // pressed one, and the window walks its sections by itself until somebody presses one
+    // The control window walks its sections by itself until somebody presses one
     function setCore(root) {
         if (root.getAttribute('data-sl-pres-ready') === '1') return;
         var keys = root.querySelectorAll('.sl-pres-core-menu > button');
@@ -439,8 +430,7 @@
         for (var l = 0; l < live.length; l++) setLive(live[l]);
     }
 
-    // The build presets of the module map: a preset lights its set on the nodes and on the wires standing in the same
-    // order, and a preset reads as pressed while the map shows exactly its set. The nodes stay links; nothing is saved
+    // The build presets: a preset reads as pressed while the map shows exactly its set; the nodes stay links and nothing is saved
     function setBuild(root) {
         if (root.getAttribute('data-sl-pres-ready') === '1') return;
         root.setAttribute('data-sl-pres-ready', '1');
@@ -471,10 +461,7 @@
         press();
     }
 
-    // The request guard: every half beat a traveller leaves the pool, rides a lane to the gate, and the gate, patrolling
-    // its track, slides to meet it - a bad request drops into quarantine, a good one flies to its window of the house and
-    // lights it. The plugin clones the cards the template rendered and writes positions as --sl-d-*; every phase is a share
-    // of STEP, the beat the CSS transitions of the traveller carry, and the log grows by a clone of its own first row
+    // The request guard: positions are written as --sl-d-* and every phase is a share of STEP, the beat the CSS transitions of the traveller carry
     function setGuard(root) {
         if (root.getAttribute('data-sl-pres-ready') === '1' || window.isMotionStill()) return;
         var scene = root.querySelector('.sl-pres-guard-scene');
@@ -602,10 +589,7 @@
         window.setInterval(function () { if (shown && !document.hidden) fly(); }, STEP / 2);
     }
 
-    // The PDO stage: every beat the next case of the pool is written onto the query line, the console and the trace, the
-    // packet walks the five nodes at a step a share of the beat, and at the end the counters of the console grow by the
-    // case and the row bars take fresh shares. Cloning the first param chip is the only
-    // markup ever made here; everything else is text and attributes on what the template rendered
+    // The PDO stage: a clone of the first param chip is the only markup made here; the rest is text and attributes on what the template rendered
     function setPdo(root) {
         if (root.getAttribute('data-sl-pres-ready') === '1' || window.isMotionStill()) return;
         var stage = root.querySelector('.sl-pres-pdo-stage');
@@ -708,8 +692,7 @@
         });
     }
 
-    // The commit board: the focus walks the rows one beat at a time and follows the pointer, and the focus panel takes
-    // the row's sha, date, title, text and chips - the chips as clones of the row's own, the last chip (the author) kept
+    // The commit board: the focus walks the rows one beat at a time and follows the pointer; the small note of a row becomes one more chip of the panel
     function setDev(root) {
         if (root.getAttribute('data-sl-pres-ready') === '1') return;
         var rows = root.querySelectorAll('.sl-pres-commit');
@@ -764,9 +747,7 @@
         }, STEP * 0.3);
     }
 
-    // The request path: every beat the flow takes the next scenario of the pool - its mode on the scene, its badge, route,
-    // core lines, the words of the parser cache and the template, the four states of the side grid and the case of the
-    // decision tree - and walks the packet's nodes one by one; a miss ends with the parser cache storing the markup
+    // The request path: every beat walks the next scenario of the pool, and a miss ends with the parser cache storing the markup
     function setFlow(root) {
         if (root.getAttribute('data-sl-pres-ready') === '1' || window.isMotionStill()) return;
         var scene = root.querySelector('.sl-pres-flow');

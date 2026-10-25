@@ -93,8 +93,7 @@
         return out;
     }
 
-    // The window itself, its focus and its place are the canon; what belongs to the editor is which pane stands open and whether the catalogue needs reading again
-    // The panel keeps living inside the editor root, because the editor has a fullscreen of its own and a window outside it would be left behind
+    // The panel lives inside the editor root, because the editor has a fullscreen of its own and a window outside it would be left behind
     function setPanel(id, show) {
         var opt = getOpt(id);
         var el = getPanel(id);
@@ -113,8 +112,7 @@
         win.setWindowOpen(el);
     }
 
-    // The expanded window is also the expanded catalogue: one button, because the room and what fills it are the same decision
-    // The list is drawn again with it, because the compact view shows the last few files and the expanded one shows a page of them
+    // The expanded window is also the expanded catalogue, so the list is drawn again with it: the compact view shows only the last few files
     function setPanelView(id) {
         var el = getPanel(id);
         if (!el) return;
@@ -162,7 +160,6 @@
         });
     }
 
-    // The runtime holds the editor of every window opened from one, because it no longer lives beside the editor plugin and cannot ask it back
     // A window opened as a form field registers no editor, so this answers null there and every editor-only path disables itself on that answer
     function getEditor(id) {
         return edits.get(String(id)) || null;
@@ -380,9 +377,7 @@
         if (getOpt(id).canlist) getFiles(id);
     }
 
-    // One successful upload adds one object instead of reloading the whole catalogue, which is what keeps the marks and the current object where they were
-    // An upload no longer inserts by itself: the queue marks what it brought in, the window inserts what stays marked,
-    // because a batch of several files is a choice and a single one has to be confirmed the same way
+    // One upload adds one object instead of reloading the catalogue, so the marks stay; the window inserts what stays marked, never an upload by itself
     function addUploaded(id, row, box) {
         var room = getRoom(id);
         setInfo(id, row.file);
@@ -394,8 +389,7 @@
         setPicks(id);
     }
 
-    // The mark of an uploaded file rides its own queue card, so it survives the list being redrawn under it, and it
-    // takes the cell the stop button has just left, which is why the card keeps its three columns
+    // The mark of an uploaded file rides its queue card, so it survives a redraw of the list; it takes the cell the stop button left
     function addJobPick(id, box, row) {
         var pick = box ? api.getTpl(id, 'fm-pick') : null;
         var one = pick ? pick.querySelector('input') : null;
@@ -603,8 +597,7 @@
         setInfo(id, row.file + ' · ' + row.sizetext);
     }
 
-    // The panel of an object offers what the object offers, which is the fan its own row and tile carry: one builder,
-    // so an action the descriptor withholds is missing from all three at once
+    // The panel of an object offers the fan its row and tile carry: one builder, so an action the descriptor withholds is missing from all three
     function setPropsActs(id, row, num) {
         var box = getSlot(id, 'propsacts');
         var dial = box ? getDial(id, row, num) : null;
@@ -764,15 +757,13 @@
         return true;
     }
 
-    // The expanded catalogue is drawn whole and scrolled, as the administrative one is: a directory is one answer and
-    // a walk of pages over an answer already in hand buys nothing. The compact view still shows the last few files
+    // The expanded catalogue is drawn whole and scrolled, as the administrative one is: a directory is one answer, and pages over it buy nothing
     function getPageRows(id) {
         var room = getRoom(id);
         return room.full ? room.view : room.view.slice(0, parseInt(getOpt(id).last || 6, 10));
     }
 
-    // The list is not a table, so Tablesort cannot drive it; what is reused is the contract the eye reads — the same
-    // three head classes and the same order the printed column stands for, with the raw figure sorted and not its text
+    // The list is not a table, so Tablesort cannot drive it; it reuses the three head classes and sorts the raw figure, not its text
     function getSortKey(row, key) {
         if (key === 'name') return String(row.file || '').toLowerCase();
         if (key === 'type') return String(row.kind || '') + ' ' + String(row.type || '');
@@ -866,7 +857,7 @@
         return 'ready';
     }
 
-    // The catalogue has five states and the settled one is only one of them; an empty catalogue and an empty filter say different words on purpose (§31)
+    // The settled catalogue is only one of its states; an empty catalogue and an empty filter say different words on purpose
     function setState(id, name) {
         var room = getRoom(id);
         var rows = {
@@ -954,8 +945,7 @@
         if (note) note.textContent = getText(getLab(id, 'mynote', '%d'), room.files.length);
     }
 
-    // The record meter answers for the column the text is stored in, not for the upload quota of the module: it counts
-    // what the editor holds right now against that capacity, and an empty field has to read as empty
+    // The record meter answers for the column the text is stored in, not for the upload quota of the module
     function setRoom(id) {
         var opt = getOpt(id);
         var fill = getSlot(id, 'roomfill');
@@ -974,8 +964,7 @@
         return win.Blob ? new win.Blob([text]).size : text.length;
     }
 
-    // Reading the catalogue again is the one action whose result can look exactly like doing nothing, so the button says it is
-    // working and the status line says what came back: a listing that did not change is an answer and has to read as one
+    // Reading the catalogue again can look like doing nothing, so the button shows it is working and an unchanged listing reads as an answer
     function setBusyList(id, on) {
         var el = getPanel(id);
         var act = el ? el.querySelector('[data-sl-act="refresh"]') : null;
@@ -1011,8 +1000,7 @@
         });
     }
 
-    // No changing action runs without an answer: the object stays busy until the server has spoken and no row disappears on hope alone
-    // Only the tile and the row of the object are covered: the items of its own fan carry the same number, and an overlay inside one of them would hide the action it names
+    // Only the tile and the row are covered: the items of the fan carry the same number, and an overlay inside one would hide the action it names
     function setBusy(id, num, on) {
         var el = getPanel(id);
         var pick = '.sl-fm-cell[data-sl-num="' + num + '"], .sl-fm-row[data-sl-num="' + num + '"]';
@@ -1064,8 +1052,7 @@
         if (way === 'delete' || way === 'zip') setFileRun(id, way, [row.path], num);
     }
 
-    // The side and the caption belong to the object and not to the pane it was picked in, so every route into the text
-    // stops at the same small window: one answer covers the whole batch, and an empty caption falls back to the file name
+    // The side and the caption belong to the object, not to the pane it was picked in, so every route into the text stops at the same small window
     function askInsert(id, way, rows, title) {
         var el = getOpts(id);
         var one;
@@ -1089,8 +1076,7 @@
         win.setWindowOpen(el);
     }
 
-    // A batch is answered file by file, because a side and a caption belong to the picture and not to the marking that
-    // collected it; the side stays on what the previous answer chose, which is the half of the pair that usually repeats
+    // A batch is answered file by file; the side stays on what the previous answer chose, the half of the pair that usually repeats
     function setInsertStep(id) {
         var want = getRoom(id).want;
         var name = getOptsPart(id, 'name');
@@ -1248,8 +1234,7 @@
         if (okay && room.pane === 'up') okay.disabled = !room.take;
     }
 
-    // The three outcomes are exclusive by construction, so writing one clears the other two here rather than trusting the window to have handed back a single answer
-    // It answers whether the write landed, because a chip drawn over a field that stayed empty states a file the form is not carrying, which is the one lie this row must not tell
+    // It answers whether the write landed, because a chip over a field that stayed empty states a file the form is not carrying
     function setFieldPick(id, mode, data) {
         var file = getFieldPart(id, 'file');
         var path = getFieldPart(id, 'path');
@@ -1298,8 +1283,7 @@
         if (setFieldPick(id, take.mode, take.data)) setPanel(id, false);
     }
 
-    // Nothing is read until the form is submitted, so the rule is checked at the pick or the visitor learns of a refusal only after the page they filled in has gone
-    // The words are the ones the server would answer with, so a refusal reads the same whichever side of the submit it was raised on
+    // The rule is checked at the pick, in the words the server would answer, because nothing is read before the form is submitted
     function checkFieldFile(id, file, done) {
         var opt = getOpt(id);
         var list = opt.exts || [];
@@ -1491,8 +1475,7 @@
         setCurrent(getPanelOwn(el), parseInt(el.getAttribute('data-sl-num'), 10));
     });
 
-    // A modifier turns a press on an object into a mark: alone it marks and unmarks one, with the shift it marks everything between the object it started from and this one
-    // The press is taken in the capture phase, because a plain press on the same object means the current object and a press on the box itself means the mark of that one
+    // The press is taken in the capture phase: a plain press on the object means the current object, a press on its box means its mark
     doc.addEventListener('click', function(ev) {
         var el = (ev.shiftKey || ev.ctrlKey || ev.metaKey) && ev.target.closest ? ev.target.closest('.sl-fm-row[data-sl-num], .sl-fm-cell[data-sl-num], [data-sl-pick]') : null;
         var id = el ? getPanelOwn(el) : '';
@@ -1682,8 +1665,7 @@
         edits.delete(String(id));
         delete api.options[String(id)];
     };
-    // The second entry of the runtime: the window of a form row registers a box and no editor, so the four editor-only paths find null and disable themselves
-    // The hook and the toolbar icon return on a missing editor by themselves, which is why a field installs neither and needs no guard of its own
+    // The second entry of the runtime: a form row registers a box and no editor, so the editor-only paths find null and disable themselves
     api.addField = function(id, node, opt) {
         if (!opt || !node) return;
         api.options[String(id)] = opt;

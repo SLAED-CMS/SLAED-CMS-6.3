@@ -323,8 +323,7 @@
         return btn;
     }
 
-    // The width follows the row of category tabs, so a long row is not cut off and a short one leaves no gap
-    // On a phone no width is written at all: there the canon lays the window edge to edge, and an inline width would leave the sheet short of the screen
+    // On a phone no width is written: the canon lays the window edge to edge, and an inline width would leave the sheet short of the screen
     function sizePanel() {
         var tabs = panel.querySelector('.sl-editor-emoji-tabs');
         var min = 360;
@@ -389,9 +388,7 @@
         return panel;
     }
 
-    // The panel stands at the button that opened it, because it is read against the text it writes into
-    // On a phone it takes no coordinates: the canon lays every window as a sheet along the bottom edge, and an inline place would beat that rule and push the panel past it
-    // The owner is written before that turn is taken, because a second press on the button closes the panel only while the panel knows whose it is
+    // The owner is written before the panel is placed, because a second press on the button closes the panel only while it knows whose it is
     function place(id) {
         var one = eds.get(id);
         var btn = one ? one.btn : null;
