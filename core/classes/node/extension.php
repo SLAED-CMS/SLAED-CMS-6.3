@@ -21,8 +21,7 @@ interface NodeExtension {
     # Forbid one of the closed actions on an already read target in addition to the core rules; it can never allow what the core refused
     public function checkNodeAction(NodeType $type, Node|NodeTarget $node, string $action): bool;
 
-    # Follow an action that has really happened, changing only rows of the extension inside the transaction of the action owner
-    # The uid names whose action it is - the author of a comment, the voter, the user of a favorite or of a resource - never the moderator who published it
+    # Follow an action that has happened, changing only rows of the extension in the transaction of its owner; the uid is the actor, never the moderator who published it
     public function updateNodeAction(NodeType $type, NodeTarget $node, string $action, int $uid): void;
 
     # Create the rows of the extension after the main row and the standard sets, before the shared commit

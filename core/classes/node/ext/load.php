@@ -6,9 +6,7 @@
 
 if (!defined('FUNC_FILE')) die('Illegal file access');
 
-# Create the registered extension of a type key from the closed map of key to file and class, with the current database and context
-# The stored key is looked up and never turned into a path; an empty key is a standard type and answers null, any other unknown key is refused
-# The map lists existing extensions only, each one arriving together with its file; the class of sync alone takes a third argument, the shared Feed of the loaded rss scope
+# Create the registered extension of a type key; the stored key is looked up in a closed map and never turned into a path
 function getNodeExtension(string $key, Database $db, NodeContext $context): ?NodeExtension {
     global $conf;
     $map = ['support' => ['support.php', 'NodeSupport'], 'sync' => ['sync.php', 'NodeSync']];

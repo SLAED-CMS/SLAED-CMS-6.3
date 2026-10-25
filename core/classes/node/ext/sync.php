@@ -98,16 +98,14 @@ final class NodeSync implements NodeExtension {
         if ($keys !== ['refresh', 'url'] || !is_string($data['url']) || !is_int($data['refresh'])) throw $this->getInvalid('ext');
     }
 
-    # The extension has no settings of its own: the transport belongs to config/rss.php and the period of a source to its row
-    # A type of it takes no public submission, because only a moderator of the type sets the source a material is made of
+    # The extension has no settings of its own, as the transport is config/rss.php; a type of it takes no public submission, since only a moderator sets a source
     public function filterNodeConfig(array $config, array $settings, array $fields): array {
         if ($config !== []) throw $this->getInvalid('ext');
         if (($settings['features']['submit'] ?? null) !== false) throw $this->getInvalid('features.submit');
         return [];
     }
 
-    # Accept exactly the address and the refresh period of the source from a moderator of the type: an external http or https address without credentials in the canonical form
-    # Feed will request, and a period of zero or 300 seconds up to a year; nothing here resolves a name or opens a connection
+    # Accept the address and the refresh period of a source from a moderator of the type; nothing here resolves a name or opens a connection
     public function filterNodeData(NodeType $type, array $data, ?Node $node = null): array {
         if (!$this->checkModer($type->name)) throw new NodeException('Only a moderator of the type sets a source', NodeException::DENIED);
         $keys = array_keys($data);
@@ -143,8 +141,7 @@ final class NodeSync implements NodeExtension {
         $this->addSourceRow($node->id, $data);
     }
 
-    # Follow a changed material, whose body is never changed by a form: a new address forgets the validators and the history of results and is due at once
-    # A new period alone keeps them and moves the next check from the last one; a change of state leaves the row alone
+    # Follow a changed material, whose body a form never changes; a new address forgets the validators and is due at once, a new period alone keeps them
     public function updateNodeData(Node $before, Node $after, ?array $data): void {
         if ($data === null) return;
         $this->checkSourceData($data);
@@ -178,8 +175,7 @@ final class NodeSync implements NodeExtension {
         $this->getQueryRes('DELETE FROM '.PREFIX_DB.'_node_sync WHERE nid = :nid', ['nid' => $node->id]);
     }
 
-    # Read the source rows of one page of materials with one statement for the administrative view of a moderator of the type
-    # A public view gets nothing, because the address of the source and the technical error are not part of the material
+    # Read the source rows of one page for the admin view of a moderator; a public view gets nothing, as the source address and its error are not part of the material
     public function getNodeData(NodeType $type, array $nodes, string $mode): array {
         if ($mode !== 'admin' || !$this->checkModer($type->name)) return [];
         $ids = [];
@@ -196,10 +192,7 @@ final class NodeSync implements NodeExtension {
         return $out;
     }
 
-    # Store the result of one fetch in its own transaction when the source and the version of the material are still the ones the fetch started from
-    # A new text passes the bound of nodes.body and changes only the body, the update time and the version of the material with the source row
-    # An answer 304 or the same text changes only the source row; a failure keeps the text and the validators, counts the failure and waits longer
-    # A concurrent change of either side writes nothing
+    # Store the result of one fetch in its own transaction while the source and the material version are those the fetch started from, else write nothing
     private function setSourceResult(array $snap, array $res): array {
         $nid = $snap['nid'];
         $new = $res['ok'] && $res['changed'] && $res['body'] !== $snap['body'];
@@ -248,8 +241,7 @@ final class NodeSync implements NodeExtension {
         return $out;
     }
 
-    # Check one source now: the snapshot of the material and its source is read without a lock, the feed is fetched with the stored validators outside any transaction
-    # The result is stored by setSourceResult(); a material in the trash is skipped
+    # Check one source now; the feed is fetched with the stored validators outside any transaction, and a material in the trash is skipped
     private function setSourceCheck(array $snap): array {
         if ($snap['status'] === NodeStatus::Deleted->value) return ['id' => $snap['nid'], 'status' => 'skipped', 'error' => ''];
         return $this->setSourceResult($snap, $this->feed->getFeedContent($snap['url'], $snap['etag'], $snap['modified']));
@@ -269,7 +261,6 @@ final class NodeSync implements NodeExtension {
     }
 
     # Check the source of one material now, whatever its due time, for a moderator of its type; a background context uses the queue instead
-    # The answer names the material, the outcome updated, unchanged, failed or skipped, and the short safe error of a failure
     public function updateNodeSync(int $id): array {
         if ($this->ctx->task) throw new NodeException('A background context checks the queue only', NodeException::DENIED);
         $snap = ($id > 0) ? ($this->getSourceSnaps('s.nid = :id', ['id' => $id])[0] ?? null) : null;
@@ -278,8 +269,7 @@ final class NodeSync implements NodeExtension {
         return $this->setSourceCheck($snap);
     }
 
-    # Check the due sources of active types for the scheduler in the order of the queue, one fetch and one transaction per material, and answer in the form of the scheduler
-    # Only the trusted background context runs it; the limit counts network sources and is not the batch of the global subsystems; one statement selects the queue
+    # Check the due sources for the scheduler, one fetch and one transaction per material; the limit counts network sources, not the batch of the global subsystems
     public function updateNodeSyncList(int $limit): array {
         if (!$this->ctx->task) throw new NodeException('Only a background context checks the queue', NodeException::DENIED);
         if ($limit < 1 || $limit > 50) throw $this->getInvalid('limit');

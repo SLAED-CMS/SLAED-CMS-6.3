@@ -737,11 +737,7 @@ function getNodeTypeVals(?NodeType $type, ?array $prof): array {
     ];
 }
 
-# Read the posted type form into the effective settings and the input the service takes; fields, uploads and rating stay those of the stored type or the defaults
-# The report switch of a role counts only in the modes download and link, the two that offer the report form, because the form hides it in any other
-# The extension settings stay those of the stored type or of the shipped profile the new type starts from
-# The views put the default one first; the one view of the display mode alone is stored empty, so the list keeps following its mode
-# A public workflow for guests without moderation is taken only with its explicit confirmation, because every visitor would then publish directly
+# Read the posted type form into the settings and the service input; a public guest workflow without moderation is taken only with its explicit confirmation
 function getNodeTypePost(?NodeType $old, ?array $prof): array {
     $num = fn(string $key, int $def): int => (($v = getVar('post', $key, 'raw', '')) !== '' && is_string($v) && preg_match('/^-?[0-9]{1,18}$/D', trim($v))) ? trim($v) : $def;
     $flag = fn(string $key): bool => getVar('post', $key, 'raw', '') === '1';

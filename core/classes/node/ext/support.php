@@ -55,8 +55,7 @@ final class NodeSupport implements NodeExtension {
         return $this->ctx->super || in_array($type->name, $this->ctx->mods, true);
     }
 
-    # The state and priority maps of the loaded Node configuration, checked against the table: the named keys the code uses and distinct whole numbers inside the CHECK bounds
-    # Priorities must rise from low to urgent because the queue orders by the number; anything else blocks the extension
+    # The state and priority maps of the Node configuration; priorities must rise from low to urgent, because the queue orders by the number
     private function getMaps(): array {
         global $conf;
         $maps = $conf['node']['support'] ?? null;
@@ -103,8 +102,7 @@ final class NodeSupport implements NodeExtension {
         return !empty($row['super']) || in_array('node-'.$type->name, getAdminModuleNames($row['modules']), true);
     }
 
-    # The addresses of the subscribed administrators who may work on the type, in the language of the request where the site is multilingual
-    # With an assigned administrator only that one, when he is still subscribed and entitled; the acting administrator never gets one
+    # The addresses of the subscribed administrators entitled to the type; an assigned one alone while still entitled, and never the acting administrator
     private function getMailList(NodeType $type, int $aid): array {
         global $conf, $locale;
         $where = 'smail = \'1\' AND email IS NOT NULL';
@@ -122,9 +120,7 @@ final class NodeSupport implements NodeExtension {
         return ($aid > 0 && isset($out[$aid])) ? [$out[$aid]] : array_values(array_unique($out));
     }
 
-    # Queue the notice of one event of a request when the type sends mail: a new request and a reply of its owner go to the staff, a reply of the staff to the owner
-    # The notice names the site, the title and the side and links the request; the private text never enters the queue, and a refused queue row is logged by Mail
-    # A failed read of the recipients is logged and costs the notice alone: the request or the reply it follows is stored all the same
+    # Queue the notice of one request event; the private text never enters the queue, and a failed read of the recipients costs the notice alone
     private function addSupportMail(NodeType $type, int $id, int $uid, string $title, string $event, int $aid): void {
         if (empty($type->settings['ext']['mail'])) return;
         getLang('node');
@@ -146,8 +142,7 @@ final class NodeSupport implements NodeExtension {
         addNodeMail($list, $title, $text);
     }
 
-    # Accept exactly the one switch of the extension and a standard section that makes the type private: registered authors, categories, open comments, direct publication
-    # Forbid public integration, rating, favorites, poll, home, pin, schedule, relation, tree and resource roles; require the support view and the two intact maps
+    # Accept the one mail switch and a standard section that keeps the type private; a public integration or an active resource role blocks the extension
     public function filterNodeConfig(array $config, array $settings, array $fields): array {
         $this->getMaps();
         if (array_keys($config) !== ['mail'] || !is_bool($config['mail'])) throw $this->getInvalid('ext.mail');
@@ -182,9 +177,7 @@ final class NodeSupport implements NodeExtension {
         return $row !== null && $row['state'] !== $this->getMaps()['state']['closed'];
     }
 
-    # Follow the first publication of a reply inside the transaction of the comment owner: a reply the owner wrote waits for the staff, any other waits for the owner
-    # The activity and the version move and the notice of the other side is queued; the side is the author of the reply, not the moderator who approved it
-    # The owner is therefore never told about a reply of his own; a closed request stays as it is
+    # Follow the first publication of a reply; the side is the author of the reply, never the moderator who approved it, so an owner is not told of their own
     public function updateNodeAction(NodeType $type, NodeTarget $node, string $action, int $uid): void {
         if (!in_array($action, self::ACTIONS, true)) throw $this->getInvalid('action');
         if ($action !== 'comment') return;
@@ -221,8 +214,7 @@ final class NodeSupport implements NodeExtension {
         $this->getQueryRes('DELETE FROM '.PREFIX_DB.'_node_support WHERE nid = :nid', ['nid' => $node->id]);
     }
 
-    # Read the queue rows of one page of accessible requests with one statement: state, priority, assignment, version and activity for everyone the request is readable to
-    # The owner needs them because he sends the stored assignment and priority back when he closes or reopens; the assigned administrator name goes to a moderator alone
+    # Read the queue rows of one page of requests; the owner gets them too, because closing or reopening sends the stored assignment and priority back
     public function getNodeData(NodeType $type, array $nodes, string $mode): array {
         $ids = [];
         foreach ($nodes as $one) if (($one instanceof Node || $one instanceof NodeTarget) && $one->id > 0) $ids[] = $one->id;
@@ -240,9 +232,7 @@ final class NodeSupport implements NodeExtension {
         return $out;
     }
 
-    # Change the working card of one request at the expected version in one statement: a moderator sets the assignment, the state and the priority
-    # The owner only closes or reopens and must send the assignment and priority the row already has; a repeat of the stored values writes nothing
-    # Closing and reopening move the activity, an assignment or a priority does not; the request must be readable by the context, as every read of the type decides
+    # Change the card of one request at the expected version; the owner only closes or reopens and must send back the stored assignment and priority
     public function updateNodeSupport(int $id, int $aid, int $state, int $prio, int $version): void {
         if ($this->ctx->task) throw new NodeException('A background context changes no request', NodeException::DENIED);
         $maps = $this->getMaps();

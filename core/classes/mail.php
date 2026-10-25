@@ -51,9 +51,7 @@ class Mail {
     private int $rsec = 0;
     private int $rnum = 0;
 
-    # Build the service from the site config; the database handle is what the queue is stored in and the lock window is read from the drain job, whose claims this object releases
-    # Two sections are read, because delivery and campaign policy are different questions: mail says how a message leaves, newsletter says how a mailing is allowed to run
-    # The MIME boundary starts with "=_", which no base64 line can contain, so one boundary per object is safe for every message it sends
+    # Build the service from the site config; the MIME boundary starts with "=_", which no base64 line can contain, so one boundary serves every message
     public function __construct(?Database $db, array $conf) {
         $this->db = $db;
         $this->conf = is_array($conf['mail'] ?? null) ? $conf['mail'] : [];
@@ -73,11 +71,7 @@ class Mail {
         $this->deletePopLink();
     }
 
-    # Accept one message from a call site and store it as a queue row; the answer means accepted into the queue, and no caller learns the delivery outcome synchronously any more
-    # The client block is appended here, inside the request that owns the visitor data, and never at send time where only the scheduler's own address would be available
-    # Every value is bounded against the column that stores it, because under strict SQL mode an oversized write fails and would take the message with it
-    # A campaign row is written held and marked as part of an audience, so nothing of a mailing is claimable until the state machine of that mailing says so
-    # The body passes getOutputHtml() like a served page, so a fragment a template wraps over lines is stored as one-line tags without blank lines
+    # Store one message as a queue row, answering queued and not delivered; every value is bounded by its column, as strict SQL mode refuses an oversized write whole
     public function addQueue(array $mesg): bool {
         $kind = substr($this->filterHeader($mesg['kind'] ?? ''), 0, self::KINDLEN);
         $rcpt = $this->filterAddress($mesg['email'] ?? '');
@@ -99,10 +93,7 @@ class Mail {
         return true;
     }
 
-    # Claim one batch of due rows under a fresh lock identifier and return them in send order; the claim is one conditional UPDATE, so two runs can never take the same row
-    # Taking a row moves its next attempt behind the lock window, which keeps a claimed row out of every other claim and gives a dead run its rows back when the window passes
-    # The predicate is exactly what the claim index leads with, so it stays one ordered range read: a marker column in it sends the optimizer to another index and adds a filesort
-    # Claims of a dead run are cleared first, which only tidies the marker columns, because the window has already made those rows claimable again
+    # Claim one batch of due rows under a fresh lock id in one conditional UPDATE; the predicate is what the claim index leads with, a marker column in it adds a filesort
     public function getBatch(int $num): array {
         if (!$this->db instanceof Database || $num < 1) return [];
         $this->deleteClaim();
@@ -114,9 +105,7 @@ class Mail {
         return $this->db->getSqlRows($this->db->getSqlQuery($sql, ['lock' => $this->lock])) ?: [];
     }
 
-    # Record what one attempt answered: an accepted row is done, a refused one waits behind a growing backoff until the attempt cap turns it into a failure the admin view keeps
-    # A hard failure skips the retries, because a message whose shared body is gone would be refused the same way on every attempt
-    # Every stored value is bounded here rather than by its column, since the write that records a failure must never be able to fail itself and leave the row claimed
+    # Record what one attempt answered; every stored value is cut here, because the write that records a failure must never fail itself and leave the row claimed
     public function setResult(int $id, bool $sent, string $mesg = '', bool $hard = false): bool {
         if (!$this->db instanceof Database || $id < 1) return false;
         if ($sent) {
@@ -140,9 +129,7 @@ class Mail {
         return (bool)$this->db->getSqlQuery($sql, $pars);
     }
 
-    # Drain the queue until nothing is due, the time budget is spent or the rate cap for the current minute is reached, then prune and report what the run did
-    # The run is time-boxed rather than count-boxed: under pseudo-cron it executes inside a web request and has to end politely instead of being killed with a row in hand
-    # One transport connection spans the whole run, which is what makes a drain one handshake rather than one per message
+    # Drain the queue within a time budget rather than a count, because under pseudo-cron the run executes inside a web request and has to end before it is killed
     public function updateQueue(): array {
         $out = ['sent' => 0, 'fail' => 0, 'kept' => 0, 'left' => 0, 'stop' => 'empty'];
         if (!$this->db instanceof Database) {
@@ -191,8 +178,7 @@ class Mail {
         return $out;
     }
 
-    # Prune accepted rows past their retention window, per kind: one mailing is one row per account, so bulk history is kept far shorter than the transactional one
-    # A failed row is never pruned here, because it is exactly what the admin view exists to show
+    # Prune accepted rows past their retention window, mailings sooner than transactional mail; a failed row is never pruned, as the admin view exists to show it
     public function deleteQueue(): int {
         if (!$this->db instanceof Database) return 0;
         $keep = max(1, intval($this->conf['keep'] ?? 0) ?: 30);
@@ -205,11 +191,7 @@ class Mail {
         return $num;
     }
 
-    # Deliver one claimed row, classify what the transport answered and record it, which is the only place a stored message turns into a delivered one
-    # The answer says what the run should do next: a refusal describing the transport rather than the message stops the run instead of spending an attempt on every remaining row
-    # A refusal is permanent for the row unless its code says otherwise, and only a permanent verdict at the recipient step is ever read as a statement about the address
-    # The phase and the code are cleared before anything is attempted, so a row refused before a transport is entered cannot be recorded under the answer the previous row got
-    # A mailing row gets the unsubscribe link of its own recipient in the body and in the list headers; the link is cleared first so no other row inherits it
+    # Deliver one claimed row and record the result; phase, code and unsubscribe link are cleared first, so no row is recorded or sent with what the previous row left
     private function setQueueSend(array $row): string {
         $id = intval($row['id']);
         $body = (string)$row['body'];
@@ -245,8 +227,7 @@ class Mail {
         return 'fail';
     }
 
-    # Classify one refusal by the step it happened at, because a code without its phase cannot be interpreted and only one of the phases says anything about the recipient
-    # A refusal carrying no code at all is temporary by definition: nothing answered, so nothing was decided, which is also the shape every non-dialogue transport reports
+    # Classify one refusal by the step it happened at; a refusal without a code is temporary, because nothing answered and so nothing was decided
     private function getFailScope(): string {
         if ($this->code === '' || $this->code[0] !== '5') return 'temp';
         return match ($this->phase) {
@@ -257,9 +238,7 @@ class Mail {
         };
     }
 
-    # Record one campaign result against the mailing that owns it: what was accepted, what was lost, and whether the sample it belongs to has finished
-    # The counters are the mailing's own history, so they are written per result rather than recomputed later from rows retention will eventually remove
-    # The classification is handed in rather than derived again here, because by this point it also describes a row that never reached a transport at all
+    # Record one campaign result against its mailing; the counters are written per result, because retention later removes the rows they could be recounted from
     private function setCampResult(array $row, bool $sent, string $scope): void {
         if ((string)$row['kind'] !== 'newsletter') return;
         $ref = intval($row['ref']);
@@ -271,8 +250,7 @@ class Mail {
         if ($scope === 'rcpt') $this->checkCampBreak($ref);
     }
 
-    # Stop a mailing whose recent results say the list is damaging the sender, counting only the refusals that were verdicts about a recipient
-    # The window is the last results of that campaign and is read once enough of them exist, because a rate over three results is not a rate
+    # Stop a mailing whose recent recipient verdicts cross the abort rate, read only once a full window of its results exists
     private function checkCampBreak(int $ref): void {
         $win = max(1, intval($this->rule['breakwin'] ?? 0) ?: 100);
         $bad = max(1, min(100, intval($this->rule['abort'] ?? 0) ?: 10));
@@ -287,8 +265,7 @@ class Mail {
         $this->setCampAbort($ref, 'the hard failure rate of this mailing crossed the configured limit');
     }
 
-    # Hold back everything a mailing has not sent yet and say why, which is what an abort is: the rows stay, they simply stop being claimable
-    # Both slices are held, because aborting during the sample has to stop the sample as well and only a release decides what runs again
+    # Hold back everything a mailing has not sent yet, the sample included, and say why; the rows stay held and only a release decides what runs again
     public function setCampAbort(int $ref, string $mesg): bool {
         if ($ref < 1 || !$this->db instanceof Database) return false;
         $sql = 'UPDATE '.PREFIX_DB.'_mail SET hold = 1 WHERE kind = \'newsletter\' AND ref = :id AND camp > 0 AND status = 0';
@@ -299,9 +276,7 @@ class Mail {
         return true;
     }
 
-    # Release the audience a held or aborted mailing is still holding, which is the one transition only an operator performs
-    # The sample is left alone: it was released once, it already has its results, and clearing its hold again would say nothing
-    # A release that frees nothing finishes the mailing instead of starting it: suppression can leave an audience no larger than the sample already sent
+    # Release the audience a held or aborted mailing still holds; a release that frees nothing finishes the mailing, as suppression can leave nothing beyond the sample
     public function setCampFree(int $ref): bool {
         if ($ref < 1 || !$this->db instanceof Database) return false;
         $sql = 'UPDATE '.PREFIX_DB.'_mail SET hold = 0, ntime = UNIX_TIMESTAMP() WHERE kind = \'newsletter\' AND ref = :id AND camp = 2 AND status = 0';
@@ -312,9 +287,7 @@ class Mail {
         return (bool)$this->db->getSqlQuery($sql, ['id' => $ref]);
     }
 
-    # Close the expansion of one mailing: either a sample is drawn and released while the rest stays held, or the whole audience is released at once
-    # Three tests decide it and all read the frozen audience size, so a restart cannot send a campaign down a different branch than the one it started on
-    # A sample of nothing would be a state no run could ever finish, which is what the size floor and the zero tests each guard from their own side
+    # Close the expansion of one mailing with a sample or the whole audience, decided on the frozen audience size, so a restart takes the branch it started on
     public function setCampReady(int $ref, int $size): int {
         if ($ref < 1 || !$this->db instanceof Database) return 0;
         $num = max(0, intval($this->rule['canary'] ?? 0));
@@ -328,8 +301,7 @@ class Mail {
         return $stat;
     }
 
-    # Draw the sample the first results are measured over: one address per recipient domain, chosen at random, topped up at random when the audience holds fewer domains
-    # A hundred addresses behind one provider would measure that provider rather than the list, which is why the domain comes first and the fill comes second
+    # Draw the sample one address per recipient domain first and top it up at random, so the first results measure the list and not one provider
     private function setCampSample(int $ref, int $num): void {
         $sql = 'SELECT MIN(id) AS id FROM '.PREFIX_DB.'_mail WHERE kind = \'newsletter\' AND ref = :id AND status = 0'
             .' GROUP BY SUBSTRING_INDEX(email, \'@\', -1) ORDER BY RAND() LIMIT '.$num;
@@ -353,8 +325,7 @@ class Mail {
         return intval($row['num'] ?? 0);
     }
 
-    # Move every campaign this run touched to the state its remaining rows now describe: a finished sample parks for an operator, an exhausted audience is done
-    # The sample never releases the rest of the audience by itself, at any measured rate, because that is the one decision a bad list must not be allowed to take unattended
+    # Move every campaign this run touched to the state its rows describe; a finished sample parks for an operator and never releases the rest by itself
     private function updateCampState(): void {
         foreach (array_keys($this->camp) as $ref) {
             $sql = 'SELECT SUM(camp = 1 AND status = 0) AS wait, SUM(status = 0) AS live FROM '.PREFIX_DB.'_mail WHERE kind = \'newsletter\' AND ref = :id';
@@ -370,18 +341,14 @@ class Mail {
         $this->camp = [];
     }
 
-    # Report whether one address may enter a bulk audience, using every check the host offers and sending when none of them can answer
-    # The order is the order the answers become available: syntax costs nothing, the send history is already recorded, and the domain is asked only when the first two allow it
-    # No step may refuse for its own failure. A resolver that is unreachable, an extension that is missing or a lookup that errors all mean send it
+    # Report whether one address may enter a bulk audience; a check that cannot answer, an unreachable resolver or a missing extension, means send it
     public function checkAddress(string $mail): bool {
         if ($this->filterAddress($mail) === '') return false;
         if ($this->checkDeadMail($mail)) return false;
         return $this->checkMailDomain($mail);
     }
 
-    # Produce the one stored form of an address the registry is keyed by, so a lookup can never disagree with the unique index it reads through
-    # The domain is lowercased and a non-ASCII one is converted to its canonical form; the local part is left as it came, where case is significant by RFC
-    # A host without the conversion refuses a non-ASCII domain rather than storing a spelling that will not match itself on the next read
+    # Produce the form the unique key of the registry stores: the domain lowered and in ASCII, the local part as it came, because its case is significant by RFC
     private function filterDeadMail(string $mail): string {
         $mail = trim($mail);
         if ($mail === '' || preg_match('/[\x00-\x1F\x7F]/', $mail)) return '';
@@ -407,9 +374,7 @@ class Mail {
         return $row && intval($row['fails']) >= $cap;
     }
 
-    # Count one permanent recipient verdict against the address it was about, which is the only failure the taxonomy allows to be read as a fact about a mailbox
-    # The counter is a running total rather than a flag: one 5xx can be a policy answer, several are a pattern, and an administrator can clear it
-    # Every placeholder is named once, because native prepares refuse a repeated name and the whole write would fail without a word
+    # Count one permanent recipient verdict against its address; every placeholder is named once, because native prepares refuse a repeated name and the write fails
     private function addDeadMail(string $mail): void {
         $mail = $this->filterDeadMail($mail);
         if ($mail === '' || !$this->db instanceof Database) return;
@@ -420,9 +385,7 @@ class Mail {
         $this->db->getSqlQuery($sql, ['mail' => $mail, 'phase' => $phase, 'code' => $code, 'uphase' => $phase, 'ucode' => $code]);
     }
 
-    # Ask whether the domain of an address accepts mail at all, which is the cheapest large win on an aged list and the one check that scales with domains rather than addresses
-    # A verdict is cached for the configured window, so a mailing resolves each domain once and a domain that comes back becomes usable again when the entry expires
-    # Every failure of the check itself is an acceptance: a resolver that is unreachable states nothing about the domain and must never hold up a send
+    # Ask whether the domain of an address accepts mail, caching the verdict; a failure of the check itself accepts, as a dead resolver says nothing about the domain
     private function checkMailDomain(string $mail): bool {
         if (empty($this->conf['verify']) || !function_exists('checkdnsrr')) return true;
         $cut = strrpos($mail, '@');
@@ -465,8 +428,7 @@ class Mail {
         $this->db->getSqlQuery($sql, ['wait' => $this->wait]);
     }
 
-    # Give the rows this run still holds back to the queue, which is what a run stopped by its time budget or by the rate cap leaves behind for the next one
-    # The next attempt goes back to now, because a released row is due again immediately and must not sit out the lock window the claim moved it behind
+    # Give the rows this run still holds back to the queue, due at once rather than after the lock window the claim moved them behind
     private function deleteLock(): void {
         if ($this->lock === '') return;
         $sql = 'UPDATE '.PREFIX_DB.'_mail SET locked = 0, lockid = \'\', ntime = UNIX_TIMESTAMP() WHERE lockid = :lock AND status = 0';
@@ -513,8 +475,7 @@ class Mail {
         return $cap < 1 || $this->rnum < $cap;
     }
 
-    # Count what the queue holds, in the words the system can actually stand behind: a transport accepting a message is not a mailbox receiving it
-    # Held rows are counted apart from pending ones, because a campaign waiting for an operator is not the same as a queue waiting for a drain
+    # Count what the queue holds; held rows apart from pending ones, because a campaign waiting for an operator is not a queue waiting for a drain
     public function getStats(): array {
         $out = ['pend' => 0, 'sent' => 0, 'fail' => 0, 'hold' => 0];
         if (!$this->db instanceof Database) return $out;
@@ -618,9 +579,7 @@ class Mail {
         return intval($this->db->getSqlAffected());
     }
 
-    # Read one delivery status notification the bounce address received and count every permanent failure it reports against the address it names
-    # Only a report about a message this site sent counts: its returned headers carry a Message-ID whose signature binds that message to that very recipient
-    # A report naming anyone else, a temporary failure, an auto-reply or a mail that is no report at all changes nothing, so a forged mail cannot remove a subscriber
+    # Count every permanent failure one delivery report names; only a report quoting a Message-ID signed for that recipient counts, so a forged mail removes nobody
     public function addBounce(string $raw): array {
         $out = ['dead' => [], 'skip' => 0];
         foreach ($this->getBounceDead($raw, $out['skip']) as [$mail, $code]) {
@@ -655,11 +614,7 @@ class Mail {
         $this->addDeadMail($mail);
     }
 
-    # Read the bounce mailbox over POP3, count the permanent failures its delivery reports name and delete what was read, which is what a dedicated bounce box is for
-    # A run takes at most BOUNCENUM messages, so a flooded box is worked off over several drains instead of holding one past its time budget
-    # Every message read is deleted, a report or not: the box exists only for reports, and a message left in it would be read again on every run
-    # The verdicts are written only after QUIT committed the deletions, so a session that breaks off counts nothing and the next run reads the same reports once
-    # An unconfigured box is no error, it simply reads nothing; a box that cannot be read reports why, and the drain it runs in carries on regardless
+    # Read the bounce mailbox over POP3 and delete what was read; verdicts are written only after QUIT commits the deletions, so a broken session counts nothing
     public function updateBounce(): array {
         $out = ['read' => 0, 'dead' => 0, 'error' => ''];
         if ($this->filterHeader($this->conf['pophost'] ?? '') === '') return $out;
@@ -690,8 +645,7 @@ class Mail {
         return $out;
     }
 
-    # Open the bounce mailbox: connect with the configured encryption, raise STLS when asked for, and log in, every step requiring the server's +OK
-    # The certificate is verified exactly as for the relay, and the password is never part of a failure message, which keeps it out of the log
+    # Open the bounce mailbox with the configured encryption and log in; the certificate is verified and the password never enters a failure message
     private function checkPopLink(): bool {
         $this->deletePopLink();
         $host = $this->filterHeader($this->conf['pophost'] ?? '');
@@ -815,8 +769,7 @@ class Mail {
         return $this->error;
     }
 
-    # Record the last failure in the site log and return false so a caller can return it directly
-    # The text is bounded in characters rather than bytes, because a transport answers with a response of its own length and a multibyte one must not be cut mid-character
+    # Record the last failure in the site log and return false; the text is cut in characters, so a multibyte relay answer is never split mid-character
     private function setError(string $mesg, array $ctx = []): bool {
         $this->error = mb_substr($mesg, 0, self::ERRLEN);
         Logger::addSite('error', 'Mail: '.$mesg, $ctx);
@@ -832,16 +785,13 @@ class Mail {
         }, E_WARNING);
     }
 
-    # Stop capturing and return the text of the last warning, stripped of control characters so nothing it carries can reshape a log line
-    # Entities are decoded first: with html_errors on, which is the default under a web SAPI, PHP hands the handler a message whose quotes are already escaped
-    # Storing it as it arrives would put &quot; in the queue row and then escape the ampersand again on the screen that exists to show an administrator what the transport said
+    # Stop capturing and return the last warning cleaned; entities are decoded first, as html_errors under a web SAPI escapes the quotes before the handler sees them
     private function getWarnText(): string {
         restore_error_handler();
         return $this->filterHeader(html_entity_decode($this->warn, ENT_QUOTES | ENT_HTML5, self::CHARSET));
     }
 
-    # Mask an address for the log, because a log is read by more people than a queue row and must not accumulate readable address lists
-    # A value that does not validate is logged as a mask alone: masking its local part would still copy whatever an injection appended behind the address into the log
+    # Mask an address for the log; a value that does not validate is logged as the mask alone, so nothing appended behind an address is copied into the log
     private function getMaskedMail(string $mail): string {
         $mail = $this->filterAddress($mail);
         if ($mail === '') return '***';
@@ -855,14 +805,12 @@ class Mail {
         return (filter_var($mail, FILTER_VALIDATE_EMAIL) === false) ? '' : $mail;
     }
 
-    # Replace control characters in a header text value with a space, so neither a line break nor a NUL can reach a header
-    # The match is deliberately bytewise: a UTF-8 aware pattern returns null on a malformed byte and would drop the whole value instead of cleaning it
+    # Replace control characters in a header value with a space; the match is bytewise on purpose, as a UTF-8 pattern returns null on a malformed byte
     private function filterHeader(string $text): string {
         return trim(preg_replace('/[\x00-\x1F\x7F]+/', ' ', $text) ?? '');
     }
 
-    # Resolve the From address and the envelope sender: the configured identity, else the site address, and the caller's address only when the site has neither
-    # A form visitor never becomes the sender of a site that has its own address, because the visitor's domain fails SPF and DMARC and anyone could mail in anyone's name
+    # Resolve the From address: the configured identity, else the site address, the caller's only when the site has neither, as a visitor's domain fails SPF and DMARC
     private function getSender(string $smail): string {
         foreach ([$this->conf['frommail'] ?? '', $this->admin, $smail] as $one) {
             $mail = $this->filterAddress($one);
@@ -898,8 +846,7 @@ class Mail {
         return chunk_split(base64_encode($text), 76, self::CRLF);
     }
 
-    # Build the multipart/alternative body: the plain-text part first and the HTML part last, because a client shows the last part it can render
-    # The HTML part stays the fragment it was composed as: with a text part beside it no filter scores a missing html tag, and webmail strips a body element anyway
+    # Build the multipart/alternative body with the text part first and the HTML part last, because a client shows the last part it can render
     private function getMimeBody(string $html): string {
         $out = '';
         foreach (['text/plain' => $this->getPlainText($html), 'text/html' => $html] as $type => $text) {
@@ -909,9 +856,7 @@ class Mail {
         return $out.'--'.$this->bound.'--'.self::CRLF;
     }
 
-    # Derive the plain-text part from the HTML: source whitespace folds to spaces, breaks and block ends become lines, and a link keeps its address beside its text
-    # Every line is trimmed and runs of empty lines fold to one, so template indentation never reaches a reader who sees the text part
-    # A list item starts its own line with a dash, so a list stays a list for a reader who sees only the text part
+    # Derive the plain-text part from the HTML: breaks and block ends become lines, a link keeps its address beside its text and a list item starts with a dash
     private function getPlainText(string $html): string {
         $text = preg_replace('#<(script|style)\b.*?</\1\s*>#si', '', $html) ?? $html;
         $text = preg_replace('#[ \t\r\n]+#', ' ', $text) ?? $text;
@@ -961,12 +906,7 @@ class Mail {
         return "\n\n"._MAIL_UNSUB.': '.$this->unsub;
     }
 
-    # Assemble the MIME header block for one already validated sender; no Return-Path is written because the receiving MTA owns that header
-    # An empty recipient means the transport writes its own To, which is what PHP mail() does and what a second To header would duplicate
-    # An empty subject means the same for Subject, which PHP mail() takes as its own parameter while a piped or dialogued message has to carry it inside the block
-    # Date and Message-ID are written here for every transport, because a relay spoken to directly is not obliged to add them and their absence costs spam score
-    # X-Priority is always normal: the queue priority orders the drain, and a high-priority flag on a site notice is what filters read as a spam signal
-    # A mailing carries the one-click unsubscribe of RFC 8058, a list identity in the site domain and the bulk precedence; every other message is marked auto-generated
+    # Assemble the MIME header block; an empty recipient or subject leaves To and Subject to PHP mail(), which writes its own and would duplicate them
     private function getHeaders(string $rcpt, string $smail, string $subj): string {
         $rcpt = $this->filterAddress($rcpt);
         $from = $this->getSender($smail);
@@ -993,9 +933,7 @@ class Mail {
         return implode(self::CRLF, $head);
     }
 
-    # Encode the transport-independent parts of one message and hand it to the configured transport, which is the only path out of the queue and is reachable from the drain alone
-    # An unset or unknown transport delivers through PHP mail(), so an installation that upgrades and configures nothing keeps sending the way it did before
-    # The phase and the code are cleared per message, so what a failed row records is what its own attempt answered and never what an earlier row left behind
+    # Encode one message and hand it to the configured transport; an unset or unknown transport sends through PHP mail(), so an unconfigured site keeps sending
     private function setDelivery(string $rcpt, string $smail, string $text, string $body): bool {
         $this->phase = '';
         $this->code = '';
@@ -1009,10 +947,7 @@ class Mail {
         };
     }
 
-    # Deliver through PHP mail(), the default transport, with the envelope sender set to the bounce address or else the resolved From, in the domain the message claims
-    # A host refusing the fifth parameter is expected rather than fatal: the message goes out without it and the parameter is dropped for the rest of the run
-    # The fallback is attempted and logged once per run, so a transport failing for its own reasons costs one attempt per message rather than two
-    # The warning handler captures the text instead of discarding it, because an unhandled warning inside a pseudo-cron request would leak into the response body
+    # Deliver through PHP mail() with the envelope sender; a refused fifth parameter is retried without it once per run, and dropped for the run when that succeeds
     private function addPhpMail(string $rcpt, string $smail, string $subj, string $body): bool {
         $head = $this->getHeaders('', $smail, '');
         $from = $this->getEnvelope($smail);
@@ -1036,13 +971,7 @@ class Mail {
         return $this->setError($mesg, ['transport' => 'php', 'mail' => $this->getMaskedMail($rcpt)]);
     }
 
-    # Deliver by piping the message into the configured Sendmail binary through proc_open(), which reports an exit status where popen() would hide it
-    # The command is an argument array and never a string, so no shell is involved: mail.sendmail holds a path and every argument is supplied here
-    # The binary is started with -t so it takes its recipient from the To header, -i so a lone dot cannot end the message, and -f for the envelope sender
-    # The proc_open() function is probed rather than assumed because shared hosting lists it in disable_functions, and the path must be an existing executable file
-    # Both output pipes are drained before the exit status is read, because a binary writing to stdout would otherwise block on a full pipe while we wait for it to finish
-    # A short write is a failure of its own: a binary that died before reading the message can still exit zero, and an unchecked fwrite() would report that as an accepted delivery
-    # The write uses the same warning handler as PHP mail(), because a closed pipe raises one and an unhandled warning would leak into the response body
+    # Pipe the message into Sendmail through proc_open() with an argument array, so no shell runs; a short write fails even when the binary exits zero
     private function addSendMail(string $rcpt, string $smail, string $subj, string $body): bool {
         $ctx = ['transport' => 'sendmail', 'mail' => $this->getMaskedMail($rcpt)];
         if (!function_exists('proc_open')) return $this->setError('sendmail is unavailable, proc_open is disabled on this host', $ctx);
@@ -1070,9 +999,7 @@ class Mail {
         return $this->setError($text.(($warn !== '') ? ': '.$warn : ''), $ctx);
     }
 
-    # Deliver over a raw SMTP dialogue, the only transport that reaches a relay this installation chooses rather than the one the host happens to provide
-    # The connection is opened once and kept, so a drain run spends one handshake on a whole batch instead of one per message
-    # The recipient and the resolved sender have both passed the address sanitiser, so neither the envelope nor the header block can carry an injected line
+    # Deliver over a raw SMTP dialogue on the connection kept for the run; recipient and sender passed the address filter, so no injected line reaches the envelope
     private function addSmtpMail(string $rcpt, string $smail, string $subj, string $body): bool {
         $this->mask = $this->getMaskedMail($rcpt);
         if (!$this->checkSmtpLink()) return false;
@@ -1084,8 +1011,7 @@ class Mail {
         return $this->checkSmtpStep('', '2', 'data');
     }
 
-    # Keep the connection this object already holds and open a new one only when there is none or the relay dropped the one there was
-    # Encryption is refused rather than silently skipped when openssl is missing, because a transport that quietly sends in clear is worse than one that says it cannot
+    # Keep the open connection or open a new one; encryption is refused rather than skipped when openssl is missing, so the transport never sends in clear unasked
     private function checkSmtpLink(): bool {
         if (is_resource($this->sock) && !feof($this->sock)) return true;
         $this->deleteSmtpLink();
@@ -1107,9 +1033,7 @@ class Mail {
         return $this->checkSmtpGreet();
     }
 
-    # Run the opening dialogue on a fresh connection: the greeting, then EHLO with a HELO fallback for a relay that speaks no ESMTP
-    # STARTTLS follows when it is configured, and authentication runs last so it is offered only over the encryption the installation asked for
-    # The second EHLO is not optional: the capability list before STARTTLS is not the one that counts, and the mechanisms AUTH may use are read from the encrypted one
+    # Run the opening dialogue; the second EHLO after STARTTLS is required, because the mechanisms AUTH may use are read from the encrypted capability list
     private function checkSmtpGreet(): bool {
         if (!$this->checkSmtpStep('', '2', 'connect')) return false;
         $name = $this->getSmtpName();
@@ -1132,8 +1056,7 @@ class Mail {
         return $this->setSmtpFail('the tls handshake failed'.(($warn !== '') ? ': '.$warn : ''));
     }
 
-    # Authenticate with a mechanism the relay actually advertised; both credentials travel base64 encoded, so nothing about them can reach the wire as protocol text
-    # Neither the password nor the encoded payload is ever passed to a failure message, which is what keeps them out of the log at every level
+    # Authenticate with a mechanism the relay advertised; neither the password nor its encoded form ever reaches a failure message, which keeps them out of the log
     private function checkSmtpAuth(): bool {
         $this->phase = 'auth';
         $user = $this->filterHeader($this->conf['user'] ?? '');
@@ -1147,8 +1070,7 @@ class Mail {
         return $this->checkSmtpStep(base64_encode($pass), '2', 'auth');
     }
 
-    # Pick an authentication mechanism out of the capability list the last EHLO returned, preferring the single-command form; a relay that advertises neither gets no guess
-    # The match stops at the next reply code, because the lines of a multi-line answer are read into one string and the capability after AUTH is not part of its argument list
+    # Pick PLAIN or LOGIN from the capability list of the last EHLO; the match stops at the next reply code, as a multi-line answer is read into one string
     private function getSmtpMech(): string {
         if (!preg_match('/AUTH[ =]([A-Za-z0-9 \-]+?)(?= \d\d\d[ -]|$)/i', $this->repl, $mtch)) return '';
         $list = array_map('strtoupper', explode(' ', $mtch[1]));
@@ -1180,8 +1102,7 @@ class Mail {
         return $this->setSmtpFail(($this->code === '') ? $this->repl.' at '.$step : 'the relay refused at '.$step.': '.$this->repl);
     }
 
-    # Read one reply, following continuation lines until the final one, because a reply read a line at a time desynchronises the whole dialogue
-    # Continuation is bounded: a relay that never sends its final line would otherwise hold the run for as many reads as it cares to answer
+    # Read one reply with its continuation lines, bounded, because a reply read a line at a time desynchronises the whole dialogue
     private function getSmtpReply(): string {
         $this->repl = '';
         $this->code = '';
@@ -1206,8 +1127,7 @@ class Mail {
         return $this->repl;
     }
 
-    # Prepare the message for the DATA phase: every line ends with CRLF on the wire, whatever the stored body happens to use
-    # A leading dot is doubled so no line of the message can end it early, which leaves the terminating sequence as the only bare dot on the wire
+    # Prepare the message for DATA: CRLF line ends and a leading dot doubled, so the terminating sequence is the only bare dot on the wire
     private function getSmtpData(string $mesg): string {
         $mesg = str_replace("\n", self::CRLF, str_replace(["\r\n", "\r"], "\n", $mesg));
         if (str_starts_with($mesg, '.')) $mesg = '.'.$mesg;
@@ -1230,8 +1150,7 @@ class Mail {
         return $done === strlen($text);
     }
 
-    # Record one failure with the phase and the reply code that produced it, because a bare code cannot be interpreted later and the phase is what says whose fault it was
-    # The connection is dropped with it: a dialogue that failed mid-step cannot be trusted to be in a known state, and this is the one path every failure passes through
+    # Record one failure with its phase and reply code and drop the connection, because a dialogue that failed mid-step is in no known state
     private function setSmtpFail(string $mesg): bool {
         $ctx = ['transport' => 'smtp', 'phase' => $this->phase, 'code' => $this->code, 'mail' => $this->mask];
         $this->deleteSmtpLink();

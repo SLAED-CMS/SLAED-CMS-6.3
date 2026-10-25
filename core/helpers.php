@@ -6,13 +6,7 @@
 
 if (!defined('FUNC_FILE')) die('Illegal file access');
 
-# Temporary home for new helper functions while shared APIs are stabilized
-
-# New, stable helper functions for building admin and frontend HTML from prepared data cuts and shared templates
-# Build the three ids one form row needs - the control, the caption naming it, the hint explaining it - so the two ends of a row cannot disagree about the name that joins them
-# The id is taken and never derived from the field name: this tree writes ids by hand and the mapping is no rule - dump_skip is f-dump-skip, and a loop position gives f-field-0
-# Re-deriving one from the name would quietly rewrite an id that JavaScript, CSS or an outside reference hangs on, so an existing id passes through untouched, duplicates included
-# Only a row whose field has no labelable control of its own - a radio group, an editor, a date pair - mints one, from the seed the caller names and a per-request counter
+# Build the control, caption and hint ids of one form row; an existing id passes through untouched and is never derived from the field name, which JS and CSS hang on
 function getFieldIds(string $id, string $mint = ''): array {
     static $seq = 0;
     if ($id === '') {
@@ -23,8 +17,7 @@ function getFieldIds(string $id, string $mint = ''): array {
     return ['input' => $id, 'label' => $id.'-label', 'hint' => $id.'-hint'];
 }
 
-# Answer the checked definitions of the extra fields of one area; the set stays empty until the 6.3 data update has left its mark, so no form shows a field before that
-# A stored set that fails the shared check is reported once with the path of its first error and then counts as empty, which keeps a page alive over a broken configuration
+# Answer the checked extra field definitions of one area; empty until the 6.3 data update has left its mark, and a set failing the check counts as empty after one log entry
 function getFieldRules(string $mod): array {
     global $conf, $fld;
     static $memo = [];
@@ -39,10 +32,7 @@ function getFieldRules(string $mod): array {
     }
 }
 
-# Read the posted extra fields of one area and answer json - the text to store, errors - field name => code, and stop - one plain message per refused field
-# Active fields are replaced as a whole, a stored value of a switched off field survives the form that hides it, and a stored name without a definition is dropped at this write
-# While the 6.3 data update has not left its mark the stored text comes back untouched and the refusal is reported, because positional data is never rewritten by the running system
-# A set that failed the shared check keeps the stored text too, and the trusted tags leave every posted text here: a value is stored raw and the tag is the capability itself
+# Read the posted extra fields of one area; before the 6.3 data update the stored text comes back untouched, and a switched-off field keeps its stored value
 function getFieldsPost(string $mod, string $old = ''): array {
     global $conf, $fld;
     if (($conf['update']['fields'] ?? '') !== '6.3.0') {
@@ -480,8 +470,7 @@ function setListPortion(string $key, string $from, string $where, array $pars, C
     return true;
 }
 
-# Render one full admin info page from a module info file with optional in-place editor; can_edit false keeps the editor away from a reader of a core page
-# Info docs are Markdown rendered in trusted mode, so they are stored raw with LF line endings: filterHtml would mangle Markdown and HTML forms submit CRLF
+# Render one admin info page with an optional in-place editor; the doc is stored raw with LF endings, as filterHtml would mangle Markdown and a form submits CRLF
 function setTplAdminInfoPage(array $data = []): void {
     global $afile, $locale, $conf, $tpl, $prs;
     $name = filterWord(getVar('get', 'name', 'text', ''));
@@ -593,9 +582,7 @@ function setTplAdminInfoPage(array $data = []): void {
     setFoot();
 }
 
-# Render one shared radio group from prepared option rows
-# The group is the element a reader lands in, so it carries the role and the reference to the caption of its own row: a radio hears "Yes" and never the question without it
-# The switch variant is a group too - two radios sharing one name still answer one question, and a reader landing on either has to be told which
+# Render one radio group that carries the role and the caption reference of its row, so a reader landing on a radio hears the question and not only Yes
 function getTplRadioGroup(array $data = []): string {
     global $tpl;
     $name = $data['name'] ?? '';
@@ -624,8 +611,7 @@ function getTplRadioGroup(array $data = []): string {
     ]);
 }
 
-# Render one shared user autocomplete input with datalist-backed lookup
-# A caller that names a card container opts into the richer, bounded answer of the route; every other caller keeps the flat array of names it has always been handed
+# Render the user autocomplete input; a caller naming a card container gets the richer bounded answer of the route, every other caller the flat list of names
 function getTplUserSearchInput(array $data = []): string {
     global $tpl;
     $name = $data['name'] ?? 'uname';
@@ -666,9 +652,7 @@ function getTplFieldsIn(array $data = []): string {
     return $out;
 }
 
-# The extra fields of an area as data and not as markup: one entry per active field with its caption, the id its caption points at, its hint and the rendered control
-# A page that lays the fields out its own way - the settings page puts them on lines - reads this, and getTplFieldsIn() is the same list folded into form rows
-# Values come from the posted form when there is one, else from the stored JSON, else - for a new entity only - from the defaults; a posted form is shown with its refusals
+# Answer the extra fields of an area as rows of data; values come from the posted form, else the stored JSON, else the defaults for a new entity only
 function getFieldsInRows(array $data = []): array {
     global $tpl, $fld;
     $rules = getFieldRules($data['mod'] ?? '');
@@ -687,11 +671,7 @@ function getFieldsInRows(array $data = []): array {
     return $rows;
 }
 
-# Map one declared storage to the room it has, so the editor that renders a field and the write path that stores it read the same number and can never disagree about it
-# The table carries the column type, not a byte count: a test compares each type line for line with storage/update/sql/table.sql, a map of numbers only an eye can check
-# The config store is a field written into a PHP file rather than a column; no ERROR 1406 waits for it, but it loads on every request reading that config, so it takes TEXT room
-# A store the table does not carry is answered with the narrowest field there is, because a permissive default would make every call site have to be right the first time
-# Whether a field may embed is derived, never stored: the room has to hold a whole data URI of Parser::EMBEDMAX, which TEXT cannot, so a summary field refuses one at any size
+# Map a declared storage to its room by column type, which a test compares with storage/update/sql/table.sql; an unknown store gets TEXT, the narrowest
 function getEditorRoomData(string $store): array {
     $room = [
         'comment.body' => 'mediumtext', 'forum.body' => 'mediumtext', 'message.body' => 'mediumtext', 'newsletter.body' => 'mediumtext',
@@ -705,11 +685,7 @@ function getEditorRoomData(string $store): array {
     return ['kind' => $kind, 'bytes' => $size, 'embed' => $size >= intdiv(Parser::EMBEDMAX + 2, 3) * 4 + 32];
 }
 
-# Refuse a text the field cannot hold before the query runs: a database handed one answers ERROR 1406 and the author loses the whole post instead of being told why
-# Length is measured with strlen(), never mb_strlen(), because a column bounds bytes: in utf8mb4 a Cyrillic letter costs two, so a character count fires at twice the limit
-# Embedded weight is measured beside the length because a column cannot express the summary rule: a 60 KB data URI fits TEXT and is then drawn onto every row of a list
-# The type is the other half of the contract: a data URI the parser refuses to draw would be stored anyway, counted against the column and then silently missing
-# It answers a ready message rather than a flag, so a form adds it to the refusals it already collects and a writer with no author to tell can put it in the log instead
+# Refuse a text its column cannot hold before the query runs; length is strlen(), never mb_strlen(), because a column bounds bytes and not characters
 function checkEditorTextRoom(string $text, string $store): string {
     $room = getEditorRoomData($store);
     if (strlen($text) > $room['bytes']) return sprintf(_ETEXTLONG, filterSize($room['bytes']));
@@ -724,9 +700,7 @@ function checkEditorTextRoom(string $text, string $store): string {
     return '';
 }
 
-# Render a rich-text editor textarea with upload config and locale for the given module
-# The call site declares where the text is stored: neither the form field name nor the upload directory identifies a column, and several editors write into a config file
-# A stored <br> mounts as what the save of the format turns back into a break: a line end for plain, which nl2br() restores, and a Markdown hard break for markdown
+# Render the rich-text editor textarea; the call site declares the store, because neither the field name nor the upload folder names a column
 function getTplTextarea(array $data = []): string {
     $id = (string)($data['id'] ?? '1');
     $name = (string)($data['name'] ?? '');
@@ -800,9 +774,7 @@ function getTplPostAction(array $hide, string $icon, string $title, string $conf
     return $out;
 }
 
-# Answer every word the file window prints and the runtime reads off its option object, so the editor driver and the form row take one set and can never disagree about a phrase
-# The editor adds its own toolbar words on top of this one and keeps the embed section beside these three, because both belong to the text it writes into and not to the window
-# The limit sentence is derived from the place rule and answers empty without one, since it is the three facts the drop zone spells out and the row beside the button repeats
+# Answer every word of the file window for the editor driver and the form row alike; the limit sentence comes from the place rule and is empty without one
 function getFileManagerText(array $rule = []): array {
     $exts = array_values(array_filter(array_map('trim', explode(',', (string)($rule['extensions'] ?? '')))));
     $mbyt = (int)($rule['maxbytes'] ?? 0);
@@ -864,9 +836,7 @@ function getFileManagerText(array $rule = []): array {
     ];
 }
 
-# Answer what one upload place lets a caller draw: the module it is moderated as, whether this visitor may upload and list there, and the extension list in one normalised form
-# The window and the form row asked the same four questions of the same rule and each worked out its own answer, and a field renders both, so the pair was computed twice per row
-# The extension list is lowercased once here rather than in one of the two callers, because the client compares a picked name against it in lower case and the two must not disagree
+# Answer what one upload place lets a caller draw; the extensions are lowercased here, because the client compares a picked name against them in lower case
 function getUploadPlaceView(array $rule): array {
     $mod = (string)$rule['mod'];
     $upl = $mod !== '' && checkEditorUploadAccess($mod, $rule);
@@ -881,14 +851,7 @@ function getUploadPlaceView(array $rule): array {
     ];
 }
 
-# Build the file manager window of one place: the one door the system opens wherever a file is asked for, inside the editor and beside a form row alike
-# The place rule answers what the sections may do, so a caller names the place and never a right, and the window can offer nothing the routes of that place refuse
-# Field mode is the window of a form: it picks and the form uploads, so the queue, its progress and the insert-as switch are absent and the pick is drawn as a chip
-# A place refusing an address carries no link tab at all, because canlink says the store keeps a file name against which an external address could never be resolved
-# The is_nolink option takes the tab away as well, for a caller whose writer refuses an address from this visitor although the place keeps one
-# Outside the editor the window is modal, so data-sl-window is written for the editor alone, where the text under it stays reachable while a file is being chosen
-# Packing and deletion follow the routes the place permits as well as the role, because a window offering a button the server refuses states a right that does not exist
-# The runtime and its draw templates travel with the window rather than with an editor, once per request, so a page with no editor still gets a working window
+# Build the file manager window of one place; its rights come from the place rule and its routes, never from the caller, and its runtime loads once per request
 function getFileManagerWindow(array $opt): string {
     global $tpl;
     static $done = false;
@@ -1093,12 +1056,7 @@ function getEditorFileKit(string $id, array $data): array {
     return ['opt' => $opt, 'html' => $html];
 }
 
-# Build the door of one form row onto the file window: the button that opens it, the chip of what came back and the three hidden carriers the submit takes to the handler
-# Outside the editor the window only picks and the form uploads, so the file rides an ordinary multipart submit and the runtime is handed a box instead of an editor to insert into
-# The three outcomes are exclusive and each has its own carrier, because the handler reads them in a fixed defensive order and a leftover of one would answer for another
-# A place refusing an address carries no address field at all, so nothing can be posted into a store that keeps a file name and could never resolve an external one
-# The is_nolink option drops the field and the link tab of its window the same way, for a visitor the writer of the caller refuses an address from
-# The row keeps the id it was given and the window mints its own from it, because the runtime finds every node of one instance by those ids and two rows of a page must not collide
+# Build the file window door of one form row; its three hidden carriers are exclusive, because the handler reads them in a fixed order and a leftover would answer
 function getFileManagerField(array $opt): string {
     global $tpl;
     $plc = (string)($opt['place'] ?? '');
@@ -1173,8 +1131,7 @@ function getFileManagerField(array $opt): string {
     return $box.$win.$tpl->getHtmlFrag('head-script-inline', ['js' => $js]);
 }
 
-# Build the gallery window from the one window frame: the owner tells whose gallery it is, and the walk, the property panel and the row of actions are what that owner offers
-# Nothing else about the window is decided here twice
+# Build the gallery window from the one window frame; its owner decides the walk, the property panel and the row of actions
 function getWindowShot(array $data = []): string {
     global $tpl;
     $own = (string)($data['own'] ?? 'view');
@@ -1262,8 +1219,7 @@ function getTplPostVals(array $hide, string $target): string {
     return 'hx-post="admin.php" hx-vals="'.$vals.'" hx-target="'.$target.'" hx-swap="innerHTML" hx-push-url="false"';
 }
 
-# Build one standalone admin button that submits a POST form, for actions that are not part of a speed dial
-# $attr carries behaviour attributes for the form itself; $look 'act' or 'danger' draws the button as the action of an alert
+# Build one standalone admin button that submits a POST form; $attr carries form behaviour, $look 'act' or 'danger' draws it as the action of an alert
 function getTplPostButton(array $hide, string $icon, string $label, string $attr = '', string $look = ''): string {
     global $afile, $tpl;
     $hide['token'] = getSiteToken((string)($hide['name'] ?? 'ajax'));
@@ -1283,8 +1239,7 @@ function getTplPostButton(array $hide, string $icon, string $label, string $attr
     ]);
 }
 
-# Build the standard moderator speed-dial keys for any front-end content row or card; callers pass the exact admin hrefs
-# The delete half becomes a form with a fresh token, never an address a browser may prefetch; a list of the address (id[]=5) goes back as fields of key[]
+# Build the moderator dial of a content row; the delete half becomes a form with a fresh token, and id[]=5 of the address goes back as fields of key[]
 function getTplEditMenu(string $edithref, string $delhref, string $title): array {
     global $tpl;
     static $seq = 0;
@@ -1316,8 +1271,7 @@ function getGenderText(int $gender): string {
     return (string)_NO_INFO;
 }
 
-# Render one title tip block from one or many label-value items
-# A plain string is rendered directly, without the label/definition grid a list of items gets
+# Render one title tip from label-value items; a plain string is rendered as it is, without the grid of a list
 function getTplTitleTip(mixed $data): string {
     global $tpl;
     if (!is_array($data)) return $tpl->getHtmlFrag('popover', ['content_html' => (string)$data]);
@@ -1333,8 +1287,7 @@ function getTplTitleTip(mixed $data): string {
     return $tpl->getHtmlFrag('popover', ['items' => $items]);
 }
 
-# Build the hover info tip shown before a user name (comments, forum posts, private messages)
-# Without a bound account the tip states the status instead of empty profile fields, where $deleted marks an orphaned post whose uid points to a removed user
+# Build the hover tip before a user name; without a bound account it states the status, and $deleted marks a post whose uid points to a removed user
 function getUserTip(string $gname, string|int $points, string $regdate, int $gender, string $from, string $warnings, bool $anon = false, bool $deleted = false): string {
     global $pnt;
     if ($anon) return getTplTitleTip([['label' => _STATUS, 'value' => (string)($deleted ? _USERDEL : _ANONYM)]]);
@@ -1362,9 +1315,7 @@ function getRatingStars(int $width): array {
     return $stars;
 }
 
-# Render the shared rating block for stars or like-style controls; type 2 answers a stored vote with the inner block alone, which replaces the content of the live one
-# The block is live only behind the mark of the 6.3 data update and an active rule as Rating checked it, so a broken rule shows no widget; the vote travels in a POST body
-# The average shown is Rating::getAverage() with two digits, the same integer half-up rule a vote answers with six, so the page and the refreshed block never disagree
+# Render the rating block; type 2 answers the inner block alone, and the average is Rating::getAverage() with two digits, the rule a vote answers with
 function getRatingAsync(mixed $typ, mixed $id, mixed $mod, mixed $rat, mixed $scor, string $obj = '', string $stl = ''): string {
     global $tpl;
     if (intval($rat)) {
@@ -1405,8 +1356,7 @@ function getRatingAsync(mixed $typ, mixed $id, mixed $mod, mixed $rat, mixed $sc
     return $tpl->getHtmlPart('div', $wrap + ['is_rate' => true, 'content_html' => $body]);
 }
 
-# Render the shared category select from database categories
-# The indent walk up a branch stops at a parent it cannot see and after as many steps as there are categories, so a loop stored in the tree never keeps the request spinning
+# Render the category select; the indent walk stops at an unseen parent and after as many steps as there are categories, so a stored loop never hangs
 function getTplCategorySelect(string $mod = '', int $id = 0, string $name = '', string $clas = '', string $empty = '', string $raw = ''): string {
     global $db, $conf, $tpl;
     $mod = filterVar($mod);
@@ -1522,8 +1472,7 @@ function getTplModuleChecks(string $name, string $mod, array $allow = [], string
     return $tpl->getHtmlFrag('check-list', ['labelledby' => $label, 'describedby' => $desc, 'items' => $boxes]);
 }
 
-# Return the names of modules that support categories: the forum and every registered Node type with the category feature, as the administrative screens read them
-# The types are never listed by name here, so a new type appears on the category screen as soon as it is registered and a site without the Node tables lists the forum alone
+# Return the modules with categories, the forum and every registered Node type with the feature; no type is named, so a new one appears once registered
 function getCategoryModules(): array {
     $types = array_filter(getNodeTypeMap(), fn(NodeType $v): bool => $v->settings['features']['categories']);
     return array_merge(['forum'], array_keys($types));
@@ -1558,8 +1507,7 @@ function getQueryString(array $data = [], bool $tail = false, string $hash = '')
     return $qry;
 }
 
-# Render a module navigation block from module config and optional overrides
-# A registered Node type has no best, pop or liste operation and no module config of its own: its links come only from the overrides its controller computes
+# Render a module navigation block; a Node type has no best, pop or liste operation and no module config, so its links come only from the overrides
 function getModuleNavi(array $p): string {
     global $conf, $tpl;
     $node = isset($conf['node']['types'][$conf['name']]);
@@ -1606,8 +1554,7 @@ function getPageNumbers(string $mod, int $count, int $pages, int $limit, array|s
     return getTplPagerView((int)$num, $pages, $maxpg, $target, ['count' => $count, 'limit' => $limit]);
 }
 
-# Render a run of text parts as one block, so the break between two of them is a decision the theme owns instead of a tag every caller spells for itself
-# $iswide asks for a blank line between the parts, and $israw hands each part through untouched for callers whose parts already carry rendered markup
+# Render text parts as one block, so the break between parts is the theme's decision; $iswide puts a blank line between, $israw passes markup through
 function getTplLines(array $line, bool $iswide = false, bool $israw = false): string {
     global $tpl;
     $rows = [];
@@ -1618,5 +1565,3 @@ function getTplLines(array $line, bool $iswide = false, bool $israw = false): st
     }
     return $tpl->getHtmlFrag('lines', ['lines' => $rows, 'is_wide' => $iswide]);
 }
-
-# End of stable helper functions for building admin and frontend HTML from prepared data cuts and shared templates

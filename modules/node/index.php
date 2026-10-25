@@ -17,8 +17,7 @@ function getNodeOps(string $ext = ''): array {
     return ($ext === 'support') ? $ops + ['support' => ['POST']] : $ops;
 }
 
-# The safe text of a refusal by its code; the message of the exception never reaches the page, only the label of a refused external source field or resource
-# Only the administrative form sends a source field, so the two administrative labels are read there alone; a refused resource is named by its place in the form
+# The safe text of a refusal by its code; the message of the exception never reaches the page, only the label of a refused source field or resource
 function getNodeFault(NodeException $err): string {
     global $conf;
     $text = match ($err->getCode()) {
@@ -82,10 +81,7 @@ function getNodeAssetList(NodeType $type, array $list): array {
     return $out;
 }
 
-# Read the resource rows of a posted form: a new multipart file is stored first through the shared upload service, a picked path or an address is taken as it came
-# A row without any source is dropped, which removes a stored resource the form carried; the refusal of an upload is answered as text and nothing is written for it
-# A file is stored only under the upload right of the type, for an active role that is no link, below the max of its role and the maxfiles of the rule
-# So a file the writer would refuse never reaches the quota; a read without upload ignores every file
+# Read the resource rows of a posted form; a file is stored only where the writer would take it, so a file the writer refuses never reaches the quota
 function getNodeAssetPost(NodeType $type, array $was, bool $upload): array {
     $rule = getUploadPlaceRule($type->name.'.attach');
     $may = checkEditorUploadAccess($type->name, $rule);
@@ -144,10 +140,7 @@ function getNodeAssetRows(?Node $node): array {
     return $out;
 }
 
-# Read the posted content of a material into the input the service takes and into the values the form shows again; the state travels separately
-# A visitor who does not moderate the type sends no poll, home, pin or date, and the comment mode of a public submission is the open one where the type has comments
-# A type with the extension sync takes the address and the period of its source instead of a body: the body stays the one its source last brought
-# A refused captcha reads the form without upload, so the texts come back to the visitor and no file of the refused request is stored
+# Read the posted content of a material for the service and the form; a refused captcha reads it without upload, so no file of the refused request is stored
 function getNodeFormPost(NodeType $type, bool $moder, ?Node $old, bool $upload = true): array {
     $feat = $type->settings['features'];
     $sync = $type->ext === 'sync';
@@ -226,9 +219,7 @@ function getNodeFormVals(?Node $node, array $ext = []): array {
     ];
 }
 
-# The categories of the type with their depth, from the shared category map with its tree order, limited to the categories the reader offers the writer
-# A category left out keeps its place in the walk, so an offered subcategory of a hidden or closed parent stands at the level of that parent; the writer checks the post right again
-# Each category is visited once; a branch under a lost parent stands at the top level and a loop follows at the end, so an edit never loses its stored category
+# The categories of the type with their depth in tree order; a lost branch or a loop still shows once, so an edit never loses its stored category
 function getNodeCatItems(NodeType $type, array $allow): array {
     $map = getCategoryMap($type->name);
     $out = [];
@@ -255,8 +246,7 @@ function getNodeEditor(NodeType $type, string $key, string $value, string $label
     return getTplTextarea(['id' => '2', 'store' => 'nodes.body', 'rows' => 12] + $base);
 }
 
-# The rows of the resource section: one repeatable group per active role, each row with the shared file field of the upload place of the type
-# The link input is offered only to a writer the service takes an external address from: a moderator of the type, or a material that goes to pre-moderation
+# The rows of the resource section; the link input is offered only to a writer the service takes an external address from
 function getNodeAssetHtml(NodeType $type, array $list, bool $link): string {
     global $tpl;
     $out = '';
@@ -285,8 +275,7 @@ function getNodeAssetHtml(NodeType $type, array $list, bool $link): string {
     return $out;
 }
 
-# The shared rows of a material form as neutral data - label, target, hint and control - so the public form and the administration lay them out in their own templates
-# Only the controls the type and the right of the visitor allow are built; the writer refuses every value the form did not offer anyway
+# The shared rows of a material form as neutral data for the public and admin templates; only the controls the type and the right of the visitor allow are built
 function getNodeFormRows(NodeType $type, array $vals, array $errs, bool $moder, bool $admin): array {
     global $tpl, $fld;
     $feat = $type->settings['features'];
@@ -356,8 +345,7 @@ function getNodeSupportLabels(): array {
     return $out;
 }
 
-# The data the extension of a type prepared for one material, with the labels and the owner switch its templates show for a request of support
-# The request of support shows its state and priority by the names of the two maps of config/node.php; only its owner gets the switch that closes or reopens it
+# The data the extension prepared for one material with the labels of a support request; the state names come from the support maps of config/node.php
 function getNodeExtVars(NodeType $type, Node|NodeTarget $node, array $data): array {
     global $conf, $afile;
     if ($type->ext !== 'support' || $data === []) return $data;
@@ -416,8 +404,7 @@ function getNodeDownload(NodeType $type, array $view): array {
     return [];
 }
 
-# The facts the standard view and card show around a stored material: comments, the fresh mark, the category icon, favorite, rating and the moderator menu
-# Every piece comes from the row or from caches the request already holds, so a list adds no statement per material; a preview without id gets none of the live parts
+# The facts the view and card show around a stored material; every piece comes from the row or the request caches, so a list adds no statement per material
 function getNodeMetaVars(NodeType $type, Node $node): array {
     $feat = $type->settings['features'];
     $live = $node->id > 0;
@@ -436,8 +423,7 @@ function getNodeMetaVars(NodeType $type, Node $node): array {
     ];
 }
 
-# Render the resources of a prepared material, one fragment of the display mode of each role; a role shown by no mode of its own stays out
-# The first image of the standard role poster goes to the player
+# Render the resources of a prepared material by the display mode of each role; the first image of the standard role poster goes to the player
 function getNodeAssetView(NodeType $type, array $view): string {
     global $tpl;
     $out = '';
@@ -460,9 +446,7 @@ function getNodeAssetView(NodeType $type, array $view): string {
     return $out;
 }
 
-# Render one prepared material through the view part of its display mode with the related cards, the facts and menus around it and the data of its extension
-# The poll and the branch of the document tree are rendered apart and handed in; a stored public material is shared, its registered author gets the menu of a profile
-# Its moderator finds the quick edit of the intro and the body before the editor in the dial, its author the quick edit alone while the writer allows him
+# Render one prepared material through the view part of its display mode; the poll and the tree branch are rendered apart and handed in
 function getNodeViewHtml(NodeType $type, Node $node, array $view, string $rels, array $ext = [], array $live = []): string {
     global $tpl, $conf;
     $rows = '';
@@ -515,18 +499,7 @@ function getNodeRoute(): NodeType {
     return getNodeTypeMap()[$conf['name']] ?? setNodeDeny(404);
 }
 
-# The list of a type with its category, letter, personal filters, sort and page
-# Explicitly sent default sort parameters are sent back to the clean address, and a sort or letter the type does not allow is a bad request; published is allowed to every type
-# The personal filters new and fav narrow the list of a signed-in visitor to what came since the last visit and to the favorites; a guest's one narrows nothing
-# A page past the end is not found before any redirect and before the reader sets its page
-# The view is the one the visitor chose for the type and keeps in a cookie, else the first view of the type; a POST of the switch sets it and returns to the list
-# A view draws the card fragment of its own, the rail its pane of tabs; an empty list of views offers the one view of the display mode
-# A list by publication in cards or compact is headed month by month with the count of its cards on the page; a pinned material opens a run of its own month
-# The letters of a category are counted live within it, the letters of the whole list come with the stored counts of the type
-# The canonical address names only the category and the page; the start page keeps the site description and names the type once a category or a page is asked
-# An htmx request gets the part of the header and the list alone, headed by the title a reload shows; both answers of one address vary by that header
-# "Show more" links the next page under every view but the rail, whose tabs take no appended page
-# A refusal of the reader answers by its code, while a storage failure goes to the shared handler
+# The list of a type with its filters, sort and page; both answers of one address vary by HX-Request, and a page past the end is not found before any redirect
 function setNodeList(): void {
     global $conf, $tpl, $home;
     $cat = getNodeNumber('cat');
@@ -661,8 +634,7 @@ function checkNodeModer(NodeType $type): bool {
     return $ask->super || in_array($type->name, $ask->mods, true);
 }
 
-# Whether the visitor may use the public form of the type: an active type with public submission and a workflow that admits the visitor, or its moderator
-# The writer decides the same question again on every write; this answer only decides whether the form and its link are offered
+# Whether the visitor may use the public form of the type; the writer decides it again on every write, this only decides whether the form is offered
 function checkNodeFlow(NodeType $type): bool {
     $ask = getNodeContext();
     $flow = $type->settings['workflow'];
@@ -688,9 +660,7 @@ function getNodeSortWay(NodeType $type, string $key): string {
     return ($key === $set['order']) ? $set['dir'] : (($key === 'title') ? 'asc' : 'desc');
 }
 
-# The header of a list: the title and the count, the windows of the categories, the letters and the sorts with the personal filters, the direction, the reset
-# Beside them the views of the type, the search, the feed, the way up for the stuck bar and the public form; every link keeps the other filters and leaves the page
-# The default sort and direction leave the address clean, as the list sends them back there; the switch of the views is drawn only for two views or more
+# The header of a list; the default sort and direction leave the address clean, as the list sends them back there
 function getNodeHead(NodeType $type, array $base, string $key, string $way, array $nums, array $wins, array $look): string {
     global $tpl;
     $set = $type->settings['list'];
@@ -765,11 +735,7 @@ function getNodeHead(NodeType $type, array $base, string $key, string $way, arra
     ]);
 }
 
-# The branch of the document tree around one material of a type with the tree feature: its root trail, its level with its children, the previous and next document
-# The tree is read in batches of getNodeTree() until one comes back short, never one query per row
-# A parent the reader may not see is null in the tree, so its child stands among the roots; siblings follow the sort of the edge, then the title, then the id
-# The level shows at most ten siblings on each side of the current document and the current one at most its first twenty children, a cut edge is flagged
-# A material outside the tree of the reader, such as a pending one its moderator reads, and a tree of one document give no branch
+# The branch of the document tree around one material; the tree is read in batches of getNodeTree() until one comes back short, never one query per row
 function getNodeTreeData(NodeQuery $query, NodeType $type, Node $node): array {
     $rows = [];
     $after = 0;
@@ -824,11 +790,7 @@ function getNodeTreeData(NodeQuery $query, NodeType $type, Node $node): array {
     ];
 }
 
-# One material of the type by its global id: a missing, closed or foreign material is not found; a successful view is counted after the answer, never for HEAD
-# The discussion follows the material where the type has comments and the material takes them; the mode the comment subsystem resolves decides whether its form is offered
-# The linked poll, the shared rating of the scope node.<name> and the favorite switch appear only where the type has the feature, each rendered by its own subsystem
-# A request of support is refused to a guest before anything is read and is never indexed; the canonical address is the address of the material, whatever else the query carries
-# A refusal of the reader answers by its code, a storage failure goes to the shared handler
+# One material of the type by its global id; a view is counted after the answer and never for HEAD, and a support request is refused to a guest before any read
 function setNodeView(): void {
     global $conf, $tpl, $com;
     $id = getNodeNumber('id', 404);
@@ -898,9 +860,7 @@ function setNodeView(): void {
     setFoot();
 }
 
-# The public form of a type: the empty form, the preview of a posted material through the view it will have, and the submission in the state the workflow gives
-# A preview writes nothing; a submission is created by the writer and answered by a redirect to a safe page, the new material itself or the list with a notice
-# Every post of a guest passes the captcha of comments first and a refused one stores nothing; the writer then holds the address to the window limits.send
+# The public form of a type with preview and submission; every post of a guest passes the captcha of comments first, and a refused one stores nothing
 function setNodeForm(): void {
     global $conf, $tpl;
     $type = getNodeRoute();
@@ -971,9 +931,7 @@ function getNodeAssetPath(NodeType $type, string $src): string {
     return (str_starts_with($full, $root) && !str_starts_with(substr($full, strlen($root)), 'thumb/')) ? $full : '';
 }
 
-# One structured resource of the type through the controlled answer: an external source of a download or link role is a redirect after the check
-# An external source of any other role is not found, because those modes show the address itself; a local file is the shared file answer
-# Only an allowed GET of a download or of an external visit is counted, right before the body or the redirect; HEAD, 304, 416 and later ranges count nothing
+# One structured resource of the type through the controlled answer; only an allowed GET is counted, right before the body or the redirect
 function setNodeAsset(): void {
     $id = getNodeNumber('id', 404);
     if (!$id) setNodeDeny(404);
@@ -1000,8 +958,7 @@ function setNodeAsset(): void {
     exit;
 }
 
-# A report that a resource does not work: CSRF, one report a minute for a visitor, and the writer stores the first report once
-# The answer returns to the material the resource belongs to, which is the page the report came from, and to the list of the type only when the material can no longer be read
+# A report that a resource does not work, one a minute for a visitor; the answer returns to the material, the page the report came from
 function setNodeReport(): void {
     global $conf, $db;
     $id = getNodeNumber('id', 404);
@@ -1029,9 +986,7 @@ function setNodeReport(): void {
     setRedirect(getSeoUrl(['name' => $type->name] + ($nid ? ['op' => 'view', 'id' => $nid, 'route' => $path] : [])), true, 302, _NODE_REPORTED);
 }
 
-# The owner closes or reopens one request of support: CSRF, the expected version of its card and the wanted state; the answer returns to the request
-# The assignment and the priority are the stored ones, read from the card of the request and never from the request body
-# The route belongs to the owner alone and to the two states open and closed, even when the owner also moderates the type; the working card is the route of the staff
+# The owner closes or reopens one support request; the assignment and the priority are read from its card, never from the request body
 function setNodeSupport(): void {
     global $conf;
     $id = getNodeNumber('id', 404);

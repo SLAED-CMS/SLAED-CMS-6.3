@@ -56,8 +56,7 @@ final class NodeView {
         return ($time === false) ? '' : date('c', $time);
     }
 
-    # The address of one resource: the counting route of a saved one, the source of an external one a role shows where it lives
-    # An unsaved preview gets the protected preview of its own upload; a nested local path has no preview address
+    # The address of one resource; an unsaved preview gets the protected preview of its own upload, and a nested local path has none
     private function getAssetHref(NodeType $type, NodeAsset $one, string $mode, bool $link): string {
         if ($link && in_array($mode, self::OUTSIDE, true)) return $one->src;
         if ($one->id > 0) return getSeoUrl(['name' => $type->name, 'op' => 'asset', 'id' => $one->id]);

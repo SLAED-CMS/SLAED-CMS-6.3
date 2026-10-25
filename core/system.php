@@ -41,13 +41,7 @@ require_once BASE_DIR.'/core/stream.php';
 # Upload root of the Node types below the upload directory, one folder per type
 if (!defined('NODE_DIR')) define('NODE_DIR', UPLOADS_DIR.'/node');
 
-# Load the runtime config from cache, rebuilding it from source if needed
-# The rebuild also stores derived data (asset manifests per theme, asset versions, parsed SEO graph/schema, logo sizes) under $conf['derived']
-# Theme asset, plugin asset or logo changes therefore need a config rebuild (admin save or deleting config/local.php) to take effect
-# A hit on local.php costs no lock and reads no journal; the rebuild runs under the shared configuration lock and looks at local.php again, as the awaited writer has published it
-# An unfinished operation forbids a rebuild from half replaced sources: the snapshot is assembled in memory with the touched files read from the journal, and nothing is published
-# A journal that cannot be read or a snapshot that fails its hash names no side, so the sources on disk are read as they are; the marker keeps the touched Node types at 503
-# $fresh is the publication step of setConfigFile() and setConfigRestore(), which own the journal: it skips cache and marker and answers an empty array on a failed publication
+# Load the runtime config from local.php or rebuild it under the shared lock; asset maps, SEO graph and logo sizes are derived there, so an asset change needs a rebuild
 function getConfig(bool $fresh = false): array {
     $local = CONFIG_DIR.'/local.php';
     $read = static function () use ($local): array {
@@ -294,8 +288,7 @@ function getSchedulerPlannedTime(array $job, array $state = []): int {
     return 0;
 }
 
-# Reads a job by key from config when $job is null, otherwise normalizes the given array
-# Enforces canonical type/system for built-in jobs and drops legacy keys so stale configs self-heal
+# Read a scheduler job from config or normalise the given one; built-in jobs get their canonical type and legacy keys drop, so a stale config heals itself
 function getSchedulerJob(string $name, ?array $job = null): array {
     global $conf;
     static $map = ['dbbackup' => 'backup', 'filescan' => 'filescan', 'maildrain' => 'maildrain', 'newsletter' => 'newsletter', 'selfcheck' => 'selfcheck', 'sitemap' => 'sitemap',
@@ -393,8 +386,7 @@ function checkSchedulerLock(string $name): bool {
     return false;
 }
 
-# Reconciles the state a crashed run left behind, idempotently; last_run keeps its value on purpose, so the job resumes at its next planned slot instead of retrying in a loop
-# Returns null when the reconciled state could not be stored, because a caller that reports success on an unwritten repair leaves the job exactly as broken as it found it
+# Reconcile the state a crashed run left; last_run keeps its value so the job resumes at its next slot, and null means the repair could not be stored
 function updateSchedulerCrash(string $name, array $state): ?array {
     $state['running'] = 0;
     $state['started_at'] = 0;
@@ -404,8 +396,7 @@ function updateSchedulerCrash(string $name, array $state): ?array {
     return setSchedulerState($name, $state) ? $state : null;
 }
 
-# Returns whether the scheduler job is due; a crashed run leaves no lock behind, so the job becomes due again on its own and is reconciled by the next call that takes the lock
-# The planned time is cached in job state, and that cache is only ever written while holding the lock, because job state must never be mutated from a read path
+# Return whether a scheduler job is due; its cached planned time is written only under the lock, because job state is never mutated from a read path
 function checkSchedulerDue(string $name, array $job = [], array $state = []): bool {
     if ($job === []) $job = getSchedulerJob($name);
     if ($state === []) $state = getSchedulerState($name);
@@ -413,8 +404,7 @@ function checkSchedulerDue(string $name, array $job = [], array $state = []): bo
     return checkSchedulerSlot($name, $job, $state);
 }
 
-# Returns whether the schedule alone puts this job in the past, without consulting the lock
-# A caller that already holds the lock asks this one: the answer it got before locking may have been acted on by another process in the meantime
+# Return whether the schedule alone puts a job in the past, for a caller already holding the lock whose earlier answer may have been acted on meanwhile
 function checkSchedulerSlot(string $name, array $job, array $state): bool {
     if ((int)($job['active'] ?? 0) !== 1) return false;
     $schedule = getSchedulerSchedule($job);
@@ -444,8 +434,7 @@ function setSchedulerStart(string $name, string $type, array $state): bool {
     return setSchedulerState($name, $state);
 }
 
-# Records the end of a run and its final status; like the start, this is written while the caller still holds the operating system lock
-# Only the fields of the state contract and the metrics of this very run survive, so numbers a previous run reported cannot linger as if they described the current one
+# Record the end of a run under the lock; only the state contract and the metrics of this run survive, so numbers of a previous run never linger
 function setSchedulerDone(string $name, string $stat, string $mess = '', array $extra = []): bool {
     $state = array_replace(array_intersect_key(getSchedulerState($name), getSchedulerFields()), $extra);
     $done = time();
@@ -486,8 +475,7 @@ function checkSchedulerCronAlive(): bool {
     return (time() - (int)($data['time'] ?? 0)) < max(60, (int)($conf['scheduler']['cron_timeout'] ?? 600));
 }
 
-# Returns whether the current request may execute the scheduler runner
-# Each trigger carries its own credential, and an administrator session is not one of them: the admin path runs through the admin module
+# Return whether the request may run the scheduler; each trigger carries its own credential and an admin session is none, the admin path runs via its module
 function checkSchedulerAccess(string $type, string $stok): bool {
     global $conf;
     if ($stok === '') return false;
@@ -497,8 +485,7 @@ function checkSchedulerAccess(string $type, string $stok): bool {
     return $stkn !== '' && hash_equals($stkn, $stok);
 }
 
-# Returns the endpoint and the credential for the asynchronous pseudo trigger when the next due job should be started, or an empty array when it should not
-# The credential is returned separately because the trigger is a POST: a token in a query string would travel through history, logs and referrers
+# Return the endpoint and credential of the async pseudo trigger when a job is due; the credential is separate because a token in a query string leaks into logs
 function addSchedulerTrigger(): array {
     global $conf;
     if ((int)($conf['scheduler']['active'] ?? 0) !== 1 || (int)($conf['scheduler']['pseudo'] ?? 0) !== 1) return [];
@@ -694,8 +681,7 @@ function addSchedulerSystemJob(string $name): array {
     };
 }
 
-# The scheduler jobs the modules declare in modules/<name>/scheduler.php, by name, each with its module; read once per request
-# A declaration holds the defaults of its row (title, schedule, priority, lock_timeout) and its handler as a closure under run; the core knows no name of a module job
+# Return the jobs modules declare in modules/<name>/scheduler.php, read once per request; the core knows no module job by name
 function getSchedulerModuleJobs(): array {
     static $list = null;
     if ($list !== null) return $list;
@@ -741,9 +727,7 @@ function getUpdateSite(): array {
     return $state;
 }
 
-# Executes the next due scheduler job or a named job and returns a structured result; none runs while an installation holds client/apply.lock
-# The due check that selected the job ran before the lock existed, so a scheduled run asks again while holding it; a manual run is an operator decision and skips that question
-# A start or a result that cannot be written fails the run: a job that finishes but still looks due would be run again by the next pass, and a lost result hides what happened
+# Run the next due or a named scheduler job; none runs during an update install, and a scheduled run asks again under the lock since its due check came before it
 function addSchedulerRun(?string $name = null, string $type = 'manual'): array {
     global $conf;
     if ((int)($conf['scheduler']['active'] ?? 0) !== 1) return ['status' => 'disabled', 'message' => 'Scheduler is disabled'];
@@ -791,8 +775,7 @@ function addSchedulerRun(?string $name = null, string $type = 'manual'): array {
     return $data;
 }
 
-# Runs every due job of one cron or pseudo call in priority order, each at most once, and starts no further job once the time budget of the request is spent
-# All of them run because a job due every minute would otherwise take every call, and the jobs further down the priority list would never get their turn
+# Run every due job of one cron or pseudo call once in priority order within the time budget, as a job due every minute would otherwise take every call
 function addSchedulerBatch(string $type): array {
     global $conf;
     if ((int)($conf['scheduler']['active'] ?? 0) !== 1) return ['status' => 'disabled', 'message' => 'Scheduler is disabled', 'jobs' => []];
@@ -1723,8 +1706,7 @@ function getSeoSchema(string $kind, array $seo, bool $ishome = false): array {
     return $data;
 }
 
-# Return the shared category map for one module or all modules as id => raw title, parent, ordern, the icon name of img and the current path, empty for none
-# The map lives in a persistent data cache plus a request-static copy; callers apply getConst and escaping at their own boundary
+# Return the category map of one or all modules from the data cache plus a request copy; titles are raw, callers apply getConst() and escaping at their boundary
 function getCategoryMap(string $mod = ''): array {
     global $db;
     static $maps = [];
@@ -1826,9 +1808,7 @@ function addCacheGcTask(): array {
     return ['status' => 'success', 'message' => 'Removed '.$num.' cache files and '.$rows.' logins'];
 }
 
-# Scheduler job sampling the server once a minute for the presentation module: the two history writers of monitor.json run first, then the snapshot keys join their rows
-# This is the only writer outside the admin monitor
-# While no sample exists the module falls back to what a public page can afford (the histories, its own disk snapshot, the request's server) and leaves out cores and uptime
+# Sample the server once a minute for the presentation module; while no sample exists the module shows only what a public page can afford, without cores and uptime
 function addMonitorSample(): array {
     global $db;
     [$cpu] = getCpuLoad();
@@ -1845,18 +1825,14 @@ function addMonitorSample(): array {
     return ['status' => 'success', 'message' => 'Monitor sample written: CPU '.$cpu.'%, RAM '.$mem['percent'].'%'];
 }
 
-# The RSS feeds of the site keyed by name with their labels: every active Node type with the rss integration
-# The feed route, the alternate link of the head and the feed picker read this one list, so no link names a feed the route refuses
+# Return the RSS feeds of the site by name, every active Node type with the rss integration; feed links read this list, so none names a feed the route refuses
 function getRssFeeds(): array {
     $out = [];
     foreach (getNodeTypeMap() as $key => $type) if ($type->active && $type->settings['integrations']['rss']) $out[$key] = getModuleName($key);
     return $out;
 }
 
-# Format head
-# The alternate feed link names the feed of the current module, else the feed of the start module, and is left out when neither has one
-# The category of the breadcrumb and of the theme header is the one the page names; without it the category of the query counts only when the visitor may read it
-# That read is judged by the reader of a Node type or by the read right and, on a multilingual site, the language of any other module, so a closed category never shows its title
+# Render the page head; a category title shows only when the visitor may read it, judged by the Node reader or the read right, so a closed category never leaks
 function setHead(array $seo = []): void {
     global $db, $home, $conf, $user, $name, $theme, $tpl, $afile, $adminpage, $adminvars, $sitepage, $sitevars, $locale;
     setSeoMove($seo);
@@ -2169,8 +2145,7 @@ function setHead(array $seo = []): void {
     return;
 }
 
-# Format foot; a panel list asking by X-SL-Part gets its title and content only, and a lost session makes it reload
-# A one-time notice of the visitor opens the content of both surfaces and is cleared by it
+# Render the page foot; a panel list asking by X-SL-Part gets its title and content only, a lost session makes it reload, and a one-time notice is cleared here
 function setFoot(): void {
     global $home, $name, $conf, $tpl, $adminpage, $adminvars, $sitepage, $sitevars, $blocks, $blocks_c, $foot;
     if (defined('ADMIN_FILE')) {
@@ -2275,8 +2250,7 @@ function getFlashHtml(): string {
     ]);
 }
 
-# Safe redirect with optional referer fallback; it also gives an open action of the panel its result, a warning being a refusal; a POST with later gets 204 or 409 alone
-# A relative target is taken from the root of the site, since a browser would resolve it against the path of the page that redirects
+# Redirect safely with an optional referer fallback; a relative target is taken from the site root, since a browser would resolve it against the page path
 function setRedirect(string $url, bool $refer = false, int $code = 302, string $text = '', bool $warn = false): never {
     setAdminLog(['result' => $warn ? 'refused' : 'done']);
     if (getVar('post', 'later', 'num')) {
@@ -2369,8 +2343,7 @@ function checkCompress(): array {
     return ['zip' => class_exists('ZipArchive'), 'gz' => function_exists('gzopen'), 'bz2' => function_exists('bzopen')];
 }
 
-# Compress a file, folder or string (zip, gz, bz2)
-# A zip takes a directory, a file or string content; gz and bz2 take a single file only; the source is deleted afterwards when requested
+# Compress a folder, a file or a string; zip takes all three, gz and bz2 take a single file only, and the source is deleted afterwards when asked
 function addCompress(string $dir, string $src, string $name, string $mode = 'auto', bool $del = false, bool $bak = false): bool {
     if (!is_dir($dir) || !is_writable($dir)) {
         addErrorFile(_ERR_DIR.': '.$dir);
@@ -2615,9 +2588,7 @@ function checkFileChmod(string $dir, int $chm): string {
     return $out;
 }
 
-# Returns the text of one configuration file: the standard header and the exported array
-# One value is one line however long it is: this file is stored data, not code anybody reads, and the line limit of .rules/global.md governs what a person writes
-# The output is deterministic, so a save of an unchanged configuration reproduces the file byte for byte and the round trip the settings tabs rely on still holds
+# Return the text of one config file with one value per line however long, as it is stored data; the output is deterministic, so a resave is byte for byte
 function getConfigCode(array $data): string {
     $export = function (array $arr, int $dep = 0) use (&$export): string {
         $pad = str_repeat('    ', $dep);
@@ -2637,9 +2608,7 @@ function getConfigCode(array $data): string {
     .'return '.$export($data).';'."\n";
 }
 
-# Replaces one file of the configuration protocol as a whole or not at all: the text is flushed to a temporary neighbour, renamed over the target and dropped from OPcache
-# A PHP target that does not parse is refused before anything is written, and an empty text removes the target, which is how a restore takes back a file the operation created
-# The rename is retried briefly, because a reader on Windows holds the target open for the moment it includes it and the replacement is refused for exactly that long
+# Replace one config file whole or not at all through a renamed temp file dropped from OPcache; the rename retries because a Windows reader holds the target open
 function setConfigSource(string $file, string $code): bool {
     if ($code !== '' && str_ends_with($file, '.php')) {
         try {
@@ -2667,9 +2636,7 @@ function setConfigSource(string $file, string $code): bool {
     return $done;
 }
 
-# Returns the unfinished configuration operation for the restore screen, getConfig() and setConfigRestore(), or an empty array when no marker exists
-# Every touched file answers the journal hashes, the hash it has now and which side that is; verdict names the snapshot a restore applies or stays empty with the reason in why
-# Reasons in why: journal - no readable journal in the marker, backup - a snapshot does not match its hash, source - a file is neither side, proof - only the database decides
+# Return the unfinished config operation with the hashes of every touched file; verdict names the snapshot a restore applies, else why says what is missing
 function getConfigJournal(): array {
     $root = BACKUP_DIR.'/config';
     if (!is_file($root.'/marker.json')) return [];
@@ -2702,10 +2669,7 @@ function getConfigJournal(): array {
     return $out;
 }
 
-# Finishes the unfinished configuration operation under the shared lock: applies one snapshot of the journal, publishes local.php, checks the hashes again and then drops the marker
-# Without an argument it is the administrative restore: it follows the verdict of getConfigJournal() and clears the HTML cache; old and new come from setConfigFile() alone
-# A Node operation carries a proof instead of a verdict: a locking read of the type row on the connection of this request waits for the writer and names the side by its version
-# The run is repeatable: a file already on the wanted side is left alone and a failed step keeps the marker; with no marker left the operation directories with their copies go
+# Finish the unfinished config operation under the shared lock; a Node operation proves its side by a locking read of the type row, and the run is repeatable
 function setConfigRestore(string $force = ''): bool {
     global $db;
     require_once BASE_DIR.'/core/classes/filemanager.php';
@@ -2757,12 +2721,7 @@ function setConfigRestore(string $force = ''): bool {
     }
 }
 
-# Saves configuration sources and publishes local.php; true means a finished consistent result, false a refusal that left the working snapshot in place
-# The string form writes one independent source with every scalar stored as a string and line endings normalized, because a textarea posts CRLF and a stored source is LF only
-# The Closure form owns node, fields, uploads and ratings: it gets their fresh areas and $save(array $package, array $proof = []): bool and answers committed, aborted or uncertain
-# Both forms run one pipeline under the shared lock: refuse while a marker exists, store both snapshots and the journal, write the marker, replace the sources, commit, publish
-# A package keeps string, int, bool, null and arrays as they are and refuses everything else before anything is written; only an area that differs from its base is replaced
-# A committed phase that cannot be written returns the old snapshot only without a proof; with one the database decides, since its commit already happened
+# Save config sources and publish local.php under the shared lock; the string form stores scalars as strings with LF endings, because a textarea posts CRLF
 function setConfigFile(string|Closure $fp, array $arr = [], array $act = []): bool {
     static $reserved = ['system.php', 'header.php', 'chmod.php', 'local.php'];
     static $shared = ['node', 'fields', 'uploads', 'ratings'];
@@ -2879,8 +2838,7 @@ function setConfigFile(string|Closure $fp, array $arr = [], array $act = []): bo
     }
 }
 
-# The asset files of one theme package in their linking order: each vendor directory with its subdirectories, then assets/<ext> of the theme
-# The files are found below PUBLIC_DIR and answered as addresses relative to it, which is what a page links
+# Return the asset files of one theme package in link order, vendor directories first; they are found below PUBLIC_DIR and answered relative to it
 function getThemeAssets(string $theme, string $ext): array {
     $base = PUBLIC_DIR.'/templates/'.$theme.'/assets/';
     $dirs = [];
@@ -2891,8 +2849,7 @@ function getThemeAssets(string $theme, string $ext): array {
     return array_map(static fn(string $v): string => substr($v, strlen(PUBLIC_DIR) + 1), $out);
 }
 
-# The stylesheets or scripts a page links in their order: the comma list of files and directories from css_f or script_f, [theme] read as the theme, then the package
-# An entry is an address relative to the document root, so it is looked up below PUBLIC_DIR and answered in the same relative form; a theme with sound/ adds sound.js
+# Return the stylesheets or scripts a page links, from css_f or script_f with [theme] read as the theme, then the package; a theme with sound/ adds sound.js
 function getAssetList(string $theme, string $ext, string $list): array {
     $out = [];
     foreach (explode(',', str_replace('[theme]', $theme, $list)) as $entry) {
@@ -2932,10 +2889,7 @@ function doCss(): string {
     return implode("\n", $arr);
 }
 
-# Create a sitemap: the XML goes straight into its files as it is produced, a new file follows every 50000 URLs, more than one is joined by an index, robots.txt names it
-# The modules of sitemap.mod are read as before; a Node type takes part through its own sitemap integration, its materials in cursor batches read as a guest of the site language
-# Neither a closed category nor the whole set of materials is ever held; the HTML map shows a Node type with its categories and leaves its materials to the XML
-# The forum keeps a category and a topic whose right opens to a guest by the guest branch of is_acess(): level 0, no group, and an empty right stays closed
+# Create the sitemap by streaming XML, a new file every 50000 URLs joined by an index; materials are read in cursor batches as a guest and never held whole
 function addSitemapTask(bool $force = false): array {
     global $db, $conf, $tpl, $fld;
     $sm = $conf['sitemap'];
@@ -3202,10 +3156,7 @@ function getImageBox(string $file): array {
     return (is_array($info) && $info[0] > 0 && $info[1] > 0) ? [(int)$info[0], (int)$info[1]] : [0, 0];
 }
 
-# Normalize final HTML output while keeping the template's own indentation, doing heavy work only on the few multiline matches
-# Raw bodies of script/style/pre/code/textarea and comments are protected first
-# Then multiline class lists and multiline tags are squeezed to a single line
-# Blank lines are dropped, the leading indent of every line is kept, and all other template whitespace is left untouched
+# Normalise the final HTML keeping the template indent; script, style, pre, code, textarea and comments are protected, only multiline tags and classes squeezed
 function getOutputHtml(string $html): string {
     if ($html === '') return '';
     $keep = [];
@@ -3417,8 +3368,7 @@ function getLoadStats(): array {
     ];
 }
 
-# The one ladder that turns a per cent into a tone, so a quota ring, a server gauge and the debug panel never disagree about what «almost full» looks like
-# The names are the ones both themes give their tone classes, and a value outside nought to a hundred answers the tone of the end it passed
+# Turn a per cent into a tone on the one ladder every gauge and ring uses; the names are the tone classes of both themes, and a value past an end takes that end
 function getPercentTone(float $part): string {
     if ($part > 95) return 'danger';
     if ($part > 75) return 'warn';
@@ -3604,11 +3554,7 @@ function getProtocol(): string {
     return $proto;
 }
 
-# Get the image from the text; inline data URIs are never returned because meta image tags must point to a real fetchable resource
-# An attachment is resolved against the upload directory of its own module, and the module is named explicitly by a caller that renders the content of another one
-# Without that name the request module would decide the path, which is right for a module rendering itself and wrong for a page that lists the newest rows of several
-# The name becomes a path segment, so it passes the same filter the request boundary applies; anything else answers an empty name, whose path resolves to no file
-# An attachment has an address only in a public folder, getUploadUrl(), or in the file context $own of a closed owner, its file route, which no check can find on disk
+# Get the image of a text, never a data URI, as a meta image must be fetchable; a caller rendering another module names it, or the request module decides the path
 function getImgText(string $text, string $type = '', bool $check = true, string $mod = '', array $own = []): string|false {
  global $conf;
     $mod = filterVar(($mod !== '') ? $mod : (string)($conf['name'] ?? ''));
@@ -3722,12 +3668,7 @@ function addRouteBacklog(): array {
     return $out;
 }
 
-# Format theme
-# The panel answers its own theme and a member's site theme may not take it back: the panel is built from partials no site theme carries, the login form among them
-# Otherwise a member who once saved a theme preference and then opened the panel was served a page whose form could not render at all
-# `$conf['theme']` stays the theme of the site in the panel too, because its screens pick the logos and banners of the site from it
-# `index.php` declares the same constant for its admin endpoints, but long after the answer here is cached, and that branch builds its Template by name anyway
-# The constant is therefore read only where it is set before the bootstrap
+# Answer the theme of the request; the panel keeps its own, as site themes lack its partials such as the login form, and ADMIN_FILE counts only where set before boot
 function getTheme(): string {
     static $cached = null;
     if ($cached !== null) return $cached;
@@ -3741,8 +3682,7 @@ function getTheme(): string {
     return $cached = $default;
 }
 
-# The colour mode the visitor chose, written by the toggle into the `mode` cookie and read before the first byte of the page
-# `auto` is the answer to everything unrecognised, including an absent cookie, because that is what follows the operating system
+# Return the colour mode of the mode cookie; auto answers everything unrecognised, an absent cookie included, because it follows the operating system
 function getThemeMode(): string {
     $mode = getCookies('mode');
     return in_array($mode, ['light', 'dark'], true) ? $mode : 'auto';
@@ -3759,9 +3699,7 @@ function isThemeFlag(string $key): bool {
     return getCookies($key) === '1';
 }
 
-# Render the colour mode control: the three modes with the one in force marked, so any of them is one press away and none of them has to be guessed
-# The value travels in a POST body with a token because setCookies() marks the cookie httponly, so no script can write it and a script toggle would fail without a word
-# The order is light, auto, dark: the answer that follows the system sits between the two it chooses from, which is what lets a rail read as a scale rather than a list
+# Render the colour mode control; it posts with a token because setCookies() marks the cookie httponly, and auto stands between light and dark as on a scale
 function getThemeModeSwitch(string $action): string {
     global $tpl;
     $icon = ['auto' => 'circle-half', 'light' => 'sun', 'dark' => 'moon'];
@@ -3808,8 +3746,7 @@ function checkThemeAssets(string $name): bool {
     return $cache[$name] = true;
 }
 
-# Format theme file
-# Determining the load time
+# Return the line of page generation time and database query count and time for the foot
 function getTimeLoads(array $stats = []): string {
     if ($stats === []) $stats = getLoadStats();
     $ttime = sprintf('%.3f', (float)($stats['gen'] ?? 0.0));
@@ -3843,10 +3780,7 @@ function getUnsubKey(string $mail): string {
     return substr(hash_hmac('sha256', mb_strtolower(trim($mail)), getSecret('unsub')), 0, 32);
 }
 
-# Notify subscribed admins by email on new content or comment submission
-# The stored module list is only read here; normalising it is a write and belongs to the admin screen that owns those records, which already writes the normalised form
-# A registered Node type is moderated through its right node-<name>, so its name is read as that right, the way is_admin_modul() reads it
-# The title is plain text from every caller, a raw material title among them: it is escaped for the HTML body here and stays plain in the subject
+# Mail the admins subscribed to a module about new content; the stored module list is only read here, and the title is escaped for the body and plain in the subject
 function addAdminMail(bool $enab, string $mod, string $username = '', string $title = '', bool $iscmt = false, string $text = ''): void {
     global $db, $conf, $locale, $mailer;
     $mod = filterVar($mod);
@@ -3899,10 +3833,7 @@ function filterSize(mixed $size): string {
     return round($val, 2).' '.$unit[$idx];
 }
 
-# Drain the outgoing mail queue as a scheduler job and report what the run delivered, what it refused and what is still waiting
-# A run that delivered nothing while refusing something is reported as failed, because that is a transport the administrator has to be told about rather than a quiet retry
-# An empty queue is a successful run and never idle: this job runs every five minutes, and idle would count as a failure and leave the last success behind on a healthy installation
-# The bounce mailbox is read in the same run, so delivery reports need no job of their own; a box that cannot be read is named in the message and never fails the delivery
+# Drain the mail queue as a scheduler job; a run that refused without delivering fails, an empty queue succeeds, and the bounce box is read in the same run
 function addMailTask(): array {
     global $mailer;
     if (!$mailer instanceof Mail) return ['status' => 'failed', 'message' => 'Mail service is unavailable'];
@@ -3926,9 +3857,7 @@ function addMailTask(): array {
     ];
 }
 
-# Resolve one audience criterion into the paged query its rows are expanded by and the count query the selector shows beside it
-# Every audience is a set of accounts ordered by primary key, which is what makes a cursor over it resumable after a run is killed
-# Every audience but all keeps to accounts that receive the mailing; all is the forced send to every account, which only an administrator chooses
+# Resolve one mailing audience into its paged and count queries; accounts are ordered by primary key so the cursor resumes, and all is the forced admin-only send
 function getMailAudience(string $audit, string $apar): array {
     global $db;
     $cond = '';
@@ -3968,10 +3897,7 @@ function getMailAudienceNum(string $audit, string $apar): int {
     return intval($row['num'] ?? 0);
 }
 
-# Expand the audience of the mailing that is preparing into queue rows, one resumable slice at a time, and close the expansion when its source is exhausted
-# Writing one row per recipient inside the request that pressed save is what this replaces: at a hundred thousand accounts that request cannot finish and cannot be resumed
-# Every address is checked before a row is written, so an invalid or suppressed one never enters a bulk audience and never costs a delivery attempt
-# The run is time-boxed like the drain, and the cursor is written per slice, so a killed run resumes where it stopped instead of restarting or duplicating
+# Expand the audience of the preparing mailing into queue rows one time-boxed slice at a time; every address is checked first and the cursor saved per slice
 function updateNewsletter(): array {
     global $db, $conf, $mailer;
     $sql = 'SELECT id, title, audit, apar, `cursor`, expect FROM '.PREFIX_DB.'_newsletter WHERE status = 1 ORDER BY id ASC LIMIT 1';
@@ -4033,8 +3959,7 @@ function getConst(string $con): string {
     return ($con !== '' && $con[0] === '_' && defined($con)) ? constant($con) : $con;
 }
 
-# The name of a module from its row of config/modules.php; a constant the common language lacks is read from the language of the panel or of the module for this context
-# A module outside the release keeps its name in modules/<name>/lang and modules/<name>/admin/lang alike, since only one of the two loads per request
+# Return the name of a module from its config row; a module outside the release keeps its name in both of its lang folders, as only one of them loads per request
 function getModuleLabel(string $mod): string {
     global $conf;
     $con = trim((string)($conf['modules'][$mod]['lang'] ?? ''));
@@ -4058,8 +3983,7 @@ function getPluralForm(int $num, string $forms): string {
     return $list[min($pick, count($list) - 1)];
 }
 
-# Resolve a module key to its localised name constant; a registered Node type answers its own title, a language constant or plain text, read from the shared type map
-# A site module the map lacks takes the name of its row through getModuleLabel(), so changelog keeps its name in its own language; a panel module stays its key
+# Resolve a module key to its localised name; a Node type answers its own title, a site module the map lacks its config row name, a panel module its key
 function getModuleName(string $con): string {
     global $conf;
     if (isset($conf['node']['types'][$con])) {
@@ -4097,8 +4021,7 @@ function getModuleName(string $con): string {
     return $map[$con] ?? ((intval($conf['modules'][$con]['type'] ?? 0) === 1) ? getModuleLabel($con) : $con);
 }
 
-# Resolve a module key or a concept key to its Bootstrap Icons glyph: the one icon map of the site and the panel, read wherever PHP names an icon
-# A module the map does not name takes the icon its module config carries, so a module chip and a module menu agree, and puzzle stands for anything unknown
+# Resolve a module or concept key to its Bootstrap Icons glyph from the one icon map; an unnamed module takes the icon of its config, puzzle stands for the unknown
 function getIconName(string $con): string {
     global $conf;
     $map = [
@@ -4137,8 +4060,7 @@ function getPassHash(string $pass): string {
     return password_hash($pass, PASSWORD_BCRYPT);
 }
 
-# Verify a user password; supports current bcrypt and legacy md5 hashes transparently
-# Legacy branch will be removed once all stored hashes have been upgraded via transparent rehashing
+# Verify a user password against a bcrypt or a legacy md5 hash; md5 stays until every stored hash has been rehashed
 function checkPassHash(string $pass, string $hash): bool {
     if (password_verify($pass, $hash)) return true;
     if (strlen($hash) === 32 && ctype_xdigit($hash)) return md5(md5(PASS_SALT).md5($pass)) === $hash;
@@ -4577,8 +4499,7 @@ function user_info(string $name, ?string $route, bool $icon = true): string {
     return $name;
 }
 
-# Write the live reply count into one forum topic, which is the one statement every forum counter path goes through
-# The number is counted inside the statement rather than moved by a delta, so a topic that had drifted comes back correct instead of drifting further
+# Write the live reply count into one forum topic, counted inside the statement and not moved by a delta, so a drifted topic comes back correct
 function setForumCount(int $tid): bool {
     global $db;
     if ($tid < 1) return false;
@@ -4586,8 +4507,7 @@ function setForumCount(int $tid): bool {
     return $db->getSqlQuery('UPDATE '.PREFIX_DB.'_forum SET comments = ('.$live.') WHERE id = :tid', ['pid' => $tid, 'tid' => $tid]) !== false;
 }
 
-# Queue the reply count of one topic to be rewritten once the request is over
-# The count runs after the response because the subquery it needs is a locking read of the topic table, and two people answering one topic at once would wait on each other
+# Queue the reply count of one topic for after the response, because its subquery is a locking read and two people answering one topic would wait on each other
 function addForumCount(int $tid): void {
     if ($tid < 1) return;
     addDeferredTask(static function() use ($tid): void {
@@ -4595,8 +4515,7 @@ function addForumCount(int $tid): void {
     });
 }
 
-# Answer the forum topics whose stored reply count disagrees with the replies actually under them
-# A topic with no counter and no reply is never examined, so the scan costs the topics that carry a discussion rather than every row
+# Answer the forum topics whose stored reply count disagrees with their replies; a topic with no counter and no reply is never examined
 function getForumDrift(): array {
     global $db;
     $live = 'SELECT COUNT(*) FROM '.PREFIX_DB.'_forum AS r WHERE r.pid = t.id';
@@ -4608,9 +4527,7 @@ function getForumDrift(): array {
     return $out;
 }
 
-# Answer the topic carrying the newest visible activity across the given categories, or 0 when they hold none
-# A reply answers as the topic it belongs to, because a category advertises a topic rather than a message
-# This is the one definition of "last message" in the forum: the repair below and the synchronisation tab both ask it
+# Answer the topic of the newest visible activity across the given categories, or 0; a reply answers as its topic, because a category advertises a topic
 function getForumLast(array $cats): int {
     global $db;
     $ids = array_values(array_unique(array_filter(array_map('intval', $cats), static fn(int $one): bool => $one > 0)));
@@ -4627,10 +4544,7 @@ function getForumLast(array $cats): int {
     return intval($pid) ?: intval($mid);
 }
 
-# Repair the last message the forum categories advertise, after a removal took one out of a branch
-# Two sets are repaired: whoever pointed at the removed topic, wherever it sat, and the chain above the category it was removed from
-# Matching on the stored value rather than walking from the category the request named is what keeps a parent from being decided by one child
-# The walk up is bounded by the number of categories and the subtree keeps a seen set, so a parent cycle already stored ends instead of hanging every forum write
+# Repair the last topic forum categories advertise after a removal, matching the stored value so no child decides a parent; bounded walks end a stored cycle
 function setForumLast(int $cat, int $gone = 0): void {
     global $db;
     $rows = $db->getSqlRows($db->getSqlQuery('SELECT id, parent, lpost FROM '.PREFIX_DB.'_categories WHERE modul = \'forum\'')) ?: [];
@@ -4707,15 +4621,7 @@ function getEditorJson(array $dat): void {
     exit;
 }
 
-# Return the upload rule of one place, a place being a module and the thing inside it a file is asked for, written with a dot: it is the one name every upload route travels under
-# The grammar is defined here and nowhere else - <mod>.<slot>, lowercase letters, digits and underscore on both sides - so no caller carries a pattern of its own
-# Two slots answer: <mod>.attach is the editor attachment rule of a module and users.avatar the picture of one account
-# The module is the one that owns the place and never the first segment of the name, so users.avatar answers account, whose moderator moderates it and whose page carries it
-# The listing caps are the shipped ones of every record in config/uploads.php, so the field place invents no number and no administrative setting is added to hold one
-# A guest owns no account, so users.avatar answers zero for both guest fields without reading a setting, and the route refuses a guest before it asks anything else
-# The ops key names which of the four editor routes the place permits: a field place uploads through its own form, so leaving the other three open would create orphan files
-# The directory comes in the three forms its readers need - dir the address of a public folder or empty, store relative to the upload root, path absolute as the file layer opens it
-# A missing directory is no refusal: the upload service creates the folder of its owner on the first write
+# Return the upload rule of one place <mod>.<slot>, a grammar defined here alone; the module is the owner of the place, so users.avatar answers account
 function getUploadPlaceRule(string $place): array {
     global $conf;
     $good = preg_match('#^[a-z0-9_]+\.[a-z0-9_]+$#', $place) === 1;
@@ -4784,18 +4690,14 @@ function getUploadPlaceRule(string $place): array {
     ];
 }
 
-# Return the folder of one upload owner relative to UPLOADS_DIR: a Node type keeps its files in a folder of its name below NODE_DIR, any other module in one of its own name
-# The type registry tells a type apart; a type operation names a type the registry does not carry yet or no longer, so it says so through the flag
-# Every builder of an upload path asks here, so the place of the types is decided once and a type can never share a folder with a module of the same name
+# Return the folder of one upload owner relative to UPLOADS_DIR; a Node type lives below NODE_DIR, so a type never shares the folder of a module of its name
 function getUploadFolder(string $mod, bool $node = false): string {
     global $conf;
     if (!$node && !isset($conf['node']['types'][$mod])) return $mod;
     return substr(NODE_DIR, strlen(UPLOADS_DIR) + 1).'/'.$mod;
 }
 
-# Split the pipe-separated upload configuration of one directory into named rule keys; all twelve are returned even when ok is false, so a caller needing one limit can read it
-# A missing directory is no refusal: the upload service creates the folder of its owner on the first write, and dir is empty for a private owner, see getUploadUrl()
-# The order is the stored one with exactly these twelve fields; a rule written short by hand keeps its guest limit at the user one, because zero there means no limit
+# Split the pipe-separated upload config of one directory into named keys, all of them even when ok is false; a short rule keeps its guest limit at the user one
 function getUploadRuleData(string $mod): array {
     global $conf;
     $con = (isset($conf['uploads'][$mod]) && (string)$conf['uploads'][$mod] !== '') ? explode('|', (string)$conf['uploads'][$mod]) : [];
@@ -4832,9 +4734,7 @@ function setUploadRuleData(array $rule): string {
     return implode('|', array_map(static fn($v) => (string)($rule[$v] ?? ''), $keys));
 }
 
-# Return what one refused upload is told to the visitor: the service answers a code and the settings of the module answer the number the refusal names, so both screens speak alike
-# The mapping lives here and not beside a screen, because the editor window and the administrative catalogue would otherwise explain the same refusal in two different words
-# A capability this build does not have is told apart from a file this build refuses: the first is nothing the visitor can correct by choosing another file
+# Return the text of one refused upload for the editor window and the catalogue alike; a missing capability of the build is told apart from a refused file
 function getUploadFailText(string $code, array $rule): string {
     return match ($code) {
         'size' => _ERROR_BIG,
@@ -4849,8 +4749,7 @@ function getUploadFailText(string $code, array $rule): string {
     };
 }
 
-# Return the single upload service; core/classes has no runtime autoload, so the class file is required on first use instead of on every request
-# The upload root is named here and nowhere else, which is why no adapter ever calls new Upload(); where the destination locks live is decided by FileManager alone
+# Return the single upload service; core/classes has no autoload, so the class is required on first use, and the upload root is named here alone
 function getUploadService(): Upload {
     static $upl = null;
     if ($upl === null) {
@@ -4860,8 +4759,7 @@ function getUploadService(): Upload {
     return $upl;
 }
 
-# Build the delivery decision of the request once: Node grants through the reader of its material, the forum through the reader of its post, a private message to its two sides
-# A comment on a poll or a profile grants through the reader of its target, the account texts of profile through the account, and a public folder has no route
+# Build the delivery decision of the file route once; every closed owner grants a file through the reader of its own target, and a public folder has no route
 function getFileService(): FileAccess {
     static $fac = null;
     if ($fac !== null) return $fac;
@@ -4908,7 +4806,6 @@ function getFileService(): FileAccess {
 }
 
 # Answer the closed owner whose route serves the folder of one upload module, or an empty string for a public folder
-# A Node type, the forum, the private messages in the folder of account, the comments on a poll and the account texts in profile; the editor window and the renderers ask here
 function getUploadOwner(string $mod): string {
     global $conf;
     if ($mod !== '' && isset($conf['node']['types'][$mod])) return 'node';
@@ -4920,8 +4817,7 @@ function getCommentPlace(string $mod): string {
     return ($mod === 'account') ? 'profile' : $mod;
 }
 
-# Answer whether the preview form of the file route serves one name of the folder of an upload module: a managed upload of the visitor, any file to a moderator of the folder
-# Only a visitor the upload rule lets list the folder gets one, and only a name of an extension the rule accepts, so the preview shows what the editor window lists and nothing else
+# Answer whether the file route previews one name of an upload folder; only a visitor who may list it gets one, and only for an extension the rule accepts
 function checkUploadPreview(string $mod, string $key): bool {
     require_once BASE_DIR.'/core/classes/filemanager.php';
     $rule = getUploadRuleData($mod);
@@ -4931,9 +4827,7 @@ function checkUploadPreview(string $mod, string $key): bool {
     return $good && FileManager::checkFileName($key) && checkEditorUploadAccess($mod, $rule) && $mine;
 }
 
-# Answer the refusal of the first name a text may not bind in the folder of an upload module, or an empty string
-# A name passes when a text the writer reads already carries it, when it is the writer's own upload there, or when a moderator of the folder writes
-# Every other name must name an existing file of an allowed extension, so a writer cannot bind a file of the folder they did not upload
+# Answer the refusal of the first name a text may not bind in an upload folder; a name passes when a readable text carries it, it is the own upload or a moderator writes
 function checkUploadNames(string $mod, array $fresh, array $seen): string {
     if (!$fresh) return '';
     require_once BASE_DIR.'/core/classes/filemanager.php';
@@ -4950,8 +4844,7 @@ function checkUploadNames(string $mod, array $fresh, array $seen): string {
     return '';
 }
 
-# The query of one URL checked against a key => value regex allowlist: an unknown, a repeated, a malformed or an empty key refuses the whole query with null
-# Keys and values are compared decoded, so a percent-encoded form is the same key and cannot slip past as a second one
+# Check the query of one URL against a key => regex allowlist, refusing the whole query with null; keys are compared decoded, so an encoded twin cannot slip past
 function getStrictQuery(string $url, array $allow): ?array {
     $cut = strpos($url, '?');
     $query = ($cut === false) ? '' : substr($url, $cut + 1);
@@ -4990,10 +4883,7 @@ function setFileRoute(): never {
     getFileStream($path, $ask['key'], is_string($mime) ? $mime : 'application/octet-stream', true, $id ? 'private' : 'none');
 }
 
-# Answer whether the current administrator moderates the files of one upload place: a Node type through its right node-<name> alone, any other module through its own key
-# The mapping of a registered type to its right lives in is_admin_modul(), so this and every other moderator question about a type name agree
-# The key is read from the stored rights of the session and never from the request, so a type name cannot turn into a right, and every upload helper asks this one question
-# The folder profile holds the texts of the account module, so the moderator of account moderates it
+# Answer whether the admin moderates one upload place, from the stored rights and never the request; the folder profile holds the account texts, so it maps to account
 function checkUploadModer(string $mod): bool {
     return $mod !== '' && is_moder(($mod === 'profile') ? 'account' : $mod) === 1;
 }
@@ -5005,10 +4895,7 @@ function checkEditorUploadAccess(string $mod, array $rule): bool {
     return !is_user() && (int)($rule['guestupload'] ?? 0) === 1;
 }
 
-# Resolve the owner token the stored file name of the current visitor carries: the site user id for a member, none for a moderator, and a per-session token for a guest
-# A moderator is answered null because checkUploadModer() reads the admin session: an administrator need not be a site user, so there is no id to own the file with and no segment
-# The guest token is derived from the session and is never the session id, because the segment ends up in a public file name and must authenticate nothing when it is read off a URL
-# A guest without a session is answered null and not a token derived from an empty id, because that one derivation is the same for every guest and is the defect this token removes
+# Resolve the owner token of the visitor stored file name; a guest token is derived from the session and is never its id, as it lands in a public file name
 function getEditorFileOwner(string $mod): ?string {
     global $user;
     if (is_user()) return (string)(int)($user[0] ?? 0);
@@ -5017,10 +4904,7 @@ function getEditorFileOwner(string $mod): ?string {
     return ($sid === '') ? null : substr(hash_hmac('sha256', 'upload|'.$sid, getSecret('upload')), 0, 16);
 }
 
-# Return the file context of one upload place; core/classes has no runtime autoload, so the file layer is required on first use and the directory is named the root here alone
-# The client passes a name inside that directory and never a root of its own, and what may be done there is the answer of the place rule and not a role the window worked out again
-# The place rule already carries the directory and the module it is moderated as, so the context takes the rule alone and no caller hands the place down a second time beside it
-# Listing and uploading are one decision, checkEditorUploadAccess(), and the two operations a module moderator additionally holds ride on checkUploadModer(), the one role rule here
+# Return the file context of one upload place; the client names a file inside its directory and never a root, and the place rule decides what may be done there
 function getUploadFileArea(array $rule): FileManager {
     require_once BASE_DIR.'/core/classes/filemanager.php';
     $mod = (string)$rule['mod'];
@@ -5028,10 +4912,7 @@ function getUploadFileArea(array $rule): FileManager {
     return new FileManager('editor', (string)$rule['path'], ['upload' => $able, 'list' => $able, 'moder' => checkUploadModer($mod)]);
 }
 
-# Resolve one storage path handed in by the client and answer the stored row only when it exists in that place and belongs to whoever is asking
-# The path arrives from the browser and is never taken on trust: it is read through the place context, so a name reaching outside the directory answers nothing at all
-# Both form handlers outside the editor asked these two questions in their own words; a guard written twice drifts, so the refusal lives here and the wording stays theirs
-# A module moderator is excused the ownership test alone, which is the same excuse getUploadFileArea() grants for deletion and packing, and never the existence test above it
+# Resolve a storage path the client sent and answer its row only when it exists in the place and belongs to the asker; a moderator is excused ownership alone
 function getUploadTakenFile(array $rule, string $take): array {
     $one = getUploadFileArea($rule)->getFileData($take);
     if ($one === [] || $one['kind'] === 'dir' || $one['url'] === '') return ['ok' => false, 'error' => 'gone', 'file' => []];
@@ -5041,10 +4922,7 @@ function getUploadTakenFile(array $rule, string $take): array {
     return ['ok' => true, 'error' => '', 'file' => $one];
 }
 
-# Answer the upload rule of one editor route once the four questions it asks have been answered: the place, the route it permits, the right of the visitor and the token
-# A refusal answers the JSON here and never returns, so no route restates the guards and none of them can ship with one of the four quietly missing from its own opening lines
-# The place travels in the address as the module name did and is read raw, because filterVar() empties a string carrying a dot and the grammar of getUploadPlaceRule() validates it
-# Which route was asked for is read the way index.php dispatched it, so a place permitting the listing alone is refused an upload here and not by a window drawing no button
+# Answer the upload rule of one editor route or refuse with JSON; the place is read raw, because filterVar() empties a dotted string and the place grammar validates it
 function getEditorRouteRule(string $src = 'post'): array {
     $rul = getUploadPlaceRule(getVar('get', 'place', 'raw', ''));
     if (!$rul['ok']) getEditorJson(['ok' => false, 'error' => $rul['error']]);
@@ -5054,12 +4932,7 @@ function getEditorRouteRule(string $src = 'post'): array {
     return $rul;
 }
 
-# Return one stored editor file row for JSON output: the descriptor of the file layer plus the two strings the window prints, so the client never formats a size or a date
-# Which actions a row offers is the capability set of its own descriptor and never a role the window derives again, which is what keeps the interface from computing a permission
-# The absolute server path is absent because the file layer gives an editor context none, and the thumbnail falls back to the file itself so a listing always has one to draw
-# The mode and the account of the stored object travel only to a module moderator: they answer for the server, not the text, and an author inserting a picture needs neither
-# The folder of a closed owner, getUploadOwner(), has no direct address, so its rows carry the controlled preview route of the owner instead of a file address
-# The bytag flag tells the window that such a file enters a text only as the [attach] tag, which the stored text turns into its own controlled address
+# Return one stored editor file for JSON; mode and account of the object go only to a moderator, and a closed owner's rows carry its preview route, not an address
 function getEditorFileData(array $one, bool $moder = false, string $mod = ''): array {
     if ($moder) return getEditorFileData($one, false, $mod) + [
         'perms' => (string)($one['perms'] ?? ''),
@@ -5087,10 +4960,7 @@ function getEditorFileData(array $one, bool $moder = false, string $mod = ''): a
     ];
 }
 
-# Publish one editor submission through the upload service and answer with the editor JSON; rules, naming and quota belong to the service, the adapter only maps its codes
-# Who the stored file belongs to is answered by getEditorFileOwner() alone, so the upload route and the listing route can never disagree about the segment the name carries
-# Every submission is journalled on its own, as the other two routes of the window are: a file that reaches the disk without a record is a file nobody can account for later
-# The file context is built after the write, because the first write creates a missing folder of its owner, and a context over the missing folder would answer nothing
+# Publish one editor upload through the upload service; the file context is built after the write, because the first write creates the missing owner folder
 function addEditorUpload(): void {
     global $admin, $user;
     $rul = getEditorRouteRule();
@@ -5121,11 +4991,7 @@ function addEditorUpload(): void {
     getEditorJson(['ok' => $out !== [], 'files' => $out, 'errors' => $bad, 'error' => $out ? '' : ($bad[0] ?? _ERROR_DOWN)]);
 }
 
-# Return stored files for the Toast UI editor file panel; a moderator lists the whole directory and every other visitor only the files carrying the own owner token
-# Whether a list is answered at all is decided by checkEditorUploadAccess() and by nothing else, so a guest the settings allow sees the own uploads of the own session
-# Which of the three limits applies is the one role question left on this route, and what each of them is worth is a setting: moderfiles, userfiles and guestfiles
-# The owner segment is alphanumeric and not numeric, so the comparison is a string one: an integer cast turns every guest token into zero and matches one guest against another
-# Who a stored name belongs to is read by FileManager::getFileOwner(), the one place that knows the format, so this route carries no pattern and no salt length of its own
+# List stored files for the editor file panel; the owner segment is alphanumeric, so it is compared as a string, as an integer cast would match every guest
 function getEditorFileJson(): void {
     $rul = getEditorRouteRule('req');
     $mod = (string)$rul['mod'];
@@ -5154,9 +5020,7 @@ function getEditorFileJson(): void {
     ]);
 }
 
-# Run one changing operation of the editor window over one path or over the marked set; deletion and packing are the two it offers and a module moderator alone is answered them
-# Every path is asked of its own descriptor before it is touched, so a capability the context withholds refuses here and not after the object was already opened for the work
-# Each path is journalled on its own and the answer names how many of how many ran, because a marked set is the same action over several names and never a second operation
+# Run delete or pack of the editor window over one path or the marked set; every path asks its own descriptor before it is touched and is journalled alone
 function setEditorFileRun(string $op): void {
     global $admin, $user;
     $rul = getEditorRouteRule();
@@ -5217,8 +5081,7 @@ function getActionMenu(array $items, bool $user = false): string {
     return $tpl->getHtmlFrag('dial', ['is_user_menu' => $user, 'dial_title' => $user ? (string)_USER : (string)_EDITOR, 'dial' => $items]);
 }
 
-# Admin status
-# The private-message variant is gone with the shared status column it rendered: a message now carries four independent states and its own labelled badge
+# Render the status badge of an admin list row
 function ad_status(mixed $link, mixed $id, string $text = ''): string {
     global $tpl;
     if ($link) {
@@ -5292,8 +5155,7 @@ function rss_select(): string {
     return $cont;
 }
 
-# Fetch one RSS or Atom source through Feed for a block: the canonical Markdown on success, null when the fetch failed or the document does not fit the TEXT column of _blocks
-# The address arrives entity-encoded from the url filter of getVar() or from _blocks.url, so it is decoded first; Feed loads here, never on a request without a feed
+# Fetch one RSS or Atom source for a block as Markdown, or null when it fails or exceeds the TEXT column; the address arrives entity-encoded and is decoded first
 function getRssBody(string $url): ?string {
     global $conf;
     require_once BASE_DIR.'/core/classes/feed.php';
@@ -5301,8 +5163,7 @@ function getRssBody(string $url): ?string {
     return ($res['ok'] && strlen($res['body']) <= 65535) ? $res['body'] : null;
 }
 
-# Render one RSS block: a stale block fetches its source and stores the Markdown, a failed fetch keeps the stored body, and both move the time so the next try waits a full refresh
-# The stored text came from a remote source, so it is rendered in safe mode whatever mode the other blocks of the site are rendered in
+# Render one RSS block; a stale block fetches and stores, a failed fetch keeps the body, and the remote text is always rendered in safe mode
 function getRssBlock(int $bid): void {
     global $db, $tpl, $prs;
     $sql = 'SELECT title, content, url, refresh, time FROM '.PREFIX_DB.'_blocks WHERE id = :bid';
@@ -5314,9 +5175,7 @@ function getRssBlock(int $bid): void {
     echo $tpl->getHtmlFrag('block-all', ['title' => $title, 'content' => $prs->filterContent($content, true, '', 2)]);
 }
 
-# Render the feed page of one address for the account and rss modules: the source heading and the entries, or the warning when the fetch failed or the feed holds no entry
-# The address is the visitor's choice, so the rendering goes through filterDoc() and is never stored in the parser cache
-# The outcome of a fetch, a refusal included, is kept 900 seconds in the data cache under the canonical address and rss.max, so repeating an address never reaches the network
+# Render the feed page of one address; the address is the visitor's choice, so it goes through filterDoc() and never the parser cache, outcomes cached 900 s
 function getRssView(string $url): string {
     global $conf, $tpl, $prs;
     if ($url === '') return '';
@@ -5578,8 +5437,7 @@ function is_user_id(string $name): int {
     return intval($uid);
 }
 
-# Return the mail address of one existing account, or an empty string for a guest, a removed account or one without an address
-# A notice goes to the address the account itself stores, never to one the request names; the panel sends such notices too, so it lives beside is_user_id()
+# Return the mail address of one existing account, or an empty string; a notice goes to the address the account stores, never one the request names
 function getUserMail(int $uid): string {
     global $db;
     if ($uid < 1) return '';
@@ -5588,8 +5446,7 @@ function getUserMail(int $uid): string {
     return is_string($mail) ? trim($mail) : '';
 }
 
-# Return the administrators who hold one right key, main administrators included, as id => name ordered by name, for a screen that assigns work to one of them
-# The key is compared against the stored rights list and never against a pattern, so a right such as node-help names exactly the holders of that one right
+# Return the administrators holding one right key as id => name; the key is compared against the stored rights, never a pattern, so node-help names only its holders
 function getAdminNames(string $key): array {
     global $db;
     $res = $db->getSqlQuery('SELECT id, name, super, modules FROM '.PREFIX_DB.'_admins ORDER BY name');
@@ -5600,10 +5457,7 @@ function getAdminNames(string $key): array {
     return $out;
 }
 
-# Check modul admin
-# The single administrative entry of Node opens to the manager of Node and to the moderator of any one type; what each may do there is decided by the Node context
-# A registered type is administered through its right node-<name> alone, so every moderator question about a type name reads the one key
-# The stored key of a removed module of the same name, which upgraded administrators may still carry, never makes its holder a moderator of the type
+# Check whether the admin may administer a module; a Node type is read as its right node-<name> alone, so the stale key of a removed module never grants the type
 function is_admin_modul(string $modul): int {
     global $db, $admin, $conf;
     $aid = intval(substr($admin[0], 0, 11));
@@ -5636,9 +5490,7 @@ function is_moder(string $modul = ''): int {
     }
 }
 
-# Search user name: the flat array of names twelve forms read, and the richer answer only the compose field of the private message page asks for
-# Both shapes are bounded, the richer one tighter: a suggestion list nobody can read to the end is a page of a database and not an answer to a reader
-# The card belongs to the name that resolved exactly and never to a suggestion, so one keystroke costs one lookup of one account instead of one for every row offered
+# Answer the user name search, bounded; the card belongs only to the name that resolved exactly, so one keystroke costs one account lookup and not one per row
 function getUserList(): void {
     global $db;
     $let = analyze_name(getVar('get', 'term', 'text', ''));
@@ -5654,13 +5506,7 @@ function getUserList(): void {
     exit;
 }
 
-# The recipient card of the private message form: who a typed name resolves to, and how much room their mailbox still has, in one lookup for one account
-# Only an exact name is answered: a card drawn for every suggestion would cost one mailbox count per offered row, which is the N+1 this form exists without
-# The fill is read through the subsystem that owns the private message table, and it answers a grade and not the numbers: how full another member's mailbox is belongs to them
-# The grade folds the ladder that colours the shelves into the three steps a sender can act on: there is room, it is nearly full, and it will refuse the message
-# The inbox is the only mailbox read, because it is the only one an arriving message lands in and the only one a send is refused on
-# A mailbox no setting bounds is graded none rather than well: the shelves answer an unmeasured box the same way, and nothing measured is not the same as nothing wrong
-# A card is answered to a member only, and never before the module itself is on: a name that resolves to nobody answers nothing at all and the form sends exactly as it did
+# Answer the recipient card of the private message form for an exact name only; it gives a grade and not numbers, because how full a mailbox is belongs to its owner
 function getUserCardData(string $name): array {
     global $db, $conf, $prv;
     $name = filterText(mb_substr($name, 0, 25));
@@ -5770,9 +5616,7 @@ function diff_dump(array $dump, array $old, array $skip = []): array|false {
     return (count($log) > 0) ? $log : false;
 }
 
-# Executes a file scan task and returns scheduler metadata
-# Directories storage and node_modules are excluded by default: the first is runtime the site rewrites by itself, the second a development dependency absent from a delivered site
-# Both only produce noise an integrity report cannot act on
+# Run the file scan as a scheduler job; storage and node_modules are excluded, the one runtime data the site rewrites, the other a dependency a site never ships
 function addFilescanTask(): array {
  global $conf, $tpl, $mailer;
     if (empty($conf['security']['log_d'])) return ['status' => 'failed', 'message' => 'File scan is disabled'];
@@ -5892,8 +5736,7 @@ function getLoginLog(array $filt, int $page, int $num): array {
     return ['rows' => $rows, 'total' => intval($total)];
 }
 
-# Check user acess
-# The moderator check takes the module name itself, not whether it is set: isset() asked about a module literally named "1" and dropped its administrator into the visitor branch
+# Check whether the visitor holds an access right; the moderator check is asked with the module name itself, never with isset() of it
 function is_acess(string $ids): bool {
  global $db, $user, $conf;
     if ($ids) {
@@ -6004,8 +5847,7 @@ function checkemail(string $mail): array {
     return $stop ?? [];
 }
 
-# Render one block: an RSS block from its feed, a file block by including its file with the parameters of its instance in $param, any other from its stored content
-# A file block that sets its content to null shows nothing at all, which is how an instance with invalid parameters stays off instead of showing something else
+# Render one block by its kind; a file block that sets its content to null shows nothing, which is how an instance with invalid parameters stays off
 function setBlockView(string $side, string $bfile, string $btitle, string $content, int $bid, string $url, string $param = ''): string {
     global $showbanners, $foot, $tpl;
     if ($url == '') {
@@ -6054,9 +5896,7 @@ function setBlockView(string $side, string $bfile, string $btitle, string $conte
     return '';
 }
 
-# Build the snapshot every Node read and write of the request is decided against, once: the site user with the effective groups and the separate administrator
-# It also holds the types that administrator moderates from the stored node-<name> keys, the key node as the right to manage, the address and the language of the categories
-# Nothing is taken from the query or the body: the background flag stays false here, because only the fixed adapters of the scheduler build a background context
+# Build the Node context of the request once from the site user and the admin, never from query or body; only scheduler adapters build a background context
 function getNodeContext(): NodeContext {
     global $db, $conf, $user, $admin, $locale;
     static $ctx = null;
@@ -6090,9 +5930,7 @@ function getNodeContext(): NodeContext {
     return $ctx;
 }
 
-# Return the registered Node types the request may receive, as name => type, read once per request through one reader of the shared context
-# A public visitor gets the active types, the Node manager and the moderators also the disabled ones they are entitled to; a type whose stored configuration is broken stays out
-# Only a name the loaded registry carries costs a query: a site without registered types, including one whose update has not created the Node tables yet, reads nothing
+# Return the Node types the request may receive; the manager and moderators also get the disabled ones they may see, and a type with broken config stays out
 function getNodeTypeMap(): array {
     global $conf;
     static $map = null;
@@ -6128,8 +5966,7 @@ function getNodeWriter(?NodeType $type = null): NodeService {
     return new NodeService($db, getNodeContext(), $fld, $pnt, ($type !== null) ? getNodeHandler($type) : null);
 }
 
-# Queue one Node notice to every address of the list: the text enters the mail template escaped, the subject names the site and the title, the sender is the site mail
-# The answer is false as soon as one row was refused, while the other addresses are still queued; Mail logs every refused row itself
+# Queue one Node notice to every address of a list; false once a row was refused while the others are still queued, and Mail logs each refused row
 function addNodeMail(array $list, string $title, string $text): bool {
     global $conf, $mailer;
     $body = getMailFrame(htmlspecialchars($text, ENT_QUOTES, 'UTF-8'));
@@ -6139,8 +5976,7 @@ function addNodeMail(array $list, string $title, string $text): bool {
     return $done;
 }
 
-# The titles of the Node targets the context may read, as id => title for a map of global id => type name, read in batches of the sync limit through the light targets
-# A name the registry does not carry, a missing or closed material and a failed read leave their ids out, so a list shows only what its viewer may open
+# Return the titles of the Node targets the context may read; unknown, closed and failed ids are left out, so a list shows only what its viewer may open
 function getNodeTitleMap(array $refs): array {
     global $conf;
     $out = [];
@@ -6155,8 +5991,7 @@ function getNodeTitleMap(array $refs): array {
     return $out;
 }
 
-# The address a request of a removed module moved to, or an empty string: a material or report address leads to the migrated material, a list, rank or category one to its type
-# Callers ask only on the way to a 404, so a site without migrated modules pays one indexed read on a refused address and nothing more
+# Return the address a request of a removed module moved to, or an empty string; it costs one indexed read and is meant for the way to a 404
 function getNodeLegacyUrl(string $mod, string $op, int $id, int $cat): string {
     $item = in_array($op, ['view', 'broken'], true);
     if (($item && $id < 1) || (!$item && !in_array($op, ['', 'liste', 'best', 'pop', 'closed'], true))) return '';
@@ -6180,8 +6015,7 @@ function getNodeMoveLabel(NodeStatus $to): array {
     };
 }
 
-# The quick edit of the intro and of the body of one material on its public page, one dial entry per text, each opening the editor in the region of that text
-# The page token travels in the header of each entry, because the article declares none; a type with an extension keeps its full form and gets no entry
+# Build the quick edit dial entries of one material; the page token rides each entry's header, as the article declares none, and an extension type gets none
 function getNodeQuickItems(NodeType $type, Node $node): array {
     if ($type->ext !== '' || $node->id < 1) return [];
     $out = [];
@@ -6192,9 +6026,7 @@ function getNodeQuickItems(NodeType $type, Node $node): array {
     return $out;
 }
 
-# The moderator actions of one material for a speed dial: its editor, then every move of its state the matrix allows as a post of the Node panel
-# The panel list adds the view and the physical deletion around them; a public page asks for refer, so the panel answers a move with the page it came from
-# Only the public page asks for quick: the quick edit of the intro and of the body goes before the editor there, while a panel list and a card hold no region to edit in
+# Build the moderator dial of one material: its editor, then every state move the matrix allows; a public page asks for refer and for the quick edit entries
 function getNodeModerDial(NodeType $type, Node $node, bool $back = false, bool $quick = false): array {
     global $afile;
     $out = $quick ? getNodeQuickItems($type, $node) : [];
@@ -6214,8 +6046,7 @@ function getNodeModeType(string $mode): ?NodeType {
     return null;
 }
 
-# The template of one view part of the type: the file of its display mode when the theme carries one, otherwise the base file of Node, answered once per request
-# The module and the file block node.php both ask it, so a mode of a theme overrides the list, the view and the block the same way
+# Return the template of one view part of a type, the file of its display mode when the theme has one, else the Node base, so a mode overrides list, view and block
 function getNodeTplName(string $kind, string $name, NodeType $type): string {
     global $tpl;
     static $memo = [];
@@ -6225,9 +6056,7 @@ function getNodeTplName(string $kind, string $name, NodeType $type): string {
     return $memo[$key];
 }
 
-# Read the parameters of one instance of the file block node.php from the canonical JSON of _blocks.param: exactly type, mode and limit in this order
-# The type is empty for a mixed feed or a registered type with the blocks integration, the mode last or home, the limit 1 to 50; anything else, including a stale type, is null
-# The mode home of a named type also needs the home feature of that type, because a feed of marked materials of a type that cannot mark any is a stale choice
+# Read the node block parameters from canonical JSON, exactly type, mode and limit in order, or null; mode home also needs the home feature of the type
 function getNodeBlockParam(string $param): ?array {
     $data = json_decode($param, true);
     if (!is_array($data) || array_keys($data) !== ['type', 'mode', 'limit'] || !is_string($data['type']) || !is_int($data['limit'])) return null;
@@ -6238,8 +6067,7 @@ function getNodeBlockParam(string $param): ?array {
     return ($set !== null && $set['integrations']['blocks'] && ($data['mode'] === 'last' || $set['features']['home'])) ? $data : null;
 }
 
-# Deliver the due future publications of Node for the scheduler: a trusted background context without any identity, the shared writer and points, and the limit of the job
-# Only this fixed adapter builds such a context, and a refusal of the writer becomes the failed status the scheduler records instead of an exception it would have to catch
+# Deliver due Node publications as a scheduler job in a trusted background context only this adapter builds; a refusal becomes the failed status
 function addNodePublishTask(): array {
     global $db, $conf, $fld, $pnt;
     $lim = intval($conf['scheduler']['jobs']['nodepublish']['settings']['limit'] ?? 50);
@@ -6251,8 +6079,7 @@ function addNodePublishTask(): array {
     }
 }
 
-# Check the due external sources of Node for the scheduler: a trusted background context without any identity and the extension sync from the closed factory
-# The limit of the job is bounded to the network sources one pass may fetch; a refusal of the extension becomes the failed status the scheduler records
+# Check due external Node sources as a scheduler job in a trusted background context; the limit bounds the fetches of one pass and a refusal becomes failed
 function addNodeSyncTask(): array {
     global $db, $conf;
     $lim = intval($conf['scheduler']['jobs']['nodesync']['settings']['limit'] ?? 10);
@@ -6265,12 +6092,7 @@ function addNodeSyncTask(): array {
     }
 }
 
-# Build the rating subsystem of the request once: the rules behind the mark of the 6.3 data update, the trusted actor of the two sessions and the closed map of the fixed targets
-# The read adapter answers only a target the actor may reach; under the lock its first statement is the locking read of the owner row, and a failed statement throws
-# The main administrator reaches every existing target and a forum moderator every topic; the write adapter stores the checked aggregate and refuses what the column cannot hold
-# A scope node.<name> goes through Node alone: the reader of the request context, under the lock the writer that locks the type and then the material before it reads
-# The rating feature of the type and the extension take part too; the extension may refuse the vote and follows a stored one inside the same transaction; Point takes no part
-# The context and the types of Node are read here, before any transaction, because a plain read inside a vote would open its snapshot before the locks
+# Build the rating service once; the Node context and types are read before any transaction, because a plain read inside a vote would open its snapshot too early
 function getRatingService(): Rating {
     global $db, $conf, $user, $admin;
     static $rate = null;
@@ -6329,8 +6151,7 @@ function getRatingService(): Rating {
     return $rate;
 }
 
-# Answer one vote of the shared rating: POST only, the site token from the body, the closed form of the five fields, and the status the result of the subsystem maps to
-# Nothing of the address is read, so an old link with query parameters is a wrong form; a refusal answers its own status with an alert and never the refreshed block
+# Answer one rating vote: POST only, the site token from the body, the closed form of five fields; nothing of the address is read
 function getRatingView(): void {
     global $tpl;
     $forms = [
@@ -6366,12 +6187,7 @@ function getRatingView(): void {
     else echo getRatingAsync(2, $vals['id'], $vals['mod'], $res['ratings'], $res['score'], '', $vals['typ'] === 'thumbs' ? '1' : '');
 }
 
-# Build the quick edit of the request once, with one adapter per kind; every adapter takes the right, the text and the stamp from the stored row and never from the request
-# A source renders its editor itself with the literal store of its column, a write goes through the guarded writer of its kind and a view renders as its page does
-# A comment and a forum post answer their body as their page renders it and their edited mark out of band; the editor id carries the subject, as a page may hold an editor
-# The forum view loads the words of its module first, because a fragment request names no module and the edited mark is one of those words
-# A Node material answers its intro or its body as the view renders it, from the stored row, so an author sees the text an edit sent back to moderation
-# A material the visitor may neither edit nor read is answered as gone, because Node answers a missing and a closed material alike
+# Build the quick edit service once; every adapter takes the right, text and stamp from the stored row, and a material neither editable nor readable answers gone
 function getQuickService(): QuickEdit {
     global $com;
     static $quick = null;
@@ -6456,8 +6272,7 @@ function getQuickService(): QuickEdit {
     return $quick;
 }
 
-# Check the transport of one quick-edit request before anything is read: the method first, then the site token from the header alone, never from a parameter
-# A token is never carried in an address, so it reaches no log; a missing or stale one answers 403 like any refusal, and the page keeps the editor and the typed text
+# Check the transport of one quick edit request: the method, then the site token from the header alone, never a parameter, so the token reaches no log
 function checkQuickRequest(string $method): array {
     if (($_SERVER['REQUEST_METHOD'] ?? '') !== $method) {
         header('Allow: '.$method);
@@ -6474,8 +6289,7 @@ function setQuickRefuse(int $stat, string $text, array $list = []): void {
     echo $tpl->getHtmlFrag('alert', ($list ? ['messages' => $list] : ['text' => $text]) + ['meta' => '', 'type' => 'warn', 'is_warn' => true]);
 }
 
-# Answer the editor of one quick-edit subject: GET only, the token from the header, the closed forms of kind, id and field, then the right the source of the kind decides
-# The form carries the stamp of the stored row and the page token in its own header, because the item around it may declare none and a save reads the token there alone
+# Answer the editor of one quick edit subject; the form carries the stamp and the page token in its own header, as the item around it may declare none
 function getQuickEdit(): void {
     global $tpl;
     [$stat, $text] = checkQuickRequest('GET');
@@ -6506,9 +6320,7 @@ function getQuickEdit(): void {
     ]);
 }
 
-# Store one quick edit: POST only, the token from the header, the closed forms of the five fields, and the status the closed result code maps to
-# A save answers the rendered region with the fresh edited mark out of band; a conflict answers the current text rendered with its fresh stamp, which htmx does not swap
-# A note of the save travels as an event header, which the script tells on the warning toast
+# Store one quick edit and answer the region with the fresh mark out of band; a conflict answers the current text with its stamp, which htmx does not swap
 function updateQuickEdit(): void {
     global $tpl;
     [$stat, $text] = checkQuickRequest('POST');
@@ -6535,8 +6347,7 @@ function updateQuickEdit(): void {
     setQuickRefuse($codes[$res['code']][0], $codes[$res['code']][1], $res['error']);
 }
 
-# Publish or hide one comment as a moderator and answer the comment itself, so the reader keeps the slice and the scroll position the action was taken from
-# The swap is named by the response rather than by the link, so a refused transition leaves the element the request named exactly as it was
+# Publish or hide one comment as a moderator and answer the comment; the swap is named by the response, so a refused move leaves the element as it was
 function updateCommentStatus(): void {
     global $tpl, $com;
     $id = getVar('req', 'id', 'num', 0);
@@ -6555,8 +6366,7 @@ function updateCommentStatus(): void {
     echo getCommentView($row, $numb, getSiteToken());
 }
 
-# Remove one comment as a moderator and answer nothing, because the reader's slice loses exactly the element the request named
-# The removal is named by the response, so a refused delete reports the refusal in the status zone and takes no element out of the page
+# Remove one comment as a moderator and answer nothing; the removal is named by the response, so a refused delete takes no element out of the page
 function deleteComment(): void {
     global $tpl, $com;
     if (!$com->deleteComment(getVar('req', 'id', 'num', 0))) {

@@ -213,8 +213,7 @@ final class NodeQuery {
         return $out;
     }
 
-    # Merge the stored differences of a type into the defaults: associative maps are merged key by key, a list replaces the default whole
-    # An empty array over a map is no difference, an empty array over a list clears it
+    # Merge the stored differences of a type into the defaults; a map merges key by key, a list replaces the default whole, and an empty array over a map changes nothing
     private function getMergedArray(array $base, array $over): array {
         foreach ($over as $key => $val) {
             $deep = is_array($base[$key] ?? null) && $base[$key] !== [] && !array_is_list($base[$key]) && is_array($val) && ($val === [] || !array_is_list($val));
@@ -281,9 +280,7 @@ final class NodeQuery {
         return $out;
     }
 
-    # Check the roles of the assets section and answer them expanded to every key, ordered by sort and then by name
-    # A mode takes the kinds it can show, the kinds of the role only narrow them, and the external link mode is one local-free role of exactly one resource
-    # Only the modes download and link offer the report form, so a role of any other mode that takes reports is refused
+    # Check the roles of the assets section and answer them expanded and sorted; only the modes download and link offer the report form, so another mode refuses reports
     private function filterAssetRule(mixed $rule, array $lims): array {
         if (!is_array($rule) || ($rule !== [] && array_is_list($rule))) throw $this->getInvalid('assets');
         $out = [];
@@ -354,8 +351,7 @@ final class NodeQuery {
         return $out;
     }
 
-    # Check the stored settings of one type on read: a refusal only of a switch a later rule closed, features.submit or the report of a role, reads that switch off with a log line
-    # Both switches only narrow what the type grants, so a type stored before the rule stays on the site; a malformed value or any other refusal still fails the type
+    # Check the stored settings of one type on read; a switch a later rule closed is read off with a log line, so a type stored before that rule stays on the site
     private function getStoredSettings(mixed $node, string $ext, array $sect, array $fields, string $name): array {
         while (true) {
             try {
@@ -372,8 +368,7 @@ final class NodeQuery {
         }
     }
 
-    # Check the stored settings of one type, its differences from the defaults without the version, and answer the canonical effective settings
-    # Every write of a type is checked here and refused on any error; a stored type is read through getStoredSettings(), the extension settings through the extension
+    # Check the settings of one type and answer the canonical effective ones; every write of a type is refused here on any error, a stored type reads through getStoredSettings()
     public function filterNodeSettings(string $ext, array $settings, array $fields): array {
         global $conf;
         return $this->filterTypeSettings($conf['node'] ?? null, $ext, $settings, $fields);
@@ -401,9 +396,7 @@ final class NodeQuery {
         return is_string($per) && preg_match(self::PERIOD, $per) && (strlen($per) < strlen($max) || (strlen($per) === strlen($max) && strcmp($per, $max) <= 0));
     }
 
-    # The types an unfinished configuration operation has touched, read from its marker once per instance; an unreadable marker holds every type
-    # The file status is asked afresh, because the marker is written and removed by other processes than a long-running reader
-    # A marker that goes between the status and the read belongs to an operation that has just finished, so it holds nothing; only one that stays and cannot be read holds all
+    # The types an unfinished configuration operation holds; the file status is asked afresh, as other processes write and remove the marker under a long-running reader
     private function getHeldTypes(): array {
         if ($this->held === null) {
             $file = BACKUP_DIR.'/config/marker.json';
@@ -418,8 +411,7 @@ final class NodeQuery {
         return $this->held;
     }
 
-    # Assemble one type from its row and a configuration, answer null for a type that fails and false for a section the configuration does not carry at the version of the row
-    # A type an unfinished configuration operation holds serves nobody until the operation is restored, because its database row and its sources may belong to different sides
+    # Assemble one type from its row and a configuration; a type an unfinished configuration operation holds serves nobody, as its row and sources may belong to different sides
     private function getTypeModel(array $row, array $cfg): NodeType|false|null {
         $name = $row['name'];
         $sect = $cfg['node']['types'][$name] ?? null;
@@ -457,8 +449,7 @@ final class NodeQuery {
         return $this->getQueryRows('SELECT '.self::TYPECOLS.' FROM '.PREFIX_DB.'_node_types'.$where.' ORDER BY sort, id', $pars);
     }
 
-    # Assemble rows into the memory of the instance; a missing section or a differing version makes the shared configuration be read once more
-    # That is how a type the request itself has just written is read back; only a version that still differs reads those rows once more, and then fails the type
+    # Assemble rows into the memory of the instance; a missing section or a differing version reads the configuration once more, which is how a type just written is read back
     private function setTypeRows(array $rows, array $names): void {
         global $conf;
         $stale = [];
@@ -513,8 +504,7 @@ final class NodeQuery {
         return $out;
     }
 
-    # Export one type the context manages as the canonical JSON of the slaed.node format: the nine keys of the definition, no id, state, version, dates, materials or paths
-    # A type whose upload or rating rule is broken is refused, because the file would not bring the same type back
+    # Export one type the context manages as canonical slaed.node JSON; a broken upload or rating rule is refused, because the file would not bring the same type back
     public function getNodeTypeExport(string $name): string {
         if (!$this->ctx->manage && !$this->ctx->super) throw new NodeException('The context does not manage node types', NodeException::DENIED);
         $type = $this->getNodeType($name);
@@ -560,8 +550,7 @@ final class NodeQuery {
         return $out;
     }
 
-    # Whether the joined main category of one read row grants the context: a moderator passes, a material without category is open, the rest needs a readable category of the type
-    # The module of the category is compared without case, as every statement over the category table compares it
+    # Whether the main category of one read row grants the context; a moderator passes and a material without category is open
     private function checkRowCat(array $row, NodeType $type): bool {
         if ($this->checkModer($type) || intval($row['cid']) === 0) return true;
         if (!$type->settings['features']['categories'] || $row['cread'] === null || strtolower($row['cmod']) !== $type->name) return false;
@@ -605,7 +594,6 @@ final class NodeQuery {
     }
 
     # Add the list filters of the instance to the conditions of one type branch; a filter the settings of the type do not allow is refused
-    # The category cut main reads the main category, extra the materials linked to it whose main category is another one, and no cut reads both with one predicate
     private function addFilterSql(NodeType $type, string $key, string $cat, array &$where, array &$pars): void {
         $set = $type->settings;
         if ($this->cid > 0) {
@@ -654,8 +642,7 @@ final class NodeQuery {
         }
     }
 
-    # Compile the conditions one type contributes to a read, with value names unique to the branch key: type, state and dates, category rights, filters and extension scope
-    # A part of a split read adds its category cut and one trusted condition of this class
+    # Compile the conditions one type contributes to a read, with value names unique to the branch key; a part of a split read adds its category cut and one trusted condition
     private function getBranchSql(NodeType $type, string $key, ?NodeExtension $ext, string $read, string $cat = '', string $cond = ''): array {
         $rule = self::READS[$read];
         $moder = $this->checkModer($type);
@@ -698,8 +685,7 @@ final class NodeQuery {
         return array_map(fn(NodeType $v): array => [$v, $v->ext === '' ? null : $this->getFactoryExt($v->ext)], $this->list);
     }
 
-    # Compile every branch of the current selection for one kind of read; a type branch splits into disjoint parts, each one range of an index
-    # The parts are the main and the extra category when a readable category is chosen, and each given condition, such as pinned and unpinned rows of an ordered read
+    # Compile every branch of the current selection for one kind of read; a type branch splits into disjoint parts, so each one reads a single range of an index
     private function getListParts(string $read, array $conds = ['']): array {
         $out = [];
         foreach ($this->getTypeSet() as $i => [$type, $ext]) {
@@ -710,8 +696,7 @@ final class NodeQuery {
         return $out;
     }
 
-    # The order of the current selection over the columns of a read row: pinned first where the feature is on, then the chosen or default sort with the id breaking ties
-    # The publication date is the order of every feed and has an index in every type, so it is open to each type; list.orders limits only the other keys
+    # The order of the current selection; the publication date is open to every type, as every feed orders by it and every type indexes it, and list.orders limits only the rest
     private function getOrderSql(string $pre): string {
         $one = count($this->list) === 1 ? $this->list[0]->settings['list'] : null;
         [$key, $dir] = $this->order ?: ($one ? [$one['order'], $one['dir']] : ['published', 'desc']);
@@ -894,8 +879,7 @@ final class NodeQuery {
         return $this;
     }
 
-    # Choose whether the lists of the reader carry the extra fields and the categories, relations and resources of their page
-    # A table that shows none of them switches them off and keeps the three statements of type, count and page; the models then hold null for every set not loaded
+    # Choose whether the lists of the reader load the extra fields and sets of their page; switched off, the models hold null for every set not loaded
     public function setNodeSets(bool $load): self {
         $this->sets = $load;
         return $this;
@@ -969,8 +953,7 @@ final class NodeQuery {
             .' (n.ratings = 0) AS rnone, n.score / NULLIF(n.ratings, 0) AS ravg FROM '.PREFIX_DB.'_nodes AS n'.$part['join'].' WHERE '.$part['where'];
     }
 
-    # Read one page of the selection: the disjoint parts of every branch, each ordered through its index and cut to the page end, are unioned, ordered and paged once more
-    # Only the ids of that page read their full row, the fields where a selected type uses them and the names of author and category
+    # Read one page of the selection; the parts of every branch are each cut to the page end through their index, then unioned and paged, and only that page reads full rows
     public function getNodeList(): array {
         $parts = $this->getListParts('list', self::PINS);
         $size = $this->getPageSize();
@@ -1046,8 +1029,7 @@ final class NodeQuery {
         return ['new' => intval($row['fresh'] ?? 0), 'fav' => intval($row['favs'] ?? 0)];
     }
 
-    # Count the selection of the author filter per type with the sums of score and ratings and the favorites held on its materials, as type id => the four numbers
-    # The rules and filters of the list apply, so a profile counts exactly what its lists read; favorites count only where the type offers them
+    # Count the selection of the author filter per type with score, ratings and favorites; the list rules and filters apply, so a profile counts exactly what its lists read
     public function getNodeAuthorStat(): array {
         if ($this->author < 1) throw $this->getInvalid('author');
         $pars = [];
@@ -1072,8 +1054,7 @@ final class NodeQuery {
         return $out;
     }
 
-    # The categories of a type the form offers the context: those of its language whose view right shows them and whose post right admits the writer, all to a moderator of the type
-    # The writer checks the rights and the language again on save; a hidden category stays out of the form, as the list answers it as missing, and so does one of another language
+    # The categories of a type the form offers the context; the writer checks the rights and the language again on save, so this list only narrows the form
     public function getNodePostCats(NodeType $type): array {
         $moder = $this->checkModer($type);
         $out = [];
@@ -1081,14 +1062,12 @@ final class NodeQuery {
         return $out;
     }
 
-    # Whether the context may read one category of the type in its language, by the same right the category filter of a list applies; a moderator reads every category of it
-    # A list of a category outside this answer would be empty by that filter, so the public list answers it as missing rather than as an empty page of a hidden title
+    # Whether the context may read one category of the type, by the right of the category filter of a list; outside it the public list answers the category as missing
     public function checkNodeCategory(NodeType $type, int $cid): bool {
         return $cid > 0 && $type->settings['features']['categories'] && in_array($cid, $this->getCatAllow($type, true), true);
     }
 
-    # Count the materials of every main category of one type in any state, as category id => count, for the Node manager and a moderator of the type
-    # A main category with materials is what makes deleteNodeCategory() refuse, so the category screen offers the deletion by the same rule
+    # Count the materials of every main category of one type in any state; a main category with materials is what makes deleteNodeCategory() refuse
     public function getNodeCategoryCount(NodeType $type): array {
         if (!$this->ctx->manage && !$this->checkModer($type)) throw new NodeException('The context does not administer the type', NodeException::DENIED);
         $out = [];
@@ -1171,9 +1150,7 @@ final class NodeQuery {
         return $this->getAssetModel($row);
     }
 
-    # Read the light targets of a map of global id => type name in at most two statements: the types still unknown to the instance, then one union of every type branch
-    # The answer keeps the order of the input and leaves out every target that is missing, closed, not published, of a disabled type or of another type than expected
-    # With any, a type the context moderates is read as a single item is, in every state and switched off as well; public readers never pass it
+    # Read the light targets of a map of global id to type name in at most two statements, in input order; with any, a type the context moderates reads in every state
     public function getNodeTargetList(array $refs, bool $any = false): array {
         if (count($refs) > $this->getTargetSize()) throw $this->getInvalid('refs');
         foreach ($refs as $id => $name) if (!is_int($id) || $id < 1 || !is_string($name) || !preg_match(self::NAME, $name)) throw $this->getInvalid('refs');
@@ -1209,15 +1186,13 @@ final class NodeQuery {
         return $out;
     }
 
-    # The largest map the batch read of targets accepts: limits.syncbatch of the configuration and never above 500, the size every caller slices its ids by
-    # A missing or broken configuration answers 500, the very bound the batch read then checks, so a caller and the reader can never disagree about one batch
+    # The largest map the batch read of targets accepts, never above 500; a broken configuration answers 500 too, the very bound the batch read checks
     public function getTargetSize(): int {
         global $conf;
         return min(500, $this->getNodeLimits($conf['node'] ?? null)['syncbatch'] ?? 500);
     }
 
-    # The new place of an address of a removed module the migration carried: the type and material of one old id, or with id 0 the type its materials went to
-    # The map is _node_legacy; a type the context may not receive answers null like a missing row, and the material itself is checked by the route it leads to
+    # The new place of an address of a removed module the migration carried, from _node_legacy; a type the context may not receive answers null like a missing row
     public function getNodeLegacy(string $mod, int $id = 0): ?array {
         if (!preg_match(self::NAME, $mod) || $id < 0 || $id > 4294967295) return null;
         $sql = 'SELECT t.name, l.nid, r.path FROM '.PREFIX_DB.'_node_legacy AS l INNER JOIN '.PREFIX_DB.'_nodes AS n ON n.id = l.nid'
