@@ -18,6 +18,10 @@
 /storage/update/files.json
 /storage/release/
 
+# Uploads are the files of a site, the production copy on the stand among them; only the shipped presentation assets are tracked
+/uploads/*
+!/uploads/presentation/
+
 # Written by the scheduler job sitemap when the site turns it on; a shipped copy would carry the addresses of the stand
 /public/sitemap.xml
 
