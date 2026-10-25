@@ -163,6 +163,16 @@ final class RouteRegistryTest extends TestCase
         $this->assertSame([[['files/race', 1, 1]], [['files/race-2', 1, 1]]], $run['rows']);
     }
 
+    # Two writers moving one entity: the second waits on its current row, which snapshot isolation of MariaDB answers with 1020, and its own transaction runs again
+    #[Test]
+    public function twoWritersMoveOneEntity(): void
+    {
+        $run = $this->getRun('move');
+        $this->assertTrue($run['waited'], 'the second writer was never seen waiting on the current row, so no race was run');
+        $this->assertSame(['files/moved-a', 'files/moved-b'], [$run['first'], $run['second']]);
+        $this->assertSame([[['files/moved', 0, null], ['files/moved-a', 0, null], ['files/moved-b', 1, 1]]], $run['rows']);
+    }
+
     # An operation of the module or the type of a prefix takes a suffix there and only there; a type takes its name or nothing
     #[Test]
     public function reservedWordsTakeASuffix(): void

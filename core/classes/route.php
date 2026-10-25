@@ -53,6 +53,9 @@ final class Route {
     # The server codes that take the whole transaction with them: a deadlock, and a record changed since the snapshot was taken
     private const LOST = [1213, 1020];
 
+    # How many times a write in its own transaction runs whole when the server rolls that transaction back; the connection learns of it only from the next answer
+    private const ROUNDS = 3;
+
     private Database $db;
 
     # The server code of the last refused statement of a write, read before anything else replaces it
@@ -142,23 +145,27 @@ final class Route {
         return $out;
     }
 
-    # One write of a path in a unit of its own, or inside the transaction of the writer behind a savepoint, answering the path or '' after a proven rollback
+    # One write of a path, answering it or '': a unit of its own the server rolled back whole runs again on a fresh snapshot, one behind a savepoint of its writer throws
     private function setRouteWrite(string $kind, int $oid, string $prefix, string $name): string {
         $own = !$this->db->checkSqlActive();
-        $this->errno = 0;
-        if ($own && !$this->db->setSqlBegin()) return '';
-        if (!$own && $this->db->getSqlQuery('SAVEPOINT '.self::SAVE) === false) throw new RuntimeException('Route: the savepoint was refused and the outer transaction is unknown');
-        $path = $this->addRouteRow($kind, $oid, $prefix, $name);
-        if ($path !== '') {
-            $kept = $own ? $this->db->setSqlCommit() : $this->db->getSqlQuery('RELEASE SAVEPOINT '.self::SAVE) !== false;
-            if (!$kept) throw new RuntimeException('Route: the outcome of the commit is unknown');
-            return $path;
+        for ($round = 1; ; $round++) {
+            $this->errno = 0;
+            $open = $own ? $this->db->setSqlBegin() : $this->db->getSqlQuery('SAVEPOINT '.self::SAVE) !== false;
+            if (!$open && $own) return '';
+            if (!$open) throw new RuntimeException('Route: the savepoint was refused and the outer transaction is unknown');
+            $path = $this->addRouteRow($kind, $oid, $prefix, $name);
+            if ($path !== '') {
+                $kept = $own ? $this->db->setSqlCommit() : $this->db->getSqlQuery('RELEASE SAVEPOINT '.self::SAVE) !== false;
+                if (!$kept) throw new RuntimeException('Route: the outcome of the commit is unknown');
+                return $path;
+            }
+            $lost = in_array($this->errno, self::LOST, true);
+            $back = $own ? $this->db->setSqlRollback() : !$lost && $this->db->getSqlQuery('ROLLBACK TO SAVEPOINT '.self::SAVE) !== false && $this->db->checkSqlActive();
+            if ($own && $lost && $round < self::ROUNDS && $this->db->getSqlQuery('DO 1') !== false && !$this->db->checkSqlActive()) continue;
+            Logger::addSite('error', 'Route: the path was not stored', ['kind' => $kind, 'oid' => $oid, 'name' => $name, 'errno' => $this->errno, 'round' => $round]);
+            if ($lost || !$back) throw new RuntimeException('Route: the rollback is not proven and the transaction is lost');
+            return '';
         }
-        Logger::addSite('error', 'Route: the path was not stored', ['kind' => $kind, 'oid' => $oid, 'name' => $name, 'errno' => $this->errno]);
-        $lost = in_array($this->errno, self::LOST, true);
-        $back = $own ? $this->db->setSqlRollback() : !$lost && $this->db->getSqlQuery('ROLLBACK TO SAVEPOINT '.self::SAVE) !== false && $this->db->checkSqlActive();
-        if ($lost || !$back) throw new RuntimeException('Route: the rollback is not proven and the transaction is lost');
-        return '';
     }
 
     # Take the first free path of a name: its own path back, else the name or its next suffix past every taken, reserved or racing path; a type has no suffix

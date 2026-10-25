@@ -392,6 +392,12 @@ entity on purpose.
   current, former or gone — or reserved takes the first free suffix `-2`, `-3` …; a racing writer that took the path
   first answers 1062 and the write moves on to the next suffix, at most 20 times. A move to a path the entity held
   before takes that row back.
+- **A lost transaction.** With `innodb_snapshot_isolation` (the MariaDB default from 11.6.2) the server answers two
+  moves of one entity, and on some versions the race for one path, with 1020 instead of waiting it out; 1020 and a
+  deadlock 1213 roll the whole transaction back, so no savepoint absorbs them. A write in its own transaction then
+  runs whole again with a fresh snapshot, at most three times, and takes the next free suffix. A write joined to the
+  transaction of its writer throws `RuntimeException`, as `Point` does (`docs/POINTS.md`): the operation of the writer
+  ends without success, and only the whole operation can be repeated. `RouteRegistryTest` runs both races.
 - **The name.** `filterSlug()` in `core/system.php` decodes the stored entities of a title, transliterates the letters
   of all six locales from one table (the letters ru and uk share take the Russian form; `і ї є ґ` → `i yi ye g`; `ü` →
   `ue`), lowercases, turns every run of other characters into one `-`, and cuts to 80 characters at the last `-` or,

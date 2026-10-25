@@ -1,5 +1,17 @@
 # Versions
 
+## 2026-10-25
+
+### Two writers of one address no longer end a request in a 500 on MariaDB 11.6.2 and newer
+
+With `innodb_snapshot_isolation`, the MariaDB default from 11.6.2, two writers that moved one entity at once, and on
+some versions two that took one free path, left the second with error 1020 "Record has changed since last read". The
+server rolls the whole transaction back on 1020, and `Route` answered it with `RuntimeException`, a 500 for a form
+that only needed its next suffix. A write of `Route` in its own transaction now runs whole again with a fresh snapshot,
+at most three times; a write inside the transaction of its writer still throws, as `Point` does, because only the
+writer can repeat its operation. The reference is `docs/ARCHITECTURE.md`, "Address Boundary"; `RouteRegistryTest`
+runs both races on MariaDB 11.8 and MySQL 8.4.
+
 ## 2026-10-24
 
 ### The panel gets one shell: the options in place, Ctrl+K, a cockpit, a floating menu, voices and a list canon

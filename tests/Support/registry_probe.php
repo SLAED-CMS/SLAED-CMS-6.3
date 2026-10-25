@@ -6,7 +6,7 @@
 
 # CLI probe for the registry of addresses of the Address Boundary of docs/ARCHITECTURE.md: the name filterSlug() makes and the class Route over _routes
 # It boots the real core with the configuration copied into scratch, then points the database facade at a disposable schema holding the shipped _routes
-# The mode race is the second writer of the race: a child this probe starts, which takes the path of the same name while the parent still holds it uncommitted
+# The mode race is the second writer of a race: a child this probe starts, which takes a path of the same name or moves the same entity while the parent holds its write
 $probework = (string)($argv[1] ?? '');
 $mode = (string)($argv[2] ?? '');
 require_once __DIR__.'/probe_boot.php';
@@ -173,26 +173,30 @@ function getProbeReserved(): array {
     return ['ops' => $ops, 'type' => $type, 'names' => $names];
 }
 
-# The second writer of the race in its own process: it asks for the path the parent holds uncommitted, waits on the unique key and must move to the next suffix
-function getProbeChild(): array {
+# The second writer of a race in its own process: it asks for the path the parent holds uncommitted, or moves the entity the parent is moving, and waits on its lock
+function getProbeChild(string $race): array {
     global $db;
-    return ['path' => (new Route($db))->addRoute('node', 31, 'files', 'Race')];
+    $rte = new Route($db);
+    return ['path' => ($race === 'move') ? $rte->setRoute('node', 41, 'files', 'Moved B') : $rte->addRoute('node', 31, 'files', 'Race')];
 }
 
-# Two writers race for one free path: the parent takes it inside an open transaction, starts the child, waits until the child is blocked on the key, then commits
-function getProbeRace(): array {
+# Two writers race: the parent writes inside an open transaction, starts the child, waits until the child is blocked on the statement it names, then commits
+function getProbeRace(string $race): array {
     global $db;
+    $rte = new Route($db);
+    if ($race === 'move') $rte->addRoute('node', 41, 'files', 'Moved');
     $db->setSqlBegin();
-    $first = (new Route($db))->addRoute('node', 30, 'files', 'Race');
-    $cmd = escapeshellarg(PHP_BINARY).' '.escapeshellarg(__FILE__).' '.escapeshellarg($GLOBALS['probework']).' race '.escapeshellarg($GLOBALS['pname']);
+    $first = ($race === 'move') ? $rte->setRoute('node', 41, 'files', 'Moved A') : $rte->addRoute('node', 30, 'files', 'Race');
+    $cmd = escapeshellarg(PHP_BINARY).' '.escapeshellarg(__FILE__).' '.escapeshellarg($GLOBALS['probework']).' race '.escapeshellarg($GLOBALS['pname']).' '.$race;
     $proc = proc_open($cmd, [1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes);
     if (!is_resource($proc)) throw new RuntimeException('The child writer did not start');
     $root = getProbeRoot();
     $ask = $root->prepare('SELECT COUNT(*) FROM information_schema.PROCESSLIST WHERE DB = :db AND INFO LIKE :info');
+    $info = ($race === 'move') ? 'UPDATE%_routes%' : 'INSERT INTO%_routes%';
     $wait = false;
     for ($i = 0; $i < 150 && !$wait; $i++) {
         usleep(100000);
-        $ask->execute(['db' => $GLOBALS['pname'], 'info' => 'INSERT INTO%_routes%']);
+        $ask->execute(['db' => $GLOBALS['pname'], 'info' => $info]);
         $wait = intval($ask->fetchColumn()) > 0;
     }
     $db->setSqlCommit();
@@ -201,18 +205,20 @@ function getProbeRace(): array {
     fclose($pipes[2]);
     proc_close($proc);
     $data = json_decode($text, true);
-    return ['first' => $first, 'second' => is_array($data) ? ($data['path'] ?? '') : $text, 'waited' => $wait, 'rows' => [getProbeRows(30), getProbeRows(31)]];
+    $rows = ($race === 'move') ? [getProbeRows(41)] : [getProbeRows(30), getProbeRows(31)];
+    return ['first' => $first, 'second' => is_array($data) ? ($data['path'] ?? '') : $text, 'waited' => $wait, 'rows' => $rows];
 }
 
 if ($mode === 'race') {
     setProbeBase();
-    echo json_encode(getProbeChild());
+    echo json_encode(getProbeChild((string)($argv[4] ?? '')));
     exit;
 }
 $report = ['error' => '', 'clean' => false, 'runs' => []];
 try {
     addProbeSchema();
-    $report['runs'] = ['slug' => getProbeSlug(), 'registry' => getProbeRegistry(), 'reserved' => getProbeReserved(), 'race' => getProbeRace()];
+    $report['runs'] = ['slug' => getProbeSlug(), 'registry' => getProbeRegistry(), 'reserved' => getProbeReserved(), 'race' => getProbeRace('path'),
+        'move' => getProbeRace('move')];
 } catch (Throwable $err) {
     $report['error'] = $err->getMessage().' @ '.basename($err->getFile()).':'.$err->getLine();
 }
