@@ -1063,14 +1063,14 @@ const DEMO_UX_LESS = [
 const DEMO_ADMINUX = [  {
     file: 'ux-01-reference.html',
     title: 'Эталон панели',
-    note: 'Все решения docs/2027-ADMIN-UX.md на одном экране «Комментариев». Логотип — ссылка, h1 один; вкладка браузера ' +
+    note: 'Все решения плана ADMIN-UX на одном экране «Комментариев». Логотип — ссылка, h1 один; вкладка браузера ' +
       'называет раздел и вкладку. Меню — два блока панели, «Администратор» и «Модули», с фильтром, открытый раздел отмечен, «…» только при наведении и в ' +
       'фокусе; на телефоне меню прячется за кнопкой и выезжает панелью. Модуль фильтрует список сразу, без перезагрузки, ' +
       'поиск — по кнопке, результат объявляется. Все поля подписаны, подсказка «i» — кнопка, а не nav, нули читаются. ' +
       '«Опции» применяются сразу. Пейджер — финал серии пагинатора. Сверх плана, «сначала в демо»: фильтр в адресе и ' +
       '«Назад», возврат после правки, чип очереди в меню, «Всё проверено», Ctrl+K, клавиши J/K/X/E, отмена вместо ' +
       'подтверждения, статус одним щелчком.',
-    tags: ['2027-ADMIN-UX', 'навигация', 'формы и ARIA', 'htmx-фильтр', 'телефон'],
+    tags: ['ADMIN-UX', 'навигация', 'формы и ARIA', 'htmx-фильтр', 'телефон'],
     base: 'self',
   },
   {
@@ -4750,7 +4750,7 @@ function setDemoGroups() {
   });
 }
 
-/* Reference page of docs/2027-ADMIN-UX.md: the side menu as a panel on a phone, its groups and filter, a list filtered
+/* Reference page of the plan ADMIN-UX: the side menu as a panel on a phone, its groups and filter, a list filtered
    in place with the result announced, module tabs that name the browser tab, row checks with a count, live options */
 /* The size of the whole comments list of the stand, for "check all on every page" */
 const UX_TOTAL = 8414;
@@ -5434,7 +5434,7 @@ function setDemoAdminUx() {
   setBell();
 }
 
-/* Reference form of docs/2027-ADMIN-UX.md, the config of the panel: ARIA tabs with arrow keys, the changes counted on a
+/* Reference form of the plan ADMIN-UX, the config of the panel: ARIA tabs with arrow keys, the changes counted on a
    sticky bar, an error summary that links to each field, messages bound to their fields, a guard on leaving, a search
    over every setting */
 // 09 Балка: the menu folds into a bar of icons and back; the choice is kept, a group opens its sections beside its icon

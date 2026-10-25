@@ -314,11 +314,15 @@ before quoting a filesort here.
 
 ### PHP Environment
 
-The single largest generation-time factor measured in 2026-07 was OPcache being
-disabled in the local OSPanel PHP config (`;zend_extension = opcache`): every
-request re-compiled ~150-200 ms of PHP (core files plus compiled templates).
-Verify OPcache is loaded in the web SAPI before profiling anything else; without
-it, code-size growth translates directly into generation time.
+The single largest generation-time factor measured in 2026-07 was OPcache not
+running in the web SAPI of the local OSPanel PHP: every request re-compiled
+~150-200 ms of PHP (core files plus compiled templates). Verify OPcache in the
+web SAPI before profiling anything else: `extension_loaded('Zend OPcache')` and
+`ini_get('opcache.enable')` under the `php.ini` of the PHP module the stand runs
+(`php_engine` in `.osp/project.ini`). The comment on the `zend_extension = opcache`
+line proves nothing: from PHP 8.5 OPcache is built in, and that line stays
+commented while OPcache runs. Without OPcache, code-size growth translates
+directly into generation time.
 
 ## Static Assets: Versions, Lifetimes, Order And Compression
 

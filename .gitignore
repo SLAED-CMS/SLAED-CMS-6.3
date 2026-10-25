@@ -18,7 +18,7 @@
 /storage/update/files.json
 /storage/release/
 
-# Written by the scheduler job sitemap on each site; a shipped copy would carry the addresses of the stand
+# Written by the scheduler job sitemap when the site turns it on; a shipped copy would carry the addresses of the stand
 /public/sitemap.xml
 
 
@@ -53,14 +53,11 @@
 *.tar
 
 # Editor files
-.agents/
 .claude/
-.prompts/
+.plans/
 .rules/
-/CLAUDE.md
 /AGENTS.md
-.idea/
-docs/plans/
+/CLAUDE.md
 *.sublime-*
 .DS_Store
 Thumbs.db

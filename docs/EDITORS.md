@@ -385,8 +385,16 @@ which would load it on every page of the site.
 `insertText()`, `exec('addImage')`, `getMarkdown()`, `addHook('addImageBlobHook')`
 — over a textarea or a CodeMirror view; `addCommand()` and `insertToolbarItem()`
 are Toast UI's toolbar and the window skips them when they are missing. The
-binding happens on first use, so the order the scripts come in does not matter;
-`addPanel()` opens the window from the folder button
+binding happens on first use, so for these two the order the scripts come in does
+not matter. Toast UI is the exception: `api.register()` of its `editor-tags.js`
+binds the window once, through `win.SlaedFileManager.addUpload()`, and skips it
+when `filemanager.js` has not run yet. The delivery keeps that order:
+`getFileManagerWindow()`, reached from `getEditorFileKit()` in the widget of the
+Toast UI driver, emits `filemanager.js` once per request ahead of the inline init
+of `Editor::getInitScript()`, as a plain tag the parser runs first on a page load;
+in a fragment answered over htmx `Editor::getAssetTags()` names it to
+`SlaedEditors.load()` of `slaed.js`, and the init waits in `SlaedEditors.ready()`
+until the scripts named before it are there. `addPanel()` opens the window from the folder button
 of the capsule (`bi-folder`, `_EUPLOAD`) or the palette line "Файлы: загрузить и
 вставить". A picture takes the format of the field: Markdown for `markdown`, the
 `[img]` tag otherwise. A paste or a drop of an image goes to the window as Toast

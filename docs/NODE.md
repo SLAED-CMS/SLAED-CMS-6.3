@@ -3321,8 +3321,9 @@ budget.
 ### Requirements and running
 
 - Probe-driven tests need the MariaDB server of `config/db.php`, an account allowed to `CREATE`/`DROP DATABASE`
-  and, for `route_probe.php` and `install_probe.php`, free local ports. Only `install_probe.php` can be moved by
-  `SLAED_PROBE_DB` (a clean install passes on MySQL 8.0). The snapshot-isolation test of `NodeServiceTest` is
+  and, for `route_probe.php` and `install_probe.php`, free local ports. Only `install_probe.php` and
+  `tests/Support/registry_probe.php` (its `getProbeCred()`) can be moved by `SLAED_PROBE_DB` (a clean install passes
+  on MySQL 8.0). The snapshot-isolation test of `NodeServiceTest` is
   skipped without `innodb_snapshot_isolation`. A Node probe that cannot create its database or server fails.
 - No test reaches the network: `Feed` gets a scripted transport (`new Feed($conf, $send)`), so a successful manual
   `op=sync` over HTTP is not tested, only its failure.

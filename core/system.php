@@ -5370,7 +5370,7 @@ function getFootControls(string $title, string $time = '', string $lic = '', boo
     ]);
 }
 
-# Format domain
+# Each comma-separated URL as a link opening in a new window, labelled without http:// and www. and cut to $str characters when given
 function domain(string $url, string $str = ''): string {
     global $tpl;
     $massiv = explode(',', $url);

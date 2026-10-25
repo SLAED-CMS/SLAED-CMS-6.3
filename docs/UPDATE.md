@@ -68,9 +68,12 @@ and `Update::RECOVERY`. The panel has no field for a server or a key, on purpose
 
 Only the last release is supported: a fix ships as a new release, old branches are not maintained, and `min` of a
 manifest only keeps a site from jumping over something incompatible. The automatic installation of security fixes and
-the other ideas after 8.0 are in `docs/2027-IDEAS.md`.
+the other ideas after 8.0 wait in the list of ideas of the owner.
 
 ## Releasing
+
+The number `8.0.1` below only shows the shape of the commands; the real 8.0.1 is the empty release described under
+this list, so a release that carries a database step is a later one.
 
 ```
 1. Prepare    tests green, docs/VERSIONS.md, UPGRADING.md, SL_VERSION in core/version.php,
@@ -698,7 +701,7 @@ updates by "Загрузить архив" and the manual path.
 > have the stored state of your site deleted at once, write to us with the identifier shown on that page.
 
 **Protecting the list.** A list of domains with their versions is a target: the panel of the master stays behind a
-strong password and, until the second factor of `docs/2027-CORE.md` exists, `admin.php` of slaed.net is restricted by IP
+strong password and, until the second factor of the core plan exists, `admin.php` of slaed.net is restricted by IP
 on the host.
 
 ## Security

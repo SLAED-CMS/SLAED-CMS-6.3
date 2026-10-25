@@ -352,6 +352,9 @@ Input should be read through `getVar()` rather than directly from `$_GET`,
 Every page of the site has one readable address without an `id`, kept in one registry; every other form of the same
 page answers one 301 to it, and an address once given never points anywhere else.
 
+The addresses below show the form of each kind of page; the names in them are examples, not pages of a particular
+site.
+
 | Page | Address |
 |---|---|
 | Home of a type or a module | `/files`, `/forum`, `/users` |
@@ -1023,7 +1026,7 @@ The record keeps neither the values before and after a change nor the title of
 the object: both would need a call in every handler. Changes made outside the
 panel — the quick edit of the site, the connector under `/api/`, the jobs of
 the scheduler, `update.php`, `setup.php` — are not recorded here; the connector
-keeps its own audit table (`docs/2027-CONNECTOR.md`).
+keeps its own audit table (the connector plan).
 
 **Logins.** Every login, by password or OAuth, of the site or the panel, is
 written by `addLoginLog()` alone: one row of `_login_log` always, and one event

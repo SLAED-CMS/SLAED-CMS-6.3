@@ -54,8 +54,8 @@ function referers(): void {
         $words = engines_word($referer) ?: _NO;
         $rows[] = ['name' => (string)$ip, 'details' => [['label' => _NICKNAME, 'value' => $who], ['label' => _DATE, 'value' => format_time($date, _TIMESTRING)]], 'cells' => [
             ['has_content_text' => true, 'content_text' => $ip],
-            ['is_truncate' => true, 'title_text' => domain($url), 'content_html' => domain($url, 30)],
-            ['is_truncate' => true, 'title_text' => domain($referer), 'content_html' => domain($referer, 30)],
+            ['is_truncate' => true, 'title_text' => html_entity_decode((string)$url, ENT_QUOTES, 'UTF-8'), 'content_html' => domain($url, 30)],
+            ['is_truncate' => true, 'title_text' => html_entity_decode((string)$referer, ENT_QUOTES, 'UTF-8'), 'content_html' => domain($referer, 30)],
             ['is_truncate' => true, 'title_text' => $words, 'has_content_text' => true, 'content_text' => $words],
             ['is_col_count' => true, 'has_content_text' => true, 'content_text' => $hits],
         ]];

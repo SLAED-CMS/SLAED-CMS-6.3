@@ -230,7 +230,7 @@ function addAdminAccount(): void {
 }
 
 # Authorize one login attempt: captcha, credentials, password rehash, session, and the report either way
-# The password is checked as typed, as the admins module and the recovery form hash it; until 2026-10 the login cut it to 25 bytes, trimmed it and escaped it
+# The password is checked as typed, as the admins module and the first-administrator form hash it; until 2026-10 the login cut it to 25 bytes, trimmed it and escaped it
 # A stored hash that matches only that old form still opens the panel and stays as it is, so no working login is lost; a legacy md5 hash is renewed from the form that matched
 function checkAdminLogin(): void {
     global $db, $afile, $conf, $stop;

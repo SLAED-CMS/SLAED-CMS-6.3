@@ -78,7 +78,7 @@ function getVotingBlockSelect(string $bval): string {
     ]);
 }
 
-# The filter of the polls as the request carries it: "-" stands for a poll of no module, the state follows the dates as the status column does, and the query keeps it
+# The filter of the polls as the request carries it: "-" is a poll of no module, the state is soon, live or done by the dates against SQL NOW(), the query keeps it
 function getVotingFilter(string $src = 'get'): array {
     global $conf;
     $modul = getVar($src, 'modul', 'var');
