@@ -19,6 +19,8 @@ function getMigrateMap(): array {
         'links' => ['type' => 'links', 'ext' => null, 'rate' => 'votes', 'home' => true, 'poll' => false, 'pin' => false],
         'files' => ['type' => 'files', 'ext' => null, 'rate' => 'votes', 'home' => true, 'poll' => false, 'pin' => false],
         'content' => ['type' => 'content', 'ext' => '', 'rate' => '', 'home' => false, 'poll' => false, 'pin' => false],
+        'jokes' => ['type' => 'jokes', 'ext' => null, 'rate' => 'ratetot', 'home' => false, 'poll' => false, 'pin' => false],
+        'media' => ['type' => 'media', 'ext' => null, 'rate' => 'votes', 'home' => true, 'poll' => false, 'pin' => false],
     ];
 }
 
@@ -110,7 +112,7 @@ function getMigratePlan(array $state): array {
         $one['need'] = getMigrateNeed($mod, $item, $one);
         $nodes = $type ? getMigrateCount('SELECT COUNT(*) FROM '.PREFIX_DB.'_nodes WHERE tid = :id', ['id' => $type->id]) : 0;
         $done = ($state['data'][$mod]['state'] ?? '') === 'done';
-        $role = ['links' => 'link', 'files' => 'download'][$mod] ?? '';
+        $role = ['links' => 'link', 'files' => 'download', 'media' => 'download'][$mod] ?? '';
         if (is_dir(BASE_DIR.'/modules/'.$mod)) {
             $one['block'] = 'the module '.$mod.' is still installed';
         } elseif (!$done && $type && $name === $mod && $nodes > 0 && empty($state['stash'][$mod])) {
@@ -365,29 +367,39 @@ function getMigrateLocal(string $text): string {
 }
 
 # The material a row of a removed module becomes, in the columns of the node table, plus the extra data the module carried in its own columns
+# The own columns of files and media land in the extra fields of their profiles under the field names; the links of media are a comma list of addresses
 # The status of help tells an open request from a closed one, which the queue row carries, so every request is published; elsewhere 0 is a submission not yet approved
 function getMigrateNode(string $mod, array $row): array {
-    $votes = in_array($mod, ['links', 'files'], true);
+    $votes = in_array($mod, ['links', 'files', 'media'], true);
     $uid = intval($row['uid'] ?? 0);
+    $cols = ['files' => ['release' => 'version', 'site' => 'website'], 'media' => ['subtitle' => 'subtitle', 'year' => 'year', 'director' => 'director', 'cast' => 'roles',
+        'creator' => 'author', 'runtime' => 'duration', 'language' => 'lang', 'notes' => 'note', 'format' => 'format', 'quality' => 'quality', 'filesize' => 'size',
+        'release' => 'released']][$mod] ?? [];
+    $extra = array_map(fn(string $v): string => trim((string)($row[$v] ?? '')), $cols);
+    if (isset($extra['release'])) $extra['release'] = mb_substr($extra['release'], 0, 100);
     return [
         'id' => intval($row['id']), 'cid' => intval($row['cid'] ?? 0), 'uid' => $uid, 'aname' => $uid > 0 ? '' : filterCutText((string)($row['name'] ?? ''), 25),
         'ip' => getIpNorm((string)($row['ip'] ?? '')) ?: '', 'title' => filterCutText(trim((string)($row['title'] ?? '')), 100), 'intro' => (string)($row['intro'] ?? ''),
         'body' => (string)($row['body'] ?? ''), 'field' => (string)($row['field'] ?? ''), 'time' => (string)($row['time'] ?? ''), 'views' => intval($row['counter'] ?? 0),
         'home' => intval($row['ihome'] ?? 0), 'comon' => ($mod === 'help') ? CommentMode::Open->value : intval($row['acomm'] ?? 0), 'pinned' => intval($row['fix'] ?? 0),
-        'poll' => intval($row['vote'] ?? 0), 'score' => intval($votes ? $row['tvotes'] : ($row['score'] ?? 0)),
-        'ratings' => intval($votes ? $row['votes'] : ($row['ratings'] ?? 0)),
+        'poll' => intval($row['vote'] ?? 0), 'score' => intval($votes ? $row['tvotes'] : ($row['score'] ?? $row['rating'] ?? 0)),
+        'ratings' => intval($votes ? $row['votes'] : ($row['ratings'] ?? $row['ratetot'] ?? 0)),
         'status' => ($mod === 'help') ? 1 : intval($row['status'] ?? 1), 'assoc' => (string)($row['assoc'] ?? ''), 'url' => trim((string)($row['url'] ?? '')),
-        'size' => intval($row['filesize'] ?? 0),
-        'release' => mb_substr(trim((string)($row['version'] ?? '')), 0, 100), 'site' => trim((string)($row['website'] ?? '')), 'hits' => intval($row['hits'] ?? 0),
+        'links' => array_values(array_filter(array_map('trim', explode(',', (string)($row['links'] ?? ''))), 'strlen')), 'size' => intval($row['filesize'] ?? 0),
+        'extra' => $extra, 'hits' => intval($row['hits'] ?? 0),
     ];
 }
 
-# The resource of a file or link row; a local path the Node grammar refuses gets a safe spelling, and the note tells the operator to rename its file
+# One resource of a file, link or media row; another scheme is refused, a local path the Node grammar refuses gets a safe spelling and a note to rename its file
 function getMigrateAsset(string $mod, array $node, string $role, array &$moves, array &$miss, array &$state, array &$srcs): ?array {
     $src = $node['url'];
     $old = $src;
     if ($src === '' || $role === '') return null;
     $link = (bool)preg_match('#^https?://#i', $src);
+    if (!$link && preg_match('#^[a-z][a-z0-9+.\-]*:#i', $src)) {
+        addMigrateNote($state, $mod, '#'.$node['id'].': the address '.$src.' is refused by Node and was not carried');
+        return null;
+    }
     if ($link) {
         $part = parse_url($src);
         if (preg_match('/[\x00-\x20\x7F]/', $src) || !is_array($part) || ($part['host'] ?? '') === '' || isset($part['user']) || isset($part['pass']) || strlen($src) > 2048) {
@@ -442,11 +454,11 @@ function getMigrateAsset(string $mod, array $node, string $role, array &$moves, 
     ];
 }
 
-# The extra field values a material keeps: the version and the site of a file row where its type defines them, each value checked by the shared field system on its own
+# The extra field values a material keeps where its type defines them, each value checked by the shared field system on its own; a refused value is left out
 function getMigrateFields(NodeType $type, array $node): array {
     global $fld;
     $out = [];
-    foreach (['release' => $node['release'], 'site' => $node['site']] as $key => $val) {
+    foreach ($node['extra'] as $key => $val) {
         if ($val === '' || !isset($type->fields[$key])) continue;
         try {
             $out += $fld->filterFieldValues([$key => $type->fields[$key]], [$key => $val]);
@@ -467,7 +479,8 @@ function addMigrateNodes(string $mod, NodeType $type, array $rows, Closure $have
     $cats = array_flip($cats);
     $polls = array_flip(array_map('intval', getMigrateQuery('SELECT id FROM '.PREFIX_DB.'_voting')->fetchAll(PDO::FETCH_COLUMN)));
     $feat = $type->settings['features'];
-    $role = ['files' => getMigrateRole($type, 'download'), 'links' => getMigrateRole($type, 'link')][$mod] ?? '';
+    $role = ['files' => getMigrateRole($type, 'download'), 'links' => getMigrateRole($type, 'link'), 'media' => getMigrateRole($type, 'download')][$mod] ?? '';
+    $most = intval($type->settings['assets'][$role]['max'] ?? 1);
     $srcs = [];
     $sql = 'SELECT a.src FROM '.PREFIX_DB.'_node_assets AS a INNER JOIN '.PREFIX_DB.'_nodes AS n ON n.id = a.nid WHERE n.tid = :tid';
     foreach (getMigrateQuery($sql, ['tid' => $type->id])->fetchAll(PDO::FETCH_COLUMN) as $src) $srcs[$src] = 0;
@@ -475,7 +488,7 @@ function addMigrateNodes(string $mod, NodeType $type, array $rows, Closure $have
         .' created, updated, published, expires) VALUES (:tid, :cid, :uid, :aname, :ip, :title, :intro, :body, :field, :poll, :home, :comon, :pinned, 0, :views, :score,'
         .' :ratings, :status, 1, :created, :updated, :published, NULL)';
     $put = 'INSERT INTO '.PREFIX_DB.'_node_assets (nid, kind, role, src, name, title, intro, mime, size, width, height, duration, hits, reported, ruid, sort, created, updated)'
-        .' VALUES (:nid, :kind, :role, :src, :name, \'\', \'\', :mime, :size, :width, :height, NULL, :hits, :rep, 0, 0, :created, :updated)';
+        .' VALUES (:nid, :kind, :role, :src, :name, \'\', \'\', :mime, :size, :width, :height, NULL, :hits, :rep, 0, :sort, :created, :updated)';
     $rate = 'INSERT INTO '.PREFIX_DB.'_rating_targets (scope, mid, base, votes, created) VALUES (:scope, :mid, :base, :votes, NOW())';
     $back = 'INSERT INTO '.PREFIX_DB.'_node_legacy (modul, oid, nid) VALUES (:modul, :oid, :nid)';
     $map = [];
@@ -531,11 +544,17 @@ function addMigrateNodes(string $mod, NodeType $type, array $rows, Closure $have
         foreach ($feat['categories'] ? $more : [] as $cid) {
             if (isset($cats[$cid])) getMigrateQuery('INSERT INTO '.PREFIX_DB.'_node_categories (nid, cid) VALUES (:nid, :cid)', ['nid' => $nid, 'cid' => $cid]);
         }
-        $one = getMigrateAsset($mod, $node, $role, $moves, $miss, $state, $srcs);
-        if ($one !== null) {
+        $sort = 0;
+        foreach (($mod === 'media') ? $node['links'] : [$node['url']] as $src) {
+            if ($sort >= $most) {
+                addMigrateNote($state, $mod, '#'.$id.': the addresses after the first '.$most.' are not carried, the role keeps no more');
+                break;
+            }
+            $one = getMigrateAsset($mod, ['url' => $src, 'hits' => ($sort > 0) ? 0 : $node['hits']] + $node, $role, $moves, $miss, $state, $srcs);
+            if ($one === null) continue;
             getMigrateQuery($put, ['nid' => $nid, 'kind' => $one['kind'], 'role' => $one['role'], 'src' => $one['src'], 'name' => $one['name'], 'mime' => $one['mime'],
                 'size' => $one['size'], 'width' => $one['width'], 'height' => $one['height'], 'hits' => $one['hits'], 'rep' => $one['reported'] ? $now : null,
-                'created' => $time, 'updated' => $time]);
+                'sort' => $sort++, 'created' => $time, 'updated' => $time]);
         }
         if ($num > 0) getMigrateQuery($rate, ['scope' => 'node.'.$type->name, 'mid' => $nid, 'base' => $score, 'votes' => $num]);
         if ($mod === 'content' && $node['url'] !== '') addMigrateNote($state, $mod, '#'.$id.': the feed address '.$node['url'].' is not carried, the type has no sync extension');
@@ -670,6 +689,31 @@ function setMigrateData(string $mod, array $one, array &$state): void {
     setMigrateState($state);
 }
 
+# Drop the table of every module whose data step is done, once the database agrees with the map of its manifest: every row of the table is a key, every material is there
+# A manifest of another database, left in the tree, never drops a table whose rows were not carried into this one: the table stays with a note
+function deleteMigrateTables(array &$state): void {
+    foreach (getMigrateMap() as $mod => $item) {
+        if (($state['data'][$mod]['state'] ?? '') !== 'done' || !checkMigrateTable($mod)) continue;
+        $map = array_map('intval', $state['data'][$mod]['map'] ?? []);
+        $ids = array_map('intval', getMigrateQuery('SELECT id FROM '.PREFIX_DB.'_'.$mod.($mod === 'help' ? ' WHERE pid = 0' : ''))->fetchAll(PDO::FETCH_COLUMN));
+        $type = getMigrateType($item['type']);
+        $have = 0;
+        foreach (array_chunk(array_values(array_unique($map)), 500) as $part) {
+            $pars = ['tid' => $type?->id ?? 0];
+            foreach ($part as $i => $nid) $pars['n'.$i] = $nid;
+            $have += getMigrateCount('SELECT COUNT(*) FROM '.PREFIX_DB.'_nodes WHERE tid = :tid AND id IN (:'.implode(', :', array_slice(array_keys($pars), 1)).')', $pars);
+        }
+        if (!array_diff($ids, array_keys($map)) && $have === count(array_unique($map))) {
+            getMigrateQuery('DROP TABLE '.PREFIX_DB.'_'.$mod);
+            continue;
+        }
+        $text = 'the table stays: its rows or the materials of the type differ from the map of the manifest';
+        if (in_array($text, $state['notes'][$mod] ?? [], true)) continue;
+        addMigrateNote($state, $mod, $text);
+        setMigrateState($state);
+    }
+}
+
 # Point the direct addresses a text keeps into the 6.2 folder of a type, or into uploads/forum outside the forum, at a published material or post that carries the name
 # It runs on every run after the data step, so a type that was blocked before is served once its materials exist; a converted address no longer matches
 function setMigrateForeign(array &$state): void {
@@ -777,7 +821,8 @@ function setMigrateRoutes(array &$state): void {
     setMigrateState($state);
 }
 
-# Run every step that is not done yet in the fixed order - stash, types, id counter, data, foreign addresses, addresses, activation - and answer the text that stopped the run
+# Run every step that is not done yet in the fixed order - stash, types, id counter, data, the drop of the carried tables, foreign addresses, addresses, activation -
+# and answer the text that stopped the run
 # The map of the old addresses needs its table, which the first stage of this file creates, so a schema without it stops the run before the first write
 function setMigrateRun(): string {
     $state = getMigrateState();
@@ -791,6 +836,7 @@ function setMigrateRun(): string {
         foreach ($todo as $mod => $one) if (empty($state['types'][$mod])) setMigrateType($mod, $one, $state);
         setMigrateCounter($plan, $state);
         foreach ($todo as $mod => $one) setMigrateData($mod, $one, $state);
+        deleteMigrateTables($state);
         setMigrateForeign($state);
         setMigrateRoutes($state);
         setMigrateActive($state);
@@ -803,13 +849,18 @@ function setMigrateRun(): string {
 }
 
 # Render the page of the migration: every module with its target and its state, the notes of the runs and the button that starts or continues the run
+# A module whose table the run dropped after its data step is shown from the counts its manifest keeps
 function setMigratePage(string $fail): void {
     global $tpl;
     $state = getMigrateState();
     $plan = getMigratePlan($state);
+    $list = [];
+    foreach (getMigrateMap() as $mod => $item) {
+        if (isset($plan[$mod]) || ($state['data'][$mod]['state'] ?? '') === 'done') $list[$mod] = $plan[$mod] ?? ['type' => $item['type'], 'block' => ''];
+    }
     $rows = '';
     $open = false;
-    foreach ($plan as $mod => $one) {
+    foreach ($list as $mod => $one) {
         $done = ($state['data'][$mod]['state'] ?? '') === 'done';
         $open = $open || (!$done && $one['block'] === '');
         $one = ($state['data'][$mod]['count'] ?? []) + $one;
@@ -819,7 +870,7 @@ function setMigratePage(string $fail): void {
     $head = array_map(fn(string $v): array => ['text' => $v], [_TYPE, _NODE_MIGROWS, _COMMENTS, _FAVORITES, _CATEGORIES, _STATUS]);
     $cont = $tpl->getHtmlFrag('alert', ['text' => _NODE_MIGINFO]);
     if ($fail !== '') $cont .= $tpl->getHtmlFrag('alert', ['type' => 'error', 'messages' => [_NODE_MIGSTOP, $fail]]);
-    elseif (!$open && $plan && $state['routes']) $cont .= $tpl->getHtmlFrag('alert', ['type' => 'success', 'text' => _NODE_MIGDONE]);
+    elseif (!$open && $state['routes']) $cont .= $tpl->getHtmlFrag('alert', ['type' => 'success', 'text' => _NODE_MIGDONE]);
     $cont .= $tpl->getHtmlFrag('table', ['headers' => $head, 'rows_html' => $rows]);
     foreach ($state['notes'] as $mod => $list) {
         if ($list) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => array_map(fn(string $v): string => $mod.': '.$v, $list)]);
@@ -896,12 +947,11 @@ function getUpdateSource(string $file): array {
     return $data;
 }
 
-# The connection settings of config/db.php, the db area of 6.3 with its collation or the $confdb of 6.2 with the collation of the release, empty without the file
+# The connection settings of config/db.php, the db area of 6.3 or the $confdb of 6.2, both with the collation of the release the schema file converts into
 function getUpdateCred(): array {
     $data = getUpdateSource(CONFIG_DIR.'/db.php');
-    $base = ['collate' => 'utf8mb4_unicode_520_ci'];
-    if (is_array($data['db'] ?? null)) return $data['db'] + $base;
-    return $data ? array_replace($data, $base) : [];
+    $data = is_array($data['db'] ?? null) ? $data['db'] : $data;
+    return $data ? array_replace($data, ['collate' => 'utf8mb4_unicode_520_ci']) : [];
 }
 
 # Check what the 6.3 data update needs before anything is changed and answer the refusal, or an empty string when the run may start
@@ -1418,6 +1468,187 @@ function setUpdateAttach(Database $db, string $prefix, string $tab, string $dir)
     return getUpdateRow($tab.': direct addresses of uploads/'.$dir.' turned into attachments (texts: '.$done.')', $good);
 }
 
+# The catch-up of a 6.3 site: archive and old folder addresses of Node texts and their comments become attachments, an archive address elsewhere reaches its material
+function setUpdateArchive(Database $db, string $prefix, bool $dry): array {
+    global $conf;
+    require_once BASE_DIR.'/core/classes/upload.php';
+    require_once BASE_DIR.'/core/classes/comment.php';
+    require_once BASE_DIR.'/core/classes/node/status.php';
+    $dir = BACKUP_DIR.'/update/archive';
+    $file = $dir.'/manifest.json';
+    $info = is_file($file) ? json_decode((string)file_get_contents($file), true) : null;
+    if (!$dry && ($info['state'] ?? '') === 'verified') return getUpdateRow('archive: the file addresses of the texts were caught up by an earlier run', true);
+    $res = $db->getSqlQuery('SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = :tab', ['tab' => $prefix.'_node_types']);
+    if ($res === false) return getUpdateRow('archive: the tables could not be read, no address was rewritten', false);
+    if (intval($db->getSqlRow($res)[0] ?? 0) === 0) return getUpdateRow('archive: the site has no Node tables, nothing to catch up', true);
+    $res = $db->getSqlQuery('SELECT id, name FROM `'.$prefix.'_node_types`');
+    if ($res === false) return getUpdateRow('archive: the types could not be read, no address was rewritten', false);
+    $kinds = [];
+    $folds = [];
+    foreach ($db->getSqlRows($res) ?: [] as $row) $kinds[intval($row['id'])] = (string)$row['name'];
+    foreach ($kinds as $name) $folds[$name] = array_values(array_unique([$name, ...array_keys(array_filter(getMigrateMap(), fn(array $v): bool => $v['type'] === $name))]));
+    $exts = Upload::getSupportedTypes();
+    $room = fn(string $name): Closure => function (string $rel) use ($name, $folds, $exts): bool {
+        if (!in_array(strtolower(pathinfo($rel, PATHINFO_EXTENSION)), $exts, true)) return false;
+        foreach ($folds[$name] as $one) if (is_file(UPLOADS_DIR.'/archive/'.$one.'/'.$rel) || is_file(UPLOADS_DIR.'/'.$one.'/'.$rel)) return true;
+        return is_file(UPLOADS_DIR.'/node/'.$name.'/'.$rel);
+    };
+    $memo = [];
+    $raw = true;
+    $live = NodeStatus::Published->value;
+    $seek = function (int $tid, string $one) use ($db, $prefix, $live, &$memo, &$raw): Closure {
+        return function (string $key) use ($db, $prefix, $tid, $one, $live, &$memo, &$raw): int {
+            $at = $tid.' '.$one;
+            if (isset($memo[$at][$key])) return $memo[$at][$key];
+            $like = '%'.strtr($key, ['!' => '!!', '%' => '!%', '_' => '!_']).'%';
+            $mark = '#\[attach='.preg_quote($key, '#').' align=#';
+            $sql = 'SELECT id, intro, body FROM `'.$prefix.'_nodes` WHERE tid = :tid AND status = :live AND (intro LIKE :one ESCAPE \'!\' OR body LIKE :two ESCAPE \'!\')'
+                .' ORDER BY id';
+            $res = $db->getSqlQuery($sql, ['tid' => $tid, 'live' => $live, 'one' => $like, 'two' => $like]);
+            foreach (($res ? $db->getSqlRows($res) : false) ?: [] as $row) {
+                $text = $row['intro']."\n".$row['body'];
+                if (preg_match($mark, $text) || ($raw && str_contains($text, 'archive/'.$one.'/'.$key))) return $memo[$at][$key] = intval($row['id']);
+            }
+            $sql = 'SELECT c.cid, c.body FROM `'.$prefix.'_comment` AS c INNER JOIN `'.$prefix.'_nodes` AS n ON n.id = c.cid AND n.tid = :tid AND n.status = :live'
+                .' INNER JOIN `'.$prefix.'_node_types` AS t ON t.id = n.tid AND t.name = c.modul WHERE c.status = :stat AND c.deleted IS NULL'
+                .' AND c.body LIKE :like ESCAPE \'!\' ORDER BY c.id';
+            $res = $db->getSqlQuery($sql, ['tid' => $tid, 'live' => $live, 'stat' => CommentStatus::Published->value, 'like' => $like]);
+            foreach (($res ? $db->getSqlRows($res) : false) ?: [] as $row) {
+                if (preg_match($mark, $row['body']) || ($raw && str_contains($row['body'], 'archive/'.$one.'/'.$key))) return $memo[$at][$key] = intval($row['cid']);
+            }
+            return $memo[$at][$key] = 0;
+        };
+    };
+    $fix = function (string $text, string $name, int $nid) use ($kinds, $folds, $room, $seek): string {
+        $have = ($name !== '') ? $room($name) : null;
+        foreach ($have ? $folds[$name] : [] as $one) $text = getMigrateAttach(getMigrateAttach($text, 'archive/'.$one, $nid, $have), $one, $nid, $have);
+        if ($have) return $text;
+        foreach ($kinds as $tid => $kind) foreach ($folds[$kind] as $one) $text = getMigrateForeign($text, 'archive/'.$one, 'node', $seek($tid, $one));
+        return $text;
+    };
+    $host = preg_quote((string)preg_replace('#^www\.#i', '', (string)parse_url((string)($conf['homeurl'] ?? ''), PHP_URL_HOST)), '#');
+    $left = fn(string $text, array $dirs): int => (int)preg_match_all('#(?<![A-Za-z0-9_./:%-])(?:\./|/|https?://(?:www\.)?'.$host.'/)?uploads/(?:'
+        .implode('|', array_map(fn(string $v): string => preg_quote($v, '#'), $dirs)).'|archive/[a-z]+)/[A-Za-z0-9_%-]#i', $text);
+    $jobs = ['nodes' => ['intro', 'body'], 'comment' => ['body'], 'forum' => ['body'], 'privat' => ['body'], 'message' => ['body'], 'newsletter' => ['body'],
+        'blocks' => ['content'], 'users' => ['sig', 'block'], 'voting' => ['body']];
+    $save = function () use ($file, &$info): bool {
+        return setUpdateBackup($file, (string)json_encode($info, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
+    };
+    $walk = function (bool $write) use ($db, $prefix, $jobs, $kinds, $folds, $fix, $left, $save, &$info): ?array {
+        $sum = ['change' => [], 'left' => 0, 'long' => []];
+        foreach ($jobs as $tab => $cols) {
+            $res = $db->getSqlQuery('SELECT column_name, character_octet_length FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = :tab',
+                ['tab' => $prefix.'_'.$tab]);
+            $size = [];
+            foreach (($res ? $db->getSqlRows($res) : false) ?: [] as $row) $size[strtolower((string)$row[0])] = intval($row[1]);
+            if (array_diff($cols, array_keys($size))) continue;
+            $pars = ['cur' => $write ? intval($info['cursor'][$tab] ?? 0) : 0];
+            foreach ($cols as $i => $col) $pars['l'.$i] = '%uploads/%';
+            $where = implode(' OR ', array_map(fn(string $v, int $i): string => '`'.$v.'` LIKE :l'.$i, $cols, array_keys($cols)));
+            $more = ['nodes' => ', tid', 'comment' => ', modul'][$tab] ?? '';
+            $res = $db->getSqlQuery('SELECT id, `'.implode('`, `', $cols).'`'.$more.' FROM `'.$prefix.'_'.$tab.'` WHERE id > :cur AND ('.$where.') ORDER BY id', $pars);
+            if ($res === false) return null;
+            $num = 0;
+            foreach ($db->getSqlRows($res) ?: [] as $row) {
+                $name = ($tab === 'comment' && in_array((string)$row['modul'], $kinds, true)) ? (string)$row['modul'] : '';
+                if ($tab === 'nodes') $name = $kinds[intval($row['tid'])] ?? '';
+                $sets = [];
+                $vals = ['id' => intval($row['id'])];
+                foreach ($cols as $i => $col) {
+                    $text = ($tab === 'nodes' && $name === '') ? (string)$row[$col] : $fix((string)$row[$col], $name, ($tab === 'nodes') ? intval($row['id']) : 0);
+                    $sum['left'] += $left($text, ($name !== '') ? $folds[$name] : []);
+                    if ($text === (string)$row[$col]) continue;
+                    $sum['change'][$tab.'.'.$col] = ($sum['change'][$tab.'.'.$col] ?? 0) + 1;
+                    if (strlen($text) > $size[$col]) {
+                        $sum['long'][] = $tab.'.'.$col.' #'.$row['id'];
+                        continue;
+                    }
+                    $sets[] = '`'.$col.'` = :v'.$i;
+                    $vals['v'.$i] = $text;
+                    if ($write) $info['done'][$tab.'.'.$col] = ($info['done'][$tab.'.'.$col] ?? 0) + 1;
+                }
+                if ($write && $sets && $db->getSqlQuery('UPDATE `'.$prefix.'_'.$tab.'` SET '.implode(', ', $sets).' WHERE id = :id', $vals) === false) return null;
+                if (!$write) continue;
+                $info['cursor'][$tab] = intval($row['id']);
+                if (++$num % 100 === 0 && !$save()) return null;
+            }
+            if ($write && !$save()) return null;
+        }
+        return $sum;
+    };
+    $list = fn(array $nums): string => $nums ? implode(', ', array_map(fn(string $k, int $v): string => $k.' '.$v, array_keys($nums), $nums)) : 'none';
+    if ($dry) {
+        $sum = $walk(false);
+        if ($sum === null) return getUpdateRow('archive, dry run: the texts could not be read', false);
+        $text = 'archive, dry run: texts that change ('.$list($sum['change']).'), addresses that stay: '.$sum['left'];
+        return getUpdateRow($text.($sum['long'] ? '; too long for their column: '.implode(', ', $sum['long']) : '').'; nothing was written', true);
+    }
+    if (!is_dir($dir) && !mkdir($dir, 0750, true)) return getUpdateRow('archive: '.$dir.' could not be created, no address was rewritten', false);
+    if (!is_array($info)) {
+        $sum = $walk(false);
+        if ($sum === null) return getUpdateRow('archive: the texts could not be read, no address was rewritten', false);
+        $info = ['version' => '6.3.0', 'state' => 'prepared', 'count' => $sum['change'], 'left' => $sum['left'], 'cursor' => [], 'done' => []];
+    }
+    $raw = false;
+    $memo = [];
+    $info['state'] = 'applying';
+    if (!$save() || $walk(true) === null) return getUpdateRow('archive: the rewrite stopped, run the update again to continue after the last written text', false);
+    $sum = $walk(false);
+    $miss = ($sum === null) ? -1 : array_sum($sum['change']) - count($sum['long']);
+    $text = 'archive: '.(($miss < 0) ? 'the texts could not be read again' : $miss.' texts still change').' after the rewrite, run the update again';
+    if ($miss !== 0) {
+        $info['cursor'] = [];
+        return getUpdateRow($save() ? $text : 'archive: the manifest could not be written', false);
+    }
+    $info['state'] = 'verified';
+    $info['left'] = $sum['left'];
+    if (!$save()) return getUpdateRow('archive: the manifest could not be written', false);
+    $text = 'archive: file addresses of the October migration rewritten ('.$list($info['done'] ?? []).'), addresses left that name no file or material: '.$sum['left'];
+    return getUpdateRow($text.($sum['long'] ? '; kept because too long for their column: '.implode(', ', $sum['long']) : ''), true);
+}
+
+# Drop the tables of the modules gone for good and every source table of Node whose rows all are materials now, an empty one at once
+# A published row is carried when _node_legacy names it; a pending row has no address there and is carried when its type holds a material of its title and creation time
+# A table with a row matched by neither stays and the report names its ids: on a 6.2 site the second stage carries those rows and drops the table after them
+function setUpdateTables(Database $db, string $prefix): array {
+    $map = getMigrateMap();
+    $names = array_merge(['auto_links', 'clients', 'clients_down', 'money', 'order', 'partners', 'products', 'whois'], array_keys($map));
+    $pars = [];
+    foreach ($names as $i => $one) $pars['t'.$i] = $prefix.'_'.$one;
+    $res = $db->getSqlQuery('SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME IN (:'.implode(', :', array_keys($pars)).')', $pars);
+    if ($res === false) return getUpdateRow('tables of the removed modules could not be read, none was dropped', false);
+    $have = array_map(fn(string $v): string => substr($v, strlen($prefix) + 1), array_column($db->getSqlRows($res) ?: [], 0));
+    $gone = array_values(array_diff(array_intersect($names, $have), array_keys($map)));
+    $rows = [];
+    $drop = [];
+    $keep = [];
+    foreach (array_intersect(array_keys($map), $have) as $mod) {
+        $tab = '`'.$prefix.'_'.$mod.'`';
+        $res = $db->getSqlQuery('SHOW COLUMNS FROM '.$tab.' LIKE \'status\'');
+        $pend = $res !== false && $mod !== 'help' && $db->getSqlRowCount($res) > 0;
+        $sql = 'SELECT s.id FROM '.$tab.' AS s WHERE '.(($mod === 'help') ? 's.pid = 0 AND ' : '')
+            .'NOT EXISTS (SELECT 1 FROM `'.$prefix.'_node_legacy` AS l WHERE l.modul = :mod AND l.oid = s.id)';
+        if ($pend) {
+            $sql .= ' AND NOT (s.status = 0 AND EXISTS (SELECT 1 FROM `'.$prefix.'_nodes` AS n INNER JOIN `'.$prefix.'_node_types` AS t ON t.id = n.tid WHERE t.name = :type'
+                .' AND n.created = s.time AND n.title COLLATE utf8mb4_bin = CONVERT(TRIM(s.title) USING utf8mb4) COLLATE utf8mb4_bin))';
+        }
+        $left = ($res === false) ? false : $db->getSqlQuery($sql.' ORDER BY s.id', ['mod' => $mod] + ($pend ? ['type' => $map[$mod]['type']] : []));
+        if ($left === false) {
+            $rows = array_merge($rows, getUpdateRow($prefix.'_'.$mod.': the rows could not be compared with Node, the table stays', false));
+            continue;
+        }
+        $ids = array_map('intval', array_column($db->getSqlRows($left) ?: [], 0));
+        if ($ids) $keep[] = $prefix.'_'.$mod.' '.count($ids).' (ids: '.implode(', ', array_slice($ids, 0, 10)).(count($ids) > 10 ? ', …' : '').')';
+        else $drop[] = $mod;
+    }
+    foreach (['tables of the removed modules dropped: ' => $gone, 'source tables of Node dropped, every row is a material: ' => $drop] as $text => $list) {
+        if (!$list) continue;
+        $bad = array_values(array_filter($list, fn(string $v): bool => $db->getSqlQuery('DROP TABLE `'.$prefix.'_'.$v.'`') === false));
+        $rows = array_merge($rows, getUpdateRow($prefix.' '.$text.implode(', ', $list).($bad ? '; could not be dropped: '.implode(', ', $bad) : ''), !$bad));
+    }
+    return array_merge($rows, $keep ? getUpdateRow('source tables of Node kept, rows not in Node yet: '.implode('; ', $keep), true) : []);
+}
+
 # The language names 6.2 stored in its settings and rows, each with the code of its lang/ file
 function getUpdateLangs(): array {
     return ['english' => 'en', 'french' => 'fr', 'german' => 'de', 'polish' => 'pl', 'russian' => 'ru', 'ukrainian' => 'uk'];
@@ -1552,6 +1783,48 @@ function setUpdateConfig(): array {
     $text = 'config: '.implode(', ', $bad).' could not be written or moved, the old sources stay in config/ and the update stops before the schema';
     if ($bad) $out = array_merge($out, getUpdateRow($text, false));
     return $out;
+}
+
+# The settings step of a 6.3 site: the keys no code reads leave, then every option of the shipped config/ the copy keeps in storage/backup/release the site lacks is added
+function setUpdateMerge(): array {
+    require_once BASE_DIR.'/core/classes/update.php';
+    $pack = BACKUP_DIR.'/release/config';
+    if (!is_dir($pack)) return getUpdateRow('config: the shipped settings are not in storage/backup/release/config, put the config/ of the release there and run again', false);
+    $gone = ['global' => '/^(rewrite|sep|tsep|title|ctitle|dbsync|version|cache_.+|css_(?!f$).+|script_(?!f$).+)$/D',
+        'users' => '/^(anonym|network|network_c|point|points)$/D', 'newsletter' => '/^(active|count)$/D', 'voting' => '/^bar$/D'];
+    $cut = [];
+    foreach ($gone as $name => $find) {
+        $data = getUpdateSource(CONFIG_DIR.'/'.$name.'.php');
+        $area = ($name === 'global') ? $data : ($data[$name] ?? []);
+        $keep = array_filter($area, fn(int|string $k): bool => !preg_match($find, (string)$k), ARRAY_FILTER_USE_KEY);
+        if ($keep === $area) continue;
+        if (!setUpdateFile($name.'.php', $keep)) return getUpdateRow('config/'.$name.'.php could not be written, the update stops before the schema', false);
+        $cut[] = $name.' '.implode(' ', array_keys(array_diff_key($area, $keep)));
+    }
+    $packs = [];
+    $sites = [];
+    foreach (glob($pack.'/*.php') ?: [] as $file) {
+        $name = basename($file, '.php');
+        if (!Update::isSiteFile('config/'.$name.'.php')) continue;
+        $one = getUpdateSource($file);
+        $text = 'config: the shipped '.$name.'.php holds no '.$name.' area, the update stops before the schema';
+        if ($name !== 'global' && !is_array($one[$name] ?? null)) return getUpdateRow($text, false);
+        $site = getUpdateSource(CONFIG_DIR.'/'.$name.'.php');
+        $packs[$name] = ($name === 'global') ? $one : $one[$name];
+        $sites[$name] = ($name === 'global') ? $site : ($site[$name] ?? []);
+    }
+    $types = array_values(array_unique(array_merge(array_keys((array)($packs['node']['types'] ?? [])), array_keys((array)($sites['node']['types'] ?? [])))));
+    $adds = [];
+    foreach ($packs as $name => $one) {
+        $res = Update::getConfigMerge($sites[$name], $one, $types, ($name === 'global') ? '' : $name);
+        if (!$res['adds']) continue;
+        if (!setUpdateFile($name.'.php', $res['data'], [], in_array($name, ['node', 'fields', 'uploads', 'ratings'], true))) {
+            return getUpdateRow('config/'.$name.'.php could not be written, the update stops before the schema', false);
+        }
+        array_push($adds, ...$res['adds']);
+    }
+    $text = 'config: the keys no code reads taken out ('.($cut ? implode('; ', $cut) : 'none').'), the shipped options the site lacked added (';
+    return getUpdateRow($text.($adds ? implode(', ', $adds) : 'none').')', true);
 }
 
 # The module registry of the 6.3 update, reconciled with the tree as the modules screen does it; the _modules table of a 6.2 site wins for its six switches
@@ -1728,8 +2001,8 @@ function setUpdateSql(Database $db, string $file, string $prefix): array {
     return $rows;
 }
 
-# Run the 6.3 update of the site config/db.php names and answer its report rows; a refusal before the preflight changes nothing, the schema file brings the step mark
-function setUpdateRun(): array {
+# Run the 6.3 update of the site config/db.php names and answer its report rows; a refusal before the preflight changes nothing, a dry run only counts the archive addresses
+function setUpdateRun(bool $dry = false): array {
     global $conf, $spanel;
     foreach (['db.php', 'global.php', 'security.php'] as $name) {
         if (!checkUpdateWrite($name)) return getUpdateRow('config/'.$name.' is not writable by PHP, nothing was changed', false);
@@ -1748,12 +2021,14 @@ function setUpdateRun(): array {
     }
     $stop = checkUpdateBase($db, $pref);
     if ($stop !== '') return getUpdateRow($stop, false);
+    if ($dry) return setUpdateArchive($db, $pref, true);
     $rows = checkUpdateEmails($db, $pref);
     $text = 'the update stopped before it changed anything: leave each address above on one account and run it again';
     if (checkUpdateFail($rows)) return array_merge($rows, getUpdateRow($text, false));
     if (!setUpdateFile('global.php', array_diff_key($conf, ['security' => '', 'db' => '']), ['close' => '1'])) return getUpdateRow('config/global.php could not be written', false);
     $rows = getUpdateRow('the site is closed for the data update (close = 1), open it in the settings after the result is checked', true);
-    $rows = array_merge($rows, setUpdateConfig());
+    $six = glob(CONFIG_DIR.'/config_*.php') || is_dir(BACKUP_DIR.'/update/config');
+    $rows = array_merge($rows, setUpdateConfig(), $six ? [] : setUpdateMerge());
     $conf = array_merge(require CONFIG_DIR.'/global.php', require CONFIG_DIR.'/security.php');
     $from = is_file(PUBLIC_DIR.'/admin.php') ? 'admin' : $spanel;
     $afile = $spanel;
@@ -1911,7 +2186,8 @@ function setUpdateRun(): array {
         $rows = array_merge($rows, getUpdateRow('config/update.php: the step mark of the code could not be written, the site stays closed', false));
     }
     $rows = array_merge($rows, setUpdatePoints($db, $pref), setUpdateRatings($db, $pref), setUpdateFields($db, $pref));
-    $rows = array_merge($rows, setUpdateAttach($db, $pref, 'forum', 'forum'), setUpdateAttach($db, $pref, 'privat', 'account'), setUpdateLangs($db, $pref));
+    $rows = array_merge($rows, setUpdateAttach($db, $pref, 'forum', 'forum'), setUpdateAttach($db, $pref, 'privat', 'account'), setUpdateLangs($db, $pref),
+        setUpdateArchive($db, $pref, false));
     $rdata = getUpdateSource(CONFIG_DIR.'/rss.php')['rss'] ?? [];
     if ($rdata !== [] && (isset($rdata['temp']) || !isset($rdata['bytes'], $rdata['redirects'], $rdata['timeout']))) {
         unset($rdata['temp']);
@@ -1947,6 +2223,8 @@ function setUpdateRun(): array {
     $good = $got !== false && ($top < $next || $db->getSqlQuery('ALTER TABLE `'.$pref.'_nodes` AUTO_INCREMENT = '.($top + 1)) !== false);
     $rows = array_merge($rows, getUpdateRow($pref.'_nodes new ids start above the highest id of the removed sections ('.$top.')', $good));
     if (checkUpdateFail($rows)) return $rows;
+    $rows = array_merge($rows, setUpdateTables($db, $pref));
+    if (checkUpdateFail($rows)) return $rows;
     $gone = 0;
     foreach (glob(BACKUP_DIR.'/update/*/*') ?: [] as $file) if (basename($file) !== 'manifest.json' && unlink($file)) $gone++;
     $rows = array_merge($rows, getUpdateRow('the snapshots of the update are deleted ('.$gone.' files), the manifests stay in storage/backup/update', true));
@@ -1965,8 +2243,8 @@ function getUpdateLinks(Template $tpl): string {
     return implode("\n", $out);
 }
 
-# Render the first stage on the login card of the admin theme: what the run does, the report of a run with its verdict, and the button that starts it
-function setUpdatePage(array $rows): void {
+# Render the first stage on the login card of the admin theme: what the run does, the report of a run or a dry run with its verdict, and the buttons that start them
+function setUpdatePage(array $rows, bool $dry = false): void {
     global $conf;
     $tpl = new Template('admin');
     $text = 'This page brings a SLAED CMS 6.2 site to 6.3 and runs without a login at the risk of the owner. It closes the site, carries the configuration over,'
@@ -1982,11 +2260,15 @@ function setUpdatePage(array $rows): void {
         $cont .= $tpl->getHtmlFrag('table', ['head' => [['content' => 'Step'], ['content' => 'Result', 'is_col_status' => true]], 'rows_html' => $list, 'disable_sort' => true]);
         $fail = 'The update stopped. Correct the failed row and run it again; every step resumes where it stopped.';
         $done = 'The update finished. Open update.php again to carry the content of the removed modules into Node.';
+        if ($dry) $done = 'The dry run finished, nothing was changed.';
         $cont .= $tpl->getHtmlFrag('alert', checkUpdateFail($rows) ? ['type' => 'error', 'text' => $fail] : ['type' => 'success', 'text' => $done]);
     }
     $hide = $tpl->getHtmlFrag('hidden', ['name_attr' => 'op', 'value_attr' => 'update', 'input_attr' => '']);
     $text = 'Run the update';
     $cont .= $tpl->getHtmlFrag('post-button', ['action' => 'update.php', 'hidden' => $hide, 'icon_name' => 'play-circle', 'title' => $text, 'label' => $text]);
+    $hide .= $tpl->getHtmlFrag('hidden', ['name_attr' => 'dry', 'value_attr' => '1', 'input_attr' => '']);
+    $text = 'Count the file addresses';
+    $cont .= $tpl->getHtmlFrag('post-button', ['action' => 'update.php', 'hidden' => $hide, 'icon_name' => 'search', 'title' => $text, 'label' => $text]);
     $meta = $tpl->getHtmlFrag('head-title', ['title' => 'SLAED CMS 6.3 update'])."\n".$tpl->getHtmlFrag('head-meta', ['name' => 'robots', 'content' => 'noindex, nofollow']);
     $logo = 'templates/admin/images/logos/'.basename((string)($conf['admin_logo'] ?? ''));
     if (!is_file(PUBLIC_DIR.'/'.$logo)) $logo = 'templates/admin/images/logos/slaed-logo-wordmark-gradient-blue.svg';
@@ -2023,7 +2305,8 @@ if (($_REQUEST['op'] ?? '') === 'update' || !isset($umark['points'], $umark['rat
     date_default_timezone_set((string)(getUpdateSource(CONFIG_DIR.'/config_global.php')['gtime'] ?? $conf['gtime']));
     $spanel = (string)(getUpdateSource(CONFIG_DIR.'/config_security.php')['afile'] ?? $conf['security']['afile'] ?? '');
     if (!preg_match('/^[a-zA-Z0-9_-]+$/D', $spanel) || in_array(strtolower($spanel), ['index', 'setup', 'update'], true)) $spanel = 'admin';
-    setUpdatePage((($_POST['op'] ?? '') === 'update') ? setUpdateRun() : []);
+    $udry = ($_POST['dry'] ?? '') === '1';
+    setUpdatePage((($_POST['op'] ?? '') === 'update') ? setUpdateRun($udry) : [], $udry);
     exit;
 }
 define('MODULE_FILE', true);

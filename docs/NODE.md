@@ -3374,14 +3374,16 @@ arrays, so `getConfig()` finds no database. `update.php` therefore decides befor
   every request with `op=update`, which a repeat uses. It runs under `SETUP_FILE`, without a key and without a login,
   at the risk of the maintainer. `setUpdatePage()` shows what the run does on the login card of the admin theme
   (`pages/login.html` with the fragments `alert`, `table`, `table-row`, `table-cells`, `inline-badge`,
-  `post-button`); a POST `op=update` runs `setUpdateRun()` and shows its report. The texts are English literals.
+  `post-button`); a POST `op=update` runs `setUpdateRun()` and shows its report, and a POST `op=update` with
+  `dry=1` runs only the checks up to the preflight and the count of the archive unit, which writes nothing. The texts
+  are English literals.
 - **Second stage**, once the three marks stand: the core boots and `isAdmin(true)` guards the migration of the
   removed modules.
 
 The connection comes from `config/db.php` in either shape (area `db` of 6.3, `$confdb` of 6.2), so the first stage
-has no form. Its collation is the `collate` of a 6.3 area, while a 6.2 source, which names the collation of 6.2,
-connects and is written in the collation of the release, `utf8mb4_unicode_520_ci`, without the `mode`, `sync` and
-`type` of 6.2, which nothing reads; `setUpdateSql()` fills `{collate}` with the same value. The panel file keeps the
+has no form. Both shapes connect and are written in the collation of the release, `utf8mb4_unicode_520_ci`, whatever
+`collate` they name, so the schema file converts a 6.3 site of another collation too; a 6.2 source is written without
+the `mode`, `sync` and `type` of 6.2, which nothing reads; `setUpdateSql()` fills `{collate}` with the same value. The panel file keeps the
 name of the site: the `afile` of `config/config_security.php` while a 6.2 site still has it, otherwise the one of
 `security.php`; a name outside `[a-zA-Z0-9_-]` or one of `index`, `setup`, `update` falls back to `admin`.
 
@@ -3390,8 +3392,10 @@ name of the site: the `afile` of `config/config_security.php` while a 6.2 site s
 The first stage does not include `core/system.php`. It loads only self-contained code: `core/admin.php` (the SQL
 splitter `getSqlbatch()` and `getSqlinfo()`, which honour the `DELIMITER` directive), `core/classes/filemanager.php`,
 `core/classes/logger.php`, `core/classes/pdo.php` (`Database`, which throws a `RuntimeException` on a refused
-connection under `SETUP_FILE`), `core/classes/template.php`, `lang/en.php` and, inside the fields unit,
-`core/classes/field.php`. A class the update needs must not depend on functions of `core/system.php`. The first stage
+connection under `SETUP_FILE`), `core/classes/template.php`, `lang/en.php`, inside the fields unit
+`core/classes/field.php`, inside the settings step `core/classes/update.php` (only `Update::getConfigMerge()` and
+`Update::isSiteFile()`, which call nothing of the core) and inside the archive unit `core/classes/upload.php`,
+`core/classes/comment.php` and `core/classes/node/status.php` for the supported types and the two status enums. A class the update needs must not depend on functions of `core/system.php`. The first stage
 defines the path constants itself, `CONFIG_DIR`, `BACKUP_DIR`, `CACHE_DIR`, `LOGS_DIR` and `UPLOADS_DIR`, which the
 attachment units of the forum and the private messages read. The update
 runs on a closed site with one writer, so the runtime configuration protocol of the running system is not used.
@@ -3457,7 +3461,13 @@ runs and reports, then neither the schema file nor any data unit runs.
 2. Close the site (`global.php`, `close = 1`). The shipped `global.php` carries `close = 0` and lands before a
    6.3 panel exists, so the run closes the site itself. It stays closed after the update until the maintainer
    opens it in the settings.
-3. `setUpdateConfig()` carries the 6.2 settings (see "6.2 configuration" below).
+3. `setUpdateConfig()` carries the 6.2 settings (see "6.2 configuration" below). A 6.3 site (no `config_*.php` and
+   no `storage/backup/update/config/`) runs `setUpdateMerge()` instead: the global keys `rewrite`, `sep`, `tsep`,
+   `title`, `ctitle`, `dbsync`, `version`, `cache_*` and every `css_*` and `script_*` but `css_f` and `script_f`, the
+   users keys `anonym`, `network`, `network_c`, `point`, `points`, the newsletter keys `active`, `count` and the poll
+   key `bar` leave, then every option of the shipped `config/` the operator keeps in `storage/backup/release/config/`
+   that the site lacks is added through `Update::getConfigMerge()`, a type section staying the site's; without that
+   folder the step is a failed row.
 4. The panel file: the rename source is the shipped `admin.php` when it exists, otherwise the panel file of the site
    (a repeat after the rename); the rename replaces a 6.2 loader under the name of the site, and a panel file of
    the site under another name is removed. Then `security.php` (`afile`) and `db.php` in the 6.3 format. The
@@ -3484,7 +3494,14 @@ runs and reports, then neither the schema file nor any data unit runs.
     `setUpdateRatings()`, `setUpdateFields()`, then `setUpdateAttach()` over the forum posts and the private
     messages: a direct address of a file `uploads/forum/` or `uploads/account/` holds becomes an `[attach]` of the
     same name, because both folders are closed; an address the folder does not hold, and an image inside a link to
-    another site, stay as written and answer 410.
+    another site, stay as written and answer 410. `setUpdateLangs()` follows, then `setUpdateArchive()` for a site
+    whose Node texts kept the addresses of an early migration: in `_nodes` and in the comments of a type, an address
+    of `uploads/archive/<module>/`, of the old folder of a module of that type or of the folder of the type becomes an
+    `[attach]` (inside `[usehtml]` the file address of the material) when the file is there; in the forum, private and
+    admin messages, newsletters, blocks, signatures and polls an archive address becomes the file address of the
+    published material or comment that carries the name. Its manifest keeps the counts of the first pass, a cursor per
+    table and the state; a stopped run continues after the cursor, a check that still finds a text to change starts
+    the cursors over, and a verified unit is skipped.
 16. `config/rss.php`: `temp` removed, missing `bytes` (`2097152`), `redirects` (`3`), `timeout` (`10`) added.
     Without these keys Feed refuses with code `config` before any request.
 17. RSS blocks: `UPDATE _blocks SET content = '', time = 0 WHERE url != ''` drops the cached HTML; the next
@@ -3499,7 +3516,14 @@ runs and reports, then neither the schema file nor any data unit runs.
     `auto_increment` (6.2 uses `sid`, `pid`, `fid`, `lid`); the current value comes from `SHOW CREATE TABLE`,
     because MySQL 8 caches `information_schema.TABLES`. An old `name=<type>&op=view&id=N` answers 404 instead of a
     different material; there is no map of old ids.
-22. Clean finish (no failed row in the whole report): every file under `storage/backup/update/*/` except
+22. Any failed row so far ends the run here. `setUpdateTables()` drops the tables of the modules gone for good
+    (`auto_links`, `clients`, `clients_down`, `money`, `order`, `partners`, `products`, `whois`), with no archive, and
+    every source table of Node whose rows all are materials: a published row by its `_node_legacy` row (for `help`
+    every request, `pid = 0`, whose replies became comments with it), a pending row, which the migration gives no
+    address, by a material of its type with the same title and creation time; an empty table goes at once. A table
+    with a row matched by neither stays, and the report names it with up to ten ids. On a 6.2 site the tables with
+    rows stay until the second stage carries them; a site whose content is already in Node loses them here.
+23. Clean finish (no failed row in the whole report): every file under `storage/backup/update/*/` except
     `manifest.json` is deleted, including the moved configuration sources and the newsletter snapshot, because
     they hold guest addresses, balances and field values.
 
@@ -3681,9 +3705,10 @@ per statement, and `SHOW … LIKE ?` fails, hence `information_schema`.
 substitutes `{prefix}`, `{engine}`, `{charset}`, `{collate}` and answers a row per table statement and per failed
 one; a `DELETE` names its removed rows. It runs outside any data transaction; a failed statement leaves the earlier
 ones applied, so every statement must be safe to run again on a 6.2 schema, on a partly migrated one and on a
-finished one. The file neither creates nor alters the tables of the nine removed modules nor those of `shop`,
-`clients`, `order`, `money`, `auto_links` and `whois`; on an updated site they stay in 6.2 format. It drops
-`_referer.lid`, which tied a referer to a link of `auto_links`.
+finished one. The file creates none of the tables of the nine removed modules nor of the modules gone for good
+(`clients`, `clients_down`, `products`, `money`, `order`, `partners`, `whois`, `auto_links`), and alters only the
+column names of the nine ("Batch X"); the first stage drops them after the data units (step 22 of the run order). It
+drops `_referer.lid`, which tied a referer to a link of `auto_links`.
 
 It runs without `NO_ZERO_DATE` and `NO_ZERO_IN_DATE` for its session, which MySQL 8 sets by default and which refuse
 every `ALTER` of a 6.2 table whose datetime defaults to a zero date, and restores the mode of the session at its end.
@@ -3757,16 +3782,18 @@ word of MySQL 8.0.2+: unqualified `_users.rank` and `_groups.rank` are written i
 | `tests/Unit/UpdateSiteTest.php` | `tests/Support/install_probe.php` mode `update` over HTTP | the whole first stage on a real 6.2 schema |
 | `UpdateSetupTest` | `tests/Support/update_probe.php … setup` | the update preflight, registry, `deleteUpdateTypes()`; the installer preflight `getSetupProbe()` and the order of `checkSetupRun()` in `setup.php` |
 | `UpdatePointsTest`, `UpdateRatingsTest`, `UpdateFieldsTest`, `UpdateConfigTest`, `UpdateMailsTest` | `update_probe.php` with unit `points` (default), `ratings`, `fields`, `config`, `mails` | one unit each: resume from cursors, stops, marks |
+| `UpdateArchiveTest` | `update_probe.php … archive` | the archive unit (dry run, rewrite, repeat, resume), the settings step of a 6.3 site and the drop of the tables by `setUpdateTables()` |
 
 `update_probe.php` lifts the functions out of `update.php` and `setup.php` by name (both act on load), with a
 scratch site and a disposable schema. A failing probe is a test failure, not a skip.
 
 `tests/Fixtures/update62` is the 6.2 site of `UpdateSiteTest`:
 
-- `site.sql`: the `CREATE TABLE` statements of all 33 tables of a real 6.2 dump (prefix `old`, counters dropped)
-  and a small invented seed of what the update has to meet: boolean and `NULL` `editor` with numeric rights,
-  `_modules`, balances, old sections up to id 300, a `news` category, blocks of removed modules, a cached RSS
-  block, two poll votes of one address, newsletter campaigns, a legacy `_whois` row.
+- `site.sql`: the `CREATE TABLE` statements of all 33 tables of a real 6.2 dump (prefix `old`, counters dropped),
+  the tables of `jokes` and `media` that dump lacked in the shape of the 6.2 installer, and a small invented seed of
+  what the update has to meet: boolean and `NULL` `editor` with numeric rights, `_modules`, balances, old sections up
+  to id 300, a `news` category, blocks of removed modules, a cached RSS block, two poll votes of one address,
+  newsletter campaigns, a legacy `_whois` row, a rated joke and a film with its own columns and three links.
 - `config/`: six 6.2 sources in variable form without secrets (`global` with language `russian`, `security`
   with `afile`, `ratings`, `users`, `voting`, `news`).
 
@@ -3783,19 +3810,23 @@ manifest, the later poll vote of one address removed), then three runs, each wit
 four marks, all manifests `verified` and `_nodes` continuing at 301. After them the schema equals a clean
 installation in `information_schema` (columns, indexes, foreign keys, checks, engine, collation). It also checks two
 guest votes in one poll, the kept panel name `myadm` now holding the shipped loader, language and address of 6.2,
-the switched-off blocks, type creation in the panel, the `_nodes` counter after a deleted material, the second stage
-carrying the two news and the file of the seed into Node, and empty PHP and SQL logs. A change to the first stage or
+the switched-off blocks, type creation in the panel, the `_nodes` counter after a deleted material, the tables left
+after each run of the first stage (the source tables with rows) and after the second stage (none), the second stage
+carrying the news, the file, the joke and the film of the seed into Node with the extra fields, resources and ratings
+of the last two, and empty PHP and SQL logs. A change to the first stage or
 the schema file is done only when this test passes.
 
 ## Migration of the removed modules
 
-`update.php` in the root carries the content of `news`, `pages`, `faq`, `help`, `links`, `files` and `content` into
-Node on a site that ran the 6.3 update. Only the main administrator opens it; the page shows the plan per module and
-a POST with the token scope `update` runs every step that is not done yet. The old tables stay as they are. It reads
-the module tables in the 6.3 shape (`id`, `cid`, `intro`, `body`, `ip`), which the production tables of `slaed.net`
-carry; for a clean 6.2 site, whose tables still say `sid`, `catid`, `hometext` and `bodytext`, the first stage renames
-the columns of the seven tables in `table_update6_3.sql` ("Batch X"), and a table already in the 6.3 shape stays as
-it is. `UpdateSiteTest` runs this second stage on its 6.2 fixture and reads the materials it made.
+`update.php` in the root carries the content of `news`, `pages`, `faq`, `help`, `links`, `files`, `content`, `jokes`
+and `media` into Node on a site that ran the 6.3 update. Only the main administrator opens it; the page shows the plan
+per module and a POST with the token scope `update` runs every step that is not done yet. The table of a module is
+dropped once its data step is done, and the page then shows the module from its manifest. It reads the module tables
+in the 6.3 shape (`id`, `cid`, `intro`, `body`, `ip`), which the production tables of `slaed.net` carry; for a clean
+6.2 site, whose tables still say `sid`, `catid`, `hometext` and `bodytext`, the first stage renames the columns of the
+nine tables in `table_update6_3.sql` ("Batch X"), and a table already in the 6.3 shape stays as it is. A table the
+first stage dropped, empty or with every row in Node already, is not in the plan. `UpdateSiteTest` runs this second
+stage on its 6.2 fixture and reads the materials it made.
 
 | Module | Type | Notes |
 |---|---|---|
@@ -3803,6 +3834,8 @@ it is. `UpdateSiteTest` runs this second stage on its 6.2 fixture and reads the 
 | `pages` | `docs` | the type gains the features its data needs, such as comments and rating |
 | `help` | `help` (`support`) | every request becomes a published material, each reply a comment of its author; open or closed goes to the queue row, which follows the last reply |
 | `content` | `content` without extension | static pages; a feed address is noted, not carried |
+| `jokes` | `jokes`, from its profile | `rating` and `ratetot` are the rating balance and its votes |
+| `media` | `media`, from its profile | the own columns land in the twelve extra fields (`roles` → `cast`, `author` → `creator`, `duration` → `runtime`, `lang` → `language`, `note` → `notes`, `size` → `filesize`, `released` → `release`, the rest by name; a year of 0 is none); every `http(s)` address of the comma list `links` becomes a link resource of the `download` role, up to its maximum of ten, its kind by the extension; ed2k and every other scheme is noted, not carried |
 
 The run changes the database and nothing else: it moves, copies and renames no file. The operator runs it with the
 upload folders of the modules where 6.2 left them, and after it, before the site opens, moves each with its contents
@@ -3810,7 +3843,7 @@ into the empty folder of its type:
 
 | From | To |
 | --- | --- |
-| `uploads/<module>/` of `news`, `faq`, `help`, `links`, `files`, `content` | `uploads/node/<module>/` |
+| `uploads/<module>/` of `news`, `faq`, `help`, `links`, `files`, `content`, `jokes`, `media` | `uploads/node/<module>/` |
 | `uploads/pages/` | `uploads/node/docs/` |
 
 A new type refuses a folder that already holds a file, so a folder moved before the run stops it at the types step;
@@ -3834,12 +3867,16 @@ continues where it stopped:
    and Markdown; blocks the conversion does not know become `[usehtml]` blocks, and a bare relative address of
    `[img]` or `[url]` gains `./`, the local form the safe parser accepts. A local resource path Node refuses gets a
    safe spelling, and a note names the file the operator renames to it.
-5. Foreign addresses, on every run (`setMigrateForeign()`): a direct address any text keeps into the 6.2 folder of
+5. Drop (`deleteMigrateTables()`): the table of every module whose data step is done, once the database agrees with
+   the map of ids in the manifest: every row of the table (for `help` every request) is a key of the map and every
+   material of the map is in `_nodes` under the type. A manifest of another database left in the tree therefore never
+   drops a table whose rows this database did not carry; the table stays with one note of the module.
+6. Foreign addresses, on every run (`setMigrateForeign()`): a direct address any text keeps into the 6.2 folder of
    a type it does not belong to becomes the `go=file&own=node` address of the first published material of that type
    whose text or published comment carries the name, and an address of `uploads/forum/` in a text that is no forum
    post the `go=file&own=forum` address of the first published post that carries it. A name nothing carries keeps
    its address and answers 410; `[code]` and `[php]` keep their examples.
-6. Activation of every type the run created or switched off.
+7. Activation of every type the run created or switched off.
 
 The data step turns a direct address of a file of `uploads/<module>/` in a material, a comment or a help reply into
 an `[attach]` of the type with the name unchanged (`getMigrateAttach()`), whatever the form of the name, when the file

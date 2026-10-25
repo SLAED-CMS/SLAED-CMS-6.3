@@ -758,8 +758,18 @@ function getInstallRows(string $body): array {
     return array_map(fn(array $v): array => [html_entity_decode($v[1], ENT_QUOTES), $v[2] === 'success'], $hit);
 }
 
+# The tables of the removed modules and the source tables of Node the site still holds, without the prefix
+function getInstallLeft(PDO $pdo): array {
+    $names = array_merge(array_diff(IPROFS, ['docs']), ['auto_links', 'clients', 'clients_down', 'money', 'order', 'partners', 'products', 'whois']);
+    $list = array_map(fn(string $v): string => substr($v, strlen(IPREF) + 1), $pdo->query('SHOW TABLES')->fetchAll(PDO::FETCH_COLUMN));
+    $out = array_values(array_intersect($list, $names));
+    sort($out);
+    return $out;
+}
+
 # What one run of the update left: the rows update.php reported as failed, the closed site, the marks, the reconciled registry, the converted sources
 # It also reads the manifests of the three units, the balances and the Node tables, whether config/local.php is gone, the panel file, the site language and address
+# The tables of the removed modules the site still holds come from getInstallLeft()
 # Then come the blocks of removed modules switched off, the Node types taken out of the configuration, the switches of the owner and the post and message of update62
 # The counter of _nodes comes from SHOW CREATE TABLE, because MySQL 8 answers SHOW TABLE STATUS from cached statistics
 function getInstallAfter(PDO $pdo, array $page): array {
@@ -822,6 +832,7 @@ function getInstallAfter(PDO $pdo, array $page): array {
         'presentation' => isset($mods['presentation']),
         'maildrain' => ($jobs['maildrain'] ?? null) === ($ship['scheduler']['jobs']['maildrain'] ?? false),
         'ids' => ['old' => $top, 'next' => $next],
+        'tables' => getInstallLeft($pdo),
         'panel' => [is_file($isite.'/public/admin.php'), is_file($isite.'/public/myadm.php'), getInstallConf('security')['security']['afile'] ?? null,
             is_file($isite.'/public/myadm.php') && sha1_file($isite.'/public/myadm.php') === sha1_file(BASE_DIR.'/public/admin.php')],
         'dupes' => preg_match('#_rating \(rows removed: (\d+)\)#', $page['body'], $hit) ? intval($hit[1]) : null,
@@ -896,8 +907,10 @@ function setInstallSources(PDO $pdo, string $snap): array {
 # Two guests vote in one poll with the statement of core/system.php, and the first super administrator signs in from the probe address as the session check demands
 # The panel, the content profile and the public side of Node are walked
 # Then a material is created and deleted and the update runs again, which must not bring the counter of _nodes back to the one of the deleted material
-# Last three news, a help request and a forum section are added to the 6.2 tables and the main administrator runs the second stage twice
-# The materials the old module tables became are read with their types, and the registry with the title of each entity
+# A help request joins the 6.2 tables before the first run, because the first stage drops an empty source table
+# Last three news and a forum section are added, and the main administrator runs the second stage twice
+# The materials the old module tables became are read with their types, the extra fields, resources and ratings of the film and the joke, and the tables left
+# The registry is read with the title of each entity, and a jokes table with a row the manifest never carried meets one more run of the second stage
 function getInstallUpgrade(PDO $pdo, string $base, string $dump, string $rev, string $snap): array {
     global $iguard, $iport, $isite;
     $out = ['config' => setInstallOld($isite, $rev, $base), 'dump' => addInstallDump($base, $dump), 'guard' => 'http://127.0.0.1:'.$iguard];
@@ -916,6 +929,8 @@ function getInstallUpgrade(PDO $pdo, string $base, string $dump, string $rev, st
     $head = ['Host: 127.0.0.1:'.$iport];
     if (!$pdo->query('SHOW COLUMNS FROM '.IPREF.'_newsletter LIKE \'mails\'')->fetch()) $pdo->exec('ALTER TABLE '.IPREF.'_newsletter ADD `mails` TEXT');
     $pdo->exec('UPDATE '.IPREF.'_newsletter SET mails = \'one@probe.test, two@probe.test,one@probe.test\' ORDER BY id LIMIT 2');
+    $pdo->exec('INSERT INTO '.IPREF.'_help (pid, catid, uid, aid, title, time, hometext, field, ip_sender, status)'
+        ." VALUES (0, 0, 2, 0, 'A request', '2023-01-01 10:00:00', 'Help', '', '', 0)");
     $news = getInstallConf('newsletter');
     $news['newsletter']['abort'] = '7';
     file_put_contents($isite.'/config/newsletter.php', "<?php\nreturn ".var_export($news, true).";\n");
@@ -1033,14 +1048,21 @@ function getInstallUpgrade(PDO $pdo, string $base, string $dump, string $rev, st
     foreach ([['General', '2022-05-01 10:00:00', 1], ['Waiting', '2022-06-01 10:00:00', 0], ['Later', '2099-01-01 10:00:00', 1]] as [$title, $time, $stat]) {
         $pdo->prepare($add)->execute(['title' => $title, 'time' => $time, 'intro' => 'Intro of '.$title, 'status' => $stat]);
     }
-    $pdo->exec('INSERT INTO '.IPREF.'_help (pid, cid, uid, aid, title, time, body, field, ip, status)'
-        ." VALUES (0, 0, 2, 0, 'A request', '2023-01-01 10:00:00', 'Help', '', '', 0)");
     $pdo->exec('INSERT INTO '.IPREF."_categories (modul, title, intro) VALUES ('forum', 'A topic', '')");
     $page = getInstallReply($who, 'GET', 'update.php');
     $tok = getInstallToken($page['body'], 'run');
     $done = getInstallReply($who, 'POST', 'update.php', ['op' => 'run', 'token' => $tok]);
     $sql = 'SELECT t.name, n.title, n.intro, n.body FROM '.IPREF.'_nodes n JOIN '.IPREF.'_node_types t ON t.id = n.tid ORDER BY t.name, n.title';
     $out['migrate'] = [$page['code'], $tok !== '', $done['code'], $pdo->query($sql)->fetchAll(PDO::FETCH_NUM)];
+    $sql = 'SELECT t.name, n.field FROM '.IPREF.'_nodes n JOIN '.IPREF.'_node_types t ON t.id = n.tid WHERE t.name IN (\'jokes\', \'media\') ORDER BY t.name';
+    $out['extra'] = ['fields' => $pdo->query($sql)->fetchAll(PDO::FETCH_KEY_PAIR)];
+    $sql = 'SELECT a.kind, a.role, a.src, a.hits, a.sort FROM '.IPREF.'_node_assets a JOIN '.IPREF.'_nodes n ON n.id = a.nid JOIN '.IPREF.'_node_types t ON t.id = n.tid'
+        .' WHERE t.name = \'media\' ORDER BY a.sort';
+    $out['extra']['assets'] = $pdo->query($sql)->fetchAll(PDO::FETCH_NUM);
+    $sql = 'SELECT scope, base, votes FROM '.IPREF.'_rating_targets WHERE scope IN (\'node.jokes\', \'node.media\') ORDER BY scope';
+    $out['extra']['ratings'] = $pdo->query($sql)->fetchAll(PDO::FETCH_NUM);
+    $out['extra']['notes'] = (bool)preg_match('#media: \#5: the address ed2k://[^<]* is refused by Node#', $done['body']);
+    $out['extra']['tables'] = getInstallLeft($pdo);
     $sql = 'SELECT r.kind, r.path, r.state, COALESCE(n.title, c.title, f.title, u.name, v.title, t.name) FROM '.IPREF.'_routes AS r'
         .' LEFT JOIN '.IPREF.'_nodes AS n ON r.kind = \'node\' AND n.id = r.oid LEFT JOIN '.IPREF.'_categories AS c ON r.kind = \'cat\' AND c.id = r.oid'
         .' LEFT JOIN '.IPREF.'_forum AS f ON r.kind = \'topic\' AND f.id = r.oid LEFT JOIN '.IPREF.'_users AS u ON r.kind = \'user\' AND u.id = r.oid'
@@ -1048,6 +1070,10 @@ function getInstallUpgrade(PDO $pdo, string $base, string $dump, string $rev, st
     $rows = $pdo->query($sql)->fetchAll(PDO::FETCH_NUM);
     $again = getInstallReply($who, 'POST', 'update.php', ['op' => 'run', 'token' => $tok]);
     $out['routes'] = [$rows, $again['code'], $pdo->query($sql)->fetchAll(PDO::FETCH_NUM) === $rows];
+    $pdo->exec('CREATE TABLE '.IPREF.'_jokes (id INT UNSIGNED NOT NULL PRIMARY KEY, ratetot VARCHAR(100) NOT NULL DEFAULT \'0\')');
+    $pdo->exec('INSERT INTO '.IPREF.'_jokes (id) VALUES (1), (99)');
+    $stale = getInstallReply($who, 'POST', 'update.php', ['op' => 'run', 'token' => $tok]);
+    $out['stale'] = [$stale['code'], substr_count($stale['body'], 'jokes: the table stays'), getInstallLeft($pdo)];
     return $out;
 }
 

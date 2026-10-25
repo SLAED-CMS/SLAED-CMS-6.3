@@ -14,6 +14,8 @@ if ($probework === '') $probework = str_replace('\\', '/', sys_get_temp_dir()).'
 define('BASE_DIR', $probework.'/site');
 define('CONFIG_DIR', BASE_DIR.'/config');
 define('CACHE_DIR', BASE_DIR.'/storage/cache');
+define('BACKUP_DIR', BASE_DIR.'/storage/backup');
+define('UPLOADS_DIR', BASE_DIR.'/uploads');
 require_once __DIR__.'/probe_boot.php';
 
 # The tree the shipped sources are read from
@@ -858,12 +860,184 @@ function getSetupClean(): array {
     return $out;
 }
 
+# The files of the catch-up site: the archive and the old folder of news, the archive of pages, and one name the docs folder already holds
+const ARCHFILE = ['archive/news/a.gif', 'archive/news/e.gif', 'news/b.png', 'archive/pages/c.jpg', 'node/docs/d.png'];
+
+# The texts of the catch-up site as table, id and text: news 1 and docs 2 are published, news 3 a draft; comment 2 belongs to a material that is gone
+const ARCHTEXT = [
+    ['nodes', 1, 'intro', '[img=left alt=A]./uploads/archive/news/a.gif[/img]'],
+    ['nodes', 1, 'body', '[url]http://www.slaed.net/uploads/news/b.png[/url] [img]./uploads/archive/news/gone.gif[/img] [usehtml]<img src="uploads/archive/news/a.gif">[/usehtml]'],
+    ['nodes', 2, 'body', '![C](uploads/archive/pages/c.jpg) [img]/uploads/docs/d.png[/img]'],
+    ['nodes', 3, 'intro', '[img]./uploads/archive/news/e.gif[/img]'],
+    ['comment', 1, 'body', '[img=center alt=title]./uploads/archive/news/a.gif[/img]'],
+    ['comment', 2, 'body', '[img]./uploads/archive/news/a.gif[/img]'],
+    ['forum', 1, 'body', '[img=center alt=T]http://www.slaed.net/uploads/archive/news/a.gif[/img]'],
+    ['forum', 2, 'body', '[img]http://other.net/uploads/archive/news/a.gif[/img] [code]uploads/archive/news/a.gif[/code]'],
+    ['privat', 1, 'body', '[url=./uploads/archive/pages/c.jpg]C[/url]'],
+    ['message', 1, 'body', '[img]./uploads/archive/news/e.gif[/img]'],
+];
+
+# Put the scratch site back to a 6.3 site of early October: the files of ARCHFILE, the two types, the texts of ARCHTEXT and no manifest of the unit
+# The tables of blocks and polls are left out, so the unit meets a site without them
+function setArchSite(): void {
+    deleteProbeTree(BASE_DIR);
+    mkdir(CONFIG_DIR, 0777, true);
+    foreach (ARCHFILE as $rel) {
+        if (!is_dir(dirname(UPLOADS_DIR.'/'.$rel))) mkdir(dirname(UPLOADS_DIR.'/'.$rel), 0777, true);
+        file_put_contents(UPLOADS_DIR.'/'.$rel, 'x');
+    }
+    $side = getProbeSide();
+    foreach (['comment', 'nodes', 'node_types', 'privat', 'message', 'newsletter'] as $name) $side->exec('DROP TABLE IF EXISTS `'.PROBEPREF.'_'.$name.'`');
+    foreach (['node_types', 'nodes', 'comment', 'privat', 'message', 'newsletter'] as $name) $side->exec(getProbeTable($name));
+    $side->exec('DELETE FROM `'.PROBEPREF.'_forum`');
+    $side->exec('INSERT INTO `'.PROBEPREF.'_node_types` (id, name, title, intro) VALUES (1, \'news\', \'News\', \'\'), (2, \'docs\', \'Docs\', \'\')');
+    $side->exec('INSERT INTO `'.PROBEPREF.'_nodes` (id, tid, title, intro, body, field, status) VALUES (1, 1, \'A\', \'\', \'\', \'\', 2), (2, 2, \'B\', \'\', \'\', \'\', 2),'
+        .' (3, 1, \'C\', \'\', \'\', \'\', 0)');
+    $side->exec('INSERT INTO `'.PROBEPREF.'_comment` (id, modul, cid, name, body, status) VALUES (1, \'news\', 1, \'u\', \'\', 1), (2, \'oldnews\', 9, \'u\', \'\', 1)');
+    $side->exec('INSERT INTO `'.PROBEPREF.'_forum` (id, name, title, body, field) VALUES (1, \'u\', \'T\', \'\', \'\'), (2, \'u\', \'T\', \'\', \'\')');
+    $side->exec('INSERT INTO `'.PROBEPREF.'_privat` (id, title, body) VALUES (1, \'P\', \'\')');
+    $side->exec('INSERT INTO `'.PROBEPREF.'_message` (id, title, body) VALUES (1, \'M\', \'\')');
+    foreach (ARCHTEXT as [$tab, $id, $col, $text]) {
+        $side->prepare('UPDATE `'.PROBEPREF.'_'.$tab.'` SET `'.$col.'` = :text WHERE id = :id')->execute(['text' => $text, 'id' => $id]);
+    }
+}
+
+# Everything the catch-up leaves behind: its answer, the manifest and every text of ARCHTEXT read back
+function getArchState(array $rows): array {
+    clearstatcache();
+    $file = BACKUP_DIR.'/update/archive/manifest.json';
+    $texts = [];
+    foreach (ARCHTEXT as [$tab, $id, $col]) {
+        $texts[$tab.'.'.$col.' #'.$id] = (string)getProbeSide()->query('SELECT `'.$col.'` FROM `'.PROBEPREF.'_'.$tab.'` WHERE id = '.$id)->fetchColumn();
+    }
+    return ['done' => checkProbeDone($rows), 'text' => getProbeText($rows), 'info' => is_file($file) ? json_decode((string)file_get_contents($file), true) : null,
+        'texts' => $texts];
+}
+
+# One pass of the catch-up as the first stage runs it, a dry run or a write run
+function getArchRun(bool $dry): array {
+    return getArchState(setUpdateArchive($GLOBALS['pdb'], PROBEPREF, $dry));
+}
+
+# The catch-up counts without writing, rewrites once, skips a verified repeat and continues after the cursor of a run that stopped
+function getArchClean(): array {
+    $GLOBALS['conf']['homeurl'] = 'https://slaed.net';
+    setArchSite();
+    $out = ['dry' => getArchRun(true), 'write' => getArchRun(false), 'repeat' => getArchRun(false)];
+    $file = BACKUP_DIR.'/update/archive/manifest.json';
+    $info = json_decode((string)file_get_contents($file), true);
+    $info['state'] = 'applying';
+    $info['cursor'] = ['nodes' => 1];
+    file_put_contents($file, json_encode($info));
+    foreach (ARCHTEXT as [$tab, $id, $col, $text]) {
+        if ($tab === 'nodes' && $id === 1) continue;
+        getProbeSide()->prepare('UPDATE `'.PROBEPREF.'_'.$tab.'` SET `'.$col.'` = :text WHERE id = :id')->execute(['text' => $text, 'id' => $id]);
+    }
+    $out['resume'] = getArchRun(false);
+    $info = json_decode((string)file_get_contents($file), true);
+    $info['state'] = 'applying';
+    $info['cursor'] = ['nodes' => 99, 'comment' => 99, 'forum' => 99, 'privat' => 99, 'message' => 99, 'newsletter' => 99];
+    file_put_contents($file, json_encode($info));
+    foreach (ARCHTEXT as [$tab, $id, $col, $text]) {
+        getProbeSide()->prepare('UPDATE `'.PROBEPREF.'_'.$tab.'` SET `'.$col.'` = :text WHERE id = :id')->execute(['text' => $text, 'id' => $id]);
+    }
+    $out['stuck'] = getArchRun(false);
+    $out['unstuck'] = getArchRun(false);
+    return $out;
+}
+
+# Put the scratch site back to a 6.3 site with keys no code reads and a shipped config/ in storage/backup/release that has options the site lacks
+function setMergeSite(bool $pack): void {
+    deleteProbeTree(BASE_DIR);
+    mkdir(CONFIG_DIR, 0777, true);
+    setUpdateFile('global.php', ['homeurl' => 'https://slaed.net', 'rewrite' => '1', 'css_f' => 'own.css', 'css_c' => '1', 'script_f' => 'own.js', 'script_a' => '1',
+        'cache_b' => '1', 'version' => '6.3.0']);
+    setUpdateFile('users.php', ['anonym' => 'Guest', 'point' => '1', 'keep' => 'site']);
+    setUpdateFile('node.php', ['types' => ['news' => ['own' => 1]], 'limits' => ['edit' => 600]], [], true);
+    if (!$pack) return;
+    $ship = BACKUP_DIR.'/release/config';
+    mkdir($ship, 0777, true);
+    $put = fn(string $name, array $data): int|false => file_put_contents($ship.'/'.$name.'.php', '<?php'."\n".'return '.var_export($data, true).';'."\n");
+    $put('global', ['homeurl' => '', 'css_f' => '', 'script_f' => 'ship.js', 'webroot' => '']);
+    $put('users', ['users' => ['keep' => 'ship', 'fresh' => '1']]);
+    $put('node', ['node' => ['types' => ['news' => ['own' => 2, 'more' => 3], 'faq' => ['own' => 1]], 'defaults' => ['list' => ['views' => ['list']]]]]);
+    $put('oauth', ['oauth' => ['google' => ['client' => '']]]);
+    $put('system', ['system' => ['skip' => '1']]);
+}
+
+# The settings step without the shipped folder, the merge of a 6.3 site and a repeat that adds nothing
+function getMergeClean(): array {
+    setMergeSite(false);
+    $out = ['none' => getProbeText(setUpdateMerge()), 'nonered' => checkUpdateFail(setUpdateMerge())];
+    setMergeSite(true);
+    $rows = setUpdateMerge();
+    $read = fn(string $name): array => (array)(($name === 'global') ? getUpdateSource(CONFIG_DIR.'/global.php') : (getUpdateSource(CONFIG_DIR.'/'.$name.'.php')[$name] ?? []));
+    $out['first'] = ['done' => checkProbeDone($rows), 'text' => getProbeText($rows), 'global' => $read('global'), 'users' => $read('users'), 'node' => $read('node'),
+        'oauth' => $read('oauth'), 'system' => is_file(CONFIG_DIR.'/system.php')];
+    $out['again'] = getProbeText(setUpdateMerge());
+    return $out;
+}
+
+# Put the schema back to a 6.3 site of early October with its source tables: news carried, its pending row in a cp1251 table matched by title and time
+# Help has a reply, faq a row no address names, files a pending row whose material has another title, pages is empty, and two tables of gone modules follow
+function setTableSite(): void {
+    $side = getProbeSide();
+    foreach (['node_legacy', 'nodes', 'node_types', 'news', 'help', 'faq', 'files', 'pages', 'order', 'whois'] as $name) {
+        $side->exec('DROP TABLE IF EXISTS `'.PROBEPREF.'_'.$name.'`');
+    }
+    foreach (['node_types', 'nodes', 'node_legacy'] as $name) $side->exec(getProbeTable($name));
+    $side->exec('CREATE TABLE `'.PROBEPREF.'_news` (id INT UNSIGNED NOT NULL PRIMARY KEY, title VARCHAR(100) NOT NULL, time DATETIME, status TINYINT NOT NULL)'
+        .' DEFAULT CHARSET=cp1251');
+    $side->exec('CREATE TABLE `'.PROBEPREF.'_help` (id INT UNSIGNED NOT NULL PRIMARY KEY, pid INT UNSIGNED NOT NULL, title VARCHAR(100) NOT NULL, time DATETIME,'
+        .' status TINYINT NOT NULL) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci');
+    foreach (['faq', 'files', 'pages'] as $name) {
+        $side->exec('CREATE TABLE `'.PROBEPREF.'_'.$name.'` (id INT UNSIGNED NOT NULL PRIMARY KEY, title VARCHAR(100) NOT NULL, time DATETIME, status TINYINT NOT NULL)'
+            .' DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci');
+    }
+    foreach (['order', 'whois'] as $name) $side->exec('CREATE TABLE `'.PROBEPREF.'_'.$name.'` (id INT UNSIGNED NOT NULL PRIMARY KEY)');
+    $side->exec('INSERT INTO `'.PROBEPREF.'_order` (id) VALUES (1)');
+    $side->exec('INSERT INTO `'.PROBEPREF.'_node_types` (id, name, title, intro) VALUES (1, \'news\', \'News\', \'\'), (2, \'help\', \'Help\', \'\'),'
+        .' (3, \'files\', \'Files\', \'\')');
+    $side->exec('INSERT INTO `'.PROBEPREF.'_nodes` (id, tid, title, intro, body, field, status, created)'
+        .' VALUES (1, 1, \'Опубликовано\', \'\', \'\', \'\', 2, \'2014-07-01 10:00:00\'), (2, 1, \'Ждёт\', \'\', \'\', \'\', 1, \'2014-07-05 14:31:45\'),'
+        .' (3, 2, \'Q\', \'\', \'\', \'\', 2, \'2015-01-01 10:00:00\'), (4, 3, \'Another\', \'\', \'\', \'\', 1, \'2016-01-01 10:00:00\')');
+    $side->exec('INSERT INTO `'.PROBEPREF.'_node_legacy` (modul, oid, nid) VALUES (\'news\', 10, 1), (\'help\', 30, 3)');
+    $side->exec('INSERT INTO `'.PROBEPREF.'_news` (id, title, time, status) VALUES (10, \'Опубликовано\', \'2014-07-01 10:00:00\', 1),'
+        .' (11, \'Ждёт \', \'2014-07-05 14:31:45\', 0)');
+    $side->exec('INSERT INTO `'.PROBEPREF.'_help` (id, pid, title, time, status) VALUES (30, 0, \'Q\', \'2015-01-01 10:00:00\', 0), (31, 30, \'A\', \'2015-01-02 10:00:00\', 1)');
+    $side->exec('INSERT INTO `'.PROBEPREF.'_faq` (id, title, time, status) VALUES (20, \'F\', \'2015-01-01 10:00:00\', 1)');
+    $side->exec('INSERT INTO `'.PROBEPREF.'_files` (id, title, time, status) VALUES (40, \'A file\', \'2016-01-01 10:00:00\', 0)');
+}
+
+# The tables of the catch-up site the drop leaves, without the prefix
+function getTableLeft(): array {
+    $list = getProbeSide()->query('SHOW TABLES')->fetchAll(PDO::FETCH_COLUMN);
+    $list = array_map(fn(string $v): string => substr($v, strlen(PROBEPREF) + 1), $list);
+    $out = array_values(array_intersect($list, ['news', 'help', 'faq', 'files', 'pages', 'order', 'whois']));
+    sort($out);
+    return $out;
+}
+
+# The drop of the first stage on the catch-up site, its repeat, and a run after the rows that kept two tables are in Node
+function getTableClean(): array {
+    setTableSite();
+    $out = ['first' => ['rows' => setUpdateTables($GLOBALS['pdb'], PROBEPREF), 'left' => getTableLeft()]];
+    $out['again'] = ['rows' => setUpdateTables($GLOBALS['pdb'], PROBEPREF), 'left' => getTableLeft()];
+    getProbeSide()->exec('INSERT INTO `'.PROBEPREF.'_node_legacy` (modul, oid, nid) VALUES (\'faq\', 20, 1)');
+    getProbeSide()->exec('UPDATE `'.PROBEPREF.'_nodes` SET title = \'A file\' WHERE id = 4');
+    $out['last'] = ['rows' => setUpdateTables($GLOBALS['pdb'], PROBEPREF), 'left' => getTableLeft()];
+    return $out;
+}
+
 $report = ['error' => '', 'clean' => false, 'runs' => []];
 
 try {
     $units = ['setUpdateFile', 'getUpdateSource', 'getUpdateCred', 'getUpdateRow', 'checkUpdateFail', 'checkUpdateBase', 'setUpdateBackup', 'setUpdatePoints',
         'setUpdateRatings', 'getUpdateRules', 'getUpdateValue', 'setUpdateFields', 'getUpdateLangs', 'setUpdateConfig', 'setUpdateMails', 'setUpdateModules', 'deleteUpdateTypes'];
     foreach ($units as $name) addProbeCode($name);
+    foreach (['getMigrateMap', 'getMigrateAttach', 'getMigrateForeign', 'setUpdateArchive', 'setUpdateMerge', 'setUpdateTables'] as $name) {
+        addProbeCode($name, 'public/update.php', ["BASE_DIR.'/core/" => "PROBEROOT.'/core/"]);
+    }
     if (($argv[2] ?? '') === 'setup') {
         require_once PROBEROOT.'/lang/en.php';
         require_once PROBEROOT.'/admin/lang/en.php';
@@ -875,6 +1049,7 @@ try {
         'fields' => ['clean' => getFieldClean(), 'resume' => getFieldResume(), 'stop' => getFieldStop()],
         'config' => ['clean' => getConfClean()],
         'mails' => ['clean' => getMailClean()],
+        'archive' => ['clean' => getArchClean(), 'merge' => getMergeClean(), 'tables' => getTableClean()],
         'setup' => ['clean' => getSetupClean()],
         default => ['clean' => getProbeClean(), 'resume' => getProbeResume(), 'stop' => getProbeStop(), 'flight' => getProbeFlight()],
     };

@@ -13,6 +13,7 @@ final class UpdateSiteTest extends TestCase
     private static array $probe = [];
 
     # The fixture tests/Fixtures/update62 holds the CREATE TABLE statements of all 33 tables a real 6.2 site dumped, a small invented seed and the 6.2 configuration files
+    # The 6.2 tables of jokes and media, which that site lacked, join the fixture in the shape of the 6.2 installer
     # The probe tests/Support/install_probe.php in its update mode loads it into a disposable MariaDB database and serves a copy of the release around it
     # Over real HTTP update.php opens without a login, its run is refused by the preflight, stopped by a broken schema file, then runs three times
     # The result is compared with a clean installation, two guests vote in one poll, the panel and Node are walked, and a last run follows a deleted material
@@ -88,6 +89,7 @@ final class UpdateSiteTest extends TestCase
 
     # The schema file runs on the tables of a real 6.2 site without a failed statement on the first run, every unit finishes, and the repeats change nothing
     # The attachment unit turns the forum address of a file the folder holds and leaves a missing one in the post and in the message
+    # The tables of the modules gone for good and the empty source tables of Node leave on the first run; a source table with rows waits for the second stage
     #[Test]
     public function aRealSiteFinishesOnTheFirstRun(): void
     {
@@ -102,6 +104,7 @@ final class UpdateSiteTest extends TestCase
             $this->assertSame(['targets' => 4, 'votes' => 0], $run[$name]['rating'], $name);
             $this->assertSame(['old' => 300, 'next' => 301], $run[$name]['ids'], $name);
             $this->assertSame(0, $run[$name]['dupes'], $name.': a repeat removed a vote');
+            $this->assertSame(['files', 'help', 'jokes', 'media', 'news'], $run[$name]['tables'], $name.': the tables left after the first stage');
         }
         $this->assertSame(['account', 'forum'], array_keys($run['first']['ratings']));
         $this->assertTrue($run['third']['same']);
@@ -160,35 +163,50 @@ final class UpdateSiteTest extends TestCase
     }
 
     # The second stage carries the 6.2 tables of the removed modules into Node: the schema file gave them the 6.3 names the migration reads
-    # The news and the file of the fixture and the rows the probe adds before the stage - three news and a help request - become materials of their types
+    # The news, the file, the joke and the film of the fixture and the rows the probe adds - three news and a help request - become materials of their types
+    # The film keeps its own columns in the extra fields of the media profile and its two web links as downloads, the ed2k link stays behind with a note
+    # The joke and the film keep their ratings, and every carried table is dropped after its data step; a table with a row its manifest lacks stays with a note
     #[Test]
     public function theSecondStageCarriesTheModulesOfASite(): void
     {
         $run = $this->getRun()['migrate'];
         $this->assertSame([200, true, 200], array_slice($run, 0, 3), 'The page of the second stage offers no run to the main administrator');
-        $want = [['files', 'A file', 'Description of the file', ''], ['help', 'A request', '', 'Help'], ['news', 'First news', 'Intro of the first news', ''],
+        $want = [['files', 'A file', 'Description of the file', ''], ['help', 'A request', '', 'Help'], ['jokes', 'A joke', '', 'Body of the joke'],
+            ['media', 'A film', 'Intro of the film', ''], ['news', 'First news', 'Intro of the first news', ''],
             ['news', 'General', 'Intro of General', ''], ['news', 'Later', 'Intro of Later', ''],
             ['news', 'Second news', 'Intro of the second news', 'Body of the second news'], ['news', 'Waiting', 'Intro of Waiting', '']];
         $this->assertSame($want, $run[3], 'The migration did not carry the rows of a clean 6.2 site');
+        $extra = $this->getRun()['extra'];
+        $film = ['cast' => 'Two actors', 'creator' => 'A studio', 'director' => 'A director', 'filesize' => '700 MB', 'format' => 'DVD', 'language' => 'English',
+            'notes' => 'A note', 'quality' => 'HD', 'release' => '2000', 'runtime' => '90 min', 'subtitle' => 'The subtitle', 'year' => 1999];
+        $this->assertSame(['jokes' => [], 'media' => $film], array_map(fn(string $v): array => json_decode($v, true), $extra['fields']));
+        $want = [['video', 'download', 'https://site62.test/film.mp4', 3, 0], ['file', 'download', 'https://site62.test/trailer.zip', 0, 1]];
+        $this->assertSame($want, array_map(fn(array $v): array => [$v[0], $v[1], $v[2], (int)$v[3], (int)$v[4]], $extra['assets']));
+        $this->assertTrue($extra['notes'], 'The page of the second stage names no refused ed2k link of the film');
+        $this->assertSame([['node.jokes', 9, 2], ['node.media', 8, 2]], array_map(fn(array $v): array => [$v[0], (int)$v[1], (int)$v[2]], $extra['ratings']));
+        $this->assertSame([], $extra['tables'], 'A source table is left after the second stage carried it');
+        $this->assertSame([200, 1, ['jokes']], $this->getRun()['stale'], 'A table with a row the manifest never carried was dropped or not named once');
     }
 
     # The second stage gives every entity its first address in the fixed order of the migration, hubs before pages and each group by ascending id
     # The category General takes the clean name before the news of the same title, and the forum section A topic before the topic
     # A news waiting for approval, one dated in the future and the request of the private type help get none; a repeat adds nothing
+    # The first stage dropped the empty tables of pages, faq, links and content, so the migration made no type faq and links
     #[Test]
     public function theSecondStageFillsTheRegistry(): void
     {
         [$rows, $code, $same] = $this->getRun()['routes'];
-        $want = [['type', 'docs', 'docs'], ['type', 'content', 'content'], ['type', 'news', 'news'], ['type', 'faq', 'faq'], ['type', 'help', 'help'],
-            ['type', 'links', 'links'], ['type', 'files', 'files'], ['cat', 'news/general', 'General'], ['node', 'news/first-news', 'First news'],
-            ['node', 'news/second-news', 'Second news'], ['node', 'news/general-2', 'General'], ['node', 'files/a-file', 'A file'], ['cat', 'forum/a-topic', 'A topic'],
+        $want = [['type', 'docs', 'docs'], ['type', 'content', 'content'], ['type', 'news', 'news'], ['type', 'help', 'help'], ['type', 'files', 'files'],
+            ['type', 'jokes', 'jokes'], ['type', 'media', 'media'], ['cat', 'news/general', 'General'], ['node', 'news/first-news', 'First news'],
+            ['node', 'news/second-news', 'Second news'], ['node', 'news/general-2', 'General'], ['node', 'files/a-file', 'A file'], ['node', 'jokes/a-joke', 'A joke'],
+            ['node', 'media/a-film', 'A film'], ['cat', 'forum/a-topic', 'A topic'],
             ['topic', 'forum/a-topic-2', 'A topic'], ['user', 'users/alpha', 'alpha'], ['user', 'users/beta', 'beta'], ['user', 'users/gamma', 'gamma'],
             ['poll', 'voting/which-one', 'Which one']];
         $this->assertSame($want, array_map(fn(array $v): array => [$v[0], $v[1], $v[3]], $rows), 'The registry after the migration is not the one of the fixed order');
         $this->assertSame(array_fill(0, count($want), 1), array_map('intval', array_column($rows, 2)), 'A path of the migration is not current');
         $this->assertSame([200, true], [$code, $same], 'A repeat of the second stage changed the registry');
         $runs = substr_count(implode("\n", $this->getRun()['logs']['error_site']), 'the migration of the old modules ran');
-        $this->assertSame(2, $runs, 'The second stage did not run twice, so the repeat proves nothing');
+        $this->assertSame(3, $runs, 'The second stage did not run twice and once more over a stale table, so the repeat proves nothing');
     }
 
     # The panel stays myadm.php, now the shipped loader in place of the one of 6.2
@@ -251,8 +269,10 @@ final class UpdateSiteTest extends TestCase
             $this->assertSame($marks, $this->getMarks($run[$name]['marks']), $name);
             $this->assertSame(['points' => 'verified', 'ratings' => 'verified', 'fields' => 'verified'], $run[$name]['manifest'], $name);
             $this->assertSame([[4, 35], 0], [$run[$name]['users'], $run[$name]['negative']], $name);
+            $this->assertSame(['files', 'help', 'news'], $run[$name]['tables'], $name.': the tables left after the first stage');
         }
         $this->assertSame([], $run['schema'], 'The update leaves a column, an index, a key or a check of the earlier schema apart from a clean installation');
+        $this->assertSame([], $run['extra']['tables'], 'A source table is left after the second stage carried it');
         $this->assertSame([[], []], [$run['logs']['error_php'], $run['logs']['error_sql']]);
     }
 }

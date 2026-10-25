@@ -4,10 +4,12 @@
 # Website: slaed.net
 
 # A SLAED 6.2 site for the update probe of tests/Support/install_probe.php (mode update, prefix old): the CREATE TABLE statements of all 33 tables
-# exactly as a real 6.2 site dumped them on 2025-11-25, only the prefix renamed and the counters dropped, and a small invented seed below them
+# exactly as a real 6.2 site dumped them on 2025-11-25, only the prefix renamed and the counters dropped, the tables of jokes and media that site lacked
+# in the shape of the 6.2 installer, and a small invented seed below them
 # The seed carries what the 6.3 update has to meet on a real site: a boolean editor and numeric rights of administrators, the module table,
 # balances, sections with the highest old id in files, a category that keeps the news type from being created, blocks of removed modules,
-# a cached RSS block, a poll with a guest vote, polls of newsletter, and a whois row with its legacy text and status columns
+# a cached RSS block, a poll with a guest vote, polls of newsletter, a whois row with its legacy text and status columns, a rated joke,
+# and a film with its own columns and three links, one of them ed2k
 
 CREATE TABLE `old_admins` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
@@ -297,6 +299,24 @@ CREATE TABLE `old_help` (
   KEY `status` (`status`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE `old_jokes` (
+  `jokeid` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `uid` int(10) unsigned NOT NULL DEFAULT 0,
+  `name` varchar(25) NOT NULL,
+  `date` datetime DEFAULT NULL,
+  `title` varchar(100) NOT NULL,
+  `cat` int(10) unsigned NOT NULL DEFAULT 0,
+  `joke` text NOT NULL,
+  `rating` varchar(100) NOT NULL DEFAULT '0',
+  `ratingtot` varchar(100) NOT NULL DEFAULT '0',
+  `ip_sender` varchar(45) NOT NULL DEFAULT '',
+  `status` tinyint(1) NOT NULL DEFAULT 0,
+  PRIMARY KEY (`jokeid`),
+  KEY `cat` (`cat`),
+  KEY `uid` (`uid`),
+  KEY `status` (`status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 CREATE TABLE `old_links` (
   `lid` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `cid` int(10) unsigned NOT NULL DEFAULT 0,
@@ -323,6 +343,42 @@ CREATE TABLE `old_links` (
   KEY `uid` (`uid`),
   KEY `status` (`status`),
   KEY `ihome` (`ihome`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `old_media` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `cid` int(10) unsigned NOT NULL DEFAULT 0,
+  `uid` int(10) unsigned NOT NULL DEFAULT 0,
+  `name` varchar(25) NOT NULL,
+  `title` varchar(100) NOT NULL,
+  `subtitle` varchar(100) NOT NULL DEFAULT '',
+  `year` smallint(5) unsigned NOT NULL DEFAULT 0,
+  `director` varchar(100) NOT NULL DEFAULT '',
+  `roles` varchar(255) NOT NULL DEFAULT '',
+  `description` text NOT NULL,
+  `createdby` varchar(100) NOT NULL DEFAULT '',
+  `duration` varchar(100) NOT NULL DEFAULT '',
+  `lang` varchar(100) NOT NULL DEFAULT '',
+  `note` text NOT NULL,
+  `format` varchar(100) NOT NULL DEFAULT '',
+  `quality` varchar(100) NOT NULL DEFAULT '',
+  `size` varchar(100) NOT NULL DEFAULT '',
+  `released` varchar(100) NOT NULL DEFAULT '',
+  `links` text NOT NULL,
+  `date` datetime DEFAULT NULL,
+  `ihome` tinyint(1) NOT NULL DEFAULT 0,
+  `acomm` tinyint(1) NOT NULL DEFAULT 0,
+  `votes` int(10) unsigned NOT NULL DEFAULT 0,
+  `totalvotes` int(10) unsigned NOT NULL DEFAULT 0,
+  `totalcom` int(10) unsigned NOT NULL DEFAULT 0,
+  `hits` int(10) unsigned NOT NULL DEFAULT 0,
+  `ip_sender` varchar(45) NOT NULL DEFAULT '',
+  `status` tinyint(1) NOT NULL DEFAULT 0,
+  PRIMARY KEY (`id`),
+  KEY `cid` (`cid`),
+  KEY `title` (`title`),
+  KEY `uid` (`uid`),
+  KEY `status` (`status`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `old_message` (
@@ -677,6 +733,14 @@ INSERT INTO `old_news` (`sid`, `catid`, `uid`, `name`, `title`, `time`, `hometex
 
 INSERT INTO `old_files` (`lid`, `cid`, `uid`, `name`, `title`, `description`, `bodytext`, `url`, `date`, `status`) VALUES
 (300, 0, 1, 'alpha', 'A file', 'Description of the file', '', 'https://site62.test/file.zip', '2019-05-01 10:00:00', 1);
+
+INSERT INTO `old_jokes` (`jokeid`, `uid`, `name`, `date`, `title`, `cat`, `joke`, `rating`, `ratingtot`, `ip_sender`, `status`) VALUES
+(1, 1, 'alpha', '2021-02-01 10:00:00', 'A joke', 0, 'Body of the joke', '9', '2', '', 1);
+
+INSERT INTO `old_media` (`id`, `cid`, `uid`, `name`, `title`, `subtitle`, `year`, `director`, `roles`, `description`, `createdby`, `duration`, `lang`, `note`,
+  `format`, `quality`, `size`, `released`, `links`, `date`, `ihome`, `votes`, `totalvotes`, `hits`, `status`) VALUES
+(5, 0, 1, 'alpha', 'A film', 'The subtitle', 1999, 'A director', 'Two actors', 'Intro of the film', 'A studio', '90 min', 'English', 'A note',
+  'DVD', 'HD', '700 MB', '2000', 'https://site62.test/film.mp4,ed2k://|file|film.avi|700|ABC|/,https://site62.test/trailer.zip', '2018-01-01 10:00:00', 1, 2, 8, 3, 1);
 
 INSERT INTO `old_forum` (`id`, `pid`, `catid`, `uid`, `name`, `title`, `time`, `hometext`, `field`, `l_uid`, `l_name`, `l_time`, `status`) VALUES
 (1, 0, 0, 1, 'alpha', 'A topic', '2024-03-01 10:00:00', '[img]uploads/forum/slaed_cms_2026-07-13_22-01-38.png[/img] [img]uploads/forum/gone.png[/img]', '', 1, 'alpha', '2024-03-01 10:00:00', 1);

@@ -975,6 +975,30 @@ CREATE TABLE IF NOT EXISTS `{prefix}_rating_votes` (
   CONSTRAINT `{prefix}_chk_rating_votes_value` CHECK (`value` BETWEEN 1 AND 5)
 ) ENGINE={engine} DEFAULT CHARSET={charset} COLLATE={collate};
 
+# A build of early October created the three tables with timers for moments: each passes a text column, takes its moment and returns to DATETIME
+# A timer 0 is no moment: a creation takes the time of the run, an annulment none; a second run finds DATETIME and changes nothing
+CALL modcol('{prefix}_rating_actors', 'last', 'BIGINT UNSIGNED NOT NULL DEFAULT 0');
+CALL runiftype('{prefix}_rating_targets', 'created', 'bigint', 'ALTER TABLE `{prefix}_rating_targets` MODIFY `created` VARCHAR(20) NULL DEFAULT NULL');
+CALL runiftype('{prefix}_rating_targets', 'created', 'varchar', 'UPDATE `{prefix}_rating_targets` SET `created` = CASE
+    WHEN `created` REGEXP \'^[1-9][0-9]{0,10}$\' THEN DATE_FORMAT(FROM_UNIXTIME(`created`), \'%Y-%m-%d %H:%i:%s\')
+    WHEN `created` REGEXP \'^[0-9]{4}-\' THEN `created`
+    ELSE DATE_FORMAT(NOW(), \'%Y-%m-%d %H:%i:%s\')
+    END');
+CALL modcol('{prefix}_rating_targets', 'created', 'DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP');
+CALL runiftype('{prefix}_rating_votes', 'created', 'bigint', 'ALTER TABLE `{prefix}_rating_votes` MODIFY `created` VARCHAR(20) NULL DEFAULT NULL');
+CALL runiftype('{prefix}_rating_votes', 'created', 'varchar', 'UPDATE `{prefix}_rating_votes` SET `created` = CASE
+    WHEN `created` REGEXP \'^[1-9][0-9]{0,10}$\' THEN DATE_FORMAT(FROM_UNIXTIME(`created`), \'%Y-%m-%d %H:%i:%s\')
+    WHEN `created` REGEXP \'^[0-9]{4}-\' THEN `created`
+    ELSE DATE_FORMAT(NOW(), \'%Y-%m-%d %H:%i:%s\')
+    END');
+CALL modcol('{prefix}_rating_votes', 'created', 'DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP');
+CALL runiftype('{prefix}_rating_votes', 'annulled', 'bigint', 'ALTER TABLE `{prefix}_rating_votes` MODIFY `annulled` VARCHAR(20) NULL DEFAULT NULL');
+CALL runiftype('{prefix}_rating_votes', 'annulled', 'varchar', 'UPDATE `{prefix}_rating_votes` SET `annulled` = CASE
+    WHEN `annulled` REGEXP \'^[1-9][0-9]{0,10}$\' THEN DATE_FORMAT(FROM_UNIXTIME(`annulled`), \'%Y-%m-%d %H:%i:%s\')
+    WHEN `annulled` REGEXP \'^[0-9]{4}-\' THEN `annulled`
+    END');
+CALL modcol('{prefix}_rating_votes', 'annulled', 'DATETIME DEFAULT NULL');
+
 # =============================================================================
 # Batch K — _referer
 # =============================================================================
@@ -1198,7 +1222,7 @@ CALL rencol('{prefix}_voting',       'questions',  'body');
 
 # =============================================================================
 # Batch X: the source tables of Node
-#   The migration of update.php reads news, pages, faq, help, links, files and content in the 6.3 shape
+#   The migration of update.php reads news, pages, faq, help, links, files, content, jokes and media in the 6.3 shape
 #   A clean 6.2 site still carries the 6.2 names; a table already in the 6.3 shape is left as it is
 # =============================================================================
 
@@ -1243,6 +1267,20 @@ CALL rencol('{prefix}_files',    'totalvotes',    'tvotes');
 CALL rencol('{prefix}_files',    'totalcomments', 'comments');
 
 CALL rencol('{prefix}_content',  'text',          'body');
+
+CALL rencol('{prefix}_jokes',    'jokeid',        'id');
+CALL rencol('{prefix}_jokes',    'date',          'time');
+CALL rencol('{prefix}_jokes',    'cat',           'cid');
+CALL rencol('{prefix}_jokes',    'joke',          'body');
+CALL rencol('{prefix}_jokes',    'ratingtot',     'ratetot');
+CALL rencol('{prefix}_jokes',    'ip_sender',     'ip');
+
+CALL rencol('{prefix}_media',    'description',   'intro');
+CALL rencol('{prefix}_media',    'createdby',     'author');
+CALL rencol('{prefix}_media',    'date',          'time');
+CALL rencol('{prefix}_media',    'totalvotes',    'tvotes');
+CALL rencol('{prefix}_media',    'totalcom',      'comments');
+CALL rencol('{prefix}_media',    'ip_sender',     'ip');
 
 # =============================================================================
 # Final type alignment to storage/update/sql/table.sql
@@ -1570,6 +1608,22 @@ CALL addidx('{prefix}_mail', 'kind_ref_status',        '`kind`, `ref`, `status`'
 CALL addidx('{prefix}_mail', 'lockid',                 '`lockid`',                                0);
 CALL addidx('{prefix}_mail', 'locked',                 '`locked`',                                0);
 
+# A build of early October kept both timers of the queue as DATETIME: each passes a text column, takes its timer and returns to BIGINT; no moment is a timer 0
+CALL runiftype('{prefix}_mail', 'ntime', 'datetime', 'ALTER TABLE `{prefix}_mail` MODIFY `ntime` VARCHAR(20) NULL DEFAULT NULL');
+CALL runiftype('{prefix}_mail', 'ntime', 'varchar', 'UPDATE `{prefix}_mail` SET `ntime` = CASE
+    WHEN `ntime` REGEXP \'^[0-9]{4}-\' THEN UNIX_TIMESTAMP(CAST(`ntime` AS DATETIME))
+    WHEN `ntime` REGEXP \'^[0-9]{1,19}$\' THEN `ntime`
+    ELSE \'0\'
+    END');
+CALL modcol('{prefix}_mail', 'ntime', 'BIGINT UNSIGNED NOT NULL DEFAULT 0');
+CALL runiftype('{prefix}_mail', 'locked', 'datetime', 'ALTER TABLE `{prefix}_mail` MODIFY `locked` VARCHAR(20) NULL DEFAULT NULL');
+CALL runiftype('{prefix}_mail', 'locked', 'varchar', 'UPDATE `{prefix}_mail` SET `locked` = CASE
+    WHEN `locked` REGEXP \'^[0-9]{4}-\' THEN UNIX_TIMESTAMP(CAST(`locked` AS DATETIME))
+    WHEN `locked` REGEXP \'^[0-9]{1,19}$\' THEN `locked`
+    ELSE \'0\'
+    END');
+CALL modcol('{prefix}_mail', 'locked', 'BIGINT UNSIGNED NOT NULL DEFAULT 0');
+
 # =============================================================================
 # Batch Y — _comment, the reply tree, the soft delete and the write keys
 # =============================================================================
@@ -1794,6 +1848,15 @@ CREATE TABLE IF NOT EXISTS `{prefix}_node_publish` (
   CONSTRAINT `{prefix}_fk_node_publish_node` FOREIGN KEY (`nid`) REFERENCES `{prefix}_nodes` (`id`) ON UPDATE RESTRICT ON DELETE CASCADE
 ) ENGINE={engine} DEFAULT CHARSET={charset} COLLATE={collate};
 
+# A build of early October kept the due moment as DATETIME: it passes a text column, takes its timer and returns to BIGINT
+CALL runiftype('{prefix}_node_publish', 'due', 'datetime', 'ALTER TABLE `{prefix}_node_publish` MODIFY `due` VARCHAR(20) NULL DEFAULT NULL');
+CALL runiftype('{prefix}_node_publish', 'due', 'varchar', 'UPDATE `{prefix}_node_publish` SET `due` = CASE
+    WHEN `due` REGEXP \'^[0-9]{4}-\' THEN UNIX_TIMESTAMP(CAST(`due` AS DATETIME))
+    WHEN `due` REGEXP \'^[0-9]{1,19}$\' THEN `due`
+    ELSE \'0\'
+    END');
+CALL modcol('{prefix}_node_publish', 'due', 'BIGINT UNSIGNED NOT NULL DEFAULT 0');
+
 CREATE TABLE IF NOT EXISTS `{prefix}_node_relations` (
   `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
   `nid` INT UNSIGNED NOT NULL,
@@ -1906,6 +1969,22 @@ CREATE TABLE IF NOT EXISTS `{prefix}_user_oauth` (
   UNIQUE KEY `provider_puid` (`provider`, `puid`),
   UNIQUE KEY `uid_provider` (`uid`, `provider`)
 ) ENGINE={engine} DEFAULT CHARSET={charset} COLLATE={collate};
+
+# A build of early October kept both moments of a link as timers: each passes a text column, takes its moment and returns to DATETIME
+# A timer 0 is no moment: the link takes the time of the run, the last login none; a second run finds DATETIME and changes nothing
+CALL runiftype('{prefix}_user_oauth', 'linked', 'bigint', 'ALTER TABLE `{prefix}_user_oauth` MODIFY `linked` VARCHAR(20) NULL DEFAULT NULL');
+CALL runiftype('{prefix}_user_oauth', 'linked', 'varchar', 'UPDATE `{prefix}_user_oauth` SET `linked` = CASE
+    WHEN `linked` REGEXP \'^[1-9][0-9]{0,10}$\' THEN DATE_FORMAT(FROM_UNIXTIME(`linked`), \'%Y-%m-%d %H:%i:%s\')
+    WHEN `linked` REGEXP \'^[0-9]{4}-\' THEN `linked`
+    ELSE DATE_FORMAT(NOW(), \'%Y-%m-%d %H:%i:%s\')
+    END');
+CALL modcol('{prefix}_user_oauth', 'linked', 'DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP');
+CALL runiftype('{prefix}_user_oauth', 'lastlog', 'bigint', 'ALTER TABLE `{prefix}_user_oauth` MODIFY `lastlog` VARCHAR(20) NULL DEFAULT NULL');
+CALL runiftype('{prefix}_user_oauth', 'lastlog', 'varchar', 'UPDATE `{prefix}_user_oauth` SET `lastlog` = CASE
+    WHEN `lastlog` REGEXP \'^[1-9][0-9]{0,10}$\' THEN DATE_FORMAT(FROM_UNIXTIME(`lastlog`), \'%Y-%m-%d %H:%i:%s\')
+    WHEN `lastlog` REGEXP \'^[0-9]{4}-\' THEN `lastlog`
+    END');
+CALL modcol('{prefix}_user_oauth', 'lastlog', 'DATETIME DEFAULT NULL');
 
 DROP PROCEDURE IF EXISTS movenet;
 

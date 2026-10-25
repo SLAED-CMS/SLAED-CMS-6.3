@@ -106,7 +106,7 @@ final class UpdatePointsTest extends TestCase
         $run = $this->getRun('flight');
         $this->assertSame('', $run['real'], 'The stand server was refused');
         $code = (string)file_get_contents(dirname(__DIR__, 2).'/public/update.php');
-        $save = strpos($code, 'function setUpdateRun(): array {');
+        $save = strpos($code, 'function setUpdateRun(bool $dry = false): array {');
         $from = strpos($code, '$stop = checkUpdateBase($db, $pref);');
         $this->assertNotFalse($save, 'The update lost its run');
         $this->assertNotFalse($from, 'The run lost its preflight');

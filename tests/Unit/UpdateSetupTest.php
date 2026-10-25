@@ -232,7 +232,7 @@ final class UpdateSetupTest extends TestCase
         $text = 'The schema file does not leave the zero date modes of MySQL 8 before its first ALTER';
         $this->assertLessThan(strpos($sql, 'CREATE PROCEDURE rencol'), strpos($sql, $mode), $text);
         $this->assertStringEndsWith("SET SESSION sql_mode = @SLAED_MODE;\n", $sql, 'The schema file does not give the session its mode back');
-        $save = strpos($code, 'function setUpdateRun(): array {');
+        $save = strpos($code, 'function setUpdateRun(bool $dry = false): array {');
         $conn = strpos($code, 'new Database(', $save);
         $head = substr($code, $save, $conn - $save);
         foreach (['checkUpdateWrite($name)', "is_file(BACKUP_DIR.'/config/marker.json')"] as $one) $this->assertStringContainsString($one, $head);

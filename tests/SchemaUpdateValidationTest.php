@@ -96,7 +96,7 @@ class SchemaUpdateValidationTest extends TestCase
 
     # A named constraint carries the prefix too but is no table, so its name is stripped before the table references are checked
     # A table the upgrade only drops must be absent from the fresh schema, so its name is read out of the reference before the check runs
-    # The deprecated modules table and the seven source tables the Node migration reads are skipped, since they are no longer part of the schema
+    # The deprecated modules table and the nine source tables the Node migration reads are skipped, since they are no longer part of the schema
     public function testUpdateSqlTablesExistInSchema(): void
     {
         $updateFile = self::$basePath.'/storage/update/sql/table_update6_3.sql';
@@ -125,6 +125,8 @@ class SchemaUpdateValidationTest extends TestCase
             'links' => true,
             'files' => true,
             'content' => true,
+            'jokes' => true,
+            'media' => true,
         ];
 
         foreach ($drops[1] as $one) {

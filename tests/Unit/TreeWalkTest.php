@@ -32,7 +32,7 @@ final class TreeWalkTest extends TestCase
         if (is_dir(self::$path)) rmdir(self::$path);
     }
 
-    # The walk of the whole tree, of templates/ and the file list of the UI audit all pass the scratch theme and storage by
+    # The walk of the whole tree, of templates/ and the file list of the UI audit all pass the scratch theme, storage and uploads by
     #[Test]
     public function aScratchThemeAndStorageAreNeverWalked(): void
     {
@@ -43,6 +43,7 @@ final class TreeWalkTest extends TestCase
         $this->assertContains(self::$root.'/public/templates/lite/assets/css/base.css', $seen, 'The walk lost a real theme');
         $this->assertSame([], preg_grep('#/templates/scratch-[0-9a-f]{8}/#', $seen), 'The walk entered a scratch theme');
         $this->assertSame([], preg_grep('#^'.preg_quote(self::$root, '#').'/storage/#', $seen), 'The walk entered storage');
+        $this->assertSame([], preg_grep('#^'.preg_quote(self::$root, '#').'/uploads/#', $seen), 'The walk entered uploads');
         $this->assertSame([], preg_grep('#^public/templates/scratch-#', getRepoFiles(['html'], ['public/templates'])), 'The UI audit lists a scratch theme');
     }
 
