@@ -9,10 +9,7 @@ if (!defined('FUNC_FILE')) die('Illegal file access');
 # Output buffering on — must precede all bootstrap operations
 if (ob_get_level() === 0) ob_start();
 
-# Retired addresses: a path after another script or a bare script name goes 301 to the address built from the script name, any other path finds no page
-# The cut of index.php, before the database: a path of up to five ASCII words is kept lowercased in $urlroute for public/index.php, which resolves it
-# A path of index.php that names only the script is its start page, and setSeoMove() answers it in the one 301 of the page with every other reason
-# A path under api/ is no page: the router of the API reads it, so the cut neither keeps it nor marks it as not found
+# The cut before the database: up to five ASCII words go lowercased to $urlroute for public/index.php, a retired address 301s, any other path is 404
 $urlroute = ['seg' => []];
 if (PHP_SAPI !== 'cli' && !defined('API_FILE')) {
     [$rpath, $rquery] = array_pad(explode('?', (string)($_SERVER['REQUEST_URI'] ?? ''), 2), 2, '');
@@ -44,8 +41,7 @@ if (PHP_SAPI !== 'cli' && !defined('API_FILE')) {
 # Ensure configuration exists when this file is analyzed or included directly
 if (!isset($conf) || !is_array($conf)) $conf = getConfig();
 
-# SEO: optional canonical host/scheme enforcement (opt-in per install; portable, proxy-aware via X-Forwarded-Proto); the host of homeurl keeps its port
-# A page of index.php is left to setSeoMove(), so the wrong host and an old address of a page are one hop; the endpoints go=, the panel and the scripts are answered here
+# Optional canonical host and scheme, proxy-aware; a page of index.php is left to setSeoMove(), so a wrong host and an old address cost one hop
 $rpage = basename(str_replace('\\', '/', (string)($_SERVER['SCRIPT_NAME'] ?? ''))) === 'index.php' && getVar('req', 'go', 'var') === '';
 if (!$rpage && ($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET' && (!empty($conf['forcessl']) || !empty($conf['forcehost']))) {
     $rhost = strtolower((string)($_SERVER['HTTP_HOST'] ?? ''));
@@ -98,8 +94,7 @@ if (defined('API_FILE')) ini_set('display_errors', '0');
 # Session start; the API is session-less, every request of it answers for itself
 if (session_status() === PHP_SESSION_NONE && !defined('API_FILE')) session_start();
 
-# Flood Protection
-# The report names the fields and does not quote them: Logger already stores the request data of the same entry with every secret masked, and a dump here would restore the password
+# Flood protection; the report names the fields and never quotes them, as Logger stores the request data masked and a dump would restore the password
 if (!defined('ADMIN_FILE') && !defined('API_FILE') && $conf['security']['flood']) {
     $ctime = time();
     $ftime = $ctime - intval($conf['security']['flood_t']);
@@ -171,8 +166,7 @@ if ($bcookie == 'block') {
     }
 }
 
-# Render the branded error page for whitelisted ?error= codes (web server routes error_page/ErrorDocument to it); the whitelist blocks forged or invalid statuses
-# The API has no error page, so the parameter means nothing to it
+# The branded error page for the whitelisted ?error= codes the web server routes to it; the API has no error page, so the parameter means nothing there
 $ecode = (isset($_GET['error']) && !defined('API_FILE')) ? (int)$_GET['error'] : 0;
 if ($ecode && in_array($ecode, [400, 401, 402, 403, 404, 500, 502, 503, 504], true)) setError($ecode);
 
@@ -663,8 +657,7 @@ function getHost(): string {
     return getenv('HTTP_HOST') ?: getenv('SERVER_NAME') ?: '';
 }
 
-# Return a purpose-scoped key derived from the site master secret
-# The master is a 256-bit CSPRNG value, generated and persisted on first use (lazy bootstrap)
+# A purpose-scoped key from the master secret; an empty master, as config/security.php ships it, is generated and written there on first use
 function getSecret(string $purpose): string {
     global $conf;
     $master = (string)($conf['security']['secret'] ?? '');
@@ -678,18 +671,14 @@ function getSecret(string $purpose): string {
     return hash_hmac('sha256', $purpose, $master);
 }
 
-# Returns a session-bound HMAC-SHA256 CSRF token scoped to the given context
-# Token is valid for the lifetime of the PHP session; invalidated when the master secret changes
+# The CSRF token of one scope, an HMAC over the session id; it lives as long as the session and dies with a new master secret
 function getSiteToken(string $scope = 'ajax'): string {
     $sid  = session_id();
     $data = $sid !== '' ? $scope.'|'.$sid : $scope;
     return hash_hmac('sha256', $data, getSecret('csrf'));
 }
 
-# Return CSRF token from request context:
-# 1) Header `X-CSRF-Token` (HTMX/global)
-# 2) Header `X-XSRF-Token`
-# 3) `token` param (POST/GET/REQUEST)
+# The CSRF token of the request: the X-CSRF-Token header global-func.js sends, then X-XSRF-Token, then the token parameter
 function getRequestToken(): string {
     $tok = '';
 
@@ -718,11 +707,7 @@ function getRequestToken(): string {
     return $tok;
 }
 
-# Validates CSRF token for a scope using timing-safe comparison
-# Smart behavior:
-# - if `$tok` is empty, auto-read token from request (header/param)
-# - accepts exact scope token
-# - for scoped checks, accepts global `ajax` token as fallback
+# Check a token against its scope in constant time, read from the request when none is passed; a scoped check accepts the ajax token too
 function checkSiteToken(string $tok = '', string $scope = 'ajax'): bool {
     if ($tok === '') $tok = getRequestToken();
     if ($tok === '') return false;
@@ -731,9 +716,7 @@ function checkSiteToken(string $tok = '', string $scope = 'ajax'): bool {
     return false;
 }
 
-# Authorizes one state-changing request of either surface: the method must be POST and the token must come from the body, scoped to the handler that renders the form
-# A credential in a query string ends up in browser history, server logs and the Referer header
-# A link carrying one is also followed by prefetchers, scanners and link previews without anyone clicking it
+# Authorize one state-changing request by POST and a body token of the form scope, as a query token leaks into history, logs and Referer and is prefetched
 function checkAdminPost(string $scope): bool {
     if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') return false;
     if (!checkSiteToken(getVar('post', 'token', 'text'), $scope)) return false;
@@ -782,8 +765,7 @@ function getReferer(): string {
     return '';
 }
 
-# Determine active locale from the cookie, load main language file, set language cookie
-# This runs before the rest of the bootstrap exists, so it only reads: the switch itself is setLangChoice(), which the op=newlang handlers call once everything is up
+# Pick the locale from the cookie and load its language file; it runs before the bootstrap is up, so it never takes a switch, which is setLangChoice()
 function setLang(): void {
     global $locale, $conf;
     $mlang = $conf['language'] ?? 'en';
@@ -801,8 +783,7 @@ function setLang(): void {
     require_once is_readable($file) ? $file : BASE_DIR.'/lang/'.$mlang.'.php';
 }
 
-# Store the locale a switch asked for; the answer travels in a POST body with a token of its own scope, because a link that changes it is followed by prefetchers and scanners
-# The caller redirects afterwards, so the cookie written here is read by setLang() on the very next request
+# Store the locale a switch posted under its own token scope; the caller redirects, so setLang() reads the cookie on the next request
 function setLangChoice(): void {
     global $conf;
     if (((int)($conf['multilingual'] ?? 0)) !== 1 || !checkAdminPost('newlang')) return;
@@ -845,9 +826,7 @@ function getLang(string $module = '', bool $admin = false): string {
     return $locale;
 }
 
-# Clean access to POST, GET or Request parameters, read from $_POST and $_GET themselves, so the keys public/index.php resolves from a path count as the query's
-# A trailing '[]' returns the whole array, a trailing '[n]' or '[name]' returns one element, and leading segments walk nested form fields ('lng[ru][]', 'row[2][id]')
-# Plain keys return a filtered scalar; an array value reached through a scalar key counts as missing so a mismatched form name yields the default instead of a filter error
+# Read one filtered value of $_GET or $_POST, so the keys public/index.php resolves from a path count; 'a[]' returns the array, an array under a plain key the default
 function getVar(string $var, string $key, string $type = '', mixed $default = ''): mixed {
     $arridx = null;
     $allarr = false;
@@ -957,8 +936,7 @@ function filterVar(string|array $var): string|array {
     return preg_match('#[^a-zA-Z0-9_\-]#', $var) ? '' : $var;
 }
 
-# Normalize a submitted web address: force an http(s) prefix, lowercase scheme and host only, run the text filter; a bare protocol returns ''
-# Path and query keep their case, because on most servers they name another resource; the parser link policy is Parser::filterUrl(), not this
+# Normalize a submitted web address to http(s) with scheme and host lowercased, path and query keep their case; the parser link policy is Parser::filterUrl()
 function filterWebUrl(string $url): string {
     $url = preg_match('#https?://#i', $url) ? $url : 'http://'.$url;
     $url = preg_replace_callback('#^https?://[^/?\#]*#i', fn(array $v): string => strtolower($v[0]), $url) ?? '';
@@ -975,9 +953,7 @@ function filterWord(string $var): string {
     return preg_replace('#[^\pL0-9\s%&/|.:;&_+\-=]#siu', '', $var) ?? '';
 }
 
-# Drop the trusted tags [usehtml] and [usephp] from an authored text unless the writer holds the capability; the tag is the capability, so no render mode hands it back
-# $trust says the writer holds it and belongs to the super administrator alone; it defaults to off, so a channel that must never carry the tags (comments, messages) omits it
-# The replace repeats because a single pass over a nested token like [use[usehtml]html] would rebuild the very tag it removed
+# Drop [usehtml] and [usephp] unless the writer is trusted; the pass repeats, as one pass over [use[usehtml]html] rebuilds the tag it removed
 function filterTrustedTags(string $text, bool $trust = false): string {
     if ($text === '' || $trust) return $text;
     while (preg_match('#\[/?use(?:html|php)\]#si', $text)) {
@@ -1051,8 +1027,7 @@ function filterClickable(string $text): string {
     return $ret;
 }
 
-# Normalize submitted content for the active editor format; plain text keeps HTML breaks, Markdown keeps line endings and trusted HTML stays intact
-# The capability check runs before the branch, because an html editor stores its input almost verbatim and would otherwise carry the trusted tags past the write boundary
+# Normalize submitted content for the editor format; the trusted tags go before the branch, as the html editor stores its input almost verbatim
 function filterHtml(string $text, mixed $id = ''): string {
     global $conf;
     if ($text) {

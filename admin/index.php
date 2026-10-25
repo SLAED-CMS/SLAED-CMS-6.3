@@ -19,8 +19,7 @@ function checkModuleConfig(string $name, int $typ): bool {
     return strpos((string)file_get_contents($file), "case 'config'") !== false;
 }
 
-# Build one dashboard module card or one sidebar menu row from a module config entry; the row of the open section is marked current, every fan can pin it
-# The module node has no public route of its own: its types carry their site links on its list of types
+# Build one dashboard card or sidebar row of a module; the open section is marked current, and the module node gets no site link, having no public route
 function getAdminMenu(string $name, array $mod, bool $open = false): string {
     global $panel, $afile, $tpl;
     $url = $afile.'.php?name='.$name;
@@ -168,8 +167,7 @@ function getAdminPanelInfo(): void {
     ]);
 }
 
-# Create an administrator from the form the login page shows while the admins table is empty, the way back into a panel whose last administrator row is gone
-# The form carries a token of its own scope like every state-changing form, and the password is hashed as typed, as the admins module and the login take it
+# Create an administrator while the admins table is empty, the way back into a panel without one; the password is hashed as typed, as admins and the login take it
 function addAdminAccount(): void {
     global $db, $afile, $conf, $stop, $prv;
     if ($db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_admins LIMIT 1')) == 0) {
@@ -229,9 +227,7 @@ function addAdminAccount(): void {
     }
 }
 
-# Authorize one login attempt: captcha, credentials, password rehash, session, and the report either way
-# The password is checked as typed, as the admins module and the first-administrator form hash it; until 2026-10 the login cut it to 25 bytes, trimmed it and escaped it
-# A stored hash that matches only that old form still opens the panel and stays as it is, so no working login is lost; a legacy md5 hash is renewed from the form that matched
+# Authorize one login; a stored hash that matches only the old cut, trimmed and escaped form still opens, so no working login is lost, and an md5 one is renewed
 function checkAdminLogin(): void {
     global $db, $afile, $conf, $stop;
     $block = checkCaptcha('adminlogin');

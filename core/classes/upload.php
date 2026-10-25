@@ -9,7 +9,7 @@ if (!defined('FUNC_FILE')) die('Illegal file access');
 # The project has no runtime autoload and this file is required directly by the service accessor and by the probes, so it brings the file layer it depends on with it
 if (!class_exists('FileManager')) require_once __DIR__.'/filemanager.php';
 
-# Publishes uploaded files below one upload root: extension, type, image and quota validation, collision-free naming and lock-guarded atomic publication (docs/UPLOAD-2026.md)
+# Publishes uploaded files below one upload root: extension, type, image and quota validation, collision-free naming and lock-guarded atomic publication
 class Upload {
     private const TRIES = 5;
     private const PARTAGE = 3600;
@@ -24,9 +24,7 @@ class Upload {
         '0.0.0.0/8', '10.0.0.0/8', '100.64.0.0/10', '127.0.0.0/8', '169.254.0.0/16', '172.16.0.0/12', '192.0.0.0/24', '192.0.2.0/24',
         '192.88.99.0/24', '192.168.0.0/16', '198.18.0.0/15', '198.51.100.0/24', '203.0.113.0/24', '224.0.0.0/4', '240.0.0.0/4',
     ];
-    # IPv6 is judged by an allowlist instead, because 2000::/3 is far from fully delegated: everything IANA still holds is reserved for future allocation and is refused by absence
-    # These are the prefixes of the IANA global unicast registry held by a regional registry, so 2001::/23 (IETF), 2002::/16 (6to4) and every IANA block are simply not here
-    # A newly delegated prefix must be added before this class fetches from it, which is the fail closed half of the bargain and the reason the registry is named above
+    # IPv6 by allowlist, the IANA global unicast prefixes a regional registry holds; a newly delegated prefix is added before a fetch reaches it, so it fails closed
     private const ALLOWSIX = [
         '2001:200::/23', '2001:400::/23', '2001:600::/23', '2001:800::/22', '2001:c00::/23', '2001:e00::/23', '2001:1200::/23', '2001:1400::/22',
         '2001:1800::/23', '2001:1a00::/23', '2001:1c00::/22', '2001:2000::/19', '2001:4000::/23', '2001:4200::/23', '2001:4400::/23', '2001:4600::/23',
@@ -88,8 +86,7 @@ class Upload {
     private ?finfo $reader = null;
     private array $notes = [];
 
-    # Builds the service over the upload root, which comes from getUploadService(), so no adapter repeats it; where the destination locks live is decided by FileManager alone
-    # Production code never subclasses this class and always reaches it through getUploadService()
+    # Build the service over the upload root; production reaches it only through getUploadService() and never subclasses it
     public function __construct(string $root) {
         $this->root = rtrim(str_replace('\\', '/', $root), '/');
     }
@@ -104,9 +101,7 @@ class Upload {
         return self::ALLOWSIX;
     }
 
-    # Publishes one submitted file; everything that can fail without touching the destination is checked before the transfer, so a rejected upload never reaches the upload tree
-    # The source path stays as the SAPI reported it: PHP matches it literally, so a separator normalized to / makes move_uploaded_file() refuse it on Windows
-    # Every result is the same eight-key shape; a failure carries only its machine-readable code and leaves neither a final file nor a partial behind
+    # Publish one submitted file, all that needs no destination checked first; the source path stays as the SAPI spelled it, as move_uploaded_file() matches it literally
     public function addUploadedFile(array $file, array $rule, string $dir, string $base, ?string $owner = null): array {
         $code = $this->checkUploadInput($file, $rule);
         if ($code !== '') return $this->getFailResult($code);
@@ -167,8 +162,7 @@ class Upload {
         return $this->addPublishRun($part, $info, $rule, $rel, $base, $owner);
     }
 
-    # Deletes one file this class published, addressed by the root-relative path a result returned; anything that is not a canonical class-owned name below the root is refused
-    # Which names are canonical is answered by FileManager::checkFileName(), the one place in the project that knows the format, so this class carries no pattern of its own
+    # Delete one file this class published by its root-relative path; FileManager::checkFileName() alone knows the canonical format, so this class keeps no pattern
     public function deleteStoredFile(string $path): bool {
         $path = str_replace('\\', '/', $path);
         $file = basename($path);
@@ -185,8 +179,7 @@ class Upload {
         return $done;
     }
 
-    # The clock, the transfer, the random name segment and the two filesystem primitives sit behind protected seams, so the tests reach every branch without an HTTP request
-    # Returns the wall clock the one-hour partial sweep measures against; seam, because a sweep test cannot wait an hour
+    # The wall clock the one-hour partial sweep measures against; a seam, because a sweep test cannot wait an hour
     protected function getTime(): int {
         return time();
     }
@@ -236,8 +229,7 @@ class Upload {
         return ['ok' => $done !== false, 'peer' => (string)curl_getinfo($curl, CURLINFO_PRIMARY_IP)];
     }
 
-    # Checks the submitted file against the rule: a malformed shape, a PHP upload error, a source that is not an upload and an oversized file all stop here
-    # Nothing about the content is decided here, so a build without a magic database still answers missing, size and transfer before the file is ever read
+    # Check the submitted shape, the PHP upload error, the upload origin and the size, nothing of the content, so a build without a magic database still answers them
     private function checkUploadInput(array $file, array $rule): string {
         if ($this->getRuleTypes($rule) === []) return 'extension';
         $name = $file['name'] ?? '';
@@ -270,9 +262,7 @@ class Upload {
         return array_values(array_filter(array_map('trim', explode(',', strtolower($typ)))));
     }
 
-    # Returns the type of one file, lowercased, judged from its content and never from a name or a header a client sent; a file that cannot be named returns an empty string
-    # The magic database stays the first reader: only when it is absent or cannot name the file does the structural fallback read the format the extension claims
-    # A type the database did name is answered unchanged, so a file whose content contradicts its extension is refused by the caller instead of being asked a second question
+    # The lowercased type of one file judged from its content; the structural fallback reads only what the magic database cannot name, a named type stays unchanged
     private function getFileMime(string $path, string $ext): string {
         $info = $this->getTypeReader();
         $mime = ($info instanceof finfo) ? $info->file($path) : false;
@@ -281,8 +271,7 @@ class Upload {
         return isset(self::TYPES[$ext]) ? $this->getFormatMime($path, $ext) : '';
     }
 
-    # Returns the one type reader of this instance; a build without the extension or without a readable magic database returns null, which is what hands the file to the fallback
-    # Protected rather than private so a test can drive a build without the extension while every other native capability of this machine stays available
+    # The one type reader of this instance, null without fileinfo or its database; protected so a test can drive a build without the extension
     protected function getTypeReader(): ?finfo {
         if ($this->reader instanceof finfo) return $this->reader;
         if (!class_exists('finfo')) {
@@ -305,8 +294,7 @@ class Upload {
         Logger::addFile('error', 'Upload capability missing on this build', ['reason' => $why]);
     }
 
-    # Returns the canonical type of one file whose structure really is the format its extension claims, or an empty string when the structure says otherwise
-    # Every validator reads through one handle with bounded seeks and reads, so a file of any size is judged without ever being held in memory
+    # The canonical type of a file whose structure proves the format its extension claims; every validator reads one handle in bounded reads, never the whole file
     private function getFormatMime(string $path, string $ext): string {
         $hand = fopen($path, 'rb');
         if ($hand === false) return '';
@@ -361,8 +349,7 @@ class Upload {
         return (int)hexdec(hash_final($sum));
     }
 
-    # Proves one image really carries the format its extension claims, which is the type marker the header reader answers for it
-    # The configured bounds and the decode that proves the pixel data follow in getImageBounds(), so this half answers the type question and never opens a second decoder
+    # Prove one image carries the type marker its extension claims; the bounds and the decode follow in getImageBounds(), so no second decoder opens here
     private function checkImageType(string $path, string $ext): bool {
         $info = $this->getImageInfo($path);
         if ($info === []) return false;
@@ -497,9 +484,7 @@ class Upload {
         return $sum;
     }
 
-    # Proves one ISO base media file: the first box is a file type box of an accepted brand, every top level box ends where the next begins, and the wanted track is declared
-    # Which handler is demanded separates the two extensions of this one container: a sound track is an m4a and a picture track is an mp4, which is what their canonical types say
-    # The walk is bounded, so a fragmented file of more boxes than that is proven by the declared track and the boxes the walk did reach rather than refused for its length
+    # Prove one ISO base media file by its ftyp brand, its top level boxes and the wanted track, the handler that tells an m4a from an mp4; the walk is bounded
     private function checkBoxBody(mixed $hand, int $size, string $want): bool {
         $head = $this->getFilePart($hand, 0, 8);
         if ($head === '' || substr($head, 4, 4) !== 'ftyp') return false;
@@ -623,8 +608,7 @@ class Upload {
         return $tail !== '' && str_contains($tail, '%%EOF');
     }
 
-    # Proves one zip archive: the end of the central directory sits where the file ends, the directory holds the announced records, and every record addresses a local header
-    # Where the extension owning this format is available it has to open the archive as well, because it reads the fields this walk deliberately does not
+    # Prove one zip archive by its end record and central directory; where ZipArchive exists it opens the archive as well, as it reads fields this walk does not
     private function checkZipBody(mixed $hand, int $size, string $path): bool {
         $tail = $this->getFilePart($hand, max(0, $size - 65557), min($size, 65557));
         $pos = ($tail === '') ? false : strrpos($tail, "PK\x05\x06");
@@ -642,8 +626,7 @@ class Upload {
         return $this->checkZipParts($hand, $off, $num, $off + $len) && $this->checkZipReader($path, false);
     }
 
-    # Walks the central directory records of one archive and proves each of them addresses a local header of the same archive
-    # Only the first records of a very large directory are walked, because the archive is proven whole by the extension that owns the format wherever it is available
+    # Prove the first central directory records each address a local header; a larger directory is left to ZipArchive where it is available
     private function checkZipParts(mixed $hand, int $from, int $num, int $stop): bool {
         $seen = min($num, self::BLOCKS);
         for ($i = 0; $i < $seen; $i++) {
@@ -738,8 +721,7 @@ class Upload {
         return [];
     }
 
-    # Proves one gzip file member by member: every header with the optional fields it announces, and where the compression library is present every stream against its own trailer
-    # A file of several concatenated members is one gzip file too, so the walk moves on behind a member instead of holding the whole body against the trailer of the last one
+    # Prove one gzip file member by member, each stream against its trailer where zlib inflates, so a concatenation of members is one gzip file too
     private function checkGzipBody(mixed $hand, int $size): bool {
         $from = 0;
         for ($i = 0; $i < self::BLOCKS; $i++) {
@@ -783,8 +765,7 @@ class Upload {
         return -1;
     }
 
-    # Decompresses the member whose stream begins at one offset in bounded chunks and returns the offset behind its trailer, or minus one when stream, checksum or length disagree
-    # Where the stream ends is the library's answer rather than the end of the file, which is what lets the next member of a concatenation be found at all
+    # Inflate one member in bounded chunks and answer the offset behind its trailer, or -1; the stream end is zlib's answer, which is how the next member is found
     private function getGzipStop(mixed $hand, int $size, int $from): int {
         $flow = inflate_init(ZLIB_ENCODING_RAW);
         if ($flow === false || fseek($hand, $from) !== 0) return -1;
@@ -825,8 +806,7 @@ class Upload {
         return $this->getFileSum($hand, 32 + $off, $len) === $sum;
     }
 
-    # Proves one tar archive: every header block holds against its own checksum, its data is padded to the block size, and the chain ends with the two zero blocks the format needs
-    # Where the walk reaches that end it reads both blocks itself, and an archive longer than the walk is answered by the end of the file, which carries them just as well
+    # Prove one tar archive by the header checksums, the block padding and the two closing zero blocks; past the walk the end of the file supplies those blocks
     private function checkTarBody(mixed $hand, int $size): bool {
         if ($size < 1536 || $size % 512 !== 0) return false;
         if (trim($this->getFilePart($hand, $size - 1024, 1024), "\x00") !== '') return false;
@@ -860,8 +840,7 @@ class Upload {
         return (preg_match('#^[0-7]+$#', $data) === 1) ? (int)octdec($data) : -1;
     }
 
-    # Decodes an image and checks it against the configured bounds; a non-image carries no dimensions at all, which is what keeps a successful result honest about what it published
-    # The dimension check runs before the decode on purpose: it is read from the header, so the configured bounds cap what the decoder is ever asked to allocate
+    # Check an image against the configured bounds, then decode it; the bounds are read from the header first, so they cap what the decoder may allocate
     private function getImageBounds(string $path, string $ext, array $rule): array {
         if (!in_array($ext, self::IMAGES, true)) return ['error' => '', 'width' => null, 'height' => null];
         $info = $this->getImageInfo($path);
@@ -875,8 +854,7 @@ class Upload {
         return ['error' => '', 'width' => $info[0], 'height' => $info[1]];
     }
 
-    # Proves the pixel data really decodes, because getimagesize() reads the header only and answers a full size for a file whose image data is truncated or corrupt
-    # Without a decoder the invariant cannot be satisfied, so the answer is unsupported rather than a silent pass; ext-gd is a composer require for that reason
+    # Prove the pixel data decodes, as getimagesize() reads only the header; no decoder answers unsupported, never a pass, which is why composer requires ext-gd
     private function getDecodeError(string $path, int $type): string {
         $call = match ($type) {
             IMAGETYPE_GIF => 'imagecreatefromgif',
@@ -946,8 +924,7 @@ class Upload {
         return ['error' => 'remote', 'path' => ''];
     }
 
-    # Runs one hop pinned to the validated address, with TLS verification kept, proxies and other protocols refused, and a 2xx body streamed into the partial under both byte limits
-    # A host that is already an address carries no pin: nothing has to be resolved, and libcurl refuses a resolve entry whose host part is an IPv6 literal by failing the transfer
+    # Run one hop pinned to the validated address with TLS verification kept; a host that is an address gets no pin, as libcurl fails on an IPv6 literal pin
     private function addRemoteRun(array $norm, string $addr, string $part, int $max): array {
         $hand = fopen($part, 'ab');
         if ($hand === false) return ['error' => 'write', 'code' => 0, 'next' => ''];
@@ -1049,8 +1026,7 @@ class Upload {
         return $site.(($base === '') ? '/' : $base).$next;
     }
 
-    # Resolves one host to a single public address, following a bounded alias chain; one non-public address anywhere in the answer refuses the whole host
-    # A refusal by the address policy is reported apart from a lookup that found nothing, because the two need opposite answers from whoever reads the log
+    # Resolve one host to a single public address over a bounded alias chain; one non-public address anywhere in the answer refuses the whole host
     private function getHostAddress(string $host): array {
         if (filter_var($host, FILTER_VALIDATE_IP) !== false) {
             return self::checkPublicAddress($host) ? ['addr' => $host, 'error' => ''] : $this->getAddressFail($host, $host);
@@ -1083,16 +1059,13 @@ class Upload {
         return ['addr' => '', 'error' => 'remote'];
     }
 
-    # Records one address the policy refused with the host it came from, so an operator can tell a private target apart from a prefix this build does not know yet
-    # Without this line the two are one failure to everyone outside the class, and a list behind the registry looks exactly like a host that is down
+    # Log one address the policy refused with its host, so an operator tells a private target apart from a prefix this build does not know yet
     private function getAddressFail(string $host, string $addr): array {
         Logger::addFile('warning', 'Remote address refused by the address policy', ['host' => $host, 'address' => $addr]);
         return ['addr' => '', 'error' => 'address'];
     }
 
-    # Returns whether one address is publicly routable: IPv4 against the blocked networks, IPv6 against the delegated prefixes and the one exception inside them
-    # A mapped or compatible form is judged as the address it embeds, so a v6 spelling cannot smuggle a v4 target in
-    # Public and static because Feed judges every address it connects to by this same policy, so the networks and their registry check exist in one place
+    # Whether one address is publicly routable, a mapped v6 form judged as the v4 it embeds; public and static, as Feed connects by this same policy
     public static function checkPublicAddress(string $addr): bool {
         $bin = inet_pton($addr);
         if ($bin === false) return false;
@@ -1144,8 +1117,7 @@ class Upload {
         return rtrim($dir, '/');
     }
 
-    # Resolves one normalized directory to its canonical path and proves it is a writable directory strictly below the upload root, which is what closes symlink escapes
-    # A write creates a missing folder of its owner segment by segment, each one proven below the root before the next is made, so a link never leads a mkdir out of the root
+    # Resolve one directory to a writable canonical path strictly below the upload root, a missing one made segment by segment, so a link never leads a mkdir out
     private function getDestPath(string $dir, bool $make = false): string {
         $root = realpath($this->root);
         if ($root === false) return '';
@@ -1167,8 +1139,7 @@ class Upload {
         return $canon.'/.upload-'.bin2hex(random_bytes(8)).'.part';
     }
 
-    # Publishes a transferred partial: under the destination lock it sweeps stale partials, rechecks quota, draws a free name and renames once
-    # The owner segment carries the token the caller owns the file by, reduced to the characters the name grammar allows; null and a token reducing to nothing write no segment
+    # Publish a transferred partial under the destination lock: sweep stale partials, recheck the quota, draw a free name and rename once
     private function addPublishRun(string $part, array $info, array $rule, string $rel, string $base, ?string $owner): array {
         $canon = dirname($part);
         $name = preg_replace('#[^a-zA-Z0-9_]#', '', $base);

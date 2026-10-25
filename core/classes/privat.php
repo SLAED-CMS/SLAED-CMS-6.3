@@ -6,7 +6,7 @@
 
 if (!defined('FUNC_FILE')) die('Illegal file access');
 
-# The three mailboxes one stored private message can be read through, each one a row of the predicate table of docs/PRIVAT-2026.md
+# The three mailboxes one stored private message can be read through
 enum PrivatBox: string {
     case Inbox = 'inbox';
     case Saved = 'saved';
@@ -38,8 +38,7 @@ final class Privat {
     # How many characters of that cut are left once the source markup is stripped out of it, which is the snippet one row answers
     private const SNIPLEN = 160;
 
-    # The source markup a snippet drops and what each pattern leaves behind, in the order they have to run
-    # A whole markdown link goes before one the cut broke off, both go before the bracket tags, and the whitespace collapses last
+    # The source markup a snippet drops, in this order: a whole markdown link before one the cut broke off, both before the bracket tags, whitespace last
     private const SNIPFROM = [
         '#!?\[([^\]\n]*)\]\([^)\n]*\)#u',
         '#!?\[[^\]\n]*\]\([^)\n]*$#u',
@@ -58,9 +57,7 @@ final class Privat {
     private array $conf;
     private array $site;
 
-    # Build the subsystem from the connection the request already carries and snapshot its own settings, so no method reaches for a global
-    # It holds no template or mail dependency and leaves points and notifications to the adapter that called it
-    # The site settings the write normalization reads are snapshotted beside them, because a stored message is source and only these three still change its text
+    # Snapshot the privat settings and the site settings that still change a stored text, so no method reaches for a global
     public function __construct(Database $db, array $conf) {
         $this->db = $db;
         $this->conf = is_array($conf['privat'] ?? null) ? $conf['privat'] : [];
@@ -72,30 +69,25 @@ final class Privat {
         ];
     }
 
-    # The predicate of one mailbox, as the predicate table of the plan states it, optionally through a table alias
-    # This is the only place the four state columns are turned into a filter, which is what keeps a list, its count and its quota from ever disagreeing
-    # No caller outside this class restates a mailbox predicate: the four state columns are read here or nowhere
+    # The predicate of one mailbox, the only place the four state columns become a filter, so a list, its count and its quota never disagree
     private function getBoxWhere(PrivatBox $box, string $pre = ''): string {
         if ($box === PrivatBox::Outbox) return $pre.'uidout = :uid AND '.$pre.'delout = 0';
         if ($box === PrivatBox::Saved) return $pre.'uidin = :uid AND '.$pre.'delin = 0 AND '.$pre.'saved = 1';
         return $pre.'uidin = :uid AND '.$pre.'delin = 0 AND '.$pre.'saved = 0';
     }
 
-    # The predicate of everything one reader has received and not opened, across both mailboxes it can sit in, optionally through a table alias
-    # It is written once because two consumers read it, the cabinet badge and the focus deck, and a badge counting one thing while the deck shows another is a defect nobody can see
+    # The predicate of everything one reader received and has not opened, across both received mailboxes, so the unread count and the unread list agree
     private function getNewWhere(string $pre = ''): string {
         return $pre.'uidin = :uid AND '.$pre.'delin = 0 AND '.$pre.'viewed = 0';
     }
 
-    # The predicate one participant reaches their own copy of a single message through, which is what every mutation authorizes itself with
-    # The recipient owns viewed, saved and delin, the sender owns delout, so what one participant does to their copy never rewrites what the other one sees
+    # The predicate of one participant's own copy; the recipient owns viewed, saved and delin, the sender delout, so one side never rewrites what the other sees
     private function getSideWhere(PrivatBox $box, string $pre = ''): string {
         if ($box === PrivatBox::Outbox) return $pre.'uidout = :uid AND '.$pre.'delout = 0';
         return $pre.'uidin = :uid AND '.$pre.'delin = 0';
     }
 
-    # Count the rows one predicate answers, or the whole table when the administrator list asks without one
-    # The table carries its alias in every count, so the one predicate that has to reach the counterpart brings its join along and the others read exactly as they did
+    # Count the rows one predicate answers over the aliased table, the whole table for an empty predicate; a search brings the counterpart join along
     private function getTotal(string $where, array $pars, string $join = ''): int {
         $sql = 'SELECT COUNT(p.id) AS num FROM '.PREFIX_DB.'_privat AS p'.$join.(($where === '') ? '' : ' WHERE '.$where);
         $row = $this->db->getSqlRow($this->db->getSqlQuery($sql, $pars));
@@ -108,10 +100,7 @@ final class Privat {
         return ' LEFT JOIN '.PREFIX_DB.'_users AS u ON (p.'.$mate.' = u.id) LEFT JOIN '.PREFIX_DB.'_routes AS r ON r.kind = \'user\' AND r.oid = u.id AND r.cur = 1';
     }
 
-    # The selection one list answers: the mailbox predicate with the toolbar conditions above it, the values each of them binds, and whether the counterpart has to be joined for it
-    # Search takes one placeholder per column and its own escape character: a native prepared statement refuses a repeated name, and no SQL mode may decide what an underscore means
-    # The period binds a number of days, not a moment, so the server that wrote the row draws the boundary and a database in another time zone still cuts where it should
-    # Only the search reaches outside the message table, which is why it is also the only condition that reports a join back to the count
+    # The selection of one list, its binds and whether the search needs the counterpart join; one placeholder per column, as native prepares refuse a repeated name
     private function getPickWhere(PrivatBox $box, array $pick): array {
         $where = $this->getBoxWhere($box, 'p.');
         $pars = [];
@@ -141,8 +130,7 @@ final class Privat {
         return [$where, $pars, $join];
     }
 
-    # Turn one submitted term into the pattern its three columns are compared with, or nothing at all when the term carries no term
-    # The escape character is escaped before the wildcards are, or the escape of a per cent would itself be read as a literal one
+    # Turn one term into the LIKE pattern; the escape character is escaped before the wildcards, or the escape of a per cent would read as a literal one
     private function filterFindText(string $text): string {
         $text = trim(mb_substr(trim($text), 0, self::FINDMAX));
         if ($text === '') return '';
@@ -150,8 +138,7 @@ final class Privat {
         return '%'.str_replace([$mark, '%', '_'], [$mark.$mark, $mark.'%', $mark.'_'], $text).'%';
     }
 
-    # The order one list is read in, chosen from a fixed set and never from a request, each shape ending in a tie-breaker on the id in the direction of its own primary sort
-    # Without that tie-breaker two rows sharing one moment can repeat or drop across a page boundary, which is a lost message rather than a cosmetic wobble
+    # The order of one list from a fixed set, each ending in an id tie-breaker, without which rows sharing a moment repeat or drop across a page boundary
     private function getSortOrder(string $sort): string {
         return match ($sort) {
             'old' => 'p.time ASC, p.id ASC',
@@ -186,17 +173,13 @@ final class Privat {
         ];
     }
 
-    # The counterpart of one row in one mailbox: the account a message came from, or the one it went to
-    # An account that no longer exists answers an empty name, which is what the adapter renders as the anonymous reader
+    # The counterpart of one row in one mailbox; an account that no longer exists answers an empty name
     private function getMateData(array $row, PrivatBox $box): array {
         $uid = ($box === PrivatBox::Outbox) ? intval($row['uidin']) : intval($row['uidout']);
         return ['partner' => $uid, 'name' => (string)($row['name'] ?? ''), 'avatar' => (string)($row['avatar'] ?? ''), 'path' => $row['path'] ?? null];
     }
 
-    # The plain single line a list row shows under its subject, built from the prefix the server cut and never from a whole stored body
-    # The source markup goes first, then the line breaks, so neither half a tag nor a second line ever reaches the row
-    # Only a prefix the server really cut loses its last open bracket: in a body short enough to arrive whole, that bracket is what the author wrote and not a tag the cut broke
-    # The length is counted in characters and not in bytes, which is what leaves the last character of a multibyte cut whole
+    # The plain one-line snippet of a body prefix; only a prefix the server really cut loses its last open bracket, in a whole body that bracket is the author's
     private function filterSnippet(string $text): string {
         if ($text === '') return '';
         $cut = mb_strlen($text) >= self::SNIPCUT;
@@ -205,8 +188,7 @@ final class Privat {
         return trim(mb_substr(trim($text), 0, self::SNIPLEN));
     }
 
-    # The state an administrator reads one row as, derived from the four columns in the order the plan fixes, first match winning
-    # The recipient side outranks saved and read because a deleted copy is what an administrator has to see first
+    # The state an administrator reads one row as, first match winning; a deletion outranks saved and read, as a deleted copy is what the panel shows first
     private function getRowState(array $row): string {
         if (intval($row['delin'])) return 'delin';
         if (intval($row['delout'])) return 'delout';
@@ -215,8 +197,7 @@ final class Privat {
         return 'new';
     }
 
-    # Normalize a submitted selection into a bounded, deduplicated, ascending list of ids, and reject the whole batch when one of them is not an id
-    # The order is what makes two parallel bulk actions take the row locks in the same sequence
+    # Normalize a selection into a bounded, unique, ascending id list or reject it whole; the order makes parallel bulk actions lock rows in one sequence
     private function getIdList(array $ids): array {
         $out = array_values(array_unique(array_map('intval', $ids)));
         if (!$out || count($out) > self::MAXBULK) return [];
@@ -238,8 +219,7 @@ final class Privat {
         return [implode(', ', $keys), $pars];
     }
 
-    # Lock the rows of one batch and report whether every one of them is the caller's own copy in that mailbox side
-    # One foreign or already deleted id fails the whole batch, so a submitted selection can never mutate a row it does not own
+    # Lock the rows of one batch and report whether every one is the caller's own copy, so one foreign or deleted id fails the whole batch
     private function checkOwner(int $uid, array $ids, PrivatBox $box): bool {
         [$keys, $pars] = $this->getIdBind($ids);
         $pars['uid'] = $uid;
@@ -248,31 +228,25 @@ final class Privat {
         return $row && intval($row['num']) === count($ids);
     }
 
-    # Roll back a write that cannot be completed and answer the false every mutating method reports a refusal with
-    # Every write wraps its own transaction; within an already open one it joins it and leaves begin, commit and rollback to whoever owns it
+    # Roll back a write the method owns and answer false; inside a transaction a caller opened, the rollback is left to that caller
     private function getFailed(bool $own): bool {
         if ($own) $this->db->setSqlRollback();
         return false;
     }
 
-    # Roll back a send that cannot be completed and answer the machine code the adapter maps to a message of its own
-    # A statement the server itself broke off also carries whether one more attempt could still win, which the send strips off again before it answers its caller
-    # Only the two call sites where a statement answered false ask that, and before the rollback, because the wrapper holds one last error and a rollback would overwrite it
+    # Roll back a failed send and answer its code; the retry test runs first, because the database wrapper keeps one last error that a failed rollback overwrites
     private function getFailure(bool $own, string $code, bool $hot = false): array {
         $hot = $hot && $this->checkDeadlock();
         if ($own) $this->db->setSqlRollback();
         return ['id' => 0, 'error' => $code, 'retry' => $hot];
     }
 
-    # Report whether the statement that has just failed is one a second attempt can still win: a deadlock the server broke up, or a lock it waited too long for
-    # It is asked only right after a statement answered false, because the wrapper holds its last error until another statement replaces it
+    # Report whether the statement that just failed is a deadlock or a lock wait timeout, which a second attempt can still win
     private function checkDeadlock(): bool {
         return in_array(intval($this->db->getSqlError()['code']), [1205, 1213], true);
     }
 
-    # Normalize one submitted field into the source the row stores: the old writer escaped it for a render model this module no longer uses, and that escape is what stage 2 drops
-    # What stays is what changes the text itself rather than its markup: the trusted tags no message may carry whoever wrote it, the clickable-link rewrite and the censor list
-    # Only the body is asked for the rewrite, because the title never carried it under the old writer either, and a title is plain text that names no link
+    # Normalize one field into the stored source, never HTML-escaped: trusted tags out, the link rewrite for the body only, the censor list
     private function filterMessageText(string $text, bool $link): string {
         if ($text === '') return '';
         $text = filterTrustedTags($text);
@@ -303,9 +277,7 @@ final class Privat {
         return $row ? intval($row['id']) : 0;
     }
 
-    # Lock the accounts a write answers to in one statement, ascending by id, and report which of them the server really holds
-    # One statement in one fixed order is what keeps two sends in opposite directions from deadlocking against each other, and a message to yourself collapses into a single row
-    # The accounts are the lock target and not the messages: both quotas key off an account, and no row lock can serialize the first message an account ever receives
+    # Lock both accounts in one statement ascending by id, so opposite sends cannot deadlock; accounts and not rows, as both quotas key off an account
     private function getUserLock(int $uid, int $to): array|false {
         $sql = 'SELECT id FROM '.PREFIX_DB.'_users WHERE id IN (:usra, :usrb) ORDER BY id FOR UPDATE';
         $done = $this->db->getSqlQuery($sql, ['usra' => $uid, 'usrb' => $to]);
@@ -314,9 +286,7 @@ final class Privat {
         return is_array($rows) ? array_map('intval', array_column($rows, 'id')) : false;
     }
 
-    # Report whether the sender is still inside their own send interval, over the sent messages themselves and not over what is left of them
-    # A sender deleting their own copy must not reset the interval, so this is the one read of the table that filters no state at all
-    # The stored moment is compared by the server that wrote it: an installation whose database runs on another time zone than PHP would otherwise never see a window at all
+    # Report whether the sender is inside their send interval over every sent row, deleted copies included, so deleting one's own copy never resets it
     private function checkFlood(int $uid): bool {
         $wait = intval($this->conf['send'] ?? 0);
         if ($wait < 1) return false;
@@ -325,25 +295,19 @@ final class Privat {
         return $row && !empty($row['hot']);
     }
 
-    # Report whether the inbox of the recipient has no room left, which is the only mailbox an arriving message can land in
-    # A stored row carries no saved flag of its own, so it is always received into the inbox and the saved folder cannot refuse it
-    # That folder has its own quota and setMessageSaved() is where it is enforced, over what a batch really adds, at the moment the reader moves a message into it
-    # A setting of zero is the absence of a bound, never a bound of zero: the outbox answers it, the ring draws it as unmeasured, and both alerts read it so
+    # Report whether the recipient's inbox is full, the only box an arriving message lands in; the saved quota is held by setMessageSaved(), a limit of 0 is none
     private function checkQuota(int $uid): bool {
         $max = $this->getBoxLimit(PrivatBox::Inbox);
         return $max > 0 && $this->getMessageCount($uid, PrivatBox::Inbox) >= $max;
     }
 
-    # The quota one mailbox answers to, read from the settings this class already holds, so nothing outside it has to know which setting bounds which box
-    # The outbox has none: a sender is bounded by the mailbox of whoever receives the message, never by the copies they keep of what they sent
+    # The quota of one mailbox from the settings; the outbox has none, as a sender is bounded by the mailbox of the recipient
     public function getBoxLimit(PrivatBox $box): int {
         if ($box === PrivatBox::Outbox) return 0;
         return intval($this->conf[($box === PrivatBox::Saved) ? 'messsav' : 'messin'] ?? 0);
     }
 
-    # How full one mailbox is: what it holds, what it may hold, and the per cent between the two, which is the one place that arithmetic happens
-    # The per cent is clamped, because a quota lowered under a mailbox that has already passed it would otherwise answer more than a whole ring
-    # A mailbox with no quota answers zero per cent rather than a hundred: nothing is measured there, and what is unmeasured is not full
+    # How full one mailbox is, the per cent clamped at 100 for a quota lowered under it and 0 for a box without a quota, as unmeasured is not full
     public function getBoxFill(int $uid, PrivatBox $box): array {
         $has = $this->getMessageCount($uid, $box);
         $max = $this->getBoxLimit($box);
@@ -362,22 +326,18 @@ final class Privat {
         return $this->getTotal($this->getNewWhere(), ['uid' => $uid]);
     }
 
-    # Count the unopened messages of one mailbox, which is the badge of one shelf and not the counter of the cabinet
-    # The inbox and the saved box split the unread between them, so their two badges add up to the one number getUnreadCount() answers
+    # Count the unopened messages of one mailbox; the inbox and saved badges add up to what getUnreadCount() answers
     public function getUnreadBoxCount(int $uid, PrivatBox $box): int {
         if ($uid < 1) return 0;
         return $this->getTotal($this->getBoxWhere($box).' AND viewed = 0', ['uid' => $uid]);
     }
 
-    # Count the messages one account has sent that their recipient has not opened yet, which is the outgoing counter of the sidebar block
-    # It filters delout because a sender who threw their own copy away is no longer waiting for it to be read
+    # Count the sent messages the recipient has not opened yet; a copy the sender deleted is no longer waiting
     public function getUnreadOutCount(int $uid): int {
         return $this->getUnreadBoxCount($uid, PrivatBox::Outbox);
     }
 
-    # Return one page of one mailbox under one selection, with the counterpart of every message resolved in the same round trip
-    # The body is read as the prefix the server cuts and never as the column itself, so a page of a mailbox costs no MEDIUMTEXT per row
-    # The rows, the count they are paged against and the pager come out of one predicate set in one answer, which makes rows = min(limit, total - offset) hold
+    # One page of one mailbox under one selection with its counterparts; the body is read as the server-cut prefix, so a page costs no MEDIUMTEXT per row
     public function getMessageList(int $uid, PrivatBox $box, int $page = 1, array $pick = []): array {
         [$where, $pars, $join] = $this->getPickWhere($box, $pick);
         $pars['uid'] = $uid;
@@ -393,9 +353,7 @@ final class Privat {
         return $out;
     }
 
-    # The facets of one mailbox in one aggregate row: what it holds altogether, and what each single toolbar condition answers inside it
-    # A facet is measured against the mailbox alone, never against the other facets and never against the search, so a chip keeps saying what its own condition would find
-    # Both period boundaries are counted in the same row under names of their own, because one name in two places is what a native prepared statement refuses
+    # The facets of one mailbox in one aggregate row, each measured against the mailbox alone, never against the search or the other facets
     public function getBoxFacets(int $uid, PrivatBox $box): array {
         $out = ['total' => 0, 'unread' => 0, 'read' => 0, 'fresh' => 0, 'stale' => 0];
         if ($uid < 1) return $out;
@@ -413,10 +371,7 @@ final class Privat {
         ];
     }
 
-    # Return the newest messages of one inbox for the dashboard preview, which is the inbox list without its pager
-    # Asked for the unread it answers the cabinet badge predicate, which spans both received mailboxes: a message saved without being read is the one still waiting for attention
-    # That predicate is the one getUnreadCount() counts, so the deck and the badge above it can never disagree about what is unread
-    # Both shapes answer the snippet the dense row shows, because one row shape out of this class is what keeps a consumer from ever cutting a body of its own
+    # The newest messages of one inbox, or with $new everything unread across both received boxes, the predicate getUnreadCount() counts
     public function getRecentList(int $uid, int $num = 6, bool $new = false): array {
         if ($uid < 1 || $num < 1) return [];
         $where = $new ? $this->getNewWhere('p.') : $this->getBoxWhere(PrivatBox::Inbox, 'p.');
@@ -431,9 +386,7 @@ final class Privat {
         return $out;
     }
 
-    # Return one message as one of its two participants reads it, or nothing at all when that side has deleted its copy
-    # The counterpart is answered with the row, so the profile a detail view renders is the other account and never the reader's own
-    # The snippet travels with it because the list row of that message is redrawn from this answer after a change, and no consumer outside this class cuts a body
+    # One message as one participant reads it, empty once that side deleted it; the snippet travels along for the list row redrawn from this answer
     public function getMessageView(int $uid, int $id, PrivatBox $box): array {
         if ($uid < 1 || $id < 1) return [];
         $sql = 'SELECT p.'.str_replace(', ', ', p.', self::FIELDS).', p.body, p.ip, u.name, u.avatar, r.path FROM '.PREFIX_DB.'_privat AS p'
@@ -444,8 +397,7 @@ final class Privat {
             + ['body' => (string)$row['body'], 'ip' => (string)$row['ip'], 'snip' => $this->filterSnippet((string)$row['body'])];
     }
 
-    # The body of one message to a reader whose side still holds it, or to anyone when the caller reads as a moderator, and an empty string otherwise
-    # The file route asks it, so a side that deleted its copy reads no file of it, exactly as it reads no longer the message itself
+    # The body of one message to a side that still holds it, to anyone for $all, empty otherwise; checkPrivatFile() in core/user.php gates files by it
     public function getMessageBody(int $uid, int $id, bool $all = false): string {
         if ($id < 1 || (!$all && $uid < 1)) return '';
         $sql = 'SELECT body FROM '.PREFIX_DB.'_privat WHERE id = :id'.($all ? '' : ' AND (uidin = :uin AND delin = 0 OR uidout = :uout AND delout = 0)').' LIMIT 1';
@@ -505,12 +457,7 @@ final class Privat {
         return [$from, $cond ? ' WHERE '.implode(' AND ', $cond) : '', $pars];
     }
 
-    # Store one private message and answer its id, or the machine code that says why it was refused
-    # A send the server broke off is attempted once more, because a deadlock and a lock that timed out say nothing about the message itself
-    # Only a send that owns its transaction is retried: a caller that opened one owns everything a rollback would take with it
-    # A transaction still open after the failure is never attempted again either, because a second attempt would join it and leave the message to a commit that never comes
-    # Both fields are normalized once, before the first attempt: a second attempt writes the bytes the first one meant to write and rewrites nothing
-    # The room of the column is measured on the normalized body only, as the link rewrite decides the last bytes; no_room is the one code carrying a ready note
+    # Store one message and answer its id or refusal code; a deadlock or lock timeout is retried once, only when the send owns its transaction and none is left open after it
     public function addMessage(int $uid, string $name, string $title, string $body, string $ip): array {
         $title = filterCutText(trim($this->filterMessageText($title, false)), 100);
         $body = $this->filterMessageText($body, true);
@@ -522,13 +469,7 @@ final class Privat {
         return ['id' => $out['id'], 'error' => $out['error']];
     }
 
-    # One attempt at storing a private message, which is the whole protocol from its transaction to its commit
-    # Title and body are stored as the source their author wrote, so a reader renders what was written, not what was escaped; one contract reads every body
-    # The send interval and both quotas are read behind the lock of both accounts, so what was true when the form was rendered decides nothing here
-    # The name is resolved before the transaction opens on purpose: the first plain read of a transaction fixes the snapshot every later plain read answers from
-    # With the lock as the first statement, the interval and the quotas behind it see the send that has just committed, so two of them cannot take one last place
-    # The resolved id is not trusted either: the lock reports whether that account is still there, and a sender it no longer finds is gone
-    # A word limit of zero bounds no word, the way a mailbox limit of zero bounds no message: without that test no word is short enough and every body is refused
+    # One attempt at storing a message; the name is resolved before the transaction on purpose, as its first plain read would fix the snapshot the quotas read
     private function addMessageRow(int $uid, string $name, string $title, string $body, string $ip): array {
         $title = trim($title);
         $body = trim($body);
@@ -559,8 +500,7 @@ final class Privat {
         return ['id' => $new, 'error' => 'ok'];
     }
 
-    # Set one state column of a batch of received messages, after the batch has proved it belongs to the reader
-    # The column is chosen from a fixed pair and never from a caller, because everything else in the statement is bound
+    # Set one state column of a batch the reader received; the column comes from a fixed pair, as it is the one unbound part of the statement
     private function setMessageFlag(int $uid, array $ids, string $col, int $val): bool {
         $ids = $this->getIdList($ids);
         if ($uid < 1 || !$ids || !in_array($col, ['viewed', 'saved'], true)) return false;
@@ -581,11 +521,7 @@ final class Privat {
         return $this->setMessageFlag($uid, $ids, 'viewed', $read ? 1 : 0);
     }
 
-    # Move a batch of received messages into the saved folder or back out of it, without touching what the reader has already read
-    # The quota counts what the batch would really add, so re-saving a saved message costs nothing and a full folder refuses the whole batch
-    # A batch locks only the rows it names, so two of them would both read a folder with room: the account is locked before the folder is counted, which is the row a send locks too
-    # Taking that lock before the rows of the batch is what puts this write in the same order as a send, and only the branch that reads the quota needs it at all
-    # A folder no setting bounds is counted against nothing: zero is the absence of a bound here as everywhere else, so neither of the two reads behind it is made
+    # Move a batch into the saved folder or out; the account is locked before the rows, in the order a send locks, so two batches cannot both take the last room
     public function setMessageSaved(int $uid, array $ids, bool $keep): bool {
         $ids = $this->getIdList($ids);
         if ($uid < 1 || !$ids) return false;
@@ -605,8 +541,7 @@ final class Privat {
         return true;
     }
 
-    # Remove a batch of messages from one side of the mailbox and erase what both sides have now deleted
-    # The counterpart keeps its own copy: only the flag of the side that asked is set, and the row itself goes only when neither side holds it any more
+    # Remove a batch from one side of the mailbox; the row itself is erased only once neither side holds it
     public function deleteMessage(int $uid, array $ids, PrivatBox $box): bool {
         $ids = $this->getIdList($ids);
         if ($uid < 1 || !$ids) return false;
@@ -624,8 +559,7 @@ final class Privat {
         return true;
     }
 
-    # Take one account out of every mailbox it appears in, which is what a deleted user row leaves behind
-    # Both of its own sides are marked deleted and what neither side holds any more is erased; the counterpart keeps a readable copy of a message from an account that is gone
+    # Take one account out of every mailbox it appears in; the counterpart keeps a readable copy of a message from an account that is gone
     public function deleteUser(int $uid): bool {
         if ($uid < 1) return false;
         $own = !$this->db->checkSqlActive();

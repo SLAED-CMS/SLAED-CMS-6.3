@@ -4,8 +4,7 @@
 # License: MIT
 # Website: slaed.net
 
-# The gate each entry passes first, before the core and the light path of uploads: it reads only core/version.php, config/update.php and client/apply.lock
-# Its two calls stay the first lines of every entry in every version, since an installation hands the entries of the old version the executor of the new one (contract v1)
+# The gate each entry passes first, before the core; its two calls head every entry in every version, as an installation hands the old entries the new executor
 require_once BASE_DIR.'/core/version.php';
 
 # The newest version whose database steps are marked in config/update.php, '' for a site without a mark, null without the file, where no site is installed yet
@@ -19,8 +18,7 @@ function getStepMark(string $dir): ?string {
     return (string)(end($vers) ?: '');
 }
 
-# The file an entry requires at its top level while client/apply.lock lies: the installed rescuer, the executor of the package under the token, or the static 503 here
-# A rescue code, a rescue.now put by FTP or a rollback under way go to core/rescue.php past the executor, so a broken package never blocks its own rollback
+# The file an entry requires while client/apply.lock lies: the rescuer, the executor under the token or the 503; a rollback skips the executor, so no package blocks it
 function getSiteGate(): string {
     $dir = (defined('UPDATE_DIR') ? UPDATE_DIR : BASE_DIR.'/storage/update').'/client';
     if (!is_file($dir.'/apply.lock')) return '';

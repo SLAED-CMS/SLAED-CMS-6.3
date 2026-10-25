@@ -6,7 +6,7 @@
 
 if (!defined('FUNC_FILE')) die('Illegal file access');
 
-# Reads one filesystem area below one server-chosen root: path canonicalization, the path policy, the descriptor and the capabilities (docs/FILE-MANAGER-CONCEPT-2026.md)
+# Reads one filesystem area below one server-chosen root: path canonicalization, the path policy, the descriptor and the capabilities
 class FileManager {
     public const MODES = ['uploads', 'editor', 'system'];
     # Every capability name a context answers, so both screens read one shape instead of guessing which keys their mode carries
@@ -37,10 +37,7 @@ class FileManager {
     private string $root = '';
     private array $flags = [];
 
-    # Builds one context over the root the server chose; an unknown mode or an unresolvable root leaves it closed, which is what makes a miswired route refuse instead of browse
-    # An empty root is refused before it is resolved, because realpath() answers the working directory for one and would open the whole site below a place that is not configured
-    # The flags carry the decisions the route already made with the module rule and checkUploadModer(), because the upload rule stays the only place a permission is computed
-    # The client never names a physical root or an absolute path; it passes a path relative to the context it already received, and everything else is decided here
+    # Build one context over a server-chosen root, closed for an unknown mode; an empty root is refused first, as realpath() answers the working directory for it
     public function __construct(string $mode, string $root, array $flags = []) {
         $path = ($root !== '' && in_array($mode, self::MODES, true)) ? realpath($root) : false;
         if ($path === false) return;
@@ -49,8 +46,7 @@ class FileManager {
         $this->flags = $flags;
     }
 
-    # Lists one directory of the context as descriptors, directories first and each group by name; a refused, missing or unlistable directory answers an empty list
-    # Entries the policy hides are dropped here, and the same policy refuses them again on a direct request, because hiding a path is convenience and refusing it is the protection
+    # List one directory as descriptors, directories first; a hidden entry is dropped here and refused again on a direct request, as hiding is no protection
     public function getFileList(string $dir): array {
         $pair = $this->getPathPair($dir);
         if ($pair['full'] === '' || !is_dir($pair['full']) || !$this->checkFileAccess($dir, 'list')) return [];
@@ -65,10 +61,7 @@ class FileManager {
         return $out;
     }
 
-    # Returns one object as the normalized descriptor of the plan, or an empty array when the path leaves the root, does not exist or is closed by the policy
-    # Existence is asked again after the path resolved, because the cache of resolved paths outlives the objects themselves and a removed one would be measured instead of dropped
-    # The absolute path travels only in an administrative context; the editor never receives it, and neither context receives a path the client did not already hold relatively
-    # Whether an object is a managed file is answered by checkFileName() and by nothing else, so no reader of a listing ever takes a stored name apart on its own
+    # One object as its descriptor or empty; existence is asked again after realpath(), whose cache outlives a removed object, and the editor never gets realpath
     public function getFileData(string $path): array {
         $pair = $this->getPathPair($path);
         if ($pair['full'] === '' || !file_exists($pair['full'])) return [];
@@ -103,8 +96,7 @@ class FileManager {
         return $data;
     }
 
-    # Returns what this context allows at all, which is what the interface prints instead of deriving a permission from a role of its own
-    # A closed instance answers every capability false, so a context that failed to build cannot be mistaken for one that simply forbids a single action
+    # What this context allows at all, which the interface prints instead of deriving a permission of its own; a closed instance answers everything false
     public function getCapabilities(): array {
         $none = array_fill_keys(self::GRANTS, false);
         $canup = !empty($this->flags['upload']);
@@ -121,16 +113,14 @@ class FileManager {
         };
     }
 
-    # Answers whether one operation is allowed on one path of this context, which every route asks before it acts and not after the path is already open
-    # An operation over two paths asks twice, once per side: a move needs write and delete on the source and write on the destination, or a closed file copies itself into the open
+    # Answer whether one operation is allowed on one path before it is opened; two paths ask once per side, or a closed file copies itself into an open one
     public function checkFileAccess(string $path, string $op): bool {
         $pair = $this->getPathPair($path);
         if ($pair['full'] === '' || !in_array($op, self::OPS, true)) return false;
         return $this->getPathRules($pair['rel'])[$op];
     }
 
-    # Answers whether one file opens in the source editor: the context has to edit at all, the extension has to carry a mode and the file has to be readable and small enough
-    # Write is not asked here on purpose, because a readable file of a write-closed path still opens for reading; whether it may be saved is the edit capability of its descriptor
+    # Answer whether one file opens in the source editor; write is not asked on purpose, as a write-closed file still opens to be read
     public function isFileEditable(string $path): bool {
         if (empty($this->getCapabilities()['edit']) || $this->getCodeLanguage($path) === '') return false;
         $pair = $this->getPathPair($path);
@@ -145,9 +135,7 @@ class FileManager {
         return self::LANGS[pathinfo($path, PATHINFO_EXTENSION)] ?? '';
     }
 
-    # Reads the source of one text file the way the editor receives it: the content itself, the version the save has to hand back and the number of lines the properties show
-    # The version is the digest of the exact bytes on disk, so a file changed by anyone between the open and the save is recognized by its content and never by a timestamp
-    # A file the editor does not open answers the empty array, and so does one carrying a NUL byte, because a binary wearing a text extension is not source
+    # The source of one text file with the digest of its bytes as the version the save hands back; a body with a NUL byte is a binary, not source
     public function getFileBody(string $path): array {
         if (!$this->isFileEditable($path)) return [];
         $text = file_get_contents($this->getPathPair($path)['full']);
@@ -155,11 +143,7 @@ class FileManager {
         return ['text' => $text, 'version' => sha1($text), 'lines' => ($text === '') ? 0 : substr_count($text, "\n") + (str_ends_with($text, "\n") ? 0 : 1)];
     }
 
-    # Writes the source of one text file back under the exclusive lock of its directory: the version is re-read and compared inside the lock and the file is replaced by one rename
-    # Comparing the version beside the lock protects against nothing: two writers read one version, both believe it current, both write, and the earlier edit is gone
-    # A form submits its lines separated the way the browser spells them, so the new body takes the separator of the file on disk and a save never rewrites every line
-    # The answer names its own failure, and a refused write leaves the file untouched: nothing is written before both versions are known to agree under the lock
-    # Of the whole file system only the body of one source file is written here, and only through this method: every other method reads, so a wrong answer costs a refusal
+    # Write one source file back; the version is compared inside the directory lock, never beside it, and the body keeps the line separator of the file on disk
     public function setFileBody(string $path, string $text, string $ver): array {
         $pair = $this->getPathPair($path);
         $shut = ['ok' => false, 'error' => 'closed', 'version' => ''];
@@ -205,7 +189,7 @@ class FileManager {
         return $this->updatePathEntry($pair, $dir.$name, 'rename');
     }
 
-    # Copies one file to a second path of the same context; a directory is not copied, because walking one into another is recursion and the first version of the plan carries none
+    # Copy one file to a second path of the same context; a directory is not copied, as this layer walks no tree
     public function addFileCopy(string $path, string $dest): array {
         return $this->updatePathEntry($this->getPathPair($path), $dest, 'copy');
     }
@@ -215,8 +199,7 @@ class FileManager {
         return $this->updatePathEntry($this->getPathPair($path), $dest, 'move');
     }
 
-    # Deletes one file or one empty directory under the lock of the directory it stands in, the emptiness read inside that lock and never before it
-    # A directory holding anything answers its own refusal: recursive deletion of the system area is named out of the first version, and a silent partial delete is worse than none
+    # Delete one file or one empty directory, the emptiness read inside the lock of its directory; a filled directory is refused, never partly deleted
     public function deleteFileEntry(string $path): array {
         $pair = $this->getPathPair($path);
         if ($pair['rel'] === '' || empty($this->getCapabilities()['delete']) || !$this->checkFileAccess($pair['rel'], 'delete')) return self::getPathFail('closed');
@@ -230,8 +213,7 @@ class FileManager {
         return $done ? ['ok' => true, 'error' => '', 'path' => $pair['rel']] : self::getPathFail($stop);
     }
 
-    # Packs one file into a ZIP beside it; the archive is a new object of the same directory and is therefore asked of the policy as a write of its own name
-    # A build without the archive extension answers its own refusal instead of leaving an empty file behind, and a failed pack takes its half-written archive with it
+    # Pack one file into a ZIP beside it, asked of the policy as a write of the archive name; a failed pack removes its half-written archive
     public function addFileArchive(string $path): array {
         $pair = $this->getPathPair($path);
         if ($pair['rel'] === '' || !is_file($pair['full']) || empty($this->getCapabilities()['compress'])) return self::getPathFail('closed');
@@ -253,10 +235,7 @@ class FileManager {
         return $done ? ['ok' => true, 'error' => '', 'path' => $new['rel']] : self::getPathFail($stop);
     }
 
-    # Packs a marked set of files into one archive of the context, which is what the catalogue hands over as a single download instead of asking for one file after another
-    # The name always ends up an archive, because a destination below the upload tree is served by the web server and a set packed into an active extension would be executed
-    # Every source is asked of the policy on its own and one closed member refuses the whole build, so a closed file never leaves the area inside an archive of open ones
-    # A name repeating inside the set carries its whole path into the archive, because two members overwriting each other would silently make the archive shorter than the set
+    # Pack a marked set into one archive; the name is forced to .zip, as the system area reaches public/, and one closed member refuses the whole build
     public function addFilesArchive(array $paths, string $dest): array {
         $name = str_ends_with(strtolower(trim($dest)), '.zip') ? trim($dest) : trim($dest).'.zip';
         $new = $this->getMakePath($name);
@@ -284,25 +263,18 @@ class FileManager {
         return $done ? ['ok' => true, 'error' => '', 'path' => $new['rel']] : self::getPathFail($stop);
     }
 
-    # Answers whether one name follows the managed format the upload service publishes under, which tells a file this project stored apart from one that arrived otherwise
-    # The dependency runs one way, Upload -> FileManager, so nothing in this file knows the upload service exists
+    # Answer whether one name follows the managed upload format; the dependency runs one way, Upload to FileManager, so this file knows no upload service
     public static function checkFileName(string $file): bool {
         return preg_match(self::NAMEPAT, basename(str_replace('\\', '/', $file))) === 1;
     }
 
-    # Returns the owner token one managed name carries, or null when the name carries no owner segment or does not follow the format at all
-    # The answer is a string and is compared as one: the segment of a guest is an opaque token, and a numeric cast turns every one of them into zero and joins two guests
+    # The owner token of one managed name, or null; it stays a string, as a numeric cast turns every guest token into zero and joins two guests
     public static function getFileOwner(string $file): ?string {
         if (!preg_match(self::NAMEPAT, basename(str_replace('\\', '/', $file)), $hit)) return null;
         return (($hit[1] ?? '') === '') ? null : $hit[1];
     }
 
-    # Takes the exclusive lock of one directory and answers the open handle, or false when it cannot be taken; every writer of the project serializes on this one protocol
-    # The key is the directory and not the file, because the upload service draws a free name below it and the file it is about to write does not exist yet to be locked
-    # Two writers holding two protocols of their own would not wait for each other at all, which is why the pair is public here instead of private in whoever writes first
-    # The lock is owned by the request: a key it already holds answers the same handle and counts the entry, since a second flock on a new handle would wait for this process
-    # A directory below the root of one upload area is locked after that root, so a write into a subdirectory waits for an owner that holds the whole area, as a type deletion does
-    # An area is a folder of the upload root, and below NODE_DIR the folder of one type, so the writers of two types never wait for each other
+    # Take the reentrant lock of one directory, a subdirectory of an upload area after its root; keyed by the directory, as an upload draws a free name that has no file to lock yet
     public static function getPathLock(string $dir): mixed {
         $key = self::getLockKey($dir);
         $node = defined('NODE_DIR') ? self::getLockKey(NODE_DIR) : '';
@@ -328,9 +300,7 @@ class FileManager {
         return $lock;
     }
 
-    # Releases one lock taken by getPathLock(); the lock file itself is never deleted, because deleting it would break the lock for a process that still holds it
-    # One entry of a held key only counts down, and the flock goes with the last one, so an inner operation never frees the directory its outer owner still works in
-    # The root of the upload area a subdirectory lock took with it is released after it, one entry for every entry of the subdirectory
+    # Release one entry of a lock and of its area root; the lock file is never deleted, as that would break the lock of a process still holding it
     public static function deletePathLock(mixed $lock): void {
         if (!is_resource($lock)) return;
         $top = null;
@@ -349,8 +319,7 @@ class FileManager {
         if ($top !== null) self::deletePathLock($top);
     }
 
-    # Returns the canonical key of one directory: the resolved path of its deepest existing part with the rest appended, forward slashes and no trailing one
-    # A junction, a second spelling or another letter case of one directory must reach the same key, so Windows keys are lower case like the filesystem that ignores it
+    # The canonical key of one directory from its deepest existing part; lower case on Windows, so a junction, a second spelling or another case reach one key
     private static function getLockKey(string $dir): string {
         $path = rtrim(str_replace('\\', '/', $dir), '/');
         $tail = '';
@@ -364,15 +333,12 @@ class FileManager {
         return (DIRECTORY_SEPARATOR === '\\') ? strtolower($key) : $key;
     }
 
-    # Returns the one directory the lock files of the project live in, outside every tree they guard, so a lock is never listed, downloaded or removed with what it serializes
-    # A build without a cache root answers an empty string and every lock then fails closed, because a writer that believes it holds a lock it never took is the worse half
+    # The lock directory under the cache root, outside every tree it guards; without a cache root every lock fails closed
     private static function getLockDir(): string {
         return defined('CACHE_DIR') ? rtrim(str_replace('\\', '/', CACHE_DIR), '/').'/locks/uploads' : '';
     }
 
-    # Takes the exclusive lock of every directory one operation touches, sorted, because two writers taking the same two keys in opposite order wait for each other forever
-    # The keys are compared segment by segment, so the root of an upload area, which every subdirectory lock takes first, never sorts after a key of another area
-    # A key that cannot be taken releases what this call already holds and answers the empty list, so a caller never works believing it holds a lock it never got
+    # Take the locks of every directory one operation touches, sorted segment by segment, so two writers never wait on each other in opposite order
     private static function getPathLocks(array $dirs): array {
         $keys = array_unique(array_map(static fn(string $dir): string => self::getLockKey($dir), $dirs));
         usort($keys, static fn(string $a, string $b): int => strcmp(str_replace('/', "\0", $a), str_replace('/', "\0", $b)));
@@ -398,8 +364,7 @@ class FileManager {
         return ['ok' => false, 'error' => $why, 'path' => ''];
     }
 
-    # Resolves one path that does not exist yet: the parent has to resolve inside the root and the last segment has to be a plain name, which is what a create and a move need
-    # The name is checked as a name and never taken as a path, so a destination cannot climb out of the directory it was pointed at the way a relative path would
+    # Resolve a path that does not exist yet: the parent inside the root, the last segment a plain name, so a destination cannot climb out of its directory
     private function getMakePath(string $path): array {
         $fail = ['rel' => '', 'full' => '', 'dir' => ''];
         $rel = trim(str_replace('\\', '/', $path));
@@ -418,8 +383,7 @@ class FileManager {
         return !str_ends_with($name, '.') && !str_ends_with($name, ' ');
     }
 
-    # Creates one new object under the lock of the directory it appears in: the capability of the context and the policy of the new name both decide before anything is written
-    # A name already taken is refused inside the lock, because the answer of a check taken before it is already old by the time the write would run
+    # Create one file or directory under the lock of its parent; a taken name is refused inside the lock, as a check made before it is already old
     private function addPathEntry(string $path, bool $isdir): array {
         $new = $this->getMakePath($path);
         $able = $this->getCapabilities();
@@ -434,9 +398,7 @@ class FileManager {
         return $done ? ['ok' => true, 'error' => '', 'path' => $new['rel']] : self::getPathFail($stop);
     }
 
-    # Moves, renames or copies one object: the source and the destination are asked of the policy separately, because otherwise a closed file copies itself into an open directory
-    # A copy needs the source read and leaves it standing; a rename and a move need it written and deleted, because both take the object away from where it was
-    # A directory is never copied and never moved inside itself: the first walks a tree the plan does not walk, and the second would bury it below its own name
+    # Move, rename or copy one object, source and destination asked of the policy apart; a copy reads the source, a move or rename writes and deletes it
     private function updatePathEntry(array $pair, string $dest, string $flag): array {
         $new = $this->getMakePath($dest);
         $copy = $flag === 'copy';
@@ -455,10 +417,7 @@ class FileManager {
         return $done ? ['ok' => true, 'error' => '', 'path' => $new['rel']] : self::getPathFail($stop);
     }
 
-    # Canonicalizes one client path inside the root and answers its relative and absolute form, or two empty strings when it is not a plain relative path below the root
-    # The root itself is the empty relative path; a drive letter, a stream wrapper and an alternate data stream all carry a colon, and a traversal survives no separator spelling
-    # The realpath() call resolves the last symlink too, so the prefix test below is what refuses a link that leaves the root while its own name looks harmless
-    # The relative path is read back off the resolved one and never off the request, so a link below the root and a second spelling of a name reach the policy as what they are
+    # Canonicalize one client path below the root, or empty strings; the relative form is read back off the resolved path, so a link reaches the policy as it is
     private function getPathPair(string $path): array {
         $fail = ['rel' => '', 'full' => ''];
         if ($this->root === '') return $fail;
@@ -472,10 +431,7 @@ class FileManager {
         return ['rel' => ($full === $this->root) ? '' : substr($full, strlen($this->root) + 1), 'full' => $full];
     }
 
-    # Answers the policy row of one relative path: what may be listed, read, downloaded, written and deleted there, decided in this one place for every route of the context
-    # The root of a context is written into but never taken away: it is listed and written, and it is never downloaded, renamed or removed through the browser that shows it
-    # Partials and lock files belong to the writers and are closed in every context; the system rows are the table of the plan, and everything it does not name stays open
-    # A row is matched against the lowered path, because a filesystem that ignores case answers the same file for both spellings and a closed path must not open under a second name
+    # The policy row of one relative path, matched lowered, as a filesystem that ignores case would open a closed path under a second spelling
     private function getPathRules(string $rel): array {
         $open = array_fill_keys(self::OPS, true);
         $shut = array_fill_keys(self::OPS, false);
@@ -490,9 +446,7 @@ class FileManager {
         return $open;
     }
 
-    # Answers whether one system path is one of the files whose loss stops the site, which is what makes the interface ask again and the journal record the answer
-    # The document root is PUBLIC_DIR wherever it lies below the project and whatever its name: its .htaccess and every PHP file directly in it are critical
-    # Those PHP files are the entries of the site, so a panel renamed by the installer or the security section stays critical under its new name
+    # Answer whether losing one system path stops the site; every PHP file directly in PUBLIC_DIR counts, so a panel the installer renamed stays critical
     private function checkCritPath(string $rel): bool {
         if ($rel === '') return false;
         $test = strtolower($rel);
@@ -505,8 +459,7 @@ class FileManager {
         return in_array($test, self::CRIT, true) || in_array(explode('/', $test)[0], self::CRITDIR, true);
     }
 
-    # Narrows the capabilities of the context down to one object: what a directory cannot be, what the path policy closes and what the kind of the file does not support
-    # Copying and packing are file operations here, because walking a directory into a second one is recursion and the first version of the plan does not carry it
+    # Narrow the context capabilities to one object by its kind and the path policy; copying and packing stay file operations, as this layer walks no tree
     private function getFileGrants(array $rule, string $kind, bool $prev, bool $edit): array {
         $out = $this->getCapabilities();
         $isdir = ($kind === 'dir');
@@ -527,8 +480,7 @@ class FileManager {
         return $out;
     }
 
-    # Returns the account one object belongs to, which only a POSIX host can answer at all
-    # Windows reports every file as owned by the same synthetic id, so the field stays empty there and the interface drops the row instead of printing a zero
+    # The account one object belongs to, empty on Windows, which reports one synthetic owner for every file
     private function getFileUser(string $full): string {
         if (DIRECTORY_SEPARATOR !== '/') return '';
         $uid = fileowner($full);

@@ -287,8 +287,7 @@ function getAdminSettingsRow(string $axis): string {
     ]);
 }
 
-# Render the settings window of the panel: the answers an administrator changes from any screen, applied where they stand except the language, which reloads
-# Its foot leads to the help of the panel, which describes every row of it
+# Render the settings window of the panel: the answers an administrator changes from any screen, applied in place except the language, which reloads
 function getAdminSettingsWindow(): string {
     global $tpl, $afile;
     $rows = '';
@@ -413,8 +412,7 @@ function getDbVersion() {
     return $dbv;
 }
 
-# Render the admin category list grouped by module as an indented tree with drag ordering, collapsible groups and dial actions
-# The materials of a Node type come from its reader; a count the administrator may not read offers no deletion, which the writer would refuse anyway
+# Render the category tree grouped by module; a Node type whose reader refuses the count offers no deletion of its categories
 function getAdminCategoryList(string $modul = '', int $obj = 0): string {
     global $db, $afile, $tpl;
     if (!in_array($modul, getCategoryModules(), true)) $modul = '';
@@ -763,9 +761,7 @@ function add_voting(string $modul, string $selectName, int $selectedId): string 
     return $tpl->getHtmlFrag('select', ['name_attr' => $selectName, 'options_html' => $opts]);
 }
 
-# Split one SQL script into the statements a driver can take one at a time, honouring quoting, comments and the DELIMITER directive of a stored routine
-# Four callers run scripts written by hand and none of them may split on a bare semicolon: the Inquiry tab, the module installer, setup.php and update.php
-# A statement is returned exactly as the file wrote it: an escape inside a string literal is part of the statement and is never unwrapped on the way through
+# Split one SQL script into statements, honouring quotes, comments and DELIMITER; a statement stays as written, an escape in a literal is never unwrapped
 function getSqlbatch(string $sql): array {
     $sql = str_replace("\r\n", "\n", str_replace("\r", "\n", $sql));
     $len = strlen($sql);
@@ -871,9 +867,7 @@ function getSqlbatch(string $sql): array {
     return ['statements' => $list, 'error' => ''];
 }
 
-# Drop the comment block a statement carries in front of its first SQL token, which is what a commented migration file puts there
-# The comment is not the statement: leaving it in front makes the preview show the file header instead of the query and makes getSqlinfo() read the wrong type
-# A block that turns out to be nothing but comments is returned empty, so the caller drops it instead of sending a query with no statement in it
+# Drop the comments in front of the first token, so the preview and getSqlinfo() read the query; a block of nothing but comments returns empty and is dropped
 function getSqlclean(string $sql): string {
     while ($sql !== '') {
         if (preg_match('/^\s+/', $sql, $mass)) {
@@ -895,8 +889,7 @@ function getSqlclean(string $sql): string {
     return trim($sql);
 }
 
-# Describe one statement for the report: the leading keyword and the table it addresses, both read from the head of the statement and never from its body
-# The table is anchored to the keyword that introduces it, because the first backtick of a statement is just as often a column of an index list or a fragment of a procedure body
+# The keyword and the table of one statement; the table is anchored to its keyword, as the first backtick is as often a column or a routine body
 function getSqlinfo(string $sql): array {
     $type = 'SQL';
     $table = '';
@@ -907,8 +900,7 @@ function getSqlinfo(string $sql): array {
     return ['type' => $type, 'table' => $table];
 }
 
-# Fill the installation placeholders one SQL script carries, which is the same set the Inquiry tab and the module installer both feed to the driver
-# A module table.sql declares its storage engine and collation through these, so a script run without them reaches the driver as invalid SQL
+# Fill the install placeholders of one SQL script; a table.sql names its engine and collation through them, so an unfilled script is invalid SQL
 function getSqlFilled(string $sql): string {
     global $conf;
     $map = [
@@ -920,8 +912,7 @@ function getSqlFilled(string $sql): string {
     return str_replace(array_keys($map), array_values($map), $sql);
 }
 
-# Return the tables one SQL script addresses, in the order it names them and without repeats, optionally only those introduced by one statement type
-# The module list asks for the CREATE set to decide whether a module is installed, and the uninstall asks for the same set, because those are the tables the script owns
+# The tables one SQL script names, in order and without repeats, optionally of one statement type; its CREATE set is what a module owns
 function getSqlFileTables(string $sql, string $verb = ''): array {
     $out = [];
     foreach (getSqlbatch(getSqlFilled($sql))['statements'] as $one) {
@@ -932,8 +923,7 @@ function getSqlFileTables(string $sql, string $verb = ''): array {
     return $out;
 }
 
-# Return whether one table exists in the current database, asked of the catalogue rather than of the table itself
-# A module that is not installed would otherwise make the list page run a query against a missing table and write an SQL error for every render
+# Whether one table exists, asked of the catalogue, so a module that is not installed costs the list page no SQL error
 function checkSqlTable(string $name): bool {
     global $db;
     if ($name === '') return false;
@@ -944,9 +934,7 @@ function checkSqlTable(string $name): bool {
     return (int)($row['num'] ?? 0) > 0;
 }
 
-# Save one part of a registered Node type from a shared screen: fields, uploads, rating or the integrations of its settings replaced in the stored type
-# The changed type goes to the service with the version the form was built from
-# Answers an empty string on success, otherwise a safe text chosen by the cause of the refusal; the text of the exception never reaches the page
+# Save one part of a Node type with the version its form was built from; a refusal answers a safe text, never the message of the exception
 function updateNodeTypePart(string $name, string $part, array $value, int $version): string {
     $type = getNodeTypeMap()[$name] ?? null;
     $label = htmlspecialchars($name, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
@@ -967,8 +955,7 @@ function updateNodeTypePart(string $name, string $part, array $value, int $versi
     return '';
 }
 
-# Return which of the two administrative file areas the current request works in; a page names its own area once, and every route of it reads the name back out of the request
-# The client never names a root, only which of the two screens it is on, and what that screen is allowed to mean is decided by the context the file layer is built with
+# The file area of the request, named once by its page; the client names only its screen, never a root, and the context decides what it may mean
 function getAdminFileMode(string $set = ''): string {
     static $ctx = '';
     if ($set !== '') $ctx = $set;
@@ -976,8 +963,7 @@ function getAdminFileMode(string $set = ''): string {
     return $ctx;
 }
 
-# Return the file context of one administrative area; core/classes carries no runtime autoload, so the file layer is required on first use and both roots are named here alone
-# The upload area is rooted at the whole upload tree and the system area at BASE_DIR: the client passes a path relative to the context and never the physical root itself
+# The file context of one area, both roots named here alone; core/classes has no autoload, so the file layer is required on first use
 function getAdminFileManager(string $mode = ''): FileManager {
     static $mans = [];
     $mode = ($mode === '') ? getAdminFileMode() : $mode;
@@ -988,9 +974,7 @@ function getAdminFileManager(string $mode = ''): FileManager {
     return $mans[$mode];
 }
 
-# Return the upload rule one browser path publishes under: the first segment of the path names the module, so a directory of the tree carries the settings of its own module
-# Below the root of the Node types the second segment names the type, and the owner travels in the rule as mod, so the route that publishes reads it from here alone
-# The shared quota of a module counts what its users stored and is not a limit on the administration, so the one rule value the catalogue drops is that ceiling
+# The upload rule of one browser path, by module or below the Node root by type; the module quota limits users, not the administration, so it is dropped
 function getAdminUploadRule(string $dir): array {
     $part = explode('/', $dir);
     $mod = ($dir === '') ? '' : (($part[0] === basename(NODE_DIR)) ? ($part[1] ?? '') : $part[0]);
@@ -1037,15 +1021,13 @@ function getAdminFileRefs(string $dir): ?array {
     return ['room' => $room, 'refs' => array_values(array_unique($refs))];
 }
 
-# Return one relative path of the request unfiltered, because what a path means is decided by the canonicalization of the file layer and never by a filter of the input side
-# A reading route carries its path in the query and a write carries it in the body, so the source is named by the caller and the two never read each other by accident
+# One relative path of the request unfiltered, as the file layer canonicalizes it; the caller names the source, the query for a read, the body for a write
 function getAdminFilePath(string $key, string $src = 'get'): string {
     $path = getVar($src, $key, 'raw', '');
     return is_string($path) ? mb_substr(trim($path), 0, 512) : '';
 }
 
-# Return the address of one browser route with the values it carries and the ajax token every numeric go route is asked for before it answers anything
-# The area of the screen travels with every address, because the answering route builds its own context and must not fall back to the system one on a catalogue request
+# The address of one browser route with the area and the ajax token a numeric go demands; without the area the route would build the system context
 function getAdminFileLink(string $op, array $args = []): string {
     static $tok = '';
     if ($tok === '') $tok = getSiteToken();
@@ -1057,8 +1039,7 @@ function getAdminFileLink(string $op, array $args = []): string {
     return $out.'&token='.$tok;
 }
 
-# Return the address one image is shown at: a file of the upload tree is public and is served by the web server, and a system file exists only behind the route that checks it again
-# A listing asks for the stored thumbnail where one was published, because a directory of full-sized photographs drawn at icon size is the one place this screen can waste a network
+# The address one image is shown at: its own where the file has one, else the preview route that checks it again; a listing takes the stored thumbnail
 function getAdminFileShot(array $one, bool $small = false): string {
     if (($one['kind'] ?? '') !== 'image' || empty($one['capabilities']['preview'])) return '';
     if ($small && $one['thumbnail'] !== '') return $one['thumbnail'];
@@ -1080,8 +1061,7 @@ function getAdminFileIcon(string $kind): array {
     };
 }
 
-# Render the tree of the system area along the open path alone: the root level and the children of every ancestor of the current directory, and never a walk of the whole site
-# Each level is spliced in under the node it belongs to, so the depth of the request equals the depth of the path and a closed directory never contributes a node
+# Render the system tree along the open path alone, the root level and the children of each ancestor, never a walk of the whole site
 function getAdminFileNodes(string $dir): string {
     global $tpl;
     $man = getAdminFileManager();
@@ -1129,8 +1109,7 @@ function getAdminFileNodes(string $dir): string {
     return $tpl->getHtmlPart('file-browser-tree', ['cap_text' => $isup ? _UPLOADS_DIRS : _UPLOADS_TREE, 'nodes' => $out]);
 }
 
-# Render the capability row of the context: what the interface prints is the answer of the file layer, so no screen derives a permission from a role of its own
-# A capability this stage does not route yet is still shown, because the row states what the context allows and not which button happens to exist
+# Render the capability row as the file layer answers it, so no screen derives a permission from a role of its own
 function getAdminFileGrants(): string {
     global $tpl;
     $names = [
@@ -1146,9 +1125,7 @@ function getAdminFileGrants(): string {
     return $out;
 }
 
-# Render the fan of one object: what it offers is the capability set of its own descriptor, so an operation the context forbids is not drawn at all instead of failing on the route
-# Reading actions are addresses and the two that change nothing but the name of a thing open the shared form, while a delete and a pack are POST forms of the module with its token
-# The question of a delete names the object, and a critical path adds what its loss costs and that the journal keeps the answer, because a stray click there stops the site
+# Render the fan of one object from its own capability set, so a forbidden operation is not drawn; a critical path adds its cost to the delete question
 function getAdminFileActs(array $one): string {
     global $afile, $tpl;
     $able = $one['capabilities'];
@@ -1175,12 +1152,7 @@ function getAdminFileActs(array $one): string {
     return ($dial === []) ? '' : $tpl->getHtmlFrag('dial', ['dial_title' => _FUNCTIONS, 'dial' => $dial]);
 }
 
-# Render the properties of one object from its descriptor: the absolute path is shown because an administrator is full-handed, and a critical path says so next to its own name
-# An object that does not exist or that the path policy closes answers the empty panel, so a closed path is refused here exactly as it is refused on every other route
-# A source file also states how many lines it holds and which version it carries, and both come from reading it once, which is why no listing ever asks for them
-# Windows answers no account for a file at all, so the owner row is written only where the host has one to give
-# The panel offers the fan of the object and nothing beside it: the fan already answers for every capability the descriptor grants, so a second row of links would repeat it
-# The picture of the panel opens the gallery the list opens, so it carries the same four addresses a row carries
+# Render the properties of one object from its descriptor; a missing or closed path answers the empty panel, as every other route refuses it
 function getAdminFileProps(string $path): string {
     global $afile, $tpl;
     $man = getAdminFileManager();
@@ -1220,9 +1192,7 @@ function getAdminFileProps(string $path): string {
     ]);
 }
 
-# Render the source editor of one system file as a window over the file screen: the way back, the name, the version of the open file and the code widget
-# The version travels in the form and is compared under the lock of the directory on the way back, so the field is what tells a stale save from a fresh one and is never dropped
-# A critical path asks again through the shared confirm protocol before the write, because an error in one of those files stops the site and a stray click must not reach it
+# Render the source editor of one system file; the version field is compared under the directory lock on save, so it tells a stale save and is never dropped
 function getAdminFileEditor(array $edit): string {
     global $afile, $tpl;
     $man = getAdminFileManager();
@@ -1278,14 +1248,7 @@ function getAdminFileEditor(array $edit): string {
     ]);
 }
 
-# Render the system file browser of one directory: the tree along the open path, the list, the properties, the capability row and the counter of the current directory
-# The same body answers the first page and every navigation of it; the toolbar is drawn once and the crumbs travel back out of band, because they live inside it
-# An open source file opens in a window over the screen, which keeps its own directory drawn underneath, so the reader never loses where the file came from
-# One object is drawn twice, as a row and as a tile, so its fan is built twice as well: two forms of one identifier would make the tile submit the form standing in the row
-# The directory is answered whole and scrolled with the page rather than paged, and the administration is given all of it: no ceiling, no page and nothing left out of the answer
-# The settings that count files belong to the editor and the visitor and never reach this screen: what an administrator may not see is decided by the policy, not a number
-# A row prints size and date for a human and carries both as raw figures for the sort, because formatted sizes compare as text and a formatted date compares by its day
-# The gallery offers what the fan of the row offers, because it presses that fan: every gallery key is a fan key, and one the context withholds is absent from both
+# Render the file browser of one directory, whole and unpaged; the fan is built again for the tile, as a form id shared with the row would submit the row form
 function getAdminFileShell(bool $full = false, array $edit = []): string {
     global $afile, $tpl;
     $ctx = getAdminFileMode();
@@ -1458,8 +1421,7 @@ function getAdminFileData(): void {
     echo getAdminFileProps(getAdminFilePath('file'));
 }
 
-# Answer one image of the system area for the preview panel; the type comes from a fixed table and never from the file, and the answer is sandboxed and never sniffed
-# A vector carries scripts, so it is served under a policy that forbids every source: shown through <img> it draws, opened by its own address it can no longer run (§20)
+# Answer one system image for the preview by a fixed type table, sandboxed under a policy that forbids every source, as an SVG carries scripts
 function getAdminFilePreview(): void {
     $types = ['png' => 'image/png', 'jpg' => 'image/jpeg', 'jpeg' => 'image/jpeg', 'gif' => 'image/gif', 'webp' => 'image/webp', 'avif' => 'image/avif', 'svg' => 'image/svg+xml'];
     $man = getAdminFileManager();
@@ -1478,8 +1440,7 @@ function getAdminFilePreview(): void {
     exit;
 }
 
-# Answer one file of the system area as a download; a direct link is no use here, because the web server would execute index.php instead of handing it over (§17)
-# The route decides who may have the file and the shared download path decides how it leaves, so the headers of a download are written in one place for the whole project
+# Answer one system file as a download through getFileStream(); a direct link would run a script or reach nothing outside public/
 function getAdminFileDownload(): void {
     $man = getAdminFileManager();
     $path = getAdminFilePath('file');
@@ -1491,11 +1452,7 @@ function getAdminFileDownload(): void {
     getFileStream($one['realpath'], $one['name']);
 }
 
-# Finish a clean installation for its first main administrator: every shipped profile of Node becomes an active type through the one import path, news gets the starter material
-# Only the mark node => new that the installer leaves in config/update.php opens this and the mark leaves afterwards, so an upgraded site gets no type here
-# A profile the installation could not finish - not created, not switched on or, for news, without starter material - is named in the answer and logged with step and reason
-# The other profiles are created all the same, and a mark that cannot be removed is logged, because no later request reaches this again
-# The starter material takes its title and text from the language constants of the panel, so it is written in the language the first administrator works in
+# Turn every shipped Node profile into an active type, news with starter material; only the mark node => new the installer writes to config/update.php opens it
 function addNodeProfiles(int $aid): string {
     global $db, $conf, $fld, $pnt;
     if (($conf['update']['node'] ?? '') !== 'new') return '';

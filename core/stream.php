@@ -9,14 +9,12 @@ if (!defined('MODULE_FILE') && !defined('ADMIN_FILE')) die('Illegal file access'
 # The one upload root of every owner, at the project level and never below the document root, so no server can execute or list an uploaded file
 if (!defined('UPLOADS_DIR')) define('UPLOADS_DIR', BASE_DIR.'/uploads');
 
-# The upload folders the light path serves at their direct address uploads/<folder>/<name>; any other folder below UPLOADS_DIR is read only through the route of its owner
-# Closing an owner takes its folder off this list and moves no file, and getUploadUrl() asks the same list, so an address the site prints and its delivery never disagree
+# The upload folders the light path serves at uploads/<folder>/<name>; getUploadUrl() asks the same list, so a printed address and its delivery agree
 function getUploadPublic(): array {
     return ['all', 'avatars', 'presentation'];
 }
 
-# The address uploads/<path> from the root of the site of a path below UPLOADS_DIR whose first folder is on the public list of the light path, else an empty string
-# A file of a private owner has no address of its own: only the route of that owner builds one, after its rights check, so no caller spells uploads/ into an address
+# The address uploads/<path> of a file in a public folder, else an empty string; a file of a private owner gets one only from its route after the rights check
 function getUploadUrl(string $path): string {
     $path = ltrim(str_replace('\\', '/', $path), '/');
     return in_array(explode('/', $path)[0], getUploadPublic(), true) ? HOME_PATH.'uploads/'.$path : '';
@@ -32,9 +30,7 @@ function getRequestPath(string $dir): ?string {
     return null;
 }
 
-# The light path: answer one request below uploads/ before the core boots, without configuration, database or session, and end the request there
-# Only a file of a public folder is served, a thumb/ copy included; a private folder, a dot segment, a control character, a link out of its folder or a missing file is gone
-# The type comes from a fixed map of the formats the upload service accepts; getFileStream() sends a type outside its inline list as an attachment, an SVG included
+# The light path: serve one file of a public upload folder before the core boots, anything else 410; the type comes from a fixed map, never the request
 function setUploadStream(string $rel): never {
     $mime = ['avif' => 'image/avif', 'flac' => 'audio/flac', 'gif' => 'image/gif', 'jpeg' => 'image/jpeg', 'jpg' => 'image/jpeg', 'm4a' => 'audio/mp4', 'mp3' => 'audio/mpeg',
         'mp4' => 'video/mp4', 'oga' => 'audio/ogg', 'ogg' => 'audio/ogg', 'opus' => 'audio/ogg', 'png' => 'image/png', 'svg' => 'image/svg+xml', 'wav' => 'audio/wav',
@@ -55,15 +51,7 @@ function setUploadStream(string $rel): never {
     getFileStream($file, basename($file), $mime[strtolower(pathinfo($file, PATHINFO_EXTENSION))] ?? 'application/octet-stream', true, 'public');
 }
 
-# Hand one stored file to the client and end the request there, which is the single file answer of the project and the one place its headers are decided
-# The caller names the type from server metadata or a fixed map, never from the request, and a type outside the closed inline registry is sent as the opaque one and saved
-# Every answer carries nosniff and a sandbox policy, so a stored SVG or HTML file opened by its address runs no script on the site
-# The name is reduced to its own last segment and encoded, so a name assembled out of a request carries no separator and can append no header line
-# The cache mode none forbids a copy, private lets one browser keep it revalidated through its entity tag and date, public lets any cache keep it a day
-# The file itself is never copied into the cache directory
-# A GET honours one byte range, a malformed or unsatisfiable one gets 416 and several are ignored for the whole file; a HEAD gets the headers of the whole file
-# $start runs once, after the conditions are decided and before the first header leaves, for a whole body or a range from byte zero alone - never for HEAD, 304 or 416
-# The body is read in bounded blocks from the one open handle and the loop stops when the client goes away, so the size of the file never reaches the memory of PHP
+# The one file answer of the project, sandboxed, its type from a closed list; $start runs before the headers leave, for a body from byte zero, never HEAD, 304 or 416
 function getFileStream(string $path, string $name, string $mime = 'application/octet-stream', bool $inline = false, string $cache = 'none', ?callable $start = null): never {
     $safe = ['image/gif', 'image/jpeg', 'image/png', 'image/webp', 'image/avif', 'audio/mpeg', 'audio/wav', 'audio/x-wav', 'audio/vnd.wave', 'audio/flac', 'audio/x-flac',
         'audio/ogg', 'audio/mp4', 'audio/x-m4a', 'audio/webm', 'video/mp4', 'video/webm', 'video/ogg'];

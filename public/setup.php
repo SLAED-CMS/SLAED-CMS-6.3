@@ -17,9 +17,7 @@ define('CACHE_DIR', BASE_DIR.'/storage/cache');
 define('LOGS_DIR', BASE_DIR.'/storage/logs');
 define('UPDATE_DIR', BASE_DIR.'/storage/update');
 
-# Read one request value through the only filter of the installer, because the core getVar() is not loaded before the last part
-# A value that is not a string is empty and control characters never pass; pass keeps the spaces of a password, every other value is trimmed
-# The type var keeps letters, digits, _ and -, num keeps a whole number and text drops the markup
+# Read one POST or cookie value through the filter of the installer, as getVar() is not loaded before the last part; pass keeps the spaces of a password
 function getSetupVar(string $src, string $key, string $type = ''): string {
     $list = ($src === 'cookie') ? $_COOKIE : $_POST;
     $val = is_string($list[$key] ?? null) ? (string)preg_replace('/[\x00-\x1F\x7F]/u', '', $list[$key]) : '';
@@ -31,15 +29,13 @@ function getSetupVar(string $src, string $key, string $type = ''): string {
     return $val;
 }
 
-# Whether a POST carries the token of this installation, kept in the session of the browser that started it
-# It is the CSRF guard of every form and of every part of the run, because the core tokens need the core
+# Whether a POST carries the session token of this installation, the CSRF guard of every form and part, as the core tokens need the core
 function checkSetupToken(array $state): bool {
     $code = (string)$state['token'];
     return $code !== '' && hash_equals($code, getSetupVar('post', 'token', 'var'));
 }
 
-# The answers of this installation from the session of the browser that started it; a session without them begins with an empty token
-# The key reach is the furthest stop this browser may post from, part the next part of the run or -1 before it, count the number of parts and made the tables created
+# The answers of this installation from the session; reach is the furthest stop the browser may post from, part the next part of the run or -1 before it
 function getSetupState(): array {
     global $conf;
     $data = $_SESSION[$conf['user_c'].'-setup'] ?? [];
@@ -114,8 +110,7 @@ function getSetupBase(): array {
     return is_array($data) ? $data : [];
 }
 
-# Saving configurations to a file; every scalar is stored as a string unless $raw keeps the native types the definitions of the extra fields are made of
-# The answer says whether the whole file was written: a file or a config/ that is not writable is left as it was and answers false, which every caller reports
+# Write one configuration file, every scalar a string unless $raw keeps native types; a file not writable stays as it was and answers false
 function setSetupFile(string $fp, array $arr, array $act = [], bool $raw = false): bool {
     $fp = BASE_DIR.'/config/'.$fp;
     if (!empty($act)) $arr = array_replace_recursive($arr, $act);
@@ -183,8 +178,7 @@ function checkSetupUrl(string $url): bool {
     return in_array(strtolower($part['scheme'] ?? ''), ['http', 'https'], true) && !array_intersect_key($part, array_flip(['user', 'pass', 'query', 'fragment']));
 }
 
-# Whether the site is installed already: config/db.php names a database whose admins table holds a row, or that database does not answer at all
-# A database that does not answer counts as installed, so a site whose server is down is never handed to the first visitor; the browser that runs the installation passes
+# Whether the site is installed: config/db.php names a database with an admin row or one that does not answer, so a downed server is never handed out
 function checkSetupDone(array $state): bool {
     $base = getSetupBase();
     if ((string)($base['name'] ?? '') === '' || $state['part'] >= 0) return false;
@@ -198,10 +192,7 @@ function checkSetupDone(array $state): bool {
     return $db->getSqlRow($res) !== null;
 }
 
-# The check rows of the server stop: PHP 8.4 and the extensions the system needs, the three directories PHP has to write into and the protocol the site answers by
-# Zip and Zlib are optional: a missing one only warns, the site runs without it, archives of that kind are off and an upload of that kind keeps its structural check
-# The directory config/ counts as writable only while the files the run writes are writable too, because a permission is never changed
-# The document root is a row of its own: public/ is the recommended mode, the project as root works on Apache and LiteSpeed through the rewrite and is shown as a warning
+# The check rows of the server stop; config/ counts as writable only with the files the run writes, as the installer never changes a permission
 function getSetupChecks(): array {
     $list = [['PHP '.PHP_VERSION, sprintf(_SETUP_NEED, '8.4'), version_compare(PHP_VERSION, '8.4.0', '>=')]];
     $exts = ['mbstring' => ['mbstring', _SETUP_MBSTRING, true], 'pdo_mysql' => ['PDO MySQL', _SETUP_PDO, true], 'json' => ['JSON', _SETUP_JSON, true],
@@ -233,8 +224,7 @@ function getSetupRoot(): string {
     return $same ? 'public' : 'project';
 }
 
-# Probe the database the answers name: the connection, the server version and a prefix no table of the database carries yet; the answer holds the rows and the first refusal
-# The server has to enforce CHECK constraints and to know RENAME COLUMN and RENAME INDEX of the schema files, which MariaDB has from 10.5.2 on and MySQL from 8.0.16
+# Probe the database of the answers; MariaDB 10.5.2 and MySQL 8.0.16 are the floor, as the schema files use CHECK and RENAME COLUMN
 function getSetupProbe(array $base): array {
     $rows = [['turn' => 0, 'text' => sprintf(_SETUP_CONNECT, $base['host']), 'note' => sprintf(_SETUP_CONN_USER, $base['uname']), 'is_fail' => true]];
     if ($base['host'] === '' || $base['uname'] === '' || $base['name'] === '') return ['checks' => $rows, 'fail' => _SQLERRORCON];
@@ -259,8 +249,7 @@ function getSetupProbe(array $base): array {
     return ['checks' => $rows, 'fail' => $taken ? sprintf(_SETUP_TAKEN, $base['prefix']) : ''];
 }
 
-# Take the answers of one stop into the session and answer the refusal of the first value outside its grammar, or an empty string; $test is off for the back button
-# A password is taken as typed, an empty one too, since a local database user often has none; the one of the administrator is kept only as its hash
+# Take the answers of one stop into the session and answer the first refusal; $test is off for the back button, a database password may be empty
 function checkSetupInput(int $stop, array &$state, bool $test): string {
     if ($stop === 0) {
         $code = getSetupVar('post', 'lang', 'var');
@@ -292,8 +281,7 @@ function checkSetupInput(int $stop, array &$state, bool $test): string {
     return '';
 }
 
-# The preflight of the run on the press of Install: the answers keep their grammar, the configuration files are writable and no configuration operation waits in its journal
-# Both schema files have to split, and the database has to answer with a free prefix; the answer is the first refusal or an empty string
+# The preflight of Install, answering the first refusal; a configuration operation waiting in its journal marker.json refuses the run
 function checkSetupRun(array $state): string {
     if (!checkSetupPrefix((string)($state['base']['prefix'] ?? ''))) return _SETUP_BADPREFIX;
     if (!checkSetupPanel((string)($state['site']['panel'] ?? ''))) return _SETUP_BADPANEL;
@@ -323,8 +311,7 @@ function getSetupParts(): array {
     return $list;
 }
 
-# Take the next part of the run for this request and mark it busy, or answer -1: a wrong token, a run that has not started, has failed or is over
-# A part that is still marked busy broke its request off, so it fails the run instead of running twice
+# Take the next part of the run and mark it busy, or -1; a part still busy broke its request off, so it fails the run instead of running twice
 function getSetupNext(array &$state): int {
     if (!checkSetupToken($state) || $state['part'] < 0 || $state['fail'] !== '' || $state['part'] >= $state['count']) return -1;
     if ($state['busy'] >= 0) {
@@ -366,9 +353,7 @@ function setSetupRun(array $state): array {
     return setSetupNext($state, $out);
 }
 
-# The configuration part keeps the writes of the old installer: global.php takes language, address, name and the mode of the document root, admin.php the chosen panel name
-# Then security.php takes the name the panel file really has, db.php the connection, and the Node types of an earlier installation leave config/node.php with their package
-# The database is probed once more first, and the password leaves the session afterwards, since the later parts read it from config/db.php
+# Write the configuration part after one more probe; the password then leaves the session, as the later parts read it from config/db.php
 function setSetupConfig(array &$state): array {
     global $conf;
     $base = $state['base'];
@@ -397,8 +382,7 @@ function setSetupConfig(array &$state): array {
     return ['task' => $task, 'fail' => ''];
 }
 
-# Take the types of config/node.php out of the four areas of their package - node.types, fields.node, uploads and ratings node.<name> - as the panel removes a type
-# A clean installation takes every type; a file that cannot be written answers false, and node.php goes last, so a repeat still finds the types to take out
+# Take the types of config/node.php out of their package files as the panel removes a type; node.php goes last, so a repeat still finds them
 function deleteSetupTypes(): array|false {
     $ntypes = array_keys(getSetupSource('node.php')['node']['types'] ?? []);
     if (!$ntypes) return [];
@@ -410,8 +394,7 @@ function deleteSetupTypes(): array|false {
     return $ntypes;
 }
 
-# Run one part of statements of table.sql or insert.sql on the connection of config/db.php; the first failed statement stops the run with its table and the reason of the server
-# The last statement of insert.sql leaves config/update.php: the marks of points, ratings, fields and Node types, the update check and the step mark of the version
+# Run one part of table.sql or insert.sql; the part before the administrator writes config/update.php with the mark node => new addNodeProfiles() reads
 function setSetupTables(array &$state, array $item): array {
     $base = getSetupBase();
     try {
@@ -482,9 +465,7 @@ function addSetupAdmin(array &$state, string $hash): array {
     return ['task' => _ADMIN.' '.$adm['name'].' — '.(($adm['user'] === '1') ? _SETUP_ADM_USER : _SETUP_ADM_MADE), 'fail' => ''];
 }
 
-# The closing stop, reached once every part has run: the installer deletes itself from the document root, the session ends and the stop names the panel address
-# A file the server would not let go keeps the warning the panel shows as well, and a Node profile the last part could not finish is named beside it
-# The lead counts the tables created, the active modules of the site without those of the panel, and the shipped languages
+# The closing stop: the installer deletes itself and the session ends; a file the server keeps leaves the warning the panel monitor shows as well
 function setSetupDone(array &$state): array {
     global $conf;
     $site = $state['site'];
@@ -499,8 +480,7 @@ function setSetupDone(array &$state): array {
         'panel_text' => _SETUP_OPENPANEL];
 }
 
-# Refuse an installed site: no form, no write and no delete, only the session of the installation is dropped
-# The installer deletes itself only at the end of its own installation, so a site that keeps it, a development copy too, keeps the warning of the panel instead
+# Refuse an installed site with no form, write or delete; a kept installer, a development copy too, leaves the warning of the panel instead
 function setSetupShut(): void {
     setSetupState([]);
     setSetupPage(-1, ['title' => _SETUP_TITLE, 'alert_html' => getSetupAlert(_SETUP_INSTALLED, 'warn')]);
@@ -583,8 +563,7 @@ function getSetupView(int $stop, array $state): array {
     return $view;
 }
 
-# The stop a button leads to and what that stop shows beside its own data; next takes and checks the answers of the stop, probe asks the database, back keeps what was typed
-# Install runs the preflight and starts the run; the run hands the form back when it is over, and then the refusal of a failed part or the closing stop follows
+# The stop a button leads to: next checks the answers, probe asks the database, back keeps what was typed and Install starts the run after its preflight
 function getSetupMove(int $stop, string $go, array &$state): array {
     if ($go === 'back') {
         checkSetupInput($stop, $state, false);
@@ -609,8 +588,7 @@ function getSetupMove(int $stop, string $go, array &$state): array {
     return [$stop + 1, []];
 }
 
-# Answer one request of the stops: a POST has to carry the token, the answers of the stop it came from are taken, and the stop the pressed button leads to is rendered
-# A run under way leaves the stops alone, so a second tab or a reload never changes an answer the run already uses; a GET opens the first stop or the run where it stands
+# Answer one request of the stops; a run under way leaves the stops alone, so a second tab or a reload never changes an answer the run uses
 function setSetupStep(array $state): void {
     $post = ($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST';
     if ($post && !checkSetupToken($state)) $state = [];
