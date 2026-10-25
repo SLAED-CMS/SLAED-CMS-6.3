@@ -207,6 +207,7 @@ function getMigrateAttach(string $text, string $dir, int $nid, Closure $have): s
         return $good ? $one : '';
     };
     $tag = function (string $file, string $align, string $title, bool $full): string {
+        $title = (string)preg_replace('/\\\\([!-\/:-@\[-`{-~])/', '$1', $title);
         $title = trim((string)preg_replace('/\s+/u', ' ', (string)preg_replace('/[^\pL0-9_\-. "]+/u', ' ', $title)));
         return '[attach='.$file.' align='.($align !== '' ? strtolower($align) : 'none').' title='.($title !== '' ? $title : 'title').($full ? ' size=full' : '').']';
     };
@@ -219,6 +220,8 @@ function getMigrateAttach(string $text, string $dir, int $nid, Closure $have): s
         }, $src) ?? $src;
     };
     $text = $hide($text, '#\[(code|php|usehtml|usephp)\b[^\]]*\].*?\[/\1\]#si');
+    $text = $hide($text, '/^ {0,3}(`{3,}|~{3,})[^\n]*\n.*?(?:^ {0,3}\1[`~]*[ \t]*$|\z)/ms');
+    $text = $hide($text, '/(?<![`\\\\])(`+)(?!`)(?:[^\n]|\n(?![ \t]*\n))+?(?<!`)\1(?!`)/');
     $img = '\[img(?:=([a-z]+))?(?: alt=([^\]]*))?\]';
     $text = preg_replace_callback('#\[url='.$addr.'\]\s*'.$img.$addr.'\[/img\]\s*\[/url\]#i', function (array $m) use ($name, $tag): string {
         $file = ($m[4] === 'thumb/'.$m[1]) ? $name($m[1]) : '';
@@ -226,7 +229,14 @@ function getMigrateAttach(string $text, string $dir, int $nid, Closure $have): s
         $file = $name($m[4]);
         return ($file !== '') ? $tag($file, $m[2], $m[3], true) : $m[0];
     }, $text) ?? $text;
+    $text = preg_replace_callback('#\[!\[([^\]\n]*)\]\('.$addr.'\)\]\('.$addr.'\)#i', function (array $m) use ($name, $tag): string {
+        $file = ($m[2] === 'thumb/'.$m[3]) ? $name($m[3]) : '';
+        if ($file !== '') return $tag($file, '', $m[1], false);
+        $file = $name($m[2]);
+        return ($file !== '') ? $tag($file, '', $m[1], true) : $m[0];
+    }, $text) ?? $text;
     $text = $hide($text, '#\[url(?:=[^\]]*)?\](?:(?!\[/url\]).)*?\[/url\]#si', fn(string $v): bool => stripos($v, '[img') !== false);
+    $text = $hide($text, '#\[!\[[^\]\n]*\]\([^)\s]*\)\]\([^)\s]*\)#');
     $text = preg_replace_callback('#'.$img.$addr.'\[/img\]#i', function (array $m) use ($name, $tag): string {
         $thumb = str_starts_with($m[3], 'thumb/');
         $file = $name($thumb ? substr($m[3], 6) : $m[3]);
@@ -240,6 +250,9 @@ function getMigrateAttach(string $text, string $dir, int $nid, Closure $have): s
     $link = fn(array $m): string => ($name($m[1]) !== '') ? $tag($name($m[1]), '', (stripos($m[2] ?? '', 'uploads/') === false) ? ($m[2] ?? '') : '', false) : $m[0];
     $text = preg_replace_callback('#\[url='.$addr.'\]([^\[]*)\[/url\]#i', $link, $text) ?? $text;
     $text = preg_replace_callback('#\[url\]'.$addr.'\[/url\]#i', $link, $text) ?? $text;
+    $text = preg_replace_callback('#(?<![!\\\\])\[((?:\\\\.|[^\]\[\\\\\n*_~`])*)\]\('.$addr.'\)#i', fn(array $m): string => $link([$m[0], $m[2], $m[1]]), $text) ?? $text;
+    $text = preg_replace_callback('#<(https?://(?:www\.)?'.$host.'/uploads/'.preg_quote($dir, '#').'/([A-Za-z0-9_./%-]+))>#i', fn(array $m): string => $link([$m[0], $m[2]]), $text)
+        ?? $text;
     for ($i = count($keep) - 1; $i >= 0; $i--) $text = str_replace("\x01".$i."\x01", $keep[$i], $text);
     if ($nid < 1) return $text;
     return preg_replace_callback('#\[usehtml\].*?\[/usehtml\]#si', function (array $blk) use ($addr, $name, $nid): string {
@@ -251,15 +264,16 @@ function getMigrateAttach(string $text, string $dir, int $nid, Closure $have): s
     }, $text) ?? $text;
 }
 
-# Rewrite direct addresses of files in uploads/$dir, a folder of another owner than the text, into the file address of owner $own and the target $find answers for the name
-# A quoted example inside [code] or [php] stays, and a name $find answers 0 for keeps its address, which answers 410
+# Point direct addresses into uploads/$dir of another owner at the file address of owner $own and target $find; quoted code and a name answered 0 keep the address (410)
 function getMigrateForeign(string $text, string $dir, string $own, Closure $find): string {
     global $conf;
     if (stripos($text, 'uploads/'.$dir.'/') === false) return $text;
     $host = preg_quote((string)preg_replace('#^www\.#i', '', (string)parse_url((string)($conf['homeurl'] ?? ''), PHP_URL_HOST)), '#');
     $addr = '(?<![A-Za-z0-9_./:%-])(?:\./|/|https?://(?:www\.)?'.$host.'/)?uploads/'.preg_quote($dir, '#').'/([A-Za-z0-9_./%-]+)';
     $keep = [];
-    $text = preg_replace_callback('#\[(code|php)\b[^\]]*\].*?\[/\1\]#si', function (array $m) use (&$keep): string {
+    $code = ['#\[(code|php)\b[^\]]*\].*?\[/\1\]#si', '/^ {0,3}(`{3,}|~{3,})[^\n]*\n.*?(?:^ {0,3}\1[`~]*[ \t]*$|\z)/ms',
+        '/(?<![`\\\\])(`+)(?!`)(?:[^\n]|\n(?![ \t]*\n))+?(?<!`)\1(?!`)/'];
+    $text = preg_replace_callback($code, function (array $m) use (&$keep): string {
         $keep[] = $m[0];
         return "\x01".(count($keep) - 1)."\x01";
     }, $text) ?? $text;
@@ -298,20 +312,23 @@ function getMigrateBlocks(string $text, array &$keep): string {
     return $text;
 }
 
-# Convert the raw HTML of a legacy text into the BB and Markdown a Node text renders: breaks, emphasis, colour, links, images, code, lists, headings, paragraphs and rules
-# Code, [usehtml] and [usephp] regions stay exactly as written; unknown blocks become [usehtml] blocks in a trusted text and plain text in a comment
-# Entities are decoded last, so the text shows the characters the old trusted rendering showed and a decoded tag stays visible text
-function getMigrateHtml(string $text, bool $trust): string {
-    $text = str_replace(["\r\n", "\r"], "\n", $text);
+
+# Convert the raw HTML of a 6.2 text into Markdown: HTML becomes the BB of getMigrateMarkdown() or a finished Markdown piece behind a \x03 or \x04 marker it passes through
+function getMigrateHtml(string $text, bool $trust, array &$seen = []): string {
+    $text = str_replace(["\r\n", "\r", "\x03", "\x04"], ["\n", "\n", '', ''], $text);
     $keep = [];
+    $mark = [];
+    $put = function (string $val, string $kind) use (&$mark): string {
+        $mark[] = $val;
+        return $kind.(count($mark) - 1).$kind;
+    };
     $text = preg_replace_callback('#\[(code|php|usehtml|usephp)\b[^\]]*\].*?\[/\1\]#si', function (array $mat) use (&$keep): string {
-        $raw = in_array(strtolower($mat[1]), ['usehtml', 'usephp'], true);
-        $keep[] = $raw ? $mat[0] : (preg_replace('#<br\s*/?>[ \t]*\n?#i', "\n", $mat[0]) ?? $mat[0]);
+        $keep[] = $mat[0];
         return "\x01".(count($keep) - 1)."\x01";
     }, $text) ?? $text;
     $text = preg_replace('/^[ \t]+/m', '', $text) ?? $text;
     if ($trust) $text = getMigrateBlocks($text, $keep);
-    $text = preg_replace(['#<!--.*?-->#s', '#<br\s*/?>[ \t]*\n?#i'], ['', "  \n"], $text) ?? $text;
+    $text = preg_replace('#<!--.*?-->#s', '', $text) ?? $text;
     do {
         $text = preg_replace_callback('#<font\b([^>]*)>((?:(?!<font\b).)*?)</font>#si', function (array $mat): string {
             $color = preg_match('/color\s*=\s*["\']?(#?[a-z0-9]+)/i', $mat[1], $hit) ? $hit[1] : '';
@@ -320,40 +337,333 @@ function getMigrateHtml(string $text, bool $trust): string {
     } while ($num > 0);
     $text = preg_replace_callback('#<(?:a|img)\b[^>]*>#i', fn(array $m): string => str_ireplace(['&#034;', '&#34;', '&quot;'], '"', $m[0]), $text) ?? $text;
     $text = preg_replace_callback('#<a\b([^>]*)>(.*?)</a>#si', function (array $mat): string {
-        $href = preg_match('/href\s*=\s*(?:"([^"]*)"|\'([^\']*)\'|([^\s>]+))/i', $mat[1], $hit) ? trim(html_entity_decode($hit[1] ?: ($hit[2] ?? '') ?: ($hit[3] ?? ''))) : '';
+        $href = preg_match('/href\s*=\s*(?:"([^"]*)"|\'([^\']*)\'|([^\s>]+))/i', $mat[1], $hit) ? trim($hit[1] ?: ($hit[2] ?? '') ?: ($hit[3] ?? '')) : '';
+        $href = strtr($href, ['[' => '%5B', ']' => '%5D']);
         $label = trim($mat[2]);
-        if ($href === '' || preg_match('/^(?:javascript|vbscript|data):/i', $href)) return $label;
+        if ($href === '' || preg_match('/^(?:javascript|vbscript|data):/i', trim(html_entity_decode($href)))) return $label;
         return ($label === '' || $label === $href) ? '[url]'.$href.'[/url]' : '[url='.$href.']'.$label.'[/url]';
     }, $text) ?? $text;
     $text = preg_replace_callback('#<img\b([^>]*)>#i', function (array $mat): string {
         $src = preg_match('/src\s*=\s*(?:"([^"]*)"|\'([^\']*)\'|([^\s>]+))/i', $mat[1], $hit) ? trim($hit[1] ?: ($hit[2] ?? '') ?: ($hit[3] ?? '')) : '';
-        return ($src !== '') ? '[img]'.html_entity_decode($src).'[/img]' : '';
+        return ($src !== '') ? '[img]'.strtr($src, ['[' => '%5B', ']' => '%5D']).'[/img]' : '';
     }, $text) ?? $text;
-    $text = preg_replace_callback('#<(code|tt|kbd)\b[^>]*>(.*?)</\1>#si', fn(array $m): string => preg_match('/[`\n]/', $m[2]) ? $m[2] : '`'.$m[2].'`', $text) ?? $text;
+    $text = preg_replace_callback('#<(code|tt|kbd)\b[^>]*>(.*?)</\1>#si', function (array $mat) use ($put): string {
+        $body = html_entity_decode(strip_tags($mat[2]), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        if (trim($body) === '' || str_contains($body, "\n")) return $mat[2];
+        $tick = str_repeat('`', max(array_map('strlen', preg_split('/[^`]+/', $body) ?: [''])) + 1);
+        $pad = (str_starts_with($body, '`') || str_ends_with($body, '`') || (str_starts_with($body, ' ') && str_ends_with($body, ' '))) ? ' ' : '';
+        return $put($tick.$pad.$body.$pad.$tick, "\x04");
+    }, $text) ?? $text;
     $pairs = ['b|strong' => 'b', 'i|em' => 'i', 'u|ins' => 'u', 's|strike|del' => 's'];
     foreach ($pairs as $tags => $bb) $text = preg_replace(['#<(?:'.$tags.')\b[^>]*>#i', '#</(?:'.$tags.')>#i'], ['['.$bb.']', '[/'.$bb.']'], $text) ?? $text;
     do {
-        $text = preg_replace_callback('#<(ul|ol)\b[^>]*>((?:(?!<(?:ul|ol)\b).)*?)</\1>#si', function (array $mat): string {
+        $text = preg_replace_callback('#<(ul|ol)\b[^>]*>((?:(?!<(?:ul|ol)\b).)*?)</\1>#si', function (array $mat) use ($put): string {
             $items = preg_split('#<li\b[^>]*>#i', $mat[2]) ?: [];
             array_shift($items);
             $out = [];
             foreach ($items as $i => $one) {
+                $head = (strtolower($mat[1]) === 'ol') ? ($i + 1).'. ' : '- ';
                 $lines = array_map('ltrim', explode("\n", trim(str_ireplace('</li>', '', $one))));
-                $out[] = ((strtolower($mat[1]) === 'ol') ? ($i + 1).'. ' : '- ').implode("\n   ", $lines);
+                $out[] = $put($head, "\x03").implode("\n".$put(str_repeat(' ', strlen($head)), "\x03"), $lines);
             }
             return "\n\n".implode("\n", $out)."\n\n";
         }, $text, -1, $num) ?? $text;
     } while ($num > 0);
-    $text = preg_replace_callback('#<h([1-6])\b[^>]*>(.*?)</h\1>#si',
-        fn(array $m): string => "\n\n".str_repeat('#', intval($m[1])).' '.trim(preg_replace('/\s+/', ' ', $m[2]) ?? '')."\n\n", $text) ?? $text;
+    $text = preg_replace_callback('#<h([1-6])\b[^>]*>(.*?)</h\1>#si', fn(array $m): string => "\n\n".$put(str_repeat('#', intval($m[1])).' ', "\x03")
+        .trim(preg_replace('/\s+/', ' ', $m[2]) ?? '')."\n\n", $text) ?? $text;
     $text = preg_replace_callback('#<p\b[^>]*align\s*=\s*["\']?center[^>]*>(.*?)</p>#si', fn(array $m): string => "\n\n[center]".trim($m[1])."[/center]\n\n", $text) ?? $text;
-    $from = ['#<center\b[^>]*>#i', '#</center>#i', '#<blockquote\b[^>]*>#i', '#</blockquote>#i', '#<hr\b[^>]*>#i', '#</?p\b[^>]*>#i', '#</?[a-z][a-z0-9]*\b[^>]*>#i'];
+    $from = ['#<center\b[^>]*>#i', '#</center>#i', '#<blockquote\b[^>]*>#i', '#</blockquote>#i', '#<hr\b[^>]*>#i', '#</?p\b[^>]*>#i', '#</?(?!br\b)[a-z][a-z0-9]*\b[^>]*>#i'];
     $text = preg_replace($from, ['[center]', '[/center]', "\n[quote]", "[/quote]\n", "\n[hr]\n", "\n\n", ''], $text) ?? $text;
-    $text = html_entity_decode($text, ENT_QUOTES | ENT_HTML5, 'UTF-8');
-    $text = preg_replace(['/\n[ \t]+\n/', '/\n{3,}/', '/^(?=[ \t]*([-=*_])(?:[ \t]*\1){2,}[ \t]*$)/m'], ["\n\n", "\n\n", '\\\\'], $text) ?? $text;
+    $text = preg_replace(['/\n[ \t]+\n/', '/\n{3,}/'], ["\n\n", "\n\n"], $text) ?? $text;
     $text = getMigrateLocal($text);
     $text = preg_replace_callback("/\x01([0-9]+)\x01/", fn(array $m): string => $keep[intval($m[1])], $text) ?? $text;
-    return trim(preg_replace('/\n{3,}/', "\n\n", $text) ?? $text);
+    $text = getMigrateMarkdown($text, true, $seen);
+    $text = preg_replace_callback("/([\x03\x04])([0-9]+)\\1/", fn(array $m): string => $mark[intval($m[2])], $text) ?? $text;
+    return trim($text);
+}
+
+# Convert stored BB into Markdown by the grammar of the BB code plan: a BB era text escapes its text runs, a Markdown one keeps them; $seen counts the forms met
+function getMigrateMarkdown(string $text, bool $esc, array &$seen = []): string {
+    $orig = $text;
+    $text = str_replace(["\r\n", "\r", "\x01", "\x02", "\x05"], ["\n", "\n", '', '', ''], $text);
+    $flat = $text;
+    $keep = [];
+    $wide = [];
+    $put = function (string $val, bool $block = false) use (&$keep, &$wide): string {
+        $keep[] = $val;
+        if ($block) $wide[count($keep) - 1] = true;
+        return $block ? "\x05\x01".(count($keep) - 1)."\x01\x05" : "\x01".(count($keep) - 1)."\x01";
+    };
+    $see = function (string $key, int $num = 1) use (&$seen): void {
+        $seen[$key] = ($seen[$key] ?? 0) + $num;
+    };
+    $text = preg_replace_callback('#\[(usehtml|usephp)\].*?\[/\1\]#si', function (array $m) use ($put, $see): string {
+        $see(strtolower($m[1]));
+        return $put($m[0]);
+    }, $text) ?? $text;
+    $src = $text;
+    $text = preg_replace_callback('#\[(code|php)(=[^\]\n]*)?\](.*?)\[/\1\]#si', function (array $m) use ($src, $put, $see): string {
+        [$all, $at] = $m[0];
+        $name = strtolower($m[1][0]);
+        $attr = ($m[2][1] ?? -1) >= 0 ? substr($m[2][0], 1) : null;
+        if ($attr !== null && $name === 'php') return $all;
+        $see($name);
+        $body = html_entity_decode((string)preg_replace('#<br\s*/?>[ \t]*\n?#i', "\n", $m[3][0]), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        $from = strrpos(substr($src, 0, $at), "\n");
+        $head = substr($src, ($from === false) ? 0 : $from + 1, $at - (($from === false) ? 0 : $from + 1));
+        $stop = strpos($src, "\n", $at + strlen($all));
+        $tail = substr($src, $at + strlen($all), (($stop === false) ? strlen($src) : $stop) - $at - strlen($all));
+        $run = max(array_map('strlen', preg_split('/[^`]+/', $body) ?: ['']));
+        $alone = preg_match('#^(?:\s|<br\s*/?>)*$#i', $head) && preg_match('#^(?:\s|<br\s*/?>)*$#i', $tail);
+        if (trim($body) === '') return '';
+        if (!str_contains($body, "\n") && !$alone) {
+            $tick = str_repeat('`', $run + 1);
+            $pad = (str_starts_with($body, '`') || str_ends_with($body, '`') || (str_starts_with($body, ' ') && str_ends_with($body, ' '))) ? ' ' : '';
+            return $put($tick.$pad.$body.$pad.$tick);
+        }
+        $body = rtrim((string)preg_replace('/^(?:[ \t]*\n)+/', '', $body));
+        $lang = ($name === 'php') ? 'php' : (string)preg_replace('/[^A-Za-z0-9_+#.-]+/', '', (string)$attr);
+        $tick = str_repeat('`', max(3, $run + 1));
+        return $put($tick.$lang."\n".$body."\n".$tick, true);
+    }, $text, -1, $num, PREG_OFFSET_CAPTURE) ?? $text;
+    if (!$esc) {
+        $text = preg_replace_callback('/^ {0,3}(`{3,}|~{3,})[^\n]*\n.*?(?:^ {0,3}\1[`~]*[ \t]*$|\z)/ms', fn(array $m): string => $put($m[0]), $text) ?? $text;
+        $text = preg_replace_callback('/(?<!`)(`+)(?!`)(?:[^\n]|\n(?![ \t]*\n))+?(?<!`)\1(?!`)/', fn(array $m): string => $put($m[0]), $text) ?? $text;
+    }
+    $val = '[^\]\s](?:[^\]\n]*[^\]\s])?';
+    $word = '[\pL0-9_\-.\"](?:[\pL0-9_\-.\" ]*[\pL0-9_\-.\"])?';
+    $pairs = ['b' => '', 'i' => '', 's' => '', 'u' => '', 'quote' => '', 'hide' => '', 'left' => '', 'center' => '', 'right' => '', 'justify' => '',
+        'url' => '(?:=[ \t]*('.$val.')[ \t]*)?', 'mail' => '(?:[ \t]*=[ \t]*('.$val.')[ \t]*)?', 'img' => '(?:=([a-zA-Z]+))?(?: alt=([\pL0-9_\-.\" \t]+))?',
+        'color' => '=[ \t]*('.$val.')[ \t]*', 'size' => '=([0-9]{1,2})', 'family' => '=([A-Za-z](?:[A-Za-z ]*[A-Za-z])?) *', 'tabs' => '=('.$val.')', 'tab' => '=('.$word.')'];
+    $ones = ['hr' => '', 'li' => '', 'attach' => '='.$val, 'block' => '=[0-9]{1,10}'];
+    preg_match_all('#\[(/?)([a-zA-Z]+)([= ][^\]\n]*)?\]#', $text, $hits, PREG_SET_ORDER | PREG_OFFSET_CAPTURE);
+    $list = [];
+    $pos = 0;
+    foreach ($hits as $hit) {
+        $name = strtolower($hit[2][0]);
+        $rest = $hit[3][0] ?? '';
+        $args = [];
+        if ($hit[1][0] === '/') {
+            $kind = (isset($pairs[$name]) && $rest === '') ? 'close' : '';
+        } elseif (isset($pairs[$name]) && preg_match('#^'.$pairs[$name].'$#u', $rest, $args)) {
+            $kind = 'open';
+        } else {
+            $kind = (isset($ones[$name]) && preg_match('#^'.$ones[$name].'$#u', $rest)) ? 'one' : '';
+        }
+        if ($kind === '') continue;
+        if ($hit[0][1] > $pos) $list[] = ['t' => 'text', 'v' => substr($text, $pos, $hit[0][1] - $pos)];
+        $list[] = ['t' => $kind, 'n' => $name, 'v' => $hit[0][0], 'a' => array_slice($args, 1)];
+        $pos = $hit[0][1] + strlen($hit[0][0]);
+    }
+    if ($pos < strlen($text)) $list[] = ['t' => 'text', 'v' => substr($text, $pos)];
+    $pair = [];
+    $open = [];
+    foreach ($list as $i => $one) {
+        if ($one['t'] === 'open') $open[] = $i;
+        if ($one['t'] !== 'close') continue;
+        $deep = array_keys(array_filter($open, fn(int $v): bool => $list[$v]['n'] === $one['n']));
+        if (!$deep) continue;
+        $at = end($deep);
+        $pair[$open[$at]] = $i;
+        $open = array_slice($open, 0, $at);
+    }
+    $emo = ["\u{1F615}", "\u{1F61B}", "\u{1F60F}", "\u{1F642}", "\u{1F603}", "\u{1F604}", "\u{1F60E}", "\u{1F913}", "\u{1F644}", "\u{1F62E}", "\u{1F641}", "\u{1F633}",
+        "\u{1F609}", "\u{1F60C}", "\u{1F620}", "\u{1F622}", "\u{1F633}", "\u{1F631}"];
+    $line = function (string $part, bool $head, bool $more): string {
+        if ($head) $part = ltrim($part, " \t");
+        if ($more) $part = rtrim($part, " \t");
+        $segs = preg_split('/(\x01\d+\x01|\x03\d+\x03|\x04\d+\x04)/', $part, -1, PREG_SPLIT_DELIM_CAPTURE) ?: [];
+        foreach ($segs as $k => $seg) {
+            if ($k % 2 === 1 || $seg === '') {
+                if ($seg !== '' && $seg[0] !== "\x03") $head = false;
+                continue;
+            }
+            $bits = preg_split('#((?:https?|ftp)://[^\s<>\[\]]+|www\.[^\s<>\[\]]+|[A-Za-z0-9._+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+)#i', $seg, -1, PREG_SPLIT_DELIM_CAPTURE) ?: [];
+            foreach ($bits as $j => $bit) {
+                if ($j % 2 === 1) continue;
+                $bit = (string)preg_replace(['/[\\\\`*\[\]<~]/', '/(?<![\pL\pN])_|_(?![\pL\pN])/u', '/&(?=#?[A-Za-z0-9]+;)/', '/=(?==)|(?<==)=/'],
+                    ['\\\\$0', '\\\\_', '\\\\&', '\\\\='], $bit);
+                if (preg_match('/^[\s:|\\\\-]*-[\s:|\\\\-]*$/', $bit) && str_contains($bit, '|')) $bit = str_replace('|', '\|', $bit);
+                $bits[$j] = $bit;
+            }
+            $seg = implode('', $bits);
+            if ($head) {
+                $seg = ltrim($seg, " \t");
+                $seg = (string)preg_replace(['/^([#>+=-])/', '/^(\d{1,9})([.)])(?=[ \t]|$)/'], ['\\\\$1', '$1\\\\$2'], $seg);
+            }
+            $head = false;
+            $segs[$k] = $seg;
+        }
+        return implode('', $segs);
+    };
+    $plain = function (string $run, bool $bol) use ($esc, $see, $emo, $line): string {
+        $run = preg_replace_callback('/(?<!\*)\*(0[1-9]|1[0-8])(?!\d)/', function (array $m) use ($see, $emo): string {
+            $see('smiley');
+            return $emo[intval($m[1]) - 1];
+        }, $run) ?? $run;
+        $run = preg_replace('#<br\s*/?>[ \t]*\n?#i', "\x02", $run, -1, $num) ?? $run;
+        if ($num) $see('br', $num);
+        if (!$esc) return $run;
+        if (preg_match('/&(?:[A-Za-z][A-Za-z0-9]*|#[0-9]+|#x[0-9A-Fa-f]+);/', $run)) $see('entity');
+        $run = html_entity_decode($run, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        $rows = preg_split('/(\n|\x02)/', $run, -1, PREG_SPLIT_DELIM_CAPTURE) ?: [];
+        foreach ($rows as $k => $row) if ($k % 2 === 0) $rows[$k] = $line($row, ($k === 0) ? $bol : true, $k < count($rows) - 1);
+        return implode('', $rows);
+    };
+    $addr = fn(string $url): string => (string)preg_replace('/^www\./i', 'https://www.', trim(html_entity_decode($url, ENT_QUOTES | ENT_HTML5, 'UTF-8')));
+    $dest = fn(string $url): string => strtr($url, [' ' => '%20', '<' => '%3C', '>' => '%3E', '(' => '%28', ')' => '%29', '\\' => '%5C', "\n" => '%0A', "\t" => '%09']);
+    $raw = function (int $from, int $to) use ($list): string {
+        $out = '';
+        for ($i = $from; $i < $to; $i++) $out .= $list[$i]['v'];
+        return $out;
+    };
+    $doc = function (string $s) use (&$keep, $esc): string {
+        $s = (string)preg_replace(['/^[\s\x02]*\x05[\s\x05\x02]*/', '/[\s\x02]*\x05[\s\x05\x02]*$/', '/[\s\x02]*\x05[\s\x05\x02]*/'], ['', '', "\n\n"], $s);
+        $bits = explode("\x02", $s);
+        $s = array_shift($bits);
+        foreach ($bits as $rest) {
+            $last = substr($s, (int)strrpos("\n".$s, "\n"));
+            $s .= (trim($last) === '' || preg_match('/^[ \t]*(?:\n|$)/', $rest)) ? "\n" : "\\\n";
+            $s .= $rest;
+        }
+        if ($esc) $s = (string)preg_replace('/\n[ \t]*\n(?:[ \t]*\n)+/', "\n\n", $s);
+        while (preg_match('/\x01\d+\x01/', $s)) $s = preg_replace_callback('/\x01(\d+)\x01/', fn(array $m): string => $keep[intval($m[1])], $s) ?? $s;
+        return $s;
+    };
+    $emph = function (string $mark, string $in, string $before, string $after) use (&$wide): string {
+        $parts = preg_split('/(\x05+|\n[ \t]*\n)/', $in, -1, PREG_SPLIT_DELIM_CAPTURE) ?: [];
+        $isp = fn(string $c): bool => $c !== '' && (bool)preg_match('/^[\p{P}\p{S}]$/u', $c);
+        $isw = fn(string $c): bool => $c === '' || (bool)preg_match('/^[\s\x02\x05]$/u', $c);
+        $unit = function (string $s, bool $end): string {
+            if ($end) {
+                if (preg_match('/(?:\x01\d+\x01|\\\\?.)$/su', $s, $m)) return $m[0];
+                return '';
+            }
+            return preg_match('/^(?:\x01\d+\x01|\\\\.|.)/su', $s, $m) ? $m[0] : '';
+        };
+        $last = count($parts) - 1;
+        foreach ($parts as $k => $one) {
+            if ($k % 2 === 1 || trim($one, " \t\n\x02") === '') continue;
+            if (preg_match('/^\s*\x01(\d+)\x01\s*$/', $one, $h) && isset($wide[intval($h[1])])) continue;
+            preg_match('/^([\s\x02]*)(.*?)([\s\x02]*)$/su', $one, $p);
+            $core = $p[2];
+            $prev = ($p[1] !== '') ? ' ' : (($k === 0) ? mb_substr($before, -1) : "\n");
+            $next = ($p[3] !== '') ? ' ' : (($k === $last) ? mb_substr($after, 0, 1) : "\n");
+            $pre = '';
+            $post = '';
+            while (!$isw($prev) && !$isp($prev) && ($u = $unit($core, false)) !== '' && !in_array($u[0], ['*', '~'], true)
+                && $isp(($u[0] === "\x01") ? '`' : mb_substr($u, -1))) {
+                $pre .= $u;
+                $core = substr($core, strlen($u));
+            }
+            while ($core !== '' && !$isw($next) && !$isp($next) && ($u = $unit($core, true)) !== '' && !in_array($u[strlen($u) - 1], ['*', '~'], true)
+                && $isp(($u[0] === "\x01") ? '`' : mb_substr($u, -1))) {
+                $post = $u.$post;
+                $core = substr($core, 0, -strlen($u));
+            }
+            $parts[$k] = $p[1].$pre.(($core === '') ? '' : $mark.$core.$mark).$post.$p[3];
+        }
+        return implode('', $parts);
+    };
+    $marks = ['b' => '**', 'i' => '*', 's' => '~~'];
+    $render = function (int $from, int $to, bool $bol, array $act) use (&$render, $list, $pair, $marks, $esc, $see, $put, $plain, $addr, $dest, $raw, $doc, $emph): string {
+        $parts = [];
+        $buf = '';
+        $tail = function () use (&$parts, $bol): string {
+            if (!$parts) return $bol ? "\n" : '';
+            $one = end($parts);
+            return isset($one['m']) ? $one['m'] : substr($one['s'], -1);
+        };
+        $flush = function () use (&$buf, &$parts, $plain, $tail): void {
+            if ($buf === '') return;
+            $parts[] = ['s' => $plain($buf, in_array($tail(), ["\n", "\x02", "\x05"], true))];
+            $buf = '';
+        };
+        $lit = fn(string $s, bool $head = false): string => $esc ? $plain($s, $head) : $s;
+        for ($i = $from; $i < $to; $i++) {
+            $one = $list[$i];
+            if ($one['t'] === 'text' || $one['t'] === 'close' || ($one['t'] === 'open' && !isset($pair[$i]))) {
+                if ($one['t'] !== 'text') $see('unpaired');
+                $buf .= $one['v'];
+                continue;
+            }
+            $flush();
+            $name = $one['n'];
+            $bnow = in_array($tail(), ["\n", "\x02", "\x05"], true);
+            if ($one['t'] === 'one') {
+                $see($name);
+                $parts[] = ['s' => ['hr' => $put('***', true), 'li' => "\u{2022} "][$name] ?? $one['v']];
+                continue;
+            }
+            $end = $pair[$i];
+            $args = $one['a'];
+            $see($name);
+            if (isset($marks[$name])) {
+                $in = $render($i + 1, $end, false, $act + [$name => true]);
+                $parts[] = isset($act[$name]) ? ['s' => $in] : ['m' => $marks[$name], 'in' => $in];
+            } elseif ($name === 'quote') {
+                $body = trim($doc($render($i + 1, $end, true, [])), "\n");
+                $body = implode("\n", array_map(fn(string $v): string => ($v === '') ? '>' : '> '.$v, explode("\n", $body)));
+                $parts[] = ['s' => (trim($body, "> \n") === '') ? '' : $put($body, true)];
+            } elseif (in_array($name, ['hide', 'tabs', 'tab'], true)) {
+                $parts[] = ['s' => $one['v'].$render($i + 1, $end, true, []).$list[$end]['v']];
+            } elseif ($name === 'url' || $name === 'mail') {
+                $kid = $raw($i + 1, $end);
+                $link = $addr((string)($args[0] ?? $kid));
+                $bare = !isset($args[0]) || trim($kid) === '' || trim($kid) === trim((string)$args[0]);
+                $label = $bare ? '' : $render($i + 1, $end, false, $act);
+                $abs = (bool)preg_match('#^[a-zA-Z][a-zA-Z0-9+.\-]{1,31}:#', $link);
+                if ($name === 'mail') {
+                    if (!preg_match('/^[^@\s]+@[^@\s]+\.[a-z]{2,}$/i', $link)) {
+                        $see('mail-text');
+                        $parts[] = ['s' => $bare ? $lit($kid) : $label];
+                    } elseif (!$bare) {
+                        $parts[] = ['s' => '['.$label.'](mailto:'.$dest($link).')'];
+                    } else {
+                        $host = '[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?';
+                        $auto = preg_match('/^[a-zA-Z0-9.!#$%&\'*+\/=?^_`{|}~-]+@'.$host.'(?:\.'.$host.')*$/D', $link);
+                        $parts[] = ['s' => $auto ? '<'.$link.'>' : '['.$lit($link).'](mailto:'.$dest($link).')'];
+                    }
+                } elseif ($link === '' || preg_match('#^(?:javascript|vbscript|data|ed2k):#i', (string)preg_replace('#[\s\x00-\x1f]+#', '', $link))) {
+                    $see(preg_match('#^ed2k:#i', $link) ? 'ed2k' : 'url-text');
+                    $parts[] = ['s' => $bare ? $lit($kid) : $label];
+                } elseif ($bare && $abs) {
+                    $parts[] = ['s' => '<'.strtr($link, [' ' => '%20', '<' => '%3C', '>' => '%3E', "\n" => '%0A', "\t" => '%09']).'>'];
+                } else {
+                    $parts[] = ['s' => '['.($bare ? $lit($link) : $label).']('.$dest($link).')'];
+                }
+            } elseif ($name === 'img') {
+                $link = $addr($raw($i + 1, $end));
+                if (($args[0] ?? '') !== '') $see('align');
+                $alt = $lit(trim((string)($args[1] ?? '')));
+                if (!$esc) $alt = strtr($alt, ['[' => '\[', ']' => '\]']);
+                if ($link === '') {
+                    $parts[] = ['s' => ''];
+                } elseif (preg_match('#^(?:javascript|vbscript|ed2k):#i', (string)preg_replace('#[\s\x00-\x1f]+#', '', $link))) {
+                    $parts[] = ['s' => $alt];
+                } else {
+                    $parts[] = ['s' => '!['.$alt.']('.$dest($link).')'];
+                }
+            } else {
+                $parts[] = ['s' => $render($i + 1, $end, $bnow, $act)];
+            }
+            $i = $end;
+        }
+        $flush();
+        $out = '';
+        foreach ($parts as $k => $one) {
+            if (!isset($one['m'])) {
+                $out .= $one['s'];
+                continue;
+            }
+            $next = '';
+            for ($j = $k + 1; $j < count($parts) && $next === ''; $j++) $next = $parts[$j]['m'] ?? $parts[$j]['s'];
+            $out .= $emph($one['m'], $one['in'], $out, $next);
+        }
+        return $out;
+    };
+    $text = $doc($render(0, count($list), true, []));
+    return ($text === $flat) ? $orig : $text;
 }
 
 # Make the local targets of a converted text explicit: a bare relative address of [img], [img=...], [img alt=...], [url] and [url=...] gains ./ in front
@@ -510,11 +820,11 @@ function addMigrateNodes(string $mod, NodeType $type, array $rows, Closure $have
             $node['poll'] = 0;
         }
         $vals = array_values(array_filter(explode('|', $node['field']), fn(string $v): bool => trim($v) !== '' && $v !== '0'));
-        $body = getMigrateAttach(getMigrateHtml($node['body'], true), $mod, 0, $have).($vals ? "\n\n".implode(' | ', $vals) : '');
+        $body = getMigrateAttach(getMigrateHtml($node['body'], true), $mod, 0, $have).($vals ? "\n\n".getMigrateMarkdown(implode(' | ', $vals), true) : '');
         $intro = getMigrateAttach(getMigrateHtml($node['intro'], true), $mod, 0, $have);
         if (strlen($intro) > 65535) {
             $intro = $node['intro'];
-            addMigrateNote($state, $mod, '#'.$id.': the rewritten summary would not fit its column, it keeps the old addresses');
+            addMigrateNote($state, $mod, '#'.$id.': the converted summary would not fit its column, it keeps the text of the old module');
         }
         $fields = getMigrateFields($type, $node);
         $score = $node['score'];
@@ -1607,6 +1917,155 @@ function setUpdateArchive(Database $db, string $prefix, bool $dry): array {
     return getUpdateRow($text.($sum['long'] ? '; kept because too long for their column: '.implode(', ', $sum['long']) : ''), true);
 }
 
+# Turn every stored text the parser renders from BB into Markdown once: one rendered trusted takes getMigrateHtml(), one Markdown by origin (owner, 2026-10-25) its tags
+function setUpdateTexts(Database $db, string $prefix, bool $dry, bool $six): array {
+    $dir = BACKUP_DIR.'/update/texts';
+    $file = $dir.'/manifest.json';
+    $info = is_file($file) ? json_decode((string)file_get_contents($file), true) : null;
+    if (!$dry && ($info['state'] ?? '') === 'verified') return getUpdateRow('texts: the stored texts were turned into Markdown by an earlier run', true);
+    $defs = (array)(getUpdateSource(CONFIG_DIR.'/fields.php')['fields'] ?? []);
+    $area = fn(mixed $set): array => is_array($set) ? array_keys(array_filter($set, fn(mixed $v): bool => is_array($v) && ($v['type'] ?? '') === 'textarea')) : [];
+    $kinds = [];
+    $res = $db->getSqlQuery('SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = :tab', ['tab' => $prefix.'_node_types']);
+    $res = ($res && intval($db->getSqlRow($res)[0] ?? 0) > 0) ? $db->getSqlQuery('SELECT id, name FROM `'.$prefix.'_node_types`') : false;
+    foreach (($res ? $db->getSqlRows($res) : false) ?: [] as $row) $kinds[intval($row['id'])] = $area($defs['node'][(string)$row['name']] ?? null);
+    $late = $six ? '0' : 'time >= :from';
+    $jobs = ['nodes' => [['intro', 'body'], '1', '', false], 'comment' => [['body'], $six ? '0' : '(modul = \'help\' OR time >= :from)', '', false],
+        'forum' => [['body'], $late, '', true], 'privat' => [['body'], $late, '', false], 'message' => [['body'], '0', '', true], 'newsletter' => [['body'], '0', '', true],
+        'blocks' => [['content'], '0', 'url = \'\'', true], 'users' => [['sig', 'block'], '0', '', true]];
+    $names = array_filter(['nodes' => array_filter($kinds) ? fn(array $row): array => $kinds[intval($row['tid'])] ?? [] : null,
+        'forum' => $area($defs['forum'] ?? null) ? fn(): array => $area($defs['forum']) : null,
+        'users' => $area($defs['account'] ?? null) ? fn(): array => $area($defs['account']) : null]);
+    $field = function (string $json, array $list, bool $esc, array &$seen): string {
+        $data = ($list && $json !== '') ? json_decode($json, true) : null;
+        if (!is_array($data)) return $json;
+        $was = $data;
+        foreach ($list as $one) if (is_string($data[$one] ?? null)) $data[$one] = getMigrateMarkdown($data[$one], $esc, $seen);
+        return ($data === $was) ? $json : (string)json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    };
+    $save = function () use ($file, &$info): bool {
+        return setUpdateBackup($file, (string)json_encode($info, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
+    };
+    $walk = function (bool $write) use ($db, $prefix, $jobs, $names, $field, $save, &$info): ?array {
+        $sum = ['change' => [], 'seen' => [], 'long' => []];
+        foreach ($jobs as $tab => [$cols, $mark, $only, $html]) {
+            $res = $db->getSqlQuery('SELECT column_name, character_octet_length FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = :tab',
+                ['tab' => $prefix.'_'.$tab]);
+            $size = [];
+            foreach (($res ? $db->getSqlRows($res) : false) ?: [] as $row) $size[strtolower((string)$row[0])] = intval($row[1]);
+            if (array_diff($cols, array_keys($size)) || ($mark !== '0' && $mark !== '1' && !isset($size['time']))) continue;
+            $test = isset($names[$tab], $size['field']) ? $names[$tab] : null;
+            if ($test) $cols[] = 'field';
+            $cur = $write ? intval($info['cursor'][$tab] ?? 0) : 0;
+            $pend = ($write && ($info['batch']['tab'] ?? '') === $tab) ? $info['batch'] : null;
+            if ($pend) {
+                $pars = [];
+                foreach (array_keys($pend['rows']) as $i => $id) $pars['i'.$i] = intval($id);
+                $res = $db->getSqlQuery('SELECT * FROM `'.$prefix.'_'.$tab.'` WHERE id IN (:'.implode(', :', array_keys($pars)).')', $pars);
+                if ($res === false) return null;
+                $same = 0;
+                foreach ($db->getSqlRows($res) ?: [] as $row) {
+                    $one = $pend['rows'][$row['id']];
+                    $same += (sha1((string)json_encode(array_map(fn(string $c): string => (string)$row[$c], $one['c']))) === $one['h']) ? 1 : 0;
+                }
+                if ($same !== 0 && $same !== count($pend['rows'])) return null;
+                if ($same > 0) {
+                    $cur = intval($pend['last']);
+                    foreach ($pend['count'] as $key => $num) $info['done'][$key] = ($info['done'][$key] ?? 0) + $num;
+                    $info['cursor'][$tab] = $cur;
+                }
+                unset($info['batch']);
+                if (!$save()) return null;
+            }
+            $where = implode(' OR ', array_map(fn(string $v): string => '`'.$v.'` <> \'\'', $cols));
+            $sql = 'SELECT id, `'.implode('`, `', $cols).'`'.(($tab === 'nodes') ? ', tid' : '').', ('.$mark.') AS md FROM `'.$prefix.'_'.$tab.'` WHERE id > :cur'
+                .(($only !== '') ? ' AND '.$only : '').' AND ('.$where.') ORDER BY id LIMIT 200';
+            while (true) {
+                $res = $db->getSqlQuery($sql, ['cur' => $cur] + (str_contains($mark, ':from') ? ['from' => '2026-07-13 00:00:00'] : []));
+                if ($res === false) return null;
+                $rows = $db->getSqlRows($res) ?: [];
+                if (!$rows) break;
+                $sets = [];
+                $count = [];
+                foreach ($rows as $row) {
+                    $id = intval($row['id']);
+                    foreach ($cols as $col) {
+                        $key = $tab.'.'.$col;
+                        $seen = [];
+                        $old = (string)$row[$col];
+                        $new = match (true) {
+                            $col === 'field' => $field($old, $test($row), !$row['md'], $seen),
+                            $html && !$row['md'] => getMigrateHtml($old, true, $seen),
+                            default => getMigrateMarkdown($old, !$row['md'], $seen),
+                        };
+                        foreach ($seen as $form => $num) $sum['seen'][$form] = ($sum['seen'][$form] ?? 0) + $num;
+                        if ($new === $old) continue;
+                        $sum['change'][$key] = ($sum['change'][$key] ?? 0) + 1;
+                        if (strlen($new) > $size[$col]) {
+                            $sum['long'][] = $key.' #'.$id;
+                            continue;
+                        }
+                        $sets[$id][$col] = $new;
+                        $count[$key] = ($count[$key] ?? 0) + 1;
+                    }
+                    $cur = $id;
+                }
+                if (!$write) continue;
+                if ($sets) {
+                    $info['batch'] = ['tab' => $tab, 'last' => $cur, 'count' => $count, 'rows' => array_map(fn(array $v): array => ['c' => array_keys($v),
+                        'h' => sha1((string)json_encode(array_values($v)))], $sets)];
+                    if (!$save() || !$db->setSqlBegin()) return null;
+                    foreach ($sets as $id => $vals) {
+                        $upd = 'UPDATE `'.$prefix.'_'.$tab.'` SET '.implode(', ', array_map(fn(string $v): string => '`'.$v.'` = :'.$v, array_keys($vals))).' WHERE id = :id';
+                        if ($db->getSqlQuery($upd, $vals + ['id' => $id]) !== false) continue;
+                        $db->setSqlRollback();
+                        return null;
+                    }
+                    if (!$db->setSqlCommit()) return null;
+                    foreach ($count as $key => $num) $info['done'][$key] = ($info['done'][$key] ?? 0) + $num;
+                    unset($info['batch']);
+                }
+                $info['cursor'][$tab] = $cur;
+                if (!$save()) return null;
+            }
+        }
+        return $sum;
+    };
+    $cont = getUpdateSource(CONFIG_DIR.'/contact.php')['contact'] ?? null;
+    $form = (is_array($cont) && is_string($cont['info'] ?? null)) ? getMigrateHtml($cont['info'], true) : null;
+    $form = ($form !== null && $form !== $cont['info']) ? $form : null;
+    $list = fn(array $nums): string => $nums ? implode(', ', array_map(fn(string $k, int $v): string => $k.' '.$v, array_keys($nums), $nums)) : 'none';
+    if ($dry && is_array($info)) return getUpdateRow('texts, dry run: the unit already ran (state '.($info['state'] ?? '').'), its converted texts are not counted again', true);
+    if ($dry) {
+        $sum = $walk(false);
+        if ($sum === null) return getUpdateRow('texts, dry run: the texts could not be read', false);
+        arsort($sum['seen']);
+        $text = 'texts, dry run: texts that turn into Markdown ('.$list($sum['change']).'), config/contact.php info '.(($form !== null) ? 'changes' : 'stays');
+        $text .= '; forms met: '.$list($sum['seen']).($sum['long'] ? '; too long for their column, they stay BB: '.implode(', ', $sum['long']) : '');
+        return getUpdateRow($text.'; nothing was written', true);
+    }
+    if (!is_dir($dir) && !mkdir($dir, 0750, true)) return getUpdateRow('texts: '.$dir.' could not be created, no text was converted', false);
+    if (!is_array($info)) {
+        $sum = $walk(false);
+        if ($sum === null) return getUpdateRow('texts: the texts could not be read, no text was converted', false);
+        $info = ['version' => '6.3.0', 'state' => 'prepared', 'count' => $sum['change'], 'long' => $sum['long'], 'cursor' => [], 'done' => []];
+    }
+    $info['state'] = 'applying';
+    if (!$save() || $walk(true) === null) return getUpdateRow('texts: the conversion stopped, run the update again to continue after the last written batch', false);
+    $same = isset($info['config']) && sha1((string)($cont['info'] ?? '')) === $info['config'];
+    if ($form !== null && !$same) {
+        $info['config'] = sha1($form);
+        $text = 'texts: config/contact.php could not be written, run the update again';
+        if (!$save() || !setUpdateFile('contact.php', ['info' => $form] + $cont)) return getUpdateRow($text, false);
+    }
+    $info['state'] = 'verified';
+    if (!$save()) return getUpdateRow('texts: the manifest could not be written', false);
+    $miss = array_sum($info['count']) - count($info['long']) - array_sum($info['done'] ?? []);
+    $text = 'texts: BB of the stored texts turned into Markdown ('.$list($info['done'] ?? []).')'.($info['long'] ? '; kept as BB because too long for their column: '
+        .implode(', ', $info['long']) : '');
+    return getUpdateRow($text.(($miss !== 0) ? '; '.$miss.' texts the count of the first pass named were not written' : ''), $miss === 0);
+}
+
 # Drop the tables of the modules gone for good and every source table of Node whose rows all are materials now, an empty one at once
 # A published row is carried when _node_legacy names it; a pending row has no address there and is carried when its type holds a material of its title and creation time
 # A table with a row matched by neither stays and the report names its ids: on a 6.2 site the second stage carries those rows and drops the table after them
@@ -2001,7 +2460,7 @@ function setUpdateSql(Database $db, string $file, string $prefix): array {
     return $rows;
 }
 
-# Run the 6.3 update of the site config/db.php names and answer its report rows; a refusal before the preflight changes nothing, a dry run only counts the archive addresses
+# Run the 6.3 update of the site config/db.php names and answer its report rows; a refusal before the preflight changes nothing, a dry run only counts addresses and texts
 function setUpdateRun(bool $dry = false): array {
     global $conf, $spanel;
     foreach (['db.php', 'global.php', 'security.php'] as $name) {
@@ -2021,13 +2480,13 @@ function setUpdateRun(bool $dry = false): array {
     }
     $stop = checkUpdateBase($db, $pref);
     if ($stop !== '') return getUpdateRow($stop, false);
-    if ($dry) return setUpdateArchive($db, $pref, true);
+    $six = glob(CONFIG_DIR.'/config_*.php') || is_dir(BACKUP_DIR.'/update/config');
+    if ($dry) return array_merge(setUpdateArchive($db, $pref, true), setUpdateTexts($db, $pref, true, $six));
     $rows = checkUpdateEmails($db, $pref);
     $text = 'the update stopped before it changed anything: leave each address above on one account and run it again';
     if (checkUpdateFail($rows)) return array_merge($rows, getUpdateRow($text, false));
     if (!setUpdateFile('global.php', array_diff_key($conf, ['security' => '', 'db' => '']), ['close' => '1'])) return getUpdateRow('config/global.php could not be written', false);
     $rows = getUpdateRow('the site is closed for the data update (close = 1), open it in the settings after the result is checked', true);
-    $six = glob(CONFIG_DIR.'/config_*.php') || is_dir(BACKUP_DIR.'/update/config');
     $rows = array_merge($rows, setUpdateConfig(), $six ? [] : setUpdateMerge());
     $conf = array_merge(require CONFIG_DIR.'/global.php', require CONFIG_DIR.'/security.php');
     $from = is_file(PUBLIC_DIR.'/admin.php') ? 'admin' : $spanel;
@@ -2187,7 +2646,7 @@ function setUpdateRun(bool $dry = false): array {
     }
     $rows = array_merge($rows, setUpdatePoints($db, $pref), setUpdateRatings($db, $pref), setUpdateFields($db, $pref));
     $rows = array_merge($rows, setUpdateAttach($db, $pref, 'forum', 'forum'), setUpdateAttach($db, $pref, 'privat', 'account'), setUpdateLangs($db, $pref),
-        setUpdateArchive($db, $pref, false));
+        setUpdateArchive($db, $pref, false), setUpdateTexts($db, $pref, false, $six));
     $rdata = getUpdateSource(CONFIG_DIR.'/rss.php')['rss'] ?? [];
     if ($rdata !== [] && (isset($rdata['temp']) || !isset($rdata['bytes'], $rdata['redirects'], $rdata['timeout']))) {
         unset($rdata['temp']);
@@ -2267,7 +2726,7 @@ function setUpdatePage(array $rows, bool $dry = false): void {
     $text = 'Run the update';
     $cont .= $tpl->getHtmlFrag('post-button', ['action' => 'update.php', 'hidden' => $hide, 'icon_name' => 'play-circle', 'title' => $text, 'label' => $text]);
     $hide .= $tpl->getHtmlFrag('hidden', ['name_attr' => 'dry', 'value_attr' => '1', 'input_attr' => '']);
-    $text = 'Count the file addresses';
+    $text = 'Count the changes';
     $cont .= $tpl->getHtmlFrag('post-button', ['action' => 'update.php', 'hidden' => $hide, 'icon_name' => 'search', 'title' => $text, 'label' => $text]);
     $meta = $tpl->getHtmlFrag('head-title', ['title' => 'SLAED CMS 6.3 update'])."\n".$tpl->getHtmlFrag('head-meta', ['name' => 'robots', 'content' => 'noindex, nofollow']);
     $logo = 'templates/admin/images/logos/'.basename((string)($conf['admin_logo'] ?? ''));

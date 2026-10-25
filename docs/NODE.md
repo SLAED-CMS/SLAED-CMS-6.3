@@ -3375,8 +3375,8 @@ arrays, so `getConfig()` finds no database. `update.php` therefore decides befor
   at the risk of the maintainer. `setUpdatePage()` shows what the run does on the login card of the admin theme
   (`pages/login.html` with the fragments `alert`, `table`, `table-row`, `table-cells`, `inline-badge`,
   `post-button`); a POST `op=update` runs `setUpdateRun()` and shows its report, and a POST `op=update` with
-  `dry=1` runs only the checks up to the preflight and the count of the archive unit, which writes nothing. The texts
-  are English literals.
+  `dry=1` runs only the checks up to the preflight and the counts of the archive and text units, which write nothing.
+  The texts are English literals.
 - **Second stage**, once the three marks stand: the core boots and `isAdmin(true)` guards the migration of the
   removed modules.
 
@@ -3501,7 +3501,14 @@ runs and reports, then neither the schema file nor any data unit runs.
     admin messages, newsletters, blocks, signatures and polls an archive address becomes the file address of the
     published material or comment that carries the name. Its manifest keeps the counts of the first pass, a cursor per
     table and the state; a stopped run continues after the cursor, a check that still finds a text to change starts
-    the cursors over, and a verified unit is skipped.
+    the cursors over, and a verified unit is skipped. Last `setUpdateTexts()`: every stored text the parser renders
+    (Node texts, comments, forum posts, private and admin messages, newsletters, own blocks, signatures, blocks without
+    a feed, textarea fields, the contact text) turns from BB into Markdown once. A text of the BB era is escaped, one
+    rendered trusted takes `getMigrateHtml()`, and a text Markdown by origin (Node; on a 6.3 site the help replies and
+    the forum posts, comments and private messages from 2026-07-13 on) converts its tags alone. Each batch of 200 rows
+    is named in the manifest with the hashes of its new texts before its transaction, so a stopped run neither
+    converts a committed batch again nor loses one that rolled back; a text too long for its column stays BB and the
+    report names it.
 16. `config/rss.php`: `temp` removed, missing `bytes` (`2097152`), `redirects` (`3`), `timeout` (`10`) added.
     Without these keys Feed refuses with code `config` before any request.
 17. RSS blocks: `UPDATE _blocks SET content = '', time = 0 WHERE url != ''` drops the cached HTML; the next
@@ -3783,6 +3790,7 @@ word of MySQL 8.0.2+: unqualified `_users.rank` and `_groups.rank` are written i
 | `UpdateSetupTest` | `tests/Support/update_probe.php … setup` | the update preflight, registry, `deleteUpdateTypes()`; the installer preflight `getSetupProbe()` and the order of `checkSetupRun()` in `setup.php` |
 | `UpdatePointsTest`, `UpdateRatingsTest`, `UpdateFieldsTest`, `UpdateConfigTest`, `UpdateMailsTest` | `update_probe.php` with unit `points` (default), `ratings`, `fields`, `config`, `mails` | one unit each: resume from cursors, stops, marks |
 | `UpdateArchiveTest` | `update_probe.php … archive` | the archive unit (dry run, rewrite, repeat, resume), the settings step of a 6.3 site and the drop of the tables by `setUpdateTables()` |
+| `UpdateTextTest` | functions lifted alone; `update_probe.php … texts` | `getMigrateMarkdown()` and `getMigrateHtml()` on BB, Markdown and 6.2 HTML; the text unit `setUpdateTexts()` (dry run, write, repeat, a batch stopped before and after its commit) |
 
 `update_probe.php` lifts the functions out of `update.php` and `setup.php` by name (both act on load), with a
 scratch site and a disposable schema. A failing probe is a test failure, not a skip.
@@ -3863,10 +3871,11 @@ continues where it stopped:
 4. Data, one transaction per module: materials with dates, views, states, rating balances, resources and the
    `_node_legacy` row, then comments and favorites rebound to the new ids (rows of a gone material take the key
    `old<module>`, which `op=remains` cleans up), the terms of `_rating`, the comment counters and `node-<type>`
-   rights instead of the module name. Texts are converted from the trusted HTML the old modules rendered into BB
-   and Markdown; blocks the conversion does not know become `[usehtml]` blocks, and a bare relative address of
-   `[img]` or `[url]` gains `./`, the local form the safe parser accepts. A local resource path Node refuses gets a
-   safe spelling, and a note names the file the operator renames to it.
+   rights instead of the module name. Texts are converted from the trusted HTML the old modules rendered into
+   Markdown (`getMigrateHtml()`): the HTML and the BB the text held become Markdown and its text is escaped as BB era
+   text (`getMigrateMarkdown()`); blocks the conversion does not know become `[usehtml]` blocks, and a bare relative
+   address of an image or a link gains `./`, the local form the safe parser accepts. A local resource path Node
+   refuses gets a safe spelling, and a note names the file the operator renames to it.
 5. Drop (`deleteMigrateTables()`): the table of every module whose data step is done, once the database agrees with
    the map of ids in the manifest: every row of the table (for `help` every request) is a key of the map and every
    material of the map is in `_nodes` under the type. A manifest of another database left in the tree therefore never
@@ -3875,7 +3884,7 @@ continues where it stopped:
    a type it does not belong to becomes the `go=file&own=node` address of the first published material of that type
    whose text or published comment carries the name, and an address of `uploads/forum/` in a text that is no forum
    post the `go=file&own=forum` address of the first published post that carries it. A name nothing carries keeps
-   its address and answers 410; `[code]` and `[php]` keep their examples.
+   its address and answers 410; `[code]`, `[php]`, fenced code and code spans keep their examples.
 7. Activation of every type the run created or switched off.
 
 The data step turns a direct address of a file of `uploads/<module>/` in a material, a comment or a help reply into

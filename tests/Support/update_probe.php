@@ -1029,13 +1029,109 @@ function getTableClean(): array {
     return $out;
 }
 
+# The texts of the text site as table, id, column and stored text: node 1 and the help reply comment 2 are Markdown by origin, forum 2 is a post of 2026
+# Forum 1 carries a textarea field, the own block of account 3 is too long for its column once escaped
+const WORDROWS = [
+    ['nodes', 1, 'body', "[b]Bold[/b] text\n- item *05"],
+    ['comment', 1, 'body', "[quote]Q[/quote]<br />\n# not a heading *05"],
+    ['comment', 2, 'body', '**md** [b]x[/b]'],
+    ['forum', 1, 'body', "[url=http://a.test/c_d]a_b[/url]<br />\nnext &amp; 2*3"],
+    ['forum', 1, 'field', '{"note":"[b]n[/b]","size":"[b]s[/b]"}'],
+    ['forum', 2, 'body', '**Markdown** of 2026 [b]x[/b]'],
+    ['privat', 1, 'body', '[code]<b>&lt;x&gt;</b>[/code]'],
+    ['message', 1, 'body', '[center]C[/center] 2*3'],
+    ['newsletter', 1, 'body', '[mail]a@b.test[/mail]'],
+    ['blocks', 1, 'content', '<a href="page.html">Page</a> [b]B[/b]<table><tr><td>t</td></tr></table>'],
+    ['users', 2, 'sig', '[i]sig[/i]'],
+];
+
+# Put the schema back to a 6.3 site whose stored texts are BB: the rows of WORDROWS, a textarea field of the forum, a BB contact text and no manifest of the unit
+function setWordSite(): void {
+    deleteProbeTree(BASE_DIR);
+    mkdir(CONFIG_DIR, 0777, true);
+    setUpdateFile('fields.php', ['forum' => ['note' => ['type' => 'textarea'], 'size' => ['type' => 'text']]], [], true);
+    setUpdateFile('contact.php', ['admins' => '1', 'info' => '[b]Наши координаты[/b]']);
+    $side = getProbeSide();
+    foreach (['comment', 'nodes', 'node_types', 'privat', 'message', 'newsletter', 'blocks'] as $name) $side->exec('DROP TABLE IF EXISTS `'.PROBEPREF.'_'.$name.'`');
+    foreach (['node_types', 'nodes', 'comment', 'privat', 'message', 'newsletter', 'blocks'] as $name) $side->exec(getProbeTable($name));
+    $side->exec('DELETE FROM `'.PROBEPREF.'_forum`');
+    $side->exec('INSERT INTO `'.PROBEPREF.'_node_types` (id, name, title, intro) VALUES (1, \'news\', \'News\', \'\')');
+    $side->exec('INSERT INTO `'.PROBEPREF.'_nodes` (id, tid, title, intro, body, field, status) VALUES (1, 1, \'A\', \'\', \'\', \'\', 2)');
+    $side->exec('INSERT INTO `'.PROBEPREF.'_comment` (id, modul, cid, name, body, status, time) VALUES (1, \'news\', 1, \'u\', \'\', 1, \'2010-01-01 10:00:00\'),'
+        .' (2, \'help\', 1, \'u\', \'\', 1, \'2011-01-01 10:00:00\')');
+    $side->exec('INSERT INTO `'.PROBEPREF.'_forum` (id, name, title, body, field, time) VALUES (1, \'u\', \'T\', \'\', \'\', \'2008-01-01 10:00:00\'),'
+        .' (2, \'u\', \'T\', \'\', \'\', \'2026-08-01 10:00:00\')');
+    $side->exec('INSERT INTO `'.PROBEPREF.'_privat` (id, title, body) VALUES (1, \'P\', \'\')');
+    $side->exec('INSERT INTO `'.PROBEPREF.'_message` (id, title, body) VALUES (1, \'M\', \'\')');
+    $side->exec('INSERT INTO `'.PROBEPREF.'_newsletter` (id, title, body) VALUES (1, \'N\', \'\')');
+    $side->exec('INSERT INTO `'.PROBEPREF.'_blocks` (id, title, content, url, which) VALUES (1, \'B\', \'\', \'\', \'\'),'
+        .' (2, \'R\', \'[b]feed[/b]\', \'https://feed.test/\', \'\')');
+    $side->exec('UPDATE `'.PROBEPREF.'_users` SET sig = \'\', block = \'\'');
+    $side->exec('UPDATE `'.PROBEPREF.'_users` SET block = \''.str_repeat('*', 40000).'\' WHERE id = 3');
+    foreach (WORDROWS as [$tab, $id, $col, $text]) {
+        $side->prepare('UPDATE `'.PROBEPREF.'_'.$tab.'` SET `'.$col.'` = :text WHERE id = :id')->execute(['text' => $text, 'id' => $id]);
+    }
+}
+
+# Everything the text unit leaves behind: its answer, the manifest, every text of WORDROWS, the feed block, the long block and the contact text
+function getWordState(array $rows): array {
+    clearstatcache();
+    $file = BACKUP_DIR.'/update/texts/manifest.json';
+    $texts = [];
+    foreach (WORDROWS as [$tab, $id, $col]) {
+        $texts[$tab.'.'.$col.' #'.$id] = (string)getProbeSide()->query('SELECT `'.$col.'` FROM `'.PROBEPREF.'_'.$tab.'` WHERE id = '.$id)->fetchColumn();
+    }
+    $side = getProbeSide();
+    return ['done' => checkProbeDone($rows), 'text' => getProbeText($rows), 'info' => is_file($file) ? json_decode((string)file_get_contents($file), true) : null,
+        'texts' => $texts, 'feed' => (string)$side->query('SELECT content FROM `'.PROBEPREF.'_blocks` WHERE id = 2')->fetchColumn(),
+        'long' => strlen((string)$side->query('SELECT block FROM `'.PROBEPREF.'_users` WHERE id = 3')->fetchColumn()),
+        'contact' => (string)(getUpdateSource(CONFIG_DIR.'/contact.php')['contact']['info'] ?? '')];
+}
+
+# One pass of the text unit as the first stage of a 6.3 site runs it, a dry run or a write run
+function getWordRun(bool $dry): array {
+    return getWordState(setUpdateTexts($GLOBALS['pdb'], PROBEPREF, $dry, false));
+}
+
+# Stop a finished run inside the batch of forum post 1, its transaction committed or not: the manifest names the batch, every later text is BB again
+function setWordBatch(array $done, bool $commit): void {
+    $file = BACKUP_DIR.'/update/texts/manifest.json';
+    $info = json_decode((string)file_get_contents($file), true);
+    $info['state'] = 'applying';
+    $info['cursor'] = ['nodes' => 1, 'comment' => 2];
+    $info['done'] = ['nodes.body' => 1, 'comment.body' => 2];
+    $rows = [1 => ['c' => ['body', 'field'], 'h' => sha1((string)json_encode([$done['forum.body #1'], $done['forum.field #1']]))]];
+    $info['batch'] = ['tab' => 'forum', 'last' => 1, 'count' => ['forum.body' => 1, 'forum.field' => 1], 'rows' => $rows];
+    file_put_contents($file, json_encode($info));
+    $side = getProbeSide();
+    foreach (WORDROWS as [$tab, $id, $col, $text]) {
+        if (in_array($tab, ['nodes', 'comment'], true)) continue;
+        $val = ($commit && $tab === 'forum' && $id === 1) ? $done['forum.'.$col.' #1'] : $text;
+        $side->prepare('UPDATE `'.PROBEPREF.'_'.$tab.'` SET `'.$col.'` = :text WHERE id = :id')->execute(['text' => $val, 'id' => $id]);
+    }
+}
+
+# The text unit counts without writing, converts once, skips a verified repeat, and after a stop never converts a committed batch again nor loses one that did not commit
+function getWordClean(): array {
+    setWordSite();
+    $out = ['dry' => getWordRun(true), 'write' => getWordRun(false), 'repeat' => getWordRun(false), 'again' => getWordRun(true)];
+    $done = $out['write']['texts'];
+    setWordBatch($done, true);
+    $out['committed'] = getWordRun(false);
+    setWordBatch($done, false);
+    $out['rolled'] = getWordRun(false);
+    return $out;
+}
+
 $report = ['error' => '', 'clean' => false, 'runs' => []];
 
 try {
     $units = ['setUpdateFile', 'getUpdateSource', 'getUpdateCred', 'getUpdateRow', 'checkUpdateFail', 'checkUpdateBase', 'setUpdateBackup', 'setUpdatePoints',
         'setUpdateRatings', 'getUpdateRules', 'getUpdateValue', 'setUpdateFields', 'getUpdateLangs', 'setUpdateConfig', 'setUpdateMails', 'setUpdateModules', 'deleteUpdateTypes'];
     foreach ($units as $name) addProbeCode($name);
-    foreach (['getMigrateMap', 'getMigrateAttach', 'getMigrateForeign', 'setUpdateArchive', 'setUpdateMerge', 'setUpdateTables'] as $name) {
+    $lift = ['getMigrateMap', 'getMigrateAttach', 'getMigrateForeign', 'getMigrateBlocks', 'getMigrateHtml', 'getMigrateMarkdown', 'getMigrateLocal', 'setUpdateArchive',
+        'setUpdateTexts', 'setUpdateMerge', 'setUpdateTables'];
+    foreach ($lift as $name) {
         addProbeCode($name, 'public/update.php', ["BASE_DIR.'/core/" => "PROBEROOT.'/core/"]);
     }
     if (($argv[2] ?? '') === 'setup') {
@@ -1050,6 +1146,7 @@ try {
         'config' => ['clean' => getConfClean()],
         'mails' => ['clean' => getMailClean()],
         'archive' => ['clean' => getArchClean(), 'merge' => getMergeClean(), 'tables' => getTableClean()],
+        'texts' => ['clean' => getWordClean()],
         'setup' => ['clean' => getSetupClean()],
         default => ['clean' => getProbeClean(), 'resume' => getProbeResume(), 'stop' => getProbeStop(), 'flight' => getProbeFlight()],
     };

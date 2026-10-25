@@ -56,7 +56,7 @@ final class UpdateAttachTest extends TestCase
 
     # An image becomes the full-size form with its alignment and its alternative text as the title; a link around its thumb becomes the thumbnail form
     # A link around another image keeps the image alone in full size, a link becomes an attachment titled by its label, a bare link or one labelled by its address titled title
-    # A Markdown image takes the same forms as [img], and the folders of the forum and of the private messages convert like the folder of a module
+    # The Markdown image, link, linked thumb and autolink take the forms of [img] and [url], and the folders of the forum and the private messages convert like a module's
     #[Test]
     public function everyFormOfTheOwnFolderBecomesAnAttachment(): void
     {
@@ -79,6 +79,14 @@ final class UpdateAttachTest extends TestCase
         $mail = 'See [url=https://slaed.net/uploads/account/brandbook.pdf]pdf file[/url].';
         $this->assertSame('See [attach=brandbook.pdf align=none title=pdf file].', $this->getText($mail, 0, 'account'),
             'A labelled link of a private message to its folder did not become an attachment');
+        $md = [
+            '[Скачать](./uploads/news/f.png)' => '[attach=f.png align=none title=Скачать]',
+            '[a\_b](uploads/news/g.zip)' => '[attach=g.zip align=none title=a_b]',
+            '[![](./uploads/news/thumb/d.png)](./uploads/news/d.png)' => '[attach=d.png align=none title=title]',
+            '[![E](./uploads/news/e.jpg)](./uploads/news/e.png)' => '[attach=e.jpg align=none title=E size=full]',
+            '<https://www.slaed.net/uploads/news/j.zip>' => '[attach=j.zip align=none title=title]',
+        ];
+        foreach ($md as $from => $want) $this->assertSame($want, $this->getText($from), 'The Markdown form '.$from.' the text unit writes was not converted');
         require_once BASE_DIR.'/core/classes/parser.php';
         $tag = (new \ReflectionClassConstant(\Parser::class, 'ATTTAG'))->getValue();
         preg_match_all($tag, implode(' ', $cases), $mm);
@@ -103,6 +111,11 @@ final class UpdateAttachTest extends TestCase
             '[img]http://other.net/uploads/news/c.png[/img]',
             '[url=./uploads/news/f.png][b]Bold[/b][/url]',
             'See uploads/news/a-1.gif here',
+            "```\n![](uploads/news/b.png)\n```",
+            'Code `[F](uploads/news/f.png)` here',
+            '[**Bold**](./uploads/news/f.png)',
+            '[![B](./uploads/news/b.png)](https://example.com)',
+            '<https://other.net/uploads/news/j.zip>',
         ];
         foreach ($keep as $text) $this->assertSame($text, $this->getText($text), 'The address '.$text.' was rewritten');
         $mix = '[code][img]./uploads/news/b.png[/img][/code] [img]./uploads/news/b.png[/img] [url=https://example.com][img]./uploads/news/b.png[/img][/url]';

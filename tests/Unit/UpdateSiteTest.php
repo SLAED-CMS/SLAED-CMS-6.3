@@ -88,7 +88,7 @@ final class UpdateSiteTest extends TestCase
     }
 
     # The schema file runs on the tables of a real 6.2 site without a failed statement on the first run, every unit finishes, and the repeats change nothing
-    # The attachment unit turns the forum address of a file the folder holds and leaves a missing one in the post and in the message
+    # The attachment unit turns the forum address of a file the folder holds and leaves a missing one in the post and in the message, which the text unit then writes as Markdown
     # The tables of the modules gone for good and the empty source tables of Node leave on the first run; a source table with rows waits for the second stage
     #[Test]
     public function aRealSiteFinishesOnTheFirstRun(): void
@@ -108,7 +108,7 @@ final class UpdateSiteTest extends TestCase
         }
         $this->assertSame(['account', 'forum'], array_keys($run['first']['ratings']));
         $this->assertTrue($run['third']['same']);
-        $want = ['[attach=slaed_cms_2026-07-13_22-01-38.png align=none title=title size=full] [img]uploads/forum/gone.png[/img]', '[url=uploads/account/gone.zip]Gone[/url]'];
+        $want = ['[attach=slaed_cms_2026-07-13_22-01-38.png align=none title=title size=full] ![](./uploads/forum/gone.png)', '[Gone](uploads/account/gone.zip)'];
         $this->assertSame($want, $run['first']['attach'], 'The attachment unit did not turn the address of a file its folder holds, or turned a missing one');
     }
 
