@@ -16,18 +16,19 @@ function getBlockTabsOps(): array {
     ];
 }
 
-# The where-to-show boxes of a block: every module with its code in a popover, then the home page, all pages, the denial and the fly places
+# The where-to-show boxes of a block: site modules and Node types by the name their pages carry, never "node", code in a popover, then home, all, denial and fly
 function getBlockWhereItems(array $where): array {
     global $conf, $tpl;
     $mods = [];
     foreach ($conf['modules'] as $name => $info) {
-        if ((int)($info['type'] ?? 1) === 1) $mods[] = $name;
+        if ((int)($info['type'] ?? 1) === 1 && $name !== 'node') $mods[$name] = _MODUL;
     }
-    sort($mods);
+    foreach (array_keys($conf['node']['types'] ?? []) as $name) $mods[$name] = _TYPE;
+    ksort($mods);
     $out = [];
-    foreach ($mods as $mod) {
+    foreach ($mods as $mod => $kind) {
         $out[] = ['is_checked' => in_array($mod, $where, true), 'name_attr' => 'blockwhere[]', 'value_attr' => $mod,
-            'label_html' => $tpl->getHtmlFrag('popover', ['label_text' => getModuleName($mod), 'title_text' => _MODUL.': '.$mod])];
+            'label_html' => $tpl->getHtmlFrag('popover', ['label_text' => getModuleName($mod), 'title_text' => $kind.': '.$mod])];
     }
     $home = in_array('home', $where, true);
     $list = ['ihome' => _HOME, 'home' => _INHOME, 'all' => _BLOCK_ALL, 'otricanie' => _DENYING, 'infly' => _INFLY, 'flyfix' => _FLY_FIX];

@@ -1303,6 +1303,9 @@ function getRouteInteg(PDO $pdo, string $work): array {
     $kept = $param();
     $good = getRouteReply('root', 'POST', 'admin.php', $post + ['ntype' => 'docs', 'nmode' => 'last', 'nlimit' => '3']);
     $out['editor'] = [$edit['code'], str_contains($edit['body'], 'name="ntype"'), str_contains($edit['body'], 'name="nlimit"'), $bad['code'], $kept, $good['code'], $param()];
+    $bound =getRouteReply('root', 'POST', 'admin.php', ['blockwhere[]' => 'docs'] + $post + ['ntype' => 'docs', 'nmode' => 'last', 'nlimit' => '3']);
+    $box = fn(string $val): bool => (bool)preg_match('#name="blockwhere\[\]"\s+value="'.$val.'"#', $edit['body']);
+    $out['where'] = [$box('docs'), $box('node'), $bound['code'], (string)$pdo->query('SELECT which FROM '.$pre.'blocks WHERE id = 51')->fetchColumn()];
     $conf = getRouteReply('root', 'GET', 'admin.php?name=search&op=config');
     $save = getRouteReply('root', 'POST', 'admin.php?name=search&op=save', ['token' => getRouteToken($conf['body'], 'ver[docs]'), 'asearch' => '1', 'search[]' => 'forum',
         'ntype[]' => 'news', 'ver[news]' => '1', 'ver[docs]' => '1', 'slet' => '3', 'slimit' => '500', 'snum' => '1', 'snump' => '5', 'anum' => '50', 'anump' => '10']);

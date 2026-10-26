@@ -139,6 +139,8 @@ final class NodeIntegTest extends TestCase
         $this->assertSame([true, true, false, true, true, false, true], $run['blocks']);
         $this->assertSame([200, true, true, 303, '{"type":"","mode":"last","limit":5}', 303, '{"type":"docs","mode":"last","limit":3}'], $run['editor'],
             'The editor misses the fields of node.php, stored an invalid parameter or did not store a valid one');
+        $this->assertSame([true, false, 303, 'docs'], $run['where'],
+            'The places of a block do not offer a Node type, still offer "node", or a save lost the type the block was bound to');
     }
 
     # The search screen toggles the integration inside the type itself, as a new version of that type
