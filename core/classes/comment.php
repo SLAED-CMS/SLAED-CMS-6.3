@@ -51,7 +51,6 @@ class Comment {
         $this->pnt = $pnt;
         $this->conf = is_array($conf['comments'] ?? null) ? $conf['comments'] : [];
         $this->site = [
-            'click' => !empty($conf['clickable']),
             'cens' => !empty($conf['censor']),
             'from' => (string)($conf['censor_l'] ?? ''),
             'to' => (string)($conf['censor_r'] ?? ''),
@@ -427,7 +426,7 @@ class Comment {
         if ($this->getReplyDepth($mod, $id, $pid) === null) return ['id' => 0, 'name' => $name, 'new' => false, 'error' => _COMMENTS_PARENT];
         $key = $this->getRequestKey($key);
         if ($key === false) return ['id' => 0, 'name' => $name, 'new' => false, 'error' => _COMMENTS_REPLAY];
-        $body = $this->filterCommentBody($body, $this->getLinkFlag($mod));
+        $body = $this->filterCommentBody($body);
         $room = checkEditorTextRoom($body, 'comment.body') ?: $this->checkAttachNames($mod, $id, $body, '');
         if ($room !== '') return ['id' => 0, 'name' => $name, 'new' => false, 'error' => $room];
         if (is_user()) {
@@ -505,7 +504,7 @@ class Comment {
         $out = ['code' => 'unavailable', 'error' => [], 'mod' => (string)($head['mod'] ?? ''), 'body' => (string)($head['body'] ?? '')];
         if (!$head) return $out;
         if (!$head['allow']) return ['code' => 'denied'] + $out;
-        $text = $this->filterCommentBody($body, $this->getLinkFlag($head['mod']));
+        $text = $this->filterCommentBody($body);
         $stop = $this->checkRules($head['mod'], $body, '', '', false)
             ?: array_filter([checkEditorTextRoom($text, 'comment.body'), $this->checkAttachNames($head['mod'], $head['cid'], $text, $head['body'])]);
         if ($stop) return ['code' => 'rules', 'error' => array_values($stop)] + $out;
@@ -837,11 +836,10 @@ class Comment {
         return [$from, $where, $pars];
     }
 
-    # Normalize a submitted comment into the stored source; only the trusted tags, the clickable-link rewrite and the censor list change the text
-    private function filterCommentBody(string $body, int $flag): string {
+    # Normalize a submitted comment into the stored source; only the trusted tags and the censor list change the text
+    private function filterCommentBody(string $body): string {
         if ($body === '') return '';
         $body = filterTrustedTags($body);
-        if ($this->site['click'] && $flag != 1) $body = filterClickable($body);
         if (!isAdmin() && $this->site['cens']) {
             foreach (explode(',', $this->site['from']) as $one) {
                 $one = trim($one);
@@ -869,11 +867,6 @@ class Comment {
         $walk = $this->db->getSqlRow($this->db->getSqlQuery($sql, ['id' => $pid, 'max' => self::MAXDEPTH]));
         $deep = $walk ? intval($walk['lvl']) : 0;
         return ($deep > 0 && $deep + 1 <= self::MAXDEPTH) ? $deep : null;
-    }
-
-    # Build the link flag the body normalization takes: 1 keeps the bare links of this author as text, 0 lets the rewrite make them clickable
-    private function getLinkFlag(string $mod): int {
-        return (!is_moder($mod) && (($this->conf['alink'] == 1 && !is_user()) || $this->conf['alink'] == 2)) ? 1 : 0;
     }
 
     # Read the time of the latest comment of one address for the flood window; best effort by design, as the address is a value the request supplies

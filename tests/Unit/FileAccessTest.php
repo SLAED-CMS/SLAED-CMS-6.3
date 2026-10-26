@@ -137,7 +137,7 @@ final class FileAccessTest extends TestCase
         foreach ($bad as $key) $this->assertSame('', $fac->getFilePath('forum', '', 5, $key), 'A name that is no bare carried name was served: '.$key);
     }
 
-    # A post of the forum serves the names its text carries to a reader of its category while it and its topic are published; the folder has no direct address
+    # A post serves the names its text carries to a reader of its category while it and its topic are published, its meta image included; the folder has no direct address
     #[Test]
     public function aForumPostServesItsReader(): void
     {
@@ -149,6 +149,8 @@ final class FileAccessTest extends TestCase
         $this->assertSame([200, 200, 200, 404], $run['moder'], 'The moderator of the forum was refused, or a moderator of a type read the forum');
         $this->assertSame([410, 410], $run['direct'], 'The light path served the closed forum folder');
         $this->assertSame([true, true, false], $run['page'], 'The topic page does not print the file route or still prints the folder');
+        $this->assertStringEndsWith('index.php?go=file&own=forum&id=601&key=fa-aaaaaaaaaa.png&thumb=1', $run['meta'][0], 'The meta image of a topic is not its attachment');
+        $this->assertSame('https://cdn.example.com/f%20one.png', $run['meta'][1], 'The meta image of a topic is not its Markdown image');
     }
 
     # The preview of the forum serves the visitor's own upload and any to a moderator of the forum, never a foreign one, a name of a post or another name
@@ -159,12 +161,13 @@ final class FileAccessTest extends TestCase
         $this->assertSame([true, 2], $this->getRun()['draft'], 'The preview of an unsaved post does not take the preview address or stored the post');
     }
 
-    # A writer of a post binds a new name only to an own upload or to a name the topic already carries: a foreign file keeps the form open with its refusal
+    # A post binds a new name only to an own upload or to a name the topic carries, as the Markdown quote the reply form offers does; a foreign file keeps the form open
     #[Test]
     public function aForumWriterBindsOnlyItsOwnOrAQuotedName(): void
     {
         $run = $this->getRun();
         $this->assertSame([true, 200, true, 0], $run['send'], 'A reply naming a foreign file was stored or did not name the refused file');
+        $this->assertSame([true, false], $run['reply'], 'The reply form does not quote the post as Markdown lines followed by a blank line');
         $this->assertSame([303, 1], $run['quote'], 'A quote of a name the topic carries was refused');
         $this->assertSame([303, 2], $run['own'], 'A reply naming an own upload was refused');
     }

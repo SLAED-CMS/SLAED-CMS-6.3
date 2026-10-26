@@ -21,7 +21,6 @@ return [
     'censor' => '1',
     'censor_l' => 'antislaed,netlevel,sunvas',
     'censor_r' => '***',
-    'clickable' => '0',
     'close' => '0',
     'css_f' => '',
     'db_t' => '1',

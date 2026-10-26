@@ -62,7 +62,6 @@ final class Privat {
         $this->db = $db;
         $this->conf = is_array($conf['privat'] ?? null) ? $conf['privat'] : [];
         $this->site = [
-            'click' => !empty($conf['clickable']),
             'cens' => !empty($conf['censor']),
             'from' => (string)($conf['censor_l'] ?? ''),
             'to' => (string)($conf['censor_r'] ?? ''),
@@ -246,11 +245,10 @@ final class Privat {
         return in_array(intval($this->db->getSqlError()['code']), [1205, 1213], true);
     }
 
-    # Normalize one field into the stored source, never HTML-escaped: trusted tags out, the link rewrite for the body only, the censor list
-    private function filterMessageText(string $text, bool $link): string {
+    # Normalize one field into the stored source, never HTML-escaped: trusted tags out, the censor list
+    private function filterMessageText(string $text): string {
         if ($text === '') return '';
         $text = filterTrustedTags($text);
-        if ($link && $this->site['click']) $text = filterClickable($text);
         if (!isAdmin() && $this->site['cens']) {
             foreach (explode(',', $this->site['from']) as $one) {
                 $one = trim($one);
@@ -459,8 +457,8 @@ final class Privat {
 
     # Store one message and answer its id or refusal code; a deadlock or lock timeout is retried once, only when the send owns its transaction and none is left open after it
     public function addMessage(int $uid, string $name, string $title, string $body, string $ip): array {
-        $title = filterCutText(trim($this->filterMessageText($title, false)), 100);
-        $body = $this->filterMessageText($body, true);
+        $title = filterCutText(trim($this->filterMessageText($title)), 100);
+        $body = $this->filterMessageText($body);
         $room = checkEditorTextRoom($body, 'privat.body');
         if ($room !== '') return ['id' => 0, 'error' => 'no_room', 'note' => $room];
         $own = !$this->db->checkSqlActive();

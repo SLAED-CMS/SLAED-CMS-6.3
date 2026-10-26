@@ -1018,7 +1018,7 @@ function add(): void {
         $subject = getVar('post', 'subject', 'title');
         $subject = $ftitle ?: $subject;
         $hometext = getVar('post', 'hometext', 'text');
-        $hometext = ($qid && $ftext) ? '[quote]'.$ftext.'[/quote]' : $hometext;
+        if ($qid && $ftext) $hometext = preg_replace('/^/m', '> ', $ftext)."\n\n";
         $status = getVar('post', 'status', 'num', 3);
         $time = getVar('req', 'time', 'time');
         $info = (!empty($ftext)) ? _PUBLICIN.': '.$ftitle : _PUBLICIN.': '.$ctitle;

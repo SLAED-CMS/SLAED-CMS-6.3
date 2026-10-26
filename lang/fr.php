@@ -160,7 +160,6 @@ define('_EMAIL','E-Mail');
 define('_END','Terminé');
 define('_ENDDATE','Date de fin');
 define('_ENGLISH','Anglais');
-define('_EQUOTE','Citation');
 define('_ERROR','Une erreur');
 define('_TOKENMISS','Le jeton de sécurité ne correspond pas!');
 define('_ERROR1','Une erreur est erroné E-Mail!');

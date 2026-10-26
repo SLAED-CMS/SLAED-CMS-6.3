@@ -333,23 +333,6 @@ function config(): void {
             ]),
         ],
         [
-            'label_for' => 'f-alink',
-            'label_html' => _NOALINKP,
-            'field_html' => $tpl->getHtmlFrag('select', [
-                'name_attr' => 'alink',
-                'selectid' => 'f-alink',
-                'options_html' => $tpl->getHtmlFrag('select-option', [
-                    'value_attr' => '0',
-                    'label_text' => _NO,
-                    'is_selected' => (string)($conf['comments']['alink'] ?? '0') === '0',
-                ]).$tpl->getHtmlFrag('select-option', [
-                    'value_attr' => '1',
-                    'label_text' => _ANONIMP,
-                    'is_selected' => (string)($conf['comments']['alink'] ?? '0') === '1',
-                ]).$tpl->getHtmlFrag('select-option', ['value_attr' => '2', 'label_text' => _ALLUSER, 'is_selected' => (string)($conf['comments']['alink'] ?? '0') === '2']),
-            ]),
-        ],
-        [
             'label_html' => _ADDAMAIL,
             'label_id' => $labid = getFieldIds('', 'addmail')['label'],
             'field_html' => getTplRadioGroup([
@@ -419,7 +402,6 @@ function save(): void {
             'sort' => getVar('post', 'sort', 'num'),
             'anonpost' => getVar('post', 'anonpost', 'num'),
             'link' => getVar('post', 'link', 'num'),
-            'alink' => getVar('post', 'alink', 'num'),
             'addmail' => getVar('post', 'addmail', 'num'),
             'privat' => getVar('post', 'privat', 'num'),
             'profil' => getVar('post', 'profil', 'num'),

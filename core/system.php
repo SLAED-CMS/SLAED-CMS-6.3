@@ -3550,7 +3550,7 @@ function getProtocol(): string {
     return $proto;
 }
 
-# Get the image of a text, never a data URI, as a meta image must be fetchable; a caller rendering another module names it, or the request module decides the path
+# The meta image of a text, [attach] before a Markdown image, never a data URI; a caller rendering another module names it, or the request module decides the path
 function getImgText(string $text, string $type = '', bool $check = true, string $mod = '', array $own = []): string|false {
  global $conf;
     $mod = filterVar(($mod !== '') ? $mod : (string)($conf['name'] ?? ''));
@@ -3558,15 +3558,13 @@ function getImgText(string $text, string $type = '', bool $check = true, string 
         $fname = basename(trim($match[1]));
         $thumb = !$type && stripos($match[0], ' size=full]') === false;
         $img = $own ? getFileService()->getFileUrl($own[0], $mod, $own[1], $fname, $thumb) : getUploadUrl(getUploadFolder($mod).'/'.($thumb ? 'thumb/' : '').$fname);
-    } elseif (preg_match('#\[img=[a-zA-Z]+\](.*?)\[/img\]#i', $text, $match)) {
-        $img = trim($match[1]);
-    } elseif (preg_match('#\[img\](.*?)\[/img\]#i', $text, $match)) {
-        $img = trim($match[1]);
+    } elseif (preg_match('#!\[(?:\\\\.|[^\]\\\\])*\]\(\s*(?:<([^<>\n]+)>|([^\s<>()]+))#', $text, $match)) {
+        $img = trim($match[1] !== '' ? $match[1] : $match[2]);
     } else {
         $img = '';
     }
     if ($img !== '' && stripos($img, 'data:') === 0) $img = '';
-    $rel = str_replace('\\', '/', $img);
+    $rel = str_replace('\\', '/', rawurldecode($img));
     $rel = str_starts_with($rel, HOME_PATH) ? substr($rel, strlen(HOME_PATH)) : ltrim($rel, '/');
     $path = empty($img) ? '' : (str_starts_with($rel, 'uploads/') ? UPLOADS_DIR.substr($rel, 7) : PUBLIC_DIR.'/'.$rel);
     $img = empty($img) ? false : ($check ? (file_exists($path) ? $img : false) : $img);

@@ -7,7 +7,6 @@
 return [
     'comments' => [
         'addmail' => '1',
-        'alink' => '0',
         'anonpost' => '1',
         'anum' => '25',
         'anump' => '8',

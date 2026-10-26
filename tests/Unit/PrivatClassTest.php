@@ -412,14 +412,15 @@ final class PrivatClassTest extends TestCase
         }
     }
 
-    # Step 11: what the writer still does once the escape is gone - the tokens a visitor may not open, the autolinker on the body alone, and the censor list on both fields
+    # Step 11: what the writer still does once the escape is gone - the tokens a visitor may not open and the censor list on both fields; a bare address is linked at render
     #[Test]
     public function theWriterStillFiltersWhatChangesTheText(): void
     {
         $run = $this->getRun('writer');
         $this->assertSame('ok', $run['error'], 'The send of the normalization scenario was refused');
-        $this->assertSame('*** t http://slaed.net', $run['title'], 'The title was not censored, kept a trusted-html token, or was run through the autolinker');
-        $this->assertSame("<b>x</b> ***\nsee [url=http://slaed.net]http://slaed.net[/url] now", $run['body'], 'The body was not censored, kept a token, or was not autolinked');
+        $this->assertSame('*** t http://slaed.net', $run['title'], 'The title was not censored or kept a trusted-html token');
+        $this->assertSame("<b>x</b> ***\nsee http://slaed.net now", $run['body'], 'The body was not censored, kept a token, or was rewritten into a link tag');
+        $this->assertStringContainsString('href="http://slaed.net"', $run['render'], 'The bare address of the stored body is no link in the rendering');
     }
 
     # A write that joins a transaction it did not open leaves the commit to whoever did open it

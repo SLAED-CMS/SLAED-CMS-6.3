@@ -87,18 +87,14 @@
             setFullscreen(id);
         });
         addItem(ed, 0, 'slaedFullscreen', 'sl-editor-icon sl-editor-icon-fullscreen', txt.fullscreen || 'Full screen', 0);
-        addCmd(ed, 'slaedQuote', function() {
-            addWrap(ed, '[quote]', '[/quote]', 'Quote');
-        });
         addCmd(ed, 'slaedHide', function() {
             addWrap(ed, '[hide]', '[/hide]', 'Hidden text');
         });
         addCmd(ed, 'slaedTabs', function() {
             addTabs(ed);
         });
-        addItem(ed, 0, 'slaedQuote', 'sl-editor-icon sl-editor-icon-quote', txt.quote || 'SLAED quote');
-        addItem(ed, 1, 'slaedHide', 'sl-editor-icon sl-editor-icon-hide', txt.hide || 'SLAED hidden block');
-        addItem(ed, 2, 'slaedTabs', 'sl-editor-icon sl-editor-icon-tabs', txt.tabs || 'SLAED tabs');
+        addItem(ed, 0, 'slaedHide', 'sl-editor-icon sl-editor-icon-hide', txt.hide || 'SLAED hidden block');
+        addItem(ed, 1, 'slaedTabs', 'sl-editor-icon sl-editor-icon-tabs', txt.tabs || 'SLAED tabs');
         if (!issuper) return;
         addCmd(ed, 'slaedHtml', function() {
             addWrap(ed, '[usehtml]', '[/usehtml]', '<p>HTML</p>');
@@ -106,8 +102,8 @@
         addCmd(ed, 'slaedPhp', function() {
             addWrap(ed, '[usephp]', '[/usephp]', 'echo "";');
         });
-        addItem(ed, 5, 'slaedHtml', 'sl-editor-icon sl-editor-icon-html', txt.html || 'SLAED raw HTML');
-        addItem(ed, 6, 'slaedPhp', 'sl-editor-icon sl-editor-icon-php', txt.php || 'SLAED PHP');
+        addItem(ed, 3, 'slaedHtml', 'sl-editor-icon sl-editor-icon-html', txt.html || 'SLAED raw HTML');
+        addItem(ed, 4, 'slaedPhp', 'sl-editor-icon sl-editor-icon-php', txt.php || 'SLAED PHP');
     }
 
     // The emoji panel is the shared runtime's: the toolbar opens it at its own button and hands over the editor it writes into
@@ -118,7 +114,7 @@
             var box = doc.getElementById(String(id) + '_toast');
             win.SlaedEmoji.setPanel(id, ed, box ? box.querySelector('.toastui-editor-toolbar-icons.sl-editor-icon-emoji') : null);
         });
-        ed.insertToolbarItem({ groupIndex: 6, itemIndex: 3 }, {
+        ed.insertToolbarItem({ groupIndex: 6, itemIndex: 2 }, {
             name: 'slaedEmoji',
             text: '',
             className: 'toastui-editor-toolbar-icons sl-editor-icon sl-editor-icon-emoji',

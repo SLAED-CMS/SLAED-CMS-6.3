@@ -115,10 +115,6 @@ button.toastui-editor-toolbar-icons {
     content: "\f5d4";
 }
 
-.toastui-editor-toolbar-icons.sl-editor-icon-quote::before {
-    content: "\f190";
-}
-
 .toastui-editor-toolbar-icons.sl-editor-icon-hide::before {
     content: "\f340";
 }

@@ -48,6 +48,9 @@ final class UpdateConfigTest extends TestCase
         $this->assertSame([$run['ship']['theme'], 'mark.svg'], [$glob['theme'], $glob['site_logo']], 'A theme that left the tree was kept or a logo of the theme was dropped');
         $this->assertArrayNotHasKey('forum', $glob, 'A 6.2 key that names a configuration area reached global.php and shadows that area');
         $this->assertSame([], array_intersect_key($glob, ['script_a' => 0, 'script_b' => 0]), 'A script switch the release dropped was carried');
+        $this->assertNotSame('1', $glob['clickable'] ?? null, 'The link switch of 6.2 the parser made pointless was carried');
+        $this->assertSame('2', $run['comments']['link'], 'A comments setting of 6.2 was not carried');
+        $this->assertNotSame('1', $run['comments']['alink'] ?? null, 'The link switch of the 6.2 comments the parser made pointless was carried');
         $this->assertSame(['de', 'k1'], [$run['lang']['lang'], $run['lang']['key']]);
         $want = ['stat' => '0'] + $run['ship']['statistic'];
         ksort($want);
@@ -70,9 +73,10 @@ final class UpdateConfigTest extends TestCase
     {
         $run = $this->getRun()['first'];
         $this->assertSame([], $run['old']);
-        $names = ['core', 'db', 'fields', 'global', 'header', 'lang', 'news', 'security', 'seo', 'stat', 'templ', 'uploads', 'users'];
+        $names = ['comments', 'core', 'db', 'fields', 'global', 'header', 'lang', 'news', 'security', 'seo', 'stat', 'templ', 'uploads', 'users'];
         $this->assertSame(array_map(fn($v) => 'config_'.$v.'.php', $names), $run['back']);
-        $this->assertStringContainsString('carried into fields, global, lang, security, statistic, uploads, users; not carried: core, db, header, news, templ', $run['text']);
+        $text = 'carried into comments, fields, global, lang, security, statistic, uploads, users; not carried: core, db, header, news, templ';
+        $this->assertStringContainsString($text, $run['text']);
     }
 
     # The two positional formats that changed after 6.2: an upload rule loses its retired eighth field and gets the guest limit at the user one

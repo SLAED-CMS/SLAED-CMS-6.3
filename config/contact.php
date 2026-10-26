@@ -7,7 +7,7 @@
 return [
     'contact' => [
         'admins' => '1',
-        'info' => '[b]Наши координаты[/b]
+        'info' => '**Наши координаты**
 
 S-Test - Webhosting, Design
 Генеральный директор: Test Testow

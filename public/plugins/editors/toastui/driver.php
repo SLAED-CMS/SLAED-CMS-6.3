@@ -60,7 +60,6 @@ class EditorToastUi implements ContentDriver {
         $panel = $kit['html'];
         $opt = ['super' => isAdmin(true)] + $kit['opt'];
         $opt['labels'] += [
-            'quote' => _EQUOTE,
             'hide' => _HIDE,
             'tabs' => _ETABS,
             'emoji' => _EEMOJI,

@@ -184,15 +184,6 @@
         addText(getEditor(id), txt);
     }
 
-    // A markdown picture carries no side, so one that takes a side is written as the tag the parser reads instead
-    function addImage(id, url, title, align) {
-        if (align === '') {
-            addSource(id, url, title);
-            return;
-        }
-        addText(getEditor(id), '[img=' + align + ' alt=' + getTagText(title) + ']' + url + '[/img]');
-    }
-
     // The parser reads a caption out of a tag by a narrow alphabet, and a character outside it would cut the tag in half
     function getTagText(text) {
         var out = String(text || '').replace(/[^\p{L}0-9_\-. "]+/gu, ' ').replace(/\s+/g, ' ').trim();
@@ -254,7 +245,7 @@
         var alt = opt.urlalt ? doc.getElementById(opt.urlalt) : null;
         var text = getAltText(id, 'url');
         if (src === '') return;
-        // A picture from another server takes a side like any other, so it goes through the same options window
+        // A picture from another server takes a caption like any other, so it goes through the same options window
         askInsert(id, 'image', [{ url: src, file: text || src, image: true, path: '' }], text);
         if (url) url.value = '';
         if (alt) alt.value = '';
@@ -1083,8 +1074,10 @@
         var note = getOptsPart(id, 'info');
         var field = getOptsPart(id, 'title');
         var size = getOptsPart(id, 'size');
+        var side = getOptsPart(id, 'align');
         var row = want ? want.rows[want.at] : null;
         if (!row) return;
+        if (side) side.hidden = want.way === 'image' && row.image && !row.bytag;
         // Only a picture that enters the text as an attachment has a thumbnail to refuse; a markdown picture is full size already
         if (size) size.hidden = !(row.image && (want.way === 'attach' || row.bytag));
         if (name) name.textContent = row.file;
@@ -1119,7 +1112,7 @@
     // A file of a closed directory has no address a reader could open, so it enters the text as the tag the stored material resolves
     function addInsertRows(id, way, rows, align, title, full) {
         rows.forEach(function(row) {
-            if (way === 'image' && row.image && !row.bytag) addImage(id, row.url, title || row.file, align);
+            if (way === 'image' && row.image && !row.bytag) addSource(id, row.url, title || row.file);
             else addAttach(id, row.file, title || row.file, align, full && row.image);
         });
     }

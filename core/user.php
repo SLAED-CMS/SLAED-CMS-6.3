@@ -1123,8 +1123,7 @@ function getPrivateMessagePane(string|array $stop, string $info, int $typ, array
             ]);
         }
         if (is_moder($conf['name'])) $chips .= Geoip::getIpHtml($view['ip'], true);
-        $quote = '[quote]'.$view['body'].'[/quote]';
-        if (getEditorMode() !== 'html') $quote = getDecodedText(replace_break($quote));
+        $quote = preg_replace('/^/m', '> ', getDecodedText(replace_break($view['body'])))."\n\n";
         return $tpl->getHtmlPart('privat-view', [
             'token' => $tok,
             'title' => $view['title'],

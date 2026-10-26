@@ -396,9 +396,9 @@ in a fragment answered over htmx `Editor::getAssetTags()` names it to
 `SlaedEditors.load()` of `slaed.js`, and the init waits in `SlaedEditors.ready()`
 until the scripts named before it are there. `addPanel()` opens the window from the folder button
 of the capsule (`bi-folder`, `_EUPLOAD`) or the palette line "Файлы: загрузить и
-вставить". A picture takes the format of the field: Markdown for `markdown`, the
-`[img]` tag otherwise. A paste or a drop of an image goes to the window as Toast
-UI's hook sends it; a paste that also carries `text/rtf`, as Word and Excel give
+вставить". A picture enters as a Markdown image in every field and takes no side; a
+file of a closed directory and an attachment enter as `[attach]`, the one that keeps a
+side. A paste or a drop of an image goes to the window as Toast UI's hook sends it; a paste that also carries `text/rtf`, as Word and Excel give
 it, stays text. Code gets no file window. The window is non-modal and stands above
 the full screen of the shell by itself: `setWindowFront()` in `slaed.js` lifts it
 from layer 10050 up, above `--sl-z-modal`.
@@ -422,8 +422,8 @@ map, written in `addUpload()` and never in `addField()`, with local `getEditor()
 and `insertText()` over it; `editor-tags.js` keeps its own copies for its own use.
 
 **The null editor is the field mode and it stays silent.** A field place has no
-editor in the map, so `getEditor()` answers null and the four editor-only paths —
-`addSource`, `addAttach`, `addImage`, `setRoom` — disable themselves through
+editor in the map, so `getEditor()` answers null and the three editor-only paths —
+`addSource`, `addAttach`, `setRoom` — disable themselves through
 guards that were already there. That is designed behaviour, not leftover code.
 
 **The draw templates travelled with the runtime.** `api.getTpl()` finds

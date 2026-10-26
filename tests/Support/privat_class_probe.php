@@ -473,7 +473,6 @@ function getProbeContent(): array {
     global $conf, $prs, $tpl;
     setProbeSeed();
     $conf['censor'] = 0;
-    $conf['clickable'] = 0;
     $out = [];
     foreach (['plain', 'markdown'] as $mode) {
         $seen = setProbeMode($mode);
@@ -492,15 +491,14 @@ function getProbeContent(): array {
     return $out;
 }
 
-# What the write normalization still does to a submitted field once the escape is gone: the tokens a visitor may not open, the autolinker and the censor list
-# The title is asked for the same run, because it never carried the autolinker and must not start carrying it now
+# What the write normalization still does to a submitted field once the escape is gone: the tokens a visitor may not open and the censor list
+# A bare address is stored as typed, as the parser links it at render; the rendering of the body is asked for the same run
 function getProbeWriter(): array {
-    global $conf;
+    global $conf, $prs;
     setProbeSeed();
     $conf['censor'] = 1;
     $conf['censor_l'] = 'badword';
     $conf['censor_r'] = '***';
-    $conf['clickable'] = 1;
     setProbeMode('markdown');
     $head = 'badword [usehtml]t[/usehtml] http://slaed.net';
     $body = "[usehtml]<b>x</b>[/usehtml] badword\nsee http://slaed.net now";
@@ -508,8 +506,8 @@ function getProbeWriter(): array {
     $pdb = $GLOBALS['pdb'];
     $row = $pdb->getSqlRow($pdb->getSqlQuery('SELECT title, body FROM '.PREFIX_DB.'_privat WHERE id = :id', ['id' => $new['id']]));
     $conf['censor'] = 0;
-    $conf['clickable'] = 0;
-    return ['error' => $new['error'], 'title' => (string)($row['title'] ?? ''), 'body' => (string)($row['body'] ?? '')];
+    $body = (string)($row['body'] ?? '');
+    return ['error' => $new['error'], 'title' => (string)($row['title'] ?? ''), 'body' => $body, 'render' => $prs->filterContent($body, true, 'privat', 2)];
 }
 
 # A write that joins a transaction it did not open must leave the commit to whoever did open it

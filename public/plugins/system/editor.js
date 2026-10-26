@@ -242,15 +242,11 @@
         area.dispatchEvent(new Event('input', { bubbles: true }));
     }
 
-    // A picture in the format the field stores: Markdown, or the tag of the parser, which reads no Markdown picture in a plain text
+    // A picture as Markdown, which the parser reads in every stored text, a plain one included
     function addImage(ed, url, alt) {
         var text = String(alt || '').replace(/\s+/g, ' ').trim();
         var src = String(url || '');
-        if (ed.frame.getAttribute('data-sl-editor-lang') !== 'markdown') {
-            addText(ed, '[img alt=' + (text.replace(/[^\p{L}0-9_\-. "]+/gu, ' ').replace(/\s+/g, ' ').trim() || 'image') + ']' + src + '[/img]');
-            return;
-        }
-        addText(ed, '![' + text.replace(/[[\]\\]/g, '') + '](' + src.replace(/[ ()]/g, function (one) { return { ' ': '%20', '(': '%28', ')': '%29' }[one]; }) + ')');
+        addText(ed, '![' + text.replace(/[[\]\\]/g, '') + '](' + src.replace(/[ ()<>]/g, function (one) { return '%' + one.charCodeAt(0).toString(16).toUpperCase(); }) + ')');
     }
 
     // The selection and the whole text of an editor in one shape for CodeMirror and for the textarea

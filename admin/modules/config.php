@@ -883,19 +883,6 @@ function config(): void {
             'is_config' => true,
         ]),
     ];
-    $rows[] = [
-        'label_html' => _CLICABLE,
-        'hint_html' => _CLICABLEINFO,
-        'label_id' => ($fids = getFieldIds('', 'clickable'))['label'],
-        'hint_id' => $fids['hint'],
-        'field_html' => getTplRadioGroup([
-            'describedby' => $fids['hint'],
-            'labelledby' => $fids['label'],
-            'name' => 'clickable',
-            'value' => $conf['clickable'],
-            'options' => $yesno,
-        ]),
-    ];
     $tabd = $tpl->getHtmlPart('div', ['rows' => $rows]);
     $rows = [];
     $rows[] = [
@@ -1146,7 +1133,6 @@ function save(): void {
             'censor' => $xcensor,
             'censor_r' => $xcensor_r,
             'censor_l' => $xcensor_l,
-            'clickable' => getVar('post', 'clickable', 'num'),
             'bots' => strtr(getVar('post', 'bots', 'text', ''), $kprotect),
             'fbots' => strtr(getVar('post', 'fbots', 'text', ''), $kprotect),
             'botsact' => getVar('post', 'botsact', 'num'),

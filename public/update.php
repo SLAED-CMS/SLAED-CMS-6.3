@@ -2196,13 +2196,14 @@ function setUpdateConfig(): array {
             if ($keep === '') unset($site['module']);
             else $site['module'] = $keep;
             unset($site['version'], $site['css_f'], $site['script_f'], $site['script_a'], $site['script_b'], $site['amod']);
-            unset($site['rewrite'], $site['sep'], $site['tsep'], $site['title'], $site['ctitle']);
+            unset($site['rewrite'], $site['sep'], $site['tsep'], $site['title'], $site['ctitle'], $site['clickable']);
             foreach (glob(CONFIG_DIR.'/*.php') ?: [] as $one) unset($site[basename($one, '.php')]);
             if (isset($site['theme']) && !is_dir(PUBLIC_DIR.'/templates/'.basename((string)$site['theme']))) unset($site['theme']);
             $look = PUBLIC_DIR.'/templates/'.basename((string)($site['theme'] ?? $base['theme'] ?? '')).'/images/logos/';
             if (isset($site['site_logo']) && !is_file($look.basename((string)$site['site_logo']))) unset($site['site_logo']);
         }
         if ($into === 'lang' && isset($site['lang'])) $site['lang'] = $langs[$site['lang']] ?? $site['lang'];
+        if ($into === 'comments') unset($site['alink']);
         foreach ($into === 'uploads' ? $site : [] as $key => $val) {
             $part = is_string($val) ? explode('|', $val) : [];
             if (count($part) !== 12) continue;
@@ -2249,8 +2250,8 @@ function setUpdateMerge(): array {
     require_once BASE_DIR.'/core/classes/update.php';
     $pack = BACKUP_DIR.'/release/config';
     if (!is_dir($pack)) return getUpdateRow('config: the shipped settings are not in storage/backup/release/config, put the config/ of the release there and run again', false);
-    $gone = ['global' => '/^(rewrite|sep|tsep|title|ctitle|dbsync|version|cache_.+|css_(?!f$).+|script_(?!f$).+)$/D',
-        'users' => '/^(anonym|network|network_c|point|points)$/D', 'newsletter' => '/^(active|count)$/D', 'voting' => '/^bar$/D'];
+    $gone = ['global' => '/^(rewrite|sep|tsep|title|ctitle|clickable|dbsync|version|cache_.+|css_(?!f$).+|script_(?!f$).+)$/D',
+        'users' => '/^(anonym|network|network_c|point|points)$/D', 'newsletter' => '/^(active|count)$/D', 'voting' => '/^bar$/D', 'comments' => '/^alink$/D'];
     $cut = [];
     foreach ($gone as $name => $find) {
         $data = getUpdateSource(CONFIG_DIR.'/'.$name.'.php');

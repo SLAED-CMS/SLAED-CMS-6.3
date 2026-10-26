@@ -160,7 +160,6 @@ define('_EMAIL','E-Mail');
 define('_END','Ist beendet');
 define('_ENDDATE','Enddatum');
 define('_ENGLISH','Englisch');
-define('_EQUOTE','Zitieren');
 define('_ERROR','Fehler');
 define('_TOKENMISS','Sicherheits-Token stimmt nicht überein!');
 define('_ERROR1','Fehler, falsche E-Mail!');

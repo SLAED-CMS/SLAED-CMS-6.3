@@ -160,7 +160,6 @@ define('_EMAIL','E-Mail');
 define('_END','Закінчено');
 define('_ENDDATE','Дата закінчення');
 define('_ENGLISH','Англійська');
-define('_EQUOTE','Цитувати');
 define('_ERROR','Помилка');
 define('_TOKENMISS','Невідповідність захисного токена!');
 define('_ERROR1','Помилка, неправильно вказаний E-Mail!');

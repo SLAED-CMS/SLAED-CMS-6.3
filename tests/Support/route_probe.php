@@ -2495,6 +2495,10 @@ function getRouteFiles(PDO $pdo): array {
             $code('root', $view('mine-aaaaaaaaaa-2.png')), $code('anna', $view('other-bbbbbbbbbb-3.png')), $code('anna', $view('fa-aaaaaaaaaa.png')),
             $code('anna', 'index.php?go=file&own=forum&name=news&key=mine-aaaaaaaaaa-2.png&preview=1')]];
     $page = getRouteReply('', 'GET', 'index.php?name=forum&op=view&id=601')['body'];
+    $st->execute([631, 0, 6, 'Picture topic', 'See ![a \] b](https://cdn.example.com/f%20one.png "t") here', 3]);
+    $pic = getRouteReply('', 'GET', 'index.php?name=forum&op=view&id=631')['body'];
+    $out['meta'] = [preg_match('#property="og:image"\s+content="([^"]*)"#', $page, $hit) ? html_entity_decode($hit[1]) : '',
+        preg_match('#property="og:image"\s+content="([^"]*)"#', $pic, $hit) ? html_entity_decode($hit[1]) : ''];
     $out['page'] = [str_contains($page, 'go=file&amp;own=forum&amp;id=601&amp;key=fa-aaaaaaaaaa.png&amp;thumb=1'),
         str_contains($page, 'go=file&amp;own=forum&amp;id=602&amp;key=fb-aaaaaaaaaa.png'), str_contains($page, 'uploads/forum/')];
     $tok = getRouteToken(getRouteReply('anna', 'GET', 'index.php?name=forum&op=add&cat=6&pid=601')['body'], 'send');
@@ -2504,7 +2508,9 @@ function getRouteFiles(PDO $pdo): array {
     $was = $count();
     $bad = $send('Anna takes [attach=other-bbbbbbbbbb-3.png align=left title=o]');
     $out['send'] = [$tok !== '', $bad['code'], str_contains($bad['body'], ': other-bbbbbbbbbb-3.png'), $count() - $was];
-    $out['quote'] = [$send('[quote]Text [attach=fb-aaaaaaaaaa.png align=left title=a][/quote] agreed')['code'], $count() - $was];
+    $form = getRouteReply('anna', 'GET', 'index.php?name=forum&op=add&cat=6&pid=601&qid=602')['body'];
+    $out['reply'] = [str_contains($form, "&gt; Text [attach=fb-aaaaaaaaaa.png align=left title=a]\n\n"), str_contains($form, '[quote]')];
+    $out['quote'] = [$send("> Text [attach=fb-aaaaaaaaaa.png align=left title=a]\n\nagreed")['code'], $count() - $was];
     $out['own'] = [$send('Anna shows [attach=mine-aaaaaaaaaa-2.png align=left title=m]')['code'], $count() - $was];
     $view = getRouteReply('anna', 'POST', 'index.php?name=forum', ['op' => 'send', 'token' => $tok, 'cat' => '6', 'pid' => '601', 'fid' => '0', 'id' => '0',
         'subject' => 'Open topic', 'hometext' => 'Preview [attach=mine-aaaaaaaaaa-2.png align=left title=m]', 'posttype' => 'preview'])['body'];

@@ -569,9 +569,10 @@ const CONFOLD = [
     'global' => "\$conf = array (\n  'sitename' => 'Old site',\n  'version' => '6.2.0 Pro',\n  'close' => '0',\n  'language' => 'russian',\n  'module' => 'news,forum',\n"
         ."  'amod' => 'news',\n  'css_f' => 'plugins/jquery/ui/',\n  'script_a' => '1',\n  'script_b' => '1',\n"
         ."  'sep' => '/',\n  'rewrite' => '0',\n  'title' => '0',\n  'ltitle' => '0',\n"
-        ."  'oldkey' => 'kept',\n  'forum' => '0',\n"
+        ."  'oldkey' => 'kept',\n  'clickable' => '1',\n  'forum' => '0',\n"
         ."  'theme' => 'default',\n  'site_logo' => 'mark.svg',\n);",
     'seo' => "\$confse = array();\n\$confse['sep'] = \"-\";\n\$confse['tsep'] = \"_\";\n\$confse['rewrite'] = \"1\";\n\$confse['ctitle'] = \"0\";\n\$confse['ltitle'] = \"1\";",
+    'comments' => "\$confcom = array('alink' => '1', 'link' => '2');",
     'users' => "\$confu = array();\n\$confu['point'] = \"1\";\n\$confu['points'] = \"1,2,3\";\n\$confu['anum'] = \"77\";",
     'stat' => "\$confst = array();\n\$confst['stat'] = \"0\";",
     'uploads' => "\$confup = array();\n\$confup['forum'] = \"gif,png|104857600|1048576|500|500|10|250|10|200|100|1|0\";\n\$confup['typ'] = \"gif,png\";",
@@ -586,7 +587,7 @@ const CONFOLD = [
 ];
 
 # The shipped sources the configuration step writes over, and forum, whose area a key of the 6.2 global names, as the release tracks them
-const CONFSHIP = ['global', 'security', 'users', 'fields', 'lang', 'statistic', 'uploads', 'forum'];
+const CONFSHIP = ['global', 'security', 'users', 'fields', 'lang', 'statistic', 'uploads', 'forum', 'comments'];
 
 # Put the scratch site back to a 6.2 site copied under the release: the tracked sources of the release, the 6.2 sources beside them and a 6.2 db.php
 # The tree holds one public module, one panel module and one logo of the shipped theme, while the theme default of 6.2 is gone
@@ -629,6 +630,7 @@ function getConfState(array $rows): array {
         'leak' => str_contains(getProbeText($rows), 'probe</script>'),
         'global' => getConfRead('global'),
         'users' => getConfRead('users'),
+        'comments' => getConfRead('comments'),
         'lang' => getConfRead('lang'),
         'statistic' => getConfRead('statistic'),
         'fields' => getConfRead('fields'),
@@ -951,8 +953,9 @@ function setMergeSite(bool $pack): void {
     deleteProbeTree(BASE_DIR);
     mkdir(CONFIG_DIR, 0777, true);
     setUpdateFile('global.php', ['homeurl' => 'https://slaed.net', 'rewrite' => '1', 'css_f' => 'own.css', 'css_c' => '1', 'script_f' => 'own.js', 'script_a' => '1',
-        'cache_b' => '1', 'version' => '6.3.0']);
+        'cache_b' => '1', 'version' => '6.3.0', 'clickable' => '1']);
     setUpdateFile('users.php', ['anonym' => 'Guest', 'point' => '1', 'keep' => 'site']);
+    setUpdateFile('comments.php', ['alink' => '2', 'link' => '1']);
     setUpdateFile('node.php', ['types' => ['news' => ['own' => 1]], 'limits' => ['edit' => 600]], [], true);
     if (!$pack) return;
     $ship = BACKUP_DIR.'/release/config';
@@ -973,7 +976,7 @@ function getMergeClean(): array {
     $rows = setUpdateMerge();
     $read = fn(string $name): array => (array)(($name === 'global') ? getUpdateSource(CONFIG_DIR.'/global.php') : (getUpdateSource(CONFIG_DIR.'/'.$name.'.php')[$name] ?? []));
     $out['first'] = ['done' => checkProbeDone($rows), 'text' => getProbeText($rows), 'global' => $read('global'), 'users' => $read('users'), 'node' => $read('node'),
-        'oauth' => $read('oauth'), 'system' => is_file(CONFIG_DIR.'/system.php')];
+        'oauth' => $read('oauth'), 'comments' => $read('comments'), 'system' => is_file(CONFIG_DIR.'/system.php')];
     $out['again'] = getProbeText(setUpdateMerge());
     return $out;
 }

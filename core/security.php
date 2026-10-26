@@ -845,7 +845,7 @@ function getVar(string $var, string $key, string $type = '', mixed $default = ''
         'let' => fn($v) => is_string($v) ? mb_substr(trim($v), 0, 1, 'utf-8') : $v,
         'word' => fn($v) => is_string($v) ? filterWord(urldecode(trim($v))) : $v,
         'name' => fn($v) => is_string($v) ? filterCutText(filterText(trim($v)), 25) : $v,
-        'title' => fn($v) => is_string($v) ? filterHtml(trim($v), 1) : $v,
+        'title' => fn($v) => is_string($v) ? filterHtml(trim($v)) : $v,
         'text' => fn($v) => is_string($v) ? filterHtml(trim($v)) : $v,
         'url' => fn($v) => is_string($v) ? filterWebUrl(trim($v)) : $v,
         'var' => fn($v) => is_string($v) ? filterVar($v) : $v,
@@ -987,54 +987,12 @@ function filterCutText(string $text, int $len): string {
     return preg_replace('#&[\#a-z0-9]*$#i', '', mb_substr($text, 0, $len, 'utf-8')) ?? '';
 }
 
-# Length center filter
-function filterCut(string $linkstrip, int $strip): string {
-    if (strlen($linkstrip) > $strip) $linkstrip = substr($linkstrip, 0, $strip - 19).'...'.substr($linkstrip, -16);
-    return $linkstrip;
-}
-
-# Format ed2k links
-function getEd2kLink(array $m): string {
-    $href = 'url='.$m[2];
-    $fname = rawurldecode($m[3]);
-    $fname = str_replace(['&#038;', '&amp;'], '&', $fname);
-    $size = filterSize($m[4]);
-    return ' eMule/eDonkey: ['.$href.']'.filterCut($fname, 50).'[/url] - '._SIZE.': '.$size;
-}
-
-# Convert plain URLs, ed2k links and email addresses in text to BBCode tags
-function filterClickable(string $text): string {
-    $ret = $text;
-    if (!preg_match("#\[php\](.*)\[/php\]|\[code\](.*)\[/code\]#si", $text)) {
-        $ret = preg_replace_callback(
-            "#([\n ])(?<=[^\w\"'])(ed2k://\|file\|([^\\/\|:<>\*\?\"]+?)\|(\d+?)\|([a-f0-9]{32})\|(.*?)/?)(?![\"'])(?=([,\.]*?[\s<\[])|[,\.]*?$)#i",
-            'getEd2kLink',
-            ' '.$text
-        );
-        $ret = preg_replace("#([\n ])(?<=[^\w\"'])(ed2k://\|server\|([\d\.]+?)\|(\d+?)\|/?)#i", 'ed2k Server: [url=\\2]\\3[/url] - Port: \\4', $ret);
-        $ret = preg_replace("#([\n ])(?<=[^\w\"'])(ed2k://\|friend\|([^\\/\|:<>\*\?\"]+?)\|([\d\.]+?)\|(\d+?)\|/?)#i", 'Friend: [url=\\2]\\3[/url]', $ret);
-        $ret = preg_replace("#([\n ])([\w]+?://[\w\#$%&~/.\-;:=,?@\[\]+]*)#is", '\\1[url=\\2]\\2[/url]', $ret);
-        $ret = preg_replace("#([\n ])((www|ftp)\.[\w\#$%&~/.\-;:=,?@\[\]+]*)#is", '\\1[url=http://\\2]\\2[/url]', $ret);
-        $ret = preg_replace("#([\n ])([a-z0-9&\-_.]+?)@([\w\-]+\.([\w\-\.]+\.)*[\w]+)#i", '\\1[mail=\\2@\\3]\\2@\\3[/mail]', $ret);
-        $ret = substr($ret, 1);
-    } else {
-        if (preg_match('#(.*)\[php\](.*)\[/php\](.*)#si', $text, $matches)) {
-            $ret = filterClickable($matches[1]).'[php]'.$matches[2].'[/php]'.filterClickable($matches[3]);
-        } elseif (preg_match('#(.*)\[code(.*)\](.*)\[/code\](.*)#si', $text, $matches)) {
-            $ret = filterClickable($matches[1]).'[code'.$matches[2].']'.$matches[3].'[/code]'.filterClickable($matches[4]);
-        }
-    }
-    return $ret;
-}
-
 # Normalize submitted content for the editor format; the trusted tags go before the branch, as the html editor stores its input almost verbatim
-function filterHtml(string $text, mixed $id = ''): string {
-    global $conf;
+function filterHtml(string $text): string {
     if ($text) {
         $text = filterTrustedTags($text, isAdmin(true));
         $mode = getEditorMode();
         if ($mode !== 'html') {
-            $text = ($conf['clickable'] && $id != 1) ? filterClickable($text) : $text;
             $out = str_replace(['$', '\\'], ['&#036;', '&#092;'], stripslashes(filterText($text, 2)));
             if ($mode === 'plain') $out = nl2br($out, false);
         } else {

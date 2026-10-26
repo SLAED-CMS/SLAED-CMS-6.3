@@ -262,7 +262,7 @@ final class EditorWindowTest extends TestCase
             "name === 'addImageBlobHook'",
             "addEventListener('paste'",
             "addEventListener('drop'",
-            "'[img alt='",
+            "addText(ed, '![' + text",
             "one.type === 'text/rtf'",
             'win.SlaedEmoji.setPanel(ed.area.id, getPort(ed), btn)',
         ] as $part) {

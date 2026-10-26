@@ -734,11 +734,14 @@
         }
     };
 
-    function getEditorInsertText(command, value) {
-        if (command === 'name') return '[b]' + value + '[/b], ';
+    // A name is text inside the bold markers, so a character of Markdown in it is escaped rather than read
+    function getEditorInsertText(command, value, title) {
+        var src;
+        if (command === 'name') return '**' + value.replace(/[\\`*_[\]<>~=|]/g, '\\$&') + '**, ';
         if (command === 'attach') return '[attach=' + value + ' align=left title=title width=500 height=500 rel=rel]\n';
-        if (command === 'img') return '[img=left alt=title]' + value + '[/img]\n';
-        return value;
+        if (command !== 'img') return value;
+        src = value.replace(/[ ()<>]/g, function (one) { return '%' + one.charCodeAt(0).toString(16).toUpperCase(); });
+        return '![' + (title || 'image').replace(/[[\]\\]/g, '') + '](' + src + ')\n';
     }
 
     function syncEditorValue(id, editor) {
@@ -766,7 +769,7 @@
     function insertEditorContent(id, command, value, title) {
         var api = window.SlaedToastUi;
         var editor = api && typeof api.getEditor === 'function' ? api.getEditor(id) : null;
-        var text = getEditorInsertText(command, value);
+        var text = getEditorInsertText(command, value, title);
         var shell = !editor && window.SlaedEditor ? window.SlaedEditor.getEditor(id) : null;
         if (shell) {
             shell.focus();
