@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="ru" data-theme="auto">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Сайт · Конструктор сайта — стенд SLAED CMS</title>
+  <link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../templates/lite/assets/css/base.css">
+  <link rel="stylesheet" href="../templates/lite/assets/css/theme.css">
+  <!-- The stand is served without Cache-Control; its sheet and scripts are stamped so an edit is seen at once -->
+  <script>document.write('<link rel="stylesheet" href="assets/demo.css?v=' + Date.now() + '"><link rel="stylesheet" href="assets/sb-site.css?v=' + Date.now() + '">');</script>
+  <script src="../plugins/system/global-func.js"></script>
+  <script src="../plugins/system/slaed.js" defer></script>
+</head>
+<!-- The canvas of the site builder: a page of the site in the theme lite. In the editor's frame (?edit=1) every part
+     is picked by a click and typed in place; on its own it is the published site with the pill "Изменить страницу".
+     The header and the footer come from the live site and are filled from the layout; the content is its sections -->
+<body class="sl-autumn">
+  <div data-sb-head></div>
+  <main id="sb-page" class="sc-page" data-sb-page></main>
+  <div data-sb-foot></div>
+  <script>document.write('<script src="assets/demo.js?v=' + Date.now() + '"><\/script><script src="assets/sb-data.js?v=' + Date.now() + '"><\/script><script src="assets/sb-site.js?v=' + Date.now() + '"><\/script>');</script>
+</body>
+</html>

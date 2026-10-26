@@ -1071,7 +1071,7 @@
     const menu = JSON.parse(doc.getElementById('demo-menu').textContent);
     const map = {};
     menu.admin.concat(menu.modules).forEach(([key, name, icon], i) => {
-      map[key] = { key, name, icon, tone: DOCK_TONES[i % DOCK_TONES.length], href: key === 'comments' ? '?name=comments' : '../../admin.php?name=' + key };
+      map[key] = { key, name, icon, tone: DOCK_TONES[i % DOCK_TONES.length], href: key === 'comments' ? '?name=comments' : key === 'layout' ? '../sb-01-builder.html' : '../../admin.php?name=' + key };
     });
     return map;
   }
@@ -1616,7 +1616,8 @@
         const card = ctpl.cloneNode(true);
         const a = card.querySelector('a');
         card.dataset.slMenuItem = key;
-        a.href = key === 'comments' ? '?name=comments' : '../../admin.php?name=' + key;
+        a.href = key === 'comments' ? '?name=comments' : key === 'layout' ? '../sb-01-builder.html' : '../../admin.php?name=' + key;
+        if (key === 'layout') card.dataset.mark = 'Д13';
         a.title = name;
         a.querySelector('.bi').classList.add('bi-' + icon);
         a.querySelector('.sl-menu-name').textContent = name;
@@ -1636,7 +1637,9 @@
         const it = mtpl.cloneNode(true);
         const a = it.querySelector('a');
         it.dataset.slMenuItem = key;
-        a.href = key === 'comments' ? '?name=comments' : '../../admin.php?name=' + key;
+        // Д13 The site builder is a section of the panel like any other; on the stand it opens the series sb-01
+        a.href = key === 'comments' ? '?name=comments' : key === 'layout' ? '../sb-01-builder.html' : '../../admin.php?name=' + key;
+        if (key === 'layout') it.dataset.mark = 'Д13';
         a.title = name;
         a.querySelector('.bi').classList.add('bi-' + icon);
         a.querySelector('.sl-menu-name').textContent = name;

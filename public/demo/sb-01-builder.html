@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="ru" data-theme="auto">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Конструктор сайта — стенд панели администратора SLAED CMS</title>
+  <link rel="stylesheet" href="../templates/admin/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../templates/admin/assets/css/base.css">
+  <link rel="stylesheet" href="../templates/admin/assets/css/theme.css">
+  <!-- The stand is served without Cache-Control; its sheets and scripts are stamped so an edit is seen at once -->
+  <script>document.write('<link rel="stylesheet" href="assets/demo.css?v=' + Date.now() + '"><link rel="stylesheet" href="assets/sb.css?v=' + Date.now() + '">');</script>
+  <script src="../plugins/system/global-func.js"></script>
+  <script src="../plugins/system/slaed.js"></script>
+  <script src="../templates/admin/assets/js/admin-ui.js"></script>
+</head>
+<!-- 01 Конструктор. One editor for everything a site says without HTML: the sections of each page, the two menus and
+     the parts of the theme around the content. The page itself stands in the middle and is edited in place - a click
+     picks any part, a double click types its text; the settings of the picked part stand on the right. Everything is
+     one layout, written as one file config/layout.php - no table, no query. The chrome is the panel's own: windows of
+     the canon, the notice setToast(), the tabs and the conditional rows of slaed.js, the icon window of admin-ui.js -->
+<body class="sb-body">
+  <div class="sb-app" data-sb-app data-view="canvas">
+    <header class="sb-top">
+      <a class="sb-back" href="admin/index.html" title="В панель администратора"><i class="bi bi-arrow-left" aria-hidden="true"></i><span>Панель</span></a>
+      <span class="sb-brand"><i class="bi bi-layers-half" aria-hidden="true"></i><span>Конструктор сайта</span></span>
+      <label class="sb-page-pick"><span class="sl-hidden">Страница</span><select class="sl-select" data-sb-page-pick></select></label>
+      <span class="sl-seg sb-views" role="group" aria-label="Что показать">
+        <button type="button" class="sl-seg-cell" data-sb-view="tree" aria-pressed="false" title="Структура"><i class="bi bi-list-nested" aria-hidden="true"></i><span>Структура</span></button><button type="button" class="sl-seg-cell" data-sb-view="canvas" aria-pressed="false" title="Страница"><i class="bi bi-window" aria-hidden="true"></i><span>Страница</span></button><button type="button" class="sl-seg-cell" data-sb-view="edit" aria-pressed="false" title="Настройки"><i class="bi bi-sliders" aria-hidden="true"></i><span>Настройки</span></button>
+      </span>
+      <span class="sl-seg sb-devices" role="group" aria-label="Ширина страницы">
+        <button type="button" class="sl-seg-cell" data-sb-device="desktop" aria-pressed="false" title="Компьютер" aria-label="Компьютер"><i class="bi bi-display" aria-hidden="true"></i></button><button type="button" class="sl-seg-cell" data-sb-device="tablet" aria-pressed="false" title="Планшет" aria-label="Планшет"><i class="bi bi-tablet" aria-hidden="true"></i></button><button type="button" class="sl-seg-cell" data-sb-device="phone" aria-pressed="false" title="Телефон" aria-label="Телефон"><i class="bi bi-phone" aria-hidden="true"></i></button>
+      </span>
+      <span class="sb-top-tools">
+        <button type="button" class="sl-but-mini sl-is-muted" data-sb-undo title="Отменить шаг (Ctrl+Z)" aria-label="Отменить шаг"><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i></button>
+        <button type="button" class="sl-but-mini sl-is-muted" data-sb-redo title="Вернуть шаг (Ctrl+Shift+Z)" aria-label="Вернуть шаг"><i class="bi bi-arrow-clockwise" aria-hidden="true"></i></button>
+        <button type="button" class="sl-but-mini sl-is-muted" data-sb-open-palette title="Все команды (Ctrl+K)" aria-label="Все команды"><i class="bi bi-command" aria-hidden="true"></i></button>
+        <button type="button" class="sl-but-mini sl-is-muted" data-sb-open-checks title="Проверить перед публикацией" aria-label="Проверить перед публикацией"><i class="bi bi-clipboard-check" aria-hidden="true"></i></button>
+        <button type="button" class="sl-but-mini sl-is-muted" data-sb-open-story title="История публикаций" aria-label="История публикаций"><i class="bi bi-clock-history" aria-hidden="true"></i></button>
+        <button type="button" class="sl-but-mini sl-is-muted" data-sb-open-data title="Данные: config/layout.php" aria-label="Данные"><i class="bi bi-filetype-php" aria-hidden="true"></i></button>
+        <a class="sl-but-mini sl-is-muted" data-sb-site href="sb-site.html" target="_blank" title="Открыть опубликованный сайт" aria-label="Открыть сайт"><i class="bi bi-box-arrow-up-right" aria-hidden="true"></i></a>
+        <span class="sb-state" data-sb-state role="status"></span>
+        <button type="button" class="sl-but-blue sb-publish" data-sb-publish><i class="bi bi-cloud-arrow-up" aria-hidden="true"></i><span>Опубликовать</span></button>
+      </span>
+    </header>
+
+    <aside class="sb-left" data-sb-left aria-label="Структура сайта">
+      <div class="sl-seg sb-tabs" role="tablist" aria-label="Что править">
+        <button type="button" role="tab" class="sl-seg-cell" data-sb-tab="page"><i class="bi bi-file-earmark-richtext" aria-hidden="true"></i>Страница</button><button type="button" role="tab" class="sl-seg-cell" data-sb-tab="menu"><i class="bi bi-menu-button-wide" aria-hidden="true"></i>Меню</button><button type="button" role="tab" class="sl-seg-cell" data-sb-tab="theme"><i class="bi bi-palette" aria-hidden="true"></i>Тема</button>
+      </div>
+      <div class="sb-tree" data-sb-tree></div>
+    </aside>
+
+    <main class="sb-stage" aria-label="Страница сайта">
+      <div class="sb-frame" data-sb-frame data-device="desktop">
+        <iframe title="Страница сайта в режиме правки"></iframe>
+      </div>
+    </main>
+
+    <!-- The settings of the picked part: a form, so the conditional rows of slaed.js find their control; nothing submits it -->
+    <form class="sb-right" data-sb-inspector aria-label="Настройки выбранного" novalidate></form>
+
+    <!-- The library of sections: a window of the canon, like the icon window - a search in the bar, cards in the body -->
+    <dialog class="sl-modal sl-modal-lg sb-lib" data-sb-lib aria-label="Добавить секцию">
+      <div class="sl-modal-title"><i class="bi bi-plus-square" aria-hidden="true"></i> <span class="sl-modal-cap"><strong>Добавить секцию</strong><span class="sl-modal-sub" data-sb-lib-where></span></span> <span class="sl-modal-acts"><button type="button" class="sl-modal-act sl-modal-act-close" data-sl-close title="Закрыть" aria-label="Закрыть"><i class="bi bi-x-lg" aria-hidden="true"></i></button></span></div>
+      <div class="sl-modal-bar"><input type="search" class="sl-select-config" placeholder="Найти секцию" aria-label="Найти секцию" autocomplete="off" data-sb-lib-find data-sl-focus></div>
+      <div class="sl-modal-body"><div data-sb-lib-list></div></div>
+      <div class="sl-modal-foot"><p class="sb-hint"><i class="bi bi-brush" aria-hidden="true"></i>Набор секций зависит от темы сайта: другая тема принесёт свои.</p></div>
+    </dialog>
+  </div>
+
+  <!-- The draft as the one file of the site: a window of the canon with the tabs of the panel -->
+  <dialog class="sl-modal sl-modal-lg" data-sb-data aria-label="config/layout.php">
+    <div class="sl-modal-title"><i class="bi bi-filetype-php" aria-hidden="true"></i> <span class="sl-modal-cap"><strong>config/layout.php</strong><span class="sl-modal-sub" data-sb-php-meta></span></span> <span class="sl-modal-acts"><button type="button" class="sl-modal-act" data-sl-full data-expand="Развернуть" data-restore="Восстановить" title="Развернуть" aria-label="Развернуть"><i class="bi bi-arrows-angle-expand" aria-hidden="true"></i></button><button type="button" class="sl-modal-act sl-modal-act-close" data-sl-close title="Закрыть" aria-label="Закрыть"><i class="bi bi-x-lg" aria-hidden="true"></i></button></span></div>
+    <div class="sl-modal-body" data-sl-tabs-init="sb-data">
+      <ul class="sl-tabs-nav">
+        <li class="sl-tabs-item"><a href="#" class="sl-tabs-link sl-is-active" data-sl-tab-link data-sl-tab-target="sb-data-file">Файл</a></li>
+        <li class="sl-tabs-item"><a href="#" class="sl-tabs-link" data-sl-tab-link data-sl-tab-target="sb-data-how">Как это работает</a></li>
+      </ul>
+      <div class="sl-tab-panel" data-sl-tab-panel="sb-data-file"><pre class="sb-php"><code data-sb-php></code></pre></div>
+      <div class="sl-tab-panel sb-how" data-sl-tab-panel="sb-data-how" hidden>
+        <ol>
+          <li><b>Один файл на сайт.</b> Части темы, оба меню и страницы с их секциями — одно дерево в <code>config/layout.php</code>.
+            Страница читает его одним <code>include</code>, а OPcache держит его в памяти: для вида сайта нет ни таблицы, ни запроса.</li>
+          <li><b>Запись — тем же путём, что и «Конфигурации».</b> «Опубликовать» пишет файл через <code>setConfigFile()</code>:
+            под той же блокировкой каталога и с тем же журналом, что и сохранение «Конфигураций». Черновик сайту не виден.</li>
+          <li><b>Секция — фрагмент темы.</b> Тема объявляет свои типы: разметку <code>sections/&lt;тип&gt;.html</code> и описание полей.
+            Значения из файла уходят в шаблон как обычные переменные, текст экранируется на границе шаблона.</li>
+          <li><b>Материалы — из модулей.</b> «Свежие материалы» и «Блок сайта» берут записи у модуля и у блока, как сегодня, — база
+            отдаёт содержимое, а не раскладку.</li>
+          <li><b>Меню и шапка — те же поля.</b> <code>partials/menu.html</code> и подвал больше не держат ссылки в разметке, а выводят
+            пункты из файла; правка не требует ни HTML, ни сброса кэша.</li>
+          <li><b>Код.</b> Класс ядра <code>core/classes/layout.php</code> читает, пишет и выводит раскладку; поведение редактора —
+            <code>plugins/system/builder.js</code>, только администратору; посетитель не грузит ни строчки редактора.</li>
+          <li><b>Вход.</b> В плавающем меню администратора на сайте рядом с «Эта страница в панели» стоит «Изменить страницу»: эта
+            страница открывается здесь, где любая её часть выбирается щелчком.</li>
+        </ol>
+      </div>
+    </div>
+    <div class="sl-modal-foot">
+      <button type="button" class="sl-but" data-sb-copy><i class="bi bi-clipboard" aria-hidden="true"></i>Скопировать</button>
+      <button type="button" class="sl-but" data-sb-export title="Перенести вид на другой сайт: файл layout.json"><i class="bi bi-download" aria-hidden="true"></i>Выгрузить файл</button>
+      <button type="button" class="sl-but" data-sb-import title="Загрузить layout.json в черновик; PHP не принимается — это был бы исполняемый код"><i class="bi bi-upload" aria-hidden="true"></i>Загрузить файл</button>
+      <input type="file" accept=".json,application/json" data-sb-import-file hidden>
+      <button type="button" class="sl-but-red" data-sb-reset><i class="bi bi-arrow-repeat" aria-hidden="true"></i>Сбросить стенд</button>
+    </div>
+  </dialog>
+
+  <!-- Before publishing: what a visitor would trip over, each row leads to its place -->
+  <dialog class="sl-modal" data-sb-checks aria-label="Перед публикацией">
+    <div class="sl-modal-title"><i class="bi bi-clipboard-check" aria-hidden="true"></i> <span class="sl-modal-cap"><strong>Перед публикацией</strong><span class="sl-modal-sub" data-sb-checks-sub></span></span> <span class="sl-modal-acts"><button type="button" class="sl-modal-act sl-modal-act-close" data-sl-close title="Закрыть" aria-label="Закрыть"><i class="bi bi-x-lg" aria-hidden="true"></i></button></span></div>
+    <div class="sl-modal-body"><ul class="sb-issues" data-sb-checks-list></ul></div>
+    <div class="sl-modal-foot">
+      <button type="button" class="sl-but" data-sl-close data-sl-focus><i class="bi bi-pencil" aria-hidden="true"></i>Исправить</button>
+      <button type="button" class="sl-but-blue" data-sb-publish-now><i class="bi bi-cloud-arrow-up" aria-hidden="true"></i>Опубликовать всё равно</button>
+    </div>
+  </dialog>
+
+  <!-- The last ten publications of the file -->
+  <dialog class="sl-modal" data-sb-story aria-label="История публикаций">
+    <div class="sl-modal-title"><i class="bi bi-clock-history" aria-hidden="true"></i> <span class="sl-modal-cap"><strong>История публикаций</strong><span class="sl-modal-sub">десять последних публикаций</span></span> <span class="sl-modal-acts"><button type="button" class="sl-modal-act sl-modal-act-close" data-sl-close title="Закрыть" aria-label="Закрыть"><i class="bi bi-x-lg" aria-hidden="true"></i></button></span></div>
+    <div class="sl-modal-body"><ul class="sb-story" data-sb-story-list></ul></div>
+  </dialog>
+
+  <!-- A new page from a ready set -->
+  <dialog class="sl-modal sl-modal-lg sb-lib" data-sb-presets aria-label="Новая страница">
+    <div class="sl-modal-title"><i class="bi bi-file-earmark-plus" aria-hidden="true"></i> <span class="sl-modal-cap"><strong>Новая страница</strong><span class="sl-modal-sub">начать с готового набора секций</span></span> <span class="sl-modal-acts"><button type="button" class="sl-modal-act sl-modal-act-close" data-sl-close title="Закрыть" aria-label="Закрыть"><i class="bi bi-x-lg" aria-hidden="true"></i></button></span></div>
+    <div class="sl-modal-body"><div class="sb-cards" data-sb-presets-list></div></div>
+  </dialog>
+
+  <!-- The command palette of the panel (fragments/palette.html), filled with the commands and places of the builder -->
+  <dialog class="sl-modal sl-editor-pal" data-sb-palette aria-labelledby="sb-pal-title">
+    <div class="sl-modal-title"><i class="bi bi-command" aria-hidden="true"></i> <span class="sl-modal-cap"><strong id="sb-pal-title">Все команды</strong></span> <span class="sl-modal-acts"><button type="button" class="sl-modal-act sl-modal-act-close" data-sl-close title="Закрыть" aria-label="Закрыть"><i class="bi bi-x-lg" aria-hidden="true"></i></button></span></div>
+    <div class="sl-modal-bar"><i class="bi bi-search" aria-hidden="true"></i><input type="search" class="sl-editor-pal-find" data-sl-focus role="combobox" aria-expanded="true" aria-controls="sb-pal-list" aria-autocomplete="list" placeholder="Команда, секция, страница" aria-label="Команда, секция, страница" autocomplete="off" spellcheck="false"></div>
+    <div class="sl-modal-body sl-modal-body-flush sl-editor-pal-body">
+      <div id="sb-pal-list" role="listbox" aria-labelledby="sb-pal-title" data-sb-pal-list></div>
+      <p class="sl-editor-pal-empty" data-sl-pal-empty hidden>Ничего не найдено</p>
+    </div>
+  </dialog>
+
+  <!-- The icon window of the panel, as getAdminIconWindow() prints it -->
+  <dialog class="sl-modal sl-modal-lg" id="sl-icon-window" aria-label="Выбрать иконку">
+    <div class="sl-modal-title"><i class="bi bi-grid-3x3-gap-fill" aria-hidden="true"></i> <span class="sl-modal-cap"><strong>Выбрать иконку</strong></span> <span class="sl-modal-acts"><button type="button" class="sl-modal-act sl-modal-act-close" data-sl-close title="Закрыть" aria-label="Закрыть"><i class="bi bi-x-lg" aria-hidden="true"></i></button></span></div>
+    <div class="sl-modal-bar"><nav class="sl-icon-modal-tabs"><button type="button" class="sl-is-active" data-sl-icon-source="bi">Bootstrap Icons</button></nav><input type="search" class="sl-select-config" placeholder="Поиск" aria-label="Поиск" data-sl-icon-search data-sl-focus></div>
+    <div class="sl-modal-body sl-modal-body-flush"><div class="sl-icon-modal-grid notranslate" translate="no" data-sl-icon-grid></div></div>
+  </dialog>
+
+  <!-- The notice of the panel, as fragments/toast.html prints it -->
+  <div class="sl-toast-host" aria-live="polite">
+    <template data-sl-toast><div class="sl-alert sl-alert-success sl-alert-flash sl-toast"><div class="sl-alert-flash-bar"><svg aria-hidden="true" focusable="false"><circle cx="50%" cy="50%" r="50%" pathLength="100"></circle></svg></div><div class="sl-alert-body"><span data-sl-toast-text></span></div><div class="sl-alert-acts"><button type="button" class="sl-alert-act sl-alert-act-quiet" data-sl-undo hidden><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i>Отменить</button><button type="button" class="sl-but-mini" data-sl-toast-close title="Закрыть" aria-label="Закрыть"><i class="bi bi-x-lg" aria-hidden="true"></i></button></div></div></template>
+  </div>
+
+  <script>document.write('<script src="assets/demo.js?v=' + Date.now() + '"><\/script><script src="assets/sb-data.js?v=' + Date.now() + '"><\/script><script src="assets/sb.js?v=' + Date.now() + '"><\/script>');</script>
+</body>
+</html>

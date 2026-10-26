@@ -1671,6 +1671,21 @@ const DEMO_PER = [
   },
 ];
 
+/* The site builder: one editor for the sections of a page, the two menus and the parts of the theme, laid over the
+   page itself. The engine is assets/sb-data.js, sb.js and sb-site.js; the canvas is sb-site.html */
+const DEMO_SITEBUILD = [
+  {
+    file: 'sb-01-builder.html',
+    title: 'Конструктор',
+    note: 'Всё, что сайт говорит без HTML, в одном окне: секции страницы, главное и нижнее меню, логотип, слоган, плашка версии, ' +
+      'контакты и соцсети. Посередине — сама страница: щелчок выбирает любую часть, двойной щелчок правит текст на месте, у секции ' +
+      'своя панель «выше, ниже, копия, скрыть, удалить» и «Добавить ниже». Черновик, отмена шагов, проверка перед публикацией, история, ' +
+      'наборы страниц, Ctrl+K; всё — один файл config/layout.php без единого запроса к базе. С опубликованного сайта сюда ведёт ' +
+      '«Изменить страницу» (sb-site.html и плавающее меню эталона site/).',
+    tags: ['секции темы', 'меню', 'правка на месте', 'без базы'],
+  },
+];
+
 const DEMO_SERIES = [
   { key: 'presentation', title: 'Презентационная страница', addr: 'index.php?name=presentation', items: DEMO_VARIANTS },
   { key: 'settings', title: 'Настройки аккаунта', addr: 'index.php?name=account&op=edithome', items: DEMO_SETTINGS },
@@ -1690,6 +1705,7 @@ const DEMO_SERIES = [
   { key: 'tables', title: 'Таблицы панели', addr: 'admin.php?name=comments', items: DEMO_TABLES },
   { key: 'alertact', title: 'Действие в алерте', addr: 'admin.php?name=categories, blocks, comments, database, referers', items: DEMO_ACT },
   { key: 'perpage', title: 'Строк на странице', addr: 'admin.php?name=comments', items: DEMO_PER },
+  { key: 'sitebuild', title: 'Конструктор сайта', addr: 'index.php (главная), partials/menu.html, site-header.html, site-footer.html', items: DEMO_SITEBUILD },
 ];
 
 /* Which series a file belongs to, and where it stands in it. An unknown file gets the first series at index -1,
