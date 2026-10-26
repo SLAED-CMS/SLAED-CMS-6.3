@@ -8,6 +8,18 @@ The `Parser` class (`core/classes/parser.php`) is responsible for converting use
 
 The parser uses a caching mechanism and internally employs a stateless "stash" token strategy (`$this->stash`). This prevents block-level components and raw HTML from being mangled or double-escaped by inline filters.
 
+### The standard
+
+Markdown is read by **CommonMark 0.31.2** with the extensions of **GFM 0.29-gfm**: tables, task list items, strikethrough, extended autolinks and the filter of disallowed raw HTML. The engine is the parser's own, written after the reference implementations: `getBlockTree()` reads the block structure one line at a time as commonmark.js does, `getInlineTree()` reads the inline content with the delimiter and bracket stacks of the specification, and the tree is rendered through the fragments of the theme. The examples of both specifications are fixtures (`tests/Fixtures/spec/`), and `ParserFixturesTest::filterDocMeetsTheSpec()` runs them in both modes as the spec runner of cmark-gfm does: the CommonMark examples with the tag filter and the extended autolinks off (`Parser::$gfmoff`, a switch of the test alone), the GFM ones with them on. `tests/Fixtures/spec/failing.json` lists the examples that fail and is empty; a listed example that passes fails the test, so the list can only shrink.
+
+The comparison removes only the markup of the theme: heading ids, the classes of the theme, the code figure with its head (its language label stands for `language-*`), the broken-image fallback, the cell alignment style, and the disk check of a local image (`Parser::$fileoff`). Code is measured in the highlighter mode the release ships, `syntax = 2`; modes 0 and 1 keep what PHP's `highlight_string()` does to a tab. A safe rendering is not measured on raw HTML, which it escapes, nor on a link of a scheme other than `http`, `https` and `mailto`, which it refuses.
+
+On top of the standard stand the SLAED extensions: `==mark==`, the alerts `> [!NOTE]`, `[!TIP]`, `[!IMPORTANT]`, `[!WARNING]`, `[!CAUTION]`, a heading id on every heading, an address `./x` read from the site root, and the bracket layer below.
+
+### The bracket layer
+
+The BB tags, the smilies and `[attach]` are read before Markdown, on a copy in which `filterMask()` hides the brackets and stars that are no tag: code spans, fenced and indented code, link targets and reference definitions, autolinks, raw HTML tags and every character a backslash escapes. The places come from a scan of the real parse, so the layer and the rendering agree on what is code. A raw pair — `[code]`, `[code=…]`, `[php]`, `[usehtml]`, `[usephp]` — whose opening tag the scan leaves visible is taken back whole, since its content is no Markdown: Markdown code around the opener wins, Markdown read inside the pair does not. A block tag becomes a stash token; a line of one block token is a leaf of its own, and an inline tag becomes a token the parse reads as text. The inline pairs do not reach across a blank line.
+
 ### The parser owns no markup
 
 Every element the parser emits is rendered by the active theme, not concatenated in PHP: paragraphs, headings, rules, lists, tables, code, quotes, callouts, links, images and the styled spans of `[color]`, `[family]` and `[size]` all come from fragments under `templates/<theme>/fragments/`. The parser passes data and semantic flags; escaping happens at the template boundary, so a value handed to a fragment arrives **unescaped** and a value that is already rendered markup travels under a `*_html` key.
@@ -17,7 +29,7 @@ Two consequences matter when using the class:
 * **A global `$tpl` is required.** `core/system.php` creates it immediately before `$prs`, so any normal request has one. Without it the parser produces text with no markup at all — there is no plain-HTML fallback any more. A standalone or test use must set `$GLOBALS['tpl']` itself, which is what `ParserFixturesTest` does.
 * **Rendered output is theme-specific.** `getCachePath()` already carries `getTheme()` and the class file's mtime in its key, so a stored rendering is never served to a different theme or across a change to this file.
 
-Two shapes are worth knowing because they look unusual. An inline element used inside a `preg_replace` replacement is rendered with `content_html` set to the literal `$1`, which gives the template a whole element and the caller a replacement string. A pair that must wrap text the parser has not finished reading is rendered the same way with `\x01` as its content and split there, so a theme never has to spell half a tag.
+One shape is worth knowing because it looks unusual. An element that wraps content — a paragraph, an emphasis, a list item, a BB pair around text the parser has not finished reading — is rendered once with `\x01` as its content and split there (`getPartPair()`), so a theme never has to spell half a tag and the parser renders the element once per template engine.
 
 ## Public Endpoints
 
@@ -42,8 +54,9 @@ No stored content passes this argument, and no table carries a format column: `p
 ## Security Context (`$safe`)
 
 The `$safe` boolean parameter is crucial:
-* **`true` (User Content):** The parser strictly escapes all HTML tags injected in the raw source using `htmlspecialchars(..., ENT_QUOTES | ENT_HTML5)`. Indented code blocks are allowed. Unsafe URL protocols are blocked. Raw `[usehtml]` and `[usephp]` BB tags are stripped or ignored. The parser's **own** output is not escaped: the inline BB pairs (`[b]`, `[i]`, `[u]`, `[s]`, `[color]`, `[family]`, `[size]`) render like `[url]` and `[img]` always did, so legacy content stays readable. What the author wrote as a tag stays text; what the parser produced stays markup.
-* **`false` (Admin Content):** The parser inherently trusts the source. It preserves manually injected HTML tags. It processes `[usehtml]` blocks literally and executes PHP code inside `[usephp]` blocks via `eval()`.
+* **`true` (User Content):** No HTML block and no raw inline tag is recognised: what the author typed as a tag is text, escaped with `htmlspecialchars(..., ENT_QUOTES | ENT_HTML5)`. A link or image address without a scheme passes, one with a scheme only as `http`, `https` or `mailto`; any other becomes `#`. Raw `[usehtml]` and `[usephp]` BB tags stay text with their backslashes. The parser's **own** output is not escaped: the inline BB pairs (`[b]`, `[i]`, `[u]`, `[s]`, `[color]`, `[family]`, `[size]`) render like `[url]` and `[img]` always did, so legacy content stays readable. What the author wrote as a tag stays text; what the parser produced stays markup.
+* **`false` (Admin Content):** The parser trusts the source: raw HTML blocks and inline tags pass by the rules of CommonMark, except the tags GFM disallows (`title`, `textarea`, `style`, `xmp`, `iframe`, `noembed`, `noframes`, `script`, `plaintext`), whose `<` is escaped. It processes `[usehtml]` blocks literally and executes PHP code inside `[usephp]` blocks via `eval()`, the one way to markup the tag filter would stop.
+* **Both modes:** `data:`, `javascript:` and `vbscript:` addresses become `#`, a Markdown image of `data:` passes only as an `EMBEDIMG` raster, and indented code blocks are read.
 
 `$trust` narrows trust to the tags. With `$safe = true` and `$trust = true` the source is rendered safe exactly as above, except that the content of `[usehtml]` becomes raw markup and the content of `[usephp]` runs; an indented line inside those tags is not read as a code block. Raw HTML, `[block=id]` and unsafe URLs around the tags stay escaped. With `$safe = false` the argument changes nothing. A Node text renders this way: a tag the super administrator added to a text somebody else wrote trusts only what it encloses, never the foreign markup around it.
 
@@ -64,12 +77,14 @@ Because `[usephp]` output is produced per render, no cache may store it. The exc
 The `Parser` supports a hybrid composition of Markdown and SLAED BBCode.
 
 ### Markdown Support
-- **Headers:** ATX headers (`# h1` through `###### h6`) and Setext headers. Automatically generates `id="slug"` attributes for anchor linking.
-- **Lists:** Ordered (`1. Name`) and unordered (`- Name`, `* Name`), including task list checkboxes `[x]`, `[ ]`.
-- **Blockquotes:** Standard `> Quote`, including GitHub-flavored Alerts (`> [!NOTE]`, `> [!WARNING]`).
-- **Tables:** Full GFM table support with column alignment.
-- **Code:** Inline backticks `` `code` `` and triple-backtick fenced blocks (` ``` `). Indented code blocks (4 spaces).
-- **Inline:** Markdown links `[text](url)`, images `![alt](url "title")`, and emphasis markers such as `***`, `**`, `*`, and `_`.
+Everything CommonMark 0.31.2 defines, with the GFM extensions named under "The standard":
+- **Headings:** ATX (`# h1` through `###### h6`) and Setext. Every heading gets an `id="slug"` for anchor linking.
+- **Lists:** Ordered (`1.`, `1)`, any start number) and unordered (`-`, `+`, `*`), tight and loose, with GFM task list checkboxes `[x]`, `[ ]`.
+- **Blockquotes:** `> Quote`, with lazy continuation, and the alerts `> [!NOTE]` … `> [!CAUTION]`.
+- **Tables:** GFM tables with column alignment and `\|` inside a cell.
+- **Code:** Code spans of any backtick run, fenced blocks of backticks or tildes with an info string, indented code blocks.
+- **Links and images:** inline, full, collapsed and shortcut reference links with their definitions, autolinks `<…>`, GFM extended autolinks (`www.`, `http://`, `https://`, `ftp://`, e-mail addresses).
+- **Inline:** emphasis and strong emphasis by the flanking rules, `~~strikethrough~~`, `==mark==`, entity and numeric references, backslash escapes, hard and soft line breaks.
 
 ### BBCode Support
 - **Typography:** `[b]`, `[i]`, `[u]`, `[s]`, `[color=X]`, `[size=N]`, `[family=X]`, `[left]`, `[center]`, `[right]`, `[justify]`.
@@ -81,13 +96,16 @@ The `Parser` supports a hybrid composition of Markdown and SLAED BBCode.
 
 ### Backslash literals
 
-In every mode a backslash turns the ASCII punctuation character after it into a literal: `filterLiteral()` replaces
-each pair with a token before any BB, Markdown or HTML pass, left to right, and the token returns HTML-escaped after
-the whole parse. Raw regions keep every backslash as typed: `[code]`, `[php]`, `[usephp]`, `[usehtml]`, an HTML tag,
-a `script` or `style` element and Markdown code. When the regular expression engine gives up on the raw regions,
-every pair becomes a literal, so a failed match hides markup instead of exposing it. `getAttachList()` reads the
-source through the same rule, so an escaped bracket names no attachment. Feed relies on this rule: it prefixes every
-punctuation character of received text with a backslash, so a feed body renders as plain text (docs/NODE.md, Feed).
+In every mode a backslash turns the ASCII punctuation character after it into a literal. In Markdown this is the
+escape of CommonMark, which the inline parse reads where the specification does and nowhere else: not in code, an
+autolink or a raw HTML tag. The bracket layer sees the same: `filterMask()` hides an escaped bracket or star from it,
+so `\[b]` and `\*01` stay text. The raw pairs `[code]`, `[php]`, `[usephp]` and `[usehtml]` keep every backslash as
+typed, also when a safe rendering does not honour `[usephp]` or `[usehtml]`. In the plain format `filterLiteral()`
+replaces each pair with a token before the bracket layer, and when the regular expression engine gives up on the raw
+regions every pair becomes a literal, so a failed match hides markup instead of exposing it. `getAttachList()` reads
+the source through the same rules, so an escaped bracket names no attachment. Feed relies on this rule: it prefixes
+every punctuation character of received text with a backslash, so a feed body renders as plain text (docs/NODE.md,
+Feed).
 
 ## Authoring Guidelines
 

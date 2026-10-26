@@ -97,7 +97,7 @@ namespace Tests\Unit {
                 'h2 mixed script' => ['## Раздел API v2', true, '', '<h2 id="раздел-api-v2">Раздел API v2</h2>'],
                 'heading id dedup' => [
                     "# Привет мир\n\n# Привет мир", true, '',
-                    "<h1 id=\"привет-мир\">Привет мир</h1>\n\n<h1 id=\"привет-мир-1\">Привет мир</h1>",
+                    "<h1 id=\"привет-мир\">Привет мир</h1>\n<h1 id=\"привет-мир-1\">Привет мир</h1>",
                 ],
 
                 'bold md'         => ['**bold**',   true, '', '<p><strong>bold</strong></p>'],
@@ -114,9 +114,11 @@ namespace Tests\Unit {
                 'ul basic' => ["- a\n- b\n- c", true, '', "<ul>\n<li>a</li>\n<li>b</li>\n<li>c</li>\n</ul>"],
                 'ol basic' => ["1. a\n2. b",     true, '', "<ol>\n<li>a</li>\n<li>b</li>\n</ol>"],
                 'ul nested' => ["- item1\n  - nested\n- item2", true, '',
-                    "<ul>\n<li><p>item1</p>\n<ul>\n<li>nested</li>\n</ul>\n</li>\n<li>item2</li>\n</ul>"],
+                    "<ul>\n<li>item1\n<ul>\n<li>nested</li>\n</ul>\n</li>\n<li>item2</li>\n</ul>"],
+                'ol from three' => ["3. a\n4. b", true, '', "<ol start=\"3\">\n<li>a</li>\n<li>b</li>\n</ol>"],
+                'ul loose'      => ["- a\n\n- b", true, '', "<ul>\n<li>\n<p>a</p>\n</li>\n<li>\n<p>b</p>\n</li>\n</ul>"],
 
-                'inline code'         => ['`inline`',              true, '', '<code>inline</code>'],
+                'inline code'         => ['`inline`',              true, '', '<p><code>inline</code></p>'],
                 'inline code in text' => ['текст `code` текст',    true, '', '<p>текст <code>code</code> текст</p>'],
 
                 'table basic' => [
@@ -156,14 +158,16 @@ namespace Tests\Unit {
                 'safe b tag'      => ['<b>ok</b>',                              true,  '', '<p>&lt;b&gt;ok&lt;/b&gt;</p>'],
                 'safe a js href'  => ['<a href="javascript:x">click</a>',       true,  '', '<p>&lt;a href=&quot;javascript:x&quot;&gt;click&lt;/a&gt;</p>'],
 
-                'unsafe script tag' => ['<script>x</script>',                false, '', '<script>x</script>'],
+                'unsafe script tag' => ['<script>x</script>',                false, '', '&lt;script>x&lt;/script>'],
                 'unsafe div block'  => ["<div class=\"x\">\ntext\n</div>",    false, '', "<div class=\"x\">\ntext\n</div>"],
                 'usehtml tag'       => ['[usehtml]<b>html</b>[/usehtml]',     false, '', '<b>html</b>'],
 
-                'code span keeps bb pair'   => ['`[quote]x[/quote]`',   true,  '', '<code>[quote]x[/quote]</code>'],
+                'code span keeps bb pair'   => ['`[quote]x[/quote]`',   true,  '', '<p><code>[quote]x[/quote]</code></p>'],
                 'code span keeps lone tag'  => ['`[hr]` and `[li]`',    true,  '', '<p><code>[hr]</code> and <code>[li]</code></p>'],
-                'code span keeps smilie'    => ['`*01`',                true,  '', '<code>*01</code>'],
-                'code span keeps trusted'   => ['`[usehtml]x[/usehtml]`', false, '', '<code>[usehtml]x[/usehtml]</code>'],
+                'code span keeps smilie'    => ['`*01`',                true,  '', '<p><code>*01</code></p>'],
+                'code span keeps trusted'   => ['`[usehtml]x[/usehtml]`', false, '', '<p><code>[usehtml]x[/usehtml]</code></p>'],
+                'link target keeps smilie'  => ['[a](/x*01) <https://y/*02>', true, '', '<p><a href="/x*01">a</a> <a href="https://y/*02">https://y/*02</a></p>'],
+                'bb url keeps a bare url'   => ['[url]https://ok.com/a[/url]', true, '', '<p><a href="https://ok.com/a">https://ok.com/a</a></p>'],
                 'bare tag still runs'       => ['[hr]',                 true,  '', '<hr>'],
 
                 'markdown joins soft lines' => ["one\ntwo",             true,  '', '<p>one'."\n".'two</p>'],
@@ -174,7 +178,7 @@ namespace Tests\Unit {
 
                 'plain editor text after a list is parsed' => [
                     "a<br>\n<br>\n- x<br>\n<br>\n[l](https://e.com)<br>\nz", false, '',
-                    "<p>a<br>\n<br></p>\n<ul>\n<li>x<br></li>\n</ul>\n<p><br>\n<a href=\"https://e.com\">l</a><br>\nz</p>",
+                    "<p>a<br>\n<br></p>\n<ul>\n<li>x<br>\n<br>\n<a href=\"https://e.com\">l</a><br>\nz</li>\n</ul>",
                 ],
                 'raw html block keeps its breaks' => ["<div>\nx<br>\ny\n</div>", false, '', "<div>\nx<br>\ny\n</div>"],
 
@@ -196,10 +200,10 @@ namespace Tests\Unit {
                 'literal plain format'    => ['\*a\*',             true,  '', '<p>*a*</p>', 'plain'],
                 'literal heading id'      => ['# A \# B',          true,  '', '<h1 id="a-b">A # B</h1>'],
                 'letter keeps backslash'  => ['C:\new',            true,  '', '<p>C:\new</p>'],
-                'code span keeps pair'    => ['`a\*b`',            true,  '', '<code>a\*b</code>'],
+                'code span keeps pair'    => ['`a\*b`',            true,  '', '<p><code>a\*b</code></p>'],
                 'escaped backtick'        => ['\`x`',              true,  '', '<p>`x`</p>'],
-                'trusted script is raw'   => ['<script>var q = "\"";</script>', false, '', '<script>var q = "\"";</script>'],
-                'trusted attribute is raw'=> ['<a title="x\*y">t</a>', false, '', '<a title="x\*y">t</a>'],
+                'trusted script is raw'   => ['<script>var q = "\"";</script>', false, '', '&lt;script>var q = "\"";&lt;/script>'],
+                'trusted attribute is raw'=> ['<a title="x\*y">t</a>', false, '', '<p><a title="x\*y">t</a></p>'],
             ];
         }
 
@@ -413,7 +417,7 @@ namespace Tests\Unit {
             try {
                 $GLOBALS['conf'] = ['replace' => ['tmod' => 'foo|bar']];
                 $this->assertSame(
-                    '<p>literal <2> text <b>one</b> bar</p>',
+                    '<p>literal &lt;2&gt; text <b>one</b> bar</p>',
                     (new \Parser())->filterContent('literal <2> text <b>one</b> foo', false, 'tmod')
                 );
                 $GLOBALS['conf'] = ['replace' => ['tmod' => 'colou?r|color']];
@@ -482,9 +486,12 @@ namespace Tests\Unit {
                     $this->assertStringContainsString('data-sl-code', $html, "mode $mode: an indented block is no code block");
                 }
                 $html = (new \Parser())->filterDoc("```js\n\n    a();\nb();\n```", true, '');
-                $this->assertStringContainsString("<code class=\"language-js\">    a();\nb();</code>", $html, 'the first line loses its indent or a blank line stays');
+                $this->assertStringContainsString("<code class=\"language-js\">\n    a();\nb();</code>", $html, 'the code lost its first blank line or an indent');
                 $html = (new \Parser())->filterDoc("```php\necho '<i>';\n```", true, '');
                 $this->assertStringContainsString('<code class="language-php">echo &#039;&lt;i&gt;&#039;;</code>', $html, 'highlight.js receives no language');
+                $html = (new \Parser())->filterDoc("> ```\n> [quote]x[/quote]\n> ```", true, '');
+                $this->assertStringContainsString('<code>[quote]x[/quote]</code>', $html, 'A fence inside a quote handed its tag to the bracket layer');
+                $this->assertStringStartsWith('<blockquote>', $html, 'A fence inside a quote is no block of the quote');
             } finally {
                 if ($hadconf) $GLOBALS['conf'] = $oldconf;
                 else unset($GLOBALS['conf']);
@@ -537,7 +544,7 @@ namespace Tests\Unit {
                 $this->assertStringContainsString('alt="Both Set"', $both);
 
                 $md = $parser->filterContent('![]('.$icon.')', true, '');
-                $this->assertStringContainsString('alt="favicon.svg"', $md);
+                $this->assertStringContainsString('alt=""', $md, 'A Markdown image without a description took an alt CommonMark does not give it');
             } finally {
                 if ($hadtpl) $GLOBALS['tpl'] = $oldtpl;
                 else unset($GLOBALS['tpl']);
@@ -578,8 +585,9 @@ namespace Tests\Unit {
                 'trusted raw pair'   => ['[usehtml]\[attach=a.pdf align=left title=A][/usehtml]',          'a.pdf', true,  true],
                 'inside code span'   => ['`[attach=a.pdf align=left title=A]`',                            'a.pdf', true,  false],
                 'inside bb code'     => ['[code][attach=a.pdf align=left title=A][/code]',                 'a.pdf', true,  false],
-                'tag across code'    => ['<a `x>` \[attach=a.pdf align=left title=A] >',                   'a.pdf', true,  true],
-                'tag across trusted' => ['<a `x>` \[attach=a.pdf align=left title=A] >',                   'a.pdf', true,  true, false],
+                'tag across code'    => ['<a `x>` \[attach=a.pdf align=left title=A] >',                   'a.pdf', false, false],
+                'tag across trusted' => ['<a `x>` \[attach=a.pdf align=left title=A] >',                   'a.pdf', false, false, false],
+                'tag in a raw tag'   => ['<span title="[attach=a.pdf align=left title=A]">x</span>',      'a.pdf', true,  false, false],
                 'escape after code'  => ['`x` \[attach=a.pdf align=left title=A]',                         'a.pdf', false, false],
             ];
         }
@@ -726,6 +734,9 @@ namespace Tests\Unit {
             $this->assertStringContainsString('a\.b', self::$p->filterDoc('[code]a\.b[/code]', true));
             $this->assertStringContainsString('<i>a\*b</i>', self::$p->filterDoc('[usehtml]<i>a\*b</i>[/usehtml]', false));
             $this->assertSame('<p>[usehtml]a\*b[/usehtml]</p>', self::$p->filterDoc('[usehtml]a\*b[/usehtml]', true));
+            $html = self::$p->filterDoc("[code]a();\n#\tb();\n        c();\n\t[/code]", false);
+            $this->assertStringNotContainsString('[code]', $html, 'A heading and an indented block read inside a raw pair hid its closing tag');
+            $this->assertSame('<p><code>[code]x[/code]</code></p>', self::$p->filterDoc('`[code]x[/code]`', true), 'A raw pair inside a code span left it');
         }
 
         # The canonical feed document escapes everything it received, so neither mode of the full parser lets a remote tag, link, heading or smilie through
@@ -752,6 +763,127 @@ namespace Tests\Unit {
                 $this->assertStringContainsString('href="https://ex.org/a%28b%29%5Bc%5D%2A01%60d%5Ce"', $html, 'The link keeps the whole address'.$mode);
                 $this->assertStringContainsString('&lt;script&gt;alert(1)&lt;/script&gt;', $html, $mode);
             }
+        }
+
+        # The examples of CommonMark 0.31.2 (spec.json as published) and GFM 0.29-gfm, CC-BY-SA 4.0, in both modes; safe skips the raw HTML it escapes and the schemes it refuses
+        public static function specCases(): array
+        {
+            $dir = BASE_DIR.'/tests/Fixtures/spec/';
+            $rows = [];
+            foreach (['commonmark', 'gfm'] as $spec) {
+                foreach (json_decode((string)file_get_contents($dir.$spec.'.json'), true) as $row) {
+                    $key = $spec.':'.$row['example'];
+                    $md = $row['markdown'];
+                    $rows[$key.' trusted'] = [$key, $md, $row['html'], false];
+                    preg_match_all('#<(?:/?[A-Za-z][A-Za-z0-9-]*(?:\s|/?>)|[!?])#', $md, $tags);
+                    $kept = array_filter($tags[0], fn($tag) => str_contains($row['html'], $tag));
+                    $raw = in_array($row['section'], ['HTML blocks', 'Raw HTML', 'Disallowed Raw HTML'], true) || $kept;
+                    preg_match_all('#\b(?:href|src)="([A-Za-z][A-Za-z0-9+.\-]*):#', $row['html'], $schemes);
+                    $other = array_diff(array_map('strtolower', $schemes[1]), ['http', 'https', 'mailto']);
+                    if (!$raw && !$other) $rows[$key.' safe'] = [$key, $md, $row['html'], true];
+                }
+            }
+            return $rows;
+        }
+
+        # An example that fails today is listed in failing.json; the list only shrinks, so a listed example that passes fails the test until it leaves the list
+        #[Test]
+        #[DataProvider('specCases')]
+        public function filterDocMeetsTheSpec(string $key, string $md, string $html, bool $safe): void
+        {
+            static $list = null;
+            $list ??= json_decode((string)file_get_contents(BASE_DIR.'/tests/Fixtures/spec/failing.json'), true);
+            $mode = $safe ? 'safe' : 'trusted';
+            $keep = $GLOBALS['conf']['syntax'] ?? null;
+            $GLOBALS['conf']['syntax'] = '2';
+            \Parser::$fileoff = true;
+            \Parser::$gfmoff = str_starts_with($key, 'commonmark:');
+            try {
+                $got = self::getSpecHtml(self::$p->filterDoc($md, $safe), true);
+            } finally {
+                \Parser::$fileoff = false;
+                \Parser::$gfmoff = false;
+                $GLOBALS['conf']['syntax'] = $keep;
+                if ($keep === null) unset($GLOBALS['conf']['syntax']);
+            }
+            $want = self::getSpecHtml($html, false);
+            if (in_array($key, $list[$mode], true)) {
+                $this->assertNotSame($want, $got, $key.' ('.$mode.') passes now: remove it from tests/Fixtures/spec/failing.json');
+                return;
+            }
+            $this->assertSame($want, $got, $key.' ('.$mode.') '.json_encode($md));
+        }
+
+        # One serialization for both sides: ours loses theme markup alone, the expected side its trimmed last break and a ./ link, which stored texts mean from the site root
+        private static function getSpecHtml(string $html, bool $ours): string
+        {
+            static $names = null;
+            $names ??= (new \ReflectionClassConstant('Parser', 'CODENAME'))->getValue();
+            if (!$ours) $html = rtrim($html, "\n");
+            $doc = \Dom\HTMLDocument::createFromString('<!doctype html><html><body>'.$html.'</body></html>', LIBXML_NOERROR);
+            $body = $doc->body;
+            if ($ours) {
+                foreach (iterator_to_array($body->querySelectorAll('figure[data-sl-code]')) as $fig) {
+                    $label = trim((string)$fig->querySelector('figcaption span')?->textContent);
+                    $pre = $doc->createElement('pre');
+                    $code = $doc->createElement('code');
+                    $pre->appendChild($code);
+                    if ($label !== '' && $label !== _CODE) $code->setAttribute('class', 'language-'.strtolower($label));
+                    $code->textContent = $fig->querySelector('pre')?->textContent."\n";
+                    $fig->replaceWith($pre);
+                }
+                foreach (iterator_to_array($body->querySelectorAll('h1, h2, h3, h4, h5, h6')) as $head) $head->removeAttribute('id');
+                foreach (iterator_to_array($body->querySelectorAll('img[onerror] + i[role="img"][hidden]')) as $icon) {
+                    $gap = $icon->previousSibling;
+                    if ($gap instanceof \Dom\Text && trim($gap->data) === '') $gap->remove();
+                    $icon->remove();
+                }
+                foreach (iterator_to_array($body->querySelectorAll('img[onerror]')) as $img) $img->removeAttribute('onerror');
+                foreach (iterator_to_array($body->querySelectorAll('th[style^="text-align:"], td[style^="text-align:"]')) as $cell) {
+                    $cell->setAttribute('align', substr((string)$cell->getAttribute('style'), 11));
+                    $cell->removeAttribute('style');
+                }
+                foreach (iterator_to_array($body->querySelectorAll('[class]')) as $node) {
+                    $all = preg_split('#\s+#', trim((string)$node->getAttribute('class')));
+                    $own = preg_grep('#^(?:sl-|bi$|bi-)#', $all, PREG_GREP_INVERT);
+                    if (!$own) $node->removeAttribute('class');
+                    elseif (count($own) < count($all)) $node->setAttribute('class', implode(' ', $own));
+                }
+            } else {
+                foreach (iterator_to_array($body->querySelectorAll('code[class^="language-"]')) as $code) {
+                    $lang = strtolower(substr((string)$code->getAttribute('class'), 9));
+                    $label = $names[$lang] ?? strtoupper($lang);
+                    if ($label === '') $code->removeAttribute('class');
+                    if ($label !== '') $code->setAttribute('class', 'language-'.strtolower($label));
+                }
+                foreach (iterator_to_array($body->querySelectorAll('a[href^="./"]')) as $link) $link->setAttribute('href', '/'.substr((string)$link->getAttribute('href'), 2));
+            }
+            $out = preg_replace('#\x00+#', "\n", trim(self::getSpecNode($body, false), "\x00"));
+            $out = str_replace("\n</code></pre>", '</code></pre>', $out);
+            return preg_replace('#[ \t]+<br>#', '<br>', $out);
+        }
+
+        # A block tag is a boundary whose surrounding blanks are formatting, so they collapse to one line break; text keeps every character
+        private static function getSpecNode(\Dom\Node $node, bool $pre): string
+        {
+            $block = ['p', 'div', 'ul', 'ol', 'li', 'blockquote', 'pre', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'hr', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'figure'];
+            $out = '';
+            foreach ($node->childNodes as $item) {
+                if ($item instanceof \Dom\Text) $out .= htmlspecialchars($item->data, ENT_NOQUOTES);
+                if (!$item instanceof \Dom\Element) continue;
+                $name = $item->localName;
+                $attr = [];
+                foreach ($item->attributes as $one) $attr[$one->name] = $one->value;
+                ksort($attr);
+                $tag = '<'.$name;
+                foreach ($attr as $an => $av) $tag .= ' '.$an.'="'.htmlspecialchars($av, ENT_QUOTES).'"';
+                $tag .= '>';
+                $edge = in_array($name, $block, true) && !$pre;
+                $inner = self::getSpecNode($item, $pre || $name === 'pre');
+                if (!in_array($name, ['br', 'hr', 'img', 'input'], true)) $tag .= ($edge && $name !== 'pre' ? "\x00".$inner."\x00" : $inner).'</'.$name.'>';
+                $out .= $edge ? "\x00".$tag."\x00" : $tag;
+            }
+            return $pre ? $out : preg_replace('#\s*\x00\s*#', "\x00", $out);
         }
     }
 }
