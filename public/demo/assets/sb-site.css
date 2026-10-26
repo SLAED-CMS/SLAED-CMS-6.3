@@ -1,69 +1,53 @@
-/* The sections of the site builder on the theme lite (sc-*) and the editing layer of its canvas (sb-*). Every colour
-   is a token of the theme; the sizes the theme legitimately does not carry - the heights of the cover, the width of a
-   column of text - live in the block below as --sc-* */
+/* The sections of the site builder on the theme lite and the editing layer of its canvas (sb-*). A section is drawn on
+   the classes of the site itself - presentation.css of the theme, loaded on every page - so the rules below (sc-*) are
+   only what the presentation has no form for: the picture of the hero, the row of buttons, a text beside a picture,
+   the column count, the claim with a button, the zones of blocks. Every value is a token of the theme */
 
-:root {
-  --sc-hero-s: clamp(220px, 26vw, 320px);
-  --sc-hero-m: clamp(300px, 36vw, 460px);
-  --sc-hero-l: clamp(380px, 48vw, 620px);
-  --sc-measure: 60ch;
-  --sc-site-height: 166px;
-  --sc-ring: 2px;
-  --sc-tone: var(--sl-primary);
+/* The sections stand on the stage of the presentation; its one column never grows past #content, whatever a module prints */
+.sc-stage {
+  grid-template-columns: minmax(0, 1fr);
 }
 
-.sc-tone-primary { --sc-tone: var(--sl-primary); }
-.sc-tone-info { --sc-tone: var(--sl-info); }
-.sc-tone-success { --sc-tone: var(--sl-success); }
-.sc-tone-warning { --sc-tone: var(--sl-warning); }
-.sc-tone-accent { --sc-tone: var(--sl-accent); }
-.sc-tone-danger { --sc-tone: var(--sl-danger); }
-
-.sc-page {
-  display: block;
-  background: var(--sl-bg);
-}
-
+/* A section holds the flags of the editor at its own edge */
 .sc {
   position: relative;
-  padding: var(--sl-space-10) 0;
-  container-type: inline-size;
+  min-width: 0;
 }
 
-.sc + .sc:not(.sc-hero) {
-  border-top: 1px solid var(--sl-border-subtle);
+/* Hero: the picture stands where the presentation keeps its cockpit; without it the words take the whole width */
+.sc-hero-solo {
+  grid-template-columns: minmax(0, 1fr);
 }
 
-.sc-head {
-  margin: 0 0 var(--sl-space-8);
+/* The pictures of the hero and of "Текст и картинка" share their frame. The hero keeps its own picture rule: the
+   shot of the gallery (sl-pres-shot) tints and greys its picture, which the main picture of a page must not take */
+.sc-hero-pic,
+.sc-media-pic,
+.sc-video,
+.sc-map-pic,
+.sc-embed {
+  border: 1px solid var(--sl-pres-border);
+  border-radius: var(--sl-radius-3);
 }
 
-.sc-head-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--sl-space-4);
-}
-
-.sc-title {
+.sc-hero-pic {
   margin: 0;
-  font-size: var(--sl-font-display);
-  line-height: var(--sl-line-tight);
-  color: var(--sl-text-strong);
+  overflow: hidden;
+  background: var(--sl-pres-inset-bg);
+  box-shadow: var(--sl-shadow-raised);
 }
 
-.sc-intro {
-  max-width: var(--sc-measure);
-  margin: var(--sl-space-4) 0 0;
-  color: var(--sl-text-muted);
+.sc-hero-pic > img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .sc-acts {
   display: flex;
   flex-wrap: wrap;
   gap: var(--sl-space-4);
-  margin: var(--sl-space-7) 0 0;
+  margin: var(--sl-space-6) 0 0;
 }
 
 .sc-acts:empty {
@@ -74,352 +58,124 @@
   margin: 0;
 }
 
-.sc-narrow {
-  max-width: calc(var(--sc-measure) + var(--sl-space-10) * 2);
+/* Features: the DNA cards and the technology cards in the number of columns the section asks; the tone of the icon */
+.sc-features .sl-pres-tech {
+  margin-top: 0;
 }
 
-/* Cover: the photograph is laid with cover and never upscaled - no height below is taller than 1440 */
-.sc-hero {
-  display: grid;
-  align-items: center;
-  min-height: var(--sc-hero-m);
-  padding: var(--sl-space-10) 0;
-  overflow: hidden;
-  color: var(--sl-band-text);
-  isolation: isolate;
+.sc-features .sl-pres-principle-copy > header[data-sl-tone] > .bi {
+  color: currentColor;
 }
 
-.sc-hero-s { min-height: var(--sc-hero-s); }
-.sc-hero-l { min-height: var(--sc-hero-l); }
+@media (width > 900px) {
+  .sc-cols-2 .sl-pres-tech {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 
-.sc-hero-photo {
-  position: absolute;
-  inset: 0;
-  z-index: -2;
-  background: var(--sl-primary-subtle) var(--sc-photo) no-repeat 50% 50% / cover;
+  .sc-cols-3 :is(.sl-pres-dna, .sl-pres-tech) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .sc-cols-4 :is(.sl-pres-dna, .sl-pres-tech) {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
 }
 
-.sc-veil::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  background: var(--sl-scrim-muted);
-}
-
-.sc-clear {
-  color: var(--sl-text-strong);
-}
-
-.sc-align-center .sc-hero-body {
-  text-align: center;
-}
-
-.sc-align-center .sc-hero-text {
-  margin-inline: auto;
-}
-
-.sc-align-center .sc-acts {
-  justify-content: center;
-}
-
-.sc-hero-title {
-  max-width: 18ch;
-  margin: 0;
-  color: inherit;
-  font-size: var(--sl-font-hero);
-  line-height: var(--sl-line-tight);
-}
-
-.sc-align-center .sc-hero-title {
-  margin-inline: auto;
-}
-
-.sc-hero-text {
-  max-width: 44ch;
-  margin: var(--sl-space-5) 0 0;
-  font-size: var(--sl-font-h4);
-  line-height: var(--sl-line-normal);
-}
-
-.sc-veil .sc-hero-title,
-.sc-veil .sc-hero-text {
-  text-shadow: 0 1px 2px var(--sl-scrim-muted);
-}
-
-.sc-but-quiet {
-  background: transparent;
-  box-shadow: inset 0 0 0 1px currentColor;
-  color: inherit;
-  text-shadow: none;
-}
-
-/* Features */
-.sc-cards {
-  display: grid;
-  grid-template-columns: repeat(var(--sc-cols, 4), minmax(0, 1fr));
-  gap: var(--sl-space-7);
-}
-
-.sc-cols-2 { --sc-cols: 2; }
-.sc-cols-3 { --sc-cols: 3; }
-.sc-cols-4 { --sc-cols: 4; }
-
-.sc-card {
-  display: flex;
-  flex-direction: column;
-  gap: var(--sl-space-5);
-  padding: var(--sl-space-7);
-  border: 1px solid var(--sl-border-subtle);
-  border-radius: var(--sl-radius-3);
-  background: var(--sl-surface);
-  box-shadow: var(--sl-card-shadow);
-}
-
-.sc-look-line .sc-card {
-  flex-direction: row;
-  align-items: flex-start;
-  padding: 0;
-  border: 0;
-  background: none;
-  box-shadow: none;
-}
-
-.sc-card-ico {
-  display: inline-grid;
-  place-items: center;
-  flex: none;
-  width: var(--sl-size-tile);
-  height: var(--sl-size-tile);
-  border: 1px solid var(--sc-tone);
-  border-radius: var(--sl-radius-circle);
-  background: var(--sl-bg-subtle);
-  color: var(--sc-tone);
-  font-size: var(--sl-size-icon-md);
-}
-
-.sc-card-title {
-  margin: 0;
-  font-size: var(--sl-font-h3);
-  line-height: var(--sl-line-tight);
-  color: var(--sl-text-strong);
-}
-
-.sc-card-text {
-  margin: var(--sl-space-3) 0 0;
-  color: var(--sl-text-muted);
-}
-
-/* Feed */
-.sc-feed-list {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: var(--sl-space-7);
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.sc-feed-item {
-  display: flex;
-  flex-direction: column;
-  gap: var(--sl-space-3);
-  padding: var(--sl-space-7);
-  border: 1px solid var(--sl-border-subtle);
-  border-radius: var(--sl-radius-3);
-  background: var(--sl-surface);
-}
-
-.sc-view-list .sc-feed-list {
-  grid-template-columns: minmax(0, 1fr);
-  gap: 0;
-}
-
-.sc-view-list .sc-feed-item {
-  flex-direction: row;
-  align-items: baseline;
-  gap: var(--sl-space-5);
-  padding: var(--sl-space-5) 0;
-  border: 0;
-  border-bottom: 1px solid var(--sl-border-subtle);
-  border-radius: 0;
-  background: none;
-}
-
-.sc-view-list .sc-feed-title {
-  flex: 1 1 auto;
-}
-
-.sc-feed-cat {
-  font-size: var(--sl-font-small);
-  color: var(--sl-primary);
-  text-transform: uppercase;
-  letter-spacing: var(--sl-track-wide);
-}
-
-.sc-feed-title {
-  font-size: var(--sl-font-h4);
-  line-height: var(--sl-line-tight);
-  color: var(--sl-text-strong);
-  text-decoration: none;
-}
-
-.sc-feed-date,
-.sc-more {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--sl-space-2);
-  font-size: var(--sl-font-small);
-  color: var(--sl-text-muted);
-}
-
-.sc-more {
-  color: var(--sl-primary);
-  text-decoration: none;
-}
-
-/* Text and picture */
+/* Text and picture: the picture of the showcase beside the words of a principle card */
 .sc-media-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  align-items: center;
-  gap: var(--sl-space-10);
-}
-
-.sc-side-left .sc-media-pic {
-  order: -1;
-}
-
-.sc-side-right .sc-media-pic {
-  order: 2;
+  gap: var(--sl-space-7);
 }
 
 .sc-media-pic {
-  margin: 0;
-  overflow: hidden;
-  border-radius: var(--sl-radius-3);
-  box-shadow: var(--sl-card-shadow);
-}
-
-.sc-media-pic img {
-  display: block;
-  width: 100%;
   height: auto;
+  min-height: var(--sl-site-height);
 }
 
-.sc-media-text {
-  margin: var(--sl-space-5) 0 0;
-  color: var(--sl-text-muted);
+.sc-side-right :is(.sc-media-pic, .sc-map-pic) {
+  order: 1;
 }
 
-/* Numbers */
-.sc-stat-list {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: var(--sl-space-7);
-  margin: 0;
+.sc-media-copy {
+  align-self: center;
+  padding: 0;
 }
 
-.sc-stat {
-  padding: 0 0 0 var(--sl-space-6);
-  border-left: 3px solid var(--sc-tone);
+/* A Markdown text: the typography of an entry of the site; its first and last blocks keep no outer margin */
+.sc-md > :first-child {
+  margin-top: 0;
 }
 
-.sc-stat-num {
-  font-size: var(--sl-font-hero);
-  line-height: var(--sl-line-tight);
-  color: var(--sc-tone);
+.sc-md > :last-child {
+  margin-bottom: 0;
 }
 
-.sc-stat-label {
-  margin: var(--sl-space-2) 0 0;
-  color: var(--sl-text-muted);
+[data-sb-edit] [data-sb-md] {
+  cursor: pointer;
 }
 
-/* Implementations: a screenshot is never wider than 260 nor taller than its own height; the row is evened by
-   cropping the tall ones to the lowest, never by stretching */
-.sc-site-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--sl-space-7);
+/* Stats: the fact tiles of the hero, as many to a row as fit */
+.sc-stats .sl-pres-facts {
+  margin-top: 0;
+  grid-template-columns: repeat(auto-fit, minmax(calc(var(--sl-pres-width) + var(--sl-space-8)), 1fr));
 }
 
-.sc-site {
-  display: grid;
-  gap: var(--sl-space-2);
-  width: 260px;
-  color: var(--sl-text-strong);
-  text-decoration: none;
-}
-
-.sc-site img {
-  display: block;
-  width: 260px;
-  height: var(--sc-site-height);
-  object-fit: cover;
-  object-position: 50% 0;
-  border: 1px solid var(--sl-border-subtle);
-  border-radius: var(--sl-radius-2);
-}
-
-.sc-site-cat {
-  font-size: var(--sl-font-small);
-  color: var(--sl-text-muted);
-}
-
-/* Call */
+/* Call: the claim card, its words on the left and the button on the right */
 .sc-cta-box {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  column-gap: var(--sl-space-7);
   align-items: center;
-  justify-content: space-between;
-  gap: var(--sl-space-7);
-  padding: var(--sl-space-9) var(--sl-space-9) var(--sl-space-9) var(--sl-space-10);
-  border: 1px solid var(--sl-border-subtle);
-  border-left: 4px solid var(--sc-tone);
-  border-radius: var(--sl-radius-3);
-  background: var(--sl-bg-subtle);
+  padding: var(--sl-space-7);
 }
 
-.sc-cta-text {
-  margin: var(--sl-space-3) 0 0;
-  color: var(--sl-text-muted);
+.sc-cta-box > :not(.sc-cta-but) {
+  grid-column: 1;
+  max-width: none;
 }
 
-.sc-cta-box > .sl-but {
-  margin: 0;
+.sc-cta-but {
+  position: relative;
+  z-index: var(--sl-z-raised);
+  grid-row: 1 / span 3;
+  grid-column: 2;
 }
 
-/* A block of the site inside a page */
-.sc-block-box {
-  max-width: 420px;
-  border: 1px solid var(--sl-border-subtle);
-  border-radius: var(--sl-radius-3);
-  background: var(--sl-surface);
-  box-shadow: var(--sl-card-shadow);
+@media (max-width: 768px) {
+  .sc-media-grid,
+  .sc-cta-box {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .sc-side-right :is(.sc-media-pic, .sc-map-pic) {
+    order: 0;
+  }
+
+  .sc-cta-but {
+    grid-row: auto;
+    grid-column: 1;
+    justify-self: start;
+    margin-top: var(--sl-space-5);
+  }
 }
 
-.sc-block-head {
-  display: flex;
-  align-items: center;
-  gap: var(--sl-space-4);
-  padding: var(--sl-space-5) var(--sl-space-6);
-  border-bottom: 1px solid var(--sl-border-subtle);
-  color: var(--sl-primary);
+/* The zones of blocks inside #content, as layouts/app.html lays them: the centre above the sections, the bottom under them */
+[data-sb-zone="c"],
+.sb-zone-down {
+  display: grid;
+  gap: var(--sl-space-5);
 }
 
-.sc-block-title {
-  flex: 1 1 auto;
-  margin: 0;
-  font-size: var(--sl-font-h4);
-  color: var(--sl-text-strong);
+[data-sb-zone="c"] {
+  margin-bottom: var(--sl-space-6);
 }
 
-.sc-block-src {
-  font-size: var(--sl-font-small);
-  color: var(--sl-text-muted);
+.sb-zone-down {
+  margin-top: var(--sl-space-6);
 }
 
+/* A block of the site: the stub of what its file prints */
 .sc-block-body {
   display: grid;
   gap: var(--sl-space-4);
@@ -428,125 +184,66 @@
   list-style: none;
 }
 
-.sc-vote {
+/* The slot of the module while its answer comes - the skeleton lines of the theme - a note in place of a section, and
+   a page without sections */
+.sc-wait {
   display: grid;
-  grid-template-columns: 1fr auto;
-  gap: var(--sl-space-2);
+  gap: var(--sl-space-4);
+  padding: var(--sl-space-8) 0;
 }
 
-.sc-vote-bar {
-  grid-column: 1 / -1;
-  height: var(--sl-space-3);
-  border-radius: var(--sl-radius-pill);
-  background: linear-gradient(90deg, var(--sl-primary) var(--sc-share), var(--sl-bg-muted) var(--sc-share));
+.sc-module-wait {
+  display: flex;
+  align-items: center;
+  gap: var(--sl-space-3);
+  margin: 0;
+  padding: var(--sl-space-8) 0;
+  color: var(--sl-text-muted);
 }
 
+/* An empty page reads as the empty folder of the file manager (.sl-fm-empty): a dashed card, a quiet icon, one line and
+   a hint; the rule of the icon stops at the card, so the icon of the button keeps its size */
 .sc-empty {
   display: grid;
   justify-items: center;
-  gap: var(--sl-space-5);
-  padding: var(--sl-space-11) 0;
-  color: var(--sl-text-muted);
-  font-size: var(--sl-font-h4);
+  gap: var(--sl-space-3);
+  margin: var(--sl-space-8) 0;
+  padding: var(--sl-space-8) var(--sl-space-7);
+  border: 1px dashed var(--sl-border-strong);
+  border-radius: var(--sl-radius-3);
+  background: var(--sl-surface);
+  text-align: center;
 }
 
-.sc-empty .bi {
-  font-size: var(--sl-size-icon-xl);
+.sc-empty > .bi {
+  color: var(--sl-text-subtle);
+  font-size: var(--sl-size-icon-lg);
 }
 
-.sc-shell-fail {
-  padding: var(--sl-space-5) 0;
-  color: var(--sl-danger);
+.sc-empty b {
+  color: var(--sl-text-strong);
+  font-weight: var(--sl-weight-normal);
 }
 
-@container (max-width: 900px) {
-  .sc-cards,
-  .sc-feed-list {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .sc-cols-2 .sc-cards {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-@container (max-width: 600px) {
-  .sc {
-    padding: var(--sl-space-9) 0;
-  }
-
-  .sc-cards,
-  .sc-feed-list,
-  .sc-cols-2 .sc-cards,
-  .sc-media-grid {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .sc-side-right .sc-media-pic {
-    order: -1;
-  }
-
-  .sc-view-list .sc-feed-item {
-    flex-wrap: wrap;
-  }
-
-  .sc-cta-box {
-    padding: var(--sl-space-8);
-  }
-
-  .sc-site,
-  .sc-site img {
-    width: 100%;
-    max-width: 260px;
-  }
-}
-
-/* The slot of the module: the stub of what the module prints, quietly framed */
-.sc-module .sc-title .bi {
-  color: var(--sl-primary);
-}
-
-.sc-module-note {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--sl-space-2);
+.sc-empty p {
+  margin: 0;
   color: var(--sl-text-muted);
   font-size: var(--sl-font-small);
 }
 
-.sc-module-list {
-  display: grid;
-  margin: 0;
-  padding: 0;
-  list-style: none;
+.sc-empty button {
+  margin-top: var(--sl-space-3);
 }
 
-.sc-module-list li {
-  display: grid;
-  gap: var(--sl-space-2);
-  padding: var(--sl-space-5) 0;
-  border-bottom: 1px solid var(--sl-border-subtle);
-}
-
-.sc-module-list a {
-  color: var(--sl-text-strong);
-  font-size: var(--sl-font-h4);
-  text-decoration: none;
-}
-
-.sc-module-form {
-  display: grid;
-  gap: var(--sl-space-4);
-  max-width: var(--sc-measure);
-}
-
-.sc-module-form .sl-but {
-  justify-self: start;
+/* In the editor a section stands still where it is: the rise of the presentation would move it under its ring */
+[data-sb-edit] .sl-pres-section {
+  animation: none;
 }
 
 /* A section kept off a device: gone for the visitor of that width, faded with its flag in the editor */
-@media (max-width: 600px) {
-  :root:not([data-sb-edit]) .sc-no-phone {
+@media (max-width: 560px) {
+  :root:not([data-sb-edit]) .sc-no-phone,
+  [data-sb-guest] .sc-no-phone {
     display: none;
   }
 
@@ -555,8 +252,9 @@
   }
 }
 
-@media (min-width: 601px) {
-  :root:not([data-sb-edit]) .sc-no-desk {
+@media (width > 560px) {
+  :root:not([data-sb-edit]) .sc-no-desk,
+  [data-sb-guest] .sc-no-desk {
     display: none;
   }
 
@@ -590,15 +288,26 @@
   zoom: var(--sb-zoom, 1);
 }
 
+/* The full-screen preview shows the page alone: no ring, no toolbar, no hint of the editor */
+[data-sb-preview] .sb-ring {
+  display: none;
+}
+
+/* The rings and the toolbar of the editor stand over every layer of the site - its sticky menu, its pinned side tabs -
+   and under nothing but its windows */
 .sb-ring {
   position: absolute;
   top: var(--sb-y);
   left: var(--sb-x);
-  z-index: var(--sl-z-overlay);
+  z-index: var(--sl-z-modal);
   width: var(--sb-w);
   height: var(--sb-h);
   box-sizing: border-box;
   pointer-events: none;
+}
+
+.sb-ring.sb-ring-pinned {
+  position: fixed;
 }
 
 .sb-ring-hover {
@@ -607,8 +316,8 @@
 }
 
 .sb-ring-sel {
-  outline: var(--sc-ring) solid var(--sl-primary);
-  outline-offset: calc(var(--sc-ring) * -1);
+  outline: var(--sl-ring-width) solid var(--sl-primary);
+  outline-offset: calc(var(--sl-ring-width) * -1);
 }
 
 .sb-ring-name {
@@ -640,17 +349,39 @@
   pointer-events: none;
 }
 
+/* The toolbar of the picked section is the capsule of the editors, set at the upper right corner */
 .sb-bar {
   position: absolute;
   top: var(--sl-space-3);
   right: var(--sl-space-3);
-  display: flex;
-  gap: var(--sl-space-2);
-  padding: var(--sl-space-2);
-  border-radius: var(--sl-radius-pill);
-  background: var(--sl-surface);
   box-shadow: var(--sl-shadow-float);
+}
+
+/* The capsule of tools shown at once rather than on hover, as in the editor of the builder (sb.css) */
+.sb-pill {
+  max-width: none;
+  margin: 0;
+  opacity: 1;
+  transform: none;
+  translate: none;
   pointer-events: auto;
+}
+
+.sb-pill .sl-modal-act:disabled,
+.sb-pill .sl-modal-act:disabled:hover {
+  background: none;
+  color: var(--sl-text-muted);
+  opacity: var(--sl-fade-disabled);
+  cursor: default;
+}
+
+.sb-act-danger {
+  --sl-modal-act-tone: var(--sl-danger);
+}
+
+/* A group whose every button is hidden leaves with its line, as a group the engine cannot use does in the editor */
+.sb-pill .sl-editor-grp:not(:has(> :not([hidden]))) {
+  display: none;
 }
 
 /* "Секция ниже" sits on the lower edge of the picked section, half in and half out */
@@ -679,35 +410,13 @@
   pointer-events: none;
 }
 
-.sb-pill {
+/* The floating pill of the stand: "Изменить страницу" without a session, the mark of a draft by its link */
+.sb-float {
   position: fixed;
   bottom: var(--sl-space-7);
   left: var(--sl-space-7);
   z-index: var(--sl-z-toast);
   box-shadow: var(--sl-shadow-float);
-}
-
-/* Columns of blocks: the sections stand in the content column of the theme's grid and take its whole width */
-.sb-main .sc > .sl-wrp {
-  width: 100%;
-}
-
-.sb-main .sc:first-child {
-  padding-top: 0;
-}
-
-.sb-zone-down {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: var(--sl-layout-gutter);
-  padding: 0 0 var(--sl-space-8);
-}
-
-/* Blocks of the centre above the content: they stand before the sections in the content column */
-.sb-zone-up {
-  display: grid;
-  gap: var(--sl-space-5);
-  margin: 0 0 var(--sl-space-7);
 }
 
 /* Drag with the cursor: the grip of the toolbar, the label that follows the hand, the line where it lands */
@@ -742,4 +451,50 @@
   pointer-events: none;
   zoom: var(--sb-zoom, 1);
   translate: var(--sl-space-5) var(--sl-space-5);
+}
+
+/* Video: the film fills a frame of the screen's proportion; the map: the frame of the map as tall as a showcase
+   picture, the contacts one card to a line beside it */
+.sc-video,
+.sc-map-pic {
+  margin: 0;
+  overflow: hidden;
+  background: var(--sl-pres-inset-bg);
+}
+
+.sc-video {
+  aspect-ratio: 16 / 9;
+}
+
+.sc-video > :is(iframe, video),
+.sc-map-pic > iframe {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+.sc-map-pic {
+  min-height: var(--sl-site-height);
+}
+
+.sc-map-cards {
+  grid-template-columns: minmax(0, 1fr);
+  align-content: center;
+  margin-top: 0;
+}
+
+/* A contact is read and copied as it is written: the caption of a technology card loses its capitals and its mono face */
+.sc-map-cards .sl-pres-tech-card span {
+  font-family: inherit;
+  font-size: var(--sl-font-small);
+  letter-spacing: normal;
+  text-transform: none;
+}
+
+/* Embedding: the frame of another service over the width of the section, its height the section's own */
+.sc-embed {
+  display: block;
+  width: 100%;
+  background: var(--sl-pres-inset-bg);
 }

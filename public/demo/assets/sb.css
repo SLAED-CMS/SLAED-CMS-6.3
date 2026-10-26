@@ -4,9 +4,10 @@
 
 :root {
   --sb-top: 56px;
-  --sb-left: 300px;
+  --sb-left: var(--sl-layout-sidebar);
   --sb-right: 360px;
   --sb-label: 112px;
+  --sb-thumb: 96px;
 }
 
 .sb-body {
@@ -36,29 +37,22 @@
   z-index: var(--sl-z-sticky);
 }
 
-.sb-back,
-.sb-brand {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--sl-space-2);
-  white-space: nowrap;
-}
-
+/* "Панель" and the state of the draft are chips of the panel (sl-chip); the way back answers the hand as a link */
 .sb-back {
-  height: var(--sl-size-control);
-  padding: 0 var(--sl-space-4);
-  border-radius: var(--sl-radius-pill);
-  color: var(--sl-text-muted);
   text-decoration: none;
 }
 
 .sb-back:hover,
 .sb-back:focus-visible {
-  background: var(--sl-tint);
+  border-color: var(--sl-primary);
   color: var(--sl-primary);
 }
 
 .sb-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sl-space-2);
+  white-space: nowrap;
   padding-left: var(--sl-space-5);
   border-left: 1px solid var(--sl-border);
   color: var(--sl-text-strong);
@@ -88,20 +82,11 @@
 }
 
 .sb-state {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--sl-space-2);
   margin: 0 var(--sl-space-3);
-  color: var(--sl-success);
-  font-size: var(--sl-font-small);
-  white-space: nowrap;
 }
 
-.sb-state[data-dirty="1"] {
-  color: var(--sl-warning-strong);
-}
-
-.sb-publish:disabled {
+.sb-publish:disabled,
+.sb-add:disabled {
   opacity: var(--sl-fade-disabled);
   cursor: default;
 }
@@ -117,15 +102,20 @@
   background: var(--sl-bg);
 }
 
-.sb-tabs {
+/* A segmented control stretched over its row, its cells sharing the width: the tabs of the tree, the menus, a field */
+.sb-fill {
   display: flex;
-  margin: var(--sl-space-4);
+  width: 100%;
 }
 
-.sb-tabs .sl-seg-cell,
-.sb-menu-pick .sl-seg-cell {
+.sb-fill .sl-seg-cell {
   flex: 1 1 0;
   gap: var(--sl-space-2);
+}
+
+.sb-tabs {
+  width: auto;
+  margin: var(--sl-space-4);
 }
 
 .sb-tree {
@@ -136,7 +126,6 @@
 }
 
 .sb-menu-pick {
-  display: flex;
   margin: 0 0 var(--sl-space-4);
 }
 
@@ -148,25 +137,13 @@
   display: flex;
   align-items: center;
   gap: var(--sl-space-2);
-  margin: var(--sl-space-5) 0 var(--sl-space-2);
-  padding: 0 var(--sl-space-3);
+  margin: var(--sl-space-6) 0 var(--sl-space-3);
+  padding: 0 var(--sl-space-2);
   color: var(--sl-text-muted);
   font-size: var(--sl-font-micro);
   font-weight: var(--sl-weight-semibold);
   letter-spacing: var(--sl-track-wide);
   text-transform: uppercase;
-}
-
-.sb-badge {
-  margin-left: auto;
-  padding: 0 var(--sl-space-3);
-  border-radius: var(--sl-radius-pill);
-  background: var(--sl-bg-muted);
-  color: var(--sl-text-muted);
-  font-size: var(--sl-font-micro);
-  font-weight: var(--sl-weight-normal);
-  letter-spacing: 0;
-  text-transform: none;
 }
 
 .sb-rows {
@@ -175,123 +152,6 @@
   margin: 0;
   padding: 0;
   list-style: none;
-}
-
-.sb-rows-empty {
-  padding: var(--sl-space-4) var(--sl-space-3);
-  color: var(--sl-text-muted);
-  font-size: var(--sl-font-small);
-}
-
-.sb-row {
-  position: relative;
-  display: flex;
-  align-items: center;
-  border-radius: var(--sl-radius-2);
-}
-
-.sb-row:hover {
-  background: var(--sl-bg-subtle);
-}
-
-.sb-row-main {
-  display: flex;
-  flex: 1 1 auto;
-  align-items: center;
-  gap: var(--sl-space-4);
-  min-width: 0;
-  padding: var(--sl-space-3);
-  border: 0;
-  border-radius: var(--sl-radius-2);
-  background: none;
-  color: var(--sl-text);
-  text-align: left;
-  cursor: pointer;
-}
-
-.sb-row-main[aria-current="true"] {
-  background: var(--sl-tint);
-  box-shadow: inset 2px 0 0 var(--sl-primary);
-}
-
-.sb-row-main[aria-current="true"] .sb-row-name {
-  color: var(--sl-primary);
-}
-
-.sb-row-ico {
-  display: inline-grid;
-  place-items: center;
-  flex: none;
-  width: var(--sl-size-chip);
-  height: var(--sl-size-chip);
-  border-radius: var(--sl-radius-2);
-  background: var(--sl-bg-muted);
-  color: var(--sl-text-muted);
-}
-
-.sb-row-text {
-  display: grid;
-  min-width: 0;
-}
-
-.sb-row-name,
-.sb-row-sub {
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
-.sb-row-name {
-  color: var(--sl-text-strong);
-}
-
-.sb-row-sub {
-  color: var(--sl-text-muted);
-  font-size: var(--sl-font-small);
-}
-
-.sb-row-off .sb-row-text {
-  opacity: var(--sl-fade-muted);
-}
-
-.sb-row-tool {
-  flex: none;
-  margin: 0 var(--sl-space-2) 0 0;
-  opacity: 0;
-  transition: opacity var(--sl-time-fast) var(--sl-ease-out);
-}
-
-.sb-row:hover .sb-row-tool,
-.sb-row:focus-within .sb-row-tool,
-.sb-row-off .sb-row-tool,
-.sb-item .sb-row-tool {
-  opacity: 1;
-}
-
-/* The drag marks of the panel lists (sl-dragging, sl-drop-*), drawn on rows that are list items and not table rows */
-.sb-row.sl-dragging,
-.sb-item.sl-dragging {
-  opacity: var(--sl-fade-disabled);
-}
-
-.sb-row.sl-drop-above,
-.sb-item.sl-drop-above {
-  box-shadow: 0 -2px 0 var(--sl-primary-strong);
-}
-
-.sb-row.sl-drop-below,
-.sb-item.sl-drop-below {
-  box-shadow: 0 2px 0 var(--sl-primary-strong);
-}
-
-.sb-row > .sl-drag-handle,
-.sb-item .sl-drag-handle {
-  flex: none;
-  margin: 0 var(--sl-space-1);
-}
-
-.sb-depth-1 {
-  margin-left: var(--sl-space-7);
 }
 
 .sb-add {
@@ -316,91 +176,12 @@
   background: var(--sl-tint);
 }
 
-.sb-add:disabled {
-  opacity: var(--sl-fade-disabled);
-  cursor: default;
-}
-
-.sb-hint,
-.sb-note {
-  display: flex;
-  gap: var(--sl-space-3);
-  margin: var(--sl-space-5) 0 0;
-  padding: var(--sl-space-4);
-  border-radius: var(--sl-radius-2);
-  background: var(--sl-bg-subtle);
-  color: var(--sl-text-muted);
-  font-size: var(--sl-font-small);
-  line-height: var(--sl-line-normal);
-}
-
-.sb-note {
-  margin: var(--sl-space-3) 0 0;
-  padding: var(--sl-space-3);
-}
-
-.sb-hint .bi,
-.sb-note .bi {
-  flex: none;
-  color: var(--sl-primary);
-}
-
-/* ---- The library: cards in a window of the canon ---- */
-
-.sb-cards {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: var(--sl-space-3);
-  margin: 0 0 var(--sl-space-5);
-}
-
-.sb-lib .sl-modal-foot .sb-hint {
-  margin: 0;
-}
-
-.sb-card {
-  display: grid;
-  grid-template-columns: 96px minmax(0, 1fr);
-  grid-template-rows: auto 1fr;
-  align-content: start;
-  gap: var(--sl-space-1) var(--sl-space-4);
-  padding: var(--sl-space-3);
-  border: 1px solid var(--sl-border);
-  border-radius: var(--sl-radius-2);
-  background: var(--sl-bg);
-  color: var(--sl-text);
-  text-align: left;
-  cursor: pointer;
-}
-
-.sb-card:hover,
-.sb-card:focus-visible {
-  border-color: var(--sl-primary);
-  box-shadow: var(--sl-shadow-raised);
-}
-
-.sb-card-name {
-  display: flex;
-  align-items: center;
-  gap: var(--sl-space-2);
-  color: var(--sl-text-strong);
-  font-weight: var(--sl-weight-semibold);
-}
-
-.sb-card-name .bi {
-  color: var(--sl-primary);
-}
-
-.sb-card-note {
-  color: var(--sl-text-muted);
-  font-size: var(--sl-font-micro);
-  line-height: var(--sl-line-normal);
-}
-
 /* A schematic of each section: four bars laid as the section lays its parts */
 .sb-thumb {
   display: grid;
-  grid-row: 1 / -1;
+  flex: 0 0 var(--sb-thumb);
+  width: var(--sb-thumb);
+  box-sizing: border-box;
   gap: var(--sl-space-1);
   height: 56px;
   padding: var(--sl-space-2);
@@ -436,11 +217,124 @@
 .sb-thumb-cta i:nth-child(1) { height: 8px; }
 .sb-thumb-cta i:nth-child(2) { width: 24px; height: 10px; background: var(--sl-primary); border-radius: var(--sl-radius-pill); }
 .sb-thumb-cta i:nth-child(n+3) { display: none; }
+.sb-thumb-voices { grid-template-columns: repeat(3, 1fr); }
+.sb-thumb-voices i { background: var(--sl-bg); box-shadow: inset 0 2px 0 var(--sl-primary), inset 0 0 0 1px var(--sl-border-strong); }
+.sb-thumb-voices i:nth-child(4) { display: none; }
 .sb-thumb-block { grid-template-rows: 10px repeat(3, 1fr); width: 60%; }
 .sb-thumb-block i:nth-child(1) { background: var(--sl-primary); }
+.sb-thumb-item { grid-template-rows: 8px repeat(3, 1fr); }
+.sb-thumb-item i:nth-child(1) { width: 60%; background: var(--sl-primary); }
+.sb-thumb-item i:nth-child(4) { width: 70%; }
+.sb-thumb-gallery { grid-template-columns: repeat(4, 1fr); }
+.sb-thumb-gallery i { background: var(--sl-primary); opacity: var(--sl-fade-disabled); }
+.sb-thumb-video { place-items: center; background: var(--sl-text-strong); }
+.sb-thumb-video i:nth-child(1) { width: var(--sl-space-6); height: var(--sl-space-6); border-radius: var(--sl-radius-circle); background: var(--sl-primary); }
+.sb-thumb-video i:nth-child(n+2) { display: none; }
+.sb-thumb-steps { grid-template-rows: repeat(4, 1fr); }
+.sb-thumb-steps i { background: none; border-left: var(--sl-space-3) solid var(--sl-primary); box-shadow: inset 0 -1px 0 var(--sl-border-strong); }
+.sb-thumb-team { grid-template-columns: repeat(3, 1fr); }
+.sb-thumb-team i { background: var(--sl-bg); box-shadow: inset 0 var(--sl-space-6) 0 var(--sl-primary), inset 0 0 0 1px var(--sl-border-strong); }
+.sb-thumb-team i:nth-child(4) { display: none; }
+.sb-thumb-prices { grid-template-columns: repeat(3, 1fr); }
+.sb-thumb-prices i { background: var(--sl-bg); box-shadow: inset 0 0 0 1px var(--sl-border-strong); }
+.sb-thumb-prices i:nth-child(2) { box-shadow: inset 0 0 0 2px var(--sl-primary); }
+.sb-thumb-prices i:nth-child(4) { display: none; }
+.sb-thumb-map { grid-template-columns: 1fr 1fr; grid-template-rows: repeat(3, 1fr); }
+.sb-thumb-map i:nth-child(1) { grid-row: 1 / -1; background: var(--sl-success); opacity: var(--sl-fade-disabled); }
 .sb-thumb-html { grid-template-rows: repeat(4, 1fr); font-family: var(--sl-face-mono); }
 .sb-thumb-html i:nth-child(odd) { width: 70%; }
 .sb-thumb-html i:nth-child(even) { width: 45%; margin-left: var(--sl-space-4); }
+
+/* The rows of the tree are rows of the panel menu (sl-menu-list-item); what the theme keeps for the sidebar alone - the
+   picked row and the tools shown on hover - is said here for the tree, with the second line of a row */
+.sb-tree .sl-menu-list-item > a {
+  flex: 1 1 auto;
+  min-width: 0;
+  color: var(--sl-text-strong);
+}
+
+.sb-tree .sl-menu-list-item > a > .bi {
+  color: var(--sl-text-muted);
+}
+
+.sb-tree .sl-menu-name {
+  display: grid;
+  min-width: 0;
+}
+
+.sb-tree .sl-menu-name > small {
+  overflow: hidden;
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-small);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.sb-tree .sl-menu-list-item:has(> a[aria-current="page"]) {
+  background: var(--sl-tint);
+  box-shadow: inset var(--sl-rail-width) 0 0 var(--sl-primary);
+}
+
+.sb-tree .sl-menu-list-item > a[aria-current="page"],
+.sb-tree .sl-menu-list-item > a[aria-current="page"] > .bi {
+  color: var(--sl-primary-strong);
+}
+
+.sb-row-tool {
+  flex: none;
+  opacity: 0;
+  transition: opacity var(--sl-time-fast) var(--sl-ease-out);
+}
+
+.sl-menu-list-item:is(:hover, :focus-within) > .sb-row-tool,
+.sl-dimmed > .sb-row-tool,
+.sl-toggle-form-block .sb-row-tool {
+  opacity: 1;
+}
+
+/* A screen without a pointer to hover shows the tools of every row */
+@media (hover: none) {
+  .sb-row-tool {
+    opacity: 1;
+  }
+}
+
+/* The drag marks of the panel (sl-dragging, sl-drop-*) the theme draws on table rows, here on the rows of a list until
+   the one drag of the panel takes lists (BUILDER.4) */
+:is(.sl-menu-list-item, .sl-toggle-form-block).sl-dragging {
+  opacity: var(--sl-fade-disabled);
+}
+
+:is(.sl-menu-list-item, .sl-toggle-form-block).sl-drop-above {
+  box-shadow: 0 calc(var(--sl-row-border) * -1) 0 var(--sl-primary-strong);
+}
+
+:is(.sl-menu-list-item, .sl-toggle-form-block).sl-drop-below {
+  box-shadow: 0 var(--sl-row-border) 0 var(--sl-primary-strong);
+}
+
+/* A count or a scope beside a caption of the tree: the neutral chip of the panel, in the words of the chip, not the caption */
+.sb-group-head > .sl-chip,
+.sb-zone-head > .sl-chip {
+  margin-left: auto;
+  font-weight: var(--sl-weight-normal);
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+/* The library and the ready pages: cards of the panel menu, three to a row in the window, the schema in place of the icon */
+.sb-cards {
+  margin: 0 0 var(--sl-space-5);
+}
+
+.sb-cards > .sl-menu-grid-item {
+  flex-basis: calc((100% - 2 * var(--sl-space-3)) / 3);
+  max-width: calc((100% - 2 * var(--sl-space-3)) / 3);
+}
+
+.sb-cards .sl-mcard-link {
+  padding-right: var(--sl-space-3);
+}
 
 /* ---- Middle: the canvas ---- */
 .sb-stage {
@@ -488,99 +382,106 @@
   min-height: 0;
   border-left: 1px solid var(--sl-border);
   background: var(--sl-bg);
+  /* The parts of a window read their tone from the root of a window, which a side panel is not */
+  --sl-modal-tone: var(--sl-primary);
 }
 
-.sb-insp-head {
-  display: flex;
-  align-items: center;
-  gap: var(--sl-space-4);
-  padding: var(--sl-space-5);
-  border-bottom: 1px solid var(--sl-border);
+/* The foot of the inspector: the small tools from the left, the deletion or the main action at the right edge */
+.sb-right .sl-modal-foot {
+  justify-content: flex-start;
 }
 
-.sb-insp-ico {
-  display: inline-grid;
-  place-items: center;
-  flex: none;
-  width: var(--sl-size-control);
-  height: var(--sl-size-control);
-  border-radius: var(--sl-radius-2);
-  background: var(--sl-tint);
-  color: var(--sl-primary);
-  font-size: var(--sl-size-icon-sm);
+.sb-right .sl-modal-foot > :is(.sl-but-red, .sl-but-blue) {
+  margin-left: auto;
 }
 
-.sb-insp-text {
-  display: grid;
-  flex: 1 1 auto;
-  min-width: 0;
+/* A foot act that undoes rather than goes on stands apart at the left edge */
+.sl-modal-foot > .sb-foot-start {
+  margin-right: auto;
 }
 
-.sb-insp-title {
-  color: var(--sl-text-strong);
-  font-size: var(--sl-font-h4);
-  font-weight: var(--sl-weight-semibold);
+/* The way back of a changed field sits in its label, after the words */
+.sb-revert {
+  margin-left: var(--sl-space-2);
+  vertical-align: middle;
 }
 
-.sb-insp-sub {
-  overflow: hidden;
-  color: var(--sl-text-muted);
-  font-size: var(--sl-font-small);
-  white-space: nowrap;
-  text-overflow: ellipsis;
+/* The inspector is the parts of a window (sl-modal-title, -body, -foot) holding the rows of the form canon. The column is
+   narrow, so the canon takes a modifier for a side panel, the one to move into the theme on the transfer: the labels
+   of every form share one column of --sb-label, so every field of every inspector starts at one line; a
+   wrapped label keeps the line height of text; a full row lists its choices one to a line, so every caption fits its line */
+.sb-right .sl-div-grid {
+  grid-template-columns: var(--sb-label) minmax(0, 1fr);
+  column-gap: var(--sl-space-5);
 }
 
-.sb-scroll {
-  flex: 1 1 auto;
-  min-height: 0;
-  overflow: auto;
-  padding: var(--sl-space-5);
-}
-
-/* Label left, control right, the caption column as wide as the longest label of the form (owner's field standard) */
-.sb-form {
-  display: grid;
-  grid-template-columns: fit-content(var(--sb-label)) minmax(0, 1fr);
-  gap: var(--sl-space-4) var(--sl-space-5);
-  align-items: center;
-}
-
-.sb-field {
-  display: grid;
-  grid-template-columns: subgrid;
+.sb-right .sl-div-item {
   grid-column: 1 / -1;
-  align-items: center;
+  grid-template-columns: subgrid;
+  padding-right: 0;
+  padding-left: 0;
 }
 
-.sb-field-wide {
+.sb-right .sl-div-item-full {
   grid-template-columns: minmax(0, 1fr);
-  gap: var(--sl-space-3);
 }
 
-.sb-label {
-  color: var(--sl-text);
-  font-size: var(--sl-font-small);
+.sb-right .sl-div-label {
+  line-height: var(--sl-line-normal);
 }
 
-.sb-control {
-  min-width: 0;
+/* One rhythm in the inspector: 12 px between the blocks of the body, as the canon spaces a window body, whatever
+   tab or list holds them; a note keeps no margin of its own */
+.sb-right .sl-modal-body .sl-div-grid {
+  margin-bottom: 0;
 }
 
-.sb-control > input[type="text"],
-.sb-control > textarea,
-.sb-control > .sl-select,
-.sb-own {
-  width: 100%;
-  box-sizing: border-box;
+.sb-right .sl-modal-body .sl-alert {
+  margin-right: 0;
+  margin-bottom: 0;
+  margin-left: 0;
 }
 
-.sb-control > textarea {
-  resize: vertical;
+.sb-right .sl-modal-body .sl-alert:first-child {
+  margin-top: 0;
+}
+
+.sb-right .sl-tab-panel > * + * {
+  margin-top: var(--sl-space-5);
+}
+
+/* A checkbox of the form is the panel's 16 px box (the theme sizes it under its shell alone), standing at the top of
+   its words: the box and the first line are of one height, so a label of two lines keeps the box beside its first */
+.sb-right .sl-div-field input[type="checkbox"] {
+  width: var(--sl-check-width);
+  min-width: var(--sl-check-width);
+  height: var(--sl-check-height);
+  min-height: var(--sl-check-height);
+  margin: 0;
+}
+
+.sb-right .sl-div-item-full :is(.sl-radio-group, .sl-check-list) {
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--sl-space-2);
+  height: auto;
+  max-height: none;
+}
+
+/* The stand's own panel of variants stands over the canvas, clear of the feet of the tree and of the settings */
+.sb-body .demo-panel {
+  right: auto;
+  left: calc(var(--sb-left) + var(--sl-space-5));
 }
 
 .sb-own {
   display: block;
+  width: 100%;
   margin-top: var(--sl-space-2);
+}
+
+.sb-logo-img {
+  max-width: 100%;
+  max-height: var(--sl-size-tile);
 }
 
 .sb-own input {
@@ -588,15 +489,9 @@
   box-sizing: border-box;
 }
 
-/* The icon picker of the panel, in a column narrower than the forms it was drawn for */
-.sb-control .sl-icon-picker input {
-  flex: 1 1 4em;
-  min-width: 0;
-}
-
 /* "Содержимое", "Вид" and "Показ" are the tabs of the panel above the form; the icon stands 4 px from its word */
 .sb-look {
-  margin: 0 0 var(--sl-space-5);
+  margin: 0 0 var(--sl-space-3);
 }
 
 .sb-look .sl-tabs-link {
@@ -606,15 +501,6 @@
 .sb-code {
   font-family: var(--sl-face-mono);
   font-size: var(--sl-font-small);
-}
-
-.sb-seg {
-  display: inline-flex;
-  max-width: 100%;
-}
-
-.sb-seg .sl-seg-cell {
-  gap: var(--sl-space-2);
 }
 
 .sb-range {
@@ -628,173 +514,102 @@
 }
 
 .sb-range output {
-  min-width: var(--sl-space-6);
+  min-width: var(--sl-size-chip);
   color: var(--sl-text-strong);
   font-weight: var(--sl-weight-semibold);
   text-align: right;
 }
 
-.sb-tones {
-  display: flex;
-  gap: var(--sl-space-3);
+/* The point of focus of a picture: a grid of nine, the pressed cell is the point the crop keeps */
+.sb-focus {
+  display: inline-grid;
+  grid-template-columns: repeat(3, var(--sl-size-chip));
+  gap: var(--sl-space-1);
 }
 
-.sb-tone {
-  width: var(--sl-size-chip);
+.sb-focus-cell {
   height: var(--sl-size-chip);
   padding: 0;
-  border: 2px solid var(--sl-bg);
-  border-radius: var(--sl-radius-circle);
-  box-shadow: 0 0 0 1px var(--sl-border-strong);
+  border: 1px solid var(--sl-border-strong);
+  border-radius: var(--sl-radius-1);
+  background: var(--sl-bg);
   cursor: pointer;
 }
 
-.sb-tone[aria-pressed="true"] {
-  box-shadow: 0 0 0 2px var(--sl-text-strong);
-}
-
-.sb-tone-primary { background: var(--sl-primary); }
-.sb-tone-success { background: var(--sl-success); }
-.sb-tone-warning { background: var(--sl-warning); }
-.sb-tone-accent { background: var(--sl-accent); }
-.sb-tone-danger { background: var(--sl-danger); }
-
-.sb-photos,
-.sb-logos {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: var(--sl-space-3);
-}
-
-.sb-logos {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-
-.sb-photo,
-.sb-logo {
-  padding: 0;
-  overflow: hidden;
-  border: 2px solid transparent;
-  border-radius: var(--sl-radius-2);
-  background: var(--sl-bg-muted);
-  cursor: pointer;
-}
-
-.sb-photo img {
-  display: block;
-  width: 100%;
-  height: auto;
-}
-
-.sb-logo {
-  display: grid;
-  place-items: center;
-  height: 52px;
-  padding: var(--sl-space-3);
-  background: var(--sl-bg-subtle);
-}
-
-.sb-logo img {
-  max-width: 100%;
-  max-height: 100%;
-}
-
-.sb-photo[aria-pressed="true"],
-.sb-logo[aria-pressed="true"] {
+.sb-focus-cell[aria-pressed="true"] {
   border-color: var(--sl-primary);
+  background: var(--sl-primary);
 }
 
-/* Items of a section: a list of folded rows, each opens its own small form */
-.sb-items {
-  margin: var(--sl-space-7) 0 0;
+/* A Markdown field: its beginning, read-only, and the button of the editor window under it */
+.sb-right textarea[data-sb-md],
+.sb-right textarea[data-sb-code] {
+  cursor: pointer;
+  resize: none;
 }
 
-.sb-items-head {
+/* An action of a field stands at the right end of its field: the editor under the beginning of a text, the file
+   manager after the name of the file */
+.sb-md-open {
   display: flex;
-  align-items: center;
+  margin: var(--sl-space-3) 0 0 auto;
+}
+
+.sb-right .sl-file-door {
+  flex-wrap: nowrap;
+}
+
+.sb-right .sl-file-door > .sl-but-green {
+  flex: none;
+  margin-left: auto;
+}
+
+/* A long name of a file ends in an ellipsis inside its chip, so the button keeps its line */
+.sb-right .sl-file-door > .sl-chip {
+  min-width: 0;
+}
+
+.sb-right .sl-file-door > .sl-chip > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+
+/* Items of a section: blocks of the form canon (sl-toggle-form-block), the plus folds each out; the title row carries
+   the grip, the name and the delete */
+.sb-items .sb-group-head {
   margin: 0 0 var(--sl-space-3);
-  color: var(--sl-text-strong);
-  font-weight: var(--sl-weight-semibold);
+  padding: 0;
 }
 
 .sb-item-list {
   display: grid;
-  gap: var(--sl-space-2);
+  gap: var(--sl-space-3);
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
-.sb-item {
-  min-width: 0;
-  border: 1px solid var(--sl-border);
-  border-radius: var(--sl-radius-2);
-  background: var(--sl-bg);
+.sb-item-list .sl-toggle-form-block + .sl-toggle-form-block {
+  margin-top: 0;
 }
 
-.sb-item summary {
+.sb-item-list .sl-toggle-form-block-title {
   display: flex;
-  align-items: center;
-  gap: var(--sl-space-3);
-  padding: var(--sl-space-2) var(--sl-space-3);
-  list-style: none;
-  cursor: pointer;
+  width: 100%;
 }
 
-.sb-item summary::-webkit-details-marker {
-  display: none;
-}
-
-.sb-item-ico {
-  color: var(--sl-primary);
-}
-
-.sb-item-name {
+.sb-item-list .sl-toggle-form-block-label {
   flex: 1 1 auto;
   min-width: 0;
   overflow: hidden;
+  color: var(--sl-text);
   white-space: nowrap;
   text-overflow: ellipsis;
 }
 
-.sb-item details[open] > summary {
-  border-bottom: 1px solid var(--sl-border);
-}
-
-.sb-item .sb-form {
-  padding: var(--sl-space-4);
-}
-
-.sb-foot {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--sl-space-3);
-  padding: var(--sl-space-4) var(--sl-space-5);
-  border-top: 1px solid var(--sl-border);
-}
-
-.sb-empty {
-  padding: var(--sl-space-8) var(--sl-space-6);
-  color: var(--sl-text-muted);
-  line-height: var(--sl-line-normal);
-}
-
-.sb-empty-ico {
-  display: inline-grid;
-  place-items: center;
-  width: var(--sl-size-tile);
-  height: var(--sl-size-tile);
-  border-radius: var(--sl-radius-circle);
-  background: var(--sl-tint);
-  color: var(--sl-primary);
-  font-size: var(--sl-size-icon-md);
-}
-
-.sb-empty-title {
-  margin: var(--sl-space-5) 0 var(--sl-space-3);
-  color: var(--sl-text-strong);
-  font-size: var(--sl-font-h4);
-  font-weight: var(--sl-weight-semibold);
+.sb-item-list .sl-div-grid {
+  margin: var(--sl-space-3) 0 0;
 }
 
 .sb-keys {
@@ -810,46 +625,14 @@
   padding: 0 var(--sl-space-2);
   border: 1px solid var(--sl-border-strong);
   border-radius: var(--sl-radius-1);
-  background: var(--sl-bg-subtle);
-  font-family: var(--sl-face-mono);
-}
-
-.sb-php {
-  margin: 0;
-  padding: var(--sl-space-5);
-  border-radius: var(--sl-radius-2);
-  background: var(--sl-bg-subtle);
-  font-family: var(--sl-face-mono);
-  font-size: var(--sl-font-small);
-  line-height: var(--sl-line-normal);
-  white-space: pre;
-  overflow: auto;
-}
-
-.sb-how ol {
-  display: grid;
-  gap: var(--sl-space-5);
-  margin: 0;
-  padding-left: var(--sl-space-7);
-  line-height: var(--sl-line-loose);
-}
-
-.sb-how code {
-  font-family: var(--sl-face-mono);
-  font-size: var(--sl-font-small);
-}
-
-.sb-card:disabled {
-  opacity: var(--sl-fade-disabled);
-  cursor: not-allowed;
-  box-shadow: none;
+  background: var(--sl-surface);
 }
 
 /* A ready page: a column of small bars, one per section of the set */
 .sb-thumb-page {
   grid-template-rows: none;
   align-content: start;
-  gap: 3px;
+  gap: var(--sl-space-1);
 }
 
 .sb-thumb-page i {
@@ -866,6 +649,81 @@
   background: none;
   border: 1px dashed var(--sl-border-strong);
 }
+
+/* Each section of a set draws its own bar, so two ready pages never look alike: the cards in a row of three, the media
+   dark or toned, the contact green, the steps and the figures by their marks, the claim as its button */
+.sb-thumb-page :is(.sb-mini-features, .sb-mini-feed, .sb-mini-team, .sb-mini-prices, .sb-mini-voices, .sb-mini-sites) {
+  height: 9px;
+  background: repeating-linear-gradient(90deg, var(--sl-border-strong) 0 31%, transparent 31% 34.5%);
+}
+
+.sb-thumb-page :is(.sb-mini-team, .sb-mini-voices) {
+  background: repeating-linear-gradient(90deg, var(--sl-tint) 0 31%, transparent 31% 34.5%);
+  box-shadow: inset 0 2px 0 var(--sl-primary);
+}
+
+.sb-thumb-page .sb-mini-prices {
+  background: repeating-linear-gradient(90deg, var(--sl-bg) 0 31%, transparent 31% 34.5%);
+  box-shadow: inset 0 0 0 1px var(--sl-border-strong);
+}
+
+.sb-thumb-page :is(.sb-mini-gallery, .sb-mini-sites) {
+  height: 11px;
+  background: repeating-linear-gradient(90deg, var(--sl-primary) 0 23%, transparent 23% 25.5%);
+  opacity: var(--sl-fade-disabled);
+}
+
+.sb-thumb-page :is(.sb-mini-video, .sb-mini-embed) {
+  height: 12px;
+  background: var(--sl-text-strong);
+}
+
+.sb-thumb-page .sb-mini-map {
+  height: 11px;
+  background: linear-gradient(90deg, var(--sl-success) 0 48%, transparent 48% 52%, var(--sl-border-strong) 52%);
+}
+
+.sb-thumb-page .sb-mini-media {
+  height: 11px;
+  background: linear-gradient(90deg, var(--sl-primary) 0 40%, transparent 40% 44%, var(--sl-border-strong) 44%);
+}
+
+.sb-thumb-page :is(.sb-mini-text, .sb-mini-item, .sb-mini-faq) {
+  height: 3px;
+  margin: var(--sl-space-1) 0;
+  box-shadow: 0 5px 0 var(--sl-border-strong);
+}
+
+.sb-thumb-page .sb-mini-steps,
+.sb-thumb-page .sb-mini-stats {
+  background: repeating-linear-gradient(90deg, var(--sl-primary) 0 3px, var(--sl-border-strong) 3px 31%, transparent 31% 34.5%);
+}
+
+.sb-thumb-page .sb-mini-module {
+  height: 14px;
+  background: var(--sl-tint);
+  box-shadow: inset 0 0 0 1px var(--sl-primary);
+}
+
+.sb-thumb-page .sb-mini-cta {
+  width: 50%;
+  margin: var(--sl-space-1) auto 0;
+  border-radius: var(--sl-radius-pill);
+  background: var(--sl-primary);
+}
+
+/* The library: the slot of a module as a frame waiting for its answer, a text as lines, an embedding as a window */
+.sb-thumb-module { background: none; box-shadow: inset 0 0 0 1px var(--sl-border-strong); }
+.sb-thumb-module i { background: var(--sl-tint); }
+.sb-thumb-module i:nth-child(1) { box-shadow: inset 0 0 0 1px var(--sl-primary); }
+.sb-thumb-text { grid-template-rows: repeat(4, 5px); align-content: center; }
+.sb-thumb-text i:nth-child(1) { width: 55%; background: var(--sl-text-muted); }
+.sb-thumb-text i:nth-child(3) { width: 80%; }
+.sb-thumb-text i:nth-child(4) { width: 65%; }
+.sb-thumb-embed { grid-template-rows: 8px 1fr; }
+.sb-thumb-embed i:nth-child(1) { background: var(--sl-text-strong); }
+.sb-thumb-embed i:nth-child(2) { background: var(--sl-bg); box-shadow: inset 0 0 0 1px var(--sl-border-strong); }
+.sb-thumb-embed i:nth-child(n+3) { display: none; }
 
 /* ---- Checks and history: rows of a window ---- */
 .sb-issues,
@@ -891,6 +749,7 @@
   color: var(--sl-text);
   text-align: left;
   cursor: pointer;
+  text-decoration: none;
 }
 
 .sb-issue:hover,
@@ -924,6 +783,7 @@
 .sb-story-row {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: var(--sl-space-4);
   padding: var(--sl-space-3) var(--sl-space-4);
   border: 1px solid var(--sl-border);
@@ -946,12 +806,50 @@
   font-size: var(--sl-font-small);
 }
 
+/* A change against the site wears the brand tone, a remark the warning one; a row with no place left to lead to is still */
+.sb-change > .bi:first-child {
+  color: var(--sl-primary);
+}
+
+.sb-issue:disabled {
+  cursor: default;
+}
+
+.sb-issue:disabled:hover {
+  border-color: var(--sl-border);
+  background: var(--sl-bg);
+}
+
+.sl-modal-body > .sb-group-head:first-child {
+  margin-top: 0;
+}
+
+/* A publication of the history folds out its sections, each brought back alone */
+.sb-story-secs {
+  flex: 1 0 100%;
+}
+
+.sb-story-secs > .sb-issues {
+  margin-top: var(--sl-space-3);
+}
+
+/* A kept section of the library carries its removal in the corner of its card */
+.sb-mine-del {
+  position: absolute;
+  top: var(--sl-space-2);
+  right: var(--sl-space-2);
+}
+
+.sb-cards .sl-mcard:has(.sb-mine-del) .sl-mcard-link {
+  padding-right: calc(var(--sl-size-chip) + var(--sl-space-3) * 2);
+}
+
 .sb-story-row .sl-but {
   flex: none;
 }
 
 /* ---- Narrower screens ---- */
-@media (max-width: 1279px) {
+@media (max-width: 1200px) {
   .sb-app {
     grid-template-columns: var(--sb-left) minmax(0, 1fr);
     grid-template-areas: "top top" "left stage";
@@ -981,7 +879,7 @@
 }
 
 /* One pane at a time: the structure, the page or the settings */
-@media (max-width: 999px) {
+@media (max-width: 900px) {
   .sb-app {
     grid-template-columns: minmax(0, 1fr);
     grid-template-rows: auto minmax(0, 1fr);
@@ -1057,10 +955,14 @@
   display: flex;
   align-items: center;
   gap: var(--sl-space-2);
-  margin: var(--sl-space-4) 0 var(--sl-space-1);
-  padding: 0 var(--sl-space-3);
+  margin: var(--sl-space-5) 0 var(--sl-space-3);
+  padding: 0 var(--sl-space-2);
   color: var(--sl-text);
   font-size: var(--sl-font-small);
+}
+
+.sb-group-head + .sb-zone-head {
+  margin-top: 0;
 }
 
 .sb-zone-head .bi {
@@ -1072,18 +974,9 @@
   border-radius: var(--sl-radius-2);
 }
 
-.sb-link {
-  padding: 0;
-  border: 0;
-  background: none;
-  color: var(--sl-primary);
-  text-decoration: underline;
-  cursor: pointer;
-}
-
 /* Where a block shows: the checkbox lists of the panel in two columns, each under a small caption */
 .sb-check-cap {
-  margin: var(--sl-space-3) 0 var(--sl-space-2);
+  margin: var(--sl-space-5) 0 var(--sl-space-3);
   color: var(--sl-text-muted);
   font-size: var(--sl-font-small);
 }
@@ -1092,11 +985,6 @@
   margin-top: 0;
 }
 
-.sb-checks {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--sl-space-1) var(--sl-space-4);
-}
 
 /* The order of a block in its position, as the weight column of the panel */
 .sb-order {
@@ -1107,4 +995,101 @@
   font-size: var(--sl-font-small);
   font-variant-numeric: tabular-nums;
   text-align: center;
+}
+
+/* ---- The full-screen preview: the stage alone under a thin bar of the way back, which covers nothing of the page ---- */
+.sb-app[data-sb-preview] {
+  grid-template: "bar" auto "stage" minmax(0, 1fr) / minmax(0, 1fr);
+}
+
+.sb-app[data-sb-preview] .sb-top,
+.sb-app[data-sb-preview] .sb-left,
+.sb-app[data-sb-preview] .sb-right {
+  display: none;
+}
+
+.sb-app[data-sb-preview] .sb-stage {
+  display: grid;
+}
+
+.sb-preview-bar {
+  grid-area: bar;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sl-space-5);
+  padding: var(--sl-space-2) var(--sl-space-5);
+  border-bottom: 1px solid var(--sl-border);
+  background: var(--sl-bg);
+}
+
+.sb-preview-note {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sl-space-2);
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-small);
+}
+
+/* The help in a window: the window zeroes the margins of its paragraphs (.sl-modal-body p), the help keeps the rhythm
+   its page in the panel has (.sl-markdown p); the rule to move into the theme with the transfer */
+.sl-modal-body .sl-markdown p {
+  margin: 0 0 var(--sl-space-6);
+}
+
+/* ---- The capsule of tools: every group of icons of the builder - the top bar, the foot of the inspector, the toolbar
+   of a section - is the capsule of the editors (sl-editor-pill, sl-editor-grp, sl-modal-act): one look, one hover,
+   the pressed state in the tone of the theme. The editor shows its capsule on hover; the builder shows it at once.
+   This modifier moves into the theme with the transfer ---- */
+.sb-pill {
+  flex: none;
+  max-width: none;
+  margin: 0;
+  opacity: 1;
+  transform: none;
+  translate: none;
+  pointer-events: auto;
+}
+
+.sb-pill .sl-modal-act {
+  text-decoration: none;
+}
+
+.sb-pill .sl-modal-act:disabled,
+.sb-pill .sl-modal-act:disabled:hover {
+  background: none;
+  color: var(--sl-text-muted);
+  opacity: var(--sl-fade-disabled);
+  cursor: default;
+}
+
+/* An action that removes answers the hand in the tone of danger, as the close of a window does */
+.sb-act-danger {
+  --sl-modal-act-tone: var(--sl-danger);
+}
+
+/* A group whose every button is hidden leaves with its line, as a group the engine cannot use does in the editor */
+.sb-pill .sl-editor-grp:not(:has(> :not([hidden]))) {
+  display: none;
+}
+
+/* The bar of the library: the filter of the groups, then the search over the rest of the line, as the search of the
+   icon window grows */
+.sb-lib-groups {
+  flex-wrap: wrap;
+}
+
+.sb-lib-find {
+  flex: 1 1 var(--sb-label);
+  min-width: 0;
+}
+
+/* A window whose content changes its height under the hand - a tab, a filter, a list - keeps its top where it opened
+   and lets only its bottom move, instead of centring again on every change; the narrow screen keeps the sheet of the
+   canon and the full window its own frame */
+@media (width > 560px) {
+  dialog.sl-modal[data-sb-top]:not(.sl-is-full) {
+    margin: calc(var(--sl-modal-gap) * 3) auto auto;
+    max-height: calc(100dvh - var(--sl-modal-gap) * 4);
+  }
 }

@@ -7,11 +7,13 @@
   <link rel="stylesheet" href="../templates/admin/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
   <link rel="stylesheet" href="../templates/admin/assets/css/base.css">
   <link rel="stylesheet" href="../templates/admin/assets/css/theme.css">
+  <link rel="stylesheet" href="../plugins/editors/codemirror/assets/cm6.css">
   <!-- The stand is served without Cache-Control; its sheets and scripts are stamped so an edit is seen at once -->
   <script>document.write('<link rel="stylesheet" href="assets/demo.css?v=' + Date.now() + '"><link rel="stylesheet" href="assets/sb.css?v=' + Date.now() + '">');</script>
   <script src="../plugins/system/global-func.js"></script>
   <script src="../plugins/system/slaed.js"></script>
   <script src="../templates/admin/assets/js/admin-ui.js"></script>
+  <script src="../plugins/system/editor.js"></script>
 </head>
 <!-- 01 Конструктор. One editor for everything a site says without HTML: the sections of each page, the two menus and
      the parts of the theme around the content. The page itself stands in the middle and is edited in place - a click
@@ -21,30 +23,48 @@
 <body class="sb-body">
   <div class="sb-app" data-sb-app data-view="canvas">
     <header class="sb-top">
-      <a class="sb-back" href="admin/index.html" title="В панель администратора"><i class="bi bi-arrow-left" aria-hidden="true"></i><span>Панель</span></a>
+      <a class="sl-chip sl-chip-neutral sb-back" href="admin/index.html" title="В панель администратора"><i class="bi bi-arrow-left" aria-hidden="true"></i>&nbsp;<span>Панель</span></a>
       <span class="sb-brand"><i class="bi bi-layers-half" aria-hidden="true"></i><span>Конструктор сайта</span></span>
       <label class="sb-page-pick"><span class="sl-hidden">Страница</span><select class="sl-select" data-sb-page-pick></select></label>
       <span class="sl-seg sb-views" role="group" aria-label="Что показать">
         <button type="button" class="sl-seg-cell" data-sb-view="tree" aria-pressed="false" title="Структура"><i class="bi bi-list-nested" aria-hidden="true"></i><span>Структура</span></button><button type="button" class="sl-seg-cell" data-sb-view="canvas" aria-pressed="false" title="Страница"><i class="bi bi-window" aria-hidden="true"></i><span>Страница</span></button><button type="button" class="sl-seg-cell" data-sb-view="edit" aria-pressed="false" title="Настройки"><i class="bi bi-sliders" aria-hidden="true"></i><span>Настройки</span></button>
       </span>
+      <!-- The widths are the segmented control of the panel; every group of icons is the capsule of the editors
+           (sl-editor-pill, sl-editor-grp, sl-modal-act): the tools by their groups, the help with the settings -->
       <span class="sl-seg sb-devices" role="group" aria-label="Ширина страницы">
         <button type="button" class="sl-seg-cell" data-sb-device="desktop" aria-pressed="false" title="Компьютер" aria-label="Компьютер"><i class="bi bi-display" aria-hidden="true"></i></button><button type="button" class="sl-seg-cell" data-sb-device="tablet" aria-pressed="false" title="Планшет" aria-label="Планшет"><i class="bi bi-tablet" aria-hidden="true"></i></button><button type="button" class="sl-seg-cell" data-sb-device="phone" aria-pressed="false" title="Телефон" aria-label="Телефон"><i class="bi bi-phone" aria-hidden="true"></i></button>
       </span>
       <span class="sb-top-tools">
-        <button type="button" class="sl-but-mini sl-is-muted" data-sb-undo title="Отменить шаг (Ctrl+Z)" aria-label="Отменить шаг"><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i></button>
-        <button type="button" class="sl-but-mini sl-is-muted" data-sb-redo title="Вернуть шаг (Ctrl+Shift+Z)" aria-label="Вернуть шаг"><i class="bi bi-arrow-clockwise" aria-hidden="true"></i></button>
-        <button type="button" class="sl-but-mini sl-is-muted" data-sb-open-palette title="Все команды (Ctrl+K)" aria-label="Все команды"><i class="bi bi-command" aria-hidden="true"></i></button>
-        <button type="button" class="sl-but-mini sl-is-muted" data-sb-open-checks title="Проверить перед публикацией" aria-label="Проверить перед публикацией"><i class="bi bi-clipboard-check" aria-hidden="true"></i></button>
-        <button type="button" class="sl-but-mini sl-is-muted" data-sb-open-story title="История публикаций" aria-label="История публикаций"><i class="bi bi-clock-history" aria-hidden="true"></i></button>
-        <button type="button" class="sl-but-mini sl-is-muted" data-sb-open-data title="Данные: config/layout.php" aria-label="Данные"><i class="bi bi-filetype-php" aria-hidden="true"></i></button>
-        <a class="sl-but-mini sl-is-muted" data-sb-site href="sb-site.html" target="_blank" title="Открыть опубликованный сайт" aria-label="Открыть сайт"><i class="bi bi-box-arrow-up-right" aria-hidden="true"></i></a>
-        <span class="sb-state" data-sb-state role="status"></span>
+        <span class="sl-editor-pill sb-pill" role="toolbar" aria-label="Инструменты">
+          <span class="sl-editor-grp">
+            <button type="button" class="sl-modal-act" data-sb-undo title="Отменить шаг (Ctrl+Z)" aria-label="Отменить шаг"><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i></button>
+            <button type="button" class="sl-modal-act" data-sb-redo title="Вернуть шаг (Ctrl+Shift+Z)" aria-label="Вернуть шаг"><i class="bi bi-arrow-clockwise" aria-hidden="true"></i></button>
+          </span>
+          <span class="sl-editor-grp">
+            <button type="button" class="sl-modal-act" data-sb-guest aria-pressed="false" title="Смотреть как гость · двойной щелчок — на весь экран (Ctrl+Alt+P)" aria-label="Смотреть как гость"><i class="bi bi-person" aria-hidden="true"></i></button>
+            <button type="button" class="sl-modal-act" data-sb-open-link title="Ссылка для просмотра черновика" aria-label="Ссылка для просмотра черновика"><i class="bi bi-link-45deg" aria-hidden="true"></i></button>
+            <a class="sl-modal-act" data-sb-site href="sb-site.html" target="_blank" title="Открыть опубликованный сайт" aria-label="Открыть сайт"><i class="bi bi-box-arrow-up-right" aria-hidden="true"></i></a>
+          </span>
+          <span class="sl-editor-grp">
+            <button type="button" class="sl-modal-act" data-sb-open-checks title="Проверить перед публикацией" aria-label="Проверить перед публикацией"><i class="bi bi-clipboard-check" aria-hidden="true"></i></button>
+            <button type="button" class="sl-modal-act" data-sb-open-story title="История публикаций" aria-label="История публикаций"><i class="bi bi-clock-history" aria-hidden="true"></i></button>
+            <button type="button" class="sl-modal-act" data-sb-open-palette title="Все команды (Ctrl+K)" aria-label="Все команды"><i class="bi bi-command" aria-hidden="true"></i></button>
+          </span>
+        </span>
+        <span class="sl-chip sb-state" data-sb-state role="status"></span>
         <button type="button" class="sl-but-blue sb-publish" data-sb-publish><i class="bi bi-cloud-arrow-up" aria-hidden="true"></i><span>Опубликовать</span></button>
+        <!-- The help of the screen and its settings stand last, as the panel keeps them at the edge of a screen -->
+        <span class="sl-editor-pill sb-pill" role="toolbar" aria-label="Справка и настройки">
+          <span class="sl-editor-grp">
+            <button type="button" class="sl-modal-act" data-sb-open-help title="Руководство" aria-label="Руководство"><i class="bi bi-question-circle" aria-hidden="true"></i></button>
+            <button type="button" class="sl-modal-act" data-sb-open-data title="Настройки" aria-label="Настройки"><i class="bi bi-gear" aria-hidden="true"></i></button>
+          </span>
+        </span>
       </span>
     </header>
 
     <aside class="sb-left" data-sb-left aria-label="Структура сайта">
-      <div class="sl-seg sb-tabs" role="tablist" aria-label="Что править">
+      <div class="sl-seg sb-fill sb-tabs" role="tablist" aria-label="Что править">
         <button type="button" role="tab" class="sl-seg-cell" data-sb-tab="page"><i class="bi bi-file-earmark-richtext" aria-hidden="true"></i>Страница</button><button type="button" role="tab" class="sl-seg-cell" data-sb-tab="menu"><i class="bi bi-menu-button-wide" aria-hidden="true"></i>Меню</button><button type="button" role="tab" class="sl-seg-cell" data-sb-tab="theme"><i class="bi bi-palette" aria-hidden="true"></i>Тема</button>
       </div>
       <div class="sb-tree" data-sb-tree></div>
@@ -57,74 +77,127 @@
     </main>
 
     <!-- The settings of the picked part: a form, so the conditional rows of slaed.js find their control; nothing submits it -->
-    <form class="sb-right" data-sb-inspector aria-label="Настройки выбранного" novalidate></form>
+    <form class="sb-right sl-div-form" data-sb-inspector aria-label="Настройки выбранного" novalidate></form>
 
     <!-- The library of sections: a window of the canon, like the icon window - a search in the bar, cards in the body -->
-    <dialog class="sl-modal sl-modal-lg sb-lib" data-sb-lib aria-label="Добавить секцию">
+    <dialog class="sl-modal sl-modal-lg" data-sb-top data-sb-lib aria-label="Добавить секцию">
       <div class="sl-modal-title"><i class="bi bi-plus-square" aria-hidden="true"></i> <span class="sl-modal-cap"><strong>Добавить секцию</strong><span class="sl-modal-sub" data-sb-lib-where></span></span> <span class="sl-modal-acts"><button type="button" class="sl-modal-act sl-modal-act-close" data-sl-close title="Закрыть" aria-label="Закрыть"><i class="bi bi-x-lg" aria-hidden="true"></i></button></span></div>
-      <div class="sl-modal-bar"><input type="search" class="sl-select-config" placeholder="Найти секцию" aria-label="Найти секцию" autocomplete="off" data-sb-lib-find data-sl-focus></div>
+      <div class="sl-modal-bar"><span class="sl-seg sb-lib-groups" role="group" aria-label="Группы секций" data-sb-lib-groups></span><input type="search" class="sl-select-config sb-lib-find" placeholder="Найти секцию" aria-label="Найти секцию" autocomplete="off" data-sb-lib-find data-sl-focus></div>
       <div class="sl-modal-body"><div data-sb-lib-list></div></div>
-      <div class="sl-modal-foot"><p class="sb-hint"><i class="bi bi-brush" aria-hidden="true"></i>Набор секций зависит от темы сайта: другая тема принесёт свои.</p></div>
+      <div class="sl-modal-foot"><span class="sl-modal-sub">Набор секций зависит от темы сайта: другая тема принесёт свои.</span></div>
     </dialog>
   </div>
 
   <!-- The draft as the one file of the site: a window of the canon with the tabs of the panel -->
-  <dialog class="sl-modal sl-modal-lg" data-sb-data aria-label="config/layout.php">
-    <div class="sl-modal-title"><i class="bi bi-filetype-php" aria-hidden="true"></i> <span class="sl-modal-cap"><strong>config/layout.php</strong><span class="sl-modal-sub" data-sb-php-meta></span></span> <span class="sl-modal-acts"><button type="button" class="sl-modal-act" data-sl-full data-expand="Развернуть" data-restore="Восстановить" title="Развернуть" aria-label="Развернуть"><i class="bi bi-arrows-angle-expand" aria-hidden="true"></i></button><button type="button" class="sl-modal-act sl-modal-act-close" data-sl-close title="Закрыть" aria-label="Закрыть"><i class="bi bi-x-lg" aria-hidden="true"></i></button></span></div>
+  <dialog class="sl-modal sl-modal-lg" data-sb-top data-sb-data aria-label="Настройки">
+    <div class="sl-modal-title"><i class="bi bi-gear" aria-hidden="true"></i> <span class="sl-modal-cap"><strong>Настройки</strong><span class="sl-modal-sub" data-sb-php-meta></span></span> <span class="sl-modal-acts"><button type="button" class="sl-modal-act" data-sl-full data-expand="Развернуть" data-restore="Восстановить" title="Развернуть" aria-label="Развернуть"><i class="bi bi-arrows-angle-expand" aria-hidden="true"></i></button><button type="button" class="sl-modal-act sl-modal-act-close" data-sl-close title="Закрыть" aria-label="Закрыть"><i class="bi bi-x-lg" aria-hidden="true"></i></button></span></div>
     <div class="sl-modal-body" data-sl-tabs-init="sb-data">
       <ul class="sl-tabs-nav">
-        <li class="sl-tabs-item"><a href="#" class="sl-tabs-link sl-is-active" data-sl-tab-link data-sl-tab-target="sb-data-file">Файл</a></li>
-        <li class="sl-tabs-item"><a href="#" class="sl-tabs-link" data-sl-tab-link data-sl-tab-target="sb-data-how">Как это работает</a></li>
+        <li class="sl-tabs-item"><a href="#" class="sl-tabs-link sl-is-active" data-sl-tab-link data-sl-tab-target="sb-data-file">Файл раскладки</a></li>
+        <li class="sl-tabs-item"><a href="#" class="sl-tabs-link" data-sl-tab-link data-sl-tab-target="sb-data-where">Где ещё настраивается</a></li>
       </ul>
-      <div class="sl-tab-panel" data-sl-tab-panel="sb-data-file"><pre class="sb-php"><code data-sb-php></code></pre></div>
-      <div class="sl-tab-panel sb-how" data-sl-tab-panel="sb-data-how" hidden>
-        <ol>
-          <li><b>Один файл на сайт.</b> Части темы, оба меню и страницы с их секциями — одно дерево в <code>config/layout.php</code>.
-            Страница читает его одним <code>include</code>, а OPcache держит его в памяти: для вида сайта нет ни таблицы, ни запроса.</li>
-          <li><b>Запись — тем же путём, что и «Конфигурации».</b> «Опубликовать» пишет файл через <code>setConfigFile()</code>:
-            под той же блокировкой каталога и с тем же журналом, что и сохранение «Конфигураций». Черновик сайту не виден.</li>
-          <li><b>Секция — фрагмент темы.</b> Тема объявляет свои типы: разметку <code>sections/&lt;тип&gt;.html</code> и описание полей.
-            Значения из файла уходят в шаблон как обычные переменные, текст экранируется на границе шаблона.</li>
-          <li><b>Материалы — из модулей.</b> «Свежие материалы» и «Блок сайта» берут записи у модуля и у блока, как сегодня, — база
-            отдаёт содержимое, а не раскладку.</li>
-          <li><b>Меню и шапка — те же поля.</b> <code>partials/menu.html</code> и подвал больше не держат ссылки в разметке, а выводят
-            пункты из файла; правка не требует ни HTML, ни сброса кэша.</li>
-          <li><b>Код.</b> Класс ядра <code>core/classes/layout.php</code> читает, пишет и выводит раскладку; поведение редактора —
-            <code>plugins/system/builder.js</code>, только администратору; посетитель не грузит ни строчки редактора.</li>
-          <li><b>Вход.</b> В плавающем меню администратора на сайте рядом с «Эта страница в панели» стоит «Изменить страницу»: эта
-            страница открывается здесь, где любая её часть выбирается щелчком.</li>
-        </ol>
+      <div class="sl-tab-panel" data-sl-tab-panel="sb-data-file">
+        <!-- The file in the editor of the panel to read (Editor::getFrame() with readonly), made on each opening -->
+        <div data-sb-php></div>
+      </div>
+      <!-- The builder keeps no settings of its own: each lives on the screen of the panel that owns it -->
+      <div class="sl-tab-panel" data-sl-tab-panel="sb-data-where" hidden>
+        <ul class="sb-issues">
+          <li><a class="sb-issue sb-change" href="../admin.php?name=uploads" target="_blank" rel="noopener"><i class="bi bi-cloud-arrow-up" aria-hidden="true"></i><span class="sb-issue-text">Загрузки</span><span class="sb-issue-where">Картинки и файлы секций: строка «layout» — типы, размер, ширина и высота</span><i class="bi bi-box-arrow-up-right" aria-hidden="true"></i></a></li>
+          <li><a class="sb-issue sb-change" href="../admin.php?name=editor" target="_blank" rel="noopener"><i class="bi bi-pencil-square" aria-hidden="true"></i><span class="sb-issue-text">Редакторы</span><span class="sb-issue-where">Каким редактором пишутся тексты в Markdown и «Свой HTML»</span><i class="bi bi-box-arrow-up-right" aria-hidden="true"></i></a></li>
+          <li><a class="sb-issue sb-change" href="../admin.php?name=config" target="_blank" rel="noopener"><i class="bi bi-sliders" aria-hidden="true"></i><span class="sb-issue-text">Конфигурации</span><span class="sb-issue-where">Название сайта и логотип — те же ключи, что правит «Логотип и строка»</span><i class="bi bi-box-arrow-up-right" aria-hidden="true"></i></a></li>
+          <li><a class="sb-issue sb-change" href="../admin.php?name=blocks" target="_blank" rel="noopener"><i class="bi bi-bricks" aria-hidden="true"></i><span class="sb-issue-text">Блоки и баннеры</span><span class="sb-issue-where">Содержимое блоков; места и порядок правятся и здесь</span><i class="bi bi-box-arrow-up-right" aria-hidden="true"></i></a></li>
+          <li><a class="sb-issue sb-change" href="../admin.php?name=modules" target="_blank" rel="noopener"><i class="bi bi-puzzle" aria-hidden="true"></i><span class="sb-issue-text">Модули</span><span class="sb-issue-where">Колонки блоков на страницах модулей</span><i class="bi bi-box-arrow-up-right" aria-hidden="true"></i></a></li>
+        </ul>
       </div>
     </div>
     <div class="sl-modal-foot">
-      <button type="button" class="sl-but" data-sb-copy><i class="bi bi-clipboard" aria-hidden="true"></i>Скопировать</button>
+      <button type="button" class="sl-but-red sb-foot-start" data-sb-reset><i class="bi bi-arrow-repeat" aria-hidden="true"></i>Сбросить стенд</button>
       <button type="button" class="sl-but" data-sb-export title="Перенести вид на другой сайт: файл layout.json"><i class="bi bi-download" aria-hidden="true"></i>Выгрузить файл</button>
       <button type="button" class="sl-but" data-sb-import title="Загрузить layout.json в черновик; PHP не принимается — это был бы исполняемый код"><i class="bi bi-upload" aria-hidden="true"></i>Загрузить файл</button>
       <input type="file" accept=".json,application/json" data-sb-import-file hidden>
-      <button type="button" class="sl-but-red" data-sb-reset><i class="bi bi-arrow-repeat" aria-hidden="true"></i>Сбросить стенд</button>
     </div>
   </dialog>
 
-  <!-- Before publishing: what a visitor would trip over, each row leads to its place -->
-  <dialog class="sl-modal" data-sb-checks aria-label="Перед публикацией">
+  <!-- Before publishing: what the publication changes against the site, then what a visitor would trip over; each row
+       leads to its place -->
+  <dialog class="sl-modal sl-modal-lg" data-sb-top data-sb-checks aria-label="Перед публикацией">
     <div class="sl-modal-title"><i class="bi bi-clipboard-check" aria-hidden="true"></i> <span class="sl-modal-cap"><strong>Перед публикацией</strong><span class="sl-modal-sub" data-sb-checks-sub></span></span> <span class="sl-modal-acts"><button type="button" class="sl-modal-act sl-modal-act-close" data-sl-close title="Закрыть" aria-label="Закрыть"><i class="bi bi-x-lg" aria-hidden="true"></i></button></span></div>
-    <div class="sl-modal-body"><ul class="sb-issues" data-sb-checks-list></ul></div>
+    <div class="sl-modal-body">
+      <div class="sb-group-head">Что изменится <span class="sl-chip sl-chip-neutral" data-sb-changes-num></span></div>
+      <ul class="sb-issues" data-sb-changes-list></ul>
+      <div class="sb-group-head">Замечания <span class="sl-chip sl-chip-neutral" data-sb-issues-num></span></div>
+      <ul class="sb-issues" data-sb-checks-list></ul>
+      <div class="sl-div-grid" data-sb-note-row hidden>
+        <div class="sl-div-item"><div class="sl-div-label"><label for="sb-note">Заметка</label><span class="sl-small">Необязательно. Видна в истории.</span></div>
+          <div class="sl-div-field"><input type="text" id="sb-note" maxlength="120" placeholder="Что сделано: новая страница, правка меню…" data-sb-note></div></div>
+      </div>
+    </div>
     <div class="sl-modal-foot">
-      <button type="button" class="sl-but" data-sl-close data-sl-focus><i class="bi bi-pencil" aria-hidden="true"></i>Исправить</button>
-      <button type="button" class="sl-but-blue" data-sb-publish-now><i class="bi bi-cloud-arrow-up" aria-hidden="true"></i>Опубликовать всё равно</button>
+      <button type="button" class="sl-but-red sb-foot-start" data-sb-discard title="Черновик станет таким, как сайт сейчас; шаг можно отменить"><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i>Отменить все изменения</button>
+      <button type="button" class="sl-but" data-sl-close data-sl-focus><i class="bi bi-pencil" aria-hidden="true"></i>Вернуться к правке</button>
+      <button type="button" class="sl-but-blue" data-sb-publish-now><i class="bi bi-cloud-arrow-up" aria-hidden="true"></i><span data-sb-publish-word>Опубликовать</span></button>
     </div>
   </dialog>
 
   <!-- The last ten publications of the file -->
-  <dialog class="sl-modal" data-sb-story aria-label="История публикаций">
-    <div class="sl-modal-title"><i class="bi bi-clock-history" aria-hidden="true"></i> <span class="sl-modal-cap"><strong>История публикаций</strong><span class="sl-modal-sub">десять последних публикаций</span></span> <span class="sl-modal-acts"><button type="button" class="sl-modal-act sl-modal-act-close" data-sl-close title="Закрыть" aria-label="Закрыть"><i class="bi bi-x-lg" aria-hidden="true"></i></button></span></div>
+  <dialog class="sl-modal" data-sb-top data-sb-story aria-label="История публикаций">
+    <div class="sl-modal-title"><i class="bi bi-clock-history" aria-hidden="true"></i> <span class="sl-modal-cap"><strong>История публикаций</strong><span class="sl-modal-sub">Десять последних публикаций</span></span> <span class="sl-modal-acts"><button type="button" class="sl-modal-act sl-modal-act-close" data-sl-close title="Закрыть" aria-label="Закрыть"><i class="bi bi-x-lg" aria-hidden="true"></i></button></span></div>
     <div class="sl-modal-body"><ul class="sb-story" data-sb-story-list></ul></div>
   </dialog>
 
+  <!-- A text of a section in the editor of the panel: a frame of fragments/editor-frame.html, made on each opening and
+       taken by the runtime of editor.js with its kit below - Markdown in CodeMirror as a text, "Свой HTML" as code -->
+  <dialog class="sl-modal sl-modal-xl" data-sb-ed-win aria-label="Редактор">
+    <div class="sl-modal-title"><i class="bi bi-pencil-square" aria-hidden="true" data-sb-ed-ico></i> <span class="sl-modal-cap"><strong data-sb-ed-cap>Текст</strong><span class="sl-modal-sub" data-sb-ed-sub></span></span> <span class="sl-modal-acts"><button type="button" class="sl-modal-act sl-modal-act-close" data-sl-close title="Закрыть" aria-label="Закрыть"><i class="bi bi-x-lg" aria-hidden="true"></i></button></span></div>
+    <div class="sl-modal-body"><form id="sb-ed-form" data-sb-ed-form></form></div>
+    <div class="sl-modal-foot">
+      <button type="button" class="sl-but" data-sl-close><i class="bi bi-x-lg" aria-hidden="true"></i>Отмена</button>
+      <button type="submit" class="sl-but-blue" form="sb-ed-form"><i class="bi bi-check-lg" aria-hidden="true"></i>Сохранить</button>
+    </div>
+  </dialog>
+
+  <!-- A link to look at the draft without the panel: a token with a term; in the system signed on the server -->
+  <dialog class="sl-modal" data-sb-link-win aria-label="Ссылка для просмотра">
+    <div class="sl-modal-title"><i class="bi bi-link-45deg" aria-hidden="true"></i> <span class="sl-modal-cap"><strong>Ссылка для просмотра</strong><span class="sl-modal-sub">Черновик без входа в панель, только для чтения</span></span> <span class="sl-modal-acts"><button type="button" class="sl-modal-act sl-modal-act-close" data-sl-close title="Закрыть" aria-label="Закрыть"><i class="bi bi-x-lg" aria-hidden="true"></i></button></span></div>
+    <div class="sl-modal-body">
+      <div class="sl-div-grid">
+        <div class="sl-div-item"><div class="sl-div-label"><label for="sb-link-term">Действует</label></div><div class="sl-div-field"><select id="sb-link-term" class="sl-select" data-sb-link-term><option value="1">1 день</option><option value="7" selected>7 дней</option><option value="30">30 дней</option></select></div></div>
+      </div>
+      <figure class="sl-code" data-sl-code data-sb-link-box hidden>
+        <figcaption class="sl-code-head"><span data-sb-link-until></span><button type="button" class="sl-modal-act" data-sl-code-copy data-sl-done="Ссылка скопирована" title="Скопировать" aria-label="Скопировать"><i class="bi bi-copy" aria-hidden="true"></i></button></figcaption>
+        <div class="sl-code-body" data-sl-code-body tabindex="0" role="region" aria-label="Ссылка"><pre><code data-sb-link-url></code></pre></div>
+      </figure>
+      <div class="sl-alert sl-alert-info"><div class="sl-alert-body">По ссылке открывается черновик таким, каким его увидит посетитель: без панели и без правки. Истёкшая ссылка больше не открывается; новая отменяет прежние.</div></div>
+    </div>
+    <div class="sl-modal-foot">
+      <button type="button" class="sl-but" data-sl-close><i class="bi bi-x-lg" aria-hidden="true"></i>Отмена</button>
+      <button type="button" class="sl-but-blue" data-sb-link-make><i class="bi bi-link-45deg" aria-hidden="true"></i>Создать ссылку</button>
+    </div>
+  </dialog>
+
+  <!-- A new page from a text: a Markdown document becomes the hero and sections "Текст" -->
+  <dialog class="sl-modal sl-modal-xl" data-sb-from-text aria-label="Страница из текста">
+    <div class="sl-modal-title"><i class="bi bi-file-earmark-text" aria-hidden="true"></i> <span class="sl-modal-cap"><strong>Страница из текста</strong><span class="sl-modal-sub"># — обложка, каждый ## — секция «Текст»</span></span> <span class="sl-modal-acts"><button type="button" class="sl-modal-act sl-modal-act-close" data-sl-close title="Закрыть" aria-label="Закрыть"><i class="bi bi-x-lg" aria-hidden="true"></i></button></span></div>
+    <div class="sl-modal-body">
+      <div data-sb-from-box></div>
+    </div>
+    <div class="sl-modal-foot">
+      <button type="button" class="sl-but" data-sl-close><i class="bi bi-x-lg" aria-hidden="true"></i>Отмена</button>
+      <button type="button" class="sl-but-blue" data-sb-from-make><i class="bi bi-file-earmark-plus" aria-hidden="true"></i>Создать страницу</button>
+    </div>
+  </dialog>
+
+  <!-- A copy of the picked section onto another page of the site -->
+  <dialog class="sl-modal" data-sb-top data-sb-pages aria-label="Копировать на страницу">
+    <div class="sl-modal-title"><i class="bi bi-files" aria-hidden="true"></i> <span class="sl-modal-cap"><strong>Копировать на страницу</strong><span class="sl-modal-sub" data-sb-pages-sub></span></span> <span class="sl-modal-acts"><button type="button" class="sl-modal-act sl-modal-act-close" data-sl-close title="Закрыть" aria-label="Закрыть"><i class="bi bi-x-lg" aria-hidden="true"></i></button></span></div>
+    <div class="sl-modal-body"><ul class="sb-issues" data-sb-pages-list></ul></div>
+  </dialog>
+
   <!-- A new page from a ready set -->
-  <dialog class="sl-modal sl-modal-lg sb-lib" data-sb-presets aria-label="Новая страница">
-    <div class="sl-modal-title"><i class="bi bi-file-earmark-plus" aria-hidden="true"></i> <span class="sl-modal-cap"><strong>Новая страница</strong><span class="sl-modal-sub">начать с готового набора секций</span></span> <span class="sl-modal-acts"><button type="button" class="sl-modal-act sl-modal-act-close" data-sl-close title="Закрыть" aria-label="Закрыть"><i class="bi bi-x-lg" aria-hidden="true"></i></button></span></div>
-    <div class="sl-modal-body"><div class="sb-cards" data-sb-presets-list></div></div>
+  <dialog class="sl-modal sl-modal-lg" data-sb-top data-sb-presets aria-label="Новая страница">
+    <div class="sl-modal-title"><i class="bi bi-file-earmark-plus" aria-hidden="true"></i> <span class="sl-modal-cap"><strong>Новая страница</strong><span class="sl-modal-sub" data-sb-presets-sub>Начните с готового набора секций</span></span> <span class="sl-modal-acts"><button type="button" class="sl-modal-act sl-modal-act-close" data-sl-close title="Закрыть" aria-label="Закрыть"><i class="bi bi-x-lg" aria-hidden="true"></i></button></span></div>
+    <div class="sl-modal-body"><div class="sl-menu-grid sb-cards" data-sb-presets-list></div></div>
   </dialog>
 
   <!-- The command palette of the panel (fragments/palette.html), filled with the commands and places of the builder -->
@@ -137,12 +210,183 @@
     </div>
   </dialog>
 
+  <!-- The stand's file manager: the window of the panel's file manager and its tiles; in the system a file field opens the file manager itself -->
+  <dialog class="sl-modal sl-modal-lg" data-sb-files-win aria-label="Файловый менеджер">
+    <div class="sl-modal-title"><i class="bi bi-folder2-open" aria-hidden="true"></i> <span class="sl-modal-cap"><strong>Файловый менеджер</strong><span class="sl-modal-sub">Выберите файл</span></span> <span class="sl-modal-acts"><button type="button" class="sl-modal-act sl-modal-act-close" data-sl-close title="Закрыть" aria-label="Закрыть"><i class="bi bi-x-lg" aria-hidden="true"></i></button></span></div>
+    <div class="sl-modal-body"><div class="sl-fm-grid" data-sb-files-list></div></div>
+  </dialog>
+
+  <!-- The help of the screen: the tab "Руководство" of the panel (admin/info/layout/ru.md in sl-markdown), over the builder -->
+  <dialog class="sl-modal sl-modal-xl" data-sb-top data-sb-help aria-label="Руководство">
+    <div class="sl-modal-title"><i class="bi bi-question-circle" aria-hidden="true"></i> <span class="sl-modal-cap"><strong>Руководство</strong><span class="sl-modal-sub">Конструктор сайта</span></span> <span class="sl-modal-acts"><button type="button" class="sl-modal-act" data-sl-full data-expand="Развернуть" data-restore="Восстановить" title="Развернуть" aria-label="Развернуть"><i class="bi bi-arrows-angle-expand" aria-hidden="true"></i></button><button type="button" class="sl-modal-act sl-modal-act-close" data-sl-close title="Закрыть" aria-label="Закрыть"><i class="bi bi-x-lg" aria-hidden="true"></i></button></span></div>
+    <div class="sl-modal-body"><div class="sl-markdown" data-sb-help-body></div></div>
+  </dialog>
+
   <!-- The icon window of the panel, as getAdminIconWindow() prints it -->
   <dialog class="sl-modal sl-modal-lg" id="sl-icon-window" aria-label="Выбрать иконку">
     <div class="sl-modal-title"><i class="bi bi-grid-3x3-gap-fill" aria-hidden="true"></i> <span class="sl-modal-cap"><strong>Выбрать иконку</strong></span> <span class="sl-modal-acts"><button type="button" class="sl-modal-act sl-modal-act-close" data-sl-close title="Закрыть" aria-label="Закрыть"><i class="bi bi-x-lg" aria-hidden="true"></i></button></span></div>
     <div class="sl-modal-bar"><nav class="sl-icon-modal-tabs"><button type="button" class="sl-is-active" data-sl-icon-source="bi">Bootstrap Icons</button></nav><input type="search" class="sl-select-config" placeholder="Поиск" aria-label="Поиск" data-sl-icon-search data-sl-focus></div>
     <div class="sl-modal-body sl-modal-body-flush"><div class="sl-icon-modal-grid notranslate" translate="no" data-sl-icon-grid></div></div>
   </dialog>
+
+  <!-- The kit of the editors of the panel, as Editor prints it once a page (fragments/editor-kit.html): the tools, the draft
+       offer, the hints and the words editor.js takes into every frame -->
+  <template data-sl-editor-kit="" data-sl-editor-words="{&quot;tools&quot;:&quot;Команды: %s&quot;,&quot;pos&quot;:&quot;Стр. %1$s, кол. %2$s&quot;,&quot;sel&quot;:&quot;выделено %s&quot;,&quot;size&quot;:&quot;Строк: %1$s · символов: %2$s&quot;,&quot;copied&quot;:&quot;Скопировано&quot;,&quot;noclip&quot;:&quot;Буфер обмена недоступен&quot;,&quot;restored&quot;:&quot;Возвращён исходный текст&quot;,&quot;recent&quot;:&quot;недавно&quot;,&quot;left&quot;:&quot;осталось %s&quot;,&quot;long&quot;:&quot;Текст длиннее, чем вмещает это поле — не более %s.&quot;,&quot;used&quot;:&quot;Переменных: %1$s из %2$s&quot;,&quot;issues&quot;:&quot;Ошибок: %1$s · замечаний: %2$s&quot;,&quot;nolint&quot;:&quot;Проблем нет&quot;,&quot;failed&quot;:&quot;Ошибка&quot;,&quot;lint&quot;:{&quot;unknown&quot;:&quot;Неизвестная переменная %s&quot;,&quot;near&quot;:&quot;Неизвестная переменная %1$s — может быть, %2$s?&quot;,&quot;shut&quot;:&quot;Лишний закрывающий тег %s&quot;,&quot;open&quot;:&quot;Тег %s не закрыт&quot;,&quot;alt&quot;:&quot;У &lt;img&gt; нет alt: изображение не прочитает экранный диктор&quot;,&quot;blank&quot;:&quot;Ссылка в новом окне без rel=\&quot;noopener\&quot;&quot;,&quot;quot&quot;:&quot;Значение атрибута без кавычек&quot;,&quot;src&quot;:&quot;Шаблон не выводит %1$s — %2$s&quot;,&quot;fixvar&quot;:&quot;Заменить на %s&quot;,&quot;fixdel&quot;:&quot;Удалить тег&quot;,&quot;fixadd&quot;:&quot;Добавить %s&quot;,&quot;fixquot&quot;:&quot;Взять в кавычки&quot;,&quot;fixshut&quot;:&quot;Закрыть %s&quot;},&quot;phrases&quot;:{&quot;Find&quot;:&quot;Найти&quot;,&quot;Replace&quot;:&quot;Заменить на&quot;,&quot;next&quot;:&quot;Следующий&quot;,&quot;previous&quot;:&quot;Предыдущий&quot;,&quot;all&quot;:&quot;Все&quot;,&quot;match case&quot;:&quot;Регистр&quot;,&quot;regexp&quot;:&quot;Регулярное выражение&quot;,&quot;by word&quot;:&quot;Слово целиком&quot;,&quot;replace&quot;:&quot;Заменить&quot;,&quot;replace all&quot;:&quot;Заменить все&quot;,&quot;close&quot;:&quot;Закрыть&quot;,&quot;current match&quot;:&quot;текущее совпадение&quot;,&quot;on line&quot;:&quot;в строке&quot;,&quot;replaced $ matches&quot;:&quot;заменено совпадений: $&quot;,&quot;replaced match on line $&quot;:&quot;заменено совпадение в строке $&quot;,&quot;Folded lines&quot;:&quot;Свёрнутые строки&quot;,&quot;Unfolded lines&quot;:&quot;Развёрнутые строки&quot;,&quot;to&quot;:&quot;по&quot;,&quot;folded code&quot;:&quot;Свёрнутый код&quot;,&quot;unfold&quot;:&quot;Развернуть&quot;,&quot;Fold line&quot;:&quot;Свернуть строку&quot;,&quot;Unfold line&quot;:&quot;Развернуть строку&quot;,&quot;Go to line&quot;:&quot;Перейти к строке&quot;,&quot;go&quot;:&quot;Перейти&quot;,&quot;Diagnostics&quot;:&quot;Проверка&quot;,&quot;No diagnostics&quot;:&quot;Проблем нет&quot;,&quot;Completions&quot;:&quot;Варианты&quot;,&quot;Control character&quot;:&quot;Управляющий символ&quot;,&quot;Selection deleted&quot;:&quot;Выделение удалено&quot;}}">
+  <span class="sl-editor-pill" role="toolbar" data-sl-editor-pill="">
+    <span class="sl-editor-grp">
+      <button type="button" class="sl-modal-act" data-sl-editor-act="undo" data-sl-editor-need="edit" title="Отменить (Ctrl+Z)" aria-label="Отменить"><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i></button>
+      <button type="button" class="sl-modal-act" data-sl-editor-act="redo" data-sl-editor-need="edit" title="Повторить (Ctrl+Y)" aria-label="Повторить"><i class="bi bi-arrow-clockwise" aria-hidden="true"></i></button>
+    </span>
+    <span class="sl-editor-grp">
+      <button type="button" class="sl-modal-act" data-sl-editor-act="search" data-sl-editor-need="cm" title="Найти и заменить (Ctrl+F)" aria-label="Найти и заменить"><i class="bi bi-search" aria-hidden="true"></i></button>
+      <button type="button" class="sl-modal-act" data-sl-editor-act="wrap" aria-pressed="true" title="Перенос строк" aria-label="Перенос строк"><i class="bi bi-text-wrap" aria-hidden="true"></i></button>
+    </span>
+    <span class="sl-editor-grp sl-editor-wide">
+      <button type="button" class="sl-modal-act" data-sl-editor-act="fold" data-sl-editor-need="cm" title="Свернуть всё (Ctrl+Alt+[)" aria-label="Свернуть всё"><i class="bi bi-chevron-bar-contract" aria-hidden="true"></i></button>
+      <button type="button" class="sl-modal-act" data-sl-editor-act="unfold" data-sl-editor-need="cm" title="Развернуть всё (Ctrl+Alt+])" aria-label="Развернуть всё"><i class="bi bi-chevron-bar-expand" aria-hidden="true"></i></button>
+    </span>
+    <span class="sl-editor-grp">
+      <button type="button" class="sl-modal-act" data-sl-editor-act="bold" data-sl-editor-need="markdown edit" title="Жирный (Ctrl+B)" aria-label="Жирный"><i class="bi bi-type-bold" aria-hidden="true"></i></button>
+      <button type="button" class="sl-modal-act" data-sl-editor-act="italic" data-sl-editor-need="markdown edit" title="Курсив (Ctrl+I)" aria-label="Курсив"><i class="bi bi-type-italic" aria-hidden="true"></i></button>
+      <button type="button" class="sl-modal-act" data-sl-editor-act="code" data-sl-editor-need="markdown edit" title="Код" aria-label="Код"><i class="bi bi-code" aria-hidden="true"></i></button>
+      <button type="button" class="sl-modal-act" data-sl-editor-act="link" data-sl-editor-need="markdown edit" title="Ссылка" aria-label="Ссылка"><i class="bi bi-link-45deg" aria-hidden="true"></i></button>
+      <button type="button" class="sl-modal-act" data-sl-editor-act="list" data-sl-editor-need="markdown edit" title="Список" aria-label="Список"><i class="bi bi-list-ul" aria-hidden="true"></i></button>
+      <button type="button" class="sl-modal-act" data-sl-editor-act="quote" data-sl-editor-need="markdown edit" title="Цитата" aria-label="Цитата"><i class="bi bi-quote" aria-hidden="true"></i></button>
+    </span>
+    <span class="sl-editor-grp">
+      <button type="button" class="sl-modal-act" data-sl-editor-act="files" data-sl-editor-need="files edit" aria-haspopup="dialog" title="Файловый менеджер" aria-label="Файловый менеджер"><i class="bi bi-folder" aria-hidden="true"></i></button>
+      <button type="button" class="sl-modal-act" data-sl-editor-act="emoji" data-sl-editor-need="text edit" aria-haspopup="dialog" title="Смайлы" aria-label="Смайлы"><i class="bi bi-emoji-smile" aria-hidden="true"></i></button>
+    </span>
+    <span class="sl-editor-grp sl-editor-wide">
+      <button type="button" class="sl-modal-act" data-sl-editor-act="pretty" data-sl-editor-need="lint edit" title="Тег на строку" aria-label="Тег на строку"><i class="bi bi-text-indent-left" aria-hidden="true"></i></button>
+      <button type="button" class="sl-modal-act" data-sl-editor-act="flat" data-sl-editor-need="lint edit" title="Собрать в одну строку" aria-label="Собрать в одну строку"><i class="bi bi-text-paragraph" aria-hidden="true"></i></button>
+    </span>
+    <span class="sl-editor-grp sl-editor-mid">
+      <button type="button" class="sl-modal-act" data-sl-editor-act="preview" data-sl-editor-need="preview" aria-pressed="false" title="Предварительный просмотр" aria-label="Предварительный просмотр"><i class="bi bi-eye" aria-hidden="true"></i></button>
+      <button type="button" class="sl-modal-act" data-sl-editor-act="diff" aria-haspopup="dialog" title="Сверка: было → стало" aria-label="Сверка: было → стало"><i class="bi bi-file-diff" aria-hidden="true"></i></button>
+      <button type="button" class="sl-modal-act" data-sl-editor-act="copy" title="Копировать" aria-label="Копировать"><i class="bi bi-copy" aria-hidden="true"></i></button>
+      <button type="button" class="sl-modal-act" data-sl-editor-act="reset" data-sl-editor-need="edit" title="Вернуть исходный текст" aria-label="Вернуть исходный текст"><i class="bi bi-arrow-repeat" aria-hidden="true"></i></button>
+    </span>
+    <span class="sl-editor-grp">
+      <button type="button" class="sl-modal-act" data-sl-editor-act="vars" data-sl-editor-need="vars edit" aria-haspopup="listbox" title="Вставить переменную" aria-label="Вставить переменную"><i class="bi bi-braces" aria-hidden="true"></i></button>
+      <button type="button" class="sl-modal-act" data-sl-editor-act="hint" data-sl-editor-need="vars edit" title="Подсказка у курсора (Ctrl+Space)" aria-label="Подсказка у курсора"><i class="bi bi-lightbulb" aria-hidden="true"></i></button>
+    </span>
+    <span class="sl-editor-grp">
+      <button type="button" class="sl-modal-act" data-sl-editor-act="palette" aria-haspopup="dialog" title="Команды (Ctrl+K)" aria-label="Команды"><i class="bi bi-command" aria-hidden="true"></i></button>
+      <button type="button" class="sl-modal-act sl-modal-act-move" data-sl-editor-act="grip" title="Переместить окно" aria-label="Переместить окно"><i class="bi bi-grip-vertical" aria-hidden="true"></i></button>
+      <button type="button" class="sl-modal-act" data-sl-editor-act="full" data-expand="Развернуть окно" data-restore="Свернуть окно" title="Развернуть окно" aria-label="Развернуть окно"><i class="bi bi-arrows-angle-expand" aria-hidden="true"></i></button>
+    </span>
+  </span>
+  <div class="sl-editor-draft" role="status" data-sl-editor-draft="">
+    <i class="bi bi-clock-history" aria-hidden="true"></i><span>В этой вкладке остался неотправленный текст этого поля.</span>
+    <button type="button" class="sl-modal-btn" data-sl-editor-act="restore"><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i>Восстановить</button>
+    <button type="button" class="sl-modal-btn" data-sl-editor-act="drop"><i class="bi bi-x-lg" aria-hidden="true"></i>Отбросить</button>
+  </div>
+  <ul class="sl-editor-issues" data-sl-editor-issues="" aria-label="Проверка" hidden=""><li data-sl-editor-tone="error"><button type="button" class="sl-editor-issue" data-sl-editor-go=""><i class="bi bi-x-octagon" aria-hidden="true"></i><span data-sl-editor-issue-text=""></span><small data-sl-editor-issue-pos=""></small></button><button type="button" class="sl-editor-fix" data-sl-editor-fix=""><i class="bi bi-magic" aria-hidden="true"></i><span></span></button></li><li data-sl-editor-tone="warning"><button type="button" class="sl-editor-issue" data-sl-editor-go=""><i class="bi bi-exclamation-triangle" aria-hidden="true"></i><span data-sl-editor-issue-text=""></span><small data-sl-editor-issue-pos=""></small></button><button type="button" class="sl-editor-fix" data-sl-editor-fix=""><i class="bi bi-magic" aria-hidden="true"></i><span></span></button></li><li data-sl-editor-tone="info"><button type="button" class="sl-editor-issue" data-sl-editor-go=""><i class="bi bi-info-circle" aria-hidden="true"></i><span data-sl-editor-issue-text=""></span><small data-sl-editor-issue-pos=""></small></button><button type="button" class="sl-editor-fix" data-sl-editor-fix=""><i class="bi bi-magic" aria-hidden="true"></i><span></span></button></li></ul>
+  <section class="sl-editor-view" data-sl-editor-view="" aria-label="Предварительный просмотр">
+    <div class="sl-editor-view-head"><i class="bi bi-eye" aria-hidden="true"></i><span>Предварительный просмотр</span><a class="sl-editor-view-open" data-sl-editor-view-open="" href="#" target="_blank" rel="noopener" hidden=""><i class="bi bi-box-arrow-up-right" aria-hidden="true"></i>Открыть образец</a></div>
+    <iframe class="sl-editor-view-frame" data-sl-editor-view-frame="" sandbox="allow-same-origin" title="Предварительный просмотр"></iframe>
+  </section>
+  <div class="sl-editor-hint" role="listbox" data-sl-editor-hint="" aria-label="Вставить переменную" hidden=""><button type="button" role="option" tabindex="-1" class="sl-editor-hint-row" data-sl-editor-var=""><code></code><span></span></button></div>
+  <dialog class="sl-modal sl-editor-pal" data-sl-editor-palette="" aria-labelledby="sl-editor-pal-title">
+    <div class="sl-modal-title">
+      <i class="bi bi-command" aria-hidden="true"></i>
+      <span class="sl-modal-cap"><strong id="sl-editor-pal-title">Команды</strong><span class="sl-modal-sub" data-sl-editor-pal-sub=""></span></span>
+      <span class="sl-modal-acts"><button type="button" class="sl-modal-act sl-modal-act-close" data-sl-close="" title="Закрыть" aria-label="Закрыть"><i class="bi bi-x-lg" aria-hidden="true"></i></button></span>
+    </div>
+    <div class="sl-modal-bar"><i class="bi bi-search" aria-hidden="true"></i><input type="search" class="sl-editor-pal-find" data-sl-focus="" role="combobox" aria-expanded="true" aria-controls="sl-editor-pal-list" aria-autocomplete="list" placeholder="Найти команду" aria-label="Найти команду" autocomplete="off" spellcheck="false"></div>
+    <div class="sl-modal-body sl-modal-body-flush sl-editor-pal-body">
+      <div id="sl-editor-pal-list" role="listbox" aria-labelledby="sl-editor-pal-title">
+        <div class="sl-editor-pal-group" role="group" aria-labelledby="sl-editor-pal-edit">
+          <div class="sl-editor-pal-cap" id="sl-editor-pal-edit">Правка</div>
+          <button type="button" role="option" tabindex="-1" class="sl-editor-pal-row" id="sl-editor-cmd-undo" data-sl-editor-cmd="undo" data-sl-editor-need="edit"><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i><span class="sl-editor-pal-name">Отменить</span><span class="sl-editor-pal-keys"><kbd>Ctrl</kbd><kbd>Z</kbd></span></button>
+          <button type="button" role="option" tabindex="-1" class="sl-editor-pal-row" id="sl-editor-cmd-redo" data-sl-editor-cmd="redo" data-sl-editor-need="edit"><i class="bi bi-arrow-clockwise" aria-hidden="true"></i><span class="sl-editor-pal-name">Повторить</span><span class="sl-editor-pal-keys"><kbd>Ctrl</kbd><kbd>Y</kbd></span></button>
+          <button type="button" role="option" tabindex="-1" class="sl-editor-pal-row" id="sl-editor-cmd-all" data-sl-editor-cmd="all"><i class="bi bi-cursor-text" aria-hidden="true"></i><span class="sl-editor-pal-name">Выделить всё</span><span class="sl-editor-pal-keys"><kbd>Ctrl</kbd><kbd>A</kbd></span></button>
+          <button type="button" role="option" tabindex="-1" class="sl-editor-pal-row" id="sl-editor-cmd-comment" data-sl-editor-cmd="comment" data-sl-editor-need="code edit"><i class="bi bi-chat-square-text" aria-hidden="true"></i><span class="sl-editor-pal-name">Закомментировать</span><span class="sl-editor-pal-keys"><kbd>Ctrl</kbd><kbd>/</kbd></span></button>
+          <button type="button" role="option" tabindex="-1" class="sl-editor-pal-row" id="sl-editor-cmd-copy" data-sl-editor-cmd="copy"><i class="bi bi-copy" aria-hidden="true"></i><span class="sl-editor-pal-name">Копировать</span><span class="sl-editor-pal-keys"></span></button>
+          <button type="button" role="option" tabindex="-1" class="sl-editor-pal-row" id="sl-editor-cmd-reset" data-sl-editor-cmd="reset" data-sl-editor-need="edit"><i class="bi bi-arrow-repeat" aria-hidden="true"></i><span class="sl-editor-pal-name">Вернуть исходный текст</span><span class="sl-editor-pal-keys"></span></button>
+        </div>
+        <div class="sl-editor-pal-group" role="group" aria-labelledby="sl-editor-pal-format">
+          <div class="sl-editor-pal-cap" id="sl-editor-pal-format">Формат</div>
+          <button type="button" role="option" tabindex="-1" class="sl-editor-pal-row" id="sl-editor-cmd-bold" data-sl-editor-cmd="bold" data-sl-editor-need="markdown edit"><i class="bi bi-type-bold" aria-hidden="true"></i><span class="sl-editor-pal-name">Жирный</span><span class="sl-editor-pal-keys"><kbd>Ctrl</kbd><kbd>B</kbd></span></button>
+          <button type="button" role="option" tabindex="-1" class="sl-editor-pal-row" id="sl-editor-cmd-italic" data-sl-editor-cmd="italic" data-sl-editor-need="markdown edit"><i class="bi bi-type-italic" aria-hidden="true"></i><span class="sl-editor-pal-name">Курсив</span><span class="sl-editor-pal-keys"><kbd>Ctrl</kbd><kbd>I</kbd></span></button>
+          <button type="button" role="option" tabindex="-1" class="sl-editor-pal-row" id="sl-editor-cmd-code" data-sl-editor-cmd="code" data-sl-editor-need="markdown edit"><i class="bi bi-code" aria-hidden="true"></i><span class="sl-editor-pal-name">Код</span><span class="sl-editor-pal-keys"></span></button>
+          <button type="button" role="option" tabindex="-1" class="sl-editor-pal-row" id="sl-editor-cmd-link" data-sl-editor-cmd="link" data-sl-editor-need="markdown edit"><i class="bi bi-link-45deg" aria-hidden="true"></i><span class="sl-editor-pal-name">Ссылка</span><span class="sl-editor-pal-keys"></span></button>
+          <button type="button" role="option" tabindex="-1" class="sl-editor-pal-row" id="sl-editor-cmd-list" data-sl-editor-cmd="list" data-sl-editor-need="markdown edit"><i class="bi bi-list-ul" aria-hidden="true"></i><span class="sl-editor-pal-name">Список</span><span class="sl-editor-pal-keys"></span></button>
+          <button type="button" role="option" tabindex="-1" class="sl-editor-pal-row" id="sl-editor-cmd-quote" data-sl-editor-cmd="quote" data-sl-editor-need="markdown edit"><i class="bi bi-quote" aria-hidden="true"></i><span class="sl-editor-pal-name">Цитата</span><span class="sl-editor-pal-keys"></span></button>
+          <button type="button" role="option" tabindex="-1" class="sl-editor-pal-row" id="sl-editor-cmd-pretty" data-sl-editor-cmd="pretty" data-sl-editor-need="lint edit"><i class="bi bi-text-indent-left" aria-hidden="true"></i><span class="sl-editor-pal-name">Тег на строку</span><span class="sl-editor-pal-keys"></span></button>
+          <button type="button" role="option" tabindex="-1" class="sl-editor-pal-row" id="sl-editor-cmd-flat" data-sl-editor-cmd="flat" data-sl-editor-need="lint edit"><i class="bi bi-text-paragraph" aria-hidden="true"></i><span class="sl-editor-pal-name">Собрать в одну строку</span><span class="sl-editor-pal-keys"></span></button>
+        </div>
+        <div class="sl-editor-pal-group" role="group" aria-labelledby="sl-editor-pal-insert">
+          <div class="sl-editor-pal-cap" id="sl-editor-pal-insert">Вставка</div>
+          <button type="button" role="option" tabindex="-1" class="sl-editor-pal-row" id="sl-editor-cmd-files" data-sl-editor-cmd="files" data-sl-editor-need="files edit"><i class="bi bi-folder" aria-hidden="true"></i><span class="sl-editor-pal-name">Файлы: загрузить и вставить</span><span class="sl-editor-pal-keys"></span></button>
+          <button type="button" role="option" tabindex="-1" class="sl-editor-pal-row" id="sl-editor-cmd-emoji" data-sl-editor-cmd="emoji" data-sl-editor-need="text edit"><i class="bi bi-emoji-smile" aria-hidden="true"></i><span class="sl-editor-pal-name">Смайлы</span><span class="sl-editor-pal-keys"></span></button>
+        </div>
+        <div class="sl-editor-pal-group" role="group" aria-labelledby="sl-editor-pal-vars" data-sl-editor-pal-vars="">
+          <div class="sl-editor-pal-cap" id="sl-editor-pal-vars">Вставить переменную</div>
+          <button type="button" role="option" tabindex="-1" class="sl-editor-pal-row" id="sl-editor-cmd-hint" data-sl-editor-cmd="hint" data-sl-editor-need="vars edit"><i class="bi bi-lightbulb" aria-hidden="true"></i><span class="sl-editor-pal-name">Подсказка у курсора</span><span class="sl-editor-pal-keys"><kbd>Ctrl</kbd><kbd>Space</kbd></span></button>
+          <button type="button" role="option" tabindex="-1" class="sl-editor-pal-row" data-sl-editor-cmd="var" data-sl-editor-need="vars edit" data-sl-editor-var=""><i class="bi bi-braces" aria-hidden="true"></i><span class="sl-editor-pal-name"></span><span class="sl-editor-pal-keys"></span></button>
+        </div>
+        <div class="sl-editor-pal-group" role="group" aria-labelledby="sl-editor-pal-view">
+          <div class="sl-editor-pal-cap" id="sl-editor-pal-view">Вид</div>
+          <button type="button" role="option" tabindex="-1" class="sl-editor-pal-row" id="sl-editor-cmd-search" data-sl-editor-cmd="search" data-sl-editor-need="cm"><i class="bi bi-search" aria-hidden="true"></i><span class="sl-editor-pal-name">Найти и заменить</span><span class="sl-editor-pal-keys"><kbd>Ctrl</kbd><kbd>F</kbd></span></button>
+          <button type="button" role="option" tabindex="-1" class="sl-editor-pal-row" id="sl-editor-cmd-lint" data-sl-editor-cmd="lint" data-sl-editor-need="lint"><i class="bi bi-check2-square" aria-hidden="true"></i><span class="sl-editor-pal-name">Проверка</span><span class="sl-editor-pal-keys"><kbd>Ctrl</kbd><kbd>Shift</kbd><kbd>M</kbd></span></button>
+          <button type="button" role="option" tabindex="-1" class="sl-editor-pal-row" id="sl-editor-cmd-preview" data-sl-editor-cmd="preview" data-sl-editor-need="preview"><i class="bi bi-eye" aria-hidden="true"></i><span class="sl-editor-pal-name">Предварительный просмотр</span><span class="sl-editor-pal-keys"></span></button>
+          <button type="button" role="option" tabindex="-1" class="sl-editor-pal-row" id="sl-editor-cmd-diff" data-sl-editor-cmd="diff"><i class="bi bi-file-diff" aria-hidden="true"></i><span class="sl-editor-pal-name">Сверка: было → стало</span><span class="sl-editor-pal-keys"></span></button>
+          <button type="button" role="option" tabindex="-1" class="sl-editor-pal-row" id="sl-editor-cmd-wrap" data-sl-editor-cmd="wrap"><i class="bi bi-text-wrap" aria-hidden="true"></i><span class="sl-editor-pal-name">Перенос строк</span><span class="sl-editor-pal-keys"></span></button>
+          <button type="button" role="option" tabindex="-1" class="sl-editor-pal-row" id="sl-editor-cmd-fold" data-sl-editor-cmd="fold" data-sl-editor-need="cm"><i class="bi bi-chevron-bar-contract" aria-hidden="true"></i><span class="sl-editor-pal-name">Свернуть всё</span><span class="sl-editor-pal-keys"><kbd>Ctrl</kbd><kbd>Alt</kbd><kbd>[</kbd></span></button>
+          <button type="button" role="option" tabindex="-1" class="sl-editor-pal-row" id="sl-editor-cmd-unfold" data-sl-editor-cmd="unfold" data-sl-editor-need="cm"><i class="bi bi-chevron-bar-expand" aria-hidden="true"></i><span class="sl-editor-pal-name">Развернуть всё</span><span class="sl-editor-pal-keys"><kbd>Ctrl</kbd><kbd>Alt</kbd><kbd>]</kbd></span></button>
+          <button type="button" role="option" tabindex="-1" class="sl-editor-pal-row" id="sl-editor-cmd-full" data-sl-editor-cmd="full"><i class="bi bi-arrows-angle-expand" aria-hidden="true"></i><span class="sl-editor-pal-name">Развернуть редактор на весь экран</span><span class="sl-editor-pal-keys"></span></button>
+        </div>
+      </div>
+      <p class="sl-editor-pal-empty" data-sl-pal-empty="" hidden="">Ничего не найдено</p>
+      <section class="sl-editor-pal-help" data-sl-pal-help="" aria-labelledby="sl-editor-pal-keys">
+        <div class="sl-editor-pal-cap" id="sl-editor-pal-keys"><i class="bi bi-keyboard" aria-hidden="true"></i>Горячие клавиши</div>
+        <dl class="sl-editor-pal-keymap">
+          <div data-sl-editor-need="cm"><dt><kbd>Ctrl</kbd><kbd>D</kbd></dt><dd>выделить следующее совпадение</dd></div>
+          <div data-sl-editor-need="cm"><dt><kbd>Ctrl</kbd><kbd>L</kbd></dt><dd>выделить строку</dd></div>
+          <div data-sl-editor-need="cm"><dt><kbd>Alt</kbd><kbd>↑</kbd><kbd>↓</kbd></dt><dd>переместить строку</dd></div>
+          <div data-sl-editor-need="cm"><dt><kbd>Shift</kbd><kbd>Alt</kbd><kbd>↑</kbd><kbd>↓</kbd></dt><dd>копировать строку</dd></div>
+          <div data-sl-editor-need="cm"><dt><kbd>Ctrl</kbd><kbd>Shift</kbd><kbd>K</kbd></dt><dd>удалить строку</dd></div>
+          <div data-sl-editor-need="cm"><dt><kbd>Ctrl</kbd><kbd>]</kbd><kbd>[</kbd></dt><dd>отступ больше, меньше</dd></div>
+          <div data-sl-editor-need="cm"><dt><kbd>Ctrl</kbd><kbd>Shift</kbd><kbd>\</kbd></dt><dd>к парной скобке</dd></div>
+          <div data-sl-editor-need="cm"><dt><kbd>Ctrl</kbd></dt><dd>щелчок — ещё один курсор</dd></div>
+          <div data-sl-editor-need="markdown"><dt><kbd>Enter</kbd></dt><dd>продолжить список</dd></div>
+          <div data-sl-editor-need="lint cm"><dt><kbd>F8</kbd></dt><dd>к следующей проблеме</dd></div>
+          <div><dt><kbd>Esc</kbd></dt><dd>закрыть окно, выйти из экрана</dd></div>
+        </dl>
+      </section>
+    </div>
+    <div class="sl-modal-foot"><span class="sl-modal-info"><kbd>↑</kbd><kbd>↓</kbd> выбор · <kbd>Enter</kbd> выполнить · <kbd>Esc</kbd> закрыть · <kbd>Ctrl</kbd><kbd>K</kbd> из любого редактора</span></div>
+  </dialog>
+  <dialog class="sl-modal sl-modal-lg sl-editor-diff" data-sl-editor-diff="" aria-labelledby="sl-editor-diff-title">
+    <div class="sl-modal-title">
+      <i class="bi bi-file-diff" aria-hidden="true"></i>
+      <span class="sl-modal-cap"><strong id="sl-editor-diff-title">Сверка: было → стало</strong><span class="sl-modal-sub" data-sl-editor-diff-sub=""></span></span>
+      <span class="sl-modal-acts"><button type="button" class="sl-modal-act sl-modal-act-close" data-sl-close="" title="Закрыть" aria-label="Закрыть"><i class="bi bi-x-lg" aria-hidden="true"></i></button></span>
+    </div>
+    <div class="sl-modal-bar">
+      <span class="sl-editor-diff-modes" role="group" aria-label="Вид сверки">
+        <button type="button" class="sl-editor-diff-mode" data-sl-editor-diff-view="all" aria-pressed="true"><i class="bi bi-list" aria-hidden="true"></i>Вместе</button>
+        <button type="button" class="sl-editor-diff-mode" data-sl-editor-diff-view="side" aria-pressed="false"><i class="bi bi-layout-split" aria-hidden="true"></i>Рядом</button>
+      </span>
+      <span class="sl-editor-diff-count" data-sl-editor-diff-count=""><span class="sl-editor-diff-ins" data-sl-editor-diff-ins=""></span><span class="sl-editor-diff-del" data-sl-editor-diff-del=""></span></span>
+    </div>
+    <div class="sl-modal-body sl-editor-diff-body">
+      <p class="sl-editor-diff-same" data-sl-editor-diff-same=""><i class="bi bi-check-circle" aria-hidden="true"></i>Изменений нет: текст совпадает с исходным</p>
+      <div class="sl-editor-diff-code" data-sl-editor-diff-all=""></div>
+      <div class="sl-editor-diff-side" data-sl-editor-diff-side="" hidden="">
+        <section><h3 class="sl-editor-diff-cap">Было</h3><div class="sl-editor-diff-code" data-sl-editor-diff-was=""></div></section>
+        <section><h3 class="sl-editor-diff-cap">Стало</h3><div class="sl-editor-diff-code" data-sl-editor-diff-now=""></div></section>
+      </div>
+    </div>
+    <div class="sl-modal-foot">
+      <span class="sl-modal-info" aria-live="polite">Здесь ничего не меняется: форма сохранит «Стало»</span>
+      <button type="button" class="sl-modal-btn" data-sl-editor-diff-back=""><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i>Вернуть было</button>
+      <button type="button" class="sl-modal-btn sl-modal-btn-main" data-sl-close="" data-sl-focus=""><i class="bi bi-check-lg" aria-hidden="true"></i>Оставить стало</button>
+    </div>
+  </dialog>
+</template>
 
   <!-- The notice of the panel, as fragments/toast.html prints it -->
   <div class="sl-toast-host" aria-live="polite">
