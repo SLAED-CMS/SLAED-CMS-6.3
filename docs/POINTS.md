@@ -451,8 +451,9 @@ The points unit of the 6.3 data update is `setUpdatePoints()` in `update.php`; i
   and a state (`prepared`, `applying`, `verified`). The snapshot plus the journal restore any account; the journal
   alone cannot restore unknown history.
 - A repeat never takes the snapshot again: it resumes from the manifest, and a `verified` unit is skipped. Journal
-  rows or an existing `update.points` mark without a manifest stop the unit, because a current balance is never
-  taken for a starting one. A snapshot that does not match its manifest stops it too.
+  rows without a manifest stop the unit, because a current balance is never taken for a starting one; an existing
+  `update.points` mark without a manifest is a unit that ran on the site before and answers done without writing. A
+  snapshot that does not match its manifest stops it too.
 - The legacy switch `users.point` becomes `points.active` (`'1'`/`'0'`); `config/points.php` is written only when
   the value differs, and `config/users.php` only when it still carries `point` or `points`, which are removed. The
   shipped `points.php` is otherwise not rewritten. A points scope without fourteen actions or with a bad `active`

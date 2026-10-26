@@ -127,7 +127,7 @@ function add(): void {
     } else {
         $mid = getVar('post', 'mid', 'num');
         $title = getVar('post', 'title', 'title');
-        $body = getVar('post', 'body', 'text');
+        $body = filterSourceText(getVar('post', 'body', 'raw', ''), isAdmin(true));
         $days = getVar('post', 'expire', 'num', 0);
         [$expire] = ($mid ? $db->getSqlRow($db->getSqlQuery('SELECT expire FROM '.PREFIX_DB.'_message WHERE id = :mid', ['mid' => $mid])) : false) ?: [null];
         $active = getVar('post', 'status', 'num');
@@ -141,7 +141,7 @@ function add(): void {
     if ($body) $cont .= getTplPreviewContent(['title' => $title, 'texta' => $body, 'mod' => 'all']);
     $langsel = '';
     if ($conf['multilingual'] == 1) {
-        $langsel = $tpl->getHtmlFrag('select', ['name_attr' => 'lang', 'options_html' => getTplLanguageOptions($lang, 1)]);
+        $langsel = $tpl->getHtmlFrag('select', ['name_attr' => 'lang', 'options_html' => getTplLanguageOptions($lang)]);
     }
     if ($expire) {
         $newexpire = 0;
@@ -235,7 +235,7 @@ function save(): void {
     $stop = [];
     $mid = getVar('post', 'mid', 'num');
     $title = filterCutText(getVar('post', 'title', 'title'), 100);
-    $body = getVar('post', 'body', 'text');
+    $body = filterSourceText(getVar('post', 'body', 'raw', ''), isAdmin(true));
     $days = getVar('post', 'expire', 'num', 0);
     $active = getVar('post', 'status', 'num');
     $view = getVar('post', 'view', 'num');

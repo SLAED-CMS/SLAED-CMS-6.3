@@ -713,7 +713,6 @@ define('_SITEMAP_XML','Ta mapa serwisu przeznaczona jest dla wyszukiwarek, jest 
 define('_SITENAME','Nazwa strony');
 define('_SITEURL','Adres strony internetowej');
 define('_SIZE','Rozmiar');
-define('_SMILIE','Uśmiech');
 define('_SORT','Sortowanie');
 define('_SPEC','Specjalna');
 define('_SPEC_GROUP','Specjalna grupa');

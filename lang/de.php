@@ -713,7 +713,6 @@ define('_SITEMAP_XML','Diese Sitemap ist für die Suchmaschinen entwickelt, es e
 define('_SITENAME','Name der Webseite');
 define('_SITEURL','URL der Seite');
 define('_SIZE','Größe');
-define('_SMILIE','Smilie');
 define('_SORT','Sortierung');
 define('_SPEC','Speziell');
 define('_SPEC_GROUP','Die spezielle Gruppe');

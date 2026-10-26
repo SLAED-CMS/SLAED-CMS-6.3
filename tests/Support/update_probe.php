@@ -223,7 +223,7 @@ function getProbeResume(): array {
     return $out;
 }
 
-# The stops: journal rows or a mark without a manifest, a snapshot that no longer matches its manifest, and a points scope that is not the shipped shape
+# The stops: journal rows without a manifest, a snapshot that left its manifest, a points scope of another shape; a mark without a manifest is done
 function getProbeStop(): array {
     $out = [];
     setProbeSite('0');
@@ -375,7 +375,7 @@ function getRateResume(): array {
     return $out;
 }
 
-# The stops: target rows or a mark without a manifest, a forged snapshot, a stored row and an owner that left the snapshot, and the broken sources the preflight names together
+# The stops: target rows without a manifest, a forged snapshot, a stored row and an owner that left the snapshot, the broken sources; a mark alone is done
 function getRateStop(): array {
     $out = [];
     setRateSite();
@@ -528,7 +528,7 @@ function getFieldResume(): array {
     return $out;
 }
 
-# The stops: a mark without a manifest, named definitions over positional rows, a forged snapshot, a stored row that is neither source nor target
+# A mark without a manifest, which is done, and the stops: named definitions over positional rows, a forged snapshot, a stored row that is neither source nor target
 # Every broken row and every broken definition is one the preflight has to name together without writing anything
 function getFieldStop(): array {
     $out = [];

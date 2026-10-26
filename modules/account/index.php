@@ -1448,8 +1448,8 @@ function savehome(): void {
     }
     if (!checkSiteToken(getVar('post', 'token', 'raw', ''), 'account')) $stop[] = _ERROR;
     $mail = getVar('post', 'mail', 'text');
-    $sig = getVar('post', 'sig', 'text');
-    $block = getVar('post', 'block', 'text');
+    $sig = filterSourceText(getVar('post', 'sig', 'raw', ''), isAdmin(true));
+    $block = filterSourceText(getVar('post', 'block', 'raw', ''), isAdmin(true));
     $prev = count((array)$stop);
     checkemail($mail);
     $last = count((array)$stop);

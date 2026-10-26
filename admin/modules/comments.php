@@ -158,15 +158,15 @@ function edit(): void {
     $ip = (string)($row['ip'] ?? '');
     $modname = trim((string)getModuleName($cmod));
     $modlabel = ($modname !== '') ? $modname.' - '.$cmod : $cmod;
-    $post = $nick ? user_info($nick, null) : (($row['name'] ?? '') ?: _ANONYM);
+    $post = $nick ? user_info($nick, null) : htmlspecialchars(($row['name'] ?? '') ?: _ANONYM, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
     $iptext = $ip ? Geoip::getIpHtml($ip) : _NO;
     $rows = [
         ['label_html' => _MODUL, 'field_html' => htmlspecialchars($modlabel, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')],
         ['label_html' => _ID, 'field_html' => (string)($row['cid'] ?? '')],
-        ['label_html' => _POSTEDBY, 'field_html' => htmlspecialchars((string)$post, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')],
+        ['label_html' => _POSTEDBY, 'field_html' => $post],
         ['label_html' => _DATE, 'field_html' => format_time((string)($row['time'] ?? ''), _TIMESTRING)],
         ['label_html' => _COMMENTS_EDITED, 'field_html' => ((string)($row['edited'] ?? '') !== '') ? format_time((string)$row['edited'], _TIMESTRING) : (string)_NO],
-        ['label_html' => _IP, 'field_html' => htmlspecialchars((string)$iptext, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')],
+        ['label_html' => _IP, 'field_html' => $iptext],
         ['label_html' => _STATUS, 'field_html' => ad_status('', $row['status'] ?? null)],
         [
             'label_for' => 'f-comment',

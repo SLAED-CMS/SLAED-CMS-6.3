@@ -9,16 +9,12 @@ namespace {
     if (!defined('_QUOTE'))    define('_QUOTE',    'Quote');
     if (!defined('_HIDE'))     define('_HIDE',     'Hidden');
     if (!defined('_HIDETEXT')) define('_HIDETEXT', 'Show');
-    if (!defined('_SMILIE'))   define('_SMILIE',   'Smilie');
     if (!defined('_CODE'))     define('_CODE',     'Code');
     if (!defined('_COPY'))     define('_COPY',     'Copy');
     if (!defined('_COPYDONE')) define('_COPYDONE', 'Copied');
     if (!defined('_SHOWALL'))  define('_SHOWALL',  'Show all');
     if (!defined('_COLLAPSE')) define('_COLLAPSE', 'Collapse');
 
-    if (!function_exists('getThemeFileUrl')) {
-        function getThemeFileUrl(string $path): string { return '/'.$path; }
-    }
     if (!function_exists('replace_break')) {
         function replace_break(string $s): string { return $s; }
     }
@@ -80,9 +76,9 @@ namespace Tests\Unit {
             unset($GLOBALS['tpl']);
         }
 
-        # Stage 2 of docs/COMMENTS-REDESIGN-2026.md renders comments at safe = true, so the inline BB pairs the parser reads for old content survive the safe escape
+        # The BB tags the parser no longer reads are text in every mode, so a stray one shows as the author typed it and never as markup
         # Script-bearing schemes must die in trusted mode too: comments render at safe=false, so an allowlist that only applies to safe mode leaves stored XSS reachable
-        # Code wins over the bracket layer, which is what lets a document write a tag as an example instead of executing it
+        # Code wins over the SLAED tags, which is what lets a document write a tag as an example instead of executing it
         # A conversation channel breaks on the line ending its author typed; plain Markdown joins those lines and plain format recognizes no Markdown at all
         # The super administrator capability is a write-boundary rule, so the parser still runs the tag it was handed; safe mode leaves it as the typed literal text
         public static function deterministicCases(): array
@@ -104,12 +100,18 @@ namespace Tests\Unit {
                 'italic md'       => ['*italic*',   true, '', '<p><em>italic</em></p>'],
                 'del mark'        => ['~~del~~ ==mark==', true, '', '<p><del>del</del> <mark>mark</mark></p>'],
                 'link md'         => ['[link](https://example.com)', true, '', '<p><a href="https://example.com">link</a></p>'],
-                'bold md + bb bold' => ['**bold** и [b]bb-bold[/b]', true, '', '<p><strong>bold</strong> и <strong>bb-bold</strong></p>'],
-                'bb pairs safe'     => ['[i]i[/i] [u]u[/u] [s]s[/s]', true, '', '<p><em>i</em> <u>u</u> <del>s</del></p>'],
-                'bb color safe'     => ['[color=red]r[/color]', true, '', '<p><span style="color:red">r</span></p>'],
-                'bb color bad safe' => ['[color=x:y]r[/color]', true, '', '<p>r</p>'],
-                'bb size safe'      => ['[size=99]big[/size]', true, '', '<p><span style="font-size:48px">big</span></p>'],
-                'bb html stays out' => ['[b]<img src=x onerror=alert(1)>[/b]', true, '', '<p><strong>&lt;img src=x onerror=alert(1)&gt;</strong></p>'],
+                'bold md + bb bold' => ['**bold** и [b]bb-bold[/b]', true, '', '<p><strong>bold</strong> и [b]bb-bold[/b]</p>'],
+                'bb pairs are text' => ['[i]i[/i] [u]u[/u] [s]s[/s]', false, '', '<p>[i]i[/i] [u]u[/u] [s]s[/s]</p>'],
+                'bb spans are text' => ['[color=red]r[/color] [size=9]s[/size] [family=Arial]f[/family]', true, '',
+                    '<p>[color=red]r[/color] [size=9]s[/size] [family=Arial]f[/family]</p>'],
+                'bb html stays out' => ['[b]<img src=x onerror=alert(1)>[/b]', true, '', '<p>[b]&lt;img src=x onerror=alert(1)&gt;[/b]</p>'],
+                'bb blocks are text' => ["[quote]q[/quote]\n\n[center]c[/center]\n\n[hr]\n\n[li]x", false, '',
+                    "<p>[quote]q[/quote]</p>\n<p>[center]c[/center]</p>\n<p>[hr]</p>\n<p>[li]x</p>"],
+                'bb code is markdown' => ['[code]a\.b[/code] [php]echo 1;[/php]', true, '', '<p>[code]a.b[/code] [php]echo 1;[/php]</p>'],
+                'bb media are text'  => ['[img]/x.png[/img] [img=left alt=A]/x.png[/img] [url=/a]t[/url] [mail=a]m[/mail]', true, '',
+                    '<p>[img]/x.png[/img] [img=left alt=A]/x.png[/img] [url=/a]t[/url] [mail=a]m[/mail]</p>'],
+                'ed2k is text'       => ['[url]ed2k://|file|a.zip|10|ABC|/[/url]', true, '', '<p>[url]ed2k://|file|a.zip|10|ABC|/[/url]</p>'],
+                'smilie is text'     => ['*01 text *18', false, '', '<p>*01 text *18</p>'],
 
                 'ul basic' => ["- a\n- b\n- c", true, '', "<ul>\n<li>a</li>\n<li>b</li>\n<li>c</li>\n</ul>"],
                 'ol basic' => ["1. a\n2. b",     true, '', "<ol>\n<li>a</li>\n<li>b</li>\n</ol>"],
@@ -133,26 +135,26 @@ namespace Tests\Unit {
                     ."<tr><td style=\"text-align:left\">a</td><td style=\"text-align:center\">b</td><td style=\"text-align:right\">c</td></tr>\n</tbody>\n</table>",
                 ],
 
-                'url bb safe javascript' => ['[url]javascript:x[/url]',       true, '', '<p><a href="#">javascript:x</a></p>'],
-                'url bb safe data html'  => ['[url]data:text/html,x[/url]',    true, '', '<p><a href="#">data:text/html,x</a></p>'],
+                'url md safe javascript' => ['[l](javascript:x)',              true, '', '<p><a href="#">l</a></p>'],
+                'url autolink safe javascript' => ['<javascript:x>',           true, '', '<p><a href="#">javascript:x</a></p>'],
                 'url md safe data html'  => ['[l](data:text/html,x)',          true, '', '<p><a href="#">l</a></p>'],
-                'url bb unsafe data html' => ['[url]data:text/html,x[/url]',   false, '', '<p><a href="#">data:text/html,x</a></p>'],
                 'url md unsafe data html' => ['[l](data:text/html,x)',         false, '', '<p><a href="#">l</a></p>'],
-                'url bb unsafe uppercase data' => ['[url]DATA:text/html,x[/url]', false, '', '<p><a href="#">DATA:text/html,x</a></p>'],
-                'url bb unsafe other scheme'   => ['[url]ftp://ok.com/f[/url]',   false, '', '<p><a href="ftp://ok.com/f">ftp://ok.com/f</a></p>'],
-                'url bb safe https'      => ['[url]https://ok.com[/url]',      true, '', '<p><a href="https://ok.com">https://ok.com</a></p>'],
-                'url bb safe mailto'     => ['[url]mailto:a@b.com[/url]',      true, '', '<p><a href="mailto:a@b.com">mailto:a@b.com</a></p>'],
-                'url bb safe local'      => ['[url]/local/path[/url]',         true, '', '<p><a href="/local/path">/local/path</a></p>'],
-                'url bb safe relative'   => ['[url]../uploads/file.pdf[/url]', true, '', '<p><a href="../uploads/file.pdf">../uploads/file.pdf</a></p>'],
+                'url md unsafe uppercase data' => ['[l](DATA:text/html,x)',    false, '', '<p><a href="#">l</a></p>'],
+                'url md unsafe other scheme'   => ['[l](ftp://ok.com/f)',      false, '', '<p><a href="ftp://ok.com/f">l</a></p>'],
+                'url md safe other scheme'     => ['[l](ftp://ok.com/f)',      true,  '', '<p><a href="#">l</a></p>'],
+                'url autolink safe https' => ['<https://ok.com>',              true, '', '<p><a href="https://ok.com">https://ok.com</a></p>'],
+                'url md safe mailto'     => ['[l](mailto:a@b.com)',            true, '', '<p><a href="mailto:a@b.com">l</a></p>'],
+                'url md safe local'      => ['[l](/local/path)',               true, '', '<p><a href="/local/path">l</a></p>'],
+                'url md safe relative'   => ['[l](../uploads/file.pdf)',       true, '', '<p><a href="../uploads/file.pdf">l</a></p>'],
 
-                'url bb unsafe javascript'        => ['[url]javascript:x[/url]',      false, '', '<p><a href="#">javascript:x</a></p>'],
                 'url md unsafe javascript'        => ['[l](javascript:x)',            false, '', '<p><a href="#">l</a></p>'],
-                'url bb unsafe vbscript'          => ['[url]vbscript:x[/url]',        false, '', '<p><a href="#">vbscript:x</a></p>'],
-                'url bb safe vbscript'            => ['[url]vbscript:x[/url]',        true,  '', '<p><a href="#">vbscript:x</a></p>'],
-                'url bb unsafe mixed case js'     => ['[url]JaVaScRiPt:x[/url]',      false, '', '<p><a href="#">JaVaScRiPt:x</a></p>'],
-                'url bb unsafe javascript space'  => ['[url] javascript:x[/url]',     false, '', '<p><a href="#">javascript:x</a></p>'],
-                'url bb unsafe javascript tab'    => ["[url]java\tscript:x[/url]",    false, '', "<p><a href=\"#\">java\tscript:x</a></p>"],
-                'url bb unsafe javascript entity' => ['[url]java&#9;script:x[/url]',  false, '', "<p><a href=\"#\">java\tscript:x</a></p>"],
+                'url autolink unsafe javascript'  => ['<javascript:x>',               false, '', '<p><a href="#">javascript:x</a></p>'],
+                'url md unsafe vbscript'          => ['[l](vbscript:x)',              false, '', '<p><a href="#">l</a></p>'],
+                'url md safe vbscript'            => ['[l](vbscript:x)',              true,  '', '<p><a href="#">l</a></p>'],
+                'url md unsafe mixed case js'     => ['[l](JaVaScRiPt:x)',            false, '', '<p><a href="#">l</a></p>'],
+                'url md unsafe javascript space'  => ['[l]( javascript:x)',           false, '', '<p><a href="#">l</a></p>'],
+                'url md unsafe javascript tab'    => ["[l](<java\tscript:x>)",        false, '', '<p><a href="java%09script:x">l</a></p>'],
+                'url md unsafe javascript entity' => ['[l](java&#9;script:x)',        false, '', '<p><a href="java%09script:x">l</a></p>'],
 
                 'safe script tag' => ['<script>alert(1)</script>',              true,  '', '<p>&lt;script&gt;alert(1)&lt;/script&gt;</p>'],
                 'safe b tag'      => ['<b>ok</b>',                              true,  '', '<p>&lt;b&gt;ok&lt;/b&gt;</p>'],
@@ -162,13 +164,11 @@ namespace Tests\Unit {
                 'unsafe div block'  => ["<div class=\"x\">\ntext\n</div>",    false, '', "<div class=\"x\">\ntext\n</div>"],
                 'usehtml tag'       => ['[usehtml]<b>html</b>[/usehtml]',     false, '', '<b>html</b>'],
 
-                'code span keeps bb pair'   => ['`[quote]x[/quote]`',   true,  '', '<p><code>[quote]x[/quote]</code></p>'],
-                'code span keeps lone tag'  => ['`[hr]` and `[li]`',    true,  '', '<p><code>[hr]</code> and <code>[li]</code></p>'],
-                'code span keeps smilie'    => ['`*01`',                true,  '', '<p><code>*01</code></p>'],
+                'code span keeps tag pair'  => ['`[hide]x[/hide]`',     true,  '', '<p><code>[hide]x[/hide]</code></p>'],
+                'code span keeps lone tag'  => ['`[tabs=1]` and `[tab=a]`', true, '', '<p><code>[tabs=1]</code> and <code>[tab=a]</code></p>'],
                 'code span keeps trusted'   => ['`[usehtml]x[/usehtml]`', false, '', '<p><code>[usehtml]x[/usehtml]</code></p>'],
-                'link target keeps smilie'  => ['[a](/x*01) <https://y/*02>', true, '', '<p><a href="/x*01">a</a> <a href="https://y/*02">https://y/*02</a></p>'],
-                'bb url keeps a bare url'   => ['[url]https://ok.com/a[/url]', true, '', '<p><a href="https://ok.com/a">https://ok.com/a</a></p>'],
-                'bare tag still runs'       => ['[hr]',                 true,  '', '<hr>'],
+                'link target keeps tag'     => ['[a](/x[hide]y[/hide]) <https://y/[hide]>', true, '',
+                    '<p><a href="/x%5Bhide%5Dy%5B/hide%5D">a</a> <a href="https://y/%5Bhide%5D">https://y/[hide]</a></p>'],
 
                 'markdown joins soft lines' => ["one\ntwo",             true,  '', '<p>one'."\n".'two</p>'],
                 'breaks keep soft lines'    => ["one\ntwo",             true,  '', '<p>one<br>'."\n".'two</p>', 'breaks'],
@@ -223,7 +223,7 @@ namespace Tests\Unit {
                 'hidden block varies'        => ['[hide]secret[/hide]',                 true,  true],
                 'executed php varies'        => ['[usephp]echo 1;[/usephp]',            false, true],
                 'markdown image varies'      => ['![alt](uploads/all/x.png)',           true,  true],
-                'bb image varies'            => ['[img]uploads/all/x.png[/img]',        true,  true],
+                'bb image is storable text'  => ['[img]uploads/all/x.png[/img]',        true,  false],
                 'attachment varies'          => ['[attach=nosuchfile.pdf align=left title=t]', true, true],
             ];
         }
@@ -240,12 +240,9 @@ namespace Tests\Unit {
         public static function runtimeCases(): array
         {
             return [
-                '[quote]текст[/quote]'                          => ['[quote]текст[/quote]'],
                 '[hide]секрет[/hide]'                           => ['[hide]секрет[/hide]'],
-                '[quote][quote]inner[/quote][/quote]'           => ['[quote][quote]inner[/quote][/quote]'],
-                '[hide][quote]q[/quote][/hide]'                 => ['[hide][quote]q[/quote][/hide]'],
-                '[quote][quote][quote]deep[/quote][/quote][/quote]' => ['[quote][quote][quote]deep[/quote][/quote][/quote]'],
-                '[quote] with list'                             => ["[quote]\n- item1\n- item2\n[/quote]"],
+                '[hide] with a quote'                           => ["[hide]\n> > q\n[/hide]"],
+                '[hide] with list'                              => ["[hide]\n- item1\n- item2\n[/hide]"],
                 'img alt'                                       => ['![alt text](img.jpg)'],
                 'img title'                                     => ['![](img.jpg "My title")'],
             ];
@@ -285,15 +282,14 @@ namespace Tests\Unit {
 
             try {
                 $parser = new \Parser();
-                $missing = $parser->filterContent('[img]/uploads/parser-missing.png[/img]', true, '');
-                $this->assertStringContainsString('class="bi bi-image sl-img-placeholder sl-img"', $missing);
+                $missing = $parser->filterContent('![gone](/uploads/parser-missing.png)', true, '');
+                $this->assertStringContainsString('<i class="bi bi-image sl-img-placeholder" role="img" aria-label="gone">', $missing);
 
-                $aligned = $parser->filterContent('[img=right]/uploads/parser-missing.png[/img]', true, '');
-                $this->assertStringContainsString('class="bi bi-image sl-img-placeholder sl-img sl-img-right"', $aligned);
-
-                $existing = $parser->filterContent('[img=right]/templates/lite/images/favicon.svg[/img]', true, '');
-                $this->assertStringContainsString('class="sl-img sl-img-right"', $existing);
+                $existing = $parser->filterContent('![](/templates/lite/images/favicon.svg)', true, '');
+                $this->assertStringContainsString('src="/templates/lite/images/favicon.svg"', $existing);
+                $this->assertStringContainsString('alt=""', $existing, 'A Markdown image without a description took an alt CommonMark does not give it');
                 $this->assertStringContainsString('onerror="this.onerror=null;this.hidden=true;this.nextElementSibling.hidden=false"', $existing);
+                $this->assertStringNotContainsString('class="sl-img', $existing);
                 $this->assertStringNotContainsString('style=', $existing);
             } finally {
                 if ($hadtpl) $GLOBALS['tpl'] = $oldtpl;
@@ -345,21 +341,13 @@ namespace Tests\Unit {
                     foreach ($pass as $case => $uri) {
                         $html = $parser->filterContent('![x]('.$uri.')', $safe, '');
                         $this->assertStringContainsString('src="'.$uri.'"', $html, 'markdown pass '.$case.$mode);
-                        $this->assertStringNotContainsString('sl-img-placeholder sl-img', $html, 'markdown pass '.$case.$mode);
-
-                        $bbc = $parser->filterContent('[img]'.$uri.'[/img]', $safe, '');
-                        $this->assertStringContainsString('src="'.$uri.'"', $bbc, 'bbcode pass '.$case.$mode);
+                        $this->assertStringNotContainsString('sl-img-placeholder" role="img" aria-label="x">', $html, 'markdown pass '.$case.$mode);
                     }
                     foreach ($block + $tricks as $case => $uri) {
-                        $bbc = $parser->filterContent('[img]'.$uri.'[/img]', $safe, '');
-                        $this->assertStringContainsString('sl-img-placeholder', $bbc, 'bbcode block '.$case.$mode);
-                        $this->assertStringNotContainsString('data:', $bbc, 'bbcode block '.$case.$mode);
+                        $html = $parser->filterContent('![x](<'.$uri.'>)', $safe, '');
+                        $this->assertStringContainsString('sl-img-placeholder', $html, 'markdown block '.$case.$mode);
+                        $this->assertStringNotContainsString('data:', $html, 'markdown block '.$case.$mode);
                     }
-                }
-                foreach ($block as $case => $uri) {
-                    $html = $parser->filterContent('![x]('.$uri.')', false, '');
-                    $this->assertStringContainsString('sl-img-placeholder', $html, 'markdown block '.$case);
-                    $this->assertStringNotContainsString('data:', $html, 'markdown block '.$case);
                 }
                 foreach ($block + $tricks as $case => $uri) {
                     $raw = $parser->filterContent('<img src="'.$uri.'">', false, '');
@@ -371,7 +359,6 @@ namespace Tests\Unit {
                     $md = $parser->filterContent('![x]('.$huge.')', $safe, '');
                     $this->assertStringContainsString('sl-img-placeholder', $md, 'huge markdown');
                     $this->assertStringNotContainsString('src="data:', $md, 'huge markdown');
-                    $this->assertStringNotContainsString('src="data:', $parser->filterContent('[img]'.$huge.'[/img]', $safe, ''), 'huge bbcode');
                 }
             } finally {
                 if ($hadtpl) $GLOBALS['tpl'] = $oldtpl;
@@ -439,7 +426,6 @@ namespace Tests\Unit {
         }
 
         # A code block is written by any author, so every highlighter mode must escape it: mode 2 hands the code to its fragment as markup and once let a tag through
-        # Legacy text stores code entity-encoded and an editor line break raw before the line end; both must render as the author typed, escaped exactly once
         #[Test]
         public function checkCodeBlocksEscapeInEveryMode(): void
         {
@@ -448,24 +434,21 @@ namespace Tests\Unit {
             try {
                 foreach (['0', '1', '2'] as $mode) {
                     $GLOBALS['conf'] = ['syntax' => $mode];
-                    foreach (['[php]echo "<script>x</script>";[/php]', '[code=js]var a = "<script>x</script>";[/code]'] as $src) {
-                        $html = (new \Parser())->filterDoc($src, true, '');
-                        $this->assertStringNotContainsString('<script>x', $html, "mode $mode: $src");
-                        $this->assertStringContainsString('script&gt;', $html, "mode $mode: $src");
+                    foreach (["```php\necho \"<script>x</script>\";\n```", "```js\nvar a = \"<script>x</script>\";\n```"] as $src) {
+                        foreach ([true, false] as $safe) {
+                            $html = (new \Parser())->filterDoc($src, $safe, '');
+                            $this->assertStringNotContainsString('<script>x', $html, "mode $mode: $src");
+                            $this->assertStringContainsString('script&gt;', $html, "mode $mode: $src");
+                        }
                     }
                 }
-                $GLOBALS['conf'] = ['syntax' => '2'];
-                $html = (new \Parser())->filterDoc('[php]echo &quot;a&amp;b&quot;;[/php]', true, '');
-                $this->assertStringContainsString('echo &quot;a&amp;b&quot;;', $html);
-                $html = (new \Parser())->filterDoc("[php]one();<br />\ntwo(\"<br>\");[/php]", true, '');
-                $this->assertStringContainsString("one();\ntwo(&quot;&lt;br&gt;&quot;);", $html);
             } finally {
                 if ($hadconf) $GLOBALS['conf'] = $oldconf;
                 else unset($GLOBALS['conf']);
             }
         }
 
-        # A fenced and an indented block render through the [code] path: the block with its head, the language named, the code escaped once in every mode
+        # A fenced and an indented block render through the code block: the block with its head, the language named, the code escaped once in every mode
         #[Test]
         public function checkFencedCodeTakesTheCodeBlock(): void
         {
@@ -489,79 +472,13 @@ namespace Tests\Unit {
                 $this->assertStringContainsString("<code class=\"language-js\">\n    a();\nb();</code>", $html, 'the code lost its first blank line or an indent');
                 $html = (new \Parser())->filterDoc("```php\necho '<i>';\n```", true, '');
                 $this->assertStringContainsString('<code class="language-php">echo &#039;&lt;i&gt;&#039;;</code>', $html, 'highlight.js receives no language');
-                $html = (new \Parser())->filterDoc("> ```\n> [quote]x[/quote]\n> ```", true, '');
-                $this->assertStringContainsString('<code>[quote]x[/quote]</code>', $html, 'A fence inside a quote handed its tag to the bracket layer');
+                $html = (new \Parser())->filterDoc("> ```\n> [hide]x[/hide]\n> ```", true, '');
+                $this->assertStringContainsString('<code>[hide]x[/hide]</code>', $html, 'A fence inside a quote handed its tag to the bracket layer');
                 $this->assertStringStartsWith('<blockquote>', $html, 'A fence inside a quote is no block of the quote');
             } finally {
                 if ($hadconf) $GLOBALS['conf'] = $oldconf;
                 else unset($GLOBALS['conf']);
             }
-        }
-
-        #[Test]
-        public function checkBbTypographyNestingLimit(): void
-        {
-            $this->assertSame(
-                '<p><strong><strong><strong>x</strong></strong></strong></p>',
-                self::$p->filterDoc('[b][b][b]x[/b][/b][/b]', false, '')
-            );
-            $this->assertSame(
-                '<p><strong><strong><strong>[b]x</strong></strong></strong>[/b]</p>',
-                self::$p->filterDoc(str_repeat('[b]', 4).'x'.str_repeat('[/b]', 4), false, '')
-            );
-        }
-
-        #[Test]
-        public function checkBbImageVariantsMatrix(): void
-        {
-            if (!class_exists('Template', false)) {
-                require_once BASE_DIR.'/core/classes/template.php';
-            }
-            $hadtpl = array_key_exists('tpl', $GLOBALS);
-            $oldtpl = $GLOBALS['tpl'] ?? null;
-            $GLOBALS['tpl'] = new \Template('lite');
-
-            try {
-                $parser = new \Parser();
-                $icon = '/templates/lite/images/favicon.svg';
-
-                $plain = $parser->filterContent('[img]'.$icon.'[/img]', true, '');
-                $this->assertStringContainsString('alt="favicon.svg"', $plain);
-                $this->assertStringNotContainsString('sl-img-left', $plain);
-                $this->assertStringNotContainsString('sl-img-right', $plain);
-
-                $bad = $parser->filterContent('[img=bad]'.$icon.'[/img]', true, '');
-                $this->assertStringContainsString('sl-img-left', $bad);
-
-                $named = $parser->filterContent('[img alt=My Image]'.$icon.'[/img]', true, '');
-                $this->assertStringContainsString('alt="My Image"', $named);
-
-                $keyword = $parser->filterContent('[img alt=title]'.$icon.'[/img]', true, '');
-                $this->assertStringContainsString('alt="favicon.svg"', $keyword);
-
-                $both = $parser->filterContent('[img=right alt=Both Set]'.$icon.'[/img]', true, '');
-                $this->assertStringContainsString('sl-img-right', $both);
-                $this->assertStringContainsString('alt="Both Set"', $both);
-
-                $md = $parser->filterContent('![]('.$icon.')', true, '');
-                $this->assertStringContainsString('alt=""', $md, 'A Markdown image without a description took an alt CommonMark does not give it');
-            } finally {
-                if ($hadtpl) $GLOBALS['tpl'] = $oldtpl;
-                else unset($GLOBALS['tpl']);
-            }
-        }
-
-        #[Test]
-        public function checkBbAlignBlockSpansParagraphs(): void
-        {
-            $html = self::$p->filterDoc("[justify]\n\nFirst para.\n\nSecond para.\n\n[/justify]", true, '');
-            $this->assertStringContainsString('<div style="text-align:justify;">', $html);
-            $this->assertStringContainsString('<p>First para.</p>', $html);
-            $this->assertStringContainsString('<p>Second para.</p>', $html);
-            $this->assertStringNotContainsString('[justify]', $html);
-
-            $center = self::$p->filterDoc('[center]Mid[/center]', true, '');
-            $this->assertStringContainsString('<div style="text-align:center;">', $center);
         }
 
         # One set of valid, escaped and broken tags for both readers: a tag filterAttach() renders is always listed, and outside code the two answer the same
@@ -584,7 +501,7 @@ namespace Tests\Unit {
                 'size not full'      => ['[attach=a.pdf align=left title=A size=thumb]',                   'a.pdf', false, false],
                 'trusted raw pair'   => ['[usehtml]\[attach=a.pdf align=left title=A][/usehtml]',          'a.pdf', true,  true],
                 'inside code span'   => ['`[attach=a.pdf align=left title=A]`',                            'a.pdf', true,  false],
-                'inside bb code'     => ['[code][attach=a.pdf align=left title=A][/code]',                 'a.pdf', true,  false],
+                'inside a dropped tag' => ['[code][attach=a.pdf align=left title=A][/code]',               'a.pdf', true,  true],
                 'tag across code'    => ['<a `x>` \[attach=a.pdf align=left title=A] >',                   'a.pdf', false, false],
                 'tag across trusted' => ['<a `x>` \[attach=a.pdf align=left title=A] >',                   'a.pdf', false, false, false],
                 'tag in a raw tag'   => ['<span title="[attach=a.pdf align=left title=A]">x</span>',      'a.pdf', true,  false, false],
@@ -658,7 +575,7 @@ namespace Tests\Unit {
         #[Test]
         public function checkTrustedTagsTrustOnlyTheirContent(): void
         {
-            $html = self::$p->filterDoc('<b>foreign</b> [url=javascript:alert(1)]u[/url] [block=1] [usehtml]<i>own</i>[/usehtml]', true, '', 0, '', [], true);
+            $html = self::$p->filterDoc('<b>foreign</b> [u](javascript:alert(1)) [block=1] [usehtml]<i>own</i>[/usehtml]', true, '', 0, '', [], true);
             $this->assertStringContainsString('<i>own</i>', $html, 'The content of a trusted tag was not trusted');
             $this->assertStringContainsString('&lt;b&gt;foreign', $html, 'Markup around a trusted tag was trusted');
             $this->assertStringNotContainsString('<b>foreign', $html);
@@ -731,15 +648,16 @@ namespace Tests\Unit {
         #[Test]
         public function checkRawBbPairsKeepTheirBackslashes(): void
         {
-            $this->assertStringContainsString('a\.b', self::$p->filterDoc('[code]a\.b[/code]', true));
             $this->assertStringContainsString('<i>a\*b</i>', self::$p->filterDoc('[usehtml]<i>a\*b</i>[/usehtml]', false));
             $this->assertSame('<p>[usehtml]a\*b[/usehtml]</p>', self::$p->filterDoc('[usehtml]a\*b[/usehtml]', true));
-            $html = self::$p->filterDoc("[code]a();\n#\tb();\n        c();\n\t[/code]", false);
-            $this->assertStringNotContainsString('[code]', $html, 'A heading and an indented block read inside a raw pair hid its closing tag');
-            $this->assertSame('<p><code>[code]x[/code]</code></p>', self::$p->filterDoc('`[code]x[/code]`', true), 'A raw pair inside a code span left it');
+            $html = self::$p->filterDoc("[usehtml]a();\n#\tb();\n        c();\n\t[/usehtml]", false);
+            $this->assertStringNotContainsString('[usehtml]', $html, 'A heading and an indented block read inside a raw pair hid its closing tag');
+            $this->assertStringNotContainsString('<h1', $html, 'A line inside a raw pair was read as Markdown');
+            $this->assertSame('<p><code>[usephp]x[/usephp]</code></p>', self::$p->filterDoc('`[usephp]x[/usephp]`', false), 'A raw pair inside a code span left it');
+            $this->assertSame('<p>[code]a.b[/code]</p>', self::$p->filterDoc('[code]a\.b[/code]', true), 'A dropped tag kept its content from Markdown');
         }
 
-        # The canonical feed document escapes everything it received, so neither mode of the full parser lets a remote tag, link, heading or smilie through
+        # The canonical feed document escapes everything it received, so neither mode of the full parser lets a remote tag, link or heading through
         #[Test]
         public function checkFeedDocumentRendersAsLiteralTextInBothModes(): void
         {

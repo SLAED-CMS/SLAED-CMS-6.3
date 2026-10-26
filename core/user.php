@@ -325,7 +325,7 @@ function setMessageShow(): string {
                 $mid = intval($mid);
                 $exp = $expire ? strtotime($expire) - time() : 0;
                 if ($expire && $exp < 0) $db->getSqlQuery('UPDATE '.PREFIX_DB.'_message SET status = 0, expire = NULL WHERE id = :mid', ['mid' => $mid]);
-                $body = $prs->filterContent($body, false, 'all', 2);
+                $body = $prs->filterContent($body, true, 'all', 2, '', [], true);
                 $exp = ($exp > 0) ? getDuration($exp) : _UNLIMITED;
                 if ($view == 4 && is_moder()) {
                     if (is_moder()) $body .= $adminNote(_MVADMIN, $exp, HOME_PATH.$afile.'.php?op=msg_add&id='.$mid);
@@ -477,7 +477,7 @@ function getUserBlock(): string {
     $block = (isset($user[4])) ? intval($user[4]) : 0;
     if (is_user() && $block) {
         [$userblock] = $db->getSqlRow($db->getSqlQuery('SELECT block FROM '.PREFIX_DB.'_users WHERE id = :uid', ['uid' => $uid]));
-        $userblock = $prs->filterContent($userblock, false, 'profile', 2, '', ['profile', $uid]);
+        $userblock = $prs->filterContent($userblock, true, 'profile', 2, '', ['profile', $uid], true);
         return $tpl->getHtmlFrag('block-all', ['title' => _MENUFOR, 'content' => $userblock]);
     }
     return '';
@@ -598,7 +598,7 @@ function getForumBody(int $id, string $body, string $etime, bool $see, string $w
     global $tpl, $prs;
     $badge = ($see && $etime !== '') ? $tpl->getHtmlFrag('inline-badge', ['title_text' => _PEDIT, 'is_topic_edit' => true, 'label' => format_time($etime, _TIMESTRING)]) : '';
     return [
-        'text' => filterTextHighlight($prs->filterContent($body, false, 'forum', 2, '', ['forum', $id]), $word),
+        'text' => filterTextHighlight($prs->filterContent($body, true, 'forum', 2, '', ['forum', $id], true), $word),
         'mark' => $tpl->getHtmlFrag('quick-edit', ['is_mark' => true, 'is_oob' => $oob, 'mark_id' => 'quick-mark-forum-'.$id, 'mark_html' => $badge]),
     ];
 }
@@ -608,9 +608,9 @@ function updateForumBody(int $id, string $text, string $stamp): array {
     global $db, $conf, $user;
     $long = 0;
     foreach (preg_split('/\s+/u', $text, -1, PREG_SPLIT_NO_EMPTY) ?: [] as $word) $long = max($long, mb_strlen($word));
-    $html = filterHtml($text);
+    $body = filterSourceText($text, isAdmin(true));
     $limit = intval($conf['forum']['letter'] ?? 0);
-    $stop = array_values(array_filter([$text === '' ? _CERROR1 : '', ($limit > 0 && $long > $limit) ? _CERROR2 : '', checkEditorTextRoom($html, 'forum.body')]));
+    $stop = array_values(array_filter([$text === '' ? _CERROR1 : '', ($limit > 0 && $long > $limit) ? _CERROR2 : '', checkEditorTextRoom($body, 'forum.body')]));
     $head = getForumPlace($id);
     if (!$head['cid']) return ['code' => 'unavailable', 'error' => []];
     if (empty($conf['forum']['add'])) return ['code' => 'denied', 'error' => []];
@@ -621,18 +621,18 @@ function updateForumBody(int $id, string $text, string $stamp): array {
     $lock = ($top === false) ? [] : $db->getSqlRow($top);
     $row = ($res === false) ? [] : $db->getSqlRow($res);
     $cat = $row ? $db->getSqlRow($db->getSqlQuery('SELECT pedit, pmod FROM '.PREFIX_DB.'_categories WHERE id = :cid', ['cid' => intval($row['cid'])])) : [];
-    $bad = $row ? checkForumNames($html, (string)$row['body'], $head['topic']) : '';
+    $bad = $row ? checkForumNames($body, (string)$row['body'], $head['topic']) : '';
     $code = match (true) {
         $res === false => 'storage',
         !$row || !$lock => 'unavailable',
         !$cat || (intval($row['pid']) ?: $id) !== $head['topic'] => 'denied',
         !checkForumRight(is_moder('forum') || is_acess((string)$cat['pmod']), is_acess((string)$cat['pedit']), intval($row['uid']), intval($lock['status'])) => 'denied',
         $bad !== '' => 'rules',
-        $html === (string)$row['body'] => 'equal',
+        $body === (string)$row['body'] => 'equal',
         !hash_equals(QuickEdit::getStamp((string)$row['body'], (string)($row['etime'] ?? '')), $stamp) => 'conflict',
         default => 'write',
     };
-    $pars = ['body' => $html, 'euid' => is_user() ? intval($user[0]) : 0, 'eip' => getIp(), 'id' => $id];
+    $pars = ['body' => $body, 'euid' => is_user() ? intval($user[0]) : 0, 'eip' => getIp(), 'id' => $id];
     if ($code === 'write') $code = $db->getSqlQuery('UPDATE '.PREFIX_DB.'_forum SET body = :body, euid = :euid, eip = :eip, etime = NOW() WHERE id = :id', $pars)
         !== false ? 'moved' : 'storage';
     if ($code !== 'equal' && $code !== 'moved') {
@@ -735,7 +735,7 @@ function checkProfileNames(string $text, string $old): string {
 # Render one signature in the file context of its account, so every page that shows it resolves its attachments against the one folder and owner of the account texts
 function getUserSign(string $sig, int $uid, int $hoff = 0): string {
     global $prs;
-    return ($sig === '') ? '' : $prs->filterContent($sig, false, 'profile', $hoff, '', ($uid > 0) ? ['profile', $uid] : []);
+    return ($sig === '') ? '' : $prs->filterContent($sig, true, 'profile', $hoff, '', ($uid > 0) ? ['profile', $uid] : [], true);
 }
 
 # Render the mailbox shelves of the private message page with their quota rings; a shelf badge keeps its element at zero, because an out-of-band swap needs one to replace
@@ -1053,7 +1053,7 @@ function getPrivateMessagePane(string|array $stop, string $info, int $typ, array
                 $old = $prv->getMessageView($uid, $from, $side);
                 if ($old) {
                     $post = '';
-                    $back = (getEditorMode() !== 'html') ? getDecodedText(replace_break($old['body'])) : $old['body'];
+                    $back = $old['body'];
                     $head = _PRFWD.': '.$old['title'];
                 }
             }
@@ -1123,7 +1123,7 @@ function getPrivateMessagePane(string|array $stop, string $info, int $typ, array
             ]);
         }
         if (is_moder($conf['name'])) $chips .= Geoip::getIpHtml($view['ip'], true);
-        $quote = preg_replace('/^/m', '> ', getDecodedText(replace_break($view['body'])))."\n\n";
+        $quote = preg_replace('/^/m', '> ', $view['body'])."\n\n";
         return $tpl->getHtmlPart('privat-view', [
             'token' => $tok,
             'title' => $view['title'],

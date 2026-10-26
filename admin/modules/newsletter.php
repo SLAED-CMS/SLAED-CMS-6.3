@@ -176,7 +176,7 @@ function add(): void {
     $id = getVar('req', 'id', 'num');
     $nid = getVar('post', 'nid', 'num', 0);
     $title = getVar('post', 'title', 'title', '');
-    $body = getVar('post', 'body', 'text', $conf['mtemp']);
+    $body = filterSourceText(getVar('post', 'body', 'raw', $conf['mtemp']), isAdmin(true));
     $pick = getVar('post', 'audit', 'var', 'subs-');
     $days = getVar('post', 'days', 'num', 365);
     $lock = false;
@@ -268,7 +268,7 @@ function save(): void {
     $stop = [];
     $nid = getVar('post', 'nid', 'num', 0);
     $title = filterCutText(getVar('post', 'title', 'title'), 50);
-    $body = getVar('post', 'body', 'text');
+    $body = filterSourceText(getVar('post', 'body', 'raw', ''), isAdmin(true));
     $pick = getVar('post', 'audit', 'var', '');
     $days = max(1, getVar('post', 'days', 'num', 365));
     $part = explode('-', $pick, 2);

@@ -691,6 +691,27 @@
   margin: var(--sl-space-7) 0;
 }
 
+/* A table of the help reads as the clean tables of the panel: a muted head, a hairline under each row and the room
+   of a paragraph after it; a column the Markdown aligns keeps the alignment the parser writes on its cells */
+.sl-markdown table {
+  width: 100%;
+  margin: 0 0 var(--sl-space-6);
+  border-collapse: collapse;
+}
+
+.sl-markdown th,
+.sl-markdown td {
+  padding: var(--sl-space-3) var(--sl-space-4);
+  border-bottom: 1px solid var(--sl-border);
+  text-align: left;
+  vertical-align: top;
+}
+
+.sl-markdown th {
+  background-color: var(--sl-bg-muted);
+  font-weight: var(--sl-weight-semibold);
+}
+
 /* An alert set inside running text loses its side margins, whether the text is rendered markdown or a message card */
 .sl-markdown .sl-alert,
 .sl-msg-body .sl-alert {
@@ -10552,14 +10573,6 @@ body[data-sl-pointer] .sl-admin-login-card:has(.sl-setup)::after {
   height: var(--sl-placeholder-height);
   vertical-align: top;
   font-size: var(--sl-size-icon-xl);
-}
-
-.sl-img-left {
-  float: left;
-}
-
-.sl-img-right {
-  float: right;
 }
 
 /* Captcha: altcha widget spacing and honeypot field */

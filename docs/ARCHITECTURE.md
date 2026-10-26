@@ -577,7 +577,7 @@ Detailed template contracts live in:
 The active content parser is `Parser` in:
 - `core/classes/parser.php`
 
-Use the parser for Markdown/BBCode/content rendering. Security text filtering
+Use the parser for Markdown and SLAED tag content rendering. Security text filtering
 helpers are not the main content rendering pipeline.
 
 Detailed parser contracts live in:
@@ -1328,12 +1328,11 @@ its own if it is ever wanted:
 - The Node title is not a quick-edit field: the address, the `h1`, the document
   title and the breadcrumbs are built from it, and a region swap updates none of
   them.
-- A forum post renders as its page renders it, with `safe = false`, while
-  `.rules/architecture.md` lists forum posts under `safe = true`; switching the
-  trust mode changes how every existing post renders.
+- A forum post renders as its page renders it, safe with trust, as a Node text
+  does; its text is stored as typed through `filterSourceText()`.
 - A moderator without the trusted-tag right drops the trusted tags of a text
-  the main administrator wrote (`filterTrustedTags()`), and a non-HTML editor
-  drops `<br>` (`docs/EDITORS.md`), exactly as the full forms do.
+  the main administrator wrote (`filterTrustedTags()`), exactly as the full forms
+  do.
 
 **Adding a kind.** Give it a stored stamp (a version column, or the body with
 its edit time), a transactional writer that answers the closed codes in the

@@ -418,7 +418,7 @@ class Mail {
         $row = $this->db->getSqlRow($this->db->getSqlQuery('SELECT body FROM '.PREFIX_DB.'_newsletter WHERE id = :id', ['id' => $ref]));
         if (!$row) return null;
         $body = (string)$row['body'];
-        $this->refs[$ref] = ($prs instanceof Parser) ? $prs->filterContent($body, false, 'all') : $body;
+        $this->refs[$ref] = ($prs instanceof Parser) ? $prs->filterContent($body, true, 'all', 0, '', [], true) : $body;
         return $this->refs[$ref];
     }
 

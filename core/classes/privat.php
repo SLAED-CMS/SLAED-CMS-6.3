@@ -38,34 +38,29 @@ final class Privat {
     # How many characters of that cut are left once the source markup is stripped out of it, which is the snippet one row answers
     private const SNIPLEN = 160;
 
-    # The source markup a snippet drops, in this order: a whole markdown link before one the cut broke off, both before the bracket tags, whitespace last
+    # The source markup a snippet drops, in order: links whole then cut, bracket tags, html, quote markers of every depth, unescaped emphasis, escapes, whitespace
     private const SNIPFROM = [
         '#!?\[([^\]\n]*)\]\([^)\n]*\)#u',
         '#!?\[[^\]\n]*\]\([^)\n]*$#u',
         '#\[/?[a-z][a-z\d]*(?:=[^\]\n]*)?\]#iu',
         '#<[^>]*>#u',
-        '#^[ \t]*(?:[>\#]+|[-+*]|\d+\.)[ \t]+#mu',
-        '#[`*~]+#u',
+        '#^[ \t]*(?:>[ \t]*)*(?:(?:\#+|[-+*]|\d+\.)[ \t]+)?#mu',
+        '#(?<!\\\\)[`*~]+#u',
+        '#\\\\([!-/:-@\[-`{-~])#u',
         '#\s+#u',
     ];
-    private const SNIPTO = ['$1', '', '', '', '', '', ' '];
+    private const SNIPTO = ['$1', '', '', '', '', '', '$1', ' '];
 
     # The tag or bracket the cut itself broke open, which is everything from the last unclosed one to the end of the prefix
     private const SNIPOPEN = '#[<\[][^>\]\n]*$#u';
 
     private Database $db;
     private array $conf;
-    private array $site;
 
-    # Snapshot the privat settings and the site settings that still change a stored text, so no method reaches for a global
+    # Snapshot the privat settings, so no method reaches for a global
     public function __construct(Database $db, array $conf) {
         $this->db = $db;
         $this->conf = is_array($conf['privat'] ?? null) ? $conf['privat'] : [];
-        $this->site = [
-            'cens' => !empty($conf['censor']),
-            'from' => (string)($conf['censor_l'] ?? ''),
-            'to' => (string)($conf['censor_r'] ?? ''),
-        ];
     }
 
     # The predicate of one mailbox, the only place the four state columns become a filter, so a list, its count and its quota never disagree
@@ -243,19 +238,6 @@ final class Privat {
     # Report whether the statement that just failed is a deadlock or a lock wait timeout, which a second attempt can still win
     private function checkDeadlock(): bool {
         return in_array(intval($this->db->getSqlError()['code']), [1205, 1213], true);
-    }
-
-    # Normalize one field into the stored source, never HTML-escaped: trusted tags out, the censor list
-    private function filterMessageText(string $text): string {
-        if ($text === '') return '';
-        $text = filterTrustedTags($text);
-        if (!isAdmin() && $this->site['cens']) {
-            foreach (explode(',', $this->site['from']) as $one) {
-                $one = trim($one);
-                if ($one !== '') $text = (string)preg_replace('#'.preg_quote($one, '#').'#i', $this->site['to'], $text);
-            }
-        }
-        return trim($text);
     }
 
     # The length of the longest word of a text in characters, which is what the letter limit of the module bounds
@@ -457,8 +439,8 @@ final class Privat {
 
     # Store one message and answer its id or refusal code; a deadlock or lock timeout is retried once, only when the send owns its transaction and none is left open after it
     public function addMessage(int $uid, string $name, string $title, string $body, string $ip): array {
-        $title = filterCutText(trim($this->filterMessageText($title)), 100);
-        $body = $this->filterMessageText($body);
+        $title = filterCutText(filterSourceText($title), 100);
+        $body = filterSourceText($body);
         $room = checkEditorTextRoom($body, 'privat.body');
         if ($room !== '') return ['id' => 0, 'error' => 'no_room', 'note' => $room];
         $own = !$this->db->checkSqlActive();

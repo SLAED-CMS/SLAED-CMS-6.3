@@ -112,7 +112,7 @@ final class PrivatClassTest extends TestCase
     {
         $run = $this->getRun('snip');
         $this->assertFalse($run['whole'], 'A list row carries the whole body of its message');
-        $this->assertSame('Head bold html stars link quote end', $run['mark'], 'The snippet still carries the source markup or the line breaks of the body');
+        $this->assertSame('Head bold html stars link quote - nested *kept* end', $run['mark'], 'The snippet still carries the source markup or the line breaks of the body');
         $this->assertSame(str_repeat('a', 160), $run['open'], 'A tag the cut broke in half reached the row, or the snippet is not bounded');
         $this->assertSame('price is [10 and the sentence goes on', $run['kept'], 'A bracket the author wrote was read as a tag the cut broke, and the text after it was dropped');
         $this->assertSame(900, $run['view'], 'The detail view no longer answers the whole body');

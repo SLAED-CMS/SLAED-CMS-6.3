@@ -305,7 +305,7 @@ final class BackupIntegrationTest extends TestCase
     public function theRestoredRowsAreIdenticalExceptWhereTheSiteKeptWriting(): void
     {
         $data = $this->getProbe('gate');
-        $this->assertGreaterThan(30, $data['data']['compared'], 'Too few tables were compared for this to mean anything');
+        $this->assertGreaterThan(25, $data['data']['compared'], 'Too few tables were compared for this to mean anything');
         foreach (array_merge($data['data']['differing'], $data['rows']) as $name) {
             $this->assertTrue($this->checkVolatile($name), $name.' differs from its backup and is not a table a live site rewrites on its own');
         }

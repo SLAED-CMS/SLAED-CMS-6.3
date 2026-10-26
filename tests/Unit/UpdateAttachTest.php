@@ -115,6 +115,8 @@ final class UpdateAttachTest extends TestCase
             'Code `[F](uploads/news/f.png)` here',
             '[**Bold**](./uploads/news/f.png)',
             '[![B](./uploads/news/b.png)](https://example.com)',
+            "[![B](./uploads/news/b.png)\\\n](https://example.com)",
+            '[Banner ![B](./uploads/news/b.png) here](https://example.com)',
             '<https://other.net/uploads/news/j.zip>',
         ];
         foreach ($keep as $text) $this->assertSame($text, $this->getText($text), 'The address '.$text.' was rewritten');

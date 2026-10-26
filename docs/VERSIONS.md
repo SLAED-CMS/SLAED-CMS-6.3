@@ -1,5 +1,49 @@
 # Versions
 
+## 2026-10-26
+
+### Every stored text is Markdown by CommonMark and GFM, and BB is left with the six SLAED tags
+
+The parser read Markdown by its own habits and BB beside it. It now reads CommonMark 0.31.2 with the GFM extensions,
+every example of both specifications passing in the trusted and in the safe mode; the update turns the BB of every
+stored text into Markdown once, and the bracket layer reads `[hide]`, `[tabs]`, `[attach]`, `[usehtml]`, `[usephp]` and
+`[block]` alone. The references are `docs/PARSER.md`, "The standard", "SLAED tags" and "Texts of the BB era", and
+`docs/EDITORS.md`, "Stored Text on Mount and Save"; the help of the panel is `admin/info/config/ru.md`.
+
+- **What goes.** The smilies `*01`–`*18` become emoji, with `images/smilies/` of both themes and `_SMILIE`; `[u]`,
+  `[color]`, `[size]`, `[family]`, the alignment tags, the alignment of an image and ed2k keep their text and lose the
+  formatting; the Toast UI quote button and `_EQUOTE` go. `filterClickable()` goes with the settings `clickable` and
+  `alink`: a bare address is a link at render.
+- **One storage, one rendering.** Every Markdown text is stored as typed through `filterSourceText()`, line ends as LF,
+  and mounted in the editor unchanged, so a save without a change keeps every byte; the forum, the signatures, the own
+  blocks, the blocks, the admin messages, the newsletters and the contact text render safe with trust, as a Node
+  material does.
+- **Safe addresses.** A safe rendering keeps an address without a scheme and one of `http`, `https` or `mailto`;
+  `data:`, `javascript:` and `vbscript:` die in every mode, but a Markdown image of `data:` passes as an embedded raster.
+- **Tests.** `ParserFixturesTest` runs the examples of `tests/Fixtures/spec/`, `UpdateTextTest` the conversion,
+  `EditorBreakTest` the storage of every writer.
+
+### The update brings a site of early October forward, and the tables of the gone and the carried modules leave
+
+`slaed.net` runs a development build of early October with its content already in Node, so it is moved by bringing its
+own database forward, not by a new installation. The first stage of `update.php` now does that for any such site, and
+the whole move was rehearsed on the production dump of 2026-10-25. The references are `docs/NODE.md`, "A site of an
+early 6.3 build", and `docs/UPDATE.md`, "Moving slaed.net to 8.0".
+
+- **The catch-up.** The addresses of `uploads/archive/<module>/` and of the old module folders in the Node texts, the
+  comments and the other texts become attachments or `go=file` addresses; the options of the release a site lacks are
+  merged from `storage/backup/release/config/` and the retired ones leave; eight time columns take their forms with
+  every moment kept; a 6.3 `db.php` is written in the collation of the release, so the schema file converts the tables.
+- **Tables.** The tables of `auto_links`, `clients`, `clients_down`, `money`, `order`, `partners`, `products` and
+  `whois` are dropped with no archive, and the source table of a carried module as soon as every row of it is a
+  material, in the first stage for a site already in Node and right after the data step in the second. `jokes` and `media` join the
+  6.2 path, the media columns going to the extra fields of its profile and its web links to `download` resources.
+- **A unit that ran before.** Points, ratings and fields with their mark set and their manifest missing answer done; the
+  units used to stop the whole run on a site brought from its dump, and the tables stayed.
+- **The rehearsal.** On a copy of the dump, both stages and a repeat that changed nothing: 36 tables equal to
+  `table.sql`, 15385 addresses, 121877 rows in a dump of the core restored and compared table by table, the folders of
+  `uploads/` laid out and checked file by file, and the site and the panel checked live in two passes.
+
 ## 2026-10-25
 
 ### Two writers of one address no longer end a request in a 500 on MariaDB 11.6.2 and newer
@@ -428,7 +472,7 @@ both show on every page: one save took the 22 breaks of a 1475-byte menu.
   render used to print a stored `<br>` as text. A line of nothing but a `<br>` becomes an empty line, so the lines
   around it render as two paragraphs.
 - **Test.** `EditorBreakTest` drives stored values through the shipped mount, the browser submit and the save of both
-  formats. The reference is `docs/EDITORS.md`, "Line Breaks on Mount".
+  formats. The reference is `docs/EDITORS.md`, "Stored Text on Mount and Save".
 
 ### The private part of an installation is out of web reach, proves it every hour, and no journal holds a secret
 

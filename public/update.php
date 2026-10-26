@@ -236,7 +236,7 @@ function getMigrateAttach(string $text, string $dir, int $nid, Closure $have): s
         return ($file !== '') ? $tag($file, '', $m[1], true) : $m[0];
     }, $text) ?? $text;
     $text = $hide($text, '#\[url(?:=[^\]]*)?\](?:(?!\[/url\]).)*?\[/url\]#si', fn(string $v): bool => stripos($v, '[img') !== false);
-    $text = $hide($text, '#\[!\[[^\]\n]*\]\([^)\s]*\)\]\([^)\s]*\)#');
+    $text = $hide($text, '#\[(?:[^\[\]\n]|\n(?![ \t]*\n))*?!\[[^\]\n]*\]\([^)\s]*\)(?:[^\[\]\n]|\n(?![ \t]*\n))*\]\([^)\s]*\)#');
     $text = preg_replace_callback('#'.$img.$addr.'\[/img\]#i', function (array $m) use ($name, $tag): string {
         $thumb = str_starts_with($m[3], 'thumb/');
         $file = $name($thumb ? substr($m[3], 6) : $m[3]);
@@ -382,7 +382,7 @@ function getMigrateHtml(string $text, bool $trust, array &$seen = []): string {
     return trim($text);
 }
 
-# Convert stored BB into Markdown by the grammar of the BB code plan: a BB era text escapes its text runs, a Markdown one keeps them; $seen counts the forms met
+# Convert stored BB into Markdown by docs/PARSER.md, "Texts of the BB era": a BB era text escapes its text runs, a Markdown one keeps them; $seen counts the forms met
 function getMigrateMarkdown(string $text, bool $esc, array &$seen = []): string {
     $orig = $text;
     $text = str_replace(["\r\n", "\r", "\x01", "\x02", "\x05"], ["\n", "\n", '', '', ''], $text);
@@ -1295,15 +1295,16 @@ function setUpdateBackup(string $path, string $text): bool {
 
 # The points unit of the 6.3 data update: keep the starting balances as a hashed snapshot, carry users.point into points.active and leave the mark that opens the subsystem
 # The unit resumes from its manifest: verified is skipped, applying and prepared continue
-# Journal rows without a manifest stop it, because a current balance is never taken for a starting one
+# Journal rows without a manifest stop it, because a current balance is never taken for a starting one; a mark without a manifest is a unit that ran on the site before
 function setUpdatePoints(Database $db, string $prefix): array {
     $dir = BASE_DIR.'/storage/backup/update/points';
     $file = $dir.'/manifest.json';
     $mark = is_file(CONFIG_DIR.'/update.php') ? ((require CONFIG_DIR.'/update.php')['update'] ?? []) : [];
     $info = is_file($file) ? json_decode((string)file_get_contents($file), true) : null;
     if (!is_array($info)) {
+        if (isset($mark['points'])) return getUpdateRow('points: the mark is set and no manifest exists, the unit ran on this site before', true);
         [$rows] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(*) FROM `'.$prefix.'_points`'));
-        if ($rows > 0 || isset($mark['points'])) return getUpdateRow('points: the journal already has rows and no manifest exists, the unit is stopped', false);
+        if ($rows > 0) return getUpdateRow('points: the journal already has rows and no manifest exists, the unit is stopped', false);
         if (!is_dir($dir) && !mkdir($dir, 0750, true)) return getUpdateRow('points: '.$dir.' could not be created', false);
         $list = [];
         $done = $db->setSqlBegin();
@@ -1343,6 +1344,7 @@ function setUpdatePoints(Database $db, string $prefix): array {
 # Nothing is written before the whole preflight passed: a broken aggregate, a broken time or address of a kept row and a broken rule stop the unit with the table and the id
 # The unit resumes from its manifest: verified is skipped, applying and prepared continue by cursor, and a row that is already stored has to equal its snapshot
 # Rows of the new tables without a manifest stop it, because a current aggregate is never taken for a starting one; rows of polls and of other events are counted and left alone
+# A mark without a manifest is a unit that ran on the site before
 function setUpdateRatings(Database $db, string $prefix): array {
     $dir = BASE_DIR.'/storage/backup/update/ratings';
     $file = $dir.'/manifest.json';
@@ -1369,14 +1371,14 @@ function setUpdateRatings(Database $db, string $prefix): array {
     };
     $polls = 'SELECT COUNT(*) FROM `'.$prefix.'_rating` WHERE modul = \'voting\'';
     if (!is_array($info)) {
+        if (isset($mark['ratings'])) return getUpdateRow('ratings: the mark is set and no manifest exists, the unit ran on this site before', true);
         $rows = 0;
         foreach (['targets', 'actors', 'votes'] as $name) {
             $num = $count('SELECT COUNT(*) FROM `'.$prefix.'_rating_'.$name.'`');
             if ($num < 0) return getUpdateRow('ratings: the table '.$prefix.'_rating_'.$name.' could not be read, the unit is stopped', false);
             $rows += $num;
         }
-        $text = 'ratings: the new tables already have rows or the mark is set and no manifest exists, the unit is stopped';
-        if ($rows > 0 || isset($mark['ratings'])) return getUpdateRow($text, false);
+        if ($rows > 0) return getUpdateRow('ratings: the new tables already have rows and no manifest exists, the unit is stopped', false);
         $old = is_file(CONFIG_DIR.'/ratings.php') ? ((require CONFIG_DIR.'/ratings.php')['ratings'] ?? []) : [];
         $rules = [];
         $stat = ['voting' => 0, 'foreign' => 0, 'orphan' => 0, 'dropped' => 0];
@@ -1620,6 +1622,7 @@ function getUpdateValue(array $rules, array $slots, int $size, string $text, Fie
 # A caption without an option and data at a switched off position grow the definitions by a disabled option or an inactive field in row order, and the report counts them
 # The unit resumes from its manifest: verified is skipped, applying and prepared continue by cursor, and a stored row has to equal its source or its target
 # Definitions that are already named while positional rows exist and no manifest does stop it, because the old definitions are the only key to those rows
+# A mark without a manifest is a unit that ran on the site before
 # Named definitions of the order area are not carried, because the release no longer ships the module that owns them
 function setUpdateFields(Database $db, string $prefix): array {
     $dir = BASE_DIR.'/storage/backup/update/fields';
@@ -1638,7 +1641,7 @@ function setUpdateFields(Database $db, string $prefix): array {
         return $res ? $list : false;
     };
     if (!is_array($info)) {
-        if (isset($mark['fields'])) return getUpdateRow('fields: the mark is set and no manifest exists, the unit is stopped', false);
+        if (isset($mark['fields'])) return getUpdateRow('fields: the mark is set and no manifest exists, the unit ran on this site before', true);
         $old = is_file(CONFIG_DIR.'/fields.php') ? ((require CONFIG_DIR.'/fields.php')['fields'] ?? []) : [];
         $named = count(array_filter(array_intersect_key($old, $maps), 'is_array'));
         $bad = [];

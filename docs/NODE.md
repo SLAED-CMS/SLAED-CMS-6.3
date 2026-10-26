@@ -1707,11 +1707,11 @@ The body is UTF-8 with LF and one final newline: per entry `## <title>`, the opt
 the description paragraphs, all separated by blank lines. Received text is data: CR/CRLF become LF, control
 characters other than LF and TAB go, and every ASCII punctuation character is prefixed with a backslash. Headings
 and links are added after escaping; in the URL `(`, `)`, `[`, `]`, `*`, `` ` ``, `\` and anything outside the safe
-set are percent-encoded. `Parser` turns each backslash + ASCII punctuation pair into a literal token before BB,
-Markdown and free blocks, left to right, and emits it HTML-escaped; raw regions keep their backslashes (`[code]`,
-`[php]`, `[usephp]`, `[usehtml]`, HTML tags, `script`/`style`, Markdown code). `getAttachList()` applies the same
-rule, so an escaped bracket names no attachment. Safe mode alone does not stop BB commands; every consumer renders
-the body through Parser in safe mode.
+set are percent-encoded. `Parser` reads each backslash + ASCII punctuation pair as a literal before the SLAED tags,
+Markdown and free blocks, left to right, and emits it HTML-escaped; raw regions keep their backslashes (`[usephp]`,
+`[usehtml]`, HTML tags, `script`/`style`, Markdown code). `getAttachList()` applies the same rule, so an escaped
+bracket names no attachment. Safe mode alone does not stop the SLAED tags; every consumer renders the body through
+Parser in safe mode.
 
 ### Consumers
 
@@ -3357,9 +3357,11 @@ not acceptance results.
 ## The 6.3 update
 
 `update.php` in the root brings a 6.2 site to 6.3 and then carries the content of the removed modules into Node
-(see the next section). It is an internal tool of the maintainer: the release does not ship it, `setup.php` installs a
-new site only, and the public `UPGRADING.md` says that a 6.2 site is not updated by the release. This section is the
-maintainer view of its first stage and of `storage/update/sql/table_update6_3.sql`.
+(see the next section); the same run brings a site of an early 6.3 build forward (see
+[A site of an early 6.3 build](#a-site-of-an-early-63-build)). It is an internal tool of the maintainer: the release
+does not ship it, `setup.php` installs a new site only, and the public `UPGRADING.md` says that a 6.2 site is not
+updated by the release. This section is the maintainer view of its first stage and of
+`storage/update/sql/table_update6_3.sql`.
 
 The first stage is the only entry of the data update. There is no CLI script, no conversion at runtime and no
 detection of a 6.2 format by the running system: a subsystem whose mark is missing stays closed for writing and
@@ -3508,7 +3510,9 @@ runs and reports, then neither the schema file nor any data unit runs.
     the forum posts, comments and private messages from 2026-07-13 on) converts its tags alone. Each batch of 200 rows
     is named in the manifest with the hashes of its new texts before its transaction, so a stopped run neither
     converts a committed batch again nor loses one that rolled back; a text too long for its column stays BB and the
-    report names it.
+    report names it. A column no parser call renders is never touched: the RSS blocks (their body is fetched again),
+    `global.mtemp` (plain text framed by `getMailFrame()`), the mail journal `_mail.body` (HTML) and the poll answers
+    `_voting.body` (a list printed as text).
 16. `config/rss.php`: `temp` removed, missing `bytes` (`2097152`), `redirects` (`3`), `timeout` (`10`) added.
     Without these keys Feed refuses with code `config` before any request.
 17. RSS blocks: `UPDATE _blocks SET content = '', time = 0 WHERE url != ''` drops the cached HTML; the next
@@ -3572,9 +3576,10 @@ and, for ratings and fields, the stored rows read back).
 
 ### Resume and repeat
 
-- No manifest: the unit prepares, but refuses when its mark is set or target data exists (`_points` rows; rows in
-  any rating table). The current state is never taken for the source state, so a repeat never snapshots a
-  balance twice.
+- No manifest: the unit prepares, but refuses when target data exists (`_points` rows; rows in any rating table). The
+  current state is never taken for the source state, so a repeat never snapshots a balance twice. A set mark without a
+  manifest is a unit that ran on the site before, its manifest left behind on another machine (a site moved or brought
+  forward from its dump): the unit answers done and writes nothing.
 - `prepared` or `applying`: every snapshot is checked against its `source` hash, the state becomes `applying`,
   and application continues from the cursor. The cursor is saved after the `COMMIT` of each batch of 500, so a
   break leaves it at most one batch behind, and a row is compared by value: equal to its target is skipped,
@@ -3781,6 +3786,53 @@ Rules, enforced by `tests/SchemaUpdateValidationTest.php` for the file:
 The header names MariaDB 10.5.2+ and MySQL 8.0.16+, as do `table.sql` and `insert.sql`. `rank` is a reserved
 word of MySQL 8.0.2+: unqualified `_users.rank` and `_groups.rank` are written in backticks in every query.
 
+A `runiftype()` passage that turns a text time into a timer casts the text to `DATETIME` before `UNIX_TIMESTAMP()`:
+on a text argument `UNIX_TIMESTAMP()` answers a decimal, which a `BIGINT` refuses.
+
+### A site of an early 6.3 build
+
+A site that ran a development build of early October 2026 (`slaed.net` is one) is no 6.2 site: its content is in
+Node already, its marks `points`, `ratings`, `fields` and `modules` are set and `steps` is missing. What it lacks is
+the rest of the release: its schema is the one of that time (no `_routes`, no `_login_log`, other columns, keys and
+collations, eight time columns in the other form), its configuration lacks the options added since and keeps retired
+ones, its files lie in the folders of the old modules and in `uploads/archive/<module>/`, its Node texts and comments
+point there, and the source tables of the old modules stay beside their materials. The first stage brings it forward
+without carrying the source tables again, so ids, addresses and every row written in Node since stay:
+
+- **Checks.** `checkUpdateEmails()` stops the run while two accounts share an address, which the schema of early
+  October allowed; which account keeps it is the operator's choice, and the others are deleted before the run with
+  their `_user_oauth` rows (the table has no foreign key to `_users`).
+- **Settings.** Step 3 of the run order merges from the `config/` of the release, which the operator puts into
+  `storage/backup/release/config/` before the run; `css_f` and `script_f` keep the values of the site.
+- **Data units.** Points, ratings and fields answer done by their marks, since their manifests stayed on the machine
+  that ran them ([Resume and repeat](#resume-and-repeat)); the forum and the private messages lose the direct addresses
+  of their closed folders, the archive unit rewrites the addresses of `uploads/archive/<module>/` and of the old
+  folders, and the text unit converts the BB of the texts by their origin.
+- **Schema.** The schema file converts the tables into the collation of the release, which the run also writes into
+  `db.php`, and brings the eight time columns (`_mail.ntime`, `_mail.locked`, `_node_publish.due`,
+  `_rating_targets.created`, `_rating_votes.created`, `_rating_votes.annulled`, `_user_oauth.linked`,
+  `_user_oauth.lastlog`) to their forms with every moment kept.
+- **Tables.** `setUpdateTables()` (step 22) drops the tables of the modules gone for good and every source table whose
+  rows are materials. This belongs to the first stage: the second stage blocks a module whose type of the same name
+  holds materials (`getMigratePlan()`), but `pages` goes to `docs` and would pass, run its stash and type steps and
+  fail on the `_node_legacy` rows it already has. With no source table left the second stage carries nothing; it is
+  still run once, because it fills `_routes`, which the first stage leaves empty, and points the foreign addresses at
+  their materials.
+
+The run moves no file. After it, before the site opens, the operator lays the folders out as follows; nothing is
+deleted, a name two sources share is laid once when it is the same file and reported when it is another one (the
+guard `index.html` of `pages/` stays out), and the old files are reviewed later:
+
+| From | To |
+| --- | --- |
+| `uploads/<module>/` and `uploads/archive/<module>/` of `news`, `faq`, `help`, `links`, `files`, `content` | `uploads/node/<module>/` |
+| `uploads/pages/`, `uploads/docs/` and `uploads/archive/pages/` | `uploads/node/docs/` |
+
+The folders of the modules that stay or are gone (`account/`, `all/`, `avatars/`, `clients/`, `forum/`, `screens/`,
+`shop/`, `voting/`) keep their paths; the guard `index.html` of `archive/` and the `presentation/` of the site are not
+laid, since the release ships its own `uploads/presentation/`. How `slaed.net` itself is moved is
+`docs/UPDATE.md`, "Moving slaed.net to 8.0".
+
 ### Tests
 
 | Test | Driver | Covers |
@@ -3886,7 +3938,9 @@ continues where it stopped:
    whose text or published comment carries the name, and an address of `uploads/forum/` in a text that is no forum
    post the `go=file&own=forum` address of the first published post that carries it. A name nothing carries keeps
    its address and answers 410; `[code]`, `[php]`, fenced code and code spans keep their examples.
-7. Activation of every type the run created or switched off.
+7. Addresses, on every run (`setMigrateRoutes()`): `addRouteBacklog()` gives every type, category, material, topic,
+   account and poll without a path its first one; a second run gives none.
+8. Activation of every type the run created or switched off.
 
 The data step turns a direct address of a file of `uploads/<module>/` in a material, a comment or a help reply into
 an `[attach]` of the type with the name unchanged (`getMigrateAttach()`), whatever the form of the name, when the file
@@ -3896,6 +3950,6 @@ around the thumb of a file the thumbnail form of that file, a link around anothe
 image alone, and `[url]` an attachment titled by its label. Inside a `[usehtml]` block of a material the raw HTML
 stays and a `src` or `href` becomes the file address of that material
 (`index.php?go=file&own=node&id=<id>&key=<name>`, with `&thumb=1` for a thumb), which
-`NodeService::getNodeFile()` grants as well. An image inside a link to anything else stays, because an attachment is
-a link of its own, and so does every address inside `[code]`, `[php]` and `[usephp]`. Every other address stays as
-written.
+`NodeService::getNodeFile()` grants as well. An image inside a link to anything else stays, with text or a hard
+break beside it in the label too, because an attachment is a link of its own, and so does every address inside
+`[code]`, `[php]` and `[usephp]`. Every other address stays as written.

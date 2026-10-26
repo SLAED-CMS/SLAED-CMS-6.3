@@ -328,7 +328,7 @@ function addsave(): void {
     global $db, $afile, $tpl;
     $warn = !checkAdminPost('blocks');
     $title = filterCutText(getVar('post', 'title', 'title', ''), 60);
-    $content = getVar('post', 'content', 'text', '');
+    $content = filterSourceText(getVar('post', 'content', 'raw', ''), isAdmin(true));
     $url = getVar('post', 'url', 'url', '');
     $bpos = getVar('post', 'bpos', 'var', '');
     if (!in_array($bpos, ['l', 'c', 'd', 'r', 'b', 'f'], true)) $bpos = '';
@@ -696,7 +696,7 @@ function editsave(): void {
     $bid = getVar('post', 'bid', 'num');
     $bkey = filterCutText(getVar('post', 'bkey', 'var', ''), 15);
     $title = filterCutText(getVar('post', 'title', 'title', ''), 60);
-    $content = getVar('post', 'content', 'text', '');
+    $content = filterSourceText(getVar('post', 'content', 'raw', ''), isAdmin(true));
     $url = filterCutText(getVar('post', 'url', 'url', ''), 200);
     $oldpos = getVar('post', 'oldposition', 'var', '');
     $bpos = getVar('post', 'bpos', 'var', '');

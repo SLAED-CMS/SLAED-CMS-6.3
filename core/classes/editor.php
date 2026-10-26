@@ -174,7 +174,7 @@ class Editor {
         ];
     }
 
-    # Render one editor in the shell with the variables, check and preview of its caller, a text with emoji, the room of its column and its file window; the kit once per answer
+    # Render one editor in the shell with the variables, check and preview of its caller, a text with emoji, the room of its column and its file window, read-only when asked; the kit once per answer
     public static function getFrame(array $data): string {
         global $tpl;
         $lang = (string)($data['lang'] ?? 'text');
@@ -213,6 +213,7 @@ class Editor {
             'rows_num' => (int)($data['rows'] ?? 0),
             'placeholder_text' => (string)($data['placeholder'] ?? ''),
             'is_required' => !empty($data['required']),
+            'is_readonly' => !empty($data['readonly']),
             'labelledby' => (string)($data['labelledby'] ?? ''),
             'aria_label' => (string)($data['arialabel'] ?? ''),
             'describedby' => (string)($data['describedby'] ?? ''),

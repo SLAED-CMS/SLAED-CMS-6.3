@@ -95,7 +95,7 @@ function setProbeSeed(): void {
 }
 
 # Build the class over the disposable schema, with the module settings one scenario needs put in front of the shipped ones
-# The whole configuration is handed over and not only the module section, because the write normalization of stage 2 reads the censor list and the autolinker from the site settings
+# The whole configuration is handed over as the site boots it; the censor list of the write normalization is read from the site settings by filterSourceText()
 function getProbeMail(array $sett = []): Privat {
     global $conf;
     return new Privat($GLOBALS['pdb'], ['privat' => $sett + $conf['privat']] + $conf);
@@ -155,7 +155,7 @@ function getProbeBoxes(): array {
 }
 
 # The body one snippet scenario is read from: source markup of both syntaxes over several lines, which one row has to answer as a single plain line
-const PROBESNIP = "# Head\n\n[b]bold[/b] <b>html</b> **stars** [link](http://slaed.net/x)\n> quote\nend";
+const PROBESNIP = "# Head\n\n[b]bold[/b] <b>html</b> **stars** [link](http://slaed.net/x)\n> quote\n> > \\- nested \\*kept\\*\nend";
 
 # What a list row answers for the body of its message: the markup of the cut is gone, a multibyte cut stays whole, and a tag the cut broke open never reaches the row
 # The bodies are written straight into the fixture, because what is read here is the cut of the server and not what a send normalizes on its way in
@@ -456,7 +456,7 @@ function getProbeRace(): array {
 # The payload every content scenario writes: a title and a body that carry everything an escape used to hide and everything a safe renderer has to keep out of the page
 const PROBETEXT = [
     'head' => '<img src=x onerror=alert(1)> "quoted" & <b>bold</b>',
-    'body' => "<script>alert('x')</script> [b]bb[/b] <a href=\"javascript:alert(1)\">link</a>\nsecond & \"line\"",
+    'body' => "<script>alert('x')</script> **bb** <a href=\"javascript:alert(1)\">link</a>\nsecond & \"line\"",
 ];
 
 # Point the writer at the editor whose first format is the wanted one and answer the format it really resolved to, so a disabled editor is visible instead of another branch

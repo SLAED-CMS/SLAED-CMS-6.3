@@ -7,26 +7,9 @@ namespace Tests\Unit;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-# Line breaks of docs/EDITORS.md: a stored <br> survives the mount by getTplTextarea() and the save of the plain and the markdown format
+# Stored text of docs/EDITORS.md: getTplTextarea() mounts the stored Markdown unchanged and a save without a change stores the same bytes, in the plain and the markdown format
 final class EditorBreakTest extends TestCase
 {
-    private const SAVED = [
-        'plain' => [
-            'lines' => "alpha<br>\r\nbeta<br>\r\ngamma",
-            'inline' => "one<br>\r\ntwo",
-            'blank' => "para<br>\r\n<br>\r\nnext",
-            'entity' => "a &amp; b<br>\r\nc",
-            'typed' => 'a &lt;br&gt; b',
-        ],
-        'markdown' => [
-            'lines' => "alpha  \r\nbeta  \r\ngamma",
-            'inline' => "one  \r\ntwo",
-            'blank' => "para  \r\n  \r\nnext",
-            'entity' => "a &amp; b  \r\nc",
-            'typed' => 'a &lt;br&gt; b',
-        ],
-    ];
-
     private static ?array $probe = null;
 
     # Run tests/Support/break_probe.php once in a fresh process and memoize its report
@@ -42,12 +25,6 @@ final class EditorBreakTest extends TestCase
         return self::$probe = $data;
     }
 
-    # One render with every break written the same way and no white space around it, so the spelling of a tag is not compared
-    private function getBreakForm(string $html): string
-    {
-        return (string)preg_replace('#\s*<br\s*/?>\s*#i', '<br>', $html);
-    }
-
     # The probe ran each format under the editor that writes it
     #[Test]
     public function eachFormatRunsUnderItsEditor(): void
@@ -57,50 +34,85 @@ final class EditorBreakTest extends TestCase
         $this->assertSame('markdown', $data['markdown']['format']);
     }
 
-    # One save writes the bytes the format stores a break as: <br> before a line end for plain, two spaces before it for markdown
+    # The editor receives the stored text byte for byte: no break rewritten, no entity decoded
     #[Test]
-    public function saveWritesEveryBreakBack(): void
-    {
-        $data = $this->getProbe();
-        foreach (self::SAVED as $fmt => $list) {
-            foreach ($list as $name => $want) $this->assertSame($want, $data[$fmt]['trips'][$name]['saved'], $fmt.' '.$name);
-        }
-    }
-
-    # A second mount and save leaves the value byte for byte as the first save wrote it
-    #[Test]
-    public function secondSaveChangesNothing(): void
+    public function mountGivesTheStoredText(): void
     {
         $data = $this->getProbe();
         foreach (['plain', 'markdown'] as $fmt) {
-            foreach ($data[$fmt]['trips'] as $name => $trip) $this->assertSame($trip['saved'], $trip['again'], $fmt.' '.$name);
+            foreach ($data[$fmt]['trips'] as $name => $trip) $this->assertSame($data['values'][$name], $trip['mount'], $fmt.' '.$name);
         }
     }
 
-    # The signature renders after the save as it rendered before it; an empty line of breaks becomes the paragraph Markdown writes it as
+    # A save without a change, submitted with the CRLF of a browser, stores the bytes it mounted, and so does a second one
     #[Test]
-    public function signatureRendersTheSame(): void
+    public function saveWithoutChangeKeepsTheBytes(): void
     {
         $data = $this->getProbe();
         foreach (['plain', 'markdown'] as $fmt) {
             foreach ($data[$fmt]['trips'] as $name => $trip) {
-                if ($fmt === 'markdown' && $name === 'blank') continue;
-                $this->assertSame($this->getBreakForm($trip['sign'][0]), $this->getBreakForm($trip['sign'][1]), $fmt.' '.$name);
+                $this->assertSame($data['values'][$name], $trip['saved'], $fmt.' '.$name);
+                $this->assertSame($data['values'][$name], $trip['again'], $fmt.' '.$name);
             }
         }
-        $this->assertSame(2, substr_count($data['markdown']['trips']['blank']['sign'][1], '<p>'));
     }
 
-    # A markdown save leaves no raw tag that an escaping render would print as text, and a tag a member typed stays text
+    # The stored text is escaped at render: a tag a member typed stays text, both hard breaks break, an entity reads as CommonMark reads it
     #[Test]
-    public function markdownSaveRendersBreaksWhenEscaped(): void
+    public function renderEscapesTheTypedText(): void
     {
-        $data = $this->getProbe();
-        foreach (['lines' => 2, 'inline' => 1, 'entity' => 1] as $name => $count) {
-            $html = $data['markdown']['trips'][$name]['safe'][1];
-            $this->assertStringNotContainsString('&lt;br', $html, $name);
-            $this->assertSame($count, substr_count($html, '<br>'), $name);
+        $trips = $this->getProbe()['markdown']['trips'];
+        $this->assertStringContainsString('&lt;h4&gt;Head&lt;/h4&gt;', $trips['tags']['sign']);
+        $this->assertStringNotContainsString('<h4', $trips['tags']['sign']);
+        $this->assertSame(2, substr_count($trips['breaks']['sign'], '<br>'));
+        $this->assertStringContainsString('a &amp; b &amp; c &lt;x&gt;', $trips['entity']['sign']);
+        $this->assertSame(2, substr_count($trips['blank']['sign'], '<p>'));
+    }
+
+    # A code block highlights once its two scripts ran, also in a pane htmx inserts, where the inline call runs before the scripts load
+    #[Test]
+    public function codeHighlightWaitsForItsScripts(): void
+    {
+        $html = $this->getProbe()['markdown']['trips']['quote']['sign'];
+        $this->assertMatchesRegularExpression('#highlight-line-numbers\.min\.js[^"]*"\s*></script><script>\(function\(s\)#', $html, 'The call does not follow its scripts');
+        foreach (["s.addEventListener('load',run)", 'document.currentScript.previousElementSibling', 'pre code:not([data-highlighted])'] as $part) {
+            $this->assertStringContainsString($part, $html);
         }
-        $this->assertSame('a <br> b', $data['markdown']['trips']['typed']['mount']);
+    }
+
+    # Every writer of a Markdown store keeps the typed text through filterSourceText(), and every reader of one renders safe with trust as Node does
+    #[Test]
+    public function storesKeepTheTypedTextAndRenderSafe(): void
+    {
+        $base = dirname(__DIR__, 2);
+        $need = [
+            'modules/forum/index.php' => ["filterSourceText(getVar('post', 'hometext', 'raw', ''), isAdmin(true))" => 3,
+                "filterContent(\$rows[0][7], true, \$conf['name'], 0, '', [], true)" => 1],
+            'modules/search/index.php' => ["'content' => \$cont, 'safe' => true, 'trust' => true," => 1],
+            'core/user.php' => ['$body = filterSourceText($text, isAdmin(true));' => 1, "filterContent(\$body, true, 'forum', 2, '', ['forum', \$id], true)" => 1,
+                "filterContent(\$userblock, true, 'profile', 2, '', ['profile', \$uid], true)" => 1, "filterContent(\$sig, true, 'profile'" => 1,
+                "\$body = \$prs->filterContent(\$body, true, 'all', 2, '', [], true);" => 1],
+            'modules/account/index.php' => ["filterSourceText(getVar('post', 'sig', 'raw', ''), isAdmin(true))" => 1,
+                "filterSourceText(getVar('post', 'block', 'raw', ''), isAdmin(true))" => 1],
+            'modules/account/admin/index.php' => ["filterSourceText(getVar('post', 'sig', 'raw', ''), isAdmin(true))" => 2,
+                "filterSourceText(getVar('post', 'block', 'raw', ''), isAdmin(true))" => 2],
+            'admin/modules/blocks.php' => ["filterSourceText(getVar('post', 'content', 'raw', ''), isAdmin(true))" => 2],
+            'core/system.php' => ["filterContent(\$content, true, 'all', 2, '', [], true)" => 1],
+            'admin/modules/messages.php' => ["filterSourceText(getVar('post', 'body', 'raw', ''), isAdmin(true))" => 2, 'getTplLanguageOptions($lang)' => 1],
+            'admin/modules/newsletter.php' => ["filterSourceText(getVar('post', 'body', 'raw', " => 2],
+            'core/classes/mail.php' => ["filterContent(\$body, true, 'all', 0, '', [], true)" => 1],
+            'modules/contact/admin/index.php' => ["filterSourceText(getVar('post', 'info', 'raw', ''), isAdmin(true))" => 1],
+            'modules/contact/index.php' => ["filterContent(\$conf['contact']['info'], true, \$conf['name'], 0, 'breaks', [], true)" => 1],
+            'core/helpers.php' => ["filterContent(\$texta, true, \$mod, 0, '', \$own, true)" => 1, "filterContent(\$textb, true, \$mod, 0, '', \$own, true)" => 1,
+                "\$desc = \$value ?: filterSourceText(getVar('post', \$name, 'raw', ''), isAdmin(true));" => 1],
+            'core/classes/comment.php' => ['filterSourceText($body)' => 2, 'filterSourceText($body, false, false)' => 1],
+            'core/classes/privat.php' => ['filterSourceText($body)' => 1],
+            'core/classes/node/service.php' => ['filterSourceText($text, $this->ctx->super, false)' => 1],
+        ];
+        foreach ($need as $file => $parts) {
+            $code = (string)file_get_contents($base.'/'.$file);
+            foreach ($parts as $part => $count) $this->assertSame($count, substr_count($code, $part), $file.': '.$part);
+            $this->assertDoesNotMatchRegularExpression("#getVar\('post', '(?:hometext|sig|block|content|body|info)', 'text'#", $code, $file.' stores a Markdown text escaped');
+        }
     }
 }

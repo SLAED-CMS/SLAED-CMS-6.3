@@ -14,7 +14,12 @@ class Parser {
     private const CACHEMIN = 2048;
     # The highlight scripts a code block loads, whose versioned addresses a stored rendering carries
     private const HLJS = ['plugins/highlightjs/highlight.min.js', 'plugins/highlightjs/highlight-line-numbers.min.js'];
-    # The name the head of a code block shows for a language of [code=…]; a language outside the list shows in capitals
+    # The call that highlights the blocks not yet highlighted; in a pane htmx inserts it runs before the two scripts load, so it waits for the second one
+    private const HLJSRUN = '(function(s){var go=function(){document.querySelectorAll(\'pre code:not([data-highlighted])\').forEach(function(c){'
+        .'hljs.highlightElement(c);hljs.lineNumbersBlock(c);});};var run=function(){if(document.readyState===\'loading\')'
+        .'document.addEventListener(\'DOMContentLoaded\',go);else go();};if(window.hljs&&hljs.lineNumbersBlock)run();'
+        .'else s.addEventListener(\'load\',run);})(document.currentScript.previousElementSibling);';
+    # The name the head of a code block shows for the language of its fence; a language outside the list shows in capitals
     private const CODENAME = ['bash' => 'Bash', 'cpp' => 'C++', 'csharp' => 'C#', 'css' => 'CSS', 'delphi' => 'Delphi', 'diff' => 'Diff', 'groovy' => 'Groovy',
         'java' => 'Java', 'jscript' => 'JavaScript', 'javascript' => 'JavaScript', 'js' => 'JavaScript', 'typescript' => 'TypeScript', 'php' => 'PHP',
         'python' => 'Python', 'ruby' => 'Ruby', 'scala' => 'Scala', 'sql' => 'SQL', 'vb' => 'VB', 'xml' => 'XML', 'shell' => 'Shell', 'sh' => 'Shell',
@@ -23,16 +28,15 @@ class Parser {
     private const CODELONG = 25;
     # A backslash makes the ASCII punctuation after it literal; the pair stays the first alternative of LITERAL and ESCAPE, so group 1 is set for a literal alone
     private const PAIR = '\\\\([!-\/:-@\[-`{-~])';
-    private const LITERAL = '/'.self::PAIR.'|\[(code|php|usephp|usehtml)(?:=[^\]]*)?\].*?\[\/\2\]|<(script|style)\b.*?<\/\3\s*>|<[a-zA-Z\/!][^>]*>/si';
+    private const LITERAL = '/'.self::PAIR.'|\[(usephp|usehtml)\].*?\[\/\2\]|<(script|style)\b.*?<\/\3\s*>|<[a-zA-Z\/!][^>]*>/si';
     # The raw pairs of the bracket layer keep every backslash as typed, so an escape inside them hides no tag from the bracket layer
-    private const ESCAPE = '/'.self::PAIR.'|\[(code|php|usephp|usehtml)(?:=[^\]]*)?\].*?\[\/\2\]/si';
+    private const ESCAPE = '/'.self::PAIR.'|\[(usephp|usehtml)\].*?\[\/\2\]/si';
     # The attachment grammar: file name, alignment and title always, width and height together, a relation only after both, and last the full-size form of an image
     private const ATTACH = '\[attach=([a-zA-Z0-9_\-\. ]+) align=([a-zA-Z]+) title=([\pL0-9_\-\.\"\s]+)';
     private const ATTSIZE = ' width=([0-5]?[0-9]?[0-9]+) height=([0-5]?[0-9]?[0-9]+)';
     private const ATTREL = ' rel=([a-zA-Z0-9_\-]+)';
     private const ATTFULL = ' size=(full)';
     private const ATTTAG = '/'.self::ATTACH.'(?:'.self::ATTSIZE.'(?:'.self::ATTREL.')?)?(?:'.self::ATTFULL.')?\]/siu';
-    private const SMILEY = '/(?<!\*)\*(0[1-9]|1[0-8])(?!\d)/';
     # The bracket layer reads a copy whose code, link targets and escaped brackets carry these two bytes for [ and *, which no source keeps
     private const UNMASK = ["\x04" => '[', "\x05" => '*'];
     private const PUNCT = '!"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~';
@@ -272,17 +276,15 @@ class Parser {
         return strtr($src, self::UNMASK);
     }
 
-    # Full re-parse of nested block content for [quote], [hide], [tab] and the alignment tags; reuses the live stash and salt and leaves filterStash()/trim() to the top level
+    # Full re-parse of nested block content for [hide] and [tab]; reuses the live stash and salt and leaves filterStash()/trim() to the top level
     private function filterNest(string $src): string {
         return $this->filterMarkdown(strtr($src, self::UNMASK), false);
     }
 
-    # Read a Markdown source: the bracket layer runs on a copy whose code, link targets and escaped brackets are masked, then CommonMark with GFM renders the result
+    # Read a Markdown source: the SLAED tags are read on a copy whose code, link targets and escaped brackets are masked, then CommonMark with GFM renders the result
     private function filterMarkdown(string $src, bool $top): string {
-        if (str_contains($src, '[') || preg_match(self::SMILEY, $src)) {
+        if (str_contains($src, '[')) {
             $src = $this->filterBbBlocks($this->filterMask($src));
-            $part = preg_split('/(\n[ \t]*\n)/', $src, -1, PREG_SPLIT_DELIM_CAPTURE) ?: [$src];
-            $src = implode('', array_map(fn(string $one): string => str_contains($one, '[') ? $this->filterBbInline($one, true) : $one, $part));
             if ($top) $src = $this->filterFreeBlocks($src);
             $src = strtr($src, self::UNMASK);
         }
@@ -305,7 +307,7 @@ class Parser {
             $at = $end;
         }
         $out .= substr($src, $at);
-        for ($at = 0; preg_match('/\[(code|php|usephp|usehtml)(?:=[^\]]*)?\]/i', $out, $m, PREG_OFFSET_CAPTURE, $at); $at = $end) {
+        for ($at = 0; preg_match('/\[(usephp|usehtml)\]/i', $out, $m, PREG_OFFSET_CAPTURE, $at); $at = $end) {
             $beg = $m[0][1];
             $end = stripos($src, '[/'.$m[1][0].']', $beg + strlen($m[0][0]));
             if ($end === false) break;
@@ -363,7 +365,7 @@ class Parser {
     }
 
     # Render parser images through the theme fragment so markup stays out of PHP
-    private function getParserImage(?string $src, string $alt, string $title = '', string $align = '', bool $isbb = false): string {
+    private function getParserImage(?string $src, string $alt, string $title = ''): string {
         global $tpl;
         if (!isset($tpl) || !is_object($tpl) || !method_exists($tpl, 'getHtmlFrag')) return $this->filterEsc($alt);
         return (string) $tpl->getHtmlFrag('parser-image', [
@@ -372,9 +374,6 @@ class Parser {
             'title' => $title,
             'missing' => $src === null,
             'fallback' => $src !== null,
-            'bbcode' => $isbb,
-            'left' => $align === 'left',
-            'right' => $align === 'right',
         ]);
     }
 
@@ -478,7 +477,7 @@ class Parser {
         ) ?? $src;
     }
 
-    # Escape non-stash text before inline BB processing of the plain format by splitting on stash tokens and escaping only the literal parts
+    # Escape non-stash text of the plain format before its autolinks by splitting on stash tokens and escaping only the literal parts
     private function filterText(string $s): string {
         $pat   = '/(\x02'.preg_quote($this->salt, '/').':\d+\x03)/';
         $parts = preg_split($pat, $s, -1, PREG_SPLIT_DELIM_CAPTURE) ?? [$s];
@@ -507,21 +506,14 @@ class Parser {
         return $id;
     }
 
-    # Render one code block by the configured highlighter; a BB block is legacy storage with entities and breaks to undo, a Markdown one is literal; mode 2 escapes the code itself
-    private function getCodeHtml(string $src, string $lang, bool $isbb = true): string {
+    # Render one code block by the configured highlighter; the code is literal, and mode 2 escapes it itself
+    private function getCodeHtml(string $code, string $lang): string {
         global $conf;
         static $sname = '';
         $mode = intval($conf['syntax'] ?? 0);
         $from = ['bash', 'cpp', 'csharp', 'css', 'delphi', 'diff', 'groovy', 'java', 'jscript', 'php', 'plain', 'python', 'ruby', 'scala', 'sql', 'vb', 'xml'];
         $to = ['Bash', 'Cpp', 'CSharp', 'Css', 'Delphi', 'Diff', 'Groovy', 'Java', 'JScript', 'Php', 'Plain', 'Python', 'Ruby', 'Scala', 'Sql', 'Vb', 'Xml'];
         $cname = str_ireplace($from, $to, preg_match('#[^a-zA-Z0-9_\-]#', $lang) ? '' : $lang);
-        $code = $src;
-        if ($isbb) {
-            $in = ['&#034;', '&quot;', '&#036;', '&dollar;', '&#038;', '&amp;', '&#039;', '&apos;', '&#060;', '&lt;', '&#062;', '&gt;', '&#092;', '&bsol;'];
-            $out = ['"', '"', '$', '$', '&', '&', "'", "'", '<', '<', '>', '>', '\\', '\\'];
-            $src = preg_replace('/\A(?:[ \t]*\r?\n)+|\s+\z/', '', $src) ?? $src;
-            $code = str_replace($in, $out, preg_replace('#<br\s*/?>(?=\r?\n|$)#i', '', $src) ?? '');
-        }
         if ($mode === 0) {
             $html = preg_match("#<\?(php)?[^[:graph:]]#", $code) ? highlight_string($code, true)
                 : preg_replace('#&lt;\?php(?:&nbsp;| )#', '', highlight_string('<?php '.$code, true), 1);
@@ -538,7 +530,7 @@ class Parser {
             $scripts = '';
             if ($sname !== 'hljs') {
                 foreach (self::HLJS as $one) $scripts .= $this->getPartHtml('head-script-src', ['src' => Template::getAssetUrl($one), 'attr' => '']);
-                $scripts .= $this->getPartHtml('head-script-inline', ['js' => 'hljs.highlightAll();hljs.initLineNumbersOnLoad();']);
+                $scripts .= $this->getPartHtml('head-script-inline', ['js' => self::HLJSRUN]);
                 $sname = 'hljs';
             }
             $hlang = ['jscript' => 'javascript', 'vb' => 'vbnet', 'plain' => 'plaintext'][strtolower($cname)] ?? strtolower($cname);
@@ -558,27 +550,10 @@ class Parser {
         ]);
     }
 
-    # Process the BB block tags; the right to author the trusted tags is settled by filterTrustedTags() at every write, never here, and a tag not honoured keeps its backslashes
+    # Process the SLAED tags; the right to author the trusted tags is settled by filterTrustedTags() at every write, never here, and a tag not honoured keeps its backslashes
     private function filterBbBlocks(string $src): string {
-        if (preg_match(self::SMILEY, $src)) {
-            $src = preg_replace_callback(
-                self::SMILEY,
-                function(array $m): string {
-                    $num = $this->filterEsc($m[1]);
-                    $img = getThemeFileUrl('images/smilies/'.$num.'.gif');
-                    $ttl = _SMILIE.' - '.$num;
-                    return $this->addStash($this->getParserImage($img, $ttl, $ttl));
-                },
-                $src
-            ) ?? $src;
-        }
-
         if (!str_contains($src, '[')) return $src;
-
-        $src = preg_replace('/\[hr\]/si', $this->addStash($this->getPartHtml('parser-block', ['is_rule' => true])), $src) ?? $src;
-        $src = preg_replace('/\[li\]/si', $this->addStash('&bull; '), $src) ?? $src;
         $keep = fn(string $txt): string => preg_replace_callback('/\\\\(?=[!-\/:-@\[-`{-~])/', fn(array $m): string => $this->addStash('\\', true), $txt) ?? $txt;
-
         $src = preg_replace_callback(
             '/\[usehtml\](.*?)\[\/usehtml\]/si',
             function(array $m) use ($keep): string {
@@ -588,7 +563,6 @@ class Parser {
             },
             $src
         ) ?? $src;
-
         $src = preg_replace_callback(
             '/\[usephp\](.*?)\[\/usephp\]/si',
             function(array $m) use ($keep): string {
@@ -607,7 +581,6 @@ class Parser {
             },
             $src
         ) ?? $src;
-
         $src = preg_replace_callback(
             '/\[tabs=(.*?)\](.*?)\[\/tabs\]/si',
             function(array $m): string {
@@ -625,40 +598,6 @@ class Parser {
             },
             $src
         ) ?? $src;
-
-        $src = preg_replace_callback(
-            '/\[code\](.*?)\[\/code\]/si',
-            function(array $m): string {
-                $txt  = str_replace('?', '&#063;', getDecodedText((string)$m[1]));
-                $html = $this->getPartHtml('div', ['is_code' => true, 'title' => _CODE, 'content_html' => $this->filterEsc($txt)], true);
-                return $this->addStash($html);
-            },
-            $src
-        ) ?? $src;
-
-        $src = preg_replace_callback(
-            '/\[code=(.*?)\](.*?)\[\/code\]/si',
-            fn(array $m): string => $this->addStash($this->getCodeHtml($m[2], $m[1])),
-            $src
-        ) ?? $src;
-
-        $src = preg_replace_callback(
-            '/\[php\](.*?)\[\/php\]/si',
-            fn(array $m): string => $this->addStash($this->getCodeHtml($m[1], 'php')),
-            $src
-        ) ?? $src;
-
-        while (preg_match('/\[quote\](.*?)\[\/quote\]/si', $src)) {
-            $src = preg_replace_callback(
-                '/\[quote\](.*?)\[\/quote\]/si',
-                function(array $m): string {
-                    $txt = $this->filterNest($m[1]);
-                    return $this->addStash($this->getQuoteHtml(['is_quote' => true, 'content_html' => $txt, 'title_text' => _QUOTE]));
-                },
-                $src
-            ) ?? $src;
-        }
-
         while (preg_match('/\[hide\](.*?)\[\/hide\]/si', $src)) {
             $src = preg_replace_callback(
                 '/\[hide\](.*?)\[\/hide\]/si',
@@ -671,21 +610,7 @@ class Parser {
                 $src
             ) ?? $src;
         }
-
-        while (preg_match('/\[(left|right|center|justify)\](.*?)\[\/\1\]/si', $src)) {
-            $src = preg_replace_callback(
-                '/\[(left|right|center|justify)\](.*?)\[\/\1\]/si',
-                fn(array $m): string => $this->addStash($this->getPartHtml('parser-block', [
-                    'is_align' => true,
-                    'align' => strtolower($m[1]),
-                    'content_html' => $this->filterNest($m[2]),
-                ])),
-                $src
-            ) ?? $src;
-        }
-
         if (stripos($src, '[attach=') !== false) $src = $this->filterAttach($src);
-
         return $src;
     }
 
@@ -1273,7 +1198,7 @@ class Parser {
                 return $this->getPartHtml('parser-block', ['is_rule' => true]);
             case 'code':
                 $lang = preg_split('/\s+/', $node->info ?? '')[0] ?? '';
-                return $this->getCodeHtml(str_ends_with($node->lit, "\n") ? substr($node->lit, 0, -1) : $node->lit, $lang, false);
+                return $this->getCodeHtml(str_ends_with($node->lit, "\n") ? substr($node->lit, 0, -1) : $node->lit, $lang);
             case 'html':
                 return $this->filterRawTags(str_replace(['&#034;', '&#039;'], ['"', "'"], $node->lit));
             case 'stash':
@@ -1952,14 +1877,13 @@ class Parser {
         return $out;
     }
 
-    # Inline entry point of the plain format: pre-escape user text via filterText() in safe mode, then run the bracket layer and the autolinks
+    # Inline entry point of the plain format: pre-escape user text via filterText() in safe mode, then run the autolinks
     private function filterInline(string $src): string {
         return $this->filterInlines($this->safe ? $this->filterText($src) : $src);
     }
 
-    # Inline pipeline of the plain format: bracket tags, then autolinks and the safe HTML escape
+    # Inline pipeline of the plain format: autolinks, then the safe HTML escape
     private function filterInlines(string $src): string {
-        if (str_contains($src, '[')) $src = $this->filterBbInline($src);
         if (!str_contains($src, '<')) return $src;
         $src = preg_replace_callback(
             '/<(https?:\/\/[^\s>]+)>/',
@@ -1973,152 +1897,6 @@ class Parser {
         ) ?? $src;
         if ($this->safe) $src = preg_replace_callback('/<[^>]+>/', fn(array $m): string => $this->filterEsc($m[0]), $src) ?? $src;
         return $src;
-    }
-
-    # Bracket inline tags, ed2k before generic [url]; a raw source is the Markdown copy, whose labels a safe rendering escapes here as the plain format escaped them before
-    private function filterBbInline(string $src, bool $israw = false): string {
-        $esc = $israw && $this->safe;
-        $src = preg_replace_callback(
-            '/\[url\](ed2k:\/\/\|file\|(.*?)\|\d+\|\w+\|(h=\w+\|)?\/?)\[\/url\]/si',
-            fn(array $m): string => $this->getEdLink($m[1], $m[2]),
-            $src
-        ) ?? $src;
-
-        $src = preg_replace_callback(
-            '/\[url=(ed2k:\/\/\|file\|(.*?)\|\d+\|\w+\|(h=\w+\|)?\/?)\](.*?)\[\/url\]/si',
-            fn(array $m): string => $this->getEdLink($m[1], $m[2], $esc ? $this->filterEsc($m[4]) : (string)$m[4]),
-            $src
-        ) ?? $src;
-
-        foreach (['b' => 'is_strong', 'i' => 'is_em', 'u' => 'is_under', 's' => 'is_del'] as $tag => $flag) {
-            if (stripos($src, '['.$tag.']') === false) continue;
-            [$open, $shut] = $this->getPartPair([$flag => true]);
-            $beg = $this->addStash($open, true);
-            $end = $this->addStash($shut, true);
-            for ($i = 0; $i < 3; $i++) {
-                $prev = $src;
-                $src = preg_replace('/\['.$tag.'\](.*?)\[\/'.$tag.'\]/si', $beg.'$1'.$end, $src) ?? $src;
-                if ($prev === $src) break;
-            }
-        }
-
-        $src = preg_replace_callback(
-            '/\[color=([^\]]+)\](.*?)\[\/color\]/si',
-            function(array $m): string {
-                $color = strtolower(trim($m[1]));
-                if (!preg_match('/^#[0-9a-f]{6}$/', $color) && !preg_match('/^[a-z]+$/', $color)) return $m[2];
-                [$open, $shut] = $this->getPartPair(['is_color' => true, 'value' => $color]);
-                return $this->addStash($open, true).$m[2].$this->addStash($shut, true);
-            },
-            $src
-        ) ?? $src;
-
-        $src = preg_replace_callback(
-            '/\[family=([A-Za-z ]+)\](.*?)\[\/family\]/si',
-            function(array $m): string {
-                [$open, $shut] = $this->getPartPair(['is_family' => true, 'value' => trim($m[1])]);
-                return $this->addStash($open, true).$m[2].$this->addStash($shut, true);
-            },
-            $src
-        ) ?? $src;
-
-        $src = preg_replace_callback(
-            '/\[size=([0-9]{1,2})\](.*?)\[\/size\]/si',
-            function(array $m): string {
-                $size = max(8, min(48, (int)$m[1]));
-                [$open, $shut] = $this->getPartPair(['is_size' => true, 'value' => $size]);
-                return $this->addStash($open, true).$m[2].$this->addStash($shut, true);
-            },
-            $src
-        ) ?? $src;
-
-        $src = preg_replace_callback(
-            '/\[mail\](.*?)\[\/mail\]/si',
-            fn(array $m): string => $this->getBbMail($m[1]) ?? $m[1],
-            $src
-        ) ?? $src;
-
-        $src = preg_replace_callback(
-            '/\[mail\s*=\s*([^\]]+)\](.*?)\[\/mail\]/si',
-            fn(array $m): string => $this->getBbMail($m[1], $esc ? $this->filterEsc($m[2]) : $m[2]) ?? $m[2],
-            $src
-        ) ?? $src;
-
-        $src = preg_replace_callback(
-            '/\[url\](.*?)\[\/url\]/si',
-            fn(array $m): string => $this->getBbLink($m[1]),
-            $src
-        ) ?? $src;
-
-        $src = preg_replace_callback(
-            '/\[url=([^\]]+)\](.*?)\[\/url\]/si',
-            fn(array $m): string => $this->getBbLink($m[1], $esc ? $this->filterEsc($m[2]) : $m[2]),
-            $src
-        ) ?? $src;
-
-        $src = preg_replace_callback(
-            '/\[img\](.*?)\[\/img\]/si',
-            fn(array $m): string => $this->getBbImage($m[1]),
-            $src
-        ) ?? $src;
-
-        $src = preg_replace_callback(
-            '/\[img=([a-zA-Z]+)\](.*?)\[\/img\]/si',
-            fn(array $m): string => $this->getBbImage($m[2], '', $m[1]),
-            $src
-        ) ?? $src;
-
-        $src = preg_replace_callback(
-            '/\[img\s+alt=([\pL0-9_\-\.\"\s]+)\](.*?)\[\/img\]/siu',
-            fn(array $m): string => $this->getBbImage($m[2], $m[1]),
-            $src
-        ) ?? $src;
-
-        $src = preg_replace_callback(
-            '/\[img=([a-zA-Z]+)\s+alt=([\pL0-9_\-\.\"\s]+)\](.*?)\[\/img\]/siu',
-            fn(array $m): string => $this->getBbImage($m[3], $m[2], $m[1]),
-            $src
-        ) ?? $src;
-
-        return $src;
-    }
-
-    # Shared BB [img] renderer: www prefix, safe URL policy, alt keywords (title/alt/empty) fall back to the file name, align validates to left/right (else left, empty stays empty)
-    private function getBbImage(string $url, string $alt = '', string $align = ''): string {
-        $url = trim($this->filterDec($url));
-        if (preg_match('/^www\./i', $url)) $url = 'https://'.$url;
-        $link = stripos($url, 'data:') === 0 ? $url : $this->filterUrl($url);
-        $path = parse_url($url, PHP_URL_PATH);
-        $path = is_string($path) && $path !== '' ? $path : $url;
-        $file = stripos($url, 'data:') === 0 ? 'image' : (basename(rawurldecode($path)) ?: 'image');
-        $alt = trim($this->filterDec($alt));
-        $alt = ($alt === '' || strtolower($alt) === 'title' || strtolower($alt) === 'alt') ? $file : $alt;
-        $align = strtolower(trim($align));
-        if ($align !== '' && !in_array($align, ['left', 'right'], true)) $align = 'left';
-        return $this->addStash($this->getParserImage($this->normalizeImageSource($link), $alt, $alt, $align, true), true);
-    }
-
-    # Shared BB [url] renderer: bare www links get https, safe mode applies the URL policy; the bare form labels with the escaped url
-    private function getBbLink(string $url, ?string $lbl = null): string {
-        $url = trim($this->filterDec($url));
-        if (preg_match('/^www\./i', $url)) $url = 'https://'.$url;
-        $href = $this->filterUrl($url);
-        return $this->addStash($lbl === null ? $this->getPartLink($href, $url) : $this->getPartLink($href, $lbl, '', false, true), true);
-    }
-
-    # Shared BB [mail] renderer: returns a stashed mailto anchor or null when the address fails validation
-    private function getBbMail(string $mail, ?string $lbl = null): ?string {
-        $mail = trim($this->filterDec($mail));
-        if (!preg_match('/^[^@\s]+@[^@\s]+\.[a-z]{2,}$/i', $mail)) return null;
-        return $this->addStash($lbl === null ? $this->getPartLink('mailto:'.$mail, $mail) : $this->getPartLink('mailto:'.$mail, $lbl, '', false, true), true);
-    }
-
-    # Shared ed2k renderer: escapes url and file name; the bare form is prefixed and labeled with the file name
-    private function getEdLink(string $url, string $name, ?string $lbl = null): string {
-        $url = $this->filterDec($url);
-        $ttl = $this->filterDec($name);
-        $tag = ($lbl === null) ? $this->getPartLink($url, $ttl, $ttl, true) : $this->getPartLink($url, $lbl, $ttl, true, true);
-        return $this->addStash(($lbl === null ? 'eMule/eDonkey: ' : '').$tag, true);
     }
 
     # Escape remaining HTML tags of the plain format in safe mode; unsafe mode is a no-op because its HTML is the author's

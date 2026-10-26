@@ -1113,7 +1113,7 @@ final class NodeService {
 
     # The stored form of one text of a material; the full form and the quick edit both run it, so a text stored either way is one canonical text
     private function filterNodeText(string $key, string $text): string {
-        $text = filterTrustedTags($text, $this->ctx->super);
+        $text = filterSourceText($text, $this->ctx->super, false);
         if (!mb_check_encoding($text, 'UTF-8') || checkEditorTextRoom($text, 'nodes.'.$key) !== '') throw $this->getInvalid($key);
         return $text;
     }

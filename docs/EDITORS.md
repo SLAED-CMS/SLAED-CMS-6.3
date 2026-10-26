@@ -265,8 +265,8 @@ the window has closed and given the focus back. The filter, the keys and the run
 ### Markdown commands and the counter
 
 Bold, italic, code, link, list and quote appear where the field stores Markdown: CodeMirror as text always, Plain Plus
-only on a field whose format is `markdown`, which no caller gives today, since Plain Plus stores `plain` and the parser
-reads no Markdown there. Ctrl+B and Ctrl+I work only in such a text. A textarea continues a list, a numbered list, a task
+only on a field whose format is `markdown`, which no caller gives today: Plain Plus names its format `plain`, while the
+parser reads every stored text as Markdown (`docs/PARSER.md`, "Source Format"). Ctrl+B and Ctrl+I work only in such a text. A textarea continues a list, a numbered list, a task
 and a quote by Enter and ends it on an empty item; CodeMirror does that through its grammar.
 
 What is left is counted in bytes against the column of `getEditorRoomData()`, the same number the save checks and the
@@ -330,7 +330,7 @@ key of its data, or `_TEXT`. The other drivers are described in `docs/TEMPLATES.
 ## Usage
 
 A form renders a text through `getTplTextarea()`, which chooses the editor and its format, mounts the stored value
-(see "Line Breaks on Mount") and declares where the text is stored:
+(see "Stored Text on Mount and Save") and declares where the text is stored:
 
 ```php
 $body = getTplTextarea([
@@ -445,20 +445,13 @@ insert-options window of `getEditorFileKit()`; a template-only rename breaks the
 silently, and the gain is cosmetic — the attribute names the window instance,
 which is true in both modes.
 
-## Line Breaks on Mount
+## Stored Text on Mount and Save
 
-A stored value can carry `<br>`: the `plain` save writes one before every line end through `nl2br()`, the `html` editors write them as markup, and the values migrated from 6.2 hold them: on the stand 8453 of 15261 forum posts, 73 of 829 signatures and 123 of 785 custom menus. `getTplTextarea()` turns each one into what the save of the active format turns back into a break, before any driver sees the value; the `html` format mounts the value as it is. CodeMirror as text mounts through the same function.
+Every text the parser renders as Markdown is stored as typed: `filterSourceText()` in `core/security.php` turns the line ends a browser submits as CRLF into LF, drops `[usehtml]` and `[usephp]` of a writer without the capability, applies the censor list to a non-administrator (not to a Node text) and trims; nothing is escaped and no `<br>` is written, because the parser escapes at render. Node, comments, private messages, forum posts, signatures, own blocks, blocks, admin messages, newsletters and the contact text go through it, whatever the editor and its format. `getTplTextarea()` mounts the stored text unchanged in every format, so a save without a change stores the bytes it mounted. CodeMirror as text mounts through the same function, and the private messages hand the stored text to forward and the quote to reply unchanged as well.
 
-| Format | A stored `<br>`, with the line end after it if there is one, mounts as | What the save writes |
-| --- | --- | --- |
-| `plain` | a line end | `<br>` and the line end again, through `nl2br()` of `filterHtml()` |
-| `markdown` | a Markdown hard break: two spaces and a line end | the two spaces and the line end, which every render of the parser, the escaped one included, turns into `<br>` |
+A text written before this rule can still carry CR or white space at its ends; its first save stores it with LF and trimmed. `tests/Unit/EditorBreakTest.php` drives hard breaks, empty lines, entities, typed tags, quotes and a fence through the shipped mount, the browser submit and the save with `tests/Support/break_probe.php`, and holds the writers and the render mode of every store.
 
-A second mount and save leaves the value byte for byte as the first save wrote it. `<br />` comes back as `<br>` in `plain`; a `<br>` with no line end after it gains one; a `<br>` at the very end of the field is lost to the `trim()` of the `text` filter, as any trailing line end is. In `markdown` a line of nothing but a `<br>` becomes a line of two spaces, which Markdown reads as an empty line: the lines around it render as two paragraphs. A `<br>` a member typed as text is stored escaped, `&lt;br&gt;`, and is not touched. `tests/Unit/EditorBreakTest.php` drives each case through the shipped mount, the browser submit and the save with `tests/Support/break_probe.php`.
-
-Toast UI starts in its markdown mode and hands the text back byte for byte; measured in the browser on 2026-10-07 with `_users.sig` and `_users.block` through one save of the account settings, `block` went from 1475 bytes with 22 tags to 1431 with 22 hard breaks and a second save changed nothing. Its WYSIWYG mode, one click away in the editor, rewrites the text on the way back: it reads every line as a paragraph and writes a hard break back as nothing (`a` and two spaces, a line end and `b` come back `ab`), and a `<br>` as a bare line end. A member who switches modes loses breaks there, whatever the server mounts.
-
-`replace_break()`, which deletes every `<br>`, is no part of the mount; it keeps its other callers: the private messages hand the text to forward and the quote to reply in one hidden field the script copies into the editor, stripped the old way; they render in the `breaks` format, where the line end that remains still breaks, so only a `<br>` with no line end after it is lost there.
+Toast UI starts in its markdown mode and hands the text back byte for byte. Its WYSIWYG mode, one click away in the editor, rewrites the text on the way back: it reads every line as a paragraph and writes a hard break back as nothing (`a` and two spaces, a line end and `b` come back `ab`), and a `<br>` as a bare line end. A member who switches modes loses breaks there, whatever the server mounts.
 
 ## Content Heading Rule
 
@@ -471,4 +464,4 @@ The module title field owns the page `H1`. Inside an article body, authors start
   the variables, the check, the comparison and the preview with its route.
 - `tests/Unit/EditorWindowTest.php` — the file window and the emoji panel of every text engine, their words in six
   locales, the skins byte-identical in both themes.
-- `tests/Unit/EditorBreakTest.php` — the line breaks on mount; `tests/Unit/EditorRoomTest.php` — the room of a column.
+- `tests/Unit/EditorBreakTest.php` — the stored text on mount and save; `tests/Unit/EditorRoomTest.php` — the room of a column.

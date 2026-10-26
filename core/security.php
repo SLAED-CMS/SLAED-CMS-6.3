@@ -962,6 +962,19 @@ function filterTrustedTags(string $text, bool $trust = false): string {
     return $text;
 }
 
+# Turn a typed text into the source a store keeps, never HTML-escaped, as the parser escapes at render; a browser sends every line end of a textarea as CRLF
+function filterSourceText(string $text, bool $trust = false, bool $cens = true): string {
+    global $conf;
+    $text = filterTrustedTags(str_replace(["\r\n", "\r"], "\n", $text), $trust);
+    if ($cens && !isAdmin() && !empty($conf['censor'])) {
+        foreach (explode(',', (string)($conf['censor_l'] ?? '')) as $one) {
+            $one = trim($one);
+            if ($one !== '') $text = (string)preg_replace('#'.preg_quote($one, '#').'#i', (string)($conf['censor_r'] ?? ''), $text);
+        }
+    }
+    return trim($text);
+}
+
 # Strip tags, HTML-encode, apply censor; $type=2 skips strip_tags (HTML allowed), $type=1 skips censor
 function filterText(string $message, int $type = 0): string {
     global $conf;

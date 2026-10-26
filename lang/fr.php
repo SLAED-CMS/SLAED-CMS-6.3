@@ -713,7 +713,6 @@ define('_SITEMAP_XML','Ce plan du site est conçu pour les moteurs de recherche,
 define('_SITENAME','Nom du site');
 define('_SITEURL','Adresse de site');
 define('_SIZE','Taille');
-define('_SMILIE','Smile');
 define('_SORT','Tri');
 define('_SPEC','Spécial');
 define('_SPEC_GROUP','Groupe spécial');

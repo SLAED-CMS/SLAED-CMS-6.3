@@ -453,7 +453,7 @@ class FeedTest extends TestCase
         $this->assertStringContainsString('$content = getRssBody($url) ?? $content;', $core, 'A failed refresh keeps the stored body');
         $this->assertStringContainsString("\$prs->filterContent(\$content, true, '', 2)", $core, 'A stored feed is rendered in safe mode');
         $this->assertStringContainsString("\$prs->filterDoc(\$body, true, '', 1)", $core, 'A feed a visitor chose is rendered safe and never enters the parser cache');
-        $pre = "\$content = (\$url == '') ? \$prs->filterContent(\$content, false, 'all', 2) : '';";
+        $pre = "\$content = (\$url == '') ? \$prs->filterContent(\$content, true, 'all', 2, '', [], true) : '';";
         $this->assertStringContainsString($pre, $core, 'A feed block is never rendered in trusted mode');
         $this->assertStringNotContainsString('core/classes/feed.php', substr($core, 0, (int)strpos($core, 'function ')), 'Feed is loaded by its consumers only');
     }

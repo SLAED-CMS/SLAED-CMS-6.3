@@ -71,14 +71,14 @@ final class UpdatePointsTest extends TestCase
         $this->checkFinished($run['applying'], '0', 'applying');
     }
 
-    # Journal rows or a mark without a manifest stop the unit before it writes anything
+    # Journal rows without a manifest stop the unit before it writes anything; a mark without a manifest is a unit that ran before, done and writing nothing
     #[Test]
     public function targetDataWithoutAManifestStopsTheUnit(): void
     {
         $run = $this->getRun('stop');
         foreach (['rows' => null, 'mark' => ['points' => '6.3.0']] as $name => $mark) {
-            $this->assertFalse($run[$name]['done'], $name);
-            $this->assertStringContainsString('no manifest exists', $run[$name]['text']);
+            $this->assertSame($name === 'mark', $run[$name]['done'], $name);
+            $this->assertStringContainsString(($name === 'mark') ? 'ran on this site before' : 'the unit is stopped', $run[$name]['text']);
             $left = [$run[$name]['state'], $run[$name]['snap'], $run[$name]['mark'], $run[$name]['stale']];
             $this->assertSame([null, null, $mark, true], $left, $name.': the stopped unit wrote something');
         }

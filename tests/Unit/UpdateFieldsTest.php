@@ -113,13 +113,16 @@ final class UpdateFieldsTest extends TestCase
         }
     }
 
-    # A mark without a manifest, named definitions over positional rows, a forged snapshot and a stored row that is neither source nor target each stop the unit
+    # Named definitions over positional rows, a forged snapshot and a stored row that is neither source nor target each stop the unit
+    # A mark without a manifest is a unit that ran before: done, and nothing written
     #[Test]
     public function theStopsHold(): void
     {
         $stop = $this->getRun('stop');
+        $this->assertTrue($stop['mark']['done']);
+        $this->assertStringContainsString('the mark is set and no manifest exists, the unit ran on this site before', $stop['mark']['text']);
+        $this->assertSame([null, false], [$stop['mark']['state'], $stop['mark']['dir']], 'A unit that ran before left a backup behind');
         foreach ([
-            'mark' => 'the mark is set and no manifest exists',
             'named' => 'already in the 6.3 format',
             'forged' => 'forum.json does not match its manifest',
             'foreign' => 'neither its source nor its target',

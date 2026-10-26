@@ -713,7 +713,6 @@ define('_SITEMAP_XML','Данная карта сайта предназначе
 define('_SITENAME','Название сайта');
 define('_SITEURL','Адрес сайта');
 define('_SIZE','Размер');
-define('_SMILIE','Смайл');
 define('_SORT','Сортировка');
 define('_SPEC','Специальная');
 define('_SPEC_GROUP','Спец. группа');

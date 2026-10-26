@@ -537,7 +537,7 @@ function getProbeCommentFormat(): array {
         'empty' => $prs->filterContent($body, true, 'voting', 0, ''),
         'html' => $prs->filterContent('<b>x</b> <img src=x onerror=alert(1)>', true, 'voting', 0, 'markdown'),
         'htmlplain' => $prs->filterContent('<b>x</b> <img src=x onerror=alert(1)>', true, 'voting', 0, 'plain'),
-        'url' => $prs->filterContent('[url=javascript:alert(1)]click[/url]', true, 'voting', 0, 'plain'),
+        'url' => $prs->filterContent('[click](javascript:alert(1))', true, 'voting', 0, 'markdown'),
         'usehtml' => $prs->filterContent('[usehtml]<b>raw</b>[/usehtml]', true, 'voting', 0, 'markdown'),
     ];
 }

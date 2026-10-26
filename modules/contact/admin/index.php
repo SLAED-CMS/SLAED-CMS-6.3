@@ -54,7 +54,7 @@ function save(): void {
     $room = '';
     if (!$iswarn) {
         $cont = [
-            'info' => getVar('post', 'info', 'text', ''),
+            'info' => filterSourceText(getVar('post', 'info', 'raw', ''), isAdmin(true)),
             'admins' => getVar('post', 'admins', 'num', 0),
         ];
         $room = checkEditorTextRoom($cont['info'], 'config');

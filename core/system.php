@@ -809,7 +809,7 @@ function getBlocks(string $side, string $fly = ''): void {
         $result = $db->getSqlQuery($sql.' ORDER BY weight ASC', $qargs);
         while ([$bid, $bkey, $title, $content, $url, $bfile, $view, $expire, $action, $bpos, $which, $param] = $db->getSqlRow($result)) {
             $bid = intval($bid);
-            $content = ($url == '') ? $prs->filterContent($content, false, 'all', 2) : '';
+            $content = ($url == '') ? $prs->filterContent($content, true, 'all', 2, '', [], true) : '';
             $view = intval($view);
             $where = explode(',', $which);
             $barr[] = [$bid, $bkey, $title, $content, $url, $bfile, $view, $expire, $action, $bpos, $where, (string)$param];

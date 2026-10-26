@@ -644,7 +644,7 @@ function view(): void {
                 unset($uid, $nick, $rank, $mail, $site, $avatar, $reg, $from, $sig, $view, $point, $warn, $gender, $votes, $total, $gname, $grank, $gcolor, $upath);
             }
         }
-        $seodesc = cutstr(trim(strip_tags($prs->filterContent($rows[0][7], false, $conf['name']))), 160);
+        $seodesc = cutstr(trim(strip_tags($prs->filterContent($rows[0][7], true, $conf['name'], 0, '', [], true))), 160);
         $seoimg = getImgText($rows[0][7], '', false, '', ['forum', intval($rows[0][0])]);
         $seoimg = $seoimg ? getPublicUrl($seoimg) : '';
         $share = getPublicUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $topic, 'route' => $rows[0][25], 'page' => $num]);
@@ -1002,7 +1002,7 @@ function add(): void {
         $subject = getVar('post', 'subject', 'title');
         $subject = $subject ?: $subold;
         $txtold = $hometext;
-        $hometext = getVar('post', 'hometext', 'text');
+        $hometext = filterSourceText(getVar('post', 'hometext', 'raw', ''), isAdmin(true));
         $hometext = $hometext ?: $txtold;
     } elseif ($conf['forum']['add'] && ($istopic || $isreply)) {
         $fid = getVar('post', 'fid', 'num');
@@ -1017,7 +1017,7 @@ function add(): void {
         }
         $subject = getVar('post', 'subject', 'title');
         $subject = $ftitle ?: $subject;
-        $hometext = getVar('post', 'hometext', 'text');
+        $hometext = filterSourceText(getVar('post', 'hometext', 'raw', ''), isAdmin(true));
         if ($qid && $ftext) $hometext = preg_replace('/^/m', '> ', $ftext)."\n\n";
         $status = getVar('post', 'status', 'num', 3);
         $time = getVar('req', 'time', 'time');
@@ -1162,7 +1162,7 @@ function send(): void {
         $id = $fid;
         $postname = filterCutText(filterText(getVar('post', 'postname', 'text')), 25);
         $subject = filterCutText(getVar('post', 'subject', 'text'), 100);
-        $hometext = getVar('post', 'hometext', 'text');
+        $hometext = filterSourceText(getVar('post', 'hometext', 'raw', ''), isAdmin(true));
         $size = 0;
         foreach (preg_split('/\s+/u', $hometext, -1, PREG_SPLIT_NO_EMPTY) ?: [] as $word) {
             $size = max($size, mb_strlen($word));

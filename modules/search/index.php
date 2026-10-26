@@ -141,7 +141,7 @@ function getSearchForum(array $state): array {
         $url = getSearchUrl(['name' => 'forum', 'op' => 'view', 'id' => $tid, 'route' => $path], $state['word']);
         $edit = getSeoUrl(['name' => 'forum', 'op' => 'add', 'id' => $tid, 'cat' => $cid, 'pid' => $pid]);
         $rows[] = getSearchItem('forum', $url, $edit, [
-            'title' => $titl, 'time' => $time, 'cid' => $cid, 'content' => $cont,
+            'title' => $titl, 'time' => $time, 'cid' => $cid, 'content' => $cont, 'safe' => true, 'trust' => true,
             'nick' => $nick, 'upath' => $upath, 'user' => $user, 'post' => true, 'comments' => $comm, 'reads' => $reads,
         ]);
     }

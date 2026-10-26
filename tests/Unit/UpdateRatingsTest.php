@@ -101,14 +101,14 @@ final class UpdateRatingsTest extends TestCase
         $this->checkFinished($run['applying'], 'applying');
     }
 
-    # Rows of the new tables or a mark without a manifest stop the unit before it writes anything
+    # Rows of the new tables without a manifest stop the unit before it writes anything; a mark without a manifest is a unit that ran before, done and writing nothing
     #[Test]
     public function targetDataWithoutAManifestStopsTheUnit(): void
     {
         $run = $this->getRun('stop');
         foreach (['rows' => ['points' => '6.3.0'], 'mark' => ['points' => '6.3.0', 'ratings' => '6.3.0']] as $name => $mark) {
-            $this->assertFalse($run[$name]['done'], $name);
-            $this->assertStringContainsString('no manifest exists', $run[$name]['text']);
+            $this->assertSame($name === 'mark', $run[$name]['done'], $name);
+            $this->assertStringContainsString(($name === 'mark') ? 'ran on this site before' : 'the unit is stopped', $run[$name]['text']);
             $left = [$run[$name]['dir'], $run[$name]['state'], $run[$name]['mark'], $run[$name]['actors'], $run[$name]['rules']['account']];
             $this->assertSame([false, null, $mark, [], '2592000|1|0'], $left, $name.': the stopped unit wrote something');
         }

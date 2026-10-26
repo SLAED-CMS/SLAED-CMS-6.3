@@ -2,8 +2,6 @@
   <div class="sl-alert sl-alert-{{ callout_type }}"><div class="sl-alert-body">{{{ content_html }}}</div></div>
 {% elseif is_hide %}
   <blockquote class="sl-hide"><p title="{{ title_text }}">{{{ content_html }}}</p></blockquote>
-{% elseif is_quote %}
-  <blockquote><p title="{{ title_text }}">{{{ content_html }}}</p></blockquote>
 {% else %}
   <blockquote>{{{ content_html }}}</blockquote>
 {% endif %}

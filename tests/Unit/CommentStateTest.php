@@ -195,18 +195,18 @@ final class CommentStateTest extends TestCase
         $this->assertSame($data['markdown'], $data['empty'], 'A row without a format did not render as markdown');
     }
 
-    # Both formats read the inline BB the parser keeps for old content, and neither lets the author emit HTML of their own
+    # Neither format reads a BB tag the parser dropped, and neither lets the author emit HTML of their own
     #[Test]
-    public function bothFormatsReadBbAndEscapeHtml(): void
+    public function bothFormatsKeepBbAsTextAndEscapeHtml(): void
     {
         $data = $this->getProbe('commentformat');
-        $this->assertStringContainsString('<strong>bb</strong>', $data['markdown']);
-        $this->assertStringContainsString('<strong>bb</strong>', $data['plain']);
+        $this->assertStringContainsString('[b]bb[/b]', $data['markdown']);
+        $this->assertStringContainsString('[b]bb[/b]', $data['plain']);
         foreach (['html', 'htmlplain'] as $case) {
             $this->assertStringContainsString('&lt;b&gt;x&lt;/b&gt;', $data[$case], 'A stored tag rendered as markup in case '.$case);
             $this->assertStringNotContainsString('onerror=alert(1)>', $data[$case], 'A stored event handler survived case '.$case);
         }
-        $this->assertStringContainsString('href="#"', $data['url'], 'A script scheme survived a bracket link');
+        $this->assertStringContainsString('href="#"', $data['url'], 'A script scheme survived a Markdown link');
         $this->assertStringNotContainsString('<b>raw</b>', $data['usehtml'], 'The trusted html escape hatch fired for a comment body');
     }
 

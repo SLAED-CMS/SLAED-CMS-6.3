@@ -51,9 +51,6 @@ class Comment {
         $this->pnt = $pnt;
         $this->conf = is_array($conf['comments'] ?? null) ? $conf['comments'] : [];
         $this->site = [
-            'cens' => !empty($conf['censor']),
-            'from' => (string)($conf['censor_l'] ?? ''),
-            'to' => (string)($conf['censor_r'] ?? ''),
             'prof' => intval($conf['users']['prof'] ?? 0),
         ];
         $this->kinds = array_map('strval', array_keys(is_array($conf['node']['types'] ?? null) ? $conf['node']['types'] : []));
@@ -426,7 +423,7 @@ class Comment {
         if ($this->getReplyDepth($mod, $id, $pid) === null) return ['id' => 0, 'name' => $name, 'new' => false, 'error' => _COMMENTS_PARENT];
         $key = $this->getRequestKey($key);
         if ($key === false) return ['id' => 0, 'name' => $name, 'new' => false, 'error' => _COMMENTS_REPLAY];
-        $body = $this->filterCommentBody($body);
+        $body = filterSourceText($body);
         $room = checkEditorTextRoom($body, 'comment.body') ?: $this->checkAttachNames($mod, $id, $body, '');
         if ($room !== '') return ['id' => 0, 'name' => $name, 'new' => false, 'error' => $room];
         if (is_user()) {
@@ -504,7 +501,7 @@ class Comment {
         $out = ['code' => 'unavailable', 'error' => [], 'mod' => (string)($head['mod'] ?? ''), 'body' => (string)($head['body'] ?? '')];
         if (!$head) return $out;
         if (!$head['allow']) return ['code' => 'denied'] + $out;
-        $text = $this->filterCommentBody($body);
+        $text = filterSourceText($body);
         $stop = $this->checkRules($head['mod'], $body, '', '', false)
             ?: array_filter([checkEditorTextRoom($text, 'comment.body'), $this->checkAttachNames($head['mod'], $head['cid'], $text, $head['body'])]);
         if ($stop) return ['code' => 'rules', 'error' => array_values($stop)] + $out;
@@ -653,7 +650,7 @@ class Comment {
     public function updateBody(int $id, string $body): string {
         if ($id < 1) return (string)_ERROR;
         $head = $this->getEditSource($id);
-        $body = filterTrustedTags($body);
+        $body = filterSourceText($body, false, false);
         $room = checkEditorTextRoom($body, 'comment.body') ?: ($head ? $this->checkAttachNames($head['mod'], $head['cid'], $body, $head['body']) : '');
         if ($room !== '') return $room;
         $own = $this->setWriteBegin();
@@ -834,19 +831,6 @@ class Comment {
             default => ' AND s.body LIKE :find',
         };
         return [$from, $where, $pars];
-    }
-
-    # Normalize a submitted comment into the stored source; only the trusted tags and the censor list change the text
-    private function filterCommentBody(string $body): string {
-        if ($body === '') return '';
-        $body = filterTrustedTags($body);
-        if (!isAdmin() && $this->site['cens']) {
-            foreach (explode(',', $this->site['from']) as $one) {
-                $one = trim($one);
-                if ($one !== '') $body = (string)preg_replace('#'.preg_quote($one, '#').'#i', $this->site['to'], $body);
-            }
-        }
-        return trim($body);
     }
 
     # Resolve the depth a reply would be stored at, or null when its parent may not be replied to; the upward walk is bounded by the depth limit, so a loop stops

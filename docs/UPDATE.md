@@ -23,6 +23,7 @@ The rules that bind the code are in `.rules/api.md` (the API, the one external h
 - [Installation](#installation)
 - [What a Site Refuses](#what-a-site-refuses)
 - [Rehearsal](#rehearsal)
+- [Moving slaed.net to 8.0](#moving-slaednet-to-80)
 - [Statistics and Privacy](#statistics-and-privacy)
 - [Security](#security)
 - [Tests](#tests)
@@ -661,6 +662,76 @@ symlink and throws in the middle of a walk on a backslash. Files get 0644, folde
   without `sodium` and without `zip`, a delta and a full archive, a personal note and the return after the next
   installation. What it did not cover: running out of space on a real disk; the same rollback path was proven by a
   failed move in the middle of a batch.
+
+## Moving slaed.net to 8.0
+
+`slaed.net` runs a development build of early October 2026, not a release, and holds data newer than any copy, so it
+is neither installed anew nor updated by the updater: its own database is brought forward by `public/update.php`
+(`docs/NODE.md`, "A site of an early 6.3 build") and restored on the host. The rehearsal of 2026-10-26 proved the
+whole path on the production dump of 2026-10-25; the move repeats it on a dump taken with the site closed, so no row
+written before the closing is lost.
+
+**The copy.** The run happens in a copy of the tree over a disposable database, never on the stand: `update.php`
+writes the settings of the site into `config/`, whose files the stand tracks.
+
+1. A local `git clone` of the committed tree: `git archive` drops `public/update.php` and `table_update6_3.sql` by
+   `export-ignore`. `modules/master/` and `modules/changelog/` are taken out, as the release archive leaves them.
+2. The shipped settings in `storage/backup/release/config/` in the form of the release archive, `config/modules.php`
+   without `master` and `changelog`: the settings step of a 6.3 site merges from that folder.
+3. The production `config/` laid over `config/` without `local.php` and without the code files `system.php`,
+   `header.php` and `chmod.php`; its `db.php` names the host, user, password and database of the disposable base;
+   `storage/logs/` exists, or the run logs nothing.
+4. The dump loaded with the prefix it carries (`sport`), then the accounts that share an address with an older one
+   deleted as the owner decided for each.
+5. The production `uploads/` copied in without `presentation/`, since a rewrite touches only a file the folder holds.
+6. Served by `php -S` or a host of its own: a POST `op=update` with `dry=1`, then one with `op=update` alone, then the
+   second stage as the administrator of the copy; a repeat of the first stage changes nothing.
+
+The script of these steps (`build`, `run`, `deliver`, `prove`) lies with the hand-over, outside the repository, since
+it names the paths and the databases of the owner's machine.
+
+**What the run must show.** The first stage ends "The update finished" without a failed row, points, ratings and fields
+done by their marks, the archive and text units with the counts of their dry run, the tables of the gone modules and
+the nine source tables dropped; the second stage ends "Готово" with the addresses of every type, category, material,
+topic, account and poll. The copy holds the 36 tables of `table.sql`, equal in columns, defaults, keys, foreign keys,
+checks and collations (`/schema` inside the copy) and without a routine; `config/modules.php` names the modules of
+the release, `global.php` has `close = 1`, and the panel file carries the `afile` of the production `security.php`.
+
+**The hand-over** is a folder outside git, deleted after the move, since its `config/` holds the production secrets:
+
+- the dump of the copy made by `Backup`, in the format the restore of the core reads, proven by a restore into an
+  empty database: every table equal to the copy by definition, rows and `CHECKSUM TABLE … EXTENDED`. Production runs
+  MariaDB 12.3; a stand without 12.x proves the restore on its own version, and the report names the gap;
+- the `config/` of the copy without `local.php`, its `db.php` the production one with the collation of the release;
+- the folder moves of `docs/NODE.md`, "A site of an early 6.3 build", checked file by file on the stand;
+- the reports of both stages, the order below and a README in Russian.
+
+**The order on production:**
+
+1. Close the site.
+2. Take a fresh dump and `config/` of production and put them through the copy and the run above.
+3. Upload the release files; the `admin.php` of the release lands under the name of the panel file of the site, and
+   no `admin.php` stays.
+4. The document root on `public/`, with `uploads/`, `config/` and `storage/` at the project level (`UPGRADING.md`,
+   "The Document Root Is `public/`").
+5. Move the folders of `uploads/` by the list.
+6. Lay the delivered `config/` over the old one.
+7. Restore the dump.
+8. Delete `config/local.php` and the caches.
+9. Read the journals, then open the site (`close = 0` in the settings).
+
+**The stand** takes the database of the copy, never its `config/`, which stays the development one: the stand is dumped
+first and the dump read back, then dropped and loaded; `storage/cache/` and `config/local.php` are cleared afterwards. A
+type whose version in the development `config/node.php` is ahead of its row is invalid and answers 404, so the row is
+raised on the stand alone and the deliverable keeps the one of production.
+
+**The live check** on the stand passes before the hand-over leaves, through real HTTP with the session of the stand:
+every Node type that holds materials and every module that stays (account, contact, forum, recommend, search, sitemap,
+users, voting, rss), the blocks, the comments, the private messages, the signatures and the own blocks, on the site and
+in the panel. It passes when no page shows a BB tag, a visible tag or a leaked escape, the editor of every form holds
+the stored text and a save without a change keeps every byte, a new comment, forum post and private message renders
+like the converted ones, and the console, the failed requests and the three error journals stay empty. A change of
+`update.php` or of the parser before the move repeats it.
 
 ## Statistics and Privacy
 

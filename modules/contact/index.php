@@ -39,7 +39,7 @@ function contact(): void {
     }
     if ($conf['contact']['info']) {
         $title = _CONTACT;
-        $info = $prs->filterContent($conf['contact']['info'], false, $conf['name'], 0, 'breaks');
+        $info = $prs->filterContent($conf['contact']['info'], true, $conf['name'], 0, 'breaks', [], true);
     } else {
         $title = _FEEDBACK;
         $info = '';

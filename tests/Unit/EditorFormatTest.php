@@ -311,7 +311,7 @@ final class EditorFormatTest extends TestCase
         $need = ['search' => 'cm', 'fold' => 'cm', 'unfold' => 'cm', 'comment' => 'code', 'bold' => 'markdown', 'list' => 'markdown', 'files' => 'files', 'emoji' => 'text',
             'hint' => 'vars', 'var' => 'vars'];
         foreach ($need as $act => $want) {
-            $this->assertMatchesRegularExpression('#data-sl-editor-cmd="'.$act.'" data-sl-editor-need="'.$want.'"#', $tpl, 'The palette offers '.$act.' to an engine without it');
+            $this->assertMatchesRegularExpression('#data-sl-editor-cmd="'.$act.'" data-sl-editor-need="'.$want.'( edit)?"#', $tpl, 'The palette offers '.$act.' to an engine without it');
         }
         $this->assertMatchesRegularExpression('#<dialog class="sl-modal sl-editor-pal" data-sl-editor-palette#', $tpl, 'The palette is not a window of the canon');
         $this->assertStringContainsString('data-sl-focus', $tpl, 'The keyboard does not land in the search of the palette');
@@ -325,6 +325,32 @@ final class EditorFormatTest extends TestCase
             $this->assertStringContainsString($part, $base, 'The shared palette lost '.$part);
         }
         $this->assertStringNotContainsString("doc.addEventListener('keydown'", $run, 'Ctrl+K is heard outside the editors');
+    }
+
+    # A frame asked read-only marks its area, and the runtime keeps of the kit only the tools that read the text
+    #[Test]
+    public function readOnlyFrameKeepsOnlyTheToolsThatRead(): void
+    {
+        require_once BASE_DIR.'/public/plugins/editors/plain/driver.php';
+        $run = fn(array $data) => $this->getFragData($this->getDriverFrags(fn() => (new EditorPlain())->getWidget('1', 'x', 'text', 'full', $data)), 'editor-frame');
+        $this->assertTrue($run(['readonly' => true])['is_readonly'] ?? null, 'The frame does not hear readonly');
+        $this->assertFalse($run([])['is_readonly'] ?? null, 'A frame is read-only unasked');
+        foreach (['admin', 'lite'] as $theme) {
+            $frame = (string)file_get_contents(PUBLIC_DIR.'/templates/'.$theme.'/fragments/editor-frame.html');
+            $this->assertStringContainsString('{% if is_readonly %} readonly{% endif %}', $frame, 'The frame of '.$theme.' does not mark its area read-only');
+            $kit = (string)file_get_contents(PUBLIC_DIR.'/templates/'.$theme.'/fragments/editor-kit.html');
+            foreach (['undo', 'redo', 'bold', 'files', 'emoji', 'reset', 'pretty', 'hint'] as $act) {
+                $this->assertMatchesRegularExpression('#data-sl-editor-act="'.$act.'" data-sl-editor-need="[a-z ]*\bedit"#', $kit, 'The capsule of '.$theme.' keeps '.$act.' in a read-only frame');
+                $this->assertMatchesRegularExpression('#data-sl-editor-cmd="'.$act.'" data-sl-editor-need="[a-z ]*\bedit"#', $kit, 'The palette of '.$theme.' keeps '.$act.' in a read-only frame');
+            }
+            foreach (['search', 'copy', 'diff', 'full'] as $act) {
+                $this->assertDoesNotMatchRegularExpression('#data-sl-editor-act="'.$act.'" data-sl-editor-need="[a-z ]*\bedit"#', $kit, 'A read-only frame of '.$theme.' loses '.$act);
+            }
+        }
+        $runtime = (string)file_get_contents(PUBLIC_DIR.'/plugins/system/editor.js');
+        foreach (['cm.EditorState.readOnly.of(true)', 'if (area.readOnly) files = null;', 'edit: !area.readOnly'] as $part) {
+            $this->assertStringContainsString($part, $runtime, 'The runtime lost '.$part);
+        }
     }
 
     # The counter of a text reads the room of its column: a text column gives its bytes, a mediumtext column and code give none
@@ -366,7 +392,7 @@ final class EditorFormatTest extends TestCase
         $kit = $this->getFragData($frags, 'editor-kit');
         $this->assertSame('word _EDITOR_VARUSED', json_decode((string)($kit['words_json'] ?? ''), true)['used'] ?? null, 'The count of the variables speaks English');
         $tpl = (string)file_get_contents(PUBLIC_DIR.'/templates/admin/fragments/editor-kit.html');
-        foreach (['data-sl-editor-act="vars" data-sl-editor-need="vars"', 'data-sl-editor-act="hint" data-sl-editor-need="vars"', 'data-sl-editor-hint'] as $part) {
+        foreach (['data-sl-editor-act="vars" data-sl-editor-need="vars edit"', 'data-sl-editor-act="hint" data-sl-editor-need="vars edit"', 'data-sl-editor-hint'] as $part) {
             $this->assertStringContainsString($part, $tpl, 'The kit lost '.$part);
         }
         $frame = (string)file_get_contents(PUBLIC_DIR.'/templates/admin/fragments/editor-frame.html');
@@ -405,8 +431,8 @@ final class EditorFormatTest extends TestCase
             $this->assertStringStartsWith('word _EDITOR_', (string)($words['lint'][$key] ?? ''), 'The check has no word for '.$key);
         }
         $kit = (string)file_get_contents(PUBLIC_DIR.'/templates/admin/fragments/editor-kit.html');
-        foreach (['data-sl-editor-act="pretty" data-sl-editor-need="lint"', 'data-sl-editor-act="flat" data-sl-editor-need="lint"',
-            'data-sl-editor-cmd="pretty" data-sl-editor-need="lint"', 'data-sl-editor-cmd="flat" data-sl-editor-need="lint"',
+        foreach (['data-sl-editor-act="pretty" data-sl-editor-need="lint edit"', 'data-sl-editor-act="flat" data-sl-editor-need="lint edit"',
+            'data-sl-editor-cmd="pretty" data-sl-editor-need="lint edit"', 'data-sl-editor-cmd="flat" data-sl-editor-need="lint edit"',
             'data-sl-editor-cmd="lint" data-sl-editor-need="lint"', 'data-sl-editor-issues'] as $part) {
             $this->assertStringContainsString($part, $kit, 'The kit lost '.$part);
         }
@@ -498,7 +524,7 @@ final class EditorFormatTest extends TestCase
         $from = strpos($route, 'function getEditorPreview(');
         $this->assertNotFalse($from, 'The route of the preview is gone');
         $body = substr($route, $from, (int)strpos($route, "\n}\n", $from) - $from);
-        foreach (["!== 'POST'", "getVar('post', 'text', 'text')", 'checkEditorTextRoom(', 'getTplPreviewContent(', 'exit;',
+        foreach (["!== 'POST'", "filterSourceText(getVar('post', 'text', 'raw', ''), isAdmin(true))", 'checkEditorTextRoom(', 'getTplPreviewContent(', 'exit;',
             '$own = getUploadOwner($mod);', "'own' => (\$own !== '') ? [\$own, 0] : []"] as $part) {
             $this->assertStringContainsString($part, $body, 'The route of the preview lost '.$part);
         }

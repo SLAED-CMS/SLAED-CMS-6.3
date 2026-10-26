@@ -373,8 +373,8 @@
         if (!(ev.ctrlKey || ev.metaKey) || ev.altKey || ev.isComposing) return;
         if (ev.shiftKey) act = (ev.code === 'KeyM' && ed.can.lint) ? 'lint' : '';
         else if (ev.code === 'KeyK') act = 'palette';
-        else if (text && ev.code === 'Space' && ed.can.vars && !ed.view) act = 'hint';
-        else if (text && ed.can.markdown) act = { KeyB: 'bold', KeyI: 'italic' }[ev.code] || '';
+        else if (text && ed.can.edit && ev.code === 'Space' && ed.can.vars && !ed.view) act = 'hint';
+        else if (text && ed.can.edit && ed.can.markdown) act = { KeyB: 'bold', KeyI: 'italic' }[ev.code] || '';
         if (!act) return;
         ev.preventDefault();
         ev.stopPropagation();
@@ -1348,6 +1348,7 @@
             ed.wrap = new cm.Compartment();
             exts.push(ed.wrap.of(ed.nowrap ? [] : cm.EditorView.lineWrapping));
             if (list[1]) exts.push(list[1].language());
+            if (area.readOnly) exts.push(cm.EditorState.readOnly.of(true));
             if (ed.vars) exts.push(getVarMarks(cm, ed), cm.EditorState.languageData.of(getVarData(ed)));
             if (ed.can.lint) exts.push(cm.linter(getLintSource(ed), { delay: 250 }), cm.lintGutter());
             ed.view = new cm.EditorView({
@@ -1399,6 +1400,9 @@
         try { view = JSON.parse(frame.getAttribute('data-sl-editor-preview') || 'null'); } catch (err) { view = null; }
         if (!Array.isArray(vars) || !vars.length) vars = null;
         if (!view || typeof view !== 'object' || !(view.vals || view.url) || !kit.view) view = null;
+        // A read-only area shows its text and keeps every tool that reads it; the tools that change it, its files and its
+        // keys of format leave
+        if (area.readOnly) files = null;
         var can = {
             text: !code,
             code: code,
@@ -1407,7 +1411,8 @@
             files: !!files,
             vars: !!vars,
             lint: !!badge && frame.hasAttribute('data-sl-editor-lint'),
-            preview: !!view
+            preview: !!view,
+            edit: !area.readOnly
         };
         pill.querySelectorAll('[data-sl-editor-need]').forEach(function (one) { if (!checkNeed(can, one)) one.remove(); });
         Array.prototype.slice.call(pill.children).forEach(function (one) { if (!one.querySelector('button')) one.remove(); });

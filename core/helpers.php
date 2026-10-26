@@ -131,8 +131,8 @@ function getTplPreviewContent(array $data = []): string {
     $mod = $data['mod'] ?? '';
     $own = $data['own'] ?? [];
     if ($title === '' && $texta === '' && $textb === '' && $field === '') return '';
-    $bodya = $texta ? $prs->filterContent($texta, false, $mod, 0, '', $own) : '';
-    $bodyb = $textb ? $prs->filterContent($textb, false, $mod, 0, '', $own) : '';
+    $bodya = $texta ? $prs->filterContent($texta, true, $mod, 0, '', $own, true) : '';
+    $bodyb = $textb ? $prs->filterContent($textb, true, $mod, 0, '', $own, true) : '';
     $bodyc = $field ? getTplViewFieldRows(['field' => $field, 'mod' => $mod]) : '';
     return $tpl->getHtmlPart('preview', [
         'title' => _PREVIEW,
@@ -151,7 +151,7 @@ function getEditorPreview(): void {
         http_response_code(405);
         exit;
     }
-    $text = getVar('post', 'text', 'text');
+    $text = filterSourceText(getVar('post', 'text', 'raw', ''), isAdmin(true));
     $store = getVar('post', 'store', 'raw', '');
     $mod = getVar('post', 'mod', 'var');
     $own = getUploadOwner($mod);
@@ -700,7 +700,7 @@ function checkEditorTextRoom(string $text, string $store): string {
     return '';
 }
 
-# Render the rich-text editor textarea; the call site declares the store, because neither the field name nor the upload folder names a column
+# Render the rich-text editor textarea over the stored source as it is; the call site declares the store, because neither the field name nor the upload folder names a column
 function getTplTextarea(array $data = []): string {
     $id = (string)($data['id'] ?? '1');
     $name = (string)($data['name'] ?? '');
@@ -712,8 +712,7 @@ function getTplTextarea(array $data = []): string {
     $stloc = substr(_LOCALE, 0, 2);
     $key = getEditorKey();
     $fmt = getEditorMode($key);
-    $desc = $value ?: filterHtml(getVar('post', $name, 'raw', ''));
-    if ($fmt !== 'html') $desc = getDecodedText(preg_replace('#<br\s*/?>(?:\r\n|\r|\n)?#i', ($fmt === 'markdown') ? "  \n" : "\n", $desc) ?? $desc);
+    $desc = $value ?: filterSourceText(getVar('post', $name, 'raw', ''), isAdmin(true));
     $rul = getUploadRuleData(strtolower($mod));
     $store = (string)($data['store'] ?? '');
     return Editor::getContent([
