@@ -571,16 +571,15 @@ namespace Tests\Unit {
         }
 
         # A safe rendering that trusts its tags makes markup of what [usehtml] encloses and runs what [usephp] encloses
-        # Foreign markup, a free block and an unsafe link around them stay text; an indented line inside a tag is no code block, and without safe mode the argument changes nothing
+        # Foreign markup and an unsafe link around them stay text; an indented line inside a tag is no code block, and without safe mode the argument changes nothing
         #[Test]
         public function checkTrustedTagsTrustOnlyTheirContent(): void
         {
-            $html = self::$p->filterDoc('<b>foreign</b> [u](javascript:alert(1)) [block=1] [usehtml]<i>own</i>[/usehtml]', true, '', 0, '', [], true);
+            $html = self::$p->filterDoc('<b>foreign</b> [u](javascript:alert(1)) [usehtml]<i>own</i>[/usehtml]', true, '', 0, '', [], true);
             $this->assertStringContainsString('<i>own</i>', $html, 'The content of a trusted tag was not trusted');
             $this->assertStringContainsString('&lt;b&gt;foreign', $html, 'Markup around a trusted tag was trusted');
             $this->assertStringNotContainsString('<b>foreign', $html);
             $this->assertStringNotContainsString('javascript:', $html, 'An unsafe link around a trusted tag survived');
-            $this->assertStringContainsString('[block=1]', $html, 'A free block around a trusted tag was rendered');
             $run = self::$p->filterDoc('[usephp]echo 6*7;[/usephp] <script>x()</script>', true, '', 0, '', [], true);
             $this->assertStringContainsString('42', $run, 'The content of [usephp] did not run');
             $this->assertStringNotContainsString('<script>', $run, 'A script around [usephp] was trusted');

@@ -54,14 +54,17 @@ function getTemplateFaq(): string {
     ]);
 }
 
-# Head-time variables of the lite layout; the banner category is the one the head resolved by the read right of the visitor, joined by the item title only without cat
+# Head-time variables of lite: no band on a layout page that turns it off, the banner category as the head resolved it by read right, top bar links in six tones
 function getThemeHeadVars(): array {
-    global $conf, $tpl, $sitevars;
-    $mname = $conf['name'] ? getModuleName($conf['name']) : '';
+    global $conf, $tpl, $sitevars, $layout, $lkey;
+    $parts = $sitevars['parts'] ?? [];
+    foreach (array_keys($parts['social'] ?? []) as $i) $parts['social'][$i]['tone'] = $i % 6;
+    $band = !($layout instanceof Layout) || empty($lkey) || !empty($layout->getPage((int)$lkey)['band']);
+    $mname = ($band && $conf['name']) ? getModuleName($conf['name']) : '';
     $fcat = (int)($sitevars['head_cid'] ?? 0);
     $ctitle = getVar('get', 'cat', 'num', 0) ? '' : (string)($sitevars['head_item'] ?? '');
     $sep = $conf[$conf['name']]['defis'] ?? $conf['defis'];
-    $cname = ($fcat && $conf['name']) ? getTplCategoryTrail($conf['name'], $fcat, $sep, $mname, false) : '';
+    $cname = ($band && $fcat && $conf['name']) ? getTplCategoryTrail($conf['name'], $fcat, $sep, $mname, false) : '';
     if ($cname !== '' && $ctitle !== '') {
         $cname .= ' '.urldecode($sep).' '.htmlspecialchars(getDecodedText($ctitle), ENT_QUOTES, 'UTF-8');
     }
@@ -73,6 +76,7 @@ function getThemeHeadVars(): array {
     return [
         'season' => $season,
         'modul' => $conf['name'] ?? '',
+        'parts' => $parts,
         'faqtitle' => getTemplateFaq(),
         'head_html' => $head,
         'preload' => getTemplateLcpPreload($season, $head !== ''),

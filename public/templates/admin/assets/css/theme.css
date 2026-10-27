@@ -1219,7 +1219,8 @@ input.sl-but-blue[value="ОК"] {
   color: var(--sl-primary-strong);
 }
 
-tr.sl-dragging {
+tr.sl-dragging,
+.sl-admin-sidebar .sl-menu-list-item.sl-dragging {
   opacity: var(--sl-fade-disabled);
 }
 
@@ -4355,6 +4356,49 @@ dialog.sl-editor-emoji-panel {
   .sl-mcard > .sl-dial {
     opacity: 1;
   }
+}
+
+/* The handle of a section lies over its icon under the pointer and in focus, the icon fading, so the row never shifts as "…" appears */
+.sl-admin-sidebar .sl-menu-list-item > .sl-drag-handle {
+  position: absolute;
+  inset-block: 0;
+  left: var(--sl-space-2);
+  z-index: var(--sl-z-raised);
+  width: var(--sl-size-icon-xs);
+  height: var(--sl-size-icon-xs);
+  margin-block: auto;
+  font-size: var(--sl-size-icon-xs);
+  opacity: 0;
+  transition:
+    opacity var(--sl-time-fast) var(--sl-ease-out),
+    color var(--sl-time-base) var(--sl-ease-out);
+}
+
+.sl-admin-sidebar .sl-menu-list-item > .sl-drag-handle + a > .bi {
+  transition:
+    opacity var(--sl-time-fast) var(--sl-ease-out),
+    transform var(--sl-time-base) var(--sl-ease-out);
+}
+
+.sl-admin-sidebar .sl-menu-list-item:is(:hover, :focus-within) > .sl-drag-handle {
+  opacity: 1;
+}
+
+.sl-admin-sidebar .sl-menu-list-item:is(:hover, :focus-within) > .sl-drag-handle + a > .bi {
+  opacity: 0;
+}
+
+/* The drop marks of a row of the sidebar stand beside its plate, where the table rows draw them inside their cells */
+.sl-wrapper.sl-admin-shell .sl-admin-sidebar .sl-menu-list-item.sl-drop-above {
+  box-shadow: 0 calc(var(--sl-row-border) * -1) 0 var(--sl-primary-strong);
+}
+
+.sl-wrapper.sl-admin-shell .sl-admin-sidebar .sl-menu-list-item.sl-drop-below {
+  box-shadow: 0 var(--sl-row-border) 0 var(--sl-primary-strong);
+}
+
+.sl-wrapper.sl-admin-shell .sl-admin-sidebar .sl-menu-list-item.sl-drop-deny {
+  box-shadow: 0 0 0 1px var(--sl-danger);
 }
 
 /* The queue of a section on its menu row and its card: there while something waits, gone at zero; on a card it stands right after the name */
@@ -7833,6 +7877,72 @@ body:has(.sl-monitor-wrapper) .sl-monitor-wrapper * {
   padding: var(--sl-space-6);
 }
 
+/* The aurora of the frame: under the hand a stroke of light runs round the border of the panel, blue into violet, along the path of the frame */
+.sl-cockpit::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: var(--sl-z-raised);
+  width: calc(var(--sl-space-8) * 6);
+  height: var(--sl-space-1);
+  border-radius: var(--sl-radius-pill);
+  background: linear-gradient(90deg, transparent, var(--sl-primary), var(--sl-accent), transparent);
+  box-shadow: 0 0 var(--sl-space-3) var(--sl-tint-strong);
+  offset-path: inset(0 round var(--sl-radius-3));
+  offset-rotate: auto;
+  opacity: 0;
+  transition: opacity var(--sl-time-slow) var(--sl-ease-out);
+  pointer-events: none;
+}
+
+.sl-cockpit:hover::before {
+  opacity: 1;
+  animation: sl-cockpit-aurora calc(var(--sl-alert-dur) * 3) linear infinite;
+}
+
+/* The scan: a line of light goes down the panel now and then, as the panels of a live console do */
+.sl-cockpit::after {
+  content: "";
+  position: absolute;
+  left: var(--sl-space-6);
+  right: var(--sl-space-6);
+  top: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--sl-primary), transparent);
+  box-shadow: 0 0 var(--sl-space-4) var(--sl-space-1) var(--sl-tint-strong), 0 0 var(--sl-space-8) var(--sl-space-4) var(--sl-tint);
+  opacity: 0;
+  animation: sl-cockpit-scan calc(var(--sl-alert-dur) * 5) var(--sl-ease-in-out) infinite;
+  pointer-events: none;
+}
+
+@keyframes sl-cockpit-aurora {
+  from { offset-distance: 0%; }
+  to { offset-distance: 100%; }
+}
+
+@keyframes sl-cockpit-scan {
+  0% {
+    top: 0;
+    opacity: 0;
+  }
+
+  12% {
+    opacity: var(--sl-fade-disabled);
+  }
+
+  52% {
+    top: 100%;
+    opacity: var(--sl-fade-disabled);
+  }
+
+  62%,
+  100% {
+    top: 100%;
+    opacity: 0;
+  }
+}
+
 /* Three columns with equal sides: the state stands in the middle between the edges whatever the width of the caption at the left and the chip at the right */
 .sl-cockpit-top {
   display: grid;
@@ -7950,9 +8060,10 @@ body:has(.sl-monitor-wrapper) .sl-monitor-wrapper * {
 }
 
 /* One row round the lamp: the lamp comes first for the reader and stands in the middle column, the rings fill the four free cells */
+/* The row of the cockpit: the lamp has a column of its own diameter, the four rings share what is left */
 .sl-cockpit-gauges {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr)) calc(var(--sl-gauge-width) * 1.15) repeat(2, minmax(0, 1fr));
   gap: var(--sl-space-8);
   align-items: center;
   justify-items: center;
@@ -8090,39 +8201,28 @@ body:has(.sl-monitor-wrapper) .sl-monitor-wrapper * {
   color: var(--sl-text-muted);
 }
 
-/* A lamp draws no rounded line: Firefox paints a circle's line in four quarters whose seams cross it, so every line is a radial gradient */
+/* The lamp: a disc of glass a step larger than a ring, lit from above and standing on its shadow; its tone lives in the comet round it and in its rows */
 .sl-cockpit-plate {
   position: relative;
   display: grid;
-  place-items: center;
+  grid-template-rows: minmax(0, 1fr) auto minmax(0, 1fr);
+  justify-items: center;
+  row-gap: var(--sl-space-1);
   box-sizing: border-box;
-  width: 100%;
-  max-width: var(--sl-gauge-width);
+  width: calc(var(--sl-gauge-width) * 1.15);
   aspect-ratio: 1;
   border: 0;
   border-radius: var(--sl-radius-circle);
-  background:
-    radial-gradient(
-      circle closest-side,
-      transparent calc(100% - var(--sl-space-3) - var(--sl-space-1)),
-      var(--sl-knob-tone) calc(100% - var(--sl-space-3) - 1px) calc(100% - var(--sl-space-3)),
-      transparent calc(100% - var(--sl-space-3) + 1px)
-    ),
-    radial-gradient(
-      circle closest-side,
-      transparent 60%,
-      color-mix(in srgb, var(--sl-knob-tone) var(--sl-ring-mix), transparent) calc(100% - var(--sl-space-3)),
-      transparent calc(100% - var(--sl-space-3))
-    ),
-    radial-gradient(circle at 50% 38%, var(--sl-bg-subtle), var(--sl-bg) 68%);
-  padding: var(--sl-space-8);
+  background: none;
+  padding: var(--sl-space-8) var(--sl-space-6);
   font: inherit;
   color: var(--sl-knob-tone);
   cursor: pointer;
   appearance: none;
+  filter: var(--sl-gauge-shadow);
+  transition: color var(--sl-time-slow) var(--sl-ease-out), opacity var(--sl-time-slow) var(--sl-ease-out);
 }
 
-/* The halo outside the line: a layer of its own, so its strength is an opacity - dim at rest, full while the panel of the lamp is open */
 .sl-cockpit-plate::before,
 .sl-cockpit-plate::after {
   content: "";
@@ -8131,19 +8231,13 @@ body:has(.sl-monitor-wrapper) .sl-monitor-wrapper * {
   pointer-events: none;
 }
 
+/* The comet: one conic ring outside the disc turning whole, its tail from the track of a ring into the tone; a ring draws no circle line, which Firefox seams */
 .sl-cockpit-plate::before {
-  background: radial-gradient(
-    circle closest-side,
-    transparent calc(100% - var(--sl-space-3)),
-    color-mix(in srgb, var(--sl-knob-tone) var(--sl-ring-mix), transparent) calc(100% - var(--sl-space-3) + 1px) calc(100% - 1px),
-    transparent 100%
-  );
-  opacity: var(--sl-fade-muted);
-  transition: opacity var(--sl-time-base) var(--sl-ease-out);
-}
-
-.sl-cockpit-float.sl-is-open .sl-cockpit-plate::before {
-  opacity: 1;
+  inset: calc(var(--sl-space-3) * -1);
+  border-radius: var(--sl-radius-circle);
+  background: conic-gradient(var(--sl-border) 0 35%, currentColor 99.6%, var(--sl-border) 0);
+  mask: radial-gradient(circle closest-side, transparent calc(100% - var(--sl-space-2)), var(--sl-text) calc(100% - var(--sl-space-2) + 1px));
+  animation: sl-cockpit-spin calc(var(--sl-alert-dur) * 3) linear infinite;
 }
 
 /* The pulse ring: invisible at rest, so a still panel shows none */
@@ -8157,32 +8251,95 @@ body:has(.sl-monitor-wrapper) .sl-monitor-wrapper * {
   opacity: 0;
 }
 
-/* The orbit runs in the middle of the halo: a dashed SVG circle, which both engines stroke in one piece and smooth alike */
-.sl-cockpit-orbit {
+/* The glass is a layer of its own under the rows: the rows read against the middle of the disc, never against its shaded rim or its line */
+.sl-cockpit-glass {
   position: absolute;
   inset: 0;
-  width: 100%;
-  height: 100%;
-  overflow: visible;
+  border-radius: var(--sl-radius-circle);
+  background:
+    radial-gradient(circle closest-side, transparent calc(100% - 1px), var(--sl-border) calc(100% - 1px)),
+    var(--sl-gauge-bg);
   pointer-events: none;
-  animation: sl-cockpit-spin calc(var(--sl-alert-dur) * 12) linear infinite;
 }
 
-.sl-cockpit-orbit circle {
-  fill: none;
-  stroke: color-mix(in srgb, currentColor var(--sl-ring-mix), transparent);
-  stroke-width: 1.5;
-  stroke-dasharray: 1.5 1.5;
-  vector-effect: non-scaling-stroke;
+.sl-cockpit-plate > :not(.sl-cockpit-glass) {
+  position: relative;
+}
+
+/* The three rows of the lamp: the mark leads the passed checks, a bar for each check, the mood of the state; the pulse and the dial keep the rows */
+.sl-cockpit-head {
+  display: flex;
+  align-items: baseline;
+  align-self: end;
+  gap: var(--sl-space-1);
+  font-size: var(--sl-font-h1);
+  font-weight: var(--sl-weight-bold);
+  line-height: var(--sl-line-tight);
+  letter-spacing: var(--sl-track-tight);
+  font-variant-numeric: tabular-nums;
+}
+
+.sl-cockpit-head > small,
+.sl-cockpit-mood {
+  font-family: var(--sl-face-mono);
+  font-size: var(--sl-font-micro);
+  font-weight: var(--sl-weight-normal);
+  letter-spacing: var(--sl-track-wide);
+  text-transform: uppercase;
+  color: var(--sl-text-muted);
 }
 
 /* The mark of the lamp is the one-colour mark of the theme cut out of the tone of the state: the brand in colour stays with the logo of the header */
 .sl-cockpit-mark {
   display: block;
-  width: calc(var(--sl-gauge-width) / 2);
+  align-self: center;
+  width: var(--sl-size-icon-md);
   aspect-ratio: 1;
+  margin-inline-end: var(--sl-space-2);
   background: currentColor;
   mask: url(../../images/logos/slaed-logo-mark-solid-black.svg) center / contain no-repeat;
+}
+
+.sl-cockpit-bars {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  height: calc(var(--sl-gauge-width) * 0.23);
+}
+
+/* A passed check is a short bar in the tone of ok, a loud one stands up in its own; the scan runs over the bars at the pace of the state */
+.sl-cockpit-bars > i {
+  width: var(--sl-space-1);
+  height: var(--sl-space-4);
+  border-radius: var(--sl-radius-pill);
+  background: currentColor;
+  opacity: var(--sl-fade-muted);
+  color: var(--sl-knob-tone);
+  transition: color var(--sl-time-slow) var(--sl-ease-out);
+  animation: sl-cockpit-check calc(var(--sl-alert-dur) * 2.4) var(--sl-ease-in-out) calc(var(--sl-d-i, 0) * var(--sl-alert-dur) * 0.12) infinite;
+}
+
+.sl-cockpit-bars > :is(.sl-knob-warn, .sl-knob-danger) {
+  width: var(--sl-space-2);
+  height: 100%;
+  opacity: 1;
+  filter: drop-shadow(0 0 var(--sl-space-1) currentColor);
+  animation: none;
+}
+
+/* A figure or a bar that the poll changed flares once, so the eye finds what moved */
+.sl-cockpit-head > b.sl-is-fresh,
+.sl-cockpit-bars > i.sl-is-fresh {
+  animation: sl-cockpit-fresh calc(var(--sl-time-slow) * 3) var(--sl-ease-out);
+}
+
+/* The word of the state is the one of the line above; a long one breaks into two centred lines */
+.sl-cockpit-mood {
+  align-self: start;
+  max-width: 100%;
+  line-height: var(--sl-line-tight);
+  text-align: center;
 }
 
 .sl-cockpit-ring:focus-visible {
@@ -8200,6 +8357,14 @@ body:has(.sl-monitor-wrapper) .sl-monitor-wrapper * {
   animation: sl-cockpit-ring var(--sl-alert-dur) var(--sl-ease-out) infinite;
 }
 
+.sl-cockpit.sl-knob-warn .sl-cockpit-plate::before {
+  animation-duration: calc(var(--sl-alert-dur) * 1.5);
+}
+
+.sl-cockpit.sl-knob-warn .sl-cockpit-bars > i {
+  animation-duration: calc(var(--sl-alert-dur) * 1.5);
+}
+
 .sl-cockpit.sl-knob-warn .sl-cockpit-mark {
   animation: sl-alert-shake var(--sl-alert-dur) var(--sl-ease-in-out) infinite;
 }
@@ -8210,11 +8375,41 @@ body:has(.sl-monitor-wrapper) .sl-monitor-wrapper * {
 }
 
 .sl-cockpit.sl-knob-danger .sl-cockpit-plate::before {
-  animation: sl-cockpit-throb calc(var(--sl-alert-dur) / 2) var(--sl-ease-in-out) infinite alternate;
+  animation:
+    sl-cockpit-spin calc(var(--sl-alert-dur) * 0.6) linear infinite,
+    sl-cockpit-throb calc(var(--sl-alert-dur) / 2) var(--sl-ease-in-out) infinite alternate;
 }
 
-.sl-cockpit.sl-knob-danger .sl-cockpit-orbit {
-  animation-duration: calc(var(--sl-alert-dur) * 2);
+.sl-cockpit.sl-knob-danger .sl-cockpit-bars > i {
+  animation-duration: calc(var(--sl-alert-dur) * 0.8);
+}
+
+/* A paused panel stills its lamp and a stale one dims it too: the comet, the scan and the mark stop, so a running lamp is one with fresh figures */
+.sl-cockpit:is([data-sl-live-paused], [data-sl-cockpit-stale]) .sl-cockpit-plate::before,
+.sl-cockpit:is([data-sl-live-paused], [data-sl-cockpit-stale]) :is(.sl-cockpit-bars > i, .sl-cockpit-mark) {
+  animation-play-state: paused;
+}
+
+.sl-cockpit:is([data-sl-live-paused], [data-sl-cockpit-stale]) .sl-cockpit-plate::after {
+  animation: none;
+}
+
+.sl-cockpit[data-sl-cockpit-stale] .sl-cockpit-plate {
+  opacity: var(--sl-fade-disabled);
+}
+
+/* A lull: every check passed and the site empty; the comet drifts round in a quarter of a minute and the bars lie flat and still */
+.sl-cockpit.sl-knob-info > .sl-cockpit-top > .sl-cockpit-state { color: var(--sl-primary-strong); }
+
+.sl-cockpit.sl-knob-info .sl-cockpit-plate::before {
+  animation-duration: calc(var(--sl-alert-dur) * 8);
+}
+
+.sl-cockpit.sl-knob-info .sl-cockpit-bars > i {
+  height: var(--sl-space-2);
+  background: var(--sl-text-muted);
+  opacity: var(--sl-fade-disabled);
+  animation: none;
 }
 
 .sl-cockpit.sl-knob-danger .sl-cockpit-plate::after {
@@ -8227,6 +8422,28 @@ body:has(.sl-monitor-wrapper) .sl-monitor-wrapper * {
 
 @keyframes sl-cockpit-spin {
   to { transform: rotate(360deg); }
+}
+
+/* The flare of a changed figure: it swells in a glow of its own tone and settles */
+@keyframes sl-cockpit-fresh {
+  from {
+    transform: scale(1.4);
+    filter: drop-shadow(0 0 var(--sl-space-3) currentColor);
+  }
+}
+
+/* The scan over the bars of the checks: a bar rises as the wave passes it and settles back */
+@keyframes sl-cockpit-check {
+  0%,
+  24%,
+  100% {
+    transform: scaleY(1);
+  }
+
+  8% {
+    transform: scaleY(2);
+    opacity: 1;
+  }
 }
 
 /* The ring leaves the lamp at full strength with its own glow and fades as it widens */
@@ -8261,18 +8478,8 @@ body:has(.sl-monitor-wrapper) .sl-monitor-wrapper * {
   }
 }
 
-/* A narrow content column: the caption and the chip share the first line and the state the middle of the second; the lamp over the gauges two by two */
-@media (max-width: 768px) {
-  .sl-cockpit-top {
-    grid-template-columns: minmax(0, 1fr) auto;
-  }
-
-  .sl-cockpit-top > .sl-cockpit-state {
-    grid-column: 1 / -1;
-    grid-row: 2;
-    justify-self: center;
-  }
-
+/* Under the large step the row of a lamp and four rings no longer holds rings of their width beside the menu: the lamp over the gauges two by two */
+@media (max-width: 1200px) {
   .sl-cockpit-gauges {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: var(--sl-space-6);
@@ -8282,10 +8489,20 @@ body:has(.sl-monitor-wrapper) .sl-monitor-wrapper * {
 
   .sl-cockpit-float:has(> .sl-cockpit-plate) {
     grid-column: 1 / -1;
+    margin-bottom: var(--sl-space-3);
+  }
+}
+
+/* A narrow content column: the caption and the chip share the first line and the state the middle of the second */
+@media (max-width: 768px) {
+  .sl-cockpit-top {
+    grid-template-columns: minmax(0, 1fr) auto;
   }
 
-  .sl-cockpit-plate {
-    width: var(--sl-gauge-width);
+  .sl-cockpit-top > .sl-cockpit-state {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    justify-self: center;
   }
 }
 
@@ -9925,6 +10142,15 @@ body[data-sl-pointer] .sl-admin-login-card:has(.sl-setup)::after {
 
   :root[data-sl-rail] .sl-admin-sidebar .sl-menu-list-item:is(:hover, :focus-within) > .sl-dial {
     pointer-events: auto;
+  }
+
+  /* The rail keeps the icon of a section, so its order is dragged in the open menu only */
+  :root[data-sl-rail] .sl-admin-sidebar .sl-menu-list-item > .sl-drag-handle {
+    display: none;
+  }
+
+  :root[data-sl-rail] .sl-admin-sidebar .sl-menu-list-item > .sl-drag-handle + a > .bi {
+    opacity: 1;
   }
 
   :root[data-sl-rail] .sl-admin-sidebar .sl-menu-list-item:hover .sl-dial-item,

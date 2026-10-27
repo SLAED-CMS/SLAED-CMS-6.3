@@ -1533,7 +1533,7 @@
     { key: 'php', name: 'Версия PHP', href: '../../admin.php?name=monitor' }
   ];
   const STATES = {
-    ok: { word: 'Все системы в норме', icon: 'check-circle-fill', off: {} },
+    ok: { word: 'Стабильное состояние', icon: 'check-circle-fill', off: {} },
     warn: {
       word: 'Требует внимания', icon: 'exclamation-triangle-fill',
       off: { setup: ['warn', 'в корне сайта'], phperr: ['warn', '29 за сутки'] }
@@ -1551,8 +1551,9 @@
   };
   const LEVELS = { fail: ['sl-knob-danger', 'x-octagon-fill'], warn: ['sl-knob-warn', 'exclamation-triangle-fill'] };
 
-  // Put the cockpit in one state: one ring tone class on the panel colours the lamp and the line; the bell panel of the
-  // lamp lists only the signals that broke, the failures first, and a calm system says in its caption that all passed
+  // Put the cockpit in one state: one ring tone class on the panel colours the lamp and the line; the lamp of the theme
+  // shows the passed checks, a bar for each check, failures first, and the word of the line; its bell panel lists only
+  // the signals that broke, and a calm system says in its caption that all passed
   function setCockpitState(tone) {
     const box = doc.querySelector('[data-sl-cockpit]');
     const now = STATES[tone];
@@ -1568,7 +1569,14 @@
     const line = box.querySelector('[data-sl-cockpit-state]');
     line.firstElementChild.className = 'bi bi-' + now.icon;
     line.lastElementChild.textContent = text;
-    box.querySelector('[data-sl-cockpit-lamp]').setAttribute('aria-label', 'Состояние системы: ' + text + '. Сигналы');
+    const lamp = box.querySelector('[data-sl-cockpit-lamp]');
+    const level = (r) => (r.level ? LEVELS[r.level][0] : 'sl-knob-ok');
+    lamp.querySelector('[data-sl-cockpit-pass]').textContent = SIGNALS.length - loud.length;
+    lamp.querySelector('[data-sl-cockpit-total]').textContent = '/' + SIGNALS.length;
+    lamp.querySelector('[data-sl-cockpit-bars]').innerHTML = loud.concat(rows.filter((r) => !r.level))
+      .map((r, i) => '<i class="' + level(r) + '" title="' + getEsc(r.name + (r.note ? ' · ' + r.note : '')) + '" style="--sl-d-i: ' + i + '"></i>').join('');
+    lamp.querySelector('[data-sl-cockpit-mood]').textContent = now.word;
+    lamp.setAttribute('aria-label', 'Состояние системы: ' + text + ', пройдено ' + (SIGNALS.length - loud.length) + ' из ' + SIGNALS.length + '. Сигналы');
   }
 
   // The cockpit of the home: the stand has no server behind it, so each gauge and each figure of the strip drifts round its own value as a live panel would

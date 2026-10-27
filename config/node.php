@@ -26,6 +26,8 @@ return [
             ],
             'view' => [
                 'mode' => 'default',
+                'side' => 2,
+                'top' => 0,
             ],
             'form' => [
             ],

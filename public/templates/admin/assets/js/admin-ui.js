@@ -113,12 +113,18 @@
             if (preview) preview.className = 'bi bi-' + node.value.trim();
         }
     });
+    /* One drag for the rows of a table and of a list, taken by the handle alone: a list with a URL posts its order and swaps in the answer, one with an event name raises it */
     var drag = null;
-    function getDragTable(node) {
-        return node && node.closest ? node.closest('table[data-sl-drag-url]') : null;
+    function getDragList(node) {
+        return node && node.closest ? node.closest('[data-sl-drag-url], [data-sl-drag-event]') : null;
     }
     function getDragRow(node) {
-        return node && node.closest ? node.closest('tr[data-sl-drag-id]') : null;
+        return node && node.closest ? node.closest('[data-sl-drag-id]') : null;
+    }
+    function getDragIds(list, scope) {
+        return Array.prototype.map.call(list.querySelectorAll(scope === null ? '[data-sl-drag-id]' : '[data-sl-drag-scope="' + scope + '"]'), function (row) {
+            return row.getAttribute('data-sl-drag-id');
+        });
     }
     function getDragRows(row) {
         var rows = [row];
@@ -133,10 +139,13 @@
         }
         return rows;
     }
-    function setDropMarksOff(table) {
-        table.querySelectorAll('.sl-drop-above, .sl-drop-below, .sl-drop-deny').forEach(function (row) {
+    function setDropMarksOff() {
+        document.querySelectorAll('.sl-drop-above, .sl-drop-below, .sl-drop-deny').forEach(function (row) {
             row.classList.remove('sl-drop-above', 'sl-drop-below', 'sl-drop-deny');
         });
+    }
+    function isDragShared(row) {
+        return getDragList(row) === getDragList(drag) && row.getAttribute('data-sl-drag-group') === drag.getAttribute('data-sl-drag-group');
     }
     document.addEventListener('mousedown', function (event) {
         var handle = event.target && event.target.closest ? event.target.closest('.sl-drag-handle') : null;
@@ -144,9 +153,18 @@
         var row = getDragRow(handle);
         if (row) row.draggable = true;
     });
+    /* A press on the handle that moved nothing leaves the row as it was, and on a row of a menu the handle over the icon opens the section as the icon did */
+    document.addEventListener('click', function (event) {
+        var handle = event.target && event.target.closest ? event.target.closest('.sl-drag-handle') : null;
+        var row = getDragRow(handle);
+        if (!row) return;
+        row.draggable = false;
+        var link = handle.nextElementSibling;
+        if (link && link.matches('a[href]')) link.click();
+    });
     document.addEventListener('dragstart', function (event) {
         var row = getDragRow(event.target);
-        if (!row || !row.draggable || !getDragTable(row)) return;
+        if (!row || !row.draggable || !getDragList(row)) return;
         drag = row;
         event.dataTransfer.effectAllowed = 'move';
         event.dataTransfer.setData('text/plain', row.getAttribute('data-sl-drag-id'));
@@ -155,10 +173,9 @@
     document.addEventListener('dragover', function (event) {
         if (!drag) return;
         var row = getDragRow(event.target);
-        var table = getDragTable(row);
-        if (!row || row === drag || !table) return;
-        setDropMarksOff(table);
-        if (row.getAttribute('data-sl-drag-group') !== drag.getAttribute('data-sl-drag-group')) {
+        if (!row || row === drag || !getDragList(row)) return;
+        setDropMarksOff();
+        if (!isDragShared(row)) {
             event.dataTransfer.dropEffect = 'none';
             row.classList.add('sl-drop-deny');
             return;
@@ -171,33 +188,35 @@
     document.addEventListener('drop', function (event) {
         if (!drag) return;
         var row = getDragRow(event.target);
-        var table = getDragTable(row);
-        if (!row || row === drag || !table) return;
-        if (row.getAttribute('data-sl-drag-group') !== drag.getAttribute('data-sl-drag-group')) return;
+        var list = getDragList(row);
+        if (!row || row === drag || !list || !isDragShared(row)) return;
         event.preventDefault();
         var moving = getDragRows(drag);
         if (moving.indexOf(row) !== -1) return;
+        var scope = drag.getAttribute('data-sl-drag-scope');
+        var was = getDragIds(list, scope);
         var before = event.clientY < row.getBoundingClientRect().top + row.offsetHeight / 2;
         var family = getDragRows(row);
         var anchor = before ? row : family[family.length - 1].nextSibling;
         var parent = row.parentNode;
         moving.forEach(function (item) { parent.insertBefore(item, anchor); });
-        var ids = [];
-        table.querySelectorAll('tr[data-sl-drag-scope="' + drag.getAttribute('data-sl-drag-scope') + '"]').forEach(function (item) {
-            ids.push(item.getAttribute('data-sl-drag-id'));
-        });
+        var ids = getDragIds(list, scope);
         var saved = drag.getAttribute('data-sl-drag-id');
-        var target = table.getAttribute('data-sl-drag-target');
-        fetch(table.getAttribute('data-sl-drag-url'), {
+        if (!list.hasAttribute('data-sl-drag-url')) {
+            list.dispatchEvent(new CustomEvent(list.getAttribute('data-sl-drag-event'), { bubbles: true, detail: { id: saved, ids: ids, was: was } }));
+            return;
+        }
+        var target = list.getAttribute('data-sl-drag-target');
+        fetch(list.getAttribute('data-sl-drag-url'), {
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: 'ids=' + ids.join('-') + '&token=' + encodeURIComponent(table.getAttribute('data-sl-drag-token') || '')
+            body: 'ids=' + ids.join('-') + '&token=' + encodeURIComponent(list.getAttribute('data-sl-drag-token') || '')
         }).then(function (reply) { return reply.text(); }).then(function (html) {
             var box = document.getElementById(target);
             if (!box) return;
             box.innerHTML = html;
             setGroupStates(box);
-            var flash = box.querySelector('tr[data-sl-drag-id="' + saved + '"]');
+            var flash = box.querySelector('[data-sl-drag-id="' + saved + '"]');
             if (!flash) return;
             flash.classList.add('sl-row-saved');
             setTimeout(function () { flash.classList.remove('sl-row-saved'); }, 900);
@@ -207,9 +226,18 @@
         if (!drag) return;
         getDragRows(drag).forEach(function (item) { item.classList.remove('sl-dragging'); });
         drag.draggable = false;
-        var table = getDragTable(drag);
-        if (table) setDropMarksOff(table);
+        setDropMarksOff();
         drag = null;
+    });
+    /* The sidebar keeps the order its administrator dragged in the cookie menu, both blocks in one list, and a refusal puts the rows of the block back */
+    document.addEventListener('sl:menu-order', function (event) {
+        var list = event.target;
+        var keys = Array.prototype.map.call(document.querySelectorAll('[data-sl-drag-event="sl:menu-order"] [data-sl-drag-id]'), function (row) {
+            return row.getAttribute('data-sl-drag-id');
+        });
+        window.setOptionSend('menu', keys.join('-')).catch(function () {
+            event.detail.was.forEach(function (key) { list.appendChild(list.querySelector('[data-sl-drag-id="' + key + '"]')); });
+        });
     });
     function setGroupRows(head, closed) {
         head.classList.toggle('sl-is-closed', closed);
@@ -1566,17 +1594,29 @@
         document.addEventListener('visibilitychange', setQueueSeen);
         window.addEventListener('focus', setQueueSeen);
     }
-    // Г9-Г14 One answer of the cockpit poll: the tone of the panel and its line of state, the signals of the lamp in the order of the server, each ring and the strip
+    // Г9-Г14 One answer of the cockpit poll: the tone of the panel, its line of state and the rows of the lamp, the signals in the order of the server, rings, strip
     function setCockpitView(box, data) {
         var loud = data.signals.filter(function (sig) { return sig.level !== 'ok'; }).length;
         var list = box.querySelector('[data-sl-signals]');
         var cap = box.querySelector('[data-sl-signals-cap]');
         var sample = box.querySelector('template[data-sl-cockpit-row]').content.firstElementChild;
-        box.classList.remove('sl-knob-ok', 'sl-knob-warn', 'sl-knob-danger');
+        var pass = box.querySelector('[data-sl-cockpit-pass]');
+        var said = box.querySelector('[data-sl-pass-of]');
+        var was = pass.textContent;
+        var fresh = function (node) {
+            node.classList.remove('sl-is-fresh');
+            void node.offsetWidth;
+            node.classList.add('sl-is-fresh');
+        };
+        var bar;
+        box.classList.remove('sl-knob-ok', 'sl-knob-info', 'sl-knob-warn', 'sl-knob-danger');
         box.classList.add('sl-knob-' + data.tone);
         box.querySelectorAll('[data-sl-tone]').forEach(function (node) { node.hidden = node.getAttribute('data-sl-tone') !== data.tone; });
         box.querySelector('[data-sl-cockpit-loud]').hidden = loud === 0;
         box.querySelector('[data-sl-cockpit-n]').textContent = loud;
+        pass.textContent = data.signals.length - loud;
+        if (pass.textContent !== was) fresh(pass);
+        said.textContent = said.getAttribute('data-sl-pass-of').replace('%s', pass.textContent).replace('%s', data.signals.length);
         cap.textContent = cap.getAttribute(loud ? 'data-sl-loud' : 'data-sl-calm');
         data.signals.forEach(function (sig) {
             var line = list.querySelector('[data-sl-signal="' + CSS.escape(sig.key) + '"]');
@@ -1586,6 +1626,12 @@
             line.querySelectorAll('[data-sl-level]').forEach(function (icon) { icon.hidden = icon.getAttribute('data-sl-level') !== sig.level; });
             line.querySelector('[data-sl-signal-fact]').textContent = sig.fact;
             list.appendChild(line);
+            bar = box.querySelector('[data-sl-bar="' + CSS.escape(sig.key) + '"]');
+            if (!bar) return;
+            bar.title = sig.label + (sig.fact ? ' · ' + sig.fact : '');
+            if (bar.classList.contains('sl-knob-' + sig.level)) return;
+            bar.className = 'sl-knob-' + sig.level;
+            fresh(bar);
         });
         Object.keys(data.gauges).forEach(function (key) {
             var ring = box.querySelector('[data-sl-gauge="' + CSS.escape(key) + '"]');
@@ -1615,6 +1661,13 @@
         });
         box.querySelectorAll('[aria-busy]').forEach(function (node) { node.setAttribute('aria-busy', 'false'); });
         box.setAttribute('data-sl-live-stamp', Date.now() - (Number(data.age) || 0) * 1000);
+        box.slCockpitPolls = (box.slCockpitPolls || 0) + 1;
+        setCockpitStale(box);
+    }
+    // Г15 A sample older than half a minute dims the lamp and stops it; the first answer after an idle while may bring an old one the server renews at once, so it never counts
+    function setCockpitStale(box) {
+        var stamp = Number(box.getAttribute('data-sl-live-stamp')) || 0;
+        box.toggleAttribute('data-sl-cockpit-stale', box.slCockpitPolls > 1 && !box.hasAttribute('data-sl-live-paused') && Date.now() - stamp > 30000);
     }
     // Г9 Г15 The cockpit asks for its figures at once and then at its interval while the tab is in sight and the live chip runs; a poll renews no session
     function setCockpitPoll() {
@@ -1633,6 +1686,10 @@
         };
         ask();
         window.setInterval(ask, (Number(box.getAttribute('data-sl-cockpit-every')) || 10) * 1000);
+        window.setInterval(function () { setCockpitStale(box); }, 5000);
+        box.addEventListener('animationend', function (event) {
+            if (event.animationName === 'sl-cockpit-fresh') event.target.classList.remove('sl-is-fresh');
+        });
         document.addEventListener('visibilitychange', ask);
         box.addEventListener('click', function (event) {
             if (event.target.closest('[data-sl-live-toggle]')) window.setTimeout(ask);

@@ -28,6 +28,7 @@
 # The argument entry runs the branch of the API of index.php beside the site and the panel: its JSON, the light core, its refusals, a ban and a lost database
 # The argument router runs the core of the connector over three modules it writes for the run: the route, the guards in their order, the input, the envelope and the file
 # The argument master runs the module master: its panel, master/check and master/file over its inbox/; its child masterext runs the two jobs of the master
+# The argument blocks runs the zones of a type and of a page, the expired, lost, gone and free blocks, the free tag of a writer and the order the panel writes
 # The argument gate runs the closed site of a code newer than its step mark: every entry at 503, the light mode of the panel, its login and steps, then the notices and settings
 if (PHP_SAPI !== 'cli') {
     http_response_code(404);
@@ -1195,9 +1196,9 @@ function addRouteIntegTypes(PDO $pdo, string $work): void {
     $pdo->exec('UPDATE '.$pre.'nodes SET home = 1 WHERE id IN (101, 105)');
     $st = $pdo->prepare('INSERT INTO '.$pre.'blocks (id, bkey, title, content, url, bpos, weight, status, refresh, time, lang, bfile, view, expire, action, which, param)'
         .' VALUES (?, \'\', ?, \'\', \'\', \'c\', ?, 1, 0, 0, \'\', \'node.php\', 0, NULL, \'d\', \'rss\', ?)');
-    $st->execute([50, 'Node home block', 1, '{"type":"news","mode":"home","limit":5}']);
-    $st->execute([51, 'Node mixed block', 2, '{"type":"","mode":"last","limit":5}']);
-    $st->execute([52, 'Node broken block', 3, '{"type":"off","mode":"last","limit":2}']);
+    $st->execute([50, 'Node home block', 1, '{"type":["news"],"mode":"home","limit":5}']);
+    $st->execute([51, 'Node mixed block', 2, '{"type":[],"mode":"last","limit":5}']);
+    $st->execute([52, 'Node broken block', 3, '{"type":["off"],"mode":"last","limit":2}']);
 }
 
 # The aggregate of one material and the stored votes and actors of its rating target
@@ -1301,11 +1302,11 @@ function getRouteInteg(PDO $pdo, string $work): array {
         'bfile' => 'node.php', 'bpos' => 'c', 'oldposition' => 'c', 'weight' => '2', 'status' => '1', 'view' => '0', 'expire' => '0', 'action' => 'd',
         'blockwhere[]' => 'rss'];
     $param = fn(): string => (string)$pdo->query('SELECT param FROM '.$pre.'blocks WHERE id = 51')->fetchColumn();
-    $bad = getRouteReply('root', 'POST', 'admin.php', $post + ['ntype' => 'off', 'nmode' => 'last', 'nlimit' => '3']);
+    $bad = getRouteReply('root', 'POST', 'admin.php', $post + ['ntype[]' => 'off', 'nmode' => 'last', 'nlimit' => '3']);
     $kept = $param();
-    $good = getRouteReply('root', 'POST', 'admin.php', $post + ['ntype' => 'docs', 'nmode' => 'last', 'nlimit' => '3']);
-    $out['editor'] = [$edit['code'], str_contains($edit['body'], 'name="ntype"'), str_contains($edit['body'], 'name="nlimit"'), $bad['code'], $kept, $good['code'], $param()];
-    $bound =getRouteReply('root', 'POST', 'admin.php', ['blockwhere[]' => 'docs'] + $post + ['ntype' => 'docs', 'nmode' => 'last', 'nlimit' => '3']);
+    $good = getRouteReply('root', 'POST', 'admin.php', $post + ['ntype[]' => 'docs', 'nmode' => 'last', 'nlimit' => '3']);
+    $out['editor'] = [$edit['code'], str_contains($edit['body'], 'name="ntype[]"'), str_contains($edit['body'], 'name="nlimit"'), $bad['code'], $kept, $good['code'], $param()];
+    $bound =getRouteReply('root', 'POST', 'admin.php', ['blockwhere[]' => 'docs'] + $post + ['ntype[]' => 'docs', 'nmode' => 'last', 'nlimit' => '3']);
     $box = fn(string $val): bool => (bool)preg_match('#name="blockwhere\[\]"\s+value="'.$val.'"#', $edit['body']);
     $out['where'] = [$box('docs'), $box('node'), $bound['code'], (string)$pdo->query('SELECT which FROM '.$pre.'blocks WHERE id = 51')->fetchColumn()];
     $conf = getRouteReply('root', 'GET', 'admin.php?name=search&op=config');
@@ -2066,8 +2067,8 @@ function addRouteSeoTypes(PDO $pdo, string $work): void {
     $pdo->exec('INSERT INTO '.$pre.'nodes (id, tid, cid, uid, aname, ip, title, intro, body, field, status, published)'
         .' VALUES (202, 2, 0, 3, \'\', \'127.0.0.1\', \'Zebra doc\', \'intro of 202\', \'Body of zebra\', \'\', 2, \'2026-01-10 10:00:00\')');
     $pdo->exec('INSERT INTO '.$pre.'blocks (id, bkey, title, content, url, bpos, weight, status, refresh, time, lang, bfile, view, expire, action, which, param)'
-        .' VALUES (60, \'\', \'Docs last block\', \'\', \'\', \'c\', 1, 1, 0, 0, \'\', \'node.php\', 0, NULL, \'d\', \'rss\', \'{"type":"docs","mode":"last","limit":5}\'),'
-        .' (61, \'\', \'Stale seo block\', \'\', \'\', \'c\', 2, 1, 0, 0, \'\', \'node.php\', 0, NULL, \'d\', \'rss\', \'{"type":"off","mode":"last","limit":2}\')');
+        .' VALUES (60, \'\', \'Docs last block\', \'\', \'\', \'c\', 1, 1, 0, 0, \'\', \'node.php\', 0, NULL, \'d\', \'rss\', \'{"type":["docs"],"mode":"last","limit":5}\'),'
+        .' (61, \'\', \'Stale seo block\', \'\', \'\', \'c\', 2, 1, 0, 0, \'\', \'node.php\', 0, NULL, \'d\', \'rss\', \'{"type":["off"],"mode":"last","limit":2}\')');
 }
 
 # The canonical route answers: canonical addresses beside foreign parameters, the description of the start page, a category named by a constant in view and feed
@@ -2181,7 +2182,7 @@ function addRouteHeadTypes(PDO $pdo, string $work): void {
     $pdo->exec('INSERT INTO '.$pre.'nodes (id, tid, cid, uid, aname, ip, title, intro, body, field, status, published)'
         .' VALUES (106, 1, 1, 2, \'\', \'127.0.0.1\', \'Zeta later\', \'intro of 106\', \'Body of zeta\', \'\', 2, \'2030-01-01 00:00:00\')');
     $pdo->exec('INSERT INTO '.$pre.'blocks (id, bkey, title, content, url, bpos, weight, status, refresh, time, lang, bfile, view, expire, action, which, param)'
-        .' VALUES (70, \'\', \'Empty head block\', \'\', \'\', \'c\', 1, 1, 0, 0, \'\', \'node.php\', 0, NULL, \'d\', \'rss\', \'{"type":"","mode":"home","limit":5}\')');
+        .' VALUES (70, \'\', \'Empty head block\', \'\', \'\', \'c\', 1, 1, 0, 0, \'\', \'node.php\', 0, NULL, \'d\', \'rss\', \'{"type":[],"mode":"home","limit":5}\')');
 }
 
 # The route answers of notices and the page cache: a page past the reader bound, the notice after a submission once and the list cached after it, the notice after a report once
@@ -4000,6 +4001,82 @@ function getRoutePage(string $work): array {
     return $out;
 }
 
+# The blocks run: docs without side columns, the page About with all four at about-us, and blocks that expire, lost their file, name a page or a gone place, or stand free
+function addRouteBlockConf(PDO $pdo, string $work): void {
+    $pre = RPREF.'_';
+    $node = require $work.'/config/node.php';
+    $node['node']['types']['docs']['view'] = ['side' => 3];
+    setRouteFile($work.'/config/node.php', $node);
+    $fields = require $work.'/config/fields.php';
+    $fields['fields']['account'] = [];
+    setRouteFile($work.'/config/fields.php', $fields);
+    $lay = getRoutePageLayout([]);
+    $lay['layout']['pages'][10] = array_replace($lay['layout']['pages'][10], ['side' => '0', 'top' => '0']);
+    setRouteFile($work.'/config/layout.php', $lay);
+    $pdo->exec('INSERT INTO '.$pre.'routes (path, kind, oid, state) VALUES (\'about-us\', \'page\', 10, 1), (\'news\', \'type\', 1, 1), (\'docs\', \'type\', 2, 1)');
+    $pdo->exec('DELETE FROM '.$pre.'blocks');
+    $st = $pdo->prepare('INSERT INTO '.$pre.'blocks (id, bkey, title, content, url, bpos, weight, status, refresh, time, lang, bfile, view, expire, action, which, param)'
+        .' VALUES (?, \'\', ?, ?, \'\', ?, ?, 1, 0, 0, \'\', ?, 0, ?, \'d\', ?, \'\')');
+    $rows = [[90, 'Right all', 'right text', 'r', 1, '', null, 'all'], [92, 'Gone block', 'gone text', 'c', 1, '', date('Y-m-d H:i:s', time() - 3600), 'all'],
+        [93, 'After gone', 'after text', 'c', 2, '', null, 'all'], [94, 'Lost file', '', 'r', 2, 'gone.php', null, 'all'],
+        [95, 'Page block', 'page text', 'r', 3, '', null, 'page-10'],
+        [96, 'Stray block', 'stray text', 'r', 4, '', null, 'Account,news'], [97, 'Fixed free', 'fixed text', 'r', 5, '', null, 'infly,news,flyfix'],
+        [98, 'Free one', 'free text', 'r', 6, '', null, 'infly,']];
+    foreach ($rows as $row) $st->execute($row);
+    $pdo->exec('UPDATE '.$pre.'nodes SET body = CONCAT(body, \'\n\n[block=98]\n\n[block=97]\n\n`[block=98]` coded\') WHERE id IN (102, 201)');
+}
+
+# The blocks over real requests: the columns of a type and of a page, the expired block, the lost file, the free blocks in a trusted text and the panel writing the order
+function getRouteBlocks(PDO $pdo): array {
+    $pre = RPREF.'_';
+    $one = fn(string $sql): mixed => $pdo->query($sql)->fetchColumn();
+    $zone = fn(string $pos): string => (string)$one('SELECT GROUP_CONCAT(CONCAT(id, \':\', weight) ORDER BY weight, id) FROM '.$pre.'blocks WHERE bpos = \''.$pos.'\'');
+    $word = fn(string $key): string => preg_match("#define\('".$key."', *'([^']+)'\)#", (string)file_get_contents(BASE_DIR.'/admin/lang/ru.php'), $hit) ? $hit[1] : '?';
+    $page = fn(string $who, string $path): string => getRouteReply($who, 'GET', $path)['body'];
+    [$news, $docs, $about] = [$page('', 'index.php?name=news'), $page('', 'index.php?name=docs'), $page('', 'about-us')];
+    [$beta, $doc, $boss] = [$page('', 'index.php?name=news&op=view&id=102'), $page('', 'index.php?name=docs&op=view&id=201'), $page('root', 'index.php?name=news')];
+    $has = fn(string $html, array $list): array => array_map(fn(string $v): bool => str_contains($html, $v), $list);
+    $out = ['news' => $has($news, ['right text', 'after text', 'gone text', 'Lost file', 'page text', 'stray text', 'fixed text', 'free text']),
+        'docs' => [$has($docs, ['right text', 'after text', 'Doc one']), $has($doc, ['right text', 'after text'])],
+        'about' => $has($about, ['right text', 'page text', 'after text']), 'root' => $has($boss, ['Lost file']),
+        'gone' => [(int)$one('SELECT status FROM '.$pre.'blocks WHERE id = 92'), $one('SELECT expire FROM '.$pre.'blocks WHERE id = 92')],
+        'free' => [$has($beta, ['free text', 'fixed text', '[block=98]</code>']), $has($doc, ['free text', 'fixed text'])]];
+    $form = getRouteReply('clara', 'GET', 'index.php?name=account&op=edithome')['body'];
+    getRouteReply('clara', 'POST', 'index.php?name=account', array_replace(getRoutePairs(getRouteInputs($form, 'savehome')), ['sig' => '[block=98] [usehtml]x[/usehtml] keep',
+        'block' => '']));
+    $out['sig'] = (string)$one('SELECT sig FROM '.$pre.'users WHERE id = 4');
+    $list = $page('root', 'admin.php?name=blocks');
+    $stray = $page('root', 'admin.php?name=blocks&op=edit&id=96');
+    $lost = $page('root', 'admin.php?name=blocks&op=edit&id=94');
+    $box = fn(string $html, string $val): bool => (bool)preg_match('#name="blockwhere\[\]"\s+value="'.preg_quote($val, '#').'"\s+checked#', $html);
+    $addf = $page('root', 'admin.php?name=blocks&op=add');
+    $opts = preg_match('#<select[^>]*name="bpos"[^>]*>(.*?)</select>#s', $addf, $hit) ? $hit[1] : '';
+    $out['panel'] = [str_contains($list, $word('_BLOCK_NOFILE')), str_contains($list, $word('_BLOCK_NOWHERE')), $box($stray, 'Account'), $box($stray, 'news'),
+        str_contains($stray, $word('_BLOCK_NOWHERE').': Account'), (bool)preg_match('#value="gone\.php"\s+selected#', $lost),
+        $box($page('root', 'admin.php?name=blocks&op=edit&id=95'), 'page-10'), substr_count($opts, '<option'), (bool)preg_match('#value="[bf]"#', $opts)];
+    $tok = getRouteToken($addf, 'addsave');
+    $add = ['op' => 'addsave', 'token' => $tok, 'content' => 'added text', 'status' => '1', 'view' => '0', 'expire' => '0', 'action' => 'd', 'blockwhere[]' => 'all'];
+    getRouteReply('root', 'POST', 'admin.php?name=blocks', $add + ['title' => 'Added', 'bpos' => 'r']);
+    $banned = getRouteReply('root', 'POST', 'admin.php?name=blocks', $add + ['title' => 'Banned', 'bpos' => 'b']);
+    $out['add'] = [$zone('r'), (int)$one('SELECT COUNT(*) FROM '.$pre.'blocks WHERE title = \'Banned\''), $banned['code']];
+    $edit = $page('root', 'admin.php?name=blocks&op=edit&id=90');
+    getRouteReply('root', 'POST', 'admin.php', ['name' => 'blocks', 'op' => 'editsave', 'token' => getRouteToken($edit, 'editsave'), 'bid' => '90', 'bkey' => '',
+        'title' => 'Right all', 'content' => 'right text', 'bpos' => 'l', 'oldposition' => 'r', 'weight' => '1', 'status' => '1', 'view' => '0', 'expire' => '0', 'action' => 'd',
+        'blockwhere[]' => 'all']);
+    $out['move'] = [$zone('l'), $zone('r')];
+    $list = $page('root', 'admin.php?name=blocks');
+    getRouteReply('root', 'POST', 'admin.php', ['name' => 'blocks', 'op' => 'delete', 'id' => '95', 'token' => getRouteToken($list, 'delete')]);
+    $out['delete'] = $zone('r');
+    $drag = preg_match('#data-sl-drag-token="([a-f0-9]{64})"#', $list, $hit) ? $hit[1] : '';
+    $ids = array_reverse(array_map(fn(string $v): string => strstr($v, ':', true), explode(',', $zone('r'))));
+    getRouteReply('root', 'POST', 'index.php?go=5&op=updateAdminBlockOrder', ['ids' => implode('-', $ids), 'token' => $drag]);
+    $out['drag'] = $zone('r');
+    $pdo->exec('UPDATE '.$pre.'blocks SET weight = weight * 10 WHERE bpos = \'r\'');
+    getRouteReply('root', 'POST', 'admin.php', ['name' => 'blocks', 'op' => 'fix', 'token' => getRouteToken($list, 'fix')]);
+    $out['fix'] = $zone('r');
+    return $out;
+}
+
 # The child favhold of the intact run holds the account of anna with one more favorite for two seconds, as a parallel request at the limit does before its commit
 if (($argv[2] ?? '') === 'favhold') {
     $hpdo = getRoutePdo((string)($argv[3] ?? ''));
@@ -4051,6 +4128,7 @@ try {
     if (($argv[2] ?? '') === 'gate') addRouteGateConf($rpdo, $rwork);
     if (($argv[2] ?? '') === 'master') addRouteMasterConf($rpdo, $rwork);
     if (($argv[2] ?? '') === 'page') addRoutePageConf($rpdo, $rwork);
+    if (($argv[2] ?? '') === 'blocks') addRouteBlockConf($rpdo, $rwork);
     $rproc = addRouteServer($rwork, $rport);
     if (($argv[2] ?? '') === 'serve') {
         fwrite(STDERR, 'serving on '.$rport.' with '.$rbase."\n");
@@ -4101,6 +4179,8 @@ try {
         $report['runs']['move'] = getRouteMove($rpdo, $rwork);
     } elseif (($argv[2] ?? '') === 'page') {
         $report['runs']['page'] = getRoutePage($rwork);
+    } elseif (($argv[2] ?? '') === 'blocks') {
+        $report['runs']['blocks'] = getRouteBlocks($rpdo);
     } elseif (($argv[2] ?? '') === 'time') {
         $report['runs']['time'] = getRouteTime($rpdo, $rwork);
     } elseif (($argv[2] ?? '') === 'null') {

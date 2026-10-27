@@ -134,6 +134,7 @@
   --sl-shadow-float: 0 6px 12px light-dark(rgba(0, 0, 0, 0.175), rgba(0, 0, 0, 0.66));
   --sl-shadow-inset: inset 0 1px 2px 0 var(--sl-scrim-subtle);
   --sl-shadow-focus: 0 0 0 var(--sl-ring-width) var(--sl-ring-bg);
+  --sl-shadow-color: light-dark(rgba(42, 48, 60, 0.18), rgba(0, 0, 0, 0.62));
   --sl-panel-shadow: 0 4px 16px light-dark(rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.62));
 
   /* Components: form field, shared by input, textarea, select and file controls */
@@ -496,6 +497,16 @@
   --sl-gauge-min-width: 56px;
   --sl-gauge-min-height: 56px;
   --sl-gauge-mix: 50%;
+  /* The glass of the cockpit lamp: gloss and a shaded rim on a disc of the light steps, so its muted words hold 4.5:1; dark on the presentation panel */
+  --sl-gauge-bg:
+    radial-gradient(ellipse 62% 34% at 50% 12%, var(--sl-beam-bg), transparent 72%),
+    radial-gradient(circle at 50% 22%, transparent 50%, light-dark(var(--sl-shadow-color), transparent) 100%),
+    radial-gradient(circle at 50% 30%, light-dark(var(--sl-bg), var(--sl-pres-inset-bg)), light-dark(var(--sl-bg-subtle), var(--sl-pres-panel-bg)) 60%,
+      light-dark(var(--sl-bg-muted), var(--sl-pres-panel-bg)));
+  --sl-gauge-shadow:
+    drop-shadow(0 var(--sl-space-3) var(--sl-space-6) var(--sl-shadow-color))
+    drop-shadow(0 var(--sl-space-4) var(--sl-space-7) light-dark(var(--sl-shadow-color), transparent))
+    drop-shadow(0 var(--sl-space-1) var(--sl-space-2) light-dark(var(--sl-shadow-color), transparent));
   /* The guard scene: the court height and the house width every other part is measured against */
   --sl-guard-height: 420px;
   --sl-guard-width: 224px;

@@ -154,9 +154,9 @@ if (empty($go)) {
         if (!$name) $home = 1;
         $name = $nname;
         $conf['name'] = $name;
-        $mconf = $conf['modules']['node'] ?? [];
-        $blocks = (string)($mconf['side'] ?? '');
-        $blocks_c = (string)($mconf['top'] ?? '');
+        $tview = getNodeTypeMap()[$name]->settings['view'] ?? [];
+        $blocks = (string)($tview['side'] ?? '');
+        $blocks_c = (string)($tview['top'] ?? '');
         getLang('node');
         require_once BASE_DIR.'/modules/node/index.php';
         exit;

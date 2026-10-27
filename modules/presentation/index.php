@@ -64,8 +64,8 @@ function getPresentationData(): array {
     $news = $read('article');
     $docs = $read('docs');
     $files = $read('files');
-    $slots = ['b' => _PRES_BL_BANNER, 'l' => _PRES_BL_LEFT, 'c' => _PRES_BL_TOP, 'd' => _PRES_BL_BOTTOM, 'r' => _PRES_BL_RIGHT, 'f' => _PRES_BL_FOOTER];
-    $ends = ['b' => [340, 118], 'l' => [296, 170], 'c' => [340, 134], 'd' => [340, 205], 'r' => [464, 170], 'f' => [340, 222]];
+    $slots = ['l' => _PRES_BL_LEFT, 'c' => _PRES_BL_TOP, 'd' => _PRES_BL_BOTTOM, 'r' => _PRES_BL_RIGHT];
+    $ends = ['l' => [296, 170], 'c' => [340, 134], 'd' => [340, 205], 'r' => [464, 170]];
     $nodes = [];
     $filled = [];
     $res = $db->getSqlQuery('SELECT title, bpos, bfile, status FROM '.PREFIX_DB.'_blocks ORDER BY status DESC, weight ASC LIMIT 8');
@@ -247,12 +247,12 @@ function getPresentationData(): array {
     $voices = getPresentationVoices();
     foreach (array_keys($voices) as $i) $voices[$i]['since_label'] = _PRES_VO_SINCE;
     $hero = [
-        'cockpit' => _PRES_COCKPIT, 'nominal' => _PRES_NOMINAL, 'version' => $ver[0].(isset($ver[1]) ? ' · '.$ver[1] : ''),
+        'cockpit' => _PRES_COCKPIT, 'nominal' => _ADM_CALM, 'version' => $ver[0].(isset($ver[1]) ? ' · '.$ver[1] : ''),
         'gen_ring' => $ring((string)$gen, 'ms', _PRES_GEN, $gpart, '', false, '', 'info'),
         'cache_ring' => $ring($hitval, $hit ? '%' : '', 'OPcache', $hit, '', false, '', 'ok'),
         'qnum_ring' => $ring((string)$load['qnum'], 'sql', _PRES_QUERY, $qpart, '', false, '', 'warn'),
         'online_ring' => $ring((string)$live, '', _ONLINE, $share($live, 120), '', false, '', 'info'),
-        'plate' => ['tone' => 'success'],
+        'plate' => ['pass' => 14, 'total' => 14, 'bars' => array_map(static fn(int $i): array => ['num' => $i], range(0, 13))],
         'eyebrow' => _PRES_EYEBROW, 'head_a' => _PRES_HEAD_A, 'head_b' => _PRES_HEAD_B, 'head_c' => _PRES_HEAD_C, 'lead' => _PRES_LEAD,
         'core' => [
             'title' => _PRES_CONTROL, 'route' => $menu[0]['path'], 'menu' => $menu, 'view' => _PRES_MONITOR, 'online' => _ONLINE,

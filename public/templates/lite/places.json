@@ -1,0 +1,116 @@
+{
+    "parts": {
+        "brand": {
+            "title": "_LAYOUT_BRAND",
+            "note": "_LAYOUT_BRAND_INFO",
+            "icon": "badge-tm",
+            "where": "_LAYOUT_AT_HEAD",
+            "conf": ["sitename", "site_logo"],
+            "fields": [
+                {"key": "tagline", "label": "_LAYOUT_TAGLINE", "type": "textarea"}
+            ]
+        },
+        "pane": {
+            "title": "_LAYOUT_PANE",
+            "note": "_LAYOUT_PANE_INFO",
+            "icon": "tag",
+            "where": "_LAYOUT_AT_HEAD",
+            "fields": [
+                {"key": "paneon", "label": "_LAYOUT_SHOWN", "type": "bool", "show": "switch"},
+                {"key": "panecap", "label": "_LAYOUT_CAPTION", "type": "text"},
+                {"key": "panever", "label": "_VERSION", "type": "text"},
+                {"key": "panebtn", "label": "_LAYOUT_BTN", "type": "text"},
+                {"key": "panehref", "label": "_LAYOUT_HREF", "type": "url"}
+            ]
+        },
+        "social": {
+            "title": "_LAYOUT_SOCIAL",
+            "icon": "share",
+            "where": "_LAYOUT_AT_TOP",
+            "fields": [],
+            "items": {
+                "key": "social",
+                "label": "_URLS",
+                "max": 10,
+                "name": "title",
+                "fields": [
+                    {"key": "icon", "label": "_ICON", "type": "icon"},
+                    {"key": "title", "label": "_LAYOUT_CAPTION", "type": "text"},
+                    {"key": "url", "label": "_LAYOUT_HREF", "type": "url"}
+                ],
+                "make": {"icon": "globe", "title": "_LAYOUT_SOC_ITEM", "url": "https://"}
+            }
+        },
+        "line": {
+            "title": "_LAYOUT_LINE",
+            "icon": "distribute-vertical",
+            "where": "_LAYOUT_AT_FOOT",
+            "fields": [
+                {"key": "lineon", "label": "_LAYOUT_SHOWN", "type": "bool", "show": "switch"},
+                {"key": "linetitle", "label": "_TITLE", "type": "text"}
+            ]
+        },
+        "contacts": {
+            "title": "_LAYOUT_CONTACTS",
+            "icon": "person-lines-fill",
+            "where": "_LAYOUT_AT_FOOT",
+            "fields": [
+                {"key": "address", "label": "_LAYOUT_ADDR", "type": "textarea"},
+                {"key": "phone", "label": "_LAYOUT_TEL", "type": "text"},
+                {"key": "email", "label": "_EMAIL", "type": "email"},
+                {"key": "web", "label": "_SITE", "type": "url"}
+            ]
+        },
+        "marks": {
+            "title": "_LAYOUT_MARKS",
+            "icon": "award",
+            "where": "_LAYOUT_AT_FOOT",
+            "fields": [
+                {"key": "markson", "label": "_LAYOUT_MARKCOL", "type": "bool", "show": "switch"},
+                {"key": "markstitle", "label": "_LAYOUT_MARKSTTL", "type": "text"},
+                {"key": "madein", "label": "_LAYOUT_MADEIN", "type": "bool", "show": "switch"}
+            ],
+            "items": {
+                "key": "marks",
+                "label": "_LAYOUT_MARKLIST",
+                "max": 6,
+                "name": "title",
+                "fields": [
+                    {"key": "img", "label": "_IMG", "type": "file"},
+                    {"key": "title", "label": "_LAYOUT_CAPTION", "type": "text"}
+                ],
+                "make": {"img": "", "title": ""}
+            }
+        },
+        "tabs": {
+            "title": "_LAYOUT_TABS",
+            "note": "_LAYOUT_TABS_INFO",
+            "icon": "bookmark",
+            "where": "_LAYOUT_AT_ALL",
+            "fields": [
+                {"key": "tabson", "label": "_LAYOUT_SHOWN", "type": "bool", "show": "switch"}
+            ],
+            "items": {
+                "key": "tabs",
+                "label": "_LAYOUT_TABLIST",
+                "max": 2,
+                "name": "title",
+                "fields": [
+                    {"key": "title", "label": "_LAYOUT_CAPTION", "type": "text"},
+                    {"key": "href", "label": "_LAYOUT_HREF", "type": "url"}
+                ],
+                "make": {"title": "_FEEDBACK", "href": "/contact"}
+            }
+        }
+    },
+    "menus": {
+        "main": {"title": "_LAYOUT_MAINMENU", "where": "_LAYOUT_AT_MENU", "depth": 2, "icons": true},
+        "foot": {"title": "_LAYOUT_FOOTMENU", "where": "_LAYOUT_AT_FOOT", "depth": 1, "icons": true}
+    },
+    "zones": {
+        "l": {"title": "_LEFT"},
+        "r": {"title": "_RIGHT"},
+        "c": {"title": "_CENTERUP"},
+        "d": {"title": "_CENTERDOWN"}
+    }
+}

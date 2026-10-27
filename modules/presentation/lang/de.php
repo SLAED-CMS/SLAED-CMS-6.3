@@ -12,7 +12,6 @@ define('_PRES_HEAD_B', 'einfach.');
 define('_PRES_HEAD_C', 'Aber nicht primitiv.');
 define('_PRES_LEAD', 'SLAED ist ein modulares Open-Source-CMS: Inhalte, Benutzer, Dateien, Suche und Erweiterungen in einem System. Keine SaaS-Abhängigkeit: Server, Daten und Code bleiben unter Ihrer Kontrolle.');
 define('_PRES_COCKPIT', 'Cockpit');
-define('_PRES_NOMINAL', 'alle Systeme im Normalbereich');
 define('_PRES_GEN', 'Generierung');
 define('_PRES_CACHE', 'Cache');
 define('_PRES_QUERIES', 'SQL-Abfragen');

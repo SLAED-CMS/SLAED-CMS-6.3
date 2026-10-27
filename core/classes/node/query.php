@@ -236,11 +236,12 @@ final class NodeQuery {
             'views' => $rule['views']];
     }
 
-    # Check the view section: one display mode of the closed list, never a path, and the support mode only for a type of the support extension
+    # Check the view section: one display mode of the closed list, never a path, the support mode only for a type of the support extension, and the columns of its pages
     private function filterViewRule(mixed $rule, string $ext): array {
-        if (!is_array($rule) || !$this->checkExactKeys($rule, ['mode'])) throw $this->getInvalid('view');
+        if (!is_array($rule) || !$this->checkExactKeys($rule, ['mode', 'side', 'top'])) throw $this->getInvalid('view');
         if (!in_array($rule['mode'], self::MODES, true) || ($rule['mode'] === 'support') !== ($ext === 'support')) throw $this->getInvalid('view.mode');
-        return ['mode' => $rule['mode']];
+        foreach (['side', 'top'] as $key) if (!in_array($rule[$key], [0, 1, 2, 3], true)) throw $this->getInvalid('view.'.$key);
+        return ['mode' => $rule['mode'], 'side' => $rule['side'], 'top' => $rule['top']];
     }
 
     # Check the workflow section: who submits, the groups that submit and publish directly, and the two notices

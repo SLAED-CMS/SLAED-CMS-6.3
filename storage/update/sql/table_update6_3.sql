@@ -788,6 +788,11 @@ CALL renidx('{prefix}_blocks', 'blanguage', 'blang');
 UPDATE `{prefix}_blocks` SET bfile = REPLACE(bfile, 'block-', '') WHERE bfile LIKE 'block-%';
 CALL addcol('{prefix}_blocks', 'param', 'VARCHAR(255) NOT NULL DEFAULT \'\'');
 
+# The banner positions b and f are gone: their rows stand at the end of the centre below, those of b first, each in its order
+SET @SLAED_DOWN = (SELECT COALESCE(MAX(weight), 0) FROM `{prefix}_blocks` WHERE bpos = 'd');
+UPDATE `{prefix}_blocks` b JOIN (SELECT id, ROW_NUMBER() OVER (ORDER BY bpos = 'f', weight, id) AS num FROM `{prefix}_blocks` WHERE bpos IN ('b', 'f')) n ON n.id = b.id
+SET b.bpos = 'd', b.weight = @SLAED_DOWN + n.num;
+
 # =============================================================================
 # Batch D — _categories
 # =============================================================================

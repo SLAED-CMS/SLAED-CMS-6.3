@@ -9,6 +9,6 @@ if (!defined('BLOCK_FILE')) {
     exit;
 }
 
-global $tpl;
-$content = '';
-$content = $tpl->getHtmlFrag('block-menu', ['content' => $content]);
+global $tpl, $layout;
+$items = ($layout instanceof Layout) ? $layout->getMenu('main') : [];
+$content = $items ? $tpl->getHtmlFrag('block-menu', ['items' => $items]) : '';

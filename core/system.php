@@ -793,7 +793,7 @@ function addSchedulerBatch(string $type): array {
 
 # Render the blocks of one column by weight; the admin block stands first in its column whatever its weight
 function getBlocks(string $side, string $fly = ''): void {
-    global $db, $conf, $locale, $name, $home, $pos, $bfile, $prs;
+    global $db, $conf, $locale, $pos, $bfile, $prs;
     static $barr;
     if ($conf['multilingual'] == 1) {
         $qlang = "AND (lang = :loc OR lang = '')";
@@ -837,35 +837,8 @@ function getBlocks(string $side, string $fly = ''): void {
             }
         }
         if ($flag == 1) {
-            if (in_array('flyfix', $where)) {
-                switch ($where[0]) {
-                    case 'all':
-                    $show = 1;
-                    break;
-                    case '':
-                    $show = 1;
-                    break;
-                    case 'infly':
-                    $show = 0;
-                    break;
-                    case 'home':
-                    $show = ($home == 1) ? 1 : 0;
-                    break;
-                    case 'ihome':
-                    if ($home == 1) $show = 1;
-                    default:
-                    if (empty($home)) {
-                        foreach ($where as $val) {
-                            if ($val == $name) $show = 1;
-                        }
-                    }
-                    break;
-                }
-                if (in_array('otricanie', $where)) $show = ($show) ? 0 : 1;
-            } else {
-                $show = 1;
-            }
-            if ($show == 1 && Layout::isViewShown($view, is_user() > 0, is_moder() > 0)) {
+            $show = !in_array('flyfix', $where, true) || isBlockShown(array_values(array_diff($where, ['infly'])));
+            if ($show && Layout::isViewShown($view, is_user() > 0, is_moder() > 0)) {
                 setBlockView($side, $bfile, $title, $content, $bid, $url, $param); return;
             }
         }
@@ -873,41 +846,15 @@ function getBlocks(string $side, string $fly = ''): void {
         $ci = count($barr);
         for ($i = 0; $i < $ci; $i++) {
             if ($barr[$i][9] != $side) continue;
-            $show = 0;
-            $where = $barr[$i][10];
-            switch ($where[0]) {
-                case 'all':
-                $show = 1;
-                break;
-                case '':
-                $show = 1;
-                break;
-                case 'infly':
-                $show = 0;
-                break;
-                case 'home':
-                $show = ($home == 1) ? 1 : 0;
-                break;
-                case 'ihome':
-                if ($home == 1) $show = 1;
-                default:
-                if (empty($home)) {
-                    foreach ($where as $val) {
-                        if ($val == $name) $show = 1;
-                    }
-                }
-                break;
-            }
-            if (in_array('otricanie', $where)) $show = ($show) ? 0 : 1;
-            if ($show == 1) {
+            if (isBlockShown($barr[$i][10])) {
                 [$bid, $bkey, $title, $content, $url, $bfile, $view, $expire, $action, $bpos, $where, $param] = $barr[$i];
                 if ($expire && strtotime($expire) < time()) {
                     if ($action == 'd') {
                         $db->getSqlQuery('UPDATE '.PREFIX_DB."_blocks SET status = '0', expire = NULL WHERE id = :bid", ['bid' => $bid]);
-                        return;
+                        continue;
                     } elseif ($action == 'r') {
                         $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_blocks WHERE id = :bid', ['bid' => $bid]);
-                        return;
+                        continue;
                     }
                 }
                 switch ($bkey) {
@@ -924,6 +871,18 @@ function getBlocks(string $side, string $fly = ''): void {
             }
         }
     }
+}
+
+# Read _blocks.which as the columns read it: all or empty everywhere, home on the home page, ihome there and on its pages, the pages by name elsewhere, otricanie turning it
+function isBlockShown(array $where): bool {
+    global $name, $home;
+    $show = match ($where[0] ?? '') {
+        'all', '' => true,
+        'infly' => false,
+        'home' => $home == 1,
+        default => ($where[0] === 'ihome' && $home == 1) || (empty($home) && in_array((string)$name, $where, true)),
+    };
+    return in_array('otricanie', $where, true) ? !$show : $show;
 }
 
 # Get admin module names (stored as names)
@@ -1815,7 +1774,7 @@ function getRssFeeds(): array {
 
 # Render the page head and track the visit once, though the page 404 renders a head again; a category title shows only when the visitor may read it, so none leaks
 function setHead(array $seo = []): void {
-    global $db, $home, $conf, $user, $name, $theme, $tpl, $afile, $adminpage, $adminvars, $sitepage, $sitevars, $locale;
+    global $db, $home, $conf, $user, $name, $theme, $tpl, $afile, $adminpage, $adminvars, $sitepage, $sitevars, $locale, $layout, $prs;
     static $kept = false;
     setSeoMove($seo);
     $name = $name ?? '';
@@ -2069,6 +2028,12 @@ function setHead(array $seo = []): void {
         $login = $tpl->getHtmlFrag('list', ['is_unordered' => true, 'is_login_top' => true, 'items_html' => $tpl->getHtmlFrag('list-item', ['content_html' => $item])]);
     }
     [$logo_w, $logo_h] = $conf['derived']['logo'][$theme] ?? getImageBox(PUBLIC_DIR.'/templates/'.$theme.'/images/logos/'.($conf['site_logo'] ?? ''));
+    $parts = [];
+    $menus = [];
+    if ($layout instanceof Layout && $prs instanceof Parser) {
+        $parts = $layout->getThemeData($prs);
+        foreach (array_keys($layout->getThemePlaces()['menus']) as $key) $menus[$key] = $layout->getMenu((string)$key);
+    }
     $sitevars = [
         'theme' => getTheme(),
         'mode' => getThemeMode(),
@@ -2083,6 +2048,8 @@ function setHead(array $seo = []): void {
         'logo_h' => $logo_h ?: '',
         'homeurl' => $conf['homeurl'] ?? '',
         'slogan' => $conf['slogan'] ?? '',
+        'parts' => $parts,
+        'menus' => $menus,
         'license' => $licens,
         'meta' => $strmeta,
         'links' => $strlink,
@@ -2164,7 +2131,6 @@ function setFoot(): void {
     $flash = getFlashHtml();
     $time = ($conf['db_t'] == '1') ? GEN_MARK : '';
     $license = !empty($vars['license']) ? (string)$vars['license'] : '';
-    getBlocks('f');
     if ($blocks == '' || $blocks == '0' || $blocks == '1') {
         ob_start(); getBlocks('l'); $left = ob_get_clean();
     } else {
@@ -4395,7 +4361,7 @@ function getAdminBlockLinks(): array {
     return $out;
 }
 
-# The sections of the panel this administrator may open, by key: the panel modules for a super administrator, then each site module with an admin part
+# The sections this administrator may open, by key: the panel modules for a super administrator, then the site modules with an admin part, each in the order of the cookie menu
 function getAdminSectionList(): array {
     global $conf, $afile;
     static $rows = null;
@@ -4410,6 +4376,8 @@ function getAdminSectionList(): array {
                 'icon' => preg_match('/^[a-z0-9-]+$/', $mod['icon'] ?? '') ? $mod['icon'] : 'puzzle'];
         }
     }
+    $seat = array_flip(explode('-', getCookies('menu')));
+    uasort($rows, static fn(array $one, array $two): int => [!$one['is_panel'], $seat[$one['key']] ?? PHP_INT_MAX] <=> [!$two['is_panel'], $seat[$two['key']] ?? PHP_INT_MAX]);
     return $rows;
 }
 
@@ -5850,9 +5818,9 @@ function checkemail(string $mail): array {
     return $stop ?? [];
 }
 
-# Render one block by its kind; a file block that sets its content to null shows nothing, which is how an instance with invalid parameters stays off
+# Render one block by its kind; a file block that sets its content to null shows nothing, so bad parameters and a lost file stay off but for the super administrator
 function setBlockView(string $side, string $bfile, string $btitle, string $content, int $bid, string $url, string $param = ''): string {
-    global $showbanners, $foot, $tpl;
+    global $tpl;
     if ($url == '') {
         $btitle = getConst($btitle);
         $bicon = '';
@@ -5862,18 +5830,12 @@ function setBlockView(string $side, string $bfile, string $btitle, string $conte
             if (file_exists($path)) {
                 include($path);
             } else {
-                $content = $tpl->getHtmlFrag('block-content', ['is_center' => true, 'content' => _BLOCKPROBLEM]);
+                $content = is_moder() ? $tpl->getHtmlFrag('block-content', ['is_center' => true, 'content' => _BLOCKPROBLEM]) : null;
             }
             if ($content === null) return '';
         }
         if (!isset($content) || empty($content)) $content = $tpl->getHtmlFrag('block-content', ['is_center' => true, 'content' => _BLOCKPROBLEM2]);
         switch($side) {
-            case 'b':
-            $showbanners = $content;
-            break;
-            case 'f':
-            $foot = $content;
-            break;
             case 'n':
             echo $content;
             break;
@@ -6059,15 +6021,18 @@ function getNodeTplName(string $kind, string $name, NodeType $type): string {
     return $memo[$key];
 }
 
-# Read the node block parameters from canonical JSON, exactly type, mode and limit in order, or null; mode home also needs the home feature of the type
+# The node block parameters from canonical JSON, exactly type, mode and limit, or null; type lists Node types once each, none for all, home needs that feature of each
 function getNodeBlockParam(string $param): ?array {
     $data = json_decode($param, true);
-    if (!is_array($data) || array_keys($data) !== ['type', 'mode', 'limit'] || !is_string($data['type']) || !is_int($data['limit'])) return null;
+    if (!is_array($data) || array_keys($data) !== ['type', 'mode', 'limit'] || !is_int($data['limit'])) return null;
+    if (!is_array($data['type']) || !array_is_list($data['type'])) return null;
     if (json_encode($data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !== $param || !in_array($data['mode'], ['last', 'home'], true)) return null;
     if ($data['limit'] < 1 || $data['limit'] > 50) return null;
-    if ($data['type'] === '') return $data;
-    $set = (getNodeTypeMap()[$data['type']] ?? null)?->settings;
-    return ($set !== null && $set['integrations']['blocks'] && ($data['mode'] === 'last' || $set['features']['home'])) ? $data : null;
+    foreach ($data['type'] as $one) {
+        $set = is_string($one) ? (getNodeTypeMap()[$one] ?? null)?->settings : null;
+        if ($set === null || !$set['integrations']['blocks'] || ($data['mode'] === 'home' && !$set['features']['home'])) return null;
+    }
+    return (array_unique($data['type']) === $data['type']) ? $data : null;
 }
 
 # Deliver due Node publications as a scheduler job in a trusted background context only this adapter builds; a refusal becomes the failed status

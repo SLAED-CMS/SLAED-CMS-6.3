@@ -16,19 +16,15 @@ function getBlockTabsOps(): array {
     ];
 }
 
-# The where-to-show boxes of a block: site modules and Node types by the name their pages carry, never "node", code in a popover, then home, all, denial and fly
+# The where-to-show boxes of a block: the places with their kind and name in a popover, a value no page answers kept checked until the administrator drops it, then the marks
 function getBlockWhereItems(array $where): array {
-    global $conf, $tpl;
-    $mods = [];
-    foreach ($conf['modules'] as $name => $info) {
-        if ((int)($info['type'] ?? 1) === 1 && $name !== 'node') $mods[$name] = _MODUL;
-    }
-    foreach (array_keys($conf['node']['types'] ?? []) as $name) $mods[$name] = _TYPE;
-    ksort($mods);
+    global $tpl;
+    $places = getBlockPlaces();
+    foreach (getBlockStray($where, $places) as $val) $places[$val] = [_BLOCK_NOWHERE, $val];
     $out = [];
-    foreach ($mods as $mod => $kind) {
-        $out[] = ['is_checked' => in_array($mod, $where, true), 'name_attr' => 'blockwhere[]', 'value_attr' => $mod,
-            'label_html' => $tpl->getHtmlFrag('popover', ['label_text' => getModuleName($mod), 'title_text' => $kind.': '.$mod])];
+    foreach ($places as $key => [$kind, $label]) {
+        $out[] = ['is_checked' => in_array($key, $where, true), 'name_attr' => 'blockwhere[]', 'value_attr' => $key,
+            'label_html' => $tpl->getHtmlFrag('popover', ['label_text' => $label, 'title_text' => $kind.': '.$key])];
     }
     $home = in_array('home', $where, true);
     $list = ['ihome' => _HOME, 'home' => _INHOME, 'all' => _BLOCK_ALL, 'otricanie' => _DENYING, 'infly' => _INFLY, 'flyfix' => _FLY_FIX];
@@ -147,9 +143,7 @@ function add(): void {
             'options_html' => $tpl->getHtmlFrag('select-option', ['value_attr' => 'l', 'label_text' => _LEFT])
                 .$tpl->getHtmlFrag('select-option', ['value_attr' => 'c', 'label_text' => _CENTERUP])
                 .$tpl->getHtmlFrag('select-option', ['value_attr' => 'd', 'label_text' => _CENTERDOWN])
-                .$tpl->getHtmlFrag('select-option', ['value_attr' => 'r', 'label_text' => _RIGHT])
-                .$tpl->getHtmlFrag('select-option', ['value_attr' => 'b', 'label_text' => _BANNERUP])
-                .$tpl->getHtmlFrag('select-option', ['value_attr' => 'f', 'label_text' => _BANNERDOWN]),
+                .$tpl->getHtmlFrag('select-option', ['value_attr' => 'r', 'label_text' => _RIGHT]),
         ]),
     ];
     $rows[] = [
@@ -308,20 +302,11 @@ function fileedit(): void {
 }
 
 function fix(): void {
-    global $db, $afile;
+    global $afile;
     $warn = !checkAdminPost('blocks');
-    if (!$warn) {
-    $pos = ['b', 'c', 'd', 'f', 'l', 'r'];
-    foreach ($pos as $val) {
-        $result = $db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_blocks WHERE bpos = :val ORDER BY weight ASC', ['val' => $val]);
-        $weight = 0;
-        while ([$bid] = $db->getSqlRow($result)) {
-            $weight++;
-            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_blocks SET weight = :weight WHERE id = :bid', ['weight' => $weight, 'bid' => $bid]);
-        }
-    }
-    }
-    setRedirect($afile.'.php?name=blocks', false, 302, $warn ? _TOKENMISS : _SUCCSAVE, $warn);
+    $done = !$warn;
+    foreach (['l', 'r', 'c', 'd'] as $val) $done = $done && setBlockOrder($val);
+    setRedirect($afile.'.php?name=blocks', false, 302, $warn ? _TOKENMISS : ($done ? _SUCCSAVE : _ERROR), !$done);
 }
 
 function addsave(): void {
@@ -331,7 +316,6 @@ function addsave(): void {
     $content = filterSourceText(getVar('post', 'content', 'raw', ''), isAdmin(true));
     $url = getVar('post', 'url', 'url', '');
     $bpos = getVar('post', 'bpos', 'var', '');
-    if (!in_array($bpos, ['l', 'c', 'd', 'r', 'b', 'f'], true)) $bpos = '';
     $active = getVar('post', 'status', 'num', 0);
     $refresh = getVar('post', 'refresh', 'num', 0);
     $headline = getVar('post', 'headline', 'url', '');
@@ -345,8 +329,6 @@ function addsave(): void {
     if (!in_array($action, ['d', 'r'], true)) $action = '';
     $url = filterCutText(($headline) ? $headline : $url, 200);
     $bwhere = getVar('post', 'blockwhere[]', 'var', []);
-    [$weight] = $db->getSqlRow($db->getSqlQuery('SELECT weight FROM '.PREFIX_DB.'_blocks WHERE bpos = :bpos ORDER BY weight DESC', ['bpos' => $bpos]));
-    $weight++;
     $bkey = '';
     $btime = 0;
     if ($bfile != '') {
@@ -368,19 +350,19 @@ function addsave(): void {
         ]);
         setFoot();
     } else {
-        if (isset($bwhere)) {
-            $which = '';
-            $which = (in_array('all', $bwhere)) ? 'all' : $which;
-            $which = (in_array('home', $bwhere)) ? 'home' : $which;
-            if ($which == '') $which = implode(',', $bwhere);
-        }
-        $param = ($bfile === 'node.php') ? json_encode(['type' => '', 'mode' => 'last', 'limit' => 10]) : '';
-        $sql = 'INSERT INTO '.PREFIX_DB.'_blocks VALUES (NULL, :bkey, :title, :content, :url, :bpos, :weight, :active, :refresh, :btime, :lang, :bfile, :view,'
+        $param = ($bfile === 'node.php') ? json_encode(['type' => [], 'mode' => 'last', 'limit' => 10]) : '';
+        $sql = 'INSERT INTO '.PREFIX_DB.'_blocks VALUES (NULL, :bkey, :title, :content, :url, :bpos, 0, :active, :refresh, :btime, :lang, :bfile, :view,'
             .(($days > 0) ? ' NOW() + INTERVAL :days DAY,' : ' NULL,').' :action, :which, :param)';
-        $db->getSqlQuery($sql, [
-            'bkey' => $bkey, 'title' => $title, 'content' => $content, 'url' => $url, 'bpos' => $bpos, 'weight' => $weight, 'active' => $active, 'refresh' => $refresh,
-            'btime' => $btime, 'lang' => $lang, 'bfile' => $bfile, 'view' => $view, 'action' => $action, 'which' => $which, 'param' => $param,
-        ] + (($days > 0) ? ['days' => $days] : []));
+        $done = in_array($bpos, ['l', 'r', 'c', 'd'], true) && $db->setSqlBegin();
+        $done = $done && $db->getSqlQuery($sql, [
+            'bkey' => $bkey, 'title' => $title, 'content' => $content, 'url' => $url, 'bpos' => $bpos, 'active' => $active, 'refresh' => $refresh,
+            'btime' => $btime, 'lang' => $lang, 'bfile' => $bfile, 'view' => $view, 'action' => $action, 'which' => getBlockWhich($bwhere), 'param' => $param,
+        ] + (($days > 0) ? ['days' => $days] : [])) !== false;
+        $done = $done && setBlockOrder($bpos, [(int)$db->getSqlLastId()]) && $db->setSqlCommit();
+        if (!$done) {
+            $db->setSqlRollback();
+            setRedirect($afile.'.php?name=blocks&op=add', false, 302, _ERROR, true);
+        }
         setRedirect($afile.'.php?name=blocks', false, 302, _SUCCSAVE);
     }
 }
@@ -515,6 +497,10 @@ function edit(): void {
     if ($bfile != '') {
         $bfopts = '';
         $files = scandir(BASE_DIR.'/blocks');
+        if (!in_array($bfile, $files, true)) {
+            $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _BLOCK_NOFILE.': blocks/'.htmlspecialchars($bfile, ENT_QUOTES)]);
+            $bfopts .= $tpl->getHtmlFrag('select-option', ['value_attr' => $bfile, 'label_text' => $bfile.' — '._BLOCK_NOFILE, 'is_selected' => true]);
+        }
         foreach ($files as $file) {
             if (preg_match('/^(.+)\.php$/', $file, $matches)) {
                 $bfopts .= $tpl->getHtmlFrag('select-option', [
@@ -536,14 +522,15 @@ function edit(): void {
         if ($bfile === 'node.php') {
             $set = getNodeBlockParam((string)$param);
             if ($set === null) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _BLOCKPROBLEM]);
-            $set ??= ['type' => '', 'mode' => 'last', 'limit' => 10];
-            $topts = $tpl->getHtmlFrag('select-option', ['value_attr' => '', 'label_text' => _ALL, 'is_selected' => $set['type'] === '']);
+            $set ??= ['type' => [], 'mode' => 'last', 'limit' => 10];
+            $tbox = [];
             foreach (getNodeTypeMap() as $name => $type) {
                 if (!$type->settings['integrations']['blocks']) continue;
-                $topts .= $tpl->getHtmlFrag('select-option', ['value_attr' => $name, 'label_text' => getModuleName($name), 'is_selected' => $set['type'] === $name]);
+                $tbox[] = ['is_checked' => in_array($name, $set['type'], true), 'name_attr' => 'ntype[]', 'value_attr' => $name, 'label_text' => getModuleName($name)];
             }
-            $rows[] = ['label_for' => 'f-ntype', 'label_html' => _TYPE, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'ntype', 'selectid' => 'f-ntype',
-                'options_html' => $topts])];
+            $tids = getFieldIds('', 'ntype');
+            $rows[] = ['label_html' => _TYPE, 'label_id' => $tids['label'], 'hint_html' => _BLOCK_ALLTYPES, 'hint_id' => $tids['hint'],
+                'field_html' => $tpl->getHtmlFrag('check-list', ['labelledby' => $tids['label'], 'describedby' => $tids['hint'], 'items' => $tbox])];
             $rows[] = ['label_for' => 'f-nmode', 'label_html' => _SHOW, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'nmode', 'selectid' => 'f-nmode',
                 'options_html' => $tpl->getHtmlFrag('select-option', ['value_attr' => 'last', 'label_text' => _NEW, 'is_selected' => $set['mode'] === 'last'])
                     .$tpl->getHtmlFrag('select-option', ['value_attr' => 'home', 'label_text' => _HOME, 'is_selected' => $set['mode'] === 'home'])])];
@@ -597,15 +584,16 @@ function edit(): void {
             'options_html' => $tpl->getHtmlFrag('select-option', ['value_attr' => 'l', 'label_text' => _LEFT, 'is_selected' => (string)$bpos === 'l'])
                 .$tpl->getHtmlFrag('select-option', ['value_attr' => 'c', 'label_text' => _CENTERUP, 'is_selected' => (string)$bpos === 'c'])
                 .$tpl->getHtmlFrag('select-option', ['value_attr' => 'd', 'label_text' => _CENTERDOWN, 'is_selected' => (string)$bpos === 'd'])
-                .$tpl->getHtmlFrag('select-option', ['value_attr' => 'r', 'label_text' => _RIGHT, 'is_selected' => (string)$bpos === 'r'])
-                .$tpl->getHtmlFrag('select-option', ['value_attr' => 'b', 'label_text' => _BANNERUP, 'is_selected' => (string)$bpos === 'b'])
-                .$tpl->getHtmlFrag('select-option', ['value_attr' => 'f', 'label_text' => _BANNERDOWN, 'is_selected' => (string)$bpos === 'f']),
+                .$tpl->getHtmlFrag('select-option', ['value_attr' => 'r', 'label_text' => _RIGHT, 'is_selected' => (string)$bpos === 'r']),
         ]),
     ];
+    $where = explode(',', (string)$which);
+    $stray = getBlockStray($where, getBlockPlaces());
+    if ($stray) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _BLOCK_NOWHERE.': '.htmlspecialchars(implode(', ', $stray), ENT_QUOTES)]);
     $rows[] = [
         'label_html' => _BLOCK_VIEW,
         'label_id' => $labid = getFieldIds('', 'blockwhere')['label'],
-        'field_html' => $tpl->getHtmlFrag('check-list', ['labelledby' => $labid, 'items' => getBlockWhereItems(explode(',', (string)($which ?? '')))]),
+        'field_html' => $tpl->getHtmlFrag('check-list', ['labelledby' => $labid, 'items' => getBlockWhereItems($where)]),
         'is_full' => true,
     ];
     if ($conf['multilingual'] == 1) {
@@ -700,7 +688,6 @@ function editsave(): void {
     $url = filterCutText(getVar('post', 'url', 'url', ''), 200);
     $oldpos = getVar('post', 'oldposition', 'var', '');
     $bpos = getVar('post', 'bpos', 'var', '');
-    if (!in_array($bpos, ['l', 'c', 'd', 'r', 'b', 'f'], true)) $bpos = '';
     $active = getVar('post', 'status', 'num', 0);
     $refresh = getVar('post', 'refresh', 'num', 0);
     $weight = getVar('post', 'weight', 'num', 0);
@@ -716,32 +703,18 @@ function editsave(): void {
     if ($warn) {
         setRedirect($afile.'.php?name=blocks&op=edit&id='.$bid, false, 302, _TOKENMISS, true);
     }
+    if (!in_array($bpos, ['l', 'r', 'c', 'd'], true)) setRedirect($afile.'.php?name=blocks&op=edit&id='.$bid, false, 302, _ERROR, true);
     $param = '';
     if ($bfile === 'node.php') {
-        $set = ['type' => getVar('post', 'ntype', 'raw', ''), 'mode' => getVar('post', 'nmode', 'raw', 'last')];
+        $pick = getVar('post', 'ntype[]', 'var', []);
+        $set = ['type' => array_values(array_intersect(array_keys(getNodeTypeMap()), $pick)), 'mode' => getVar('post', 'nmode', 'raw', 'last')];
         $set['limit'] = intval(getVar('post', 'nlimit', 'num', 10));
         $param = (string)json_encode($set, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-        if (getNodeBlockParam($param) === null) setRedirect($afile.'.php?name=blocks&op=edit&id='.$bid, false, 302, _BLOCKPROBLEM, true);
-    }
-    $which = '';
-    if (in_array('all', $bwhere)) $which = 'all';
-    if (in_array('home', $bwhere)) $which = 'home';
-    if ($which == '') {
-        $which = implode(',', $bwhere);
-    } else {
-        if (in_array('otricanie', $bwhere)) $which .= ',otricanie';
-        if (in_array('flyfix', $bwhere)) $which .= ',flyfix';
-    }
-    if (in_array('infly', $bwhere)) {
-        if (in_array('flyfix', $bwhere)) {
-            $which = 'infly,'.str_replace('infly,', '', $which);
-        } else {
-            $which = 'infly,';
+        if (count($set['type']) !== count(array_unique($pick)) || getNodeBlockParam($param) === null) {
+            setRedirect($afile.'.php?name=blocks&op=edit&id='.$bid, false, 302, _BLOCKPROBLEM, true);
         }
     }
-    if (in_array('ihome', $bwhere) && $which != 'home') {
-        $which = 'ihome,'.str_replace(',ihome', '', $which);
-    }
+    $which = getBlockWhich($bwhere);
     $fresh = false;
     if ($url) {
         $bkey = '';
@@ -756,36 +729,21 @@ function editsave(): void {
         return $res;
     };
     $put('UPDATE '.PREFIX_DB.'_blocks SET param = :param, which = :which WHERE id = :bid', ['param' => $param, 'which' => $which, 'bid' => $bid]);
-    $pars = ['bkey' => $bkey, 'title' => $title, 'content' => $content, 'url' => $url, 'bpos' => $bpos, 'active' => $active, 'refresh' => $refresh, 'lang' => $lang,
+    $pars = ['bkey' => $bkey, 'title' => $title, 'content' => $content, 'url' => $url, 'active' => $active, 'refresh' => $refresh, 'lang' => $lang,
         'bfile' => $bfile, 'view' => $view, 'bid' => $bid];
-    $sql = 'UPDATE '.PREFIX_DB.'_blocks SET bkey = :bkey, title = :title, content = :content, url = :url, bpos = :bpos, weight = :weight, status = :active, refresh = :refresh,'
+    $sql = 'UPDATE '.PREFIX_DB.'_blocks SET bkey = :bkey, title = :title, content = :content, url = :url, status = :active, refresh = :refresh,'
         .' lang = :lang, bfile = :bfile, view = :view';
     if ($fresh) {
         $sql .= ', time = :time';
         $pars['time'] = time();
     }
-    if ($oldpos != $bpos) {
-        $result = $put('SELECT id FROM '.PREFIX_DB.'_blocks WHERE weight >= :weight AND bpos = :bpos', ['weight' => $weight, 'bpos' => $bpos]);
-        $fweight = $weight;
-        $oweight = $weight;
-        while ($result && [$nbid] = $db->getSqlRow($result)) {
-            $weight++;
-            $put('UPDATE '.PREFIX_DB.'_blocks SET weight = :weight WHERE id = :bid', ['weight' => $weight, 'bid' => $nbid]);
-        }
-        $result = $put('SELECT id FROM '.PREFIX_DB.'_blocks WHERE weight > :oweight AND bpos = :oldposition', ['oweight' => $oweight, 'oldposition' => $oldpos]);
-        while ($result && [$obid] = $db->getSqlRow($result)) {
-            $put('UPDATE '.PREFIX_DB.'_blocks SET weight = :oweight WHERE id = :bid', ['oweight' => $oweight, 'bid' => $obid]);
-            $oweight++;
-        }
-        $result = $put('SELECT weight FROM '.PREFIX_DB.'_blocks WHERE bpos = :bpos ORDER BY weight DESC LIMIT 0,1', ['bpos' => $bpos]);
-        [$lastw] = ($result ? $db->getSqlRow($result) : false) ?: [0];
-        $put($sql.' WHERE id = :bid', ['weight' => ($lastw <= $fweight) ? $lastw + 1 : $fweight] + $pars);
-    } elseif ($url) {
-        $put($sql.' WHERE id = :bid', ['weight' => $weight] + $pars);
+    if ($url) {
+        $put($sql.' WHERE id = :bid', $pars);
     } else {
         $exp = ($days > 0) ? ', expire = COALESCE(expire, NOW() + INTERVAL :days DAY)' : '';
-        $put($sql.$exp.', action = :action WHERE id = :bid', ['weight' => $weight, 'action' => $action] + (($days > 0) ? ['days' => $days] : []) + $pars);
+        $put($sql.$exp.', action = :action WHERE id = :bid', ['action' => $action] + (($days > 0) ? ['days' => $days] : []) + $pars);
     }
+    if (!$fail && $oldpos !== $bpos && !setBlockOrder($bpos, [$bid], $weight)) $fail = true;
     if (!$fail && !$db->setSqlCommit()) $fail = true;
     if ($fail) {
         $db->setSqlRollback();
@@ -809,17 +767,10 @@ function delete(): void {
     global $db, $afile;
     $id = getVar('post', 'id', 'num');
     $warn = !checkAdminPost('blocks');
-    $row = (!$warn && $id) ? $db->getSqlRow($db->getSqlQuery('SELECT bpos, weight FROM '.PREFIX_DB.'_blocks WHERE id = :id', ['id' => $id])) : false;
-    if ($row) {
-        [$bpos, $weight] = $row;
-        $result = $db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_blocks WHERE weight > :weight AND bpos = :bpos', ['weight' => $weight, 'bpos' => $bpos]);
-        while ([$nbid] = $db->getSqlRow($result)) {
-            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_blocks SET weight = :weight WHERE id = :bid', ['weight' => $weight, 'bid' => $nbid]);
-            $weight++;
-        }
-        $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_blocks WHERE id = :id', ['id' => $id]);
-    }
-    setRedirect($afile.'.php?name=blocks', false, 302, $warn ? _TOKENMISS : ($row ? _SUCCDELETE : _ERROR), !$row);
+    $row = (!$warn && $id) ? $db->getSqlRow($db->getSqlQuery('SELECT bpos FROM '.PREFIX_DB.'_blocks WHERE id = :id', ['id' => $id])) : false;
+    $done = $row && $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_blocks WHERE id = :id', ['id' => $id]) !== false;
+    if ($done && in_array($row[0], ['l', 'r', 'c', 'd'], true)) setBlockOrder((string)$row[0]);
+    setRedirect($afile.'.php?name=blocks', false, 302, $warn ? _TOKENMISS : ($done ? _SUCCDELETE : _ERROR), !$done);
 }
 
 function info(): void {

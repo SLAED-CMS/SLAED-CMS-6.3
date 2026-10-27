@@ -965,7 +965,7 @@ button.st-cal-day:hover {
   }
 
   :root.st-fx:not([data-demo-motion="off"]) .st-clock-spoke.st-is-now {
-    animation: st-now 1.4s var(--sl-ease-in-out) infinite !important;
+    animation: st-now var(--st-beat, 1.4s) var(--sl-ease-in-out) infinite !important;
   }
 
   :root.st-fx:not([data-demo-motion="off"]) .st-play .st-clock-gen {
@@ -1102,5 +1102,356 @@ button.st-cal-day:hover {
 
   .st-cal-v {
     font-size: var(--sl-font-small);
+  }
+}
+
+/* The pace of the running hour (data-st-pace): its line of state with the panel of the rate and the norm, the run of the
+   month in its place on any other day; while the dial shows the running hour, the pace lights its spokes, beats the hour
+   that runs and turns the comet of the lamp of the theme; the tone stays green, a lull takes the blue of the theme */
+.st-pace {
+  white-space: nowrap;
+  cursor: help;
+}
+
+.st-pace:not([hidden]) + .st-pace-off {
+  display: none;
+}
+
+.st-pace > .sl-float-panel {
+  text-transform: none;
+  letter-spacing: normal;
+  color: var(--sl-text);
+}
+
+[data-st-pace="lull"]:has(.st-pace:not([hidden])) {
+  --sl-knob-tone: var(--sl-primary-strong);
+  --st-spoke: 0.25;
+  --st-beat: 3s;
+}
+
+[data-st-pace="lull"]:has(.st-pace:not([hidden])) > .sl-cockpit-top > .sl-cockpit-state {
+  color: var(--sl-primary-strong);
+}
+
+[data-st-pace="calm"]:has(.st-pace:not([hidden])) {
+  --st-spoke: 0.35;
+  --st-beat: 2.2s;
+}
+
+[data-st-pace="rise"]:has(.st-pace:not([hidden])) {
+  --st-spoke: var(--sl-fade-muted);
+  --st-beat: 0.9s;
+}
+
+[data-st-pace="rush"]:has(.st-pace:not([hidden])) {
+  --st-spoke: var(--sl-fade-subtle);
+  --st-beat: 0.5s;
+}
+
+[data-st-pace="lull"]:has(.st-pace:not([hidden])) .sl-cockpit-plate::before {
+  animation-duration: calc(var(--sl-alert-dur) * 8);
+}
+
+[data-st-pace="calm"]:has(.st-pace:not([hidden])) .sl-cockpit-plate::before {
+  animation-duration: calc(var(--sl-alert-dur) * 5);
+}
+
+[data-st-pace="rise"]:has(.st-pace:not([hidden])) .sl-cockpit-plate::before {
+  animation-duration: calc(var(--sl-alert-dur) * 1.5);
+}
+
+[data-st-pace="rush"]:has(.st-pace:not([hidden])) .sl-cockpit-plate::before {
+  animation-duration: calc(var(--sl-alert-dur) * 0.6);
+}
+
+/* The window of the series, one for the statistic and the monitor: windows with three lamps on a lined ground, the
+   aurora frame under the hand, figures in framed tiles with mono capitals. A row stands on one grid of three columns,
+   so the edges of the windows meet from row to row: a split is one large window over two columns and a side of windows
+   under each other, a trio three equal windows; all of a row are as high as the row */
+.st-ground {
+  display: grid;
+  gap: var(--sl-space-6);
+  background-image: linear-gradient(var(--sl-bg-subtle) 1px, transparent 1px), linear-gradient(90deg, var(--sl-bg-subtle) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+.st-ground .sl-cockpit {
+  margin: 0;
+}
+
+.st-split,
+.st-trio {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--sl-space-6);
+}
+
+.st-split > :first-child {
+  grid-column: span 2;
+}
+
+/* The windows of a side share its height evenly, a longer one keeps what its content needs */
+.st-side {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sl-space-6);
+}
+
+.st-side > * {
+  flex: 1 1 0;
+}
+
+.st-win {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  border: 1px solid var(--sl-border-strong);
+  border-radius: var(--sl-radius-3);
+  background: linear-gradient(var(--sl-surface), var(--sl-bg));
+}
+
+/* The aurora frame of a window, the one of the cockpit of the theme: under the hand a stroke of light runs round the
+   border, blue into violet, along the path of the frame (sl-cockpit-aurora of theme.css) */
+.st-win::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: var(--sl-z-raised);
+  width: calc(var(--sl-space-8) * 6);
+  height: var(--sl-space-1);
+  border-radius: var(--sl-radius-pill);
+  background: linear-gradient(90deg, transparent, var(--sl-primary), var(--sl-accent), transparent);
+  box-shadow: 0 0 var(--sl-space-3) var(--sl-tint-strong);
+  offset-path: inset(0 round var(--sl-radius-3));
+  offset-rotate: auto;
+  opacity: 0;
+  transition: opacity var(--sl-time-slow) var(--sl-ease-out);
+  pointer-events: none;
+}
+
+.st-win:hover::before {
+  opacity: 1;
+}
+
+/* The head holds the live chip of a live window at its right end, so every head is as high as the chip; its words are
+   its spans, so the panel of the chip keeps the face of the panel */
+.st-win-cap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--sl-space-4);
+  box-sizing: border-box;
+  min-height: calc(var(--sl-size-chip) + var(--sl-space-4) * 2 + 1px);
+  padding: var(--sl-space-4) var(--sl-space-6);
+  overflow: hidden;
+  border-bottom: 1px solid var(--sl-border);
+}
+
+.st-win-cap > span {
+  font-family: var(--sl-face-mono);
+  font-size: var(--sl-font-micro);
+  letter-spacing: var(--sl-track-wide);
+  text-transform: uppercase;
+  color: var(--sl-text-muted);
+}
+
+.st-win-cap > .bi {
+  color: var(--sl-primary);
+}
+
+.st-win-cap > :is(.st-meta, .sl-live-chip) {
+  position: relative;
+  margin-left: auto;
+}
+
+.st-win-cap > .st-meta {
+  color: var(--sl-primary);
+}
+
+.st-meta + .sl-live-chip {
+  margin-left: 0;
+}
+
+.st-lamps {
+  display: inline-flex;
+  gap: var(--sl-space-2);
+}
+
+.st-lamps i {
+  width: var(--sl-space-3);
+  height: var(--sl-space-3);
+  border-radius: var(--sl-radius-circle);
+  background: var(--sl-danger);
+}
+
+.st-lamps i:nth-child(2) { background: var(--sl-warning); }
+.st-lamps i:nth-child(3) { background: var(--sl-success); }
+
+.st-win-body {
+  flex: 1;
+  min-height: 0;
+  padding: var(--sl-space-6);
+}
+
+/* A large window fills the height of its row with its picture: the chart, the rhythm, the grid of the week */
+.st-fill > .st-win-body,
+.st-fill [data-st-rhythm],
+.st-fill .sl-pres-chart,
+.st-fill > .st-win-body > [data-st-chart] {
+  display: flex;
+  flex-direction: column;
+}
+
+.st-fill [data-st-rhythm],
+.st-fill .sl-pres-chart,
+.st-fill > .st-win-body > [data-st-chart] {
+  flex: 1;
+}
+
+.st-fill .sl-pres-plot,
+.st-fill .st-plot {
+  flex: 1;
+  height: auto;
+  min-height: 200px;
+}
+
+.st-fill [data-st-week] {
+  flex: 1;
+  grid-template-rows: auto repeat(7, minmax(18px, 1fr));
+}
+
+.st-fill .st-week-cell {
+  aspect-ratio: auto;
+}
+
+/* The tiles over the picture of a window: the name in mono capitals with the dot of its series, the figure, one line under it */
+.st-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: var(--sl-space-5);
+  margin-bottom: var(--sl-space-6);
+}
+
+.st-tile {
+  display: grid;
+  gap: var(--sl-space-2);
+  padding: var(--sl-space-5);
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-2);
+  background: var(--sl-bg);
+}
+
+.st-tile > span:first-child,
+.st-tile small {
+  font-family: var(--sl-face-mono);
+  font-size: var(--sl-font-micro);
+  letter-spacing: var(--sl-track-wide);
+  text-transform: uppercase;
+  color: var(--sl-text-muted);
+}
+
+.st-tile > span:first-child {
+  display: flex;
+  align-items: center;
+  gap: var(--sl-space-3);
+}
+
+.st-tile small {
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.st-tile b {
+  font-size: var(--sl-font-h1);
+  line-height: var(--sl-line-tight);
+  font-variant-numeric: tabular-nums;
+  color: var(--sl-text-strong);
+}
+
+.st-tile-tone b {
+  color: var(--sl-success-strong);
+}
+
+/* A tile may carry the icon of its figure at its right, over its rows, in the tone of its series */
+.st-tile:has(> .st-tile-icon) {
+  grid-template-columns: minmax(0, 1fr) auto;
+  column-gap: var(--sl-space-5);
+}
+
+.st-tile:has(> .st-tile-icon) > :not(.st-tile-icon) {
+  grid-column: 1;
+}
+
+.st-tile-icon {
+  grid-column: 2;
+  grid-row: 1 / span 3;
+  align-self: center;
+  font-size: var(--sl-size-icon-xl);
+  line-height: 1;
+  color: var(--st-tone, var(--sl-primary));
+}
+
+/* A narrow tile keeps its width for the figure */
+@media (max-width: 760px) {
+  .st-tile-icon {
+    display: none;
+  }
+
+  .st-tile:has(> .st-tile-icon) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  :root.st-fx:not([data-demo-motion="off"]) .st-ground {
+    animation: st-drift 60s linear infinite;
+  }
+
+  :root.st-fx:not([data-demo-motion="off"]) .st-win:hover::before {
+    animation: sl-cockpit-aurora calc(var(--sl-alert-dur) * 3) linear infinite;
+  }
+
+  :root.st-fx:not([data-demo-motion="off"]) .st-lamps i {
+    animation: st-lamp 2.8s var(--sl-ease-in-out) infinite;
+  }
+
+  :root.st-fx:not([data-demo-motion="off"]) .st-lamps i:nth-child(2) { animation-delay: 0.35s; }
+  :root.st-fx:not([data-demo-motion="off"]) .st-lamps i:nth-child(3) { animation-delay: 0.7s; }
+
+  :root.st-fx:not([data-demo-motion="off"]) .st-win-cap::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: var(--sl-beam-width);
+    background: linear-gradient(100deg, transparent, var(--sl-tint-strong), transparent);
+    transform: translateX(-160%) skewX(-18deg);
+    animation: sl-beam var(--sl-beam-dur) var(--sl-ease-in-out) infinite;
+    animation-delay: calc(var(--st-i, 0) * var(--sl-beam-dur) / 7);
+    pointer-events: none;
+  }
+
+}
+
+@keyframes st-drift {
+  to { background-position: 0 320px, 320px 0; }
+}
+
+@keyframes st-lamp {
+  50% { opacity: var(--sl-fade-disabled); }
+}
+
+/* Narrow: every window takes the row, the middle of the plate stands over its four gauges */
+@media (max-width: 1100px) {
+  .st-split,
+  .st-trio {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .st-split > :first-child {
+    grid-column: auto;
   }
 }

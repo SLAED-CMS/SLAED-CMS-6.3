@@ -249,8 +249,9 @@ final class AdminGuardTest extends TestCase
     public function thePinsOfTheMenuAreHeldAtBothEnds(): void
     {
         $option = $this->getBody('admin/index.php', 'setAdminOption');
-        $this->assertStringContainsString("count(\$pins) > 8 || preg_grep('#[^a-z0-9_]#', \$pins)", $option, 'The option stores a list of pins it never checked');
-        $store = strpos($option, "setCookies(\$key, time() + 31536000, implode('-', \$pins))");
+        $check = "count(\$keys) > ((\$key === 'pins') ? 8 : count(\$conf['modules'])) || preg_grep('#[^a-z0-9_]#', \$keys)";
+        $this->assertStringContainsString($check, $option, 'The option stores a list of pins it never checked');
+        $store = strpos($option, "setCookies(\$key, time() + 31536000, implode('-', \$keys))");
         $this->assertLessThan($store, strpos($option, 'http_response_code(400)'), 'The pins are stored before they are checked');
         $dock = $this->getBody('core/system.php', 'getAdminDock');
         $this->assertStringContainsString('if (!isset($list[$key]) || count($pins) === 8) continue;', $dock, 'The menu draws a pin of a closed section or a ninth one');
@@ -311,5 +312,30 @@ final class AdminGuardTest extends TestCase
         $this->assertSame('done', $data['log'] ?? '', 'The option refused the key rows');
         if ($kept) $this->assertSame(['rows', $value], $data['set'] ?? [], $value.' was not stored');
         else $this->assertSame('rows', $data['drop'] ?? '', $value.' was stored or left in place');
+    }
+
+    # Orders of the panel menu a page may post, each with the sections as the menu then lists them and the cookie the option keeps, null for a refusal
+    public static function getMenuValues(): array
+    {
+        $base = ['admins', 'blocks', 'config', 'account', 'forum'];
+        return [
+            'none' => ['', $base, ''], 'dragged' => ['forum-blocks-account-config', ['blocks', 'config', 'admins', 'forum', 'account'], 'forum-blocks-account-config'],
+            'twice' => ['forum-forum', ['admins', 'blocks', 'config', 'forum', 'account'], 'forum'],
+            'gone' => ['ghost-forum', ['admins', 'blocks', 'config', 'forum', 'account'], 'ghost-forum'],
+            'word' => ['Forum-blocks', ['blocks', 'admins', 'config', 'account', 'forum'], null], 'long' => ['a-b-c-d-e-f', $base, null],
+        ];
+    }
+
+    # The order of the panel menu is its administrator's cookie: the panel sections stay before the site ones, an unnamed section keeps its place after the named
+    #[Test]
+    #[DataProvider('getMenuValues')]
+    public function theMenuKeepsTheOrderOfItsAdministrator(string $value, array $list, ?string $kept): void
+    {
+        $data = $this->getProbe('menu', $value);
+        $this->assertSame($list, $data['list'] ?? [], 'The sections are not listed in the order of the cookie '.$value);
+        $this->assertSame(($kept === null) ? 'refused' : 'done', $data['log'] ?? '', 'The option took the order '.$value.' wrongly');
+        if ($kept === '') $this->assertSame('menu', $data['drop'] ?? '', 'An empty order left the cookie in place');
+        elseif ($kept !== null) $this->assertSame(['menu', $kept], $data['set'] ?? [], $value.' was not stored as '.$kept);
+        else $this->assertArrayNotHasKey('set', $data, $value.' was stored');
     }
 }

@@ -1,5 +1,5 @@
 {
-  "generated": "2026-10-22T23:41:28.863Z",
+  "generated": "2026-10-27T22:37:46.760Z",
   "pairs": [
     {
       "theme": "admin",
@@ -80,7 +80,7 @@
     },
     {
       "theme": "admin",
-      "page": "admin-account",
+      "page": "admin-node",
       "mode": "dark",
       "sel": "a.sl-seg-cell",
       "bgsel": "span.sl-seg.sl-seg-pager",
@@ -102,7 +102,7 @@
     },
     {
       "theme": "admin",
-      "page": "admin-account",
+      "page": "admin-node",
       "mode": "dark",
       "sel": "a.sl-seg-cell.sl-pager-far",
       "bgsel": "span.sl-seg.sl-seg-pager",
@@ -124,7 +124,7 @@
     },
     {
       "theme": "admin",
-      "page": "admin-account",
+      "page": "admin-node",
       "mode": "dark",
       "sel": "a.sl-seg-cell.sl-pager-near",
       "bgsel": "span.sl-seg.sl-seg-pager",
@@ -135,7 +135,7 @@
     },
     {
       "theme": "admin",
-      "page": "admin-blockfile-code",
+      "page": "admin-account-add",
       "mode": "light",
       "sel": "a.sl-skip",
       "bgsel": "a.sl-skip",
@@ -157,7 +157,7 @@
     },
     {
       "theme": "admin",
-      "page": "admin-blockfile-code",
+      "page": "admin-account-add",
       "mode": "light",
       "sel": "a.sl-tabs-link",
       "bgsel": "a.sl-tabs-link",
@@ -179,7 +179,7 @@
     },
     {
       "theme": "admin",
-      "page": "admin-blockfile-code",
+      "page": "admin-account-add",
       "mode": "light",
       "sel": "a.sl-tabs-link.sl-is-active",
       "bgsel": "a.sl-tabs-link.sl-is-active",
@@ -201,7 +201,7 @@
     },
     {
       "theme": "admin",
-      "page": "admin-blockfile-code",
+      "page": "admin-account-add",
       "mode": "light",
       "sel": "b",
       "bgsel": "span.sl-phx-badge",
@@ -215,7 +215,18 @@
       "page": "admin-home",
       "mode": "light",
       "sel": "b",
-      "bgsel": "section.sl-cockpit.sl-knob-warn",
+      "bgsel": "section.sl-cockpit.sl-knob-danger",
+      "fg": "rgb(205, 69, 69)",
+      "bg": "rgb(247, 251, 253)",
+      "size": 24,
+      "weight": 900
+    },
+    {
+      "theme": "admin",
+      "page": "admin-home",
+      "mode": "light",
+      "sel": "b",
+      "bgsel": "section.sl-cockpit.sl-knob-danger",
       "fg": "rgb(17, 24, 39)",
       "bg": "rgb(247, 251, 253)",
       "size": 18,
@@ -234,7 +245,7 @@
     },
     {
       "theme": "admin",
-      "page": "admin-blockfile-code",
+      "page": "admin-account-add",
       "mode": "light",
       "sel": "b",
       "bgsel": "div.sl-toolbar",
@@ -262,6 +273,17 @@
       "bgsel": "div.sl-wrapmid",
       "fg": "rgb(17, 24, 39)",
       "bg": "rgb(255, 255, 255)",
+      "size": 13,
+      "weight": 600
+    },
+    {
+      "theme": "admin",
+      "page": "admin-node",
+      "mode": "light",
+      "sel": "b",
+      "bgsel": "button.sl-pager-rows-btn",
+      "fg": "rgb(28, 110, 158)",
+      "bg": "rgb(217, 238, 246)",
       "size": 13,
       "weight": 600
     },
@@ -314,7 +336,18 @@
       "page": "admin-home",
       "mode": "dark",
       "sel": "b",
-      "bgsel": "section.sl-cockpit.sl-knob-warn",
+      "bgsel": "section.sl-cockpit.sl-knob-danger",
+      "fg": "rgb(240, 106, 106)",
+      "bg": "rgb(21, 29, 43)",
+      "size": 24,
+      "weight": 900
+    },
+    {
+      "theme": "admin",
+      "page": "admin-home",
+      "mode": "dark",
+      "sel": "b",
+      "bgsel": "section.sl-cockpit.sl-knob-danger",
       "fg": "rgb(229, 231, 235)",
       "bg": "rgb(21, 29, 43)",
       "size": 18,
@@ -355,12 +388,23 @@
     },
     {
       "theme": "admin",
-      "page": "admin-account",
+      "page": "admin-node",
       "mode": "dark",
       "sel": "b",
       "bgsel": "div.sl-wrapmid",
       "fg": "rgb(229, 231, 235)",
       "bg": "rgb(17, 24, 39)",
+      "size": 13,
+      "weight": 600
+    },
+    {
+      "theme": "admin",
+      "page": "admin-node",
+      "mode": "dark",
+      "sel": "b",
+      "bgsel": "button.sl-pager-rows-btn",
+      "fg": "rgb(92, 188, 234)",
+      "bg": "rgb(22, 50, 63)",
       "size": 13,
       "weight": 600
     },
@@ -395,50 +439,6 @@
       "fg": "rgb(229, 231, 235)",
       "bg": "rgb(17, 24, 39)",
       "size": 14,
-      "weight": 700
-    },
-    {
-      "theme": "admin",
-      "page": "admin-home",
-      "mode": "light",
-      "sel": "b.sl-adm-n",
-      "bgsel": "b.sl-adm-n",
-      "fg": "rgb(255, 255, 255)",
-      "bg": "rgb(38, 134, 55)",
-      "size": 12,
-      "weight": 700
-    },
-    {
-      "theme": "admin",
-      "page": "admin-home",
-      "mode": "dark",
-      "sel": "b.sl-adm-n",
-      "bgsel": "b.sl-adm-n",
-      "fg": "rgb(11, 18, 32)",
-      "bg": "rgb(70, 201, 93)",
-      "size": 12,
-      "weight": 700
-    },
-    {
-      "theme": "admin",
-      "page": "admin-blockfile-code",
-      "mode": "light",
-      "sel": "b.sl-dock-badge",
-      "bgsel": "b.sl-dock-badge",
-      "fg": "rgb(255, 255, 255)",
-      "bg": "rgb(194, 65, 12)",
-      "size": 12,
-      "weight": 700
-    },
-    {
-      "theme": "admin",
-      "page": "admin-blockfile-code",
-      "mode": "dark",
-      "sel": "b.sl-dock-badge",
-      "bgsel": "b.sl-dock-badge",
-      "fg": "rgb(11, 18, 32)",
-      "bg": "rgb(255, 176, 87)",
-      "size": 12,
       "weight": 700
     },
     {
@@ -509,6 +509,28 @@
     },
     {
       "theme": "admin",
+      "page": "admin-node",
+      "mode": "light",
+      "sel": "button.sl-pager-rows-btn",
+      "bgsel": "button.sl-pager-rows-btn",
+      "fg": "rgb(28, 110, 158)",
+      "bg": "rgb(217, 238, 246)",
+      "size": 13,
+      "weight": 400
+    },
+    {
+      "theme": "admin",
+      "page": "admin-node",
+      "mode": "dark",
+      "sel": "button.sl-pager-rows-btn",
+      "bgsel": "button.sl-pager-rows-btn",
+      "fg": "rgb(92, 188, 234)",
+      "bg": "rgb(22, 50, 63)",
+      "size": 13,
+      "weight": 400
+    },
+    {
+      "theme": "admin",
       "page": "admin-sysfile",
       "mode": "light",
       "sel": "dd",
@@ -663,7 +685,7 @@
     },
     {
       "theme": "admin",
-      "page": "admin-blockfile-code",
+      "page": "admin-account-add",
       "mode": "light",
       "sel": "div.sl-div-label",
       "bgsel": "div.sl-div-item",
@@ -751,6 +773,50 @@
     },
     {
       "theme": "admin",
+      "page": "admin-account-add",
+      "mode": "light",
+      "sel": "div.tab-item",
+      "bgsel": "div.tab-item",
+      "fg": "rgb(99, 105, 118)",
+      "bg": "rgb(247, 251, 253)",
+      "size": 12,
+      "weight": 500
+    },
+    {
+      "theme": "admin",
+      "page": "admin-account-add",
+      "mode": "dark",
+      "sel": "div.tab-item",
+      "bgsel": "div.tab-item",
+      "fg": "rgb(154, 164, 178)",
+      "bg": "rgb(21, 29, 43)",
+      "size": 12,
+      "weight": 500
+    },
+    {
+      "theme": "admin",
+      "page": "admin-account-add",
+      "mode": "light",
+      "sel": "div.tab-item.active",
+      "bgsel": "div.tab-item.active",
+      "fg": "rgb(17, 24, 39)",
+      "bg": "rgb(255, 255, 255)",
+      "size": 12,
+      "weight": 500
+    },
+    {
+      "theme": "admin",
+      "page": "admin-account-add",
+      "mode": "dark",
+      "sel": "div.tab-item.active",
+      "bgsel": "div.tab-item.active",
+      "fg": "rgb(229, 231, 235)",
+      "bg": "rgb(17, 24, 39)",
+      "size": 12,
+      "weight": 500
+    },
+    {
+      "theme": "admin",
       "page": "admin-sysfile",
       "mode": "light",
       "sel": "dt",
@@ -795,7 +861,7 @@
     },
     {
       "theme": "admin",
-      "page": "admin-blockfile-code",
+      "page": "admin-account-add",
       "mode": "light",
       "sel": "h1.sl-module-head-title",
       "bgsel": "div.sl-wrapmid",
@@ -839,7 +905,7 @@
     },
     {
       "theme": "admin",
-      "page": "admin-blockfile-code",
+      "page": "admin-account-add",
       "mode": "light",
       "sel": "kbd",
       "bgsel": "kbd",
@@ -872,7 +938,7 @@
     },
     {
       "theme": "admin",
-      "page": "admin-blockfile",
+      "page": "admin-account-add",
       "mode": "light",
       "sel": "label",
       "bgsel": "div.sl-div-item",
@@ -894,7 +960,7 @@
     },
     {
       "theme": "admin",
-      "page": "admin-blockfile",
+      "page": "admin-account-add",
       "mode": "dark",
       "sel": "label",
       "bgsel": "div.sl-div-item",
@@ -974,7 +1040,7 @@
       "page": "admin-home",
       "mode": "light",
       "sel": "li",
-      "bgsel": "section.sl-cockpit.sl-knob-warn",
+      "bgsel": "section.sl-cockpit.sl-knob-danger",
       "fg": "rgb(99, 105, 118)",
       "bg": "rgb(247, 251, 253)",
       "size": 13,
@@ -996,7 +1062,7 @@
       "page": "admin-home",
       "mode": "dark",
       "sel": "li",
-      "bgsel": "section.sl-cockpit.sl-knob-warn",
+      "bgsel": "section.sl-cockpit.sl-knob-danger",
       "fg": "rgb(154, 164, 178)",
       "bg": "rgb(21, 29, 43)",
       "size": 13,
@@ -1026,7 +1092,7 @@
     },
     {
       "theme": "admin",
-      "page": "admin-account",
+      "page": "admin-node",
       "mode": "dark",
       "sel": "p.sl-pager-info",
       "bgsel": "div.sl-wrapmid",
@@ -1040,10 +1106,10 @@
       "page": "admin-home",
       "mode": "light",
       "sel": "small",
-      "bgsel": "section.sl-cockpit.sl-knob-warn",
+      "bgsel": "section.sl-cockpit.sl-knob-danger",
       "fg": "rgb(99, 105, 118)",
       "bg": "rgb(247, 251, 253)",
-      "size": 13,
+      "size": 12,
       "weight": 400
     },
     {
@@ -1051,15 +1117,15 @@
       "page": "admin-home",
       "mode": "dark",
       "sel": "small",
-      "bgsel": "section.sl-cockpit.sl-knob-warn",
+      "bgsel": "section.sl-cockpit.sl-knob-danger",
       "fg": "rgb(154, 164, 178)",
       "bg": "rgb(21, 29, 43)",
-      "size": 13,
+      "size": 12,
       "weight": 400
     },
     {
       "theme": "admin",
-      "page": "admin-blockfile-code",
+      "page": "admin-account-add",
       "mode": "light",
       "sel": "span",
       "bgsel": "button.sl-menu-btn",
@@ -1084,8 +1150,8 @@
       "page": "admin-home",
       "mode": "light",
       "sel": "span",
-      "bgsel": "section.sl-cockpit.sl-knob-warn",
-      "fg": "rgb(194, 65, 12)",
+      "bgsel": "section.sl-cockpit.sl-knob-danger",
+      "fg": "rgb(199, 53, 53)",
       "bg": "rgb(247, 251, 253)",
       "size": 12,
       "weight": 400
@@ -1095,7 +1161,7 @@
       "page": "admin-home",
       "mode": "light",
       "sel": "span",
-      "bgsel": "section.sl-cockpit.sl-knob-warn",
+      "bgsel": "section.sl-cockpit.sl-knob-danger",
       "fg": "rgb(38, 134, 55)",
       "bg": "rgb(247, 251, 253)",
       "size": 38,
@@ -1114,7 +1180,7 @@
     },
     {
       "theme": "admin",
-      "page": "admin-blockfile-code",
+      "page": "admin-account-add",
       "mode": "light",
       "sel": "span",
       "bgsel": "span.sl-queue",
@@ -1158,34 +1224,23 @@
     },
     {
       "theme": "admin",
-      "page": "admin-home",
-      "mode": "light",
-      "sel": "span",
-      "bgsel": "div.sl-block-sidebar",
-      "fg": "rgb(99, 105, 118)",
-      "bg": "rgb(244, 246, 248)",
-      "size": 14,
-      "weight": 400
-    },
-    {
-      "theme": "admin",
-      "page": "admin-home",
-      "mode": "light",
-      "sel": "span",
-      "bgsel": "section.sl-cockpit.sl-knob-warn",
-      "fg": "rgb(28, 110, 158)",
-      "bg": "rgb(247, 251, 253)",
-      "size": 38,
-      "weight": 700
-    },
-    {
-      "theme": "admin",
       "page": "admin-sysfile",
       "mode": "light",
       "sel": "span",
       "bgsel": "div.sl-fm-shell",
       "fg": "rgb(99, 105, 118)",
       "bg": "rgb(255, 255, 255)",
+      "size": 13,
+      "weight": 400
+    },
+    {
+      "theme": "admin",
+      "page": "admin-blockfile-code",
+      "mode": "light",
+      "sel": "span",
+      "bgsel": "span.sl-editor-tab",
+      "fg": "rgb(99, 105, 118)",
+      "bg": "rgb(247, 251, 253)",
       "size": 13,
       "weight": 400
     },
@@ -1235,17 +1290,6 @@
     },
     {
       "theme": "admin",
-      "page": "admin-blockfile-code",
-      "mode": "light",
-      "sel": "span",
-      "bgsel": "span.sl-editor-tab",
-      "fg": "rgb(99, 105, 118)",
-      "bg": "rgb(247, 251, 253)",
-      "size": 13,
-      "weight": 400
-    },
-    {
-      "theme": "admin",
       "page": "admin-tplconfig",
       "mode": "light",
       "sel": "span",
@@ -1257,7 +1301,7 @@
     },
     {
       "theme": "admin",
-      "page": "admin-blockfile-code",
+      "page": "admin-account-add",
       "mode": "dark",
       "sel": "span",
       "bgsel": "button.sl-menu-btn",
@@ -1282,8 +1326,8 @@
       "page": "admin-home",
       "mode": "dark",
       "sel": "span",
-      "bgsel": "section.sl-cockpit.sl-knob-warn",
-      "fg": "rgb(255, 176, 87)",
+      "bgsel": "section.sl-cockpit.sl-knob-danger",
+      "fg": "rgb(255, 139, 139)",
       "bg": "rgb(21, 29, 43)",
       "size": 12,
       "weight": 400
@@ -1293,7 +1337,7 @@
       "page": "admin-home",
       "mode": "dark",
       "sel": "span",
-      "bgsel": "section.sl-cockpit.sl-knob-warn",
+      "bgsel": "section.sl-cockpit.sl-knob-danger",
       "fg": "rgb(70, 201, 93)",
       "bg": "rgb(21, 29, 43)",
       "size": 38,
@@ -1345,6 +1389,17 @@
     },
     {
       "theme": "admin",
+      "page": "admin-sysfile",
+      "mode": "dark",
+      "sel": "span",
+      "bgsel": "div.sl-fm-shell",
+      "fg": "rgb(154, 164, 178)",
+      "bg": "rgb(17, 24, 39)",
+      "size": 13,
+      "weight": 400
+    },
+    {
+      "theme": "admin",
       "page": "admin-home",
       "mode": "dark",
       "sel": "span",
@@ -1356,23 +1411,12 @@
     },
     {
       "theme": "admin",
-      "page": "admin-home",
+      "page": "admin-blockfile-code",
       "mode": "dark",
       "sel": "span",
-      "bgsel": "div.sl-block-sidebar",
+      "bgsel": "span.sl-editor-tab",
       "fg": "rgb(154, 164, 178)",
-      "bg": "rgb(24, 32, 48)",
-      "size": 14,
-      "weight": 400
-    },
-    {
-      "theme": "admin",
-      "page": "admin-monitor-tab-hover",
-      "mode": "dark",
-      "sel": "span",
-      "bgsel": "a.sl-status-compact-item",
-      "fg": "rgb(154, 164, 178)",
-      "bg": "rgb(17, 24, 39)",
+      "bg": "rgb(21, 29, 43)",
       "size": 13,
       "weight": 400
     },
@@ -1422,17 +1466,6 @@
     },
     {
       "theme": "admin",
-      "page": "admin-blockfile-code",
-      "mode": "dark",
-      "sel": "span",
-      "bgsel": "span.sl-editor-tab",
-      "fg": "rgb(154, 164, 178)",
-      "bg": "rgb(21, 29, 43)",
-      "size": 13,
-      "weight": 400
-    },
-    {
-      "theme": "admin",
       "page": "admin-tplconfig",
       "mode": "dark",
       "sel": "span",
@@ -1444,29 +1477,29 @@
     },
     {
       "theme": "admin",
-      "page": "admin-home",
+      "page": "admin-account-add",
       "mode": "light",
-      "sel": "span.sl-adm-flag",
-      "bgsel": "div.sl-block-sidebar",
-      "fg": "rgb(194, 65, 12)",
-      "bg": "rgb(244, 246, 248)",
-      "size": 12,
-      "weight": 500
+      "sel": "span.placeholder.ProseMirror-widget",
+      "bgsel": "div.toastui-editor-md-container.toastui-editor-md-tab-style",
+      "fg": "rgb(99, 105, 118)",
+      "bg": "rgb(255, 255, 255)",
+      "size": 14,
+      "weight": 400
     },
     {
       "theme": "admin",
-      "page": "admin-home",
+      "page": "admin-account-add",
       "mode": "dark",
-      "sel": "span.sl-adm-flag",
-      "bgsel": "div.sl-block-sidebar",
-      "fg": "rgb(255, 176, 87)",
-      "bg": "rgb(24, 32, 48)",
-      "size": 12,
-      "weight": 500
+      "sel": "span.placeholder.ProseMirror-widget",
+      "bgsel": "div.toastui-editor-md-container.toastui-editor-md-tab-style",
+      "fg": "rgb(154, 164, 178)",
+      "bg": "rgb(17, 24, 39)",
+      "size": 14,
+      "weight": 400
     },
     {
       "theme": "admin",
-      "page": "admin-blockfile-code",
+      "page": "admin-account-add",
       "mode": "light",
       "sel": "span.sl-bell-n",
       "bgsel": "span.sl-bell-n",
@@ -1642,28 +1675,6 @@
     },
     {
       "theme": "admin",
-      "page": "admin-account-add",
-      "mode": "light",
-      "sel": "span.sl-editor-left",
-      "bgsel": "div.sl-editor-card",
-      "fg": "rgb(99, 105, 118)",
-      "bg": "rgb(247, 251, 253)",
-      "size": 12,
-      "weight": 400
-    },
-    {
-      "theme": "admin",
-      "page": "admin-account-add",
-      "mode": "dark",
-      "sel": "span.sl-editor-left",
-      "bgsel": "div.sl-editor-card",
-      "fg": "rgb(154, 164, 178)",
-      "bg": "rgb(21, 29, 43)",
-      "size": 12,
-      "weight": 400
-    },
-    {
-      "theme": "admin",
       "page": "admin-tplconfig",
       "mode": "light",
       "sel": "span.sl-editor-var",
@@ -1741,7 +1752,7 @@
     },
     {
       "theme": "admin",
-      "page": "admin-blockfile-code",
+      "page": "admin-account-add",
       "mode": "light",
       "sel": "span.sl-menu-name",
       "bgsel": "div.sl-menu-list-item",
@@ -1763,7 +1774,7 @@
     },
     {
       "theme": "admin",
-      "page": "admin-blockfile-code",
+      "page": "admin-account-add",
       "mode": "light",
       "sel": "span.sl-menu-name",
       "bgsel": "h3",
@@ -1774,7 +1785,7 @@
     },
     {
       "theme": "admin",
-      "page": "admin-blockfile-code",
+      "page": "admin-account-add",
       "mode": "light",
       "sel": "span.sl-menu-name",
       "bgsel": "div.sl-block-sidebar.sl-block-menu",
@@ -1928,29 +1939,7 @@
     },
     {
       "theme": "admin",
-      "page": "admin-node",
-      "mode": "light",
-      "sel": "span.sl-pager-range",
-      "bgsel": "div.sl-wrapmid",
-      "fg": "rgb(99, 105, 118)",
-      "bg": "rgb(255, 255, 255)",
-      "size": 13,
-      "weight": 400
-    },
-    {
-      "theme": "admin",
-      "page": "admin-account",
-      "mode": "dark",
-      "sel": "span.sl-pager-range",
-      "bgsel": "div.sl-wrapmid",
-      "fg": "rgb(154, 164, 178)",
-      "bg": "rgb(17, 24, 39)",
-      "size": 13,
-      "weight": 400
-    },
-    {
-      "theme": "admin",
-      "page": "admin-blockfile-code",
+      "page": "admin-account-add",
       "mode": "light",
       "sel": "span.sl-phx-badge",
       "bgsel": "span.sl-phx-badge",
@@ -1983,7 +1972,7 @@
     },
     {
       "theme": "admin",
-      "page": "admin-account",
+      "page": "admin-node",
       "mode": "dark",
       "sel": "span.sl-seg-cell.sl-is-active",
       "bgsel": "span.sl-seg-knob",
@@ -2005,7 +1994,7 @@
     },
     {
       "theme": "admin",
-      "page": "admin-account",
+      "page": "admin-node",
       "mode": "dark",
       "sel": "span.sl-seg-cell.sl-is-muted",
       "bgsel": "span.sl-seg.sl-seg-pager",
@@ -2258,7 +2247,7 @@
     },
     {
       "theme": "admin",
-      "page": "admin-sysfile",
+      "page": "admin-template-style",
       "mode": "light",
       "sel": "span.tok-literal",
       "bgsel": "div.sl-editor-card",
@@ -2269,7 +2258,7 @@
     },
     {
       "theme": "admin",
-      "page": "admin-sysfile",
+      "page": "admin-template-style",
       "mode": "dark",
       "sel": "span.tok-literal",
       "bgsel": "div.sl-editor-card",
@@ -2544,17 +2533,6 @@
     },
     {
       "theme": "admin",
-      "page": "admin-sysfile",
-      "mode": "light",
-      "sel": "td",
-      "bgsel": "div.sl-fm-shell",
-      "fg": "rgb(17, 24, 39)",
-      "bg": "rgb(255, 255, 255)",
-      "size": 14,
-      "weight": 400
-    },
-    {
-      "theme": "admin",
       "page": "admin-monitor-tab-hover",
       "mode": "light",
       "sel": "td",
@@ -2563,6 +2541,17 @@
       "bg": "rgb(255, 255, 255)",
       "size": 14,
       "weight": 600
+    },
+    {
+      "theme": "admin",
+      "page": "admin-sysfile",
+      "mode": "light",
+      "sel": "td",
+      "bgsel": "div.sl-fm-shell",
+      "fg": "rgb(17, 24, 39)",
+      "bg": "rgb(255, 255, 255)",
+      "size": 14,
+      "weight": 400
     },
     {
       "theme": "admin",
@@ -2632,7 +2621,7 @@
     },
     {
       "theme": "admin",
-      "page": "admin-account",
+      "page": "admin-node",
       "mode": "dark",
       "sel": "td.sl-cell-ellipsis",
       "bgsel": "tr",
@@ -2643,7 +2632,7 @@
     },
     {
       "theme": "admin",
-      "page": "admin-account",
+      "page": "admin-node",
       "mode": "dark",
       "sel": "td.sl-cell-ellipsis",
       "bgsel": "div.sl-wrapmid",
@@ -2786,7 +2775,7 @@
     },
     {
       "theme": "admin",
-      "page": "admin-account",
+      "page": "admin-node",
       "mode": "dark",
       "sel": "td.sl-col-id",
       "bgsel": "tr",
@@ -2797,7 +2786,7 @@
     },
     {
       "theme": "admin",
-      "page": "admin-account",
+      "page": "admin-node",
       "mode": "dark",
       "sel": "td.sl-col-id",
       "bgsel": "div.sl-wrapmid",
@@ -2863,7 +2852,7 @@
     },
     {
       "theme": "admin",
-      "page": "admin-account",
+      "page": "admin-node",
       "mode": "dark",
       "sel": "th.sl-cell-ellipsis.sl-sort",
       "bgsel": "th.sl-cell-ellipsis.sl-sort",
@@ -2951,7 +2940,7 @@
     },
     {
       "theme": "admin",
-      "page": "admin-account",
+      "page": "admin-node",
       "mode": "dark",
       "sel": "th.sl-col-id.sl-sort",
       "bgsel": "th.sl-col-id.sl-sort",
@@ -3237,17 +3226,6 @@
     },
     {
       "theme": "lite",
-      "page": "favorites",
-      "mode": "dark",
-      "sel": "a",
-      "bgsel": "div.sl-opt-tile.sl-opt-w6.sl-cat-tone-0",
-      "fg": "rgb(92, 188, 234)",
-      "bg": "rgb(17, 24, 39)",
-      "size": 16,
-      "weight": 400
-    },
-    {
-      "theme": "lite",
       "page": "front-search-focus",
       "mode": "dark",
       "sel": "a",
@@ -3255,6 +3233,17 @@
       "fg": "rgb(111, 200, 255)",
       "bg": "rgb(11, 29, 44)",
       "size": 12,
+      "weight": 400
+    },
+    {
+      "theme": "lite",
+      "page": "favorites",
+      "mode": "dark",
+      "sel": "a",
+      "bgsel": "div.sl-opt-tile.sl-opt-w6.sl-cat-tone-0",
+      "fg": "rgb(92, 188, 234)",
+      "bg": "rgb(17, 24, 39)",
+      "size": 16,
       "weight": 400
     },
     {
@@ -3930,14 +3919,14 @@
     },
     {
       "theme": "lite",
-      "page": "node-list",
+      "page": "front-search-focus",
       "mode": "dark",
       "sel": "b",
-      "bgsel": "body.sl-autumn",
-      "fg": "rgb(243, 244, 246)",
-      "bg": "rgb(17, 24, 39)",
-      "size": 13,
-      "weight": 600
+      "bgsel": "div.sl-pres-cockpit",
+      "fg": "rgb(114, 230, 176)",
+      "bg": "rgb(16, 40, 59)",
+      "size": 24,
+      "weight": 700
     },
     {
       "theme": "lite",
@@ -4032,17 +4021,6 @@
       "page": "front-search-focus",
       "mode": "dark",
       "sel": "b",
-      "bgsel": "div.sl-pres-blocks-head",
-      "fg": "rgb(114, 230, 176)",
-      "bg": "rgb(16, 40, 59)",
-      "size": 13,
-      "weight": 700
-    },
-    {
-      "theme": "lite",
-      "page": "front-search-focus",
-      "mode": "dark",
-      "sel": "b",
       "bgsel": "div.sl-pres-guard-scene.sl-pres-scene",
       "fg": "rgb(240, 106, 106)",
       "bg": "rgb(11, 29, 44)",
@@ -4059,6 +4037,17 @@
       "bg": "rgb(8, 24, 36)",
       "size": 12,
       "weight": 500
+    },
+    {
+      "theme": "lite",
+      "page": "node-list",
+      "mode": "dark",
+      "sel": "b",
+      "bgsel": "body.sl-autumn",
+      "fg": "rgb(243, 244, 246)",
+      "bg": "rgb(17, 24, 39)",
+      "size": 13,
+      "weight": 600
     },
     {
       "theme": "lite",
@@ -4095,7 +4084,7 @@
     },
     {
       "theme": "lite",
-      "page": "settings",
+      "page": "favorites",
       "mode": "dark",
       "sel": "b",
       "bgsel": "section.sl-block",
@@ -4106,22 +4095,22 @@
     },
     {
       "theme": "lite",
-      "page": "settings",
+      "page": "favorites",
       "mode": "dark",
       "sel": "b",
-      "bgsel": "div.sl-opt-lamp.sl-cat-tone-4",
-      "fg": "rgb(92, 188, 234)",
+      "bgsel": "div.sl-opt-lamp.sl-cat-tone-1",
+      "fg": "rgb(70, 201, 93)",
       "bg": "rgb(17, 24, 39)",
       "size": 18,
       "weight": 700
     },
     {
       "theme": "lite",
-      "page": "settings",
+      "page": "favorites",
       "mode": "dark",
       "sel": "b",
-      "bgsel": "div.sl-opt-lamp.sl-cat-tone-1",
-      "fg": "rgb(70, 201, 93)",
+      "bgsel": "div.sl-opt-lamp.sl-cat-tone-4",
+      "fg": "rgb(92, 188, 234)",
       "bg": "rgb(17, 24, 39)",
       "size": 18,
       "weight": 700
@@ -4410,50 +4399,6 @@
       "fg": "rgb(255, 255, 255)",
       "bg": "rgb(187, 136, 122)",
       "size": 32,
-      "weight": 400
-    },
-    {
-      "theme": "lite",
-      "page": "oauth-finish",
-      "mode": "light",
-      "sel": "div.sl-center",
-      "bgsel": "section.sl-block",
-      "fg": "rgb(34, 34, 34)",
-      "bg": "rgb(248, 249, 251)",
-      "size": 16,
-      "weight": 400
-    },
-    {
-      "theme": "lite",
-      "page": "oauth-finish",
-      "mode": "light",
-      "sel": "div.sl-center",
-      "bgsel": "section.sl-block",
-      "fg": "rgb(34, 34, 34)",
-      "bg": "rgb(248, 249, 251)",
-      "size": 14,
-      "weight": 400
-    },
-    {
-      "theme": "lite",
-      "page": "oauth-finish",
-      "mode": "dark",
-      "sel": "div.sl-center",
-      "bgsel": "section.sl-block",
-      "fg": "rgb(229, 231, 235)",
-      "bg": "rgb(21, 29, 43)",
-      "size": 16,
-      "weight": 400
-    },
-    {
-      "theme": "lite",
-      "page": "oauth-finish",
-      "mode": "dark",
-      "sel": "div.sl-center",
-      "bgsel": "section.sl-block",
-      "fg": "rgb(229, 231, 235)",
-      "bg": "rgb(21, 29, 43)",
-      "size": 14,
       "weight": 400
     },
     {
@@ -4920,7 +4865,7 @@
     },
     {
       "theme": "lite",
-      "page": "private",
+      "page": "oauth-finish",
       "mode": "light",
       "sel": "h1.sl-title",
       "bgsel": "body.sl-autumn",
@@ -5030,7 +4975,7 @@
     },
     {
       "theme": "lite",
-      "page": "private",
+      "page": "oauth-finish",
       "mode": "light",
       "sel": "h2.sl-title",
       "bgsel": "section.sl-block",
@@ -5140,7 +5085,7 @@
     },
     {
       "theme": "lite",
-      "page": "presentation",
+      "page": "front-search-focus",
       "mode": "dark",
       "sel": "h3",
       "bgsel": "div.sl-pres-tile-copy",
@@ -5162,10 +5107,10 @@
     },
     {
       "theme": "lite",
-      "page": "settings",
+      "page": "favorites",
       "mode": "dark",
       "sel": "h3",
-      "bgsel": "div.sl-opt-tile.sl-opt-w6.sl-cat-tone-0",
+      "bgsel": "div.sl-opt-tile.sl-opt-w6.sl-cat-tone-3",
       "fg": "rgb(243, 244, 246)",
       "bg": "rgb(17, 24, 39)",
       "size": 13,
@@ -5311,7 +5256,7 @@
       "bgsel": "section.sl-oauth-card",
       "fg": "rgb(229, 231, 235)",
       "bg": "rgb(21, 29, 43)",
-      "size": 16,
+      "size": 14,
       "weight": 400
     },
     {
@@ -5322,7 +5267,7 @@
       "bgsel": "section.sl-oauth-card",
       "fg": "rgb(229, 231, 235)",
       "bg": "rgb(21, 29, 43)",
-      "size": 14,
+      "size": 16,
       "weight": 400
     },
     {
@@ -5800,10 +5745,10 @@
     },
     {
       "theme": "lite",
-      "page": "settings",
+      "page": "favorites",
       "mode": "dark",
       "sel": "p",
-      "bgsel": "div.sl-opt-tile.sl-opt-w2.sl-cat-tone-3",
+      "bgsel": "div.sl-opt-tile.sl-opt-w6.sl-cat-tone-3",
       "fg": "rgb(154, 164, 178)",
       "bg": "rgb(17, 24, 39)",
       "size": 13,
@@ -5877,7 +5822,7 @@
     },
     {
       "theme": "lite",
-      "page": "front-search-focus",
+      "page": "oauth-finish",
       "mode": "dark",
       "sel": "p.sl-font",
       "bgsel": "div",
@@ -5901,7 +5846,7 @@
       "theme": "lite",
       "page": "front-search-focus",
       "mode": "light",
-      "sel": "p.sl-font.sl-slogan",
+      "sel": "p.sl-font.sl-slogan.sl-sec-lines",
       "bgsel": "body.sl-autumn",
       "fg": "rgb(100, 113, 126)",
       "bg": "rgb(255, 255, 255)",
@@ -5912,7 +5857,7 @@
       "theme": "lite",
       "page": "front-search-focus",
       "mode": "dark",
-      "sel": "p.sl-font.sl-slogan",
+      "sel": "p.sl-font.sl-slogan.sl-sec-lines",
       "bgsel": "body.sl-autumn",
       "fg": "rgb(154, 164, 178)",
       "bg": "rgb(17, 24, 39)",
@@ -6155,7 +6100,7 @@
       "page": "front-search-focus",
       "mode": "light",
       "sel": "small",
-      "bgsel": "a.sl-pres-mod.sl-is-on",
+      "bgsel": "div.sl-pres-cockpit",
       "fg": "rgb(100, 113, 126)",
       "bg": "rgb(242, 244, 247)",
       "size": 12,
@@ -6210,9 +6155,9 @@
       "page": "front-search-focus",
       "mode": "dark",
       "sel": "small",
-      "bgsel": "div.sl-pres-metric",
+      "bgsel": "div.sl-pres-cockpit",
       "fg": "rgb(131, 165, 186)",
-      "bg": "rgb(11, 29, 44)",
+      "bg": "rgb(16, 40, 59)",
       "size": 12,
       "weight": 400
     },
@@ -6221,9 +6166,9 @@
       "page": "front-search-focus",
       "mode": "dark",
       "sel": "small",
-      "bgsel": "a.sl-pres-mod.sl-is-on",
+      "bgsel": "div.sl-pres-metric",
       "fg": "rgb(131, 165, 186)",
-      "bg": "rgb(16, 40, 59)",
+      "bg": "rgb(11, 29, 44)",
       "size": 12,
       "weight": 400
     },
@@ -6273,7 +6218,7 @@
     },
     {
       "theme": "lite",
-      "page": "private",
+      "page": "oauth-finish",
       "mode": "light",
       "sel": "span",
       "bgsel": "section.sl-block",
@@ -6284,7 +6229,7 @@
     },
     {
       "theme": "lite",
-      "page": "private",
+      "page": "oauth-finish",
       "mode": "light",
       "sel": "span",
       "bgsel": "section.sl-block",
@@ -6724,10 +6669,10 @@
     },
     {
       "theme": "lite",
-      "page": "settings",
+      "page": "favorites",
       "mode": "dark",
       "sel": "span",
-      "bgsel": "div.sl-opt-lamp.sl-cat-tone-1",
+      "bgsel": "div.sl-opt-lamp.sl-cat-tone-4",
       "fg": "rgb(154, 164, 178)",
       "bg": "rgb(17, 24, 39)",
       "size": 13,
@@ -6757,17 +6702,6 @@
     },
     {
       "theme": "lite",
-      "page": "settings",
-      "mode": "dark",
-      "sel": "span",
-      "bgsel": "nav.sl-opt-rail",
-      "fg": "rgb(243, 244, 246)",
-      "bg": "rgb(17, 24, 39)",
-      "size": 12,
-      "weight": 600
-    },
-    {
-      "theme": "lite",
       "page": "private",
       "mode": "dark",
       "sel": "span",
@@ -6776,6 +6710,17 @@
       "bg": "rgb(17, 24, 39)",
       "size": 12,
       "weight": 400
+    },
+    {
+      "theme": "lite",
+      "page": "settings",
+      "mode": "dark",
+      "sel": "span",
+      "bgsel": "nav.sl-opt-rail",
+      "fg": "rgb(243, 244, 246)",
+      "bg": "rgb(17, 24, 39)",
+      "size": 12,
+      "weight": 600
     },
     {
       "theme": "lite",
@@ -7017,6 +6962,28 @@
       "fg": "rgb(70, 201, 93)",
       "bg": "rgb(17, 24, 39)",
       "size": 13,
+      "weight": 400
+    },
+    {
+      "theme": "lite",
+      "page": "front-search-focus",
+      "mode": "light",
+      "sel": "span.sl-cockpit-mood",
+      "bgsel": "div.sl-pres-cockpit",
+      "fg": "rgb(100, 113, 126)",
+      "bg": "rgb(242, 244, 247)",
+      "size": 12,
+      "weight": 400
+    },
+    {
+      "theme": "lite",
+      "page": "front-search-focus",
+      "mode": "dark",
+      "sel": "span.sl-cockpit-mood",
+      "bgsel": "div.sl-pres-cockpit",
+      "fg": "rgb(131, 165, 186)",
+      "bg": "rgb(16, 40, 59)",
+      "size": 12,
       "weight": 400
     },
     {
@@ -7857,6 +7824,28 @@
     },
     {
       "theme": "lite",
+      "page": "oauth-finish",
+      "mode": "dark",
+      "sel": "span.sl-sec-lines",
+      "bgsel": "footer",
+      "fg": "rgb(255, 255, 255)",
+      "bg": "rgb(42, 48, 60)",
+      "size": 16,
+      "weight": 400
+    },
+    {
+      "theme": "lite",
+      "page": "front-search-focus",
+      "mode": "dark",
+      "sel": "span.sl-sec-lines",
+      "bgsel": "footer",
+      "fg": "rgb(255, 255, 255)",
+      "bg": "rgb(42, 48, 60)",
+      "size": 14,
+      "weight": 400
+    },
+    {
+      "theme": "lite",
       "page": "private",
       "mode": "light",
       "sel": "span.sl-seg-cell.sl-is-active",
@@ -7901,7 +7890,7 @@
     },
     {
       "theme": "lite",
-      "page": "private",
+      "page": "oauth-finish",
       "mode": "light",
       "sel": "span.sl-session-open",
       "bgsel": "section.sl-block",
@@ -8018,6 +8007,72 @@
       "fg": "rgb(229, 231, 235)",
       "bg": "rgb(17, 24, 39)",
       "size": 14,
+      "weight": 400
+    },
+    {
+      "theme": "lite",
+      "page": "settings",
+      "mode": "light",
+      "sel": "span.toastui-editor-md-link",
+      "bgsel": "div.toastui-editor-md-container.toastui-editor-md-tab-style",
+      "fg": "rgb(100, 113, 126)",
+      "bg": "rgb(255, 255, 255)",
+      "size": 13,
+      "weight": 400
+    },
+    {
+      "theme": "lite",
+      "page": "settings",
+      "mode": "dark",
+      "sel": "span.toastui-editor-md-link",
+      "bgsel": "div.toastui-editor-md-container.toastui-editor-md-tab-style",
+      "fg": "rgb(154, 164, 178)",
+      "bg": "rgb(17, 24, 39)",
+      "size": 13,
+      "weight": 400
+    },
+    {
+      "theme": "lite",
+      "page": "settings",
+      "mode": "light",
+      "sel": "span.toastui-editor-md-link.toastui-editor-md-link-desc.toastui-editor-md-marked-text",
+      "bgsel": "div.toastui-editor-md-container.toastui-editor-md-tab-style",
+      "fg": "rgb(28, 110, 158)",
+      "bg": "rgb(255, 255, 255)",
+      "size": 13,
+      "weight": 400
+    },
+    {
+      "theme": "lite",
+      "page": "settings",
+      "mode": "dark",
+      "sel": "span.toastui-editor-md-link.toastui-editor-md-link-desc.toastui-editor-md-marked-text",
+      "bgsel": "div.toastui-editor-md-container.toastui-editor-md-tab-style",
+      "fg": "rgb(92, 188, 234)",
+      "bg": "rgb(17, 24, 39)",
+      "size": 13,
+      "weight": 400
+    },
+    {
+      "theme": "lite",
+      "page": "settings",
+      "mode": "light",
+      "sel": "span.toastui-editor-md-link.toastui-editor-md-link-url.toastui-editor-md-marked-text",
+      "bgsel": "div.toastui-editor-md-container.toastui-editor-md-tab-style",
+      "fg": "rgb(100, 113, 126)",
+      "bg": "rgb(255, 255, 255)",
+      "size": 13,
+      "weight": 400
+    },
+    {
+      "theme": "lite",
+      "page": "settings",
+      "mode": "dark",
+      "sel": "span.toastui-editor-md-link.toastui-editor-md-link-url.toastui-editor-md-marked-text",
+      "bgsel": "div.toastui-editor-md-container.toastui-editor-md-tab-style",
+      "fg": "rgb(154, 164, 178)",
+      "bg": "rgb(17, 24, 39)",
+      "size": 13,
       "weight": 400
     },
     {

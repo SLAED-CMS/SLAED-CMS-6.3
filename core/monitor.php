@@ -905,12 +905,11 @@ function getCockpitData(): array {
     $opcrow = $opon ? [$row('memory', _ADM_MEMORY, filterSize($opused).' / '.filterSize($optotal)),
         $row('file-earmark-code', _ADM_SCRIPTS, (string)($opc['opcache_statistics']['num_cached_scripts'] ?? 0))] : [];
     $sigs = getSystemSignals();
-    $lvls = array_column($sigs, 'level');
     $online = getTableCount('session');
     $load = getLoadAverage();
     $none = $load['num'] === 0;
     return [
-        'tone' => in_array('danger', $lvls, true) ? 'danger' : (in_array('warn', $lvls, true) ? 'warn' : 'ok'),
+        'tone' => getCockpitTone($sigs),
         'href' => HOME_PATH.$afile.'.php?name=monitor',
         'gauges' => [
             'cpu' => $ring('CPU', _ADM_CPU, $snap['cpu_p'], getPercentTone($snap['cpu_p']), [$row('cpu', _ADM_CORES, $cpu['physical'].' / '.$cpu['logical']),
@@ -931,6 +930,19 @@ function getCockpitData(): array {
         'signals' => $sigs,
         'age' => ($snap['sampled_at'] > 0) ? max(time() - $snap['sampled_at'], 0) : null,
     ];
+}
+
+# The tone of the lamp: its worst signal, and with all passed a lull (info) while statistic.log counts under 20 pages in the last sixty minutes
+function getCockpitTone(array $sigs): string {
+    $lvls = array_column($sigs, 'level');
+    if (in_array('danger', $lvls, true)) return 'danger';
+    if (in_array('warn', $lvls, true)) return 'warn';
+    $stat = getStatsToday();
+    if ($stat['date'] !== date('d.m.Y')) return 'ok';
+    $hour = (int)date('G');
+    $part = (int)date('i') / 60;
+    $prev = ($hour > 0) ? $stat['hours'][$hour - 1] : $stat['hours'][0] / max($part, 0.25);
+    return ($stat['hours'][$hour] + $prev * (1 - $part) < 20) ? 'info' : 'ok';
 }
 
 # The fourteen signals of the lamp, failures first, each with check, level, fact of a failure and page; journals and queues kept $ttl seconds, 0 fresh

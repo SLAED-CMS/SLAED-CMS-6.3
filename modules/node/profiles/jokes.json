@@ -29,7 +29,9 @@
                 "views": []
             },
             "view": {
-                "mode": "default"
+                "mode": "default",
+                "side": 2,
+                "top": 0
             },
             "form": [],
             "workflow": {

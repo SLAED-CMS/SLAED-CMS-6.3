@@ -256,6 +256,8 @@ return [
             .' partials/group-form.html and assets/js/admin-ui.js',
         '--sl-d-hint-x' => 'editor variable list left inside its card, at the caret or under the capsule button, plugins/system/editor.js',
         '--sl-d-hint-y' => 'editor variable list top inside its card, below the caret line or at the top of the card, plugins/system/editor.js',
+        '--sl-d-i' => 'place of a check among the bars of the cockpit lamp, which times its scan, templates/admin/partials/cockpit.html and'
+            .' templates/lite/partials/presentation-hero.html',
         '--sl-d-knob-w' => 'width of the chosen cell of a segmented switch, which its plate takes, plugins/system/slaed.js',
         '--sl-d-knob-x' => 'left of the chosen cell of a segmented switch inside its track, where its plate travels, plugins/system/slaed.js',
         '--sl-d-level' => 'profile completion percentage, templates/lite/partials/account-home.html and account-profile.html',
@@ -690,6 +692,15 @@ return [
         '.sl-dial.sl-dial-point' =>
             'the pointed dial: in admin a row that stops wrapping and closes its gap, on the site the switch from an inline dial to an absolutely placed '
             .'one. The two mechanisms again',
+        '.sl-cockpit-plate' =>
+            'one lamp, two roles: in the panel a button that opens the signals of its checks, reset as a button and centred by its float; on the '
+            .'presentation a figure standing straight in the grid of the rings, which nothing presses. The glass, the comet and the rows are the same',
+        '.sl-cockpit-plate::before' =>
+            'the panel lamp carries two layers, the comet and the pulse ring of a warning, and declares their box once for both; the site lamp shows '
+            .'every check passed, has the comet alone and declares its box on it',
+        '.sl-cockpit-bars > i' =>
+            'a bar of the panel carries the level of its own check, which the poll changes, and runs into its new colour; every bar of the presentation '
+            .'is a passed check in the colour of its lamp, which nothing changes',
     ],
 
     # The skeleton of a theme package: what a directory has to hold before the runtime and the tests accept it as a theme

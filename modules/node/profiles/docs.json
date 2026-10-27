@@ -29,7 +29,9 @@
                 ]
             },
             "view": {
-                "mode": "docs"
+                "mode": "docs",
+                "side": 2,
+                "top": 0
             },
             "form": [],
             "workflow": {

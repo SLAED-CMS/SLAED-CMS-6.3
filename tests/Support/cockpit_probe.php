@@ -89,4 +89,12 @@ foreach ([13 => 2, 17 => 100, 18 => 15, 19 => 6144] as $pidx => $pval) {
 }
 file_put_contents(COUNTER_DIR.'/statistic.log', implode('|', $pline));
 $pout['cockpit'] = getCockpitData();
+$pcalm = [['level' => 'ok'], ['level' => 'ok']];
+$pout['tone'] = ['lull' => getCockpitTone($pcalm), 'warn' => getCockpitTone([['level' => 'ok'], ['level' => 'warn']])];
+$pline[13] = implode(',', array_replace(array_fill(0, 24, 0), [$phour => 40]));
+file_put_contents(COUNTER_DIR.'/statistic.log', implode('|', $pline));
+$pout['tone']['busy'] = getCockpitTone($pcalm);
+$pline[0] = date('d.m.Y', strtotime('-1 day'));
+file_put_contents(COUNTER_DIR.'/statistic.log', implode('|', $pline));
+$pout['tone']['stale'] = getCockpitTone($pcalm);
 echo json_encode($pout, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);

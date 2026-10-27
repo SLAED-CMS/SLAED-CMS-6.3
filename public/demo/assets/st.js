@@ -30,7 +30,12 @@
    - data-st-say="visits|audience|sources|tech|load|hours|day" — the sentence a report opens with
    - controls: data-st-go prev|next, data-st-metric, data-st-range 7|14|all, data-st-cmp, data-st-day, data-st-day-clear
    - data-st-scope="day" — the hosts inside read the picked day (the last whole day until one is picked; with
-     data-st-now the running day while the month runs), data-st-now-set="on|off" switches it
+     data-st-now the running day while the month runs), data-st-now-set="on|off" switches it, for every scope of its
+     cockpit at once, so a switch in the head and the dial in the row read one day
+   - data-st-pace — the pace of the running hour on the cockpit: the rate of the hour against the norm of that hour, the
+     mean of the same hour on the same weekday over four weeks; data-st-pace-text its line of state, data-st-pace-rows
+     the rows of its panel. The row "Тип" of the stand panel gives the rate as a share of the norm (lull, calm, ok, rise,
+     rush): the tick of the stand adds hits far quicker than a site gets them, so the pace is read from the scene
    - data-sl-live-box with the live chip of the theme — the box the counter ticks in; slaed.js pauses it and counts the
      seconds since the last tick, the tick stamps it as a swap of the box would
    - data-st-if="day|noday|now|last|load|noload|run|arc|cmp" — a part shown only in that state
@@ -932,6 +937,11 @@ function initSt() {
   if (document.querySelector('[data-st-root] [data-st-default-metric]')) st.metric = document.querySelector('[data-st-default-metric]').dataset.stDefaultMetric;
   setStDraw();
   initStFx();
+  if (document.querySelector('[data-st-pace]')) {
+    setStPace(document.querySelector('[data-demo-kinds]')?.dataset.kind);
+    // The stand panel dispatches its kind on the host without bubbling; a listener in the capture phase still hears it
+    document.addEventListener('demo-kind', (e) => setStPace(e.target.dataset.kind), true);
+  }
 
   document.addEventListener('click', (e) => {
     const t = e.target;
@@ -947,7 +957,13 @@ function initSt() {
     if (cmp) { st.cmp = !st.cmp; setStDraw(); return; }
     if (t.closest('[data-st-day-clear]')) { st.day = -1; setStDraw(); return; }
     const now = t.closest('[data-st-now-set]');
-    if (now) { now.closest('[data-st-scope="day"]').toggleAttribute('data-st-now', now.dataset.stNowSet === 'on'); st.day = -1; setStDraw(); return; }
+    if (now) {
+      const boxes = now.closest('.sl-cockpit') ? now.closest('.sl-cockpit').querySelectorAll('[data-st-scope="day"]') : [now.closest('[data-st-scope="day"]')];
+      boxes.forEach((box) => box.toggleAttribute('data-st-now', now.dataset.stNowSet === 'on'));
+      st.day = -1;
+      setStDraw();
+      return;
+    }
     const day = t.closest('[data-st-day]');
     if (day) { st.day = st.day === Number(day.dataset.stDay) && !day.hasAttribute('data-st-keep') ? -1 : Number(day.dataset.stDay); setStDraw(); return; }
     const col = t.closest('.st-cols-pick .st-col');
@@ -1146,6 +1162,40 @@ function setStTick() {
     setStClock(host, sc);
   });
   document.querySelectorAll('[data-sl-live-box]').forEach((box) => box.setAttribute('data-sl-live-stamp', Date.now()));
+}
+
+/* The pace of the running hour: under half the norm calm, up to 1.3 an ordinary day, up to twice a rise, above a rush;
+   a norm under ST_PACE_FLOOR is noise and reads as an ordinary day, a rate under it is a lull, the site empty */
+const ST_PACE = [[0.5, 'calm', 'Ниже нормы', 'arrow-down-right-circle-fill'], [1.3, 'day', 'Стабильное состояние', 'check-circle-fill'],
+  [2, 'rise', 'Выше нормы', 'arrow-up-right-circle-fill'], [Infinity, 'rush', 'Всплеск', 'lightning-charge-fill']];
+const ST_PACE_LULL = [0, 'lull', 'Затишье', 'dash-circle-fill'];
+const ST_PACE_SCENE = { lull: 0.05, calm: 0.4, ok: 1, rise: 1.6, rush: 2.6 };
+const ST_PACE_FLOOR = 20;
+
+/* The norm of the running hour: the mean of that hour on the same weekday over the four weeks before the running day */
+function getStNorm() {
+  const mon = getStMonth(ST_NOW.key);
+  const live = mon.days[mon.days.length - 1];
+  const prev = getStPrevKey(ST_NOW.key);
+  const same = (getStHas(prev) ? getStMonth(prev).days : []).concat(mon.days.filter((d) => !d.live)).filter((d) => d.wd === live.wd).slice(-4);
+  return { wd: live.wd, norm: same.length ? same.reduce((sum, d) => sum + d.hrs[ST_NOW.hour], 0) / same.length : 0 };
+}
+
+/* The pace of the scene on every cockpit that shows it: its step, the line of state and the rows of its panel; a calm
+   day and a lull stand alone in the line, the others carry their share of the norm */
+function setStPace(kind) {
+  const { wd, norm } = getStNorm();
+  const rate = Math.round(norm * (ST_PACE_SCENE[kind] ?? 1));
+  const share = norm >= ST_PACE_FLOOR ? rate / norm : 1;
+  const [, pace, word, icon] = rate < ST_PACE_FLOOR ? ST_PACE_LULL : ST_PACE.find(([top]) => share < top);
+  const hour = String(ST_NOW.hour).padStart(2, '0') + ':00';
+  const rows = [['activity', 'Сейчас', getStNum(rate) + ' в час'], ['calendar-week', 'Норма · ' + ST_WEEK[wd].toLowerCase() + ' ' + hour, getStNum(norm) + ' в час'],
+    [icon, 'Темп', '×' + getStNum(share, 1)]];
+  document.querySelectorAll('[data-st-pace]').forEach((box) => {
+    box.dataset.stPace = pace;
+    box.querySelector('[data-st-pace-text]').innerHTML = `<i class="bi bi-${icon}" aria-hidden="true"></i>${word}${pace === 'day' || pace === 'lull' ? '' : ' &middot; &times;' + getStNum(share, 1)}`;
+    box.querySelector('[data-st-pace-rows]').innerHTML = rows.map(([i, name, num]) => `<a><i class="bi bi-${i}" aria-hidden="true"></i> ${name} <span class="sl-bell-num">${num}</span></a>`).join('');
+  });
 }
 
 /* The clock of the stand: the line of the running day shows it, and a new hour opens a new column of the counter */

@@ -7,7 +7,7 @@
 # CLI probe for guards of the panel: the escaping of the debug panel, the rename of the admin file, the parent of a category and the repair of the forum last message
 # It lifts the shipped function out of its source and runs it over stubs and an in-memory table, so no scenario boots the core or touches a database
 # BASE_DIR is the scratch root the caller passed, so every rename the scenarios ask for happens inside it and nothing below the site moves
-# Modes: debug prints the panel over a hostile cookie; afile <name> renames; catparent <id:parent> saves a category; forumlast repairs a cycle; rows [value] reads and posts rows
+# Modes: debug prints the panel over a hostile cookie; afile <name> renames; catparent <id:parent>; forumlast repairs a cycle; rows [value]; menu <keys> orders the menu
 if (PHP_SAPI !== 'cli') {
     http_response_code(404);
     exit;
@@ -19,7 +19,7 @@ $pmode = (string)($argv[1] ?? '');
 $pwork = str_replace('\\', '/', (string)($argv[2] ?? ''));
 $pname = (string)($argv[3] ?? '');
 $psite = str_replace('\\', '/', dirname(__DIR__, 2));
-if ($pwork === '' || !in_array($pmode, ['debug', 'afile', 'catparent', 'forumlast', 'rows'], true)) {
+if ($pwork === '' || !in_array($pmode, ['debug', 'afile', 'catparent', 'forumlast', 'rows', 'menu'], true)) {
     echo json_encode(['error' => 'usage']);
     exit;
 }
@@ -56,9 +56,14 @@ function checkDebugView(): bool {
     return true;
 }
 
-# No super-admin, so the error log of the panel stays out of the output
+# No super-admin unless the scenario lists the sections of one, so the error log of the panel stays out of the output
 function isAdmin(bool $sup = false): bool {
-    return false;
+    return $GLOBALS['padmin'] ?? false;
+}
+
+# Every site module of the scenario is one its administrator may open
+function is_admin_modul(string $modul): int {
+    return 1;
 }
 
 # The token check passed: only the rename is under test
@@ -261,13 +266,33 @@ try {
         }
         if ($pname !== '') {
             setProbeLift($psite.'/admin/index.php', 'setAdminOption', $pwork.'/lift_option.php');
-            $conf = ['admin_c' => 'probe', 'user_c' => 'probe'];
+            $conf = ['admin_c' => 'probe', 'user_c' => 'probe', 'modules' => []];
             $ppost = ['key' => 'rows', 'value' => $pname];
             register_shutdown_function(static function(): void {
                 echo json_encode($GLOBALS['pdone']);
             });
             setAdminOption();
         }
+    } elseif ($pmode === 'menu') {
+        define('HOME_PATH', '/');
+        setProbeLift($psite.'/core/system.php', 'getAdminSectionList', $pwork.'/lift_menu.php');
+        setProbeLift($psite.'/admin/index.php', 'setAdminOption', $pwork.'/lift_option.php');
+        foreach (['account', 'forum'] as $one) {
+            mkdir(BASE_DIR.'/modules/'.$one.'/admin', 0777, true);
+            file_put_contents(BASE_DIR.'/modules/'.$one.'/admin/index.php', $one);
+        }
+        $padmin = true;
+        $afile = 'admin';
+        $conf = ['admin_c' => 'probe', 'user_c' => 'probe', 'modules' => [
+            'account' => ['type' => '1'], 'admins' => ['type' => '0'], 'blocks' => ['type' => '0'], 'config' => ['type' => '0'], 'forum' => ['type' => '1'],
+        ]];
+        $pcook = ['menu' => $pname];
+        $pdone['data']['list'] = array_keys(getAdminSectionList());
+        $ppost = ['key' => 'menu', 'value' => $pname];
+        register_shutdown_function(static function(): void {
+            echo json_encode($GLOBALS['pdone']);
+        });
+        setAdminOption();
     } else {
         foreach (['admin', 'index'] as $file) file_put_contents(PUBLIC_DIR.'/'.$file.'.php', $file);
         setProbeLift($psite.'/admin/modules/security.php', 'configsave', $pwork.'/lift_afile.php');

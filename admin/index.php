@@ -71,10 +71,11 @@ function getAdminMenu(string $name, array $mod, bool $open = false): string {
         'dial_title' => _FUNCTIONS,
         'queue_key' => $queue,
         'queue_num' => $qnum,
+        'is_drag' => true,
     ]);
 }
 
-# Build the sidebar menu blocks of a module screen: the panel modules for a super-admin, then every site module this administrator may open
+# Build the sidebar menu blocks of a module screen: the panel modules for a super-admin, then every site module this administrator may open, a row dragged only within its block
 function getAdminPanelBlocks(): string {
     global $panel, $conf, $tpl, $name;
     if (!$panel) {
@@ -84,7 +85,7 @@ function getAdminPanelBlocks(): string {
         if (isAdmin(true)) {
             foreach ($list as $key => $row) if ($row['is_panel']) $cont .= getAdminMenu($key, $conf['modules'][$key], $key === $name);
             $block = $tpl->getHtmlPart('block-sidebar', [
-                'title' => _ADMIN, 'icon_name' => 'person-gear', 'content_html' => $cont, 'id' => '1', 'close' => _OPCL, 'is_find' => true,
+                'title' => _ADMIN, 'icon_name' => 'person-gear', 'content_html' => $cont, 'id' => '1', 'close' => _OPCL, 'is_find' => true, 'is_drag' => true,
             ]);
             $cont = '';
         }
@@ -94,7 +95,7 @@ function getAdminPanelBlocks(): string {
             getLang($key, true);
         }
         $block .= $tpl->getHtmlPart('block-sidebar', [
-            'title' => _MODULES, 'icon_name' => 'people', 'content_html' => $cont, 'id' => '2', 'close' => _OPCL, 'is_find' => true,
+            'title' => _MODULES, 'icon_name' => 'people', 'content_html' => $cont, 'id' => '2', 'close' => _OPCL, 'is_find' => true, 'is_drag' => true,
         ]);
         return $block;
     }
@@ -111,17 +112,22 @@ function getAdminPanel(): void {
     if ($conf['admininfo']) $content .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => $conf['admininfo']]);
     if (isAdmin(true)) {
         $sigs = getSystemSignals();
-        $tone = $sigs[0]['level'] ?? 'ok';
+        $tone = getCockpitTone($sigs);
         $every = 10;
-        $flag = static fn(string $level): array => ['is_ok' => $level === 'ok', 'is_warn' => $level === 'warn', 'is_danger' => $level === 'danger'];
+        $flag = static fn(string $level): array => ['is_ok' => $level === 'ok', 'is_info' => $level === 'info', 'is_warn' => $level === 'warn', 'is_danger' => $level === 'danger'];
+        $loud = count(array_filter($sigs, static fn(array $v): bool => $v['level'] !== 'ok'));
         $content .= $tpl->getHtmlPart('cockpit', [
             'url' => 'index.php?go=5&op=getCockpitData&token='.getSiteToken(),
             'monitor_url' => HOME_PATH.$afile.'.php?name=monitor',
             'every' => $every,
             'tone' => $tone,
-            'loud' => count(array_filter($sigs, static fn(array $v): bool => $v['level'] !== 'ok')),
+            'loud' => $loud,
+            'pass' => count($sigs) - $loud,
+            'total' => count($sigs),
             'passed' => sprintf(_ADM_PASSED, count($sigs)),
-            'signals' => array_map(static fn(array $v): array => $v + $flag($v['level']), $sigs),
+            'pass_of' => _ADM_PASSOF,
+            'pass_text' => sprintf(_ADM_PASSOF, count($sigs) - $loud, count($sigs)),
+            'signals' => array_map(static fn(array $v, int $i): array => $v + $flag($v['level']) + ['num' => $i], $sigs, array_keys($sigs)),
             'live_html' => $tpl->getHtmlFrag('live-chip', ['live_every' => $every]),
         ] + $flag($tone));
     }
@@ -389,9 +395,9 @@ function setAdminOption(): void {
     $key = getVar('post', 'key', 'var', '');
     $val = getVar('post', 'value', 'var', '');
     $part = explode(':', base64_decode($_SESSION[$conf['admin_c']] ?? '', true), 4);
-    $pins = ($key === 'pins') ? array_unique(array_filter(explode('-', $val))) : [];
-    if (!in_array($key, ['mode', 'still', 'rail', 'dock-off', 'dock-site-off', 'density', 'rows', 'pins', 'editor'], true) || ($key === 'editor' && count($part) !== 4)
-        || count($pins) > 8 || preg_grep('#[^a-z0-9_]#', $pins)) {
+    $keys = in_array($key, ['pins', 'menu'], true) ? array_unique(array_filter(explode('-', $val))) : [];
+    if (!in_array($key, ['mode', 'still', 'rail', 'dock-off', 'dock-site-off', 'density', 'rows', 'pins', 'menu', 'editor'], true) || ($key === 'editor' && count($part) !== 4)
+        || count($keys) > (($key === 'pins') ? 8 : count($conf['modules'])) || preg_grep('#[^a-z0-9_]#', $keys)) {
         setAdminLog(['result' => 'refused']);
         http_response_code(400);
         exit;
@@ -404,8 +410,8 @@ function setAdminOption(): void {
     } elseif ($key === 'rows') {
         if ($val === 'all' || (string)max(5, min(LIST_MAX, intval($val))) === $val) setCookies($key, time() + 31536000, $val);
         else setCookiesDelete($key);
-    } elseif ($key === 'pins') {
-        if ($pins) setCookies($key, time() + 31536000, implode('-', $pins));
+    } elseif ($key === 'pins' || $key === 'menu') {
+        if ($keys) setCookies($key, time() + 31536000, implode('-', $keys));
         else setCookiesDelete($key);
     } elseif ($key !== 'editor') {
         if ($val === '1') setCookies($key, time() + 31536000, '1');

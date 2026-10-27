@@ -779,7 +779,7 @@ function getNodeTypePost(?NodeType $old, ?array $prof): array {
         'list' => ['orders' => $pick('orders', ['published', 'updated', 'title', 'views', 'rating']), 'order' => getVar('post', 'order', 'var', 'published'),
             'dir' => getVar('post', 'dir', 'var', 'desc'), 'limit' => $num('limit', 10), 'alpha' => $flag('alpha'), 'show' => $pick('show', ['category', 'author', 'date',
                 'views']), 'views' => ($looks === [NodeQuery::MODEVIEW[$mode] ?? '']) ? [] : $looks],
-        'view' => ['mode' => $mode],
+        'view' => ['mode' => $mode, 'side' => $num('side', 2), 'top' => $num('top', 0)],
         'form' => [],
         'workflow' => ['access' => $access, 'groups' => $gids, 'publish' => $pubs, 'notify' => ['pending' => $flag('notify_pending'), 'result' => $flag('notify_result')]],
         'admin' => [],
@@ -857,6 +857,10 @@ function getNodeTypeRows(array $vals, bool $new): array {
     $rows[] = ['label_for' => 'f-mode', 'label_html' => _NODE_MODE, 'hint_html' => $esc(_NODE_MODEHINT), 'hint_id' => 'f-mode-hint',
         'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'mode',
         'selectid' => 'f-mode', 'describedby' => 'f-mode-hint', 'options_html' => $opts(array_combine(NodeQuery::MODES, NodeQuery::MODES), $set['view']['mode'])])];
+    $rows[] = ['label_for' => 'f-side', 'label_html' => _BLOCKS_MOD, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'side', 'selectid' => 'f-side',
+        'options_html' => $opts([_BLOCKS_MOD0, _BLOCKS_MOD1, _BLOCKS_MOD2, _BLOCKS_MOD3], $set['view']['side'])])];
+    $rows[] = ['label_for' => 'f-top', 'label_html' => _BLOCKS_MOD, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'top', 'selectid' => 'f-top',
+        'options_html' => $opts([_BLOCKS_MODC0, _BLOCKS_MODC1, _BLOCKS_MODC2, _BLOCKS_MODC3], $set['view']['top'])])];
     $rows[] = $head(_NODE_FEATURES);
     $feats = ['categories' => _CATEGORIES, 'comments' => _COMMENTS, 'rating' => _RATING, 'favorites' => _FAVORITES, 'poll' => _VOTING, 'home' => _NODE_FHOME,
         'pinned' => _NODE_FPIN,

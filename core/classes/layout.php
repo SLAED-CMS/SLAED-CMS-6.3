@@ -53,6 +53,8 @@ final class Layout {
     private bool $moder;
     private bool $draft = false;
     private ?array $types = null;
+    private ?array $places = null;
+    private ?array $parts = null;
     private array $provs = [];
     private ?Field $fld = null;
 
@@ -117,6 +119,7 @@ final class Layout {
     public function setDraftData(array $data): void {
         $this->data = self::getLayoutData($data);
         $this->draft = true;
+        $this->parts = null;
     }
 
     # Whether the layout read is the draft, which no search engine indexes and no address redirects
@@ -204,7 +207,7 @@ final class Layout {
             $desc = $one['desc'];
             $data = $this->getFieldData(is_array($desc['fields'] ?? null) ? $desc['fields'] : [], $sec, $prs);
             if (is_array($desc['items'] ?? null)) $data['items'] = $this->getItemData($desc['items'], $sec['items'] ?? null, $prs);
-            $data['parts'] = $this->data['theme'];
+            $data['parts'] = $this->getThemeData($prs);
             $prov = $this->getProvider($type, $one['prov']);
             if ($prov) $data = array_replace($data, $prov($sec));
             $inner = $tpl->getHtmlSection($type, $data, ($frag === 'theme') ? '' : $this->mods.'/'.$frag.'/sections');
@@ -227,19 +230,42 @@ final class Layout {
         return $slot ? $html : $html.$body;
     }
 
-    # The items of one menu the viewer may see, at every depth, each with its children filtered the same way
+    # The items of a menu the theme declares, as deep as it declares, that the viewer may see; the title, the address and the icon checked as fields of a section
     public function getMenu(string $key): array {
-        $walk = function (array $list) use (&$walk): array {
+        $walk = function (array $list, int $lev) use (&$walk): array {
             $out = [];
             foreach ($list as $item) {
                 if (!is_array($item) || !self::isViewShown((int)($item['who'] ?? 0), $this->user, $this->moder)) continue;
-                $item['kids'] = $walk(is_array($item['kids'] ?? null) ? $item['kids'] : []);
-                $out[] = $item;
+                $icon = (string)($item['icon'] ?? '');
+                $out[] = [
+                    'id' => (int)($item['id'] ?? 0),
+                    'title' => $this->getTypeValue('title', 'text', [], $item['title'] ?? ''),
+                    'href' => $this->getTypeValue('href', 'url', [], $item['href'] ?? ''),
+                    'icon' => (preg_match(self::ICON, $icon) === 1) ? $icon : '',
+                    'blank' => !empty($item['blank']),
+                    'kids' => ($lev > 1) ? $walk(is_array($item['kids'] ?? null) ? $item['kids'] : [], $lev - 1) : [],
+                ];
             }
             return $out;
         };
+        $depth = (int)($this->getThemePlaces()['menus'][$key]['depth'] ?? 0);
         $list = $this->data['menus'][$key] ?? [];
-        return $walk(is_array($list) ? $list : []);
+        return ($depth > 0 && is_array($list)) ? $walk($list, $depth) : [];
+    }
+
+    # The values of the parts the theme declares, by their fields and lists checked as those of a section; a value no part of the theme names stays in the layout unprinted
+    public function getThemeData(Parser $prs): array {
+        if ($this->parts !== null) return $this->parts;
+        $vals = $this->data['theme'];
+        $out = [];
+        foreach ($this->getThemePlaces()['parts'] as $part) {
+            if (!is_array($part)) continue;
+            $out += $this->getFieldData(is_array($part['fields'] ?? null) ? $part['fields'] : [], $vals, $prs);
+            $list = is_array($part['items'] ?? null) ? $part['items'] : [];
+            $key = (string)($list['key'] ?? '');
+            if (preg_match(self::FIELD, $key) === 1) $out[$key] = $this->getItemData($list, $vals[$key] ?? null, $prs);
+        }
+        return $this->parts = $out;
     }
 
     # The section types of the roots, the theme first, then each module by name: the first root to describe a type owns it, the theme's fragment wins
@@ -264,12 +290,13 @@ final class Layout {
 
     # The places a theme declares in its places.json: its parts with their fields, its menus with their depth and its zones of blocks
     public function getThemePlaces(): array {
+        if ($this->places !== null) return $this->places;
         $file = $this->base.'/places.json';
         $data = is_file($file) ? json_decode((string)file_get_contents($file), true) : [];
         $data = is_array($data) ? $data : [];
         $out = [];
         foreach (['parts', 'menus', 'zones'] as $key) $out[$key] = is_array($data[$key] ?? null) ? $data[$key] : [];
-        return $out;
+        return $this->places = $out;
     }
 
     # Whether a section is switched on, today lies within its dates, its audience on the scale of _blocks.view holds the viewer, and its language is the visitor's

@@ -11,7 +11,7 @@
         <div class="sl-pres-gauges">
           {% include 'fragments/presentation-ring.html' with gen_ring %}
           {% include 'fragments/presentation-ring.html' with cache_ring %}
-          <div class="sl-pres-plate" data-sl-tone="{{ plate.tone }}" title="{{ nominal }}"><svg class="sl-pres-plate-orbit" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="47.3" pathLength="120"></circle></svg><span class="sl-pres-mark" role="img" aria-label="SLAED"></span></div>
+          <div class="sl-cockpit-plate sl-knob-ok" role="img" aria-label="SLAED · {{ nominal }}" title="{{ nominal }}"><span class="sl-cockpit-glass"></span><span class="sl-cockpit-head" aria-hidden="true"><span class="sl-cockpit-mark"></span><b>{{ plate.pass }}</b><small>/{{ plate.total }}</small></span><span class="sl-cockpit-bars" aria-hidden="true">{% for row in plate.bars %}<i style="--sl-d-i: {{ row.num }}"></i>{% endfor %}</span><span class="sl-cockpit-mood" aria-hidden="true">{{ nominal }}</span></div>
           {% include 'fragments/presentation-ring.html' with qnum_ring %}
           {% include 'fragments/presentation-ring.html' with online_ring %}
         </div>

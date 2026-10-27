@@ -1851,8 +1851,11 @@ of the mode is stored empty, so the list keeps following its mode.
 | Key | Type | Default | Rule |
 |---|---|---|---|
 | `mode` | string | `'default'` | one of `NodeQuery::MODES`: `default`, `article`, `docs`, `faq`, `files`, `media`, `support`; a type of the extension `support` takes `support` and no other type does |
+| `side` | int | 2 | the side columns of the type's pages, the scale of `side` in `config/modules.php`: 0 both, 1 left, 2 right, 3 none |
+| `top` | int | 0 | the centre columns, the scale of `top`: 0 both, 1 above the content, 2 below it, 3 none |
 
-`view` carries no rights. See Rendering for how the mode selects templates.
+`view` carries no rights. See Rendering for how the mode selects templates. The branch of Node in `public/index.php`
+reads `side` and `top` of the type a request names; the row `node` of `config/modules.php` has no say over them.
 
 #### Settings: form and admin
 

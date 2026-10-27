@@ -542,13 +542,16 @@ Block files live under:
 - `blocks/`
 
 Block definitions and placement are database-driven. `setFoot()` asks
-`getBlocks()` for footer, left, right, center, and down zones; file-backed blocks
-are included from `blocks/<file>`.
+`getBlocks()` for the four zones left, right, center and down (`bpos` l, r, c, d);
+file-backed blocks are included from `blocks/<file>`, and a row whose file is gone
+prints nothing but to the super administrator. `isBlockShown()` reads `which` for every block,
+`getBlockWhich()` of `core/admin.php` writes it, and `setBlockOrder()` there is the
+one writer of `bpos` and `weight`: every zone numbered from 1.
 
 Free blocks (the `infly` mark in the `which` column) are excluded from zone
-rendering and are output in two ways: trusted content places a `[block=id]`
-tag (resolved by the parser for admin-authored content with `$safe === false`,
-left as literal text in user-submitted content), and theme templates place a
+rendering and are output in two ways: content places a `[block=id]` tag, which
+the parser renders in a raw or a trusted rendering and `filterTrustedTags()` keeps
+from every writer but the super administrator, and theme templates place a
 `{% freeblock id %}` tag (compiled by the template engine). Both entry points
 call the same `getBlocks()` engine, apply the same visibility rules, and do
 not expand nested tags inside block output.

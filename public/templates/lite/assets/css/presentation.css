@@ -680,94 +680,136 @@
   margin-right: var(--sl-space-2);
 }
 
+/* The row of the cockpit, as the panel lays it: the lamp has a column of its own diameter, the four rings share what is left */
 .sl-pres-gauges {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr)) calc(var(--sl-gauge-width) * 1.15) repeat(2, minmax(0, 1fr));
   gap: var(--sl-space-8);
   align-items: center;
   margin: var(--sl-space-7) 0 var(--sl-space-3);
 }
 
-/* The plate draws no rounded line: Firefox paints a circle's line in four quarters whose seams cross it, so every line is a radial gradient */
-.sl-pres-plate {
+/* The lamp of the cockpit, the twin of the panel's: a disc of glass a step larger than a ring with a comet round it and three rows, every check passed */
+.sl-cockpit-plate {
   position: relative;
   display: grid;
-  place-items: center;
+  grid-template-rows: minmax(0, 1fr) auto minmax(0, 1fr);
+  justify-items: center;
+  row-gap: var(--sl-space-1);
+  box-sizing: border-box;
+  width: calc(var(--sl-gauge-width) * 1.15);
   aspect-ratio: 1;
+  justify-self: center;
   border-radius: var(--sl-radius-circle);
-  background:
-    radial-gradient(
-      circle closest-side,
-      transparent calc(100% - var(--sl-space-3) - 2px),
-      currentColor calc(100% - var(--sl-space-3) - 1px) calc(100% - var(--sl-space-3)),
-      color-mix(in srgb, currentColor var(--sl-chip-mix), transparent) calc(100% - var(--sl-space-3) + 1px) calc(100% - 1px),
-      transparent 100%
-    ),
-    radial-gradient(
-      circle closest-side,
-      transparent 60%,
-      color-mix(in srgb, currentColor var(--sl-chip-tint-mix), transparent) calc(100% - var(--sl-space-3)),
-      transparent calc(100% - var(--sl-space-3))
-    ),
-    radial-gradient(circle at 50% 38%, var(--sl-pres-core-bg), var(--sl-pres-panel-bg) 68%);
-  padding: var(--sl-space-8);
+  padding: var(--sl-space-7);
+  color: var(--sl-knob-tone);
+  filter: var(--sl-gauge-shadow);
 }
 
-.sl-pres-plate::after {
+/* The comet: one conic ring outside the disc turning whole, its tail from the track into the tone; a ring draws no circle line, which Firefox seams */
+.sl-cockpit-plate::before {
   content: "";
   position: absolute;
-  inset: 0;
-  background: radial-gradient(
-    circle closest-side,
-    transparent calc(100% - var(--sl-space-1) - 1px),
-    currentColor calc(100% - var(--sl-space-1)) calc(100% - 1px),
-    transparent 100%
-  );
-  opacity: 0;
+  inset: calc(var(--sl-space-3) * -1);
+  border-radius: var(--sl-radius-circle);
+  background: conic-gradient(var(--sl-pres-border) 0 35%, currentColor 99.6%, var(--sl-pres-border) 0);
+  mask: radial-gradient(circle closest-side, transparent calc(100% - var(--sl-space-2)), var(--sl-text) calc(100% - var(--sl-space-2) + 1px));
   pointer-events: none;
-  animation: sl-pres-lamp calc(var(--sl-pres-dur) * 0.6) var(--sl-ease-out) infinite;
+  animation: sl-pres-spin calc(var(--sl-alert-dur) * 3) linear infinite;
 }
 
-/* The lamp breathes only while something waits: a calm system shows a steady glow, so motion itself is the alarm */
-.sl-pres-plate[data-sl-tone="success"]::after {
-  animation: none;
-}
-
-.sl-pres-plate-orbit {
+/* The glass is a layer of its own under the rows: the rows read against the middle of the disc, never against its shaded rim or its line */
+.sl-cockpit-glass {
   position: absolute;
   inset: 0;
-  width: 100%;
-  height: 100%;
-  overflow: visible;
+  border-radius: var(--sl-radius-circle);
+  background:
+    radial-gradient(circle closest-side, transparent calc(100% - 1px), var(--sl-pres-border) calc(100% - 1px)),
+    var(--sl-gauge-bg);
   pointer-events: none;
-  animation: sl-pres-spin calc(var(--sl-pres-dur) * 6) linear infinite;
 }
 
-.sl-pres-plate-orbit circle {
-  fill: none;
-  stroke: color-mix(in srgb, currentColor var(--sl-pulse-mix), transparent);
-  stroke-width: 1.5;
-  stroke-dasharray: 1.5 1.5;
-  vector-effect: non-scaling-stroke;
+/* The lamp reads the palette of the presentation as its rings do: its tone is the colour of an ok ring, its track and line the track of an arc */
+.sl-pres .sl-cockpit-plate.sl-knob-ok {
+  color: var(--sl-pres-good-text);
 }
 
-@keyframes sl-pres-spin {
-  to { transform: rotate(360deg); }
+.sl-cockpit-plate > :not(.sl-cockpit-glass) {
+  position: relative;
 }
 
-@keyframes sl-pres-lamp {
-  from { opacity: var(--sl-fade-muted); transform: scale(0.92); }
-  to { opacity: 0; transform: scale(1.12); }
+.sl-cockpit-head {
+  display: flex;
+  align-items: baseline;
+  align-self: end;
+  gap: var(--sl-space-1);
+  font-size: var(--sl-font-h1);
+  font-weight: var(--sl-weight-bold);
+  line-height: var(--sl-line-tight);
+  letter-spacing: var(--sl-track-tight);
+  font-variant-numeric: tabular-nums;
+}
+
+/* The small words of the lamp are the muted words of the presentation, as the captions of its rings */
+.sl-cockpit-head > small,
+.sl-cockpit-mood {
+  font-family: var(--sl-face-mono);
+  font-size: var(--sl-font-micro);
+  font-weight: var(--sl-weight-normal);
+  letter-spacing: var(--sl-track-wide);
+  text-transform: uppercase;
+  color: var(--sl-pres-muted-text);
 }
 
 /* The lamp mark is the one-colour theme mark in the state tone, so the brand in colour stays with the header logo */
-.sl-pres-mark {
+.sl-cockpit-mark {
   display: block;
-  width: calc(var(--sl-gauge-width) / 2);
-  max-width: 100%;
+  align-self: center;
+  width: var(--sl-size-icon-md);
   aspect-ratio: 1;
+  margin-inline-end: var(--sl-space-2);
   background: currentColor;
   mask: url(../../images/logos/slaed-logo-mark-solid-black.svg) center / contain no-repeat;
+}
+
+.sl-cockpit-bars {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  height: calc(var(--sl-gauge-width) * 0.23);
+}
+
+/* A bar for each check of the panel lamp, the scan running over them as it does there */
+.sl-cockpit-bars > i {
+  width: var(--sl-space-1);
+  height: var(--sl-space-4);
+  border-radius: var(--sl-radius-pill);
+  background: currentColor;
+  opacity: var(--sl-fade-muted);
+  animation: sl-cockpit-check calc(var(--sl-alert-dur) * 2.4) var(--sl-ease-in-out) calc(var(--sl-d-i, 0) * var(--sl-alert-dur) * 0.12) infinite;
+}
+
+/* The word of the state is the one of the line above; a long one breaks into two centred lines */
+.sl-cockpit-mood {
+  align-self: start;
+  max-width: 100%;
+  line-height: var(--sl-line-tight);
+  text-align: center;
+}
+
+/* The scan over the bars of the checks: a bar rises as the wave passes it and settles back */
+@keyframes sl-cockpit-check {
+  0%,
+  24%,
+  100% {
+    transform: scaleY(1);
+  }
+
+  8% {
+    transform: scaleY(2);
+    opacity: 1;
+  }
 }
 
 /* The figure in the dial centre, the caption in the mouth of the arc, so the caption never crosses the scale */
@@ -5155,10 +5197,9 @@
     margin-inline: auto;
   }
 
-  .sl-pres-plate {
+  .sl-cockpit-plate {
     grid-column: 1 / -1;
     grid-row: 1;
-    width: calc(var(--sl-gauge-width) + var(--sl-space-8));
   }
 
   .sl-pres .sl-pres-gauges > .sl-pres-ring {

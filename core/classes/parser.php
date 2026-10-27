@@ -138,10 +138,10 @@ class Parser {
         return $out;
     }
 
-    # Replace trusted [block=id] tags with rendered free (infly) block output; frontend only, skipped for unsafe content, block-content filtering, nesting and test runs
+    # Replace [block=id] with the rendered free (infly) block; frontend only, for a raw or a trusted rendering, never in block content, nesting or a test run
     private function filterFreeBlocks(string $src): string {
         static $depth = 0;
-        if ($this->safe || self::$freeoff || $depth > 0 || defined('ADMIN_FILE') || !str_contains($src, '[block=') || !function_exists('getBlocks')) return $src;
+        if (($this->safe && !$this->trust) || self::$freeoff || $depth > 0 || defined('ADMIN_FILE') || !str_contains($src, '[block=') || !function_exists('getBlocks')) return $src;
         return preg_replace_callback('#\[block=(\d{1,10})\]#', function (array $m) use (&$depth): string {
             $depth++;
             ob_start();

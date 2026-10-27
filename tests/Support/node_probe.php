@@ -419,7 +419,7 @@ function getProbeNodeConf(int $stale): array {
         'defaults' => [
             'list' => ['orders' => ['published'], 'order' => 'published', 'dir' => 'desc', 'limit' => 10, 'alpha' => false, 'show' => ['category', 'author', 'date', 'views'],
                 'views' => []],
-            'view' => ['mode' => 'default'],
+            'view' => ['mode' => 'default', 'side' => 2, 'top' => 0],
             'form' => [],
             'workflow' => ['access' => 'user', 'groups' => [], 'publish' => [], 'notify' => ['pending' => true, 'result' => true]],
             'admin' => [],

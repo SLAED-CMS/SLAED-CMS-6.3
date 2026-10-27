@@ -9,7 +9,7 @@ if (!defined('BLOCK_FILE')) {
     exit;
 }
 
-# The one file block of Node, set by type, mode and limit in _blocks.param; a feed of one type puts pinned materials first, then the newest publication, whatever its list sorts
+# The one file block of Node, set by its types, mode and limit in _blocks.param; a feed of one type puts pinned materials first, then the newest, whatever its list sorts
 global $db, $conf, $fld, $tpl, $prs;
 $set = getNodeBlockParam($param);
 $content = null;
@@ -19,7 +19,7 @@ if ($set === null) {
     $types = [];
     $size = min($set['limit'], intval($conf['node']['limits']['maxlist'] ?? 0));
     foreach (getNodeTypeMap() as $type) {
-        if (!$type->active || !$type->settings['integrations']['blocks'] || ($set['type'] !== '' && $type->name !== $set['type'])) continue;
+        if (!$type->active || !$type->settings['integrations']['blocks'] || ($set['type'] && !in_array($type->name, $set['type'], true))) continue;
         if ($set['mode'] === 'home' && !$type->settings['features']['home']) continue;
         $types[$type->id] = $type;
         $size = min($size, $type->settings['list']['limit']);

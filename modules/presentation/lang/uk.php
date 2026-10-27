@@ -12,7 +12,6 @@ define('_PRES_HEAD_B', 'просте.');
 define('_PRES_HEAD_C', 'Але не примітивне.');
 define('_PRES_LEAD', 'SLAED — модульна CMS з відкритим кодом: керування вмістом, користувачами, файлами, пошуком і розширеннями в одній системі. Жодної SaaS-залежності — сервер, дані й код лишаються під вашим контролем.');
 define('_PRES_COCKPIT', 'Кокпіт');
-define('_PRES_NOMINAL', 'усі системи в нормі');
 define('_PRES_GEN', 'Генерація');
 define('_PRES_CACHE', 'Кеш');
 define('_PRES_QUERIES', 'SQL запитів');

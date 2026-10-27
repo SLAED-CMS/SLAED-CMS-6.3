@@ -35,47 +35,47 @@
 </head>
 <body>
   <template data-st-face data-st-module="monitor" data-st-title="Мониторинг" data-st-icon="display" data-st-tabs="Главная:|Справка:info|Журнал действий:log">
-    <div class="mn-ground" data-st-rise data-demo-kinds="ok:Норма:ok|warn:Внимание:warn|danger:Сбой:danger" data-kind="warn">
+    <div class="st-ground" data-st-rise data-demo-kinds="ok:Норма:ok|warn:Внимание:warn|danger:Сбой:danger" data-kind="warn">
       <div data-mon-block="cockpit"></div>
 
-      <div class="mn-split" data-st-rise>
-        <section class="mn-win" id="mn-signals">
-          <div class="mn-win-cap"><i class="bi bi-list-check" aria-hidden="true"></i><span>Проверки системы</span><span class="mn-meta"><span data-mon-t="passed"></span> из 12 пройдено</span></div>
-          <div class="mn-win-body v-checks" data-mon-signals="all"></div>
+      <div class="st-split" data-st-rise>
+        <section class="st-win" id="mn-signals">
+          <div class="st-win-cap"><i class="bi bi-list-check" aria-hidden="true"></i><span>Проверки системы</span><span class="st-meta"><span data-mon-t="passed"></span> из <span data-mon-t="total"></span> пройдено</span></div>
+          <div class="st-win-body v-checks" data-mon-signals="all"></div>
         </section>
-        <div class="mn-side" data-st-rise>
-          <section class="mn-win">
-            <div class="mn-win-cap"><span class="mn-lamps" aria-hidden="true"><i></i><i></i><i></i></span><span>Безопасность</span></div>
-            <div class="mn-win-body" data-mon-kv="security"></div>
+        <div class="st-side" data-st-rise>
+          <section class="st-win">
+            <div class="st-win-cap"><span class="st-lamps" aria-hidden="true"><i></i><i></i><i></i></span><span>Безопасность</span></div>
+            <div class="st-win-body" data-mon-kv="security"></div>
           </section>
-          <section class="mn-win">
-            <div class="mn-win-cap"><span class="mn-lamps" aria-hidden="true"><i></i><i></i><i></i></span><span>Хранилище</span><span class="mn-meta">копия сегодня, 07:38</span></div>
-            <div class="mn-win-body"><div data-mon-store></div><div data-mon-kv="folders"></div></div>
+          <section class="st-win">
+            <div class="st-win-cap"><span class="st-lamps" aria-hidden="true"><i></i><i></i><i></i></span><span>Хранилище</span><span class="st-meta">копия сегодня, 07:38</span></div>
+            <div class="st-win-body"><div data-mon-store></div></div>
           </section>
         </div>
       </div>
 
-      <div class="mn-trio" data-st-rise>
-        <section class="mn-win">
-          <div class="mn-win-cap"><i class="bi bi-hdd-network" aria-hidden="true"></i><span>Сервер</span><span class="mn-meta">nginx 1.28.0</span></div>
-          <div class="mn-win-body"><div data-mon-meter="disk"></div><p class="mn-sub">Программы</p><div data-mon-kv="software"></div>
+      <div class="st-trio" data-st-rise>
+        <section class="st-win">
+          <div class="st-win-cap"><i class="bi bi-hdd-network" aria-hidden="true"></i><span>Сервер</span><span class="st-meta">nginx 1.28.0</span></div>
+          <div class="st-win-body"><div data-mon-meter="disk"></div><p class="mn-sub">Программы</p><div data-mon-kv="software"></div>
             <details class="v-more"><summary>Сервер, диск и сайт подробно</summary><div data-mon-kv="server"></div><div data-mon-kv="disk"></div><p class="mn-sub">Сайт</p><div data-mon-kv="cms"></div></details></div>
         </section>
-        <section class="mn-win">
-          <div class="mn-win-cap"><i class="bi bi-filetype-php" aria-hidden="true"></i><span>PHP</span><span class="mn-meta">8.4.27</span></div>
-          <div class="mn-win-body"><div data-mon-meter="opmem"></div><p class="mn-sub">OPcache</p><div data-mon-kv="opcache"></div>
-            <details class="v-more"><summary>PHP, лимиты и расширения подробно</summary><div data-mon-kv="php"></div><div data-mon-kv="limits"></div><div data-mon-meter="phpmem"></div><div data-mon-meter="upload"></div><p class="mn-sub">Расширения</p><div class="mn-chips" data-mon-chips="on"></div></details></div>
+        <section class="st-win">
+          <div class="st-win-cap"><i class="bi bi-filetype-php" aria-hidden="true"></i><span>PHP</span><span class="st-meta">8.4.27</span></div>
+          <div class="st-win-body"><div data-mon-meter="opmem"></div><p class="mn-sub">OPcache</p><div data-mon-kv="opcache"></div>
+            <details class="v-more"><summary>PHP, лимиты и расширения подробно</summary><div data-mon-meter="phpmem"></div><div data-mon-meter="upload"></div><div data-mon-kv="php"></div><div data-mon-kv="limits"></div><div data-mon-block="ext"></div></details></div>
         </section>
-        <section class="mn-win">
-          <div class="mn-win-cap"><i class="bi bi-database" aria-hidden="true"></i><span>База данных</span><span class="mn-meta">MariaDB 11.7.2</span></div>
-          <div class="mn-win-body"><div data-mon-meter="pool"></div><p class="mn-sub">База</p><div data-mon-kv="db" data-mon-slice="4,8"></div>
+        <section class="st-win">
+          <div class="st-win-cap"><i class="bi bi-database" aria-hidden="true"></i><span>База данных</span><span class="st-meta">MariaDB 11.7.2</span></div>
+          <div class="st-win-body"><div data-mon-meter="pool"></div><p class="mn-sub">База</p><div data-mon-kv="db" data-mon-slice="4,8"></div>
             <details class="v-more"><summary>База и запрос подробно</summary><div data-mon-kv="db" data-mon-slice="0,4"></div><div data-mon-kv="db" data-mon-slice="8"></div><p class="mn-sub">Запрос</p><div data-mon-kv="request"></div></details></div>
         </section>
       </div>
 
-      <section class="mn-win" data-st-rise data-sl-live-box>
-        <div class="mn-win-cap"><i class="bi bi-graph-up-arrow" aria-hidden="true"></i><span>Трафик и нагрузка</span><span class="mn-meta">20 минут</span><span data-mon-live></span></div>
-        <div class="mn-win-body"><div data-mon-block="traffic"></div></div>
+      <section class="st-win" data-st-rise data-sl-live-box>
+        <div class="st-win-cap"><i class="bi bi-graph-up-arrow" aria-hidden="true"></i><span>Трафик и нагрузка</span><span class="st-meta">20 минут</span><span data-mon-live></span></div>
+        <div class="st-win-body"><div data-mon-block="traffic"></div></div>
       </section>
     </div>
   </template>

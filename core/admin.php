@@ -599,7 +599,26 @@ function getCategoryAccess(array $auth): string {
     return $acess.'|'.implode(',', $select);
 }
 
-# Render the admin block list grouped by position with drag ordering, a trailing free (infly) section, a lamp, expiry state and action links; it never writes
+# The places a block may name in which: site modules and Node types by the name their pages carry, never node, then the builder's pages at an address of their own
+function getBlockPlaces(): array {
+    global $conf;
+    $out = [];
+    foreach ($conf['modules'] as $name => $info) {
+        if ((int)($info['type'] ?? 1) === 1 && $name !== 'node') $out[$name] = [_MODUL, getModuleName($name)];
+    }
+    foreach (array_keys($conf['node']['types'] ?? []) as $name) $out[$name] = [_TYPE, getModuleName($name)];
+    ksort($out);
+    $lout = new Layout($conf['layout'] ?? [], getTheme(), false, false);
+    foreach ($lout->getAddressKeys() as $key) $out['page-'.$key] = [_LAYOUT_PAGE, (string)($lout->getPage($key)['title'] ?? '') ?: 'page-'.$key];
+    return $out;
+}
+
+# The values of which no page of the site answers: not a mark of getBlockWhich() and no place of getBlockPlaces(); a 6.x name that stays never shows its block
+function getBlockStray(array $where, array $places): array {
+    return array_values(array_diff($where, ['', 'all', 'home', 'ihome', 'otricanie', 'infly', 'flyfix'], array_keys($places)));
+}
+
+# Render the admin block list by position with drag ordering, the free blocks last, a lamp, the expiry, the marks of a lost file or place and the actions; it never writes
 function getAdminBlockList(): string {
     global $db, $afile, $tpl;
     $posmap = [
@@ -607,9 +626,8 @@ function getAdminBlockList(): string {
         'r' => [_RIGHT, _RIGHTBLOCK],
         'c' => [_CENTERUP, _CENTERBLOCK],
         'd' => [_CENTERDOWN, _CENTERBLOCK],
-        'b' => [_BANNERUP, _BANNER],
-        'f' => [_BANNERDOWN, _BANNER],
     ];
+    $places = getBlockPlaces();
     $rows = [];
     $free = [];
     $group = '';
@@ -631,6 +649,11 @@ function getAdminBlockList(): string {
         } else {
             $type = _BLOCKSYSTEM;
         }
+        $stray = getBlockStray($marks, $places);
+        if ($bfile != '' && !is_file(BASE_DIR.'/blocks/'.$bfile)) {
+            $type .= ' '.$tpl->getHtmlFrag('inline-badge', ['chip_tone' => 'warn', 'label' => _BLOCK_NOFILE, 'title_text' => 'blocks/'.$bfile]);
+        }
+        if ($stray) $type .= ' '.$tpl->getHtmlFrag('inline-badge', ['chip_tone' => 'warn', 'label' => _BLOCK_NOWHERE, 'title_text' => implode(', ', $stray)]);
         if ($view == 0) {
             $who = _MVALL;
         } elseif ($view == 1) {
@@ -728,16 +751,61 @@ function updateAdminBlockOrder(): void {
     global $db;
     if (checkAdminPost('blocks')) {
         $ids = array_values(array_filter(array_map('intval', explode('-', getVar('post', 'ids', 'var')))));
-        if ($ids) {
-            [$bpos] = $db->getSqlRow($db->getSqlQuery('SELECT bpos FROM '.PREFIX_DB.'_blocks WHERE id = :bid', ['bid' => $ids[0]]));
-            $weight = 0;
-            foreach ($ids as $bid) {
-                $weight++;
-                $db->getSqlQuery('UPDATE '.PREFIX_DB.'_blocks SET weight = :weight WHERE id = :bid AND bpos = :bpos', ['weight' => $weight, 'bid' => $bid, 'bpos' => $bpos]);
-            }
-        }
+        $row = $ids ? $db->getSqlRow($db->getSqlQuery('SELECT bpos FROM '.PREFIX_DB.'_blocks WHERE id = :bid', ['bid' => $ids[0]])) : null;
+        if ($row) setBlockOrder((string)$row[0], $ids, 1);
     }
     echo getAdminBlockList();
+}
+
+# The one writer of the position and the order of _blocks: a zone numbered from 1, the given rows moved in from $place on (0 after the others), each zone they left closed up
+function setBlockOrder(string $bpos, array $ids = [], int $place = 0): bool {
+    global $db;
+    $zones = ['l', 'r', 'c', 'd'];
+    if (!in_array($bpos, $zones, true)) return false;
+    $ids = array_values(array_unique(array_filter(array_map('intval', $ids), static fn(int $v): bool => $v > 0)));
+    $pars = ['bpos' => $bpos];
+    foreach ($ids as $i => $bid) $pars['id'.$i] = $bid;
+    $in = $ids ? ' OR id IN (:'.implode(', :', array_slice(array_keys($pars), 1)).')' : '';
+    $own = !$db->checkSqlActive();
+    if ($own && !$db->setSqlBegin()) return false;
+    $res = $db->getSqlQuery('SELECT id, bpos, weight FROM '.PREFIX_DB.'_blocks WHERE bpos = :bpos'.$in.' ORDER BY weight, id', $pars);
+    $rows = $res ? ($db->getSqlRows($res) ?: []) : [];
+    $have = [];
+    $rest = [];
+    $left = [];
+    foreach ($rows as [$bid, $pos, $weight]) {
+        $have[(int)$bid] = [(string)$pos, (int)$weight];
+        if (!in_array((int)$bid, $ids, true)) $rest[] = (int)$bid;
+        elseif ($pos !== $bpos && in_array($pos, $zones, true)) $left[$pos] = true;
+    }
+    $move = array_values(array_filter($ids, static fn(int $v): bool => isset($have[$v])));
+    array_splice($rest, ($place > 0) ? min($place - 1, count($rest)) : count($rest), 0, $move);
+    $done = $res !== false;
+    $sql = 'UPDATE '.PREFIX_DB.'_blocks SET bpos = :bpos, weight = :weight WHERE id = :bid';
+    foreach ($rest as $i => $bid) {
+        if ($done && $have[$bid] !== [$bpos, $i + 1]) $done = $db->getSqlQuery($sql, ['bpos' => $bpos, 'weight' => $i + 1, 'bid' => $bid]) !== false;
+    }
+    foreach (array_keys($left) as $pos) $done = $done && setBlockOrder((string)$pos);
+    if (!$own) return $done;
+    if ($done && $db->setSqlCommit()) return true;
+    $db->setSqlRollback();
+    return false;
+}
+
+# The one writer of _blocks.which from the checked boxes: all and home push the list out, the denial and the fixed mark follow them, infly leads, ihome leads any list but home
+function getBlockWhich(array $marks): string {
+    $which = '';
+    if (in_array('all', $marks, true)) $which = 'all';
+    if (in_array('home', $marks, true)) $which = 'home';
+    if ($which === '') {
+        $which = implode(',', $marks);
+    } else {
+        if (in_array('otricanie', $marks, true)) $which .= ',otricanie';
+        if (in_array('flyfix', $marks, true)) $which .= ',flyfix';
+    }
+    if (in_array('infly', $marks, true)) $which = in_array('flyfix', $marks, true) ? 'infly,'.str_replace('infly,', '', $which) : 'infly,';
+    if (in_array('ihome', $marks, true) && $which !== 'home') $which = 'ihome,'.str_replace(',ihome', '', $which);
+    return $which;
 }
 
 # Add voting

@@ -87,6 +87,12 @@ final class LayoutTest extends TestCase
         ], $over);
     }
 
+    # An item of a menu as the builder writes it, for everyone and without children
+    private function getMenuItem(string $title, string $href, array $over = []): array
+    {
+        return array_replace(['id' => 1, 'title' => $title, 'href' => $href, 'who' => '0', 'kids' => []], $over);
+    }
+
     # The layout as one visitor sees it in the language of a multilingual site, the types read from the scratch theme and the scratch modules
     private function getReader(array $data, bool $user = false, bool $moder = false, string $lang = ''): Layout
     {
@@ -145,16 +151,31 @@ final class LayoutTest extends TestCase
         $this->assertSame(0, $this->getReader(['v' => 0, 'home' => 1])->getHomeKey());
     }
 
+    # The delivered config/layout.php as the index of git holds it: the working file of the stand is a layout of its own (.rules/git.md), never the delivery
+    private static function getShippedFile(): array
+    {
+        $proc = proc_open(['git', '-C', BASE_DIR, 'show', ':config/layout.php'], [1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes);
+        $code = (string)stream_get_contents($pipes[1]);
+        stream_get_contents($pipes[2]);
+        fclose($pipes[1]);
+        fclose($pipes[2]);
+        if (proc_close($proc) !== 0) $code = (string)file_get_contents(BASE_DIR.'/config/layout.php');
+        $file = (string)tempnam(sys_get_temp_dir(), 'slaed_layout_');
+        file_put_contents($file, $code);
+        $data = require $file;
+        unlink($file);
+        return $data;
+    }
+
     # The delivered file is of this version and marked shipped; its home page holds the slot of the home module of the settings and has no columns
     #[Test]
     public function theShippedLayoutIsNeutral(): void
     {
-        $file = require BASE_DIR.'/config/layout.php';
+        $file = self::getShippedFile();
         $this->assertSame(['layout'], array_keys($file));
         $data = $file['layout'];
         $this->assertSame($data, Layout::getLayoutData($data), 'The delivered file is not in the one shape');
         $this->assertTrue($data['shipped']);
-        $this->assertSame([], $data['menus']);
         $read = $this->getReader($data);
         $home = $read->getHomeKey();
         $this->assertSame(1, $home);
@@ -166,7 +187,31 @@ final class LayoutTest extends TestCase
             $ids[] = $key;
             foreach ($page['sections'] as $sec) $ids[] = $sec['id'];
         }
+        foreach ($data['menus'] as $list) foreach ($list as $item) $ids[] = $item['id'];
         $this->assertGreaterThan(max($ids), $data['next'], 'The counter of the file would give a number again');
+    }
+
+    # The delivery carries a menu of the site's own sections in every menu of lite, every key of its parts and no value of one site: no contact, link, mark or tab
+    #[Test]
+    public function theShippedChromeIsNeutral(): void
+    {
+        $data = self::getShippedFile()['layout'];
+        $places = (new Layout([], 'lite', false, false))->getThemePlaces();
+        $this->assertSame(array_keys($places['menus']), array_keys($data['menus']));
+        foreach ($data['menus'] as $list) {
+            $this->assertNotSame([], $list);
+            foreach ($list as $item) $this->assertMatchesRegularExpression('#^/[a-z]*$#D', $item['href'], 'A shipped item leads outside the site');
+        }
+        $keys = [];
+        foreach ($places['parts'] as $part) {
+            foreach ($part['fields'] as $one) $keys[] = $one['key'];
+            if (isset($part['items'])) $keys[] = $part['items']['key'];
+        }
+        sort($keys);
+        $have = array_keys($data['theme']);
+        sort($have);
+        $this->assertSame($keys, $have, 'An update brings a site the keys of the delivery, so it carries every key lite declares');
+        $this->assertSame([], array_filter($data['theme'], static fn(mixed $v): bool => !in_array($v, ['', false, []], true)), 'The delivery carries a value of one site');
     }
 
     # The merge of an update writes the delivered file through the string form of setConfigFile(), every scalar as text; the site still has its home page and its slot
@@ -177,7 +222,7 @@ final class LayoutTest extends TestCase
             if (is_array($val)) return array_map($norm, $val);
             return is_bool($val) ? (string)(int)$val : (string)$val;
         };
-        $file = require BASE_DIR.'/config/layout.php';
+        $file = self::getShippedFile();
         $read = $this->getReader($norm($file['layout']));
         $data = $read->getData();
         $this->assertSame([Layout::VERSION, true, 1, 2], [$data['v'], $data['shipped'], $data['home'], $data['notfound']]);
@@ -490,6 +535,78 @@ final class LayoutTest extends TestCase
         $this->assertSame([['All', [['Users', []]]]], $titles($this->getReader($data, true)->getMenu('main')));
         $this->assertSame([['All', [['Users', []], ['Guests', []]]], ['Admins', []]], $titles($this->getReader($data, true, true)->getMenu('main')));
         $this->assertSame([], $this->getReader($data)->getMenu('foot'));
+    }
+
+    # A menu is as deep as the theme declares it, a menu it does not declare prints nothing; an address, an icon and a title are checked as fields of a section
+    #[Test]
+    public function aMenuKeepsItsDepthAndItsChecks(): void
+    {
+        $item = $this->getMenuItem(...);
+        $deep = $item('Two', '/two', ['kids' => [$item('Three', '/three')], 'icon' => 'bad icon', 'blank' => '1']);
+        $list = [$item('One', 'https://example.org/', ['kids' => [$deep], 'icon' => 'star']), $item('Bad', 'javascript:alert(1)', ['title' => ['x']]), $item('Rel', 'news')];
+        $read = $this->getReader($this->getLayout(['menus' => ['main' => $list, 'foot' => $list]]));
+        $main = $read->getMenu('main');
+        $this->assertSame(['id' => 1, 'title' => 'One', 'href' => 'https://example.org/', 'icon' => 'star', 'blank' => false], array_diff_key($main[0], ['kids' => 1]));
+        $want = ['id' => 1, 'title' => 'Two', 'href' => '/two', 'icon' => '', 'blank' => true, 'kids' => []];
+        $this->assertSame($want, $main[0]['kids'][0], 'A level below the depth of the theme printed');
+        $this->assertSame(['', ''], [$main[1]['title'], $main[1]['href']]);
+        $this->assertSame('', $main[2]['href'], 'An address that is neither of the site nor of the web passed');
+        $this->assertSame([], $read->getMenu('foot'), 'A menu the theme does not declare printed');
+    }
+
+    # The parts of the theme reach the page by the fields of places.json, each value checked as a field of a section is; a key no part declares stays unprinted
+    #[Test]
+    public function theThemePartsAreCheckedByTheirPlaces(): void
+    {
+        $theme = [
+            'tagline' => "One\nTwo", 'paneon' => '1', 'panehref' => 'javascript:alert(1)', 'email' => 'not mail', 'web' => 'https://example.org/', 'other' => 'Lost',
+            'social' => [['icon' => 'github', 'title' => 'Hub', 'url' => 'https://github.com/x'], ['icon' => 'bad icon', 'title' => 'Own', 'url' => '/recommend'], 'broken'],
+            'marks' => array_fill(0, 8, ['img' => 'presentation/brand/tech/php.png', 'title' => 'PHP']),
+            'tabs' => [['title' => 'Ideas', 'href' => '/forum'], ['title' => 'Mail', 'href' => '/contact'], ['title' => 'Third', 'href' => '/x']],
+        ];
+        $parts = (new Layout($this->getLayout(['theme' => $theme]), 'lite', false, false, '', self::$mods))->getThemeData($this->getParser());
+        $this->assertSame("One\nTwo", $parts['tagline']);
+        $this->assertTrue($parts['paneon']);
+        $this->assertSame(['', '', 'https://example.org/', true], [$parts['panehref'], $parts['email'], $parts['web'], $parts['web_ext']]);
+        $this->assertArrayNotHasKey('other', $parts);
+        $social = array_map(static fn(array $v): array => [$v['icon'], $v['url'], !empty($v['url_ext'])], $parts['social']);
+        $this->assertSame([['github', 'https://github.com/x', true], ['', '/recommend', false]], $social);
+        $this->assertCount(6, $parts['marks'], 'The footer holds more marks than its part allows');
+        $this->assertSame('/uploads/presentation/brand/tech/php.png', $parts['marks'][0]['img']);
+        $this->assertSame([true, false], array_column($parts['tabs'], 'is_first'), 'The theme draws two tabs');
+        $this->assertSame(['social', 'marks', 'tabs'], array_values(array_filter(array_keys($parts), static fn(string $k): bool => is_array($parts[$k]))));
+    }
+
+    # The chrome of lite prints the menus and parts of the layout and carries no value of slaed.net of its own
+    #[Test]
+    public function theChromeOfLiteComesFromTheLayout(): void
+    {
+        $files = ['partials/site-header.html', 'partials/site-footer.html', 'partials/menu.html', 'fragments/block-menu.html'];
+        foreach ($files as $one) {
+            $code = (string)file_get_contents(PUBLIC_DIR.'/templates/lite/'.$one);
+            foreach (['slaed.de', 'slaed.info', 'Ostercappeln', 'support@slaed.net', 'images/tmp/', 'Все великое', 'Aктуальная'] as $word) {
+                $this->assertStringNotContainsString($word, $code, $one.' still carries '.$word);
+            }
+        }
+        $lang = file_get_contents(BASE_DIR.'/admin/lang/ru.php').file_get_contents(BASE_DIR.'/lang/ru.php');
+        preg_match_all("/^define\('(_[A-Z0-9_]+)'/m", $lang, $hit);
+        $places = json_decode((string)file_get_contents(PUBLIC_DIR.'/templates/lite/places.json'), true, 512, JSON_THROW_ON_ERROR);
+        array_walk_recursive($places, function (mixed $val, string|int $key) use ($hit): void {
+            if (in_array($key, ['title', 'note', 'where', 'label'], true) && $val !== '') $this->assertContains($val, $hit[1], 'places.json of lite names an undefined '.$val);
+        });
+        $item = $this->getMenuItem(...);
+        $kids = [$item('Docs <b>', 'https://example.org/', ['blank' => true]), $item('Mail', '/contact', ['icon' => 'star'])];
+        $list = [$item('Group', '', ['kids' => $kids]), $item('News', '/news')];
+        $read = new Layout($this->getLayout(['menus' => ['main' => $list]]), 'lite', false, false, '', self::$mods);
+        $tpl = new Template('lite');
+        $menu = $tpl->getHtmlPart('menu', ['menus' => ['main' => $read->getMenu('main')], 'home' => 'Home']);
+        $this->assertStringContainsString('<a href="#" title="Group">Group</a>', $menu, 'A group without its address lost its place in the menu');
+        $this->assertStringContainsString('<a href="https://example.org/" title="Docs &lt;b&gt;" target="_blank" rel="noopener">Docs &lt;b&gt;</a>', $menu);
+        $this->assertStringContainsString('<i class="bi bi-star" aria-hidden="true"></i>&nbsp;Mail</a>', $menu);
+        $this->assertStringContainsString('<a href="/news" title="News">News</a>', $menu);
+        $block = $tpl->getHtmlFrag('block-menu', ['items' => $read->getMenu('main')]);
+        $this->assertStringContainsString('<li><a href="/contact" title="Mail"><i class="bi bi-star" aria-hidden="true"></i>&nbsp;Mail</a></li></ul></li>', $block);
+        $this->assertStringStartsWith('<nav class="sl-block-menu"><ul><li><a href="#" title="Group">Group</a><ul>', $block);
     }
 
     # An update adds the layout to a site that lacks it and new keys of the theme, but never a page or a menu item the site deleted

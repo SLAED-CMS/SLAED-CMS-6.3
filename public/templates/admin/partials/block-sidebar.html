@@ -4,7 +4,7 @@
     id="sl-block-{{ id }}"
     class="sl-block-sidebar-content"
 
-    data-sl-toggle="sl-block-{{ id }}"
+    data-sl-toggle="sl-block-{{ id }}"{% if is_drag %} data-sl-drag-event="sl:menu-order"{% endif %}
   >{% if content_id %}<div id="{{ content_id }}">{% endif %}{{{ content_html }}}{% if content_id %}</div>{% endif %}</div>
   <div class="sl-block-sidebar-bottom"></div>
 </div>

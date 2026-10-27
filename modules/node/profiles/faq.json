@@ -32,7 +32,9 @@
                 ]
             },
             "view": {
-                "mode": "faq"
+                "mode": "faq",
+                "side": 2,
+                "top": 0
             },
             "form": [],
             "workflow": {

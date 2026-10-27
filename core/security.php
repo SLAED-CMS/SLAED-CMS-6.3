@@ -977,11 +977,11 @@ function filterWord(string $var): string {
     return preg_replace('#[^\pL0-9\s%&/|.:;&_+\-=]#siu', '', $var) ?? '';
 }
 
-# Drop [usehtml] and [usephp] unless the writer is trusted; the pass repeats, as one pass over [use[usehtml]html] rebuilds the tag it removed
+# Drop [usehtml], [usephp] and [block=id] unless the writer is trusted; the pass repeats, as one pass over [use[usehtml]html] rebuilds the tag it removed
 function filterTrustedTags(string $text, bool $trust = false): string {
     if ($text === '' || $trust) return $text;
-    while (preg_match('#\[/?use(?:html|php)\]#si', $text)) {
-        $text = (string)preg_replace('#\[/?use(?:html|php)\]#si', '', $text);
+    while (preg_match('#\[/?use(?:html|php)\]|\[block=\d+\]#si', $text)) {
+        $text = (string)preg_replace('#\[/?use(?:html|php)\]|\[block=\d+\]#si', '', $text);
     }
     return $text;
 }

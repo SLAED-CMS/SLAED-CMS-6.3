@@ -134,7 +134,7 @@ final class CockpitTest extends TestCase
         $this->assertSame([50, 7.5, 3], [$strip['gen']['value'], $strip['sql']['value'], $strip['mem']['value']]);
     }
 
-    # The snapshot carries four shares with their panel rows, the strip of the average page and the signals, toned by the worst signal
+    # The snapshot carries four shares with their panel rows, the strip of the average page and the signals, toned by the worst signal or a lull
     #[Test]
     public function theSnapshotHasEveryPart(): void
     {
@@ -148,8 +148,15 @@ final class CockpitTest extends TestCase
         }
         $this->assertSame(['gen', 'sql', 'mem', 'online'], array_keys($data['strip']));
         $lvls = array_column($data['signals'], 'level');
-        $tone = in_array('danger', $lvls, true) ? 'danger' : (in_array('warn', $lvls, true) ? 'warn' : 'ok');
+        $tone = in_array('danger', $lvls, true) ? 'danger' : (in_array('warn', $lvls, true) ? 'warn' : 'info');
         $this->assertSame($tone, $data['tone']);
         $this->assertCount(14, $data['signals']);
+    }
+
+    # With every check passed the lamp rests in a lull while the hour counts under twenty pages; a loud signal and a stale counter never make one
+    #[Test]
+    public function theLampRestsInALull(): void
+    {
+        $this->assertSame(['lull' => 'info', 'warn' => 'warn', 'busy' => 'ok', 'stale' => 'ok'], $this->getProbe()['tone']);
     }
 }

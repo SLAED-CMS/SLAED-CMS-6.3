@@ -397,8 +397,18 @@
   --sl-footer-shadow: 0 1px 0 light-dark(rgba(255, 255, 255, 0.25), rgba(0, 0, 0, 0.35));
   --sl-form-width: 545px;
   --sl-form-label-width: 160px;
-  /* The width a gauge of the home cockpit grows to; the lamp in their row takes the same and its mark half of it */
+  /* The width a gauge of the home cockpit grows to; the lamp in their row is a step larger */
   --sl-gauge-width: 150px;
+  /* The glass of the lamp: gloss, a shaded rim and a disc a step off the plate give a light page the volume a dark one has from its gloss */
+  --sl-gauge-bg:
+    radial-gradient(ellipse 62% 34% at 50% 12%, light-dark(var(--sl-bg), var(--sl-beam-bg)), transparent 72%),
+    radial-gradient(circle at 50% 22%, transparent 50%, light-dark(var(--sl-shadow-color), transparent) 100%),
+    radial-gradient(circle at 50% 30%, light-dark(var(--sl-bg-subtle), var(--sl-bg)), light-dark(var(--sl-bg-muted), var(--sl-surface)) 60%,
+      light-dark(var(--sl-border), var(--sl-bg-subtle)));
+  --sl-gauge-shadow:
+    drop-shadow(0 var(--sl-space-3) var(--sl-space-6) var(--sl-shadow-color))
+    drop-shadow(0 var(--sl-space-4) var(--sl-space-7) light-dark(var(--sl-shadow-color), transparent))
+    drop-shadow(0 var(--sl-space-1) var(--sl-space-2) light-dark(var(--sl-shadow-color), transparent));
   --sl-graph-height: 285px;
   /* A painted group name keeps the hue of its group, taken from its parent, and the lightness its scheme reads: 4.5:1 for any stored colour */
   --sl-group-text: light-dark(oklch(from currentColor min(l, 0.5) c h), oklch(from currentColor max(l, 0.7) c h));

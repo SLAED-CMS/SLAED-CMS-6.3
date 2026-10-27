@@ -1,45 +1,14 @@
 <div id="topmenu">
   <ul>
     <li><a href="/" class="sl-home-link sl-circle-action" title="{{ home }}"><i class="bi bi-house-door-fill" aria-hidden="true"></i><span class="sl-hidden">{{ home }}</span></a></li>
+    {% for item in menus.main %}
     <li>
-      <a href="#" title="Услуги">Услуги</a>
-      <ul>
-        <li><a href="https://slaed.de" target="_blank" title="Модификация и интеграция тем оформления">Темы и шаблоны</a></li>
-      </ul>
+      <a href="{% if item.href %}{{ item.href }}{% else %}#{% endif %}" title="{{ item.title }}"{% if item.blank %} target="_blank" rel="noopener"{% endif %}>{% if item.icon %}<i class="bi bi-{{ item.icon }}" aria-hidden="true"></i>&nbsp;{% endif %}{{ item.title }}</a>
+      {% if item.kids %}<ul>
+        {% for kid in item.kids %}<li><a href="{% if kid.href %}{{ kid.href }}{% else %}#{% endif %}" title="{{ kid.title }}"{% if kid.blank %} target="_blank" rel="noopener"{% endif %}>{% if kid.icon %}<i class="bi bi-{{ kid.icon }}" aria-hidden="true"></i>&nbsp;{% endif %}{{ kid.title }}</a></li>
+        {% endfor %}
+      </ul>{% endif %}
     </li>
-    <li>
-      <a href="#" title="Поддержка">Поддержка</a>
-      <ul>
-        <li><a href="{{ root }}faq" title="Вопросы и ответы">Вопросы и ответы</a></li>
-        <li><a href="{{ root }}docs" title="Центр документации">Центр документации</a></li>
-        <li><a href="{{ root }}forum" title="Общий форум проекта">Общий форум проекта</a></li>
-        <li><a href="https://slaed.info" target="_blank" title="Руководство по PHP">Руководство по PHP</a></li>
-        <li><a href="{{ root }}help" title="Техническая поддержка клиентов">Техническая поддержка</a></li>
-        <li><a href="{{ root }}contact" title="Обратная связь и контактная информация">Обратная связь</a></li>
-      </ul>
-    </li>
-    <li>
-      <a href="#" title="Каталог файлов">Каталог файлов</a>
-      <ul>
-        <li><a href="{{ root }}files" title="Каталог файлов">Каталог файлов</a></li>
-      </ul>
-    </li>
-    <li>
-      <a href="#" title="Новости">Новости</a>
-      <ul>
-        <li><a href="{{ root }}news" title="Все новости проекта">Все новости</a></li>
-      </ul>
-    </li>
-    <li>
-      <a href="#" title="Компания">Компания</a>
-      <ul>
-        <li><a href="{{ root }}contact" title="Контактная информация">Контактные данные</a></li>
-        <li><a href="{{ root }}presentation" title="Презентационная страница системы">Презентационная страница</a></li>
-        <li><a href="{{ root }}recommend" title="Рекомендовать наш сайт"><i class="bi bi-chat-heart-fill" aria-hidden="true"></i>&nbsp;Рекомендовать наш сайт</a></li>
-        <li><a href="{{ root }}links" title="Каталог сайтов системы">Каталог сайтов системы</a></li>
-        <li><a href="{{ root }}users" title="Tоп пользователи проекта">Tоп пользователи проекта</a></li>
-        <li><a href="{{ root }}voting" title="Опросы нашего проекта">Опросы нашего проекта</a></li>
-      </ul>
-    </li>
+    {% endfor %}
   </ul>
 </div>

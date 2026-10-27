@@ -14,15 +14,10 @@
       <ul class="sl-top-contact"><li class="sl-head-marquee">{% if faqtitle %}{{{ faqtitle }}}{% endif %}</li></ul>
       <div class="sl-top-right">
         {{{ mode_html }}}
-        <div class="sl-top-social">
-          <a class="sl-thd sl-circle-action sl-cat-tone-0" rel="me noopener" target="_blank" href="https://github.com/SLAED-CMS/SLAED-CMS-6.3" title="Мы в GitHub" aria-label="Мы в GitHub"><i class="bi bi-github" aria-hidden="true"></i>Мы в GitHub</a>
-          <a class="sl-thd sl-circle-action sl-cat-tone-1" rel="me noopener" target="_blank" href="https://www.youtube.com/@SLAED-CMS" title="Мы в YouTube" aria-label="Мы в YouTube"><i class="bi bi-youtube" aria-hidden="true"></i>Мы в YouTube</a>
-          <a class="sl-thd sl-circle-action sl-cat-tone-2" rel="me noopener" target="_blank" href="https://x.com/slaed_cms" title="Мы в X" aria-label="Мы в X"><i class="bi bi-twitter-x" aria-hidden="true"></i>Мы в X</a>
-          <a class="sl-thd sl-circle-action sl-cat-tone-3" rel="me noopener" target="_blank" href="https://vk.com/slaed_cms" title="Мы вКонтакте" aria-label="Мы вКонтакте"><i class="bi bi-chat-square-text" aria-hidden="true"></i>Мы вКонтакте</a>
-          <a class="sl-thd sl-circle-action sl-cat-tone-4" rel="me noopener" target="_blank" href="https://slaed.de" title="Документация на немецком" aria-label="Документация на немецком"><i class="bi bi-book-half" aria-hidden="true"></i>Документация на немецком</a>
-          <a class="sl-thd sl-circle-action sl-cat-tone-5" rel="me noopener" target="_blank" href="https://slaed.info" title="Документация на английском" aria-label="Документация на английском"><i class="bi bi-book" aria-hidden="true"></i>Документация на английском</a>
-          <a class="sl-thd sl-circle-action sl-cat-tone-0" href="{{ root }}recommend" title="{{ recommend }}" aria-label="{{ recommend }}"><i class="bi bi-star" aria-hidden="true"></i>{{ recommend }}</a>
-        </div>
+        {% if parts.social %}<div class="sl-top-social">
+          {% for soc in parts.social %}{% if soc.url %}<a class="sl-thd sl-circle-action sl-cat-tone-{{ soc.tone }}"{% if soc.url_ext %} rel="me noopener" target="_blank"{% endif %} href="{{ soc.url }}" title="{{ soc.title }}" aria-label="{{ soc.title }}">{% if soc.icon %}<i class="bi bi-{{ soc.icon }}" aria-hidden="true"></i>{% endif %}{{ soc.title }}</a>
+          {% endif %}{% endfor %}
+        </div>{% endif %}
       </div>
     </div>
   </div>
@@ -31,13 +26,13 @@
       <a href="/" class="sl-thd sl-logo" title="{% if slogan %}{{ sitename }} - {{ slogan }}{% else %}{{ sitename }}{% endif %}">
         <img src="{{ root }}templates/{{ theme }}/images/logos/{{ logo }}" alt="{% if slogan %}{{ sitename }} - {{ slogan }}{% else %}{{ sitename }}{% endif %}" title="{% if slogan %}{{ sitename }} - {{ slogan }}{% else %}{{ sitename }}{% endif %}"{% if logo_w %} width="{{ logo_w }}" height="{{ logo_h }}"{% endif %}>
       </a>
-      <p class="sl-font sl-slogan">Все великое<br>просто</p>
+      {% if parts.tagline %}<p class="sl-font sl-slogan sl-sec-lines">{{ parts.tagline }}</p>{% endif %}
       {{{ login }}}
-      <ul class="sl-d-pane">
-        <li class="sl-d-info sl-d-version sl-font">Aктуальная версия</li>
-        <li class="sl-d-num sl-font">6.2</li>
-        <li class="sl-d-btns"><a class="sl-but" href="{{ root }}files" title="Скачать бесплатно актуальную версию системы">Скачать систему</a></li>
-      </ul>
+      {% if parts.paneon %}<ul class="sl-d-pane">
+        {% if parts.panecap %}<li class="sl-d-info sl-d-version sl-font">{{ parts.panecap }}</li>{% endif %}
+        {% if parts.panever %}<li class="sl-d-num sl-font">{{ parts.panever }}</li>{% endif %}
+        {% if parts.panebtn and parts.panehref %}<li class="sl-d-btns"><a class="sl-but" href="{{ parts.panehref }}"{% if parts.panehref_ext %} target="_blank" rel="noopener"{% endif %} title="{{ parts.panebtn }}">{{ parts.panebtn }}</a></li>{% endif %}
+      </ul>{% endif %}
     </div>
   </header>
   <nav id="hmenu" aria-label="Главное меню">

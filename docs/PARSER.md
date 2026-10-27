@@ -60,7 +60,7 @@ The `$safe` boolean parameter is crucial:
 * **`false` (Admin Content):** The parser trusts the source: raw HTML blocks and inline tags pass by the rules of CommonMark, except the tags GFM disallows (`title`, `textarea`, `style`, `xmp`, `iframe`, `noembed`, `noframes`, `script`, `plaintext`), whose `<` is escaped. It processes `[usehtml]` blocks literally and executes PHP code inside `[usephp]` blocks via `eval()`, the one way to markup the tag filter would stop.
 * **Both modes:** `data:`, `javascript:` and `vbscript:` addresses become `#`, a Markdown image of `data:` passes only as an `EMBEDIMG` raster, and indented code blocks are read.
 
-`$trust` narrows trust to the tags. With `$safe = true` and `$trust = true` the source is rendered safe exactly as above, except that the content of `[usehtml]` becomes raw markup and the content of `[usephp]` runs; an indented line inside those tags is not read as a code block. Raw HTML, `[block=id]` and unsafe URLs around the tags stay escaped. With `$safe = false` the argument changes nothing. A Node text renders this way: a tag the super administrator added to a text somebody else wrote trusts only what it encloses, never the foreign markup around it.
+`$trust` narrows trust to the tags. With `$safe = true` and `$trust = true` the source is rendered safe exactly as above, except that the content of `[usehtml]` becomes raw markup and the content of `[usephp]` runs and `[block=id]` prints its free block; an indented line inside those tags is not read as a code block. Raw HTML and unsafe URLs around the tags stay escaped. With `$safe = false` the argument changes nothing. A Node text renders this way: a tag the super administrator added to a text somebody else wrote trusts only what it encloses, never the foreign markup around it.
 
 ## Trusted author capability
 
@@ -97,8 +97,8 @@ this one grammar, so no form renders that the write filter let through.
   `[tab=Title]…[/tab]` inside.
 - **Local Attachments:** `[attach=file.png align=X title=Y]`, optionally `width=W height=H`, then `rel=R`, and last `size=full` - Resolves to local uploaded files, generates thumbs automatically via GD if needed; `size=full` renders an image through the `full` template of `config/filetype.php` at its own size and makes no thumb.
 - **Trusted:** `[usehtml]…[/usehtml]` and `[usephp]…[/usephp]` (super administrator only), `[block=id]` (a free block,
-  rendered only with `$safe = false` outside the panel, so no text of the site renders it today, since every one
-  renders safe).
+  rendered outside the panel with `$safe = false` or with `$trust`; `filterTrustedTags()` keeps all three from every
+  other writer).
 
 `getImgText()` in `core/system.php` takes the meta image of a text from its first `[attach=…]`, else from its first
 Markdown image `![…](…)`.
