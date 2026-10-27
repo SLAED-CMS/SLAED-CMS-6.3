@@ -1,0 +1,32 @@
+{
+    "title": "_LAYOUT_STEPS",
+    "note": "_LAYOUT_STEPS_INFO",
+    "icon": "list-ol",
+    "group": "base",
+    "frame": true,
+    "fields": [
+        {"key": "title", "label": "_TITLE", "type": "text"},
+        {"key": "lead", "label": "_LAYOUT_LEAD", "type": "text"},
+        {"key": "icon", "label": "_ICON", "type": "icon", "tab": "look"}
+    ],
+    "items": {
+        "label": "_LAYOUT_STEPS",
+        "max": 12,
+        "name": "title",
+        "fields": [
+            {"key": "title", "label": "_LAYOUT_STEP", "type": "text"},
+            {"key": "text", "label": "_DESCRIPTION", "type": "text"}
+        ],
+        "make": {"title": "_LAYOUT_STEP", "text": "_LAYOUT_STEP_TEXT"}
+    },
+    "make": {
+        "title": "_LAYOUT_STEPS_TTL",
+        "lead": "",
+        "icon": "list-ol",
+        "items": [
+            {"title": "_LAYOUT_STEP", "text": "_LAYOUT_STEP_TEXT"},
+            {"title": "_LAYOUT_STEP", "text": "_LAYOUT_STEP_TEXT"},
+            {"title": "_LAYOUT_STEP", "text": "_LAYOUT_STEP_TEXT"}
+        ]
+    }
+}

@@ -1,0 +1,25 @@
+{
+    "title": "_LAYOUT_VIDEO",
+    "note": "_LAYOUT_VID_INFO",
+    "icon": "play-btn",
+    "group": "media",
+    "frame": true,
+    "fields": [
+        {"key": "title", "label": "_TITLE", "type": "text"},
+        {"key": "lead", "label": "_LAYOUT_LEAD", "type": "text"},
+        {"key": "icon", "label": "_ICON", "type": "icon", "tab": "look"},
+        {"key": "url", "label": "_LAYOUT_VIDSRC", "type": "video"},
+        {"key": "caption", "label": "_LAYOUT_CAPTION", "type": "text"},
+        {"key": "photo", "label": "_LAYOUT_COVER", "type": "file", "tab": "look"},
+        {"key": "focus", "label": "_LAYOUT_FOCUS", "type": "focus", "tab": "look"}
+    ],
+    "make": {
+        "title": "_LAYOUT_VIDEO",
+        "lead": "",
+        "icon": "play-btn",
+        "url": "",
+        "caption": "",
+        "photo": "",
+        "focus": "center"
+    }
+}

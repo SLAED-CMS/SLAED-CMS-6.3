@@ -10,7 +10,7 @@ if (!defined('FUNC_FILE')) die('Illegal file access');
 final class Route {
 
     # The kinds of entity a path names
-    private const KINDS = ['type', 'node', 'cat', 'topic', 'user', 'poll'];
+    private const KINDS = ['type', 'node', 'cat', 'topic', 'user', 'poll', 'page'];
 
     # The grammar of a prefix and of the name of a type, the grammar NodeService gives a type name
     private const NAME = '/^[a-z][a-z0-9]{0,19}$/D';
@@ -37,7 +37,7 @@ final class Route {
     # The operations public/index.php answers under any name before it routes
     private const COMMON = ['mode', 'newlang'];
 
-    # Names no type takes besides the modules: the entries of public/, the uploads the light path answers before the core, the prefix of the connector
+    # Names no type and no page takes besides the modules: the entries of public/, the uploads the light path answers before the core, the prefix of the connector
     private const TYPES = ['admin', 'api', 'demo', 'error', 'favicon', 'index', 'phoenix', 'plugins', 'robots', 'setup', 'sitemap', 'templates',
         'update', 'uploads'];
 
@@ -105,7 +105,7 @@ final class Route {
     public function setRouteName(string $kind, int $oid, string $prefix, string $name, string $title): string {
         if ($kind === 'type' || !$this->checkRouteOwner($kind, $oid, $prefix)) return '';
         $now = $this->getRouteList($kind, [$oid])[$oid] ?? '';
-        if ($name === '' && str_starts_with($now, $prefix.'/')) return $now;
+        if ($name === '' && $now !== '' && str_starts_with($now, ($prefix === '') ? '' : $prefix.'/')) return $now;
         if ($name === '' && $now !== '') $name = substr($now, strpos($now, '/') + 1);
         return ($name === '') ? $this->addRoute($kind, $oid, $prefix, $title) : $this->setRoute($kind, $oid, $prefix, $name);
     }
@@ -117,8 +117,9 @@ final class Route {
         return $this->db->getSqlQuery($sql, ['state' => self::GONE, 'kind' => $kind, 'oid' => $oid]) !== false;
     }
 
-    # Whether a name under a prefix is an operation of its module or type, which the parser reads before the registry, so a page of that name would never open
+    # Whether a name under a prefix is an operation of its module or type, at the root a module or an entry, which the parser reads before the registry
     public function isRouteReserved(string $prefix, string $name): bool {
+        if ($prefix === '') return in_array($name, self::COMMON, true) || in_array($name, self::TYPES, true) || is_dir(BASE_DIR.'/modules/'.$name);
         $ops = self::OPS[$prefix] ?? ((preg_match(self::NAME, $prefix) && is_dir(BASE_DIR.'/modules/'.$prefix)) ? [] : self::OPS['node']);
         return in_array($name, self::COMMON, true) || in_array($name, $ops, true);
     }
@@ -129,10 +130,10 @@ final class Route {
         return $this->getRoute($name) === [];
     }
 
-    # Refuse an unknown kind, an id out of the column, and a prefix outside the grammar; a type is the one kind without a prefix
+    # Refuse an unknown kind, an id out of the column, and a prefix outside the grammar; a type and a page of the layout are the kinds at the root, without a prefix
     private function checkRouteOwner(string $kind, int $oid, string $prefix): bool {
         if (!in_array($kind, self::KINDS, true) || $oid < 1 || $oid > self::MAXINT) return false;
-        return ($kind === 'type') ? $prefix === '' : preg_match(self::NAME, $prefix) === 1;
+        return ($kind === 'type' || $kind === 'page') ? $prefix === '' : preg_match(self::NAME, $prefix) === 1;
     }
 
     # The rows holding the path of a name or one of its suffixes, keyed by path, so the first free suffix is found without a query per step
@@ -169,7 +170,7 @@ final class Route {
 
     # Take the first free path of a name: its own path back, else the name or its next suffix past every taken, reserved or racing path; a type has no suffix
     private function addRouteRow(string $kind, int $oid, string $prefix, string $name): string {
-        $base = ($kind === 'type') ? $name : $prefix.'/'.$name;
+        $base = ($prefix === '') ? $name : $prefix.'/'.$name;
         $taken = $this->getRouteTaken($base);
         $sql = 'INSERT INTO '.PREFIX_DB.'_routes (path, kind, oid) VALUES (:path, :kind, :oid)';
         $tries = 0;
@@ -178,7 +179,7 @@ final class Route {
             $path = ($num === 1) ? $base : $base.'-'.$num;
             $hold = $taken[$path] ?? null;
             if ($hold !== null && $hold['kind'] === $kind && $hold['oid'] === $oid && $hold['state'] !== self::GONE) return $this->setRouteBack($kind, $oid, $path, $hold['state']);
-            if ($hold !== null || ($kind !== 'type' && $this->isRouteReserved($prefix, substr($path, strlen($prefix) + 1)))) continue;
+            if ($hold !== null || ($kind !== 'type' && $this->isRouteReserved($prefix, ltrim(substr($path, strlen($prefix)), '/')))) continue;
             $tries++;
             if (!$this->setRouteFormer($kind, $oid)) return '';
             if ($this->db->getSqlQuery($sql, ['path' => $path, 'kind' => $kind, 'oid' => $oid]) !== false) return $path;

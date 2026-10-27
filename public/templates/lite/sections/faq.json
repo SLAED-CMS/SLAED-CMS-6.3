@@ -1,0 +1,33 @@
+{
+    "title": "_LAYOUT_FAQ",
+    "note": "_LAYOUT_FAQ_INFO",
+    "icon": "patch-question",
+    "group": "contact",
+    "frame": true,
+    "fields": [
+        {"key": "title", "label": "_TITLE", "type": "text"},
+        {"key": "lead", "label": "_LAYOUT_LEAD", "type": "text"},
+        {"key": "icon", "label": "_ICON", "type": "icon", "tab": "look"},
+        {"key": "open", "label": "_LAYOUT_FIRSTOPEN", "type": "bool", "show": "switch", "tab": "look"}
+    ],
+    "items": {
+        "label": "_LAYOUT_QUESTS",
+        "max": 12,
+        "name": "q",
+        "fields": [
+            {"key": "q", "label": "_LAYOUT_QUEST", "type": "text"},
+            {"key": "a", "label": "_LAYOUT_ANSWER", "type": "markdown"}
+        ],
+        "make": {"q": "_LAYOUT_QUEST", "a": "_LAYOUT_ANSWER"}
+    },
+    "make": {
+        "title": "_LAYOUT_FAQ",
+        "lead": "",
+        "icon": "patch-question",
+        "open": true,
+        "items": [
+            {"q": "_LAYOUT_QUEST", "a": "_LAYOUT_ANSWER"},
+            {"q": "_LAYOUT_QUEST", "a": "_LAYOUT_ANSWER"}
+        ]
+    }
+}

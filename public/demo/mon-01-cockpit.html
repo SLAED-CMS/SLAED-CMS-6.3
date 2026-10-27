@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="ru" data-theme="auto">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Кокпит &middot; Мониторинг — стенд SLAED CMS</title>
+  <link rel="stylesheet" href="../templates/admin/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../templates/admin/assets/css/base.css">
+  <link rel="stylesheet" href="../templates/admin/assets/css/theme.css">
+  <!-- The stand is served without Cache-Control; its sheets and scripts are stamped so an edit is seen at once -->
+  <script>document.write('<link rel="stylesheet" href="assets/demo.css?v=' + Date.now() + '"><link rel="stylesheet" href="assets/st.css?v=' + Date.now() + '"><link rel="stylesheet" href="assets/mon.css?v=' + Date.now() + '">');</script>
+  <script src="../plugins/system/global-func.js"></script>
+  <script src="../plugins/system/slaed.js"></script>
+  <script src="../templates/admin/assets/js/admin-ui.js"></script>
+  <style>
+    /* Кокпит: the language of the leader of the statistic series on the monitor — the plate, the live chart over the
+       whole width, then rows of one large window and two smaller ones whose lists end on one line */
+    .v-counts {
+      margin-top: var(--sl-space-6);
+    }
+  </style>
+</head>
+<body>
+  <template data-st-face data-st-module="monitor" data-st-title="Мониторинг" data-st-icon="display" data-st-tabs="Главная:|Справка:info|Журнал действий:log">
+    <div class="mn-ground" data-st-rise data-demo-kinds="ok:Норма:ok|warn:Внимание:warn|danger:Сбой:danger|night:Ночь:ok" data-kind="warn">
+      <div data-mon-block="cockpit" data-mon-nav="off" data-mon-pulse></div>
+
+      <section class="mn-win" data-st-rise data-sl-live-box>
+        <div class="mn-win-cap"><i class="bi bi-graph-up-arrow" aria-hidden="true"></i><span>Трафик и нагрузка</span><span class="mn-meta">20 минут</span><span data-mon-live></span></div>
+        <div class="mn-win-body">
+          <div data-mon-block="traffic"></div>
+          <div class="mn-counts v-counts">
+            <div class="mn-count"><span>Новости</span><b data-mon-t="news"></b></div>
+            <div class="mn-count"><span>Файлы</span><b data-mon-t="files"></b></div>
+            <div class="mn-count"><span>Таблицы базы</span><b data-mon-t="tables"></b></div>
+            <div class="mn-count"><span>Онлайн</span><b data-mon-t="online"></b></div>
+          </div>
+        </div>
+      </section>
+
+      <div class="mn-split" data-st-rise>
+        <section class="mn-win">
+          <div class="mn-win-cap"><i class="bi bi-hdd-network" aria-hidden="true"></i><span>Сервер и PHP</span><span class="mn-meta">nginx 1.28.0 · PHP 8.4.27</span></div>
+          <div class="mn-win-body mn-two"><div><div data-mon-kv="server"></div></div><div><div data-mon-kv="php"></div><div data-mon-meter="opmem"></div></div></div>
+        </section>
+        <div class="mn-side" data-st-rise>
+          <section class="mn-win">
+            <div class="mn-win-cap"><span class="mn-lamps" aria-hidden="true"><i></i><i></i><i></i></span><span>Программы</span></div>
+            <div class="mn-win-body" data-mon-kv="software"></div>
+          </section>
+          <section class="mn-win">
+            <div class="mn-win-cap"><span class="mn-lamps" aria-hidden="true"><i></i><i></i><i></i></span><span>OPcache</span></div>
+            <div class="mn-win-body" data-mon-kv="opcache"></div>
+          </section>
+        </div>
+      </div>
+
+      <div class="mn-split" data-st-rise>
+        <section class="mn-win">
+          <div class="mn-win-cap"><i class="bi bi-database" aria-hidden="true"></i><span>База данных и запрос</span><span class="mn-meta">MariaDB 11.7.2 · 51.66 MB</span></div>
+          <div class="mn-win-body mn-two"><div><div data-mon-kv="db"></div><div data-mon-meter="pool"></div></div><div><div data-mon-kv="request"></div><div data-mon-meter="phpmem"></div></div></div>
+        </section>
+        <div class="mn-side" data-st-rise>
+          <section class="mn-win">
+            <div class="mn-win-cap"><span class="mn-lamps" aria-hidden="true"><i></i><i></i><i></i></span><span>Безопасность</span></div>
+            <div class="mn-win-body" data-mon-kv="security"></div>
+          </section>
+          <section class="mn-win">
+            <div class="mn-win-cap"><span class="mn-lamps" aria-hidden="true"><i></i><i></i><i></i></span><span>Хранилище</span><span class="mn-meta">копия сегодня, 07:38</span></div>
+            <div class="mn-win-body" data-mon-kv="folders"></div>
+          </section>
+        </div>
+      </div>
+
+      <div class="mn-trio" data-st-rise>
+        <section class="mn-win">
+          <div class="mn-win-cap"><span class="mn-lamps" aria-hidden="true"><i></i><i></i><i></i></span><span>Диск</span></div>
+          <div class="mn-win-body"><div data-mon-meter="disk"></div><div data-mon-kv="disk"></div></div>
+        </section>
+        <section class="mn-win">
+          <div class="mn-win-cap"><span class="mn-lamps" aria-hidden="true"><i></i><i></i><i></i></span><span>Лимиты</span></div>
+          <div class="mn-win-body" data-mon-kv="limits"></div>
+        </section>
+        <section class="mn-win">
+          <div class="mn-win-cap"><span class="mn-lamps" aria-hidden="true"><i></i><i></i><i></i></span><span>Сайт</span></div>
+          <div class="mn-win-body"><div data-mon-kv="cms"></div><div data-mon-meter="upload"></div></div>
+        </section>
+      </div>
+
+      <section class="mn-win" data-st-rise>
+        <div class="mn-win-cap"><i class="bi bi-puzzle" aria-hidden="true"></i><span>Расширения PHP</span></div>
+        <div class="mn-win-body mn-two"><div><p class="mn-sub">Включены</p><div class="mn-chips" data-mon-chips="on"></div></div><div><p class="mn-sub">Выключены</p><div class="mn-chips" data-mon-chips="off"></div></div></div>
+      </section>
+    </div>
+  </template>
+  <script>document.write('<script src="assets/st.js?v=' + Date.now() + '"><\/script>');</script>
+  <script>document.write('<script src="assets/mon.js?v=' + Date.now() + '"><\/script>');</script>
+  <script>document.write('<script src="assets/demo.js?v=' + Date.now() + '"><\/script>');</script>
+</body>
+</html>

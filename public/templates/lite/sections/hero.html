@@ -1,0 +1,11 @@
+<div class="sl-pres-hero">
+  <div class="sl-pres-hero-grid{% if not pic or not photo %} sl-sec-solo{% endif %}">
+    <div class="sl-pres-copy">
+      {% if over %}<div class="sl-pres-eyebrow">{{ over }}</div>{% endif %}
+      <h1><b>{{ title }}</b>{% if accent %} <span>{{ accent }}</span>{% endif %}{% if title2 %}<br><b>{{ title2 }}</b>{% endif %}</h1>
+      {% if text %}<p class="sl-pres-lead sl-sec-lines">{{ text }}</p>{% endif %}
+      {% if btn and href or btn2 and href2 %}<p class="sl-sec-acts">{% if btn and href %}<a class="sl-but" href="{{ href }}"{% if href_ext %} target="_blank" rel="noopener"{% endif %}>{{ btn }}</a>{% endif %}{% if btn2 and href2 %}<a class="sl-but" href="{{ href2 }}"{% if href2_ext %} target="_blank" rel="noopener"{% endif %}>{{ btn2 }}</a>{% endif %}</p>{% endif %}
+    </div>
+    {% if pic and photo %}<figure class="sl-sec-pic sl-sec-hero-pic"><img src="{{ photo }}" alt="{{ alt }}" style="--sl-d-focus: {{ focus }}" loading="lazy" width="2560" height="1440"></figure>{% endif %}
+  </div>
+</div>

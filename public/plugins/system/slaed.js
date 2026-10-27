@@ -3116,6 +3116,17 @@
     document.addEventListener('pointercancel', setPointerOff);
     window.addEventListener('blur', setPointerOff);
 
+    // A section of the layout asks an outside server only after the click on its placeholder: the frame waits in a template, and no consent is stored
+    document.addEventListener('click', function (event) {
+        var but = event.target && event.target.closest ? event.target.closest('[data-sl-sec-load] > button') : null;
+        var tpl = but ? but.parentNode.querySelector(':scope > template') : null;
+        if (!tpl) return;
+        var part = tpl.content.cloneNode(true);
+        var frame = part.querySelector('iframe');
+        but.parentNode.replaceWith(part);
+        if (frame) frame.focus();
+    });
+
     window.addEventListener('resize', refitFloating);
     window.addEventListener('scroll', refitFloating, true);
 

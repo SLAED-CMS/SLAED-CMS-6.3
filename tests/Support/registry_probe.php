@@ -173,6 +173,34 @@ function getProbeReserved(): array {
     return ['ops' => $ops, 'type' => $type, 'names' => $names];
 }
 
+# A page of the layout at the root: a name from its title past a module, an entry, a common operation, a type and a taken path, a move with 301, a form that keeps it
+function getProbePage(): array {
+    global $db;
+    $rte = new Route($db);
+    $rte->addRoute('type', 50, '', 'recipes');
+    $out = [
+        'first' => $rte->addRoute('page', 1, '', 'О компании'),
+        'again' => $rte->addRoute('page', 1, '', 'Other title'),
+        'module' => $rte->addRoute('page', 2, '', 'Forum'),
+        'entry' => $rte->addRoute('page', 3, '', 'Uploads'),
+        'common' => $rte->addRoute('page', 4, '', 'Mode'),
+        'type' => $rte->addRoute('page', 5, '', 'Recipes'),
+        'twin' => $rte->addRoute('page', 6, '', 'О компании'),
+        'empty' => $rte->addRoute('page', 7, '', '!!!'),
+        'moved' => $rte->setRoute('page', 1, '', 'About us'),
+    ];
+    $out['former'] = $rte->getRoute('o-kompanii');
+    $out['kept'] = $rte->setRouteName('page', 1, '', '', 'Any title');
+    $out['named'] = $rte->setRouteName('page', 1, '', 'team', 'Any title');
+    $out['list'] = $rte->getRouteList('page', [1, 2, 99]);
+    $out['typename'] = [$rte->checkTypeName('team'), $rte->checkTypeName('crew')];
+    $out['reserved'] = [$rte->isRouteReserved('', 'forum'), $rte->isRouteReserved('', 'uploads'), $rte->isRouteReserved('', 'newlang'), $rte->isRouteReserved('', 'team')];
+    $out['refuse'] = [$rte->addRoute('page', 8, 'files', 'x'), $rte->addRoute('page', 0, '', 'x')];
+    $rte->deleteRoute('page', 6);
+    $out['gone'] = [$rte->getRoute('o-kompanii-2'), $rte->addRoute('page', 9, '', 'О компании')];
+    return $out;
+}
+
 # The second writer of a race in its own process: it asks for the path the parent holds uncommitted, or moves the entity the parent is moving, and waits on its lock
 function getProbeChild(string $race): array {
     global $db;
@@ -217,7 +245,7 @@ if ($mode === 'race') {
 $report = ['error' => '', 'clean' => false, 'runs' => []];
 try {
     addProbeSchema();
-    $report['runs'] = ['slug' => getProbeSlug(), 'registry' => getProbeRegistry(), 'reserved' => getProbeReserved(), 'race' => getProbeRace('path'),
+    $report['runs'] = ['slug' => getProbeSlug(), 'registry' => getProbeRegistry(), 'reserved' => getProbeReserved(), 'page' => getProbePage(), 'race' => getProbeRace('path'),
         'move' => getProbeRace('move')];
 } catch (Throwable $err) {
     $report['error'] = $err->getMessage().' @ '.basename($err->getFile()).':'.$err->getLine();

@@ -1,0 +1,13 @@
+{
+    "title": "_LAYOUT_HTML",
+    "note": "_LAYOUT_HTML_INFO",
+    "icon": "code-slash",
+    "group": "master",
+    "frame": false,
+    "fields": [
+        {"key": "code", "label": "_CODE", "type": "code"}
+    ],
+    "make": {
+        "code": ""
+    }
+}

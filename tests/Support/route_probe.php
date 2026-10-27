@@ -36,9 +36,11 @@ if (PHP_SAPI !== 'cli') {
 error_reporting(E_ALL);
 ini_set('display_errors', '0');
 $rwork = str_replace('\\', '/', (string)($argv[1] ?? sys_get_temp_dir().'/slaed_node_route'));
-if (in_array($argv[2] ?? '', ['view', 'comments', 'ext', 'syncext', 'integext', 'guardext', 'treeext', 'seoext', 'buildext', 'masterext'], true)) {
+if (in_array($argv[2] ?? '', ['view', 'comments', 'ext', 'syncext', 'integext', 'guardext', 'treeext', 'seoext', 'buildext', 'masterext', 'pageext'], true)) {
     $probework = $rwork.'/child';
-    foreach (['CONFIG_DIR' => 'config', 'BACKUP_DIR' => 'backup', 'CACHE_DIR' => 'cache', 'UPLOADS_DIR' => 'uploads', 'UPDATE_DIR' => 'update'] as $rkey => $rdir) {
+    $rdirs = ['CONFIG_DIR' => 'config', 'BACKUP_DIR' => 'backup', 'CACHE_DIR' => 'cache', 'UPLOADS_DIR' => 'uploads', 'UPDATE_DIR' => 'update', 'LAYOUT_DIR' => 'layout',
+        'SITEMAP_DIR' => 'sitemap'];
+    foreach ($rdirs as $rkey => $rdir) {
         define($rkey, $rwork.'/'.$rdir);
     }
     require_once __DIR__.'/probe_boot.php';
@@ -46,7 +48,7 @@ if (in_array($argv[2] ?? '', ['view', 'comments', 'ext', 'syncext', 'integext', 
     require_once BASE_DIR.'/core/system.php';
     $rchild = ['view' => 'getRouteViewData', 'comments' => 'getRouteCommentData', 'ext' => 'getRouteExtData', 'syncext' => 'getRouteSyncData',
         'integext' => 'getRouteIntegData', 'guardext' => 'getRouteGuardData', 'treeext' => 'getRouteTreeData',
-        'seoext' => 'getRouteSeoData', 'buildext' => 'getRouteBuildData', 'masterext' => 'getRouteMasterData'][$argv[2]];
+        'seoext' => 'getRouteSeoData', 'buildext' => 'getRouteBuildData', 'masterext' => 'getRouteMasterData', 'pageext' => 'getRoutePageData'][$argv[2]];
     echo json_encode($rchild());
     exit;
 }
@@ -3892,6 +3894,112 @@ function getRouteMove(PDO $pdo, string $work): array {
     return $out;
 }
 
+# The layout of the page run: the home page with the slot of the home module, a page 404, pages of sections with and without an address, for users, hidden and with a slot
+function getRoutePageLayout(array $miss): array {
+    $sec = static fn(int $id, string $type, array $over = []): array => array_replace(['id' => $id, 'type' => $type, 'on' => true, 'who' => '0', 'lang' => ''], $over);
+    $page = static fn(string $title, array $over, array $list): array => array_replace(['title' => $title, 'addr' => '', 'desc' => '', 'band' => true, 'side' => '3',
+        'top' => '3', 'og' => '', 'noindex' => false, 'who' => '0'], $over, ['sections' => $list]);
+    return ['layout' => ['v' => 1, 'shipped' => false, 'next' => 60, 'home' => 1, 'notfound' => 2, 'theme' => [], 'menus' => [], 'pages' => [
+        1 => $page('', [], [$sec(30, 'module', ['module' => ''])]),
+        2 => $page('Lost here', ['noindex' => true], $miss),
+        10 => $page('About', ['desc' => 'All about us', 'og' => 'uploads/all/og.png'], [$sec(31, 'hero')]),
+        11 => $page('Members', ['who' => '1'], [$sec(32, 'hero')]),
+        12 => $page('Hidden', ['noindex' => true], [$sec(33, 'hero')]),
+        13 => $page('Docs page', [], [$sec(34, 'module', ['module' => 'docs'])]),
+        14 => $page('Unpublished', [], [$sec(35, 'hero')]),
+    ]]];
+}
+
+# The page run: the layout, the rows of the registry and a draft with a counter of links of 3, a new page, a page of the slot of the home module and a section more on home
+function addRoutePageConf(PDO $pdo, string $work): void {
+    setRouteFile($work.'/config/layout.php', getRoutePageLayout([['id' => 40, 'type' => 'hero', 'on' => true, 'who' => '0']]));
+    $rows = [['about-us', 'page', 10, 1], ['about', 'page', 10, 0], ['members', 'page', 11, 1], ['hidden', 'page', 12, 1], ['gone-page', 'page', 15, 2],
+        ['docs-page', 'page', 13, 1], ['news', 'type', 1, 1], ['docs', 'type', 2, 1]];
+    $st = $pdo->prepare('INSERT INTO '.RPREF.'_routes (path, kind, oid, state) VALUES (?, ?, ?, ?)');
+    foreach ($rows as $row) $st->execute($row);
+    $draft = getRoutePageLayout([])['layout'];
+    $draft['pages'][10]['title'] = 'About draft';
+    $draft['pages'][20] = array_replace($draft['pages'][14], ['title' => 'Fresh']);
+    $draft['pages'][21] = array_replace($draft['pages'][14], ['title' => 'Blank', 'sections' => [['id' => 42, 'type' => 'module', 'on' => true, 'module' => '']]]);
+    $draft['pages'][1]['sections'][] = ['id' => 41, 'type' => 'hero', 'on' => true, 'who' => '0'];
+    file_put_contents($work.'/layout/draft.json', json_encode(['layout' => $draft, 'link' => 3]));
+}
+
+# The child pageext boots the core on the scratch configuration: the links of the draft it signs, and the sitemap with the pages that have an address of their own
+function getRoutePageData(): array {
+    global $conf;
+    $now = time();
+    $tok = [
+        'about' => Layout::getDraftToken(10, $now + 3600, 3), 'fresh' => Layout::getDraftToken(20, $now + 3600, 3), 'home' => Layout::getDraftToken(1, $now + 3600, 3),
+        'docs' => Layout::getDraftToken(13, $now + 3600, 3), 'blank' => Layout::getDraftToken(21, $now + 3600, 3),
+        'expired' => Layout::getDraftToken(10, $now - 60, 3), 'revoked' => Layout::getDraftToken(10, $now + 3600, 2),
+    ];
+    $out = ['tokens' => $tok, 'checks' => [Layout::checkDraftToken(10, $tok['about'], 3), Layout::checkDraftToken(20, $tok['about'], 3),
+        Layout::checkDraftToken(10, $tok['about'], 4), Layout::checkDraftToken(10, $tok['expired'], 3), Layout::checkDraftToken(10, 'x.'.str_repeat('a', 64), 3)]];
+    $keep = [];
+    foreach (array_merge([PUBLIC_DIR.'/sitemap.xml', PUBLIC_DIR.'/robots.txt'], glob(PUBLIC_DIR.'/sitemap-*.xml*') ?: []) as $file) {
+        $keep[$file] = is_file($file) ? [file_get_contents($file), filemtime($file)] : null;
+    }
+    try {
+        $conf['sitemap'] = array_replace($conf['sitemap'], ['gen_m' => '1', 'txt' => '1']);
+        $out['sitemap'] = addSitemapTask(true)['status'];
+        preg_match_all('#<loc>([^<]+)</loc>#', (string)file_get_contents(PUBLIC_DIR.'/sitemap.xml'), $all);
+        $home = $conf['homeurl'].'/';
+        $locs = array_map(static fn(string $v): string => str_replace($home, '', html_entity_decode($v)), $all[1]);
+        $out['locs'] = array_values(array_intersect($locs, ['about-us', 'about', 'members', 'hidden', 'docs-page', 'gone-page', 'page-10', 'page-14']));
+        $txt = (string)file_get_contents(SITEMAP_DIR.'/sitemap.txt');
+        $out['txt'] = [preg_match('#>\s*About\s*</a>#', $txt) === 1, str_contains($txt, 'Hidden'), str_contains($txt, 'Members')];
+    } finally {
+        foreach (glob(PUBLIC_DIR.'/sitemap-*.xml*') ?: [] as $file) if (!isset($keep[$file])) unlink($file);
+        foreach ($keep as $file => $old) {
+            if ($old === null) {
+                if (is_file($file)) unlink($file);
+                continue;
+            }
+            file_put_contents($file, $old[0]);
+            touch($file, $old[1]);
+        }
+    }
+    return $out;
+}
+
+# A page of the layout over real requests, never followed: its address, its former one and its name, the gone one, the audience, the robots, the page 404 and the draft
+function getRoutePage(string $work): array {
+    global $rport;
+    $site = 'http://127.0.0.1:'.$rport;
+    $ask = function (string $path, string $who = '') use ($site): array {
+        $one = getRouteReply($who, 'GET', $path, [], [], false);
+        $body = $one['body'];
+        $meta = static fn(string $attr, string $key): string => preg_match('#<meta\s+'.$attr.'="'.preg_quote($key, '#').'"\s+content="([^"]*)"#s', $body, $hit)
+            ? html_entity_decode($hit[1]) : '';
+        $title = preg_match('#<title>([^<]*)</title>#', $body, $hit) ? html_entity_decode($hit[1]) : '';
+        $canon = preg_match('#<link\s+rel="canonical"[^>]*href="([^"]*)"#s', $body, $hit) ? str_replace($site, '~', html_entity_decode($hit[1])) : '';
+        return ['code' => $one['code'], 'move' => str_replace($site, '~', $one['head']['location'] ?? ''), 'title' => explode(' - ', $title)[0], 'canon' => $canon,
+            'robots' => $meta('name', 'robots'), 'og' => str_replace($site, '~', $meta('property', 'og:image')), 'desc' => $meta('name', 'description'),
+            'draft' => str_contains($body, 'Черновик: страница ещё не опубликована.'), 'dead' => str_contains($body, 'Ссылка для просмотра устарела или неверна.')];
+    };
+    $data = json_decode((string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg(__FILE__).' '.escapeshellarg($work).' pageext 2>&1'), true);
+    if (!is_array($data)) throw new RuntimeException('The child pageext did not answer');
+    $tok = $data['tokens'];
+    $out = ['data' => array_diff_key($data, ['tokens' => 1]), 'pages' => []];
+    foreach (['about-us', 'about', 'index.php?name=page-10', 'index.php?name=page-10&utm=x', 'page-10', 'hidden', 'gone-page', 'docs-page', 'members',
+        'index.php?name=page-1', 'index.php?name=page-2', 'index.php?name=page-13', 'index.php?name=page-14', 'index.php?name=page-99', 'nosuch', 'users?page=50'] as $path) {
+        $out['pages'][$path] = $ask($path);
+    }
+    $out['pages']['members:anna'] = $ask('members', 'anna');
+    $out['draft'] = [
+        'about' => $ask('index.php?name=page-10&draft='.$tok['about']), 'path' => $ask('about-us?draft='.$tok['about']),
+        'fresh' => $ask('index.php?name=page-20&draft='.$tok['fresh']), 'home' => $ask('index.php?name=page-1&draft='.$tok['home']),
+        'docs' => $ask('index.php?name=page-13&draft='.$tok['docs']), 'swap' => $ask('index.php?name=page-20&draft='.$tok['about']),
+        'expired' => $ask('index.php?name=page-10&draft='.$tok['expired']), 'revoked' => $ask('index.php?name=page-10&draft='.$tok['revoked']),
+        'junk' => $ask('index.php?name=page-10&draft=junk'), 'blank' => $ask('index.php?name=page-21&draft='.$tok['blank']),
+    ];
+    setRouteFile($work.'/config/layout.php', getRoutePageLayout([]));
+    if (is_file($work.'/config/local.php')) unlink($work.'/config/local.php');
+    $out['empty'] = $ask('nosuch');
+    return $out;
+}
+
 # The child favhold of the intact run holds the account of anna with one more favorite for two seconds, as a parallel request at the limit does before its commit
 if (($argv[2] ?? '') === 'favhold') {
     $hpdo = getRoutePdo((string)($argv[3] ?? ''));
@@ -3920,7 +4028,7 @@ $rbase = '';
 $rproc = null;
 try {
     deleteRouteTree($rwork);
-    foreach (['config', 'backup', 'cache', 'counter', 'logs', 'sitemap', 'captcha', 'uploads'] as $rdir) mkdir($rwork.'/'.$rdir, 0777, true);
+    foreach (['config', 'backup', 'cache', 'counter', 'logs', 'sitemap', 'captcha', 'uploads', 'layout'] as $rdir) mkdir($rwork.'/'.$rdir, 0777, true);
     [$rpdo, $rbase] = addRouteBase();
     addRouteRows($rpdo);
     $rport = getRoutePort();
@@ -3942,6 +4050,7 @@ try {
     if (($argv[2] ?? '') === 'router') addRouteApiConf($rwork);
     if (($argv[2] ?? '') === 'gate') addRouteGateConf($rpdo, $rwork);
     if (($argv[2] ?? '') === 'master') addRouteMasterConf($rpdo, $rwork);
+    if (($argv[2] ?? '') === 'page') addRoutePageConf($rpdo, $rwork);
     $rproc = addRouteServer($rwork, $rport);
     if (($argv[2] ?? '') === 'serve') {
         fwrite(STDERR, 'serving on '.$rport.' with '.$rbase."\n");
@@ -3990,6 +4099,8 @@ try {
         $report['runs']['jobs'] = json_decode((string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg(__FILE__).' '.escapeshellarg($rwork).' masterext 2>&1'), true);
     } elseif (($argv[2] ?? '') === 'move') {
         $report['runs']['move'] = getRouteMove($rpdo, $rwork);
+    } elseif (($argv[2] ?? '') === 'page') {
+        $report['runs']['page'] = getRoutePage($rwork);
     } elseif (($argv[2] ?? '') === 'time') {
         $report['runs']['time'] = getRouteTime($rpdo, $rwork);
     } elseif (($argv[2] ?? '') === 'null') {

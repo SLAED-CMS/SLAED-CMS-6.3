@@ -1,0 +1,363 @@
+<!doctype html>
+<html lang="ru" data-theme="auto">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Разрезы &middot; Статистика — стенд SLAED CMS</title>
+  <link rel="stylesheet" href="../templates/admin/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../templates/admin/assets/css/base.css">
+  <link rel="stylesheet" href="../templates/admin/assets/css/theme.css">
+  <!-- The stand is served without Cache-Control; its sheets and scripts are stamped so an edit is seen at once -->
+  <script>document.write('<link rel="stylesheet" href="assets/demo.css?v=' + Date.now() + '"><link rel="stylesheet" href="assets/st.css?v=' + Date.now() + '">');</script>
+  <script src="../plugins/system/global-func.js"></script>
+  <script src="../plugins/system/slaed.js"></script>
+  <script src="../templates/admin/assets/js/admin-ui.js"></script>
+  <style>
+    /* Разрезы: one chart and the questions put to it — every figure of the counter is a tile that puts itself on the
+       chart, the period and the month before are switches over it; under it one slice at a time, picked from a column
+       of all eight, drawn as wide bars with the name inside */
+    .v-board {
+      padding: 0;
+      overflow: hidden;
+    }
+
+    .v-tiles {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      border-bottom: 1px solid var(--sl-border);
+    }
+
+    .v-tile {
+      position: relative;
+      display: grid;
+      gap: var(--sl-space-1);
+      padding: var(--sl-space-5) var(--sl-space-6);
+      border: 0;
+      border-right: 1px solid var(--sl-border);
+      background: none;
+      font: inherit;
+      text-align: left;
+      color: var(--sl-text);
+      cursor: pointer;
+      transition: background var(--sl-time-fast) var(--sl-ease-out);
+    }
+
+    .v-tile:last-child {
+      border-right: 0;
+    }
+
+    .v-tile:hover {
+      background: var(--sl-bg-subtle);
+    }
+
+    .v-tile[aria-pressed="true"] {
+      background: var(--sl-tint);
+    }
+
+    .v-tiles {
+      position: relative;
+    }
+
+    .v-tiles-knob {
+      position: absolute;
+      z-index: var(--sl-z-raised);
+      bottom: -1px;
+      height: 3px;
+      border-radius: var(--sl-radius-pill);
+      background: var(--sl-primary);
+      box-shadow: 0 0 var(--sl-space-5) var(--sl-primary);
+      pointer-events: none;
+    }
+
+    .v-tile b {
+      transition: color var(--sl-time-base) var(--sl-ease-out), transform var(--sl-time-slow) var(--st-spring);
+      transform-origin: left;
+    }
+
+    .v-tile[aria-pressed="true"] b {
+      color: var(--st-tone);
+      transform: scale(1.08);
+    }
+
+    .v-tile > span:first-child {
+      font-size: var(--sl-font-micro);
+      text-transform: uppercase;
+      letter-spacing: var(--sl-track-wide);
+      color: var(--sl-text-muted);
+    }
+
+    .v-tile b {
+      font-size: var(--sl-font-h2);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .v-plot {
+      padding: var(--sl-space-6);
+    }
+
+    .v-tools {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: var(--sl-space-4);
+      margin-bottom: var(--sl-space-4);
+    }
+
+    .v-tools h2 {
+      margin: 0 auto 0 0;
+      font-size: var(--sl-font-h4);
+    }
+
+    .v-tools h2 span {
+      color: var(--sl-text-muted);
+      font-weight: var(--sl-weight-normal);
+    }
+
+    .v-plot [data-st-chart] {
+      --st-h: 280px;
+    }
+
+    .v-slice {
+      display: grid;
+      grid-template-columns: 220px minmax(0, 1fr);
+      padding: 0;
+      overflow: hidden;
+    }
+
+    .v-dims {
+      display: grid;
+      align-content: start;
+      padding: var(--sl-space-3);
+      border-right: 1px solid var(--sl-border);
+      background: var(--sl-surface);
+    }
+
+    .v-dim {
+      display: flex;
+      align-items: center;
+      gap: var(--sl-space-4);
+      padding: var(--sl-space-4) var(--sl-space-5);
+      border: 0;
+      border-radius: var(--sl-radius-2);
+      background: none;
+      font: inherit;
+      text-align: left;
+      color: var(--sl-text-muted);
+      cursor: pointer;
+    }
+
+    .v-dim:hover {
+      color: var(--sl-text);
+    }
+
+    .v-dim[aria-selected="true"] {
+      background: var(--sl-bg);
+      box-shadow: var(--sl-shadow-xs);
+      color: var(--sl-primary);
+      font-weight: var(--sl-weight-semibold);
+    }
+
+    .v-panes {
+      padding: var(--sl-space-6);
+    }
+
+    .v-rows {
+      display: grid;
+      gap: var(--sl-space-2);
+    }
+
+    .v-row {
+      position: relative;
+      isolation: isolate;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 90px 60px;
+      align-items: center;
+      gap: var(--sl-space-4);
+      min-height: 34px;
+      padding: 0 var(--sl-space-5);
+    }
+
+    .v-row::before {
+      content: "";
+      position: absolute;
+      z-index: -1;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: var(--sl-d-rel);
+      border-radius: var(--sl-radius-1);
+      background: var(--sl-primary-subtle);
+      transform-origin: left;
+    }
+
+    .v-row:hover::before {
+      background: var(--sl-tint-strong);
+    }
+
+    .v-row b,
+    .v-row span:last-child {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .v-row span:last-child {
+      color: var(--sl-text-muted);
+    }
+
+    .v-head-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 90px 60px;
+      gap: var(--sl-space-4);
+      padding: 0 var(--sl-space-5) var(--sl-space-3);
+      font-size: var(--sl-font-micro);
+      text-transform: uppercase;
+      color: var(--sl-text-subtle);
+    }
+
+    .v-head-row span:not(:first-child) {
+      text-align: right;
+    }
+
+    .v-hours {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: var(--sl-space-6);
+    }
+
+    .v-hours > .sl-box {
+      margin: 0;
+    }
+
+    .v-hours h3 {
+      margin: 0 0 var(--sl-space-3);
+      font-size: var(--sl-font-h4);
+    }
+
+    .v-hours [data-st-chart] {
+      --st-h: 140px;
+    }
+
+    .v-data summary {
+      cursor: pointer;
+      font-weight: var(--sl-weight-semibold);
+    }
+
+    .v-data[open] summary {
+      margin-bottom: var(--sl-space-5);
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+      :root.st-fx:not([data-demo-motion="off"]) .v-row::before {
+        animation: st-unroll 0.8s var(--st-spring) both;
+        animation-delay: calc(var(--sl-d-i) * 55ms);
+      }
+
+      :root.st-fx:not([data-demo-motion="off"]) .v-row {
+        animation: st-fade-up 0.45s var(--sl-ease-out) both;
+        animation-delay: calc(var(--sl-d-i) * 55ms);
+      }
+
+      :root.st-fx:not([data-demo-motion="off"]) .v-row b {
+        transition: transform var(--sl-time-base) var(--st-spring);
+      }
+
+      :root.st-fx:not([data-demo-motion="off"]) .v-row:hover b {
+        transform: scale(1.12);
+      }
+
+      :root.st-fx:not([data-demo-motion="off"]) .v-dim .bi {
+        transition: transform var(--sl-time-slow) var(--st-spring);
+      }
+
+      :root.st-fx:not([data-demo-motion="off"]) .v-dim[aria-selected="true"] .bi {
+        transform: scale(1.3) rotate(-8deg);
+      }
+
+      :root.st-fx:not([data-demo-motion="off"]) .v-tile[aria-pressed="true"] [data-st-delta] {
+        animation: st-fade-up 0.4s var(--sl-ease-out);
+      }
+    }
+
+    @media (max-width: 860px) {
+      .v-slice {
+        grid-template-columns: minmax(0, 1fr);
+      }
+
+      .v-dims {
+        grid-auto-flow: column;
+        overflow-x: auto;
+        border-right: 0;
+        border-bottom: 1px solid var(--sl-border);
+      }
+    }
+  </style>
+</head>
+<body>
+  <template data-st-face>
+    <section class="sl-box v-board">
+      <div class="v-tiles" role="group" aria-label="Что показать на графике" data-sl-knob="st-metric"><span class="v-tiles-knob" data-sl-knob-mark></span>
+        <button type="button" class="v-tile st-s-u" data-st-metric="u"><span>Уникальные</span><b data-st-t="u"></b><span data-st-delta="u"></span></button>
+        <button type="button" class="v-tile st-s-h" data-st-metric="h"><span>Входы</span><b data-st-t="h"></b><span data-st-delta="h"></span></button>
+        <button type="button" class="v-tile st-s-home" data-st-metric="home"><span>Главная</span><b data-st-t="home"></b><span data-st-delta="home"></span></button>
+        <button type="button" class="v-tile st-s-ref" data-st-metric="ref"><span>Переходы</span><b data-st-t="ref"></b><span data-st-delta="ref"></span></button>
+        <button type="button" class="v-tile st-s-bot" data-st-metric="bot"><span>Краулеры</span><b data-st-t="bot"></b><span data-st-delta="bot"></span></button>
+        <button type="button" class="v-tile st-s-aud" data-st-metric="aud"><span>Аудитория</span><b data-st-t="aud"></b><span data-st-delta="aud"></span></button>
+        <button type="button" class="v-tile st-s-usr" data-st-metric="usr"><span>Пользователи</span><b data-st-t="usr"></b><span data-st-delta="usr"></span></button>
+        <button type="button" class="v-tile st-s-gen" data-st-metric="gen"><span>Генерация, мс</span><b data-st-t="gen"></b><span data-st-delta="gen"></span></button>
+      </div>
+      <div class="v-plot">
+        <div class="v-tools">
+          <h2><span data-st-t="month"></span> <span class="st-live" data-st-if="run">в эфире</span></h2>
+          <button type="button" class="sl-but" data-st-go="prev" title="Месяц раньше" aria-label="Месяц раньше"><i class="bi bi-chevron-left" aria-hidden="true"></i></button>
+          <button type="button" class="sl-but" data-st-go="next" title="Месяц позже" aria-label="Месяц позже"><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
+          <span class="sl-seg" role="group" aria-label="Сколько дней" data-sl-knob="st-range"><span class="sl-seg-knob" data-sl-knob-mark></span>
+            <button type="button" class="sl-seg-cell" data-st-range="7">7 дней</button>
+            <button type="button" class="sl-seg-cell" data-st-range="14">14 дней</button>
+            <button type="button" class="sl-seg-cell" data-st-range="all">Месяц</button>
+          </span>
+          <button type="button" class="sl-but" data-st-cmp><i class="bi bi-intersect" aria-hidden="true"></i> Прошлый месяц</button>
+        </div>
+        <div data-st-chart="@" data-st-kind="area" data-st-cmp-on></div>
+      </div>
+    </section>
+
+    <section class="sl-box v-slice" data-demo-tabs>
+      <div class="v-dims" role="tablist" aria-orientation="vertical" aria-label="Разрез">
+        <button type="button" class="v-dim" role="tab" aria-selected="true" data-demo-tab="refcat"><i class="bi bi-signpost-split" aria-hidden="true"></i>Источники</button>
+        <button type="button" class="v-dim" role="tab" aria-selected="false" data-demo-tab="countries"><i class="bi bi-globe2" aria-hidden="true"></i>Страны</button>
+        <button type="button" class="v-dim" role="tab" aria-selected="false" data-demo-tab="browsers"><i class="bi bi-browser-chrome" aria-hidden="true"></i>Браузеры</button>
+        <button type="button" class="v-dim" role="tab" aria-selected="false" data-demo-tab="os"><i class="bi bi-windows" aria-hidden="true"></i>Системы</button>
+        <button type="button" class="v-dim" role="tab" aria-selected="false" data-demo-tab="devices"><i class="bi bi-laptop" aria-hidden="true"></i>Устройства</button>
+        <button type="button" class="v-dim" role="tab" aria-selected="false" data-demo-tab="newret"><i class="bi bi-arrow-repeat" aria-hidden="true"></i>Новые и вернувшиеся</button>
+        <button type="button" class="v-dim" role="tab" aria-selected="false" data-demo-tab="depth"><i class="bi bi-layers" aria-hidden="true"></i>Глубина</button>
+        <button type="button" class="v-dim" role="tab" aria-selected="false" data-demo-tab="duration"><i class="bi bi-hourglass-split" aria-hidden="true"></i>Длительность</button>
+      </div>
+      <div class="v-panes">
+        <div class="v-head-row"><span>Значение</span><span>Число</span><span>Доля</span></div>
+        <div class="v-rows" data-demo-panel="refcat" data-st-bars="refcat"><template><div class="v-row"><span data-st-f="name"></span><b data-st-f="num"></b><span data-st-f="pct"></span></div></template></div>
+        <div class="v-rows" data-demo-panel="countries" data-st-bars="countries" hidden><template><div class="v-row"><span><span data-st-f="flag"></span><span data-st-f="name"></span></span><b data-st-f="num"></b><span data-st-f="pct"></span></div></template></div>
+        <div class="v-rows" data-demo-panel="browsers" data-st-bars="browsers" hidden><template><div class="v-row"><span data-st-f="name"></span><b data-st-f="num"></b><span data-st-f="pct"></span></div></template></div>
+        <div class="v-rows" data-demo-panel="os" data-st-bars="os" hidden><template><div class="v-row"><span data-st-f="name"></span><b data-st-f="num"></b><span data-st-f="pct"></span></div></template></div>
+        <div class="v-rows" data-demo-panel="devices" data-st-bars="devices" hidden><template><div class="v-row"><span data-st-f="name"></span><b data-st-f="num"></b><span data-st-f="pct"></span></div></template></div>
+        <div class="v-rows" data-demo-panel="newret" data-st-bars="newret" hidden><template><div class="v-row"><span data-st-f="name"></span><b data-st-f="num"></b><span data-st-f="pct"></span></div></template></div>
+        <div class="v-rows" data-demo-panel="depth" data-st-bars="depth" hidden><template><div class="v-row"><span data-st-f="name"></span><b data-st-f="num"></b><span data-st-f="pct"></span></div></template></div>
+        <div class="v-rows" data-demo-panel="duration" data-st-bars="duration" hidden><template><div class="v-row"><span data-st-f="name"></span><b data-st-f="num"></b><span data-st-f="pct"></span></div></template></div>
+      </div>
+    </section>
+
+    <div class="v-hours" data-st-rise>
+      <section class="sl-box"><h3>Входы по часам</h3><div data-st-chart="hits" data-st-x="hours"></div></section>
+      <section class="sl-box"><h3>Генерация по часам, мс</h3><div data-st-chart="gen" data-st-x="hours" data-st-kind="area" data-st-if="load"></div><p data-st-if="noload">В этом месяце счётчик ещё не писал нагрузку.</p></section>
+    </div>
+
+    <section class="sl-box">
+      <details class="v-data">
+        <summary>Данные по дням</summary>
+        <div data-st-table></div>
+      </details>
+    </section>
+  </template>
+  <script>document.write('<script src="assets/st.js?v=' + Date.now() + '"><\/script>');</script>
+  <script>document.write('<script src="assets/demo.js?v=' + Date.now() + '"><\/script>');</script>
+</body>
+</html>

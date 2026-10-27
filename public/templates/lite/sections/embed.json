@@ -1,0 +1,25 @@
+{
+    "title": "_LAYOUT_EMBED",
+    "note": "_LAYOUT_EMB_INFO",
+    "icon": "window-stack",
+    "group": "master",
+    "frame": true,
+    "fields": [
+        {"key": "title", "label": "_TITLE", "type": "text"},
+        {"key": "lead", "label": "_LAYOUT_LEAD", "type": "text"},
+        {"key": "icon", "label": "_ICON", "type": "icon", "tab": "look"},
+        {"key": "url", "label": "_URL", "type": "page"},
+        {"key": "height", "label": "_HEIGHT", "type": "int", "show": "range", "min": 200, "max": 900, "tab": "look"},
+        {"key": "photo", "label": "_LAYOUT_COVER", "type": "file", "tab": "look"},
+        {"key": "focus", "label": "_LAYOUT_FOCUS", "type": "focus", "tab": "look"}
+    ],
+    "make": {
+        "title": "_LAYOUT_EMBED",
+        "lead": "",
+        "icon": "window-stack",
+        "url": "",
+        "height": 420,
+        "photo": "",
+        "focus": "center"
+    }
+}

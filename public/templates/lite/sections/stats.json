@@ -1,0 +1,35 @@
+{
+    "title": "_LAYOUT_STATS",
+    "note": "_LAYOUT_STAT_INFO",
+    "icon": "123",
+    "group": "trust",
+    "frame": true,
+    "fields": [
+        {"key": "title", "label": "_TITLE", "type": "text"},
+        {"key": "lead", "label": "_LAYOUT_LEAD", "type": "text"},
+        {"key": "icon", "label": "_ICON", "type": "icon", "tab": "look"},
+        {"key": "tone", "label": "_LAYOUT_TINT", "type": "tone", "tab": "look"}
+    ],
+    "items": {
+        "label": "_LAYOUT_NUMS",
+        "max": 6,
+        "name": "value",
+        "fields": [
+            {"key": "value", "label": "_LAYOUT_NUM", "type": "text"},
+            {"key": "unit", "label": "_LAYOUT_UNIT", "type": "text"},
+            {"key": "label", "label": "_LAYOUT_CAPTION", "type": "text"}
+        ],
+        "make": {"value": "100", "unit": "", "label": "_LAYOUT_CAPTION"}
+    },
+    "make": {
+        "title": "_LAYOUT_STATS_TTL",
+        "lead": "",
+        "icon": "bar-chart",
+        "tone": "",
+        "items": [
+            {"value": "10", "unit": "", "label": "_LAYOUT_CAPTION"},
+            {"value": "500", "unit": "", "label": "_LAYOUT_CAPTION"},
+            {"value": "24/7", "unit": "", "label": "_LAYOUT_CAPTION"}
+        ]
+    }
+}

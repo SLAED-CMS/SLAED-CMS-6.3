@@ -1,0 +1,1106 @@
+/* Statistic series: the parts every face shares (st-*). Colours are tokens of the admin theme only; a value written from
+   the script carries --sl-d-*. A face dresses these parts in its own <style> under v-* */
+
+/* The tone of a metric and of the n-th part of a dimension; the parts reuse the categorical tones of the poll meter */
+.st-s-u, .st-s-mem, .st-s-hits { --st-tone: var(--sl-primary); }
+.st-s-h, .st-s-sql { --st-tone: var(--sl-accent); }
+.st-s-home, .st-s-aud { --st-tone: var(--sl-success); }
+.st-s-ref, .st-s-gen { --st-tone: var(--sl-warning); }
+.st-s-bot { --st-tone: var(--sl-text-subtle); }
+.st-s-usr { --st-tone: var(--sl-danger); }
+.st-k-1 { --st-k: var(--sl-progress-1); }
+.st-k-2 { --st-k: var(--sl-progress-2); }
+.st-k-3 { --st-k: var(--sl-progress-3); }
+.st-k-4 { --st-k: var(--sl-progress-4); }
+.st-k-5 { --st-k: var(--sl-progress-5); }
+
+.st-root {
+  display: grid;
+  gap: var(--sl-space-6);
+  margin-bottom: var(--sl-space-6);
+  min-width: 0;
+}
+
+.st-root > .sl-box {
+  margin: 0;
+}
+
+.st-card {
+  position: relative;
+}
+
+.st-root [hidden] {
+  display: none !important;
+}
+
+/* The chart: grid lines with their values at the left, columns on a grid of n, a line in an SVG over the same box */
+.st-plot {
+  position: relative;
+  height: var(--st-h, 220px);
+  margin: var(--sl-space-3) 0 var(--sl-space-8) var(--st-axis, 44px);
+}
+
+.st-grid-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(var(--sl-d-y) * 100%);
+  border-top: 1px dashed var(--sl-border);
+}
+
+.st-grid-line:last-child {
+  border-top-style: solid;
+  border-color: var(--sl-border-strong);
+}
+
+.st-grid-line i {
+  position: absolute;
+  right: calc(100% + var(--sl-space-3));
+  top: 0;
+  transform: translateY(-50%);
+  font-family: var(--sl-face-mono);
+  font-size: var(--sl-font-micro);
+  font-style: normal;
+  color: var(--sl-text-subtle);
+  white-space: nowrap;
+}
+
+.st-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.st-svg linearGradient {
+  color: var(--st-tone);
+}
+
+.st-line {
+  fill: none;
+  stroke: var(--st-tone);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.st-line-cmp {
+  stroke-dasharray: 5 5;
+  opacity: var(--sl-fade-muted);
+}
+
+.st-area {
+  stroke: none;
+}
+
+.st-cols {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: repeat(var(--sl-d-n), minmax(0, 1fr));
+}
+
+.st-col {
+  position: relative;
+  min-width: 0;
+}
+
+.st-bar {
+  position: absolute;
+  left: 14%;
+  right: 14%;
+  bottom: 0;
+  height: calc(var(--sl-d-v) * 100%);
+  border-radius: var(--sl-radius-1) var(--sl-radius-1) 0 0;
+  background: var(--st-tone);
+  transform-origin: bottom;
+  transition: opacity var(--sl-time-fast) var(--sl-ease-out);
+}
+
+.st-col em {
+  position: absolute;
+  top: calc(100% + var(--sl-space-2));
+  left: 0;
+  right: 0;
+  font-family: var(--sl-face-mono);
+  font-size: var(--sl-font-micro);
+  font-style: normal;
+  text-align: center;
+  color: var(--sl-text-subtle);
+}
+
+.st-col-end em {
+  color: var(--sl-danger);
+}
+
+.st-col-skip {
+  visibility: hidden;
+}
+
+.st-cols:hover .st-col:not(.st-is-on) .st-bar {
+  opacity: var(--sl-fade-muted);
+}
+
+.st-col.st-is-on::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: var(--sl-radius-1);
+  background: var(--sl-tint);
+}
+
+.st-col.st-is-on em,
+.st-col.st-is-pick em {
+  visibility: visible;
+  font-weight: var(--sl-weight-bold);
+  color: var(--sl-text);
+}
+
+.st-col.st-is-pick .st-bar {
+  box-shadow: var(--sl-shadow-focus);
+}
+
+.st-cols-pick .st-col {
+  cursor: pointer;
+}
+
+/* Every tip is a float of the system: the part carries .sl-float, its .sl-float-panel is opened and placed by slaed.js */
+/* The panel of a part only tells: it takes no hand, so the parts it lies over stay under the pointer */
+.st-float.sl-float-panel {
+  gap: var(--sl-space-2);
+  min-width: 190px;
+  font-size: var(--sl-font-small);
+  pointer-events: none;
+}
+
+.sl-float:hover > .st-float,
+.sl-float.sl-is-open > .st-float {
+  display: grid;
+}
+
+.st-float .sl-bell-cap {
+  margin-bottom: var(--sl-space-1);
+}
+
+.st-tip-row {
+  display: grid;
+  grid-template-columns: var(--sl-space-3) 1fr auto;
+  align-items: center;
+  gap: var(--sl-space-3);
+  color: var(--sl-text);
+}
+
+.st-tip-row .sl-bell-num {
+  padding-left: var(--sl-space-5);
+}
+
+/* The one line of the plugin stays out of sight: the zones over its points carry the panels */
+.sl-pres-tip {
+  display: none !important;
+}
+
+.st-zones {
+  position: absolute;
+  inset: 0;
+  z-index: var(--sl-z-raised);
+}
+
+.st-zone {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+}
+
+.st-dot {
+  width: var(--sl-space-3);
+  height: var(--sl-space-3);
+  border-radius: var(--sl-radius-circle);
+  background: var(--st-tone);
+}
+
+.st-k-1.st-dot,
+.st-k-2.st-dot,
+.st-k-3.st-dot,
+.st-k-4.st-dot,
+.st-k-5.st-dot {
+  background: var(--st-k);
+}
+
+.st-tip-cmp .st-dot {
+  background: none;
+  border: 1px dashed var(--st-tone);
+}
+
+/* A sparkline fills its box; the box gives the size */
+[data-st-spark] svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+[data-st-spark] polyline {
+  fill: none;
+  stroke: var(--st-tone);
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+/* The change against the month before: the tone says the direction, never the verdict */
+[data-st-delta] {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sl-space-1);
+  font-size: var(--sl-font-micro);
+  font-weight: var(--sl-weight-semibold);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+[data-st-delta][data-dir="up"] { color: var(--sl-success-strong); }
+[data-st-delta][data-dir="down"] { color: var(--sl-danger-strong); }
+[data-st-delta][data-dir="flat"],
+[data-st-delta][data-dir="none"] { color: var(--sl-text-subtle); }
+
+/* One bar split into its parts, and its legend */
+.st-stack-bar {
+  display: flex;
+  height: var(--st-stack, 10px);
+  overflow: hidden;
+  border-radius: var(--sl-radius-pill);
+  background: var(--sl-bg-subtle);
+}
+
+/* A part is a float of the system, so its colour is a layer of its own: the motion moves the layer and never the part */
+.st-stack-part {
+  position: relative;
+  flex: 0 0 var(--sl-d-pct);
+}
+
+.st-stack-part::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--st-k);
+  transform-origin: left;
+}
+
+.st-stack-part + .st-stack-part {
+  border-left: 2px solid var(--sl-bg);
+}
+
+.st-stack-keys {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sl-space-2) var(--sl-space-6);
+  margin-top: var(--sl-space-3);
+  font-size: var(--sl-font-small);
+  color: var(--sl-text-muted);
+}
+
+.st-stack-key {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sl-space-2);
+}
+
+.st-stack-key i {
+  width: var(--sl-space-4);
+  height: var(--sl-space-4);
+  border-radius: var(--sl-radius-1);
+  background: var(--st-k);
+}
+
+.st-stack-key b {
+  color: var(--sl-text);
+  font-variant-numeric: tabular-nums;
+}
+
+/* The flag of a country before its name, as the geo column of the panel draws it */
+[data-st-bars] img {
+  width: 18px;
+  height: auto;
+  margin-right: var(--sl-space-3);
+  vertical-align: -2px;
+  border-radius: 2px;
+}
+
+/* The table of days: the theme table, a thin bar under each number, weekends and the running day marked */
+.st-table td,
+.st-table th {
+  position: relative;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.st-table :is(td, th):first-child {
+  text-align: left;
+}
+
+.st-table .st-th-date {
+  width: 150px;
+}
+
+.st-cell-bar {
+  position: absolute;
+  left: var(--sl-space-3);
+  bottom: var(--sl-space-2);
+  width: calc((100% - 2 * var(--sl-space-3)) * var(--st-bar-w, 1));
+  height: 3px;
+  border-radius: var(--sl-radius-pill);
+  background: linear-gradient(to right, var(--st-tone) var(--sl-d-pct), var(--sl-bg-subtle) var(--sl-d-pct));
+}
+
+.st-td-top .st-cell-num {
+  font-weight: var(--sl-weight-bold);
+  color: var(--sl-text-strong);
+}
+
+.st-date-wd {
+  margin-left: var(--sl-space-3);
+  font-size: var(--sl-font-micro);
+  color: var(--sl-text-subtle);
+}
+
+.st-tr-end .st-date-wd {
+  color: var(--sl-danger);
+}
+
+.st-run-chip {
+  margin-left: var(--sl-space-3);
+}
+
+.st-tr-total td {
+  font-weight: var(--sl-weight-bold);
+}
+
+tr.st-is-pick > td {
+  background: var(--sl-tint);
+}
+
+tr[data-st-day] {
+  cursor: pointer;
+}
+
+/* The month as a calendar: the heat is the brand colour under the cell, its opacity the value of the day */
+[data-st-cal] {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: var(--sl-space-3);
+}
+
+.st-cal-wd {
+  padding-bottom: var(--sl-space-2);
+  font-family: var(--sl-face-mono);
+  font-size: var(--sl-font-micro);
+  text-transform: uppercase;
+  text-align: center;
+  color: var(--sl-text-muted);
+}
+
+.st-cal-end {
+  color: var(--sl-danger);
+}
+
+.st-cal-day {
+  --sl-d-i: 0;
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  align-content: space-between;
+  min-height: 78px;
+  padding: var(--sl-space-3) var(--sl-space-4);
+  overflow: hidden;
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-2);
+  background: var(--sl-surface);
+  font: inherit;
+  text-align: left;
+  color: var(--sl-text);
+  cursor: pointer;
+  transition: border-color var(--sl-time-fast) var(--sl-ease-out), transform var(--sl-time-fast) var(--sl-ease-out);
+}
+
+.st-cal-day::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  background: var(--sl-primary);
+  opacity: calc(var(--sl-d-heat, 0) * var(--st-heat, 0.42));
+}
+
+button.st-cal-day:hover {
+  border-color: var(--sl-primary);
+}
+
+.st-cal-day.st-is-pick {
+  border-color: var(--sl-primary);
+  box-shadow: var(--sl-shadow-focus);
+}
+
+.st-cal-future {
+  border-style: dashed;
+  background: none;
+  color: var(--sl-text-subtle);
+  cursor: default;
+}
+
+.st-cal-n {
+  font-size: var(--sl-font-micro);
+  color: var(--sl-text-muted);
+}
+
+.st-cal-v {
+  font-size: var(--sl-font-h3);
+  font-variant-numeric: tabular-nums;
+}
+
+.st-cal-sub {
+  font-size: var(--sl-font-micro);
+  color: var(--sl-text-muted);
+}
+
+.st-cal-meter {
+  height: 3px;
+  margin-top: var(--sl-space-2);
+  border-radius: var(--sl-radius-pill);
+  background: linear-gradient(to right, var(--sl-accent) var(--sl-d-pct), transparent var(--sl-d-pct));
+}
+
+.st-cal-run .st-cal-n::after {
+  content: " · идёт";
+  color: var(--sl-success-strong);
+}
+
+/* Weekdays by hours: the same heat on a grid of 7 by 24 */
+[data-st-week] {
+  display: grid;
+  grid-template-columns: 28px repeat(24, minmax(0, 1fr));
+  gap: 3px;
+}
+
+.st-week-h,
+.st-week-wd {
+  font-family: var(--sl-face-mono);
+  font-size: var(--sl-font-micro);
+  color: var(--sl-text-subtle);
+}
+
+.st-week-wd {
+  align-self: center;
+}
+
+.st-week-cell {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 3px;
+  background: var(--sl-bg-subtle);
+}
+
+/* The heat is the first layer of the cell, with no stacking of its own, so the panel of the cell lies over its neighbours */
+.st-week-cell::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--sl-primary);
+  opacity: var(--sl-d-heat);
+}
+
+/* The day as a dial */
+[data-st-clock] svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.st-clock-ring {
+  fill: none;
+  stroke: var(--sl-border);
+  stroke-dasharray: 2 3;
+}
+
+.st-clock-spoke {
+  transform-box: view-box;
+  transform-origin: 100px 100px;
+  stroke: var(--sl-primary-muted);
+  stroke-width: 6;
+  stroke-linecap: round;
+}
+
+.st-clock-spoke.st-is-on,
+.st-clock-spoke.st-is-hand {
+  stroke: var(--sl-primary);
+}
+
+.st-clock-spoke.st-is-hand {
+  stroke-width: 9;
+}
+
+/* The running day: the hour that runs, the hours to come; a dial redrawn by the tick stands still */
+.st-clock-spoke.st-is-later {
+  opacity: var(--sl-fade-disabled);
+  stroke-dasharray: 1 3;
+}
+
+.st-still * {
+  animation: none !important;
+}
+
+.st-clock-gen {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.st-clock-gen {
+  fill: var(--sl-warning);
+}
+
+.st-clock-h {
+  font-family: var(--sl-face-mono);
+  font-size: 8px;
+  text-anchor: middle;
+  fill: var(--sl-text-subtle);
+}
+
+/* Every month of the archive as one strip: a bar a month, a dashed slot where the file is missing */
+[data-st-archive] {
+  display: flex;
+  align-items: flex-end;
+  gap: 1px;
+  height: var(--st-arc-h, 72px);
+  padding-bottom: var(--sl-space-7);
+}
+
+.st-arc-m {
+  position: relative;
+  flex: 1 1 0;
+  align-self: stretch;
+  min-width: 2px;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+
+.st-arc-m i {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: calc(var(--sl-d-v, 0.08) * 100%);
+  border-radius: 1px 1px 0 0;
+  background: var(--sl-primary-muted);
+  transition: background var(--sl-time-fast) var(--sl-ease-out);
+}
+
+.st-arc-m:hover i {
+  background: var(--sl-primary-strong);
+}
+
+.st-arc-m.st-is-pick i {
+  background: var(--sl-primary);
+  box-shadow: 0 0 0 2px var(--sl-bg), 0 0 0 4px var(--sl-primary);
+}
+
+.st-arc-run i {
+  background: var(--sl-success);
+}
+
+.st-arc-gap {
+  cursor: default;
+}
+
+.st-arc-gap i {
+  height: 30%;
+  border: 1px dashed var(--sl-danger);
+  background: none;
+}
+
+.st-arc-year {
+  position: absolute;
+  top: calc(100% + var(--sl-space-2));
+  left: 0;
+  font-family: var(--sl-face-mono);
+  font-size: var(--sl-font-micro);
+  color: var(--sl-text-subtle);
+  pointer-events: none;
+}
+
+.st-arc-m:has(.st-arc-year)::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 100%;
+  height: var(--sl-space-2);
+  border-left: 1px solid var(--sl-border-strong);
+}
+
+/* The rhythm chart of the presentation page in the tokens of the panel: plugins/presentation/presentation.js draws the
+   canvas and reads --sl-primary, --sl-accent and --sl-pres-good-text for its three series; this dresses its markup */
+.sl-pres-chart {
+  --sl-pres-good-text: var(--sl-success-strong);
+  min-width: 0;
+}
+
+.sl-pres-chart-meta,
+.sl-pres-chart-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sl-space-5);
+}
+
+.sl-pres-chart-meta strong {
+  font-size: var(--sl-font-hero);
+  line-height: var(--sl-line-tight);
+  letter-spacing: var(--sl-track-tight);
+  color: var(--sl-text-strong);
+}
+
+.sl-pres-chart-meta span {
+  display: block;
+  margin-top: var(--sl-space-3);
+  font-size: var(--sl-font-small);
+  color: var(--sl-text-muted);
+}
+
+.sl-pres-chart-meta b {
+  margin-left: var(--sl-space-3);
+  color: var(--sl-pres-good-text);
+}
+
+.sl-pres-plot {
+  position: relative;
+  height: var(--st-h, 240px);
+  margin-top: var(--sl-space-6);
+}
+
+.sl-pres-plot canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.sl-pres-tip {
+  position: absolute;
+  top: 0;
+  left: 0;
+  padding: var(--sl-space-2) var(--sl-space-4);
+  border: 1px solid var(--sl-border-strong);
+  border-radius: var(--sl-radius-1);
+  background: var(--sl-bg);
+  box-shadow: var(--sl-shadow-float);
+  font-size: var(--sl-font-small);
+  white-space: nowrap;
+  color: var(--sl-text);
+  opacity: 0;
+  transition: opacity var(--sl-time-fast) var(--sl-ease-out);
+  pointer-events: none;
+}
+
+.sl-pres-plot:hover .sl-pres-tip:not([hidden]) {
+  opacity: 1;
+}
+
+.sl-pres-chart-foot {
+  margin-top: var(--sl-space-5);
+  padding-top: var(--sl-space-5);
+  border-top: 1px solid var(--sl-border);
+}
+
+.sl-pres-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sl-space-6);
+  font-size: var(--sl-font-small);
+  color: var(--sl-text-muted);
+}
+
+.sl-pres-legend > span {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sl-space-3);
+}
+
+.sl-pres-legend i {
+  width: var(--sl-space-3);
+  height: var(--sl-space-3);
+  border-radius: var(--sl-radius-circle);
+  background: var(--sl-primary);
+}
+
+.sl-pres-legend > span:nth-child(2) i {
+  background: var(--sl-accent);
+}
+
+.sl-pres-legend > span:nth-child(3) i {
+  background: var(--sl-pres-good-text);
+}
+
+.sl-pres-segment {
+  display: inline-flex;
+  gap: var(--sl-space-1);
+  padding: var(--sl-space-2);
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-2);
+  background: var(--sl-bg-subtle);
+}
+
+.sl-pres-segment button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sl-space-2);
+  padding: var(--sl-space-3) var(--sl-space-5);
+  border: 0;
+  border-radius: var(--sl-radius-1);
+  background: transparent;
+  font: inherit;
+  font-size: var(--sl-font-small);
+  color: var(--sl-text-muted);
+  cursor: pointer;
+}
+
+.sl-pres-segment button[aria-pressed="true"] {
+  background: var(--sl-bg);
+  box-shadow: var(--sl-shadow-xs);
+  color: var(--sl-primary);
+}
+
+/* Under the hand: a guide through the column, a dot on every line at it, the tip gliding to it */
+.st-col.st-is-on::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  border-left: 1px dashed var(--sl-border-strong);
+}
+
+.st-col.st-is-on .st-bar {
+  box-shadow: 0 0 var(--sl-space-5) var(--st-tone);
+}
+
+.st-marks {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.st-mark {
+  position: absolute;
+  left: calc(var(--sl-d-x) * 100%);
+  bottom: calc(var(--sl-d-y) * 100%);
+  width: 10px;
+  height: 10px;
+  margin: 0 0 -5px -5px;
+  border: 2px solid var(--sl-bg);
+  border-radius: var(--sl-radius-circle);
+  background: var(--st-tone);
+  box-shadow: 0 0 0 3px var(--sl-tint-strong);
+}
+
+.st-mark-cmp {
+  border-color: var(--st-tone);
+  background: var(--sl-bg);
+}
+
+/* The day still running: a quiet bar in a dashed frame, it breathes while the counter writes it */
+.st-col-run .st-bar {
+  opacity: var(--sl-fade-muted);
+  outline: 1px dashed var(--st-tone);
+  outline-offset: 2px;
+}
+
+.st-live {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sl-space-3);
+  font-size: var(--sl-font-micro);
+  font-weight: var(--sl-weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: var(--sl-track-wide);
+  color: var(--sl-success-strong);
+}
+
+.st-live::before {
+  content: "";
+  width: var(--sl-space-3);
+  height: var(--sl-space-3);
+  border-radius: var(--sl-radius-circle);
+  background: var(--sl-success);
+}
+
+/* A tile that leans to the hand carries a glare where the hand is */
+[data-st-tilt] {
+  position: relative;
+}
+
+[data-st-tilt]::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(circle 160px at var(--st-mx, 50%) var(--st-my, 50%), var(--sl-tint-strong), transparent 70%);
+  opacity: 0;
+  transition: opacity var(--sl-time-base) var(--sl-ease-out);
+  pointer-events: none;
+}
+
+[data-st-tilt]:hover::before {
+  opacity: 1;
+}
+
+/* The ripple of a press stays with the pointer in every mode */
+.st-root :is(.sl-but, .sl-seg-cell, [data-st-metric], button[data-st-day], [data-demo-tab], [data-st-tilt]) {
+  position: relative;
+  overflow: hidden;
+}
+
+.st-ripple {
+  position: absolute;
+  z-index: var(--sl-z-raised);
+  width: var(--st-d);
+  height: var(--st-d);
+  margin: calc(var(--st-d) / -2) 0 0 calc(var(--st-d) / -2);
+  border-radius: var(--sl-radius-circle);
+  background: currentColor;
+  opacity: calc(1 - var(--sl-fade-subtle));
+  transform: scale(0);
+  animation: st-ripple 0.65s var(--sl-ease-out) forwards;
+  pointer-events: none;
+}
+
+/* The motion of the series. A card waits under its place until it enters the view, rises in its turn, and only then its
+   columns grow, its lines are drawn left to right, its parts unroll, its cells pop and its arcs fill; a redraw plays it
+   again, a step of the month slides the cards the way it went. The stand switch and a reduced motion stop all of it */
+@media (prefers-reduced-motion: no-preference) {
+  :root.st-fx:not([data-demo-motion="off"]) .st-card:not(.st-in) {
+    opacity: 0;
+  }
+
+  :root.st-fx:not([data-demo-motion="off"]) .st-card.st-rise {
+    animation: st-rise 0.7s var(--st-spring) backwards;
+    animation-delay: calc(min(var(--st-i, 0), 6) * 80ms);
+  }
+
+  :root.st-fx:not([data-demo-motion="off"]) .st-card.st-swap-next {
+    animation: st-swap-next 0.45s var(--sl-ease-out);
+  }
+
+  :root.st-fx:not([data-demo-motion="off"]) .st-card.st-swap-prev {
+    animation: st-swap-prev 0.45s var(--sl-ease-out);
+  }
+
+  :root.st-fx:not([data-demo-motion="off"]) .st-play .st-bar {
+    animation: st-grow 0.8s var(--st-spring) both;
+    animation-delay: calc(0.15s + var(--sl-d-i, 0) * 22ms);
+  }
+
+  :root.st-fx:not([data-demo-motion="off"]) .st-bar {
+    transition: height 0.6s var(--st-spring), opacity var(--sl-time-fast) var(--sl-ease-out), box-shadow var(--sl-time-base) var(--sl-ease-out);
+  }
+
+  :root.st-fx:not([data-demo-motion="off"]) .st-col-run .st-bar {
+    animation: st-breathe 2.4s var(--sl-ease-in-out) infinite;
+  }
+
+  :root.st-fx:not([data-demo-motion="off"]) .st-col.st-tick .st-bar {
+    animation: st-tick-bar 1s var(--sl-ease-out);
+  }
+
+  :root.st-fx:not([data-demo-motion="off"]) .st-play :is(.st-svg, [data-st-spark] svg) {
+    animation: st-wipe 1.2s var(--sl-ease-in-out) both;
+    animation-delay: 0.2s;
+  }
+
+  :root.st-fx:not([data-demo-motion="off"]) .st-mark {
+    animation: st-pop 0.3s var(--st-spring);
+  }
+
+  /* A part that is a float never carries a transform: one would make it the frame of the fixed panel of slaed.js, which
+     then opens off its place and does not follow the scroll; its colour layer moves instead */
+  :root.st-fx:not([data-demo-motion="off"]) .st-play .st-stack-part::before,
+  :root.st-fx:not([data-demo-motion="off"]) .st-play .sl-statx-bv {
+    animation: st-unroll 0.9s var(--st-spring) backwards;
+    animation-delay: calc(0.2s + var(--sl-d-i, 0) * 60ms);
+    transform-origin: left;
+  }
+
+  :root.st-fx:not([data-demo-motion="off"]) .st-stack-part:nth-child(2) { --sl-d-i: 2; }
+  :root.st-fx:not([data-demo-motion="off"]) .st-stack-part:nth-child(3) { --sl-d-i: 4; }
+  :root.st-fx:not([data-demo-motion="off"]) .st-stack-part:nth-child(n+4) { --sl-d-i: 6; }
+
+  :root.st-fx:not([data-demo-motion="off"]) .st-play .st-stack-key {
+    animation: st-fade 0.5s var(--sl-ease-out) both;
+    animation-delay: 0.6s;
+  }
+
+  :root.st-fx:not([data-demo-motion="off"]) .st-play .st-cal-day {
+    animation: st-pop 0.5s var(--st-spring) both;
+    animation-delay: calc(var(--sl-d-i, 0) * 16ms);
+  }
+
+  :root.st-fx:not([data-demo-motion="off"]) .st-play .st-week-cell::before {
+    animation: st-pop 0.45s var(--st-spring) backwards;
+    animation-delay: calc((var(--st-wx, 0) + var(--st-wy, 0)) * 22ms);
+  }
+
+  :root.st-fx:not([data-demo-motion="off"]) .st-week-cell:hover {
+    outline: 2px solid var(--sl-primary);
+    outline-offset: 1px;
+    z-index: var(--sl-z-raised);
+  }
+
+  :root.st-fx:not([data-demo-motion="off"]) .st-play .st-clock-spoke {
+    animation: st-spoke 0.7s var(--st-spring) both;
+    animation-delay: calc(var(--sl-d-i, 0) * 35ms);
+  }
+
+  :root.st-fx:not([data-demo-motion="off"]) .st-clock-spoke.st-is-now {
+    animation: st-now 1.4s var(--sl-ease-in-out) infinite !important;
+  }
+
+  :root.st-fx:not([data-demo-motion="off"]) .st-play .st-clock-gen {
+    animation: st-pop 0.5s var(--st-spring) both;
+    animation-delay: 0.9s;
+  }
+
+  :root.st-fx:not([data-demo-motion="off"]) .st-play tbody tr {
+    animation: st-fade-up 0.4s var(--sl-ease-out) both;
+    animation-delay: calc(var(--sl-d-i, 0) * 22ms);
+  }
+
+  :root.st-fx:not([data-demo-motion="off"]) .st-play .st-arc-m i {
+    animation: st-grow 0.6s var(--st-spring) both;
+    animation-delay: calc(var(--sl-d-i, 0) * 4ms);
+  }
+
+  :root.st-fx:not([data-demo-motion="off"]) .sl-statx-rval {
+    transition: stroke-dashoffset 1.4s var(--st-spring);
+  }
+
+  :root.st-fx:not([data-demo-motion="off"]) .sl-knob-val {
+    transition: stroke-dasharray 1.4s var(--st-spring);
+  }
+
+  :root.st-fx:not([data-demo-motion="off"]) .st-tick {
+    animation: st-flash 1.1s var(--sl-ease-out);
+  }
+
+  :root.st-fx:not([data-demo-motion="off"]) .st-live::before {
+    animation: st-live 1.6s var(--sl-ease-out) infinite;
+  }
+
+  :root.st-fx:not([data-demo-motion="off"]) [data-st-tilt] {
+    transform: perspective(900px) rotateX(var(--st-rx, 0deg)) rotateY(var(--st-ry, 0deg));
+    transition: transform 0.35s var(--sl-ease-out), box-shadow 0.35s var(--sl-ease-out);
+  }
+
+  :root.st-fx:not([data-demo-motion="off"]) [data-st-tilt]:hover {
+    box-shadow: var(--sl-shadow-float);
+  }
+}
+
+:root {
+  --st-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* A card moves by its offset and not by a transform: a transform would make it the frame of every fixed panel of
+   slaed.js inside it, and a panel opened while the card moves would stand off its place */
+@keyframes st-rise {
+  from { opacity: 0; top: var(--sl-space-7); }
+}
+
+@keyframes st-swap-next {
+  from { opacity: 0; left: var(--sl-space-8); }
+}
+
+@keyframes st-swap-prev {
+  from { opacity: 0; left: calc(var(--sl-space-8) * -1); }
+}
+
+@keyframes st-grow {
+  from { transform: scaleY(0); }
+}
+
+@keyframes st-unroll {
+  from { transform: scaleX(0); }
+}
+
+@keyframes st-wipe {
+  from { clip-path: inset(0 100% 0 0); }
+  to { clip-path: inset(0 0 0 0); }
+}
+
+@keyframes st-fade {
+  from { opacity: 0; }
+}
+
+@keyframes st-fade-up {
+  from { opacity: 0; transform: translateY(var(--sl-space-3)); }
+}
+
+@keyframes st-pop {
+  from { opacity: 0; transform: scale(0.6); }
+}
+
+@keyframes st-spoke {
+  from { opacity: 0; transform: scale(0.5); }
+}
+
+@keyframes st-breathe {
+  50% { opacity: var(--sl-fade-subtle); }
+}
+
+@keyframes st-tick-bar {
+  30% { opacity: 1; box-shadow: 0 0 var(--sl-space-6) var(--st-tone); }
+}
+
+@keyframes st-flash {
+  0% { color: var(--sl-success-strong); text-shadow: 0 0 var(--sl-space-5) var(--sl-success); }
+}
+
+@keyframes st-live {
+  from { box-shadow: 0 0 0 0 var(--sl-success); }
+  to { box-shadow: 0 0 0 var(--sl-space-3) transparent; }
+}
+
+@keyframes st-now {
+  50% { opacity: var(--sl-fade-muted); stroke-width: 9; }
+}
+
+@keyframes st-ripple {
+  to { opacity: 0; transform: scale(1); }
+}
+
+@media (max-width: 760px) {
+  .st-plot {
+    --st-axis: 36px;
+  }
+
+  [data-st-cal] {
+    gap: var(--sl-space-2);
+  }
+
+  .st-cal-day {
+    min-height: 56px;
+    padding: var(--sl-space-2);
+  }
+
+  .st-cal-sub,
+  .st-cal-meter {
+    display: none;
+  }
+
+  .st-cal-v {
+    font-size: var(--sl-font-small);
+  }
+}

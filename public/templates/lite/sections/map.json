@@ -1,0 +1,25 @@
+{
+    "title": "_LAYOUT_LOCATE",
+    "note": "_LAYOUT_LOC_INFO",
+    "icon": "geo-alt",
+    "group": "contact",
+    "frame": true,
+    "fields": [
+        {"key": "title", "label": "_TITLE", "type": "text"},
+        {"key": "lead", "label": "_LAYOUT_LEAD", "type": "text"},
+        {"key": "icon", "label": "_ICON", "type": "icon", "tab": "look"},
+        {"key": "point", "label": "_LAYOUT_POINT", "type": "point"},
+        {"key": "side", "label": "_LAYOUT_MAPPOS", "type": "select", "show": "seg", "options": {"left": "_LEFT", "right": "_RIGHT"}, "tab": "look"},
+        {"key": "photo", "label": "_LAYOUT_COVER", "type": "file", "tab": "look"},
+        {"key": "focus", "label": "_LAYOUT_FOCUS", "type": "focus", "tab": "look"}
+    ],
+    "make": {
+        "title": "_LAYOUT_LOCATE",
+        "lead": "",
+        "icon": "geo-alt",
+        "point": "",
+        "side": "left",
+        "photo": "",
+        "focus": "center"
+    }
+}

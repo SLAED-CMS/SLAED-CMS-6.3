@@ -1,0 +1,37 @@
+{
+    "title": "_ALBUM",
+    "note": "_LAYOUT_GAL_INFO",
+    "icon": "images",
+    "group": "media",
+    "frame": true,
+    "fields": [
+        {"key": "title", "label": "_TITLE", "type": "text"},
+        {"key": "lead", "label": "_LAYOUT_LEAD", "type": "text"},
+        {"key": "icon", "label": "_ICON", "type": "icon", "tab": "look"},
+        {"key": "over", "label": "_LAYOUT_OVER", "type": "text"}
+    ],
+    "items": {
+        "label": "_LAYOUT_PICS",
+        "max": 24,
+        "name": "caption",
+        "fields": [
+            {"key": "photo", "label": "_IMG", "type": "file"},
+            {"key": "alt", "label": "_LAYOUT_ALT", "type": "text"},
+            {"key": "caption", "label": "_LAYOUT_CAPTION", "type": "text"},
+            {"key": "focus", "label": "_LAYOUT_FOCUS", "type": "focus"}
+        ],
+        "make": {"photo": "presentation/brand/background-1.png", "alt": "", "caption": "_LAYOUT_CAPTION", "focus": "center"}
+    },
+    "make": {
+        "title": "_ALBUM",
+        "lead": "",
+        "icon": "images",
+        "over": "",
+        "items": [
+            {"photo": "presentation/brand/background-1.png", "alt": "", "caption": "_LAYOUT_CAPTION", "focus": "center"},
+            {"photo": "presentation/brand/background-2.png", "alt": "", "caption": "_LAYOUT_CAPTION", "focus": "center"},
+            {"photo": "presentation/brand/background-3.png", "alt": "", "caption": "_LAYOUT_CAPTION", "focus": "center"},
+            {"photo": "presentation/brand/background-4.png", "alt": "", "caption": "_LAYOUT_CAPTION", "focus": "center"}
+        ]
+    }
+}

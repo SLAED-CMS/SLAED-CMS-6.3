@@ -22,13 +22,15 @@ final class LayoutTest extends TestCase
         require_once BASE_DIR.'/core/classes/template.php';
         require_once BASE_DIR.'/core/classes/layout.php';
         require_once BASE_DIR.'/core/classes/update.php';
+        require_once BASE_DIR.'/core/classes/field.php';
+        if (!class_exists('Parser', false)) require_once BASE_DIR.'/core/classes/parser.php';
         self::$theme = 'scratch-'.substr(sha1('layout'.getmypid().microtime(true)), 0, 8);
         self::$tdir = PUBLIC_DIR.'/templates/'.self::$theme;
         self::$mods = str_replace('\\', '/', sys_get_temp_dir()).'/slaed_layout_mods_'.getmypid();
         $files = [
-            self::$tdir.'/sections/hero.json' => '{"title": "_HERO"}',
+            self::$tdir.'/sections/hero.json' => '{"title": "_HERO", "fields": [{"key": "title", "type": "text"}]}',
             self::$tdir.'/sections/hero.html' => '<p class="hero">{{ title }}</p>',
-            self::$tdir.'/sections/text.json' => '{"title": "_TEXT"}',
+            self::$tdir.'/sections/text.json' => '{"title": "_TEXT", "fields": [{"key": "body", "type": "text"}]}',
             self::$tdir.'/sections/text.html' => '<p class="text">{{ body }}</p>',
             self::$tdir.'/sections/bare.json' => '{"title": "_BARE"}',
             self::$tdir.'/sections/module.json' => '{"title": "_SLOT"}',
@@ -36,7 +38,7 @@ final class LayoutTest extends TestCase
             self::$tdir.'/sections/list.json' => '["a", "b"]',
             self::$tdir.'/sections/feed.html' => '<p class="feed">{{ title }} {{ count }}</p>',
             self::$tdir.'/places.json' => '{"parts": {"brand": {"fields": []}}, "menus": {"main": {"depth": 2}}, "zones": "broken"}',
-            self::$mods.'/probe/sections/feed.json' => '{"title": "_FEED"}',
+            self::$mods.'/probe/sections/feed.json' => '{"title": "_FEED", "fields": [{"key": "title", "type": "text"}]}',
             self::$mods.'/probe/sections/feed.php' => '<?php return static fn(array $sec): array => ["count" => 7];',
             self::$mods.'/probe/sections/hero.json' => '{"title": "_MODHERO"}',
             self::$mods.'/probe/sections/card.json' => '{"title": "_CARD"}',
@@ -85,10 +87,21 @@ final class LayoutTest extends TestCase
         ], $over);
     }
 
-    # The layout as one visitor sees it, the types read from the scratch theme and the scratch modules
-    private function getReader(array $data, bool $user = false, bool $moder = false): Layout
+    # The layout as one visitor sees it in the language of a multilingual site, the types read from the scratch theme and the scratch modules
+    private function getReader(array $data, bool $user = false, bool $moder = false, string $lang = ''): Layout
     {
-        return new Layout($data, self::$theme, $user, $moder, self::$mods);
+        return new Layout($data, self::$theme, $user, $moder, $lang, self::$mods);
+    }
+
+    # A parser that marks the text it was given and the module it renders for, so a test sees which values went through it
+    private function getParser(): \Parser
+    {
+        return new class () extends \Parser {
+            public function filterDoc(string $src, bool $safe = true, string $mod = '', int $hoff = 0, string $fmt = '', array $own = [], bool $trust = false): string
+            {
+                return '<md data-mod="'.$mod.'" data-safe="'.(int)$safe.'">'.htmlspecialchars($src).'</md>';
+            }
+        };
     }
 
     # The scale of _blocks.view: all, users, moderators, guests; a moderator sees every value, an unknown value nobody else
@@ -193,7 +206,7 @@ final class LayoutTest extends TestCase
         $this->assertSame(0, $this->getReader($this->getLayout(['home' => 9]))->getHomeKey());
     }
 
-    # The sections render through the theme in their order, the module's output in the slot; what is hidden, off or has no fragment of the theme prints nothing
+    # The sections render in their order, the module's output in the slot, a module's own fragment where the theme has none; what is hidden, off or has no fragment prints nothing
     #[Test]
     public function aPageRendersItsSectionsAroundTheModule(): void
     {
@@ -210,12 +223,185 @@ final class LayoutTest extends TestCase
         ]];
         $data = $this->getLayout(['pages' => [1 => $page, 2 => ['sections' => [$this->getSection(1, 'hero', ['title' => 'Top'])]]]]);
         $tpl = new Template(self::$theme);
-        $html = (string)preg_replace('#\s+#', ' ', $this->getReader($data)->getPageHtml(1, '<main>BODY</main>', $tpl));
-        $this->assertSame('<p class="hero">A &amp; B</p><main>BODY</main><p class="feed">Feed 7</p>', str_replace('> <', '><', trim($html)));
-        $user = $this->getReader($data, true)->getPageHtml(1, '', $tpl);
+        $html = (string)preg_replace('#\s+#', ' ', $this->getReader($data)->getPageHtml(1, '<main>BODY</main>', $tpl, $this->getParser()));
+        $this->assertSame('<p class="hero">A &amp; B</p><main>BODY</main><p class="feed">Feed 7</p><p class="card"></p>', str_replace('> <', '><', trim($html)));
+        $user = $this->getReader($data, true)->getPageHtml(1, '', $tpl, $this->getParser());
         $this->assertStringContainsString('<p class="text">Users</p>', $user);
         $this->assertStringNotContainsString('Off', $user);
-        $this->assertStringEndsWith('<main>BODY</main>', $this->getReader($data)->getPageHtml(2, '<main>BODY</main>', $tpl), 'Output no slot took was dropped');
+        $this->assertStringEndsWith('<main>BODY</main>', $this->getReader($data)->getPageHtml(2, '<main>BODY</main>', $tpl, $this->getParser()), 'Output no slot took was dropped');
+    }
+
+    # A section of lite prints each value as its kind asks: Field refuses a bad address, a bad picture, icon or tone prints nothing, a list stops at its max
+    #[Test]
+    public function aSectionOfLitePrintsItsValuesByTheirKinds(): void
+    {
+        $page = ['sections' => [
+            $this->getSection(1, 'hero', ['over' => 'Over', 'title' => 'A < B', 'accent' => 'Acc', 'text' => "One\nTwo", 'btn' => 'Go', 'href' => 'javascript:alert(1)',
+                'btn2' => 'Docs', 'href2' => '/docs', 'pic' => '1', 'photo' => 'presentation/brand/background-1.png', 'alt' => 'Mark', 'focus' => 'left top', 'anchor' => 'top']),
+            $this->getSection(2, 'media', ['title' => 'Media', 'icon' => 'bad icon', 'text' => '**Bold**', 'btn' => 'More', 'href' => 'https://example.org/',
+                'photo' => 'presentation/../../config/db.php', 'side' => 'right', 'phone' => false]),
+            $this->getSection(3, 'features', ['title' => 'Feat', 'icon' => 'star', 'look' => 'line', 'cols' => 'four', 'tone' => 'nosuch',
+                'items' => array_fill(0, 10, ['icon' => 'star', 'title' => 'Card', 'text' => 'Why'])]),
+            $this->getSection(4, 'steps', ['title' => 'Steps', 'items' => [['title' => 'First', 'text' => ''], 'broken', ['title' => 'Second', 'text' => 'Then']]]),
+            $this->getSection(5, 'text', ['title' => 'Later', 'body' => 'x', 'from' => '2999-01-01']),
+            $this->getSection(6, 'text', ['title' => 'Gone', 'body' => 'x', 'till' => '2000-01-01']),
+            $this->getSection(7, 'media', ['title' => 'Flip', 'text' => '', 'photo' => 'presentation/brand/background-4.png', 'side' => 'right']),
+            $this->getSection(8, 'cta', ['title' => 'Call', 'btn' => 'Write', 'href' => '/contact', 'desk' => '']),
+        ]];
+        $read = new Layout($this->getLayout(['pages' => [1 => $page]]), 'lite', false, false, '', self::$mods);
+        $html = $read->getPageHtml(1, '', new Template('lite'), $this->getParser());
+        $this->assertStringContainsString('id="top"', $html);
+        $this->assertStringContainsString('<b>A &lt; B</b> <span>Acc</span>', $html);
+        $this->assertStringContainsString("<p class=\"sl-pres-lead sl-sec-lines\">One\nTwo</p>", $html);
+        $this->assertStringNotContainsString('javascript:', $html);
+        $this->assertStringNotContainsString('>Go<', $html, 'A button without a valid address printed');
+        $this->assertStringContainsString('<a class="sl-but" href="/docs">Docs</a>', $html, 'An address of the site opened a new tab');
+        $this->assertStringContainsString('<a class="sl-but" href="https://example.org/" target="_blank" rel="noopener">More</a>', $html);
+        $this->assertStringContainsString('src="/uploads/presentation/brand/background-1.png" alt="Mark" style="--sl-d-focus: left top"', $html);
+        $this->assertStringContainsString('<md data-mod="layout" data-safe="1">**Bold**</md>', $html);
+        $this->assertStringNotContainsString('db.php', $html);
+        $this->assertStringContainsString('sl-sec-media sl-sec-solo', $html);
+        $this->assertStringContainsString('sl-sec-media sl-sec-flip', $html);
+        $this->assertStringContainsString('bi-layout-text-sidebar sl-pres-icon', $html, 'A bad icon did not fall back to the icon of the type');
+        $this->assertStringContainsString('sl-sec-no-phone', $html);
+        $this->assertStringContainsString('sl-sec-no-desk', $html);
+        $this->assertStringContainsString('sl-pres-tech sl-sec-cols-four', $html);
+        $this->assertSame(8, substr_count($html, 'sl-pres-tech-card'));
+        $this->assertStringNotContainsString('data-sl-tone', $html);
+        $this->assertMatchesRegularExpression('#>01</span><div><b>First</b></div>.*>02</span><div><b>Second</b><span class="sl-pres-tags"><span>Then</span>#s', $html);
+        $this->assertStringNotContainsString('Later', $html);
+        $this->assertStringNotContainsString('Gone', $html);
+        $this->assertStringContainsString('<a class="sl-but sl-sec-cta-but" href="/contact">Write</a>', $html);
+        preg_match_all('#<span class="sl-pres-num">(\d+)</span>#', $html, $hit);
+        $this->assertSame(['01', '02', '03', '04'], $hit[1], 'Only the framed sections are numbered, in their order');
+    }
+
+    # Every section of lite and of the modules has its fragment, fields of the closed kinds under names a fragment receives, labels and defaults naming defined constants
+    #[Test]
+    public function theSectionsOfLiteAreDescribedInFull(): void
+    {
+        $dir = PUBLIC_DIR.'/templates/lite/sections';
+        $lang = file_get_contents(BASE_DIR.'/admin/lang/ru.php').file_get_contents(BASE_DIR.'/lang/ru.php');
+        foreach (glob(BASE_DIR.'/modules/*/sections', GLOB_ONLYDIR) ?: [] as $one) $lang .= (string)file_get_contents(dirname($one).'/lang/ru.php');
+        preg_match_all("/^define\('(_[A-Z0-9_]+)'/m", $lang, $hit);
+        $defs = array_flip($hit[1]);
+        $lost = ['path', 'file', 'data', 'real', 'lev', 'iscode', 'scope', 'items', 'parts'];
+        $kinds = ['text', 'textarea', 'select', 'bool', 'int', 'url', 'markdown', 'code', 'file', 'focus', 'icon', 'tone', 'video', 'page', 'point'];
+        $groups = [];
+        $files = array_merge(glob($dir.'/*.json') ?: [], glob(BASE_DIR.'/modules/*/sections/*.json') ?: []);
+        foreach ($files as $file) {
+            $type = basename($file, '.json');
+            $desc = json_decode((string)file_get_contents($file), true, 512, JSON_THROW_ON_ERROR);
+            $this->assertFileExists($dir.'/'.$type.'.html', $type.' has no fragment in lite');
+            foreach ([$desc['title'], $desc['note']] as $name) $this->assertArrayHasKey($name, $defs, $type.' names an undefined '.$name);
+            $this->assertMatchesRegularExpression('/^[a-z0-9]+(?:-[a-z0-9]+)*$/D', $desc['icon']);
+            $this->assertIsBool($desc['frame']);
+            $groups[$desc['group']][] = $type;
+            $sets = [[$desc['fields'], $desc['make']]];
+            if (isset($desc['items'])) {
+                $this->assertArrayHasKey($desc['items']['label'], $defs);
+                $this->assertGreaterThan(0, $desc['items']['max']);
+                $this->assertContains($desc['items']['name'], array_column($desc['items']['fields'], 'key'));
+                $sets[] = [$desc['items']['fields'], $desc['items']['make']];
+                foreach ($desc['make']['items'] as $item) $sets[] = [$desc['items']['fields'], $item];
+            }
+            foreach ($sets as [$fields, $make]) {
+                $keys = array_column($fields, 'key');
+                $this->assertEqualsCanonicalizing($keys, array_values(array_diff(array_keys($make), ['items'])), $type.': the defaults and the fields differ');
+                foreach ($fields as $one) {
+                    $this->assertMatchesRegularExpression('/^[a-z][a-z0-9]{0,31}$/D', $one['key']);
+                    $this->assertNotContains($one['key'], $lost, $type.'.'.$one['key'].' is a name Template::getView() never hands to the fragment');
+                    $this->assertContains($one['type'], $kinds, $type.'.'.$one['key']);
+                    $this->assertArrayHasKey($one['label'], $defs, $type.'.'.$one['key'].' names an undefined '.$one['label']);
+                    foreach ($one['options'] ?? [] as $opt => $label) {
+                        $this->assertMatchesRegularExpression('/^[a-z][a-z0-9_]{0,31}$/D', (string)$opt);
+                        if (!ctype_digit($label)) $this->assertArrayHasKey($label, $defs);
+                    }
+                    $val = $make[$one['key']];
+                    if ($one['type'] === 'select') $this->assertArrayHasKey($val, $one['options'], $type.'.'.$one['key']);
+                    if ($one['type'] === 'file' && $val !== '') $this->assertFileExists(UPLOADS_DIR.'/'.$val);
+                    if (is_string($val) && str_starts_with($val, '_')) $this->assertArrayHasKey($val, $defs, $type.'.'.$one['key'].' defaults to an undefined '.$val);
+                }
+            }
+        }
+        $groups = array_map(static function (array $list): array {
+            sort($list);
+            return $list;
+        }, $groups);
+        ksort($groups);
+        $this->assertSame([
+            'base' => ['cta', 'features', 'hero', 'media', 'steps', 'text'],
+            'contact' => ['faq', 'map', 'prices'],
+            'master' => ['embed', 'html'],
+            'media' => ['gallery', 'sites', 'video'],
+            'trust' => ['stats', 'team', 'voices'],
+        ], $groups);
+        $bare = array_diff(array_map(static fn(string $v): string => basename($v, '.html'), glob($dir.'/*.html') ?: []), array_merge(...array_values($groups)));
+        sort($bare);
+        $this->assertSame(['block', 'feed', 'item'], $bare, 'A fragment of lite waits for a type no root describes yet');
+    }
+
+    # The kinds of an outside frame give their addresses and nothing else: a film of YouTube in its privacy mode or of the uploads, a page of https alone, a point of the map
+    #[Test]
+    public function anOutsideFrameWaitsForTheClick(): void
+    {
+        $page = ['sections' => [
+            $this->getSection(1, 'video', ['title' => 'Tube', 'url' => 'https://youtu.be/dQw4w9WgXcQ?t=3', 'photo' => 'presentation/brand/background-2.png',
+                'focus' => 'left top']),
+            $this->getSection(2, 'video', ['title' => 'Film', 'url' => 'presentation/clip.webm', 'caption' => 'Clip']),
+            $this->getSection(3, 'video', ['title' => 'Lost', 'url' => 'https://vimeo.com/1', 'caption' => 'Never']),
+            $this->getSection(4, 'embed', ['title' => 'Form', 'url' => 'https://forms.example.org/f?a=1&b=2', 'height' => 500]),
+            $this->getSection(5, 'embed', ['title' => 'Plain', 'url' => 'http://example.org/']),
+            $this->getSection(6, 'embed', ['title' => 'Script', 'url' => 'javascript:alert(1)//https://x']),
+            $this->getSection(7, 'map', ['title' => 'Map', 'point' => '52.3507, 8.2271', 'side' => 'right']),
+            $this->getSection(8, 'map', ['title' => 'Off map', 'point' => '95, 8']),
+            $this->getSection(9, 'html', ['code' => '<b data-x="1">Own</b>']),
+        ]];
+        $read = new Layout($this->getLayout(['pages' => [1 => $page], 'theme' => ['phone' => '+49 1', 'email' => 'a@example.org']]), 'lite', false, false, '', self::$mods);
+        $html = $read->getPageHtml(1, '', new Template('lite'), $this->getParser());
+        $this->assertStringContainsString('<template><iframe src="https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ?autoplay=1"', $html);
+        $this->assertStringContainsString('src="/uploads/presentation/brand/background-2.png" alt="" style="--sl-d-focus: left top"', $html);
+        $this->assertStringContainsString('<video src="/uploads/presentation/clip.webm" controls preload="metadata"></video>', $html);
+        $this->assertStringContainsString('<p class="sl-pres-lead">Clip</p>', $html);
+        $this->assertStringNotContainsString('Lost', $html, 'A section printing nothing kept its frame');
+        $this->assertStringNotContainsString('Never', $html);
+        $this->assertStringContainsString('style="--sl-d-frame: 500px"', $html);
+        $this->assertStringContainsString('forms.example.org</button>', $html);
+        $this->assertStringContainsString('src="https://forms.example.org/f?a=1&amp;b=2"', $html);
+        $this->assertStringNotContainsString('Plain', $html);
+        $this->assertStringNotContainsString('javascript:', $html);
+        $this->assertStringContainsString('https://www.openstreetmap.org/export/embed.html?bbox=8.2111,52.3407,8.2431,52.3607&amp;layer=mapnik&amp;marker=52.3507,8.2271', $html);
+        $this->assertStringContainsString('sl-sec-media sl-sec-flip', $html);
+        $this->assertStringContainsString('<a href="tel:+49 1">+49 1</a>', $html, 'The values of the theme did not reach the section');
+        $this->assertStringContainsString('<a href="mailto:a@example.org">', $html);
+        $this->assertStringContainsString('<h2>Off map</h2>', $html, 'The contacts of the theme stand without the map');
+        $this->assertSame(1, substr_count($html, 'sl-sec-media sl-sec-solo'));
+        $this->assertStringContainsString('<b data-x="1">Own</b>', $html);
+        $this->assertSame(3, substr_count($html, 'data-sl-sec-load>'), 'Every outside frame but the film of the uploads waits behind its placeholder');
+    }
+
+    # The first question of a list opens when the section asks; an answer is Markdown through the parser
+    #[Test]
+    public function theFirstQuestionOpens(): void
+    {
+        $sec = $this->getSection(1, 'faq', ['title' => 'Faq', 'open' => true, 'items' => [['q' => 'One?', 'a' => 'Yes'], ['q' => 'Two?', 'a' => 'No']]]);
+        $read = new Layout($this->getLayout(['pages' => [1 => ['sections' => [$sec]]]]), 'lite', false, false, '', self::$mods);
+        $html = $read->getPageHtml(1, '', new Template('lite'), $this->getParser());
+        $this->assertSame(1, substr_count($html, ' open>'));
+        $this->assertMatchesRegularExpression('#<details class="sl-node-faq" open>\s*<summary>.*One\?#s', $html);
+        $this->assertStringContainsString('<md data-mod="layout" data-safe="1">No</md>', $html);
+    }
+
+    # The showcase of sites is a type of the module presentation with its provider, drawn by the fragment of lite
+    #[Test]
+    public function theShowcaseIsATypeOfItsModule(): void
+    {
+        $types = (new Layout([], 'lite', false, false))->getSectionTypes();
+        $this->assertSame(['presentation', 'theme'], [$types['sites']['root'], $types['sites']['frag']]);
+        $this->assertSame(str_replace('\\', '/', BASE_DIR.'/modules/presentation/sections/sites.php'), str_replace('\\', '/', $types['sites']['prov']));
+        $this->assertFileExists(BASE_DIR.'/modules/presentation/sections/sites.html', 'A theme without its own fragment has none to fall back on');
+        $code = (string)file_get_contents(BASE_DIR.'/modules/presentation/index.php');
+        $this->assertStringNotContainsString('function getPresentationSites', $code, 'The provider would run the module');
     }
 
     # The theme describes first and its fragment wins, a module adds its own types with a provider; the slot, a bad name and a list are no type
@@ -224,7 +410,7 @@ final class LayoutTest extends TestCase
     {
         $types = $this->getReader($this->getLayout())->getSectionTypes();
         $this->assertSame(['bare', 'hero', 'text', 'card', 'feed'], array_keys($types));
-        $this->assertSame(['root' => 'theme', 'desc' => ['title' => '_HERO'], 'frag' => 'theme', 'prov' => ''], $types['hero']);
+        $this->assertSame(['root' => 'theme', 'desc' => ['title' => '_HERO', 'fields' => [['key' => 'title', 'type' => 'text']]], 'frag' => 'theme', 'prov' => ''], $types['hero']);
         $this->assertSame('', $types['bare']['frag']);
         $this->assertSame(['probe', 'theme'], [$types['feed']['root'], $types['feed']['frag']]);
         $this->assertStringEndsWith('/probe/sections/feed.php', $types['feed']['prov']);
@@ -237,7 +423,58 @@ final class LayoutTest extends TestCase
     {
         $places = $this->getReader($this->getLayout())->getThemePlaces();
         $this->assertSame(['parts' => ['brand' => ['fields' => []]], 'menus' => ['main' => ['depth' => 2]], 'zones' => []], $places);
-        $this->assertSame(['parts' => [], 'menus' => [], 'zones' => []], (new Layout([], 'scratch-00000000', false, false, self::$mods))->getThemePlaces());
+        $this->assertSame(['parts' => [], 'menus' => [], 'zones' => []], (new Layout([], 'scratch-00000000', false, false, '', self::$mods))->getThemePlaces());
+    }
+
+    # A section of one language shows only to a visitor of that language, and to everyone while the site is not multilingual
+    #[Test]
+    public function aSectionOfALanguageShowsInItsLanguage(): void
+    {
+        $page = ['sections' => [$this->getSection(1, 'hero', ['title' => 'All']), $this->getSection(2, 'hero', ['title' => 'Ru', 'lang' => 'ru']),
+            $this->getSection(3, 'hero', ['title' => 'De', 'lang' => 'de'])]];
+        $data = $this->getLayout(['pages' => [1 => $page, 2 => ['sections' => [$this->getSection(4, 'hero', ['lang' => 'de'])]]]]);
+        $tpl = new Template(self::$theme);
+        $html = fn(string $lang): string => (string)preg_replace('#\s+#', '', $this->getReader($data, false, false, $lang)->getPageHtml(1, '', $tpl, $this->getParser()));
+        $this->assertSame('<pclass="hero">All</p><pclass="hero">Ru</p>', $html('ru'));
+        $this->assertSame('<pclass="hero">All</p><pclass="hero">Ru</p><pclass="hero">De</p>', $html(''));
+        $this->assertTrue($this->getReader($data, false, false, 'ru')->isPageEmpty(2));
+        $this->assertFalse($this->getReader($data, false, false, 'de')->isPageEmpty(2));
+    }
+
+    # A page answers at an address of its own unless it is the home page, the page 404 or holds a slot switched on; its audience is the scale of a block
+    #[Test]
+    public function aPageOfSectionsHasAnAddressOfItsOwn(): void
+    {
+        $pages = $this->getLayout()['pages'] + [
+            6 => ['who' => '1', 'sections' => [$this->getSection(16, 'hero')]],
+            7 => ['sections' => []],
+            8 => ['sections' => [$this->getSection(17, 'module', ['module' => 'faq', 'on' => false]), $this->getSection(18, 'hero')]],
+        ];
+        $guest = $this->getReader($this->getLayout(['pages' => $pages]));
+        $this->assertSame([5, 6, 7, 8], $guest->getAddressKeys());
+        $this->assertSame([6, 7, 8], $this->getReader($this->getLayout(['pages' => $pages, 'home' => 5]))->getAddressKeys());
+        $this->assertFalse($guest->isPageShown(6));
+        $this->assertTrue($this->getReader($this->getLayout(['pages' => $pages]), true)->isPageShown(6));
+        $this->assertTrue($guest->isPageShown(7));
+        $this->assertTrue($guest->isPageEmpty(7));
+        $this->assertTrue($guest->isPageEmpty(99));
+        $this->assertFalse($guest->isPageEmpty(8));
+        $this->assertSame(1, preg_match(Layout::PAGE, 'page-'.max(array_keys($pages))));
+        foreach (['page-0', 'page-01', 'page-', 'page-1a', 'Page-1', 'page-12345678901', 'news'] as $bad) $this->assertSame(0, preg_match(Layout::PAGE, $bad), $bad);
+    }
+
+    # The draft read in place of the published layout keeps the viewer and marks itself, so the page answers as a draft
+    #[Test]
+    public function theDraftReadsInPlaceOfTheLayout(): void
+    {
+        $read = $this->getReader($this->getLayout());
+        $this->assertFalse($read->isDraft());
+        $read->setDraftData($this->getLayout(['pages' => [9 => ['title' => 'New', 'sections' => [$this->getSection(19, 'hero')]]], 'home' => 9]));
+        $this->assertTrue($read->isDraft());
+        $this->assertSame([9], array_keys($read->getData()['pages']));
+        $this->assertSame(9, $read->getHomeKey());
+        $read->setDraftData(['v' => 0]);
+        $this->assertSame([], $read->getData()['pages']);
     }
 
     # A menu gives the items its viewer may see, at every depth

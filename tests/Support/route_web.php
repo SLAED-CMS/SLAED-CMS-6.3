@@ -29,7 +29,7 @@ if (preg_match('#^/[A-Za-z0-9_-]+\.(html|txt|ico|xml)$#D', $rpath) && is_file(di
 define('BASE_DIR', str_replace('\\', '/', dirname(__DIR__, 2)));
 define('PUBLIC_DIR', BASE_DIR.'/public');
 $rdirs = ['CONFIG_DIR' => 'config', 'BACKUP_DIR' => 'backup', 'CACHE_DIR' => 'cache', 'COUNTER_DIR' => 'counter', 'LOGS_DIR' => 'logs', 'SITEMAP_DIR' => 'sitemap',
-    'CAPTCHA_DIR' => 'captcha', 'UPLOADS_DIR' => 'uploads', 'UPDATE_DIR' => 'update'];
+    'CAPTCHA_DIR' => 'captcha', 'UPLOADS_DIR' => 'uploads', 'UPDATE_DIR' => 'update', 'LAYOUT_DIR' => 'layout'];
 foreach ($rdirs as $rkey => $rdir) define($rkey, $rroot.'/'.$rdir);
 require_once __DIR__.'/test_keys.php';
 $rglob = require CONFIG_DIR.'/global.php';

@@ -53,6 +53,7 @@ if ($urlroute['seg'] !== []) {
             'cat' => ['name' => $rpre, 'cat' => $roid],
             'topic' => ['name' => 'forum', 'op' => 'view', 'id' => $roid],
             'user' => ['name' => 'account', 'op' => 'view', 'id' => $roid],
+            'page' => ['name' => 'page-'.$roid],
             default => ['name' => 'voting', 'op' => 'view', 'id' => $roid],
         };
     } else {
@@ -94,8 +95,54 @@ if (empty($go)) {
     $file = getVar('req', 'file', 'var') ?: 'index';
     $theme = getTheme();
     # A page of the layout stands around a module: the home page, or the page whose slot holds the module of this request on its front view
-    $layout = new Layout($conf['layout'] ?? [], $theme, is_user() > 0, is_moder() > 0);
-    $lkey = $name ? (empty($op) && $file === 'index' ? $layout->getModuleKey($name) : 0) : $layout->getHomeKey();
+    $layout = new Layout($conf['layout'] ?? [], $theme, is_user() > 0, is_moder() > 0, $conf['multilingual'] ? (string)$locale : '');
+    # The one answer 403 of a page the visitor may not open, with its reason: a closed module, a page of the layout for users only, a dead link of the draft
+    $deny = static function (string $text): never {
+        global $tpl, $conf, $name;
+        $conf['name'] ??= (string)$name;
+        http_response_code(403);
+        setHead();
+        echo $tpl->getHtmlFrag('title', ['title' => _ACCESSDENIED, 'is_level_one' => true])
+            .$tpl->getHtmlFrag('alert', ['text' => $text, 'meta' => '', 'type' => 'info', 'is_warn' => false]);
+        setFoot();
+        exit;
+    };
+    # A page by its name page-<key>: from the draft under a valid link, else only a page with an address of its own; a page of the draft holding a slot runs as its module
+    $pkey = 0;
+    $ppath = '';
+    if (preg_match(Layout::PAGE, (string)$name, $phit)) {
+        $pkey = (int)$phit[1];
+        $ptok = getVar('get', 'draft', 'raw', '');
+        if ($ptok !== '') {
+            $pdft = Layout::getDraftFile();
+            if ($pdft === [] || !Layout::checkDraftToken($pkey, $ptok, $pdft['link'])) $deny(_LAYOUT_LINKBAD);
+            $layout->setDraftData($pdft['layout']);
+            if ($layout->getPage($pkey) === []) setError(404);
+            $pslot = $layout->getSlotName($pkey);
+            $phome = $pkey === $layout->getHomeKey();
+            if ($pslot === '' && !$phome) setError(404);
+            if ($pslot !== null) [$name, $pkey] = [$phome ? '' : $pslot, 0];
+        } else {
+            if (in_array($pkey, $layout->getAddressKeys(), true)) $ppath = (new Route($db))->getRouteList('page', [$pkey])[$pkey] ?? '';
+            if ($ppath === '') setError(404);
+        }
+    }
+    $lkey = $pkey ?: ($name ? (empty($op) && $file === 'index' ? $layout->getModuleKey($name) : 0) : $layout->getHomeKey());
+    if ($lkey && !$layout->isPageShown($lkey)) $deny(is_user() ? _MODULESADMINS : sprintf(_MODULEUSERS, getSeoUrl(['name' => 'account'])));
+    # A page of sections alone: its title, description, picture and robots, the canonical address its path; the draft keeps no address and indexes nothing
+    if ($pkey) {
+        $pdata = $layout->getPage($pkey);
+        $conf['name'] = $name;
+        $pseo = [
+            'title' => (string)($pdata['title'] ?? ''),
+            'desc' => (string)($pdata['desc'] ?? ''),
+            'img' => (($pdata['og'] ?? '') !== '') ? getPublicUrl((string)$pdata['og']) : '',
+            'robots' => empty($pdata['noindex']) ? '' : 'noindex, follow',
+        ];
+        setHead(array_filter($pseo, static fn(string $v): bool => $v !== '') + (($ppath !== '') ? ['route' => $ppath] : []));
+        setFoot();
+        exit;
+    }
     $hname = '';
     if (!$name) {
         $hslot = $lkey ? $layout->getSlotName($lkey) : '';
@@ -143,22 +190,12 @@ if (empty($go)) {
                     $gname = $grp['name'] ?? '';
                 }
                 if ($gname) $info .= _ADDITIONALYGRP.': '.$gname;
-                http_response_code(403);
-                setHead();
-                echo $tpl->getHtmlFrag('title', ['title' => _ACCESSDENIED, 'is_level_one' => true])
-                    .$tpl->getHtmlFrag('alert', ['text' => $info, 'meta' => '', 'type' => 'info', 'is_warn' => false]);
-                setFoot();
-                exit;
+                $deny($info);
             } elseif ($view == 2 && is_moder($name) && file_exists($path)) {
                 getLang($name);
                 require_once $path;
             } elseif ($view == 2 && !is_moder($name)) {
-                http_response_code(403);
-                setHead();
-                echo $tpl->getHtmlFrag('title', ['title' => _ACCESSDENIED, 'is_level_one' => true])
-                    .$tpl->getHtmlFrag('alert', ['text' => _MODULESADMINS, 'meta' => '', 'type' => 'info', 'is_warn' => false]);
-                setFoot();
-                exit;
+                $deny(_MODULESADMINS);
             } else {
                 setError(404);
             }

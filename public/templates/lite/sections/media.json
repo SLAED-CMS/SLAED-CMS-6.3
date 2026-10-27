@@ -1,0 +1,31 @@
+{
+    "title": "_LAYOUT_MEDIA",
+    "note": "_LAYOUT_MEDIA_INFO",
+    "icon": "layout-text-sidebar",
+    "group": "base",
+    "frame": true,
+    "fields": [
+        {"key": "title", "label": "_TITLE", "type": "text"},
+        {"key": "lead", "label": "_LAYOUT_LEAD", "type": "text"},
+        {"key": "icon", "label": "_ICON", "type": "icon", "tab": "look"},
+        {"key": "text", "label": "_TEXT", "type": "markdown"},
+        {"key": "btn", "label": "_LAYOUT_BTN", "type": "text"},
+        {"key": "href", "label": "_LAYOUT_HREF", "type": "url"},
+        {"key": "photo", "label": "_IMG", "type": "file", "tab": "look"},
+        {"key": "alt", "label": "_LAYOUT_ALT", "type": "text", "tab": "look"},
+        {"key": "focus", "label": "_LAYOUT_FOCUS", "type": "focus", "tab": "look"},
+        {"key": "side", "label": "_LAYOUT_PICPOS", "type": "select", "show": "seg", "options": {"left": "_LEFT", "right": "_RIGHT"}, "tab": "look"}
+    ],
+    "make": {
+        "title": "_LAYOUT_MEDIA",
+        "lead": "",
+        "icon": "info-circle",
+        "text": "_LAYOUT_MEDIA_TEXT",
+        "btn": "_READMORE",
+        "href": "",
+        "photo": "presentation/brand/background-4.png",
+        "alt": "",
+        "focus": "center",
+        "side": "left"
+    }
+}

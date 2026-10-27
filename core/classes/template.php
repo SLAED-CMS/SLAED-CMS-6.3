@@ -69,14 +69,14 @@ class Template {
         return $this->getAssetMarkup().$html;
     }
 
-    # Return compiled markup of one section of the layout, the theme's sections/<type>.html; Layout decides which type and with what values
-    public function getHtmlSection(string $name, array $data = []): string {
+    # Return compiled markup of one section of the layout, the theme's sections/<type>.html or the default fragment in the sections/ of the module $dir names
+    public function getHtmlSection(string $name, array $data = [], string $dir = ''): string {
         if (!$this->checkName($name)) {
             $this->reportTemplateError('sections', $name, 'Invalid section name');
             return $this->getTemplateDebugComment('sections', $name, 'invalid section name');
         }
         $this->assets = ['css' => [], 'js' => []];
-        $html = $this->getHtml('sections', $name, $data);
+        $html = $this->getHtml('sections', $name, $data, $dir);
         return $this->getAssetMarkup().$html;
     }
 
@@ -139,10 +139,10 @@ class Template {
     }
 
     # Compile when needed and render; the compiled file is renamed over the old one under compile.lock, so a parallel include never meets a half-written file
-    protected function getHtml(string $type, string $name, array $data = []): string {
-        $file = $this->getFile($type, $name);
+    protected function getHtml(string $type, string $name, array $data = [], string $dir = ''): string {
+        $file = $this->getFile($type, $name, $dir);
         if ($file !== '' && isset($this->fresh[$file])) return $this->getView($this->fresh[$file], $data, false, $type, $name);
-        if (!$file || !$this->checkFile($file)) {
+        if (!$file || !$this->checkFile($file, $dir)) {
             $this->reportTemplateError($type, $name, 'Template file not found');
             return $this->getTemplateDebugComment($type, $name, 'template file not found');
         }
@@ -155,7 +155,7 @@ class Template {
             $lock = fopen($mdir.'/compile.lock', 'c');
             if ($lock !== false) flock($lock, LOCK_EX);
             clearstatcache(true, $cache);
-            $code = $stale() ? $this->getCode($type, $name) : null;
+            $code = $stale() ? $this->getCode($type, $name, $dir) : null;
             $temp = $cache.'.'.bin2hex(random_bytes(6)).'.tmp';
             $done = $code === null || ($code !== '' && file_put_contents($temp, $this->filterCode($code)) !== false && (rename($temp, $cache) || is_file($cache)));
             if (is_file($temp)) unlink($temp);
@@ -254,16 +254,17 @@ class Template {
         return $out;
     }
 
-    # Build the absolute template file path within the theme directory
-    protected function getFile(string $type, string $name): string {
+    # Build the absolute template file path within the theme directory, or a section within the folder of a module that only a section may name
+    protected function getFile(string $type, string $name, string $dir = ''): string {
         if (!$this->checkType($type) || !$this->checkName($name)) return '';
+        if ($dir !== '') return ($type === 'sections') ? rtrim(str_replace('\\', '/', $dir), '/').'/'.$name.'.html' : '';
         return $this->base.'/'.$type.'/'.$name.'.html';
     }
 
     # Load the raw template code when the resolved file is valid
-    protected function getCode(string $type, string $name): string {
-        $file = $this->getFile($type, $name);
-        if (!$file || !$this->checkFile($file)) {
+    protected function getCode(string $type, string $name, string $dir = ''): string {
+        $file = $this->getFile($type, $name, $dir);
+        if (!$file || !$this->checkFile($file, $dir)) {
             $this->reportTemplateError($type, $name, 'Template source not found');
             return '';
         }
@@ -764,13 +765,14 @@ class Template {
         return in_array($type, ['pages', 'partials', 'fragments', 'layouts', 'sections'], true);
     }
 
-    # Verify that the target file exists inside the theme base path resolved once in the constructor
-    protected function checkFile(string $file): bool {
-        if ($this->real === '' || $file === '' || is_link($file) || !is_file($file)) return false;
+    # Verify that the target file exists inside the theme base path resolved once in the constructor, or inside the folder of a module a section names
+    protected function checkFile(string $file, string $dir = ''): bool {
+        $root = ($dir === '') ? $this->real : rtrim(str_replace('\\', '/', (string)realpath($dir)), '/');
+        if ($root === '' || $file === '' || is_link($file) || !is_file($file)) return false;
         $path = realpath($file);
         if ($path === false || is_link($path)) return false;
         $path = str_replace('\\', '/', $path);
-        return str_starts_with($path, $this->real.'/');
+        return str_starts_with($path, $root.'/');
     }
 
     # Validate static include paths inside the current theme

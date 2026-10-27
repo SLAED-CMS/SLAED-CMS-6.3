@@ -513,9 +513,10 @@ function setExit(string $msg, string $typ = '', string $title = ''): never {
     ]));
 }
 
-# Emit an HTTP error status, log it when enabled, and render the standard error page before stopping, for SEO-correct responses such as out-of-range pagination
+# Emit an HTTP error status, log it when enabled, and render the error page before stopping; a 404 of a page shows the page 404 of the layout while it has a section
 function setError(int $code = 404): never {
-    global $conf;
+    global $conf, $locale, $layout, $lkey, $name, $home;
+    static $busy = false;
     $msg = [400 => 'Bad Request', 401 => 'Unauthorized', 402 => 'Payment Required', 403 => 'Forbidden', 404 => 'Not Found', 405 => 'Method Not Allowed', 409 => 'Conflict',
         410 => 'Gone', 422 => 'Unprocessable Content', 429 => 'Too Many Requests', 500 => 'Internal Server Error', 502 => 'Bad Gateway', 503 => 'Service Unavailable',
         504 => 'Gateway Timeout'][$code] ?? 'Error';
@@ -529,6 +530,26 @@ function setError(int $code = 404): never {
     }
     if (defined('API_FILE')) ApiRouter::setApiReply(['status' => $code]);
     if (ob_get_level() > 0) ob_clean();
+    $page = $code === 404 && !$busy && !defined('ADMIN_FILE') && class_exists('Layout', false) && getVar('req', 'go', 'var') === '' && empty($_SERVER['HTTP_HX_REQUEST']);
+    if ($page) {
+        $busy = true;
+        $level = ob_get_level();
+        try {
+            $read = new Layout($conf['layout'] ?? [], getTheme(), is_user() > 0, is_moder() > 0, $conf['multilingual'] ? (string)$locale : '');
+            $miss = (int)$read->getData()['notfound'];
+            if ($miss > 0 && !$read->isPageEmpty($miss)) {
+                [$layout, $lkey, $name, $home, $conf['name']] = [$read, $miss, 'page-'.$miss, 0, 'page-'.$miss];
+                $title = (string)($read->getPage($miss)['title'] ?? '');
+                setHead(($title !== '') ? ['title' => $title] : []);
+                setFoot();
+                exit;
+            }
+        } catch (Throwable $err) {
+            while (ob_get_level() > $level) ob_end_clean();
+            if (ob_get_level() > 0) ob_clean();
+            Logger::addSite('error', 'The page 404 of the layout failed', ['error' => $err->getMessage()]);
+        }
+    }
     setExit(sprintf(_ERROR_PAGE, $code), '1', _ERROR.' '.$code);
 }
 

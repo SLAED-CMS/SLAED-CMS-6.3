@@ -1,0 +1,316 @@
+<!doctype html>
+<html lang="ru" data-theme="auto">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Отчёт &middot; Статистика — стенд SLAED CMS</title>
+  <link rel="stylesheet" href="../templates/admin/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../templates/admin/assets/css/base.css">
+  <link rel="stylesheet" href="../templates/admin/assets/css/theme.css">
+  <!-- The stand is served without Cache-Control; its sheets and scripts are stamped so an edit is seen at once -->
+  <script>document.write('<link rel="stylesheet" href="assets/demo.css?v=' + Date.now() + '"><link rel="stylesheet" href="assets/st.css?v=' + Date.now() + '">');</script>
+  <script src="../plugins/system/global-func.js"></script>
+  <script src="../plugins/system/slaed.js"></script>
+  <script src="../templates/admin/assets/js/admin-ui.js"></script>
+  <style>
+    /* Отчёт: the month read as a report from top to bottom — six numbered chapters with the head of the presentation
+       (number in a frame, icon in a frame, title over a rule), each opening with one sentence built from the figures,
+       then its picture; the contents stay at the right */
+    .v-doc {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 190px;
+      align-items: start;
+      gap: var(--sl-space-8);
+      counter-reset: v-ch;
+    }
+
+    .v-doc > .sl-box {
+      margin: 0;
+      padding: var(--sl-space-8);
+    }
+
+    .v-cover {
+      display: grid;
+      gap: var(--sl-space-3);
+      padding-bottom: var(--sl-space-8);
+      border-bottom: 1px solid var(--sl-border);
+    }
+
+    .v-over {
+      font-family: var(--sl-face-mono);
+      font-size: var(--sl-font-micro);
+      letter-spacing: var(--sl-track-wide);
+      text-transform: uppercase;
+      color: var(--sl-primary);
+    }
+
+    .v-cover h2 {
+      margin: 0;
+      font-size: var(--sl-font-display);
+      line-height: var(--sl-line-tight);
+    }
+
+    .v-cover-nav {
+      display: flex;
+      gap: var(--sl-space-3);
+    }
+
+    .v-ch {
+      display: grid;
+      gap: var(--sl-space-6);
+      padding: var(--sl-space-8) 0;
+      border-bottom: 1px solid var(--sl-border);
+      scroll-margin-top: var(--sl-space-6);
+    }
+
+    .v-ch:last-child {
+      border-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    .v-ch-head {
+      display: flex;
+      align-items: center;
+      gap: var(--sl-space-4);
+      counter-increment: v-ch;
+    }
+
+    .v-ch-head::before {
+      content: counter(v-ch, decimal-leading-zero);
+      display: grid;
+      place-items: center;
+      width: var(--sl-size-tile);
+      height: var(--sl-size-tile);
+      border: 1px solid var(--sl-border-strong);
+      border-radius: var(--sl-radius-2);
+      font-family: var(--sl-face-mono);
+      font-size: var(--sl-font-small);
+      color: var(--sl-text-muted);
+    }
+
+    .v-ch-head > .bi {
+      display: grid;
+      place-items: center;
+      width: var(--sl-size-tile);
+      height: var(--sl-size-tile);
+      border: 1px solid var(--sl-primary-muted);
+      border-radius: var(--sl-radius-2);
+      background: var(--sl-primary-subtle);
+      font-size: var(--sl-size-icon-sm);
+      color: var(--sl-primary);
+    }
+
+    .v-ch-head h3 {
+      flex: 1;
+      margin: 0;
+      padding-bottom: var(--sl-space-3);
+      border-bottom: 2px solid transparent;
+      border-image: var(--sl-grad-line) 1;
+      font-size: var(--sl-font-h2);
+    }
+
+    .v-lead {
+      max-width: 70ch;
+      margin: 0;
+      font-size: var(--sl-font-h4);
+      line-height: var(--sl-line-loose);
+      color: var(--sl-text-muted);
+    }
+
+    .v-lead b {
+      color: var(--sl-text-strong);
+    }
+
+    .v-figs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--sl-space-6) var(--sl-space-8);
+    }
+
+    .v-fig {
+      display: grid;
+      gap: var(--sl-space-1);
+    }
+
+    .v-fig b {
+      font-size: var(--sl-font-hero);
+      font-weight: var(--sl-weight-bold);
+      line-height: var(--sl-line-tight);
+      letter-spacing: var(--sl-track-tight);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .v-fig span {
+      font-size: var(--sl-font-small);
+      color: var(--sl-text-muted);
+    }
+
+    .v-line {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: var(--sl-space-4);
+    }
+
+    .v-line h4 {
+      margin: 0 auto 0 0;
+      font-size: var(--sl-font-body);
+      color: var(--sl-text-muted);
+    }
+
+    .v-pair {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: var(--sl-space-8);
+    }
+
+    .v-pair h4 {
+      margin: 0 0 var(--sl-space-4);
+      font-size: var(--sl-font-body);
+      color: var(--sl-text-muted);
+    }
+
+    .v-small {
+      --st-h: 160px;
+    }
+
+    .v-stacks {
+      display: grid;
+      gap: var(--sl-space-6);
+    }
+
+    .v-stacks .st-stack-bar {
+      --st-stack: 14px;
+    }
+
+    .v-toc {
+      position: sticky;
+      top: var(--sl-space-6);
+      display: grid;
+      gap: var(--sl-space-1);
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      counter-reset: v-toc;
+    }
+
+    .v-toc a {
+      display: flex;
+      gap: var(--sl-space-3);
+      padding: var(--sl-space-3) var(--sl-space-4);
+      border-left: 2px solid var(--sl-border);
+      font-size: var(--sl-font-small);
+      color: var(--sl-text-muted);
+      text-decoration: none;
+      counter-increment: v-toc;
+    }
+
+    .v-toc a::before {
+      content: counter(v-toc, decimal-leading-zero);
+      font-family: var(--sl-face-mono);
+      color: var(--sl-text-subtle);
+    }
+
+    .v-toc a:hover {
+      border-left-color: var(--sl-primary);
+      color: var(--sl-primary);
+    }
+
+    @media (max-width: 1100px) {
+      .v-doc {
+        grid-template-columns: minmax(0, 1fr);
+      }
+
+      .v-toc {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <template data-st-face>
+    <div class="v-doc">
+      <article class="sl-box">
+        <header class="v-cover">
+          <span class="v-over">Отчёт счётчика · <span data-st-t="run"></span></span>
+          <h2 data-st-t="month"></h2>
+          <div class="v-cover-nav">
+            <button type="button" class="sl-but" data-st-go="prev"><i class="bi bi-arrow-left" aria-hidden="true"></i> Месяц раньше</button>
+            <button type="button" class="sl-but" data-st-go="next">Месяц позже <i class="bi bi-arrow-right" aria-hidden="true"></i></button>
+          </div>
+        </header>
+
+        <section class="v-ch" id="v-visits">
+          <header class="v-ch-head"><i class="bi bi-graph-up-arrow" aria-hidden="true"></i><h3>Посещаемость</h3></header>
+          <p class="v-lead" data-st-say="visits"></p>
+          <div class="v-figs">
+            <div class="v-fig"><b data-st-t="u"></b><span>уникальных хостов · <span data-st-delta="u"></span></span></div>
+            <div class="v-fig"><b data-st-t="h"></b><span>просмотров страниц · <span data-st-delta="h"></span></span></div>
+            <div class="v-fig"><b data-st-t="per"></b><span>страницы на хост</span></div>
+          </div>
+          <div class="v-line"><h4>Уникальные по дням</h4><button type="button" class="sl-but" data-st-cmp><i class="bi bi-intersect" aria-hidden="true"></i> Наложить прошлый месяц</button></div>
+          <div data-st-chart="u" data-st-kind="area" data-st-cmp-on></div>
+        </section>
+
+        <section class="v-ch" id="v-audience">
+          <header class="v-ch-head"><i class="bi bi-people" aria-hidden="true"></i><h3>Аудитория</h3></header>
+          <p class="v-lead" data-st-say="audience"></p>
+          <div class="sl-statx-rings">
+            <div class="sl-statx-ring sl-statx-tone-success" data-st-share="human"><svg viewBox="0 0 100 100" aria-hidden="true"><circle class="sl-statx-rbg" cx="50" cy="50" r="38"></circle><circle class="sl-statx-rval" cx="50" cy="50" r="38" stroke-dasharray="238.76" stroke-dashoffset="238.76"></circle></svg><strong data-st-pct></strong><b data-st-share-name></b><span data-st-share-hint></span></div>
+            <div class="sl-statx-ring sl-statx-tone-accent" data-st-share="mobile"><svg viewBox="0 0 100 100" aria-hidden="true"><circle class="sl-statx-rbg" cx="50" cy="50" r="38"></circle><circle class="sl-statx-rval" cx="50" cy="50" r="38" stroke-dasharray="238.76" stroke-dashoffset="238.76"></circle></svg><strong data-st-pct></strong><b data-st-share-name></b><span data-st-share-hint></span></div>
+            <div class="sl-statx-ring sl-statx-tone-primary" data-st-share="ret"><svg viewBox="0 0 100 100" aria-hidden="true"><circle class="sl-statx-rbg" cx="50" cy="50" r="38"></circle><circle class="sl-statx-rval" cx="50" cy="50" r="38" stroke-dasharray="238.76" stroke-dashoffset="238.76"></circle></svg><strong data-st-pct></strong><b data-st-share-name></b><span data-st-share-hint></span></div>
+            <div class="sl-statx-ring sl-statx-tone-warning" data-st-share="search"><svg viewBox="0 0 100 100" aria-hidden="true"><circle class="sl-statx-rbg" cx="50" cy="50" r="38"></circle><circle class="sl-statx-rval" cx="50" cy="50" r="38" stroke-dasharray="238.76" stroke-dashoffset="238.76"></circle></svg><strong data-st-pct></strong><b data-st-share-name></b><span data-st-share-hint></span></div>
+          </div>
+          <div class="v-stacks"><div data-st-stack="newret"></div><div data-st-stack="depth"></div><div data-st-stack="duration"></div></div>
+        </section>
+
+        <section class="v-ch" id="v-sources">
+          <header class="v-ch-head"><i class="bi bi-signpost-split" aria-hidden="true"></i><h3>Источники</h3></header>
+          <p class="v-lead" data-st-say="sources"></p>
+          <div class="v-stacks"><div data-st-stack="refcat"></div></div>
+          <div class="v-pair">
+            <div><h4>Страны</h4><div class="sl-statx-tone-warning" data-st-bars="countries"></div></div>
+            <div><h4>Переходы и краулеры по дням</h4><div class="v-small" data-st-chart="ref,bot"></div></div>
+          </div>
+        </section>
+
+        <section class="v-ch" id="v-tech">
+          <header class="v-ch-head"><i class="bi bi-laptop" aria-hidden="true"></i><h3>Техника</h3></header>
+          <p class="v-lead" data-st-say="tech"></p>
+          <div class="v-stacks"><div data-st-stack="devices"></div><div data-st-stack="os"></div><div data-st-stack="browsers"></div></div>
+        </section>
+
+        <section class="v-ch" id="v-load">
+          <header class="v-ch-head"><i class="bi bi-speedometer2" aria-hidden="true"></i><h3>Нагрузка и сутки</h3></header>
+          <p class="v-lead" data-st-say="load"></p>
+          <p class="v-lead" data-st-say="hours"></p>
+          <div class="v-figs" data-st-if="load">
+            <div class="v-fig"><b data-st-t="gen"></b><span>мс на страницу</span></div>
+            <div class="v-fig"><b data-st-t="sql"></b><span>запросов к базе</span></div>
+            <div class="v-fig"><b data-st-t="mem"></b><span>МБ памяти PHP</span></div>
+          </div>
+          <div data-st-chart="hits,gen" data-st-x="hours"></div>
+        </section>
+
+        <section class="v-ch" id="v-days">
+          <header class="v-ch-head"><i class="bi bi-table" aria-hidden="true"></i><h3>По дням</h3></header>
+          <div data-st-table></div>
+        </section>
+      </article>
+
+      <nav aria-label="Разделы отчёта">
+        <ul class="v-toc">
+          <li><a href="#v-visits">Посещаемость</a></li>
+          <li><a href="#v-audience">Аудитория</a></li>
+          <li><a href="#v-sources">Источники</a></li>
+          <li><a href="#v-tech">Техника</a></li>
+          <li><a href="#v-load">Нагрузка и сутки</a></li>
+          <li><a href="#v-days">По дням</a></li>
+        </ul>
+      </nav>
+    </div>
+  </template>
+  <script>document.write('<script src="assets/st.js?v=' + Date.now() + '"><\/script>');</script>
+  <script>document.write('<script src="assets/demo.js?v=' + Date.now() + '"><\/script>');</script>
+</body>
+</html>

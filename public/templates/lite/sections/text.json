@@ -1,0 +1,19 @@
+{
+    "title": "_TEXT",
+    "note": "_LAYOUT_TEXT_INFO",
+    "icon": "file-text",
+    "group": "base",
+    "frame": true,
+    "fields": [
+        {"key": "title", "label": "_TITLE", "type": "text"},
+        {"key": "lead", "label": "_LAYOUT_LEAD", "type": "text"},
+        {"key": "icon", "label": "_ICON", "type": "icon", "tab": "look"},
+        {"key": "body", "label": "_TEXT", "type": "markdown"}
+    ],
+    "make": {
+        "title": "_LAYOUT_TEXT_TITLE",
+        "lead": "",
+        "icon": "file-text",
+        "body": "_LAYOUT_TEXT_BODY"
+    }
+}

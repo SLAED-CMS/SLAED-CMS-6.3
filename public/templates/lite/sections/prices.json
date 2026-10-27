@@ -1,0 +1,37 @@
+{
+    "title": "_LAYOUT_PRICES",
+    "note": "_LAYOUT_PRICE_INFO",
+    "icon": "tags",
+    "group": "contact",
+    "frame": true,
+    "fields": [
+        {"key": "title", "label": "_TITLE", "type": "text"},
+        {"key": "lead", "label": "_LAYOUT_LEAD", "type": "text"},
+        {"key": "icon", "label": "_ICON", "type": "icon", "tab": "look"}
+    ],
+    "items": {
+        "label": "_LAYOUT_PRICES",
+        "max": 6,
+        "name": "name",
+        "fields": [
+            {"key": "name", "label": "_NAME", "type": "text"},
+            {"key": "price", "label": "_LAYOUT_PRICE", "type": "text"},
+            {"key": "unit", "label": "_LAYOUT_TERM", "type": "text"},
+            {"key": "text", "label": "_LAYOUT_INCL", "type": "textarea"},
+            {"key": "btn", "label": "_LAYOUT_BTN", "type": "text"},
+            {"key": "href", "label": "_LAYOUT_HREF", "type": "url"},
+            {"key": "hot", "label": "_LAYOUT_HOT", "type": "bool", "show": "switch"}
+        ],
+        "make": {"name": "_LAYOUT_PLAN", "price": "0", "unit": "", "text": "", "btn": "_LAYOUT_CTA_BTN", "href": "", "hot": false}
+    },
+    "make": {
+        "title": "_LAYOUT_PRICES",
+        "lead": "",
+        "icon": "tags",
+        "items": [
+            {"name": "_LAYOUT_PLAN", "price": "0", "unit": "", "text": "", "btn": "_LAYOUT_CTA_BTN", "href": "", "hot": false},
+            {"name": "_LAYOUT_PLAN", "price": "0", "unit": "", "text": "", "btn": "_LAYOUT_CTA_BTN", "href": "", "hot": true},
+            {"name": "_LAYOUT_PLAN", "price": "0", "unit": "", "text": "", "btn": "_LAYOUT_CTA_BTN", "href": "", "hot": false}
+        ]
+    }
+}

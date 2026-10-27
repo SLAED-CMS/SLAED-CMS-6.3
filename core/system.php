@@ -31,6 +31,7 @@ if (!defined('LOGS_DIR')) define('LOGS_DIR', BASE_DIR.'/storage/logs');
 if (!defined('SITEMAP_DIR')) define('SITEMAP_DIR', BASE_DIR.'/storage/sitemap');
 if (!defined('CAPTCHA_DIR')) define('CAPTCHA_DIR', BASE_DIR.'/storage/captcha');
 if (!defined('UPDATE_DIR')) define('UPDATE_DIR', BASE_DIR.'/storage/update');
+if (!defined('LAYOUT_DIR')) define('LAYOUT_DIR', BASE_DIR.'/storage/layout');
 
 # The public part a browser fetches, the document root; an entry of public/ defines it, and a tool or a test without one reads the folder of the project
 if (!defined('PUBLIC_DIR')) define('PUBLIC_DIR', BASE_DIR.'/public');
@@ -1496,7 +1497,7 @@ function setSeoMove(array $seo = []): void {
     $name = $keys['name'] ?? '';
     $op = $keys['op'] ?? '';
     if (array_key_exists('route', $seo)) $keys['route'] = $seo['route'];
-    $known = $name === '' || isset($conf['node']['types'][$name]) || isset($conf['modules'][$name]);
+    $known = $name === '' || isset($conf['node']['types'][$name]) || isset($conf['modules'][$name]) || (preg_match(Layout::PAGE, $name) === 1 && ($seo['route'] ?? '') !== '');
     $bare = $op !== '' && ($keys['route'] ?? '') === '' && ($name === '' || !(new Route($db))->isRouteReserved($name, $op));
     if (!isset($seo['url']) && (!$known || $bare)) return;
     $drop = ['name', 'op', 'id', 'cat', 'uname'];
@@ -1523,8 +1524,9 @@ function setSeoMove(array $seo = []): void {
     setRedirect((($site !== '') ? ($ssl ? 'https' : 'http').'://'.$site : '').$want, false, 301);
 }
 
-# Resolve canonical URL and robots defaults for the current frontend request
+# Resolve canonical URL and robots defaults for the current frontend request; a page read from the draft of the layout is never indexed
 function getSeoRoute(array $seo = []): array {
+    global $layout;
     $vars = filterCanonicalParams();
     if (array_key_exists('route', $seo) || http_response_code() >= 400) $vars['route'] = $seo['route'] ?? null;
     $name = $vars['name'] ?? '';
@@ -1537,7 +1539,7 @@ function getSeoRoute(array $seo = []): array {
         'partner', 'passlost', 'preview', 'privat', 'send', 'upload',
     ];
     $noindex = in_array($name, $services, true) || in_array($op, $forms, true) || $op === 'liste' || ($name === 'account' && $op !== 'view');
-    if (getVar('get', 'status', 'num')) $noindex = true;
+    if (getVar('get', 'status', 'num') || ($layout instanceof Layout && $layout->isDraft())) $noindex = true;
     $status = http_response_code();
     if ($status >= 400) $noindex = true;
     $iscanon = !$noindex;
@@ -1811,25 +1813,24 @@ function getRssFeeds(): array {
     return $out;
 }
 
-# Render the page head; a category title shows only when the visitor may read it, judged by the Node reader or the read right, so a closed category never leaks
+# Render the page head and track the visit once, though the page 404 renders a head again; a category title shows only when the visitor may read it, so none leaks
 function setHead(array $seo = []): void {
     global $db, $home, $conf, $user, $name, $theme, $tpl, $afile, $adminpage, $adminvars, $sitepage, $sitevars, $locale;
+    static $kept = false;
     setSeoMove($seo);
     $name = $name ?? '';
     $ctime = time();
     $request = $_SERVER['REQUEST_URI'] ?? getenv('REQUEST_URI') ?: '';
-    if ($conf['session']) {
-        $track = updateSessionTrack($ctime, $request, $name);
+    if (!$kept) {
+        $kept = true;
+        $track = $conf['session'] ? updateSessionTrack($ctime, $request, $name) : ['uname' => '', 'guest' => 0];
         $uname = $track['uname'];
         $guest = $track['guest'];
-    } else {
-        $uname = '';
-        $guest = 0;
-    }
-    if ($conf['referers']['refer']) addDeferredTask(static fn() => updateRefererTrack($ctime, $request, $uname));
-    if ($conf['statistic']['stat']) {
-        $stats = updateStatsCookie($guest);
-        addDeferredTask(static fn() => updateStatsTrack($request, $guest, $stats));
+        if ($conf['referers']['refer']) addDeferredTask(static fn() => updateRefererTrack($ctime, $request, $uname));
+        if ($conf['statistic']['stat']) {
+            $stats = updateStatsCookie($guest);
+            addDeferredTask(static fn() => updateStatsTrack($request, $guest, $stats));
+        }
     }
     $hcid = (int)($seo['cid'] ?? getVar('get', 'cat', 'num', 0));
     if (!isset($seo['cid']) && $hcid > 0 && !defined('ADMIN_FILE')) {
@@ -2126,7 +2127,7 @@ function setHead(array $seo = []): void {
 
 # Render the page foot; a panel list asking by X-SL-Part gets its title and content only, a lost session makes it reload, and a one-time notice is cleared here
 function setFoot(): void {
-    global $home, $name, $conf, $tpl, $adminpage, $adminvars, $sitepage, $sitevars, $blocks, $blocks_c, $foot, $layout, $lkey;
+    global $home, $name, $conf, $tpl, $adminpage, $adminvars, $sitepage, $sitevars, $blocks, $blocks_c, $foot, $layout, $lkey, $prs;
     if (defined('ADMIN_FILE')) {
         $vars = is_array($adminvars ?? null) ? $adminvars : [];
         $page = (is_string($adminpage ?? '') && $adminpage !== '') ? $adminpage : 'admin';
@@ -2156,7 +2157,8 @@ function setFoot(): void {
     $vars = is_array($sitevars ?? null) ? $sitevars : [];
     $body = (ob_get_level() > 0) ? (string)ob_get_clean() : '';
     if (!empty($lkey) && $layout instanceof Layout) {
-        $body = $layout->getPageHtml($lkey, $body, $tpl);
+        $mark = $layout->isDraft() ? $tpl->getHtmlFrag('alert', ['text' => _LAYOUT_DRAFT, 'meta' => '', 'type' => 'warn', 'is_warn' => true]) : '';
+        $body = $mark.$layout->getPageHtml($lkey, $body, $tpl, $prs);
         [$blocks, $blocks_c] = $layout->getPageColumns($lkey);
     }
     $flash = getFlashHtml();
@@ -2922,6 +2924,9 @@ function addSitemapTask(bool $force = false): array {
             if ($open) $ncats[$name][intval($cid)] = (string)$ctitle;
         }
     }
+    $lout = new Layout($conf['layout'] ?? [], getTheme(), false, false);
+    $lkeys = array_filter($lout->getAddressKeys(), fn(int $v): bool => $lout->isPageShown($v) && empty($lout->getPage($v)['noindex']));
+    $paths = (new Route($db))->getRouteList('page', $lkeys);
     $home = $conf['homeurl'];
     $head = '<?xml version="1.0" encoding="UTF-8"?>'."\n"
         .(($sm['xsl'] && file_exists(SITEMAP_DIR.'/sitemap.xsl')) ? '<?xml-stylesheet type="text/xsl" href="'.$home.'/index.php?go=xsl"?>'."\n" : '');
@@ -2953,6 +2958,7 @@ function addSitemapTask(bool $force = false): array {
     try {
         if ($sm['gen_h']) $put($line(getPublicUrl(), $date, 'h'));
         if ($sm['gen_m']) foreach (array_merge(array_keys($info), array_keys($types)) as $key) $put($line(getPublicUrl(['name' => $key]), $date, 'm'));
+        if ($sm['gen_m']) foreach ($paths as $key => $path) $put($line(getPublicUrl(['name' => 'page-'.$key, 'route' => $path]), $date, 'm'));
         foreach (array_keys($info) as $key) {
             $result = $db->getSqlQuery('SELECT id, modul, title, parent, pview FROM '.PREFIX_DB.'_categories WHERE modul = :mod', ['mod' => $key]);
             while ([$cid, $cmodul, $title, $parent, $pview] = $db->getSqlRow($result)) {
@@ -3031,6 +3037,11 @@ function addSitemapTask(bool $force = false): array {
             }
             $mkids = $citems ? $tpl->getHtmlFrag('list', ['items_html' => $citems, 'is_sub' => true]) : '';
             $items .= $tpl->getHtmlFrag('list-item', ['content_html' => $mlink, 'children_html' => $mkids]);
+        }
+        foreach ($paths as $key => $path) {
+            $ptitle = (string)($lout->getPage($key)['title'] ?? '') ?: $path;
+            $plink = $tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => 'page-'.$key, 'route' => $path]), 'title' => $ptitle, 'label' => $ptitle]);
+            $items .= $tpl->getHtmlFrag('list-item', ['content_html' => $plink]);
         }
         $html = $tpl->getHtmlFrag('list', ['items_html' => $items]);
         $sdir = dirname(SITEMAP_DIR.'/sitemap.txt');
@@ -3975,9 +3986,13 @@ function getPluralForm(int $num, string $forms): string {
     return $list[min($pick, count($list) - 1)];
 }
 
-# Resolve a module key to its localised name; a Node type answers its own title, a site module the map lacks its config row name, a panel module its key
+# Resolve a module key to its localised name: a Node type and a page of the layout answer their title, a site module the map lacks its config row name, a panel module its key
 function getModuleName(string $con): string {
-    global $conf;
+    global $conf, $layout;
+    if (class_exists('Layout', false) && preg_match(Layout::PAGE, $con, $hit) === 1) {
+        $data = ($layout instanceof Layout) ? $layout->getData() : Layout::getLayoutData($conf['layout'] ?? []);
+        return (string)($data['pages'][(int)$hit[1]]['title'] ?? '');
+    }
     if (isset($conf['node']['types'][$con])) {
         $type = getNodeTypeMap()[$con] ?? null;
         return ($type !== null) ? getConst($type->title) : $con;

@@ -1,0 +1,10 @@
+{% if url_file %}<figure class="sl-sec-frame sl-sec-film"><video src="{{ url_file }}" controls preload="metadata"></video></figure>
+{% elseif url_frame %}<figure class="sl-sec-frame sl-sec-film">
+  <div class="sl-sec-load" data-sl-sec-load>
+    {% if photo %}<img src="{{ photo }}" alt="" style="--sl-d-focus: {{ focus }}" loading="lazy" decoding="async">{% else %}<i class="bi bi-play-btn" aria-hidden="true"></i>{% endif %}
+    <button type="button" class="sl-but"><i class="bi bi-play-fill" aria-hidden="true"></i>{{ _LAYOUT_FILM }}</button>
+    <template><iframe src="{{ url_frame }}" title="{{ title }}" allow="autoplay; encrypted-media; picture-in-picture; fullscreen"></iframe></template>
+  </div>
+</figure>
+{% endif %}
+{% if url_file or url_frame %}{% if caption %}<p class="sl-pres-lead">{{ caption }}</p>{% endif %}{% endif %}

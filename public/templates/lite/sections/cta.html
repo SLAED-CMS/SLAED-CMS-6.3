@@ -1,0 +1,6 @@
+<div class="sl-pres-claim sl-sec-cta">
+  {% if over %}<span class="sl-pres-over">{{ over }}</span>{% endif %}
+  <h3>{{ title }}</h3>
+  {% if text %}<p class="sl-sec-lines">{{ text }}</p>{% endif %}
+  {% if btn and href %}<a class="sl-but sl-sec-cta-but" href="{{ href }}"{% if href_ext %} target="_blank" rel="noopener"{% endif %}>{{ btn }}</a>{% endif %}
+</div>

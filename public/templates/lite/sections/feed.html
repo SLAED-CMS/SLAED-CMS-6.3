@@ -1,0 +1,9 @@
+{% if view_list %}<div class="sl-pres-commits">
+  {% for item in rows %}<a class="sl-pres-commit" href="{{ item.href }}"><span class="sl-pres-sha">{{ item.kind }}</span><div><b>{{ item.title }}</b>{% if item.cat %}<span class="sl-pres-tags"><span>{{ item.cat }}</span></span>{% endif %}</div>{% if date %}<div class="sl-pres-when"><time datetime="{{ item.iso }}">{{ item.when }}</time></div>{% else %}<span></span>{% endif %}</a>{% endfor %}
+</div>{% else %}<div class="sl-pres-pulse">
+  {% for item in rows %}<article class="sl-pres-pulse-card" data-sl-tone="{{ item.tone }}">
+    <div class="sl-pres-pulse-head"><span><i class="bi bi-{{ item.icon }}" aria-hidden="true"></i></span><div><b>{{ item.kind }}</b><span>{{ item.cat }}</span></div></div>
+    <div class="sl-pres-pulse-body">{% if date %}<time datetime="{{ item.iso }}">{{ item.when }}</time>{% endif %}<h3><a href="{{ item.href }}">{{ item.title }}</a></h3>{% if item.text %}<p>{{ item.text }}</p>{% endif %}</div>
+    <div class="sl-pres-pulse-foot"><i class="sl-pres-dot sl-is-live"></i>{% if more and item.all_href %}<a href="{{ item.all_href }}"><span>{{ item.all }}</span> <i class="bi bi-arrow-up-right" aria-hidden="true"></i></a>{% endif %}</div>
+  </article>{% endfor %}
+</div>{% endif %}

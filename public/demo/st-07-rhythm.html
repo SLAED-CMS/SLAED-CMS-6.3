@@ -1,0 +1,338 @@
+<!doctype html>
+<html lang="ru" data-theme="auto">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ритм &middot; Статистика — стенд SLAED CMS</title>
+  <link rel="stylesheet" href="../templates/admin/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../templates/admin/assets/css/base.css">
+  <link rel="stylesheet" href="../templates/admin/assets/css/theme.css">
+  <!-- The stand is served without Cache-Control; its sheets and scripts are stamped so an edit is seen at once -->
+  <script>document.write('<link rel="stylesheet" href="assets/demo.css?v=' + Date.now() + '"><link rel="stylesheet" href="assets/st.css?v=' + Date.now() + '">');</script>
+  <script src="../plugins/system/global-func.js"></script>
+  <script src="../plugins/system/slaed.js"></script>
+  <script src="../templates/admin/assets/js/admin-ui.js"></script>
+  <style>
+    /* Ритм: the counter keeps every hour, and this face is about time — a ribbon of days to pick from, the picked day
+       or the month as a dial of 24 spokes with the generation as dots around it, the week as a grid of 7 by 24, workdays
+       against weekends, the slow hours named */
+    .v-ribbon {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      align-items: center;
+      gap: var(--sl-space-6);
+    }
+
+    .v-ribbon-head {
+      display: grid;
+      gap: var(--sl-space-2);
+    }
+
+    .v-ribbon-head h2 {
+      margin: 0;
+      font-size: var(--sl-font-h3);
+    }
+
+    .v-ribbon-head div {
+      display: flex;
+      gap: var(--sl-space-2);
+    }
+
+    .v-ribbon [data-st-chart] {
+      --st-h: 80px;
+      --st-axis: 40px;
+    }
+
+    .v-stage {
+      display: grid;
+      grid-template-columns: minmax(300px, 400px) minmax(0, 1fr);
+      gap: var(--sl-space-6);
+    }
+
+    .v-stage > .sl-box {
+      margin: 0;
+    }
+
+    .v-dial {
+      position: relative;
+      display: grid;
+      align-content: start;
+      gap: var(--sl-space-5);
+    }
+
+    .v-dial-face {
+      position: relative;
+    }
+
+    .v-dial-mid {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-content: center;
+      text-align: center;
+      pointer-events: none;
+    }
+
+    .v-mid-home,
+    .v-mid-say {
+      display: grid;
+      justify-items: center;
+    }
+
+    .v-dial-mid:has(> [data-st-clock-say]:not([hidden])) > .v-mid-home {
+      display: none;
+    }
+
+    .v-mid-say b {
+      color: var(--sl-primary);
+    }
+
+    .v-dial-face::before {
+      content: "";
+      position: absolute;
+      inset: 8%;
+      border-radius: var(--sl-radius-circle);
+      background: conic-gradient(from 0deg, var(--sl-tint-strong), transparent 16%);
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .v-dial-face [data-st-clock] {
+      position: relative;
+    }
+
+    .v-dial-mid b {
+      font-size: var(--sl-font-h1);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .v-dial-mid span {
+      font-size: var(--sl-font-micro);
+      color: var(--sl-text-muted);
+    }
+
+    .v-dial-head {
+      display: flex;
+      align-items: baseline;
+      gap: var(--sl-space-3);
+    }
+
+    .v-dial-head h3 {
+      margin: 0;
+      font-size: var(--sl-font-h3);
+    }
+
+    .v-dial-head span {
+      color: var(--sl-text-muted);
+    }
+
+    .v-dial-head button {
+      margin-left: auto;
+    }
+
+    .v-keys {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--sl-space-3) var(--sl-space-6);
+      font-size: var(--sl-font-small);
+      color: var(--sl-text-muted);
+    }
+
+    .v-keys i {
+      display: inline-block;
+      width: var(--sl-space-4);
+      height: var(--sl-space-4);
+      margin-right: var(--sl-space-2);
+      border-radius: var(--sl-radius-circle);
+      vertical-align: -1px;
+    }
+
+    .v-key-hit { background: var(--sl-primary); }
+    .v-key-gen { background: var(--sl-warning); }
+
+    .v-cap,
+    .v-week h3 {
+      margin: 0 0 var(--sl-space-5);
+      font-size: var(--sl-font-h4);
+    }
+
+    .v-scale {
+      display: flex;
+      align-items: center;
+      gap: var(--sl-space-3);
+      margin-top: var(--sl-space-5);
+      font-size: var(--sl-font-micro);
+      color: var(--sl-text-muted);
+    }
+
+    .v-scale i {
+      width: 120px;
+      height: 8px;
+      border-radius: var(--sl-radius-pill);
+      background: linear-gradient(to right, var(--sl-bg-subtle), var(--sl-primary));
+    }
+
+    .v-facts {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: var(--sl-space-5);
+      margin-top: var(--sl-space-8);
+    }
+
+    .v-fact {
+      display: grid;
+      gap: var(--sl-space-1);
+      padding-left: var(--sl-space-5);
+      border-left: 3px solid var(--st-tone, var(--sl-border-strong));
+    }
+
+    .v-fact span {
+      font-size: var(--sl-font-small);
+      color: var(--sl-text-muted);
+    }
+
+    .v-fact b {
+      font-size: var(--sl-font-h2);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .v-rest {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: var(--sl-space-6);
+    }
+
+    .v-rest > .sl-box {
+      margin: 0;
+    }
+
+    .v-rest h3 {
+      margin: 0 0 var(--sl-space-4);
+      font-size: var(--sl-font-h4);
+    }
+
+    .v-stacks {
+      display: grid;
+      gap: var(--sl-space-6);
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+      :root.st-fx:not([data-demo-motion="off"]) .v-dial-face::before {
+        opacity: 1;
+        animation: v-sweep 7s linear infinite;
+      }
+
+      :root.st-fx:not([data-demo-motion="off"]) .st-play .v-fact {
+        animation: st-fade-up 0.5s var(--st-spring) both;
+      }
+
+      :root.st-fx:not([data-demo-motion="off"]) .st-play .v-fact:nth-child(2) { animation-delay: 0.1s; }
+      :root.st-fx:not([data-demo-motion="off"]) .st-play .v-fact:nth-child(3) { animation-delay: 0.2s; }
+      :root.st-fx:not([data-demo-motion="off"]) .st-play .v-fact:nth-child(4) { animation-delay: 0.3s; }
+      :root.st-fx:not([data-demo-motion="off"]) .st-play .v-fact:nth-child(5) { animation-delay: 0.4s; }
+
+      :root.st-fx:not([data-demo-motion="off"]) .st-clock-spoke.st-is-on {
+        filter: drop-shadow(0 0 var(--sl-space-3) var(--sl-primary));
+      }
+
+      :root.st-fx:not([data-demo-motion="off"]) .v-mid-home b {
+        animation: v-beat 2.4s var(--sl-ease-in-out) infinite;
+      }
+
+      :root.st-fx:not([data-demo-motion="off"]) .v-mid-say {
+        animation: st-pop 0.25s var(--st-spring);
+      }
+
+      :root.st-fx:not([data-demo-motion="off"]) .v-scale i {
+        background-size: 200% 100%;
+        animation: v-shimmer 4s linear infinite alternate;
+      }
+    }
+
+    @keyframes v-sweep {
+      to { transform: rotate(360deg); }
+    }
+
+    @keyframes v-beat {
+      50% { transform: scale(1.08); }
+    }
+
+    @keyframes v-shimmer {
+      to { background-position: 100% 0; }
+    }
+
+    @media (max-width: 980px) {
+      .v-stage,
+      .v-ribbon {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+  </style>
+</head>
+<body>
+  <template data-st-face>
+    <section class="sl-box v-ribbon">
+      <div class="v-ribbon-head">
+        <h2 data-st-t="month"></h2>
+        <span class="st-live" data-st-if="run">в эфире</span>
+        <div>
+          <button type="button" class="sl-but" data-st-go="prev" title="Месяц раньше" aria-label="Месяц раньше"><i class="bi bi-chevron-left" aria-hidden="true"></i></button>
+          <button type="button" class="sl-but" data-st-go="next" title="Месяц позже" aria-label="Месяц позже"><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
+        </div>
+      </div>
+      <div data-st-chart="u" data-st-pick></div>
+    </section>
+
+    <div class="v-stage" data-st-rise>
+      <section class="sl-box v-dial" data-st-scope="day">
+        <div class="v-dial-head">
+          <h3 data-st-if="day" data-st-t="date"></h3><span data-st-if="day" data-st-t="weekday"></span>
+          <h3 data-st-if="noday">Последние полные сутки</h3>
+          <button type="button" class="sl-but" data-st-day-clear data-st-if="day" title="Снять выбор" aria-label="Снять выбор"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
+        </div>
+        <div class="v-dial-face">
+          <div data-st-clock></div>
+          <div class="v-dial-mid"><div class="v-mid-home"><span>пик</span><b data-st-t="peak-hour"></b><span><span data-st-t="h"></span> входов за сутки</span></div><div class="v-mid-say" data-st-clock-say hidden></div></div>
+        </div>
+        <div class="v-keys"><span><i class="v-key-hit"></i>входы за час</span><span><i class="v-key-gen"></i>генерация: чем больше точка, тем дольше</span></div>
+      </section>
+
+      <section class="sl-box v-week">
+        <h3>Неделя по часам: среднее число входов</h3>
+        <div data-st-week></div>
+        <div class="v-scale"><span>меньше</span><i></i><span>больше</span></div>
+        <div class="v-facts">
+          <div data-st-tilt class="v-fact st-s-u"><span>Будний день</span><b data-st-t="avg-work"></b><span>уникальных в среднем</span></div>
+          <div data-st-tilt class="v-fact st-s-usr"><span>Выходной</span><b data-st-t="avg-end"></b><span>уникальных в среднем</span></div>
+          <div data-st-tilt class="v-fact st-s-hits"><span>Пиковый час</span><b data-st-t="peak-hour"></b><span>больше всего входов</span></div>
+          <div data-st-tilt class="v-fact st-s-gen"><span>Самый медленный</span><b data-st-t="slow-hour"></b><span>дольше всего генерация</span></div>
+          <div data-st-tilt class="v-fact st-s-home"><span>Самый быстрый</span><b data-st-t="fast-hour"></b><span>быстрее всего генерация</span></div>
+        </div>
+      </section>
+    </div>
+
+    <section class="sl-box">
+      <h3 class="v-cap">Генерация средней страницы по часам, мс</h3>
+      <div data-st-chart="gen,hits" data-st-x="hours" data-st-kind="area" data-st-if="load"></div>
+      <div class="v-keys" data-st-if="load"><span><i class="v-key-gen"></i>генерация, мс</span><span><i class="v-key-hit"></i>входы — своя шкала</span></div>
+      <p data-st-if="noload">В этом месяце счётчик ещё не писал нагрузку.</p>
+    </section>
+
+    <div class="v-rest" data-st-rise>
+      <section class="sl-box"><h3>Источники</h3><div class="v-stacks"><div data-st-stack="refcat"></div><div data-st-stack="devices"></div></div></section>
+      <section class="sl-box"><h3>Сеансы</h3><div class="v-stacks"><div data-st-stack="depth"></div><div data-st-stack="duration"></div></div></section>
+      <section class="sl-box"><h3>Страны</h3><div class="sl-statx-tone-warning" data-st-bars="countries" data-st-top="5"></div></section>
+      <section class="sl-box"><h3>Браузеры</h3><div class="sl-statx-tone-primary" data-st-bars="browsers" data-st-top="5"></div></section>
+    </div>
+
+    <section class="sl-box">
+      <details>
+        <summary>Данные по дням</summary>
+        <div data-st-table="pick"></div>
+      </details>
+    </section>
+  </template>
+  <script>document.write('<script src="assets/st.js?v=' + Date.now() + '"><\/script>');</script>
+  <script>document.write('<script src="assets/demo.js?v=' + Date.now() + '"><\/script>');</script>
+</body>
+</html>

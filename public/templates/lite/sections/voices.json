@@ -1,0 +1,38 @@
+{
+    "title": "_LAYOUT_VOICES",
+    "note": "_LAYOUT_VOICE_INFO",
+    "icon": "chat-quote",
+    "group": "trust",
+    "frame": true,
+    "fields": [
+        {"key": "title", "label": "_TITLE", "type": "text"},
+        {"key": "lead", "label": "_LAYOUT_LEAD", "type": "text"},
+        {"key": "icon", "label": "_ICON", "type": "icon", "tab": "look"},
+        {"key": "over", "label": "_LAYOUT_OVER", "type": "text"},
+        {"key": "tone", "label": "_LAYOUT_TINT", "type": "tone", "tab": "look"}
+    ],
+    "items": {
+        "label": "_LAYOUT_VOICES",
+        "max": 6,
+        "name": "name",
+        "fields": [
+            {"key": "text", "label": "_LAYOUT_WORDS", "type": "textarea"},
+            {"key": "name", "label": "_LAYOUT_PERSON", "type": "text"},
+            {"key": "site", "label": "_SITE", "type": "text"},
+            {"key": "role", "label": "_LAYOUT_ROLE", "type": "text"},
+            {"key": "since", "label": "_LAYOUT_SINCE", "type": "text"}
+        ],
+        "make": {"text": "_LAYOUT_VOICE_TEXT", "name": "_LAYOUT_PERSON", "site": "", "role": "", "since": ""}
+    },
+    "make": {
+        "title": "_LAYOUT_VOICES",
+        "lead": "",
+        "icon": "chat-quote",
+        "over": "",
+        "tone": "success",
+        "items": [
+            {"text": "_LAYOUT_VOICE_TEXT", "name": "_LAYOUT_PERSON", "site": "", "role": "", "since": ""},
+            {"text": "_LAYOUT_VOICE_TEXT", "name": "_LAYOUT_PERSON", "site": "", "role": "", "since": ""}
+        ]
+    }
+}

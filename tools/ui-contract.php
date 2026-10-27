@@ -248,6 +248,8 @@ return [
         '--sl-d-dock-y' => 'centre of the floating menu down the window, plugins/system/dock.js',
         '--sl-d-duration' => 'profile feed scroll duration, plugins/system/slaed.js',
         '--sl-d-editor-floor' => 'height of the field CodeMirror takes the place of, plugins/system/editor.js',
+        '--sl-d-focus' => 'point of a picture its crop keeps in view, object-position of templates/lite/sections/*.html',
+        '--sl-d-frame' => 'height of the frame of an embedded page, the field height of templates/lite/sections/embed.html',
         '--sl-d-float-left' => 'floating panel viewport left, plugins/system/slaed.js',
         '--sl-d-float-top' => 'floating panel viewport top, plugins/system/slaed.js',
         '--sl-d-group' => 'colour of a group on its ladder step, its contrast tiles and the bind swatch of its form, templates/admin/fragments/group-step.html,'

@@ -1,0 +1,21 @@
+{
+    "title": "_PRES_SEC",
+    "note": "_PRES_SEC_INFO",
+    "icon": "images",
+    "group": "media",
+    "frame": true,
+    "fields": [
+        {"key": "title", "label": "_TITLE", "type": "text"},
+        {"key": "lead", "label": "_LAYOUT_LEAD", "type": "text"},
+        {"key": "icon", "label": "_ICON", "type": "icon", "tab": "look"},
+        {"key": "over", "label": "_LAYOUT_OVER", "type": "text"},
+        {"key": "count", "label": "_PRES_SEC_COUNT", "type": "int", "show": "range", "min": 3, "max": 12}
+    ],
+    "make": {
+        "title": "_PRES_H_SITES",
+        "lead": "",
+        "icon": "globe",
+        "over": "_PRES_SI_REAL",
+        "count": 8
+    }
+}

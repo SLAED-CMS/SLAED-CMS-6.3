@@ -1,0 +1,7 @@
+{% if url_frame %}<div class="sl-sec-frame sl-sec-page"{% if height %} style="--sl-d-frame: {{ height }}px"{% endif %}>
+  <div class="sl-sec-load" data-sl-sec-load>
+    {% if photo %}<img src="{{ photo }}" alt="" style="--sl-d-focus: {{ focus }}" loading="lazy" decoding="async">{% else %}<i class="bi bi-window-stack" aria-hidden="true"></i>{% endif %}
+    <button type="button" class="sl-but"><i class="bi bi-box-arrow-in-down" aria-hidden="true"></i>{{ _SHOW }} {{ url_host }}</button>
+    <template><iframe src="{{ url_frame }}" title="{{ title }}" sandbox="allow-scripts allow-forms allow-same-origin allow-popups" referrerpolicy="no-referrer"></iframe></template>
+  </div>
+</div>{% endif %}

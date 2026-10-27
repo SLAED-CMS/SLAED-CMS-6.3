@@ -1,0 +1,10 @@
+<div class="sl-pres-dna sl-sec-cols-{{ cols }}">
+  {% for item in items %}<article class="sl-pres-principle">
+    {% if item.photo %}<img src="{{ item.photo }}" width="1920" height="440" alt="{{ item.name }}" style="--sl-d-focus: {{ item.focus }}" loading="lazy" decoding="async">{% endif %}
+    <div class="sl-pres-principle-copy">
+      <header data-sl-tone="primary"><i class="bi bi-person" aria-hidden="true"></i><h3>{{ item.name }}</h3></header>
+      {% if item.role %}<span class="sl-pres-over">{{ item.role }}</span>{% endif %}
+      {% if item.text %}<p class="sl-sec-lines">{{ item.text }}</p>{% endif %}
+    </div>
+  </article>{% endfor %}
+</div>

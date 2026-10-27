@@ -1,0 +1,37 @@
+{
+    "title": "_LAYOUT_HERO",
+    "note": "_LAYOUT_HERO_INFO",
+    "icon": "image",
+    "group": "base",
+    "frame": false,
+    "fields": [
+        {"key": "over", "label": "_LAYOUT_OVER", "type": "text"},
+        {"key": "title", "label": "_TITLE", "type": "text"},
+        {"key": "accent", "label": "_LAYOUT_ACCENT", "type": "text"},
+        {"key": "title2", "label": "_LAYOUT_LINE2", "type": "text"},
+        {"key": "text", "label": "_TEXT", "type": "textarea"},
+        {"key": "btn", "label": "_LAYOUT_BTN", "type": "text"},
+        {"key": "href", "label": "_LAYOUT_HREF", "type": "url"},
+        {"key": "btn2", "label": "_LAYOUT_BTN2", "type": "text"},
+        {"key": "href2", "label": "_LAYOUT_HREF2", "type": "url"},
+        {"key": "pic", "label": "_LAYOUT_PICRIGHT", "type": "bool", "show": "switch", "tab": "look"},
+        {"key": "photo", "label": "_IMG", "type": "file", "tab": "look"},
+        {"key": "alt", "label": "_LAYOUT_ALT", "type": "text", "tab": "look"},
+        {"key": "focus", "label": "_LAYOUT_FOCUS", "type": "focus", "tab": "look"}
+    ],
+    "make": {
+        "over": "_LAYOUT_OVER",
+        "title": "_TITLE",
+        "accent": "_LAYOUT_HERO_ACC",
+        "title2": "",
+        "text": "_LAYOUT_HERO_TEXT",
+        "btn": "_READMORE",
+        "href": "",
+        "btn2": "",
+        "href2": "",
+        "pic": true,
+        "photo": "presentation/brand/background-1.png",
+        "alt": "",
+        "focus": "center"
+    }
+}

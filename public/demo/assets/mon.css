@@ -1,0 +1,770 @@
+/* Monitor series: the parts every face shares (mn-*), in the language of the leader of the statistic series: windows
+   with three lamps on a lined ground, the plate of the cockpit with its glow, its scan line and its radar, the aurora
+   frame under the hand. Colours are tokens of the admin theme only */
+
+.mn-ground {
+  display: grid;
+  gap: var(--sl-space-6);
+  background-image: linear-gradient(var(--sl-bg-subtle) 1px, transparent 1px), linear-gradient(90deg, var(--sl-bg-subtle) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+/* Every row stands on one grid of three columns, so the edges of the windows meet from row to row: a split is one
+   large window over two columns and a side of windows under each other, a trio three equal windows; all of a row
+   are as high as the row */
+.mn-split,
+.mn-trio {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--sl-space-6);
+}
+
+.mn-split > :first-child {
+  grid-column: span 2;
+}
+
+/* The windows of a side share its height evenly, a longer one keeps what its content needs */
+.mn-side {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sl-space-6);
+}
+
+.mn-side > * {
+  flex: 1 1 0;
+}
+
+/* Two halves of one window, each its own list; a small heading inside a body */
+.mn-two {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 var(--sl-space-8);
+}
+
+.mn-sub {
+  margin: var(--sl-space-6) 0 var(--sl-space-3);
+  font-family: var(--sl-face-mono);
+  font-size: var(--sl-font-micro);
+  letter-spacing: var(--sl-track-wide);
+  text-transform: uppercase;
+  color: var(--sl-text-muted);
+}
+
+.mn-sub:first-child {
+  margin-top: 0;
+}
+
+@property --mn-turn {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
+.mn-win {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  border: 1px solid var(--sl-border-strong);
+  border-radius: var(--sl-radius-3);
+  background: linear-gradient(var(--sl-surface), var(--sl-bg));
+}
+
+/* The aurora frame: a light runs round the frame under the hand, blue into violet */
+.mn-win::before,
+.mn-cockpit::before {
+  content: "";
+  position: absolute;
+  z-index: var(--sl-z-raised);
+  inset: -1px;
+  padding: 1px;
+  border-radius: inherit;
+  background: conic-gradient(from var(--mn-turn), transparent 0 62%, var(--sl-primary) 82%, var(--sl-accent) 90%, transparent 100%);
+  mask: linear-gradient(var(--sl-text) 0 0) content-box, linear-gradient(var(--sl-text) 0 0);
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity var(--sl-time-slow) var(--sl-ease-out);
+  pointer-events: none;
+}
+
+.mn-win:hover::before,
+.mn-cockpit:hover::before {
+  opacity: 1;
+}
+
+/* The head of a window holds the live chip of a live window at its right end, so every head is as high as the chip;
+   its words, as the head of the cockpit, are its spans */
+.mn-win-cap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--sl-space-4);
+  box-sizing: border-box;
+  min-height: calc(var(--sl-size-chip) + var(--sl-space-4) * 2 + 1px);
+  padding: var(--sl-space-4) var(--sl-space-6);
+  overflow: hidden;
+  border-bottom: 1px solid var(--sl-border);
+}
+
+.mn-win-cap > span {
+  font-family: var(--sl-face-mono);
+  font-size: var(--sl-font-micro);
+  letter-spacing: var(--sl-track-wide);
+  text-transform: uppercase;
+  color: var(--sl-text-muted);
+}
+
+.mn-win-cap > .sl-live-chip {
+  position: relative;
+  margin-left: auto;
+}
+
+.mn-meta + .sl-live-chip {
+  margin-left: 0;
+}
+
+.mn-win-cap > .bi {
+  color: var(--sl-primary);
+}
+
+.mn-win-cap > .mn-meta {
+  margin-left: auto;
+  color: var(--sl-primary);
+}
+
+.mn-lamps {
+  display: inline-flex;
+  gap: var(--sl-space-2);
+}
+
+.mn-lamps i {
+  width: var(--sl-space-3);
+  height: var(--sl-space-3);
+  border-radius: var(--sl-radius-circle);
+  background: var(--sl-danger);
+}
+
+.mn-lamps i:nth-child(2) { background: var(--sl-warning); }
+.mn-lamps i:nth-child(3) { background: var(--sl-success); }
+
+.mn-win-body {
+  flex: 1;
+  min-height: 0;
+  padding: var(--sl-space-6);
+}
+
+/* The windows of a row end on one line: what a list lacks of the height of the row its rows share out, so no window
+   keeps an empty foot; a body and a half of a window stack their parts, the list takes the rest */
+.mn-win-body:not(.mn-two),
+.mn-two > * {
+  display: flex;
+  flex-direction: column;
+}
+
+/* A list grows by the number of its rows (set by mon.js), so every row of a window gets the same share */
+[data-mon-kv] {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+}
+
+[data-mon-kv] > .mn-kv {
+  flex: 1;
+  align-items: center;
+}
+
+:is([data-mon-kv], [data-mon-meter], [data-mon-store]) + :is([data-mon-kv], [data-mon-meter], [data-mon-store]) {
+  margin-top: var(--sl-space-5);
+}
+
+/* The plate of the cockpit: the theme's own, its circles glowing at the mix of the presentation */
+.mn-cockpit {
+  position: relative;
+  margin: 0;
+}
+
+.mn-cockpit :is(.sl-cockpit-ring, .sl-cockpit-plate) {
+  --sl-ring-mix: 50%;
+}
+
+.mn-cockpit .sl-cockpit-top > .mn-nav {
+  justify-self: end;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sl-space-3);
+}
+
+.mn-nav-btn {
+  display: inline-grid;
+  place-items: center;
+  width: var(--sl-size-chip);
+  height: var(--sl-size-chip);
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-1);
+  background: var(--sl-bg);
+  color: var(--sl-primary);
+}
+
+.mn-nav .sl-live-chip {
+  position: relative;
+}
+
+.mn-radar {
+  position: absolute;
+  inset: 12%;
+  border-radius: var(--sl-radius-circle);
+  background: conic-gradient(from 0deg, var(--sl-tint-strong), transparent 16%);
+  pointer-events: none;
+}
+
+.mn-cockpit:not(.sl-knob-ok) .mn-radar {
+  display: none;
+}
+
+/* A list name · value: the name at the left, the value at the right, a dashed rule between the rows */
+.mn-kv {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+  align-items: baseline;
+  gap: var(--sl-space-5);
+  padding: var(--sl-space-3) 0;
+  border-bottom: 1px dashed var(--sl-border);
+  font-size: var(--sl-font-small);
+}
+
+.mn-kv:last-child {
+  border-bottom: 0;
+}
+
+.mn-kv > span {
+  color: var(--sl-text-muted);
+}
+
+.mn-kv > b {
+  min-width: 0;
+  text-align: right;
+  font-weight: var(--sl-weight-semibold);
+  font-variant-numeric: tabular-nums;
+  color: var(--sl-text);
+}
+
+.mn-kv-soft > span {
+  display: inline-flex;
+  align-items: center;
+}
+
+.mn-kv-soft > span .bi {
+  margin-right: var(--sl-space-3);
+  color: var(--sl-primary);
+}
+
+.mn-kv-soft > b {
+  font-family: var(--sl-face-mono);
+  color: var(--sl-primary);
+}
+
+.mn-flag {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sl-space-2);
+  font-weight: var(--sl-weight-normal);
+  color: var(--sl-text-subtle);
+}
+
+.mn-flag::before {
+  content: "";
+  width: var(--sl-space-3);
+  height: var(--sl-space-3);
+  border-radius: var(--sl-radius-circle);
+  background: var(--sl-border-strong);
+}
+
+.mn-flag-on {
+  color: var(--sl-success-strong);
+}
+
+.mn-flag-on::before {
+  background: var(--sl-success);
+  box-shadow: 0 0 var(--sl-space-3) var(--sl-success);
+}
+
+.mn-mute {
+  font-weight: var(--sl-weight-normal);
+  color: var(--sl-text-subtle);
+}
+
+.mn-good {
+  color: var(--sl-success-strong);
+}
+
+.mn-long {
+  display: block;
+  min-width: 0;
+}
+
+.mn-long-text {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--sl-face-mono);
+  font-weight: var(--sl-weight-normal);
+}
+
+.mn-long-panel.sl-float-panel {
+  max-width: 420px;
+  font-family: var(--sl-face-mono);
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+
+/* A check of the lamp: its lamp in the tone of its level, the icon, the name and the fact */
+.mn-sig {
+  display: grid;
+  grid-template-columns: var(--sl-space-4) var(--sl-size-icon-sm) minmax(min-content, 1fr) minmax(0, auto);
+  align-items: center;
+  gap: var(--sl-space-4);
+  padding: var(--sl-space-4) var(--sl-space-3);
+  border-radius: var(--sl-radius-2);
+  font-size: var(--sl-font-small);
+}
+
+.mn-sig:hover {
+  background: var(--sl-tint);
+}
+
+.mn-sig-lamp {
+  width: var(--sl-space-4);
+  height: var(--sl-space-4);
+  border-radius: var(--sl-radius-circle);
+  background: var(--sl-knob-tone);
+  box-shadow: 0 0 var(--sl-space-3) var(--sl-knob-tone);
+}
+
+.mn-sig > .bi {
+  color: var(--sl-knob-tone);
+}
+
+.mn-sig > b {
+  font-weight: var(--sl-weight-semibold);
+  color: var(--sl-text);
+  text-align: end;
+}
+
+.mn-sig.sl-knob-warn,
+.mn-sig.sl-knob-danger {
+  background: var(--sl-bg-subtle);
+}
+
+.mn-sig-calm summary {
+  display: flex;
+  align-items: center;
+  gap: var(--sl-space-3);
+  padding: var(--sl-space-4) var(--sl-space-3);
+  cursor: pointer;
+  font-size: var(--sl-font-small);
+  color: var(--sl-success-strong);
+}
+
+/* A meter used of limit, in the tone of its level */
+.mn-meter + .mn-meter {
+  margin-top: var(--sl-space-6);
+}
+
+.mn-meter-head {
+  display: flex;
+  justify-content: space-between;
+  font-size: var(--sl-font-small);
+  color: var(--sl-text-muted);
+}
+
+.mn-meter-head b {
+  font-family: var(--sl-face-mono);
+  color: var(--sl-text);
+}
+
+.mn-meter-bar {
+  display: block;
+  height: var(--sl-space-3);
+  margin: var(--sl-space-3) 0 var(--sl-space-2);
+  border-radius: var(--sl-radius-pill);
+  background: var(--sl-bg-subtle);
+}
+
+.mn-meter-bar i {
+  display: block;
+  width: var(--sl-d-pct);
+  height: 100%;
+  border-radius: inherit;
+  background: var(--sl-knob-tone);
+  box-shadow: 0 0 var(--sl-space-4) var(--sl-knob-tone);
+  transform-origin: left;
+}
+
+.mn-meter-note {
+  font-size: var(--sl-font-micro);
+  color: var(--sl-text-subtle);
+}
+
+.mn-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sl-space-2);
+}
+
+.mn-chip {
+  padding: var(--sl-space-1) var(--sl-space-3);
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-1);
+  background: var(--sl-bg);
+  font-family: var(--sl-face-mono);
+  font-size: var(--sl-font-micro);
+  color: var(--sl-text);
+}
+
+.mn-chip-off {
+  border-style: dashed;
+  color: var(--sl-text-subtle);
+}
+
+/* The live chart: the chart classes of the monitor of the theme, CPU and RAM in percent, the network on its own scale */
+.mn-chart {
+  position: relative;
+  height: var(--mn-chart-h, 240px);
+  margin: var(--sl-space-3) 0 var(--sl-space-8) 40px;
+}
+
+.mn-chart-grid span {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(var(--sl-d-y) * 100%);
+  border-top: 1px dashed var(--sl-border);
+}
+
+.mn-chart-grid i {
+  position: absolute;
+  right: calc(100% + var(--sl-space-3));
+  top: 0;
+  transform: translateY(-50%);
+  font-family: var(--sl-face-mono);
+  font-size: var(--sl-font-micro);
+  font-style: normal;
+  color: var(--sl-text-subtle);
+}
+
+.mn-chart .mn-chart-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.mn-chart-axis em {
+  position: absolute;
+  top: calc(100% + var(--sl-space-3));
+  font-family: var(--sl-face-mono);
+  font-size: var(--sl-font-micro);
+  font-style: normal;
+  white-space: nowrap;
+  color: var(--sl-text-subtle);
+  transform: translateX(-50%);
+}
+
+.mn-chart-axis em:first-child { transform: none; }
+.mn-chart-axis em:last-child { transform: translateX(-100%); }
+
+.mn-chart-keys {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sl-space-3) var(--sl-space-7);
+  padding-top: var(--sl-space-5);
+  border-top: 1px solid var(--sl-border);
+  font-size: var(--sl-font-small);
+  color: var(--sl-text-muted);
+}
+
+.mn-chart-keys i {
+  display: inline-block;
+  width: var(--sl-space-3);
+  height: var(--sl-space-3);
+  margin-right: var(--sl-space-3);
+  border-radius: var(--sl-radius-circle);
+  vertical-align: 1px;
+}
+
+.mn-chart-keys b {
+  color: var(--sl-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.mn-up, .st-mn-up { --st-tone: var(--sl-chart-up); background: var(--sl-chart-up); }
+.mn-down, .st-mn-down { --st-tone: var(--sl-chart-down); background: var(--sl-chart-down); }
+.mn-cpu, .st-mn-cpu { --st-tone: var(--sl-chart-cpu); background: var(--sl-chart-cpu); }
+.mn-ram, .st-mn-ram { --st-tone: var(--sl-chart-ram); background: var(--sl-chart-ram); }
+
+.mn-counts {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--sl-space-5);
+}
+
+.mn-count {
+  display: grid;
+  gap: var(--sl-space-1);
+  padding: var(--sl-space-5);
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-2);
+  background: var(--sl-bg);
+}
+
+.mn-count > span {
+  font-family: var(--sl-face-mono);
+  font-size: var(--sl-font-micro);
+  letter-spacing: var(--sl-track-wide);
+  text-transform: uppercase;
+  color: var(--sl-text-muted);
+}
+
+.mn-count > b {
+  font-size: var(--sl-font-h1);
+  line-height: var(--sl-line-tight);
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  :root.st-fx:not([data-demo-motion="off"]) .mn-ground {
+    animation: mn-drift 60s linear infinite;
+  }
+
+  :root.st-fx:not([data-demo-motion="off"]) :is(.mn-win, .mn-cockpit):hover::before {
+    animation: mn-turn 2.6s linear infinite;
+  }
+
+  :root.st-fx:not([data-demo-motion="off"]) .mn-lamps i {
+    animation: mn-lamp 2.8s var(--sl-ease-in-out) infinite;
+  }
+
+  :root.st-fx:not([data-demo-motion="off"]) .mn-lamps i:nth-child(2) { animation-delay: 0.35s; }
+  :root.st-fx:not([data-demo-motion="off"]) .mn-lamps i:nth-child(3) { animation-delay: 0.7s; }
+
+  :root.st-fx:not([data-demo-motion="off"]) .mn-win-cap::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: var(--sl-beam-width);
+    background: linear-gradient(100deg, transparent, var(--sl-tint-strong), transparent);
+    transform: translateX(-160%) skewX(-18deg);
+    animation: sl-beam var(--sl-beam-dur) var(--sl-ease-in-out) infinite;
+    animation-delay: calc(var(--st-i, 0) * var(--sl-beam-dur) / 7);
+    pointer-events: none;
+  }
+
+  :root.st-fx:not([data-demo-motion="off"]) .mn-cockpit::after {
+    content: "";
+    position: absolute;
+    left: var(--sl-space-6);
+    right: var(--sl-space-6);
+    top: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--sl-primary), transparent);
+    box-shadow: 0 0 var(--sl-space-4) var(--sl-space-1) var(--sl-tint-strong), 0 0 var(--sl-space-8) var(--sl-space-4) var(--sl-tint);
+    opacity: 0;
+    animation: mn-scan 9s var(--sl-ease-in-out) infinite;
+    pointer-events: none;
+  }
+
+  :root.st-fx:not([data-demo-motion="off"]) .mn-radar {
+    animation: mn-sweep 7s linear infinite;
+  }
+
+  :root.st-fx:not([data-demo-motion="off"]) .st-play .mn-chart-svg {
+    animation: st-wipe 1.2s var(--sl-ease-in-out) both;
+    animation-delay: 0.2s;
+  }
+
+  :root.st-fx:not([data-demo-motion="off"]) .st-play .mn-meter-bar i {
+    animation: st-unroll 0.9s var(--st-spring) backwards;
+    animation-delay: 0.3s;
+  }
+
+  :root.st-fx:not([data-demo-motion="off"]) .st-play :is(.mn-kv, .mn-sig) {
+    animation: st-fade-up 0.4s var(--sl-ease-out) backwards;
+  }
+
+  :root.st-fx:not([data-demo-motion="off"]) .mn-sig.sl-knob-warn .mn-sig-lamp,
+  :root.st-fx:not([data-demo-motion="off"]) .mn-sig.sl-knob-danger .mn-sig-lamp {
+    animation: mn-lamp 1.4s var(--sl-ease-in-out) infinite;
+  }
+}
+
+@keyframes mn-turn {
+  to { --mn-turn: 360deg; }
+}
+
+@keyframes mn-drift {
+  to { background-position: 0 320px, 320px 0; }
+}
+
+@keyframes mn-scan {
+  0% { top: 0; opacity: 0; }
+  12% { opacity: var(--sl-fade-disabled); }
+  52% { top: 100%; opacity: var(--sl-fade-disabled); }
+  62%, 100% { top: 100%; opacity: 0; }
+}
+
+@keyframes mn-sweep {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes mn-lamp {
+  50% { opacity: var(--sl-fade-disabled); }
+}
+
+@media (max-width: 1100px) {
+  .mn-split,
+  .mn-trio {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .mn-split > :first-child {
+    grid-column: auto;
+  }
+
+  .mn-cockpit .mn-gauges {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .mn-cockpit .mn-gauges > .mn-lamp {
+    grid-column: 1 / -1;
+    order: -1;
+  }
+
+  .mn-counts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .mn-two {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .mn-chart-axis em:is(:nth-child(2), :nth-child(4)) {
+    display: none;
+  }
+}
+
+/* Пульс сервера in the lamp (data-mon-pulse): the heart and the rate over the trace of a cardiograph, the mood under it,
+   all in the tone of the state. The trace holds two sweeps and slides by one in the time of its beats, so it runs
+   without a seam, and its ends fade as the sweep of a monitor does. The heart beats lub-dub once a beat; a night without
+   visitors is a flat line with a grey heart. With the motion off the trace stands and the heart rests */
+.mn-pulse {
+  grid-template-rows: minmax(0, 1fr) auto minmax(0, 1fr);
+  row-gap: var(--sl-space-1);
+  padding: var(--sl-space-7) var(--sl-space-6);
+}
+
+.mn-bpm {
+  position: relative;
+  z-index: var(--sl-z-raised);
+  display: flex;
+  align-items: baseline;
+  align-self: end;
+  gap: var(--sl-space-1);
+  font-size: calc(var(--sl-gauge-width) * 0.18);
+  font-weight: var(--sl-weight-bold);
+  line-height: var(--sl-line-tight);
+  letter-spacing: var(--sl-track-tight);
+}
+
+.mn-bpm > .bi {
+  align-self: center;
+  margin-inline-end: var(--sl-space-1);
+  font-size: var(--sl-font-h2);
+}
+
+.mn-bpm > small {
+  font-size: var(--sl-font-micro);
+  font-weight: var(--sl-weight-normal);
+  letter-spacing: normal;
+  color: var(--sl-text-muted);
+}
+
+.mn-ecg {
+  display: block;
+  width: 100%;
+  height: calc(var(--sl-gauge-width) * 0.22);
+  overflow: hidden;
+  mask: linear-gradient(90deg, transparent, currentColor 30%, currentColor 70%, transparent);
+}
+
+.mn-ecg > svg {
+  display: block;
+  width: 200%;
+  height: 100%;
+  overflow: visible;
+}
+
+.mn-ecg path {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+  filter: drop-shadow(0 0 var(--sl-space-1) currentColor);
+}
+
+.mn-mood {
+  align-self: start;
+  max-width: 100%;
+  overflow: hidden;
+  font-family: var(--sl-face-mono);
+  font-size: var(--sl-font-micro);
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--sl-text-muted);
+}
+
+[data-mon-flat] .mn-bpm > .bi {
+  color: var(--sl-text-muted);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  :root.st-fx:not([data-demo-motion="off"]) .mn-pulse:not([data-mon-flat]) .mn-bpm > .bi {
+    animation: mn-heart var(--sl-d-beat, 1s) var(--sl-ease-out) infinite;
+  }
+
+  :root.st-fx:not([data-demo-motion="off"]) .mn-pulse:not([data-mon-flat]) .mn-ecg > svg {
+    animation: mn-trace var(--sl-d-sweep, 3s) linear infinite;
+  }
+}
+
+/* Lub-dub: the strong beat, a short fall, the weaker echo, then rest */
+@keyframes mn-heart {
+  0%,
+  50%,
+  100% {
+    transform: scale(1);
+  }
+
+  12% {
+    transform: scale(1.3);
+  }
+
+  24% {
+    transform: scale(0.95);
+  }
+
+  36% {
+    transform: scale(1.15);
+  }
+}
+
+@keyframes mn-trace {
+  to { transform: translateX(-50%); }
+}

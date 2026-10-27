@@ -1,0 +1,3 @@
+<div class="sl-pres-facts">
+  {% for item in items %}<div class="sl-pres-stat"{% if tone %} data-sl-tone="{{ tone }}"{% endif %}><span>{{ item.label }}</span><b>{{ item.value }}{% if item.unit %} <small>{{ item.unit }}</small>{% endif %}</b></div>{% endfor %}
+</div>

@@ -1,0 +1,3 @@
+<div class="sl-pres-commits">
+  {% for item in items %}<div class="sl-pres-commit"><span class="sl-pres-sha">{{ item.order_num }}</span><div><b>{{ item.title }}</b>{% if item.text %}<span class="sl-pres-tags"><span>{{ item.text }}</span></span>{% endif %}</div><span></span></div>{% endfor %}
+</div>

@@ -1,0 +1,3 @@
+<ul>
+  {% for item in sites %}<li><figure><img src="{{ item.src }}" width="{{ item.w }}" height="{{ item.h }}" alt="{{ item.name }}" loading="lazy" decoding="async"><figcaption>{{ item.name }}</figcaption></figure></li>{% endfor %}
+</ul>

@@ -5425,3 +5425,250 @@
   }
 }
 
+
+/* Sections of the layout: fragments/section.html and sections/, only what the presentation has no form for */
+.sl-sec {
+  min-width: 0;
+}
+
+.sl-sec:not(:first-child),
+.sl-sec + * {
+  margin-top: var(--sl-space-6);
+}
+
+.sl-sec-lines {
+  white-space: pre-line;
+}
+
+.sl-sec-acts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sl-space-4);
+  margin: var(--sl-space-6) 0 0;
+}
+
+.sl-sec-acts .sl-but {
+  margin: 0;
+}
+
+/* The picture of the hero and of a text beside it: one frame, its point of focus kept by the crop */
+.sl-sec-pic {
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid var(--sl-pres-border);
+  border-radius: var(--sl-radius-3);
+}
+
+#content .sl-sec-pic > img,
+.sl-sec .sl-pres-principle > img {
+  object-position: var(--sl-d-focus, center);
+}
+
+.sl-sec-hero-pic {
+  background: var(--sl-pres-inset-bg);
+  box-shadow: var(--sl-shadow-raised);
+}
+
+.sl-sec-hero-pic > img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Features: the DNA cards or the technology cards in the columns the section asks, their icon in its tone */
+.sl-sec .sl-pres-tech {
+  margin-top: 0;
+}
+
+.sl-sec .sl-pres-principle-copy > header[data-sl-tone] > .bi {
+  color: currentColor;
+}
+
+/* Text and picture: the picture of the showcase beside the words of a principle card, on either side */
+.sl-sec-media {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--sl-space-7);
+}
+
+.sl-sec-media > .sl-sec-pic {
+  height: auto;
+  min-height: var(--sl-site-height);
+}
+
+.sl-sec-flip > :is(.sl-sec-pic, .sl-sec-frame) {
+  order: 1;
+}
+
+.sl-sec-copy {
+  align-self: center;
+  padding: 0;
+}
+
+.sl-sec-solo {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.sl-sec-md > :first-child {
+  margin-top: 0;
+}
+
+.sl-sec-md > :last-child {
+  margin-bottom: 0;
+}
+
+/* A link of a text keeps the colour of a link of the site, which the root of the presentation hands down as the colour of the words */
+.sl-sec-md a,
+.sl-sec-cards a {
+  color: var(--sl-pres-link-text);
+}
+
+/* Call: the claim card, its words on the left and the button on the right */
+.sl-sec-cta {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  column-gap: var(--sl-space-7);
+  align-items: center;
+  padding: var(--sl-space-7);
+}
+
+.sl-sec-cta > :not(.sl-sec-cta-but) {
+  grid-column: 1;
+  max-width: none;
+}
+
+.sl-sec-cta-but {
+  position: relative;
+  z-index: var(--sl-z-raised);
+  grid-row: 1 / span 3;
+  grid-column: 2;
+}
+
+/* Gallery: a picture of the showcase keeps its point of focus; a snapshot of a site, which names none, keeps its top */
+#content .sl-sec .sl-pres-shot > img {
+  object-position: var(--sl-d-focus, top);
+}
+
+/* Figures: the fact tiles of the hero, as many to a row as fit */
+.sl-sec .sl-pres-facts {
+  margin-top: 0;
+  grid-template-columns: repeat(auto-fit, minmax(calc(var(--sl-pres-width) + var(--sl-space-8)), 1fr));
+}
+
+/* An outside frame: a film in the proportion of the screen, a map as tall as a showcase picture, a page as tall as its
+   section asks; until the click its placeholder fills the frame with the picture of the section or its icon */
+.sl-sec-frame {
+  position: relative;
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid var(--sl-pres-border);
+  border-radius: var(--sl-radius-3);
+  background: var(--sl-pres-inset-bg);
+}
+
+.sl-sec-film {
+  aspect-ratio: 16 / 9;
+}
+
+.sl-sec-map {
+  min-height: var(--sl-site-height);
+}
+
+.sl-sec-page {
+  height: var(--sl-d-frame, var(--sl-site-height));
+}
+
+#content .sl-sec-frame :is(iframe, video) {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+.sl-sec-load {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: var(--sl-space-5);
+}
+
+#content .sl-sec-load > img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: var(--sl-d-focus, center);
+}
+
+.sl-sec-load > .bi {
+  color: var(--sl-pres-muted-text);
+  font-size: var(--sl-font-hero);
+}
+
+.sl-sec-load > .sl-but {
+  position: relative;
+  z-index: var(--sl-z-raised);
+  margin: 0;
+}
+
+/* Map and contacts: the contacts one card to a line beside the map, read and copied as they are written, without the
+   capitals and the mono face of a technology card */
+.sl-sec-cards {
+  grid-template-columns: minmax(0, 1fr);
+  align-content: center;
+}
+
+.sl-sec-cards .sl-pres-tech-card span {
+  font-family: inherit;
+  font-size: var(--sl-font-small);
+  letter-spacing: normal;
+  text-transform: none;
+}
+
+@media (width > 900px) {
+  .sl-sec-cols-two {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .sl-sec-cols-three {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .sl-sec-cols-four {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .sl-sec-media,
+  .sl-sec-cta {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .sl-sec-flip > :is(.sl-sec-pic, .sl-sec-frame) {
+    order: 0;
+  }
+
+  .sl-sec-cta-but {
+    grid-row: auto;
+    grid-column: 1;
+    justify-self: start;
+    margin-top: var(--sl-space-5);
+  }
+}
+
+/* A section kept off a device is gone at that width */
+@media (max-width: 560px) {
+  .sl-sec-no-phone {
+    display: none;
+  }
+}
+
+@media (width > 560px) {
+  .sl-sec-no-desk {
+    display: none;
+  }
+}

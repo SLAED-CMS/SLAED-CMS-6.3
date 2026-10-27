@@ -5,6 +5,7 @@
 /storage/logs/*
 /storage/counter/*
 /storage/backup/*
+/storage/layout/*
 /storage/sitemap/*
 !/storage/sitemap/sitemap.xsl
 /storage/captcha/*

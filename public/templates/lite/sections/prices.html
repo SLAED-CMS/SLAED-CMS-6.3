@@ -1,0 +1,7 @@
+<div class="sl-pres-pulse">
+  {% for item in items %}<article class="sl-pres-pulse-card" data-sl-tone="{% if item.hot %}accent{% else %}primary{% endif %}">
+    <div class="sl-pres-pulse-head"><span><i class="bi bi-{% if item.hot %}star-fill{% else %}tag{% endif %}" aria-hidden="true"></i></span><div><b>{{ item.name }}</b><span>{{ item.unit }}</span></div></div>
+    <div class="sl-pres-pulse-body"><h3>{{ item.price }}</h3>{% if item.text %}<p class="sl-sec-lines">{{ item.text }}</p>{% endif %}</div>
+    <div class="sl-pres-pulse-foot"><i class="sl-pres-dot{% if item.hot %} sl-is-live{% endif %}"></i>{% if item.btn and item.href %}<a href="{{ item.href }}"{% if item.href_ext %} target="_blank" rel="noopener"{% endif %}><span>{{ item.btn }}</span> <i class="bi bi-arrow-up-right" aria-hidden="true"></i></a>{% endif %}</div>
+  </article>{% endfor %}
+</div>

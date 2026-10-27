@@ -137,6 +137,8 @@
         var face = root.querySelector('canvas');
         var tip = root.querySelector('output');
         var mini = root.getAttribute('data-sl-pres') === 'spark';
+        // A chart marked data-sl-pres-fill="all" lays a wash and a shade under every line, as the monitor of the panel does
+        var fill = root.getAttribute('data-sl-pres-fill') === 'all';
         var sets = {};
         try { sets = JSON.parse(root.getAttribute('data-sl-pres-series') || '{}'); } catch (err) { sets = {}; }
         if (!face || (!tip && !mini) || !sets.day) return;
@@ -220,6 +222,29 @@
                 pen.fillText(getFigure(top * (4 - i) / 4), 0, y);
             }
             pen.setLineDash([]);
+            var trace = function (data) {
+                pen.beginPath();
+                pen.moveTo(getX(0), getY(data[0] || 0));
+                for (var p = 1; p < count; p++) {
+                    var mid = (getX(p - 1) + getX(p)) / 2;
+                    pen.bezierCurveTo(mid, getY(data[p - 1] || 0), mid, getY(data[p] || 0), getX(p), getY(data[p] || 0));
+                }
+            };
+            // The washes go first, every one under every line, so no line is hidden by the wash of another
+            for (var a = 0; fill && kind !== 'bar' && a < rows.length; a++) {
+                trace(rows[a]);
+                pen.lineTo(right, low);
+                pen.lineTo(left, low);
+                pen.closePath();
+                var wash = pen.createLinearGradient(0, high, 0, low);
+                wash.addColorStop(0, tones[a]);
+                wash.addColorStop(1, 'transparent');
+                pen.fillStyle = wash;
+                pen.globalAlpha = a ? 0.34 : 0.5;
+                pen.fill();
+                pen.globalAlpha = 1;
+            }
+            var shade = fill ? getTone(root, '--sl-text').replace(/^rgb\((.+)\)$/, 'rgba($1, 0.18)') : 'transparent';
             for (var s = 0; s < rows.length; s++) {
                 var data = rows[s];
                 pen.strokeStyle = tones[s];
@@ -232,14 +257,15 @@
                     pen.globalAlpha = 1;
                     continue;
                 }
-                pen.beginPath();
-                pen.moveTo(getX(0), getY(data[0] || 0));
-                for (var p = 1; p < count; p++) {
-                    var mid = (getX(p - 1) + getX(p)) / 2;
-                    pen.bezierCurveTo(mid, getY(data[p - 1] || 0), mid, getY(data[p] || 0), getX(p), getY(data[p] || 0));
-                }
+                trace(data);
+                pen.shadowColor = shade;
+                pen.shadowOffsetY = fill ? 1 : 0;
+                pen.shadowBlur = fill ? 2 : 0;
                 pen.stroke();
-                if (s) continue;
+                pen.shadowColor = 'transparent';
+                pen.shadowOffsetY = 0;
+                pen.shadowBlur = 0;
+                if (s || fill) continue;
                 pen.lineTo(right, low);
                 pen.lineTo(left, low);
                 pen.closePath();

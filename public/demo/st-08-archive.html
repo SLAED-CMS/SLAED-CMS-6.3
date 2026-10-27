@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="ru" data-theme="auto">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Архив &middot; Статистика — стенд SLAED CMS</title>
+  <link rel="stylesheet" href="../templates/admin/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../templates/admin/assets/css/base.css">
+  <link rel="stylesheet" href="../templates/admin/assets/css/theme.css">
+  <!-- The stand is served without Cache-Control; its sheets and scripts are stamped so an edit is seen at once -->
+  <script>document.write('<link rel="stylesheet" href="assets/demo.css?v=' + Date.now() + '"><link rel="stylesheet" href="assets/st.css?v=' + Date.now() + '">');</script>
+  <script src="../plugins/system/global-func.js"></script>
+  <script src="../plugins/system/slaed.js"></script>
+  <script src="../templates/admin/assets/js/admin-ui.js"></script>
+  <style>
+    /* Архив: eighteen years of the counter are the first thing on the page — every archive file is a bar of one strip,
+       the gaps where a file is missing are dashed, a click opens the month. The month under it is measured twice:
+       against the month before and against the same month a year before */
+    .v-arc {
+      padding-bottom: var(--sl-space-4);
+    }
+
+    .v-arc-head {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      gap: var(--sl-space-3) var(--sl-space-6);
+      margin-bottom: var(--sl-space-5);
+    }
+
+    .v-arc-head h2 {
+      margin: 0;
+      font-size: var(--sl-font-h4);
+    }
+
+    .v-arc-head span {
+      font-size: var(--sl-font-small);
+      color: var(--sl-text-muted);
+    }
+
+    .v-arc-keys {
+      display: flex;
+      gap: var(--sl-space-6);
+      margin-left: auto;
+    }
+
+    .v-arc-keys i {
+      display: inline-block;
+      width: var(--sl-space-4);
+      height: var(--sl-space-5);
+      margin-right: var(--sl-space-2);
+      vertical-align: -2px;
+    }
+
+    .v-arc-keys .v-k-on { background: var(--sl-primary); }
+    .v-arc-keys .v-k-run { background: var(--sl-success); }
+    .v-arc-keys .v-k-gap { border: 1px dashed var(--sl-danger); }
+
+    .v-arc [data-st-archive] {
+      --st-arc-h: 96px;
+    }
+
+    .v-month {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      gap: var(--sl-space-5);
+    }
+
+    .v-month h2 {
+      margin: 0;
+      font-size: var(--sl-font-display);
+      line-height: var(--sl-line-tight);
+    }
+
+    .v-month p {
+      margin: var(--sl-space-2) 0 0;
+      color: var(--sl-text-muted);
+    }
+
+    .v-month-nav {
+      display: flex;
+      gap: var(--sl-space-3);
+    }
+
+    .v-grid {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 1px;
+      overflow: hidden;
+      padding: 0;
+      background: var(--sl-border);
+    }
+
+    .v-grid > div {
+      display: grid;
+      gap: var(--sl-space-2);
+      padding: var(--sl-space-6);
+      background: var(--sl-bg);
+    }
+
+    .v-grid span:first-child {
+      font-size: var(--sl-font-small);
+      color: var(--sl-text-muted);
+    }
+
+    .v-grid b {
+      font-size: var(--sl-font-h1);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .v-vs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--sl-space-2) var(--sl-space-5);
+      font-size: var(--sl-font-micro);
+      color: var(--sl-text-subtle);
+    }
+
+    .v-cols {
+      display: grid;
+      grid-template-columns: minmax(0, 3fr) minmax(260px, 2fr);
+      gap: var(--sl-space-6);
+    }
+
+    .v-cols > .sl-box {
+      margin: 0;
+    }
+
+    .v-cols h3,
+    .v-dims h3 {
+      margin: 0 0 var(--sl-space-4);
+      font-size: var(--sl-font-h4);
+    }
+
+    .v-dims {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: var(--sl-space-6);
+    }
+
+    .v-stacks {
+      display: grid;
+      gap: var(--sl-space-6);
+    }
+
+    @media (max-width: 1280px) {
+      .v-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 560px) {
+      .v-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 980px) {
+      .v-cols {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+  </style>
+</head>
+<body>
+  <template data-st-sub>
+    <span class="sl-chip"><i class="bi bi-archive" aria-hidden="true"></i>&nbsp;214 файлов архива</span>
+  </template>
+  <template data-st-face>
+    <section class="sl-box v-arc">
+      <div class="v-arc-head">
+        <h2>Архив счётчика</h2>
+        <span>октябрь 2008 — октябрь 2026, высота — средний день месяца</span>
+        <span class="v-arc-keys"><span><i class="v-k-on"></i>выбран</span><span><i class="v-k-run"></i>идёт</span><span><i class="v-k-gap"></i>нет файла</span></span>
+      </div>
+      <div data-st-archive></div>
+    </section>
+
+    <section class="sl-box v-month">
+      <div>
+        <h2 data-st-t="month"></h2>
+        <p data-st-t="run"></p>
+      </div>
+      <div class="v-month-nav">
+        <button type="button" class="sl-but" data-st-go="prev"><i class="bi bi-chevron-left" aria-hidden="true"></i> Раньше</button>
+        <button type="button" class="sl-but" data-st-go="next">Позже <i class="bi bi-chevron-right" aria-hidden="true"></i></button>
+      </div>
+    </section>
+
+    <section class="sl-box v-grid" aria-label="Итоги месяца">
+      <div><span>Уникальные</span><b data-st-t="u"></b><span class="v-vs"><span>месяц назад <span data-st-delta="u"></span></span><span>год назад <span data-st-delta="u" data-st-vs="year"></span></span></span></div>
+      <div><span>Входы</span><b data-st-t="h"></b><span class="v-vs"><span>месяц назад <span data-st-delta="h"></span></span><span>год назад <span data-st-delta="h" data-st-vs="year"></span></span></span></div>
+      <div><span>Аудитория</span><b data-st-t="aud"></b><span class="v-vs"><span>месяц назад <span data-st-delta="aud"></span></span><span>год назад <span data-st-delta="aud" data-st-vs="year"></span></span></span></div>
+      <div><span>Переходы</span><b data-st-t="ref"></b><span class="v-vs"><span>месяц назад <span data-st-delta="ref"></span></span><span>год назад <span data-st-delta="ref" data-st-vs="year"></span></span></span></div>
+      <div><span>Краулеры</span><b data-st-t="bot"></b><span class="v-vs"><span>месяц назад <span data-st-delta="bot"></span></span><span>год назад <span data-st-delta="bot" data-st-vs="year"></span></span></span></div>
+      <div><span>Пользователи</span><b data-st-t="usr"></b><span class="v-vs"><span>месяц назад <span data-st-delta="usr"></span></span><span>год назад <span data-st-delta="usr" data-st-vs="year"></span></span></span></div>
+    </section>
+
+    <div class="v-cols">
+      <section class="sl-box">
+        <h3>По дням</h3>
+        <div data-st-chart="u,h" data-st-cmp-on data-st-pick></div>
+        <button type="button" class="sl-but" data-st-cmp><i class="bi bi-intersect" aria-hidden="true"></i> Наложить прошлый месяц</button>
+      </section>
+      <section class="sl-box">
+        <h3>Нагрузка средней страницы</h3>
+        <div data-st-if="load"><div data-st-chart="gen" data-st-x="hours" data-st-kind="area"></div></div>
+        <p data-st-if="noload">Нагрузку счётчик пишет с октября 2026 года; в этом месяце её колонок нет.</p>
+        <div class="v-stacks"><div data-st-stack="refcat"></div><div data-st-stack="devices"></div></div>
+      </section>
+    </div>
+
+    <section class="sl-box v-dims">
+      <div><h3>Браузеры</h3><div class="sl-statx-tone-primary" data-st-bars="browsers" data-st-top="6"></div></div>
+      <div><h3>Системы</h3><div class="sl-statx-tone-success" data-st-bars="os"></div></div>
+      <div><h3>Страны</h3><div class="sl-statx-tone-warning" data-st-bars="countries" data-st-top="6"></div></div>
+      <div><h3>Сеансы</h3><div class="v-stacks"><div data-st-stack="newret"></div><div data-st-stack="depth"></div><div data-st-stack="duration"></div></div></div>
+    </section>
+
+    <section class="sl-box">
+      <details>
+        <summary>Таблица дней</summary>
+        <div data-st-table></div>
+      </details>
+    </section>
+  </template>
+  <script>document.write('<script src="assets/st.js?v=' + Date.now() + '"><\/script>');</script>
+  <script>document.write('<script src="assets/demo.js?v=' + Date.now() + '"><\/script>');</script>
+</body>
+</html>

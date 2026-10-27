@@ -1,0 +1,37 @@
+{
+    "title": "_LAYOUT_TEAM",
+    "note": "_LAYOUT_TEAM_INFO",
+    "icon": "people",
+    "group": "trust",
+    "frame": true,
+    "fields": [
+        {"key": "title", "label": "_TITLE", "type": "text"},
+        {"key": "lead", "label": "_LAYOUT_LEAD", "type": "text"},
+        {"key": "icon", "label": "_ICON", "type": "icon", "tab": "look"},
+        {"key": "cols", "label": "_LAYOUT_COLS", "type": "select", "show": "seg", "options": {"two": "2", "three": "3", "four": "4"}, "tab": "look"}
+    ],
+    "items": {
+        "label": "_LAYOUT_PEOPLE",
+        "max": 12,
+        "name": "name",
+        "fields": [
+            {"key": "photo", "label": "_LAYOUT_PHOTO", "type": "file"},
+            {"key": "focus", "label": "_LAYOUT_FOCUS", "type": "focus"},
+            {"key": "name", "label": "_LAYOUT_PERSON", "type": "text"},
+            {"key": "role", "label": "_LAYOUT_ROLE", "type": "text"},
+            {"key": "text", "label": "_LAYOUT_ABOUT", "type": "textarea"}
+        ],
+        "make": {"photo": "presentation/brand/background-1.png", "focus": "center", "name": "_LAYOUT_PERSON", "role": "_LAYOUT_ROLE", "text": "_LAYOUT_TEAM_TEXT"}
+    },
+    "make": {
+        "title": "_LAYOUT_TEAM",
+        "lead": "",
+        "icon": "people",
+        "cols": "three",
+        "items": [
+            {"photo": "presentation/brand/background-1.png", "focus": "center", "name": "_LAYOUT_PERSON", "role": "_LAYOUT_ROLE", "text": "_LAYOUT_TEAM_TEXT"},
+            {"photo": "presentation/brand/background-2.png", "focus": "center", "name": "_LAYOUT_PERSON", "role": "_LAYOUT_ROLE", "text": "_LAYOUT_TEAM_TEXT"},
+            {"photo": "presentation/brand/background-3.png", "focus": "center", "name": "_LAYOUT_PERSON", "role": "_LAYOUT_ROLE", "text": "_LAYOUT_TEAM_TEXT"}
+        ]
+    }
+}

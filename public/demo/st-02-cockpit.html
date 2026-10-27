@@ -1,0 +1,779 @@
+<!doctype html>
+<html lang="ru" data-theme="auto">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Кокпит &middot; Статистика — стенд SLAED CMS</title>
+  <link rel="stylesheet" href="../templates/admin/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../templates/admin/assets/css/base.css">
+  <link rel="stylesheet" href="../templates/admin/assets/css/theme.css">
+  <!-- The stand is served without Cache-Control; its sheets and scripts are stamped so an edit is seen at once -->
+  <script>document.write('<link rel="stylesheet" href="assets/demo.css?v=' + Date.now() + '"><link rel="stylesheet" href="assets/st.css?v=' + Date.now() + '">');</script>
+  <script src="../plugins/system/global-func.js"></script>
+  <script src="../plugins/system/slaed.js"></script>
+  <script src="../templates/admin/assets/js/admin-ui.js"></script>
+  <style>
+    /* Кокпит: the language of the presentation page on the tokens of the panel — the plate of the cockpit with four
+       arcs for the shares and the dial of the day in the middle, figures in framed cells with mono capitals, windows
+       with three lamps on a lined ground; under the plate every row is one large window and two smaller ones, the log of days takes the whole width */
+    .v-ground {
+      display: grid;
+      gap: var(--sl-space-6);
+      background-image: linear-gradient(var(--sl-bg-subtle) 1px, transparent 1px), linear-gradient(90deg, var(--sl-bg-subtle) 1px, transparent 1px);
+      background-size: 32px 32px;
+    }
+
+    .v-ground .sl-cockpit {
+      margin: 0;
+    }
+
+    /* Every circle of the plate glows as the gauges of the presentation do: the theme's own glow of the arc and of the
+       lamp, read at the mix of the presentation (--sl-gauge-mix of lite) instead of the quieter one of the panel */
+    .v-ground :is(.sl-cockpit-ring, .v-dial-lamp) {
+      --sl-ring-mix: 50%;
+    }
+
+    .v-ground .sl-cockpit-gauges {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      align-items: center;
+      gap: var(--sl-space-6);
+      margin-top: var(--sl-space-6);
+    }
+
+    /* The dial of 07 in the place of the lamp: the spokes take the tone of the plate, the orbit of the lamp turns round
+       it, the centre is set as the figure of a gauge */
+    .v-dial {
+      align-self: center;
+    }
+
+    .v-dial-face {
+      position: relative;
+      width: 100%;
+      max-width: calc(var(--sl-gauge-width) * 1.1);
+      aspect-ratio: 1;
+      margin: 0 auto;
+      color: var(--sl-knob-tone);
+      isolation: isolate;
+    }
+
+    .v-dial-face [data-st-clock] {
+      position: relative;
+    }
+
+    /* The lamp of the cockpit of the home page lies under the dial: its disc, its line in the tone of the plate, its halo
+       and the orbit turning in the halo - all the calm state of the home page moves; the pulse ring is a warning there.
+       The band of the tone inside its line lights the mark of a lone lamp; under the spokes it is only a wash, so it goes */
+    .v-dial-face .v-dial-lamp {
+      position: absolute;
+      inset: -8%;
+      width: auto;
+      max-width: none;
+      z-index: -1;
+      padding: 0;
+      cursor: default;
+      pointer-events: none;
+      background:
+        radial-gradient(
+          circle closest-side,
+          transparent calc(100% - var(--sl-space-3) - var(--sl-space-1)),
+          var(--sl-knob-tone) calc(100% - var(--sl-space-3) - 1px) calc(100% - var(--sl-space-3)),
+          transparent calc(100% - var(--sl-space-3) + 1px)
+        ),
+        radial-gradient(circle at 50% 38%, var(--sl-bg-subtle), var(--sl-bg) 68%);
+    }
+
+    .v-dial-face::before {
+      content: "";
+      position: absolute;
+      inset: 9%;
+      border-radius: var(--sl-radius-circle);
+      background: conic-gradient(from 0deg, var(--sl-tint-strong), transparent 16%);
+      pointer-events: none;
+    }
+
+    .v-dial .st-clock-spoke {
+      stroke: var(--sl-knob-tone);
+      opacity: var(--sl-fade-disabled);
+      transition: opacity var(--sl-time-base) var(--sl-ease-out);
+    }
+
+    .v-dial .st-clock-spoke:is(.st-is-on, .st-is-hand) {
+      opacity: 1;
+      filter: drop-shadow(0 0 var(--sl-space-2) var(--sl-knob-tone));
+    }
+
+    /* The hours of the dial read at the size of the small words of the gauges */
+    .v-dial .st-clock-h {
+      font-size: 15px;
+      font-weight: var(--sl-weight-semibold);
+      fill: var(--sl-text-muted);
+    }
+
+    .v-dial .st-clock-ring {
+      stroke: var(--sl-border);
+    }
+
+    .v-dial-mid {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-content: center;
+      text-align: center;
+      pointer-events: none;
+    }
+
+    .v-mid-home,
+    .v-mid-say {
+      display: grid;
+      justify-items: center;
+      gap: var(--sl-space-1);
+    }
+
+    .v-dial-mid:has(> [data-st-clock-say]:not([hidden])) > .v-mid-home {
+      display: none;
+    }
+
+    .v-dial-mid b {
+      font-size: var(--sl-font-h2);
+      font-weight: var(--sl-weight-bold);
+      line-height: var(--sl-line-tight);
+      letter-spacing: var(--sl-track-tight);
+      font-variant-numeric: tabular-nums;
+      color: var(--sl-knob-tone);
+    }
+
+    .v-dial-mid :is(small, span),
+    .v-dial-cap {
+      font-family: var(--sl-face-mono);
+      font-size: var(--sl-font-micro);
+      letter-spacing: var(--sl-track-wide);
+      text-transform: uppercase;
+      color: var(--sl-text-muted);
+    }
+
+    .v-dial-cap {
+      letter-spacing: 0;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--sl-space-3);
+      margin-top: var(--sl-space-7);
+    }
+
+    .v-dial-set {
+      display: inline-flex;
+      gap: var(--sl-space-1);
+      padding: var(--sl-space-1);
+      border: 1px solid var(--sl-border);
+      border-radius: var(--sl-radius-pill);
+      background: var(--sl-bg-subtle);
+    }
+
+    .v-dial-cap .v-dial-set button {
+      width: auto;
+      height: auto;
+      padding: var(--sl-space-1) var(--sl-space-4);
+      border: 0;
+      border-radius: var(--sl-radius-pill);
+      background: transparent;
+      font: inherit;
+      letter-spacing: inherit;
+      text-transform: inherit;
+      color: var(--sl-text-muted);
+    }
+
+    .v-dial-cap .v-dial-set button[aria-pressed="true"] {
+      background: var(--sl-bg);
+      box-shadow: var(--sl-shadow-xs);
+      color: var(--sl-knob-tone);
+    }
+
+    .v-dial-set:has(~ [data-st-if="day"]:not([hidden])) {
+      display: none;
+    }
+
+    .v-nav > .v-live {
+      display: inline-flex;
+      margin-left: var(--sl-space-3);
+    }
+
+    .v-nav .sl-live-chip {
+      position: relative;
+    }
+
+    .v-dial .st-clock-spoke.st-is-now {
+      opacity: 1;
+      filter: drop-shadow(0 0 var(--sl-space-3) var(--sl-knob-tone));
+    }
+
+    .v-dial-cap button {
+      display: inline-grid;
+      place-items: center;
+      width: var(--sl-size-icon-sm);
+      height: var(--sl-size-icon-sm);
+      padding: 0;
+      border: 1px solid var(--sl-border);
+      border-radius: var(--sl-radius-circle);
+      background: var(--sl-bg);
+      font-size: var(--sl-font-micro);
+      color: var(--sl-text-muted);
+      cursor: pointer;
+    }
+
+    .v-nav {
+      justify-self: end;
+      display: inline-flex;
+      align-items: center;
+      gap: var(--sl-space-2);
+    }
+
+    .v-nav button {
+      display: inline-grid;
+      place-items: center;
+      width: var(--sl-size-chip);
+      height: var(--sl-size-chip);
+      padding: 0;
+      border: 1px solid var(--sl-border);
+      border-radius: var(--sl-radius-1);
+      background: var(--sl-bg);
+      color: var(--sl-primary);
+      cursor: pointer;
+    }
+
+    .v-nav button:disabled {
+      opacity: var(--sl-fade-disabled);
+      cursor: default;
+    }
+
+    .v-split {
+      display: grid;
+      grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr);
+      gap: var(--sl-space-6);
+    }
+
+    .v-frame {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      border: 1px solid var(--sl-border-strong);
+      border-radius: var(--sl-radius-3);
+      background: linear-gradient(var(--sl-surface), var(--sl-bg));
+    }
+
+    .v-frame-cap {
+      display: flex;
+      align-items: center;
+      gap: var(--sl-space-4);
+      padding: var(--sl-space-4) var(--sl-space-6);
+      border-bottom: 1px solid var(--sl-border);
+      font-family: var(--sl-face-mono);
+      font-size: var(--sl-font-micro);
+      letter-spacing: var(--sl-track-wide);
+      text-transform: uppercase;
+      color: var(--sl-text-muted);
+    }
+
+    .v-frame-cap > .bi {
+      color: var(--sl-primary);
+    }
+
+    .v-frame-cap > .v-meta {
+      margin-left: auto;
+      color: var(--sl-primary);
+    }
+
+    .v-lamps {
+      display: inline-flex;
+      gap: var(--sl-space-2);
+    }
+
+    .v-lamps i {
+      width: var(--sl-space-3);
+      height: var(--sl-space-3);
+      border-radius: var(--sl-radius-circle);
+      background: var(--sl-danger);
+    }
+
+    .v-lamps i:nth-child(2) { background: var(--sl-warning); }
+    .v-lamps i:nth-child(3) { background: var(--sl-success); }
+
+    .v-frame-body {
+      flex: 1;
+      min-height: 0;
+      padding: var(--sl-space-6);
+    }
+
+    /* The large frame fills the height of its row with its picture: the chart, the rhythm, the grid of the week */
+    .v-fill > .v-frame-body,
+    .v-fill [data-st-rhythm],
+    .v-fill .sl-pres-chart,
+    .v-fill > .v-frame-body > [data-st-chart] {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .v-fill [data-st-rhythm],
+    .v-fill .sl-pres-chart,
+    .v-fill > .v-frame-body > [data-st-chart] {
+      flex: 1;
+    }
+
+    .v-fill .sl-pres-plot,
+    .v-fill .st-plot {
+      flex: 1;
+      height: auto;
+      min-height: 200px;
+    }
+
+    .v-fill [data-st-week] {
+      flex: 1;
+      grid-template-rows: auto repeat(7, minmax(18px, 1fr));
+    }
+
+    .v-fill .st-week-cell {
+      aspect-ratio: auto;
+    }
+
+    /* The week in the steps of the theme, from a quiet hour to a hot one */
+    .v-week .st-week-cell::before {
+      opacity: 1;
+      background: var(--sl-bg-subtle);
+    }
+
+    .v-week [data-lv="1"]::before { background: var(--sl-primary-muted); }
+    .v-week [data-lv="2"]::before { background: var(--sl-primary); }
+    .v-week [data-lv="3"]::before { background: var(--sl-success); }
+    .v-week [data-lv="4"]::before { background: var(--sl-warning); }
+    .v-week [data-lv="5"]::before { background: var(--sl-danger); }
+
+    .v-steps {
+      display: flex;
+      align-items: center;
+      gap: var(--sl-space-2);
+      margin-top: var(--sl-space-5);
+      font-family: var(--sl-face-mono);
+      font-size: var(--sl-font-micro);
+      text-transform: uppercase;
+      letter-spacing: var(--sl-track-wide);
+      color: var(--sl-text-muted);
+    }
+
+    .v-steps i {
+      width: var(--sl-space-6);
+      height: var(--sl-space-4);
+      border-radius: 3px;
+      background: var(--sl-bg-subtle);
+    }
+
+    .v-steps i:nth-of-type(2) { background: var(--sl-primary-muted); }
+    .v-steps i:nth-of-type(3) { background: var(--sl-primary); }
+    .v-steps i:nth-of-type(4) { background: var(--sl-success); }
+    .v-steps i:nth-of-type(5) { background: var(--sl-warning); }
+    .v-steps i:nth-of-type(6) { background: var(--sl-danger); }
+
+    .v-steps span:first-child {
+      margin-right: var(--sl-space-2);
+    }
+
+    .v-steps span:last-child {
+      margin-left: var(--sl-space-2);
+    }
+
+    .v-cells {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: var(--sl-space-5);
+      margin-bottom: var(--sl-space-6);
+    }
+
+    .v-cell {
+      display: grid;
+      gap: var(--sl-space-2);
+      padding: var(--sl-space-5);
+      border: 1px solid var(--sl-border);
+      border-radius: var(--sl-radius-2);
+      background: var(--sl-bg);
+    }
+
+    .v-cell > span:first-child,
+    .v-cell small {
+      font-family: var(--sl-face-mono);
+      font-size: var(--sl-font-micro);
+      letter-spacing: var(--sl-track-wide);
+      text-transform: uppercase;
+      color: var(--sl-text-muted);
+    }
+
+    .v-cell small {
+      text-transform: none;
+      letter-spacing: 0;
+    }
+
+    .v-cell b {
+      font-size: var(--sl-font-h1);
+      line-height: var(--sl-line-tight);
+      font-variant-numeric: tabular-nums;
+      color: var(--sl-text-strong);
+    }
+
+    .v-cell-tone b {
+      color: var(--sl-success-strong);
+    }
+
+    .v-frame [data-st-chart] {
+      --st-h: 230px;
+    }
+
+    .v-frame .st-bar {
+      left: 10%;
+      right: 10%;
+      background: var(--sl-grad-progress-1);
+    }
+
+    .v-side {
+      display: grid;
+      grid-template-rows: repeat(2, 1fr);
+      gap: var(--sl-space-6);
+    }
+
+    .v-rows {
+      display: grid;
+      gap: var(--sl-space-3);
+    }
+
+    .v-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 72px 64px 44px;
+      align-items: center;
+      gap: var(--sl-space-3);
+      font-size: var(--sl-font-small);
+    }
+
+    .v-row-name {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .v-row-track {
+      height: 6px;
+      border-radius: var(--sl-radius-pill);
+      background: var(--sl-bg-subtle);
+    }
+
+    .v-row-track i {
+      display: block;
+      width: var(--sl-d-rel);
+      height: 100%;
+      border-radius: inherit;
+      background: var(--st-k);
+    }
+
+    .v-row b,
+    .v-row-pct {
+      font-family: var(--sl-face-mono);
+      font-size: var(--sl-font-micro);
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .v-row-pct {
+      color: var(--sl-text-muted);
+    }
+
+    .v-hours .sl-pres-plot {
+      min-height: 240px;
+    }
+
+    .v-stacks {
+      display: grid;
+      gap: var(--sl-space-6);
+    }
+
+    .v-log .st-table {
+      font-family: var(--sl-face-mono);
+      font-size: var(--sl-font-small);
+    }
+
+    .v-log .st-tr-total td {
+      color: var(--sl-primary);
+    }
+
+    @property --v-turn {
+      syntax: "<angle>";
+      inherits: false;
+      initial-value: 0deg;
+    }
+
+    .v-frame,
+    .v-ground .sl-cockpit {
+      position: relative;
+    }
+
+    .v-frame-cap {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .v-frame::before {
+      content: "";
+      position: absolute;
+      z-index: var(--sl-z-raised);
+      inset: -1px;
+      padding: 1px;
+      border-radius: inherit;
+      background: conic-gradient(from var(--v-turn), transparent 0 62%, var(--sl-primary) 82%, var(--sl-accent) 90%, transparent 100%);
+      mask: linear-gradient(var(--sl-text) 0 0) content-box, linear-gradient(var(--sl-text) 0 0);
+      mask-composite: exclude;
+      opacity: 0;
+      transition: opacity var(--sl-time-slow) var(--sl-ease-out);
+      pointer-events: none;
+    }
+
+    .v-frame:hover::before {
+      opacity: 1;
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+      :root.st-fx:not([data-demo-motion="off"]) .v-ground {
+        animation: v-drift 60s linear infinite;
+      }
+
+      :root.st-fx:not([data-demo-motion="off"]) .v-frame:hover::before {
+        animation: v-turn 2.6s linear infinite;
+      }
+
+      :root.st-fx:not([data-demo-motion="off"]) .v-frame-cap::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        width: var(--sl-beam-width);
+        background: linear-gradient(100deg, transparent, var(--sl-tint-strong), transparent);
+        transform: translateX(-160%) skewX(-18deg);
+        animation: sl-beam var(--sl-beam-dur) var(--sl-ease-in-out) infinite;
+        animation-delay: calc(var(--st-i, 0) * var(--sl-beam-dur) / 7);
+        pointer-events: none;
+      }
+
+      :root.st-fx:not([data-demo-motion="off"]) .v-ground .sl-cockpit::after {
+        content: "";
+        position: absolute;
+        left: var(--sl-space-6);
+        right: var(--sl-space-6);
+        top: 0;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, var(--sl-primary), transparent);
+        box-shadow: 0 0 var(--sl-space-4) var(--sl-space-1) var(--sl-tint-strong), 0 0 var(--sl-space-8) var(--sl-space-4) var(--sl-tint);
+        opacity: 0;
+        animation: v-scan 9s var(--sl-ease-in-out) infinite;
+        pointer-events: none;
+      }
+
+      :root.st-fx:not([data-demo-motion="off"]) .v-dial-face::before {
+        animation: v-sweep 7s linear infinite;
+      }
+
+      :root.st-fx:not([data-demo-motion="off"]) .v-mid-home b {
+        animation: v-beat 2.4s var(--sl-ease-in-out) infinite;
+      }
+
+      :root.st-fx:not([data-demo-motion="off"]) .v-mid-say {
+        animation: st-pop 0.25s var(--st-spring);
+      }
+
+      :root.st-fx:not([data-demo-motion="off"]) .v-lamps i {
+        animation: v-lamp 2.8s var(--sl-ease-in-out) infinite;
+      }
+
+      :root.st-fx:not([data-demo-motion="off"]) .v-lamps i:nth-child(2) { animation-delay: 0.35s; }
+      :root.st-fx:not([data-demo-motion="off"]) .v-lamps i:nth-child(3) { animation-delay: 0.7s; }
+
+      :root.st-fx:not([data-demo-motion="off"]) .st-play .v-row-track i {
+        animation: st-unroll 0.9s var(--st-spring) both;
+        animation-delay: calc(0.25s + var(--sl-d-i, 0) * 70ms);
+        transform-origin: left;
+      }
+
+      :root.st-fx:not([data-demo-motion="off"]) .st-play .v-row {
+        animation: st-fade-up 0.4s var(--sl-ease-out) both;
+        animation-delay: calc(var(--sl-d-i, 0) * 60ms);
+      }
+
+      :root.st-fx:not([data-demo-motion="off"]) .v-row:hover .v-row-track i {
+        box-shadow: 0 0 var(--sl-space-4) var(--st-k);
+      }
+    }
+
+    @keyframes v-turn {
+      to { --v-turn: 360deg; }
+    }
+
+    @keyframes v-drift {
+      to { background-position: 0 320px, 320px 0; }
+    }
+
+    @keyframes v-scan {
+      0% { top: 0; opacity: 0; }
+      12% { opacity: var(--sl-fade-disabled); }
+      52% { top: 100%; opacity: var(--sl-fade-disabled); }
+      62%, 100% { top: 100%; opacity: 0; }
+    }
+
+    @keyframes v-sweep {
+      to { transform: rotate(360deg); }
+    }
+
+    @keyframes v-beat {
+      50% { transform: scale(1.06); }
+    }
+
+    @keyframes v-lamp {
+      50% { opacity: var(--sl-fade-disabled); }
+    }
+
+    @media (max-width: 1100px) {
+      .v-split {
+        grid-template-columns: minmax(0, 1fr);
+      }
+
+      .v-ground .sl-cockpit-gauges {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .v-ground .sl-cockpit-gauges > .v-dial {
+        grid-column: 1 / -1;
+        order: -1;
+      }
+    }
+  </style>
+</head>
+<body>
+  <template data-st-face>
+    <div class="v-ground" data-st-rise>
+      <section class="sl-cockpit sl-knob-ok" aria-labelledby="v-cap" data-sl-live-box>
+        <div class="sl-cockpit-top">
+          <span id="v-cap"><i class="bi bi-graph-up" aria-hidden="true"></i>Статистика · <span data-st-t="month"></span></span>
+          <span class="sl-cockpit-state" role="status"><span data-st-t="run"></span></span>
+          <div class="v-nav">
+            <button type="button" data-st-go="prev" title="Месяц раньше" aria-label="Месяц раньше"><i class="bi bi-chevron-left" aria-hidden="true"></i></button>
+            <button type="button" data-st-go="next" title="Месяц позже" aria-label="Месяц позже"><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
+            <div class="v-live" data-st-if="run"><div class="sl-tip sl-float sl-live-chip" tabindex="0">
+              <span class="sl-live-icon"><i class="bi bi-activity sl-live-s-on" aria-hidden="true"></i><i class="bi bi-pause-circle-fill sl-live-s-paused" aria-hidden="true"></i></span>
+              <div class="sl-float-panel sl-live-panel">
+                <dl>
+                  <dt>Статус</dt><dd><span class="sl-live-s-on">В эфире</span><span class="sl-live-s-paused">На паузе</span></dd>
+                  <dt>Интервал</dt><dd>3 сек</dd>
+                  <dt>Обновлено</dt><dd><span data-sl-live-ago data-sl-live-unit="сек">&mdash;</span></dd>
+                </dl>
+                <span class="sl-live-action"><button type="button" class="sl-chip sl-chip-warn sl-live-act" data-sl-live-toggle><span class="sl-live-s-on"><i class="bi bi-pause-fill" aria-hidden="true"></i> Пауза</span><span class="sl-live-s-paused"><i class="bi bi-play-fill" aria-hidden="true"></i> Продолжить</span></button></span>
+              </div>
+            </div></div>
+          </div>
+        </div>
+        <div class="sl-cockpit-gauges">
+          <span class="sl-float sl-cockpit-float"><span class="sl-cockpit-ring sl-knob sl-knob-ok" tabindex="0" role="meter" aria-label="Люди" aria-valuemin="0" aria-valuemax="100" data-st-share="human"><svg class="sl-knob-svg" viewBox="0 0 44 44" aria-hidden="true"><path class="sl-knob-bg" d="M7.858 36.142 A20 20 0 1 1 36.142 36.142"></path><path class="sl-knob-val" d="M7.858 36.142 A20 20 0 1 1 36.142 36.142" pathLength="100" stroke-dasharray="0 100"></path><path d="M10.7 33.3 11.8 32.2 M7.2 28.1 8.7 27.5 M6 22 H7.6 M7.2 15.9 8.7 16.5 M10.7 10.7 11.8 11.8 M15.9 7.2 16.5 8.7 M22 6 V7.6 M28.1 7.2 27.5 8.7 M33.3 10.7 32.2 11.8 M36.8 15.9 35.3 16.5 M38 22 H36.4 M36.8 28.1 35.3 27.5 M33.3 33.3 32.2 32.2"></path></svg><span><b><span data-st-v></span><small>%</small></b><span data-st-share-name></span></span></span><span class="sl-float-panel sl-bell-tip" role="group"><span class="sl-bell-cap" data-st-share-cap></span><span data-st-share-rows></span></span></span>
+          <span class="sl-float sl-cockpit-float"><span class="sl-cockpit-ring sl-knob sl-knob-info" tabindex="0" role="meter" aria-label="С телефона" aria-valuemin="0" aria-valuemax="100" data-st-share="mobile"><svg class="sl-knob-svg" viewBox="0 0 44 44" aria-hidden="true"><path class="sl-knob-bg" d="M7.858 36.142 A20 20 0 1 1 36.142 36.142"></path><path class="sl-knob-val" d="M7.858 36.142 A20 20 0 1 1 36.142 36.142" pathLength="100" stroke-dasharray="0 100"></path><path d="M10.7 33.3 11.8 32.2 M7.2 28.1 8.7 27.5 M6 22 H7.6 M7.2 15.9 8.7 16.5 M10.7 10.7 11.8 11.8 M15.9 7.2 16.5 8.7 M22 6 V7.6 M28.1 7.2 27.5 8.7 M33.3 10.7 32.2 11.8 M36.8 15.9 35.3 16.5 M38 22 H36.4 M36.8 28.1 35.3 27.5 M33.3 33.3 32.2 32.2"></path></svg><span><b><span data-st-v></span><small>%</small></b><span data-st-share-name></span></span></span><span class="sl-float-panel sl-bell-tip" role="group"><span class="sl-bell-cap" data-st-share-cap></span><span data-st-share-rows></span></span></span>
+          <div class="sl-cockpit-float v-dial" data-st-scope="day" data-st-now>
+            <div class="v-dial-face">
+              <span class="sl-cockpit-plate v-dial-lamp" aria-hidden="true"><svg class="sl-cockpit-orbit" viewBox="0 0 100 100"><circle cx="50" cy="50" r="47.3" pathLength="120"></circle></svg></span>
+              <div data-st-clock></div>
+              <div class="v-dial-mid"><div class="v-mid-home"><small>пик</small><b data-st-t="peak-hour"></b><small><span data-st-t="h"></span></small></div><div class="v-mid-say" data-st-clock-say hidden></div></div>
+            </div>
+            <span class="v-dial-cap"><span class="v-dial-set" data-st-if="run"><button type="button" data-st-now-set="on">Сейчас</button><button type="button" data-st-now-set="off">Вчера</button></span><span data-st-if="arc">Последние полные сутки</span><span data-st-if="day"><span data-st-t="date"></span>, <span data-st-t="weekday"></span></span><button type="button" data-st-day-clear data-st-if="day" title="Снять выбор" aria-label="Снять выбор"><i class="bi bi-x-lg" aria-hidden="true"></i></button></span>
+          </div>
+          <span class="sl-float sl-cockpit-float"><span class="sl-cockpit-ring sl-knob sl-knob-warn" tabindex="0" role="meter" aria-label="Вернулись" aria-valuemin="0" aria-valuemax="100" data-st-share="ret"><svg class="sl-knob-svg" viewBox="0 0 44 44" aria-hidden="true"><path class="sl-knob-bg" d="M7.858 36.142 A20 20 0 1 1 36.142 36.142"></path><path class="sl-knob-val" d="M7.858 36.142 A20 20 0 1 1 36.142 36.142" pathLength="100" stroke-dasharray="0 100"></path><path d="M10.7 33.3 11.8 32.2 M7.2 28.1 8.7 27.5 M6 22 H7.6 M7.2 15.9 8.7 16.5 M10.7 10.7 11.8 11.8 M15.9 7.2 16.5 8.7 M22 6 V7.6 M28.1 7.2 27.5 8.7 M33.3 10.7 32.2 11.8 M36.8 15.9 35.3 16.5 M38 22 H36.4 M36.8 28.1 35.3 27.5 M33.3 33.3 32.2 32.2"></path></svg><span><b><span data-st-v></span><small>%</small></b><span data-st-share-name></span></span></span><span class="sl-float-panel sl-bell-tip" role="group"><span class="sl-bell-cap" data-st-share-cap></span><span data-st-share-rows></span></span></span>
+          <span class="sl-float sl-cockpit-float"><span class="sl-cockpit-ring sl-knob sl-knob-info" tabindex="0" role="meter" aria-label="Из поиска" aria-valuemin="0" aria-valuemax="100" data-st-share="search"><svg class="sl-knob-svg" viewBox="0 0 44 44" aria-hidden="true"><path class="sl-knob-bg" d="M7.858 36.142 A20 20 0 1 1 36.142 36.142"></path><path class="sl-knob-val" d="M7.858 36.142 A20 20 0 1 1 36.142 36.142" pathLength="100" stroke-dasharray="0 100"></path><path d="M10.7 33.3 11.8 32.2 M7.2 28.1 8.7 27.5 M6 22 H7.6 M7.2 15.9 8.7 16.5 M10.7 10.7 11.8 11.8 M15.9 7.2 16.5 8.7 M22 6 V7.6 M28.1 7.2 27.5 8.7 M33.3 10.7 32.2 11.8 M36.8 15.9 35.3 16.5 M38 22 H36.4 M36.8 28.1 35.3 27.5 M33.3 33.3 32.2 32.2"></path></svg><span><b><span data-st-v></span><small>%</small></b><span data-st-share-name></span></span></span><span class="sl-float-panel sl-bell-tip" role="group"><span class="sl-bell-cap" data-st-share-cap></span><span data-st-share-rows></span></span></span>
+        </div>
+        <ul class="sl-cockpit-strip">
+          <li><i class="bi bi-stopwatch" aria-hidden="true"></i><b data-st-t="gen"></b> ms <span>генерация</span></li>
+          <li><i class="bi bi-database" aria-hidden="true"></i><b data-st-t="sql"></b> sql <span>запросов</span></li>
+          <li><i class="bi bi-memory" aria-hidden="true"></i><b data-st-t="mem"></b> MB <span>память PHP</span></li>
+          <li><i class="bi bi-person-check" aria-hidden="true"></i><b data-st-t="usr"></b> <span>пользователей</span></li>
+          <li><i class="bi bi-infinity" aria-hidden="true"></i><b data-st-t="all"></b> <span>хитов за всё время</span></li>
+        </ul>
+      </section>
+
+      <div class="v-split" data-st-rise>
+        <section class="v-frame v-fill">
+          <div class="v-frame-cap"><i class="bi bi-bar-chart-line" aria-hidden="true"></i><span>Статистика / трафик сайта</span><span class="v-meta" data-st-t="period-short"></span></div>
+          <div class="v-frame-body">
+            <div class="v-cells">
+              <div data-st-tilt class="v-cell"><span>Уникальные</span><b data-st-t="u"></b><small><span data-st-t="avg-u"></span> в день · <span data-st-delta="u"></span></small></div>
+              <div data-st-tilt class="v-cell"><span>Входы</span><b data-st-t="h"></b><small><span data-st-t="per"></span> страницы на хост</small></div>
+              <div data-st-tilt class="v-cell"><span>Главная</span><b data-st-t="home"></b><small>входов на главную</small></div>
+              <div data-st-tilt class="v-cell v-cell-tone"><span>Аудитория</span><b data-st-t="aud"></b><small>пришли сами · <span data-st-delta="aud"></span></small></div>
+            </div>
+            <div data-st-chart="u" data-st-pick></div>
+          </div>
+        </section>
+        <div class="v-side" data-st-rise>
+          <section class="v-frame">
+            <div class="v-frame-cap"><span class="v-lamps" aria-hidden="true"><i></i><i></i><i></i></span><span>Источники</span><span class="v-meta">из поиска <span data-st-t="share-search"></span> %</span></div>
+            <div class="v-frame-body">
+              <div class="v-rows" data-st-bars="refcat"><template><div class="v-row"><span class="v-row-name" data-st-f="name"></span><span class="v-row-track"><i></i></span><b data-st-f="num"></b><span class="v-row-pct" data-st-f="pct"></span></div></template></div>
+            </div>
+          </section>
+          <section class="v-frame">
+            <div class="v-frame-cap"><span class="v-lamps" aria-hidden="true"><i></i><i></i><i></i></span><span>Страны</span></div>
+            <div class="v-frame-body">
+              <div class="v-rows" data-st-bars="countries" data-st-top="6"><template><div class="v-row"><span class="v-row-name"><span data-st-f="flag"></span><span data-st-f="name"></span></span><span class="v-row-track"><i></i></span><b data-st-f="num"></b><span class="v-row-pct" data-st-f="pct"></span></div></template></div>
+            </div>
+          </section>
+        </div>
+      </div>
+
+      <div class="v-split" data-st-rise>
+        <section class="v-frame v-fill v-hours">
+          <div class="v-frame-cap"><i class="bi bi-activity" aria-hidden="true"></i><span>Хиты по часам</span><span class="v-meta">ритм сайта</span></div>
+          <div class="v-frame-body"><div data-st-rhythm></div></div>
+        </section>
+        <div class="v-side" data-st-rise>
+          <section class="v-frame">
+            <div class="v-frame-cap"><span class="v-lamps" aria-hidden="true"><i></i><i></i><i></i></span><span>Браузеры</span></div>
+            <div class="v-frame-body"><div class="v-rows" data-st-bars="browsers" data-st-top="6"><template><div class="v-row"><span class="v-row-name" data-st-f="name"></span><span class="v-row-track"><i></i></span><b data-st-f="num"></b><span class="v-row-pct" data-st-f="pct"></span></div></template></div></div>
+          </section>
+          <section class="v-frame">
+            <div class="v-frame-cap"><span class="v-lamps" aria-hidden="true"><i></i><i></i><i></i></span><span>Системы</span></div>
+            <div class="v-frame-body"><div class="v-rows" data-st-bars="os"><template><div class="v-row"><span class="v-row-name" data-st-f="name"></span><span class="v-row-track"><i></i></span><b data-st-f="num"></b><span class="v-row-pct" data-st-f="pct"></span></div></template></div></div>
+          </section>
+        </div>
+      </div>
+
+      <div class="v-split" data-st-rise>
+        <section class="v-frame v-fill v-week">
+          <div class="v-frame-cap"><i class="bi bi-calendar-week" aria-hidden="true"></i><span>Неделя по часам</span><span class="v-meta">среднее число входов</span></div>
+          <div class="v-frame-body">
+            <div data-st-week></div>
+            <div class="v-steps" aria-hidden="true"><span>тише</span><i></i><i></i><i></i><i></i><i></i><i></i><span>горячее</span></div>
+          </div>
+        </section>
+        <div class="v-side" data-st-rise>
+          <section class="v-frame">
+            <div class="v-frame-cap"><span class="v-lamps" aria-hidden="true"><i></i><i></i><i></i></span><span>Сеансы</span></div>
+            <div class="v-frame-body v-stacks">
+              <div data-st-stack="newret"></div>
+              <div data-st-stack="depth"></div>
+              <div data-st-stack="duration"></div>
+            </div>
+          </section>
+          <section class="v-frame">
+            <div class="v-frame-cap"><span class="v-lamps" aria-hidden="true"><i></i><i></i><i></i></span><span>Устройства</span></div>
+            <div class="v-frame-body"><div class="v-rows" data-st-bars="devices"><template><div class="v-row"><span class="v-row-name" data-st-f="name"></span><span class="v-row-track"><i></i></span><b data-st-f="num"></b><span class="v-row-pct" data-st-f="pct"></span></div></template></div></div>
+          </section>
+        </div>
+      </div>
+
+      <section class="v-frame v-log">
+        <div class="v-frame-cap"><i class="bi bi-journal-text" aria-hidden="true"></i><span>Журнал дней</span><span class="v-meta"><span data-st-t="days"></span> дн.</span></div>
+        <div class="v-frame-body"><div data-st-table="totaltop pick"></div></div>
+      </section>
+    </div>
+  </template>
+  <script>document.write('<script src="assets/st.js?v=' + Date.now() + '"><\/script>');</script>
+  <script>document.write('<script src="assets/demo.js?v=' + Date.now() + '"><\/script>');</script>
+</body>
+</html>

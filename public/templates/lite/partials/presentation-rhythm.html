@@ -2,7 +2,7 @@
 {% include 'fragments/presentation-head.html' with head %}
 <div class="sl-pres-body">
   <div class="sl-pres-rhythm">
-    <article class="sl-pres-chart" data-sl-pres="chart" data-sl-pres-series="{{ series }}">
+    <article class="sl-pres-chart" data-sl-pres="chart" data-sl-pres-fill="all" data-sl-pres-series="{{ series }}">
       <div class="sl-pres-chart-meta">
         <div><strong>{{ volume }}</strong><span>{{ volume_label }}{% if has_change %} <b>{{ change }}</b>{% endif %}</span></div>
         <div class="sl-pres-segment" role="group" aria-label="{{ period_label }}">

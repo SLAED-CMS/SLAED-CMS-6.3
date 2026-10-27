@@ -186,6 +186,22 @@ final class RouteRegistryTest extends TestCase
         $this->assertSame($want, $run['names']);
     }
 
+    # A page of the layout takes its path at the root past a module, an entry, a common operation and a type, moves with 301 as a node does, and its path is no type
+    #[Test]
+    public function aPageOfTheLayoutLivesAtTheRoot(): void
+    {
+        $run = $this->getRun('page');
+        $this->assertSame(['o-kompanii', 'o-kompanii', 'forum-2', 'uploads-2', 'mode-2', 'recipes-2', 'o-kompanii-2', '7', 'about-us'],
+            [$run['first'], $run['again'], $run['module'], $run['entry'], $run['common'], $run['type'], $run['twin'], $run['empty'], $run['moved']]);
+        $this->assertSame(['kind' => 'page', 'oid' => 1, 'state' => 0, 'path' => 'about-us'], $run['former']);
+        $this->assertSame(['about-us', 'team'], [$run['kept'], $run['named']], 'a form without a name moved the page, or a name was not taken');
+        $this->assertSame(['1' => 'team', '2' => 'forum-2'], $run['list']);
+        $this->assertSame([false, true], $run['typename'], 'a type could take the path of a page');
+        $this->assertSame([true, true, true, false], $run['reserved']);
+        $this->assertSame(['', ''], $run['refuse'], 'a page took a prefix or a zero number');
+        $this->assertSame([['kind' => 'page', 'oid' => 6, 'state' => 2, 'path' => ''], 'o-kompanii-3'], $run['gone'], 'a path of a deleted page was given again');
+    }
+
     # The operations Route reserves are the cases of the switch of every module and the operations of getNodeOps(), so no module answers one the registry could give
     #[Test]
     public function theOperationsMatchTheModules(): void

@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="ru" data-theme="auto">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Календарь &middot; Статистика — стенд SLAED CMS</title>
+  <link rel="stylesheet" href="../templates/admin/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../templates/admin/assets/css/base.css">
+  <link rel="stylesheet" href="../templates/admin/assets/css/theme.css">
+  <!-- The stand is served without Cache-Control; its sheets and scripts are stamped so an edit is seen at once -->
+  <script>document.write('<link rel="stylesheet" href="assets/demo.css?v=' + Date.now() + '"><link rel="stylesheet" href="assets/st.css?v=' + Date.now() + '">');</script>
+  <script src="../plugins/system/global-func.js"></script>
+  <script src="../plugins/system/slaed.js"></script>
+  <script src="../templates/admin/assets/js/admin-ui.js"></script>
+  <style>
+    /* Календарь: the month is a calendar and the calendar is the navigation — every day a cell tinted by its value,
+       a click opens the day at the right: its hours, its load, its sources. The table is the other face of the same month */
+    .v-desk {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 340px;
+      align-items: start;
+      gap: var(--sl-space-6);
+    }
+
+    .v-desk > .sl-box {
+      margin: 0;
+    }
+
+    .v-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: var(--sl-space-4);
+      margin-bottom: var(--sl-space-6);
+    }
+
+    .v-bar h2 {
+      min-width: 170px;
+      margin: 0;
+      font-size: var(--sl-font-h2);
+      text-align: center;
+    }
+
+    .v-bar .sl-seg:first-of-type {
+      margin-left: auto;
+    }
+
+    .v-sum {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--sl-space-3) var(--sl-space-7);
+      margin-top: var(--sl-space-6);
+      padding-top: var(--sl-space-5);
+      border-top: 1px solid var(--sl-border);
+      font-size: var(--sl-font-small);
+      color: var(--sl-text-muted);
+    }
+
+    .v-sum b {
+      margin-right: var(--sl-space-2);
+      font-size: var(--sl-font-h4);
+      color: var(--sl-text);
+    }
+
+    .v-day {
+      position: sticky;
+      top: var(--sl-space-6);
+      display: grid;
+      gap: var(--sl-space-6);
+    }
+
+    .v-day-head {
+      display: flex;
+      align-items: baseline;
+      gap: var(--sl-space-3);
+    }
+
+    .v-day-head h3 {
+      margin: 0;
+      font-size: var(--sl-font-h2);
+    }
+
+    .v-day-head span {
+      color: var(--sl-text-muted);
+    }
+
+    .v-day-head button {
+      margin-left: auto;
+    }
+
+    .v-hint {
+      margin: 0;
+      font-size: var(--sl-font-small);
+      color: var(--sl-text-muted);
+    }
+
+    .v-nums {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--sl-space-3);
+    }
+
+    .v-num {
+      display: grid;
+      gap: var(--sl-space-1);
+      padding: var(--sl-space-4) var(--sl-space-5);
+      border-radius: var(--sl-radius-2);
+      background: var(--sl-bg-subtle);
+    }
+
+    .v-num span {
+      font-size: var(--sl-font-micro);
+      color: var(--sl-text-muted);
+    }
+
+    .v-num b {
+      font-size: var(--sl-font-h2);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .v-day h4 {
+      margin: 0 0 var(--sl-space-3);
+      font-size: var(--sl-font-small);
+      color: var(--sl-text-muted);
+    }
+
+    .v-day [data-st-chart] {
+      --st-h: 110px;
+      --st-axis: 36px;
+    }
+
+    .v-load {
+      display: flex;
+      gap: var(--sl-space-6);
+      font-size: var(--sl-font-small);
+      color: var(--sl-text-muted);
+    }
+
+    .v-load b {
+      font-size: var(--sl-font-h4);
+      color: var(--sl-text);
+    }
+
+    .v-dims {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: var(--sl-space-6);
+    }
+
+    .v-dims h3 {
+      margin: 0 0 var(--sl-space-4);
+      font-size: var(--sl-font-h4);
+    }
+
+    .v-stacks {
+      display: grid;
+      gap: var(--sl-space-6);
+    }
+
+    @media (max-width: 1180px) {
+      .v-desk {
+        grid-template-columns: minmax(0, 1fr);
+      }
+
+      .v-day {
+        position: static;
+      }
+    }
+  </style>
+</head>
+<body>
+  <template data-st-face>
+    <div class="v-desk">
+      <section class="sl-box" data-demo-tabs>
+        <div class="v-bar">
+          <button type="button" class="sl-but" data-st-go="prev" title="Месяц раньше" aria-label="Месяц раньше"><i class="bi bi-chevron-left" aria-hidden="true"></i></button>
+          <h2 data-st-t="month"></h2>
+          <button type="button" class="sl-but" data-st-go="next" title="Месяц позже" aria-label="Месяц позже"><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
+          <span class="sl-seg" role="group" aria-label="Чем окрашены дни">
+            <button type="button" class="sl-seg-cell" data-st-metric="u">Уникальные</button>
+            <button type="button" class="sl-seg-cell" data-st-metric="h">Входы</button>
+            <button type="button" class="sl-seg-cell" data-st-metric="aud">Аудитория</button>
+            <button type="button" class="sl-seg-cell" data-st-metric="gen">Генерация</button>
+          </span>
+          <span class="sl-seg sl-seg-view" role="tablist" aria-label="Вид">
+            <button type="button" class="sl-seg-cell sl-is-active" role="tab" aria-selected="true" data-demo-tab="cal" title="Календарь" aria-label="Календарь"><i class="bi bi-calendar3" aria-hidden="true"></i></button>
+            <button type="button" class="sl-seg-cell" role="tab" aria-selected="false" data-demo-tab="tab" title="Таблица" aria-label="Таблица"><i class="bi bi-table" aria-hidden="true"></i></button>
+          </span>
+        </div>
+        <div data-demo-panel="cal" data-st-cal></div>
+        <div data-demo-panel="tab" data-st-table="pick" hidden></div>
+        <div class="v-sum">
+          <span><b data-st-t="u"></b>уникальных</span>
+          <span><b data-st-t="h"></b>входов</span>
+          <span><b data-st-t="aud"></b>аудитория</span>
+          <span><b data-st-t="ref"></b>переходов</span>
+          <span><b data-st-t="bot"></b>краулеров</span>
+          <span><b data-st-t="usr"></b>пользователей</span>
+          <span data-st-delta="u"></span>
+        </div>
+      </section>
+
+      <aside class="sl-box v-day" data-st-scope="day" aria-label="День">
+        <div class="v-day-head">
+          <h3 data-st-t="date"></h3><span data-st-t="weekday"></span>
+          <button type="button" class="sl-but" data-st-day-clear data-st-if="day" title="Снять выбор" aria-label="Снять выбор"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
+        </div>
+        <p class="v-hint" data-st-if="noday">Последний полный день. Щёлкните любой день календаря.</p>
+        <div class="v-nums">
+          <div class="v-num"><span>Уникальные</span><b data-st-t="u"></b><span data-st-delta="u"></span></div>
+          <div class="v-num"><span>Входы</span><b data-st-t="h"></b><span data-st-delta="h"></span></div>
+          <div class="v-num"><span>Переходы</span><b data-st-t="ref"></b><span data-st-delta="ref"></span></div>
+          <div class="v-num"><span>Краулеры</span><b data-st-t="bot"></b><span data-st-delta="bot"></span></div>
+        </div>
+        <div><h4>Входы по часам</h4><div data-st-chart="hits,gen" data-st-x="hours"></div></div>
+        <div>
+          <h4>Нагрузка средней страницы</h4>
+          <div class="v-load" data-st-if="load"><span><b data-st-t="gen"></b> мс</span><span><b data-st-t="sql"></b> запросов</span><span><b data-st-t="mem"></b> МБ</span></div>
+          <p class="v-hint" data-st-if="noload">В этом месяце счётчик ещё не писал нагрузку.</p>
+        </div>
+        <div><h4>Источники</h4><div data-st-stack="refcat"></div></div>
+        <div><h4>Устройства</h4><div data-st-stack="devices"></div></div>
+      </aside>
+    </div>
+
+    <section class="sl-box v-dims">
+      <div><h3>Браузеры</h3><div class="sl-statx-tone-primary" data-st-bars="browsers" data-st-top="6"></div></div>
+      <div><h3>Системы</h3><div class="sl-statx-tone-success" data-st-bars="os"></div></div>
+      <div><h3>Страны</h3><div class="sl-statx-tone-warning" data-st-bars="countries" data-st-top="6"></div></div>
+      <div><h3>Сеансы</h3><div class="v-stacks"><div data-st-stack="newret"></div><div data-st-stack="depth"></div><div data-st-stack="duration"></div></div></div>
+    </section>
+  </template>
+  <script>document.write('<script src="assets/st.js?v=' + Date.now() + '"><\/script>');</script>
+  <script>document.write('<script src="assets/demo.js?v=' + Date.now() + '"><\/script>');</script>
+</body>
+</html>

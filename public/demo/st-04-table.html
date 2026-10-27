@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="ru" data-theme="auto">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Таблица &middot; Статистика — стенд SLAED CMS</title>
+  <link rel="stylesheet" href="../templates/admin/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../templates/admin/assets/css/base.css">
+  <link rel="stylesheet" href="../templates/admin/assets/css/theme.css">
+  <!-- The stand is served without Cache-Control; its sheets and scripts are stamped so an edit is seen at once -->
+  <script>document.write('<link rel="stylesheet" href="assets/demo.css?v=' + Date.now() + '"><link rel="stylesheet" href="assets/st.css?v=' + Date.now() + '">');</script>
+  <script src="../plugins/system/global-func.js"></script>
+  <script src="../plugins/system/slaed.js"></script>
+  <script src="../templates/admin/assets/js/admin-ui.js"></script>
+  <style>
+    /* Таблица: the table of the live page stays the page, and every cell learns to show its weight — columns in
+       groups, a bar under each number, the best day of each column in bold, the total pinned on top, the weekends
+       shaded. A row opens its day in a strip that rises from the bottom; the slices stand under the table */
+    .v-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: var(--sl-space-4) var(--sl-space-6);
+    }
+
+    .v-bar h2 {
+      margin: 0;
+      font-size: var(--sl-font-h3);
+    }
+
+    .v-bar .v-ribbon {
+      flex: 1 1 260px;
+      height: 44px;
+    }
+
+    .v-bar .v-ribbon .st-plot {
+      --st-h: 44px;
+      margin: 0;
+    }
+
+    .v-bar .v-ribbon :is(.st-grid, .st-col em) {
+      display: none;
+    }
+
+    .v-wrap {
+      overflow-x: auto;
+    }
+
+    .v-wrap .st-table {
+      min-width: 980px;
+    }
+
+    .v-wrap .st-table thead th {
+      position: sticky;
+      top: 0;
+      z-index: var(--sl-z-raised);
+    }
+
+    .st-thead-groups th {
+      padding-bottom: var(--sl-space-2);
+      font-family: var(--sl-face-mono);
+      font-size: var(--sl-font-micro);
+      letter-spacing: var(--sl-track-wide);
+      text-transform: uppercase;
+      text-align: center !important;
+      color: var(--sl-text-muted);
+      border-bottom: 2px solid var(--sl-border);
+    }
+
+    .st-thead-groups th:nth-child(2) { border-bottom-color: var(--sl-primary); }
+    .st-thead-groups th:nth-child(3) { border-bottom-color: var(--sl-accent); }
+    .st-thead-groups th:nth-child(4) { border-bottom-color: var(--sl-warning); }
+    .st-thead-groups th:nth-child(5) { border-bottom-color: var(--sl-success); }
+
+    .v-wrap .st-table :is(.st-th-usr, .st-td-usr, .st-th-home, .st-td-home, .st-th-bot, .st-td-bot) {
+      border-right: 1px solid var(--sl-border-strong);
+    }
+
+    .v-wrap .st-table td {
+      padding-bottom: var(--sl-space-4);
+    }
+
+    .v-wrap .st-tr-end > td {
+      background: var(--sl-bg-subtle);
+    }
+
+    .v-wrap .st-tr-total > td {
+      background: var(--sl-primary-subtle);
+      color: var(--sl-text-strong);
+    }
+
+    .v-wrap tr[data-st-day]:hover > td {
+      background: var(--sl-tint);
+    }
+
+    .v-note {
+      margin: var(--sl-space-4) 0 0;
+      font-size: var(--sl-font-small);
+      color: var(--sl-text-muted);
+    }
+
+    .v-dims {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: var(--sl-space-6);
+    }
+
+    .v-dims > .sl-box {
+      margin: 0;
+    }
+
+    .v-dims h3 {
+      margin: 0 0 var(--sl-space-4);
+      font-size: var(--sl-font-h4);
+    }
+
+    .v-dock {
+      position: sticky;
+      bottom: var(--sl-space-5);
+      z-index: var(--sl-z-sticky);
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) minmax(0, 1fr) auto;
+      align-items: center;
+      gap: var(--sl-space-6);
+      margin: 0;
+      padding: var(--sl-space-5) var(--sl-space-6);
+      border: 1px solid var(--sl-primary);
+      border-radius: var(--sl-radius-3);
+      background: var(--sl-bg);
+      box-shadow: var(--sl-shadow-float);
+    }
+
+    .v-dock h3 {
+      margin: 0;
+      font-size: var(--sl-font-h3);
+      white-space: nowrap;
+    }
+
+    .v-dock h3 small {
+      display: block;
+      font-size: var(--sl-font-small);
+      font-weight: var(--sl-weight-normal);
+      color: var(--sl-text-muted);
+    }
+
+    .v-stacks {
+      display: grid;
+      gap: var(--sl-space-4);
+    }
+
+    .v-dock [data-st-chart] {
+      --st-h: 70px;
+      --st-axis: 34px;
+    }
+
+    .v-dock .st-plot {
+      margin-bottom: var(--sl-space-6);
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+      :root:not([data-demo-motion="off"]) .v-dock {
+        animation: v-rise var(--sl-time-base) var(--sl-ease-out);
+      }
+    }
+
+    @keyframes v-rise {
+      from { opacity: 0; transform: translateY(var(--sl-space-6)); }
+    }
+
+    @media (max-width: 900px) {
+      .v-dock {
+        grid-template-columns: minmax(0, 1fr) auto;
+      }
+
+      .v-dock > div {
+        grid-column: 1 / -1;
+      }
+    }
+  </style>
+</head>
+<body>
+  <template data-st-face>
+    <section class="sl-box v-bar">
+      <button type="button" class="sl-but" data-st-go="prev" title="Месяц раньше" aria-label="Месяц раньше"><i class="bi bi-chevron-left" aria-hidden="true"></i></button>
+      <h2 data-st-t="month"></h2>
+      <button type="button" class="sl-but" data-st-go="next" title="Месяц позже" aria-label="Месяц позже"><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
+      <span class="sl-chip" data-st-t="run"></span>
+      <div class="v-ribbon" data-st-chart="u" aria-hidden="true"></div>
+    </section>
+
+    <section class="sl-box">
+      <div class="v-wrap"><div data-st-table="groups bars totaltop pick"></div></div>
+      <p class="v-note">Строка «Всего» — суммы, у нагрузки — средняя страница за период. Жирным — лучший день колонки. Щелчок по строке открывает день.</p>
+    </section>
+
+    <section class="sl-box v-dock" data-st-scope="day" data-st-if="day" aria-label="Выбранный день">
+      <h3><span data-st-t="date"></span><small data-st-t="weekday"></small></h3>
+      <div data-st-chart="hits,gen" data-st-x="hours"></div>
+      <div class="v-stacks"><div data-st-stack="refcat"></div><div data-st-stack="devices"></div></div>
+      <button type="button" class="sl-but" data-st-day-clear title="Закрыть" aria-label="Закрыть"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
+    </section>
+
+    <div class="v-dims">
+      <section class="sl-box"><h3>Браузеры</h3><div class="sl-statx-tone-primary" data-st-bars="browsers"></div></section>
+      <section class="sl-box"><h3>Системы</h3><div class="sl-statx-tone-success" data-st-bars="os"></div></section>
+      <section class="sl-box"><h3>Страны</h3><div class="sl-statx-tone-warning" data-st-bars="countries"></div></section>
+      <section class="sl-box"><h3>Устройства</h3><div class="sl-statx-tone-accent" data-st-bars="devices"></div></section>
+      <section class="sl-box"><h3>Источники</h3><div class="sl-statx-tone-primary" data-st-bars="refcat"></div></section>
+      <section class="sl-box"><h3>Сеансы</h3><div class="sl-statx-tone-success" data-st-bars="newret"></div><div class="sl-statx-tone-primary" data-st-bars="depth"></div><div class="sl-statx-tone-warning" data-st-bars="duration"></div></section>
+    </div>
+  </template>
+  <script>document.write('<script src="assets/st.js?v=' + Date.now() + '"><\/script>');</script>
+  <script>document.write('<script src="assets/demo.js?v=' + Date.now() + '"><\/script>');</script>
+</body>
+</html>

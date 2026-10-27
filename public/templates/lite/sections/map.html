@@ -1,0 +1,14 @@
+{% if point_frame or parts.address or parts.phone or parts.email %}<div class="sl-sec-media{% if not point_frame %} sl-sec-solo{% elseif side_right %} sl-sec-flip{% endif %}">
+  {% if point_frame %}<div class="sl-sec-frame sl-sec-map">
+    <div class="sl-sec-load" data-sl-sec-load>
+      {% if photo %}<img src="{{ photo }}" alt="" style="--sl-d-focus: {{ focus }}" loading="lazy" decoding="async">{% else %}<i class="bi bi-geo-alt" aria-hidden="true"></i>{% endif %}
+      <button type="button" class="sl-but"><i class="bi bi-map" aria-hidden="true"></i>{{ _LAYOUT_MAP }}</button>
+      <template><iframe src="{{ point_frame }}" title="{{ title }}"></iframe></template>
+    </div>
+  </div>{% endif %}
+  {% if parts.address or parts.phone or parts.email %}<div class="sl-pres-tech sl-sec-cards">
+    {% if parts.address %}<div class="sl-pres-tech-card" data-sl-tone="primary"><i class="bi bi-geo-alt" aria-hidden="true"></i><div><b>{{ _LAYOUT_ADDR }}</b><span class="sl-sec-lines">{{ parts.address }}</span></div></div>{% endif %}
+    {% if parts.phone %}<div class="sl-pres-tech-card" data-sl-tone="primary"><i class="bi bi-telephone" aria-hidden="true"></i><div><b>{{ _LAYOUT_TEL }}</b><span><a href="tel:{{ parts.phone }}">{{ parts.phone }}</a></span></div></div>{% endif %}
+    {% if parts.email %}<div class="sl-pres-tech-card" data-sl-tone="primary"><i class="bi bi-envelope" aria-hidden="true"></i><div><b>{{ _EMAIL }}</b><span><a href="mailto:{{ parts.email }}">{{ parts.email }}</a></span></div></div>{% endif %}
+  </div>{% endif %}
+</div>{% endif %}

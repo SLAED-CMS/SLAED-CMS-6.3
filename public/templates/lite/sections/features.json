@@ -1,0 +1,41 @@
+{
+    "title": "_LAYOUT_FEATURES",
+    "note": "_LAYOUT_FEAT_INFO",
+    "icon": "grid-3x2-gap",
+    "group": "base",
+    "frame": true,
+    "fields": [
+        {"key": "title", "label": "_TITLE", "type": "text"},
+        {"key": "lead", "label": "_LAYOUT_LEAD", "type": "text"},
+        {"key": "icon", "label": "_ICON", "type": "icon", "tab": "look"},
+        {"key": "look", "label": "_LAYOUT_CARDS", "type": "select", "show": "seg", "options": {"tile": "_LAYOUT_TILE", "line": "_LAYOUT_LINES"}, "tab": "look"},
+        {"key": "cols", "label": "_LAYOUT_COLS", "type": "select", "show": "seg", "options": {"two": "2", "three": "3", "four": "4"}, "tab": "look"},
+        {"key": "tone", "label": "_LAYOUT_TONE", "type": "tone", "tab": "look"}
+    ],
+    "items": {
+        "label": "_LAYOUT_CARDS",
+        "max": 8,
+        "name": "title",
+        "fields": [
+            {"key": "icon", "label": "_ICON", "type": "icon"},
+            {"key": "title", "label": "_TITLE", "type": "text"},
+            {"key": "text", "label": "_TEXT", "type": "textarea"},
+            {"key": "photo", "label": "_LAYOUT_STRIP", "type": "file"},
+            {"key": "focus", "label": "_LAYOUT_FOCUS", "type": "focus"}
+        ],
+        "make": {"icon": "star", "title": "_LAYOUT_FEAT_ITEM", "text": "_LAYOUT_FEAT_TEXT", "photo": "presentation/dna/simplicity.webp", "focus": "center"}
+    },
+    "make": {
+        "title": "_LAYOUT_FEATURES",
+        "lead": "",
+        "icon": "grid-3x2-gap",
+        "look": "tile",
+        "cols": "three",
+        "tone": "primary",
+        "items": [
+            {"icon": "star", "title": "_LAYOUT_FEAT_ITEM", "text": "_LAYOUT_FEAT_TEXT", "photo": "presentation/dna/simplicity.webp", "focus": "center"},
+            {"icon": "star", "title": "_LAYOUT_FEAT_ITEM", "text": "_LAYOUT_FEAT_TEXT", "photo": "presentation/dna/functionality.webp", "focus": "center"},
+            {"icon": "star", "title": "_LAYOUT_FEAT_ITEM", "text": "_LAYOUT_FEAT_TEXT", "photo": "presentation/dna/efficiency.webp", "focus": "center"}
+        ]
+    }
+}
