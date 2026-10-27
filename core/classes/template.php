@@ -69,6 +69,17 @@ class Template {
         return $this->getAssetMarkup().$html;
     }
 
+    # Return compiled markup of one section of the layout, the theme's sections/<type>.html; Layout decides which type and with what values
+    public function getHtmlSection(string $name, array $data = []): string {
+        if (!$this->checkName($name)) {
+            $this->reportTemplateError('sections', $name, 'Invalid section name');
+            return $this->getTemplateDebugComment('sections', $name, 'invalid section name');
+        }
+        $this->assets = ['css' => [], 'js' => []];
+        $html = $this->getHtml('sections', $name, $data);
+        return $this->getAssetMarkup().$html;
+    }
+
     # Whether the current theme carries one template file of a group, without rendering or reporting anything; a caller with a fallback asks this before choosing a name
     public function checkTemplateFile(string $kind, string $name): bool {
         return $this->checkType($kind) && $this->checkName($name) && $this->checkFile($this->getFile($kind, $name));
@@ -750,7 +761,7 @@ class Template {
 
     # Validate supported template groups for the new engine
     protected function checkType(string $type): bool {
-        return in_array($type, ['pages', 'partials', 'fragments', 'layouts'], true);
+        return in_array($type, ['pages', 'partials', 'fragments', 'layouts', 'sections'], true);
     }
 
     # Verify that the target file exists inside the theme base path resolved once in the constructor

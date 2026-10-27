@@ -44,6 +44,16 @@ function getStatisticSearch(): string {
     return $tpl->getHtmlPart('div', ['is_searchbox' => true, 'content_html' => $form]);
 }
 
+# The load of one statistic line by hour: pages, generation ms, queries and KB, pages counted only where the hour carries a load, as days before the load fields have none
+function getStatLoadHours(array $pts): array {
+    $out = [];
+    foreach (['num' => 13, 'gen' => 17, 'sql' => 18, 'mem' => 19] as $key => $idx) {
+        $out[$key] = array_map('intval', array_pad(array_slice(explode(',', trim((string)($pts[$idx] ?? ''))), 0, 24), 24, 0));
+    }
+    foreach ($out['gen'] as $hour => $val) if ($val <= 0) $out['num'][$hour] = 0;
+    return $out;
+}
+
 # Render extended statistics for the selected archive or current period
 function getStatExtPanel(string $file): string {
     global $tpl;
@@ -78,10 +88,17 @@ function getStatExtPanel(string $file): string {
         16 => [],
     ];
     $hrs = array_fill(0, 24, 0);
+    $lgen = array_fill(0, 24, 0);
+    $lnum = array_fill(0, 24, 0);
     $has = false;
     foreach ($rows as $line) {
         $pts = explode('|', trim((string)$line));
         if (isset($pts[8])) $has = true;
+        $load = getStatLoadHours($pts);
+        foreach ($load['gen'] as $h => $val) {
+            $lgen[$h] += $val;
+            $lnum[$h] += $load['num'][$h];
+        }
         foreach ([8, 9, 10, 11, 12, 14, 15, 16] as $idx) {
             if (isset($pts[$idx]) && $pts[$idx] !== '') {
                 $cur = getCounterField($pts[$idx]);
@@ -176,8 +193,6 @@ function getStatExtPanel(string $file): string {
     $bot = (int)($cnt[10]['bot'] ?? 0);
     $hum = max(0, $devt - $bot);
     $mob = (int)($cnt[10]['mobile'] ?? 0);
-    $hrm = 0;
-    foreach ($hrs as $val) $hrm = max($hrm, (int)$val);
     $rings = [
         $ring('Human Traffic %', 'Humans / all devices', $pct($hum, $devt), 'success'),
         $ring('Mobile Share %', 'Mobile / human traffic', $pct($mob, $hum), 'accent'),
@@ -198,11 +213,13 @@ function getStatExtPanel(string $file): string {
         $dim = $bars($name, $map, $tone, $ord);
         if ($dim !== []) $dims[] = $dim;
     }
-    $hours = [];
-    if ($hrm > 0) {
+    $hbars = static function(array $vals): array {
+        $top = max($vals);
+        if ($top <= 0) return [];
+        $out = [];
         for ($i = 0; $i < 24; $i++) {
-            $high = (int)round(48 * $hrs[$i] / $hrm);
-            $hours[] = [
+            $high = (int)round(48 * $vals[$i] / $top);
+            $out[] = [
                 'x' => $i * 11 + 1,
                 'y' => 48 - $high,
                 'height' => $high,
@@ -211,12 +228,17 @@ function getStatExtPanel(string $file): string {
                 'label' => (string)$i,
             ];
         }
-    }
+        return $out;
+    };
+    $gavg = array_map(static fn(int $gen, int $num): float => $num ? $gen / $num : 0.0, $lgen, $lnum);
+    $charts = array_values(array_filter([
+        ['title' => 'Hits by hour (total)', 'hours' => $hbars($hrs)],
+        ['title' => 'Average generation by hour (ms)', 'hours' => $hbars($gavg)],
+    ], static fn(array $one): bool => $one['hours'] !== []));
     return $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('statistic-extended', [
         'rings' => $rings,
         'dims' => $dims,
-        'hours' => $hours,
-        'hours_title' => 'Hits by hour (total)',
+        'charts' => $charts,
     ])]);
 }
 
@@ -260,7 +282,13 @@ function statistic(): void {
         ['content' => _BOTSOPT],
         ['content' => _AUDIENCE],
         ['content' => _USERS],
+        ['content' => _GENERATION],
+        ['content' => _ADM_QUERIES],
+        ['content' => _ADM_PHPMEM],
     ];
+    $avg = static fn(int $num, int $gen, int $sql, int $mem): array => $num ? [round($gen / $num).' ms', (string)round($sql / $num, 1), round($mem / 1024 / $num, 1).' MB']
+        : ['—', '—', '—'];
+    $tnum = $tgen = $tsql = $tmem = 0;
     $rows = '';
     $daysLog = COUNTER_DIR.'/days.log';
     $statLog = COUNTER_DIR.'/statistic.log';
@@ -290,6 +318,13 @@ function statistic(): void {
         $auditory += $out_aud;
         if ($auditory < 0) $auditory = 0;
         $regusers += rtrim($out[7]);
+        $load = getStatLoadHours($out);
+        $day = [array_sum($load['num']), array_sum($load['gen']), array_sum($load['sql']), array_sum($load['mem'])];
+        $tnum += $day[0];
+        $tgen += $day[1];
+        $tsql += $day[2];
+        $tmem += $day[3];
+        [$dgen, $dsql, $dmem] = $avg(...$day);
         $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
             'cells' => [
                 ['content_html' => $out[0]],
@@ -300,9 +335,13 @@ function statistic(): void {
                 ['content_html' => $out[4]],
                 ['content_html' => (string)$out_aud],
                 ['content_html' => rtrim($out[7])],
+                ['content_html' => $dgen],
+                ['content_html' => $dsql],
+                ['content_html' => $dmem],
             ],
         ])]);
     }
+    [$agen, $asql, $amem] = $avg($tnum, $tgen, $tsql, $tmem);
     $rows .= $tpl->getHtmlFrag('table-row', [
         'row_attr' => 'data-sort-method="none"',
         'cells_html' => $tpl->getHtmlFrag('table-cells', [
@@ -315,6 +354,9 @@ function statistic(): void {
                 ['content_html' => $tpl->getHtmlFrag('span', ['is_bold' => true, 'text' => (string)$engines])],
                 ['content_html' => $tpl->getHtmlFrag('span', ['is_bold' => true, 'text' => (string)$auditory])],
                 ['content_html' => $tpl->getHtmlFrag('span', ['is_bold' => true, 'text' => (string)$regusers])],
+                ['content_html' => $tpl->getHtmlFrag('span', ['is_bold' => true, 'text' => $agen])],
+                ['content_html' => $tpl->getHtmlFrag('span', ['is_bold' => true, 'text' => $asql])],
+                ['content_html' => $tpl->getHtmlFrag('span', ['is_bold' => true, 'text' => $amem])],
             ],
         ]),
     ]);

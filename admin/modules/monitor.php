@@ -102,13 +102,14 @@ function getMonitorChartTimeLabel(int $sec, bool $now = false): string {
     return sprintf(_MONITOR_TIME_AGO, $sec);
 }
 
-# Builds the monitor traffic chart from its four series; the SVG around them lives in the theme partial
+# Builds the monitor traffic chart from its four series, labelled by the stored time of each picked point; the SVG around them lives in the theme partial
 function getMonitorChartSvg(array $snap): string {
     global $tpl;
     $uh = is_array($snap['hist_up'] ?? null) ? $snap['hist_up'] : [];
     $dh = is_array($snap['hist_down'] ?? null) ? $snap['hist_down'] : [];
     $ch = is_array($snap['hist_cpu'] ?? null) ? $snap['hist_cpu'] : [];
     $rh = is_array($snap['hist_ram'] ?? null) ? $snap['hist_ram'] : [];
+    $times = is_array($snap['hist_time'] ?? null) ? $snap['hist_time'] : [];
     $ww = 900;
     $hh = 285;
     $pb = 222;
@@ -116,10 +117,11 @@ function getMonitorChartSvg(array $snap): string {
     $bc = 6;
     $tw = 148;
     $th = 104;
-    $st = 4;
     $xs = [];
+    $stamps = [];
     for ($ix = 0; $ix < $bc; $ix++) {
         $xs[] = round($px + ($ix * (($ww - ($px * 2)) / ($bc - 1))), 2);
+        $stamps[] = (int)($times[(int)round($ix * max(count($times) - 1, 0) / ($bc - 1))] ?? time());
     }
     $vals = array_map('floatval', array_merge($uh, $dh));
     $mx = $vals ? max(1.0, max($vals)) : 1.0;
@@ -145,8 +147,8 @@ function getMonitorChartSvg(array $snap): string {
     $axes = [];
     foreach ($xs as $ix => $xx) {
         $vgrid .= 'M'.$xx.' 42V'.$pb;
-        $sec = ($bc - 1 - $ix) * $st;
-        $axes[] = ['x' => round($xx, 2), 'label' => getMonitorChartTimeLabel($sec, $sec === 0)];
+        $sec = max(time() - $stamps[$ix], 0);
+        $axes[] = ['x' => round($xx, 2), 'label' => getMonitorChartTimeLabel($sec, $sec < 10)];
     }
     $slots = [];
     for ($ix = 0; $ix < $bc; $ix++) {
@@ -163,8 +165,9 @@ function getMonitorChartSvg(array $snap): string {
         if ($tx < $px) $tx = $px;
         $fy = (float)($fp['y'] ?? ($cp['y'] ?? $pb));
         $ty = (($fy + $th + 18) > ($hh - 8)) ? max($fy - $th - 16, 8) : 56;
-        $tm = time() - (($bc - 1 - $ix) * $st);
-        $lb = getMonitorChartTimeLabel((int)(($bc - 1 - $ix) * $st), $ix === $bc - 1);
+        $tm = $stamps[$ix];
+        $sec = max(time() - $tm, 0);
+        $lb = getMonitorChartTimeLabel($sec, $sec < 10);
         $slots[] = [
             'x' => $xx,
             'y' => $fy,
@@ -207,51 +210,33 @@ function getStatusHtml(?bool $state): string {
     ]);
 }
 
-# Builds complete monitor snapshot with system, network, and chart path values
-function getMonitorPanelSnapshot(): array {
-    return getMonitorCache('panel_snapshot', 3, static function (): array {
-        [$cpup] = getCpuLoad();
-        $cpu = getCpuDetails();
-        $mem = getMemoryInfo();
-        $disk = getMonitorDiskSnapshot();
-        $live = getRealtimePanelMetrics((float)$cpup, (float)$mem['percent']);
-        $netmax = max(array_merge([1.0], $live['hist_up'], $live['hist_down']));
-        $pathup = getSmoothAreaPath($live['hist_up'], $netmax);
-        $pathdown = getSmoothAreaPath($live['hist_down'], $netmax);
-        $upline = getSmoothLinePath($live['hist_up'], $netmax);
-        $downlin = getSmoothLinePath($live['hist_down'], $netmax);
-        $pathcpu = getSmoothAreaPath($live['hist_cpu'], 100.0);
-        $pathram = getSmoothAreaPath($live['hist_ram'], 100.0);
-        $cpuline = getSmoothLinePath($live['hist_cpu'], 100.0);
-        $ramline = getSmoothLinePath($live['hist_ram'], 100.0);
-        return [
-            'cpu_p' => (float)$cpup,
-            'cpu' => $cpu,
-            'mem' => $mem,
-            'disk_total' => $disk['disk_total'],
-            'disk_free' => $disk['disk_free'],
-            'disk_used' => $disk['disk_used'],
-            'disk_pct' => $disk['disk_pct'],
-            'net' => [
-                'rx_total' => $live['rx_total'],
-                'tx_total' => $live['tx_total'],
-                'rx_rate' => $live['rx_rate'],
-                'tx_rate' => $live['tx_rate'],
-            ],
-            'hist_down' => $live['hist_down'],
-            'hist_up' => $live['hist_up'],
-            'hist_cpu' => $live['hist_cpu'],
-            'hist_ram' => $live['hist_ram'],
-            'path_up' => $pathup,
-            'path_down' => $pathdown,
-            'path_cpu' => $pathcpu,
-            'path_ram' => $pathram,
-            'path_up_line' => $upline,
-            'path_down_line' => $downlin,
-            'path_cpu_line' => $cpuline,
-            'path_ram_line' => $ramline,
-        ];
-    });
+# Builds the monitor snapshot with its chart paths from the one server sample; the page reads the sample as it stands, a poll passes $fresh to retake an old one
+function getMonitorPanelSnapshot(bool $fresh = false): array {
+    $snap = getMonitorSample($fresh);
+    $netmax = max(array_merge([1.0], $snap['net_hist_up'], $snap['net_hist_down']));
+    return [
+        'cpu_p' => $snap['cpu_p'],
+        'cpu' => $snap['cpu'],
+        'mem' => $snap['mem'],
+        'disk_total' => $snap['disk_total'],
+        'disk_free' => $snap['disk_free'],
+        'disk_used' => $snap['disk_used'],
+        'disk_pct' => $snap['disk_pct'],
+        'net' => $snap['net'],
+        'hist_down' => $snap['net_hist_down'],
+        'hist_up' => $snap['net_hist_up'],
+        'hist_cpu' => $snap['sys_hist_cpu'],
+        'hist_ram' => $snap['sys_hist_ram'],
+        'hist_time' => $snap['sys_hist_time'],
+        'path_up' => getSmoothAreaPath($snap['net_hist_up'], $netmax),
+        'path_down' => getSmoothAreaPath($snap['net_hist_down'], $netmax),
+        'path_cpu' => getSmoothAreaPath($snap['sys_hist_cpu'], 100.0),
+        'path_ram' => getSmoothAreaPath($snap['sys_hist_ram'], 100.0),
+        'path_up_line' => getSmoothLinePath($snap['net_hist_up'], $netmax),
+        'path_down_line' => getSmoothLinePath($snap['net_hist_down'], $netmax),
+        'path_cpu_line' => getSmoothLinePath($snap['sys_hist_cpu'], 100.0),
+        'path_ram_line' => getSmoothLinePath($snap['sys_hist_ram'], 100.0),
+    ];
 }
 
 # Builds template variables for realtime traffic panel including paths and tooltips
@@ -449,6 +434,7 @@ function getMonitorRuntimeStats(object $db, ?array $snapshot): array {
     $reqtime = (float)getServerValue('REQUEST_TIME_FLOAT', '0');
     if ($reqtime <= 0) $reqtime = microtime(true);
     $extras = getMonitorRuntimeExtras();
+    $sample = getMonitorSample();
     $islowdisk = ($disktot > 0 && (($diskfree / $disktot) * 100) < 10);
     $diskwarn = $tpl->getHtmlFrag('inline-badge', [
         'is_danger' => $islowdisk,
@@ -456,7 +442,7 @@ function getMonitorRuntimeStats(object $db, ?array $snapshot): array {
         'label' => $islowdisk ? 'Low free space' : 'Normal',
     ]);
     return [
-        'diskio' => getDiskIoMetrics(),
+        'diskio' => $sample['diskio'],
         'disktotal' => $disktot,
         'diskfree' => $diskfree,
         'diskused' => $diskused,
@@ -465,13 +451,13 @@ function getMonitorRuntimeStats(object $db, ?array $snapshot): array {
         'opmem' => $cacheon ? filterSize((int)$opmused).' / '.filterSize((int)$opmemtot) : 'N/A',
         'opscripts' => $cacheon ? $opcache['opcache_statistics']['num_cached_scripts'] : 'N/A',
         'ophit' => $cacheon ? round($opcache['opcache_statistics']['opcache_hit_rate'], 1).'%' : 'N/A',
-        'uptime' => getUptimeInfo(),
+        'uptime' => $sample['uptime'],
         'dbhealth' => getDbHealth($db),
         'diskwarn' => $diskwarn,
         'storages' => $extras['storages'],
         'lastbackup' => $extras['lastbackup'],
         'error24' => $extras['error24'],
-        'uploadsz' => $extras['uploadsz'],
+        'uploadsz' => getUploadsSizeLabel(),
         'failed24' => $extras['failed24'],
         'seclast24' => $extras['seclast24'],
         'dblast24' => $extras['dblast24'],
@@ -641,9 +627,9 @@ function info(): void {
     ]);
 }
 
-# Sets snapshot-backed monitor partial output for HTMX refresh endpoints
+# Sets snapshot-backed monitor partial output for HTMX refresh endpoints; their polls carry X-SL-Poll, so the session is already released when the sample is retaken
 function setMonitorPart(bool $showstat, bool $showtraf, bool $useoob = false): void {
-    echo getMonitorPartial(getMonitorPanelSnapshot(), $showstat, $showtraf, $useoob);
+    echo getMonitorPartial(getMonitorPanelSnapshot(true), $showstat, $showtraf, $useoob);
 }
 
 # Renders only traffic partial panel for asynchronous dashboard refresh requests

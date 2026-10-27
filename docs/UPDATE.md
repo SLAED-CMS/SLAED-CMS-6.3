@@ -396,7 +396,9 @@ An installation keeps what the site saved and brings what is new; at runtime not
   value and never merges by index. The sections a site creates and deletes itself are taken whole: a Node type section
   (`node.types.<type>`, `fields.node.<type>`, `uploads.<type>`, `ratings['node.<type>']`) present on the site is the
   site's, an absent one is never added, so a deleted type never returns; a field set `fields.<set>` present is the
-  site's, absent it is added whole. Everything else, `modules.modules` and `scheduler.jobs` included, merges
+  site's, absent it is added whole; so are the pages and the menus of the layout (`layout.pages`, `layout.menus`), so a
+  page a site deleted never returns, while a new key of `layout.theme` is added. Everything else, `modules.modules` and
+  `scheduler.jobs` included, merges
   recursively: a new module and a new job of a release are added, a new field of a record goes into every record. A
   new Node type reaches sites only by a PHP step of its version: without its row in `_node_types` it is no type.
 - `setConfigFile()` writes as a string the ordinary files, in its Closure form `node`, `fields`, `uploads` and `ratings`;

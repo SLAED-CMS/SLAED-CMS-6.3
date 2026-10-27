@@ -80,5 +80,13 @@ $pmake = static function () use (&$pcalls): array {
 $pout['store'] = [getMonitorCache('probe', 60, $pmake), getMonitorCache('probe', 60, $pmake), getMonitorCache('probe', 0, $pmake), $pcalls];
 $pfile = Cache::getFile(['monitor', 'probe'], 'json');
 $pout['file'] = is_file($pfile) ? json_decode((string)file_get_contents($pfile), true) : null;
+$pout['bare'] = getCockpitData()['strip'];
+$phour = (int)date('G');
+$pline = array_fill(0, 20, '');
+$pline[0] = date('d.m.Y');
+foreach ([13 => 2, 17 => 100, 18 => 15, 19 => 6144] as $pidx => $pval) {
+    $pline[$pidx] = implode(',', array_replace(array_fill(0, 24, 0), [$phour => $pval]));
+}
+file_put_contents(COUNTER_DIR.'/statistic.log', implode('|', $pline));
 $pout['cockpit'] = getCockpitData();
 echo json_encode($pout, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);

@@ -93,10 +93,13 @@ if (empty($go)) {
     }
     $file = getVar('req', 'file', 'var') ?: 'index';
     $theme = getTheme();
+    # A page of the layout stands around a module: the home page, or the page whose slot holds the module of this request on its front view
+    $layout = new Layout($conf['layout'] ?? [], $theme, is_user() > 0, is_moder() > 0);
+    $lkey = $name ? (empty($op) && $file === 'index' ? $layout->getModuleKey($name) : 0) : $layout->getHomeKey();
     $hname = '';
-    if (!$name && !empty($conf['module'])) {
-        $hmodul = explode(',', $conf['module']);
-        $hname = $hmodul[mt_rand(0, count($hmodul) - 1)];
+    if (!$name) {
+        $hslot = $lkey ? $layout->getSlotName($lkey) : '';
+        $hname = ($hslot === '') ? trim(explode(',', (string)($conf['module'] ?? ''))[0]) : (string)$hslot;
     }
     $nname = $name ?: $hname;
     if ($nname === 'node' || isset($conf['node']['types'][$nname])) {
@@ -164,7 +167,7 @@ if (empty($go)) {
         }
     } else {
         $home = 1;
-        if (empty($conf['module'])) {
+        if ($hname === '') {
             $conf['name'] = '';
             setHead();
             setFoot();

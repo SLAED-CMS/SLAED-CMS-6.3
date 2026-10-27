@@ -124,7 +124,17 @@ final class CockpitTest extends TestCase
         $this->assertSame(['num' => 1], $data['file']);
     }
 
-    # The snapshot carries four shares with their panel rows, the strip of the request and the signals, toned by the worst signal
+    # The strip shows the average page of the running hour from the load fields of statistic.log, and a dash while the hour has none
+    #[Test]
+    public function theStripAveragesThePages(): void
+    {
+        $data = $this->getProbe();
+        $this->assertSame(['—', '—', '—'], [$data['bare']['gen']['value'], $data['bare']['sql']['value'], $data['bare']['mem']['value']]);
+        $strip = $data['cockpit']['strip'];
+        $this->assertSame([50, 7.5, 3], [$strip['gen']['value'], $strip['sql']['value'], $strip['mem']['value']]);
+    }
+
+    # The snapshot carries four shares with their panel rows, the strip of the average page and the signals, toned by the worst signal
     #[Test]
     public function theSnapshotHasEveryPart(): void
     {
@@ -137,7 +147,6 @@ final class CockpitTest extends TestCase
             $this->assertNotEmpty($ring['rows'], $key);
         }
         $this->assertSame(['gen', 'sql', 'mem', 'online'], array_keys($data['strip']));
-        $this->assertLessThan(60000, $data['strip']['gen']['value'], 'The generation is not measured from the start of the request');
         $lvls = array_column($data['signals'], 'level');
         $tone = in_array('danger', $lvls, true) ? 'danger' : (in_array('warn', $lvls, true) ? 'warn' : 'ok');
         $this->assertSame($tone, $data['tone']);

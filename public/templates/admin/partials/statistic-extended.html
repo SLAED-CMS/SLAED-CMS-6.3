@@ -31,15 +31,15 @@
   {% endfor %}
 </div>
 {% endif %}
-{% if hours %}
+{% for chart in charts %}
 <section class="sl-statx-hours">
-  <h4>{{ hours_title }}</h4>
+  <h4>{{ chart.title }}</h4>
   <svg viewBox="0 0 264 64" aria-hidden="true">
-    {% for hour in hours %}
+    {% for hour in chart.hours %}
     <rect x="{{ hour.x }}" y="{{ hour.y }}" width="9" height="{{ hour.height }}" rx="1"></rect>
     {% if hour.is_tick %}<text x="{{ hour.tickx }}" y="62" text-anchor="middle">{{ hour.label }}</text>{% endif %}
     {% endfor %}
   </svg>
 </section>
-{% endif %}
+{% endfor %}
 {% endif %}

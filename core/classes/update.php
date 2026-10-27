@@ -417,14 +417,14 @@ final class Update {
         return ['ok' => true, 'ver' => '', 'error' => ''];
     }
 
-    # The site value with every key of the shipped one it lacks at any depth, and the paths added; a list, a field set and a section of a Node type stay the site's
+    # The site value with every key of the shipped one it lacks at any depth, and the paths added; a list, a field set, a Node type, the layout's pages and menus stay the site's
     public static function getConfigMerge(array $site, array $pack, array $types, string $path = ''): array {
         if ($pack !== [] && array_is_list($pack)) return ($site === []) ? ['data' => $pack, 'adds' => [$path]] : ['data' => $site, 'adds' => []];
         $adds = [];
         foreach ($pack as $key => $val) {
             $at = ($path === '') ? (string)$key : $path.'.'.$key;
             $rule = (preg_match('#^(node\.types|fields\.node|ratings\.node|uploads)\.(.+)$#D', $at, $hit) === 1 && in_array($hit[2], $types, true)) ? 'type'
-                : ((preg_match('#^fields\.[^.]+$#D', $at) === 1 && $at !== 'fields.node') ? 'whole' : '');
+                : (((preg_match('#^fields\.[^.]+$#D', $at) === 1 && $at !== 'fields.node') || in_array($at, ['layout.pages', 'layout.menus'], true)) ? 'whole' : '');
             $deep = $rule === '' && is_array($val) && $val !== [] && !array_is_list($val);
             if (!array_key_exists($key, $site)) {
                 if ($rule === 'type') continue;

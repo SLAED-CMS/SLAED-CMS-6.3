@@ -2700,7 +2700,7 @@ function getRouteComment(PDO $pdo): array {
     return $out;
 }
 
-# The time forms of the schema over real requests: the cleanups, the refresh and the expiry of a block, the expiry of a message, the session sweep, the forum new mark
+# The time forms of the schema over real requests: the cleanups, a block on a page with a centre column, a message on the home, the sessions, the forum mark
 function getRouteTime(PDO $pdo, string $work): array {
     $pre = RPREF.'_';
     $one = fn(string $sql): mixed => $pdo->query($sql)->fetchColumn();
@@ -2726,8 +2726,9 @@ function getRouteTime(PDO $pdo, string $work): array {
         .' (\'newbot\', UNIX_TIMESTAMP(), \'10.0.0.4\', 1, \'news\', \'\')');
     file_put_contents($work.'/counter/session.log', '0');
     $was = time();
-    $home = getRouteReply('', 'GET', '/');
-    $out['blocks'] = [$home['code'], $row('SELECT time >= '.($was - 1).', content FROM '.$pre.'blocks WHERE id = 82'),
+    $feed = getRouteReply('', 'GET', 'index.php?name=news');
+    getRouteReply('', 'GET', '/');
+    $out['blocks'] = [$feed['code'], $row('SELECT time >= '.($was - 1).', content FROM '.$pre.'blocks WHERE id = 82'),
         $row('SELECT time < '.$was.' FROM '.$pre.'blocks WHERE id = 83'), $row('SELECT status, expire FROM '.$pre.'blocks WHERE id = 80'),
         $row('SELECT status, expire > NOW() FROM '.$pre.'blocks WHERE id = 81')];
     $out['message'] = [$row('SELECT status, expire FROM '.$pre.'message WHERE id = 1'), $row('SELECT status, expire > NOW() FROM '.$pre.'message WHERE id = 2'),

@@ -672,10 +672,36 @@ Server metrics:
 - `core/monitor.php` holds the CPU, memory, network, disk, uptime, log-tail and
   security counters; `admin/modules/monitor.php` keeps only its page, charts and
   template variables
+- `getMonitorSample()` is the one writer of `storage/logs/monitor.json`: called
+  with `$fresh`, it retakes a sample older than ten seconds under the non-blocking
+  lock `storage/cache/locks/scheduler/monitor-sample.lock`, and a request that does
+  not get the lock reads the file as it stands, so the OS probes (PowerShell on
+  Windows) never run twice at once. The sample holds the CPU share and details,
+  memory, disk, network and disk-io rates with their histories and the time of each
+  point (`sys_hist_time`), `uptime`, `cores`, `soft`, the uploads size retaken once
+  an hour (`uploads`, `uploads_at`) and `sampled_at`
+- on Windows every figure comes from one PowerShell run per sample,
+  `getWindowsProbe()`, started by `proc_open()` and killed after ten seconds; a
+  run that gave nothing writes no sample, so the old figures stay and age instead
+  of turning into zeros
+- three readers share it: the cockpit poll (`getCockpitData()`) and the HTMX polls
+  of the monitor page pass `$fresh`; the monitor page itself and the presentation
+  module only read. Every request carrying `X-SL-Poll` releases the session in
+  `core/security.php` right after the idle check, so no poll, the sampling one
+  included, holds another request of the same visitor; a poll handler therefore
+  never writes the session
+- the load of a page is part of the statistic: `updateStatsTrack()`, the deferred
+  task `setHead()` queues while the statistic is on, adds the generation (ms), the
+  queries and the peak memory (KB) of the page to three hour fields of
+  `statistic.log` (17, 18, 19, twenty-four sums each, beside the hits by hour of
+  field 13), so they roll into `days.log` and the month archives with the day.
+  The statistic page shows the average page per day and per hour; the strip of the
+  cockpit is the average page of the running hour (`getLoadAverage()`), of the hour
+  before while this one has none. JSON polls never reach `setHead()` and never count
 - the `monitor` scheduler job (`* * * * *`, priority 9, the lowest, so it never
   takes a tick from `maildrain` or `newsletter`) calls `addMonitorSample()`, which
-  runs the two history writers of `storage/logs/monitor.json` and then stores
-  `disk_pct`, `disk_used`, `disk_total`, `uptime`, `cores`, `soft` and `sampled_at`
+  takes the same sample so the history goes on while no panel polls, and fails when
+  the sample is older than a minute: a stuck or failing writer shows in its state
 - a public reader (`modules/presentation`) only calls `getMetricStore()` and treats a
   missing store or a `sampled_at` older than five minutes as "no monitor": the
   pseudo-cron ticks once per page view, so after a quiet spell the first visitor

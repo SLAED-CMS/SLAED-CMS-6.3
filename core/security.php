@@ -116,6 +116,9 @@ if ($admin && time() - intval($_SESSION[$conf['admin_c'].'-time'] ?? 0) >= getAd
     $_SESSION[$conf['admin_c'].'-time'] = time();
 }
 
+# A poll only reads the session from here on, so it lets it go at once and never holds the next request of the same visitor behind its own work
+if (isset($_SERVER['HTTP_X_SL_POLL']) && session_status() === PHP_SESSION_ACTIVE) session_write_close();
+
 # Format user variable; the API knows no visitor by a cookie, its rights come from the client of the request
 $user = (!defined('API_FILE') && ($tmp = base64_decode($_COOKIE[$conf['user_c'].'-account'] ?? '', true)) && $tmp !== '') ? explode(':', $tmp) : [];
 

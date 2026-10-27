@@ -146,6 +146,7 @@ if (!defined('API_FILE') && !defined('UPDATE_FILE')) {
     $theme = getTheme();
     if (is_file(PUBLIC_DIR.'/templates/'.$theme.'/index.php')) require_once PUBLIC_DIR.'/templates/'.$theme.'/index.php';
     require_once BASE_DIR.'/core/classes/template.php';
+    require_once BASE_DIR.'/core/classes/layout.php';
     require_once BASE_DIR.'/core/classes/parser.php';
     require_once BASE_DIR.'/core/classes/captcha.php';
     require_once BASE_DIR.'/core/classes/oauth.php';
@@ -863,16 +864,8 @@ function getBlocks(string $side, string $fly = ''): void {
             } else {
                 $show = 1;
             }
-            if ($show == 1) {
-                if ($view == 0) {
-                    setBlockView($side, $bfile, $title, $content, $bid, $url, $param); return;
-                } elseif ($view == 1 && is_user() || is_moder()) {
-                    setBlockView($side, $bfile, $title, $content, $bid, $url, $param); return;
-                } elseif ($view == 2 && is_moder()) {
-                    setBlockView($side, $bfile, $title, $content, $bid, $url, $param); return;
-                } elseif ($view == 3 && !is_user() || is_moder()) {
-                    setBlockView($side, $bfile, $title, $content, $bid, $url, $param); return;
-                }
+            if ($show == 1 && Layout::isViewShown($view, is_user() > 0, is_moder() > 0)) {
+                setBlockView($side, $bfile, $title, $content, $bid, $url, $param); return;
             }
         }
     } else {
@@ -924,15 +917,7 @@ function getBlocks(string $side, string $fly = ''): void {
                     echo getUserBlock();
                     break;
                     default:
-                    if ($view == 0) {
-                        setBlockView($side, $bfile, $title, $content, $bid, $url, $param);
-                    } elseif ($view == 1 && is_user() || is_moder()) {
-                        setBlockView($side, $bfile, $title, $content, $bid, $url, $param);
-                    } elseif ($view == 2 && is_moder()) {
-                        setBlockView($side, $bfile, $title, $content, $bid, $url, $param);
-                    } elseif ($view == 3 && !is_user() || is_moder()) {
-                        setBlockView($side, $bfile, $title, $content, $bid, $url, $param);
-                    }
+                    if (Layout::isViewShown($view, is_user() > 0, is_moder() > 0)) setBlockView($side, $bfile, $title, $content, $bid, $url, $param);
                     break;
                 }
             }
@@ -1073,21 +1058,24 @@ function getTableCount(string $table, string $where = '', array $bind = []): int
     return (int)$num;
 }
 
-# Reads the running day of statistic.log into named counters, hours as twenty-four integers and the session maps parsed; an unreadable or empty log yields zeros
+# Reads the running day of statistic.log into named counters, hits and the page load sums (ms, queries, KB) as twenty-four integers each and the session maps parsed
 function getStatsToday(): array {
     $file = COUNTER_DIR.'/statistic.log';
     $line = (is_file($file) && is_readable($file)) ? trim((string)file_get_contents($file)) : '';
     $con = ($line !== '') ? explode('|', $line) : [];
-    $hours = ($con[13] ?? '') !== '' ? explode(',', $con[13]) : [];
+    $hrs = static fn(string $field): array => array_map('intval', array_pad(array_slice(($field !== '') ? explode(',', $field) : [], 0, 24), 24, 0));
     return [
         'date' => $con[0] ?? '',
         'hosts' => (int)($con[1] ?? 0),
         'visits' => (int)($con[2] ?? 0),
         'total' => (int)($con[3] ?? 0),
         'home' => (int)($con[6] ?? 0),
-        'hours' => array_map('intval', array_pad(array_slice($hours, 0, 24), 24, 0)),
+        'hours' => $hrs($con[13] ?? ''),
         'session' => getCounterField($con[14] ?? ''),
         'depth' => getCounterField($con[15] ?? ''),
+        'gen' => $hrs($con[17] ?? ''),
+        'sql' => $hrs($con[18] ?? ''),
+        'mem' => $hrs($con[19] ?? ''),
     ];
 }
 
@@ -1146,12 +1134,12 @@ function updateCounterField(string $field, string $key, int $by = 1): string {
     return implode(',', $out);
 }
 
-# Update the 24 hour field with one hit
-function updateHoursField(string $field, int $hour): string {
+# Update the 24 hour field, adding $by to one hour: a hit by default, or the figures of the page for the load fields
+function updateHoursField(string $field, int $hour, int $by = 1): string {
     $hrs = ($field === '') ? [] : explode(',', $field);
     $hrs = array_pad(array_slice($hrs, 0, 24), 24, 0);
     $hour = max(0, min(23, $hour));
-    $hrs[$hour] = (int)$hrs[$hour] + 1;
+    $hrs[$hour] = (int)$hrs[$hour] + $by;
     foreach ($hrs as $key => $val) {
         $hrs[$key] = (string)((int)$val);
     }
@@ -1300,6 +1288,7 @@ function updateStatsCookie(int $guest): array {
 # Write daily statistics under one exclusive statistic.lock; statistic.log is written atomically, unique counters derive from the ips/user sets, rollover aborts on any failure
 function updateStatsTrack(string $request, int $guest, array $state): void {
     global $conf, $user;
+    $load = getLoadStats();
     $sreferer = getReferer();
     $sreqhom = filterText($request);
     $spath = COUNTER_DIR.'/';
@@ -1447,10 +1436,14 @@ function updateStatsTrack(string $request, int $guest, array $state): void {
         $ext[10] = updateCounterField($prev[10] ?? '', $info['device']);
         $ext[11] = ($cc !== '') ? updateCounterField($prev[11] ?? '', $cc) : ($prev[11] ?? '');
         $ext[12] = ($guest !== 1) ? updateCounterField($prev[12] ?? '', $rcat) : ($prev[12] ?? '');
-        $ext[13] = updateHoursField($prev[13] ?? '', (int)date('G'));
+        $hour = (int)date('G');
+        $ext[13] = updateHoursField($prev[13] ?? '', $hour);
         $ext[14] = ($sess !== null) ? updateCounterField($prev[14] ?? '', $sess['is_new'] ? 'new' : 'returning') : ($prev[14] ?? '');
         $ext[15] = ($sess !== null) ? updateCounterField($prev[15] ?? '', getSessionDepthBucket($sess['depth'])) : ($prev[15] ?? '');
         $ext[16] = ($sess !== null) ? updateCounterField($prev[16] ?? '', getSessionDurationBucket($sess['duration'])) : ($prev[16] ?? '');
+        $ext[17] = updateHoursField($prev[17] ?? '', $hour, (int)round($load['gen'] * 1000));
+        $ext[18] = updateHoursField($prev[18] ?? '', $hour, $load['qnum']);
+        $ext[19] = updateHoursField($prev[19] ?? '', $hour, intdiv($load['mem'], 1024));
         $wc = implode('|', $ext);
         if (!Cache::setBody($slog, $wc)) {
             addErrorFile('Statistic counter write failed: statistic.log');
@@ -1804,21 +1797,11 @@ function addCacheGcTask(): array {
     return ['status' => 'success', 'message' => 'Removed '.$num.' cache files and '.$rows.' logins'];
 }
 
-# Sample the server once a minute for the presentation module; while no sample exists the module shows only what a public page can afford, without cores and uptime
+# Keep the server sample going once a minute while no panel polls it; a sample older than a minute means the writer is stuck or failing, and the run fails with it
 function addMonitorSample(): array {
-    global $db;
-    [$cpu] = getCpuLoad();
-    $mem = getMemoryInfo();
-    getRealtimePanelMetrics((float)$cpu, (float)$mem['percent']);
-    getDiskIoMetrics();
-    [$dbver] = $db->getSqlRow($db->getSqlQuery('SELECT VERSION()'));
-    $store = getMonitorDiskSnapshot() + getMetricStore();
-    $store['uptime'] = getUptimeInfo();
-    $store['cores'] = getCpuCores();
-    $store['soft'] = getServerSoftware() + ['php' => PHP_VERSION, 'db' => $dbver];
-    $store['sampled_at'] = time();
-    setMetricStore($store);
-    return ['status' => 'success', 'message' => 'Monitor sample written: CPU '.$cpu.'%, RAM '.$mem['percent'].'%'];
+    $snap = getMonitorSample(true);
+    $mess = 'Monitor sample of '.($snap['sampled_at'] > 0 ? date('Y-m-d H:i:s', $snap['sampled_at']) : 'never').': CPU '.$snap['cpu_p'].'%, RAM '.$snap['mem']['percent'].'%';
+    return ['status' => (time() - $snap['sampled_at'] > 60) ? 'failed' : 'success', 'message' => $mess];
 }
 
 # Return the RSS feeds of the site by name, every active Node type with the rss integration; feed links read this list, so none names a feed the route refuses
@@ -2143,7 +2126,7 @@ function setHead(array $seo = []): void {
 
 # Render the page foot; a panel list asking by X-SL-Part gets its title and content only, a lost session makes it reload, and a one-time notice is cleared here
 function setFoot(): void {
-    global $home, $name, $conf, $tpl, $adminpage, $adminvars, $sitepage, $sitevars, $blocks, $blocks_c, $foot;
+    global $home, $name, $conf, $tpl, $adminpage, $adminvars, $sitepage, $sitevars, $blocks, $blocks_c, $foot, $layout, $lkey;
     if (defined('ADMIN_FILE')) {
         $vars = is_array($adminvars ?? null) ? $adminvars : [];
         $page = (is_string($adminpage ?? '') && $adminpage !== '') ? $adminpage : 'admin';
@@ -2172,6 +2155,10 @@ function setFoot(): void {
     }
     $vars = is_array($sitevars ?? null) ? $sitevars : [];
     $body = (ob_get_level() > 0) ? (string)ob_get_clean() : '';
+    if (!empty($lkey) && $layout instanceof Layout) {
+        $body = $layout->getPageHtml($lkey, $body, $tpl);
+        [$blocks, $blocks_c] = $layout->getPageColumns($lkey);
+    }
     $flash = getFlashHtml();
     $time = ($conf['db_t'] == '1') ? GEN_MARK : '';
     $license = !empty($vars['license']) ? (string)$vars['license'] : '';
@@ -3362,6 +3349,17 @@ function getLoadStats(): array {
         'sql' => $sql,
         'avg' => ($qnum > 0) ? ($sql / $qnum) : 0.0,
     ];
+}
+
+# The average page of the running hour from the load fields of statistic.log, or of the hour before while this one has none; a page counts only once the statistic is on
+function getLoadAverage(): array {
+    $stat = getStatsToday();
+    $hour = (int)date('G');
+    $day = $stat['date'] === date('d.m.Y');
+    if ($day && $stat['gen'][$hour] === 0 && $hour > 0) $hour--;
+    $num = ($day && $stat['gen'][$hour] > 0) ? $stat['hours'][$hour] : 0;
+    return ['num' => $num, 'gen' => $num ? $stat['gen'][$hour] / 1000 / $num : null, 'sql' => $num ? $stat['sql'][$hour] / $num : null,
+        'mem' => $num ? $stat['mem'][$hour] * 1024 / $num : null];
 }
 
 # Turn a per cent into a tone on the one ladder every gauge and ring uses; the names are the tone classes of both themes, and a value past an end takes that end

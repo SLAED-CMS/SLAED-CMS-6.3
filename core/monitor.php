@@ -6,48 +6,51 @@
 
 if (!defined('FUNC_FILE')) die('Illegal file access');
 
+# Every Windows figure from one PowerShell run per request, killed after ten seconds so a hung WMI query never holds the sampler lock; a run that gave nothing is failed
+function getWindowsProbe(): array {
+    static $data = null;
+    if ($data !== null) return $data;
+    $data = [];
+    if (!function_exists('proc_open')) return $data;
+    $file = tempnam(CACHE_DIR, 'slm');
+    if ($file === false) return $data;
+    $script = '$p = Get-CimInstance Win32_Processor -OperationTimeoutSec 4 -ErrorAction SilentlyContinue;'
+        .' $o = Get-CimInstance Win32_OperatingSystem -OperationTimeoutSec 4 -ErrorAction SilentlyContinue;'
+        .' \'load=\' + ($p | Measure-Object -Property LoadPercentage -Average).Average;'
+        .' \'logical=\' + ($p | Measure-Object -Property NumberOfLogicalProcessors -Sum).Sum;'
+        .' \'physical=\' + ($p | Measure-Object -Property NumberOfCores -Sum).Sum;'
+        .' \'mhz=\' + ($p | Select-Object -First 1).MaxClockSpeed;'
+        .' \'total=\' + $o.TotalVisibleMemorySize; \'free=\' + $o.FreePhysicalMemory;'
+        .' \'boot=\' + $o.LastBootUpTime.ToString(\'yyyy-MM-dd HH:mm:ss\')';
+    $cmd = ['powershell', '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-Command', $script];
+    $proc = proc_open($cmd, [0 => ['file', 'NUL', 'r'], 1 => ['file', $file, 'w'], 2 => ['file', 'NUL', 'w']], $pipes);
+    if (is_resource($proc)) {
+        $end = microtime(true) + 10;
+        while (proc_get_status($proc)['running'] && microtime(true) < $end) usleep(50000);
+        if (proc_get_status($proc)['running']) proc_terminate($proc);
+        proc_close($proc);
+    }
+    foreach (file($file, FILE_IGNORE_NEW_LINES) ?: [] as $line) {
+        [$key, $val] = array_pad(explode('=', $line, 2), 2, '');
+        $val = str_replace(',', '.', trim($val));
+        if ($key === 'boot' && ($ts = strtotime($val)) !== false) $data['boot'] = $ts;
+        elseif (is_numeric($val)) $data[trim($key)] = (float)$val;
+    }
+    unlink($file);
+    if ($data === []) $data = ['failed' => 1];
+    return $data;
+}
+
 # CPU load analyzer with cache in seconds (Windows 10/11, Linux/macOS)
 function getCpuLoad(int $tcache = 2): array {
     static $cache = ['time' => 0, 'cpu' => _NO_INFO, 'info' => _NO_INFO];
     if (time() - $cache['time'] < $tcache) return [$cache['cpu'], $cache['info']];
     $percent = null;
-    $allow = static function (string $path): bool {
-        $obase = ini_get('open_basedir');
-        if ($obase === false || $obase === '') return true;
-
-        $npath = str_replace('\\', '/', $path);
-        foreach (explode(PATH_SEPARATOR, $obase) as $base) {
-            $base = trim((string)$base);
-            if ($base === '' || $base === '.') continue;
-
-            $cbase = rtrim(str_replace('\\', '/', $base), '/');
-            if ($cbase === '') continue;
-
-            if ($npath === $cbase || str_starts_with($npath, $cbase.'/')) {
-                return true;
-            }
-        }
-        return false;
-    };
-    $rfile = static function (string $path) use ($allow): string|false {
-        if (!$allow($path)) return false;
-        if (!is_file($path) || !is_readable($path)) return false;
-
-        $content = file_get_contents($path);
-        return ($content === false) ? false : $content;
-    };
-    if (stristr(PHP_OS, 'WIN')) {
-        $out = [];
-        $cmd = 'powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command'
-            .' "(Get-CimInstance Win32_Processor -ErrorAction SilentlyContinue | Measure-Object -Property LoadPercentage -Average).Average"';
-        if (function_exists('exec')) exec($cmd, $out);
-        if (!empty($out)) {
-            $val = str_replace(',', '.', trim($out[0]));
-            if (is_numeric($val)) $percent = (float)$val;
-        }
+    if (PHP_OS_FAMILY === 'Windows') {
+        $percent = getWindowsProbe()['load'] ?? null;
         if ($percent === null) {
             $out = [];
-            $cmd = 'wmic cpu get loadpercentage /all';
+            $cmd = 'wmic cpu get loadpercentage /all 2>NUL';
             if (function_exists('exec')) exec($cmd, $out);
             if ($out) {
                 foreach ($out as $line) {
@@ -63,19 +66,19 @@ function getCpuLoad(int $tcache = 2): array {
             $tmp = sys_getloadavg();
             if (isset($tmp[0]) && is_numeric($tmp[0])) $raw = (float)$tmp[0];
         }
-        $loadavg = $rfile('/proc/loadavg');
+        $loadavg = getFileSafe('/proc/loadavg');
         if (!isset($raw) && $loadavg !== false) {
             $tmp = explode(' ', $loadavg);
             if (isset($tmp[0]) && is_numeric($tmp[0])) $raw = (float)$tmp[0];
         }
         $nproc = 0;
-        $info = $rfile('/proc/cpuinfo');
+        $info = getFileSafe('/proc/cpuinfo');
         if ($info !== false) {
             preg_match_all('/^processor\s*:/m', $info, $matches);
             if (!empty($matches[0])) $nproc = count($matches[0]);
         }
         if ($nproc <= 0) $nproc = 1;
-        if (isset($raw) && is_numeric($raw)) $percent = ($raw / $nproc) * 10.0;
+        if (isset($raw) && is_numeric($raw)) $percent = ($raw / $nproc) * 100.0;
     }
     if (is_numeric($percent)) {
         $cpu = round((float)$percent, 2);
@@ -135,7 +138,7 @@ function getCookieValues(): array {
 
 # Collects total, free, used memory and usage percent using OS-specific providers with safe fallbacks
 function getMemoryInfo(): array {
-    if (str_starts_with(strtoupper(PHP_OS), 'WIN')) {
+    if (PHP_OS_FAMILY === 'Windows') {
         [$total, $free] = getMemoryInfoWindows();
     } else {
         [$total, $free] = getMemoryInfoLinux();
@@ -153,47 +156,31 @@ function getMemoryInfo(): array {
     ];
 }
 
-# Reads total and free physical memory on Windows via PowerShell CIM and WMIC fallback paths
+# Reads total and free physical memory on Windows from the probe, with the WMIC fallback paths; only the sampler under its lock calls it, so it keeps no cache
 function getMemoryInfoWindows(): array {
-    return getMonitorCache('memory_windows', 10, static function (): array {
-        $free = 0;
-        $total = 0;
-        $ps = [];
-        if (function_exists('exec')) exec(
-            'powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command'
-            .' "(Get-CimInstance Win32_OperatingSystem | Select-Object TotalVisibleMemorySize,FreePhysicalMemory | Format-List)"',
-            $ps
-        );
-        foreach ($ps as $line) {
-            if (str_contains($line, 'TotalVisibleMemorySize')) {
-                $parts = explode(':', $line, 2);
-                $total = intval(trim($parts[1] ?? '0')) * 1024;
-            } elseif (str_contains($line, 'FreePhysicalMemory')) {
-                $parts = explode(':', $line, 2);
-                $free = intval(trim($parts[1] ?? '0')) * 1024;
-            }
+    $probe = getWindowsProbe();
+    $total = (int)($probe['total'] ?? 0) * 1024;
+    $free = (int)($probe['free'] ?? 0) * 1024;
+    if ($total > 0 && $free > 0) return [$total, $free];
+    $outtot = [];
+    if (function_exists('exec')) exec('wmic ComputerSystem get TotalPhysicalMemory /Value 2>NUL', $outtot);
+    foreach ($outtot as $line) {
+        if (str_contains($line, 'TotalPhysicalMemory')) {
+            $parts = explode('=', $line);
+            $total = intval($parts[1] ?? 0);
+            break;
         }
-        if ($total > 0 && $free > 0) return [$total, $free];
-        $outtot = [];
-        if (function_exists('exec')) exec('wmic ComputerSystem get TotalPhysicalMemory /Value', $outtot);
-        foreach ($outtot as $line) {
-            if (str_contains($line, 'TotalPhysicalMemory')) {
-                $parts = explode('=', $line);
-                $total = intval($parts[1] ?? 0);
-                break;
-            }
+    }
+    $outfree = [];
+    if (function_exists('exec')) exec('wmic OS get FreePhysicalMemory /Value 2>NUL', $outfree);
+    foreach ($outfree as $line) {
+        if (str_contains($line, 'FreePhysicalMemory')) {
+            $parts = explode('=', $line);
+            $free = intval($parts[1] ?? 0) * 1024;
+            break;
         }
-        $outfree = [];
-        if (function_exists('exec')) exec('wmic OS get FreePhysicalMemory /Value', $outfree);
-        foreach ($outfree as $line) {
-            if (str_contains($line, 'FreePhysicalMemory')) {
-                $parts = explode('=', $line);
-                $free = intval($parts[1] ?? 0) * 1024;
-                break;
-            }
-        }
-        return [$total, $free];
-    });
+    }
+    return [$total, $free];
 }
 
 # Parses /proc/meminfo on Linux and computes total and available memory with compatibility fallback
@@ -241,17 +228,8 @@ function getMemoryInfoLinux(): array {
 # Detects logical CPU core count across Windows and Linux with environment and command fallbacks
 function getCpuCores(): int {
     $cores = 0;
-    if (str_starts_with(strtoupper(PHP_OS), 'WIN')) {
-        $out = [];
-        if (function_exists('exec')) exec(
-            'powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command'
-            .' "(Get-CimInstance Win32_Processor | Measure-Object -Property NumberOfLogicalProcessors -Sum).Sum"',
-            $out
-        );
-        if (!empty($out)) {
-            $val = trim((string)$out[0]);
-            if (is_numeric($val)) $cores = (int)$val;
-        }
+    if (PHP_OS_FAMILY === 'Windows') {
+        $cores = (int)(getWindowsProbe()['logical'] ?? 0);
         if ($cores <= 0) {
             $envcores = getenv('NUMBER_OF_PROCESSORS');
             if ($envcores !== false && is_numeric($envcores)) $cores = (int)$envcores;
@@ -285,7 +263,7 @@ function getCpuCores(): int {
 
 # Returns cumulative RX and TX bytes using the active platform-specific network statistics source
 function getNetworkStats(): array {
-    if (str_starts_with(strtoupper(PHP_OS), 'WIN')) {
+    if (PHP_OS_FAMILY === 'Windows') {
         return getNetworkStatsWindows();
     }
     return getNetworkStatsLinux();
@@ -402,11 +380,10 @@ function addHistory(array $history, float $value, int $max = 30): array {
     return $history;
 }
 
-# Calculates realtime network rates, updates history buffers, and persists metric snapshots
-function getRealtimePanelMetrics(float $cpupct, float $rampct): array {
+# Returns the sample with network rates and the history buffers moved on by one timed point; points without a time, left by an older store, are dropped
+function getRealtimePanelMetrics(array $store, float $cpupct, float $rampct): array {
     $now = time();
     $net = getNetworkStats();
-    $store = getMetricStore();
     $prevts = (int)($store['net_prev_ts'] ?? 0);
     $prevrx = (float)($store['net_prev_rx'] ?? 0);
     $prevtx = (float)($store['net_prev_tx'] ?? 0);
@@ -417,10 +394,13 @@ function getRealtimePanelMetrics(float $cpupct, float $rampct): array {
     $hstup = is_array($store['net_hist_up'] ?? null) ? $store['net_hist_up'] : [];
     $hstcpu = is_array($store['sys_hist_cpu'] ?? null) ? $store['sys_hist_cpu'] : [];
     $hstram = is_array($store['sys_hist_ram'] ?? null) ? $store['sys_hist_ram'] : [];
-    $hstdn = addHistory($hstdn, $rxrate);
-    $hstup = addHistory($hstup, $txrate);
-    $hstcpu = addHistory($hstcpu, max(min($cpupct, 100), 0));
-    $hstram = addHistory($hstram, max(min($rampct, 100), 0));
+    $times = is_array($store['sys_hist_time'] ?? null) ? $store['sys_hist_time'] : [];
+    $keep = count($times);
+    $hstdn = addHistory(array_slice($hstdn, max(count($hstdn) - $keep, 0)), $rxrate);
+    $hstup = addHistory(array_slice($hstup, max(count($hstup) - $keep, 0)), $txrate);
+    $hstcpu = addHistory(array_slice($hstcpu, max(count($hstcpu) - $keep, 0)), max(min($cpupct, 100), 0));
+    $hstram = addHistory(array_slice($hstram, max(count($hstram) - $keep, 0)), max(min($rampct, 100), 0));
+    $times = addHistory($times, $now);
     $store['net_prev_ts'] = $now;
     $store['net_prev_rx'] = $net['rx'];
     $store['net_prev_tx'] = $net['tx'];
@@ -428,22 +408,14 @@ function getRealtimePanelMetrics(float $cpupct, float $rampct): array {
     $store['net_hist_up'] = $hstup;
     $store['sys_hist_cpu'] = $hstcpu;
     $store['sys_hist_ram'] = $hstram;
-    setMetricStore($store);
-    return [
-        'rx_total' => (float)$net['rx'],
-        'tx_total' => (float)$net['tx'],
-        'rx_rate' => $rxrate,
-        'tx_rate' => $txrate,
-        'hist_down' => $hstdn,
-        'hist_up' => $hstup,
-        'hist_cpu' => $hstcpu,
-        'hist_ram' => $hstram,
-    ];
+    $store['sys_hist_time'] = $times;
+    $store['net'] = ['rx_total' => (float)$net['rx'], 'tx_total' => (float)$net['tx'], 'rx_rate' => $rxrate, 'tx_rate' => $txrate];
+    return $store;
 }
 
 # Reads cumulative disk read and write bytes from Linux diskstats for whole block devices only
 function getDiskIoTotals(): array {
-    if (str_starts_with(strtoupper(PHP_OS), 'WIN')) return ['read' => 0.0, 'write' => 0.0, 'ok' => false];
+    if (PHP_OS_FAMILY === 'Windows') return ['read' => 0.0, 'write' => 0.0, 'ok' => false];
     $file = '/proc/diskstats';
     if (!isPathAllowed($file) || !is_file($file) || !is_readable($file)) return ['read' => 0.0, 'write' => 0.0, 'ok' => false];
     $read = 0.0;
@@ -463,19 +435,11 @@ function getDiskIoTotals(): array {
     return ['read' => $read, 'write' => $write, 'ok' => true];
 }
 
-# Calculates disk read and write rates from cumulative counters and updates history buffers
-function getDiskIoMetrics(): array {
+# Returns the sample with disk read and write rates from cumulative counters under diskio and its history buffers moved on by one point
+function getDiskIoMetrics(array $store): array {
     $now = time();
     $totals = getDiskIoTotals();
-    if (!$totals['ok']) {
-        return [
-            'read_rate' => null,
-            'write_rate' => null,
-            'hist_read' => [],
-            'hist_write' => [],
-        ];
-    }
-    $store = getMetricStore();
+    if (!$totals['ok']) return ['diskio' => ['read_rate' => null, 'write_rate' => null, 'hist_read' => [], 'hist_write' => []]] + $store;
     $prevts = (int)($store['disk_prev_ts'] ?? 0);
     $prevread = (float)($store['disk_prev_read'] ?? 0);
     $writold = (float)($store['disk_prev_write'] ?? 0);
@@ -491,36 +455,21 @@ function getDiskIoMetrics(): array {
     $store['disk_prev_write'] = $totals['write'];
     $store['disk_hist_read'] = $histread;
     $store['disk_hist_write'] = $histwrt;
-    setMetricStore($store);
-    return [
-        'read_rate' => $readrate,
-        'write_rate' => $wrtrate,
-        'hist_read' => $histread,
-        'hist_write' => $histwrt,
-    ];
+    $store['diskio'] = ['read_rate' => $readrate, 'write_rate' => $wrtrate, 'hist_read' => $histread, 'hist_write' => $histwrt];
+    return $store;
 }
 
 # Returns human-readable system uptime from platform sources with graceful fallback behavior
 function getUptimeInfo(): string {
-    if (!str_starts_with(strtoupper(PHP_OS), 'WIN')) {
+    if (PHP_OS_FAMILY !== 'Windows') {
         $data = getFileSafe('/proc/uptime');
         if ($data !== false) {
             $sec = (int)floatval(explode(' ', trim($data))[0] ?? 0);
             if ($sec > 0) return getUptimeText($sec);
         }
-    } elseif (function_exists('exec')) {
-        $out = [];
-        exec(
-            'powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command'
-            ." \"(Get-CimInstance Win32_OperatingSystem).LastBootUpTime.ToString('yyyy-MM-dd HH:mm:ss')\"",
-            $out
-        );
-        $boot = trim((string)($out[0] ?? ''));
-        $bootts = $boot !== '' ? strtotime($boot) : false;
-        if ($bootts !== false) {
-            $sec = max(time() - $bootts, 0);
-            return getUptimeText($sec);
-        }
+    } else {
+        $boot = (int)(getWindowsProbe()['boot'] ?? 0);
+        if ($boot > 0) return getUptimeText(max(time() - $boot, 0));
     }
     return 'N/A';
 }
@@ -710,29 +659,16 @@ function getMonitorDiskSnapshot(): array {
     ];
 }
 
-# Collects raw CPU metadata including logical and physical cores and current base frequency
-function getCpuDetailsRaw(): array {
+# Collects CPU metadata including logical and physical cores and base frequency; on Windows it comes from the probe the sample has already run, so it needs no cache
+function getCpuDetails(): array {
     $logical = getCpuCores();
     $physical = 0;
     $freq = 'N/A';
-    if (str_starts_with(strtoupper(PHP_OS), 'WIN')) {
-        if (function_exists('exec')) {
-            $out = [];
-            exec(
-                'powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command "(Get-CimInstance Win32_Processor | Measure-Object -Property NumberOfCores -Sum).Sum"',
-                $out
-            );
-            if (!empty($out) && is_numeric(trim((string)$out[0]))) $physical = (int)trim((string)$out[0]);
-            $out = [];
-            exec(
-                'powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command "(Get-CimInstance Win32_Processor | Select-Object -First 1 -ExpandProperty MaxClockSpeed)"',
-                $out
-            );
-            if (!empty($out) && is_numeric(trim((string)$out[0]))) {
-                $mhz = (int)trim((string)$out[0]);
-                if ($mhz > 0) $freq = round($mhz / 1000, 2).' GHz';
-            }
-        }
+    if (PHP_OS_FAMILY === 'Windows') {
+        $probe = getWindowsProbe();
+        $physical = (int)($probe['physical'] ?? 0);
+        $mhz = (int)($probe['mhz'] ?? 0);
+        if ($mhz > 0) $freq = round($mhz / 1000, 2).' GHz';
     } else {
         $cpuinfo = getFileSafe('/proc/cpuinfo');
         $corespersocket = 0;
@@ -783,11 +719,6 @@ function getCpuDetailsRaw(): array {
         'physical' => ($physical > 0) ? (string)$physical : 'N/A',
         'freq' => $freq,
     ];
-}
-
-# Returns the CPU metadata, read again only every two minutes because the cores and the clock do not change between polls
-function getCpuDetails(): array {
-    return getMonitorCache('cpu_details', 120, 'getCpuDetailsRaw');
 }
 
 # Calculates the cumulative size of regular files in a readable directory tree; returns null when unavailable
@@ -855,10 +786,9 @@ function getLastBackupRunLabel(): string {
     return ($when !== false) ? $when->format('Y-m-d H:i:s') : 'N/A';
 }
 
-# Returns formatted uploads directory size or N/A when directory size is unavailable
+# Returns the uploads size the sampler counts once an hour, as a walk of a large tree is too slow for a page, or N/A when the directory could not be read
 function getUploadsSizeLabel(): string {
-    $updir = defined('UPLOADS_DIR') ? (string)UPLOADS_DIR : BASE_DIR.'/uploads';
-    $bytes = getDirectorySizeBytes($updir);
+    $bytes = getMonitorSample()['uploads'];
     return ($bytes === null) ? 'N/A' : filterSize((int)$bytes);
 }
 
@@ -900,7 +830,6 @@ function getMonitorRuntimeExtras(): array {
         'storages' => getStorageDirectorySizes(),
         'lastbackup' => getLastBackupRunLabel(),
         'error24' => getErrorLogCountHours(24),
-        'uploadsz' => getUploadsSizeLabel(),
         'failed24' => getFailedLoginCountHours(24),
         'seclast24' => getSecurityEventHours(24),
         'dblast24' => getDbIssueEventHours(24),
@@ -921,30 +850,65 @@ function getMonitorCache(string $key, int $ttl, callable $make): array {
     return $seen[$key] = $data;
 }
 
-# The figures of the home cockpit for a super-administrator: four shares with the rows of their panels, the strip of this request and the signals, toned by the worst
+# The one writer of monitor.json: with $fresh a sample past ten seconds is retaken by whoever gets the lock without waiting; a failed Windows probe keeps the old one
+function getMonitorSample(bool $fresh = false): array {
+    global $db;
+    $store = getMetricStore();
+    $lock = ($fresh && time() - intval($store['sampled_at'] ?? 0) >= 10) ? getSchedulerLockHandle('monitor-sample') : false;
+    if ($lock !== false) {
+        try {
+            $store = getMetricStore();
+            if (time() - intval($store['sampled_at'] ?? 0) >= 10 && !(PHP_OS_FAMILY === 'Windows' && !empty(getWindowsProbe()['failed']))) {
+                [$cpu] = getCpuLoad();
+                $cpud = getCpuDetails();
+                $mem = getMemoryInfo();
+                [$dbver] = $db->getSqlRow($db->getSqlQuery('SELECT VERSION()'));
+                $store = getMonitorDiskSnapshot() + getDiskIoMetrics(getRealtimePanelMetrics($store, (float)$cpu, (float)$mem['percent']));
+                $store['cpu_p'] = (float)$cpu;
+                $store['cpu'] = $cpud;
+                $store['mem'] = $mem;
+                $store['uptime'] = getUptimeInfo();
+                $store['cores'] = $cpud['logical'];
+                $store['soft'] = getServerSoftware() + ['php' => PHP_VERSION, 'db' => $dbver];
+                if (time() - intval($store['uploads_at'] ?? 0) >= 3600) {
+                    $store['uploads'] = getDirectorySizeBytes(defined('UPLOADS_DIR') ? (string)UPLOADS_DIR : BASE_DIR.'/uploads');
+                    $store['uploads_at'] = time();
+                }
+                $store['sampled_at'] = time();
+                setMetricStore($store);
+            }
+        } finally {
+            deleteSchedulerHandle($lock);
+        }
+    }
+    return $store + ['cpu_p' => 0.0, 'cpu' => ['logical' => 1, 'physical' => 'N/A', 'freq' => 'N/A'], 'mem' => ['total' => 0, 'free' => 0, 'used' => 0, 'percent' => 0],
+        'net' => ['rx_total' => 0.0, 'tx_total' => 0.0, 'rx_rate' => 0.0, 'tx_rate' => 0.0], 'diskio' => ['read_rate' => null, 'write_rate' => null, 'hist_read' => [],
+        'hist_write' => []], 'net_hist_down' => [], 'net_hist_up' => [], 'sys_hist_cpu' => [], 'sys_hist_ram' => [], 'sys_hist_time' => [], 'uptime' => 'N/A',
+        'uploads' => null, 'uploads_at' => 0, 'sampled_at' => 0] + getMonitorDiskSnapshot();
+}
+
+# The figures of the home cockpit for a super-administrator: four shares with the rows of their panels, the strip of the average page, the signals and the sample age
 function getCockpitData(): array {
     global $afile;
-    $snap = getMonitorCache('cockpit', 3, static function (): array {
-        [$cpup] = getCpuLoad();
-        $opc = function_exists('opcache_get_status') ? opcache_get_status(false) : false;
-        $mem = is_array($opc) ? ($opc['memory_usage'] ?? []) : [];
-        return ['cpu_p' => is_numeric($cpup) ? (float)$cpup : 0.0, 'cpu' => getCpuDetails(), 'mem' => getMemoryInfo(), 'op_on' => is_array($opc) && !empty($opc['opcache_enabled']),
-            'op_hit' => (float)($opc['opcache_statistics']['opcache_hit_rate'] ?? 0), 'op_used' => (int)($mem['used_memory'] ?? 0),
-            'op_total' => (int)($mem['used_memory'] ?? 0) + (int)($mem['free_memory'] ?? 0) + (int)($mem['wasted_memory'] ?? 0),
-            'op_files' => (int)($opc['opcache_statistics']['num_cached_scripts'] ?? 0)] + getMonitorDiskSnapshot();
-    });
+    $snap = getMonitorSample(true);
+    $opc = function_exists('opcache_get_status') ? opcache_get_status(false) : false;
+    $opon = is_array($opc) && !empty($opc['opcache_enabled']);
+    $opmem = $opon ? ($opc['memory_usage'] ?? []) : [];
+    $opused = (int)($opmem['used_memory'] ?? 0);
+    $optotal = $opused + (int)($opmem['free_memory'] ?? 0) + (int)($opmem['wasted_memory'] ?? 0);
     $row = static fn(string $icon, string $label, string $value): array => ['icon' => $icon, 'label' => $label, 'value' => $value];
     $ring = static fn(string $label, string $title, float $part, string $tone, array $rows): array => [
         'label' => $label, 'title' => $title, 'value' => round($part, 1), 'tone' => $tone, 'rows' => $rows];
     $cpu = $snap['cpu'];
     $mem = $snap['mem'];
-    $hit = $snap['op_on'] ? $snap['op_hit'] : 0.0;
-    $opcrow = $snap['op_on'] ? [$row('memory', _ADM_MEMORY, filterSize($snap['op_used']).' / '.filterSize($snap['op_total'])),
-        $row('file-earmark-code', _ADM_SCRIPTS, (string)$snap['op_files'])] : [];
+    $hit = $opon ? (float)($opc['opcache_statistics']['opcache_hit_rate'] ?? 0) : 0.0;
+    $opcrow = $opon ? [$row('memory', _ADM_MEMORY, filterSize($opused).' / '.filterSize($optotal)),
+        $row('file-earmark-code', _ADM_SCRIPTS, (string)($opc['opcache_statistics']['num_cached_scripts'] ?? 0))] : [];
     $sigs = getSystemSignals();
     $lvls = array_column($sigs, 'level');
     $online = getTableCount('session');
-    $load = getLoadStats();
+    $load = getLoadAverage();
+    $none = $load['num'] === 0;
     return [
         'tone' => in_array('danger', $lvls, true) ? 'danger' : (in_array('warn', $lvls, true) ? 'warn' : 'ok'),
         'href' => HOME_PATH.$afile.'.php?name=monitor',
@@ -955,16 +919,17 @@ function getCockpitData(): array {
                 $row('stack', _OVERALL, filterSize($mem['total'])), $row('check2-circle', _ADM_AVAIL, filterSize($mem['free']))]),
             'disk' => $ring(_ADM_DISK, _ADM_DISK, (float)$snap['disk_pct'], getPercentTone((float)$snap['disk_pct']), [$row('pie-chart', _ADM_USED,
                 filterSize($snap['disk_used'])), $row('box', _ADM_FREE, filterSize($snap['disk_free']))]),
-            'opcache' => $ring('OPcache', 'OPcache', $hit, $snap['op_on'] ? getPercentTone(100 - $hit) : 'warn', array_merge([$row('bullseye', _ADM_HITS,
-                $snap['op_on'] ? round($hit, 1).'%' : _OFF)], $opcrow)),
+            'opcache' => $ring('OPcache', 'OPcache', $hit, $opon ? getPercentTone(100 - $hit) : 'warn', array_merge([$row('bullseye', _ADM_HITS,
+                $opon ? round($hit, 1).'%' : _OFF)], $opcrow)),
         ],
         'strip' => [
-            'gen' => ['icon' => 'stopwatch', 'label' => _GENERATION, 'value' => (int)round($load['gen'] * 1000), 'unit' => 'ms'],
-            'sql' => ['icon' => 'database', 'label' => _ADM_QUERIES, 'value' => $load['qnum'], 'unit' => 'sql'],
-            'mem' => ['icon' => 'memory', 'label' => _ADM_PHPMEM, 'value' => round($load['mem'] / 1048576, 1), 'unit' => 'MB'],
+            'gen' => ['icon' => 'stopwatch', 'label' => _GENERATION, 'value' => $none ? '—' : (int)round($load['gen'] * 1000), 'unit' => 'ms'],
+            'sql' => ['icon' => 'database', 'label' => _ADM_QUERIES, 'value' => $none ? '—' : round($load['sql'], 1), 'unit' => 'sql'],
+            'mem' => ['icon' => 'memory', 'label' => _ADM_PHPMEM, 'value' => $none ? '—' : round($load['mem'] / 1048576, 1), 'unit' => 'MB'],
             'online' => ['icon' => 'people', 'label' => _ONLINE, 'value' => $online, 'unit' => ''],
         ],
         'signals' => $sigs,
+        'age' => ($snap['sampled_at'] > 0) ? max(time() - $snap['sampled_at'], 0) : null,
     ];
 }
 

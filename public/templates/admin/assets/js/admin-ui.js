@@ -1614,7 +1614,7 @@
             if (item) item.textContent = data.strip[key].value;
         });
         box.querySelectorAll('[aria-busy]').forEach(function (node) { node.setAttribute('aria-busy', 'false'); });
-        box.setAttribute('data-sl-live-stamp', Date.now());
+        box.setAttribute('data-sl-live-stamp', Date.now() - (Number(data.age) || 0) * 1000);
     }
     // Г9 Г15 The cockpit asks for its figures at once and then at its interval while the tab is in sight and the live chip runs; a poll renews no session
     function setCockpitPoll() {
