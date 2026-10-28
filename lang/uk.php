@@ -450,6 +450,7 @@ define('_LAYOUT_MAP','Показати карту');
 define('_LAYOUT_ADDR','Адреса');
 define('_LAYOUT_TEL','Телефон');
 define('_LAYOUT_FROM','з');
+define('_LAYOUT_BUILDER','Конструктор сайту');
 define('_LINKS','Каталог сайтів');
 define('_LIST','Список');
 define('_LIVE','В ефірі');

@@ -171,6 +171,17 @@ return [
             'top' => '0',
             'type' => '0',
         ],
+        'layout' => [
+            'lang' => '_LAYOUT_BUILDER',
+            'icon' => 'layers-half',
+            'active' => '1',
+            'view' => '0',
+            'menu' => '1',
+            'group' => '0',
+            'side' => '0',
+            'top' => '0',
+            'type' => '0',
+        ],
         'master' => [
             'lang' => '_MASTER',
             'icon' => 'puzzle',

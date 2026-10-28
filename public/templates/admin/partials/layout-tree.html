@@ -1,0 +1,18 @@
+{# The tree of the site builder: the tabs of what is edited, then the groups of rows; a row is a row of the panel menu, a list of rows drags by its handle and raises sl:lay-order #}
+<div class="sl-lay-tree" id="sl-lay-tree" data-sl-lay-tab="{{ tab }}"{% if is_oob %} hx-swap-oob="true"{% endif %}>
+  <div class="sl-seg sl-lay-fill" role="tablist" aria-label="{{ tabs_label }}">{% for item in tabs %}<button type="button" role="tab" class="sl-seg-cell{% if item.is_on %} sl-is-active{% endif %}" aria-selected="{% if item.is_on %}true{% else %}false{% endif %}" hx-get="{{ item.url }}" hx-target="#sl-lay-tree" hx-swap="outerHTML" hx-push-url="false"><i class="bi bi-{{ item.icon }}" aria-hidden="true"></i>{{ item.label }}</button>{% endfor %}</div>
+  <div class="sl-lay-scroll">
+    {% if menus %}<div class="sl-seg sl-lay-fill" role="group" aria-label="{{ menus_label }}">{% for item in menus %}<button type="button" class="sl-seg-cell{% if item.is_on %} sl-is-active{% endif %}" aria-pressed="{% if item.is_on %}true{% else %}false{% endif %}" hx-get="{{ item.url }}" hx-target="#sl-lay-tree" hx-swap="outerHTML" hx-push-url="false">{{ item.label }}</button>{% endfor %}</div>{% endif %}
+    {% for group in groups %}
+    <div class="sl-lay-group">
+      {% if group.title %}<div class="sl-lay-head{% if group.is_sub %} sl-lay-head-sub{% endif %}"><i class="bi bi-{{ group.icon }}" aria-hidden="true"></i><span>{{ group.title }}</span>{% if group.chip %}<span class="sl-chip sl-chip-neutral">{{ group.chip }}</span>{% endif %}</div>{% endif %}
+      <div class="sl-lay-rows"{% if group.drag %} data-sl-drag-event="sl:lay-order" data-sl-lay-list="{{ group.drag }}"{% endif %}>
+        {% for row in group.rows %}{% include 'fragments/menu-list-item.html' with row %}{% endfor %}
+        {% if group.none %}<p class="sl-list-none">{{ group.none }}</p>{% endif %}
+      </div>
+      {% if group.add %}<button type="button" class="sl-lay-add" data-sl-lay-act="{{ group.add.act }}" data-sl-lay-arg="{{ group.add.arg }}"><i class="bi bi-plus-lg" aria-hidden="true"></i>{{ group.add.label }}</button>{% endif %}
+    </div>
+    {% endfor %}
+    {{{ note_html }}}
+  </div>
+</div>

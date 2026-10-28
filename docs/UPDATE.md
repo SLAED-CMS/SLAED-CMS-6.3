@@ -401,8 +401,8 @@ An installation keeps what the site saved and brings what is new; at runtime not
   `scheduler.jobs` included, merges
   recursively: a new module and a new job of a release are added, a new field of a record goes into every record. A
   new Node type reaches sites only by a PHP step of its version: without its row in `_node_types` it is no type.
-- `setConfigFile()` writes as a string the ordinary files, in its Closure form `node`, `fields`, `uploads` and `ratings`;
-  a site without the file gets it whole. Like every save of the panel, the string form keeps scalars as strings, so
+- `setConfigFile()` writes as a string the ordinary files, in its Closure form `node`, `fields`, `uploads`, `ratings`
+  and `layout`, which keep their native types; a site without the file gets it whole. Like every save of the panel, the string form keeps scalars as strings, so
   readers take numbers through `intval()`. `config/system.php`, `header.php` and `chmod.php` are code, not settings,
   and follow the row "all other code".
 - **Renaming, changing the meaning or deleting an option** is a PHP step of the version through `setConfigFile()`.

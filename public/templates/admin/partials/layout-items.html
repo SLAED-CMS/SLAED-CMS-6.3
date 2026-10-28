@@ -1,0 +1,6 @@
+{# The items of a section or a theme part in the site builder: the caption with the count, each item a block of the form canon, a new one added at the end #}
+<div class="sl-lay-items">
+  <div class="sl-lay-head"><i class="bi bi-list-ul" aria-hidden="true"></i><span>{{ title }}</span><span class="sl-chip sl-chip-neutral">{{ num }}</span></div>
+  {{{ items_html }}}
+  <button type="button" class="sl-lay-add" data-sl-lay-act="item-add"{% if is_full %} disabled{% endif %}><i class="bi bi-plus-lg" aria-hidden="true"></i>{{ add_text }}</button>
+</div>

@@ -129,7 +129,8 @@ function getProbeString(): array {
     $bytes = (string)file_get_contents(CONFIG_DIR.'/sample.php') === $code;
     $merge = setConfigFile('sample.php', ['zeta' => 3], ['zeta' => 1, 'kept' => 'yes']);
     $deny = [];
-    foreach (['local.php', 'system.php', 'fields.php', 'uploads.php', 'ratings.php', 'node.php', '../sample.php', 'Sample.php', 'sample', 'sub/sample.php'] as $name) {
+    $names = ['local.php', 'system.php', 'fields.php', 'uploads.php', 'ratings.php', 'node.php', 'layout.php', '../sample.php', 'Sample.php', 'sample', 'sub/sample.php'];
+    foreach ($names as $name) {
         $deny[$name] = setConfigFile($name, ['probe' => '1']);
     }
     return [
@@ -241,6 +242,7 @@ function setProbeReset(): void {
     if (is_file(CONFIG_DIR.'/node.php')) unlink(CONFIG_DIR.'/node.php');
     global $preal;
     copy($preal.'/fields.php', CONFIG_DIR.'/fields.php');
+    copy($preal.'/layout.php', CONFIG_DIR.'/layout.php');
     if (is_file(CONFIG_DIR.'/local.php')) unlink(CONFIG_DIR.'/local.php');
     getConfig();
 }
@@ -359,6 +361,32 @@ function getProbeCase(string $tamper): array {
     return $out;
 }
 
+# An unsure publication of the layout whose witness row reads as after it, and one whose row reads as neither side: the first is finished, the second keeps its marker
+function getProbeWitness(): array {
+    $keep = $GLOBALS['db'] ?? null;
+    $pdb = new ProbeDb();
+    $pdb->ver = 2;
+    $GLOBALS['db'] = $pdb;
+    $out = [];
+    try {
+        foreach (['new' => Layout::getWitnessHash($pdb, 'blocks', 7), 'other' => sha1('other')] as $case => $hash) {
+            setProbeReset();
+            $proof = ['kind' => 'layout', 'table' => 'blocks', 'id' => 7, 'old' => sha1('before'), 'new' => $hash];
+            $done = setConfigFile(static function (array $base, Closure $save) use ($proof): string {
+                $base['layout']['next'] = 999;
+                $save($base, $proof);
+                return 'uncertain';
+            });
+            $jour = getConfigJournal();
+            $back = setConfigRestore();
+            $out[$case] = [$done, $jour['why'] ?? null, $jour['types'] ?? null, $back, getProbeTrace()['marker'], getProbeSource('layout.php')['layout']['next'] ?? null];
+        }
+    } finally {
+        $GLOBALS['db'] = $keep;
+    }
+    return $out;
+}
+
 # Every crash case, and the plain rebuild a missing local.php gets when no marker forbids it
 function getProbeCrash(): array {
     $out = [];
@@ -372,6 +400,7 @@ function getProbeCrash(): array {
     });
     $jour = getConfigJournal();
     $out['proof'] = [$done, $jour['why'] ?? null, $jour['types'] ?? null, $jour['proof'] ?? null, setConfigRestore(), getProbeTrace()['marker']];
+    $out['witness'] = getProbeWitness();
     setProbeReset();
     unlink(CONFIG_DIR.'/local.php');
     $conf = getConfig();

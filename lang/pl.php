@@ -450,6 +450,7 @@ define('_LAYOUT_MAP','Pokaż mapę');
 define('_LAYOUT_ADDR','Adres');
 define('_LAYOUT_TEL','Telefon');
 define('_LAYOUT_FROM','od');
+define('_LAYOUT_BUILDER','Kreator strony');
 define('_LINKS','Katalog stron');
 define('_LIST','Lista');
 define('_LIVE','Na żywo');

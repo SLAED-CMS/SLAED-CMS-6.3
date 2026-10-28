@@ -1,0 +1,26 @@
+{# The inspector of the site builder: the parts of a window holding the rows of the form canon; a change of any field posts the form, a foot act posts through the screen #}
+<form class="sl-lay-right sl-div-form sl-div-side" id="sl-lay-insp" action="{{ save_url }}" method="post" hx-post="{{ save_url }}" hx-trigger="change, submit" hx-swap="none" novalidate aria-label="{{ aria_text }}"{% if is_oob %} hx-swap-oob="true"{% endif %}>
+  <input type="hidden" name="token" value="{{ token }}">
+  <input type="hidden" name="sel" value="{{ sel }}">
+  <input type="hidden" name="page" value="{{ page }}">
+  <div class="sl-modal-title">
+    <i class="bi bi-{{ icon_name }}" aria-hidden="true"></i>
+    <span class="sl-modal-cap"><strong>{{ title_text }}</strong><span class="sl-modal-sub" title="{{ sub_text }}">{{ sub_text }}</span></span>
+    {% if sel %}<span class="sl-modal-acts"><button type="button" class="sl-modal-act sl-modal-act-close" data-sl-lay-unpick title="{{ unpick_text }}" aria-label="{{ unpick_text }}"><i class="bi bi-x-lg" aria-hidden="true"></i></button></span>{% endif %}
+  </div>
+  <div class="sl-modal-body"{% if tabs %} data-sl-tabs-init="sl-lay-tabs"{% endif %}>
+    {% if tabs %}
+    <ul class="sl-tabs-nav sl-lay-tabs">{% for tab in tabs %}<li class="sl-tabs-item"><a href="#" class="sl-tabs-link{% if tab.is_first %} sl-is-active{% endif %}" data-sl-tab-link data-sl-tab-target="sl-lay-{{ tab.key }}"><i class="bi bi-{{ tab.icon }}" aria-hidden="true"></i>{{ tab.label }}</a></li>{% endfor %}</ul>
+    {% for tab in tabs %}<div class="sl-tab-panel" data-sl-tab-panel="sl-lay-{{ tab.key }}"{% if not tab.is_first %} hidden{% endif %}>{{{ tab.body_html }}}</div>{% endfor %}
+    {% else %}
+    {{{ body_html }}}
+    {% endif %}
+  </div>
+  {% if acts or main or danger %}
+  <div class="sl-modal-foot">
+    {% if acts %}<span class="sl-editor-pill sl-editor-pill-open" role="toolbar" aria-label="{{ aria_text }}"><span class="sl-editor-grp">{% for act in acts %}{% if act.href %}<a class="sl-modal-act" href="{{ act.href }}" target="_blank" rel="noopener" title="{{ act.title }}" aria-label="{{ act.title }}"><i class="bi bi-{{ act.icon }}" aria-hidden="true"></i></a>{% else %}<button type="button" class="sl-modal-act" data-sl-lay-act="{{ act.act }}" data-sl-lay-id="{{ act.id }}" title="{{ act.title }}" aria-label="{{ act.title }}"{% if act.is_off %} disabled{% endif %}><i class="bi bi-{{ act.icon }}" aria-hidden="true"></i></button>{% endif %}{% endfor %}</span></span>{% endif %}
+    {% if main %}<button type="button" class="sl-but-blue" data-sl-lay-act="{{ main.act }}" data-sl-lay-arg="{{ main.arg }}"><i class="bi bi-{{ main.icon }}" aria-hidden="true"></i>{{ main.label }}</button>{% endif %}
+    {% if danger %}<button type="button" class="sl-but-red" data-sl-lay-act="{{ danger.act }}" data-sl-lay-id="{{ danger.id }}"><i class="bi bi-trash3" aria-hidden="true"></i>{{ danger.label }}</button>{% endif %}
+  </div>
+  {% endif %}
+</form>

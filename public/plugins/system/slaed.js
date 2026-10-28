@@ -609,14 +609,12 @@
         if (field) field.value = value;
     }
 
+    // A select of pictures shows its choice in the picture it names, a select that came with a swap as well
     function setImageReplace() {
-        var selects = document.querySelectorAll('[data-sl-image-replace]');
-        selects.forEach(function (select) {
-            var picture = document.getElementById(select.getAttribute('data-sl-image-replace') || '');
-            if (!picture) return;
-            select.addEventListener('change', function () {
-                picture.setAttribute('src', this.value || '');
-            });
+        document.addEventListener('change', function (event) {
+            var select = event.target && event.target.closest ? event.target.closest('[data-sl-image-replace]') : null;
+            var picture = select ? document.getElementById(select.getAttribute('data-sl-image-replace') || '') : null;
+            if (picture) picture.setAttribute('src', select.value || '');
         });
     }
 

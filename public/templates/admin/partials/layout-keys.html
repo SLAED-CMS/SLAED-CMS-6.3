@@ -1,0 +1,2 @@
+{# The keys of the site builder the start of its inspector lists, each with what it does #}
+<ul class="sl-lay-keys">{% for item in keys %}<li>{% for one in item.keys %}<kbd>{{ one }}</kbd> {% endfor %}<span>{{ item.text }}</span></li>{% endfor %}</ul>

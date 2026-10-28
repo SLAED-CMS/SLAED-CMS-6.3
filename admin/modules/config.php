@@ -1249,7 +1249,8 @@ function restore(): void {
     foreach ($jour['files'] as $name => $one) $rows[] = [_FILE.': '.$name, $one['state']];
     $proof = $jour['why'] === 'proof';
     $pname = (string)($jour['proof']['name'] ?? '');
-    $rows[] = [_CONFIG_VERDICT, ($jour['verdict'] !== '') ? $jour['verdict'] : ($proof ? sprintf(_NODE_PROOF, $pname) : sprintf(_CONFIG_BLOCKED, $jour['why']))];
+    $pword = (($jour['proof']['kind'] ?? '') === 'layout') ? _LAYOUT_PROOF : sprintf(_NODE_PROOF, $pname);
+    $rows[] = [_CONFIG_VERDICT, ($jour['verdict'] !== '') ? $jour['verdict'] : ($proof ? $pword : sprintf(_CONFIG_BLOCKED, $jour['why']))];
     $body = '';
     foreach ($rows as $row) {
         $body .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [

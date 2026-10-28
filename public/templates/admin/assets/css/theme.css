@@ -1220,7 +1220,8 @@ input.sl-but-blue[value="ОК"] {
 }
 
 tr.sl-dragging,
-.sl-admin-sidebar .sl-menu-list-item.sl-dragging {
+.sl-admin-sidebar .sl-menu-list-item.sl-dragging,
+.sl-lay-tree .sl-menu-list-item.sl-dragging {
   opacity: var(--sl-fade-disabled);
 }
 
@@ -1713,6 +1714,25 @@ pre code.hljs {
 
 .sl-div-item:hover {
   background-color: var(--sl-surface);
+}
+
+/* Form canon, side panel: in a narrow column the label stays on the left as wide as its words, a full row stacks its label over its field */
+.sl-div-side .sl-div-item {
+  grid-template-columns: fit-content(var(--sl-form-label-width)) minmax(0, 1fr);
+  gap: var(--sl-space-4);
+}
+
+.sl-div-side .sl-div-item.sl-div-item-full {
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--sl-space-2);
+}
+
+.sl-div-side .sl-div-label {
+  line-height: var(--sl-line-normal);
+}
+
+.sl-div-side .sl-div-item-full .sl-check-list {
+  grid-template-columns: minmax(0, 1fr);
 }
 
 /* A row asked to hide has to outrank the display the row itself sets, which a single class cannot do from further up the file */
@@ -2246,6 +2266,7 @@ pre code.hljs {
 
 .sl-editor-pill .sl-modal-act[aria-pressed="true"],
 .sl-editor-pill .sl-modal-act[aria-expanded="true"],
+.sl-editor-pill-open .sl-modal-act:not(:disabled):hover,
 .sl-wrapper .sl-toolbar li .sl-bell-tip a:hover,
 .sl-wrapper .sl-toolbar li .sl-bell-tip a:focus-visible,
 .sl-cockpit .sl-bell-tip a[href]:hover,
@@ -2268,6 +2289,24 @@ pre code.hljs {
   height: var(--sl-size-icon-xs);
   margin: 0 var(--sl-space-1);
   background: var(--sl-border-strong);
+}
+
+/* Capsule shown at once: a toolbar of a screen rests open on its line, its disabled act fades and its act of danger takes the tone of danger */
+.sl-editor-pill.sl-editor-pill-open {
+  margin: 0;
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
+
+.sl-editor-pill-open .sl-modal-act:disabled {
+  opacity: var(--sl-fade-disabled);
+  cursor: default;
+}
+
+/* A group whose every act is hidden leaves the capsule with its line */
+.sl-editor-grp:not(:has(> :not([hidden]))) {
+  display: none;
 }
 
 /* Every command stays in the palette, so a narrow row lets the folds go first and copy and reset next */
@@ -2623,16 +2662,22 @@ pre code.hljs {
   margin-top: 0;
 }
 
-.sl-editor-pal-cap {
-  display: flex;
-  align-items: center;
-  gap: var(--sl-space-2);
-  padding: var(--sl-space-3) var(--sl-modal-pad-x) var(--sl-space-1);
+/* One caption of the panel over a group of rows: the palettes, the file manager and the tree of the site builder */
+.sl-editor-pal-cap,
+.sl-fm-cap,
+.sl-lay-head {
   color: var(--sl-text-muted);
   font-size: var(--sl-font-micro);
   font-weight: var(--sl-weight-semibold);
   letter-spacing: var(--sl-track-wide);
   text-transform: uppercase;
+}
+
+.sl-editor-pal-cap {
+  display: flex;
+  align-items: center;
+  gap: var(--sl-space-2);
+  padding: var(--sl-space-3) var(--sl-modal-pad-x) var(--sl-space-1);
 }
 
 .sl-editor-pal-row {
@@ -2738,7 +2783,8 @@ pre code.hljs {
 }
 
 .sl-editor-pal kbd,
-.sl-menu-pal kbd {
+.sl-menu-pal kbd,
+.sl-lay-keys kbd {
   display: inline-block;
   padding: 0 var(--sl-space-1);
   border: 1px solid var(--sl-border-strong);
@@ -4148,6 +4194,20 @@ dialog.sl-editor-emoji-panel {
   background-color: var(--sl-surface);
 }
 
+/* A row of a menu list may carry a second line under its name and stand one level in under the row it belongs to */
+.sl-menu-name > small {
+  display: block;
+  overflow: hidden;
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-small);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.sl-menu-list-item.sl-menu-list-kid {
+  margin-left: var(--sl-space-6);
+}
+
 .sl-block-sidebar-count-label {
   overflow-wrap: anywhere;
 }
@@ -4335,6 +4395,7 @@ dialog.sl-editor-emoji-panel {
 
 /* The fan of a section only under the pointer and in focus: the menu column and the grid of cards rest without a button on every row; a touch screen has no hover and keeps it */
 .sl-admin-sidebar .sl-menu-list-item > .sl-dial,
+.sl-lay-tree .sl-menu-list-item > .sl-dial,
 .sl-mcard > .sl-dial {
   opacity: 0;
   transition:
@@ -4345,14 +4406,17 @@ dialog.sl-editor-emoji-panel {
 }
 
 .sl-admin-sidebar .sl-menu-list-item:is(:hover, :focus-within) > .sl-dial,
+.sl-lay-tree .sl-menu-list-item:is(:hover, :focus-within) > .sl-dial,
 .sl-mcard:is(:hover, :focus-within) > .sl-dial,
 .sl-admin-sidebar .sl-menu-list-item > .sl-dial.sl-open,
+.sl-lay-tree .sl-menu-list-item > .sl-dial.sl-open,
 .sl-mcard > .sl-dial.sl-open {
   opacity: 1;
 }
 
 @media (hover: none) {
   .sl-admin-sidebar .sl-menu-list-item > .sl-dial,
+  .sl-lay-tree .sl-menu-list-item > .sl-dial,
   .sl-mcard > .sl-dial {
     opacity: 1;
   }
@@ -4389,15 +4453,18 @@ dialog.sl-editor-emoji-panel {
 }
 
 /* The drop marks of a row of the sidebar stand beside its plate, where the table rows draw them inside their cells */
-.sl-wrapper.sl-admin-shell .sl-admin-sidebar .sl-menu-list-item.sl-drop-above {
+.sl-wrapper.sl-admin-shell .sl-admin-sidebar .sl-menu-list-item.sl-drop-above,
+.sl-lay-tree .sl-menu-list-item.sl-drop-above {
   box-shadow: 0 calc(var(--sl-row-border) * -1) 0 var(--sl-primary-strong);
 }
 
-.sl-wrapper.sl-admin-shell .sl-admin-sidebar .sl-menu-list-item.sl-drop-below {
+.sl-wrapper.sl-admin-shell .sl-admin-sidebar .sl-menu-list-item.sl-drop-below,
+.sl-lay-tree .sl-menu-list-item.sl-drop-below {
   box-shadow: 0 var(--sl-row-border) 0 var(--sl-primary-strong);
 }
 
-.sl-wrapper.sl-admin-shell .sl-admin-sidebar .sl-menu-list-item.sl-drop-deny {
+.sl-wrapper.sl-admin-shell .sl-admin-sidebar .sl-menu-list-item.sl-drop-deny,
+.sl-lay-tree .sl-menu-list-item.sl-drop-deny {
   box-shadow: 0 0 0 1px var(--sl-danger);
 }
 
@@ -4769,6 +4836,11 @@ dialog.sl-modal {
 dialog.sl-modal[open] {
   display: flex;
   flex-direction: column;
+}
+
+/* A window whose body changes under a filter or a tab holds its top, so only its foot moves */
+dialog.sl-modal.sl-modal-top {
+  margin-block: var(--sl-modal-gap) auto;
 }
 
 dialog.sl-modal::backdrop {
@@ -10994,10 +11066,6 @@ body[data-sl-pointer] .sl-admin-login-card:has(.sl-setup)::after {
 .sl-fm-cap {
   display: block;
   padding: var(--sl-space-1) var(--sl-space-3) var(--sl-space-3);
-  font-size: var(--sl-font-micro);
-  letter-spacing: var(--sl-track-wide);
-  text-transform: uppercase;
-  color: var(--sl-text-muted);
 }
 
 /* The node counts its own padding inside its width: the theme has no global border-box, so a full width plus padding would push the tree wider than the column that holds it */

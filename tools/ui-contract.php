@@ -24,9 +24,10 @@ return [
             'root' => 'public/templates/admin',
             'api' => 'public/templates/admin/assets/css/base.css',
             # The file dock.css dresses the block "Administration", the floating menu and the watch window, which the site theme carries a file of its own for
+            # The file layout.css dresses the screen of the site builder over the whole window, which only the admin theme carries
             # The file phoenix.css dresses the screensaver of the panel, which only the admin theme carries
             'css' => [
-                'public/templates/admin/assets/css/base.css', 'public/templates/admin/assets/css/dock.css',
+                'public/templates/admin/assets/css/base.css', 'public/templates/admin/assets/css/dock.css', 'public/templates/admin/assets/css/layout.css',
                 'public/templates/admin/assets/css/phoenix.css', 'public/templates/admin/assets/css/theme.css', 'public/templates/admin/assets/editors/toastui/skin.css',
             ],
             'kind' => 'admin',
@@ -205,7 +206,8 @@ return [
     # The eleven `col-*` entries are the column widths of a fixed admin list table: the track list of `table-layout: fixed`
     # CSS spells that track list as one width per cell instead of one `grid-template-columns`, and each is a figure an author retunes
     'components' => [
-        'adm', 'alert', 'alert-act', 'arrow', 'aside', 'ava', 'avatar', 'badge', 'band', 'bar', 'beam', 'brand', 'btn', 'btn-mini', 'bullet', 'cab-act', 'cab-msg', 'cab-ring',
+        'adm', 'alert', 'alert-act', 'arrow', 'aside', 'ava', 'avatar', 'badge', 'band', 'bar', 'beam', 'brand', 'btn', 'btn-mini', 'builder', 'bullet',
+        'cab-act', 'cab-msg', 'cab-ring',
         'calc', 'capsule', 'card', 'changelog', 'changelog-body', 'changelog-date',
         'changelog-files', 'changelog-stat', 'check', 'check-list', 'check-tick', 'chip', 'chip-tint', 'code', 'col-actions', 'col-amount', 'col-author',
         'col-check', 'col-count', 'col-date', 'col-form', 'col-id', 'col-ip', 'col-lang', 'col-last', 'col-module', 'col-num', 'col-sent',
@@ -238,6 +240,7 @@ return [
         '--sl-d-admins' => 'session donut end of the administration share, templates/*/partials/session-summary.html',
         '--sl-d-bots' => 'session donut end of the bot share, templates/*/partials/session-summary.html',
         '--sl-d-count' => 'speed dial item count, plugins/system/filemanager.js',
+        '--sl-d-device' => 'width of the device the frame of the site builder shows, templates/admin/assets/js/layout.js',
         '--sl-d-depth' => 'nesting depth of a comment or of a check list row, templates/lite/fragments/comment.html and templates/*/fragments/check-list.html',
         '--sl-d-dock-lift' => 'height the notice of the panel and the site climbs over a floating menu lying under it, plugins/system/dock.js',
         '--sl-d-dock-px' => 'left of a pop of the floating menu over its icon inside the window, plugins/system/dock.js',
@@ -605,6 +608,9 @@ return [
             .'paints the shadow on the two contexts that show one, so the shared rule carries none',
         '.sl-float.sl-float-up > .sl-float-panel::after' =>
             'the flipped half of the same arrow, and the same reason',
+        '.sl-editor-pal-cap' =>
+            'admin sets the type of the caption once, in the rule it shares with the caption of the file manager and the heads of the tree of the site '
+            .'builder, so the tool sees the admin side without it; lite has the palette caption alone and keeps its type on the rule',
         '.sl-chip' =>
             'the panel chip is a count badge with a minimum width and a bold micro type; the site chip is a label with an icon, its own gap and a pointer '
             .'transition. They share a name and a shape and nothing else',

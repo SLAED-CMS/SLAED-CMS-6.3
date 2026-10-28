@@ -1,0 +1,593 @@
+/* Site builder: the screen of admin/modules/layout.php over the whole window - the top bar, the tree, the page of the draft in its frame, the inspector */
+
+/* Screen: three columns under the top bar, laid over the shell of the panel */
+.sl-lay-app {
+  position: fixed;
+  inset: 0;
+  z-index: var(--sl-z-sticky);
+  display: grid;
+  grid-template-columns: var(--sl-layout-sidebar) minmax(0, 1fr) var(--sl-builder-width);
+  grid-template-rows: auto minmax(0, 1fr);
+  grid-template-areas: "top top top" "left stage right";
+  background: var(--sl-bg-muted);
+}
+
+/* Top bar: the way back and the state of the draft are chips of the panel, every group of icons a capsule shown at once */
+.sl-lay-top {
+  grid-area: top;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sl-space-4);
+  padding: var(--sl-space-3) var(--sl-space-5);
+  border-bottom: 1px solid var(--sl-border);
+  background: var(--sl-bg);
+}
+
+.sl-lay-back {
+  text-decoration: none;
+}
+
+.sl-lay-back:hover,
+.sl-lay-back:focus-visible {
+  border-color: var(--sl-primary);
+  color: var(--sl-primary);
+}
+
+.sl-lay-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sl-space-2);
+  padding-left: var(--sl-space-4);
+  border-left: 1px solid var(--sl-border);
+  color: var(--sl-text-strong);
+  font-weight: var(--sl-weight-semibold);
+  white-space: nowrap;
+}
+
+.sl-lay-brand > .bi {
+  color: var(--sl-primary);
+}
+
+.sl-lay-devices {
+  margin-left: auto;
+}
+
+.sl-lay-tools,
+.sl-lay-state {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sl-space-3);
+}
+
+/* Tree: its tabs over the rows, the rows scroll on their own */
+.sl-lay-left {
+  grid-area: left;
+  min-height: 0;
+  border-right: 1px solid var(--sl-border);
+  background: var(--sl-bg);
+}
+
+.sl-lay-tree {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.sl-lay-fill {
+  display: flex;
+  margin: var(--sl-space-4);
+}
+
+.sl-lay-fill > .sl-seg-cell {
+  flex: 1 1 0;
+  gap: var(--sl-space-2);
+}
+
+.sl-lay-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  padding: 0 var(--sl-space-4) var(--sl-space-7);
+}
+
+.sl-lay-scroll > .sl-lay-fill {
+  margin: 0 0 var(--sl-space-4);
+}
+
+.sl-lay-group {
+  margin: 0 0 var(--sl-space-4);
+}
+
+/* The caption of a group is the one caption of the panel (theme.css); a zone of blocks under it keeps the case of its words */
+.sl-lay-head {
+  display: flex;
+  align-items: center;
+  gap: var(--sl-space-2);
+  margin: var(--sl-space-5) 0 var(--sl-space-3);
+  padding: 0 var(--sl-space-2);
+}
+
+.sl-lay-head.sl-lay-head-sub {
+  margin-top: var(--sl-space-3);
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.sl-lay-head > .sl-chip {
+  margin-left: auto;
+  font-weight: var(--sl-weight-normal);
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.sl-lay-rows {
+  display: grid;
+  gap: var(--sl-space-1);
+}
+
+.sl-lay-add {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sl-space-2);
+  width: 100%;
+  margin: var(--sl-space-3) 0 0;
+  padding: var(--sl-space-3);
+  border: 1px dashed var(--sl-border-strong);
+  border-radius: var(--sl-radius-2);
+  background: none;
+  color: var(--sl-primary);
+  cursor: pointer;
+}
+
+.sl-lay-add:not(:disabled):hover,
+.sl-lay-add:not(:disabled):focus-visible {
+  border-style: solid;
+  border-color: var(--sl-primary);
+  background: var(--sl-tint);
+}
+
+.sl-lay-add:disabled {
+  opacity: var(--sl-fade-disabled);
+  cursor: default;
+}
+
+/* Rows of the tree: rows of the panel menu, the picked one in the tint with the brand bar, the handle and "…" under the pointer */
+.sl-lay-tree .sl-menu-list-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--sl-space-2);
+  min-height: var(--sl-menu-height);
+  padding: 0 var(--sl-space-2);
+}
+
+.sl-lay-tree .sl-menu-list-item > a {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  gap: var(--sl-space-3);
+  min-width: 0;
+  color: var(--sl-text-strong);
+  text-decoration: none;
+}
+
+.sl-lay-tree .sl-menu-list-item > a > .bi {
+  color: var(--sl-text-muted);
+}
+
+.sl-lay-tree .sl-menu-name {
+  min-width: 0;
+}
+
+.sl-lay-tree .sl-menu-list-item:has(> a[aria-current="page"]) {
+  background: var(--sl-tint);
+  box-shadow: inset var(--sl-rail-width) 0 0 var(--sl-primary);
+}
+
+.sl-lay-tree .sl-menu-list-item > a[aria-current="page"],
+.sl-lay-tree .sl-menu-list-item > a[aria-current="page"] > .bi {
+  color: var(--sl-primary-strong);
+}
+
+.sl-lay-tree .sl-menu-list-item > .sl-drag-handle {
+  flex: none;
+}
+
+/* Stage: the page of the draft in its frame, as wide as the device chosen in the top bar */
+.sl-lay-stage {
+  grid-area: stage;
+  display: grid;
+  min-width: 0;
+  min-height: 0;
+  padding: var(--sl-space-5);
+  overflow: auto;
+}
+
+.sl-lay-frame {
+  justify-self: center;
+  width: min(100%, var(--sl-d-device, 100%));
+  height: 100%;
+  overflow: hidden;
+  border-radius: var(--sl-radius-2);
+  background: var(--sl-bg);
+  box-shadow: var(--sl-shadow-raised);
+  transition: width var(--sl-time-base) var(--sl-ease-out);
+}
+
+.sl-lay-frame > iframe {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+/* Inspector: the parts of a window in a column, its body scrolling between the head and the foot */
+.sl-lay-app > .sl-lay-right {
+  grid-area: right;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  margin: 0;
+  border-left: 1px solid var(--sl-border);
+  background: var(--sl-bg);
+}
+
+.sl-lay-app > .sl-lay-right > .sl-modal-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+}
+
+.sl-lay-right > .sl-modal-foot {
+  justify-content: flex-start;
+}
+
+.sl-lay-right > .sl-modal-foot > :is(.sl-but-red, .sl-but-blue) {
+  margin-left: auto;
+}
+
+.sl-lay-right .sl-modal-body > * + * {
+  margin-top: var(--sl-space-4);
+}
+
+.sl-lay-right .sl-div-grid {
+  margin-bottom: 0;
+}
+
+.sl-lay-tabs .sl-tabs-link {
+  gap: var(--sl-space-2);
+}
+
+/* Items of a section or a part: blocks of the form canon, each its caption with its moves over its own rows */
+.sl-lay-items .sl-lay-head {
+  margin-top: 0;
+}
+
+.sl-lay-items .sl-toggle-form-block + .sl-toggle-form-block {
+  margin-top: var(--sl-space-2);
+}
+
+.sl-lay-items .sl-toggle-form-block-item {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.sl-lay-items .sl-toggle-form-block-title {
+  display: flex;
+  align-items: center;
+  gap: var(--sl-space-2);
+  width: 100%;
+}
+
+.sl-lay-item-cap {
+  overflow: hidden;
+  font-weight: var(--sl-weight-semibold);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.sl-lay-item-acts {
+  display: inline-flex;
+  flex: none;
+  gap: var(--sl-space-1);
+  margin-left: auto;
+}
+
+/* Fields the canon has no control for: the point of focus as a grid of nine, the tones as swatches, a number on a range */
+.sl-lay-focus {
+  display: inline-grid;
+  grid-template-columns: repeat(3, var(--sl-size-chip));
+  gap: var(--sl-space-1);
+}
+
+.sl-lay-focus-cell {
+  display: grid;
+  place-items: center;
+  width: var(--sl-size-chip);
+  height: var(--sl-size-chip);
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-1);
+  background: var(--sl-surface);
+  cursor: pointer;
+}
+
+.sl-lay-focus .sl-lay-focus-cell > input {
+  width: var(--sl-space-3);
+  min-width: 0;
+  height: var(--sl-space-3);
+  min-height: 0;
+  margin: 0;
+  border-radius: var(--sl-radius-circle);
+  background: var(--sl-border-strong);
+  cursor: pointer;
+  appearance: none;
+}
+
+.sl-lay-focus-cell:has(> input:checked) {
+  border-color: var(--sl-primary);
+  background: var(--sl-tint);
+}
+
+.sl-lay-focus .sl-lay-focus-cell > input:checked {
+  background: var(--sl-primary);
+}
+
+.sl-lay-focus-cell:has(> input:focus-visible),
+.sl-lay-tone:has(> input:focus-visible) {
+  outline: var(--sl-ring-width) solid var(--sl-ring-bg);
+  outline-offset: var(--sl-ring-gap);
+}
+
+.sl-lay-tone {
+  display: inline-grid;
+  width: var(--sl-size-control);
+  height: var(--sl-size-control);
+  border-radius: var(--sl-radius-circle);
+  cursor: pointer;
+}
+
+.sl-rank-tones .sl-lay-tone > input {
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+  min-height: 0;
+  margin: 0;
+  border-radius: inherit;
+  cursor: pointer;
+  appearance: none;
+}
+
+.sl-lay-tone:has(> input:checked) {
+  box-shadow: 0 0 0 var(--sl-ring-gap) var(--sl-surface), 0 0 0 calc(var(--sl-ring-gap) + var(--sl-ring-width)) var(--sl-primary);
+}
+
+.sl-lay-tone-primary {
+  background: var(--sl-primary);
+}
+
+.sl-lay-tone-success {
+  background: var(--sl-success);
+}
+
+.sl-lay-tone-warning {
+  background: var(--sl-warning);
+}
+
+.sl-lay-tone-accent {
+  background: var(--sl-accent);
+}
+
+.sl-lay-tone-danger {
+  background: var(--sl-danger);
+}
+
+.sl-lay-range {
+  display: flex;
+  align-items: center;
+  gap: var(--sl-space-3);
+}
+
+.sl-lay-range > input {
+  flex: 1 1 auto;
+  accent-color: var(--sl-primary);
+}
+
+.sl-lay-range > output {
+  min-width: var(--sl-size-control);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+/* Keys of the start of the inspector: each line its keys, then what they do */
+.sl-lay-keys {
+  display: grid;
+  gap: var(--sl-space-2);
+  margin: 0;
+  padding: 0;
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-small);
+  list-style: none;
+}
+
+.sl-lay-keys > li {
+  display: flex;
+  align-items: center;
+  gap: var(--sl-space-1);
+}
+
+.sl-lay-keys span {
+  margin-left: var(--sl-space-2);
+}
+
+/* Library: cards of the panel menu, three to a row, the schema of a section in place of the icon */
+.sl-lay-groups {
+  flex: none;
+}
+
+.sl-lay-find {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.sl-lay-cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--sl-space-3);
+}
+
+.sl-lay-cards .sl-menu-grid-item {
+  max-width: none;
+}
+
+.sl-lay-thumb {
+  display: grid;
+  flex: none;
+  align-content: center;
+  gap: var(--sl-space-1);
+  width: var(--sl-size-tile);
+  height: var(--sl-size-tile);
+  padding: var(--sl-space-2);
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-1);
+  background: var(--sl-surface);
+  box-sizing: border-box;
+}
+
+.sl-lay-thumb > i {
+  display: block;
+  height: var(--sl-space-2);
+  border-radius: var(--sl-radius-1);
+  background: var(--sl-border-strong);
+}
+
+.sl-lay-thumb:is([data-sl-lay-thumb="hero"], [data-sl-lay-thumb="cta"]) {
+  border-color: var(--sl-primary);
+  background: var(--sl-primary);
+}
+
+.sl-lay-thumb:is([data-sl-lay-thumb="hero"], [data-sl-lay-thumb="cta"]) > i {
+  background: var(--sl-on-solid);
+}
+
+.sl-lay-thumb:is([data-sl-lay-thumb="features"], [data-sl-lay-thumb="stats"], [data-sl-lay-thumb="team"], [data-sl-lay-thumb="prices"], [data-sl-lay-thumb="voices"]) {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.sl-lay-thumb:is([data-sl-lay-thumb="gallery"], [data-sl-lay-thumb="sites"]) {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.sl-lay-thumb:is([data-sl-lay-thumb="features"], [data-sl-lay-thumb="stats"], [data-sl-lay-thumb="team"], [data-sl-lay-thumb="prices"]) > i,
+.sl-lay-thumb:is([data-sl-lay-thumb="voices"], [data-sl-lay-thumb="gallery"], [data-sl-lay-thumb="sites"]) > i {
+  height: var(--sl-space-5);
+}
+
+.sl-lay-thumb:is([data-sl-lay-thumb="media"], [data-sl-lay-thumb="map"]) {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.sl-lay-thumb:is([data-sl-lay-thumb="media"], [data-sl-lay-thumb="map"]) > i:first-child {
+  grid-area: span 3 / auto;
+  height: 100%;
+  background: var(--sl-primary);
+}
+
+.sl-lay-thumb:is([data-sl-lay-thumb="video"], [data-sl-lay-thumb="embed"]) {
+  place-items: center;
+  border-color: var(--sl-text-strong);
+  background: var(--sl-text-strong);
+}
+
+.sl-lay-thumb:is([data-sl-lay-thumb="video"], [data-sl-lay-thumb="embed"]) > i:first-child {
+  width: var(--sl-space-5);
+  height: var(--sl-space-5);
+  border-radius: var(--sl-radius-circle);
+  background: var(--sl-bg);
+}
+
+.sl-lay-thumb:is([data-sl-lay-thumb="video"], [data-sl-lay-thumb="embed"], [data-sl-lay-thumb="map"]) > i:not(:first-child) {
+  display: none;
+}
+
+.sl-lay-thumb:is([data-sl-lay-thumb="faq"], [data-sl-lay-thumb="steps"]) > i {
+  border-left: var(--sl-space-2) solid var(--sl-primary);
+}
+
+.sl-lay-thumb[data-sl-lay-thumb="html"] > i {
+  background: var(--sl-success);
+}
+
+.sl-lay-thumb[data-sl-lay-thumb="module"] {
+  border-style: dashed;
+  border-color: var(--sl-primary);
+}
+
+/* Settings: the screens of the panel that keep what the builder does not, each a row leading to its screen */
+.sl-lay-links {
+  display: grid;
+  gap: var(--sl-space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sl-lay-link {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas: "icon name end" "icon text end";
+  align-items: center;
+  column-gap: var(--sl-space-3);
+  padding: var(--sl-space-3) var(--sl-space-4);
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-2);
+  color: var(--sl-text);
+  text-decoration: none;
+}
+
+.sl-lay-link:hover,
+.sl-lay-link:focus-visible {
+  border-color: var(--sl-primary);
+  background: var(--sl-tint);
+}
+
+.sl-lay-link > .bi:first-child {
+  grid-area: icon;
+  color: var(--sl-primary);
+  font-size: var(--sl-size-icon-sm);
+}
+
+.sl-lay-link > .bi:last-child {
+  grid-area: end;
+  color: var(--sl-text-muted);
+}
+
+.sl-lay-link-name {
+  grid-area: name;
+  color: var(--sl-text-strong);
+  font-weight: var(--sl-weight-semibold);
+}
+
+.sl-lay-link-text {
+  grid-area: text;
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-small);
+}
+
+/* A narrow window stacks the columns: the top bar, the tree, the page, the inspector, scrolled as one */
+@media (max-width: 900px) {
+  .sl-lay-app {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto;
+    grid-template-areas: "top" "left" "stage" "right";
+    overflow: auto;
+  }
+
+  .sl-lay-stage {
+    min-height: 100vh;
+  }
+
+  .sl-lay-cards {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

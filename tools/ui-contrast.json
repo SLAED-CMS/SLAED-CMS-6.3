@@ -1,5 +1,5 @@
 {
-  "generated": "2026-10-27T22:37:46.760Z",
+  "generated": "2026-10-28T08:30:38.979Z",
   "pairs": [
     {
       "theme": "admin",
@@ -215,8 +215,8 @@
       "page": "admin-home",
       "mode": "light",
       "sel": "b",
-      "bgsel": "section.sl-cockpit.sl-knob-danger",
-      "fg": "rgb(205, 69, 69)",
+      "bgsel": "section.sl-cockpit.sl-knob-warn",
+      "fg": "rgb(217, 119, 6)",
       "bg": "rgb(247, 251, 253)",
       "size": 24,
       "weight": 900
@@ -226,7 +226,7 @@
       "page": "admin-home",
       "mode": "light",
       "sel": "b",
-      "bgsel": "section.sl-cockpit.sl-knob-danger",
+      "bgsel": "section.sl-cockpit.sl-knob-warn",
       "fg": "rgb(17, 24, 39)",
       "bg": "rgb(247, 251, 253)",
       "size": 18,
@@ -336,8 +336,8 @@
       "page": "admin-home",
       "mode": "dark",
       "sel": "b",
-      "bgsel": "section.sl-cockpit.sl-knob-danger",
-      "fg": "rgb(240, 106, 106)",
+      "bgsel": "section.sl-cockpit.sl-knob-warn",
+      "fg": "rgb(240, 147, 43)",
       "bg": "rgb(21, 29, 43)",
       "size": 24,
       "weight": 900
@@ -347,7 +347,7 @@
       "page": "admin-home",
       "mode": "dark",
       "sel": "b",
-      "bgsel": "section.sl-cockpit.sl-knob-danger",
+      "bgsel": "section.sl-cockpit.sl-knob-warn",
       "fg": "rgb(229, 231, 235)",
       "bg": "rgb(21, 29, 43)",
       "size": 18,
@@ -960,7 +960,7 @@
     },
     {
       "theme": "admin",
-      "page": "admin-account-add",
+      "page": "admin-blockfile",
       "mode": "dark",
       "sel": "label",
       "bgsel": "div.sl-div-item",
@@ -1040,7 +1040,7 @@
       "page": "admin-home",
       "mode": "light",
       "sel": "li",
-      "bgsel": "section.sl-cockpit.sl-knob-danger",
+      "bgsel": "section.sl-cockpit.sl-knob-warn",
       "fg": "rgb(99, 105, 118)",
       "bg": "rgb(247, 251, 253)",
       "size": 13,
@@ -1062,7 +1062,7 @@
       "page": "admin-home",
       "mode": "dark",
       "sel": "li",
-      "bgsel": "section.sl-cockpit.sl-knob-danger",
+      "bgsel": "section.sl-cockpit.sl-knob-warn",
       "fg": "rgb(154, 164, 178)",
       "bg": "rgb(21, 29, 43)",
       "size": 13,
@@ -1106,7 +1106,7 @@
       "page": "admin-home",
       "mode": "light",
       "sel": "small",
-      "bgsel": "section.sl-cockpit.sl-knob-danger",
+      "bgsel": "section.sl-cockpit.sl-knob-warn",
       "fg": "rgb(99, 105, 118)",
       "bg": "rgb(247, 251, 253)",
       "size": 12,
@@ -1117,7 +1117,7 @@
       "page": "admin-home",
       "mode": "dark",
       "sel": "small",
-      "bgsel": "section.sl-cockpit.sl-knob-danger",
+      "bgsel": "section.sl-cockpit.sl-knob-warn",
       "fg": "rgb(154, 164, 178)",
       "bg": "rgb(21, 29, 43)",
       "size": 12,
@@ -1150,8 +1150,8 @@
       "page": "admin-home",
       "mode": "light",
       "sel": "span",
-      "bgsel": "section.sl-cockpit.sl-knob-danger",
-      "fg": "rgb(199, 53, 53)",
+      "bgsel": "section.sl-cockpit.sl-knob-warn",
+      "fg": "rgb(194, 65, 12)",
       "bg": "rgb(247, 251, 253)",
       "size": 12,
       "weight": 400
@@ -1161,7 +1161,7 @@
       "page": "admin-home",
       "mode": "light",
       "sel": "span",
-      "bgsel": "section.sl-cockpit.sl-knob-danger",
+      "bgsel": "section.sl-cockpit.sl-knob-warn",
       "fg": "rgb(38, 134, 55)",
       "bg": "rgb(247, 251, 253)",
       "size": 38,
@@ -1221,6 +1221,17 @@
       "bg": "rgb(244, 246, 248)",
       "size": 13,
       "weight": 400
+    },
+    {
+      "theme": "admin",
+      "page": "admin-home",
+      "mode": "light",
+      "sel": "span",
+      "bgsel": "section.sl-cockpit.sl-knob-warn",
+      "fg": "rgb(28, 110, 158)",
+      "bg": "rgb(247, 251, 253)",
+      "size": 38,
+      "weight": 700
     },
     {
       "theme": "admin",
@@ -1312,6 +1323,28 @@
     },
     {
       "theme": "admin",
+      "page": "admin-sysfile",
+      "mode": "dark",
+      "sel": "span",
+      "bgsel": "div.sl-fm-shell",
+      "fg": "rgb(154, 164, 178)",
+      "bg": "rgb(17, 24, 39)",
+      "size": 13,
+      "weight": 400
+    },
+    {
+      "theme": "admin",
+      "page": "admin-template-style",
+      "mode": "dark",
+      "sel": "span",
+      "bgsel": "span",
+      "fg": "rgb(229, 231, 235)",
+      "bg": "rgb(17, 24, 39)",
+      "size": 14,
+      "weight": 700
+    },
+    {
+      "theme": "admin",
       "page": "admin-statistic",
       "mode": "dark",
       "sel": "span",
@@ -1326,8 +1359,8 @@
       "page": "admin-home",
       "mode": "dark",
       "sel": "span",
-      "bgsel": "section.sl-cockpit.sl-knob-danger",
-      "fg": "rgb(255, 139, 139)",
+      "bgsel": "section.sl-cockpit.sl-knob-warn",
+      "fg": "rgb(255, 176, 87)",
       "bg": "rgb(21, 29, 43)",
       "size": 12,
       "weight": 400
@@ -1337,7 +1370,7 @@
       "page": "admin-home",
       "mode": "dark",
       "sel": "span",
-      "bgsel": "section.sl-cockpit.sl-knob-danger",
+      "bgsel": "section.sl-cockpit.sl-knob-warn",
       "fg": "rgb(70, 201, 93)",
       "bg": "rgb(21, 29, 43)",
       "size": 38,
@@ -1367,17 +1400,6 @@
     },
     {
       "theme": "admin",
-      "page": "admin-template-style",
-      "mode": "dark",
-      "sel": "span",
-      "bgsel": "span",
-      "fg": "rgb(229, 231, 235)",
-      "bg": "rgb(17, 24, 39)",
-      "size": 14,
-      "weight": 700
-    },
-    {
-      "theme": "admin",
       "page": "admin-blockfile-code",
       "mode": "dark",
       "sel": "span",
@@ -1389,17 +1411,6 @@
     },
     {
       "theme": "admin",
-      "page": "admin-sysfile",
-      "mode": "dark",
-      "sel": "span",
-      "bgsel": "div.sl-fm-shell",
-      "fg": "rgb(154, 164, 178)",
-      "bg": "rgb(17, 24, 39)",
-      "size": 13,
-      "weight": 400
-    },
-    {
-      "theme": "admin",
       "page": "admin-home",
       "mode": "dark",
       "sel": "span",
@@ -1408,6 +1419,17 @@
       "bg": "rgb(24, 32, 48)",
       "size": 13,
       "weight": 400
+    },
+    {
+      "theme": "admin",
+      "page": "admin-home",
+      "mode": "dark",
+      "sel": "span",
+      "bgsel": "section.sl-cockpit.sl-knob-warn",
+      "fg": "rgb(92, 188, 234)",
+      "bg": "rgb(21, 29, 43)",
+      "size": 38,
+      "weight": 700
     },
     {
       "theme": "admin",
@@ -1704,7 +1726,7 @@
       "fg": "rgb(99, 105, 118)",
       "bg": "rgb(247, 251, 253)",
       "size": 12,
-      "weight": 400
+      "weight": 600
     },
     {
       "theme": "admin",
@@ -1715,7 +1737,7 @@
       "fg": "rgb(154, 164, 178)",
       "bg": "rgb(21, 29, 43)",
       "size": 12,
-      "weight": 400
+      "weight": 600
     },
     {
       "theme": "admin",
@@ -3270,7 +3292,7 @@
     },
     {
       "theme": "lite",
-      "page": "private",
+      "page": "favorites",
       "mode": "dark",
       "sel": "a",
       "bgsel": "body.sl-autumn",
@@ -3281,7 +3303,7 @@
     },
     {
       "theme": "lite",
-      "page": "private",
+      "page": "favorites",
       "mode": "dark",
       "sel": "a",
       "bgsel": "section.sl-block",
@@ -3710,10 +3732,10 @@
     },
     {
       "theme": "lite",
-      "page": "oauth-finish",
+      "page": "private",
       "mode": "light",
       "sel": "b",
-      "bgsel": "span.sl-login-toggle",
+      "bgsel": "a.sl-login-profile",
       "fg": "rgb(34, 51, 69)",
       "bg": "rgb(242, 244, 247)",
       "size": 16,
@@ -4865,7 +4887,7 @@
     },
     {
       "theme": "lite",
-      "page": "oauth-finish",
+      "page": "private",
       "mode": "light",
       "sel": "h1.sl-title",
       "bgsel": "body.sl-autumn",
@@ -4975,7 +4997,7 @@
     },
     {
       "theme": "lite",
-      "page": "oauth-finish",
+      "page": "private",
       "mode": "light",
       "sel": "h2.sl-title",
       "bgsel": "section.sl-block",
@@ -5723,7 +5745,7 @@
     },
     {
       "theme": "lite",
-      "page": "private",
+      "page": "favorites",
       "mode": "dark",
       "sel": "p",
       "bgsel": "section.sl-block",
@@ -6218,7 +6240,7 @@
     },
     {
       "theme": "lite",
-      "page": "oauth-finish",
+      "page": "private",
       "mode": "light",
       "sel": "span",
       "bgsel": "section.sl-block",
@@ -6229,7 +6251,7 @@
     },
     {
       "theme": "lite",
-      "page": "oauth-finish",
+      "page": "private",
       "mode": "light",
       "sel": "span",
       "bgsel": "section.sl-block",
@@ -6416,17 +6438,6 @@
     },
     {
       "theme": "lite",
-      "page": "settings",
-      "mode": "light",
-      "sel": "span",
-      "bgsel": "nav.sl-opt-rail",
-      "fg": "rgb(34, 51, 69)",
-      "bg": "rgb(255, 255, 255)",
-      "size": 12,
-      "weight": 600
-    },
-    {
-      "theme": "lite",
       "page": "favorites",
       "mode": "light",
       "sel": "span",
@@ -6446,6 +6457,17 @@
       "bg": "rgb(242, 244, 247)",
       "size": 13,
       "weight": 400
+    },
+    {
+      "theme": "lite",
+      "page": "settings",
+      "mode": "light",
+      "sel": "span",
+      "bgsel": "nav.sl-opt-rail",
+      "fg": "rgb(34, 51, 69)",
+      "bg": "rgb(255, 255, 255)",
+      "size": 12,
+      "weight": 600
     },
     {
       "theme": "lite",
@@ -6680,28 +6702,6 @@
     },
     {
       "theme": "lite",
-      "page": "favorites",
-      "mode": "dark",
-      "sel": "span",
-      "bgsel": "div.sl-opt-tile.sl-opt-w6.sl-cat-tone-3",
-      "fg": "rgb(92, 188, 234)",
-      "bg": "rgb(17, 24, 39)",
-      "size": 13,
-      "weight": 400
-    },
-    {
-      "theme": "lite",
-      "page": "favorites",
-      "mode": "dark",
-      "sel": "span",
-      "bgsel": "a.sl-chip.sl-chip-neutral",
-      "fg": "rgb(243, 244, 246)",
-      "bg": "rgb(26, 33, 48)",
-      "size": 13,
-      "weight": 400
-    },
-    {
-      "theme": "lite",
       "page": "private",
       "mode": "dark",
       "sel": "span",
@@ -6721,6 +6721,28 @@
       "bg": "rgb(17, 24, 39)",
       "size": 12,
       "weight": 600
+    },
+    {
+      "theme": "lite",
+      "page": "favorites",
+      "mode": "dark",
+      "sel": "span",
+      "bgsel": "div.sl-opt-tile.sl-opt-w6.sl-cat-tone-3",
+      "fg": "rgb(92, 188, 234)",
+      "bg": "rgb(17, 24, 39)",
+      "size": 13,
+      "weight": 400
+    },
+    {
+      "theme": "lite",
+      "page": "favorites",
+      "mode": "dark",
+      "sel": "span",
+      "bgsel": "a.sl-chip.sl-chip-neutral",
+      "fg": "rgb(243, 244, 246)",
+      "bg": "rgb(26, 33, 48)",
+      "size": 13,
+      "weight": 400
     },
     {
       "theme": "lite",
@@ -7890,7 +7912,7 @@
     },
     {
       "theme": "lite",
-      "page": "oauth-finish",
+      "page": "private",
       "mode": "light",
       "sel": "span.sl-session-open",
       "bgsel": "section.sl-block",

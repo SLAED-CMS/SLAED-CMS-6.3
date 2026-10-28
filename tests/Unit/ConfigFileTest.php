@@ -64,7 +64,7 @@ class ConfigFileTest extends TestCase
         $this->assertStringContainsString('FileManager::getPathLock(CONFIG_DIR)', $this->getBody('core/system.php', 'getConfig'), 'The rebuild runs outside the shared lock');
     }
 
-    # The string form serves independent sources and the Closure form the shared node, fields, uploads and ratings
+    # The string form serves independent sources and the Closure form the shared node, fields, uploads, ratings and layout
     # The string form stores what it always stored: sorted keys, every scalar a string, LF only, and the snapshot published in the same call
     #[Test]
     public function theStringFormKeepsItsStoredShape(): void
@@ -83,20 +83,20 @@ class ConfigFileTest extends TestCase
         $this->assertSame([], $data['temps'], 'A temporary file stayed beside the sources');
     }
 
-    # The reserved files, the four shared sources and anything that is not a plain lowercase file name are refused by the string form
+    # The reserved files, the five shared sources and anything that is not a plain lowercase file name are refused by the string form
     #[Test]
     public function theStringFormRefusesSharedAndForeignNames(): void
     {
         foreach ($this->getProbe('string')['deny'] as $name => $done) $this->assertFalse($done, $name.' was accepted by the string form');
     }
 
-    # The Closure form hands over the four fresh areas without their wrappers and stores native types as they are, replacing only the source that changed
+    # The Closure form hands over the five fresh areas without their wrappers and stores native types as they are, replacing only the source that changed
     #[Test]
     public function theClosureFormKeepsNativeTypes(): void
     {
         $data = $this->getProbe('closure');
         $this->assertTrue($data['done'], 'A valid package was refused');
-        $this->assertSame(['node', 'fields', 'uploads', 'ratings'], $data['seen']['keys'], 'The base is not the four shared areas');
+        $this->assertSame(['node', 'fields', 'uploads', 'ratings', 'layout'], $data['seen']['keys'], 'The base is not the five shared areas');
         $this->assertSame([], $data['seen']['node'], 'A missing node.php is not an empty area');
         $this->assertFalse($data['seen']['wrapped'], 'The base still carries the root wrapper of its file');
         $this->assertGreaterThan(0, $data['seen']['rules'], 'The uploads area arrived empty');
@@ -181,6 +181,15 @@ class ConfigFileTest extends TestCase
         }
         $want = [false, 'proof', ['probe'], ['name' => 'probe', 'id' => 7, 'old' => 1, 'new' => 2, 'kind' => 'update'], false, true];
         $this->assertSame($want, $all['proof'], 'An uncertain operation with a proof was resolved without the database');
+    }
+
+    # An unsure publication of the layout holds no Node type and is finished by its witness row alone: a row as after it finishes it, a row as neither side keeps the marker
+    #[Test]
+    public function anUnsurePublicationIsResolvedByItsWitnessRow(): void
+    {
+        $data = $this->getProbe('crash')['witness'];
+        $this->assertSame([false, 'proof', [], true, false, 999], $data['new'], 'A witness row as after the publication did not finish it');
+        $this->assertSame([false, 'proof', [], false, true, 999], $data['other'], 'A witness row as neither side was resolved by a guess');
     }
 
     # A missing local.php without a marker stays the ordinary path of a fresh install, an update and a manual edit

@@ -1,9 +1,9 @@
 <article class="sl-menu-grid-item sl-mcard{% if is_off %} sl-mcard-off{% endif %}"{% if key %} data-sl-menu-item="{{ key }}"{% endif %}>
-  <a class="sl-mcard-link" href="{{ url }}" title="{{ title_attr }}">
-    <span class="sl-ico">
+  <a class="sl-mcard-link" href="{{ url }}" title="{{ title_attr }}"{% if link_attr %} {{{ link_attr }}}{% endif %}>
+    {% if thumb %}<span class="sl-lay-thumb" data-sl-lay-thumb="{{ thumb }}" aria-hidden="true"><i></i><i></i><i></i><i></i></span>{% else %}<span class="sl-ico">
       <i class="bi bi-{{ icon_name }}"></i>
       <i class="sl-led{% if is_off %} sl-led-off{% else %} sl-led-ok{% endif %}" title="{{ led_title }}"></i>
-    </span>
+    </span>{% endif %}
     <span class="sl-mbody">
       <strong><span class="sl-menu-name">{{ title }}</span>{% if queue_key %} <span class="sl-queue" data-sl-queue="{{ queue_key }}"{% if not queue_num %} hidden{% endif %}><span data-sl-queue-n>{{ queue_num }}</span><span class="sl-visually-hidden"> {{ _WAITINGCONT }}</span></span>{% endif %}</strong>
       {% if subtitle %}<span>{{ subtitle }}</span>{% endif %}

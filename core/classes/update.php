@@ -49,8 +49,8 @@ final class Update {
     # The folders a package may hold at its top; a file of the top level passes by its name alone
     public const DIRS = ['admin', 'blocks', 'config', 'core', 'docs', 'lang', 'modules', 'public', 'storage', 'tests', 'tools', 'uploads'];
 
-    # The settings files Node shares, which setConfigFile() writes together in its Closure form only
-    private const SHARED = ['node', 'fields', 'uploads', 'ratings'];
+    # The settings files setConfigFile() writes together in its Closure form only: the four Node shares and the layout, whose merge needs no type of Node
+    private const SHARED = ['node', 'fields', 'uploads', 'ratings', 'layout'];
 
     # The themes a release ships and replaces whole; every other theme of public/templates/ is left as it is
     public const THEMES = ['admin', 'lite'];
@@ -463,7 +463,7 @@ final class Update {
             $packs[$key] = $flat ? $pack : $pack[$key];
             $sites[$key] = $flat ? $site : ($site[$key] ?? []);
         }
-        $lone = array_intersect_key($packs, array_flip(self::SHARED)) !== [] && !isset($packs['node']);
+        $lone = array_intersect_key($packs, array_flip(array_diff(self::SHARED, ['layout']))) !== [] && !isset($packs['node']);
         if ($lone) return ['ok' => false, 'error' => 'pack', 'name' => 'config/node.php', 'adds' => []];
         $types = array_values(array_unique(array_merge(array_keys((array)($packs['node']['types'] ?? [])), array_keys((array)($sites['node']['types'] ?? [])))));
         $adds = [];

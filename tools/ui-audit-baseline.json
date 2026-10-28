@@ -1,5 +1,5 @@
 {
-    "generated": "2026-10-27T10:44:55Z",
+    "generated": "2026-10-28T08:32:12Z",
     "themes": {
         "admin": {
             "count": 0,
@@ -15,7 +15,7 @@
             "clash": 0,
             "classes": 0,
             "important": 14,
-            "tokens": 364,
+            "tokens": 367,
             "contrast": 0
         },
         "lite": {
@@ -24,7 +24,7 @@
             "dup": 0,
             "names": 0,
             "dead": 0,
-            "single": 201,
+            "single": 203,
             "alias": 0,
             "unsat": 0,
             "unmet": 0,
@@ -32,7 +32,7 @@
             "clash": 0,
             "classes": 0,
             "important": 10,
-            "tokens": 456,
+            "tokens": 459,
             "contrast": 0
         }
     },
@@ -61,6 +61,7 @@
             "--sl-btn-mini-width",
             "--sl-btn-shadow",
             "--sl-btn-width",
+            "--sl-builder-width",
             "--sl-capsule-max-width",
             "--sl-changelog-body-border",
             "--sl-changelog-files-height",
@@ -177,6 +178,8 @@
             "--sl-footer-shadow",
             "--sl-form-label-width",
             "--sl-form-width",
+            "--sl-gauge-bg",
+            "--sl-gauge-shadow",
             "--sl-gauge-width",
             "--sl-grad-line",
             "--sl-grad-progress-1",
@@ -577,10 +580,12 @@
             "--sl-fresh-month-dur",
             "--sl-fresh-now-dur",
             "--sl-fresh-week-dur",
+            "--sl-gauge-bg",
             "--sl-gauge-height",
             "--sl-gauge-min-height",
             "--sl-gauge-min-width",
             "--sl-gauge-mix",
+            "--sl-gauge-shadow",
             "--sl-gauge-width",
             "--sl-grad-caption",
             "--sl-grad-gloss",
@@ -766,6 +771,7 @@
             "--sl-select-height",
             "--sl-sep-height",
             "--sl-session-gap",
+            "--sl-shadow-color",
             "--sl-shadow-float",
             "--sl-shadow-focus",
             "--sl-shadow-inset",

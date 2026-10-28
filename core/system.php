@@ -2620,7 +2620,7 @@ function getConfigJournal(): array {
     return $out;
 }
 
-# Finish the unfinished config operation under the shared lock; a Node operation proves its side by a locking read of the type row, and the run is repeatable
+# Finish the unfinished config operation under the shared lock; a Node operation proves its side by a locking read of the type row, a publication of the layout by its witness row
 function setConfigRestore(string $force = ''): bool {
     global $db;
     require_once BASE_DIR.'/core/classes/filemanager.php';
@@ -2643,6 +2643,14 @@ function setConfigRestore(string $force = ''): bool {
             $db->setSqlRollback();
             $side = ($now === $proof['new']) ? 'new' : (($now === $proof['old'] && $now > -1) ? 'old' : '');
         }
+        $wit = $proof && ($proof['kind'] ?? '') === 'layout' && in_array($proof['table'] ?? '', ['blocks', 'routes'], true) && is_int($proof['id'] ?? null);
+        $wit = $wit && is_string($proof['old'] ?? null) && is_string($proof['new'] ?? null) && $proof['old'] !== $proof['new'] && $db instanceof Database;
+        if ($wit) require_once BASE_DIR.'/core/classes/layout.php';
+        if ($wit && $db->setSqlBegin()) {
+            $hash = Layout::getWitnessHash($db, $proof['table'], $proof['id']);
+            $db->setSqlRollback();
+            $side = ($hash === $proof['new']) ? 'new' : (($hash === $proof['old']) ? 'old' : '');
+        }
         if ($side !== '') {
             $done = true;
             foreach ($jour['files'] as $file => $one) {
@@ -2651,7 +2659,7 @@ function setConfigRestore(string $force = ''): bool {
                 if ($code === false || ($code === '' && $one[$side] !== '') || !setConfigSource(CONFIG_DIR.'/'.$file, $code)) $done = false;
             }
             $pub = $done ? getConfig(true) : [];
-            $done = $pub !== [] && (!$proof || (($pub['node']['types'][$name]['version'] ?? 0) === $now));
+            $done = $pub !== [] && (!$good || (($pub['node']['types'][$name]['version'] ?? 0) === $now));
             if ($done && $force === '') Cache::deleteAll();
             foreach ($jour['files'] as $file => $one) {
                 $hash = is_file(CONFIG_DIR.'/'.$file) ? (string)sha1_file(CONFIG_DIR.'/'.$file) : '';
@@ -2675,7 +2683,7 @@ function setConfigRestore(string $force = ''): bool {
 # Save config sources and publish local.php under the shared lock; the string form stores scalars as strings with LF endings, because a textarea posts CRLF
 function setConfigFile(string|Closure $fp, array $arr = [], array $act = []): bool {
     static $reserved = ['system.php', 'header.php', 'chmod.php', 'local.php'];
-    static $shared = ['node', 'fields', 'uploads', 'ratings'];
+    static $shared = ['node', 'fields', 'uploads', 'ratings', 'layout'];
     static $busy = false;
     $call = $fp instanceof Closure;
     if ($busy || ($call && ($arr || $act))) return false;
@@ -4431,6 +4439,7 @@ function getAdminDock(): string {
         'option_url' => HOME_PATH.$afile.'.php',
         'option_token' => getSiteToken('option'),
         'page' => getAdminPageLink(),
+        'build' => isAdmin(true) ? ['href' => HOME_PATH.$afile.'.php?name=layout', 'label' => _LAYOUT_BUILDER, 'is_here' => defined('ADMIN_FILE') && $name === 'layout'] : [],
         'queue' => $queue,
         'queue_sum' => array_sum(array_column($queue, 'num')),
         'queue_url' => HOME_PATH.'index.php?go=5&op=getAdminQueueData&token='.getSiteToken(),

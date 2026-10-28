@@ -37,7 +37,7 @@ if (PHP_SAPI !== 'cli') {
 error_reporting(E_ALL);
 ini_set('display_errors', '0');
 $rwork = str_replace('\\', '/', (string)($argv[1] ?? sys_get_temp_dir().'/slaed_node_route'));
-if (in_array($argv[2] ?? '', ['view', 'comments', 'ext', 'syncext', 'integext', 'guardext', 'treeext', 'seoext', 'buildext', 'masterext', 'pageext'], true)) {
+if (in_array($argv[2] ?? '', ['view', 'comments', 'ext', 'syncext', 'integext', 'guardext', 'treeext', 'seoext', 'buildext', 'masterext', 'pageext', 'pubext', 'restext'], true)) {
     $probework = $rwork.'/child';
     $rdirs = ['CONFIG_DIR' => 'config', 'BACKUP_DIR' => 'backup', 'CACHE_DIR' => 'cache', 'UPLOADS_DIR' => 'uploads', 'UPDATE_DIR' => 'update', 'LAYOUT_DIR' => 'layout',
         'SITEMAP_DIR' => 'sitemap'];
@@ -49,7 +49,8 @@ if (in_array($argv[2] ?? '', ['view', 'comments', 'ext', 'syncext', 'integext', 
     require_once BASE_DIR.'/core/system.php';
     $rchild = ['view' => 'getRouteViewData', 'comments' => 'getRouteCommentData', 'ext' => 'getRouteExtData', 'syncext' => 'getRouteSyncData',
         'integext' => 'getRouteIntegData', 'guardext' => 'getRouteGuardData', 'treeext' => 'getRouteTreeData',
-        'seoext' => 'getRouteSeoData', 'buildext' => 'getRouteBuildData', 'masterext' => 'getRouteMasterData', 'pageext' => 'getRoutePageData'][$argv[2]];
+        'seoext' => 'getRouteSeoData', 'buildext' => 'getRouteBuildData', 'masterext' => 'getRouteMasterData', 'pageext' => 'getRoutePageData', 'pubext' => 'getRoutePublishData',
+        'restext' => 'getRouteRestoreData'][$argv[2]];
     echo json_encode($rchild());
     exit;
 }
@@ -4077,6 +4078,118 @@ function getRouteBlocks(PDO $pdo): array {
     return $out;
 }
 
+# The publish run: the page layout with its addresses and three blocks, two on the right and one on the left
+function addRoutePublishConf(PDO $pdo, string $work): void {
+    $pre = RPREF.'_';
+    setRouteFile($work.'/config/layout.php', getRoutePageLayout([]));
+    $pdo->exec('INSERT INTO '.$pre.'routes (path, kind, oid, state) VALUES (\'about-us\', \'page\', 10, 1), (\'members\', \'page\', 11, 1), (\'hidden\', \'page\', 12, 1),'
+        .' (\'docs-page\', \'page\', 13, 1), (\'news\', \'type\', 1, 1), (\'docs\', \'type\', 2, 1)');
+    $pdo->exec('DELETE FROM '.$pre.'blocks');
+    $st = $pdo->prepare('INSERT INTO '.$pre.'blocks (id, bkey, title, content, url, bpos, weight, status, refresh, time, lang, bfile, view, expire, action, which, param)'
+        .' VALUES (?, \'\', ?, ?, \'\', ?, ?, 1, 0, 0, \'\', \'\', 0, NULL, \'d\', \'all\', \'\')');
+    foreach ([[90, 'Right all', 'right text', 'r', 1], [91, 'Second', 'second text', 'r', 2], [92, 'Left one', 'left text', 'l', 1]] as $row) $st->execute($row);
+}
+
+# The child pubext publishes over a connection whose commit reports a failure: drop never commits, lost commits and reports one all the same; no panel code runs
+function getRoutePublishData(): array {
+    global $conf, $argv;
+    $mode = (string)($argv[3] ?? '');
+    $cdb = $conf['db'];
+    $lost = new class($cdb['host'], $cdb['uname'], $cdb['pass'], $cdb['name'], $cdb['collate']) extends Database {
+        public bool $keep = false;
+        function setSqlCommit(): bool {
+            if ($this->keep) parent::setSqlCommit();
+            return false;
+        }
+    };
+    $lost->keep = $mode === 'lost';
+    $data = $conf['layout'];
+    $data['pages'][10]['title'] = 'About '.$mode;
+    $work = static function () use ($lost): array {
+        if ($lost->getSqlQuery('UPDATE '.PREFIX_DB.'_blocks SET title = :title WHERE id = 90', ['title' => 'Unsure']) === false) throw new RuntimeException('probe');
+        return [];
+    };
+    $res = Layout::setPublish($lost, $data, Layout::getLayoutHash($conf['layout']), [90], $work);
+    $jour = getConfigJournal();
+    return ['state' => $res['state'], 'why' => $jour['why'] ?? '', 'types' => $jour['types'] ?? null, 'marker' => is_file(BACKUP_DIR.'/config/marker.json'),
+        'proof' => [$jour['proof']['kind'] ?? '', $jour['proof']['table'] ?? '', $jour['proof']['id'] ?? 0]];
+}
+
+# The child restext finishes the operation the child pubext left by its witness row in a process of its own, as the restore screen of the panel does
+function getRouteRestoreData(): array {
+    global $db;
+    $done = setConfigRestore();
+    $lay = (static fn(string $file): mixed => include $file)(CONFIG_DIR.'/layout.php');
+    $row = $db->getSqlRow($db->getSqlQuery('SELECT title FROM '.PREFIX_DB.'_blocks WHERE id = 90'));
+    return ['done' => $done, 'page' => $lay['layout']['pages'][10]['title'] ?? '', 'block' => (string)($row[0] ?? ''), 'marker' => is_file(BACKUP_DIR.'/config/marker.json')];
+}
+
+# The publication over real requests: the acts of the screen make the draft, another editor, a changed site and a changed block refuse it, then it goes live and comes back
+function getRoutePublish(PDO $pdo, string $work): array {
+    $pre = RPREF.'_';
+    $file = $work.'/config/layout.php';
+    $attr = static fn(string $html, string $name): string => preg_match('#'.$name.'="([^"]*)"#', $html, $hit) ? html_entity_decode($hit[1]) : '';
+    $screen = getRouteReply('root', 'GET', 'admin.php?name=layout')['body'];
+    [$tok, $ed, $rev, $live] = [$attr($screen, 'data-sl-lay-token'), $attr($screen, 'data-sl-lay-ed'), $attr($screen, 'data-sl-lay-rev'), $attr($screen, 'data-sl-lay-live')];
+    $post = static function (string $op, array $pars, array $over = []) use (&$rev, $tok, $ed, $live, $attr): array {
+        $send = array_replace($pars + ['token' => $tok, 'ed' => $ed, 'rev' => $rev, 'live' => $live, 'page' => '1'], $over);
+        $one = getRouteReply('root', 'POST', 'admin.php?name=layout&op='.$op, $send);
+        $rev = $attr($one['body'], 'data-sl-lay-rev') ?: $rev;
+        $evs = json_decode($one['head']['hx-trigger'] ?? '{}', true) ?: [];
+        return ['code' => $one['code'], 'text' => (string)($evs['sl-quick-note'] ?? ($evs['sl-layout-saved']['text'] ?? '')), 'body' => $one['body']];
+    };
+    $draft = static fn(): array => json_decode((string)file_get_contents($work.'/layout/draft.json'), true) ?: [];
+    $trace = function () use ($pdo, $pre, $file, $work): array {
+        $routes = $pdo->query('SELECT oid, path, state FROM '.$pre.'routes WHERE kind = \'page\' ORDER BY oid, path')->fetchAll(PDO::FETCH_NUM);
+        $blocks = $pdo->query('SELECT id, title, bpos, weight, status FROM '.$pre.'blocks ORDER BY bpos, weight, id')->fetchAll(PDO::FETCH_NUM);
+        return ['file' => sha1_file($file), 'routes' => array_map(static fn(array $v): string => implode(':', $v), $routes),
+            'blocks' => array_map(static fn(array $v): string => implode(':', $v), $blocks), 'story' => array_map('basename', glob($work.'/layout/pub-*.json') ?: []),
+            'marker' => is_file($work.'/backup/config/marker.json')];
+    };
+    $out = ['marks' => [$tok !== '', strlen($ed) === 12, strlen($rev) === 16, strlen($live) === 40]];
+    $out['acts'] = [$post('act', ['act' => 'blk-del', 'id' => '91'])['code'], $post('save', ['sel' => 'blk:90', 'field[title]' => 'Right now'])['code'],
+        $post('act', ['act' => 'blk-add'])['code'], $post('act', ['act' => 'page-add'])['code'], $post('act', ['act' => 'page-del', 'id' => '12'])['code'],
+        $post('save', ['sel' => 'page:10', 'field[addr]' => 'about-team'])['code']];
+    $before = $trace();
+    $pages = count($draft()['layout']['pages'] ?? []);
+    $other = $post('act', ['act' => 'page-add'], ['ed' => 'otherone', 'rev' => 'stale']);
+    $out['other'] = [$other['text'], count($draft()['layout']['pages'] ?? []) === $pages];
+    $orig = (string)file_get_contents($file);
+    $data = (static fn(string $one): mixed => include $one)($file);
+    $data['layout']['pages'][1]['title'] = 'Changed elsewhere';
+    setRouteFile($file, $data);
+    $stale = $post('act', ['act' => 'publish']);
+    file_put_contents($file, $orig);
+    $out['stale'] = [$stale['text'], $trace() === $before];
+    $pdo->exec('UPDATE '.$pre.'blocks SET title = \'Elsewhere\' WHERE id = 91');
+    $moved = $post('act', ['act' => 'publish']);
+    $pdo->exec('UPDATE '.$pre.'blocks SET title = \'Second\' WHERE id = 91');
+    $out['moved'] = [$moved['text'], $trace() === $before, ($draft()['blocks'] ?? []) !== []];
+    $done = $post('act', ['act' => 'publish']);
+    $lay = (static fn(string $one): mixed => include $one)($file)['layout'];
+    $dft = $draft();
+    $story = (static fn(string $one): mixed => json_decode((string)file_get_contents($one), true))($work.'/layout/pub-1.json');
+    $out['done'] = ['text' => $done['text'], 'trace' => $trace(), 'pages' => array_keys($lay['pages']), 'addr' => [$lay['pages'][10]['addr'], $lay['pages'][60]['addr'] ?? ''],
+        'shipped' => $lay['shipped'], 'draft' => [$dft['blocks'], $dft['bwas'], $dft['undo']], 'story' => [$story['num'] ?? 0, $story['by'] ?? '', count($story['blocks'] ?? [])],
+        'live' => str_contains($done['body'], 'sl-chip-success')];
+    $out['visit'] = [];
+    foreach (['about-us', 'about-team', 'hidden', (string)($lay['pages'][60]['addr'] ?? 'none')] as $path) {
+        $one = getRouteReply('', 'GET', $path, [], [], false);
+        $out['visit'][] = $one['code'].' '.str_replace('http://127.0.0.1:'.$GLOBALS['rport'], '~', $one['head']['location'] ?? '');
+    }
+    $list = getRouteReply('root', 'GET', 'admin.php?name=layout&op=story')['body'];
+    $out['list'] = [substr_count($list, 'data-sl-lay-act="story-back"'), str_contains($list, 'сейчас на сайте'), str_contains($list, 'root')];
+    $post('act', ['act' => 'page-add']);
+    $back = $post('act', ['act' => 'story-back', 'id' => '1']);
+    $out['back'] = [$back['text'] !== '', str_contains($back['body'], 'sl-chip-success'), count($draft()['undo'] ?? [])];
+    foreach (['drop', 'lost'] as $mode) {
+        $pub = json_decode((string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg(__FILE__).' '.escapeshellarg($work).' pubext '.$mode.' 2>&1'), true);
+        $back = json_decode((string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg(__FILE__).' '.escapeshellarg($work).' restext 2>&1'), true);
+        $out['unsure'][$mode] = [$pub, $back];
+    }
+    return $out;
+}
+
 # The child favhold of the intact run holds the account of anna with one more favorite for two seconds, as a parallel request at the limit does before its commit
 if (($argv[2] ?? '') === 'favhold') {
     $hpdo = getRoutePdo((string)($argv[3] ?? ''));
@@ -4129,6 +4242,7 @@ try {
     if (($argv[2] ?? '') === 'master') addRouteMasterConf($rpdo, $rwork);
     if (($argv[2] ?? '') === 'page') addRoutePageConf($rpdo, $rwork);
     if (($argv[2] ?? '') === 'blocks') addRouteBlockConf($rpdo, $rwork);
+    if (($argv[2] ?? '') === 'publish') addRoutePublishConf($rpdo, $rwork);
     $rproc = addRouteServer($rwork, $rport);
     if (($argv[2] ?? '') === 'serve') {
         fwrite(STDERR, 'serving on '.$rport.' with '.$rbase."\n");
@@ -4181,6 +4295,8 @@ try {
         $report['runs']['page'] = getRoutePage($rwork);
     } elseif (($argv[2] ?? '') === 'blocks') {
         $report['runs']['blocks'] = getRouteBlocks($rpdo);
+    } elseif (($argv[2] ?? '') === 'publish') {
+        $report['runs']['publish'] = getRoutePublish($rpdo, $rwork);
     } elseif (($argv[2] ?? '') === 'time') {
         $report['runs']['time'] = getRouteTime($rpdo, $rwork);
     } elseif (($argv[2] ?? '') === 'null') {

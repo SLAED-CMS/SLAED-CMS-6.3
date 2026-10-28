@@ -22,22 +22,25 @@ final class Layout {
     private const TYPE = '/^[a-z][a-z0-9-]{0,39}$/D';
 
     # The draft in LAYOUT_DIR is JSON and never PHP: it is written from the edits, so no include may ever run it
-    private const DRAFT = 'draft.json';
+    public const DRAFT = 'draft.json';
+
+    # The publications LAYOUT_DIR keeps beside the draft, each a JSON file pub-<number>.json; an older one goes with the next publication
+    public const HISTORY = 10;
 
     # The key of a field in a description: no underscore, so the names derived with one (text_html, side_right) never meet a field; items and parts are the lists it adds
-    private const FIELD = '/^[a-z][a-z0-9]{0,31}$/D';
+    public const FIELD = '/^[a-z][a-z0-9]{0,31}$/D';
 
     # The nine points of a picture its crop keeps in view, as object-position takes them
-    private const FOCUS = ['left top', 'center top', 'right top', 'left center', 'center', 'right center', 'left bottom', 'center bottom', 'right bottom'];
+    public const FOCUS = ['left top', 'center top', 'right top', 'left center', 'center', 'right center', 'left bottom', 'center bottom', 'right bottom'];
 
     # The tones a section gives its icons or figures; the tone text is the colour of the words and prints none
-    private const TONES = ['primary', 'success', 'warning', 'accent', 'danger'];
+    public const TONES = ['primary', 'success', 'warning', 'accent', 'danger'];
 
     # The name of a Bootstrap icon, the icon contract every theme ships
-    private const ICON = '/^[a-z0-9]+(?:-[a-z0-9]+)*$/D';
+    public const ICON = '/^[a-z0-9]+(?:-[a-z0-9]+)*$/D';
 
     # The anchor of a section, the id a link to its place on the page names
-    private const ANCHOR = '/^[A-Za-z][A-Za-z0-9_-]{0,63}$/D';
+    public const ANCHOR = '/^[A-Za-z][A-Za-z0-9_-]{0,63}$/D';
 
     # An address of a YouTube film in each form its site gives, the id of the film caught
     private const TUBE = '#^https?://(?:www\.|m\.)?(?:youtube(?:-nocookie)?\.com/(?:watch\?(?:[^\#]*&)?v=|embed/|shorts/|live/)|youtu\.be/)([A-Za-z0-9_-]{11})(?![A-Za-z0-9_-])#';
@@ -77,6 +80,79 @@ final class Layout {
     public static function checkDraftToken(int $key, string $token, int $link): bool {
         if (preg_match('/^([1-9][0-9]{0,10})\.[0-9a-f]{64}$/D', $token, $hit) !== 1 || (int)$hit[1] < time()) return false;
         return hash_equals(self::getDraftToken($key, (int)$hit[1], $link), $token);
+    }
+
+    # The checksum an editor keeps of the published layout it opened, taken over the one shape, so the text and the native form of the file agree
+    public static function getLayoutHash(array $data): string {
+        return sha1((string)json_encode(self::getLayoutData($data), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
+    }
+
+    # The fingerprint of a witness of a publication read FOR UPDATE: a row of _blocks by its id or the rows of _routes of a page, empty for none, null when unread
+    public static function getWitnessHash(Database $db, string $table, int $id): ?string {
+        $sql = match ($table) {
+            'blocks' => 'SELECT id, bkey, title, content, url, bpos, weight, status, refresh, time, lang, bfile, view, expire, action, which, param FROM '.PREFIX_DB.'_blocks'
+                .' WHERE id = :id FOR UPDATE',
+            'routes' => 'SELECT path, state FROM '.PREFIX_DB.'_routes WHERE kind = \'page\' AND oid = :id ORDER BY path FOR UPDATE',
+            default => '',
+        };
+        $res = ($sql !== '') ? $db->getSqlQuery($sql, ['id' => $id]) : false;
+        if ($res === false) return null;
+        $rows = $res->fetchAll(PDO::FETCH_ASSOC);
+        return $rows ? sha1((string)json_encode($rows, JSON_INVALID_UTF8_SUBSTITUTE)) : '';
+    }
+
+    # Publish a layout in the writer of the shared areas: the file it was opened on is checked, the rows and the addresses go in one transaction, a changed row is the proof
+    public static function setPublish(Database $db, array $data, string $live, array $bids, ?Closure $work): array {
+        $state = ['state' => 'aborted', 'text' => '', 'key' => 0, 'data' => array_replace(self::getLayoutData($data), ['shipped' => false]), 'proof' => []];
+        $route = new Route($db);
+        $done = setConfigFile(static function (array $base, Closure $save) use ($db, $route, $live, $bids, $work, &$state): string {
+            $open = false;
+            try {
+                if (self::getLayoutHash($base['layout']) !== $live) {
+                    $state['state'] = 'stale';
+                    return 'aborted';
+                }
+                $data = $state['data'];
+                $keys = (new self($data, '', false, false))->getAddressKeys();
+                $paths = $route->getRouteList('page', array_merge($keys, array_keys(self::getLayoutData($base['layout'])['pages'])));
+                $gone = array_values(array_filter(array_keys($paths), static fn(int $v): bool => !isset($data['pages'][$v])));
+                $moves = array_values(array_filter($keys, static fn(int $v): bool => ($paths[$v] ?? '') === '' || $paths[$v] !== (string)($data['pages'][$v]['addr'] ?? '')));
+                $open = $bids !== [] || $work !== null || $gone !== [] || $moves !== [];
+                if ($open && !$db->setSqlBegin()) throw new RuntimeException('Layout: the transaction cannot be started');
+                $olds = [];
+                foreach ($bids as $bid) $olds['blocks:'.$bid] = self::getWitnessHash($db, 'blocks', $bid);
+                foreach (array_merge($gone, $moves) as $key) $olds['routes:'.$key] = self::getWitnessHash($db, 'routes', $key);
+                foreach ($work ? $work() : [] as $bid) $olds['blocks:'.$bid] = '';
+                foreach ($gone as $key) if (!$route->deleteRoute('page', $key)) throw new RuntimeException('Layout: the address of a deleted page cannot be marked gone');
+                foreach ($moves as $key) {
+                    $path = $route->setRouteName('page', $key, '', (string)($data['pages'][$key]['addr'] ?? ''), (string)($data['pages'][$key]['title'] ?? ''));
+                    [$state['state'], $state['key']] = ($path === '') ? ['address', $key] : ['aborted', 0];
+                    if ($path === '') throw new DomainException('The address of a page is refused');
+                    $data['pages'][$key]['addr'] = $path;
+                }
+                $proof = [];
+                foreach ($olds as $one => $old) {
+                    [$table, $id] = explode(':', $one);
+                    $new = self::getWitnessHash($db, $table, (int)$id);
+                    if ($old === null || $new === null) throw new RuntimeException('Layout: a witness row cannot be read');
+                    if ($old === $new) continue;
+                    $proof = ['kind' => 'layout', 'table' => $table, 'id' => (int)$id, 'old' => $old, 'new' => $new];
+                    break;
+                }
+                $base['layout'] = $data;
+                if (!$save($base, $proof)) throw new RuntimeException('Layout: the configuration package cannot be saved');
+                [$state['data'], $state['proof']] = [$data, $proof];
+            } catch (Throwable $err) {
+                if ($open) $db->setSqlRollback();
+                if ($state['state'] === 'aborted' && $err instanceof DomainException) [$state['state'], $state['text']] = ['refused', $err->getMessage()];
+                if ($state['state'] === 'aborted') Logger::addSite('error', 'Layout: a publication failed', ['error' => $err->getMessage()]);
+                return 'aborted';
+            }
+            $state['state'] = ($open && !$db->setSqlCommit()) ? 'uncertain' : 'committed';
+            return $state['state'];
+        });
+        if (!$done && $state['state'] === 'committed') $state['state'] = 'uncertain';
+        return $state;
     }
 
     # The draft as its layout and the counter of its links, or an empty array while there is none or it does not read
@@ -372,21 +448,26 @@ final class Layout {
         return [$key.'_frame' => $val, $key.'_host' => strtolower($part['host'])] + $out;
     }
 
-    # One value of a type of Field, made canonical by Field itself; the key stands for the label of an option, whose constant of the panel the site never loads
-    private function getTypeValue(string $key, string $type, array $one, mixed $val): mixed {
-        $none = in_array($type, ['bool', 'int'], true) ? null : '';
+    # The rule of Field for one field of a description, never required; the key stands for the label of an option, whose constant of the panel the site never loads
+    public static function getFieldRule(string $key, string $type, array $one): array {
         $opts = [];
         if ($type === 'select') {
             $items = [];
             $list = is_array($one['options'] ?? null) ? array_keys($one['options']) : [];
-            foreach ($list as $opt) $items[$opt] = ['title' => (string)$opt, 'active' => true, 'sort' => count($items)];
+            foreach ($list as $opt) $items[$opt] =['title' => (string)$opt, 'active' => true, 'sort' => count($items)];
             $opts['items'] = $items;
         }
         foreach (['min', 'max'] as $lim) if (isset($one[$lim])) $opts[$lim] = $one[$lim];
-        $rule = ['title' => $key, 'intro' => '', 'type' => $type, 'default' => $none, 'options' => $opts, 'req' => false, 'multi' => false, 'active' => true, 'sort' => 0];
+        $none = in_array($type, ['bool', 'int'], true) ? null : '';
+        return ['title' => $key, 'intro' => '', 'type' => $type, 'default' => $none, 'options' => $opts, 'req' => false, 'multi' => false, 'active' => true, 'sort' => 0];
+    }
+
+    # One value of a type of Field, made canonical by Field itself; a value that fails prints as absent
+    private function getTypeValue(string $key, string $type, array $one, mixed $val): mixed {
+        $none = in_array($type, ['bool', 'int'], true) ? null : '';
         $this->fld ??= new Field();
         try {
-            $out = $this->fld->filterFieldValues([$key => $rule], [$key => $val])[$key] ?? $none;
+            $out = $this->fld->filterFieldValues([$key => self::getFieldRule($key, $type, $one)], [$key => $val])[$key] ?? $none;
         } catch (InvalidArgumentException) {
             $out = $none;
         }
