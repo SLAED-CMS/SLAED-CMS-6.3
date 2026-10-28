@@ -1,14 +1,14 @@
 {% if look_line %}
 <div class="sl-pres-tech sl-sec-cols-{{ cols }}">
-  {% for item in items %}<div class="sl-pres-tech-card"{% if tone %} data-sl-tone="{{ tone }}"{% endif %}><i class="bi bi-{{ item.icon }}" aria-hidden="true"></i><div><b>{{ item.title }}</b><span class="sl-sec-lines">{{ item.text }}</span></div></div>{% endfor %}
+  {% for item in items %}<div class="sl-pres-tech-card"{% if tone %} data-sl-tone="{{ tone }}"{% endif %}><i class="bi bi-{{ item.icon }}" aria-hidden="true"></i><div><b{% if is_build %} data-sl-text="items.{{ item.order_num }}.title"{% endif %}>{{ item.title }}</b><span class="sl-sec-lines"{% if is_build %} data-sl-text="items.{{ item.order_num }}.text" data-sl-lines{% endif %}>{{ item.text }}</span></div></div>{% endfor %}
 </div>
 {% else %}
 <div class="sl-pres-dna sl-sec-cols-{{ cols }}">
   {% for item in items %}<article class="sl-pres-principle">
     {% if item.photo %}<img src="{{ item.photo }}" width="1920" height="440" alt="" style="--sl-d-focus: {{ item.focus }}" loading="lazy" decoding="async">{% endif %}
     <div class="sl-pres-principle-copy">
-      <header{% if tone %} data-sl-tone="{{ tone }}"{% endif %}><i class="bi bi-{{ item.icon }}" aria-hidden="true"></i><h3>{{ item.title }}</h3></header>
-      <p class="sl-sec-lines">{{ item.text }}</p>
+      <header{% if tone %} data-sl-tone="{{ tone }}"{% endif %}><i class="bi bi-{{ item.icon }}" aria-hidden="true"></i><h3{% if is_build %} data-sl-text="items.{{ item.order_num }}.title"{% endif %}>{{ item.title }}</h3></header>
+      <p class="sl-sec-lines"{% if is_build %} data-sl-text="items.{{ item.order_num }}.text" data-sl-lines{% endif %}>{{ item.text }}</p>
     </div>
   </article>{% endfor %}
 </div>

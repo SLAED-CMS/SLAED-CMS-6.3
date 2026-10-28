@@ -1,5 +1,6 @@
 /* The screen of the site builder (admin/modules/layout.php): picks fetch the inspector, every act posts to the draft and the answer swaps the tree,
-   the inspector and the state out of band, then raises sl-layout-saved, on which the frame of the page reloads where it stood */
+   the inspector and the state out of band, then raises sl-layout-saved, on which the frame of the page reloads where it stood; the page in the frame
+   runs plugins/system/builder.js, whose messages pick, type, move and act as the screen does */
 (function () {
     var app = document.querySelector('[data-sl-lay-app]');
     if (!app || !window.htmx) return;
@@ -13,6 +14,7 @@
     var dest = document.getElementById('sl-lay-dest');
     var edit = document.getElementById('sl-lay-edit');
     var link = document.getElementById('sl-lay-link');
+    var help = document.getElementById('sl-lay-help');
     var bar = app.querySelector('[data-sl-lay-preview]');
     // The widths of the devices of the top bar, written as --sl-d-device; the computer takes the whole stage
     var devices = { desk: '', tablet: '768px', phone: '390px' };
@@ -41,15 +43,27 @@
         window.htmx.ajax('POST', app.getAttribute('data-sl-lay-post'), { source: app, swap: 'none', values: values });
     }
 
-    // Pick a part: the tree marks its row, the inspector comes from the server
-    function setPick(sel) {
+    // Pick a part: the tree marks its row, the inspector comes from the server, the page in the frame rings it unless the pick came from there
+    function setPick(sel, still) {
         state.sel = sel;
         app.querySelectorAll('#sl-lay-tree a[aria-current]').forEach(function (one) { one.removeAttribute('aria-current'); });
         var row = sel ? app.querySelector('#sl-lay-tree a[data-sl-lay-pick="' + sel + '"]') : null;
         if (row) row.setAttribute('aria-current', 'page');
         var url = app.getAttribute('data-sl-lay-get-insp') + '&page=' + encodeURIComponent(state.page) + '&sel=' + encodeURIComponent(sel);
         window.htmx.ajax('GET', url, { target: '#sl-lay-insp', swap: 'outerHTML' });
+        if (!still) setFramePost({ sl: 'pick', sel: sel, scroll: true });
         setPlace();
+    }
+
+    // Tell the page in the frame, whose builder.js listens for the screen of its own site only
+    function setFramePost(msg) {
+        try { frame.contentWindow.postMessage(msg, window.location.origin); } catch (e) { return; }
+    }
+
+    // The tab of the tree that lists a pick: a part of the theme, a menu, or the page with its sections and blocks
+    function getPickTab(sel) {
+        if (sel.indexOf('part:') === 0) return 'theme';
+        return sel.indexOf('menu:') === 0 ? 'menu' : 'page';
     }
 
     // Show the tree of a tab
@@ -130,13 +144,72 @@
         setFrame();
     }
 
-    // Esc inside the page of the frame leaves the preview as it does on the screen; the frame is of this site, so its window is reachable
+    // The keys pressed in the page of the frame are the keys of the screen; the frame is of this site, so its window is reachable
     frame.addEventListener('load', function () {
-        try {
-            frame.contentWindow.addEventListener('keydown', function (event) {
-                if (event.key === 'Escape' && app.hasAttribute('data-sl-lay-full')) setPreview(false);
-            });
-        } catch (e) { return; }
+        try { frame.contentWindow.addEventListener('keydown', setKey, true); } catch (e) { return; }
+    });
+
+    // The names of the rings and the words of the toolbar for the page in the frame, with the pick it shows; the names come with every write in the state
+    function setFrameInit() {
+        var mark = document.getElementById('sl-lay-state');
+        var names = {};
+        var words = {};
+        try { names = JSON.parse(mark ? mark.getAttribute('data-sl-lay-names') || '{}' : '{}'); } catch (e) { names = {}; }
+        try { words = JSON.parse(app.getAttribute('data-sl-lay-words') || '{}'); } catch (e) { words = {}; }
+        setFramePost({ sl: 'init', sel: state.sel, names: names, words: words });
+    }
+
+    // A pick made on the page: the inspector comes, and the tree turns to the tab that lists it
+    function setPickFrom(sel) {
+        var tab = getPickTab(sel);
+        setPick(sel, true);
+        if (sel && tab !== state.tab) setTab(tab);
+    }
+
+    // The field a mark of the page names: the key of a section or a part, or an item by its place in the list, items.01.title the first one
+    function getTextPath(path) {
+        var part = String(path || '').split('.');
+        return part.length === 3 ? { key: part[2], num: String(parseInt(part[1], 10) - 1) } : { key: part[0], num: '' };
+    }
+
+    // A text typed on the page is saved as the inspector saves its field, and the inspector is drawn again with it
+    function setText(sel, path, value) {
+        var one = getTextPath(path);
+        var values = { token: app.getAttribute('data-sl-lay-token'), page: state.page, sel: sel, tab: getPickTab(sel), redraw: 1 };
+        values[one.num === '' ? 'field[' + one.key + ']' : 'item[' + one.num + '][' + one.key + ']'] = value;
+        window.htmx.ajax('POST', app.getAttribute('data-sl-lay-save'), { source: app, swap: 'none', values: values });
+    }
+
+    // An act of the toolbar of a section on the page: the acts of the foot of its inspector, the library after it, the link to its anchor
+    function setFrameAct(act, sel) {
+        var acts = { up: 'sec-up', down: 'sec-down', dup: 'sec-dup', hide: 'sec-toggle', del: 'sec-del' };
+        if (sel.indexOf('sec:') !== 0) return;
+        if (act === 'add') return setLibrary();
+        if (act === 'link') {
+            var copy = app.querySelector('#sl-lay-insp [data-sl-lay-copy]');
+            if (copy && window.setCopyText) window.setCopyText(copy, new URL(copy.getAttribute('data-sl-lay-copy'), window.location.href).href);
+            return;
+        }
+        if (acts[act]) setAct(acts[act], sel.slice(4), '', sel);
+    }
+
+    // A message of the page in the frame: it is ready, a pick, a typed text, an act of its toolbar, a dragged section, a text for the editor window
+    window.addEventListener('message', function (event) {
+        var msg = event.data;
+        if (event.origin !== window.location.origin || event.source !== frame.contentWindow || !msg || !msg.sl) return;
+        var sel = String(msg.sel || '');
+        if (msg.sl === 'ready') return setFrameInit();
+        if (msg.sl === 'pick') return setPickFrom(sel);
+        if (msg.sl === 'text') return setText(sel, msg.path, String(msg.value));
+        if (msg.sl === 'act') return setFrameAct(String(msg.act || ''), sel);
+        if (msg.sl === 'move' && sel.indexOf('sec:') === 0) {
+            return setAct('sec-move', sel.slice(4), String(parseInt(msg.to, 10) || 0) + '-' + (msg.after ? 1 : 0), sel);
+        }
+        if (msg.sl === 'open') {
+            var one = getTextPath(msg.path);
+            if (sel !== state.sel) setPickFrom(sel);
+            setEdit(one.key, one.num);
+        }
     });
 
     // The recent types lead the library, three of them, the last put first: a convenience of this browser
@@ -207,6 +280,14 @@
         setWindowFrom(story, app.getAttribute('data-sl-lay-get-story'), '#sl-lay-story-list');
     }
 
+    // The help of the screen: the text of the tab "Справка" of the panel without its frame, fetched on the first opening
+    function setHelp() {
+        var body = document.getElementById('sl-lay-help-body');
+        if (body.childElementCount) return window.setWindowOpen(help);
+        window.htmx.ajax('GET', app.getAttribute('data-sl-lay-get-help'), { target: body, swap: 'innerHTML', select: '.sl-markdown' })
+            .then(function () { window.setWindowOpen(help); });
+    }
+
     // The editor window of a text of the pick, a field of an item by its place; the frame of the editor comes from the server on each opening
     function setEdit(key, num) {
         var url = app.getAttribute('data-sl-lay-get-edit') + '&page=' + encodeURIComponent(state.page) + '&sel=' + encodeURIComponent(state.sel);
@@ -216,6 +297,7 @@
     // Open a window of the screen by its name
     function setOpen(name, id) {
         if (name === 'story') return setStory();
+        if (name === 'help') return setHelp();
         if (name === 'from') return setWindowFrom(edit, app.getAttribute('data-sl-lay-get-edit') + '&page=' + encodeURIComponent(state.page) + '&from=1');
         if (name === 'link') {
             link.querySelector('[data-sl-lay-link-box]').hidden = true;
@@ -247,15 +329,15 @@
         if (row.hasAttribute('data-sl-lay-goto')) return setPick(row.getAttribute('data-sl-lay-goto'));
         if (row.hasAttribute('data-sl-lay-href')) return window.location.assign(row.getAttribute('data-sl-lay-href'));
         if (cmd === 'lib') return setLibrary();
-        if (['sets', 'story', 'checks', 'publish', 'link'].indexOf(cmd) >= 0) return setOpen(cmd);
+        if (['sets', 'story', 'checks', 'publish', 'link', 'help'].indexOf(cmd) >= 0) return setOpen(cmd);
         if (cmd === 'page-add') return setOpen('ready');
         if (cmd === 'guest') return setGuest(!state.guest);
         if (cmd === 'preview') return setPreview(true);
         if (cmd.indexOf('tab-') === 0) return setTab(cmd.slice(4));
         if (cmd.indexOf('dev-') === 0) return setDevice(cmd.slice(4));
-        if (cmd === 'site' || cmd === 'help') {
-            var link = app.querySelector(cmd === 'site' ? '.sl-lay-tools a[href][target]' : '.sl-lay-tools a[href*="op=info"]');
-            if (link) window.open(link.href, '_blank', 'noopener');
+        if (cmd === 'site') {
+            var site = app.querySelector('.sl-lay-tools a[href][target]');
+            if (site) window.open(site.href, '_blank', 'noopener');
             return;
         }
         setAct(cmd);
@@ -458,7 +540,8 @@
     });
 
     /* Every write carries this editor and the draft and the site it saw, so a write of another editor in between is refused instead of overwritten;
-       a request of the tree asks for the pick and the page the screen holds now, not the ones its buttons were drawn with */
+       every request names the module of a page made in memory until it is written, and a request of the tree asks for the pick and the page the
+       screen holds now, not the ones its buttons were drawn with */
     document.addEventListener('htmx:configRequest', function (event) {
         var elt = event.detail.elt;
         var mark = document.getElementById('sl-lay-state');
@@ -467,6 +550,7 @@
             event.detail.parameters.rev = mark ? mark.getAttribute('data-sl-lay-rev') || '' : '';
             event.detail.parameters.live = mark ? mark.getAttribute('data-sl-lay-live') || '' : '';
         }
+        if (app.getAttribute('data-sl-lay-mod') && /[?&]name=layout(?:&|$)/.test(event.detail.path)) event.detail.parameters.mod = app.getAttribute('data-sl-lay-mod');
         if (!elt || !elt.closest || !elt.closest('#sl-lay-tree')) return;
         event.detail.parameters.page = state.page;
         if (!/sel=menu/.test(event.detail.path)) event.detail.parameters.sel = state.sel;
@@ -522,8 +606,8 @@
         }
     });
 
-    // Keys of the screen, taken before those of the panel: Ctrl+K the palette, Ctrl+Alt+P the preview, Ctrl+Z and Ctrl+Shift+Z or Ctrl+Y the steps, Esc the preview or the pick
-    window.addEventListener('keydown', function (event) {
+    // Keys of the screen and of its page, before those of the panel: Ctrl+K the palette, Ctrl+Alt+P the preview, Ctrl+Z, Ctrl+Shift+Z or Ctrl+Y the steps, Ctrl+D a copy, Esc
+    function setKey(event) {
         var ctrl = event.ctrlKey || event.metaKey;
         if (event.isComposing) return;
         if (ctrl && !event.altKey && !event.shiftKey && event.code === 'KeyK') {
@@ -543,8 +627,14 @@
             event.preventDefault();
             return setAct(event.code === 'KeyY' || event.shiftKey ? 'redo' : 'undo');
         }
+        if (ctrl && !event.altKey && !event.shiftKey && event.code === 'KeyD' && state.sel.indexOf('sec:') === 0) {
+            event.preventDefault();
+            return setAct('sec-dup', state.sel.slice(4));
+        }
         if (event.key === 'Escape' && state.sel) setPick('');
-    }, true);
+    }
+
+    window.addEventListener('keydown', setKey, true);
 
     var place = getKept('sl-lay-place');
     if (place && String(place.page) === String(state.page)) {

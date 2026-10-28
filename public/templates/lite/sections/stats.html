@@ -1,3 +1,3 @@
 <div class="sl-pres-facts">
-  {% for item in items %}<div class="sl-pres-stat"{% if tone %} data-sl-tone="{{ tone }}"{% endif %}><span>{{ item.label }}</span><b>{{ item.value }}{% if item.unit %} <small>{{ item.unit }}</small>{% endif %}</b></div>{% endfor %}
+  {% for item in items %}<div class="sl-pres-stat"{% if tone %} data-sl-tone="{{ tone }}"{% endif %}><span{% if is_build %} data-sl-text="items.{{ item.order_num }}.label"{% endif %}>{{ item.label }}</span><b>{% if is_build %}<span data-sl-text="items.{{ item.order_num }}.value">{{ item.value }}</span>{% else %}{{ item.value }}{% endif %}{% if item.unit %} <small{% if is_build %} data-sl-text="items.{{ item.order_num }}.unit"{% endif %}>{{ item.unit }}</small>{% endif %}</b></div>{% endfor %}
 </div>

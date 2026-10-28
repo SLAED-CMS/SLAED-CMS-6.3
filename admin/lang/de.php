@@ -532,6 +532,7 @@ define('_LAYOUT_ONPHONE','Auf dem Telefon');
 define('_LAYOUT_ONDESK','Auf dem Desktop');
 define('_LAYOUT_SHOWNOTE','„Für wen“ und die Daten sind dieselben wie bei den Blöcken der Website. Der Anker gibt dem Abschnitt eine Adresse auf der Seite: Ein Link „#anker“ führt zu ihm.');
 define('_LAYOUT_DUP','Duplizieren');
+define('_LAYOUT_DRAG','Ziehen');
 define('_LAYOUT_UP','Nach oben');
 define('_LAYOUT_DOWN','Nach unten');
 define('_LAYOUT_ALLSITE','ganze Website');

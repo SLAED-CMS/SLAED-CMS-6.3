@@ -174,7 +174,7 @@ class Editor {
         ];
     }
 
-    # Render one editor in the shell with the variables, check and preview of its caller, a text with emoji, the room of its column and its file window, read-only when asked; the kit once per answer
+    # Render one editor in the shell with the vars, check, preview, emoji, room and file window of its caller, read-only when asked; the kit once
     public static function getFrame(array $data): string {
         global $tpl;
         $lang = (string)($data['lang'] ?? 'text');

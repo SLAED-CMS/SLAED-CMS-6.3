@@ -107,7 +107,7 @@ if (empty($go)) {
         setFoot();
         exit;
     };
-    # A page by its name page-<key>: from the draft under a valid link, seen as a guest on guest=1, else only a page with an address; a draft page holding a slot runs as its module
+    # A page page-<key>: the draft by a valid link, guest=1 as a guest, edit=1 for the builder, else a page with an address; a slot or a module page not written runs as its module
     $pkey = 0;
     $ppath = '';
     if (preg_match(Layout::PAGE, (string)$name, $phit)) {
@@ -116,12 +116,18 @@ if (empty($go)) {
         if ($ptok !== '') {
             $pdft = Layout::getDraftFile();
             if ($pdft === [] || !Layout::checkDraftToken($pkey, $ptok, $pdft['link'])) $deny(_LAYOUT_LINKBAD);
-            if (getVar('get', 'guest', 'num', 0) === 1) $layout = new Layout($conf['layout'] ?? [], $theme, false, false, $conf['multilingual'] ? (string)$locale : '');
+            $pguest = getVar('get', 'guest', 'num', 0) === 1;
+            if ($pguest) $layout = new Layout($conf['layout'] ?? [], $theme, false, false, $conf['multilingual'] ? (string)$locale : '');
             $layout->setDraftData($pdft['layout']);
-            if ($layout->getPage($pkey) === []) setError(404);
-            $pslot = $layout->getSlotName($pkey);
-            $phome = $pkey === $layout->getHomeKey();
-            if ($pslot === '' && !$phome) setError(404);
+            if (!$pguest && getVar('get', 'edit', 'num', 0) === 1 && isAdmin(true)) $layout->setBuildMode();
+            $pmod = getVar('get', 'mod', 'var', '');
+            $pinfo = $conf['modules'][$pmod] ?? [];
+            $pnew = isset($conf['node']['types'][$pmod]) || ($pmod !== 'node' && !empty($pinfo['active']) && (int)($pinfo['type'] ?? 1) === 1);
+            if ($pnew && $pkey >= (int)($pdft['layout']['next'] ?? 0) && $layout->getModuleKey($pmod) === 0) [$name, $pkey] = [$pmod, 0];
+            elseif ($layout->getPage($pkey) === []) setError(404);
+            $pslot = $pkey ? $layout->getSlotName($pkey) : null;
+            $phome = $pkey && $pkey === $layout->getHomeKey();
+            if ($pkey && $pslot === '' && !$phome) setError(404);
             if ($pslot !== null) [$name, $pkey] = [$phome ? '' : $pslot, 0];
         } else {
             if (in_array($pkey, $layout->getAddressKeys(), true)) $ppath = (new Route($db))->getRouteList('page', [$pkey])[$pkey] ?? '';

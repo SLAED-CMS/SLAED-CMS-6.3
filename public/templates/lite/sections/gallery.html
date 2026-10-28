@@ -1,9 +1,9 @@
 <div class="sl-pres-gallery">
-  {% if over %}<div class="sl-pres-gallery-head"><span>{{ over }}</span></div>{% endif %}
+  {% if over %}<div class="sl-pres-gallery-head"><span{% if is_build %} data-sl-text="over"{% endif %}>{{ over }}</span></div>{% endif %}
   <div class="sl-pres-gallery-track" tabindex="0"{% if title %} role="region" aria-label="{{ title }}"{% endif %}>
     {% for item in items %}{% if item.photo %}<article class="sl-pres-tile">
       <figure class="sl-pres-shot"><img src="{{ item.photo }}" alt="{{ item.alt }}" style="--sl-d-focus: {{ item.focus }}" loading="lazy" decoding="async"></figure>
-      {% if item.caption %}<div class="sl-pres-tile-copy"><h3>{{ item.caption }}</h3></div>{% endif %}
+      {% if item.caption %}<div class="sl-pres-tile-copy"><h3{% if is_build %} data-sl-text="items.{{ item.order_num }}.caption"{% endif %}>{{ item.caption }}</h3></div>{% endif %}
     </article>{% endif %}{% endfor %}
   </div>
 </div>

@@ -321,6 +321,75 @@ final class LayoutTest extends TestCase
         $this->assertSame(['01', '02', '03', '04'], $hit[1], 'Only the framed sections are numbered, in their order');
     }
 
+    # The edit mode of the builder marks each section, the slot and the texts of the fields for builder.js; a visitor's page carries none of them
+    #[Test]
+    public function theEditModeMarksThePartsOfThePage(): void
+    {
+        $page = ['sections' => [
+            $this->getSection(1, 'hero', ['title' => 'Head', 'text' => 'Lead']),
+            $this->getSection(2, 'module'),
+            $this->getSection(3, 'steps', ['title' => 'Steps', 'items' => [['title' => 'First', 'text' => 'Then']]]),
+            $this->getSection(4, 'text', ['title' => 'Body', 'body' => 'x']),
+        ]];
+        $data = $this->getLayout(['pages' => [1 => $page]]);
+        $read = new Layout($data, 'lite', false, false, '', self::$mods);
+        $plain = $read->getPageHtml(1, '<main>BODY</main>', new Template('lite'), $this->getParser());
+        $this->assertStringNotContainsString('data-sl-pick', $plain, 'A visitor got the marks of the builder');
+        $this->assertStringNotContainsString('data-sl-text', $plain);
+        $this->assertStringNotContainsString('data-sl-md', $plain);
+        $this->assertFalse($read->isBuildMode());
+        $read->setBuildMode();
+        $html = $read->getPageHtml(1, '<main>BODY</main>', new Template('lite'), $this->getParser());
+        $this->assertTrue($read->isBuildMode());
+        $this->assertStringContainsString('data-sl-pick="sec:1"', $html);
+        $this->assertStringContainsString('<div data-sl-pick="sec:2" data-sl-build-one><main>BODY</main></div>', $html, 'The slot is not picked around the module');
+        $this->assertStringContainsString('<b data-sl-text="title">Head</b>', $html);
+        $this->assertStringContainsString('data-sl-text="text" data-sl-lines>Lead</p>', $html);
+        $this->assertStringContainsString('<b data-sl-text="items.01.title">First</b>', $html, 'An item is not marked by its place');
+        $this->assertStringContainsString('<h2 data-sl-text="title">Steps</h2>', $html, 'The head of a framed section is not marked');
+        $this->assertStringContainsString('data-sl-md="body"', $html);
+    }
+
+    # Every text lite marks names a field: of its type in a section (an item of its list, Markdown or own HTML by kind), of a part or a menu item in the chrome
+    #[Test]
+    public function theMarksOfLiteNameTheFieldsOfTheirTypes(): void
+    {
+        foreach (glob(PUBLIC_DIR.'/templates/lite/sections/*.html') ?: [] as $file) {
+            $type = basename($file, '.html');
+            $json = is_file(dirname($file).'/'.$type.'.json') ? dirname($file).'/'.$type.'.json' : BASE_DIR.'/modules/presentation/sections/'.$type.'.json';
+            $desc = is_file($json) ? json_decode((string)file_get_contents($json), true) : [];
+            $kinds = array_column(is_array($desc['fields'] ?? null) ? $desc['fields'] : [], 'type', 'key');
+            $kinds += ['title' => 'text', 'lead' => 'text'];
+            $items = array_column(is_array($desc['items']['fields'] ?? null) ? $desc['items']['fields'] : [], 'type', 'key');
+            preg_match_all('#data-sl-(text|md)="([^"]+)"#', (string)file_get_contents($file), $hit, PREG_SET_ORDER);
+            foreach ($hit as [, $mark, $path]) {
+                $item = preg_match('#^items\.\{\{ item\.order_num \}\}\.([a-z0-9]+)$#', $path, $one) === 1;
+                $kind = $item ? ($items[$one[1]] ?? '') : ($kinds[$path] ?? '');
+                $this->assertNotSame('', $kind, $type.'.html marks '.$path.', which its type does not describe');
+                $want = ($mark === 'md') ? ['markdown', 'code'] : ['text', 'textarea'];
+                $this->assertContains($kind, $want, $type.'.html marks '.$path.' of the kind '.$kind.' as '.$mark);
+            }
+        }
+        $head = (string)file_get_contents(PUBLIC_DIR.'/templates/lite/fragments/presentation-head.html');
+        $this->assertStringContainsString('data-sl-text="title"', $head, 'The head of a framed section is not marked');
+        $places = json_decode((string)file_get_contents(PUBLIC_DIR.'/templates/lite/places.json'), true);
+        [$fields, $lists] = [['title' => true], []];
+        foreach ($places['parts'] as $part) {
+            foreach ($part['fields'] ?? [] as $one) $fields[$one['key']] = true;
+            if (isset($part['items']['key'])) $lists[$part['items']['key']] = array_column($part['items']['fields'], 'type', 'key');
+        }
+        foreach (['site-header', 'site-footer', 'menu'] as $name) {
+            $code = (string)file_get_contents(PUBLIC_DIR.'/templates/lite/partials/'.$name.'.html');
+            preg_match_all('#data-sl-pick="(part|menu):([a-z]+)#', $code, $hit, PREG_SET_ORDER);
+            foreach ($hit as [, $kind, $key]) $this->assertArrayHasKey($key, $places[$kind.'s'], $name.'.html picks the '.$kind.' '.$key.', which lite does not declare');
+            preg_match_all('#data-sl-text="([^"]+)"#', $code, $hit);
+            foreach ($hit[1] as $path) {
+                $item = preg_match('#^([a-z]+)\.\{\{ [a-z]+\.order_num \}\}\.([a-z0-9]+)$#', $path, $one) === 1;
+                $this->assertTrue($item ? isset($lists[$one[1]][$one[2]]) : isset($fields[$path]), $name.'.html marks '.$path.', which no part of lite describes');
+            }
+        }
+    }
+
     # Every section of lite and of the modules has its fragment, fields of the closed kinds under names a fragment receives, labels and defaults naming defined constants
     #[Test]
     public function theSectionsOfLiteAreDescribedInFull(): void

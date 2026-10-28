@@ -532,6 +532,7 @@ define('_LAYOUT_ONPHONE','Sur un téléphone');
 define('_LAYOUT_ONDESK','Sur un ordinateur');
 define('_LAYOUT_SHOWNOTE','« Pour qui » et les dates sont ceux des blocs du site. L\'ancre donne à la section une adresse sur la page : un lien « #ancre » y mène.');
 define('_LAYOUT_DUP','Dupliquer');
+define('_LAYOUT_DRAG','Faire glisser');
 define('_LAYOUT_UP','Monter');
 define('_LAYOUT_DOWN','Descendre');
 define('_LAYOUT_ALLSITE','tout le site');

@@ -1,7 +1,7 @@
 <div class="sl-pres-pulse">
   {% for item in items %}<article class="sl-pres-pulse-card" data-sl-tone="{% if item.hot %}accent{% else %}primary{% endif %}">
-    <div class="sl-pres-pulse-head"><span><i class="bi bi-{% if item.hot %}star-fill{% else %}tag{% endif %}" aria-hidden="true"></i></span><div><b>{{ item.name }}</b><span>{{ item.unit }}</span></div></div>
-    <div class="sl-pres-pulse-body"><h3>{{ item.price }}</h3>{% if item.text %}<p class="sl-sec-lines">{{ item.text }}</p>{% endif %}</div>
-    <div class="sl-pres-pulse-foot"><i class="sl-pres-dot{% if item.hot %} sl-is-live{% endif %}"></i>{% if item.btn and item.href %}<a href="{{ item.href }}"{% if item.href_ext %} target="_blank" rel="noopener"{% endif %}><span>{{ item.btn }}</span> <i class="bi bi-arrow-up-right" aria-hidden="true"></i></a>{% endif %}</div>
+    <div class="sl-pres-pulse-head"><span><i class="bi bi-{% if item.hot %}star-fill{% else %}tag{% endif %}" aria-hidden="true"></i></span><div><b{% if is_build %} data-sl-text="items.{{ item.order_num }}.name"{% endif %}>{{ item.name }}</b><span{% if is_build %} data-sl-text="items.{{ item.order_num }}.unit"{% endif %}>{{ item.unit }}</span></div></div>
+    <div class="sl-pres-pulse-body"><h3{% if is_build %} data-sl-text="items.{{ item.order_num }}.price"{% endif %}>{{ item.price }}</h3>{% if item.text %}<p class="sl-sec-lines"{% if is_build %} data-sl-text="items.{{ item.order_num }}.text" data-sl-lines{% endif %}>{{ item.text }}</p>{% endif %}</div>
+    <div class="sl-pres-pulse-foot"><i class="sl-pres-dot{% if item.hot %} sl-is-live{% endif %}"></i>{% if item.btn and item.href %}<a href="{{ item.href }}"{% if item.href_ext %} target="_blank" rel="noopener"{% endif %}><span{% if is_build %} data-sl-text="items.{{ item.order_num }}.btn"{% endif %}>{{ item.btn }}</span> <i class="bi bi-arrow-up-right" aria-hidden="true"></i></a>{% endif %}</div>
   </article>{% endfor %}
 </div>

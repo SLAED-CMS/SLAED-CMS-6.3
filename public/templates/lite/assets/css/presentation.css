@@ -5713,3 +5713,124 @@
     display: none;
   }
 }
+
+/* ---- The editing layer of the site builder: the page in the frame of its screen, plugins/system/builder.js ---- */
+
+/* A part answers the pointer; a section stands still, the rise of the presentation would move it under its ring */
+[data-sl-build] [data-sl-pick] {
+  cursor: pointer;
+}
+
+[data-sl-build] .sl-pres-section {
+  animation: none;
+}
+
+[data-sl-build] [contenteditable] {
+  outline: 0;
+  cursor: text;
+  caret-color: var(--sl-primary);
+}
+
+/* The rings stand over every layer of the site, its sticky menu and its pinned side tabs, and under nothing but its windows */
+.sl-builder-ring {
+  position: absolute;
+  top: var(--sl-d-box-y);
+  left: var(--sl-d-box-x);
+  z-index: var(--sl-z-modal);
+  width: var(--sl-d-box-w);
+  height: var(--sl-d-box-h);
+  box-sizing: border-box;
+  pointer-events: none;
+}
+
+.sl-builder-ring[data-sl-build-pinned] {
+  position: fixed;
+}
+
+.sl-builder-hover {
+  outline: 1px dashed var(--sl-primary);
+  outline-offset: -1px;
+}
+
+.sl-builder-sel {
+  outline: var(--sl-ring-width) solid var(--sl-primary);
+  outline-offset: calc(var(--sl-ring-width) * -1);
+}
+
+.sl-builder-name {
+  position: absolute;
+  top: 0;
+  left: 0;
+  padding: var(--sl-space-1) var(--sl-space-3);
+  border-radius: 0 0 var(--sl-radius-2) 0;
+  background: var(--sl-primary);
+  color: var(--sl-on-solid);
+  font-size: var(--sl-font-micro);
+  line-height: var(--sl-line-normal);
+  white-space: nowrap;
+}
+
+.sl-builder-hover .sl-builder-name {
+  background: var(--sl-surface);
+  color: var(--sl-primary);
+  box-shadow: inset 0 0 0 1px var(--sl-primary);
+}
+
+.sl-builder-name:empty {
+  display: none;
+}
+
+/* The toolbar of the picked section is the capsule of the editors shown at once, at its upper right corner; the ring outranks the capsule of theme.css */
+.sl-builder-sel .sl-builder-bar {
+  position: absolute;
+  top: var(--sl-space-3);
+  right: var(--sl-space-3);
+  max-width: none;
+  box-shadow: var(--sl-shadow-float);
+}
+
+/* "Добавить секцию" sits centred on the lower edge of the picked section, half in and half out */
+.sl-builder-sel .sl-builder-add {
+  position: absolute;
+  top: calc(100% - var(--sl-size-control) / 2);
+  right: 0;
+  left: 0;
+  z-index: var(--sl-z-raised);
+  width: fit-content;
+  margin: 0 auto;
+  box-shadow: var(--sl-shadow-float);
+  pointer-events: auto;
+}
+
+/* Drag with the cursor: the grip of the toolbar, the label that follows the hand, the line where the section lands */
+.sl-builder-grip {
+  cursor: grab;
+  touch-action: none;
+}
+
+[data-sl-build-drag],
+[data-sl-build-drag] * {
+  cursor: grabbing;
+  user-select: none;
+}
+
+.sl-builder-line {
+  border-radius: var(--sl-radius-pill);
+  background: var(--sl-primary);
+  box-shadow: var(--sl-shadow-float);
+}
+
+.sl-builder-ghost {
+  position: fixed;
+  top: var(--sl-d-pointer-y);
+  left: var(--sl-d-pointer-x);
+  z-index: var(--sl-z-toast);
+  padding: var(--sl-space-2) var(--sl-space-4);
+  border-radius: var(--sl-radius-pill);
+  background: var(--sl-primary);
+  color: var(--sl-on-solid);
+  font-size: var(--sl-font-small);
+  white-space: nowrap;
+  pointer-events: none;
+  translate: var(--sl-space-5) var(--sl-space-5);
+}

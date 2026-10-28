@@ -532,6 +532,7 @@ define('_LAYOUT_ONPHONE','Na telefonie');
 define('_LAYOUT_ONDESK','Na komputerze');
 define('_LAYOUT_SHOWNOTE','„Dla kogo” i daty są takie same jak w blokach strony. Kotwica daje sekcji adres na stronie: link „#kotwica” do niej prowadzi.');
 define('_LAYOUT_DUP','Powiel');
+define('_LAYOUT_DRAG','Przeciągnij');
 define('_LAYOUT_UP','Wyżej');
 define('_LAYOUT_DOWN','Niżej');
 define('_LAYOUT_ALLSITE','cała strona');

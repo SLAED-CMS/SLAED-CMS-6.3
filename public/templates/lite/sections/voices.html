@@ -1,13 +1,13 @@
 <div class="sl-pres-voices">
-  {% if over %}<div class="sl-pres-panel-head"><span>{{ over }}</span></div>{% endif %}
+  {% if over %}<div class="sl-pres-panel-head"><span{% if is_build %} data-sl-text="over"{% endif %}>{{ over }}</span></div>{% endif %}
   <div class="sl-pres-voices-track">
     {% for item in items %}<article class="sl-pres-voice"{% if tone %} data-sl-tone="{{ tone }}"{% endif %}>
-      <p class="sl-sec-lines">{{ item.text }}</p>
+      <p class="sl-sec-lines"{% if is_build %} data-sl-text="items.{{ item.order_num }}.text" data-sl-lines{% endif %}>{{ item.text }}</p>
       <i class="sl-pres-voice-sep"></i>
       <div class="sl-pres-voice-person">
         <span class="sl-pres-voice-ava"><i class="bi bi-person" aria-hidden="true"></i></span>
-        <div><strong>{{ item.name }}</strong>{% if item.site or item.role %}<small>{{ item.site }}{% if item.site and item.role %} · {% endif %}{{ item.role }}</small>{% endif %}</div>
-        {% if item.since %}<div class="sl-pres-since"><span>{{ _LAYOUT_FROM }}</span><b>{{ item.since }}</b></div>{% endif %}
+        <div><strong{% if is_build %} data-sl-text="items.{{ item.order_num }}.name"{% endif %}>{{ item.name }}</strong>{% if item.site or item.role %}<small>{{ item.site }}{% if item.site and item.role %} · {% endif %}{{ item.role }}</small>{% endif %}</div>
+        {% if item.since %}<div class="sl-pres-since"><span>{{ _LAYOUT_FROM }}</span><b{% if is_build %} data-sl-text="items.{{ item.order_num }}.since"{% endif %}>{{ item.since }}</b></div>{% endif %}
       </div>
     </article>{% endfor %}
   </div>

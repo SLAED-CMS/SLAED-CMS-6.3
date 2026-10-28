@@ -3143,6 +3143,23 @@ pre code.hljs {
   background: var(--sl-border-strong);
 }
 
+/* Capsule shown at once: a toolbar rests open on its line, its disabled act fades, and a group whose every act is hidden leaves with its line */
+.sl-editor-pill.sl-editor-pill-open {
+  margin: 0;
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
+
+.sl-editor-pill-open .sl-modal-act:disabled {
+  opacity: var(--sl-fade-disabled);
+  cursor: default;
+}
+
+.sl-editor-grp:not(:has(> :not([hidden]))) {
+  display: none;
+}
+
 /* Every command stays in the palette, so a narrow row lets the folds go first and copy and reset next */
 @media (max-width: 900px) {
   .sl-editor-wide {

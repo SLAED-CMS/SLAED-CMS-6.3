@@ -7,4 +7,4 @@
   </div>
 </figure>
 {% endif %}
-{% if url_file or url_frame %}{% if caption %}<p class="sl-pres-lead">{{ caption }}</p>{% endif %}{% endif %}
+{% if url_file or url_frame %}{% if caption %}<p class="sl-pres-lead"{% if is_build %} data-sl-text="caption"{% endif %}>{{ caption }}</p>{% endif %}{% endif %}

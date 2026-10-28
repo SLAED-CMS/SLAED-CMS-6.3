@@ -1,7 +1,7 @@
 <div class="sl-sec-media{% if not photo %} sl-sec-solo{% elseif side_right %} sl-sec-flip{% endif %}">
   {% if photo %}<figure class="sl-pres-shot sl-sec-pic"><img src="{{ photo }}" alt="{{ alt }}" style="--sl-d-focus: {{ focus }}" loading="lazy" width="2560" height="1440"></figure>{% endif %}
   <div class="sl-pres-principle-copy sl-sec-copy">
-    <div class="sl-entry-content sl-sec-md">{{{ text_html }}}</div>
-    {% if btn and href %}<p class="sl-sec-acts"><a class="sl-but" href="{{ href }}"{% if href_ext %} target="_blank" rel="noopener"{% endif %}>{{ btn }}</a></p>{% endif %}
+    <div class="sl-entry-content sl-sec-md"{% if is_build %} data-sl-md="text"{% endif %}>{{{ text_html }}}</div>
+    {% if btn and href %}<p class="sl-sec-acts"><a class="sl-but" href="{{ href }}"{% if href_ext %} target="_blank" rel="noopener"{% endif %}{% if is_build %} data-sl-text="btn"{% endif %}>{{ btn }}</a></p>{% endif %}
   </div>
 </div>

@@ -1,4 +1,4 @@
 {% for item in items %}<details class="sl-node-faq"{% if open and item.is_first %} open{% endif %}>
-  <summary><i class="bi bi-chevron-right" aria-hidden="true"></i><span class="sl-title">{{ item.q }}</span></summary>
-  <div class="sl-node-faq-body sl-sec-md">{{{ item.a_html }}}</div>
+  <summary><i class="bi bi-chevron-right" aria-hidden="true"></i><span class="sl-title"{% if is_build %} data-sl-text="items.{{ item.order_num }}.q"{% endif %}>{{ item.q }}</span></summary>
+  <div class="sl-node-faq-body sl-sec-md"{% if is_build %} data-sl-md="items.{{ item.order_num }}.a"{% endif %}>{{{ item.a_html }}}</div>
 </details>{% endfor %}

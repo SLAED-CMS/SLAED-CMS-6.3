@@ -14,8 +14,8 @@
       <ul class="sl-top-contact"><li class="sl-head-marquee">{% if faqtitle %}{{{ faqtitle }}}{% endif %}</li></ul>
       <div class="sl-top-right">
         {{{ mode_html }}}
-        {% if parts.social %}<div class="sl-top-social">
-          {% for soc in parts.social %}{% if soc.url %}<a class="sl-thd sl-circle-action sl-cat-tone-{{ soc.tone }}"{% if soc.url_ext %} rel="me noopener" target="_blank"{% endif %} href="{{ soc.url }}" title="{{ soc.title }}" aria-label="{{ soc.title }}">{% if soc.icon %}<i class="bi bi-{{ soc.icon }}" aria-hidden="true"></i>{% endif %}{{ soc.title }}</a>
+        {% if parts.social %}<div class="sl-top-social"{% if is_build %} data-sl-pick="part:social"{% endif %}>
+          {% for soc in parts.social %}{% if soc.url %}<a class="sl-thd sl-circle-action sl-cat-tone-{{ soc.tone }}"{% if soc.url_ext %} rel="me noopener" target="_blank"{% endif %} href="{{ soc.url }}" title="{{ soc.title }}" aria-label="{{ soc.title }}">{% if soc.icon %}<i class="bi bi-{{ soc.icon }}" aria-hidden="true"></i>{% endif %}{% if is_build %}<span data-sl-text="social.{{ soc.order_num }}.title">{{ soc.title }}</span>{% else %}{{ soc.title }}{% endif %}</a>
           {% endif %}{% endfor %}
         </div>{% endif %}
       </div>
@@ -23,15 +23,15 @@
   </div>
   <header id="header">
     <div class="sl-wrp">
-      <a href="/" class="sl-thd sl-logo" title="{% if slogan %}{{ sitename }} - {{ slogan }}{% else %}{{ sitename }}{% endif %}">
+      <a href="/" class="sl-thd sl-logo"{% if is_build %} data-sl-pick="part:brand"{% endif %} title="{% if slogan %}{{ sitename }} - {{ slogan }}{% else %}{{ sitename }}{% endif %}">
         <img src="{{ root }}templates/{{ theme }}/images/logos/{{ logo }}" alt="{% if slogan %}{{ sitename }} - {{ slogan }}{% else %}{{ sitename }}{% endif %}" title="{% if slogan %}{{ sitename }} - {{ slogan }}{% else %}{{ sitename }}{% endif %}"{% if logo_w %} width="{{ logo_w }}" height="{{ logo_h }}"{% endif %}>
       </a>
-      {% if parts.tagline %}<p class="sl-font sl-slogan sl-sec-lines">{{ parts.tagline }}</p>{% endif %}
+      {% if parts.tagline %}<p class="sl-font sl-slogan sl-sec-lines"{% if is_build %} data-sl-pick="part:brand" data-sl-text="tagline" data-sl-lines{% endif %}>{{ parts.tagline }}</p>{% endif %}
       {{{ login }}}
-      {% if parts.paneon %}<ul class="sl-d-pane">
-        {% if parts.panecap %}<li class="sl-d-info sl-d-version sl-font">{{ parts.panecap }}</li>{% endif %}
-        {% if parts.panever %}<li class="sl-d-num sl-font">{{ parts.panever }}</li>{% endif %}
-        {% if parts.panebtn and parts.panehref %}<li class="sl-d-btns"><a class="sl-but" href="{{ parts.panehref }}"{% if parts.panehref_ext %} target="_blank" rel="noopener"{% endif %} title="{{ parts.panebtn }}">{{ parts.panebtn }}</a></li>{% endif %}
+      {% if parts.paneon %}<ul class="sl-d-pane"{% if is_build %} data-sl-pick="part:pane"{% endif %}>
+        {% if parts.panecap %}<li class="sl-d-info sl-d-version sl-font"{% if is_build %} data-sl-text="panecap"{% endif %}>{{ parts.panecap }}</li>{% endif %}
+        {% if parts.panever %}<li class="sl-d-num sl-font"{% if is_build %} data-sl-text="panever"{% endif %}>{{ parts.panever }}</li>{% endif %}
+        {% if parts.panebtn and parts.panehref %}<li class="sl-d-btns"><a class="sl-but" href="{{ parts.panehref }}"{% if parts.panehref_ext %} target="_blank" rel="noopener"{% endif %} title="{{ parts.panebtn }}"{% if is_build %} data-sl-text="panebtn"{% endif %}>{{ parts.panebtn }}</a></li>{% endif %}
       </ul>{% endif %}
     </div>
   </header>

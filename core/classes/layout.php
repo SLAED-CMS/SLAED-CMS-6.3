@@ -55,6 +55,7 @@ final class Layout {
     private bool $user;
     private bool $moder;
     private bool $draft = false;
+    private bool $build = false;
     private ?array $types = null;
     private ?array $places = null;
     private ?array $parts = null;
@@ -198,6 +199,16 @@ final class Layout {
         $this->parts = null;
     }
 
+    # Draw the page for the edit mode of the builder: the fragments mark their parts and texts for plugins/system/builder.js, which the screen alone loads
+    public function setBuildMode(): void {
+        $this->build = true;
+    }
+
+    # Whether the page is drawn for the edit mode of the builder in the frame of its screen
+    public function isBuildMode(): bool {
+        return $this->build;
+    }
+
     # Whether the layout read is the draft, which no search engine indexes and no address redirects
     public function isDraft(): bool {
         return $this->draft;
@@ -274,7 +285,7 @@ final class Layout {
             if ($type === self::SLOT) {
                 if ($slot) continue;
                 $slot = true;
-                $html .= $body;
+                $html .= ($this->build && $wrap) ? $tpl->getHtmlFrag('section', ['is_slot' => true, 'pick' => 'sec:'.(int)($sec['id'] ?? 0), 'body_html' => $body]) : $body;
                 continue;
             }
             $one = $types[$type] ?? [];
@@ -284,6 +295,7 @@ final class Layout {
             $data = $this->getFieldData(is_array($desc['fields'] ?? null) ? $desc['fields'] : [], $sec, $prs);
             if (is_array($desc['items'] ?? null)) $data['items'] = $this->getItemData($desc['items'], $sec['items'] ?? null, $prs);
             $data['parts'] = $this->getThemeData($prs);
+            $data['is_build'] = $this->build;
             $prov = $this->getProvider($type, $one['prov']);
             if ($prov) $data = array_replace($data, $prov($sec));
             $inner = $tpl->getHtmlSection($type, $data, ($frag === 'theme') ? '' : $this->mods.'/'.$frag.'/sections');
@@ -296,8 +308,10 @@ final class Layout {
             $icon = (string)(($data['icon'] ?? '') ?: ($desc['icon'] ?? ''));
             $html .= $tpl->getHtmlFrag('section', [
                 'is_frame' => $frame,
-                'head' => $frame ? ['num' => sprintf('%02d', ++$num), 'icon' => $icon, 'title' => $data['title'] ?? '', 'lead' => $data['lead'] ?? ''] : [],
+                'head' => $frame ? ['num' => sprintf('%02d', ++$num), 'icon' => $icon, 'title' => $data['title'] ?? '', 'lead' => $data['lead'] ?? '',
+                    'is_build' => $this->build] : [],
                 'anchor' => (preg_match(self::ANCHOR, (string)($sec['anchor'] ?? '')) === 1) ? $sec['anchor'] : '',
+                'pick' => $this->build ? 'sec:'.(int)($sec['id'] ?? 0) : '',
                 'no_phone' => array_key_exists('phone', $sec) && empty($sec['phone']),
                 'no_desk' => array_key_exists('desk', $sec) && empty($sec['desk']),
                 'body_html' => $inner,

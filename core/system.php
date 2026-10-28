@@ -2050,6 +2050,7 @@ function setHead(array $seo = []): void {
         'slogan' => $conf['slogan'] ?? '',
         'parts' => $parts,
         'menus' => $menus,
+        'is_build' => $layout instanceof Layout && $layout->isBuildMode(),
         'license' => $licens,
         'meta' => $strmeta,
         'links' => $strlink,
@@ -2165,7 +2166,8 @@ function setFoot(): void {
         'foot_html' => $foot,
         'debug_html' => $debug,
         'windows_html' => getWindowSet(),
-        'dock_html' => (isAdmin() && !isThemeFlag('dock-site-off')) ? getAdminDock() : '',
+        'dock_html' => (isAdmin() && !isThemeFlag('dock-site-off') && empty($vars['is_build'])) ? getAdminDock() : '',
+        'build_html' => empty($vars['is_build']) ? '' : $tpl->getHtmlFrag('builder'),
     ]);
     $page = (is_string($sitepage ?? '') && $sitepage !== '') ? $sitepage : ($home ? 'home' : 'module');
     $html = getOutputHtml($tpl->getHtmlPage($page, $vars, $page === 'home' ? 'home' : 'app'));
@@ -2823,11 +2825,13 @@ function getAssetList(string $theme, string $ext, string $list): array {
     return array_values(array_unique($out));
 }
 
-# The deferred script tags of the page head: the files of getAssetList(), dock.js for the menu of an administrator, and on the site the head of config/header.php
+# The deferred script tags of the head: getAssetList(), dock.js for an administrator or builder.js in the frame of the builder, the site head of config/header.php
 function doScript(): string {
-    global $theme, $conf, $tpl;
+    global $theme, $conf, $tpl, $layout;
     $array = $conf['derived']['assets'][$theme]['js'] ?? getAssetList($theme, 'js', $conf['script_f']);
-    if (isAdmin() && (defined('ADMIN_FILE') || !isThemeFlag('dock-site-off'))) $array[] = 'plugins/system/dock.js';
+    $build = !defined('ADMIN_FILE') && $layout instanceof Layout && $layout->isBuildMode();
+    if ($build) $array[] = 'plugins/system/builder.js';
+    elseif (isAdmin() && (defined('ADMIN_FILE') || !isThemeFlag('dock-site-off'))) $array[] = 'plugins/system/dock.js';
     $arr = [];
     foreach ($array as $file) $arr[] = $tpl->getHtmlFrag('head-script-src', ['src' => Template::getAssetUrl($file), 'attr' => 'defer']);
     $cont = implode("\n", $arr);
@@ -4408,7 +4412,7 @@ function getAdminPageLink(): array {
 
 # Render the floating menu of an administrator in the theme of the page: the home, this page and the queue on the site, the pins, the watch, the own links, the card, the tools
 function getAdminDock(): string {
-    global $afile, $tpl, $conf, $admin, $name, $panel;
+    global $afile, $tpl, $conf, $admin, $name, $panel, $lkey, $op, $file;
     $own = getAdminBlockLinks();
     $list = getAdminSectionList();
     $pins = [];
@@ -4431,6 +4435,10 @@ function getAdminDock(): string {
     $stamp = static fn(int $i): array => isset($log[$i]) ? ['stamp' => format_time($log[$i]['time'], 'c'), 'text' => format_time($log[$i]['time'], _TIMESTRING)] : [];
     $idle = max(0, getAdminIdle() - time() + intval($_SESSION[$conf['admin_c'].'-time'] ?? 0));
     $links = $own['links'];
+    $mod = $conf['modules'][(string)$name] ?? [];
+    $front = !empty($name) && empty($op) && ($file ?? 'index') === 'index';
+    $front = $front && (isset($conf['node']['types'][$name]) || ($name !== 'node' && !empty($mod['active']) && intval($mod['type'] ?? 1) === 1));
+    $bpar = defined('ADMIN_FILE') ? [] : (!empty($lkey) ? ['page' => intval($lkey)] : ($front ? ['mod' => (string)$name] : []));
     return $tpl->getHtmlFrag('dock', [
         'home_url' => HOME_PATH.$afile.'.php',
         'is_home' => defined('ADMIN_FILE') && !empty($panel),
@@ -4439,7 +4447,8 @@ function getAdminDock(): string {
         'option_url' => HOME_PATH.$afile.'.php',
         'option_token' => getSiteToken('option'),
         'page' => getAdminPageLink(),
-        'build' => isAdmin(true) ? ['href' => HOME_PATH.$afile.'.php?name=layout', 'label' => _LAYOUT_BUILDER, 'is_here' => defined('ADMIN_FILE') && $name === 'layout'] : [],
+        'build' => isAdmin(true) ? ['href' => HOME_PATH.$afile.'.php?'.http_build_query(['name' => 'layout'] + $bpar), 'label' => $bpar ? _LAYOUT_EDITPAGE : _LAYOUT_BUILDER,
+            'icon' => $bpar ? 'pencil-square' : 'layers-half', 'is_here' => defined('ADMIN_FILE') && $name === 'layout'] : [],
         'queue' => $queue,
         'queue_sum' => array_sum(array_column($queue, 'num')),
         'queue_url' => HOME_PATH.'index.php?go=5&op=getAdminQueueData&token='.getSiteToken(),
@@ -5829,7 +5838,7 @@ function checkemail(string $mail): array {
 
 # Render one block by its kind; a file block that sets its content to null shows nothing, so bad parameters and a lost file stay off but for the super administrator
 function setBlockView(string $side, string $bfile, string $btitle, string $content, int $bid, string $url, string $param = ''): string {
-    global $tpl;
+    global $tpl, $layout;
     if ($url == '') {
         $btitle = getConst($btitle);
         $bicon = '';
@@ -5861,6 +5870,7 @@ function setBlockView(string $side, string $bfile, string $btitle, string $conte
                 'icon_name' => $bicon,
                 'href' => $bhref,
                 'is_before_content' => $side === 'c',
+                'pick' => ($layout instanceof Layout && $layout->isBuildMode()) ? 'blk:'.$bid : '',
             ]);
             break;
         }

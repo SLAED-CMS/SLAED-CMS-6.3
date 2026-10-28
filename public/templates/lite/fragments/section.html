@@ -1,5 +1,5 @@
-<section class="sl-pres sl-sec{% if is_frame %} sl-pres-section{% endif %}{% if no_phone %} sl-sec-no-phone{% endif %}{% if no_desk %} sl-sec-no-desk{% endif %}"{% if anchor %} id="{{ anchor }}"{% endif %}>
+{% if is_slot %}<div data-sl-pick="{{ pick }}" data-sl-build-one>{{{ body_html }}}</div>{% else %}<section class="sl-pres sl-sec{% if is_frame %} sl-pres-section{% endif %}{% if no_phone %} sl-sec-no-phone{% endif %}{% if no_desk %} sl-sec-no-desk{% endif %}"{% if anchor %} id="{{ anchor }}"{% endif %}{% if pick %} data-sl-pick="{{ pick }}"{% endif %}>
 {% if is_frame %}{% include 'fragments/presentation-head.html' with head %}
 <div class="sl-pres-body">{{{ body_html }}}</div>
 {% else %}{{{ body_html }}}
-{% endif %}</section>
+{% endif %}</section>{% endif %}

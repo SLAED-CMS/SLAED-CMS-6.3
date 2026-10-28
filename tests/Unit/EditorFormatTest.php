@@ -311,7 +311,8 @@ final class EditorFormatTest extends TestCase
         $need = ['search' => 'cm', 'fold' => 'cm', 'unfold' => 'cm', 'comment' => 'code', 'bold' => 'markdown', 'list' => 'markdown', 'files' => 'files', 'emoji' => 'text',
             'hint' => 'vars', 'var' => 'vars'];
         foreach ($need as $act => $want) {
-            $this->assertMatchesRegularExpression('#data-sl-editor-cmd="'.$act.'" data-sl-editor-need="'.$want.'( edit)?"#', $tpl, 'The palette offers '.$act.' to an engine without it');
+            $this->assertMatchesRegularExpression('#data-sl-editor-cmd="'.$act.'" data-sl-editor-need="'.$want.'( edit)?"#', $tpl,
+                'The palette offers '.$act.' to an engine without it');
         }
         $this->assertMatchesRegularExpression('#<dialog class="sl-modal sl-editor-pal" data-sl-editor-palette#', $tpl, 'The palette is not a window of the canon');
         $this->assertStringContainsString('data-sl-focus', $tpl, 'The keyboard does not land in the search of the palette');
@@ -343,11 +344,14 @@ final class EditorFormatTest extends TestCase
             $this->assertStringContainsString('{% if is_readonly %} readonly{% endif %}', $frame, 'The frame of '.$theme.' does not mark its area read-only');
             $kit = (string)file_get_contents(PUBLIC_DIR.'/templates/'.$theme.'/fragments/editor-kit.html');
             foreach (['undo', 'redo', 'bold', 'files', 'emoji', 'reset', 'pretty', 'hint'] as $act) {
-                $this->assertMatchesRegularExpression('#data-sl-editor-act="'.$act.'" data-sl-editor-need="[a-z ]*\bedit"#', $kit, 'The capsule of '.$theme.' keeps '.$act.' in a read-only frame');
-                $this->assertMatchesRegularExpression('#data-sl-editor-cmd="'.$act.'" data-sl-editor-need="[a-z ]*\bedit"#', $kit, 'The palette of '.$theme.' keeps '.$act.' in a read-only frame');
+                $this->assertMatchesRegularExpression('#data-sl-editor-act="'.$act.'" data-sl-editor-need="[a-z ]*\bedit"#', $kit,
+                    'The capsule of '.$theme.' keeps '.$act.' in a read-only frame');
+                $this->assertMatchesRegularExpression('#data-sl-editor-cmd="'.$act.'" data-sl-editor-need="[a-z ]*\bedit"#', $kit,
+                    'The palette of '.$theme.' keeps '.$act.' in a read-only frame');
             }
             foreach (['search', 'copy', 'diff', 'full'] as $act) {
-                $this->assertDoesNotMatchRegularExpression('#data-sl-editor-act="'.$act.'" data-sl-editor-need="[a-z ]*\bedit"#', $kit, 'A read-only frame of '.$theme.' loses '.$act);
+                $this->assertDoesNotMatchRegularExpression('#data-sl-editor-act="'.$act.'" data-sl-editor-need="[a-z ]*\bedit"#', $kit,
+                    'A read-only frame of '.$theme.' loses '.$act);
             }
         }
         $runtime = (string)file_get_contents(PUBLIC_DIR.'/plugins/system/editor.js');

@@ -3,9 +3,9 @@
     <li><a href="/" class="sl-home-link sl-circle-action" title="{{ home }}"><i class="bi bi-house-door-fill" aria-hidden="true"></i><span class="sl-hidden">{{ home }}</span></a></li>
     {% for item in menus.main %}
     <li>
-      <a href="{% if item.href %}{{ item.href }}{% else %}#{% endif %}" title="{{ item.title }}"{% if item.blank %} target="_blank" rel="noopener"{% endif %}>{% if item.icon %}<i class="bi bi-{{ item.icon }}" aria-hidden="true"></i>&nbsp;{% endif %}{{ item.title }}</a>
+      <a{% if is_build %} data-sl-pick="menu:main:{{ item.id }}" data-sl-text="title"{% endif %} href="{% if item.href %}{{ item.href }}{% else %}#{% endif %}" title="{{ item.title }}"{% if item.blank %} target="_blank" rel="noopener"{% endif %}>{% if item.icon %}<i class="bi bi-{{ item.icon }}" aria-hidden="true"></i>&nbsp;{% endif %}{{ item.title }}</a>
       {% if item.kids %}<ul>
-        {% for kid in item.kids %}<li><a href="{% if kid.href %}{{ kid.href }}{% else %}#{% endif %}" title="{{ kid.title }}"{% if kid.blank %} target="_blank" rel="noopener"{% endif %}>{% if kid.icon %}<i class="bi bi-{{ kid.icon }}" aria-hidden="true"></i>&nbsp;{% endif %}{{ kid.title }}</a></li>
+        {% for kid in item.kids %}<li><a{% if is_build %} data-sl-pick="menu:main:{{ kid.id }}" data-sl-text="title"{% endif %} href="{% if kid.href %}{{ kid.href }}{% else %}#{% endif %}" title="{{ kid.title }}"{% if kid.blank %} target="_blank" rel="noopener"{% endif %}>{% if kid.icon %}<i class="bi bi-{{ kid.icon }}" aria-hidden="true"></i>&nbsp;{% endif %}{{ kid.title }}</a></li>
         {% endfor %}
       </ul>{% endif %}
     </li>

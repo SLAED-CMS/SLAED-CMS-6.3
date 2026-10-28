@@ -1,5 +1,5 @@
 <div class="sl-pres-gallery">
-  <div class="sl-pres-gallery-head"><span>{{ over }}</span><b>{{ total }}</b></div>
+  <div class="sl-pres-gallery-head"><span{% if is_build %} data-sl-text="over"{% endif %}>{{ over }}</span><b>{{ total }}</b></div>
   <div class="sl-pres-gallery-track" tabindex="0"{% if title %} role="region" aria-label="{{ title }}"{% endif %}>
     {% for item in sites %}{% include 'fragments/presentation-site.html' with item %}{% endfor %}
   </div>

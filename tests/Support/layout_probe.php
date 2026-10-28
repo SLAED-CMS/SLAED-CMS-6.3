@@ -60,6 +60,11 @@ function setProbeLift(string $file, array $funcs, string $into): void {
 
 define('LAYOUT_HEAVY', 512000);
 
+# The value of a request the probe sets in pvars, a stub of the probe
+function getVar(string $var, string $key, string $type = '', mixed $default = ''): mixed {
+    return $GLOBALS['pvars'][$key] ?? $default;
+}
+
 # The name of a module as the panel shows it, a stub of the probe
 function getModuleName(string $mod): string {
     return 'Mod '.$mod;
@@ -74,7 +79,7 @@ try {
     $plift = array_merge($plift, ['setLayoutBlock', 'getLayoutMake', 'getLayoutAddr', 'setLayoutSecAct', 'setLayoutMenuAct', 'setLayoutItemAct', 'isLayoutSame']);
     $plift = array_merge($plift, ['getLayoutView', 'getLayoutPageTitle', 'getLayoutSecName', 'getLayoutFlat', 'getLayoutLookKeys', 'getLayoutChanges', 'getLayoutIssues']);
     $plift = array_merge($plift, ['setLayoutSecBack', 'setLayoutPresetPage', 'getLayoutSecLabel', 'setLayoutPageCopy', 'setLayoutTextPage', 'getLayoutAddrs']);
-    $plift[] = 'getLayoutModules';
+    $plift = array_merge($plift, ['getLayoutModules', 'setLayoutSlotPage', 'getLayoutStored']);
     setProbeLift($psite.'/admin/modules/layout.php', $plift, $pwork.'/lift_layout.php');
     $site = ['v' => 1, 'shipped' => false, 'next' => 20, 'home' => 1, 'notfound' => 2, 'theme' => ['phone' => '', 'social' => []],
         'menus' => ['main' => [['id' => 4, 'title' => 'A', 'kids' => []], ['id' => 5, 'title' => 'B', 'kids' => []],
@@ -99,6 +104,20 @@ try {
         $pdone['data']['back'] = ['undo' => count($back['undo']), 'phone' => $back['layout']['theme']['phone'], 'next' => $back['layout']['next']];
         file_put_contents(LAYOUT_DIR.'/'.Layout::DRAFT, '{"layout": "broken"');
         $pdone['data']['broken'] = getLayoutDraft()['layout']['theme']['phone'];
+        $conf['modules'] = ['news' => ['type' => 1, 'active' => 1, 'side' => '2', 'top' => '9'], 'admin' => ['type' => 0, 'active' => 1]];
+        $GLOBALS['pvars'] = ['mod' => 'admin'];
+        $pdone['data']['panel'] = isset(getLayoutDraft()['made']);
+        $GLOBALS['pvars'] = ['mod' => 'news'];
+        $made = getLayoutDraft();
+        $page = $made['layout']['pages'][$made['made']['key'] ?? 0] ?? [];
+        $pdone['data']['made'] = ['made' => $made['made'] ?? null, 'page' => [$page['title'] ?? null, $page['side'] ?? null, $page['top'] ?? null, $page['addr'] ?? null],
+            'slot' => array_intersect_key($page['sections'][0] ?? [], ['id' => 1, 'type' => 1, 'module' => 1, 'on' => 1]), 'dirty' => isLayoutDirty(getLayoutStored($made)),
+            'stored' => array_keys(getLayoutStored($made)['layout']['pages']), 'next' => getLayoutStored($made)['layout']['next']];
+        $made['layout']['pages'][20]['title'] = 'Changed';
+        setLayoutDraft($made);
+        $again = getLayoutDraft();
+        $pdone['data']['kept'] = ['made' => isset($again['made']), 'title' => $again['layout']['pages'][20]['title'] ?? null, 'next' => $again['layout']['next'],
+            'file' => array_values(array_intersect(['base', 'made'], array_keys(json_decode((string)file_get_contents(LAYOUT_DIR.'/'.Layout::DRAFT), true))))];
     } elseif ($pmode === 'value') {
         $check = static fn(array $one, mixed $raw): array => getLayoutValue($one + ['key' => 'k'], $raw);
         $pdone['data'] = [
@@ -141,6 +160,12 @@ try {
         $out['dupslot'] = setLayoutSecAct($lay, $types, 'sec-dup', 3, '', 1, 'sec:3');
         $out['up'] = setLayoutSecAct($lay, $types, 'sec-up', 21, '', 1, 'sec:21');
         $out['order'] = array_column($lay['pages'][1]['sections'], 'id');
+        setLayoutSecAct($lay, $types, 'sec-move', 3, '20-1', 1, 'sec:3');
+        $out['moved'] = array_column($lay['pages'][1]['sections'], 'id');
+        setLayoutSecAct($lay, $types, 'sec-move', 3, '21-0', 1, 'sec:3');
+        $out['before'] = array_column($lay['pages'][1]['sections'], 'id');
+        setLayoutSecAct($lay, $types, 'sec-move', 3, '99-0', 1, 'sec:3');
+        $out['nowhere'] = array_column($lay['pages'][1]['sections'], 'id');
         setLayoutSecAct($lay, $types, 'sec-order', 0, '20-3', 1, '');
         $out['short'] = array_column($lay['pages'][1]['sections'], 'id');
         setLayoutSecAct($lay, $types, 'sec-order', 0, '20-3-21', 1, '');

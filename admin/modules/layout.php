@@ -36,6 +36,33 @@ function getLayoutDraft(): array {
     foreach (['rev', 'ed', 'by'] as $key) $dft[$key] = is_string($data[$key] ?? null) ? $data[$key] : '';
     $dft['at'] = intval($data['at'] ?? 0);
     $dft['layout']['next'] = max($dft['layout']['next'], $live['next']);
+    $mod = getVar('req', 'mod', 'var', '');
+    if ($mod !== '') setLayoutSlotPage($dft, $mod);
+    return $dft;
+}
+
+# The page of a module the edit of a page in the floating menu opened while no page holds its slot: made in memory, written by the first change
+function setLayoutSlotPage(array &$dft, string $mod): void {
+    global $conf;
+    if (!isset(getLayoutModules()[$mod])) return;
+    foreach ($dft['layout']['pages'] as $page) {
+        foreach ($page['sections'] as $sec) if (($sec['type'] ?? '') === Layout::SLOT && (string)($sec['module'] ?? '') === $mod) return;
+    }
+    $cols = isset($conf['node']['types'][$mod]) ? (getNodeTypeMap()[$mod]->settings['view'] ?? []) : ($conf['modules'][$mod] ?? []);
+    [$side, $top] = array_map(static fn(mixed $v): string => in_array((string)$v, ['0', '1', '2', '3'], true) ? (string)$v : '0', [$cols['side'] ?? '', $cols['top'] ?? '']);
+    $dft['base'] = $dft['layout'];
+    $key = $dft['layout']['next']++;
+    $sec = ['id' => $dft['layout']['next']++, 'type' => Layout::SLOT, 'on' => true, 'module' => $mod, 'who' => '0', 'lang' => '', 'from' => '', 'till' => '', 'anchor' => '',
+        'phone' => true, 'desk' => true];
+    $dft['layout']['pages'][$key] = ['title' => getModuleName($mod), 'addr' => '', 'desc' => '', 'band' => true, 'side' => $side, 'top' => $top, 'og' => '', 'noindex' => false,
+        'who' => '0', 'sections' => [$sec]];
+    $dft['made'] = ['key' => $key, 'mod' => $mod];
+}
+
+# The draft as its file holds it, without the page of a module the screen made in memory: what Ctrl+Z, the state, the checks and the publication read
+function getLayoutStored(array $dft): array {
+    if (isset($dft['base'])) $dft['layout'] = $dft['base'];
+    unset($dft['base'], $dft['made']);
     return $dft;
 }
 
@@ -53,6 +80,7 @@ function setLayoutFile(string $name, array $data): bool {
 
 # Write the draft with a new stamp of its revision and time, which the screen of every editor posts back to find a write of another one
 function setLayoutDraft(array &$dft): bool {
+    unset($dft['base'], $dft['made']);
     [$dft['rev'], $dft['at']] = [bin2hex(random_bytes(8)), time()];
     return setLayoutFile(Layout::DRAFT, $dft);
 }
@@ -834,8 +862,8 @@ function getLayoutInsp(array $dft, int $key, string $sel, bool $oob = false): st
     }
     $data['sel'] = '';
     $data['main'] = ['open' => 'ready', 'icon' => 'file-earmark-plus', 'label' => $lay['shipped'] ? _LAYOUT_READYPICK : _LAYOUT_NEWPAGE];
-    $keys = [[['Ctrl', 'Z'], _LAYOUT_KEYUNDO], [['Ctrl', 'Shift', 'Z'], _LAYOUT_KEYREDO], [['Ctrl', 'K'], _LAYOUT_CMDS], [['Ctrl', 'Alt', 'P'], _LAYOUT_KEYVIEW],
-        [['Esc'], _LAYOUT_UNPICK]];
+    $keys = [[['Ctrl', 'Z'], _LAYOUT_KEYUNDO], [['Ctrl', 'Shift', 'Z'], _LAYOUT_KEYREDO], [['Ctrl', 'D'], _LAYOUT_DUP], [['Ctrl', 'K'], _LAYOUT_CMDS],
+        [['Ctrl', 'Alt', 'P'], _LAYOUT_KEYVIEW], [['Esc'], _LAYOUT_UNPICK]];
     $keys = $tpl->getHtmlPart('layout-keys', ['keys' => array_map(static fn(array $v): array => ['keys' => $v[0], 'text' => $v[1]], $keys)]);
     return $tpl->getHtmlPart('layout-insp', array_replace($data, ['icon_name' => 'cursor', 'title_text' => _LAYOUT_NOPICK, 'sub_text' => _LAYOUT_NOPICK2,
         'body_html' => ($lay['shipped'] ? $note(_LAYOUT_SHIPNOTE) : '').$note(_LAYOUT_PICKHINT).$keys]));
@@ -1244,13 +1272,32 @@ function getLayoutConfRows(array $dft): array {
 # The state of the draft in the top bar: Undo and Redo, then the chip of a draft with the count of its changes or of a published layout
 function getLayoutChip(array $dft, bool $oob = false): string {
     global $tpl, $conf;
+    $names = getLayoutNames($dft);
+    $dft = getLayoutStored($dft);
     $dirty = isLayoutDirty($dft);
     $view = getLayoutView($dft['layout']);
     $num = $dirty ? count(getLayoutChanges($dft, Layout::getLayoutData($conf['layout'] ?? []), getLayoutTypes($view), $view->getThemePlaces())) : 0;
     return $tpl->getHtmlPart('layout-state', ['is_oob' => $oob, 'is_dirty' => $dirty, 'state_text' => $dirty ? _LAYOUT_ISDRAFT.($num ? ' · '.$num : '') : _LAYOUT_ISLIVE,
         'state_title' => $num ? sprintf(_LAYOUT_DRAFTNUM, $num) : ($dirty ? _LAYOUT_DRAFTWAIT : ''), 'undo_text' => _LAYOUT_UNDO, 'redo_text' => _LAYOUT_REDO,
         'is_undo' => $dft['undo'] !== [], 'is_redo' => $dft['redo'] !== [],
-        'tools_label' => _LAYOUT_TOOLS, 'rev' => $dft['rev'], 'live' => Layout::getLayoutHash($conf['layout'] ?? []), 'publish_text' => _LAYOUT_PUBLISH]);
+        'tools_label' => _LAYOUT_TOOLS, 'rev' => $dft['rev'], 'live' => Layout::getLayoutHash($conf['layout'] ?? []), 'publish_text' => _LAYOUT_PUBLISH,
+        'names' => (string)json_encode($names, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)]);
+}
+
+# The names the rings of the page in the frame show, by the pick each part of the page carries: the sections of every page, the blocks, the parts and the menu items
+function getLayoutNames(array $dft): array {
+    $lay = $dft['layout'];
+    $view = getLayoutView($lay);
+    $types = getLayoutTypes($view);
+    $places = $view->getThemePlaces();
+    $out = [];
+    foreach ($lay['pages'] as $page) foreach ($page['sections'] as $sec) $out['sec:'.intval($sec['id'] ?? 0)] = getLayoutSecLabel($sec, $types);
+    foreach (getLayoutBlocks($dft) as $bid => $blk) $out['blk:'.$bid] = _LAYOUT_BLOCK.' «'.getConst($blk['title']).'»';
+    foreach ($places['parts'] as $pkey => $part) if (is_array($part)) $out['part:'.$pkey] = getConst((string)($part['title'] ?? $pkey));
+    foreach (array_keys($places['menus']) as $mkey) {
+        foreach (getLayoutFlat($lay['menus'][$mkey] ?? []) as $item) $out['menu:'.$mkey.':'.intval($item['id'] ?? 0)] = _LAYOUT_MITEM.' «'.(string)($item['title'] ?? '').'»';
+    }
+    return $out;
 }
 
 # The defaults of a description with its words resolved: a string with a leading underscore is a constant the editor reads when it makes a section or an item
@@ -1297,7 +1344,7 @@ function setLayoutPane(array $dft, int $key, string $sel, string $tab, string $t
 # Keep a changed draft as one step and write it; a draft that cannot be written is refused with its reason, a refused value is named after the write
 function setLayoutKeep(array $dft, array $new, int $key, string $sel, string $tab, string $text, bool $undo, bool $insp = true, bool $warn = false): never {
     if (getLayoutState($new) == getLayoutState($dft)) setLayoutPane($dft, $key, $sel, $tab, $warn ? $text : '', false, $insp || $warn, $warn);
-    $new['undo'] = array_slice(array_merge($dft['undo'], [getLayoutState($dft)]), -LAYOUT_STEPS);
+    $new['undo'] = array_slice(array_merge($dft['undo'], [getLayoutState(getLayoutStored($dft))]), -LAYOUT_STEPS);
     $new['redo'] = [];
     if (!setLayoutDraft($new)) setLayoutPane($dft, $key, $sel, $tab, _LAYOUT_NOWRITE, false, true, true);
     setLayoutPane($new, $key, $sel, $tab, $text, $undo, $insp || $warn, $warn);
@@ -1306,9 +1353,11 @@ function setLayoutKeep(array $dft, array $new, int $key, string $sel, string $ta
 function layout(): void {
     global $tpl, $afile, $adminvars;
     $dft = getLayoutDraft();
-    $made = is_file(LAYOUT_DIR.'/'.Layout::DRAFT) || setLayoutDraft($dft);
+    $first = getLayoutStored($dft);
+    $made = is_file(LAYOUT_DIR.'/'.Layout::DRAFT) || setLayoutDraft($first);
+    [$dft['rev'], $dft['at']] = [$first['rev'], $first['at']];
     $lay = $dft['layout'];
-    $key = getLayoutPageKey($lay);
+    $key = (isset($dft['made']) && !getVar('req', 'page', 'num', 0)) ? $dft['made']['key'] : getLayoutPageKey($lay);
     $sel = getLayoutPick();
     if ($sel !== '' && !isLayoutPicked($dft, $sel)) $sel = '';
     $tab = getLayoutTab($sel);
@@ -1330,7 +1379,11 @@ function layout(): void {
     $names = ['base' => _LAYOUT_G_BASE, 'media' => _LAYOUT_G_MEDIA, 'content' => _LAYOUT_G_CONT];
     $names += ['trust' => _LAYOUT_G_TRUST, 'contact' => _LAYOUT_G_LINK, 'master' => _LAYOUT_G_PRO];
     foreach ($names as $one => $label) if (in_array($one, array_column($cards, 'group'), true)) $groups[] = ['key' => $one, 'label' => $label, 'is_on' => false];
-    $frame = HOME_PATH.'index.php?'.http_build_query(['name' => 'page-'.$key, 'draft' => Layout::getDraftToken($key, time() + 7200, $dft['link'])]);
+    $mod = (string)($dft['made']['mod'] ?? '');
+    $frame = HOME_PATH.'index.php?'.http_build_query(['name' => 'page-'.$key, 'draft' => Layout::getDraftToken($key, time() + 7200, $dft['link']), 'edit' => 1]
+        + (($mod !== '') ? ['mod' => $mod] : []));
+    $words = ['grip' => _LAYOUT_DRAG, 'up' => _LAYOUT_UP, 'down' => _LAYOUT_DOWN, 'dup' => _LAYOUT_DUP, 'link' => _LAYOUT_SECLINK, 'hide' => _LAYOUT_HIDESEC,
+        'del' => _DELETE, 'add' => _LAYOUT_ADDSEC];
     setHead();
     $adminvars['is_full'] = true;
     if (!$made) echo $tpl->getHtmlFrag('alert', ['text' => _LAYOUT_NOWRITE, 'meta' => '', 'type' => 'error', 'is_warn' => true]);
@@ -1341,7 +1394,8 @@ function layout(): void {
         'devices' => [['key' => 'desk', 'icon' => 'display', 'label' => _LAYOUT_DESK, 'is_on' => true], ['key' => 'tablet', 'icon' => 'tablet', 'label' => _LAYOUT_TABLET],
             ['key' => 'phone', 'icon' => 'phone', 'label' => _LAYOUT_PHONE]],
         'tools_label' => _LAYOUT_TOOLS, 'site_url' => HOME_PATH, 'site_text' => _LAYOUT_OPENSITE, 'cmds_text' => _LAYOUT_CMDS, 'help_url' => getLayoutUrl(['op' => 'info']),
-        'help_text' => _MANUAL, 'sets_text' => _LAYOUT_SETS, 'help_label' => _LAYOUT_HELPSETS, 'state_html' => getLayoutChip($dft),
+        'help_text' => _MANUAL, 'expand_text' => _EEXPAND, 'restore_text' => _ERESTORE, 'sets_text' => _LAYOUT_SETS, 'help_label' => _LAYOUT_HELPSETS,
+        'state_html' => getLayoutChip($dft),
         'tree_label' => _LAYOUT_TREE, 'tree_html' => getLayoutTree($dft, $key, $tab, $sel), 'stage_label' => _LAYOUT_STAGE, 'frame_url' => $frame, 'frame_title' => _LAYOUT_FRAME,
         'insp_html' => getLayoutInsp($dft, $key, $sel), 'lib_title' => _LAYOUT_ADDSEC, 'lib_groups' => $groups, 'lib_groups_label' => _LAYOUT_GROUPS, 'lib_find' => _LAYOUT_FINDSEC,
         'lib_note' => _LAYOUT_LIBNOTE, 'cards' => $cards, 'none_text' => _NONE_FOUND, 'close_text' => _CLOSE,
@@ -1355,7 +1409,8 @@ function layout(): void {
         'edit_url' => getLayoutUrl(['op' => 'edit']), 'edit_title' => _EDIT, 'source_url' => getLayoutUrl(['op' => 'source']), 'file_title' => _LAYOUT_FILETAB,
         'link_tip' => _LAYOUT_LINKTIP, 'link_title' => _LAYOUT_LINK, 'link_sub' => _LAYOUT_LINKSUB, 'term_label' => _LAYOUT_LINKTERM, 'link_make' => _LAYOUT_LINKMAKE,
         'terms' => array_map(static fn(int $v): array => ['value' => $v, 'label' => sprintf(getPluralForm($v, _LAYOUT_DAYS), $v), 'is_on' => $v === LAYOUT_TERMS[1]], LAYOUT_TERMS),
-        'copy_text' => _COPY, 'copied_text' => _COPIED, 'cancel_text' => _CANCEL,
+        'copy_text' => _COPY, 'copied_text' => _COPIED, 'cancel_text' => _CANCEL, 'save_url' => getLayoutUrl(['op' => 'save']), 'mod' => $mod,
+        'words' => (string)json_encode($words, JSON_UNESCAPED_UNICODE),
         'link_note_html' => $tpl->getHtmlFrag('alert', ['text' => _LAYOUT_LINKNOTE, 'meta' => '', 'type' => 'info', 'is_warn' => false]),
     ]).getAdminIconWindow();
     setFoot();
@@ -1555,6 +1610,13 @@ function setLayoutSecAct(array &$lay, array $types, string $act, int $sid, strin
     } elseif ($act === 'sec-up' || $act === 'sec-down') {
         $to = $pos + (($act === 'sec-up') ? -1 : 1);
         if (isset($list[$to])) [$list[$pos], $list[$to]] = [$list[$to], $list[$pos]];
+    } elseif ($act === 'sec-move') {
+        [$to, $after] = array_map('intval', explode('-', $arg) + [0, 0]);
+        $rest = array_values(array_filter($list, static fn(array $v): bool => intval($v['id'] ?? 0) !== $sid));
+        $at = array_search($to, array_map('intval', array_column($rest, 'id')), true);
+        if ($at === false) return $out;
+        array_splice($rest, $at + ($after ? 1 : 0), 0, [$sec]);
+        $list = $rest;
     } elseif ($act === 'sec-copy') {
         $to = intval($arg);
         if ($to === $pkey || !isset($lay['pages'][$to]) || !empty($types[(string)($sec['type'] ?? '')]['one'])) return $out;
@@ -1696,10 +1758,11 @@ function act(): void {
     $act = getVar('post', 'act', 'var', '');
     $bid = getVar('post', 'id', 'var', '');
     $arg = getVar('post', 'arg', 'var', '');
-    if ($act === 'undo' || $act === 'redo') setLayoutBack($dft, $key, $sel, $tab, $act === 'undo');
-    if ($act === 'publish') setLayoutPublish($dft, $key, $sel, $tab);
-    if ($act === 'story-back') setLayoutStoryBack($dft, intval($bid), $key, $sel, $tab);
-    if ($act === 'discard') setLayoutDiscard($dft, $key, $sel, $tab);
+    $was = getLayoutStored($dft);
+    if ($act === 'undo' || $act === 'redo') setLayoutBack($was, $key, $sel, $tab, $act === 'undo');
+    if ($act === 'publish') setLayoutPublish($was, $key, $sel, $tab);
+    if ($act === 'story-back') setLayoutStoryBack($was, intval($bid), $key, $sel, $tab);
+    if ($act === 'discard') setLayoutDiscard($was, $key, $sel, $tab);
     if ($act === 'sec-mine' || $act === 'mine-del') setLayoutMineAct($dft, $act, intval($bid), $key, $sel, $tab);
     if ($act === 'link') setLayoutLink($dft, $key, $sel, $tab, intval($arg));
     $new = $dft;
@@ -1821,7 +1884,7 @@ function story(): void {
 # The window before a publication: the changes against the site, the remarks, and the note and the publication when the publish button opens it
 function checks(): void {
     global $tpl, $conf;
-    $dft = getLayoutDraft();
+    $dft = getLayoutStored(getLayoutDraft());
     $lay = $dft['layout'];
     $view = getLayoutView($lay);
     $types = getLayoutTypes($view);
@@ -1888,11 +1951,14 @@ function setLayoutLink(array $dft, int $key, string $sel, string $tab, int $days
     $days = in_array($days, LAYOUT_TERMS, true) ? $days : LAYOUT_TERMS[1];
     $new = $dft;
     $new['link']++;
-    if (!setLayoutDraft($new)) setLayoutPane($dft, $key, $sel, $tab, _LAYOUT_NOWRITE, false, false, true);
+    $keep = getLayoutStored($new);
+    if (!setLayoutDraft($keep)) setLayoutPane($dft, $key, $sel, $tab, _LAYOUT_NOWRITE, false, false, true);
+    [$new['rev'], $new['at']] = [$keep['rev'], $keep['at']];
+    $mod = isset($dft['made']) ? ['mod' => $dft['made']['mod']] : [];
     $till = time() + $days * 86400;
-    $link = static fn(int $end): string => 'index.php?'.http_build_query(['name' => 'page-'.$key, 'draft' => Layout::getDraftToken($key, $end, $new['link'])]);
-    $evs = ['sl-layout-link' => ['url' => rtrim((string)($conf['homeurl'] ?? ''), '/').'/'.$link($till), 'till' => sprintf(_LAYOUT_LINKTILL, date(_TIMESTRING, $till)),
-        'frame' => HOME_PATH.$link(time() + 7200), 'text' => _LAYOUT_LINKDONE]];
+    $link = static fn(int $end, array $more): string => 'index.php?'.http_build_query(['name' => 'page-'.$key, 'draft' => Layout::getDraftToken($key, $end, $new['link'])] + $more);
+    $evs = ['sl-layout-link' => ['url' => rtrim((string)($conf['homeurl'] ?? ''), '/').'/'.$link($till, $mod), 'till' => sprintf(_LAYOUT_LINKTILL, date(_TIMESTRING, $till)),
+        'frame' => HOME_PATH.$link(time() + 7200, ['edit' => 1] + $mod), 'text' => _LAYOUT_LINKDONE]];
     header('Content-Type: text/html; charset=utf-8');
     header('Cache-Control: no-store');
     header('HX-Trigger: '.json_encode($evs));

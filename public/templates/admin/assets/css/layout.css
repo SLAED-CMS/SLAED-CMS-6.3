@@ -248,6 +248,11 @@
   margin-left: auto;
 }
 
+/* The acts of a pick stand in sight whole: the capsule takes the width the red icon leaves, not the share an editor gives it */
+.sl-lay-right > .sl-modal-foot > .sl-editor-pill {
+  max-width: none;
+}
+
 .sl-lay-right .sl-modal-body > * + * {
   margin-top: var(--sl-space-4);
 }
@@ -407,6 +412,18 @@
 
 .sl-lay-right button[data-sl-lay-edit] {
   margin-top: var(--sl-space-2);
+}
+
+/* The chip of a picked file keeps the width of its row: the name is cut with an ellipsis and its title holds it whole, the cross stays in sight */
+.sl-lay-right .sl-file-door > .sl-chip {
+  max-width: 100%;
+  min-width: 0;
+}
+
+.sl-lay-right .sl-file-door [data-sl-field="name"] {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* Keys of the start of the inspector: each line its keys, then what they do */

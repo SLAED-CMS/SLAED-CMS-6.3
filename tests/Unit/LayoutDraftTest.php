@@ -46,7 +46,7 @@ final class LayoutDraftTest extends TestCase
         return substr($code, $from, (int)strpos($code, "\n}\n", $from) - $from);
     }
 
-    # No draft yet starts as the site, clean; a draft written whole leaves no temporary file and is what the page of a draft link reads
+    # No draft starts as the site; a draft written whole leaves no temporary file and is read by a draft link; a module page waits in memory for the first change
     #[Test]
     public function theDraftIsWrittenWholeAndReadByTheDraftLink(): void
     {
@@ -60,6 +60,11 @@ final class LayoutDraftTest extends TestCase
         $this->assertSame(['link' => 3, 'phone' => '+49 1', 'pages' => [1, 2, 9]], $data['link']);
         $this->assertSame(['undo' => 1, 'phone' => '+49 1', 'next' => 25], $data['back']);
         $this->assertSame('', $data['broken'], 'A draft that does not read did not start as the site');
+        $this->assertFalse($data['panel'], 'A section of the panel got a page of the site');
+        $made = ['made' => ['key' => 20, 'mod' => 'news'], 'page' => ['Mod news', '2', '0', ''], 'slot' => ['id' => 21, 'type' => 'module', 'on' => true, 'module' => 'news'],
+            'dirty' => false, 'stored' => [1, 2, 9], 'next' => 20];
+        $this->assertSame($made, $data['made'], 'The page of a module is not made in memory with the columns of its module');
+        $this->assertSame(['made' => false, 'title' => 'Changed', 'next' => 22, 'file' => []], $data['kept'], 'The first change did not write the page of a module');
     }
 
     # A type of Field is checked by Field, a kind of the builder by its own grammar; a refused value keeps the old one and names its field
@@ -86,6 +91,9 @@ final class LayoutDraftTest extends TestCase
         $this->assertSame(['sec:21', 'copied Hero', false, ''], $data['dup']);
         $this->assertSame(['sec:3', '', false, ''], $data['dupslot'], 'The slot of a module got a twin');
         $this->assertSame([3, 21, 20], $data['order']);
+        $this->assertSame([21, 20, 3], $data['moved'], 'A section dragged after another did not land there');
+        $this->assertSame([3, 21, 20], $data['before'], 'A section dragged before another did not land there');
+        $this->assertSame([3, 21, 20], $data['nowhere'], 'A section dragged to no section moved');
         $this->assertSame([3, 21, 20], $data['short'], 'An order missing a section was taken');
         $this->assertSame([20, 3, 21], $data['ordered']);
         $this->assertSame(['sec:21', 'hidden Hero', true, ''], $data['hide']);

@@ -532,6 +532,7 @@ define('_LAYOUT_ONPHONE','On a phone');
 define('_LAYOUT_ONDESK','On a desktop');
 define('_LAYOUT_SHOWNOTE','"Who sees it" and the dates are those of the blocks of the site. The anchor gives the section an address on the page: a link "#anchor" leads to it.');
 define('_LAYOUT_DUP','Duplicate');
+define('_LAYOUT_DRAG','Drag');
 define('_LAYOUT_UP','Up');
 define('_LAYOUT_DOWN','Down');
 define('_LAYOUT_ALLSITE','whole site');

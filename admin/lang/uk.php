@@ -532,6 +532,7 @@ define('_LAYOUT_ONPHONE','На телефоні');
 define('_LAYOUT_ONDESK','На комп\'ютері');
 define('_LAYOUT_SHOWNOTE','«Кому» й дати — ті самі, що в блоків сайту. Якір дає секції адресу на сторінці: посилання «#якір» веде до неї.');
 define('_LAYOUT_DUP','Дублювати');
+define('_LAYOUT_DRAG','Перетягнути');
 define('_LAYOUT_UP','Вище');
 define('_LAYOUT_DOWN','Нижче');
 define('_LAYOUT_ALLSITE','увесь сайт');

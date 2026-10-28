@@ -1,10 +1,10 @@
-  {% if parts.lineon %}<section id="demo-line"{% if parts.linetitle %} aria-label="{{ parts.linetitle }}"{% endif %}>
+  {% if parts.lineon %}<section id="demo-line"{% if is_build %} data-sl-pick="part:line"{% endif %}{% if parts.linetitle %} aria-label="{{ parts.linetitle }}"{% endif %}>
     <div class="sl-wrp">
-      {% if parts.linetitle %}<div class="sl-font sl-demo-line-title">{{ parts.linetitle }}</div>{% endif %}
-      {% if parts.paneon %}<ul class="sl-d-pane">
-        {% if parts.panecap %}<li class="sl-d-info sl-d-version sl-font">{{ parts.panecap }}</li>{% endif %}
-        {% if parts.panever %}<li class="sl-d-num sl-font">{{ parts.panever }}</li>{% endif %}
-        {% if parts.panebtn and parts.panehref %}<li class="sl-d-btns"><a class="sl-but" href="{{ parts.panehref }}"{% if parts.panehref_ext %} target="_blank" rel="noopener"{% endif %} title="{{ parts.panebtn }}">{{ parts.panebtn }}</a></li>{% endif %}
+      {% if parts.linetitle %}<div class="sl-font sl-demo-line-title"{% if is_build %} data-sl-text="linetitle"{% endif %}>{{ parts.linetitle }}</div>{% endif %}
+      {% if parts.paneon %}<ul class="sl-d-pane"{% if is_build %} data-sl-pick="part:pane"{% endif %}>
+        {% if parts.panecap %}<li class="sl-d-info sl-d-version sl-font"{% if is_build %} data-sl-text="panecap"{% endif %}>{{ parts.panecap }}</li>{% endif %}
+        {% if parts.panever %}<li class="sl-d-num sl-font"{% if is_build %} data-sl-text="panever"{% endif %}>{{ parts.panever }}</li>{% endif %}
+        {% if parts.panebtn and parts.panehref %}<li class="sl-d-btns"><a class="sl-but" href="{{ parts.panehref }}"{% if parts.panehref_ext %} target="_blank" rel="noopener"{% endif %} title="{{ parts.panebtn }}"{% if is_build %} data-sl-text="panebtn"{% endif %}>{{ parts.panebtn }}</a></li>{% endif %}
       </ul>{% endif %}
     </div>
   </section>{% endif %}
@@ -13,27 +13,27 @@
       <section class="sl-grid" aria-label="{{ sitename }}">
         <div class="sl-upper-wordmark" title="{% if slogan %}{{ sitename }} - {{ slogan }}{% else %}{{ sitename }}{% endif %}">
           <img class="sl-upper-wordmark-img" src="{{ root }}templates/{{ theme }}/images/logos/slaed-logo-wordmark-outline-blue.svg" alt="{% if slogan %}{{ sitename }} - {{ slogan }}{% else %}{{ sitename }}{% endif %}" title="{% if slogan %}{{ sitename }} - {{ slogan }}{% else %}{{ sitename }}{% endif %}" width="355" height="110">
-          {% if parts.tagline %}<span class="sl-upper-tagline sl-font">{{ parts.tagline }}</span>{% endif %}
+          {% if parts.tagline %}<span class="sl-upper-tagline sl-font"{% if is_build %} data-sl-pick="part:brand" data-sl-text="tagline" data-sl-lines{% endif %}>{{ parts.tagline }}</span>{% endif %}
         </div>
         {{{ foot_html }}}
-        {% if parts.madein %}<div class="sl-thd sl-madein sl-madein-brand" title="Официальный патент на бренд SLAED в Германии">
+        {% if parts.madein %}<div class="sl-thd sl-madein sl-madein-brand"{% if is_build %} data-sl-pick="part:marks"{% endif %} title="Официальный патент на бренд SLAED в Германии">
           <img src="{{ root }}templates/{{ theme }}/images/flags/de.svg" alt="Официальная регистрация бренда SLAED в Германии" width="60" height="40">
           <span class="sl-madein-label sl-font">Made<br>in<br>Germany</span>
         </div>{% endif %}
       </section>
       {% if forumblock %}{{{ forumblock }}}{% endif %}
-      {% if parts.markson and parts.marks %}<section class="sl-grid"{% if parts.markstitle %} aria-label="{{ parts.markstitle }}"{% endif %}>
-        {% if parts.markstitle %}<div class="sl-font sl-f-title">{{ parts.markstitle }}</div>{% endif %}
+      {% if parts.markson and parts.marks %}<section class="sl-grid"{% if is_build %} data-sl-pick="part:marks"{% endif %}{% if parts.markstitle %} aria-label="{{ parts.markstitle }}"{% endif %}>
+        {% if parts.markstitle %}<div class="sl-font sl-f-title"{% if is_build %} data-sl-text="markstitle"{% endif %}>{{ parts.markstitle }}</div>{% endif %}
         <div class="sl-partners">
           {% for mark in parts.marks %}{% if mark.img %}<span title="{{ mark.title }}"><img src="{{ mark.img }}" alt="{{ mark.title }}" width="74" height="74"></span>
           {% endif %}{% endfor %}
         </div>
       </section>{% endif %}
-      {% if parts.address or parts.phone or parts.email or parts.web %}<section class="sl-grid" aria-label="Контакты">
+      {% if parts.address or parts.phone or parts.email or parts.web %}<section class="sl-grid" aria-label="Контакты"{% if is_build %} data-sl-pick="part:contacts"{% endif %}>
         <div class="sl-font sl-f-title">Контакты</div>
         <address>
           <ul class="sl-block-contact">
-            {% if parts.address %}<li><i class="bi bi-geo-alt sl-contact-icon" aria-hidden="true"></i><span class="sl-sec-lines">{{ parts.address }}</span></li>{% endif %}
+            {% if parts.address %}<li><i class="bi bi-geo-alt sl-contact-icon" aria-hidden="true"></i><span class="sl-sec-lines"{% if is_build %} data-sl-text="address" data-sl-lines{% endif %}>{{ parts.address }}</span></li>{% endif %}
             {% if parts.phone %}<li><i class="bi bi-telephone sl-contact-icon" aria-hidden="true"></i>{{ parts.phone }}</li>{% endif %}
             {% if parts.email %}<li><i class="bi bi-envelope sl-contact-icon" aria-hidden="true"></i><a href="mailto:{{ parts.email }}">{{ parts.email }}</a></li>{% endif %}
             {% if parts.web %}<li><i class="bi bi-globe sl-contact-icon" aria-hidden="true"></i><a href="{{ parts.web }}" title="{{ sitename }}">{{ parts.web }}</a></li>{% endif %}
@@ -44,13 +44,13 @@
     {% if menus.foot %}<div class="sl-wrp">
       <nav class="sl-fmenu" aria-label="Нижнее меню">
         <ul>
-          {% for item in menus.foot %}<li><a href="{% if item.href %}{{ item.href }}{% else %}#{% endif %}" title="{{ item.title }}"{% if item.blank %} target="_blank" rel="noopener"{% endif %}>{% if item.icon %}<i class="bi bi-{{ item.icon }}" aria-hidden="true"></i>{% endif %}{{ item.title }}</a></li>
+          {% for item in menus.foot %}<li><a{% if is_build %} data-sl-pick="menu:foot:{{ item.id }}" data-sl-text="title"{% endif %} href="{% if item.href %}{{ item.href }}{% else %}#{% endif %}" title="{{ item.title }}"{% if item.blank %} target="_blank" rel="noopener"{% endif %}>{% if item.icon %}<i class="bi bi-{{ item.icon }}" aria-hidden="true"></i>{% endif %}{{ item.title }}</a></li>
           {% endfor %}
         </ul>
       </nav>
     </div>{% endif %}
   </footer>
-  {% if parts.tabson %}{% for tab in parts.tabs %}{% if tab.href %}{% if tab.is_first %}<div id="block-idea"><a href="{{ tab.href }}" title="{{ tab.title }}" class="sl-btn-idea"><span class="sl-font">{{ tab.title }}</span></a></div>{% else %}<div id="block-feedback"><a href="{{ tab.href }}" title="{{ tab.title }}" class="sl-btn-feedback"><span class="sl-font">{{ tab.title }}</span></a></div>{% endif %}
+  {% if parts.tabson %}{% for tab in parts.tabs %}{% if tab.href %}{% if tab.is_first %}<div id="block-idea"{% if is_build %} data-sl-pick="part:tabs"{% endif %}><a href="{{ tab.href }}" title="{{ tab.title }}" class="sl-btn-idea"><span class="sl-font"{% if is_build %} data-sl-text="tabs.{{ tab.order_num }}.title"{% endif %}>{{ tab.title }}</span></a></div>{% else %}<div id="block-feedback"{% if is_build %} data-sl-pick="part:tabs"{% endif %}><a href="{{ tab.href }}" title="{{ tab.title }}" class="sl-btn-feedback"><span class="sl-font"{% if is_build %} data-sl-text="tabs.{{ tab.order_num }}.title"{% endif %}>{{ tab.title }}</span></a></div>{% endif %}
   {% endif %}{% endfor %}{% endif %}
   {% if debug_html %}
   <div class="sl-advantage">
@@ -59,6 +59,7 @@
     </div>
   </div>
   {% endif %}
+  {{{ build_html }}}
   {{{ windows_html }}}
   {{{ dock_html }}}
 </body>

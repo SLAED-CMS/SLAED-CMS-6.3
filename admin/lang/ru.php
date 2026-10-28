@@ -532,6 +532,7 @@ define('_LAYOUT_ONPHONE','На телефоне');
 define('_LAYOUT_ONDESK','На компьютере');
 define('_LAYOUT_SHOWNOTE','«Кому» и даты — те же, что у блоков сайта. Якорь даёт секции адрес на странице: ссылка «#якорь» ведёт к ней.');
 define('_LAYOUT_DUP','Дублировать');
+define('_LAYOUT_DRAG','Перетащить');
 define('_LAYOUT_UP','Выше');
 define('_LAYOUT_DOWN','Ниже');
 define('_LAYOUT_ALLSITE','весь сайт');
