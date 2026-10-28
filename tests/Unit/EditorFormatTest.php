@@ -335,6 +335,9 @@ final class EditorFormatTest extends TestCase
         $run = fn(array $data) => $this->getFragData($this->getDriverFrags(fn() => (new EditorPlain())->getWidget('1', 'x', 'text', 'full', $data)), 'editor-frame');
         $this->assertTrue($run(['readonly' => true])['is_readonly'] ?? null, 'The frame does not hear readonly');
         $this->assertFalse($run([])['is_readonly'] ?? null, 'A frame is read-only unasked');
+        $code = fn(array $data) => $this->getFragData($this->getDriverFrags(fn() => Editor::getCode($data + ['id' => 'c', 'lang' => 'php', 'text' => 'x'])), 'editor-frame');
+        $this->assertTrue($code(['readonly' => true])['is_readonly'] ?? null, 'The code editor does not pass readonly to its frame');
+        $this->assertFalse($code([])['is_readonly'] ?? null, 'Code is read-only unasked');
         foreach (['admin', 'lite'] as $theme) {
             $frame = (string)file_get_contents(PUBLIC_DIR.'/templates/'.$theme.'/fragments/editor-frame.html');
             $this->assertStringContainsString('{% if is_readonly %} readonly{% endif %}', $frame, 'The frame of '.$theme.' does not mark its area read-only');

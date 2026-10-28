@@ -78,7 +78,7 @@ The browser may reach the folder `public/` and nothing else. It holds the entrie
 `setup.php`, `update.php`), `.htaccess`, `robots.txt`, `error.html`, the sitemap files, `templates/` and
 `plugins/`. Everything else stays outside: the code in `core/`, `modules/`, `admin/`, the settings in `config/`, the
 logs and database backups in `storage/`, and every uploaded file in `uploads/`. The files of the public folders of
-`uploads/` (avatars, `all/` and `presentation/`) are still served at `/uploads/...` by `index.php`; the files of a
+`uploads/` (avatars, `all/`, `layout/` and `presentation/`) are still served at `/uploads/...` by `index.php`; the files of a
 content type, the forum, the private messages, the profiles and the poll comments only through the checked route of
 the text that names them. The system job `selfcheck` proves every hour that nothing outside `public/` is reachable.
 

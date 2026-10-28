@@ -1055,7 +1055,7 @@ function getEditorFileKit(string $id, array $data): array {
     return ['opt' => $opt, 'html' => $html];
 }
 
-# Build the file window door of one form row; its three hidden carriers are exclusive, because the handler reads them in a fixed order and a leftover would answer
+# Build the file window door of one form row, registered once a row swapped in by htmx has loaded its runtime; its three hidden carriers are exclusive, read in a fixed order
 function getFileManagerField(array $opt): string {
     global $tpl;
     $plc = (string)($opt['place'] ?? '');
@@ -1124,9 +1124,10 @@ function getFileManagerField(array $opt): string {
         'urlalt' => $eid.'-fm-urlalt',
         'editor' => $eid,
     ]);
-    $js = '(function(){var box=document.getElementById('.json_encode($eid.'-box').');';
+    $js = '(function(){var go=function(){var box=document.getElementById('.json_encode($eid.'-box').');';
     $js .= 'if(box&&window.SlaedFileManager){window.SlaedFileManager.addField('.json_encode($eid).',box,'
-        .json_encode($run, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES).');}})();';
+        .json_encode($run, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES).');}};';
+    $js .= 'if(window.SlaedEditors){window.SlaedEditors.ready(go);}else{go();}})();';
     return $box.$win.$tpl->getHtmlFrag('head-script-inline', ['js' => $js]);
 }
 

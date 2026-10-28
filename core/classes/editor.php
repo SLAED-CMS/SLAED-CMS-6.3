@@ -144,7 +144,7 @@ class Editor {
         return $driver instanceof CodeDriver ? $driver->getAssets($profile).self::getThemeSkin($key).$driver->getWidget($id, $name, $value, $lang, $profile, $label) : '';
     }
 
-    # What the page tells the editor: the variables of a template, whether its html is checked, and its preview, 'text' for the route or the sample values of a template
+    # What the page tells the editor: the variables of a template, whether its html is checked, its preview, 'text' for the route or the sample values of a template, and read-only
     private static function getPageData(array $data): array {
         $vars = [];
         foreach ((array)($data['vars'] ?? []) as $key => $text) {
@@ -160,7 +160,7 @@ class Editor {
         } elseif ($view !== 'text') {
             $view = '';
         }
-        return ['vars' => $vars, 'lint' => !empty($data['lint']), 'view' => $view];
+        return ['vars' => $vars, 'lint' => !empty($data['lint']), 'view' => $view, 'readonly' => !empty($data['readonly'])];
     }
 
     # The data the preview of one frame runs on: a template filled in at once on the client, a text posted with a token to the route of its own door
@@ -186,6 +186,7 @@ class Editor {
         $lint = !empty(self::$page['lint']) && $lang === 'html';
         $view = self::$page['view'] ?? '';
         $view = ($view !== '') ? self::getViewData($view, $data) : [];
+        $read = !empty($data['readonly']) || !empty(self::$page['readonly']);
         self::$page = [];
         $head = '';
         if (!self::$done) {
@@ -213,7 +214,7 @@ class Editor {
             'rows_num' => (int)($data['rows'] ?? 0),
             'placeholder_text' => (string)($data['placeholder'] ?? ''),
             'is_required' => !empty($data['required']),
-            'is_readonly' => !empty($data['readonly']),
+            'is_readonly' => $read,
             'labelledby' => (string)($data['labelledby'] ?? ''),
             'aria_label' => (string)($data['arialabel'] ?? ''),
             'describedby' => (string)($data['describedby'] ?? ''),

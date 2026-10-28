@@ -399,6 +399,16 @@
   text-align: right;
 }
 
+/* The own address under the choice of an address, and the button of a text under its beginning */
+.sl-lay-own {
+  display: block;
+  margin-top: var(--sl-space-2);
+}
+
+.sl-lay-right button[data-sl-lay-edit] {
+  margin-top: var(--sl-space-2);
+}
+
 /* Keys of the start of the inspector: each line its keys, then what they do */
 .sl-lay-keys {
   display: grid;
@@ -430,7 +440,7 @@
   min-width: 0;
 }
 
-.sl-lay-cards {
+.sl-menu-grid.sl-lay-cards {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: var(--sl-space-3);
@@ -523,6 +533,47 @@
   border-color: var(--sl-primary);
 }
 
+/* A ready page: a column of thin bars, one per section of its set, the cover and the claim toned, the slot of a module a frame waiting for its answer */
+.sl-lay-thumb[data-sl-lay-thumb="page"] {
+  align-content: start;
+}
+
+.sl-lay-thumb[data-sl-lay-thumb="page"] > i {
+  height: var(--sl-space-1);
+}
+
+.sl-lay-thumb[data-sl-lay-thumb="page"] > :is([data-sl-lay-mini="hero"], [data-sl-lay-mini="cta"]) {
+  height: var(--sl-space-3);
+  background: var(--sl-primary);
+}
+
+.sl-lay-thumb[data-sl-lay-thumb="page"] > [data-sl-lay-mini="cta"] {
+  width: var(--sl-size-icon-sm);
+  justify-self: center;
+  border-radius: var(--sl-radius-pill);
+}
+
+.sl-lay-thumb[data-sl-lay-thumb="page"] > [data-sl-lay-mini="module"] {
+  height: var(--sl-space-3);
+  background: var(--sl-tint);
+  box-shadow: inset 0 0 0 1px var(--sl-primary);
+}
+
+.sl-lay-thumb[data-sl-lay-thumb="page"] > [data-sl-lay-mini="empty"] {
+  height: var(--sl-space-8);
+  border: 1px dashed var(--sl-border-strong);
+  background: none;
+}
+
+/* The library: the recent types and my sections stand over the types, each its caption and its row of cards */
+.sl-lay-sect:not([hidden]) {
+  margin-bottom: var(--sl-space-5);
+}
+
+.sl-lay-sect > .sl-lay-head {
+  margin-top: 0;
+}
+
 /* Settings: the screens of the panel that keep what the builder does not, each a row leading to its screen */
 .sl-lay-links {
   display: grid;
@@ -574,6 +625,83 @@
   font-size: var(--sl-font-small);
 }
 
+/* The changes, the remarks, the pages to copy to and the sections of a publication: the findings list of the editors laid open in a window, each row
+   leading to its place */
+.sl-editor-issues.sl-lay-issues {
+  max-height: none;
+  margin: 0 0 var(--sl-space-5);
+  padding: 0;
+  overflow: visible;
+  border-top: 0;
+}
+
+.sl-lay-issues > li {
+  padding: 0 var(--sl-space-3);
+  border-radius: var(--sl-radius-1);
+}
+
+.sl-lay-issues .sl-editor-issue:disabled {
+  cursor: default;
+}
+
+.sl-lay-issues .sl-editor-issue > .bi:last-child:not(:first-child) {
+  color: var(--sl-text-muted);
+}
+
+.sl-lay-story-secs {
+  margin: var(--sl-space-2) 0 0 var(--sl-space-4);
+}
+
+.sl-lay-story-secs .sl-lay-issues {
+  margin: var(--sl-space-2) 0 0;
+}
+
+/* The way back of the window before a publication stands at the left of its foot, away from the publication */
+.sl-modal-foot > .sl-lay-foot-start {
+  margin-right: auto;
+}
+
+/* The way back of a field to the site stands after its label */
+.sl-lay-live {
+  margin-left: var(--sl-space-2);
+}
+
+.sl-lay-live[hidden] {
+  display: none;
+}
+
+/* The full preview: the panels step aside, the page takes the window under the thin bar of the way back */
+.sl-lay-preview {
+  grid-area: top;
+  display: flex;
+  align-items: center;
+  gap: var(--sl-space-4);
+  padding: var(--sl-space-3) var(--sl-space-5);
+  border-bottom: 1px solid var(--sl-border);
+  background: var(--sl-bg);
+}
+
+.sl-lay-preview[hidden] {
+  display: none;
+}
+
+.sl-lay-preview-note {
+  display: inline-flex;
+  flex: 1 1 auto;
+  align-items: center;
+  gap: var(--sl-space-2);
+  color: var(--sl-text-muted);
+}
+
+.sl-lay-app[data-sl-lay-full] {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas: "top" "stage";
+}
+
+.sl-lay-app[data-sl-lay-full] > :is(.sl-lay-top, .sl-lay-left, .sl-lay-right) {
+  display: none;
+}
+
 /* A narrow window stacks the columns: the top bar, the tree, the page, the inspector, scrolled as one */
 @media (max-width: 900px) {
   .sl-lay-app {
@@ -587,7 +715,7 @@
     min-height: 100vh;
   }
 
-  .sl-lay-cards {
+  .sl-menu-grid.sl-lay-cards {
     grid-template-columns: minmax(0, 1fr);
   }
 }

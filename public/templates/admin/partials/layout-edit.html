@@ -1,0 +1,15 @@
+{# The editor window of the site builder: a text of the pick in Markdown, the own HTML in the code editor, or a whole page from a text; its form posts the one field it holds #}
+<div class="sl-modal-title"><i class="bi bi-{{ icon_name }}" aria-hidden="true"></i> <span class="sl-modal-cap"><strong>{{ title_text }}</strong><span class="sl-modal-sub">{{ sub_text }}</span></span> <span class="sl-modal-acts"><button type="button" class="sl-modal-act sl-modal-act-close" data-sl-close title="{{ close_text }}" aria-label="{{ close_text }}"><i class="bi bi-x-lg" aria-hidden="true"></i></button></span></div>
+<div class="sl-modal-body">
+  <form id="sl-lay-edit-form" action="{{ post_url }}" method="post" hx-post="{{ post_url }}" hx-swap="none" novalidate>
+    <input type="hidden" name="token" value="{{ token }}">
+    <input type="hidden" name="sel" value="{{ sel }}">
+    <input type="hidden" name="page" value="{{ page }}">
+    {% if is_from %}<input type="hidden" name="act" value="page-text">{% else %}<input type="hidden" name="redraw" value="1">{% endif %}
+    {{{ editor_html }}}
+  </form>
+</div>
+<div class="sl-modal-foot">
+  <button type="button" class="sl-but" data-sl-close><i class="bi bi-x-lg" aria-hidden="true"></i>{{ cancel_text }}</button>
+  <button type="submit" class="sl-but-blue" form="sl-lay-edit-form"><i class="bi bi-{{ save_icon }}" aria-hidden="true"></i>{{ save_text }}</button>
+</div>

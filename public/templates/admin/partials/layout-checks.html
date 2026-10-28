@@ -1,0 +1,14 @@
+{# The window before a publication in the site builder: what it changes against the site, what a visitor would trip over, each row leading to its place, then the note and the publication #}
+<div class="sl-modal-title"><i class="bi bi-clipboard-check" aria-hidden="true"></i> <span class="sl-modal-cap"><strong>{{ title_text }}</strong><span class="sl-modal-sub">{{ sub_text }}</span></span> <span class="sl-modal-acts"><button type="button" class="sl-modal-act sl-modal-act-close" data-sl-close title="{{ close_text }}" aria-label="{{ close_text }}"><i class="bi bi-x-lg" aria-hidden="true"></i></button></span></div>
+<div class="sl-modal-body">
+  <div class="sl-lay-head"><i class="bi bi-arrow-left-right" aria-hidden="true"></i><span>{{ changes_title }}</span><span class="sl-chip sl-chip-neutral">{{ changes_num }}</span></div>
+  {% if changes %}<ul class="sl-editor-issues sl-lay-issues">{% for item in changes %}<li data-sl-editor-tone="info"><button type="button" class="sl-editor-issue" data-sl-lay-goto="{{ item.sel }}" data-sl-lay-page="{{ item.page }}"{% if not item.sel %} disabled{% endif %}><i class="bi bi-{{ item.icon }}" aria-hidden="true"></i><span>{{ item.text }}</span><small>{{ item.where }}</small></button></li>{% endfor %}</ul>{% else %}<p class="sl-list-none">{{ changes_none }}</p>{% endif %}
+  <div class="sl-lay-head"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i><span>{{ issues_title }}</span><span class="sl-chip sl-chip-neutral">{{ issues_num }}</span></div>
+  {% if issues %}<ul class="sl-editor-issues sl-lay-issues">{% for item in issues %}<li data-sl-editor-tone="warning"><button type="button" class="sl-editor-issue" data-sl-lay-goto="{{ item.sel }}" data-sl-lay-page="{{ item.page }}"><i class="bi bi-{{ item.icon }}" aria-hidden="true"></i><span>{{ item.text }}</span><small>{{ item.where }}</small></button></li>{% endfor %}</ul>{% else %}<p class="sl-list-none">{{ issues_none }}</p>{% endif %}
+  {% if is_pub %}<div class="sl-div-grid"><div class="sl-div-item"><div class="sl-div-label"><label for="sl-lay-note">{{ note_label }}</label><span class="sl-small">{{ note_hint }}</span></div><div class="sl-div-field"><input type="text" id="sl-lay-note" maxlength="120" placeholder="{{ note_place }}" autocomplete="off" data-sl-lay-note></div></div></div>{% endif %}
+</div>
+<div class="sl-modal-foot">
+  {% if is_discard %}<button type="button" class="sl-but-red sl-lay-foot-start" data-sl-lay-act="discard" title="{{ discard_title }}"><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i>{{ discard_text }}</button>{% endif %}
+  <button type="button" class="sl-but" data-sl-close{% if not is_pub %} data-sl-focus{% endif %}><i class="bi bi-pencil" aria-hidden="true"></i>{{ back_text }}</button>
+  {% if is_pub %}<button type="button" class="sl-but-blue" data-sl-lay-act="publish" data-sl-focus><i class="bi bi-cloud-arrow-up" aria-hidden="true"></i>{{ publish_text }}</button>{% endif %}
+</div>

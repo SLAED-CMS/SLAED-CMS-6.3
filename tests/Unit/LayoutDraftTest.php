@@ -126,6 +126,79 @@ final class LayoutDraftTest extends TestCase
         $this->assertSame(['id' => 'n1', 'title' => 'New', 'status' => true, 'new' => true], $data['new']);
     }
 
+    # The window before a publication lists the changes by the ids of the draft and the remarks a visitor would trip over, a picture behind its switch left out
+    #[Test]
+    public function theChecksListTheChangesAndTheRemarks(): void
+    {
+        $data = $this->getProbe('tools');
+        $changes = ['secnew Hero > sec:20', 'secnew Hero «Off» > sec:22', 'page Twin > page:12', 'part Contacts > part:contacts', 'itemset A2 > menu:main:4',
+            'itemnew E > menu:main:8', 'itemdel B > menu:main', 'blkset Poll > blk:13', 'blknew New > blk:n1', 'blkdel Old > '];
+        $this->assertSame($changes, $data['changes']);
+        $issues = ['notitle > sec:20', 'addr /nowhere > sec:20', 'alt big.png > sec:20', 'heavy big.png 586 > sec:20', 'mdalt big.png > sec:20', 'heavy big.png 586 > sec:20',
+            'intext anchor #gone > sec:20', 'hidden > sec:22', 'nodesc > page:9', 'twinurl about About > page:12', 'addr https:// > part:contacts', 'nowhere A2 > menu:main:4',
+            'nowhere D > menu:main:7', 'nowhere E > menu:main:8', 'blknone New > blk:n1'];
+        $this->assertSame($issues, $data['issues']);
+        $this->assertSame([true, true, true, true, false, false, false], $data['same']);
+    }
+
+    # The tools of a section: its look goes to a section of its type alone, a copy and a ready page take new ids, a section of a publication comes back to its place
+    #[Test]
+    public function theToolsOfASectionKeepTheirIdsAndTheirContent(): void
+    {
+        $data = $this->getProbe('tools');
+        $this->assertSame(['pic', 'tone', 'cols'], $data['look'], 'A picture, an icon or a text counted as the look');
+        $this->assertSame(['sec:31', 'look into Hero', true, ''], $data['paste']);
+        $this->assertSame(['tone' => 'accent', 'cols' => 'two', 'pic' => false, 'title' => 'Two', 'photo' => 'p/2.png'], $data['pasted']);
+        $this->assertSame(['sec:31', '', false, 'look gone'], $data['self'], 'A section took its own look');
+        $this->assertSame(['sec:30', 'copied Hero to Home', true, ''], $data['copy']);
+        $this->assertSame(['3:module', '20:hero'], $data['copied']);
+        $this->assertSame(['', '', false, ''], $data['copyslot'], 'The slot of a module was copied');
+        $this->assertSame(21, $data['next']);
+        $this->assertSame(['sec:3', ''], $data['back']);
+        $this->assertSame([3], $data['backids'], 'A section brought back twice stands twice');
+        $this->assertSame(['', 'story gone'], $data['nosec']);
+        $this->assertSame(['', 'page About gone'], $data['nopage']);
+        $preset = ['key' => 20, 'addr' => 'about-20', 'band' => false, 'next' => 23, 'secs' => ['21:hero', '22:module'], 'title' => 'Mine', 'anchor' => 'top', 'who' => '0'];
+        $this->assertSame($preset, $data['preset'], 'A ready page kept a missing type, a second slot or a module the slot refuses');
+        $this->assertTrue($data['empty']);
+    }
+
+    # A copy of a page takes a number, ids and an address of its own and leaves a slot behind; a text makes a cover and sections "Text", its words never read as constants
+    #[Test]
+    public function aPageIsCopiedOrMadeFromAText(): void
+    {
+        $data = $this->getProbe('pages');
+        $this->assertSame([20, 'copied About. Slot kept.'], $data['copy']);
+        $this->assertSame(['title' => 'Copy About', 'addr' => 'copy-about', 'desc' => 'Said', 'secs' => ['21:hero']], $data['copied'], 'A copy shares an id or took the slot');
+        $this->assertSame([0, ''], $data['lost'], 'The page 404 was copied');
+        $this->assertSame([22, '_HOME', 2], $data['text']);
+        $this->assertSame(['addr' => 'home', 'desc' => 'The lead.', 'band' => false], $data['textpage']);
+        $secs = [['hero', '_HOME', 'The lead.', ''], ['text', 'One', 'Text **one**.', 'file-text'], ['text', 'Two', "- a\n# Not a title", 'file-text']];
+        $this->assertSame($secs, $data['textsecs'], 'A text page lost a part, kept a default button or read a word as a constant');
+        $this->assertSame([0, '', 0], $data['notitle'], 'A text without "# " made a page');
+        $this->assertTrue($data['bare'], 'A page without a cover lost its title band');
+        $addrs = ['Pages' => ['/' => 'Home', '/copy-about' => 'Copy About', '/home' => '_HOME', '/bare' => 'Bare']];
+        $addrs['Modules'] = ['/contact' => 'Mod contact', '/news' => 'Mod news'];
+        $this->assertSame($addrs, $data['addrs'], 'The choice of an address offers a page holding a slot, an inactive module or misses a page');
+    }
+
+    # The texts of the builder are written in the editors of the panel: Markdown with the file window of layout.attach, its folder public and its uploads for its editors alone
+    #[Test]
+    public function theEditorWindowCarriesTheFilesOfTheBuilder(): void
+    {
+        $body = $this->getBody('edit');
+        $this->assertStringContainsString("getTplTextarea(['id' => 'f-lay-edit'", $body, 'A Markdown text is not written in the content editor of the panel');
+        $this->assertStringContainsString("'mod' => 'layout'", $body, 'The frame of the builder carries no data-sl-editor-files');
+        $this->assertStringContainsString("Editor::getCode(['id' => 'f-lay-edit'", $body, 'The own HTML is not written in the code editor');
+        $this->assertStringContainsString("'readonly' => true", $this->getBody('source'), 'The file of the layout opens for writing');
+        $this->assertContains('layout', getUploadPublic(), 'A picture of a section has no address');
+        $rule = explode('|', (string)((require BASE_DIR.'/config/uploads.php')['uploads']['layout'] ?? ''));
+        $this->assertCount(12, $rule, 'The shipped upload rule of layout is missing');
+        $this->assertSame(['0', '0'], [$rule[9], $rule[10]], 'A user or a guest may upload into the folder of the builder');
+        $rows = $this->getBody('getLayoutRows');
+        $this->assertStringContainsString("getFileManagerField(['id' => \$fid, 'place' => 'layout.attach'", $rows, 'A picture is not picked in the file window');
+    }
+
     # Every write of the screen is a POST of the scope layout checked before anything is read from the post, and the reads write nothing
     #[Test]
     public function everyWriteOfTheScreenIsAPostOfItsScope(): void
@@ -136,7 +209,7 @@ final class LayoutDraftTest extends TestCase
             $this->assertNotFalse($guard, $name.'() does not check its POST');
             $this->assertLessThan(strpos($body, "getVar('post'"), $guard, $name.'() reads the post before its check');
         }
-        foreach (['layout', 'tree', 'pick', 'story', 'info'] as $name) {
+        foreach (['layout', 'tree', 'pick', 'story', 'checks', 'dest', 'edit', 'source', 'info'] as $name) {
             $body = $this->getBody($name);
             $this->assertStringNotContainsString('setLayoutKeep(', $body, $name.'() writes a step of the draft');
             $this->assertStringNotContainsString('checkAdminPost(', $body);

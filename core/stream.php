@@ -11,7 +11,7 @@ if (!defined('UPLOADS_DIR')) define('UPLOADS_DIR', BASE_DIR.'/uploads');
 
 # The upload folders the light path serves at uploads/<folder>/<name>; getUploadUrl() asks the same list, so a printed address and its delivery agree
 function getUploadPublic(): array {
-    return ['all', 'avatars', 'presentation'];
+    return ['all', 'avatars', 'layout', 'presentation'];
 }
 
 # The address uploads/<path> of a file in a public folder, else an empty string; a file of a private owner gets one only from its route after the rights check

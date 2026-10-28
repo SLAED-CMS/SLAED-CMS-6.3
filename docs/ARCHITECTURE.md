@@ -800,7 +800,7 @@ The owners are the closed set `FileAccess::OWNERS`:
 | `privat` | `uploads/account/` | private message | a side that still holds the message, a moderator of `account` (`checkPrivatFile()`) |
 | `comment` | `uploads/voting/`, `uploads/profile/` | comment | a reader of its poll or profile while the comment is published, a moderator of the module (`checkCommentFile()`); a comment of a Node material takes the route of its material |
 | `profile` | `uploads/profile/` | account | the signature to whoever may open the profile, the own block to its owner alone (`checkProfileFile()`) |
-| `public` | `uploads/all/`, `uploads/avatars/`, `uploads/presentation/` | none | anyone, at the direct address |
+| `public` | `uploads/all/`, `uploads/avatars/`, `uploads/layout/`, `uploads/presentation/` | none | anyone, at the direct address |
 
 `getUploadOwner()` names the owner of an upload module, and `getCommentPlace()`
 the folder the comment form of a module uploads into: a comment on a profile

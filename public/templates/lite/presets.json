@@ -1,0 +1,93 @@
+{
+    "landing": {
+        "title": "_LAYOUT_RS_LAND",
+        "note": "_LAYOUT_RS_LAND_I",
+        "icon": "rocket-takeoff",
+        "band": false,
+        "sections": [{"type": "hero"}, {"type": "features"}, {"type": "stats"}, {"type": "sites"}, {"type": "voices"}, {"type": "cta"}]
+    },
+    "company": {
+        "title": "_LAYOUT_RS_FIRM",
+        "note": "_LAYOUT_RS_FIRM_I",
+        "icon": "building",
+        "band": false,
+        "sections": [{"type": "hero", "make": {"pic": false}}, {"type": "media"}, {"type": "team"}, {"type": "stats"}, {"type": "faq"}]
+    },
+    "services": {
+        "title": "_LAYOUT_RS_SERV",
+        "note": "_LAYOUT_RS_SERV_I",
+        "icon": "briefcase",
+        "band": false,
+        "sections": [{"type": "hero"}, {"type": "features", "make": {"look": "line"}}, {"type": "steps"}, {"type": "prices"}, {"type": "cta"}]
+    },
+    "portfolio": {
+        "title": "_LAYOUT_RS_FOLIO",
+        "note": "_LAYOUT_RS_FOLIO_I",
+        "icon": "images",
+        "band": false,
+        "sections": [{"type": "hero", "make": {"pic": false}}, {"type": "gallery"}, {"type": "voices"}, {"type": "cta"}]
+    },
+    "contacts": {
+        "title": "_LAYOUT_CONTACTS",
+        "note": "_LAYOUT_RS_CONT_I",
+        "icon": "envelope",
+        "band": false,
+        "sections": [{"type": "hero", "make": {"pic": false}}, {"type": "map"}, {"type": "module", "make": {"module": "contact"}}]
+    },
+    "faq": {
+        "title": "_LAYOUT_FAQ",
+        "note": "_LAYOUT_RS_FAQ_I",
+        "icon": "patch-question",
+        "band": false,
+        "sections": [{"type": "hero", "make": {"pic": false, "btn": ""}}, {"type": "faq"}, {"type": "cta"}]
+    },
+    "jobs": {
+        "title": "_LAYOUT_RS_JOBS",
+        "note": "_LAYOUT_RS_JOBS_I",
+        "icon": "person-workspace",
+        "band": false,
+        "sections": [{"type": "hero", "make": {"pic": false}}, {"type": "text"}, {"type": "steps", "make": {"title": "_LAYOUT_RS_JOBSTEP"}}, {"type": "cta"}]
+    },
+    "video": {
+        "title": "_LAYOUT_RS_VIDEO",
+        "note": "_LAYOUT_RS_VIDEO_I",
+        "icon": "play-btn",
+        "band": false,
+        "sections": [{"type": "hero", "make": {"pic": false}}, {"type": "video"}, {"type": "text"}, {"type": "cta"}]
+    },
+    "soon": {
+        "title": "_LAYOUT_RS_SOON",
+        "note": "_LAYOUT_RS_SOON_I",
+        "icon": "hourglass-split",
+        "band": false,
+        "sections": [
+            {"type": "hero", "make": {"over": "_LAYOUT_RS_SOON", "title": "_LAYOUT_RS_SOON_T", "accent": "_LAYOUT_RS_SOON_A", "btn": "", "pic": false}},
+            {"type": "cta", "make": {"title": "_LAYOUT_RS_SOON_C", "btn": "_LAYOUT_RS_SOON_B"}}
+        ]
+    },
+    "event": {
+        "title": "_LAYOUT_RS_EVENT",
+        "note": "_LAYOUT_RS_EVENT_I",
+        "icon": "calendar-event",
+        "band": false,
+        "sections": [
+            {"type": "hero", "make": {"pic": false}},
+            {"type": "steps", "make": {"title": "_LAYOUT_RS_PROGRAM"}},
+            {"type": "map"},
+            {"type": "cta", "make": {"title": "_LAYOUT_RS_SIGNUP", "btn": "_LAYOUT_RS_SIGNUP"}}
+        ]
+    },
+    "card": {
+        "title": "_LAYOUT_RS_CARD",
+        "note": "_LAYOUT_RS_CARD_I",
+        "icon": "person-vcard",
+        "band": false,
+        "sections": [
+            {"type": "hero", "make": {"anchor": "start"}},
+            {"type": "features", "make": {"anchor": "services"}},
+            {"type": "media", "make": {"anchor": "about"}},
+            {"type": "faq", "make": {"anchor": "questions"}},
+            {"type": "cta", "make": {"anchor": "contact"}}
+        ]
+    }
+}

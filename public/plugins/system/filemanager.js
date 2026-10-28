@@ -1259,6 +1259,9 @@
         if (!done) setMsg(id, getLab(id, 'upload', 'Upload failed'), true);
         if (name) name.textContent = (done && mode) ? getFieldText({ mode: mode, data: one }) : '';
         if (chip) chip.hidden = !(done && mode);
+        // The carrier that landed, or the path once all three are cleared, tells its form of the change, as a form that saves on change has nothing else to hear
+        box = ({ file: file, path: path, url: link })[mode] || path || file || link;
+        if (done && box) box.dispatchEvent(new Event('change', { bubbles: true }));
         return done;
     }
 

@@ -107,7 +107,7 @@ if (empty($go)) {
         setFoot();
         exit;
     };
-    # A page by its name page-<key>: from the draft under a valid link, else only a page with an address of its own; a page of the draft holding a slot runs as its module
+    # A page by its name page-<key>: from the draft under a valid link, seen as a guest on guest=1, else only a page with an address; a draft page holding a slot runs as its module
     $pkey = 0;
     $ppath = '';
     if (preg_match(Layout::PAGE, (string)$name, $phit)) {
@@ -116,6 +116,7 @@ if (empty($go)) {
         if ($ptok !== '') {
             $pdft = Layout::getDraftFile();
             if ($pdft === [] || !Layout::checkDraftToken($pkey, $ptok, $pdft['link'])) $deny(_LAYOUT_LINKBAD);
+            if (getVar('get', 'guest', 'num', 0) === 1) $layout = new Layout($conf['layout'] ?? [], $theme, false, false, $conf['multilingual'] ? (string)$locale : '');
             $layout->setDraftData($pdft['layout']);
             if ($layout->getPage($pkey) === []) setError(404);
             $pslot = $layout->getSlotName($pkey);

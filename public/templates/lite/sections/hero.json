@@ -15,9 +15,9 @@
         {"key": "btn2", "label": "_LAYOUT_BTN2", "type": "text"},
         {"key": "href2", "label": "_LAYOUT_HREF2", "type": "url"},
         {"key": "pic", "label": "_LAYOUT_PICRIGHT", "type": "bool", "show": "switch", "tab": "look"},
-        {"key": "photo", "label": "_IMG", "type": "file", "tab": "look"},
-        {"key": "alt", "label": "_LAYOUT_ALT", "type": "text", "tab": "look"},
-        {"key": "focus", "label": "_LAYOUT_FOCUS", "type": "focus", "tab": "look"}
+        {"key": "photo", "label": "_IMG", "type": "file", "tab": "look", "when": ["pic", "1"]},
+        {"key": "alt", "label": "_LAYOUT_ALT", "type": "text", "tab": "look", "when": ["pic", "1"]},
+        {"key": "focus", "label": "_LAYOUT_FOCUS", "type": "focus", "tab": "look", "when": ["pic", "1"]}
     ],
     "make": {
         "over": "_LAYOUT_OVER",

@@ -1260,13 +1260,15 @@
         }
     }
 
-    // Show a row only for one value of another field: the tab hook keys off the tab index and cannot express this, so the value of the named control decides
+    // Show a row only for one value of another field: the tab hook keys off the tab index and cannot, so the value of the named control decides, the checked one of radios
     function applyFieldShow(field) {
         var form = field.form || document;
         var rows = form.querySelectorAll('[data-sl-show-when="' + field.name + '"]');
+        var pick = (field.type === 'radio') ? form.querySelector('[name="' + field.name + '"]:checked') : field;
+        var value = pick ? pick.value : '';
         for (var i = 0; i < rows.length; i++) {
             var want = (rows[i].getAttribute('data-sl-show-value') || '').split(' ');
-            rows[i].style.display = (want.indexOf(field.value) < 0) ? 'none' : '';
+            rows[i].style.display = (want.indexOf(value) < 0) ? 'none' : '';
         }
     }
 
@@ -1276,15 +1278,16 @@
         var rows = root.querySelectorAll('[data-sl-show-when]');
         for (var i = 0; i < rows.length; i++) {
             var form = rows[i].closest('form') || document;
-            var field = form.querySelector('[name="' + rows[i].getAttribute('data-sl-show-when') + '"]');
-            if (!field) continue;
-            if (field.getAttribute('data-sl-show-ready') !== '1') {
-                field.setAttribute('data-sl-show-ready', '1');
-                field.addEventListener('change', function () {
+            var fields = form.querySelectorAll('[name="' + rows[i].getAttribute('data-sl-show-when') + '"]');
+            if (!fields.length) continue;
+            for (var j = 0; j < fields.length; j++) {
+                if (fields[j].getAttribute('data-sl-show-ready') === '1') continue;
+                fields[j].setAttribute('data-sl-show-ready', '1');
+                fields[j].addEventListener('change', function () {
                     applyFieldShow(this);
                 });
             }
-            applyFieldShow(field);
+            applyFieldShow(fields[0]);
         }
     }
 
@@ -2350,6 +2353,7 @@
         area.remove();
         done();
     }
+    window.setCopyText = setCopyText;
 
     // A code block takes its buttons once the script is there: until then the whole code shows and nothing promises a copy
     function setCodeBlocks(root) {

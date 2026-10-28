@@ -1,0 +1,5 @@
+{# My sections of the site builder in its library: the sections kept with their settings, each card adding a copy to the page, swapped out of band after a change #}
+<div class="sl-lay-sect" id="sl-lay-mine" data-sl-lay-sect="mine"{% if not cards %} hidden{% endif %}{% if is_oob %} hx-swap-oob="true"{% endif %}>
+  <div class="sl-lay-head"><i class="bi bi-bookmark" aria-hidden="true"></i><span>{{ title }}</span><span class="sl-chip sl-chip-neutral">{{ num }}</span></div>
+  <div class="sl-menu-grid sl-lay-cards">{% for item in cards %}<div class="sl-lay-card" data-sl-lay-card="mine" data-sl-lay-words="{{ item.words }}">{% include 'fragments/menu-grid-item.html' with item %}</div>{% endfor %}</div>
+</div>

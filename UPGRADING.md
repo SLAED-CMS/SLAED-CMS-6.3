@@ -96,7 +96,7 @@ README.md, "Document Root and Web Server". The installer records the mode it fou
 `config/global.php`.
 
 No upload lies in the document root. An address `uploads/<folder>/<name>` reaches `index.php`, whose light path
-serves a file of a public folder (avatars, `presentation` and `all`) before the core boots and
+serves a file of a public folder (avatars, `presentation`, `layout` and `all`) before the core boots and
 answers 410 for every other folder and every missing file; the files of a Node type leave only through `go=file` and
 `op=asset`, the files of the forum only through `go=file` to a reader of the post that names them, the files of
 `uploads/account/` only to the two sides of the private message that names them and to a moderator of `account`, and
