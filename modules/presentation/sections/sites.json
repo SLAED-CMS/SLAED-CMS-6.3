@@ -3,6 +3,7 @@
     "note": "_PRES_SEC_INFO",
     "icon": "images",
     "group": "media",
+    "order": 1,
     "frame": true,
     "fields": [
         {"key": "title", "label": "_TITLE", "type": "text"},

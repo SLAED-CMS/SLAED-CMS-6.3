@@ -1716,13 +1716,19 @@ pre code.hljs {
   background-color: var(--sl-surface);
 }
 
-/* Form canon, side panel: in a narrow column the label stays on the left as wide as its words, a full row stacks its label over its field */
-.sl-div-side .sl-div-item {
-  grid-template-columns: fit-content(var(--sl-form-label-width)) minmax(0, 1fr);
-  gap: var(--sl-space-4);
+/* Form canon, side panel: the labels of every row share one column, so every field starts at one line; a full row and a block of rows stack their caption over the field */
+.sl-div-side .sl-div-grid {
+  grid-template-columns: var(--sl-form-side-width) minmax(0, 1fr);
+  column-gap: var(--sl-space-5);
 }
 
-.sl-div-side .sl-div-item.sl-div-item-full {
+.sl-div-side .sl-div-item {
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;
+  gap: var(--sl-space-5);
+}
+
+.sl-div-side .sl-div-item:is(.sl-div-item-full, .sl-toggle-form-block-item) {
   grid-template-columns: minmax(0, 1fr);
   gap: var(--sl-space-2);
 }

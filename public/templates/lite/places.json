@@ -108,9 +108,9 @@
         "foot": {"title": "_LAYOUT_FOOTMENU", "where": "_LAYOUT_AT_FOOT", "depth": 1, "icons": true}
     },
     "zones": {
-        "l": {"title": "_LEFT"},
-        "r": {"title": "_RIGHT"},
-        "c": {"title": "_CENTERUP"},
-        "d": {"title": "_CENTERDOWN"}
+        "l": {"title": "_LEFT", "icon": "layout-sidebar"},
+        "r": {"title": "_RIGHT", "icon": "layout-sidebar-reverse"},
+        "c": {"title": "_CENTERUP", "icon": "arrow-bar-up"},
+        "d": {"title": "_CENTERDOWN", "icon": "arrow-bar-down"}
     }
 }

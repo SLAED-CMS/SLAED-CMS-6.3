@@ -6,7 +6,7 @@
    Two ways in. Inside the editor (?edit=1 in its frame) every part answers the hand: a ring and a label follow the
    pointer, a click picks the part and tells the editor, a text of the picked part is typed in place, and the picked
    section carries its toolbar. Opened on its own it is the published site an administrator sees, the floating menu of
-   the session carrying "Изменить страницу" that opens the editor on this page (a pill of the stand without a session).
+   the session carrying "Конструктор сайта" that opens the editor on this page (a pill of the stand without a session).
 
    Messages from the editor: {sb: 'render', layout, page, sel, guest, preview} and {sb: 'pick', sel}, {sb: 'mode', mode}.
    Messages to the editor: {sb: 'ready'}, {sb: 'pick', sel}, {sb: 'text', path, value, done}, {sb: 'act', act, id},
@@ -995,7 +995,7 @@
         render();
       }
     });
-    // The way into the editor: "Изменить страницу" in the floating menu of an administrator, right after "Эта страница
+    // The way into the editor: "Конструктор сайта" in the floating menu of an administrator, right after "Эта страница
     // в панели", as getAdminDock() prints it with the transfer; the menu runs on dock.js of the system. Without the
     // session of an administrator the stand keeps a pill of its own
     const into = 'sb-01-builder.html?page=' + encodeURIComponent(st.page);
@@ -1004,9 +1004,9 @@
         const app = document.createElement('a');
         app.className = 'sl-dock-app';
         app.href = into;
-        app.dataset.tip = 'Изменить страницу';
-        app.setAttribute('aria-label', 'Изменить страницу');
-        app.innerHTML = '<i class="bi bi-pencil-square" aria-hidden="true"></i>';
+        app.dataset.tip = 'Конструктор сайта';
+        app.setAttribute('aria-label', 'Конструктор сайта');
+        app.innerHTML = '<i class="bi bi-layers-half" aria-hidden="true"></i>';
         const here = st.dock.querySelector('.sl-dock-page');
         if (here) here.after(app);
         else st.dock.querySelector('[data-sl-dock-body]').prepend(app);

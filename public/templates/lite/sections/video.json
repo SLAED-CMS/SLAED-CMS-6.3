@@ -3,6 +3,7 @@
     "note": "_LAYOUT_VID_INFO",
     "icon": "play-btn",
     "group": "media",
+    "order": 3,
     "frame": true,
     "fields": [
         {"key": "title", "label": "_TITLE", "type": "text"},

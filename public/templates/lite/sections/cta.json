@@ -3,19 +3,20 @@
     "note": "_LAYOUT_CTA_INFO",
     "icon": "megaphone",
     "group": "base",
+    "order": 6,
     "frame": false,
     "fields": [
         {"key": "over", "label": "_LAYOUT_OVER", "type": "text"},
         {"key": "title", "label": "_TITLE", "type": "text"},
         {"key": "text", "label": "_TEXT", "type": "textarea"},
         {"key": "btn", "label": "_LAYOUT_BTN", "type": "text"},
-        {"key": "href", "label": "_LAYOUT_HREF", "type": "url"}
+        {"key": "href", "label": "_LAYOUT_HREF", "type": "url", "for": "btn"}
     ],
     "make": {
         "over": "",
         "title": "_LAYOUT_CTA_TITLE",
         "text": "_LAYOUT_CTA_TEXT",
-        "btn": "_LAYOUT_CTA_BTN",
+        "btn": "",
         "href": ""
     }
 }

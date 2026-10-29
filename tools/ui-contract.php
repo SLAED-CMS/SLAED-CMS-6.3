@@ -206,7 +206,7 @@ return [
     # The eleven `col-*` entries are the column widths of a fixed admin list table: the track list of `table-layout: fixed`
     # CSS spells that track list as one width per cell instead of one `grid-template-columns`, and each is a figure an author retunes
     'components' => [
-        'adm', 'alert', 'alert-act', 'arrow', 'aside', 'ava', 'avatar', 'badge', 'band', 'bar', 'beam', 'brand', 'btn', 'btn-mini', 'builder', 'bullet',
+        'adm', 'alert', 'alert-act', 'arrow', 'aside', 'ava', 'avatar', 'badge', 'band', 'bar', 'beam', 'brand', 'btn', 'btn-mini', 'builder', 'builder-pick', 'builder-thumb', 'bullet',
         'cab-act', 'cab-msg', 'cab-ring',
         'calc', 'capsule', 'card', 'changelog', 'changelog-body', 'changelog-date',
         'changelog-files', 'changelog-stat', 'check', 'check-list', 'check-tick', 'chip', 'chip-tint', 'code', 'col-actions', 'col-amount', 'col-author',
@@ -216,7 +216,7 @@ return [
         'field', 'flash', 'flash-bar', 'fm-as',
         'fm-bar', 'fm-body', 'fm-busy', 'fm-drop', 'fm-edit', 'fm-empty', 'fm-field', 'fm-filter', 'fm-kind', 'fm-mode',
         'fmenu', 'fm-panel', 'fm-pick', 'fm-preview', 'fm-props', 'fm-quota', 'fm-row', 'fm-search', 'fm-sep', 'fm-split', 'fm-thumb',
-        'fm-tile', 'footer', 'form', 'form-label', 'forum', 'fp', 'fp-ava', 'fresh', 'fresh-day', 'fresh-days', 'fresh-month',
+        'fm-tile', 'footer', 'form', 'form-label', 'form-side', 'forum', 'fp', 'fp-ava', 'fresh', 'fresh-day', 'fresh-days', 'fresh-month',
         'fresh-now', 'fresh-week', 'gauge', 'graph', 'group', 'guard', 'header', 'hub-head', 'hub-row',
         'ico', 'idea', 'info-row', 'item', 'knob', 'ladder', 'ladder-bar', 'lang', 'led', 'letter', 'live-dot', 'loading',
         'loading-dot', 'login', 'login-drop', 'login-footer', 'login-header', 'logo', 'madein', 'marquee', 'menu', 'meta',

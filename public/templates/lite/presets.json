@@ -39,21 +39,21 @@
         "note": "_LAYOUT_RS_FAQ_I",
         "icon": "patch-question",
         "band": false,
-        "sections": [{"type": "hero", "make": {"pic": false, "btn": ""}}, {"type": "faq"}, {"type": "cta"}]
+        "sections": [{"type": "hero", "make": {"pic": false}}, {"type": "faq"}, {"type": "cta"}]
     },
     "news": {
         "title": "_LAYOUT_RS_NEWS",
         "note": "_LAYOUT_RS_NEWS_I",
         "icon": "newspaper",
         "band": false,
-        "sections": [{"type": "hero", "make": {"pic": false, "btn": ""}}, {"type": "feed"}, {"type": "item"}]
+        "sections": [{"type": "hero", "make": {"pic": false}}, {"type": "feed"}, {"type": "item"}]
     },
     "article": {
         "title": "_LAYOUT_RS_ART",
         "note": "_LAYOUT_RS_ART_I",
         "icon": "file-earmark-richtext",
         "band": false,
-        "sections": [{"type": "hero", "make": {"pic": false, "btn": ""}}, {"type": "item"}]
+        "sections": [{"type": "hero", "make": {"pic": false}}, {"type": "item"}]
     },
     "jobs": {
         "title": "_LAYOUT_RS_JOBS",
@@ -75,8 +75,8 @@
         "icon": "hourglass-split",
         "band": false,
         "sections": [
-            {"type": "hero", "make": {"over": "_LAYOUT_RS_SOON", "title": "_LAYOUT_RS_SOON_T", "accent": "_LAYOUT_RS_SOON_A", "btn": "", "pic": false}},
-            {"type": "cta", "make": {"title": "_LAYOUT_RS_SOON_C", "btn": "_LAYOUT_RS_SOON_B"}}
+            {"type": "hero", "make": {"over": "_LAYOUT_RS_SOON", "title": "_LAYOUT_RS_SOON_T", "accent": "_LAYOUT_RS_SOON_A", "pic": false}},
+            {"type": "cta", "make": {"title": "_LAYOUT_RS_SOON_C", "btn": "_LAYOUT_RS_SOON_B", "href": "/contact"}}
         ]
     },
     "event": {
@@ -88,7 +88,7 @@
             {"type": "hero", "make": {"pic": false}},
             {"type": "steps", "make": {"title": "_LAYOUT_RS_PROGRAM"}},
             {"type": "map"},
-            {"type": "cta", "make": {"title": "_LAYOUT_RS_SIGNUP", "btn": "_LAYOUT_RS_SIGNUP"}}
+            {"type": "cta", "make": {"title": "_LAYOUT_RS_SIGNUP", "btn": "_LAYOUT_RS_SIGNUP", "href": "/contact"}}
         ]
     },
     "card": {

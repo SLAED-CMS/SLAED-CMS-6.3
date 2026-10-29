@@ -3,6 +3,7 @@
     "note": "_NODE_ITEM_INFO",
     "icon": "file-earmark-richtext",
     "group": "content",
+    "order": 2,
     "frame": true,
     "fields": [
         {"key": "title", "label": "_TITLE", "type": "text"},

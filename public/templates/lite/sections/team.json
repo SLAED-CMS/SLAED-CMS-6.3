@@ -3,6 +3,7 @@
     "note": "_LAYOUT_TEAM_INFO",
     "icon": "people",
     "group": "trust",
+    "order": 3,
     "frame": true,
     "fields": [
         {"key": "title", "label": "_TITLE", "type": "text"},

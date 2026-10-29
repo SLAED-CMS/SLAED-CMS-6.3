@@ -3,6 +3,7 @@
     "note": "_LAYOUT_BLOCK_INFO",
     "icon": "bricks",
     "group": "master",
+    "order": 1,
     "frame": false,
     "fields": [
         {"key": "block", "label": "_BLOCK", "type": "blockref"}

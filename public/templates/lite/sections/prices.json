@@ -3,6 +3,7 @@
     "note": "_LAYOUT_PRICE_INFO",
     "icon": "tags",
     "group": "contact",
+    "order": 2,
     "frame": true,
     "fields": [
         {"key": "title", "label": "_TITLE", "type": "text"},
@@ -19,19 +20,19 @@
             {"key": "unit", "label": "_LAYOUT_TERM", "type": "text"},
             {"key": "text", "label": "_LAYOUT_INCL", "type": "textarea"},
             {"key": "btn", "label": "_LAYOUT_BTN", "type": "text"},
-            {"key": "href", "label": "_LAYOUT_HREF", "type": "url"},
+            {"key": "href", "label": "_LAYOUT_HREF", "type": "url", "for": "btn"},
             {"key": "hot", "label": "_LAYOUT_HOT", "type": "bool", "show": "switch"}
         ],
-        "make": {"name": "_LAYOUT_PLAN", "price": "0", "unit": "", "text": "", "btn": "_LAYOUT_CTA_BTN", "href": "", "hot": false}
+        "make": {"name": "_LAYOUT_PLAN", "price": "0", "unit": "", "text": "", "btn": "", "href": "", "hot": false}
     },
     "make": {
         "title": "_LAYOUT_PRICES",
         "lead": "",
         "icon": "tags",
         "items": [
-            {"name": "_LAYOUT_PLAN", "price": "0", "unit": "", "text": "", "btn": "_LAYOUT_CTA_BTN", "href": "", "hot": false},
-            {"name": "_LAYOUT_PLAN", "price": "0", "unit": "", "text": "", "btn": "_LAYOUT_CTA_BTN", "href": "", "hot": true},
-            {"name": "_LAYOUT_PLAN", "price": "0", "unit": "", "text": "", "btn": "_LAYOUT_CTA_BTN", "href": "", "hot": false}
+            {"name": "_LAYOUT_PLAN", "price": "0", "unit": "", "text": "", "btn": "", "href": "", "hot": false},
+            {"name": "_LAYOUT_PLAN", "price": "0", "unit": "", "text": "", "btn": "", "href": "", "hot": true},
+            {"name": "_LAYOUT_PLAN", "price": "0", "unit": "", "text": "", "btn": "", "href": "", "hot": false}
         ]
     }
 }

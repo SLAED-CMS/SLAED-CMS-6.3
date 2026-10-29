@@ -144,9 +144,9 @@ final class LayoutDraftTest extends TestCase
         $changes = ['secnew Hero > sec:20', 'secnew Hero «Off» > sec:22', 'page Twin > page:12', 'part Contacts > part:contacts', 'itemset A2 > menu:main:4',
             'itemnew E > menu:main:8', 'itemdel B > menu:main', 'blkset Poll > blk:13', 'blknew New > blk:n1', 'blkdel Old > '];
         $this->assertSame($changes, $data['changes']);
-        $issues = ['notitle > sec:20', 'addr /nowhere > sec:20', 'alt big.png > sec:20', 'heavy big.png 586 > sec:20', 'mdalt big.png > sec:20', 'heavy big.png 586 > sec:20',
-            'intext anchor #gone > sec:20', 'hidden > sec:22', 'nodesc > page:9', 'twinurl about About > page:12', 'addr https:// > part:contacts', 'nowhere A2 > menu:main:4',
-            'nowhere D > menu:main:7', 'nowhere E > menu:main:8', 'blknone New > blk:n1'];
+        $issues = ['notitle > sec:20', 'addr /nowhere > sec:20', 'nolink More > sec:20', 'alt big.png > sec:20', 'heavy big.png 586 > sec:20', 'mdalt big.png > sec:20',
+            'heavy big.png 586 > sec:20', 'intext anchor #gone > sec:20', 'hidden > sec:22', 'nodesc > page:9', 'twinurl about About > page:12', 'addr https:// > part:contacts',
+            'nowhere A2 > menu:main:4', 'nowhere D > menu:main:7', 'nowhere E > menu:main:8', 'blknone New > blk:n1'];
         $this->assertSame($issues, $data['issues']);
         $this->assertSame([true, true, true, true, false, false, false], $data['same']);
     }
@@ -188,8 +188,8 @@ final class LayoutDraftTest extends TestCase
         $this->assertSame([0, '', 0], $data['notitle'], 'A text without "# " made a page');
         $this->assertTrue($data['bare'], 'A page without a cover lost its title band');
         $addrs = ['Pages' => ['/' => 'Home', '/copy-about' => 'Copy About', '/home' => '_HOME', '/bare' => 'Bare']];
-        $addrs['Modules'] = ['/contact' => 'Mod contact', '/news' => 'Mod news'];
-        $this->assertSame($addrs, $data['addrs'], 'The choice of an address offers a page holding a slot, an inactive module or misses a page');
+        $addrs['Modules'] = ['/blog' => 'Mod blog', '/contact' => 'Mod contact', '/news' => 'Mod news'];
+        $this->assertSame($addrs, $data['addrs'], 'The choice of an address offers a page holding a slot, an inactive module, misses a page or leaves the order of the names');
     }
 
     # The texts of the builder are written in the editors of the panel: Markdown with the file window of layout.attach, its folder public and its uploads for its editors alone

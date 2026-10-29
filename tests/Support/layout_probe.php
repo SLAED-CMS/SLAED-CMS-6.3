@@ -39,7 +39,7 @@ $pwords += ['_LAYOUT_PAGECOPIED' => 'copied %s.', '_LAYOUT_SLOTKEPT' => 'Slot ke
 $pkind = ['PAGE', 'PAGESET', 'PAGEDEL', 'SECNEW', 'SECSET', 'SECDEL', 'SECORD', 'PART', 'SITE', 'ITEMNEW', 'ITEMSET', 'ITEMDEL', 'ITEMORD', 'BLKNEW', 'BLKSET', 'BLKDEL'];
 foreach ($pkind as $pone) $pwords['_LAYOUT_CH_'.$pone] = strtolower($pone).' %s';
 foreach (['NOTITLE', 'INTEXT', 'NOFILM', 'HTTPS', 'NOITEMS', 'DATES', 'EXPIRED', 'NODEV', 'HIDDEN', 'NODESC', 'NONAME'] as $pone) $pwords['_LAYOUT_IS_'.$pone] = strtolower($pone);
-foreach (['ANCHOR', 'ADDR', 'ALT', 'MDALT', 'TWIN', 'NOWHERE', 'BLKNONE', 'NORSS'] as $pone) $pwords['_LAYOUT_IS_'.$pone] = strtolower($pone).' %s';
+foreach (['ANCHOR', 'ADDR', 'ALT', 'MDALT', 'TWIN', 'NOWHERE', 'NOLINK', 'BLKNONE', 'NORSS'] as $pone) $pwords['_LAYOUT_IS_'.$pone] = strtolower($pone).' %s';
 $pwords += ['_LAYOUT_IS_HEAVY' => 'heavy %s %s', '_LAYOUT_IS_TWINURL' => 'twinurl %s %s', '_LAYOUT_IS_NONODE' => 'nonode', '_LAYOUT_IS_NOBLOCK' => 'noblock'];
 $pwords += ['_LAYOUT_IS_BLKOFF' => 'blkoff %s', '_LAYOUT_IMPTYPE' => '%s: no %s', '_LAYOUT_WHO' => 'Who', '_TITLE' => 'Title'];
 foreach ($pwords as $key => $val) define($key, $val);
@@ -225,7 +225,8 @@ try {
         $pdone['data'] = $out;
     } elseif ($pmode === 'tools') {
         $live = Layout::getLayoutData($site);
-        $fields = [['key' => 'title', 'type' => 'text'], ['key' => 'href', 'type' => 'url'], ['key' => 'text', 'type' => 'markdown'],
+        $fields = [['key' => 'title', 'type' => 'text'], ['key' => 'href', 'type' => 'url'], ['key' => 'btn2', 'type' => 'text'],
+            ['key' => 'href2', 'type' => 'url', 'for' => 'btn2'], ['key' => 'text', 'type' => 'markdown'],
             ['key' => 'pic', 'type' => 'bool', 'tab' => 'look'], ['key' => 'photo', 'type' => 'file', 'tab' => 'look', 'when' => ['pic', '1']],
             ['key' => 'alt', 'type' => 'text', 'tab' => 'look', 'when' => ['pic', '1']], ['key' => 'tone', 'type' => 'tone', 'tab' => 'look'],
             ['key' => 'cols', 'type' => 'select', 'show' => 'seg', 'tab' => 'look'], ['key' => 'icon', 'type' => 'icon', 'tab' => 'look']];
@@ -237,8 +238,8 @@ try {
             'menus' => ['main' => ['title' => 'Main', 'depth' => 2]], 'zones' => []];
         $blks = ['13' => ['status' => false], 'n1' => ['new' => true, 'title' => 'New', 'kind' => 'html', 'content' => ''], '14' => ['del' => true]];
         $dft = ['layout' => $live, 'conf' => [], 'blocks' => $blks, 'bwas' => ['13' => ['title' => 'Poll', 'kind' => 'file'], '14' => ['title' => 'Old', 'kind' => 'file']]];
-        $dft['layout']['pages'][9]['sections'][] = ['id' => 20, 'type' => 'hero', 'on' => true, 'title' => '', 'href' => '/nowhere', 'pic' => true, 'photo' => 'x/big.png',
-            'alt' => '', 'text' => '[a](#top) [b](/about) ![](/uploads/x/big.png) [c](#gone)', 'anchor' => 'top'];
+        $dft['layout']['pages'][9]['sections'][] = ['id' => 20, 'type' => 'hero', 'on' => true, 'title' => '', 'href' => '/nowhere', 'btn2' => ' More ',
+            'href2' => '', 'pic' => true, 'photo' => 'x/big.png', 'alt' => '', 'text' => '[a](#top) [b](/about) ![](/uploads/x/big.png) [c](#gone)', 'anchor' => 'top'];
         $dft['layout']['pages'][9]['sections'][] = ['id' => 22, 'type' => 'hero', 'on' => false, 'title' => 'Off', 'href' => '//cdn.example/x', 'pic' => false,
             'photo' => 'x/big.png', 'alt' => ''];
         $dft['layout']['pages'][12] = ['title' => 'Twin', 'addr' => 'about', 'desc' => 'Said', 'sections' => []];
@@ -286,7 +287,7 @@ try {
         $pdone['data'] = $out;
     } elseif ($pmode === 'pages') {
         $conf += ['modules' => ['contact' => ['type' => 1, 'active' => 1], 'off' => ['type' => 1, 'active' => 0], 'node' => ['type' => 1, 'active' => 1]],
-            'node' => ['types' => ['news' => []]]];
+            'node' => ['types' => ['news' => [], 'blog' => []]]];
         $lay = Layout::getLayoutData($site);
         $lay['pages'][9]['sections'] = [['id' => 11, 'type' => 'hero', 'on' => true, 'title' => 'Hi'], ['id' => 12, 'type' => 'module', 'on' => true, 'module' => 'contact']];
         $lay['pages'][9]['desc'] = 'Said';

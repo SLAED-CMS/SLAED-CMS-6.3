@@ -3,6 +3,7 @@
     "note": "_LAYOUT_EMB_INFO",
     "icon": "window-stack",
     "group": "master",
+    "order": 2,
     "frame": true,
     "fields": [
         {"key": "title", "label": "_TITLE", "type": "text"},

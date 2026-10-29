@@ -578,6 +578,7 @@ button.st-cal-day:hover {
   padding-bottom: var(--sl-space-7);
 }
 
+/* A month is a button and holds the float of its sums, which keeps the left-aligned rows of every float of the series */
 .st-arc-m {
   position: relative;
   flex: 1 1 0;
@@ -586,10 +587,11 @@ button.st-cal-day:hover {
   padding: 0;
   border: 0;
   background: none;
+  text-align: left;
   cursor: pointer;
 }
 
-.st-arc-m i {
+.st-arc-m > i {
   position: absolute;
   left: 0;
   right: 0;
@@ -600,16 +602,16 @@ button.st-cal-day:hover {
   transition: background var(--sl-time-fast) var(--sl-ease-out);
 }
 
-.st-arc-m:hover i {
+.st-arc-m:hover > i {
   background: var(--sl-primary-strong);
 }
 
-.st-arc-m.st-is-pick i {
+/* A bar is a few pixels wide, so the picked month is told by its colour alone: a ring around it would cover its neighbours */
+.st-arc-m.st-is-pick > i {
   background: var(--sl-primary);
-  box-shadow: 0 0 0 2px var(--sl-bg), 0 0 0 4px var(--sl-primary);
 }
 
-.st-arc-run i {
+.st-arc-run > i {
   background: var(--sl-success);
 }
 
@@ -617,7 +619,7 @@ button.st-cal-day:hover {
   cursor: default;
 }
 
-.st-arc-gap i {
+.st-arc-gap > i {
   height: 30%;
   border: 1px dashed var(--sl-danger);
   background: none;
@@ -978,7 +980,7 @@ button.st-cal-day:hover {
     animation-delay: calc(var(--sl-d-i, 0) * 22ms);
   }
 
-  :root.st-fx:not([data-demo-motion="off"]) .st-play .st-arc-m i {
+  :root.st-fx:not([data-demo-motion="off"]) .st-play .st-arc-m > i {
     animation: st-grow 0.6s var(--st-spring) both;
     animation-delay: calc(var(--sl-d-i, 0) * 4ms);
   }

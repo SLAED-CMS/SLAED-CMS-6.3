@@ -451,7 +451,6 @@ define('_LAYOUT_ADDR','Adresse');
 define('_LAYOUT_TEL','Telefon');
 define('_LAYOUT_FROM','seit');
 define('_LAYOUT_BUILDER','Website-Baukasten');
-define('_LAYOUT_EDITPAGE','Seite bearbeiten');
 define('_LINKS','Seiten Katalog');
 define('_LIST','Liste');
 define('_LIVE','Live');

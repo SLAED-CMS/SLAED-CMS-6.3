@@ -3,6 +3,7 @@
     "note": "_LAYOUT_FEAT_INFO",
     "icon": "grid-3x2-gap",
     "group": "base",
+    "order": 2,
     "frame": true,
     "fields": [
         {"key": "title", "label": "_TITLE", "type": "text"},

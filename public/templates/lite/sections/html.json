@@ -3,6 +3,7 @@
     "note": "_LAYOUT_HTML_INFO",
     "icon": "code-slash",
     "group": "master",
+    "order": 3,
     "frame": false,
     "fields": [
         {"key": "code", "label": "_CODE", "type": "code"}

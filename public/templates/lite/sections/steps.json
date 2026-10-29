@@ -3,6 +3,7 @@
     "note": "_LAYOUT_STEPS_INFO",
     "icon": "list-ol",
     "group": "base",
+    "order": 5,
     "frame": true,
     "fields": [
         {"key": "title", "label": "_TITLE", "type": "text"},

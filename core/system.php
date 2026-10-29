@@ -2093,7 +2093,7 @@ function setHead(array $seo = []): void {
     return;
 }
 
-# Render the page foot; a panel list asking by X-SL-Part gets its title and content only, a lost session makes it reload, and a one-time notice is cleared here
+# Render the page foot; X-SL-Part of a panel list gets its title and content only, a lost session reloads, a notice is cleared, a draft is marked unless framed with edit=1
 function setFoot(): void {
     global $home, $name, $conf, $tpl, $adminpage, $adminvars, $sitepage, $sitevars, $blocks, $blocks_c, $foot, $layout, $lkey, $prs;
     if (defined('ADMIN_FILE')) {
@@ -2125,7 +2125,8 @@ function setFoot(): void {
     $vars = is_array($sitevars ?? null) ? $sitevars : [];
     $body = (ob_get_level() > 0) ? (string)ob_get_clean() : '';
     if (!empty($lkey) && $layout instanceof Layout) {
-        $mark = $layout->isDraft() ? $tpl->getHtmlFrag('alert', ['text' => _LAYOUT_DRAFT, 'meta' => '', 'type' => 'warn', 'is_warn' => true]) : '';
+        $draft = $layout->isDraft() && getVar('get', 'edit', 'num', 0) !== 1;
+        $mark = $draft ? $tpl->getHtmlFrag('alert', ['text' => _LAYOUT_DRAFT, 'meta' => '', 'type' => 'warn', 'is_warn' => true]) : '';
         $body = $mark.$layout->getPageHtml($lkey, $body, $tpl, $prs);
         [$blocks, $blocks_c] = $layout->getPageColumns($lkey);
     }
@@ -4447,8 +4448,8 @@ function getAdminDock(): string {
         'option_url' => HOME_PATH.$afile.'.php',
         'option_token' => getSiteToken('option'),
         'page' => getAdminPageLink(),
-        'build' => isAdmin(true) ? ['href' => HOME_PATH.$afile.'.php?'.http_build_query(['name' => 'layout'] + $bpar), 'label' => $bpar ? _LAYOUT_EDITPAGE : _LAYOUT_BUILDER,
-            'icon' => $bpar ? 'pencil-square' : 'layers-half', 'is_here' => defined('ADMIN_FILE') && $name === 'layout'] : [],
+        'build' => isAdmin(true) ? ['href' => HOME_PATH.$afile.'.php?'.http_build_query(['name' => 'layout'] + $bpar), 'label' => _LAYOUT_BUILDER,
+            'icon' => 'layers-half', 'is_here' => defined('ADMIN_FILE') && $name === 'layout'] : [],
         'queue' => $queue,
         'queue_sum' => array_sum(array_column($queue, 'num')),
         'queue_url' => HOME_PATH.'index.php?go=5&op=getAdminQueueData&token='.getSiteToken(),

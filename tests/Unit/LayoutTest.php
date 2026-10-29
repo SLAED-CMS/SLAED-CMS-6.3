@@ -390,7 +390,7 @@ final class LayoutTest extends TestCase
         }
     }
 
-    # Every section of lite and of the modules has its fragment, fields of the closed kinds under names a fragment receives, labels and defaults naming defined constants
+    # Every section of lite and of the modules has its fragment, fields of the closed kinds a fragment receives, defined labels and defaults, no default button without its address
     #[Test]
     public function theSectionsOfLiteAreDescribedInFull(): void
     {
@@ -405,6 +405,7 @@ final class LayoutTest extends TestCase
         $kinds = ['text', 'textarea', 'select', 'bool', 'int', 'url', 'markdown', 'code', 'file', 'focus', 'icon', 'tone', 'video', 'page', 'point'];
         $kinds = array_merge($kinds, ['nodetype', 'noderef', 'blockref']);
         $groups = [];
+        $descs = [];
         $files = array_merge(glob($dir.'/*.json') ?: [], glob(BASE_DIR.'/modules/*/sections/*.json') ?: []);
         foreach ($files as $file) {
             $type = basename($file, '.json');
@@ -413,7 +414,10 @@ final class LayoutTest extends TestCase
             foreach ([$desc['title'], $desc['note']] as $name) $this->assertArrayHasKey($name, $defs, $type.' names an undefined '.$name);
             $this->assertMatchesRegularExpression('/^[a-z0-9]+(?:-[a-z0-9]+)*$/D', $desc['icon']);
             $this->assertIsBool($desc['frame']);
-            $groups[$desc['group']][] = $type;
+            $this->assertIsInt($desc['order'], $type.' has no order in its group');
+            $this->assertArrayNotHasKey($desc['order'], $groups[$desc['group']] ?? [], $type.' shares its order in its group');
+            $groups[$desc['group']][$desc['order']] = $type;
+            $descs[$type] = $desc;
             $sets = [[$desc['fields'], $desc['make']]];
             if (isset($desc['items'])) {
                 $this->assertArrayHasKey($desc['items']['label'], $defs);
@@ -438,22 +442,37 @@ final class LayoutTest extends TestCase
                     if ($one['type'] === 'select') $this->assertArrayHasKey($val, $one['options'], $type.'.'.$one['key']);
                     if ($one['type'] === 'file' && $val !== '') $this->assertFileExists(UPLOADS_DIR.'/'.$val);
                     if (is_string($val) && str_starts_with($val, '_')) $this->assertArrayHasKey($val, $defs, $type.'.'.$one['key'].' defaults to an undefined '.$val);
+                    if (!isset($one['for'])) continue;
+                    $pair = [$one['type'], array_column($fields, 'type', 'key')[$one['for']] ?? ''];
+                    $this->assertSame(['url', 'text'], $pair, $type.'.'.$one['key'].' ties no text to an address');
+                    $this->assertFalse($make[$one['for']] !== '' && $val === '', $type.': the default '.$one['for'].' is a button without its address');
                 }
             }
         }
         $groups = array_map(static function (array $list): array {
-            sort($list);
-            return $list;
+            ksort($list);
+            return array_values($list);
         }, $groups);
         ksort($groups);
         $this->assertSame([
-            'base' => ['cta', 'features', 'hero', 'media', 'steps', 'text'],
-            'contact' => ['faq', 'map', 'prices'],
+            'base' => ['hero', 'features', 'media', 'text', 'steps', 'cta'],
+            'contact' => ['faq', 'prices', 'map'],
             'content' => ['feed', 'item'],
             'master' => ['block', 'embed', 'html'],
-            'media' => ['gallery', 'sites', 'video'],
-            'trust' => ['stats', 'team', 'voices'],
+            'media' => ['sites', 'gallery', 'video'],
+            'trust' => ['stats', 'voices', 'team'],
         ], $groups);
+        $sets = json_decode((string)file_get_contents(PUBLIC_DIR.'/templates/lite/presets.json'), true, 512, JSON_THROW_ON_ERROR);
+        foreach ($sets as $set => $ready) {
+            foreach ($ready['sections'] as $sec) {
+                $desc = $descs[$sec['type']] ?? ['fields' => [], 'make' => []];
+                $make = array_replace($desc['make'], $sec['make'] ?? []);
+                foreach ($desc['fields'] as $one) {
+                    if (!isset($one['for'])) continue;
+                    $this->assertFalse($make[$one['for']] !== '' && $make[$one['key']] === '', $set.': a '.$sec['type'].' with a button without its address');
+                }
+            }
+        }
         $bare = array_diff(array_map(static fn(string $v): string => basename($v, '.html'), glob($dir.'/*.html') ?: []), array_merge(...array_values($groups)));
         $this->assertSame([], array_values($bare), 'A fragment of lite has no type that describes it');
     }

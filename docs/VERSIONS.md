@@ -34,9 +34,9 @@ Boundary", "Address Boundary" and "Block Boundary", `docs/TEMPLATES.md`, "Layout
   another revision is refused.
 - **The publication.** The file, the addresses and the rows of `_blocks` go in one transaction inside the shared writer
   of `config/`, its proof a witness row; a row changed meanwhile in "Блоки и баннеры" stops it.
-- **On the page.** "Изменить страницу" of the floating menu opens the builder on the page where the administrator
-  stands; in the frame `plugins/system/builder.js` rings a part, types a text in place, drags a section and shows its
-  toolbar.
+- **On the page.** "Конструктор сайта" of the floating menu, one entry in the panel and on the site, opens the builder
+  on the page where the administrator stands; in the frame `plugins/system/builder.js` rings a part, types a text in
+  place, drags a section and shows its toolbar.
 - **One drag of the panel.** Rows of a table or a list drag by their handle; "Блоки и баннеры" post the order, and each
   administrator keeps an order of the panel menu of their own in the cookie `menu`.
 - **Tests.** `LayoutTest`, `LayoutDraftTest`, `LayoutPublishTest`, `BlocksTest` and the route tests.

@@ -213,12 +213,17 @@
         if (acts[act]) setAct(acts[act], sel.slice(4), '', sel);
     }
 
-    // A message of the page in the frame: it is ready, a pick, a typed text, an act of its toolbar, a dragged section, a text for the editor window
+    // A message of the page in the frame: it is ready, a pick, a typed text, an act of its toolbar, a dragged section, a text for the editor window, a key of the screen
     window.addEventListener('message', function (event) {
         var msg = event.data;
         if (event.origin !== window.location.origin || event.source !== frame.contentWindow || !msg || !msg.sl) return;
         var sel = String(msg.sel || '');
         if (msg.sl === 'ready') return setFrameInit();
+        if (msg.sl === 'key') {
+            var none = function () {};
+            return setKey({ key: String(msg.key || ''), code: String(msg.code || ''), ctrlKey: !!msg.ctrl, metaKey: false, altKey: !!msg.alt, shiftKey: !!msg.shift,
+                isComposing: false, target: frame, preventDefault: none, stopPropagation: none });
+        }
         if (msg.sl === 'pick') return setPickFrom(sel);
         if (msg.sl === 'text') return setText(sel, msg.path, String(msg.value));
         if (msg.sl === 'act') return setFrameAct(String(msg.act || ''), sel);
@@ -242,7 +247,7 @@
         setKept('sl-lay-recent', [type].concat(getRecent().filter(function (one) { return one !== type; })).slice(0, 3), true);
     }
 
-    // The library: its groups and its search narrow the cards together; the recent types lead it while nothing is searched, my sections stand before the types
+    // The library: its groups and its search narrow the cards together, a group left without a card hides its heading; the recent types lead it while nothing is searched
     function setLibraryList() {
         var find = lib.querySelector('[data-sl-lay-find]').value.trim().toLowerCase();
         var recent = getRecent();
@@ -260,7 +265,9 @@
         box.closest('[data-sl-lay-sect]').hidden = !recent.length || find !== '' || (group !== '' && group !== 'recent');
         if (!box.closest('[data-sl-lay-sect]').hidden) seen += recent.length;
         var own = lib.querySelector('#sl-lay-mine');
+        var parts = lib.querySelectorAll('[data-sl-lay-part]');
         if (own) own.hidden = !mine || (group !== '' && group !== 'mine');
+        parts.forEach(function (part) { part.hidden = false; });
         lib.querySelectorAll('[data-sl-lay-sect="types"] [data-sl-lay-card], #sl-lay-mine [data-sl-lay-card]').forEach(function (card) {
             var kind = card.getAttribute('data-sl-lay-card');
             var show = (kind === 'mine') ? (group === '' || group === 'mine') : (group === '' || kind === group);
@@ -268,6 +275,7 @@
             card.hidden = !show;
             if (show && !card.closest('[hidden]')) seen++;
         });
+        parts.forEach(function (part) { part.hidden = !part.querySelector('[data-sl-lay-card]:not([hidden])'); });
         lib.querySelector('[data-sl-lay-none]').hidden = seen > 0;
     }
 
@@ -280,7 +288,14 @@
         return cell;
     }
 
+    // The library under the place of the new section: after the picked one, else after the last one of the page the tree names, else at its start
     function setLibrary() {
+        var where = lib.querySelector('[data-sl-lay-where]');
+        var sel = String(state.sel || '');
+        var row = sel.indexOf('sec:') === 0 ? app.querySelector('#sl-lay-tree a[data-sl-lay-pick="' + sel + '"]') : null;
+        var tree = app.querySelector('#sl-lay-tree');
+        var name = row ? row.getAttribute('title') : (tree ? tree.getAttribute('data-sl-lay-tail') : '');
+        where.textContent = name ? where.getAttribute('data-sl-lay-where').replace('%s', name) : where.getAttribute('data-sl-lay-start');
         lib.querySelector('[data-sl-lay-find]').value = '';
         setLibraryList();
         window.setWindowOpen(lib);
@@ -343,10 +358,20 @@
         });
     }
 
-    // Run the command the palette chose once it has closed
+    // Run the command the palette chose once it has closed: a type is added as its card of the library adds it, a part opens on the tab that lists it
     function setPaletteRun(row) {
         var cmd = row.getAttribute('data-sl-lay-cmd') || '';
-        if (row.hasAttribute('data-sl-lay-goto')) return setPick(row.getAttribute('data-sl-lay-goto'));
+        if (row.hasAttribute('data-sl-lay-new')) {
+            var card = lib.querySelector('[data-sl-lay-add="' + row.getAttribute('data-sl-lay-new') + '"]');
+            if (card) card.click();
+            return;
+        }
+        if (row.hasAttribute('data-sl-lay-goto')) {
+            var sel = row.getAttribute('data-sl-lay-goto');
+            setPick(sel);
+            if (getPickTab(sel) !== state.tab) setTab(getPickTab(sel));
+            return;
+        }
         if (row.hasAttribute('data-sl-lay-href')) return window.location.assign(row.getAttribute('data-sl-lay-href'));
         if (cmd === 'lib') return setLibrary();
         if (['sets', 'story', 'checks', 'publish', 'link', 'help'].indexOf(cmd) >= 0) return setOpen(cmd);
@@ -435,8 +460,12 @@
     });
 
     // The page of the screen is its address: another page reloads the screen
+    // The last option of the choice of a page opens the window of the ready pages and leaves the choice on the page shown
     app.querySelector('[data-sl-lay-page-pick]').addEventListener('change', function (event) {
-        window.location.assign(event.target.value);
+        var pick = event.target;
+        if (!pick.selectedOptions[0].hasAttribute('data-sl-lay-new')) return window.location.assign(pick.value);
+        pick.value = (pick.querySelector('option[selected]') || pick.options[0]).value;
+        setOpen('ready');
     });
 
     // A changed field of the inspector shows its way back to the site at once; the inspector is not drawn again on a save, so the focus stays where it went
@@ -645,7 +674,8 @@
         }
     });
 
-    // Keys of the screen and of its page, before those of the panel: Ctrl+K the palette, Ctrl+Alt+P the preview, Ctrl+Z, Ctrl+Shift+Z or Ctrl+Y the steps, Ctrl+D a copy, Esc
+    // Keys of the screen and of its page, before those of the panel: Ctrl+K the palette, Ctrl+Alt+P the preview, Ctrl+Z, Ctrl+Shift+Z or Ctrl+Y the steps, Ctrl+D a copy,
+    // Alt+Up and Alt+Down a move, Delete a removal, Esc
     function setKey(event) {
         var ctrl = event.ctrlKey || event.metaKey;
         if (event.isComposing) return;
@@ -669,6 +699,14 @@
         if (ctrl && !event.altKey && !event.shiftKey && event.code === 'KeyD' && state.sel.indexOf('sec:') === 0) {
             event.preventDefault();
             return setAct('sec-dup', state.sel.slice(4));
+        }
+        if (!ctrl && event.altKey && !event.shiftKey && (event.key === 'ArrowUp' || event.key === 'ArrowDown') && state.sel.indexOf('sec:') === 0) {
+            event.preventDefault();
+            return setAct(event.key === 'ArrowUp' ? 'sec-up' : 'sec-down', state.sel.slice(4));
+        }
+        if (!ctrl && !event.altKey && !event.shiftKey && event.key === 'Delete' && state.sel.indexOf('sec:') === 0) {
+            event.preventDefault();
+            return setAct('sec-del', state.sel.slice(4));
         }
         if (event.key === 'Escape' && state.sel) setPick('');
     }

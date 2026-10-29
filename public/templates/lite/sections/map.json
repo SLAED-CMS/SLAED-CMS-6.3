@@ -3,6 +3,7 @@
     "note": "_LAYOUT_LOC_INFO",
     "icon": "geo-alt",
     "group": "contact",
+    "order": 3,
     "frame": true,
     "fields": [
         {"key": "title", "label": "_TITLE", "type": "text"},

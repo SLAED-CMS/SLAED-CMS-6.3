@@ -3,6 +3,7 @@
     "note": "_LAYOUT_GAL_INFO",
     "icon": "images",
     "group": "media",
+    "order": 2,
     "frame": true,
     "fields": [
         {"key": "title", "label": "_TITLE", "type": "text"},

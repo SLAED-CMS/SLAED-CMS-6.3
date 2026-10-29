@@ -5,7 +5,7 @@
       <i class="sl-led{% if is_off %} sl-led-off{% else %} sl-led-ok{% endif %}" title="{{ led_title }}"></i>
     </span>{% endif %}
     <span class="sl-mbody">
-      <strong><span class="sl-menu-name">{{ title }}</span>{% if queue_key %} <span class="sl-queue" data-sl-queue="{{ queue_key }}"{% if not queue_num %} hidden{% endif %}><span data-sl-queue-n>{{ queue_num }}</span><span class="sl-visually-hidden"> {{ _WAITINGCONT }}</span></span>{% endif %}</strong>
+      <strong>{% if thumb and icon_name %}<i class="bi bi-{{ icon_name }}" aria-hidden="true"></i> {% endif %}<span class="sl-menu-name">{{ title }}</span>{% if queue_key %} <span class="sl-queue" data-sl-queue="{{ queue_key }}"{% if not queue_num %} hidden{% endif %}><span data-sl-queue-n>{{ queue_num }}</span><span class="sl-visually-hidden"> {{ _WAITINGCONT }}</span></span>{% endif %}</strong>
       {% if subtitle %}<span>{{ subtitle }}</span>{% endif %}
     </span>
   </a>

@@ -397,8 +397,15 @@
   --sl-footer-shadow: 0 1px 0 light-dark(rgba(255, 255, 255, 0.25), rgba(0, 0, 0, 0.35));
   --sl-form-width: 545px;
   --sl-form-label-width: 160px;
+  /* The one column of labels of a form in a side panel, narrower than the label of a page form */
+  --sl-form-side-width: 112px;
   /* The inspector of the site builder, the column at the right of its screen */
   --sl-builder-width: 360px;
+  /* The schema of a section on a card of the library of the site builder */
+  --sl-builder-thumb-width: 96px;
+  --sl-builder-thumb-height: 56px;
+  /* The choice of a page in the top bar of the site builder, wide enough for the title of a page */
+  --sl-builder-pick-width: 170px;
   /* The width a gauge of the home cockpit grows to; the lamp in their row is a step larger */
   --sl-gauge-width: 150px;
   /* The glass of the lamp: gloss, a shaded rim and a disc a step off the plate give a light page the volume a dark one has from its gloss */

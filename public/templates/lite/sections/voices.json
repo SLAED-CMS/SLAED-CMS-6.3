@@ -3,6 +3,7 @@
     "note": "_LAYOUT_VOICE_INFO",
     "icon": "chat-quote",
     "group": "trust",
+    "order": 2,
     "frame": true,
     "fields": [
         {"key": "title", "label": "_TITLE", "type": "text"},

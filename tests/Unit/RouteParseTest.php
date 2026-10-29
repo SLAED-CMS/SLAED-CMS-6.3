@@ -42,7 +42,7 @@ final class RouteParseTest extends TestCase
             'forum' => [200, 'Форум', 'forum'],
             'forum/topic-one' => [200, 'Topic one - Talk - Форум', 'forum/topic-one'],
             'forum/talk' => [200, 'Форум Talk - Форум', 'forum/talk'],
-            'users' => [200, 'Tоп пользователи', 'users'],
+            'users' => [200, 'Топ пользователи', 'users'],
             'voting/poll-one' => [200, 'Poll one - Опросы', 'voting/poll-one'],
             'news/view/101' => [200, 'Alpha - Open - News', 'news/alpha'],
             'account/login' => [200, 'Вход в панель управления - Профиль', ''],

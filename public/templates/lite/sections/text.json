@@ -3,6 +3,7 @@
     "note": "_LAYOUT_TEXT_INFO",
     "icon": "file-text",
     "group": "base",
+    "order": 4,
     "frame": true,
     "fields": [
         {"key": "title", "label": "_TITLE", "type": "text"},

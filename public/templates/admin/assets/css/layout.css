@@ -18,8 +18,8 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--sl-space-4);
-  padding: var(--sl-space-3) var(--sl-space-5);
+  gap: var(--sl-space-5);
+  padding: var(--sl-space-5);
   border-bottom: 1px solid var(--sl-border);
   background: var(--sl-bg);
 }
@@ -49,15 +49,31 @@
   color: var(--sl-primary);
 }
 
+.sl-lay-page > .sl-select {
+  min-width: var(--sl-builder-pick-width);
+}
+
 .sl-lay-devices {
   margin-left: auto;
 }
 
+/* The capsule of tools with the steps, the help and the settings, then at the edge the chip and the publication: the chip keeps its own room on both sides */
 .sl-lay-tools,
 .sl-lay-state {
   display: inline-flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: var(--sl-space-3);
+  gap: var(--sl-space-2);
+}
+
+.sl-lay-state > .sl-chip {
+  margin: 0 var(--sl-space-3);
+}
+
+/* A capsule of the canon is capped in width and scrolls its overflow, which in a narrow bar hides icons: here it keeps its width and moves to the next line whole */
+.sl-lay-tools > .sl-editor-pill {
+  flex: none;
+  max-width: none;
 }
 
 /* Tree: its tabs over the rows, the rows scroll on their own */
@@ -91,12 +107,14 @@
   padding: 0 var(--sl-space-4) var(--sl-space-7);
 }
 
+/* The switch of the menus stands in a block, where the inline segmented control of the canon would keep only the width of its words */
 .sl-lay-scroll > .sl-lay-fill {
+  width: 100%;
   margin: 0 0 var(--sl-space-4);
 }
 
 .sl-lay-group {
-  margin: 0 0 var(--sl-space-4);
+  margin: 0 0 var(--sl-space-5);
 }
 
 /* The caption of a group is the one caption of the panel (theme.css); a zone of blocks under it keeps the case of its words */
@@ -104,25 +122,31 @@
   display: flex;
   align-items: center;
   gap: var(--sl-space-2);
-  margin: var(--sl-space-5) 0 var(--sl-space-3);
+  margin: var(--sl-space-6) 0 var(--sl-space-3);
   padding: 0 var(--sl-space-2);
 }
 
 .sl-lay-head.sl-lay-head-sub {
-  margin-top: var(--sl-space-3);
+  margin-top: var(--sl-space-5);
   letter-spacing: 0;
   text-transform: none;
+}
+
+/* A zone right under the head of the blocks sits on its gap alone, as the head of a group over its rows */
+.sl-lay-head + .sl-lay-head.sl-lay-head-sub {
+  margin-top: 0;
 }
 
 .sl-lay-head > .sl-chip {
   margin-left: auto;
-  font-weight: var(--sl-weight-normal);
   letter-spacing: 0;
   text-transform: none;
 }
 
+/* One column no wider than the tree, so a long second line of a row ends in its ellipsis instead of widening the row past the edge */
 .sl-lay-rows {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--sl-space-1);
 }
 
@@ -148,27 +172,19 @@
   background: var(--sl-tint);
 }
 
-.sl-lay-add:disabled {
+.sl-lay-add:disabled,
+.sl-lay-top .sl-but-blue:disabled {
   opacity: var(--sl-fade-disabled);
   cursor: default;
 }
 
 /* Rows of the tree: rows of the panel menu, the picked one in the tint with the brand bar, the handle and "…" under the pointer */
 .sl-lay-tree .sl-menu-list-item {
-  position: relative;
-  display: flex;
-  align-items: center;
   gap: var(--sl-space-2);
-  min-height: var(--sl-menu-height);
-  padding: 0 var(--sl-space-2);
 }
 
 .sl-lay-tree .sl-menu-list-item > a {
-  display: flex;
   flex: 1 1 auto;
-  align-items: center;
-  gap: var(--sl-space-3);
-  min-width: 0;
   color: var(--sl-text-strong);
   text-decoration: none;
 }
@@ -193,6 +209,17 @@
 
 .sl-lay-tree .sl-menu-list-item > .sl-drag-handle {
   flex: none;
+}
+
+/* The order of a block in its zone, the number the list of blocks shows as its position */
+.sl-lay-tree .sl-menu-order {
+  flex: none;
+  min-width: var(--sl-size-chip);
+  margin-right: var(--sl-space-3);
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-small);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
 }
 
 /* Stage: the page of the draft drawn at the width of the device chosen in the top bar and scaled down to the stage; layout.js writes the width,
@@ -256,10 +283,6 @@
   max-width: none;
 }
 
-.sl-lay-right .sl-modal-body > * + * {
-  margin-top: var(--sl-space-4);
-}
-
 .sl-lay-right .sl-div-grid {
   margin-bottom: 0;
 }
@@ -283,14 +306,8 @@
   margin-top: var(--sl-space-2);
 }
 
-.sl-lay-items .sl-toggle-form-block-item {
-  grid-template-columns: minmax(0, 1fr);
-}
-
 .sl-lay-items .sl-toggle-form-block-title {
   display: flex;
-  align-items: center;
-  gap: var(--sl-space-2);
   width: 100%;
 }
 
@@ -476,87 +493,222 @@
   max-width: none;
 }
 
+/* A card of the library without a dial keeps no room for one at its right, so its words run to the edge; a card of my sections keeps it */
+.sl-lay-cards .sl-mcard-link:last-child {
+  padding-right: var(--sl-space-3);
+}
+
+/* The schema of a section on its card: four bars laid as the section lays its parts, so each type of the library has a shape of its own */
 .sl-lay-thumb {
   display: grid;
   flex: none;
-  align-content: center;
   gap: var(--sl-space-1);
-  width: var(--sl-size-tile);
-  height: var(--sl-size-tile);
+  width: var(--sl-builder-thumb-width);
+  height: var(--sl-builder-thumb-height);
   padding: var(--sl-space-2);
-  border: 1px solid var(--sl-border);
   border-radius: var(--sl-radius-1);
-  background: var(--sl-surface);
+  background: var(--sl-bg-muted);
   box-sizing: border-box;
 }
 
 .sl-lay-thumb > i {
-  display: block;
-  height: var(--sl-space-2);
   border-radius: var(--sl-radius-1);
   background: var(--sl-border-strong);
 }
 
-.sl-lay-thumb:is([data-sl-lay-thumb="hero"], [data-sl-lay-thumb="cta"]) {
-  border-color: var(--sl-primary);
+.sl-lay-thumb[data-sl-lay-thumb="hero"] {
+  align-content: center;
   background: var(--sl-primary);
 }
 
-.sl-lay-thumb:is([data-sl-lay-thumb="hero"], [data-sl-lay-thumb="cta"]) > i {
+/* A bar shorter than its row is a span of ten columns, each bar on a row of its own */
+.sl-lay-thumb:is([data-sl-lay-thumb="hero"], [data-sl-lay-thumb="item"], [data-sl-lay-thumb="html"], [data-sl-lay-thumb="text"]) {
+  grid-template-columns: repeat(10, minmax(0, 1fr));
+}
+
+.sl-lay-thumb:is([data-sl-lay-thumb="hero"], [data-sl-lay-thumb="item"], [data-sl-lay-thumb="html"], [data-sl-lay-thumb="text"]) > i {
+  grid-column: 1 / -1;
+}
+
+.sl-lay-thumb[data-sl-lay-thumb="hero"] > i {
+  height: var(--sl-space-2);
   background: var(--sl-on-solid);
 }
 
-.sl-lay-thumb:is([data-sl-lay-thumb="features"], [data-sl-lay-thumb="stats"], [data-sl-lay-thumb="team"], [data-sl-lay-thumb="prices"], [data-sl-lay-thumb="voices"]) {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+.sl-lay-thumb[data-sl-lay-thumb="hero"] > i:nth-child(1) {
+  grid-column: 1 / span 7;
+  height: var(--sl-space-3);
 }
 
-.sl-lay-thumb:is([data-sl-lay-thumb="gallery"], [data-sl-lay-thumb="sites"]) {
+.sl-lay-thumb[data-sl-lay-thumb="hero"] > i:nth-child(2) {
+  grid-column: 1 / span 5;
+}
+
+.sl-lay-thumb[data-sl-lay-thumb="hero"] > i:nth-child(3) {
+  grid-column: 1 / span 3;
+  height: var(--sl-space-3);
+  border-radius: var(--sl-radius-pill);
+}
+
+.sl-lay-thumb:is([data-sl-lay-thumb="features"], [data-sl-lay-thumb="stats"], [data-sl-lay-thumb="sites"], [data-sl-lay-thumb="gallery"]) {
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
-.sl-lay-thumb:is([data-sl-lay-thumb="features"], [data-sl-lay-thumb="stats"], [data-sl-lay-thumb="team"], [data-sl-lay-thumb="prices"]) > i,
-.sl-lay-thumb:is([data-sl-lay-thumb="voices"], [data-sl-lay-thumb="gallery"], [data-sl-lay-thumb="sites"]) > i {
-  height: var(--sl-space-5);
+.sl-lay-thumb:is([data-sl-lay-thumb="feed"], [data-sl-lay-thumb="voices"], [data-sl-lay-thumb="team"], [data-sl-lay-thumb="prices"]) {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.sl-lay-thumb:is([data-sl-lay-thumb="feed"], [data-sl-lay-thumb="voices"], [data-sl-lay-thumb="team"], [data-sl-lay-thumb="prices"]) > i:nth-child(4),
+.sl-lay-thumb:is([data-sl-lay-thumb="hero"], [data-sl-lay-thumb="media"], [data-sl-lay-thumb="map"]) > i:nth-child(4),
+.sl-lay-thumb:is([data-sl-lay-thumb="cta"], [data-sl-lay-thumb="video"], [data-sl-lay-thumb="embed"]) > i:nth-child(n+3),
+.sl-lay-thumb[data-sl-lay-thumb="video"] > i:nth-child(2) {
+  display: none;
+}
+
+.sl-lay-thumb[data-sl-lay-thumb="stats"] > i {
+  border-left: var(--sl-space-1) solid var(--sl-primary);
+  background: none;
+}
+
+.sl-lay-thumb:is([data-sl-lay-thumb="features"], [data-sl-lay-thumb="prices"]) > i,
+.sl-lay-thumb[data-sl-lay-thumb="prices"] > i:nth-child(2) {
+  box-shadow: inset 0 0 0 var(--sl-space-1) var(--sl-primary);
+}
+
+.sl-lay-thumb[data-sl-lay-thumb="voices"] > i {
+  background: var(--sl-bg);
+  box-shadow: inset 0 var(--sl-space-1) 0 var(--sl-primary), inset 0 0 0 1px var(--sl-border-strong);
+}
+
+.sl-lay-thumb[data-sl-lay-thumb="team"] > i {
+  background: var(--sl-bg);
+  box-shadow: inset 0 var(--sl-space-6) 0 var(--sl-primary), inset 0 0 0 1px var(--sl-border-strong);
 }
 
 .sl-lay-thumb:is([data-sl-lay-thumb="media"], [data-sl-lay-thumb="map"]) {
   grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-rows: repeat(3, minmax(0, 1fr));
 }
 
 .sl-lay-thumb:is([data-sl-lay-thumb="media"], [data-sl-lay-thumb="map"]) > i:first-child {
-  grid-area: span 3 / auto;
-  height: 100%;
+  grid-row: 1 / -1;
   background: var(--sl-primary);
 }
 
-.sl-lay-thumb:is([data-sl-lay-thumb="video"], [data-sl-lay-thumb="embed"]) {
+.sl-lay-thumb[data-sl-lay-thumb="map"] > i:first-child {
+  background: var(--sl-success);
+  opacity: var(--sl-fade-disabled);
+}
+
+.sl-lay-thumb[data-sl-lay-thumb="gallery"] > i {
+  background: var(--sl-primary);
+  opacity: var(--sl-fade-disabled);
+}
+
+.sl-lay-thumb:is([data-sl-lay-thumb="faq"], [data-sl-lay-thumb="steps"], [data-sl-lay-thumb="html"]) {
+  grid-template-rows: repeat(4, minmax(0, 1fr));
+}
+
+.sl-lay-thumb[data-sl-lay-thumb="faq"] > i {
+  border-bottom: 1px solid var(--sl-border-strong);
+  border-radius: 0;
+  background: none;
+}
+
+.sl-lay-thumb[data-sl-lay-thumb="steps"] > i {
+  border-left: var(--sl-space-3) solid var(--sl-primary);
+  background: none;
+  box-shadow: inset 0 -1px 0 var(--sl-border-strong);
+}
+
+.sl-lay-thumb[data-sl-lay-thumb="cta"] {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  border-left: var(--sl-space-1) solid var(--sl-primary);
+}
+
+.sl-lay-thumb[data-sl-lay-thumb="cta"] > i:nth-child(1) {
+  height: var(--sl-space-3);
+}
+
+.sl-lay-thumb[data-sl-lay-thumb="cta"] > i:nth-child(2) {
+  width: var(--sl-space-8);
+  height: var(--sl-space-4);
+  border-radius: var(--sl-radius-pill);
+  background: var(--sl-primary);
+}
+
+.sl-lay-thumb:is([data-sl-lay-thumb="block"], [data-sl-lay-thumb="item"]) {
+  grid-template-rows: var(--sl-space-3) repeat(3, minmax(0, 1fr));
+}
+
+.sl-lay-thumb:is([data-sl-lay-thumb="block"], [data-sl-lay-thumb="item"]) > i:first-child {
+  background: var(--sl-primary);
+}
+
+.sl-lay-thumb[data-sl-lay-thumb="item"] > i:first-child {
+  grid-column: 1 / span 6;
+}
+
+.sl-lay-thumb[data-sl-lay-thumb="item"] > i:nth-child(4),
+.sl-lay-thumb[data-sl-lay-thumb="html"] > i:nth-child(odd) {
+  grid-column: 1 / span 7;
+}
+
+.sl-lay-thumb[data-sl-lay-thumb="html"] > i:nth-child(even) {
+  grid-column: 2 / span 5;
+}
+
+.sl-lay-thumb[data-sl-lay-thumb="video"] {
   place-items: center;
-  border-color: var(--sl-text-strong);
   background: var(--sl-text-strong);
 }
 
-.sl-lay-thumb:is([data-sl-lay-thumb="video"], [data-sl-lay-thumb="embed"]) > i:first-child {
-  width: var(--sl-space-5);
-  height: var(--sl-space-5);
+.sl-lay-thumb[data-sl-lay-thumb="video"] > i:first-child {
+  width: var(--sl-space-6);
+  height: var(--sl-space-6);
   border-radius: var(--sl-radius-circle);
-  background: var(--sl-bg);
+  background: var(--sl-primary);
 }
 
-.sl-lay-thumb:is([data-sl-lay-thumb="video"], [data-sl-lay-thumb="embed"], [data-sl-lay-thumb="map"]) > i:not(:first-child) {
-  display: none;
+/* A text as its heading over its lines, an embedding as a window under its bar, the slot of a module as a frame waiting for its answer */
+.sl-lay-thumb[data-sl-lay-thumb="text"] {
+  grid-template-rows: repeat(4, var(--sl-space-2));
+  align-content: center;
 }
 
-.sl-lay-thumb:is([data-sl-lay-thumb="faq"], [data-sl-lay-thumb="steps"]) > i {
-  border-left: var(--sl-space-2) solid var(--sl-primary);
+.sl-lay-thumb[data-sl-lay-thumb="text"] > i:nth-child(1) {
+  grid-column: 1 / span 5;
+  background: var(--sl-text-muted);
 }
 
-.sl-lay-thumb[data-sl-lay-thumb="html"] > i {
-  background: var(--sl-success);
+.sl-lay-thumb[data-sl-lay-thumb="text"] > i:nth-child(3) {
+  grid-column: 1 / span 8;
+}
+
+.sl-lay-thumb[data-sl-lay-thumb="text"] > i:nth-child(4) {
+  grid-column: 1 / span 7;
+}
+
+.sl-lay-thumb[data-sl-lay-thumb="embed"] {
+  grid-template-rows: var(--sl-space-3) minmax(0, 1fr);
+}
+
+.sl-lay-thumb[data-sl-lay-thumb="embed"] > i:nth-child(1) {
+  background: var(--sl-text-strong);
 }
 
 .sl-lay-thumb[data-sl-lay-thumb="module"] {
-  border-style: dashed;
-  border-color: var(--sl-primary);
+  background: none;
+  box-shadow: inset 0 0 0 1px var(--sl-border-strong);
+}
+
+.sl-lay-thumb[data-sl-lay-thumb="module"] > i {
+  background: var(--sl-tint);
+}
+
+.sl-lay-thumb[data-sl-lay-thumb="module"] > i:nth-child(1) {
+  box-shadow: inset 0 0 0 1px var(--sl-primary);
 }
 
 /* A ready page: a column of thin bars, one per section of its set, the cover and the claim toned, the slot of a module a frame waiting for its answer */

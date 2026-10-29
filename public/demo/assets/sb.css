@@ -317,7 +317,6 @@
 .sb-group-head > .sl-chip,
 .sb-zone-head > .sl-chip {
   margin-left: auto;
-  font-weight: var(--sl-weight-normal);
   letter-spacing: 0;
   text-transform: none;
 }

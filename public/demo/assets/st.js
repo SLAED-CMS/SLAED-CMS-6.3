@@ -141,12 +141,13 @@ function getStEsc(s) {
   return String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 }
 
-/* The base of a month: the audience of an old CMS site — growth to 2013, a slow decline, summer dips and the release of 8.0 */
+/* The base of a month: the audience of an old CMS site — growth to 2013, a slow decline, the release of 8.0, and the season of the
+   archive of slaed.net 2009-2025 by its medians, a month against the mean of its year: no summer dip beyond five per cent */
 function getStBase(key) {
   const [y, m] = key.split('-').map(Number);
   const yr = y + (m - 1) / 12;
   const curve = yr < 2013 ? 300 + (yr - 2008.75) * 560 : 2680 - (yr - 2013) * 175;
-  const season = [0.93, 0.98, 1.02, 1.03, 0.97, 0.88, 0.8, 0.82, 0.98, 1.04, 1.05, 0.9][m - 1];
+  const season = [0.97, 0.99, 1.09, 1.05, 0.97, 0.96, 0.95, 0.95, 0.91, 0.97, 0.99, 0.91][m - 1];
   const boost = key === '2026-10' ? 1.42 : key === '2026-09' ? 1.08 : 1;
   return Math.max(260, curve) * season * boost;
 }
@@ -713,7 +714,7 @@ function setStClock(el, scope) {
   el._stClock = { hrs: a.hrs.slice(), gen: a.genHour.slice(), load: a.load };
 }
 
-/* Every month of the archive in one strip, the gaps where the file is missing, the bar the average day of the month */
+/* Every month of the archive in one strip, the gaps where the file is missing, the bar the average day of the month, a float of the system with its sums under the hand */
 function setStArchive(el) {
   const all = ST_ARCHIVE.concat([ST_NOW.key]);
   const first = all[0].split('-').map(Number);
@@ -722,17 +723,18 @@ function setStArchive(el) {
     if (m > 12) { m = 1; y++; }
     keys.push(y + '-' + String(m).padStart(2, '0'));
   }
-  const avg = (k) => getStBase(k);
-  const max = Math.max(...keys.filter(getStHas).map(avg));
+  const aggs = Object.fromEntries(keys.filter(getStHas).map((k) => [k, getStAgg(getStMonth(k).days, k)]));
+  const avg = (k) => aggs[k].u / Math.max(1, aggs[k].days.length);
+  const max = Math.max(...Object.keys(aggs).map(avg));
   let year = '';
   el.innerHTML = keys.map((k, idx) => {
     const [y, m] = k.split('-');
-    const has = getStHas(k);
     const yr = y !== year && Number(m) <= 6 ? (year = y, `<span class="st-arc-year">${y}</span>`) : '';
     const name = ST_MONTHS[Number(m) - 1] + ' ' + y;
-    return has
-      ? `<button type="button" class="st-arc-m${k === st.month ? ' st-is-pick' : ''}${k === ST_NOW.key ? ' st-arc-run' : ''}" data-st-month="${k}" aria-pressed="${k === st.month}" style="--sl-d-v:${(avg(k) / max).toFixed(3)};--sl-d-i:${idx}" title="${name}${k === ST_NOW.key ? ' — идёт' : ''}">${yr}<i></i></button>`
-      : `<span class="st-arc-m st-arc-gap" title="${name} — нет файла statistic_${k}.log">${yr}<i></i></span>`;
+    if (!aggs[k]) return `<span class="st-arc-m st-arc-gap sl-float" aria-label="${name}">${yr}<i></i>${getStFloat(name, [['Файл statistic_' + k + '.log', 'нет']])}</span>`;
+    const run = k === ST_NOW.key;
+    const rows = [['Уникальные в день', getStNum(Math.round(avg(k))), 's-u'], [ST_METRICS.u.name, getStNum(aggs[k].u), 's-u'], [ST_METRICS.h.name, getStNum(aggs[k].h), 's-h']];
+    return `<button type="button" class="st-arc-m sl-float${k === st.month ? ' st-is-pick' : ''}${run ? ' st-arc-run' : ''}" data-st-month="${k}" aria-pressed="${k === st.month}" aria-label="${name}" style="--sl-d-v:${(avg(k) / max).toFixed(3)};--sl-d-i:${idx}">${yr}<i></i>${getStFloat(name + (run ? ' · идёт' : ''), rows)}</button>`;
   }).join('');
 }
 
@@ -837,8 +839,8 @@ function setStDraw() {
   each('[data-st-week]', setStWeek);
   each('[data-st-clock]', setStClock);
   each('[data-st-rhythm]', setStRhythm);
-  doc.querySelectorAll('[data-st-stack], [data-st-week], [data-st-chart]').forEach((host) => host.dispatchEvent(new CustomEvent('htmx:afterSwap', { bubbles: true, detail: {} })));
   doc.querySelectorAll('[data-st-archive]').forEach(setStArchive);
+  doc.querySelectorAll('[data-st-stack], [data-st-week], [data-st-chart], [data-st-archive]').forEach((host) => host.dispatchEvent(new CustomEvent('htmx:afterSwap', { bubbles: true, detail: {} })));
   doc.querySelectorAll('[data-st-months]').forEach(setStMonths);
   doc.querySelectorAll('.st-still').forEach((host) => host.classList.remove('st-still'));
   const press = (sel, on) => doc.querySelectorAll(sel).forEach((b) => { b.setAttribute('aria-pressed', String(on(b))); b.classList.toggle('sl-is-active', on(b)); });

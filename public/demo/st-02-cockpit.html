@@ -15,7 +15,8 @@
   <style>
     /* Кокпит: the language of the presentation page on the tokens of the panel — the plate of the cockpit with four
        arcs for the shares and the dial of the day in the middle, figures in framed cells with mono capitals, windows
-       with three lamps on a lined ground; under the plate every row is one large window and two smaller ones, the log of days takes the whole width */
+       with three lamps on a lined ground; under the plate the archive of the statistics and the log of days take the whole width, every row between them is one
+       large window and two smaller ones */
     /* The dial of the day in the lamp of the theme: the spokes and the hours fill the glass inside its line, the middle
        reads as the figure of the other lamps; the switch of the day stands in the head beside the months */
     .v-dial {
@@ -193,7 +194,8 @@
     .v-week [data-lv="4"]::before { background: var(--sl-warning); }
     .v-week [data-lv="5"]::before { background: var(--sl-danger); }
 
-    .v-steps {
+    .v-steps,
+    .v-keys {
       display: flex;
       align-items: center;
       gap: var(--sl-space-2);
@@ -205,7 +207,8 @@
       color: var(--sl-text-muted);
     }
 
-    .v-steps i {
+    .v-steps i,
+    .v-keys i {
       width: var(--sl-space-6);
       height: var(--sl-space-4);
       border-radius: 3px;
@@ -217,6 +220,31 @@
     .v-steps i:nth-of-type(4) { background: var(--sl-success); }
     .v-steps i:nth-of-type(5) { background: var(--sl-warning); }
     .v-steps i:nth-of-type(6) { background: var(--sl-danger); }
+
+    /* The archive of the statistics: every month of the archive files one bar of the strip, its keys in the row of the steps of the week */
+    .v-arc [data-st-archive] {
+      --st-arc-h: 96px;
+    }
+
+    .v-keys {
+      flex-wrap: wrap;
+      gap: var(--sl-space-2) var(--sl-space-6);
+    }
+
+    .v-keys > span {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--sl-space-2);
+    }
+
+    /* The hint of the strip stands at the right edge, away from its keys */
+    .v-keys > span:last-child {
+      margin-left: auto;
+    }
+
+    .v-keys .v-k-on { background: var(--sl-primary); }
+    .v-keys .v-k-run { background: var(--sl-success); }
+    .v-keys .v-k-gap { border: 1px dashed var(--sl-danger); background: none; }
 
     .v-steps span:first-child {
       margin-right: var(--sl-space-2);
@@ -369,6 +397,14 @@
           <li><i class="bi bi-person-check" aria-hidden="true"></i><b data-st-t="usr"></b> <span>пользователей</span></li>
           <li><i class="bi bi-infinity" aria-hidden="true"></i><b data-st-t="all"></b> <span>хитов за всё время</span></li>
         </ul>
+      </section>
+
+      <section class="st-win v-arc" data-st-rise>
+        <div class="st-win-cap"><i class="bi bi-archive" aria-hidden="true"></i><span>Архив статистики</span><span class="st-meta">октябрь 2008 — октябрь 2026 · 214 файлов</span></div>
+        <div class="st-win-body">
+          <div data-st-archive></div>
+          <div class="v-keys" aria-hidden="true"><span><i class="v-k-on"></i>выбран</span><span><i class="v-k-run"></i>идёт</span><span><i class="v-k-gap"></i>нет файла</span><span>высота — уникальные в среднем за день, щелчок открывает месяц</span></div>
+        </div>
       </section>
 
       <div class="st-split" data-st-rise>

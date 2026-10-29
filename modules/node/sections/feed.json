@@ -3,6 +3,7 @@
     "note": "_NODE_FEED_INFO",
     "icon": "rss",
     "group": "content",
+    "order": 1,
     "frame": true,
     "fields": [
         {"key": "title", "label": "_TITLE", "type": "text"},

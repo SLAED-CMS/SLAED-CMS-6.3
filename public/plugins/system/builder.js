@@ -2,8 +2,8 @@
    the edit mode of the builder for its super administrator. The theme marks its parts: data-sl-pick on a section, a part, a menu item or a block,
    data-sl-text on a text typed in place (data-sl-lines for one of several lines), data-sl-md on a text of the editor window; the template
    [data-sl-build] holds the rings and the toolbar. Messages to the screen: {sl: 'ready'}, {sl: 'pick', sel}, {sl: 'text', sel, path, value},
-   {sl: 'act', act, sel}, {sl: 'move', sel, to, after}, {sl: 'open', sel, path}; from it: {sl: 'init', sel, names, words}, {sl: 'pick', sel, scroll},
-   {sl: 'scale', scale} */
+   {sl: 'act', act, sel}, {sl: 'move', sel, to, after}, {sl: 'open', sel, path}, {sl: 'key', key, code, ctrl, alt, shift}; from it:
+   {sl: 'init', sel, names, words}, {sl: 'pick', sel, scroll}, {sl: 'scale', scale} */
 (function () {
     'use strict';
     var tpl = document.querySelector('template[data-sl-build]');
@@ -198,6 +198,17 @@
     });
 
     document.addEventListener('submit', function (event) { event.preventDefault(); }, true);
+
+    // A key of the screen pressed on the page goes to the screen, which runs it as its own; a text typed in place and a field keep theirs
+    document.addEventListener('keydown', function (event) {
+        var ctrl = event.ctrlKey || event.metaKey;
+        if (event.defaultPrevented || event.isComposing || state.typing || event.target.closest('input, select, textarea, [contenteditable]')) return;
+        var mine = ctrl ? (event.code === 'KeyP' ? event.altKey : ['KeyK', 'KeyZ', 'KeyY', 'KeyD'].indexOf(event.code) >= 0)
+            : (event.altKey ? /^Arrow(Up|Down)$/.test(event.key) : event.key === 'Delete');
+        if (!mine) return;
+        event.preventDefault();
+        post({ sl: 'key', key: event.key, code: event.code, ctrl: ctrl, alt: event.altKey, shift: event.shiftKey });
+    });
 
     // The place a dragged section lands: before or after the section under the pointer
     function getSpot(x, y) {
