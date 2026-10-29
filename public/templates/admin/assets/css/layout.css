@@ -195,7 +195,8 @@
   flex: none;
 }
 
-/* Stage: the page of the draft in its frame, as wide as the device chosen in the top bar */
+/* Stage: the page of the draft drawn at the width of the device chosen in the top bar and scaled down to the stage; layout.js writes the width,
+   the height the page needs at that scale and the scale */
 .sl-lay-stage {
   grid-area: stage;
   display: grid;
@@ -207,7 +208,7 @@
 
 .sl-lay-frame {
   justify-self: center;
-  width: min(100%, var(--sl-d-device, 100%));
+  width: calc(var(--sl-d-device, 100%) * var(--sl-d-scale, 1));
   height: 100%;
   overflow: hidden;
   border-radius: var(--sl-radius-2);
@@ -218,9 +219,11 @@
 
 .sl-lay-frame > iframe {
   display: block;
-  width: 100%;
-  height: 100%;
+  width: var(--sl-d-device, 100%);
+  height: var(--sl-d-device-h, 100%);
   border: 0;
+  transform: scale(var(--sl-d-scale, 1));
+  transform-origin: 0 0;
 }
 
 /* Inspector: the parts of a window in a column, its body scrolling between the head and the foot */
@@ -259,6 +262,12 @@
 
 .sl-lay-right .sl-div-grid {
   margin-bottom: 0;
+}
+
+/* A picture of a field, the logo of the theme among them, is drawn at its own size and the column of the inspector is narrower */
+.sl-lay-right .sl-div-field img {
+  max-width: 100%;
+  height: auto;
 }
 
 .sl-lay-tabs .sl-tabs-link {

@@ -23,7 +23,7 @@
   </div>
   <header id="header">
     <div class="sl-wrp">
-      <a href="/" class="sl-thd sl-logo"{% if is_build %} data-sl-pick="part:brand"{% endif %} title="{% if slogan %}{{ sitename }} - {{ slogan }}{% else %}{{ sitename }}{% endif %}">
+      <a href="{{ root }}" class="sl-thd sl-logo"{% if is_build %} data-sl-pick="part:brand"{% endif %} title="{% if slogan %}{{ sitename }} - {{ slogan }}{% else %}{{ sitename }}{% endif %}">
         <img src="{{ root }}templates/{{ theme }}/images/logos/{{ logo }}" alt="{% if slogan %}{{ sitename }} - {{ slogan }}{% else %}{{ sitename }}{% endif %}" title="{% if slogan %}{{ sitename }} - {{ slogan }}{% else %}{{ sitename }}{% endif %}"{% if logo_w %} width="{{ logo_w }}" height="{{ logo_h }}"{% endif %}>
       </a>
       {% if parts.tagline %}<p class="sl-font sl-slogan sl-sec-lines"{% if is_build %} data-sl-pick="part:brand" data-sl-text="tagline" data-sl-lines{% endif %}>{{ parts.tagline }}</p>{% endif %}

@@ -6149,7 +6149,9 @@ button.sl-seg-cell:hover {
   margin-top: 0;
 }
 
+/* The logo keeps the width of its picture: a flex item that shrank drew it a few pixels wide beside a long tagline */
 .sl-logo {
+  flex: none;
   width: auto;
   height: var(--sl-logo-height);
   margin: 0;

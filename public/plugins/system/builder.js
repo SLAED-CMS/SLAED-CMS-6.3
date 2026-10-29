@@ -2,13 +2,14 @@
    the edit mode of the builder for its super administrator. The theme marks its parts: data-sl-pick on a section, a part, a menu item or a block,
    data-sl-text on a text typed in place (data-sl-lines for one of several lines), data-sl-md on a text of the editor window; the template
    [data-sl-build] holds the rings and the toolbar. Messages to the screen: {sl: 'ready'}, {sl: 'pick', sel}, {sl: 'text', sel, path, value},
-   {sl: 'act', act, sel}, {sl: 'move', sel, to, after}, {sl: 'open', sel, path}; from it: {sl: 'init', sel, names, words}, {sl: 'pick', sel, scroll} */
+   {sl: 'act', act, sel}, {sl: 'move', sel, to, after}, {sl: 'open', sel, path}; from it: {sl: 'init', sel, names, words}, {sl: 'pick', sel, scroll},
+   {sl: 'scale', scale} */
 (function () {
     'use strict';
     var tpl = document.querySelector('template[data-sl-build]');
     if (window.parent === window || !tpl) return;
     var root = document.documentElement;
-    var state = { sel: '', names: {}, typing: null, drag: null };
+    var state = { sel: '', names: {}, typing: null, drag: null, zoom: 1 };
     var layer = tpl.content.cloneNode(true);
     var hover = layer.querySelector('[data-sl-build-hover]');
     var ring = layer.querySelector('[data-sl-build-sel]');
@@ -223,8 +224,8 @@
 
     document.addEventListener('pointermove', function (event) {
         if (!state.drag) return;
-        ghost.style.setProperty('--sl-d-pointer-x', event.clientX + 'px');
-        ghost.style.setProperty('--sl-d-pointer-y', event.clientY + 'px');
+        ghost.style.setProperty('--sl-d-pointer-x', (event.clientX / state.zoom) + 'px');
+        ghost.style.setProperty('--sl-d-pointer-y', (event.clientY / state.zoom) + 'px');
         var spot = getSpot(event.clientX, event.clientY);
         state.drag.spot = spot && 'sec:' + spot.to !== state.sel ? spot : null;
         if (!state.drag.spot) {
@@ -262,6 +263,10 @@
             setPick(msg.sel || '', false);
             var node = getPicked(state.sel);
             if (node && msg.scroll) node.scrollIntoView({ block: 'nearest', behavior: 'instant' });
+        } else if (msg.sl === 'scale') {
+            state.zoom = Math.min(2, 1 / (Number(msg.scale) || 1));
+            root.style.setProperty('--sl-d-zoom', String(state.zoom));
+            window.requestAnimationFrame(setRings);
         }
     });
 

@@ -16,9 +16,10 @@
     var link = document.getElementById('sl-lay-link');
     var help = document.getElementById('sl-lay-help');
     var bar = app.querySelector('[data-sl-lay-preview]');
-    // The widths of the devices of the top bar, written as --sl-d-device; the computer takes the whole stage
-    var devices = { desk: '', tablet: '768px', phone: '390px' };
-    var state = { page: app.getAttribute('data-sl-lay-page'), sel: app.getAttribute('data-sl-lay-sel'), tab: app.getAttribute('data-sl-lay-tab'), guest: false };
+    // The widths of the devices of the top bar: the page is drawn at that width and scaled down to the stage, so a computer shows the desktop layout of the theme
+    var devices = { desk: 1366, tablet: 820, phone: 390 };
+    var state = { page: app.getAttribute('data-sl-lay-page'), sel: app.getAttribute('data-sl-lay-sel'), tab: app.getAttribute('data-sl-lay-tab'), dev: 'desk', guest: false };
+    var scale = 1;
 
     // One key of the storage of this tab of the browser, or of the browser for the recent types; a storage that is off reads as empty
     function getKept(key, local) {
@@ -95,13 +96,31 @@
     function setDevice(dev) {
         if (!(dev in devices)) dev = 'desk';
         state.dev = dev;
-        app.querySelector('[data-sl-lay-frame]').style.setProperty('--sl-d-device', devices[dev] || '100%');
         app.querySelectorAll('[data-sl-lay-device]').forEach(function (one) {
             var on = one.getAttribute('data-sl-lay-device') === dev;
             one.classList.toggle('sl-is-active', on);
             one.setAttribute('aria-pressed', on ? 'true' : 'false');
         });
+        setFit();
         setPlace();
+    }
+
+    /* The page at the width of its device, scaled down to the stage and as tall as the stage at that scale; a narrow window stacks the columns,
+       and there the page takes the width of the stage up to its device. The page is told the scale, so its rings and toolbar keep their size */
+    function setFit() {
+        var box = app.querySelector('[data-sl-lay-frame]');
+        var css = window.getComputedStyle(box.parentElement);
+        var wide = box.parentElement.clientWidth - parseFloat(css.paddingLeft) - parseFloat(css.paddingRight);
+        var high = box.parentElement.clientHeight - parseFloat(css.paddingTop) - parseFloat(css.paddingBottom);
+        var width = devices[state.dev];
+        if (window.matchMedia('(max-width: 900px)').matches) width = Math.min(wide, width);
+        var fit = Math.min(1, wide / width);
+        box.style.setProperty('--sl-d-device', width + 'px');
+        box.style.setProperty('--sl-d-device-h', (high / fit) + 'px');
+        box.style.setProperty('--sl-d-scale', String(fit));
+        if (fit === scale) return;
+        scale = fit;
+        setFramePost({ sl: 'scale', scale: scale });
     }
 
     // Reload the page of the draft in its frame and put it back where it was scrolled; the guest view asks the page as a visitor without a session sees it
@@ -149,7 +168,7 @@
         try { frame.contentWindow.addEventListener('keydown', setKey, true); } catch (e) { return; }
     });
 
-    // The names of the rings and the words of the toolbar for the page in the frame, with the pick it shows; the names come with every write in the state
+    // The names of the rings and the words of the toolbar for the page in the frame, with the pick it shows and the scale it is drawn at; the names come with every write in the state
     function setFrameInit() {
         var mark = document.getElementById('sl-lay-state');
         var names = {};
@@ -157,6 +176,7 @@
         try { names = JSON.parse(mark ? mark.getAttribute('data-sl-lay-names') || '{}' : '{}'); } catch (e) { names = {}; }
         try { words = JSON.parse(app.getAttribute('data-sl-lay-words') || '{}'); } catch (e) { words = {}; }
         setFramePost({ sl: 'init', sel: state.sel, names: names, words: words });
+        setFramePost({ sl: 'scale', scale: scale });
     }
 
     // A pick made on the page: the inspector comes, and the tree turns to the tab that lists it
@@ -654,6 +674,7 @@
     }
 
     window.addEventListener('keydown', setKey, true);
+    new window.ResizeObserver(function () { setFit(); }).observe(app.querySelector('[data-sl-lay-frame]').parentElement);
 
     var place = getKept('sl-lay-place');
     if (place && String(place.page) === String(state.page)) {

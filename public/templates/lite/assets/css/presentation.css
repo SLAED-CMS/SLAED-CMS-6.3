@@ -5780,6 +5780,14 @@
   display: none;
 }
 
+/* The screen draws the page scaled down and builder.js writes --sl-d-zoom back: the names, the toolbar, its button and the label keep their size */
+.sl-builder-name,
+.sl-builder-bar,
+.sl-builder-add,
+.sl-builder-ghost {
+  zoom: var(--sl-d-zoom, 1);
+}
+
 /* The toolbar of the picked section is the capsule of the editors shown at once, at its upper right corner; the ring outranks the capsule of theme.css */
 .sl-builder-sel .sl-builder-bar {
   position: absolute;
