@@ -12,6 +12,7 @@ define('_NODE_BUSY','Материал тем временем изменён, н
 define('_NODE_CATS','Дополнительные категории');
 define('_NODE_CLOSE','Закрыть обращение');
 define('_NODE_FAILED','Материал не удалось сохранить, повторите попытку позже.');
+define('_NODE_FEEDALL','Все: %s');
 define('_NODE_FILTERS','Отбор материалов');
 define('_NODE_FIND','Поиск в разделе');
 define('_NODE_GONE','Материал не существует или недоступен.');

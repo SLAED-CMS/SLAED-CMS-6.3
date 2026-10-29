@@ -1,0 +1,29 @@
+{
+    "title": "_NODE_FEED",
+    "note": "_NODE_FEED_INFO",
+    "icon": "rss",
+    "group": "content",
+    "frame": true,
+    "fields": [
+        {"key": "title", "label": "_TITLE", "type": "text"},
+        {"key": "lead", "label": "_LAYOUT_LEAD", "type": "text"},
+        {"key": "icon", "label": "_ICON", "type": "icon", "tab": "look"},
+        {"key": "source", "label": "_NODE_TYPES", "type": "nodetype"},
+        {"key": "mode", "label": "_NODE_FEEDMODE", "type": "select", "show": "seg", "options": {"last": "_NEW", "home": "_NODE_FEEDHOME"}},
+        {"key": "count", "label": "_NODE_FEEDCOUNT", "type": "int", "show": "range", "min": 2, "max": 8},
+        {"key": "view", "label": "_LAYOUT_TABLOOK", "type": "select", "show": "seg", "options": {"tile": "_LAYOUT_CARDS", "list": "_LAYOUT_LINES"}, "tab": "look"},
+        {"key": "date", "label": "_DATE", "type": "bool", "show": "switch", "tab": "look"},
+        {"key": "more", "label": "_NODE_FEEDMORE", "type": "bool", "show": "switch", "tab": "look"}
+    ],
+    "make": {
+        "title": "_NODE_FEED",
+        "lead": "",
+        "icon": "rss",
+        "source": [],
+        "mode": "last",
+        "count": 4,
+        "view": "tile",
+        "date": true,
+        "more": true
+    }
+}

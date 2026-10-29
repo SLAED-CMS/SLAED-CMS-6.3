@@ -41,6 +41,20 @@
         "band": false,
         "sections": [{"type": "hero", "make": {"pic": false, "btn": ""}}, {"type": "faq"}, {"type": "cta"}]
     },
+    "news": {
+        "title": "_LAYOUT_RS_NEWS",
+        "note": "_LAYOUT_RS_NEWS_I",
+        "icon": "newspaper",
+        "band": false,
+        "sections": [{"type": "hero", "make": {"pic": false, "btn": ""}}, {"type": "feed"}, {"type": "item"}]
+    },
+    "article": {
+        "title": "_LAYOUT_RS_ART",
+        "note": "_LAYOUT_RS_ART_I",
+        "icon": "file-earmark-richtext",
+        "band": false,
+        "sections": [{"type": "hero", "make": {"pic": false, "btn": ""}}, {"type": "item"}]
+    },
     "jobs": {
         "title": "_LAYOUT_RS_JOBS",
         "note": "_LAYOUT_RS_JOBS_I",

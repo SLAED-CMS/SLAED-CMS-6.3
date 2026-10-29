@@ -1,5 +1,46 @@
 # Versions
 
+## 2026-10-29
+
+### The site builder edits the pages, the menus and the parts of the theme on the page itself, and publishes them with their blocks in one step
+
+The start page was one module of the list in `config/global.php`, and the header, the menus and the footer of lite were
+partials that carried the data of slaed.net into every site. A site now has a layout, `config/layout.php`: pages of
+sections at addresses of their own, two menus and the parts of the theme, edited by "Конструктор сайта" of the panel
+in a draft and published with the rows of `_blocks` they touch. The references are `docs/ARCHITECTURE.md`, "Layout
+Boundary", "Address Boundary" and "Block Boundary", `docs/TEMPLATES.md`, "Layout Sections", and `docs/UPDATE.md`,
+"Settings, Languages and Themes"; the help of the panel is `admin/info/layout/ru.md`.
+
+- **Pages.** The page `home` of the layout is the start page, its module slot holding the module of the home route
+  (the first entry of the list, no longer one drawn at random). A page of sections answers at the root as the kind
+  `page` of `_routes`, with 301 from a former address and 410 once deleted, its own title, description, picture and
+  `robots`, an entry in the sitemap and the audience "users only"; the page 404 of the layout answers a missing address
+  with the code kept. `which` of a block takes `page-<number>`.
+- **Sections.** 21 types in six groups: the module slot of the core, 17 of lite, "Свежие материалы" and "Материал" of
+  the module Node, "Внедрения" of the module presentation. A type is a description, a fragment and, in a module, a provider; Markdown renders
+  through the parser, a video, a map and an outside page load only on a click.
+- **The chrome of lite.** The header, both menus, the contacts, the band before the footer, the marks of the footer
+  and the side tabs come from the layout by `places.json`; the delivered layout is neutral, and slaed.net takes its own
+  by the import of the builder. The marks moved to `uploads/presentation/brand/tech/`, `blocks/menu.php` prints the main
+  menu.
+- **Blocks.** `setBlockOrder()` is the one writer of the zone and the order; the positions b and f leave, their rows
+  moving to d by a statement of `table_update6_3.sql`; an expired block no longer cuts its column, a block without its
+  file is hidden from visitors, a Node type carries columns of its own (`view.side`, `view.top`), and `[block=N]` renders
+  in a trusted rendering.
+- **The screen.** The structure, the page in a frame and the inspector; 50 steps of Undo kept in the draft; the checks
+  of links, anchors, descriptions and weights before a publication, with its note; a history of ten with one section
+  back; the guest view, a signed link of the draft, ready pages, own sections, the copy of a page and a page from a
+  text; the export and the import of the layout as JSON. One draft serves every administrator, and a write that saw
+  another revision is refused.
+- **The publication.** The file, the addresses and the rows of `_blocks` go in one transaction inside the shared writer
+  of `config/`, its proof a witness row; a row changed meanwhile in "Блоки и баннеры" stops it.
+- **On the page.** "Изменить страницу" of the floating menu opens the builder on the page where the administrator
+  stands; in the frame `plugins/system/builder.js` rings a part, types a text in place, drags a section and shows its
+  toolbar.
+- **One drag of the panel.** Rows of a table or a list drag by their handle; "Блоки и баннеры" post the order, and each
+  administrator keeps an order of the panel menu of their own in the cookie `menu`.
+- **Tests.** `LayoutTest`, `LayoutDraftTest`, `LayoutPublishTest`, `BlocksTest` and the route tests.
+
 ## 2026-10-26
 
 ### Every stored text is Markdown by CommonMark and GFM, and BB is left with the six SLAED tags

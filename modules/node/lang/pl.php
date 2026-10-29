@@ -12,6 +12,7 @@ define('_NODE_BUSY','Materiał został w międzyczasie zmieniony, nic nie zapisa
 define('_NODE_CATS','Dodatkowe kategorie');
 define('_NODE_CLOSE','Zamknij zgłoszenie');
 define('_NODE_FAILED','Nie udało się zapisać materiału, spróbuj ponownie później.');
+define('_NODE_FEEDALL','Wszystkie: %s');
 define('_NODE_FILTERS','Wybór materiałów');
 define('_NODE_FIND','Szukaj w dziale');
 define('_NODE_GONE','Materiał nie istnieje lub jest niedostępny.');

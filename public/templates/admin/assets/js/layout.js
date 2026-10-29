@@ -434,6 +434,11 @@
         if (own && pick.value === '__own') window.setTimeout(function () { own.focus(); }, 0);
     });
 
+    // Enter in the search of a record keeps the inspector from posting: the search asks for its list as the words are typed
+    app.addEventListener('keydown', function (event) {
+        if (event.key === 'Enter' && event.target.matches && event.target.matches('[data-sl-lay-seek]')) event.preventDefault();
+    });
+
     // A range shows its number as it moves; the icon window writes its field by an input event, which the form takes as the change it saves on
     app.addEventListener('input', function (event) {
         var range = event.target.closest ? event.target.closest('[data-sl-lay-range]') : null;
@@ -524,6 +529,20 @@
         if (event.detail.successful && head.indexOf('sl-quick-note') < 0) window.setWindowClose(edit);
     });
 
+    // "Загрузить файл" opens the choice of a JSON file, whose change posts the foot of the settings; the window closes once the draft took it, a refusal keeps it
+    sets.addEventListener('click', function (event) {
+        var pick = event.target.closest ? event.target.closest('[data-sl-lay-import]') : null;
+        if (pick) sets.querySelector('[data-sl-lay-import-file]').click();
+    });
+
+    sets.addEventListener('htmx:afterRequest', function (event) {
+        var file = sets.querySelector('[data-sl-lay-import-file]');
+        var head = event.detail.xhr ? event.detail.xhr.getResponseHeader('HX-Trigger') || '' : '';
+        if (!file || event.detail.elt !== file.form) return;
+        file.value = '';
+        if (event.detail.successful && head.indexOf('sl-quick-note') < 0) window.setWindowClose(sets);
+    });
+
     edit.addEventListener('keydown', function (event) {
         var form = edit.querySelector('#sl-lay-edit-form');
         if (!form || event.key !== 'Enter' || !(event.ctrlKey || event.metaKey)) return;
@@ -540,18 +559,18 @@
     });
 
     /* Every write carries this editor and the draft and the site it saw, so a write of another editor in between is refused instead of overwritten;
-       every request names the module of a page made in memory until it is written, and a request of the tree asks for the pick and the page the
-       screen holds now, not the ones its buttons were drawn with */
+       every request names the module of a page made in memory until it is written, and a request of the tree or of the settings asks for the pick
+       and the page the screen holds now, not the ones its buttons were drawn with */
     document.addEventListener('htmx:configRequest', function (event) {
         var elt = event.detail.elt;
         var mark = document.getElementById('sl-lay-state');
-        if (event.detail.verb === 'post' && elt && (elt === app || (elt.closest && elt.closest('[data-sl-lay-app], #sl-lay-edit')))) {
+        if (event.detail.verb === 'post' && elt && (elt === app || (elt.closest && elt.closest('[data-sl-lay-app], #sl-lay-edit, #sl-lay-sets')))) {
             event.detail.parameters.ed = app.getAttribute('data-sl-lay-ed') || '';
             event.detail.parameters.rev = mark ? mark.getAttribute('data-sl-lay-rev') || '' : '';
             event.detail.parameters.live = mark ? mark.getAttribute('data-sl-lay-live') || '' : '';
         }
         if (app.getAttribute('data-sl-lay-mod') && /[?&]name=layout(?:&|$)/.test(event.detail.path)) event.detail.parameters.mod = app.getAttribute('data-sl-lay-mod');
-        if (!elt || !elt.closest || !elt.closest('#sl-lay-tree')) return;
+        if (!elt || !elt.closest || !elt.closest('#sl-lay-tree, #sl-lay-sets')) return;
         event.detail.parameters.page = state.page;
         if (!/sel=menu/.test(event.detail.path)) event.detail.parameters.sel = state.sel;
     });

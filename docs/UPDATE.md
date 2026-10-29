@@ -406,6 +406,9 @@ An installation keeps what the site saved and brings what is new; at runtime not
   readers take numbers through `intval()`. `config/system.php`, `header.php` and `chmod.php` are code, not settings,
   and follow the row "all other code".
 - **Renaming, changing the meaning or deleting an option** is a PHP step of the version through `setConfigFile()`.
+- **The shape of the layout** carries its version `v` (`Layout::VERSION`). `Layout` reads a file of another version as
+  an empty layout, so a release that changes the shape brings a PHP step that moves `config/layout.php` of every site to
+  it, through the Closure form, as a step moves any stored data; the merge never does it.
 - **Languages and themes** are replaced whole, so the wording of a release reaches every site; edits of an
   administrator in these files are lost on update (the old files lie in the backup of the installation), and the
   pages "Языки", "Шаблоны" and "Стили" warn about it (`_UPDATE_LANGS`, `_UPDATE_THEMES`). They never stop an

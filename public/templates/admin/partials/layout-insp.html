@@ -1,5 +1,5 @@
-{# The inspector of the site builder: the parts of a window holding the rows of the form canon; a change of any field outside a window of a file posts the form with its files, a foot act posts through the screen #}
-<form class="sl-lay-right sl-div-form sl-div-side" id="sl-lay-insp" action="{{ save_url }}" method="post" hx-post="{{ save_url }}" hx-trigger="change[!target.closest('dialog')], submit" hx-swap="none" hx-encoding="multipart/form-data" enctype="multipart/form-data" novalidate aria-label="{{ aria_text }}"{% if is_oob %} hx-swap-oob="true"{% endif %}>
+{# The inspector of the site builder: the parts of a window holding the rows of the form canon; a change of any field outside a window of a file but the search of a record posts the form with its files, a foot act posts through the screen #}
+<form class="sl-lay-right sl-div-form sl-div-side" id="sl-lay-insp" action="{{ save_url }}" method="post" hx-post="{{ save_url }}" hx-trigger="change[!target.closest('dialog') && !target.matches('[data-sl-lay-seek]')], submit" hx-swap="none" hx-encoding="multipart/form-data" enctype="multipart/form-data" novalidate aria-label="{{ aria_text }}"{% if is_oob %} hx-swap-oob="true"{% endif %}>
   <input type="hidden" name="token" value="{{ token }}">
   <input type="hidden" name="sel" value="{{ sel }}">
   <input type="hidden" name="page" value="{{ page }}">

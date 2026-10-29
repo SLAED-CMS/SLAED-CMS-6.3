@@ -63,7 +63,13 @@ templates/<theme>/
   pages/
   partials/
   fragments/
+  sections/        # optional section types of the site builder, <type>.json and <type>.html
+  places.json      # optional parts, menus and zones of blocks the site builder edits
+  presets.json     # optional ready pages of the site builder
 ```
+
+The last three are the contract of the site builder, "Layout Sections" below; a site theme without them shows no
+sections and no parts, and the panel theme `admin` has none.
 
 `sound/` holds the voices `plugins/system/sound.js` plays: `success`, `error`, `warn`, `queue`, `win` in both themes,
 `inbox` and `send` in `lite`, each `<voice>.mp3`. The layout names the folder on `<html>` as `data-sl-sound` from
@@ -396,6 +402,7 @@ setHead([
 Behavior:
 
 - `route` is the current path of the entity of the page from its reader (`null` for an entity without one); the canonical address is built from it, and `setHead()` first answers any other form of the page with one 301 through `setSeoMove()` (`docs/ARCHITECTURE.md`, "Address Boundary")
+- a page of the site builder passes `title`, `desc`, `img` (its picture for social networks), `robots` (`noindex, follow` for a page hidden from search engines) and its path as `route`; read from the draft it is `noindex` with no canonical address (`docs/ARCHITECTURE.md`, "Layout Boundary")
 - supported page kinds are `website`, `collection`, `article`, `news`, `product`, `forum`, `profile`, and `utility`
 - `canon` and `robots` are explicit overrides; normal routes use route-aware defaults
 - search, account forms, add/send flows, and other service routes are `noindex, follow` without canonical
@@ -901,6 +908,141 @@ Every reader passes the raw column and its title, and every template takes the r
   `--sl-ladder-bar-height`, `--sl-ladder-bar-mix`, `--sl-wheel-bg` and `--sl-wheel-eye-width`; templates and the script
   write `--sl-d-group`, `--sl-d-share` and `--sl-d-swatch`, registered under `data` in `tools/ui-contract.php`.
 - `tests/Unit/GroupFormTest.php` holds `save()` and `getGroupNext()`.
+
+## Layout Sections
+
+A site theme describes what the site builder places on the pages and around them; the layout keeps the values by key
+and the theme prints what it declares, so a change of theme keeps every value (`docs/ARCHITECTURE.md`, "Layout
+Boundary"). Everything but the fragments is data; a label is a constant of `admin/lang`, written with its leading `_`.
+
+| File | Holds |
+|---|---|
+| `sections/<type>.json` | the description of a section type |
+| `sections/<type>.html` | its fragment |
+| `places.json` | the parts of the theme, its menus and its zones of blocks |
+| `presets.json` | the ready pages |
+
+A new theme copies all four. The demo series "Конструктор сайта" — `public/demo/sb-01-builder.html`, `sb-site.html`
+and their `assets/sb-*` — stays the reference of the look and the behaviour of the screen and of the canvas.
+
+### Roots and providers
+
+`Layout::getSectionTypes()` scans `sections/` of the active theme, then `modules/<name>/sections/` of every module by
+name. The first root that describes a type owns it; a type name is `[a-z][a-z0-9-]{0,39}`, and `module`, the slot
+that holds the output of a module, belongs to the core and is never a description.
+
+- **The fragment.** The theme's `sections/<type>.html` wins. A type of a module whose theme has none renders the
+  module's own `sections/<type>.html` through `Template::getHtmlSection($type, $data, $dir)`, held inside that folder as
+  a theme file is held inside its theme. A type with neither is skipped on the site and named in the editor.
+- **The provider.** A module may bring `sections/<type>.php`, which returns a `Closure` that takes the section and
+  answers values laid over those of its fields. A section on the data of a module is a type of that module, so a site
+  without the module has no such type in the library.
+- **Shipped.** Lite describes 17 types. The module `node` brings `feed` ("Свежие материалы", over `getNodeFeed()`, the
+  engine of the block `node.php`) and `item` ("Материал", a record by `getNodeContent()` of its type); `presentation`
+  brings `sites` ("Внедрения", over `getPresentationSites()`) with a default fragment. Lite draws `feed`, `item` and
+  `sites` with fragments of its own.
+
+### The description
+
+| Key | Holds |
+|---|---|
+| `title`, `note` | the name and the line of its card in the library |
+| `icon` | the Bootstrap icon of the card and of the head |
+| `group` | the group of the library: `base`, `media`, `content`, `trust`, `contact` or `master`, shown in this order |
+| `frame` | the head of a presentation section with its number, `fragments/presentation-head.html` |
+| `fields` | the fields of the section |
+| `items` | an optional list: `label`, `max`, `name` (the field that names an item), `fields`, `make` |
+| `make` | the defaults of a new section or item; a string with a leading `_` is a constant resolved when the editor creates it, and the site never reads `make` |
+
+A field is `key` (`Layout::FIELD`, no underscore, so a derived key never meets a field), `label` and `type`, and
+optionally `show`, `tab` (`look` for the tab "Вид"), `options` (key → label of a `select`), `min` and `max`, and `when`
+(`[key, value]`: the field shows and is checked only while another field holds that value).
+
+| `type` | Edited as | The fragment gets |
+|---|---|---|
+| `text`, `textarea`, `email`, `date`, `url`, `int`, `bool`, `select` | a type of `Field`, checked by `checkFieldValues()`; `show` draws a `select` as `seg`, a `bool` as `switch`, an `int` as `range` | the value made canonical by `Field`; a `select` also `<key>_<option>`, a `url` outside the site `<key>_ext` |
+| `markdown` | the content editor of the site in the editor window, with the file manager over `layout.attach` | `<key>_html` by `Parser::filterDoc()` with the module `layout` |
+| `code` | "Свой HTML" in the code editor, for the super administrator | `<key>_html`, printed as it is |
+| `file` | the file field over `layout.attach` | the address of a path below `uploads/`, in a public folder only |
+| `focus` | the grid of nine | one of `Layout::FOCUS`, `center` by default |
+| `icon`, `tone` | the icon window; the swatches of `Layout::TONES` | the name, or empty |
+| `video` | an address of YouTube or a film of the uploads | `<key>_frame` (the privacy mode of YouTube), `<key>_file` |
+| `page` | an address of `https` | `<key>_frame`, `<key>_host` |
+| `point` | one field, the latitude and the longitude: "52.35, 8.23" | `<key>_frame`, the map of OpenStreetMap |
+| `nodetype` | the check list of the Node types that may feed a block | the list of type names, empty for all |
+| `noderef` | a search over the titles of the published records | the number of the record |
+| `blockref` | the blocks of the site, the free ones first | the number, and `<key>_html`, the block by `Template::getFree()` |
+
+Every fragment also gets `parts`, the values of the parts of the theme, and `is_build`; an item gets `order_num`, its
+place as two digits, and `is_first`. A missing or refused value is empty, never an error on the site. The kinds are a
+closed set of the core, so a new section needs no line of JavaScript; the kinds of the editor's own forms (`anchor`,
+`slug`, `choice`, `checks`) are not for a description.
+
+### The frame of a section
+
+`fragments/section.html` stands around every section: `id` from its anchor (`Layout::ANCHOR`), `sl-sec-no-phone` and
+`sl-sec-no-desk` for the devices it is hidden on, the head of `presentation-head.html` when the description has
+`frame`, and `data-sl-pick` in the edit mode. The module slot is its output alone, and in the edit mode a `div` with
+its pick. A theme without the fragment prints the sections bare.
+
+An outside frame — a field `video`, `page` or `point` — waits in a `<template>` of `[data-sl-sec-load]`, and
+`slaed.js` swaps it in on the click of its placeholder: no outside server is asked before that click and no consent
+or cookie is stored. A film of the uploads plays at once.
+
+### Places
+
+`places.json` holds three maps; `Layout::getThemePlaces()` reads it and `getThemeData()` checks the values of `theme`
+by its fields, as the values of a section.
+
+- `parts`: each `title`, `note`, `icon`, `where` (the place the structure of the screen groups it by) and `fields` as
+  in a description; optionally `items` with its `key`, the name of its list in `theme`, and `conf`, the keys of
+  `config/global.php` the part edits as "Конфигурации" does. Lite declares `brand` (its `conf` is `sitename` and
+  `site_logo`, its field `tagline`), `pane`, `social`, `line`, `contacts`, `marks` and `tabs`.
+- `menus`: each `title`, `where`, `depth` and `icons`; lite declares `main` two levels deep and `foot` one.
+- `zones`: the zones of blocks `l`, `r`, `c`, `d` with their `title`.
+
+### Ready pages
+
+`presets.json` maps a key to a ready page: `title`, `note`, `icon`, `band` and `sections`, each a `type` with an
+optional `make` laid over the defaults of that type. The screen puts its own "Из текста" and "Пустая" first; a type the
+theme and its modules do not describe is skipped when the page is made. Lite brings thirteen.
+
+### Marks of the edit mode
+
+Under `is_build` the fragments mark what the canvas of the builder picks and types (`plugins/system/builder.js`):
+
+| Mark | On |
+|---|---|
+| `data-sl-pick` | a section and the slot (`sec:<id>`), a part of the theme (`part:<key>`), a menu item (`menu:<key>:<id>`), a block (`blk:<id>`) |
+| `data-sl-text` | a text typed in place, by the key of its field; an item's as `items.{{ item.order_num }}.<key>` |
+| `data-sl-lines` | beside `data-sl-text`, a text of several lines |
+| `data-sl-md` | a Markdown text or "Свой HTML", which opens the editor window |
+
+`fragments/builder.html` holds the template `[data-sl-build]` with the rings and the toolbar. A visitor gets no mark; a
+theme without them keeps the rings and the inspector and loses only the typing in place. `LayoutTest` holds that each
+`data-sl-text` names a field of its type.
+
+### The screen of the builder
+
+The screen is written once on the theme `admin` (`partials/layout-*.html`, `fragments/layout-field.html`,
+`assets/js/layout.js`, `assets/css/layout.css`); a site theme brings only its sections
+and places. It is built of the canon of the panel — the parts of a window for the inspector, `div-row.html`,
+`menu-list-item.html` for the tree, `menu-grid-item.html` for the cards, `toggle-form-block.html` for the items, the
+file field, the capsule of the editors — and keeps own CSS only for the three columns, the frame of the canvas, the
+schemas of the cards, the swatches, the rings and the toolbar on the page.
+
+- **The tone of a button is its weight.** `sl-but-blue` the one main action of a window or the screen,
+  `sl-but-green` the action of a field that opens its editor or picker, `sl-but-red` what removes or throws away,
+  `sl-but` the way back and the secondary, `sl-but-mini sl-is-muted` the small tools of a part, their words in the
+  title. Every button carries its icon.
+- **One place for each kind of button.** What is done to the picked part stands only in the foot of the inspector, the
+  small tools at the left, the deletion as a red icon at the right; the action of a field at the right end of its field;
+  a new element at the end of its list; the foot of a window the dangerous action at the left, the way back and the main
+  action at the right.
+- **One capsule for every group of icons.** The top bar, the foot of the inspector and the toolbar on the page are
+  `sl-editor-pill` with its groups, shown at once, a removing act in the tone of danger.
+- **A switch says its answers.** "Да" and "Нет" answer a question asked in the positive; any other answer is a
+  segmented control with its words.
 
 ## Theme Contract
 

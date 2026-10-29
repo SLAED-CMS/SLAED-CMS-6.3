@@ -12,7 +12,7 @@ This guide covers:
 - bootstrap and configuration flow
 - frontend and admin routing
 - core runtime objects and global dependencies
-- module, block, template, editor, parser, cache, scheduler and journal boundaries
+- module, block, layout, template, editor, parser, cache, scheduler and journal boundaries
 - performance-sensitive and refactor-sensitive areas
 
 This guide does not describe a future framework, dependency injection container,
@@ -88,18 +88,22 @@ Home route:
 
 ```text
 index.php
-  -> configured module list from config/global.php
+  -> the page home of config/layout.php
+  -> the module its slot names, else the first entry of the module list of config/global.php
   -> requested file, defaulting to index
   -> modules/<selected-module>/<file>.php
+  -> setFoot() draws the sections of the page around the module output
 ```
 
-If `config/global.php` contains a comma-separated module list, the home route
-selects one entry for the request. If no home module is configured, the runtime
-renders an empty page shell.
+The start page is the page `home` of the layout (see "Layout Boundary"). The module
+slot of that page names the module of the home route; a slot left empty, or a layout
+without a home page, takes the first entry of the comma-separated module list of
+`config/global.php`. With no module the runtime renders the sections of the page alone.
 
-The home route reads the `side` and `top` positions of the selected module from
-`config/modules.php` the same way the named route does, so `admin.php?name=modules`
-governs the block columns of the start page too. A module whose output carries its
+The block columns of the start page are the `side` and `top` of the page itself
+(`Layout::getPageColumns()`, applied in `setFoot()`), which win over those of the
+module; without a home page in the layout the home route reads them from the module
+row of `config/modules.php` as the named route does. A module whose output carries its
 own `h1` sets `$sitevars['has_own_title']` after `setHead()` — `setHead()` rebuilds
 that array — and `layouts/home.html` then skips the site name heading; `layouts/app.html`
 never prints one. `modules/presentation` is the module that does this.
@@ -362,9 +366,11 @@ site.
 | Page of a list; sorting, letter, filter | `/files/moduli?page=2`; `/files?order=views`, `/files?let=a` |
 | Forum topic, forum section | `/forum/modul-poiska`, `/forum/obshchie-voprosy` |
 | Profile, poll | `/users/eduard`, `/voting/kak-vam-novyi-dizain` |
+| Page of the site builder | `/o-kompanii` |
 | Operations | `/files/add`, `/files/asset/2`, `/account/login`, `/account/privat` |
 
-- The prefix of the type or module is part of every address; the separator is a fixed `/`, no setting moves it.
+- The prefix of the type or module is part of every address; the separator is a fixed `/`, no setting moves it. A
+  page of the site builder answers at the root, as a type does.
 - Materials and categories of a type share one namespace; the category is not in the address of a material, so a
   material keeps its address when it moves. The forum names topics and sections the same way under `/forum`.
 - The profile lives under the list of users and is named by its login: a new login in the panel moves it, and the old
@@ -376,7 +382,8 @@ site.
 ### The registry
 
 `_routes` (`storage/update/sql/table.sql`): `path` (ASCII, binary, unique, without the leading slash), `kind`
-(`type`, `node`, `cat`, `topic`, `user`, `poll`), `oid`, `state` (`1` current, `0` former, `2` gone) and `cur`, a stored
+(`type`, `node`, `cat`, `topic`, `user`, `poll`, `page`), `oid` (for `page` the permanent number of the page in
+`config/layout.php`, whose owner is the layout and not a row of a table), `state` (`1` current, `0` former, `2` gone) and `cur`, a stored
 column generated from `state` — `1` on the current row, `NULL` on every other — so the unique key `(kind, oid, cur)`
 lets an entity hold any number of former paths and at most one current one. No foreign key: the rows outlive their
 entity on purpose.
@@ -407,6 +414,10 @@ entity on purpose.
   `rules` and `stats` in front of the profiles. For the name of a new Node type, the modules, the entries of `public/`,
   `uploads`, `api` and every `type` row of the registry, so the name of a deleted type is never given again.
   `RouteRegistryTest` holds the lists against the switches, `getNodeOps()`, `public/index.php` and the tree.
+- **A page at the root.** `type` and `page` are the two kinds without a prefix (`checkRouteOwner()`). The name of a
+  page is `filterSlug()` of its field "Адрес" or its title, one segment of `PATH`; at the root `isRouteReserved()`
+  reserves `mode`, `newlang`, the entries of `TYPES` and the modules, and a path a type or another page holds takes
+  the next suffix. Unlike a type a page moves, with 301 from its former path, as a material does.
 
 ### When an entity gets and changes its path
 
@@ -418,6 +429,7 @@ entity on purpose.
 | `topic` | creation of the topic; a reply the recycle section turns into a topic | never by the title | deletion for good; the recycle section keeps it |
 | `user` | creation of the `_users` row: activation, OAuth sign-up, the panel, the first administrator | a new login in the panel | deletion of the account |
 | `poll` | save of a poll without a module (a poll of a module has no page) | the field "Адрес" of the poll form | deletion |
+| `page` | the publication of the layout that first holds the page, unless it is the home page, the page 404 or holds a module slot that is switched on | the field "Адрес" of the page, applied by the next publication | its deletion, applied by the next publication |
 
 - The address follows the title only until the first publication; after that a new title, category or display name
   never moves it, only the field "Адрес" does. `Route::setRouteName()` is its one rule: the name the form gave, else
@@ -446,8 +458,8 @@ Two stages, because the registry needs the database and the cut runs before it.
    current or former path opens the page of its entity, a gone path answers 410, a path never given 404, a known
    prefix with more segments than its grammar 404. The page of an entity is `name=<type>` for `type`,
    `name=<type>&op=view&id=` for `node`, `name=<prefix>&cat=` for `cat`, `name=forum&op=view&id=` for `topic`,
-   `name=account&op=view&id=` for `user`, `name=voting&op=view&id=` for `poll`. The keys replace the same keys of the
-   query in `$_GET`.
+   `name=account&op=view&id=` for `user`, `name=voting&op=view&id=` for `poll`, `name=page-<oid>` for `page`. The
+   keys replace the same keys of the query in `$_GET`.
 
 `getVar()` reads scalars from `$_GET` and `$_POST` like its array branch, not through `filter_input()`, so the keys a
 path wrote reach every reader. The price of an address is one indexed query per page view, with no cache in front of
@@ -546,7 +558,10 @@ Block definitions and placement are database-driven. `setFoot()` asks
 file-backed blocks are included from `blocks/<file>`, and a row whose file is gone
 prints nothing but to the super administrator. `isBlockShown()` reads `which` for every block,
 `getBlockWhich()` of `core/admin.php` writes it, and `setBlockOrder()` there is the
-one writer of `bpos` and `weight`: every zone numbered from 1.
+one writer of `bpos` and `weight`: every zone numbered from 1. A value of `which` is a
+module, a Node type or `page-<number>`, a page of the site builder (`getBlockPlaces()`
+lists them, `getBlockStray()` the values no page answers); a page holding a module slot
+answers to the name of its module.
 
 Free blocks (the `infly` mark in the `which` column) are excluded from zone
 rendering and are output in two ways: content places a `[block=id]` tag, which
@@ -558,6 +573,105 @@ not expand nested tags inside block output.
 
 Block rendering is part of the frontend page assembly path. Treat it as a shared
 runtime boundary, not as module-local output.
+
+## Layout Boundary
+
+The layout is what a site says without HTML: the sections of its pages, its menus and the parts of the theme around
+the content. It is one file, `config/layout.php`, read by `getConfig()` as `$conf['layout']` and edited by the site
+builder of the panel; blocks stay rows of `_blocks`. The theme side of the contract — the description of a section,
+its fragment, the places and the ready pages of a theme — is `docs/TEMPLATES.md`, "Layout Sections".
+
+`Layout` (`core/classes/layout.php`) is a thin core: it reads the file, renders it, publishes it and gives it as data
+(`getData()`, the form a later answer of the API takes). It knows no section, part or menu by name; every one comes
+from its description, and the one type the core owns is the module slot (`Layout::SLOT`, `module`).
+
+### The file
+
+| Key | Holds |
+|---|---|
+| `v` | the version of the shape, `Layout::VERSION`; a file of another version reads as an empty layout, so a change of the shape is a PHP step of the update that moves the file of a site |
+| `shipped` | true only in the delivered file; the first publication clears it, and the ready pages are offered while it holds |
+| `next` | the counter of ids: pages, sections and menu items take their numbers from it, never given twice; a version back from the history or an imported file keeps the larger counter |
+| `home`, `notfound` | the numbers of the home page and of the page 404 |
+| `theme` | the values of the parts of the theme by flat keys without underscore, kept across a change of theme; a theme prints the parts it declares and passes over the others |
+| `menus` | the menus by key, each a list of items: `id`, `title`, `href` (an address of the site from `/` or of `https`), `icon`, `blank`, `who` and `kids` |
+| `pages` | the pages keyed by their permanent number: `title`, `addr`, `desc`, `og`, `noindex`, `who` (0 all, 1 users), `band` (the title band), `side` and `top` (the scale of `config/modules.php`) and `sections` |
+
+A section is `id`, `type`, `on`, the fields of "Показ" — `who` (the scale 0–3 of `_blocks.view`), `lang`, `from`,
+`till`, `anchor`, `phone`, `desk` — and the values of its type by the keys of its description; the slot carries
+`module`, empty for the home module of the settings. The delivered file is neutral: a menu of the site's own
+sections, every part empty or off, a home page with its slot and no columns, an empty page 404. The layout of a real
+site — slaed.net among them — reaches it by the import of the builder, never by the tracked file.
+
+### Rendering
+
+- **The page around a module.** `public/index.php` builds `$layout` before it routes and answers the number `$lkey`
+  of the page around the request: the page `page-<n>` the request names, the page whose switched-on slot holds the
+  module of a front view (`getModuleKey()`, never the home page or the page 404), or on the start page the home page.
+  `setFoot()` then wraps the module output in the sections (`getPageHtml()`) and takes the columns of the page
+  (`getPageColumns()`); a page without a slot prints the module output after its sections.
+- **A page of sections alone** — no slot, its own address — sets `$conf['name']` to `page-<n>` and passes its
+  title, description, picture, `robots` and its path as `route` to `setHead()`. The name `page-<n>` answers 301 to
+  that path; the home page, the page 404, a page holding a slot and a page without a row of `_routes` answer 404 under
+  it. A page for users only answers a guest with the 403 of a closed module and its link to the login.
+- **A section.** `isSectionShown()` reads `on`, the dates, the audience and the language of a multilingual site;
+  `Layout::isViewShown()` is the one reading of the scale 0–3, shared by blocks, sections and menu items. Every
+  section stands in `fragments/section.html` of the theme; a section whose fragment prints nothing loses its frame and
+  its number.
+- **The chrome.** `setHead()` gives every page of the site `parts` (`getThemeData()`) and `menus` (`getMenu()`, as
+  deep as the theme declares); `getThemeHeadVars()` of lite prints the title band of a page with `band`.
+- **The page 404.** `setError(404)` of `core/security.php` prints the page `notfound` while it has a section the
+  visitor sees, with the code 404 kept; an empty page, an error inside it, the panel, an endpoint `go=` and an htmx
+  request get the standard page of the error.
+- **The sitemap.** `addSitemapTask()` lists the pages with an address of their own that a guest sees and that are not
+  `noindex`.
+- **Feeds.** `getNodeFeed()` of `core/system.php` is the one engine of the block `node.php` and of the section
+  "Свежие материалы" of the module Node.
+
+### The draft and the publication
+
+The panel module `admin/modules/layout.php` is the editor, for the super administrator only, every write a POST
+through `checkAdminPost('layout')`. The screen covers the window and shows the page in a frame by the link of the
+draft; its help is `admin/info/layout/ru.md`.
+
+- **Storage.** `LAYOUT_DIR` (`storage/layout/`, ignored by git, made by the first write, never in a package) holds
+  `draft.json` (`Layout::DRAFT`, JSON so no include ever runs it), the publications `pub-<n>.json` of the history
+  (`Layout::HISTORY`, ten, each with its author, its note and the blocks, the name and the logo as published) and
+  `mine.json`, the own sections shared by the administrators. The draft keeps beside the layout the changed, new and
+  deleted rows of `_blocks` with each touched row as it began (`blocks`, `bwas`), `sitename` and `site_logo` where
+  they differ from `config/global.php` (`conf`), the steps of Undo and Redo, the counter `link` of the draft links and
+  the revision, the time and the editor of its last write. One draft serves every administrator: a write that saw
+  another revision is refused and named.
+- **The link of the draft.** `index.php?name=page-<n>&draft=<term>.<hmac>` signed by `Layout::getDraftToken()` with
+  `getSecret('layout-draft')` over the page, the term and the counter `link`; a new link raises the counter and so
+  takes the earlier ones back. The page renders from the draft with `noindex`, no canonical address, no redirect and the
+  mark "Черновик"; a wrong or expired link answers 403. `guest=1` reads it as a visitor, `edit=1` of a super
+  administrator turns on the edit mode, `mod=<module>` shows a module page the draft has not written yet.
+- **The edit mode.** `Layout::setBuildMode()` hands the fragments `is_build` and the picks of their parts;
+  `setFoot()` prints `fragments/builder.html` of the theme and no floating menu, and `doScript()` loads
+  `plugins/system/builder.js` in place of `dock.js`. The page and the screen talk by `postMessage`, the protocol
+  written at the head of `builder.js`. Nothing of it reaches a visitor.
+- **The publication.** `Layout::setPublish()` runs inside the Closure form of `setConfigFile()`, where `layout` is
+  one of the shared areas (`docs/NODE.md`, "Configuration protocol"): the published file is checked against the checksum the
+  screen opened (`getLayoutHash()`), then the changed rows of `_blocks` (`setLayoutRows()` of the module, each against
+  its row in `bwas`), the addresses through `Route` — a new or renamed page by `setRouteName()`, a deleted one by
+  `deleteRoute()` — and the file are written in one transaction. The proof of an uncertain commit is a witness row:
+  the first touched row of `_blocks` or of `_routes` whose fingerprint (`getWitnessHash()`) changed, which
+  `setConfigRestore()` reads again `FOR UPDATE`. A publication that changes no row opens no transaction. `sitename` and
+  `site_logo` follow in a second call of the string form, as "Конфигурации" writes them.
+- **Export and import** carry the layout alone, as JSON: an import checks every value by the descriptions of the
+  theme on the server and refuses the file on an unknown type, a refused value or a twin id; the blocks, the name and
+  the logo stay with the site.
+- **Uploads.** The pictures of the sections are the place `layout.attach`, the public folder `uploads/layout/`, with
+  the row `layout` of `config/uploads.php` (the types of `content`, no uploads of users and guests).
+
+No table holds the layout and no cache of pages stands in front of it. A publication runs on its click only, never by
+a schedule: the dates of "Показ" already hold a section back until its day. A page holds one module at most, and a
+section is a file of a theme or of a module, never installed by upload; the builder edits data and never a file of a
+theme. An update adds the keys a site lacks to `theme` and takes `pages` and `menus` whole (`docs/UPDATE.md`, "Settings,
+Languages and Themes"). The tests are `LayoutTest` (rendering, the delivered file from the index of git, the marks of
+the fragments), `LayoutDraftTest` (the screen over `tests/Support/layout_probe.php`), `LayoutPublishTest` (the
+publication over `route_probe.php publish`), `BlocksTest` and the route tests of "Address Boundary".
 
 ## Template Boundary
 
@@ -877,6 +991,7 @@ Runtime-generated files are stored under:
 - `storage/logs/scheduler/`
 - `storage/sitemap/`
 - `storage/backup/`
+- `storage/layout/`, the draft, the history and the own sections of the site builder (`LAYOUT_DIR`, see "Layout Boundary")
 
 `storage/update/sql/` is source, not runtime data: the schema `table.sql`, the
 seed `insert.sql` and the 6.2 update `table_update6_3.sql`. `storage/` lies outside
@@ -1240,10 +1355,11 @@ index.php
   -> core/system.php
   -> core/security.php
   -> Template / Parser / Geoip / Captcha / Cache
+  -> Layout of config/layout.php, the page around the request
   -> module include
   -> module calls setHead()
   -> module content
-  -> setFoot()
+  -> setFoot(): the sections of the page around the content, blocks
   -> Template::getHtmlPage()
 ```
 

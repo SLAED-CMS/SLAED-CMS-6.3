@@ -6054,6 +6054,36 @@ function getNodeBlockParam(string $param): ?array {
     return (array_unique($data['type']) === $data['type']) ? $data : null;
 }
 
+# The materials of a feed the block node.php and the section of the site builder share, by types, mode and limit; one type puts pinned materials first, then the newest
+function getNodeFeed(array $set, array $log): array {
+    global $conf;
+    $types = [];
+    $size = min($set['limit'], intval($conf['node']['limits']['maxlist'] ?? 0));
+    foreach (getNodeTypeMap() as $type) {
+        if (!$type->active || !$type->settings['integrations']['blocks'] || ($set['type'] && !in_array($type->name, $set['type'], true))) continue;
+        if ($set['mode'] === 'home' && !$type->settings['features']['home']) continue;
+        $types[$type->id] = $type;
+        $size = min($size, $type->settings['list']['limit']);
+    }
+    $list = [];
+    if ($types && $size > 0) {
+        try {
+            $query = getNodeReader()->setNodePage(1, $size);
+            if (count($types) === 1) {
+                $one = reset($types);
+                $query->setNodeType($one)->setNodeExtension(getNodeHandler($one))->setNodeOrder('published', 'desc');
+            } else {
+                $query->setNodeTypes(array_values($types));
+            }
+            if ($set['mode'] === 'home') $query->setNodeHome();
+            $list = $query->getNodeList();
+        } catch (NodeException $err) {
+            Logger::addSite('error', 'Node feed: the materials cannot be read', $log + ['code' => $err->getCode()]);
+        }
+    }
+    return [$types, $list];
+}
+
 # Deliver due Node publications as a scheduler job in a trusted background context only this adapter builds; a refusal becomes the failed status
 function addNodePublishTask(): array {
     global $db, $conf, $fld, $pnt;

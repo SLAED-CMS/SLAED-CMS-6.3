@@ -1,0 +1,13 @@
+{
+    "title": "_LAYOUT_BLOCK",
+    "note": "_LAYOUT_BLOCK_INFO",
+    "icon": "bricks",
+    "group": "master",
+    "frame": false,
+    "fields": [
+        {"key": "block", "label": "_BLOCK", "type": "blockref"}
+    ],
+    "make": {
+        "block": 0
+    }
+}

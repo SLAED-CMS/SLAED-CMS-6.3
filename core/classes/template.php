@@ -512,7 +512,7 @@ class Template {
     }
 
     # Render one free block by id through the global block engine; frontend only, output captured, no nesting
-    protected function getFree(int $bid): string {
+    public function getFree(int $bid): string {
         static $depth = 0;
         if ($bid < 1 || $depth > 0 || defined('ADMIN_FILE') || !function_exists('getBlocks')) return '';
         $depth++;

@@ -396,11 +396,14 @@ final class LayoutTest extends TestCase
     {
         $dir = PUBLIC_DIR.'/templates/lite/sections';
         $lang = file_get_contents(BASE_DIR.'/admin/lang/ru.php').file_get_contents(BASE_DIR.'/lang/ru.php');
-        foreach (glob(BASE_DIR.'/modules/*/sections', GLOB_ONLYDIR) ?: [] as $one) $lang .= (string)file_get_contents(dirname($one).'/lang/ru.php');
+        foreach (glob(BASE_DIR.'/modules/*/sections', GLOB_ONLYDIR) ?: [] as $one) {
+            foreach (['/lang/ru.php', '/admin/lang/ru.php'] as $file) if (is_file(dirname($one).$file)) $lang .= (string)file_get_contents(dirname($one).$file);
+        }
         preg_match_all("/^define\('(_[A-Z0-9_]+)'/m", $lang, $hit);
         $defs = array_flip($hit[1]);
         $lost = ['path', 'file', 'data', 'real', 'lev', 'iscode', 'scope', 'items', 'parts'];
         $kinds = ['text', 'textarea', 'select', 'bool', 'int', 'url', 'markdown', 'code', 'file', 'focus', 'icon', 'tone', 'video', 'page', 'point'];
+        $kinds = array_merge($kinds, ['nodetype', 'noderef', 'blockref']);
         $groups = [];
         $files = array_merge(glob($dir.'/*.json') ?: [], glob(BASE_DIR.'/modules/*/sections/*.json') ?: []);
         foreach ($files as $file) {
@@ -446,13 +449,13 @@ final class LayoutTest extends TestCase
         $this->assertSame([
             'base' => ['cta', 'features', 'hero', 'media', 'steps', 'text'],
             'contact' => ['faq', 'map', 'prices'],
-            'master' => ['embed', 'html'],
+            'content' => ['feed', 'item'],
+            'master' => ['block', 'embed', 'html'],
             'media' => ['gallery', 'sites', 'video'],
             'trust' => ['stats', 'team', 'voices'],
         ], $groups);
         $bare = array_diff(array_map(static fn(string $v): string => basename($v, '.html'), glob($dir.'/*.html') ?: []), array_merge(...array_values($groups)));
-        sort($bare);
-        $this->assertSame(['block', 'feed', 'item'], $bare, 'A fragment of lite waits for a type no root describes yet');
+        $this->assertSame([], array_values($bare), 'A fragment of lite has no type that describes it');
     }
 
     # The kinds of an outside frame give their addresses and nothing else: a film of YouTube in its privacy mode or of the uploads, a page of https alone, a point of the map

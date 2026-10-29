@@ -12,6 +12,7 @@ define('_NODE_BUSY','Der Beitrag wurde inzwischen geändert, nichts wurde gespei
 define('_NODE_CATS','Weitere Kategorien');
 define('_NODE_CLOSE','Anfrage schließen');
 define('_NODE_FAILED','Der Beitrag konnte nicht gespeichert werden, bitte später erneut versuchen.');
+define('_NODE_FEEDALL','Alle: %s');
 define('_NODE_FILTERS','Beiträge auswählen');
 define('_NODE_FIND','Im Bereich suchen');
 define('_NODE_GONE','Der Beitrag existiert nicht oder ist nicht verfügbar.');

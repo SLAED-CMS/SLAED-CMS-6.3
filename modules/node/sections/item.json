@@ -1,0 +1,21 @@
+{
+    "title": "_NODE_ITEM",
+    "note": "_NODE_ITEM_INFO",
+    "icon": "file-earmark-richtext",
+    "group": "content",
+    "frame": true,
+    "fields": [
+        {"key": "title", "label": "_TITLE", "type": "text"},
+        {"key": "lead", "label": "_LAYOUT_LEAD", "type": "text"},
+        {"key": "icon", "label": "_ICON", "type": "icon", "tab": "look"},
+        {"key": "item", "label": "_NODE_ITEM", "type": "noderef"},
+        {"key": "part", "label": "_SHOW", "type": "select", "show": "seg", "options": {"all": "_NODE_ITEMALL", "intro": "_NODE_INTRO"}}
+    ],
+    "make": {
+        "title": "",
+        "lead": "",
+        "icon": "file-earmark-richtext",
+        "item": 0,
+        "part": "all"
+    }
+}

@@ -9,6 +9,7 @@
 # Modes: draft writes and reads the draft; value checks the values of fields; sec acts on sections; menu nests and orders items; block lays changes over a row
 # The mode tools lists the changes and the remarks, pastes a look, copies a section, brings one back from a publication and makes a ready page
 # The mode pages copies a page, makes a page from a text and lists the addresses an address field offers
+# The mode import reads a layout file by the descriptions and names the remarks of a record and a block, over stubs of their readers
 if (PHP_SAPI !== 'cli') {
     http_response_code(404);
     exit;
@@ -19,7 +20,7 @@ ini_set('log_errors', '0');
 $pmode = (string)($argv[1] ?? '');
 $pwork = str_replace('\\', '/', (string)($argv[2] ?? ''));
 $psite = str_replace('\\', '/', dirname(__DIR__, 2));
-if ($pwork === '' || !in_array($pmode, ['draft', 'value', 'sec', 'menu', 'block', 'tools', 'pages'], true)) {
+if ($pwork === '' || !in_array($pmode, ['draft', 'value', 'sec', 'menu', 'block', 'tools', 'pages', 'import'], true)) {
     echo json_encode(['error' => 'usage']);
     exit;
 }
@@ -39,7 +40,8 @@ $pkind = ['PAGE', 'PAGESET', 'PAGEDEL', 'SECNEW', 'SECSET', 'SECDEL', 'SECORD', 
 foreach ($pkind as $pone) $pwords['_LAYOUT_CH_'.$pone] = strtolower($pone).' %s';
 foreach (['NOTITLE', 'INTEXT', 'NOFILM', 'HTTPS', 'NOITEMS', 'DATES', 'EXPIRED', 'NODEV', 'HIDDEN', 'NODESC', 'NONAME'] as $pone) $pwords['_LAYOUT_IS_'.$pone] = strtolower($pone);
 foreach (['ANCHOR', 'ADDR', 'ALT', 'MDALT', 'TWIN', 'NOWHERE', 'BLKNONE', 'NORSS'] as $pone) $pwords['_LAYOUT_IS_'.$pone] = strtolower($pone).' %s';
-$pwords += ['_LAYOUT_IS_HEAVY' => 'heavy %s %s', '_LAYOUT_IS_TWINURL' => 'twinurl %s %s'];
+$pwords += ['_LAYOUT_IS_HEAVY' => 'heavy %s %s', '_LAYOUT_IS_TWINURL' => 'twinurl %s %s', '_LAYOUT_IS_NONODE' => 'nonode', '_LAYOUT_IS_NOBLOCK' => 'noblock'];
+$pwords += ['_LAYOUT_IS_BLKOFF' => 'blkoff %s', '_LAYOUT_IMPTYPE' => '%s: no %s', '_LAYOUT_WHO' => 'Who', '_TITLE' => 'Title'];
 foreach ($pwords as $key => $val) define($key, $val);
 set_time_limit(20);
 $pdone = ['error' => '', 'data' => []];
@@ -65,6 +67,16 @@ function getVar(string $var, string $key, string $type = '', mixed $default = ''
     return $GLOBALS['pvars'][$key] ?? $default;
 }
 
+# The rows of _blocks the screen reads, a stub of the probe: block 13 is off, block 15 on
+function getLayoutBlocks(array $dft): array {
+    return ['13' => ['title' => 'Poll', 'status' => false, 'new' => false, 'kind' => 'file'], '15' => ['title' => 'Ad', 'status' => true, 'new' => false, 'kind' => 'html']];
+}
+
+# The published records the choice of a record offers, a stub of the probe: record 7 alone answers
+function getLayoutNodes(int $now, string $find): array {
+    return ($now === 7) ? [7 => ['title' => 'Seven', 'type' => 'news']] : [];
+}
+
 # The name of a module as the panel shows it, a stub of the probe
 function getModuleName(string $mod): string {
     return 'Mod '.$mod;
@@ -79,7 +91,8 @@ try {
     $plift = array_merge($plift, ['setLayoutBlock', 'getLayoutMake', 'getLayoutAddr', 'setLayoutSecAct', 'setLayoutMenuAct', 'setLayoutItemAct', 'isLayoutSame']);
     $plift = array_merge($plift, ['getLayoutView', 'getLayoutPageTitle', 'getLayoutSecName', 'getLayoutFlat', 'getLayoutLookKeys', 'getLayoutChanges', 'getLayoutIssues']);
     $plift = array_merge($plift, ['setLayoutSecBack', 'setLayoutPresetPage', 'getLayoutSecLabel', 'setLayoutPageCopy', 'setLayoutTextPage', 'getLayoutAddrs']);
-    $plift = array_merge($plift, ['getLayoutModules', 'setLayoutSlotPage', 'getLayoutStored']);
+    $plift = array_merge($plift, ['getLayoutModules', 'setLayoutSlotPage', 'getLayoutStored', 'getLayoutImport', 'getLayoutClean', 'getLayoutCleanItems']);
+    $plift = array_merge($plift, ['getLayoutShowFields', 'getLayoutPageFields', 'getLayoutItemFields']);
     setProbeLift($psite.'/admin/modules/layout.php', $plift, $pwork.'/lift_layout.php');
     $site = ['v' => 1, 'shipped' => false, 'next' => 20, 'home' => 1, 'notfound' => 2, 'theme' => ['phone' => '', 'social' => []],
         'menus' => ['main' => [['id' => 4, 'title' => 'A', 'kids' => []], ['id' => 5, 'title' => 'B', 'kids' => []],
@@ -142,6 +155,12 @@ try {
             'file' => $check(['type' => 'file'], 'presentation/../config/db.php'),
             'markdown' => $check(['type' => 'markdown'], "A\r\nB"),
             'kind' => $check(['type' => 'unknown'], 'x'),
+            'nodetype' => $check(['type' => 'nodetype'], ['news', '', 'docs', 'news']),
+            'badtype' => $check(['type' => 'nodetype'], ['News']),
+            'noderef' => $check(['type' => 'noderef'], '3944'),
+            'noref' => $check(['type' => 'blockref'], ''),
+            'intref' => $check(['type' => 'blockref'], 15),
+            'badref' => $check(['type' => 'blockref'], '-1'),
         ];
         $vals = ['title' => 'Old', 'href' => '/old'];
         $bad = [];
@@ -288,6 +307,48 @@ try {
         $out['bare'] = setLayoutTextPage($lay, [], '# Bare')[1] !== '' ? $lay['pages'][$lay['next'] - 1]['band'] : null;
         $lay['pages'][12] = ['title' => 'Slot', 'addr' => 'slot', 'sections' => [['id' => 30, 'type' => 'module', 'on' => true, 'module' => 'contact']]];
         $out['addrs'] = getLayoutAddrs($lay);
+        $pdone['data'] = $out;
+    } elseif ($pmode === 'import') {
+        $fields = [['key' => 'title', 'label' => '_TITLE', 'type' => 'text'], ['key' => 'tone', 'label' => 'Tone', 'type' => 'tone'],
+            ['key' => 'item', 'label' => 'Item', 'type' => 'noderef'],
+            ['key' => 'block', 'label' => 'Block', 'type' => 'blockref']];
+        $list = ['label' => 'Cards', 'max' => 2, 'fields' => [['key' => 'text', 'label' => 'Text', 'type' => 'text']]];
+        $slot = [['key' => 'module', 'label' => 'Mod', 'type' => 'choice', 'options' => ['' => 'Home']]];
+        $types = ['card' => ['title' => 'Card', 'one' => false, 'frag' => true, 'desc' => ['fields' => $fields, 'items' => $list]],
+            'module' => ['title' => 'Slot', 'one' => true, 'frag' => true, 'desc' => ['fields' => $slot]]];
+        $social = ['key' => 'social', 'max' => 3, 'fields' => [['key' => 'url', 'label' => 'Url', 'type' => 'url']]];
+        $places = ['parts' => ['contacts' => ['title' => 'Contacts', 'fields' => [['key' => 'phone', 'label' => 'Phone', 'type' => 'text']], 'items' => $social]],
+            'menus' => ['main' => ['title' => 'Main', 'depth' => 1]], 'zones' => []];
+        $card = ['id' => 30, 'type' => 'card', 'on' => true, 'title' => 'One', 'tone' => 'accent', 'item' => 7, 'block' => '15', 'odd' => 'x',
+            'items' => [['text' => 'a'], ['text' => 'b'], ['text' => 'c']]];
+        $file = ['v' => 1, 'shipped' => true, 'next' => 10, 'home' => 1, 'notfound' => 2,
+            'theme' => ['phone' => '+49', 'other' => 'kept by no part', 'social' => [['url' => 'https://x.com', 'extra' => 1]]],
+            'menus' => ['main' => [['id' => 4, 'title' => 'A', 'href' => '/about', 'who' => '0', 'kids' => [['id' => 5, 'title' => 'Deep', 'kids' => []]]]],
+                'gone' => [['id' => 6]]],
+            'pages' => ['1' => ['title' => '', 'sections' => [['id' => 3, 'type' => 'module', 'on' => true, 'module' => '']]], '2' => ['title' => 'Lost', 'sections' => []],
+                '9' => ['title' => 'About', 'addr' => 'about', 'noindex' => true, 'sections' => [$card]]]];
+        $now = ['next' => 40];
+        [$lay, $bad] = getLayoutImport($file, $now, $types, $places);
+        $out = ['bad' => $bad, 'next' => $lay['next'] ?? null, 'shipped' => $lay['shipped'] ?? null, 'theme' => $lay['theme'] ?? null, 'menus' => $lay['menus'] ?? null,
+            'sec' => $lay['pages'][9]['sections'][0] ?? null, 'page' => array_diff_key($lay['pages'][9] ?? [], ['sections' => 1]), 'keys' => array_keys($lay['pages'] ?? [])];
+        $wrong = $file;
+        $wrong['pages']['9']['sections'][0]['type'] = 'gone';
+        $out['type'] = getLayoutImport($wrong, $now, $types, $places);
+        $wrong = $file;
+        $wrong['pages']['9']['sections'][0]['tone'] = 'pink';
+        $out['value'] = getLayoutImport($wrong, $now, $types, $places);
+        $wrong = $file;
+        $wrong['pages']['9']['sections'][0]['id'] = 4;
+        $out['twin'] = getLayoutImport($wrong, $now, $types, $places);
+        $out['version'] = getLayoutImport(array_replace($file, ['v' => 2]), $now, $types, $places);
+        $out['nohome'] = getLayoutImport(array_replace($file, ['home' => 8]), $now, $types, $places);
+        $dft = ['layout' => $lay, 'conf' => [], 'blocks' => [], 'bwas' => []];
+        $dft['layout']['pages'][9]['sections'][] = ['id' => 31, 'type' => 'card', 'on' => true, 'title' => '', 'item' => 5, 'block' => 13, 'items' => [['text' => 'a']]];
+        $dft['layout']['pages'][9]['sections'][] = ['id' => 32, 'type' => 'card', 'on' => true, 'title' => '', 'item' => 0, 'block' => 0, 'items' => [['text' => 'a']]];
+        $out['issues'] = [];
+        foreach (getLayoutIssues($dft, $types, $places, static fn(string $path): bool => true, static fn(string $path): int => 0) as $one) {
+            $out['issues'][] = $one['text'].' > '.$one['sel'];
+        }
         $pdone['data'] = $out;
     } else {
         $dft = ['layout' => Layout::getLayoutData($site), 'blocks' => [], 'bwas' => []];

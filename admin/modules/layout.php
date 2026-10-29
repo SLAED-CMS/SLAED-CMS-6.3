@@ -178,11 +178,14 @@ function getLayoutSecLabel(array $sec, array $types): string {
     return ($word !== '' && $word !== $title) ? $title.' «'.$word.'»' : $title;
 }
 
-# The section types the library offers: the types of the theme and the modules, then the slot of a module, which the core owns
+# The section types the library offers: the types of the theme and the modules, labelled by the site and the panel words of their module, then the slot the core owns
 function getLayoutTypes(Layout $view): array {
     $out = [];
     foreach ($view->getSectionTypes() as $type => $one) {
-        if ($one['root'] !== 'theme') getLang($one['root']);
+        if ($one['root'] !== 'theme') {
+            getLang($one['root']);
+            getLang($one['root'], true);
+        }
         $desc = $one['desc'];
         $out[$type] = ['title' => getConst((string)($desc['title'] ?? $type)), 'note' => getConst((string)($desc['note'] ?? '')), 'icon' => (string)($desc['icon'] ?? 'square'),
             'group' => (string)($desc['group'] ?? 'master'), 'desc' => $desc, 'frag' => $one['frag'] !== '', 'one' => false];
@@ -361,11 +364,15 @@ function getLayoutValue(array $one, mixed $raw): array {
         'slug' => $text === '' || filterSlug($text) !== '',
         'choice' => is_scalar($raw) && in_array((string)$raw, array_map('strval', array_keys(is_array($one['options'] ?? null) ? $one['options'] : [])), true),
         'video', 'page', 'point' => is_string($raw) && mb_check_encoding($raw, 'UTF-8') && mb_strlen($text) <= 2048 && !preg_match('/[\x00-\x1F\x7F]/', $text),
+        'nodetype' => is_array($raw) && array_filter($raw, static fn($v): bool => !is_string($v) || ($v !== '' && preg_match('/^[a-z][a-z0-9]{0,19}$/D', $v) !== 1)) === [],
+        'noderef', 'blockref' => (is_int($raw) && $raw >= 0) || (is_string($raw) && preg_match('/^[0-9]{0,10}$/D', $text) === 1),
         default => false,
     };
     if (!$good) return ['format', null];
     if ($type === 'markdown' || $type === 'code') return ['', str_replace(["\r\n", "\r"], "\n", $raw)];
     if ($type === 'choice') return ['', (string)$raw];
+    if ($type === 'nodetype') return ['', array_values(array_unique(array_filter($raw, static fn(string $v): bool => $v !== '')))];
+    if ($type === 'noderef' || $type === 'blockref') return ['', intval($raw)];
     return ['', ($type === 'slug') ? filterSlug($text) : $text];
 }
 
@@ -422,6 +429,135 @@ function getLayoutAddrs(array $lay): array {
     return [_LAYOUT_PAGES => $pages, _MODULES => $mods];
 }
 
+# The Node types a feed offers, active and given to blocks in their settings, as the engine of node.php reads them; each by its name and its title
+function getLayoutFeedTypes(): array {
+    $out = [];
+    foreach (getNodeTypeMap() as $type) if ($type->active && $type->settings['integrations']['blocks']) $out[$type->name] = getModuleName($type->name);
+    return $out;
+}
+
+# The records a visitor reads, published within their dates as NodeQuery reads them for a guest: the one held, then up to twenty by title or number, the newest first
+function getLayoutNodes(int $now, string $find): array {
+    global $db;
+    $sql = 'SELECT n.id, n.title, t.name FROM '.PREFIX_DB.'_nodes AS n INNER JOIN '.PREFIX_DB.'_node_types AS t ON t.id = n.tid WHERE n.status = :st'
+        .' AND n.published <= NOW() AND (n.expires IS NULL OR n.expires > NOW()) AND ';
+    $pars = ['st' => NodeStatus::Published->value];
+    $res = ($now > 0) ? $db->getSqlQuery($sql.'n.id = :now', $pars + ['now' => $now]) : false;
+    $rows = $res ? ($db->getSqlRows($res) ?: []) : [];
+    if ($find !== '') {
+        $like = '%'.strtr($find, ['!' => '!!', '%' => '!%', '_' => '!_']).'%';
+        $res = $db->getSqlQuery($sql.'(n.title LIKE :find ESCAPE \'!\' OR n.id = :num) ORDER BY n.id DESC LIMIT 20', $pars + ['find' => $like, 'num' => intval($find)]);
+        $rows = array_merge($rows, $res ? ($db->getSqlRows($res) ?: []) : []);
+    }
+    $out = [];
+    foreach ($rows as $row) $out[intval($row['id'])] = ['title' => (string)$row['title'], 'type' => (string)$row['name']];
+    return $out;
+}
+
+# The options of the choice of a record: none, the one held - named gone when it no longer answers, so a save of another field keeps it - then the found ones by type
+function getLayoutNodeHtml(int $now, string $find): string {
+    global $tpl;
+    $rows = getLayoutNodes($now, $find);
+    $html = $tpl->getHtmlFrag('select-option', ['value_attr' => '', 'label_text' => _LAYOUT_PICKNODE, 'is_selected' => $now === 0]);
+    if ($now > 0 && !isset($rows[$now])) {
+        $html .= $tpl->getHtmlFrag('select-option', ['value_attr' => (string)$now, 'label_text' => sprintf(_LAYOUT_NODEGONE, $now), 'is_selected' => true]);
+    }
+    $groups = [];
+    foreach ($rows as $id => $row) {
+        $one = $tpl->getHtmlFrag('select-option', ['value_attr' => (string)$id, 'label_text' => sprintf(_LAYOUT_NUMBERED, $id, $row['title']), 'is_selected' => $id === $now]);
+        if ($id === $now) $html .= $one;
+        else $groups[$row['type']] = ($groups[$row['type']] ?? '').$one;
+    }
+    foreach ($groups as $type => $part) $html .= $tpl->getHtmlFrag('select-optgroup', ['label_text' => getModuleName($type), 'options_html' => $part]);
+    return $html;
+}
+
+# The values of one part of a layout file by a list of fields, each checked as the inspector checks it; a refused value is named with its place
+function getLayoutClean(array $list, array $vals, string $where, array &$bad): array {
+    $out = [];
+    foreach ($list as $one) {
+        $key = (string)($one['key'] ?? '');
+        if ($key === '' || !array_key_exists($key, $vals)) continue;
+        [$err, $val] = getLayoutValue($one, $vals[$key]);
+        if ($err !== '') $bad[] = $where.' · '.getConst((string)$one['label']);
+        else $out[$key] = $val;
+    }
+    return $out;
+}
+
+# The items of a list in a layout file by the description of the list, no more than its max
+function getLayoutCleanItems(array $desc, mixed $list, string $where, array &$bad): array {
+    $out = [];
+    $fields = is_array($desc['fields'] ?? null) ? $desc['fields'] : [];
+    foreach (is_array($list) ? array_values($list) : [] as $item) {
+        if (count($out) >= max(0, intval($desc['max'] ?? 0))) break;
+        if (is_array($item)) $out[] = getLayoutClean($fields, $item, $where, $bad);
+    }
+    return $out;
+}
+
+# A layout file read by the descriptions of the theme and its modules, a value none of them describes left out; null with the reasons when a value or an id is refused
+function getLayoutImport(array $data, array $now, array $types, array $places): array {
+    $lay = Layout::getLayoutData($data);
+    if ((string)($data['v'] ?? '') !== (string)Layout::VERSION || !isset($lay['pages'][$lay['home']], $lay['pages'][$lay['notfound']])) return [null, []];
+    [$bad, $ids] = [[], []];
+    $out = ['v' => Layout::VERSION, 'shipped' => false, 'next' => 1, 'home' => $lay['home'], 'notfound' => $lay['notfound'], 'theme' => [], 'menus' => [], 'pages' => []];
+    $take = static function (mixed $id) use (&$ids): bool {
+        if (!is_int($id) || $id < 1 || isset($ids[$id])) return false;
+        return $ids[$id] = true;
+    };
+    foreach ($places['parts'] as $pkey => $part) {
+        if (!is_array($part)) continue;
+        $where = getConst((string)($part['title'] ?? $pkey));
+        $out['theme'] += getLayoutClean(is_array($part['fields'] ?? null) ? $part['fields'] : [], $lay['theme'], $where, $bad);
+        $list = is_array($part['items'] ?? null) ? $part['items'] : [];
+        $lkey = (string)($list['key'] ?? '');
+        if (preg_match(Layout::FIELD, $lkey) === 1) $out['theme'][$lkey] = getLayoutCleanItems($list, $lay['theme'][$lkey] ?? [], $where, $bad);
+    }
+    foreach ($places['menus'] as $mkey => $menu) {
+        if (!is_array($menu)) continue;
+        $where = getConst((string)($menu['title'] ?? $mkey));
+        $walk = static function (mixed $list, int $lev) use (&$walk, &$bad, $take, $menu, $where): array {
+            $out = [];
+            foreach (is_array($list) ? $list : [] as $item) {
+                if (!is_array($item)) continue;
+                if (!$take($item['id'] ?? null)) $bad[] = $where.' · id';
+                $kids = ($lev > 1) ? $walk($item['kids'] ?? [], $lev - 1) : [];
+                $out[] = ['id' => intval($item['id'] ?? 0)] + getLayoutClean(getLayoutItemFields($menu), $item, $where, $bad) + ['kids' => $kids];
+            }
+            return $out;
+        };
+        $out['menus'][$mkey] = $walk($lay['menus'][$mkey] ?? [], max(1, intval($menu['depth'] ?? 1)));
+    }
+    foreach ($lay['pages'] as $pkey => $page) {
+        $where = getLayoutPageTitle($lay, $pkey);
+        if (!$take($pkey)) $bad[] = $where.' · id';
+        $vals = array_replace($page, ['noindex' => empty($page['noindex']) ? '0' : '1']);
+        $clean = getLayoutClean(getLayoutPageFields($lay, $pkey), $vals, $where, $bad);
+        if (isset($clean['noindex'])) $clean['noindex'] = $clean['noindex'] === '1';
+        $secs = [];
+        foreach ($page['sections'] as $sec) {
+            if (!is_array($sec)) continue;
+            $type = (string)($sec['type'] ?? '');
+            $one = $types[$type] ?? null;
+            if ($one === null) {
+                $bad[] = sprintf(_LAYOUT_IMPTYPE, $where, $type);
+                continue;
+            }
+            $desc = $one['desc'];
+            $place = $where.' · '.$one['title'];
+            if (!$take($sec['id'] ?? null)) $bad[] = $place.' · id';
+            $fields = array_merge(is_array($desc['fields'] ?? null) ? $desc['fields'] : [], getLayoutShowFields());
+            $item = ['id' => intval($sec['id'] ?? 0), 'type' => $type, 'on' => !empty($sec['on'])] + getLayoutClean($fields, $sec, $place, $bad);
+            if (is_array($desc['items'] ?? null)) $item['items'] = getLayoutCleanItems($desc['items'], $sec['items'] ?? [], $place, $bad);
+            $secs[] = $item;
+        }
+        $out['pages'][$pkey] = $clean + ['sections' => $secs];
+    }
+    $out['next'] = max($lay['next'], intval($now['next'] ?? 0), max(array_merge([0], array_keys($ids))) + 1);
+    return $bad ? [null, array_values(array_unique($bad))] : [$out, []];
+}
+
 # A new file of a file field goes into the uploads of the builder, a pick of its file window is a path there, the value it had stays; the answer is the refusal and the path
 function getLayoutFile(string $up, mixed $raw, string $now): array {
     $file = $_FILES[$up] ?? null;
@@ -438,7 +574,7 @@ function getLayoutFile(string $up, mixed $raw, string $now): array {
 }
 
 # The rows of the inspector for a list of fields: a type of Field drawn by Field, a kind of the builder by the canon; a field the site has carries its way back, shown while unlike
-function getLayoutRows(array $list, array $vals, string $base, string $tab = '', ?array $live = null, array $addrs = []): array {
+function getLayoutRows(array $list, array $vals, string $base, string $tab = '', ?array $live = null, array $addrs = [], array $blks = []): array {
     global $tpl;
     $rows = [];
     $fld = new Field();
@@ -475,6 +611,34 @@ function getLayoutRows(array $list, array $vals, string $base, string $tab = '',
             $none = $tpl->getHtmlFrag('hidden', ['name_attr' => $name.'[]', 'value_attr' => '', 'input_attr' => '']);
             $row = ['label_id' => $fid, 'label_html' => $row['label_html'], 'is_full' => true,
                 'field_html' => $none.$tpl->getHtmlFrag('check-list', ['labelledby' => $fid, 'items' => $items])];
+        } elseif ($type === 'nodetype') {
+            $now = is_array($val) ? $val : [];
+            $items = [];
+            foreach (getLayoutFeedTypes() as $opt => $word) {
+                $items[] = ['name_attr' => $name.'[]', 'value_attr' => $opt, 'label_text' => $word, 'is_checked' => in_array($opt, $now, true)];
+            }
+            $none = $tpl->getHtmlFrag('hidden', ['name_attr' => $name.'[]', 'value_attr' => '', 'input_attr' => '']);
+            $row = ['label_id' => $fid, 'label_html' => $row['label_html'], 'is_full' => true, 'hint_html' => htmlspecialchars(_LAYOUT_TYPEHINT, ENT_QUOTES, 'UTF-8'),
+                'field_html' => $none.$tpl->getHtmlFrag('check-list', ['labelledby' => $fid, 'items' => $items])];
+        } elseif ($type === 'blockref') {
+            $now = is_scalar($val) ? (string)intval($val) : '0';
+            $html = $tpl->getHtmlFrag('select-option', ['value_attr' => '', 'label_text' => _LAYOUT_PICKBLK, 'is_selected' => !isset($blks[$now])]);
+            foreach ([_LAYOUT_FREEBLK => true, _LAYOUT_OTHERBLK => false] as $group => $free) {
+                $part = '';
+                foreach ($blks as $bid => $blk) {
+                    if ($blk['new'] || $blk['kind'] === 'sys' || in_array('infly', $blk['which'], true) !== $free) continue;
+                    $word = sprintf(_LAYOUT_NUMBERED, $bid, getConst($blk['title']));
+                    $part .= $tpl->getHtmlFrag('select-option', ['value_attr' => $bid, 'label_text' => $word, 'is_selected' => $bid === $now]);
+                }
+                if ($part !== '') $html .= $tpl->getHtmlFrag('select-optgroup', ['label_text' => $group, 'options_html' => $part]);
+            }
+            $row['field_html'] = $tpl->getHtmlFrag('select', ['name_attr' => $name, 'selectid' => $fid, 'options_html' => $html]);
+            $row['hint_html'] = htmlspecialchars(_LAYOUT_BLOCKHINT, ENT_QUOTES, 'UTF-8');
+        } elseif ($type === 'noderef') {
+            $html = getLayoutNodeHtml(is_scalar($val) ? intval($val) : 0, '');
+            $row['field_html'] = $tpl->getHtmlFrag('layout-field', ['kind_find' => true, 'select_id' => $fid, 'find_url' => getLayoutUrl(['op' => 'find', 'key' => $key]),
+                'find_text' => _LAYOUT_FINDNODE, 'select_html' => $tpl->getHtmlFrag('select', ['name_attr' => $name, 'selectid' => $fid, 'options_html' => $html])]);
+            $row['hint_html'] = htmlspecialchars(_LAYOUT_NODEHINT, ENT_QUOTES, 'UTF-8');
         } elseif ($type === 'choice') {
             $now = is_bool($val) ? ($val ? '1' : '0') : (is_scalar($val) ? (string)$val : '');
             $html = '';
@@ -530,7 +694,8 @@ function getLayoutRows(array $list, array $vals, string $base, string $tab = '',
         }
         if (isset($one['when'])) $row['attr'] = 'data-sl-show-when="'.htmlspecialchars($base.'['.$one['when'][0].']', ENT_QUOTES, 'UTF-8').'" data-sl-show-value="'
             .htmlspecialchars($one['when'][1], ENT_QUOTES, 'UTF-8').'"';
-        if ($back !== '') $row['hint_html'] = $tpl->getHtmlFrag('layout-field', ['kind_back' => true, 'back_arg' => $back, 'back_text' => _LAYOUT_LIVEBACK, 'label' => $label,
+        if ($back !== '') $row['hint_html'] = ($row['hint_html'] ?? '').$tpl->getHtmlFrag('layout-field', [
+            'kind_back' => true, 'back_arg' => $back, 'back_text' => _LAYOUT_LIVEBACK, 'label' => $label,
             'is_same' => isLayoutSame($val, $live[$key] ?? null)]);
         $rows[] = $row;
     }
@@ -759,7 +924,8 @@ function getLayoutInsp(array $dft, int $key, string $sel, bool $oob = false): st
         if ($one === null) return getLayoutInsp($dft, $key, '', $oob);
         $desc = $one['desc'];
         $fields = is_array($desc['fields'] ?? null) ? $desc['fields'] : [];
-        $body = $grid(getLayoutRows($fields, $sec, 'field', '', $was, $addrs));
+        $blks = in_array('blockref', array_column($fields, 'type'), true) ? getLayoutBlocks($dft) : [];
+        $body = $grid(getLayoutRows($fields, $sec, 'field', '', $was, $addrs, $blks));
         if (is_array($desc['items'] ?? null)) $body .= getLayoutItems($desc['items'], $sec['items'] ?? [], 's'.$sid, ($was !== null) ? ($was['items'] ?? []) : null, $addrs);
         if ($type === Layout::SLOT) $body .= $note(sprintf(_LAYOUT_SLOTNOTE, getLayoutSecName($sec)));
         if (!$one['frag']) $body .= $note(_LAYOUT_NOFRAGIN);
@@ -1033,6 +1199,7 @@ function getLayoutIssues(array $dft, array $types, array $places, Closure $answe
         }
     };
     $addrs = [];
+    $blks = null;
     foreach ($lay['pages'] as $key => $page) {
         $ptitle = getLayoutPageTitle($lay, $key);
         $marks = array_values(array_filter(array_map(static fn($v): string => is_array($v) ? (string)($v['anchor'] ?? '') : '', $page['sections'])));
@@ -1043,7 +1210,15 @@ function getLayoutIssues(array $dft, array $types, array $places, Closure $answe
             $put = static fn(string $icon, string $text) => $add($icon, $text, $where, 'sec:'.intval($sec['id'] ?? 0), $key);
             $desc = $one['desc'];
             $fields = is_array($desc['fields'] ?? null) ? $desc['fields'] : [];
-            if (in_array('title', array_column($fields, 'key'), true) && trim((string)($sec['title'] ?? '')) === '') $put('type', _LAYOUT_IS_NOTITLE);
+            $kinds = array_column($fields, 'type', 'key');
+            if (isset($kinds['title']) && !in_array('noderef', $kinds, true) && trim((string)($sec['title'] ?? '')) === '') $put('type', _LAYOUT_IS_NOTITLE);
+            foreach ($kinds as $fkey => $kind) {
+                $ref = (string)intval($sec[$fkey] ?? 0);
+                if ($kind === 'noderef' && getLayoutNodes(intval($ref), '') === []) $put('file-earmark-richtext', _LAYOUT_IS_NONODE);
+                if ($kind === 'blockref') $blks ??= array_filter(getLayoutBlocks($dft), static fn(array $v): bool => !$v['new'] && $v['kind'] !== 'sys');
+                if ($kind === 'blockref' && !isset($blks[$ref])) $put('bricks', _LAYOUT_IS_NOBLOCK);
+                elseif ($kind === 'blockref' && !$blks[$ref]['status']) $put('bricks', sprintf(_LAYOUT_IS_BLKOFF, getConst($blks[$ref]['title'])));
+            }
             $pics($fields, $sec, $marks, $put);
             $list = is_array($desc['items'] ?? null) ? $desc['items'] : null;
             if ($list !== null && !($sec['items'] ?? [])) $put('list-ul', _LAYOUT_IS_NOITEMS);
@@ -1410,6 +1585,8 @@ function layout(): void {
         'link_tip' => _LAYOUT_LINKTIP, 'link_title' => _LAYOUT_LINK, 'link_sub' => _LAYOUT_LINKSUB, 'term_label' => _LAYOUT_LINKTERM, 'link_make' => _LAYOUT_LINKMAKE,
         'terms' => array_map(static fn(int $v): array => ['value' => $v, 'label' => sprintf(getPluralForm($v, _LAYOUT_DAYS), $v), 'is_on' => $v === LAYOUT_TERMS[1]], LAYOUT_TERMS),
         'copy_text' => _COPY, 'copied_text' => _COPIED, 'cancel_text' => _CANCEL, 'save_url' => getLayoutUrl(['op' => 'save']), 'mod' => $mod,
+        'export_url' => getLayoutUrl(['op' => 'export']), 'export_text' => _LAYOUT_EXPORT, 'export_tip' => _LAYOUT_EXPTIP, 'import_text' => _LAYOUT_IMPORT,
+        'import_tip' => _LAYOUT_IMPTIP,
         'words' => (string)json_encode($words, JSON_UNESCAPED_UNICODE),
         'link_note_html' => $tpl->getHtmlFrag('alert', ['text' => _LAYOUT_LINKNOTE, 'meta' => '', 'type' => 'info', 'is_warn' => false]),
     ]).getAdminIconWindow();
@@ -1763,6 +1940,7 @@ function act(): void {
     if ($act === 'publish') setLayoutPublish($was, $key, $sel, $tab);
     if ($act === 'story-back') setLayoutStoryBack($was, intval($bid), $key, $sel, $tab);
     if ($act === 'discard') setLayoutDiscard($was, $key, $sel, $tab);
+    if ($act === 'import') setLayoutImport($was, $key, $sel, $tab);
     if ($act === 'sec-mine' || $act === 'mine-del') setLayoutMineAct($dft, $act, intval($bid), $key, $sel, $tab);
     if ($act === 'link') setLayoutLink($dft, $key, $sel, $tab, intval($arg));
     $new = $dft;
@@ -1976,6 +2154,28 @@ function setLayoutDiscard(array $dft, int $key, string $sel, string $tab): never
     if (!isset($new['layout']['pages'][$key])) $key = getLayoutPageKey($new['layout']);
     if ($sel !== '' && !isLayoutPicked($new, $sel)) $sel = '';
     setLayoutKeep($dft, $new, $key, $sel, $tab, sprintf(_LAYOUT_DISCARDED, $num), true);
+}
+
+# A layout file of JSON, never PHP, replaces the layout of the draft in one step with Undo; its blocks and settings stay, the counter of ids keeps its larger value
+function setLayoutImport(array $dft, int $key, string $sel, string $tab): never {
+    $file = $_FILES['file'] ?? null;
+    $code = is_array($file) ? intval($file['error'] ?? UPLOAD_ERR_NO_FILE) : UPLOAD_ERR_NO_FILE;
+    $name = is_array($file) ? basename((string)($file['name'] ?? '')) : '';
+    $warn = match (true) {
+        in_array($code, [UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE], true) || ($code === UPLOAD_ERR_OK && intval($file['size']) > 1048576) => _ERROR_BIG,
+        $code !== UPLOAD_ERR_OK || !is_uploaded_file((string)$file['tmp_name']) => _ERROR_DOWN,
+        strtolower(pathinfo($name, PATHINFO_EXTENSION)) !== 'json' => _ERROR_FILE,
+        default => '',
+    };
+    $data = ($warn === '') ? json_decode((string)file_get_contents((string)$file['tmp_name']), true) : null;
+    $view = getLayoutView($dft['layout']);
+    [$lay, $bad] = is_array($data) ? getLayoutImport($data, $dft['layout'], getLayoutTypes($view), $view->getThemePlaces()) : [null, []];
+    if ($warn === '' && $lay === null) $warn = $bad ? sprintf(_LAYOUT_IMPVAL, implode('; ', array_slice($bad, 0, 5))) : _LAYOUT_IMPBAD;
+    if ($warn !== '') setLayoutPane($dft, $key, $sel, $tab, $warn, false, false, true);
+    $new = array_replace($dft, ['layout' => $lay]);
+    if (!isset($lay['pages'][$key])) $key = getLayoutPageKey($lay);
+    if ($sel !== '' && !isLayoutPicked($new, $sel)) $sel = '';
+    setLayoutKeep($dft, $new, $key, $sel, $tab, sprintf(_LAYOUT_IMPDONE, $name), true);
 }
 
 # Take one field of the pick back to its value on the site, a field of an item by its place in the list ("2-alt"); the answer is whether the pick and the field were found
@@ -2243,6 +2443,26 @@ function source(): void {
     exit;
 }
 
+function find(): void {
+    $find = mb_substr(trim((string)getVar('get', 'find', 'word', '')), 0, 100);
+    $key = getVar('get', 'key', 'var', '');
+    $now = (preg_match(Layout::FIELD, $key) === 1) ? intval(getVar('get', 'field['.$key.']', 'num', 0)) : 0;
+    header('Content-Type: text/html; charset=utf-8');
+    header('Cache-Control: no-store');
+    echo getLayoutNodeHtml($now, $find);
+    exit;
+}
+
+function export(): void {
+    $lay = Layout::getLayoutData(getLayoutStored(getLayoutDraft())['layout']);
+    header('Content-Type: application/json; charset=UTF-8');
+    header('Content-Disposition: attachment; filename="layout-'.date('Y-m-d').'.json"');
+    header('X-Content-Type-Options: nosniff');
+    header('Cache-Control: no-store');
+    echo json_encode($lay, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
 function info(): void {
     setTplAdminInfoPage([
         'ops' => ['name=layout', 'name=layout&op=info'],
@@ -2261,5 +2481,7 @@ switch ($op) {
     case 'dest': dest(); break;
     case 'edit': edit(); break;
     case 'source': source(); break;
+    case 'find': find(); break;
+    case 'export': export(); break;
     case 'info': info(); break;
 }

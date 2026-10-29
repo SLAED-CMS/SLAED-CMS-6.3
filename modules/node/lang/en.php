@@ -12,6 +12,7 @@ define('_NODE_BUSY','The material was changed in the meantime, nothing was saved
 define('_NODE_CATS','Additional categories');
 define('_NODE_CLOSE','Close the request');
 define('_NODE_FAILED','The material could not be saved, please try again later.');
+define('_NODE_FEEDALL','All: %s');
 define('_NODE_FILTERS','Filter materials');
 define('_NODE_FIND','Search this section');
 define('_NODE_GONE','The material does not exist or is not available.');

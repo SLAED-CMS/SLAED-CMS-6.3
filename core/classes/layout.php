@@ -18,6 +18,9 @@ final class Layout {
     # The name a page carries in $conf['name'], in $name and in the which of a block: page- and its permanent number, a name no module or type can take
     public const PAGE = '/^page-([1-9][0-9]{0,9})$/D';
 
+    # The name of a Node type a field of the kind nodetype lists, the grammar Route and NodeQuery keep for a type
+    private const NAME = '/^[a-z][a-z0-9]{0,19}$/D';
+
     # The name of a section type, which is the file name of its description, its fragment and its provider
     private const TYPE = '/^[a-z][a-z0-9-]{0,39}$/D';
 
@@ -296,6 +299,9 @@ final class Layout {
             if (is_array($desc['items'] ?? null)) $data['items'] = $this->getItemData($desc['items'], $sec['items'] ?? null, $prs);
             $data['parts'] = $this->getThemeData($prs);
             $data['is_build'] = $this->build;
+            foreach (is_array($desc['fields'] ?? null) ? $desc['fields'] : [] as $fld) {
+                if (is_array($fld) && ($fld['type'] ?? '') === 'blockref' && isset($data[$fld['key']])) $data[$fld['key'].'_html'] = $tpl->getFree($data[$fld['key']]);
+            }
             $prov = $this->getProvider($type, $one['prov']);
             if ($prov) $data = array_replace($data, $prov($sec));
             $inner = $tpl->getHtmlSection($type, $data, ($frag === 'theme') ? '' : $this->mods.'/'.$frag.'/sections');
@@ -421,6 +427,8 @@ final class Layout {
                 'focus' => in_array($val, self::FOCUS, true) ? $val : 'center',
                 'icon' => (is_string($val) && preg_match(self::ICON, $val) === 1) ? $val : '',
                 'tone' => in_array($val, self::TONES, true) ? $val : '',
+                'nodetype' => is_array($val) ? array_values(array_unique(array_filter($val, static fn($v): bool => is_string($v) && preg_match(self::NAME, $v) === 1))) : [],
+                'noderef', 'blockref' => (is_int($val) || (is_string($val) && ctype_digit($val))) ? intval($val) : 0,
                 default => $this->getTypeValue($key, $type, $one, $val),
             };
             if ($type === 'select' && $out[$key] !== '') $out[$key.'_'.$out[$key]] = true;

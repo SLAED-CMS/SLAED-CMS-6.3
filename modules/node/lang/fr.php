@@ -12,6 +12,7 @@ define('_NODE_BUSY','La publication a été modifiée entre-temps, rien n\'a ét
 define('_NODE_CATS','Catégories supplémentaires');
 define('_NODE_CLOSE','Fermer la demande');
 define('_NODE_FAILED','La publication n\'a pas pu être enregistrée, réessayez plus tard.');
+define('_NODE_FEEDALL','Toutes : %s');
 define('_NODE_FILTERS','Filtrer les publications');
 define('_NODE_FIND','Rechercher dans la section');
 define('_NODE_GONE','La publication n\'existe pas ou n\'est pas disponible.');

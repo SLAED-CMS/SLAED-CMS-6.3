@@ -76,8 +76,10 @@ final class LayoutDraftTest extends TestCase
             'slug' => 'o-kompanii', 'markdown' => "A\nB"];
         foreach ($good as $key => $val) $this->assertSame(['', $val], $data[$key], $key.' was not taken');
         $bad = ['textmax' => 'max', 'badurl' => 'format', 'badselect' => 'choice', 'bigint' => 'max', 'badchoice' => 'format', 'badfocus' => 'format', 'icon' => 'format',
-            'anchor' => 'format', 'file' => 'format', 'kind' => 'format'];
+            'anchor' => 'format', 'file' => 'format', 'kind' => 'format', 'badtype' => 'format', 'badref' => 'format'];
         foreach ($bad as $key => $code) $this->assertSame([$code, null], $data[$key], $key.' was not refused');
+        $refs = ['nodetype' => ['news', 'docs'], 'noderef' => 3944, 'noref' => 0, 'intref' => 15];
+        foreach ($refs as $key => $val) $this->assertSame(['', $val], $data[$key], $key.' was not taken');
         $this->assertSame(['vals' => ['title' => 'New', 'href' => '/old'], 'bad' => ['Link']], $data['set']);
     }
 
@@ -207,6 +209,29 @@ final class LayoutDraftTest extends TestCase
         $this->assertStringContainsString("getFileManagerField(['id' => \$fid, 'place' => 'layout.attach'", $rows, 'A picture is not picked in the file window');
     }
 
+    # A layout file is read by the descriptions: undescribed values leave, an unknown type, a refused value or a twin id refuse it; empty records and blocks are named
+    #[Test]
+    public function aLayoutFileIsReadByTheDescriptions(): void
+    {
+        $data = $this->getProbe('import');
+        $this->assertSame([], $data['bad']);
+        $this->assertSame([40, false, [1, 2, 9]], [$data['next'], $data['shipped'], $data['keys']], 'The counter or the pages of an imported file are wrong');
+        $this->assertSame(['phone' => '+49', 'social' => [['url' => 'https://x.com']]], $data['theme'], 'A value no part describes was kept');
+        $menu = ['main' => [['id' => 4, 'title' => 'A', 'href' => '/about', 'who' => '0', 'kids' => []]]];
+        $this->assertSame($menu, $data['menus'], 'A menu kept a level or a menu the theme lacks');
+        $sec = ['id' => 30, 'type' => 'card', 'on' => true, 'title' => 'One', 'tone' => 'accent', 'item' => 7, 'block' => 15, 'items' => [['text' => 'a'], ['text' => 'b']]];
+        $this->assertSame($sec, $data['sec'], 'A section was not read by its description');
+        $this->assertSame(['title' => 'About', 'addr' => 'about', 'noindex' => true], $data['page']);
+        $this->assertSame([null, ['About: no gone']], $data['type'], 'A type the theme lacks was taken');
+        $this->assertSame([null, ['About · Card · Tone']], $data['value'], 'A refused value was taken');
+        $this->assertSame([null, ['About · Card · id']], $data['twin'], 'An id given twice was taken');
+        $this->assertSame([[null, []], [null, []]], [$data['version'], $data['nohome']], 'A file of another version or without its home page was taken');
+        $this->assertSame(['nonode > sec:31', 'blkoff Poll > sec:31', 'nonode > sec:32', 'noblock > sec:32', 'nodesc > page:9'], $data['issues']);
+        $import = $this->getBody('setLayoutImport');
+        $this->assertStringContainsString("!== 'json' => _ERROR_FILE", $import, 'A file other than JSON is read');
+        $this->assertStringNotContainsString('include', $import, 'An imported file is run');
+    }
+
     # Every write of the screen is a POST of the scope layout checked before anything is read from the post, and the reads write nothing
     #[Test]
     public function everyWriteOfTheScreenIsAPostOfItsScope(): void
@@ -217,7 +242,7 @@ final class LayoutDraftTest extends TestCase
             $this->assertNotFalse($guard, $name.'() does not check its POST');
             $this->assertLessThan(strpos($body, "getVar('post'"), $guard, $name.'() reads the post before its check');
         }
-        foreach (['layout', 'tree', 'pick', 'story', 'checks', 'dest', 'edit', 'source', 'info'] as $name) {
+        foreach (['layout', 'tree', 'pick', 'story', 'checks', 'dest', 'edit', 'source', 'find', 'export', 'info'] as $name) {
             $body = $this->getBody($name);
             $this->assertStringNotContainsString('setLayoutKeep(', $body, $name.'() writes a step of the draft');
             $this->assertStringNotContainsString('checkAdminPost(', $body);
