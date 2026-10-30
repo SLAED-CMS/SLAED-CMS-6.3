@@ -280,9 +280,18 @@
   --sl-skel-dur: calc(1.2s * var(--sl-time-scale));
   --sl-flash-dur: calc(5s * var(--sl-time-scale));
   --sl-modal-dur: calc(0.22s * var(--sl-time-scale));
+  /* Panel motion: a light round a frame under the hand, a home tile or a part of a ground rising, a press spreading, a chart drawn, an arc filling and a changed figure lighting */
+  --sl-aurora-dur: calc(5.4s * var(--sl-time-scale));
+  --sl-tile-dur: calc(0.55s * var(--sl-time-scale));
+  --sl-ripple-dur: calc(0.65s * var(--sl-time-scale));
+  --sl-graph-dur: calc(1.2s * var(--sl-time-scale));
+  --sl-knob-dur: calc(1.4s * var(--sl-time-scale));
+  /* The series of the panel: the grid of a ground drifting by one cell and the lamps of a window head fading in turn */
+  --sl-ground-dur: calc(6s * var(--sl-time-scale));
+  --sl-pane-dur: calc(2.8s * var(--sl-time-scale));
   /* The overshoot a dialog opens with: a curve leaving the 0-1 range is a different kind of motion, not a ladder step */
   --sl-modal-ease: cubic-bezier(0.34, 1.3, 0.64, 1);
-  /* The overshoot of an alert: a flash springs onto its place and a success tick lands from its turn; the installer and the screensaver badge land on it too */
+  /* The overshoot of an alert: a flash springs onto its place, a success tick lands; the installer, the screensaver badge, a home tile and a cockpit arc land on it too */
   --sl-alert-ease: cubic-bezier(0.34, 1.56, 0.64, 1);
   /* The installer card: the beat its stops move to, every motion of it measured in that beat */
   --sl-setup-dur: calc(0.5s * var(--sl-time-scale));
@@ -408,6 +417,10 @@
   --sl-builder-pick-width: 170px;
   /* The width a gauge of the home cockpit grows to; the lamp in their row is a step larger */
   --sl-gauge-width: 150px;
+  /* The glow round a circle of the cockpit, its arcs and its lamp, at the share the gauges of the presentation carry */
+  --sl-knob-mix: 50%;
+  /* The stroke of light that runs round a frame under the hand */
+  --sl-aurora-width: calc(var(--sl-space-8) * 6);
   /* The glass of the lamp: gloss, a shaded rim and a disc a step off the plate give a light page the volume a dark one has from its gloss */
   --sl-gauge-bg:
     radial-gradient(ellipse 62% 34% at 50% 12%, light-dark(var(--sl-bg), var(--sl-beam-bg)), transparent 72%),
@@ -419,6 +432,9 @@
     drop-shadow(0 var(--sl-space-4) var(--sl-space-7) light-dark(var(--sl-shadow-color), transparent))
     drop-shadow(0 var(--sl-space-1) var(--sl-space-2) light-dark(var(--sl-shadow-color), transparent));
   --sl-graph-height: 285px;
+  /* The cell of the grid under the windows of a page and the width under which a tile of figures takes the next row */
+  --sl-ground-width: 32px;
+  --sl-metric-min-width: 150px;
   /* A painted group name keeps the hue of its group, taken from its parent, and the lightness its scheme reads: 4.5:1 for any stored colour */
   --sl-group-text: light-dark(oklch(from currentColor min(l, 0.5) c h), oklch(from currentColor max(l, 0.7) c h));
   --sl-header-height: 72px;

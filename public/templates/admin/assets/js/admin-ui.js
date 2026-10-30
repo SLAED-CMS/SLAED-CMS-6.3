@@ -1259,10 +1259,112 @@
     }
     /* Motion over the page: the place of every solid head in the order its beam crosses; the light that follows the pointer is slaed.js's */
     function setBeamTurns() {
-        document.querySelectorAll('.sl-dashboard-panel-head, .sl-block-sidebar h3').forEach(function (head, i) {
+        document.querySelectorAll('.sl-dashboard-panel-head, .sl-block-sidebar h3, .sl-pane-cap').forEach(function (head, i) {
             head.style.setProperty('--sl-d-turn', i);
         });
     }
+    var arrival = { seen: null, drawn: {} };
+    // A grid that rose drops its marks, so a tile the menu find shows again or the drag moves does not rise a second time
+    function setArriveDone(grid) {
+        var left = Array.prototype.filter.call(grid.children, function (tile) { return tile.matches('.sl-mcard') && tile.getClientRects().length > 0; }).length;
+        var end = function () {
+            grid.removeEventListener('animationend', done);
+            grid.removeEventListener('animationcancel', done);
+            grid.removeAttribute('data-sl-arrive');
+            grid.classList.remove('sl-is-in');
+        };
+        var done = function (event) {
+            if (event.animationName === 'sl-tile-rise' && event.target.parentNode === grid && --left <= 0) end();
+        };
+        if (!left) return end();
+        grid.addEventListener('animationend', done);
+        grid.addEventListener('animationcancel', done);
+    }
+    // Home tiles, the parts of a ground and monitor charts wait for the view; a waiting chart is clipped to nothing, which the observer reads as unseen, so its parent is watched
+    function setArriveMarks(root) {
+        if (window.isMotionStill() || !window.IntersectionObserver) return;
+        if (!arrival.seen) {
+            arrival.seen = new IntersectionObserver(function (rows) {
+                rows.forEach(function (row) {
+                    var node = row.target.slArrive || row.target;
+                    var place;
+                    if (!row.isIntersecting) return;
+                    arrival.seen.unobserve(row.target);
+                    node.classList.add('sl-is-in');
+                    if (node.matches('.sl-menu-grid')) return setArriveDone(node);
+                    if (node.matches('.sl-ground > *')) return;
+                    place = node.closest('[id]');
+                    arrival.drawn[place ? place.id : ''] = true;
+                });
+            }, { threshold: 0.06 });
+        }
+        root.querySelectorAll('.sl-menu-grid:not([data-sl-arrive])').forEach(function (grid) {
+            var tiles = grid.querySelectorAll(':scope > .sl-mcard');
+            if (!tiles.length) return;
+            tiles.forEach(function (tile, i) { tile.style.setProperty('--sl-d-turn', i); });
+            grid.setAttribute('data-sl-arrive', '');
+            arrival.seen.observe(grid);
+        });
+        root.querySelectorAll('.sl-ground > :not(.sl-ground-lines, [data-sl-arrive])').forEach(function (part, i) {
+            part.style.setProperty('--sl-d-turn', i);
+            part.setAttribute('data-sl-arrive', '');
+            arrival.seen.observe(part);
+        });
+        root.querySelectorAll('.sl-chart-svg:not([data-sl-arrive])').forEach(function (chart) {
+            var place = chart.closest('[id]');
+            if (arrival.drawn[place ? place.id : '']) return;
+            chart.setAttribute('data-sl-arrive', '');
+            chart.parentNode.slArrive = chart;
+            arrival.seen.observe(chart.parentNode);
+        });
+    }
+    document.addEventListener('htmx:load', function (event) {
+        if (event.target.querySelectorAll) setArriveMarks(event.target);
+    });
+    var tilt = { last: null, frame: 0, tile: null };
+    // A home tile or a tile of figures under the hand leans to it and lays its glare where the hand is, once a frame; the theme holds level a home tile whose dial is in use
+    function setTileTilt() {
+        var event = tilt.last;
+        var tile = !window.isMotionStill() && event.target.closest ? event.target.closest('.sl-menu-grid > .sl-mcard, .sl-metric') : null;
+        var box;
+        var left;
+        var top;
+        tilt.frame = 0;
+        if (tilt.tile && tilt.tile !== tile) {
+            ['--sl-d-tilt-x', '--sl-d-tilt-y', '--sl-d-x', '--sl-d-y'].forEach(function (name) { tilt.tile.style.removeProperty(name); });
+        }
+        tilt.tile = tile;
+        if (!tile) return;
+        box = tile.getBoundingClientRect();
+        left = event.clientX - box.left;
+        top = event.clientY - box.top;
+        tile.style.setProperty('--sl-d-tilt-x', ((left / box.width - 0.5) * 10).toFixed(2) + 'deg');
+        tile.style.setProperty('--sl-d-tilt-y', ((0.5 - top / box.height) * 12).toFixed(2) + 'deg');
+        tile.style.setProperty('--sl-d-x', Math.round(left) + 'px');
+        tile.style.setProperty('--sl-d-y', Math.round(top) + 'px');
+    }
+    document.addEventListener('pointermove', function (event) {
+        if (event.pointerType === 'touch') return;
+        tilt.last = event;
+        if (!tilt.frame) tilt.frame = window.requestAnimationFrame(setTileTilt);
+    }, { passive: true });
+    var ripple = '.sl-menu-grid > .sl-mcard > .sl-mcard-link, .sl-admin-sidebar .sl-menu-list-item, .sl-block-sidebar-count-row, .sl-cockpit button';
+    // A press on a home tile, a row of the menu or of its counters and a control of the cockpit spreads from the pointer; the forms and the lists take none
+    document.addEventListener('pointerdown', function (event) {
+        var host = event.button === 0 && event.target.closest ? event.target.closest(ripple) : null;
+        var box;
+        var wave;
+        if (!host || window.isMotionStill() || event.target.closest('.sl-dial, .sl-drag-handle')) return;
+        box = host.getBoundingClientRect();
+        wave = document.createElement('span');
+        wave.setAttribute('data-sl-ripple', '');
+        wave.setAttribute('aria-hidden', 'true');
+        wave.style.setProperty('--sl-d-x', Math.round(event.clientX - box.left) + 'px');
+        wave.style.setProperty('--sl-d-y', Math.round(event.clientY - box.top) + 'px');
+        wave.addEventListener('animationend', function () { wave.remove(); });
+        wave.addEventListener('animationcancel', function () { wave.remove(); });
+        host.appendChild(wave);
+    }, { passive: true });
     /* Every part of the installation is its own POST of the run form, so the bar shows how far the server really got */
     function setSetupRun() {
         var run = document.querySelector('[data-sl-setup-run]');
@@ -1499,6 +1601,46 @@
     phone.addEventListener('change', function () {
         if (!phone.matches && document.body.hasAttribute('data-sl-drawer')) setDrawer(false);
     });
+    // A figure or a bar that a poll changed flares once; the theme decides how by what the node is
+    function setFigureFresh(node) {
+        node.classList.remove('sl-is-fresh');
+        void node.offsetWidth;
+        node.classList.add('sl-is-fresh');
+    }
+    // A figure runs from the value it shows to the new one and flares; slFigure keeps the goal, since the text is a step of the run while it lasts
+    function setFigureRun(node, value) {
+        var text = String(value);
+        var goal = text.trim() === '' ? NaN : Number(text);
+        var was = node.slFigure === undefined ? Number(node.textContent) : node.slFigure;
+        var from = isNaN(was) ? 0 : was;
+        var digits = (text.split('.')[1] || '').length;
+        var run = (node.slFigureRun || 0) + 1;
+        var start = 0;
+        var step;
+        node.slFigure = goal;
+        node.slFigureRun = run;
+        if (isNaN(goal) || goal === was || window.isMotionStill() || document.hidden) {
+            node.textContent = text;
+            return;
+        }
+        if (!isNaN(was)) setFigureFresh(node);
+        step = function (now) {
+            var part;
+            if (node.slFigureRun !== run) return;
+            if (!start) start = now;
+            part = Math.min(1, (now - start) / 900);
+            node.textContent = part < 1 ? (from + (goal - from) * (1 - Math.pow(1 - part, 3))).toFixed(digits) : text;
+            if (part < 1) window.requestAnimationFrame(step);
+        };
+        window.requestAnimationFrame(step);
+    }
+    // The value a figure stands for, the goal of its run when one runs
+    function getFigureValue(node) {
+        return node.slFigure === undefined ? Number(node.textContent) : node.slFigure;
+    }
+    document.addEventListener('animationend', function (event) {
+        if (event.animationName === 'sl-cockpit-fresh' || event.animationName === 'sl-figure-flash') event.target.classList.remove('sl-is-fresh');
+    });
     var queue = { sum: -1, unseen: 0, title: '', mods: {} };
     // The rows of one list in the order of their numbers, the fullest first; equal numbers keep the order the page gave them
     function setQueueOrder(box) {
@@ -1507,7 +1649,7 @@
         var after = rows[rows.length - 1].nextSibling;
         rows.forEach(function (row, i) { if (!row.hasAttribute('data-sl-queue-at')) row.setAttribute('data-sl-queue-at', i); });
         rows.sort(function (one, two) {
-            var diff = Number(two.querySelector('[data-sl-queue-n]').textContent) - Number(one.querySelector('[data-sl-queue-n]').textContent);
+            var diff = getFigureValue(two.querySelector('[data-sl-queue-n]')) - getFigureValue(one.querySelector('[data-sl-queue-n]'));
             return diff || one.getAttribute('data-sl-queue-at') - two.getAttribute('data-sl-queue-at');
         });
         rows.forEach(function (row) { box.insertBefore(row, after); });
@@ -1533,7 +1675,7 @@
             mods[row.mod] = (mods[row.mod] || 0) + row.num;
             document.querySelectorAll('[data-sl-queue-row="' + CSS.escape(row.key) + '"]').forEach(function (node) {
                 var num = node.querySelector('[data-sl-queue-n]');
-                num.textContent = row.num;
+                setFigureRun(num, row.num);
                 if (num.classList.contains('sl-chip')) {
                     num.classList.toggle('sl-chip-warn', row.num > 0);
                     num.classList.toggle('sl-chip-success', row.num === 0);
@@ -1543,7 +1685,7 @@
         });
         document.querySelectorAll('[data-sl-queue]').forEach(function (chip) {
             var num = mods[chip.getAttribute('data-sl-queue')] || 0;
-            chip.querySelector('[data-sl-queue-n]').textContent = num;
+            setFigureRun(chip.querySelector('[data-sl-queue-n]'), num);
             chip.hidden = num === 0;
         });
         var boxes = [];
@@ -1603,11 +1745,6 @@
         var pass = box.querySelector('[data-sl-cockpit-pass]');
         var said = box.querySelector('[data-sl-pass-of]');
         var was = pass.textContent;
-        var fresh = function (node) {
-            node.classList.remove('sl-is-fresh');
-            void node.offsetWidth;
-            node.classList.add('sl-is-fresh');
-        };
         var bar;
         box.classList.remove('sl-knob-ok', 'sl-knob-info', 'sl-knob-warn', 'sl-knob-danger');
         box.classList.add('sl-knob-' + data.tone);
@@ -1615,7 +1752,7 @@
         box.querySelector('[data-sl-cockpit-loud]').hidden = loud === 0;
         box.querySelector('[data-sl-cockpit-n]').textContent = loud;
         pass.textContent = data.signals.length - loud;
-        if (pass.textContent !== was) fresh(pass);
+        if (pass.textContent !== was) setFigureFresh(pass);
         said.textContent = said.getAttribute('data-sl-pass-of').replace('%s', pass.textContent).replace('%s', data.signals.length);
         cap.textContent = cap.getAttribute(loud ? 'data-sl-loud' : 'data-sl-calm');
         data.signals.forEach(function (sig) {
@@ -1631,7 +1768,7 @@
             bar.title = sig.label + (sig.fact ? ' · ' + sig.fact : '');
             if (bar.classList.contains('sl-knob-' + sig.level)) return;
             bar.className = 'sl-knob-' + sig.level;
-            fresh(bar);
+            setFigureFresh(bar);
         });
         Object.keys(data.gauges).forEach(function (key) {
             var ring = box.querySelector('[data-sl-gauge="' + CSS.escape(key) + '"]');
@@ -1642,7 +1779,7 @@
             rows = ring.parentNode.querySelector('[data-sl-gauge-rows]');
             ring.classList.remove('sl-knob-ok', 'sl-knob-info', 'sl-knob-warn', 'sl-knob-danger');
             ring.classList.add('sl-knob-' + gauge.tone);
-            ring.querySelector('[data-sl-gauge-val]').textContent = num;
+            setFigureRun(ring.querySelector('[data-sl-gauge-val]'), num);
             ring.querySelector('.sl-knob-val').setAttribute('stroke-dasharray', gauge.value + ' 100');
             ring.setAttribute('aria-valuenow', num);
             ring.setAttribute('aria-valuetext', num + '%');
@@ -1657,7 +1794,7 @@
         });
         Object.keys(data.strip).forEach(function (key) {
             var item = box.querySelector('[data-sl-strip="' + CSS.escape(key) + '"] [data-sl-strip-val]');
-            if (item) item.textContent = data.strip[key].value;
+            if (item) setFigureRun(item, data.strip[key].value);
         });
         box.querySelectorAll('[aria-busy]').forEach(function (node) { node.setAttribute('aria-busy', 'false'); });
         box.setAttribute('data-sl-live-stamp', Date.now() - (Number(data.age) || 0) * 1000);
@@ -1687,9 +1824,6 @@
         ask();
         window.setInterval(ask, (Number(box.getAttribute('data-sl-cockpit-every')) || 10) * 1000);
         window.setInterval(function () { setCockpitStale(box); }, 5000);
-        box.addEventListener('animationend', function (event) {
-            if (event.animationName === 'sl-cockpit-fresh') event.target.classList.remove('sl-is-fresh');
-        });
         document.addEventListener('visibilitychange', ask);
         box.addEventListener('click', function (event) {
             if (event.target.closest('[data-sl-live-toggle]')) window.setTimeout(ask);
@@ -2410,6 +2544,7 @@
         document.addEventListener('DOMContentLoaded', function () {
             addFileStep();
             setBeamTurns();
+            setArriveMarks(document);
             setSetupRun();
             addRankForm();
             addFormCanon();
@@ -2423,6 +2558,7 @@
     } else {
         addFileStep();
         setBeamTurns();
+        setArriveMarks(document);
         setSetupRun();
         addRankForm();
         addFormCanon();

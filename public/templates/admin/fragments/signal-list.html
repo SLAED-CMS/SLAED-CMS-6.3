@@ -1,0 +1,1 @@
+{% for item in loud %}{% include 'fragments/signal.html' with item %}{% endfor %}{% if calm %}<details class="sl-signal-calm"><summary><i class="bi bi-check2-circle" aria-hidden="true"></i>{{ calm_text }}</summary>{% for item in calm %}{% include 'fragments/signal.html' with item %}{% endfor %}</details>{% endif %}

@@ -5465,6 +5465,303 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
     background: radial-gradient(circle var(--sl-pointer-width) at var(--sl-d-pointer-x) var(--sl-d-pointer-y), var(--sl-tint), transparent 70%);
     pointer-events: none;
   }
+
+  /* Under the hand a light runs round the frame of the cockpit, a home tile, a monitor card or a window, blue into violet; only its run lights it, so a still panel shows none */
+  :is(.sl-cockpit, .sl-mcard, .sl-monitor-card, .sl-pane)::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: var(--sl-z-raised);
+    width: var(--sl-aurora-width);
+    height: var(--sl-space-1);
+    border-radius: var(--sl-radius-pill);
+    background: linear-gradient(90deg, transparent, var(--sl-primary), var(--sl-accent), transparent);
+    box-shadow: 0 0 var(--sl-space-3) var(--sl-tint-strong);
+    offset-path: inset(0 round var(--sl-radius-2));
+    offset-rotate: auto;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  :is(.sl-cockpit, .sl-pane)::before {
+    offset-path: inset(0 round var(--sl-radius-3));
+  }
+
+  :is(.sl-cockpit, .sl-mcard, .sl-monitor-card, .sl-pane):hover::before {
+    animation: sl-aurora var(--sl-aurora-dur) linear infinite;
+  }
+
+  /* The scan of the cockpit: a line of light goes down the panel now and then, as the panels of a live console do */
+  .sl-cockpit::after {
+    content: "";
+    position: absolute;
+    left: var(--sl-space-6);
+    right: var(--sl-space-6);
+    top: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--sl-primary), transparent);
+    box-shadow: 0 0 var(--sl-space-4) var(--sl-space-1) var(--sl-tint-strong), 0 0 var(--sl-space-8) var(--sl-space-4) var(--sl-tint);
+    opacity: 0;
+    animation: sl-cockpit-scan calc(var(--sl-alert-dur) * 5) var(--sl-ease-in-out) infinite;
+    pointer-events: none;
+  }
+
+  /* The comet turns round the lamp in every state at the pace of the state, which the rules of the cockpit set; a failure throbs its halo as it turns */
+  .sl-cockpit-plate::before {
+    animation: sl-cockpit-spin calc(var(--sl-alert-dur) * 3) linear infinite;
+  }
+
+  .sl-cockpit.sl-knob-danger .sl-cockpit-plate::before {
+    animation:
+      sl-cockpit-spin calc(var(--sl-alert-dur) * 0.6) linear infinite,
+      sl-cockpit-throb calc(var(--sl-alert-dur) / 2) var(--sl-ease-in-out) infinite alternate;
+  }
+
+  /* An arc of the cockpit runs from its old share to the new one on a spring; it starts empty, so the first figures fill it from zero */
+  .sl-cockpit-ring .sl-knob-val {
+    transition: stroke-dasharray var(--sl-knob-dur) var(--sl-alert-ease);
+  }
+
+  /* A figure of a ring, of the strip or of a queue that admin-ui.js runs to a new value lights once while it runs */
+  :is([data-sl-gauge-val], [data-sl-strip-val], [data-sl-queue-n]).sl-is-fresh {
+    animation: sl-figure-flash var(--sl-knob-dur) var(--sl-ease-out);
+  }
+
+  /* The home tiles wait under their place until admin-ui.js finds their grid in the view, then rise in their turn; they move by their offset, never by a transform */
+  .sl-menu-grid[data-sl-arrive]:not(.sl-is-in) > .sl-mcard {
+    opacity: 0;
+  }
+
+  .sl-menu-grid[data-sl-arrive].sl-is-in > .sl-mcard {
+    animation: sl-tile-rise var(--sl-tile-dur) var(--sl-alert-ease) backwards;
+    animation-delay: calc(var(--sl-d-turn, 0) * var(--sl-tile-dur) / 20);
+  }
+
+  /* A home tile or a tile of figures in hand leans to the pointer under a glare; a home tile whose dial is in use stands level, so the fan holds still under the hand */
+  .sl-menu-grid > .sl-mcard:hover,
+  .sl-metric:hover {
+    transform: perspective(var(--sl-layout-container)) rotateX(var(--sl-d-tilt-y, 0deg)) rotateY(var(--sl-d-tilt-x, 0deg)) translateY(-1px);
+  }
+
+  .sl-metric {
+    transition: transform var(--sl-time-slow) var(--sl-ease-out), box-shadow var(--sl-time-slow) var(--sl-ease-out);
+  }
+
+  .sl-metric:hover {
+    box-shadow: var(--sl-shadow-float);
+  }
+
+  /* The glare of a tile of figures lies over the whole tile and takes no hand */
+  .sl-metric:hover::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: radial-gradient(circle var(--sl-pointer-width) at var(--sl-d-x, 50%) var(--sl-d-y, 50%), var(--sl-tint-strong), transparent 70%);
+    pointer-events: none;
+  }
+
+  /* The glare lies on the link, which fills the tile: over the ground of the tile and under its words */
+  .sl-menu-grid > .sl-mcard:hover > .sl-mcard-link {
+    border-radius: inherit;
+    background: radial-gradient(circle var(--sl-pointer-width) at var(--sl-d-x, 50%) var(--sl-d-y, 50%), var(--sl-tint-strong), transparent 70%);
+  }
+
+  .sl-menu-grid > .sl-mcard:hover:has(> .sl-dial:is(:hover, .sl-open)) {
+    transform: none;
+  }
+
+  /* A chart of the monitor waits hidden until admin-ui.js finds it in the view, then is drawn left to right once; a later tick never draws it again */
+  .sl-chart-svg[data-sl-arrive]:not(.sl-is-in) {
+    clip-path: inset(0 100% 0 0);
+  }
+
+  .sl-chart-svg[data-sl-arrive].sl-is-in {
+    animation: sl-chart-draw var(--sl-graph-dur) var(--sl-ease-in-out);
+  }
+
+  /* The grid under the windows drifts on its own layer, one cell a cycle, so a move repaints nothing */
+  .sl-ground-lines::before {
+    animation: sl-ground-drift var(--sl-ground-dur) linear infinite;
+  }
+
+  /* A part of a ground waits until admin-ui.js finds it in the view, then rises by its offset, its rows after it and its meters filling; the turn is capped for a part far down */
+  .sl-ground > [data-sl-arrive]:not(.sl-is-in) {
+    opacity: 0;
+  }
+
+  .sl-ground > [data-sl-arrive].sl-is-in {
+    animation: sl-tile-rise var(--sl-tile-dur) var(--sl-alert-ease) backwards;
+    animation-delay: calc(min(var(--sl-d-turn, 0), 6) * var(--sl-tile-dur) / 7);
+  }
+
+  .sl-ground > .sl-is-in :is(.sl-kv, .sl-signal) {
+    animation: sl-rows-in calc(var(--sl-time-slow) + var(--sl-time-fast)) var(--sl-ease-out) backwards;
+  }
+
+  .sl-ground > .sl-is-in .sl-meter-bar > i {
+    animation: sl-meter-fill calc(var(--sl-knob-dur) * 0.65) var(--sl-alert-ease) backwards;
+    animation-delay: var(--sl-time-slow);
+  }
+
+  /* The beam crosses the light head of a window in its own turn, in the tint a light head can carry */
+  .sl-pane-cap::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: var(--sl-beam-width);
+    background: linear-gradient(100deg, transparent, var(--sl-tint-strong), transparent);
+    transform: translateX(-160%) skewX(-18deg);
+    animation: sl-beam var(--sl-beam-dur) var(--sl-ease-in-out) infinite;
+    animation-delay: calc(var(--sl-d-turn, 0) * var(--sl-beam-dur) / 10);
+    pointer-events: none;
+  }
+
+  /* The lamps of a window head fade in turn; the lamp of a signal that is not well fades at twice the pace */
+  .sl-pane-lamps > i {
+    animation: sl-pane-lamp var(--sl-pane-dur) var(--sl-ease-in-out) infinite;
+  }
+
+  .sl-pane-lamps > i:nth-child(2) {
+    animation-delay: calc(var(--sl-pane-dur) / 8);
+  }
+
+  .sl-pane-lamps > i:nth-child(3) {
+    animation-delay: calc(var(--sl-pane-dur) / 4);
+  }
+
+  :is(.sl-signal.sl-knob-warn, .sl-signal.sl-knob-danger) > .sl-signal-lamp {
+    animation: sl-pane-lamp calc(var(--sl-pane-dur) / 2) var(--sl-ease-in-out) infinite;
+  }
+
+  /* The ripple of a press on a home tile, a row of the menu or of its counters and a control of the cockpit: a layer over the control clips a disc spreading from the pointer */
+  :is(.sl-mcard-link, .sl-block-sidebar-count-row, .sl-cockpit button):has(> [data-sl-ripple]) {
+    position: relative;
+  }
+
+  [data-sl-ripple] {
+    position: absolute;
+    inset: 0;
+    z-index: var(--sl-z-raised);
+    overflow: hidden;
+    border-radius: inherit;
+    pointer-events: none;
+  }
+
+  [data-sl-ripple]::after {
+    content: "";
+    position: absolute;
+    left: var(--sl-d-x);
+    top: var(--sl-d-y);
+    width: calc(100% * 3);
+    aspect-ratio: 1;
+    border-radius: var(--sl-radius-circle);
+    background: currentColor;
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0);
+    animation: sl-ripple var(--sl-ripple-dur) var(--sl-ease-out) forwards;
+  }
+}
+
+/* The light of a frame is on only while it runs */
+@keyframes sl-aurora {
+  from {
+    offset-distance: 0%;
+    opacity: 1;
+  }
+
+  to {
+    offset-distance: 100%;
+    opacity: 1;
+  }
+}
+
+@keyframes sl-cockpit-scan {
+  0% {
+    top: 0;
+    opacity: 0;
+  }
+
+  12% {
+    opacity: var(--sl-fade-disabled);
+  }
+
+  52% {
+    top: 100%;
+    opacity: var(--sl-fade-disabled);
+  }
+
+  62%,
+  100% {
+    top: 100%;
+    opacity: 0;
+  }
+}
+
+@keyframes sl-figure-flash {
+  from {
+    color: var(--sl-success-strong);
+    text-shadow: 0 0 var(--sl-space-5) var(--sl-success);
+  }
+}
+
+/* A home tile or a part of a ground rises from under its place by its offset; each is positioned already */
+@keyframes sl-tile-rise {
+  from {
+    top: var(--sl-space-7);
+    opacity: 0;
+  }
+}
+
+@keyframes sl-chart-draw {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+
+  to {
+    clip-path: inset(0);
+  }
+}
+
+@keyframes sl-ground-drift {
+  to {
+    transform: translate(var(--sl-ground-width), var(--sl-ground-width));
+  }
+}
+
+/* A row may hold a float, so it rises by its offset and never by a transform */
+@keyframes sl-rows-in {
+  from {
+    top: var(--sl-space-3);
+    opacity: 0;
+  }
+}
+
+@keyframes sl-meter-fill {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+@keyframes sl-pane-lamp {
+  50% {
+    opacity: var(--sl-fade-disabled);
+  }
+}
+
+/* The disc of a press spreads to cover the control and fades as it goes */
+@keyframes sl-ripple {
+  from {
+    opacity: calc(1 - var(--sl-fade-subtle));
+  }
+
+  to {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1);
+  }
 }
 
 @keyframes sl-beam {
@@ -7824,6 +8121,7 @@ body:has(.sl-monitor-wrapper) .sl-monitor-wrapper * {
 }
 
 .sl-monitor-card {
+  position: relative;
   background: var(--sl-monitor-bg-card);
   border: 1px solid var(--sl-monitor-border);
   border-radius: var(--sl-radius-2);
@@ -7953,72 +8251,6 @@ body:has(.sl-monitor-wrapper) .sl-monitor-wrapper * {
   border-radius: var(--sl-radius-3);
   background: linear-gradient(var(--sl-surface), var(--sl-bg));
   padding: var(--sl-space-6);
-}
-
-/* The aurora of the frame: under the hand a stroke of light runs round the border of the panel, blue into violet, along the path of the frame */
-.sl-cockpit::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  z-index: var(--sl-z-raised);
-  width: calc(var(--sl-space-8) * 6);
-  height: var(--sl-space-1);
-  border-radius: var(--sl-radius-pill);
-  background: linear-gradient(90deg, transparent, var(--sl-primary), var(--sl-accent), transparent);
-  box-shadow: 0 0 var(--sl-space-3) var(--sl-tint-strong);
-  offset-path: inset(0 round var(--sl-radius-3));
-  offset-rotate: auto;
-  opacity: 0;
-  transition: opacity var(--sl-time-slow) var(--sl-ease-out);
-  pointer-events: none;
-}
-
-.sl-cockpit:hover::before {
-  opacity: 1;
-  animation: sl-cockpit-aurora calc(var(--sl-alert-dur) * 3) linear infinite;
-}
-
-/* The scan: a line of light goes down the panel now and then, as the panels of a live console do */
-.sl-cockpit::after {
-  content: "";
-  position: absolute;
-  left: var(--sl-space-6);
-  right: var(--sl-space-6);
-  top: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, var(--sl-primary), transparent);
-  box-shadow: 0 0 var(--sl-space-4) var(--sl-space-1) var(--sl-tint-strong), 0 0 var(--sl-space-8) var(--sl-space-4) var(--sl-tint);
-  opacity: 0;
-  animation: sl-cockpit-scan calc(var(--sl-alert-dur) * 5) var(--sl-ease-in-out) infinite;
-  pointer-events: none;
-}
-
-@keyframes sl-cockpit-aurora {
-  from { offset-distance: 0%; }
-  to { offset-distance: 100%; }
-}
-
-@keyframes sl-cockpit-scan {
-  0% {
-    top: 0;
-    opacity: 0;
-  }
-
-  12% {
-    opacity: var(--sl-fade-disabled);
-  }
-
-  52% {
-    top: 100%;
-    opacity: var(--sl-fade-disabled);
-  }
-
-  62%,
-  100% {
-    top: 100%;
-    opacity: 0;
-  }
 }
 
 /* Three columns with equal sides: the state stands in the middle between the edges whatever the width of the caption at the left and the chip at the right */
@@ -8231,7 +8463,7 @@ body:has(.sl-monitor-wrapper) .sl-monitor-wrapper * {
 }
 
 .sl-cockpit-ring .sl-knob-val {
-  filter: drop-shadow(0 0 var(--sl-space-4) color-mix(in srgb, var(--sl-knob-tone) var(--sl-ring-mix), transparent));
+  filter: drop-shadow(0 0 var(--sl-space-4) color-mix(in srgb, var(--sl-knob-tone) var(--sl-knob-mix), transparent));
 }
 
 .sl-cockpit-ring path:not([class]) {
@@ -8279,7 +8511,7 @@ body:has(.sl-monitor-wrapper) .sl-monitor-wrapper * {
   color: var(--sl-text-muted);
 }
 
-/* The lamp: a disc of glass a step larger than a ring, lit from above and standing on its shadow; its tone lives in the comet round it and in its rows */
+/* The lamp: a disc of glass a step larger than a ring, lit from above and standing on its shadow in a halo of its tone; the tone lives in the comet round it and in its rows */
 .sl-cockpit-plate {
   position: relative;
   display: grid;
@@ -8297,7 +8529,7 @@ body:has(.sl-monitor-wrapper) .sl-monitor-wrapper * {
   color: var(--sl-knob-tone);
   cursor: pointer;
   appearance: none;
-  filter: var(--sl-gauge-shadow);
+  filter: var(--sl-gauge-shadow) drop-shadow(0 0 var(--sl-space-4) color-mix(in srgb, currentColor var(--sl-knob-mix), transparent));
   transition: color var(--sl-time-slow) var(--sl-ease-out), opacity var(--sl-time-slow) var(--sl-ease-out);
 }
 
@@ -8315,7 +8547,6 @@ body:has(.sl-monitor-wrapper) .sl-monitor-wrapper * {
   border-radius: var(--sl-radius-circle);
   background: conic-gradient(var(--sl-border) 0 35%, currentColor 99.6%, var(--sl-border) 0);
   mask: radial-gradient(circle closest-side, transparent calc(100% - var(--sl-space-2)), var(--sl-text) calc(100% - var(--sl-space-2) + 1px));
-  animation: sl-cockpit-spin calc(var(--sl-alert-dur) * 3) linear infinite;
 }
 
 /* The pulse ring: invisible at rest, so a still panel shows none */
@@ -8340,7 +8571,7 @@ body:has(.sl-monitor-wrapper) .sl-monitor-wrapper * {
   pointer-events: none;
 }
 
-.sl-cockpit-plate > :not(.sl-cockpit-glass) {
+.sl-cockpit-plate > :not(.sl-cockpit-glass, [data-sl-ripple]) {
   position: relative;
 }
 
@@ -8450,12 +8681,6 @@ body:has(.sl-monitor-wrapper) .sl-monitor-wrapper * {
 .sl-cockpit.sl-knob-danger {
   border-color: var(--sl-danger);
   animation: sl-cockpit-alarm calc(var(--sl-alert-dur) / 2) var(--sl-ease-in-out) infinite alternate;
-}
-
-.sl-cockpit.sl-knob-danger .sl-cockpit-plate::before {
-  animation:
-    sl-cockpit-spin calc(var(--sl-alert-dur) * 0.6) linear infinite,
-    sl-cockpit-throb calc(var(--sl-alert-dur) / 2) var(--sl-ease-in-out) infinite alternate;
 }
 
 .sl-cockpit.sl-knob-danger .sl-cockpit-bars > i {
@@ -12920,5 +13145,549 @@ button.sl-fm-thumb:hover .bi-zoom-in {
   .sl-fm-win .sl-fm-rows-head span:nth-child(5),
   .sl-fm-win .sl-fm-row span:nth-child(5) {
     display: none;
+  }
+}
+
+/* Series ground: a grid under the windows of a page, on a layer of its own that stands a cell over the top and the left, so it drifts one cell and comes back unseen */
+.sl-ground {
+  position: relative;
+  display: grid;
+  gap: var(--sl-space-6);
+  min-width: 0;
+}
+
+.sl-ground > * {
+  position: relative;
+  min-width: 0;
+}
+
+.sl-ground > .sl-ground-lines {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.sl-ground-lines::before {
+  content: "";
+  position: absolute;
+  inset: calc(var(--sl-ground-width) * -1) 0 0 calc(var(--sl-ground-width) * -1);
+  background-image: linear-gradient(var(--sl-bg-subtle) 1px, transparent 1px), linear-gradient(90deg, var(--sl-bg-subtle) 1px, transparent 1px);
+  background-size: var(--sl-ground-width) var(--sl-ground-width);
+}
+
+.sl-ground > .sl-cockpit {
+  margin: 0;
+}
+
+/* Series rows: one grid of three columns, so the edges of the windows meet from row to row; a split is one large window and a side of windows sharing its height */
+.sl-pane-split,
+.sl-pane-trio {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--sl-space-6);
+}
+
+.sl-pane-split > :first-child {
+  grid-column: span 2;
+}
+
+.sl-pane-side {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sl-space-6);
+}
+
+.sl-pane-side > * {
+  flex: 1 1 0;
+}
+
+/* Series window: not the dialog of fragments/window.html; a head of mono capitals with its lamps or icon, its meta and live chip at the right end, and a body stacking its parts */
+.sl-pane {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  border: 1px solid var(--sl-border-strong);
+  border-radius: var(--sl-radius-3);
+  background: linear-gradient(var(--sl-surface), var(--sl-bg));
+}
+
+.sl-pane-cap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--sl-space-4);
+  box-sizing: border-box;
+  min-height: calc(var(--sl-size-chip) + var(--sl-space-4) * 2 + 1px);
+  padding: var(--sl-space-4) var(--sl-space-6);
+  overflow: hidden;
+  border-bottom: 1px solid var(--sl-border);
+}
+
+.sl-pane-cap > .bi {
+  color: var(--sl-primary);
+}
+
+.sl-pane-title,
+.sl-pane-meta,
+.sl-metric-name,
+.sl-ext-cap {
+  font-family: var(--sl-face-mono);
+  font-size: var(--sl-font-micro);
+  font-weight: var(--sl-weight-normal);
+  line-height: var(--sl-line-normal);
+  letter-spacing: var(--sl-track-wide);
+  text-transform: uppercase;
+  color: var(--sl-text-muted);
+}
+
+.sl-pane-cap > .sl-pane-meta {
+  margin-left: auto;
+  color: var(--sl-primary);
+}
+
+.sl-pane-cap > .sl-live-chip {
+  position: relative;
+  margin-left: auto;
+}
+
+.sl-pane-cap > .sl-pane-meta + .sl-live-chip {
+  margin-left: 0;
+}
+
+.sl-pane-lamps {
+  display: inline-flex;
+  gap: var(--sl-space-2);
+}
+
+.sl-pane-lamps > i {
+  width: var(--sl-space-3);
+  height: var(--sl-space-3);
+  border-radius: var(--sl-radius-circle);
+  background: var(--sl-danger);
+}
+
+.sl-pane-lamps > i:nth-child(2) {
+  background: var(--sl-warning);
+}
+
+.sl-pane-lamps > i:nth-child(3) {
+  background: var(--sl-success);
+}
+
+.sl-pane-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  padding: var(--sl-space-6);
+}
+
+/* A large window gives what its row has left to its picture, the last part of its body */
+.sl-pane-fill > .sl-pane-body > :last-child {
+  flex: 1;
+}
+
+.sl-pane-body.sl-pane-two {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 var(--sl-space-8);
+}
+
+.sl-pane-two > * {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+:is(.sl-kv-list, .sl-meter, .sl-ext) + :is(.sl-kv-list, .sl-meter, .sl-ext) {
+  margin-top: var(--sl-space-5);
+}
+
+/* Series tile: the name with the dot of its series, the figure, a line under it and the icon of its figure at its right; not the tile of the home, whose motion is --sl-tile-dur */
+.sl-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(var(--sl-metric-min-width), 1fr));
+  gap: var(--sl-space-5);
+  margin-bottom: var(--sl-space-6);
+}
+
+.sl-metric {
+  position: relative;
+  display: grid;
+  gap: var(--sl-space-2);
+  padding: var(--sl-space-5);
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-2);
+  background: var(--sl-bg);
+}
+
+.sl-metric-name {
+  display: flex;
+  align-items: center;
+  gap: var(--sl-space-3);
+}
+
+.sl-metric-dot {
+  width: var(--sl-space-3);
+  height: var(--sl-space-3);
+  border-radius: var(--sl-radius-circle);
+  background: currentColor;
+}
+
+.sl-metric small {
+  font-family: var(--sl-face-mono);
+  font-size: var(--sl-font-micro);
+  font-weight: var(--sl-weight-normal);
+  color: var(--sl-text-muted);
+}
+
+.sl-metric-value {
+  font-size: var(--sl-font-h1);
+  line-height: var(--sl-line-tight);
+  font-variant-numeric: tabular-nums;
+  color: var(--sl-text-strong);
+}
+
+.sl-metric-good > .sl-metric-value {
+  color: var(--sl-success-strong);
+}
+
+.sl-metric:has(> .sl-metric-icon) {
+  grid-template-columns: minmax(0, 1fr) auto;
+  column-gap: var(--sl-space-5);
+}
+
+.sl-metric:has(> .sl-metric-icon) > :not(.sl-metric-icon) {
+  grid-column: 1;
+}
+
+.sl-metric-icon {
+  grid-column: 2;
+  grid-row: 1 / span 3;
+  align-self: center;
+  font-size: var(--sl-size-icon-xl);
+  line-height: 1;
+  color: var(--sl-primary);
+}
+
+.sl-metric-up :is(.sl-metric-dot, .sl-metric-icon) {
+  color: var(--sl-chart-up);
+}
+
+.sl-metric-down :is(.sl-metric-dot, .sl-metric-icon) {
+  color: var(--sl-chart-down);
+}
+
+.sl-metric-cpu :is(.sl-metric-dot, .sl-metric-icon) {
+  color: var(--sl-chart-cpu);
+}
+
+.sl-metric-ram :is(.sl-metric-dot, .sl-metric-icon) {
+  color: var(--sl-chart-ram);
+}
+
+/* Series list name and value: a dashed rule between the rows, and the rows of a window share out what its row has left, so no window keeps an empty foot */
+.sl-kv-list {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.sl-kv {
+  position: relative;
+  display: grid;
+  flex: 1;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+  align-items: center;
+  gap: var(--sl-space-5);
+  padding: var(--sl-space-3) 0;
+  border-bottom: 1px dashed var(--sl-border);
+  font-size: var(--sl-font-small);
+}
+
+.sl-kv:last-child {
+  border-bottom: 0;
+}
+
+.sl-kv > dd {
+  min-width: 0;
+  text-align: right;
+  font-weight: var(--sl-weight-semibold);
+  font-variant-numeric: tabular-nums;
+  color: var(--sl-text);
+}
+
+.sl-kv-soft > dt {
+  display: inline-flex;
+  align-items: center;
+}
+
+.sl-kv-soft > dt > .bi {
+  margin-right: var(--sl-space-3);
+  color: var(--sl-primary);
+}
+
+.sl-kv-soft > dd {
+  font-family: var(--sl-face-mono);
+  color: var(--sl-primary);
+}
+
+.sl-kv > dt,
+.sl-kv-flag,
+.sl-kv-mute {
+  font-weight: var(--sl-weight-normal);
+  color: var(--sl-text-muted);
+}
+
+.sl-kv-flag::before {
+  content: "";
+  width: var(--sl-space-3);
+  height: var(--sl-space-3);
+  border-radius: var(--sl-radius-circle);
+  background: var(--sl-border-strong);
+}
+
+.sl-kv-flag.sl-kv-on,
+.sl-kv-good,
+.sl-ext-good {
+  color: var(--sl-success-strong);
+}
+
+.sl-kv-flag.sl-kv-on::before {
+  background: var(--sl-success);
+  box-shadow: 0 0 var(--sl-space-3) var(--sl-success);
+}
+
+/* A value cut short: the info mark before it opens the whole value, which the template escapes once for both */
+.sl-long {
+  display: flex;
+  align-items: center;
+  gap: var(--sl-space-2);
+  min-width: 0;
+}
+
+.sl-kv .sl-long {
+  justify-content: flex-end;
+}
+
+.sl-long > .sl-tip {
+  flex: none;
+  margin: 0;
+  color: var(--sl-primary);
+}
+
+.sl-long > .sl-tip > .sl-float-panel {
+  font-family: var(--sl-face-mono);
+  font-weight: var(--sl-weight-normal);
+  text-align: left;
+}
+
+.sl-long-text {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--sl-face-mono);
+  font-weight: var(--sl-weight-normal);
+}
+
+/* Series signal: its lamp and icon in the tone of its level, the name and the fact; the passed ones fold into one line */
+.sl-signal {
+  position: relative;
+  display: grid;
+  grid-template-columns: var(--sl-space-4) var(--sl-size-icon-sm) minmax(min-content, 1fr) minmax(0, auto);
+  align-items: center;
+  gap: var(--sl-space-4);
+  padding: var(--sl-space-4) var(--sl-space-3);
+  border-radius: var(--sl-radius-2);
+  font-size: var(--sl-font-small);
+}
+
+.sl-signal:hover {
+  background: var(--sl-tint);
+}
+
+.sl-signal.sl-knob-warn,
+.sl-signal.sl-knob-danger {
+  background: var(--sl-bg-subtle);
+}
+
+.sl-signal-lamp {
+  width: var(--sl-space-4);
+  height: var(--sl-space-4);
+  border-radius: var(--sl-radius-circle);
+  background: var(--sl-knob-tone);
+  box-shadow: 0 0 var(--sl-space-3) var(--sl-knob-tone);
+}
+
+.sl-signal > .bi {
+  color: var(--sl-knob-tone);
+}
+
+.sl-signal > span:not(.sl-float-panel) {
+  white-space: nowrap;
+}
+
+.sl-signal > b {
+  font-weight: var(--sl-weight-semibold);
+  text-align: end;
+  color: var(--sl-text);
+}
+
+.sl-signal-calm > summary {
+  display: flex;
+  align-items: center;
+  gap: var(--sl-space-3);
+  padding: var(--sl-space-4) var(--sl-space-3);
+  font-size: var(--sl-font-small);
+  color: var(--sl-success-strong);
+  cursor: pointer;
+}
+
+/* Series meter: used of a real limit, in the tone of its level */
+.sl-meter + .sl-meter {
+  margin-top: var(--sl-space-6);
+}
+
+.sl-meter-head {
+  display: flex;
+  justify-content: space-between;
+  font-size: var(--sl-font-small);
+  color: var(--sl-text-muted);
+}
+
+.sl-meter-head > b {
+  font-family: var(--sl-face-mono);
+  color: var(--sl-text);
+}
+
+.sl-meter-bar {
+  display: block;
+  height: var(--sl-space-3);
+  margin: var(--sl-space-3) 0 var(--sl-space-2);
+  border-radius: var(--sl-radius-pill);
+  background: var(--sl-bg-subtle);
+}
+
+.sl-meter-bar > i {
+  display: block;
+  width: var(--sl-d-part);
+  height: 100%;
+  border-radius: inherit;
+  background: var(--sl-knob-tone);
+  box-shadow: 0 0 var(--sl-space-4) var(--sl-knob-tone);
+  transform-origin: left;
+}
+
+.sl-meter-note {
+  font-size: var(--sl-font-micro);
+  color: var(--sl-text-muted);
+}
+
+/* Series extensions by weight: a wanted one framed green with a check or red with a cross, and under its group what a missing one costs */
+.sl-ext {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--sl-space-6) var(--sl-space-8);
+}
+
+.sl-ext-cap {
+  margin-bottom: var(--sl-space-3);
+}
+
+.sl-ext-short {
+  color: var(--sl-danger-strong);
+}
+
+.sl-ext-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sl-space-2);
+}
+
+.sl-ext-chip {
+  padding: var(--sl-space-1) var(--sl-space-3);
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-1);
+  background: var(--sl-bg);
+  font-family: var(--sl-face-mono);
+  font-size: var(--sl-font-micro);
+  color: var(--sl-text);
+}
+
+.sl-ext-chip.sl-ext-off {
+  border-style: dashed;
+  color: var(--sl-text-muted);
+}
+
+.sl-kv-flag,
+.sl-ext-chip.sl-ext-ok,
+.sl-ext-chip.sl-ext-lost {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sl-space-2);
+}
+
+.sl-ext-chip.sl-ext-ok {
+  border-color: var(--sl-success);
+}
+
+.sl-ext-ok > .bi {
+  color: var(--sl-success);
+}
+
+.sl-ext-chip.sl-ext-lost {
+  border-color: var(--sl-danger);
+  color: var(--sl-danger-strong);
+}
+
+.sl-ext-lost > .bi,
+.sl-ext-note > .bi {
+  color: var(--sl-danger);
+}
+
+.sl-ext-note {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sl-space-2);
+  margin-top: var(--sl-space-3);
+  font-size: var(--sl-font-small);
+  color: var(--sl-text);
+}
+
+/* Narrower than a large window and its side: every window takes the row */
+@media (max-width: 1200px) {
+  .sl-pane-split,
+  .sl-pane-trio {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .sl-pane-split > :first-child {
+    grid-column: auto;
+  }
+}
+
+/* A narrow tile keeps its width for the figure, a narrow window holds one column */
+@media (max-width: 768px) {
+  .sl-pane-body.sl-pane-two,
+  .sl-ext {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .sl-pane-body.sl-pane-two {
+    row-gap: var(--sl-space-5);
+  }
+
+  .sl-metric-icon {
+    display: none;
+  }
+
+  .sl-metric:has(> .sl-metric-icon) {
+    grid-template-columns: minmax(0, 1fr);
   }
 }

@@ -1,0 +1,4 @@
+<section class="sl-pane{% if is_fill %} sl-pane-fill{% endif %}"{% if live_html %} data-sl-live-box{% endif %}>
+  <div class="sl-pane-cap">{% if icon %}<i class="bi bi-{{ icon }}" aria-hidden="true"></i>{% else %}<span class="sl-pane-lamps" aria-hidden="true"><i></i><i></i><i></i></span>{% endif %}<h2 class="sl-pane-title">{{ title }}</h2>{% if meta %}<span class="sl-pane-meta">{{ meta }}</span>{% endif %}{{{ live_html }}}</div>
+  {% if right_html %}<div class="sl-pane-body sl-pane-two"><div>{{{ content_html }}}</div><div>{{{ right_html }}}</div></div>{% else %}<div class="sl-pane-body">{{{ content_html }}}</div>{% endif %}
+</section>

@@ -1,5 +1,22 @@
 # Versions
 
+## 2026-10-30
+
+### The panel moves by one set of rules and behaviours, and a still panel stops all of it
+
+The effects settled on the demo series "Статистика" became the motion of the admin theme. The reference is
+`docs/TEMPLATES.md`, "Panel Shell", "Motion"; the help of the panel is `admin/info/panel/ru.md`.
+
+- **The light.** A light runs round the frame of the cockpit, a home tile and a card of "Мониторинг" under the hand; the
+  scan and the comet of the cockpit moved into the block "Motion over the page", and the circles of the cockpit glow at
+  the share of the gauges of the presentation.
+- **The figures.** The rings, the strip and the queues run to a new value and light once; the arcs of the rings fill
+  after them.
+- **The home.** The tiles rise in their turn when the grid enters the view and lean to the hand under a glare; a press on
+  a tile, a row of the menu or of its counters and a control of the cockpit spreads from the pointer.
+- **The charts.** A chart of "Мониторинг" is drawn left to right once when it enters the view, and a poll does not
+  draw it again.
+
 ## 2026-10-29
 
 ### The site builder edits the pages, the menus and the parts of the theme on the page itself, and publishes them with their blocks in one step
@@ -32,6 +49,13 @@ Boundary", "Address Boundary" and "Block Boundary", `docs/TEMPLATES.md`, "Layout
   back; the guest view, a signed link of the draft, ready pages, own sections, the copy of a page and a page from a
   text; the export and the import of the layout as JSON. One draft serves every administrator, and a write that saw
   another revision is refused.
+- **Beside its demo.** The screen was set beside the demo series "Конструктор сайта" and built of the canon of the
+  panel where the two differed. The page draws at the width of its device, 1366, 820 or 390 px, scaled to the stage;
+  the library sets its cards under the heading of their group by the key `order` of a type, each card a schema of its
+  type; a zone of blocks carries its icon from `places.json`, the blocks their order in the zone, a menu item the name
+  of its page or module; Alt+↑/↓ and Delete move and remove the picked section; the choice of a page lists the modules
+  without a page and ends in "+ Новая страница". A button of lite is closed on both sides: no default text without its
+  address, and the check names a filled text whose address is empty.
 - **The publication.** The file, the addresses and the rows of `_blocks` go in one transaction inside the shared writer
   of `config/`, its proof a witness row; a row changed meanwhile in "Блоки и баннеры" stops it.
 - **On the page.** "Конструктор сайта" of the floating menu, one entry in the panel and on the site, opens the builder

@@ -206,7 +206,8 @@ return [
     # The eleven `col-*` entries are the column widths of a fixed admin list table: the track list of `table-layout: fixed`
     # CSS spells that track list as one width per cell instead of one `grid-template-columns`, and each is a figure an author retunes
     'components' => [
-        'adm', 'alert', 'alert-act', 'arrow', 'aside', 'ava', 'avatar', 'badge', 'band', 'bar', 'beam', 'brand', 'btn', 'btn-mini', 'builder', 'builder-pick', 'builder-thumb', 'bullet',
+        'adm', 'alert', 'alert-act', 'arrow', 'aside', 'aurora', 'ava', 'avatar', 'badge', 'band', 'bar', 'beam', 'brand', 'btn', 'btn-mini',
+        'builder', 'builder-pick', 'builder-thumb', 'bullet',
         'cab-act', 'cab-msg', 'cab-ring',
         'calc', 'capsule', 'card', 'changelog', 'changelog-body', 'changelog-date',
         'changelog-files', 'changelog-stat', 'check', 'check-list', 'check-tick', 'chip', 'chip-tint', 'code', 'col-actions', 'col-amount', 'col-author',
@@ -217,16 +218,16 @@ return [
         'fm-bar', 'fm-body', 'fm-busy', 'fm-drop', 'fm-edit', 'fm-empty', 'fm-field', 'fm-filter', 'fm-kind', 'fm-mode',
         'fmenu', 'fm-panel', 'fm-pick', 'fm-preview', 'fm-props', 'fm-quota', 'fm-row', 'fm-search', 'fm-sep', 'fm-split', 'fm-thumb',
         'fm-tile', 'footer', 'form', 'form-label', 'form-side', 'forum', 'fp', 'fp-ava', 'fresh', 'fresh-day', 'fresh-days', 'fresh-month',
-        'fresh-now', 'fresh-week', 'gauge', 'graph', 'group', 'guard', 'header', 'hub-head', 'hub-row',
+        'fresh-now', 'fresh-week', 'gauge', 'graph', 'ground', 'group', 'guard', 'header', 'hub-head', 'hub-row',
         'ico', 'idea', 'info-row', 'item', 'knob', 'ladder', 'ladder-bar', 'lang', 'led', 'letter', 'live-dot', 'loading',
         'loading-dot', 'login', 'login-drop', 'login-footer', 'login-header', 'logo', 'madein', 'marquee', 'menu', 'meta',
-        'meter', 'modal', 'modal-act', 'modal-btn', 'mode', 'module-head', 'monitor-table', 'move', 'msg', 'msg-brand', 'nav', 'node-find', 'opt', 'opt-lamp', 'opt-rail',
-        'pager', 'pager-dot', 'pager-item', 'panel', 'panel-feed', 'phx', 'phx-badge', 'phx-ground', 'phx-pop', 'phx-shine',
+        'meter', 'metric', 'modal', 'modal-act', 'modal-btn', 'mode', 'module-head', 'monitor-table', 'move', 'msg', 'msg-brand', 'nav', 'node-find', 'opt', 'opt-lamp', 'opt-rail',
+        'pager', 'pager-dot', 'pager-item', 'pane', 'panel', 'panel-feed', 'phx', 'phx-badge', 'phx-ground', 'phx-pop', 'phx-shine',
         'placeholder', 'plot', 'pointer', 'pmf-ava', 'pmf-blank', 'pmf-chip', 'pmf-day', 'pmf-filter',
         'pmf-head', 'pmf-mate', 'pmf-meta', 'pmf-pane', 'pmf-slot', 'pmf-text', 'pmf-who',
         'popover', 'pres', 'pres-panel', 'pres-ground', 'pres-inset', 'pres-core', 'pres-frame', 'pres-muted', 'pres-link', 'pres-good', 'pres-warn',
         'preview', 'profile-ava', 'profile-dot', 'progress', 'proof', 'pulse', 'qr', 'quote', 'radio',
-        'rail', 'rank', 'ratings', 'ring', 'row', 'scroll', 'search', 'search-filter', 'search-order', 'search-sort', 'seg', 'seg-knob', 'select', 'set', 'sep',
+        'rail', 'rank', 'ratings', 'ring', 'ripple', 'row', 'scroll', 'search', 'search-filter', 'search-order', 'search-sort', 'seg', 'seg-knob', 'select', 'set', 'sep',
         'session', 'setup', 'setup-seal', 'shot', 'shot-side', 'site', 'site-img', 'skel', 'stats', 'statx',
         'skel-row', 'skel-tile', 'slide', 'slide-cont', 'solid', 'solid-bad', 'solid-good', 'solid-link', 'solid-warn',
         'sort', 'spark', 'spin', 'sublist', 'sublist-two', 'switch', 'switch-knob',
@@ -278,7 +279,8 @@ return [
         '--sl-d-at' => 'settings rail mark index, templates/lite/partials/account-settings.html',
         '--sl-d-of' => 'settings rail mark count less one, templates/lite/partials/account-settings.html',
         '--sl-d-part' => 'share of a measured figure as a percentage, templates/lite/fragments/presentation-stat.html, partials/presentation-stats.html'
-            .' and partials/presentation-runtime.html, and the shares of the watch window, templates/*/partials/session-stats.html',
+            .' and partials/presentation-runtime.html, the shares of the watch window, templates/*/partials/session-stats.html,'
+            .' and the fill of a meter, templates/admin/fragments/meter.html',
         '--sl-d-gate-y' => 'height the request guard gate patrols at inside its scene, plugins/presentation/presentation.js',
         '--sl-d-pointer-x' => 'pointer viewport horizontal position, plugins/system/slaed.js and builder.js',
         '--sl-d-pointer-y' => 'pointer viewport vertical position, plugins/system/slaed.js and builder.js',
@@ -289,12 +291,16 @@ return [
         '--sl-d-spy' => 'settings rail progress width, and the presentation rail progress in pixels, plugins/system/slaed.js',
         '--sl-d-swatch' => 'colour one swatch of a palette shows, and the value the own-colour wheel holds, templates/admin/partials/group-form.html and assets/js/admin-ui.js',
         '--sl-d-toast' => 'time a notice stays, which the ring of the panel notice counts down, plugins/system/slaed.js',
-        '--sl-d-turn' =>'place of a node in a staggered row: a solid head its beam crosses, templates/admin/assets/js/admin-ui.js,'
+        '--sl-d-turn' =>'place of a node in a staggered row: a solid head or a window head its beam crosses and a part of a ground rising, templates/admin/assets/js/admin-ui.js,'
             .' a rating star that bursts, plugins/system/slaed.js, and a check row of the installer, templates/admin/pages/setup.html',
         '--sl-d-user' => 'user group colour, templates/lite/partials/block-user-info.html',
         '--sl-d-usrlevel' => 'user group progress, templates/lite/partials/block-user-info.html',
-        '--sl-d-x' => 'horizontal position of a travelling card or packet inside its scene, plugins/presentation/presentation.js',
-        '--sl-d-y' => 'vertical position of a travelling card inside its scene, plugins/presentation/presentation.js',
+        '--sl-d-tilt-x' => 'turn of a home tile or a tile of figures round its upright axis towards the pointer, templates/admin/assets/js/admin-ui.js',
+        '--sl-d-tilt-y' => 'turn of a home tile or a tile of figures round its level axis towards the pointer, templates/admin/assets/js/admin-ui.js',
+        '--sl-d-x' => 'horizontal position of a travelling card or packet inside its scene, plugins/presentation/presentation.js, and of the pointer'
+            .' inside a home tile, a tile of figures or a pressed control of the panel, templates/admin/assets/js/admin-ui.js',
+        '--sl-d-y' => 'vertical position of a travelling card inside its scene, plugins/presentation/presentation.js, and of the pointer'
+            .' inside a home tile, a tile of figures or a pressed control of the panel, templates/admin/assets/js/admin-ui.js',
     ],
 
     # Names read by JavaScript through getComputedStyle. Renaming one edits the script in the same commit
@@ -393,6 +399,10 @@ return [
     # Rule bodies repeated under selectors that do not belong together, each with the reason it is not merged
     # The key is the group's selectors sorted and joined by ', ', which is what checkDupBlocks() compares
     'duplicates' => [
+        # A part of the series against a part of another screen that only meets it on the same steps: a join would tie two screens together
+        '.sl-long, .sl-set-name',
+        '.sl-fm-tile-cap small, .sl-meter-note',
+        '.sl-fm-win .sl-fm-main, .sl-pane-two > *',
         # A utility that puts a gap after any inline element, beside the input of one form field
         # Merging would move the field's definition into the utility block, where nobody editing the field would look
         '.sl-div-field label input, .sl-inline-gap',

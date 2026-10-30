@@ -1214,7 +1214,7 @@ button.st-cal-day:hover {
 }
 
 /* The aurora frame of a window, the one of the cockpit of the theme: under the hand a stroke of light runs round the
-   border, blue into violet, along the path of the frame (sl-cockpit-aurora of theme.css) */
+   border, blue into violet, along the path of the frame (sl-aurora of theme.css) */
 .st-win::before {
   content: "";
   position: absolute;
@@ -1412,7 +1412,7 @@ button.st-cal-day:hover {
   }
 
   :root.st-fx:not([data-demo-motion="off"]) .st-win:hover::before {
-    animation: sl-cockpit-aurora calc(var(--sl-alert-dur) * 3) linear infinite;
+    animation: sl-aurora var(--sl-aurora-dur) linear infinite;
   }
 
   :root.st-fx:not([data-demo-motion="off"]) .st-lamps i {

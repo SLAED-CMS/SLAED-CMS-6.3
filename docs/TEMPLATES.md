@@ -702,6 +702,46 @@ queues, the session, the cockpit, the menu, the voices — is `docs/ARCHITECTURE
   `tools/ui-contract.php` with its components `dock`, `adm`, `stats`, `phx`; the rings of the cockpit stand on the
   component `gauge`.
 
+### Motion
+
+Each effect of the panel lives once: its moving rules in the block "Motion over the page" of `assets/css/theme.css`, its
+behaviour in `assets/js/admin-ui.js`, its tokens in the API block of `base.css` and in `tools/ui-contract.php`. The
+switch is "One motion switch" of `docs/ARCHITECTURE.md`; the option "Движение" writes `data-sl-still` through
+`setOptionView()`, and the help of the home, `admin/info/panel/ru.md`, names the motion. The demo series
+`public/demo/st-02-cockpit.html` and `public/demo/adm-07-effects.html` stay on the stand.
+
+| Effect | Where | How |
+|---|---|---|
+| A light round the frame under the hand, blue into violet | `.sl-cockpit`, `.sl-mcard`, `.sl-monitor-card` | `::before`, a stroke of `--sl-aurora-width` along `offset-path`; `sl-aurora` over `--sl-aurora-dur` carries its opacity, so a still panel shows none |
+| The scan, a line of light going down the panel now and then | `.sl-cockpit` | `::after`, 1 px under the glow of `--sl-tint-strong` and `--sl-tint`, `sl-cockpit-scan`, at most `--sl-fade-disabled` |
+| The comet round the lamp, in every state and the one beam there | `.sl-cockpit-plate` | `::before`, `sl-cockpit-spin`; the rules of the cockpit set its pace by the state, a multiple of `--sl-alert-dur` |
+| The glow of a circle, at the share of the gauges of the presentation | `.sl-cockpit-ring .sl-knob-val`, `.sl-cockpit-plate` | `--sl-knob-mix`, not the shared `--sl-ring-mix`; it does not move, so it stands with the rules of the cockpit, outside the block |
+| An arc fills to its share | `.sl-cockpit-ring .sl-knob-val` | `stroke-dasharray` over `--sl-knob-dur` on `--sl-alert-ease`; `partials/cockpit.html` starts it at `0 100`, so the first poll fills it from zero |
+| A figure runs from its value to the new one and lights | `[data-sl-gauge-val]`, `[data-sl-strip-val]`, `[data-sl-queue-n]` | `setFigureRun()` in 900 ms, called by `setCockpitView()` and `setQueueView()`; `slFigure` keeps the goal, which `getFigureValue()` answers; `setFigureFresh()` is the one flare, `sl-figure-flash` over `--sl-knob-dur`; a still panel or a hidden tab writes the value at once |
+| The tiles rise in their turn when the grid enters the view | `.sl-menu-grid` | `setArriveMarks()` at start and on `htmx:load` sets `data-sl-arrive` and `--sl-d-turn`; `sl-is-in` starts `sl-tile-rise` over `--sl-tile-dur`, and `setArriveDone()` drops the marks once every shown tile rose |
+| A tile leans to the hand under a glare | `.sl-menu-grid > .sl-mcard` | one `pointermove`, not of a touch, written once a frame by `setTileTilt()`: `--sl-d-tilt-x`, `--sl-d-tilt-y`, `--sl-d-x`, `--sl-d-y`; a tile whose dial is hovered or open takes `transform: none` |
+| A press spreads from the pointer | `.sl-mcard-link` of the home grid, `.sl-menu-list-item` of `.sl-admin-sidebar`, `.sl-block-sidebar-count-row`, `.sl-cockpit button` | one `pointerdown` appends `span[data-sl-ripple]` with `--sl-d-x`, `--sl-d-y`, removed when `sl-ripple` over `--sl-ripple-dur` ends; not from the dial or the drag handle |
+| A chart is drawn left to right once | `.sl-chart-svg` | `data-sl-arrive`, then `sl-is-in` starts `sl-chart-draw` over `--sl-graph-dur`; a waiting chart is clipped to nothing, which the observer reads as unseen, so its parent is watched; a chart whose place (the nearest `id`) was drawn is a tick of the poll and gets no mark |
+
+The laws of a move:
+
+- **Duration.** A duration in the CSS of these effects is a component token `-dur` or a multiple of `--sl-alert-dur`,
+  each carrying `--sl-time-scale`. The run of a figure, 900 ms, is the script's; the scripts ask `isMotionStill()`, so a
+  still panel gets no arrival, tilt, ripple or run.
+- **The block.** A new effect goes into "Motion over the page" and carries no reduced-motion block of its own. The block
+  does not hold every animation of the theme: the knob of the segmented switch and the installer keep blocks of their
+  own, and the other animations stand outside any block and stop by `--sl-time-scale` alone. That holds only where the
+  end of a move hides it, so an effect that would stand visible, as the aurora under the hand, starts at opacity 0 and
+  takes its light from its keyframes.
+- **Colour and tokens.** Colours are tokens only; a new token is declared in the API block of `base.css` and in
+  `tools/ui-contract.php`, the component under `components`, the prop under `props`.
+- **No transform over a float.** `slaed.js` places a panel of `.sl-float` as `position: fixed` and `refitFloating()`
+  follows the scroll; a `transform` on an ancestor becomes the frame of `fixed`, and the panel opens off its place. So
+  the arrival moves by the offset `top`, a part animates its pseudo-element, and the tilt holds only a tile, whose
+  dial is a fan inside it, no float.
+- **A tick never replays.** A chart is drawn once; a later poll updates it without drawing it again.
+- **The ripple stays on the home and the menu.** The forms and the lists of the panel take none.
+
 ## Node List Contract
 
 The list of a Node type is one part that swaps itself: `partials/node/list.html` of `lite` is `#sl-node-list`, the
@@ -923,7 +963,9 @@ Boundary"). Everything but the fragments is data; a label is a constant of `admi
 | `presets.json` | the ready pages |
 
 A new theme copies all four. The demo series "Конструктор сайта" — `public/demo/sb-01-builder.html`, `sb-site.html`
-and their `assets/sb-*` — stays the reference of the look and the behaviour of the screen and of the canvas.
+and their `assets/sb-*` — stays the reference of the layout and the behaviour of the screen and of the canvas; its
+sizes, spacing, fonts and styles are those of the canon of the panel, and where the two differ the demo is brought to
+the canon.
 
 ### Roots and providers
 
@@ -948,15 +990,22 @@ that holds the output of a module, belongs to the core and is never a descriptio
 |---|---|
 | `title`, `note` | the name and the line of its card in the library |
 | `icon` | the Bootstrap icon of the card and of the head |
-| `group` | the group of the library: `base`, `media`, `content`, `trust`, `contact` or `master`, shown in this order |
+| `group` | the group of the library: `base`, `media`, `content`, `trust`, `contact` or `master`, shown in this order, each under its heading; an unknown group lands in `master` |
+| `order` | the place of the card in its group, ascending; a type without it stands after the ordered ones, the module slot first of `content` |
 | `frame` | the head of a presentation section with its number, `fragments/presentation-head.html` |
 | `fields` | the fields of the section |
 | `items` | an optional list: `label`, `max`, `name` (the field that names an item), `fields`, `make` |
 | `make` | the defaults of a new section or item; a string with a leading `_` is a constant resolved when the editor creates it, and the site never reads `make` |
 
 A field is `key` (`Layout::FIELD`, no underscore, so a derived key never meets a field), `label` and `type`, and
-optionally `show`, `tab` (`look` for the tab "Вид"), `options` (key → label of a `select`), `min` and `max`, and `when`
-(`[key, value]`: the field shows and is checked only while another field holds that value).
+optionally `show`, `tab` (`look` for the tab "Вид"), `options` (key → label of a `select`), `min` and `max`, `when`
+(`[key, value]`: the field shows and is checked only while another field holds that value), and `for` on a field `url`:
+the key of the text of the button it leads from.
+
+A button of a fragment prints only with both its text and its address, so the pair is closed on both sides: a `make`
+carries no button text without its address, and the check before a publication names a filled text whose address is
+empty ("Кнопка «…» никуда не ведёт"). Lite ties `href` to `btn` in `hero`, `cta`, `media` and the items of `prices`, and
+`href2` to `btn2` in `hero`; `LayoutTest` holds that no default and no ready page breaks a pair.
 
 | `type` | Edited as | The fragment gets |
 |---|---|---|
@@ -999,7 +1048,8 @@ by its fields, as the values of a section.
   `config/global.php` the part edits as "Конфигурации" does. Lite declares `brand` (its `conf` is `sitename` and
   `site_logo`, its field `tagline`), `pane`, `social`, `line`, `contacts`, `marks` and `tabs`.
 - `menus`: each `title`, `where`, `depth` and `icons`; lite declares `main` two levels deep and `foot` one.
-- `zones`: the zones of blocks `l`, `r`, `c`, `d` with their `title`.
+- `zones`: the zones of blocks `l`, `r`, `c`, `d` with their `title` and `icon`, the Bootstrap icon of the zone in the
+  tree of the screen (`layout-sidebar` without it); the tree sets them under one head "Блоки".
 
 ### Ready pages
 
@@ -1022,6 +1072,11 @@ Under `is_build` the fragments mark what the canvas of the builder picks and typ
 theme without them keeps the rings and the inspector and loses only the typing in place. `LayoutTest` holds that each
 `data-sl-text` names a field of its type.
 
+The screen draws the page at the width of its device — 1366, 820 or 390 px — and scales it down to its stage; the
+message `{sl: 'scale'}` makes `builder.js` write the inverse, at most 2, as `--sl-d-zoom` on the root of the page, which
+the CSS of the names, the toolbar, the button "Добавить секцию" and the drag label takes as `zoom`, so they keep their
+size (lite: `presentation.css`).
+
 ### The screen of the builder
 
 The screen is written once on the theme `admin` (`partials/layout-*.html`, `fragments/layout-field.html`,
@@ -1040,7 +1095,9 @@ schemas of the cards, the swatches, the rings and the toolbar on the page.
   a new element at the end of its list; the foot of a window the dangerous action at the left, the way back and the main
   action at the right.
 - **One capsule for every group of icons.** The top bar, the foot of the inspector and the toolbar on the page are
-  `sl-editor-pill` with its groups, shown at once, a removing act in the tone of danger.
+  `sl-editor-pill` with its groups, shown at once, a removing act in the tone of danger. Its icon action is round,
+  muted and `--sl-size-chip` wide (`.sl-editor-pill .sl-modal-act`), while the same action in the head of a window and
+  in the floating menu stays the square of `docs/WINDOW.md`: the capsule is a part of its own.
 - **A switch says its answers.** "Да" and "Нет" answer a question asked in the positive; any other answer is a
   segmented control with its words.
 
