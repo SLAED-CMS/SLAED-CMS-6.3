@@ -19,7 +19,7 @@ function modules(): void {
         'label' => _SEARCH,
         'is_part' => true,
         'hidden' => [['nameattr' => 'name', 'valueattr' => 'modules']],
-        'fields' => [['field_id' => 'sl-mod-type', 'label' => _TYPE, 'name_attr' => 'type', 'options' => $opts]],
+        'fields' => [['field_id' => 'sl-mod-type', 'label' => _TYPE, 'name_attr' => 'type', 'options' => $opts, 'is_now' => true]],
     ]);
     $head = getTplAdminTabs(['ops' => ['name=modules'.$typelink, 'name=modules&op=info'], 'tabs' => [_HOME, _MANUAL], 'subtitle_html' => $search, 'part' => [0]]);
     $cont = !empty($infos) ? $tpl->getHtmlFrag('alert', ['text' => $infos]) : '';
@@ -194,22 +194,13 @@ function edit(): void {
     $top = $conf['modules'][$mod]['top'];
     $mtype = getVar('req', 'type', 'num', 2);
     $mtype = in_array($mtype, [2, 1, 0], true) ? $mtype : 2;
-    $search = $tpl->getHtmlPart('div', [
-        'is_searchbox' => true,
-        'content_html' => $tpl->getHtmlPart('form', [
-            'action_url' => $afile.'.php',
-            'hidden' => [
-                ['nameattr' => 'name', 'valueattr' => 'modules'],
-            ],
-            'content_html' => _TYPE.': '.$tpl->getHtmlFrag('select', [
-                'name_attr' => 'type',
-                'options_html' =>
-                    $tpl->getHtmlFrag('select-option', ['value_attr' => '2', 'label_text' => _ALL, 'is_selected' => $mtype === 2]).
-                    $tpl->getHtmlFrag('select-option', ['value_attr' => '1', 'label_text' => _USERS, 'is_selected' => $mtype === 1]).
-                    $tpl->getHtmlFrag('select-option', ['value_attr' => '0', 'label_text' => _ADMINS, 'is_selected' => $mtype === 0]),
-                'select_attr' => 'OnChange="submit()"',
-            ]),
-        ]),
+    $opts = [];
+    foreach ([2 => _ALL, 1 => _USERS, 0 => _ADMINS] as $key => $label) $opts[] = ['value_attr' => (string)$key, 'label_text' => $label, 'is_selected' => $mtype === $key];
+    $search = $tpl->getHtmlFrag('list-filter', [
+        'action_url' => $afile.'.php',
+        'label' => _SEARCH,
+        'hidden' => [['nameattr' => 'name', 'valueattr' => 'modules']],
+        'fields' => [['field_id' => 'sl-mod-type', 'label' => _TYPE, 'name_attr' => 'type', 'options' => $opts, 'is_now' => true]],
     ]);
     setHead();
     $cont = getTplAdminTabs(['ops' => ['name=modules'.($mtype !== 2 ? '&type='.$mtype : ''), 'name=modules&op=info'], 'tabs' => [_HOME, _MANUAL], 'subtitle_html' => $search]);
@@ -263,7 +254,7 @@ function edit(): void {
             'label_html' => _UGROUP,
             'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'group', 'selectid' => 'f-group', 'options_html' => $grpopts, 'is_config' => true]),
         ],
-        ['label_for' => 'f-side', 'label_html' => _BLOCKS_MOD, 'field_html' => $tpl->getHtmlFrag('select', [
+        ['label_for' => 'f-side', 'label_html' => _BLOCKS_SIDE, 'field_html' => $tpl->getHtmlFrag('select', [
             'name_attr' => 'side',
             'selectid' => 'f-side',
             'is_config' => true,
@@ -273,7 +264,7 @@ function edit(): void {
                 $tpl->getHtmlFrag('select-option', ['value_attr' => '2', 'label_text' => _BLOCKS_MOD2, 'is_selected' => (int)$side === 2]).
                 $tpl->getHtmlFrag('select-option', ['value_attr' => '3', 'label_text' => _BLOCKS_MOD3, 'is_selected' => (int)$side === 3]),
         ])],
-        ['label_for' => 'f-top', 'label_html' => _BLOCKS_MOD, 'field_html' => $tpl->getHtmlFrag('select', [
+        ['label_for' => 'f-top', 'label_html' => _BLOCKS_TOP, 'field_html' => $tpl->getHtmlFrag('select', [
             'name_attr' => 'top',
             'selectid' => 'f-top',
             'is_config' => true,

@@ -519,7 +519,7 @@ function config(): void {
     ];
     $rows[] = [
         'label_html' => _STARTDATE,
-        'field_html' => getTplAddDateTime(['name' => 'startdate', 'time' => (string)$conf['startdate'], 'with' => true, 'max' => 16, 'is_config' => true]),
+        'field_html' => getTplAddDateTime(['name' => 'startdate', 'label' => _STARTDATE, 'time' => (string)$conf['startdate'], 'with' => true, 'max' => 16, 'is_config' => true]),
     ];
     $rows[] = ['label_for' => 'f-adminmail', 'label_html' => _ADMINEMAIL, 'field_html' => $tpl->getHtmlFrag('input', [
         'itype' => 'email',

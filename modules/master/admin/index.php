@@ -201,13 +201,14 @@ function getMasterStats(): string {
     $days = array_column($res ? ($db->getSqlRows($res) ?: []) : [], 'day');
     $day = getVar('get', 'day', 'text', '');
     if (!in_array($day, $days, true)) $day = (string)($days[0] ?? '');
-    $opts = '';
-    foreach ($days as $one) $opts .= $tpl->getHtmlFrag('select-option', ['value_attr' => $one, 'label_text' => $one, 'is_selected' => $one === $day]);
-    $cont = $days ? $tpl->getHtmlPart('div', ['is_searchbox' => true, 'content_html' => $tpl->getHtmlPart('form', [
+    $opts = [];
+    foreach ($days as $one) $opts[] = ['value_attr' => $one, 'label_text' => $one, 'is_selected' => $one === $day];
+    $cont = $days ? $tpl->getHtmlFrag('list-filter', [
         'action_url' => $afile.'.php',
+        'label' => _DATE,
         'hidden' => [['nameattr' => 'name', 'valueattr' => 'master'], ['nameattr' => 'tab', 'valueattr' => '2']],
-        'content_html' => _DATE.': '.$tpl->getHtmlFrag('select', ['name_attr' => 'day', 'options_html' => $opts, 'select_attr' => 'OnChange="submit()"']),
-    ])]) : '';
+        'fields' => [['field_id' => 'sl-mst-day', 'label' => _DATE, 'name_attr' => 'day', 'options' => $opts, 'is_now' => true]],
+    ]) : '';
     $res = $db->getSqlQuery('SELECT chan, ver, php, db, sites, nosod, nozip, errs, fails FROM '.PREFIX_DB.'_master_stat WHERE day = :day ORDER BY sites DESC', ['day' => $day]);
     $rows = [];
     foreach (($res && $day !== '') ? ($db->getSqlRows($res) ?: []) : [] as $row) {

@@ -237,9 +237,9 @@ function getLayoutPageFields(array $lay, int $key): array {
         $out[] = ['key' => 'who', 'label' => '_LAYOUT_WHO', 'type' => 'choice', 'options' => ['0' => '_MVALL', '1' => '_MVUSERS']];
     }
     $out[] = ['key' => 'band', 'label' => '_LAYOUT_BAND', 'type' => 'bool', 'show' => 'switch'];
-    $out[] = ['key' => 'side', 'label' => '_LAYOUT_SIDE', 'type' => 'choice',
+    $out[] = ['key' => 'side', 'label' => '_BLOCKS_SIDE', 'type' => 'choice',
         'options' => ['0' => '_BLOCKS_MOD0', '1' => '_BLOCKS_MOD1', '2' => '_BLOCKS_MOD2', '3' => '_BLOCKS_MOD3']];
-    $out[] = ['key' => 'top', 'label' => '_LAYOUT_TOP', 'type' => 'choice',
+    $out[] = ['key' => 'top', 'label' => '_BLOCKS_TOP', 'type' => 'choice',
         'options' => ['0' => '_BLOCKS_MODC0', '1' => '_BLOCKS_MODC1', '2' => '_BLOCKS_MODC2', '3' => '_BLOCKS_MODC3']];
     return $out;
 }
@@ -627,7 +627,7 @@ function getLayoutRows(array $list, array $vals, string $base, string $tab = '',
             }
             $none = $tpl->getHtmlFrag('hidden', ['name_attr' => $name.'[]', 'value_attr' => '', 'input_attr' => '']);
             $row = ['label_id' => $fid, 'label_html' => $row['label_html'], 'is_full' => true, 'hint_html' => htmlspecialchars(_LAYOUT_TYPEHINT, ENT_QUOTES, 'UTF-8'),
-                'field_html' => $none.$tpl->getHtmlFrag('check-list', ['labelledby' => $fid, 'items' => $items])];
+                'hint_id' => $fid.'-hint', 'field_html' => $none.$tpl->getHtmlFrag('check-list', ['labelledby' => $fid, 'describedby' => $fid.'-hint', 'items' => $items])];
         } elseif ($type === 'blockref') {
             $now = is_scalar($val) ? (string)intval($val) : '0';
             $html = $tpl->getHtmlFrag('select-option', ['value_attr' => '', 'label_text' => _LAYOUT_PICKBLK, 'is_selected' => !isset($blks[$now])]);
@@ -640,13 +640,16 @@ function getLayoutRows(array $list, array $vals, string $base, string $tab = '',
                 }
                 if ($part !== '') $html .= $tpl->getHtmlFrag('select-optgroup', ['label_text' => $group, 'options_html' => $part]);
             }
-            $row['field_html'] = $tpl->getHtmlFrag('select', ['name_attr' => $name, 'selectid' => $fid, 'options_html' => $html]);
+            $row['field_html'] = $tpl->getHtmlFrag('select', ['name_attr' => $name, 'selectid' => $fid, 'describedby' => $fid.'-hint', 'options_html' => $html]);
             $row['hint_html'] = htmlspecialchars(_LAYOUT_BLOCKHINT, ENT_QUOTES, 'UTF-8');
+            $row['hint_id'] = $fid.'-hint';
         } elseif ($type === 'noderef') {
             $html = getLayoutNodeHtml(is_scalar($val) ? intval($val) : 0, '');
             $row['field_html'] = $tpl->getHtmlFrag('layout-field', ['kind_find' => true, 'select_id' => $fid, 'find_url' => getLayoutUrl(['op' => 'find', 'key' => $key]),
-                'find_text' => _LAYOUT_FINDNODE, 'select_html' => $tpl->getHtmlFrag('select', ['name_attr' => $name, 'selectid' => $fid, 'options_html' => $html])]);
+                'find_text' => _LAYOUT_FINDNODE,
+                'select_html' => $tpl->getHtmlFrag('select', ['name_attr' => $name, 'selectid' => $fid, 'describedby' => $fid.'-hint', 'options_html' => $html])]);
             $row['hint_html'] = htmlspecialchars(_LAYOUT_NODEHINT, ENT_QUOTES, 'UTF-8');
+            $row['hint_id'] = $fid.'-hint';
         } elseif ($type === 'choice') {
             $now = is_bool($val) ? ($val ? '1' : '0') : (is_scalar($val) ? (string)$val : '');
             $html = '';

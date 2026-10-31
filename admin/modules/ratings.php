@@ -29,10 +29,12 @@ function ratings(): void {
     foreach (array_keys($scopes) as $i => $val) {
         $rule = str_starts_with($val, 'node.') ? $types[substr($val, 5)]->rating : ($conf['ratings'][$val] ?? []);
         $rows = [[
+            'label_for' => 'f-time-'.$i,
             'label_html' => _VOTING_TIME,
             'is_ratings_inner' => true,
             'field_html' => $tpl->getHtmlFrag('input', [
                 'itype' => 'number',
+                'input_id' => 'f-time-'.$i,
                 'name_attr' => 'time['.$i.']',
                 'value_attr' => (string)intdiv(intval($rule['period'] ?? 0), 86400),
                 'is_config' => true,

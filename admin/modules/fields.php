@@ -87,11 +87,14 @@ function getFieldBlock(string $area, int $pos, string $name, array $def, bool $k
     foreach ($list as $key => $item) {
         $cell = $base.'[items]['.$num.']';
         $cells = [];
+        $say = ['key' => _FIELDS_KEY, 'title' => _TITLE, 'sort' => _POSITION];
         foreach (['key' => is_string($key) ? $key : '', 'title' => $show($item['title'] ?? ''), 'sort' => $show($item['sort'] ?? '')] as $part => $val) {
             $lock = $kept && $part === 'key' && $val !== '';
-            $cells[] = ['content_html' => $tpl->getHtmlFrag('input', ['name_attr' => $cell.'['.$part.']', 'value_attr' => $val, 'is_readonly' => $lock])];
+            $cells[] = ['content_html' => $tpl->getHtmlFrag('input', ['name_attr' => $cell.'['.$part.']', 'aria_label' => $say[$part].' - '.($num + 1), 'value_attr' => $val,
+                'is_readonly' => $lock])];
         }
-        $cells[] = ['content_html' => $tpl->getHtmlFrag('checkbox', ['name_attr' => $cell.'[active]', 'value_attr' => '1', 'is_checked' => !empty($item['active'])])];
+        $cells[] = ['content_html' => $tpl->getHtmlFrag('checkbox', ['name_attr' => $cell.'[active]', 'aria_label' => _ACTIVATE2.' - '.($num + 1), 'value_attr' => '1',
+            'is_checked' => !empty($item['active'])])];
         $irows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', ['cells' => $cells])]);
         $num++;
     }

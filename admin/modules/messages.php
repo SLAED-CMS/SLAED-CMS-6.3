@@ -141,7 +141,7 @@ function add(): void {
     if ($body) $cont .= getTplPreviewContent(['title' => $title, 'texta' => $body, 'mod' => 'all']);
     $langsel = '';
     if ($conf['multilingual'] == 1) {
-        $langsel = $tpl->getHtmlFrag('select', ['name_attr' => 'lang', 'options_html' => getTplLanguageOptions($lang)]);
+        $langsel = $tpl->getHtmlFrag('select', ['name_attr' => 'lang', 'selectid' => 'f-lang', 'options_html' => getTplLanguageOptions($lang)]);
     }
     if ($expire) {
         $newexpire = 0;
@@ -188,7 +188,7 @@ function add(): void {
         ]), 'is_full' => true],
     ];
     if ($langsel) {
-        $rows[] = ['label_html' => _LANGUAGE, 'field_html' => $langsel];
+        $rows[] = ['label_for' => 'f-lang', 'label_html' => _LANGUAGE, 'field_html' => $langsel];
     }
     $rows[] = [
         'label_for' => $newexpire ? 'f-expire' : '',

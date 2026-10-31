@@ -460,6 +460,7 @@
     }
     function setFileWord(form) {
         var arg = form.querySelector('[name="arg"]');
+        arg.setAttribute('aria-label', form.querySelector('[data-sl-fm-title]').textContent);
         form.hidden = false;
         arg.focus();
         arg.select();

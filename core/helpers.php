@@ -104,6 +104,7 @@ function getTplAddDateTime(array $data = []): string {
             'maxlength_num' => $max,
             'placeholder_text' => $phold,
             'is_config' => $iscfg,
+            'aria_label' => (string)($data['label'] ?? ''),
             'input_attr' => 'id="'.$pid.'" data-sl-datetime-target="'.$hid.'" data-sl-datetime-kind="'.$type.'"',
         ]);
 }
@@ -1500,20 +1501,20 @@ function getCategoryModules(): array {
     return array_merge(['forum'], array_keys($types));
 }
 
-# Render a select with category-enabled modules
+# The select of the modules with categories for a form row; $auto answers the filter of a screen instead, whose choice opens the list of that module
 function getTplCategoryModule(string $name, string $clas = '', string $sel = '', bool $auto = false): string {
-    global $tpl;
-    $attr = $auto ? 'OnChange="submit()"' : '';
-    $cont = '';
-    $mods = getCategoryModules();
-    foreach ($mods as $mod) {
-        $cont .= $tpl->getHtmlFrag('select-option', [
-            'value_attr' => $mod,
-            'label_text' => getModuleName($mod).' - '.$mod,
-            'is_selected' => $sel == $mod,
+    global $afile, $tpl;
+    $opts = [];
+    foreach (getCategoryModules() as $mod) $opts[] = ['value_attr' => $mod, 'label_text' => getModuleName($mod).' - '.$mod, 'is_selected' => $sel == $mod];
+    if ($auto) {
+        return $tpl->getHtmlFrag('list-filter', [
+            'action_url' => $afile.'.php',
+            'label' => _CATEGORIES,
+            'hidden' => [['nameattr' => 'name', 'valueattr' => 'categories']],
+            'fields' => [['field_id' => 'sl-cat-mod', 'label' => _MODUL, 'name_attr' => $name, 'options' => $opts, 'is_now' => true]],
         ]);
     }
-    return $tpl->getHtmlFrag('select', ['name_attr' => $name, 'select_class' => $clas, 'select_attr' => $attr, 'options_html' => $cont]);
+    return $tpl->getHtmlFrag('select', ['name_attr' => $name, 'selectid' => 'f-'.$name, 'select_class' => $clas, 'options' => $opts]);
 }
 
 # Build a query string fragment from key value pairs

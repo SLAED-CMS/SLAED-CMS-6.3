@@ -263,7 +263,8 @@ function getNodeAssetHtml(NodeType $type, array $list, bool $link): string {
                 .$tpl->getHtmlFrag('hidden', ['name_attr' => 'asset['.$idx.'][id]', 'value_attr' => $one['id'] ?? '', 'input_attr' => ''])
                 .getFileManagerField(['id' => $fid, 'place' => $type->name.'.attach', 'name' => 'afile'.$idx, 'path' => 'apath'.$idx, 'url' => 'aurl'.$idx,
                     'path_value' => $ext ? '' : $one['src'], 'url_value' => $ext ? $one['src'] : '', 'is_nolink' => !$link])
-                .$tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'asset['.$idx.'][title]', 'value_attr' => $one['title'], 'maxlength_num' => 100,
+                .$tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'asset['.$idx.'][title]', 'aria_label' => _TITLE, 'value_attr' => $one['title'],
+                    'maxlength_num' => 100,
                     'placeholder_text' => _TITLE]);
             $group[] = ['is_empty' => $one['src'] === '', 'content_html' => $cell];
             $idx++;

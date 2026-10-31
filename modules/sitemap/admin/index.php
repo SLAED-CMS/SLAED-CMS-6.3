@@ -21,6 +21,7 @@ function getSitemapFreqSelect(string $name, string $value): string {
     }
     return $tpl->getHtmlFrag('select', [
         'name_attr' => $name,
+        'selectid' => 'f-'.$name,
         'is_config' => true,
         'options_html' => $opts,
     ]);
@@ -38,6 +39,7 @@ function getSitemapPrioritySelect(string $name, string $value): string {
     }
     return $tpl->getHtmlFrag('select', [
         'name_attr' => $name,
+        'selectid' => 'f-'.$name,
         'is_config' => true,
         'options_html' => $opts,
     ]);
@@ -197,14 +199,14 @@ function config(): void {
             ]),
         ],
         ['label_html' => _MAP_AUTO, 'label_id' => $labid = getFieldIds('', 'auto')['label'], 'field_html' => $yesno('auto', $conf['sitemap']['auto'] ?? 0, $labid)],
-        ['label_html' => _MAP_FR_H, 'field_html' => getSitemapFreqSelect('fr_h', (string)($conf['sitemap']['fr_h'] ?? '0'))],
-        ['label_html' => _MAP_FR_M, 'field_html' => getSitemapFreqSelect('fr_m', (string)($conf['sitemap']['fr_m'] ?? '0'))],
-        ['label_html' => _MAP_FR_C, 'field_html' => getSitemapFreqSelect('fr_c', (string)($conf['sitemap']['fr_c'] ?? '0'))],
-        ['label_html' => _MAP_FR_P, 'field_html' => getSitemapFreqSelect('fr_p', (string)($conf['sitemap']['fr_p'] ?? '0'))],
-        ['label_html' => _MAP_PR_H, 'field_html' => getSitemapPrioritySelect('pr_h', (string)($conf['sitemap']['pr_h'] ?? '0'))],
-        ['label_html' => _MAP_PR_M, 'field_html' => getSitemapPrioritySelect('pr_m', (string)($conf['sitemap']['pr_m'] ?? '0'))],
-        ['label_html' => _MAP_PR_C, 'field_html' => getSitemapPrioritySelect('pr_c', (string)($conf['sitemap']['pr_c'] ?? '0'))],
-        ['label_html' => _MAP_PR_P, 'field_html' => getSitemapPrioritySelect('pr_p', (string)($conf['sitemap']['pr_p'] ?? '0'))],
+        ['label_for' => 'f-fr_h', 'label_html' => _MAP_FR_H, 'field_html' => getSitemapFreqSelect('fr_h', (string)($conf['sitemap']['fr_h'] ?? '0'))],
+        ['label_for' => 'f-fr_m', 'label_html' => _MAP_FR_M, 'field_html' => getSitemapFreqSelect('fr_m', (string)($conf['sitemap']['fr_m'] ?? '0'))],
+        ['label_for' => 'f-fr_c', 'label_html' => _MAP_FR_C, 'field_html' => getSitemapFreqSelect('fr_c', (string)($conf['sitemap']['fr_c'] ?? '0'))],
+        ['label_for' => 'f-fr_p', 'label_html' => _MAP_FR_P, 'field_html' => getSitemapFreqSelect('fr_p', (string)($conf['sitemap']['fr_p'] ?? '0'))],
+        ['label_for' => 'f-pr_h', 'label_html' => _MAP_PR_H, 'field_html' => getSitemapPrioritySelect('pr_h', (string)($conf['sitemap']['pr_h'] ?? '0'))],
+        ['label_for' => 'f-pr_m', 'label_html' => _MAP_PR_M, 'field_html' => getSitemapPrioritySelect('pr_m', (string)($conf['sitemap']['pr_m'] ?? '0'))],
+        ['label_for' => 'f-pr_c', 'label_html' => _MAP_PR_C, 'field_html' => getSitemapPrioritySelect('pr_c', (string)($conf['sitemap']['pr_c'] ?? '0'))],
+        ['label_for' => 'f-pr_p', 'label_html' => _MAP_PR_P, 'field_html' => getSitemapPrioritySelect('pr_p', (string)($conf['sitemap']['pr_p'] ?? '0'))],
         ['label_html' => _MAP_DAT_H, 'label_id' => $labid = getFieldIds('', 'dat_h')['label'], 'field_html' => $yesno('dat_h', $conf['sitemap']['dat_h'] ?? 0, $labid)],
         ['label_html' => _MAP_DAT_M, 'label_id' => $labid = getFieldIds('', 'dat_m')['label'], 'field_html' => $yesno('dat_m', $conf['sitemap']['dat_m'] ?? 0, $labid)],
         ['label_html' => _MAP_DAT_C, 'label_id' => $labid = getFieldIds('', 'dat_c')['label'], 'field_html' => $yesno('dat_c', $conf['sitemap']['dat_c'] ?? 0, $labid)],

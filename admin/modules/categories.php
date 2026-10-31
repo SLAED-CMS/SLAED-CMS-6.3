@@ -63,13 +63,7 @@ function add(): void {
     $modlink = '&modul='.$modul;
     $ops = ['name=categories'.$modlink, 'name=categories&op=add'.$modlink, 'name=categories&op=subadd'.$modlink, 'name=categories&op=addedit'.$modlink,
         'name=categories&op=info'.$modlink];
-    $subtitle = $tpl->getHtmlPart('div', ['is_searchbox' => true, 'content_html' => $tpl->getHtmlPart('form', [
-        'action_url' => $afile.'.php',
-        'hidden' => [
-            ['nameattr' => 'name', 'valueattr' => 'categories'],
-        ],
-        'content_html' => _MODUL.': '.getTplCategoryModule('modul', '', $modul, true),
-    ])]);
+    $subtitle = getTplCategoryModule('modul', '', $modul, true);
     setHead();
     $cont = getTplAdminTabs([
         'ops' => $ops,
@@ -109,7 +103,7 @@ function add(): void {
             'label_html' => _ICON,
             'field_html' => $tpl->getHtmlPart('icon-picker', ['name_attr' => 'imgcat', 'value_attr' => '', 'placeholder_text' => _ICON, 'button_label' => _ICONPICK]),
         ],
-        ['label_html' => _MODUL, 'field_html' => getTplCategoryModule('modul', 'sl-form-control', $modul)],
+        ['label_for' => 'f-modul', 'label_html' => _MODUL, 'field_html' => getTplCategoryModule('modul', 'sl-form-control', $modul)],
     ];
     if ($conf['multilingual'] == 1) {
         $rows0[] = [
@@ -206,13 +200,7 @@ function subadd(): void {
         'name=categories&op=info'.$modlink];
     setHead();
     if ($db->getSqlRowCount($db->getSqlQuery('SELECT * FROM '.PREFIX_DB.'_categories WHERE modul = :modul', ['modul' => $modul])) > 0) {
-        $subtitle = $tpl->getHtmlPart('div', ['is_searchbox' => true, 'content_html' => $tpl->getHtmlPart('form', [
-            'action_url' => $afile.'.php',
-            'hidden' => [
-                ['nameattr' => 'name', 'valueattr' => 'categories'],
-            ],
-            'content_html' => _MODUL.': '.getTplCategoryModule('modul', '', $modul, true),
-        ])]);
+        $subtitle = getTplCategoryModule('modul', '', $modul, true);
         $cont = getTplAdminTabs([
             'ops' => $ops,
             'tabs' => [_HOME, _ADDCATEGORY, _ADDSUBCATEGORY, _EDIT, _MANUAL],
@@ -231,7 +219,7 @@ function subadd(): void {
                 'label_id' => $labid = getFieldIds('', 'status')['label'],
                 'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'status', 'value' => '0', 'options' => $yesno]),
             ],
-            ['label_html' => _CATEGORY, 'field_html' => getTplCategorySelect($modul, 0, 'cid', 'sl-form-control')],
+            ['label_for' => 'f-cid', 'label_html' => _CATEGORY, 'field_html' => getTplCategorySelect($modul, 0, 'cid', 'sl-form-control')],
             ['label_for' => 'f-title', 'label_html' => _TITLE, 'field_html' => $tpl->getHtmlFrag('input', [
                 'itype' => 'text',
                 'name_attr' => 'title',
@@ -252,7 +240,7 @@ function subadd(): void {
                 'label_html' => _ICON,
                 'field_html' => $tpl->getHtmlPart('icon-picker', ['name_attr' => 'imgcat', 'value_attr' => '', 'placeholder_text' => _ICON, 'button_label' => _ICONPICK]),
             ],
-            ['label_html' => _MODUL, 'field_html' => getTplCategoryModule('modul', 'sl-form-control', $modul)],
+            ['label_for' => 'f-modul', 'label_html' => _MODUL, 'field_html' => getTplCategoryModule('modul', 'sl-form-control', $modul)],
         ];
         if ($conf['multilingual'] == 1) {
             $rows0[] = [
@@ -338,13 +326,7 @@ function subadd(): void {
             'submit_label' => _ADD,
         ])]).getAdminIconWindow();
     } else {
-        $subtitle = $tpl->getHtmlPart('div', ['is_searchbox' => true, 'content_html' => $tpl->getHtmlPart('form', [
-            'action_url' => $afile.'.php',
-            'hidden' => [
-                ['nameattr' => 'name', 'valueattr' => 'categories'],
-            ],
-            'content_html' => _MODUL.': '.getTplCategoryModule('modul', '', $modul, true),
-        ])]);
+        $subtitle = getTplCategoryModule('modul', '', $modul, true);
         $navi = getTplAdminTabs([
             'ops' => $ops,
             'tabs' => [_HOME, _ADDCATEGORY, _ADDSUBCATEGORY, _EDIT, _MANUAL],
@@ -364,13 +346,7 @@ function addedit(): void {
     $modlink = '&modul='.$modul;
     $ops = ['name=categories'.$modlink, 'name=categories&op=add'.$modlink, 'name=categories&op=subadd'.$modlink, 'name=categories&op=addedit'.$modlink,
         'name=categories&op=info'.$modlink];
-    $subtitle = $tpl->getHtmlPart('div', ['is_searchbox' => true, 'content_html' => $tpl->getHtmlPart('form', [
-        'action_url' => $afile.'.php',
-        'hidden' => [
-            ['nameattr' => 'name', 'valueattr' => 'categories'],
-        ],
-        'content_html' => _MODUL.': '.getTplCategoryModule('modul', '', $modul, true),
-    ])]);
+    $subtitle = getTplCategoryModule('modul', '', $modul, true);
     setHead();
     $cont = getTplAdminTabs([
         'ops' => $ops,
@@ -387,6 +363,7 @@ function addedit(): void {
                 ['nameattr' => 'token', 'valueattr' => getSiteToken('categories')],
             ],
             'rows' => [[
+                'label_for' => 'f-cid',
                 'label_html' => _CATEGORY,
                 'field_html' => getTplCategorySelect($modul, 0, 'cid', 'sl-form-control'),
             ]],
@@ -411,13 +388,7 @@ function edit(): void {
     $modlink = '&modul='.$modul;
     $ops = ['name=categories'.$modlink, 'name=categories&op=add'.$modlink, 'name=categories&op=subadd'.$modlink, 'name=categories&op=addedit'.$modlink,
         'name=categories&op=info'.$modlink];
-    $subtitle = $tpl->getHtmlPart('div', ['is_searchbox' => true, 'content_html' => $tpl->getHtmlPart('form', [
-        'action_url' => $afile.'.php',
-        'hidden' => [
-            ['nameattr' => 'name', 'valueattr' => 'categories'],
-        ],
-        'content_html' => _MODUL.': '.getTplCategoryModule('modul', '', $modul, true),
-    ])]);
+    $subtitle = getTplCategoryModule('modul', '', $modul, true);
     setHead();
     $cont = getTplAdminTabs([
         'ops' => $ops,
@@ -457,10 +428,10 @@ function edit(): void {
             'label_html' => _ICON,
             'field_html' => $tpl->getHtmlPart('icon-picker', ['name_attr' => 'imgcat', 'value_attr' => $imgcat, 'placeholder_text' => _ICON, 'button_label' => _ICONPICK]),
         ],
-        ['label_html' => _MODUL, 'field_html' => getTplCategoryModule('modul', 'sl-form-control', $modul)],
+        ['label_for' => 'f-modul', 'label_html' => _MODUL, 'field_html' => getTplCategoryModule('modul', 'sl-form-control', $modul)],
     ];
     if ($parent != 0) {
-        $rows0[] = ['label_html' => _CATEGORY, 'field_html' => getTplCategorySelect($modul, $parent, 'parent', 'sl-form-control')];
+        $rows0[] = ['label_for' => 'f-parent', 'label_html' => _CATEGORY, 'field_html' => getTplCategorySelect($modul, $parent, 'parent', 'sl-form-control')];
     }
     if ($conf['multilingual'] == 1) {
         $rows0[] = [

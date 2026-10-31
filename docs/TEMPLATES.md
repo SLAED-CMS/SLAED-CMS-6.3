@@ -1167,7 +1167,7 @@ byte-identical between the themes.
 | `npm run ui:before` | captures the tree you are about to change into a temp directory |
 | `npm run ui:after` | empties the caches, compares against that capture, regenerates the contrast registry when a `base.css` moved, then reads the counts |
 | `npm run ui:gates` | the fast gates by hand — the same set the pre-commit hook runs |
-| `npm run ui:label` | the label crawl: every `for`, id and aria reference on every rendered route, against `tools/label-audit-baseline.json` |
+| `npm run ui:label` | the label crawl: every `for`, id, aria reference and field name on every rendered route, against `tools/label-audit-baseline.json` |
 | `node tools/ui-shots.mjs --capture --out=<dir>` | writes a PNG set and each state's measured noise floor |
 | `node tools/ui-shots.mjs --check --out=<dir>` | compares the tree against a set captured earlier; a missing image fails the run instead of being written |
 | `node tools/ui-shots.mjs --contrast` | regenerates `tools/ui-contrast.json`, the pairs that really meet on screen |
@@ -1222,7 +1222,7 @@ A change to `tools/ui-audit.php` needs a fixture in `tests/Fixtures/ui/` coverin
 | `--census` | also print, per route, how many rows, groups, editors and hints were seen |
 | `--only=x` | audit only routes whose signature contains `x`; the walk itself is unchanged |
 
-Forward, if the attribute is there it must be right: every `for` resolves to a labelable element, no id repeats, no `<label>` nests, every `<label>` has a `for` or a labelable descendant, every aria IDREF resolves to an element with text. Reverse, the attribute must exist: every `.sl-radio-group` carries `role="group"` and a resolving `aria-labelledby`, every visible editable has a name, and every element carrying a `-hint` id is referenced by an `aria-describedby` in its own row.
+Forward, if the attribute is there it must be right: every `for` resolves to a labelable element, no id repeats, no `<label>` nests, every `<label>` has a `for` or a labelable descendant, every aria IDREF resolves to an element with text. Reverse, the attribute must exist: every `.sl-radio-group` carries `role="group"` and a resolving `aria-labelledby`, every visible editable has a name, every form field has a name of its own (`control-unnamed`: a label, `aria-labelledby` or `aria-label`, where a `title` or a placeholder does not count; a field in a closed tab counts, a field whose own display is none does not), and every element carrying a `-hint` id is referenced by an `aria-describedby` in its own row, unless the slot holds only a button of the row.
 
 - **Not part of `npm run ui:gates`**, deliberately: the gates run from `tools/hooks/pre-commit` on every commit and this needs an HTTPS stand, a browser and administrator credentials. The hook prints a reminder instead. Moving it into the gates means changing the hook in the same commit.
 - **It walks frames, not the main document.** TinyMCE puts its editable body in a separate document; a main-frame query sees the `<iframe>` and stops, so an unnamed editor reads as clean.

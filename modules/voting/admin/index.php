@@ -18,6 +18,7 @@ function getVotingCommentSelect(int $selected): string {
     }
     return $tpl->getHtmlFrag('select', [
         'name_attr' => 'acomm',
+        'selectid' => 'f-acomm',
         'options_html' => $opts,
     ]);
 }
@@ -41,6 +42,7 @@ function getVotingModuleSelect(string $modul = ''): string {
     }
     return $tpl->getHtmlFrag('select', [
         'name_attr' => 'modul',
+        'selectid' => 'f-modul',
         'options_html' => $opts,
     ]);
 }
@@ -49,6 +51,7 @@ function getVotingStatusSelect(int|string $status): string {
     global $tpl;
     return $tpl->getHtmlFrag('select', [
         'name_attr' => 'status',
+        'selectid' => 'f-status',
         'options_html' =>
             $tpl->getHtmlFrag('select-option', ['value_attr' => '1', 'label_text' => _VCLOSED, 'is_selected' => (string)$status === '1'])
             .$tpl->getHtmlFrag('select-option', ['value_attr' => '0', 'label_text' => _VDEACT, 'is_selected' => (string)$status === '0']),
@@ -59,6 +62,7 @@ function getVotingTypeSelect(int|string $typ): string {
     global $tpl;
     return $tpl->getHtmlFrag('select', [
         'name_attr' => 'typ',
+        'selectid' => 'f-typ',
         'options_html' =>
             $tpl->getHtmlFrag('select-option', ['value_attr' => '1', 'label_text' => _VOPEN, 'is_selected' => (string)$typ === '1'])
             .$tpl->getHtmlFrag('select-option', ['value_attr' => '0', 'label_text' => _VCLOSE, 'is_selected' => (string)$typ === '0']),
@@ -69,6 +73,7 @@ function getVotingBlockSelect(string $bval): string {
     global $tpl;
     return $tpl->getHtmlFrag('select', [
         'name_attr' => 'block',
+        'selectid' => 'f-block',
         'is_config' => true,
         'options_html' =>
             $tpl->getHtmlFrag('select-option', ['value_attr' => '0', 'label_text' => _VLASTACT, 'is_selected' => $bval === '0'])
@@ -244,9 +249,9 @@ function add(): void {
             'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'path', 'input_id' => 'f-path', 'value_attr' => $pname, 'maxlength_num' => 255]
                 + (($path !== '') ? ['describedby' => 'f-path-hint'] : [])),
         ],
-        ['label_html' => _MODUL, 'field_html' => getVotingModuleSelect($modul)],
-        ['label_html' => _CHNGSTORY, 'field_html' => getTplAddDateTime(['name' => 'date', 'time' => $date, 'with' => true, 'max' => 16])],
-        ['label_html' => _ENDDATE, 'field_html' => getTplAddDateTime(['name' => 'enddate', 'time' => $enddate, 'with' => true, 'max' => 16])],
+        ['label_for' => 'f-modul', 'label_html' => _MODUL, 'field_html' => getVotingModuleSelect($modul)],
+        ['label_html' => _CHNGSTORY, 'field_html' => getTplAddDateTime(['name' => 'date', 'label' => _CHNGSTORY, 'time' => $date, 'with' => true, 'max' => 16])],
+        ['label_html' => _ENDDATE, 'field_html' => getTplAddDateTime(['name' => 'enddate', 'label' => _ENDDATE, 'time' => $enddate, 'with' => true, 'max' => 16])],
     ];
     if ($conf['multilingual'] == 1) {
         $rows[] = [
@@ -254,15 +259,15 @@ function add(): void {
             'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'lang', 'selectid' => 'f-lang', 'options_html' => getTplLanguageOptions($lang)]),
         ];
     }
-    $rows[] = ['label_html' => _COMMENTS, 'field_html' => getVotingCommentSelect((int)$acomm)];
+    $rows[] = ['label_for' => 'f-acomm', 'label_html' => _COMMENTS, 'field_html' => getVotingCommentSelect((int)$acomm)];
     $rows[] = [
         'label_html' => _MULTI, 'label_id' => $labid = getFieldIds('', 'multi')['label'],
         'field_html' => getTplRadioGroup([
             'labelledby' => $labid, 'name' => 'multi', 'value' => $multi, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]],
         ]),
     ];
-    $rows[] = ['label_html' => _TYPE, 'field_html' => getVotingTypeSelect($typ)];
-    $rows[] = ['label_html' => _AFTEREXPIRATION, 'field_html' => getVotingStatusSelect($status)];
+    $rows[] = ['label_for' => 'f-typ', 'label_html' => _TYPE, 'field_html' => getVotingTypeSelect($typ)];
+    $rows[] = ['label_for' => 'f-status', 'label_html' => _AFTEREXPIRATION, 'field_html' => getVotingStatusSelect($status)];
     $answ = '';
     for ($i = 0; $i < $conf['voting']['answ']; $i++) {
         $a = $i + 1;
@@ -277,18 +282,22 @@ function add(): void {
             'label_html' => _POLLEACH.' - '.$a,
             'content_html' => $tpl->getHtmlPart('div', ['rows' => [
                 [
+                    'label_for' => 'f-body-'.$i,
                     'label_html' => _POLLEACH,
                     'field_html' => $tpl->getHtmlFrag('input', [
                         'itype' => 'text',
+                        'input_id' => 'f-body-'.$i,
                         'name_attr' => 'body[]',
                         'value_attr' => $qval,
                         'placeholder_text' => _POLLEACH.' - '.$a,
                     ]),
                 ],
                 [
+                    'label_for' => 'f-answer-'.$i,
                     'label_html' => _VOTES,
                     'field_html' => $tpl->getHtmlFrag('input', [
                         'itype' => 'number',
+                        'input_id' => 'f-answer-'.$i,
                         'name_attr' => 'answer[]',
                         'value_attr' => $aval,
                         'placeholder_text' => _VOTES,
@@ -309,7 +318,7 @@ function add(): void {
             ['nameattr' => 'id', 'valueattr' => (string)$id],
         ],
         'rows' => $rows,
-        'actions_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'posttype', 'options_html' => $posttypeopts, 'is_inline_gap' => true])
+        'actions_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'posttype', 'aria_label' => _FUNCTIONS, 'options_html' => $posttypeopts, 'is_inline_gap' => true])
             .$tpl->getHtmlFrag('button', ['submit_label' => _OK, 'button_type' => 'submit']),
     ])]);
     echo $cont;
@@ -475,7 +484,7 @@ function config(): void {
                 'itype' => 'number', 'name_attr' => 'answ', 'input_id' => 'f-answ', 'value_attr' => (string)$conf['voting']['answ'], 'is_config' => true,
             ]),
         ],
-        ['label_html' => _VBLOCK, 'field_html' => getVotingBlockSelect($bval)],
+        ['label_for' => 'f-block', 'label_html' => _VBLOCK, 'field_html' => getVotingBlockSelect($bval)],
     ];
     $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php',

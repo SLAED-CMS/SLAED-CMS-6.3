@@ -4,10 +4,10 @@
     <form action="{{ root }}account" method="post" class="sl-login-dropdown-form sl-float-panel">
       <ul class="sl-login-form">
         <li>
-          <input type="{{ name_field.itype }}" name="{{ name_field.name_attr }}" value="{{ name_field.value_attr }}" class="sl-field sl-login-field" maxlength="{{ name_field.maxlength_num }}" placeholder="{{ name_field.placeholder_text }}" autocomplete="username" required>
+          <input type="{{ name_field.itype }}" name="{{ name_field.name_attr }}" value="{{ name_field.value_attr }}" class="sl-field sl-login-field" maxlength="{{ name_field.maxlength_num }}" placeholder="{{ name_field.placeholder_text }}" aria-label="{{ name_field.placeholder_text }}" autocomplete="username" required>
         </li>
         <li>
-          <input type="{{ password_field.itype }}" name="{{ password_field.name_attr }}" value="{{ password_field.value_attr }}" class="sl-field sl-login-field" maxlength="{{ password_field.maxlength_num }}" placeholder="{{ password_field.placeholder_text }}" autocomplete="current-password" required>
+          <input type="{{ password_field.itype }}" name="{{ password_field.name_attr }}" value="{{ password_field.value_attr }}" class="sl-field sl-login-field" maxlength="{{ password_field.maxlength_num }}" placeholder="{{ password_field.placeholder_text }}" aria-label="{{ password_field.placeholder_text }}" autocomplete="current-password" required>
         </li>
         {% if captcha %}{{{ captcha }}}{% endif %}
         <li>

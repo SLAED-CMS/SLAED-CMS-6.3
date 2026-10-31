@@ -581,12 +581,14 @@ function config(): void {
     foreach ([['canary', _NLCANARY, _NLCANARYI, '100'], ['canarymin', _NLCANMIN, _NLCANMINI, '500'], ['breakwin', _NLBREAK, _NLBREAKI, '100'],
         ['abort', _NLABORT, _NLABORTI, '10'], ['bouncemax', _NLBOUNCE, _NLBOUNCEI, '2']] as $item) {
         $rows[] = [
+            'label_for' => ($fids = getFieldIds('', $item[0]))['input'],
             'label_html' => $item[1],
             'hint_html' => $item[2],
-            'hint_id' => $hntid = getFieldIds('', $item[0])['hint'],
+            'hint_id' => $fids['hint'],
             'field_html' => $tpl->getHtmlFrag('input', [
-                'describedby' => $hntid,
+                'describedby' => $fids['hint'],
                 'itype' => 'number',
+                'input_id' => $fids['input'],
                 'name_attr' => $item[0],
                 'value_attr' => (string)($rule[$item[0]] ?? $item[3]),
                 'is_config' => true,

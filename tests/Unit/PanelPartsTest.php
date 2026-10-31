@@ -37,6 +37,29 @@ final class PanelPartsTest extends TestCase
     }
 
     #[Test]
+    public function noPanelListSubmitsItself(): void
+    {
+        $root = dirname(__DIR__, 2);
+        $files = array_merge([$root.'/core/helpers.php', $root.'/core/admin.php'], glob($root.'/admin/modules/*.php') ?: [], glob($root.'/modules/*/admin/index.php') ?: []);
+        $this->assertGreaterThan(20, count($files));
+        foreach ($files as $file) {
+            $this->assertDoesNotMatchRegularExpression('/on-?change\s*=\s*\\\\?["\'][^"\']*submit/i', (string)file_get_contents($file),
+                $file.': a filter takes the field is_now of list-filter');
+        }
+    }
+
+    #[Test]
+    public function aStripOfTabsIsATablistOfTabs(): void
+    {
+        $script = (string)file_get_contents(dirname(__DIR__, 2).'/public/plugins/system/slaed.js');
+        $from = (int)strpos($script, 'function initTabGroup(');
+        $part = substr($script, $from, (int)strpos($script, 'function applyFieldShow(') - $from);
+        $this->assertStringContainsString("list[0].closest('.sl-tabs-nav')", $part, 'On a module head the strip is the group itself, which querySelector never finds');
+        $this->assertStringContainsString("cells[c].setAttribute('role', 'presentation')", $part, 'A tablist owns tabs, so its li gives up the role of a list item');
+        $this->assertStringContainsString('list[move].focus()', $part, 'An arrow moves the focus with the choice, or the next arrow starts from the same tab');
+    }
+
+    #[Test]
     public function anEmptyOrShortValueCarriesNoMark(): void
     {
         $this->assertSame([], self::$data['cell_none']);

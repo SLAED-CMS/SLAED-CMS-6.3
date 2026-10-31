@@ -51,26 +51,17 @@ function getTemplateTabsOps(string $templ): array {
 
 function getTemplateSearch(string $templ): string {
     global $afile, $tpl;
-    $opts = '';
+    $opts = [];
     foreach (scandir(PUBLIC_DIR.'/templates') as $file) {
         if ($file === '.' || $file === '..' || !is_dir(PUBLIC_DIR.'/templates/'.$file)) continue;
-        $opts .= $tpl->getHtmlFrag('select-option', [
-            'value_attr' => $file,
-            'label_text' => $file,
-            'is_selected' => $file === $templ,
-        ]);
+        $opts[] = ['value_attr' => $file, 'label_text' => $file, 'is_selected' => $file === $templ];
     }
-    $form = $tpl->getHtmlPart('form', [
-        'action_url' => $afile.'.php?name=template',
-        'content_html' => _THEME.': '.$tpl->getHtmlFrag('select', [
-            'name_attr' => 'templ',
-            'options_html' => $opts,
-        ]).' '.$tpl->getHtmlFrag('button', [
-            'submit_label' => _OK,
-            'button_type' => 'submit',
-        ]),
+    return $tpl->getHtmlFrag('list-filter', [
+        'action_url' => $afile.'.php',
+        'label' => _THEME,
+        'hidden' => [['nameattr' => 'name', 'valueattr' => 'template']],
+        'fields' => [['field_id' => 'sl-tpl-theme', 'label' => _THEME, 'name_attr' => 'templ', 'options' => $opts]],
     ]);
-    return $tpl->getHtmlPart('div', ['is_searchbox' => true, 'content_html' => $form]);
 }
 
 function getTemplateEditorBlock(string $templ, string $filelink, string $mode, string $op): string {

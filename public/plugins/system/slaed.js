@@ -1218,17 +1218,18 @@
             };
             list[i].onkeydown = function (event) {
                 var pos = list.indexOf(this);
-                if (event.key === 'ArrowRight') {
-                    event.preventDefault();
-                    pick(list[(pos + 1) % list.length]);
-                } else if (event.key === 'ArrowLeft') {
-                    event.preventDefault();
-                    pick(list[(pos + list.length - 1) % list.length]);
-                }
+                var move = { ArrowRight: (pos + 1) % list.length, ArrowLeft: (pos + list.length - 1) % list.length, Home: 0, End: list.length - 1 }[event.key];
+                if (move === undefined) return;
+                event.preventDefault();
+                pick(list[move]);
+                list[move].focus();
             };
             var target = list[i].getAttribute('data-sl-tab-target');
             var pane = group.querySelector('[data-sl-tab-panel="' + target + '"]') || document.getElementById(target);
-            if (pane) pane.setAttribute('role', 'tabpanel');
+            if (pane) {
+                pane.setAttribute('role', 'tabpanel');
+                if (pane.id) list[i].setAttribute('aria-controls', pane.id);
+            }
         }
 
         var idx = -1;
@@ -1248,9 +1249,16 @@
         if (idx < 0) idx = 0;
         pick(list[idx]);
 
-        var nav = group.querySelector('.sl-tabs-nav');
+        // The strip is the group itself on a module head; a link of the strip that opens a page is a tab of the list for the reader, which a tablist asks of all its children
+        var nav = list[0].closest('.sl-tabs-nav');
         if (nav) {
             nav.setAttribute('role', 'tablist');
+            var cells = nav.querySelectorAll(':scope > li');
+            for (var c = 0; c < cells.length; c++) {
+                cells[c].setAttribute('role', 'presentation');
+                var open = cells[c].querySelector('a:not([data-sl-tab-link])');
+                if (open) open.setAttribute('role', 'tab');
+            }
             nav.addEventListener('wheel', function (event) {
                 if (this.scrollWidth <= this.clientWidth) return;
                 if (Math.abs(event.deltaY) <= Math.abs(event.deltaX) && event.deltaX === 0) return;

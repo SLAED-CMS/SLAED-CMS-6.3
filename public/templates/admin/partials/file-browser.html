@@ -36,7 +36,7 @@
       {% if is_unused %}<input type="hidden" name="unused" value="1">{% endif %}
       <input type="hidden" name="token" value="{{ token }}">
       <b data-sl-fm-title></b>
-      <input type="text" name="arg" value="" autocomplete="off" spellcheck="false" required>
+      <input type="text" name="arg" value="" aria-label="{{ apply_text }}" autocomplete="off" spellcheck="false" required>
       <span data-sl-fm-marks></span>
       <button type="submit" class="sl-but-blue">{{ apply_text }}</button>
       <button type="button" class="sl-but" data-sl-fm-act="close">{{ cancel_text }}</button>

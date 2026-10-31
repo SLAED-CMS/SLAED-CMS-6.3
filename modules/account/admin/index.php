@@ -273,7 +273,7 @@ function add(bool $fresh = false): void {
     }
     $rows[] = [
         'label_html' => _REG,
-        'field_html' => getTplAddDateTime(['name' => 'reg', 'time' => (string)($reg ?? ''), 'with' => true, 'max' => 16, 'is_config' => true]),
+        'field_html' => getTplAddDateTime(['name' => 'reg', 'label' => _REG, 'time' => (string)($reg ?? ''), 'with' => true, 'max' => 16, 'is_config' => true]),
     ];
     $rows[] = [
         'label_for' => 'f-occ',
@@ -425,9 +425,11 @@ function add(bool $fresh = false): void {
     for ($i = 0; $i < 5; $i++) {
         $a = $i + 1;
         $rows[] = [
+            'label_for' => 'f-warn-'.$i,
             'label_html' => _UWARN.' - '.$a,
             'field_html' => $tpl->getHtmlFrag('input', [
                 'itype' => 'text',
+                'input_id' => 'f-warn-'.$i,
                 'name_attr' => 'warn[]',
                 'value_attr' => empty($warn[$i]) ? '' : filterText((string)$warn[$i]),
                 'placeholder_text' => _UWARN.' - '.$a,
@@ -469,7 +471,7 @@ function add(bool $fresh = false): void {
     ];
     $rows[] = [
         'label_html' => _BIRTHDAY,
-        'field_html' => getTplAddDateTime(['name' => 'birth', 'time' => (string)$birth, 'with' => false, 'max' => 10, 'is_config' => true]),
+        'field_html' => getTplAddDateTime(['name' => 'birth', 'label' => _BIRTHDAY, 'time' => (string)$birth, 'with' => false, 'max' => 10, 'is_config' => true]),
     ];
     $rows[] = [
         'label_for' => 'f-gender',
@@ -483,8 +485,10 @@ function add(bool $fresh = false): void {
         'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'pass', 'input_id' => 'f-pass', 'value_attr' => '', 'maxlength_num' => 25, 'placeholder_text' => _PASSWORD]),
     ];
     $rows[] = [
+        'label_for' => 'f-pass2',
         'label_html' => _RETYPEPASSWORD,
-        'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'pass2', 'value_attr' => '', 'maxlength_num' => 25, 'placeholder_text' => _RETYPEPASSWORD]),
+        'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'pass2', 'input_id' => 'f-pass2', 'value_attr' => '', 'maxlength_num' => 25,
+            'placeholder_text' => _RETYPEPASSWORD]),
     ];
     $rows[] = [
         'label_for' => 'f-mail',

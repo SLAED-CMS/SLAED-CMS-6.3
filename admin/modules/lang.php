@@ -132,10 +132,12 @@ function fileedit(): void {
         $n = $idx + 1;
         $valc = isset($cnst_arr[$idx]) ? $cnst_arr[$idx] : '';
         $rows = [[
+            'label_for' => 'f-cnst-'.$i,
             'label_html' => _CONST.': #'.$n,
             'is_lang_edit' => true,
             'field_html' => $tpl->getHtmlFrag('input', [
                 'itype' => 'text',
+                'input_id' => 'f-cnst-'.$i,
                 'name_attr' => 'cnst['.$i.']',
                 'value_attr' => $valc,
                 'placeholder_text' => _CONST,
@@ -159,10 +161,12 @@ function fileedit(): void {
                 ]);
             }
             $rows[] = [
+                'label_for' => 'f-lng-'.$j.'-'.$i,
                 'label_html' => getLangName($lng_cn[$j]),
                 'is_lang_edit' => true,
                 'field_html' => $tpl->getHtmlFrag('input', [
                     'itype' => 'text',
+                    'input_id' => 'f-lng-'.$j.'-'.$i,
                     'name_attr' => 'lng['.$lng_cn[$j].']['.$i.']',
                     'value_attr' => $val,
                     'placeholder_text' => getLangName($lng_cn[$j]),
@@ -234,7 +238,7 @@ function config(): void {
     setHead();
     $cont = getTplAdminTabs(['ops' => ['name=lang', 'name=lang&op=config', 'name=lang&op=info'], 'tabs' => [_HOME, _PREFERENCES, _MANUAL], 'tab' => 1]);
     $cont .= checkPerms(CONFIG_DIR.'/lang.php');
-    $s_lang = $tpl->getHtmlFrag('select', ['name_attr' => 'lang', 'options_html' => getTplLanguageOptions($conf['lang']['lang'], 1), 'is_config' => true]);
+    $s_lang = $tpl->getHtmlFrag('select', ['name_attr' => 'lang', 'selectid' => 'f-lang', 'options_html' => getTplLanguageOptions($conf['lang']['lang'], 1), 'is_config' => true]);
     $rows = [
         [
             'label_for' => 'f-key',
@@ -247,7 +251,7 @@ function config(): void {
                 'is_config' => true,
             ]),
         ],
-        ['label_html' => _LANGTR, 'field_html' => $s_lang],
+        ['label_for' => 'f-lang', 'label_html' => _LANGTR, 'field_html' => $s_lang],
         [
             'label_for' => 'f-count',
             'label_html' => _LANGCOUNT,

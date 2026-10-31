@@ -70,7 +70,7 @@ const OPEN = new Set(['', 'view', 'edit', 'add', 'new', 'newuser', 'passlost', '
 const SEED = ['/index.php?name=account&op=newuser', '/index.php?name=account&op=passlost'];
 const REC = new Set(['id', 'cid', 'pid', 'qid']);
 const LOOSE = new Set([...REC, 'name', 'op', 'num', 'cat', 'token', 'sid', 'page', 'uname', 'redirect', 'go', 'prov',
-    'mod', 'modul', 'new_ip', 'search', 'at', 'last', 'pnum', 'com', 'typ', 'let']);
+    'mod', 'modul', 'new_ip', 'search', 'at', 'last', 'pnum', 'com', 'typ', 'let', 'key', 'own', 'word', 'month']);
 // What a readable path of the site names, asked of the stand once per path: an operation of its prefix, or the kind of
 // the registry entity. The address alone cannot tell /news/internet, a category, from /news/<slug>, a material, nor
 // /account/logout from a page - and an operation the walk does not know must stay a skipped op, not become a record
@@ -154,15 +154,15 @@ function getFrameFindings() {
   // Named by a reference that resolves to something with text in it. An empty target is a worse answer than no
   // attribute: the name computes to the empty string and the reader announces nothing, with the attribute in place
   const namedby = (el) => refs(el, 'aria-labelledby').some((id) => text(document.getElementById(id)) !== '');
-  const named = (el) => {
+  const labelled = (el) => {
     if (namedby(el)) return true;
     if ((el.getAttribute('aria-label') || '').trim() !== '') return true;
     if (el.id) {
       for (const lab of document.querySelectorAll('label[for]')) if (lab.getAttribute('for') === el.id && text(lab) !== '') return true;
     }
-    if (el.closest('label') && text(el.closest('label')) !== '') return true;
-    return (el.getAttribute('title') || '').trim() !== '';
+    return !!el.closest('label') && text(el.closest('label')) !== '';
   };
+  const named = (el) => labelled(el) || (el.getAttribute('title') || '').trim() !== '';
   const seen = new Map();
   for (const el of document.querySelectorAll('[id]')) if (el.id) seen.set(el.id, (seen.get(el.id) || 0) + 1);
   for (const [id, num] of seen) for (let i = 1; i < num; i++) add('dup-id', null, id);
@@ -219,10 +219,21 @@ function getFrameFindings() {
   for (const el of document.querySelectorAll('[contenteditable]')) if (el.isContentEditable) box.add(el);
   for (const el of box) if (!shown(el)) box.delete(el);
   for (const el of box) if (!named(el)) add('editor-unnamed', el, el.id || '');
+  // A form field with no name of its own. A title or a placeholder is no name here: a title is a tooltip and a placeholder goes away with the first character.
+  // Fields of a tab or a block not open now count, since opening them is one click and shown() would drop them. A field whose own display is none stays out: the source
+  // of an editor and a file input behind its button never reach a reader, and an ancestor closed by a tab does not change that value
+  const FIELD = 'input:not([type="hidden"]):not([type="submit"]):not([type="button"]):not([type="reset"]):not([type="image"]), select, textarea';
+  for (const el of document.querySelectorAll(FIELD)) {
+    if (getComputedStyle(el).display === 'none' || el.closest('[aria-hidden="true"]:not([data-sl-tab-panel])') || el.tabIndex < 0 || labelled(el)) continue;
+    add('control-unnamed', el, (el.getAttribute('name') || el.id || '').replace(/\d+/g, '#'));
+  }
   const hint = new Set();
   for (const el of document.querySelectorAll('.sl-div-label .sl-small')) hint.add(el);
   for (const el of document.querySelectorAll('[id$="-hint"]')) hint.add(el);
   for (const el of hint) {
+    // The slot of a hint may hold only a button of its row (the revert of the site builder): that describes no field and asks for no id
+    const part = el.querySelector('button');
+    if (!el.id && part && text(part) === text(el)) continue;
     if (!el.id) {
       add('hint-unnamed', el, '');
       continue;

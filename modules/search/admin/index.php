@@ -150,7 +150,8 @@ function getSearchauditTable(array $list, string $view = 'enabled'): string {
             ['is_truncate' => true, 'title_text' => (string)($row['edit'] ?: _NO), 'has_content_text' => true, 'content_text' => (string)($row['edit'] ?: _NO)],
             ['is_truncate' => true, 'title_text' => (string)($row['reason'] ?: _NO), 'has_content_text' => true, 'content_text' => (string)($row['reason'] ?: _NO)],
         ];
-        if ($view === 'ready') $cells[] = ['is_col_check' => true, 'content_html' => $tpl->getHtmlFrag('checkbox', ['name_attr' => 'mods[]', 'value_attr' => (string)$row['mod']])];
+        if ($view === 'ready') $cells[] = ['is_col_check' => true,
+            'content_html' => $tpl->getHtmlFrag('checkbox', ['name_attr' => 'mods[]', 'aria_label' => (string)$row['mod'], 'value_attr' => (string)$row['mod']])];
         $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', ['cells' => $cells])]);
     }
     return $tpl->getHtmlFrag('table', ['is_wrapless' => true, 'is_fixed' => true, 'head' => $head, 'rows_html' => $rows]);
@@ -529,7 +530,7 @@ function edit(): void {
                 'label_for' => 'f-modul', 'label_html' => _MODUL,
                 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'modul', 'selectid' => 'f-modul', 'options' => getSearchmodsOpts((string)$mod)]),
             ],
-            ['label_html' => _DATE, 'field_html' => getTplAddDateTime(['name' => 'time', 'time' => (string)$time, 'with' => true, 'max' => 16])],
+            ['label_html' => _DATE, 'field_html' => getTplAddDateTime(['name' => 'time', 'label' => _DATE, 'time' => (string)$time, 'with' => true, 'max' => 16])],
             [
                 'label_for' => 'f-hits', 'label_html' => _HITS,
                 'field_html' => $tpl->getHtmlFrag('input', [

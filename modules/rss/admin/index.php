@@ -27,12 +27,23 @@ function rss(): void {
             $tpl->getHtmlFrag('select-option', ['value_attr' => '0', 'label_text' => _RSSSITE, 'is_selected' => $uses === 0])
             .$tpl->getHtmlFrag('select-option', ['value_attr' => '1', 'label_text' => _RSSHOME, 'is_selected' => $uses === 1]);
         $block = $tpl->getHtmlPart('div', ['rows' => [
-            ['label_html' => _NAME, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'field1[]', 'value_attr' => $name, 'placeholder_text' => _NAME])],
             [
-                'label_html' => _ADDRESS,
-                'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'field2[]', 'value_attr' => $addr, 'placeholder_text' => _ADDRESS]),
+                'label_for' => 'f-field1-'.$c,
+                'label_html' => _NAME,
+                'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'field1[]', 'input_id' => 'f-field1-'.$c, 'value_attr' => $name,
+                    'placeholder_text' => _NAME]),
             ],
-            ['label_html' => _USES, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'field3[]', 'options_html' => $opts])],
+            [
+                'label_for' => 'f-field2-'.$c,
+                'label_html' => _ADDRESS,
+                'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'field2[]', 'input_id' => 'f-field2-'.$c, 'value_attr' => $addr,
+                    'placeholder_text' => _ADDRESS]),
+            ],
+            [
+                'label_for' => 'f-field3-'.$c,
+                'label_html' => _USES,
+                'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'field3[]', 'selectid' => 'f-field3-'.$c, 'options_html' => $opts]),
+            ],
         ]]);
         $rows[] = $tpl->getHtmlPart('toggle-form-block', [
             'block_id' => 'rss'.$c,

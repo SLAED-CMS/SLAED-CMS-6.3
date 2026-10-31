@@ -376,6 +376,7 @@ function banlist(): void {
         $mailtext = replace_break(str_replace('[text]', _BANN_INFO."\n\n"._BANN_TERM.': [time]'."\n"._BANN_REAS.': [info]', $conf['mtemp']));
         $userrows = [
             [
+                'label_for' => 'uname',
                 'label_html' => _NICKNAME,
                 'field_html' => getTplUserSearchInput([
                     'input_id' => 'uname',
@@ -737,6 +738,7 @@ function config(): void {
     $ainfo = sprintf(_ADMIN_FILE_INFO, strtolower(getRandomString('10')));
     $floodhtml = $tpl->getHtmlFrag('select', [
         'name_attr' => 'flood',
+        'selectid' => 'f-flood',
         'is_config' => true,
         'options_html' =>
             $tpl->getHtmlFrag('select-option', ['value_attr' => '0', 'label_text' => _NO, 'is_selected' => $conf['security']['flood'] == 0])
@@ -746,6 +748,7 @@ function config(): void {
     ]);
     $errorhtml = $tpl->getHtmlFrag('select', [
         'name_attr' => 'error',
+        'selectid' => 'f-error',
         'is_config' => true,
         'options_html' =>
             $tpl->getHtmlFrag('select-option', ['value_attr' => '0', 'label_text' => _NO, 'is_selected' => $conf['security']['error'] == 0])
@@ -753,8 +756,8 @@ function config(): void {
             .$tpl->getHtmlFrag('select-option', ['value_attr' => '2', 'label_text' => _SEC_VIEW_2, 'is_selected' => $conf['security']['error'] == 2]),
     ]);
     $rows = [
-        ['label_html' => _SFLOOD, 'field_html' => $floodhtml],
-        ['label_html' => _SEC_VIEW, 'field_html' => $errorhtml],
+        ['label_for' => 'f-flood', 'label_html' => _SFLOOD, 'field_html' => $floodhtml],
+        ['label_for' => 'f-error', 'label_html' => _SEC_VIEW, 'field_html' => $errorhtml],
         [
             'label_for' => 'f-flood-t',
             'label_html' => _SFLOD_T,

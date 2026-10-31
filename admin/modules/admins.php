@@ -156,7 +156,7 @@ function add(): void {
         ._PASSWORD.': [pass]';
     $mailtext = replace_break(str_replace('[text]', $txt, $conf['mtemp']));
     $langv = $conf['multilingual'] == 1
-        ? $tpl->getHtmlFrag('select', ['name_attr' => 'lang', 'options_html' => getTplLanguageOptions((string)$lang)])
+        ? $tpl->getHtmlFrag('select', ['name_attr' => 'lang', 'selectid' => 'f-lang', 'options_html' => getTplLanguageOptions((string)$lang)])
         : '';
     $nameField = $aid
         ? $tpl->getHtmlFrag('input', [
@@ -164,6 +164,7 @@ function add(): void {
             'is_required' => true,
             'maxlength_num' => 25,
             'name_attr' => 'aname',
+            'input_id' => 'aname',
             'placeholder_text' => _NICKNAME,
             'value_attr' => (string)$name,
         ])
@@ -178,6 +179,7 @@ function add(): void {
         ]);
     $rows = [
         [
+            'label_for' => 'aname',
             'label_html' => _NICKNAME,
             'field_html' => $nameField,
         ],
@@ -293,12 +295,14 @@ function add(): void {
             'is_full' => true,
         ],
         [
+            'label_for' => 'f-editor',
             'label_html' => _EDITOR,
-            'field_html' => Editor::getSelect('editor', (string)$editor, 'content', 'admin'),
+            'field_html' => Editor::getSelect('editor', (string)$editor, 'content', 'admin', 'id="f-editor"'),
         ],
     ];
     if ($conf['multilingual'] == 1) {
         $rows[] = [
+            'label_for' => 'f-lang',
             'label_html' => _LANGUAGE,
             'field_html' => $langv,
         ];

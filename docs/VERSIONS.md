@@ -2,6 +2,22 @@
 
 ## 2026-10-31
 
+### Every field of the panel has a name, and a strip of tabs is a list of tabs
+
+- **Self-submitting lists.** The filters of the forms of "Модули" and "Категории" and of the statistics of "Мастер" move onto
+  `fragments/list-filter.html` with its button and `is_now`, so a change still opens the list and a page without the script works;
+  `PanelPartsTest` holds that no screen writes `OnChange="submit()"` again. The filter of the list of "Модули" takes `is_now` too.
+- **Tabs.** `initTabGroup()` in `slaed.js` finds the strip through its first tab, as on a module head the strip is the group
+  itself and `role="tablist"` never landed there. Its `li` takes `role="presentation"`, a link of the strip that opens a page
+  `role="tab"`, a tab its `aria-controls`. Arrows move the focus with the choice, so the second press goes on, and Home and End work.
+- **Names.** Every field of the panel is reached by its own label: `label_for` and an id in the form rows,
+  `aria_label` of `fragments/select.html` and `fragments/input.html` where no label stands, `label` of `getTplAddDateTime()`, and the
+  hints of the site builder are tied to their fields. `tools/label-audit.mjs` gains the kind `control-unnamed`, which takes neither a
+  `title` nor a placeholder for a name; its baseline is stored anew on the stand after the production move, 492 routes, with no
+  entry of the panel and the fields of the site still listed.
+- **Two lists under one label.** `_BLOCKS_MOD` goes: the side and the centre blocks of "Модули", of a Node type and of the
+  site builder read `_BLOCKS_SIDE` and `_BLOCKS_TOP`, which replace `_LAYOUT_SIDE` and `_LAYOUT_TOP`.
+
 ### The secrets of the panel are for the super administrator alone
 
 - **OAuth keys.** The switches and the keys of Google and Microsoft move from the settings of "Пользователи", a section that

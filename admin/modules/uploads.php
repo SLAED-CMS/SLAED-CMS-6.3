@@ -435,6 +435,13 @@ function config(): void {
     $blocks = '';
     $mods = getUploadModuleList();
     $types = getNodeTypeMap();
+    $limit = function (string $name, string $label, mixed $val, string $hint = '') use ($tpl): array {
+        $ids = getFieldIds('', $name);
+        $row = ['label_for' => $ids['input'], 'label_html' => $label];
+        if ($hint !== '') $row += ['hint_html' => $hint, 'hint_id' => $ids['hint']];
+        return $row + ['field_html' => $tpl->getHtmlFrag('input', ['describedby' => ($hint !== '') ? $ids['hint'] : '', 'itype' => 'number', 'input_id' => $ids['input'],
+            'name_attr' => $name.'[]', 'is_config' => true, 'is_required' => true, 'value_attr' => $val])];
+    };
     $i = 0;
     foreach ($mods as $val) {
         if ($val != '') {
@@ -455,105 +462,15 @@ function config(): void {
             $mrows = [
                 ['label_html' => _MODUL, 'field_html' => $modn],
                 ['label_for' => $fids['input'], 'label_html' => _FTYPE, 'hint_html' => $typs, 'hint_id' => $fids['hint'], 'field_html' => $tfld],
-                [
-                    'label_html' => _FSIZEALL._FIN,
-                    'field_html' => $tpl->getHtmlFrag('input', [
-                        'itype' => 'number',
-                        'name_attr' => 'allsize[]',
-                        'is_config' => true,
-                        'is_required' => true,
-                        'value_attr' => $rul['maxquota'],
-                    ]),
-                ],
-                [
-                    'label_html' => _FSIZE._FIN,
-                    'field_html' => $tpl->getHtmlFrag('input', [
-                        'itype' => 'number',
-                        'name_attr' => 'size[]',
-                        'is_config' => true,
-                        'is_required' => true,
-                        'value_attr' => $rul['maxbytes'],
-                    ]),
-                ],
-                [
-                    'label_html' => _AWIDTH._AIN,
-                    'field_html' => $tpl->getHtmlFrag('input', [
-                        'itype' => 'number',
-                        'name_attr' => 'width[]',
-                        'is_config' => true,
-                        'is_required' => true,
-                        'value_attr' => $rul['maxwidth'],
-                    ]),
-                ],
-                [
-                    'label_html' => _AHEIGHT._AIN,
-                    'field_html' => $tpl->getHtmlFrag('input', [
-                        'itype' => 'number',
-                        'name_attr' => 'height[]',
-                        'is_config' => true,
-                        'is_required' => true,
-                        'value_attr' => $rul['maxheight'],
-                    ]),
-                ],
-                [
-                    'label_html' => _FILEUP,
-                    'field_html' => $tpl->getHtmlFrag('input', [
-                        'itype' => 'number',
-                        'name_attr' => 'up[]',
-                        'is_config' => true,
-                        'is_required' => true,
-                        'value_attr' => $rul['maxfiles'],
-                    ]),
-                ],
-                [
-                    'label_html' => _GDWIDTH,
-                    'field_html' => $tpl->getHtmlFrag('input', [
-                        'itype' => 'number',
-                        'name_attr' => 'gdwidth[]',
-                        'is_config' => true,
-                        'is_required' => true,
-                        'value_attr' => $rul['thumbwidth'],
-                    ]),
-                ],
-                [
-                    'label_html' => _EDFILEA,
-                    'hint_html' => _CONFINES,
-                    'hint_id' => $hntid = getFieldIds('', 'asum[]')['hint'],
-                    'field_html' => $tpl->getHtmlFrag('input', [
-                        'describedby' => $hntid,
-                        'itype' => 'number',
-                        'name_attr' => 'asum[]',
-                        'is_config' => true,
-                        'is_required' => true,
-                        'value_attr' => $rul['moderfiles'],
-                    ]),
-                ],
-                [
-                    'label_html' => _EDFILEU,
-                    'hint_html' => _CONFINES,
-                    'hint_id' => $hntid = getFieldIds('', 'usum[]')['hint'],
-                    'field_html' => $tpl->getHtmlFrag('input', [
-                        'describedby' => $hntid,
-                        'itype' => 'number',
-                        'name_attr' => 'usum[]',
-                        'is_config' => true,
-                        'is_required' => true,
-                        'value_attr' => $rul['userfiles'],
-                    ]),
-                ],
-                [
-                    'label_html' => _EDFILEG,
-                    'hint_html' => _CONFINES,
-                    'hint_id' => $hntid = getFieldIds('', 'gsum[]')['hint'],
-                    'field_html' => $tpl->getHtmlFrag('input', [
-                        'describedby' => $hntid,
-                        'itype' => 'number',
-                        'name_attr' => 'gsum[]',
-                        'is_config' => true,
-                        'is_required' => true,
-                        'value_attr' => $rul['guestfiles'],
-                    ]),
-                ],
+                $limit('allsize', _FSIZEALL._FIN, $rul['maxquota']),
+                $limit('size', _FSIZE._FIN, $rul['maxbytes']),
+                $limit('width', _AWIDTH._AIN, $rul['maxwidth']),
+                $limit('height', _AHEIGHT._AIN, $rul['maxheight']),
+                $limit('up', _FILEUP, $rul['maxfiles']),
+                $limit('gdwidth', _GDWIDTH, $rul['thumbwidth']),
+                $limit('asum', _EDFILEA, $rul['moderfiles'], _CONFINES),
+                $limit('usum', _EDFILEU, $rul['userfiles'], _CONFINES),
+                $limit('gsum', _EDFILEG, $rul['guestfiles'], _CONFINES),
                 [
                     'label_html' => _F_8,
                     'label_id' => $labid = getFieldIds('', $i.'upload')['label'],

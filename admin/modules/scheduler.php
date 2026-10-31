@@ -152,9 +152,11 @@ function add(string $name = ''): void {
             'is_config' => true,
         ]),
     ], [
+        'label_for' => 'f-type',
         'label_html' => _TYPE,
         'field_html' => $tpl->getHtmlFrag('input', [
             'itype' => 'text',
+            'input_id' => 'f-type',
             'value_attr' => (($job['type'] ?? '') === 'custom') ? _SCHEDULER_CUSTOM : _SCHEDULER_SYSTEM,
             'is_config' => true,
             'input_attr' => 'disabled',
@@ -177,9 +179,11 @@ function add(string $name = ''): void {
         ];
     } else {
         $rows[] = [
+            'label_for' => 'f-system',
             'label_html' => _SCHEDULER_SYSTEM,
             'field_html' => $tpl->getHtmlFrag('input', [
                 'itype' => 'text',
+                'input_id' => 'f-system',
                 'value_attr' => (string)($job['system'] ?? ''),
                 'is_config' => true,
                 'input_attr' => 'disabled',
