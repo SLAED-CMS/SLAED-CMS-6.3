@@ -60,6 +60,7 @@
       <button type="button" class="sl-but" data-sl-fm-act="close">{{ cancel_text }}</button>
     </form>
     {% endif %}
+    {% if file_links %}<div class="sl-fm-caps"><b>{{ links_label }}</b>{% for one in file_links %}<a class="sl-chip sl-chip-neutral" href="{{ one.url }}"><i class="bi bi-{{ one.icon }}" aria-hidden="true"></i>&nbsp;{{ one.name }}</a>{% endfor %}</div>{% endif %}
     {% if quota_html %}<div class="sl-fm-quota">{{{ quota_html }}}</div>{% endif %}
     <div class="sl-fm-split" data-sl-fm-url="{{ self_url }}" data-sl-fm-up="{{ up_url }}" data-sl-fm-find="{{ find_text }}">
       {{{ tree_html }}}

@@ -2,6 +2,14 @@
 
 ## 2026-10-31
 
+### One file manager
+
+- **The section.** "Загрузки" is "Файловый менеджер": the row `uploads` of `config/modules.php` takes `_EUPLOAD`, `setUpdateModules()` renames a stored `_UPLOADS` on the update, and the key `name=uploads` does not change. `_UPLOADS` stays for the monitor and the builder. The tab "Шаблоны" is "Шаблоны вложений" (`_UPLOADS_TPLS`).
+- **"Редактор" is gone.** Its three files are direct links over the tree of `op=sysfiles` (`getAdminFileLinks()`, `_UPLOADS_QUICK`), and the button of the standard robots rules stands in the foot of that file's editor. `.htaccess` and `xsl` open in the source editor (`apache`, `xml`). `config/header.php` opens whole: the wrapper is no longer stripped and added back. `admin/modules/editor.php`, its help and the constants `_E*` of the screen left; `_EROBSTD` and `_EINFOPHP` stay.
+- **"Шаблон" is gone.** The tab "Тема оформления" (`op=theme`) is the file browser over one theme, the context `theme` of `FileManager` with viewing and editing alone, in place of one editor per file on one page. `admin/modules/template.php`, its help, `_TEMPLATES` and `_STYLES` left. The engine is in `docs/TEMPLATES.md`, "Compile And Render" and "Editing A Theme From The Panel".
+- **One writer.** `filecodesave()` of "Блоки" and `xslsave()` of "Карта сайта" stay on their screens and write through `FileManager::setFileBody()`, a new file first through `addFileEntry()`: both now refuse a stale save with 409 and keep the typed text.
+- **The stub.** `config/system.php`, which nothing included, is deleted with its place in the loader, `setConfigFile()` and `Update::isSiteFile()`. `setUpdateModules()` moves the file of an old site to `config/system.php.old`, because the loader would now require it. The records of the two sections drop on the update, as a record without a module does.
+
 ### Mail is one section
 
 - **The section.** "Рассылка" is "Почта": `_NEWSLETTER` carries the new word in the six locales, so a site gets it with its language

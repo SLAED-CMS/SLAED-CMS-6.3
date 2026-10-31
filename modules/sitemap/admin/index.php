@@ -108,9 +108,8 @@ function add(): void {
     setRedirect($afile.'.php?name=sitemap', false, 302, $iswarn ? _TOKENMISS : _SUCCSAVE, $iswarn);
 }
 
-function xsledit(): void {
+function getXslForm(string $text, string $ver, string $note = ''): string {
     global $afile, $tpl;
-    setHead();
     $file = SITEMAP_DIR.'/sitemap.xsl';
     $cont = getTplAdminTabs([
         'ops' => ['name=sitemap', 'name=sitemap&op=xsledit', 'name=sitemap&op=config', 'name=sitemap&op=info'],
@@ -118,13 +117,14 @@ function xsledit(): void {
         'tab' => 1,
     ]);
     $cont .= checkPerms($file);
-    $conts = is_readable($file) ? file_get_contents($file) : '';
+    if ($note !== '') $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $note]);
     $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => sprintf(_XSL_INFO, $file)])]);
     $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php',
         'hidden' => [
             ['nameattr' => 'name', 'valueattr' => 'sitemap'],
             ['nameattr' => 'op', 'valueattr' => 'xslsave'],
+            ['nameattr' => 'ver', 'valueattr' => $ver],
             ['nameattr' => 'token', 'valueattr' => getSiteToken('sitemap')],
         ],
         'content_html' => Editor::getCode([
@@ -132,11 +132,17 @@ function xsledit(): void {
             'name' => 'template',
             'label' => _FILE.': '.$file,
             'lang' => 'xml',
-            'text' => $conts,
+            'text' => $text,
         ]),
         'submit_label' => _SAVE,
     ])]);
-    echo $cont;
+    return $cont;
+}
+
+function xsledit(): void {
+    $file = SITEMAP_DIR.'/sitemap.xsl';
+    setHead();
+    echo getXslForm(is_readable($file) ? (string)file_get_contents($file) : '', is_file($file) ? (string)sha1_file($file) : '');
     setFoot();
 }
 
@@ -145,15 +151,22 @@ function xslsave(): void {
     $iswarn = !checkAdminPost('sitemap');
     $file = SITEMAP_DIR.'/sitemap.xsl';
     $template = getVar('post', 'template', 'raw', '');
-    if (!$iswarn && $template !== '') {
-        $dir = dirname($file);
-        if (!is_dir($dir) && !mkdir($dir, 0777, true) && !is_dir($dir)) {
-            setRedirect($afile.'.php?name=sitemap&op=xsledit', false, 302, _NO_INFO, true);
-            return;
-        }
-        file_put_contents($file, $template);
+    if ($iswarn || $template === '') setRedirect($afile.'.php?name=sitemap&op=xsledit', false, 302, $iswarn ? _TOKENMISS : _SUCCSAVE, $iswarn);
+    $dir = dirname($file);
+    if (!is_dir($dir) && !mkdir($dir, 0777, true) && !is_dir($dir)) setRedirect($afile.'.php?name=sitemap&op=xsledit', false, 302, _NO_INFO, true);
+    $man = getAdminFileManager('system');
+    $path = getAdminFileRel($file);
+    $ver = getVar('post', 'ver', 'word', '');
+    $res = ($ver === '') ? $man->addFileEntry($path) : ['ok' => true, 'error' => ''];
+    if ($res['ok']) $res = $man->setFileBody($path, $template, ($ver === '') ? sha1('') : $ver);
+    if (in_array($res['error'], ['conflict', 'exists'], true)) {
+        http_response_code(409);
+        setHead();
+        echo getXslForm($template, (string)sha1_file($file), _UPLOADS_STALE);
+        setFoot();
+        return;
     }
-    setRedirect($afile.'.php?name=sitemap&op=xsledit', false, 302, $iswarn ? _TOKENMISS : _SUCCSAVE, $iswarn);
+    setRedirect($afile.'.php?name=sitemap&op=xsledit', false, 302, $res['ok'] ? _SUCCSAVE : _ERROR_UP, !$res['ok']);
 }
 
 function config(): void {

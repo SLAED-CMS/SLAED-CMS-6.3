@@ -6,6 +6,15 @@
 
 if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 
+require_once BASE_DIR.'/core/classes/update.php';
+
+function getUploadsTabs(): array {
+    return [
+        'ops' => ['name=uploads', 'name=uploads&op=sysfiles', 'name=uploads&op=theme', 'name=uploads&op=tplconfig', 'name=uploads&op=config', 'name=uploads&op=info'],
+        'tabs' => [_HOME, _UPLOADS_SYSTEM, _THEME, _UPLOADS_TPLS, _PREFERENCES, _MANUAL],
+    ];
+}
+
 function getUploadModuleList(): array {
     global $conf;
     $mods = array_keys(array_filter($conf['uploads'], static fn($v) => is_string($v) && str_contains($v, '|')));
@@ -46,11 +55,7 @@ function uploads(): void {
     $part = explode('/', $walk);
     $dir = ($walk === '') ? getUploadFolder($conf['uploads']['dir']) : implode('/', array_slice($part, 0, ($part[0] === basename(NODE_DIR)) ? 2 : 1));
     setHead();
-    $cont = getTplAdminTabs([
-        'ops' => ['name=uploads', 'name=uploads&op=sysfiles', 'name=uploads&op=tplconfig', 'name=uploads&op=config', 'name=uploads&op=info'],
-        'tabs' => [_HOME, _UPLOADS_SYSTEM, _TEMPLATES, _PREFERENCES, _MANUAL],
-        'subtitle_html' => getUploadsSearch($dir),
-    ]);
+    $cont = getTplAdminTabs(getUploadsTabs() + ['subtitle_html' => getUploadsSearch($dir)]);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop]);
     echo $cont.checkPerms(UPLOADS_DIR).getAdminFileShell(true);
     setFoot();
@@ -93,60 +98,112 @@ function fmupload(): void {
     setRedirect($back, false, 302, ($done > 0) ? _SUCCUPLOAD : $note, $done < 1);
 }
 
+function getUploadsThemes(string $templ): string {
+    global $afile, $tpl;
+    $opts = [];
+    foreach (scandir(PUBLIC_DIR.'/templates') as $file) {
+        if ($file === '.' || $file === '..' || !is_dir(PUBLIC_DIR.'/templates/'.$file)) continue;
+        $opts[] = ['value_attr' => $file, 'label_text' => $file, 'is_selected' => $file === $templ];
+    }
+    return $tpl->getHtmlFrag('list-filter', [
+        'action_url' => $afile.'.php',
+        'label' => _THEME,
+        'hidden' => [['nameattr' => 'name', 'valueattr' => 'uploads'], ['nameattr' => 'op', 'valueattr' => 'theme']],
+        'fields' => [['field_id' => 'sl-fm-theme', 'label' => _THEME, 'name_attr' => 'templ', 'options' => $opts]],
+    ]);
+}
+
+# The head of a screen of the system or the theme area; a shipped theme warns on every one of them, as an update replaces the file being edited here
+function getUploadsFileHead(): string {
+    global $tpl;
+    if (getAdminFileMode() !== 'theme') return getTplAdminTabs(getUploadsTabs() + ['tab' => 1]);
+    $templ = getAdminFileTheme();
+    $cont = getTplAdminTabs(getUploadsTabs() + ['tab' => 2, 'subtitle_html' => getUploadsThemes($templ)]);
+    if (in_array($templ, Update::THEMES, true)) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _UPDATE_THEMES]);
+    return $cont.checkPerms(PUBLIC_DIR.'/templates/'.$templ);
+}
+
+function getRobotsTemplate(): string {
+    global $conf;
+    $base = rtrim((string)($conf['homeurl'] ?? ''), '/');
+    $rows = [
+        'User-agent: *',
+        '',
+        'Disallow: /admin/',
+        'Disallow: /blocks/',
+        'Disallow: /config/',
+        'Disallow: /core/',
+        'Disallow: /lang/',
+        'Disallow: /modules/',
+        'Disallow: /setup.php',
+        'Disallow: /storage/',
+    ];
+    $rows[] = '';
+    $rows[] = 'Sitemap: '.($base ? $base.'/sitemap.xml' : '/sitemap.xml');
+    return implode("\n", $rows);
+}
+
+# The button of the standard robots rules, in the foot of the editor of that one file
+function getRobotsButton(string $file): string {
+    global $tpl;
+    if (getAdminFileMode() !== 'system' || $file !== getAdminFileRel(PUBLIC_DIR.'/robots.txt')) return '';
+    return $tpl->getHtmlFrag('editor-robots-button', [
+        'label' => _EROBSTD,
+        'target_id' => 'slfmcode',
+        'template_json' => json_encode(getRobotsTemplate(), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+    ]);
+}
+
 function sysfiles(): void {
     getAdminFileMode('system');
     setHead();
-    echo getTplAdminTabs([
-        'ops' => ['name=uploads', 'name=uploads&op=sysfiles', 'name=uploads&op=tplconfig', 'name=uploads&op=config', 'name=uploads&op=info'],
-        'tabs' => [_HOME, _UPLOADS_SYSTEM, _TEMPLATES, _PREFERENCES, _MANUAL],
-        'tab' => 1,
-    ]).getAdminFileShell(true);
+    echo getUploadsFileHead().getAdminFileShell(true);
+    setFoot();
+}
+
+function theme(): void {
+    getAdminFileMode('theme');
+    setHead();
+    echo getUploadsFileHead().getAdminFileShell(true);
     setFoot();
 }
 
 function fmedit(): void {
-    global $afile;
-    getAdminFileMode('system');
+    if (getAdminFileMode() === 'uploads') getAdminFileMode('system');
     $file = getAdminFilePath('file');
     $body = getAdminFileManager()->getFileBody($file);
-    if ($body === []) setRedirect($afile.'.php?name=uploads&op=sysfiles', false, 302, _UPLOADS_NOEDIT, true);
+    if ($body === []) setRedirect(getAdminFileBack(), false, 302, _UPLOADS_NOEDIT, true);
     setHead();
-    echo getTplAdminTabs([
-        'ops' => ['name=uploads', 'name=uploads&op=sysfiles', 'name=uploads&op=tplconfig', 'name=uploads&op=config', 'name=uploads&op=info'],
-        'tabs' => [_HOME, _UPLOADS_SYSTEM, _TEMPLATES, _PREFERENCES, _MANUAL],
-        'tab' => 1,
-    ]).getAdminFileShell(true, ['path' => $file, 'text' => $body['text'], 'version' => $body['version']]);
+    echo getUploadsFileHead().getAdminFileShell(true, ['path' => $file, 'text' => $body['text'], 'version' => $body['version'], 'extra_html' => getRobotsButton($file)]);
     setFoot();
 }
 
 function fmsave(): void {
     global $admin, $afile;
-    getAdminFileMode('system');
+    if (getAdminFileMode() === 'uploads') getAdminFileMode('system');
     $file = getAdminFilePath('file', 'post');
     $text = getVar('post', 'text', 'raw', '');
     $text = is_string($text) ? $text : '';
     $ver = getVar('post', 'ver', 'word', '');
     $pass = checkAdminPost('uploads');
     unset($_POST['text'], $_POST['token']);
-    if (!$pass) setRedirect($afile.'.php?name=uploads&op=sysfiles', false, 302, _TOKENMISS, true);
+    if (!$pass) setRedirect(getAdminFileBack(), false, 302, _TOKENMISS, true);
     $res = getAdminFileManager()->setFileBody($file, $text, $ver);
     Logger::addFile($res['ok'] ? 'notice' : 'warning', 'System file save', [
         'admin' => substr((string)($admin[1] ?? ''), 0, 25),
+        'ctx' => getAdminFileMode(),
         'op' => 'fmsave',
         'path' => $file,
         'target' => $file,
         'result' => $res['ok'] ? 'ok' : $res['error'],
     ]);
-    if ($res['ok']) setRedirect($afile.'.php?name=uploads&op=fmedit&file='.rawurlencode($file), false, 302, _SUCCSAVE, false);
-    if ($res['error'] === 'closed' || $res['error'] === 'read') setRedirect($afile.'.php?name=uploads&op=sysfiles', false, 302, _ACCESSDENIED, true);
+    if ($res['ok']) setRedirect($afile.'.php?name=uploads&op=fmedit'.getAdminFileQuery().'&file='.rawurlencode($file), false, 302, _SUCCSAVE, false);
+    if ($res['error'] === 'closed' || $res['error'] === 'read') setRedirect(getAdminFileBack(), false, 302, _ACCESSDENIED, true);
     $stale = $res['error'] === 'conflict';
     if ($stale) http_response_code(409);
     setHead();
-    echo getTplAdminTabs([
-        'ops' => ['name=uploads', 'name=uploads&op=sysfiles', 'name=uploads&op=tplconfig', 'name=uploads&op=config', 'name=uploads&op=info'],
-        'tabs' => [_HOME, _UPLOADS_SYSTEM, _TEMPLATES, _PREFERENCES, _MANUAL],
-        'tab' => 1,
-    ]).getAdminFileShell(true, [
+    echo getUploadsFileHead().getAdminFileShell(true, [
+        'extra_html' => getRobotsButton($file),
         'path' => $file,
         'text' => $text,
         'version' => $stale ? $res['version'] : $ver,
@@ -167,7 +224,7 @@ function getFileNote(array $res, string $op): string {
 }
 
 function setFileAction(string $op): void {
-    global $admin, $afile;
+    global $admin;
     $ctx = getAdminFileMode();
     $man = getAdminFileManager();
     $file = getAdminFilePath('file', 'post');
@@ -175,8 +232,7 @@ function setFileAction(string $op): void {
     $dir = getAdminFilePath('back', 'post');
     $mark = getVar('post', 'mark[]', 'raw', []);
     $mark = is_array($mark) ? array_values(array_filter($mark, 'is_string')) : [];
-    $page = ($ctx === 'uploads') ? '' : '&op=sysfiles';
-    $back = $afile.'.php?name=uploads'.$page.(($dir === '') ? '' : '&dir='.rawurlencode($dir)).((getVar('post', 'unused', 'num', 0) === 1) ? '&unused=1' : '');
+    $back = getAdminFileBack($dir).((getVar('post', 'unused', 'num', 0) === 1) ? '&unused=1' : '');
     $pass = checkAdminPost('uploads');
     unset($_POST['token']);
     if (!$pass) setRedirect($back, false, 302, _TOKENMISS, true);
@@ -299,11 +355,7 @@ function getTemplateSample(string $type): array {
 function tplconfig(): void {
     global $afile, $conf, $tpl;
     setHead();
-    $cont = getTplAdminTabs([
-        'ops' => ['name=uploads', 'name=uploads&op=sysfiles', 'name=uploads&op=tplconfig', 'name=uploads&op=config', 'name=uploads&op=info'],
-        'tabs' => [_HOME, _UPLOADS_SYSTEM, _TEMPLATES, _PREFERENCES, _MANUAL],
-        'tab' => 2,
-    ]);
+    $cont = getTplAdminTabs(getUploadsTabs() + ['tab' => 3]);
     $vars = [
         '[src]' => _UPLOADS_SRC,
         '[tsrc]' => _UPLOADS_TSRC,
@@ -373,11 +425,7 @@ function tplsave(): void {
 function config(): void {
     global $afile, $conf, $tpl;
     setHead();
-    $cont = getTplAdminTabs([
-        'ops' => ['name=uploads', 'name=uploads&op=sysfiles', 'name=uploads&op=tplconfig', 'name=uploads&op=config', 'name=uploads&op=info'],
-        'tabs' => [_HOME, _UPLOADS_SYSTEM, _TEMPLATES, _PREFERENCES, _MANUAL],
-        'tab' => 3,
-    ]);
+    $cont = getTplAdminTabs(getUploadsTabs() + ['tab' => 4]);
     $cont .= checkPerms(CONFIG_DIR.'/uploads.php');
     $serv = getUploadService();
     $typs = implode(', ', $serv::getSupportedTypes());
@@ -614,15 +662,13 @@ function configsave(): void {
 }
 
 function info(): void {
-    setTplAdminInfoPage([
-        'ops' => ['name=uploads', 'name=uploads&op=sysfiles', 'name=uploads&op=tplconfig', 'name=uploads&op=config', 'name=uploads&op=info'],
-        'tabs' => [_HOME, _UPLOADS_SYSTEM, _TEMPLATES, _PREFERENCES, _MANUAL],
-    ]);
+    setTplAdminInfoPage(getUploadsTabs());
 }
 
 switch ($op) {
     default: uploads(); break;
     case 'sysfiles': sysfiles(); break;
+    case 'theme': theme(); break;
     case 'fmedit': fmedit(); break;
     case 'fmsave': fmsave(); break;
     case 'fmcreate': fmcreate(); break;

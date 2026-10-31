@@ -287,7 +287,7 @@ final class UpdateSignTest extends TestCase
         }
         $this->assertTrue(Update::isSiteFile('config/global.php'));
         $this->assertTrue(Update::isSiteFile('public/robots.txt'));
-        foreach (['config/system.php', 'config/header.php', 'config/chmod.php', 'public/sitemap.xml', 'core/system.php'] as $code) {
+        foreach (['config/header.php', 'config/chmod.php', 'public/sitemap.xml', 'core/system.php'] as $code) {
             $this->assertFalse(Update::isSiteFile($code), $code.' passed for a file of the site');
         }
     }

@@ -404,7 +404,7 @@ An installation keeps what the site saved and brings what is new; at runtime not
   new Node type reaches sites only by a PHP step of its version: without its row in `_node_types` it is no type.
 - `setConfigFile()` writes as a string the ordinary files, in its Closure form `node`, `fields`, `uploads`, `ratings`
   and `layout`, which keep their native types; a site without the file gets it whole. Like every save of the panel, the string form keeps scalars as strings, so
-  readers take numbers through `intval()`. `config/system.php`, `header.php` and `chmod.php` are code, not settings,
+  readers take numbers through `intval()`. `config/header.php` and `chmod.php` are code, not settings,
   and follow the row "all other code".
 - **Renaming, changing the meaning or deleting an option** is a PHP step of the version through `setConfigFile()`.
 - **The shape of the layout** carries its version `v` (`Layout::VERSION`). `Layout` reads a file of another version as
@@ -412,7 +412,7 @@ An installation keeps what the site saved and brings what is new; at runtime not
   it, through the Closure form, as a step moves any stored data; the merge never does it.
 - **Languages and themes** are replaced whole, so the wording of a release reaches every site; edits of an
   administrator in these files are lost on update (the old files lie in the backup of the installation), and the
-  pages "Языки", "Шаблоны" and "Стили" warn about it (`_UPDATE_LANGS`, `_UPDATE_THEMES`). They never stop an
+  screens "Языки" and "Тема оформления" of "Файловый менеджер" warn about it (`_UPDATE_LANGS`, `_UPDATE_THEMES`). They never stop an
   installation (`Update::isSwapFile()`, `Update::THEMES`). A third-party theme that lacks a fragment a new core
   expects is the concern of its author.
 - **The manual path** (FTP) is the site owner's responsibility: a `config/` uploaded whole overwrites the settings of
@@ -684,8 +684,8 @@ writes the settings of the site into `config/`, whose files the stand tracks.
    `export-ignore`. `modules/master/` and `modules/changelog/` are taken out, as the release archive leaves them.
 2. The shipped settings in `storage/backup/release/config/` in the form of the release archive, `config/modules.php`
    without `master` and `changelog`: the settings step of a 6.3 site merges from that folder.
-3. The production `config/` laid over `config/` without `local.php` and without the code files `system.php`,
-   `header.php` and `chmod.php`; its `db.php` names the host, user, password and database of the disposable base;
+3. The production `config/` laid over `config/` without `local.php` and without the code files `system.php` of the old
+   releases, `header.php` and `chmod.php`; its `db.php` names the host, user, password and database of the disposable base;
    `storage/logs/` exists, or the run logs nothing.
 4. The dump loaded with the prefix it carries (`sport`), then the accounts that share an address with an older one
    deleted as the owner decided for each.

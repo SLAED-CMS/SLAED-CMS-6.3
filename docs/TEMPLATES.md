@@ -426,6 +426,16 @@ A page is opened at a path such as `/news/internet`, so a relative address in it
 
 `RouteBuildTest::aPageAtAPathCarriesNoRelativeAddress` opens pages at paths of two and three segments as a guest, a member and the administrator and fails on any `href`, `src`, `action`, `hx-*` or `data-*` address, inline `url()` or `fetch()` that does not start at the root.
 
+## Compile And Render
+- A template compiles to PHP in `storage/cache/templates/<theme>/`, rebuilt when its source or `core/classes/template.php` is newer than the cached file, so a saved file needs no clearing of a cache.
+- A name in a tag is `[_a-z][_a-z0-9]*`, dots between its parts; a constant takes `{{ _NAME }}` up to 12 characters.
+- Objects and resources in the data of a render become `null` (`Template::setData()`): a template calls no method.
+- The source is not filtered for PHP: an opening PHP tag in a template runs when the page shows. An edit of a theme file is an edit of code, which is why the panel gives it to the super administrator alone.
+- A template that includes itself renders empty on the repeat instead of recursing.
+
+## Editing A Theme From The Panel
+The screen `name=uploads&op=theme` is the context `theme` of `FileManager` over `public/templates/<theme>`: `getAdminFileMode()` names the area, `getAdminFileTheme()` takes a folder name from `templ` and falls back to the theme of the site, `getAdminFileManager()` builds the root, `getAdminFileQuery()` carries `ctx` and `templ` through every address. Its row of `getCapabilities()` is browse, preview, download and edit alone: a shipped file is changed and never added or removed from here. The saves share `FileManager::setFileBody()` with the system area, the block files of `admin/modules/blocks.php` and the XSL of the sitemap: a version compared under the directory lock, 409 on a conflict with the typed text kept. The warning of `Update::THEMES` stands on every screen of the two shipped themes.
+
 ## Engine Limitations
 - no advanced expression language
 - no equality/comparison operators in `{% if %}` expressions, such as `==`, `!=`, `<`, `>`, `<=`, or `>=`

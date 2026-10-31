@@ -8,7 +8,7 @@ if (!defined('FUNC_FILE')) die('Illegal file access');
 
 # Reads one filesystem area below one server-chosen root: path canonicalization, the path policy, the descriptor and the capabilities
 class FileManager {
-    public const MODES = ['uploads', 'editor', 'system'];
+    public const MODES = ['uploads', 'editor', 'system', 'theme'];
     # Every capability name a context answers, so both screens read one shape instead of guessing which keys their mode carries
     public const GRANTS = ['browse', 'preview', 'upload', 'download', 'insert', 'embed', 'edit', 'create', 'mkdir', 'rename', 'copy', 'move', 'delete', 'compress'];
     # The operations the path policy answers; the compound ones are asked as two of these, once per side, because rename, copy and move touch two paths
@@ -21,7 +21,7 @@ class FileManager {
     private const MAXEDIT = 2097152;
     private const LANGS = [
         'php' => 'php', 'html' => 'html', 'htm' => 'html', 'tpl' => 'html', 'css' => 'css', 'js' => 'js', 'json' => 'json',
-        'sql' => 'sql', 'xml' => 'xml', 'txt' => 'text', 'md' => 'markdown', 'ini' => 'ini', 'log' => 'text',
+        'sql' => 'sql', 'xml' => 'xml', 'xsl' => 'xml', 'txt' => 'text', 'md' => 'markdown', 'ini' => 'ini', 'log' => 'text', 'htaccess' => 'apache',
     ];
     private const IMAGES = ['png', 'jpg', 'jpeg', 'gif', 'webp', 'avif', 'svg'];
     private const AUDIOS = ['mp3', 'wav', 'flac', 'ogg', 'oga', 'opus', 'm4a'];
@@ -109,6 +109,7 @@ class FileManager {
                 'embed' => !empty($this->flags['embed']), 'delete' => $moder, 'compress' => $moder]),
             'system' => array_merge($none, ['browse' => true, 'preview' => true, 'download' => true, 'edit' => true, 'create' => true,
                 'mkdir' => true, 'rename' => true, 'copy' => true, 'move' => true, 'delete' => true, 'compress' => true]),
+            'theme' => array_merge($none, ['browse' => true, 'preview' => true, 'download' => true, 'edit' => true]),
             default => $none,
         };
     }

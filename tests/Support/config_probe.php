@@ -129,7 +129,7 @@ function getProbeString(): array {
     $bytes = (string)file_get_contents(CONFIG_DIR.'/sample.php') === $code;
     $merge = setConfigFile('sample.php', ['zeta' => 3], ['zeta' => 1, 'kept' => 'yes']);
     $deny = [];
-    $names = ['local.php', 'system.php', 'fields.php', 'uploads.php', 'ratings.php', 'node.php', 'layout.php', '../sample.php', 'Sample.php', 'sample', 'sub/sample.php'];
+    $names = ['local.php', 'header.php', 'fields.php', 'uploads.php', 'ratings.php', 'node.php', 'layout.php', '../sample.php', 'Sample.php', 'sample', 'sub/sample.php'];
     foreach ($names as $name) {
         $deny[$name] = setConfigFile($name, ['probe' => '1']);
     }
@@ -558,7 +558,7 @@ function getProbeMerge(): array {
     $write(CONFIG_DIR.'/api.php', $site);
     $data['api']['cors'] = ['https://a.example', 'https://b.example'];
     $write($pack.'/api.php', $data);
-    file_put_contents($pack.'/system.php', "<?php\nreturn ['probe' => 1];\n");
+    file_put_contents($pack.'/header.php', "<?php\nreturn ['probe' => 1];\n");
     $write($pack.'/probefile.php', ['probefile' => ['one' => '1']]);
     $before = getProbeHashes();
     $test = Update::addConfigMerge($probework.'/pack', true);

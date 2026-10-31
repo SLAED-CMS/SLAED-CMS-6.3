@@ -246,13 +246,15 @@ final class FileManagerCatalogTest extends TestCase
         $this->assertFileDoesNotExist(self::$root.'/files/set.zip', 'The refused pack wrote its archive anyway');
     }
 
-    # Which of the two areas a request works in is decided once and by the server, and each of the two roots is named in exactly one place
+    # Which of the areas a request works in is decided once and by the server, each root is named in exactly one place, and the client gives a theme by a folder name alone
     #[Test]
     public function theAreaOfTheScreenDecidesTheRoot(): void
     {
         $body = $this->getBody('core/admin.php', 'getAdminFileManager');
         $this->assertStringContainsString("new FileManager('uploads', UPLOADS_DIR)", $body, 'The catalogue is not rooted at the upload tree');
         $this->assertStringContainsString("new FileManager('system', BASE_DIR)", $body, 'The system area is not rooted at the site');
+        $this->assertStringContainsString("new FileManager('theme', PUBLIC_DIR.'/templates/'.getAdminFileTheme())", $body, 'The theme area is not rooted at one theme');
+        $this->assertStringContainsString('preg_match(\'#^[a-z0-9_-]+$#i\', $name)', $this->getBody('core/admin.php', 'getAdminFileTheme'), 'A theme name is no plain folder name');
         $code = $this->getFile('core/admin.php');
         $same = 'A file context is built outside the one accessor, so a second place names a root of its own';
         $this->assertSame(substr_count($body, 'new FileManager('), substr_count($code, 'new FileManager('), $same);
@@ -261,6 +263,7 @@ final class FileManagerCatalogTest extends TestCase
         $this->assertStringContainsString("getVar('post', 'ctx'", $mode, 'The area of a writing route is not read off the request');
         $this->assertStringContainsString("getAdminFileMode('uploads')", $this->getBody('admin/modules/uploads.php', 'uploads'), 'The catalogue screen does not name its own area');
         $this->assertStringContainsString("getAdminFileMode('system')", $this->getBody('admin/modules/uploads.php', 'sysfiles'), 'The system screen does not name its own area');
+        $this->assertStringContainsString("getAdminFileMode('theme')", $this->getBody('admin/modules/uploads.php', 'theme'), 'The theme screen does not name its own area');
     }
 
     # No address of the module changes a file any more: every file operation has one POST route of its own, and the upload route that ran beside the file manager is gone

@@ -67,7 +67,7 @@ function getConfig(bool $fresh = false): array {
         foreach (array_keys($swap) as $name) $files[] = CONFIG_DIR.'/'.$name;
         $files = array_unique($files);
         sort($files);
-        $skip = ['local.php', 'system.php', 'header.php', 'chmod.php'];
+        $skip = ['local.php', 'header.php', 'chmod.php'];
         $hash = '';
         $conf = [];
         foreach ($files as $file) {
@@ -2682,7 +2682,7 @@ function setConfigRestore(string $force = ''): bool {
 
 # Save config sources and publish local.php under the shared lock; the string form stores scalars as strings with LF endings, because a textarea posts CRLF
 function setConfigFile(string|Closure $fp, array $arr = [], array $act = []): bool {
-    static $reserved = ['system.php', 'header.php', 'chmod.php', 'local.php'];
+    static $reserved = ['header.php', 'chmod.php', 'local.php'];
     static $shared = ['node', 'fields', 'uploads', 'ratings', 'layout'];
     static $busy = false;
     $call = $fp instanceof Closure;

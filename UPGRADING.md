@@ -87,6 +87,14 @@ The hosts and landing pages of visits are counted in the files of the statistics
 - The tabs of `name=config` after "Цензура" moved up by one: the cache is `tab=4`. The mail settings left them: they are `name=newsletter&op=mailconf`, saved by
   `op=mailsave`, the test letter is `op=mailtest` of the same section. `mtemp` stays in `config/global.php`, the rest in `config/mail.php`.
 
+### The Files of the Panel Are One Section
+
+"Загрузки" is "Файловый менеджер" under the same key `name=uploads`. The pages `name=editor` and `name=template` are gone:
+`public/robots.txt`, `public/.htaccess` and `config/header.php` open from the tab of the system files, the files of a theme
+from the tab `op=theme`, which views and edits and neither adds nor removes a file. `config/header.php` opens whole, with its
+first lines. `config/system.php` was read by nothing and is no reserved name any more: move code that still lies in it
+to a block or a module, and leave no such file in `config/`, because the loader requires every PHP file there.
+
 ### Node Upload Directories Under `uploads/node/`
 
 Every Node type keeps its files in `uploads/node/<type>/`; the folders of the modules (`account`, `all`, `avatars`,

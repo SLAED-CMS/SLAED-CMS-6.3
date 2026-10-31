@@ -2290,10 +2290,7 @@ function setUpdateMerge(): array {
     return getUpdateRow($text.($adds ? implode(', ', $adds) : 'none').')', true);
 }
 
-# The module registry of the 6.3 update, reconciled with the tree as the modules screen does it; the _modules table of a 6.2 site wins for its six switches
-# A module of the tree keeps the record of config/modules.php or gets the default, node gets the record of a clean installation, a record without a module is dropped
-# The panel rights of the administrators name the modules instead of the numbers of that table, and the answer names the dropped records
-# Only the first run reads that table: a repeat after the mark modules keeps the switches the owner set in between, and the answer says so
+# The registry reconciled with the tree: a record without a module is dropped, the 6.2 table wins once for its switches, panel rights name modules, the old system.php moves aside
 function setUpdateModules(Database $db, string $prefix, bool $first = true): array {
     $mods = [];
     foreach (scandir(BASE_DIR.'/admin/modules') ?: [] as $file) if (preg_match('/^([a-z_]+)\.php$/i', $file, $matches)) $mods[$matches[1]] = 0;
@@ -2311,6 +2308,7 @@ function setUpdateModules(Database $db, string $prefix, bool $first = true): arr
     $exfile = CONFIG_DIR.'/modules.php';
     $existing = file_exists($exfile) ? ((require $exfile)['modules'] ?? []) : [];
     $cont = array_merge($cont, $existing);
+    if (($cont['uploads']['lang'] ?? '') === '_UPLOADS') $cont['uploads']['lang'] = '_EUPLOAD';
     $sql = 'SELECT table_name FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = :tbl';
     $tblres = $first ? $db->getSqlQuery($sql, ['tbl' => $prefix.'_modules']) : false;
     $fail = ($first && !$tblres) ? ['information_schema'] : [];
@@ -2350,7 +2348,12 @@ function setUpdateModules(Database $db, string $prefix, bool $first = true): arr
     if (!$fail && !setUpdateFile('modules.php', array_intersect_key($cont, $mods))) $fail[] = 'config/modules.php';
     if ($fail) return getUpdateRow('module registry: '.implode(', ', $fail).' could not be read or written, the update stops before the schema', false);
     $out = $first ? [] : getUpdateRow('config/modules.php switches of the 6.2 table '.$prefix.'_modules were carried by the first run, the current ones stay', true);
-    return array_merge($out, $gone ? getUpdateRow('config/modules.php records of removed modules dropped: '.implode(', ', $gone), true) : []);
+    $out = array_merge($out, $gone ? getUpdateRow('config/modules.php records of removed modules dropped: '.implode(', ', $gone), true) : []);
+    $old = CONFIG_DIR.'/system.php';
+    if (!is_file($old)) return $out;
+    $done = rename($old, $old.'.old');
+    $text = $done ? 'config/system.php is read no more and stays as config/system.php.old' : 'config/system.php could not be moved, the update stops before the schema';
+    return array_merge($out, getUpdateRow($text, $done));
 }
 
 # Take the types of config/node.php out of the four areas of their package - node.types, fields.node, uploads and ratings node.<name> - as the panel removes a type

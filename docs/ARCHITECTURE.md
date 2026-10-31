@@ -1262,7 +1262,7 @@ runtime of every request carries.
   `core/system.php` builds `$conf['version']` from both.
 - **The scheduler** starts no job while `apply.lock` lies (`addSchedulerRun()`).
 - **The class `Update`** (`core/classes/update.php`) loads only where it is used — the job `updatecheck`, the
-  panel ("Обновления", the banner, the warnings of "Шаблоны"), `setup.php`, the light mode, the executor and the
+  panel ("Обновления", the banner, the warning of "Тема оформления"), `setup.php`, the light mode, the executor and the
   module `master` — never on a page view of the site, unless the pseudo-cron runs the job. Its one external request
   goes to `Update::HOST` only. Its state lies in `storage/update/client/`, which no package may hold.
 - **Trust** starts from `Update::getFactoryKeys()`: the constants `Update::PRIMARY` and `Update::RECOVERY`, or

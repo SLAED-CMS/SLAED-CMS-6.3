@@ -131,7 +131,7 @@ final class ReleaseToolTest extends TestCase
         $code = preg_replace("#const PRIMARY = '[^']*'#", "const PRIMARY = '".$test['primary']."'", $code);
         self::setFile('core/classes/update.php', preg_replace("#const RECOVERY = '[^']*'#", "const RECOVERY = '".$test['recovery']."'", $code));
         $files = ['public/sitemap.xml' => "<urlset/>\n", 'composer.json' => '{"require":{"php":">=8.4"}}', 'README.md' => "# Test\n", 'config/global.php' => "<?php\nreturn [];\n",
-            'config/system.php' => "<?php\n", 'public/robots.txt' => "User-agent: *\n", 'public/index.php' => "<?php\n", 'public/update.php' => "<?php\n# one\n",
+            'config/header.php' => "<?php\n", 'public/robots.txt' => "User-agent: *\n", 'public/index.php' => "<?php\n", 'public/update.php' => "<?php\n# one\n",
             'storage/update/sql/table.sql' => "-- table\n", 'storage/update/sql/table_update6_3.sql' => "-- 6.3\n", 'core/system.php' => "<?php\n# one\n",
             'modules/news/index.php' => "<?php\n# news\n", 'docs/a.md' => "# a\n", 'modules/master/api.php' => "<?php\n# master\n",
             'modules/changelog/index.php' => "<?php\n# changelog\n", 'public/templates/lite/partials/changelog.html' => "<div></div>\n",
@@ -270,7 +270,7 @@ final class ReleaseToolTest extends TestCase
         $this->assertSame('8.0.0', $list['version']);
         $this->assertTrue($list['files']['config/global.php']['site'] ?? false, 'config/global.php is not marked as a file of the site');
         $this->assertTrue($list['files']['public/robots.txt']['site'] ?? false, 'public/robots.txt is not marked as a file of the site');
-        $this->assertArrayNotHasKey('site', $list['files']['config/system.php'], 'config/system.php is code, not a setting');
+        $this->assertArrayNotHasKey('site', $list['files']['config/header.php'], 'config/header.php is code, not a setting');
         $this->assertArrayNotHasKey('storage/update/files.json', $list['files'], 'files.json lists itself');
         $this->assertSame(hash('sha256', "<?php\n# one\n"), $list['files']['core/system.php']['sha256']);
         $man = $run['firstman'];
@@ -304,7 +304,7 @@ final class ReleaseToolTest extends TestCase
         $this->assertSame($want, $names,
             'The delta lost an unchanged settings file the merge reads, or took unchanged code, robots.txt or an export-ignore file');
         $this->assertArrayNotHasKey('modules/news/index.php', $run['delta']['list']['files'], 'The renamed file is still in the list');
-        $this->assertArrayHasKey('config/system.php', $run['delta']['list']['files'], 'The list of the delta is not the full list');
+        $this->assertArrayHasKey('config/header.php', $run['delta']['list']['files'], 'The list of the delta is not the full list');
         foreach (['docs/a.md', 'tools/release.php', 'tests/Fixtures/update/primary.key', 'composer.json', 'README.md', '.gitattributes', '.gitignore'] as $path) {
             $this->assertArrayNotHasKey($path, $run['delta']['list']['files'], 'A file the site does not need reached the release: '.$path);
         }

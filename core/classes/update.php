@@ -193,7 +193,7 @@ final class Update {
     # Whether a shipped path is a file of the site that a package only places when it is missing: a settings file of config/ and public/robots.txt
     public static function isSiteFile(string $path): bool {
         if ($path === 'public/robots.txt') return true;
-        return preg_match('#^config/[a-z0-9_]+\.php$#D', $path) === 1 && !in_array(basename($path), ['system.php', 'header.php', 'chmod.php', 'local.php'], true);
+        return preg_match('#^config/[a-z0-9_]+\.php$#D', $path) === 1 && !in_array(basename($path), ['header.php', 'chmod.php', 'local.php'], true);
     }
 
     # Whether a shipped path is replaced whole even when the site changed it, its old copy kept by the backup: a language file and a file of the themes admin and lite

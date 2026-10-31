@@ -242,7 +242,7 @@ final class EditorFormatTest extends TestCase
         $this->assertFileDoesNotExist($dir.'build/entry.js');
         $this->assertStringNotContainsString('iife', (string)file_get_contents($dir.'build/build.mjs'), 'The build still writes the bundle');
         $this->assertStringNotContainsString('theme-one-dark', (string)file_get_contents($dir.'build/core.js'), 'The build still carries One Dark');
-        foreach (['admin/modules/editor.php', 'public/templates/admin/assets/js/admin-ui.js', 'public/templates/admin/assets/js/editor-robots.js'] as $file) {
+        foreach (['admin/modules/uploads.php', 'public/templates/admin/assets/js/admin-ui.js', 'public/templates/admin/assets/js/editor-robots.js'] as $file) {
             $this->assertStringNotContainsString('CM6', (string)file_get_contents(BASE_DIR.'/'.$file), $file.' reads the editors of the removed bundle');
         }
         $css = (string)file_get_contents($dir.'assets/cm6.css');

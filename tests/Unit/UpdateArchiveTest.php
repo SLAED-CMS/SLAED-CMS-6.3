@@ -107,7 +107,7 @@ final class UpdateArchiveTest extends TestCase
         $this->assertSame(['link' => '1'], $one['comments'], 'The link switch of the comments the parser made pointless was kept');
         $this->assertSame(['defaults' => ['list' => ['views' => ['list']]], 'limits' => ['edit' => 600], 'types' => ['news' => ['own' => 1]]], $one['node']);
         $this->assertSame(['google' => ['client' => '']], $one['oauth']);
-        $this->assertFalse($one['system'], 'A reserved file of the shipped folder was written into the site');
+        $this->assertFalse($one['header'], 'A reserved file of the shipped folder was written into the site');
         $this->assertStringContainsString('added (none)', $run['again']);
     }
 

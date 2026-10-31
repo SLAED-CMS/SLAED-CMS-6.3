@@ -1114,7 +1114,7 @@
     },
     {
       "theme": "admin",
-      "page": "admin-template-style",
+      "page": "admin-theme-file",
       "mode": "light",
       "sel": "span",
       "bgsel": "span",
@@ -1290,7 +1290,7 @@
     },
     {
       "theme": "admin",
-      "page": "admin-template-style",
+      "page": "admin-theme-file",
       "mode": "dark",
       "sel": "span",
       "bgsel": "span",
@@ -2060,7 +2060,7 @@
     },
     {
       "theme": "admin",
-      "page": "admin-template-style",
+      "page": "admin-theme-file",
       "mode": "light",
       "sel": "span.tok-atom",
       "bgsel": "div.sl-editor-card",
@@ -2082,7 +2082,7 @@
     },
     {
       "theme": "admin",
-      "page": "admin-template-style",
+      "page": "admin-theme-file",
       "mode": "dark",
       "sel": "span.tok-atom",
       "bgsel": "div.sl-editor-card",
@@ -2093,7 +2093,7 @@
     },
     {
       "theme": "admin",
-      "page": "admin-template-style",
+      "page": "admin-theme-file",
       "mode": "light",
       "sel": "span.tok-className",
       "bgsel": "div.sl-editor-card",
@@ -2104,7 +2104,7 @@
     },
     {
       "theme": "admin",
-      "page": "admin-template-style",
+      "page": "admin-theme-file",
       "mode": "dark",
       "sel": "span.tok-className",
       "bgsel": "div.sl-editor-card",
@@ -2115,7 +2115,7 @@
     },
     {
       "theme": "admin",
-      "page": "admin-template-style",
+      "page": "admin-theme-file",
       "mode": "light",
       "sel": "span.tok-comment",
       "bgsel": "div.sl-editor-card",
@@ -2126,7 +2126,7 @@
     },
     {
       "theme": "admin",
-      "page": "admin-template-style",
+      "page": "admin-theme-file",
       "mode": "dark",
       "sel": "span.tok-comment",
       "bgsel": "div.sl-editor-card",
@@ -2137,7 +2137,7 @@
     },
     {
       "theme": "admin",
-      "page": "admin-template-style",
+      "page": "admin-theme-file",
       "mode": "light",
       "sel": "span.tok-keyword",
       "bgsel": "div.sl-editor-card",
@@ -2148,7 +2148,7 @@
     },
     {
       "theme": "admin",
-      "page": "admin-template-style",
+      "page": "admin-theme-file",
       "mode": "dark",
       "sel": "span.tok-keyword",
       "bgsel": "div.sl-editor-card",
@@ -2159,7 +2159,7 @@
     },
     {
       "theme": "admin",
-      "page": "admin-template-style",
+      "page": "admin-theme-file",
       "mode": "light",
       "sel": "span.tok-labelName",
       "bgsel": "div.sl-editor-card",
@@ -2170,7 +2170,7 @@
     },
     {
       "theme": "admin",
-      "page": "admin-template-style",
+      "page": "admin-theme-file",
       "mode": "dark",
       "sel": "span.tok-labelName",
       "bgsel": "div.sl-editor-card",
@@ -2181,7 +2181,7 @@
     },
     {
       "theme": "admin",
-      "page": "admin-template-style",
+      "page": "admin-theme-file",
       "mode": "light",
       "sel": "span.tok-literal",
       "bgsel": "div.sl-editor-card",
@@ -2192,7 +2192,7 @@
     },
     {
       "theme": "admin",
-      "page": "admin-template-style",
+      "page": "admin-theme-file",
       "mode": "dark",
       "sel": "span.tok-literal",
       "bgsel": "div.sl-editor-card",
@@ -2225,7 +2225,7 @@
     },
     {
       "theme": "admin",
-      "page": "admin-template-style",
+      "page": "admin-theme-file",
       "mode": "light",
       "sel": "span.tok-number",
       "bgsel": "div.sl-editor-card",
@@ -2236,7 +2236,7 @@
     },
     {
       "theme": "admin",
-      "page": "admin-template-style",
+      "page": "admin-theme-file",
       "mode": "dark",
       "sel": "span.tok-number",
       "bgsel": "div.sl-editor-card",
@@ -2247,7 +2247,7 @@
     },
     {
       "theme": "admin",
-      "page": "admin-template-style",
+      "page": "admin-theme-file",
       "mode": "light",
       "sel": "span.tok-operator",
       "bgsel": "div.sl-editor-card",
@@ -2258,7 +2258,7 @@
     },
     {
       "theme": "admin",
-      "page": "admin-template-style",
+      "page": "admin-theme-file",
       "mode": "dark",
       "sel": "span.tok-operator",
       "bgsel": "div.sl-editor-card",
@@ -2269,7 +2269,7 @@
     },
     {
       "theme": "admin",
-      "page": "admin-template-style",
+      "page": "admin-theme-file",
       "mode": "light",
       "sel": "span.tok-propertyName",
       "bgsel": "div.sl-editor-card",
@@ -2280,7 +2280,7 @@
     },
     {
       "theme": "admin",
-      "page": "admin-template-style",
+      "page": "admin-theme-file",
       "mode": "dark",
       "sel": "span.tok-propertyName",
       "bgsel": "div.sl-editor-card",
@@ -2291,7 +2291,7 @@
     },
     {
       "theme": "admin",
-      "page": "admin-template-style",
+      "page": "admin-theme-file",
       "mode": "light",
       "sel": "span.tok-punctuation",
       "bgsel": "div.sl-editor-card",
@@ -2313,7 +2313,7 @@
     },
     {
       "theme": "admin",
-      "page": "admin-template-style",
+      "page": "admin-theme-file",
       "mode": "dark",
       "sel": "span.tok-punctuation",
       "bgsel": "div.sl-editor-card",
@@ -2335,7 +2335,7 @@
     },
     {
       "theme": "admin",
-      "page": "admin-template-style",
+      "page": "admin-theme-file",
       "mode": "light",
       "sel": "span.tok-string",
       "bgsel": "div.sl-editor-card",
@@ -2357,7 +2357,7 @@
     },
     {
       "theme": "admin",
-      "page": "admin-template-style",
+      "page": "admin-theme-file",
       "mode": "dark",
       "sel": "span.tok-string",
       "bgsel": "div.sl-editor-card",
@@ -2379,7 +2379,7 @@
     },
     {
       "theme": "admin",
-      "page": "admin-template-style",
+      "page": "admin-theme-file",
       "mode": "light",
       "sel": "span.tok-typeName",
       "bgsel": "div.sl-editor-card",
@@ -2390,7 +2390,7 @@
     },
     {
       "theme": "admin",
-      "page": "admin-template-style",
+      "page": "admin-theme-file",
       "mode": "dark",
       "sel": "span.tok-typeName",
       "bgsel": "div.sl-editor-card",
@@ -2401,7 +2401,7 @@
     },
     {
       "theme": "admin",
-      "page": "admin-template-style",
+      "page": "admin-theme-file",
       "mode": "light",
       "sel": "span.tok-variableName",
       "bgsel": "div.sl-editor-card",
@@ -2412,7 +2412,7 @@
     },
     {
       "theme": "admin",
-      "page": "admin-template-style",
+      "page": "admin-theme-file",
       "mode": "dark",
       "sel": "span.tok-variableName",
       "bgsel": "div.sl-editor-card",

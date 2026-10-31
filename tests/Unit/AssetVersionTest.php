@@ -207,11 +207,11 @@ class AssetVersionTest extends TestCase
         $this->assertStringContainsString('window.SlaedEditors.own(el,', $init);
     }
 
-    # The robots screen prints no tag of its own for a script the admin package prints on every panel page
+    # The section of the robots button prints no tag of its own for a script the admin package prints on every panel page
     #[Test]
     public function theRobotsScreenLeavesItsScriptToTheThemePackage(): void
     {
-        $code = (string)file_get_contents(BASE_DIR.'/admin/modules/editor.php');
+        $code = (string)file_get_contents(BASE_DIR.'/admin/modules/uploads.php');
         $this->assertStringNotContainsString('editor-robots.js', $code, 'The screen prints the script the package already prints on every panel page');
         $this->assertFileExists(PUBLIC_DIR.'/templates/admin/assets/js/editor-robots.js');
     }

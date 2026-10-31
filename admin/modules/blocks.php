@@ -367,6 +367,45 @@ function addsave(): void {
     }
 }
 
+function getBlockCodeForm(string $bf, string $flag, string $text, string $ver, string $note = ''): string {
+    global $afile, $tpl;
+    $cont = getTplAdminTabs(['ops' => getBlockTabsOps(), 'tabs' => [_HOME, _ADDNEWBLOCK, _ADDNEWFILEBLOCK, _EDITBLOCK, _MANUAL], 'tab' => 3]);
+    $dir = BASE_DIR.'/blocks';
+    $path = BASE_DIR.'/blocks/'.$bf;
+    $cont .= checkPerms($dir).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _BLOCK.': '.$path]);
+    if (file_exists($path)) $cont .= checkPerms($path).$tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _B_FEDIT]);
+    if ($note !== '') $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $note]);
+    $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _EINFOPHP]);
+    $rows = [[
+        'label_html' => _FILENAME,
+        'has_field_text' => true,
+        'field_text' => $bf,
+    ], [
+        'label_html' => _CONTENT,
+        'field_html' => Editor::getCode([
+            'id' => 'code',
+            'name' => 'blocktext',
+            'label' => _CONTENT,
+            'lang' => 'php',
+            'text' => $text,
+        ]),
+        'is_full' => true,
+    ]];
+    return $cont.$tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
+        'action_url' => $afile.'.php?name=blocks&op=filecodesave',
+        'hidden' => [
+            ['nameattr' => 'bf', 'valueattr' => $bf],
+            ['nameattr' => 'flag', 'valueattr' => $flag],
+            ['nameattr' => 'ver', 'valueattr' => $ver],
+            ['nameattr' => 'name', 'valueattr' => 'blocks'],
+            ['nameattr' => 'op', 'valueattr' => 'filecodesave'],
+            ['nameattr' => 'token', 'valueattr' => getSiteToken('blocks')],
+        ],
+        'rows' => $rows,
+        'submit_label' => _SAVE,
+    ])]);
+}
+
 function filecode(): void {
     global $db, $afile, $tpl;
     if (!checkAdminPost('blocks')) {
@@ -401,40 +440,9 @@ function filecode(): void {
                 unset($out[0]);
             }
         }
-        setHead();
-        $cont = getTplAdminTabs(['ops' => getBlockTabsOps(), 'tabs' => [_HOME, _ADDNEWBLOCK, _ADDNEWFILEBLOCK, _EDITBLOCK, _MANUAL], 'tab' => 3]);
-        $dir = BASE_DIR.'/blocks';
         $path = BASE_DIR.'/blocks/'.$bf;
-        $cont .= checkPerms($dir).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _BLOCK.': '.$path]);
-        if (file_exists($path)) $cont .= checkPerms($path).$tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _B_FEDIT]);
-        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _EINFOPHP]);
-        $rows = [[
-            'label_html' => _FILENAME,
-            'has_field_text' => true,
-            'field_text' => $bf,
-        ], [
-            'label_html' => _CONTENT,
-            'field_html' => Editor::getCode([
-                'id' => 'code',
-                'name' => 'blocktext',
-                'label' => _CONTENT,
-                'lang' => 'php',
-                'text' => trim($out[1] ?? ''),
-            ]),
-            'is_full' => true,
-        ]];
-        echo $cont.$tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
-            'action_url' => $afile.'.php?name=blocks&op=filecodesave',
-            'hidden' => [
-                ['nameattr' => 'bf', 'valueattr' => $bf],
-                ['nameattr' => 'flag', 'valueattr' => $flaged],
-                ['nameattr' => 'name', 'valueattr' => 'blocks'],
-                ['nameattr' => 'op', 'valueattr' => 'filecodesave'],
-                ['nameattr' => 'token', 'valueattr' => getSiteToken('blocks')],
-            ],
-            'rows' => $rows,
-            'submit_label' => _SAVE,
-        ])]);
+        setHead();
+        echo getBlockCodeForm($bf, $flaged, trim($out[1] ?? ''), is_file($path) ? (string)sha1_file($path) : '');
         setFoot();
     } else {
         setRedirect($afile.'.php?name=blocks&op=fileedit');
@@ -447,22 +455,22 @@ function filecodesave(): void {
     $btext = getVar('post', 'blocktext', 'raw', '');
     $bf = getVar('post', 'bf', 'text', '');
     $bf = preg_match('/^[a-z0-9_\-]+\.php$/i', $bf) ? $bf : '';
-    if (!$warn && $btext && $bf) {
-        if ($handle = fopen(BASE_DIR.'/blocks/'.$bf, 'wb')) {
-            $htmlb = '';
-            $htmle = '';
-            $flag = getVar('post', 'flag', 'var', '');
-            if ($flag == 'html') {
-                $htmlb = "\$content = <<<BLOCKHTML\n";
-                $htmle = "\nBLOCKHTML;\n";
-            }
-            fwrite($handle, '<?php'."\n".'# Author: Eduard Laas'."\n".'# 2005 - '.date('Y').' SLAED'."\n".'# License: MIT'."\n".'# Website: slaed.net'."\n\n"
-                .'if (!defined(\'BLOCK_FILE\')) {'."\n".'header(\'Location: ../index.php\');'."\n".'exit;'."\n".'}'."\n\n".$htmlb.$btext.$htmle."\n".'?>');
-            fclose($handle);
-            setRedirect($afile.'.php?name=blocks', false, 302, _SUCCFILESAVE);
-        }
-    }
-    setRedirect($afile.'.php?name=blocks&op=fileedit', false, 302, $warn ? _TOKENMISS : '', $warn);
+    if ($warn || !$btext || !$bf) setRedirect($afile.'.php?name=blocks&op=fileedit', false, 302, $warn ? _TOKENMISS : '', $warn);
+    $flag = getVar('post', 'flag', 'var', '');
+    $ver = getVar('post', 'ver', 'word', '');
+    $htmlb = ($flag == 'html') ? "\$content = <<<BLOCKHTML\n" : '';
+    $htmle = ($flag == 'html') ? "\nBLOCKHTML;\n" : '';
+    $body = '<?php'."\n".'# Author: Eduard Laas'."\n".'# 2005 - '.date('Y').' SLAED'."\n".'# License: MIT'."\n".'# Website: slaed.net'."\n\n"
+        .'if (!defined(\'BLOCK_FILE\')) {'."\n".'header(\'Location: ../index.php\');'."\n".'exit;'."\n".'}'."\n\n".$htmlb.$btext.$htmle."\n".'?>';
+    $man = getAdminFileManager('system');
+    $res = ($ver === '') ? $man->addFileEntry('blocks/'.$bf) : ['ok' => true, 'error' => ''];
+    if ($res['ok']) $res = $man->setFileBody('blocks/'.$bf, $body, ($ver === '') ? sha1('') : $ver);
+    if ($res['ok']) setRedirect($afile.'.php?name=blocks', false, 302, _SUCCFILESAVE);
+    if (!in_array($res['error'], ['conflict', 'exists'], true)) setRedirect($afile.'.php?name=blocks&op=fileedit', false, 302, _ERROR_UP, true);
+    http_response_code(409);
+    setHead();
+    echo getBlockCodeForm($bf, $flag, $btext, (string)sha1_file(BASE_DIR.'/blocks/'.$bf), _UPLOADS_STALE);
+    setFoot();
 }
 
 function edit(): void {

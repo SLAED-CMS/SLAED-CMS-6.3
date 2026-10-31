@@ -832,6 +832,20 @@ function getSetupClean(): array {
         'again' => deleteUpdateTypes(['docs'])];
     setModSite(false);
     $out['plain'] = getModState(setUpdateModules($pdb, PROBEPREF));
+    setModSite(false);
+    touch(BASE_DIR.'/admin/modules/uploads.php');
+    file_put_contents(CONFIG_DIR.'/system.php', "<?php\n# own\n");
+    $mods = (include CONFIG_DIR.'/modules.php')['modules'];
+    $mods['uploads'] = ['lang' => '_UPLOADS'] + $mods['forum'];
+    setUpdateFile('modules.php', $mods);
+    $one = getModState(setUpdateModules($pdb, PROBEPREF));
+    $kept = (string)file_get_contents(CONFIG_DIR.'/system.php.old');
+    $out['renamed'] = ['lang' => $one['mods']['uploads']['lang'], 'text' => $one['text'], 'stub' => is_file(CONFIG_DIR.'/system.php'), 'kept' => $kept];
+    setModSite(false);
+    file_put_contents(CONFIG_DIR.'/system.php', "<?php\n# own\n");
+    mkdir(CONFIG_DIR.'/system.php.old');
+    $rows = setUpdateModules($pdb, PROBEPREF);
+    $out['stuck'] = ['red' => checkUpdateFail($rows), 'stub' => is_file(CONFIG_DIR.'/system.php')];
     $out['fresh'] = getFreshFlight();
     $out['text'] = getTextFlight();
     $out['update'] = ['real' => checkUpdateBase($pdb, PROBEPREF), 'none' => checkUpdateBase($pdb, 'free')];
@@ -965,7 +979,7 @@ function setMergeSite(bool $pack): void {
     $put('users', ['users' => ['keep' => 'ship', 'fresh' => '1']]);
     $put('node', ['node' => ['types' => ['news' => ['own' => 2, 'more' => 3], 'faq' => ['own' => 1]], 'defaults' => ['list' => ['views' => ['list']]]]]);
     $put('oauth', ['oauth' => ['google' => ['client' => '']]]);
-    $put('system', ['system' => ['skip' => '1']]);
+    $put('header', ['header' => ['skip' => '1']]);
 }
 
 # The settings step without the shipped folder, the merge of a 6.3 site and a repeat that adds nothing
@@ -976,7 +990,7 @@ function getMergeClean(): array {
     $rows = setUpdateMerge();
     $read = fn(string $name): array => (array)(($name === 'global') ? getUpdateSource(CONFIG_DIR.'/global.php') : (getUpdateSource(CONFIG_DIR.'/'.$name.'.php')[$name] ?? []));
     $out['first'] = ['done' => checkProbeDone($rows), 'text' => getProbeText($rows), 'global' => $read('global'), 'users' => $read('users'), 'node' => $read('node'),
-        'oauth' => $read('oauth'), 'comments' => $read('comments'), 'system' => is_file(CONFIG_DIR.'/system.php')];
+        'oauth' => $read('oauth'), 'comments' => $read('comments'), 'header' => is_file(CONFIG_DIR.'/header.php')];
     $out['again'] = getProbeText(setUpdateMerge());
     return $out;
 }

@@ -214,7 +214,6 @@ If a new user-facing constant is required, update all bundled locales where that
 
 Reserved files in `config/`:
 
-- `system.php`
 - `header.php`
 - `chmod.php`
 - `local.php`

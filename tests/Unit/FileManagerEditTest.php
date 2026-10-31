@@ -15,6 +15,8 @@ final class FileManagerEditTest extends TestCase
         'plugins/app.js' => "var num = 1;\n",
         'config/data.json' => "{\"key\": 1}\n",
         'docs/note.md' => "# note\n",
+        'docs/.htaccess' => "Options -Indexes\n",
+        'docs/map.xsl' => "<xsl/>\n",
         'files/empty.txt' => '',
         'files/crlf.txt' => "one\r\ntwo\r\n",
         '.env' => "SECRET=1\n",
@@ -124,7 +126,8 @@ final class FileManagerEditTest extends TestCase
     public function everyEditableLanguageOpensAndSaves(): void
     {
         $man = $this->getManager();
-        foreach (['index.php' => 'php', 'templates/theme.css' => 'css', 'plugins/app.js' => 'js', 'config/data.json' => 'json', 'docs/note.md' => 'markdown'] as $file => $lang) {
+        $langs = ['index.php' => 'php', 'templates/theme.css' => 'css', 'plugins/app.js' => 'js', 'config/data.json' => 'json', 'docs/note.md' => 'markdown'];
+        foreach ($langs + ['docs/.htaccess' => 'apache', 'docs/map.xsl' => 'xml'] as $file => $lang) {
             $this->setFixture($file);
             $this->assertSame($lang, $man->getCodeLanguage($file), $file.' resolves to another highlighting mode');
             $open = $man->getFileBody($file);
@@ -272,9 +275,9 @@ final class FileManagerEditTest extends TestCase
         $this->assertFileDoesNotExist(self::$root.'/files/missing.txt', 'The save created a file that did not exist');
     }
 
-    # Only the system context edits at all: the upload catalogue and the window of the editor carry no edit capability, so neither of them opens or writes a source file
+    # The system and the theme context edit; the upload catalogue and the window of the editor carry no edit capability, so neither of them opens or writes a source file
     #[Test]
-    public function onlyTheSystemContextWritesSource(): void
+    public function onlyTheUploadContextsRefuseSource(): void
     {
         foreach (['uploads', 'editor'] as $mode) {
             $man = $this->getManager($mode);
@@ -284,6 +287,54 @@ final class FileManagerEditTest extends TestCase
             $this->assertSame('closed', $res['error'], 'The '.$mode.' context was allowed to write a source file');
         }
         $this->assertSame(self::BODIES['templates/theme.css'], file_get_contents(self::$root.'/templates/theme.css'), 'A context without the edit capability changed the file');
+    }
+
+    # The theme context views and edits and nothing else: every other write of the layer answers closed and leaves the tree as it was, a walk out of the root included
+    #[Test]
+    public function theThemeContextOnlyViewsAndEdits(): void
+    {
+        $man = $this->getManager('theme');
+        $able = array_keys(array_filter($man->getCapabilities()));
+        $this->assertSame(['browse', 'preview', 'download', 'edit'], $able, 'The theme context grants something other than viewing and editing');
+        $body = $this->setFixture('templates/theme.css');
+        $open = $man->getFileBody('templates/theme.css');
+        $this->assertSame($body, $open['text'], 'The theme context did not open a file of its root');
+        $res = $man->setFileBody('templates/theme.css', "a {}\n", $open['version']);
+        $this->assertTrue($res['ok'], 'The theme context refused the save with '.var_export($res['error'], true));
+        $this->assertSame('conflict', $man->setFileBody('templates/theme.css', "b {}\n", $open['version'])['error'], 'A stale version of a theme file was written');
+        $this->setFixture('templates/theme.css');
+        $refused = [
+            'delete' => $man->deleteFileEntry('templates/theme.css'),
+            'rename' => $man->updateFileName('templates/theme.css', 'other.css'),
+            'move' => $man->updateFilePath('templates/theme.css', 'docs/theme.css'),
+            'copy' => $man->addFileCopy('templates/theme.css', 'docs/theme.css'),
+            'create' => $man->addFileEntry('templates/new.css'),
+            'mkdir' => $man->addDirectory('templates/newdir'),
+            'zip' => $man->addFileArchive('templates/theme.css'),
+            'pack' => $man->addFilesArchive(['templates/theme.css'], 'templates/set.zip'),
+        ];
+        foreach ($refused as $op => $one) $this->assertSame('closed', $one['error'], 'The theme context allowed '.$op);
+        $this->assertSame($body, file_get_contents(self::$root.'/templates/theme.css'), 'A refused operation changed the file');
+        foreach (['docs/theme.css', 'templates/other.css', 'templates/new.css', 'templates/newdir', 'templates/theme.css.zip', 'templates/set.zip'] as $left) {
+            $this->assertFileDoesNotExist(self::$root.'/'.$left, 'A refused operation left '.$left);
+        }
+        $this->assertSame([], $man->getFileBody('../outside.txt'), 'The theme context opened a file outside its root');
+    }
+
+    # The screens of the block files and of the XSL write through the one writer, a new file through its create, and name the file by the version the form carried
+    #[Test]
+    public function theFilesOfBlocksAndXslTakeTheOneWriter(): void
+    {
+        foreach (['admin/modules/blocks.php' => 'filecodesave', 'modules/sitemap/admin/index.php' => 'xslsave'] as $file => $name) {
+            $code = $this->getFile($file);
+            $from = strpos($code, 'function '.$name.'(): void {');
+            $this->assertNotFalse($from, $file.' lost its save');
+            $body = substr($code, $from, (int)strpos($code, "\n}", $from) - $from);
+            $this->assertStringContainsString('setFileBody(', $body, $name.' writes past the file layer');
+            $this->assertStringContainsString('addFileEntry(', $body, $name.' does not create a new file through the file layer');
+            $this->assertStringContainsString("getVar('post', 'ver', 'word', '')", $body, $name.' does not take the version of its form');
+            foreach (['fopen(', 'fwrite(', 'file_put_contents('] as $raw) $this->assertStringNotContainsString($raw, $body, $name.' writes the file by itself');
+        }
     }
 
     # The route of the save is a POST of the module carrying the scoped token, and the module itself is closed to everyone but the super administrator

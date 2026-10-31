@@ -50,7 +50,7 @@ final class UpdateMergeTest extends TestCase
         $this->assertTrue($data['same'], 'The trial wrote a settings file');
         $this->assertSame([true, '', '', true], $data['run'], 'The run failed or added other options than the trial named');
         $this->assertSame([], $data['again'], 'A second run found options to add again');
-        $this->assertSame(array_keys($want), $data['touched'], 'The run wrote a file with nothing to add, or system.php');
+        $this->assertSame(array_keys($want), $data['touched'], 'The run wrote a file with nothing to add, or header.php');
         $this->assertSame(['marker' => false, 'dirs' => 0], $data['trace'], 'The run left the journal of the configuration behind');
     }
 

@@ -68,6 +68,19 @@ final class UpdateSetupTest extends TestCase
         $this->assertSame('', $run['rights']);
     }
 
+    # The section of the files takes the caption of the release over the old one, and the core file of an old site leaves the way of the loader with its code kept
+    #[Test]
+    public function theRegistryRenamesTheSectionAndMovesTheOldFile(): void
+    {
+        $run = $this->getRun()['renamed'];
+        $this->assertSame('_EUPLOAD', $run['lang'], 'The section kept the old caption');
+        $this->assertFalse($run['stub'], 'config/system.php stays where getConfig() would require it');
+        $this->assertSame("<?php\n# own\n", $run['kept'], 'The code of the old file was not kept');
+        $this->assertStringContainsString('config/system.php is read no more', $run['text'], 'The answer does not name the move');
+        $stuck = $this->getRun()['stuck'];
+        $this->assertTrue($stuck['red'] && $stuck['stub'], 'A file that could not be moved passed for moved, and the loader would run it');
+    }
+
     # The update needs both the users and the admins table of its prefix
     #[Test]
     public function thePreflightRefusesAWrongBase(): void

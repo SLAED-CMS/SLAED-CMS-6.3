@@ -116,7 +116,9 @@
       "theme": "admin",
       "steps": [{ "do": "click", "sel": "form[action*=\"op=filecode\"] [type=\"submit\"]", "shot": "code" }]
     },
-    { "name": "admin-template-style", "url": "/admin.php?name=template&op=style", "auth": "admin", "theme": "admin" },
+    { "name": "admin-theme", "url": "/admin.php?name=uploads&op=theme&templ=lite", "auth": "admin", "theme": "admin" },
+    { "name": "admin-theme-file", "url": "/admin.php?name=uploads&op=fmedit&ctx=theme&templ=lite&file=assets/css/theme.css", "auth": "admin", "theme": "admin" },
+    { "name": "admin-robots", "url": "/admin.php?name=uploads&op=fmedit&file=public/robots.txt", "auth": "admin", "theme": "admin" },
     { "name": "admin-account-add", "url": "/admin.php?name=account&op=add", "auth": "admin", "theme": "admin" }
   ]
 }

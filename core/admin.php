@@ -847,8 +847,49 @@ function updateNodeTypePart(string $name, string $part, array $value, int $versi
 function getAdminFileMode(string $set = ''): string {
     static $ctx = '';
     if ($set !== '') $ctx = $set;
-    if ($ctx === '') $ctx = (getVar('get', 'ctx', 'word', '') === 'uploads' || getVar('post', 'ctx', 'word', '') === 'uploads') ? 'uploads' : 'system';
+    if ($ctx === '') {
+        $ctx = getVar('get', 'ctx', 'word', '') ?: getVar('post', 'ctx', 'word', '');
+        if (!in_array($ctx, ['uploads', 'theme'], true)) $ctx = 'system';
+    }
     return $ctx;
+}
+
+# The theme of the theme area, a folder of public/templates or else the theme of the site; the client names a folder, the root is built here
+function getAdminFileTheme(): string {
+    global $conf;
+    $name = getVar('get', 'templ', 'var', '') ?: getVar('post', 'templ', 'var', '');
+    return (preg_match('#^[a-z0-9_-]+$#i', $name) && is_dir(PUBLIC_DIR.'/templates/'.$name)) ? $name : (string)$conf['theme'];
+}
+
+# The query of the theme area, carried by every address of its screens, or a save and a walk would land in the theme of the site
+function getAdminFileQuery(): string {
+    return (getAdminFileMode() === 'theme') ? '&ctx=theme&templ='.rawurlencode(getAdminFileTheme()) : '';
+}
+
+# The page of the file screens the area of the request came from, in one folder of it
+function getAdminFileBack(string $dir = ''): string {
+    global $afile;
+    $page = ['uploads' => '', 'theme' => '&op=theme'][getAdminFileMode()] ?? '&op=sysfiles';
+    return $afile.'.php?name=uploads'.$page.getAdminFileQuery().(($dir === '') ? '' : '&dir='.rawurlencode($dir));
+}
+
+# One absolute path as the system area names it, or empty outside the root of the site; the folder of the documents may carry another name on a hosting
+function getAdminFileRel(string $full): string {
+    $base = realpath(BASE_DIR);
+    $dir = realpath(dirname($full));
+    if ($base === false || $dir === false) return '';
+    $base = str_replace('\\', '/', $base);
+    $dir = str_replace('\\', '/', $dir);
+    return str_starts_with($dir.'/', $base.'/') ? ltrim(substr($dir, strlen($base)).'/'.basename($full), '/') : '';
+}
+
+# The name of the root of the area, shown over its tree and first in its crumbs
+function getAdminFileHome(): string {
+    return match (getAdminFileMode()) {
+        'uploads' => basename(UPLOADS_DIR),
+        'theme' => getAdminFileTheme(),
+        default => _UPLOADS_ROOT,
+    };
 }
 
 # The file context of one area, both roots named here alone; core/classes has no autoload, so the file layer is required on first use
@@ -857,7 +898,11 @@ function getAdminFileManager(string $mode = ''): FileManager {
     $mode = ($mode === '') ? getAdminFileMode() : $mode;
     if (!isset($mans[$mode])) {
         require_once BASE_DIR.'/core/classes/filemanager.php';
-        $mans[$mode] = ($mode === 'uploads') ? new FileManager('uploads', UPLOADS_DIR) : new FileManager('system', BASE_DIR);
+        $mans[$mode] = match ($mode) {
+            'uploads' => new FileManager('uploads', UPLOADS_DIR),
+            'theme' => new FileManager('theme', PUBLIC_DIR.'/templates/'.getAdminFileTheme()),
+            default => new FileManager('system', BASE_DIR),
+        };
     }
     return $mans[$mode];
 }
@@ -919,7 +964,7 @@ function getAdminFilePath(string $key, string $src = 'get'): string {
 function getAdminFileLink(string $op, array $args = []): string {
     static $tok = '';
     if ($tok === '') $tok = getSiteToken();
-    $out = 'index.php?go=5&op='.$op.((getAdminFileMode() === 'uploads') ? '&ctx=uploads' : '');
+    $out = 'index.php?go=5&op='.$op.((getAdminFileMode() === 'uploads') ? '&ctx=uploads' : getAdminFileQuery());
     foreach ($args as $key => $val) {
         if ((string)$val === '') continue;
         $out .= '&'.$key.'='.rawurlencode((string)$val);
@@ -984,17 +1029,17 @@ function getAdminFileNodes(string $dir): string {
         $cur = $next;
         $step++;
     }
-    $isup = getAdminFileMode() === 'uploads';
+    $ctx = getAdminFileMode();
     array_unshift($out, [
-        'name' => $isup ? basename(UPLOADS_DIR) : _UPLOADS_ROOT,
-        'hint' => $isup ? basename(UPLOADS_DIR) : _UPLOADS_ROOT,
+        'name' => getAdminFileHome(),
+        'hint' => getAdminFileHome(),
         'path' => '',
         'url' => getAdminFileLink('getAdminFileList'),
         'pads' => [],
-        'icon' => $isup ? 'folder-fill' : 'hdd-stack',
+        'icon' => ['uploads' => 'folder-fill', 'theme' => 'palette'][$ctx] ?? 'hdd-stack',
         'is_cur' => $dir === '',
     ]);
-    return $tpl->getHtmlPart('file-browser-tree', ['cap_text' => $isup ? _UPLOADS_DIRS : _UPLOADS_TREE, 'nodes' => $out]);
+    return $tpl->getHtmlPart('file-browser-tree', ['cap_text' => ['uploads' => _UPLOADS_DIRS, 'theme' => _THEME][$ctx] ?? _UPLOADS_TREE, 'nodes' => $out]);
 }
 
 # Render the capability row as the file layer answers it, so no screen derives a permission from a role of its own
@@ -1024,7 +1069,7 @@ function getAdminFileActs(array $one): string {
     $ask = _DELETE.' "'.$name.'"?'.(empty($one['critical']) ? '' : ' '._UPLOADS_CRITDEL);
     $dial = [];
     if (!empty($able['edit'])) $dial[] = [
-        'href' => $afile.'.php?name=uploads&op=fmedit&file='.rawurlencode($path),
+        'href' => $afile.'.php?name=uploads&op=fmedit'.getAdminFileQuery().'&file='.rawurlencode($path),
         'run' => 'fmedit',
         'icon_name' => 'pencil-square',
         'title' => _EDIT,
@@ -1082,7 +1127,7 @@ function getAdminFileProps(string $path): string {
     ]);
 }
 
-# Render the source editor of one system file; the version field is compared under the directory lock on save, so it tells a stale save and is never dropped
+# Render the source editor of one file of the area; the version field is compared under the directory lock on save, so it tells a stale save and is never dropped
 function getAdminFileEditor(array $edit): string {
     global $afile, $tpl;
     $man = getAdminFileManager();
@@ -1091,7 +1136,8 @@ function getAdminFileEditor(array $edit): string {
     $dir = str_contains($path, '/') ? substr($path, 0, (int)strrpos($path, '/')) : '';
     $ver = (string)($edit['version'] ?? '');
     $code = 'slfmcode';
-    $back = $afile.'.php?name=uploads&op=sysfiles'.(($dir === '') ? '' : '&dir='.rawurlencode($dir));
+    $back = getAdminFileBack($dir);
+    $hide = (getAdminFileMode() === 'theme') ? [['nameattr' => 'ctx', 'valueattr' => 'theme'], ['nameattr' => 'templ', 'valueattr' => getAdminFileTheme()]] : [];
     $form = $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php',
         'form_attr' => 'id="slfmeditform"',
@@ -1101,6 +1147,7 @@ function getAdminFileEditor(array $edit): string {
             ['nameattr' => 'file', 'valueattr' => $path],
             ['nameattr' => 'ver', 'valueattr' => $ver],
             ['nameattr' => 'token', 'valueattr' => getSiteToken('uploads')],
+            ...$hide,
         ],
         'content_html' => (($edit['note'] ?? '') === '' ? '' : $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $edit['note']]))
             .Editor::getCode([
@@ -1112,6 +1159,7 @@ function getAdminFileEditor(array $edit): string {
             ]),
     ]);
     $foot = $tpl->getHtmlFrag('window-foot-edit', [
+        'extra_html' => (string)($edit['extra_html'] ?? ''),
         'ver_hint' => _UPLOADS_VERHINT,
         'ver_label' => _UPLOADS_VERSION,
         'ver_text' => substr($ver, 0, 6),
@@ -1136,6 +1184,19 @@ function getAdminFileEditor(array $edit): string {
         'body_html' => $form,
         'foot_html' => $foot,
     ]);
+}
+
+# The files the system area is opened for, one click away; a file that is gone or lies outside the root of the site is not offered
+function getAdminFileLinks(): array {
+    global $afile;
+    if (getAdminFileMode() !== 'system') return [];
+    $man = getAdminFileManager();
+    $out = [];
+    foreach ([PUBLIC_DIR.'/robots.txt' => 'robot', PUBLIC_DIR.'/.htaccess' => 'server', CONFIG_DIR.'/header.php' => 'code-slash'] as $full => $icon) {
+        $rel = getAdminFileRel($full);
+        if ($rel !== '' && $man->isFileEditable($rel)) $out[] = ['name' => $rel, 'url' => $afile.'.php?name=uploads&op=fmedit&file='.rawurlencode($rel), 'icon' => $icon];
+    }
+    return $out;
 }
 
 # Render the file browser of one directory, whole and unpaged; the fan is built again for the tile, as a form id shared with the row would submit the row form
@@ -1210,8 +1271,7 @@ function getAdminFileShell(bool $full = false, array $edit = []): string {
         $data['acts_html'] = getAdminFileActs($row);
         $tiles .= $tpl->getHtmlFrag('file-browser-tile', $data);
     }
-    $home = ($ctx === 'uploads') ? basename(UPLOADS_DIR) : _UPLOADS_ROOT;
-    $crumbs = [['name' => $home, 'url' => ($dir === '') ? '' : getAdminFileLink('getAdminFileList')]];
+    $crumbs = [['name' => getAdminFileHome(), 'url' => ($dir === '') ? '' : getAdminFileLink('getAdminFileList')]];
     $walk = '';
     foreach (($dir === '') ? [] : explode('/', $dir) as $part) {
         $walk = ($walk === '') ? $part : $walk.'/'.$part;
@@ -1280,6 +1340,8 @@ function getAdminFileShell(bool $full = false, array $edit = []): string {
         'cancel_text' => _CLOSE,
         'can_create' => !empty($able['create']),
         'can_mkdir' => !empty($able['mkdir']),
+        'file_links' => getAdminFileLinks(),
+        'links_label' => _UPLOADS_QUICK,
         'caps_label' => _UPLOADS_GRANTS,
         'caps_html' => getAdminFileGrants(),
         'info_text' => _OVERALL.': '.count($all).' · '.filterSize($sum),
