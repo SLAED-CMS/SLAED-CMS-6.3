@@ -458,6 +458,7 @@ define('_LOCALE','de_DE');
 define('_LOCALITYLANG','Wohnort');
 define('_LOGIN','Login');
 define('_LOGININCOR','Login fehlerhaft! Bitte noch einmal versuchen...');
+define('_LOGINLIMIT','Zu viele Fehlversuche. Bitte versuchen Sie es in 15 Minuten erneut.');
 define('_LOGOUT','Abmelden');
 define('_MAN','Mann');
 define('_MATERIALS','%s Beitrag|%s Beiträge');

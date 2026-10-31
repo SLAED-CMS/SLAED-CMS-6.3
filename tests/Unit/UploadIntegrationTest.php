@@ -204,8 +204,8 @@ final class UploadIntegrationTest extends TestCase
         $this->assertStringContainsString('getUploadPlaceRule(', $rule, 'The shared guard resolves something other than the place rule');
         $this->assertStringNotContainsString("getVar('get', 'mod'", $rule, 'The shared guard still reads the module parameter, which cannot carry a place at all');
         $code = $this->getFile('public/index.php');
-        $from = strpos($code, '$go == 4');
-        $stop = strpos($code, '$go == 5');
+        $from = strpos($code, 'elseif ($go == 4)');
+        $stop = strpos($code, 'elseif ($go == 5)');
         $this->assertNotFalse($from, 'The editor branch of the front controller is gone');
         $this->assertNotFalse($stop, 'The branch after the editor one is gone, so the slice below would run past the routes it claims about');
         $part = substr($code, $from, $stop - $from);

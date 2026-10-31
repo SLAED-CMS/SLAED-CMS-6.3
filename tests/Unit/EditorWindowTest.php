@@ -89,7 +89,7 @@ final class EditorWindowTest extends TestCase
     public function theChangingRoutesReadTheirTokenFromTheBody(): void
     {
         $rule = $this->getBody('core/system.php', 'getEditorRouteRule');
-        $this->assertStringContainsString("getVar(\$src, 'token', 'raw', '')", $rule, 'The guard reads its token from a fixed place, so one route cannot demand the body');
+        $this->assertStringContainsString("getVar('post', 'token', 'raw', '')", $rule, 'The guard reads its token from a fixed place, so one route cannot demand the body');
         $code = $this->getFile('public/index.php');
         foreach (['editorDelete', 'editorArchive'] as $op) {
             $this->assertStringContainsString("case '".$op."':", $code, 'The route '.$op.' is not wired at all');

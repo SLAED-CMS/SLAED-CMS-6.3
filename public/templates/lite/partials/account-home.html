@@ -28,7 +28,7 @@
     {% include 'fragments/panel-head.html' with home_head %}
     <div class="sl-cab-actions">
       {% for item in actions %}
-      <a class="sl-cab-act sl-cat-tone-{{ item.tone }}" href="{{ item.href }}" title="{{ item.title }}">
+      <a class="sl-cab-act sl-cat-tone-{{ item.tone }}" href="{{ item.href }}" title="{{ item.title }}"{% if item.post %} data-sl-post="{{ item.post }}"{% endif %}>
         {% if item.badge %}<span class="sl-cab-badge">{{ item.badge }}</span>{% endif %}
         <span class="sl-cat-ico"><i class="bi bi-{{ item.icon }}" aria-hidden="true"></i></span>
         <b>{{ item.label }}</b>

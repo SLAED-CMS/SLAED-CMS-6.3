@@ -844,12 +844,7 @@ CALL addidx('{prefix}_forum', 'time', '`time`', 0);
 # Batch J — _message
 # =============================================================================
 
-CALL rencol('{prefix}_message', 'mid', 'id');
-CALL rencol('{prefix}_message', 'active', 'status');
-CALL rencol('{prefix}_message', 'mlanguage', 'lang');
-CALL renidx('{prefix}_message', 'active', 'status');
-CALL renidx('{prefix}_message', 'mlanguage', 'lang');
-CALL addidx('{prefix}_message', 'status', '`status`', 0);
+DROP TABLE IF EXISTS `{prefix}_message`;
 
 # =============================================================================
 # Batch J — _points
@@ -1207,13 +1202,11 @@ CALL rencol('{prefix}_categories', 'auth_mod',    'pmod');
 
 # =============================================================================
 # Batch W: body column unification
-#   _message:      content    → body
 #   _newsletter:   content    → body
 #   _privat:       content    → body
 #   _voting:       questions  → body
 # =============================================================================
 
-CALL rencol('{prefix}_message',      'content',    'body');
 CALL rencol('{prefix}_newsletter',   'content',    'body');
 CALL rencol('{prefix}_privat',       'content',    'body');
 CALL rencol('{prefix}_voting',       'questions',  'body');
@@ -1416,19 +1409,6 @@ ALTER TABLE `{prefix}_groups`
   MODIFY `extra`  BOOLEAN NOT NULL DEFAULT 0,
   MODIFY `rank`   VARCHAR(255) NOT NULL DEFAULT '',
   MODIFY `color`  VARCHAR(7) NOT NULL DEFAULT '';
-
-ALTER TABLE `{prefix}_message`
-  MODIFY `id`     INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  MODIFY `title`  VARCHAR(100) NOT NULL,
-  MODIFY `body`   MEDIUMTEXT NOT NULL,
-  MODIFY `status` BOOLEAN NOT NULL DEFAULT 1,
-  MODIFY `view`   BOOLEAN NOT NULL DEFAULT 1,
-  MODIFY `lang`   VARCHAR(10) CHARACTER SET ascii COLLATE ascii_bin NOT NULL DEFAULT '';
-
-# The expiry of a message becomes the moment it ends, NULL for none, by the same path as the expiry of a block
-CALL runiftype('{prefix}_message', 'expire', 'int', 'ALTER TABLE `{prefix}_message` MODIFY `expire` VARCHAR(14) NULL DEFAULT NULL');
-CALL runiftype('{prefix}_message', 'expire', 'varchar', 'UPDATE `{prefix}_message` SET `expire` = CASE WHEN `expire` REGEXP \'^[0-9]{14}$\' THEN `expire` WHEN `expire` REGEXP \'^[1-9][0-9]{0,10}$\' THEN DATE_FORMAT(FROM_UNIXTIME(`expire`), \'%Y%m%d%H%i%s\') END');
-CALL modcol('{prefix}_message', 'expire', 'DATETIME DEFAULT NULL');
 
 CALL stopnull('{prefix}_newsletter', 'time', 'newsletter.time holds NULL rows: repair them before this upgrade');
 UPDATE `{prefix}_newsletter` SET `body` = '' WHERE `body` IS NULL;
@@ -2132,7 +2112,6 @@ CALL setconv('{prefix}_groups', '{collate}');
 CALL setconv('{prefix}_login_log', '{collate}');
 CALL setconv('{prefix}_mail', '{collate}');
 CALL setconv('{prefix}_maildead', '{collate}');
-CALL setconv('{prefix}_message', '{collate}');
 CALL setconv('{prefix}_newsletter', '{collate}');
 CALL setconv('{prefix}_node_types', '{collate}');
 CALL setconv('{prefix}_nodes', '{collate}');
@@ -2185,7 +2164,6 @@ CALL delidx('{prefix}_forum', 'counter');
 CALL delidx('{prefix}_forum', 'uid');
 CALL delidx('{prefix}_forum', 'cid_status');
 CALL delidx('{prefix}_groups', 'name');
-CALL delidx('{prefix}_message', 'lang');
 CALL delidx('{prefix}_newsletter', 'time');
 CALL delidx('{prefix}_node_types', 'active');
 CALL delidx('{prefix}_nodes', 'queue');

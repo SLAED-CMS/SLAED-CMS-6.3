@@ -56,14 +56,13 @@ final class AdminLogTest extends TestCase
     public function aPassedTokenWritesOneLine(): void
     {
         $run = $this->getRun()['actions'];
-        $this->assertSame([303, 303, 303, 200, 303, 303, 200, 200, 303, 200], $run['codes']);
+        $this->assertSame([303, 303, 200, 303, 303, 200, 200, 303, 200], $run['codes']);
         $this->assertSame([true, true, true, true, true], $run['tokens'], 'a form of the run lost its token');
-        $this->assertSame([true, 0, 0], $run['gone'], 'the message and the comments were not removed');
+        $this->assertSame([true, 0, 0], $run['gone'], 'the poll and the comments were not removed');
         $want = [
-            ['action', 'root', 'messages', 'save', 0, 0, 'done', false],
-            ['action', 'root', 'messages', 'status', 1, 1, 'done', false],
-            ['action', 'root', 'messages', 'save', 1, 1, 'open', false],
-            ['action', 'root', 'messages', 'save', 1, 1, 'done', false],
+            ['action', 'root', 'voting', 'save', 0, 0, 'done', false],
+            ['action', 'root', 'voting', 'save', 1, 1, 'open', false],
+            ['action', 'root', 'voting', 'save', 1, 1, 'done', false],
             ['action', 'root', 'comments', 'delete', 1, 2, 'done', false],
             ['action', 'root', 'blocks', 'updateAdminBlockOrder', 0, 0, 'open', false],
             ['action', 'root', 'database', 'dump', 0, 0, 'open', false],
@@ -129,12 +128,12 @@ final class AdminLogTest extends TestCase
     public function theActionLogReadsAsTable(): void
     {
         $run = $this->getRun()['read'];
-        $this->assertSame([['root #1', 'dump', ''], ['root #1', '', ''], ['root #1', '', '#1 +1'], ['root #1', '', '#1'], ['root #1', '', '#1'], ['root #1', '', '#1'],
+        $this->assertSame([['root #1', 'dump', ''], ['root #1', '', ''], ['root #1', '', '#1 +1'], ['root #1', '', '#1'], ['root #1', '', '#1'],
             ['root #1', '', '']], array_map(static fn(array $v): array => [$v[2], $v[4] === 'dump' ? 'dump' : '', $v[5]], $run['actions']));
         $this->assertSame([], array_intersect(array_column($run['actions'], 4), ['save', 'status', 'delete', 'updateAdminBlockOrder']), 'a common operation shows its name');
-        $this->assertSame([], array_intersect(array_column($run['actions'], 3), ['messages', 'comments', 'blocks', 'database']), 'a module shows its scope');
+        $this->assertSame([], array_intersect(array_column($run['actions'], 3), ['voting', 'comments', 'blocks', 'database']), 'a module shows its scope');
         $this->assertSame([['docsman #4', 'info'], ['docsman #4', 'warning']], array_map(static fn(array $v): array => [$v[2], $v[1]], $run['logins']));
-        $this->assertSame([9, 4, 3], [$run['all'], $run['modul'], $run['open']], 'the filters of events, module and result');
+        $this->assertSame([8, 3, 3], [$run['all'], $run['modul'], $run['open']], 'the filters of events, module and result');
         $this->assertFalse($run['foreign'], 'a line that is not JSON is skipped');
     }
 

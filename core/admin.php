@@ -157,6 +157,7 @@ function getAdminTopMenu(): string {
         ['href' => $afile.'.php?op=logout', 'label' => _LOGOUT, 'blank' => false, 'icon' => getIconName('logout'), 'split' => true],
     ];
     $html = '';
+    $out = $afile.'.php?op=logout';
     foreach ($items as $item) {
         $html .= $tpl->getHtmlFrag('list-item', ['is_split' => !empty($item['split']), 'content_html' => $tpl->getHtmlFrag('link', [
             'href' => (string)$item['href'],
@@ -165,6 +166,7 @@ function getAdminTopMenu(): string {
             'label' => (string)$item['label'],
             'is_label_strong' => true,
             'is_blank' => !empty($item['blank']),
+            'link_attr' => ($item['href'] === $out) ? 'data-sl-post="'.getSiteToken('logout').'"' : '',
         ])]);
     }
     return $html;
@@ -178,7 +180,7 @@ function getAdminLayoutVars(): array {
         return ['login' => $login];
     }
     $rows = getAdminQueues();
-    $bell = ['rows' => $rows, 'sum' => array_sum(array_column($rows, 'num')), 'url' => 'index.php?go=5&op=getAdminQueueData&token='.getSiteToken()];
+    $bell = ['rows' => $rows, 'sum' => array_sum(array_column($rows, 'num')), 'url' => 'index.php?go=5&op=getAdminQueueData'];
     return [
         'settings_win' => getAdminSettingsWindow(),
         'dock_html' => getAdminDock(),
@@ -331,7 +333,7 @@ function getAdminCategoryList(string $modul = '', int $obj = 0): string {
     }
     $cont = $tpl->getHtmlFrag('table', [
         'attr' => 'data-sl-admin-table="categories" data-sl-drag-url="index.php?go=5&op=updateAdminCategoryOrder&mod='.$modul.'"'
-            .' data-sl-drag-token="'.getSiteToken().'" data-sl-drag-target="repajax_cat"',
+            .' data-sl-drag-token="'.getSiteToken('categories').'" data-sl-drag-target="repajax_cat"',
         'disable_sort' => true,
         'head' => [
             ['content' => _ID],
@@ -541,7 +543,7 @@ function getAdminBlockList(): string {
     }
     return $tpl->getHtmlFrag('table', [
         'attr' => 'data-sl-admin-table="blocks" data-sl-drag-url="index.php?go=5&op=updateAdminBlockOrder"'
-            .' data-sl-drag-token="'.getSiteToken().'" data-sl-drag-target="repajax_block"',
+            .' data-sl-drag-token="'.getSiteToken('blocks').'" data-sl-drag-target="repajax_block"',
         'disable_sort' => true,
         'head' => [
             ['content' => _ID],
@@ -962,14 +964,12 @@ function getAdminFilePath(string $key, string $src = 'get'): string {
 
 # The address of one browser route with the area and the ajax token a numeric go demands; without the area the route would build the system context
 function getAdminFileLink(string $op, array $args = []): string {
-    static $tok = '';
-    if ($tok === '') $tok = getSiteToken();
     $out = 'index.php?go=5&op='.$op.((getAdminFileMode() === 'uploads') ? '&ctx=uploads' : getAdminFileQuery());
     foreach ($args as $key => $val) {
         if ((string)$val === '') continue;
         $out .= '&'.$key.'='.rawurlencode((string)$val);
     }
-    return $out.'&token='.$tok;
+    return $out;
 }
 
 # The address one image is shown at: its own where the file has one, else the preview route that checks it again; a listing takes the stored thumbnail

@@ -458,6 +458,7 @@ define('_LOCALE','en_GB');
 define('_LOCALITYLANG','Locality');
 define('_LOGIN','Login');
 define('_LOGININCOR','Login Incorrect! Please Try Again...');
+define('_LOGINLIMIT','Too many failed attempts. Please try again in 15 minutes.');
 define('_LOGOUT','Logout');
 define('_MAN','Man');
 define('_MATERIALS','%s material|%s materials');

@@ -150,7 +150,7 @@
 
     function getReq(id, url, data) {
         var opt = getOpt(id);
-        data.append('token', opt.ajax || '');
+        data.append('token', opt.token || '');
         return fetch(url, {
             method: 'POST',
             credentials: 'same-origin',

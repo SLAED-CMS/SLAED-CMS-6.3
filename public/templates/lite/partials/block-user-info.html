@@ -25,7 +25,7 @@
     <a href="{{ root }}account" title="{{ profile_label }}" aria-label="{{ profile_label }}"><i class="bi bi-person" aria-hidden="true"></i></a>
     {% if has_privat %}<a href="{{ root }}account/privat" title="{{ privat_label }}" aria-label="{{ privat_label }}"><i class="bi bi-chat-dots" aria-hidden="true"></i></a>{% endif %}
     <a href="{{ root }}account/edithome" title="{{ change_label }}" aria-label="{{ change_label }}"><i class="bi bi-gear" aria-hidden="true"></i></a>
-    <a href="{{ root }}account/logout?refer=1" title="{{ logout_label }}" aria-label="{{ logout_label }}"><i class="bi bi-box-arrow-right" aria-hidden="true"></i></a>
+    <a href="{{ root }}account/logout?refer=1" data-sl-post="{{ logout_token }}" title="{{ logout_label }}" aria-label="{{ logout_label }}"><i class="bi bi-box-arrow-right" aria-hidden="true"></i></a>
   </nav>
   {% else %}
   {% include 'fragments/block-login-form.html' %}

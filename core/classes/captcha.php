@@ -318,14 +318,22 @@ class Captcha {
         self::provider()->challenge($act);
     }
 
-    # Record a failed login for the given scope (user|admin); the streak feeds the "after failed attempts" mode
-    public static function registerLoginFailure(string $scope): void {
+    # Record a failed login for the given scope (user|admin); the streak feeds the "after failed attempts" mode, the other two the limit
+    public static function registerLoginFailure(string $scope, string $name = ''): void {
         self::increment('lf:'.$scope.':'.getIp(), self::loginWindow());
+        self::increment('lp:'.$scope.':'.getIp().':'.strtolower($name), self::loginWindow());
+        self::increment('li:'.$scope.':'.getIp(), self::loginWindow());
     }
 
-    # Clear the failure streak after a successful login
-    public static function clearLoginFailures(string $scope): void {
+    # Clear the failure streak and the count of this name after a successful login; the count of the address stays, or a login to the own account would reset a guessing run
+    public static function clearLoginFailures(string $scope, string $name = ''): void {
         CaptchaStore::clear('lf:'.$scope.':'.getIp());
+        CaptchaStore::clear('lp:'.$scope.':'.getIp().':'.strtolower($name));
+    }
+
+    # Report whether this address has used up its attempts, on one name or on all; no count across addresses, as it would let any guest lock a member out of the account
+    public static function isLoginLimited(string $scope, string $name): bool {
+        return CaptchaStore::counter('lp:'.$scope.':'.getIp().':'.strtolower($name)) >= 5 || CaptchaStore::counter('li:'.$scope.':'.getIp()) >= 30;
     }
 
     # Current failure count for a scope

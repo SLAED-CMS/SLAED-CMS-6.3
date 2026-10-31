@@ -8,6 +8,7 @@ define('_ACCOUNTCREATED','Utworzone konto nowego użytkownika');
 define('_ACCOUNT_BLOCKNOTE','Wyłączone menu nie jest pokazywane, ale tekst poniżej zostaje zachowany.');
 define('_ACCOUNT_CLEAN','Brak ostrzeżeń');
 define('_ACCOUNT_EXITNOTE','Zakończ sesję');
+define('_ACCOUNT_MAILPASS','Bieżące hasło, wymagane tylko przy zmianie adresu');
 define('_ACCOUNT_FIELDS','Pola dodatkowe');
 define('_ACCOUNT_FILLED','Wypełnienie profilu');
 define('_ACCOUNT_FSMAILNOTE','List przychodzi na każdą odpowiedź w Twoim temacie.');

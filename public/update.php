@@ -1028,7 +1028,7 @@ function deleteMigrateTables(array &$state): void {
 # It runs on every run after the data step, so a type that was blocked before is served once its materials exist; a converted address no longer matches
 function setMigrateForeign(array &$state): void {
     $prs = new Parser();
-    $cols = ['nodes' => ['intro', 'body'], 'comment' => ['body'], 'forum' => ['body'], 'privat' => ['body'], 'message' => ['body'], 'newsletter' => ['body'],
+    $cols = ['nodes' => ['intro', 'body'], 'comment' => ['body'], 'forum' => ['body'], 'privat' => ['body'], 'newsletter' => ['body'],
         'blocks' => ['content'], 'users' => ['sig', 'block'], 'voting' => ['body']];
     $live = NodeStatus::Published->value;
     foreach (array_map(fn(array $v): string => $v['type'], getMigrateMap()) + ['forum' => ''] as $mod => $kind) {
@@ -1842,7 +1842,7 @@ function setUpdateArchive(Database $db, string $prefix, bool $dry): array {
     $host = preg_quote((string)preg_replace('#^www\.#i', '', (string)parse_url((string)($conf['homeurl'] ?? ''), PHP_URL_HOST)), '#');
     $left = fn(string $text, array $dirs): int => (int)preg_match_all('#(?<![A-Za-z0-9_./:%-])(?:\./|/|https?://(?:www\.)?'.$host.'/)?uploads/(?:'
         .implode('|', array_map(fn(string $v): string => preg_quote($v, '#'), $dirs)).'|archive/[a-z]+)/[A-Za-z0-9_%-]#i', $text);
-    $jobs = ['nodes' => ['intro', 'body'], 'comment' => ['body'], 'forum' => ['body'], 'privat' => ['body'], 'message' => ['body'], 'newsletter' => ['body'],
+    $jobs = ['nodes' => ['intro', 'body'], 'comment' => ['body'], 'forum' => ['body'], 'privat' => ['body'], 'newsletter' => ['body'],
         'blocks' => ['content'], 'users' => ['sig', 'block'], 'voting' => ['body']];
     $save = function () use ($file, &$info): bool {
         return setUpdateBackup($file, (string)json_encode($info, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
@@ -1934,7 +1934,7 @@ function setUpdateTexts(Database $db, string $prefix, bool $dry, bool $six): arr
     foreach (($res ? $db->getSqlRows($res) : false) ?: [] as $row) $kinds[intval($row['id'])] = $area($defs['node'][(string)$row['name']] ?? null);
     $late = $six ? '0' : 'time >= :from';
     $jobs = ['nodes' => [['intro', 'body'], '1', '', false], 'comment' => [['body'], $six ? '0' : '(modul = \'help\' OR time >= :from)', '', false],
-        'forum' => [['body'], $late, '', true], 'privat' => [['body'], $late, '', false], 'message' => [['body'], '0', '', true], 'newsletter' => [['body'], '0', '', true],
+        'forum' => [['body'], $late, '', true], 'privat' => [['body'], $late, '', false], 'newsletter' => [['body'], '0', '', true],
         'blocks' => [['content'], '0', 'url = \'\'', true], 'users' => [['sig', 'block'], '0', '', true]];
     $names = array_filter(['nodes' => array_filter($kinds) ? fn(array $row): array => $kinds[intval($row['tid'])] ?? [] : null,
         'forum' => $area($defs['forum'] ?? null) ? fn(): array => $area($defs['forum']) : null,
@@ -2120,7 +2120,7 @@ function getUpdateLangs(): array {
 function setUpdateLangs(Database $db, string $prefix): array {
     $good = true;
     $done = 0;
-    foreach (['admins', 'blocks', 'categories', 'message', 'users', 'voting'] as $tab) {
+    foreach (['admins', 'blocks', 'categories', 'users', 'voting'] as $tab) {
         foreach (getUpdateLangs() as $name => $code) {
             $res = $db->getSqlQuery('UPDATE `'.$prefix.'_'.$tab.'` SET lang = :code WHERE LOWER(lang) = :name', ['code' => $code, 'name' => $name]);
             $good = $good && $res !== false;
@@ -2199,7 +2199,7 @@ function setUpdateConfig(): array {
             if ($keep === '') unset($site['module']);
             else $site['module'] = $keep;
             unset($site['version'], $site['css_f'], $site['script_f'], $site['script_a'], $site['script_b'], $site['amod']);
-            unset($site['rewrite'], $site['sep'], $site['tsep'], $site['title'], $site['ctitle'], $site['clickable']);
+            unset($site['rewrite'], $site['sep'], $site['tsep'], $site['title'], $site['ctitle'], $site['clickable'], $site['message']);
             foreach (glob(CONFIG_DIR.'/*.php') ?: [] as $one) unset($site[basename($one, '.php')]);
             if (isset($site['theme']) && !is_dir(PUBLIC_DIR.'/templates/'.basename((string)$site['theme']))) unset($site['theme']);
             $look = PUBLIC_DIR.'/templates/'.basename((string)($site['theme'] ?? $base['theme'] ?? '')).'/images/logos/';
@@ -2253,7 +2253,7 @@ function setUpdateMerge(): array {
     require_once BASE_DIR.'/core/classes/update.php';
     $pack = BACKUP_DIR.'/release/config';
     if (!is_dir($pack)) return getUpdateRow('config: the shipped settings are not in storage/backup/release/config, put the config/ of the release there and run again', false);
-    $gone = ['global' => '/^(rewrite|sep|tsep|title|ctitle|clickable|dbsync|version|cache_.+|css_(?!f$).+|script_(?!f$).+)$/D',
+    $gone = ['global' => '/^(rewrite|sep|tsep|title|ctitle|clickable|dbsync|version|message|cache_.+|css_(?!f$).+|script_(?!f$).+)$/D',
         'users' => '/^(anonym|network|network_c|point|points)$/D', 'newsletter' => '/^(active|count)$/D', 'voting' => '/^bar$/D', 'comments' => '/^alink$/D'];
     $cut = [];
     foreach ($gone as $name => $find) {

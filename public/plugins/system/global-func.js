@@ -54,9 +54,6 @@ function fetchUserSuggestions(input) {
 	if (rich) {
 		url += '&rich=1';
 	}
-	if (input.dataset.slUserToken) {
-		url += '&token=' + encodeURIComponent(input.dataset.slUserToken);
-	}
 	window.fetch(url, {
 		credentials: 'same-origin',
 		headers: {

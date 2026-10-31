@@ -105,11 +105,12 @@ class Mail {
         return $this->db->getSqlRows($this->db->getSqlQuery($sql, ['lock' => $this->lock])) ?: [];
     }
 
-    # Record what one attempt answered; every stored value is cut here, because the write that records a failure must never fail itself and leave the row claimed
+    # Record what one attempt answered; a sent mail of the kinds that carry a password keeps no body, and every value is cut here, as the write of a failure must never fail itself
     public function setResult(int $id, bool $sent, string $mesg = '', bool $hard = false): bool {
         if (!$this->db instanceof Database || $id < 1) return false;
         if ($sent) {
-            $sql = 'UPDATE '.PREFIX_DB.'_mail SET status = 1, tries = tries + 1, locked = 0, lockid = \'\', phase = \'\', code = \'\', error = \'\' WHERE id = :id';
+            $sql = 'UPDATE '.PREFIX_DB.'_mail SET status = 1, tries = tries + 1, locked = 0, lockid = \'\', phase = \'\', code = \'\', error = \'\','
+                .' body = IF(kind IN (\'account\', \'admins\'), \'\', body) WHERE id = :id';
             return (bool)$this->db->getSqlQuery($sql, ['id' => $id]);
         }
         $row = $this->db->getSqlRow($this->db->getSqlQuery('SELECT tries FROM '.PREFIX_DB.'_mail WHERE id = :id', ['id' => $id]));
@@ -188,6 +189,9 @@ class Mail {
         if ($this->db->getSqlQuery($sql, ['days' => $bulk])) $num += intval($this->db->getSqlAffected());
         $sql = 'DELETE FROM '.PREFIX_DB.'_mail WHERE status = 1 AND kind <> \'newsletter\' AND time < DATE_SUB(NOW(), INTERVAL :days DAY) LIMIT '.self::PRUNENUM;
         if ($this->db->getSqlQuery($sql, ['days' => $keep])) $num += intval($this->db->getSqlAffected());
+        $sql = 'UPDATE '.PREFIX_DB.'_mail SET body = \'\' WHERE status = 2 AND kind IN (\'account\', \'admins\') AND body <> \'\''
+            .' AND time < DATE_SUB(NOW(), INTERVAL :days DAY) LIMIT '.self::PRUNENUM;
+        $this->db->getSqlQuery($sql, ['days' => $keep]);
         return $num;
     }
 
@@ -525,7 +529,7 @@ class Mail {
         $list = $this->getIdList($list);
         if ($list === '' || !$this->db instanceof Database) return 0;
         $sql = 'UPDATE '.PREFIX_DB.'_mail SET status = 0, tries = 0, ntime = UNIX_TIMESTAMP(), locked = 0, lockid = \'\', phase = \'\', code = \'\', error = \'\''
-            .' WHERE status = 2 AND id IN ('.$list.')';
+            .' WHERE status = 2 AND (body <> \'\' OR ref > 0) AND id IN ('.$list.')';
         if (!$this->db->getSqlQuery($sql)) return 0;
         return intval($this->db->getSqlAffected());
     }

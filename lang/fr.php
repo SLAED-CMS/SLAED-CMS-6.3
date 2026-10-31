@@ -458,6 +458,7 @@ define('_LOCALE','fr_FR');
 define('_LOCALITYLANG','Lieu de résidence');
 define('_LOGIN','Se connecter');
 define('_LOGININCOR','Informations de connexion incorrectes! Essayez encore...');
+define('_LOGINLIMIT','Trop de tentatives échouées. Réessayez dans 15 minutes.');
 define('_LOGOUT','Sortie');
 define('_MAN','Homme');
 define('_MATERIALS','%s publication|%s publications');

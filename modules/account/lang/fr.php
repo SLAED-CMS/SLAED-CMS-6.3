@@ -8,6 +8,7 @@ define('_ACCOUNTCREATED',"Créé le compte d'un nouvel utilisateur");
 define('_ACCOUNT_BLOCKNOTE','Un menu désactivé n\'est pas affiché, mais le texte ci-dessous est conservé.');
 define('_ACCOUNT_CLEAN','Aucun avertissement');
 define('_ACCOUNT_EXITNOTE','Terminer la session');
+define('_ACCOUNT_MAILPASS','Votre mot de passe actuel, requis seulement pour modifier cette adresse');
 define('_ACCOUNT_FIELDS','Champs supplémentaires');
 define('_ACCOUNT_FILLED','Complétude du profil');
 define('_ACCOUNT_FSMAILNOTE','Un message arrive pour chaque réponse dans votre sujet.');

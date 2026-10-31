@@ -110,6 +110,12 @@ function getSetupBase(): array {
     return is_array($data) ? $data : [];
 }
 
+# The account PHP runs under, '' where the platform does not tell it: a refused folder is mostly one uploaded by FTP under another account, so the owner has to know this one
+function getSetupUser(): string {
+    if (function_exists('posix_geteuid') && function_exists('posix_getpwuid')) return (string)(posix_getpwuid(posix_geteuid())['name'] ?? '');
+    return (string)(getenv('USERNAME') ?: '');
+}
+
 # Write one configuration file, every scalar a string unless $raw keeps native types; a file not writable stays as it was and answers false
 function setSetupFile(string $fp, array $arr, array $act = [], bool $raw = false): bool {
     $fp = BASE_DIR.'/config/'.$fp;
@@ -202,9 +208,10 @@ function getSetupChecks(): array {
         $list[] = [$name, $has ? $note : ($must ? _SETUP_NOEXT : _SETUP_NOOPT), $has || !$must, !$has && !$must];
     }
     $cfg = checkSetupWrite('db.php') && checkSetupWrite('global.php') && checkSetupWrite('security.php') && checkSetupWrite('update.php');
+    $user = getSetupUser();
     foreach (['config' => $cfg, 'storage' => true, 'uploads' => true] as $dir => $good) {
         $good = $good && is_dir(BASE_DIR.'/'.$dir) && is_writable(BASE_DIR.'/'.$dir);
-        $list[] = [$dir.'/', $good ? _SETUP_WRITABLE : _SETUP_NOWRITE, $good];
+        $list[] = [$dir.'/', $good ? _SETUP_WRITABLE : (($user !== '') ? sprintf(_SETUP_OPENDIR, $user) : _SETUP_NOWRITE), $good];
     }
     $url = getSetupUrl();
     $list[] = [strtoupper((string)parse_url($url, PHP_URL_SCHEME)), sprintf(_SETUP_ANSWERS, $url), true];
@@ -370,7 +377,7 @@ function setSetupConfig(array &$state): array {
     if ($panel !== $from && (!is_file(PUBLIC_DIR.'/'.$from.'.php') || !rename(PUBLIC_DIR.'/'.$from.'.php', PUBLIC_DIR.'/'.$panel.'.php'))) $panel = $from;
     if (!in_array(strtolower($now), ['admin', 'index', 'setup', 'update', strtolower($panel)], true) && is_file(PUBLIC_DIR.'/'.$now.'.php')) unlink(PUBLIC_DIR.'/'.$now.'.php');
     $state['site']['panel'] = $panel;
-    if (!setSetupFile('security.php', getSetupSource('security.php')['security'] ?? [], ['afile' => $panel])) {
+    if (!setSetupFile('security.php', getSetupSource('security.php')['security'] ?? [], ['afile' => $panel, 'captcha' => ['active' => '1', 'login_admin' => 'after-fail']])) {
         return ['task' => '', 'fail' => _FILE.' config/security.php — '._SETUP_NOWRITE];
     }
     $cont = ['host' => $base['host'], 'uname' => $base['uname'], 'pass' => $base['pass'], 'name' => $base['name'], 'engine' => 'InnoDB', 'charset' => 'utf8mb4',
@@ -623,7 +630,7 @@ ini_set('display_errors', $conf['security']['error'] > 0 ? '1' : '0');
 error_reporting([0, E_ALL ^ E_NOTICE, E_ALL][intval($conf['security']['error'])] ?? 0);
 set_time_limit(300);
 require_once BASE_DIR.'/core/admin.php';
-if (session_status() === PHP_SESSION_NONE) session_start();
+if (session_status() === PHP_SESSION_NONE) session_start(['cookie_httponly' => true, 'cookie_samesite' => 'Lax', 'use_strict_mode' => true]);
 $setup = getSetupState();
 if (getSetupVar('post', 'go', 'var') === 'part' && $setup['part'] >= 0 && $setup['part'] === $setup['count'] - 1) {
     $ahash = (string)($setup['admin']['hash'] ?? '');

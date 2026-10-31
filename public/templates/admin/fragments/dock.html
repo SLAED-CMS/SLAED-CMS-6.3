@@ -21,7 +21,7 @@
       {% if links %}<button type="button" class="sl-dock-app sl-dock-stack" data-tip="{{ _ADM_LINKS }}: {{ links_num }}" aria-label="{{ _ADM_LINKS }}: {{ links_num }}" data-sl-dock-pop="stack" aria-controls="sl-dock-pop-stack" aria-expanded="false"><i class="bi bi-folder2-open" aria-hidden="true"></i>{% if is_dead %}<b class="sl-dock-badge" title="{{ _ADM_NOFILE }}">!</b>{% endif %}</button>{% endif %}
       <button type="button" class="sl-dock-app sl-dock-me" data-tip="{{ me_name }}" aria-label="{{ me_name }}" data-sl-dock-pop="me" aria-controls="sl-dock-pop-me" aria-expanded="false"><i class="bi bi-person-gear" aria-hidden="true"></i></button>
       <span class="sl-dock-sep"></span>
-      <a class="sl-dock-app sl-dock-plain sl-dock-out" href="{{ logout_url }}" data-tip="{{ _LOGOUT }}" aria-label="{{ _LOGOUT }}"><i class="bi bi-box-arrow-right" aria-hidden="true"></i></a>
+      <a class="sl-dock-app sl-dock-plain sl-dock-out" href="{{ logout_url }}" data-sl-post="{{ logout_token }}" data-tip="{{ _LOGOUT }}" aria-label="{{ _LOGOUT }}"><i class="bi bi-box-arrow-right" aria-hidden="true"></i></a>
     </div>
     <span class="sl-dock-sep sl-dock-sep-end"></span>
     <span class="sl-modal-acts sl-dock-tools">

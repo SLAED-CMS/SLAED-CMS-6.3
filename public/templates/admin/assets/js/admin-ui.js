@@ -2347,7 +2347,7 @@
     function setQueueFetch(acted) {
         var bell = document.querySelector('[data-sl-bell]');
         if (!bell) return;
-        fetch(bell.getAttribute('data-sl-bell'), { credentials: 'same-origin', headers: { 'Accept': 'application/json', 'X-SL-Poll': '1' } })
+        fetch(bell.getAttribute('data-sl-bell'), { credentials: 'same-origin', headers: { 'Accept': 'application/json', 'X-SL-Poll': '1', 'X-CSRF-TOKEN': window.getPageToken() } })
             .then(function (res) { return res.ok ? res.json() : null; })
             .then(function (data) {
                 if (!data || !Array.isArray(data.rows)) return;
@@ -2455,7 +2455,7 @@
         ask = function () {
             if (busy || document.hidden || box.hasAttribute('data-sl-live-paused')) return;
             busy = true;
-            fetch(box.getAttribute('data-sl-cockpit'), { credentials: 'same-origin', headers: { 'Accept': 'application/json', 'X-SL-Poll': '1' } })
+            fetch(box.getAttribute('data-sl-cockpit'), { credentials: 'same-origin', headers: { 'Accept': 'application/json', 'X-SL-Poll': '1', 'X-CSRF-TOKEN': window.getPageToken() } })
                 .then(function (res) { return res.ok ? res.json() : null; })
                 .then(function (data) { if (data && data.gauges && Array.isArray(data.signals)) setCockpitView(box, data); })
                 .catch(function () {})

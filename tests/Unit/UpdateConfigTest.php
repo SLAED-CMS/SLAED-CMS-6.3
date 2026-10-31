@@ -50,6 +50,7 @@ final class UpdateConfigTest extends TestCase
         $this->assertArrayNotHasKey('forum', $glob, 'A 6.2 key that names a configuration area reached global.php and shadows that area');
         $this->assertSame([], array_intersect_key($glob, ['script_a' => 0, 'script_b' => 0]), 'A script switch the release dropped was carried');
         $this->assertNotSame('1', $glob['clickable'] ?? null, 'The link switch of 6.2 the parser made pointless was carried');
+        $this->assertArrayNotHasKey('message', $glob, 'The switch of the site messages, which are gone, was carried');
         $this->assertSame('2', $run['comments']['link'], 'A comments setting of 6.2 was not carried');
         $this->assertNotSame('1', $run['comments']['alink'] ?? null, 'The link switch of the 6.2 comments the parser made pointless was carried');
         $this->assertSame(['de', 'k1'], [$run['lang']['lang'], $run['lang']['key']]);

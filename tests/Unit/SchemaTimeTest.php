@@ -51,13 +51,6 @@ final class SchemaTimeTest extends TestCase
         $this->assertSame([1, 1], $kept, 'A block that has not expired was touched');
     }
 
-    # An expired message switches off with no expiry left, a live one stays and is shown on the next request
-    #[Test]
-    public function aMessageExpires(): void
-    {
-        $this->assertSame([[0, null], [1, 1], true], $this->getRun()['message']);
-    }
-
     # The session sweep removes the visitors whose timer lies behind the session time and keeps the others
     #[Test]
     public function theSessionSweepReadsTheTimer(): void
@@ -65,11 +58,11 @@ final class SchemaTimeTest extends TestCase
         $this->assertSame(['newbot'], $this->getRun()['session']);
     }
 
-    # The panel sets the expiry of a block and of a message from days as a moment that far ahead
+    # The panel sets the expiry of a block from days as a moment that far ahead
     #[Test]
     public function thePanelSetsAnExpiryFromDays(): void
     {
-        $this->assertSame([2, 3], array_map('intval', $this->getRun()['panel']));
+        $this->assertSame([2], array_map('intval', $this->getRun()['panel']));
     }
 
     # A topic newer than the last visit is new and an older one is not; an account that never came back and a guest see both as new, and the visit is recorded from never

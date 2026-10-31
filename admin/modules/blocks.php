@@ -124,13 +124,18 @@ function add(): void {
         ]),
     ];
     $rows[] = [
-        'label_for' => 'f-content',
         'label_html' => _CONTENT,
-        'field_html' => $tpl->getHtmlFrag('textarea', [
-            'name_attr' => 'content',
-            'input_id' => 'f-content',
-            'rows_num' => 15,
-            'value_text' => '',
+        'label_id' => $labid = getFieldIds('', 'content')['label'],
+        'field_html' => getTplTextarea([
+            'labelledby' => $labid,
+            'label' => _CONTENT,
+            'id' => '1',
+            'name' => 'content',
+            'value' => '',
+            'mod' => 'all',
+            'store' => 'blocks.content',
+            'rows' => '15',
+            'placeholder' => _CONTENT,
         ]),
         'is_full' => true,
     ];
@@ -342,10 +347,11 @@ function addsave(): void {
     if ($warn) {
         setRedirect($afile.'.php?name=blocks&op=add', false, 302, _TOKENMISS, true);
     }
-    if (($content == '') && ($bfile == '')) {
+    $room = ($url || $bfile != '') ? '' : checkEditorTextRoom($content, 'blocks.content');
+    if ($room !== '' || (($content == '') && ($bfile == ''))) {
         setHead();
         $cont = getTplAdminTabs(['ops' => getBlockTabsOps(), 'tabs' => [_HOME, _ADDNEWBLOCK, _ADDNEWFILEBLOCK, _EDITBLOCK, _MANUAL], 'tab' => 1]);
-        echo $cont.$tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _RSSFAIL]).$tpl->getHtmlPart('box', [
+        echo $cont.$tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $room ?: _RSSFAIL]).$tpl->getHtmlPart('box', [
             'content_html' => _GOBACK,
         ]);
         setFoot();
@@ -572,13 +578,18 @@ function edit(): void {
         ];
     } else {
         $rows[] = [
-            'label_for' => 'f-content',
             'label_html' => _CONTENT,
-            'field_html' => $tpl->getHtmlFrag('textarea', [
-                'name_attr' => 'content',
-                'input_id' => 'f-content',
-                'rows_num' => 15,
-                'value_text' => (string)$content,
+            'label_id' => $labid = getFieldIds('', 'content')['label'],
+            'field_html' => getTplTextarea([
+                'labelledby' => $labid,
+                'label' => _CONTENT,
+                'id' => '1',
+                'name' => 'content',
+                'value' => (string)$content,
+                'mod' => 'all',
+                'store' => 'blocks.content',
+                'rows' => '15',
+                'placeholder' => _CONTENT,
             ]),
             'is_full' => true,
         ];
@@ -687,7 +698,7 @@ function edit(): void {
 }
 
 function editsave(): void {
-    global $db, $afile;
+    global $db, $afile, $tpl;
     $warn = !checkAdminPost('blocks');
     $bid = getVar('post', 'bid', 'num');
     $bkey = filterCutText(getVar('post', 'bkey', 'var', ''), 15);
@@ -712,6 +723,14 @@ function editsave(): void {
         setRedirect($afile.'.php?name=blocks&op=edit&id='.$bid, false, 302, _TOKENMISS, true);
     }
     if (!in_array($bpos, ['l', 'r', 'c', 'd'], true)) setRedirect($afile.'.php?name=blocks&op=edit&id='.$bid, false, 302, _ERROR, true);
+    $room = ($url || $bfile != '') ? '' : checkEditorTextRoom($content, 'blocks.content');
+    if ($room !== '') {
+        setHead();
+        $cont = getTplAdminTabs(['ops' => getBlockTabsOps(), 'tabs' => [_HOME, _ADDNEWBLOCK, _ADDNEWFILEBLOCK, _EDITBLOCK, _MANUAL], 'tab' => 3]);
+        echo $cont.$tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $room]).$tpl->getHtmlPart('box', ['content_html' => _GOBACK]);
+        setFoot();
+        return;
+    }
     $param = '';
     if ($bfile === 'node.php') {
         $pick = getVar('post', 'ntype[]', 'var', []);

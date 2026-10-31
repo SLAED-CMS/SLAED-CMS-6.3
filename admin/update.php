@@ -38,21 +38,22 @@ function setUpdateLogin(string $fail): void {
 function checkUpdateLogin(): void {
     global $db, $afile, $conf;
     $name = htmlspecialchars(trim(substr(getVar('post', 'name', 'raw', ''), 0, 25)));
-    $pwd = getVar('post', 'pwd', 'raw', '');
-    $good = checkSiteToken(getVar('post', 'token', 'text'), 'update') && CaptchaStore::counter('lf:admin:'.getIp()) < 10;
+    $pwd = str_replace("\0", '', getVar('post', 'pwd', 'raw', ''));
+    $good = checkSiteToken(getVar('post', 'token', 'text'), 'update') && CaptchaStore::counter('lf:admin:'.getIp()) < 10 && !Captcha::isLoginLimited('admin', $name);
     $sql = 'SELECT id, name, password, editor, super FROM '.PREFIX_DB.'_admins WHERE name = :name';
     $res = ($good && $name !== '' && $pwd !== '') ? $db->getSqlQuery($sql, ['name' => $name]) : false;
     $row = $res ? ($db->getSqlRow($res) ?: []) : [];
     if (($row[1] ?? '') !== $name || intval($row[4] ?? 0) !== 1 || !checkPassHash($pwd, (string)($row[2] ?? ''))) {
-        Captcha::registerLoginFailure('admin');
+        Captcha::registerLoginFailure('admin', $name);
         addUpdateLogin((isset($row[1]) && $row[1] === $name) ? intval($row[0]) : 0, $good ? 'password' : 'blocked', $name);
         setUpdateLogin(_LOGININCOR);
         return;
     }
+    session_regenerate_id(true);
     $_SESSION[$conf['admin_c']] = base64_encode($row[0].':'.$row[1].':'.$row[2].':'.$row[3]);
     $_SESSION[$conf['admin_c'].'-time'] = time();
     $db->getSqlQuery('UPDATE '.PREFIX_DB.'_admins SET ip = :ip, lastvis = now() WHERE id = :id', ['ip' => getIp(), 'id' => $row[0]]);
-    Captcha::clearLoginFailures('admin');
+    Captcha::clearLoginFailures('admin', $name);
     addUpdateLogin(intval($row[0]), 'ok', $name);
     setRedirect($afile.'.php');
 }

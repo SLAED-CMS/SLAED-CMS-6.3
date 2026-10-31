@@ -53,7 +53,6 @@ return [
     'language' => 'ru',
     'live_u' => '4',
     'ltitle' => '1',
-    'message' => '1',
     'module' => 'presentation',
     'mtemp' => 'Здравствуйте!
 

@@ -334,7 +334,7 @@
         var host = pop.querySelector('[data-sl-dock-lp-host]');
         if (!url || !host || pop.hasAttribute('data-sl-done')) return;
         pop.setAttribute('data-sl-done', '');
-        fetch(url, { credentials: 'same-origin', headers: { 'Accept': 'application/json' } })
+        fetch(url, { credentials: 'same-origin', headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': window.getPageToken() } })
             .then(function (res) { return res.ok ? res.json() : null; })
             .then(function (data) {
                 var pins = getDockPins(box);
@@ -417,7 +417,7 @@
     }
     // С8 Ask the server for the queue of the site now; the admin card takes the time left
     function setDockFetch(box) {
-        fetch(box.getAttribute('data-sl-dock-poll'), { credentials: 'same-origin', headers: { 'Accept': 'application/json', 'X-SL-Poll': '1' } })
+        fetch(box.getAttribute('data-sl-dock-poll'), { credentials: 'same-origin', headers: { 'Accept': 'application/json', 'X-SL-Poll': '1', 'X-CSRF-TOKEN': window.getPageToken() } })
             .then(function (res) { return res.ok ? res.json() : null; })
             .then(function (data) {
                 var left;

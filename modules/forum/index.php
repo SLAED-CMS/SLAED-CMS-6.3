@@ -914,10 +914,16 @@ function quickreply(int|string|null $id, int|string|null $catid, string $subject
     return '';
 }
 
+# A write of the forum takes its token from the body of a POST, as a query token leaks through history, logs and Referer; an empty one would send checkSiteToken() to the request
+function checkForumPost(): bool {
+    $tok = getVar('post', 'token', 'raw', '');
+    return ($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && $tok !== '' && checkSiteToken($tok);
+}
+
 # A moderator acts only on the topics stored in the category they moderate, whatever else the form lists
 function move(): void {
     global $db, $conf;
-    if (!checkSiteToken()) {
+    if (!checkForumPost()) {
         setRedirect(getSeoUrl(['name' => $conf['name']]));
         return;
     }
@@ -1141,7 +1147,7 @@ function pmoder(int|string $status, int $subh): string {
 # A named post or topic brings its own category and topic through getForumPlace(), so neither the rights nor the counters can be pointed at another category
 function send(): void {
     global $db, $user, $conf, $stop, $tpl, $mailer, $pnt;
-    if (!checkSiteToken()) {
+    if (!checkForumPost()) {
         setHead(['title' => _FORUM, 'kind' => 'utility', 'robots' => 'noindex, follow']);
         echo $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _TOKENMISS]);
         setFoot();
@@ -1306,7 +1312,7 @@ function send(): void {
 function delete(int|string|null $id = null): void {
     global $db, $conf, $pnt;
     $hasargs = ($id !== null);
-    if (!$hasargs && !checkSiteToken()) {
+    if (!$hasargs && !checkForumPost()) {
         setRedirect(getSeoUrl(['name' => $conf['name']]));
         return;
     }

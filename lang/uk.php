@@ -458,6 +458,7 @@ define('_LOCALE','uk_UA');
 define('_LOCALITYLANG','Місце проживання');
 define('_LOGIN','Увійти');
 define('_LOGININCOR','Неправильний логін! Спробуйте ще...');
+define('_LOGINLIMIT','Забагато невдалих спроб. Повторіть через 15 хвилин.');
 define('_LOGOUT','Вихід');
 define('_MAN','Чоловік');
 define('_MATERIALS','%s матеріал|%s матеріали|%s матеріалів');

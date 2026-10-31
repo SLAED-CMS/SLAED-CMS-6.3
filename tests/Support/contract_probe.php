@@ -197,7 +197,7 @@ function getProbeCommentWrite(bool $guest): array {
         $one = $db->getSqlRow($db->getSqlQuery($sql));
         if (!$one) return ['guest' => $guest, 'user' => false, 'rows' => [], 'refuse' => [], 'clean' => true];
         $uid = intval($one['id']);
-        $user = [(string)$one['id'], (string)$one['name'], (string)$one['password']];
+        $user = [(string)$one['id'], (string)$one['name'], getUserToken((string)$one['password'])];
     }
     $out['uid'] = [$uid, is_user() ? $uid : 0];
     $ip = getIp();
@@ -306,7 +306,7 @@ function getProbeForumRight(): array {
     $one = $db->getSqlRow($db->getSqlQuery($sql));
     if (!$one) return $out;
     $uid = intval($one['id']);
-    $user = [(string)$one['id'], (string)$one['name'], (string)$one['password']];
+    $user = [(string)$one['id'], (string)$one['name'], getUserToken((string)$one['password'])];
     $out['signed'] = is_user() && intval($user[0]) === $uid;
     $out['user'] = [
         'own' => checkForumRight(false, true, $uid, 3),
@@ -331,7 +331,7 @@ function getProbeCommentStage2(): array {
     $sql = 'SELECT id, name, password FROM '.PREFIX_DB.'_users WHERE access = 0 AND password != \'\' AND name REGEXP \'^[A-Za-z0-9_.-]+$\' ORDER BY id ASC LIMIT 1';
     $one = $db->getSqlRow($db->getSqlQuery($sql));
     $uid = $one ? intval($one['id']) : 0;
-    if ($one) $user = [(string)$one['id'], (string)$one['name'], (string)$one['password']];
+    if ($one) $user = [(string)$one['id'], (string)$one['name'], getUserToken((string)$one['password'])];
     $out['user'] = [$uid, is_user() ? $uid : 0];
     $gain = (($conf['update']['points'] ?? '') === '6.3.0' && $conf['points']['active'] === '1') ? intval($conf['points']['actions']['comment']['points']) : 0;
     $long = intval($conf['comments']['letter']);
@@ -447,7 +447,7 @@ function getProbeCommentSweep(): array {
     $sql = 'SELECT id, name, password FROM '.PREFIX_DB.'_users WHERE access = 0 AND password != \'\' AND name REGEXP \'^[A-Za-z0-9_.-]+$\' ORDER BY id ASC LIMIT 1';
     $one = $db->getSqlRow($db->getSqlQuery($sql));
     $uid = $one ? intval($one['id']) : 0;
-    if ($one) $user = [(string)$one['id'], (string)$one['name'], (string)$one['password']];
+    if ($one) $user = [(string)$one['id'], (string)$one['name'], getUserToken((string)$one['password'])];
     $out['gain'] = (($conf['update']['points'] ?? '') === '6.3.0' && $conf['points']['active'] === '1') ? intval($conf['points']['actions']['comment']['points']) : 0;
     $all = getProbeCommentCount();
     $db->setSqlBegin();
@@ -1014,9 +1014,9 @@ function getProbeListParity(): array {
     global $db, $com, $prv, $mailer, $probework;
     $out = ['admin' => isAdmin(true), 'lists' => []];
     if (!$out['admin']) return $out;
-    foreach (['modules/account/admin/index.php' => 'getAccountScope', 'modules/search/admin/index.php' => 'getSearchwhere', 'admin/modules/favorites.php' => 'getFavoritesFilter',
-        'admin/modules/privat.php' => 'getPrivatFilter', 'modules/voting/admin/index.php' => 'getVotingFilter',
-        'admin/modules/newsletter.php' => 'getDeadFilter'] as $file => $func) {
+    foreach (['getAccountScope' => 'modules/account/admin/index.php', 'getSearchwhere' => 'modules/search/admin/index.php',
+        'getFavoritesFilter' => 'modules/account/admin/index.php', 'getPrivatFilter' => 'admin/modules/privat.php', 'getVotingFilter' => 'modules/voting/admin/index.php',
+        'getDeadFilter' => 'admin/modules/newsletter.php'] as $func => $file) {
         $code = (string)file_get_contents(BASE_DIR.'/'.$file);
         $from = strpos($code, "\nfunction ".$func.'(');
         file_put_contents($probework.'/lift_'.$func.'.php', "<?php\n".substr($code, $from, strpos($code, "\n}\n", $from) - $from + 3));
@@ -1120,7 +1120,7 @@ if ($mode === 'statscookie') {
     $guest = 0;
     if (($argv[5] ?? '') === 'user') {
         $urow = $db->getSqlRow($db->getSqlQuery('SELECT id, name, password FROM '.PREFIX_DB.'_users WHERE password != \'\' ORDER BY id ASC LIMIT 1'));
-        $user = $urow ? [(string)$urow['id'], (string)$urow['name'], (string)$urow['password']] : [];
+        $user = $urow ? [(string)$urow['id'], (string)$urow['name'], getUserToken((string)$urow['password'])] : [];
         $guest = 2;
     }
     for ($num = 0; $num < $rep; $num++) {

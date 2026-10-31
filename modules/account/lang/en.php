@@ -8,6 +8,7 @@ define('_ACCOUNTCREATED','New User Account Created');
 define('_ACCOUNT_BLOCKNOTE','A switched-off menu is not shown, but the text below is kept.');
 define('_ACCOUNT_CLEAN','No warnings');
 define('_ACCOUNT_EXITNOTE','End the session');
+define('_ACCOUNT_MAILPASS','Your current password, needed only when you change the address');
 define('_ACCOUNT_FIELDS','Additional fields');
 define('_ACCOUNT_FILLED','Profile completeness');
 define('_ACCOUNT_FSMAILNOTE','A letter comes for every reply in your topic.');

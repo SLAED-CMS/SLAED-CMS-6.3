@@ -5523,16 +5523,6 @@ dialog.sl-editor-emoji-panel {
   background: var(--sl-feedback-bg);
 }
 
-/* Messages: centered message box layout */
-.sl-message-box {
-  margin-bottom: var(--sl-space-11);
-}
-
-.sl-message-box h3 {
-  padding-bottom: var(--sl-space-7);
-  border-bottom: 1px solid var(--sl-border-subtle);
-}
-
 /* Error page: standalone error message layout */
 .sl-view-error {
   max-width: var(--sl-view-max-width);

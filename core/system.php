@@ -1803,7 +1803,7 @@ function setHead(array $seo = []): void {
         if (!$open) $hcid = 0;
     }
     $licens = getLicenseHtml();
-    $strmeta = '<meta charset="'._CHARSET.'">'."\n";
+    $strmeta = '<meta charset="'._CHARSET.'">'."\n".$tpl->getHtmlFrag('head-meta', ['name' => 'sl-token', 'content' => getSiteToken()])."\n";
     $strlink = $stscript = '';
     if (!defined('ADMIN_FILE')) {
         $seomap = getSeoRoute($seo);
@@ -1985,7 +1985,8 @@ function setHead(array $seo = []): void {
                 'is_login_avatar' => true,
                 'is_bold_label' => true,
             ]),
-            $tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => 'account', 'op' => 'logout', 'refer' => 1]), 'title' => _LOGOUT, 'label' => _LOGOUT]),
+            $tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => 'account', 'op' => 'logout', 'refer' => 1]), 'title' => _LOGOUT, 'label' => _LOGOUT,
+                'link_attr' => 'data-sl-post="'.getSiteToken('account').'"']),
         ];
         $html = '';
         foreach ($items as $item) {
@@ -2008,7 +2009,7 @@ function setHead(array $seo = []): void {
                 'itype' => 'password',
                 'name_attr' => 'user_password',
                 'value_attr' => '',
-                'maxlength_num' => 25,
+                'maxlength_num' => 72,
                 'placeholder_text' => _PASSWORD,
                 'is_required' => true,
             ],
@@ -2036,7 +2037,7 @@ function setHead(array $seo = []): void {
         'mode' => getThemeMode(),
         'is_still' => isThemeFlag('still'),
         'sound_url' => getThemeFileUrl('sound/'),
-        'pm_poll' => (is_user() && $conf['privat']['act']) ? HOME_PATH.'index.php?go=1&op=getPrivateCountData&token='.getSiteToken() : '',
+        'pm_poll' => (is_user() && $conf['privat']['act']) ? HOME_PATH.'index.php?go=1&op=getPrivateCountData' : '',
         'mode_html' => getThemeModeSwitch(HOME_PATH.'index.php'),
         'lang' => substr(_LOCALE, 0, 2),
         'sitename' => $conf['sitename'] ?? '',
@@ -2150,9 +2151,8 @@ function setFoot(): void {
     } else {
         $down = '';
     }
-    $msg = ($home == 1) ? setMessageShow() : '';
     $vars = array_replace($vars, [
-        'content' => $flash.$msg.$center.$body,
+        'content' => $flash.$center.$body,
         'blocks_left' => $left,
         'blocks_right' => $right,
         'blocks_down' => $down,
@@ -3256,7 +3256,7 @@ function getVotingView(int $id = 0, string $votid = '', bool $force = false): st
     $admin = '';
     if (!$force && is_moder('voting')) {
         $edit = HOME_PATH.$afile.'.php?name=voting&op=';
-        $admin = $tpl->getHtmlFrag('dial', getTplEditMenu($edit.'add&id='.$id, $edit.'delete&id[]='.$id.'&refer=1', $title));
+        $admin = $tpl->getHtmlFrag('dial', getTplEditMenu($edit.'add&id='.$id, $edit.'delete&id[]='.$id.'&refer=1', $title, 'voting'));
     }
 
     $post = (!$force && !$rate) ? $tpl->getHtmlFrag('link', [
@@ -3304,7 +3304,7 @@ function getVotingView(int $id = 0, string $votid = '', bool $force = false): st
         'votes_html' => $votes,
         'comm_html'  => $com,
         'live_every' => (!$force && $rate && strtotime($end) > time()) ? intval($conf['live_u'] ?? 0) : 0,
-        'live_query' => 'go=1&op=getVotingView&id='.$id.'&votid='.$votid.'&token='.getSiteToken(),
+        'live_query' => 'go=1&op=getVotingView&id='.$id.'&votid='.$votid,
         'is_closed' => (!$force && $rate && strtotime($end) <= time()),
         'end_label' => _VOTING_END,
     ]);
@@ -4268,7 +4268,7 @@ function getSessionStats(): void {
     arsort($pages);
     usort($lands, static fn(array $one, array $two): int => $two['num'] <=> $one['num']);
     $top = max($pages ?: [1]);
-    $base = HOME_PATH.'index.php?go='.(defined('ADMIN_FILE') ? '5' : '1').'&op=getSessionStats&token='.getSiteToken().'&kind=';
+    $base = HOME_PATH.'index.php?go='.(defined('ADMIN_FILE') ? '5' : '1').'&op=getSessionStats&kind=';
     $all = max(1, $nums['all']);
     echo $tpl->getHtmlPart('session-stats', [
         'every' => $every,
@@ -4340,6 +4340,7 @@ function adminblock(): string {
         'site_url' => defined('ADMIN_FILE') ? HOME_PATH : '',
         'page' => getAdminPageLink(),
         'logout_url' => HOME_PATH.$afile.'.php?op=logout',
+        'logout_token' => getSiteToken('logout'),
         'links' => $links,
         'links_num' => count($links),
         'is_dead' => in_array(true, array_map(static fn(array $row): bool => $row['dead_title'] !== '', $links), true),
@@ -4448,6 +4449,7 @@ function getAdminDock(): string {
         'is_home' => defined('ADMIN_FILE') && !empty($panel),
         'mark_src' => getThemeFileUrl('images/logos/slaed-logo-mark-gradient-blue.svg'),
         'logout_url' => HOME_PATH.$afile.'.php?op=logout',
+        'logout_token' => getSiteToken('logout'),
         'option_url' => HOME_PATH.$afile.'.php',
         'option_token' => getSiteToken('option'),
         'page' => getAdminPageLink(),
@@ -4455,8 +4457,8 @@ function getAdminDock(): string {
             'icon' => 'layers-half', 'is_here' => defined('ADMIN_FILE') && $name === 'layout'] : [],
         'queue' => $queue,
         'queue_sum' => array_sum(array_column($queue, 'num')),
-        'queue_url' => HOME_PATH.'index.php?go=5&op=getAdminQueueData&token='.getSiteToken(),
-        'sections_url' => HOME_PATH.'index.php?go=5&op=getAdminSectionData&token='.getSiteToken(),
+        'queue_url' => HOME_PATH.'index.php?go=5&op=getAdminQueueData',
+        'sections_url' => HOME_PATH.'index.php?go=5&op=getAdminSectionData',
         'star_note' => sprintf(_ADM_STARTIP, 8),
         'pins' => $pins,
         'pin_max' => sprintf(_ADM_PINMAX, 8),
@@ -4916,12 +4918,13 @@ function getUploadTakenFile(array $rule, string $take): array {
 }
 
 # Answer the upload rule of one editor route or refuse with JSON; the place is read raw, because filterVar() empties a dotted string and the place grammar validates it
-function getEditorRouteRule(string $src = 'post'): array {
+function getEditorRouteRule(): array {
     $rul = getUploadPlaceRule(getVar('get', 'place', 'raw', ''));
     if (!$rul['ok']) getEditorJson(['ok' => false, 'error' => $rul['error']]);
     if (!in_array(getVar('req', 'op', 'var', ''), $rul['ops'], true)) getEditorJson(['ok' => false, 'error' => _ACCESSDENIED]);
     if (!checkEditorUploadAccess((string)$rul['mod'], $rul)) getEditorJson(['ok' => false, 'error' => _ACCESSDENIED]);
-    if (!checkSiteToken(getVar($src, 'token', 'raw', ''), 'upload')) getEditorJson(['ok' => false, 'error' => _TOKENMISS]);
+    $tok = getVar('post', 'token', 'raw', '');
+    if ($tok === '' || !checkSiteToken($tok, 'upload')) getEditorJson(['ok' => false, 'error' => _TOKENMISS]);
     return $rul;
 }
 
@@ -4986,7 +4989,7 @@ function addEditorUpload(): void {
 
 # List stored files for the editor file panel; the owner segment is alphanumeric, so it is compared as a string, as an integer cast would match every guest
 function getEditorFileJson(): void {
-    $rul = getEditorRouteRule('req');
+    $rul = getEditorRouteRule();
     $mod = (string)$rul['mod'];
     $area = getUploadFileArea($rul);
     $all = checkUploadModer($mod);
@@ -5265,6 +5268,11 @@ function getVisitBot(): array {
     return ['name' => 'No Accept-Language', 'type' => 'other'];
 }
 
+# The password proof of the member cookie: a keyed hash of the stored hash, so a read of the database alone forges no login and a new password still ends every old cookie
+function getUserToken(string $hash): string {
+    return hash_hmac('sha256', $hash, getSecret('user'));
+}
+
 # Check user
 function is_user(string $usr = ''): int {
  global $db, $conf, $user;
@@ -5277,7 +5285,7 @@ function is_user(string $usr = ''): int {
         if ($uid != '' && $pwd != '') {
             if ($conf['users']['check'] == '0') {
                 [$pass] = $db->getSqlRow($db->getSqlQuery('SELECT password FROM '.PREFIX_DB.'_users WHERE id = :uid AND name = :name', ['uid' => $uid, 'name' => $una]));
-                if ($pass != '' && hash_equals($pass, $pwd)) {
+                if ($pass != '' && hash_equals(getUserToken($pass), $pwd)) {
                     $usertrue = 1;
                     return 1;
                 }
@@ -5286,7 +5294,7 @@ function is_user(string $usr = ''): int {
                     'SELECT password, ip FROM '.PREFIX_DB.'_users WHERE id = :uid AND name = :name',
                     ['uid' => $uid, 'name' => $una]
                 ));
-                if ($pass != '' && hash_equals($pass, $pwd) && $userip != '' && $userip == $ip) {
+                if ($pass != '' && hash_equals(getUserToken($pass), $pwd) && $userip != '' && $userip == $ip) {
                     $usertrue = 1;
                     return 1;
                 }
@@ -5370,8 +5378,8 @@ function getUserList(): void {
     $rich = getVar('get', 'rich', 'num', 0) == 1;
     $name = [];
     if ($let) {
-        $sql = 'SELECT name FROM '.PREFIX_DB.'_users WHERE name LIKE :name ORDER BY name ASC LIMIT '.($rich ? 10 : 50);
-        $result = $db->getSqlQuery($sql, ['name' => $let.'%']);
+        $sql = 'SELECT name FROM '.PREFIX_DB.'_users WHERE name LIKE :name ESCAPE \'!\' ORDER BY name ASC LIMIT '.($rich ? 10 : 50);
+        $result = $db->getSqlQuery($sql, ['name' => str_replace(['!', '%', '_'], ['!!', '!%', '!_'], $let).'%']);
         while ([$uname] = $db->getSqlRow($result)) $name[] = $uname;
     }
     header('Content-Type: application/json; charset=utf-8');

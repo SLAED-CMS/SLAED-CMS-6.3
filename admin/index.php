@@ -117,7 +117,7 @@ function getAdminPanel(): void {
         $flag = static fn(string $level): array => ['is_ok' => $level === 'ok', 'is_info' => $level === 'info', 'is_warn' => $level === 'warn', 'is_danger' => $level === 'danger'];
         $loud = count(array_filter($sigs, static fn(array $v): bool => $v['level'] !== 'ok'));
         $content .= $tpl->getHtmlPart('cockpit', [
-            'url' => 'index.php?go=5&op=getCockpitData&token='.getSiteToken(),
+            'url' => 'index.php?go=5&op=getCockpitData',
             'monitor_url' => HOME_PATH.$afile.'.php?name=monitor',
             'every' => $every,
             'tone' => $tone,
@@ -171,7 +171,6 @@ function getAdminPanelInfo(): void {
         'ops' => ['', 'op=info'],
         'tabs' => [_HOME, _MANUAL],
         'action_url' => HOME_PATH.$afile.'.php?op=info',
-        'can_edit' => isAdmin(true),
     ]);
 }
 
@@ -241,9 +240,10 @@ function checkAdminLogin(): void {
     $block = checkCaptcha('adminlogin');
     if ($block) $stop = _SECCODEINCOR;
     $name = htmlspecialchars(trim(substr($_POST['name'] ?? '', 0, 25)));
-    $pwd = getVar('post', 'pwd', 'raw', '');
+    $pwd = str_replace("\0", '', getVar('post', 'pwd', 'raw', ''));
     $old = htmlspecialchars(trim(substr($pwd, 0, 25)));
     if (!$name || $pwd === '') $stop = _LOGININCOR;
+    if (Captcha::isLoginLimited('admin', $name)) [$stop, $block] = [_LOGINLIMIT, true];
     $aid = $aname = $apwd = $aeditor = null;
     $back = false;
     if ($name) {
@@ -265,17 +265,18 @@ function checkAdminLogin(): void {
             $apwd = $hash;
         }
         unset($_SESSION[$conf['admin_c']]);
+        session_regenerate_id(true);
         $info = base64_encode($aid.':'.$aname.':'.$apwd.':'.$aeditor);
         $_SESSION[$conf['admin_c']] = $info;
         $_SESSION[$conf['admin_c'].'-time'] = time();
         $ip = getip();
         $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_session WHERE uname = :ip', ['ip' => $ip]);
         $db->getSqlQuery('UPDATE '.PREFIX_DB.'_admins SET ip = :ip, lastvis = now() WHERE id = :id', ['ip' => $ip, 'id' => $aid]);
-        Captcha::clearLoginFailures('admin');
+        Captcha::clearLoginFailures('admin', $name);
         addLoginLog($lid, true, 'ok', $name);
         setRedirect($afile.'.php');
     } else {
-        Captcha::registerLoginFailure('admin');
+        Captcha::registerLoginFailure('admin', $name);
         addLoginLog($lid, true, $block ? 'blocked' : 'password', $name);
         getAdminLoginForm();
     }
@@ -443,9 +444,11 @@ function updateAdminSession(): void {
 # End the panel session: drop the session row, forget the administrator, and hand the browser back to the login page
 function deleteAdminSession(): void {
     global $db, $admin, $afile, $conf;
+    if (!checkAdminPost('logout')) setRedirect($afile.'.php');
     $aname = filterText(substr($admin[1], 0, 25), 1);
     $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_session WHERE uname = :name AND guest = :guest', ['name' => $aname, 'guest' => '3']);
     unset($_SESSION[$conf['admin_c']], $_SESSION[$conf['admin_c'].'-time'], $admin);
+    session_regenerate_id(true);
     setRedirect($afile.'.php');
 }
 

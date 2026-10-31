@@ -40,7 +40,7 @@ Typical writable paths:
 
 The installer never changes file permissions. It does not install while `config/db.php`, `config/global.php`,
 `config/security.php` or `config/update.php` is not writable by PHP (for one of them that does not exist yet:
-`config/` itself).
+`config/` itself). The red row names the account PHP runs under; the README, "Permissions", says what to open to it.
 
 ---
 
@@ -94,6 +94,21 @@ The hosts and landing pages of visits are counted in the files of the statistics
 from the tab `op=theme`, which views and edits and neither adds nor removes a file. `config/header.php` opens whole, with its
 first lines. `config/system.php` was read by nothing and is no reserved name any more: move code that still lies in it
 to a block or a module, and leave no such file in `config/`, because the loader requires every PHP file there.
+
+### The Favorites Are a Tab of the Users
+
+The section `name=favorites` is gone: its list is `name=account&op=favorites`, its settings are `name=account&op=favconf`, saved by
+`op=favsave`, and its delete is `op=favdrop`, all under the token of `account`. A bookmark to the old address opens no page. `config/favorites.php`
+stays. An administrator with the right to "Пользователи" now sees the bookmarks and may change their settings.
+
+### The Word Replacement Is a Tab of the Settings
+
+The section `name=replace` is gone: its page is `name=config&op=replace`, one form per Node type chosen by `&type=<name>`, saved by `op=replacesave` under the token
+of `config`. A bookmark to the old address opens no page. `config/replace.php` stays and is read as before. Every Node type may now hold rules, not only `content` and `news`.
+
+### The Site Messages Are Blocks
+
+The section `name=messages`, the setting `message` of `config/global.php`, the table `{prefix}_message` and the box `.sl-message-box` are gone. The update drops the table with its rows and carries none of them: copy a message you still need into a block before the update. An announcement is a block of the position "По центру вверху" marked "Только на главной", with the term, language and audience of a block. It shows only while the setting `top` of the home page or module leaves that zone on, which the shipped home does not until you change it, and it has no line for the moderator. The content field of a block holds 64 KB and no embedded image, and a save over that limit is refused.
 
 ### Node Upload Directories Under `uploads/node/`
 
@@ -241,7 +256,7 @@ Custom code should use the current `Database` API.
   its column fails instead of being cut: cut it with `filterCutText()` before the write. `$conf['db']['sync']` is
   gone.
 - A moment is `DATETIME`, a machine timer is `BIGINT` unix seconds, and no column holds a time as text.
-  `_users_temp.time` is gone; `_blocks.expire` and `_message.expire` are `DATETIME`, NULL for no expiry.
+  `_users_temp.time` is gone; `_blocks.expire` is `DATETIME`, NULL for no expiry.
 - `_users.email`, `_admins.email` and `_users_temp.email` are unique and NULL for "no address": write NULL, never `''`,
   and read the result of the write — `Database::getSqlTwin()` names the key of a refused duplicate.
 - Every `lang` column holds a language code (`ru`, `en`, …), never a name such as `russian`.

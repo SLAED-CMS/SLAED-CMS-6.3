@@ -14,3 +14,16 @@ if (!defined('UPDATE_KEYS')) {
     define('UPDATE_KEYS', $tkeys);
     unset($tkeys, $trole);
 }
+
+# A member cookie of a seeded account from its row id:name:hash, with the proof the core reads; a scratch site without a master gets one here, as each child would mint its own
+function getProbeAccount(string $row): string {
+    [$uid, $name, $hash] = explode(':', $row, 3);
+    $file = CONFIG_DIR.'/security.php';
+    $data = require $file;
+    if (($data['security']['secret'] ?? '') === '' && realpath(CONFIG_DIR) !== realpath(dirname(__DIR__, 2).'/config')) {
+        $data['security']['secret'] = bin2hex(random_bytes(32));
+        file_put_contents($file, "<?php\nreturn ".var_export($data, true).";\n", LOCK_EX);
+        if (is_file(CONFIG_DIR.'/local.php')) unlink(CONFIG_DIR.'/local.php');
+    }
+    return base64_encode($uid.':'.$name.':'.hash_hmac('sha256', $hash, hash_hmac('sha256', 'user', (string)($data['security']['secret'] ?? ''))));
+}

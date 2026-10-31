@@ -155,6 +155,8 @@ final class UpdateSetupTest extends TestCase
         $root = dirname(__DIR__, 2);
         $code = (string)file_get_contents($root.'/public/setup.php');
         $this->assertStringNotContainsString('chmod(', $code, 'The installer changes permissions');
+        $this->assertStringContainsString('sprintf(_SETUP_OPENDIR, $user)', $code, 'A refused folder no longer names the account PHP runs under');
+        $this->assertStringNotContainsString('chmod -R 755', (string)file_get_contents($root.'/README.md'), 'The README tells to close the folders PHP has to create files in');
         foreach (['$_GET', '$_REQUEST'] as $one) $this->assertStringNotContainsString($one, $code);
         $this->assertSame([1, 1], [substr_count($code, '$_POST'), substr_count($code, '$_COOKIE')], 'The request is read outside getSetupVar()');
         foreach (['xpass', 'apwd', 'apwd2'] as $one) $this->assertMatchesRegularExpression("/\\['".$one."', [A-Z_0-9]+, '', /", $code, 'The form prints the password '.$one);

@@ -108,10 +108,10 @@ final class InputFilterTest extends TestCase
     public function theDetectorBoundsSqlKeywordsByLetters(): void
     {
         $body = (string)file_get_contents(dirname(__DIR__, 2).'/core/security.php');
-        preg_match_all('/\$string = (\'#\(\?<!\[a-z\]\).+?);\R/s', $body, $found);
-        $this->assertCount(2, $found[1], 'The detector of GET or of COOKIE no longer bounds a keyword by letters');
+        preg_match_all('/\$word = (\'\(\?<!\[a-z\]\).+?);\R/s', $body, $found);
+        $this->assertCount(1, $found[1], 'The detector of GET and COOKIE no longer bounds a keyword by letters');
         foreach ($found[1] as $line) {
-            $find = (string)eval('return '.str_replace('PREFIX_DB', "'probe'", $line).';');
+            $find = '#'.(string)eval('return '.$line.';').'probe_admins|probe_users#i';
             foreach (['Eyedropper-zpE6uHS4K9.gif', 'Reunion', 'selection', 'truncated', 'backdrop'] as $val) {
                 $this->assertSame(0, preg_match($find, $val), 'A harmless value counts as an attack: '.$val);
             }

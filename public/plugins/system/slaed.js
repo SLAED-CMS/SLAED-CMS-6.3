@@ -1,4 +1,13 @@
 (function () {
+    // The token of the page for a request of its own: it travels by header, as an address lands in logs and history
+    window.getPageToken = function () {
+        var one = document.querySelector('meta[name="sl-token"]');
+        return one ? one.getAttribute('content') : '';
+    };
+    document.addEventListener('htmx:configRequest', function (event) {
+        if (event.detail && !event.detail.headers['X-CSRF-TOKEN']) event.detail.headers['X-CSRF-TOKEN'] = window.getPageToken();
+    });
+
     // Window canon: the native dialog gives the focus trap, the top layer and the return of the focus; only what the platform does not give is written here
     var winstack = [];
     var winlayer = 10050;
@@ -883,6 +892,23 @@
     function isHtmxOwn(node) {
         return ['hx-get', 'hx-post', 'hx-put', 'hx-patch', 'hx-delete'].some(function (name) { return node.hasAttribute(name); });
     }
+
+    // A link that changes state posts its token, so a foreign image or a prefetch of the same address changes nothing; a click with a modifier only opens the address
+    document.addEventListener('click', function (event) {
+        var link = event.target.closest ? event.target.closest('a[data-sl-post]') : null;
+        if (!link || event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey) return;
+        event.preventDefault();
+        var form = document.createElement('form');
+        var field = document.createElement('input');
+        form.method = 'post';
+        form.action = link.href;
+        field.type = 'hidden';
+        field.name = 'token';
+        field.value = link.getAttribute('data-sl-post');
+        form.appendChild(field);
+        document.body.appendChild(form);
+        form.submit();
+    });
 
     // links carrying data-sl-confirm (plain text, escaped by the template) must pass a confirm dialog first
     function setDialToggle() {
@@ -1936,7 +1962,7 @@
         var timer = window.setInterval(function () {
             if (!document.body.contains(vote)) { window.clearInterval(timer); return; }
             if (vote.hasAttribute('data-sl-live-paused')) return;
-            window.fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } }).then(function (response) {
+            window.fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': window.getPageToken() } }).then(function (response) {
                 if (!response.ok) throw new Error('Request failed');
                 return response.text();
             }).then(function (html) {
@@ -3077,7 +3103,7 @@
         var seen = mark ? Number(mark.textContent) || 0 : -1;
         if (!url) return;
         window.setInterval(function () {
-            fetch(url, { credentials: 'same-origin', headers: { 'Accept': 'application/json', 'X-SL-Poll': '1' } })
+            fetch(url, { credentials: 'same-origin', headers: { 'Accept': 'application/json', 'X-SL-Poll': '1', 'X-CSRF-TOKEN': window.getPageToken() } })
                 .then(function (res) { return res.ok ? res.json() : null; })
                 .then(function (data) {
                     var num = data ? Number(data.num) : NaN;

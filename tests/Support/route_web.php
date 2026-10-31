@@ -34,10 +34,11 @@ foreach ($rdirs as $rkey => $rdir) define($rkey, $rroot.'/'.$rdir);
 require_once __DIR__.'/test_keys.php';
 $rglob = require CONFIG_DIR.'/global.php';
 $rwho = (string)($_SERVER['HTTP_X_PROBE_WHO'] ?? '');
-$rusers = ['anna' => '2:anna:hash-anna', 'boris' => '3:boris:hash-boris', 'clara' => '4:clara:hash-clara', 'helper' => '5:helper:hash-helper'];
+$rusers = ['anna' => '2:anna:hash-anna', 'boris' => '3:boris:hash-boris', 'clara' => '4:clara:hash-clara', 'helper' => '5:helper:hash-helper',
+    'mailer' => '16:mailer:$2y$12$OmJ8Kb9NGj277ClzEh3gyuNwmPjLIXTkRED.be/AiSCwbyyuFvd.q'];
 $radmins = ['root' => '1:root:hash-root', 'moder' => '2:moder:hash-moder', 'boss' => '3:boss:hash-boss', 'docsman' => '4:docsman:hash-docsman',
     'helper' => '5:helper:hash-helper'];
-if (isset($rusers[$rwho])) $_COOKIE[$rglob['user_c'].'-account'] = base64_encode($rusers[$rwho]);
+if (isset($rusers[$rwho])) $_COOKIE[$rglob['user_c'].'-account'] = getProbeAccount($rusers[$rwho]);
 # A request of the API opens no session here either; the files it loaded and the state of the session at its end go to api.json, so the probe sees what the core left out
 # The state is read at the end because the reply of the API removes every header, a session cookie included, so no cookie in the reply proves no session
 if (str_starts_with($rpath, '/api/')) {

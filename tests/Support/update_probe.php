@@ -569,7 +569,7 @@ const CONFOLD = [
     'global' => "\$conf = array (\n  'sitename' => 'Old site',\n  'version' => '6.2.0 Pro',\n  'close' => '0',\n  'language' => 'russian',\n  'module' => 'news,forum',\n"
         ."  'amod' => 'news',\n  'css_f' => 'plugins/jquery/ui/',\n  'script_a' => '1',\n  'script_b' => '1',\n"
         ."  'sep' => '/',\n  'rewrite' => '0',\n  'title' => '0',\n  'ltitle' => '0',\n"
-        ."  'oldkey' => 'kept',\n  'clickable' => '1',\n  'forum' => '0',\n"
+        ."  'oldkey' => 'kept',\n  'clickable' => '1',\n  'message' => '1',\n  'forum' => '0',\n"
         ."  'theme' => 'default',\n  'site_logo' => 'mark.svg',\n);",
     'seo' => "\$confse = array();\n\$confse['sep'] = \"-\";\n\$confse['tsep'] = \"_\";\n\$confse['rewrite'] = \"1\";\n\$confse['ctitle'] = \"0\";\n\$confse['ltitle'] = \"1\";",
     'comments' => "\$confcom = array('alink' => '1', 'link' => '2');",
@@ -890,7 +890,7 @@ const ARCHTEXT = [
     ['forum', 1, 'body', '[img=center alt=T]http://www.slaed.net/uploads/archive/news/a.gif[/img]'],
     ['forum', 2, 'body', '[img]http://other.net/uploads/archive/news/a.gif[/img] [code]uploads/archive/news/a.gif[/code]'],
     ['privat', 1, 'body', '[url=./uploads/archive/pages/c.jpg]C[/url]'],
-    ['message', 1, 'body', '[img]./uploads/archive/news/e.gif[/img]'],
+    ['newsletter', 1, 'body', '[img]./uploads/archive/news/e.gif[/img]'],
 ];
 
 # Put the scratch site back to a 6.3 site of early October: the files of ARCHFILE, the two types, the texts of ARCHTEXT and no manifest of the unit
@@ -903,8 +903,8 @@ function setArchSite(): void {
         file_put_contents(UPLOADS_DIR.'/'.$rel, 'x');
     }
     $side = getProbeSide();
-    foreach (['comment', 'nodes', 'node_types', 'privat', 'message', 'newsletter'] as $name) $side->exec('DROP TABLE IF EXISTS `'.PROBEPREF.'_'.$name.'`');
-    foreach (['node_types', 'nodes', 'comment', 'privat', 'message', 'newsletter'] as $name) $side->exec(getProbeTable($name));
+    foreach (['comment', 'nodes', 'node_types', 'privat', 'newsletter'] as $name) $side->exec('DROP TABLE IF EXISTS `'.PROBEPREF.'_'.$name.'`');
+    foreach (['node_types', 'nodes', 'comment', 'privat', 'newsletter'] as $name) $side->exec(getProbeTable($name));
     $side->exec('DELETE FROM `'.PROBEPREF.'_forum`');
     $side->exec('INSERT INTO `'.PROBEPREF.'_node_types` (id, name, title, intro) VALUES (1, \'news\', \'News\', \'\'), (2, \'docs\', \'Docs\', \'\')');
     $side->exec('INSERT INTO `'.PROBEPREF.'_nodes` (id, tid, title, intro, body, field, status) VALUES (1, 1, \'A\', \'\', \'\', \'\', 2), (2, 2, \'B\', \'\', \'\', \'\', 2),'
@@ -912,7 +912,7 @@ function setArchSite(): void {
     $side->exec('INSERT INTO `'.PROBEPREF.'_comment` (id, modul, cid, name, body, status) VALUES (1, \'news\', 1, \'u\', \'\', 1), (2, \'oldnews\', 9, \'u\', \'\', 1)');
     $side->exec('INSERT INTO `'.PROBEPREF.'_forum` (id, name, title, body, field) VALUES (1, \'u\', \'T\', \'\', \'\'), (2, \'u\', \'T\', \'\', \'\')');
     $side->exec('INSERT INTO `'.PROBEPREF.'_privat` (id, title, body) VALUES (1, \'P\', \'\')');
-    $side->exec('INSERT INTO `'.PROBEPREF.'_message` (id, title, body) VALUES (1, \'M\', \'\')');
+    $side->exec('INSERT INTO `'.PROBEPREF.'_newsletter` (id, title, body) VALUES (1, \'N\', \'\')');
     foreach (ARCHTEXT as [$tab, $id, $col, $text]) {
         $side->prepare('UPDATE `'.PROBEPREF.'_'.$tab.'` SET `'.$col.'` = :text WHERE id = :id')->execute(['text' => $text, 'id' => $id]);
     }
@@ -952,7 +952,7 @@ function getArchClean(): array {
     $out['resume'] = getArchRun(false);
     $info = json_decode((string)file_get_contents($file), true);
     $info['state'] = 'applying';
-    $info['cursor'] = ['nodes' => 99, 'comment' => 99, 'forum' => 99, 'privat' => 99, 'message' => 99, 'newsletter' => 99];
+    $info['cursor'] = ['nodes' => 99, 'comment' => 99, 'forum' => 99, 'privat' => 99, 'newsletter' => 99];
     file_put_contents($file, json_encode($info));
     foreach (ARCHTEXT as [$tab, $id, $col, $text]) {
         getProbeSide()->prepare('UPDATE `'.PROBEPREF.'_'.$tab.'` SET `'.$col.'` = :text WHERE id = :id')->execute(['text' => $text, 'id' => $id]);
@@ -967,7 +967,7 @@ function setMergeSite(bool $pack): void {
     deleteProbeTree(BASE_DIR);
     mkdir(CONFIG_DIR, 0777, true);
     setUpdateFile('global.php', ['homeurl' => 'https://slaed.net', 'rewrite' => '1', 'css_f' => 'own.css', 'css_c' => '1', 'script_f' => 'own.js', 'script_a' => '1',
-        'cache_b' => '1', 'version' => '6.3.0', 'clickable' => '1']);
+        'cache_b' => '1', 'version' => '6.3.0', 'clickable' => '1', 'message' => '1']);
     setUpdateFile('users.php', ['anonym' => 'Guest', 'point' => '1', 'keep' => 'site']);
     setUpdateFile('comments.php', ['alink' => '2', 'link' => '1']);
     setUpdateFile('node.php', ['types' => ['news' => ['own' => 1]], 'limits' => ['edit' => 600]], [], true);
@@ -1056,8 +1056,7 @@ const WORDROWS = [
     ['forum', 1, 'field', '{"note":"[b]n[/b]","size":"[b]s[/b]"}'],
     ['forum', 2, 'body', '**Markdown** of 2026 [b]x[/b]'],
     ['privat', 1, 'body', '[code]<b>&lt;x&gt;</b>[/code]'],
-    ['message', 1, 'body', '[center]C[/center] 2*3'],
-    ['newsletter', 1, 'body', '[mail]a@b.test[/mail]'],
+    ['newsletter', 1, 'body', '[center]C[/center] 2*3 [mail]a@b.test[/mail]'],
     ['blocks', 1, 'content', '<a href="page.html">Page</a> [b]B[/b]<table><tr><td>t</td></tr></table>'],
     ['users', 2, 'sig', '[i]sig[/i]'],
 ];
@@ -1069,8 +1068,8 @@ function setWordSite(): void {
     setUpdateFile('fields.php', ['forum' => ['note' => ['type' => 'textarea'], 'size' => ['type' => 'text']]], [], true);
     setUpdateFile('contact.php', ['admins' => '1', 'info' => '[b]Наши координаты[/b]']);
     $side = getProbeSide();
-    foreach (['comment', 'nodes', 'node_types', 'privat', 'message', 'newsletter', 'blocks'] as $name) $side->exec('DROP TABLE IF EXISTS `'.PROBEPREF.'_'.$name.'`');
-    foreach (['node_types', 'nodes', 'comment', 'privat', 'message', 'newsletter', 'blocks'] as $name) $side->exec(getProbeTable($name));
+    foreach (['comment', 'nodes', 'node_types', 'privat', 'newsletter', 'blocks'] as $name) $side->exec('DROP TABLE IF EXISTS `'.PROBEPREF.'_'.$name.'`');
+    foreach (['node_types', 'nodes', 'comment', 'privat', 'newsletter', 'blocks'] as $name) $side->exec(getProbeTable($name));
     $side->exec('DELETE FROM `'.PROBEPREF.'_forum`');
     $side->exec('INSERT INTO `'.PROBEPREF.'_node_types` (id, name, title, intro) VALUES (1, \'news\', \'News\', \'\')');
     $side->exec('INSERT INTO `'.PROBEPREF.'_nodes` (id, tid, title, intro, body, field, status) VALUES (1, 1, \'A\', \'\', \'\', \'\', 2)');
@@ -1079,7 +1078,6 @@ function setWordSite(): void {
     $side->exec('INSERT INTO `'.PROBEPREF.'_forum` (id, name, title, body, field, time) VALUES (1, \'u\', \'T\', \'\', \'\', \'2008-01-01 10:00:00\'),'
         .' (2, \'u\', \'T\', \'\', \'\', \'2026-08-01 10:00:00\')');
     $side->exec('INSERT INTO `'.PROBEPREF.'_privat` (id, title, body) VALUES (1, \'P\', \'\')');
-    $side->exec('INSERT INTO `'.PROBEPREF.'_message` (id, title, body) VALUES (1, \'M\', \'\')');
     $side->exec('INSERT INTO `'.PROBEPREF.'_newsletter` (id, title, body) VALUES (1, \'N\', \'\')');
     $side->exec('INSERT INTO `'.PROBEPREF.'_blocks` (id, title, content, url, which) VALUES (1, \'B\', \'\', \'\', \'\'),'
         .' (2, \'R\', \'[b]feed[/b]\', \'https://feed.test/\', \'\')');

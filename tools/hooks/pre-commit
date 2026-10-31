@@ -13,6 +13,12 @@
 # The visual gate is not here: it takes a quarter of an hour twice over and needs a capture of the tree taken
 # before the edit, which no hook can be in time for. This one names it instead of running it.
 
+# The master of a stand never reaches a commit, whatever else is skipped: a clone with the filter of slaed-agent stores it empty, any other clone stops here
+if git diff --cached --name-only | grep -qx 'config/security.php' && git show :config/security.php | grep -Eq "'secret' *=> *'[^']+'"; then
+    printf '\n[secret] config/security.php is staged with a master secret. The shipped file carries an empty one.\n\n'
+    exit 1
+fi
+
 [ "$SLAED_SKIP_GATES" = "1" ] && exit 0
 
 staged=$(git diff --cached --name-only --diff-filter=ACMR)

@@ -39,6 +39,14 @@ final class UniqueEmailTest extends TestCase
         $this->assertSame([200, true, 'clara@probe.test'], $this->getRun()['save']);
     }
 
+    # A member changes the address only with the current password, as a stolen cookie must not reach the recovery of the account
+    #[Test]
+    public function theAddressChangesOnlyWithThePassword(): void
+    {
+        $old = 'mailer@probe.test';
+        $this->assertSame([200, $old, 200, $old, 303, 'new@probe.test'], $this->getRun()['mailpass']);
+    }
+
     # Both panels refuse to give an existing account or administrator the address of another one in another case and say why
     #[Test]
     public function thePanelsRefuseATakenAddress(): void

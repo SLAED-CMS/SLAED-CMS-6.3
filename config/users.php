@@ -17,7 +17,7 @@ return [
         'check' => '0',
         'enter' => '1',
         'mail_b' => '',
-        'minpass' => '5',
+        'minpass' => '8',
         'name_b' => 'alter,drop,insert,outfile,select,truncate,union',
         'news' => '1',
         'nomail' => '1',

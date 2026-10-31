@@ -115,14 +115,20 @@ The installer records the mode it found as `webroot` in `config/global.php`: `pu
 
 ### Permissions
 
-Typical writable directories:
+PHP has to create files in `config/`, `storage/` and `uploads/`, as the release ships no `config/db.php` and every save of
+the settings replaces a file through a temporary one. Writable files in a closed folder are not enough.
+
+When the files were uploaded under another account than the one PHP runs under, which is what the installer names on its
+red row, either make that account the owner or open writing to its group:
 
 ```bash
-chmod -R 755 config/ storage/ uploads/
-chmod 666 config/*.php
+chown -R <php-account> config/ storage/ uploads/
+# or, with the account in the group of the folder
+chmod -R 775 config/ storage/ uploads/
 ```
 
-Actual server permissions depend on your OS, web server user, and deployment model.
+Where PHP runs under your own account, as on most shared hosting, nothing has to change. Use `777` only when the host
+leaves no other way, as it lets every account on the server write there.
 
 ---
 

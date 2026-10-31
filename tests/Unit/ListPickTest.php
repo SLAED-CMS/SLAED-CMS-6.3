@@ -34,14 +34,10 @@ final class ListPickTest extends TestCase
     public static function getHandlers(): array
     {
         $jobs = ['scheduler' => ['jobs' => ['alpha' => ['type' => 'custom'], 'beta' => ['type' => 'custom'], 'gamma' => ['type' => 'system']]]];
-        $msgs = ['multilingual' => '1'];
         $bans = ['security' => ['blocker_ip' => '10.0.0.1|0|100|a||10.0.0.2|h|200|b||10.0.0.3|0|300|c||', 'blocker_user' => 'ann|100|a||bob|200|b||cid|300|c||']];
         return [
-            'favorites' => [['file' => 'admin/modules/favorites.php', 'func' => 'delete', 'lift' => ['getFavoritesFilter'], 'post' => ['id' => [3, 5]]]],
+            'favorites' => [['file' => 'modules/account/admin/index.php', 'func' => 'favdrop', 'lift' => ['getFavoritesFilter'], 'post' => ['id' => [3, 5]]]],
             'privat' => [['file' => 'admin/modules/privat.php', 'func' => 'delete', 'lift' => ['getPrivatFilter'], 'post' => ['id' => [3, 5]]]],
-            'messages delete' => [['file' => 'admin/modules/messages.php', 'func' => 'delete', 'lift' => ['getMessagesFilter'], 'conf' => $msgs, 'post' => ['id' => [3, 5]]]],
-            'messages status' => [['file' => 'admin/modules/messages.php', 'func' => 'status', 'lift' => ['getMessagesFilter'], 'conf' => $msgs,
-                'post' => ['id' => [3, 5], 'act' => 1]]],
             'newsletter campaigns' => [['file' => 'admin/modules/newsletter.php', 'func' => 'delete', 'lift' => ['getCampFilter'], 'post' => ['id' => [3, 5]]]],
             'newsletter queue' => [['file' => 'admin/modules/newsletter.php', 'func' => 'drop', 'lift' => ['getQueueQuery'], 'post' => ['id' => [3, 5]]]],
             'newsletter dead' => [['file' => 'admin/modules/newsletter.php', 'func' => 'revive', 'lift' => ['getDeadFilter'], 'post' => ['id' => [3, 5]]]],

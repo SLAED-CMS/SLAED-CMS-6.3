@@ -15,7 +15,7 @@ final class JournalNameTest extends TestCase
         'user', 'warn'];
 
     # The state files storage/logs/ holds beside the journals
-    private const STATES = ['filescan.json', 'monitor.json', 'scheduler/heartbeat.json', 'scheduler/trigger.json'];
+    private const STATES = ['filescan.json', 'monitor.json', 'report_mail.json', 'scheduler/heartbeat.json', 'scheduler/trigger.json'];
 
     public static function setUpBeforeClass(): void
     {

@@ -52,7 +52,7 @@ function getVar(string $typ, string $name, string $filt = '', mixed $def = ''): 
     $val = $GLOBALS['pcase']['post'][$many ? substr($name, 0, -2) : $name] ?? null;
     $cast = static fn(mixed $v): mixed => match ($filt) {'num' => filterNum($v), 'var' => is_string($v) ? filterVar($v) : $v, default => $v};
     if ($many) return is_array($val) ? array_values(array_filter(array_map($cast, $val), static fn(mixed $v): bool => $v !== '' && $v !== null && $v !== false)) : [];
-    return ($val === null || is_array($val)) ? $def : $cast($val);
+    return ($val === null || $val === '' || is_array($val)) ? $def : $cast($val);
 }
 
 # Record the answer of the handler and leave it the way a redirect does
@@ -71,9 +71,9 @@ function setAdminLog(array $data): void {
     $GLOBALS['pdone']['data']['log'] = $data;
 }
 
-# No Node type is installed for the search filter of a scenario
+# The Node types of the scenario, by default none for its search filter
 function getNodeTypeMap(): array {
-    return [];
+    return (array)($GLOBALS['pcase']['types'] ?? []);
 }
 
 final class ProbeRes {

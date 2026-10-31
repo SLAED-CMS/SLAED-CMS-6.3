@@ -238,7 +238,8 @@ if (empty($go)) {
 } elseif (is_numeric($go)) {
     $public = ($go == 1 && in_array($op, ['getUserSessionInfo', 'getUserSessionRows', 'getPrivateMessageView', 'getRatingView', 'getQuickEdit', 'updateQuickEdit',
         'getFavoriteList', 'getNodeHint'], true))
-        || (($go == 1 || $go == 5) && $op === 'getUserSessionAdminInfo');
+        || (($go == 1 || $go == 5) && $op === 'getUserSessionAdminInfo')
+        || ($go == 5 && in_array($op, ['updateAdminCategoryOrder', 'updateAdminBlockOrder', 'getAdminFilePreview', 'getAdminFileDownload'], true));
     if ($go == 1 && in_array($op, ['addComment', 'updateCommentStatus', 'deleteComment', 'addPrivateMessage',
         'setPrivateMessageRead', 'updatePrivatBox', 'addFavorite', 'deleteFavorite'], true) && ($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
         Cache::setHeaders();
@@ -247,10 +248,8 @@ if (empty($go)) {
         die($tpl->getHtmlFrag('alert', ['text' => _ERROR, 'is_warn' => true]));
     }
     if ($go != 3 && !$public) {
-        $fdsize = intval($_FILES['file']['size'] ?? 0);
-        $tok = getVar('req', 'token', 'raw', '')
-            ?: ($_SERVER['HTTP_X_CSRF_TOKEN'] ?? '');
-        if (!($go == 4 && $fdsize) && !checkSiteToken($tok)) die($tpl->getHtmlFrag('alert', ['text' => _TOKENMISS, 'is_warn' => true]));
+        $tok = getVar('post', 'token', 'raw', '') ?: ($_SERVER['HTTP_X_CSRF_TOKEN'] ?? '');
+        if ($go != 4 && !checkSiteToken($tok)) die($tpl->getHtmlFrag('alert', ['text' => _TOKENMISS, 'is_warn' => true]));
     }
     if ($go == 1) {
         Cache::setHeaders();

@@ -91,18 +91,11 @@ if ($conf['security']['error'] === 2) {
 # The API prints no error into its JSON, whatever the setting: the detail stays in the journal
 if (defined('API_FILE')) ini_set('display_errors', '0');
 
-# Session start; the API is session-less, every request of it answers for itself
-if (session_status() === PHP_SESSION_NONE && !defined('API_FILE')) session_start();
-
-# Flood protection; the report names the fields and never quotes them, as Logger stores the request data masked and a dump would restore the password
-if (!defined('ADMIN_FILE') && !defined('API_FILE') && $conf['security']['flood']) {
-    $ctime = time();
-    $ftime = $ctime - intval($conf['security']['flood_t']);
-    $flood = (isset($_SESSION[$conf['user_c'].'-flood']) && $_SESSION[$conf['user_c'].'-flood'] > $ftime) ? 1 : 0;
-    if ($conf['security']['flood'] == 3 && $flood) addWarnReport('Flood attack');
-    if ($conf['security']['flood'] == 2 && isset($_GET) && $flood) addWarnReport('Flood in GET - '.implode(', ', array_keys($_GET)));
-    if (isset($_POST) && $flood) addWarnReport('Flood in POST - '.implode(', ', array_keys($_POST)));
-    $_SESSION[$conf['user_c'].'-flood'] = $ctime;
+# Session start with a closed cookie, as PHP ships it open to scripts and to a cross-site post; the API is session-less, every request of it answers for itself
+if (session_status() === PHP_SESSION_NONE && !defined('API_FILE')) {
+    $rsec = parse_url((string)$conf['homeurl'], PHP_URL_SCHEME) === 'https';
+    session_start(['cookie_httponly' => true, 'cookie_samesite' => 'Lax', 'cookie_secure' => $rsec, 'use_strict_mode' => true]);
+    unset($rsec);
 }
 
 # Format admin variable
@@ -271,144 +264,40 @@ register_shutdown_function(function() use (&$lexc) {
     }
 });
 
-# Checking URL, GET, POST, COOKIE, FILES variables for safety; the API is left to ApiInput, its own filter, so a refused value is a 422 there and never a ban here
+# Reading the request: a GET value only an attack can carry stops here, any other suspicious value leaves a line of hack.log; the API is left to ApiInput, its own filter
 if (!isAdmin(true) && !defined('API_FILE')) {
     $ruri = mb_strlen((string)($_SERVER['REQUEST_URI'] ?? ''), 'utf-8');
     if ($ruri > 2048) addWarnReport('Spam in URL - '.$ruri.' > 2048');
-    if (isset($_GET)) {
-        function checkGet($name, $val) {
-            global $conf;
-            $links = '#^(http\:\/\/|https\:\/\/|ftp\:\/\/|php\:\/\/|\/\/)#i';
-            $script = '#<.*?(script|body|object|iframe|applet|meta|form|style|img).*?>#i';
-            $char = '#\([^>]*\"?[^)]*\)#';
-            $quote = '#\'|\.\.[/\\\\%]#';
-            $string = '#(?<![a-z])(?:ALTER|DROP|INSERT|OUTFILE|SELECT|TRUNCATE|UNION)(?![a-z])|'
-                .PREFIX_DB.'_admins|'.PREFIX_DB.'_users|admins_show|admins_add|admins_save|admins_del#i';
-            $decode = base64_decode($val);
-            $slash = preg_replace('#\/\*.*?\*\/#', '', $val);
-            if ($conf['security']['url_get']) if (preg_match($links, $val)) addWarnReport('URL in GET - '.$name.' = '.$val);
-            if (preg_match($script, urldecode($val)) || preg_match($char, $val)) addWarnReport('HTML in GET - '.$name.' = '.$val);
-            if (preg_match($quote, $val)) addHackReport('Hack in GET - '.$name.' = '.$val);
-            if (preg_match($string, $val)) addHackReport('XSS in GET - '.$name.' = '.$val);
-            if (preg_match($string, $decode)) addHackReport('XSS base64 in GET - '.$name.' = '.$val);
-            if (preg_match($string, $slash)) addHackReport('XSS slash in GET - '.$name.' = '.$val);
-        }
-        function getGet($in) {
-            if (is_array($in)) {
-                foreach ($in as $key => $val) {
-                    if (is_array($val)) {
-                        getGet($val);
-                    } else {
-                        checkGet($key, $val);
-                    }
-                }
-            } else {
-                checkGet(_NO, $in);
-            }
-        }
-        getGet($_GET);
+    foreach (['GET' => $_GET, 'POST' => $_POST, 'COOKIE' => $_COOKIE] as $rfrom => $rdata) checkRequestData($rdata, $rfrom);
+    unset($ruri, $rfrom, $rdata);
+}
+
+# Walk one superglobal to its leaves; it reads them itself and not through getVar(), so a module that reads the request its own way is covered too
+function checkRequestData(array $data, string $from): void {
+    foreach ($data as $key => $val) {
+        if (is_array($val)) checkRequestData($val, $from);
+        else checkRequestValue((string)$key, (string)$val, $from);
     }
-    if (isset($_POST)) {
-        function checkPost($name, $val) {
-            global $conf;
-            $links = '#^(http\:\/\/|https\:\/\/|ftp\:\/\/|php\:\/\/|\/\/)#i';
-            $script = '#<.*?(script|body|object|iframe|applet|meta|form).*?>#i';
-            $string = '#'.PREFIX_DB.'_admins|'.PREFIX_DB.'_users#i';
-            $decode = base64_decode($val);
-            $slash = preg_replace('#\/\*.*?\*\/#', '', $val);
-            if ($conf['security']['ref_post'] && isset($_FILES['file']['size'])) {
-                if (!intval($_FILES['file']['size']) && !stristr(getenv('HTTP_REFERER'), getHost())) addWarnReport('POST from referer - '.$name.' = '.$val);
-            }
-            if ($conf['security']['url_post']) if (preg_match($links, $val)) addWarnReport('URL in POST - '.$name.' = '.$val);
-            if (!checkHtmlEditor() && preg_match($script, urldecode($val))) addWarnReport('HTML in POST - '.$name.' = '.$val);
-            if (preg_match($string, $val)) addHackReport('XSS in POST - '.$name.' = '.$val);
-            if (preg_match($string, $decode)) addHackReport('XSS base64 in POST - '.$name.' = '.$val);
-            if (preg_match($string, $slash)) addHackReport('XSS slash in POST - '.$name.' = '.$val);
+}
+
+# Judge one value: the block is narrow, as a word of a search or of a login must pass, and a pattern that breaks on a long value counts as found, never as clean
+function checkRequestValue(string $name, string $val, string $from): void {
+    global $conf;
+    $code = urldecode($val);
+    if ($from === 'GET' && preg_match('#\.\.[/\\\\]|<\s*/?\s*script\b|(?:php|phar|expect|zip)://#i', $code) !== 0) addHackReport('Hack in GET - '.$name);
+    $tags = '(?:script|body|object|embed|iframe|applet|meta|form|style|img|svg|math|base|link|video|audio|input|button|details|marquee)';
+    $word = '(?<![a-z])(?:ALTER|DROP|INSERT|OUTFILE|SELECT|TRUNCATE|UNION)(?![a-z])|admins_show|admins_add|admins_save|admins_del|';
+    $rules = ['HTML' => '#<\s*/?\s*'.$tags.'\b|\bon[a-z]{3,}\s*=#i', 'SQL' => '#'.(($from === 'POST') ? '' : $word).PREFIX_DB.'_admins|'.PREFIX_DB.'_users#i'];
+    if ($from === 'GET') $rules['Quote'] = '#\'|\([^)]*\)#';
+    if (!empty($conf['security'][($from === 'GET') ? 'url_get' : 'url_post']) && $from !== 'COOKIE') $rules['URL'] = '#^\s*(?:https?:|ftp:|file:|data:|//)#i';
+    $data = [$code, preg_replace('#/\*.*?\*/#s', '', $val) ?? ''];
+    $base = ($from === 'COOKIE') ? [] : [base64_decode($val)];
+    foreach ($rules as $label => $rule) {
+        foreach (($label === 'SQL') ? [...$data, ...$base] : $data as $text) {
+            if (preg_match($rule, $text) === 0) continue;
+            addWatchReport($label.' in '.$from.' - '.$name);
+            return;
         }
-        function getPost($in) {
-            if (is_array($in)) {
-                foreach ($in as $key => $val) {
-                    if (is_array($val)) {
-                        getPost($val);
-                    } else {
-                        checkPost($key, $val);
-                    }
-                }
-            } else {
-                checkPost(_NO, $in);
-            }
-        }
-        getPost($_POST);
-    }
-    if (isset($_COOKIE)) {
-        function checkCookie($name, $val) {
-            $links = '#^(http\:\/\/|https\:\/\/|ftp\:\/\/|php\:\/\/|\/\/)#i';
-            $script = '#<.*?(script|body|object|iframe|applet|meta|form|style|img).*?>#i';
-            $string = '#(?<![a-z])(?:ALTER|DROP|INSERT|OUTFILE|SELECT|TRUNCATE|UNION)(?![a-z])|'
-                .PREFIX_DB.'_admins|'.PREFIX_DB.'_users|admins_show|admins_add|admins_save|admins_del#i';
-            $decode = base64_decode($val);
-            $slash = preg_replace('#\/\*.*?\*\/#', '', $val);
-            if (preg_match($links, $val)) addHackReport('URL in COOKIE - '.$name.' = '.$val);
-            if (preg_match($script, $val)) addHackReport('HTML in COOKIE - '.$name.' = '.$val);
-            if (preg_match($string, $val)) addHackReport('XSS in COOKIE - '.$name.' = '.$val);
-            if (preg_match($string, $decode)) addHackReport('XSS base64 in COOKIE - '.$name.' = '.$val);
-            if (preg_match($string, $slash)) addHackReport('XSS slash in COOKIE - '.$name.' = '.$val);
-        }
-        function getCookie($in) {
-            if (is_array($in)) {
-                foreach ($in as $key => $val) {
-                    if (is_array($val)) {
-                        getCookie($val);
-                    } else {
-                        checkCookie($key, $val);
-                    }
-                }
-            } else {
-                checkCookie(_NO, $in);
-            }
-        }
-        getCookie($_COOKIE);
-    }
-    if (isset($_FILES)) {
-        function checkFiles($name, $val) {
-            $type = '#php.*|js|htm|html|phtml|cgi|pl|perl|asp#i';
-            if (isset($_FILES['userfile'])) {
-                $dot = strrchr($_FILES['userfile']['name'], '.');
-                $val = ($dot !== false) ? strtolower(substr($dot, 1)) : '';
-                if ($val !== '' && preg_match($type, $val)) addHackReport('Hack in FILES - '.$name.' = '.$val);
-            } elseif (isset($_FILES['file'])) {
-                if (is_array($_FILES['file']['name'])) {
-                    $files = count($_FILES['file']['name']);
-                    for ($i = 0; $i < $files; $i++) {
-                        $dot = strrchr($_FILES['file']['name'][$i], '.');
-                        $val = ($dot !== false) ? strtolower(substr($dot, 1)) : '';
-                        if ($val !== '' && preg_match($type, $val)) addHackReport('Hack in FILES - '.$name.' = '.$val);
-                    }
-                } else {
-                    $dot = strrchr($_FILES['file']['name'], '.');
-                    $val = ($dot !== false) ? strtolower(substr($dot, 1)) : '';
-                    if ($val !== '' && preg_match($type, $val)) addHackReport('Hack in FILES - '.$name.' = '.$val);
-                }
-            } elseif (isset($_FILES[$name]['name'])) {
-                $dot = strrchr($_FILES[$name]['name'], '.');
-                $val = ($dot !== false) ? strtolower(substr($dot, 1)) : '';
-                if ($val !== '' && preg_match($type, $val)) addHackReport('Hack in FILES - '.$name.' = '.$val);
-            }
-        }
-        function getFiles($in) {
-            if (is_array($in)) {
-                foreach ($in as $key => $val) {
-                    if (is_array($val)) {
-                        getFiles($val);
-                    } else {
-                        checkFiles($key, $val);
-                    }
-                }
-            } else {
-                checkFiles(_NO, $in);
-            }
-        }
-        getFiles($_FILES);
     }
 }
 
@@ -578,17 +467,21 @@ function getCookies(string $name): string {
     return $cookie;
 }
 
-# Get the client's real IP address
+# The address of the visitor is REMOTE_ADDR, as a client writes any header; behind a proxy of security.proxy it is the rightmost address of X-Forwarded-For no listed proxy added
 function getIp(): string {
-    foreach (['REMOTE_ADDR', 'HTTP_X_REAL_IP', 'HTTP_X_FORWARDED_FOR', 'HTTP_CLIENT_IP', 'HTTP_X_CLUSTER_CLIENT_IP', 'HTTP_FORWARDED_FOR', 'HTTP_FORWARDED'] as $header) {
-        if (isset($_SERVER[$header])) {
-            foreach (explode(',', $_SERVER[$header]) as $ip) {
-                $ip = trim($ip);
-                if (filter_var($ip, FILTER_VALIDATE_IP)) return $ip;
-            }
-        }
+    global $conf;
+    $addr = trim((string)($_SERVER['REMOTE_ADDR'] ?? ''));
+    if (!filter_var($addr, FILTER_VALIDATE_IP)) return '0.0.0.0';
+    $list = array_filter(explode(',', (string)($conf['security']['proxy'] ?? '')));
+    $isproxy = static fn(string $ip): bool => array_filter($list, static fn(string $cidr): bool => getIpMatch($ip, $cidr)) !== [];
+    if (!$list || !$isproxy($addr)) return $addr;
+    $hops = isset($_SERVER['HTTP_X_FORWARDED_FOR']) ? explode(',', (string)$_SERVER['HTTP_X_FORWARDED_FOR']) : [(string)($_SERVER['HTTP_X_REAL_IP'] ?? '')];
+    foreach (array_reverse($hops) as $hop) {
+        $hop = trim($hop);
+        if (!filter_var($hop, FILTER_VALIDATE_IP)) break;
+        if (!$isproxy($hop)) return $hop;
     }
-    return '0.0.0.0';
+    return $addr;
 }
 
 # Return IP family: 4, 6 or 0 (invalid)
@@ -704,7 +597,7 @@ function getSiteToken(string $scope = 'ajax'): string {
     return hash_hmac('sha256', $data, getSecret('csrf'));
 }
 
-# The CSRF token of the request: the X-CSRF-Token header global-func.js sends, then X-XSRF-Token, then the token parameter
+# The CSRF token of the request: the X-CSRF-Token header, then X-XSRF-Token, then the body of a POST; never the address, which lands in logs and history
 function getRequestToken(): string {
     $tok = '';
 
@@ -721,25 +614,14 @@ function getRequestToken(): string {
         if (is_string($p) && $p !== '') $tok = trim($p);
     }
 
-    if ($tok === '') {
-        $g = filter_input(INPUT_GET, 'token', FILTER_UNSAFE_RAW);
-        if (is_string($g) && $g !== '') $tok = trim($g);
-    }
-
-    if ($tok === '' && isset($_REQUEST['token']) && is_string($_REQUEST['token'])) {
-        $tok = trim($_REQUEST['token']);
-    }
-
     return $tok;
 }
 
-# Check a token against its scope in constant time, read from the request when none is passed; a scoped check accepts the ajax token too
+# Check a token against its scope in constant time, read from the request when none is passed; a scope takes its own token alone, as the ajax token travels with every poll
 function checkSiteToken(string $tok = '', string $scope = 'ajax'): bool {
     if ($tok === '') $tok = getRequestToken();
     if ($tok === '') return false;
-    if (hash_equals(getSiteToken($scope), $tok)) return true;
-    if ($scope !== 'ajax' && hash_equals(getSiteToken('ajax'), $tok)) return true;
-    return false;
+    return hash_equals(getSiteToken($scope), $tok);
 }
 
 # Authorize one state-changing request by POST and a body token of the form scope, as a query token leaks into history, logs and Referer and is prefetched
@@ -962,9 +844,10 @@ function filterVar(string|array $var): string|array {
     return preg_match('#[^a-zA-Z0-9_\-]#', $var) ? '' : $var;
 }
 
-# Normalize a submitted web address to http(s) with scheme and host lowercased, path and query keep their case; the parser link policy is Parser::filterUrl()
+# Normalize a submitted web address to http(s) with scheme and host lowercased, any other scheme to empty, a colon before digits being a port
 function filterWebUrl(string $url): string {
-    $url = preg_match('#https?://#i', $url) ? $url : 'http://'.$url;
+    if (preg_match('#^(?!https?:)[a-z][a-z0-9+.-]*:(?!\d)#i', $url)) return '';
+    $url = preg_match('#^https?://#i', $url) ? $url : 'http://'.$url;
     $url = preg_replace_callback('#^https?://[^/?\#]*#i', fn(array $v): string => strtolower($v[0]), $url) ?? '';
     return ($url === 'http://') ? '' : filterText($url);
 }
@@ -991,20 +874,19 @@ function filterTrustedTags(string $text, bool $trust = false): string {
 # Turn a typed text into the source a store keeps, never HTML-escaped, as the parser escapes at render; a browser sends every line end of a textarea as CRLF
 function filterSourceText(string $text, bool $trust = false, bool $cens = true): string {
     global $conf;
-    $text = filterTrustedTags(str_replace(["\r\n", "\r"], "\n", $text), $trust);
+    $text = str_replace(["\r\n", "\r"], "\n", $text);
     if ($cens && !isAdmin() && !empty($conf['censor'])) {
         foreach (explode(',', (string)($conf['censor_l'] ?? '')) as $one) {
             $one = trim($one);
             if ($one !== '') $text = (string)preg_replace('#'.preg_quote($one, '#').'#i', (string)($conf['censor_r'] ?? ''), $text);
         }
     }
-    return trim($text);
+    return trim(filterTrustedTags($text, $trust));
 }
 
-# Strip tags, HTML-encode, apply censor; $type=2 skips strip_tags (HTML allowed), $type=1 skips censor
+# Strip tags, HTML-encode, apply censor; $type=2 skips strip_tags (HTML allowed), $type=1 skips censor; the trusted tags go last, as a decode or a cut above can rebuild one
 function filterText(string $message, int $type = 0): string {
     global $conf;
-    $message = filterTrustedTags($message, isAdmin(true));
     if ($type === 2) {
         $message = htmlspecialchars(trim($message), ENT_QUOTES);
     } else {
@@ -1017,7 +899,7 @@ function filterText(string $message, int $type = 0): string {
             $message = preg_replace('#'.preg_quote($val, '#').'#i', $conf['censor_r'], $message);
         }
     }
-    return $message;
+    return filterTrustedTags($message, isAdmin(true));
 }
 
 # Cut an escaped value to the characters of its column, dropping an HTML entity the cut would split
@@ -1026,10 +908,9 @@ function filterCutText(string $text, int $len): string {
     return preg_replace('#&[\#a-z0-9]*$#i', '', mb_substr($text, 0, $len, 'utf-8')) ?? '';
 }
 
-# Normalize submitted content for the editor format; the trusted tags go before the branch, as the html editor stores its input almost verbatim
+# Normalize submitted content for the editor format; the trusted tags go last, as stripslashes() turns [use\php] into the tag itself
 function filterHtml(string $text): string {
     if ($text) {
-        $text = filterTrustedTags($text, isAdmin(true));
         $mode = getEditorMode();
         if ($mode !== 'html') {
             $out = str_replace(['$', '\\'], ['&#036;', '&#092;'], stripslashes(filterText($text, 2)));
@@ -1037,7 +918,7 @@ function filterHtml(string $text): string {
         } else {
             $out = str_replace(['"', '$', '\'', '\\'], ['&#034;', '&#036;', '&#039;', '&#092;'], stripslashes($text));
         }
-        return $out;
+        return filterTrustedTags($out, isAdmin(true));
     }
     return '';
 }
@@ -1060,7 +941,44 @@ function getTimeLeft(int $time): string {
     return ($now < $time) ? getDuration($expire).' ('.$days.') - '.$end : $end.' - '._END;
 }
 
-# Add a hack report with optional block and email
+# Leave one line of hack.log and let the request go on; a word in a value is a signal and no proof, and Logger already stores the request masked, so the line names the field alone
+function addWatchReport(string $msg): void {
+    global $user, $conf;
+    static $num = 0;
+    if (++$num > 5 || empty($conf['security']['write_h'])) return;
+    $luser = (is_array($user) && isset($user[1])) ? substr((string)$user[1], 0, 25) : substr(_ANONYM, 0, 25);
+    Logger::addHack('notice', filterText(substr($msg, 0, 500)), ['user' => $luser, 'hash' => md5(getAgent()), 'blocked' => false]);
+}
+
+# Let one security mail out per hour and answer how many it follows, -1 to hold this one; any guest can provoke a report and the queue has no limit of its own
+function getReportSkip(): int {
+    $hand = is_dir(LOGS_DIR) ? fopen(LOGS_DIR.'/report_mail.json', 'c+') : false;
+    if ($hand === false || !flock($hand, LOCK_EX)) return 0;
+    $data = json_decode((string)stream_get_contents($hand), true);
+    [$time, $num] = [intval($data['time'] ?? 0), intval($data['num'] ?? 0)];
+    $open = time() - $time >= 3600;
+    rewind($hand);
+    ftruncate($hand, 0);
+    fwrite($hand, (string)json_encode($open ? ['time' => time(), 'num' => 0] : ['time' => $time, 'num' => $num + 1]));
+    fclose($hand);
+    return $open ? $num : -1;
+}
+
+# The ban list with one automatic ban added: expired rows go, and past the cap the oldest automatic ones, as any guest can provoke a report and a manual ban must outlive that
+function getBanList(string $row): string {
+    global $conf;
+    [$hand, $auto] = [[], []];
+    foreach (explode('||', (string)$conf['security']['blocker_ip']) as $val) {
+        $part = explode('|', $val, 4);
+        if (count($part) < 4 || time() > (int)$part[2]) continue;
+        if ($part[3] === _HACK) $auto[] = $val;
+        else $hand[] = $val;
+    }
+    $auto[] = $row;
+    return implode('||', array_merge($hand, array_slice($auto, -1000))).'||';
+}
+
+# Add a hack report with optional block and email; a request another page sent, an image in a post among them, is refused but bans nobody, as the visitor did not write it
 function addHackReport(string $msg): void {
     global $user, $conf, $tpl, $mailer;
     $msg = filterText(substr($msg, 0, 500));
@@ -1071,16 +989,15 @@ function addHackReport(string $msg): void {
     $agent = getAgent();
     $dtime = date(_TIMESTRING);
     $luser = (is_array($user) && isset($user[1])) ? substr((string)$user[1], 0, 25) : substr(_ANONYM, 0, 25);
-    if ($conf['security']['block']) {
+    if ($conf['security']['block'] && ($_SERVER['HTTP_SEC_FETCH_SITE'] ?? 'none') === 'none') {
         $btime = time() + 86400;
         $cidr = getIpHostCidr($ip);
-        if ($cidr !== false) {
-            $cont = ['blocker_ip' => $conf['security']['blocker_ip'].$cidr.'|'.md5($agent).'|'.$btime.'|'._HACK.'||'];
-            setConfigFile('security.php', $cont, $conf['security']);
-        }
+        if ($cidr !== false) setConfigFile('security.php', ['blocker_ip' => getBanList($cidr.'|0|'.$btime.'|'._HACK)], $conf['security']);
         setCookies($conf['security']['blocker_cookie'], $btime, 'block');
     }
-    if ($conf['security']['mail']) {
+    $skip = $conf['security']['mail'] ? getReportSkip() : -1;
+    if ($skip >= 0) {
+        $msg .= $skip ? ' (+'.$skip.')' : '';
         $subject = $conf['sitename'].' - '._SECURITY;
         if ($tpl instanceof Template) {
             $lines = [
@@ -1115,7 +1032,9 @@ function addWarnReport(string $msg): void {
     $agent = getAgent();
     $dtime = date(_TIMESTRING);
     $luser = (is_array($user) && isset($user[1])) ? substr((string)$user[1], 0, 25) : substr(_ANONYM, 0, 25);
-    if ($conf['security']['mail_w']) {
+    $skip = $conf['security']['mail_w'] ? getReportSkip() : -1;
+    if ($skip >= 0) {
+        $msg .= $skip ? ' (+'.$skip.')' : '';
         $subject = $conf['sitename'].' - '._SECURITY;
         if ($tpl instanceof Template) {
             $lines = [

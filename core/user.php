@@ -299,46 +299,6 @@ function setComShow(int $id, int $acomm, ?string $route): string {
     return $tpl->getHtmlFrag('block-content', ['id' => 'comm', 'is_comments_section' => true, 'content' => $cont]);
 }
 
-# Render the active site message box for the current language and user role
-function setMessageShow(): string {
-    global $db, $afile, $conf, $currentlang, $tpl, $prs;
-    if ($conf['message'] == 1) {
-        $adminNote = static function (string $viewType, string $duration, string $editUrl) use ($tpl): string {
-            $edit = $tpl->getHtmlFrag('link', ['href' => $editUrl, 'title' => _EDIT, 'label' => _EDIT]);
-            return $tpl->getHtmlFrag('block-content', [
-                'is_center' => true,
-                'content' => '['._VIEW.': '.$viewType.' | '._PURCHASED.': '.$duration.' | '.$edit.' ]',
-            ]);
-        };
-        $params = [];
-        $querylang = ($conf['multilingual'] == 1) ? 'AND (lang = :lang OR lang = \'\')' : '';
-        if ($conf['multilingual'] == 1) {
-            $params['lang'] = $currentlang;
-        }
-        $messageBox = static fn(string $title, string $body): string => $tpl->getHtmlFrag('block-content', [
-            'is_message_box' => true,
-            'content' => $tpl->getHtmlFrag('title', ['title' => $title, 'is_level_two' => true]).$body,
-        ]);
-        $result = $db->getSqlQuery('SELECT id, title, body, expire, view FROM '.PREFIX_DB.'_message WHERE status = 1 '.$querylang, $params);
-        if ($db->getSqlRowCount($result) > 0) {
-            while ([$mid, $title, $body, $expire, $view] = $db->getSqlRow($result)) {
-                $mid = intval($mid);
-                $exp = $expire ? strtotime($expire) - time() : 0;
-                if ($expire && $exp < 0) {
-                    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_message SET status = 0, expire = NULL WHERE id = :mid', ['mid' => $mid]);
-                    continue;
-                }
-                $who = match (intval($view)) {4 => is_moder() ? _MVADMIN : '', 3 => is_user() ? _MVUSERS : '', 2 => is_user() ? '' : _MVANON, 1 => _MVALL, default => ''};
-                if ($who === '') continue;
-                $body = $prs->filterContent($body, true, 'all', 2, '', [], true);
-                if (is_moder()) $body .= $adminNote($who, ($exp > 0) ? getDuration($exp) : _UNLIMITED, HOME_PATH.$afile.'.php?name=messages&op=add&id='.$mid);
-                return $messageBox($title, $body);
-            }
-        }
-    }
-    return '';
-}
-
 # Build the account navigation items; only the inner strip names its unread badge, the one an out-of-band swap reaches, and the badge caps at 99+ for the round tile
 function getUserNavItems(bool $home = false): array {
     global $db, $conf, $prv;
@@ -374,7 +334,8 @@ function getUserNavItems(bool $home = false): array {
         'sub' => _ACCOUNT_SETUPNOTE];
     $items[] = ['label' => _ACCOUNT_LOGINS, 'title' => _ACCOUNT_LOGINS, 'href' => getSeoUrl(['name' => 'account', 'op' => 'logins']), 'icon' => getIconName('logins'),
         'sub' => _ACCOUNT_LOGSNOTE];
-    $items[] = ['label' => _LOGOUT, 'title' => _LOGOUT, 'href' => getSeoUrl(['name' => 'account', 'op' => 'logout']), 'icon' => getIconName('logout'), 'sub' => _ACCOUNT_EXITNOTE];
+    $items[] = ['label' => _LOGOUT, 'title' => _LOGOUT, 'href' => getSeoUrl(['name' => 'account', 'op' => 'logout']), 'icon' => getIconName('logout'), 'sub' => _ACCOUNT_EXITNOTE,
+        'post' => getSiteToken('account')];
     foreach ($items as $pos => $item) {
         $items[$pos]['tone'] = $pos % 6;
         if (!isset($item['sub'])) $items[$pos]['sub'] = ($item['title'] !== $item['label']) ? $item['title'] : '';

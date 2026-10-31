@@ -8,6 +8,7 @@ define('_ACCOUNTCREATED','Создана учетная запись новог�
 define('_ACCOUNT_BLOCKNOTE','Выключенное меню не показывается, но текст ниже сохраняется.');
 define('_ACCOUNT_CLEAN','Без предупреждений');
 define('_ACCOUNT_EXITNOTE','Завершить сеанс');
+define('_ACCOUNT_MAILPASS','Текущий пароль, нужен только при смене адреса');
 define('_ACCOUNT_FIELDS','Дополнительные поля');
 define('_ACCOUNT_FILLED','Заполненность профиля');
 define('_ACCOUNT_FSMAILNOTE','Письмо приходит на каждый ответ в вашей теме.');

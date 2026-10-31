@@ -78,6 +78,7 @@ if (is_user()) {
         'profile_label' => _PERSONALINFO,
         'change_label' => _CHANGE,
         'logout_label' => _LOGOUT,
+        'logout_token' => getSiteToken('account'),
     ];
 } else {
     $captcha = getCaptcha('login');

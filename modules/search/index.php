@@ -121,12 +121,13 @@ function getSearchForum(array $state): array {
     global $db, $conf;
     $rows = [];
     $rid = (int)($conf['forum']['recycle'] ?? 0);
+    $like = '%'.str_replace(['!', '%', '_'], ['!!', '!%', '!_'], $state['word']).'%';
     if (is_moder('forum') || !$rid) {
         $cond = '';
-        $pars = ['worda' => '%'.$state['word'].'%', 'wordb' => '%'.$state['word'].'%'];
+        $pars = ['worda' => $like, 'wordb' => $like];
     } else {
         $cond = 'f.cid != :rid AND';
-        $pars = ['rid' => $rid, 'worda' => '%'.$state['word'].'%', 'wordb' => '%'.$state['word'].'%'];
+        $pars = ['rid' => $rid, 'worda' => $like, 'wordb' => $like];
     }
     $pars['lim'] = $state['lim'];
     $result = $db->getSqlQuery(
@@ -134,7 +135,8 @@ function getSearchForum(array $state): array {
         .' FROM '.PREFIX_DB.'_forum AS f LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.id)'
         .' LEFT JOIN '.PREFIX_DB.'_routes AS ur ON ur.kind = \'user\' AND ur.oid = u.id AND ur.cur = 1'
         .' LEFT JOIN '.PREFIX_DB.'_routes AS r ON r.kind = \'topic\' AND r.oid = f.id AND r.cur = 1'
-        .' WHERE '.$cond.' f.pid = \'0\' AND f.time <= NOW() AND f.status != \'0\' AND (f.title LIKE :worda OR f.body LIKE :wordb) ORDER BY f.time DESC LIMIT :lim',
+        .' WHERE '.$cond.' f.pid = \'0\' AND f.time <= NOW() AND f.status != \'0\' AND (f.title LIKE :worda ESCAPE \'!\' OR f.body LIKE :wordb ESCAPE \'!\')'
+        .' ORDER BY f.time DESC LIMIT :lim',
         $pars
     );
     while ([$mid, $pid, $user, $titl, $time, $cid, $cont, $comm, $reads, $nick, $path, $upath] = $db->getSqlRow($result)) {

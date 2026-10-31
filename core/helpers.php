@@ -493,7 +493,7 @@ function setListPortion(string $key, string $from, string $where, array $pars, C
     return true;
 }
 
-# Render one admin info page with an optional in-place editor; the doc is stored raw with LF endings, as filterHtml would mangle Markdown and a form submits CRLF
+# Render one admin info page with the editor of a super administrator; the doc runs its trusted tags, so a refused post stays in the textarea and only the stored doc renders
 function setTplAdminInfoPage(array $data = []): void {
     global $afile, $locale, $conf, $tpl, $prs;
     $name = filterWord(getVar('get', 'name', 'text', ''));
@@ -504,7 +504,7 @@ function setTplAdminInfoPage(array $data = []): void {
     $action = $data['action_url'] ?? (HOME_PATH.$afile.'.php?name='.$name.'&op=info');
     $save = $data['save_flag'] ?? 'save_info';
     $submit = $data['submit_label'] ?? _SAVECHANGES;
-    $edit = !empty($conf['adminfo']) && ($data['can_edit'] ?? true);
+    $edit = !empty($conf['adminfo']) && isAdmin(true);
     $fdoc = static function(string $path): string {
         foreach (['.html', '.md'] as $ext) {
             if (file_exists($path.$ext)) return $path.$ext;
@@ -529,6 +529,7 @@ function setTplAdminInfoPage(array $data = []): void {
     $path = $fdoc($base.'/'.$locale);
     if ($path === '') $path = $base.'/'.$locale.'.html';
     $text = file_exists($path) ? (string)file_get_contents($path) : _NO_INFO;
+    $doc = $text;
     $alert = '';
     if ($edit && getVar('post', $save, 'num', 0)) {
         if (!checkSiteToken()) {
@@ -557,7 +558,7 @@ function setTplAdminInfoPage(array $data = []): void {
                 if ($fp !== false) {
                     fwrite($fp, $content);
                     fclose($fp);
-                    $text = $content;
+                    $text = $doc = $content;
                     $alert = $tpl->getHtmlFrag('alert', [
                         'alert_attr' => 'data-sl-autohide="5000"',
                         'is_flash' => true,
@@ -568,7 +569,7 @@ function setTplAdminInfoPage(array $data = []): void {
             }
         }
     }
-    $info = $tpl->getHtmlPart('div', ['class' => 'sl-markdown', 'content_html' => $prs->filterContent($text, false, $mod)]);
+    $info = $tpl->getHtmlPart('div', ['class' => 'sl-markdown', 'content_html' => $prs->filterContent($doc, false, $mod)]);
     $body = ($alert !== '' ? $alert : '').$tpl->getHtmlPart('box', ['content_html' => $info]);
     $head = strtolower($_SERVER['HTTP_HX_REQUEST'] ?? '');
     if ($head === 'true') {
@@ -697,9 +698,9 @@ function getFieldsInRows(array $data = []): array {
 # Map a declared storage to its room by column type, which a test compares with storage/update/sql/table.sql; an unknown store gets TEXT, the narrowest
 function getEditorRoomData(string $store): array {
     $room = [
-        'comment.body' => 'mediumtext', 'forum.body' => 'mediumtext', 'message.body' => 'mediumtext', 'newsletter.body' => 'mediumtext',
+        'comment.body' => 'mediumtext', 'forum.body' => 'mediumtext', 'newsletter.body' => 'mediumtext',
         'privat.body' => 'mediumtext', 'nodes.body' => 'mediumtext', 'nodes.intro' => 'text',
-        'users.block' => 'text', 'users.sig' => 'text',
+        'blocks.content' => 'text', 'users.block' => 'text', 'users.sig' => 'text',
         'config' => 'config',
     ];
     $byte = ['text' => 65535, 'mediumtext' => 16777215, 'config' => 65535];
@@ -1009,7 +1010,6 @@ function getEditorFileKit(string $id, array $data): array {
         'maxwidth' => (int)($rul['maxwidth'] ?? 0),
         'maxheight' => (int)($rul['maxheight'] ?? 0),
         'token' => $upl ? getSiteToken('upload') : '',
-        'ajax' => $upl ? getSiteToken() : '',
         'upload' => $upl ? HOME_PATH.'index.php?go=4&op=editorUpload&place='.rawurlencode($plc) : '',
         'files' => $upl ? HOME_PATH.'index.php?go=4&op=editorFiles&place='.rawurlencode($plc) : '',
         'remove' => $mdr ? HOME_PATH.'index.php?go=4&op=editorDelete&place='.rawurlencode($plc) : '',
@@ -1113,7 +1113,6 @@ function getFileManagerField(array $opt): string {
         'maxwidth' => (int)$rul['maxwidth'],
         'maxheight' => (int)$rul['maxheight'],
         'token' => $upl ? getSiteToken('upload') : '',
-        'ajax' => $upl ? getSiteToken() : '',
         'upload' => ($upl && in_array('editorUpload', $ops, true)) ? HOME_PATH.'index.php?go=4&op=editorUpload&place='.rawurlencode($plc) : '',
         'files' => ($upl && in_array('editorFiles', $ops, true)) ? HOME_PATH.'index.php?go=4&op=editorFiles&place='.rawurlencode($plc) : '',
         'remove' => ($mdr && in_array('editorDelete', $ops, true)) ? HOME_PATH.'index.php?go=4&op=editorDelete&place='.rawurlencode($plc) : '',
@@ -1200,7 +1199,7 @@ function getWindowSet(bool $admin = false): string {
             'bar_html' => $tpl->getHtmlPart('session-stats', ['is_bar' => true, 'live_html' => $tpl->getHtmlFrag('live-chip', ['live_every' => 10])]),
             'body_html' => $tpl->getHtmlPart('session-stats', [
                 'is_wait' => true,
-                'url' => HOME_PATH.'index.php?go='.($admin ? '5' : '1').'&op=getSessionStats&token='.getSiteToken(),
+                'url' => HOME_PATH.'index.php?go='.($admin ? '5' : '1').'&op=getSessionStats',
             ]),
             'foot_html' => $tpl->getHtmlPart('session-stats', ['is_foot' => true, 'url' => HOME_PATH.$afile.'.php?name=statistic']),
         ]);
@@ -1263,14 +1262,14 @@ function getTplPostButton(array $hide, string $icon, string $label, string $attr
 }
 
 # Build the moderator dial of a content row; the delete half becomes a form with a fresh token, and id[]=5 of the address goes back as fields of key[]
-function getTplEditMenu(string $edithref, string $delhref, string $title): array {
+function getTplEditMenu(string $edithref, string $delhref, string $title, string $scope): array {
     global $tpl;
     static $seq = 0;
     $parts = explode('?', $delhref, 2);
     $pars = [];
     parse_str($parts[1] ?? '', $pars);
     unset($pars['token']);
-    $pars['token'] = getSiteToken();
+    $pars['token'] = getSiteToken($scope);
     $hide = '';
     foreach ($pars as $key => $val) {
         foreach ((array)$val as $one) {

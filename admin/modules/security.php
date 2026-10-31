@@ -541,6 +541,14 @@ function passwd(): void {
             'input_id' => 'f-admin-ip',
             'value_text' => $conf['security']['admin_ip'],
         ]),
+    ], [
+        'label_for' => 'f-proxy',
+        'label_html' => _SEC_PROXY, 'hint_html' => _SEC_PROXY_TIP, 'hint_id' => $hntpx = getFieldIds('f-proxy')['hint'],
+        'field_html' => $tpl->getHtmlFrag('textarea', ['describedby' => $hntpx,
+            'name_attr' => 'proxy',
+            'input_id' => 'f-proxy',
+            'value_text' => (string)($conf['security']['proxy'] ?? ''),
+        ]),
     ]];
     if (!$conf['security']['login'] || !$conf['security']['password']) {
         $rows[] = [
@@ -603,7 +611,9 @@ function passsave(): void {
             $cidr = getIpCidr($val);
             if ($cidr !== false) $ips[] = $cidr;
         }
+        $hops = array_map('getIpCidr', preg_split('#[\s,]+#', getVar('post', 'proxy', 'text', ''), -1, PREG_SPLIT_NO_EMPTY) ?: []);
         $cont = $conf['security'];
+        $cont['proxy'] = implode(',', array_filter($hops));
         $cont['admin_ip'] = implode(',', $ips);
         $cont['login'] = $xlogin;
         $cont['password'] = $xpassword;
@@ -736,16 +746,6 @@ function config(): void {
     $cont = getTplAdminTabs($tabset + ['tab' => 5]);
     $cont .= checkPerms(CONFIG_DIR.'/security.php');
     $ainfo = sprintf(_ADMIN_FILE_INFO, strtolower(getRandomString('10')));
-    $floodhtml = $tpl->getHtmlFrag('select', [
-        'name_attr' => 'flood',
-        'selectid' => 'f-flood',
-        'is_config' => true,
-        'options_html' =>
-            $tpl->getHtmlFrag('select-option', ['value_attr' => '0', 'label_text' => _NO, 'is_selected' => $conf['security']['flood'] == 0])
-            .$tpl->getHtmlFrag('select-option', ['value_attr' => '1', 'label_text' => _SFLOOD_1, 'is_selected' => $conf['security']['flood'] == 1])
-            .$tpl->getHtmlFrag('select-option', ['value_attr' => '2', 'label_text' => _SFLOOD_2, 'is_selected' => $conf['security']['flood'] == 2])
-            .$tpl->getHtmlFrag('select-option', ['value_attr' => '3', 'label_text' => _SFLOOD_3, 'is_selected' => $conf['security']['flood'] == 3]),
-    ]);
     $errorhtml = $tpl->getHtmlFrag('select', [
         'name_attr' => 'error',
         'selectid' => 'f-error',
@@ -756,13 +756,7 @@ function config(): void {
             .$tpl->getHtmlFrag('select-option', ['value_attr' => '2', 'label_text' => _SEC_VIEW_2, 'is_selected' => $conf['security']['error'] == 2]),
     ]);
     $rows = [
-        ['label_for' => 'f-flood', 'label_html' => _SFLOOD, 'field_html' => $floodhtml],
         ['label_for' => 'f-error', 'label_html' => _SEC_VIEW, 'field_html' => $errorhtml],
-        [
-            'label_for' => 'f-flood-t',
-            'label_html' => _SFLOD_T,
-            'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'flood_t', 'input_id' => 'f-flood-t', 'value_attr' => $conf['security']['flood_t']]),
-        ],
         [
             'label_for' => 'f-blocker-cookie',
             'label_html' => _SEC_COOKIE,
@@ -871,16 +865,6 @@ function config(): void {
                 'labelledby' => $labid,
                 'name' => 'url_post',
                 'value' => $conf['security']['url_post'],
-                'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]],
-            ]),
-        ],
-        [
-            'label_html' => _SEC_REF_POST,
-            'label_id' => $labid = getFieldIds('', 'ref_post')['label'],
-            'field_html' => getTplRadioGroup([
-                'labelledby' => $labid,
-                'name' => 'ref_post',
-                'value' => $conf['security']['ref_post'],
                 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]],
             ]),
         ],
@@ -1142,7 +1126,6 @@ function configsave(): void {
     }
     if (!$warn) {
         $afile = $nfile;
-        $flood_t = getVar('post', 'flood_t', 'num', '1');
         $log_size = getVar('post', 'log_size', 'num', '1048576');
         $idle = getVar('post', 'idle', 'num', 60) * 60;
         $sess_d = getVar('post', 'sess_d', 'num', 1440) * 60;
@@ -1162,9 +1145,7 @@ function configsave(): void {
         }
         $dskip = array_values(array_unique($dskip));
         $cont = [
-            'flood' => getVar('post', 'flood', 'num'),
             'error' => getVar('post', 'error', 'num'),
-            'flood_t' => $flood_t,
             'idle' => $idle,
             'blocker_cookie' => getVar('post', 'blocker_cookie', 'text'),
             'afile' => $afile,
@@ -1176,7 +1157,6 @@ function configsave(): void {
             'error_log' => getVar('post', 'error_log', 'num'),
             'url_get' => getVar('post', 'url_get', 'num'),
             'url_post' => getVar('post', 'url_post', 'num'),
-            'ref_post' => getVar('post', 'ref_post', 'num'),
             'mail' => getVar('post', 'mail', 'num'),
             'mail_w' => getVar('post', 'mail_w', 'num'),
             'mail_d' => getVar('post', 'mail_d', 'num'),

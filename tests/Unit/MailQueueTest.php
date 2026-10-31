@@ -381,11 +381,13 @@ final class MailQueueTest extends TestCase
         $db = new MailQueueDatabase();
         $db->moved = 3;
         $this->assertSame(6, $this->getMail($db, ['keep' => '30', 'keepbulk' => '3'])->deleteQueue());
-        $this->assertCount(2, $db->sql);
+        $this->assertCount(3, $db->sql);
         $this->assertStringContainsString('WHERE status = 1 AND kind = \'newsletter\'', $db->sql[0]['query']);
         $this->assertSame(3, $db->sql[0]['pars']['days']);
         $this->assertStringContainsString('WHERE status = 1 AND kind <> \'newsletter\'', $db->sql[1]['query']);
         $this->assertSame(30, $db->sql[1]['pars']['days']);
+        $this->assertStringContainsString('SET body = \'\' WHERE status = 2 AND kind IN (\'account\', \'admins\')', $db->sql[2]['query']);
+        $this->assertSame(30, $db->sql[2]['pars']['days']);
     }
 
     # A failed row is never pruned, because it is exactly what an administrator opens the queue view to read
@@ -395,6 +397,7 @@ final class MailQueueTest extends TestCase
         $db = new MailQueueDatabase();
         $this->getMail($db)->deleteQueue();
         foreach ($db->sql as $one) {
+            if (!str_starts_with($one['query'], 'DELETE')) continue;
             $this->assertStringContainsString('status = 1', $one['query']);
         }
     }

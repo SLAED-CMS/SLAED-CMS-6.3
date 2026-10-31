@@ -155,7 +155,7 @@ final class UpdateTextTest extends TestCase
         $run = $this->getRun();
         $this->assertTrue($run['dry']['done'], $run['dry']['text']);
         $this->assertNull($run['dry']['info'], 'The dry run wrote a manifest');
-        $this->assertStringContainsString('(nodes.body 1, comment.body 2, forum.body 2, forum.field 1, privat.body 1, message.body 1, newsletter.body 1,'
+        $this->assertStringContainsString('(nodes.body 1, comment.body 2, forum.body 2, forum.field 1, privat.body 1, newsletter.body 1,'
             .' blocks.content 1, users.sig 1, users.block 1), config/contact.php info changes', $run['dry']['text']);
         $this->assertSame('[b]Bold[/b] text', strstr($run['dry']['texts']['nodes.body #1'], "\n", true), 'The dry run converted a text');
         $want = [
@@ -166,8 +166,7 @@ final class UpdateTextTest extends TestCase
             'forum.field #1' => '{"note":"**n**","size":"[b]s[/b]"}',
             'forum.body #2' => '**Markdown** of 2026 **x**',
             'privat.body #1' => "```\n<b><x></b>\n```",
-            'message.body #1' => 'C 2\\*3',
-            'newsletter.body #1' => '<a@b.test>',
+            'newsletter.body #1' => 'C 2\\*3 <a@b.test>',
             'blocks.content #1' => "[Page](./page.html) **B**\n\n[usehtml]\n<table><tr><td>t</td></tr></table>\n[/usehtml]",
             'users.sig #2' => '*sig*',
         ];

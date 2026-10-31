@@ -35,7 +35,7 @@ function account(): void {
             'field_html' => $tpl->getHtmlFrag('input', [
                 'name_attr' => 'user_password',
                 'input_id' => 'f-user-password',
-                'maxlength_num' => 25,
+                'maxlength_num' => 72,
                 'placeholder_text' => _PASSWORD,
                 'is_required' => true,
             ]),
@@ -135,7 +135,7 @@ function newuser(): void {
                 'field_html' => $tpl->getHtmlFrag('input', [
                     'name_attr' => 'user_password',
                     'input_id' => 'f-user-password',
-                    'maxlength_num' => 25,
+                    'maxlength_num' => 72,
                     'placeholder_text' => _PASSWORD,
                 ]),
             ]).$tpl->getHtmlFrag('form-field-row', [
@@ -144,7 +144,7 @@ function newuser(): void {
                 'field_html' => $tpl->getHtmlFrag('input', [
                     'name_attr' => 'user_password2',
                     'input_id' => 'f-user-password2',
-                    'maxlength_num' => 25,
+                    'maxlength_num' => 72,
                     'placeholder_text' => _RETYPEPASSWORD,
                 ]),
             ]);
@@ -195,11 +195,11 @@ function finnewuser(): void {
         $rules = getVar('post', 'rules', 'num');
         if (!checkSiteToken(getVar('post', 'token', 'raw', ''), 'account')) $stop[] = _ERROR;
         checkuser($nick, $mail, $rules);
-        $pass = htmlspecialchars(substr(getVar('post', 'user_password', 'text'), 0, 40));
-        $pass2 = htmlspecialchars(substr(getVar('post', 'user_password2', 'text'), 0, 40));
+        $pass = getPassInput('user_password');
+        $pass2 = getPassInput('user_password2');
         if (checkCaptcha('register')) $stop[] = _SECCODEINCOR;
         if ($pass == '' && $pass2 == '') {
-            $pass = getRandomString($conf['users']['minpass']);
+            $pass = getRandomString(max(12, intval($conf['users']['minpass'])));
         } elseif ($pass != $pass2) {
             $stop[] = _ERROR_PASS;
         } elseif ($pass == $pass2 && strlen($pass) < $conf['users']['minpass']) {
@@ -236,7 +236,8 @@ function finnewuser(): void {
             } else {
                 $link = $tpl->getHtmlFrag('link', ['href' => $finishlink, 'title' => _ACTIVATIONSUB, 'label' => $finishlink, 'is_blank' => true]);
                 $subject = $conf['sitename'].' - '._ACTIVATIONSUB;
-                $message = getMailFrame(getTplLines([sprintf(_PASSFSEND, $mail, $conf['sitename'], $link, $nick, $pass), _IFYOUDIDNOTASK], true, true));
+                $shown = htmlspecialchars($pass, ENT_QUOTES);
+                $message = getMailFrame(getTplLines([sprintf(_PASSFSEND, $mail, $conf['sitename'], $link, $nick, $shown), _IFYOUDIDNOTASK], true, true));
                 $mailer->addQueue(['kind' => 'account', 'email' => $mail, 'title' => $subject, 'body' => $message, 'sender' => $conf['adminmail'], 'prio' => 3]);
                 $meta = $tpl->getHtmlFrag('meta-refresh', ['url' => HOME_PATH, 'secs' => 30]);
                 $cont = $tpl->getHtmlFrag('title', ['title' => _ACCOUNTCREATED, 'is_level_one' => true])
@@ -859,7 +860,6 @@ function logins(): void {
 function passlost(): void {
     global $conf, $stop, $tpl;
     $code = getVar('get', 'code', 'text');
-    $code = ($code) ? substr($code, 0, 10) : false;
     $email = getVar('get', 'email', 'text');
     if ($email) checkemail($email);
     if (!is_user()) {
@@ -892,7 +892,7 @@ function passlost(): void {
                     'name_attr' => 'code',
                     'input_id' => 'f-code',
                     'value_attr' => $code ?: '',
-                    'maxlength_num' => 10,
+                    'maxlength_num' => 20,
                     'placeholder_text' => _CONFIRMATIONCODE,
                     'is_required' => true,
                 ]),
@@ -917,11 +917,29 @@ function passlost(): void {
     }
 }
 
+# The code of a password recovery: keyed, so a read of the database forges none, and bound to the hour and to the stored hash, so a new password ends it
+function getPassCode(string $email, string $pass, int $back = 0): string {
+    return substr(hash_hmac('sha256', strtolower($email).'|'.$pass.'|'.(intdiv(time(), 3600) - $back), getSecret('recover')), 0, 20);
+}
+
+# The password as typed; a NUL goes, as bcrypt refuses it with an exception
+function getPassInput(string $key): string {
+    return str_replace("\0", '', trim(getVar('post', $key, 'raw', '')));
+}
+
+# Answer which form of the typed password opens the hash, '' for none: the form itself, or one of the three escaped forms login, registration and the profile used to store
+function getPassMatch(string $pass, string $hash): string {
+    $text = filterHtml($pass);
+    foreach (array_unique([$pass, htmlspecialchars(trim(substr($text, 0, 25))), htmlspecialchars(substr($text, 0, 40)), $text]) as $form) {
+        if ($form !== '' && checkPassHash($form, $hash)) return $form;
+    }
+    return '';
+}
+
 function passmail(): void {
     global $db, $conf, $stop, $tpl, $mailer;
     $email = getVar('post', 'email', 'text');
-    $code = getVar('post', 'code', 'text');
-    $code = ($code) ? substr($code, 0, 10) : false;
+    $code = (string)getVar('post', 'code', 'text');
     if (!checkSiteToken(getVar('post', 'token', 'raw', ''), 'account')) $stop[] = _ERROR;
     checkemail($email);
     if (!$stop) {
@@ -933,9 +951,9 @@ function passmail(): void {
         }
     }
     if (!$stop) {
-        $subpass = substr(md5($pass), 0, 10);
-        if ($code && $subpass == $code) {
-            $newpass = getRandomString($conf['users']['minpass']);
+        $subpass = getPassCode($email, $pass);
+        if ($code !== '' && (hash_equals($subpass, $code) || hash_equals(getPassCode($email, $pass, 1), $code))) {
+            $newpass = getRandomString(max(12, intval($conf['users']['minpass'])));
             $chash = getPassHash($newpass);
             $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET password = :password WHERE email = :email', ['password' => $chash, 'email' => $email]);
             $link = $tpl->getHtmlFrag('link', [
@@ -953,6 +971,8 @@ function passmail(): void {
             echo $tpl->getHtmlFrag('title', ['title' => _PASSWORDLOST, 'is_level_one' => true])
                 .$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _USERPASSWORD.' '.$nick.' '._MAILED, 'meta' => $meta]);
             setFoot();
+        } elseif (CaptchaStore::increment('pm:'.strtolower($email), 3600) > 3 || CaptchaStore::increment('pi:'.getIp(), 3600) > 10) {
+            setRedirect(getSeoUrl(['name' => $conf['name'], 'op' => 'passlost', 'email' => $email]));
         } else {
             $link = $tpl->getHtmlFrag('link', [
                 'href' => getPublicUrl(['name' => $conf['name'], 'op' => 'passlost', 'code' => $subpass, 'email' => $email]),
@@ -971,14 +991,15 @@ function passmail(): void {
 
 function setUserLogin(int $uid, string $name, string $pass, int $story, int $blockon, string $theme, string $way = 'login'): void {
     global $db, $conf, $pnt;
-    setCookies('account', time() + (int)$conf['user_c_t'], [$uid, $name, $pass, $story, $blockon, $theme]);
+    if (session_status() === PHP_SESSION_ACTIVE) session_regenerate_id(true);
+    setCookies('account', time() + (int)$conf['user_c_t'], [$uid, $name, getUserToken($pass), $story, $blockon, $theme]);
     $uip = getIp();
     $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_session WHERE uname = :uname AND guest = :guest', ['uname' => $uip, 'guest' => 0]);
     getUserLastVisit($uid);
     $pars = ['ip' => $uip, 'agent' => filterCutText(getAgent(), 255), 'id' => $uid];
     $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET ip = :ip, lastvis = NOW(), agent = :agent WHERE id = :id', $pars);
     $pnt->addEvent('login', 'account', 'day:'.gmdate('Ymd'), $uid);
-    Captcha::clearLoginFailures('user');
+    Captcha::clearLoginFailures('user', $name);
     addLoginLog($uid, false, 'ok', $name, $way);
 }
 
@@ -988,15 +1009,17 @@ function login(): void {
     if ($block) $stop[] = _ERROR;
     if (checkCaptcha('login')) [$stop[], $block] = [_SECCODEINCOR, true];
     $uname = htmlspecialchars(trim(substr(getVar('post', 'user_name', 'text'), 0, 25)));
-    $upass = htmlspecialchars(trim(substr(getVar('post', 'user_password', 'text'), 0, 25)));
-    if (!$uname || !$upass) $stop[] = _LOGININCOR;
+    $upass = getPassInput('user_password');
+    if (!$uname || $upass === '') $stop[] = _LOGININCOR;
+    if (Captcha::isLoginLimited('user', $uname)) [$stop[], $block] = [_LOGINLIMIT, true];
     $result = $db->getSqlQuery(
         'SELECT id, name, email, password, storynum, blockon, theme FROM '.PREFIX_DB.'_users WHERE name = :name',
         ['name' => $uname]
     );
     [$uid, $nick, $mail, $pass, $story, $blockon, $theme] = $db->getSqlRow($result);
-    if ($db->getSqlRowCount($result) != 1 || !$uid || $nick != $uname || !checkPassHash($upass, $pass)) $stop[] = _LOGININCOR;
-    if (!$stop && password_needs_rehash($pass, PASSWORD_BCRYPT)) {
+    $form = (!$stop && $db->getSqlRowCount($result) == 1 && $uid && $nick == $uname) ? getPassMatch($upass, (string)$pass) : '';
+    if (!$stop && $form === '') $stop[] = _LOGININCOR;
+    if (!$stop && ($form !== $upass || password_needs_rehash($pass, PASSWORD_BCRYPT))) {
         $pass = getPassHash($upass);
         $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET password = :pwd WHERE id = :id', ['pwd' => $pass, 'id' => $uid]);
     }
@@ -1004,7 +1027,7 @@ function login(): void {
         setUserLogin((int)$uid, (string)$nick, (string)$pass, (int)$story, (int)$blockon, (string)$theme);
         setRedirect(getSeoUrl(['name' => $conf['name']]), true);
     } else {
-        Captcha::registerLoginFailure('user');
+        Captcha::registerLoginFailure('user', $uname);
         addLoginLog(($nick === $uname) ? intval($uid) : 0, false, $block ? 'blocked' : 'password', $uname);
         account();
     }
@@ -1012,6 +1035,8 @@ function login(): void {
 
 function logout(): void {
     global $db, $user;
+    $tok = getVar('post', 'token', 'raw', '');
+    if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST' || $tok === '' || !checkSiteToken($tok, 'account')) setRedirect(HOME_PATH);
     $nick = (is_array($user) && isset($user[1])) ? htmlspecialchars(substr((string)$user[1], 0, 25)) : '';
     setCookiesDelete('account');
     if ($nick !== '') $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_session WHERE uname = :uname AND guest = :guest', ['uname' => $nick, 'guest' => 2]);
@@ -1124,6 +1149,15 @@ function edithome(): void {
             'input_attr' => $mark('mail'),
             'is_required' => true,
         ])];
+        if (!str_starts_with((string)($info['password'] ?? ''), '!')) {
+            $flds[] = ['label' => _ACCOUNT_MAILPASS, 'label_for' => 'f-mailpass', 'control_html' => $tpl->getHtmlFrag('input', [
+                'name_attr' => 'mailpass',
+                'input_id' => 'f-mailpass',
+                'itype' => 'password',
+                'autocomplete_attr' => 'current-password',
+                'maxlength_num' => 72,
+            ])];
+        }
         $flds[] = ['label' => _SITEURL, 'label_for' => 'f-site', 'control_html' => $tpl->getHtmlFrag('input', [
             'name_attr' => 'site',
             'input_id' => 'f-site',
@@ -1339,7 +1373,7 @@ function edithome(): void {
                     'input_id' => 'f-newpass',
                     'itype' => 'password',
                     'autocomplete_attr' => 'new-password',
-                    'maxlength_num' => 25,
+                    'maxlength_num' => 72,
                     'placeholder_text' => _PASSNEW,
                     'is_required' => true,
                 ]),
@@ -1351,7 +1385,7 @@ function edithome(): void {
                     'input_id' => 'f-newpass2',
                     'itype' => 'password',
                     'autocomplete_attr' => 'new-password',
-                    'maxlength_num' => 25,
+                    'maxlength_num' => 72,
                     'placeholder_text' => _PASSNEW2,
                     'is_required' => true,
                 ]),
@@ -1363,7 +1397,7 @@ function edithome(): void {
                     'input_id' => 'f-oldpass',
                     'itype' => 'password',
                     'autocomplete_attr' => 'current-password',
-                    'maxlength_num' => 25,
+                    'maxlength_num' => 72,
                     'placeholder_text' => _PASSOLD,
                     'is_required' => true,
                 ]),
@@ -1471,12 +1505,19 @@ function savehome(): void {
     if ($file = checkProfileNames($block, (string)$bold)) $stop[] = ['text' => $file, 'sect' => 'privacy'];
     $flds = getFieldsPost($conf['name'], (string)$fold);
     foreach ($flds['stop'] as $text) $stop[] = ['text' => $text, 'sect' => 'personal'];
+    [$oldmail, $oldhash] = $db->getSqlRow($db->getSqlQuery('SELECT email, password FROM '.PREFIX_DB.'_users WHERE id = :id', ['id' => (int)$user[0]])) ?: ['', ''];
+    if (!$stop && strtolower((string)$mail) !== strtolower((string)$oldmail) && !str_starts_with((string)$oldhash, '!')) {
+        if (Captcha::isLoginLimited('user', (string)$user[1])) $stop[] = ['text' => _LOGINLIMIT, 'sect' => 'personal'];
+        elseif (getPassMatch(getPassInput('mailpass'), (string)$oldhash) === '') {
+            Captcha::registerLoginFailure('user', (string)$user[1]);
+            $stop[] = ['text' => _ACCOUNT_MAILPASS, 'sect' => 'personal'];
+        }
+    }
     if (!$stop) {
         $uid = (int)$user[0];
         $checkn = htmlspecialchars(substr($user[1], 0, 25));
-        $checkp = htmlspecialchars($user[2]);
         [$id, $name, $pass] = $db->getSqlRow($db->getSqlQuery('SELECT id, name, password FROM '.PREFIX_DB.'_users WHERE id = :user_id', ['user_id' => $uid]));
-        if ($id == $uid && $name == $checkn && $pass == $checkp) {
+        if ($id == $uid && $name == $checkn && hash_equals(getUserToken((string)$pass), (string)$user[2])) {
             $site = filterCutText(getVar('post', 'site', 'url'), 255);
             $occ = filterCutText(getVar('post', 'occ', 'text'), 100);
             $from = filterCutText(getVar('post', 'from', 'text'), 100);
@@ -1530,7 +1571,7 @@ function savehome(): void {
                     Logger::addFile('error', 'Avatar upload could not be removed after a failed profile write', ['path' => $path]);
                 }
             }
-            setCookies('account', time() + (int)$conf['user_c_t'], [$uid, $name, $pass, $story, $blockon, $theme]);
+            setCookies('account', time() + (int)$conf['user_c_t'], [$uid, $name, getUserToken($pass), $story, $blockon, $theme]);
             if ($stop) {
                 edithome();
                 return;
@@ -1561,9 +1602,9 @@ function setavatar(): void {
 function savepass(): void {
     global $user, $db, $conf, $stop, $tpl, $mailer;
     if (!checkSiteToken(getVar('post', 'token', 'raw', ''), 'account')) $stop[] = _ERROR;
-    $newpass = getVar('post', 'newpass', 'text', false);
-    $repeat = getVar('post', 'newpass2', 'text', false);
-    $oldpass = getVar('post', 'oldpass', 'text', false);
+    $newpass = getPassInput('newpass');
+    $repeat = getPassInput('newpass2');
+    $oldpass = getPassInput('oldpass');
     if (!$stop && is_user() && $oldpass && $newpass && $repeat) {
         if (strlen($newpass) >= $conf['users']['minpass']) {
             $uid = (int)$user[0];
@@ -1571,7 +1612,9 @@ function savepass(): void {
                 'SELECT name, email, password, storynum, blockon, theme FROM '.PREFIX_DB.'_users WHERE id = :id',
                 ['id' => $uid]
             ));
-            if (!empty($pass) && checkPassHash($oldpass, $pass)) {
+            $good = !empty($pass) && !Captcha::isLoginLimited('user', (string)$nick) && getPassMatch($oldpass, (string)$pass) !== '';
+            if (!$good) Captcha::registerLoginFailure('user', (string)$nick);
+            if ($good) {
                 if ($newpass == $repeat) {
                     $hash = getPassHash($newpass);
                     if (!$db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET password = :password WHERE id = :id', ['password' => $hash, 'id' => $uid])) {
@@ -1587,7 +1630,7 @@ function savepass(): void {
                     $subject = $conf['sitename'].' - '._USERPASSWORD.' '.$nick;
                     $message = getMailFrame(sprintf(_PASSESEND, $nick, $conf['sitename'], $nick, $link));
                     $mailer->addQueue(['kind' => 'account', 'email' => $mail, 'title' => $subject, 'body' => $message, 'sender' => $conf['adminmail'], 'prio' => 3]);
-                    setCookies('account', time() + (int)$conf['user_c_t'], [$uid, $nick, $hash, $story, $blockon, $theme]);
+                    setCookies('account', time() + (int)$conf['user_c_t'], [$uid, $nick, getUserToken($hash), $story, $blockon, $theme]);
                     setRedirect(getSeoUrl(['name' => $conf['name'], 'op' => 'edithome']), false, 302, _SUCCSAVE);
                 } else {
                     $stop[] = _ERROR_PASS;
@@ -1773,7 +1816,7 @@ function oauthfinish(): void {
                 'itype' => 'password',
                 'name_attr' => 'user_password',
                 'input_id' => 'f-user-password',
-                'maxlength_num' => 25,
+                'maxlength_num' => 72,
                 'placeholder_text' => _PASSWORD,
                 'autocomplete_attr' => 'current-password',
                 'is_required' => true,
@@ -1839,12 +1882,12 @@ function oauthfinish(): void {
     $act = getVar('post', 'act', 'word');
     if ($act === 'link') {
         $uname = htmlspecialchars(trim(substr(getVar('post', 'user_name', 'text'), 0, 25)));
-        $upass = htmlspecialchars(trim(substr(getVar('post', 'user_password', 'text'), 0, 25)));
+        $upass = getPassInput('user_password');
         $ures = $db->getSqlQuery('SELECT id, password FROM '.PREFIX_DB.'_users WHERE name = :name', ['name' => $uname]);
         $urow = $db->getSqlRow($ures);
-        $badcap = checkCaptcha('login');
-        if ($badcap || !$uname || !$upass || !is_array($urow) || empty($urow['id']) || !checkPassHash($upass, (string)$urow['password'])) {
-            Captcha::registerLoginFailure('user');
+        $badcap = checkCaptcha('login') || Captcha::isLoginLimited('user', $uname);
+        if ($badcap || !$uname || !$upass || !is_array($urow) || empty($urow['id']) || getPassMatch($upass, (string)$urow['password']) === '') {
+            Captcha::registerLoginFailure('user', $uname);
             addLoginLog(intval($urow['id'] ?? 0), false, $badcap ? 'blocked' : 'password', $uname);
             oauthretry(_LOGININCOR);
         }

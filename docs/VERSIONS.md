@@ -2,6 +2,45 @@
 
 ## 2026-10-31
 
+### The request reading becomes a sensor, and the panel and the logins close
+
+- **The reading.** `checkRequestData()` replaces `checkGet()`, `checkPost()`, `checkCookie()` and `checkFiles()`. Only `../`, `<script` and a stream wrapper in a GET value stop a request; every other match writes a `notice` of `hack.log` through `addWatchReport()` and the request goes on. A report names the field and never quotes the value; a pattern that breaks on a long value counts as found.
+- **The files.** The check of `$_FILES` is gone: it read two field names, and `Upload` holds the closed list of types.
+- **The ban and the mail.** A ban takes the address alone, drops expired rows and keeps at most 1000 automatic ones; a request another page sent bans nobody. `getReportSkip()` lets one security mail out per hour.
+- **The info page.** A post that fails its token renders nothing, and only a super administrator edits a doc, as a doc runs `[usephp]`.
+- **The trusted tags.** `filterTrustedTags()` runs last in `filterText()`, `filterHtml()` and `filterSourceText()`, as `stripslashes()` made `[usephp]` out of `[use\php]`.
+- **The session.** The cookie is `HttpOnly` and `SameSite=Lax`, `Secure` on https, with strict mode on; every login regenerates the id.
+- **The logins.** `Captcha::isLoginLimited()` closes an address after 5 misses on a name or 30 on all, and the installer turns the captcha on. The member cookie carries `getUserToken()` instead of the stored hash, so every member logs in once more after the update.
+- **The passwords.** Login, registration and the profile read the password as typed, and `getPassMatch()` still opens a hash stored from an escaped form and rehashes it. A recovery code is keyed, 80 bits and ends within two hours, a generated password has at least 12 characters, and a sent mail of the kinds `account` and `admins` keeps no body.
+- **The address.** `filterWebUrl()` empties any scheme but `http` and `https`.
+- **The way out.** A logout is a POST with a token: a link carries `data-sl-post`, `slaed.js` submits it, and a GET of the same address logs nobody out.
+- **The forum.** `checkForumPost()` takes the token of `move`, `send` and `delete` from the body of a POST alone.
+- **The mail of a profile.** A member changes the address only with the current password, `mailpass`; an account of OAuth alone has none and is not asked. A miss counts toward the login limit, as a wrong current password does in `savepass()`.
+- **The defaults.** `minpass` ships as 8; the forum search and the name search escape `%` and `_` under `ESCAPE '!'`.
+- **The token.** No address carries a token any more: a page holds it in `<meta name="sl-token">`, `window.getPageToken()` and the `htmx:configRequest` hook of `slaed.js` send it by header, and neither `getRequestToken()` nor the gate of `public/index.php` reads the address. A scope takes its own token alone, so the ajax token of a poll opens no handler of the panel. The file window sends `upload`, the order of blocks and categories sends its own scope, and the gate leaves out `go=4` and those order handlers, as each checks for itself; a preview and a download go without a token, as a browser opens them by itself, and each answers for its rights.
+- **The address of a visitor.** `getIp()` trusts `REMOTE_ADDR` alone unless it is a proxy of the new `security.proxy`, and then reads the rightmost address of `X-Forwarded-For` no listed proxy added, as the login limit and the ban hit everybody behind a proxy otherwise.
+- **The settings that go.** `flood`, `flood_t` and `ref_post` leave the code, the form and the config: a new session evaded the first, and the second read an empty upload and a substring of the Referer.
+- **The mail that failed.** A failed row of `account` or `admins` loses its body after the time a sent one is kept, and such a row can no longer be retried; the row stays for its error.
+
+### The site messages are blocks
+
+- **The section.** "Сообщения" is gone: `admin/modules/messages.php` and its help, the row of `config/modules.php`, `setMessageShow()` and its call in `setFoot()`, the setting `message` with its field in "Конфигурации" and `_MESSAGE_BOX`, `is_message_box` and `.sl-message-box`, and the table `_message`. The update drops the table without carrying its rows, takes the setting out of `config/global.php` and drops the record as a record without a module.
+- **The block in its place.** A block of the zone `c` marked `home` stands where a message stood and goes through the same `filterContent()` call; its term, language and audience are those of a block. Unlike a message it obeys `top` of the home, whose shipped value `3` switches the zone off, and it carries no line for the moderator.
+- **The field.** The content of a block is edited in `getTplTextarea()` with the store `blocks.content`, a `TEXT` of 64 KB without embeds, and `addsave()` and `editsave()` refuse what does not fit with a page that goes back to the form.
+
+### The word replacement is a tab of the settings
+
+- **The section.** "Замена слов" leaves the menu for a link in the strip of "Конфигурации", beside "Цензура": `op=replace` shows the rules, `op=replacesave` stores them. The address `name=replace`, `admin/modules/replace.php` and its help are gone, the record of the section drops on the update as a record without a module does, and the help is section 5 of the help of "Конфигурации".
+- **Every type.** The types come from `getNodeTypeMap()` instead of `content` and `news`, in a second strip of links. Each type is a form of its own that writes its own key: a form of all types holds a hundred fields per type and can run into `max_input_vars` (1000 by the default of PHP, so from ten types on), which cuts off the rules of the last ones without a word.
+- **The file.** A save drops the empty pairs instead of padding the value to fifty, so a type without rules holds an empty string and the parser returns at once. The key stays, because the merge of an update brings a missing key back with the shipped rules.
+- **Around it.** The two lists of the blocks in the form of a module say that the columns of a builder page apply instead (`_BLOCKS_PAGEHINT`). The help of "Дополнительные поля" is written anew from the code. The dead `case 'mailtest'` of `admin/modules/config.php`, which ended in a fatal error since the mail moved, is gone.
+
+### The favorites are a tab of the users
+
+- **The section.** "Фавориты" leave the menu for the tab of "Пользователи": `op=favorites` lists them, `op=favdrop` deletes, `op=favconf` and `op=favsave` show and store the settings, which `config/favorites.php` keeps. The address `name=favorites`, `admin/modules/favorites.php` and its help are gone, the record of the section drops on the update as a record without a module does.
+- **The rights.** The tab follows the right of the section, so a delegated administrator of "Пользователи" sees the bookmarks and their settings, which until now only the super administrator did: the data is not secret. The journal writes these actions under `account`.
+- **The way to the settings.** The filter bar of the list carries the link "Конфигурации", the keys `link_url` and `link_text` of `fragments/list-filter.html`; the strip stays at seven tabs. `getAccountTabs()` replaces the seven copies of the strip, and "Обнуление параметров" and "Конфигурации" move up by one index.
+
 ### One file manager
 
 - **The section.** "Загрузки" is "Файловый менеджер": the row `uploads` of `config/modules.php` takes `_EUPLOAD`, `setUpdateModules()` renames a stored `_UPLOADS` on the update, and the key `name=uploads` does not change. `_UPLOADS` stays for the monitor and the builder. The tab "Шаблоны" is "Шаблоны вложений" (`_UPLOADS_TPLS`).

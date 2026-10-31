@@ -205,18 +205,6 @@ CREATE TABLE `{prefix}_maildead` (
   UNIQUE KEY `email` (`email`)
 ) ENGINE={engine} DEFAULT CHARSET={charset} COLLATE={collate};
 
-CREATE TABLE `{prefix}_message` (
-  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `title` VARCHAR(100) NOT NULL,
-  `body` MEDIUMTEXT NOT NULL,
-  `expire` DATETIME DEFAULT NULL,
-  `status` BOOLEAN NOT NULL DEFAULT 1,
-  `view` BOOLEAN NOT NULL DEFAULT 1,
-  `lang` VARCHAR(10) CHARACTER SET ascii COLLATE ascii_bin NOT NULL DEFAULT '',
-  PRIMARY KEY (`id`),
-  KEY `status` (`status`)
-) ENGINE={engine} DEFAULT CHARSET={charset} COLLATE={collate};
-
 CREATE TABLE `{prefix}_newsletter` (
   `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
   `title` VARCHAR(50) NOT NULL,

@@ -143,6 +143,7 @@ function config(): void {
             'rel' => 'config-panel-'.$idx,
             'title' => $label,
         ];
+        if ($idx === 3) $links[] = ['href' => $afile.'.php?name=config&op=replace', 'label' => _REPLACE, 'title' => _REPLACE];
     }
     $links[] = [
         'href' => $afile.'.php?name=config&op=info&tab='.$ctab,
@@ -459,11 +460,6 @@ function config(): void {
         'placeholder_text' => _LIVE_UPD,
         'is_config' => true,
     ])];
-    $rows[] = [
-        'label_html' => _MESSAGE_BOX,
-        'label_id' => $labid = getFieldIds('', 'message')['label'],
-        'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'message', 'value' => $conf['message'], 'options' => $yesno]),
-    ];
     $rows[] = [
         'label_html' => _TIME_DB,
         'label_id' => $labid = getFieldIds('', 'db_t')['label'],
@@ -826,7 +822,6 @@ function save(): void {
             'admcol' => getVar('post', 'admcol', 'num', 6),
             'session' => getVar('post', 'session', 'num'),
             'live_u' => getVar('post', 'live_u', 'num'),
-            'message' => getVar('post', 'message', 'num'),
             'db_t' => getVar('post', 'db_t', 'num'),
             'adminfo' => getVar('post', 'adminfo', 'num'),
             'close' => getVar('post', 'close', 'num'),
@@ -874,6 +869,115 @@ function clearcache(): void {
     $warn = !checkAdminPost('config');
     if (!$warn) Cache::deleteAll();
     setRedirect($afile.'.php?name=config&tab='.$ctab, false, 302, $warn ? _TOKENMISS : _SUCCCLEAR, $warn);
+}
+
+# One form per type, because a form of all types can grow past max_input_vars, and PHP would then cut off the rules of the last ones without a word
+function replace(): void {
+    global $afile, $conf, $tpl;
+    $types = getNodeTypeMap();
+    $pick = getVar('get', 'type', 'var');
+    if (!isset($types[$pick])) $pick = (string)array_key_first($types);
+    setHead();
+    $cont = getTplAdminTabs([
+        'ops' => ['name=config&tab=0', 'name=config&tab=1', 'name=config&tab=2', 'name=config&tab=3', 'name=config&op=replace', 'name=config&tab=4', 'name=config&op=info'],
+        'tabs' => [_GENPREF, _SEO, _MULTILINGUAL.' / '._GEOLOCATION, _CENSORS, _REPLACE, _OPTIMIZE, _MANUAL],
+        'tab' => 4,
+    ]);
+    if ($pick === '') {
+        echo $cont.$tpl->getHtmlFrag('alert', ['text' => _NO_INFO]);
+        setFoot();
+        return;
+    }
+    $subs = '';
+    foreach ($types as $name => $type) {
+        $label = (str_starts_with($type->title, '_') && defined($type->title)) ? constant($type->title) : $type->title;
+        $subs .= $tpl->getHtmlFrag('tabs-link', ['href' => $afile.'.php?name=config&op=replace&type='.$name, 'is_active' => $name === $pick, 'label' => $label, 'title' => $label]);
+    }
+    $cont .= $tpl->getHtmlPart('tabs', ['id' => 'replace-type', 'is_subtabs' => true, 'tabs_html' => $subs]);
+    $cont .= $tpl->getHtmlFrag('alert', ['text' => _REPLACEINFO]);
+    $cont .= checkPerms(CONFIG_DIR.'/replace.php');
+    $fieldc = explode('||', $conf['replace'][$pick] ?? '');
+    $blok = '';
+    for ($c = 0; $c < 50; $c++) {
+        $out = array_pad(explode('|', $fieldc[$c] ?? '', 2), 2, '');
+        if ($out[0] === '0') $out[0] = '';
+        if ($out[1] === '0') $out[1] = '';
+        $next = $c + 1;
+        $wid = 'f-word-'.$c;
+        $tid = 'f-repl-'.$c;
+        $rows = [
+            [
+                'label_for' => $wid,
+                'label_html' => _WORD,
+                'field_html' => $tpl->getHtmlFrag('input', [
+                    'itype' => 'text',
+                    'name_attr' => 'word[]',
+                    'input_id' => $wid,
+                    'value_attr' => $out[0],
+                    'placeholder_text' => _WORD,
+                    'is_config' => true,
+                ]),
+            ],
+            [
+                'label_for' => $tid,
+                'label_html' => _CONTENT,
+                'hint_html' => _REPLACEIN,
+                'hint_id' => $hntid = getFieldIds($tid)['hint'],
+                'field_html' => $tpl->getHtmlFrag('textarea', [
+                    'describedby' => $hntid,
+                    'name_attr' => 'repl[]',
+                    'input_id' => $tid,
+                    'value_text' => $out[1],
+                    'rows_num' => '5',
+                    'is_config' => true,
+                ]),
+            ],
+        ];
+        $blok .= $tpl->getHtmlPart('toggle-form-block', [
+            'block_id' => 'fi'.$c,
+            'is_toggle_block' => true,
+            'is_hidden' => $out[0] === '' && $out[1] === '' && $c !== 0,
+            'toggle_target_id' => 'fi'.$next,
+            'title' => _ADD,
+            'label_html' => _REPLACE_FIELD.': '.$next,
+            'content_html' => $tpl->getHtmlPart('div', ['rows' => $rows]),
+        ]);
+    }
+    $form = $tpl->getHtmlPart('form', [
+        'action_url' => $afile.'.php',
+        'hidden' => [
+            ['nameattr' => 'name', 'valueattr' => 'config'],
+            ['nameattr' => 'op', 'valueattr' => 'replacesave'],
+            ['nameattr' => 'type', 'valueattr' => $pick],
+            ['nameattr' => 'token', 'valueattr' => getSiteToken('config')],
+        ],
+        'content_html' => $blok,
+        'submit_label' => _SAVECHANGES,
+    ]);
+    echo $cont.$tpl->getHtmlPart('box', ['content_html' => $form]);
+    setFoot();
+}
+
+# A type without rules stays in the file with an empty value: the parser then skips it, and the merge of an update would bring a missing key back with the shipped rules
+function replacesave(): void {
+    global $afile, $conf;
+    $type = getVar('post', 'type', 'var');
+    $warn = !checkAdminPost('config');
+    $text = $warn ? _TOKENMISS : _SUCCSAVE;
+    if (!$warn && !isset(getNodeTypeMap()[$type])) {
+        $warn = true;
+        $text = _ERROR;
+    }
+    if (!$warn) {
+        $rules = [];
+        for ($i = 0; $i < 50; $i++) {
+            $word = getVar('post', 'word['.$i.']', 'word', '0');
+            $body = getVar('post', 'repl['.$i.']', '', '0');
+            if ($word !== '0' || $body !== '0') $rules[] = $word.'|'.$body;
+        }
+        setConfigFile('replace.php', [$type => implode('||', $rules)] + ($conf['replace'] ?? []));
+    }
+    setRedirect($afile.'.php?name=config&op=replace'.($type !== '' ? '&type='.$type : ''), false, 302, $text, $warn);
 }
 
 # The restore entry reads nothing but the configuration journal, so it opens when the configuration it repairs cannot render the settings screen
@@ -927,10 +1031,11 @@ function info(): void {
             'name=config&tab=1',
             'name=config&tab=2',
             'name=config&tab=3',
+            'name=config&op=replace',
             'name=config&tab=4',
             'name=config&op=info',
         ],
-        'tabs' => [_GENPREF, _SEO, _MULTILINGUAL.' / '._GEOLOCATION, _CENSORS, _OPTIMIZE, _MANUAL],
+        'tabs' => [_GENPREF, _SEO, _MULTILINGUAL.' / '._GEOLOCATION, _CENSORS, _REPLACE, _OPTIMIZE, _MANUAL],
     ]);
 }
 
@@ -938,7 +1043,8 @@ switch ($op) {
     default: config(); break;
     case 'save': save(); break;
     case 'clearcache': clearcache(); break;
-    case 'mailtest': mailtest(); break;
+    case 'replace': replace(); break;
+    case 'replacesave': replacesave(); break;
     case 'restore': restore(); break;
     case 'info': info(); break;
 }

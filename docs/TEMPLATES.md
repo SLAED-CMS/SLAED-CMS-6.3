@@ -526,7 +526,7 @@ The module hands the meaning of each row — its name, its moment, its details, 
 the canon builds the markup from it: the relative date, the "i", the key E, the boxes, the foot "Отмечено: N" with its
 action and "Отметить все N". No list of the canon glues a `popover`, a `stamp`, a `data-sl-edit`, an `hx-boost` or
 the box of a row pick into a cell of its own. The etalon is "Комментарии" (`admin/modules/comments.php`), the shortest full example
-"Избранное" (`admin/modules/favorites.php`). "Группы" (the ladder), "Блоки", "Категории" and the file manager are
+"Фавориты" (`favorites()` of `modules/account/admin/index.php`). "Группы" (the ladder), "Блоки", "Категории" and the file manager are
 components of their own and stand outside this contract.
 
 | Key | On | The module hands | The canon builds |
@@ -566,8 +566,8 @@ components of their own and stand outside this contract.
   and a pause until `more` is false, and warns when a portion failed or was refused. Rows added after the page was drawn lie above
   `upto` and are not touched.
 - **The filter is one condition.** The list, its count, the address of the pager, the foot and its portions read one
-  condition of the filter, never a copy of it. "Комментарии" and the six growing lists — "Избранное", the private
-  messages, "Сообщения", "Голосования", the campaigns and the undeliverable addresses of "Почта" — have
+  condition of the filter, never a copy of it. "Комментарии" and the five growing lists — "Избранное", the private
+  messages, "Голосования", the campaigns and the undeliverable addresses of "Почта" — have
   `get<X>Filter($src)` in their module: the state of the request and the query `base` that keeps it, with the `from`,
   the `where` and its `pars` where the module owns the query; the foot reads it with `'post'`. `get<X>Search($flt)`
   draws `fragments/list-filter.html` into the `subtitle_html` of the tabs. Where a class owns the query, it answers the
@@ -601,8 +601,9 @@ the panel layout (the login after a lost session) answers `HX-Refresh`. Back red
 | `pane` | the window round the list: the keys of `pane-cap.html` and `tiles_html` above the table (the tables of "База данных") |
 | `is_fixed` | the fixed table layout |
 
-- **The filter is a GET form.** `fragments/list-filter.html` draws labelled fields with no `onchange`; the tabs that
-  change the list in place are the indexes in `part` of `getTplAdminTabs()`. The filter stays in the address with `num`,
+- **The filter is a GET form.** `fragments/list-filter.html` draws labelled fields with no `onchange`, and `link_url`
+  with `link_text` a plain link beside its button, which leaves the list for a page of its own (the settings of
+  "Фавориты"); the tabs that change the list in place are the indexes in `part` of `getTplAdminTabs()`. The filter stays in the address with `num`,
   and both pagers stand whenever there is more than one page, the filter applied by the server. Without a pager the key
   tip "i" (`fragments/pager-keys.html`) stands alone above and below the table.
 - **The view is one for every list.** The switch `sl-seg sl-seg-view` writes the cookie `density` through op `option`:

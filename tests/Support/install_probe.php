@@ -67,6 +67,20 @@ function addInstallTree(string $site): int {
     return $num;
 }
 
+# A member cookie of an installed account with the proof the core reads; a copy without a master gets one here, and the cached config goes, or its first request would mint another
+function getInstallAccount(string $row): string {
+    global $isite;
+    [$uid, $name, $hash] = explode(':', $row, 3);
+    $file = $isite.'/config/security.php';
+    $data = require $file;
+    if (($data['security']['secret'] ?? '') === '') {
+        $data['security']['secret'] = bin2hex(random_bytes(32));
+        file_put_contents($file, "<?php\nreturn ".var_export($data, true).";\n", LOCK_EX);
+        if (is_file($isite.'/config/local.php')) unlink($isite.'/config/local.php');
+    }
+    return base64_encode($uid.':'.$name.':'.hash_hmac('sha256', $hash, hash_hmac('sha256', 'user', $data['security']['secret'])));
+}
+
 # The router of both servers, whose document root is public/ of the copy: static files are served as they are, every other path reaches index.php as the server rules send it
 # The entry stubs of the copy are required with the account the checks name in X-Probe-User or X-Probe-Admin put where the core reads it
 function setInstallRouter(string $site): void {
@@ -479,8 +493,8 @@ function getInstallWho(PDO $pdo): array {
     return [
         'guest' => [],
         'admin' => ['admin' => base64_encode($adm['id'].':'.$adm['name'].':'.$adm['password'])],
-        'user' => is_array($usr) ? ['user' => base64_encode($usr['id'].':'.$usr['name'].':'.$usr['password'])] : [],
-        'other' => ['user' => base64_encode($sid.':Stranger:hash-stranger')],
+        'user' => is_array($usr) ? ['user' => getInstallAccount($usr['id'].':'.$usr['name'].':'.$usr['password'])] : [],
+        'other' => ['user' => getInstallAccount($sid.':Stranger:hash-stranger')],
     ];
 }
 
@@ -844,11 +858,10 @@ function getInstallAfter(PDO $pdo, array $page): array {
             array_values(array_filter(array_keys(getInstallConf('ratings')['ratings'] ?? []), fn(int|string $v): bool => str_starts_with($v, 'node.')))],
         'owner' => [$mods['forum']['active'] ?? null, $jobs['newsletter']['active'] ?? null, str_contains($page['body'], 'were carried by the first run')],
         'times' => [$pdo->query('SELECT time FROM '.IPREF.'_blocks WHERE id < 4 ORDER BY id')->fetchAll(PDO::FETCH_COLUMN),
-            $pdo->query('SELECT expire FROM '.IPREF.'_blocks WHERE id < 4 ORDER BY id')->fetchAll(PDO::FETCH_COLUMN),
-            $pdo->query('SELECT expire FROM '.IPREF.'_message ORDER BY id')->fetchAll(PDO::FETCH_COLUMN)],
+            $pdo->query('SELECT expire FROM '.IPREF.'_blocks WHERE id < 4 ORDER BY id')->fetchAll(PDO::FETCH_COLUMN)],
         'nulls' => [$pdo->query('SELECT lang, viewmail, birthday, sig, occ, origin FROM '.IPREF.'_users WHERE id < 4 ORDER BY id')->fetchAll(PDO::FETCH_NUM),
             $pdo->query('SELECT title, smail, lang FROM '.IPREF.'_admins WHERE id = 2')->fetch(PDO::FETCH_NUM),
-            $pdo->query('SELECT lang FROM '.IPREF.'_message ORDER BY id')->fetchAll(PDO::FETCH_COLUMN), (string)$pdo->query('SELECT lang FROM '.IPREF.'_voting')->fetchColumn()],
+            (string)$pdo->query('SELECT lang FROM '.IPREF.'_voting')->fetchColumn()],
         'attach' => [(string)$pdo->query('SELECT body FROM '.IPREF.'_forum WHERE id = 1')->fetchColumn(),
             (string)$pdo->query('SELECT body FROM '.IPREF.'_privat WHERE id = 1')->fetchColumn()],
     ];

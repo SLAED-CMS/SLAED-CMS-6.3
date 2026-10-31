@@ -674,9 +674,10 @@ function getRouteViewData(): array {
 # Stand in for one visitor of a child process before the core boots: the account cookie and the administrator session of the seeded accounts
 function setRouteChild(string $who): void {
     $glob = require CONFIG_DIR.'/global.php';
-    $users = ['anna' => '2:anna:hash-anna', 'boris' => '3:boris:hash-boris', 'helper' => '5:helper:hash-helper'];
+    $users = ['anna' => '2:anna:hash-anna', 'boris' => '3:boris:hash-boris', 'helper' => '5:helper:hash-helper',
+        'mailer' => '16:mailer:$2y$12$OmJ8Kb9NGj277ClzEh3gyuNwmPjLIXTkRED.be/AiSCwbyyuFvd.q'];
     $admins = ['root' => '1:root:hash-root', 'docsman' => '4:docsman:hash-docsman', 'helper' => '5:helper:hash-helper'];
-    if (isset($users[$who])) $_COOKIE[$glob['user_c'].'-account'] = base64_encode($users[$who]);
+    if (isset($users[$who])) $_COOKIE[$glob['user_c'].'-account'] = getProbeAccount($users[$who]);
     if (session_status() === PHP_SESSION_NONE) session_start();
     if (isset($admins[$who])) [$_SESSION[$glob['admin_c']], $_SESSION[$glob['admin_c'].'-time']] = [base64_encode($admins[$who]), time()];
 }
@@ -822,7 +823,7 @@ function getRouteSupport(PDO $pdo): array {
     $out['foreign'] = [$steal['code'], $rows($aid), (int)getRouteCol($pdo, $aid, 'comnum')];
     $atok = $ctok(getRouteReply('anna', 'GET', 'index.php?name=help&op=view&id='.$aid)['body']);
     $frag = fn(string $who, string $tok, string $op): string => getRouteReply($who, 'GET', 'index.php?go=1&op='.$op.'&id='.(($op === 'getCommentPage') ? $aid.'&mod=help&com=1'
-        : $cid.'&skip=0').'&token='.$tok)['body'];
+        : $cid.'&skip=0'), [], ['X-CSRF-TOKEN: '.$tok])['body'];
     $out['fragments'] = [str_contains($frag('anna', $atok, 'getCommentPage'), 'Anna reply one'), str_contains($frag('boris', $btok, 'getCommentPage'), 'Anna reply one'),
         str_contains($frag('boris', $btok, 'getCommentBranch'), 'reply'), str_contains($frag('boris', $btok, 'getCommentPage'), 'Helper reply one')];
     $prof = fn(string $who): string => getRouteReply($who, 'GET', 'index.php?name=account&op=view&uname=anna')['body'];
@@ -1269,7 +1270,7 @@ function getRouteInteg(PDO $pdo, string $work): array {
     $hidden = str_contains($list(), 'Beta');
     $pdo->exec('UPDATE '.$pre.'nodes SET status = 2 WHERE id = 102');
     $bare = getRouteReply('boris', 'GET', 'index.php?name=news&op=view&id=102')['body'].$list();
-    $out['favlist'] = [$shown, $hidden, str_contains(getRouteReply('root', 'GET', 'admin.php?name=favorites')['body'], 'Beta'),
+    $out['favlist'] = [$shown, $hidden, str_contains(getRouteReply('root', 'GET', 'admin.php?name=account&op=favorites')['body'], 'Beta'),
         str_contains($bare, 'op=deleteFavorite') && str_contains($bare, 'op=addFavorite'), (bool)preg_match('#href="[^"]*op=(?:add|delete)Favorite#', $bare)];
     $page = getRouteReply('root', 'GET', 'admin.php?name=node');
     $gone = getRouteReply('root', 'POST', 'admin.php', ['name' => 'node', 'op' => 'delete', 'id' => ['105'], 'type' => 'news', 'version' => '1',
@@ -2704,7 +2705,7 @@ function getRouteComment(PDO $pdo): array {
     return $out;
 }
 
-# The time forms of the schema over real requests: the cleanups, a block on a page with a centre column, a message on the home, the sessions, the forum mark
+# The time forms of the schema over real requests: the cleanups, a block on a page with a centre column, the sessions, the forum mark
 function getRouteTime(PDO $pdo, string $work): array {
     $pre = RPREF.'_';
     $one = fn(string $sql): mixed => $pdo->query($sql)->fetchColumn();
@@ -2724,8 +2725,6 @@ function getRouteTime(PDO $pdo, string $work): array {
         .' (83, \'\', \'Fresh feed\', \'fresh feed\', \'http://127.0.0.1:1/feed.xml\', \'c\', 2, 1, 3600, UNIX_TIMESTAMP() - 10, \'\', \'\', 0, NULL, \'\', \'all\', \'\'),'
         .' (80, \'\', \'Gone block\', \'gone text\', \'\', \'c\', 3, 1, 0, 0, \'\', \'\', 0, NOW() - INTERVAL 1 HOUR, \'d\', \'all\', \'\'),'
         .' (81, \'\', \'Kept block\', \'kept text\', \'\', \'c\', 4, 1, 0, 0, \'\', \'\', 0, NOW() + INTERVAL 1 DAY, \'d\', \'all\', \'\')');
-    $pdo->exec('INSERT INTO '.$pre.'message (id, title, body, expire, status, view, lang) VALUES (1, \'Gone message\', \'gone body\', NOW() - INTERVAL 1 HOUR, 1, 1, \'\'),'
-        .' (2, \'Live message\', \'live body\', NOW() + INTERVAL 1 DAY, 1, 1, \'\')');
     $pdo->exec('INSERT INTO '.$pre.'session (uname, time, ip, guest, modul, url) VALUES (\'oldbot\', UNIX_TIMESTAMP() - 5000, \'10.0.0.3\', 1, \'news\', \'\'),'
         .' (\'newbot\', UNIX_TIMESTAMP(), \'10.0.0.4\', 1, \'news\', \'\')');
     file_put_contents($work.'/counter/session.log', '0');
@@ -2735,17 +2734,12 @@ function getRouteTime(PDO $pdo, string $work): array {
     $out['blocks'] = [$feed['code'], $row('SELECT time >= '.($was - 1).', content FROM '.$pre.'blocks WHERE id = 82'),
         $row('SELECT time < '.$was.' FROM '.$pre.'blocks WHERE id = 83'), $row('SELECT status, expire FROM '.$pre.'blocks WHERE id = 80'),
         $row('SELECT status, expire > NOW() FROM '.$pre.'blocks WHERE id = 81')];
-    $out['message'] = [$row('SELECT status, expire FROM '.$pre.'message WHERE id = 1'), $row('SELECT status, expire > NOW() FROM '.$pre.'message WHERE id = 2'),
-        str_contains(getRouteReply('', 'GET', '/')['body'], 'live body')];
     $out['session'] = $pdo->query('SELECT uname FROM '.$pre.'session WHERE uname LIKE \'%bot\' ORDER BY uname')->fetchAll(PDO::FETCH_COLUMN);
     $add = getRouteReply('root', 'GET', 'admin.php?name=blocks&op=add');
     getRouteReply('root', 'POST', 'admin.php?name=blocks', ['op' => 'addsave', 'token' => getRouteToken($add['body'], 'addsave'), 'title' => 'Timed block',
         'content' => 'timed text', 'bpos' => 'l', 'status' => '1', 'view' => '0', 'expire' => '2', 'action' => 'd', 'blockwhere[]' => 'all']);
-    $add = getRouteReply('root', 'GET', 'admin.php?name=messages&op=add');
-    getRouteReply('root', 'POST', 'admin.php?name=messages', ['op' => 'save', 'posttype' => 'save', 'token' => getRouteToken($add['body'], 'save'), 'mid' => '0',
-        'title' => 'Timed message', 'body' => 'timed body', 'expire' => '3', 'status' => '1', 'view' => '1']);
     $days = 'ROUND(TIMESTAMPDIFF(SECOND, NOW(), expire) / 86400)';
-    $out['panel'] = [$one('SELECT '.$days.' FROM '.$pre.'blocks WHERE title = \'Timed block\''), $one('SELECT '.$days.' FROM '.$pre.'message WHERE title = \'Timed message\'')];
+    $out['panel'] = [$one('SELECT '.$days.' FROM '.$pre.'blocks WHERE title = \'Timed block\'')];
     $pdo->exec('INSERT INTO '.$pre.'categories (id, modul, title, intro, status, pview, pread, ppost, preply, pedit, pdelete, pmod, lang) VALUES'
         .' (6, \'forum\', \'Times\', \'\', 1, \'0|0\', \'0|0\', \'1|0\', \'1|0\', \'1|0\', \'1|0\', \'\', \'\')');
     $pdo->exec('INSERT INTO '.$pre.'forum (id, pid, cid, uid, name, title, time, body, field, luid, lname, ltime, status) VALUES'
@@ -2816,6 +2810,18 @@ function getRouteEmail(PDO $pdo, string $work): array {
     $pairs = getRouteInputs(getRouteReply('clara', 'GET', 'index.php?name=account&op=edithome')['body'], 'savehome');
     $save = getRouteReply('clara', 'POST', 'index.php?name=account', getRoutePairs($pairs, ['mail' => 'ANNA@probe.test']) + ['sig' => '', 'block' => '']);
     $out = ['save' => [$save['code'], str_contains($save['body'], $taken), $pdo->query('SELECT email FROM '.$pre.'users WHERE id = 4')->fetchColumn()]];
+    $pdo->prepare('INSERT INTO '.$pre.'users (id, name, email, password, sig, block, warnings, field, grp, points, ip)'
+        .' VALUES (16, \'mailer\', \'mailer@probe.test\', ?, \'\', \'\', \'\', \'\', 0, 0, \'127.0.0.1\')')
+        ->execute(['$2y$12$OmJ8Kb9NGj277ClzEh3gyuNwmPjLIXTkRED.be/AiSCwbyyuFvd.q']);
+    $addr = fn(): string => (string)$pdo->query('SELECT email FROM '.$pre.'users WHERE id = 16')->fetchColumn();
+    $mailer = function(array $more) {
+        $pairs = getRouteInputs(getRouteReply('mailer', 'GET', 'index.php?name=account&op=edithome')['body'], 'savehome');
+        return getRouteReply('mailer', 'POST', 'index.php?name=account', getRoutePairs($pairs, $more + ['field[field3]' => 'a@probe.test']) + ['sig' => '', 'block' => ''])['code'];
+    };
+    $out['mailpass'] = [$mailer(['mail' => 'new@probe.test']), $addr(), $mailer(['mail' => 'new@probe.test', 'mailpass' => 'wrong']), $addr()];
+    $out['mailpass'][] = $mailer(['mail' => 'new@probe.test', 'mailpass' => 'mail-pass-1']);
+    $out['mailpass'][] = $addr();
+    $pdo->exec('DELETE FROM '.$pre.'users WHERE id = 16');
     $pairs = getRouteInputs(getRouteReply('root', 'GET', 'admin.php?name=account&op=add&id=4')['body'], 'addsave');
     $more = ['name' => 'account', 'op' => 'addsave', 'sig' => '', 'block' => ''];
     $user = getRouteReply('root', 'POST', 'admin.php', getRoutePairs($pairs, ['email' => 'ANNA@probe.test']) + $more);
@@ -2891,15 +2897,14 @@ function getRouteJournal(PDO $pdo, string $work): array {
     $open = getRouteReply('gate', 'POST', 'admin.php', ['op' => 'check_admin', 'name' => 'docsman', 'pwd' => 'docs-pass-1']);
     $out['panellogin'] = [$gate['code'], $open['code'], getRouteLines('admin')];
     $mark = $count('admin');
-    $tok = getRouteToken(getRouteReply('root', 'GET', 'admin.php?name=messages&op=add')['body'], 'save');
-    $base = ['name' => 'messages', 'op' => 'save', 'posttype' => 'save', 'mid' => '0', 'title' => 'Journal one', 'body' => 'secret body text', 'expire' => '0',
-        'status' => '1', 'view' => '1', 'token' => $tok];
+    $tok = getRouteToken(getRouteReply('root', 'GET', 'admin.php?name=voting&op=add')['body'], 'save');
+    $base = ['name' => 'voting', 'op' => 'save', 'posttype' => 'save', 'title' => 'Journal one', 'body' => ['secret body text'], 'answer' => ['0'],
+        'date' => '2026-01-01 10:00:00', 'enddate' => '2036-01-01 10:00:00', 'token' => $tok];
     $codes = [getRouteReply('root', 'POST', 'admin.php', $base)['code']];
-    $mid = (int)$pdo->query('SELECT id FROM '.$pre.'message WHERE title = \'Journal one\'')->fetchColumn();
-    $codes[] = getRouteReply('root', 'POST', 'admin.php', ['name' => 'messages', 'op' => 'status', 'id' => [(string)$mid], 'act' => '0', 'token' => $tok])['code'];
-    $codes[] = getRouteReply('root', 'POST', 'admin.php', ['name' => 'messages', 'op' => 'delete', 'id' => [(string)$mid], 'token' => str_repeat('0', 64)])['code'];
-    $codes[] = getRouteReply('root', 'POST', 'admin.php', array_replace($base, ['mid' => (string)$mid, 'title' => '']))['code'];
-    $codes[] = getRouteReply('root', 'POST', 'admin.php', array_replace($base, ['mid' => (string)$mid, 'posttype' => 'delete']))['code'];
+    $mid = (int)$pdo->query('SELECT id FROM '.$pre.'voting WHERE title = \'Journal one\'')->fetchColumn();
+    $codes[] = getRouteReply('root', 'POST', 'admin.php', ['name' => 'voting', 'op' => 'delete', 'id' => [(string)$mid], 'token' => str_repeat('0', 64)])['code'];
+    $codes[] = getRouteReply('root', 'POST', 'admin.php', array_replace($base, ['id' => (string)$mid, 'title' => '']))['code'];
+    $codes[] = getRouteReply('root', 'POST', 'admin.php', array_replace($base, ['id' => (string)$mid, 'posttype' => 'delete']))['code'];
     $when = date('Y-m-d H:i:s');
     foreach (['first', 'second'] as $text) {
         $pdo->prepare('INSERT INTO '.$pre.'comment (cid, modul, time, uid, name, ip, body, status, shown) VALUES (101, \'news\', ?, 2, \'anna\', \'127.0.0.1\', ?, 1, ?)')
@@ -2917,7 +2922,7 @@ function getRouteJournal(PDO $pdo, string $work): array {
     $dtok = getRouteToken(getRouteReply('root', 'GET', 'admin.php?name=database&op=dump')['body'], 'name="string"');
     $codes[] = getRouteReply('root', 'POST', 'admin.php?name=database&op=dump', ['type' => 'dump', 'action' => 'exec', 'string' => 'SELECT 1;', 'token' => $dtok])['code'];
     $out['actions'] = ['codes' => $codes, 'tokens' => [$tok !== '', $ctok !== '', $btok !== '', $stok !== '', $dtok !== ''], 'gone' => [$mid > 0,
-        (int)$pdo->query('SELECT COUNT(*) FROM '.$pre.'message WHERE id = '.$mid)->fetchColumn(), (int)$pdo->query('SELECT COUNT(*) FROM '.$pre.'comment WHERE deleted IS NULL')
+        (int)$pdo->query('SELECT COUNT(*) FROM '.$pre.'voting WHERE id = '.$mid)->fetchColumn(), (int)$pdo->query('SELECT COUNT(*) FROM '.$pre.'comment WHERE deleted IS NULL')
         ->fetchColumn()], 'lines' => getRouteLines('admin', $mark), 'database' => getRouteLines('database')];
     $mark = $count('admin');
     mkdir($work.'/logs/admin.log.tmp');
@@ -2927,7 +2932,7 @@ function getRouteJournal(PDO $pdo, string $work): array {
     rmdir($work.'/logs/admin.log');
     rename($work.'/logs/admin.log.tmp/admin.log', $work.'/logs/admin.log');
     rmdir($work.'/logs/admin.log.tmp');
-    $out['broken'] = [$kept, (int)$pdo->query('SELECT COUNT(*) FROM '.$pre.'message WHERE title = \'Journal kept\'')->fetchColumn(), $count('admin') - $mark];
+    $out['broken'] = [$kept, (int)$pdo->query('SELECT COUNT(*) FROM '.$pre.'voting WHERE title = \'Journal kept\'')->fetchColumn(), $count('admin') - $mark];
     $ltok = getRouteToken(getRouteReply('door', 'GET', 'index.php?name=account')['body'], 'user_password');
     $out['sitelogin'] = [$ltok !== '', getRouteReply('door', 'POST', 'index.php?name=account', ['op' => 'login', 'user_name' => 'clara', 'user_password' => 'wrong-pass',
         'token' => $ltok])['code'], getRouteReply('door', 'POST', 'index.php?name=account', ['op' => 'login', 'user_name' => 'clara', 'user_password' => 'clara-pass-1',
@@ -2972,20 +2977,20 @@ function getRouteJournalView(string $work): array {
     $first = $page('file=warn');
     $soon = date('Y-m-d', time() + 86400 * 2);
     $past = date('Y-m-d', time() - 86400 * 2);
-    $tabs = getRouteReply('root', 'GET', 'admin.php?name=messages')['body'];
+    $tabs = getRouteReply('root', 'GET', 'admin.php?name=voting')['body'];
     $help = getRouteReply('helper', 'GET', 'admin.php?name=comments');
     $deny = getRouteReply('helper', 'GET', 'admin.php?name=security&op=logview&file=admin');
     return [
         'actions' => $view('file=admin'),
         'logins' => $view('file=admin&event=login'),
         'all' => count($view('file=admin&event=all')),
-        'modul' => count($view('file=admin&modul=messages')),
+        'modul' => count($view('file=admin&modul=voting')),
         'open' => count($view('file=admin&res=open')),
         'foreign' => str_contains($page('file=admin&event=all'), 'Foreign block'),
         'pages' => [count($cells($first)), str_contains($first, 'class="sl-pager"'), count($view('file=warn&num=3')), count($view('file=warn&level=error&num=2'))],
         'order' => [$cells($first)[0][2] ?? '', $view('file=warn&level=error')[0][2] ?? '', array_unique(array_column($view('file=warn&level=error'), 1))],
         'days' => [count($view('file=warn&from='.$past)), count($view('file=warn&from='.$soon)), count($view('file=warn&to='.$past))],
-        'link' => [str_contains($tabs, 'op=logview&amp;file=admin&amp;modul=messages'), $help['code'], str_contains($help['body'], 'op=logview'),
+        'link' => [str_contains($tabs, 'op=logview&amp;file=admin&amp;modul=voting'), $help['code'], str_contains($help['body'], 'op=logview'),
             str_contains($deny['body'], '<tbody>')],
     ];
 }
@@ -4113,6 +4118,10 @@ function getRouteBlocks(PDO $pdo): array {
         str_contains($stray, $word('_BLOCK_NOWHERE').': Account'), (bool)preg_match('#value="gone\.php"\s+selected#', $lost),
         $box($page('root', 'admin.php?name=blocks&op=edit&id=95'), 'page-10'), substr_count($opts, '<option'), (bool)preg_match('#value="[bf]"#', $opts)];
     $tok = getRouteToken($addf, 'addsave');
+    $over = ['token' => $tok, 'title' => 'Too long', 'content' => str_repeat('x', 65536), 'bpos' => 'r', 'status' => '1', 'view' => '0', 'expire' => '0', 'action' => 'd'];
+    $out['room'] = [getRouteReply('root', 'POST', 'admin.php?name=blocks', $over + ['op' => 'addsave'])['code'],
+        getRouteReply('root', 'POST', 'admin.php?name=blocks', $over + ['op' => 'editsave', 'bid' => '90', 'oldposition' => 'r'])['code'],
+        (int)$one('SELECT COUNT(*) FROM '.$pre.'blocks WHERE title = \'Too long\''), str_contains($addf, 'blocks.content')];
     $add = ['op' => 'addsave', 'token' => $tok, 'content' => 'added text', 'status' => '1', 'view' => '0', 'expire' => '0', 'action' => 'd', 'blockwhere[]' => 'all'];
     getRouteReply('root', 'POST', 'admin.php?name=blocks', $add + ['title' => 'Added', 'bpos' => 'r']);
     $banned = getRouteReply('root', 'POST', 'admin.php?name=blocks', $add + ['title' => 'Banned', 'bpos' => 'b']);

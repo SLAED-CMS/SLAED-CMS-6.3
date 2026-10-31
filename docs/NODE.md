@@ -3735,7 +3735,7 @@ It stops with a message while `_privat.time`, `_comment.time`, `_forum.time`, `_
 `NULL` or `_comment.reqkey` is still hex text; a missing `_forum.ltime` takes the topic time and a missing
 `_voting.enddate` the poll start, which is when the site read such a poll as closed. Text times take their forms: the
 refresh stamps `_blocks.time` and `_rating.time` become numbers (a text that is no number becomes `0`), the unix
-expiries of `_blocks.expire` and `_message.expire` become the `DATETIME` the connection shows for them, `0` becoming
+expiry of `_blocks.expire` becomes the `DATETIME` the connection shows for it, `0` becoming
 `NULL`, `_users_temp.time` is dropped, and `_users.lastvis` loses its zero date and the sentinel
 `1970-01-01 00:00:01` to `NULL` for "never".
 

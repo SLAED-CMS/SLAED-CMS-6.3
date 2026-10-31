@@ -351,8 +351,8 @@ namespace Tests\Unit {
                     }
                 }
             }
-            $this->assertGreaterThanOrEqual(29, count($lists), 'The scan found too few lists to hold anything');
-            foreach (['admin/modules/favorites.php favorites()', 'modules/voting/admin/index.php voting()'] as $name) {
+            $this->assertGreaterThanOrEqual(28, count($lists), 'The scan found too few lists to hold anything');
+            foreach (['modules/account/admin/index.php favorites()', 'modules/voting/admin/index.php voting()'] as $name) {
                 $this->assertArrayHasKey($name, $lists);
                 $this->assertStringContainsString("'moment' =>", $lists[$name], $name.' has no date column');
             }
@@ -377,7 +377,7 @@ namespace Tests\Unit {
                     $this->assertStringContainsString("'is_edit' =>", $item, $name.' has an edit the key E does not open: '.$item);
                 }
             }
-            $this->assertGreaterThanOrEqual(13, $seen, 'The scan found too few edits to hold anything');
+            $this->assertGreaterThanOrEqual(12, $seen, 'The scan found too few edits to hold anything');
         }
 
         # A list under a filter bar tells an empty result from an empty list, the queues of getAdminQueues() say they are clean (owner, 2026-10-24)

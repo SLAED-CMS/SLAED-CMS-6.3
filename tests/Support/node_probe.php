@@ -480,7 +480,7 @@ function setProbeVisitor(string $who): void {
     $_GET = ['task' => '1', 'super' => '1', 'aid' => '1', 'mods' => 'news', 'uid' => '5', 'lang' => 'xx'];
     $_POST = ['task' => '1', 'manage' => '1', 'groups' => '1,2'];
     $_REQUEST = $_GET + $_POST;
-    if (isset($users[$who])) $_COOKIE[$glob['user_c'].'-account'] = base64_encode($users[$who]);
+    if (isset($users[$who])) $_COOKIE[$glob['user_c'].'-account'] = getProbeAccount($users[$who]);
     if (session_status() === PHP_SESSION_NONE) session_start();
     if (isset($admins[$who])) [$_SESSION[$glob['admin_c']], $_SESSION[$glob['admin_c'].'-time']] = [base64_encode($admins[$who]), time()];
 }

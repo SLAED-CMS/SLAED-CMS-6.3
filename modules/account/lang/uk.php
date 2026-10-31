@@ -8,6 +8,7 @@ define('_ACCOUNTCREATED','Створений обліковий запис но�
 define('_ACCOUNT_BLOCKNOTE','Вимкнене меню не показується, але текст нижче зберігається.');
 define('_ACCOUNT_CLEAN','Без попереджень');
 define('_ACCOUNT_EXITNOTE','Завершити сеанс');
+define('_ACCOUNT_MAILPASS','Поточний пароль, потрібен лише при зміні адреси');
 define('_ACCOUNT_FIELDS','Додаткові поля');
 define('_ACCOUNT_FILLED','Заповненість профілю');
 define('_ACCOUNT_FSMAILNOTE','Лист надходить на кожну відповідь у вашій темі.');

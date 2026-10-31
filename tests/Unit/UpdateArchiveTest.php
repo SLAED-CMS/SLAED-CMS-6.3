@@ -21,7 +21,7 @@ final class UpdateArchiveTest extends TestCase
         'forum.body #1' => '[img=center alt=T]./index.php?go=file&own=node&id=1&key=a.gif[/img]',
         'forum.body #2' => '[img]http://other.net/uploads/archive/news/a.gif[/img] [code]uploads/archive/news/a.gif[/code]',
         'privat.body #1' => '[url=./index.php?go=file&own=node&id=2&key=c.jpg]C[/url]',
-        'message.body #1' => '[img]./uploads/archive/news/e.gif[/img]',
+        'newsletter.body #1' => '[img]./uploads/archive/news/e.gif[/img]',
     ];
 
     private const COUNT = ['nodes.intro' => 2, 'nodes.body' => 2, 'comment.body' => 2, 'forum.body' => 1, 'privat.body' => 1];
@@ -77,7 +77,7 @@ final class UpdateArchiveTest extends TestCase
         $this->assertSame(self::DONE, $run['repeat']['texts']);
         $this->assertTrue($run['resume']['done'], $run['resume']['text']);
         $this->assertSame(self::DONE, $run['resume']['texts']);
-        $this->assertSame(['nodes' => 3, 'comment' => 2, 'forum' => 2, 'privat' => 1, 'message' => 1], $run['resume']['info']['cursor']);
+        $this->assertSame(['nodes' => 3, 'comment' => 2, 'forum' => 2, 'privat' => 1, 'newsletter' => 1], $run['resume']['info']['cursor']);
     }
 
     # A check that still finds texts to change starts the cursors over, so the repeat its refusal asks for rewrites them instead of finding nothing after the cursor

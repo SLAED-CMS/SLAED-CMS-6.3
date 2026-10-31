@@ -112,7 +112,7 @@ final class UpdateSiteTest extends TestCase
         $this->assertSame($want, $run['first']['attach'], 'The attachment unit did not turn the address of a file its folder holds, or turned a missing one');
     }
 
-    # The times of 6.2 take their forms: a refresh stamp is a number the feed unit sets to 0, a unix expiry of a block or a message is a moment, none is NULL, repeats keep them
+    # The times of 6.2 take their forms: a refresh stamp is a number the feed unit sets to 0, a unix expiry of a block is a moment, none is NULL, repeats keep them
     # The first schema run converts in the release zone of a site without its own, Europe/Berlin, at the offset its connection carries today
     #[Test]
     public function theTimesOfASiteTakeTheirForms(): void
@@ -120,7 +120,7 @@ final class UpdateSiteTest extends TestCase
         $run = $this->getRun();
         $zone = new \DateTimeZone((new \DateTime('now', new \DateTimeZone('Europe/Berlin')))->format('P'));
         $at = fn(int $v): string => (new \DateTime('@'.$v))->setTimezone($zone)->format('Y-m-d H:i:s');
-        $want = [[0, 0, 0], [null, null, $at(1700003600)], [$at(1700007200), null]];
+        $want = [[0, 0, 0], [null, null, $at(1700003600)]];
         foreach (['first', 'second', 'third'] as $name) $this->assertSame($want, $run[$name]['times'], $name);
     }
 
@@ -130,7 +130,7 @@ final class UpdateSiteTest extends TestCase
     {
         $run = $this->getRun();
         $users = [['ru', 0, null, '', '', ''], ['en', 1, '1990-05-17', '', '', ''], ['', 0, null, '', '', '']];
-        $want = [$users, ['', 0, 'de'], ['', 'uk'], 'ru'];
+        $want = [$users, ['', 0, 'de'], 'ru'];
         foreach (['first', 'second', 'third'] as $name) $this->assertSame($want, $run[$name]['nulls'], $name);
     }
 
