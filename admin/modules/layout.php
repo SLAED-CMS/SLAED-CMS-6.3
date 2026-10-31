@@ -2293,7 +2293,7 @@ function setLayoutRows(array $dft, array $rss): array {
         $till = ($days > 0) ? 'NOW() + INTERVAL :days DAY' : 'NULL';
         if (!empty($set['new'])) {
             $vals = $cols($set, $set);
-            $sql = '(bkey, refresh, expire, '.implode(', ', array_keys($vals)).') VALUES (\'\', 0, '.$till.', :'.implode(', :', array_keys($vals)).')';
+            $sql = '(bkey, refresh, expire, '.implode(', ', array_keys($vals)).') VALUES (\'\', 3600, '.$till.', :'.implode(', :', array_keys($vals)).')';
             $put('INSERT INTO '.PREFIX_DB.'_blocks '.$sql, $vals + (($days > 0) ? ['days' => $days] : []));
             $made[] = intval($db->getSqlLastId());
             $zones[$vals['bpos']] = true;

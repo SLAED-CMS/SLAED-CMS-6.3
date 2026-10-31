@@ -90,7 +90,6 @@ function getEditbox(
             ['nameattr' => 'name', 'valueattr' => 'editor'],
             ['nameattr' => 'op', 'valueattr' => 'save'],
             ['nameattr' => 'editor', 'valueattr' => $edit],
-            ['nameattr' => 'file', 'valueattr' => $file],
             ['nameattr' => 'token', 'valueattr' => getSiteToken('editor')],
         ],
         'rows' => [[
@@ -160,7 +159,12 @@ function robots(): void {
 function save(): void {
     global $afile, $tpl;
     $edit = getVar('post', 'editor', 'var');
-    $file = getVar('post', 'file');
+    $file = [
+        'editor' => CONFIG_DIR.'/system.php',
+        'editheader' => CONFIG_DIR.'/header.php',
+        'htaccess' => PUBLIC_DIR.'/.htaccess',
+        'robots' => PUBLIC_DIR.'/robots.txt',
+    ][$edit] ?? '';
     if (!checkAdminPost('editor')) {
         if (isHtmxReq()) {
             echo $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _TOKENMISS]);

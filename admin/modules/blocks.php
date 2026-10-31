@@ -386,7 +386,7 @@ function filecode(): void {
         } else {
             $bf = preg_match('/^[a-z0-9_\-]+\.php$/i', $bf) ? $bf : '';
             if ($bf === '') {
-                setRedirect($afile.'.php?name=blocks&op=logview');
+                setRedirect($afile.'.php?name=blocks&op=fileedit');
                 return;
             }
             $bfstr = file_get_contents(BASE_DIR.'/blocks/'.$bf);
@@ -437,7 +437,7 @@ function filecode(): void {
         ])]);
         setFoot();
     } else {
-        setRedirect($afile.'.php?name=blocks&op=logview');
+        setRedirect($afile.'.php?name=blocks&op=fileedit');
     }
 }
 

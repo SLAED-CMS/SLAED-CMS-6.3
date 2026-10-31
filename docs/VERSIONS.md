@@ -2,6 +2,17 @@
 
 ## 2026-10-31
 
+### Small repairs found by the audit of the panel sections
+
+- **Site message.** The edit link of a message on the home page opens `name=messages&op=add`, where it led nowhere before,
+  and an expired message is switched off without being shown once more.
+- **"Редактор".** `save()` takes the path of the file from its tab; a path sent in the request is ignored.
+- **"Блоки".** A bad file name in `filecode()` returns to `op=fileedit` instead of an operation that does not exist.
+- **"Конструктор сайта".** A new block is created with `refresh` 3600, as the form of "Блоки" offers it: at 0 an RSS block
+  fetched its feed on every view.
+- **Help.** "Рейтинги" is rewritten by the code; "Категории", "Конфигурации", "Опросы", "Рассылка", "Группы", "Загрузки" and
+  "Языки" no longer name modules that are gone, and "Сообщения" says where a message shows.
+
 ### The panel takes the parts of its series: "Статистика" and "Мониторинг" are cockpits, the other screens take the window
 
 The engine of the series lives in `admin-ui.js`, and the two screens are built on it by their data. The help of each

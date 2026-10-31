@@ -324,22 +324,15 @@ function setMessageShow(): string {
             while ([$mid, $title, $body, $expire, $view] = $db->getSqlRow($result)) {
                 $mid = intval($mid);
                 $exp = $expire ? strtotime($expire) - time() : 0;
-                if ($expire && $exp < 0) $db->getSqlQuery('UPDATE '.PREFIX_DB.'_message SET status = 0, expire = NULL WHERE id = :mid', ['mid' => $mid]);
-                $body = $prs->filterContent($body, true, 'all', 2, '', [], true);
-                $exp = ($exp > 0) ? getDuration($exp) : _UNLIMITED;
-                if ($view == 4 && is_moder()) {
-                    if (is_moder()) $body .= $adminNote(_MVADMIN, $exp, HOME_PATH.$afile.'.php?op=msg_add&id='.$mid);
-                    return $messageBox($title, $body);
-                } elseif (($view == 3 && is_user()) || ($view == 3 && is_user() && is_moder())) {
-                    if (is_moder()) $body .= $adminNote(_MVUSERS, $exp, HOME_PATH.$afile.'.php?op=msg_add&id='.$mid);
-                    return $messageBox($title, $body);
-                } elseif (($view == 2 && !is_user()) || ($view == 2 && !is_user() && is_moder())) {
-                    if (is_moder()) $body .= $adminNote(_MVANON, $exp, HOME_PATH.$afile.'.php?op=msg_add&id='.$mid);
-                    return $messageBox($title, $body);
-                } elseif ($view == 1) {
-                    if (is_moder()) $body .= $adminNote(_MVALL, $exp, HOME_PATH.$afile.'.php?op=msg_add&id='.$mid);
-                    return $messageBox($title, $body);
+                if ($expire && $exp < 0) {
+                    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_message SET status = 0, expire = NULL WHERE id = :mid', ['mid' => $mid]);
+                    continue;
                 }
+                $who = match (intval($view)) {4 => is_moder() ? _MVADMIN : '', 3 => is_user() ? _MVUSERS : '', 2 => is_user() ? '' : _MVANON, 1 => _MVALL, default => ''};
+                if ($who === '') continue;
+                $body = $prs->filterContent($body, true, 'all', 2, '', [], true);
+                if (is_moder()) $body .= $adminNote($who, ($exp > 0) ? getDuration($exp) : _UNLIMITED, HOME_PATH.$afile.'.php?name=messages&op=add&id='.$mid);
+                return $messageBox($title, $body);
             }
         }
     }
