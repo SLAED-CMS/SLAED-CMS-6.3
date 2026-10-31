@@ -174,7 +174,7 @@ composer quality
 - Typed content through Node, forum, account, search, and other modules
 - WYSIWYG editor integrations
 - File uploads and media handling
-- RSS, SEO metadata, referer and statistics modules
+- RSS, SEO metadata and statistics modules
 
 ### Themes
 

@@ -84,7 +84,7 @@ if (empty($go)) {
     Cache::setHeaders();
     if ($conf['alang']) {
         $coun = Geoip::getCountry(getIp());
-        if ($coun !== '' && !is_bot() && empty(getCookies('language'))) {
+        if ($coun !== '' && getVisitBot()['name'] === '' && empty(getCookies('language'))) {
             $lang = ['GB' => 'en', 'US' => 'en', 'CA' => 'en', 'AU' => 'en', 'FR' => 'fr', 'DE' => 'de', 'PL' => 'pl', 'RU' => 'ru', 'UA' => 'uk'][$coun] ?? '';
             if ($lang !== '') {
                 setCookies('language', time() + (int)($conf['user_c_t'] ?? 0), $lang);

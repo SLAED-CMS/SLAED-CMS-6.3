@@ -50,7 +50,7 @@ class Cache {
         return false;
     }
 
-    # Write a cache file atomically through a temp file, exclusive lock, and rename; a short write is a failure and never reaches the target path
+    # Write a cache file atomically through a temp file and rename; a short write never reaches the target, and the rename retries as a Windows reader holds it open
     public static function setBody(string $file, string $body): bool {
         $dir = dirname($file);
         if (!self::setDirPath($dir)) return false;
@@ -60,11 +60,12 @@ class Cache {
             if (is_file($tmp)) unlink($tmp);
             return false;
         }
-        if (!rename($tmp, $file)) {
-            if (is_file($tmp)) unlink($tmp);
-            return false;
+        for ($i = 0; $i < 5; $i++) {
+            if (rename($tmp, $file)) return true;
+            usleep(20000);
         }
-        return true;
+        if (is_file($tmp)) unlink($tmp);
+        return false;
     }
 
     # Remove every cached file under storage/cache, keeping the lock files and the directory tree

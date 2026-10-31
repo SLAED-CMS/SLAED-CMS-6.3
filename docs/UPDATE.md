@@ -78,7 +78,8 @@ this list, so a release that carries a database step is a later one.
 
 ```
 1. Prepare    tests green, docs/VERSIONS.md, UPGRADING.md, SL_VERSION in core/version.php,
-              a database step when the schema changed (and the same change in table.sql)
+              a database step when the schema changed (and the same change in table.sql),
+              the branches of PHP, MariaDB and MySQL with their end of support in getSupportEnd() of core/monitor.php
 2. Tag        git tag v8.0.1            (local only; publish pushes it)
 3. Build      php tools/release.php build v8.0.1
                 checks: the tag exists, the tree is clean, SL_VERSION is 8.0.1 and above the previous release,

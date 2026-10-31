@@ -482,37 +482,28 @@ function getUptimeText(int $sec): string {
     return $days.'d '.$hours.'h '.$mins.'m';
 }
 
-# Queries database runtime health metrics and returns normalized diagnostics for monitor output
+# The health of the database for the monitor, which its poll reads too: the limits as numbers, the zone as a zone with its offset, null or empty where a reading failed
 function getDbHealth(object $db): array {
-    $data = [
-        'connections' => 'N/A',
-        'slow' => 'N/A',
-        'charset' => 'N/A',
-        'sql_mode' => 'N/A',
-        'max_packet' => 'N/A',
-        'buffer_pool' => 'N/A',
-        'timezone' => 'N/A',
-        'user' => 'N/A'
-    ];
+    $data = ['connections' => null, 'max_conn' => null, 'charset' => '', 'sql_mode' => '', 'max_packet' => null, 'buffer_pool' => null, 'timezone' => '', 'user' => ''];
     try {
-        $res = $db->getSqlQuery("SHOW GLOBAL STATUS LIKE 'Threads_connected'");
-        if ($res && ($row = $db->getSqlRow($res)) && isset($row['Value'])) $data['connections'] = (string)$row['Value'];
-        $res = $db->getSqlQuery("SHOW GLOBAL STATUS LIKE 'Slow_queries'");
-        if ($res && ($row = $db->getSqlRow($res)) && isset($row['Value'])) $data['slow'] = (string)$row['Value'];
-        $res = $db->getSqlQuery("SHOW VARIABLES LIKE 'character_set_connection'");
-        if ($res && ($row = $db->getSqlRow($res)) && isset($row['Value'])) $data['charset'] = (string)$row['Value'];
-        $res = $db->getSqlQuery("SHOW VARIABLES LIKE 'sql_mode'");
-        if ($res && ($row = $db->getSqlRow($res)) && isset($row['Value'])) $data['sql_mode'] = (string)$row['Value'];
-        $res = $db->getSqlQuery("SHOW VARIABLES LIKE 'max_allowed_packet'");
-        if ($res && ($row = $db->getSqlRow($res)) && isset($row['Value'])) $data['max_packet'] = filterSize((int)$row['Value']);
-        $res = $db->getSqlQuery("SHOW VARIABLES LIKE 'innodb_buffer_pool_size'");
-        if ($res && ($row = $db->getSqlRow($res)) && isset($row['Value'])) $data['buffer_pool'] = filterSize((int)$row['Value']);
-        $tz = 'N/A';
-        $res = $db->getSqlQuery('SELECT CURRENT_TIME() as db_time');
-        if ($res && ($row = $db->getSqlRow($res)) && isset($row['db_time'])) $tz = (string)$row['db_time'];
-        $data['timezone'] = $tz;
-        $res = $db->getSqlQuery('SELECT CURRENT_USER() as db_user');
-        if ($res && ($row = $db->getSqlRow($res)) && isset($row['db_user'])) $data['user'] = (string)$row['db_user'];
+        $vars = [];
+        $list = "'max_connections', 'character_set_connection', 'sql_mode', 'max_allowed_packet', 'innodb_buffer_pool_size'";
+        $res = $db->getSqlQuery('SHOW VARIABLES WHERE Variable_name IN ('.$list.')');
+        while ($row = $db->getSqlRow($res)) $vars[$row['Variable_name']] = $row['Value'];
+        $data['max_conn'] = isset($vars['max_connections']) ? (int)$vars['max_connections'] : null;
+        $data['charset'] = (string)($vars['character_set_connection'] ?? '');
+        $data['sql_mode'] = (string)($vars['sql_mode'] ?? '');
+        $data['max_packet'] = isset($vars['max_allowed_packet']) ? (int)$vars['max_allowed_packet'] : null;
+        $data['buffer_pool'] = isset($vars['innodb_buffer_pool_size']) ? (int)$vars['innodb_buffer_pool_size'] : null;
+        $row = $db->getSqlRow($db->getSqlQuery("SHOW GLOBAL STATUS LIKE 'Threads_connected'"));
+        if ($row) $data['connections'] = (int)$row['Value'];
+        $row = $db->getSqlRow($db->getSqlQuery('SELECT @@session.time_zone AS zone, TIMEDIFF(NOW(), UTC_TIMESTAMP()) AS diff, CURRENT_USER() AS who'));
+        if ($row) {
+            $diff = substr((string)$row['diff'], 0, 6);
+            $diff = str_starts_with($diff, '-') ? $diff : '+'.substr($diff, 0, 5);
+            $data['timezone'] = ((string)$row['zone'] === $diff) ? $diff : $row['zone'].' ('.$diff.')';
+            $data['user'] = (string)$row['who'];
+        }
     } catch (Throwable $error) {
         if (class_exists('Logger')) Logger::addSql('error', 'Monitor DB health read failed', ['error' => $error->getMessage()]);
     }
@@ -615,13 +606,13 @@ function getSecurityEventCount(int $hours = 24): int {
     return $count;
 }
 
-# Returns latest recent security-related event with source label and timestamp context
-function getSecurityEventHours(int $hours = 24): string {
+# The latest security event read into time, journal, level and message, never the line, which carries the address and the browser; null with no journal, [] with no event
+function getSecurityEventHours(int $hours = 24): ?array {
     $logsdir = defined('LOGS_DIR') ? (string)LOGS_DIR : BASE_DIR.'/storage/logs';
     $files = ['warn.log', 'hack.log', 'error_site.log', 'error_php.log', 'request.log'];
     $thresh = time() - ($hours * 3600);
+    $best = [];
     $bestts = 0;
-    $besttxt = '';
     $seen = false;
     foreach ($files as $name) {
         $path = $logsdir.'/'.$name;
@@ -635,14 +626,13 @@ function getSecurityEventHours(int $hours = 24): string {
             $ts = getLogLineTimestamp($line);
             if ($ts === null || $ts < $thresh) continue;
             if ($ts <= $bestts) continue;
+            $row = json_decode($line, true);
             $bestts = $ts;
-            $besttxt = strtoupper(pathinfo($name, PATHINFO_FILENAME)).': '.(string)preg_replace('/\s+/', ' ', trim($line));
+            $best = ['time' => $ts, 'file' => pathinfo($name, PATHINFO_FILENAME), 'level' => (string)($row['level'] ?? ''), 'text' => (string)($row['msg'] ?? '')];
             break;
         }
     }
-    if (!$seen) return 'N/A';
-    if ($bestts <= 0) return '0';
-    return date('Y-m-d H:i:s', $bestts).' | '.$besttxt;
+    return $seen ? $best : null;
 }
 
 # Collects disk capacity and usage values used by both realtime and full dashboard render paths; a host that disables the disk functions reads as zero
@@ -786,54 +776,42 @@ function getLastBackupRunLabel(): string {
     return ($when !== false) ? $when->format('Y-m-d H:i:s') : 'N/A';
 }
 
-# Returns the uploads size the sampler counts once an hour, as a walk of a large tree is too slow for a page, or N/A when the directory could not be read
-function getUploadsSizeLabel(): string {
-    $bytes = getMonitorSample()['uploads'];
-    return ($bytes === null) ? 'N/A' : filterSize((int)$bytes);
-}
-
-# Returns latest recent database-related issue event matched by error patterns
-function getDbIssueEventHours(int $hours = 24): string {
-    $logsdir = defined('LOGS_DIR') ? (string)LOGS_DIR : BASE_DIR.'/storage/logs';
-    $files = ['error_sql.log', 'error_file.log', 'error_php.log'];
-    $thresh = time() - ($hours * 3600);
-    $bestts = 0;
-    $besttxt = '';
-    $seen = false;
-    $dbmatch = '/(sqlstate|mysql|mysqli|mariadb|database|pdo|deadlock|lock wait|too many connections|connection refused|access denied)/iu';
-    foreach ($files as $name) {
-        $path = $logsdir.'/'.$name;
-        if (!is_file($path) || !is_readable($path)) continue;
-        $seen = true;
-        $tail = getFileTailChunk($path, 262144);
-        $lines = getTailLines($tail, 2500);
-        if (!$lines) continue;
-        for ($ix = count($lines) - 1; $ix >= 0; $ix--) {
-            $line = $lines[$ix];
-            if (preg_match($dbmatch, $line) !== 1) continue;
-            $ts = getLogLineTimestamp($line);
-            if ($ts === null || $ts < $thresh) continue;
-            if ($ts <= $bestts) continue;
-            $bestts = $ts;
-            $besttxt = strtoupper(pathinfo($name, PATHINFO_FILENAME)).': '.(string)preg_replace('/\s+/', ' ', trim($line));
-            break;
-        }
-    }
-    if (!$seen) return 'N/A';
-    if ($bestts <= 0) return '0';
-    return date('Y-m-d H:i:s', $bestts).' | '.$besttxt;
-}
-
 # Caches expensive runtime extras such as directory scans and log counters across short monitor refresh windows
 function getMonitorRuntimeExtras(): array {
-    return getMonitorCache('runtime_extras', 60, static fn(): array => [
+    return getMonitorCache('extras', 60, static fn(): array => [
         'storages' => getStorageDirectorySizes(),
         'lastbackup' => getLastBackupRunLabel(),
         'error24' => getErrorLogCountHours(24),
+        'sql24' => getErrorLogCountHours(24, ['error_sql.log']),
         'failed24' => getFailedLoginCountHours(24),
         'seclast24' => getSecurityEventHours(24),
-        'dblast24' => getDbIssueEventHours(24),
     ]);
+}
+
+# The counts of the monitor and the size of the database, kept a minute as the poll reads the size for a signal; a Node count is that of the first active type of its mode, or null
+function getMonitorDbStats(): array {
+    return getMonitorCache('dbstats', 60, static function (): array {
+        global $db, $conf;
+        $count = static function (string $mode): ?int {
+            $type = getNodeModeType($mode);
+            try {
+                return ($type !== null) ? getNodeReader()->setNodeType($type)->getNodeCount() : null;
+            } catch (NodeException) {
+                return null;
+            }
+        };
+        $size = 0;
+        $tabs = 0;
+        $name = preg_replace('#[^a-zA-Z0-9_]#', '', (string)($conf['db']['name'] ?? ''));
+        if ($name !== '') {
+            $res = $db->getSqlQuery('SELECT DATA_LENGTH AS data_length, INDEX_LENGTH AS index_length FROM information_schema.TABLES WHERE TABLE_SCHEMA = :name', ['name' => $name]);
+            while ($row = $db->getSqlRow($res)) {
+                $size += (int)($row['data_length'] ?? 0) + (int)($row['index_length'] ?? 0);
+                $tabs++;
+            }
+        }
+        return ['dbsize' => $size, 'dbtabs' => $tabs, 'cntnews' => $count('article'), 'cntfile' => $count('files')];
+    });
 }
 
 # One short-lived store of the monitor per site: a JSON file of Cache under the request itself, never APCu, which each php-cgi of a Windows pool keeps to itself; $ttl 0 reads fresh
@@ -887,10 +865,26 @@ function getMonitorSample(bool $fresh = false): array {
         'uploads' => null, 'uploads_at' => 0, 'sampled_at' => 0] + getMonitorDiskSnapshot();
 }
 
-# The figures of the home cockpit for a super-administrator: four shares with the rows of their panels, the strip of the average page, the signals and the sample age
-function getCockpitData(): array {
-    global $afile;
-    $snap = getMonitorSample(true);
+# The rings and the strip of the server as a cockpit names them, the same on the home and on the monitor
+function getCockpitParts(): array {
+    return [
+        'rings' => [
+            ['key' => 'cpu', 'label' => 'CPU', 'title' => _ADM_CPU],
+            ['key' => 'ram', 'label' => 'RAM', 'title' => _ADM_RAM],
+            ['key' => 'disk', 'label' => _ADM_DISK, 'title' => _ADM_DISK],
+            ['key' => 'opcache', 'label' => 'OPcache', 'title' => 'OPcache'],
+        ],
+        'strip' => [
+            ['key' => 'gen', 'icon' => 'stopwatch', 'label' => _GENERATION, 'unit' => 'ms'],
+            ['key' => 'sql', 'icon' => 'database', 'label' => _ADM_QUERIES, 'unit' => 'sql'],
+            ['key' => 'mem', 'icon' => 'memory', 'label' => _ADM_PHPMEM, 'unit' => 'MB'],
+            ['key' => 'online', 'icon' => 'people', 'label' => _ONLINE, 'unit' => ''],
+        ],
+    ];
+}
+
+# The four shares of a server sample with the rows of their panels
+function getCockpitRings(array $snap): array {
     $opc = function_exists('opcache_get_status') ? opcache_get_status(false) : false;
     $opon = is_array($opc) && !empty($opc['opcache_enabled']);
     $opmem = $opon ? ($opc['memory_usage'] ?? []) : [];
@@ -904,32 +898,56 @@ function getCockpitData(): array {
     $hit = $opon ? (float)($opc['opcache_statistics']['opcache_hit_rate'] ?? 0) : 0.0;
     $opcrow = $opon ? [$row('memory', _ADM_MEMORY, filterSize($opused).' / '.filterSize($optotal)),
         $row('file-earmark-code', _ADM_SCRIPTS, (string)($opc['opcache_statistics']['num_cached_scripts'] ?? 0))] : [];
-    $sigs = getSystemSignals();
-    $online = getTableCount('session');
+    return [
+        'cpu' => $ring('CPU', _ADM_CPU, $snap['cpu_p'], getPercentTone($snap['cpu_p']), [$row('cpu', _ADM_CORES, $cpu['physical'].' / '.$cpu['logical']),
+            $row('lightning-charge', _ADM_FREQ, ($cpu['freq'] === 'N/A') ? 'N/A' : filterDecimal((float)$cpu['freq']).' GHz')]),
+        'ram' => $ring('RAM', _ADM_RAM, (float)$mem['percent'], getPercentTone((float)$mem['percent']), [$row('memory', _ADM_USED, filterSize($mem['used'])),
+            $row('stack', _OVERALL, filterSize($mem['total'])), $row('check2-circle', _ADM_AVAIL, filterSize($mem['free']))]),
+        'disk' => $ring(_ADM_DISK, _ADM_DISK, (float)$snap['disk_pct'], getPercentTone((float)$snap['disk_pct']), [$row('pie-chart', _ADM_USED,
+            filterSize($snap['disk_used'])), $row('box', _ADM_FREE, filterSize($snap['disk_free']))]),
+        'opcache' => $ring('OPcache', 'OPcache', $hit, $opon ? getPercentTone(100 - $hit) : 'warn', array_merge([$row('bullseye', _ADM_HITS,
+            $opon ? filterDecimal(round($hit, 1)).'%' : _OFF)], $opcrow)),
+    ];
+}
+
+# The strip of the average page of the running hour and the visitors online
+function getCockpitStrip(): array {
+    $item = static fn(string $icon, string $label, int|float|string $num, string $unit): array => ['icon' => $icon, 'label' => $label, 'value' => $num,
+        'text' => is_string($num) ? $num : filterDecimal($num), 'unit' => $unit];
     $load = getLoadAverage();
     $none = $load['num'] === 0;
     return [
+        'gen' => $item('stopwatch', _GENERATION, $none ? '—' : (int)round($load['gen'] * 1000), 'ms'),
+        'sql' => $item('database', _ADM_QUERIES, $none ? '—' : round($load['sql'], 1), 'sql'),
+        'mem' => $item('memory', _ADM_PHPMEM, $none ? '—' : round($load['mem'] / 1048576, 1), 'MB'),
+        'online' => $item('people', _ONLINE, getTableCount('session'), ''),
+    ];
+}
+
+# The figures of the home cockpit for a super-administrator: four shares with the rows of their panels, the strip of the average page, the signals and the sample age
+function getCockpitData(): array {
+    global $afile;
+    $snap = getMonitorSample(true);
+    $sigs = getSystemSignals();
+    return [
         'tone' => getCockpitTone($sigs),
         'href' => HOME_PATH.$afile.'.php?name=monitor',
-        'gauges' => [
-            'cpu' => $ring('CPU', _ADM_CPU, $snap['cpu_p'], getPercentTone($snap['cpu_p']), [$row('cpu', _ADM_CORES, $cpu['physical'].' / '.$cpu['logical']),
-                $row('lightning-charge', _ADM_FREQ, (string)$cpu['freq'])]),
-            'ram' => $ring('RAM', _ADM_RAM, (float)$mem['percent'], getPercentTone((float)$mem['percent']), [$row('memory', _ADM_USED, filterSize($mem['used'])),
-                $row('stack', _OVERALL, filterSize($mem['total'])), $row('check2-circle', _ADM_AVAIL, filterSize($mem['free']))]),
-            'disk' => $ring(_ADM_DISK, _ADM_DISK, (float)$snap['disk_pct'], getPercentTone((float)$snap['disk_pct']), [$row('pie-chart', _ADM_USED,
-                filterSize($snap['disk_used'])), $row('box', _ADM_FREE, filterSize($snap['disk_free']))]),
-            'opcache' => $ring('OPcache', 'OPcache', $hit, $opon ? getPercentTone(100 - $hit) : 'warn', array_merge([$row('bullseye', _ADM_HITS,
-                $opon ? round($hit, 1).'%' : _OFF)], $opcrow)),
-        ],
-        'strip' => [
-            'gen' => ['icon' => 'stopwatch', 'label' => _GENERATION, 'value' => $none ? '—' : (int)round($load['gen'] * 1000), 'unit' => 'ms'],
-            'sql' => ['icon' => 'database', 'label' => _ADM_QUERIES, 'value' => $none ? '—' : round($load['sql'], 1), 'unit' => 'sql'],
-            'mem' => ['icon' => 'memory', 'label' => _ADM_PHPMEM, 'value' => $none ? '—' : round($load['mem'] / 1048576, 1), 'unit' => 'MB'],
-            'online' => ['icon' => 'people', 'label' => _ONLINE, 'value' => $online, 'unit' => ''],
-        ],
+        'gauges' => getCockpitRings($snap),
+        'strip' => getCockpitStrip(),
         'signals' => $sigs,
         'age' => ($snap['sampled_at'] > 0) ? max(time() - $snap['sampled_at'], 0) : null,
     ];
+}
+
+# The pages of the last sixty minutes from statistic.log, null while the file does not hold today: the statistic is off or nobody came yet, which says nothing of the hour
+function getPageHourRate(): ?float {
+    $stat = getStatsToday();
+    return ($stat['date'] === date('d.m.Y')) ? getStatsHourRate($stat['hours'], time()) : null;
+}
+
+# The hour of a lull, under 20 pages; a counter that does not hold today makes none
+function isPageLull(?float $rate): bool {
+    return $rate !== null && $rate < 20;
 }
 
 # The tone of the lamp: its worst signal, and with all passed a lull (info) while statistic.log counts under 20 pages in the last sixty minutes
@@ -937,12 +955,344 @@ function getCockpitTone(array $sigs): string {
     $lvls = array_column($sigs, 'level');
     if (in_array('danger', $lvls, true)) return 'danger';
     if (in_array('warn', $lvls, true)) return 'warn';
-    $stat = getStatsToday();
-    if ($stat['date'] !== date('d.m.Y')) return 'ok';
-    $hour = (int)date('G');
-    $part = (int)date('i') / 60;
-    $prev = ($hour > 0) ? $stat['hours'][$hour - 1] : $stat['hours'][0] / max($part, 0.25);
-    return ($stat['hours'][$hour] + $prev * (1 - $part) < 20) ? 'info' : 'ok';
+    return isPageLull(getPageHourRate()) ? 'info' : 'ok';
+}
+
+# A moment as the facts of the panel write it: its time today, the word for yesterday, else its day and month
+function getShortDate(int $time): string {
+    return match (date('Y-m-d', $time)) {
+        date('Y-m-d') => date('H:i', $time),
+        date('Y-m-d', strtotime('-1 day')) => _YESTERDAY,
+        default => date('d.m', $time),
+    };
+}
+
+# The end of support of a branch as YYYY-MM, refreshed with every release (docs/UPDATE.md, "Releasing"); the web server is not here, as distributions patch it under its old number
+function getSupportEnd(string $soft, string $branch): string {
+    return [
+        'php' => ['8.0' => '2023-11', '8.1' => '2025-12', '8.2' => '2026-12', '8.3' => '2027-12', '8.4' => '2028-12', '8.5' => '2029-12'],
+        'mariadb' => ['10.4' => '2024-06', '10.5' => '2025-06', '10.6' => '2026-07', '10.11' => '2028-02', '11.4' => '2029-05', '11.8' => '2028-06', '12.3' => '2029-05'],
+        'mysql' => ['5.7' => '2023-10', '8.0' => '2026-04', '8.4' => '2032-04'],
+    ][$soft][$branch] ?? '';
+}
+
+# The word on a version by its branch and the level it earns; a branch outside the table is neutral, never an alarm
+function getSupportFact(string $soft, string $ver, int $time): array {
+    $end = getSupportEnd($soft, implode('.', array_slice(explode('.', $ver), 0, 2)));
+    if ($end === '') return ['ok', $ver];
+    return (date('Y-m', $time) > $end) ? ['warn', sprintf(_MONITOR_ENDED, $ver, substr($end, 0, 4))] : ['ok', sprintf(_MONITOR_UNTIL, $ver, substr($end, 0, 4))];
+}
+
+# The product, its table of support and its version from the answer of VERSION(), whose suffix a distribution writes
+function getDbLabel(string $ver): array {
+    $maria = stripos($ver, 'mariadb') !== false;
+    $num = preg_match('#^\d+(?:\.\d+)+#', $ver, $hit) ? $hit[0] : $ver;
+    return ['name' => $maria ? 'MariaDB' : 'MySQL', 'soft' => $maria ? 'mariadb' : 'mysql', 'version' => $num];
+}
+
+# The uptime of the sample in minutes: it stores the text of getUptimeText(), which the presentation prints; null where the host gives none
+function getUptimeMinutes(string $text): ?int {
+    return preg_match('#^(\d+)d (\d+)h (\d+)m$#', $text, $hit) ? (int)$hit[1] * 1440 + (int)$hit[2] * 60 + (int)$hit[3] : null;
+}
+
+# Minutes of uptime in the words of the language, with or without its minutes
+function getUptimeWords(int $mins, bool $long = false): string {
+    $days = intdiv($mins, 1440);
+    $hours = intdiv($mins % 1440, 60);
+    return $long ? sprintf(_MONITOR_UPLONG, $days, $hours, $mins % 60) : sprintf(_MONITOR_UPSHORT, $days, $hours);
+}
+
+# The extensions by their weight, by the code: required are composer.json and the calls with no way round, recommended what turns a part off; no code calls APCu
+function getExtensionWeight(array $have): array {
+    $seen = array_map(static fn(string $one): string => str_ireplace('zend ', '', strtolower($one)), $have);
+    $must = ['ctype', 'curl', 'filter', 'gd', 'json', 'mbstring', 'PDO', 'pdo_mysql', 'session'];
+    $tip = ['dom', 'fileinfo', 'intl', 'OPcache', 'openssl', 'Phar', 'sodium', 'zip', 'zlib'];
+    $lost = static fn(array $list): array => array_values(array_filter($list, static fn(string $one): bool => !in_array(strtolower($one), $seen, true)));
+    $need = array_map('strtolower', array_merge($must, $tip));
+    return [
+        'must' => $must,
+        'tip' => $tip,
+        'must_lost' => $lost($must),
+        'tip_lost' => $lost($tip),
+        'seen' => $seen,
+        'other' => array_values(array_filter($have, static fn(string $one): bool => !in_array(str_ireplace('zend ', '', strtolower($one)), $need, true))),
+    ];
+}
+
+# The one reading behind the signals of the server: what the sample holds, what the database and PHP say now, the size of the database as its store keeps it
+function getServerFacts(array $snap): array {
+    global $db, $conf;
+    $opc = function_exists('opcache_get_status') ? opcache_get_status(false) : false;
+    $opon = is_array($opc) && !empty($opc['opcache_enabled']);
+    $used = $opon ? (int)($opc['memory_usage']['used_memory'] ?? 0) : 0;
+    $health = getDbHealth($db);
+    $soft = $snap['soft'] ?? [];
+    $web = getServerSoftware();
+    return [
+        'time' => time(),
+        'health' => $health,
+        'cpu' => (float)$snap['cpu_p'],
+        'ram' => (float)$snap['mem']['percent'],
+        'disk' => (float)$snap['disk_pct'],
+        'op_on' => $opon,
+        'op_hit' => $opon ? (float)($opc['opcache_statistics']['opcache_hit_rate'] ?? 0) : 0.0,
+        'op_used' => $used,
+        'op_total' => $opon ? $used + (int)($opc['memory_usage']['free_memory'] ?? 0) + (int)($opc['memory_usage']['wasted_memory'] ?? 0) : 0,
+        'conn' => $health['connections'],
+        'max_conn' => $health['max_conn'],
+        'pool' => $health['buffer_pool'],
+        'dbsize' => getMonitorDbStats()['dbsize'],
+        'peak' => memory_get_peak_usage(true),
+        'limit' => getMemoryLimitBytes(),
+        'gen' => getLoadAverage()['gen'],
+        'php' => PHP_VERSION,
+        'db' => (string)($soft['db'] ?? getDbVersion()),
+        'web' => $web['name'].(($web['version'] !== 'N/A') ? ' '.$web['version'] : ''),
+        'https' => str_starts_with(strtolower((string)$conf['homeurl']), 'https://'),
+        'proto' => getServerValue('SERVER_PROTOCOL', ''),
+        'exts' => get_loaded_extensions(),
+        'uptime' => getUptimeMinutes((string)$snap['uptime']),
+    ];
+}
+
+# The thirteen signals of the server and its programs from the facts given, failures first: each with key, icon, label, level and fact; a reading that failed is neutral
+function getServerSignalList(array $in): array {
+    $share = static fn(float $num, int $warn, int $fail): string => ($num >= $fail) ? 'danger' : (($num >= $warn) ? 'warn' : 'ok');
+    $pct = static fn(float $num): string => filterDecimal(round($num, 1)).'%';
+    $exts = getExtensionWeight($in['exts']);
+    $lost = array_merge($exts['must_lost'], $exts['tip_lost']);
+    $db = getDbLabel($in['db']);
+    [$phpok, $phpfact] = getSupportFact('php', $in['php'], $in['time']);
+    [$dbok, $dbfact] = getSupportFact($db['soft'], $db['version'], $in['time']);
+    $http = preg_match('#^HTTP/(\d)#', $in['proto'], $hit) && (int)$hit[1] >= 2;
+    $nope = array_merge($in['https'] ? [] : ['HTTPS'], $http ? [] : ['HTTP/2']);
+    $conn = ($in['conn'] !== null && $in['max_conn'] > 0);
+    $mins = $in['uptime'];
+    $rows = [
+        ['cpu', 'cpu', _ADM_CPU, $share($in['cpu'], 75, 90), sprintf(_MONITOR_LOADED, $pct($in['cpu']))],
+        ['ram', 'memory', _ADM_RAM, $share($in['ram'], 75, 90), sprintf(_MONITOR_TAKEN, $pct($in['ram']))],
+        ['disk', 'hdd', _ADM_DISK, $share($in['disk'], 80, 95), sprintf(_MONITOR_TAKEN, $pct($in['disk']))],
+        ['opcache', 'lightning-charge', 'OPcache', (!$in['op_on'] || $in['op_hit'] < 80) ? 'warn' : 'ok',
+            $in['op_on'] ? sprintf(_MONITOR_OPFACT, $pct($in['op_hit']), filterSize($in['op_used']).' / '.filterSize($in['op_total'])) : _OFF],
+        ['conn', 'diagram-3', _MONITOR_SIGCONN, $conn ? $share($in['conn'] * 100 / $in['max_conn'], 75, 90) : 'ok',
+            $conn ? sprintf(_MONITOR_OF, $in['conn'], $in['max_conn']) : _NO_INFO],
+        ['innodb', 'database', _MONITOR_POOL, ($in['pool'] !== null && $in['pool'] < $in['dbsize']) ? 'warn' : 'ok',
+            ($in['pool'] !== null) ? sprintf(_MONITOR_POOLFOR, filterSize($in['dbsize']), filterSize($in['pool'])) : _NO_INFO],
+        ['phpmem', 'speedometer2', _ADM_PHPMEM, ($in['limit'] > 0) ? $share($in['peak'] * 100 / $in['limit'], 75, 90) : 'ok',
+            sprintf(_MONITOR_OF, filterSize($in['peak']), ($in['limit'] > 0) ? filterSize($in['limit']) : _MONITOR_NOLIMIT)],
+        ['gen', 'stopwatch', _MONITOR_SIGGEN, ($in['gen'] === null) ? 'ok' : (($in['gen'] > 2) ? 'danger' : (($in['gen'] > 0.5) ? 'warn' : 'ok')),
+            ($in['gen'] === null) ? '—' : filterDecimal($in['gen'] * 1000, 0).' ms'],
+        ['php', 'filetype-php', _ADM_SIG_PHPVER, $phpok, $phpfact],
+        ['soft', 'hdd-rack', _MONITOR_SIGSOFT, $dbok, $db['name'].' '.$dbfact.' · '.$in['web']],
+        ['proto', 'lock', 'HTTPS / HTTP/2', $nope ? 'warn' : 'ok', $nope ? sprintf(_MONITOR_NONE, implode(', ', $nope)) : _MONITOR_PROTOOK],
+        ['ext', 'puzzle', _MONITOR_EXTS, $exts['must_lost'] ? 'danger' : ($exts['tip_lost'] ? 'warn' : 'ok'),
+            $lost ? sprintf(_MONITOR_NONE, implode(', ', $lost)) : _MONITOR_EXTOK],
+        ['uptime', 'clock-history', _MONITOR_UPTIME, ($mins !== null && $mins < 60) ? 'warn' : 'ok',
+            ($mins === null) ? _NO_INFO : (($mins < 60) ? sprintf(_MONITOR_REBOOT, $mins) : sprintf(_MONITOR_NOREBOOT, getUptimeWords($mins)))],
+    ];
+    $rank = ['danger' => 0, 'warn' => 1, 'ok' => 2];
+    usort($rows, static fn(array $one, array $two): int => $rank[$one[3]] <=> $rank[$two[3]]);
+    return array_map(static fn(array $one): array => array_combine(['key', 'icon', 'label', 'level', 'fact'], $one), $rows);
+}
+
+# The lamp of the monitor from one list of signals: the tone decides first; with all passed no page in the hour is a flat line, under 20 a lull that beats as a norm
+function getServerLamp(array $sigs, ?float $rate, float $cpu): array {
+    $lvls = array_column($sigs, 'level');
+    $loud = count(array_filter($lvls, static fn(string $one): bool => $one !== 'ok'));
+    $worst = in_array('danger', $lvls, true) ? 'danger' : ($loud ? 'warn' : 'ok');
+    $mode = ($worst !== 'ok') ? $worst : (($rate !== null && round($rate) < 1) ? 'flat' : (isPageLull($rate) ? 'lull' : 'ok'));
+    $base = ['ok' => 72, 'lull' => 72, 'warn' => 96, 'danger' => 168, 'flat' => 0][$mode];
+    return [
+        'tone' => in_array($mode, ['flat', 'lull'], true) ? 'info' : $worst,
+        'mode' => $mode,
+        'loud' => $loud,
+        'pass' => count($lvls) - $loud,
+        'total' => count($lvls),
+        'base' => $base,
+        'bpm' => (int)round($base * (0.8 + $cpu / 100)),
+    ];
+}
+
+# The load of one statistic line by hour: pages, generation ms, queries and KB, pages counted only where the hour carries a load, as days before the load fields have none
+function getStatLoadHours(array $pts): array {
+    $out = [];
+    foreach (['num' => 13, 'gen' => 17, 'sql' => 18, 'mem' => 19] as $key => $idx) {
+        $out[$key] = array_map('intval', array_pad(array_slice(explode(',', trim((string)($pts[$idx] ?? ''))), 0, 24), 24, 0));
+    }
+    foreach ($out['gen'] as $hour => $val) if ($val <= 0) $out['num'][$hour] = 0;
+    return $out;
+}
+
+# One line of the counter by its field names: a day of an old archive stops at the eighth field, so its hours, load and session maps are empty; null for a line that is no day
+function getStatRow(string $line): ?array {
+    $pts = explode('|', trim($line));
+    if (count($pts) < 8 || !preg_match('#^(\d{2})\.(\d{2})\.(\d{4})$#', $pts[0], $hit)) return null;
+    $dims = [];
+    $maps = ['browsers' => 8, 'os' => 9, 'devices' => 10, 'countries' => 11, 'refcat' => 12, 'newret' => 14, 'depth' => 15, 'duration' => 16];
+    $maps += ['hosts' => 20, 'pages' => 21, 'bots' => 22, 'bottype' => 23];
+    foreach ($maps as $key => $idx) {
+        $dims[$key] = getCounterField(trim($pts[$idx] ?? ''));
+    }
+    return getStatLoadHours($pts) + [
+        'date' => $pts[0], 'month' => $hit[3].'-'.$hit[2], 'day' => (int)$hit[1],
+        'week' => (int)date('N', mktime(0, 0, 0, (int)$hit[2], (int)$hit[1], (int)$hit[3])) - 1,
+        'u' => (int)$pts[1], 'h' => (int)$pts[2], 'all' => (int)$pts[3], 'bot' => (int)$pts[4], 'ref' => (int)$pts[5], 'home' => (int)$pts[6], 'usr' => (int)$pts[7],
+        'aud' => max(0, (int)$pts[1] - (int)$pts[4] - (int)$pts[5]),
+        'hours' => array_map('intval', array_pad(array_slice(explode(',', trim($pts[13] ?? '')), 0, 24), 24, 0)),
+        'dims' => $dims,
+    ];
+}
+
+# The days of one month oldest first: its file of the archive, then the lines of days.log and statistic.log that fall in it, as a month stays there until the first hit of the next
+function getStatRows(string $month): array {
+    $rows = [];
+    foreach ([COUNTER_DIR.'/statistic/statistic_'.$month.'.log', COUNTER_DIR.'/days.log', COUNTER_DIR.'/statistic.log'] as $file) {
+        $list = (is_file($file) && is_readable($file)) ? file($file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) : [];
+        foreach ($list ?: [] as $line) {
+            $row = getStatRow($line);
+            if ($row !== null && $row['month'] === $month) $rows[$row['day']] = $row;
+        }
+    }
+    ksort($rows);
+    return array_values($rows);
+}
+
+# The sums of a run of days as the page shows them: counts added, the load that of the average page, the four shares of the rings
+function getStatSum(array $rows): array {
+    $sum = ['days' => count($rows), 'u' => 0, 'h' => 0, 'home' => 0, 'ref' => 0, 'bot' => 0, 'aud' => 0, 'usr' => 0, 'hours' => array_fill(0, 24, 0), 'num' => array_fill(0, 24, 0),
+        'gen' => array_fill(0, 24, 0), 'sql' => array_fill(0, 24, 0), 'mem' => array_fill(0, 24, 0), 'dims' => []];
+    foreach ($rows as $row) {
+        foreach (['u', 'h', 'home', 'ref', 'bot', 'aud', 'usr'] as $key) $sum[$key] += $row[$key];
+        foreach (['hours', 'num', 'gen', 'sql', 'mem'] as $key) foreach ($row[$key] as $hour => $val) $sum[$key][$hour] += $val;
+        foreach ($row['dims'] as $key => $map) {
+            $sum['dims'][$key] ??= [];
+            foreach ($map as $name => $val) $sum['dims'][$key][$name] = ($sum['dims'][$key][$name] ?? 0) + $val;
+        }
+    }
+    $pages = array_sum($sum['num']);
+    $map = static fn(string $key): array => $sum['dims'][$key] ?? [];
+    $pct = static fn(int|float $num, int|float $den): int => ($den > 0) ? (int)round($num / $den * 100) : 0;
+    $dev = array_sum($map('devices'));
+    $man = $dev - ($map('devices')['bot'] ?? 0);
+    return $sum + [
+        'pages' => $pages,
+        'avg_gen' => $pages ? array_sum($sum['gen']) / $pages : null,
+        'avg_sql' => $pages ? array_sum($sum['sql']) / $pages : null,
+        'avg_mem' => $pages ? array_sum($sum['mem']) / 1024 / $pages : null,
+        'shares' => [
+            'human' => $pct($man, $dev),
+            'mobile' => $pct($map('devices')['mobile'] ?? 0, $man),
+            'ret' => $pct($map('newret')['returning'] ?? 0, array_sum($map('newret'))),
+            'search' => $pct($map('refcat')['search'] ?? 0, array_sum($map('refcat'))),
+        ],
+    ];
+}
+
+# The pace of the running hour against the mean of that hour on its weekday over four weeks; under 20 pages a lull as on the lamp, a norm under 20 is noise, an ordinary day
+function getStatPace(array $live, array $past, int $time): array {
+    $hour = (int)date('G', $time);
+    $same = array_slice(array_values(array_filter($past, static fn(array $row): bool => $row['week'] === $live['week'])), -4);
+    $norm = $same ? array_sum(array_map(static fn(array $row): int => $row['hours'][$hour], $same)) / count($same) : 0.0;
+    $rate = getStatsHourRate($live['hours'], $time);
+    $share = ($norm >= 20) ? $rate / $norm : 1.0;
+    $pace = match (true) {
+        $rate < 20 => 'lull',
+        $share < 0.5 => 'calm',
+        $share < 1.3 => 'day',
+        $share < 2 => 'rise',
+        default => 'rush',
+    };
+    return ['pace' => $pace, 'rate' => $rate, 'norm' => $norm, 'share' => $share, 'week' => $live['week'], 'hour' => $hour];
+}
+
+# Every closed month with its days, hosts and hits, kept in archive.json until the stamp of its file changes; a past month not yet rolled over has no file and is read each time
+function getStatArchive(int $time = 0): array {
+    $store = COUNTER_DIR.'/archive.json';
+    $kept = is_file($store) ? json_decode((string)file_get_contents($store), true) : null;
+    $kept = is_array($kept) ? $kept : [];
+    $rows = [];
+    foreach (is_dir(COUNTER_DIR.'/statistic') ? (scandir(COUNTER_DIR.'/statistic') ?: []) : [] as $name) {
+        if (!preg_match('#^statistic_(\d{4}-\d{2})\.log$#', $name, $hit)) continue;
+        $file = COUNTER_DIR.'/statistic/'.$name;
+        $stamp = filemtime($file).'-'.filesize($file);
+        if (($kept[$hit[1]]['stamp'] ?? '') === $stamp) {
+            $rows[$hit[1]] = $kept[$hit[1]];
+            continue;
+        }
+        $row = ['stamp' => $stamp, 'days' => 0, 'u' => 0, 'h' => 0];
+        foreach (file($file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) ?: [] as $line) {
+            $pts = explode('|', $line);
+            if (count($pts) < 8) continue;
+            $row['days']++;
+            $row['u'] += (int)$pts[1];
+            $row['h'] += (int)$pts[2];
+        }
+        $rows[$hit[1]] = $row;
+    }
+    if ($rows !== $kept) addFile($store, (string)json_encode($rows));
+    $date = getStatsToday()['date'];
+    $late = (strlen($date) === 10) ? substr($date, 6).'-'.substr($date, 3, 2) : '';
+    if ($late !== '' && $late < date('Y-m', $time ?: time()) && !isset($rows[$late])) {
+        $sum = getStatSum(getStatRows($late));
+        $rows[$late] = ['days' => $sum['days'], 'u' => $sum['u'], 'h' => $sum['h']];
+        ksort($rows);
+    }
+    return $rows;
+}
+
+# The one reading of the counter behind the statistic page: a month with its sums, the day of the scope, the same days a month before, the run of the rhythm, the week and the pace
+function getStatData(string $month = '', int $pick = -1, bool $now = true, int $time = 0): array {
+    $time = $time ?: time();
+    $cur = date('Y-m', $time);
+    $keys = array_keys(getStatArchive($time));
+    if (!in_array($cur, $keys, true)) $keys[] = $cur;
+    sort($keys);
+    $key = in_array($month, $keys, true) ? $month : $cur;
+    $idx = (int)array_search($key, $keys, true);
+    $rows = getStatRows($key);
+    $num = count($rows);
+    $back = static fn(string $one): string => date('Y-m', mktime(0, 0, 0, (int)substr($one, 5, 2) - 1, 1, (int)substr($one, 0, 4)));
+    $past = getStatRows($back($key));
+    $live = $num > 0 && $rows[$num - 1]['date'] === date('d.m.Y', $time);
+    $at = isset($rows[$pick]) ? $pick : max(0, $num - (($live && !$now && $num > 1) ? 2 : 1));
+    $run = array_slice($rows, 0, $at + 1);
+    $list = $past;
+    $step = $back($key);
+    while ($list !== [] && count($run) < 30) {
+        $run = array_merge($list, $run);
+        $step = $back($step);
+        $list = (count($run) < 30) ? getStatRows($step) : [];
+    }
+    $first = $num ? $rows[0]['day'] : 0;
+    $last = $num ? $rows[$num - 1]['day'] : 0;
+    $then = array_values(array_filter($past, static fn(array $row): bool => $row['day'] >= $first && $row['day'] <= $last));
+    $grid = array_fill(0, 7, array_fill(0, 24, 0));
+    $seen = array_fill(0, 7, 0);
+    foreach ($rows as $i => $row) {
+        if ($live && $i === $num - 1) continue;
+        $seen[$row['week']]++;
+        foreach ($row['hours'] as $hour => $val) $grid[$row['week']][$hour] += $val;
+    }
+    foreach ($grid as $day => $line) if ($seen[$day]) $grid[$day] = array_map(static fn(int $val): float => round($val / $seen[$day], 2), $line);
+    return [
+        'key' => $key,
+        'prev' => $keys[$idx - 1] ?? '',
+        'next' => $keys[$idx + 1] ?? '',
+        'months' => $keys,
+        'is_run' => $key === $cur,
+        'is_live' => $live,
+        'rows' => $rows,
+        'sum' => getStatSum($rows),
+        'then' => $then ? getStatSum($then) : null,
+        'at' => $at,
+        'is_pick' => isset($rows[$pick]),
+        'day' => $rows[$at] ?? null,
+        'past' => $rows[$at - 1] ?? ($past ? $past[count($past) - 1] : null),
+        'run' => array_slice($run, -30),
+        'week' => $grid,
+        'pace' => $live ? getStatPace($rows[$num - 1], array_merge($past, array_slice($rows, 0, $num - 1)), $time) : null,
+        'all' => getStatsToday()['total'],
+    ];
 }
 
 # The fourteen signals of the lamp, failures first, each with check, level, fact of a failure and page; journals and queues kept $ttl seconds, 0 fresh
@@ -968,14 +1318,8 @@ function getSystemSignals(int $ttl = 60): array {
     $found = Update::getState()['found'];
     $ver = Update::isVersion((string)($found['version'] ?? '')) ? (string)$found['version'] : '';
     $age = time() - $runs['backup'];
-    $past = date('Y-m-d', strtotime('-1 day'));
-    $when = match (true) {
-        date('Y-m-d', $runs['backup']) === date('Y-m-d') => date('H:i', $runs['backup']),
-        date('Y-m-d', $runs['backup']) === $past => _YESTERDAY,
-        default => date('d.m', $runs['backup']),
-    };
     $bak = empty($conf['security']['log_b']) ? ['warn', _OFF] : (($runs['backup'] <= 0) ? ['danger', _ADM_SIG_NOBAK]
-        : [($age > 86400 * max(1, intval($conf['security']['dump_age']))) ? 'warn' : 'ok', $when]);
+        : [($age > 86400 * max(1, intval($conf['security']['dump_age']))) ? 'warn' : 'ok', getShortDate($runs['backup'])]);
     $day = static fn(int|string $num): string => sprintf(_ADM_SIG_DAY, $num);
     $count = static fn(int|string $num, int $warn, int $fail = 0): string => !is_int($num) ? 'ok'
         : (($fail > 0 && $num >= $fail) ? 'danger' : (($num >= $warn) ? 'warn' : 'ok'));
@@ -985,7 +1329,7 @@ function getSystemSignals(int $ttl = 60): array {
         ['setup', _ADM_SIG_SETUP, '', is_file(PUBLIC_DIR.'/setup.php') ? 'warn' : 'ok', _ADM_SIG_ROOT],
         ['php', _ADM_SIG_PHP, 'monitor', $count($runs['php'], 1, 100), $day($runs['php'])],
         ['sql', _ADM_SIG_DB, 'database', $count($runs['sql'], 1, 10), $day($runs['sql'])],
-        ['disk', _ADM_DISK, 'monitor', ($free < 10) ? 'danger' : (($disk['disk_pct'] > 75) ? 'warn' : 'ok'), $disk['disk_pct'].'%'],
+        ['disk', _ADM_DISK, 'monitor', ($free < 10) ? 'danger' : (($disk['disk_pct'] > 75) ? 'warn' : 'ok'), filterDecimal($disk['disk_pct']).'%'],
         ['backup', _ADM_SIG_BACKUP, 'database&op=dump', $bak[0], $bak[1]],
         ['login', _ADM_SIG_LOGIN, 'security&op=logins', $count($runs['login'], 20), $day($runs['login'])],
         ['attack', _ADM_SIG_ATTACK, 'security', $count($runs['attack'], 1), $day($runs['attack'])],

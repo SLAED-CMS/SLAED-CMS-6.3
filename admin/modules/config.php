@@ -378,9 +378,9 @@ function config(): void {
     global $afile, $conf, $tpl;
     setHead();
     $ctab = getVar('get', 'tab', 'num', 0);
-    if ($ctab < 0 || $ctab > 6) $ctab = 0;
+    if ($ctab < 0 || $ctab > 5) $ctab = 0;
     $links = [];
-    foreach ([_GENPREF, _SEO, _MULTILINGUAL.' / '._GEOLOCATION, _CENSORS, _BOTSOPT, _OPTIMIZE, _MAILOPT] as $idx => $label) {
+    foreach ([_GENPREF, _SEO, _MULTILINGUAL.' / '._GEOLOCATION, _CENSORS, _OPTIMIZE, _MAILOPT] as $idx => $label) {
         $links[] = [
             'href' => '#',
             'is_active' => $ctab === $idx,
@@ -691,6 +691,11 @@ function config(): void {
         'label_id' => $labid = getFieldIds('', 'session')['label'],
         'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'session', 'value' => $conf['session'], 'options' => $yesno]),
     ];
+    $rows[] = [
+        'label_html' => _BOTSACT,
+        'label_id' => $labid = getFieldIds('', 'botsact')['label'],
+        'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'botsact', 'value' => $conf['botsact'], 'options' => $yesno]),
+    ];
     $rows[] = ['label_for' => 'f-live-u', 'label_html' => _LIVE_UPD, 'field_html' => $tpl->getHtmlFrag('input', [
         'itype' => 'number',
         'name_attr' => 'live_u',
@@ -884,45 +889,6 @@ function config(): void {
         ]),
     ];
     $tabd = $tpl->getHtmlPart('div', ['rows' => $rows]);
-    $rows = [];
-    $rows[] = [
-        'label_for' => 'f-bots',
-        'label_html' => _BOTSLIST,
-        'hint_html' => _NOKOMA.' '._BOTSINFO,
-        'hint_id' => $hntid = getFieldIds('f-bots')['hint'],
-        'field_html' => $tpl->getHtmlFrag('textarea', [
-            'describedby' => $hntid,
-            'name_attr' => 'bots',
-            'input_id' => 'f-bots',
-            'value_text' => (string)$conf['bots'],
-            'cols_num' => 65,
-            'rows_num' => 10,
-            'is_required' => true,
-            'is_config' => true,
-        ]),
-    ];
-    $rows[] = [
-        'label_for' => 'f-fbots',
-        'label_html' => _BOTSSITE,
-        'hint_html' => _NOKOMA,
-        'hint_id' => $hntid = getFieldIds('f-fbots')['hint'],
-        'field_html' => $tpl->getHtmlFrag('textarea', [
-            'describedby' => $hntid,
-            'name_attr' => 'fbots',
-            'input_id' => 'f-fbots',
-            'value_text' => (string)$conf['fbots'],
-            'cols_num' => 65,
-            'rows_num' => 10,
-            'is_required' => true,
-            'is_config' => true,
-        ]),
-    ];
-    $rows[] = [
-        'label_html' => _BOTSACT,
-        'label_id' => $labid = getFieldIds('', 'botsact')['label'],
-        'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'botsact', 'value' => $conf['botsact'], 'options' => $yesno]),
-    ];
-    $tabe = $tpl->getHtmlPart('div', ['rows' => $rows]);
     $cnt = 0;
     $size = 0;
     $dirs = [];
@@ -980,16 +946,17 @@ function config(): void {
             'is_config' => true,
         ]),
     ];
-    $lines = [_DIR.': storage/cache'];
-    foreach ($dirs as $dk => $dv) $lines[] = $dk.': '.$dv;
-    $lines[] = _FILE_M.': '.$cnt;
-    $lines[] = _FILE_S.': '.filterSize($size);
-    if (empty($conf['scheduler']['jobs']['cachegc']['active'])) $lines[] = _SCHEDULER.' cachegc: '._SCHEDULER_OFF;
-    $html = $tpl->getHtmlFrag('alert', ['messages' => $lines]);
+    $items = [['label' => _DIR, 'text' => 'storage/cache']];
+    foreach ($dirs as $dk => $dv) $items[] = ['label' => $dk, 'text' => filterDecimal($dv, 0)];
+    if (empty($conf['scheduler']['jobs']['cachegc']['active'])) $items[] = ['label' => _SCHEDULER.' cachegc', 'text' => _SCHEDULER_OFF, 'is_flag' => true];
+    $html = $tpl->getHtmlFrag('metric-list', ['items' => [
+        ['label' => _FILE_M, 'value' => filterDecimal($cnt, 0), 'icon' => 'files'],
+        ['label' => _FILE_S, 'value' => filterSize($size), 'icon' => 'hdd'],
+    ]]).$tpl->getHtmlFrag('kv-list', ['items' => $items]);
     $tabf = $html.$tpl->getHtmlPart('div', ['rows' => $rows]);
     $tabg = getMailPanel();
     $content = '';
-    foreach ([$taba, $tabb, $tabc, $tabd, $tabe, $tabf, $tabg] as $idx => $panel) {
+    foreach ([$taba, $tabb, $tabc, $tabd, $tabf, $tabg] as $idx => $panel) {
         $content .= $tpl->getHtmlFrag('tabs-panel', [
             'panel_id' => 'config-panel-'.$idx,
             'content_html' => $panel,
@@ -1008,7 +975,7 @@ function config(): void {
         'submit_label' => _SAVECHANGES,
     ]);
     $hide = ['name' => 'config', 'op' => 'clearcache', 'tab' => $ctab];
-    $show = 'data-sl-tab-show="5" data-sl-tab-group="config-main" hidden';
+    $show = 'data-sl-tab-show="4" data-sl-tab-group="config-main" hidden';
     $clear = getTplPostButton($hide, 'trash', _CACHECLEAR, $show);
     echo $cont.$tpl->getHtmlPart('box', ['content_html' => $form.$clear]);
     setFoot();
@@ -1017,7 +984,7 @@ function config(): void {
 function save(): void {
     global $afile, $conf;
     $ctab = getVar('post', 'tab', 'num', 0);
-    if ($ctab < 0 || $ctab > 6) $ctab = 0;
+    if ($ctab < 0 || $ctab > 5) $ctab = 0;
     $warn = !checkAdminPost('config');
     if (!$warn) {
         $protect = ['\n' => '', '\t' => '', '\r' => '', ' ' => ''];
@@ -1133,8 +1100,6 @@ function save(): void {
             'censor' => $xcensor,
             'censor_r' => $xcensor_r,
             'censor_l' => $xcensor_l,
-            'bots' => strtr(getVar('post', 'bots', 'text', ''), $kprotect),
-            'fbots' => strtr(getVar('post', 'fbots', 'text', ''), $kprotect),
             'botsact' => getVar('post', 'botsact', 'num'),
             'cache' => getVar('post', 'cache', 'num'),
             'css_f' => strtr(getVar('post', 'css_f', 'text', ''), $kprotect),
@@ -1194,8 +1159,8 @@ function save(): void {
 # Queue a test message and drain the queue in this request; a run that sent nothing says so, as the rate window or the time budget can end it first
 function mailtest(): void {
     global $afile, $conf, $mailer;
-    $ctab = getVar('post', 'tab', 'num', 6);
-    if ($ctab < 0 || $ctab > 6) $ctab = 6;
+    $ctab = getVar('post', 'tab', 'num', 5);
+    if ($ctab < 0 || $ctab > 5) $ctab = 5;
     $warn = !checkAdminPost('config');
     $text = _TOKENMISS;
     if (!$warn) {
@@ -1217,7 +1182,7 @@ function mailtest(): void {
 function clearcache(): void {
     global $afile;
     $ctab = getVar('post', 'tab', 'num', 0);
-    if ($ctab < 0 || $ctab > 6) $ctab = 0;
+    if ($ctab < 0 || $ctab > 5) $ctab = 0;
     $warn = !checkAdminPost('config');
     if (!$warn) Cache::deleteAll();
     setRedirect($afile.'.php?name=config&tab='.$ctab, false, 302, $warn ? _TOKENMISS : _SUCCCLEAR, $warn);
@@ -1276,10 +1241,9 @@ function info(): void {
             'name=config&tab=3',
             'name=config&tab=4',
             'name=config&tab=5',
-            'name=config&tab=6',
             'name=config&op=info',
         ],
-        'tabs' => [_GENPREF, _SEO, _MULTILINGUAL.' / '._GEOLOCATION, _CENSORS, _BOTSOPT, _OPTIMIZE, _MAILOPT, _MANUAL],
+        'tabs' => [_GENPREF, _SEO, _MULTILINGUAL.' / '._GEOLOCATION, _CENSORS, _OPTIMIZE, _MAILOPT, _MANUAL],
     ]);
 }
 

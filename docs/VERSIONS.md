@@ -1,5 +1,41 @@
 # Versions
 
+## 2026-10-31
+
+### The panel takes the parts of its series: "Статистика" and "Мониторинг" are cockpits, the other screens take the window
+
+The engine of the series lives in `admin-ui.js`, and the two screens are built on it by their data. The help of each
+screen is in `admin/info/` and `modules/*/admin/info/`.
+
+- **"Статистика".** `getStatData()` gives the cockpit: the dial of the day, the archive strip kept in
+  `storage/counter/archive.json`, the windows, the log of days and `op=live`. The GD chart and the settings `bet` and `shi`
+  are gone.
+- **"Мониторинг".** The pulse and thirteen signals of `getServerSignalList()`, the tiles over the live chart and the
+  findings of the audit; `op=live` takes the place of `op=status`, `op=traffic` and `op=sync`.
+- **The screens of the panel.** "Рассылка", "База данных", "Безопасность", "Конфигурации", "Обновления", "Загрузки",
+  "Поиск", "Карта сайта" and "Мастер" take the window, the tiles and the meters on top. The key `pane` of
+  `getTplAdminList()` puts a list inside a window.
+- **The mark "i".** `getTplLongCell()` opens a value of `CELL_LONG` (16) characters or more whole behind the mark, a shorter
+  one keeps its title. A cut cell that ends a row stays inside the table, and a status wraps instead of covering its
+  neighbour.
+- **The meters.** `getTplMeter()` draws a share of a real limit: a campaign with nothing expected shows its figures alone.
+
+### Visits are counted in one place, the files of the statistics, and robots are named by type
+
+The counter of the statistics is the only record of visits; the page `name=referers` and the table `_referer` are gone.
+The help of the panel is `admin/info/statistic/ru.md`, the upgrade notes are in `UPGRADING.md`.
+
+- **The fields.** A line of `statistic.log` gains the hosts, the landing pages, the names and the types of robots. A full
+  field lets a frequent key in by evicting the rarest, so a burst of spam no longer holds the top.
+- **The sources.** A source counts the start of a session only, the new source `ai` is checked first, and the own site is
+  told by its domain, so a search with the name of the site in its query is a search.
+- **The robots.** `getBotInfo()` reads the masks of five types, and `getVisitBot()` adds a visit without `Accept-Language`
+  as a robot; `is_bot()`, `from_bot()`, `engines_word()` and `updateRefererTrack()` are gone. A robot leaves "Аудитория"
+  once and no longer writes search words.
+- **The settings.** The lists and the masks moved to the settings of the statistics, the tab "Краулеры" of the
+  configuration is gone and its tabs after it moved up by one.
+- **The cache.** `Cache::setBody()` retries a `rename` on a busy file, as the writer of the configuration does.
+
 ## 2026-10-30
 
 ### The panel moves by one set of rules and behaviours, and a still panel stops all of it

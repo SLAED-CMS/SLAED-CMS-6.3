@@ -277,7 +277,8 @@
   gap: var(--sl-space-6);
 }
 
-.sl-rank-ctl {
+.sl-rank-ctl,
+.sl-share-rows {
   display: grid;
   gap: var(--sl-space-3);
 }
@@ -945,7 +946,8 @@ input.sl-but-blue[value="ОК"] {
   border-bottom: 0;
 }
 
-.sl-preview-title {
+.sl-preview-title,
+.sl-chart-axis em.sl-is-pick {
   font-weight: var(--sl-weight-bold);
   color: var(--sl-text);
 }
@@ -5467,7 +5469,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   }
 
   /* Under the hand a light runs round the frame of the cockpit, a home tile, a monitor card or a window, blue into violet; only its run lights it, so a still panel shows none */
-  :is(.sl-cockpit, .sl-mcard, .sl-monitor-card, .sl-pane)::before {
+  :is(.sl-cockpit, .sl-mcard, .sl-pane)::before {
     content: "";
     position: absolute;
     top: 0;
@@ -5488,7 +5490,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
     offset-path: inset(0 round var(--sl-radius-3));
   }
 
-  :is(.sl-cockpit, .sl-mcard, .sl-monitor-card, .sl-pane):hover::before {
+  :is(.sl-cockpit, .sl-mcard, .sl-pane):hover::before {
     animation: sl-aurora var(--sl-aurora-dur) linear infinite;
   }
 
@@ -5524,7 +5526,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   }
 
   /* A figure of a ring, of the strip or of a queue that admin-ui.js runs to a new value lights once while it runs */
-  :is([data-sl-gauge-val], [data-sl-strip-val], [data-sl-queue-n]).sl-is-fresh {
+  :is([data-sl-gauge-val], [data-sl-strip-val], [data-sl-queue-n], [data-sl-figure]).sl-is-fresh {
     animation: sl-figure-flash var(--sl-knob-dur) var(--sl-ease-out);
   }
 
@@ -5581,6 +5583,74 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
     animation: sl-chart-draw var(--sl-graph-dur) var(--sl-ease-in-out);
   }
 
+  /* A tick slides the live chart by the time that passed; only the slide moves, the drawing is never replayed */
+  .sl-chart-flow.sl-is-glide {
+    transition: transform var(--sl-graph-dur) var(--sl-ease-in-out);
+  }
+
+  /* A part of the series plays once with its ground part: bars grow, strips and tracks unroll, cells and rows enter in their turn; data-sl-play is off on a tick */
+  .sl-ground > .sl-is-in [data-sl-play] :is(.sl-chart-bar, .sl-archive-month > i) {
+    animation: sl-bar-grow calc(var(--sl-knob-dur) * 0.6) var(--sl-alert-ease) backwards;
+    animation-delay: calc(var(--sl-d-turn, 0) * var(--sl-time-fast) / 8);
+  }
+
+  .sl-ground > .sl-is-in [data-sl-play] .sl-archive-month > i {
+    animation-delay: calc(var(--sl-d-turn, 0) * var(--sl-time-fast) / 40);
+  }
+
+  .sl-ground > .sl-is-in [data-sl-play] .sl-stack-part::before,
+  .sl-ground > .sl-is-in [data-sl-play] .sl-share-track > i {
+    animation: sl-meter-fill calc(var(--sl-knob-dur) * 0.65) var(--sl-alert-ease) backwards;
+    animation-delay: calc(var(--sl-time-fast) + var(--sl-d-turn, 0) * var(--sl-time-fast) / 2);
+  }
+
+  .sl-ground > .sl-is-in [data-sl-play] .sl-clock-spoke {
+    animation: sl-clock-spoke calc(var(--sl-knob-dur) * 0.5) var(--sl-alert-ease) backwards;
+    animation-delay: calc(var(--sl-d-turn, 0) * var(--sl-time-fast) / 4);
+  }
+
+  .sl-clock-spoke.sl-is-now {
+    animation: sl-clock-now calc(var(--sl-alert-dur) * 1.2) var(--sl-ease-in-out) infinite;
+  }
+
+  .sl-cockpit[data-sl-pace="lull"] .sl-clock-spoke.sl-is-now { animation-duration: calc(var(--sl-alert-dur) * 2.5); }
+  .sl-cockpit[data-sl-pace="calm"] .sl-clock-spoke.sl-is-now { animation-duration: calc(var(--sl-alert-dur) * 1.8); }
+  .sl-cockpit[data-sl-pace="rise"] .sl-clock-spoke.sl-is-now { animation-duration: calc(var(--sl-alert-dur) * 0.75); }
+  .sl-cockpit[data-sl-pace="rush"] .sl-clock-spoke.sl-is-now { animation-duration: calc(var(--sl-alert-dur) * 0.4); }
+
+  .sl-cockpit[data-sl-pace="calm"] .sl-cockpit-plate::before { animation-duration: calc(var(--sl-alert-dur) * 5); }
+  .sl-cockpit[data-sl-pace="rise"] .sl-cockpit-plate::before { animation-duration: calc(var(--sl-alert-dur) * 1.5); }
+  .sl-cockpit[data-sl-pace="rush"] .sl-cockpit-plate::before { animation-duration: calc(var(--sl-alert-dur) * 0.6); }
+
+  /* A step of the months moves the windows the way it went instead of raising them */
+  .sl-ground[data-sl-way="next"] > [data-sl-arrive].sl-is-in {
+    animation: sl-ground-next var(--sl-tile-dur) var(--sl-ease-out) backwards;
+  }
+
+  .sl-ground[data-sl-way="prev"] > [data-sl-arrive].sl-is-in {
+    animation: sl-ground-prev var(--sl-tile-dur) var(--sl-ease-out) backwards;
+  }
+
+  .sl-ground > .sl-is-in [data-sl-play] .sl-week-cell::before {
+    animation: sl-bar-grow var(--sl-tile-dur) var(--sl-alert-ease) backwards;
+    animation-delay: calc(var(--sl-d-turn, 0) * var(--sl-time-fast) / 8);
+    transform-origin: bottom;
+  }
+
+  .sl-ground > .sl-is-in [data-sl-play] :is(.sl-share-row, .sl-days-table tbody tr) {
+    animation: sl-rows-in calc(var(--sl-time-slow) + var(--sl-time-fast)) var(--sl-ease-out) backwards;
+  }
+
+  /* The day still running breathes while the counter writes it, its window rising or not, and a bar a tick changed lights once */
+  .sl-chart-col.sl-is-run > .sl-chart-bar,
+  .sl-ground > .sl-is-in [data-sl-play] .sl-chart-col.sl-is-run > .sl-chart-bar {
+    animation: sl-pane-lamp var(--sl-pane-dur) var(--sl-ease-in-out) infinite;
+  }
+
+  .sl-chart-col > .sl-chart-bar.sl-is-fresh {
+    animation: sl-bar-flash var(--sl-knob-dur) var(--sl-ease-out);
+  }
+
   /* The grid under the windows drifts on its own layer, one cell a cycle, so a move repaints nothing */
   .sl-ground-lines::before {
     animation: sl-ground-drift var(--sl-ground-dur) linear infinite;
@@ -5596,7 +5666,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
     animation-delay: calc(min(var(--sl-d-turn, 0), 6) * var(--sl-tile-dur) / 7);
   }
 
-  .sl-ground > .sl-is-in :is(.sl-kv, .sl-signal) {
+  .sl-ground > .sl-is-in .sl-kv {
     animation: sl-rows-in calc(var(--sl-time-slow) + var(--sl-time-fast)) var(--sl-ease-out) backwards;
   }
 
@@ -5620,7 +5690,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
     pointer-events: none;
   }
 
-  /* The lamps of a window head fade in turn; the lamp of a signal that is not well fades at twice the pace */
+  /* The lamps of a window head fade in turn */
   .sl-pane-lamps > i {
     animation: sl-pane-lamp var(--sl-pane-dur) var(--sl-ease-in-out) infinite;
   }
@@ -5631,10 +5701,6 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
 
   .sl-pane-lamps > i:nth-child(3) {
     animation-delay: calc(var(--sl-pane-dur) / 4);
-  }
-
-  :is(.sl-signal.sl-knob-warn, .sl-signal.sl-knob-danger) > .sl-signal-lamp {
-    animation: sl-pane-lamp calc(var(--sl-pane-dur) / 2) var(--sl-ease-in-out) infinite;
   }
 
   /* The ripple of a press on a home tile, a row of the menu or of its counters and a control of the cockpit: a layer over the control clips a disc spreading from the pointer */
@@ -5726,6 +5792,34 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   }
 }
 
+@keyframes sl-clock-spoke {
+  from {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+}
+
+@keyframes sl-clock-now {
+  50% {
+    opacity: var(--sl-fade-muted);
+    stroke-width: 9;
+  }
+}
+
+@keyframes sl-ground-next {
+  from {
+    opacity: 0;
+    transform: translateX(var(--sl-space-8));
+  }
+}
+
+@keyframes sl-ground-prev {
+  from {
+    opacity: 0;
+    transform: translateX(calc(var(--sl-space-8) * -1));
+  }
+}
+
 @keyframes sl-ground-drift {
   to {
     transform: translate(var(--sl-ground-width), var(--sl-ground-width));
@@ -5743,6 +5837,18 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
 @keyframes sl-meter-fill {
   from {
     transform: scaleX(0);
+  }
+}
+
+@keyframes sl-bar-grow {
+  from {
+    transform: scaleY(0);
+  }
+}
+
+@keyframes sl-bar-flash {
+  30% {
+    box-shadow: 0 0 var(--sl-space-6) currentColor;
   }
 }
 
@@ -7373,6 +7479,11 @@ button.sl-but-mini {
   max-width: 100%;
 }
 
+/* A cut cell that ends the row stays cut: the open overflow of a last cell belongs to the dial */
+.sl-table-fixed td.sl-cell-ellipsis:last-child {
+  overflow: hidden;
+}
+
 .sl-table-fixed .sl-col-id {
   width: var(--sl-col-id-width);
 }
@@ -7387,7 +7498,6 @@ button.sl-but-mini {
 
 .sl-table-fixed .sl-col-status {
   width: var(--sl-col-status-width);
-  white-space: nowrap;
 }
 
 .sl-table-fixed .sl-col-actions {
@@ -8103,96 +8213,6 @@ button.sl-but-mini {
   }
 }
 
-/* Admin monitor: dashboard layout */
-.sl-monitor-wrapper {
-  --sl-monitor-bg-card: var(--sl-bg);
-  --sl-monitor-border: var(--sl-border);
-  --sl-monitor-font: Tahoma, Arial, Verdana, sans-serif;
-  font-family: var(--sl-monitor-font);
-  color: var(--sl-text);
-}
-
-body:has(.sl-monitor-wrapper) {
-  font-family: Tahoma, Arial, Verdana, sans-serif;
-}
-
-body:has(.sl-monitor-wrapper) .sl-monitor-wrapper * {
-  font-family: var(--sl-monitor-font);
-}
-
-.sl-monitor-card {
-  position: relative;
-  background: var(--sl-monitor-bg-card);
-  border: 1px solid var(--sl-monitor-border);
-  border-radius: var(--sl-radius-2);
-  padding: var(--sl-space-7);
-  box-shadow: var(--sl-panel-shadow);
-  margin-bottom: var(--sl-space-7);
-  scroll-margin-top: var(--sl-space-6);
-}
-
-.sl-monitor-card-flat {
-  margin-bottom: 0;
-}
-
-.sl-monitor-card-spaced-flat {
-  margin-top: var(--sl-space-7);
-  margin-bottom: 0;
-}
-
-.sl-monitor-panel-head {
-  font-size: var(--sl-font-body);
-  font-weight: var(--sl-weight-semibold);
-  color: var(--sl-text);
-  margin-bottom: var(--sl-space-7);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.sl-monitor-head-left {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--sl-space-3);
-}
-
-.sl-monitor-head-left .bi {
-  font-size: var(--sl-size-icon-sm);
-  color: var(--sl-text-muted);
-}
-
-.sl-monitor-head-right {
-  font-weight: var(--sl-weight-normal);
-  font-size: var(--sl-font-small);
-  color: var(--sl-text-muted);
-}
-
-/* Admin monitor: top section split */
-.sl-monitor-top-split {
-  display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: var(--sl-space-7);
-}
-
-@media (max-width: 900px) {
-  .sl-monitor-top-split {
-    grid-template-columns: 1fr;
-  }
-}
-
-.sl-monitor-sys-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: var(--sl-space-6);
-  text-align: center;
-}
-
-.sl-monitor-sys-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
 /* Progress ring: pathLength="100" lets PHP answer one percentage; butt ends, since a round cap closes the gap between almost full and full */
 .sl-knob {
   --sl-knob-size: 100px;
@@ -8265,7 +8285,8 @@ body:has(.sl-monitor-wrapper) .sl-monitor-wrapper * {
   justify-self: end;
 }
 
-.sl-cockpit-top > span {
+.sl-cockpit-top > span,
+.sl-clock-mid :is(small, span) {
   font-family: var(--sl-face-mono);
   font-size: var(--sl-font-micro);
   letter-spacing: var(--sl-track-wide);
@@ -8637,6 +8658,76 @@ body:has(.sl-monitor-wrapper) .sl-monitor-wrapper * {
   animation: none;
 }
 
+/* The pulse of the monitor in the same three rows: the heart beside the pages of the hour, the trace of a cardiograph for the bars, the mood; a flat line stills the heart and greys it */
+.sl-cockpit-rate > .bi {
+  align-self: center;
+  margin-inline-end: var(--sl-space-1);
+  font-size: var(--sl-font-h2);
+  animation: sl-heart calc(var(--sl-d-beat, 1s) * var(--sl-time-scale)) var(--sl-ease-out) infinite;
+}
+
+/* The box shows one sweep of the two the trace holds, which slides by one in the time of its beats, so it runs without a seam, and its ends fade as the sweep of a monitor does */
+.sl-cockpit-trace {
+  display: block;
+  width: 100%;
+  height: calc(var(--sl-gauge-width) * 0.23);
+  overflow: hidden;
+  mask: linear-gradient(90deg, transparent, currentColor, currentColor, transparent);
+}
+
+.sl-cockpit-trace > svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  animation: sl-trace calc(var(--sl-d-sweep, 3s) * var(--sl-time-scale)) linear infinite;
+}
+
+.sl-cockpit-trace path {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+  filter: drop-shadow(0 0 var(--sl-space-1) currentColor);
+}
+
+[data-sl-pulse="flat"] :is(.sl-cockpit-rate > .bi, .sl-cockpit-trace > svg) {
+  animation: none;
+}
+
+[data-sl-pulse="flat"] .sl-cockpit-rate > .bi {
+  color: var(--sl-text-muted);
+}
+
+/* Lub-dub: the strong beat, a short fall, the weaker echo, then rest */
+@keyframes sl-heart {
+  0%,
+  50%,
+  100% {
+    transform: scale(1);
+  }
+
+  12% {
+    transform: scale(1.3);
+  }
+
+  24% {
+    transform: scale(0.95);
+  }
+
+  36% {
+    transform: scale(1.15);
+  }
+}
+
+@keyframes sl-trace {
+  to {
+    transform: translateX(-100%);
+  }
+}
+
 /* A figure or a bar that the poll changed flares once, so the eye finds what moved */
 .sl-cockpit-head > b.sl-is-fresh,
 .sl-cockpit-bars > i.sl-is-fresh {
@@ -8689,7 +8780,7 @@ body:has(.sl-monitor-wrapper) .sl-monitor-wrapper * {
 
 /* A paused panel stills its lamp and a stale one dims it too: the comet, the scan and the mark stop, so a running lamp is one with fresh figures */
 .sl-cockpit:is([data-sl-live-paused], [data-sl-cockpit-stale]) .sl-cockpit-plate::before,
-.sl-cockpit:is([data-sl-live-paused], [data-sl-cockpit-stale]) :is(.sl-cockpit-bars > i, .sl-cockpit-mark) {
+.sl-cockpit:is([data-sl-live-paused], [data-sl-cockpit-stale]) :is(.sl-cockpit-bars > i, .sl-cockpit-mark, .sl-cockpit-rate > .bi, .sl-cockpit-trace > svg) {
   animation-play-state: paused;
 }
 
@@ -8809,221 +8900,12 @@ body:has(.sl-monitor-wrapper) .sl-monitor-wrapper * {
   }
 }
 
-.sl-system-label {
-  font-size: var(--sl-font-body);
-  font-weight: var(--sl-weight-semibold);
-  color: var(--sl-text);
-  margin-bottom: var(--sl-space-2);
-}
-
-.sl-system-sub {
+.sl-rhythm-figure > span {
   font-size: var(--sl-font-small);
   color: var(--sl-text-muted);
 }
 
-/* Admin monitor: overview strip */
-.sl-monitor-overview-strip {
-  background: var(--sl-monitor-bg-card);
-  border: 1px solid var(--sl-monitor-border);
-  border-radius: var(--sl-radius-2);
-  padding: var(--sl-space-6) var(--sl-space-8);
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
-  gap: var(--sl-space-7);
-  margin-bottom: var(--sl-space-7);
-  align-items: center;
-}
-
-.sl-overview-item {
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  border-right: 1px solid var(--sl-bg-subtle);
-  padding-left: var(--sl-space-4);
-}
-
-.sl-overview-item:last-child {
-  border-right: none;
-}
-
-.sl-overview-label {
-  font-size: var(--sl-font-small);
-  color: var(--sl-text-muted);
-  margin-bottom: var(--sl-space-2);
-}
-
-.sl-overview-val {
-  font-size: var(--sl-font-h4);
-  font-weight: var(--sl-weight-bold);
-  color: var(--sl-text);
-  display: flex;
-  align-items: center;
-  gap: var(--sl-space-4);
-}
-
-.sl-overview-icon-arr {
-  background: var(--sl-bg-subtle);
-  width: var(--sl-size-icon-sm);
-  height: var(--sl-size-icon-sm);
-  border-radius: var(--sl-radius-1);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-size: var(--sl-size-icon-sm);
-  color: var(--sl-text-muted);
-}
-
-/* Admin monitor: bottom grid */
-.sl-monitor-bottom-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: var(--sl-space-7);
-  margin-bottom: var(--sl-space-7);
-}
-
-.sl-status-blue {
-  color: var(--sl-chart-ram);
-}
-
-/* Admin monitor: compact software panel */
-.sl-status-compact {
-  display: flex;
-  flex-direction: column;
-  gap: var(--sl-space-3);
-}
-
-.sl-status-compact-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border: 1px solid var(--sl-monitor-border);
-  border-radius: var(--sl-radius-2);
-  padding: var(--sl-space-3) var(--sl-space-4);
-  background: var(--sl-bg);
-  text-decoration: none;
-  color: inherit;
-  cursor: pointer;
-  transition:
-    border-color var(--sl-time-base) var(--sl-ease-out),
-    background-color var(--sl-time-base) var(--sl-ease-out);
-}
-
-.sl-status-compact-item:hover {
-  border-color: var(--sl-primary-strong);
-  background-color: var(--sl-surface);
-}
-
-.sl-status-compact-left {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--sl-space-3);
-  font-size: var(--sl-font-body);
-  font-weight: var(--sl-weight-semibold);
-  color: var(--sl-text);
-}
-
-.sl-status-compact-left .bi {
-  font-size: var(--sl-size-icon-sm);
-  color: var(--sl-text-muted);
-  width: var(--sl-size-icon-sm);
-  text-align: center;
-}
-
-.sl-status-compact-right {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--sl-space-3);
-  font-size: var(--sl-font-small);
-  color: var(--sl-text-muted);
-}
-
-/* Admin monitor: traffic chart */
-.sl-traffic-stats-row {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(150px, 1fr));
-  gap: var(--sl-space-4);
-  margin-bottom: var(--sl-space-6);
-  background: var(--sl-bg-muted);
-  padding: var(--sl-space-6);
-  border-radius: var(--sl-radius-2);
-  font-size: var(--sl-font-body);
-}
-
-@media (max-width: 900px) {
-  .sl-traffic-stats-row {
-    grid-template-columns: repeat(2, minmax(140px, 1fr));
-  }
-}
-
-@media (max-width: 560px) {
-  .sl-traffic-stats-row {
-    grid-template-columns: 1fr;
-  }
-}
-
-.sl-t-item {
-  display: flex;
-  align-items: center;
-  gap: var(--sl-space-4);
-  background: var(--sl-bg);
-  border: 1px solid var(--sl-monitor-border);
-  border-radius: var(--sl-radius-2);
-  padding: var(--sl-space-4);
-}
-
-.sl-t-icon {
-  flex: 0 0 auto;
-  width: var(--sl-t-icon-width);
-  text-align: center;
-}
-
-.sl-t-icon i {
-  font-size: var(--sl-size-icon-xl);
-  line-height: 1;
-}
-
-.sl-t-icon-up i {
-  color: var(--sl-chart-up);
-}
-
-.sl-t-icon-down i {
-  color: var(--sl-chart-down);
-}
-
-.sl-t-icon-cpu i {
-  color: var(--sl-chart-cpu);
-}
-
-.sl-t-icon-ram i {
-  color: var(--sl-primary);
-}
-
-.sl-t-content {
-  min-width: 0;
-  line-height: 1;
-}
-
-.sl-t-label {
-  font-size: var(--sl-font-body);
-  line-height: 1;
-}
-
-.sl-t-val {
-  font-size: var(--sl-font-body);
-  font-weight: var(--sl-weight-semibold);
-  color: var(--sl-text);
-  line-height: 1;
-  margin-top: var(--sl-space-2);
-}
-
-.sl-t-sub {
-  font-size: var(--sl-font-body);
-  font-weight: var(--sl-weight-normal);
-  color: var(--sl-text-muted);
-  line-height: 1;
-  margin-top: var(--sl-space-2);
-}
-
+/* The drawing of a chart of the series: a wash and a line for each series */
 .sl-chart-svg {
   width: 100%;
   height: var(--sl-graph-height);
@@ -9031,47 +8913,8 @@ body:has(.sl-monitor-wrapper) .sl-monitor-wrapper * {
   overflow: visible;
 }
 
-.sl-chart-gridline {
-  fill: none;
-  stroke: var(--sl-border);
-  stroke-width: 1;
-  opacity: var(--sl-fade-subtle);
-}
-
-.sl-chart-vgrid {
-  fill: none;
-  stroke: var(--sl-border);
-  stroke-width: 1;
-  stroke-dasharray: 4 7;
-  opacity: var(--sl-fade-subtle);
-}
-
-.sl-chart-axis-label,
-.sl-chart-value-label {
-  fill: var(--sl-text);
-  font-family: Tahoma, Arial, Verdana, sans-serif;
-  font-size: var(--sl-font-small);
-}
-
-.sl-chart-value-label {
-  text-anchor: end;
-  font-size: var(--sl-font-small);
-}
-
-.sl-chart-axis-label {
-  text-anchor: middle;
-  font-size: var(--sl-font-small);
-}
-
 .sl-chart-area {
   stroke: none;
-}
-
-.sl-chart-area-up,
-.sl-chart-area-down,
-.sl-chart-area-cpu,
-.sl-chart-area-ram {
-  filter: url(#slMonitorGlow);
 }
 
 .sl-chart-line {
@@ -9081,127 +8924,6 @@ body:has(.sl-monitor-wrapper) .sl-monitor-wrapper * {
   stroke-linecap: round;
   stroke-linejoin: round;
   filter: url(#slMonitorGlow);
-}
-
-.sl-chart-line-up {
-  stroke: var(--sl-chart-up);
-}
-
-.sl-chart-line-down {
-  stroke: var(--sl-chart-down);
-}
-
-.sl-chart-line-cpu {
-  stroke: var(--sl-chart-cpu);
-}
-
-.sl-chart-line-ram {
-  stroke: var(--sl-chart-ram);
-}
-
-.sl-chart-dayline {
-  stroke: var(--sl-chart-ram);
-  stroke-width: 1;
-  opacity: 0;
-}
-
-.sl-chart-focus {
-  fill: var(--sl-bg);
-  stroke: var(--sl-chart-ram);
-  stroke-width: 3;
-  opacity: 0;
-}
-
-.sl-chart-hover-zone {
-  fill: transparent;
-  stroke: transparent;
-  pointer-events: all;
-  cursor: crosshair;
-}
-
-.sl-chart-tip {
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity var(--sl-time-fast) var(--sl-ease-out);
-}
-
-.sl-chart-tip rect {
-  fill: var(--sl-bg);
-  stroke: var(--sl-border-strong);
-  filter: drop-shadow(0 6px 14px var(--sl-shadow-color));
-}
-
-.sl-chart-tip text {
-  fill: var(--sl-text);
-  font: var(--sl-font-small) var(--sl-monitor-font);
-}
-
-.sl-chart-tip .sl-chart-tip-title {
-  font-size: var(--sl-font-body);
-  font-weight: var(--sl-weight-bold);
-}
-
-.sl-chart-day:hover .sl-chart-dayline,
-.sl-chart-day:hover .sl-chart-focus,
-.sl-chart-day:hover .sl-chart-tip {
-  opacity: 1;
-}
-
-/* Admin monitor: detailed table footer */
-.sl-monitor-info-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--sl-space-8);
-}
-
-.sl-monitor-info-grid > div {
-  min-width: 0;
-}
-
-.sl-monitor-clean-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: var(--sl-font-body);
-  table-layout: fixed;
-}
-
-.sl-monitor-clean-table td {
-  padding: var(--sl-space-4) 0;
-  border-bottom: 1px solid var(--sl-border);
-  vertical-align: top;
-}
-
-.sl-monitor-clean-table td:first-child {
-  font-weight: var(--sl-weight-semibold);
-  color: var(--sl-text);
-  width: var(--sl-monitor-table-width);
-}
-
-.sl-monitor-clean-table td:last-child {
-  color: var(--sl-text);
-  width: calc(100% - var(--sl-monitor-table-width));
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
-.sl-monitor-clean-table td:last-child:has(.sl-tip) {
-  overflow: visible;
-}
-
-.sl-monitor-clean-table td:last-child .sl-tip {
-  margin-right: var(--sl-space-2);
-  vertical-align: middle;
-  top: 1px;
-}
-
-.sl-monitor-clean-table td:last-child .sl-note {
-  display: inline-block;
-  vertical-align: middle;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  max-width: calc(100% - var(--sl-size-chip));
 }
 
 /* Admin login: shell, form and responsive layout */
@@ -11055,7 +10777,7 @@ body[data-sl-pointer] .sl-admin-login-card:has(.sl-setup)::after {
   }
 }
 
-/* Responsive fallbacks: form widths, tables and monitor blocks */
+/* Responsive fallbacks: form widths and tables */
 @media (max-width: 900px) {
   .sl-form-control,
   .sl-select-config,
@@ -11063,16 +10785,6 @@ body[data-sl-pointer] .sl-admin-login-card:has(.sl-setup)::after {
   .sl-search-order-select,
   .sl-search-filter-field {
     width: 100%;
-  }
-
-  .sl-monitor-info-grid {
-    grid-template-columns: 1fr;
-    gap: var(--sl-space-6);
-  }
-
-  .sl-monitor-clean-table td:last-child {
-    white-space: normal;
-    overflow-wrap: anywhere;
   }
 }
 
@@ -11549,7 +11261,8 @@ body[data-sl-pointer] .sl-admin-login-card:has(.sl-setup)::after {
   padding: var(--sl-space-5);
 }
 
-.sl-fm-hint {
+.sl-fm-hint,
+.sl-series-none {
   margin: 0;
   font-size: var(--sl-font-small);
   color: var(--sl-text-muted);
@@ -11600,7 +11313,7 @@ body[data-sl-pointer] .sl-admin-login-card:has(.sl-setup)::after {
   margin: 0;
 }
 
-.sl-fm-props div {
+.sl-fm-props > div {
   display: flex;
   justify-content: space-between;
   gap: var(--sl-space-4);
@@ -11609,7 +11322,7 @@ body[data-sl-pointer] .sl-admin-login-card:has(.sl-setup)::after {
   font-size: var(--sl-font-small);
 }
 
-.sl-fm-props div:last-child {
+.sl-fm-props > div:last-child {
   border-bottom: 0;
 }
 
@@ -11942,180 +11655,222 @@ button.sl-fm-thumb:hover .bi-zoom-in {
   }
 }
 
-/* Extended statistics: the rings, the dimension bars and the hour chart one counter archive is read into */
-.sl-statx-rings {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: var(--sl-space-5);
+/* The head of the statistic: the switch of the day and the steps of the months at the right of its cockpit; the pace in the line of state, the lull in the blue of the theme */
+.sl-cockpit-nav {
+  justify-self: end;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sl-space-2);
 }
 
-.sl-statx-ring,
-.sl-statx-dim,
-.sl-statx-hours {
-  padding: var(--sl-space-5);
-  border: 1px solid var(--sl-border);
-  border-radius: var(--sl-radius-1);
-  background: var(--sl-surface);
-  box-shadow: var(--sl-shadow-xs);
+.sl-cockpit-nav > .sl-live-chip {
+  position: relative;
+  margin-left: var(--sl-space-3);
 }
 
-.sl-statx-ring {
-  text-align: center;
-}
-
-.sl-statx-ring svg {
-  display: block;
-  width: 100%;
-  max-width: var(--sl-statx-max-width);
-  height: auto;
-  margin: 0 auto var(--sl-space-3);
-  transform: rotate(-90deg);
-}
-
-.sl-statx-rbg,
-.sl-statx-rval {
-  fill: none;
-  stroke-width: var(--sl-statx-ring);
-}
-
-.sl-statx-rbg {
-  stroke: var(--sl-border-strong);
-}
-
-.sl-statx-rval {
-  stroke-linecap: round;
-}
-
-.sl-statx-ring strong {
-  display: block;
-  font-size: var(--sl-font-h2);
-  line-height: var(--sl-line-tight);
-}
-
-.sl-statx-ring b {
-  display: block;
-  margin-top: var(--sl-space-2);
-  font-size: var(--sl-font-small);
-}
-
-.sl-statx-ring span {
-  display: block;
-  color: var(--sl-text-muted);
+.sl-cockpit-day {
+  display: inline-flex;
+  align-items: center;
+  margin-right: var(--sl-space-3);
+  font-family: var(--sl-face-mono);
   font-size: var(--sl-font-micro);
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--sl-text-muted);
 }
 
-.sl-statx-dims {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--sl-space-5);
-  margin-top: var(--sl-space-5);
-}
-
-.sl-statx-dim h4,
-.sl-statx-hours h4 {
-  margin: 0 0 var(--sl-space-3);
-  color: var(--sl-primary);
-  font-size: var(--sl-font-body);
-}
-
-.sl-statx-bar {
-  display: flex;
+.sl-cockpit-day > span:not(.sl-cockpit-set) {
+  display: inline-grid;
+  grid-auto-flow: column;
   align-items: center;
   gap: var(--sl-space-3);
-  margin: var(--sl-space-2) 0;
 }
 
-.sl-statx-bl {
-  width: var(--sl-statx-width);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.sl-statx-bg {
-  flex: 1;
-  height: var(--sl-statx-height);
-  border-radius: var(--sl-radius-1);
+.sl-cockpit-set {
+  display: inline-flex;
+  gap: var(--sl-space-1);
+  padding: var(--sl-space-1);
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-pill);
   background: var(--sl-bg-subtle);
 }
 
-.sl-statx-bv {
-  display: block;
-  height: 100%;
+.sl-cockpit-set > button {
+  padding: var(--sl-space-1) var(--sl-space-4);
+  border: 0;
+  border-radius: var(--sl-radius-pill);
+  background: transparent;
+  font: inherit;
+  text-transform: inherit;
+  color: var(--sl-text-muted);
+  cursor: pointer;
+}
+
+.sl-cockpit-set > [aria-pressed="true"] {
+  background: var(--sl-bg);
+  box-shadow: var(--sl-shadow-xs);
+  color: var(--sl-success-strong);
+}
+
+.sl-cockpit-clear,
+.sl-cockpit-step {
+  display: inline-grid;
+  place-items: center;
+  box-sizing: border-box;
+  padding: 0;
+  border: 1px solid var(--sl-border);
+  background: var(--sl-bg);
+  cursor: pointer;
+}
+
+.sl-cockpit-clear {
+  width: var(--sl-size-icon-sm);
+  height: var(--sl-size-icon-sm);
+  border-radius: var(--sl-radius-circle);
+  font-size: var(--sl-font-micro);
+  color: var(--sl-text-muted);
+}
+
+.sl-cockpit-step {
+  width: var(--sl-size-chip);
+  height: var(--sl-size-chip);
   border-radius: var(--sl-radius-1);
+  color: var(--sl-primary);
 }
 
-.sl-statx-bc,
-.sl-statx-bp {
-  min-width: var(--sl-statx-min-width);
-  text-align: right;
+.sl-cockpit-step[aria-disabled] {
+  opacity: var(--sl-fade-disabled);
+  cursor: default;
 }
 
-.sl-statx-hours {
-  margin-top: var(--sl-space-5);
+.sl-pace {
+  white-space: nowrap;
+  cursor: pointer;
 }
 
-.sl-statx-hours svg {
+.sl-pace > .sl-float-panel {
+  text-transform: none;
+  letter-spacing: normal;
+  color: var(--sl-text);
+}
+
+/* The dial of the day fills the glass of the lamp inside its line; its middle reads as the figure of the other lamps */
+.sl-cockpit-dial {
+  padding: 0;
+  cursor: default;
+}
+
+.sl-cockpit-plate > .sl-clock {
+  position: absolute;
+  inset: var(--sl-statx-ring);
+}
+
+.sl-clock svg {
   display: block;
   width: 100%;
   height: auto;
+  overflow: visible;
 }
 
-.sl-statx-hours rect {
-  fill: var(--sl-primary);
+.sl-clock-ring {
+  fill: none;
+  stroke: var(--sl-border);
+  stroke-dasharray: 2 3;
 }
 
-.sl-statx-hours text {
+.sl-clock-spoke {
+  transform-box: view-box;
+  transform-origin: 100px 100px;
+  stroke: var(--sl-knob-tone);
+  stroke-width: 6;
+  stroke-linecap: round;
+  opacity: var(--sl-fade-disabled);
+  transition: opacity var(--sl-time-base) var(--sl-ease-out);
+}
+
+.sl-cockpit[data-sl-pace="lull"] .sl-clock-spoke:not(.sl-is-later) {
+  opacity: calc(var(--sl-fade-disabled) * var(--sl-fade-muted));
+}
+
+.sl-cockpit[data-sl-pace="calm"] .sl-clock-spoke:not(.sl-is-later) {
+  opacity: calc(var(--sl-fade-disabled) * var(--sl-fade-subtle));
+}
+
+.sl-cockpit[data-sl-pace="rise"] .sl-clock-spoke:not(.sl-is-later) {
+  opacity: var(--sl-fade-muted);
+}
+
+.sl-cockpit[data-sl-pace="rush"] .sl-clock-spoke:not(.sl-is-later) {
+  opacity: var(--sl-fade-subtle);
+}
+
+.sl-clock-spoke.sl-is-later {
+  stroke-dasharray: 1 3;
+  opacity: calc(var(--sl-fade-disabled) * var(--sl-fade-muted));
+}
+
+.sl-cockpit .sl-clock-spoke:is(.sl-is-on, .sl-is-now, .sl-is-hand) {
+  opacity: 1;
+}
+
+.sl-clock-spoke.sl-is-hand {
+  stroke-width: 9;
+}
+
+.sl-clock-gen {
+  fill: var(--sl-warning);
+}
+
+.sl-clock-hour {
+  font-family: var(--sl-face-mono);
+  font-weight: var(--sl-weight-semibold);
+  text-anchor: middle;
   fill: var(--sl-text-muted);
-  font-size: var(--sl-font-micro);
 }
 
-.sl-statx-unavail {
-  margin: 0;
+.sl-clock-mid {
+  position: absolute;
+  inset: 0;
+  max-width: var(--sl-statx-max-width);
+  margin-inline: auto;
+  display: grid;
+  place-content: center;
+  text-align: center;
+  pointer-events: none;
 }
 
-/* One tone per dimension: the arc it fills on a ring, the fill it paints on a bar */
-.sl-statx-tone-primary .sl-statx-rval {
-  stroke: var(--sl-primary);
+.sl-clock-home,
+.sl-clock-say {
+  display: grid;
+  justify-items: center;
+  gap: var(--sl-space-1);
 }
 
-.sl-statx-tone-primary .sl-statx-bv {
-  background: var(--sl-primary);
+.sl-clock-mid:has(> .sl-clock-say:not([hidden])) > .sl-clock-home {
+  display: none;
 }
 
-.sl-statx-tone-success .sl-statx-rval {
-  stroke: var(--sl-success);
+.sl-clock-mid b {
+  font-size: calc(var(--sl-font-h1) * 0.85);
+  font-weight: var(--sl-weight-bold);
+  line-height: var(--sl-line-tight);
+  letter-spacing: var(--sl-track-tight);
+  font-variant-numeric: tabular-nums;
+  color: var(--sl-knob-tone);
 }
 
-.sl-statx-tone-success .sl-statx-bv {
-  background: var(--sl-success);
+/* The change of a tile against the month before, in the tone of its direction */
+.sl-metric-delta {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sl-space-1);
+  font-weight: var(--sl-weight-semibold);
 }
 
-.sl-statx-tone-warning .sl-statx-rval {
-  stroke: var(--sl-warning);
-}
-
-.sl-statx-tone-warning .sl-statx-bv {
-  background: var(--sl-warning);
-}
-
-.sl-statx-tone-accent .sl-statx-rval {
-  stroke: var(--sl-accent);
-}
-
-.sl-statx-tone-accent .sl-statx-bv {
-  background: var(--sl-accent);
-}
-
-@media (max-width: 900px) {
-  .sl-statx-rings {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .sl-statx-dims {
-    grid-template-columns: 1fr;
-  }
-}
+.sl-metric-delta-up { color: var(--sl-success-strong); }
+.sl-metric-delta-down { color: var(--sl-danger-strong); }
+.sl-metric-delta-flat,
+.sl-metric-delta-none { color: var(--sl-text-muted); }
 
 /* The file door of a form row carries none of the window's component names, which the administrative browser owns (docs/WINDOW.md) */
 .sl-file-door {
@@ -13302,6 +13057,17 @@ button.sl-fm-thumb:hover .bi-zoom-in {
   min-width: 0;
 }
 
+[data-sl-series] {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
+[data-sl-series="stack"] + [data-sl-series="rows"] {
+  margin-top: var(--sl-space-6);
+}
+
 :is(.sl-kv-list, .sl-meter, .sl-ext) + :is(.sl-kv-list, .sl-meter, .sl-ext) {
   margin-top: var(--sl-space-5);
 }
@@ -13344,7 +13110,8 @@ button.sl-fm-thumb:hover .bi-zoom-in {
   color: var(--sl-text-muted);
 }
 
-.sl-metric-value {
+.sl-metric-value,
+.sl-rhythm-figure > b {
   font-size: var(--sl-font-h1);
   line-height: var(--sl-line-tight);
   font-variant-numeric: tabular-nums;
@@ -13365,6 +13132,8 @@ button.sl-fm-thumb:hover .bi-zoom-in {
 }
 
 .sl-metric-icon {
+  width: var(--sl-t-icon-width);
+  text-align: center;
   grid-column: 2;
   grid-row: 1 / span 3;
   align-self: center;
@@ -13401,7 +13170,7 @@ button.sl-fm-thumb:hover .bi-zoom-in {
   position: relative;
   display: grid;
   flex: 1;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+  grid-template-columns: var(--sl-monitor-table-width) minmax(0, 1fr);
   align-items: center;
   gap: var(--sl-space-5);
   padding: var(--sl-space-3) 0;
@@ -13470,8 +13239,13 @@ button.sl-fm-thumb:hover .bi-zoom-in {
   min-width: 0;
 }
 
-.sl-kv .sl-long {
+.sl-kv .sl-long,
+.sl-fm-props .sl-long {
   justify-content: flex-end;
+}
+
+.sl-fm-props dd:has(> .sl-long) {
+  overflow: visible;
 }
 
 .sl-long > .sl-tip {
@@ -13494,59 +13268,6 @@ button.sl-fm-thumb:hover .bi-zoom-in {
   white-space: nowrap;
   font-family: var(--sl-face-mono);
   font-weight: var(--sl-weight-normal);
-}
-
-/* Series signal: its lamp and icon in the tone of its level, the name and the fact; the passed ones fold into one line */
-.sl-signal {
-  position: relative;
-  display: grid;
-  grid-template-columns: var(--sl-space-4) var(--sl-size-icon-sm) minmax(min-content, 1fr) minmax(0, auto);
-  align-items: center;
-  gap: var(--sl-space-4);
-  padding: var(--sl-space-4) var(--sl-space-3);
-  border-radius: var(--sl-radius-2);
-  font-size: var(--sl-font-small);
-}
-
-.sl-signal:hover {
-  background: var(--sl-tint);
-}
-
-.sl-signal.sl-knob-warn,
-.sl-signal.sl-knob-danger {
-  background: var(--sl-bg-subtle);
-}
-
-.sl-signal-lamp {
-  width: var(--sl-space-4);
-  height: var(--sl-space-4);
-  border-radius: var(--sl-radius-circle);
-  background: var(--sl-knob-tone);
-  box-shadow: 0 0 var(--sl-space-3) var(--sl-knob-tone);
-}
-
-.sl-signal > .bi {
-  color: var(--sl-knob-tone);
-}
-
-.sl-signal > span:not(.sl-float-panel) {
-  white-space: nowrap;
-}
-
-.sl-signal > b {
-  font-weight: var(--sl-weight-semibold);
-  text-align: end;
-  color: var(--sl-text);
-}
-
-.sl-signal-calm > summary {
-  display: flex;
-  align-items: center;
-  gap: var(--sl-space-3);
-  padding: var(--sl-space-4) var(--sl-space-3);
-  font-size: var(--sl-font-small);
-  color: var(--sl-success-strong);
-  cursor: pointer;
 }
 
 /* Series meter: used of a real limit, in the tone of its level */
@@ -13589,6 +13310,40 @@ button.sl-fm-thumb:hover .bi-zoom-in {
   color: var(--sl-text-muted);
 }
 
+/* A meter in a row of a list: its figure over its bar, the head of the column says the name */
+.sl-meter-row .sl-meter-head {
+  justify-content: flex-end;
+}
+
+.sl-meter-row .sl-meter-bar {
+  margin-bottom: 0;
+}
+
+/* A window on a screen of its own, outside the rows of the series: the rhythm of a box under it, a list inside it, tiles alone end with the body */
+:not(.sl-ground, .sl-pane-split, .sl-pane-trio, .sl-pane-side) > .sl-pane {
+  margin-bottom: var(--sl-space-5);
+}
+
+.sl-pane-body > .sl-table-shell {
+  margin: 0;
+  padding: 0;
+}
+
+.sl-pane-body > .sl-metrics:last-child {
+  margin-bottom: 0;
+}
+
+.sl-fm-quota {
+  padding: var(--sl-space-3) var(--sl-space-5);
+  border-bottom: 1px solid var(--sl-border);
+}
+
+/* A figure of a tile may be a word a visitor typed: it breaks inside its tile rather than running under the icon */
+.sl-metric-value {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
 /* Series extensions by weight: a wanted one framed green with a check or red with a cross, and under its group what a missing one costs */
 .sl-ext {
   display: grid;
@@ -13627,7 +13382,9 @@ button.sl-fm-thumb:hover .bi-zoom-in {
 
 .sl-kv-flag,
 .sl-ext-chip.sl-ext-ok,
-.sl-ext-chip.sl-ext-lost {
+.sl-ext-chip.sl-ext-lost,
+.sl-series-keys > span,
+.sl-stack-key {
   display: inline-flex;
   align-items: center;
   gap: var(--sl-space-2);
@@ -13660,6 +13417,615 @@ button.sl-fm-thumb:hover .bi-zoom-in {
   color: var(--sl-text);
 }
 
+/* Series tones: a stroke, a fill, a bar and a dot of a chart read their tone as currentColor */
+.sl-tone-up {
+  color: var(--sl-chart-up);
+}
+
+.sl-tone-down {
+  color: var(--sl-chart-down);
+}
+
+.sl-tone-cpu {
+  color: var(--sl-chart-cpu);
+}
+
+.sl-tone-ram {
+  color: var(--sl-chart-ram);
+}
+
+.sl-tone-primary {
+  color: var(--sl-primary);
+}
+
+.sl-tone-accent {
+  color: var(--sl-accent);
+}
+
+.sl-tone-success {
+  color: var(--sl-success);
+}
+
+.sl-tone-warning {
+  color: var(--sl-warning);
+}
+
+.sl-tone-danger {
+  color: var(--sl-danger);
+}
+
+.sl-tone-muted {
+  color: var(--sl-text-muted);
+}
+
+.sl-tone-part1 {
+  color: var(--sl-progress-1);
+}
+
+.sl-tone-part2 {
+  color: var(--sl-progress-2);
+}
+
+.sl-tone-part3 {
+  color: var(--sl-progress-3);
+}
+
+.sl-tone-part4 {
+  color: var(--sl-progress-4);
+}
+
+.sl-tone-part5 {
+  color: var(--sl-progress-5);
+}
+
+/* Series chart: the grid with its figures at the left, a drawing or columns over it, the zones of the hand on top, the axis under it; a large window stretches it */
+.sl-chart {
+  position: relative;
+  flex: 1;
+  min-height: var(--sl-graph-min-height);
+  margin: var(--sl-space-3) 0 var(--sl-space-8) var(--sl-graph-pad-x);
+}
+
+.sl-chart-grid > span {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(var(--sl-d-y) * 100%);
+  border-top: 1px dashed var(--sl-border);
+}
+
+.sl-chart-grid > span:last-child {
+  border-top-style: solid;
+  border-color: var(--sl-border-strong);
+}
+
+.sl-chart-grid i,
+.sl-chart-axis em {
+  position: absolute;
+  font-family: var(--sl-face-mono);
+  font-size: var(--sl-font-micro);
+  font-style: normal;
+  color: var(--sl-text-muted);
+  white-space: nowrap;
+}
+
+.sl-chart-grid i {
+  right: calc(100% + var(--sl-space-3));
+  top: 0;
+  transform: translateY(-50%);
+}
+
+.sl-chart-axis em {
+  left: calc(var(--sl-d-x) * 100%);
+  top: calc(100% + var(--sl-space-2));
+  transform: translateX(-50%);
+}
+
+.sl-chart-axis em.sl-is-skip:not(.sl-is-pick) {
+  visibility: hidden;
+}
+
+.sl-chart-axis em.sl-is-end {
+  color: var(--sl-danger-strong);
+}
+
+/* The edges of a line chart stand on the edges of the window, and its marks stay inside */
+.sl-chart-live .sl-chart-axis em:first-child {
+  transform: none;
+}
+
+.sl-chart-live .sl-chart-axis em:last-child {
+  transform: translateX(-100%);
+}
+
+/* The drawing keeps to the width of its window, so the point a tick dropped goes out at the left edge */
+.sl-chart > .sl-chart-svg {
+  position: absolute;
+  inset: 0;
+  height: 100%;
+  clip-path: inset(calc(var(--sl-space-3) * -1) 0);
+}
+
+.sl-chart .sl-chart-line {
+  stroke: currentColor;
+}
+
+.sl-chart-cols {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: repeat(var(--sl-d-n), minmax(0, 1fr));
+}
+
+.sl-chart-col {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--sl-space-1);
+  min-width: 0;
+  padding: 0 var(--sl-space-1);
+}
+
+.sl-chart-bar {
+  flex: 1;
+  min-width: 0;
+  height: calc(var(--sl-d-v) * 100%);
+  border-radius: var(--sl-radius-1) var(--sl-radius-1) 0 0;
+  background: currentColor;
+  transform-origin: bottom;
+  transition: height var(--sl-time-slow) var(--sl-ease-out);
+}
+
+.sl-chart-bar.sl-tone-primary:only-child {
+  background: var(--sl-grad-progress-1);
+}
+
+/* The day still running: a quiet bar in a dashed frame; the picked one carries the ring of a focus */
+.sl-chart-col.sl-is-run > .sl-chart-bar {
+  opacity: var(--sl-fade-muted);
+  outline: 1px dashed currentColor;
+  outline-offset: var(--sl-space-1);
+}
+
+.sl-chart-col.sl-is-pick > .sl-chart-bar {
+  box-shadow: var(--sl-shadow-focus);
+}
+
+.sl-chart-zones {
+  position: absolute;
+  inset: 0;
+  z-index: var(--sl-z-raised);
+}
+
+.sl-chart-zone {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc(var(--sl-d-left) * 100%);
+  width: calc(var(--sl-d-width) * 100%);
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+}
+
+button.sl-chart-zone {
+  cursor: pointer;
+}
+
+.sl-chart-cols ~ .sl-chart-zones .sl-chart-zone:is(:hover, :focus-visible) {
+  border-radius: var(--sl-radius-1);
+  background: var(--sl-tint);
+}
+
+/* The guide of the point under the hand and a dot on every line it crosses */
+.sl-chart-zone::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc(var(--sl-d-x) * 100%);
+  border-left: 1px dashed var(--sl-text-muted);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.sl-chart-dot {
+  position: absolute;
+  left: calc(var(--sl-d-x) * 100%);
+  bottom: calc(var(--sl-d-y) * 100%);
+  width: var(--sl-space-3);
+  height: var(--sl-space-3);
+  margin: 0 0 calc(var(--sl-space-3) / -2) calc(var(--sl-space-3) / -2);
+  border-radius: var(--sl-radius-circle);
+  background: currentColor;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.sl-chart-zone:is(:hover, :focus-visible, .sl-is-open)::before,
+.sl-chart-zone:is(:hover, :focus-visible, .sl-is-open) > .sl-chart-dot {
+  opacity: 1;
+}
+
+/* The panel of a point only tells: it takes no hand, so the parts it lies over stay under the pointer */
+.sl-series-tip.sl-float-panel {
+  font-size: var(--sl-font-small);
+  pointer-events: none;
+}
+
+.sl-series-tip .sl-bell-cap {
+  margin-bottom: var(--sl-space-1);
+}
+
+.sl-series-row {
+  display: grid;
+  grid-template-columns: var(--sl-space-3) 1fr auto;
+  align-items: center;
+  gap: var(--sl-space-3);
+  color: var(--sl-text);
+}
+
+.sl-series-row + .sl-series-row {
+  margin-top: var(--sl-space-2);
+}
+
+.sl-series-row .sl-bell-num {
+  padding-left: var(--sl-space-5);
+}
+
+.sl-series-dot {
+  display: inline-block;
+  width: var(--sl-space-3);
+  height: var(--sl-space-3);
+  border-radius: var(--sl-radius-circle);
+  background: currentColor;
+}
+
+/* The keys under a part in mono capitals, with their swatches; the steps of the week stand close */
+.sl-series-keys {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sl-space-2) var(--sl-space-6);
+  margin-top: var(--sl-space-5);
+  font-family: var(--sl-face-mono);
+  font-size: var(--sl-font-micro);
+  letter-spacing: var(--sl-track-wide);
+  text-transform: uppercase;
+  color: var(--sl-text-muted);
+}
+
+.sl-series-keys.sl-series-steps {
+  gap: var(--sl-space-2);
+}
+
+.sl-series-keys > .sl-series-hint {
+  margin-left: auto;
+}
+
+.sl-series-mark {
+  width: var(--sl-space-6);
+  height: var(--sl-space-4);
+  border-radius: var(--sl-radius-1);
+  background: var(--sl-bg-subtle);
+}
+
+/* The archive: a bar a month, a dashed slot where the file is missing; a bar is a few pixels wide, so a month is told by its colour and a ring would cover its neighbours */
+.sl-archive {
+  display: flex;
+  align-items: flex-end;
+  gap: 1px;
+  height: var(--sl-archive-height);
+  padding-bottom: var(--sl-space-7);
+  overflow: auto hidden;
+}
+
+.sl-archive-month {
+  position: relative;
+  flex: 1 0 var(--sl-space-1);
+  align-self: stretch;
+}
+
+.sl-archive-month > i {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: calc(var(--sl-d-v) * 100%);
+  border-radius: 1px 1px 0 0;
+  background: var(--sl-primary-muted);
+  transform-origin: bottom;
+  transition: background var(--sl-time-fast) var(--sl-ease-out);
+}
+
+a.sl-archive-month:is(:hover, :focus-visible) > i {
+  background: var(--sl-primary-strong);
+}
+
+.sl-archive-month.sl-is-pick > i,
+.sl-series-mark-pick,
+.sl-week-cell[data-sl-level="2"]::before,
+.sl-series-mark-step2 {
+  background: var(--sl-primary);
+}
+
+.sl-archive-month.sl-is-run > i,
+.sl-series-mark-run,
+.sl-week-cell[data-sl-level="3"]::before,
+.sl-series-mark-step3 {
+  background: var(--sl-success);
+}
+
+.sl-archive-month.sl-is-gap > i,
+.sl-series-mark-gap {
+  border: 1px dashed var(--sl-danger);
+  background: none;
+}
+
+.sl-archive-year {
+  position: absolute;
+  top: calc(100% + var(--sl-space-2));
+  left: 0;
+  font-family: var(--sl-face-mono);
+  font-size: var(--sl-font-micro);
+  color: var(--sl-text-muted);
+  pointer-events: none;
+}
+
+.sl-archive-month:has(> .sl-archive-year)::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 100%;
+  height: var(--sl-space-2);
+  border-left: 1px solid var(--sl-border-strong);
+}
+
+/* The week by hours: the steps of the theme from a quiet hour to a hot one, a layer of each cell, so its panel lies over the neighbours */
+.sl-week {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 28px repeat(24, minmax(0, 1fr));
+  grid-template-rows: auto repeat(7, minmax(18px, 1fr));
+  gap: var(--sl-space-1);
+}
+
+.sl-week-hour,
+.sl-week-day {
+  font-family: var(--sl-face-mono);
+  font-size: var(--sl-font-micro);
+  color: var(--sl-text-muted);
+}
+
+.sl-week-day {
+  align-self: center;
+}
+
+.sl-week-day.sl-is-end {
+  color: var(--sl-danger-strong);
+}
+
+.sl-week-cell {
+  position: relative;
+  border-radius: var(--sl-radius-1);
+  background: var(--sl-bg-subtle);
+}
+
+.sl-week-cell::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--sl-bg-subtle);
+}
+
+.sl-week-cell[data-sl-level="1"]::before,
+.sl-series-mark-step1 {
+  background: var(--sl-primary-muted);
+}
+
+.sl-week-cell[data-sl-level="4"]::before,
+.sl-series-mark-step4 {
+  background: var(--sl-warning);
+}
+
+.sl-week-cell[data-sl-level="5"]::before,
+.sl-series-mark-step5 {
+  background: var(--sl-danger);
+}
+
+/* One bar split into its parts: a part is a float, so its colour is a layer of its own, and its keys under it */
+.sl-stack-bar {
+  display: flex;
+  height: var(--sl-space-4);
+  overflow: hidden;
+  border-radius: var(--sl-radius-pill);
+  background: var(--sl-bg-subtle);
+}
+
+.sl-stack-part {
+  position: relative;
+  flex: 0 0 var(--sl-d-part);
+}
+
+.sl-stack-part::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: currentColor;
+  transform-origin: left;
+}
+
+.sl-stack-part + .sl-stack-part {
+  border-left: var(--sl-space-1) solid var(--sl-bg);
+}
+
+.sl-stack-keys {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sl-space-2) var(--sl-space-6);
+  margin-top: var(--sl-space-3);
+  font-size: var(--sl-font-small);
+}
+
+.sl-stack-key > i {
+  width: var(--sl-space-4);
+  height: var(--sl-space-4);
+  border-radius: var(--sl-radius-1);
+  background: currentColor;
+}
+
+.sl-stack-key > span {
+  color: var(--sl-text-muted);
+}
+
+.sl-stack-key > b {
+  color: var(--sl-text);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Bar rows of a dimension: a name with its flag, a track at the share of the largest, the number, the percent */
+.sl-share-row {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 72px 64px var(--sl-statx-min-width);
+  align-items: center;
+  gap: var(--sl-space-3);
+  font-size: var(--sl-font-small);
+}
+
+.sl-share-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--sl-text);
+}
+
+.sl-share-name > img {
+  width: var(--sl-space-6);
+  height: auto;
+  margin-right: var(--sl-space-3);
+  vertical-align: -2px;
+  border-radius: var(--sl-radius-1);
+}
+
+.sl-share-track {
+  height: var(--sl-statx-height);
+  border-radius: var(--sl-radius-pill);
+  background: var(--sl-bg-subtle);
+}
+
+.sl-share-track > i {
+  display: block;
+  width: var(--sl-d-part);
+  height: 100%;
+  border-radius: inherit;
+  background: currentColor;
+  transform-origin: left;
+}
+
+.sl-share-row > b,
+.sl-share-pct {
+  font-family: var(--sl-face-mono);
+  font-size: var(--sl-font-micro);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: var(--sl-text);
+}
+
+.sl-share-pct {
+  color: var(--sl-text-muted);
+}
+
+/* The rhythm: a figure and its period over the chart, the legend and the view under it */
+.sl-rhythm {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.sl-rhythm-head,
+.sl-rhythm-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sl-space-3) var(--sl-space-6);
+}
+
+.sl-rhythm-foot .sl-series-keys {
+  margin-top: 0;
+}
+
+.sl-rhythm > .sl-chart {
+  margin-top: var(--sl-space-6);
+}
+
+.sl-rhythm-figure {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: baseline;
+  gap: var(--sl-space-1) var(--sl-space-3);
+}
+
+.sl-rhythm-figure > b {
+  grid-column: 1 / -1;
+  font-size: var(--sl-font-hero);
+}
+
+.sl-rhythm-figure > em {
+  font-size: var(--sl-font-small);
+  font-style: normal;
+  font-weight: var(--sl-weight-bold);
+  color: var(--sl-success-strong);
+}
+
+[data-sl-series="table"] {
+  overflow-x: auto;
+}
+
+/* The table of days: figures to the right in their column, the total first and bold, weekends and the picked day marked */
+.sl-days-table :is(td, th) {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.sl-days-table :is(td, th):first-child {
+  min-width: var(--sl-statx-width);
+  text-align: left;
+}
+
+.sl-days-week {
+  margin-left: var(--sl-space-3);
+  font-size: var(--sl-font-micro);
+  color: var(--sl-text-muted);
+}
+
+.sl-days-table tr.sl-is-end .sl-days-week {
+  color: var(--sl-danger-strong);
+}
+
+.sl-days-date > .sl-chip {
+  margin-left: var(--sl-space-3);
+}
+
+.sl-days-table tr.sl-is-total > td,
+.sl-days-table td.sl-is-top {
+  font-weight: var(--sl-weight-bold);
+  color: var(--sl-text-strong);
+}
+
+.sl-days-table tr.sl-is-pick > td {
+  background: var(--sl-tint);
+}
+
+.sl-days-table tr[data-sl-series-pick] {
+  cursor: pointer;
+}
+
 /* Narrower than a large window and its side: every window takes the row */
 @media (max-width: 1200px) {
   .sl-pane-split,
@@ -13689,5 +14055,9 @@ button.sl-fm-thumb:hover .bi-zoom-in {
 
   .sl-metric:has(> .sl-metric-icon) {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .sl-chart-live .sl-chart-axis em:is(:nth-child(2), :nth-child(4)) {
+    display: none;
   }
 }

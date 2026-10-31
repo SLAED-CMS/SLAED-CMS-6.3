@@ -456,7 +456,7 @@ final class NodeRouteTest extends TestCase
         $this->assertSame([true, false, false], $run['faqview'], 'The faq view does not ask its question or shows its views or author');
         $this->assertSame([['/files/asset/12'], ['/files/asset/11'], 3], [$run['files']['links'], $run['files']['images'],
             $run['files']['buttons']], 'The file card does not offer the download of the one material that has it beside both reading buttons');
-        $this->assertContains('1.95 KB', $run['files']['chips'], 'The file card hides the size of its download');
+        $this->assertNotEmpty(preg_grep('/^1[.,]95 KB$/', $run['files']['chips']), 'The file card hides the size of its download');
         $this->assertContains('318', $run['files']['chips'], 'The file card hides the count of its downloads');
         $this->assertSame(['bi-download', 'sl-entry-content'], $run['filesview'], 'The files view does not put its resources above the text');
         $this->assertSame([['Gallery only', 'Overview video'], ['/media/asset/16', '/media/asset/13'], 1],

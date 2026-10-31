@@ -780,13 +780,13 @@ function addAdminLog(): bool {
     return Logger::addAdmin('info', $data['modul'].' '.$data['op'], $data);
 }
 
-# Return external HTTP referer URL, or empty string if internal/invalid/unknown
+# The external referer or nothing; the own site is told by the domain, as a search for its name carries that name in the query of a foreign address
 function getReferer(): string {
     $referer = filterText(getenv('HTTP_REFERER'));
-    if (!empty($referer) && !preg_match('#^unknown#i', $referer) && !preg_match('#^bookmark#i', $referer) && !stristr($referer, getHost())) {
-        return $referer;
-    }
-    return '';
+    if (empty($referer) || preg_match('#^(unknown|bookmark)#i', $referer)) return '';
+    $home = getRefHost(getHost());
+    $host = getRefHost($referer);
+    return ($home !== '' && $host !== $home && !str_ends_with($host, '.'.$home)) ? $referer : '';
 }
 
 # Pick the locale from the cookie and load its language file; it runs before the bootstrap is up, so it never takes a switch, which is setLangChoice()

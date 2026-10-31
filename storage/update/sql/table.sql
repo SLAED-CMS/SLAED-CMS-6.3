@@ -505,19 +505,6 @@ CREATE TABLE `{prefix}_rating_votes` (
   CONSTRAINT `{prefix}_chk_rating_votes_value` CHECK (`value` BETWEEN 1 AND 5)
 ) ENGINE={engine} DEFAULT CHARSET={charset} COLLATE={collate};
 
-CREATE TABLE `{prefix}_referer` (
-  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `uid` INT UNSIGNED NOT NULL,
-  `name` VARCHAR(45) NOT NULL,
-  `ip` VARCHAR(45) CHARACTER SET ascii COLLATE ascii_bin NOT NULL DEFAULT '',
-  `referer` VARCHAR(2048) NOT NULL DEFAULT '',
-  `url` VARCHAR(2048) NOT NULL DEFAULT '',
-  `time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  KEY `time` (`time`),
-  KEY `ip` (`ip`)
-) ENGINE={engine} DEFAULT CHARSET={charset} COLLATE={collate};
-
 CREATE TABLE `{prefix}_routes` (
   `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
   `path` VARCHAR(255) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,

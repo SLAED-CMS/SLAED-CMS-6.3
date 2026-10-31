@@ -313,6 +313,27 @@ function getListLimit(int $base, int|Closure $total): int {
     return ((string)max(5, min(LIST_MAX, intval($pick))) === $pick) ? intval($pick) : $base;
 }
 
+# One meter used of a real limit; a limit that is no pressure, as a progress or a rotating log, gives its own tone, a row of a list its own figure
+function getTplMeter(string $label, int|float $part, int|float $whole, string $note = '', string $tone = '', string $value = '', bool $row = false): string {
+    global $tpl;
+    $pct = ($whole > 0) ? $part * 100 / $whole : 0;
+    return $tpl->getHtmlFrag('meter', [
+        'label' => $label,
+        'value' => ($value !== '') ? $value : filterDecimal($pct, ($pct < 10) ? 1 : 0).'%',
+        'pct' => ($pct > 0) ? (int)round(max(1, min(100, $pct))) : 0,
+        'tone' => ($tone !== '') ? $tone : getPercentTone($pct),
+        'note' => $note,
+        'is_row' => $row,
+    ]);
+}
+
+# The keys of a cell cut short: a long value opens whole behind the mark of the system, a short one keeps the title, since both on one cell would show twice
+function getTplLongCell(string $text, string $label): array {
+    global $tpl;
+    if (mb_strlen($text) < CELL_LONG) return ($text === '') ? [] : ['title_text' => $text];
+    return ['prefix_html' => $tpl->getHtmlFrag('popover', ['tip_text' => $text, 'tip_label' => _DETAILS.': '.$label])];
+}
+
 # Render one panel list of the canon from the meaning of its rows; the foot sends one field group per action, and an own number in base brings the rows chip
 function getTplAdminList(array $data): string {
     global $afile, $tpl;
@@ -424,6 +445,7 @@ function getTplAdminList(array $data): string {
     return $tpl->getHtmlPart('admin-list', [
         'head_html' => (string)($data['head_html'] ?? ''),
         'note_html' => (string)($data['note_html'] ?? ''),
+        'pane' => (array)($data['pane'] ?? []),
         'top_html' => ($rows !== '') ? getTplPagerView($page, $pages, $maxpg, $link, $meta + ['is_top' => true, 'rows' => $per ? $per + ['id' => 'sl-rows-top'] : []]) : '',
         'pager_html' => ($rows !== '') ? getTplPagerView($page, $pages, $maxpg, $link, $meta + ['rows' => $per ? $per + ['id' => 'sl-rows-end', 'is_up' => true] : []]) : '',
         'is_list' => true,

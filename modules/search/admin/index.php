@@ -236,15 +236,13 @@ function getSearchsum(string $where, array $pars): string {
         $pars
     )) ?? ['', 0];
     $mlab = $mod ? getModuleName($mod) : _ALL;
-    return $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('alert', [
-        'messages' => [
-            _SEARCHTOTAL.': '.intval($hits),
-            _SEARCHUNIQUE.': '.intval($uniq),
-            _SEARCHLAST.': '.($last ? format_time((string)$last, _TIMESTRING) : _NO_INFO),
-            _SEARCHTOP.': '.($word ?: _NO_INFO).' ('.intval($best).')',
-            _SEARCHTOPMOD.': '.($mlab ?: _NO_INFO).' ('.intval($mhit).')',
-        ],
-    ])]);
+    return $tpl->getHtmlFrag('pane', ['title' => _SEARCH, 'icon' => 'search', 'content_html' => $tpl->getHtmlFrag('metric-list', ['items' => [
+        ['label' => _SEARCHTOTAL, 'value' => filterDecimal(intval($hits), 0), 'icon' => 'search'],
+        ['label' => _SEARCHUNIQUE, 'value' => filterDecimal(intval($uniq), 0), 'icon' => 'fingerprint'],
+        ['label' => _SEARCHLAST, 'value' => $last ? format_time((string)$last, _TIMESTRING) : _NO_INFO],
+        ['label' => _SEARCHTOP, 'value' => $word ?: _NO_INFO, 'note' => filterDecimal(intval($best), 0), 'icon' => 'trophy'],
+        ['label' => _SEARCHTOPMOD, 'value' => $mlab ?: _NO_INFO, 'note' => filterDecimal(intval($mhit), 0), 'icon' => 'grid'],
+    ]])]);
 }
 
 # The search log or, for the top, its words, counted by the same filter its rows are read by and drawn by the list canon

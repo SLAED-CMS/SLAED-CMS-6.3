@@ -55,7 +55,8 @@ function sitemap(): void {
     $conts = is_readable(PUBLIC_DIR.'/'.$file) ? file_get_contents(PUBLIC_DIR.'/'.$file) : '';
     $f = 0;
     $asize = 0;
-    $lines = [_SITEMAP.': '.$conf['homeurl'].'/'.$file];
+    $urls = 0;
+    $items = [];
     foreach (glob(PUBLIC_DIR.'/sitemap*.xml*') ?: [] as $cfile) {
         $cont .= checkPerms($cfile);
         $handle = fopen($cfile, 'rb');
@@ -68,16 +69,17 @@ function sitemap(): void {
             fclose($handle);
         }
         $size = filesize($cfile);
-        $lines[] = _FILE.': '.basename($cfile);
-        $lines[] = _DATE.': '.date(_TIMESTRING, filemtime($cfile));
-        $lines[] = _SIZE.': '.filterSize($size);
-        $lines[] = _URLS.': '.$n;
+        $items[] = ['label' => basename($cfile), 'text' => date(_TIMESTRING, filemtime($cfile)).' · '.filterSize($size).' · '._URLS.': '.filterDecimal($n, 0)];
         $f++;
         $asize += $size;
+        $urls += $n;
     }
-    $lines[] = _FILE_M.': '.$f;
-    $lines[] = _FILE_S.': '.filterSize($asize);
-    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('alert', ['is_warn' => false, 'messages' => $lines])]);
+    $cont .= $tpl->getHtmlFrag('pane', ['title' => _SITEMAP, 'icon' => 'diagram-3', 'meta' => $conf['homeurl'].'/'.$file,
+        'content_html' => $tpl->getHtmlFrag('metric-list', ['items' => [
+        ['label' => _FILE_M, 'value' => filterDecimal($f, 0), 'icon' => 'files'],
+        ['label' => _FILE_S, 'value' => filterSize($asize), 'icon' => 'hdd'],
+        ['label' => _URLS, 'value' => filterDecimal($urls, 0), 'icon' => 'link-45deg'],
+    ]]).($items ? $tpl->getHtmlFrag('kv-list', ['items' => $items]) : '')]);
     $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php',
         'hidden' => [

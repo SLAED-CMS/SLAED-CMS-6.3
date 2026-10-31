@@ -6,186 +6,6 @@
 
 if (!defined('ADMIN_FILE') && !defined('SETUP_FILE')) die('Illegal file access');
 
-# Format statistic image
-function getStatistic(): void {
- global $conf;
-    $report = getVar('get', 'report', 'num', 0);
-    $day = getVar('get', 'day', 'num', 15);
-    $file = getVar('get', 'file', 'text', '');
-    $off = 1;
-
-    if (!$report) header('Content-type: image/png');
-    $image = imagecreate(800, 340);
-
-    $white = imagecolorallocate($image, 255, 255, 255);
-    $red = imagecolorallocate($image, 255, 0, 0);
-    $green = imagecolorallocate($image, 0, 128, 0);
-    $purple = imagecolorallocate($image, 200, 0, 200);
-    $black = imagecolorallocate($image, 0, 0, 0);
-    $wblue = imagecolorallocate($image, 34, 122, 199);
-    $wgreen = imagecolorallocate($image, 44, 135, 16);
-    $gray = imagecolorallocate($image, 203, 218, 226);
-    $yellow = imagecolorallocate($image, 207, 179, 31);
-    $llgray = imagecolorallocate($image, 250, 250, 250);
-
-    imagefilledrectangle($image, 0, 252, 800, 340, $llgray);
-
-    $daysLog = COUNTER_DIR.'/days.log';
-    $statLog = COUNTER_DIR.'/statistic.log';
-    if ($report) {
-        $f = (file_exists($daysLog) && is_readable($daysLog)) ? file($daysLog) : ((file_exists($statLog) && is_readable($statLog)) ? file($statLog) : []);
-    } else {
-        if ($file) {
-            $path = COUNTER_DIR.'/statistic/'.$file;
-            $f = (is_file($path) && is_readable($path)) ? file($path) : [];
-        } else {
-            if (file_exists($daysLog) && is_readable($daysLog)) {
-                $f = file($daysLog);
-                $stat = (file_exists($statLog) && is_readable($statLog)) ? file($statLog) : false;
-                if ($stat !== false) $f = array_merge($f, $stat);
-            } else {
-                $f = (file_exists($statLog) && is_readable($statLog)) ? file($statLog) : [];
-            }
-        }
-    }
-    $f = ($f !== false) ? $f : [];
-    $f = array_values(array_filter(array_map(static function ($row) {
-        $row = trim((string)$row);
-        if ($row === '') {
-            return null;
-        }
-
-        $parts = explode('|', $row);
-        return (count($parts) >= 8) ? implode('|', array_slice($parts, 0, 8)) : null;
-    }, $f)));
-    $to = count($f);
-    if ($day > 15) {
-        $from = 0;
-        $to = min(15, $to);
-    } else {
-        $from = (!$file && date('d') <= 15) ? 0 : 15;
-        if ($from < 0) $from = 0;
-        if ($from > $to) $from = $to;
-    }
-    $regusers = $unique = $today = $engines = $sites = $homepage = $auditory = $max1 = $max2 = 0;
-    for ($i = $from; $i < $to; $i++) {
-        $day = explode('|', $f[$i]);
-        if ($day[1] > $max1) $max1 = $day[1];
-        if ($day[2] > $max2) $max2 = $day[2];
-        $unique = $unique + $day[1];
-        $today = $today + $day[2];
-        $engines = $engines + $day[4];
-        $sites = $sites + $day[5];
-        $homepage = $homepage + $day[6];
-        $auditory = $auditory + $day[1] - ($day[4] + $day[5]);
-        if ($auditory < 0) $auditory = 0;
-        $regusers = $regusers + $day[7];
-    }
-    $i = 0;
-    for ($z = $from; $z < $to; $z++) {
-        $day = explode('|', $f[$z]);
-        if ($day[2] != '') {
-            $w = ($max2 > 0) ? round((230 / $max2) * $day[2]) : 0;
-            if ($w < 4) $w = 4;
-            $off = 134;
-            imagefilledrectangle($image, $off+$conf['statistic']['bet']*$i+1, 250-$w+1, $off+$conf['statistic']['bet']*$i+$conf['statistic']['shi'], 249, $yellow);
-            imagerectangle($image, $off+$conf['statistic']['bet']*$i, 250-$w, $off+$conf['statistic']['bet']*$i+$conf['statistic']['shi'], 249, $black);
-            imagerectangle(
-                $image,
-                $off+$conf['statistic']['bet']*$i+$conf['statistic']['shi']+1,
-                250-$w+3,
-                $off+$conf['statistic']['bet']*$i+$conf['statistic']['shi']+2,
-                249,
-                $gray
-            );
-            $w = ($max1 > 0) ? round((230 / $max1) * $day[1]) : 0;
-            if ($w < 5) $w = 1;
-            $off = 120;
-
-            imagefilledrectangle($image, $off+$conf['statistic']['bet']*$i+1, 250-$w+1, $off+$conf['statistic']['bet']*$i+$conf['statistic']['shi']+3, 249, $wblue);
-            imagerectangle($image, $off+$conf['statistic']['bet']*$i,250-$w, $off+$conf['statistic']['bet']*$i+$conf['statistic']['shi']+3, 249, $black);
-            imagerectangle(
-                $image,
-                $off+$conf['statistic']['bet']*$i+$conf['statistic']['shi']+4,
-                250-$w+4,
-                $off+$conf['statistic']['bet']*$i+$conf['statistic']['shi']+5,
-                249,
-                $black
-            );
-            $zzz = $day[1] - ($day[4] + $day[5]);
-            $w = ($max1 > 0) ? round((230 / $max1) * $zzz) : 0;
-            if ($w < 4) $w = $w + 31;
-
-            imagefilledrectangle($image, $off+$conf['statistic']['bet']*$i+1, 250-$w+1, $off+$conf['statistic']['bet']*$i+$conf['statistic']['shi']+3, 249, $wgreen);
-            imagerectangle($image, $off+$conf['statistic']['bet']*$i, 250-$w, $off+$conf['statistic']['bet']*$i+$conf['statistic']['shi']+3, 249, $black);
-            imagestring($image, 1, $off+$conf['statistic']['bet']*$i+2, 250-$w+1-10, $day[1], $white);
-
-            $d = explode('.', $day[0]);
-            $d = $d[0].'.'.$d[1];
-
-            imagestring($image, 1, $off+$conf['statistic']['bet']*$i+1, 255, $d, $wblue);
-            imagestring($image, 1, $off+$conf['statistic']['bet']*$i+1, 265, $day[1], $red);
-            imagestring($image, 1, $off+$conf['statistic']['bet']*$i+1, 275, $day[2], $green);
-            imagestring($image, 1, $off+$conf['statistic']['bet']*$i+1, 285, $day[6], $purple);
-
-            imagestring($image, 1, $off+$conf['statistic']['bet']*$i+1, 300, $day[5], $wblue);
-            imagestring($image, 1, $off+$conf['statistic']['bet']*$i+1, 310, $day[4], $red);
-            imagestring($image, 1, $off+$conf['statistic']['bet']*$i+1, 320, $zzz, $green);
-            imagestring($image, 1, $off+$conf['statistic']['bet']*$i+1, 330, rtrim($day[7]), $purple);
-
-            imagestring($image, 1, 3, 255, 'DATE:', $wblue);
-            imagestring($image, 1, 3, 265, 'UNIQUE VISITORS:', $red);
-            imagestring($image, 1, 3, 275, 'SITE HITS:', $green);
-            imagestring($image, 1, 3, 285, 'HOMEPAGE HITS:', $purple);
-
-            imagestring($image, 1, 3, 300, 'OTHER SITES:', $wblue);
-            imagestring($image, 1, 3, 310, 'SEARCH ENGINES:', $red);
-            imagestring($image, 1, 3, 320, 'AUDIENCE:', $green);
-            imagestring($image, 1, 3, 330, 'REGISTERED USERS:', $purple);
-        }
-        $i++;
-    }
-
-    imagefilledrectangle($image, 5, 170, 20, 180, $wblue);
-    imagerectangle($image, 5, 170, 20, 180, $black);
-    imagestring($image, 1, 25, 171, 'UNIQUE VISITORS', $black);
-
-    imagefilledrectangle($image, 5, 185, 20, 195, $wgreen);
-    imagerectangle($image, 5, 185, 20, 195, $black);
-    imagestring($image, 1, 25, 186, 'SITE AUDIENCE', $black);
-
-    imagefilledrectangle($image, 5, 200, 20, 210, $yellow);
-    imagerectangle($image, 5, 200, 20, 210, $black);
-    imagestring($image, 1, 25, 202, 'SITE HITS', $black);
-
-    imagerectangle($image, 0, 296, 799, 339, $gray);
-    imagerectangle($image, 0, 252, 800, 252, $gray);
-    imagerectangle($image, 0, 0, 799, 339, $gray);
-
-    imagestring($image, 1, 5, 5, 'VISITS BY DAYS FOR '.strtoupper($conf['homeurl']).' BY SLAED CMS '.$conf['version'].' - '.date(_TIMESTRING), $wblue);
-
-    imagestring($image, 1, 5, 30, 'UNIQUES TOTAL: '.$unique, $red);
-    imagestring($image, 1, 5, 40, 'HITS TOTAL: '.$today, $green);
-    imagestring($image, 1, 5, 50, 'HOMEPAGE HITS: '.$homepage, $purple);
-
-    imagestring($image, 1, 5, 70, 'OTHER SITES: '.$sites, $wblue);
-    imagestring($image, 1, 5, 80, 'SEARCH ENGINES: '.$engines, $red);
-    imagestring($image, 1, 5, 90, 'AUDIENCE: '.$auditory, $green);
-    imagestring($image, 1, 5, 100, 'REG. USERS: '.$regusers, $purple);
-
-    imagestring($image, 1, 5, 120, 'PAGES PER VIS.: '.(($unique > 0) ? round($today / $unique, 2) : 0), $wblue);
-    imagestring($image, 1, 5, 130, 'AVR. AUDIENCE: '.(($i > 0) ? round($auditory / $i) : 0), $wblue);
-
-    $sdir = COUNTER_DIR.'/statistic';
-    if ($report && !is_dir($sdir) && !mkdir($sdir, 0755, true)) $report = 0;
-    if ($report) {
-        imagepng($image, $sdir.'/'.date('m-Y').'.png');
-    } else {
-        imagepng($image);
-    }
-    exit;
-}
-
 # Authenticate and IP address check
 function checkAccess() {
     global $conf;
@@ -1229,19 +1049,21 @@ function getAdminFileProps(string $path): string {
     [$icon, $tone] = getAdminFileIcon($one['kind']);
     $body = empty($one['editable']) ? [] : $man->getFileBody($one['path']);
     $rows = [
-        ['label' => _NAME, 'value' => $one['name']],
+        ['label' => _NAME, 'value' => $one['name'], 'can_cut' => true],
         ['label' => _TYPE, 'value' => ($one['extension'] === '') ? $one['kind'] : $one['kind'].' · '.$one['extension']],
     ];
     if ($one['kind'] !== 'dir') $rows[] = ['label' => _SIZE, 'value' => filterSize($one['size'])];
     if ($one['width']) $rows[] = ['label' => _UPLOADS_DIMS, 'value' => $one['width'].' × '.$one['height']];
     if ($body !== []) $rows[] = ['label' => _UPLOADS_LINES, 'value' => number_format($body['lines'], 0, '', ' ')];
     $rows[] = ['label' => _DATE, 'value' => date(_TIMESTRING, $one['mtime'])];
-    $rows[] = ['label' => ($one['url'] === '') ? _UPLOADS_PATH : _UPLOADS_ADDR, 'value' => ($one['path'] === '') ? '/' : ($one['url'] ?: $one['path'])];
-    $rows[] = ['label' => _UPLOADS_FULL, 'value' => $one['realpath'] ?? ''];
+    $rows[] = ['label' => ($one['url'] === '') ? _UPLOADS_PATH : _UPLOADS_ADDR, 'value' => ($one['path'] === '') ? '/' : ($one['url'] ?: $one['path']), 'can_cut' => true];
+    $rows[] = ['label' => _UPLOADS_FULL, 'value' => $one['realpath'] ?? '', 'can_cut' => true];
     if ($one['perms'] !== '') $rows[] = ['label' => _UPLOADS_PERMS, 'value' => $one['perms']];
     if ($one['owner'] !== '') $rows[] = ['label' => _UPLOADS_USER, 'value' => $one['owner']];
     if ($body !== []) $rows[] = ['label' => _UPLOADS_VERSION, 'value' => substr($body['version'], 0, 6)];
     if ($one['managed']) $rows[] = ['label' => _UPLOADS_OWNER, 'value' => FileManager::getFileOwner($one['name']) ?? _UPLOADS_OWNSITE];
+    $rows = array_map(static fn(array $row): array => ['label' => $row['label'], 'text' => $row['value'],
+        'is_long' => !empty($row['can_cut']) && mb_strlen((string)$row['value']) >= CELL_LONG, 'tip_label' => _DETAILS.': '.$row['label']], $rows);
     $warn = empty($one['critical']) ? '' : _UPLOADS_CRIT;
     if ($warn === '' && $one['managed'] && !empty($one['capabilities']['rename'])) $warn = _UPLOADS_LINKWARN;
     return $tpl->getHtmlFrag('file-browser-props', [
@@ -1345,6 +1167,14 @@ function getAdminFileShell(bool $full = false, array $edit = []): string {
     $sum = 0;
     foreach ($all as $row) $sum += $row['size'];
     $rule = getAdminUploadRule($dir);
+    $quota = '';
+    $room = ($ctx === 'uploads' && $rule['mod'] !== '') ? UPLOADS_DIR.'/'.getUploadFolder($rule['mod']) : '';
+    $max = ($room !== '' && is_dir($room)) ? getUploadRuleData($rule['mod'])['maxquota'] : 0;
+    if ($max > 0) {
+        require_once BASE_DIR.'/core/classes/upload.php';
+        $have = (new Upload(UPLOADS_DIR))->getUsedBytes($room);
+        $quota = getTplMeter(_FSIZEALL, $have, $max, sprintf(_NUMOF, filterSize($have), filterSize($max)));
+    }
     $show = $all;
     $mark = !empty($able['delete']) || !empty($able['compress']) || !empty($able['move']);
     $rows = '';
@@ -1453,6 +1283,7 @@ function getAdminFileShell(bool $full = false, array $edit = []): string {
         'caps_label' => _UPLOADS_GRANTS,
         'caps_html' => getAdminFileGrants(),
         'info_text' => _OVERALL.': '.count($all).' · '.filterSize($sum),
+        'quota_html' => $quota,
         'tree_html' => getAdminFileNodes($dir),
         'props_html' => getAdminFileProps($pick),
         'edit_html' => ($pick === '') ? '' : getAdminFileEditor($edit),

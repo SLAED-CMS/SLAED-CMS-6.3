@@ -1,6 +1,7 @@
 <div id="sl-list" hx-target="this" hx-swap="outerHTML show:none" hx-history-elt hx-history="false" hx-headers='{"X-SL-Part": "1"}' data-sl-list>
 {{{ head_html }}}
 {{{ note_html }}}
+{% if pane %}<section class="sl-pane">{% include 'fragments/pane-cap.html' with pane %}<div class="sl-pane-body">{{{ pane.tiles_html }}}{% endif %}
 <div class="sl-box sl-table-shell" data-sl-list-said="{{ said }}">
   {% if is_sweep %}<div class="sl-alert sl-alert-info sl-list-note" data-sl-allpages data-sl-allpages-num="{{ count }}" data-sl-allpages-upto="{{ bulk.upto }}" hidden><div class="sl-alert-body"><span role="status" data-sl-allpages-text data-sl-page-all="{{ _ADM_PAGEALL }}" data-sl-all-on="{{ _ADM_ALLON }}" data-sl-swept="{{ _ADM_SWEPT }}"></span></div><div class="sl-alert-acts"><button type="button" class="sl-alert-act" data-sl-allpages-go><i class="bi bi-check2-all" aria-hidden="true"></i>{{ all_text }}</button><button type="button" class="sl-alert-act sl-alert-act-quiet" data-sl-allpages-off hidden><i class="bi bi-x-lg" aria-hidden="true"></i>{{ _ADM_UNPICK }}</button><button type="button" class="sl-alert-act sl-alert-act-quiet" data-sl-sweep-hold data-sl-pause="{{ _PAUSE }}" data-sl-resume="{{ _RESUME }}" aria-pressed="false" hidden><i class="bi bi-pause-fill" aria-hidden="true"></i><i class="bi bi-play-fill" aria-hidden="true" hidden></i><span>{{ _PAUSE }}</span></button></div><span class="sl-alert-meter" aria-hidden="true" data-sl-sweep-meter hidden></span></div>{% endif %}
   <div class="sl-alert sl-alert-error sl-list-note" role="alert" tabindex="-1" data-sl-list-error hidden><div class="sl-alert-body">{{ _ADM_LISTERR }}</div><div class="sl-alert-acts"><button type="button" class="sl-alert-act" data-sl-list-retry><i class="bi bi-arrow-clockwise" aria-hidden="true"></i>{{ _RETRY }}</button></div></div>
@@ -34,5 +35,6 @@
   <p class="sl-list-none{% if is_calm %} sl-list-calm{% endif %}">{{ none_text }}</p>
   {% endif %}
 </div>
+{% if pane %}</div></section>{% endif %}
 {{{ foot_html }}}
 </div>

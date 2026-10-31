@@ -1008,11 +1008,7 @@ CALL modcol('{prefix}_rating_votes', 'annulled', 'DATETIME DEFAULT NULL');
 # Batch K — _referer
 # =============================================================================
 
-CALL rencol('{prefix}_referer', 'date', 'time');
-CALL renidx('{prefix}_referer', 'date', 'time');
-CALL addidx('{prefix}_referer', 'time', '`time`', 0);
-CALL addidx('{prefix}_referer', 'ip', '`ip`', 0);
-CALL delcol('{prefix}_referer', 'lid');
+DROP TABLE IF EXISTS `{prefix}_referer`;
 
 # =============================================================================
 # Batch K — _search
@@ -1199,9 +1195,6 @@ CALL rencol('{prefix}_groups',     'description', 'intro');
 # =============================================================================
 # Batch V: naming consistency — url, email, website, pview/pread/... columns
 # =============================================================================
-
-# _referer: link → url
-CALL rencol('{prefix}_referer',    'link',        'url');
 
 # _categories: auth_* → p* (permission columns)
 CALL rencol('{prefix}_categories', 'auth_view',   'pview');
@@ -1465,18 +1458,6 @@ ALTER TABLE `{prefix}_rating`
   MODIFY `mid` INT UNSIGNED NOT NULL DEFAULT 0,
   MODIFY `uid` INT UNSIGNED NOT NULL DEFAULT 0,
   MODIFY `ip` VARCHAR(45) CHARACTER SET ascii COLLATE ascii_bin NOT NULL DEFAULT '';
-
-UPDATE `{prefix}_referer` SET `referer` = '' WHERE `referer` IS NULL;
-UPDATE `{prefix}_referer` SET `url`     = '' WHERE `url`     IS NULL;
-
-ALTER TABLE `{prefix}_referer`
-  MODIFY `id`      INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  MODIFY `referer` VARCHAR(2048) NOT NULL DEFAULT '',
-  MODIFY `url`     VARCHAR(2048) NOT NULL DEFAULT '',
-  MODIFY `uid` INT UNSIGNED NOT NULL,
-  MODIFY `name` VARCHAR(45) NOT NULL,
-  MODIFY `ip` VARCHAR(45) CHARACTER SET ascii COLLATE ascii_bin NOT NULL DEFAULT '',
-  MODIFY `time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP;
 
 UPDATE `{prefix}_session` SET `url` = '' WHERE `url` IS NULL;
 
@@ -2169,7 +2150,6 @@ CALL setconv('{prefix}_rating', '{collate}');
 CALL setconv('{prefix}_rating_actors', '{collate}');
 CALL setconv('{prefix}_rating_targets', '{collate}');
 CALL setconv('{prefix}_rating_votes', '{collate}');
-CALL setconv('{prefix}_referer', '{collate}');
 CALL setconv('{prefix}_routes', '{collate}');
 CALL setconv('{prefix}_search', '{collate}');
 CALL setconv('{prefix}_session', '{collate}');
@@ -2214,7 +2194,6 @@ CALL delidx('{prefix}_node_assets', 'report');
 CALL delidx('{prefix}_points', 'target');
 CALL delidx('{prefix}_rating', 'mid');
 CALL delidx('{prefix}_rating', 'uid');
-CALL delidx('{prefix}_referer', 'uid');
 CALL delidx('{prefix}_search', 'word');
 CALL delidx('{prefix}_search', 'modul');
 CALL delidx('{prefix}_session', 'ip');

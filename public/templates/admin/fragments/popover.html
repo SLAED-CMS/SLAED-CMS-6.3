@@ -14,4 +14,5 @@
   </div>
 </div>
 {% endif %}
-{% if label_text %}<span class="sl-note">{{ label_text }}</span>{% endif %}
+{% if tip_text %}<div class="sl-float sl-tip"><button type="button" aria-label="{% if tip_label %}{{ tip_label }}{% else %}{{ _DETAILS }}{% endif %}"><i class="bi bi-info-circle-fill" aria-hidden="true"></i></button><div class="sl-float-panel" role="tooltip">{{ tip_text }}</div></div>{% endif %}
+{% if label_text %}<span class="sl-note"{% if title_text %} title="{{ title_text }}"{% endif %}>{{ label_text }}</span>{% endif %}

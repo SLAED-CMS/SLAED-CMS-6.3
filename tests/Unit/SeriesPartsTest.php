@@ -12,7 +12,7 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use Template;
 
-# The parts of the series in the theme admin: no screen draws them before the statistic and monitor screens take them, so this holds their keys and their escaping
+# The parts of the series in the theme admin that the statistic and monitor screens share: their keys and their escaping
 final class SeriesPartsTest extends TestCase
 {
     private static Template $view;
@@ -50,6 +50,51 @@ final class SeriesPartsTest extends TestCase
     }
 
     #[Test]
+    public function aTileCarriesItsChangeBesideItsNote(): void
+    {
+        $tile = self::getPart('metric-list', ['items' => [[
+            'label' => 'A', 'value' => '1 200', 'num' => 1200, 'note' => 'N<', 'delta' => '+12%', 'dir' => 'up', 'arrow' => 'arrow-up-right', 'delta_tip' => 'T<',
+        ]]]);
+        $this->assertSame('1200', $tile->querySelector('.sl-metric-value > [data-sl-figure]')->getAttribute('data-sl-figure'));
+        $this->assertSame('N<', $tile->querySelector('[data-sl-metric-note]')->textContent);
+        $delta = $tile->querySelector('small > .sl-metric-delta-up[data-sl-metric-delta]');
+        $this->assertSame('T<', $delta->getAttribute('title'));
+        $this->assertNotNull($delta->querySelector('i.bi-arrow-up-right'));
+        $this->assertSame('+12%', $delta->lastElementChild->textContent);
+        $this->assertNull(self::getPart('metric-list', ['items' => [['label' => 'B', 'value' => '2', 'note' => 'N']]])->querySelector('[data-sl-metric-delta]'));
+    }
+
+    # The cockpit takes its rings, its strip and its parts as data: the home and the statistic share this one markup
+    #[Test]
+    public function theCockpitTakesItsPartsAsData(): void
+    {
+        $view = \Dom\HTMLDocument::createFromString('<!doctype html><html><body>'.self::$view->getHtmlPart('cockpit', [
+            'tone' => 'ok',
+            'cap_icon' => 'graph-up',
+            'cap_text' => 'C<',
+            'rings' => [['key' => 'human', 'label' => 'L<', 'title' => 'T<']],
+            'strip' => [['key' => 'usr', 'icon' => 'person', 'label' => 'U<', 'unit' => ''], ['key' => 'gen', 'icon' => 'stopwatch', 'label' => 'G', 'unit' => 'ms']],
+            'state_html' => '<span id="state"></span>',
+            'lamp_html' => '<div id="lamp"></div>',
+            'nav_html' => '<div id="nav"></div>',
+        ]).'</body></html>', LIBXML_NOERROR);
+        $this->assertNull($view->querySelector('[data-sl-cockpit]'), 'A page with its own poll carries no address of the home poll');
+        $this->assertSame('C<', $view->querySelector('#sl-cockpit-cap')->textContent);
+        $this->assertNotNull($view->querySelector('#sl-cockpit-cap > i.bi-graph-up'));
+        $this->assertNotNull($view->querySelector('.sl-cockpit-top > #state'));
+        $this->assertNotNull($view->querySelector('.sl-cockpit-top > #nav'));
+        $this->assertNotNull($view->querySelector('.sl-cockpit-gauges > #lamp'));
+        $this->assertNull($view->querySelector('[data-sl-cockpit-pass]'), 'A lamp of its own replaces the lamp of the checks');
+        $ring = $view->querySelector('[data-sl-gauge="human"]');
+        $this->assertSame('L<', $ring->getAttribute('aria-label'));
+        $this->assertSame('T<', $view->querySelector('#sl-cockpit-tip-human')->textContent);
+        $this->assertCount(2, $view->querySelectorAll('[data-sl-strip] [data-sl-strip-val]'));
+        $this->assertSame('U<', $view->querySelector('[data-sl-strip="usr"] > span')->textContent);
+        $this->assertStringContainsString(' ms ', $view->querySelector('[data-sl-strip="gen"]')->textContent);
+        $this->assertStringNotContainsString('href', $view->querySelector('template[data-sl-cockpit-row]')->innerHTML);
+    }
+
+    #[Test]
     public function groundHoldsItsLinesAndRowsTheirWindows(): void
     {
         $ground = self::getPart('pane-ground', ['content_html' => '<p id="in"></p>']);
@@ -75,6 +120,29 @@ final class SeriesPartsTest extends TestCase
         $this->assertNull($tiles[1]->querySelector('.sl-metric-dot, .sl-metric-icon'));
         $this->assertStringContainsString('sl-metric-good', $tiles[1]->getAttribute('class'));
         $this->assertSame('<7', $tiles[1]->querySelector('.sl-metric-value')->textContent);
+    }
+
+    #[Test]
+    public function figureOfATileKeepsItsValueApartFromItsText(): void
+    {
+        $doc = self::getPart('metric-list', ['items' => [['label' => 'Hits', 'value' => '1 234,5', 'num' => 1234.5, 'unit' => 'KB/s'], ['label' => 'Plain', 'value' => 'none']]]);
+        $tiles = $doc->querySelectorAll('.sl-metric-value');
+        $this->assertSame('1234.5', $tiles[0]->querySelector('[data-sl-figure]')->getAttribute('data-sl-figure'));
+        $this->assertSame('1 234,5', $tiles[0]->querySelector('[data-sl-figure]')->textContent);
+        $this->assertNull($tiles[1]->querySelector('[data-sl-figure]'));
+    }
+
+    #[Test]
+    public function partOfTheEngineCarriesItsDataWhole(): void
+    {
+        $json = json_encode(['label' => 'A"<b>', 'days' => [['value' => 3, 'cap' => "1 'x'"]]], JSON_UNESCAPED_UNICODE);
+        $host = self::getPart('series', ['id' => 'sl-days', 'kind' => 'days', 'json' => $json])->querySelector('#sl-days');
+        $this->assertSame('days', $host->getAttribute('data-sl-series'));
+        $this->assertSame($json, $host->getAttribute('data-sl-series-data'));
+        $this->assertSame('', $host->innerHTML);
+        $this->assertFalse(self::getPart('series', ['kind' => 'week', 'json' => '{}'])->querySelector('[data-sl-series]')->hasAttribute('id'));
+        $wait = self::getPart('series', ['kind' => 'live', 'json' => '{}', 'wait_text' => 'W<'])->querySelector('[data-sl-series] > .sl-loading[role="status"]');
+        $this->assertSame('W<', $wait->getAttribute('aria-label'));
     }
 
     #[Test]
@@ -125,24 +193,6 @@ final class SeriesPartsTest extends TestCase
         $this->assertSame('--sl-d-part: 75%', $bar->querySelector('i')->getAttribute('style'));
         $this->assertSame('3 of 4', $doc->querySelector('.sl-meter-note')->textContent);
         $this->assertNull(self::getPart('meter', ['label' => 'Disk', 'value' => '1%', 'pct' => 1, 'tone' => 'ok'])->querySelector('.sl-meter-note'));
-    }
-
-    #[Test]
-    public function signalsFoldThePassedOnes(): void
-    {
-        $loud = ['level' => 'danger', 'icon' => 'database', 'label' => 'DB<', 'fact' => 'down<', 'note' => 'src<'];
-        $calm = ['level' => 'ok', 'icon' => 'check', 'label' => 'PHP', 'fact' => '8.4'];
-        $doc = self::getPart('signal-list', ['loud' => [$loud], 'calm' => [$calm], 'calm_text' => 'Passed: 1']);
-        $this->assertSame('DB<', $doc->querySelector('body > .sl-signal.sl-knob-danger > span')->textContent);
-        $this->assertSame('down<', $doc->querySelector('body > .sl-signal > b')->textContent);
-        $this->assertNotNull($doc->querySelector('.sl-signal.sl-float > .sl-float-panel[role="tooltip"]'));
-        $this->assertSame('Passed: 1', trim($doc->querySelector('details.sl-signal-calm > summary')->textContent));
-        $this->assertNotNull($doc->querySelector('details.sl-signal-calm > .sl-signal.sl-knob-ok'));
-        $this->assertNull($doc->querySelector('details .sl-float-panel'));
-        $this->assertSame('0', $doc->querySelector('body > .sl-signal')->getAttribute('tabindex'));
-        $this->assertFalse($doc->querySelector('details .sl-signal')->hasAttribute('tabindex'));
-        $this->assertNull(self::getPart('signal-list', ['loud' => [$loud], 'calm' => []])->querySelector('details'));
-        $this->assertNull(self::getPart('signal-list', ['calm' => [$calm], 'calm_text' => 'Passed: 1'])->querySelector('body > .sl-signal'));
     }
 
     #[Test]

@@ -142,7 +142,9 @@ function newsletter(): void {
             ['is_truncate' => true, 'title_text' => (string)$camp['title'],
                 'text_html' => filterTextHighlight(htmlspecialchars((string)$camp['title'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'), $flt['chng'])],
             ['is_truncate' => true, 'has_content_text' => true, 'content_text' => getCampAudit((string)$camp['audit'], (string)$camp['apar'])],
-            ['is_col_count' => true, 'has_content_text' => true, 'content_text' => $camp['total'].' / '.$camp['expect']],
+            ['class_name' => 'sl-col-sent', 'is_col_count' => true] + ((intval($camp['expect']) > 0)
+                ? ['content_html' => getTplMeter(_NLPROGRESS, intval($camp['total']), intval($camp['expect']), '', 'ok', $camp['total'].' / '.$camp['expect'], true)]
+                : ['has_content_text' => true, 'content_text' => $camp['total'].' / '.$camp['expect']]),
             ['class_name' => 'sl-col-sent', 'is_col_count' => true, 'content_html' => $camp['send'].' '._NLUSER],
             ['is_col_count' => true, 'has_content_text' => true, 'content_text' => $camp['fails'].' ('.$rate.'%)'],
             ['is_col_status' => true, 'has_content_text' => true, 'content_text' => getCampState(intval($camp['status']))],
@@ -158,7 +160,7 @@ function newsletter(): void {
             ['content' => _ID, 'is_col_id' => true],
             ['content' => _TITLE, 'is_truncate' => true],
             ['content' => _NLWHERE, 'is_truncate' => true],
-            ['content' => _NLPROGRESS, 'is_col_count' => true],
+            ['content' => _NLPROGRESS, 'class_name' => 'sl-col-sent', 'is_col_count' => true],
             ['content' => _NLEND, 'class_name' => 'sl-col-sent', 'is_col_count' => true],
             ['content' => _NLFAILS, 'is_col_count' => true],
             ['content' => _STATUS, 'is_col_status' => true, 'nosort' => true],
@@ -395,9 +397,8 @@ function queue(): void {
     $back = 'kind='.rawurlencode($kind).'&status='.$stat.'&num='.$data['page'];
     $tally = $mailer->getStats();
     $items = [];
-    foreach ([_MAIL_PEND => 'pend', _MAIL_HELD => 'hold', _MAIL_ACCEPT => 'sent', _MAIL_FAILED => 'fail'] as $label => $key) {
-        $items[] = ['label_html' => $label, 'field_text' => (string)$tally[$key], 'has_field_text' => true];
-    }
+    $parts = [[_MAIL_PEND, 'pend', 'hourglass-split'], [_MAIL_HELD, 'hold', 'pause-circle'], [_MAIL_ACCEPT, 'sent', 'check2-circle'], [_MAIL_FAILED, 'fail', 'x-circle']];
+    foreach ($parts as [$label, $key, $icon]) $items[] = ['label' => $label, 'value' => filterDecimal($tally[$key], 0), 'icon' => $icon];
     $rows = [];
     foreach ($data['rows'] as $row) {
         $note = trim((string)$row['phase'].' '.$row['code'].' '.$row['error']);
@@ -405,12 +406,12 @@ function queue(): void {
             'cells' => [
             ['is_col_id' => true, 'has_content_text' => true, 'content_text' => $row['id']],
             ['has_content_text' => true, 'content_text' => (string)$row['kind']],
-            ['is_truncate' => true, 'title_text' => (string)$row['email'], 'has_content_text' => true, 'content_text' => (string)$row['email']],
-            ['is_truncate' => true, 'title_text' => (string)$row['title'], 'has_content_text' => true, 'content_text' => (string)$row['title']],
+            ['is_truncate' => true, 'has_content_text' => true, 'content_text' => (string)$row['email']] + getTplLongCell((string)$row['email'], _EMAIL),
+            ['is_truncate' => true, 'has_content_text' => true, 'content_text' => (string)$row['title']] + getTplLongCell((string)$row['title'], _TITLE),
             ['is_col_count' => true, 'has_content_text' => true, 'content_text' => (string)$row['tries']],
             ['is_col_date' => true, 'moment' => $row['time']],
             ['is_col_status' => true, 'has_content_text' => true, 'content_text' => getQueueState($row)],
-            ['is_truncate' => true, 'title_text' => $note, 'has_content_text' => true, 'content_text' => $note],
+            ['is_truncate' => true, 'has_content_text' => true, 'content_text' => $note] + getTplLongCell($note, _ERROR),
             ['is_col_actions' => true, 'dial' => getQueueActions($row, $back)],
         ]];
     }
@@ -418,7 +419,8 @@ function queue(): void {
     echo getTplAdminList([
         'head_html' => getCampTabs(2, getQueueSearch($kind, $stat)),
         'key' => 'newsletter-queue',
-        'note_html' => getQueueAlarm().$tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('div', ['rows' => $items])]),
+        'note_html' => getQueueAlarm().$tpl->getHtmlFrag('pane', ['title' => _NLQUEUE, 'icon' => 'envelope-paper',
+            'content_html' => $tpl->getHtmlFrag('metric-list', ['items' => $items])]),
         'is_fixed' => true,
         'head' => [
             ['content' => _ID, 'is_col_id' => true],
@@ -524,9 +526,9 @@ function dead(): void {
         $mail = filterTextHighlight(htmlspecialchars((string)$row['email'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'), $flt['chng']);
         $rows[] = ['name' => (string)$row['email'], 'drop' => $drop + ['later' => 'gone move'], 'cells' => [
             ['is_col_id' => true, 'has_content_text' => true, 'content_text' => $row['id']],
-            ['is_truncate' => true, 'title_text' => (string)$row['email'], 'text_html' => $mail],
+            ['is_truncate' => true, 'text_html' => $mail] + getTplLongCell((string)$row['email'], _EMAIL),
             ['is_col_count' => true, 'has_content_text' => true, 'content_text' => (string)$row['fails']],
-            ['is_truncate' => true, 'title_text' => $note, 'has_content_text' => true, 'content_text' => $note],
+            ['is_truncate' => true, 'has_content_text' => true, 'content_text' => $note] + getTplLongCell($note, _ERROR),
             ['is_col_date' => true, 'moment' => $row['time']],
             ['is_col_actions' => true, 'dial' => []],
         ]];

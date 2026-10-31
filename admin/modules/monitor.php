@@ -6,620 +6,336 @@
 
 if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 
-# Builds a smooth SVG cubic-bezier line path from metric history for chart rendering
-function getSmoothLinePath(array $hist, float $max, int $ht = 220, int $wt = 100, int $px = 0): string {
-    $pts = getHistoryPoints($hist, $max, $ht, $wt, $px);
-    if (!$pts) return 'M'.$px.','.$ht.' L'.($wt - $px).','.$ht;
-    if (count($pts) < 2) return 'M'.$pts[0]['x'].','.$pts[0]['y'].' L'.$pts[0]['x'].','.$pts[0]['y'];
-    $pat = 'M'.$pts[0]['x'].','.$pts[0]['y'].' ';
-    $nn = count($pts);
-    for ($ix = 0; $ix < $nn - 1; $ix++) {
-        $pta = ($ix > 0) ? $pts[$ix - 1] : $pts[$ix];
-        $ptb = $pts[$ix];
-        $ptc = $pts[$ix + 1];
-        $ptd = ($ix + 2 < $nn) ? $pts[$ix + 2] : $ptc;
-        $conax = $ptb['x'] + (($ptc['x'] - $pta['x']) / 6);
-        $conay = $ptb['y'] + (($ptc['y'] - $pta['y']) / 6);
-        $conbx = $ptc['x'] - (($ptd['x'] - $ptb['x']) / 6);
-        $conby = $ptc['y'] - (($ptd['y'] - $ptb['y']) / 6);
-        $pat .= 'C'.round($conax, 2).','.round($conay, 2).' '
-            .round($conbx, 2).','.round($conby, 2).' '
-            .$ptc['x'].','.$ptc['y'].' ';
-    }
-    return trim($pat);
+# A rate of the sample in KB/s: the sample holds bytes, and the chart keeps one unit for its whole window
+function getMonitorRate(array $hist): array {
+    return array_map(static fn(int|float $val): float => round($val / 1024, 1), $hist);
 }
 
-# Builds a smooth closed SVG area path from metric history for filled chart rendering
-function getSmoothAreaPath(array $hist, float $max, int $ht = 220, int $wt = 100, int $px = 0): string {
-    $pts = getHistoryPoints($hist, $max, $ht, $wt, $px);
-    if (!$pts) return 'M'.$px.','.$ht.' L'.($wt - $px).','.$ht.' Z';
-    $fir = $pts[0];
-    $pat = 'M'.$px.','.$ht.' L'.$fir['x'].','.$fir['y'].' ';
-    $nn = count($pts);
-    if ($nn === 1) {
-        $pat .= 'L'.($wt - $px).','.$ht.' Z';
-        return $pat;
-    }
-    for ($ix = 0; $ix < $nn - 1; $ix++) {
-        $pta = ($ix > 0) ? $pts[$ix - 1] : $pts[$ix];
-        $ptb = $pts[$ix];
-        $ptc = $pts[$ix + 1];
-        $ptd = ($ix + 2 < $nn) ? $pts[$ix + 2] : $ptc;
-        $conax = $ptb['x'] + (($ptc['x'] - $pta['x']) / 6);
-        $conay = $ptb['y'] + (($ptc['y'] - $pta['y']) / 6);
-        $conbx = $ptc['x'] - (($ptd['x'] - $ptb['x']) / 6);
-        $conby = $ptc['y'] - (($ptd['y'] - $ptb['y']) / 6);
-        $pat .= 'C'.round($conax, 2).','.round($conay, 2).' '.round($conbx, 2).','.round($conby, 2).' '.$ptc['x'].','.$ptc['y'].' ';
-    }
-    $pat .= 'L'.($wt - $px).','.$ht.' Z';
-    return trim($pat);
-}
-
-# Builds normalized SVG points from metric history for chart lines and hover markers
-function getHistoryPoints(array $hist, float $max, int $ht = 220, int $wt = 100, int $px = 0): array {
-    $hist = array_values(array_map('floatval', $hist));
-    if (!$hist) return [];
-    $cnt = count($hist);
-    $max = max($max, 1.0);
-    $iw = max($wt - ($px * 2), 1);
-    $pts = [];
-    foreach ($hist as $ix => $val) {
-        $xx = $px + (($cnt > 1) ? ($ix * ($iw / ($cnt - 1))) : 0.0);
-        $yy = $ht - (($val / $max) * ($ht - 10));
-        if ($yy < 0) $yy = 0;
-        if ($yy > $ht) $yy = $ht;
-        $pts[] = ['x' => round($xx, 2), 'y' => round($yy, 2), 'value' => round($val, 2)];
-    }
-    return $pts;
-}
-
-# Samples evenly distributed points from history for aligned hover markers and tooltips
-function getHistoryBucketPoints(array $hist, float $max, int $ht = 220, int $wt = 100, int $px = 0, int $cnt = 6): array {
-    $pts = getHistoryPoints($hist, $max, $ht, $wt, $px);
-    if (!$pts || $cnt <= 0) return [];
-    if (count($pts) === 1) return array_fill(0, $cnt, $pts[0]);
-    $last = count($pts) - 1;
-    $out = [];
-    for ($ix = 0; $ix < $cnt; $ix++) {
-        $pos = ($cnt > 1) ? ($ix * ($last / ($cnt - 1))) : 0.0;
-        $out[] = $pts[(int)round($pos)];
-    }
-    return $out;
-}
-
-# Returns the nearest point from a series for a given hover bucket index
-function getHistoryMarkerPoint(array $pts, int $ix, int $cnt = 6): array {
-    $nn = count($pts);
-    if ($nn <= 0) return [];
-    if ($nn === 1) return $pts[0];
-    $pos = ($cnt > 1) ? ($ix * (($nn - 1) / ($cnt - 1))) : 0.0;
-    return $pts[(int)round($pos)] ?? $pts[$nn - 1];
-}
-
-# Returns the localized monitor time label
-function getMonitorChartTimeLabel(int $sec, bool $now = false): string {
-    if ($now) return _MONITOR_TIME_NOW;
-    return sprintf(_MONITOR_TIME_AGO, $sec);
-}
-
-# Builds the monitor traffic chart from its four series, labelled by the stored time of each picked point; the SVG around them lives in the theme partial
-function getMonitorChartSvg(array $snap): string {
-    global $tpl;
-    $uh = is_array($snap['hist_up'] ?? null) ? $snap['hist_up'] : [];
-    $dh = is_array($snap['hist_down'] ?? null) ? $snap['hist_down'] : [];
-    $ch = is_array($snap['hist_cpu'] ?? null) ? $snap['hist_cpu'] : [];
-    $rh = is_array($snap['hist_ram'] ?? null) ? $snap['hist_ram'] : [];
-    $times = is_array($snap['hist_time'] ?? null) ? $snap['hist_time'] : [];
-    $ww = 900;
-    $hh = 285;
-    $pb = 222;
-    $px = 8;
-    $bc = 6;
-    $tw = 148;
-    $th = 104;
-    $xs = [];
-    $stamps = [];
-    for ($ix = 0; $ix < $bc; $ix++) {
-        $xs[] = round($px + ($ix * (($ww - ($px * 2)) / ($bc - 1))), 2);
-        $stamps[] = (int)($times[(int)round($ix * max(count($times) - 1, 0) / ($bc - 1))] ?? time());
-    }
-    $vals = array_map('floatval', array_merge($uh, $dh));
-    $mx = $vals ? max(1.0, max($vals)) : 1.0;
-    $upb = getHistoryBucketPoints($uh, $mx, $pb, $ww, $px, $bc);
-    $dpb = getHistoryBucketPoints($dh, $mx, $pb, $ww, $px, $bc);
-    $cpb = getHistoryBucketPoints($ch, 100.0, $pb, $ww, $px, $bc);
-    $rpb = getHistoryBucketPoints($rh, 100.0, $pb, $ww, $px, $bc);
-    $series = [
-        ['key' => 'up', 'grad' => 'slMonitorAreaUp', 'area' => getSmoothAreaPath($uh, $mx, $pb, $ww, $px), 'line' => getSmoothLinePath($uh, $mx, $pb, $ww, $px)],
-        ['key' => 'down', 'grad' => 'slMonitorAreaDown', 'area' => getSmoothAreaPath($dh, $mx, $pb, $ww, $px), 'line' => getSmoothLinePath($dh, $mx, $pb, $ww, $px)],
-        ['key' => 'cpu', 'grad' => 'slMonitorAreaCpu', 'area' => getSmoothAreaPath($ch, 100.0, $pb, $ww, $px), 'line' => getSmoothLinePath($ch, 100.0, $pb, $ww, $px)],
-        ['key' => 'ram', 'grad' => 'slMonitorAreaRam', 'area' => getSmoothAreaPath($rh, 100.0, $pb, $ww, $px), 'line' => getSmoothLinePath($rh, 100.0, $pb, $ww, $px)],
+# A tile of a series over the chart: the value now, the peak and the mean of the window, the dot and the icon of the series
+function getMonitorTile(string $label, string $tone, string $icon, array $vals, string $unit, int $digits): array {
+    $now = $vals ? (float)$vals[count($vals) - 1] : 0.0;
+    $text = static fn(int|float $num): string => filterDecimal($num, $digits);
+    return [
+        'label' => $label,
+        'tone' => $tone,
+        'icon' => $icon,
+        'unit' => $unit,
+        'num' => round($now, $digits),
+        'value' => $text($now),
+        'note' => sprintf(_MONITOR_PEAKAVG, $text($vals ? max($vals) : 0), $text($vals ? array_sum($vals) / count($vals) : 0)),
     ];
-    $gy = [42, 82, 122, 162, 202];
-    $al = ['100', '75', '50', '25', '0'];
-    $grid = '';
-    $ticks = [];
-    foreach ($gy as $ix => $yy) {
-        $grid .= 'M'.$px.' '.$yy.'H'.($ww - $px);
-        $ticks[] = ['y' => $yy + 3, 'label' => $al[$ix]];
-    }
-    $vgrid = '';
-    $axes = [];
-    foreach ($xs as $ix => $xx) {
-        $vgrid .= 'M'.$xx.' 42V'.$pb;
-        $sec = max(time() - $stamps[$ix], 0);
-        $axes[] = ['x' => round($xx, 2), 'label' => getMonitorChartTimeLabel($sec, $sec < 10)];
-    }
-    $slots = [];
-    for ($ix = 0; $ix < $bc; $ix++) {
-        $up = $upb[$ix] ?? null;
-        $dp = $dpb[$ix] ?? null;
-        $cp = $cpb[$ix] ?? null;
-        $rp = $rpb[$ix] ?? null;
-        $fp = getHistoryMarkerPoint($cpb, $ix, $bc);
-        $xx = (float)$xs[$ix];
-        $stt = ($ix === 0) ? $px : round((($xs[$ix - 1]) + $xx) / 2, 2);
-        $end = ($ix === $bc - 1) ? ($ww - $px) : round(($xx + ($xs[$ix + 1])) / 2, 2);
-        $tx = $xx + 14;
-        if ($tx + $tw > $ww - $px) $tx = $xx - $tw - 14;
-        if ($tx < $px) $tx = $px;
-        $fy = (float)($fp['y'] ?? ($cp['y'] ?? $pb));
-        $ty = (($fy + $th + 18) > ($hh - 8)) ? max($fy - $th - 16, 8) : 56;
-        $tm = $stamps[$ix];
-        $sec = max(time() - $tm, 0);
-        $lb = getMonitorChartTimeLabel($sec, $sec < 10);
-        $slots[] = [
-            'x' => $xx,
-            'y' => $fy,
-            'tipx' => round($tx, 2),
-            'tipy' => $ty,
-            'title' => date('H:i:s', $tm).' · '.$lb,
-            'zonex' => $stt,
-            'zonewidth' => max($end - $stt, 1),
-            'rows' => [
-                ['y' => 39, 'label' => 'CPU', 'value' => round((float)($cp['value'] ?? 0), 1).'%'],
-                ['y' => 57, 'label' => 'RAM', 'value' => round((float)($rp['value'] ?? 0), 1).'%'],
-                ['y' => 75, 'label' => 'Upstream', 'value' => filterSize((float)($up['value'] ?? 0)).'/s'],
-                ['y' => 93, 'label' => 'Downstream', 'value' => filterSize((float)($dp['value'] ?? 0)).'/s'],
+}
+
+# All the page redraws of one reading: the lamp and its panel, the rings and the strip of the cockpit, the tiles and the live chart; the first draw and the poll take this one shape
+function getMonitorView(array $snap, array $facts): array {
+    $sigs = getServerSignalList($facts);
+    $rate = getPageHourRate();
+    $lamp = getServerLamp($sigs, $rate, (float)$snap['cpu_p']);
+    $gauges = getCockpitRings($snap);
+    foreach ($sigs as $sig) if (isset($gauges[$sig['key']]) && $sig['level'] !== 'ok') $gauges[$sig['key']]['tone'] = $sig['level'];
+    $mood = ['ok' => _ADM_CALM, 'info' => _ADM_LULL, 'warn' => _ADM_HEED, 'danger' => _ADM_FAULT][$lamp['tone']];
+    $beat = ($rate === null) ? '—' : filterDecimal($rate / 60, 1);
+    $mins = getUptimeMinutes((string)$snap['uptime']);
+    $text = ($mins === null) ? '—' : getUptimeWords($mins);
+    $up = getMonitorRate($snap['net_hist_up']);
+    $down = getMonitorRate($snap['net_hist_down']);
+    $at = $snap['sys_hist_time'];
+    return [
+        'tone' => $lamp['tone'],
+        'loud' => $lamp['loud'],
+        'cap' => $lamp['loud'] ? _ADM_WAIT : sprintf(_ADM_PASSED, $lamp['total']),
+        'rows' => array_values(array_filter($sigs, static fn(array $sig): bool => $sig['level'] !== 'ok')),
+        'pulse' => [
+            'mode' => $lamp['mode'],
+            'base' => $lamp['base'],
+            'bpm' => $lamp['bpm'],
+            'num' => ($rate === null) ? '—' : round($rate / 60, 1),
+            'text' => $beat,
+            'mood' => $mood,
+            'label' => sprintf(_MONITOR_PULSE, $beat, $mood, $lamp['pass'], $lamp['total']),
+        ],
+        'gauges' => $gauges,
+        'strip' => ['uptime' => ['value' => $text, 'text' => $text]] + getCockpitStrip(),
+        'age' => ($snap['sampled_at'] > 0) ? max(time() - $snap['sampled_at'], 0) : 0,
+        'meta' => sprintf(_MONITOR_WINDOW, $at ? max(1, (int)round(($at[count($at) - 1] - $at[0]) / 60)) : 0),
+        'tiles' => [
+            getMonitorTile(_MONITOR_UP, 'up', 'cloud-upload-fill', $up, 'KB/s', 1),
+            getMonitorTile(_MONITOR_DOWN, 'down', 'cloud-download-fill', $down, 'KB/s', 1),
+            getMonitorTile('CPU', 'cpu', 'cpu-fill', $snap['sys_hist_cpu'], '%', 0),
+            getMonitorTile('RAM', 'ram', 'motherboard-fill', $snap['sys_hist_ram'], '%', 0),
+        ],
+        'live' => [
+            'label' => _MONITOR_TRAFFIC,
+            'at' => $at,
+            'now' => time(),
+            'grid' => ['100%', '75%', '50%', '25%', '0%'],
+            'words' => ['now' => _MONITOR_TIME_NOW, 'sec' => _MONITOR_TIME_AGO, 'min' => _MONITOR_TIME_MIN],
+            'series' => [
+                ['key' => 'up', 'name' => _MONITOR_UP, 'unit' => 'KB/s', 'digits' => 1, 'tone' => 'up', 'values' => $up],
+                ['key' => 'down', 'name' => _MONITOR_DOWN, 'unit' => 'KB/s', 'digits' => 1, 'tone' => 'down', 'values' => $down],
+                ['key' => 'cpu', 'name' => 'CPU', 'unit' => '%', 'digits' => 0, 'tone' => 'cpu', 'max' => 100, 'values' => $snap['sys_hist_cpu']],
+                ['key' => 'ram', 'name' => 'RAM', 'unit' => '%', 'digits' => 0, 'tone' => 'ram', 'max' => 100, 'values' => $snap['sys_hist_ram']],
             ],
-        ];
-    }
-    return $tpl->getHtmlPart('monitor-chart', [
-        'width' => $ww,
-        'height' => $hh,
-        'label' => 'Traffic monitoring chart',
-        'gridline' => $grid,
-        'vgrid' => $vgrid,
-        'ticks' => $ticks,
-        'series' => $series,
-        'slots' => $slots,
-        'axes' => $axes,
-        'tipwidth' => $tw,
-        'tipheight' => $th,
-    ]);
-}
-
-# Formats boolean status into colored HTML badges used by monitor status indicators
-function getStatusHtml(?bool $state): string {
-    global $tpl;
-    if ($state === null) return $tpl->getHtmlFrag('inline-badge', ['is_muted' => true, 'label' => 'N/A']);
-    return $tpl->getHtmlFrag('inline-badge', [
-        'is_success' => $state,
-        'is_danger' => !$state,
-        'label' => $state ? 'On' : 'Off',
-    ]);
-}
-
-# Builds the monitor snapshot with its chart paths from the one server sample; the page reads the sample as it stands, a poll passes $fresh to retake an old one
-function getMonitorPanelSnapshot(bool $fresh = false): array {
-    $snap = getMonitorSample($fresh);
-    $netmax = max(array_merge([1.0], $snap['net_hist_up'], $snap['net_hist_down']));
-    return [
-        'cpu_p' => $snap['cpu_p'],
-        'cpu' => $snap['cpu'],
-        'mem' => $snap['mem'],
-        'disk_total' => $snap['disk_total'],
-        'disk_free' => $snap['disk_free'],
-        'disk_used' => $snap['disk_used'],
-        'disk_pct' => $snap['disk_pct'],
-        'net' => $snap['net'],
-        'hist_down' => $snap['net_hist_down'],
-        'hist_up' => $snap['net_hist_up'],
-        'hist_cpu' => $snap['sys_hist_cpu'],
-        'hist_ram' => $snap['sys_hist_ram'],
-        'hist_time' => $snap['sys_hist_time'],
-        'path_up' => getSmoothAreaPath($snap['net_hist_up'], $netmax),
-        'path_down' => getSmoothAreaPath($snap['net_hist_down'], $netmax),
-        'path_cpu' => getSmoothAreaPath($snap['sys_hist_cpu'], 100.0),
-        'path_ram' => getSmoothAreaPath($snap['sys_hist_ram'], 100.0),
-        'path_up_line' => getSmoothLinePath($snap['net_hist_up'], $netmax),
-        'path_down_line' => getSmoothLinePath($snap['net_hist_down'], $netmax),
-        'path_cpu_line' => getSmoothLinePath($snap['sys_hist_cpu'], 100.0),
-        'path_ram_line' => getSmoothLinePath($snap['sys_hist_ram'], 100.0),
+        ],
     ];
 }
 
-# Builds template variables for realtime traffic panel including paths and tooltips
-function getTrafficPanelVars(?array $snapshot = null): array {
-    $snapshot = $snapshot ?? getMonitorPanelSnapshot();
-    $cpup = (float)$snapshot['cpu_p'];
-    $cpu = $snapshot['cpu'];
-    $mem = $snapshot['mem'];
-    $net = $snapshot['net'];
-    return [
-        'path_up' => $snapshot['path_up'],
-        'path_down' => $snapshot['path_down'],
-        'path_cpu' => $snapshot['path_cpu'],
-        'path_ram' => $snapshot['path_ram'],
-        'path_up_line' => $snapshot['path_up_line'],
-        'path_down_line' => $snapshot['path_down_line'],
-        'path_cpu_line' => $snapshot['path_cpu_line'],
-        'path_ram_line' => $snapshot['path_ram_line'],
-        'chartsvg' => getMonitorChartSvg($snapshot),
-        'tip_up' => 'Upstream: '.filterSize($net['tx_total']).' ('.filterSize($net['tx_rate']).'/s)',
-        'tip_down' => 'Downstream: '.filterSize($net['rx_total']).' ('.filterSize($net['rx_rate']).'/s)',
-        'tip_cpu' => 'CPU Usage: '.round((float)$cpup, 1).'%',
-        'tip_ram' => 'RAM Usage: '.round((float)$mem['percent'], 1).'% ('.filterSize($mem['used']).' / '.filterSize($mem['total']).')',
-        'nettx' => filterSize($net['tx_total']),
-        'netrx' => filterSize($net['rx_total']),
-        'nettxrate' => filterSize($net['tx_rate']).'/s',
-        'netrxrate' => filterSize($net['rx_rate']).'/s',
-        'cpuuse' => round((float)$cpup, 1),
-        'cpufreq' => $cpu['freq'],
-        'ram_p' => round((float)$mem['percent'], 1),
-        'ramtmb' => filterSize($mem['total']),
-    ];
+# A row of a list: a value cut short opens whole beside the mark of the system, an empty one says so in the quiet tone
+function getMonitorRow(string $label, string $text, bool $long = false): array {
+    if ($text === '') return ['label' => $label, 'text' => _NO_INFO, 'is_mute' => true];
+    return ['label' => $label, 'text' => $text, 'is_long' => $long, 'tip_label' => _DETAILS.': '.$label];
 }
 
-# Builds template variables for server status gauges, colors, and usage metrics
-function getServerStatusVars(?array $snapshot = null): array {
-    $snapshot = $snapshot ?? getMonitorPanelSnapshot();
-    $cpup = (float)$snapshot['cpu_p'];
-    $cpu = $snapshot['cpu'];
-    $mem = $snapshot['mem'];
-    $disksum = (float)$snapshot['disk_total'];
-    $diskused = (float)$snapshot['disk_used'];
-    $diskpct = (float)$snapshot['disk_pct'];
-    $cpuval = (float)$cpup;
-    $ramval = (float)$mem['percent'];
-    $diskval = (float)$diskpct;
-    return [
-        'load_0' => round($cpuval, 1),
-        'cpu_tone' => getPercentTone($cpuval),
-        'cpu_full' => $cpuval >= 100,
-        'cpucores' => $cpu['logical'],
-        'cpuphys' => $cpu['physical'],
-        'cpufreq' => $cpu['freq'],
-        'ram_tone' => getPercentTone($ramval),
-        'ram_full' => $ramval >= 100,
-        'ram_p' => round($ramval, 1),
-        'ramumb' => filterSize($mem['used']),
-        'ramtmb' => filterSize($mem['total']),
-        'ramavailmb' => filterSize($mem['free']),
-        'disk_tone' => getPercentTone($diskval),
-        'disk_full' => $diskval >= 100,
-        'disk_p' => $diskpct,
-        'diskused' => filterSize($diskused),
-        'disktot' => filterSize($disksum),
-    ];
+# A row of a state: its lamp with the word, in the system's words for on and off
+function getMonitorFlag(string $label, bool $state): array {
+    return ['label' => $label, 'text' => $state ? _ON : _OFF, 'is_flag' => true, 'is_on' => $state];
 }
 
-# Renders monitor partial HTML for selected panels using merged template variables
-function getMonitorPartial(array $snapshot, bool $showstat, bool $showtraf, bool $useoob = false): string {
-    global $tpl;
-    $vars = array_merge(
-        getServerStatusVars($snapshot),
-        getTrafficPanelVars($snapshot),
-        [
-            'status_oob' => ($showstat && $useoob) ? ' hx-swap-oob="outerHTML"' : '',
-            'traffic_oob' => ($showtraf && $useoob) ? ' hx-swap-oob="outerHTML"' : '',
-            'show_layout' => false,
-            'show_status' => $showstat,
-            'show_traffic' => $showtraf,
-        ]
-    );
-    return $tpl->getHtmlPart('basic-monitor', $vars);
+# A size of a folder, or the quiet word where it could not be read
+function getMonitorSize(string $label, int|float|null $bytes): array {
+    return ($bytes === null) ? getMonitorRow($label, '') : getMonitorRow($label, filterSize($bytes));
 }
 
-# Monitor counts and database size; the site and files tiles count the materials of the first active type of the article and files modes, or stay out
-function getMonitorDbStats(object $db, array $conf): array {
-    $userson = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_session'));
-    $count = static function (string $mode): ?int {
-        $type = getNodeModeType($mode);
-        try {
-            return ($type !== null) ? getNodeReader()->setNodeType($type)->getNodeCount() : null;
-        } catch (NodeException) {
-            return null;
-        }
-    };
-    $dbsize = 0;
-    $dbtabs = 0;
-    $dbname = preg_replace('#[^a-zA-Z0-9_]#', '', (string)($conf['db']['name'] ?? ''));
-    if ($dbname !== '') {
-        $dbres = $db->getSqlQuery(
-            'SELECT DATA_LENGTH AS data_length, INDEX_LENGTH AS index_length FROM information_schema.TABLES WHERE TABLE_SCHEMA = :name',
-            ['name' => $dbname]
-        );
-        while ($row = $db->getSqlRow($dbres)) {
-            $dbsize += (int)($row['data_length'] ?? 0) + (int)($row['index_length'] ?? 0);
-            $dbtabs++;
-        }
-    }
-    return [
-        'userson' => $userson,
-        'dbsize' => $dbsize,
-        'dbtabs' => $dbtabs,
-        'cntnews' => $count('article'),
-        'cntfile' => $count('files'),
-    ];
+# The latest security event as a line of its time, level and message, the raw line of the journal never shown
+function getMonitorEvent(?array $evt): array {
+    if ($evt === null) return getMonitorRow(_MONITOR_LASTEV, '');
+    if ($evt === []) return ['label' => _MONITOR_LASTEV, 'text' => _NO, 'is_good' => true];
+    $word = ['critical' => _MONITOR_LVCRIT, 'error' => _MONITOR_LVERROR, 'warning' => _MONITOR_LVWARN][$evt['level']] ?? _MONITOR_LVINFO;
+    return getMonitorRow(_MONITOR_LASTEV, implode(' · ', array_filter([getShortDate($evt['time']), $word, $evt['text'] ?: $evt['file']])), true);
 }
 
-# Collects web server, firewall, extension, and protocol metadata for dashboard
-function getMonitorServerStats(): array {
-    global $tpl;
-    $soft = getServerSoftware();
-    $servsw = $soft['raw'];
-    $servname = $soft['name'];
-    $servver = $soft['version'];
-    $srvport = getServerValue('SERVER_PORT', 'N/A');
-    $https = strtolower(getServerValue('HTTPS', ''));
-    $ishttps = ($https === 'on' || $https === '1') || ((int)$srvport === 443);
-    $srvhttps = $tpl->getHtmlFrag('inline-badge', [
-        'is_success' => $ishttps,
-        'is_danger' => !$ishttps,
-        'label' => $ishttps ? 'enabled' : 'disabled',
-    ]);
-    $exts = get_loaded_extensions();
+# The names of the cookies of the request and their number; their values, the session among them, stay off the screen
+function getMonitorCookies(): array {
+    $list = array_keys(getCookieValues());
+    return getMonitorRow(_MONITOR_COOKIES, $list ? sprintf(_MONITOR_HIDDEN, count($list), implode(', ', $list)) : '', true);
+}
+
+# The modules PHP has on disk and has not loaded, read from its directory; a directory out of reach gives its settings instead of a list
+function getMonitorExtOff(array $seen): array {
     $dir = (string)ini_get('extension_dir');
     $base = (string)ini_get('open_basedir');
-    $able = $base === '' || array_reduce(
-        explode(PATH_SEPARATOR, $base),
-        static fn(bool $keep, string $one): bool => $keep || str_starts_with($dir, rtrim($one, '/\\')),
-        false
-    );
-    $why = '';
-    if ($dir === '') $why = 'extension_dir is not set, so the module directory was not read';
-    elseif (!$able) $why = 'extension_dir '.$dir.' lies outside open_basedir '.$base.', so the module directory was not read';
-    elseif (!is_dir($dir)) $why = 'extension_dir '.$dir.' is not a readable directory, so the module directory was not read';
+    if ($dir === '' || !isPathAllowed($dir) || !is_dir($dir)) return ['chips' => [], 'notes' => [['name' => 'extension_dir', 'text' => sprintf(_MONITOR_EXTDIR, $dir, $base)]]];
     $off = [];
-    if ($why === '') {
-        $seen = array_map('strtolower', $exts);
-        foreach (array_merge(glob($dir.'/*.so') ?: [], glob($dir.'/*.dll') ?: []) as $file) {
-            $name = strtolower(str_replace(['php_', '.dll', '.so'], '', basename($file)));
-            if ($name !== '' && !in_array($name, $seen, true)) $off[] = $name;
-        }
+    foreach (array_merge(glob($dir.'/*.so') ?: [], glob($dir.'/*.dll') ?: []) as $file) {
+        $name = strtolower(str_replace(['php_', '.dll', '.so'], '', basename($file)));
+        if ($name !== '' && !in_array($name, $seen, true)) $off[] = ['name' => $name, 'is_off' => true];
     }
-    $onlist = implode(', ', $exts);
-    $offlist = implode(', ', $off);
-    $onhtml = $tpl->getHtmlFrag('popover', ['content_html' => $onlist, 'label_text' => $onlist]);
-    if ($why !== '') $offhtml = $tpl->getHtmlFrag('popover', ['content_html' => $why, 'label_text' => 'N/A']);
-    elseif ($off !== []) $offhtml = $tpl->getHtmlFrag('popover', ['content_html' => $offlist, 'label_text' => $offlist]);
-    else $offhtml = 'None';
-
-    return [
-        'servsw' => $servsw,
-        'servname' => $servname,
-        'servver' => $servver,
-        'extlist_on' => $onhtml,
-        'extlist_off' => $offhtml,
-        'srvprot' => getServerValue('SERVER_PROTOCOL', 'N/A'),
-        'srvname' => getServerValue('SERVER_NAME', 'N/A'),
-        'srvport' => $srvport,
-        'srvroot' => getServerValue('DOCUMENT_ROOT', 'N/A'),
-        'srvhttps' => $srvhttps,
-        'serverip' => getServerValue('SERVER_ADDR', 'N/A'),
-    ];
+    return ['chips' => $off, 'notes' => []];
 }
 
-# Collects runtime diagnostics, opcache, storage, and timing metrics for monitor
-function getMonitorRuntimeStats(object $db, ?array $snapshot): array {
+# The extensions by their weight: a wanted one framed with its state, what a missing one costs under its group, then the others loaded and those on disk left out
+function getMonitorExts(): string {
     global $tpl;
-    $disk = ($snapshot !== null)
-        ? [
-            'disk_total' => (float)$snapshot['disk_total'],
-            'disk_free' => (float)$snapshot['disk_free'],
-            'disk_used' => (float)$snapshot['disk_used'],
-            'disk_pct' => (float)$snapshot['disk_pct'],
-        ]
-        : getMonitorDiskSnapshot();
-    $disktot = (float)$disk['disk_total'];
-    $diskfree = (float)$disk['disk_free'];
-    $diskused = (float)$disk['disk_used'];
-    $opcache = function_exists('opcache_get_status') ? opcache_get_status(false) : false;
-    $cacheon = $opcache && !empty($opcache['opcache_enabled']);
-    $opmused = $opcache ? $opcache['memory_usage']['used_memory'] : 0;
-    $opmfree = $opcache ? $opcache['memory_usage']['free_memory'] : 0;
-    $opmwast = $opcache ? $opcache['memory_usage']['wasted_memory'] : 0;
-    $opmemtot = $opmused + $opmfree + $opmwast;
-    $reqtime = (float)getServerValue('REQUEST_TIME_FLOAT', '0');
-    if ($reqtime <= 0) $reqtime = microtime(true);
-    $extras = getMonitorRuntimeExtras();
-    $sample = getMonitorSample();
-    $islowdisk = ($disktot > 0 && (($diskfree / $disktot) * 100) < 10);
-    $diskwarn = $tpl->getHtmlFrag('inline-badge', [
-        'is_danger' => $islowdisk,
-        'is_success' => !$islowdisk,
-        'label' => $islowdisk ? 'Low free space' : 'Normal',
-    ]);
-    return [
-        'diskio' => $sample['diskio'],
-        'disktotal' => $disktot,
-        'diskfree' => $diskfree,
-        'diskused' => $diskused,
-        'gdver' => (function_exists('gd_info') ? (gd_info()['GD Version'] ?? 'N/A') : 'N/A'),
-        'opcacheon' => $cacheon,
-        'opmem' => $cacheon ? filterSize((int)$opmused).' / '.filterSize((int)$opmemtot) : 'N/A',
-        'opscripts' => $cacheon ? $opcache['opcache_statistics']['num_cached_scripts'] : 'N/A',
-        'ophit' => $cacheon ? round($opcache['opcache_statistics']['opcache_hit_rate'], 1).'%' : 'N/A',
-        'uptime' => $sample['uptime'],
-        'dbhealth' => getDbHealth($db),
-        'diskwarn' => $diskwarn,
-        'storages' => $extras['storages'],
-        'lastbackup' => $extras['lastbackup'],
-        'error24' => $extras['error24'],
-        'uploadsz' => getUploadsSizeLabel(),
-        'failed24' => $extras['failed24'],
-        'seclast24' => $extras['seclast24'],
-        'dblast24' => $extras['dblast24'],
-        'exectime' => round(microtime(true) - $reqtime, 3),
-        'dbtime' => round($db->sqltime * 1000, 1),
-    ];
-}
-
-# Collects current request metadata including cookie dump, URI, IP, and locale
-function getMonitorRequestStats(): array {
-    $reqcook = 'N/A';
-    $cookies = getCookieValues();
-    if (!empty($cookies)) {
-        $list = [];
-        foreach ($cookies as $kx => $vx) $list[] = $kx.'='.$vx;
-        $reqcook = implode('; ', $list);
-    }
-    $reqip = getServerValue('REMOTE_ADDR', 'N/A');
-    if (function_exists('getip')) $reqip = getip();
-    return [
-        'reqmethod' => getServerValue('REQUEST_METHOD', 'N/A'),
-        'reqcookie' => $reqcook,
-        'requri' => getServerValue('REQUEST_URI', 'N/A'),
-        'reqquery' => getServerValue('QUERY_STRING', 'N/A'),
-        'reqip' => $reqip,
-        'requa' => getServerValue('HTTP_USER_AGENT', 'N/A'),
-        'reqlang' => getServerValue('HTTP_ACCEPT_LANGUAGE', 'N/A'),
-    ];
-}
-
-# Builds final render-ready template variables for the main monitor dashboard
-function getMonitorTemplateVars(?array $snapshot, array $ctx, array $conf, object $db, string $afile): array {
-    global $tpl;
-    $status = static fn(?bool $vx): string => getStatusHtml($vx);
-    $dbhealth = $ctx['dbhealth'];
-    $diskio = $ctx['diskio'];
-    $storages = $ctx['storages'];
-    $vars = [
-            'statusurl' => $afile.'.php?name=monitor&op=status',
-            'trafficurl' => $afile.'.php?name=monitor&op=traffic',
-            'syncurl' => $afile.'.php?name=monitor&op=sync',
-            'status_oob' => '',
-            'traffic_oob' => '',
-            'dbtabs' => $ctx['dbtabs'],
-            'has_news' => $ctx['cntnews'] !== null,
-            'cntnews' => (string)$ctx['cntnews'],
-            'has_file' => $ctx['cntfile'] !== null,
-            'cntfile' => (string)$ctx['cntfile'],
-            'userson' => $ctx['userson'],
-            'servsoftname' => $ctx['servname'],
-            'servver' => $ctx['servver'],
-            'mysql' => (string)getDbVersion(),
-            'phpver' => PHP_VERSION,
-            'opmode' => $status(!($conf['close'] ?? 0)),
-            'statact' => $status(is_active('stat')),
-            'referact' => $status(is_active('referers')),
-            'newslet' => $status((bool)($conf['newsletter']['active'] ?? 0)),
-            'cache' => $status((bool)($conf['cache'] ?? 0)),
-            'cmsver' => (string)($conf['version'] ?? ''),
-            'osname' => php_uname('s'),
-            'servfull' => (string)$ctx['servsw'],
-            'serverip' => (string)$ctx['serverip'],
-            'servprot' => (string)$ctx['srvprot'],
-            'servname' => (string)$ctx['srvname'],
-            'servport' => (string)$ctx['srvport'],
-            'servroot' => $tpl->getHtmlFrag('popover', ['content_html' => $ctx['srvroot'], 'label_text' => $ctx['srvroot']]),
-            'servhttps' => $ctx['srvhttps'],
-            'phpsapi' => php_sapi_name(),
-            'zend_eng' => (string)(function_exists('zend_version') ? zend_version() : 'N/A'),
-            'php_char' => (string)(ini_get('default_charset') ?: 'N/A'),
-            'extlist_on' => $ctx['extlist_on'],
-            'extlist_off' => $ctx['extlist_off'],
-            'gdver' => (string)$ctx['gdver'],
-            'opcache_on' => $status($ctx['opcacheon']),
-            'opcache_mem' => (string)$ctx['opmem'],
-            'opcache_scripts' => (string)$ctx['opscripts'],
-            'opcache_hit_rate' => (string)$ctx['ophit'],
-            'postmax' => (string)ini_get('post_max_size'),
-            'fileup' => $status((bool)ini_get('file_uploads')),
-            'maxfileup' => (string)ini_get('max_file_uploads'),
-            'upmax' => (string)ini_get('upload_max_filesize'),
-            'memlim' => (string)ini_get('memory_limit'),
-            'scriptmem' => filterSize(memory_get_usage(true)),
-            'mempeak' => filterSize(memory_get_peak_usage(true)),
-            'maxvars' => (string)ini_get('max_input_vars'),
-            'maxtime' => (string)ini_get('max_execution_time'),
-            'gzipld' => $status(extension_loaded('zlib')),
-            'zipld' => $status(extension_loaded('zip')),
-            'bz2ld' => $status(extension_loaded('bz2')),
-            'phptime' => date('H:i:s'),
-            'uptime' => (string)$ctx['uptime'],
-            'dbszfmt' => filterSize($ctx['dbsize']),
-            'diskwarn' => $ctx['diskwarn'],
-            'dbconn' => (string)$dbhealth['connections'],
-            'dbslow' => (string)$dbhealth['slow'],
-            'dbchar' => (string)$dbhealth['charset'],
-            'dbsqlmode' => $tpl->getHtmlFrag('popover', ['content_html' => $dbhealth['sql_mode'], 'label_text' => $dbhealth['sql_mode']]),
-            'dbmaxpack' => (string)$dbhealth['max_packet'],
-            'dbbuffpool' => (string)$dbhealth['buffer_pool'],
-            'dbtz' => (string)$dbhealth['timezone'],
-            'dbcurname' => (string)($conf['db']['name'] ?? 'N/A'),
-            'dbuser' => (string)$dbhealth['user'],
-            'dbqnum' => $db->qnum,
-            'dbqtime' => $ctx['dbtime'],
-            'exectime' => $ctx['exectime'],
-            'diskfree' => filterSize((float)$ctx['diskfree']),
-            'disktot' => filterSize((float)$ctx['disktotal']),
-            'diskused' => filterSize((float)$ctx['diskused']),
-            'reqmeth' => (string)$ctx['reqmethod'],
-            'reqcookie' => $tpl->getHtmlFrag('popover', ['content_html' => $ctx['reqcookie'], 'label_text' => $ctx['reqcookie']]),
-            'requri' => $tpl->getHtmlFrag('popover', ['content_html' => $ctx['requri'], 'label_text' => $ctx['requri']]),
-            'reqquery' => $tpl->getHtmlFrag('popover', ['content_html' => $ctx['reqquery'], 'label_text' => $ctx['reqquery']]),
-            'reqip' => (string)$ctx['reqip'],
-            'requa' => $tpl->getHtmlFrag('popover', ['content_html' => $ctx['requa'], 'label_text' => $ctx['requa']]),
-            'reqlang' => $tpl->getHtmlFrag('popover', ['content_html' => $ctx['reqlang'], 'label_text' => $ctx['reqlang']]),
-            'dskread' => ($diskio['read_rate'] === null) ? 'N/A' : filterSize((int)$diskio['read_rate']).'/s',
-            'dskwrite' => ($diskio['write_rate'] === null) ? 'N/A' : filterSize((int)$diskio['write_rate']).'/s',
-            'backupdirsz' => ($storages['backup'] === null) ? 'N/A' : filterSize((int)$storages['backup']),
-            'cachedirsz' => ($storages['cache'] === null) ? 'N/A' : filterSize((int)$storages['cache']),
-            'logsdirsz' => ($storages['logs'] === null) ? 'N/A' : filterSize((int)$storages['logs']),
-            'lastbackuprun' => (string)$ctx['lastbackup'],
-            'errorlog24h' => (string)$ctx['error24'],
-            'uploadssz' => (string)$ctx['uploadsz'],
-            'failedlogins24h' => (string)$ctx['failed24'],
-            'lastsecurityevent24h' => $tpl->getHtmlFrag('popover', ['content_html' => $ctx['seclast24'], 'label_text' => $ctx['seclast24']]),
-            'dbissueevent24h' => $tpl->getHtmlFrag('popover', ['content_html' => $ctx['dblast24'], 'label_text' => $ctx['dblast24']]),
-            'show_layout' => true,
-            'show_status' => ($snapshot !== null),
-            'show_traffic' => ($snapshot !== null),
+    $exts = getExtensionWeight(get_loaded_extensions());
+    $cost = ['gd' => _MONITOR_NOGD, 'curl' => _MONITOR_NOCURL, 'dom' => _MONITOR_NODOM, 'intl' => _MONITOR_NOINTL, 'OPcache' => _MONITOR_NOOPC, 'openssl' => _MONITOR_NOSSL,
+        'Phar' => _MONITOR_NOPHAR, 'fileinfo' => _MONITOR_NOFINFO, 'sodium' => _MONITOR_NOSODIUM, 'zip' => _MONITOR_NOZIP, 'zlib' => _MONITOR_NOZLIB];
+    $group = static function (string $label, array $list, array $lost) use ($cost): array {
+        $have = count($list) - count($lost);
+        return [
+            'label' => $label,
+            'have_text' => sprintf(_MONITOR_HAVE, $have, count($list)),
+            'is_short' => $lost !== [],
+            'chips' => array_map(static fn(string $one): array => in_array($one, $lost, true)
+                ? ['name' => $one, 'is_lost' => true, 'state_text' => _NO] : ['name' => $one, 'is_ok' => true, 'state_text' => _MONITOR_HAS], $list),
+            'notes' => array_map(static fn(string $one): array => ['name' => sprintf(_MONITOR_EXTNO, $one), 'text' => $cost[$one] ?? _MONITOR_NOEXT], $lost),
         ];
-    if ($snapshot !== null) $vars = array_merge($vars, getServerStatusVars($snapshot), getTrafficPanelVars($snapshot));
-    return $vars;
+    };
+    $off = getMonitorExtOff($exts['seen']);
+    return $tpl->getHtmlFrag('ext', ['groups' => [
+        $group(_MONITOR_MUST, $exts['must'], $exts['must_lost']),
+        $group(_MONITOR_TIP, $exts['tip'], $exts['tip_lost']),
+        ['label' => _MONITOR_OTHER, 'chips' => array_map(static fn(string $one): array => ['name' => $one], $exts['other'])],
+        ['label' => _MONITOR_OFF] + $off,
+    ]]);
 }
 
-# Aggregates all monitor context providers for full dashboard rendering
-function getMonitorDashboardContext(object $db, array $conf, ?array $snapshot = null): array {
-    return array_merge(
-        getMonitorDbStats($db, $conf),
-        getMonitorServerStats(),
-        getMonitorRuntimeStats($db, $snapshot),
-        getMonitorRequestStats()
-    );
+# The whole ground of the page from one reading: the windows are drawn once, and the poll moves only the cockpit and the traffic
+function getMonitorGround(array $snap): string {
+    global $afile, $conf, $db, $sgtime, $tpl;
+    $every = 4;
+    $facts = getServerFacts($snap);
+    $view = getMonitorView($snap, $facts);
+    $extra = getMonitorRuntimeExtras();
+    $stats = getMonitorDbStats();
+    $health = $facts['health'];
+    $web = getServerSoftware();
+    $webver = ($web['version'] !== 'N/A') ? $web['version'] : '';
+    $dbase = getDbLabel((string)($snap['soft']['db'] ?? getDbVersion()));
+    $store = $extra['storages'];
+    $disk = $snap['diskio'];
+    $opc = function_exists('opcache_get_status') ? opcache_get_status(false) : false;
+    $opon = is_array($opc) && !empty($opc['opcache_enabled']);
+    $opmem = $opon ? $opc['memory_usage'] : [];
+    $optot = (int)($opmem['used_memory'] ?? 0) + (int)($opmem['free_memory'] ?? 0) + (int)($opmem['wasted_memory'] ?? 0);
+    $https = in_array(strtolower(getServerValue('HTTPS', '')), ['on', '1'], true) || (int)getServerValue('SERVER_PORT', '0') === 443;
+    $peak = memory_get_peak_usage(true);
+    $limit = getMemoryLimitBytes();
+    $upmax = ini_parse_quantity((string)ini_get('upload_max_filesize'));
+    $postmax = ini_parse_quantity((string)ini_get('post_max_size'));
+    $upnote = sprintf(_MONITOR_UPNOTE, ini_get('post_max_size'), ini_get('upload_max_filesize'));
+    $free = $snap['disk_total'] > 0 ? $snap['disk_free'] * 100 / $snap['disk_total'] : 100;
+    $rate = static fn(?float $num): string => ($num === null) ? '' : filterSize($num).'/s';
+    $mins = getUptimeMinutes((string)$snap['uptime']);
+    $backup = strtotime((string)$extra['lastbackup']);
+    $opbar = $opon ? getTplMeter(_MONITOR_OPMEM, (int)$opmem['used_memory'], $optot, sprintf(_MONITOR_OF, filterSize($opmem['used_memory']), filterSize($optot))) : '';
+    $list = static fn(array $items): string => $tpl->getHtmlFrag('kv-list', ['items' => $items]);
+    $pane = static fn(array $keys): string => $tpl->getHtmlFrag('pane', $keys);
+    $tiles = $tpl->getHtmlFrag('metric-list', ['items' => $view['tiles']]);
+    $part = $tpl->getHtmlFrag('series', [
+        'id' => 'sl-monitor-live',
+        'kind' => 'live',
+        'wait_text' => _MONITOR_WAIT,
+        'json' => (string)json_encode($view['live'], JSON_UNESCAPED_UNICODE),
+    ]);
+    $cockpit = $tpl->getHtmlPart('cockpit', [
+        'cap_icon' => 'display',
+        'cap_text' => _MONITOR_STATE,
+        'tone' => $view['tone'],
+        'is_ok' => $view['tone'] === 'ok',
+        'is_info' => $view['tone'] === 'info',
+        'is_warn' => $view['tone'] === 'warn',
+        'is_danger' => $view['tone'] === 'danger',
+        'loud' => $view['loud'],
+        'live_html' => $tpl->getHtmlFrag('live-chip', ['live_every' => $every]),
+        'lamp_html' => $tpl->getHtmlPart('monitor-cockpit', ['is_lamp' => true, 'state_text' => _MONITOR_STATE, 'rate_text' => _MONITOR_RATE]),
+        'rings' => getCockpitParts()['rings'],
+        'strip' => array_merge([['key' => 'uptime', 'icon' => 'clock-history', 'label' => _MONITOR_UPTIME, 'unit' => '']], getCockpitParts()['strip']),
+    ]);
+    $traffic = $pane([
+        'title' => _MONITOR_TRAFFIC,
+        'icon' => 'graph-up-arrow',
+        'meta' => $view['meta'],
+        'live_html' => $tpl->getHtmlFrag('live-chip', ['live_every' => $every]),
+        'content_html' => $tiles.$part,
+    ]);
+    $server = $pane([
+        'title' => _MONITOR_SRVPHP,
+        'icon' => 'hdd-network',
+        'meta' => trim($web['name'].' '.$webver).' · PHP '.PHP_VERSION,
+        'content_html' => $list([
+            getMonitorRow(_MONITOR_UPTIME, ($mins === null) ? '' : getUptimeWords($mins, true)),
+            getMonitorRow(_MONITOR_OS, php_uname('s')),
+            getMonitorRow(_MONITOR_WEB, $web['raw'], true),
+            getMonitorFlag('HTTPS', $https),
+            getMonitorRow(_MONITOR_PROTO, getServerValue('SERVER_PROTOCOL', '')),
+            getMonitorRow(_MONITOR_HOST, getServerValue('SERVER_NAME', '')),
+            getMonitorRow(_MONITOR_IP, getServerValue('SERVER_ADDR', '')),
+            getMonitorRow(_MONITOR_PORT, getServerValue('SERVER_PORT', '')),
+            getMonitorRow(_MONITOR_ROOT, getServerValue('DOCUMENT_ROOT', ''), true),
+        ]),
+        'right_html' => $opbar.$list([
+            getMonitorRow('SAPI', php_sapi_name()),
+            getMonitorRow('Zend Engine', function_exists('zend_version') ? zend_version() : ''),
+            getMonitorRow(_MONITOR_CHARSET, (string)ini_get('default_charset')),
+            getMonitorRow(_MONITOR_ZONE, date_default_timezone_get()),
+            getMonitorRow('GD', function_exists('gd_info') ? (string)(gd_info()['GD Version'] ?? '') : '', true),
+            getMonitorFlag('GZip', extension_loaded('zlib')),
+            getMonitorFlag('Zip', extension_loaded('zip')),
+            getMonitorFlag('BZip2', extension_loaded('bz2')),
+        ]),
+    ]);
+    $soft = $pane(['title' => _MONITOR_SOFT, 'content_html' => $list([
+        ['label' => 'SLAED CMS', 'text' => (string)($conf['version'] ?? ''), 'icon' => 'window-stack'],
+        ['label' => 'PHP', 'text' => PHP_VERSION, 'icon' => 'filetype-php'],
+        ['label' => $dbase['name'], 'text' => $dbase['version'], 'icon' => 'database'],
+        ['label' => $web['name'], 'text' => $webver ?: _NO_INFO, 'icon' => 'hdd-rack'],
+    ])]);
+    $opcache = $pane(['title' => 'OPcache', 'content_html' => $list([
+        getMonitorFlag('OPcache', $opon),
+        getMonitorRow(_ADM_SCRIPTS, $opon ? filterDecimal((int)$opc['opcache_statistics']['num_cached_scripts'], 0) : ''),
+        getMonitorRow(_ADM_HITS, $opon ? filterDecimal(round((float)$opc['opcache_statistics']['opcache_hit_rate'], 1)).'%' : ''),
+    ])]);
+    $base = $pane([
+        'title' => _MONITOR_DBREQ,
+        'icon' => 'database',
+        'meta' => $dbase['name'].' '.$dbase['version'].' · '.filterSize($stats['dbsize']),
+        'content_html' => (($health['buffer_pool'] !== null) ? getTplMeter(_MONITOR_POOL, $stats['dbsize'], $health['buffer_pool'],
+            sprintf(_MONITOR_POOLFOR, filterSize($stats['dbsize']), filterSize($health['buffer_pool'])), ($stats['dbsize'] > $health['buffer_pool']) ? 'warn' : 'ok') : '').$list([
+            getMonitorRow(_MONITOR_SERVER, $dbase['name'].' '.$dbase['version']),
+            getMonitorRow(_MONITOR_CHARSET, $health['charset']),
+            getMonitorRow(_MONITOR_ZONE, $health['timezone']),
+            getMonitorRow(_MONITOR_PACKET, ($health['max_packet'] !== null) ? filterSize($health['max_packet']) : ''),
+            getMonitorRow(_MONITOR_CONNS, ($health['connections'] !== null) ? sprintf(_MONITOR_OF, $health['connections'], (int)$health['max_conn']) : ''),
+            getMonitorRow(_MONITOR_DBSIZE, filterSize($stats['dbsize'])),
+            getMonitorRow(_MONITOR_TABLES, (string)$stats['dbtabs']),
+            getMonitorRow(_MONITOR_DBNAME, (string)($conf['db']['name'] ?? '')),
+            getMonitorRow(_USER, $health['user']),
+            getMonitorRow('SQL mode', str_replace(',', ', ', $health['sql_mode']), true),
+        ]),
+        'right_html' => getTplMeter(_ADM_PHPMEM, $peak, $limit, ($limit > 0) ? sprintf(_MONITOR_PEAK, filterSize($peak), filterSize($limit)) : _MONITOR_NOLIMIT).$list([
+            getMonitorRow(_MONITOR_CLIENT, getIp()),
+            getMonitorRow(_ADDRESS, getServerValue('REQUEST_URI', ''), true),
+            getMonitorRow(_MONITOR_QUERY, getServerValue('QUERY_STRING', ''), true),
+            getMonitorRow(_MONITOR_TIME, filterDecimal((microtime(true) - $sgtime) * 1000, 0).' ms'),
+            getMonitorRow(_MONITOR_DBQUERY, (string)$db->qnum),
+            getMonitorRow(_MONITOR_DBTIME, filterDecimal($db->sqltime * 1000, 1).' ms'),
+            getMonitorRow(_MONITOR_ACCEPT, getServerValue('HTTP_ACCEPT_LANGUAGE', ''), true),
+            getMonitorCookies(),
+            getMonitorRow(_BROWSER, getServerValue('HTTP_USER_AGENT', ''), true),
+        ]),
+    ]);
+    $guard = $pane(['title' => _SECURITY, 'content_html' => $list([
+        getMonitorRow(_MONITOR_FAILED, filterDecimal((int)$extra['failed24'], 0)),
+        getMonitorEvent($extra['seclast24']),
+        is_int($extra['sql24']) && $extra['sql24'] > 0 ? getMonitorRow(_MONITOR_DBERR, filterDecimal($extra['sql24'], 0))
+            : (is_int($extra['sql24']) ? ['label' => _MONITOR_DBERR, 'text' => _NO, 'is_good' => true] : getMonitorRow(_MONITOR_DBERR, '')),
+        getMonitorRow(_MONITOR_ERRLOG, is_int($extra['error24']) ? sprintf(_MONITOR_RECORDS, filterDecimal($extra['error24'], 0)) : ''),
+    ])]);
+    $folders = $pane([
+        'title' => _MONITOR_STORE,
+        'meta' => ($backup > 0) ? sprintf(_MONITOR_BACKUP, getShortDate($backup)) : '',
+        'content_html' => $list([
+            getMonitorSize(_UPLOADS, $snap['uploads']),
+            getMonitorSize(_MONITOR_BACKUPS, $store['backup']),
+            getMonitorSize(_MONITOR_LOGS, $store['logs']),
+            getMonitorSize(_MONITOR_CACHE, $store['cache']),
+        ]),
+    ]);
+    $drive = $pane(['title' => _ADM_DISK, 'content_html' => getTplMeter(_ADM_DISK, $snap['disk_used'], $snap['disk_total'],
+        sprintf(_MONITOR_OF, filterSize($snap['disk_used']), filterSize($snap['disk_total']))).$list([
+        getMonitorSize(_ADM_FREE, $snap['disk_free']),
+        getMonitorRow(_MONITOR_READ, $rate($disk['read_rate'])),
+        getMonitorRow(_MONITOR_WRITE, $rate($disk['write_rate'])),
+        ($free < 10) ? ['label' => _MONITOR_HEALTH, 'text' => _MONITOR_LOWDISK] : ['label' => _MONITOR_HEALTH, 'text' => _MONITOR_NORM, 'is_good' => true],
+    ])]);
+    $limits = $pane(['title' => _MONITOR_LIMITS, 'content_html' => $list([
+        getMonitorRow(_MONITOR_MEMLIM, (string)ini_get('memory_limit')),
+        getMonitorRow(_MONITOR_SCRIPT, filterSize(memory_get_usage(true))),
+        getMonitorRow(_MONITOR_MAXTIME, ini_get('max_execution_time').' '._SEC),
+        getMonitorRow('POST', (string)ini_get('post_max_size')),
+        getMonitorRow(_MONITOR_FILE, (string)ini_get('upload_max_filesize')),
+        getMonitorFlag(_MONITOR_UPLOADS, (bool)ini_get('file_uploads')),
+        getMonitorRow(_MONITOR_MAXFILES, (string)ini_get('max_file_uploads')),
+        getMonitorRow(_MONITOR_MAXVARS, (string)ini_get('max_input_vars')),
+    ])]);
+    $upbar = getTplMeter(_MONITOR_UPLOAD, $upmax, $postmax, $upnote, ($upmax > $postmax) ? 'warn' : 'ok');
+    $site = $pane(['title' => _SITE, 'content_html' => $upbar.$list(array_merge([
+        getMonitorFlag(_SITE, !($conf['close'] ?? 0)),
+        getMonitorFlag(_STATISTIC, (bool)($conf['statistic']['stat'] ?? 0)),
+        getMonitorFlag(_NEWSLETTER, intval($conf['scheduler']['jobs']['newsletter']['active'] ?? 0) === 1),
+        getMonitorFlag(_MONITOR_CACHE, (bool)($conf['cache'] ?? 0)),
+    ], ($stats['cntnews'] !== null) ? [getMonitorRow(_NEWS, filterDecimal($stats['cntnews'], 0))] : [],
+        ($stats['cntfile'] !== null) ? [getMonitorRow(_FILES, filterDecimal($stats['cntfile'], 0))] : []))]);
+    $ground = $cockpit.$traffic
+        .$tpl->getHtmlFrag('pane-row', ['content_html' => $server, 'side_html' => $soft.$opcache])
+        .$tpl->getHtmlFrag('pane-row', ['content_html' => $base, 'side_html' => $guard.$folders])
+        .$tpl->getHtmlFrag('pane-row', ['content_html' => $drive.$limits.$site])
+        .$pane(['title' => _MONITOR_EXTS, 'icon' => 'puzzle', 'content_html' => getMonitorExts()]);
+    return $tpl->getHtmlPart('monitor-cockpit', [
+        'is_page' => true,
+        'url' => $afile.'.php?name=monitor&op=live',
+        'every' => $every,
+        'view' => (string)json_encode($view, JSON_UNESCAPED_UNICODE),
+        'content_html' => $tpl->getHtmlFrag('pane-ground', ['content_html' => $ground]),
+    ]);
 }
 
-# Sets the monitor dashboard output with standard admin wrapper and optional snapshot-backed panels
-function setMonitorPage(object $db, array $conf, string $afile, ?array $snapshot = null): void {
-    global $tpl;
-    $ctx = getMonitorDashboardContext($db, $conf, $snapshot);
-    $vars = getMonitorTemplateVars($snapshot, $ctx, $conf, $db, $afile);
-    $navi = getTplAdminTabs(['ops' => ['name=monitor', 'name=monitor&op=info'], 'tabs' => [_HOME, _MANUAL]]);
-    echo $navi.$tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('basic-monitor', $vars)]);
-}
-
-# Renders the main monitor page including navigation, panels, and full dashboard layout
 function monitor(): void {
-    global $db, $conf, $afile;
     setHead();
-    setMonitorPage($db, $conf, $afile);
+    echo getTplAdminTabs(['ops' => ['name=monitor', 'name=monitor&op=info'], 'tabs' => [_HOME, _MANUAL]]).getMonitorGround(getMonitorSample());
     setFoot();
 }
 
-# Renders monitor information page with standard admin info block and navigation tabs
 function info(): void {
     setTplAdminInfoPage([
         'ops' => ['name=monitor', 'name=monitor&op=info'],
@@ -627,30 +343,16 @@ function info(): void {
     ]);
 }
 
-# Sets snapshot-backed monitor partial output for HTMX refresh endpoints; their polls carry X-SL-Poll, so the session is already released when the sample is retaken
-function setMonitorPart(bool $showstat, bool $showtraf, bool $useoob = false): void {
-    echo getMonitorPartial(getMonitorPanelSnapshot(true), $showstat, $showtraf, $useoob);
-}
-
-# Renders only traffic partial panel for asynchronous dashboard refresh requests
-function traffic(): void {
-    setMonitorPart(false, true, false);
-}
-
-# Renders only status partial panel for asynchronous dashboard refresh requests
-function status(): void {
-    setMonitorPart(true, false, false);
-}
-
-# Renders status and traffic partials together for synchronized asynchronous updates
-function sync(): void {
-    setMonitorPart(true, true, true);
+# The one poll of the page answers one reading as JSON; it carries X-SL-Poll, so the session is already released when the sample is retaken
+function live(): void {
+    header('Content-Type: application/json; charset=UTF-8');
+    $snap = getMonitorSample(true);
+    echo json_encode(getMonitorView($snap, getServerFacts($snap)), JSON_UNESCAPED_UNICODE);
+    exit;
 }
 
 switch ($op) {
     default: monitor(); break;
     case 'info': info(); break;
-    case 'traffic': traffic(); break;
-    case 'status': status(); break;
-    case 'sync': sync(); break;
+    case 'live': live(); break;
 }

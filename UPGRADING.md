@@ -69,9 +69,22 @@ their block `blocks/auto_links.php`, configuration files, upload directories and
 - The shared subsystems have no scope for them: the shop cart, the shop comments, ratings and favorites, the
   points action `order`, the extra-field area `order`, and the RSS feed, sitemap section, search source and
   newsletter audiences of these modules do not exist.
-- `{prefix}_referer` has no `lid`, which tied a referer to a link of `auto_links`, and `config/global.php` has
-  no `amod`.
+- `config/global.php` has no `amod`.
 - A site that needs these modules stays on its current release.
+
+### The Referers Module Moved Into the Statistics
+
+The hosts and landing pages of visits are counted in the files of the statistics, so the page `name=referers`, the table
+`{prefix}_referer`, `config/referers.php` and the log of addresses with them are gone.
+
+- The robots, by the types `ai`, `search`, `seo`, `social` and `other`, and the hosts of the sources `search`, `social`
+  and `ai` are edited on the settings of the statistics and live in `config/statistic.php`; `bots` and `fbots` left
+  `config/global.php`, and `fbots` has no successor by that name.
+- A release adds the robots it ships and the site lacks to `bots` of the site, so a robot the administrator removed or
+  moved to another type comes back with the next update. The host lists stay as the site has them.
+- Custom code calls `getBotInfo(getAgent())`, which answers the `name` and `type` of a robot, with an empty `name` for a
+  person, in place of `is_bot()`.
+- The tabs of `name=config` after "Цензура" moved up by one: the cache is `tab=4` and the mail is `tab=5`.
 
 ### Node Upload Directories Under `uploads/node/`
 

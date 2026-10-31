@@ -351,7 +351,7 @@ namespace Tests\Unit {
                     }
                 }
             }
-            $this->assertGreaterThanOrEqual(30, count($lists), 'The scan found too few lists to hold anything');
+            $this->assertGreaterThanOrEqual(29, count($lists), 'The scan found too few lists to hold anything');
             foreach (['admin/modules/favorites.php favorites()', 'modules/voting/admin/index.php voting()'] as $name) {
                 $this->assertArrayHasKey($name, $lists);
                 $this->assertStringContainsString("'moment' =>", $lists[$name], $name.' has no date column');
@@ -380,7 +380,7 @@ namespace Tests\Unit {
             $this->assertGreaterThanOrEqual(13, $seen, 'The scan found too few edits to hold anything');
         }
 
-        # A list under a filter bar tells an empty result from an empty list, the queues of getAdminQueues() say they are clean (owner, 2026-10-24); the referers only sort
+        # A list under a filter bar tells an empty result from an empty list, the queues of getAdminQueues() say they are clean (owner, 2026-10-24)
         #[Test]
         public function everyFilteredListTellsNothingFound(): void
         {
@@ -398,11 +398,10 @@ namespace Tests\Unit {
                     $name = substr($file, strlen($root) + 1).' '.$func.'()';
                     $lists[$name] = $part;
                     $bar = str_contains($part, "'list-filter'") || array_filter($bars, static fn($v) => str_contains($part, $v.'('));
-                    if (!$bar || $name === 'admin/modules/referers.php referers()') continue;
+                    if (!$bar) continue;
                     $this->assertMatchesRegularExpression("#'none_text' => .*_NONE_FOUND#", $part, $name.' says no info under its filter');
                 }
             }
-            $this->assertArrayHasKey('admin/modules/referers.php referers()', $lists);
             $queues = ['admin/modules/comments.php comments()', 'modules/account/admin/index.php newuser()', 'modules/node/admin/index.php show()',
                 'modules/node/admin/index.php setNodeSupportQueue()'];
             foreach ($queues as $name) {

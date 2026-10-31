@@ -104,7 +104,7 @@ function getMasterReleases(string $head, string $note): string {
         $acts[] = ['href' => $afile.'.php?name=master&op=share&ver='.$ver, 'icon_name' => 'percent', 'title' => _MASTER_SHARE];
         $rows[] = ['name' => $ver, 'cells' => [
             ['has_content_text' => true, 'content_text' => $ver],
-            ['is_truncate' => true, 'has_content_text' => true, 'content_text' => $state],
+            ['is_truncate' => true, 'has_content_text' => true, 'content_text' => $state] + getTplLongCell($state, _STATUS),
             ['is_col_count' => true, 'has_content_text' => true, 'content_text' => $row['share'].' %'],
             ['is_col_date' => true, 'moment' => $row['accepted'], 'has_content_text' => true, 'content_text' => '-'],
             ['is_col_date' => true, 'moment' => $row['changed'], 'has_content_text' => true, 'content_text' => '-'],
@@ -254,10 +254,11 @@ function getMasterNoteList(string $head, string $note): string {
         $rows[] = ['name' => '#'.$row['id'], 'cells' => [
             ['is_col_id' => true, 'has_content_text' => true, 'content_text' => $row['id']],
             ['has_content_text' => true, 'content_text' => $row['level']],
-            ['is_truncate' => true, 'has_content_text' => true, 'content_text' => ($row['sid'] !== '') ? $row['sid'] : _MASTER_TOALL],
+            ['is_truncate' => true, 'has_content_text' => true, 'content_text' => ($row['sid'] !== '') ? $row['sid'] : _MASTER_TOALL]
+                + getTplLongCell((string)$row['sid'], _MASTER_TO),
             ['has_content_text' => true, 'content_text' => ($row['ver'] !== '') ? $row['ver'] : _ALL],
             ['is_col_date' => true, 'moment' => $row['until'], 'has_content_text' => true, 'content_text' => _MASTER_NOEND],
-            ['is_truncate' => true, 'title_text' => (string)($data['ru'] ?? ''), 'has_content_text' => true, 'content_text' => (string)($data['ru'] ?? '')],
+            ['is_truncate' => true, 'has_content_text' => true, 'content_text' => (string)($data['ru'] ?? '')] + getTplLongCell((string)($data['ru'] ?? ''), _TEXT),
             ['is_col_status' => true, 'has_content_text' => true, 'content_text' => $row['active'] ? _YES : _NO],
             ['is_col_actions' => true, 'content_html' => $acts ? $tpl->getHtmlFrag('dial', ['dial_title' => _FUNCTIONS, 'dial' => $acts]) : ''],
         ]];
@@ -282,12 +283,15 @@ function getMasterNoteList(string $head, string $note): string {
 
 # The tab of keys, read only: the fingerprints of the factory keys and of the keys in force, and every key statement in force with its kseq
 function getMasterKeyList(array $keys): string {
-    $print = static fn(string $key): string => trim(chunk_split(Update::getKeyPrint(Update::getRawBytes($key, 32)), 4, ' '));
+    $print = static function (string $key): array {
+        $text = trim(chunk_split(Update::getKeyPrint(Update::getRawBytes($key, 32)), 4, ' '));
+        return ['is_truncate' => true, 'content_text' => $text] + getTplLongCell($text, _MASTER_PRINT);
+    };
     $fact = Update::getFactoryKeys();
-    $rows = [[['content_text' => _MASTER_PRIMARY.' - '._MASTER_FACTORY], ['is_truncate' => true, 'content_text' => $print($fact['primary'])]],
-        [['content_text' => _MASTER_RECOVERY.' - '._MASTER_FACTORY], ['is_truncate' => true, 'content_text' => $print($fact['recovery'])]],
-        [['content_text' => _MASTER_PRIMARY.' - '._MASTER_INFORCE], ['is_truncate' => true, 'content_text' => $print($keys['keys']['primary'])]],
-        [['content_text' => _MASTER_RECOVERY.' - '._MASTER_INFORCE], ['is_truncate' => true, 'content_text' => $print($keys['keys']['recovery'])]],
+    $rows = [[['content_text' => _MASTER_PRIMARY.' - '._MASTER_FACTORY], $print($fact['primary'])],
+        [['content_text' => _MASTER_RECOVERY.' - '._MASTER_FACTORY], $print($fact['recovery'])],
+        [['content_text' => _MASTER_PRIMARY.' - '._MASTER_INFORCE], $print($keys['keys']['primary'])],
+        [['content_text' => _MASTER_RECOVERY.' - '._MASTER_INFORCE], $print($keys['keys']['recovery'])],
         [['content_text' => 'kseq'], ['content_text' => $keys['keys']['kseq']]]];
     foreach ($keys['list'] as $one) {
         $rows[] = [['content_text' => 'inbox/keys/'.$one['kseq'].'.json'], ['is_truncate' => true, 'content_text' => $one['time'] ? date(_TIMESTRING, $one['time']) : '-']];

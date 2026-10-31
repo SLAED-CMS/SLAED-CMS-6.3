@@ -2494,7 +2494,7 @@ function getDemoSize(n) {
     num /= 1024;
     at++;
   }
-  return (at === 0 ? num : num.toFixed(1)) + ' ' + unit[at];
+  return (at === 0 ? num : num.toFixed(1).replace('.', ',')) + ' ' + unit[at];
 }
 
 function setDemoDrop() {

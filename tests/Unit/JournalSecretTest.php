@@ -102,12 +102,13 @@ final class JournalSecretTest extends TestCase
         foreach ($data['lines'] as $line) $this->assertSame(['filescan', false], [$line['chan'], isset($line['post'])]);
     }
 
-    # The security dashboard reads the structured request.log for its latest event
+    # The security dashboard reads the structured request.log for its latest event, and of its line only the time, the level and the message reach the screen
     #[Test]
     public function dashboardReadsRequestJournal(): void
     {
         $data = $this->getProbe('write');
-        $this->assertStringContainsString('| REQUEST: ', $data['event']);
-        $this->assertStringContainsString('"chan":"request"', $data['event']);
+        $this->assertSame(['file', 'level', 'text', 'time'], (static function (array $keys): array { sort($keys); return $keys; })(array_keys($data['event'])));
+        $this->assertSame('request', $data['event']['file']);
+        $this->assertStringNotContainsString('"chan"', $data['event']['text']);
     }
 }

@@ -292,17 +292,6 @@ return [
             'top' => '0',
             'type' => '1',
         ],
-        'referers' => [
-            'lang' => '_REFERERS',
-            'icon' => 'box-arrow-in-right',
-            'active' => '1',
-            'view' => '0',
-            'menu' => '1',
-            'group' => '0',
-            'side' => '0',
-            'top' => '0',
-            'type' => '0',
-        ],
         'replace' => [
             'lang' => '_REPLACE',
             'icon' => 'arrow-left-right',

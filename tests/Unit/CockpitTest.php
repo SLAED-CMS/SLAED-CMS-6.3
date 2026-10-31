@@ -132,6 +132,8 @@ final class CockpitTest extends TestCase
         $this->assertSame(['—', '—', '—'], [$data['bare']['gen']['value'], $data['bare']['sql']['value'], $data['bare']['mem']['value']]);
         $strip = $data['cockpit']['strip'];
         $this->assertSame([50, 7.5, 3], [$strip['gen']['value'], $strip['sql']['value'], $strip['mem']['value']]);
+        $this->assertSame('50', $strip['gen']['text']);
+        $this->assertMatchesRegularExpression('/^7[.,]5$/', $strip['sql']['text'], 'The figure of the strip lost the text the language writes');
     }
 
     # The snapshot carries four shares with their panel rows, the strip of the average page and the signals, toned by the worst signal or a lull

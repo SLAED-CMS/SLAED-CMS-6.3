@@ -1128,6 +1128,93 @@ if ($mode === 'statscookie') {
     }
     $out = getProbeCounter();
     $out['isuser'] = is_user();
+} elseif ($mode === 'statsource') {
+    $conf['statistic'] = (require BASE_DIR.'/config/statistic.php')['statistic'];
+    $_SERVER['REMOTE_ADDR'] = '203.0.113.40';
+    putenv('HTTP_HOST=slaed.test');
+    $_SERVER['HTTP_ACCEPT_LANGUAGE'] = 'ru';
+    putenv('HTTP_USER_AGENT=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36');
+    putenv('HTTP_REFERER=https://www.google.com/search?q=slaed');
+    updateStatsTrack('/', 0, ['sess' => ['is_new' => true, 'depth' => 1, 'duration' => 0], 'country' => 'DE']);
+    putenv('HTTP_REFERER');
+    updateStatsTrack('/index.php?name=voting', 0, ['sess' => ['is_new' => false, 'depth' => 2, 'duration' => 5], 'country' => 'DE']);
+    updateStatsTrack('/index.php?name=voting', 0, ['sess' => ['is_new' => true, 'depth' => 1, 'duration' => 0], 'country' => 'DE']);
+    updateStatsTrack('/index.php?name=voting', 3, ['sess' => null, 'country' => 'DE']);
+    putenv('HTTP_USER_AGENT=Mozilla/5.0 AppleWebKit/537.36 (compatible; GPTBot/1.2; +https://openai.com/gptbot)');
+    updateStatsTrack('/index.php?name=voting', 1, ['sess' => null, 'country' => 'DE']);
+    updateStatsTrack('/', 1, ['sess' => null, 'country' => 'DE']);
+    putenv('HTTP_USER_AGENT=Mozilla/5.0 (compatible; FreshScoutBot/1.0)');
+    $_SERVER['REMOTE_ADDR'] = '203.0.113.41';
+    putenv('HTTP_REFERER=https://www.google.com/');
+    updateStatsTrack('/', 1, ['sess' => null, 'country' => 'DE']);
+    putenv('HTTP_REFERER');
+    $out = getProbeCounter();
+} elseif ($mode === 'statrules') {
+    $conf['statistic'] = (require BASE_DIR.'/config/statistic.php')['statistic'];
+    if (!function_exists('getStatRow')) require_once BASE_DIR.'/core/monitor.php';
+    $chrome = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36';
+    $out['bots'] = array_map(static fn(string $ua): string => getBotInfo($ua)['name'], [
+        'chrome' => $chrome,
+        'cubot' => 'Mozilla/5.0 (Linux; Android 11; CUBOT X50) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Mobile Safari/537.36',
+        'firephp' => $chrome.' FirePHP/0.7.4',
+        'google' => 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)',
+        'bing' => 'Mozilla/5.0 (compatible; bingbot/2.0; +http://www.bing.com/bingbot.htm)',
+        'yandex' => 'Mozilla/5.0 (compatible; YandexBot/3.0; +http://yandex.com/bots)',
+        'chatgpt' => 'Mozilla/5.0 AppleWebKit/537.36 (compatible; ChatGPT-User/1.0; +https://openai.com/bot)',
+        'fresh' => 'Mozilla/5.0 (compatible; FreshScoutBot/1.0)',
+        'curl' => 'curl/8.4.0',
+        'none' => 'unknown',
+    ]);
+    $out['info'] = [getAgentInfo($chrome, 0)['device'], getAgentInfo('curl/8.4.0', 0)['device']];
+    putenv('HTTP_USER_AGENT='.$chrome);
+    unset($_SERVER['HTTP_ACCEPT_LANGUAGE']);
+    $out['dressed'] = getVisitBot();
+    $_SERVER['HTTP_ACCEPT_LANGUAGE'] = 'ru';
+    $out['browser'] = getVisitBot();
+    putenv('HTTP_HOST=slaed.test');
+    $out['referers'] = [];
+    foreach (['https://www.google.com/search?q=slaed.test', 'https://slaed.test/news', 'https://www.slaed.test/', 'https://forum.slaed.test/', 'https://notslaed.test/'] as $one) {
+        putenv('HTTP_REFERER='.$one);
+        $out['referers'][] = getReferer() !== '';
+    }
+    putenv('HTTP_REFERER');
+    $out['types'] = array_map(static fn(string $ua): string => getBotInfo($ua)['type'], [
+        'Mozilla/5.0 (compatible; GPTBot/1.2)', 'Mozilla/5.0 (compatible; Googlebot/2.1)', 'Mozilla/5.0 (compatible; AhrefsBot/7.0)',
+        'facebookexternalhit/1.1', 'curl/8.4.0', $chrome,
+    ]);
+    $out['strays'] = [];
+    foreach ($conf['statistic']['bots'] as $type => $list) {
+        foreach (array_keys($list) as $mask) {
+            if (getBotInfo('Mozilla/5.0 (compatible; '.$mask.'/1.0)')['type'] !== $type) $out['strays'][] = $mask;
+        }
+    }
+    $out['cats'] = array_map('getRefCategory', [
+        'none' => '',
+        'france' => 'https://www.google.fr/',
+        'china' => 'https://www.google.com.hk/search?q=a',
+        'ya' => 'https://ya.ru/',
+        'bare' => 'www.google.com',
+        'maya' => 'https://maya.ru/',
+        'micro' => 'https://www.microsoft.com/',
+        'tco' => 'https://t.co/abc',
+        'mobile' => 'https://m.facebook.com/',
+        'broken' => 'http://google.com, http://spam.test/',
+        'chatgpt' => 'https://chatgpt.com/',
+        'gemini' => 'https://gemini.google.com/app',
+    ]);
+    $out['hosts'] = array_map('getRefHost', ['https://www.google.com/', 'https://m.baidu.com/s?wd=a', 'www.bing.com', 'http://google.com, http://x', 'https://a|b.com/', '']);
+    $out['pages'] = array_map('getRefPage', [
+        '/', '/index.php', '/news/one?utm_source=a&gclid=b', '/index.php?name=files&op=view&id=12&word=wap', '/a|b', '/a,b', '/a:b', '/'.str_repeat('a', 100),
+    ]);
+    $out['evict'] = updateCounterField('a:5,b:1', 'c', 2);
+    $out['other'] = updateCounterField('a:5,Other:2', 'Other');
+    $out['same'] = updateCounterField('a:5', '');
+    $flood = '';
+    for ($num = 0; $num < 40; $num++) $flood = updateCounterField($flood, '/spam'.$num, 20);
+    for ($num = 0; $num < 3; $num++) $flood = updateCounterField($flood, '/real', 20);
+    $out['flood'] = getCounterField($flood);
+    $line = '04.10.2026|1|1|1|0|0|0|0'.str_repeat('|', 12).'|google.com:3,Other:1|/:2|OpenAI GPTBot:4|ai:4';
+    $out['row'] = array_intersect_key(getStatRow($line)['dims'], ['hosts' => 1, 'pages' => 1, 'bots' => 1, 'bottype' => 1]);
 } elseif ($mode === 'appendfail') {
     $out['blocked'] = addFile(COUNTER_DIR.'/blocked', 'payload,', 'a');
     $out['plain'] = addFile(COUNTER_DIR.'/plain.log', 'first,', 'a');

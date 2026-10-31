@@ -84,7 +84,7 @@ const MON_EXT = {
 };
 
 /* The thirteen signals of the server and its programs, by gravity, the source of each named as admin/modules/monitor.php
-   reads it today; three need a reading the monitor has not yet: the limit max_connections, the end of support of a PHP
+   read it on 2026-10-27; three need a reading the monitor has not yet: the limit max_connections, the end of support of a PHP
    version and the age of MariaDB and nginx. The thresholds: CPU and RAM 75/90%, disk 80/95%, OPcache under 80% of hits or
    off, the connections near max_connections, the InnoDB buffer smaller than the base, the peak of a script near
    memory_limit, a page over 0.5/2 s, PHP out of its support, an old MariaDB or nginx, no HTTP/2 or no HTTPS, a needed
@@ -382,7 +382,7 @@ function setMonExt(el) {
     + `<div class="mn-two">${group('Другие включённые', rest('on', ''))}${group('Выключены', rest('off', ' mn-chip-off'))}</div>`;
 }
 
-/* The series of the live chart: key, name, unit, decimals, and the icon the live page gives it (partials/basic-monitor.html) */
+/* The series of the live chart: key, name, unit, decimals, and the icon the live page gives it */
 const MON_SERIES = [['up', 'Исходящий', 'KB/s', 1, 'cloud-upload-fill'], ['down', 'Входящий', 'KB/s', 1, 'cloud-download-fill'],
   ['cpu', 'CPU', '%', 0, 'cpu-fill'], ['ram', 'RAM', '%', 0, 'motherboard-fill']];
 

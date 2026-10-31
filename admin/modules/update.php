@@ -35,20 +35,28 @@ function getUpdateView(): string {
         [_UPDATE_SIGN, ($bits & 1) ? _UPDATE_SODIUM : _UPDATE_OWN],
         [_UPDATE_UNZIP, ($bits & 2) ? 'ZipArchive' : (($bits & 4) ? 'PharData' : _UPDATE_NOZIP)],
     ];
-    $rows = [];
-    foreach ($list as [$label, $text]) $rows[] = ['label_html' => $label, 'has_field_text' => true, 'field_text' => $text];
+    $items = [];
+    foreach ($list as [$label, $text]) $items[] = ['label' => $label, 'text' => $text];
     $hid = getFieldIds('', 'sid')['hint'];
     $sid = $tpl->getHtmlFrag('code-block', ['lang_text' => 'sid', 'label_text' => _UPDATE_SID, 'copy_text' => _COPY, 'done_text' => _COPYDONE,
         'describedby' => $hid, 'content_html' => htmlspecialchars((string)$state['sid'], ENT_QUOTES, 'UTF-8')]);
-    $rows[] = ['label_html' => _UPDATE_SID, 'hint_html' => _UPDATE_SIDHINT, 'hint_id' => $hid, 'field_html' => $sid];
+    $rows = [['label_html' => _UPDATE_SID, 'hint_html' => _UPDATE_SIDHINT, 'hint_id' => $hid, 'field_html' => $sid]];
     $last = getUpdateLast($state);
-    $rows = array_merge($rows, $last['rows']);
     $cont .= $last['html'];
     $pack = getUpdatePack($state, (($sets['channel'] ?? '') === 'beta') ? 'beta' : 'stable');
     $acts = getTplPostButton(['name' => 'update', 'op' => 'check'], 'arrow-repeat', _UPDATE_CHECK).$pack['acts']
         .getTplPostButton(['name' => 'update', 'op' => 'audit'], 'shield-check', _UPDATE_AUDIT);
-    $rows = array_merge($rows, $pack['rows'], [['label_html' => _FUNCTIONS, 'field_html' => $acts]]);
-    return $cont.$tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('div', ['rows' => $rows])]).$pack['html'];
+    $rows = array_merge($rows, $last['rows'], [['label_html' => _FUNCTIONS, 'field_html' => $acts]]);
+    $list = $tpl->getHtmlFrag('kv-list', ['items' => array_merge($items, $last['items'], $pack['items'])]);
+    return $cont.$tpl->getHtmlFrag('pane', ['title' => _UPDATE_TITLE, 'icon' => 'arrow-repeat', 'meta' => SL_VERSION,
+        'content_html' => $pack['bars'].$list.$tpl->getHtmlPart('div', ['rows' => $rows])]).$pack['html'];
+}
+
+# The meter of the space a step needs, or its words alone where the free space cannot be read; what the step may remove counts as free, as its own check does
+function getUpdateRoom(array $room, string $text, int $old = 0): string {
+    global $tpl;
+    if ($room['free'] === null) return $tpl->getHtmlFrag('kv-list', ['items' => [['label' => _UPDATE_SPACE, 'text' => $text]]]);
+    return getTplMeter(_UPDATE_SPACE, $room['need'], $room['free'] + $old, $text);
 }
 
 # One list under the overview: its heading with the count and at most 100 entries, the rest counted
@@ -62,14 +70,13 @@ function getUpdateList(string $head, array $items, bool $warn = true): string {
 # The last installation and the last rollback: the self-check of a fresh installation runs once here, and its answer offers going back or confirming the site by hand
 function getUpdateLast(array $state): array {
     global $conf, $tpl;
-    $out = ['rows' => [], 'html' => ''];
-    $line = static fn(string $label, string $text): array => ['label_html' => $label, 'has_field_text' => true, 'field_text' => $text];
+    $out = ['items' => [], 'rows' => [], 'html' => ''];
     $done = (array)$state['done'];
     $undo = (array)$state['undo'];
     if (Update::isVersion($undo['to'] ?? null)) {
         $cause = (string)$undo['why'].(((string)$undo['error'] !== '') ? ': '.$undo['error'] : '');
         $why = ($undo['why'] === 'revert') ? _UPDATE_UNDOREV : sprintf(_UPDATE_UNDOFAIL, intval($undo['step']), $cause);
-        $out['rows'][] = $line(_UPDATE_UNDO, sprintf(_UPDATE_RUN, $undo['from'], $undo['to'], date(_TIMESTRING, intval($undo['time']))).' - '.$why);
+        $out['items'][] = ['label' => _UPDATE_UNDO, 'text' => sprintf(_UPDATE_RUN, $undo['from'], $undo['to'], date(_TIMESTRING, intval($undo['time']))).' - '.$why];
     }
     if (!Update::isVersion($done['to'] ?? null)) return $out;
     if (($done['check'] ?? '') === 'wait') {
@@ -80,11 +87,11 @@ function getUpdateLast(array $state): array {
     }
     $back = ($done['back'] ?? '') !== '' && is_dir(BASE_DIR.'/'.$done['back']);
     $text = sprintf(_UPDATE_RUN, $done['from'], $done['to'], date(_TIMESTRING, intval($done['time'])));
-    $out['rows'][] = $line(_UPDATE_LASTRUN, $text.' - '.match ($done['check']) {
+    $out['items'][] = ['label' => _UPDATE_LASTRUN, 'text' => $text.' - '.match ($done['check']) {
         'ok' => _UPDATE_SELFOK,
         'down' => sprintf(_UPDATE_SELFBAD, intval($done['code'] ?? 0)),
         default => _UPDATE_SELFNONE,
-    });
+    }];
     $acts = ($done['check'] === 'none') ? getTplPostButton(['name' => 'update', 'op' => 'selfok'], 'check2-circle', _UPDATE_ALLOK) : '';
     if ($back) $acts .= getTplPostButton(['name' => 'update', 'op' => 'revert'], 'arrow-counterclockwise', _UPDATE_REVERT);
     if ($acts !== '') $out['rows'][] = ['label_html' => _UPDATE_LASTRUN, 'field_html' => $acts];
@@ -109,7 +116,7 @@ function getUpdateInstall(array $state, array $man): string {
     if ($room['old'] > 0) $text .= ' '.sprintf(_UPDATE_ROOMBAK, filterSize($room['old']));
     $short = !$room['ok'] && $room['free'] !== null;
     if ($short) $text .= ' '.sprintf(_UPDATE_ROOMLOW, filterSize($room['need'] - $room['free'] - $room['old']));
-    $rows = [['label_html' => _UPDATE_SPACE, 'has_field_text' => true, 'field_text' => $text]];
+    $rows = [];
     $marks = [];
     if (!empty($state['stage']['changed'])) $marks[] = ['over', _UPDATE_OVER];
     if ($room['free'] === null) $marks[] = ['free', _UPDATE_FREEOK];
@@ -117,7 +124,8 @@ function getUpdateInstall(array $state, array $man): string {
         $rows[] = ['label_html' => _CONFIRM, 'field_html' => $tpl->getHtmlFrag('checkbox', ['name_attr' => $key, 'value_attr' => '1', 'label_text' => $label,
             'is_required' => true])];
     }
-    return $tpl->getHtmlPart('box', ['title' => _UPDATE_INSTALL, 'content_html' => $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _UPDATE_INSTHINT])
+    return $tpl->getHtmlFrag('pane', ['title' => _UPDATE_INSTALL, 'icon' => 'box-arrow-in-down', 'content_html' => getUpdateRoom($room, $text, $room['old'])
+        .$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _UPDATE_INSTHINT])
         .$tpl->getHtmlPart('form', [
             'action_url' => $afile.'.php?name=update&op=install',
             'hidden' => [['name_attr' => 'token', 'value_attr' => getSiteToken('update')]],
@@ -130,8 +138,8 @@ function getUpdateInstall(array $state, array $man): string {
 # The package of the release found: the archive this site takes and the space it needs, a download cut midway, the unpacked package, the last refusal and integrity check
 function getUpdatePack(array $state, string $chan): array {
     global $afile, $tpl;
-    $out = ['rows' => [], 'acts' => '', 'html' => ''];
-    $line = static fn(string $label, string $text): array => ['label_html' => $label, 'has_field_text' => true, 'field_text' => $text];
+    $out = ['items' => [], 'bars' => '', 'acts' => '', 'html' => ''];
+    $line = static fn(string $label, string $text): array => ['label' => $label, 'text' => $text];
     $man = Update::getOffer($state, $chan);
     $reader = Update::getZipReader();
     $stage = (array)$state['stage'];
@@ -144,7 +152,7 @@ function getUpdatePack(array $state, string $chan): array {
         $sums = array_column(array_filter([$data['full'], $data['delta']], 'is_array'), 'sha256');
         $ready = ($stage['version'] ?? '') === $data['version'] && in_array($stage['sha256'] ?? '', $sums, true) && is_dir(UPDATE_DIR.'/client/stage/'.$data['version']);
         if ($ready) {
-            $out['rows'][] = $line(_UPDATE_PACK, $name.' - '.sprintf(_UPDATE_STAGED, intval($stage['files'] ?? 0), date(_TIMESTRING, intval($stage['time'] ?? 0))));
+            $out['items'][] = $line(_UPDATE_PACK, $name.' - '.sprintf(_UPDATE_STAGED, intval($stage['files'] ?? 0), date(_TIMESTRING, intval($stage['time'] ?? 0))));
             if (!empty($stage['nolist'])) $out['html'] .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _UPDATE_NOLIST]);
             if (!empty($stage['changed'])) $out['html'] .= getUpdateList(_UPDATE_CHANGED, (array)$stage['changed']);
             $out['acts'] = getTplPostButton(['name' => 'update', 'op' => 'test'], 'clipboard-check', _UPDATE_TEST);
@@ -153,9 +161,10 @@ function getUpdatePack(array $state, string $chan): array {
             $temp = Update::getTempFile($data['version'], $kind);
             $have = is_file($temp) ? (int)filesize($temp) : 0;
             $room = Update::getSpaceNeed($pack, $have);
-            $out['rows'][] = $line(_UPDATE_PACK, $name.(($have > 0) ? ' - '.sprintf(_UPDATE_GOT, filterSize($have), filterSize($pack['size'])) : ''));
+            $out['items'][] = $line(_UPDATE_PACK, $name);
+            if ($have > 0) $out['bars'] .= getTplMeter(_UPDATE_PACK, $have, $pack['size'], sprintf(_UPDATE_GOT, filterSize($have), filterSize($pack['size'])), 'ok');
             $free = ($room['free'] === null) ? sprintf(_UPDATE_NOFREE, filterSize($room['need'])) : sprintf(_UPDATE_NEED, filterSize($room['need']), filterSize($room['free']));
-            $out['rows'][] = $line(_UPDATE_SPACE, $free.($room['ok'] ? '' : ' '.sprintf(_UPDATE_LOW, filterSize($room['need'] - intval($room['free'])))));
+            $out['bars'] .= getUpdateRoom($room, $free.($room['ok'] ? '' : ' '.sprintf(_UPDATE_LOW, filterSize($room['need'] - intval($room['free'])))));
             if ($reader !== '' && $room['ok']) {
                 $out['acts'] = getTplPostButton(['name' => 'update', 'op' => 'download'], 'cloud-download', ($have > 0) ? _UPDATE_GETMORE : _DOWNLOAD);
             }
@@ -164,7 +173,7 @@ function getUpdatePack(array $state, string $chan): array {
     $fault = (array)$state['fault'];
     if (!$ready && ($fault['error'] ?? '') !== '') {
         $why = (string)$fault['error'].(((string)($fault['name'] ?? '') !== '') ? ' - '.(string)$fault['name'] : '');
-        $out['rows'][] = $line(_UPDATE_FAULT, date(_TIMESTRING, intval($fault['time'] ?? 0)).' - '.sprintf(_UPDATE_REJECT, $why));
+        $out['items'][] = $line(_UPDATE_FAULT, date(_TIMESTRING, intval($fault['time'] ?? 0)).' - '.sprintf(_UPDATE_REJECT, $why));
     }
     $audit = (array)$state['audit'];
     $seen = (intval($audit['time'] ?? 0) > 0) ? date(_TIMESTRING, intval($audit['time'])) : '';
@@ -175,7 +184,7 @@ function getUpdatePack(array $state, string $chan): array {
         $dirty => sprintf(_UPDATE_DIRTY, $seen),
         default => sprintf(_UPDATE_CLEAN, $seen),
     };
-    $out['rows'][] = $line(_UPDATE_INTEG, $text);
+    $out['items'][] = $line(_UPDATE_INTEG, $text);
     foreach (['changed' => _UPDATE_MODIFIED, 'missing' => _UPDATE_MISSING, 'extra' => _UPDATE_EXTRA] as $key => $head) {
         if (!empty($audit[$key])) $out['html'] .= getUpdateList($head, (array)$audit[$key]);
     }

@@ -29,7 +29,7 @@ $tabset = [
 ];
 
 function security(): void {
-    global $afile, $labels, $tabset;
+    global $afile, $conf, $labels, $tabset;
     $rows = [];
     $files = is_dir(LOGS_DIR) ? scandir(LOGS_DIR) : [];
     foreach ($files as $file) {
@@ -40,7 +40,7 @@ function security(): void {
         $rows[] = ['name' => $title, 'details' => [['label' => _FILE, 'value' => 'storage/logs/'.$file]],
             'drop' => getTplPostAction(['name' => 'security', 'op' => 'delete', 'id[]' => $name], 'trash', _ONDELETE), 'cells' => [
             ['is_truncate' => true, 'title_text' => $title, 'has_content_text' => true, 'content_text' => $title],
-            ['is_col_count' => true, 'has_content_text' => true, 'content_text' => filterSize(filesize($path))],
+            ['is_col_count' => true, 'content_html' => getTplMeter(_SIZE, filesize($path), intval($conf['security']['log_size']), '', 'ok', filterSize(filesize($path)), true)],
             ['is_col_date' => true, 'moment' => filemtime($path)],
             ['is_col_actions' => true, 'dial' => [
                 ['href' => $afile.'.php?name=security&op=logview&file='.urlencode($name), 'icon_name' => 'file-text', 'title' => _SHOW],
@@ -126,13 +126,13 @@ function logview(): void {
                 $op = (string)($row['op'] ?? '');
                 $tid = intval($row['target'] ?? 0);
                 $more = intval($row['num'] ?? 0) - 1;
-                $cells[] = ['is_truncate' => true, 'has_content_text' => true, 'content_text' => trim($who)];
+                $cells[] = ['is_truncate' => true, 'has_content_text' => true, 'content_text' => trim($who)] + getTplLongCell(trim($who), _ADMIN);
                 $cells[] = ['has_content_text' => true, 'content_text' => $mods[$row['modul'] ?? ''] ?? (string)($row['modul'] ?? '')];
                 $cells[] = ['has_content_text' => true, 'content_text' => $login ? _SEC_ENTRY : ($words[$op] ?? $op)];
                 $cells[] = ['is_col_status' => true, 'has_content_text' => true, 'content_text' => $tid ? '#'.$tid.($more > 0 ? ' +'.$more : '') : ''];
                 $cells[] = ['has_content_text' => true, 'content_text' => $results[$row['result'] ?? ''] ?? (string)($row['result'] ?? '')];
             } else {
-                $cells[] = ['is_truncate' => true, 'has_content_text' => true, 'title_text' => (string)$row['msg'], 'content_text' => (string)$row['msg']];
+                $cells[] = ['is_truncate' => true, 'has_content_text' => true, 'content_text' => (string)$row['msg']] + getTplLongCell((string)$row['msg'], _MESSAGE);
             }
             $cells[] = ['content_html' => Geoip::getIpHtml((string)($row['ip'] ?? ''))];
             $rows[] = ['cells' => $cells];
@@ -239,12 +239,13 @@ function logins(): void {
         $info = getAgentInfo($agent, 0);
         $rows[] = ['cells' => [
             ['is_col_date' => true, 'moment' => $row['time']],
-            ['is_truncate' => true, 'has_content_text' => true, 'content_text' => trim((string)$row['name'].' #'.intval($row['uid']))],
+            ['is_truncate' => true, 'has_content_text' => true, 'content_text' => trim((string)$row['name'].' #'.intval($row['uid']))]
+                + getTplLongCell(trim((string)$row['name'].' #'.intval($row['uid'])), _ACCOUNT),
             ['has_content_text' => true, 'content_text' => $row['admin'] ? _ADMIN : _USER],
             ['has_content_text' => true, 'content_text' => $results[$row['result']] ?? (string)$row['result']],
             ['has_content_text' => true, 'content_text' => $ways[$row['way']] ?? (string)$row['way']],
             ['content_html' => Geoip::getIpHtml((string)$row['ip'])],
-            ['is_truncate' => true, 'has_content_text' => true, 'title_text' => $agent, 'content_text' => $info['browser'].' / '.$info['os']],
+            ['is_truncate' => true, 'has_content_text' => true, 'content_text' => $info['browser'].' / '.$info['os']] + getTplLongCell($agent, _BROWSER),
         ]];
     }
     $link = 'name=security&op=logins'.($uid ? '&uid='.$uid : '').($side !== '' ? '&side='.$side : '').($res !== '' ? '&res='.$res : '')

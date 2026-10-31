@@ -60,6 +60,7 @@
       <button type="button" class="sl-but" data-sl-fm-act="close">{{ cancel_text }}</button>
     </form>
     {% endif %}
+    {% if quota_html %}<div class="sl-fm-quota">{{{ quota_html }}}</div>{% endif %}
     <div class="sl-fm-split" data-sl-fm-url="{{ self_url }}" data-sl-fm-up="{{ up_url }}" data-sl-fm-find="{{ find_text }}">
       {{{ tree_html }}}
       <div class="sl-fm-work">{{{ list_html }}}</div>

@@ -7,7 +7,7 @@
     {% if image_url %}<img src="{{ image_url }}" alt="{{ name }}"><button type="button" class="sl-fm-zoom" title="{{ shot_text }}" aria-label="{{ shot_text }}" data-sl-fm-show data-sl-fm-file="{{ pick_value }}" data-sl-fm-name="{{ name }}" data-sl-fm-img="{{ image_url }}" data-sl-fm-info="{{ info_url }}" data-sl-fm-down="{{ down_url }}"><i class="bi bi-arrows-fullscreen" aria-hidden="true"></i></button>{% else %}<i class="bi bi-{{ icon }}" aria-hidden="true"></i>{% endif %}
   </span>
   <dl class="sl-fm-props">
-    {% for row in rows %}<div><dt>{{ row.label }}</dt><dd title="{{ row.value }}">{{ row.value }}</dd></div>{% endfor %}
+    {% for row in rows %}<div><dt>{{ row.label }}</dt>{% if row.is_long %}<dd>{% include 'fragments/long.html' with row %}</dd>{% else %}<dd title="{{ row.text }}">{{ row.text }}</dd>{% endif %}</div>{% endfor %}
   </dl>
   {% if dial_html %}
   <div class="sl-fm-acts">{{{ dial_html }}}</div>

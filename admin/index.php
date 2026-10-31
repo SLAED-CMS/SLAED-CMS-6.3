@@ -129,7 +129,9 @@ function getAdminPanel(): void {
             'pass_text' => sprintf(_ADM_PASSOF, count($sigs) - $loud, count($sigs)),
             'signals' => array_map(static fn(array $v, int $i): array => $v + $flag($v['level']) + ['num' => $i], $sigs, array_keys($sigs)),
             'live_html' => $tpl->getHtmlFrag('live-chip', ['live_every' => $every]),
-        ] + $flag($tone));
+            'cap_icon' => 'display',
+            'cap_text' => _ADM_STATE,
+        ] + getCockpitParts() + $flag($tone));
     }
     if ($panel) {
         if (isAdmin(true)) {

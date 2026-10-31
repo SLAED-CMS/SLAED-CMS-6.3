@@ -17,6 +17,9 @@ define('DBG_MARK', "\x02SLDBG\x02");
 # The most rows one page of a panel list carries: the cap of an own number and of "all", and the ceiling of the reads of the panel
 define('LIST_MAX', 1000);
 
+# The characters from which a value of a narrow column counts as cut: shorter ones fit it, and a mark on every row would say nothing
+define('CELL_LONG', 16);
+
 # Frozen salt for verifying legacy md5 password hashes; never change it or stored legacy hashes stop matching
 define('PASS_SALT', 'IFNMQUVELiBBbGwgcmlnaHRzIHJlc2VydmVkLg==');
 
@@ -936,7 +939,7 @@ function updateSessionTrack(int $ctime, string $request, string $name): array {
         $uname = filterCutText(filterText($user[1], 1), 25);
         $guest = 2;
     } elseif (!defined('ADMIN_FILE') && !is_user()) {
-        $bname = is_bot();
+        $bname = getVisitBot()['name'];
         if ($bname) {
             $uname = filterCutText(filterText($bname, 1), 25);
             $guest = 1;
@@ -988,29 +991,6 @@ function getUserLastVisit(int $uid): string {
     return $_SESSION[$key]['time'];
 }
 
-# Track the current referer hit and optional auto-link attribution
-function updateRefererTrack(int $ctime, string $request, string $uname): void {
-    global $db, $conf, $user;
-    $referer = getReferer();
-    if (!$referer) return;
-    $referf = COUNTER_DIR.'/referer.log';
-    $refert = (file_exists($referf) && filesize($referf) != 0) ? file_get_contents($referf) : 0;
-    $past = $ctime - intval($conf['referers']['refer_t']);
-    if ($refert < $past && (is_dir(COUNTER_DIR) || mkdir(COUNTER_DIR, 0755, true) || is_dir(COUNTER_DIR))) {
-        $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_referer');
-        if (file_exists($referf)) unlink($referf);
-        $fp = fopen($referf, 'wb');
-        fwrite($fp, $ctime);
-        fclose($fp);
-    }
-    $ip = getIp();
-    $uid = is_user() ? intval($user[0]) : 0;
-    $args = ['uid' => $uid, 'name' => $uname, 'ip' => $ip, 'referer' => filterCutText($referer, 2048), 'url' => filterCutText(filterText($request), 2048)];
-    if ($conf['referers']['referb'] != 1 || ($conf['referers']['referb'] == 1 && from_bot())) {
-        $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_referer (uid, name, ip, referer, url, time) VALUES (:uid, :name, :ip, :referer, :url, NOW())', $args);
-    }
-}
-
 # Counts the rows of one system table behind an optional WHERE clause; the table comes from the caller's own list, never from input, the clause binds named placeholders
 function getTableCount(string $table, string $where = '', array $bind = []): int {
     global $db;
@@ -1054,6 +1034,14 @@ function getStatsDays(int $days): array {
     return array_slice($rows, -max($days, 1));
 }
 
+# The pages of the last sixty minutes from the hits by hour: the part of the hour gone counts from the hour before, which the first hour of a day takes from itself
+function getStatsHourRate(array $hours, int $time): float {
+    $hour = (int)date('G', $time);
+    $part = (int)date('i', $time) / 60;
+    $prev = ($hour > 0) ? $hours[$hour - 1] : $hours[0] / max($part, 0.25);
+    return $hours[$hour] + $prev * (1 - $part);
+}
+
 # Parse a key count field into a normalized map
 function getCounterField(string $field): array {
     $vals = [];
@@ -1070,26 +1058,18 @@ function getCounterField(string $field): array {
     return $vals;
 }
 
-# Update one counter field with top ten keys and an overflow bucket
-function updateCounterField(string $field, string $key, int $by = 1): string {
+# One counter field of a day: past $max keys the rarest yields to a new one and joins the overflow, as a key kept out could never rise and any client may send a burst of keys
+function updateCounterField(string $field, string $key, int $max = 10): string {
     if ($key === '') return $field;
-    $vals = getCounterField($field);
-    $vals[$key] = ($vals[$key] ?? 0) + $by;
-    $oth = (int)($vals['Other'] ?? 0);
+    $vals = array_filter(getCounterField($field), static fn(int $val): bool => $val > 0);
+    $oth = $vals['Other'] ?? 0;
     unset($vals['Other']);
     arsort($vals, SORT_NUMERIC);
-    $out = [];
-    $num = 0;
-    foreach ($vals as $name => $val) {
-        $val = (int)$val;
-        if ($val <= 0) continue;
-        if ($num < 10) {
-            $out[] = $name.':'.$val;
-        } else {
-            $oth += $val;
-        }
-        $num++;
-    }
+    if ($key === 'Other') $oth++;
+    if ($key !== 'Other' && !isset($vals[$key]) && count($vals) >= $max) $oth += array_pop($vals);
+    if ($key !== 'Other') $vals[$key] = ($vals[$key] ?? 0) + 1;
+    arsort($vals, SORT_NUMERIC);
+    $out = array_map(static fn(int|string $name, int $val): string => $name.':'.$val, array_keys($vals), $vals);
     if ($oth > 0) $out[] = 'Other:'.$oth;
     return implode(',', $out);
 }
@@ -1122,29 +1102,44 @@ function getSessionDurationBucket(int $secs): string {
     return '15m+';
 }
 
-# Return the referral category for a visit
+# The host of a referer as the lists and the counter read it, without www. and m.; none for what a counter field could not hold, as a client sends whatever it likes
+function getRefHost(string $ref): string {
+    $host = preg_replace('#^(www|m)\.#', '', strtolower((string)parse_url(str_contains($ref, '://') ? $ref : '//'.$ref, PHP_URL_HOST)));
+    return preg_match('#^[a-z0-9-]+(\.[a-z0-9-]+)+$#D', $host) ? $host : '';
+}
+
+# Whether a host is on a list of the settings: an entry with a dot is the end of the domain, one without is a whole part of it, so google is google.fr and t.co is not microsoft.com
+function checkHostList(string $host, array $list): bool {
+    $parts = explode('.', $host);
+    foreach ($list as $key) {
+        if (str_contains($key, '.') ? ($host === $key || str_ends_with($host, '.'.$key)) : in_array($key, $parts, true)) return true;
+    }
+    return false;
+}
+
+# The page a visitor enters by as a key of its counter: the marks of an ad and of a highlighted word go, so one page counts once; what the field could not hold is the overflow
+function getRefPage(string $uri): string {
+    [$path, $line] = array_pad(explode('?', substr($uri, 0, 1024), 2), 2, '');
+    parse_str($line, $args);
+    $mark = '#^(word|utm_\w+|gclid|fbclid|yclid|ysclid|msclkid|_openstat)$#';
+    $args = array_filter($args, static fn(int|string $key): bool => !preg_match($mark, (string)$key), ARRAY_FILTER_USE_KEY);
+    $page = (!$args && in_array($path, ['/index.php', '/index.html'], true)) ? '/' : $path.($args ? '?'.http_build_query($args) : '');
+    return (strlen($page) <= 100 && preg_match('#^/[\w./%?&=~+-]*$#D', $page)) ? $page : 'Other';
+}
+
+# The source of a visit by the lists of the settings of the statistics, AI first as gemini.google.com is no search; a host that is no host or the site itself is direct
 function getRefCategory(string $ref): string {
     global $conf;
-    if ($ref === '') return 'direct';
-    $home = preg_replace('#^www\.#i', '', strtolower((string)parse_url((string)($conf['homeurl'] ?? ''), PHP_URL_HOST)));
-    $host = preg_replace('#^www\.#i', '', strtolower((string)parse_url($ref, PHP_URL_HOST)));
-    if ($home !== '' && $host !== '' && $home === $host) return 'direct';
-    if ($host === '') return 'direct';
-    $search = ['google', 'bing', 'yahoo', 'yandex', 'duckduckgo', 'baidu', 'ecosia', 'qwant'];
-    foreach ($search as $key) {
-        if (str_contains($host, $key)) return 'search';
-    }
-    $social = ['facebook', 'twitter', 't.co', 'instagram', 'linkedin', 'vk.com', 'reddit', 'youtube', 'telegram', 'tiktok'];
-    foreach ($social as $key) {
-        if (str_contains($host, $key)) return 'social';
-    }
-    return 'referrer';
+    $host = getRefHost($ref);
+    if ($host === '' || $host === getRefHost((string)($conf['homeurl'] ?? ''))) return 'direct';
+    if (checkHostList($host, $conf['statistic']['ai'] ?? [])) return 'ai';
+    if (checkHostList($host, $conf['statistic']['search'] ?? [])) return 'search';
+    return checkHostList($host, $conf['statistic']['social'] ?? []) ? 'social' : 'referrer';
 }
 
 # Parse the user agent into browser, operating system and device
 function getAgentInfo(string $ua, int $guest): array {
-    $bot = '#bot|crawl|spider|slurp|bingpreview|petalbot#i';
-    if ($guest === 1 || preg_match($bot, $ua)) {
+    if ($guest === 1 || getBotInfo($ua)['name'] !== '') {
         return ['browser' => 'Bot', 'os' => 'Bot', 'device' => 'bot'];
     }
     $browser = 'Other';
@@ -1254,7 +1249,6 @@ function updateStatsTrack(string $request, int $guest, array $state): void {
     $spath = COUNTER_DIR.'/';
     $slog = $spath.'statistic.log';
     $info = getAgentInfo(getAgent(), $guest);
-    $rcat = ($guest !== 1) ? getRefCategory($sreferer) : '';
     $cc = ($state['country'] !== '') ? $state['country'] : (class_exists('Geoip') ? Geoip::getCountry(getIp()) : '');
     $sess = $state['sess'];
     $safeOpen = static function(string $file, string $mode) {
@@ -1378,15 +1372,15 @@ function updateStatsTrack(string $request, int $guest, array $state): void {
         $shost = substr_count($iplog, ',') + ($ipnew ? 1 : 0);
         $suser = substr_count($unlog, ',') + ($unew ? 1 : 0);
         if ($isday) {
-            $sengine = ($ipnew && $conf['session'] && $guest == 1) ? intval(($con[4] ?? 0) + 1) : ($con[4] ?? 0);
-            $srefer = ($ipnew && $sreferer) ? intval(($con[5] ?? 0) + 1) : ($con[5] ?? 0);
+            $sengine = ($ipnew && $guest == 1) ? intval(($con[4] ?? 0) + 1) : ($con[4] ?? 0);
+            $srefer = ($ipnew && $sreferer && $guest != 1) ? intval(($con[5] ?? 0) + 1) : ($con[5] ?? 0);
             $shome = ($reqhom) ? intval(($con[6] ?? 0) + 1) : ($con[6] ?? 0);
             $wc = $con[0].'|'.$shost.'|'.intval(($con[2] ?? 0) + 1).'|'.intval(($con[3] ?? 0) + 1).'|'.$sengine.'|'.$srefer.'|'.$shome.'|'.$suser;
             $prev = $con;
         } else {
             $ahits = ($con[3] ?? 0) ? intval(($con[3] ?? 0) + 1) : 1;
-            $sengine = ($conf['session'] && $guest == 1) ? 1 : 0;
-            $srefer = ($sreferer) ? 1 : 0;
+            $sengine = ($guest == 1) ? 1 : 0;
+            $srefer = ($sreferer && $guest != 1) ? 1 : 0;
             $wc = $today.'|'.$shost.'|1|'.$ahits.'|'.$sengine.'|'.$srefer.'|'.$reqhom.'|'.$suser;
             $prev = [];
         }
@@ -1395,7 +1389,7 @@ function updateStatsTrack(string $request, int $guest, array $state): void {
         $ext[9] = updateCounterField($prev[9] ?? '', $info['os']);
         $ext[10] = updateCounterField($prev[10] ?? '', $info['device']);
         $ext[11] = ($cc !== '') ? updateCounterField($prev[11] ?? '', $cc) : ($prev[11] ?? '');
-        $ext[12] = ($guest !== 1) ? updateCounterField($prev[12] ?? '', $rcat) : ($prev[12] ?? '');
+        $ext[12] = ($sess !== null && $sess['is_new']) ? updateCounterField($prev[12] ?? '', getRefCategory($sreferer)) : ($prev[12] ?? '');
         $hour = (int)date('G');
         $ext[13] = updateHoursField($prev[13] ?? '', $hour);
         $ext[14] = ($sess !== null) ? updateCounterField($prev[14] ?? '', $sess['is_new'] ? 'new' : 'returning') : ($prev[14] ?? '');
@@ -1404,6 +1398,12 @@ function updateStatsTrack(string $request, int $guest, array $state): void {
         $ext[17] = updateHoursField($prev[17] ?? '', $hour, (int)round($load['gen'] * 1000));
         $ext[18] = updateHoursField($prev[18] ?? '', $hour, $load['qnum']);
         $ext[19] = updateHoursField($prev[19] ?? '', $hour, intdiv($load['mem'], 1024));
+        $from = ($sess !== null && $sess['is_new']) ? getRefHost($sreferer) : '';
+        $ext[20] = updateCounterField($prev[20] ?? '', $from);
+        $ext[21] = ($from !== '') ? updateCounterField($prev[21] ?? '', getRefPage($request), 20) : ($prev[21] ?? '');
+        $robot = getVisitBot();
+        $ext[22] = updateCounterField($prev[22] ?? '', str_replace(['|', ',', ':'], ' ', $robot['name']), 20);
+        $ext[23] = updateCounterField($prev[23] ?? '', $robot['type']);
         $wc = implode('|', $ext);
         if (!Cache::setBody($slog, $wc)) {
             addErrorFile('Statistic counter write failed: statistic.log');
@@ -1782,10 +1782,7 @@ function setHead(array $seo = []): void {
     $request = $_SERVER['REQUEST_URI'] ?? getenv('REQUEST_URI') ?: '';
     if (!$kept) {
         $kept = true;
-        $track = $conf['session'] ? updateSessionTrack($ctime, $request, $name) : ['uname' => '', 'guest' => 0];
-        $uname = $track['uname'];
-        $guest = $track['guest'];
-        if ($conf['referers']['refer']) addDeferredTask(static fn() => updateRefererTrack($ctime, $request, $uname));
+        $guest = $conf['session'] ? updateSessionTrack($ctime, $request, $name)['guest'] : ((getVisitBot()['name'] !== '') ? 1 : 0);
         if ($conf['statistic']['stat']) {
             $stats = updateStatsCookie($guest);
             addDeferredTask(static fn() => updateStatsTrack($request, $guest, $stats));
@@ -3806,13 +3803,19 @@ function addAdminMail(bool $enab, string $mod, string $username = '', string $ti
     }
 }
 
+# A number in the language of the page: a comma in the fraction but for en, without intl, which is only recommended; with no digits round() decides them and nothing is grouped
+function filterDecimal(int|float $num, ?int $digits = null): string {
+    $mark = (defined('_LOCALE') && in_array(substr(_LOCALE, 0, 2), ['ru', 'uk', 'de', 'fr', 'pl'], true)) ? ',' : '.';
+    return ($digits === null) ? str_replace('.', $mark, (string)$num) : number_format($num, $digits, $mark, "\u{00A0}");
+}
+
 # Size value filter (bytes to human-readable unit)
 function filterSize(mixed $size): string {
     $val = (float)$size;
     if ($val <= 0) return intval($size).' Bytes';
     $unit = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
     for ($idx = 0, $max = count($unit) - 1; $val >= 1024 && $idx < $max; $idx++) $val /= 1024;
-    return round($val, 2).' '.$unit[$idx];
+    return filterDecimal(round($val, 2)).' '.$unit[$idx];
 }
 
 # Drain the mail queue as a scheduler job; a run that refused without delivering fails, an empty queue succeeds, and the bounce box is read in the same run
@@ -5238,148 +5241,28 @@ function domain(string $url, string $str = ''): string {
     return implode(', ', $dom);
 }
 
-# Check the user agent against the configured bot list with literal case-insensitive matching, result cached per request
-function is_bot(): int|string {
+# The name and type of a robot: by a mask of the settings, else by the word that gives it away as other; no agent is a script, a CUBOT is a phone, a person has an empty name
+function getBotInfo(string $ua): array {
     global $conf;
-    static $found = null;
-    if ($found !== null) return $found;
-    $agent = getAgent();
-    $found = 0;
-    foreach (explode(',', $conf['bots']) as $item) {
-        [$mask, $bname] = array_pad(explode('=', $item, 2), 2, '');
-        if ($mask !== '' && stripos($agent, $mask) !== false) {
-            $found = filterText(substr($bname, 0, 25), 1);
-            break;
+    static $seen = [];
+    if (isset($seen[$ua])) return $seen[$ua];
+    if ($ua === 'unknown') return ['name' => 'Unknown', 'type' => 'other'];
+    foreach ($conf['statistic']['bots'] ?? [] as $type => $list) {
+        foreach ($list as $mask => $name) {
+            if (stripos($ua, (string)$mask) !== false) return $seen[$ua] = ['name' => ($name !== '') ? $name : (string)$mask, 'type' => $type];
         }
     }
-    return $found;
-}
-# Check the referer against the configured bot referer list with literal case-insensitive matching, result cached per request
-function from_bot(): int|string {
-    global $conf;
-    static $found = null;
-    if ($found !== null) return $found;
-    $refer = getReferer();
-    $found = 0;
-    foreach (explode(',', $conf['fbots']) as $mask) {
-        if ($mask !== '' && stripos($refer, $mask) !== false) {
-            $found = filterText(substr($mask, 0, 25), 1);
-            break;
-        }
-    }
-    return $found;
+    $word = '(?<!cu)bot|crawl|spider|slurp|scrap|fetch|scan|archiv|monitor|preview|externalhit|headless|lighthouse|pagespeed|'
+        .'curl|wget|python|httpclient|http-client|go-http|libwww|java/|okhttp|axios|perl/|ruby|(?<![a-z])php/';
+    $is = preg_match('#[\w.-]*(?:'.$word.')[\w.-]*#i', substr($ua, 0, 512), $hit) === 1;
+    return $seen[$ua] = ['name' => $is ? substr($hit[0], 0, 25) : '', 'type' => $is ? 'other' : ''];
 }
 
-# Check referer from Search Engines
-function engines_word(string $refer): string {
-    $engines = [
-        'images.google.' => ['q', 'prev'],
-        'bing.com' => 'q',
-        '.alot.' => 'q',
-        'a993.com' => 'q1',
-        'abcsok.' => 'q',
-        'alltheweb.' => 'q',
-        'altavista.' => 'q',
-        'aol.' => ['q', 'query', 'encquery'],
-        'aolsvc.' => 'query',
-        'avantfind.com' => 'keywords',
-        'bonvote.com' => 'search',
-        'bonweb.com' => 'search',
-        'comcast.net' => 'q',
-        'conduit.' => 'q',
-        'eniro.se' => 'search_word',
-        'excite.' => 'search',
-        'google.' => ['q', 'as_q'],
-        'gogo.ru' => 'q',
-        'yandex.' => ['text', 'query'],
-        'ya.ru' => 'text',
-        'hotbot.' => 'query',
-        'icerocket.com' => 'q',
-        'icq.com' => 'q',
-        'isheyka.com' => 'q',
-        'midco.net' => 'q',
-        'live.com' => 'q',
-        'msn.' => 'q',
-        'yahoo.' => ['p', 'k'],
-        'search.' => 'q',
-        'kvasir.no' => 'q',
-        'myway.com' => 'searchfor',
-        'netscape.' => ['q', 'query'],
-        'oceanfree.net' => 'as_q',
-        'qip.ru' => 'query',
-        'sweetim.com' => 'q',
-        'tut.by' => 'query',
-        'ukr.net' => 'search_query',
-        'search.oboz.ua' => 'k',
-        'search.www.infoseek.co.jp' => 'qt',
-        '.setooz.com' => 'query',
-        'toile.com' => 'q',
-        'vinden.nl' => 'q',
-        '.i.ua' => 'q',
-        '.mail.ru' => ['q', 'tag'],
-        '.onru.ru' => 'q',
-        'aport.ru' => 'r',
-        'find.ru' => 'text',
-        'gde.ru' => ['keywords', 'query', 't', 'search_query', 'id'],
-        'go.km.ru' => 'sq',
-        'meta.ua' => 'q',
-        'metabot.ru' => 'st',
-        'nerus.ru' => 'query',
-        'nigma.ru' => ['s', 'pq'],
-        'nova.rambler.ru' => 'query',
-        'poisk.ru' => 'text',
-        'protonet.ru' => 'q',
-        'rambler.ru' => 'query',
-        'tyndex.ru' => 'pnam',
-        'webalta.ru' => 'q',
-        'exactseek.com' => ['q', 'query'],
-        'lycos.' => 'query',
-        'ask.' => 'q',
-        'cnn.' => 'query',
-        'looksmart.' => 'qt',
-        'about.' => 'terms',
-        'mamma.' => 'query',
-        'gigablast.' => 'q',
-        'voila.' => 'rdata',
-        'virgilio.' => 'qs',
-        'baidu.' => 'wd',
-        'alice.' => 'qs',
-        'najdi.' => 'q',
-        'club-internet.' => 'q',
-        'mama.' => 'query',
-        'seznam.' => 'q',
-        'netsprint.' => 'q',
-        'szukacz.' => 'q',
-        'yam.' => 'k',
-        'pchome.' => 'q',
-    ];
-
-    $refer= str_replace(['&#038;', '&amp;'], '&', $refer);
-    $tmp = parse_url(urldecode(trim($refer)));
-    $site = $tmp['host'] ?? '';
-    $str = $tmp['query'] ?? '';
-    parse_str($str, $arr);
-
-    foreach ($engines as $key => $value) {
-        if (substr_count($site, $key)) {
-            foreach ($arr as $k => $v) {
-                if (is_array($value)) {
-                    if (in_array($k, $value)) {
-                        return $v;
-                        break;
-                    }
-                } elseif ($k == $value) {
-                    return $v;
-                    break;
-                } else {
-                    return _NO;
-                    break;
-                }
-            }
-            break;
-        }
-    }
-    return '';
+# The robot of this request: its agent, else no language asked for, as a browser always asks and a script dressed as one rarely does; getBotInfo() alone judges a stored agent
+function getVisitBot(): array {
+    $info = getBotInfo(getAgent());
+    if ($info['name'] !== '' || !empty($_SERVER['HTTP_ACCEPT_LANGUAGE']) || getenv('HTTP_ACCEPT_LANGUAGE')) return $info;
+    return ['name' => 'No Accept-Language', 'type' => 'other'];
 }
 
 # Check user

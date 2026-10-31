@@ -109,6 +109,84 @@ final class StatsContractTest extends TestCase
         return (date('d') !== '01' ? '01.' : '02.').date('m.Y');
     }
 
+    # The sources count the entry of a session once: a click inside the site and a hit without a session of the counter add nothing, though every hit still counts
+    #[Test]
+    public function sourcesCountOnlyTheEntryOfASession(): void
+    {
+        $script = dirname(__DIR__).'/Support/contract_probe.php';
+        $out = (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' statsource '.escapeshellarg($this->dir).' 2>&1');
+        $this->assertIsArray(json_decode($out, true), 'Probe did not return JSON: '.$out);
+        $part = $this->getFields();
+        $this->assertSame('7', $part[2], 'every hit must be counted');
+        $this->assertSame('search:1,direct:1', $part[12], 'a source is counted by the first hit of a session only');
+        $this->assertSame(['1', '1'], [$part[4], $part[5]], 'a robot with a referer is a crawler only, so the audience takes it off once');
+        $this->assertSame('google.com:1', $part[20], 'the host of an entry from another site');
+        $this->assertSame('/:1', $part[21], 'the page of an entry from another site');
+        $this->assertSame('OpenAI GPTBot:2,FreshScoutBot:1', $part[22], 'every hit of a robot counts by its name, and a person adds none');
+        $this->assertSame('ai:2,other:1', $part[23], 'every hit of a robot counts by its type, one outside the lists as other');
+    }
+
+    # Run the rules of the counter once in a fresh PHP process: who is a robot, the source and host of a referer, the key of a page, the limit of a field
+    private function getRulesProbe(): array
+    {
+        static $data = null;
+        if ($data !== null) return $data;
+        $script = dirname(__DIR__).'/Support/contract_probe.php';
+        $out = (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' statrules '.escapeshellarg($this->dir).' 2>&1');
+        $data = json_decode($out, true);
+        $this->assertIsArray($data, 'Probe did not return JSON: '.$out);
+        return $data;
+    }
+
+    # A person gets no name and a robot one, by the list or by a word of its agent, and the two callers of the detector agree
+    #[Test]
+    public function aRobotIsNamedAndAPersonIsNot(): void
+    {
+        $data = $this->getRulesProbe();
+        $this->assertSame([
+            'chrome' => '', 'cubot' => '', 'firephp' => '', 'google' => 'Google Bot', 'bing' => 'Bing Bot', 'yandex' => 'Yandex Bot', 'chatgpt' => 'ChatGPT User',
+            'fresh' => 'FreshScoutBot', 'curl' => 'curl', 'none' => 'Unknown',
+        ], $data['bots']);
+        $this->assertSame(['desktop', 'bot'], $data['info']);
+        $this->assertSame(['ai', 'search', 'seo', 'social', 'other', ''], $data['types']);
+        $this->assertSame(['name' => 'No Accept-Language', 'type' => 'other'], $data['dressed'], 'A script dressed as a browser asks for no language');
+        $this->assertSame(['name' => '', 'type' => ''], $data['browser']);
+        $this->assertSame([true, false, false, false, true], $data['referers'], 'The own site is told by the domain, not by its name in a foreign query');
+        $this->assertSame([], $data['strays'], 'A mask of the settings is answered by a mask of another type');
+    }
+
+    # The lists match whole parts of a domain or its end, never a piece of a word, and a host the counter could not hold counts as direct
+    #[Test]
+    public function aSourceFollowsTheListsByDomain(): void
+    {
+        $data = $this->getRulesProbe();
+        $this->assertSame([
+            'none' => 'direct', 'france' => 'search', 'china' => 'search', 'ya' => 'search', 'bare' => 'search', 'maya' => 'referrer', 'micro' => 'referrer',
+            'tco' => 'social', 'mobile' => 'social', 'broken' => 'direct', 'chatgpt' => 'ai', 'gemini' => 'ai',
+        ], $data['cats']);
+        $this->assertSame(['google.com', 'baidu.com', 'bing.com', '', '', ''], $data['hosts']);
+    }
+
+    # A page loses its marks of an ad and of a highlighted word, and what would break the line of the counter becomes the overflow
+    #[Test]
+    public function aPageKeyCannotBreakTheCounter(): void
+    {
+        $this->assertSame(['/', '/', '/news/one', '/index.php?name=files&op=view&id=12', 'Other', 'Other', 'Other', 'Other'], $this->getRulesProbe()['pages']);
+    }
+
+    # A full field gives way to a new key at its rarest, so a burst of addresses early in a day cannot keep a real page out
+    #[Test]
+    public function aFullFieldLetsAFrequentKeyIn(): void
+    {
+        $data = $this->getRulesProbe();
+        $this->assertSame('a:5,c:1,Other:1', $data['evict']);
+        $this->assertSame('a:5,Other:3', $data['other']);
+        $this->assertSame('a:5', $data['same']);
+        $this->assertSame(3, $data['flood']['/real'] ?? 0, 'a page entered three times stands in the field after the burst');
+        $this->assertSame(43, array_sum($data['flood']), 'no hit is lost to the limit');
+        $this->assertSame(['hosts' => ['google.com' => 3, 'Other' => 1], 'pages' => ['/' => 2], 'bots' => ['OpenAI GPTBot' => 4], 'bottype' => ['ai' => 4]], $data['row']);
+    }
+
     # Parallel first hits from one IP count the host once and never lose a single hit
     #[Test]
     public function parallelHitsFromOneIpCountTheHostOnce(): void

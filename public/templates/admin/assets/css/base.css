@@ -340,7 +340,7 @@
   --sl-phx-shine-bg: linear-gradient(100deg, transparent 30%, #fff 50%, transparent 70%);
   --sl-col-date-width: 150px;
   --sl-col-count-width: 64px;
-  --sl-col-sent-width: 118px;
+  --sl-col-sent-width: 144px;
   --sl-col-ip-width: 150px;
   --sl-col-ip-height: 24px;
   --sl-col-lang-width: 58px;
@@ -432,6 +432,11 @@
     drop-shadow(0 var(--sl-space-4) var(--sl-space-7) light-dark(var(--sl-shadow-color), transparent))
     drop-shadow(0 var(--sl-space-1) var(--sl-space-2) light-dark(var(--sl-shadow-color), transparent));
   --sl-graph-height: 285px;
+  /* The floor of a chart drawn by the series and the room of the figures of its scale at its left */
+  --sl-graph-min-height: 240px;
+  --sl-graph-pad-x: 40px;
+  /* The strip of the months of an archive with the years under its bars */
+  --sl-archive-height: 96px;
   /* The cell of the grid under the windows of a page and the width under which a tile of figures takes the next row */
   --sl-ground-width: 32px;
   --sl-metric-min-width: 150px;
@@ -484,7 +489,7 @@
   --sl-modal-btn-mix: 86%;
   --sl-modal-border: 3px;
   --sl-module-head-height: 41px;
-  --sl-monitor-table-width: 38%;
+  --sl-monitor-table-width: 45%;
   --sl-msg-width: 460px;
   --sl-msg-shadow: 0 10px 30px light-dark(rgba(35, 52, 70, 0.14), rgba(0, 0, 0, 0.6));
   --sl-msg-brand-width: 240px;

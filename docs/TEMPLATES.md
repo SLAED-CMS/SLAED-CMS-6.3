@@ -588,6 +588,7 @@ the panel layout (the login after a lost session) answers `HX-Refresh`. Back red
 | `limit`, `base` | the rows of this page from `getListLimit()` and the list's own number; `base` brings the rows chip |
 | `key` | the key the sort is kept under, the module name by default; the second list of a module names its own (`security-logins`, `newsletter-dead`) |
 | `head_html`, `note_html`, `foot_html` | the tabs with the filter bar, a note above the table, a form under it that has to live inside `#sl-list` (the ban lists) |
+| `pane` | the window round the list: the keys of `pane-cap.html` and `tiles_html` above the table (the tables of "База данных") |
 | `is_fixed` | the fixed table layout |
 
 - **The filter is a GET form.** `fragments/list-filter.html` draws labelled fields with no `onchange`; the tabs that
@@ -670,8 +671,7 @@ under the text to the right — the width of the alert decides, not that of the 
   `admin/modules/*.php` for it, `ViewBridgeSmokeTest::viewRendersAlertActionSlot` renders the fragment with and without
   the slot.
 - **Where it stands.** "Сортировка" of "Категории" (`_CATDRAGSORT`) and "Блоки", "Исправить счётчики" of
-  "Комментарии", "Оптимизация" and "Ремонт" of "База данных", "Очистить" of "Переходы" (`_REF_TOTAL`, dangerous, with
-  its question), "Отметить все N" with the progress line `sl-alert-meter` (`--sl-d-run`), "Повторить" of a list that
+  "Комментарии", "Оптимизация" and "Ремонт" of "База данных", "Отметить все N" with the progress line `sl-alert-meter` (`--sl-d-run`), "Повторить" of a list that
   did not come, and "Отменить" of the toast of the panel. The toast of the site is a pill with `sl-toast-undo`, not an
   alert.
 
@@ -712,7 +712,7 @@ switch is "One motion switch" of `docs/ARCHITECTURE.md`; the option "Движе�
 
 | Effect | Where | How |
 |---|---|---|
-| A light round the frame under the hand, blue into violet | `.sl-cockpit`, `.sl-mcard`, `.sl-monitor-card` | `::before`, a stroke of `--sl-aurora-width` along `offset-path`; `sl-aurora` over `--sl-aurora-dur` carries its opacity, so a still panel shows none |
+| A light round the frame under the hand, blue into violet | `.sl-cockpit`, `.sl-mcard`, `.sl-pane` | `::before`, a stroke of `--sl-aurora-width` along `offset-path`; `sl-aurora` over `--sl-aurora-dur` carries its opacity, so a still panel shows none |
 | The scan, a line of light going down the panel now and then | `.sl-cockpit` | `::after`, 1 px under the glow of `--sl-tint-strong` and `--sl-tint`, `sl-cockpit-scan`, at most `--sl-fade-disabled` |
 | The comet round the lamp, in every state and the one beam there | `.sl-cockpit-plate` | `::before`, `sl-cockpit-spin`; the rules of the cockpit set its pace by the state, a multiple of `--sl-alert-dur` |
 | The glow of a circle, at the share of the gauges of the presentation | `.sl-cockpit-ring .sl-knob-val`, `.sl-cockpit-plate` | `--sl-knob-mix`, not the shared `--sl-ring-mix`; it does not move, so it stands with the rules of the cockpit, outside the block |

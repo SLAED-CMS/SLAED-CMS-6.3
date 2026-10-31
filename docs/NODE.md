@@ -323,7 +323,7 @@ values over real requests. The 6.2 path of `table_update6_3.sql` reaches the sam
 | ip | `VARCHAR(45) CHARACTER SET ascii COLLATE ascii_bin NOT NULL DEFAULT ''` |
 | module, scope | `VARCHAR(50) CHARACTER SET ascii COLLATE ascii_bin NOT NULL` |
 | language | `VARCHAR(10) CHARACTER SET ascii COLLATE ascii_bin NOT NULL DEFAULT ''`: the name of a `lang/<code>.php` file, `''` for "all languages" or "the site language" |
-| user name | `VARCHAR(25)`; `_session.uname` and `_referer.name`, which may hold an ip, are 45; `_oauth_temp.uname`, the display name of a provider, is 128 |
+| user name | `VARCHAR(25)`; `_session.uname`, which may hold an ip, is 45; `_oauth_temp.uname`, the display name of a provider, is 128 |
 | email | `VARCHAR(255)`, keyed whole; the unique ones are `DEFAULT NULL`, NULL for "no address" |
 | text | `TEXT` / `MEDIUMTEXT NOT NULL`, supplied by the insert |
 | long address | `VARCHAR(2048)`, keyed by prefix where a key is needed (`_node_assets.src`) |

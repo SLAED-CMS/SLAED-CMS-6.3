@@ -1204,7 +1204,7 @@ class Upload {
     }
 
     # Sums the published bytes of one destination in constant memory; partials are never counted
-    private function getUsedBytes(string $canon): int {
+    public function getUsedBytes(string $canon): int {
         $sum = 0;
         foreach (scandir($canon) ?: [] as $file) {
             $path = $canon.'/'.$file;

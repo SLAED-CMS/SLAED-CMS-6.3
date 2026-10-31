@@ -78,7 +78,7 @@ function getSearchForm(array $state): string {
 
 function addSearchStat(array $state): void {
     global $db, $conf;
-    if (!$conf['search']['asearch'] || $state['word'] === '') return;
+    if (!$conf['search']['asearch'] || $state['word'] === '' || getVisitBot()['name'] !== '') return;
     $pars = ['word' => filterCutText($state['word'], 255), 'modul' => $state['mod']];
     $result = $db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_search WHERE word = :word AND modul = :modul', $pars);
     if ($db->getSqlRowCount($result) > 0) {

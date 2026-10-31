@@ -1280,7 +1280,7 @@
         grid.addEventListener('animationend', done);
         grid.addEventListener('animationcancel', done);
     }
-    // Home tiles, the parts of a ground and monitor charts wait for the view; a waiting chart is clipped to nothing, which the observer reads as unseen, so its parent is watched
+    // Home tiles, the parts of a ground and charts wait for the view; a waiting chart is clipped to nothing, which the observer reads as unseen, so its parent is watched
     function setArriveMarks(root) {
         if (window.isMotionStill() || !window.IntersectionObserver) return;
         if (!arrival.seen) {
@@ -1292,7 +1292,7 @@
                     arrival.seen.unobserve(row.target);
                     node.classList.add('sl-is-in');
                     if (node.matches('.sl-menu-grid')) return setArriveDone(node);
-                    if (node.matches('.sl-ground > *')) return;
+                    if (node.matches('.sl-ground > *')) return setFigureRise(node);
                     place = node.closest('[id]');
                     arrival.drawn[place ? place.id : ''] = true;
                 });
@@ -1607,39 +1607,670 @@
         void node.offsetWidth;
         node.classList.add('sl-is-fresh');
     }
-    // A figure runs from the value it shows to the new one and flares; slFigure keeps the goal, since the text is a step of the run while it lasts
-    function setFigureRun(node, value) {
-        var text = String(value);
-        var goal = text.trim() === '' ? NaN : Number(text);
-        var was = node.slFigure === undefined ? Number(node.textContent) : node.slFigure;
-        var from = isNaN(was) ? 0 : was;
-        var digits = (text.split('.')[1] || '').length;
+    // A number in the language of the page, grouped as filterDecimal() groups it; the browser knows the mark of the language the server names
+    function getFigureText(value, digits) {
+        var text = Number(value).toLocaleString(document.documentElement.lang || 'en', { useGrouping: false, minimumFractionDigits: digits, maximumFractionDigits: digits });
+        return text.replace(/^\D?\d+/, function (whole) { return whole.replace(/\B(?=(\d{3})+$)/g, '\u00a0'); });
+    }
+    // The run of a figure: it climbs to its goal in 900 ms, each step in the language of the page, and ends on the text the server wrote
+    function setFigureRoll(node, from, goal, text, digits) {
         var run = (node.slFigureRun || 0) + 1;
         var start = 0;
-        var step;
-        node.slFigure = goal;
-        node.slFigureRun = run;
-        if (isNaN(goal) || goal === was || window.isMotionStill() || document.hidden) {
-            node.textContent = text;
-            return;
-        }
-        if (!isNaN(was)) setFigureFresh(node);
-        step = function (now) {
+        var step = function (now) {
             var part;
             if (node.slFigureRun !== run) return;
             if (!start) start = now;
             part = Math.min(1, (now - start) / 900);
-            node.textContent = part < 1 ? (from + (goal - from) * (1 - Math.pow(1 - part, 3))).toFixed(digits) : text;
+            node.textContent = part < 1 ? getFigureText(from + (goal - from) * (1 - Math.pow(1 - part, 3)), digits) : text;
             if (part < 1) window.requestAnimationFrame(step);
         };
+        node.slFigureRun = run;
         window.requestAnimationFrame(step);
+    }
+    // A figure runs from its value to the new one and flares; the value is apart from the text, whose comma Number() cannot read, and slFigure keeps the goal during the run
+    function setFigureRun(node, value, text) {
+        var raw = String(value);
+        var said = String(text === undefined ? value : text);
+        var goal = raw.trim() === '' ? NaN : Number(raw);
+        var was = getFigureValue(node);
+        node.slFigure = goal;
+        node.slFigureText = said;
+        node.slFigureRun = (node.slFigureRun || 0) + 1;
+        if (isNaN(goal) || goal === was || window.isMotionStill() || document.hidden) {
+            node.textContent = said;
+            return;
+        }
+        if (!isNaN(was)) setFigureFresh(node);
+        setFigureRoll(node, isNaN(was) ? 0 : was, goal, said, (raw.split('.')[1] || '').length);
+    }
+    // The figures of a part of a ground that rose run up from zero to what they show; a poll that came first left its own goal and text
+    function setFigureRise(part) {
+        part.querySelectorAll('[data-sl-figure]').forEach(function (node) {
+            var raw = String(getFigureValue(node));
+            if (!isNaN(raw)) setFigureRoll(node, 0, Number(raw), node.slFigureText || node.textContent, (raw.split('.')[1] || '').length);
+        });
     }
     // The value a figure stands for, the goal of its run when one runs
     function getFigureValue(node) {
-        return node.slFigure === undefined ? Number(node.textContent) : node.slFigure;
+        return node.slFigure === undefined ? Number(node.getAttribute('data-sl-figure') || node.textContent) : node.slFigure;
     }
     document.addEventListener('animationend', function (event) {
-        if (event.animationName === 'sl-cockpit-fresh' || event.animationName === 'sl-figure-flash') event.target.classList.remove('sl-is-fresh');
+        if (['sl-cockpit-fresh', 'sl-figure-flash', 'sl-bar-flash'].indexOf(event.animationName) !== -1) event.target.classList.remove('sl-is-fresh');
+    });
+    var chartnum = 0;
+    var dayat = -1;
+    // A node of the engine with its class and its text, never markup: every text of a chart comes from the server and stays a text
+    function getSeriesNode(tag, name, text) {
+        var node = document.createElement(tag);
+        if (name) node.className = name;
+        if (text !== undefined) node.textContent = text;
+        return node;
+    }
+    // A part of a drawing in the namespace of svg, its attributes set one by one
+    function getSeriesSvg(tag, attrs) {
+        var node = document.createElementNS('http://www.w3.org/2000/svg', tag);
+        Object.keys(attrs).forEach(function (key) { node.setAttribute(key, attrs[key]); });
+        return node;
+    }
+    // The tone of a part is a class of the theme that sets its colour; every stroke, fill, bar and dot of a chart reads it as currentColor
+    function getSeriesTone(tone) {
+        return tone ? ' sl-tone-' + String(tone).replace(/[^a-z0-9]/g, '') : '';
+    }
+    // Fill the panel of a point: its caption and its rows of name, text and tone
+    function setSeriesTip(tip, cap, rows) {
+        tip.replaceChildren.apply(tip, [getSeriesNode('span', 'sl-bell-cap', cap)].concat(rows.map(function (row) {
+            var line = getSeriesNode('span', 'sl-series-row');
+            line.append(getSeriesNode('i', row[2] ? 'sl-series-dot' + getSeriesTone(row[2]) : ''), row[0], getSeriesNode('b', 'sl-bell-num', row[1]));
+            return line;
+        })));
+    }
+    // The panel of a point is a float of the system that only tells, so the parts under it stay under the hand
+    function getSeriesTip(cap, rows) {
+        var tip = getSeriesNode('span', 'sl-float-panel sl-series-tip');
+        tip.setAttribute('role', 'tooltip');
+        setSeriesTip(tip, cap, rows);
+        return tip;
+    }
+    // A part drawn anew is handed to slaed.js as a swap, which wires its floats and its knobs
+    function setSeriesSwap(host) {
+        host.dispatchEvent(new CustomEvent('htmx:afterSwap', { bubbles: true, detail: {} }));
+    }
+    // The keys under a part: a swatch or a dot with its word, a word alone, or a hint at the far edge
+    function getSeriesKeys(list, name) {
+        var box = getSeriesNode('div', 'sl-series-keys' + (name ? ' ' + name : ''));
+        box.setAttribute('aria-hidden', 'true');
+        box.append.apply(box, list.map(function (one) {
+            var key = getSeriesNode('span', one.is_hint ? 'sl-series-hint' : '');
+            if (one.mark) key.appendChild(getSeriesNode('i', 'sl-series-mark sl-series-mark-' + one.mark));
+            if (one.tone) key.appendChild(getSeriesNode('i', 'sl-series-dot' + getSeriesTone(one.tone)));
+            if (one.text) key.append(one.text);
+            return key;
+        }));
+        return box;
+    }
+    // A switch of the theme over the keys of a list; the knob follows the class of its cell
+    function getSeriesSeg(list, attr, on, label) {
+        var seg = getSeriesNode('div', 'sl-seg');
+        seg.setAttribute('data-sl-knob', 'series-' + attr);
+        seg.setAttribute('role', 'group');
+        seg.setAttribute('aria-label', label);
+        seg.appendChild(getSeriesNode('span', 'sl-seg-knob'));
+        seg.firstChild.setAttribute('data-sl-knob-mark', '');
+        seg.firstChild.setAttribute('aria-hidden', 'true');
+        list.forEach(function (one) {
+            var cell = getSeriesNode('button', 'sl-seg-cell' + (one.key === on ? ' sl-is-active' : ''), one.icon ? undefined : one.name);
+            cell.type = 'button';
+            cell.setAttribute('data-sl-series-' + attr, one.key);
+            cell.setAttribute('aria-pressed', one.key === on ? 'true' : 'false');
+            if (one.icon) {
+                cell.setAttribute('aria-label', one.name);
+                cell.appendChild(getSeriesNode('i', 'bi bi-' + one.icon)).setAttribute('aria-hidden', 'true');
+            }
+            seg.appendChild(cell);
+        });
+        return seg;
+    }
+    // The round top of a scale over its largest value, so its four steps read as whole figures, a count of one or two included
+    function getChartTop(max) {
+        max = Math.max(4, max);
+        var unit = Math.pow(10, Math.floor(Math.log10(max)));
+        var step = (max / unit > 5) ? 2 * unit : unit;
+        return Math.ceil(max / step) * step;
+    }
+    // The figures of a scale from its top down to zero, with the fraction its steps need
+    function getChartScale(top) {
+        var digits = Number.isInteger(top / 4) ? 0 : (Number.isInteger(top / 2) ? 1 : 2);
+        return [1, 0.75, 0.5, 0.25, 0].map(function (part) { return getFigureText(top * part, digits); });
+    }
+    // The frame of a chart: the grid, the zones of the hand and the axis; the drawing or the columns go in under the zones
+    function getChartFrame(label, role) {
+        var chart = getSeriesNode('div', 'sl-chart');
+        chart.append(getSeriesNode('div', 'sl-chart-grid'), getSeriesNode('div', 'sl-chart-zones'), getSeriesNode('div', 'sl-chart-axis'));
+        chart.setAttribute('role', role);
+        if (label) chart.setAttribute('aria-label', label);
+        return chart;
+    }
+    // The lines of the grid from the top of a scale to its floor, each with its figure
+    function setChartGrid(chart, list) {
+        var box = chart.querySelector('.sl-chart-grid');
+        box.replaceChildren.apply(box, list.map(function (text, i) {
+            var line = getSeriesNode('span');
+            line.appendChild(getSeriesNode('i', '', text));
+            line.style.setProperty('--sl-d-y', 1 - i / (list.length - 1));
+            return line;
+        }));
+    }
+    // The marks of the axis at their share of the width; a skipped one keeps its word for the moment its day is picked
+    function setChartAxis(chart, list) {
+        var box = chart.querySelector('.sl-chart-axis');
+        box.replaceChildren.apply(box, list.map(function (one) {
+            var mark = getSeriesNode('em', (one.is_end ? 'sl-is-end' : '') + (one.is_skip ? ' sl-is-skip' : ''), one.text);
+            mark.style.setProperty('--sl-d-x', one.at.toFixed(4));
+            return mark;
+        }));
+    }
+    // A zone of the hand: a float over its point, a button where it can be picked, a dot for each line it crosses
+    function getChartZone(one, i) {
+        var zone = getSeriesNode(one.can_pick ? 'button' : 'span', 'sl-chart-zone sl-float');
+        if (one.can_pick) {
+            zone.type = 'button';
+            zone.setAttribute('data-sl-series-pick', i);
+            zone.setAttribute('aria-label', one.cap);
+            zone.setAttribute('aria-pressed', 'false');
+        }
+        (one.dots || []).forEach(function (dot) { zone.appendChild(getSeriesNode('i', 'sl-chart-dot' + getSeriesTone(dot.tone))); });
+        zone.appendChild(getSeriesTip(one.cap, []));
+        return zone;
+    }
+    // Lay the zones over their points; a tick keeps the ones that stand, so an open panel stays open with its new figures. Answers whether they were made anew
+    function setChartZones(chart, list) {
+        var box = chart.querySelector('.sl-chart-zones');
+        var made = box.children.length !== list.length;
+        if (made) box.replaceChildren();
+        list.forEach(function (one, i) {
+            var zone = made ? box.appendChild(getChartZone(one, i)) : box.children[i];
+            var dots = zone.querySelectorAll(':scope > .sl-chart-dot');
+            zone.style.setProperty('--sl-d-left', one.left.toFixed(4));
+            zone.style.setProperty('--sl-d-width', one.wide.toFixed(4));
+            zone.style.setProperty('--sl-d-x', one.at.toFixed(4));
+            (one.dots || []).forEach(function (dot, j) { if (dots[j]) dots[j].style.setProperty('--sl-d-y', dot.y.toFixed(4)); });
+            setSeriesTip(zone.querySelector(':scope > .sl-series-tip'), one.cap, one.rows);
+        });
+        return made;
+    }
+    // The columns of a chart, a bar for each set; a bar a tick changed flares once
+    function setChartCols(chart, sets, count, tick) {
+        var box = chart.querySelector('.sl-chart-cols');
+        if (!box) {
+            box = getSeriesNode('div', 'sl-chart-cols');
+            chart.insertBefore(box, chart.querySelector('.sl-chart-zones'));
+        }
+        if (box.children.length !== count) {
+            box.replaceChildren();
+            for (var i = 0; i < count; i++) {
+                var col = box.appendChild(getSeriesNode('div', 'sl-chart-col'));
+                col.style.setProperty('--sl-d-turn', i);
+                sets.forEach(function (set) { col.appendChild(getSeriesNode('i', 'sl-chart-bar' + getSeriesTone(set.tone))); });
+            }
+            tick = false;
+        }
+        box.style.setProperty('--sl-d-n', count);
+        sets.forEach(function (set, j) {
+            Array.prototype.forEach.call(box.children, function (col, i) {
+                var bar = col.children[j];
+                var part = ((set.values[i] || 0) / set.top).toFixed(4);
+                if (tick && bar.style.getPropertyValue('--sl-d-v') !== part) setFigureFresh(bar);
+                bar.style.setProperty('--sl-d-v', part);
+            });
+        });
+    }
+    // The curve through the points of a line, each pair joined at its middle
+    function getLineCurve(list) {
+        return list.map(function (dot, i) {
+            var was = list[i - 1];
+            var mid;
+            if (!i) return 'M' + dot[0].toFixed(1) + ' ' + dot[1].toFixed(1);
+            mid = ((was[0] + dot[0]) / 2).toFixed(1);
+            return 'C' + mid + ' ' + was[1].toFixed(1) + ' ' + mid + ' ' + dot[1].toFixed(1) + ' ' + dot[0].toFixed(1) + ' ' + dot[1].toFixed(1);
+        }).join(' ');
+    }
+    // The wash under a line closes on the floor of the drawing, at the last point and at the first
+    function getLineArea(list) {
+        return getLineCurve(list) + ' L' + list[list.length - 1][0].toFixed(1) + ' 200 L' + list[0][0].toFixed(1) + ' 200 Z';
+    }
+    // The drawing of a chart: a wash and a line for each series in one group, which a tick slides; a gradient reads the tone of its series from its own class
+    function getLineSvg(rows) {
+        var svg = getSeriesSvg('svg', { 'class': 'sl-chart-svg', 'viewBox': '0 0 1000 200', 'preserveAspectRatio': 'none', 'aria-hidden': 'true' });
+        var defs = svg.appendChild(getSeriesSvg('defs', {}));
+        var flow = getSeriesSvg('g', { 'class': 'sl-chart-flow' });
+        var glow = defs.appendChild(getSeriesSvg('filter', { 'id': 'slMonitorGlow', 'x': '-10%', 'y': '-10%', 'width': '120%', 'height': '120%' }));
+        glow.appendChild(getSeriesSvg('feDropShadow', { 'dx': '0', 'dy': '1', 'stdDeviation': '0.8', 'flood-color': 'var(--sl-text)', 'flood-opacity': '0.1' }));
+        chartnum += 1;
+        rows.forEach(function (row, i) {
+            var name = 'sl-chart-g' + chartnum + '-' + i;
+            var tone = getSeriesTone(row.tone || row.key);
+            var grad = defs.appendChild(getSeriesSvg('linearGradient', { 'id': name, 'class': tone.trim(), 'x1': '0', 'x2': '0', 'y1': '0', 'y2': '1' }));
+            grad.appendChild(getSeriesSvg('stop', { 'offset': '0', 'stop-color': 'currentColor', 'stop-opacity': '0.42' }));
+            grad.appendChild(getSeriesSvg('stop', { 'offset': '1', 'stop-color': 'currentColor', 'stop-opacity': '0.04' }));
+            flow.appendChild(getSeriesSvg('path', { 'class': 'sl-chart-area' + tone, 'fill': 'url(#' + name + ')' }));
+        });
+        rows.forEach(function (row) { flow.appendChild(getSeriesSvg('path', { 'class': 'sl-chart-line' + getSeriesTone(row.tone || row.key) })); });
+        svg.appendChild(flow);
+        return svg;
+    }
+    // Write the lines into a drawing: lists of points, a list for each series, in the order of getLineSvg()
+    function setLineSvg(chart, lists) {
+        var areas = chart.querySelectorAll('.sl-chart-area');
+        var lines = chart.querySelectorAll('.sl-chart-line');
+        lists.forEach(function (list, i) {
+            if (!list.length) return;
+            areas[i].setAttribute('d', getLineArea(list));
+            lines[i].setAttribute('d', getLineCurve(list));
+        });
+    }
+    // A value of a series with its unit; a percent stands close to its figure, as the facts of the panel write it
+    function getSeriesText(row, value) {
+        return getFigureText(value, row.digits || 0) + (!row.unit ? '' : (row.unit === '%' ? '%' : ' ' + row.unit));
+    }
+    // How long ago a moment was, in the words of the server
+    function getLiveAgo(words, secs) {
+        if (secs < 1) return words.now;
+        return (secs < 60 ? words.sec : words.min).replace('%s', secs < 60 ? Math.round(secs) : Math.round(secs / 60));
+    }
+    // The live chart: a point stands by its time, the window is what the sample holds; a tick slides the group by the time passed, the dropped point left of the edge
+    function setSeriesLive(host, data, tick) {
+        var was = host.slLive;
+        var list = data.at;
+        var num = list.length;
+        var chart = host.querySelector(':scope > .sl-chart');
+        var last = num ? list[num - 1] : 0;
+        var first = num ? list[0] : 0;
+        var span = Math.max(1, last - first);
+        var late = was && was.at.length ? was.at[was.at.length - 1] : 0;
+        var roof = 1;
+        var flow;
+        var made;
+        if (tick && chart && last === late) return;
+        data.series.forEach(function (row) { if (!row.max) roof = Math.max.apply(Math, [roof].concat(row.values)); });
+        var tops = data.series.map(function (row) { return row.max || roof * 1.1; });
+        var posx = function (when) { return (when - first) / span * 1000; };
+        var posy = function (value, top) { return 200 - value / top * 190; };
+        var lists = data.series.map(function (row, j) {
+            var dots = row.values.map(function (value, i) { return [posx(list[i]), posy(value, tops[j])]; });
+            var old = (tick && was) ? was.at.filter(function (when) { return when < first; }) : [];
+            return old.map(function (when, i) { return [posx(when), posy(was.series[j].values[i], tops[j])]; }).concat(dots);
+        });
+        var isnew = !chart;
+        if (isnew) {
+            chart = getChartFrame(data.label, 'img');
+            chart.classList.add('sl-chart-live');
+            chart.insertBefore(getLineSvg(data.series), chart.querySelector('.sl-chart-zones'));
+            setChartGrid(chart, data.grid);
+            host.replaceChildren(chart);
+        }
+        setLineSvg(chart, lists);
+        flow = chart.querySelector('.sl-chart-flow');
+        if (tick && late && !window.isMotionStill()) {
+            flow.classList.remove('sl-is-glide');
+            flow.style.transform = 'translateX(' + ((last - late) / span * 1000).toFixed(1) + 'px)';
+            void flow.getBoundingClientRect();
+            flow.classList.add('sl-is-glide');
+            flow.style.transform = '';
+        }
+        var now = data.now || last;
+        setChartAxis(chart, num ? [0, 0.25, 0.5, 0.75, 1].map(function (at) { return { at: at, text: getLiveAgo(data.words, now - (first + at * span)) }; }) : []);
+        made = setChartZones(chart, list.map(function (when, i) {
+            var here = posx(when);
+            var left = i ? (posx(list[i - 1]) + here) / 2 : here - (num > 1 ? (posx(list[1]) - here) / 2 : 0);
+            var right = (i < num - 1) ? (here + posx(list[i + 1])) / 2 : here + (num > 1 ? (here - posx(list[i - 1])) / 2 : 0);
+            return { left: left / 1000, wide: (right - left) / 1000, at: (here - left) / Math.max(1, right - left), cap: getLiveAgo(data.words, now - when),
+                rows: data.series.map(function (row) { return [row.name, getSeriesText(row, row.values[i]), row.tone || row.key]; }),
+                dots: data.series.map(function (row, j) { return { tone: row.tone || row.key, y: row.values[i] / tops[j] * 0.95 }; }) };
+        }));
+        host.slLive = { at: list, series: data.series };
+        if (made) setSeriesSwap(host);
+        if (isnew) setArriveMarks(host);
+    }
+    // The chart of the rhythm: its period and its view are the reader's; a tick of the same period moves the lines and the bars in place, and a new choice builds it again
+    function setRhythmChart(host, data, tick) {
+        var box = host.querySelector(':scope > .sl-rhythm');
+        var per = data.periods.filter(function (one) { return one.key === host.slPeriod; })[0] || data.periods[0];
+        var view = host.slView || data.views[0].key;
+        var tones = per.series.map(function (row) { return row.tone || row.key; });
+        var name = [per.key, view].concat(tones).join('-');
+        var chart = box.querySelector(':scope > .sl-chart');
+        var num = per.labels.length;
+        var top = getChartTop(Math.max.apply(Math, [1].concat.apply([1], per.series.map(function (row) { return row.values; }))));
+        var fresh = !chart || chart.slName !== name;
+        var posx = function (i) { return (i + 0.5) / num; };
+        if (fresh) {
+            var next = getChartFrame(data.label, 'img');
+            next.slName = name;
+            if (view !== 'bar') next.insertBefore(getLineSvg(per.series), next.querySelector('.sl-chart-zones'));
+            if (chart) chart.replaceWith(next);
+            else box.insertBefore(next, box.lastChild);
+            chart = next;
+            box.querySelector('.sl-rhythm-foot').firstChild.replaceWith(getSeriesKeys(per.series.map(function (row, i) { return { tone: tones[i], text: row.name }; })));
+        }
+        if (view === 'bar') setChartCols(chart, per.series.map(function (row, i) { return { tone: tones[i], values: row.values, top: top }; }), num, tick && !fresh);
+        else setLineSvg(chart, per.series.map(function (row) { return row.values.map(function (value, i) { return [posx(i) * 1000, 200 - value / top * 200]; }); }));
+        setChartGrid(chart, getChartScale(top));
+        setChartAxis(chart, per.ticks.map(function (text, i) { return { at: posx(i), text: text }; }));
+        setChartZones(chart, per.labels.map(function (cap, i) {
+            return { left: i / num, wide: 1 / num, at: 0.5, cap: cap,
+                rows: per.series.map(function (row, j) { return [row.name, getSeriesText(row, row.values[i]), tones[j]]; }),
+                dots: (view === 'bar') ? [] : per.series.map(function (row, j) { return { tone: tones[j], y: row.values[i] / top }; }) };
+        }));
+        box.querySelector('.sl-rhythm-figure > b').textContent = per.figure;
+        box.querySelector('.sl-rhythm-figure > span').textContent = per.note;
+        box.querySelector('.sl-rhythm-figure > em').textContent = per.delta || '';
+        if (fresh) {
+            setSeriesSwap(host);
+            setArriveMarks(host);
+        }
+    }
+    // The rhythm of a site, on the engine of the live chart: a figure and its period over the chart, the legend and the view under it
+    function setSeriesRhythm(host, data, tick) {
+        var box = host.querySelector(':scope > .sl-rhythm');
+        if (!box) {
+            box = getSeriesNode('div', 'sl-rhythm');
+            var head = box.appendChild(getSeriesNode('div', 'sl-rhythm-head'));
+            var foot = box.appendChild(getSeriesNode('div', 'sl-rhythm-foot'));
+            var sum = head.appendChild(getSeriesNode('div', 'sl-rhythm-figure'));
+            sum.append(getSeriesNode('b'), getSeriesNode('span'), getSeriesNode('em'));
+            host.slPeriod = host.slPeriod || data.periods[0].key;
+            host.slView = host.slView || data.views[0].key;
+            head.appendChild(getSeriesSeg(data.periods, 'period', host.slPeriod, data.period_label));
+            foot.append(getSeriesKeys([]), getSeriesSeg(data.views, 'view', host.slView, data.view_label));
+            host.replaceChildren(box);
+        }
+        setRhythmChart(host, data, tick);
+    }
+    // The columns of the days: a bar a day on a round scale, weekends named in red on the axis, the running day dashed; a tick moves the bars in place
+    function setSeriesDays(host, data, tick) {
+        var list = data.days;
+        var num = list.length;
+        var values = list.map(function (day) { return day.value; });
+        var top = getChartTop(Math.max.apply(Math, [1].concat(values)));
+        var chart = host.querySelector(':scope > .sl-chart');
+        var made;
+        if (!chart) {
+            chart = getChartFrame(data.label, data.can_pick ? 'group' : 'img');
+            host.replaceChildren(chart);
+        }
+        setChartCols(chart, [{ tone: data.tone, values: values, top: top }], num, tick);
+        chart.querySelectorAll('.sl-chart-col').forEach(function (col, i) { col.classList.toggle('sl-is-run', !!list[i].is_run); });
+        setChartGrid(chart, getChartScale(top));
+        setChartAxis(chart, list.map(function (day, i) { return { at: (i + 0.5) / num, text: day.label, is_end: day.is_end, is_skip: num > 16 && i % 2 }; }));
+        made = setChartZones(chart, list.map(function (day, i) { return { left: i / num, wide: 1 / num, at: 0.5, cap: day.cap, rows: day.rows, can_pick: data.can_pick }; }));
+        if (made) setSeriesSwap(host);
+        setSeriesPick(typeof data.pick === 'number' ? data.pick : dayat);
+    }
+    // Every month of the archive on one strip, a dashed slot where the file is missing; a month opens at its address, and a narrow strip scrolls from its last month
+    function setSeriesArchive(host, data) {
+        var box = getSeriesNode('div', 'sl-archive');
+        var top = Math.max.apply(Math, [1].concat(data.months.map(function (one) { return one.value || 0; })));
+        data.months.forEach(function (one, i) {
+            var name = 'sl-archive-month sl-float' + (one.is_gap ? ' sl-is-gap' : '') + (one.is_run ? ' sl-is-run' : '') + (one.is_pick ? ' sl-is-pick' : '');
+            var month = getSeriesNode(one.href ? 'a' : 'span', name);
+            if (one.href) month.href = one.href;
+            else month.setAttribute('role', 'img');
+            if (one.is_pick) month.setAttribute('aria-current', 'true');
+            month.setAttribute('aria-label', one.name);
+            month.style.setProperty('--sl-d-v', one.is_gap ? 0.3 : (one.value / top).toFixed(4));
+            month.style.setProperty('--sl-d-turn', i);
+            if (one.year) month.appendChild(getSeriesNode('span', 'sl-archive-year', one.year));
+            month.append(getSeriesNode('i'), getSeriesTip(one.name, one.rows));
+            box.appendChild(month);
+        });
+        host.replaceChildren(box, getSeriesKeys(data.keys));
+        box.scrollLeft = box.scrollWidth;
+        setSeriesSwap(host);
+    }
+    // The week by the hours of its days: six steps from a quiet hour to a hot one, each cell a float of its average
+    function setSeriesWeek(host, data) {
+        var box = getSeriesNode('div', 'sl-week');
+        var top = Math.max.apply(Math, [1].concat.apply([1], data.cells));
+        box.appendChild(getSeriesNode('span'));
+        data.hours.forEach(function (text) { box.appendChild(getSeriesNode('span', 'sl-week-hour', text)); });
+        data.cells.forEach(function (row, w) {
+            box.appendChild(getSeriesNode('span', 'sl-week-day' + (data.days[w].is_end ? ' sl-is-end' : ''), data.days[w].name));
+            row.forEach(function (value, h) {
+                var cell = box.appendChild(getSeriesNode('span', 'sl-week-cell sl-float'));
+                cell.setAttribute('data-sl-level', Math.min(5, Math.round(value / top * 5)));
+                cell.style.setProperty('--sl-d-turn', w + h);
+                cell.appendChild(getSeriesTip(data.days[w].cap + ', ' + data.spans[h], [[data.name, getFigureText(value, 0), data.tone]]));
+            });
+        });
+        var keys = [0, 1, 2, 3, 4, 5].map(function (step) { return { mark: 'step' + step }; });
+        host.replaceChildren(box, getSeriesKeys([{ text: data.low }].concat(keys, [{ text: data.high }]), 'sl-series-steps'));
+        setSeriesSwap(host);
+    }
+    // One bar split into its parts and its keys; a part is a float, so its colour is a layer of its own that the motion moves
+    function setSeriesStack(host, data) {
+        if (!data.parts.length && data.empty) return host.replaceChildren(getSeriesNode('p', 'sl-series-none', data.label + ': ' + data.empty));
+        var bar = getSeriesNode('span', 'sl-stack-bar');
+        var keys = getSeriesNode('span', 'sl-stack-keys');
+        bar.setAttribute('role', 'img');
+        bar.setAttribute('aria-label', data.label);
+        data.parts.forEach(function (one, i) {
+            var tone = 'part' + (i % 5 + 1);
+            var part = bar.appendChild(getSeriesNode('span', 'sl-stack-part sl-float' + getSeriesTone(tone)));
+            var key = keys.appendChild(getSeriesNode('span', 'sl-stack-key' + getSeriesTone(tone)));
+            part.style.setProperty('--sl-d-part', one.pct + '%');
+            part.style.setProperty('--sl-d-turn', i);
+            part.appendChild(getSeriesTip(data.label, [[one.name, one.pct + '%', tone], [data.count, one.text]]));
+            key.append(getSeriesNode('i'), getSeriesNode('span', '', one.name), getSeriesNode('b', '', one.pct + '%'));
+        });
+        host.replaceChildren(bar, keys);
+        setSeriesSwap(host);
+    }
+    // Bar rows of a dimension: the name, a track at its share of the largest, the number and the percent
+    function setSeriesRows(host, data) {
+        if (!data.rows.length && data.empty) return host.replaceChildren(getSeriesNode('p', 'sl-series-none', data.empty));
+        var box = getSeriesNode('div', 'sl-share-rows');
+        var top = Math.max.apply(Math, [1].concat(data.rows.map(function (one) { return one.pct; })));
+        data.rows.forEach(function (one, i) {
+            var row = box.appendChild(getSeriesNode('div', 'sl-share-row' + getSeriesTone('part' + (i % 5 + 1))));
+            var name = row.appendChild(getSeriesNode('span', 'sl-share-name'));
+            var track = row.appendChild(getSeriesNode('span', 'sl-share-track')).appendChild(getSeriesNode('i'));
+            var flag;
+            if (one.flag) {
+                flag = name.appendChild(getSeriesNode('img'));
+                flag.src = one.flag;
+                flag.alt = '';
+            }
+            name.append(one.name);
+            name.title = one.name;
+            track.style.setProperty('--sl-d-part', (one.pct / top * 100).toFixed(1) + '%');
+            row.style.setProperty('--sl-d-turn', i);
+            row.append(getSeriesNode('b', '', one.text), getSeriesNode('span', 'sl-share-pct', one.pct + '%'));
+        });
+        host.replaceChildren(box);
+    }
+    // One row of the table of days: its date and weekday, the mark of the running day, a cell a column, the largest of a column bold
+    function getTableRow(one, i, can) {
+        var row = getSeriesNode('tr', (one.is_end ? 'sl-is-end' : '') + (one.is_total ? ' sl-is-total' : ''));
+        var date = row.appendChild(getSeriesNode('td', 'sl-days-date', one.label));
+        if (one.week) date.appendChild(getSeriesNode('span', 'sl-days-week', one.week));
+        if (one.run_text) date.appendChild(getSeriesNode('span', 'sl-chip sl-chip-success', one.run_text));
+        if (can) {
+            row.setAttribute('data-sl-series-pick', i);
+            row.tabIndex = 0;
+        }
+        one.cells.forEach(function (text, j) { row.appendChild(getSeriesNode('td', (one.tops && one.tops[j]) ? 'sl-is-top' : '', text)); });
+        return row;
+    }
+    // The table of days with its total; a tick writes the texts into the rows that stand, so the focus and the picked row stay
+    function setSeriesTable(host, data) {
+        var table = host.querySelector(':scope > table');
+        var rows = data.rows;
+        var head;
+        var body;
+        if (!table || table.tBodies[0].rows.length !== rows.length + 1) {
+            table = getSeriesNode('table', 'sl-table-list-sort sl-days-table');
+            head = table.createTHead().appendChild(getSeriesNode('tr'));
+            data.cols.forEach(function (text) { head.appendChild(getSeriesNode('th', '', text)); });
+            body = table.appendChild(getSeriesNode('tbody'));
+            body.appendChild(getTableRow(Object.assign({ is_total: true }, data.total), -1, false));
+            rows.forEach(function (one, i) { body.appendChild(getTableRow(one, i, data.can_pick)); });
+            host.replaceChildren(table);
+        } else {
+            [data.total].concat(rows).forEach(function (one, i) {
+                Array.prototype.forEach.call(table.tBodies[0].rows[i].cells, function (cell, j) {
+                    if (!j) return;
+                    cell.textContent = one.cells[j - 1];
+                    cell.classList.toggle('sl-is-top', !!(one.tops && one.tops[j - 1]));
+                });
+            });
+        }
+        setSeriesPick(typeof data.pick === 'number' ? data.pick : dayat);
+    }
+    // A point of the dial at a radius from its middle, on the turn of its hour
+    function getClockPoint(turn, far) {
+        var angle = turn / 24 * Math.PI * 2 - Math.PI / 2;
+        return [(100 + Math.cos(angle) * far).toFixed(2), (100 + Math.sin(angle) * far).toFixed(2)];
+    }
+    // The drawing of the dial once: two rings, a spoke and a dot of generation for each hour, each third hour named, the words of its middle
+    function getClockDraw(host, data) {
+        var svg = getSeriesSvg('svg', { 'viewBox': '-10 -10 220 220', 'role': 'img', 'aria-label': data.label });
+        var mid = getSeriesNode('div', 'sl-clock-mid');
+        var home = mid.appendChild(getSeriesNode('div', 'sl-clock-home'));
+        var say = mid.appendChild(getSeriesNode('div', 'sl-clock-say'));
+        [44, 84].forEach(function (far) { svg.appendChild(getSeriesSvg('circle', { 'class': 'sl-clock-ring', 'cx': 100, 'cy': 100, 'r': far })); });
+        for (var i = 0; i < 24; i++) {
+            var from = getClockPoint(i + 0.5, 48);
+            var spot = getClockPoint(i + 0.5, 89);
+            var spoke = svg.appendChild(getSeriesSvg('line', { 'class': 'sl-clock-spoke', 'data-sl-hour': i, 'x1': from[0], 'y1': from[1] }));
+            spoke.style.setProperty('--sl-d-turn', i);
+            svg.appendChild(getSeriesSvg('circle', { 'class': 'sl-clock-gen', 'cx': spot[0], 'cy': spot[1] }));
+            if (i % 3) continue;
+            var name = getClockPoint(i, 99);
+            var mark = getSeriesSvg('text', { 'class': 'sl-clock-hour', 'x': name[0], 'y': (Number(name[1]) + 5).toFixed(2), 'font-size': 16 });
+            mark.textContent = String(i).padStart(2, '0');
+            svg.appendChild(mark);
+        }
+        home.append(getSeriesNode('small'), getSeriesNode('b'), getSeriesNode('small'));
+        say.append(getSeriesNode('span'), getSeriesNode('b'), getSeriesNode('span'));
+        say.hidden = true;
+        host.classList.add('sl-clock');
+        host.replaceChildren(svg, mid);
+        return svg;
+    }
+    // The day as a dial in the lamp of the cockpit: a spoke an hour for its hits, a dot outside it for its generation, the middle naming the peak; a tick moves what stands
+    function setSeriesClock(host, data) {
+        var svg = host.querySelector(':scope > svg') || getClockDraw(host, data);
+        var top = Math.max.apply(Math, [1].concat(data.hours));
+        var slow = Math.max.apply(Math, [1].concat(data.gen));
+        var dots = svg.querySelectorAll('.sl-clock-gen');
+        var home = host.querySelector('.sl-clock-home').children;
+        svg.querySelectorAll('.sl-clock-spoke').forEach(function (spoke, i) {
+            var end = getClockPoint(i + 0.5, 48 + 32 * data.hours[i] / top);
+            spoke.setAttribute('x2', end[0]);
+            spoke.setAttribute('y2', end[1]);
+            spoke.classList.toggle('sl-is-on', i === data.peak);
+            spoke.classList.toggle('sl-is-now', i === data.now);
+            spoke.classList.toggle('sl-is-later', data.now >= 0 && i > data.now);
+            dots[i].setAttribute('r', data.gen[i] ? (1.2 + 3.4 * data.gen[i] / slow).toFixed(2) : 0);
+        });
+        home[0].textContent = data.peak_label;
+        home[1].textContent = data.peak_text;
+        home[2].textContent = data.total;
+    }
+    // The middle of a dial names the hour under the hand and returns to its peak when the hand leaves
+    function setClockHand(host, spoke) {
+        var say = host.querySelector('.sl-clock-say');
+        var data = host.slSeries;
+        var num = spoke ? Number(spoke.getAttribute('data-sl-hour')) : -1;
+        host.querySelectorAll('.sl-clock-spoke').forEach(function (one) { one.classList.toggle('sl-is-hand', one === spoke); });
+        say.hidden = !spoke;
+        if (!spoke) return;
+        say.children[0].textContent = String(num).padStart(2, '0') + ':00';
+        say.children[1].textContent = getFigureText(data.hours[num], 0);
+        say.children[2].textContent = data.gen[num] ? getFigureText(data.gen[num], 0) + ' ms' : data.hits_word;
+    }
+    document.addEventListener('pointerover', function (event) {
+        var host = event.target.closest ? event.target.closest('.sl-clock') : null;
+        if (host) setClockHand(host, event.target.closest('.sl-clock-spoke'));
+    });
+    document.addEventListener('pointerout', function (event) {
+        var host = event.target.closest ? event.target.closest('.sl-clock') : null;
+        if (host && !host.contains(event.relatedTarget)) setClockHand(host, null);
+    });
+    var drawers = { live: setSeriesLive, rhythm: setSeriesRhythm, days: setSeriesDays, archive: setSeriesArchive,
+        week: setSeriesWeek, stack: setSeriesStack, rows: setSeriesRows, table: setSeriesTable, clock: setSeriesClock };
+    // Draw a part of the series from its data; a tick moves what stands and never replays the entry, which only data-sl-play lets the theme run
+    function setSeriesData(host, data, tick) {
+        var draw = drawers[host.getAttribute('data-sl-series')];
+        if (!draw) return;
+        host.slSeries = data;
+        host.toggleAttribute('data-sl-play', !tick);
+        draw(host, data, !!tick);
+    }
+    window.setSeriesData = setSeriesData;
+    // Draw every part of the series the page brought from the data it carries, once
+    function setSeriesDraw(root) {
+        root.querySelectorAll('[data-sl-series]').forEach(function (host) {
+            if (!host.slSeries) setSeriesData(host, JSON.parse(host.getAttribute('data-sl-series-data')), false);
+        });
+    }
+    document.addEventListener('htmx:load', function (event) {
+        if (event.target.querySelectorAll) setSeriesDraw(event.target);
+    });
+    // The picked day stands on every chart and table of days of the page at once
+    function setSeriesPick(index) {
+        dayat = index;
+        document.querySelectorAll('[data-sl-series="days"], [data-sl-series="table"]').forEach(function (host) {
+            var cols = host.querySelectorAll('.sl-chart-col');
+            var marks = host.querySelectorAll('.sl-chart-axis > em');
+            host.querySelectorAll('[data-sl-series-pick]').forEach(function (node) {
+                var at = Number(node.getAttribute('data-sl-series-pick'));
+                node.classList.toggle('sl-is-pick', at === index);
+                if (node.tagName === 'BUTTON') node.setAttribute('aria-pressed', at === index ? 'true' : 'false');
+                else if (at === index) node.setAttribute('aria-current', 'true');
+                else node.removeAttribute('aria-current');
+            });
+            cols.forEach(function (col, i) { col.classList.toggle('sl-is-pick', i === index); });
+            marks.forEach(function (mark, i) { mark.classList.toggle('sl-is-pick', i === index); });
+        });
+    }
+    // A pick of a day toggles and tells the page by sl-series-pick; a period or a view of the rhythm redraws its chart
+    document.addEventListener('click', function (event) {
+        var hit = event.target.closest ? event.target.closest('[data-sl-series-pick], [data-sl-series-period], [data-sl-series-view]') : null;
+        var host = hit ? hit.closest('[data-sl-series]') : null;
+        var num;
+        if (!host) return;
+        if (hit.hasAttribute('data-sl-series-pick')) {
+            num = hit.classList.contains('sl-is-pick') ? -1 : Number(hit.getAttribute('data-sl-series-pick'));
+            setSeriesPick(num);
+            document.dispatchEvent(new CustomEvent('sl-series-pick', { detail: { index: num } }));
+            return;
+        }
+        if (hit.hasAttribute('data-sl-series-period')) host.slPeriod = hit.getAttribute('data-sl-series-period');
+        else host.slView = hit.getAttribute('data-sl-series-view');
+        hit.parentNode.querySelectorAll('.sl-seg-cell').forEach(function (cell) {
+            cell.classList.toggle('sl-is-active', cell === hit);
+            cell.setAttribute('aria-pressed', cell === hit ? 'true' : 'false');
+        });
+        host.toggleAttribute('data-sl-play', false);
+        setRhythmChart(host, host.slSeries, false);
+    });
+    document.addEventListener('keydown', function (event) {
+        var row = (event.key === 'Enter' || event.key === ' ') && event.target.matches && event.target.matches('tr[data-sl-series-pick]') ? event.target : null;
+        if (!row) return;
+        event.preventDefault();
+        row.click();
+    });
+    // The panels of the series stand close to each other: the one under the hand shuts its neighbours at once, without the grace of a lone float, so no two lie over each other
+    document.addEventListener('pointerover', function (event) {
+        var host = event.target.closest ? event.target.closest('.sl-float') : null;
+        if (!host || !host.querySelector(':scope > .sl-series-tip')) return;
+        document.querySelectorAll('.sl-float.sl-is-open').forEach(function (other) {
+            if (other === host || !other.querySelector(':scope > .sl-series-tip')) return;
+            window.clearTimeout(other.slFloatClose);
+            other.slFloatClose = null;
+            other.classList.remove('sl-float-left', 'sl-float-right', 'sl-float-up', 'sl-is-open');
+        });
     });
     var queue = { sum: -1, unseen: 0, title: '', mods: {} };
     // The rows of one list in the order of their numbers, the fullest first; equal numbers keep the order the page gave them
@@ -1736,21 +2367,24 @@
         document.addEventListener('visibilitychange', setQueueSeen);
         window.addEventListener('focus', setQueueSeen);
     }
+    // The tone of a cockpit and its line of state with the count of what is loud
+    function setCockpitTone(box, tone, loud) {
+        box.classList.remove('sl-knob-ok', 'sl-knob-info', 'sl-knob-warn', 'sl-knob-danger');
+        box.classList.add('sl-knob-' + tone);
+        box.querySelectorAll('[data-sl-tone]').forEach(function (node) { node.hidden = node.getAttribute('data-sl-tone') !== tone; });
+        box.querySelector('[data-sl-cockpit-loud]').hidden = loud === 0;
+        box.querySelector('[data-sl-cockpit-n]').textContent = loud;
+    }
     // Г9-Г14 One answer of the cockpit poll: the tone of the panel, its line of state and the rows of the lamp, the signals in the order of the server, rings, strip
     function setCockpitView(box, data) {
         var loud = data.signals.filter(function (sig) { return sig.level !== 'ok'; }).length;
         var list = box.querySelector('[data-sl-signals]');
         var cap = box.querySelector('[data-sl-signals-cap]');
-        var sample = box.querySelector('template[data-sl-cockpit-row]').content.firstElementChild;
         var pass = box.querySelector('[data-sl-cockpit-pass]');
         var said = box.querySelector('[data-sl-pass-of]');
         var was = pass.textContent;
         var bar;
-        box.classList.remove('sl-knob-ok', 'sl-knob-info', 'sl-knob-warn', 'sl-knob-danger');
-        box.classList.add('sl-knob-' + data.tone);
-        box.querySelectorAll('[data-sl-tone]').forEach(function (node) { node.hidden = node.getAttribute('data-sl-tone') !== data.tone; });
-        box.querySelector('[data-sl-cockpit-loud]').hidden = loud === 0;
-        box.querySelector('[data-sl-cockpit-n]').textContent = loud;
+        setCockpitTone(box, data.tone, loud);
         pass.textContent = data.signals.length - loud;
         if (pass.textContent !== was) setFigureFresh(pass);
         said.textContent = said.getAttribute('data-sl-pass-of').replace('%s', pass.textContent).replace('%s', data.signals.length);
@@ -1770,6 +2404,14 @@
             bar.className = 'sl-knob-' + sig.level;
             setFigureFresh(bar);
         });
+        setCockpitGauges(box, data);
+        box.setAttribute('data-sl-live-stamp', Date.now() - (Number(data.age) || 0) * 1000);
+        box.slCockpitPolls = (box.slCockpitPolls || 0) + 1;
+        setCockpitStale(box);
+    }
+    // The rings with the rows of their panels and the strip, which every cockpit of the panel draws from the same shape
+    function setCockpitGauges(box, data) {
+        var sample = box.querySelector('template[data-sl-cockpit-row]').content.firstElementChild;
         Object.keys(data.gauges).forEach(function (key) {
             var ring = box.querySelector('[data-sl-gauge="' + CSS.escape(key) + '"]');
             var gauge = data.gauges[key];
@@ -1794,12 +2436,9 @@
         });
         Object.keys(data.strip).forEach(function (key) {
             var item = box.querySelector('[data-sl-strip="' + CSS.escape(key) + '"] [data-sl-strip-val]');
-            if (item) setFigureRun(item, data.strip[key].value);
+            if (item) setFigureRun(item, data.strip[key].value, data.strip[key].text);
         });
         box.querySelectorAll('[aria-busy]').forEach(function (node) { node.setAttribute('aria-busy', 'false'); });
-        box.setAttribute('data-sl-live-stamp', Date.now() - (Number(data.age) || 0) * 1000);
-        box.slCockpitPolls = (box.slCockpitPolls || 0) + 1;
-        setCockpitStale(box);
     }
     // Г15 A sample older than half a minute dims the lamp and stops it; the first answer after an idle while may bring an old one the server renews at once, so it never counts
     function setCockpitStale(box) {
@@ -1829,6 +2468,231 @@
             if (event.target.closest('[data-sl-live-toggle]')) window.setTimeout(ask);
         });
     }
+    var stat = { seq: 0, now: true, way: '', back: null };
+    // The head of the statistic: the pace while the dial shows the running hour, else the run of the month, the words beside the months and the day the dial reads
+    function setStatState(top, state) {
+        var rows = top.querySelector('[data-sl-stat-pace-rows]');
+        top.querySelector('[data-sl-stat-pace]').hidden = !state.is_now;
+        top.querySelector('[data-sl-stat-off]').hidden = state.is_now;
+        top.querySelectorAll('[data-sl-stat-run]').forEach(function (node) { node.textContent = state.run; });
+        top.querySelectorAll('[data-sl-stat-if]').forEach(function (node) {
+            var key = node.getAttribute('data-sl-stat-if');
+            node.hidden = key !== state.mode || (key === 'run' && !state.can_set);
+        });
+        top.querySelector('[data-sl-stat-date]').textContent = state.day_text;
+        top.querySelectorAll('[data-sl-stat-now]').forEach(function (cell) {
+            cell.setAttribute('aria-pressed', (cell.getAttribute('data-sl-stat-now') === '1') === state.is_now ? 'true' : 'false');
+        });
+        top.classList.toggle('sl-knob-info', state.pace === 'lull');
+        top.classList.toggle('sl-knob-ok', state.pace !== 'lull');
+        if (!state.is_now) return top.removeAttribute('data-sl-pace');
+        top.setAttribute('data-sl-pace', state.pace);
+        top.querySelector('[data-sl-stat-pace-text]').replaceChildren(getSeriesNode('i', 'bi bi-' + state.icon), state.text);
+        rows.replaceChildren.apply(rows, state.rows.map(function (one) {
+            var line = getSeriesNode('a');
+            line.append(getSeriesNode('i', 'bi bi-' + one.icon), ' ' + one.label + ' ', getSeriesNode('span', 'sl-bell-num', one.value));
+            return line;
+        }));
+    }
+    // A tile of the series: its figure runs to the new value, its note and its change follow; a tile drawn at zero has no figure, and its first text gives way with its unit left
+    function setMetricTile(tile, one) {
+        var num = tile.querySelector('[data-sl-figure]');
+        var delta = tile.querySelector('[data-sl-metric-delta]');
+        if (num) setFigureRun(num, one.num, one.value);
+        else tile.querySelector('.sl-metric-value').firstChild.nodeValue = one.value + (one.unit ? ' ' : '');
+        tile.querySelector('[data-sl-metric-note]').textContent = one.note;
+        if (!delta) return;
+        delta.className = 'sl-metric-delta sl-metric-delta-' + one.dir;
+        delta.firstChild.className = 'bi bi-' + one.arrow;
+        delta.lastChild.textContent = one.delta;
+    }
+    // One reading of the counter over the page: the first draw brings no parts, as each host carries its own, and a part whose data did not move is left alone
+    function setStatView(page, data) {
+        var top = page.querySelector('.sl-cockpit');
+        setCockpitGauges(top, data);
+        setStatState(top, data.state);
+        page.querySelectorAll('.sl-metric').forEach(function (tile, i) { if (data.tiles[i]) setMetricTile(tile, data.tiles[i]); });
+        Object.keys(data.meta).forEach(function (id) {
+            var host = document.getElementById(id);
+            var meta = host ? host.closest('.sl-pane').querySelector('.sl-pane-meta') : null;
+            if (meta) meta.textContent = data.meta[id];
+        });
+        Object.keys(data.parts || {}).forEach(function (id) {
+            var host = document.getElementById(id);
+            if (host && JSON.stringify(host.slSeries) !== JSON.stringify(data.parts[id])) setSeriesData(host, data.parts[id], true);
+        });
+    }
+    // Ask for the reading of the day in scope; a later question makes an earlier answer stale, and a poll renews no session
+    function setStatFetch() {
+        var page = document.querySelector('[data-sl-stat]');
+        var seq = ++stat.seq;
+        if (!page) return;
+        var url = page.getAttribute('data-sl-stat') + '&day=' + (dayat + 1) + '&now=' + (stat.now ? 1 : 0);
+        fetch(url, { credentials: 'same-origin', headers: { 'Accept': 'application/json', 'X-SL-Poll': '1' } })
+            .then(function (res) { return res.ok ? res.json() : null; })
+            .then(function (data) {
+                if (!data || !data.parts || seq !== stat.seq || !page.isConnected) return;
+                setStatView(page, data);
+                page.querySelector('.sl-cockpit').setAttribute('data-sl-live-stamp', Date.now());
+            })
+            .catch(function () {});
+    }
+    // A month opens in place, the windows moving the way it went; the address follows it, and the list above the page names it
+    function setStatMonth(url, back) {
+        var page = document.querySelector('[data-sl-stat]');
+        var next = new URL(url, location.href).searchParams.get('month') || '';
+        var key = page.getAttribute('data-sl-stat-key');
+        if (next === key || (!next && page.hasAttribute('data-sl-stat-live'))) return;
+        if (!window.htmx) {
+            location.href = url;
+            return;
+        }
+        stat.seq += 1;
+        stat.now = true;
+        stat.way = (next && next < key) ? 'prev' : 'next';
+        stat.back = (back === undefined) ? null : back;
+        dayat = -1;
+        history.pushState(null, '', url);
+        window.htmx.ajax('GET', url, { target: page, select: '[data-sl-stat]', swap: 'outerHTML' });
+    }
+    // The control of a step of the months is gone with the old page, so the focus goes to its twin: the same arrow, its neighbour at an end, or the month opened on the strip
+    function setStatFocus(page) {
+        var steps = page.querySelectorAll('.sl-cockpit-step');
+        var node = (stat.back === -1) ? page.querySelector('.sl-archive-month[aria-current]') : steps[stat.back];
+        if (node && stat.back !== -1 && !node.hasAttribute('href')) node = steps[1 - stat.back];
+        if (node) node.focus({ preventScroll: true });
+        if (node && stat.back === -1) node.scrollIntoView({ block: 'nearest', inline: 'center' });
+        stat.back = null;
+    }
+    // Draw the page from the reading it carries; after a step of the months the ground keeps the way it went for the theme, and the list above names the month
+    function setStatStart(page) {
+        var ground = page.querySelector('.sl-ground');
+        var list = document.querySelector('select[name="month"]');
+        setStatView(page, JSON.parse(page.getAttribute('data-sl-stat-view')));
+        if (list) list.value = page.hasAttribute('data-sl-stat-live') ? '' : page.getAttribute('data-sl-stat-key');
+        if (stat.way) ground.setAttribute('data-sl-way', stat.way);
+        stat.way = '';
+        setBeamTurns();
+        if (stat.back !== null) setStatFocus(page);
+    }
+    // The running month asks for its reading while the tab is in sight and the live chip runs; a day picked or switched asks at once in any month
+    function setStatPoll() {
+        var page = document.querySelector('[data-sl-stat]');
+        if (!page) return;
+        setStatStart(page);
+        var ask = function () {
+            var box = document.querySelector('[data-sl-stat][data-sl-stat-live]');
+            if (box && !document.hidden && !box.querySelector('[data-sl-live-paused]')) setStatFetch();
+        };
+        window.setInterval(ask, (Number(page.getAttribute('data-sl-stat-every')) || 10) * 1000);
+        document.addEventListener('visibilitychange', ask);
+        document.addEventListener('click', function (event) {
+            if (event.target.closest && event.target.closest('[data-sl-stat] [data-sl-live-toggle]')) window.setTimeout(ask);
+        });
+    }
+    // A beat of the trace is 50 units on the line at 24, a racing one 25; a sweep is 200 units, and the path holds two so that it slides by one without a seam
+    var pulsebeat = { calm: 'h14l3-3l3 3h4l2 3l3-19l3 22l2-6h5q4-6 8 0h3', early: 'h4l3-3l3 3h2l2 2l2-12l2 14l2-4h4q3-4 6 0h20',
+        race: 'h4l2 2l2-26l2 30l2-6h3q3-5 6 0h4', flat: 'h50' };
+    var pulsemode = { ok: ['calm', 'calm', 'calm', 'calm'], lull: ['calm', 'calm', 'calm', 'calm'], warn: ['calm', 'flat', 'early', 'calm'], flat: ['flat', 'flat', 'flat', 'flat'],
+        danger: ['race', 'race', 'race', 'race', 'race', 'race', 'race', 'race'] };
+    // The pulse in the lamp: the figure is the pages of the hour, the beat apart from it; the trace and its sweep change with the mode alone, so a drifting beat never jerks them
+    function setMonitorPulse(lamp, one) {
+        var list = pulsemode[one.mode];
+        var sweep;
+        if (lamp.getAttribute('data-sl-pulse') !== one.mode) {
+            sweep = list.map(function (beat) { return pulsebeat[beat]; }).join('');
+            lamp.setAttribute('data-sl-pulse', one.mode);
+            lamp.querySelector('[data-sl-pulse-trace]').setAttribute('d', 'M0 24' + sweep + sweep);
+            if (one.base) lamp.style.setProperty('--sl-d-sweep', (list.length * 60 / one.base).toFixed(3) + 's');
+        }
+        if (one.bpm) lamp.style.setProperty('--sl-d-beat', (60 / one.bpm).toFixed(3) + 's');
+        setFigureRun(lamp.querySelector('[data-sl-pulse-num]'), one.num, one.text);
+        lamp.querySelector('[data-sl-pulse-mood]').textContent = one.mood;
+        lamp.setAttribute('aria-label', one.label);
+    }
+    // The cockpit of the monitor from one reading: its tone, its pulse, the signals that are loud, the rings and the strip; the age of the sample stands in its chip
+    function setMonitorCockpit(box, data) {
+        var rows = box.querySelector('[data-sl-signals]');
+        setCockpitTone(box, data.tone, data.loud);
+        setMonitorPulse(box.querySelector('[data-sl-pulse]'), data.pulse);
+        box.querySelector('[data-sl-signals-cap]').textContent = data.cap;
+        rows.replaceChildren.apply(rows, data.rows.map(function (sig) {
+            var line = getSeriesNode('a', 'sl-knob-' + sig.level);
+            var icon = getSeriesNode('i', 'bi bi-' + (sig.level === 'danger' ? 'x-octagon-fill' : 'exclamation-triangle-fill'));
+            icon.setAttribute('aria-hidden', 'true');
+            line.append(icon, ' ' + sig.label + ' ', getSeriesNode('span', 'sl-bell-num', sig.fact));
+            return line;
+        }));
+        setCockpitGauges(box, data);
+        box.setAttribute('data-sl-live-stamp', Date.now() - data.age * 1000);
+        box.slCockpitPolls = (box.slCockpitPolls || 0) + 1;
+        setCockpitStale(box);
+    }
+    // One reading over the page, each box that its chip keeps on air: the cockpit, and the tiles and the chart of the traffic; the first draw carries the chart in its host
+    function setMonitorView(page, data) {
+        var box = page.querySelector('.sl-cockpit');
+        var pane = page.querySelector('.sl-pane[data-sl-live-box]');
+        var host = document.getElementById('sl-monitor-live');
+        if (!box.hasAttribute('data-sl-live-paused')) setMonitorCockpit(box, data);
+        if (pane.hasAttribute('data-sl-live-paused')) return;
+        pane.querySelectorAll('.sl-metric').forEach(function (tile, i) { setMetricTile(tile, data.tiles[i]); });
+        pane.querySelector('.sl-pane-meta').textContent = data.meta;
+        pane.setAttribute('data-sl-live-stamp', Date.now() - data.age * 1000);
+        if (JSON.stringify(host.slSeries) !== JSON.stringify(data.live)) setSeriesData(host, data.live, true);
+    }
+    // The monitor draws the reading it carries and asks for the next one at once and at its interval while the tab is in sight and a chip runs; a poll renews no session
+    function setMonitorPoll() {
+        var page = document.querySelector('[data-sl-monitor]');
+        var busy = false;
+        var ask;
+        if (!page) return;
+        setMonitorView(page, JSON.parse(page.getAttribute('data-sl-monitor-view')));
+        page.querySelector('.sl-cockpit').slCockpitPolls = 0;
+        ask = function () {
+            if (busy || document.hidden || !page.querySelector('[data-sl-live-box]:not([data-sl-live-paused])')) return;
+            busy = true;
+            fetch(page.getAttribute('data-sl-monitor'), { credentials: 'same-origin', headers: { 'Accept': 'application/json', 'X-SL-Poll': '1' } })
+                .then(function (res) { return res.ok ? res.json() : null; })
+                .then(function (data) { if (data && data.gauges && data.live) setMonitorView(page, data); })
+                .catch(function () {})
+                .then(function () { busy = false; });
+        };
+        ask();
+        window.setInterval(ask, (Number(page.getAttribute('data-sl-monitor-every')) || 4) * 1000);
+        window.setInterval(function () { setCockpitStale(page.querySelector('.sl-cockpit')); }, 5000);
+        document.addEventListener('visibilitychange', ask);
+        page.addEventListener('click', function (event) {
+            if (event.target.closest('[data-sl-live-toggle]')) window.setTimeout(ask);
+        });
+    }
+    document.addEventListener('htmx:load', function (event) {
+        if (event.target.matches && event.target.matches('[data-sl-stat]')) setStatStart(event.target);
+    });
+    document.addEventListener('sl-series-pick', function () {
+        if (document.querySelector('[data-sl-stat]')) setStatFetch();
+    });
+    document.addEventListener('click', function (event) {
+        var hit = event.target.closest ? event.target : null;
+        var link = hit ? hit.closest('[data-sl-stat] .sl-cockpit-step[href], [data-sl-stat] .sl-archive-month[href]') : null;
+        var cell = hit ? hit.closest('[data-sl-stat-now]') : null;
+        if (link && !event.ctrlKey && !event.metaKey && !event.shiftKey) {
+            event.preventDefault();
+            setStatMonth(link.href, link.matches('.sl-archive-month') ? -1 : Array.from(link.parentNode.querySelectorAll('.sl-cockpit-step')).indexOf(link));
+        }
+        if (!cell && !(hit && hit.closest('[data-sl-stat-clear]'))) return;
+        if (cell) stat.now = cell.getAttribute('data-sl-stat-now') === '1';
+        setSeriesPick(-1);
+        setStatFetch();
+    });
+    document.addEventListener('submit', function (event) {
+        var list = event.target.querySelector ? event.target.querySelector('select[name="month"]') : null;
+        if (!list || !document.querySelector('[data-sl-stat]')) return;
+        event.preventDefault();
+        setStatMonth(event.target.getAttribute('action') + '?name=statistic' + (list.value ? '&month=' + list.value : ''));
+    });
+    window.addEventListener('popstate', function () {
+        if (document.querySelector('[data-sl-stat]')) location.reload();
+    });
     var listretry = null;
     // The list of the canon a request comes from or lands in
     function getListBox(event) {
@@ -2544,12 +3408,15 @@
         document.addEventListener('DOMContentLoaded', function () {
             addFileStep();
             setBeamTurns();
+            setSeriesDraw(document);
             setArriveMarks(document);
             setSetupRun();
             addRankForm();
             addFormCanon();
             setQueuePoll();
             setCockpitPoll();
+            setStatPoll();
+            setMonitorPoll();
             setSessionWatch();
             setMenuFind();
             setListPicked();
@@ -2558,12 +3425,15 @@
     } else {
         addFileStep();
         setBeamTurns();
+        setSeriesDraw(document);
         setArriveMarks(document);
         setSetupRun();
         addRankForm();
         addFormCanon();
         setQueuePoll();
         setCockpitPoll();
+        setStatPoll();
+        setMonitorPoll();
         setSessionWatch();
         setMenuFind();
         setListPicked();

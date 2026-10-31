@@ -158,7 +158,7 @@ function database(string $run = ''): void {
         }
         $rows[] = ['name' => $name, 'cells' => [
             ['is_col_id' => true, 'has_content_text' => true, 'content_text' => count($rows) + 1],
-            ['title_text' => $name, 'has_content_text' => true, 'content_text' => $name],
+            ['has_content_text' => true, 'content_text' => $name] + getTplLongCell((string)$name, _TABLE),
             ['has_content_text' => true, 'content_text' => $tabeng],
             ['title_text' => $tabloc, 'has_content_text' => true, 'content_text' => $tabloc],
             ['is_col_count' => true, 'has_content_text' => true, 'content_text' => $num],
@@ -168,11 +168,10 @@ function database(string $run = ''): void {
             ['is_col_actions' => true, 'content_html' => $stattag],
         ]];
     }
-    $sums = $tpl->getHtmlFrag('alert', ['messages' => [
-        (['' => _DATABASE, 'optimize' => _OPTIMIZE, 'repair' => _REPAIR][$type]).': '.$conf['db']['name'],
-        _ROWS.': '.$allrows,
-        _TOTALSPACE.': '.filterSize($total),
-        _TOTALFREE.': '.filterSize($sumfree),
+    $tiles = $tpl->getHtmlFrag('metric-list', ['items' => [
+        ['label' => _ROWS, 'value' => filterDecimal($allrows, 0), 'icon' => 'list-ol'],
+        ['label' => _TOTALSPACE, 'value' => filterSize($total), 'icon' => 'database'],
+        ['label' => _TOTALFREE, 'value' => filterSize($sumfree), 'icon' => 'recycle'],
     ]]);
     $note = match ($type) {
         'optimize' => $tpl->getHtmlFrag('alert', ['is_warn' => true,
@@ -184,7 +183,8 @@ function database(string $run = ''): void {
     setHead();
     echo getTplAdminList([
         'head_html' => $head,
-        'note_html' => $note.$sums,
+        'note_html' => $note,
+        'pane' => ['title' => ['' => _DATABASE, 'optimize' => _OPTIMIZE, 'repair' => _REPAIR][$type], 'icon' => 'database', 'meta' => $conf['db']['name'], 'tiles_html' => $tiles],
         'head' => [
             ['content' => _ID, 'is_col_id' => true],
             ['content' => _TABLE],

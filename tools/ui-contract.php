@@ -206,7 +206,7 @@ return [
     # The eleven `col-*` entries are the column widths of a fixed admin list table: the track list of `table-layout: fixed`
     # CSS spells that track list as one width per cell instead of one `grid-template-columns`, and each is a figure an author retunes
     'components' => [
-        'adm', 'alert', 'alert-act', 'arrow', 'aside', 'aurora', 'ava', 'avatar', 'badge', 'band', 'bar', 'beam', 'brand', 'btn', 'btn-mini',
+        'adm', 'alert', 'alert-act', 'archive', 'arrow', 'aside', 'aurora', 'ava', 'avatar', 'badge', 'band', 'bar', 'beam', 'brand', 'btn', 'btn-mini',
         'builder', 'builder-pick', 'builder-thumb', 'bullet',
         'cab-act', 'cab-msg', 'cab-ring',
         'calc', 'capsule', 'card', 'changelog', 'changelog-body', 'changelog-date',
@@ -238,6 +238,10 @@ return [
     # Written from outside CSS by a template or a script, read only by CSS. Never API
     'data' => [
         '--sl-d-arrow' => 'popover arrow offset, plugins/system/slaed.js',
+        '--sl-d-left' => 'left edge of a zone of the hand as a share of its chart, templates/admin/assets/js/admin-ui.js',
+        '--sl-d-n' => 'number of columns of a chart, templates/admin/assets/js/admin-ui.js',
+        '--sl-d-v' => 'height of a bar as a share of its scale, templates/admin/assets/js/admin-ui.js',
+        '--sl-d-width' => 'width of a zone of the hand as a share of its chart, templates/admin/assets/js/admin-ui.js',
         '--sl-d-admins' => 'session donut end of the administration share, templates/*/partials/session-summary.html',
         '--sl-d-bots' => 'session donut end of the bot share, templates/*/partials/session-summary.html',
         '--sl-d-box-h' => 'height of a ring of the site builder over a part of the page, plugins/system/builder.js',
@@ -406,8 +410,8 @@ return [
         # A utility that puts a gap after any inline element, beside the input of one form field
         # Merging would move the field's definition into the utility block, where nobody editing the field would look
         '.sl-div-field label input, .sl-inline-gap',
-        # The head of the monitor, the count badge of a sidebar block and one field of a list filter: three components sharing three declarations by coincidence
-        '.sl-filter-field, .sl-monitor-head-left, .sl-wrapper.sl-admin-shell .sl-admin-sidebar .sl-block-sidebar-count-label',
+        # The count badge of a sidebar block and one field of a list filter: two components sharing three declarations by coincidence
+        '.sl-filter-field, .sl-wrapper.sl-admin-shell .sl-admin-sidebar .sl-block-sidebar-count-label',
         # The tab strip of the icon picker and the filter row of the file manager window: two rows of one gap, met by two components that share nothing else
         # They were in two files until the window became the theme's
         '.sl-fm-win .sl-fm-filters, .sl-icon-modal-tabs',
