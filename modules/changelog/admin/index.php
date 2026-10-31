@@ -111,37 +111,39 @@ function config(): void {
         $tpl->getHtmlFrag('select-option', ['value_attr' => 'github', 'label_text' => 'GitHub', 'is_selected' => $source === 'github']);
     $yesno = [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]];
     $rows = [
-        [
-            'label_for' => 'f-source',
-            'label_html' => _CHLOG_SOURCE, 'hint_html' => _CHLOG_SOURCE_TITLE, 'hint_id' => $hntid = getFieldIds('f-source')['hint'],
-            'field_html' => $tpl->getHtmlFrag('select', [
-                'describedby' => $hntid, 'name_attr' => 'source', 'selectid' => 'f-source', 'options_html' => $sourceopts, 'is_config' => true,
-            ]),
-        ],
-        [
-            'label_for' => 'f-ghowner',
-            'label_html' => _CHLOG_GH_OWNER,
-            'field_html' => $tpl->getHtmlFrag('input', [
-                'itype' => 'text', 'name_attr' => 'ghowner', 'input_id' => 'f-ghowner', 'value_attr' => chlogEsc($conf['changelog']['ghowner'] ?? ''), 'is_config' => true,
-            ]),
-            'is_hidden' => $source !== 'github',
-        ],
-        [
-            'label_for' => 'f-ghrepo',
-            'label_html' => _CHLOG_GH_REPO,
-            'field_html' => $tpl->getHtmlFrag('input', [
-                'itype' => 'text', 'name_attr' => 'ghrepo', 'input_id' => 'f-ghrepo', 'value_attr' => chlogEsc($conf['changelog']['ghrepo'] ?? ''), 'is_config' => true,
-            ]),
-            'is_hidden' => $source !== 'github',
-        ],
-        [
-            'label_for' => 'f-ghtoken',
-            'label_html' => _CHLOG_GH_TOKEN,
-            'field_html' => $tpl->getHtmlFrag('input', [
-                'itype' => 'password', 'name_attr' => 'ghtoken', 'input_id' => 'f-ghtoken', 'value_attr' => chlogEsc($conf['changelog']['ghtoken'] ?? ''), 'is_config' => true,
-            ]),
-            'is_hidden' => $source !== 'github',
-        ],
+        ...(isAdmin(true) ? [
+            [
+                'label_for' => 'f-source',
+                'label_html' => _CHLOG_SOURCE, 'hint_html' => _CHLOG_SOURCE_TITLE, 'hint_id' => $hntid = getFieldIds('f-source')['hint'],
+                'field_html' => $tpl->getHtmlFrag('select', [
+                    'describedby' => $hntid, 'name_attr' => 'source', 'selectid' => 'f-source', 'options_html' => $sourceopts, 'is_config' => true,
+                ]),
+            ],
+            [
+                'label_for' => 'f-ghowner',
+                'label_html' => _CHLOG_GH_OWNER,
+                'field_html' => $tpl->getHtmlFrag('input', [
+                    'itype' => 'text', 'name_attr' => 'ghowner', 'input_id' => 'f-ghowner', 'value_attr' => chlogEsc($conf['changelog']['ghowner'] ?? ''), 'is_config' => true,
+                ]),
+                'is_hidden' => $source !== 'github',
+            ],
+            [
+                'label_for' => 'f-ghrepo',
+                'label_html' => _CHLOG_GH_REPO,
+                'field_html' => $tpl->getHtmlFrag('input', [
+                    'itype' => 'text', 'name_attr' => 'ghrepo', 'input_id' => 'f-ghrepo', 'value_attr' => chlogEsc($conf['changelog']['ghrepo'] ?? ''), 'is_config' => true,
+                ]),
+                'is_hidden' => $source !== 'github',
+            ],
+            [
+                'label_for' => 'f-ghtoken',
+                'label_html' => _CHLOG_GH_TOKEN,
+                'field_html' => $tpl->getHtmlFrag('input', [
+                    'itype' => 'password', 'name_attr' => 'ghtoken', 'input_id' => 'f-ghtoken', 'value_attr' => chlogEsc($conf['changelog']['ghtoken'] ?? ''), 'is_config' => true,
+                ]),
+                'is_hidden' => $source !== 'github',
+            ],
+        ] : []),
         [
             'label_for' => 'f-limit',
             'label_html' => _CHLOG_LIMIT, 'hint_html' => _CHLOG_STATS_TITLE, 'hint_id' => $hntid = getFieldIds('f-limit')['hint'],
@@ -196,14 +198,15 @@ function config(): void {
 }
 
 function configsave(): void {
-    global $afile;
+    global $afile, $conf;
     $iswarn = !checkAdminPost('changelog');
     if (!$iswarn) {
-        $confdata = [
+        $confdata = (isAdmin(true) ? [
             'source' => chlogSource(getVar('post', 'source', 'var', 'local')),
             'ghowner' => trim(getVar('post', 'ghowner', 'text', '')),
             'ghrepo' => trim(getVar('post', 'ghrepo', 'text', '')),
             'ghtoken' => trim(getVar('post', 'ghtoken', 'text', '')),
+        ] : array_intersect_key($conf['changelog'] ?? [], array_flip(['source', 'ghowner', 'ghrepo', 'ghtoken']))) + [
             'limit' => chlogClamp(getVar('post', 'limit', 'num', 50), 10, CHLOG_MAX_LIMIT),
             'perpage' => chlogClamp(getVar('post', 'perpage', 'num', 10), 5, 50),
             'cachettl' => chlogClamp(getVar('post', 'cachettl', 'num', 900), 0, 3600),

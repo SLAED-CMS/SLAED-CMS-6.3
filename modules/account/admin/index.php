@@ -1043,80 +1043,6 @@ function config(): void {
             ]),
         ],
         [
-            'label_html' => _OAUTHACT,
-            'label_id' => $labid = getFieldIds('', 'oactive')['label'],
-            'field_html' => getTplRadioGroup([
-                'labelledby' => $labid,
-                'name' => 'oactive',
-                'value' => (string)($conf['oauth']['active'] ?? 0),
-                'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]],
-            ]),
-        ],
-        [
-            'label_html' => _OAUTHGACT,
-            'label_id' => $labid = getFieldIds('', 'gactive')['label'],
-            'field_html' => getTplRadioGroup([
-                'labelledby' => $labid,
-                'name' => 'gactive',
-                'value' => (string)($conf['oauth']['google']['active'] ?? 0),
-                'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]],
-            ]),
-        ],
-        [
-            'label_for' => 'f-gclientid',
-            'label_html' => _OAUTHGID,
-            'field_html' => $tpl->getHtmlFrag('input', [
-                'itype' => 'text',
-                'name_attr' => 'gclientid',
-                'input_id' => 'f-gclientid',
-                'value_attr' => (string)($conf['oauth']['google']['clientid'] ?? ''),
-                'is_config' => true,
-            ]),
-        ],
-        [
-            'label_for' => 'f-gsecret',
-            'label_html' => _OAUTHGKEY,
-            'field_html' => $tpl->getHtmlFrag('input', [
-                'itype' => 'text',
-                'name_attr' => 'gsecret',
-                'input_id' => 'f-gsecret',
-                'value_attr' => (string)($conf['oauth']['google']['secret'] ?? ''),
-                'is_config' => true,
-            ]),
-        ],
-        [
-            'label_html' => _OAUTHMACT,
-            'label_id' => $labid = getFieldIds('', 'mactive')['label'],
-            'field_html' => getTplRadioGroup([
-                'labelledby' => $labid,
-                'name' => 'mactive',
-                'value' => (string)($conf['oauth']['microsoft']['active'] ?? 0),
-                'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]],
-            ]),
-        ],
-        [
-            'label_for' => 'f-mclientid',
-            'label_html' => _OAUTHMID,
-            'field_html' => $tpl->getHtmlFrag('input', [
-                'itype' => 'text',
-                'name_attr' => 'mclientid',
-                'input_id' => 'f-mclientid',
-                'value_attr' => (string)($conf['oauth']['microsoft']['clientid'] ?? ''),
-                'is_config' => true,
-            ]),
-        ],
-        [
-            'label_for' => 'f-msecret',
-            'label_html' => _OAUTHMKEY,
-            'field_html' => $tpl->getHtmlFrag('input', [
-                'itype' => 'text',
-                'name_attr' => 'msecret',
-                'input_id' => 'f-msecret',
-                'value_attr' => (string)($conf['oauth']['microsoft']['secret'] ?? ''),
-                'is_config' => true,
-            ]),
-        ],
-        [
             'label_for' => 'f-nameb',
             'label_html' => _NAME_BLOCK,
             'field_html' => $tpl->getHtmlFrag('input', [
@@ -1150,7 +1076,7 @@ function config(): void {
 }
 
 function save(): void {
-    global $afile, $conf;
+    global $afile;
     $iswarn = !checkAdminPost('account');
     if (!$iswarn) {
         $protect = ['\n' => '', '\t' => '', '\r' => '', ' ' => ''];
@@ -1178,20 +1104,6 @@ function save(): void {
             'mail_b' => strtolower(strtr(getVar('post', 'mail', 'text'), $protect)),
         ];
         setConfigFile('users.php', $cont);
-        $oanew = [
-            'active' => getVar('post', 'oactive', 'num'),
-            'google' => [
-                'active' => getVar('post', 'gactive', 'num'),
-                'clientid' => strtr(getVar('post', 'gclientid', 'text'), $protect),
-                'secret' => strtr(getVar('post', 'gsecret', 'text'), $protect),
-            ],
-            'microsoft' => [
-                'active' => getVar('post', 'mactive', 'num'),
-                'clientid' => strtr(getVar('post', 'mclientid', 'text'), $protect),
-                'secret' => strtr(getVar('post', 'msecret', 'text'), $protect),
-            ],
-        ];
-        setConfigFile('oauth.php', $oanew, $conf['oauth'] ?? []);
     }
     setRedirect($afile.'.php?name=account&op=config', false, 302, $iswarn ? _TOKENMISS : _SUCCSAVE, $iswarn);
 }

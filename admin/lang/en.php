@@ -1056,6 +1056,7 @@ define('_SEC_LOG_U','To conduct statistics of inputs of users?');
 define('_SEC_MAIL_D_SEND','To inform on updating files on E-Mail?');
 define('_SEC_MAIL_SEND','To inform on attacks on E-Mail?');
 define('_SEC_MAIL_W_SEND','To inform on the forbidden actions on E-Mail?');
+define('_SEC_OAUTH','OAuth keys');
 define('_SEC_PASS','Login and password');
 define('_SEC_PASSWORD','Additional password of manager');
 define('_SEC_REF_POST','Disable take the POST variables from other sites, sources?');

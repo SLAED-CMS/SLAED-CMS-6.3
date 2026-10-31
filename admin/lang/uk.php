@@ -1056,6 +1056,7 @@ define('_SEC_LOG_U','Вести статистику входів користу
 define('_SEC_MAIL_D_SEND','Повідомляти про модифікації файлів на E-Mail?');
 define('_SEC_MAIL_SEND','Повідомляти про напади на E-Mail?');
 define('_SEC_MAIL_W_SEND','Повідомляти про заборонених діях на E-Mail?');
+define('_SEC_OAUTH','OAuth-ключі');
 define('_SEC_PASS','Логін і пароль');
 define('_SEC_PASSWORD','Додатковий пароль адміністратора');
 define('_SEC_REF_POST','Заборонити брати змінні POST від інших сайтів, джерел?');

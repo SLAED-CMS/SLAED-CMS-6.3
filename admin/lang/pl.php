@@ -1056,6 +1056,7 @@ define('_SEC_LOG_U','Prowadzenie statystyk wejść użytkowników?');
 define('_SEC_MAIL_D_SEND','Informacja o modyfikacji plików na E-Mail?');
 define('_SEC_MAIL_SEND','Informacja o atakach na E-Mail?');
 define('_SEC_MAIL_W_SEND','Informacja o blokowanych działaniach na E-Mail?');
+define('_SEC_OAUTH','Klucze OAuth');
 define('_SEC_PASS','Login i hasło');
 define('_SEC_PASSWORD','Opcjonalne hasło administratora');
 define('_SEC_REF_POST','Wyłącz przyjmować zmienne POST od innych stron, źródeł?');

@@ -2,6 +2,16 @@
 
 ## 2026-10-31
 
+### The secrets of the panel are for the super administrator alone
+
+- **OAuth keys.** The switches and the keys of Google and Microsoft move from the settings of "Пользователи", a section that
+  can be delegated, to the tab `name=security&op=oauthkeys`; `op=save` of the account module no longer writes
+  `config/oauth.php`. The list of links `op=oauthlist` stays in "Пользователи".
+- **GitHub access.** The fields `source`, `ghowner`, `ghrepo` and `ghtoken` of "Журнал изменений" are drawn and written for
+  `isAdmin(true)` alone, as the site calls the named repository with that token; a save by another administrator keeps the
+  stored values and changes the other settings.
+- **Tests.** `AdminSecretTest` holds both over real requests, and that no journal carries a secret.
+
 ### Small repairs found by the audit of the panel sections
 
 - **Site message.** The edit link of a message on the home page opens `name=messages&op=add`, where it led nowhere before,

@@ -200,7 +200,7 @@ database on any failure. The reference is `docs/UPDATE.md`; the help of the page
 Built-in OAuth2 Authorization Code Flow with PKCE (Google and Microsoft in V1, no Composer dependencies) replaces the legacy third-party social login integration:
 
 - The tables `{prefix}_user_oauth` (permanent provider links) and `{prefix}_oauth_temp` (one-time state/pending records) hold the provider data; `{prefix}_users` has no `network` column.
-- Providers are configured in the admin panel under Users settings (Client ID / Client Secret per provider) or in `config/oauth.php`. The redirect URI to register at the provider console is `https://your-site/index.php?name=account&op=oauth`.
+- Providers are configured by the super administrator in the admin panel under Security, the tab "OAuth keys" (Client ID / Client Secret per provider), or in `config/oauth.php`. The redirect URI to register at the provider console is `https://your-site/index.php?name=account&op=oauth`.
 - Accounts created through OAuth have no password (an invalid `!`-prefixed marker is stored); a password can be added later via password recovery.
 
 ### Cache And Asset Settings

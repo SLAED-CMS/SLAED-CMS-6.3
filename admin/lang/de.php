@@ -1056,6 +1056,7 @@ define('_SEC_LOG_U','Statistik der Eingänge der Benutzer zu führen?');
 define('_SEC_MAIL_D_SEND','Über die Modifikation der Dateien auf E-Mail mitzuteilen?');
 define('_SEC_MAIL_SEND','Über die Angriffe auf E-Mail Mitzuteilen?');
 define('_SEC_MAIL_W_SEND','Über die untersagten Handlungen auf E-Mail mitzuteilen?');
+define('_SEC_OAUTH','OAuth-Schlüssel');
 define('_SEC_PASS','Login und Passwort');
 define('_SEC_PASSWORD','Zusätzliches Passwort des Verwalters');
 define('_SEC_REF_POST','Verbieten nehmen Variablen POST von anderen Websites, Quelle?');

@@ -2990,6 +2990,63 @@ function getRouteJournalView(string $work): array {
     ];
 }
 
+# The keys and the token the secrets run starts from, the request journal on, and the administrator boss delegated both sections that used to hold them
+function addRouteSecretConf(PDO $pdo, string $work): void {
+    $data = require $work.'/config/security.php';
+    $data['security'] = array_replace($data['security'], ['log' => '1', 'log_a' => '1']);
+    setRouteFile($work.'/config/security.php', $data);
+    $data = require $work.'/config/oauth.php';
+    $data['oauth']['google'] = array_replace($data['oauth']['google'], ['clientid' => 'probe-gid', 'secret' => 'probe-gkey-old']);
+    $data['oauth']['microsoft'] = array_replace($data['oauth']['microsoft'], ['clientid' => 'probe-mid', 'secret' => 'probe-mkey-old']);
+    setRouteFile($work.'/config/oauth.php', $data);
+    setRouteFile($work.'/config/changelog.php', ['changelog' => ['source' => 'local', 'ghowner' => 'probe', 'ghrepo' => 'probe', 'ghtoken' => 'probe-ghtoken-old', 'limit' => '50',
+        'perpage' => '10', 'cachettl' => '900', 'grpdate' => '0', 'showfile' => '0', 'showstat' => '0', 'exporten' => '0']]);
+    if (is_file($work.'/config/local.php')) unlink($work.'/config/local.php');
+    $pdo->exec('UPDATE '.RPREF.'_admins SET modules = \'account,changelog\' WHERE id = 3');
+}
+
+# The secrets over real requests: a delegated administrator neither sees nor writes them while the rest of a form still saves, a super-administrator does both, no journal holds one
+function getRouteSecrets(string $work): array {
+    $file = static fn(string $name): string => (string)file_get_contents($work.'/config/'.$name.'.php');
+    $seen = static fn(array $reply): array => array_map(static fn(string $v): bool => str_contains($reply['body'], $v),
+        ['probe-gkey-old', 'probe-mkey-old', 'name="gsecret"', 'probe-ghtoken-old', 'name="ghtoken"', 'name="ghowner"', 'name="ghrepo"', 'name="source"']);
+    $acc = getRouteReply('boss', 'GET', 'admin.php?name=account&op=config');
+    $log = getRouteReply('boss', 'GET', 'admin.php?name=changelog&op=config');
+    $sec = getRouteReply('boss', 'GET', 'admin.php?name=security&op=oauthkeys');
+    $out = ['boss' => ['account' => [$acc['code'], $seen($acc)], 'changelog' => [$log['code'], $seen($log)], 'security' => $seen($sec)]];
+    $pairs = getRoutePairs(getRouteInputs($acc['body'], 'save'), ['anum' => '51']);
+    $save = getRouteReply('boss', 'POST', 'admin.php', $pairs + ['rules' => '', 'name' => 'account', 'op' => 'save', 'gsecret' => 'probe-stolen', 'oactive' => '1']);
+    $deny = getRouteReply('boss', 'POST', 'admin.php', ['name' => 'security', 'op' => 'oauthsave', 'token' => (string)($pairs['token'] ?? ''), 'gsecret' => 'probe-stolen']);
+    $mark = 'name=changelog&amp;op=configsave';
+    $form = ['token' => getRouteToken($log['body'], $mark), 'source' => 'github', 'ghowner' => 'probe-foreign', 'ghrepo' => 'probe-foreign', 'limit' => '50', 'perpage' => '11',
+        'cachettl' => '900', 'ghtoken' => 'probe-stolen'];
+    $chlog = getRouteReply('boss', 'POST', 'admin.php?name=changelog&op=configsave', $form);
+    $text = $file('changelog');
+    $out['write'] = ['codes' => [$save['code'], $chlog['code']], 'denied' => str_contains($deny['body'], 'probe-gkey-old'),
+        'users' => str_contains($file('users'), "'anum' => '51'"),
+        'oauth' => [str_contains($file('oauth'), 'probe-gkey-old'), str_contains($file('oauth'), 'probe-stolen')],
+        'token' => [str_contains($text, 'probe-ghtoken-old'), str_contains($text, 'probe-stolen'), str_contains($text, "'perpage' => '11'")],
+        'place' => [str_contains($text, "'source' => 'local'"), str_contains($text, 'probe-foreign')]];
+    $page = getRouteReply('root', 'GET', 'admin.php?name=security&op=oauthkeys');
+    $pairs = getRoutePairs(getRouteInputs($page['body'], 'oauthsave'), ['gsecret' => 'probe-gkey-new']);
+    $none = getRouteReply('root', 'POST', 'admin.php', array_diff_key($pairs, ['token' => 1]));
+    $cold = str_contains($file('oauth'), 'probe-gkey-new');
+    $done = getRouteReply('root', 'POST', 'admin.php', $pairs);
+    $mine = getRouteReply('root', 'GET', 'admin.php?name=changelog&op=config');
+    $next = getRouteReply('root', 'POST', 'admin.php?name=changelog&op=configsave', ['ghtoken' => 'probe-ghtoken-new', 'ghowner' => 'probe-root', 'source' => 'local',
+        'token' => getRouteToken($mine['body'], $mark)] + $form);
+    $out['root'] = ['seen' => [$seen($page), $seen($mine)], 'codes' => [$none['code'], $done['code'], $next['code']], 'cold' => $cold,
+        'oauth' => [str_contains($file('oauth'), 'probe-gkey-new'), str_contains($file('oauth'), 'probe-mkey-old'), str_contains($file('oauth'), "'jwks' =>")],
+        'token' => [str_contains($file('changelog'), 'probe-ghtoken-new'), str_contains($file('changelog'), 'probe-ghtoken-old'), str_contains($file('changelog'), 'probe-root')]];
+    $held = [];
+    foreach (glob($work.'/logs/*') ?: [] as $one) {
+        $text = is_file($one) ? (string)file_get_contents($one) : '';
+        if (preg_match('/probe-(gkey|mkey|ghtoken|stolen)/', $text)) $held[] = basename($one);
+    }
+    $out['logs'] = ['held' => $held, 'request' => str_contains((string)(is_file($work.'/logs/request.log') ? file_get_contents($work.'/logs/request.log') : ''), 'gsecret')];
+    return $out;
+}
+
 # Every row the registry holds for one entity in the order it was written: path, state and the generated cur
 function getRouteAddress(PDO $pdo, string $kind, int $oid): array {
     $st = $pdo->prepare('SELECT path, state, cur FROM '.RPREF.'_routes WHERE kind = ? AND oid = ? ORDER BY id');
@@ -4233,6 +4290,7 @@ try {
     if (($argv[2] ?? '') === 'seo') addRouteSeoTypes($rpdo, $rwork);
     if (($argv[2] ?? '') === 'head') addRouteHeadTypes($rpdo, $rwork);
     if (($argv[2] ?? '') === 'journal') addRouteJournalConf($rpdo, $rwork);
+    if (($argv[2] ?? '') === 'secrets') addRouteSecretConf($rpdo, $rwork);
     if (($argv[2] ?? '') === 'address') addRouteAddressConf($rpdo, $rwork);
     if (($argv[2] ?? '') === 'parse') addRouteParseConf($rpdo, $rwork);
     if (($argv[2] ?? '') === 'build') addRouteBuildConf($rpdo, $rwork);
@@ -4273,6 +4331,8 @@ try {
         $report['runs']['quick'] = getRouteQuick($rpdo, $rwork);
     } elseif (($argv[2] ?? '') === 'journal') {
         $report['runs']['journal'] = getRouteJournal($rpdo, $rwork);
+    } elseif (($argv[2] ?? '') === 'secrets') {
+        $report['runs']['secrets'] = getRouteSecrets($rwork);
     } elseif (($argv[2] ?? '') === 'address') {
         $report['runs']['address'] = getRouteWriters($rpdo, $rwork);
     } elseif (($argv[2] ?? '') === 'parse') {

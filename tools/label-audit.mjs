@@ -56,7 +56,7 @@ const origin = new URL(conf.base).origin;
 // renders a form or renders a view, and what is left out is reported as a skipped op rather than passed over silently
 const OPEN = new Set(['', 'view', 'edit', 'add', 'new', 'newuser', 'passlost', 'config', 'info', 'list', 'search',
     'profil', 'profile', 'privat', 'favorites', 'settings', 'docs', 'stat', 'preview', 'reply', 'newtopic', 'quote', 'contact',
-    'edithome', 'oauthlist', 'banlist', 'liste', 'rules', 'stats', 'fileadd', 'fileedit', 'subadd', 'addedit']);
+    'edithome', 'oauthlist', 'oauthkeys', 'banlist', 'liste', 'rules', 'stats', 'fileadd', 'fileedit', 'subadd', 'addedit']);
 // The parameters that name one record rather than one route. Every one of them is dropped from the signature, and the
 // four that identify a record leave the `#rec` mark behind, so a hundred categories are one route that is known to be
 // record-bound. Measured, without this the panel alone offered more than five hundred signatures - eighty six category
