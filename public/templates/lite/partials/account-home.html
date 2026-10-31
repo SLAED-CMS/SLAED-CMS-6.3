@@ -68,12 +68,12 @@
       {% include 'fragments/panel-head.html' with rss_head %}
       {% if rss_options_html %}
       <form class="sl-cab-rss-form" method="post" action="{{ rss_action }}" hx-post="{{ rss_action }}" hx-target="#repcabrss" hx-swap="innerHTML" hx-push-url="false">
-        <select class="sl-field" name="url" title="{{ rss_select_label }}">{{{ rss_options_html }}}</select>
+        <select class="sl-field" name="url" title="{{ rss_select_label }}" aria-label="{{ rss_select_label }}">{{{ rss_options_html }}}</select>
         <button class="sl-but" type="submit">{{ rss_select_label }}</button>
       </form>
       {% endif %}
       <form class="sl-cab-rss-form" method="post" action="{{ rss_action }}" hx-post="{{ rss_action }}" hx-target="#repcabrss" hx-swap="innerHTML" hx-push-url="false">
-        <input class="sl-field" type="text" name="url" maxlength="200" placeholder="{{ rss_url_label }}" title="{{ rss_url_label }}">
+        <input class="sl-field" type="text" name="url" maxlength="200" placeholder="{{ rss_url_label }}" title="{{ rss_url_label }}" aria-label="{{ rss_url_label }}">
         <button class="sl-but" type="submit">{{ ok_label }}</button>
       </form>
     </div>

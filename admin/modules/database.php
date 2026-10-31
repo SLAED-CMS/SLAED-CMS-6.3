@@ -115,7 +115,7 @@ function database(string $run = ''): void {
     $marks = ($type !== '') ? (array)($_SESSION[$keep] ?? []) : [];
     if ($type !== '') unset($_SESSION[$keep]);
     $words = ['done' => [($type === 'repair') ? _OK : _OPTIMIZED, 'is_success'], 'same' => [_ALREADYOPTIMIZED, 'is_danger'], 'fail' => [_ERROR, 'is_danger'],
-        'none' => [_NO, 'is_dimmed']];
+        'none' => [_NO, 'is_muted']];
     $ops = ['name=database', 'name=database&type=optimize', 'name=database&type=repair', 'name=database&op=dump', 'name=database&op=info'];
     $head = getTplAdminTabs(['ops' => $ops, 'tabs' => [_HOME, _OPTIMIZE, _REPAIR, _INQUIRY, _MANUAL], 'tab' => ['' => 0, 'optimize' => 1, 'repair' => 2][$type],
         'part' => [0, 1, 2]]);
@@ -146,7 +146,7 @@ function database(string $run = ''): void {
         $total += $tabsize;
         $sumfree += $tabfree;
         $freetag = $tabeng === 'InnoDB'
-            ? $tpl->getHtmlFrag('inline-badge', ['is_dimmed' => true, 'label' => filterSize($tabfree)])
+            ? $tpl->getHtmlFrag('inline-badge', ['is_muted' => !$tabfree, 'label' => filterSize($tabfree)])
             : $tpl->getHtmlFrag('inline-badge', ['is_danger' => (bool)$tabfree, 'is_success' => !$tabfree, 'label' => filterSize($tabfree)]);
         $mark = $words[$marks[$name] ?? ''] ?? [];
         $stattag = $mark ? $tpl->getHtmlFrag('inline-badge', [$mark[1] => true, 'label' => $mark[0]]) : '';

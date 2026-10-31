@@ -1071,7 +1071,8 @@ function add(): void {
         $rows .= getTplFieldsIn(['field' => $field, 'mod' => $conf['name'], 'new' => !$fid]);
         $rows .= ($ismod)
             ? $tpl->getHtmlFrag('form-field-row', ['label' => _OPMOD, 'field_html' => pmoder($status, $subh)])
-                .$tpl->getHtmlFrag('form-field-row', ['label' => _CHNGSTORY, 'field_html' => getTplAddDateTime(['name' => 'time', 'time' => $time, 'with' => true, 'max' => 16])])
+                .$tpl->getHtmlFrag('form-field-row', ['label' => _CHNGSTORY,
+                    'field_html' => getTplAddDateTime(['name' => 'time', 'label' => _CHNGSTORY, 'time' => $time, 'with' => true, 'max' => 16])])
             : '';
         $hide = $tpl->getHtmlFrag('hidden', ['name_attr' => 'id', 'value_attr' => (string)$id, 'input_attr' => ''])
             .$tpl->getHtmlFrag('hidden', ['name_attr' => 'fid', 'value_attr' => (string)$fid, 'input_attr' => ''])
@@ -1088,6 +1089,7 @@ function add(): void {
                     'name' => '',
                     'val' => '',
                     'select' => true,
+                    'select_label' => _FUNCTIONS,
                     'show_preview' => true,
                     'show_delete' => false,
                     'label_preview' => _PREVIEW,

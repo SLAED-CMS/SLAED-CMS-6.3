@@ -282,7 +282,8 @@ if (!isAdmin(true) && !defined('API_FILE')) {
             $script = '#<.*?(script|body|object|iframe|applet|meta|form|style|img).*?>#i';
             $char = '#\([^>]*\"?[^)]*\)#';
             $quote = '#\'|\.\.[/\\\\%]#';
-            $string = '#ALTER|DROP|INSERT|OUTFILE|SELECT|TRUNCATE|UNION|'.PREFIX_DB.'_admins|'.PREFIX_DB.'_users|admins_show|admins_add|admins_save|admins_del#i';
+            $string = '#(?<![a-z])(?:ALTER|DROP|INSERT|OUTFILE|SELECT|TRUNCATE|UNION)(?![a-z])|'
+                .PREFIX_DB.'_admins|'.PREFIX_DB.'_users|admins_show|admins_add|admins_save|admins_del#i';
             $decode = base64_decode($val);
             $slash = preg_replace('#\/\*.*?\*\/#', '', $val);
             if ($conf['security']['url_get']) if (preg_match($links, $val)) addWarnReport('URL in GET - '.$name.' = '.$val);
@@ -343,7 +344,8 @@ if (!isAdmin(true) && !defined('API_FILE')) {
         function checkCookie($name, $val) {
             $links = '#^(http\:\/\/|https\:\/\/|ftp\:\/\/|php\:\/\/|\/\/)#i';
             $script = '#<.*?(script|body|object|iframe|applet|meta|form|style|img).*?>#i';
-            $string = '#ALTER|DROP|INSERT|OUTFILE|SELECT|TRUNCATE|UNION|'.PREFIX_DB.'_admins|'.PREFIX_DB.'_users|admins_show|admins_add|admins_save|admins_del#i';
+            $string = '#(?<![a-z])(?:ALTER|DROP|INSERT|OUTFILE|SELECT|TRUNCATE|UNION)(?![a-z])|'
+                .PREFIX_DB.'_admins|'.PREFIX_DB.'_users|admins_show|admins_add|admins_save|admins_del#i';
             $decode = base64_decode($val);
             $slash = preg_replace('#\/\*.*?\*\/#', '', $val);
             if (preg_match($links, $val)) addHackReport('URL in COOKIE - '.$name.' = '.$val);

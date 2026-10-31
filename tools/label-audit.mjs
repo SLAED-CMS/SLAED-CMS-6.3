@@ -154,13 +154,15 @@ function getFrameFindings() {
   // Named by a reference that resolves to something with text in it. An empty target is a worse answer than no
   // attribute: the name computes to the empty string and the reader announces nothing, with the attribute in place
   const namedby = (el) => refs(el, 'aria-labelledby').some((id) => text(document.getElementById(id)) !== '');
+  // A picture with its alt inside a label is the text of that label, as a browser computes the name
+  const said = (lab) => text(lab) !== '' || !!lab.querySelector('img[alt]:not([alt=""])');
   const labelled = (el) => {
     if (namedby(el)) return true;
     if ((el.getAttribute('aria-label') || '').trim() !== '') return true;
     if (el.id) {
-      for (const lab of document.querySelectorAll('label[for]')) if (lab.getAttribute('for') === el.id && text(lab) !== '') return true;
+      for (const lab of document.querySelectorAll('label[for]')) if (lab.getAttribute('for') === el.id && said(lab)) return true;
     }
-    return !!el.closest('label') && text(el.closest('label')) !== '';
+    return !!el.closest('label') && said(el.closest('label'));
   };
   const named = (el) => labelled(el) || (el.getAttribute('title') || '').trim() !== '';
   const seen = new Map();

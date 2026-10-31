@@ -1006,7 +1006,7 @@ function getPrivateMessagePane(string|array $stop, string $info, int $typ, array
         $opts = '';
         foreach ($mass as $key => $lab) $opts .= $tpl->getHtmlFrag('select-option', ['value_attr' => $key, 'label_text' => $lab]);
         $bulk = $tpl->getHtmlFrag('select', [
-                'name_attr' => 'act', 'title' => _CHECKOP, 'options_html' => $opts, 'select_attr' => 'form="prbulk"',
+                'name_attr' => 'act', 'title' => _CHECKOP, 'aria_label' => _CHECKOP, 'options_html' => $opts, 'select_attr' => 'form="prbulk"',
             ])
             .$tpl->getHtmlFrag('button', [
                 'button_type' => 'submit', 'submit_label' => _OK, 'title' => _CHECKOP, 'input_attr' => 'form="prbulk"',

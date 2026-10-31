@@ -567,9 +567,9 @@ function configsave(): void {
             $xheight = (!intval($height[$i] ?? 0)) ? 500 : intval($height[$i]);
             $xup = (!intval($up[$i] ?? 0)) ? 10 : intval($up[$i]);
             $xgdwidth = (!intval($gdwidth[$i] ?? 0)) ? 150 : intval($gdwidth[$i]);
-            $xasum = (!intval($asum[$i] ?? 0)) ? 250 : intval($asum[$i]);
-            $xusum = (!intval($usum[$i] ?? 0)) ? 100 : intval($usum[$i]);
-            $xgsum = (!intval($gsum[$i] ?? 0)) ? $xusum : intval($gsum[$i]);
+            $xasum = intval($asum[$i] ?? 0);
+            $xusum = intval($usum[$i] ?? 0);
+            $xgsum = intval($gsum[$i] ?? 0);
             $upload = getVar('post', $i.'upload', 'num');
             $upguest = getVar('post', $i.'upguest', 'num');
             $rule = [

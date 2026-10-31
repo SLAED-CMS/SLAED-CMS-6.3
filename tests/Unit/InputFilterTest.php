@@ -103,6 +103,25 @@ final class InputFilterTest extends TestCase
         $this->assertSame('short', $cut[2]);
     }
 
+    # The detector of GET and COOKIE bounds an SQL keyword by letters, as \b misses the digit in /*!50000UNION*/: a file name with a keyword inside is no attack
+    #[Test]
+    public function theDetectorBoundsSqlKeywordsByLetters(): void
+    {
+        $body = (string)file_get_contents(dirname(__DIR__, 2).'/core/security.php');
+        preg_match_all('/\$string = (\'#\(\?<!\[a-z\]\).+?);\R/s', $body, $found);
+        $this->assertCount(2, $found[1], 'The detector of GET or of COOKIE no longer bounds a keyword by letters');
+        foreach ($found[1] as $line) {
+            $find = (string)eval('return '.str_replace('PREFIX_DB', "'probe'", $line).';');
+            foreach (['Eyedropper-zpE6uHS4K9.gif', 'Reunion', 'selection', 'truncated', 'backdrop'] as $val) {
+                $this->assertSame(0, preg_match($find, $val), 'A harmless value counts as an attack: '.$val);
+            }
+            $hits = ['1 UNION SELECT 1', 'drop table x', '1/**/union/**/all', 'UNION(SELECT(1))', '/*!50000UNION*/', '/*!12345SELECT*/1', '1UNION(1)', '.1UNION'];
+            foreach ([...$hits, 'x_SELECT_y', 'probe_admins', 'admins_show'] as $val) {
+                $this->assertSame(1, preg_match($find, $val), 'An attack went through: '.$val);
+            }
+        }
+    }
+
     # An agent longer than _users.agent is stored cut to the column, while getAgent() stays whole, so the blocker still matches the hash of the full agent
     #[Test]
     public function aLongAgentIsStoredCutAndBlockedWhole(): void

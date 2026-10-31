@@ -1,5 +1,5 @@
 {
-  "generated": "2026-10-30T23:11:26.470Z",
+  "generated": "2026-10-31T12:37:48.997Z",
   "pairs": [
     {
       "theme": "admin",
@@ -751,28 +751,6 @@
     },
     {
       "theme": "admin",
-      "page": "admin-template-style",
-      "mode": "light",
-      "sel": "form.sl-div-form",
-      "bgsel": "div.sl-searchbox",
-      "fg": "rgb(17, 24, 39)",
-      "bg": "rgb(247, 251, 253)",
-      "size": 14,
-      "weight": 400
-    },
-    {
-      "theme": "admin",
-      "page": "admin-template-style",
-      "mode": "dark",
-      "sel": "form.sl-div-form",
-      "bgsel": "div.sl-searchbox",
-      "fg": "rgb(229, 231, 235)",
-      "bg": "rgb(21, 29, 43)",
-      "size": 14,
-      "weight": 400
-    },
-    {
-      "theme": "admin",
       "page": "admin-account-add",
       "mode": "light",
       "sel": "h1.sl-module-head-title",
@@ -1106,6 +1084,17 @@
       "page": "admin-home",
       "mode": "light",
       "sel": "span",
+      "bgsel": "section.sl-cockpit.sl-knob-danger",
+      "fg": "rgb(205, 69, 69)",
+      "bg": "rgb(247, 251, 253)",
+      "size": 38,
+      "weight": 700
+    },
+    {
+      "theme": "admin",
+      "page": "admin-home",
+      "mode": "light",
+      "sel": "span",
       "bgsel": "article.sl-menu-grid-item.sl-mcard",
       "fg": "rgb(99, 105, 118)",
       "bg": "rgb(244, 246, 248)",
@@ -1155,17 +1144,6 @@
       "bg": "rgb(244, 246, 248)",
       "size": 13,
       "weight": 400
-    },
-    {
-      "theme": "admin",
-      "page": "admin-home",
-      "mode": "light",
-      "sel": "span",
-      "bgsel": "section.sl-cockpit.sl-knob-danger",
-      "fg": "rgb(28, 110, 158)",
-      "bg": "rgb(247, 251, 253)",
-      "size": 38,
-      "weight": 700
     },
     {
       "theme": "admin",
@@ -1337,22 +1315,22 @@
       "page": "admin-home",
       "mode": "dark",
       "sel": "span",
-      "bgsel": "div.sl-block-sidebar",
-      "fg": "rgb(229, 231, 235)",
-      "bg": "rgb(24, 32, 48)",
-      "size": 13,
-      "weight": 400
+      "bgsel": "section.sl-cockpit.sl-knob-danger",
+      "fg": "rgb(240, 106, 106)",
+      "bg": "rgb(21, 29, 43)",
+      "size": 38,
+      "weight": 700
     },
     {
       "theme": "admin",
       "page": "admin-home",
       "mode": "dark",
       "sel": "span",
-      "bgsel": "section.sl-cockpit.sl-knob-danger",
-      "fg": "rgb(92, 188, 234)",
-      "bg": "rgb(21, 29, 43)",
-      "size": 38,
-      "weight": 700
+      "bgsel": "div.sl-block-sidebar",
+      "fg": "rgb(229, 231, 235)",
+      "bg": "rgb(24, 32, 48)",
+      "size": 13,
+      "weight": 400
     },
     {
       "theme": "admin",
@@ -1591,7 +1569,7 @@
       "mode": "light",
       "sel": "span.sl-chip.sl-chip-warn",
       "bgsel": "div.sl-block-sidebar.sl-block-queue",
-      "fg": "rgb(194, 65, 12)",
+      "fg": "rgb(178, 59, 11)",
       "bg": "rgb(244, 246, 248)",
       "size": 12,
       "weight": 700
@@ -2086,7 +2064,7 @@
       "mode": "light",
       "sel": "span.tok-atom",
       "bgsel": "div.sl-editor-card",
-      "fg": "rgb(194, 65, 12)",
+      "fg": "rgb(178, 59, 11)",
       "bg": "rgb(247, 251, 253)",
       "size": 14,
       "weight": 400
@@ -2251,7 +2229,7 @@
       "mode": "light",
       "sel": "span.tok-number",
       "bgsel": "div.sl-editor-card",
-      "fg": "rgb(194, 65, 12)",
+      "fg": "rgb(178, 59, 11)",
       "bg": "rgb(247, 251, 253)",
       "size": 14,
       "weight": 400
@@ -2995,6 +2973,28 @@
     },
     {
       "theme": "lite",
+      "page": "front-search-focus",
+      "mode": "light",
+      "sel": "a",
+      "bgsel": "div.sl-pres-voices",
+      "fg": "rgb(28, 110, 158)",
+      "bg": "rgb(248, 249, 251)",
+      "size": 12,
+      "weight": 400
+    },
+    {
+      "theme": "lite",
+      "page": "front-menu-hover",
+      "mode": "dark",
+      "sel": "a",
+      "bgsel": "div.sl-wrp",
+      "fg": "rgb(255, 255, 255)",
+      "bg": "rgb(34, 39, 47)",
+      "size": 16,
+      "weight": 400
+    },
+    {
+      "theme": "lite",
       "page": "node-list",
       "mode": "light",
       "sel": "a",
@@ -3039,17 +3039,6 @@
     },
     {
       "theme": "lite",
-      "page": "front-search-focus",
-      "mode": "light",
-      "sel": "a",
-      "bgsel": "div.sl-pres-voices",
-      "fg": "rgb(28, 110, 158)",
-      "bg": "rgb(248, 249, 251)",
-      "size": 12,
-      "weight": 400
-    },
-    {
-      "theme": "lite",
       "page": "private",
       "mode": "light",
       "sel": "a",
@@ -3068,17 +3057,6 @@
       "fg": "rgb(28, 110, 158)",
       "bg": "rgb(248, 249, 251)",
       "size": 14,
-      "weight": 400
-    },
-    {
-      "theme": "lite",
-      "page": "front-menu-hover",
-      "mode": "dark",
-      "sel": "a",
-      "bgsel": "div.sl-wrp",
-      "fg": "rgb(255, 255, 255)",
-      "bg": "rgb(34, 39, 47)",
-      "size": 16,
       "weight": 400
     },
     {
@@ -3424,7 +3402,7 @@
     },
     {
       "theme": "lite",
-      "page": "front-search-focus",
+      "page": "oauth-finish",
       "mode": "light",
       "sel": "a.sl-login-link.sl-login-link-top.sl-login-link-register",
       "bgsel": "body.sl-autumn",
@@ -3622,10 +3600,10 @@
     },
     {
       "theme": "lite",
-      "page": "front-search-focus",
+      "page": "private",
       "mode": "light",
       "sel": "b",
-      "bgsel": "span.sl-login-toggle",
+      "bgsel": "a.sl-login-profile",
       "fg": "rgb(34, 51, 69)",
       "bg": "rgb(242, 244, 247)",
       "size": 16,
@@ -3666,45 +3644,12 @@
     },
     {
       "theme": "lite",
-      "page": "node-view",
-      "mode": "light",
-      "sel": "b",
-      "bgsel": "body.sl-autumn",
-      "fg": "rgb(34, 34, 34)",
-      "bg": "rgb(255, 255, 255)",
-      "size": 16,
-      "weight": 700
-    },
-    {
-      "theme": "lite",
       "page": "front-search-focus",
       "mode": "light",
       "sel": "b",
       "bgsel": "div.sl-pres-core",
       "fg": "rgb(34, 34, 34)",
       "bg": "rgb(255, 255, 255)",
-      "size": 14,
-      "weight": 700
-    },
-    {
-      "theme": "lite",
-      "page": "private",
-      "mode": "light",
-      "sel": "b",
-      "bgsel": "a.sl-cab-act.sl-cat-tone-0",
-      "fg": "rgb(34, 51, 69)",
-      "bg": "rgb(255, 255, 255)",
-      "size": 13,
-      "weight": 700
-    },
-    {
-      "theme": "lite",
-      "page": "favorites",
-      "mode": "light",
-      "sel": "b",
-      "bgsel": "section.sl-block",
-      "fg": "rgb(100, 113, 126)",
-      "bg": "rgb(248, 249, 251)",
       "size": 14,
       "weight": 700
     },
@@ -3765,6 +3710,39 @@
     },
     {
       "theme": "lite",
+      "page": "node-view",
+      "mode": "light",
+      "sel": "b",
+      "bgsel": "body.sl-autumn",
+      "fg": "rgb(34, 34, 34)",
+      "bg": "rgb(255, 255, 255)",
+      "size": 16,
+      "weight": 700
+    },
+    {
+      "theme": "lite",
+      "page": "private",
+      "mode": "light",
+      "sel": "b",
+      "bgsel": "a.sl-cab-act.sl-cat-tone-0",
+      "fg": "rgb(34, 51, 69)",
+      "bg": "rgb(255, 255, 255)",
+      "size": 13,
+      "weight": 700
+    },
+    {
+      "theme": "lite",
+      "page": "favorites",
+      "mode": "light",
+      "sel": "b",
+      "bgsel": "section.sl-block",
+      "fg": "rgb(100, 113, 126)",
+      "bg": "rgb(248, 249, 251)",
+      "size": 14,
+      "weight": 700
+    },
+    {
+      "theme": "lite",
       "page": "favorites",
       "mode": "light",
       "sel": "b",
@@ -3816,6 +3794,17 @@
       "fg": "rgb(229, 231, 235)",
       "bg": "rgb(21, 29, 43)",
       "size": 16,
+      "weight": 700
+    },
+    {
+      "theme": "lite",
+      "page": "front-search-focus",
+      "mode": "dark",
+      "sel": "b",
+      "bgsel": "span.sl-login-toggle",
+      "fg": "rgb(243, 244, 246)",
+      "bg": "rgb(26, 33, 48)",
+      "size": 14,
       "weight": 700
     },
     {
@@ -3938,17 +3927,6 @@
       "bg": "rgb(8, 24, 36)",
       "size": 12,
       "weight": 500
-    },
-    {
-      "theme": "lite",
-      "page": "front-search-focus",
-      "mode": "dark",
-      "sel": "b",
-      "bgsel": "span.sl-login-toggle",
-      "fg": "rgb(243, 244, 246)",
-      "bg": "rgb(26, 33, 48)",
-      "size": 14,
-      "weight": 700
     },
     {
       "theme": "lite",
@@ -4777,7 +4755,7 @@
     },
     {
       "theme": "lite",
-      "page": "oauth-finish",
+      "page": "private",
       "mode": "light",
       "sel": "h1.sl-title",
       "bgsel": "body.sl-autumn",
@@ -4799,17 +4777,6 @@
     },
     {
       "theme": "lite",
-      "page": "node-view",
-      "mode": "light",
-      "sel": "h2",
-      "bgsel": "body.sl-autumn",
-      "fg": "rgb(34, 34, 34)",
-      "bg": "rgb(255, 255, 255)",
-      "size": 20,
-      "weight": 400
-    },
-    {
-      "theme": "lite",
       "page": "front-search-focus",
       "mode": "light",
       "sel": "h2",
@@ -4818,6 +4785,17 @@
       "bg": "rgb(248, 249, 251)",
       "size": 20,
       "weight": 700
+    },
+    {
+      "theme": "lite",
+      "page": "node-view",
+      "mode": "light",
+      "sel": "h2",
+      "bgsel": "body.sl-autumn",
+      "fg": "rgb(34, 34, 34)",
+      "bg": "rgb(255, 255, 255)",
+      "size": 20,
+      "weight": 400
     },
     {
       "theme": "lite",
@@ -4887,7 +4865,7 @@
     },
     {
       "theme": "lite",
-      "page": "oauth-finish",
+      "page": "private",
       "mode": "light",
       "sel": "h2.sl-title",
       "bgsel": "section.sl-block",
@@ -4928,17 +4906,6 @@
       "bg": "rgb(21, 29, 43)",
       "size": 20,
       "weight": 400
-    },
-    {
-      "theme": "lite",
-      "page": "favorites",
-      "mode": "light",
-      "sel": "h3",
-      "bgsel": "div.sl-opt-tile.sl-opt-w6.sl-cat-tone-3",
-      "fg": "rgb(34, 51, 69)",
-      "bg": "rgb(255, 255, 255)",
-      "size": 13,
-      "weight": 600
     },
     {
       "theme": "lite",
@@ -4972,6 +4939,17 @@
       "bg": "rgb(255, 255, 255)",
       "size": 20,
       "weight": 700
+    },
+    {
+      "theme": "lite",
+      "page": "favorites",
+      "mode": "light",
+      "sel": "h3",
+      "bgsel": "div.sl-opt-tile.sl-opt-w6.sl-cat-tone-3",
+      "fg": "rgb(34, 51, 69)",
+      "bg": "rgb(255, 255, 255)",
+      "size": 13,
+      "weight": 600
     },
     {
       "theme": "lite",
@@ -5470,6 +5448,28 @@
     },
     {
       "theme": "lite",
+      "page": "front-search-focus",
+      "mode": "light",
+      "sel": "p",
+      "bgsel": "section.sl-pres-section",
+      "fg": "rgb(100, 113, 126)",
+      "bg": "rgb(248, 249, 251)",
+      "size": 13,
+      "weight": 400
+    },
+    {
+      "theme": "lite",
+      "page": "front-search-focus",
+      "mode": "light",
+      "sel": "p",
+      "bgsel": "article.sl-pres-voice",
+      "fg": "rgb(34, 34, 34)",
+      "bg": "rgb(248, 249, 251)",
+      "size": 13,
+      "weight": 400
+    },
+    {
+      "theme": "lite",
       "page": "node-view",
       "mode": "light",
       "sel": "p",
@@ -5499,28 +5499,6 @@
       "fg": "rgb(34, 34, 34)",
       "bg": "rgb(248, 249, 251)",
       "size": 16,
-      "weight": 400
-    },
-    {
-      "theme": "lite",
-      "page": "front-search-focus",
-      "mode": "light",
-      "sel": "p",
-      "bgsel": "section.sl-pres-section",
-      "fg": "rgb(100, 113, 126)",
-      "bg": "rgb(248, 249, 251)",
-      "size": 13,
-      "weight": 400
-    },
-    {
-      "theme": "lite",
-      "page": "front-search-focus",
-      "mode": "light",
-      "sel": "p",
-      "bgsel": "article.sl-pres-voice",
-      "fg": "rgb(34, 34, 34)",
-      "bg": "rgb(248, 249, 251)",
-      "size": 13,
       "weight": 400
     },
     {
@@ -6012,9 +5990,9 @@
       "page": "front-search-focus",
       "mode": "light",
       "sel": "small",
-      "bgsel": "div.sl-pres-bcard",
+      "bgsel": "div.sl-pres-cockpit",
       "fg": "rgb(100, 113, 126)",
-      "bg": "rgb(255, 255, 255)",
+      "bg": "rgb(242, 244, 247)",
       "size": 12,
       "weight": 400
     },
@@ -6023,9 +6001,9 @@
       "page": "front-search-focus",
       "mode": "light",
       "sel": "small",
-      "bgsel": "div.sl-pres-cockpit",
+      "bgsel": "div.sl-pres-bcard",
       "fg": "rgb(100, 113, 126)",
-      "bg": "rgb(242, 244, 247)",
+      "bg": "rgb(255, 255, 255)",
       "size": 12,
       "weight": 400
     },
@@ -6130,7 +6108,7 @@
     },
     {
       "theme": "lite",
-      "page": "oauth-finish",
+      "page": "private",
       "mode": "light",
       "sel": "span",
       "bgsel": "section.sl-block",
@@ -6141,57 +6119,13 @@
     },
     {
       "theme": "lite",
-      "page": "oauth-finish",
+      "page": "private",
       "mode": "light",
       "sel": "span",
       "bgsel": "section.sl-block",
       "fg": "rgb(34, 34, 34)",
       "bg": "rgb(248, 249, 251)",
       "size": 14,
-      "weight": 400
-    },
-    {
-      "theme": "lite",
-      "page": "node-list",
-      "mode": "light",
-      "sel": "span",
-      "bgsel": "a.sl-but",
-      "fg": "rgb(42, 48, 60)",
-      "bg": "rgb(235, 237, 241)",
-      "size": 14,
-      "weight": 400
-    },
-    {
-      "theme": "lite",
-      "page": "profile",
-      "mode": "light",
-      "sel": "span",
-      "bgsel": "aside.sl-cab-rail",
-      "fg": "rgb(140, 44, 169)",
-      "bg": "rgb(248, 249, 251)",
-      "size": 13,
-      "weight": 400
-    },
-    {
-      "theme": "lite",
-      "page": "profile",
-      "mode": "light",
-      "sel": "span",
-      "bgsel": "aside.sl-cab-rail",
-      "fg": "rgb(78, 126, 31)",
-      "bg": "rgb(248, 249, 251)",
-      "size": 13,
-      "weight": 400
-    },
-    {
-      "theme": "lite",
-      "page": "profile",
-      "mode": "light",
-      "sel": "span",
-      "bgsel": "aside.sl-cab-rail",
-      "fg": "rgb(28, 110, 158)",
-      "bg": "rgb(248, 249, 251)",
-      "size": 13,
       "weight": 400
     },
     {
@@ -6306,6 +6240,61 @@
     },
     {
       "theme": "lite",
+      "page": "node-list",
+      "mode": "light",
+      "sel": "span",
+      "bgsel": "a.sl-but",
+      "fg": "rgb(42, 48, 60)",
+      "bg": "rgb(235, 237, 241)",
+      "size": 14,
+      "weight": 400
+    },
+    {
+      "theme": "lite",
+      "page": "profile",
+      "mode": "light",
+      "sel": "span",
+      "bgsel": "aside.sl-cab-rail",
+      "fg": "rgb(140, 44, 169)",
+      "bg": "rgb(248, 249, 251)",
+      "size": 13,
+      "weight": 400
+    },
+    {
+      "theme": "lite",
+      "page": "profile",
+      "mode": "light",
+      "sel": "span",
+      "bgsel": "aside.sl-cab-rail",
+      "fg": "rgb(78, 126, 31)",
+      "bg": "rgb(248, 249, 251)",
+      "size": 13,
+      "weight": 400
+    },
+    {
+      "theme": "lite",
+      "page": "profile",
+      "mode": "light",
+      "sel": "span",
+      "bgsel": "aside.sl-cab-rail",
+      "fg": "rgb(28, 110, 158)",
+      "bg": "rgb(248, 249, 251)",
+      "size": 13,
+      "weight": 400
+    },
+    {
+      "theme": "lite",
+      "page": "front-search-focus",
+      "mode": "light",
+      "sel": "span",
+      "bgsel": "div.sl-pres-hero",
+      "fg": "rgb(28, 110, 158)",
+      "bg": "rgb(255, 255, 255)",
+      "size": 38,
+      "weight": 700
+    },
+    {
+      "theme": "lite",
       "page": "favorites",
       "mode": "light",
       "sel": "span",
@@ -6314,6 +6303,17 @@
       "bg": "rgb(255, 255, 255)",
       "size": 13,
       "weight": 400
+    },
+    {
+      "theme": "lite",
+      "page": "settings",
+      "mode": "light",
+      "sel": "span",
+      "bgsel": "nav.sl-opt-rail",
+      "fg": "rgb(34, 51, 69)",
+      "bg": "rgb(255, 255, 255)",
+      "size": 12,
+      "weight": 600
     },
     {
       "theme": "lite",
@@ -6336,28 +6336,6 @@
       "bg": "rgb(242, 244, 247)",
       "size": 13,
       "weight": 400
-    },
-    {
-      "theme": "lite",
-      "page": "settings",
-      "mode": "light",
-      "sel": "span",
-      "bgsel": "nav.sl-opt-rail",
-      "fg": "rgb(34, 51, 69)",
-      "bg": "rgb(255, 255, 255)",
-      "size": 12,
-      "weight": 600
-    },
-    {
-      "theme": "lite",
-      "page": "front-search-focus",
-      "mode": "light",
-      "sel": "span",
-      "bgsel": "div.sl-pres-hero",
-      "fg": "rgb(28, 110, 158)",
-      "bg": "rgb(255, 255, 255)",
-      "size": 38,
-      "weight": 700
     },
     {
       "theme": "lite",
@@ -6614,17 +6592,6 @@
     },
     {
       "theme": "lite",
-      "page": "private",
-      "mode": "dark",
-      "sel": "span",
-      "bgsel": "a.sl-cab-act.sl-pmf-fold.sl-knob-danger",
-      "fg": "rgb(154, 164, 178)",
-      "bg": "rgb(17, 24, 39)",
-      "size": 12,
-      "weight": 400
-    },
-    {
-      "theme": "lite",
       "page": "settings",
       "mode": "dark",
       "sel": "span",
@@ -6633,6 +6600,17 @@
       "bg": "rgb(17, 24, 39)",
       "size": 12,
       "weight": 600
+    },
+    {
+      "theme": "lite",
+      "page": "private",
+      "mode": "dark",
+      "sel": "span",
+      "bgsel": "a.sl-cab-act.sl-pmf-fold.sl-knob-danger",
+      "fg": "rgb(154, 164, 178)",
+      "bg": "rgb(17, 24, 39)",
+      "size": 12,
+      "weight": 400
     },
     {
       "theme": "lite",
@@ -7802,7 +7780,7 @@
     },
     {
       "theme": "lite",
-      "page": "oauth-finish",
+      "page": "private",
       "mode": "light",
       "sel": "span.sl-session-open",
       "bgsel": "section.sl-block",

@@ -36,15 +36,17 @@ final class PanelPartsTest extends TestCase
         return \Dom\HTMLDocument::createFromString('<!doctype html><html><body>'.$html.'</body></html>', LIBXML_NOERROR);
     }
 
+    # The list of a section in RSS stays: the categories of its form are built on the server for the section it names
     #[Test]
-    public function noPanelListSubmitsItself(): void
+    public function noListSubmitsItself(): void
     {
         $root = dirname(__DIR__, 2);
-        $files = array_merge([$root.'/core/helpers.php', $root.'/core/admin.php'], glob($root.'/admin/modules/*.php') ?: [], glob($root.'/modules/*/admin/index.php') ?: []);
+        $files = array_merge([$root.'/core/helpers.php', $root.'/core/admin.php'], glob($root.'/admin/modules/*.php') ?: [],
+            glob($root.'/modules/*/admin/index.php') ?: [], array_diff(glob($root.'/modules/*/index.php') ?: [], [$root.'/modules/rss/index.php']));
         $this->assertGreaterThan(20, count($files));
         foreach ($files as $file) {
             $this->assertDoesNotMatchRegularExpression('/on-?change\s*=\s*\\\\?["\'][^"\']*submit/i', (string)file_get_contents($file),
-                $file.': a filter takes the field is_now of list-filter');
+                $file.': a list applies by its button, or in the panel by the field is_now of list-filter');
         }
     }
 

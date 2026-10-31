@@ -991,7 +991,7 @@ function type(): void {
     if ($prof !== null) $hidden[] = ['name_attr' => 'profile', 'value_attr' => $pname];
     $opts = $tpl->getHtmlFrag('select-option', ['value_attr' => 'keep', 'label_text' => _NODE_KEEP, 'is_selected' => true])
         .$tpl->getHtmlFrag('select-option', ['value_attr' => 'save', 'label_text' => _SAVECHANGES]);
-    $act = $clash ? $tpl->getHtmlFrag('select', ['name_attr' => 'action', 'options_html' => $opts, 'is_inline_gap' => true]) : '';
+    $act = $clash ? $tpl->getHtmlFrag('select', ['name_attr' => 'action', 'aria_label' => _FUNCTIONS, 'options_html' => $opts, 'is_inline_gap' => true]) : '';
     $rows = getNodeTypeRows($vals, $old === null);
     if ($old === null) {
         $picks = [];

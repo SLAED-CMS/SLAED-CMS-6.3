@@ -11,7 +11,7 @@ if (!defined('MODULE_FILE')) {
 
 require_once __DIR__.'/common.php';
 
-# The data of partials/presentation.html; cache ratio, online floor, hour profile, traces and scenes are staged, and padded days leave every headline on real rows
+# The data of partials/presentation.html; cache ratio, hour profile, traces and scenes are staged, and padded days leave every headline on real rows
 function getPresentationData(): array {
     global $conf, $db, $theme;
     $cnt = getSessionCounts();
@@ -186,7 +186,7 @@ function getPresentationData(): array {
     $opcache = function_exists('opcache_get_status') ? opcache_get_status(false) : false;
     $hit = ($opcache && !empty($opcache['opcache_enabled'])) ? (int)round($opcache['opcache_statistics']['opcache_hit_rate'] ?? 0) : 0;
     $hitval = $hit ?: _PRES_STK_OFF;
-    $live = max($cnt['all'], 48 + $today['visits'] % 37);
+    $live = $cnt['all'];
     $split = static function (array $visits, int $hit, int $shift): array {
         $rows = ['visits' => [], 'cache' => [], 'db' => []];
         foreach (array_values($visits) as $i => $hits) {

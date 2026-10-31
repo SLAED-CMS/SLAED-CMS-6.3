@@ -30,7 +30,7 @@ final class UpdateConfigTest extends TestCase
         return self::$probe;
     }
 
-    # The values of the site go over the shipped source, the release keeps its version and asset list, the site stays closed, a language name becomes its code
+    # The values of the site go over the shipped source, its old version is not carried, the release keeps its asset list, the site stays closed, a language name becomes its code
     # The start module of the panel is a setting the release dropped, so the one the site stored never reaches the carried source
     # A start module or a theme that left the tree falls back to the shipped value, a logo the theme holds stays, and seo wins over the global of 6.2
     # The 6.2 key forum names the area of config/forum.php, which global.php would shadow in the merged configuration, so it is not carried
@@ -44,7 +44,8 @@ final class UpdateConfigTest extends TestCase
         $this->assertSame(['Old site', '1', 'ru', 'forum', '1', 'kept'], [$glob['sitename'], $glob['close'], $glob['language'], $glob['module'], $glob['ltitle'], $glob['oldkey']]);
         $site = ['rewrite' => '1', 'sep' => '-', 'tsep' => '_', 'title' => '0', 'ctitle' => '0'];
         $this->assertSame([], array_intersect_assoc($glob, $site), 'A value of an address switch of 6.2 was carried');
-        $this->assertSame([$run['ship']['version'], $run['ship']['css_f'], $run['ship']['amod']], [$glob['version'], $glob['css_f'], $glob['amod'] ?? null]);
+        $this->assertArrayNotHasKey('version', $glob, 'The version of the old site was carried, and the release names its own in the code');
+        $this->assertSame([$run['ship']['css_f'], $run['ship']['amod']], [$glob['css_f'], $glob['amod'] ?? null]);
         $this->assertSame([$run['ship']['theme'], 'mark.svg'], [$glob['theme'], $glob['site_logo']], 'A theme that left the tree was kept or a logo of the theme was dropped');
         $this->assertArrayNotHasKey('forum', $glob, 'A 6.2 key that names a configuration area reached global.php and shadows that area');
         $this->assertSame([], array_intersect_key($glob, ['script_a' => 0, 'script_b' => 0]), 'A script switch the release dropped was carried');

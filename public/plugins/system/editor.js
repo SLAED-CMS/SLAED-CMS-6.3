@@ -1307,10 +1307,10 @@
         return mods[full];
     }
 
-    // Give the editable area of CodeMirror what its textarea says: the name, by a caption or by its own text, and whether a text is spell-checked
+    // Give the editable area of CodeMirror what its textarea says, name and spell-check; the tabindex names the Tab stop it already is, so axe counts its scroller as reachable
     function getAreaAttr(area) {
         var ref = area.getAttribute('aria-labelledby');
-        var attr = { spellcheck: String(area.spellcheck), autocorrect: area.spellcheck ? 'on' : 'off' };
+        var attr = { tabindex: '0', spellcheck: String(area.spellcheck), autocorrect: area.spellcheck ? 'on' : 'off' };
         if (ref) attr['aria-labelledby'] = ref;
         else attr['aria-label'] = area.getAttribute('aria-label') || '';
         return attr;

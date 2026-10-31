@@ -636,7 +636,7 @@ function getConfState(array $rows): array {
         'fields' => getConfRead('fields'),
         'uploads' => getConfRead('uploads'),
         'bans' => array_intersect_key((array)getConfRead('security'), ['blocker_ip' => 0, 'blocker_user' => 0]),
-        'ship' => ['version' => $ship['global']['version'], 'css_f' => $ship['global']['css_f'], 'amod' => $ship['global']['amod'] ?? null, 'theme' => $ship['global']['theme'],
+        'ship' => ['css_f' => $ship['global']['css_f'], 'amod' => $ship['global']['amod'] ?? null, 'theme' => $ship['global']['theme'],
             'users' => array_keys($ship['users']['users']), 'statistic' => $ship['statistic']['statistic']],
         'old' => array_map('basename', glob(CONFIG_DIR.'/config_*.php') ?: []),
         'back' => array_map('basename', glob($back.'/*') ?: []),

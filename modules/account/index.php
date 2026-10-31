@@ -139,8 +139,14 @@ function newuser(): void {
                     'placeholder_text' => _PASSWORD,
                 ]),
             ]).$tpl->getHtmlFrag('form-field-row', [
+                'label_for' => 'f-user-password2',
                 'label_html' => getTplTitleTip(_BLANKFORAUTO)._RETYPEPASSWORD,
-                'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'user_password2', 'maxlength_num' => 25, 'placeholder_text' => _RETYPEPASSWORD]),
+                'field_html' => $tpl->getHtmlFrag('input', [
+                    'name_attr' => 'user_password2',
+                    'input_id' => 'f-user-password2',
+                    'maxlength_num' => 25,
+                    'placeholder_text' => _RETYPEPASSWORD,
+                ]),
             ]);
             if (!empty($conf['users']['rule'])) {
                 $fields .= $tpl->getHtmlFrag('form-field-row', [
@@ -1097,7 +1103,7 @@ function edithome(): void {
             else $errs[$sect][] = $text;
         }
         $secs = [];
-        $flds = [['label' => _BIRTHDAY, 'control_html' => getTplAddDateTime(['name' => 'user_birthday', 'time' => $bday, 'with' => false, 'max' => 10])]];
+        $flds = [['label' => _BIRTHDAY, 'control_html' => getTplAddDateTime(['name' => 'user_birthday', 'label' => _BIRTHDAY, 'time' => $bday, 'with' => false, 'max' => 10])]];
         $gopt = '';
         foreach ([_NO_INFO, _MAN, _WOMAN] as $key => $val) {
             $gopt .= $tpl->getHtmlFrag('select-option', ['value_attr' => (string)$key, 'label_text' => $val, 'is_selected' => $key == (int)$info['gender']]);
@@ -1338,9 +1344,11 @@ function edithome(): void {
                     'is_required' => true,
                 ]),
             ]).$tpl->getHtmlFrag('form-field-row', [
+                'label_for' => 'f-newpass2',
                 'label' => _PASSNEW2,
                 'field_html' => $tpl->getHtmlFrag('input', [
                     'name_attr' => 'newpass2',
+                    'input_id' => 'f-newpass2',
                     'itype' => 'password',
                     'autocomplete_attr' => 'new-password',
                     'maxlength_num' => 25,

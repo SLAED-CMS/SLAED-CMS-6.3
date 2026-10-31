@@ -912,7 +912,7 @@ function setNodeForm(): void {
     $opts = $tpl->getHtmlFrag('select-option', ['value_attr' => 'preview', 'label_text' => _PREVIEW])
         .$tpl->getHtmlFrag('select-option', ['value_attr' => 'submit', 'label_text' => _SEND, 'is_selected' => true]);
     $send = $tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken(), 'input_attr' => ''])
-        .$tpl->getHtmlFrag('select', ['name_attr' => 'action', 'options_html' => $opts])
+        .$tpl->getHtmlFrag('select', ['name_attr' => 'action', 'aria_label' => _FUNCTIONS, 'options_html' => $opts])
         .$tpl->getHtmlFrag('button', ['button_type' => 'submit', 'submit_label' => _OK]);
     echo $tpl->getHtmlFrag('title', ['title' => getModuleName($type->name).' - '._ADD, 'is_level_one' => true])
         .(($note !== '') ? $tpl->getHtmlFrag('alert', ['text' => htmlspecialchars($note, ENT_QUOTES, 'UTF-8'), 'is_warn' => true]) : '')

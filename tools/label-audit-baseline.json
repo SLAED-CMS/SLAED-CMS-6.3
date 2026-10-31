@@ -1,5 +1,5 @@
 {
-  "generated": "2026-10-31T11:06:25Z",
+  "generated": "2026-10-31T12:27:11Z",
   "_": "What the label crawl finds today, so a run fails on what it finds tomorrow. Each key is kind|route|id-or-selector and each value how often it was seen. Every entry is a defect a plan names; the file shrinks and never grows. Coverage is judged apart from it: a route that stopped rendering hides violations rather than fixing them.",
   "coverage": {
     "pages": 492,
@@ -540,27 +540,5 @@
       "site:voting:view#rec"
     ]
   },
-  "violations": {
-    "control-unnamed|guest:account:newuser|user_password#": 1,
-    "control-unnamed|guest:search:|mod": 1,
-    "control-unnamed|guest:search:|word": 1,
-    "control-unnamed|site:account:edithome|avatar": 127,
-    "control-unnamed|site:account:edithome|newpass#": 1,
-    "control-unnamed|site:account:edithome|sl_datetime_picker_#": 1,
-    "control-unnamed|site:account:newuser|url": 1,
-    "control-unnamed|site:account:passlost|url": 1,
-    "control-unnamed|site:account:privat#rec|act": 1,
-    "control-unnamed|site:account:privat|act": 1,
-    "control-unnamed|site:account:profile|url": 1,
-    "control-unnamed|site:account:|url": 1,
-    "control-unnamed|site:faq:add|action": 1,
-    "control-unnamed|site:files:add|action": 1,
-    "control-unnamed|site:forum:add#rec|posttype": 1,
-    "control-unnamed|site:forum:add|posttype": 1,
-    "control-unnamed|site:help:add|action": 1,
-    "control-unnamed|site:links:add|action": 1,
-    "control-unnamed|site:news:add|action": 1,
-    "control-unnamed|site:search:|mod": 1,
-    "control-unnamed|site:search:|word": 1
-  }
+  "violations": {}
 }

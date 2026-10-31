@@ -57,12 +57,13 @@ function getSearchForm(array $state): string {
     $all_opt = $tpl->getHtmlFrag('select-option', ['value_attr' => '', 'label_text' => _SEARCHALL, 'is_selected' => false]);
     $mod_html = $tpl->getHtmlFrag('select', [
         'name_attr' => 'mod',
+        'aria_label' => _MODUL,
         'options_html' => $all_opt.getSearchModList($state['mods'], (string)$state['mod']),
-        'select_attr' => 'onchange="submit()"',
     ]);
     $word_html = $tpl->getHtmlFrag('input', [
         'itype' => 'text',
         'name_attr' => 'word',
+        'aria_label' => _SEARCH,
         'value_attr' => (string)$state['word'],
         'maxlength_num' => '100',
         'placeholder_text' => _SEARCH,

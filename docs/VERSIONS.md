@@ -2,6 +2,28 @@
 
 ## 2026-10-31
 
+### The detector leaves a word inside a file name, a zero limit stays zero, and the presentation counts who is online
+
+- **Detector.** `checkGet()` and `checkCookie()` take `ALTER`, `DROP`, `INSERT`, `OUTFILE`, `SELECT`, `TRUNCATE` and `UNION` only
+  where no letter touches them, so a file name such as `Eyedropper-….gif` in `key=` no longer writes to `hack.log`, queues a mail or,
+  with `$conf['security']['block']`, bans the visitor. The bound is letters and not `\b`: `/*!50000UNION*/` has a digit before the word.
+  A word with a digit, a separator or nothing beside it still counts, `drop_down.gif` too, and so does the name of a table with the prefix.
+- **Upload limits.** `configsave()` of "Загрузки" keeps a 0 in the three limits of files, as the hint of the form and
+  `getEditorFileJson()` read it: no limit. A save without an edit no longer turns the `userfiles` and `guestfiles` 0 of `layout` into 100.
+- **Presentation.** "Онлайн" shows `getSessionCounts()` alone; the floor `48 + visits % 37` is gone. The cache chart stays staged.
+- **Muted zeros.** "База данных" writes a zero of "Расходы" with `sl-muted` and an InnoDB value that is not zero in the plain tone;
+  `sl-dimmed` of the panel is the menu row that is off and nothing else, and `is_dimmed` leaves the admin `inline-badge.html`.
+- **Warning tone.** The light `--sl-warning-strong` of the admin theme goes from `#c2410c` to `#b23b0b`: `sl-chip-warn` on its own tint
+  over the sidebar reads 4.53:1, where it read 3.98:1.
+- **Names of the site.** The fields of search, registration, the profile, the feed box of the cabinet, private messages, the form of a
+  material and the forum carry a name of their own, and `control-unnamed` of `tools/label-audit.mjs` counts an image with its alt
+  in a label as the text of that label.
+- **Self-submitting list of search.** The list of search applies by its button, so an empty required word is held by the form;
+  `PanelPartsTest` now holds the site modules too, but for RSS, whose section rebuilds the categories of the form on the server.
+- **CodeMirror.** `getAreaAttr()` gives the editable area `tabindex="0"`: it was a Tab stop already, and axe now counts its scroller as reachable.
+- **Tests.** `UpdateConfigTest` holds that the version of the old site is not carried, in place of a comparison of `null` with `null`;
+  `InputFilterTest` holds the bounds of the detector and `UploadIntegrationTest` the zero of the save.
+
 ### Every field of the panel has a name, and a strip of tabs is a list of tabs
 
 - **Self-submitting lists.** The filters of the forms of "Модули" and "Категории" and of the statistics of "Мастер" move onto

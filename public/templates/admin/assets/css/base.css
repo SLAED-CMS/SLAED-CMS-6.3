@@ -28,7 +28,7 @@
   --sl-danger: light-dark(#cd4545, #f06a6a);
   --sl-danger-strong: light-dark(#c73535, #ff8b8b);
   --sl-warning: light-dark(#d97706, #f0932b);
-  --sl-warning-strong: light-dark(#c2410c, #ffb057);
+  --sl-warning-strong: light-dark(#b23b0b, #ffb057);
   --sl-warning-subtle: light-dark(#fff4e5, #3a2a12);
   --sl-accent: light-dark(#8e44ad, #b370cf);
   --sl-info-subtle: light-dark(#e8f4fd, #14283a);

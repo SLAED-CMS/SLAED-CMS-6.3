@@ -400,6 +400,16 @@ final class UploadIntegrationTest extends TestCase
         }
     }
 
+    # A limit of files stored as 0 lifts the limit, as the hint of the form and the listing route say, so the save keeps the zero rather than a number of its own
+    #[Test]
+    public function theSaveOfTheSettingsKeepsAZeroLimit(): void
+    {
+        $body = $this->getBody('admin/modules/uploads.php', 'configsave');
+        foreach (['asum', 'usum', 'gsum'] as $key) {
+            $this->assertStringContainsString('$x'.$key.' = intval($'.$key.'[$i] ?? 0);', $body, 'The save replaces a zero of '.$key.' by a number of its own');
+        }
+    }
+
     # Every adapter that writes a row checks the result and compensates the exact path it just published, and logs a compensation that itself failed
     #[Test]
     public function everyDatabaseWriteIsCheckedAndCompensated(): void
