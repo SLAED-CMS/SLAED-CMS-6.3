@@ -128,259 +128,14 @@ function getGeoipPanel(): string {
     return $tpl->getHtmlPart('div', ['rows' => $rows]).$stat.$info;
 }
 
-# Render one mail settings row whose caption labels its control, carrying the transport the value hook shows it for
-function getMailRow(string $label, string $field, string $trans = '', string $hint = '', array $ids = []): array {
-    return [
-        'label_for' => (string)($ids['input'] ?? ''),
-        'label_html' => $label,
-        'label_id' => (string)($ids['label'] ?? ''),
-        'hint_html' => $hint,
-        'hint_id' => (string)($ids['hint'] ?? ''),
-        'field_html' => $field,
-        'attr' => ($trans !== '') ? 'data-sl-show-when="mailtrans" data-sl-show-value="'.$trans.'"' : '',
-    ];
-}
-
-# Render the mail settings; an extension the host lacks is reported beside the control it disables, so a choice that cannot work does not look like one that can
-function getMailPanel(): string {
-    global $conf, $tpl;
-    $mail = is_array($conf['mail'] ?? null) ? $conf['mail'] : [];
-    $trans = (string)($mail['transport'] ?? 'php');
-    $secur = (string)($mail['secure'] ?? 'none');
-    $yesno = [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]];
-    $tlist = [['value_attr' => 'php', 'label_text' => 'PHP mail()'], ['value_attr' => 'sendmail', 'label_text' => 'Sendmail'], ['value_attr' => 'smtp', 'label_text' => 'SMTP']];
-    foreach ($tlist as $key => $item) $tlist[$key]['is_selected'] = $item['value_attr'] === $trans;
-    $slist = [['value_attr' => 'none', 'label_text' => _NONE], ['value_attr' => 'tls', 'label_text' => 'STARTTLS'], ['value_attr' => 'ssl', 'label_text' => 'SSL/TLS']];
-    foreach ($slist as $key => $item) $slist[$key]['is_selected'] = $item['value_attr'] === $secur;
-    $nossl = function_exists('stream_socket_enable_crypto') ? '' : $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _MAIL_NOSSL]);
-    $noprc = function_exists('proc_open') ? '' : $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _MAIL_NOPROC]);
-    $rows = [];
-    $fids = getFieldIds('', 'mailtrans');
-    $rows[] = getMailRow(_MAIL_TRANS, $tpl->getHtmlFrag('select', [
-        'name_attr' => 'mailtrans',
-        'selectid' => $fids['input'],
-        'options' => $tlist,
-        'is_config' => true,
-    ]), '', '', $fids);
-    $fids = getFieldIds('', 'mailfname');
-    $rows[] = getMailRow(_MAIL_FROMNAME, $tpl->getHtmlFrag('input', [
-        'itype' => 'text',
-        'name_attr' => 'mailfname',
-        'input_id' => $fids['input'],
-        'describedby' => $fids['hint'],
-        'value_attr' => (string)($mail['fromname'] ?? ''),
-        'maxlength_num' => 100,
-        'is_config' => true,
-    ]), '', _MAIL_NAMEINFO, $fids);
-    $fids = getFieldIds('', 'mailfmail');
-    $rows[] = getMailRow(_MAIL_FROMMAIL, $tpl->getHtmlFrag('input', [
-        'itype' => 'text',
-        'name_attr' => 'mailfmail',
-        'input_id' => $fids['input'],
-        'describedby' => $fids['hint'],
-        'value_attr' => (string)($mail['frommail'] ?? ''),
-        'maxlength_num' => 100,
-        'is_config' => true,
-    ]), '', _MAIL_MAILINFO, $fids);
-    $fids = getFieldIds('', 'mailreply');
-    $rows[] = getMailRow(_MAIL_REPLYTO, $tpl->getHtmlFrag('input', [
-        'itype' => 'text',
-        'name_attr' => 'mailreply',
-        'input_id' => $fids['input'],
-        'describedby' => $fids['hint'],
-        'value_attr' => (string)($mail['replyto'] ?? ''),
-        'maxlength_num' => 100,
-        'is_config' => true,
-    ]), '', _MAIL_REPLYINFO, $fids);
-    $fids = getFieldIds('', 'mailbounce');
-    $rows[] = getMailRow(_MAIL_BOUNCE, $tpl->getHtmlFrag('input', [
-        'itype' => 'text',
-        'name_attr' => 'mailbounce',
-        'input_id' => $fids['input'],
-        'describedby' => $fids['hint'],
-        'value_attr' => (string)($mail['bounce'] ?? ''),
-        'maxlength_num' => 100,
-        'is_config' => true,
-    ]), '', _MAIL_BOUNCEI, $fids);
-    $fids = getFieldIds('', 'mailpophost');
-    $rows[] = getMailRow(_MAIL_POPHOST, $tpl->getHtmlFrag('input', [
-        'itype' => 'text',
-        'name_attr' => 'mailpophost',
-        'input_id' => $fids['input'],
-        'describedby' => $fids['hint'],
-        'value_attr' => (string)($mail['pophost'] ?? ''),
-        'maxlength_num' => 100,
-        'is_config' => true,
-    ]), '', _MAIL_POPINFO, $fids);
-    $fids = getFieldIds('', 'mailpopport');
-    $rows[] = getMailRow(_MAIL_POPPORT, $tpl->getHtmlFrag('input', [
-        'itype' => 'number',
-        'name_attr' => 'mailpopport',
-        'input_id' => $fids['input'],
-        'value_attr' => (string)($mail['popport'] ?? '995'),
-        'is_config' => true,
-    ]), '', '', $fids);
-    $plist = $slist;
-    foreach ($plist as $key => $item) $plist[$key]['is_selected'] = $item['value_attr'] === (string)($mail['popsecure'] ?? 'ssl');
-    $fids = getFieldIds('', 'mailpopsec');
-    $rows[] = getMailRow(_MAIL_POPSEC, $tpl->getHtmlFrag('select', [
-        'name_attr' => 'mailpopsec',
-        'selectid' => $fids['input'],
-        'options' => $plist,
-        'is_config' => true,
-    ]).$nossl, '', '', $fids);
-    $fids = getFieldIds('', 'mailpopuser');
-    $rows[] = getMailRow(_MAIL_POPUSER, $tpl->getHtmlFrag('input', [
-        'itype' => 'text',
-        'name_attr' => 'mailpopuser',
-        'input_id' => $fids['input'],
-        'value_attr' => (string)($mail['popuser'] ?? ''),
-        'maxlength_num' => 100,
-        'autocomplete_attr' => 'off',
-        'is_config' => true,
-    ]), '', '', $fids);
-    $fids = getFieldIds('', 'mailpoppass');
-    $rows[] = getMailRow(_MAIL_POPPASS, $tpl->getHtmlFrag('input', [
-        'itype' => 'password',
-        'name_attr' => 'mailpoppass',
-        'input_id' => $fids['input'],
-        'describedby' => $fids['hint'],
-        'value_attr' => '',
-        'maxlength_num' => 100,
-        'autocomplete_attr' => 'new-password',
-        'is_config' => true,
-    ]), '', _MAIL_PASSINFO, $fids);
-    $fids = getFieldIds('', 'mailhost');
-    $rows[] = getMailRow(_MAIL_HOST, $tpl->getHtmlFrag('input', [
-        'itype' => 'text',
-        'name_attr' => 'mailhost',
-        'input_id' => $fids['input'],
-        'value_attr' => (string)($mail['host'] ?? ''),
-        'maxlength_num' => 100,
-        'is_config' => true,
-    ]), 'smtp', '', $fids);
-    $fids = getFieldIds('', 'mailport');
-    $rows[] = getMailRow(_MAIL_PORT, $tpl->getHtmlFrag('input', [
-        'itype' => 'number',
-        'name_attr' => 'mailport',
-        'input_id' => $fids['input'],
-        'value_attr' => (string)($mail['port'] ?? '587'),
-        'is_config' => true,
-    ]), 'smtp', '', $fids);
-    $fids = getFieldIds('', 'mailsecure');
-    $rows[] = getMailRow(_MAIL_SECURE, $tpl->getHtmlFrag('select', [
-        'name_attr' => 'mailsecure',
-        'selectid' => $fids['input'],
-        'options' => $slist,
-        'is_config' => true,
-    ]).$nossl, 'smtp', '', $fids);
-    $fids = getFieldIds('', 'mailauth');
-    $rows[] = getMailRow(
-        _MAIL_AUTH,
-        getTplRadioGroup(['labelledby' => $fids['label'], 'name' => 'mailauth', 'value' => (string)(int)($mail['auth'] ?? 0), 'options' => $yesno]),
-        'smtp',
-        '',
-        ['label' => $fids['label']]
-    );
-    $fids = getFieldIds('', 'mailuser');
-    $rows[] = getMailRow(_USER, $tpl->getHtmlFrag('input', [
-        'itype' => 'text',
-        'name_attr' => 'mailuser',
-        'input_id' => $fids['input'],
-        'value_attr' => (string)($mail['user'] ?? ''),
-        'maxlength_num' => 100,
-        'autocomplete_attr' => 'off',
-        'is_config' => true,
-    ]), 'smtp', '', $fids);
-    $fids = getFieldIds('', 'mailpass');
-    $rows[] = getMailRow(_PASSWORD, $tpl->getHtmlFrag('input', [
-        'itype' => 'password',
-        'name_attr' => 'mailpass',
-        'input_id' => $fids['input'],
-        'describedby' => $fids['hint'],
-        'value_attr' => '',
-        'maxlength_num' => 100,
-        'autocomplete_attr' => 'new-password',
-        'is_config' => true,
-    ]), 'smtp', _MAIL_PASSINFO, $fids);
-    $fids = getFieldIds('', 'mailtime');
-    $rows[] = getMailRow(_MAIL_TIMEOUT, $tpl->getHtmlFrag('input', [
-        'itype' => 'number',
-        'name_attr' => 'mailtime',
-        'input_id' => $fids['input'],
-        'value_attr' => (string)($mail['timeout'] ?? '10'),
-        'is_config' => true,
-    ]), 'smtp', '', $fids);
-    $fids = getFieldIds('', 'mailpath');
-    $rows[] = getMailRow(_MAIL_SENDPATH, $tpl->getHtmlFrag('input', [
-        'itype' => 'text',
-        'name_attr' => 'mailpath',
-        'input_id' => $fids['input'],
-        'describedby' => $fids['hint'],
-        'value_attr' => (string)($mail['sendmail'] ?? ''),
-        'maxlength_num' => 255,
-        'is_config' => true,
-    ]).$noprc, 'sendmail', _MAIL_PATHINFO, $fids);
-    foreach ([['mailbatch', _MAIL_BATCH, 'batch', '25'], ['mailrate', _MAIL_RATE, 'rate', '60'], ['mailtries', _MAIL_TRIES, 'tries', '5'],
-        ['mailback', _MAIL_BACKOFF, 'backoff', '300'], ['mailkeep', _MAIL_KEEP, 'keep', '30'], ['mailbulk', _MAIL_KEEPBULK, 'keepbulk', '3']] as $item) {
-        $fids = getFieldIds('', $item[0]);
-        $rows[] = getMailRow($item[1], $tpl->getHtmlFrag('input', [
-            'itype' => 'number',
-            'name_attr' => $item[0],
-            'input_id' => $fids['input'],
-            'value_attr' => (string)($mail[$item[2]] ?? $item[3]),
-            'is_config' => true,
-        ]), '', '', $fids);
-    }
-    $fids = getFieldIds('', 'mailverify');
-    $rows[] = getMailRow(_MAIL_VERIFY, getTplRadioGroup([
-        'labelledby' => $fids['label'],
-        'describedby' => $fids['hint'],
-        'name' => 'mailverify',
-        'value' => (string)(int)($mail['verify'] ?? 1),
-        'options' => $yesno,
-    ]), '', _MAIL_VERIFYI, ['label' => $fids['label'], 'hint' => $fids['hint']]);
-    $fids = getFieldIds('', 'mailttl');
-    $rows[] = getMailRow(_MAIL_DNSTTL, $tpl->getHtmlFrag('input', [
-        'itype' => 'number',
-        'name_attr' => 'mailttl',
-        'input_id' => $fids['input'],
-        'value_attr' => (string)($mail['dnsttl'] ?? '604800'),
-        'is_config' => true,
-    ]), '', '', $fids);
-    $fids = getFieldIds('', 'mailto');
-    $rows[] = getMailRow(_MAIL_TEST, $tpl->getHtmlFrag('input', [
-        'itype' => 'text',
-        'name_attr' => 'mailto',
-        'input_id' => $fids['input'],
-        'describedby' => $fids['hint'],
-        'value_attr' => '',
-        'maxlength_num' => 100,
-        'placeholder_text' => (string)$conf['adminmail'],
-        'is_config' => true,
-    ]).$tpl->getHtmlFrag('button', ['button_type' => 'submit', 'name_attr' => 'op', 'value_attr' => 'mailtest', 'label' => _SEND, 'is_green' => true]), '', _MAIL_TESTINFO, $fids);
-    $fids = getFieldIds('', 'mtemp');
-    $rows[] = getMailRow(_MAILTEMP, $tpl->getHtmlFrag('textarea', [
-        'name_attr' => 'mtemp',
-        'input_id' => $fids['input'],
-        'value_text' => (string)$conf['mtemp'],
-        'cols_num' => 65,
-        'rows_num' => 10,
-        'is_required' => true,
-        'is_config' => true,
-        'describedby' => $fids['hint'],
-    ]), '', _MAILTEMPINFO, $fids);
-    return $tpl->getHtmlPart('div', ['rows' => $rows]);
-}
-
 # Render the settings tabs in one form; the cache button stands after it as a form of its own, because the browser drops a nested form
 function config(): void {
     global $afile, $conf, $tpl;
     setHead();
     $ctab = getVar('get', 'tab', 'num', 0);
-    if ($ctab < 0 || $ctab > 5) $ctab = 0;
+    if ($ctab < 0 || $ctab > 4) $ctab = 0;
     $links = [];
-    foreach ([_GENPREF, _SEO, _MULTILINGUAL.' / '._GEOLOCATION, _CENSORS, _OPTIMIZE, _MAILOPT] as $idx => $label) {
+    foreach ([_GENPREF, _SEO, _MULTILINGUAL.' / '._GEOLOCATION, _CENSORS, _OPTIMIZE] as $idx => $label) {
         $links[] = [
             'href' => '#',
             'is_active' => $ctab === $idx,
@@ -403,7 +158,7 @@ function config(): void {
         'tabs_index' => $ctab,
         'tabs_sync_selector' => 'input[name="tab"]',
     ]);
-    $cont .= checkPerms(CONFIG_DIR.'/global.php').checkPerms(CONFIG_DIR.'/mail.php');
+    $cont .= checkPerms(CONFIG_DIR.'/global.php');
     if (getConfigJournal()) {
         $link = $tpl->getHtmlFrag('link', ['href' => $afile.'.php?name=config&op=restore', 'title' => _CONFIG_RESTORE, 'label' => _CONFIG_RESTORE]);
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _CONFIG_PENDING.' '.$link]);
@@ -954,9 +709,8 @@ function config(): void {
         ['label' => _FILE_S, 'value' => filterSize($size), 'icon' => 'hdd'],
     ]]).$tpl->getHtmlFrag('kv-list', ['items' => $items]);
     $tabf = $html.$tpl->getHtmlPart('div', ['rows' => $rows]);
-    $tabg = getMailPanel();
     $content = '';
-    foreach ([$taba, $tabb, $tabc, $tabd, $tabf, $tabg] as $idx => $panel) {
+    foreach ([$taba, $tabb, $tabc, $tabd, $tabf] as $idx => $panel) {
         $content .= $tpl->getHtmlFrag('tabs-panel', [
             'panel_id' => 'config-panel-'.$idx,
             'content_html' => $panel,
@@ -984,7 +738,7 @@ function config(): void {
 function save(): void {
     global $afile, $conf;
     $ctab = getVar('post', 'tab', 'num', 0);
-    if ($ctab < 0 || $ctab > 5) $ctab = 0;
+    if ($ctab < 0 || $ctab > 4) $ctab = 0;
     $warn = !checkAdminPost('config');
     if (!$warn) {
         $protect = ['\n' => '', '\t' => '', '\r' => '', ' ' => ''];
@@ -1105,84 +859,18 @@ function save(): void {
             'css_f' => strtr(getVar('post', 'css_f', 'text', ''), $kprotect),
             'script_f' => strtr(getVar('post', 'script_f', 'text',
                 'plugins/htmx/htmx.min.js,plugins/system/global-func.js,plugins/system/slaed.js,plugins/tablesort/tablesort.min.js'), $kprotect),
-            'mtemp' => filterTrustedTags(getVar('post', 'mtemp', 'raw'), isAdmin(true)),
+            'mtemp' => (string)$conf['mtemp'],
             'dev_mode' => getVar('post', 'dev_mode', 'num'),
         ];
-        $mtrans = getVar('post', 'mailtrans', 'var', 'php');
-        if (!in_array($mtrans, ['php', 'sendmail', 'smtp'], true)) $mtrans = 'php';
-        $msecur = getVar('post', 'mailsecure', 'var', 'none');
-        if (!in_array($msecur, ['none', 'tls', 'ssl'], true)) $msecur = 'none';
-        $psecur = getVar('post', 'mailpopsec', 'var', 'ssl');
-        if (!in_array($psecur, ['none', 'tls', 'ssl'], true)) $psecur = 'ssl';
-        $mfrom = trim(getVar('post', 'mailfmail', 'raw'));
-        $mreply = trim(getVar('post', 'mailreply', 'raw'));
-        $mbounce = trim(getVar('post', 'mailbounce', 'raw'));
-        foreach ([$mfrom, $mreply, $mbounce] as $addr) {
-            if ($addr !== '' && !filter_var($addr, FILTER_VALIDATE_EMAIL)) setRedirect($afile.'.php?name=config&tab='.$ctab, false, 302, _MAIL_BADMAIL, true);
-        }
-        $mpass = getVar('post', 'mailpass', 'raw');
-        $mail = [
-            'transport' => $mtrans,
-            'fromname' => trim(getVar('post', 'mailfname', 'raw')),
-            'frommail' => $mfrom,
-            'replyto' => $mreply,
-            'bounce' => $mbounce,
-            'pophost' => trim(getVar('post', 'mailpophost', 'raw')),
-            'popport' => getVar('post', 'mailpopport', 'num', 995),
-            'popsecure' => $psecur,
-            'popuser' => trim(getVar('post', 'mailpopuser', 'raw')),
-            'sendmail' => trim(getVar('post', 'mailpath', 'raw')),
-            'host' => trim(getVar('post', 'mailhost', 'raw')),
-            'port' => getVar('post', 'mailport', 'num', 587),
-            'secure' => $msecur,
-            'auth' => getVar('post', 'mailauth', 'num'),
-            'user' => trim(getVar('post', 'mailuser', 'raw')),
-            'timeout' => getVar('post', 'mailtime', 'num', 10),
-            'batch' => max(1, getVar('post', 'mailbatch', 'num', 25)),
-            'rate' => max(0, getVar('post', 'mailrate', 'num', 60)),
-            'tries' => max(1, getVar('post', 'mailtries', 'num', 5)),
-            'backoff' => max(1, getVar('post', 'mailback', 'num', 300)),
-            'keep' => max(1, getVar('post', 'mailkeep', 'num', 30)),
-            'keepbulk' => max(1, getVar('post', 'mailbulk', 'num', 3)),
-            'verify' => getVar('post', 'mailverify', 'num'),
-            'dnsttl' => max(60, getVar('post', 'mailttl', 'num', 604800)),
-        ];
-        if ($mpass !== '') $mail['pass'] = $mpass;
-        $ppass = getVar('post', 'mailpoppass', 'raw');
-        if ($ppass !== '') $mail['poppass'] = $ppass;
         setConfigFile('global.php', $cont);
-        setConfigFile('mail.php', $mail, is_array($conf['mail'] ?? null) ? $conf['mail'] : []);
     }
     setRedirect($afile.'.php?name=config&tab='.$ctab, false, 302, $warn ? _TOKENMISS : _SUCCSAVE, $warn);
-}
-
-# Queue a test message and drain the queue in this request; a run that sent nothing says so, as the rate window or the time budget can end it first
-function mailtest(): void {
-    global $afile, $conf, $mailer;
-    $ctab = getVar('post', 'tab', 'num', 5);
-    if ($ctab < 0 || $ctab > 5) $ctab = 5;
-    $warn = !checkAdminPost('config');
-    $text = _TOKENMISS;
-    if (!$warn) {
-        $mail = trim(getVar('post', 'mailto', 'raw')) ?: (string)$conf['adminmail'];
-        $body = getMailFrame(_MAIL_TEST.': '.$conf['homeurl']);
-        $data = ['sent' => 0, 'fail' => 0, 'stop' => ''];
-        if ($mailer->addQueue(['kind' => 'test', 'email' => $mail, 'sender' => (string)$conf['adminmail'], 'title' => _MAIL_TEST, 'body' => $body, 'prio' => 1])) {
-            $data = $mailer->updateQueue();
-        } else {
-            $data['fail'] = 1;
-        }
-        $warn = $data['sent'] < 1;
-        $bad = ($data['fail'] > 0 || $data['stop'] === 'transport');
-        $text = $bad ? _ERROR.': '.$mailer->getError() : (($data['sent'] > 0) ? _MAIL_TESTOK : _MAIL_TESTWAIT);
-    }
-    setRedirect($afile.'.php?name=config&tab='.$ctab, false, 302, $text, $warn);
 }
 
 function clearcache(): void {
     global $afile;
     $ctab = getVar('post', 'tab', 'num', 0);
-    if ($ctab < 0 || $ctab > 5) $ctab = 0;
+    if ($ctab < 0 || $ctab > 4) $ctab = 0;
     $warn = !checkAdminPost('config');
     if (!$warn) Cache::deleteAll();
     setRedirect($afile.'.php?name=config&tab='.$ctab, false, 302, $warn ? _TOKENMISS : _SUCCCLEAR, $warn);
@@ -1240,10 +928,9 @@ function info(): void {
             'name=config&tab=2',
             'name=config&tab=3',
             'name=config&tab=4',
-            'name=config&tab=5',
             'name=config&op=info',
         ],
-        'tabs' => [_GENPREF, _SEO, _MULTILINGUAL.' / '._GEOLOCATION, _CENSORS, _OPTIMIZE, _MAILOPT, _MANUAL],
+        'tabs' => [_GENPREF, _SEO, _MULTILINGUAL.' / '._GEOLOCATION, _CENSORS, _OPTIMIZE, _MANUAL],
     ]);
 }
 

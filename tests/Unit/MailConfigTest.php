@@ -88,4 +88,17 @@ final class MailConfigTest extends TestCase
             $this->assertIsString($val, $key.' must be stored as a string');
         }
     }
+
+    # The general settings rewrite global.php whole, so their form keeps mtemp it no longer shows; the mail section holds a password and stays the main administrator's
+    #[Test]
+    public function theMailFormWritesItsOwnKeysAlone(): void
+    {
+        $conf = (string)file_get_contents(BASE_DIR.'/admin/modules/config.php');
+        $mail = (string)file_get_contents(BASE_DIR.'/admin/modules/newsletter.php');
+        $this->assertStringContainsString("'mtemp' => (string)\$conf['mtemp'],", $conf, 'A save of the general settings drops the mail frame from global.php');
+        $this->assertStringNotContainsString("'mail.php'", $conf, 'The general settings still write the mail settings');
+        $this->assertStringContainsString("setConfigFile('mail.php', \$mail,", $mail, 'A save without a password no longer keeps the stored one');
+        $this->assertMatchesRegularExpression("#setConfigFile\('global\.php', \['mtemp' => [^;]+\], \\\$glob\);#", $mail, 'The mail form writes global.php without its other keys');
+        $this->assertStringContainsString("|| !isAdmin(true)) die('Illegal file access');", $mail, 'The mail password is open to more than the main administrator');
+    }
 }

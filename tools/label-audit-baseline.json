@@ -1,8 +1,8 @@
 {
-  "generated": "2026-10-31T12:27:11Z",
+  "generated": "2026-10-31T13:53:08Z",
   "_": "What the label crawl finds today, so a run fails on what it finds tomorrow. Each key is kind|route|id-or-selector and each value how often it was seen. Every entry is a defect a plan names; the file shrinks and never grows. Coverage is judged apart from it: a route that stopped rendering hides violations rather than fixing them.",
   "coverage": {
-    "pages": 492,
+    "pages": 491,
     "routes": [
       "admin:account:",
       "admin:account:add",
@@ -44,14 +44,12 @@
       "admin:config:?tab=2",
       "admin:config:?tab=3",
       "admin:config:?tab=4",
-      "admin:config:?tab=5",
       "admin:config:info",
       "admin:config:info?tab=0",
       "admin:config:info?tab=1",
       "admin:config:info?tab=2",
       "admin:config:info?tab=3",
       "admin:config:info?tab=4",
-      "admin:config:info?tab=5",
       "admin:contact:",
       "admin:contact:info",
       "admin:database:",
@@ -190,6 +188,7 @@
       "admin:newsletter:add#rec",
       "admin:newsletter:config",
       "admin:newsletter:info",
+      "admin:newsletter:mailconf",
       "admin:node:",
       "admin:node:?status=1&type=content",
       "admin:node:?status=1&type=docs",

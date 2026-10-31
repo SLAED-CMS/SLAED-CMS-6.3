@@ -312,7 +312,7 @@ function getMonitorGround(array $snap): string {
     $site = $pane(['title' => _SITE, 'content_html' => $upbar.$list(array_merge([
         getMonitorFlag(_SITE, !($conf['close'] ?? 0)),
         getMonitorFlag(_STATISTIC, (bool)($conf['statistic']['stat'] ?? 0)),
-        getMonitorFlag(_NEWSLETTER, intval($conf['scheduler']['jobs']['newsletter']['active'] ?? 0) === 1),
+        getMonitorFlag(_NEWSLETTER_JOB, intval($conf['scheduler']['jobs']['newsletter']['active'] ?? 0) === 1),
         getMonitorFlag(_MONITOR_CACHE, (bool)($conf['cache'] ?? 0)),
     ], ($stats['cntnews'] !== null) ? [getMonitorRow(_NEWS, filterDecimal($stats['cntnews'], 0))] : [],
         ($stats['cntfile'] !== null) ? [getMonitorRow(_FILES, filterDecimal($stats['cntfile'], 0))] : []))]);

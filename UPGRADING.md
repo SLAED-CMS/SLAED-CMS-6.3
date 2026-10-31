@@ -84,7 +84,8 @@ The hosts and landing pages of visits are counted in the files of the statistics
   moved to another type comes back with the next update. The host lists stay as the site has them.
 - Custom code calls `getBotInfo(getAgent())`, which answers the `name` and `type` of a robot, with an empty `name` for a
   person, in place of `is_bot()`.
-- The tabs of `name=config` after "Цензура" moved up by one: the cache is `tab=4` and the mail is `tab=5`.
+- The tabs of `name=config` after "Цензура" moved up by one: the cache is `tab=4`. The mail settings left them: they are `name=newsletter&op=mailconf`, saved by
+  `op=mailsave`, the test letter is `op=mailtest` of the same section. `mtemp` stays in `config/global.php`, the rest in `config/mail.php`.
 
 ### Node Upload Directories Under `uploads/node/`
 

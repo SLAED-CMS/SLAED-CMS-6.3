@@ -1337,7 +1337,7 @@ function getSystemSignals(int $ttl = 60): array {
         ['https', 'HTTPS', 'config', str_starts_with(strtolower((string)$conf['homeurl']), 'https://') ? 'ok' : 'warn', _OFF],
         ['opcache', 'OPcache', 'monitor', (is_array($opc) && !empty($opc['opcache_enabled'])) ? 'ok' : 'warn', _OFF],
         ['phpver', _ADM_SIG_PHPVER, 'monitor', version_compare(PHP_VERSION, '8.1.0', '<') ? 'warn' : 'ok', PHP_VERSION],
-        ['mail', _MAILOPT, 'newsletter&op=queue', ($runs['mail'] > 0) ? 'warn' : 'ok', sprintf(_ADM_SIG_WAIT, $runs['mail'])],
+        ['mail', _NEWSLETTER, 'newsletter&op=queue', ($runs['mail'] > 0) ? 'warn' : 'ok', sprintf(_ADM_SIG_WAIT, $runs['mail'])],
         ['update', _UPDATE_TITLE, 'update', ($ver === '') ? 'ok' : (empty($found['security']) ? 'warn' : 'danger'), $ver],
     ];
     $rank = ['danger' => 0, 'warn' => 1, 'ok' => 2];

@@ -557,7 +557,7 @@ components of their own and stand outside this contract.
   `upto` and are not touched.
 - **The filter is one condition.** The list, its count, the address of the pager, the foot and its portions read one
   condition of the filter, never a copy of it. "Комментарии" and the six growing lists — "Избранное", the private
-  messages, "Сообщения", "Голосования", the campaigns and the undeliverable addresses of "Рассылка" — have
+  messages, "Сообщения", "Голосования", the campaigns and the undeliverable addresses of "Почта" — have
   `get<X>Filter($src)` in their module: the state of the request and the query `base` that keeps it, with the `from`,
   the `where` and its `pars` where the module owns the query; the foot reads it with `'post'`. `get<X>Search($flt)`
   draws `fragments/list-filter.html` into the `subtitle_html` of the tabs. Where a class owns the query, it answers the

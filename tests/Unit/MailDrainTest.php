@@ -56,7 +56,7 @@ final class MailDrainTest extends TestCase
     public function noCodePathWrapsTheFrameByHand(): void
     {
         $root = dirname(__DIR__, 2);
-        foreach (['core/user.php', 'core/system.php', 'admin/modules/config.php', 'modules/account/index.php', 'modules/forum/index.php'] as $file) {
+        foreach (['core/user.php', 'core/system.php', 'admin/modules/newsletter.php', 'modules/account/index.php', 'modules/forum/index.php'] as $file) {
             $code = (string)file_get_contents($root.'/'.$file);
             $this->assertDoesNotMatchRegularExpression('#str_replace\(\'\[text\]\'[^;]*\$conf\[\'mtemp\'\]\)#', $code, $file.' wraps mtemp by hand');
         }

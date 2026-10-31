@@ -2,6 +2,16 @@
 
 ## 2026-10-31
 
+### Mail is one section
+
+- **The section.** "Рассылка" is "Почта": `_NEWSLETTER` carries the new word in the six locales, so a site gets it with its language
+  files and its `config/modules.php` stays as it is. The key `name=newsletter` does not change. `_MAILOPT` is gone, and `_NEWSLETTER_JOB` keeps
+  the word of the campaigns on the flag of their job in "Мониторинг".
+- **The transport.** The mail tab left "Конфигурации" for the tab "Транспорт" of the section: `op=mailconf` shows it with its settings
+  find, `op=mailsave` stores it, `op=mailtest` queues the test letter under the token of the section. `tab=5` of `name=config` is no more.
+- **Two files.** `mtemp` stays in `config/global.php`, where its readers take it. The form of "Конфигурации" writes the whole file, so it
+  keeps the key it no longer shows; `op=mailsave` writes that key alone. `MailConfigTest` holds both.
+
 ### The detector leaves a word inside a file name, a zero limit stays zero, and the presentation counts who is online
 
 - **Detector.** `checkGet()` and `checkCookie()` take `ALTER`, `DROP`, `INSERT`, `OUTFILE`, `SELECT`, `TRUNCATE` and `UNION` only
