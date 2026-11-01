@@ -1,4 +1,4 @@
-<nav class="sl-pager" aria-label="{{ _PAGENAV }}">
+<nav class="sl-pager" aria-label="{{ _PAGENAV }}{% if is_top %}: {{ _TOP }}{% endif %}">
   <div class="sl-pager-main">
     <div class="sl-pager-nav">
       {{{ prev }}}

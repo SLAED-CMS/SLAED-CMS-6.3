@@ -692,6 +692,14 @@
   margin: var(--sl-space-7) 0;
 }
 
+/* A link inside running text differs by more than its tone: on the dark page the blue and the text are only 2.14:1 apart */
+.sl-markdown a,
+.sl-preview-section a,
+.sl-box > a:not([class]),
+.sl-msg-foot a {
+  text-decoration: underline;
+}
+
 /* A table of the help reads as the clean tables of the panel: a muted head, a hairline under each row and the room
    of a paragraph after it; a column the Markdown aligns keeps the alignment the parser writes on its cells */
 .sl-markdown table {
@@ -747,16 +755,20 @@
   text-align: center;
 }
 
+/* The empty alternative keeps the glyph of the sort out of the name of the head cell; the first line is for a browser that does not know the form */
 .sl-sort::after {
   content: "\f127";
+  content: "\f127" / "";
 }
 
 .sl-sort-asc::after {
   content: "\f235";
+  content: "\f235" / "";
 }
 
 .sl-sort-desc::after {
   content: "\f229";
+  content: "\f229" / "";
 }
 
 thead tr th[data-sort-method="none"] {
@@ -988,12 +1000,25 @@ input.sl-but-blue[value="ОК"] {
   color: var(--sl-border);
 }
 
+/* A row of a list that is off is still read: its icon fades and its words take the muted tone at 4.5:1 */
+.sl-menu-list-item.sl-dimmed {
+  opacity: 1;
+}
+
+.sl-menu-list-item.sl-dimmed .bi {
+  opacity: var(--sl-fade-muted);
+}
+
+.sl-menu-list-item.sl-dimmed :is(.sl-menu-name, .sl-menu-name > small) {
+  color: var(--sl-text-muted);
+}
+
 .sl-hidden {
   display: none;
 }
 
 .sl-highlight {
-  color: var(--sl-danger);
+  color: var(--sl-danger-strong);
   background-color: var(--sl-warning-subtle);
 }
 
@@ -1836,7 +1861,8 @@ pre code.hljs {
   height: var(--sl-check-height);
   min-width: var(--sl-check-width);
   min-height: var(--sl-check-height);
-  margin: 0 var(--sl-space-2) var(--sl-space-1) 0;
+  /* Four around sixteen hold the centres 24 apart, which WCAG 2.5.8 asks of a target under 24 */
+  margin: var(--sl-space-2);
   border: 1px solid var(--sl-border-strong);
   border-radius: var(--sl-radius-1);
   background-color: var(--sl-bg);
@@ -3797,6 +3823,11 @@ dialog.sl-editor-emoji-panel {
   background-color: var(--sl-tint-strong);
 }
 
+/* On that tint a link of the theme falls to 3.38:1, so a link of a picked row takes the text */
+.sl-table-list-sort[data-sl-density] tbody tr:has(> .sl-col-check input:checked) > td a {
+  color: var(--sl-text);
+}
+
 /* Rows a filter, a tab or a page brings enter in turn, backwards only: a held end keeps each row a stacking context over the tip above */
 .sl-table-list-sort[data-sl-density] tbody tr[data-sl-enter] {
   animation: sl-row-in calc(var(--sl-time-slow) + var(--sl-time-fast)) var(--sl-ease-out) backwards;
@@ -5084,6 +5115,12 @@ dialog.sl-modal.sl-is-full {
 /* Axis: tone. Two variables and nothing more: the icon, the stripe and the primary button find them by themselves */
 .sl-modal-danger { --sl-modal-tone: var(--sl-danger); --sl-modal-line: var(--sl-danger); }
 .sl-modal-warn { --sl-modal-tone: var(--sl-warning); --sl-modal-line: var(--sl-warning); }
+
+/* The text of a solid button holds 3.18:1 on the warning tone: the button of a warning takes the strong step */
+.sl-modal-warn .sl-modal-btn-main {
+  background: var(--sl-warning-strong);
+  border-color: var(--sl-warning-strong);
+}
 .sl-modal-success { --sl-modal-tone: var(--sl-success); --sl-modal-line: var(--sl-success); }
 
 /* Axis: presentation. The windowed one is non-modal and draggable, because the File Manager and the emoji panel are worked alongside the text under them */
@@ -5955,6 +5992,8 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   width: 100%;
   max-width: 100%;
   min-width: 0;
+  /* Options stacked one under another keep their boxes 24 apart, as WCAG 2.5.8 asks */
+  min-height: var(--sl-space-8);
   margin: 0;
   white-space: normal;
 }
@@ -8508,6 +8547,12 @@ button.sl-but-mini {
   color: var(--sl-knob-tone);
 }
 
+/* A figure in the warning tone stays under 3:1 on the plate; the arc keeps the tone, the figure takes the strong step */
+.sl-cockpit-ring.sl-knob-warn > span > b,
+.sl-cockpit.sl-knob-warn .sl-cockpit-head > b {
+  color: var(--sl-warning-strong);
+}
+
 .sl-cockpit-ring > span > b::before {
   content: "";
 }
@@ -8592,7 +8637,7 @@ button.sl-but-mini {
   pointer-events: none;
 }
 
-.sl-cockpit-plate > :not(.sl-cockpit-glass, [data-sl-ripple]) {
+.sl-cockpit-plate > :not(.sl-cockpit-glass, .sl-visually-hidden, [data-sl-ripple]) {
   position: relative;
 }
 
@@ -8616,7 +8661,7 @@ button.sl-but-mini {
   font-weight: var(--sl-weight-normal);
   letter-spacing: var(--sl-track-wide);
   text-transform: uppercase;
-  color: var(--sl-text-muted);
+  color: var(--sl-text);
 }
 
 /* The mark of the lamp is the one-colour mark of the theme cut out of the tone of the state: the brand in colour stays with the logo of the header */
@@ -10370,6 +10415,12 @@ body[data-sl-pointer] .sl-admin-login-card:has(.sl-setup)::after {
   font-variant-numeric: tabular-nums;
 }
 
+/* In a flex row a reader joins the label and the figure into one word; the eye has the gap, the reader hears this */
+.sl-bell-num::before {
+  content: ": ";
+  font-size: 0;
+}
+
 /* A queue that grew while the page stood open stirs the bell: the icon swings once from its top */
 .sl-bell[data-sl-ping] .sl-bell-ic > .bi {
   transform-origin: 50% 0;
@@ -10987,6 +11038,16 @@ body[data-sl-pointer] .sl-admin-login-card:has(.sl-setup)::after {
 
 .sl-fm-work {
   min-width: 0;
+}
+
+/* A long name ends in its ellipsis at the width the other columns leave, or the table pushes under the properties; a phone scrolls the table in its own frame */
+.sl-fm-work .sl-table-shell {
+  overflow-x: auto;
+}
+
+.sl-fm-work td:has(> .sl-fm-name) {
+  width: 100%;
+  max-width: 0;
 }
 
 .sl-fm-tree {
@@ -11650,6 +11711,10 @@ button.sl-fm-thumb:hover .bi-zoom-in {
     border-bottom: 1px solid var(--sl-border);
   }
 
+  .sl-fm-bar {
+    flex-wrap: wrap;
+  }
+
   .sl-fm-bar input[type="text"] {
     width: var(--sl-fm-search-width);
   }
@@ -11825,7 +11890,7 @@ button.sl-fm-thumb:hover .bi-zoom-in {
   font-family: var(--sl-face-mono);
   font-weight: var(--sl-weight-semibold);
   text-anchor: middle;
-  fill: var(--sl-text-muted);
+  fill: var(--sl-text);
 }
 
 .sl-clock-mid {
@@ -11922,7 +11987,7 @@ button.sl-fm-thumb:hover .bi-zoom-in {
 }
 
 .sl-fm-win .sl-fm-rail-cap {
-  color: var(--sl-text-subtle);
+  color: var(--sl-text-muted);
   font-size: var(--sl-font-micro);
   letter-spacing: var(--sl-track-wide);
   padding: var(--sl-space-2) var(--sl-space-4) var(--sl-space-3);
@@ -12029,7 +12094,7 @@ button.sl-fm-thumb:hover .bi-zoom-in {
 }
 
 .sl-fm-win .sl-fm-rail-foot {
-  color: var(--sl-text-subtle);
+  color: var(--sl-text-muted);
   font-size: var(--sl-font-micro);
   line-height: var(--sl-line-normal);
   margin-top: auto;

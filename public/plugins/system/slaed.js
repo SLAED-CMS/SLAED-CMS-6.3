@@ -368,11 +368,20 @@
                     setTableSortState(event.currentTarget);
                     setTableSortSaid(event.currentTarget);
                 });
+                table.addEventListener('keydown', setTableSortKey);
                 table.setAttribute('data-sort-ready', '1');
                 setTableSortKept(table);
             }
             setTableSortState(table);
         }
+    }
+
+    // Tablesort answers Enter on a head cell and leaves Space to scroll the page
+    function setTableSortKey(event) {
+        var cell = event.target;
+        if (event.key !== ' ' || cell.tagName !== 'TH' || cell.getAttribute('data-sort-method') === 'none') return;
+        event.preventDefault();
+        cell.click();
     }
 
     // Э19 A table naming its key gets back the sort its viewer chose last, quietly, as nothing was asked

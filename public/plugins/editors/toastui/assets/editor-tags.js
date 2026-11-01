@@ -139,6 +139,28 @@
         if (!tabs || !mode || tabs.parentElement === mode) return;
         mode.insertBefore(tabs, mode.firstChild);
     }
+    // The vendor writes aria-role, which no browser reads, and leaves its button of the folded toolbar without a name: attributes only, its nodes stay its own
+    function setNames(box, more) {
+        var tabs = box.querySelector('.toastui-editor-tabs');
+        if (tabs && tabs.hasAttribute('aria-role')) {
+            tabs.removeAttribute('aria-role');
+            tabs.setAttribute('role', 'tablist');
+            Array.prototype.forEach.call(tabs.querySelectorAll('.tab-item'), function(item) {
+                item.removeAttribute('aria-role');
+                item.setAttribute('role', 'tab');
+            });
+        }
+        Array.prototype.forEach.call(box.querySelectorAll('button.more:not([aria-label])'), function(item) {
+            item.setAttribute('aria-label', more);
+        });
+    }
+    function addNames(id, opt) {
+        var box = doc.getElementById(String(id) + '_toast');
+        var more = opt.labels && opt.labels.more ? opt.labels.more : 'More';
+        if (!box) return;
+        setNames(box, more);
+        new MutationObserver(function() { setNames(box, more); }).observe(box.querySelector('.toastui-editor-toolbar') || box, { childList: true, subtree: true });
+    }
     function setWidth(id) {
         var box = doc.getElementById(String(id) + '_toast');
         var bar = box && box.querySelector('.toastui-editor-defaultUI-toolbar');
@@ -166,6 +188,7 @@
         api.options[String(id)] = opt || {};
         addTags(id, ed, opt || {});
         addEmoji(id, ed, opt || {});
+        addNames(id, opt || {});
         if (win.SlaedFileManager) win.SlaedFileManager.addUpload(id, ed, opt || {});
         setTabs(id);
         if (typeof ed.on === 'function') ed.on('changeMode', function() { setWidth(id); });

@@ -23,10 +23,10 @@
   --sl-primary-muted: light-dark(#8fc5d9, #2b5f7d);
   --sl-primary-subtle: light-dark(#d9eef6, #16323f);
   --sl-success: light-dark(#268637, #46c95d);
-  --sl-success-strong: light-dark(#1f8031, #6ada7d);
+  --sl-success-strong: light-dark(#1a6f2b, #6ada7d);
   --sl-success-subtle: light-dark(#eaf7ed, #14301b);
   --sl-danger: light-dark(#cd4545, #f06a6a);
-  --sl-danger-strong: light-dark(#c73535, #ff8b8b);
+  --sl-danger-strong: light-dark(#ad2a2a, #ff8b8b);
   --sl-warning: light-dark(#d97706, #f0932b);
   --sl-warning-strong: light-dark(#b23b0b, #ffb057);
   --sl-warning-subtle: light-dark(#fff4e5, #3a2a12);

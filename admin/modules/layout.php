@@ -1669,7 +1669,7 @@ function getLayoutLinks(): array {
     global $afile;
     $list = [
         ['uploads', 'cloud-arrow-up', _UPLOADS, _LAYOUT_W_UPL],
-        ['editor', 'pencil-square', _EDITOR, _LAYOUT_W_EDIT],
+        ['admins', 'pencil-square', _EDITOR, _LAYOUT_W_EDIT],
         ['config', 'sliders', _PREFERENCES, _LAYOUT_W_CONF],
         ['blocks', 'bricks', _BLOCKS, _LAYOUT_W_BLK],
         ['modules', 'puzzle', _MODULES, _LAYOUT_W_MOD],

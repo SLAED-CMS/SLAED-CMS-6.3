@@ -801,7 +801,7 @@ Server metrics:
   `getWindowsProbe()`, started by `proc_open()` and killed after ten seconds; a
   run that gave nothing writes no sample, so the old figures stay and age instead
   of turning into zeros
-- three readers share it: the cockpit poll (`getCockpitData()`) and the HTMX polls
+- three readers share it: the cockpit poll (`getCockpitData()`) and the poll `op=live`
   of the monitor page pass `$fresh`; the monitor page itself and the presentation
   module only read. Every request carrying `X-SL-Poll` releases the session in
   `core/security.php` right after the idle check, so no poll, the sampling one
@@ -1108,7 +1108,7 @@ journals `storage/logs/` holds only state as `.json` (`scheduler/<job>.json`,
 `scheduler/heartbeat.json`, `scheduler/trigger.json`, `monitor.json`,
 `filescan.json`); the locks
 live in `storage/cache/locks/`, which the cache sweeps never empty. The labels
-of the security section come from one map in `admin/modules/security.php`, and
+of the logs section come from one map in `admin/modules/logs.php`, and
 `JournalNameTest` holds the files, the channels and the map together.
 
 ## Journal Boundary
@@ -1218,9 +1218,9 @@ install schema creates the table and the 6.2 update creates it with
 
 **Reading.** A user reads their own logins in the profile,
 `index.php?name=account&op=logins`, with the pager. The panel reads them all on
-the tab "Журнал входов" of "Безопасность" (`op=logins`), filtered by account,
+the tab "Журнал входов" of "Журналы" (`name=logs&op=logins`), filtered by account,
 panel or site, result, way and period. Every journal of `Logger` opens on
-"Безопасность" as a table (`op=logview&file=<name>`), read by
+"Журналы" as a table (`op=logview&file=<name>`), read by
 `Logger::getEntries()`: newest first across every file of the channel, so
 `file` reads `file.log` and `error_file.log` together; the level is a
 threshold ("≥ warning"), `from` and `to` are whole days, and any other key
@@ -1234,9 +1234,9 @@ address; `filescan_tree.log` keeps the raw view.
 
 **The link of a module.** `getTplAdminTabs()` ends the tab strip of every module
 known to `$conf['modules']` with "Журнал действий",
-`admin.php?name=security&op=logview&file=admin&modul=<name>`, for an
+`admin.php?name=logs&op=logview&file=admin&modul=<name>`, for an
 administrator for whom `isAdmin(true)` holds, who alone may open
-"Безопасность". No module adds the link by hand or shows a block of entries
+"Журналы". No module adds the link by hand or shows a block of entries
 on its own screen.
 
 `LoginLogTest` holds the table, its reader, the monitor count and the cleanup
@@ -1314,6 +1314,47 @@ the requests behind it. The help of the panel is `admin/info/panel/ru.md`, opene
   signal and `getSelfCheckAlert()`. The home draws the lamp and the signals with the page and never calls
   `getCockpitData()` itself — a snapshot costs seconds on Windows — so the rings come from the poll
   `go=5&op=getCockpitData` at once and every 10 s while the tab is seen; super administrator only.
+- **Two lamps, two lists.** `getSystemSignals()` of the home checks SLAED itself, `getServerSignalList()` of "Мониторинг" the
+  server and its programs: thirteen rows over the one reading `getServerFacts()`, failures first, and a reading that failed
+  is neutral. The thresholds of both are the help `admin/info/monitor/ru.md`; `CockpitTest` and `MonitorSignalTest` hold them.
+  Off OPcache is yellow on both. `getSupportEnd()` answers the end of support of the branches of PHP, MariaDB and MySQL and
+  is refreshed with every release (`docs/UPDATE.md`); a branch outside the table is neutral. The web server shows its version
+  without a verdict, as a distribution patches it under the old number. `getExtensionWeight()` sorts the extensions:
+  required are `composer.json` and the calls with no way round, recommended what turns a part off, and APCu is neither, as
+  no code calls it.
+- **"Мониторинг" reads one sample.** `monitor()` and `live()` of `admin/modules/monitor.php` build the first paint and the
+  answer of `op=live` from `getMonitorView()`, the poll every 4 s; `getMonitorGround()` draws the other windows once. The
+  chart is the 30 points of `addHistory()` with their times (`sys_hist_time`), every 10 s under a viewer and once a minute
+  without one.
+- **The pulse is an honest rate apart from its beat.** The figure is the pages per minute of `getStatsToday()`, the
+  reckoning by hours that "Затишье" of `getCockpitTone()` uses, as a counter by the minute would write on every request of
+  the site. `getServerLamp()` beats by the tone and the CPU: 72, 96 or 168 × (0.8 + CPU/100). The tone decides first, so
+  "внимание" and "сбой" beat at no pages at all; with every signal passed no page in the hour is a flat line, and under 20
+  a lull that beats as a norm.
+- **"Статистика" reads the counter.** `statistic()` and `live()` of `admin/modules/statistic.php` build the first paint and
+  the answer of `op=live` from `getStatView()`, one reading of `getStatData()`: the month, its sums, the same days a month
+  before, the day in scope, the run of the rhythm, the week and the pace of `getStatPace()`. A day is `getStatRow()` over
+  `COUNTER_DIR`: the archive `statistic/statistic_<month>.log`, then `days.log` and `statistic.log`, as a month stays there
+  until the first hit of the next. `getStatArchive()` keeps the sums of closed months in `archive.json` until the stamp of
+  a file changes, so the strip reads no file of the archive again. `updateStatsTrack()` of `core/system.php` writes the
+  fields 20–23 (hosts, landing pages, names and types of robots), and the lists stand in `config/statistic.php`.
+- **The robots stand in a dictionary by type.** `$conf['statistic']['bots']` holds `mask => name` under `ai`, `search`,
+  `seo`, `social`, `other`, so `Update::getConfigMerge` adds the new robots of a release at the price of bringing back a
+  deleted one; the hosts are lists. The source `ai` is checked first, or `gemini.google.com` would be a search. A visit
+  without `Accept-Language` counts as the robot `No Accept-Language`, a rule still unproved on the figures of production.
+- **The sections stand by their use, and some stay apart on purpose.** Writing is one, and the entry stays where an
+  administrator looks for it, so the files of the blocks and the XSL keep their screens and write through
+  `FileManager::setFileBody()`. Not merged: "Рейтинги" and "Группы" (`core/classes/rating.php` reads neither points nor
+  groups); "Личные сообщения" or "Группы" and "Пользователи" (the latter is delegated, the former two for the super
+  administrator alone); "Блоки" and the builder (it has no interval of RSS, no ready feed, no parameters of `node.php`, no
+  code of a file); "Статистика" and "Мониторинг", "Администраторы" and "Пользователи", "Обновления" and "Мастер", "Опросы" and
+  "Рейтинги" (other data, roles or rights). The reset of points stays in `pointreset()` of "Пользователи", as moving it would
+  narrow the rights of a delegated administrator. The flags of search and the sitemap of a type are two entries to one flag
+  `settings.integrations` with one writer, `updateNodeTypePart()`, and `features.rating` and `rule.active` are two levels,
+  a feature of a type and the taking of votes.
+- **A section that goes takes its row with it.** The merge of settings only adds a module, and `getAdminSectionList()` does
+  not check the file of a section, so a row left behind is a menu item with an empty page. `setUpdateModules()` of
+  `public/update.php` drops a record without a module on the move to 8.0; after it a step of the version does (`docs/UPDATE.md`).
 - **The admin block and the floating menu read one row.** `getAdminBlockLinks()` reads the row `bkey = 'admin'` of
   `_blocks` once a request, for a super administrator only, and parses its links (`javascript:OpenWindow` read as its
   address, a missing file inside the site marked). `adminblock()` draws the block — in the panel on the home only, on

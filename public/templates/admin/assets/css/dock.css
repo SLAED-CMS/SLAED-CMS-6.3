@@ -339,6 +339,14 @@ button.sl-session-donut:focus-visible {
   white-space: nowrap;
 }
 
+/* Links over each other, the name and the address of a row and the pages of the top: 24 between them is what WCAG 2.5.8 asks */
+.sl-stats-row > span > a,
+.sl-stats-row > span > b > a,
+.sl-stats-top > li > a {
+  display: block;
+  min-height: var(--sl-space-8);
+}
+
 .sl-stats-kpis small,
 .sl-stats-row > span > :is(a, span),
 .sl-stats-where small,

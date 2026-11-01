@@ -2,6 +2,7 @@
 <html lang="{{ lang }}" data-theme="{{ mode }}"{% if is_still %} data-sl-still{% endif %}>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+{% if is_bare %}<title>{% if title %}{{ title }}{% else %}{{ sitename }}{% endif %}</title>{% endif %}
 {{{ meta }}}
 {{{ links }}}
 {{{ scripts }}}
@@ -11,15 +12,15 @@
   <div class="sl-admin-shell sl-admin-login-shell">
     <div class="sl-admin-login-top"></div>
     <div class="sl-admin-login-card">
-      <div class="sl-admin-login-header">
+      <header class="sl-admin-login-header">
         <div class="sl-admin-brand"><h1><a href="//slaed.net" target="_blank" title="{{ adtitle }}"><img src="{{ adlogo }}" alt="{{ adalt }}" title="{{ adtitle }}"></a></h1></div>
-      </div>
-      <div class="sl-admin-login-content">
+      </header>
+      <main class="sl-admin-login-content">
   {% endif %}
   {% block content %}{% endblock %}
   {% if not is_bare %}
-      </div>
-      <div class="sl-admin-login-footer"><div class="sl-admin-login-copyright">{{{ license }}}</div></div>
+      </main>
+      <footer class="sl-admin-login-footer"><div class="sl-admin-login-copyright">{{{ license }}}</div></footer>
     </div>
     <div class="sl-admin-login-bottom"></div>
   </div>

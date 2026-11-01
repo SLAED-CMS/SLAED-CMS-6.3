@@ -580,9 +580,9 @@ components of their own and stand outside this contract.
   default support queue — say `_ADM_CLEAN` with `is_calm`; the mail queue is a delivery journal and is not one of them.
   A text with a meaning of its own stays: `_NODE_NOTYPES` for Node without types, `_ERROR` for "База данных".
 - **What stays single.** A delete under a question — TRUNCATE and DROP of "База данных", an administrator, a Node type,
-  "Рефереры — удалить всё", the tables of a module — has no box, as has "Аннулировать" of a rating vote, which asks for a
+  the tables of a module — has no box, as has "Аннулировать" of a rating vote, which asks for a
   reason, and a campaign with mail in its queue. Short service lists — "Языки", "База данных", "Планировщик",
-  "Администраторы", the Node types, the journals of "Безопасность" — have no filter bar.
+  "Администраторы", the Node types, the list of "Журналы" — have no filter bar.
 
 **The frame swaps itself.** `partials/admin-list.html` is `#sl-list` with `hx-target="this"`,
 `hx-swap="outerHTML show:none"`, `hx-history-elt` and the header `X-SL-Part`; on that header `setFoot()` answers the
@@ -596,7 +596,7 @@ the panel layout (the login after a lost session) answers `HX-Refresh`. Back red
 | `href` | the address of a page without `num`, ending in `&`; both pagers and the rows chip append to it |
 | `count`, `page`, `pages`, `maxpg` | the rows under the filter and the pager window |
 | `limit`, `base` | the rows of this page from `getListLimit()` and the list's own number; `base` brings the rows chip |
-| `key` | the key the sort is kept under, the module name by default; the second list of a module names its own (`security-logins`, `newsletter-dead`) |
+| `key` | the key the sort is kept under, the module name by default; the second list of a module names its own (`logs-logins`, `newsletter-dead`) |
 | `head_html`, `note_html`, `foot_html` | the tabs with the filter bar, a note above the table, a form under it that has to live inside `#sl-list` (the ban lists) |
 | `pane` | the window round the list: the keys of `pane-cap.html` and `tiles_html` above the table (the tables of "База данных") |
 | `is_fixed` | the fixed table layout |
@@ -706,6 +706,8 @@ queues, the session, the cockpit, the menu, the voices — is `docs/ARCHITECTURE
 - **The menu of the panel.** `getAdminMenu()` marks the current section with `aria-current`, carries the key of its
   module and the chip `sl-queue` of its queue; the filter `sl-menu-find` stands in `sl-menu-top`. The dial `sl-dial`
   closed is one Tab stop, its items reachable once it opens; "…" shows on hover and focus.
+- **The title of the tab** puts the most important first: `setFoot()` joins the section, the open tab, `_ADMIN` and the name of
+  the site by `getSeoTitle()` over `$conf['defis']`. `getTplAdminTabs()` gives both; its first tab is not written.
 - **The tone of a column block is its role.** `partials/block-sidebar.html` writes `sl-block-menu` for the menu and
   `sl-block-queue` for "Ждут внимания" (`is_queue`); every other block is green. No rule reads the number of a block.
 - **The styles of the block, the menu and the window** are `assets/css/dock.css` of each theme, the screensaver
@@ -730,7 +732,9 @@ switch is "One motion switch" of `docs/ARCHITECTURE.md`; the option "Движе�
 | An arc fills to its share | `.sl-cockpit-ring .sl-knob-val` | `stroke-dasharray` over `--sl-knob-dur` on `--sl-alert-ease`; `partials/cockpit.html` starts it at `0 100`, so the first poll fills it from zero |
 | A figure runs from its value to the new one and lights | `[data-sl-gauge-val]`, `[data-sl-strip-val]`, `[data-sl-queue-n]` | `setFigureRun()` in 900 ms, called by `setCockpitView()` and `setQueueView()`; `slFigure` keeps the goal, which `getFigureValue()` answers; `setFigureFresh()` is the one flare, `sl-figure-flash` over `--sl-knob-dur`; a still panel or a hidden tab writes the value at once |
 | The tiles rise in their turn when the grid enters the view | `.sl-menu-grid` | `setArriveMarks()` at start and on `htmx:load` sets `data-sl-arrive` and `--sl-d-turn`; `sl-is-in` starts `sl-tile-rise` over `--sl-tile-dur`, and `setArriveDone()` drops the marks once every shown tile rose |
-| A tile leans to the hand under a glare | `.sl-menu-grid > .sl-mcard` | one `pointermove`, not of a touch, written once a frame by `setTileTilt()`: `--sl-d-tilt-x`, `--sl-d-tilt-y`, `--sl-d-x`, `--sl-d-y`; a tile whose dial is hovered or open takes `transform: none` |
+| The parts of a ground rise in their turn, each when it enters the view | `.sl-ground > *` | the same marks of `setArriveMarks()`, part by part; a part that rose starts its figures, `setFigureRise()` running each `[data-sl-figure]` from zero by `setFigureRoll()`, the run behind `setFigureRun()` |
+| A tile leans to the hand under a glare | `.sl-menu-grid > .sl-mcard`, `.sl-metric` | one `pointermove`, not of a touch, written once a frame by `setTileTilt()`: `--sl-d-tilt-x`, `--sl-d-tilt-y`, `--sl-d-x`, `--sl-d-y`; a home tile whose dial is hovered or open takes `transform: none` |
+| A beam crosses the solid heads in their turn | `.sl-dashboard-panel-head`, `.sl-block-sidebar h3`, `.sl-pane-cap` | `setBeamTurns()` writes the place of each head in `--sl-d-turn` |
 | A press spreads from the pointer | `.sl-mcard-link` of the home grid, `.sl-menu-list-item` of `.sl-admin-sidebar`, `.sl-block-sidebar-count-row`, `.sl-cockpit button` | one `pointerdown` appends `span[data-sl-ripple]` with `--sl-d-x`, `--sl-d-y`, removed when `sl-ripple` over `--sl-ripple-dur` ends; not from the dial or the drag handle |
 | A chart is drawn left to right once | `.sl-chart-svg` | `data-sl-arrive`, then `sl-is-in` starts `sl-chart-draw` over `--sl-graph-dur`; a waiting chart is clipped to nothing, which the observer reads as unseen, so its parent is watched; a chart whose place (the nearest `id`) was drawn is a tick of the poll and gets no mark |
 
@@ -751,7 +755,97 @@ The laws of a move:
   the arrival moves by the offset `top`, a part animates its pseudo-element, and the tilt holds only a tile, whose
   dial is a fan inside it, no float.
 - **A tick never replays.** A chart is drawn once; a later poll updates it without drawing it again.
-- **The ripple stays on the home and the menu.** The forms and the lists of the panel take none.
+- **The ripple stays on the home and the menu.** The forms and the lists of the panel take none, nor do the tiles, the
+  segments and the days of the parts below.
+
+### Parts Of A Screen
+
+A screen that shows a state rather than rows — "Статистика", "Мониторинг", the summaries of the others — is built of these
+parts. Each lives once in the theme `admin`: the markup in `fragments/`, the rules in `theme.css`, the behaviour in
+`admin-ui.js`, the tokens in `base.css` and `tools/ui-contract.php` (`--sl-ground-width`, `--sl-ground-dur`,
+`--sl-pane-dur`, `--sl-metric-min-width`). A page has something of its own only where the other has no like: the dial of
+the day in the lamp of "Статистика", the pulse in the lamp of "Мониторинг". The reference pages are
+`public/demo/st-02-cockpit.html` and `public/demo/mon-01-cockpit.html`, whose classes `st-*` and `mn-*` stay in
+`public/demo/assets/`; the frozen tokens `--sl-statx-*` stay with the dial, the bars of rows and the log of days. `SeriesPartsTest`
+holds the keys and the escaping of the fragments, `PanelPartsTest` `getTplMeter()`, `getTplLongCell()` and the key `pane`.
+`fragments/window.html` and `data-sl-window` are a dialog, `--sl-tile-dur` and `sl-tile-rise` the tile of the home; neither
+is one of these parts.
+
+| Part | Fragment, class | Keys and notes |
+|---|---|---|
+| The ground | `pane-ground.html`, `.sl-ground` | `content_html`. Its grid drifts on a layer of its own, `.sl-ground-lines`, by `transform`: the drift measured 5.7% and 14.5% of a core (renderer, GPU) against 4.8% and 13.2% without it and 20.4% and 43.5% by `background-position` |
+| A row of windows | `pane-row.html`, `.sl-pane-split`, `.sl-pane-side`, `.sl-pane-trio` | `content_html` and `side_html`: with a side a large window and a column, without one a grid of three |
+| A window | `pane.html`, `pane-cap.html`, `.sl-pane` | `title` (an `h2`), `icon` or three lamps without it, `meta`, `live_html`, `content_html`, `right_html` for a second half, `is_fill` for a window whose chart takes the height. A list enters a window by the key `pane` of `getTplAdminList()` and draws the same cap |
+| A tile of figures | `metric-list.html`, `.sl-metric` | `items`: `label`, `value`, `unit`, `num`, `note`, `delta` with `dir`, `arrow`, `delta_tip`, `icon`, `is_good`, `tone` (`up`, `down`, `cpu`, `ram`). `num` is the value to count, `value` its text |
+| Name and value | `kv-list.html`, `.sl-kv` in a `dl` | `items`: `label`, `icon`, `text`, with `is_long`, `is_flag` and `is_on`, `is_mute`, `is_good` |
+| A value cut short | `long.html`, `.sl-long` | `text`, escaped once for both places, `tip_label`: the mark "i" of `.sl-tip` before the text |
+| A meter | `meter.html`, `.sl-meter`, drawn by `getTplMeter()` | a share of a real limit with the role `meter` and `--sl-d-part`; `is_row` is the form inside a table row |
+| The extensions | `ext.html`, `.sl-ext` | `groups`: `label`, `have_text`, `is_short`, `chips` (`name`, `is_ok`, `is_lost`, `is_off`, `state_text`), `notes` |
+| A chart | `series.html` | `id`, `kind`, `json`, `wait_text`, drawn by the engine below |
+| A cockpit | `partials/cockpit.html`, with `monitor-cockpit.html` and `statistic-cockpit.html` | `cap_icon`, `cap_text`, `rings`, `strip`, and the parts of the page `state_html`, `nav_html`, `lamp_html`. The lamp holds its face: the checks of the home, the pulse of "Мониторинг", the dial of "Статистика" |
+
+The rules of the parts:
+
+- **A ring is a share of a limit.** CPU, RAM, the disk and OPcache take a ring; a size with no limit (generation, queries, the
+  memory of PHP, online) stands in the strip under the rings. A ring takes its tone from `getPercentTone()`, OPcache by
+  the share it misses and yellow while off, and a signal that fired repaints its ring in its own tone.
+- **A meter stands where a limit presses, at the top of its card**, in the tone of `getPercentTone()` unless it names its own.
+  A full journal, a finished campaign and a downloaded part of a package are no failure and stay green; so does the upload
+  limit equal to the limit of POST, which turns yellow when the file may be larger than the request, and the buffer of InnoDB,
+  yellow when it is smaller than the database. A campaign with nothing expected shows its figures alone, as a share of
+  nothing is no share. A row that repeats a meter of the same page is not printed.
+- **The meter of uploads stands above the columns**, inside `#slfmbody`: under the list of a folder it would go past 25
+  thousand pixels. It sums `Upload::getUsedBytes()`, the sum the upload itself checks, without the folders inside.
+- **The mark "i" begins at `CELL_LONG`, 16 characters.** `getTplLongCell()` answers the keys of a cell: the server does not
+  know the width of a column and a mark on every row would say nothing, so a shorter value keeps its `title`. A
+  narrow screen can cut a short value without the mark, and a long name nothing cuts carries it. In the properties of a file
+  the mark stands only at the name, the address and the full path.
+- **A figure has its value apart from its text.** `filterDecimal()` writes the fraction by the language of the page (a comma
+  but for `en`, without `intl`, only recommended), `filterSize()` goes through it, and `getFigureText()` writes what the
+  browser counts the same way. `setFigureRun()` takes the value by `Number()`, which a comma would break. A per cent has no
+  space before its sign, and a short date is `getShortDate()`.
+- **"Группы" and "Опросы" keep their bars of shares.** A share among others has no limit, so they take no meter.
+- **The details of a ring or a lamp are a float.** `sl-float` with the rows of the bell, on hover, on focus and by a click;
+  whatever holds such a panel by a click has the hand cursor, and `cursor: help` stays on `.sl-tip` and `.sl-note`, where a
+  click does nothing.
+
+The screens that take the parts: "Почта" (the queue and its tiles, a meter per campaign), "База данных" (the window round the
+list, the tiles of rows, size and free space), "Поиск" and "Карта сайта" (tiles of the summary), the tab of the cache of
+"Конфигурации", "Обновления" (the free space, the part downloaded), "Журналы" (the size to `log_size`), the file manager
+(the quota) and "Мастер" (the mark "i" at a key, a `sid` and the state of a release).
+
+### The Engine Of The Parts
+
+A chart is `fragments/series.html`. `setSeriesDraw()` draws it on load and on `htmx:load`, and a poll calls
+`window.setSeriesData(host, data, true)`: a tick moves what stands and plays no arrival. Every text comes from the server. A
+tone is `up`, `down`, `cpu`, `ram`, `primary`, `accent`, `success`, `warning`, `danger` or `muted`. A pick of a day
+leaves as the event `sl-series-pick` on `document`, with `detail.index`, `-1` for taking it off.
+
+| `kind` | Data |
+|---|---|
+| `live` | `label`, `at` (the time of the points, seconds), `now`, `grid` (the texts of the scale from the top), `words` (`now`, `sec`, `min` with `%s`), `series`: `key`, `name`, `unit`, `digits`, `tone`, `max` (without it the common top of the series without a limit), `values` |
+| `rhythm` | `label`, `period_label`, `view_label`, `views`: `key` (`area`, `bar`), `name`, `icon`; `periods`: `key`, `name`, `figure`, `note`, `delta`, `labels` (of the panel of a point), `ticks` (of the axis, empty for none), `series`: `key`, `name`, `tone`, `unit`, `digits`, `values` |
+| `days` | `label`, `tone`, `can_pick`, `pick`, `days`: `label`, `cap`, `value`, `is_end`, `is_run`, `rows` (the rows of the panel, `[name, text, tone]`) |
+| `archive` | `months`: `name`, `year` (only on a month whose year is written; a first month of a year no later than June, so neighbours do not collide), `value`, `href` (empty for a gap), `is_gap`, `is_run`, `is_pick`, `rows`; `keys`: `mark` (`pick`, `run`, `gap`) and `text`, the hint `is_hint` |
+| `week` | `name`, `tone`, `low`, `high`, `days`: `name`, `cap`, `is_end`; `hours` (a label or empty), `spans` (the hour in the panel), `cells`: seven rows of 24 numbers |
+| `stack` | `label`, `count`, `parts`: `name`, `pct` (an integer), `text`; `empty`, the words when there are no parts |
+| `rows` | `rows`: `name`, `text`, `pct` (an integer), `flag` (the address of a picture); `empty` |
+| `clock` | `label`, `hours` (24 numbers), `gen` (24 numbers, ms), `peak` (the hour or `-1`), `peak_label`, `peak_text`, `total`, `hits_word`, `now` (the running hour or `-1`) |
+| `table` | `can_pick`, `pick`, `cols`, `total`: `label`, `cells`; `rows`: `label`, `week`, `is_end`, `run_text`, `cells`, `tops` |
+
+- **The live chart is calm.** The curtain of its arrival plays once; a tick slides the lines left by a step. Under the
+  hand a dashed guide and the points of every series, with a panel of the system float. The distances and the axis come
+  from the times of the points, not their numbers: 30 points, so a window of 5 to 30 minutes.
+- **The strip of the archive is one line of the whole history.** A column is the unique visitors of an average day, not the
+  sum of its month, which would understate a running month and February and already stands in the panel of the month. A
+  column is narrower than 24 px by the decision of 2026-10-29; WCAG 2.5.8 passes it as the arrows ‹ › and the list of
+  months stand on the page as its equal means.
+- **The rhythm of "Хиты по часам" is a chart of the theme.** `plugins/presentation/presentation.js` stays with the site,
+  so the panel does not depend on the module presentation.
+- **The behaviour of the pages** is `setStatView()`, `setStatFetch()` and `setStatMonth()`, `setMonitorView()`,
+  `setMonitorPulse()` and `setMonitorPoll()` of `admin-ui.js`; the rings and the strip are `setCockpitGauges()`, the lamp and
+  the poll of the home `setCockpitView()` and `setCockpitPoll()`. The data behind them is `docs/ARCHITECTURE.md`,
+  "Admin Shell Boundary".
 
 ## Node List Contract
 
@@ -1249,6 +1343,24 @@ Forward, if the attribute is there it must be right: every `for` resolves to a l
 - The walk composites sheer layers instead of skipping them, and does it per layer of one `background-image`, back to front — a hatch over a gradient stands on that gradient, not on the page two boxes further out.
 - **A masked element is invisible to the walk, so its colours are nobody's.** The mask list of `tools/ui-shots.json` keeps a shot still by hiding what moves, and the crawler sees the same hidden element: `time` is masked, and the registry holds no `time` pair on any page of the tree. The same goes for anything hidden when the page loads — a save bar that appears on the first keystroke is never sighted either. A component that falls in either hole has no measured contrast at all, and the only honest way to get one is to read the computed colours off the live element by hand and write the figure down.
 - Regenerate the registry in the same session as the manifest that feeds it. Comparing a registry against one taken under a different `mask`/`drop` list measures the difference between two runs, not a change.
+
+### What the audit of the panel left
+
+The repeated audit of 2026-11-01 (`docs/VERSIONS.md`) left these, each with its reason:
+
+- **The strip of the archive**, `target-size`: "The Engine Of The Parts" above; the equal means were checked on the live page.
+- **`landmark-unique` on the builder:** axe compares the `main` of the panel with the `main` of the site inside the frame.
+  They are two documents, and nothing needs changing.
+- **The theme `lite` inside the frame of the builder**, contrast: `.sl-generates` 2.65, the legends of the debug panel 2.74 and
+  3, `.sl-builder-name` 2.75. This is the theme of the site, which no audit has covered.
+- **`color-contrast` incomplete:** axe gave up on 76 thousand nodes on gradients and overlays. Outside "Статистика",
+  "Мониторинг" and the cockpit of the home, which were measured by pixels, nobody read them by hand. In those three only the
+  note "на хост" of a tile and the mark "00" of the dial stay under the norm by that measure; both read on the shot, as the
+  background of the tile and the arc fell into it.
+- **The live reader** ran in Chromium with NVDA 2026.3 on the home, "Комментарии" and "Конфигурации"; JAWS, VoiceOver and
+  Firefox were not checked.
+- **The label crawl does not open** an operation that writes or sends a file: `delete`, `clone`, `dump`, `pointreset`,
+  `export`, `download` and others, which `--census` lists.
 
 ### Why the baseline is not committed
 

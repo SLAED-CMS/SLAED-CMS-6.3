@@ -2953,7 +2953,7 @@ function getRouteJournal(PDO $pdo, string $work): array {
     return $out;
 }
 
-# The table of the journals on the security screen over real requests: the filters, the pager, a foreign line skipped and the link of a module for a super-admin alone
+# The table of the journals on the logs screen over real requests: the filters, the pager, a foreign line skipped and the link of a module for a super-admin alone
 function getRouteJournalView(string $work): array {
     $cells = static function (string $html): array {
         $rows = [];
@@ -2965,7 +2965,7 @@ function getRouteJournalView(string $work): array {
         }
         return $rows;
     };
-    $page = static fn(string $query): string => getRouteReply('root', 'GET', 'admin.php?name=security&op=logview&'.$query)['body'];
+    $page = static fn(string $query): string => getRouteReply('root', 'GET', 'admin.php?name=logs&op=logview&'.$query)['body'];
     $view = static fn(string $query): array => $cells($page($query));
     file_put_contents($work.'/logs/admin.log', "Login: Yes\nForeign block\n---\n", FILE_APPEND);
     $lines = '';
@@ -2979,7 +2979,7 @@ function getRouteJournalView(string $work): array {
     $past = date('Y-m-d', time() - 86400 * 2);
     $tabs = getRouteReply('root', 'GET', 'admin.php?name=voting')['body'];
     $help = getRouteReply('helper', 'GET', 'admin.php?name=comments');
-    $deny = getRouteReply('helper', 'GET', 'admin.php?name=security&op=logview&file=admin');
+    $deny = getRouteReply('helper', 'GET', 'admin.php?name=logs&op=logview&file=admin');
     return [
         'actions' => $view('file=admin'),
         'logins' => $view('file=admin&event=login'),
@@ -3049,6 +3049,70 @@ function getRouteSecrets(string $work): array {
         if (preg_match('/probe-(gkey|mkey|ghtoken|stolen)/', $text)) $held[] = basename($one);
     }
     $out['logs'] = ['held' => $held, 'request' => str_contains((string)(is_file($work.'/logs/request.log') ? file_get_contents($work.'/logs/request.log') : ''), 'gsecret')];
+    return $out;
+}
+
+# The proxy list the forms of the settings file must keep, and both jobs switched on
+function addRouteFormConf(string $work): void {
+    $data = require $work.'/config/security.php';
+    $data['security'] = array_replace($data['security'], ['proxy' => '10.9.8.7/32', 'log_b' => '1', 'log_d' => '1', 'mail_d' => '0', 'dump_age' => '7', 'write_h' => '1']);
+    setRouteFile($work.'/config/security.php', $data);
+    if (is_file($work.'/config/local.php')) unlink($work.'/config/local.php');
+}
+
+# The three forms that write config/security.php over real requests: each shows its own fields, writes them alone and leaves every other key as it was
+function getRouteForms(string $work): array {
+    $text = static fn(): string => (string)file_get_contents($work.'/config/security.php');
+    $keys = ['log_b', 'dump_age', 'log_d', 'dump_skip', 'mail_d', 'log', 'error_log', 'write_h', 'write_w', 'log_a', 'log_u', 'log_size', 'sess_d', 'sess_b'];
+    $urls = ['dbbackup' => 'name=scheduler&op=add&job=dbbackup', 'filescan' => 'name=scheduler&op=add&job=filescan', 'sitemap' => 'name=scheduler&op=add&job=sitemap',
+        'logs' => 'name=logs&op=config', 'security' => 'name=security&op=config'];
+    $out = ['fields' => [], 'pages' => []];
+    $body = [];
+    foreach ($urls as $key => $url) {
+        $body[$key] = getRouteReply('root', 'GET', 'admin.php?'.$url)['body'];
+        $out['fields'][$key] = array_values(array_filter($keys, static fn(string $v): bool => str_contains($body[$key], 'name="'.$v.'"')));
+    }
+    foreach (['name=logs', 'name=logs&op=logins', 'name=logs&op=info', 'name=security', 'name=security&op=banlist'] as $url) {
+        $out['pages'][$url] = getRouteReply('root', 'GET', 'admin.php?'.$url)['code'];
+    }
+    $list = getRouteReply('root', 'GET', 'admin.php?name=logs')['body'];
+    $none = [];
+    foreach (glob(dirname(__DIR__, 2).'/admin/lang/*.php') ?: [] as $one) {
+        if (preg_match("/define\('_SEC_CHECK_NONE','([^']+)'\)/", (string)file_get_contents($one), $hit)) $none[] = htmlspecialchars($hit[1], ENT_QUOTES);
+    }
+    $told = static fn(string $html): bool => array_filter($none, static fn(string $v): bool => str_contains($html, $v)) !== [];
+    $out['alert'] = [$told(getRouteReply('root', 'GET', 'admin.php?name=security')['body']), $told($list), str_contains($list, 'file=admin')];
+    $warn = static function (): array {
+        preg_match_all('#<a\b[^>]*>#', getRouteReply('root', 'GET', 'admin.php?name=scheduler')['body'], $tags);
+        $seen = [];
+        foreach ($tags[0] as $tag) {
+            if (!str_contains($tag, 'sl-dial') && preg_match('#name=scheduler&amp;op=add&amp;job=([a-z]+)#', $tag, $hit)) $seen[] = $hit[1];
+        }
+        return $seen;
+    };
+    $out['warn'] = [$warn()];
+    $was = (require $work.'/config/security.php')['security'];
+    $flip = static fn(string $key): string => ((string)($was[$key] ?? '0') === '1') ? '0' : '1';
+    $job = getRoutePairs(getRouteInputs($body['dbbackup'], 'save'));
+    $cold = getRouteReply('root', 'POST', 'admin.php', array_diff_key(['log_b' => '0', 'dump_age' => '3'] + $job, ['token' => 1]));
+    $out['cold'] = [$cold['code'], str_contains($text(), "'dump_age' => '3'")];
+    $one = getRouteReply('root', 'POST', 'admin.php', ['log_b' => '0', 'dump_age' => '3'] + $job);
+    $job = getRoutePairs(getRouteInputs($body['filescan'], 'save'));
+    $two = getRouteReply('root', 'POST', 'admin.php', ['log_d' => '0', 'mail_d' => '1', 'dump_skip' => "./one\\two\n..\\up\n.git\n.git/\n"] + $job);
+    $job = getRoutePairs(getRouteInputs($body['logs'], 'configsave'));
+    $tri = getRouteReply('root', 'POST', 'admin.php', ['log_size' => '12345', 'write_h' => '0'] + $job);
+    $job = getRoutePairs(getRouteInputs($body['security'], 'configsave'));
+    $out['warn'][] = $warn();
+    $own = ['error' => '1', 'idle' => '33', 'blocker_cookie' => 'probecook', 'url_get' => $flip('url_get'), 'url_post' => $flip('url_post'), 'mail' => $flip('mail'),
+        'mail_w' => $flip('mail_w'), 'block' => $flip('block'), 'cap_ttl' => '777'];
+    $sec = getRouteReply('root', 'POST', 'admin.php', $own + $job);
+    $data = $text();
+    $out['codes'] = [$one['code'], $two['code'], $tri['code'], $sec['code']];
+    $out['saved'] = array_map(static fn(string $v): bool => str_contains($data, $v), ["'log_b' => '0'", "'dump_age' => '3'", "'log_d' => '0'", "'mail_d' => '1'",
+        "'dump_skip' => 'one/two/\n.git/'", "'log_size' => '12345'", "'write_h' => '0'", "'proxy' => '10.9.8.7/32'", "'error' => '1'", "'idle' => '1980'",
+        "'blocker_cookie' => 'probecook'", "'ttl' => '777'", "'url_get' => '".$own['url_get']."'", "'url_post' => '".$own['url_post']."'", "'mail' => '".$own['mail']."'",
+        "'mail_w' => '".$own['mail_w']."'", "'block' => '".$own['block']."'"]);
+    $out['secret'] = strlen((string)((require $work.'/config/security.php')['security']['secret'] ?? ''));
     return $out;
 }
 
@@ -4300,6 +4364,7 @@ try {
     if (($argv[2] ?? '') === 'head') addRouteHeadTypes($rpdo, $rwork);
     if (($argv[2] ?? '') === 'journal') addRouteJournalConf($rpdo, $rwork);
     if (($argv[2] ?? '') === 'secrets') addRouteSecretConf($rpdo, $rwork);
+    if (($argv[2] ?? '') === 'forms') addRouteFormConf($rwork);
     if (($argv[2] ?? '') === 'address') addRouteAddressConf($rpdo, $rwork);
     if (($argv[2] ?? '') === 'parse') addRouteParseConf($rpdo, $rwork);
     if (($argv[2] ?? '') === 'build') addRouteBuildConf($rpdo, $rwork);
@@ -4342,6 +4407,8 @@ try {
         $report['runs']['journal'] = getRouteJournal($rpdo, $rwork);
     } elseif (($argv[2] ?? '') === 'secrets') {
         $report['runs']['secrets'] = getRouteSecrets($rwork);
+    } elseif (($argv[2] ?? '') === 'forms') {
+        $report['runs']['forms'] = getRouteForms($rwork);
     } elseif (($argv[2] ?? '') === 'address') {
         $report['runs']['address'] = getRouteWriters($rpdo, $rwork);
     } elseif (($argv[2] ?? '') === 'parse') {

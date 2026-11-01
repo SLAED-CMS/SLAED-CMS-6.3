@@ -67,6 +67,7 @@ class EditorToastUi implements ContentDriver {
             'php' => _EUSEPHP,
             'fullscreen' => _EFULLSCREEN,
             'exitfull' => _EEXITFULL,
+            'more' => _MORE,
             'image' => _IMG,
             'attach' => _EATTACH,
             'nofiles' => _NO_INFO,
@@ -84,7 +85,8 @@ class EditorToastUi implements ContentDriver {
         $js .= 'if(mnt){mnt.removeAttribute("aria-labelledby");mnt.removeAttribute("aria-label");mnt.removeAttribute("aria-describedby");}';
         $js .= 'var setname=function(){if(!mnt||(!lab&&!alt&&!des)){return;}';
         $js .= 'var box=mnt.querySelectorAll("[contenteditable=true],.ProseMirror,.toastui-editor-md-container textarea");';
-        $js .= 'for(var i=0;i<box.length;i++){if(lab){box[i].setAttribute("aria-labelledby",lab);}else if(alt){box[i].setAttribute("aria-label",alt);}';
+        $js .= 'for(var i=0;i<box.length;i++){if(box[i].isContentEditable){box[i].setAttribute("role","textbox");box[i].setAttribute("aria-multiline","true");}';
+        $js .= 'if(lab){box[i].setAttribute("aria-labelledby",lab);}else if(alt){box[i].setAttribute("aria-label",alt);}';
         $js .= 'if(des){box[i].setAttribute("aria-describedby",des);}}};';
         $js .= 'setname();setTimeout(setname,300);ed.on("changeMode",setname);';
         $js .= 'if(window.SlaedToastUi){window.SlaedToastUi.register('.$jid.',ed,'.$jopt.');}';

@@ -105,6 +105,7 @@ final class UpdateArchiveTest extends TestCase
         $this->assertSame(['css_f' => 'own.css', 'homeurl' => 'https://slaed.net', 'script_f' => 'own.js', 'webroot' => ''], $one['global']);
         $this->assertSame(['fresh' => '1', 'keep' => 'site'], $one['users']);
         $this->assertSame(['link' => '1'], $one['comments'], 'The link switch of the comments the parser made pointless was kept');
+        $this->assertSame(['log_b' => '1'], $one['security'], 'The two intervals no code reads were kept, or a key beside them was lost');
         $this->assertSame(['defaults' => ['list' => ['views' => ['list']]], 'limits' => ['edit' => 600], 'types' => ['news' => ['own' => 1]]], $one['node']);
         $this->assertSame(['google' => ['client' => '']], $one['oauth']);
         $this->assertFalse($one['header'], 'A reserved file of the shipped folder was written into the site');

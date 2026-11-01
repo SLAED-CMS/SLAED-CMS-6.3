@@ -479,9 +479,13 @@ if (isAdmin()) {
     } elseif ($panel) {
         getAdminPanel();
     } else {
+        $found = false;
         if (isAdmin(true)) {
             $module_file = BASE_DIR.'/admin/modules/'.$name.'.php';
-            if (file_exists($module_file)) require_once $module_file;
+            if (file_exists($module_file)) {
+                require_once $module_file;
+                $found = true;
+            }
         }
         if (isset($conf['modules'][$name])) {
             if (isAdmin(true) || is_admin_modul($name)) {
@@ -489,9 +493,11 @@ if (isAdmin()) {
                 if (file_exists($path.'/index.php')) {
                     getLang($name, true);
                     require_once $path.'/index.php';
+                    $found = true;
                 }
             }
         }
+        if (!$found) setError(404);
     }
 } else {
     $home = 1;

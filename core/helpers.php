@@ -275,7 +275,7 @@ function getTplAdminTabs(array $data = []): string {
             ];
         }
     }
-    if ($known && isAdmin(true)) $links[] = ['href' => HOME_PATH.$afile.'.php?name=security&op=logview&file=admin&modul='.$name, 'label' => _SEC_STAT_A];
+    if ($known && isAdmin(true)) $links[] = ['href' => HOME_PATH.$afile.'.php?name=logs&op=logview&file=admin&modul='.$name, 'label' => _SEC_STAT_A];
     $adminvars['section'] = $title;
     $adminvars['view'] = '';
     $tabs = '';

@@ -287,7 +287,7 @@ function getMonitorGround(array $snap): string {
         'content_html' => $list([
             getMonitorSize(_UPLOADS, $snap['uploads']),
             getMonitorSize(_MONITOR_BACKUPS, $store['backup']),
-            getMonitorSize(_MONITOR_LOGS, $store['logs']),
+            getMonitorSize(_LOGS, $store['logs']),
             getMonitorSize(_MONITOR_CACHE, $store['cache']),
         ]),
     ]);

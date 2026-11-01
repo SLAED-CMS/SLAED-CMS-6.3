@@ -496,6 +496,23 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
     color: var(--sl-text-muted);
 }
 
+/* The vendor paints the source for a white page: a quote #555, strong words and table cells #222, code on a pale plate, whatever the scheme */
+.toastui-editor-md-block-quote .toastui-editor-md-marked-text,
+.toastui-editor-md-strong,
+.toastui-editor-md-emph,
+.toastui-editor-md-table .toastui-editor-md-table-cell,
+.toastui-editor-md-code.toastui-editor-md-marked-text,
+.toastui-editor-md-code-block {
+    color: var(--sl-text);
+}
+
+.toastui-editor-md-code,
+.toastui-editor-md-code-block,
+.toastui-editor-md-code-block-line-background,
+.toastui-editor-md-custom-block-line-background {
+    background-color: var(--sl-bg-muted);
+}
+
 /* The words of a link and the odd list markers take the link of the theme: the blue of the vendor holds 3:1 on white, under the 4.5:1 of text */
 .toastui-editor-md-link.toastui-editor-md-link-desc.toastui-editor-md-marked-text,
 .toastui-editor-md-list-item-style.toastui-editor-md-list-item-odd {

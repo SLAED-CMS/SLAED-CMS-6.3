@@ -1,5 +1,26 @@
 # Versions
 
+## 2026-11-01
+
+### The panel is audited again, under axe and under a live screen reader
+
+- **The audit.** Axe 4.14 (WCAG 2.2 AA and best-practice) over 249 screens of the panel, 517 addresses with the variants of a search term and of a pick in the builder, each at 1440 and 375 px in the light and the dark scheme, then 70 states the walk does not open: every dialog shown, the floats, a picked row, an empty result, the refusals, a form with an empty required field. NVDA 2026.3 read the home, "Комментарии" and "Конфигурации" by keys; the speech came from its log.
+- **Landmarks.** The footer of the panel is a `footer`, the debug panel an `aside` named `_DEBUGPANEL`, the stage of the builder a `section`, so a page has one `main`. The login of the panel and the page of `setExit()` in the admin theme have their `main`, and the latter its `title`. The upper pager is named apart from the lower one, a code block is a `group`, as a help page holds many of them, and a section of the debug panel takes the Tab, as it scrolls.
+- **Names.** The lamp of the home takes its name from what it shows, the text of the lamp of "Мониторинг" stands in its label word for word, and the zone of the file window drops the `aria-label` that hid its limits. `editor-tags.js` turns the `aria-role` of Toast UI into `role` and names its button of the folded toolbar; the editable body takes `role="textbox"`, which its name needs. The fields of the form "Пункты" of "Группы" are named by their rule and column. A label and a figure in a row of the bell no longer run together for a reader (`.sl-bell-num::before`).
+- **Keys and state.** Space sorts by a head cell as Enter does (`setTableSortKey()`), the glyph of the sort left the name of the cell, and a strip of links marks its page with `aria-current`.
+- **Targets.** A checkbox of the panel keeps 4 px on every side and an option under another 24 px of height, as WCAG 2.5.8 asks of a target under 24. The strip of the statistics archive stays narrower by the decision of 2026-10-29: the month list and ‹ › are its equal means.
+- **Contrast.** `--sl-success-strong` and `--sl-danger-strong` of the admin theme go darker in the light scheme, so a chip holds 4.5:1 on the side block. The found words, the button of a warning, a link of a picked row, a row of the builder that is off, the captions of the file window in both themes, the mood of a lamp, the hours of the dial and a figure in the warning tone come up to the norm. The skin of Toast UI, one file in both themes, paints the Markdown source for both schemes, and a link inside text is underlined.
+- **The file manager.** A long name ends in its ellipsis instead of pushing the table under the properties, a phone scrolls the table in its frame, and the toolbar wraps.
+- **A dead section.** An address of the panel that names no section, or a section the administrator may not open, answers 404 instead of an empty page with 200 (`AdminLogTest`), and "Где ещё настраивается" of the builder leads to "Администраторы", where the editor of an administrator is chosen, not to the removed "Редактор".
+- **The label crawl.** `tools/label-audit.mjs` opens the screens of the panel it passed by (`sysfiles`, `fmedit`, `tplconfig`, `passwd`, `logview`, `logins`, `queue`, `dead`, `types`, `type`, `import`, `support`, `votes`, `points`, `toplist`, `xsledit`, `favconf`, `theme`), which a GET only shows, and only in the panel, as the same words on the site are other handlers. A search term is no part of a route, so no query of a visitor reaches the tracked baseline, which also drops the removed routes.
+
+### The journals are a section of their own, and the settings of two jobs stand on their forms
+
+- **The section.** `admin/modules/logs.php`, `name=logs`, holds the list of the journals, `op=logview`, `op=logins`, `op=download` and `op=delete`, moved from "Безопасность" under the token and the journal of `logs`; its caption `_LOGS` replaces `_MONITOR_LOGS`. The first tab of "Безопасность" is the ban list with the verdict of the self-check, and the addresses `name=security&op=logview` and `name=security&op=logins` are gone. The merge of an update adds the section to a site, as it adds any shipped module.
+- **The settings.** `log`, `error_log`, `write_h`, `write_w`, `log_a`, `log_u` and `log_size` are saved by `op=config` of "Журналы"; `log_b` and `dump_age` by the form of the job `dbbackup`; `log_d`, `dump_skip` and `mail_d` by the form of `filescan`, whose warnings in the list lead there. The keys stay in `config/security.php`.
+- **Three writers, one file.** Every form passes `$conf['security']` as the third argument of `setConfigFile()` and writes its own fields; `configsave()` of "Безопасность" no longer loses `proxy` on a save (`SecurityFormTest`).
+- **Gone.** `sess_d`, `sess_b`, their fields and `_SEC_LOG_DS`, `_SEC_LOG_DB`: no code read them, a job takes its time from `schedule`. `setUpdateConfig()` and `setUpdateMerge()` drop them from a site.
+
 ## 2026-10-31
 
 ### The request reading becomes a sensor, and the panel and the logins close
@@ -120,8 +141,9 @@
 
 ### The panel takes the parts of its series: "Статистика" and "Мониторинг" are cockpits, the other screens take the window
 
-The engine of the series lives in `admin-ui.js`, and the two screens are built on it by their data. The help of each
-screen is in `admin/info/` and `modules/*/admin/info/`.
+The engine of the series lives in `admin-ui.js`, and the two screens are built on it by their data. The references are
+`docs/TEMPLATES.md`, "Parts Of A Screen" and "The Engine Of The Parts", `docs/ARCHITECTURE.md`, "Admin Shell Boundary", and
+`docs/PERFORMANCE.md`, "Admin Runtime"; the help of each screen is in `admin/info/` and `modules/*/admin/info/`.
 
 - **"Статистика".** `getStatData()` gives the cockpit: the dial of the day, the archive strip kept in
   `storage/counter/archive.json`, the windows, the log of days and `op=live`. The GD chart and the settings `bet` and `shi`

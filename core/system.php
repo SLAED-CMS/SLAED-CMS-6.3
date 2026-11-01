@@ -658,7 +658,7 @@ function getSchedulerNextJob(?string $name = null): ?array {
 # Runs the database backup through the Backup class; the class is required here rather than globally, because there is no autoloader for core/classes and this job runs once a day
 function addBackupJob(): array {
     global $db, $conf;
-    if (empty($conf['security']['log_b'])) return ['status' => 'disabled', 'message' => 'Database backup is disabled in the security settings'];
+    if (empty($conf['security']['log_b'])) return ['status' => 'disabled', 'message' => 'Database backup is disabled in the form of this job'];
     require_once BASE_DIR.'/core/classes/backup.php';
     $sett = $conf['scheduler']['jobs']['dbbackup']['settings'] ?? [];
     return (new Backup($db, ['name' => (string)($conf['db']['name'] ?? '')], is_array($sett) ? $sett : [], BACKUP_DIR))->addDatabaseBackup();

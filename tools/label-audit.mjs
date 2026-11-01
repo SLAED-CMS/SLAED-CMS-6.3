@@ -57,6 +57,9 @@ const origin = new URL(conf.base).origin;
 const OPEN = new Set(['', 'view', 'edit', 'add', 'new', 'newuser', 'passlost', 'config', 'info', 'list', 'search',
     'profil', 'profile', 'privat', 'favorites', 'settings', 'docs', 'stat', 'preview', 'reply', 'newtopic', 'quote', 'contact',
     'edithome', 'oauthlist', 'oauthkeys', 'mailconf', 'replace', 'banlist', 'liste', 'rules', 'stats', 'fileadd', 'fileedit', 'subadd', 'addedit']);
+// The screens of the panel a GET only shows. The same words on the site are other handlers, so they open nothing there: support is a write of the node module
+const PANEL = new Set(['favconf', 'theme', 'sysfiles', 'fmedit', 'tplconfig', 'passwd', 'logview', 'logins', 'queue', 'dead', 'types', 'type', 'import', 'support',
+    'votes', 'points', 'toplist', 'xsledit']);
 // The parameters that name one record rather than one route. Every one of them is dropped from the signature, and the
 // four that identify a record leave the `#rec` mark behind, so a hundred categories are one route that is known to be
 // record-bound. Measured, without this the panel alone offered more than five hundred signatures - eighty six category
@@ -70,7 +73,7 @@ const OPEN = new Set(['', 'view', 'edit', 'add', 'new', 'newuser', 'passlost', '
 const SEED = ['/index.php?name=account&op=newuser', '/index.php?name=account&op=passlost'];
 const REC = new Set(['id', 'cid', 'pid', 'qid']);
 const LOOSE = new Set([...REC, 'name', 'op', 'num', 'cat', 'token', 'sid', 'page', 'uname', 'redirect', 'go', 'prov',
-    'mod', 'modul', 'new_ip', 'search', 'at', 'last', 'pnum', 'com', 'typ', 'let', 'key', 'own', 'word', 'month']);
+    'mod', 'modul', 'new_ip', 'search', 'at', 'last', 'pnum', 'com', 'typ', 'let', 'key', 'own', 'word', 'month', 'find']);
 // What a readable path of the site names, asked of the stand once per path: an operation of its prefix, or the kind of
 // the registry entity. The address alone cannot tell /news/internet, a category, from /news/<slug>, a material, nor
 // /account/logout from a page - and an operation the walk does not know must stay a skipped op, not become a record
@@ -120,7 +123,9 @@ function getRouteSig(href, side) {
     const key = raw.startsWith('amp;') ? raw.slice(4) : raw;
     if (REC.has(key)) rec = true;
     // chng beside a search field is the term a list is searched for - an author, an address, a number - so one screen, however many rows link to it
-    if (!LOOSE.has(key) && !(key === 'chng' && url.searchParams.has('search'))) rest.push(key + '=' + val);
+    // file of the editor and dir of the file manager are one screen however many the tree links to; file of a journal is a journal of its own, dir of a list its sort
+    const same = (key === 'chng' && url.searchParams.has('search')) || (key === 'file' && op === 'fmedit') || (key === 'dir' && name === 'uploads');
+    if (!LOOSE.has(key) && !same) rest.push(key + '=' + val);
   }
   rest.sort();
   return side + ':' + name + ':' + op + (rec ? '#rec' : '') + (rest.length ? '?' + rest.join('&') : '');
@@ -398,7 +403,7 @@ try {
         const url = new URL(href);
         if (url.pathname !== adminPath && url.pathname !== '/index.php' && url.pathname !== '/' && getSitePath(url) === '') continue;
         const op = getRouteOp(url)?.op ?? '?path';
-        if (!OPEN.has(op)) {
+        if (!OPEN.has(op) && !(url.pathname === adminPath && PANEL.has(op))) {
           skipped.set(op, (skipped.get(op) || 0) + 1);
           continue;
         }

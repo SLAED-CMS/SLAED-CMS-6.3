@@ -449,16 +449,20 @@ td.sl-cell-ellipsis {
   text-align: center;
 }
 
+/* The empty alternative keeps the glyph of the sort out of the name of the head cell; the first line is for a browser that does not know the form */
 .sl-sort::after {
   content: "\f127";
+  content: "\f127" / "";
 }
 
 .sl-sort-asc::after {
   content: "\f235";
+  content: "\f235" / "";
 }
 
 .sl-sort-desc::after {
   content: "\f229";
+  content: "\f229" / "";
 }
 
 thead tr th[data-sort-method="none"] {
@@ -11607,7 +11611,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
 }
 
 .sl-fm-win .sl-fm-rail-cap {
-  color: var(--sl-text-subtle);
+  color: var(--sl-text-muted);
   font-size: var(--sl-font-micro);
   letter-spacing: var(--sl-track-wide);
   padding: var(--sl-space-2) var(--sl-space-4) var(--sl-space-3);
@@ -11709,7 +11713,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
 }
 
 .sl-fm-win .sl-fm-rail-foot {
-  color: var(--sl-text-subtle);
+  color: var(--sl-text-muted);
   font-size: var(--sl-font-micro);
   line-height: var(--sl-line-normal);
   margin-top: auto;

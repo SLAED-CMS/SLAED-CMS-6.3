@@ -576,7 +576,8 @@ const CONFOLD = [
     'users' => "\$confu = array();\n\$confu['point'] = \"1\";\n\$confu['points'] = \"1,2,3\";\n\$confu['anum'] = \"77\";",
     'stat' => "\$confst = array();\n\$confst['stat'] = \"0\";",
     'uploads' => "\$confup = array();\n\$confup['forum'] = \"gif,png|104857600|1048576|500|500|10|250|10|200|100|1|0\";\n\$confup['typ'] = \"gif,png\";",
-    'security' => "\$confs = array('blocker_ip' => '10.1.2.3|3|abc|1784035343|Hack||10.9.9.9|4|0|1784035344|Spam||::1|4|0|1|Odd||', 'blocker_user' => 'bob|1784035343|Spam||');",
+    'security' => "\$confs = array('blocker_ip' => '10.1.2.3|3|abc|1784035343|Hack||10.9.9.9|4|0|1784035344|Spam||::1|4|0|1|Odd||', 'blocker_user' => 'bob|1784035343|Spam||',"
+        ." 'sess_b' => '86400', 'sess_d' => '86400');",
     'lang' => "\$confla = array('lang' => 'german', 'key' => 'k1');",
     'fields' => "\$conffi = array();\n\$conffi['account'] = \"Kind|A,B|3|1\";",
     'header' => "echo '<script>probe</script>';",
@@ -636,6 +637,7 @@ function getConfState(array $rows): array {
         'fields' => getConfRead('fields'),
         'uploads' => getConfRead('uploads'),
         'bans' => array_intersect_key((array)getConfRead('security'), ['blocker_ip' => 0, 'blocker_user' => 0]),
+        'sess' => array_intersect_key((array)getConfRead('security'), ['sess_b' => 0, 'sess_d' => 0]),
         'ship' => ['css_f' => $ship['global']['css_f'], 'amod' => $ship['global']['amod'] ?? null, 'theme' => $ship['global']['theme'],
             'users' => array_keys($ship['users']['users']), 'statistic' => $ship['statistic']['statistic']],
         'old' => array_map('basename', glob(CONFIG_DIR.'/config_*.php') ?: []),
@@ -970,6 +972,7 @@ function setMergeSite(bool $pack): void {
         'cache_b' => '1', 'version' => '6.3.0', 'clickable' => '1', 'message' => '1']);
     setUpdateFile('users.php', ['anonym' => 'Guest', 'point' => '1', 'keep' => 'site']);
     setUpdateFile('comments.php', ['alink' => '2', 'link' => '1']);
+    setUpdateFile('security.php', ['sess_b' => '86400', 'sess_d' => '86400', 'log_b' => '1']);
     setUpdateFile('node.php', ['types' => ['news' => ['own' => 1]], 'limits' => ['edit' => 600]], [], true);
     if (!$pack) return;
     $ship = BACKUP_DIR.'/release/config';
@@ -990,7 +993,7 @@ function getMergeClean(): array {
     $rows = setUpdateMerge();
     $read = fn(string $name): array => (array)(($name === 'global') ? getUpdateSource(CONFIG_DIR.'/global.php') : (getUpdateSource(CONFIG_DIR.'/'.$name.'.php')[$name] ?? []));
     $out['first'] = ['done' => checkProbeDone($rows), 'text' => getProbeText($rows), 'global' => $read('global'), 'users' => $read('users'), 'node' => $read('node'),
-        'oauth' => $read('oauth'), 'comments' => $read('comments'), 'header' => is_file(CONFIG_DIR.'/header.php')];
+        'oauth' => $read('oauth'), 'comments' => $read('comments'), 'security' => $read('security'), 'header' => is_file(CONFIG_DIR.'/header.php')];
     $out['again'] = getProbeText(setUpdateMerge());
     return $out;
 }

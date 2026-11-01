@@ -173,6 +173,24 @@ Recommended direction:
    `COUNT(*)` where possible.
 5. Optionally cache admin counter blocks for a short TTL.
 
+Measured through the browser on the stand, as the administrator, 2026-11-01, machine load 10% before the run and 19% after
+it, 216 files of the statistics archive, generation and queries from the footer of the page, one load for the expired monitor
+cache, three for an absent `archive.json`, four to six for the others:
+
+| Page | State | Generation | Queries | Document |
+|---|---|---|---|---|
+| `name=statistic`, the first day of a month | `archive.json` warm | 0.20–0.23 s | 22 | 252 KB |
+| | `archive.json` absent | 0.23–0.25 s | 22 | 252 KB |
+| `name=statistic&month=<a full month>` | `archive.json` warm | 0.21–0.24 s | 22 | 274 KB |
+| `name=monitor` | monitor cache warm | 0.14–0.16 s | 26 | 144 KB |
+| | monitor cache expired | 0.20 s | 32 | 146 KB |
+
+The poll `op=live` of the statistics took 66–83 ms and 10 KB on the first day of a month, 59–96 ms and 21 KB on a full one.
+That of the monitor took 55–85 ms and 3.9 KB, and 1.7 s when it retook the sample, in the background, with the session
+already released. A run of 2026-10-31 at CPU 26–59% answered 0.30–0.37 s for the statistics, so a figure from a loaded machine
+compares with nothing here. The sums of closed months stay in `archive.json`, as the strip would read every file of the
+archive otherwise.
+
 ### Security Request Checks
 
 `core/security.php` always starts a PHP session and runs blocker checks. Request

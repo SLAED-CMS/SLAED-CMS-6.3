@@ -13,13 +13,13 @@ function scheduler(): void {
     global $afile, $conf, $tpl;
     $jobs = getSchedulerJobs();
     $cont = '';
-    $wargo = $tpl->getHtmlFrag('link', [
-        'href' => $afile.'.php?name=security&op=config',
+    $wargo = static fn(string $job): string => $tpl->getHtmlFrag('link', [
+        'href' => $afile.'.php?name=scheduler&op=add&job='.$job,
         'label' => _SCHEDULER_WARN_GO,
         'title' => _SCHEDULER_WARN_GO,
     ]);
-    if (!$conf['security']['log_b']) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _SCHEDULER_WARN_DB.' '.$wargo.'.']);
-    if (!$conf['security']['log_d']) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _SCHEDULER_WARNLOG.' '.$wargo.'.']);
+    if (!$conf['security']['log_b']) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _SCHEDULER_WARN_DB.' '.$wargo('dbbackup').'.']);
+    if (!$conf['security']['log_d']) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _SCHEDULER_WARNLOG.' '.$wargo('filescan').'.']);
     $head = [
         ['content' => _TITLE],
         ['content' => _SCHEDULER_NEXTRUN, 'is_col_date' => true],
@@ -125,6 +125,7 @@ function add(string $name = ''): void {
     $readonly = $isnew ? '' : ' readonly';
     $cont = getTplAdminTabs(['ops' => ['name=scheduler', 'name=scheduler&op=add', 'name=scheduler&op=info'], 'tabs' => [_HOME, _ADD, _MANUAL], 'tab' => 1]);
     $cont .= checkPerms(CONFIG_DIR.'/scheduler.php');
+    if (!$iscustom && in_array($key, ['dbbackup', 'filescan'], true)) $cont .= checkPerms(CONFIG_DIR.'/security.php');
     $cont .= $tpl->getHtmlFrag('alert', ['text' => $info]);
     $rows = [[
         'label_for' => 'f-job',
@@ -219,6 +220,43 @@ function add(string $name = ''): void {
             ]),
         ];
     }
+    $yesno = [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]];
+    $switch = static fn(string $field, string $label): array => [
+        'label_html' => $label,
+        'label_id' => $labid = getFieldIds('', $field)['label'],
+        'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => $field, 'value' => (string)$conf['security'][$field], 'options' => $yesno]),
+    ];
+    if (!$iscustom && $key === 'dbbackup') {
+        $rows[] = $switch('log_b', _SEC_DB);
+        $rows[] = [
+            'label_for' => 'f-dump-age',
+            'label_html' => _SEC_DUMP_AGE,
+            'field_html' => $tpl->getHtmlFrag('input', [
+                'itype' => 'number',
+                'name_attr' => 'dump_age',
+                'input_id' => 'f-dump-age',
+                'value_attr' => intval($conf['security']['dump_age']),
+            ]),
+        ];
+    }
+    if (!$iscustom && $key === 'filescan') {
+        $rows[] = $switch('log_d', _SEC_LOG_D);
+        $rows[] = [
+            'label_for' => 'f-dump-skip',
+            'label_html' => _SEC_DUMP_SKIP,
+            'hint_html' => _SEC_DUMP_SKIP_INFO,
+            'hint_id' => $hntid = getFieldIds('f-dump-skip')['hint'],
+            'field_html' => $tpl->getHtmlFrag('textarea', [
+                'describedby' => $hntid,
+                'name_attr' => 'dump_skip',
+                'input_id' => 'f-dump-skip',
+                'rows_num' => 8,
+                'value_text' => (string)($conf['security']['dump_skip'] ?? ''),
+            ]),
+            'is_full' => true,
+        ];
+        $rows[] = $switch('mail_d', _SEC_MAIL_D_SEND);
+    }
     $rows[] = [
         'label_for' => 'f-priority',
         'label_html' => _SCHEDULER_PRIO, 'hint_html' => _SCHEDULER_PRIOTIP, 'hint_id' => $hntid = getFieldIds('f-priority')['hint'],
@@ -245,7 +283,6 @@ function add(string $name = ''): void {
             'input_attr' => 'min="60"',
         ]),
     ];
-    $yesno = [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]];
     $rows[] = [
         'label_html' => _ACTIVATE2,
         'label_id' => $labid = getFieldIds('', 'active')['label'],
@@ -331,6 +368,22 @@ function save(): void {
         }
         ksort($data['jobs']);
         setConfigFile('scheduler.php', $data);
+        if ($issys && $name === 'dbbackup') {
+            setConfigFile('security.php', ['log_b' => getVar('post', 'log_b', 'num'), 'dump_age' => max(1, intval(getVar('post', 'dump_age', 'num', 7)))], $conf['security']);
+        }
+        if ($issys && $name === 'filescan') {
+            $dskip = [];
+            foreach (explode("\n", str_replace(["\r\n", "\r"], "\n", getVar('post', 'dump_skip', 'raw', ''))) as $line) {
+                $line = trim(str_replace('\\', '/', $line));
+                $line = preg_replace('#/+#', '/', $line);
+                $line = preg_replace('#^\./#', '', (string)$line);
+                $line = trim((string)$line, " \t\n\r\0\x0B");
+                if ($line === '' || $line === '.' || $line === './' || str_contains($line, '..')) continue;
+                $dskip[] = str_ends_with($line, '/') ? $line : $line.'/';
+            }
+            $sets = ['log_d' => getVar('post', 'log_d', 'num'), 'mail_d' => getVar('post', 'mail_d', 'num'), 'dump_skip' => implode("\n", array_unique($dskip))];
+            setConfigFile('security.php', $sets, $conf['security']);
+        }
     }
     setRedirect($afile.'.php?name=scheduler&op=add&job='.$name, false, 302, $warn ? _TOKENMISS : _SUCCSAVE, $warn);
 }

@@ -294,12 +294,14 @@ function points(): void {
     $prows = '';
     foreach ($conf['points']['actions'] as $name => $rule) {
         if ($name === 'adjust') continue;
-        $cells = [['has_content_text' => true, 'content_text' => constant('_POINTS_'.strtoupper($name))]];
+        $rname = constant('_POINTS_'.strtoupper($name));
+        $cells = [['has_content_text' => true, 'content_text' => $rname]];
         foreach ($heads as $key => $head) {
             $cells[] = ['content_html' => $tpl->getHtmlFrag('input', [
                 'itype' => 'number',
                 'name_attr' => 'rule['.$name.']['.$key.']',
                 'value_attr' => (string)$rule[$key],
+                'aria_label' => $rname.': '.$head,
                 'placeholder_text' => $head,
                 'is_required' => true,
             ])];

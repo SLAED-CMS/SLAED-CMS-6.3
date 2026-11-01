@@ -8,7 +8,7 @@
     <span class="sl-modal-cap"><strong>{{ title_text }}</strong><span class="sl-modal-sub" title="{{ sub_text }}">{{ sub_text }}</span></span>
     {% if sel %}<span class="sl-modal-acts">{% if is_step %}<button type="button" class="sl-modal-act" data-sl-lay-step="{{ prev }}" title="{{ prev_text }}" aria-label="{{ prev_text }}"{% if not prev %} disabled{% endif %}><i class="bi bi-chevron-left" aria-hidden="true"></i></button><button type="button" class="sl-modal-act" data-sl-lay-step="{{ next }}" title="{{ next_text }}" aria-label="{{ next_text }}"{% if not next %} disabled{% endif %}><i class="bi bi-chevron-right" aria-hidden="true"></i></button>{% endif %}<button type="button" class="sl-modal-act sl-modal-act-close" data-sl-lay-unpick title="{{ unpick_text }}" aria-label="{{ unpick_text }}"><i class="bi bi-x-lg" aria-hidden="true"></i></button></span>{% endif %}
   </div>
-  <div class="sl-modal-body"{% if tabs %} data-sl-tabs-init="sl-lay-tabs"{% endif %}>
+  <div class="sl-modal-body" tabindex="0"{% if tabs %} data-sl-tabs-init="sl-lay-tabs"{% endif %}>
     {% if tabs %}
     <ul class="sl-tabs-nav sl-lay-tabs">{% for tab in tabs %}<li class="sl-tabs-item"><a href="#" class="sl-tabs-link{% if tab.is_first %} sl-is-active{% endif %}" data-sl-tab-link data-sl-tab-target="sl-lay-{{ tab.key }}"><i class="bi bi-{{ tab.icon }}" aria-hidden="true"></i>{{ tab.label }}</a></li>{% endfor %}</ul>
     {% for tab in tabs %}<div class="sl-tab-panel" data-sl-tab-panel="sl-lay-{{ tab.key }}"{% if not tab.is_first %} hidden{% endif %}>{{{ tab.body_html }}}</div>{% endfor %}

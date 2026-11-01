@@ -10,7 +10,7 @@ use PHPUnit\Framework\TestCase;
 # Journal names of docs/ARCHITECTURE.md, "Private Data Boundary": a journal is named after what it holds, a failure goes to error_*.log, a record of what happened to <meaning>.log
 final class JournalNameTest extends TestCase
 {
-    # Every journal of storage/logs/ and what it holds: the rule table of the plan, which the label map of the security section has to cover exactly
+    # Every journal of storage/logs/ and what it holds: the rule table of the plan, which the label map of the logs section has to cover exactly
     private const JOURNALS = ['admin', 'database', 'error_file', 'error_php', 'error_site', 'error_sql', 'file', 'filescan', 'filescan_tree', 'hack', 'oauth', 'request',
         'user', 'warn'];
 
@@ -27,7 +27,7 @@ final class JournalNameTest extends TestCase
         require_once $root.'/core/monitor.php';
     }
 
-    # Every channel of Logger lands in a journal of the table at every level, and the security section labels every journal and nothing else
+    # Every channel of Logger lands in a journal of the table at every level, and the logs section labels every journal and nothing else
     #[Test]
     public function everyChannelHasAJournalAndEveryJournalALabel(): void
     {
@@ -38,11 +38,11 @@ final class JournalNameTest extends TestCase
                 $this->assertContains($name, self::JOURNALS, 'The channel '.$chan.' at '.$levl.' writes a journal outside the rule');
             }
         }
-        preg_match('/\$labels = \[(.*?)\];/s', $this->getSource('admin/modules/security.php'), $map);
+        preg_match('/\$labels = \[(.*?)\];/s', $this->getSource('admin/modules/logs.php'), $map);
         preg_match_all("/'([a-z_]+)' => _SEC_STAT_/", $map[1] ?? '', $keys);
         $labels = $keys[1];
         sort($labels);
-        $this->assertSame(self::JOURNALS, $labels, 'The label map of the security section does not cover exactly the journals of the rule');
+        $this->assertSame(self::JOURNALS, $labels, 'The label map of the logs section does not cover exactly the journals of the rule');
     }
 
     # Every name the code writes into LOGS_DIR is a journal, a state file or a directory of state, and every rotation archive is named after its journal

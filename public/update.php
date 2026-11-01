@@ -2207,6 +2207,7 @@ function setUpdateConfig(): array {
         }
         if ($into === 'lang' && isset($site['lang'])) $site['lang'] = $langs[$site['lang']] ?? $site['lang'];
         if ($into === 'comments') unset($site['alink']);
+        if ($into === 'security') unset($site['sess_b'], $site['sess_d']);
         foreach ($into === 'uploads' ? $site : [] as $key => $val) {
             $part = is_string($val) ? explode('|', $val) : [];
             if (count($part) !== 12) continue;
@@ -2254,7 +2255,7 @@ function setUpdateMerge(): array {
     $pack = BACKUP_DIR.'/release/config';
     if (!is_dir($pack)) return getUpdateRow('config: the shipped settings are not in storage/backup/release/config, put the config/ of the release there and run again', false);
     $gone = ['global' => '/^(rewrite|sep|tsep|title|ctitle|clickable|dbsync|version|message|cache_.+|css_(?!f$).+|script_(?!f$).+)$/D',
-        'users' => '/^(anonym|network|network_c|point|points)$/D', 'newsletter' => '/^(active|count)$/D', 'voting' => '/^bar$/D', 'comments' => '/^alink$/D'];
+        'users' => '/^(anonym|network|network_c|point|points)$/D', 'newsletter' => '/^(active|count)$/D', 'voting' => '/^bar$/D', 'comments' => '/^alink$/D', 'security' => '/^(sess_b|sess_d)$/D'];
     $cut = [];
     foreach ($gone as $name => $find) {
         $data = getUpdateSource(CONFIG_DIR.'/'.$name.'.php');
