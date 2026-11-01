@@ -1,0 +1,12 @@
+@property --sl-d-pointer-x {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 16px;
+}
+
+.sl-one {
+  --sl-d-pointer-x: inherit;
+  --sl-own: inherit;
+  --sl-d-part: 1px;
+  padding: 10px;
+}

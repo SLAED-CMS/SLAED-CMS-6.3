@@ -411,9 +411,7 @@ function getThemeModel(string $name): array {
     return $out;
 }
 
-# Build one model from CSS already in hand, which is what lets the tool be tested on fixtures with known answers
-# A descriptor block such as @font-face is not a rule: it holds descriptors where var() is invalid, so a figure inside one is not a decision a theme can move
-# The @media and @keyframes blocks never reach the descriptor check
+# Build one model from CSS in hand, fixtures too; a descriptor block (@font-face, @property) holds no decision, and a `data` name that only says inherit declares nothing
 function getTextModel(array $list, string $api = ''): array {
     $cont = getContract();
     $out = ['name' => 'fixture', 'conf' => [], 'api' => [], 'rules' => [], 'files' => [], 'marker' => false, 'scoped' => [], 'clash' => []];
@@ -443,6 +441,7 @@ function getTextModel(array $list, string $api = ''): array {
             foreach ($rule['decls'] as $decl) {
                 if (!str_starts_with($decl['prop'], '--')) continue;
                 if ($mode && isset($out['api'][$decl['prop']])) continue;
+                if ($decl['val'] === 'inherit' && isset($cont['data'][$decl['prop']])) continue;
                 $out['scoped'][] = ['name' => $decl['prop'], 'sel' => $rule['sel'], 'file' => $path, 'line' => $rule['line']];
             }
             $out['rules'][] = $rule;

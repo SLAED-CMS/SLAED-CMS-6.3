@@ -5473,6 +5473,19 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   outline-offset: calc(var(--sl-ring-gap) * -1);
 }
 
+/* The place of the pointer light does not inherit, so a move restyles no descendant of what slaed.js writes on; a rule that reads it says inherit */
+@property --sl-d-pointer-x {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+
+@property --sl-d-pointer-y {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+
 /* Motion over the page: nothing here changes a colour or a measure, and where motion is reduced it is not there */
 @media (prefers-reduced-motion: no-preference) {
   /* The beam crosses every solid head once a cycle, each a tenth of a cycle after the one before it, and at once under the hand; on the installer card it crosses the logo */
@@ -5497,6 +5510,8 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
 
   /* The light that follows the pointer, as over the site; slaed.js writes where it is */
   body[data-sl-pointer]::after {
+    --sl-d-pointer-x: inherit;
+    --sl-d-pointer-y: inherit;
     content: "";
     position: fixed;
     inset: 0;
@@ -9208,6 +9223,8 @@ body:has(.sl-admin-login-shell)::before {
 }
 
 body[data-sl-pointer] .sl-admin-login-card:has(.sl-setup)::after {
+  --sl-d-pointer-x: inherit;
+  --sl-d-pointer-y: inherit;
   background: radial-gradient(circle var(--sl-pointer-width) at var(--sl-d-pointer-x) var(--sl-d-pointer-y), var(--sl-primary), transparent 70%) fixed;
 }
 

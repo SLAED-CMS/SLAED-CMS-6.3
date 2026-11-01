@@ -228,6 +228,8 @@
         event.preventDefault();
         state.drag = { spot: null };
         ghost.textContent = state.names[state.sel] || '';
+        ghost.style.setProperty('--sl-d-pointer-x', (event.clientX / state.zoom) + 'px');
+        ghost.style.setProperty('--sl-d-pointer-y', (event.clientY / state.zoom) + 'px');
         ghost.hidden = false;
         grip.setPointerCapture(event.pointerId);
         root.setAttribute('data-sl-build-drag', '');

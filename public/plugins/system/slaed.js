@@ -3138,7 +3138,7 @@
     }
     window.isMotionStill = isMotionStill;
 
-    // The pointer light is written once a frame and only where motion is welcome; the theme decides whether body[data-sl-pointer] shows it
+    // The pointer light, once a frame where motion is welcome, on body and data-sl-pointer-at, as the two do not inherit; the theme decides whether body[data-sl-pointer] shows it
     var pointer = { left: 0, top: 0, frame: 0 };
     document.addEventListener('pointermove', function (event) {
         if (event.pointerType === 'touch' || isMotionStill()) return;
@@ -3146,8 +3146,10 @@
         pointer.top = event.clientY;
         if (pointer.frame) return;
         pointer.frame = window.requestAnimationFrame(function () {
-            document.body.style.setProperty('--sl-d-pointer-x', pointer.left + 'px');
-            document.body.style.setProperty('--sl-d-pointer-y', pointer.top + 'px');
+            document.querySelectorAll('body, [data-sl-pointer-at]').forEach(function (node) {
+                node.style.setProperty('--sl-d-pointer-x', pointer.left + 'px');
+                node.style.setProperty('--sl-d-pointer-y', pointer.top + 'px');
+            });
             document.body.setAttribute('data-sl-pointer', '');
             pointer.frame = 0;
         });

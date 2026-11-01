@@ -57,6 +57,15 @@ final class UiAuditTest extends TestCase
     }
 
     #[Test]
+    public function testARegisteredPropertyIsNoDecisionAndItsInheritDeclaresNothing(): void
+    {
+        $model = $this->getModel('property.css');
+        $sel = array_values(array_unique(array_column(checkThemeCount($model)['sites'], 'sel')));
+        $this->assertSame(['.sl-one'], $sel, 'the initial value of @property is a descriptor, and var() cannot be written there at all');
+        $this->assertSame(['--sl-own', '--sl-d-part'], array_column($model['scoped'], 'name'), 'only a name written from outside CSS that says inherit leaves the list');
+    }
+
+    #[Test]
     public function testCountsThreeLiteralsAndReadsTheRepeatedBodyAsNeed(): void
     {
         $model = $this->getModel('count-basic.css');

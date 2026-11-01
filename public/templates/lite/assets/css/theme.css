@@ -5888,9 +5888,24 @@ dialog.sl-editor-emoji-panel {
   }
 }
 
+/* The place of the pointer light does not inherit, so a move restyles no descendant of what slaed.js writes on; a rule that reads it says inherit */
+@property --sl-d-pointer-x {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+
+@property --sl-d-pointer-y {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+
 /* The light that follows the pointer, as over the admin; slaed.js writes where it is */
 @media (prefers-reduced-motion: no-preference) {
   body[data-sl-pointer]::after {
+    --sl-d-pointer-x: inherit;
+    --sl-d-pointer-y: inherit;
     content: "";
     position: fixed;
     inset: 0;

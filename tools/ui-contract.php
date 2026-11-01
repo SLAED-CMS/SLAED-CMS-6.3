@@ -286,8 +286,8 @@ return [
             .' and partials/presentation-runtime.html, the shares of the watch window, templates/*/partials/session-stats.html,'
             .' and the fill of a meter, templates/admin/fragments/meter.html',
         '--sl-d-gate-y' => 'height the request guard gate patrols at inside its scene, plugins/presentation/presentation.js',
-        '--sl-d-pointer-x' => 'pointer viewport horizontal position, plugins/system/slaed.js and builder.js',
-        '--sl-d-pointer-y' => 'pointer viewport vertical position, plugins/system/slaed.js and builder.js',
+        '--sl-d-pointer-x' => 'pointer viewport horizontal position, registered without inheritance in theme.css, plugins/system/slaed.js and builder.js',
+        '--sl-d-pointer-y' => 'pointer viewport vertical position, registered without inheritance in theme.css, plugins/system/slaed.js and builder.js',
         '--sl-d-run' => 'share of a whole-list job done, which the line along the foot of its alert fills, templates/admin/assets/js/admin-ui.js',
         '--sl-d-rail' => 'height of the sticky section rail of the presentation page, plugins/system/slaed.js',
         '--sl-d-ring' => 'profile ring colour, templates/lite/partials/account-home.html and account-profile.html',
