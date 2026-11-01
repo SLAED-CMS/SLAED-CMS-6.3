@@ -268,6 +268,12 @@
         var lean = Math.tan(-18 * Math.PI / 180);
         var shine = kit.doc.createElement('canvas');
         var sg = shine.getContext('2d');
+        var still = kit.doc.createElement('canvas');
+        var stg = still.getContext('2d', { willReadFrequently: true });
+        var stkey = '';
+        var wet = false;
+        var high = false;
+        var fresh = true;
         var cell = 16;
         var trail = 18;
         var rows = Math.ceil(code.h / cell);
@@ -355,6 +361,7 @@
         function setBuild() {
             var glow, n, i, j, a, q;
             setShape();
+            stkey = '';
             rnd = getPhxSeed(2005);
             now = 0;
             ash = [];
@@ -461,8 +468,10 @@
         function setRain() {
             var cg = code.g;
             var out, pos, cyc, head, row, ch, i;
-            cg.clearRect(0, 0, code.w, code.h);
+            if (wet) cg.clearRect(0, 0, code.w, code.h);
+            wet = false;
             if (now < phxAt.code || now >= phxAt.hold) return;
+            wet = true;
             out = Math.max(1 - getPhxInOut(getPart(phxAt.code, phxAt.clear)), getPart(phxAt.rise + 2.2, phxAt.hold));
             cg.font = font;
             cg.textAlign = 'center';
@@ -490,6 +499,7 @@
             ash.forEach(function (p) {
                 var x = p.x + Math.sin(now * 0.9 + p.ph) * p.sway * Math.min(1, p.age / 2);
                 var fade = (p.up ? 1 : getPhxClamp(p.y / (lay.h * 0.3))) * (1 - Math.pow(p.age / p.life, 2)) * (p.old ? 1 - getPart(phxAt.dim, phxAt.clear) : 1);
+                if (p.up) high = true;
                 setDot(x, p.y, p.s, getPhxTone(fire, getPhxClamp(p.h + p.dh * p.age, 0, p.top)), fade * (0.7 + 0.3 * Math.sin(now * 2.5 + p.ph)), p.up ? top.g : g);
             });
         }
@@ -535,6 +545,26 @@
             sg.drawImage(word, 0, 0, r.width, r.height);
             top.g.globalAlpha = 1;
             top.g.drawImage(shine, r.x, r.y, r.width, r.height);
+            high = true;
+        }
+        // A still act, drawn once and copied 1:1; `still` stays in software, as an accelerated source makes alpha on the ground round otherwise; a zoom can keep a layer's pixels
+        function setStill(act, fn) {
+            var wide = lay.cv.width;
+            var tall = lay.cv.height;
+            var key = [act, wide, tall, lay.w, lay.h].join(' ');
+            if (!wide || !tall) return;
+            if (stkey !== key) {
+                still.width = wide;
+                still.height = tall;
+                stg.setTransform(g.getTransform());
+                fn();
+                stkey = key;
+            }
+            g.save();
+            g.setTransform(1, 0, 0, 1, 0, 0);
+            g.globalAlpha = 1;
+            g.drawImage(still, 0, 0);
+            g.restore();
         }
         // The acts of the scene that move dots, one picture at the time of the clock
         function setActs() {
@@ -549,7 +579,9 @@
                         (0.35 + 0.65 * getPhxOut(s)) * show);
                 });
             } else if (now >= phxAt.hold && now < phxAt.fall) {
-                pts.forEach(function (p) { setDot(p.tx, p.ty, 3, p.c, 1); });
+                setStill('hold', function () {
+                    pts.forEach(function (p) { setDot(p.tx, p.ty, 3, p.c, 1, stg); });
+                });
             } else if (now >= phxAt.fall && now < phxAt.form) {
                 t = getPart(phxAt.fall, phxAt.form);
                 pts.forEach(function (p) {
@@ -568,7 +600,9 @@
                     else setDotTwo(x, y, 3, getPhxTone(fire, s / 0.7), p.q.c, getPhxClamp((s - 0.7) / 0.3), getPhxLerp(getLie(p), 1, getPhxClamp(s * 3)));
                 });
             } else if (now >= phxAt.big && now < phxAt.melt) {
-                own.forEach(function (p) { setDot(p.q.tx, p.q.ty, 3, p.q.c, 1); });
+                setStill('big', function () {
+                    own.forEach(function (p) { setDot(p.q.tx, p.q.ty, 3, p.q.c, 1, stg); });
+                });
             } else if (now >= phxAt.melt && now < phxAt.fly) {
                 t = getPart(phxAt.melt, phxAt.fly);
                 own.forEach(function (p) {
@@ -587,7 +621,9 @@
                         getPhxLerp(getLie(p), 1, s) * gone);
                 });
             } else if (now >= phxAt.small && now < phxAt.dust) {
-                uniq.forEach(function (p) { setDot(p.h.tx, p.h.ty, hs, p.h.c, 1); });
+                setStill('small', function () {
+                    uniq.forEach(function (p) { setDot(p.h.tx, p.h.ty, hs, p.h.c, 1, stg); });
+                });
             } else if (now >= phxAt.dust && now < phxAt.land) {
                 t = getPart(phxAt.dust, phxAt.land);
                 uniq.forEach(function (p) {
@@ -615,7 +651,8 @@
             var dim = now < phxAt.land ? getPhxInOut(getPart(phxAt.dim, phxAt.clear)) : 1 - getPhxInOut(getPart(phxAt.land, phxAt.land + 2));
             setRain();
             g.clearRect(0, 0, lay.w, lay.h);
-            top.g.clearRect(0, 0, top.w, top.h);
+            if (high) top.g.clearRect(0, 0, top.w, top.h);
+            high = false;
             setActs();
             if (gl >= 0 && gl < 1) setGlint(gl);
             setAsh();
@@ -642,6 +679,10 @@
             ash = keep.filter(function (p) { return !p.up; });
             ash.forEach(function (p) { p.old = true; });
         }
+        // A resize empties the canvases and a scroll moves the logo under its glint, so a frame between two steps draws after either
+        function setFresh() {
+            fresh = true;
+        }
         setQuiet();
         ctl = {
             get busy() { return now < phxAt.calm || leaving; },
@@ -649,13 +690,17 @@
             start: function () {
                 leaving = false;
                 exit = 1;
+                fresh = true;
                 setRound();
             },
             wake: function () {
                 if (now < phxAt.calm) leaving = true;
             }
         };
+        kit.on(window, 'resize', setFresh);
+        kit.on(window, 'scroll', setFresh, { passive: true });
         kit.loop(function (dt) {
+            var draw = fresh || leaving;
             if (leaving) {
                 exit -= dt / phxExit;
                 if (exit <= 0) {
@@ -668,9 +713,11 @@
                 while (acc >= phxStep) {
                     setStep(phxStep);
                     acc -= phxStep;
+                    draw = true;
                 }
             }
-            setFrame();
+            fresh = false;
+            if (draw) setFrame();
         });
         return ctl;
     }
