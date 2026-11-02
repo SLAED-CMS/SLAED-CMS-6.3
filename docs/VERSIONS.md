@@ -12,6 +12,12 @@
 - **The connection.** A refused database connection is written to `error_sql.log`, where the database errors are,
   and counts in the SQL errors the update check reports.
 
+### The hero on top of a page loads its picture at once
+
+- **Eager.** The picture of a hero with no section, no module output and no band above it, shown on the phone and the
+  desk, carries `fetchpriority="high"` instead of `loading="lazy"`, as it is the largest paint of the page; every
+  other hero stays lazy.
+
 ## 2026-11-02
 
 ### The admin block reads Markdown links and names this site

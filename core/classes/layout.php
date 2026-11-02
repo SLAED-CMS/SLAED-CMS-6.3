@@ -282,7 +282,9 @@ final class Layout {
         $num = 0;
         $types = $this->getSectionTypes();
         $wrap = $tpl->checkTemplateFile('fragments', 'section');
-        foreach ($this->getPage($key)['sections'] ?? [] as $sec) {
+        $page = $this->getPage($key);
+        $top = empty($page['band']);
+        foreach ($page['sections'] ?? [] as $sec) {
             if (!is_array($sec) || !$this->isSectionShown($sec)) continue;
             $type = (string)($sec['type'] ?? '');
             if ($type === self::SLOT) {
@@ -299,6 +301,7 @@ final class Layout {
             if (is_array($desc['items'] ?? null)) $data['items'] = $this->getItemData($desc['items'], $sec['items'] ?? null, $prs);
             $data['parts'] = $this->getThemeData($prs);
             $data['is_build'] = $this->build;
+            $data['is_first'] = $top && $html === '' && !empty($sec['phone'] ?? true) && !empty($sec['desk'] ?? true);
             foreach (is_array($desc['fields'] ?? null) ? $desc['fields'] : [] as $fld) {
                 if (is_array($fld) && ($fld['type'] ?? '') === 'blockref' && isset($data[$fld['key']])) $data[$fld['key'].'_html'] = $tpl->getFree($data[$fld['key']]);
             }

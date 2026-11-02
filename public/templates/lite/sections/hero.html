@@ -13,7 +13,7 @@
       {% endif %}
     </div>
     {% if pic and photo %}
-    <figure class="sl-sec-pic sl-sec-hero-pic"><img src="{{ photo }}" alt="{{ alt }}" style="--sl-d-focus: {{ focus }}" loading="lazy" width="2560" height="1440"></figure>
+    <figure class="sl-sec-pic sl-sec-hero-pic"><img src="{{ photo }}" alt="{{ alt }}" style="--sl-d-focus: {{ focus }}"{% if is_first %} fetchpriority="high"{% else %} loading="lazy"{% endif %} width="2560" height="1440"></figure>
     {% endif %}
   </div>
 </div>

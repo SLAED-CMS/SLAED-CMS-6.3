@@ -321,6 +321,27 @@ final class LayoutTest extends TestCase
         $this->assertSame(['01', '02', '03', '04'], $hit[1], 'Only the framed sections are numbered, in their order');
     }
 
+    # The picture of the hero on top of the page is its largest paint and loads at once; under the module or the band, or off one device, it stays lazy
+    #[Test]
+    public function onlyTheTopHeroLoadsItsPictureAtOnce(): void
+    {
+        $hero = $this->getSection(2, 'hero', ['title' => 'Head', 'pic' => '1', 'photo' => 'presentation/brand/background-1.png']);
+        $read = new Layout($this->getLayout(['pages' => [
+            1 => ['sections' => [$hero]],
+            2 => ['sections' => [$this->getSection(1, 'module'), $hero]],
+            3 => ['band' => true, 'sections' => [$hero]],
+            4 => ['sections' => [['phone' => false] + $hero]],
+        ]]), 'lite', false, false, '', self::$mods);
+        $top = $read->getPageHtml(1, '<main>BODY</main>', new Template('lite'), $this->getParser());
+        $this->assertStringContainsString('style="--sl-d-focus: center" fetchpriority="high" width="2560"', $top);
+        $this->assertStringNotContainsString('loading="lazy"', $top);
+        foreach ([2 => 'under the module', 3 => 'under the band', 4 => 'off the phone'] as $key => $why) {
+            $low = $read->getPageHtml($key, '<main>BODY</main>', new Template('lite'), $this->getParser());
+            $this->assertStringContainsString('style="--sl-d-focus: center" loading="lazy" width="2560"', $low, 'A hero '.$why.' loaded at once');
+            $this->assertStringNotContainsString('fetchpriority', $low);
+        }
+    }
+
     # The edit mode of the builder marks each section, the slot and the texts of the fields for builder.js; a visitor's page carries none of them
     #[Test]
     public function theEditModeMarksThePartsOfThePage(): void

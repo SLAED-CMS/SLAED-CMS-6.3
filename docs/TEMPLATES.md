@@ -1165,8 +1165,10 @@ empty ("Кнопка «…» никуда не ведёт"). Lite ties `href` to
 | `noderef` | a search over the titles of the published records | the number of the record |
 | `blockref` | the blocks of the site, the free ones first | the number, and `<key>_html`, the block by `Template::getFree()` |
 
-Every fragment also gets `parts`, the values of the parts of the theme, and `is_build`; an item gets `order_num`, its
-place as two digits, and `is_first`. A missing or refused value is empty, never an error on the site. The kinds are a
+Every fragment also gets `parts`, the values of the parts of the theme, `is_build`, and `is_first` when no section and no
+output of the module stands above it, the page carries no band and the section is shown on the phone and the desk, so
+its picture loads at once and not lazily: an eager picture is fetched under `display: none` too; an item gets `order_num`, its place as two digits,
+and `is_first`. A missing or refused value is empty, never an error on the site. The kinds are a
 closed set of the core, so a new section needs no line of JavaScript; the kinds of the editor's own forms (`anchor`,
 `slug`, `choice`, `checks`) are not for a description.
 
