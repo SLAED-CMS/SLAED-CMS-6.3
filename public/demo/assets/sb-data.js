@@ -60,10 +60,10 @@ const SB_SEASONS = [['date', 'По дате'], ['sl-winter', 'Зима'], ['sl-s
 /* The files of blocks/ a file block runs: key, label, icon, file */
 const SB_BLOCKS = [
   ['voting', 'Опрос', 'bar-chart', 'voting.php'], ['login', 'Вход на сайт', 'box-arrow-in-right', 'login.php'],
-  ['stat', 'Статистика', 'graph-up', 'stat.php'], ['search', 'Поиск', 'search', 'search.php'],
+  ['search', 'Поиск', 'search', 'search.php'],
   ['languages', 'Языки', 'translate', 'languages.php'], ['user_info', 'Кто на сайте', 'people', 'user_info.php'],
   ['forum', 'Форум', 'chat-dots', 'forum.php'], ['node', 'Материалы', 'newspaper', 'node.php'],
-  ['img', 'Примеры внедрений', 'images', 'img.php'], ['banner_random', 'Случайный баннер', 'badge-ad', 'banner_random.php'],
+  ['img', 'Примеры внедрений', 'images', 'img.php'],
 ];
 // What a block is, by its type and the file it runs: key, label, icon, file - an HTML and an RSS block have no file
 const getSbBlockKind = (b) => (b.type === 'html' ? ['', 'HTML', 'code-square'] : b.type === 'rss' ? ['', 'RSS', 'rss'] : (SB_BLOCKS.find((x) => x[0] === b.kind) || SB_BLOCKS[0]));
@@ -820,7 +820,6 @@ function getSbStart() {
       blk('Кто на сайте', 'file', 'r', { kind: 'user_info', which: ['news'] }),
       blk('Набор в команду модераторов', 'html', 'c', { content: '<p>Ищем модераторов форума — напишите нам.</p>', which: ['news', 'forum'] }),
       blk('Новости партнёров', 'rss', 'l', { url: 'https://slaed.net/rss', status: false }),
-      blk('Статистика', 'file', 'd', { kind: 'stat' }),
       free,
     ],
     menus: {

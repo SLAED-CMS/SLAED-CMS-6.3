@@ -784,15 +784,16 @@ function getInstallLeft(PDO $pdo): array {
 # What one run of the update left: the rows update.php reported as failed, the closed site, the marks, the reconciled registry, the converted sources
 # It also reads the manifests of the three units, the balances and the Node tables, whether config/local.php is gone, the panel file, the site language and address
 # The tables of the removed modules the site still holds come from getInstallLeft()
-# Then come the blocks of removed modules switched off, the Node types taken out of the configuration, the switches of the owner and the post and message of update62
+# Then come the blocks of removed modules and files switched off, the Node types taken out of the configuration, the switches of the owner and the post and message of update62
 # The counter of _nodes comes from SHOW CREATE TABLE, because MySQL 8 answers SHOW TABLE STATUS from cached statistics
 function getInstallAfter(PDO $pdo, array $page): array {
     global $isite;
     $rows = getInstallRows($page['body']);
     preg_match('#records of removed modules dropped: ([a-z_, ]+)#', $page['body'], $gone);
-    preg_match('#_blocks of removed modules switched off: ([a-z_., ]+)#', $page['body'], $boff);
+    preg_match('#_blocks of removed modules and files switched off: ([a-z_., ]+)#', $page['body'], $boff);
     preg_match('#_node_types removed with their fields, upload and rating rules: ([a-z_, ]+)#', $page['body'], $tgone);
-    $bfiles = "'news.php', 'pages.php', 'faq.php', 'files.php', 'jokes.php', 'jokes_random.php', 'links.php', 'center.php', 'center_media.php', 'center_plus.php'";
+    $bfiles = "'news.php', 'pages.php', 'faq.php', 'files.php', 'jokes.php', 'jokes_random.php', 'links.php', 'center.php', 'center_media.php', 'center_plus.php'"
+        .", 'stat.php', 'banner_random.php'";
     $mods = getInstallConf('modules')['modules'] ?? [];
     $rss = getInstallConf('rss')['rss'] ?? [];
     $jobs = getInstallConf('scheduler')['scheduler']['jobs'] ?? [];
@@ -996,7 +997,7 @@ function getInstallUpgrade(PDO $pdo, string $base, string $dump, string $rev, st
     if (is_file($isite.'/config/local.php')) unlink($isite.'/config/local.php');
     $out['owned'] = [$mods['modules']['forum']['active'], '0'];
     $pdo->exec('INSERT INTO '.IPREF."_blocks (title, content, bfile, status, which) VALUES ('Probe news', '', 'news.php', 1, 'all'),"
-        ." ('Probe jokes', '', 'block-jokes.php', 1, 'all'), ('Probe own', '', 'modules.php', 1, 'all')");
+        ." ('Probe jokes', '', 'block-jokes.php', 1, 'all'), ('Probe stat', '', 'stat.php', 1, 'all'), ('Probe own', '', 'modules.php', 1, 'all')");
     $time = microtime(true);
     $out['second'] = getInstallAfter($pdo, getInstallReply([], 'POST', 'update.php', $form, $head)) + ['time' => round(microtime(true) - $time, 1)];
     $mani = fn(): array => array_map('sha1_file', glob($isite.'/storage/backup/update/*/manifest.json') ?: []);

@@ -2664,12 +2664,13 @@ function setUpdateRun(bool $dry = false): array {
     $rnum = $db->getSqlQuery('UPDATE `'.$pref.'_blocks` SET content = \'\', time = 0 WHERE url != \'\'');
     $rows = array_merge($rows, getUpdateRow($pref.'_blocks RSS bodies cleared for Markdown (rows: '.($rnum ? $db->getSqlRowCount($rnum) : 0).')', $rnum !== false));
     $bpars = [];
-    foreach (['news', 'pages', 'faq', 'files', 'jokes', 'jokes_random', 'links', 'center', 'center_media', 'center_plus'] as $i => $one) $bpars['b'.$i] = $one.'.php';
+    foreach (['news', 'pages', 'faq', 'files', 'jokes', 'jokes_random', 'links', 'center', 'center_media', 'center_plus',
+        'stat', 'banner_random'] as $i => $one) $bpars['b'.$i] = $one.'.php';
     $bsql = ' WHERE status = 1 AND bfile IN (:'.implode(', :', array_keys($bpars)).')';
     $res = $db->getSqlQuery('SELECT DISTINCT bfile FROM `'.$pref.'_blocks`'.$bsql.' ORDER BY bfile', $bpars);
     $boff = $res ? array_column($db->getSqlRows($res) ?: [], 0) : [];
     $good = $res !== false && ($boff === [] || $db->getSqlQuery('UPDATE `'.$pref.'_blocks` SET status = 0'.$bsql, $bpars) !== false);
-    $rows = array_merge($rows, getUpdateRow($pref.'_blocks of removed modules switched off: '.($boff ? implode(', ', $boff) : 'none'), $good));
+    $rows = array_merge($rows, getUpdateRow($pref.'_blocks of removed modules and files switched off: '.($boff ? implode(', ', $boff) : 'none'), $good));
     $rows = array_merge($rows, setUpdateMails($db, $pref, (string)$conf['adminmail'], true));
     [$acount] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(*) FROM `'.$pref.'_users` WHERE `avatar` LIKE \'default/%\''));
     $rows = array_merge($rows, getUpdateRow($pref.'_users avatar migration (legacy rows left: '.(int)$acount.')', (int)$acount === 0));

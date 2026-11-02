@@ -1,5 +1,17 @@
 # Versions
 
+## 2026-11-02
+
+### The counter picture and the random banner are gone
+
+- **Removed.** The blocks `blocks/stat.php` and `blocks/banner_random.php`, the counter picture `index.php?stat=1&img=N`
+  of `core/user.php`, the folder `templates/lite/images/banners/` with its badges, and the leftover folders
+  `templates/lite/images/account/` and `templates/admin/images/ranks/`. A clean install no longer seeds the blocks
+  «Счетчик посещений» and «Реклама».
+- **The update.** `update.php` switches off a block that runs `stat.php` or `banner_random.php`, as it does with the
+  blocks of the removed modules.
+- **Breaking:** an outside page that embeds the counter picture gets the start page instead of a PNG.
+
 ## 2026-11-01
 
 ### The panel is audited again, under axe and under a live screen reader

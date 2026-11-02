@@ -340,7 +340,7 @@ Frontend theme assets referenced by a partial must use an explicitly passed and 
 Confirmed current usage:
 
 - frontend/admin bootstrap creates `$tpl = new Template($theme)` in `core/system.php`
-- admin requests get the theme `admin` from `getTheme()` in `core/system.php`; `$conf['theme']` stays the site theme, which the panel reads for the logos and banners of the site; a rank is drawn by the fragment of the theme in use and reads no file of the site theme
+- admin requests get the theme `admin` from `getTheme()` in `core/system.php`; `$conf['theme']` stays the site theme, which the panel reads for the logos of the site; a rank is drawn by the fragment of the theme in use and reads no file of the site theme
 - direct admin helper endpoints can create `new Template('admin')` from `index.php`
 - frontend pages are finalized through `setFoot()` and `$tpl->getHtmlPage(...)`
 - admin page rendering also ends in `$tpl->getHtmlPage(...)`

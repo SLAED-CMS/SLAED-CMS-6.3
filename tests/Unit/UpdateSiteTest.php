@@ -229,7 +229,7 @@ final class UpdateSiteTest extends TestCase
         }
         $this->assertSame([200, 200, 200, 404], $run['panel']);
         $this->assertSame(['news.php', 0, 0], [trim($run['first']['blocks'][0]), $run['first']['blocks'][1], $run['first']['blocks'][2]]);
-        $this->assertSame(['jokes.php, news.php', 0, 1], [trim($run['second']['blocks'][0]), $run['second']['blocks'][1], $run['second']['blocks'][2]]);
+        $this->assertSame(['jokes.php, news.php, stat.php', 0, 1], [trim($run['second']['blocks'][0]), $run['second']['blocks'][1], $run['second']['blocks'][2]]);
         $this->assertSame(['1', '1', true], $run['first']['owner']);
         $this->assertSame(['0', '0', true], $run['second']['owner']);
         $this->assertSame([], $run['first']['modules']['old']);

@@ -1690,16 +1690,3 @@ function getOpenXsl(): string {
     }
     return $cont;
 }
-
-# Show statistic
-switch(getVar('get', 'stat', 'num', 0)) {
-    case 1:
-    $img = getVar('get', 'img', 'num', 0) ? '_'.getVar('get', 'img', 'num', 0) : '';
-    $stat = getStatsToday();
-    $image = imagecreatefrompng(PUBLIC_DIR.'/'.getThemeFilePath('images/banners/stat'.$img.'.png'));
-    $white = imagecolorallocate($image, 255, 255, 255);
-    imagestring($image, 1, 22, 4, $stat['visits'].'/'.$stat['hosts'], $white);
-    header('Content-type: image/png');
-    imagepng($image);
-    exit;
-}
