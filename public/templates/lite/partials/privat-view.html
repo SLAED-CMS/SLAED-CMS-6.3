@@ -2,15 +2,23 @@
 <div class="sl-pmf-blank">
   <i class="bi bi-{{ blank_icon }}" aria-hidden="true"></i>
   <b>{{ blank_title }}</b>
-  {% if blank_text %}<p>{{ blank_text }}</p>{% endif %}
+  {% if blank_text %}
+  <p>{{ blank_text }}</p>
+  {% endif %}
 </div>
 {% else %}
 {% if is_reply or acts or is_wipe %}
 <div class="sl-pmf-acts">
-  {% if is_reply %}<button type="button" class="sl-but" data-sl-pm-reply><i class="bi bi-reply" aria-hidden="true"></i>&nbsp; {{ reply_label }}</button>{% endif %}
-  {% if forward_href %}<a class="sl-but" href="{{ forward_href }}" title="{{ forward_label }}" hx-get="{{ forward_href }}" hx-target="#prview" hx-swap="innerHTML" hx-push-url="false" hx-params="none"><i class="bi bi-forward" aria-hidden="true"></i>&nbsp; {{ forward_label }}</a>{% endif %}
+  {% if is_reply %}
+  <button type="button" class="sl-but" data-sl-pm-reply><i class="bi bi-reply" aria-hidden="true"></i>&nbsp; {{ reply_label }}</button>
+  {% endif %}
+  {% if forward_href %}
+  <a class="sl-but" href="{{ forward_href }}" title="{{ forward_label }}" hx-get="{{ forward_href }}" hx-target="#prview" hx-swap="innerHTML" hx-push-url="false" hx-params="none"><i class="bi bi-forward" aria-hidden="true"></i>&nbsp; {{ forward_label }}</a>
+  {% endif %}
   <span class="sl-pmf-acts-end">
-    {% if is_wipe %}<button type="button" class="sl-but-mini" title="{{ wipe_label }}" data-sl-pm-wipe><i class="bi bi-eraser" aria-hidden="true"></i><span class="sl-visually-hidden">{{ wipe_label }}</span></button>{% endif %}
+    {% if is_wipe %}
+    <button type="button" class="sl-but-mini" title="{{ wipe_label }}" data-sl-pm-wipe><i class="bi bi-eraser" aria-hidden="true"></i><span class="sl-visually-hidden">{{ wipe_label }}</span></button>
+    {% endif %}
     {% for act in acts %}<a class="sl-but-mini{% if act.on %} sl-is-active{% endif %}" href="{{ act.href }}" title="{{ act.title }}"{% if act.confirm %} data-sl-confirm="{{ act.confirm }}"{% endif %} hx-post="{{ act.href }}" hx-target="#prlist" hx-swap="innerHTML" hx-push-url="false" hx-params="none" hx-headers='{"X-CSRF-TOKEN": "{{ token }}"}'><i class="bi bi-{{ act.icon }}" aria-hidden="true"></i><span class="sl-visually-hidden">{{ act.title }}</span></a>{% endfor %}
   </span>
 </div>
@@ -22,17 +30,29 @@
     <img src="{{ avatar }}" alt="{{ author }}" class="sl-avatar">
     <span>
       <b>{% if author_html %}{{{ author_html }}}{% else %}{{ author }}{% endif %}</b>
-      {% if note %}<small>{{ note }}</small>{% endif %}
+      {% if note %}
+      <small>{{ note }}</small>
+      {% endif %}
     </span>
   </div>
   {% endif %}
-  {% if chips_html %}<div class="sl-pmf-chips">{{{ chips_html }}}</div>{% endif %}
+  {% if chips_html %}
+  <div class="sl-pmf-chips">
+    {{{ chips_html }}}
+  </div>
+  {% endif %}
 </header>
 {% if text_html %}
 <div class="sl-pmf-text">
   {{{ text_html }}}
-  {% if sig_html %}<div class="sl-pmf-sig">{{{ sig_html }}}</div>{% endif %}
+  {% if sig_html %}
+  <div class="sl-pmf-sig">
+    {{{ sig_html }}}
+  </div>
+  {% endif %}
 </div>
 {% endif %}
 {% endif %}
-{% if is_carry %}<textarea hidden data-sl-pm-carry data-sl-pm-name="{{ carry_name }}" data-sl-pm-title="{{ carry_title }}">{{ carry_body }}</textarea>{% endif %}
+{% if is_carry %}
+<textarea hidden data-sl-pm-carry data-sl-pm-name="{{ carry_name }}" data-sl-pm-title="{{ carry_title }}">{{ carry_body }}</textarea>
+{% endif %}

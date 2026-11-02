@@ -800,7 +800,7 @@ on the host.
 | `UpdateFetchTest` | download and resume, the upload by hand, the central directory and its refusals for both readers, `stage/`, the integrity check |
 | `UpdateMergeTest` | the merge of `config/` (`tests/Support/config_probe.php` mode `merge`) |
 | `UpdateGateTest` | the gate of the three entries, the manual path, the light mode and its backup (`route_probe.php gate`) |
-| `UpdateApplyTest` | the installation, every rollback, the rescuer, the executor of the package (`tests/Support/apply_probe.php`) |
+| `UpdateApplyTest` | the installation, every rollback, the rescuer, the executor of the package (`tests/Support/apply_probe.php`); group `release`, run by `composer test:release` |
 | `BackupPartTest` | the portion dump and restore without the core (`tests/Support/dump_probe.php`) |
 | `ReleaseToolTest` | build, sign, publish, notes and key statements in a scratch repository; the tools run without OPcache, since CLI processes of one user on Windows share one cache |
 | `MasterTest` | the master: panel, `master/check`, `master/file`, acceptance, cohort, pause, the two jobs (`route_probe.php master`) |

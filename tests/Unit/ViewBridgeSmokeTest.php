@@ -91,7 +91,7 @@ namespace Tests\Unit {
                 $this->assertStringNotContainsString('sl-alert-acts', $bare, 'An alert without actions grew a slot in '.$theme);
                 $this->assertMatchesRegularExpression('#</div>\R\s*</div>#', $bare, 'An alert without actions lost the line break after its body in '.$theme);
                 $html = $tpl->getHtmlFrag('alert', ['text' => 'Drift', 'is_warn' => true, 'acts_html' => '<button>Fix</button>']);
-                $this->assertMatchesRegularExpression('#Drift.*</div>\s*<div class="sl-alert-acts"><button>Fix</button></div>\s*</div>#s', $html,
+                $this->assertMatchesRegularExpression('#Drift.*</div>\s*<div class="sl-alert-acts">\s*<button>Fix</button>\s*</div>\s*</div>#s', $html,
                     'The actions of an alert do not follow its body in '.$theme);
                 $act = $tpl->getHtmlFrag('post-button', ['action' => 'admin.php', 'hidden' => '', 'icon_name' => 'trash', 'title' => 'Clear', 'label' => 'Clear',
                     'is_act' => true, 'is_danger' => true]);

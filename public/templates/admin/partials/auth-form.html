@@ -2,9 +2,18 @@
   <div class="sl-admin-login-form-frame">
     <ul class="sl-admin-login-list">
       {% for row in rows %}
-      <li><span>{{ row.label }}{% if row.has_colon %}:{% endif %}</span><div class="sl-admin-login-field">{{{ row.field_html }}}</div></li>
+      <li>
+        <span>{{ row.label }}{% if row.has_colon %}:{% endif %}</span>
+        <div class="sl-admin-login-field">
+          {{{ row.field_html }}}
+        </div>
+      </li>
       {% endfor %}
     </ul>
   </div>
-  <div class="sl-admin-login-submit">{% include 'fragments/hidden.html' with hidden %}{% if token %}{% include 'fragments/hidden.html' with token %}{% endif %}{% include 'fragments/button.html' with submit %}</div>
+  <div class="sl-admin-login-submit">
+    {% include 'fragments/hidden.html' with hidden %}
+    {% if token %}{% include 'fragments/hidden.html' with token %}{% endif %}
+    {% include 'fragments/button.html' with submit %}
+  </div>
 </form>

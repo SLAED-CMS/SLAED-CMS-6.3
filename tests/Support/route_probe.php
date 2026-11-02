@@ -325,7 +325,7 @@ function getRouteLists(PDO $pdo): array {
     $one = getRouteReply('', 'GET', 'index.php?name=news');
     $out['list'] = [$one['code'], str_contains($one['body'], 'Gamma'), str_contains($one['body'], 'Beta'), str_contains($one['body'], 'Alpha'), str_contains($one['body'],
         'Members')];
-    $out['canon'] = str_contains($one['body'], 'rel="canonical" href="http://127.0.0.1');
+    $out['canon'] = (bool)preg_match('#rel="canonical"\s+href="http://127\.0\.0\.1#', $one['body']);
     $out['nostore'] = str_contains((string)($one['head']['cache-control'] ?? ''), 'no-store');
     $pdo->exec('UPDATE '.RPREF.'_nodes SET title = \'Gamma changed\' WHERE id = 105');
     $out['hit'] = str_contains(getRouteReply('', 'GET', 'index.php?name=news')['body'], 'Gamma changed');

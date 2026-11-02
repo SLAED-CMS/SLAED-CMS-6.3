@@ -8,6 +8,9 @@ use PHPUnit\Framework\TestCase;
 # The editor room contract that needs no running stand: the room table against the schema both ways, every call site, the write guard and the client
 class EditorRoomTest extends TestCase
 {
+    # The raw answer of each probe run, kept before any assertion so a failed probe is not started again by the next test
+    private static array $outs = [];
+
     private const BODIES = [
         'comment.body', 'forum.body', 'newsletter.body', 'nodes.body', 'privat.body',
     ];
@@ -40,7 +43,7 @@ class EditorRoomTest extends TestCase
         $list = $work.'/stores.json';
         file_put_contents($list, (string)json_encode(array_values(array_unique(array_merge(array_keys($this->getTable()), array_keys($this->getCalls()['named']))))));
         $cmd = escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' '.escapeshellarg($list).' '.escapeshellarg($work).' 2>&1';
-        $out = (string)shell_exec($cmd);
+        $out = self::$outs[__FUNCTION__] ??= (string)shell_exec($cmd);
         $data = json_decode($out, true);
         $this->assertIsArray($data, 'The room probe did not return JSON: '.$out);
         if (!empty($data['error'])) $this->markTestSkipped('The room probe failed: '.$data['error']);

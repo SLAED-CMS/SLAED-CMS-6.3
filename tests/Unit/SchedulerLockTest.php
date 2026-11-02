@@ -8,6 +8,9 @@ use PHPUnit\Framework\TestCase;
 # Batch 4 of docs/BACKUP-2026.md: the lock protocol and the request boundary of the scheduler
 final class SchedulerLockTest extends TestCase
 {
+    # The raw answer of each probe run, kept before any assertion so a failed probe is not started again by the next test
+    private static array $outs = [];
+
     private static array $probe = [];
 
     # The probe tests/Support/scheduler_probe.php boots the real core with LOGS_DIR in scratch and declares its own jobs in memory, so no site configuration is written
@@ -19,7 +22,8 @@ final class SchedulerLockTest extends TestCase
         if (isset(self::$probe[$mode])) return self::$probe[$mode];
         $script = dirname(__DIR__).'/Support/scheduler_probe.php';
         $work = str_replace('\\', '/', sys_get_temp_dir()).'/slaed_sched_probe_'.$mode;
-        $out = (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' '.escapeshellarg($mode).' '.escapeshellarg($work).' 2>&1');
+        $out = self::$outs[__FUNCTION__.$mode] ??= (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' '.escapeshellarg($mode).' '
+            .escapeshellarg($work).' 2>&1');
         $data = json_decode($out, true);
         $this->assertIsArray($data, 'Probe '.$mode.' did not return JSON: '.$out);
         if (!empty($data['error'])) $this->markTestSkipped('Probe '.$mode.': '.$data['error']);

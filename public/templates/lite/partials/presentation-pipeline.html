@@ -1,37 +1,47 @@
 <section class="sl-pres-section" id="pipeline">
-{% include 'fragments/presentation-head.html' with head %}
-<div class="sl-pres-body">
-  <div class="sl-pres-arch" data-sl-pres="flow" data-sl-pres-store="{{ store }}">
-    <div data-sl-pres-flows="" hidden>{% for item in flows %}<div data-sl-pres-mode="{{ item.mode }}" data-sl-pres-badge="{{ item.badge }}" data-sl-pres-btone="{{ item.btone }}" data-sl-pres-route="{{ item.route }}" data-sl-pres-sub="{{ item.sub }}" data-sl-pres-state="{{ item.state }}" data-sl-pres-gate-a="{{ item.gatea }}" data-sl-pres-gate-b="{{ item.gateb }}" data-sl-pres-mod-b="{{ item.modb }}" data-sl-pres-states="{{ item.states }}" data-sl-pres-tones="{{ item.tones }}" data-sl-pres-seq="{{ item.seq }}"></div>{% endfor %}</div>
-    <div class="sl-pres-flow sl-pres-scene" data-sl-mode="{{ mode }}">
-      <div class="sl-pres-flow-top"><span class="sl-pres-mono">{{ route }}</span><span class="sl-pres-pill"{% if is_on %} data-sl-tone="success"{% else %} data-sl-tone="warning"{% endif %}>{{ decision }}</span></div>
-      <svg class="sl-pres-paths" viewBox="0 0 700 460" preserveAspectRatio="none" aria-hidden="true">
-        <path class="sl-pres-path-ring" d="M350,33 Q475,38 570,96 Q648,151 642,226 Q640,330 560,382 Q460,446 350,433 Q240,446 140,382 Q60,330 58,226 Q52,145 145,88 Q248,28 350,33Z"></path>
-        <path class="sl-pres-path-live" d="M350,33 Q475,38 570,96 Q648,151 642,226 Q640,330 560,382 Q460,446 350,433 Q240,446 140,382 Q60,330 58,226 Q52,145 145,88 Q248,28 350,33"></path>
-        <circle class="sl-pres-path-packet" r="5"><animateMotion dur="7s" repeatCount="indefinite" path="M350,33 Q475,38 570,96 Q648,151 642,226 Q640,330 560,382 Q460,446 350,433 Q240,446 140,382 Q60,330 58,226 Q52,145 145,88 Q248,28 350,33Z"></animateMotion></circle>
-      </svg>
-      <div class="sl-pres-flow-core">
-        <div>
-          <img src="{{ root }}templates/{{ theme }}/images/logos/slaed-logo-wordmark-gradient-blue.svg" alt="SLAED" width="96" height="32">
-          <b>{{ cache }}</b>
-          <small>{{ cache_note }}</small>
-          <span class="sl-pres-pill"{% if is_on %} data-sl-tone="success"{% else %} data-sl-tone="warning"{% endif %}>{{ cache_state }}</span>
+  {% include 'fragments/presentation-head.html' with head %}
+  <div class="sl-pres-body">
+    <div class="sl-pres-arch" data-sl-pres="flow" data-sl-pres-store="{{ store }}">
+      <div data-sl-pres-flows="" hidden>
+        {% for item in flows %}
+        <div data-sl-pres-mode="{{ item.mode }}" data-sl-pres-badge="{{ item.badge }}" data-sl-pres-btone="{{ item.btone }}" data-sl-pres-route="{{ item.route }}" data-sl-pres-sub="{{ item.sub }}" data-sl-pres-state="{{ item.state }}" data-sl-pres-gate-a="{{ item.gatea }}" data-sl-pres-gate-b="{{ item.gateb }}" data-sl-pres-mod-b="{{ item.modb }}" data-sl-pres-states="{{ item.states }}" data-sl-pres-tones="{{ item.tones }}" data-sl-pres-seq="{{ item.seq }}"></div>
+        {% endfor %}
+      </div>
+      <div class="sl-pres-flow sl-pres-scene" data-sl-mode="{{ mode }}">
+        <div class="sl-pres-flow-top"><span class="sl-pres-mono">{{ route }}</span><span class="sl-pres-pill"{% if is_on %} data-sl-tone="success"{% else %} data-sl-tone="warning"{% endif %}>{{ decision }}</span></div>
+        <svg class="sl-pres-paths" viewBox="0 0 700 460" preserveAspectRatio="none" aria-hidden="true">
+          <path class="sl-pres-path-ring" d="M350,33 Q475,38 570,96 Q648,151 642,226 Q640,330 560,382 Q460,446 350,433 Q240,446 140,382 Q60,330 58,226 Q52,145 145,88 Q248,28 350,33Z"></path>
+          <path class="sl-pres-path-live" d="M350,33 Q475,38 570,96 Q648,151 642,226 Q640,330 560,382 Q460,446 350,433 Q240,446 140,382 Q60,330 58,226 Q52,145 145,88 Q248,28 350,33"></path>
+          <circle class="sl-pres-path-packet" r="5"><animateMotion dur="7s" repeatCount="indefinite" path="M350,33 Q475,38 570,96 Q648,151 642,226 Q640,330 560,382 Q460,446 350,433 Q240,446 140,382 Q60,330 58,226 Q52,145 145,88 Q248,28 350,33Z"></animateMotion></circle>
+        </svg>
+        <div class="sl-pres-flow-core">
+          <div>
+            <img src="{{ root }}templates/{{ theme }}/images/logos/slaed-logo-wordmark-gradient-blue.svg" alt="SLAED" width="96" height="32">
+            <b>{{ cache }}</b>
+            <small>{{ cache_note }}</small>
+            <span class="sl-pres-pill"{% if is_on %} data-sl-tone="success"{% else %} data-sl-tone="warning"{% endif %}>{{ cache_state }}</span>
+          </div>
         </div>
+        <span class="sl-pres-flow-chip"><i class="bi bi-lightning-charge" aria-hidden="true"></i> {{ chip }}</span>
+        {% for item in nodes %}
+        <div class="sl-pres-node"><i class="bi bi-{{ item.icon }}" aria-hidden="true"></i><span>{{ item.num }}</span><b>{{ item.title }}</b><small><span>{{ item.a }}</span><span>{{ item.b }}</span></small></div>
+        {% endfor %}
       </div>
-      <span class="sl-pres-flow-chip"><i class="bi bi-lightning-charge" aria-hidden="true"></i> {{ chip }}</span>
-      {% for item in nodes %}<div class="sl-pres-node"><i class="bi bi-{{ item.icon }}" aria-hidden="true"></i><span>{{ item.num }}</span><b>{{ item.title }}</b><small><span>{{ item.a }}</span><span>{{ item.b }}</span></small></div>{% endfor %}
-    </div>
-    <div class="sl-pres-arch-side">
-      <div class="sl-pres-tree">
-        <div class="sl-pres-panel-head"><span>{{ tree }}</span><b>{{ tree_mode }}</b></div>
-        {% for item in cases %}<div class="sl-pres-case{% if item.is_on %} sl-is-on{% endif %}" data-sl-tone="{{ item.tone }}"><strong>{{ item.name }}</strong><span>{{ item.text }}</span></div>{% endfor %}
+      <div class="sl-pres-arch-side">
+        <div class="sl-pres-tree">
+          <div class="sl-pres-panel-head"><span>{{ tree }}</span><b>{{ tree_mode }}</b></div>
+          {% for item in cases %}
+          <div class="sl-pres-case{% if item.is_on %} sl-is-on{% endif %}" data-sl-tone="{{ item.tone }}"><strong>{{ item.name }}</strong><span>{{ item.text }}</span></div>
+          {% endfor %}
+        </div>
+        <div class="sl-pres-states">
+          {% for item in states %}
+          {% include 'fragments/presentation-stat.html' with item %}
+          {% endfor %}
+          <div class="sl-pres-stat sl-pres-clean-row"><span>{{ clean }}</span><b>{{ clean_value }}</b><small><i class="sl-pres-dot"></i>{{ clean_note }}</small></div>
+        </div>
+        <p class="sl-pres-note"><i class="bi bi-info-circle" aria-hidden="true"></i>{{ note }}</p>
       </div>
-      <div class="sl-pres-states">
-        {% for item in states %}{% include 'fragments/presentation-stat.html' with item %}{% endfor %}
-        <div class="sl-pres-stat sl-pres-clean-row"><span>{{ clean }}</span><b>{{ clean_value }}</b><small><i class="sl-pres-dot"></i>{{ clean_note }}</small></div>
-      </div>
-      <p class="sl-pres-note"><i class="bi bi-info-circle" aria-hidden="true"></i>{{ note }}</p>
     </div>
   </div>
-</div>
 </section>

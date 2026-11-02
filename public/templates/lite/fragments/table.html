@@ -1,42 +1,38 @@
 <div class="sl-table-shell">
-<table
-  class="
-    {% if class %}{{ class }}
-    {% else %}
-      {% if is_list or sortable %}sl-table-list
-      {% else %}sl-table{% if is_amount %} sl-table-amount{% endif %}{% if is_form %} sl-table-form{% endif %}{% if is_faq %} sl-table-faq{% endif %}
-      {% endif %}
+  <table class="{% if class %}{{ class }}{% else %}{% if is_list or sortable %}sl-table-list{% else %}sl-table{% if is_amount %} sl-table-amount{% endif %}{% if is_form %} sl-table-form{% endif %}{% if is_faq %} sl-table-faq{% endif %}{% endif %}{% endif %}"{% if sortable %} data-sl-table-sort{% endif %}>
+    {% if title %}
+    <caption{% if title_class %} class="{{ title_class }}"{% endif %}>{{ title }}</caption>
     {% endif %}
-  "
-  {% if sortable %}data-sl-table-sort{% endif %}
->
-{% if title %}<caption{% if title_class %} class="{{ title_class }}"{% endif %}>{{ title }}</caption>{% endif %}
-{% if headers %}
-<thead class="{% if head_class %}{{ head_class }}{% else %}sl-table-head{% endif %}">
-  <tr>
-    {% for head in headers %}
-    <th
-      {% if head.class or head.is_num or head.is_forum_num or head.is_forum_stat or head.is_col_half or head.is_col_check %}
-      class="{% if head.class %}{{ head.class }}{% elseif head.is_forum_num %}sl-fl-col-num{% elseif head.is_forum_stat %}sl-fl-col-stat{% elseif head.is_col_half %}sl-col-half{% elseif head.is_col_check %}sl-col-check{% elseif head.is_num %}sl-table-col-num{% endif %}"
-      {% endif %}
-      {% if head.no_sort %}data-sort-method="none"{% endif %}
-      {% if head.is_col_check %}data-sl-check-all{% endif %}
-    >{% if head.content_html %}{{{ head.content_html }}}{% else %}{{ head.text }}{% endif %}</th>
-    {% endfor %}
-  </tr>
-</thead>
-{% elseif col_id or col_title or col_cat or col_poster %}
-<thead class="sl-table-head">
-  <tr>
-    {% if col_title %}<th>{{ col_title }}</th>{% endif %}
-    {% if col_cat %}<th>{{ col_cat }}</th>{% endif %}
-    {% if col_poster %}<th>{{ col_poster }}</th>{% endif %}
-    {% if col_id %}<th class="sl-table-col-num" data-sort-method="none">{{ col_id }}</th>{% endif %}
-  </tr>
-</thead>
-{% endif %}
-<tbody{% if body_class %} class="{{ body_class }}"{% else %}{% if is_list or sortable %}{% else %} class="sl-table-body"{% endif %}{% endif %}>{{{ rows_html }}}{% if open %}{% else %}
-</tbody>
-</table>
+    {% if headers %}
+    <thead class="{% if head_class %}{{ head_class }}{% else %}sl-table-head{% endif %}">
+      <tr>
+        {% for head in headers %}
+        <th{% if head.class or head.is_num or head.is_forum_num or head.is_forum_stat or head.is_col_half or head.is_col_check %} class="{% if head.class %}{{ head.class }}{% elseif head.is_forum_num %}sl-fl-col-num{% elseif head.is_forum_stat %}sl-fl-col-stat{% elseif head.is_col_half %}sl-col-half{% elseif head.is_col_check %}sl-col-check{% elseif head.is_num %}sl-table-col-num{% endif %}"{% endif %}{% if head.no_sort %} data-sort-method="none"{% endif %}{% if head.is_col_check %} data-sl-check-all{% endif %}>{% if head.content_html %}{{{ head.content_html }}}{% else %}{{ head.text }}{% endif %}</th>
+        {% endfor %}
+      </tr>
+    </thead>
+    {% elseif col_id or col_title or col_cat or col_poster %}
+    <thead class="sl-table-head">
+      <tr>
+        {% if col_title %}
+        <th>{{ col_title }}</th>
+        {% endif %}
+        {% if col_cat %}
+        <th>{{ col_cat }}</th>
+        {% endif %}
+        {% if col_poster %}
+        <th>{{ col_poster }}</th>
+        {% endif %}
+        {% if col_id %}
+        <th class="sl-table-col-num" data-sort-method="none">{{ col_id }}</th>
+        {% endif %}
+      </tr>
+    </thead>
+    {% endif %}
+    <tbody{% if body_class %} class="{{ body_class }}"{% else %}{% if is_list or sortable %}{% else %} class="sl-table-body"{% endif %}{% endif %}>
+      {{{ rows_html }}}
+    {% if open %}{% else %}
+    </tbody>
+  </table>
 </div>
 {% endif %}

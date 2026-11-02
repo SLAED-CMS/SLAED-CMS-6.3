@@ -14,6 +14,9 @@ use PHPUnit\Framework\TestCase;
 # The lamp of the monitor: thirteen signals of the server with their thresholds, their order and their count, the pulse, and the extensions by their weight for SLAED
 final class MonitorSignalTest extends TestCase
 {
+    # The raw answer of each probe run, kept before any assertion so a failed probe is not started again by the next test
+    private static array $outs = [];
+
     private const KEYS = ['conn', 'cpu', 'disk', 'ext', 'gen', 'innodb', 'opcache', 'php', 'phpmem', 'proto', 'ram', 'soft', 'uptime'];
 
     private static ?array $probe = null;
@@ -26,7 +29,7 @@ final class MonitorSignalTest extends TestCase
         if (self::$probe !== null) return self::$probe;
         self::$work = str_replace('\\', '/', sys_get_temp_dir()).'/slaed_monitor_'.bin2hex(random_bytes(4));
         $script = dirname(__DIR__).'/Support/monitor_probe.php';
-        $out = (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' '.escapeshellarg(self::$work).' 2>&1');
+        $out = self::$outs[__FUNCTION__] ??= (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' '.escapeshellarg(self::$work).' 2>&1');
         $data = json_decode($out, true);
         $this->assertIsArray($data, 'The probe did not return JSON: '.$out);
         return self::$probe = $data;

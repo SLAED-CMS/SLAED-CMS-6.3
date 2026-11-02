@@ -8,6 +8,9 @@ use PHPUnit\Framework\TestCase;
 # The Point class is the one writer of the points journal and of the fast balance, and docs/POINTS.md is its contract
 final class PointTest extends TestCase
 {
+    # The raw answer of each probe run, kept before any assertion so a failed probe is not started again by the next test
+    private static array $outs = [];
+
     private const ACTIONS = [
         'publish' => ['10', '86400', '10'], 'comment' => ['5', '86400', '30'], 'view' => ['0', '86400', '50'],
         'download' => ['3', '86400', '20'], 'visit' => ['0', '86400', '20'], 'poll' => ['3', '86400', '10'],
@@ -26,7 +29,7 @@ final class PointTest extends TestCase
         if (self::$probe !== []) return self::$probe;
         $script = dirname(__DIR__).'/Support/point_probe.php';
         $work = str_replace('\\', '/', sys_get_temp_dir()).'/slaed_point_probe';
-        $out = (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' '.escapeshellarg($work).' 2>&1');
+        $out = self::$outs[__FUNCTION__] ??= (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' '.escapeshellarg($work).' 2>&1');
         $data = json_decode($out, true);
         $this->assertIsArray($data, 'The probe did not return JSON: '.$out);
         $this->assertSame('', $data['error'], 'The probe failed');

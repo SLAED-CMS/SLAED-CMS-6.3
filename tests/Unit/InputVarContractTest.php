@@ -8,6 +8,9 @@ use PHPUnit\Framework\TestCase;
 # Contract tests for the real getVar() helper, covering production code in an isolated CLI process instead of a replica
 final class InputVarContractTest extends TestCase
 {
+    # The raw answer of each probe run, kept before any assertion so a failed probe is not started again by the next test
+    private static array $outs = [];
+
     private static array $probe = [];
 
     # Run the getVar probe of tests/Support/contract_probe.php once and memoize its report for every scenario in this class
@@ -15,7 +18,7 @@ final class InputVarContractTest extends TestCase
     {
         if (self::$probe !== []) return self::$probe;
         $script = dirname(__DIR__).'/Support/contract_probe.php';
-        $out = (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' getvar 2>&1');
+        $out = self::$outs[__FUNCTION__] ??= (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' getvar 2>&1');
         $data = json_decode($out, true);
         $this->assertIsArray($data, 'Probe getvar did not return JSON: '.$out);
         return self::$probe = $data;

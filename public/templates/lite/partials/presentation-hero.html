@@ -29,28 +29,45 @@
         <div class="sl-pres-core-view">
           <div class="sl-pres-core-title"><b>{{ core.view }}</b><span data-sl-tone="success">● {{ core.online }}</span></div>
           <div class="sl-pres-metrics">
-            {% for item in core.metrics %}<div class="sl-pres-metric"><b{% if item.is_live %} data-sl-pres-live=""{% endif %}>{{ item.value }}</b><small>{{ item.label }}</small></div>{% endfor %}
+            {% for item in core.metrics %}
+            <div class="sl-pres-metric"><b{% if item.is_live %} data-sl-pres-live=""{% endif %}>{{ item.value }}</b><small>{{ item.label }}</small></div>
+            {% endfor %}
           </div>
           <div class="sl-pres-core-pulse" data-sl-pres="pulse"><span class="sl-pres-scan"></span><canvas role="img" aria-label="{{ core.chart }}"></canvas></div>
           <div class="sl-pres-core-stack">
             {% for item in core.stack %}<span><i class="bi bi-{{ item.icon }}" aria-hidden="true"></i><b>{{ item.name }}</b><em{% if item.is_ok %} class="sl-is-ok"{% endif %}>{{ item.note }}</em></span>{% endfor %}
           </div>
           <div class="sl-pres-core-flow">{% for item in core.flow %}<span><i></i>{{ item }}</span><b>→</b>{% endfor %}<span><i></i>200</span></div>
-          <div class="sl-pres-log">{% for item in core.trace %}<div><time>{{ item.time }}</time><span>{{ item.name }}</span><em data-sl-tone="success">{{ item.value }}</em></div>{% endfor %}</div>
+          <div class="sl-pres-log">
+            {% for item in core.trace %}
+            <div><time>{{ item.time }}</time><span>{{ item.name }}</span><em data-sl-tone="success">{{ item.value }}</em></div>
+            {% endfor %}
+          </div>
         </div>
       </div>
     </div>
   </div>
   <div class="sl-pres-facts">
-    {% for item in facts %}{% include 'fragments/presentation-stat.html' with item %}{% endfor %}
+    {% for item in facts %}
+    {% include 'fragments/presentation-stat.html' with item %}
+    {% endfor %}
   </div>
   <div class="sl-pres-ticker" aria-hidden="true">
     <div class="sl-pres-ticker-track">
-      {% for item in ticks %}<div class="sl-pres-ticker-item"><i></i><b>{{ item.name }}</b> {{ item.text }}</div>{% endfor %}
-      {% for item in ticks %}<div class="sl-pres-ticker-item"><i></i><b>{{ item.name }}</b> {{ item.text }}</div>{% endfor %}
+      {% for item in ticks %}
+      <div class="sl-pres-ticker-item"><i></i><b>{{ item.name }}</b> {{ item.text }}</div>
+      {% endfor %}
+      {% for item in ticks %}
+      <div class="sl-pres-ticker-item"><i></i><b>{{ item.name }}</b> {{ item.text }}</div>
+      {% endfor %}
     </div>
   </div>
   <div class="sl-pres-tech" aria-label="{{ tech_label }}">
-    {% for item in tech %}<div class="sl-pres-tech-card" data-sl-tone="{{ item.tone }}"><i class="bi bi-{{ item.icon }}" aria-hidden="true"></i><div><b>{{ item.name }}</b><span>{{ item.note }}</span></div></div>{% endfor %}
+    {% for item in tech %}
+    <div class="sl-pres-tech-card" data-sl-tone="{{ item.tone }}">
+      <i class="bi bi-{{ item.icon }}" aria-hidden="true"></i>
+      <div><b>{{ item.name }}</b><span>{{ item.note }}</span></div>
+    </div>
+    {% endfor %}
   </div>
 </div>

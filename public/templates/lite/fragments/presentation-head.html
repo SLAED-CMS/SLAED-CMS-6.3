@@ -3,5 +3,7 @@
   <i class="bi bi-{{ icon }} sl-pres-icon" aria-hidden="true"></i>
   <h2{% if is_build %} data-sl-text="title"{% endif %}>{{ title }}</h2>
   <p{% if is_build %} data-sl-text="lead"{% endif %}>{{ lead }}</p>
-  {% if state %}<span class="sl-pres-pill"{% if tone %} data-sl-tone="{{ tone }}"{% endif %}>{{ state }}</span>{% endif %}
+  {% if state %}
+  <span class="sl-pres-pill"{% if tone %} data-sl-tone="{{ tone }}"{% endif %}>{{ state }}</span>
+  {% endif %}
 </div>

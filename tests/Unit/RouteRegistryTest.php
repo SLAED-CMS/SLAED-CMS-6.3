@@ -11,6 +11,9 @@ use ReflectionClass;
 # The registry of addresses of the Address Boundary of docs/ARCHITECTURE.md: the name filterSlug() makes, the class Route over _routes and its reserved words
 final class RouteRegistryTest extends TestCase
 {
+    # The raw answer of each probe run, kept before any assertion so a failed probe is not started again by the next test
+    private static array $outs = [];
+
     private static array $probe = [];
 
     private static string $work = '';
@@ -22,7 +25,7 @@ final class RouteRegistryTest extends TestCase
         if (self::$probe === []) {
             self::$work = str_replace('\\', '/', sys_get_temp_dir()).'/slaed_route_'.bin2hex(random_bytes(4));
             $script = dirname(__DIR__).'/Support/registry_probe.php';
-            $out = (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' '.escapeshellarg(self::$work).' 2>&1');
+            $out = self::$outs[__FUNCTION__] ??= (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' '.escapeshellarg(self::$work).' 2>&1');
             $data = json_decode($out, true);
             $this->assertIsArray($data, 'The probe did not return JSON: '.$out);
             $this->assertSame('', $data['error'], 'The probe failed');

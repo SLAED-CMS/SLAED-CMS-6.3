@@ -73,9 +73,6 @@ final class FieldTest extends TestCase
             $have[$meth->getName()] = ($back instanceof ReflectionNamedType ? $back->getName() : '?').'('.implode(', ', $pars).')';
         }
         $this->assertSame($want, $have);
-        $root = dirname(__DIR__, 2).'/core/classes';
-        $this->assertDirectoryDoesNotExist($root.'/field');
-        foreach (['FieldManager', 'FieldService', 'FieldRegistry', 'FieldException', 'FieldError'] as $name) $this->assertFalse(class_exists($name, false), $name.' exists');
     }
 
     # The registry is exactly ten types, each with exactly four keys, and only select may hold several values

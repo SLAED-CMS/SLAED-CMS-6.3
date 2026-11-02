@@ -46,7 +46,7 @@ $pout = [
     'closed' => getStatData('2026-09', -1, true, $pclock),
     'old' => getStatData('2026-07', -1, true, $pclock),
     'wrong' => getStatData('../../config/db', -1, true, $pclock),
-    'archive' => getStatArchive(),
+    'archive' => getStatArchive($pclock),
 ];
 $pfile = COUNTER_DIR.'/statistic/statistic_2026-07.log';
 $pstamp = (int)filemtime($pfile);

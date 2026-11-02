@@ -9,6 +9,9 @@ use PHPUnit\Framework\TestCase;
 # docs/PERFORMANCE.md, section "Static Assets": every asset address carries the version of its content from the derived map, and the head scripts run deferred in order
 class AssetVersionTest extends TestCase
 {
+    # The raw answer of each probe run, kept before any assertion so a failed probe is not started again by the next test
+    private static array $outs = [];
+
     private static array $probe = [];
     private array $saved = [];
 
@@ -39,7 +42,7 @@ class AssetVersionTest extends TestCase
         $work = str_replace('\\', '/', sys_get_temp_dir()).'/slaed_asset_probe';
         if (!is_dir($work)) mkdir($work, 0777, true);
         $cmd = escapeshellarg(PHP_BINARY).' '.escapeshellarg(dirname(__DIR__).'/Support/asset_probe.php').' '.escapeshellarg($work).' 2>&1';
-        $out = (string)shell_exec($cmd);
+        $out = self::$outs[__FUNCTION__] ??= (string)shell_exec($cmd);
         $data = json_decode($out, true);
         $this->assertIsArray($data, 'The asset probe did not return JSON: '.$out);
         if (!empty($data['error'])) $this->markTestSkipped('The asset probe failed: '.$data['error']);

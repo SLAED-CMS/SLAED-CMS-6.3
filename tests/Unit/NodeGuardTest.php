@@ -10,6 +10,9 @@ use PHPUnit\Framework\TestCase;
 # The input and output guards of Node, driven by tests/Support/route_probe.php with the argument guard; the installer lock is proven by NodeProfileTest
 final class NodeGuardTest extends TestCase
 {
+    # The raw answer of each probe run, kept before any assertion so a failed probe is not started again by the next test
+    private static array $outs = [];
+
     private static array $probe = [];
 
     # The probe runs the disposable database and scratch configuration of the integrations with a select field of accounts and a favorite worth points
@@ -21,7 +24,7 @@ final class NodeGuardTest extends TestCase
         if (self::$probe === []) {
             $script = dirname(__DIR__).'/Support/route_probe.php';
             $work = str_replace('\\', '/', sys_get_temp_dir()).'/slaed_node_guard';
-            $out = (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' '.escapeshellarg($work).' guard 2>&1');
+            $out = self::$outs[__FUNCTION__] ??= (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' '.escapeshellarg($work).' guard 2>&1');
             $data = json_decode($out, true);
             $this->assertIsArray($data, 'The probe did not return JSON: '.substr($out, 0, 600));
             $this->assertSame('', $data['error'], 'The probe failed');

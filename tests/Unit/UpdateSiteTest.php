@@ -4,12 +4,17 @@ declare(strict_types=1);
 
 namespace Tests\Unit;
 
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 # The 6.3 update of update.php carries a real 6.2 site over (docs/NODE.md, The 6.3 update)
+#[Group('release')]
 final class UpdateSiteTest extends TestCase
 {
+    # The raw answer of each probe run, kept before any assertion so a failed probe is not started again by the next test
+    private static array $outs = [];
+
     private static array $probe = [];
 
     # The fixture tests/Fixtures/update62 holds the CREATE TABLE statements of all 33 tables a real 6.2 site dumped, a small invented seed and the 6.2 configuration files
@@ -38,7 +43,8 @@ final class UpdateSiteTest extends TestCase
             $site = dirname(__DIR__).'/Fixtures/';
             $work = str_replace('\\', '/', sys_get_temp_dir()).'/slaed_update_site_'.$name;
             $args = [$work, 'update', $site.$name.'/site.sql', $site.'update62/config', 'old'];
-            $out = (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' '.implode(' ', array_map('escapeshellarg', $args)).' 2>&1');
+            $out = self::$outs[__FUNCTION__.$name] ??= (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' '
+                .implode(' ', array_map('escapeshellarg', $args)).' 2>&1');
             $data = json_decode($out, true);
             $this->assertIsArray($data, 'The probe did not return JSON: '.$out);
             $this->assertSame('', $data['error'], 'The probe failed');

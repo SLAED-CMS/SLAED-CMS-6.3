@@ -19,8 +19,9 @@ if (!is_dir($probework.'/config')) {
     }
 }
 $psec = require $probework.'/config/security.php';
+# The file scan skips the heavy folders of the stand: the test reads only the lines of its journal, and uploads/ alone holds gigabytes the scan would hash twice
 $psec['security'] = array_merge($psec['security'], ['log' => '1', 'log_a' => '1', 'log_u' => '1', 'log_d' => '1', 'mail_d' => '0',
-    'log_size' => ($pmode === 'rotate') ? '64' : '10485760']);
+    'log_size' => ($pmode === 'rotate') ? '64' : '10485760', 'dump_skip' => ".git/\nvendor/\ntests/\nuploads/\npublic/"]);
 file_put_contents($probework.'/config/security.php', "<?php\nreturn ".var_export($psec, true).";\n");
 if (is_file($probework.'/config/local.php')) unlink($probework.'/config/local.php');
 define('CONFIG_DIR', $probework.'/config');

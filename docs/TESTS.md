@@ -20,6 +20,7 @@ Composer scripts currently present in `composer.json`:
 
 - `composer test`
 - `composer test:fast`
+- `composer test:release`
 - `composer analyse`
 - `composer quality`
 
@@ -69,16 +70,23 @@ vendor/bin/phpunit
 
 ### PHPUnit In Parallel
 ```bash
-vendor/bin/paratest --processes=8 --order-by=duration,reverse
+vendor/bin/paratest --processes=8 --order-by=duration,reverse --exclude-group=release
 ```
 
-The same suite through ParaTest (`composer test:fast`): one test class per worker,
+The suite through ParaTest (`composer test:fast`): one test class per worker,
 the longest classes first by the durations PHPUnit keeps in `.phpunit.cache`, about
-four times faster than the serial run. Every probe that creates its own disposable
+four times faster than the serial run. It leaves out the group `release`: the clean
+installation (`NodeProfileTest`), the installation of a package (`UpdateApplyTest`)
+and the data update of `public/update.php` (`UpdateSiteTest`, `PrivatMigrationTest` and
+the units `Update{Archive,Attach,Config,Fields,Mails,Points,Ratings,Text}Test`), which
+copy the tree or a site and walk it over HTTP. `composer test:release` runs that group
+alone; the serial `vendor/bin/phpunit` runs everything. Every probe that creates its own disposable
 database and scratch runs alongside the others; a probe started without a scratch
 of its own shares the database of the stand, so `tests/Support/probe_boot.php`
 lines such probes up on one lock. A test class must therefore stand alone: what
 it calls it stubs or loads itself, never relying on a class that ran before it.
+A class that memoizes its probe keeps the raw answer in `self::$outs` before any
+assertion, so a probe that fails costs its class one run, not one per test.
 
 ### PHPUnit By Suite
 ```bash
@@ -106,6 +114,19 @@ vendor/bin/php-cs-fixer fix --dry-run --diff --using-cache=no --config=.php-cs-f
 vendor/bin/php-cs-fixer fix --using-cache=no --config=.php-cs-fixer.dist.php <paths>
 ```
 
+### Unused Code Audit
+```bash
+php tools/unused.php
+php tools/unused.php --only=func
+php tools/unused.php --only=const
+php tools/unused.php --only=var
+```
+
+Lists the plain functions of `core/*.php`, the language constants and the local variables that nothing uses, each with
+the file and line of its definition. It is a token scan run by hand, never by PHPUnit or the commit hook, and it always
+exits 0: a name reached only through a string built at run time reads as unused, so a name goes only after a search of
+the whole repository.
+
 ### Syntax Check
 ```bash
 php -l path/to/file.php
@@ -126,8 +147,6 @@ after load and reports one finding per broken rule. In Git Bash set `MSYS_NO_PAT
 ### Theme Independence Audits
 
 `TemplateValidationTest` discovers installed frontend themes dynamically, validates each theme's local runtime directories and CSS files, rejects cross-theme includes/assets, and requires non-zero PHP and template reference counters. Its mixed Windows/POSIX path cases protect the reference scan from silently becoming vacuous.
-
-`AdminCssClassUsageTest` is a theme-aware informational audit despite its legacy filename. It reports `admin` and `lite` independently and scans theme templates, theme hooks, PHP emitters, and shared JavaScript state classes. An item in its unused list is only a static signal; selector removal still requires a complete emitter audit and browser coverage.
 
 ### CSS Normalization Verification
 
@@ -200,7 +219,6 @@ Directory:
 - `tests/Unit`
 
 Current unit test files include:
-- `AdminCssClassUsageTest.php`
 - `AdminLoginBridgeFlowTest.php`
 - `AdminPageRenderFlowTest.php`
 - `AdminPreviewBridgeFlowTest.php`
@@ -297,7 +315,6 @@ Current validation test files include:
 - `ConfigValidationTest.php`
 - `ErrorPageContractTest.php`
 - `InsertValidationTest.php`
-- `LanguageConstantsUsageTest.php`
 - `LanguageValidationTest.php`
 - `ModuleStructureTest.php`
 - `PhpFileFormatTest.php`
@@ -308,7 +325,6 @@ Current validation test files include:
 - `SeoSemanticsValidationTest.php`
 - `SetupFileWarningTest.php`
 - `TemplateValidationTest.php`
-- `UnusedCodeAuditTest.php`
 
 ## Recommended Order
 For focused code work:

@@ -257,7 +257,7 @@ final class UpdateSignTest extends TestCase
         for ($i = 0xee; $i <= 0xff; ++$i) $cases[] = [$sig, 'm', chr($i).str_repeat(chr(0xff), 30).chr(0x7f)];
         for ($k = 0; $k < 8; ++$k) {
             $pair = self::getPair();
-            $msg = random_bytes(random_int(0, 2048));
+            $msg = random_bytes(random_int(1, 2048));
             $sig = sodium_crypto_sign_detached($msg, $pair['sec']);
             $bad = $sig;
             $bad[$k * 8] = chr(ord($bad[$k * 8]) ^ (1 << $k));

@@ -1,8 +1,16 @@
 {% if open %}
 <div class="sl-forum-top">
   <span class="sl-pull-right">
-    {% if share_url %}<span class="sl-meta-actions">{% include 'fragments/share.html' %}</span>{% endif %}
-    {% if button %}<b>{{{ button }}}</b>{% elseif actions_html %}{{{ actions_html }}}{% else %}<b>{{{ atopic }}}</b><b>{{{ areply }}}</b>{% endif %}
+    {% if share_url %}
+    <span class="sl-meta-actions">{% include 'fragments/share.html' %}</span>
+    {% endif %}
+    {% if button %}
+    <b>{{{ button }}}</b>
+    {% elseif actions_html %}
+    {{{ actions_html }}}
+    {% else %}
+    <b>{{{ atopic }}}</b><b>{{{ areply }}}</b>
+    {% endif %}
   </span>
   <h1 class="sl-heading">{% if title_html %}{{{ title_html }}}{% else %}{{{ favor }}} {{{ title }}}{% endif %}</h1>
 </div>
@@ -10,7 +18,13 @@
 <div class="sl-forum-foot">
   {{{ pager }}}
   <span class="sl-pull-right">
-    {% if button %}<b>{{{ button }}}</b>{% elseif actions_html %}{{{ actions_html }}}{% else %}<b>{{{ atopic }}}</b><b>{{{ areply }}}</b>{% endif %}
+    {% if button %}
+    <b>{{{ button }}}</b>
+    {% elseif actions_html %}
+    {{{ actions_html }}}
+    {% else %}
+    <b>{{{ atopic }}}</b><b>{{{ areply }}}</b>
+    {% endif %}
   </span>
 </div>
 {% endif %}

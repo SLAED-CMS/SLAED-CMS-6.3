@@ -10,6 +10,9 @@ use PHPUnit\Framework\TestCase;
 # The token rules of core/security.php over tests/Support/token_probe.php, and the promise that no address of the site carries a token
 final class TokenScopeTest extends TestCase
 {
+    # The raw answer of each probe run, kept before any assertion so a failed probe is not started again by the next test
+    private static array $outs = [];
+
     private static array $probe = [];
 
     # Run the probe once and memoize its report
@@ -17,7 +20,8 @@ final class TokenScopeTest extends TestCase
     {
         if (self::$probe !== []) return self::$probe;
         $work = str_replace('\\', '/', sys_get_temp_dir()).'/slaed_token_'.getmypid();
-        $out = (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg(dirname(__DIR__).'/Support/token_probe.php').' '.escapeshellarg($work).' 2>&1');
+        $out = self::$outs[__FUNCTION__] ??= (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg(dirname(__DIR__).'/Support/token_probe.php').' '
+            .escapeshellarg($work).' 2>&1');
         foreach (glob($work.'/*') ?: [] as $one) unlink($one);
         if (is_dir($work)) rmdir($work);
         $data = json_decode($out, true);

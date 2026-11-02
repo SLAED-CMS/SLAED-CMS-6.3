@@ -8,6 +8,9 @@ use PHPUnit\Framework\TestCase;
 # Every comment target stores the same row through the Comment class, updates its target counter where one exists and awards its own points
 final class CommentWriteTest extends TestCase
 {
+    # The raw answer of each probe run, kept before any assertion so a failed probe is not started again by the next test
+    private static array $outs = [];
+
     private static array $probe = [];
 
     # Run one write probe per author kind, driving the class against live rows in a transaction it always rolls back, and memoize its report
@@ -16,7 +19,7 @@ final class CommentWriteTest extends TestCase
     {
         if (isset(self::$probe[$mode])) return self::$probe[$mode];
         $script = dirname(__DIR__).'/Support/contract_probe.php';
-        $out = (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' '.escapeshellarg($mode).' 2>&1');
+        $out = self::$outs[__FUNCTION__.$mode] ??= (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' '.escapeshellarg($mode).' 2>&1');
         $data = json_decode($out, true);
         $this->assertIsArray($data, 'Probe '.$mode.' did not return JSON: '.$out);
         return self::$probe[$mode] = $data;

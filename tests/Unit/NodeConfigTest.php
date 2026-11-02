@@ -12,6 +12,9 @@ use ReflectionMethod;
 # NodeService writes types: four operations and the import run in the shared configuration writer, type row locked, version proven on both sides
 final class NodeConfigTest extends TestCase
 {
+    # The raw answer of each probe run, kept before any assertion so a failed probe is not started again by the next test
+    private static array $outs = [];
+
     private static array $probe = [];
 
     # The file of a Node class
@@ -29,7 +32,7 @@ final class NodeConfigTest extends TestCase
         if (self::$probe === []) {
             $script = dirname(__DIR__).'/Support/node_probe.php';
             $work = str_replace('\\', '/', sys_get_temp_dir()).'/slaed_node_config';
-            $out = (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' '.escapeshellarg($work).' service 2>&1');
+            $out = self::$outs[__FUNCTION__] ??= (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' '.escapeshellarg($work).' service 2>&1');
             $data = json_decode($out, true);
             $this->assertIsArray($data, 'The probe did not return JSON: '.$out);
             $this->assertSame('', $data['error'], 'The probe failed');

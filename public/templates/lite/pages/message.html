@@ -1,7 +1,5 @@
 {% extends 'layouts/bare.html' %}
-
 {% block title %}{% if title %}{{ title }} — {{ sitename }}{% else %}{{ sitename }}{% endif %}{% endblock %}
-
 {% block content %}
 <div class="sl-msg">
   <div class="sl-msg-card">
@@ -11,13 +9,21 @@
     <a class="sl-msg-brand sl-msg-brand-text" href="{{ homeurl }}" title="{{ sitename }}">{{ sitename }}</a>
     {% endif %}
     <div class="sl-msg-line"></div>
-    {% if title %}<h1 class="sl-msg-title">{{{ title }}}</h1>{% endif %}
+    {% if title %}
+    <h1 class="sl-msg-title">{{{ title }}}</h1>
+    {% endif %}
     <div class="sl-msg-body">
-      {% if message_html %}{{{ message_html }}}{% else %}{{{ content }}}{% endif %}
+      {% if message_html %}
+      {{{ message_html }}}
+      {% else %}
+      {{{ content }}}
+      {% endif %}
     </div>
     {% if search %}
     <form class="sl-search-form sl-msg-search" action="{{ root }}search" method="post" role="search">
-      {% if home %}<a class="sl-home-link sl-circle-action" href="{{ homeurl }}" title="{{ home }}" aria-label="{{ home }}"><i class="bi bi-house-door-fill" aria-hidden="true"></i></a>{% endif %}
+      {% if home %}
+      <a class="sl-home-link sl-circle-action" href="{{ homeurl }}" title="{{ home }}" aria-label="{{ home }}"><i class="bi bi-house-door-fill" aria-hidden="true"></i></a>
+      {% endif %}
       <input type="hidden" name="mod" value="">
       <input type="text" name="word" maxlength="100" placeholder="{{ search }}" class="sl-field" required>
       <button type="submit" class="sl-search-btn sl-circle-action" aria-label="{{ search }}" title="{{ search }}"><i class="bi bi-search" aria-hidden="true"></i></button>
@@ -25,7 +31,9 @@
     {% endif %}
     {% if license %}
     <div class="sl-msg-line"></div>
-    <div class="sl-msg-foot">{{{ license }}}</div>
+    <div class="sl-msg-foot">
+      {{{ license }}}
+    </div>
     {% endif %}
   </div>
 </div>

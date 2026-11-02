@@ -11,6 +11,9 @@ use Update;
 # Settings, languages and themes of an update: missing options merged into config/, the sections a site owns kept, languages and the two themes replaced whole
 final class UpdateMergeTest extends TestCase
 {
+    # The raw answer of each probe run, kept before any assertion so a failed probe is not started again by the next test
+    private static array $outs = [];
+
     private static array $probe = [];
 
     public static function setUpBeforeClass(): void
@@ -24,7 +27,7 @@ final class UpdateMergeTest extends TestCase
         if (self::$probe) return self::$probe;
         $script = dirname(__DIR__).'/Support/config_probe.php';
         $work = str_replace('\\', '/', sys_get_temp_dir()).'/slaed_config_merge_'.getmypid();
-        $out = (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' merge '.escapeshellarg($work).' 2>&1');
+        $out = self::$outs[__FUNCTION__] ??= (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' merge '.escapeshellarg($work).' 2>&1');
         $data = json_decode($out, true);
         $this->assertIsArray($data, 'The merge probe did not return JSON: '.$out);
         $this->assertSame('', $data['error'], 'The merge probe failed');

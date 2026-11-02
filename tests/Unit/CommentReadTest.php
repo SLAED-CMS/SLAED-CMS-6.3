@@ -8,6 +8,9 @@ use PHPUnit\Framework\TestCase;
 # The read methods of the Comment class answer exactly what the legacy queries they replace answer, byte for byte
 final class CommentReadTest extends TestCase
 {
+    # The raw answer of each probe run, kept before any assertion so a failed probe is not started again by the next test
+    private static array $outs = [];
+
     private static array $probe = [];
 
     # Run the read probe once and memoize its report for every scenario in this class
@@ -16,7 +19,7 @@ final class CommentReadTest extends TestCase
     {
         if (self::$probe !== []) return self::$probe;
         $script = dirname(__DIR__).'/Support/contract_probe.php';
-        $out = (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' commentread 2>&1');
+        $out = self::$outs[__FUNCTION__] ??= (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' commentread 2>&1');
         $data = json_decode($out, true);
         $this->assertIsArray($data, 'Probe commentread did not return JSON: '.$out);
         return self::$probe = $data;

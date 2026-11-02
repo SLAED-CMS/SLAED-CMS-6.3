@@ -1,1 +1,12 @@
-{% if side_html %}<div class="sl-pane-split">{{{ content_html }}}<div class="sl-pane-side">{{{ side_html }}}</div></div>{% else %}<div class="sl-pane-trio">{{{ content_html }}}</div>{% endif %}
+{% if side_html %}
+<div class="sl-pane-split">
+  {{{ content_html }}}
+  <div class="sl-pane-side">
+    {{{ side_html }}}
+  </div>
+</div>
+{% else %}
+<div class="sl-pane-trio">
+  {{{ content_html }}}
+</div>
+{% endif %}

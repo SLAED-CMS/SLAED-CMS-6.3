@@ -2,7 +2,7 @@
 
 use PHPUnit\Framework\TestCase;
 
-# Validates block files: syntax, naming, dangerous calls, encoding, output format, presence and size
+# Validates block files: syntax, naming, dangerous calls, encoding and presence
 class BlockValidationTest extends TestCase
 {
     private static string $basePath;
@@ -120,63 +120,10 @@ class BlockValidationTest extends TestCase
         );
     }
 
-    # Reports blocks that output neither through $content nor echo/return; informational, some blocks use another format
-    public function testBlocksOutputFormat(): void
-    {
-        $warnings = [];
-
-        foreach (self::$blockFiles as $file) {
-            $content = file_get_contents($file);
-            $fileName = basename($file);
-
-            if (!preg_match('/\$content\s*[.=]/', $content)) {
-                if (!preg_match('/echo\s/', $content) && !preg_match('/return\s/', $content)) {
-                    $warnings[] = "blocks/$fileName - не обнаружен вывод через \$content";
-                }
-            }
-        }
-
-        $this->assertTrue(true, count($warnings).' блоков с нестандартным форматом вывода');
-    }
-
     # Checks that block files were found and that there are more than five of them
     public function testBlockFilesFound(): void
     {
         $this->assertNotEmpty(self::$blockFiles, 'Файлы блоков не найдены');
         $this->assertGreaterThan(5, count(self::$blockFiles), 'Найдено слишком мало блоков');
-    }
-
-    # Lists the block files for comparison with the database; informational, since the database may hold dynamic blocks
-    public function testBlockFilesMatchDatabase(): void
-    {
-        $fileBlocks = [];
-        foreach (self::$blockFiles as $file) {
-            $fileName = basename($file, '.php');
-            $fileBlocks[] = $fileName;
-        }
-
-        $this->assertNotEmpty($fileBlocks, 'Не найдены файлы блоков');
-    }
-
-    # Reports block files larger than 50 KB; a warning, not an error
-    public function testBlockFilesSize(): void
-    {
-        $warnings = [];
-        $maxSize = 50 * 1024;
-
-        foreach (self::$blockFiles as $file) {
-            $size = filesize($file);
-            $fileName = basename($file);
-
-            if ($size > $maxSize) {
-                $warnings[] = sprintf(
-                    'blocks/%s - большой размер файла (%s KB)',
-                    $fileName,
-                    round($size / 1024, 1)
-                );
-            }
-        }
-
-        $this->assertTrue(true, count($warnings).' блоков с большим размером файла');
     }
 }

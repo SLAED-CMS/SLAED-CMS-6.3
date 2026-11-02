@@ -8,6 +8,9 @@ use PHPUnit\Framework\TestCase;
 # The Rating class is the one writer of the vote history and of the aggregate of every rated target, and docs/RATINGS.md is its contract
 final class RatingTest extends TestCase
 {
+    # The raw answer of each probe run, kept before any assertion so a failed probe is not started again by the next test
+    private static array $outs = [];
+
     private const NONE = [
         'ok' => false, 'code' => 'unavailable', 'vote' => 0, 'score' => 0, 'ratings' => 0,
         'average' => null, 'wait' => 0, 'duplicate' => false, 'canvote' => false,
@@ -25,7 +28,7 @@ final class RatingTest extends TestCase
         if (self::$probe !== []) return self::$probe;
         $script = dirname(__DIR__).'/Support/rating_probe.php';
         $work = str_replace('\\', '/', sys_get_temp_dir()).'/slaed_rating_probe';
-        $out = (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' '.escapeshellarg($work).' 2>&1');
+        $out = self::$outs[__FUNCTION__] ??= (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' '.escapeshellarg($work).' 2>&1');
         $data = json_decode($out, true);
         $this->assertIsArray($data, 'The probe did not return JSON: '.substr($out, 0, 600));
         $this->assertSame('', $data['error'], 'The probe failed');

@@ -1,65 +1,80 @@
 <section class="sl-pres-section" id="system">
-{% include 'fragments/presentation-head.html' with head %}
-<div class="sl-pres-body">
-  <div class="sl-pres-modules" data-sl-pres="build">
-    <div class="sl-pres-presets" role="group" aria-label="{{ presets.label }}">
-      <span><i class="bi bi-sliders2" aria-hidden="true"></i>{{ presets.label }}</span>
-      <div class="sl-pres-segment">{% for item in presets.items %}<button type="button" data-sl-pres-build="{{ item.mods }}" aria-pressed="{% if item.is_on %}true{% else %}false{% endif %}">{{ item.label }}</button>{% endfor %}</div>
-      <small>{{ presets.note }}</small>
-    </div>
-    <div class="sl-pres-map sl-pres-scene">
-      <svg class="sl-pres-wires" viewBox="0 0 900 346" preserveAspectRatio="none" aria-hidden="true">
-        <path{% if lit.one %} class="sl-is-on"{% endif %} d="M118 58 C260 58 295 160 450 173"></path>
-        <path{% if lit.two %} class="sl-is-on"{% endif %} d="M118 288 C260 288 295 190 450 173"></path>
-        <path{% if lit.three %} class="sl-is-on"{% endif %} d="M782 58 C640 58 605 160 450 173"></path>
-        <path{% if lit.four %} class="sl-is-on"{% endif %} d="M782 288 C640 288 605 190 450 173"></path>
-        <path{% if lit.five %} class="sl-is-on"{% endif %} d="M250 173 H450"></path>
-        <path{% if lit.six %} class="sl-is-on"{% endif %} d="M650 173 H450"></path>
-        <path{% if lit.seven %} class="sl-is-on"{% endif %} d="M330 72 C380 100 410 130 450 173"></path>
-        <path{% if lit.eight %} class="sl-is-on"{% endif %} d="M570 274 C525 245 490 210 450 173"></path>
-      </svg>
-      <div class="sl-pres-map-core"><i class="sl-pres-orbit"></i><img src="{{ root }}templates/{{ theme }}/images/logos/{{ logo }}" alt="SLAED" width="64" height="64"></div>
-      {% for item in mods %}{% include 'fragments/presentation-module.html' with item %}{% endfor %}
-    </div>
-    <div class="sl-pres-detail">
-      {% for item in groups %}<div class="sl-pres-card"><div class="sl-pres-detail-head"><b>{{ item.title }}</b><span>● {{ item.state }}</span></div><div class="sl-pres-tags">{% for tag in item.tags %}<span>{{ tag }}</span>{% endfor %}</div></div>{% endfor %}
-    </div>
-    <div class="sl-pres-blocks">
-      <div class="sl-pres-blocks-head">
-        <div><span class="sl-pres-over">{{ blocks.over }}</span><b><i class="bi bi-grid-1x2" aria-hidden="true"></i>{{ blocks.title }}</b></div>
-        <div class="sl-pres-blocks-state"><i class="sl-pres-dot" data-sl-tone="success"></i><b>{{ blocks.active }}</b></div>
+  {% include 'fragments/presentation-head.html' with head %}
+  <div class="sl-pres-body">
+    <div class="sl-pres-modules" data-sl-pres="build">
+      <div class="sl-pres-presets" role="group" aria-label="{{ presets.label }}">
+        <span><i class="bi bi-sliders2" aria-hidden="true"></i>{{ presets.label }}</span>
+        <div class="sl-pres-segment">{% for item in presets.items %}<button type="button" data-sl-pres-build="{{ item.mods }}" aria-pressed="{% if item.is_on %}true{% else %}false{% endif %}">{{ item.label }}</button>{% endfor %}</div>
+        <small>{{ presets.note }}</small>
       </div>
-      <div class="sl-pres-blocks-layout">
-        <div class="sl-pres-blocks-stage sl-pres-scene">
-          <svg class="sl-pres-wires" viewBox="0 0 760 340" preserveAspectRatio="none" aria-hidden="true">
-            {% for item in blocks.nodes %}<path{% if item.is_on %} class="sl-is-on"{% endif %} d="M{{ item.x1 }} {{ item.y1 }} C{{ item.cx1 }} {{ item.y1 }} {{ item.cx2 }} {{ item.y2 }} {{ item.x2 }} {{ item.y2 }}"></path>{% endfor %}
-          </svg>
-          <div class="sl-pres-page">
-            <div class="sl-pres-slot{% if blocks.fill.banner %} sl-is-on{% endif %}">{{ blocks.slots.banner }}</div>
-            <div class="sl-pres-page-grid">
-              <aside class="sl-pres-slot{% if blocks.fill.left %} sl-is-on{% endif %}"><span>{{ blocks.slots.left }}</span></aside>
-              <div>
-                <div class="sl-pres-slot{% if blocks.fill.top %} sl-is-on{% endif %}">{{ blocks.slots.top }}</div>
-                <div class="sl-pres-page-content"><div class="sl-pres-router"><i class="bi bi-arrows-move" aria-hidden="true"></i><b>{{ blocks.router }}</b><span>{{ blocks.router_note }}</span></div></div>
-                <div class="sl-pres-slot{% if blocks.fill.bottom %} sl-is-on{% endif %}">{{ blocks.slots.bottom }}</div>
-              </div>
-              <aside class="sl-pres-slot{% if blocks.fill.right %} sl-is-on{% endif %}"><span>{{ blocks.slots.right }}</span></aside>
-            </div>
-            <div class="sl-pres-slot{% if blocks.fill.footer %} sl-is-on{% endif %}">{{ blocks.slots.footer }}</div>
-          </div>
-          {% for item in blocks.nodes %}<div class="sl-pres-node{% if item.is_on %} sl-is-on{% else %} sl-is-off{% endif %}" title="{{ item.title }}"><i class="bi bi-{{ item.icon }}" aria-hidden="true"></i><span>{{ item.pos }}</span><b>{{ item.title }}</b><small><span>{% if item.is_file %}FILE{% else %}HTML{% endif %}</span><span>{% if item.is_on %}ON{% else %}OFF{% endif %}</span></small></div>{% endfor %}
+      <div class="sl-pres-map sl-pres-scene">
+        <svg class="sl-pres-wires" viewBox="0 0 900 346" preserveAspectRatio="none" aria-hidden="true">
+          <path{% if lit.one %} class="sl-is-on"{% endif %} d="M118 58 C260 58 295 160 450 173"></path>
+          <path{% if lit.two %} class="sl-is-on"{% endif %} d="M118 288 C260 288 295 190 450 173"></path>
+          <path{% if lit.three %} class="sl-is-on"{% endif %} d="M782 58 C640 58 605 160 450 173"></path>
+          <path{% if lit.four %} class="sl-is-on"{% endif %} d="M782 288 C640 288 605 190 450 173"></path>
+          <path{% if lit.five %} class="sl-is-on"{% endif %} d="M250 173 H450"></path>
+          <path{% if lit.six %} class="sl-is-on"{% endif %} d="M650 173 H450"></path>
+          <path{% if lit.seven %} class="sl-is-on"{% endif %} d="M330 72 C380 100 410 130 450 173"></path>
+          <path{% if lit.eight %} class="sl-is-on"{% endif %} d="M570 274 C525 245 490 210 450 173"></path>
+        </svg>
+        <div class="sl-pres-map-core"><i class="sl-pres-orbit"></i><img src="{{ root }}templates/{{ theme }}/images/logos/{{ logo }}" alt="SLAED" width="64" height="64"></div>
+        {% for item in mods %}
+        {% include 'fragments/presentation-module.html' with item %}
+        {% endfor %}
+      </div>
+      <div class="sl-pres-detail">
+        {% for item in groups %}
+        <div class="sl-pres-card">
+          <div class="sl-pres-detail-head"><b>{{ item.title }}</b><span>● {{ item.state }}</span></div>
+          <div class="sl-pres-tags">{% for tag in item.tags %}<span>{{ tag }}</span>{% endfor %}</div>
         </div>
-        <aside class="sl-pres-blocks-panel">
-          <div class="sl-pres-panel-head"><span>{{ blocks.layout }}</span><b>{{ blocks.current }}</b></div>
-          <div class="sl-pres-blocks-list">
-            {% for item in blocks.nodes %}<div class="sl-pres-bcard" title="{{ item.title }}"><b>{{ item.title }}</b><span>{{ item.pos }}</span><small>{% if item.is_file %}FILE{% else %}HTML{% endif %} · {% if item.is_on %}ON{% else %}OFF{% endif %}</small></div>{% endfor %}
+        {% endfor %}
+      </div>
+      <div class="sl-pres-blocks">
+        <div class="sl-pres-blocks-head">
+          <div><span class="sl-pres-over">{{ blocks.over }}</span><b><i class="bi bi-grid-1x2" aria-hidden="true"></i>{{ blocks.title }}</b></div>
+          <div class="sl-pres-blocks-state"><i class="sl-pres-dot" data-sl-tone="success"></i><b>{{ blocks.active }}</b></div>
+        </div>
+        <div class="sl-pres-blocks-layout">
+          <div class="sl-pres-blocks-stage sl-pres-scene">
+            <svg class="sl-pres-wires" viewBox="0 0 760 340" preserveAspectRatio="none" aria-hidden="true">
+              {% for item in blocks.nodes %}
+              <path{% if item.is_on %} class="sl-is-on"{% endif %} d="M{{ item.x1 }} {{ item.y1 }} C{{ item.cx1 }} {{ item.y1 }} {{ item.cx2 }} {{ item.y2 }} {{ item.x2 }} {{ item.y2 }}"></path>
+              {% endfor %}
+            </svg>
+            <div class="sl-pres-page">
+              <div class="sl-pres-slot{% if blocks.fill.banner %} sl-is-on{% endif %}">{{ blocks.slots.banner }}</div>
+              <div class="sl-pres-page-grid">
+                <aside class="sl-pres-slot{% if blocks.fill.left %} sl-is-on{% endif %}"><span>{{ blocks.slots.left }}</span></aside>
+                <div>
+                  <div class="sl-pres-slot{% if blocks.fill.top %} sl-is-on{% endif %}">{{ blocks.slots.top }}</div>
+                  <div class="sl-pres-page-content">
+                    <div class="sl-pres-router"><i class="bi bi-arrows-move" aria-hidden="true"></i><b>{{ blocks.router }}</b><span>{{ blocks.router_note }}</span></div>
+                  </div>
+                  <div class="sl-pres-slot{% if blocks.fill.bottom %} sl-is-on{% endif %}">{{ blocks.slots.bottom }}</div>
+                </div>
+                <aside class="sl-pres-slot{% if blocks.fill.right %} sl-is-on{% endif %}"><span>{{ blocks.slots.right }}</span></aside>
+              </div>
+              <div class="sl-pres-slot{% if blocks.fill.footer %} sl-is-on{% endif %}">{{ blocks.slots.footer }}</div>
+            </div>
+            {% for item in blocks.nodes %}
+            <div class="sl-pres-node{% if item.is_on %} sl-is-on{% else %} sl-is-off{% endif %}" title="{{ item.title }}"><i class="bi bi-{{ item.icon }}" aria-hidden="true"></i><span>{{ item.pos }}</span><b>{{ item.title }}</b><small><span>{% if item.is_file %}FILE{% else %}HTML{% endif %}</span><span>{% if item.is_on %}ON{% else %}OFF{% endif %}</span></small></div>
+            {% endfor %}
           </div>
-          <div class="sl-pres-rules">
-            {% for item in blocks.rules %}<span><i class="bi bi-{{ item.icon }}" aria-hidden="true"></i><b>{{ item.title }}</b><em>{{ item.note }}</em></span>{% endfor %}
-          </div>
-        </aside>
+          <aside class="sl-pres-blocks-panel">
+            <div class="sl-pres-panel-head"><span>{{ blocks.layout }}</span><b>{{ blocks.current }}</b></div>
+            <div class="sl-pres-blocks-list">
+              {% for item in blocks.nodes %}
+              <div class="sl-pres-bcard" title="{{ item.title }}"><b>{{ item.title }}</b><span>{{ item.pos }}</span><small>{% if item.is_file %}FILE{% else %}HTML{% endif %} · {% if item.is_on %}ON{% else %}OFF{% endif %}</small></div>
+              {% endfor %}
+            </div>
+            <div class="sl-pres-rules">
+              {% for item in blocks.rules %}<span><i class="bi bi-{{ item.icon }}" aria-hidden="true"></i><b>{{ item.title }}</b><em>{{ item.note }}</em></span>{% endfor %}
+            </div>
+          </aside>
+        </div>
       </div>
     </div>
   </div>
-</div>
 </section>

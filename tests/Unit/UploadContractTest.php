@@ -8,6 +8,9 @@ use PHPUnit\Framework\TestCase;
 # Batches 3 and 4 of docs/UPLOAD-2026.md: the local and the remote half of the Upload class
 final class UploadContractTest extends TestCase
 {
+    # The raw answer of each probe run, kept before any assertion so a failed probe is not started again by the next test
+    private static array $outs = [];
+
     private static array $probe = [];
     private const CANON = ['7z', 'avif', 'flac', 'gif', 'gz', 'jpeg', 'jpg', 'm4a', 'mp3', 'mp4', 'oga', 'ogg', 'opus', 'pdf', 'png', 'rar', 'tar', 'wav', 'webm', 'webp', 'zip'];
 
@@ -20,7 +23,8 @@ final class UploadContractTest extends TestCase
         if (isset(self::$probe[$mode])) return self::$probe[$mode];
         $file = dirname(__DIR__).'/Support/upload_probe.php';
         $work = str_replace('\\', '/', sys_get_temp_dir()).'/slaed_upload_probe_'.$mode;
-        $out = (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($file).' '.escapeshellarg($mode).' '.escapeshellarg($work).' 2>&1');
+        $out = self::$outs[__FUNCTION__.$mode] ??= (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($file).' '.escapeshellarg($mode).' '
+            .escapeshellarg($work).' 2>&1');
         $data = json_decode($out, true);
         $this->assertIsArray($data, 'Probe '.$mode.' did not return JSON: '.$out);
         if (!empty($data['error'])) $this->markTestSkipped('Probe '.$mode.': '.$data['error']);

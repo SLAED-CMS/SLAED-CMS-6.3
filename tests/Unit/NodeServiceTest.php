@@ -12,6 +12,9 @@ use ReflectionMethod;
 # NodeService writes materials: create, preview, change, state moves and the physical delete with categories, fields, relations and resources
 final class NodeServiceTest extends TestCase
 {
+    # The raw answer of each probe run, kept before any assertion so a failed probe is not started again by the next test
+    private static array $outs = [];
+
     private static array $probe = [];
 
     # The root of the repository
@@ -39,7 +42,7 @@ final class NodeServiceTest extends TestCase
         if (self::$probe === []) {
             $script = dirname(__DIR__).'/Support/node_probe.php';
             $work = str_replace('\\', '/', sys_get_temp_dir()).'/slaed_node_service';
-            $out = (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' '.escapeshellarg($work).' material 2>&1');
+            $out = self::$outs[__FUNCTION__] ??= (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' '.escapeshellarg($work).' material 2>&1');
             $data = json_decode($out, true);
             $this->assertIsArray($data, 'The probe did not return JSON: '.$out);
             $this->assertSame('', $data['error'], 'The probe failed');

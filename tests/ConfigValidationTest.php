@@ -100,27 +100,6 @@ class ConfigValidationTest extends TestCase
         );
     }
 
-    # Reports default passwords in the configuration; an informational check for development environments
-    public function testNodefault_passwords(): void
-    {
-        $warnings = [];
-        $default_passwords = ['password', '123456', 'admin', 'root', 'test'];
-
-        foreach (self::$config_files as $file) {
-            $content = file_get_contents($file);
-            $file_name = basename($file);
-
-            if (preg_match('/[\'"]pass(?:word)?[\'"]\s*=>\s*[\'"]([^\'"]*)[\'"]/i', $content, $match)) {
-                $password = $match[1];
-                if (in_array(strtolower($password), $default_passwords, true)) {
-                    $warnings[] = "config/$file_name - default password detected";
-                }
-            }
-        }
-
-        $this->assertTrue(true, count($warnings).' files with potentially unsafe passwords');
-    }
-
     # Checks that configuration files are valid UTF-8 and carry no BOM
     public function testconfig_filesEncoding(): void
     {

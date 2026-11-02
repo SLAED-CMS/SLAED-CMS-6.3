@@ -10,6 +10,9 @@ use PHPUnit\Framework\TestCase;
 # The 6.3 update: the module registry, the removal of unregistered Node types and the preflight of update.php, beside the preflight and the order of checks of setup.php
 final class UpdateSetupTest extends TestCase
 {
+    # The raw answer of each probe run, kept before any assertion so a failed probe is not started again by the next test
+    private static array $outs = [];
+
     private static array $probe = [];
 
     # The registry keeps the switches of the 6.2 _modules table over config/modules.php on the first run and leaves the switches of the owner alone after it
@@ -23,7 +26,7 @@ final class UpdateSetupTest extends TestCase
         if (self::$probe === []) {
             $script = dirname(__DIR__).'/Support/update_probe.php';
             $work = str_replace('\\', '/', sys_get_temp_dir()).'/slaed_update_setup';
-            $out = (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' '.escapeshellarg($work).' setup 2>&1');
+            $out = self::$outs[__FUNCTION__] ??= (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' '.escapeshellarg($work).' setup 2>&1');
             $data = json_decode($out, true);
             $this->assertIsArray($data, 'The probe did not return JSON: '.$out);
             $this->assertSame('', $data['error'], 'The probe failed');

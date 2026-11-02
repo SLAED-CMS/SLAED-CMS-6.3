@@ -4,5 +4,7 @@
   <small>{{ limits_text }}</small>
   <input type="file" name="{{ file_name }}" data-sl-field="file" accept="{{ accept_attr }}" hidden>
   <input type="hidden" name="{{ path_name }}" data-sl-field="path" value="{{ path_value }}">
-  {% if url_name %}<input type="hidden" name="{{ url_name }}" data-sl-field="url" value="{{ url_value }}">{% endif %}
+  {% if url_name %}
+  <input type="hidden" name="{{ url_name }}" data-sl-field="url" value="{{ url_value }}">
+  {% endif %}
 </div>

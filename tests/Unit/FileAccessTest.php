@@ -10,6 +10,9 @@ use PHPUnit\Framework\TestCase;
 # The delivery decision of every file: one adapter per owner, each address form, a refusal of every name a target does not carry, the closed owners on route_probe.php files
 final class FileAccessTest extends TestCase
 {
+    # The raw answer of each probe run, kept before any assertion so a failed probe is not started again by the next test
+    private static array $outs = [];
+
     private const ROOM = 'zzfileaccess';
     private const PNG = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==';
     private static array $probe = [];
@@ -20,7 +23,7 @@ final class FileAccessTest extends TestCase
         if (self::$probe === []) {
             $script = dirname(__DIR__).'/Support/route_probe.php';
             $work = str_replace('\\', '/', sys_get_temp_dir()).'/slaed_files_route';
-            $out = (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' '.escapeshellarg($work).' files 2>&1');
+            $out = self::$outs[__FUNCTION__] ??= (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' '.escapeshellarg($work).' files 2>&1');
             $data = json_decode($out, true);
             $this->assertIsArray($data, 'The probe did not return JSON: '.substr($out, 0, 600));
             $this->assertSame('', $data['error'], 'The probe failed');

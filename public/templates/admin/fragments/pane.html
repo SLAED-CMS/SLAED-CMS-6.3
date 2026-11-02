@@ -1,4 +1,17 @@
 <section class="sl-pane{% if is_fill %} sl-pane-fill{% endif %}"{% if live_html %} data-sl-live-box{% endif %}>
   {% include 'fragments/pane-cap.html' %}
-  {% if right_html %}<div class="sl-pane-body sl-pane-two"><div>{{{ content_html }}}</div><div>{{{ right_html }}}</div></div>{% else %}<div class="sl-pane-body">{{{ content_html }}}</div>{% endif %}
+  {% if right_html %}
+  <div class="sl-pane-body sl-pane-two">
+    <div>
+      {{{ content_html }}}
+    </div>
+    <div>
+      {{{ right_html }}}
+    </div>
+  </div>
+  {% else %}
+  <div class="sl-pane-body">
+    {{{ content_html }}}
+  </div>
+  {% endif %}
 </section>

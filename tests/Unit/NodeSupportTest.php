@@ -10,6 +10,9 @@ use PHPUnit\Framework\TestCase;
 # The comments of a Node material and the private requests of the extension support; the static half reads the files of the stage
 final class NodeSupportTest extends TestCase
 {
+    # The raw answer of each probe run, kept before any assertion so a failed probe is not started again by the next test
+    private static array $outs = [];
+
     private static array $probe = [];
 
     # The root of the tree
@@ -27,7 +30,7 @@ final class NodeSupportTest extends TestCase
         if (self::$probe === []) {
             $script = dirname(__DIR__).'/Support/route_probe.php';
             $work = str_replace('\\', '/', sys_get_temp_dir()).'/slaed_node_support';
-            $out = (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' '.escapeshellarg($work).' support 2>&1');
+            $out = self::$outs[__FUNCTION__] ??= (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' '.escapeshellarg($work).' support 2>&1');
             $data = json_decode($out, true);
             $this->assertIsArray($data, 'The probe did not return JSON: '.substr($out, 0, 600));
             $this->assertSame('', $data['error'], 'The probe failed');

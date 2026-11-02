@@ -1,9 +1,12 @@
 <section class="sl-block">
   <h2 class="sl-title" title="{{ close }}" data-sl-toggle-control="sl-block-{{ id }}">{{ title }}</h2>
-  <div
-    id="sl-block-{{ id }}"
-    class="sl-block-content"
-
-    data-sl-toggle="sl-block-{{ id }}"
-  >{% if content_id %}<div id="{{ content_id }}">{% endif %}{{{ content_html }}}{% if content_id %}</div>{% endif %}</div>
+  <div id="sl-block-{{ id }}" class="sl-block-content" data-sl-toggle="sl-block-{{ id }}">
+    {% if content_id %}
+    <div id="{{ content_id }}">
+    {% endif %}
+    {{{ content_html }}}
+    {% if content_id %}
+    </div>
+    {% endif %}
+  </div>
 </section>

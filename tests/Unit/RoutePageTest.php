@@ -10,6 +10,9 @@ use PHPUnit\Framework\TestCase;
 # A page of the layout at its address, over route_probe.php page: the kind page of the registry, its head, its audience, the page 404 of the layout and the link of the draft
 final class RoutePageTest extends TestCase
 {
+    # The raw answer of each probe run, kept before any assertion so a failed probe is not started again by the next test
+    private static array $outs = [];
+
     private static array $probe = [];
 
     # Run the probe once in its page mode and memoize the run; no request may write a PHP or SQL error
@@ -18,7 +21,7 @@ final class RoutePageTest extends TestCase
         if (self::$probe === []) {
             $script = dirname(__DIR__).'/Support/route_probe.php';
             $work = str_replace('\\', '/', sys_get_temp_dir()).'/slaed_page_route';
-            $out = (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' '.escapeshellarg($work).' page 2>&1');
+            $out = self::$outs[__FUNCTION__] ??= (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' '.escapeshellarg($work).' page 2>&1');
             $data = json_decode($out, true);
             $this->assertIsArray($data, 'The probe did not return JSON: '.substr($out, 0, 600));
             $this->assertSame('', $data['error'], 'The probe failed');

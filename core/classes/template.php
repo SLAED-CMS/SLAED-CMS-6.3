@@ -157,7 +157,8 @@ class Template {
             clearstatcache(true, $cache);
             $code = $stale() ? $this->getCode($type, $name, $dir) : null;
             $temp = $cache.'.'.bin2hex(random_bytes(6)).'.tmp';
-            $done = $code === null || ($code !== '' && file_put_contents($temp, $this->filterCode($code)) !== false && (rename($temp, $cache) || is_file($cache)));
+            $done = $code === null
+                || ($code !== '' && file_put_contents($temp, $this->filterBreak($this->filterCode($code))) !== false && (rename($temp, $cache) || is_file($cache)));
             if (is_file($temp)) unlink($temp);
             if ($lock !== false) fclose($lock);
             if (!$done) return '';
@@ -174,13 +175,13 @@ class Template {
         if ($iscode) {
             if ($file === '') return '';
             if (!is_dir($this->cache) && !mkdir($this->cache, 0777, true) && !is_dir($this->cache)) return '';
-            $path = $this->cache.'/inline-'.sha1($this->theme.'|'.$file).'.php';
+            $path = $this->cache.'/inline-'.sha1($this->theme.'|'.(self::$mtime ??= (filemtime(__FILE__) ?: 0)).'|'.$file).'.php';
             if (!is_file($path)) {
                 $lock = fopen($this->cache.'/compile.lock', 'c');
                 if ($lock !== false) flock($lock, LOCK_EX);
                 clearstatcache(true, $path);
                 $temp = $path.'.'.bin2hex(random_bytes(6)).'.tmp';
-                if (!is_file($path) && file_put_contents($temp, $file) !== false) rename($temp, $path);
+                if (!is_file($path) && file_put_contents($temp, $this->filterBreak($file)) !== false) rename($temp, $path);
                 if (is_file($temp)) unlink($temp);
                 if ($lock !== false) fclose($lock);
             }
@@ -357,6 +358,8 @@ class Template {
     # Compile the shared template syntax before block and extends handling
     protected function filterBody(string $code): string {
         if ($code === '') return '';
+        $code = $this->filterPad($code);
+        $code = $this->filterLine($code);
         $code = $this->filterNote($code);
         $code = $this->filterRaw($code);
         $code = $this->filterConst($code);
@@ -598,6 +601,65 @@ class Template {
         );
     }
 
+    # Wrap an insert standing alone on its line so its output takes the indent of that line; runs first, while the line still starts with its own indent
+    protected function filterPad(string $code): string {
+        if ($code === '' || (!str_contains($code, '{{{') && !str_contains($code, '{%'))) return $code;
+        $raw = '\{\{\{\s*[_a-z][_a-z0-9]*(?:\.[_a-z][_a-z0-9]*)*\s*\}\}\}';
+        $unit = '(?:'.$raw.'|\{%\s*include\s+\'[a-z0-9\/.-]+\'(?:\s+with\s+[_a-z][_a-z0-9]*)?\s*%\}|\{%\s*freeblock\s+[0-9]{1,10}\s*%\}'
+            .'|\{%\s*block\s+[a-z][a-z0-9_]*\s*%\}(?:'.$raw.')?\{%\s*endblock\s*%\})';
+        return (string)preg_replace_callback(
+            '/^([ \t]*)(\{%\s*if\s+[^%\r\n]*%\}'.$unit.'\{%\s*endif\s*%\}|'.$unit.')[ \t]*(\r?\n|$)/m',
+            static function(array $data): string {
+                $eol = ($data[3] !== '') ? 'true' : 'false';
+                return '<?php ob_start(); ?>'.$data[2].'<?= $this->getPad((string)ob_get_clean(), \''.$data[1].'\', '.$eol.'); ?>'.$data[3];
+            },
+            $code
+        );
+    }
+
+    # Drop a line that holds only control tags or notes, its indent and its line end included, so it leaves nothing in the output
+    protected function filterLine(string $code): string {
+        if ($code === '' || (!str_contains($code, '{%') && !str_contains($code, '{#'))) return $code;
+        $code = (string)preg_replace('/^[ \t]*(?:\{\#(?:(?!\#\}).)*\#\}[ \t]*)+\r?\n/ms', '', $code);
+        return (string)preg_replace_callback(
+            '/^[ \t]*((?:\{%\s*(?:if|elseif|else|endif|for|endfor|block|endblock|extends)\b(?:(?!%\}).)*%\}[ \t]*)+)\r?\n/m',
+            static fn(array $data): string => rtrim($data[1]),
+            $code
+        );
+    }
+
+    # Give back the line end PHP swallows after a closing tag; the tag that ends the file and the getPad() wrapper, which writes its own, keep swallowing it
+    protected function filterBreak(string $code): string {
+        if (!str_contains($code, "?>\n") && !str_contains($code, "?>\r\n")) return $code;
+        $toks = token_get_all($code);
+        $last = count($toks) - 1;
+        $out = '';
+        $pad = false;
+        foreach ($toks as $idx => $tok) {
+            $text = is_array($tok) ? $tok[1] : $tok;
+            $out .= $text;
+            if (!is_array($tok)) continue;
+            if ($tok[0] === T_OPEN_TAG || $tok[0] === T_OPEN_TAG_WITH_ECHO) $pad = false;
+            if ($tok[0] === T_STRING && $text === 'getPad') $pad = true;
+            if ($idx < $last && !$pad && $tok[0] === T_CLOSE_TAG && str_ends_with($text, "\n")) $out .= str_ends_with($text, "\r\n") ? "\r\n" : "\n";
+        }
+        return $out;
+    }
+
+    # Indent every line of an insert after its first by the indent of its line; pre, textarea, script and a tag whose attribute spans lines keep their text
+    public static function getPad(string $html, string $pad, bool $eol): string {
+        $html = trim($html, "\r\n");
+        if (trim($html) === '') return '';
+        if ($pad === '' || !str_contains($html, "\n")) return $pad.$html.($eol ? "\n" : '');
+        $keep = stripos($html, '<pre') !== false || stripos($html, '<textarea') !== false || stripos($html, '<script') !== false
+            || preg_match('#<[a-zA-Z][^>]*\n#', $html) === 1;
+        $find = '#<(pre|textarea|script)\b.*?</\1>|<[a-zA-Z][^>]*\n[^>]*>|\n(?=[^\r\n])#si';
+        $html = $keep
+            ? (string)preg_replace_callback($find, static fn(array $row): string => ($row[0] === "\n") ? "\n".$pad : $row[0], $html)
+            : (string)preg_replace('/\n(?=[^\r\n])/', "\n".$pad, $html);
+        return $pad.$html.($eol ? "\n" : '');
+    }
+
     # Remove template note blocks from the source code
     protected function filterNote(string $code): string {
         if ($code === '' || !str_contains($code, '{#')) return $code;
@@ -661,24 +723,20 @@ class Template {
         return $out;
     }
 
-    # Render collected asset tags for fallback standalone output
+    # Render collected asset tags for fallback standalone output; each tag of the head fragments already ends its own line
     protected function getAssetMarkup(): string {
-        $css = implode("\n", $this->assets['css']);
-        $js = implode("\n", $this->assets['js']);
-        if ($css !== '') $css .= "\n";
-        if ($js !== '') $js .= "\n";
-        return $css.$js;
+        return implode('', $this->assets['css']).implode('', $this->assets['js']);
     }
 
     # Merge collected assets into page-level links and scripts fields
     protected function mergePageAssets(array $data = []): array {
         $data = $this->setData($data);
-        $css = implode("\n", $this->assets['css']);
-        $js = implode("\n", $this->assets['js']);
+        $css = implode('', $this->assets['css']);
+        $js = implode('', $this->assets['js']);
         $links = (string)($data['links'] ?? '');
         $scripts = (string)($data['scripts'] ?? '');
-        $data['links'] = ($css !== '') ? trim($links."\n".$css) : $links;
-        $data['scripts'] = ($js !== '') ? trim($scripts."\n".$js) : $scripts;
+        $data['links'] = ($css !== '') ? trim(rtrim($links)."\n".$css) : $links;
+        $data['scripts'] = ($js !== '') ? trim(rtrim($scripts)."\n".$js) : $scripts;
         return $data;
     }
 

@@ -8,6 +8,9 @@ use PHPUnit\Framework\TestCase;
 # The plan docs/UPLOAD-FILEINFO-PLAN-2026.md: the upload half of a PHP build without the Fileinfo extension
 final class UploadFallbackTest extends TestCase
 {
+    # The raw answer of each probe run, kept before any assertion so a failed probe is not started again by the next test
+    private static array $outs = [];
+
     private static array $probe = [];
     private const CANON = ['7z', 'avif', 'flac', 'gif', 'gz', 'jpeg', 'jpg', 'm4a', 'mp3', 'mp4', 'oga', 'ogg', 'opus', 'pdf', 'png', 'rar', 'tar', 'wav', 'webm', 'webp', 'zip'];
     # The canonical type of every format, which is what the fallback answers once the structure of a file really is the format its extension claims
@@ -29,7 +32,8 @@ final class UploadFallbackTest extends TestCase
         if (isset(self::$probe[$mode])) return self::$probe[$mode];
         $file = dirname(__DIR__).'/Support/upload_probe.php';
         $work = str_replace('\\', '/', sys_get_temp_dir()).'/slaed_upload_blind_'.$mode;
-        $out = (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($file).' '.escapeshellarg($mode).' '.escapeshellarg($work).' 2>&1');
+        $out = self::$outs[__FUNCTION__.$mode] ??= (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($file).' '.escapeshellarg($mode).' '
+            .escapeshellarg($work).' 2>&1');
         $data = json_decode($out, true);
         $this->assertIsArray($data, 'Probe '.$mode.' did not return JSON: '.$out);
         if (!empty($data['error'])) $this->markTestSkipped('Probe '.$mode.': '.$data['error']);

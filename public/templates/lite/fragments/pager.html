@@ -2,12 +2,21 @@
   <div class="sl-pager-main">
     <div class="sl-pager-nav">
       {{{ prev }}}
-      <span class="sl-seg sl-seg-pager" data-sl-knob="pager"><span class="sl-seg-knob" data-sl-knob-mark aria-hidden="true"></span><span class="sl-seg-run sl-pager-pages">{{{ items }}}</span></span>
+      <span class="sl-seg sl-seg-pager" data-sl-knob="pager">
+        <span class="sl-seg-knob" data-sl-knob-mark aria-hidden="true"></span>
+        <span class="sl-seg-run sl-pager-pages">
+          {{{ items }}}
+        </span>
+      </span>
       {{{ next }}}
     </div>
     <div class="sl-pager-side">
       <span class="sl-pager-sep" aria-hidden="true"></span>
-      {% if is_top %}<a href="#sl-list-end" title="{{ _PAGEEND }}" aria-label="{{ _PAGEEND }}" class="sl-but-mini"><i class="bi bi-arrow-down" aria-hidden="true"></i></a>{% else %}<a href="#top" title="{{ _PAGETOP }}" aria-label="{{ _PAGETOP }}" class="sl-but-mini"><i class="bi bi-arrow-up" aria-hidden="true"></i></a>{% endif %}
+      {% if is_top %}
+      <a href="#sl-list-end" title="{{ _PAGEEND }}" aria-label="{{ _PAGEEND }}" class="sl-but-mini"><i class="bi bi-arrow-down" aria-hidden="true"></i></a>
+      {% else %}
+      <a href="#top" title="{{ _PAGETOP }}" aria-label="{{ _PAGETOP }}" class="sl-but-mini"><i class="bi bi-arrow-up" aria-hidden="true"></i></a>
+      {% endif %}
       {% include 'fragments/pager-keys.html' %}
     </div>
   </div>

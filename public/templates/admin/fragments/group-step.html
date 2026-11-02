@@ -3,8 +3,12 @@
   <span class="sl-ladder-node" aria-hidden="true"></span>
   <span class="sl-ladder-who">
     <span class="sl-ladder-top">{{{ rank_html }}}<a class="sl-ladder-name" href="{{ edit_url }}" title="{{ edit_title }}">{{ name }}</a></span>
-    {% if intro %}<small title="{{ intro }}">{{ intro }}</small>{% endif %}
+    {% if intro %}
+    <small title="{{ intro }}">{{ intro }}</small>
+    {% endif %}
   </span>
   <span class="sl-ladder-share">{% if is_empty %}<span class="sl-ladder-empty">{{ empty_text }}</span>{% else %}<a class="sl-ladder-users" href="{{ users_url }}" title="{{ users_title }}">{{ users_text }}</a>{% endif %}<i class="sl-ladder-bar" aria-hidden="true"></i></span>
-  <span class="sl-ladder-opt">{{{ dial_html }}}</span>
+  <span class="sl-ladder-opt">
+    {{{ dial_html }}}
+  </span>
 </li>

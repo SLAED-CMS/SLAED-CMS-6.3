@@ -10,6 +10,9 @@ use PHPUnit\Framework\TestCase;
 # The data of the home cockpit, docs/ARCHITECTURE.md "Admin Shell Boundary": fourteen signals by the thresholds of the owner, the snapshot and the one store of the monitor
 final class CockpitTest extends TestCase
 {
+    # The raw answer of each probe run, kept before any assertion so a failed probe is not started again by the next test
+    private static array $outs = [];
+
     private const KEYS = ['attack', 'backup', 'cron', 'dirs', 'disk', 'https', 'login', 'mail', 'opcache', 'php', 'phpver', 'setup', 'sql', 'update'];
 
     private static ?array $probe = null;
@@ -22,7 +25,7 @@ final class CockpitTest extends TestCase
         if (self::$probe !== null) return self::$probe;
         self::$work = str_replace('\\', '/', sys_get_temp_dir()).'/slaed_cockpit_'.bin2hex(random_bytes(4));
         $script = dirname(__DIR__).'/Support/cockpit_probe.php';
-        $out = (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' '.escapeshellarg(self::$work).' 2>&1');
+        $out = self::$outs[__FUNCTION__] ??= (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' '.escapeshellarg(self::$work).' 2>&1');
         $data = json_decode($out, true);
         $this->assertIsArray($data, 'The probe did not return JSON: '.$out);
         return self::$probe = $data;
@@ -88,7 +91,7 @@ final class CockpitTest extends TestCase
     {
         $data = $this->getProbe();
         $this->assertSame('danger', $data['calm']['backup'][0]);
-        $this->assertSame(['warn', date('d.m', time() - 8 * 86400)], $data['open']['backup']);
+        $this->assertSame(['warn', $data['backday']], $data['open']['backup']);
         $this->assertSame(['ok', ''], $data['closed']['backup']);
         $this->assertSame(['warn', $data['text']['off']], $data['nobackup']['backup']);
     }

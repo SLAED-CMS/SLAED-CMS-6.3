@@ -1,10 +1,4 @@
-{% if brand_link %}
-{% include 'fragments/link.html' with brand_link %}
-{% endif %}
-{% if dbglink %}
-{% include 'fragments/link.html' with dbglink %}
-{% endif %}
-{% include 'fragments/link.html' with top_link %}
+{% if brand_link %}{% include 'fragments/link.html' with brand_link %}{% endif %}{% if dbglink %}{% include 'fragments/link.html' with dbglink %}{% endif %}{% include 'fragments/link.html' with top_link %}
 {% if time_html %}
 <div class="sl-generates">{{{ time_html }}}</div>
 {% endif %}

@@ -14,6 +14,9 @@ use PHPUnit\Framework\TestCase;
 # The one reading of the counter behind the statistic page, on a sample counter: a month and a day against their fields, the archive with its gap and kept sums, the pace
 final class StatisticDataTest extends TestCase
 {
+    # The raw answer of each probe run, kept before any assertion so a failed probe is not started again by the next test
+    private static array $outs = [];
+
     private static ?array $probe = null;
 
     private static string $work = '';
@@ -24,7 +27,7 @@ final class StatisticDataTest extends TestCase
         if (self::$probe !== null) return self::$probe;
         self::$work = str_replace('\\', '/', sys_get_temp_dir()).'/slaed_statistic_'.bin2hex(random_bytes(4));
         $script = dirname(__DIR__).'/Support/statistic_probe.php';
-        $out = (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' '.escapeshellarg(self::$work).' 2>&1');
+        $out = self::$outs[__FUNCTION__] ??= (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' '.escapeshellarg(self::$work).' 2>&1');
         $data = json_decode($out, true);
         $this->assertIsArray($data, 'The probe did not return JSON: '.$out);
         return self::$probe = $data;

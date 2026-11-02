@@ -1,6 +1,10 @@
 <div class="sl-user-card"{% if group_color %} style="--sl-d-user: {{ group_color }}; --sl-d-usrlevel: {{ ngroup_pct }}%;"{% endif %}>
   <div class="sl-block-user-ava">
-    {% if is_user %}<a href="{{ root }}account" title="{{ change_label }}" class="sl-live-avatar"><i class="sl-ava-min" style="background-image: url({{ avatar_url }});"></i></a>{% else %}<i class="sl-ava-min" style="background-image: url({{ avatar_url }});"></i>{% endif %}
+    {% if is_user %}
+    <a href="{{ root }}account" title="{{ change_label }}" class="sl-live-avatar"><i class="sl-ava-min" style="background-image: url({{ avatar_url }});"></i></a>
+    {% else %}
+    <i class="sl-ava-min" style="background-image: url({{ avatar_url }});"></i>
+    {% endif %}
     <p>
       {% if is_user %}
       <a href="{{ root }}account">{{ greeting_name }}</a>
@@ -10,7 +14,9 @@
       <small>{{ greeting_label }}</small><b>{{ greeting_name }}</b>
       {% endif %}
     </p>
-    {% if is_user and points_label %}<span class="sl-user-points"><b>{{ points_count }}</b><small>{{ points_label }}</small></span>{% endif %}
+    {% if is_user and points_label %}
+    <span class="sl-user-points"><b>{{ points_count }}</b><small>{{ points_label }}</small></span>
+    {% endif %}
   </div>
   {% if is_user %}
   <ul class="sl-block-pm">
@@ -18,12 +24,16 @@
     <li><a href="{{ root }}account/privat"><i class="bi bi-envelope" aria-hidden="true"></i><span>{{ inbox_label }}</span><b{% if has_new_in %} class="sl-pm-new"{% endif %} data-sl-pm-num>{{ inbox_count }}</b></a></li>
     <li><a href="{{ root }}account/privat"><i class="bi bi-send" aria-hidden="true"></i><span>{{ outbox_label }}</span><b>{{ outbox_count }}</b></a></li>
     {% endif %}
-    {% if has_fav %}<li><a href="{{ root }}account/favorites"><i class="bi bi-star" aria-hidden="true"></i><span>{{ favorites_label }}</span><i class="bi bi-chevron-right" aria-hidden="true"></i></a></li>{% endif %}
+    {% if has_fav %}
+    <li><a href="{{ root }}account/favorites"><i class="bi bi-star" aria-hidden="true"></i><span>{{ favorites_label }}</span><i class="bi bi-chevron-right" aria-hidden="true"></i></a></li>
+    {% endif %}
     <li><a href="{{ root }}account/edithome"><i class="bi bi-sliders" aria-hidden="true"></i><span>{{ change_label }}</span><i class="bi bi-chevron-right" aria-hidden="true"></i></a></li>
   </ul>
   <nav class="sl-user-nav" aria-label="{{ change_label }}">
     <a href="{{ root }}account" title="{{ profile_label }}" aria-label="{{ profile_label }}"><i class="bi bi-person" aria-hidden="true"></i></a>
-    {% if has_privat %}<a href="{{ root }}account/privat" title="{{ privat_label }}" aria-label="{{ privat_label }}"><i class="bi bi-chat-dots" aria-hidden="true"></i></a>{% endif %}
+    {% if has_privat %}
+    <a href="{{ root }}account/privat" title="{{ privat_label }}" aria-label="{{ privat_label }}"><i class="bi bi-chat-dots" aria-hidden="true"></i></a>
+    {% endif %}
     <a href="{{ root }}account/edithome" title="{{ change_label }}" aria-label="{{ change_label }}"><i class="bi bi-gear" aria-hidden="true"></i></a>
     <a href="{{ root }}account/logout?refer=1" data-sl-post="{{ logout_token }}" title="{{ logout_label }}" aria-label="{{ logout_label }}"><i class="bi bi-box-arrow-right" aria-hidden="true"></i></a>
   </nav>
@@ -34,5 +44,9 @@
     <li><a href="{{ root }}account/passlost"><i class="bi bi-key" aria-hidden="true"></i><span>{{ passfor_label }}</span><i class="bi bi-chevron-right" aria-hidden="true"></i></a></li>
   </ul>
   {% endif %}
-  {% if session_html %}<div class="sl-block-session" id="repsinfo" data-sl-live-box>{{{ session_html }}}</div>{% endif %}
+  {% if session_html %}
+  <div class="sl-block-session" id="repsinfo" data-sl-live-box>
+    {{{ session_html }}}
+  </div>
+  {% endif %}
 </div>

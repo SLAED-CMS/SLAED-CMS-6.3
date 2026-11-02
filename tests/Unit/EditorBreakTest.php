@@ -10,6 +10,9 @@ use PHPUnit\Framework\TestCase;
 # Stored text of docs/EDITORS.md: getTplTextarea() mounts the stored Markdown unchanged and a save without a change stores the same bytes, in the plain and the markdown format
 final class EditorBreakTest extends TestCase
 {
+    # The raw answer of each probe run, kept before any assertion so a failed probe is not started again by the next test
+    private static array $outs = [];
+
     private static ?array $probe = null;
 
     # Run tests/Support/break_probe.php once in a fresh process and memoize its report
@@ -18,7 +21,7 @@ final class EditorBreakTest extends TestCase
         if (self::$probe !== null) return self::$probe;
         $work = str_replace('\\', '/', sys_get_temp_dir()).'/slaed_break';
         $script = dirname(__DIR__).'/Support/break_probe.php';
-        $out = (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' '.escapeshellarg($work).' 2>&1');
+        $out = self::$outs[__FUNCTION__] ??= (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' '.escapeshellarg($work).' 2>&1');
         $data = json_decode($out, true);
         $this->assertIsArray($data, 'The probe did not return JSON: '.$out);
         $this->assertArrayNotHasKey('error', $data, (string)($data['error'] ?? ''));

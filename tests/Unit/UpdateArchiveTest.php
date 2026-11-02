@@ -4,12 +4,17 @@ declare(strict_types=1);
 
 namespace Tests\Unit;
 
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 # The catch-up of a 6.3 site of early October: archive and old folder addresses, the merge of the shipped config/ and the drop of the tables of the gone modules
+#[Group('release')]
 final class UpdateArchiveTest extends TestCase
 {
+    # The raw answer of each probe run, kept before any assertion so a failed probe is not started again by the next test
+    private static array $outs = [];
+
     private const DONE = [
         'nodes.intro #1' => '[attach=a.gif align=left title=A size=full]',
         'nodes.body #1' => '[attach=b.png align=none title=title] [img]./uploads/archive/news/gone.gif[/img]'
@@ -34,7 +39,7 @@ final class UpdateArchiveTest extends TestCase
         if (self::$probe === []) {
             $script = dirname(__DIR__).'/Support/update_probe.php';
             $work = str_replace('\\', '/', sys_get_temp_dir()).'/slaed_update_archive';
-            $out = (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' '.escapeshellarg($work).' archive 2>&1');
+            $out = self::$outs[__FUNCTION__] ??= (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' '.escapeshellarg($work).' archive 2>&1');
             $data = json_decode($out, true);
             $this->assertIsArray($data, 'The probe did not return JSON: '.$out);
             $this->assertSame('', $data['error'], 'The probe failed');

@@ -1,11 +1,11 @@
 {% if rows %}
 {{{ before_html }}}
 {% include 'fragments/table.html' with table_open %}
-{% for row in rows %}
-{% include 'fragments/table-row.html' with row %}
-{% endfor %}
-</tbody>
-</table>
+      {% for row in rows %}
+      {% include 'fragments/table-row.html' with row %}
+      {% endfor %}
+    </tbody>
+  </table>
 </div>
 {{{ pager_html }}}
 {% if bulk_html %}{{{ bulk_html }}}{% endif %}

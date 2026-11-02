@@ -8,6 +8,9 @@ use PHPUnit\Framework\TestCase;
 # The image pipeline behind uploads, driven through getImageThumb() directly with every fixture written by GD itself
 final class ImageThumbTest extends TestCase
 {
+    # The raw answer of each probe run, kept before any assertion so a failed probe is not started again by the next test
+    private static array $outs = [];
+
     private static array $probe = [];
 
     # Run one scenario of tests/Support/image_probe.php, which boots the real core with its writable directories in scratch, and memoize its report
@@ -16,7 +19,8 @@ final class ImageThumbTest extends TestCase
         if (isset(self::$probe[$mode])) return self::$probe[$mode];
         $file = dirname(__DIR__).'/Support/image_probe.php';
         $work = str_replace('\\', '/', sys_get_temp_dir()).'/slaed_img_probe_'.$mode;
-        $out = (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($file).' '.escapeshellarg($mode).' '.escapeshellarg($work).' 2>&1');
+        $out = self::$outs[__FUNCTION__.$mode] ??= (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($file).' '.escapeshellarg($mode).' '
+            .escapeshellarg($work).' 2>&1');
         $data = json_decode($out, true);
         $this->assertIsArray($data, 'Probe '.$mode.' did not return JSON: '.$out);
         if (!empty($data['error'])) $this->markTestSkipped('Probe '.$mode.': '.$data['error']);

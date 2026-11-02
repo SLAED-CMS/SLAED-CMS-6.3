@@ -3,5 +3,7 @@
     <span class="sl-vote-answer" title="{{ text_safe }}">{{{ text }}}</span>
     <span class="sl-vote-result-meta" title="{{ text_safe }} - {{ percent }}%"><b>{{ percent }}%</b> <span>{{ votes_label }}: {{ votes }}</span></span>
   </header>
-  <div class="sl-progress-line sl-progress-{{ pn }}" title="{{ text_safe }} - {{ percent }}%"><div style="width: {{ percent }}%;">{{ percent }}%</div></div>
+  <div class="sl-progress-line sl-progress-{{ pn }}" title="{{ text_safe }} - {{ percent }}%">
+    <div style="width: {{ percent }}%;">{{ percent }}%</div>
+  </div>
 </li>

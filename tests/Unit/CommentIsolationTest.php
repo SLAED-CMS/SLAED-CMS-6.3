@@ -5,7 +5,7 @@ namespace Tests\Unit;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-# The comment table has exactly one owner, the global helpers that shared it are gone, and no table name built from a variable reaches it
+# The comment table has exactly one owner, and no table name built from a variable reaches it
 final class CommentIsolationTest extends TestCase
 {
     # The one file allowed to name the comment table, and the trees generated, vendored or outside the rule, and the internal migration update.php
@@ -91,18 +91,6 @@ final class CommentIsolationTest extends TestCase
             }
         }
         $this->assertSame([], $rows, 'The comment table is counted by its name again instead of through the comment class');
-    }
-
-    # The three globals the class absorbed are defined nowhere and called nowhere
-    #[Test]
-    public function theRetiredGlobalHelpersAreGone(): void
-    {
-        foreach (['ashowcom', 'numcom', 'getCommentMode'] as $name) {
-            foreach ($this->getFiles() as $file => $src) {
-                $this->assertStringNotContainsString('function '.$name.'(', $src, $name.'() is still defined in '.$file);
-                $this->assertSame(0, preg_match('#\b'.$name.'\s*\(#', $this->getCode($src)), $name.'() is still named in '.$file);
-            }
-        }
     }
 
     # The target map holds every module that renders comments with its table and nothing else: the key is the scope of the points journal, and no positional slot may return

@@ -10,6 +10,9 @@ use PHPUnit\Framework\TestCase;
 # Journals of docs/ARCHITECTURE.md, "Private Data Boundary": no secret of a request reaches a journal, whichever writer handles it
 final class JournalSecretTest extends TestCase
 {
+    # The raw answer of each probe run, kept before any assertion so a failed probe is not started again by the next test
+    private static array $outs = [];
+
     private static array $probe = [];
 
     private static array $dirs = [];
@@ -22,7 +25,8 @@ final class JournalSecretTest extends TestCase
         $script = dirname(__DIR__).'/Support/journal_probe.php';
         $work = str_replace('\\', '/', sys_get_temp_dir()).'/slaed_journal_'.$mode.'_'.bin2hex(random_bytes(4));
         self::$dirs[] = $work;
-        $out = (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' '.escapeshellarg($mode).' '.escapeshellarg($work).' 2>&1');
+        $out = self::$outs[__FUNCTION__.$mode] ??= (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' '.escapeshellarg($mode).' '
+            .escapeshellarg($work).' 2>&1');
         $data = json_decode($out, true);
         $this->assertIsArray($data, 'Probe '.$mode.' did not return JSON: '.$out);
         return self::$probe[$mode] = $data;

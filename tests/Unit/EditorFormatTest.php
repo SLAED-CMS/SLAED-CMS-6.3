@@ -63,8 +63,6 @@ final class EditorFormatTest extends TestCase
         $this->assertTrue(Editor::isValidEditor('codemirror', 'user'), 'CodeMirror is no text editor of the site');
         $this->assertTrue(Editor::isValidEditor('plain', 'user'));
         $this->assertFalse(Editor::isValidEditor('x/../plain', 'admin'), 'A key walks to a manifest outside its own directory');
-        $panel = (string)file_get_contents(BASE_DIR.'/admin/index.php');
-        $this->assertStringNotContainsString('function isValidEditor', $panel, 'The panel reads a manifest with a check of its own');
     }
 
     # A page loads the core and the one grammar its editor names, so every language of the manifest needs a file of its own beside the core

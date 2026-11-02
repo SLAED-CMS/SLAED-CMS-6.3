@@ -1,11 +1,8 @@
 {% if missing %}
 <i class="bi bi-image sl-img-placeholder" role="img" aria-label="{{ alt }}"{% if title %} title="{{ title }}"{% endif %}></i>
 {% else %}
-<img
-  src="{{ src }}"
-  alt="{{ alt }}"
-  {% if title %}title="{{ title }}"{% endif %}
-  {% if fallback %}onerror="this.onerror=null;this.hidden=true;this.nextElementSibling.hidden=false"{% endif %}
->
-{% if fallback %}<i class="bi bi-image sl-img-placeholder" role="img" aria-label="{{ alt }}"{% if title %} title="{{ title }}"{% endif %} hidden></i>{% endif %}
+<img src="{{ src }}" alt="{{ alt }}"{% if title %} title="{{ title }}"{% endif %}{% if fallback %} onerror="this.onerror=null;this.hidden=true;this.nextElementSibling.hidden=false"{% endif %}>
+{% if fallback %}
+<i class="bi bi-image sl-img-placeholder" role="img" aria-label="{{ alt }}"{% if title %} title="{{ title }}"{% endif %} hidden></i>
+{% endif %}
 {% endif %}

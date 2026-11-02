@@ -8,6 +8,9 @@ use PHPUnit\Framework\TestCase;
 # The notification of a new comment is one queue row written inside the transaction that stores it, and nothing is delivered while the visitor waits
 final class CommentNotifyTest extends TestCase
 {
+    # The raw answer of each probe run, kept before any assertion so a failed probe is not started again by the next test
+    private static array $outs = [];
+
     private static array $probe = [];
     private static array $src = [];
 
@@ -17,7 +20,7 @@ final class CommentNotifyTest extends TestCase
     {
         if (self::$probe !== []) return self::$probe;
         $script = dirname(__DIR__).'/Support/contract_probe.php';
-        $out = (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' commentnotify 2>&1');
+        $out = self::$outs[__FUNCTION__] ??= (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' commentnotify 2>&1');
         $data = json_decode($out, true);
         $this->assertIsArray($data, 'Probe commentnotify did not return JSON: '.$out);
         return self::$probe = $data;

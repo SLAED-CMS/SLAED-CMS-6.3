@@ -4,12 +4,17 @@ declare(strict_types=1);
 
 namespace Tests\Unit;
 
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 # The newsletter step of the 6.3 update keeps the pending recipients before the schema drops the mails column and queues them once per campaign and address
+#[Group('release')]
 final class UpdateMailsTest extends TestCase
 {
+    # The raw answer of each probe run, kept before any assertion so a failed probe is not started again by the next test
+    private static array $outs = [];
+
     private const ROWS = [
         [1, 'a@probe.test', 'admin@probe.test', 'First', 'newsletter'],
         [1, 'b@probe.test', 'admin@probe.test', 'First', 'newsletter'],
@@ -27,7 +32,7 @@ final class UpdateMailsTest extends TestCase
         if (self::$probe === []) {
             $script = dirname(__DIR__).'/Support/update_probe.php';
             $work = str_replace('\\', '/', sys_get_temp_dir()).'/slaed_update_mails';
-            $out = (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' '.escapeshellarg($work).' mails 2>&1');
+            $out = self::$outs[__FUNCTION__] ??= (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' '.escapeshellarg($work).' mails 2>&1');
             $data = json_decode($out, true);
             $this->assertIsArray($data, 'The probe did not return JSON: '.$out);
             $this->assertSame('', $data['error'], 'The probe failed');

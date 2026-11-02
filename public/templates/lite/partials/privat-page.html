@@ -21,11 +21,17 @@
   </div>
   {% endif %}
   <div class="sl-duo" id="prpage" data-sl-pane="{{ pane }}">
-    <aside class="sl-duo-aside" id="prlist" aria-label="{{ list_label }}">{{{ list_html }}}</aside>
+    <aside class="sl-duo-aside" id="prlist" aria-label="{{ list_label }}">
+      {{{ list_html }}}
+    </aside>
     <section class="sl-duo-main" aria-label="{{ view_label }}">
       <button type="button" class="sl-but sl-pmf-back" data-sl-pm-back><i class="bi bi-chevron-left" aria-hidden="true"></i>&nbsp; {{ back_label }}</button>
-      <div id="prview">{{{ view_html }}}</div>
-      {% if open_post %}<div hx-post="{{ open_post }}" hx-trigger="load" hx-target="#prview" hx-swap="innerHTML" hx-push-url="false" hx-headers='{"X-CSRF-TOKEN": "{{ token }}"}'></div>{% endif %}
+      <div id="prview">
+        {{{ view_html }}}
+      </div>
+      {% if open_post %}
+      <div hx-post="{{ open_post }}" hx-trigger="load" hx-target="#prview" hx-swap="innerHTML" hx-push-url="false" hx-headers='{"X-CSRF-TOKEN": "{{ token }}"}'></div>
+      {% endif %}
       <form class="sl-pmf-reply" id="prform" action="{{ send_url }}" method="post" hx-post="{{ send_url }}" hx-target="#prview" hx-swap="innerHTML" hx-push-url="false">
         {{{ token_html }}}
         {{{ to_row_html }}}
@@ -35,7 +41,9 @@
             <b data-sl-user-slot="name"></b>
             <small><span data-sl-user-slot="group"></span><span data-sl-user-slot="seen"></span></small>
             <span class="sl-chip" data-sl-user-slot="fill"></span>
-            {% if wait_note %}<span class="sl-chip sl-chip-warn"><i class="bi bi-hourglass-split" aria-hidden="true"></i> {{ wait_note }}</span>{% endif %}
+            {% if wait_note %}
+            <span class="sl-chip sl-chip-warn"><i class="bi bi-hourglass-split" aria-hidden="true"></i> {{ wait_note }}</span>
+            {% endif %}
           </span>
           <span class="sl-knob sl-knob-full" aria-hidden="true">
             <svg class="sl-knob-svg" viewBox="0 0 44 44"><circle class="sl-knob-bg" cx="22" cy="22" r="18"></circle></svg>

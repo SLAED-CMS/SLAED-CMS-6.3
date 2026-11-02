@@ -3,7 +3,11 @@
     <div class="sl-module-head-icon"><i class="bi bi-{{ icon }}" title="{{ title }}"></i></div>
     <div class="sl-module-head-body">
       <h1 class="sl-module-head-title">{{ title }}</h1>
-      {% if subtitle_html %}<div class="sl-module-head-subtitle">{{{ subtitle_html }}}</div>{% endif %}
+      {% if subtitle_html %}
+      <div class="sl-module-head-subtitle">
+        {{{ subtitle_html }}}
+      </div>
+      {% endif %}
       {% if find %}
       <div class="sl-module-head-subtitle">
         <div class="sl-searchbox sl-filter" role="search" aria-label="{{ find }}">
@@ -12,7 +16,10 @@
             <span class="sl-form-find">
               <input type="search" id="sl-form-find" autocomplete="off" spellcheck="false" role="combobox" aria-expanded="false" aria-controls="sl-form-hits" aria-autocomplete="list">
               <ul class="sl-form-hits" id="sl-form-hits" role="listbox" aria-label="{{ find }}" hidden></ul>
-              <template><li role="option" aria-selected="false"></li><li class="sl-form-none">{{ _NONE_FOUND }}</li></template>
+              <template>
+                <li role="option" aria-selected="false"></li>
+                <li class="sl-form-none">{{ _NONE_FOUND }}</li>
+              </template>
             </span>
           </span>
         </div>
@@ -21,13 +28,7 @@
     </div>
   </div>
   {% if tabs_html %}
-  <ul
-    class="sl-tabs-nav sl-tabs-nav-main"
-    {% if tabs_id %}id="{{ tabs_id }}"{% endif %}
-    {% if is_runtime %}{% if tabs_id %}data-sl-tabs-init="{{ tabs_id }}"{% endif %}{% endif %}
-    {% if tabs_index %}data-sl-tabs-index="{{ tabs_index }}"{% endif %}
-    {% if tabs_sync_selector %}data-sl-tabs-sync="{{ tabs_sync_selector }}"{% endif %}
-  >
+  <ul class="sl-tabs-nav sl-tabs-nav-main"{% if tabs_id %} id="{{ tabs_id }}"{% endif %}{% if is_runtime %}{% if tabs_id %} data-sl-tabs-init="{{ tabs_id }}"{% endif %}{% endif %}{% if tabs_index %} data-sl-tabs-index="{{ tabs_index }}"{% endif %}{% if tabs_sync_selector %} data-sl-tabs-sync="{{ tabs_sync_selector }}"{% endif %}>
     {{{ tabs_html }}}
   </ul>
   {% endif %}

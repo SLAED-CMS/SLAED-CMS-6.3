@@ -7,8 +7,14 @@
       <time class="sl-pmf-when" datetime="{{ stamp }}">{{ when }}</time>
     </span>
     <span class="sl-pmf-meta">
-      {% if author_html %}{{{ author_html }}}{% else %}<span class="sl-author sl-muted"><i class="bi bi-person-x" aria-hidden="true"></i> {{ author }}</span>{% endif %}
-      {% if snip %}<span class="sl-pmf-snip">{{ snip }}</span>{% endif %}
+      {% if author_html %}
+      {{{ author_html }}}
+      {% else %}
+      <span class="sl-author sl-muted"><i class="bi bi-person-x" aria-hidden="true"></i> {{ author }}</span>
+      {% endif %}
+      {% if snip %}
+      <span class="sl-pmf-snip">{{ snip }}</span>
+      {% endif %}
       {{{ mark_html }}}
     </span>
   </div>

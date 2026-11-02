@@ -3,7 +3,9 @@
   {{{ hidden_html }}}
   {% for group in groups %}
   {% include 'fragments/date-head.html' with group %}
-  {% for row in group.rows %}{% include 'fragments/privat-row.html' with row %}{% endfor %}
+  {% for row in group.rows %}
+  {% include 'fragments/privat-row.html' with row %}
+  {% endfor %}
   {% endfor %}
 </form>
 <div class="sl-pmf-foot">
@@ -14,6 +16,8 @@
 <div class="sl-pmf-blank">
   <i class="bi bi-{{ empty_icon }}" aria-hidden="true"></i>
   <b>{{ empty_title }}</b>
-  {% if found %}<p>{{ found }}</p>{% endif %}
+  {% if found %}
+  <p>{{ found }}</p>
+  {% endif %}
 </div>
 {% endif %}

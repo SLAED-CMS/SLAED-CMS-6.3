@@ -3,26 +3,98 @@
   <header class="sl-lay-top">
     <a class="sl-chip sl-chip-neutral sl-lay-back" href="{{ panel_url }}" title="{{ panel_title }}"><i class="bi bi-arrow-left" aria-hidden="true"></i>&nbsp;<span>{{ panel_text }}</span></a>
     <span class="sl-lay-brand"><i class="bi bi-layers-half" aria-hidden="true"></i><span>{{ title_text }}</span></span>
-    <label class="sl-lay-page"><span class="sl-visually-hidden">{{ page_label }}</span><select class="sl-select" data-sl-lay-page-pick><optgroup label="{{ pages_group }}">{% for item in pages %}<option value="{{ item.url }}"{% if item.is_on %} selected{% endif %}>{{ item.title }}</option>{% endfor %}</optgroup>{% if mods %}<optgroup label="{{ mods_group }}">{% for item in mods %}<option value="{{ item.url }}">{{ item.title }}</option>{% endfor %}</optgroup>{% endif %}<option value="" data-sl-lay-new>+ {{ new_text }}</option></select></label>
-    <span class="sl-seg sl-lay-devices" role="group" aria-label="{{ width_label }}">{% for item in devices %}<button type="button" class="sl-seg-cell{% if item.is_on %} sl-is-active{% endif %}" data-sl-lay-device="{{ item.key }}" aria-pressed="{% if item.is_on %}true{% else %}false{% endif %}" title="{{ item.label }}" aria-label="{{ item.label }}"><i class="bi bi-{{ item.icon }}" aria-hidden="true"></i></button>{% endfor %}</span>
+    <label class="sl-lay-page">
+      <span class="sl-visually-hidden">{{ page_label }}</span>
+      <select class="sl-select" data-sl-lay-page-pick>
+        <optgroup label="{{ pages_group }}">
+          {% for item in pages %}
+          <option value="{{ item.url }}"{% if item.is_on %} selected{% endif %}>{{ item.title }}</option>
+          {% endfor %}
+        </optgroup>
+        {% if mods %}
+        <optgroup label="{{ mods_group }}">
+          {% for item in mods %}
+          <option value="{{ item.url }}">{{ item.title }}</option>
+          {% endfor %}
+        </optgroup>
+        {% endif %}
+        <option value="" data-sl-lay-new>+ {{ new_text }}</option>
+      </select>
+    </label>
+    <span class="sl-seg sl-lay-devices" role="group" aria-label="{{ width_label }}">
+      {% for item in devices %}
+      <button type="button" class="sl-seg-cell{% if item.is_on %} sl-is-active{% endif %}" data-sl-lay-device="{{ item.key }}" aria-pressed="{% if item.is_on %}true{% else %}false{% endif %}" title="{{ item.label }}" aria-label="{{ item.label }}"><i class="bi bi-{{ item.icon }}" aria-hidden="true"></i></button>
+      {% endfor %}
+    </span>
     <span class="sl-lay-tools">
-      <span class="sl-editor-pill sl-editor-pill-open" role="toolbar" aria-label="{{ tools_label }}">{{{ steps_html }}}<span class="sl-editor-grp"><button type="button" class="sl-modal-act" data-sl-lay-guest aria-pressed="false" title="{{ guest_title }}" aria-label="{{ guest_text }}" aria-keyshortcuts="Control+Alt+P"><i class="bi bi-person" aria-hidden="true"></i></button><button type="button" class="sl-modal-act" data-sl-lay-open="link" title="{{ link_tip }}" aria-label="{{ link_tip }}" aria-haspopup="dialog"><i class="bi bi-link-45deg" aria-hidden="true"></i></button><a class="sl-modal-act" href="{{ site_url }}" target="_blank" rel="noopener" title="{{ site_text }}" aria-label="{{ site_text }}"><i class="bi bi-box-arrow-up-right" aria-hidden="true"></i></a></span><span class="sl-editor-grp"><button type="button" class="sl-modal-act" data-sl-lay-open="checks" title="{{ checks_text }}" aria-label="{{ checks_text }}" aria-haspopup="dialog"><i class="bi bi-clipboard-check" aria-hidden="true"></i></button><button type="button" class="sl-modal-act" data-sl-lay-open="story" title="{{ story_title }}" aria-label="{{ story_title }}" aria-haspopup="dialog"><i class="bi bi-clock-history" aria-hidden="true"></i></button><button type="button" class="sl-modal-act" data-sl-lay-open="palette" title="{{ cmds_text }} (Ctrl+K)" aria-label="{{ cmds_text }}" aria-keyshortcuts="Control+K"><i class="bi bi-command" aria-hidden="true"></i></button></span></span>
-      <span class="sl-editor-pill sl-editor-pill-open" role="toolbar" aria-label="{{ help_label }}"><span class="sl-editor-grp"><button type="button" class="sl-modal-act" data-sl-lay-open="help" aria-haspopup="dialog" title="{{ help_text }}" aria-label="{{ help_text }}"><i class="bi bi-question-circle" aria-hidden="true"></i></button><button type="button" class="sl-modal-act" data-sl-lay-open="sets" title="{{ sets_text }}" aria-label="{{ sets_text }}"><i class="bi bi-gear" aria-hidden="true"></i></button></span></span>
+      <span class="sl-editor-pill sl-editor-pill-open" role="toolbar" aria-label="{{ tools_label }}">
+        {{{ steps_html }}}
+        <span class="sl-editor-grp">
+          <button type="button" class="sl-modal-act" data-sl-lay-guest aria-pressed="false" title="{{ guest_title }}" aria-label="{{ guest_text }}" aria-keyshortcuts="Control+Alt+P"><i class="bi bi-person" aria-hidden="true"></i></button>
+          <button type="button" class="sl-modal-act" data-sl-lay-open="link" title="{{ link_tip }}" aria-label="{{ link_tip }}" aria-haspopup="dialog"><i class="bi bi-link-45deg" aria-hidden="true"></i></button>
+          <a class="sl-modal-act" href="{{ site_url }}" target="_blank" rel="noopener" title="{{ site_text }}" aria-label="{{ site_text }}"><i class="bi bi-box-arrow-up-right" aria-hidden="true"></i></a>
+        </span>
+        <span class="sl-editor-grp">
+          <button type="button" class="sl-modal-act" data-sl-lay-open="checks" title="{{ checks_text }}" aria-label="{{ checks_text }}" aria-haspopup="dialog"><i class="bi bi-clipboard-check" aria-hidden="true"></i></button>
+          <button type="button" class="sl-modal-act" data-sl-lay-open="story" title="{{ story_title }}" aria-label="{{ story_title }}" aria-haspopup="dialog"><i class="bi bi-clock-history" aria-hidden="true"></i></button>
+          <button type="button" class="sl-modal-act" data-sl-lay-open="palette" title="{{ cmds_text }} (Ctrl+K)" aria-label="{{ cmds_text }}" aria-keyshortcuts="Control+K"><i class="bi bi-command" aria-hidden="true"></i></button>
+        </span>
+      </span>
+      <span class="sl-editor-pill sl-editor-pill-open" role="toolbar" aria-label="{{ help_label }}">
+        <span class="sl-editor-grp">
+          <button type="button" class="sl-modal-act" data-sl-lay-open="help" aria-haspopup="dialog" title="{{ help_text }}" aria-label="{{ help_text }}"><i class="bi bi-question-circle" aria-hidden="true"></i></button>
+          <button type="button" class="sl-modal-act" data-sl-lay-open="sets" title="{{ sets_text }}" aria-label="{{ sets_text }}"><i class="bi bi-gear" aria-hidden="true"></i></button>
+        </span>
+      </span>
       {{{ state_html }}}
     </span>
   </header>
-  <aside class="sl-lay-left" aria-label="{{ tree_label }}">{{{ tree_html }}}</aside>
-  <section class="sl-lay-stage" aria-label="{{ stage_label }}"><div class="sl-lay-frame" data-sl-lay-frame><iframe src="{{ frame_url }}" title="{{ frame_title }}"></iframe></div></section>
+  <aside class="sl-lay-left" aria-label="{{ tree_label }}">
+    {{{ tree_html }}}
+  </aside>
+  <section class="sl-lay-stage" aria-label="{{ stage_label }}">
+    <div class="sl-lay-frame" data-sl-lay-frame><iframe src="{{ frame_url }}" title="{{ frame_title }}"></iframe></div>
+  </section>
   {{{ insp_html }}}
-  <div class="sl-lay-preview" data-sl-lay-preview hidden><span class="sl-lay-preview-note"><i class="bi bi-eye" aria-hidden="true"></i>{{ preview_note }}</span><button type="button" class="sl-but" data-sl-lay-unpreview><i class="bi bi-x-lg" aria-hidden="true"></i>{{ edit_text }}</button></div>
+  <div class="sl-lay-preview" data-sl-lay-preview hidden>
+    <span class="sl-lay-preview-note"><i class="bi bi-eye" aria-hidden="true"></i>{{ preview_note }}</span>
+    <button type="button" class="sl-but" data-sl-lay-unpreview><i class="bi bi-x-lg" aria-hidden="true"></i>{{ edit_text }}</button>
+  </div>
 </div>
 <dialog class="sl-modal sl-modal-lg sl-modal-top" id="sl-lay-lib" aria-label="{{ lib_title }}">
   <div class="sl-modal-title"><i class="bi bi-plus-square" aria-hidden="true"></i> <span class="sl-modal-cap"><strong>{{ lib_title }}</strong><span class="sl-modal-sub" data-sl-lay-where="{{ lib_after }}" data-sl-lay-start="{{ lib_start }}"></span></span> <span class="sl-modal-acts"><button type="button" class="sl-modal-act sl-modal-act-close" data-sl-close title="{{ close_text }}" aria-label="{{ close_text }}"><i class="bi bi-x-lg" aria-hidden="true"></i></button></span></div>
-  <div class="sl-modal-bar"><span class="sl-seg sl-lay-groups" role="group" aria-label="{{ lib_groups_label }}">{% for item in lib_groups %}<button type="button" class="sl-seg-cell{% if item.is_on %} sl-is-active{% endif %}" data-sl-lay-group="{{ item.key }}" aria-pressed="{% if item.is_on %}true{% else %}false{% endif %}">{{ item.label }}</button>{% if item.is_on %}<button type="button" class="sl-seg-cell" data-sl-lay-group="mine" aria-pressed="false" hidden>{{ mine_label }}</button><button type="button" class="sl-seg-cell" data-sl-lay-group="recent" aria-pressed="false" hidden>{{ recent_label }}</button>{% endif %}{% endfor %}</span><input type="search" class="sl-select-config sl-lay-find" placeholder="{{ lib_find }}" aria-label="{{ lib_find }}" autocomplete="off" data-sl-lay-find data-sl-focus></div>
+  <div class="sl-modal-bar">
+    <span class="sl-seg sl-lay-groups" role="group" aria-label="{{ lib_groups_label }}">
+      {% for item in lib_groups %}
+      <button type="button" class="sl-seg-cell{% if item.is_on %} sl-is-active{% endif %}" data-sl-lay-group="{{ item.key }}" aria-pressed="{% if item.is_on %}true{% else %}false{% endif %}">{{ item.label }}</button>
+      {% if item.is_on %}
+      <button type="button" class="sl-seg-cell" data-sl-lay-group="mine" aria-pressed="false" hidden>{{ mine_label }}</button>
+      <button type="button" class="sl-seg-cell" data-sl-lay-group="recent" aria-pressed="false" hidden>{{ recent_label }}</button>
+      {% endif %}
+      {% endfor %}
+    </span>
+    <input type="search" class="sl-select-config sl-lay-find" placeholder="{{ lib_find }}" aria-label="{{ lib_find }}" autocomplete="off" data-sl-lay-find data-sl-focus>
+  </div>
   <div class="sl-modal-body">
-    <div class="sl-lay-sect" data-sl-lay-sect="recent" hidden><div class="sl-lay-head"><i class="bi bi-clock" aria-hidden="true"></i><span>{{ recent_label }}</span></div><div class="sl-menu-grid sl-lay-cards" data-sl-lay-recent></div></div>
+    <div class="sl-lay-sect" data-sl-lay-sect="recent" hidden>
+      <div class="sl-lay-head"><i class="bi bi-clock" aria-hidden="true"></i><span>{{ recent_label }}</span></div>
+      <div class="sl-menu-grid sl-lay-cards" data-sl-lay-recent></div>
+    </div>
     {{{ mine_html }}}
-    <div data-sl-lay-sect="types">{% for group in lib_sects %}<div class="sl-lay-sect" data-sl-lay-part><div class="sl-lay-head"><span>{{ group.label }}</span></div><div class="sl-menu-grid sl-lay-cards">{% for item in group.cards %}<div class="sl-lay-card" data-sl-lay-card="{{ item.group }}" data-sl-lay-type="{{ item.thumb }}" data-sl-lay-words="{{ item.words }}">{% include 'fragments/menu-grid-item.html' with item %}</div>{% endfor %}</div></div>{% endfor %}</div>
+    <div data-sl-lay-sect="types">
+      {% for group in lib_sects %}
+      <div class="sl-lay-sect" data-sl-lay-part>
+        <div class="sl-lay-head"><span>{{ group.label }}</span></div>
+        <div class="sl-menu-grid sl-lay-cards">
+          {% for item in group.cards %}
+          <div class="sl-lay-card" data-sl-lay-card="{{ item.group }}" data-sl-lay-type="{{ item.thumb }}" data-sl-lay-words="{{ item.words }}">
+            {% include 'fragments/menu-grid-item.html' with item %}
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
     <p class="sl-list-none" data-sl-lay-none hidden>{{ none_text }}</p>
   </div>
   <div class="sl-modal-foot"><span class="sl-modal-sub">{{ lib_note }}</span></div>
@@ -30,15 +102,38 @@
 <dialog class="sl-modal sl-modal-lg sl-modal-top" id="sl-lay-sets" aria-label="{{ sets_title }}">
   <div class="sl-modal-title"><i class="bi bi-gear" aria-hidden="true"></i> <span class="sl-modal-cap"><strong>{{ sets_title }}</strong><span class="sl-modal-sub">config/layout.php</span></span> <span class="sl-modal-acts"><button type="button" class="sl-modal-act sl-modal-act-close" data-sl-close title="{{ close_text }}" aria-label="{{ close_text }}"><i class="bi bi-x-lg" aria-hidden="true"></i></button></span></div>
   <div class="sl-modal-body" data-sl-tabs-init="sl-lay-sets">
-    <ul class="sl-tabs-nav sl-lay-tabs"><li class="sl-tabs-item"><a href="#" class="sl-tabs-link sl-is-active" data-sl-tab-link data-sl-tab-target="sl-lay-sets-file"><i class="bi bi-filetype-php" aria-hidden="true"></i>{{ file_title }}</a></li><li class="sl-tabs-item"><a href="#" class="sl-tabs-link" data-sl-tab-link data-sl-tab-target="sl-lay-sets-where"><i class="bi bi-signpost-split" aria-hidden="true"></i>{{ where_title }}</a></li></ul>
+    <ul class="sl-tabs-nav sl-lay-tabs">
+      <li class="sl-tabs-item"><a href="#" class="sl-tabs-link sl-is-active" data-sl-tab-link data-sl-tab-target="sl-lay-sets-file"><i class="bi bi-filetype-php" aria-hidden="true"></i>{{ file_title }}</a></li>
+      <li class="sl-tabs-item"><a href="#" class="sl-tabs-link" data-sl-tab-link data-sl-tab-target="sl-lay-sets-where"><i class="bi bi-signpost-split" aria-hidden="true"></i>{{ where_title }}</a></li>
+    </ul>
     <div class="sl-tab-panel" data-sl-tab-panel="sl-lay-sets-file" id="sl-lay-file" aria-live="polite"></div>
-    <div class="sl-tab-panel" data-sl-tab-panel="sl-lay-sets-where" hidden><ul class="sl-lay-links">{% for item in links %}<li><a class="sl-lay-link" href="{{ item.href }}" target="_blank" rel="noopener"><i class="bi bi-{{ item.icon }}" aria-hidden="true"></i><span class="sl-lay-link-name">{{ item.title }}</span><span class="sl-lay-link-text">{{ item.text }}</span><i class="bi bi-box-arrow-up-right" aria-hidden="true"></i></a></li>{% endfor %}</ul></div>
+    <div class="sl-tab-panel" data-sl-tab-panel="sl-lay-sets-where" hidden>
+      <ul class="sl-lay-links">
+        {% for item in links %}
+        <li><a class="sl-lay-link" href="{{ item.href }}" target="_blank" rel="noopener"><i class="bi bi-{{ item.icon }}" aria-hidden="true"></i><span class="sl-lay-link-name">{{ item.title }}</span><span class="sl-lay-link-text">{{ item.text }}</span><i class="bi bi-box-arrow-up-right" aria-hidden="true"></i></a></li>
+        {% endfor %}
+      </ul>
+    </div>
   </div>
-  <form class="sl-modal-foot" action="{{ act_url }}" method="post" enctype="multipart/form-data" hx-post="{{ act_url }}" hx-encoding="multipart/form-data" hx-trigger="change" hx-swap="none"><input type="hidden" name="token" value="{{ token }}"><input type="hidden" name="act" value="import"><a class="sl-but" href="{{ export_url }}" download title="{{ export_tip }}"><i class="bi bi-download" aria-hidden="true"></i>{{ export_text }}</a><button type="button" class="sl-but" data-sl-lay-import title="{{ import_tip }}"><i class="bi bi-upload" aria-hidden="true"></i>{{ import_text }}</button><input type="file" name="file" accept=".json,application/json" data-sl-lay-import-file hidden></form>
+  <form class="sl-modal-foot" action="{{ act_url }}" method="post" enctype="multipart/form-data" hx-post="{{ act_url }}" hx-encoding="multipart/form-data" hx-trigger="change" hx-swap="none">
+    <input type="hidden" name="token" value="{{ token }}">
+    <input type="hidden" name="act" value="import">
+    <a class="sl-but" href="{{ export_url }}" download title="{{ export_tip }}"><i class="bi bi-download" aria-hidden="true"></i>{{ export_text }}</a>
+    <button type="button" class="sl-but" data-sl-lay-import title="{{ import_tip }}"><i class="bi bi-upload" aria-hidden="true"></i>{{ import_text }}</button>
+    <input type="file" name="file" accept=".json,application/json" data-sl-lay-import-file hidden>
+  </form>
 </dialog>
 <dialog class="sl-modal sl-modal-lg sl-modal-top" id="sl-lay-ready" aria-label="{{ ready_title }}">
   <div class="sl-modal-title"><i class="bi bi-file-earmark-plus" aria-hidden="true"></i> <span class="sl-modal-cap"><strong>{{ ready_title }}</strong><span class="sl-modal-sub">{{ ready_sub }}</span></span> <span class="sl-modal-acts"><button type="button" class="sl-modal-act sl-modal-act-close" data-sl-close title="{{ close_text }}" aria-label="{{ close_text }}"><i class="bi bi-x-lg" aria-hidden="true"></i></button></span></div>
-  <div class="sl-modal-body"><div class="sl-menu-grid sl-lay-cards">{% for item in ready_cards %}<div class="sl-lay-card">{% include 'fragments/menu-grid-item.html' with item %}</div>{% endfor %}</div></div>
+  <div class="sl-modal-body">
+    <div class="sl-menu-grid sl-lay-cards">
+      {% for item in ready_cards %}
+      <div class="sl-lay-card">
+        {% include 'fragments/menu-grid-item.html' with item %}
+      </div>
+      {% endfor %}
+    </div>
+  </div>
 </dialog>
 <dialog class="sl-modal sl-modal-lg sl-modal-top" id="sl-lay-checks" aria-label="{{ checks_text }}"></dialog>
 <dialog class="sl-modal sl-modal-top" id="sl-lay-dest" aria-label="{{ dest_title }}"></dialog>
@@ -46,11 +141,28 @@
 <dialog class="sl-modal" id="sl-lay-link" aria-label="{{ link_title }}">
   <div class="sl-modal-title"><i class="bi bi-link-45deg" aria-hidden="true"></i> <span class="sl-modal-cap"><strong>{{ link_title }}</strong><span class="sl-modal-sub">{{ link_sub }}</span></span> <span class="sl-modal-acts"><button type="button" class="sl-modal-act sl-modal-act-close" data-sl-close title="{{ close_text }}" aria-label="{{ close_text }}"><i class="bi bi-x-lg" aria-hidden="true"></i></button></span></div>
   <div class="sl-modal-body">
-    <div class="sl-div-grid"><div class="sl-div-item"><div class="sl-div-label"><label for="sl-lay-term">{{ term_label }}</label></div><div class="sl-div-field"><select id="sl-lay-term" class="sl-select" data-sl-lay-term>{% for item in terms %}<option value="{{ item.value }}"{% if item.is_on %} selected{% endif %}>{{ item.label }}</option>{% endfor %}</select></div></div></div>
-    <figure class="sl-code" data-sl-code data-sl-lay-link-box hidden><figcaption class="sl-code-head"><span data-sl-lay-link-till></span><button type="button" class="sl-modal-act" data-sl-code-copy data-sl-done="{{ copied_text }}" title="{{ copy_text }}" aria-label="{{ copy_text }}"><i class="bi bi-copy" aria-hidden="true"></i></button></figcaption><div class="sl-code-body" data-sl-code-body tabindex="0" role="region" aria-label="{{ link_title }}"><pre><code data-sl-lay-link-url></code></pre></div></figure>
+    <div class="sl-div-grid">
+      <div class="sl-div-item">
+        <div class="sl-div-label"><label for="sl-lay-term">{{ term_label }}</label></div>
+        <div class="sl-div-field">
+          <select id="sl-lay-term" class="sl-select" data-sl-lay-term>
+            {% for item in terms %}
+            <option value="{{ item.value }}"{% if item.is_on %} selected{% endif %}>{{ item.label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+    </div>
+    <figure class="sl-code" data-sl-code data-sl-lay-link-box hidden>
+      <figcaption class="sl-code-head"><span data-sl-lay-link-till></span><button type="button" class="sl-modal-act" data-sl-code-copy data-sl-done="{{ copied_text }}" title="{{ copy_text }}" aria-label="{{ copy_text }}"><i class="bi bi-copy" aria-hidden="true"></i></button></figcaption>
+      <div class="sl-code-body" data-sl-code-body tabindex="0" role="region" aria-label="{{ link_title }}"><pre><code data-sl-lay-link-url></code></pre></div>
+    </figure>
     {{{ link_note_html }}}
   </div>
-  <div class="sl-modal-foot"><button type="button" class="sl-but" data-sl-close><i class="bi bi-x-lg" aria-hidden="true"></i>{{ cancel_text }}</button><button type="button" class="sl-but-blue" data-sl-lay-link-make><i class="bi bi-link-45deg" aria-hidden="true"></i>{{ link_make }}</button></div>
+  <div class="sl-modal-foot">
+    <button type="button" class="sl-but" data-sl-close><i class="bi bi-x-lg" aria-hidden="true"></i>{{ cancel_text }}</button>
+    <button type="button" class="sl-but-blue" data-sl-lay-link-make><i class="bi bi-link-45deg" aria-hidden="true"></i>{{ link_make }}</button>
+  </div>
 </dialog>
 <dialog class="sl-modal sl-modal-xl sl-modal-top" id="sl-lay-help" aria-label="{{ help_text }}">
   <div class="sl-modal-title"><i class="bi bi-question-circle" aria-hidden="true"></i> <span class="sl-modal-cap"><strong>{{ help_text }}</strong><span class="sl-modal-sub">{{ title_text }}</span></span> <span class="sl-modal-acts"><button type="button" class="sl-modal-act" data-sl-full data-expand="{{ expand_text }}" data-restore="{{ restore_text }}" title="{{ expand_text }}" aria-label="{{ expand_text }}"><i class="bi bi-arrows-angle-expand" aria-hidden="true"></i></button><button type="button" class="sl-modal-act sl-modal-act-close" data-sl-close title="{{ close_text }}" aria-label="{{ close_text }}"><i class="bi bi-x-lg" aria-hidden="true"></i></button></span></div>
@@ -62,14 +174,44 @@
 </dialog>
 <dialog class="sl-modal sl-editor-pal" id="sl-lay-pal" aria-labelledby="sl-lay-pal-title">
   <div class="sl-modal-title"><i class="bi bi-command" aria-hidden="true"></i> <span class="sl-modal-cap"><strong id="sl-lay-pal-title">{{ pal_title }}</strong></span> <span class="sl-modal-acts"><button type="button" class="sl-modal-act sl-modal-act-close" data-sl-close title="{{ close_text }}" aria-label="{{ close_text }}"><i class="bi bi-x-lg" aria-hidden="true"></i></button></span></div>
-  <div class="sl-modal-bar"><i class="bi bi-search" aria-hidden="true"></i><input type="search" class="sl-editor-pal-find" data-sl-focus role="combobox" aria-expanded="true" aria-controls="sl-lay-pal-list" aria-autocomplete="list" placeholder="{{ pal_find }}" aria-label="{{ pal_find }}" autocomplete="off" spellcheck="false"></div>
+  <div class="sl-modal-bar">
+    <i class="bi bi-search" aria-hidden="true"></i>
+    <input type="search" class="sl-editor-pal-find" data-sl-focus role="combobox" aria-expanded="true" aria-controls="sl-lay-pal-list" aria-autocomplete="list" placeholder="{{ pal_find }}" aria-label="{{ pal_find }}" autocomplete="off" spellcheck="false">
+  </div>
   <div class="sl-modal-body sl-modal-body-flush sl-editor-pal-body">
     <div id="sl-lay-pal-list" role="listbox" aria-labelledby="sl-lay-pal-title">
-      <div class="sl-editor-pal-group" role="group" aria-labelledby="sl-lay-pal-acts"><div class="sl-editor-pal-cap" id="sl-lay-pal-acts">{{ pal_acts_title }}</div>{% for item in pal_acts %}<button type="button" role="option" tabindex="-1" class="sl-editor-pal-row" id="sl-lay-cmd-{{ item.cmd }}" data-sl-lay-cmd="{{ item.cmd }}"><i class="bi bi-{{ item.icon }}" aria-hidden="true"></i><span class="sl-editor-pal-name">{{ item.label }}</span><span class="sl-editor-pal-keys">{% for one in item.keys %}<kbd>{{ one }}</kbd>{% endfor %}</span></button>{% endfor %}</div>
-      <div class="sl-editor-pal-group" role="group" aria-labelledby="sl-lay-pal-add"><div class="sl-editor-pal-cap" id="sl-lay-pal-add">{{ pal_add_title }}</div>{% for group in lib_sects %}{% for item in group.cards %}<button type="button" role="option" tabindex="-1" class="sl-editor-pal-row" id="sl-lay-new-{{ item.thumb }}" data-sl-lay-new="{{ item.thumb }}"><i class="bi bi-{{ item.icon_name }}" aria-hidden="true"></i><span class="sl-editor-pal-name">{{ pal_add }}: {{ item.title }}</span><span class="sl-editor-pal-keys"></span></button>{% endfor %}{% endfor %}</div>
-      <div class="sl-editor-pal-group" role="group" aria-labelledby="sl-lay-pal-secs" data-sl-lay-pal-secs><div class="sl-editor-pal-cap" id="sl-lay-pal-secs">{{ pal_secs_title }}</div><template><button type="button" role="option" tabindex="-1" class="sl-editor-pal-row" data-sl-lay-goto=""><i class="bi" aria-hidden="true"></i><span class="sl-editor-pal-name"></span><span class="sl-editor-pal-keys"></span></button></template></div>
-      <div class="sl-editor-pal-group" role="group" aria-labelledby="sl-lay-pal-parts"><div class="sl-editor-pal-cap" id="sl-lay-pal-parts">{{ pal_parts_title }}</div>{% for item in pal_parts %}<button type="button" role="option" tabindex="-1" class="sl-editor-pal-row" id="sl-lay-pal-{{ item.id }}" data-sl-lay-goto="{{ item.sel }}"><i class="bi bi-{{ item.icon }}" aria-hidden="true"></i><span class="sl-editor-pal-name">{{ item.title }}</span><span class="sl-editor-pal-keys"></span></button>{% endfor %}</div>
-      <div class="sl-editor-pal-group" role="group" aria-labelledby="sl-lay-pal-pages"><div class="sl-editor-pal-cap" id="sl-lay-pal-pages">{{ pal_pages_title }}</div>{% for item in pal_pages %}<button type="button" role="option" tabindex="-1" class="sl-editor-pal-row" id="sl-lay-page-{{ item.key }}" data-sl-lay-href="{{ item.url }}"><i class="bi bi-file-earmark-richtext" aria-hidden="true"></i><span class="sl-editor-pal-name">{{ item.title }}</span><span class="sl-editor-pal-keys"></span></button>{% endfor %}</div>
+      <div class="sl-editor-pal-group" role="group" aria-labelledby="sl-lay-pal-acts">
+        <div class="sl-editor-pal-cap" id="sl-lay-pal-acts">{{ pal_acts_title }}</div>
+        {% for item in pal_acts %}
+        <button type="button" role="option" tabindex="-1" class="sl-editor-pal-row" id="sl-lay-cmd-{{ item.cmd }}" data-sl-lay-cmd="{{ item.cmd }}"><i class="bi bi-{{ item.icon }}" aria-hidden="true"></i><span class="sl-editor-pal-name">{{ item.label }}</span><span class="sl-editor-pal-keys">{% for one in item.keys %}<kbd>{{ one }}</kbd>{% endfor %}</span></button>
+        {% endfor %}
+      </div>
+      <div class="sl-editor-pal-group" role="group" aria-labelledby="sl-lay-pal-add">
+        <div class="sl-editor-pal-cap" id="sl-lay-pal-add">{{ pal_add_title }}</div>
+        {% for group in lib_sects %}
+        {% for item in group.cards %}
+        <button type="button" role="option" tabindex="-1" class="sl-editor-pal-row" id="sl-lay-new-{{ item.thumb }}" data-sl-lay-new="{{ item.thumb }}"><i class="bi bi-{{ item.icon_name }}" aria-hidden="true"></i><span class="sl-editor-pal-name">{{ pal_add }}: {{ item.title }}</span><span class="sl-editor-pal-keys"></span></button>
+        {% endfor %}
+        {% endfor %}
+      </div>
+      <div class="sl-editor-pal-group" role="group" aria-labelledby="sl-lay-pal-secs" data-sl-lay-pal-secs>
+        <div class="sl-editor-pal-cap" id="sl-lay-pal-secs">{{ pal_secs_title }}</div>
+        <template>
+          <button type="button" role="option" tabindex="-1" class="sl-editor-pal-row" data-sl-lay-goto=""><i class="bi" aria-hidden="true"></i><span class="sl-editor-pal-name"></span><span class="sl-editor-pal-keys"></span></button>
+        </template>
+      </div>
+      <div class="sl-editor-pal-group" role="group" aria-labelledby="sl-lay-pal-parts">
+        <div class="sl-editor-pal-cap" id="sl-lay-pal-parts">{{ pal_parts_title }}</div>
+        {% for item in pal_parts %}
+        <button type="button" role="option" tabindex="-1" class="sl-editor-pal-row" id="sl-lay-pal-{{ item.id }}" data-sl-lay-goto="{{ item.sel }}"><i class="bi bi-{{ item.icon }}" aria-hidden="true"></i><span class="sl-editor-pal-name">{{ item.title }}</span><span class="sl-editor-pal-keys"></span></button>
+        {% endfor %}
+      </div>
+      <div class="sl-editor-pal-group" role="group" aria-labelledby="sl-lay-pal-pages">
+        <div class="sl-editor-pal-cap" id="sl-lay-pal-pages">{{ pal_pages_title }}</div>
+        {% for item in pal_pages %}
+        <button type="button" role="option" tabindex="-1" class="sl-editor-pal-row" id="sl-lay-page-{{ item.key }}" data-sl-lay-href="{{ item.url }}"><i class="bi bi-file-earmark-richtext" aria-hidden="true"></i><span class="sl-editor-pal-name">{{ item.title }}</span><span class="sl-editor-pal-keys"></span></button>
+        {% endfor %}
+      </div>
     </div>
     <p class="sl-editor-pal-empty" data-sl-pal-empty hidden>{{ none_text }}</p>
   </div>

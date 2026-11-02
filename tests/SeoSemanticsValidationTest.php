@@ -55,13 +55,13 @@ final class SeoSemanticsValidationTest extends TestCase
         $pop = file_get_contents($this->base.'/public/templates/lite/fragments/popover.html');
         $layout = file_get_contents($this->base.'/public/templates/lite/layouts/app.html');
 
-        $this->assertStringContainsString('{% if is_detail %}<h1', $card);
-        $this->assertStringContainsString('{% elseif is_nested %}<h3', $card);
-        $this->assertStringContainsString('{% else %}<h2', $card);
+        $this->assertMatchesRegularExpression('#\{% if is_detail %\}\s*<h1#', $card);
+        $this->assertMatchesRegularExpression('#\{% elseif is_nested %\}\s*<h3#', $card);
+        $this->assertMatchesRegularExpression('#\{% else %\}\s*<h2#', $card);
         $this->assertStringNotContainsString('card-title.html', $card);
-        $this->assertStringContainsString('{% if is_page %}<h1', $vote);
-        $this->assertStringContainsString('{% elseif is_section %}<h2', $vote);
-        $this->assertStringContainsString('{% elseif is_widget %}<h3', $vote);
+        $this->assertMatchesRegularExpression('#\{% if is_page %\}\s*<h1#', $vote);
+        $this->assertMatchesRegularExpression('#\{% elseif is_section %\}\s*<h2#', $vote);
+        $this->assertMatchesRegularExpression('#\{% elseif is_widget %\}\s*<h3#', $vote);
         $this->assertStringNotContainsString('<nav', $pop);
         $this->assertSame(1, substr_count($layout, '<main'));
     }

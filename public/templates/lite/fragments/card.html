@@ -1,76 +1,111 @@
 <article id="{{ id }}" class="sl-post sl-card{% if columns %} sl-card-col-{{ columns }}{% endif %}">
-  {% if is_detail %}<h1 class="sl-title">
-  {% elseif is_nested %}<h3 class="sl-title">
-  {% else %}<h2 class="sl-title">{% endif %}
+  {% if is_detail %}
+  <h1 class="sl-title">
+  {% elseif is_nested %}
+  <h3 class="sl-title">
+  {% else %}
+  <h2 class="sl-title">
+  {% endif %}
     {{{ favorites }}}
     {% if title_html %}
-      {{{ title_html }}}
+    {{{ title_html }}}
     {% elseif title_link %}
-      {% include 'fragments/link.html' with title_link %}
-      {% if title_new %} {{{ title_new }}}{% endif %}
+    {% include 'fragments/link.html' with title_link %}
+    {% if title_new %}{{{ title_new }}}{% endif %}
     {% else %}
-      <a href="{{ title_href }}" title="{{ title_attr }}">{{{ title_text }}}</a>
-      {% if title_new %} {{{ title_new }}}{% endif %}
+    <a href="{{ title_href }}" title="{{ title_attr }}">{{{ title_text }}}</a>
+    {% if title_new %}{{{ title_new }}}{% endif %}
     {% endif %}
-  {% if is_detail %}</h1>{% elseif is_nested %}</h3>{% else %}</h2>{% endif %}
+  {% if is_detail %}
+  </h1>
+  {% elseif is_nested %}
+  </h3>
+  {% else %}
+  </h2>
+  {% endif %}
   <div class="sl-meta">
     <ul class="sl-pull-right">
       <li>
-        {% if comm_html %}{{{ comm_html }}}
-        {% elseif comm_link %}{% include 'fragments/link.html' with comm_link %}
-        {% elseif comm_href %}<a href="{{ comm_href }}" title="{{ comm_label }}" class="sl-chip sl-card-comment"><i class="bi bi-chat-text" aria-hidden="true"></i> {{ comm_text }}</a>
+        {% if comm_html %}
+        {{{ comm_html }}}
+        {% elseif comm_link %}
+        {% include 'fragments/link.html' with comm_link %}
+        {% elseif comm_href %}
+        <a href="{{ comm_href }}" title="{{ comm_label }}" class="sl-chip sl-card-comment"><i class="bi bi-chat-text" aria-hidden="true"></i> {{ comm_text }}</a>
         {% endif %}
       </li>
       <li>{{{ hits }}}</li>
       <li>
-        {% if reads_html %}{{{ reads_html }}}
-        {% elseif reads_span %}{% include 'fragments/span.html' with reads_span %}
-        {% elseif reads_text %}<span title="{{ reads_label }}" class="sl-chip sl-card-reads"><i class="bi bi-eye" aria-hidden="true"></i> {{ reads_text }}</span>
+        {% if reads_html %}
+        {{{ reads_html }}}
+        {% elseif reads_span %}
+        {% include 'fragments/span.html' with reads_span %}
+        {% elseif reads_text %}
+        <span title="{{ reads_label }}" class="sl-chip sl-card-reads"><i class="bi bi-eye" aria-hidden="true"></i> {{ reads_text }}</span>
         {% endif %}
       </li>
       <li>
-        {% if post_span %}{% include 'fragments/span.html' with post_span %}
-        {% elseif post_text %}<span title="{{ post_label }}" class="sl-chip sl-chip-info sl-card-post">{{{ post_text }}}</span>
+        {% if post_span %}
+        {% include 'fragments/span.html' with post_span %}
+        {% elseif post_text %}
+        <span title="{{ post_label }}" class="sl-chip sl-chip-info sl-card-post">{{{ post_text }}}</span>
         {% endif %}
       </li>
       <li class="sl-meta-actions">
         {% if is_moder %}{% include 'fragments/dial.html' %}{% endif %}
-        {% if id_link %}{% include 'fragments/link.html' with id_link %}
-        {% else %}<a href="#{{ id }}" title="{{ id }}" class="sl-but-mini">{{ id }}</a>
+        {% if id_link %}
+        {% include 'fragments/link.html' with id_link %}
+        {% else %}
+        <a href="#{{ id }}" title="{{ id }}" class="sl-but-mini">{{ id }}</a>
         {% endif %}
       </li>
     </ul>
     <ul>
       <li>
-        {% if date_html %}{{{ date_html }}}
-        {% elseif date_text %}<time datetime="{{ date_iso }}" title="{{ date_label }}" class="sl-chip sl-chip-info sl-card-date"><i class="bi bi-calendar3" aria-hidden="true"></i> {{ date_text }}</time>
+        {% if date_html %}
+        {{{ date_html }}}
+        {% elseif date_text %}
+        <time datetime="{{ date_iso }}" title="{{ date_label }}" class="sl-chip sl-chip-info sl-card-date"><i class="bi bi-calendar3" aria-hidden="true"></i> {{ date_text }}</time>
         {% endif %}
       </li>
       <li>
-        {% if category_html %}{{{ category_html }}}
-        {% elseif category_link %}{% include 'fragments/link.html' with category_link %}
-        {% elseif category_href %}<a href="{{ category_href }}" title="{{ category_attr }}" class="sl-chip sl-card-category"><i class="bi bi-folder" aria-hidden="true"></i> {{ category_text }}</a>
+        {% if category_html %}
+        {{{ category_html }}}
+        {% elseif category_link %}
+        {% include 'fragments/link.html' with category_link %}
+        {% elseif category_href %}
+        <a href="{{ category_href }}" title="{{ category_attr }}" class="sl-chip sl-card-category"><i class="bi bi-folder" aria-hidden="true"></i> {{ category_text }}</a>
         {% endif %}
       </li>
     </ul>
   </div>
   <div class="sl-entry-content">
     {% if aside_items %}
-      <ul id="sliding{{ id }}" class="sl-card-aside">
-        {% for item in aside_items %}{% if item.content_html %}<li>{{{ item.content_html }}}</li>{% endif %}{% endfor %}
-      </ul>
+    <ul id="sliding{{ id }}" class="sl-card-aside">
+      {% for item in aside_items %}
+      {% if item.content_html %}
+      <li>{{{ item.content_html }}}</li>
+      {% endif %}
+      {% endfor %}
+    </ul>
     {% endif %}
     {{{ voting }}}
-    {% if image_html %}{{{ image_html }}}
-    {% elseif category_icon %}<a href="{{ category_href }}" title="{{ category_attr }}" class="sl-card-image sl-cat-tone-{{ category_tone }}">{{{ category_icon }}}</a>
+    {% if image_html %}
+    {{{ image_html }}}
+    {% elseif category_icon %}
+    <a href="{{ category_href }}" title="{{ category_attr }}" class="sl-card-image sl-cat-tone-{{ category_tone }}">{{{ category_icon }}}</a>
     {% endif %}
     {{{ text }}}{% if body_text %}<br><br>{{{ body_text }}}{% endif %}
   </div>
   <div class="sl-meta-foot">
     <div class="sl-rate-box sl-pull-right">{{{ rating }}}</div>
-    {% if footer_items %}{% for item in footer_items %}{{{ item.content_html }}}{% endfor %}{% endif %}
-    {% if read_link %}{% include 'fragments/link.html' with read_link %}
-    {% elseif read_href %}<a href="{{ read_href }}" title="{{ title_attr }}" class="sl-but">{{ read_text }}</a>
+    {% if footer_items %}
+    {% for item in footer_items %}{{{ item.content_html }}}{% endfor %}
+    {% endif %}
+    {% if read_link %}
+    {% include 'fragments/link.html' with read_link %}
+    {% elseif read_href %}
+    <a href="{{ read_href }}" title="{{ title_attr }}" class="sl-but">{{ read_text }}</a>
     {% endif %}
   </div>
 </article>

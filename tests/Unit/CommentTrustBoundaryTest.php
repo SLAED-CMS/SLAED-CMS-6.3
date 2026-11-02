@@ -8,6 +8,9 @@ use PHPUnit\Framework\TestCase;
 # The moderation mode and the target module of a comment come from the server, never from the request
 final class CommentTrustBoundaryTest extends TestCase
 {
+    # The raw answer of each probe run, kept before any assertion so a failed probe is not started again by the next test
+    private static array $outs = [];
+
     private static array $probe = [];
     private static array $src = [];
 
@@ -16,7 +19,7 @@ final class CommentTrustBoundaryTest extends TestCase
     {
         if (self::$probe !== []) return self::$probe;
         $script = dirname(__DIR__).'/Support/contract_probe.php';
-        $out = (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' comment 2>&1');
+        $out = self::$outs[__FUNCTION__] ??= (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' comment 2>&1');
         $data = json_decode($out, true);
         $this->assertIsArray($data, 'Probe comment did not return JSON: '.$out);
         return self::$probe = $data;

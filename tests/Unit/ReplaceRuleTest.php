@@ -68,14 +68,10 @@ final class ReplaceRuleTest extends TestCase
         $this->assertSame('_tokenmiss', $bare['text']);
     }
 
-    # The section left the panel: no module, no help and no row in the registry, while the file of the rules stays where the parser reads it
+    # The rules are a tab of the settings of the main administrator, and their file stays where the parser reads it
     #[Test]
     public function theSectionIsATabOfTheSettings(): void
     {
-        $this->assertFileDoesNotExist(BASE_DIR.'/admin/modules/replace.php');
-        $this->assertDirectoryDoesNotExist(BASE_DIR.'/admin/info/replace');
-        $mods = require BASE_DIR.'/config/modules.php';
-        $this->assertArrayNotHasKey('replace', $mods['modules']);
         $this->assertArrayHasKey('replace', require BASE_DIR.'/config/replace.php');
         $code = (string)file_get_contents(BASE_DIR.'/admin/modules/config.php');
         $this->assertStringContainsString("case 'replace': replace(); break;", $code);

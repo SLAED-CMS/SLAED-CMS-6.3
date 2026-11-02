@@ -1,10 +1,19 @@
 <div class="sl-alert {% if type %}sl-alert-{{ type }}{% elseif is_warn %}sl-alert-warn{% else %}sl-alert-info{% endif %}">
   <div class="sl-alert-body">
     {% if messages %}
-      <ul class="sl-alert-list">{% for message in messages %}<li>{{ message }}</li>{% endfor %}</ul>
+    <ul class="sl-alert-list">
+      {% for message in messages %}
+      <li>{{ message }}</li>
+      {% endfor %}
+    </ul>
     {% elseif text %}
-      <p class="sl-alert-text">{{{ text }}}</p>
+    <p class="sl-alert-text">{{{ text }}}</p>
     {% endif %}
   </div>
-{% if acts_html %}<div class="sl-alert-acts">{{{ acts_html }}}</div>{% endif %}</div>
+  {% if acts_html %}
+  <div class="sl-alert-acts">
+    {{{ acts_html }}}
+  </div>
+  {% endif %}
+</div>
 {% if meta %}{{{ meta }}}{% endif %}

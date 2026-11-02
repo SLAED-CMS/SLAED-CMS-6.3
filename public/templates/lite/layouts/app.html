@@ -1,16 +1,20 @@
 {% include 'partials/site-header.html' %}
-  <div class="sl-wrp">
-    <div id="container"{% if blocks_left %} class="sl-has-left{% if blocks_right %} sl-has-right{% endif %}"{% elseif blocks_right %} class="sl-has-right"{% endif %}>
-      {% if blocks_left %}
-      <aside id="leftbar">{{{ blocks_left }}}</aside>
-      {% endif %}
-      <main id="content">
-        {% block content %}{{{ content }}}{% endblock %}
-        {% if blocks_down %}{{{ blocks_down }}}{% endif %}
-      </main>
-      {% if blocks_right %}
-      <aside id="sidebar">{{{ blocks_right }}}</aside>
-      {% endif %}
+    <div class="sl-wrp">
+      <div id="container"{% if blocks_left %} class="sl-has-left{% if blocks_right %} sl-has-right{% endif %}"{% elseif blocks_right %} class="sl-has-right"{% endif %}>
+        {% if blocks_left %}
+        <aside id="leftbar">
+          {{{ blocks_left }}}
+        </aside>
+        {% endif %}
+        <main id="content">
+          {% block content %}{{{ content }}}{% endblock %}
+          {% if blocks_down %}{{{ blocks_down }}}{% endif %}
+        </main>
+        {% if blocks_right %}
+        <aside id="sidebar">
+          {{{ blocks_right }}}
+        </aside>
+        {% endif %}
+      </div>
     </div>
-  </div>
 {% include 'partials/site-footer.html' %}

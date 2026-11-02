@@ -1,25 +1,18 @@
 {% extends 'layouts/bare.html' %}
-
-{% block title %}
-{% if title %}{{ title }}{% else %}{{ sitename }}{% endif %}
-{% endblock %}
-
+{% block title %}{% if title %}{{ title }}{% else %}{{ sitename }}{% endif %}{% endblock %}
 {% block content %}
 <main class="sl-view-error">
   {% if title %}
   <h1 class="sl-view-error-title">{{ title }}</h1>
   {% endif %}
-
   {% if message_html %}
   <div class="sl-view-error-alert">
     {{{ message_html }}}
   </div>
   {% endif %}
-
   {% if url %}
   <p class="sl-view-error-link"><a href="{{ url }}">{{ url_text }}</a></p>
   {% endif %}
-
   {% if time %}
   <p class="sl-view-error-time">{{ time_text }}</p>
   {% endif %}

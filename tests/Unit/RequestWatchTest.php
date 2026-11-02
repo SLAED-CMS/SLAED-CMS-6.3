@@ -10,6 +10,9 @@ use PHPUnit\Framework\TestCase;
 # The request reading of core/security.php, the trusted tags, the info page and the login limit, asserted on the shipped functions lifted by tests/Support/watch_probe.php
 final class RequestWatchTest extends TestCase
 {
+    # The raw answer of each probe run, kept before any assertion so a failed probe is not started again by the next test
+    private static array $outs = [];
+
     private static array $probe = [];
 
     # Run the probe once and memoize its report for every scenario
@@ -18,7 +21,7 @@ final class RequestWatchTest extends TestCase
         if (self::$probe !== []) return self::$probe;
         $work = str_replace('\\', '/', sys_get_temp_dir()).'/slaed_watch_'.getmypid();
         $cmd = escapeshellarg(PHP_BINARY).' -d opcache.enable_cli=0 '.escapeshellarg(dirname(__DIR__).'/Support/watch_probe.php').' '.escapeshellarg($work);
-        $out = (string)shell_exec($cmd.' 2>&1');
+        $out = self::$outs[__FUNCTION__] ??= (string)shell_exec($cmd.' 2>&1');
         $this->deleteWork($work);
         $data = json_decode($out, true);
         $this->assertIsArray($data, 'The probe did not return JSON: '.substr($out, 0, 800));

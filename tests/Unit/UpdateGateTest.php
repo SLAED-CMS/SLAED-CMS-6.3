@@ -10,6 +10,9 @@ use PHPUnit\Framework\TestCase;
 # The closed site of a code newer than its step mark over route_probe.php gate: the entries at 503, the light mode of the panel, then the notices and settings it opens to
 final class UpdateGateTest extends TestCase
 {
+    # The raw answer of each probe run, kept before any assertion so a failed probe is not started again by the next test
+    private static array $outs = [];
+
     private static array $probe = [];
 
     # Run the probe once in its gate mode and memoize the run; the only SQL error is the step the run breaks on purpose, and no request writes a PHP error
@@ -18,7 +21,7 @@ final class UpdateGateTest extends TestCase
         if (self::$probe === []) {
             $script = dirname(__DIR__).'/Support/route_probe.php';
             $work = str_replace('\\', '/', sys_get_temp_dir()).'/slaed_update_gate';
-            $out = (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' '.escapeshellarg($work).' gate 2>&1');
+            $out = self::$outs[__FUNCTION__] ??= (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' '.escapeshellarg($work).' gate 2>&1');
             $data = json_decode($out, true);
             $this->assertIsArray($data, 'The probe did not return JSON: '.substr($out, 0, 600));
             $this->assertSame('', $data['error'], 'The probe failed');

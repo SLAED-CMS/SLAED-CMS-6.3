@@ -1803,7 +1803,7 @@ function setHead(array $seo = []): void {
         if (!$open) $hcid = 0;
     }
     $licens = getLicenseHtml();
-    $strmeta = '<meta charset="'._CHARSET.'">'."\n".$tpl->getHtmlFrag('head-meta', ['name' => 'sl-token', 'content' => getSiteToken()])."\n";
+    $strmeta = '<meta charset="'._CHARSET.'">'."\n".$tpl->getHtmlFrag('head-meta', ['name' => 'sl-token', 'content' => getSiteToken()]);
     $strlink = $stscript = '';
     if (!defined('ADMIN_FILE')) {
         $seomap = getSeoRoute($seo);
@@ -1827,10 +1827,10 @@ function setHead(array $seo = []): void {
         $type = $ogmap[$kind] ?? 'website';
         $purl = $seomap['iscanon'] ? $seomap['canon'] : $seomap['siteurl'];
         $title = getHeadTitle($seo);
-        $strmeta .= $tpl->getHtmlFrag('head-title', ['title' => $title])."\n";
-        if ($author !== '') $strmeta .= $tpl->getHtmlFrag('head-meta', ['name' => 'author', 'content' => $author])."\n";
-        if ($desc !== '') $strmeta .= $tpl->getHtmlFrag('head-meta', ['name' => 'description', 'content' => $desc])."\n";
-        $strmeta .= $tpl->getHtmlFrag('head-meta', ['name' => 'robots', 'content' => $seomap['robot']])."\n";
+        $strmeta .= $tpl->getHtmlFrag('head-title', ['title' => $title]);
+        if ($author !== '') $strmeta .= $tpl->getHtmlFrag('head-meta', ['name' => 'author', 'content' => $author]);
+        if ($desc !== '') $strmeta .= $tpl->getHtmlFrag('head-meta', ['name' => 'description', 'content' => $desc]);
+        $strmeta .= $tpl->getHtmlFrag('head-meta', ['name' => 'robots', 'content' => $seomap['robot']]);
         $from = ['[homeurl]', '[site]', '[logo]', '[loc]', '[time]', '[mtime]', '[title]', '[desc]', '[img]', '[ctitle]', '[type]', '[url]', '[headline]', '[author]'];
         $raw = [$conf['homeurl'], $site, $logo, _LOCALE, $tiso, $miso, $title, $desc, $img, $ctitle, $type, $purl, $headline, $author];
         $gvars = array_combine($from, array_map('strval', $raw)) ?: [];
@@ -1848,16 +1848,16 @@ function setHead(array $seo = []): void {
                     'is_property' => true,
                     'property' => $prop,
                     'content' => $value,
-                ])."\n";
+                ]);
             }
         }
-        if ($seomap['iscanon']) $strlink .= $tpl->getHtmlFrag('head-link', ['rel' => 'canonical', 'href' => $seomap['canon'], 'type' => '', 'title' => ''])."\n";
+        if ($seomap['iscanon']) $strlink .= $tpl->getHtmlFrag('head-link', ['rel' => 'canonical', 'href' => $seomap['canon'], 'type' => '', 'title' => '']);
         if ($conf['rss']['act']) {
             $feeds = getRssFeeds();
             $rmod = isset($feeds[$conf['name'] ?? '']) ? $conf['name'] : trim(explode(',', $conf['module'])[0]);
             if (isset($feeds[$rmod])) {
                 $rurl = $conf['homeurl'].'/index.php?go=rss&name='.$rmod;
-                $strlink .= $tpl->getHtmlFrag('head-link', ['rel' => 'alternate', 'href' => $rurl, 'type' => 'application/rss+xml', 'title' => $conf['sitename'].' - '._RSS])."\n";
+                $strlink .= $tpl->getHtmlFrag('head-link', ['rel' => 'alternate', 'href' => $rurl, 'type' => 'application/rss+xml', 'title' => $conf['sitename'].' - '._RSS]);
             }
             $fieldc = explode('||', $conf['rss']['rss']);
             foreach ($fieldc as $val) {
@@ -1868,7 +1868,7 @@ function setHead(array $seo = []): void {
                         'href' => $out[1],
                         'type' => 'application/rss+xml',
                         'title' => $out[0],
-                    ])."\n";
+                    ]);
                 }
             }
         }
@@ -1877,7 +1877,7 @@ function setHead(array $seo = []): void {
             'href' => $conf['homeurl'].'/index.php?go=search',
             'type' => 'application/opensearchdescription+xml',
             'title' => $conf['sitename'].' - '._SEARCH,
-        ])."\n";
+        ]);
         if (!empty($conf['aschema'])) {
             $sdata = [
                 'title' => $home ? $site : $headline, 'desc' => $desc, 'url' => $purl, 'img' => $simg, 'author' => $author,
@@ -1907,16 +1907,16 @@ function setHead(array $seo = []): void {
                 $stscript .= $tpl->getHtmlFrag('head-script-inline', [
                     'is_jsonld' => true,
                     'json_html' => getSeoJson($item),
-                ])."\n";
+                ]);
             }
         }
     }
     $favicon = 'templates/'.(defined('ADMIN_FILE') ? 'admin' : $theme).'/images/favicon.svg';
     if (is_file(PUBLIC_DIR.'/'.$favicon)) {
-        $strlink .= $tpl->getHtmlFrag('head-link', ['rel' => 'shortcut icon', 'href' => HOME_PATH.$favicon, 'type' => 'image/svg+xml', 'title' => ''])."\n";
+        $strlink .= $tpl->getHtmlFrag('head-link', ['rel' => 'shortcut icon', 'href' => HOME_PATH.$favicon, 'type' => 'image/svg+xml', 'title' => '']);
     }
     $strlink .= doCss();
-    $script = doScript()."\n".$stscript;
+    $script = doScript().$stscript;
     if (defined('ADMIN_FILE')) {
         $adlogo = basename((string)($conf['admin_logo'] ?? 'slaed_logo_256x73.png'));
         $adpath = getThemeFilePath('images/logos/'.$adlogo);
@@ -2115,7 +2115,7 @@ function setFoot(): void {
             'debug_html' => $debug,
             'windows_html' => getWindowSet(true),
         ]);
-        $vars['meta'] = ($vars['meta'] ?? '').$tpl->getHtmlFrag('head-title', ['title' => $head])."\n";
+        $vars['meta'] = ($vars['meta'] ?? '').$tpl->getHtmlFrag('head-title', ['title' => $head]);
         echo getTimedHtml($tpl->getHtmlPage($page, $vars, $page === 'login' ? 'bare' : 'admin'));
         unset($adminpage, $adminvars);
         return;
@@ -2168,7 +2168,7 @@ function setFoot(): void {
         'build_html' => empty($vars['is_build']) ? '' : $tpl->getHtmlFrag('builder'),
     ]);
     $page = (is_string($sitepage ?? '') && $sitepage !== '') ? $sitepage : ($home ? 'home' : 'module');
-    $html = getOutputHtml($tpl->getHtmlPage($page, $vars, $page === 'home' ? 'home' : 'app'));
+    $html = $tpl->getHtmlPage($page, $vars, $page === 'home' ? 'home' : 'app');
     unset($sitepage, $sitevars);
     echo getTimedHtml($html);
     while (ob_get_level() > 0) ob_end_flush();
@@ -2832,7 +2832,7 @@ function doScript(): string {
     elseif (isAdmin() && (defined('ADMIN_FILE') || !isThemeFlag('dock-site-off'))) $array[] = 'plugins/system/dock.js';
     $arr = [];
     foreach ($array as $file) $arr[] = $tpl->getHtmlFrag('head-script-src', ['src' => Template::getAssetUrl($file), 'attr' => 'defer']);
-    $cont = implode("\n", $arr);
+    $cont = implode('', $arr);
     if (!defined('ADMIN_FILE') && file_exists(CONFIG_DIR.'/header.php')) {
         ob_start();
         include CONFIG_DIR.'/header.php';
@@ -2847,7 +2847,7 @@ function doCss(): string {
     $array = $conf['derived']['assets'][$theme]['css'] ?? getAssetList($theme, 'css', $conf['css_f']);
     $arr = [];
     foreach ($array as $file) $arr[] = $tpl->getHtmlFrag('head-link', ['rel' => 'stylesheet', 'href' => Template::getAssetUrl($file), 'type' => '', 'title' => '']);
-    return implode("\n", $arr);
+    return implode('', $arr);
 }
 
 # Create the sitemap by streaming XML, a new file every 50000 URLs joined by an index; materials are read in cursor batches as a guest and never held whole
@@ -3124,52 +3124,6 @@ function getImageBox(string $file): array {
     if (!in_array($ext, ['png', 'jpg', 'jpeg', 'gif', 'webp', 'avif'], true)) return [0, 0];
     $info = getimagesize($file);
     return (is_array($info) && $info[0] > 0 && $info[1] > 0) ? [(int)$info[0], (int)$info[1]] : [0, 0];
-}
-
-# Normalise the final HTML keeping the template indent; script, style, pre, code, textarea and comments are protected, only multiline tags and classes squeezed
-function getOutputHtml(string $html): string {
-    if ($html === '') return '';
-    $keep = [];
-    $html = (string)preg_replace_callback('#<(script|style|pre|code|textarea)\b[^>]*>.*?</\1>|<!--.*?-->#si', static function(array $dat) use (&$keep): string {
-        if ($dat[0][1] === '!') {
-            $key = "\x01".count($keep)."\x01";
-            $keep[$key] = $dat[0];
-            return $key;
-        }
-        $gt = strpos($dat[0], '>');
-        $key = "\x01".count($keep)."\x01";
-        $keep[$key] = substr($dat[0], $gt + 1);
-        return substr($dat[0], 0, $gt + 1).$key;
-    }, $html);
-    $html = (string)preg_replace_callback('#\sclass\s*=\s*(["\'])([^"\']*[\r\n][^"\']*)\1#', static function(array $cls): string {
-        return ' class='.$cls[1].trim((string)preg_replace('#\s+#', ' ', $cls[2])).$cls[1];
-    }, $html);
-    $html = (string)preg_replace_callback('#<[a-zA-Z][^>]*[\r\n][^>]*>#s', static function(array $dat): string {
-        $tag = $dat[0];
-        $out = '';
-        $quot = '';
-        $space = false;
-        $len = strlen($tag);
-        for ($pos = 0; $pos < $len; $pos++) {
-            $chr = $tag[$pos];
-            if ($quot !== '') {
-                $out .= $chr;
-                if ($chr === $quot) $quot = '';
-            } elseif ($chr === '"' || $chr === "'") {
-                $quot = $chr;
-                $out .= $chr;
-            } elseif (ctype_space($chr)) {
-                $space = $out !== '' && substr($out, -1) !== '<';
-            } else {
-                if ($space && $chr !== '>' && substr($out, -1) !== '<') $out .= ' ';
-                $space = false;
-                $out .= $chr;
-            }
-        }
-        return $out;
-    }, $html);
-    $html = (string)preg_replace('#\n[ \t\r]*(?=\n)#', '', $html);
-    return strtr($html, $keep);
 }
 
 # Voting view
@@ -3735,7 +3689,7 @@ function getTimeLoads(array $stats = []): string {
     return $cont;
 }
 
-# Replace footer and debug markers with one final request metrics snapshot
+# Replace footer and debug markers with one final request metrics snapshot; the debug block arrives after the render, so it takes the indent of its line here
 function getTimedHtml(string $html): string {
     global $conf;
     $hgen = str_contains($html, GEN_MARK);
@@ -3744,7 +3698,12 @@ function getTimedHtml(string $html): string {
     $stats = getLoadStats();
     $maps = [];
     if ($hgen) $maps[GEN_MARK] = ($conf['db_t'] == '1') ? getTimeLoads($stats) : '';
-    if ($hdbg) $maps[DBG_MARK] = checkDebugView() ? getDebugSystemInfo($stats) : '';
+    if ($hdbg) {
+        $info = checkDebugView() ? getDebugSystemInfo($stats) : '';
+        $line = '/^([ \t]*)'.preg_quote(DBG_MARK, '/').'[ \t]*(\r?\n)?/m';
+        $html = (string)preg_replace_callback($line, static fn(array $row): string => Template::getPad($info, $row[1], isset($row[2])), $html);
+        $maps[DBG_MARK] = $info;
+    }
     return strtr($html, $maps);
 }
 

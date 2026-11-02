@@ -13,6 +13,9 @@ use ReflectionMethod;
 # NodeQuery reads types, materials, targets, resources, trees and sitemap rows against the context getNodeContext() builds from the trusted request state
 final class NodeQueryTest extends TestCase
 {
+    # The raw answer of each probe run, kept before any assertion so a failed probe is not started again by the next test
+    private static array $outs = [];
+
     private static array $probe = [];
 
     # The file of the reader
@@ -30,7 +33,7 @@ final class NodeQueryTest extends TestCase
         if (self::$probe === []) {
             $script = dirname(__DIR__).'/Support/node_probe.php';
             $work = str_replace('\\', '/', sys_get_temp_dir()).'/slaed_node_query';
-            $out = (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' '.escapeshellarg($work).' query 2>&1');
+            $out = self::$outs[__FUNCTION__] ??= (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' '.escapeshellarg($work).' query 2>&1');
             $data = json_decode($out, true);
             $this->assertIsArray($data, 'The probe did not return JSON: '.$out);
             $this->assertSame('', $data['error'], 'The probe failed');

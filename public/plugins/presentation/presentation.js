@@ -335,7 +335,7 @@
         draw();
     }
 
-    // The pulse strip: nothing here is measured, so it says so by never standing still; a reader who asked for no motion gets one still band
+    // The pulse strip: nothing here is measured, so it says so by never standing still while it is seen; a reader who asked for no motion gets one still band; a frame reads no layout, the size comes from the observer
     function setPulse(root) {
         if (root.getAttribute('data-sl-pres-ready') === '1') return;
         var face = root.querySelector('canvas');
@@ -350,12 +350,16 @@
         }
         var last = 0;
         var tone = '';
+        var rect = root.getBoundingClientRect();
+        var shown = true;
+        var armed = false;
+        var wake = function () {
+            if (armed || !rect.width || !rect.height) return;
+            armed = true;
+            window.requestAnimationFrame(paint);
+        };
         var paint = function (now) {
-            var rect = root.getBoundingClientRect();
-            if (!rect.width || !rect.height) {
-                window.requestAnimationFrame(paint);
-                return;
-            }
+            armed = false;
             var dpr = Math.min(window.devicePixelRatio || 1, 2);
             var wide = Math.round(rect.width * dpr);
             var high = Math.round(rect.height * dpr);
@@ -396,9 +400,23 @@
             pen.globalAlpha = 0.22;
             pen.fill();
             pen.globalAlpha = 1;
-            if (!window.isMotionStill()) window.requestAnimationFrame(paint);
+            if (shown && !window.isMotionStill()) wake();
         };
-        window.requestAnimationFrame(paint);
+        if (window.ResizeObserver) {
+            new ResizeObserver(function () {
+                var box = root.getBoundingClientRect();
+                if (box.width === rect.width && box.height === rect.height) return;
+                rect = box;
+                wake();
+            }).observe(root);
+        }
+        if (window.IntersectionObserver) {
+            new IntersectionObserver(function (rows) {
+                shown = rows[rows.length - 1].isIntersecting;
+                if (shown && !window.isMotionStill()) wake();
+            }).observe(root);
+        }
+        wake();
     }
 
     // A figure that breathes: the value the module wrote is the centre, and every few seconds it moves within an eighth of itself
@@ -849,7 +867,37 @@
         setAutoplay(scene, run);
     }
 
+    // A part off screen costs no frame: the CSS pauses what data-sl-pres-off marks, and SMIL, which no CSS reaches, is paused here and under still motion too
+    function setOffScreen() {
+        var list = document.querySelectorAll('.sl-pres-hero, .sl-pres-section');
+        var setPaths = function (box) {
+            var off = box.hasAttribute('data-sl-pres-off') || window.isMotionStill();
+            var svgs = box.querySelectorAll('svg');
+            for (var i = 0; i < svgs.length; i++) {
+                if (off) svgs[i].pauseAnimations();
+                else svgs[i].unpauseAnimations();
+            }
+        };
+        var setAll = function () {
+            for (var i = 0; i < list.length; i++) setPaths(list[i]);
+        };
+        if (window.IntersectionObserver) {
+            var seen = new IntersectionObserver(function (rows) {
+                for (var r = 0; r < rows.length; r++) {
+                    rows[r].target.toggleAttribute('data-sl-pres-off', !rows[r].isIntersecting);
+                    setPaths(rows[r].target);
+                }
+            });
+            for (var s = 0; s < list.length; s++) seen.observe(list[s]);
+        }
+        new MutationObserver(setAll).observe(document.documentElement, { attributes: true, attributeFilter: ['data-sl-still'] });
+        var calm = window.matchMedia('(prefers-reduced-motion: reduce)');
+        if (calm.addEventListener) calm.addEventListener('change', setAll);
+        setAll();
+    }
+
     function setPresentation() {
+        setOffScreen();
         var list = document.querySelectorAll('[data-sl-pres]');
         for (var i = 0; i < list.length; i++) {
             var kind = list[i].getAttribute('data-sl-pres');

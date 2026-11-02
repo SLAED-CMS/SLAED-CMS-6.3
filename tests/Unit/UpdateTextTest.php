@@ -4,12 +4,17 @@ declare(strict_types=1);
 
 namespace Tests\Unit;
 
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 # The text unit of update.php turns stored BB into Markdown once, by docs/PARSER.md, "Texts of the BB era", and getMigrateHtml() writes Markdown for a 6.2 text
+#[Group('release')]
 final class UpdateTextTest extends TestCase
 {
+    # The raw answer of each probe run, kept before any assertion so a failed probe is not started again by the next test
+    private static array $outs = [];
+
     private static string $code = '';
 
     private static array $probe = [];
@@ -54,7 +59,7 @@ final class UpdateTextTest extends TestCase
         if (self::$probe === []) {
             $script = dirname(__DIR__).'/Support/update_probe.php';
             $work = str_replace('\\', '/', sys_get_temp_dir()).'/slaed_update_text';
-            $out = (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' '.escapeshellarg($work).' texts 2>&1');
+            $out = self::$outs[__FUNCTION__] ??= (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' '.escapeshellarg($work).' texts 2>&1');
             $data = json_decode($out, true);
             $this->assertIsArray($data, 'The probe did not return JSON: '.$out);
             $this->assertSame('', $data['error'], 'The probe failed');

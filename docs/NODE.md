@@ -3185,7 +3185,7 @@ theme, blocks and independent global subsystems are outside it, and the `NodeCon
   point reward runs no SQL; a non-zero one is measured apart.
 
 `NodeQueryTest` pins the list budgets per probe type, `NodeServiceTest` the state change (`<= 6`,
-`<= 7` with a job) and the delete trace, `NodeRouteTest` the view with tree batches; `tools/node-profile.php`
+`<= 7` with a job) and the delete trace, `NodeRouteListTest` the view with tree batches; `tools/node-profile.php`
 enforces the ceilings on a large database.
 
 Timing targets, as `p95` with Xdebug off and a warm MariaDB: model read and preparation 150 ms, file access check
@@ -3249,9 +3249,11 @@ apart from the read and state-change budgets.
 
 `phpunit.xml` defines the suites `Unit` (`tests/Unit`) and `Validation` (the rest of `tests`), bootstrap
 `tests/bootstrap.php`. Node tests are `#[Test]` classes in `tests/Unit`. Most start a CLI probe from
-`tests/Support` as a child process and assert on its JSON; there is no base test class, no `tests/Fixtures/node`,
-no SQL dump and no copy of the schema - probes execute the shipped `storage/update/sql/table.sql` and update SQL. Most
-files also have a static half that reads the sources.
+`tests/Support` as a child process and assert on its JSON; the one base test class is `NodeRouteCase`, which runs a
+mode of `route_probe.php` for the three classes cut from `NodeRouteTest` so that ParaTest runs the modes side by side.
+There is no `tests/Fixtures/node`, no SQL dump and no copy of the schema - probes execute the shipped
+`storage/update/sql/table.sql` and update SQL. Most files also have a static half that reads the sources. The classes
+marked `release` below belong to the group `composer test:fast` leaves out and `composer test:release` runs.
 
 | Test | Tests | Driver | Covers |
 |---|---:|---|---|
@@ -3259,16 +3261,19 @@ files also have a static half that reads the sources.
 | `NodeQueryTest` | 25 | `node_probe.php query` | reader API, access, paging, targets, tree, sitemap, budgets, context |
 | `NodeConfigTest` | 17 | `node_probe.php service` | type writes, versions, import, commit crash, restore, race |
 | `NodeServiceTest` | 29 | `node_probe.php material` | material writes, moves, sets, locks, counters, reports, delayed publication |
-| `NodeRouteTest` | 48 | `route_probe.php` + `secure`, `tree`, `modes`, `seo`, `head` | public and admin HTTP, cache, files, form rules, tree, view modes, SEO; the list header with its links, counts and their cache, the views of a type, the part of an htmx request, the search hints, the feed with its title, link, date, 304 and closed category |
+| `NodeRouteTest` | 16 | `route_probe.php` | public and admin HTTP, cache, files, the view preparer, the stage files, the constants |
+| `NodeRouteFormTest` | 9 | `route_probe.php secure` | form rules: upload right, write window, captcha, categories, links, notice, import |
+| `NodeRouteListTest` | 14 | `route_probe.php tree`, `modes`, `head` | tree, view modes, the views of a type, the part of an htmx request, the search hints; the list header with its links, counts and their cache |
+| `NodeRouteSeoTest` | 9 | `route_probe.php seo` | canonical addresses, retired addresses, the feed with its title, link, date, 304 and closed category |
 | `NodeSupportTest` | 13 | `route_probe.php support` | comments on Node, private requests, card, mail |
 | `NodeSyncTest` | 10 | `route_probe.php sync` | source form, `op=sync`, `nodesync`, scripted transport |
 | `NodeIntegTest` | 14 | `route_probe.php integ` | rating, favorites, poll, home, search, RSS, sitemap, blocks |
 | `NodeGuardTest` | 10 | `route_probe.php guard` | output escaping, favorites with points, poll right |
 | `NodeIntegrityTest` | 7 | `route_probe.php intact` | rows left by real requests, checked by SQL |
-| `NodeProfileTest` | 14 | `install_probe.php` | `setup.php` stop by stop and part by part, its refusals, the ten profiles; panel and public walk |
-| `UpdateSiteTest` | 9 | `install_probe.php update` | 6.2 -> 6.3 update of `tests/Fixtures/update62` and `update62early` by `update.php` over HTTP |
-| `Update{Config,Mails,Setup}Test` | 6, 4, 10 | `update_probe.php config`/`mails`/`setup` | settings carry-over, newsletter, registry, both preflights |
-| `Update{Points,Ratings,Fields}Test` | 6, 8, 9 | `update_probe.php` (`points`)/`ratings`/`fields` | data update units |
+| `NodeProfileTest` | 14 | `install_probe.php`, `release` but the three static | `setup.php` stop by stop and part by part, its refusals, the ten profiles; panel and public walk |
+| `UpdateSiteTest` | 9 | `install_probe.php update`, `release` | 6.2 -> 6.3 update of `tests/Fixtures/update62` and `update62early` by `update.php` over HTTP |
+| `Update{Config,Mails,Setup}Test` | 6, 4, 10 | `update_probe.php config`/`mails`/`setup`; Config and Mails `release` | settings carry-over, newsletter, registry, both preflights |
+| `Update{Points,Ratings,Fields}Test` | 6, 8, 9 | `update_probe.php` (`points`)/`ratings`/`fields`, `release` | data update units |
 | `PointTest`, `RatingTest` | 20, 18 | `point_probe.php`, `rating_probe.php` | the classes |
 | `PointOwnersTest`, `RatingOwnersTest` | 7, 5 | static | owner wiring, labels in six locales |
 | `FieldTest`, `FieldViewTest` | 10, 6 | static; `contract_probe.php fieldpost` | `Field`, its form and view outputs |
@@ -3331,7 +3336,7 @@ budget.
 - No test reaches the network: `Feed` gets a scripted transport (`new Feed($conf, $send)`), so a successful manual
   `op=sync` over HTTP is not tested, only its failure.
 - Run `php vendor/bin/phpunit` (`composer test`), one file (`php vendor/bin/phpunit tests/Unit/NodeRouteTest.php`)
-  or `--filter Node`; a probe alone (`php tests/Support/route_probe.php <scratch> integ`) prints its report. The
+  or `--filter Node`, which runs the `release` methods of `NodeProfileTest` too; a probe alone (`php tests/Support/route_probe.php <scratch> integ`) prints its report. The
   pre-commit hook and `npm run ui:gates` run only theme and markup tests.
 - A Node change is checked with `php -l`, `php vendor/bin/phpunit`, `php vendor/bin/phpstan`,
   `php vendor/bin/php-cs-fixer check`, `npm run ui:gates` when core, modules, templates, tests or UI tools change,

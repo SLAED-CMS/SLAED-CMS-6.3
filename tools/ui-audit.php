@@ -988,6 +988,15 @@ function getOpenForks(array $data): array {
     return $out;
 }
 
+# Shared selectors and canon templates that diverge with no written reason: the list behind the global count cross
+function getOpenCross(): array {
+    $cross = checkCrossTheme();
+    $out = [];
+    foreach ($cross['structure'] as $item => $info) if ($info['why'] === '') $out[] = $item;
+    foreach (getOpenForks($cross) as $item) $out[] = $item;
+    return $out;
+}
+
 # Class attributes, inline styles and HTML tags hardcoded in PHP, found by tokenising and folding concatenations
 function checkPhpMarkup(): array {
     $cont = getContract();
@@ -1361,10 +1370,7 @@ if (!$only && count($want) === count($cont['themes'])) {
     $kinds = checkNameKinds();
     $sum = 0;
     foreach (checkPhpMarkup() as $hits) $sum += $hits['class'] + $hits['style'] + $hits['tag'];
-    $cross = checkCrossTheme();
-    $open = [];
-    foreach ($cross['structure'] as $item => $info) if ($info['why'] === '') $open[] = $item;
-    foreach (getOpenForks($cross) as $item) $open[] = $item;
+    $open = getOpenCross();
     $store['global'] = ['kinds' => count($kinds), 'cross' => count($open), 'markup' => $sum];
     setSection('shared selectors and canon templates that diverge with no written reason, which --cross explains:', $open);
     $said = array_map(fn($v) => $v['name'].': '.implode(', ', array_map(fn($k, $t) => $t.' is a '.$k, $v['kinds'], array_keys($v['kinds']))), $kinds);

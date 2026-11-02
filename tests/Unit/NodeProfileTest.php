@@ -4,12 +4,16 @@ declare(strict_types=1);
 
 namespace Tests\Unit;
 
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 # The ten shipped profiles of modules/node/profiles: slaed.node exports the clean installation of setup.php imports as active types, while an update creates no type
 final class NodeProfileTest extends TestCase
 {
+    # The raw answer of each probe run, kept before any assertion so a failed probe is not started again by the next test
+    private static array $outs = [];
+
     private const NAMES = ['content', 'docs', 'faq', 'files', 'help', 'jokes', 'links', 'media', 'news', 'pages'];
 
     private static array $probe = [];
@@ -35,7 +39,8 @@ final class NodeProfileTest extends TestCase
     {
         $script = dirname(__DIR__).'/Support/install_probe.php';
         $work = str_replace('\\', '/', sys_get_temp_dir()).'/slaed_node_install';
-        $out = (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' '.escapeshellarg($work).' '.escapeshellarg($mode).' 2>&1');
+        $out = self::$outs[__FUNCTION__.$mode] ??= (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' '.escapeshellarg($work).' '
+            .escapeshellarg($mode).' 2>&1');
         $data = json_decode($out, true);
         $this->assertIsArray($data, 'The probe did not return JSON: '.$out);
         $this->assertSame('', $data['error'], 'The probe failed');
@@ -159,6 +164,7 @@ final class NodeProfileTest extends TestCase
     # The ten types carry every shared area and directory and the starter news, the mark is gone, and the recovery form of the panel creates nothing more
     # Every type, the starter news, the site account and the forum seed of insert.sql carry their first path, the seed in the order of the registry
     #[Test]
+    #[Group('release')]
     public function aCleanInstallationCreatesTheTenTypes(): void
     {
         $run = $this->getRuns()['setup'];
@@ -211,6 +217,7 @@ final class NodeProfileTest extends TestCase
     # The installed site keeps setup.php shut: a copy put back answers a visit and a part of the run with the refusal, shows no form and no token and stays in place
     # A config/db.php whose database does not answer counts as installed too; nothing is written, and only that refused connection is logged
     #[Test]
+    #[Group('release')]
     public function theInstalledSiteKeepsTheInstallerShut(): void
     {
         $run = $this->getRuns()['setup']['lock'];
@@ -225,6 +232,7 @@ final class NodeProfileTest extends TestCase
     # The administrator stop refuses what the panel refuses; Install refuses a pending journal and a config/security.php PHP cannot write, before the database is asked
     # A run whose data file fails hands the form back with the reason and writes no mark; the permissions of the files it rewrote stay, and only the wrong password is logged
     #[Test]
+    #[Group('release')]
     public function theInstallerRefusesBeforeItWrites(): void
     {
         $run = $this->getRuns()['setup']['refuse'];
@@ -249,6 +257,7 @@ final class NodeProfileTest extends TestCase
     # A profile the installation cannot finish - here a user file in uploads/node/jokes it refuses to take over - is named on the closing stop and in the site log with its step
     # The other nine types and the starter news are created all the same, and the mark is gone
     #[Test]
+    #[Group('release')]
     public function aFailedProfileIsNamedAndTheOthersAreCreated(): void
     {
         if (self::$fail === []) self::$fail = $this->getProbe('fail');
@@ -274,6 +283,7 @@ final class NodeProfileTest extends TestCase
 
     # Every created type exports exactly its profile, with the rules of the site in place of the empty ones
     #[Test]
+    #[Group('release')]
     public function everyTypeExportsItsProfile(): void
     {
         $run = $this->getRuns()['exports'];
@@ -283,6 +293,7 @@ final class NodeProfileTest extends TestCase
 
     # Every type but help: the public list, a published material written through the panel with its roles and fields, its public page, and a draft only the panel reaches
     #[Test]
+    #[Group('release')]
     public function everyProfileWritesAndServesAMaterial(): void
     {
         $runs = $this->getRuns()['types'];
@@ -306,6 +317,7 @@ final class NodeProfileTest extends TestCase
 
     # help stays private: the guest is refused, the owner submits through the public form and reads the request, the stranger does not, and the queue carries it
     #[Test]
+    #[Group('release')]
     public function helpStaysPrivate(): void
     {
         $run = $this->getRuns()['support'];
@@ -319,6 +331,7 @@ final class NodeProfileTest extends TestCase
 
     # content keeps its source, the manual check of the panel reaches the transport of Feed and counts the refusal, and the scheduled job picks a due source up
     #[Test]
+    #[Group('release')]
     public function contentSyncsByHandAndBySchedule(): void
     {
         $run = $this->getRuns()['sync'];
@@ -330,6 +343,7 @@ final class NodeProfileTest extends TestCase
 
     # The constructor of the panel offers the ten profiles, and a type made from a profile under a new name keeps its extension settings, roles and fields
     #[Test]
+    #[Group('release')]
     public function theConstructorOffersEveryProfile(): void
     {
         $run = $this->getRuns()['builder'];
@@ -341,6 +355,7 @@ final class NodeProfileTest extends TestCase
     # The showcase of news for the guest: a category of the panel with eleven materials, two pages and a refused third, the category list with one page of cards
     # The list, its second page, the category and a material each carry a canonical address
     #[Test]
+    #[Group('release')]
     public function theGuestPagesThroughCategoriesAndPages(): void
     {
         $run = $this->getRuns()['showcase'];
@@ -357,6 +372,7 @@ final class NodeProfileTest extends TestCase
     # The installation writes no PHP or SQL error; the site log holds only the refusals the checks provoke and the failed checks of the local feed address
     # The site log also holds the journal of the published type changes of the run, twenty of them the import and the activation of the ten profiles
     #[Test]
+    #[Group('release')]
     public function theInstallationLogsOnlyWhatTheChecksProvoke(): void
     {
         $logs = $this->getRuns()['logs'];

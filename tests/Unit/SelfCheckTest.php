@@ -10,6 +10,9 @@ use PHPUnit\Framework\TestCase;
 # Self-check of docs/ARCHITECTURE.md, "Private Data Boundary": the installation proves its private part is private, by the body of an answer and in three states
 final class SelfCheckTest extends TestCase
 {
+    # The raw answer of each probe run, kept before any assertion so a failed probe is not started again by the next test
+    private static array $outs = [];
+
     private static ?array $probe = null;
 
     private static string $work = '';
@@ -20,7 +23,7 @@ final class SelfCheckTest extends TestCase
         if (self::$probe !== null) return self::$probe;
         self::$work = str_replace('\\', '/', sys_get_temp_dir()).'/slaed_check_'.bin2hex(random_bytes(4));
         $script = dirname(__DIR__).'/Support/check_probe.php';
-        $out = (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' '.escapeshellarg(self::$work).' 2>&1');
+        $out = self::$outs[__FUNCTION__] ??= (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' '.escapeshellarg(self::$work).' 2>&1');
         $data = json_decode($out, true);
         $this->assertIsArray($data, 'The probe did not return JSON: '.$out);
         return self::$probe = $data;

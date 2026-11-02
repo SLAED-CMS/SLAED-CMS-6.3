@@ -449,7 +449,7 @@ class TemplateValidationTest extends TestCase
     {
         foreach (['admin', 'lite'] as $theme) {
             $frag = (string)file_get_contents(self::$templatesPath.'/'.$theme.'/fragments/select.html');
-            $this->assertStringContainsString('{% if selectid %}id="{{ selectid }}"{% endif %}', $frag, 'The select fragment of '.$theme.' does not read selectid');
+            $this->assertStringContainsString('{% if selectid %} id="{{ selectid }}"{% endif %}', $frag, 'The select fragment of '.$theme.' does not read selectid');
             $this->assertStringNotContainsString('input_id', $frag, 'The select fragment of '.$theme.' reads a second id key');
         }
         $errors = [];
@@ -471,8 +471,8 @@ class TemplateValidationTest extends TestCase
     {
         foreach (['admin', 'lite'] as $theme) {
             $frag = (string)file_get_contents(self::$templatesPath.'/'.$theme.'/fragments/alert.html');
-            $this->assertMatchesRegularExpression('#</div>\R\{% if acts_html %\}<div class="sl-alert-acts">\{\{\{ acts_html \}\}\}</div>\{% endif %\}\s*</div>#', $frag,
-                'The alert fragment of '.$theme.' has no action slot after its body');
+            $slot = '#</div>\s*\{% if acts_html %\}\s*<div class="sl-alert-acts">\s*\{\{\{ acts_html \}\}\}\s*</div>\s*\{% endif %\}\s*</div>#';
+            $this->assertMatchesRegularExpression($slot, $frag, 'The alert fragment of '.$theme.' has no action slot after its body');
         }
         $files = array_merge(glob(self::$basePath.'/admin/modules/*.php') ?: [], glob(self::$basePath.'/modules/*/admin/*.php') ?: []);
         $this->assertNotEmpty($files, 'No admin module was found');

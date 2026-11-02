@@ -8,6 +8,9 @@ use PHPUnit\Framework\TestCase;
 # Batch 10 of docs/UPLOAD-2026.md: the half no double can answer, the resolver, the service accessor and the adapters; nothing here writes to the site
 final class UploadIntegrationTest extends TestCase
 {
+    # The raw answer of each probe run, kept before any assertion so a failed probe is not started again by the next test
+    private static array $outs = [];
+
     private const ADAPTERS = [
         'core/system.php' => 'addEditorUpload',
         'modules/account/index.php' => 'savehome',
@@ -25,7 +28,8 @@ final class UploadIntegrationTest extends TestCase
         if (isset(self::$probe[$mode])) return self::$probe[$mode];
         $script = dirname(__DIR__).'/Support/upload_probe.php';
         $work = str_replace('\\', '/', sys_get_temp_dir()).'/slaed_upload_live_'.$mode;
-        $out = (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' '.escapeshellarg($mode).' '.escapeshellarg($work).' 2>&1');
+        $out = self::$outs[__FUNCTION__.$mode] ??= (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' '.escapeshellarg($mode).' '
+            .escapeshellarg($work).' 2>&1');
         $data = json_decode($out, true);
         $this->assertIsArray($data, 'Probe '.$mode.' did not return JSON: '.$out);
         if (!empty($data['error'])) $this->markTestSkipped('Probe '.$mode.': '.$data['error']);

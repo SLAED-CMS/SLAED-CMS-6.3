@@ -1,10 +1,9 @@
-<div
-  {% if row_id %}id="{{ row_id }}"{% endif %}
-  class="sl-form-row{% if is_hidden %} sl-hidden{% endif %}"
->
+<div{% if row_id %} id="{{ row_id }}"{% endif %} class="sl-form-row{% if is_hidden %} sl-hidden{% endif %}">
   {% include 'fragments/label.html' %}
   <div class="sl-form-field">
-  {{{ field_html }}}
-  {% if hint %}<small id="{{ hint_id }}">{{ hint }}</small>{% endif %}
+    {{{ field_html }}}
+    {% if hint %}
+    <small id="{{ hint_id }}">{{ hint }}</small>
+    {% endif %}
   </div>
 </div>

@@ -350,7 +350,6 @@ Confirmed current usage:
 Current template-related tests include:
 
 - `tests/TemplateValidationTest.php`
-- `tests/Unit/AdminCssClassUsageTest.php`
 - `tests/Unit/AdminLoginBridgeFlowTest.php`
 - `tests/Unit/AdminPageRenderFlowTest.php`
 - `tests/Unit/AdminPreviewBridgeFlowTest.php`
@@ -1268,7 +1267,7 @@ byte-identical between the themes.
 | `php tools/ui-audit.php --markup` | no class attribute, inline style or HTML tag hardcoded in PHP; `limit` is `0` |
 | `php tools/ui-audit.php --file=<css> --migrating` | one file, naming the token that replaces each violation |
 | `php tools/ui-audit.php --store` | rewrites `tools/ui-audit-baseline.json` from the current tree |
-| `vendor/bin/phpunit` | `ThemeContractTest` (ratchet + contrast registry), `UiAuditTest` (the tool against fixtures), `ThemeCreationTest` (a scratch copy audits clean and renders) |
+| `vendor/bin/phpunit` | `ThemeContractTest` (ratchet with the global counts + frozen API + contrast registry; the gates run it in place of the full audit), `UiAuditTest` (the tool against fixtures), `ThemeCreationTest` (a scratch copy audits clean and renders) |
 | `npm run ui:before` | captures the tree you are about to change into a temp directory |
 | `npm run ui:after` | empties the caches, compares against that capture, regenerates the contrast registry when a `base.css` moved, then reads the counts |
 | `npm run ui:gates` | the fast gates by hand — the same set the pre-commit hook runs |

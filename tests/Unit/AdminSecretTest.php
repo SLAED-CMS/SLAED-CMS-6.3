@@ -10,6 +10,9 @@ use PHPUnit\Framework\TestCase;
 # The OAuth keys and the GitHub token belong to the super administrator, over real requests, driven by tests/Support/route_probe.php with the argument secrets
 final class AdminSecretTest extends TestCase
 {
+    # The raw answer of each probe run, kept before any assertion so a failed probe is not started again by the next test
+    private static array $outs = [];
+
     private static array $probe = [];
 
     private static string $work = '';
@@ -20,7 +23,7 @@ final class AdminSecretTest extends TestCase
         if (self::$probe === []) {
             self::$work = str_replace('\\', '/', sys_get_temp_dir()).'/slaed_secret_'.bin2hex(random_bytes(4));
             $script = dirname(__DIR__).'/Support/route_probe.php';
-            $out = (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' '.escapeshellarg(self::$work).' secrets 2>&1');
+            $out = self::$outs[__FUNCTION__] ??= (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' '.escapeshellarg(self::$work).' secrets 2>&1');
             $data = json_decode($out, true);
             $this->assertIsArray($data, 'The probe did not return JSON: '.$out);
             $this->assertSame('', $data['error'], 'The probe failed');

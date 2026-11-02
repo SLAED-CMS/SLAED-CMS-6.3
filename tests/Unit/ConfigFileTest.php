@@ -10,6 +10,9 @@ use PHPUnit\Framework\TestCase;
 # The configuration protocol of docs/NODE.md: setConfigFile() in string and Closure form runs one locked pipeline with a journal, a marker and atomic publication
 class ConfigFileTest extends TestCase
 {
+    # The raw answer of each probe run, kept before any assertion so a failed probe is not started again by the next test
+    private static array $outs = [];
+
     private static array $probe = [];
     private static array $files = [];
 
@@ -20,7 +23,8 @@ class ConfigFileTest extends TestCase
         if (isset(self::$probe[$mode])) return self::$probe[$mode];
         $script = dirname(__DIR__).'/Support/config_probe.php';
         $work = str_replace('\\', '/', sys_get_temp_dir()).'/slaed_config_'.$mode.'_'.getmypid();
-        $out = (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' '.escapeshellarg($mode).' '.escapeshellarg($work).' 2>&1');
+        $out = self::$outs[__FUNCTION__.$mode] ??= (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' '.escapeshellarg($mode).' '
+            .escapeshellarg($work).' 2>&1');
         $data = json_decode($out, true);
         $this->assertIsArray($data, 'Probe '.$mode.' did not return JSON: '.$out);
         $this->assertSame('', $data['error'], 'Probe '.$mode.' failed');

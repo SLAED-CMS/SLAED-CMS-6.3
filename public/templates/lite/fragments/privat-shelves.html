@@ -11,9 +11,13 @@
     <span>
       <b>{{ item.label }}</b>
       <small>{% if item.count %}<span>{{ item.count }}</span>{% endif %}{% if item.note %}<span>{{ item.note }}</span>{% endif %}</small>
-      {% if item.free %}<span class="sl-chip sl-chip-danger"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> {{ item.free }}</span>{% endif %}
+      {% if item.free %}
+      <span class="sl-chip sl-chip-danger"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> {{ item.free }}</span>
+      {% endif %}
     </span>
-    {% if item.badge_id %}<span class="sl-cab-badge{% if !item.badge %} sl-hidden{% endif %}" id="{{ item.badge_id }}">{{ item.badge }}</span>{% endif %}
+    {% if item.badge_id %}
+    <span class="sl-cab-badge{% if !item.badge %} sl-hidden{% endif %}" id="{{ item.badge_id }}">{{ item.badge }}</span>
+    {% endif %}
   </a>
   {% endfor %}
 </nav>

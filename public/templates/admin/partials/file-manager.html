@@ -14,7 +14,9 @@
       <button type="button" class="sl-fm-rail-item" role="tab" aria-selected="false" data-sl-pane="up" data-editor="{{ editor_id }}"{% if not can_upload %} disabled{% endif %}>
         <i class="bi bi-cloud-arrow-up" aria-hidden="true"></i>
         <span><b>{{ up_label }}</b><small>{% if can_upload %}{{ up_note }}{% else %}{{ up_why }}{% endif %}</small></span>
-        {% if not can_upload %}<i class="bi bi-lock-fill sl-fm-rail-lock" aria-hidden="true"></i>{% endif %}
+        {% if not can_upload %}
+        <i class="bi bi-lock-fill sl-fm-rail-lock" aria-hidden="true"></i>
+        {% endif %}
       </button>
       {% if can_link %}
       <button type="button" class="sl-fm-rail-item" role="tab" aria-selected="false" data-sl-pane="url" data-editor="{{ editor_id }}">
@@ -26,7 +28,9 @@
       <button type="button" class="sl-fm-rail-item" role="tab" aria-selected="false" data-sl-pane="emb" data-editor="{{ editor_id }}"{% if not can_embed %} disabled{% endif %}>
         <i class="bi bi-file-earmark-code" aria-hidden="true"></i>
         <span><b>{{ embed_label }}</b><small>{% if can_embed %}{{ embed_note }}{% else %}{{ embed_why }}{% endif %}</small></span>
-        {% if not can_embed %}<i class="bi bi-lock-fill sl-fm-rail-lock" aria-hidden="true"></i>{% endif %}
+        {% if not can_embed %}
+        <i class="bi bi-lock-fill sl-fm-rail-lock" aria-hidden="true"></i>
+        {% endif %}
       </button>
       {% endif %}
       <span class="sl-fm-rail-sep"></span>
@@ -34,7 +38,9 @@
       <button type="button" class="sl-fm-rail-item" role="tab" aria-selected="false" data-sl-pane="lib" data-editor="{{ editor_id }}"{% if not can_list %} disabled{% endif %}>
         <i class="bi bi-images" aria-hidden="true"></i>
         <span><b>{{ files_label }}</b><small data-sl-slot="railnote">{% if can_list %}{{ files_note }}{% else %}{{ files_why }}{% endif %}</small></span>
-        {% if not can_list %}<i class="bi bi-lock-fill sl-fm-rail-lock" aria-hidden="true"></i>{% endif %}
+        {% if not can_list %}
+        <i class="bi bi-lock-fill sl-fm-rail-lock" aria-hidden="true"></i>
+        {% endif %}
       </button>
       <span class="sl-fm-rail-foot"><b data-sl-slot="quota">{{ quota_text }}</b>{{ module_text }}</span>
     </nav>
@@ -159,8 +165,12 @@
             <span class="sl-bulk-count" data-sl-slot="bulkcount"></span>
             <button type="button" class="sl-chip sl-chip-info sl-live-act" data-sl-bulk="image" data-editor="{{ editor_id }}"><i class="bi bi-image" aria-hidden="true"></i>&nbsp;<span></span></button>
             <button type="button" class="sl-chip sl-chip-neutral sl-live-act" data-sl-bulk="attach" data-editor="{{ editor_id }}"><i class="bi bi-paperclip" aria-hidden="true"></i>&nbsp;<span></span></button>
-            {% if can_zip %}<button type="button" class="sl-chip sl-chip-warn sl-live-act" data-sl-bulk="zip" data-editor="{{ editor_id }}"><i class="bi bi-file-zip" aria-hidden="true"></i>&nbsp;<span>{{ zip_label }}</span></button>{% endif %}
-            {% if can_delete %}<button type="button" class="sl-chip sl-chip-danger sl-live-act" data-sl-bulk="delete" data-editor="{{ editor_id }}"><i class="bi bi-trash3" aria-hidden="true"></i>&nbsp;<span>{{ delete_label }}</span></button>{% endif %}
+            {% if can_zip %}
+            <button type="button" class="sl-chip sl-chip-warn sl-live-act" data-sl-bulk="zip" data-editor="{{ editor_id }}"><i class="bi bi-file-zip" aria-hidden="true"></i>&nbsp;<span>{{ zip_label }}</span></button>
+            {% endif %}
+            {% if can_delete %}
+            <button type="button" class="sl-chip sl-chip-danger sl-live-act" data-sl-bulk="delete" data-editor="{{ editor_id }}"><i class="bi bi-trash3" aria-hidden="true"></i>&nbsp;<span>{{ delete_label }}</span></button>
+            {% endif %}
             <button type="button" class="sl-chip sl-chip-neutral sl-live-act" data-sl-bulk="clear" data-editor="{{ editor_id }}"><i class="bi bi-x-lg" aria-hidden="true"></i>&nbsp;<span>{{ unmark_label }}</span></button>
           </div>
           <div class="sl-fm-view" data-sl-view="skel" hidden>
@@ -188,7 +198,9 @@
       <div id="{{ msg_id }}"></div>
       <div class="sl-modal-foot">
         <span class="sl-modal-info" data-sl-slot="info" aria-live="polite">{{ nofile_label }}</span>
-        {% if is_field %}<span class="sl-chip sl-chip-neutral" data-sl-slot="pick" hidden></span>{% endif %}
+        {% if is_field %}
+        <span class="sl-chip sl-chip-neutral" data-sl-slot="pick" hidden></span>
+        {% endif %}
         <button type="button" class="sl-modal-btn" data-sl-act="refresh" data-editor="{{ editor_id }}"><i class="bi bi-arrow-clockwise" aria-hidden="true"></i>{{ refresh_label }}</button>
         <button type="button" class="sl-modal-btn" data-sl-close><i class="bi bi-x-lg" aria-hidden="true"></i>{{ close_label }}</button>
         <button type="button" class="sl-modal-btn sl-modal-btn-main" data-sl-act="apply" data-editor="{{ editor_id }}"><i class="bi bi-check-lg" aria-hidden="true"></i>{{ insert_label }}</button>

@@ -4,12 +4,17 @@ declare(strict_types=1);
 
 namespace Tests\Unit;
 
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 # The fields unit of the 6.3 data update in update.php, whose contract is the one-off conversion of Field in docs/NODE.md (Fields unit)
+#[Group('release')]
 final class UpdateFieldsTest extends TestCase
 {
+    # The raw answer of each probe run, kept before any assertion so a failed probe is not started again by the next test
+    private static array $outs = [];
+
     private const USERS = [
         2 => '{"field1":"option2","field2":"Änn \"Q\"","field4":"2001-02-03","field5":"2020-05-06 07:08:00","field6":"one"}',
         3 => '{"field6":"0"}',
@@ -30,7 +35,7 @@ final class UpdateFieldsTest extends TestCase
         if (self::$probe === []) {
             $script = dirname(__DIR__).'/Support/update_probe.php';
             $work = str_replace('\\', '/', sys_get_temp_dir()).'/slaed_update_probe_fields';
-            $out = (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' '.escapeshellarg($work).' fields 2>&1');
+            $out = self::$outs[__FUNCTION__] ??= (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' '.escapeshellarg($work).' fields 2>&1');
             $data = json_decode($out, true);
             $this->assertIsArray($data, 'The probe did not return JSON: '.$out);
             $this->assertSame('', $data['error'], 'The probe failed');

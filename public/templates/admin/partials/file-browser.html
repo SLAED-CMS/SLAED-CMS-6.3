@@ -5,9 +5,15 @@
     <button type="button" class="sl-but-mini sl-is-muted" data-sl-fm-go="up" title="{{ up_text }}" aria-label="{{ up_text }}"><i class="bi bi-arrow-up" aria-hidden="true"></i></button>
     <button type="button" class="sl-but-mini sl-is-muted" data-sl-fm-go="self" title="{{ reload_text }}" aria-label="{{ reload_text }}"><i class="bi bi-arrow-clockwise" aria-hidden="true"></i></button>
     <span class="sl-fm-sep"></span>
-    {% if can_create %}<button type="button" class="sl-but-mini sl-is-muted" data-sl-fm-act="fmcreate" title="{{ newfile_text }}" aria-label="{{ newfile_text }}"><i class="bi bi-file-earmark-plus" aria-hidden="true"></i></button>{% endif %}
-    {% if can_mkdir %}<button type="button" class="sl-but-mini sl-is-muted" data-sl-fm-act="fmmkdir" title="{{ newdir_text }}" aria-label="{{ newdir_text }}"><i class="bi bi-folder-plus" aria-hidden="true"></i></button>{% endif %}
-    {% if can_upload %}<button type="button" class="sl-but-mini sl-fm-main" data-sl-fm-act="upload" title="{{ load_text }}" aria-label="{{ load_text }}"><i class="bi bi-cloud-arrow-up" aria-hidden="true"></i></button>{% endif %}
+    {% if can_create %}
+    <button type="button" class="sl-but-mini sl-is-muted" data-sl-fm-act="fmcreate" title="{{ newfile_text }}" aria-label="{{ newfile_text }}"><i class="bi bi-file-earmark-plus" aria-hidden="true"></i></button>
+    {% endif %}
+    {% if can_mkdir %}
+    <button type="button" class="sl-but-mini sl-is-muted" data-sl-fm-act="fmmkdir" title="{{ newdir_text }}" aria-label="{{ newdir_text }}"><i class="bi bi-folder-plus" aria-hidden="true"></i></button>
+    {% endif %}
+    {% if can_upload %}
+    <button type="button" class="sl-but-mini sl-fm-main" data-sl-fm-act="upload" title="{{ load_text }}" aria-label="{{ load_text }}"><i class="bi bi-cloud-arrow-up" aria-hidden="true"></i></button>
+    {% endif %}
     <span class="sl-fm-crumbs" id="slfmcrumbs">{% for crumb in crumbs %}{% if crumb.url %}<a href="{{ crumb.url }}" hx-get="{{ crumb.url }}" hx-target="#slfmbody" hx-swap="innerHTML" hx-push-url="false">{{ crumb.name }}</a><span>/</span>{% else %}<b>{{ crumb.name }}</b>{% endif %}{% endfor %}</span>
     <input type="text" name="find" value="{{ find_text }}" placeholder="{{ filter_text }}" aria-label="{{ filter_text }}" hx-get="{{ find_url }}" hx-include="#slfmbody [name='dir'], #slfmbody [name='unused']" hx-target="#slfmbody" hx-swap="innerHTML" hx-push-url="false" hx-trigger="input changed delay:400ms, search">
     <button type="button" class="sl-but-mini sl-is-muted" data-sl-fm-view="list" aria-pressed="true" title="{{ list_text }}" aria-label="{{ list_text }}"><i class="bi bi-list-ul" aria-hidden="true"></i></button>
@@ -26,14 +32,18 @@
   <div id="slfmbody">
 {% endif %}
     <input type="hidden" name="dir" value="{{ dir }}">
-    {% if is_unused %}<input type="hidden" name="unused" value="1">{% endif %}
+    {% if is_unused %}
+    <input type="hidden" name="unused" value="1">
+    {% endif %}
     <form class="sl-fm-ops" action="{{ post_url }}" method="post" hidden>
       <input type="hidden" name="name" value="uploads">
       <input type="hidden" name="op" value="">
       <input type="hidden" name="ctx" value="{{ ctx }}">
       <input type="hidden" name="file" value="">
       <input type="hidden" name="back" value="{{ dir }}">
-      {% if is_unused %}<input type="hidden" name="unused" value="1">{% endif %}
+      {% if is_unused %}
+      <input type="hidden" name="unused" value="1">
+      {% endif %}
       <input type="hidden" name="token" value="{{ token }}">
       <b data-sl-fm-title></b>
       <input type="text" name="arg" value="" aria-label="{{ apply_text }}" autocomplete="off" spellcheck="false" required>
@@ -60,31 +70,60 @@
       <button type="button" class="sl-but" data-sl-fm-act="close">{{ cancel_text }}</button>
     </form>
     {% endif %}
-    {% if file_links %}<div class="sl-fm-caps"><b>{{ links_label }}</b>{% for one in file_links %}<a class="sl-chip sl-chip-neutral" href="{{ one.url }}"><i class="bi bi-{{ one.icon }}" aria-hidden="true"></i>&nbsp;{{ one.name }}</a>{% endfor %}</div>{% endif %}
-    {% if quota_html %}<div class="sl-fm-quota">{{{ quota_html }}}</div>{% endif %}
+    {% if file_links %}
+    <div class="sl-fm-caps">
+      <b>{{ links_label }}</b>
+      {% for one in file_links %}
+      <a class="sl-chip sl-chip-neutral" href="{{ one.url }}"><i class="bi bi-{{ one.icon }}" aria-hidden="true"></i>&nbsp;{{ one.name }}</a>
+      {% endfor %}
+    </div>
+    {% endif %}
+    {% if quota_html %}
+    <div class="sl-fm-quota">
+      {{{ quota_html }}}
+    </div>
+    {% endif %}
     <div class="sl-fm-split" data-sl-fm-url="{{ self_url }}" data-sl-fm-up="{{ up_url }}" data-sl-fm-find="{{ find_text }}">
       {{{ tree_html }}}
-      <div class="sl-fm-work">{{{ list_html }}}</div>
-      <aside class="sl-fm-side" id="slfmside">{{{ props_html }}}</aside>
+      <div class="sl-fm-work">
+        {{{ list_html }}}
+      </div>
+      <aside class="sl-fm-side" id="slfmside">
+        {{{ props_html }}}
+      </aside>
     </div>
     {% if edit_html %}{{{ edit_html }}}{% endif %}
     {% if can_mark %}
     <div class="sl-bulk-bar" hidden>
       <span class="sl-bulk-count" data-sl-fm-count="{{ marks_text }}"></span>
-      {% if can_zip %}<button type="button" class="sl-chip sl-chip-neutral sl-live-act" data-sl-fm-act="fmcompress" data-sl-fm-many="1"><i class="bi bi-file-zip" aria-hidden="true"></i>&nbsp;{{ zip_text }}</button>{% endif %}
-      {% if can_zip %}<button type="button" class="sl-chip sl-chip-neutral sl-live-act" data-sl-fm-act="fmpack" data-sl-fm-many="1" data-sl-fm-arg="{{ pack_name }}"><i class="bi bi-file-earmark-zip" aria-hidden="true"></i>&nbsp;{{ pack_text }}</button>{% endif %}
-      {% if can_move %}<button type="button" class="sl-chip sl-chip-neutral sl-live-act" data-sl-fm-act="fmmove" data-sl-fm-many="1" data-sl-fm-arg="{{ dir }}"><i class="bi bi-folder-symlink" aria-hidden="true"></i>&nbsp;{{ move_text }}</button>{% endif %}
-      {% if can_delete %}<button type="button" class="sl-chip sl-chip-danger sl-live-act" data-sl-fm-act="fmdelete" data-sl-fm-many="1" data-sl-fm-ask="{{ ask_text }}"><i class="bi bi-trash3" aria-hidden="true"></i>&nbsp;{{ delete_text }}</button>{% endif %}
+      {% if can_zip %}
+      <button type="button" class="sl-chip sl-chip-neutral sl-live-act" data-sl-fm-act="fmcompress" data-sl-fm-many="1"><i class="bi bi-file-zip" aria-hidden="true"></i>&nbsp;{{ zip_text }}</button>
+      {% endif %}
+      {% if can_zip %}
+      <button type="button" class="sl-chip sl-chip-neutral sl-live-act" data-sl-fm-act="fmpack" data-sl-fm-many="1" data-sl-fm-arg="{{ pack_name }}"><i class="bi bi-file-earmark-zip" aria-hidden="true"></i>&nbsp;{{ pack_text }}</button>
+      {% endif %}
+      {% if can_move %}
+      <button type="button" class="sl-chip sl-chip-neutral sl-live-act" data-sl-fm-act="fmmove" data-sl-fm-many="1" data-sl-fm-arg="{{ dir }}"><i class="bi bi-folder-symlink" aria-hidden="true"></i>&nbsp;{{ move_text }}</button>
+      {% endif %}
+      {% if can_delete %}
+      <button type="button" class="sl-chip sl-chip-danger sl-live-act" data-sl-fm-act="fmdelete" data-sl-fm-many="1" data-sl-fm-ask="{{ ask_text }}"><i class="bi bi-trash3" aria-hidden="true"></i>&nbsp;{{ delete_text }}</button>
+      {% endif %}
       <button type="button" class="sl-chip sl-chip-neutral sl-live-act" data-sl-fm-act="unmark"><i class="bi bi-x-lg" aria-hidden="true"></i>&nbsp;{{ clear_text }}</button>
     </div>
     {% endif %}
-    {% if caps_html %}<div class="sl-fm-caps"><b>{{ caps_label }}</b>{{{ caps_html }}}</div>{% endif %}
+    {% if caps_html %}
+    <div class="sl-fm-caps"><b>{{ caps_label }}</b>{{{ caps_html }}}</div>
+    {% endif %}
     <div class="sl-fm-foot">
       <span aria-live="polite">{{ info_text }}</span>
-      {% if unused_url %}<a class="sl-chip {% if is_unused %}sl-chip-warn{% else %}sl-chip-neutral{% endif %}" href="{{ unused_url }}" hx-get="{{ unused_url }}" hx-target="#slfmbody" hx-swap="innerHTML" hx-push-url="false" title="{{ unused_hint }}"{% if is_unused %} aria-current="true"{% endif %}><i class="bi bi-funnel" aria-hidden="true"></i>&nbsp;{{ unused_text }}</a>{% endif %}
+      {% if unused_url %}
+      <a class="sl-chip {% if is_unused %}sl-chip-warn{% else %}sl-chip-neutral{% endif %}" href="{{ unused_url }}" hx-get="{{ unused_url }}" hx-target="#slfmbody" hx-swap="innerHTML" hx-push-url="false" title="{{ unused_hint }}"{% if is_unused %} aria-current="true"{% endif %}><i class="bi bi-funnel" aria-hidden="true"></i>&nbsp;{{ unused_text }}</a>
+      {% endif %}
     </div>
 {% if is_full %}
   </div>
 </div>
 {% endif %}
-{% if is_swap %}<span class="sl-fm-crumbs" id="slfmcrumbs" hx-swap-oob="true">{% for crumb in crumbs %}{% if crumb.url %}<a href="{{ crumb.url }}" hx-get="{{ crumb.url }}" hx-target="#slfmbody" hx-swap="innerHTML" hx-push-url="false">{{ crumb.name }}</a><span>/</span>{% else %}<b>{{ crumb.name }}</b>{% endif %}{% endfor %}</span>{% endif %}
+{% if is_swap %}
+<span class="sl-fm-crumbs" id="slfmcrumbs" hx-swap-oob="true">{% for crumb in crumbs %}{% if crumb.url %}<a href="{{ crumb.url }}" hx-get="{{ crumb.url }}" hx-target="#slfmbody" hx-swap="innerHTML" hx-push-url="false">{{ crumb.name }}</a><span>/</span>{% else %}<b>{{ crumb.name }}</b>{% endif %}{% endfor %}</span>
+{% endif %}

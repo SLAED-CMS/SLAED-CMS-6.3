@@ -15,6 +15,9 @@ require_once BASE_DIR.'/core/classes/backup.php';
 # The portion mode of Backup, contract v1: a dump taken one request per portion and restored the same way, both without the core
 final class BackupPartTest extends TestCase
 {
+    # The raw answer of each probe run, kept before any assertion so a failed probe is not started again by the next test
+    private static array $outs = [];
+
     private const SITE = ['ab_admins', 'ab_child', 'ab_empty', 'ab_gen', 'ab_keyed', 'ab_multi', 'ab_myisam', 'ab_nokey'];
     private const ALIEN = ['ab_x_admins', 'ab_x_users', 'abc_admins', 'other_t'];
     private const LOAD = ['dump_probe.php', 'db.php', 'backup.php'];
@@ -27,7 +30,7 @@ final class BackupPartTest extends TestCase
         $work = str_replace('\\', '/', sys_get_temp_dir()).'/slaed_part_probe';
         $this->deleteWork($work);
         $script = dirname(__DIR__).'/Support/dump_probe.php';
-        $out = (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' cycle '.escapeshellarg($work).' 2>&1');
+        $out = self::$outs[__FUNCTION__] ??= (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' cycle '.escapeshellarg($work).' 2>&1');
         $this->deleteWork($work);
         $data = json_decode($out, true);
         $this->assertIsArray($data, 'The probe did not return JSON: '.substr($out, 0, 600));

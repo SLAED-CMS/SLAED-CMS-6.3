@@ -1,4 +1,8 @@
-{% if open %}<section><h2 class="sl-related-title">{{ title }}</h2>
-<ul class="sl-related-list">
-{% else %}</ul></section>
+{% if open %}
+<section>
+  <h2 class="sl-related-title">{{ title }}</h2>
+  <ul class="sl-related-list">
+{% else %}
+  </ul>
+</section>
 {% endif %}

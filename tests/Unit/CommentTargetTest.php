@@ -8,6 +8,9 @@ use PHPUnit\Framework\TestCase;
 # The activity feed, the profile hub counter and the module delete handlers stop reaching the comment table themselves
 final class CommentTargetTest extends TestCase
 {
+    # The raw answer of each probe run, kept before any assertion so a failed probe is not started again by the next test
+    private static array $outs = [];
+
     private static array $probe = [];
     private static array $feed = [];
     private static array $src = [];
@@ -17,7 +20,7 @@ final class CommentTargetTest extends TestCase
     {
         if (self::$probe !== []) return self::$probe;
         $script = dirname(__DIR__).'/Support/contract_probe.php';
-        $out = (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' commenttarget 2>&1');
+        $out = self::$outs[__FUNCTION__] ??= (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' commenttarget 2>&1');
         $data = json_decode($out, true);
         $this->assertIsArray($data, 'Probe commenttarget did not return JSON: '.$out);
         return self::$probe = $data;
@@ -28,7 +31,7 @@ final class CommentTargetTest extends TestCase
     {
         if (self::$feed !== []) return self::$feed;
         $script = dirname(__DIR__).'/Support/contract_probe.php';
-        $out = (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' commentfeed 2>&1');
+        $out = self::$outs[__FUNCTION__] ??= (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' commentfeed 2>&1');
         $data = json_decode($out, true);
         $this->assertIsArray($data, 'Probe commentfeed did not return JSON: '.$out);
         return self::$feed = $data;

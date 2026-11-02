@@ -8,6 +8,9 @@ use PHPUnit\Framework\TestCase;
 # Step 2 of docs/PRIVAT-2026.md: the Privat class owns every read and write of the private message table, each read one row of the predicate table
 final class PrivatClassTest extends TestCase
 {
+    # The raw answer of each probe run, kept before any assertion so a failed probe is not started again by the next test
+    private static array $outs = [];
+
     private static array $probe = [];
 
     # The probe tests/Support/privat_class_probe.php boots the real core in an isolated CLI process against a disposable schema of the two shipped tables
@@ -19,7 +22,7 @@ final class PrivatClassTest extends TestCase
         if (self::$probe !== []) return self::$probe;
         $script = dirname(__DIR__).'/Support/privat_class_probe.php';
         $work = str_replace('\\', '/', sys_get_temp_dir()).'/slaed_privat_probe';
-        $out = (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' '.escapeshellarg($work).' 2>&1');
+        $out = self::$outs[__FUNCTION__] ??= (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' '.escapeshellarg($work).' 2>&1');
         $data = json_decode($out, true);
         $this->assertIsArray($data, 'The probe did not return JSON: '.$out);
         if (!empty($data['error'])) $this->markTestSkipped('Probe: '.$data['error']);

@@ -70,6 +70,7 @@ const parts = {
   'cockpit-mon': { auth: 'admin', url: '/admin.php?name=monitor', sel: '.sl-cockpit', still: beat },
   led: { auth: 'admin', url: '/admin.php', sel: '.sl-led-ok' },
   live: { auth: 'admin', url: '/admin.php', sel: '.sl-live-icon' },
+  hero: { auth: '', url: '/presentation', sel: '.sl-pres-hero' },
   pipeline: { auth: '', url: '/presentation', sel: '#pipeline' },
   guard: { auth: '', url: '/presentation', sel: '#security' },
   runtime: { auth: '', url: '/presentation', sel: '#runtime' },

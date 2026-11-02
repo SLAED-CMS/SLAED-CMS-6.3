@@ -8,6 +8,9 @@ use PHPUnit\Framework\TestCase;
 # The GeoIP reader contract: resolved countries and the peak memory of the streaming reader are measured on production code against the real corpus
 final class GeoipReaderTest extends TestCase
 {
+    # The raw answer of each probe run, kept before any assertion so a failed probe is not started again by the next test
+    private static array $outs = [];
+
     private static array $probe = [];
 
     # Run tests/Support/contract_probe.php once in an isolated CLI process and memoize its report, skipping when the optional country corpus is not shipped
@@ -15,7 +18,7 @@ final class GeoipReaderTest extends TestCase
     {
         if (self::$probe !== []) return self::$probe;
         $script = dirname(__DIR__).'/Support/contract_probe.php';
-        $out = (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' geoip 2>&1');
+        $out = self::$outs[__FUNCTION__] ??= (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' geoip 2>&1');
         $data = json_decode($out, true);
         $this->assertIsArray($data, 'Probe geoip did not return JSON: '.$out);
         if (($data['size'] ?? 0) < 1) $this->markTestSkipped('country corpus is not installed');

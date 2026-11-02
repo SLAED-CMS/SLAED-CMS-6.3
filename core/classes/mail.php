@@ -84,7 +84,6 @@ class Mail {
         $ref = max(0, intval($mesg['ref'] ?? 0));
         $body = ($ref > 0) ? '' : (string)($mesg['body'] ?? '');
         if ($ref === 0 && !empty($mesg['client'])) $body .= $this->getClientBlock();
-        $body = getOutputHtml($body);
         $sql = 'INSERT INTO '.PREFIX_DB.'_mail (kind, sender, email, title, body, ref, prio, camp, hold, time, ntime)'
             .' VALUES (:kind, :from, :mail, :subj, :body, :ref, :prio, :camp, :hold, NOW(), UNIX_TIMESTAMP())';
         $pars = ['kind' => $kind, 'from' => $smail, 'mail' => $rcpt, 'subj' => $subj, 'body' => $body, 'ref' => $ref, 'prio' => (intval($mesg['prio'] ?? 0) ?: 3)];
@@ -905,7 +904,7 @@ class Mail {
         if ($this->unsub === '') return '';
         if ($tpl instanceof Template) {
             $link = $tpl->getHtmlFrag('link', ['href' => $this->unsub, 'title' => _MAIL_UNSUB, 'label' => _MAIL_UNSUB]);
-            return getOutputHtml($tpl->getHtmlPart('message-block', ['title' => '', 'content_html' => $link]));
+            return $tpl->getHtmlPart('message-block', ['title' => '', 'content_html' => $link]);
         }
         return "\n\n"._MAIL_UNSUB.': '.$this->unsub;
     }

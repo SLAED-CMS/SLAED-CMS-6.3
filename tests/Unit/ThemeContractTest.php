@@ -113,6 +113,17 @@ final class ThemeContractTest extends TestCase
         $this->assertLessThanOrEqual($was, count($now), 'a rule written against one theme is wrong in the other, and no reader can tell which without opening both');
     }
 
+    # The global count cross of the ratchet: no new shared selector or canon template diverges between the themes without a written reason
+    #[Test]
+    public function testNoNewDivergenceStandsWithoutItsReason(): void
+    {
+        $now = getOpenCross();
+        $was = self::$base['global']['cross'] ?? null;
+        if ($was === null) $this->markTestSkipped('no stored cross baseline');
+        $this->assertLessThanOrEqual($was, count($now),
+            'a shared selector or canon template diverges with no written reason: '.implode(', ', $now).'; run php tools/ui-audit.php --cross');
+    }
+
     #[Test]
     public function testEveryLadderStepHasATokenName(): void
     {

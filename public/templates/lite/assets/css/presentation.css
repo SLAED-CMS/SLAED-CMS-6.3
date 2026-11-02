@@ -5714,6 +5714,15 @@
   }
 }
 
+/* A part off screen, marked by presentation.js, costs no frame; the rise of the section itself follows the scroll, not the clock, so it is left out, and these rules stand last to outweigh every animation above */
+:root .sl-pres [data-sl-pres-off] *,
+:root .sl-pres [data-sl-pres-off] *::before,
+:root .sl-pres [data-sl-pres-off] *::after,
+:root .sl-pres [data-sl-pres-off]::before,
+:root .sl-pres [data-sl-pres-off]::after {
+  animation-play-state: paused;
+}
+
 /* ---- The editing layer of the site builder: the page in the frame of its screen, plugins/system/builder.js ---- */
 
 /* A part answers the pointer; a section stands still, the rise of the presentation would move it under its ring */

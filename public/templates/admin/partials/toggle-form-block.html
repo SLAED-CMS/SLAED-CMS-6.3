@@ -1,8 +1,4 @@
-<div
-  id="{{ block_id }}"
-  class="sl-toggle-form-block{% if is_hidden %} sl-hidden{% endif %}"
-  {% if is_toggle_block %}data-sl-toggle="{{ block_id }}" data-sl-toggle-default="{% if is_hidden %}closed{% else %}open{% endif %}"{% endif %}
->
+<div id="{{ block_id }}" class="sl-toggle-form-block{% if is_hidden %} sl-hidden{% endif %}"{% if is_toggle_block %} data-sl-toggle="{{ block_id }}" data-sl-toggle-default="{% if is_hidden %}closed{% else %}open{% endif %}"{% endif %}>
   <div class="sl-div-grid">
     <div class="sl-div-item sl-toggle-form-block-item">
       <div class="sl-div-label">
@@ -15,7 +11,9 @@
         <span class="sl-toggle-form-block-title">{{{ label_html }}}</span>
         {% endif %}
       </div>
-      <div class="sl-div-field">{{{ content_html }}}</div>
+      <div class="sl-div-field">
+        {{{ content_html }}}
+      </div>
     </div>
   </div>
 </div>

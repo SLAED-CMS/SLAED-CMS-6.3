@@ -1,5 +1,7 @@
 <form action="{{ action }}" method="post" class="sl-set-row{% if is_mode %} sl-mode{% endif %}" data-sl-option="{{ axis }}">
   {{{ hidden }}}
   <label class="sl-set-name" for="{{ pick_id }}"><i class="bi bi-{{ icon_name }}" aria-hidden="true"></i>{{ title }}</label>
-  <span class="sl-set-pick">{{{ pick_html }}}</span>
+  <span class="sl-set-pick">
+    {{{ pick_html }}}
+  </span>
 </form>

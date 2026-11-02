@@ -8,6 +8,9 @@ use PHPUnit\Framework\TestCase;
 # Every forum handler that names a post takes its category, topic and author from the stored row, never from the category the request names
 final class ForumRightTest extends TestCase
 {
+    # The raw answer of each probe run, kept before any assertion so a failed probe is not started again by the next test
+    private static array $outs = [];
+
     private static ?array $probe = null;
     private static array $src = [];
 
@@ -16,7 +19,7 @@ final class ForumRightTest extends TestCase
     {
         if (self::$probe !== null) return self::$probe;
         $script = dirname(__DIR__).'/Support/contract_probe.php';
-        $out = (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' forumright 2>&1');
+        $out = self::$outs[__FUNCTION__] ??= (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' forumright 2>&1');
         $data = json_decode($out, true);
         $this->assertIsArray($data, 'Probe forumright did not return JSON: '.$out);
         return self::$probe = $data;

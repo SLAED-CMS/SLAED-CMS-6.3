@@ -8,6 +8,9 @@ use PHPUnit\Framework\TestCase;
 # The destination lock and the managed name format left the upload service and belong to FileManager alone
 final class FileManagerLockTest extends TestCase
 {
+    # The raw answer of each probe run, kept before any assertion so a failed probe is not started again by the next test
+    private static array $outs = [];
+
     private static array $probe = [];
     private static array $files = [];
 
@@ -17,7 +20,8 @@ final class FileManagerLockTest extends TestCase
         if (isset(self::$probe[$mode])) return self::$probe[$mode];
         $script = dirname(__DIR__).'/Support/'.$file;
         $work = str_replace('\\', '/', sys_get_temp_dir()).'/slaed_upload_lock_'.$mode;
-        $out = (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' '.escapeshellarg($mode).' '.escapeshellarg($work).' 2>&1');
+        $out = self::$outs[__FUNCTION__.$mode] ??= (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' '.escapeshellarg($mode).' '
+            .escapeshellarg($work).' 2>&1');
         $data = json_decode($out, true);
         $this->assertIsArray($data, 'Probe '.$mode.' did not return JSON: '.$out);
         if (!empty($data['error'])) $this->markTestSkipped('Probe '.$mode.': '.$data['error']);

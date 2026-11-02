@@ -17,5 +17,9 @@
     {% endif %}
     {% endif %}
   </svg>
-  {% if icon %}<i class="bi bi-{{ icon }}" aria-hidden="true"></i>{% else %}<div><b>{{ value }}{% if unit %}<small>{{ unit }}</small>{% endif %}</b>{% if not is_sm %}<span>{{ label }}</span>{% endif %}</div>{% endif %}
+  {% if icon %}
+  <i class="bi bi-{{ icon }}" aria-hidden="true"></i>
+  {% else %}
+  <div><b>{{ value }}{% if unit %}<small>{{ unit }}</small>{% endif %}</b>{% if not is_sm %}<span>{{ label }}</span>{% endif %}</div>
+  {% endif %}
 </div>

@@ -110,8 +110,8 @@ final class EditorWindowTest extends TestCase
         }
         foreach (['can_upload', 'can_embed', 'can_list'] as $flag) {
             $this->assertStringContainsString('{% if not '.$flag.' %} disabled{% endif %}', $lite, 'The section of '.$flag.' disappears instead of being closed and explained');
-            $this->assertStringContainsString(
-                '{% if not '.$flag.' %}<i class="bi bi-lock-fill',
+            $this->assertMatchesRegularExpression(
+                '#\{% if not '.$flag.' %\}\s*<i class="bi bi-lock-fill#',
                 $lite,
                 'A section closed by '.$flag.' carries no lock, so the boundary of the rights is invisible'
             );

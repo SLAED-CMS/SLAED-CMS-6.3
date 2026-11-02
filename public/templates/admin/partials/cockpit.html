@@ -1,11 +1,21 @@
 <section class="sl-cockpit sl-knob-{{ tone }}" aria-labelledby="sl-cockpit-cap"{% if url %} data-sl-cockpit="{{ url }}" data-sl-cockpit-every="{{ every }}"{% endif %} data-sl-live-box>
   <div class="sl-cockpit-top">
     <span id="sl-cockpit-cap"><i class="bi bi-{{ cap_icon }}" aria-hidden="true"></i>{{ cap_text }}</span>
-    {% if state_html %}{{{ state_html }}}{% else %}<span class="sl-cockpit-state" id="sl-cockpit-state" role="status"><span data-sl-tone="ok"{% if not is_ok %} hidden{% endif %}><i class="bi bi-check-circle-fill" aria-hidden="true"></i>{{ _ADM_CALM }}</span><span data-sl-tone="info"{% if not is_info %} hidden{% endif %}><i class="bi bi-dash-circle-fill" aria-hidden="true"></i>{{ _ADM_LULL }}</span><span data-sl-tone="warn"{% if not is_warn %} hidden{% endif %}><i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i>{{ _ADM_HEED }}</span><span data-sl-tone="danger"{% if not is_danger %} hidden{% endif %}><i class="bi bi-x-octagon-fill" aria-hidden="true"></i>{{ _ADM_FAULT }}</span><span data-sl-cockpit-loud{% if not loud %} hidden{% endif %}> &middot; <span data-sl-cockpit-n>{{ loud }}</span></span></span>{% endif %}
-    {% if nav_html %}{{{ nav_html }}}{% else %}{{{ live_html }}}{% endif %}
+    {% if state_html %}
+    {{{ state_html }}}
+    {% else %}
+    <span class="sl-cockpit-state" id="sl-cockpit-state" role="status"><span data-sl-tone="ok"{% if not is_ok %} hidden{% endif %}><i class="bi bi-check-circle-fill" aria-hidden="true"></i>{{ _ADM_CALM }}</span><span data-sl-tone="info"{% if not is_info %} hidden{% endif %}><i class="bi bi-dash-circle-fill" aria-hidden="true"></i>{{ _ADM_LULL }}</span><span data-sl-tone="warn"{% if not is_warn %} hidden{% endif %}><i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i>{{ _ADM_HEED }}</span><span data-sl-tone="danger"{% if not is_danger %} hidden{% endif %}><i class="bi bi-x-octagon-fill" aria-hidden="true"></i>{{ _ADM_FAULT }}</span><span data-sl-cockpit-loud{% if not loud %} hidden{% endif %}> &middot; <span data-sl-cockpit-n>{{ loud }}</span></span></span>
+    {% endif %}
+    {% if nav_html %}
+    {{{ nav_html }}}
+    {% else %}
+    {{{ live_html }}}
+    {% endif %}
   </div>
   <div class="sl-cockpit-gauges" aria-busy="true" data-sl-cockpit-gauges>
-    {% if lamp_html %}{{{ lamp_html }}}{% else %}
+    {% if lamp_html %}
+    {{{ lamp_html }}}
+    {% else %}
     <span class="sl-float sl-cockpit-float">
       <button type="button" class="sl-cockpit-plate" aria-describedby="sl-cockpit-pass"><span class="sl-visually-hidden">{{ _ADM_STATE }}: </span><span class="sl-cockpit-glass" aria-hidden="true"></span><span class="sl-cockpit-head"><span class="sl-cockpit-mark"></span><b data-sl-cockpit-pass>{{ pass }}</b><small>/{{ total }}</small></span><span class="sl-cockpit-bars" aria-hidden="true">{% for row in signals %}<i class="sl-knob-{{ row.level }}" data-sl-bar="{{ row.key }}" title="{{ row.label }}{% if row.fact %} · {{ row.fact }}{% endif %}" style="--sl-d-i: {{ row.num }}"></i>{% endfor %}</span><span class="sl-cockpit-mood"><span data-sl-tone="ok"{% if not is_ok %} hidden{% endif %}>{{ _ADM_CALM }}</span><span data-sl-tone="info"{% if not is_info %} hidden{% endif %}>{{ _ADM_LULL }}</span><span data-sl-tone="warn"{% if not is_warn %} hidden{% endif %}>{{ _ADM_HEED }}</span><span data-sl-tone="danger"{% if not is_danger %} hidden{% endif %}>{{ _ADM_FAULT }}</span></span></button><span id="sl-cockpit-pass" data-sl-pass-of="{{ pass_of }}" hidden>{{ pass_text }}</span>
       <span class="sl-float-panel sl-bell-tip" role="group" aria-labelledby="sl-cockpit-tip-cap"><span class="sl-bell-cap" id="sl-cockpit-tip-cap" data-sl-signals-cap data-sl-calm="{{ passed }}" data-sl-loud="{{ _ADM_WAIT }}">{% if loud %}{{ _ADM_WAIT }}{% else %}{{ passed }}{% endif %}</span><span data-sl-signals>{% for row in signals %}<a{% if row.href %} href="{{ row.href }}"{% endif %} class="sl-knob-{{ row.level }}" data-sl-signal="{{ row.key }}"{% if row.is_ok %} hidden{% endif %}><i class="bi bi-exclamation-triangle-fill" aria-hidden="true" data-sl-level="warn"{% if not row.is_warn %} hidden{% endif %}></i><i class="bi bi-x-octagon-fill" aria-hidden="true" data-sl-level="danger"{% if not row.is_danger %} hidden{% endif %}></i> {{ row.label }} <span class="sl-bell-num" data-sl-signal-fact>{{ row.fact }}</span></a>{% endfor %}</span></span>
@@ -22,7 +32,11 @@
     {% endfor %}
   </div>
   <ul class="sl-cockpit-strip" aria-busy="true" data-sl-cockpit-strip>
-    {% for item in strip %}<li data-sl-strip="{{ item.key }}"><i class="bi bi-{{ item.icon }}" aria-hidden="true"></i><b data-sl-strip-val>&mdash;</b>{% if item.unit %} {{ item.unit }}{% endif %} <span>{{ item.label }}</span></li>{% endfor %}
+    {% for item in strip %}
+    <li data-sl-strip="{{ item.key }}"><i class="bi bi-{{ item.icon }}" aria-hidden="true"></i><b data-sl-strip-val>&mdash;</b>{% if item.unit %} {{ item.unit }}{% endif %} <span>{{ item.label }}</span></li>
+    {% endfor %}
   </ul>
-  <template data-sl-cockpit-row><a{% if monitor_url %} href="{{ monitor_url }}"{% endif %}><i class="bi" aria-hidden="true"></i> <span></span> <span class="sl-bell-num"></span></a></template>
+  <template data-sl-cockpit-row>
+    <a{% if monitor_url %} href="{{ monitor_url }}"{% endif %}><i class="bi" aria-hidden="true"></i> <span></span> <span class="sl-bell-num"></span></a>
+  </template>
 </section>

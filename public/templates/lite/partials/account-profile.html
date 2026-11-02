@@ -1,17 +1,33 @@
 <div class="sl-profile-card sl-profile-split">
   <aside class="sl-profile-split-rail">
     <div class="sl-profile-avatar"{% if has_level or ring %} style="{% if has_level %}--sl-d-level:{{ level }}%;{% endif %}{% if ring %}--sl-d-ring:{{ ring }};{% endif %}"{% endif %}>
-      {% if avatar_html %}{{{ avatar_html }}}{% else %}<img src="{{ avatar }}" alt="{{ name }}" title="{{ name }}">{% endif %}
-      {% if is_online %}<span class="sl-profile-status" title="{{ online_label }}"></span>{% endif %}
+      {% if avatar_html %}
+      {{{ avatar_html }}}
+      {% else %}
+      <img src="{{ avatar }}" alt="{{ name }}" title="{{ name }}">
+      {% endif %}
+      {% if is_online %}
+      <span class="sl-profile-status" title="{{ online_label }}"></span>
+      {% endif %}
     </div>
     <h1 class="sl-font sl-profile-name">{{ name }}</h1>
-    {% if urank %}<div class="sl-profile-rank">{{ urank }}</div>{% endif %}
+    {% if urank %}
+    <div class="sl-profile-rank">{{ urank }}</div>
+    {% endif %}
     {{{ rank_html }}}
     <div class="sl-profile-chips">
-      {% if has_special_group %}<span class="sl-chip sl-chip-accent" title="{{ sgroup_label }}: {{ sgroup }}"><i class="bi bi-people-fill" aria-hidden="true"></i><span>{{ sgroup }}</span></span>{% endif %}
-      {% if is_online %}<span class="sl-chip sl-chip-success"><i class="bi bi-wifi" aria-hidden="true"></i><span>{{ online_label }}</span></span>{% else %}<span class="sl-chip sl-chip-danger"><i class="bi bi-wifi-off" aria-hidden="true"></i><span>{{ offline_label }}</span></span>{% endif %}
+      {% if has_special_group %}
+      <span class="sl-chip sl-chip-accent" title="{{ sgroup_label }}: {{ sgroup }}"><i class="bi bi-people-fill" aria-hidden="true"></i><span>{{ sgroup }}</span></span>
+      {% endif %}
+      {% if is_online %}
+      <span class="sl-chip sl-chip-success"><i class="bi bi-wifi" aria-hidden="true"></i><span>{{ online_label }}</span></span>
+      {% else %}
+      <span class="sl-chip sl-chip-danger"><i class="bi bi-wifi-off" aria-hidden="true"></i><span>{{ offline_label }}</span></span>
+      {% endif %}
     </div>
-    {% if pm_href %}<div class="sl-profile-actions"><a class="sl-but sl-but-blue" href="{{ pm_href }}" title="{{ pm_label }}">{{ pm_label }}</a></div>{% endif %}
+    {% if pm_href %}
+    <div class="sl-profile-actions"><a class="sl-but sl-but-blue" href="{{ pm_href }}" title="{{ pm_label }}">{{ pm_label }}</a></div>
+    {% endif %}
     {% if rating_html %}
     <div class="sl-profile-score">
       <b>{{ rating_label }}</b>
@@ -25,7 +41,9 @@
     </div>
     <div class="sl-profile-chips">
       <span class="sl-chip sl-chip-info" title="{{ points_label }}"><i class="bi bi-stars" aria-hidden="true"></i><span>{{ points_text }}</span></span>
-      {% if level_next %}<span class="sl-chip sl-chip-neutral" title="{{ level_next }}"><span>{{ level_next }}</span></span>{% endif %}
+      {% if level_next %}
+      <span class="sl-chip sl-chip-neutral" title="{{ level_next }}"><span>{{ level_next }}</span></span>
+      {% endif %}
     </div>
     {% endif %}
   </aside>
@@ -60,29 +78,41 @@
       {% endif %}
     </div>
     {% endif %}
-    {% if has_field %}<div class="sl-profile-panel sl-profile-wide">{{{ field }}}</div>{% endif %}
+    {% if has_field %}
+    <div class="sl-profile-panel sl-profile-wide">
+      {{{ field }}}
+    </div>
+    {% endif %}
     {% if has_warn_list %}
     <div class="sl-profile-panel sl-profile-wide sl-is-warn">
       {% include 'fragments/panel-head.html' with warn_head %}
       {{{ warn_html }}}
     </div>
     {% endif %}
-    {% if has_sign %}<div class="sl-profile-sign"><blockquote>{{{ sign }}}</blockquote></div>{% endif %}
+    {% if has_sign %}
+    <div class="sl-profile-sign">
+      <blockquote>
+        {{{ sign }}}
+      </blockquote>
+    </div>
+    {% endif %}
   </div>
 </div>
 <div class="sl-profile-panel sl-profile-wide sl-cat-tone-1">
-    {% include 'fragments/panel-head.html' with hub_head %}
-    <div class="sl-profile-scroll" data-sl-profile-scroll>
-      <div class="sl-profile-scroll-feed">
-        {% for row in hub %}
-        <div class="sl-cab-row sl-profile-entry sl-profile-hub-row">
-          <span class="sl-chip sl-chip-info" title="{{ col_items }}"><i class="bi bi-grid" aria-hidden="true"></i>{{ row.count }}</span>
-          <i class="bi bi-{{ row.icon }}" aria-hidden="true"></i>
-          <a{% if row.href %} href="{{ row.href }}"{% endif %} title="{{ row.title }}">{{ row.title }}</a>
-          <span class="sl-profile-hub-total">{% if row.rating %}<span class="sl-chip sl-chip-success" title="{{ col_rating }}"><i class="bi bi-star-fill" aria-hidden="true"></i>{{ row.rating }}</span>{% endif %}{% if row.favs %}<span class="sl-chip sl-chip-accent" title="{{ col_favs }}"><i class="bi bi-bookmark-fill" aria-hidden="true"></i>{{ row.favs }}</span>{% endif %}</span>
-        </div>
-        {% endfor %}
+  {% include 'fragments/panel-head.html' with hub_head %}
+  <div class="sl-profile-scroll" data-sl-profile-scroll>
+    <div class="sl-profile-scroll-feed">
+      {% for row in hub %}
+      <div class="sl-cab-row sl-profile-entry sl-profile-hub-row">
+        <span class="sl-chip sl-chip-info" title="{{ col_items }}"><i class="bi bi-grid" aria-hidden="true"></i>{{ row.count }}</span>
+        <i class="bi bi-{{ row.icon }}" aria-hidden="true"></i>
+        <a{% if row.href %} href="{{ row.href }}"{% endif %} title="{{ row.title }}">{{ row.title }}</a>
+        <span class="sl-profile-hub-total">{% if row.rating %}<span class="sl-chip sl-chip-success" title="{{ col_rating }}"><i class="bi bi-star-fill" aria-hidden="true"></i>{{ row.rating }}</span>{% endif %}{% if row.favs %}<span class="sl-chip sl-chip-accent" title="{{ col_favs }}"><i class="bi bi-bookmark-fill" aria-hidden="true"></i>{{ row.favs }}</span>{% endif %}</span>
       </div>
+      {% endfor %}
     </div>
+  </div>
 </div>
-<div class="sl-profile-panel sl-profile-wide sl-cat-tone-2">{{{ feed_html }}}</div>
+<div class="sl-profile-panel sl-profile-wide sl-cat-tone-2">
+  {{{ feed_html }}}
+</div>

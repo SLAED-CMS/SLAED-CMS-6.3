@@ -1,5 +1,7 @@
 <div class="sl-session-row{% if geo_html %} sl-session-row--icon{% endif %}">
-  {% if geo_html %}<div class="sl-session-icon">{{{ geo_html }}}</div>{% endif %}
+  {% if geo_html %}
+  <div class="sl-session-icon">{{{ geo_html }}}</div>
+  {% endif %}
   <div class="sl-session-name">
     {% if name_link %}
     {% include 'fragments/link.html' with name_link %}

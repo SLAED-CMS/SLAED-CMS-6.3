@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Tests\Unit;
 
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 # The migration of update.php rewrites direct addresses of the own folder into attachments and moves no file (docs/NODE.md, Migration of the removed modules)
+#[Group('release')]
 final class UpdateAttachTest extends TestCase
 {
     private static string $code = '';

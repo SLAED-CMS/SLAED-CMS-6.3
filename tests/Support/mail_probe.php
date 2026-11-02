@@ -392,7 +392,7 @@ function getProbeMessage(string $mesg): array {
 }
 
 # Report what the site mail frame makes of a plain-text template: its own lines become <br>, the inserted HTML text arrives untouched
-# Then queue the real link fragment in the frame and read back the stored body, which addQueue() has put through the page output normalizer
+# Then queue the real link fragment in the frame and read back the stored body beside the one that was sent
 function getProbeFrame(): array {
     global $db, $conf, $tpl;
     $row = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) AS num FROM '.PREFIX_DB.'_mail'));
@@ -400,7 +400,8 @@ function getProbeFrame(): array {
     $conf['mtemp'] = "Hello!\r\n\r\n[text]\r\n\r\nBest regards,\nSLAED CMS";
     $out = ['body' => getMailFrame("<a\n  href=\"https://slaed.loc/\"\n>\n    link</a><br>line")];
     $link = $tpl->getHtmlFrag('link', ['href' => 'https://slaed.loc/?a=1&b=2', 'title' => 'Go', 'label' => 'https://slaed.loc/', 'is_blank' => true]);
-    getProbeMail()->addQueue(['kind' => PROBEKIND, 'email' => 'frame@slaed.net', 'sender' => 'info@slaed.net', 'title' => 'frame', 'body' => getMailFrame('Link: '.$link)]);
+    $out['sent'] = getMailFrame('Link: '.$link);
+    getProbeMail()->addQueue(['kind' => PROBEKIND, 'email' => 'frame@slaed.net', 'sender' => 'info@slaed.net', 'title' => 'frame', 'body' => $out['sent']]);
     $row = $db->getSqlRow($db->getSqlQuery('SELECT body FROM '.PREFIX_DB.'_mail WHERE email = :mail', ['mail' => 'frame@slaed.net']));
     $out['stored'] = (string)($row['body'] ?? '');
     $out['clean'] = deleteProbeRows($ntime);

@@ -8,6 +8,9 @@ use PHPUnit\Framework\TestCase;
 # One rule set for add and edit, conditional state changes, an idempotent soft delete and add, and a stored format that decides the rendering
 final class CommentStateTest extends TestCase
 {
+    # The raw answer of each probe run, kept before any assertion so a failed probe is not started again by the next test
+    private static array $outs = [];
+
     private static array $probe = [];
 
     # Run one scenario of tests/Support/contract_probe.php per process and memoize its report for every test in this class
@@ -16,7 +19,7 @@ final class CommentStateTest extends TestCase
     {
         if (isset(self::$probe[$mode])) return self::$probe[$mode];
         $script = dirname(__DIR__).'/Support/contract_probe.php';
-        $out = (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' '.escapeshellarg($mode).' 2>&1');
+        $out = self::$outs[__FUNCTION__.$mode] ??= (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' '.escapeshellarg($mode).' 2>&1');
         $data = json_decode($out, true);
         $this->assertIsArray($data, 'Probe '.$mode.' did not return JSON: '.$out);
         return self::$probe[$mode] = $data;

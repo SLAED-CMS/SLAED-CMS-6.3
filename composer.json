@@ -37,11 +37,13 @@
     },
     "config": {
         "optimize-autoloader": true,
+        "process-timeout": 0,
         "sort-packages": true
     },
     "scripts": {
         "test": "phpunit",
-        "test:fast": "paratest --processes=8 --order-by=duration,reverse",
+        "test:fast": "paratest --processes=8 --order-by=duration,reverse --exclude-group=release",
+        "test:release": "paratest --processes=8 --order-by=duration,reverse --group=release",
         "analyse": "phpstan analyse",
         "quality": [
             "@analyse",

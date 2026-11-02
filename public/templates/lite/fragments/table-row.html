@@ -1,104 +1,62 @@
-<tr
-  class="
-    {% if row_class %}{{ row_class }}
-    {% else %}
-      sl-table-row
-      {% if is_hidden %} sl-hidden{% endif %}
-    {% endif %}
-  "
-  {% if id %}id="{{ id }}"{% endif %}
->
+<tr class="{% if row_class %}{{ row_class }}{% else %}sl-table-row{% if is_hidden %} sl-hidden{% endif %}{% endif %}"{% if id %} id="{{ id }}"{% endif %}>
   {% if cells %}
-    {% for cell in cells %}
-    <td
-      class="
-        {% if cell.class %}{{ cell.class }}
-        {% else %}
-          sl-table-cell
-          {% if cell.is_col_check %} sl-col-check{% endif %}
-          {% if cell.is_num %} sl-table-col-num{% endif %}
-          {% if cell.is_forum_stat %} sl-fl-col-stat{% endif %}
-          {% if cell.is_forum_user %} sl-fl-col-user{% endif %}
-          {% if cell.is_truncate %} sl-cell-ellipsis{% endif %}
-        {% endif %}
-      "
-      {% if cell.colspan %}colspan="{{ cell.colspan }}"{% endif %}
-    >
-      {% if cell.href %}
-        <a
-          href="{{ cell.href }}"
-          title="{{ cell.title }}"
-          class="{% if cell.link_class %}{{ cell.link_class }}{% elseif cell.is_faq_link %}sl-chip sl-faq{% elseif cell.is_num %}sl-but-mini{% else %}sl-table-num-link{% endif %}"
-        >
-          {% if cell.is_faq_link %}<i class="bi bi-question-circle" aria-hidden="true"></i> {% endif %}
-          {% if cell.link_label_html %}
-            {{{ cell.link_label_html }}}
-          {% elseif cell.img_src %}
-            <img
-              src="{{ cell.img_src }}"
-              alt="{{ cell.img_alt }}"
-              title="{{ cell.img_title }}"
-              {% if cell.img_class or cell.is_avatar %}
-              class="
-                {% if cell.img_class %}{{ cell.img_class }}{% endif %}
-                {% if cell.is_avatar %}{% if cell.img_class %} {% endif %}sl-avatar{% endif %}
-              "
-              {% endif %}
-            >
-          {% else %}
-            {{ cell.text }}
-          {% endif %}
-        </a>
+  {% for cell in cells %}
+  <td class="{% if cell.class %}{{ cell.class }}{% else %}sl-table-cell{% if cell.is_col_check %} sl-col-check{% endif %}{% if cell.is_num %} sl-table-col-num{% endif %}{% if cell.is_forum_stat %} sl-fl-col-stat{% endif %}{% if cell.is_forum_user %} sl-fl-col-user{% endif %}{% if cell.is_truncate %} sl-cell-ellipsis{% endif %}{% endif %}"{% if cell.colspan %} colspan="{{ cell.colspan }}"{% endif %}>
+    {% if cell.href %}
+    <a href="{{ cell.href }}" title="{{ cell.title }}" class="{% if cell.link_class %}{{ cell.link_class }}{% elseif cell.is_faq_link %}sl-chip sl-faq{% elseif cell.is_num %}sl-but-mini{% else %}sl-table-num-link{% endif %}">
+      {% if cell.is_faq_link %}
+      <i class="bi bi-question-circle" aria-hidden="true"></i>
+      {% endif %}
+      {% if cell.link_label_html %}
+      {{{ cell.link_label_html }}}
       {% elseif cell.img_src %}
-        <img
-          src="{{ cell.img_src }}"
-          alt="{{ cell.img_alt }}"
-          title="{{ cell.img_title }}"
-          {% if cell.img_class or cell.is_avatar %}
-          class="
-            {% if cell.img_class %}{{ cell.img_class }}{% endif %}
-            {% if cell.is_avatar %}{% if cell.img_class %} {% endif %}sl-avatar{% endif %}
-          "
-          {% endif %}
-        >
-      {% elseif cell.is_forum_user %}
-        <span class="sl-chip sl-chip-info">{% if cell.content_html %}{{{ cell.content_html }}}{% else %}{{ cell.text }}{% endif %}</span>
-      {% elseif cell.is_forum_stat %}
-        <span class="sl-chip sl-chip-neutral">{% if cell.content_html %}{{{ cell.content_html }}}{% else %}{{ cell.text }}{% endif %}</span>
+      <img src="{{ cell.img_src }}" alt="{{ cell.img_alt }}" title="{{ cell.img_title }}"{% if cell.img_class or cell.is_avatar %} class="{% if cell.img_class %}{{ cell.img_class }}{% endif %}{% if cell.is_avatar %}{% if cell.img_class %} {% endif %}sl-avatar{% endif %}"{% endif %}>
       {% else %}
-        {% if cell.prefix_html %}{{{ cell.prefix_html }}}{% endif %}
-        {% if cell.heading_html %}
-          <strong>{{{ cell.heading_html }}}</strong>
-        {% elseif cell.content_html %}
-          {{{ cell.content_html }}}
-        {% elseif cell.primary_text or cell.secondary_text %}
-          {% if cell.primary_text %}
-            <span{% if cell.primary_title %} title="{{ cell.primary_title }}"{% endif %}>{{ cell.primary_text }}</span>
-          {% endif %}
-          {% if cell.secondary_text %}<br>{{ cell.secondary_text }}{% endif %}
-        {% else %}
-          {{ cell.text }}
-        {% endif %}
+      {{ cell.text }}
       {% endif %}
-    </td>
-    {% endfor %}
+    </a>
+    {% elseif cell.img_src %}
+    <img src="{{ cell.img_src }}" alt="{{ cell.img_alt }}" title="{{ cell.img_title }}"{% if cell.img_class or cell.is_avatar %} class="{% if cell.img_class %}{{ cell.img_class }}{% endif %}{% if cell.is_avatar %}{% if cell.img_class %} {% endif %}sl-avatar{% endif %}"{% endif %}>
+    {% elseif cell.is_forum_user %}
+    <span class="sl-chip sl-chip-info">{% if cell.content_html %}{{{ cell.content_html }}}{% else %}{{ cell.text }}{% endif %}</span>
+    {% elseif cell.is_forum_stat %}
+    <span class="sl-chip sl-chip-neutral">{% if cell.content_html %}{{{ cell.content_html }}}{% else %}{{ cell.text }}{% endif %}</span>
+    {% else %}
+    {% if cell.prefix_html %}{{{ cell.prefix_html }}}{% endif %}
+    {% if cell.heading_html %}
+    <strong>{{{ cell.heading_html }}}</strong>
+    {% elseif cell.content_html %}
+    {{{ cell.content_html }}}
+    {% elseif cell.primary_text or cell.secondary_text %}
+    {% if cell.primary_text %}
+    <span{% if cell.primary_title %} title="{{ cell.primary_title }}"{% endif %}>{{ cell.primary_text }}</span>
+    {% endif %}
+    {% if cell.secondary_text %}
+    <br>{{ cell.secondary_text }}
+    {% endif %}
+    {% else %}
+    {{ cell.text }}
+    {% endif %}
+    {% endif %}
+  </td>
+  {% endfor %}
   {% elseif cells_html %}
-    {{{ cells_html }}}
+  {{{ cells_html }}}
   {% else %}
-    <td class="sl-table-cell sl-cell-ellipsis" data-sort="{{ title_text }}">
-      {% if report %}{{{ report }}}{% endif %}{% if title_new %}{{{ title_new }}} {% endif %}
-      <a href="{{ title_href }}" title="{{ title_attr }}">{{ title_text }}</a>
-    </td>
-    <td class="sl-table-cell">
-      {% if category_href %}
-        <a href="{{ category_href }}" title="{{ category_attr }}" class="sl-chip"><i class="bi bi-folder" aria-hidden="true"></i>{{ category_text }}</a>
-      {% else %}
-        <span class="sl-chip sl-chip-neutral"><i class="bi bi-folder" aria-hidden="true"></i>{{ category_text }}</span>
-      {% endif %}
-    </td>
-    <td class="sl-table-cell"><span class="sl-chip sl-chip-info">{{{ post_text }}}</span></td>
-    <td class="sl-table-cell sl-table-col-num">
-      {% if is_moder %}{% include 'fragments/dial.html' %} {% endif %}<a href="#{{ id }}" title="{{ id }}" class="sl-but-mini">{{ id }}</a>
-    </td>
+  <td class="sl-table-cell sl-cell-ellipsis" data-sort="{{ title_text }}">
+    {% if report %}{{{ report }}}{% endif %}{% if title_new %}{{{ title_new }}} {% endif %}
+    <a href="{{ title_href }}" title="{{ title_attr }}">{{ title_text }}</a>
+  </td>
+  <td class="sl-table-cell">
+    {% if category_href %}
+    <a href="{{ category_href }}" title="{{ category_attr }}" class="sl-chip"><i class="bi bi-folder" aria-hidden="true"></i>{{ category_text }}</a>
+    {% else %}
+    <span class="sl-chip sl-chip-neutral"><i class="bi bi-folder" aria-hidden="true"></i>{{ category_text }}</span>
+    {% endif %}
+  </td>
+  <td class="sl-table-cell"><span class="sl-chip sl-chip-info">{{{ post_text }}}</span></td>
+  <td class="sl-table-cell sl-table-col-num">
+    {% if is_moder %}{% include 'fragments/dial.html' %} {% endif %}<a href="#{{ id }}" title="{{ id }}" class="sl-but-mini">{{ id }}</a>
+  </td>
   {% endif %}
 </tr>

@@ -10,6 +10,9 @@ use PHPUnit\Framework\TestCase;
 # The login table _login_log of docs/ARCHITECTURE.md, "Journal Boundary": one writer, one reader, the count of the monitor and the cleanup of the daily job
 final class LoginLogTest extends TestCase
 {
+    # The raw answer of each probe run, kept before any assertion so a failed probe is not started again by the next test
+    private static array $outs = [];
+
     private static array $probe = [];
 
     private static string $work = '';
@@ -21,7 +24,7 @@ final class LoginLogTest extends TestCase
         if (self::$probe === []) {
             self::$work = str_replace('\\', '/', sys_get_temp_dir()).'/slaed_login_'.bin2hex(random_bytes(4));
             $script = dirname(__DIR__).'/Support/login_probe.php';
-            $out = (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' '.escapeshellarg(self::$work).' 2>&1');
+            $out = self::$outs[__FUNCTION__] ??= (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' '.escapeshellarg(self::$work).' 2>&1');
             $data = json_decode($out, true);
             $this->assertIsArray($data, 'The probe did not return JSON: '.$out);
             $this->assertSame('', $data['error'], 'The probe failed');

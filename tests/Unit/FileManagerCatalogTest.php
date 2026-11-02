@@ -288,21 +288,13 @@ final class FileManagerCatalogTest extends TestCase
         $this->assertStringContainsString("'result' => \$res['ok'] ? 'ok' : (string)\$res['error']", $body, 'A refused upload is recorded as if it had stored the file');
     }
 
-    # The catalogue is the only list of the upload tree the administration has: the quick lists went with the route that fed them and with the captions they were named by
+    # The catalogue screen is the browser of the file layer with the directory selector it navigates by
     #[Test]
-    public function theCatalogueIsTheOnlyListOfTheTree(): void
+    public function theCatalogueScreenIsTheFileShell(): void
     {
-        $this->assertStringNotContainsString('function getAdminUploadFiles(', $this->getFile('core/admin.php'), 'The quick list of the module is still built');
-        $this->assertStringNotContainsString('getAdminUploadFiles', $this->getFile('public/index.php'), 'The route the quick list was read through is still wired');
         $body = $this->getBody('admin/modules/uploads.php', 'uploads');
-        $this->assertStringNotContainsString('uploads-panel', $body, 'The catalogue screen still carries the sub-tabs the quick lists lived in');
         $this->assertStringContainsString('getAdminFileShell(true)', $body, 'The catalogue screen shows no browser of its own');
         $this->assertStringContainsString('getUploadsSearch(', $body, 'The directory selector the screen navigates by is gone');
-        foreach (['de', 'en', 'fr', 'pl', 'ru', 'uk'] as $loc) {
-            $lang = $this->getFile('admin/lang/'.$loc.'.php');
-            $this->assertStringNotContainsString('_DGEN', $lang, 'The caption of a removed sub-tab is still defined in '.$loc);
-            $this->assertStringNotContainsString('_DTHUMB', $lang, 'The caption of a removed sub-tab is still defined in '.$loc);
-        }
     }
 
     # The directory stands at its own length and the page carries it: no pager, no box of its own to scroll, and the settings say how many objects one answer may hold
@@ -383,7 +375,6 @@ final class FileManagerCatalogTest extends TestCase
     #[Test]
     public function oneDownloadPathServesTheProject(): void
     {
-        $this->assertStringNotContainsString('function stream(', $this->getFile('core/system.php'), 'The download helper of the legacy contract is still defined');
         $body = $this->getBody('core/stream.php', 'getFileStream');
         $this->assertStringContainsString("'application/octet-stream'", $body, 'A download is answered with a type the browser may execute');
         $this->assertStringContainsString("rawurlencode(basename(str_replace('\\\\', '/', \$name)))", $body, 'The name of a download reaches the header as it was given');

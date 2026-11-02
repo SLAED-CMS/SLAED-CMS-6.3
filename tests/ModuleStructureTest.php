@@ -49,20 +49,6 @@ class ModuleStructureTest extends TestCase
         );
     }
 
-    # Reports modules without a lang/ directory; a warning, not an error, since some modules need no language files
-    public function testModulesHaveLanguageDirectory(): void
-    {
-        $warnings = [];
-
-        foreach (self::$modules as $name => $path) {
-            if (!is_dir($path.'/lang')) {
-                $warnings[] = "modules/$name - отсутствует директория lang/";
-            }
-        }
-
-        $this->assertTrue(true, count($warnings).' модулей без директории lang/');
-    }
-
     # Checks that a module with at least one language file has all of them and lists at most 30 missing files
     public function testModulesHaveAllLanguages(): void
     {

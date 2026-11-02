@@ -1,1 +1,7 @@
-{% if is_build %}<div data-sl-md="code">{{{ code_html }}}</div>{% else %}{{{ code_html }}}{% endif %}
+{% if is_build %}
+<div data-sl-md="code">
+  {{{ code_html }}}
+</div>
+{% else %}
+{{{ code_html }}}
+{% endif %}

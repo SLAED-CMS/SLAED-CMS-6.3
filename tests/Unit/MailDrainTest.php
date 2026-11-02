@@ -8,6 +8,9 @@ use PHPUnit\Framework\TestCase;
 # The mail drain half no double can answer: an atomic claim, a real-clock backoff, an exact prune and a whole drain run, with nothing leaving this host
 final class MailDrainTest extends TestCase
 {
+    # The raw answer of each probe run, kept before any assertion so a failed probe is not started again by the next test
+    private static array $outs = [];
+
     private static array $probe = [];
 
     # Run one scenario of tests/Support/mail_probe.php, which boots the real core in an isolated CLI process, and memoize its report for every test
@@ -17,7 +20,8 @@ final class MailDrainTest extends TestCase
         if (isset(self::$probe[$mode])) return self::$probe[$mode];
         $script = dirname(__DIR__).'/Support/mail_probe.php';
         $work = sys_get_temp_dir().'/slaed_mail_probe_'.$mode;
-        $out = (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' '.escapeshellarg($mode).' '.escapeshellarg($work).' 2>&1');
+        $out = self::$outs[__FUNCTION__.$mode] ??= (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' '.escapeshellarg($mode).' '
+            .escapeshellarg($work).' 2>&1');
         $data = json_decode($out, true);
         $this->assertIsArray($data, 'Probe '.$mode.' did not return JSON: '.$out);
         if (isset($data['error'])) $this->markTestSkipped((string)$data['error']);
@@ -41,14 +45,14 @@ final class MailDrainTest extends TestCase
         $this->assertSame($html, $this->getProbe('mailframe')['body']);
     }
 
-    # A queued body carries the standard page formatting: the multiline link fragment is one tag on one line and no blank line survives
+    # A queued body is stored byte for byte as it was built, the escaped link fragment included
     #[Test]
-    public function aQueuedBodyCarriesThePageFormatting(): void
+    public function aQueuedBodyIsStoredAsBuilt(): void
     {
         $data = $this->getProbe('mailframe');
         $this->assertTrue($data['clean'], 'The frame probe left a queue row behind');
-        $this->assertStringContainsString('<a href="https://slaed.loc/?a=1&amp;b=2" title="Go" target="_blank" rel="noopener noreferrer">', $data['stored']);
-        $this->assertDoesNotMatchRegularExpression('#\n[ \t\r]*\n#', $data['stored'], 'A blank line reached the queued body');
+        $this->assertStringContainsString('href="https://slaed.loc/?a=1&amp;b=2"', $data['stored']);
+        $this->assertSame($data['sent'], $data['stored']);
     }
 
     # Every code path that wraps a text into mtemp goes through getMailFrame(), because a bare str_replace() sends the frame without its lines

@@ -10,6 +10,9 @@ use PHPUnit\Framework\TestCase;
 # The building of an address of the Address Boundary of docs/ARCHITECTURE.md, over route_probe.php build: the links the pages print, the statements of the lists, the builder itself
 final class RouteBuildTest extends TestCase
 {
+    # The raw answer of each probe run, kept before any assertion so a failed probe is not started again by the next test
+    private static array $outs = [];
+
     # The statements of each page before batch 5, measured by the same run on the tree of batch 4; a list may run one more and no other page any more
     private const BASE = ['news' => 10, 'news/open' => 12, 'news?page=2' => 10, 'news/alpha' => 8, 'forum' => 4, 'forum/talk' => 8, 'forum/topic-one' => 8, 'users' => 5,
         'voting' => 5, 'voting/poll-one' => 9, 'users/anna' => 14];
@@ -22,7 +25,7 @@ final class RouteBuildTest extends TestCase
         if (self::$probe === []) {
             $script = dirname(__DIR__).'/Support/route_probe.php';
             $work = str_replace('\\', '/', sys_get_temp_dir()).'/slaed_build_route';
-            $out = (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' '.escapeshellarg($work).' build 2>&1');
+            $out = self::$outs[__FUNCTION__] ??= (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' '.escapeshellarg($work).' build 2>&1');
             $data = json_decode($out, true);
             $this->assertIsArray($data, 'The probe did not return JSON: '.substr($out, 0, 600));
             $this->assertSame('', $data['error'], 'The probe failed');

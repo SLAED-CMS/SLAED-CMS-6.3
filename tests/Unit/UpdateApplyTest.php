@@ -4,12 +4,17 @@ declare(strict_types=1);
 
 namespace Tests\Unit;
 
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 # The installation from the panel over tests/Support/apply_probe.php: the preflight, the closed site, the executor of the package, the rescuer and every rollback
+#[Group('release')]
 final class UpdateApplyTest extends TestCase
 {
+    # The raw answer of each probe run, kept before any assertion so a failed probe is not started again by the next test
+    private static array $outs = [];
+
     private static array $probe = [];
 
     # Run the probe once over all its runs and memoize the report; it must clean up its database, and no run but the failed step may log an error
@@ -18,7 +23,7 @@ final class UpdateApplyTest extends TestCase
         if (self::$probe === []) {
             $script = dirname(__DIR__).'/Support/apply_probe.php';
             $work = str_replace('\\', '/', sys_get_temp_dir()).'/slaed_update_apply';
-            $out = (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' '.escapeshellarg($work).' all 2>&1');
+            $out = self::$outs[__FUNCTION__] ??= (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' '.escapeshellarg($work).' all 2>&1');
             $data = json_decode($out, true);
             $this->assertIsArray($data, 'The probe did not return JSON: '.substr($out, 0, 600));
             $this->assertSame('', $data['error'], 'The probe failed');

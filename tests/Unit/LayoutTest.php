@@ -297,7 +297,7 @@ final class LayoutTest extends TestCase
         $html = $read->getPageHtml(1, '', new Template('lite'), $this->getParser());
         $this->assertStringContainsString('id="top"', $html);
         $this->assertStringContainsString('<b>A &lt; B</b> <span>Acc</span>', $html);
-        $this->assertStringContainsString("<p class=\"sl-pres-lead sl-sec-lines\">One\nTwo</p>", $html);
+        $this->assertMatchesRegularExpression('#<p class="sl-pres-lead sl-sec-lines">One\n\s*Two</p>#', $html);
         $this->assertStringNotContainsString('javascript:', $html);
         $this->assertStringNotContainsString('>Go<', $html, 'A button without a valid address printed');
         $this->assertStringContainsString('<a class="sl-but" href="/docs">Docs</a>', $html, 'An address of the site opened a new tab');
@@ -313,7 +313,7 @@ final class LayoutTest extends TestCase
         $this->assertStringContainsString('sl-pres-tech sl-sec-cols-four', $html);
         $this->assertSame(8, substr_count($html, 'sl-pres-tech-card'));
         $this->assertStringNotContainsString('data-sl-tone', $html);
-        $this->assertMatchesRegularExpression('#>01</span><div><b>First</b></div>.*>02</span><div><b>Second</b><span class="sl-pres-tags"><span>Then</span>#s', $html);
+        $this->assertMatchesRegularExpression('#>01</span>\s*<div><b>First</b></div>.*>02</span>\s*<div><b>Second</b><span class="sl-pres-tags"><span>Then</span>#s', $html);
         $this->assertStringNotContainsString('Later', $html);
         $this->assertStringNotContainsString('Gone', $html);
         $this->assertStringContainsString('<a class="sl-but sl-sec-cta-but" href="/contact">Write</a>', $html);
@@ -342,7 +342,7 @@ final class LayoutTest extends TestCase
         $html = $read->getPageHtml(1, '<main>BODY</main>', new Template('lite'), $this->getParser());
         $this->assertTrue($read->isBuildMode());
         $this->assertStringContainsString('data-sl-pick="sec:1"', $html);
-        $this->assertStringContainsString('<div data-sl-pick="sec:2" data-sl-build-one><main>BODY</main></div>', $html, 'The slot is not picked around the module');
+        $this->assertMatchesRegularExpression('#<div data-sl-pick="sec:2" data-sl-build-one>\s*<main>BODY</main>\s*</div>#', $html, 'The slot is not picked around the module');
         $this->assertStringContainsString('<b data-sl-text="title">Head</b>', $html);
         $this->assertStringContainsString('data-sl-text="text" data-sl-lines>Lead</p>', $html);
         $this->assertStringContainsString('<b data-sl-text="items.01.title">First</b>', $html, 'An item is not marked by its place');
@@ -696,8 +696,8 @@ final class LayoutTest extends TestCase
         $this->assertStringContainsString('<i class="bi bi-star" aria-hidden="true"></i>&nbsp;Mail</a>', $menu);
         $this->assertStringContainsString('<a href="/news" title="News">News</a>', $menu);
         $block = $tpl->getHtmlFrag('block-menu', ['items' => $read->getMenu('main')]);
-        $this->assertStringContainsString('<li><a href="/contact" title="Mail"><i class="bi bi-star" aria-hidden="true"></i>&nbsp;Mail</a></li></ul></li>', $block);
-        $this->assertStringStartsWith('<nav class="sl-block-menu"><ul><li><a href="#" title="Group">Group</a><ul>', $block);
+        $this->assertMatchesRegularExpression('#<li><a href="/contact" title="Mail"><i class="bi bi-star" aria-hidden="true"></i>&nbsp;Mail</a></li>\s*</ul>\s*</li>#', $block);
+        $this->assertMatchesRegularExpression('#^<nav class="sl-block-menu">\s*<ul>\s*<li>\s*<a href="\#" title="Group">Group</a>\s*<ul>#', $block);
     }
 
     # An update adds the layout to a site that lacks it and new keys of the theme, but never a page or a menu item the site deleted

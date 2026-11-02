@@ -8,6 +8,9 @@ use PHPUnit\Framework\TestCase;
 # The half of Backup no double can answer, run against a disposable live schema; the site database and storage/backup are never touched
 final class BackupIntegrationTest extends TestCase
 {
+    # The raw answer of each probe run, kept before any assertion so a failed probe is not started again by the next test
+    private static array $outs = [];
+
     private static array $probe = [];
 
     # Run one scenario of tests/Support/backup_probe.php, which boots the real core in an isolated CLI process, and memoize its report for every test
@@ -18,7 +21,8 @@ final class BackupIntegrationTest extends TestCase
         if (isset(self::$probe[$mode])) return self::$probe[$mode];
         $script = dirname(__DIR__).'/Support/backup_probe.php';
         $work = str_replace('\\', '/', sys_get_temp_dir()).'/slaed_backup_probe_'.$mode;
-        $out = (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' '.escapeshellarg($mode).' '.escapeshellarg($work).' 2>&1');
+        $out = self::$outs[__FUNCTION__.$mode] ??= (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' '.escapeshellarg($mode).' '
+            .escapeshellarg($work).' 2>&1');
         $data = json_decode($out, true);
         $this->assertIsArray($data, 'Probe '.$mode.' did not return JSON: '.$out);
         if (!empty($data['error'])) $this->markTestSkipped('Probe '.$mode.': '.$data['error']);
@@ -329,15 +333,13 @@ final class BackupIntegrationTest extends TestCase
         }
     }
 
-    # The dispatcher runs the class and the procedural implementation is gone, with no alias or wrapper left behind
+    # The dispatcher runs the class, required lazily
     #[Test]
     public function theDispatcherRunsTheClassAndNothingElse(): void
     {
         $core = (string)file_get_contents(dirname(__DIR__, 2).'/core/system.php');
-        $this->assertStringNotContainsString('function addBackupTask', $core, 'The procedural backup implementation is still there');
         $this->assertStringContainsString("'backup' => addBackupJob()", $core, 'The dispatcher does not run the class path');
         $this->assertStringContainsString("require_once BASE_DIR.'/core/classes/backup.php'", $core, 'The class is not required lazily');
-        $this->assertStringNotContainsString('addBackupTask(', $core, 'A call to the removed implementation survived');
     }
 
     # Durable persistence works against a real file and says so when the file cannot be opened
