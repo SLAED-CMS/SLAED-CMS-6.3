@@ -1521,8 +1521,10 @@
   const SIGNALS = [
     { key: 'dirs', name: 'Защита каталогов', href: '../../admin.php?name=security' },
     { key: 'setup', name: 'Файл установки', href: '#sl-alert-setup' },
-    { key: 'phperr', name: 'Ошибки PHP', href: '../../admin.php?name=monitor' },
-    { key: 'dberr', name: 'Ошибки базы данных', href: '../../admin.php?name=database' },
+    { key: 'phperr', name: 'Ошибки PHP', href: '../../admin.php?name=logs&op=logview&file=error_php' },
+    { key: 'siteerr', name: 'Ошибки сайта', href: '../../admin.php?name=logs&op=logview&file=error_site' },
+    { key: 'fileerr', name: 'Ошибки файлов', href: '../../admin.php?name=logs&op=logview&file=error_file' },
+    { key: 'dberr', name: 'Ошибки базы данных', href: '../../admin.php?name=logs&op=logview&file=error_sql' },
     { key: 'disk', name: 'Место на диске', href: '../../admin.php?name=monitor' },
     { key: 'backup', name: 'Резервная копия', href: '../../plugins/sxd/index.php' },
     { key: 'login', name: 'Неудачные входы', href: '../../admin.php?name=security' },

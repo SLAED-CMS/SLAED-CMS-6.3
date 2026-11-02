@@ -36,7 +36,7 @@ class Database {
             $this->sqlconnid = null;
             global $conf;
             $detail = _SQLERRORCON.' - '._ERROR.': '.$e->getCode().' - '.$e->getMessage();
-            Logger::addSite('error', $detail, ['http_code' => 500]);
+            Logger::addSql('error', $detail, ['http_code' => 500]);
             if (defined('SETUP_FILE')) throw new RuntimeException($detail);
             if (!defined('API_FILE') && (int)($conf['security']['error'] ?? 0) > 0) setExit($detail);
             setError(500);

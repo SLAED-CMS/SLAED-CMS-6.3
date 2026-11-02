@@ -7,13 +7,13 @@ namespace Tests\Unit;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-# The data of the home cockpit, docs/ARCHITECTURE.md "Admin Shell Boundary": fourteen signals by the thresholds of the owner, the snapshot and the one store of the monitor
+# The data of the home cockpit, docs/ARCHITECTURE.md "Admin Shell Boundary": sixteen signals by the thresholds of the owner, the snapshot and the one store of the monitor
 final class CockpitTest extends TestCase
 {
     # The raw answer of each probe run, kept before any assertion so a failed probe is not started again by the next test
     private static array $outs = [];
 
-    private const KEYS = ['attack', 'backup', 'cron', 'dirs', 'disk', 'https', 'login', 'mail', 'opcache', 'php', 'phpver', 'setup', 'sql', 'update'];
+    private const KEYS = ['attack', 'backup', 'cron', 'dirs', 'disk', 'file', 'https', 'login', 'mail', 'opcache', 'php', 'phpver', 'setup', 'site', 'sql', 'update'];
 
     private static ?array $probe = null;
 
@@ -47,7 +47,7 @@ final class CockpitTest extends TestCase
 
     # Every check is there once, the failures come first, and a check in order says nothing as its fact
     #[Test]
-    public function fourteenSignalsFailuresFirst(): void
+    public function sixteenSignalsFailuresFirst(): void
     {
         $data = $this->getProbe();
         $keys = $data['order'];
@@ -60,17 +60,20 @@ final class CockpitTest extends TestCase
         foreach ($data['closed'] as $key => [$level, $fact]) if ($level === 'ok') $this->assertSame('', $fact, 'The check '.$key.' in order still names a fact');
     }
 
-    # PHP errors warn from one and fail from a hundred in a day, database errors warn from one and fail from ten; no journal is no signal
+    # PHP, site and file errors each count their own journal, warn from one and fail from a hundred in a day; database errors fail from ten; no journal is no signal
     #[Test]
     public function journalsCountByTheThresholds(): void
     {
         $data = $this->getProbe();
         $day = fn(int $num): string => sprintf($data['text']['day'], $num);
-        $this->assertSame(['ok', ''], $data['calm']['php']);
-        $this->assertSame(['ok', ''], $data['calm']['sql']);
+        foreach (['php', 'site', 'file', 'sql'] as $key) $this->assertSame(['ok', ''], $data['calm'][$key], 'The '.$key.' errors are loud with no journal');
         $this->assertSame(['warn', $day(3)], $data['few']['php']);
+        $this->assertSame(['warn', $day(2)], $data['few']['site']);
+        $this->assertSame(['warn', $day(4)], $data['few']['file']);
         $this->assertSame(['warn', $day(1)], $data['few']['sql']);
         $this->assertSame(['danger', $day(100)], $data['many']['php']);
+        $this->assertSame(['danger', $day(100)], $data['many']['site']);
+        $this->assertSame(['danger', $day(100)], $data['many']['file']);
         $this->assertSame(['danger', $day(10)], $data['many']['sql']);
     }
 
@@ -155,7 +158,7 @@ final class CockpitTest extends TestCase
         $lvls = array_column($data['signals'], 'level');
         $tone = in_array('danger', $lvls, true) ? 'danger' : (in_array('warn', $lvls, true) ? 'warn' : 'info');
         $this->assertSame($tone, $data['tone']);
-        $this->assertCount(14, $data['signals']);
+        $this->assertCount(16, $data['signals']);
     }
 
     # With every check passed the lamp rests in a lull while the hour counts under twenty pages; a loud signal and a stale counter never make one

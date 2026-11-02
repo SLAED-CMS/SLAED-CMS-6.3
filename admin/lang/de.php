@@ -77,6 +77,8 @@ define('_ADM_SIG_DIRS','Verzeichnisschutz');
 define('_ADM_SIG_SETUP','Installationsdatei');
 define('_ADM_SIG_PHP','PHP-Fehler');
 define('_ADM_SIG_DB','Datenbankfehler');
+define('_ADM_SIG_SITE','Website-Fehler');
+define('_ADM_SIG_FILE','Dateifehler');
 define('_ADM_SIG_BACKUP','Sicherung');
 define('_ADM_SIG_LOGIN','Fehlgeschlagene Anmeldungen');
 define('_ADM_SIG_ATTACK','Sicherheitsereignisse');

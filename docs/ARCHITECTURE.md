@@ -1309,7 +1309,7 @@ the requests behind it. The help of the panel is `admin/info/panel/ru.md`, opene
 - **The cockpit reads the monitor.** The data functions of the monitor live in `core/monitor.php`, read by
   "Мониторинг" and the home alike. `getMonitorCache($key, $ttl, $make)` is the one store: a JSON file of `Cache` per
   site under the memory of the request, never APCu, which each php-cgi of a Windows pool keeps to itself.
-  `getSystemSignals()` answers the fourteen signals of the lamp (`key, level, label, fact, href`, failures first, kept
+  `getSystemSignals()` answers the sixteen signals of the lamp (`key, level, label, fact, href`, failures first, kept
   60 s), the age of a backup measured against `dump_age` of `config/security.php`; `getSelfCheckState()` feeds both the
   signal and `getSelfCheckAlert()`. The home draws the lamp and the signals with the page and never calls
   `getCockpitData()` itself — a snapshot costs seconds on Windows — so the rings come from the poll

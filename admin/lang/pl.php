@@ -77,6 +77,8 @@ define('_ADM_SIG_DIRS','Ochrona katalogów');
 define('_ADM_SIG_SETUP','Plik instalacyjny');
 define('_ADM_SIG_PHP','Błędy PHP');
 define('_ADM_SIG_DB','Błędy bazy danych');
+define('_ADM_SIG_SITE','Błędy witryny');
+define('_ADM_SIG_FILE','Błędy plików');
 define('_ADM_SIG_BACKUP','Kopia zapasowa');
 define('_ADM_SIG_LOGIN','Nieudane logowania');
 define('_ADM_SIG_ATTACK','Zdarzenia bezpieczeństwa');

@@ -77,6 +77,8 @@ define('_ADM_SIG_DIRS','Захист каталогів');
 define('_ADM_SIG_SETUP','Файл встановлення');
 define('_ADM_SIG_PHP','Помилки PHP');
 define('_ADM_SIG_DB','Помилки бази даних');
+define('_ADM_SIG_SITE','Помилки сайту');
+define('_ADM_SIG_FILE','Помилки файлів');
 define('_ADM_SIG_BACKUP','Резервна копія');
 define('_ADM_SIG_LOGIN','Невдалі входи');
 define('_ADM_SIG_ATTACK','Події безпеки');

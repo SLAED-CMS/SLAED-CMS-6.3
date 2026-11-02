@@ -114,7 +114,7 @@ final class JournalNameTest extends TestCase
         }
     }
 
-    # The dashboard counter reads the structured line Logger writes and counts warning, error and critical within the window, nothing else
+    # The dashboard counter reads the structured line Logger writes and counts warning, error and critical within the window, an answer of 500 and up among them, nothing else
     #[Test]
     public function theErrorCounterCountsTheProblemLevelsOnly(): void
     {
@@ -124,6 +124,9 @@ final class JournalNameTest extends TestCase
             ['ts' => $now, 'level' => 'error'],
             ['ts' => $now, 'level' => 'critical'],
             ['ts' => $now, 'level' => 'warning'],
+            ['ts' => $now, 'level' => 'error', 'http_code' => 500],
+            ['ts' => $now, 'level' => 'error', 'http_code' => 404],
+            ['ts' => $now, 'level' => 'error', 'http_code' => 403],
             ['ts' => $now, 'level' => 'notice'],
             ['ts' => $now, 'level' => 'info'],
             ['ts' => $now, 'level' => 'debug'],
@@ -131,7 +134,7 @@ final class JournalNameTest extends TestCase
         ];
         $text = implode("\n", array_map(static fn(array $row): string => (string)json_encode($row + ['chan' => 'site', 'msg' => 'probe']), $rows));
         file_put_contents(LOGS_DIR.'/error_site.log', $text."\n[2026-01-01 00:00:00] old text line\n", FILE_APPEND);
-        $this->assertSame((is_int($base) ? $base : 0) + 3, getErrorLogCountHours(24));
+        $this->assertSame((is_int($base) ? $base : 0) + 4, getErrorLogCountHours(24), 'The counter missed a problem level or took a 4xx answer of a visitor');
     }
 
     # Whether one literal joined to LOGS_DIR names a journal, a state file or a directory below which only state is kept

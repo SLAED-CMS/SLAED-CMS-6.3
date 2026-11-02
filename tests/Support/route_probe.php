@@ -3400,6 +3400,10 @@ function getRouteEntry(string $work): array {
     setRouteFile($work.'/config/db.php', $base);
     unlink($work.'/config/local.php');
     $out['back'] = $ask('api/v1/system/ping')['code'];
+    $slog = $work.'/logs/error_sql.log';
+    $lines = is_file($slog) ? (file($slog, FILE_IGNORE_NEW_LINES) ?: []) : [];
+    $out['refused'] = count(array_filter($lines, fn(string $v): bool => str_contains($v, '[1045]')));
+    if (is_file($slog)) file_put_contents($slog, implode("\n", array_filter($lines, fn(string $v): bool => !str_contains($v, '[1045]'))));
     return $out;
 }
 

@@ -510,7 +510,7 @@ function getDbHealth(object $db): array {
     return $data;
 }
 
-# Counts the warning, error and critical lines Logger wrote into the given error journals within a time window, reading the tail of each
+# Counts the warning, error and critical lines of the given error journals within a time window from the tail of each; an answer under 500 is a visitor's miss, not a failure
 function getErrorLogCountHours(int $hours = 24, array $files = ['error_php.log', 'error_sql.log', 'error_site.log', 'error_file.log']): int|string {
     $logsdir = defined('LOGS_DIR') ? (string)LOGS_DIR : BASE_DIR.'/storage/logs';
     $thresh = time() - ($hours * 3600);
@@ -522,7 +522,7 @@ function getErrorLogCountHours(int $hours = 24, array $files = ['error_php.log',
         $seen = true;
         foreach (getTailLines(getFileTailChunk($path, 262144), 2500) as $line) {
             $row = json_decode($line, true);
-            if (!is_array($row) || !in_array($row['level'] ?? '', ['warning', 'error', 'critical'], true)) continue;
+            if (!is_array($row) || !in_array($row['level'] ?? '', ['warning', 'error', 'critical'], true) || (int)($row['http_code'] ?? 500) < 500) continue;
             $ts = strtotime((string)($row['ts'] ?? ''));
             if ($ts !== false && $ts >= $thresh) $count++;
         }
@@ -1295,7 +1295,7 @@ function getStatData(string $month = '', int $pick = -1, bool $now = true, int $
     ];
 }
 
-# The fourteen signals of the lamp, failures first, each with check, level, fact of a failure and page; journals and queues kept $ttl seconds, 0 fresh
+# The sixteen signals of the lamp, failures first, each with check, level, fact of a failure and page; journals and queues kept $ttl seconds, 0 fresh
 function getSystemSignals(int $ttl = 60): array {
     global $conf, $afile;
     require_once BASE_DIR.'/core/classes/update.php';
@@ -1306,7 +1306,8 @@ function getSystemSignals(int $ttl = 60): array {
             $next = ((int)($job['active'] ?? 0) === 1) ? getSchedulerPlannedTime($job, getSchedulerState($name)) : 0;
             if ($next > 0 && $next < time() - 3600) $late++;
         }
-        return ['php' => getErrorLogCountHours(24, ['error_php.log', 'error_site.log', 'error_file.log']), 'sql' => getErrorLogCountHours(24, ['error_sql.log']),
+        return ['php' => getErrorLogCountHours(24, ['error_php.log']), 'site' => getErrorLogCountHours(24, ['error_site.log']),
+            'file' => getErrorLogCountHours(24, ['error_file.log']), 'sql' => getErrorLogCountHours(24, ['error_sql.log']),
             'login' => getFailedLoginCountHours(24), 'attack' => getSecurityEventCount(24), 'late' => $late, 'backup' => (int)strtotime(getLastBackupRunLabel()),
             'mail' => $mailer->getPending(3600)];
     });
@@ -1327,8 +1328,10 @@ function getSystemSignals(int $ttl = 60): array {
         ['dirs', _ADM_SIG_DIRS, 'security', $self['open'] ? 'danger' : (($self['none'] || $self['unknown']) ? 'warn' : 'ok'),
             $self['open'] ? _ADM_SIG_OPEN : ($self['none'] ? _ADM_SIG_NONE : _ADM_SIG_UNK)],
         ['setup', _ADM_SIG_SETUP, '', is_file(PUBLIC_DIR.'/setup.php') ? 'warn' : 'ok', _ADM_SIG_ROOT],
-        ['php', _ADM_SIG_PHP, 'monitor', $count($runs['php'], 1, 100), $day($runs['php'])],
-        ['sql', _ADM_SIG_DB, 'database', $count($runs['sql'], 1, 10), $day($runs['sql'])],
+        ['php', _ADM_SIG_PHP, 'logs&op=logview&file=error_php', $count($runs['php'], 1, 100), $day($runs['php'])],
+        ['site', _ADM_SIG_SITE, 'logs&op=logview&file=error_site', $count($runs['site'], 1, 100), $day($runs['site'])],
+        ['file', _ADM_SIG_FILE, 'logs&op=logview&file=error_file', $count($runs['file'], 1, 100), $day($runs['file'])],
+        ['sql', _ADM_SIG_DB, 'logs&op=logview&file=error_sql', $count($runs['sql'], 1, 10), $day($runs['sql'])],
         ['disk', _ADM_DISK, 'monitor', ($free < 10) ? 'danger' : (($disk['disk_pct'] > 75) ? 'warn' : 'ok'), filterDecimal($disk['disk_pct']).'%'],
         ['backup', _ADM_SIG_BACKUP, 'database&op=dump', $bak[0], $bak[1]],
         ['login', _ADM_SIG_LOGIN, 'logs&op=logins', $count($runs['login'], 20), $day($runs['login'])],

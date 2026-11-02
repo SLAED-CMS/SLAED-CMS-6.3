@@ -223,7 +223,7 @@ final class NodeProfileTest extends TestCase
         $run = $this->getRuns()['setup']['lock'];
         foreach (['visit', 'part', 'down'] as $kind) $this->assertSame([true, -1, false, true], $run[$kind], $kind);
         $this->assertTrue($run['same'], 'The shut installer changed config/ or the panel');
-        $this->assertSame(['error_php' => 0, 'error_sql' => 0, 'error_site' => 1], $run['logs']);
+        $this->assertSame(['error_php' => 0, 'error_sql' => 1, 'error_site' => 0], $run['logs']);
     }
 
     # The installer over real HTTP refuses on the stop the answer came from and writes nothing: a POST without the token of its browser, a part without a run
@@ -251,7 +251,7 @@ final class NodeProfileTest extends TestCase
         $this->assertTrue($run['same'], 'A refused stop changed config/ or the panel');
         $this->assertSame([5, false, 4, true, false, true], $run['ddl'], 'A failed run wrote its marks or did not name the failed table');
         $this->assertTrue($run['perm'][0], 'The installer changed the permissions of config/global.php or config/security.php');
-        $this->assertSame(['error_php' => 0, 'error_sql' => 0, 'error_site' => 1], $run['logs'], 'Only the refused connection is logged');
+        $this->assertSame(['error_php' => 0, 'error_sql' => 1, 'error_site' => 0], $run['logs'], 'Only the refused connection is logged, in the journal of the database');
     }
 
     # A profile the installation cannot finish - here a user file in uploads/node/jokes it refuses to take over - is named on the closing stop and in the site log with its step

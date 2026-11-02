@@ -103,7 +103,7 @@ final class ApiEntryTest extends TestCase
         $this->assertSame(['ip' => true, 'hack' => false, 'site' => 200], $this->getRun()['kept'], 'The input of the API was judged by the scan of the site');
     }
 
-    # A banned address gets a bare 403 and a database that refuses the connection a bare 500, both in JSON with no word of the reason, whatever the error display says
+    # A banned address gets a bare 403 and a lost database a bare 500, both in JSON with no word of the reason whatever the display says; the SQL journal keeps the refusal once
     #[Test]
     public function aBanAndALostDatabaseAnswerInJson(): void
     {
@@ -114,6 +114,7 @@ final class ApiEntryTest extends TestCase
             $this->assertStringNotContainsString($word, $run['lost']['body'], 'The reply of a lost database named its reason');
         }
         $this->assertSame(200, $run['back'], 'The API did not come back with the database');
+        $this->assertSame(1, $run['refused'], 'The refused connection was not written once to the SQL journal');
     }
 
     # The site and the panel answer their pages as before, and a path that only begins like api, or api without its slash, is a page of the site that is not found

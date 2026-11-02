@@ -1,5 +1,17 @@
 # Versions
 
+## 2026-11-03
+
+### The lamp of the home names every error journal and opens it
+
+- **Sixteen checks.** "Ошибки PHP" counts `error_php.log` alone; "Ошибки сайта" counts `error_site.log` and "Ошибки
+  файлов" `error_file.log`, each warning from one entry a day and failing from a hundred. Each of the four error checks,
+  the database among them, opens its own journal in "Журналы" instead of the monitor or the database tool.
+- **Misses are no failures.** An answer of the site under 500 (404, 403) no longer counts as an error, on the lamp
+  and in the count of the monitor; the bots that probe for files kept the lamp red on a site that had no fault.
+- **The connection.** A refused database connection is written to `error_sql.log`, where the database errors are,
+  and counts in the SQL errors the update check reports.
+
 ## 2026-11-02
 
 ### The admin block reads Markdown links and names this site

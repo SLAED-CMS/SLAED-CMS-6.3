@@ -77,6 +77,8 @@ define('_ADM_SIG_DIRS','Directory protection');
 define('_ADM_SIG_SETUP','Setup file');
 define('_ADM_SIG_PHP','PHP errors');
 define('_ADM_SIG_DB','Database errors');
+define('_ADM_SIG_SITE','Site errors');
+define('_ADM_SIG_FILE','File errors');
 define('_ADM_SIG_BACKUP','Backup');
 define('_ADM_SIG_LOGIN','Failed logins');
 define('_ADM_SIG_ATTACK','Security events');

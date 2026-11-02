@@ -697,7 +697,7 @@ queues, the session, the cockpit, the menu, the voices — is `docs/ARCHITECTURE
 | `fragments/bell.html` | admin | `getAdminLayoutVars()` | the bell with the queues of `getAdminQueues()` and the address of their poll |
 | `fragments/palette.html` | admin | the layout | Ctrl+K: the actions, the sections gathered from the menu or the cards, the settings of the page |
 | `fragments/toast.html` | both | `getWindowSet()` | the one notice: in admin a flash alert with a ring of `--sl-d-toast` and "Отменить" in the slot, in lite a pill |
-| `partials/cockpit.html`, `fragments/live-chip.html` | admin | `getAdminPanel()` | the four rings, the lamp with the fourteen signal rows, the strip and the live chip of the home |
+| `partials/cockpit.html`, `fragments/live-chip.html` | admin | `getAdminPanel()` | the four rings, the lamp with the sixteen signal rows, the strip and the live chip of the home |
 | `fragments/admin-block.html`, `partials/session-summary.html` | both | `adminblock()` | the block "Администрация": the summary ring, the keys, the own links |
 | `partials/session-stats.html` | both | `getSessionStats()` | the body of the watch window `#sl-stats` |
 | `fragments/dock.html` | both | `getAdminDock()` | the floating menu: the home, "Эта страница в панели" on the site, the pins, the queue, "Все разделы", the watch ring, the card of the administrator, the own links, the tools |
