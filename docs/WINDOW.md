@@ -99,9 +99,12 @@ The gallery is the one window whose inside has a layout of its own, so it owns a
 | `data-sl-shot-down` | the download link |
 | `data-sl-shot-step` | one step of the walk, `-1` or `1` |
 | `data-sl-shot-act` | an action of the object, named by the subsystem that drives it |
+| `data-sl-shot-group` | on a page, not in the window: the container whose image links the `view` window walks |
 
 `data-sl-shot` defaults to `view` when PHP names no owner, which is how a page of the site gets its own image
-viewer from the same fragment without a flag of its own.
+viewer from the same fragment without a flag of its own. The `view` window opens on `a.sl-attach` or
+`a[data-sl-shot-open]` pointing at a picture; the arrows and the arrow keys walk the image links of the nearest
+`data-sl-shot-group` around it, and a link outside any group shows alone, its arrows hidden.
 
 ## JavaScript API
 

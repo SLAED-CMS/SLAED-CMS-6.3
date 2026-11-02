@@ -270,24 +270,46 @@
     window.setWindowExpand = setWindowExpand;
     window.setExpandButton = setExpandButton;
 
-    // Lightbox: an image link opens the gallery window the page carries, the same one the editor and the file browser open with their own data
+    // Lightbox: an image link opens the gallery window the page carries, the same one the editor and the file browser open with their own data.
+    // The image links of one data-sl-shot-group are walked by the arrows of the window and by the arrow keys; a lone link hides the arrows
     function setLightbox() {
         var root = document.querySelector('dialog[data-sl-shot="view"]');
         var image = root ? root.querySelector('[data-sl-shot-img]') : null;
         var label = root ? root.querySelector('[data-sl-shot-name]') : null;
         if (!root || !image || !label) return;
+        var steps = root.querySelectorAll('[data-sl-shot-step]');
+        var list = [];
+        var at = 0;
+        var isImage = function (link) {
+            return /\.(?:avif|gif|jpe?g|png|webp|svg)(?:[?#].*)?$/i.test(link.getAttribute('href') || '');
+        };
+        var show = function (next) {
+            at = (next + list.length) % list.length;
+            var href = list[at].getAttribute('href');
+            image.src = href;
+            image.alt = list[at].getAttribute('title') || '';
+            label.textContent = list[at].getAttribute('title') || href.split('/').pop();
+        };
         root.addEventListener('close', function () {
             image.removeAttribute('src');
         });
+        root.addEventListener('click', function (event) {
+            var walk = event.target.closest('[data-sl-shot-step]');
+            if (walk && list.length > 1) show(at + parseInt(walk.getAttribute('data-sl-shot-step'), 10));
+        });
+        root.addEventListener('keydown', function (event) {
+            if (list.length < 2 || (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight')) return;
+            event.preventDefault();
+            show(at + (event.key === 'ArrowLeft' ? -1 : 1));
+        });
         document.addEventListener('click', function (event) {
             var trigger = event.target.closest('a.sl-attach, a[data-sl-shot-open]');
-            if (!trigger) return;
-            var href = trigger.getAttribute('href') || '';
-            if (!/\.(?:avif|gif|jpe?g|png|webp|svg)(?:[?#].*)?$/i.test(href)) return;
+            if (!trigger || !isImage(trigger)) return;
             event.preventDefault();
-            image.src = href;
-            image.alt = trigger.getAttribute('title') || '';
-            label.textContent = trigger.getAttribute('title') || href.split('/').pop();
+            var group = trigger.closest('[data-sl-shot-group]');
+            list = group ? Array.prototype.filter.call(group.querySelectorAll('a.sl-attach, a[data-sl-shot-open]'), isImage) : [trigger];
+            for (var i = 0; i < steps.length; i++) steps[i].hidden = list.length < 2;
+            show(list.indexOf(trigger));
             setWindowOpen(root);
         });
     }

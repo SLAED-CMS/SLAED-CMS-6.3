@@ -3,7 +3,7 @@
   <div class="sl-pres-body">
     <div class="sl-pres-gallery" data-sl-pres="brand" role="region" aria-label="{{ title }}" aria-roledescription="{{ role }}" data-sl-pres-of="{{ of }}">
       <div class="sl-pres-gallery-head"><span>{{ over }}</span><b>{{ count }}</b></div>
-      <div class="sl-pres-gallery-track" tabindex="0" aria-label="{{ hint }}">
+      <div class="sl-pres-gallery-track" tabindex="0" aria-label="{{ hint }}" data-sl-shot-group>
         {% for item in items %}
         {% include 'fragments/presentation-brand.html' with item %}
         {% endfor %}

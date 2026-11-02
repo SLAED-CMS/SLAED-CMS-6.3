@@ -797,7 +797,7 @@
 }
 
 /* The live chip of the blocks of the site, on the components of this theme: the tip with the state, the interval, the
-   age of the figures and the pause; its beat is the led pulse of the theme, and a pause stills it in the warning tone */
+   age of the figures and the pause; its beat is the live pulse of the theme, and a pause stills it in the warning tone */
 .sl-tip.sl-live-chip {
   width: auto;
   height: auto;
@@ -815,7 +815,7 @@
   color: var(--sl-success);
   font-size: var(--sl-size-icon-xs);
   line-height: 1;
-  animation: sl-led-pulse var(--sl-led-dur) var(--sl-ease-in-out) infinite;
+  animation: sl-live-pulse var(--sl-led-dur) var(--sl-ease-in-out) infinite;
 }
 
 .sl-live-chip.sl-is-paused .sl-live-icon {

@@ -46,9 +46,9 @@
   --sl-primary-subtle: light-dark(#64b1e1, #16323f);
   --sl-primary-strong: light-dark(#1c6e9e, #5cbcea);
   --sl-primary-inverse: #7cc4ee;
-  --sl-success: light-dark(#4e7e1f, #46c95d);
-  --sl-success-subtle: light-dark(#9fd779, #14301b);
-  --sl-success-muted: light-dark(#96d26d, #1b3d23);
+  --sl-success: light-dark(#248234, #46c95d);
+  --sl-success-subtle: light-dark(#79d78a, #14301b);
+  --sl-success-muted: light-dark(#6dd27f, #1b3d23);
   --sl-warning: light-dark(#f47a20, #f0932b);
   --sl-warning-strong: light-dark(#c2410c, #ffb057);
   --sl-warning-subtle: light-dark(#ffa024, #3a2a12);
@@ -491,6 +491,8 @@
   --sl-pres-link-text: light-dark(var(--sl-primary-strong), #6fc8ff);
   --sl-pres-good-text: light-dark(color-mix(in srgb, var(--sl-success) 90%, var(--sl-text)), #72e6b0);
   --sl-pres-warn-text: light-dark(var(--sl-warning-strong), #ffd37d);
+  /* The veil over the photos of the presentation: none by day, a dusk by night so a bright picture does not glare on the dark page */
+  --sl-pres-photo-bg: light-dark(transparent, rgba(4, 12, 22, 0.32));
   /* The presentation gauge rings: the cockpit and vitals size, the small statistics size and the glow share */
   --sl-gauge-width: 128px;
   --sl-gauge-height: 128px;
@@ -566,6 +568,9 @@
   /* The gap the knob of a switch keeps from its track on every side, and the lift the knob rides on */
   --sl-switch-gap: 2px;
   --sl-switch-knob-shadow: 0 1px 3px light-dark(rgba(0, 0, 0, 0.22), rgba(0, 0, 0, 0.6));
+  /* A switch turned on: its track and the answer on its knob, the system green by day and a mint by night, which reads at 11:1 */
+  --sl-switch-on-bg: light-dark(var(--sl-success), #72e6b0);
+  --sl-switch-on-text: light-dark(var(--sl-success), #72e6b0);
   --sl-table-border: 2px;
   --sl-table-height: 30px;
   --sl-tooltip-min-width: 150px;

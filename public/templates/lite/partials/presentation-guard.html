@@ -18,7 +18,7 @@
         <div class="sl-pres-traffic">
           {% for item in legend %}<span data-sl-tone="{{ item.tone }}"><i class="bi bi-{{ item.icon }}" aria-hidden="true"></i>{{ item.label }}</span>{% endfor %}
         </div>
-        <span class="sl-pres-badge">{{ badge }}</span>
+        <span class="sl-pres-badge" data-sl-pres-off-text="{{ badge_off }}">{{ badge }}</span>
         <div class="sl-pres-net"><i class="bi bi-globe2" aria-hidden="true"></i><span>{{ net }}</span></div>
         <div class="sl-pres-allow" aria-hidden="true"><span>{{ allow }}</span></div>
         <div class="sl-pres-deny" aria-hidden="true"><span>{{ deny }}</span></div>

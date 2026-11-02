@@ -62,14 +62,15 @@ const states = {
 };
 
 // One part of a screen for the pixels: where it lies; a live figure cannot move, since the document and the polls answer both variants alike
+// A ring drawn outside its element is cropped with the margin `pad` round the box, or the crop would hold the fill alone
 // The mark of the state beats by a transform on the compositor, whose raster of the glyph differs by up to 64 of 255 between two loads of the same file, so it stands still
 const beat = '.sl-cockpit-state .bi';
 const parts = {
   cockpit: { auth: 'admin', url: '/admin.php', sel: '.sl-cockpit', still: beat },
   'cockpit-stat': { auth: 'admin', url: '/admin.php?name=statistic', sel: '.sl-cockpit', still: beat },
   'cockpit-mon': { auth: 'admin', url: '/admin.php?name=monitor', sel: '.sl-cockpit', still: beat },
-  led: { auth: 'admin', url: '/admin.php', sel: '.sl-led-ok' },
-  live: { auth: 'admin', url: '/admin.php', sel: '.sl-live-icon' },
+  led: { auth: 'admin', url: '/admin.php', sel: '.sl-led-ok', pad: 8 },
+  live: { auth: 'admin', url: '/admin.php', sel: '.sl-live-icon', pad: 8 },
   hero: { auth: '', url: '/presentation', sel: '.sl-pres-hero' },
   pipeline: { auth: '', url: '/presentation', sel: '#pipeline' },
   guard: { auth: '', url: '/presentation', sel: '#security' },
@@ -524,7 +525,9 @@ async function getCrops(browser, keep, polls, side, item, mode, tone) {
       });
       document.querySelectorAll('svg').forEach((one) => one.setCurrentTime(i * 0.37));
     }, { i, moments });
-    out.push(await box.screenshot({ animations: 'allow' }));
+    const rect = item.pad ? await box.boundingBox() : null;
+    const clip = rect ? { x: rect.x - item.pad, y: rect.y - item.pad, width: rect.width + item.pad * 2, height: rect.height + item.pad * 2 } : null;
+    out.push(await (clip ? page.screenshot({ clip, animations: 'allow' }) : box.screenshot({ animations: 'allow' })));
   }
   await ctx.close();
   return out;

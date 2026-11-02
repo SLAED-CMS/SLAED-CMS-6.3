@@ -456,7 +456,8 @@
   --sl-led-width: 12px;
   --sl-led-height: 12px;
   --sl-led-border: 2px;
-  --sl-led-shadow: 0 0 0 6px transparent;
+  --sl-led-ring: 6px;
+  --sl-led-shadow: 0 0 0 var(--sl-led-ring) transparent;
   --sl-loading-width: 73px;
   --sl-loading-height: 17px;
   --sl-loading-dot-width: 6px;

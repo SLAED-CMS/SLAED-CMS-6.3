@@ -568,6 +568,18 @@
             log.insertBefore(row, log.firstElementChild);
             while (log.children.length > 6) log.removeChild(log.lastElementChild);
         };
+        // Every catch of the scene fills the next trap of the quarantine and flashes its count; a full row empties for the next ten
+        var traps = box.querySelectorAll('.sl-pres-traps > i');
+        var caught = 0;
+        var trap = function () {
+            if (!traps.length) return;
+            var k = caught++ % traps.length;
+            if (k === 0) for (var t = 0; t < traps.length; t++) traps[t].classList.remove('sl-is-full');
+            traps[k].classList.add('sl-is-full');
+            box.classList.remove('sl-is-hit');
+            void box.offsetWidth;
+            box.classList.add('sl-is-hit');
+        };
         var block = function (card) {
             setState('block', gate.getAttribute('data-sl-pres-block'));
             card.classList.add('sl-is-caught');
@@ -576,13 +588,21 @@
             card.style.setProperty('--sl-d-y', Math.round(q.top + q.height * 0.4) + 'px');
             window.setTimeout(function () {
                 if (count) count.textContent = String((parseInt(count.textContent, 10) || 0) + 1);
+                trap();
                 note(card);
                 card.remove();
                 release();
             }, STEP * 0.17);
         };
-        var pass = function (card) {
-            setState('pass', gate.getAttribute('data-sl-pres-pass'));
+        // A card walks into the house. With the guard switched off the gate stays quiet, and a threat lands as a breach the log marks as passed
+        var pass = function (card, off) {
+            var breach = off && card.hasAttribute('data-sl-pres-bad');
+            var lamp = breach ? 'sl-is-breach' : 'sl-is-lit';
+            if (!off) setState('pass', gate.getAttribute('data-sl-pres-pass'));
+            if (breach) {
+                card.setAttribute('data-sl-pres-result', gate.getAttribute('data-sl-pres-pass'));
+                card.setAttribute('data-sl-pres-verdict', 'danger');
+            }
             card.classList.add('sl-is-passed');
             var zone = card.getAttribute('data-sl-pres-zone');
             var home = zone === 'door' ? root.querySelector('.sl-pres-door') : root.querySelector('.sl-pres-pane:nth-child(' + zone + ')');
@@ -592,8 +612,8 @@
             card.style.setProperty('--sl-d-y', Math.round(h.top + h.height / 2 - c.height / 2) + 'px');
             window.setTimeout(function () {
                 if (home) {
-                    home.classList.add('sl-is-lit');
-                    window.setTimeout(function () { home.classList.remove('sl-is-lit'); }, STEP * 0.2);
+                    home.classList.add(lamp);
+                    window.setTimeout(function () { home.classList.remove(lamp); }, STEP * 0.2);
                 }
                 note(card);
                 release();
@@ -604,6 +624,7 @@
             var card = pool[at % pool.length].cloneNode(true);
             var lane = rel(lanes[at % lanes.length]);
             var y = lane.top + lane.height / 2;
+            var off = root.getAttribute('data-sl-pres-guard') === '0';
             at++;
             card.style.setProperty('--sl-d-x', '-' + Math.round(lane.left) + 'px');
             card.style.setProperty('--sl-d-y', Math.round(y) + 'px');
@@ -612,10 +633,10 @@
             var g = rel(gate);
             card.style.setProperty('--sl-d-y', Math.round(y - c.height / 2) + 'px');
             card.style.setProperty('--sl-d-x', Math.round(g.left - c.width - 8) + 'px');
-            window.setTimeout(function () { aim = y; setState('check', ''); }, STEP * 0.18);
+            if (!off) window.setTimeout(function () { aim = y; setState('check', ''); }, STEP * 0.18);
             window.setTimeout(function () {
-                if (card.hasAttribute('data-sl-pres-bad')) block(card);
-                else pass(card);
+                if (!off && card.hasAttribute('data-sl-pres-bad')) block(card);
+                else pass(card, off);
             }, STEP * 0.43);
         };
         var wake = function (on) {
@@ -791,14 +812,26 @@
         }, STEP * 0.3);
     }
 
-    // The request path: every beat walks the next scenario of the pool, and a miss ends with the parser cache storing the markup
+    // The request path: every beat walks the next scenario of the pool the cache switch picks, and a miss ends with the parser cache storing the markup
     function setFlow(root) {
-        if (root.getAttribute('data-sl-pres-ready') === '1' || window.isMotionStill()) return;
+        if (root.getAttribute('data-sl-pres-ready') === '1') return;
         var scene = root.querySelector('.sl-pres-flow');
         var pool = root.querySelectorAll('[data-sl-pres-flows] > div');
         var nodes = root.querySelectorAll('.sl-pres-flow > .sl-pres-node');
         if (!scene || pool.length < 2 || nodes.length < 7) return;
         root.setAttribute('data-sl-pres-ready', '1');
+        var mode = root.querySelector('.sl-pres-tree .sl-pres-panel-head > b');
+        var level = mode ? mode.textContent : '';
+        // The packet round the ring runs fast while the cache serves the markup and slow while every visit is parsed again
+        var motion = root.querySelector('.sl-pres-path-packet > animateMotion');
+        var pace = function () {
+            if (motion) motion.setAttribute('dur', root.getAttribute('data-sl-pres-cache') === '0' ? '11s' : '4s');
+        };
+        pace();
+        var getPool = function () {
+            var on = root.getAttribute('data-sl-pres-cache') === '0' ? '0' : '1';
+            return Array.prototype.filter.call(pool, function (c) { return c.getAttribute('data-sl-pres-on') === on; });
+        };
         var badge = root.querySelector('.sl-pres-flow-top .sl-pres-pill');
         var route = root.querySelector('.sl-pres-flow-top .sl-pres-mono');
         var sub = root.querySelector('.sl-pres-flow-core small');
@@ -807,8 +840,27 @@
         var mod = nodes[5].querySelectorAll('small > span');
         var cases = root.querySelectorAll('.sl-pres-case');
         var stats = root.querySelectorAll('.sl-pres-states > .sl-pres-stat:not(.sl-pres-clean-row)');
+        var count = root.querySelector('[data-sl-pres-count]');
+        var tally = count ? count.querySelectorAll('b') : [];
+        var work = nodes[3].querySelectorAll('small > span');
+        var data = work.length > 1 ? work[1].textContent : '';
+        var hits = 0;
+        var parses = 0;
         var at = 0;
         var timer = 0;
+        // Every request of the scene is counted: one served from the stored markup, or one the parser had to read again; the tally shows with the first
+        var tick = function (c) {
+            var parse = c.getAttribute('data-sl-pres-mode') !== 'hit';
+            if (count) count.hidden = false;
+            if (parse) parses++;
+            else hits++;
+            if (tally.length > 1) {
+                tally[0].textContent = String(hits);
+                tally[1].textContent = String(parses);
+            }
+            if (work.length > 1) work[1].textContent = parse ? root.getAttribute('data-sl-pres-parsing') : data;
+            nodes[3].classList.toggle('sl-is-busy', parse);
+        };
         var setTone = function (el, tone) {
             if (!el) return;
             if (tone) el.setAttribute('data-sl-tone', tone);
@@ -846,14 +898,24 @@
         };
         var run = function () {
             window.clearInterval(timer);
-            var c = pool[at++ % pool.length];
+            var set = getPool();
+            var c = set[at++ % set.length];
+            // The markup is stored once: past the first round a miss is not played again
+            if (at > set.length && set.length > 1 && c.getAttribute('data-sl-pres-mode') === 'miss') c = set[at++ % set.length];
             var seq = c.getAttribute('data-sl-pres-seq').split(',');
             var i = 0;
             paint(c);
+            tick(c);
             var light = function () {
                 for (var n = 0; n < nodes.length; n++) nodes[n].classList.toggle('sl-is-on', String(n + 1) === seq[i] || (i === seq.length - 1 && c.getAttribute('data-sl-pres-mode') === 'miss' && n === 4));
                 if (i === seq.length - 1 && c.getAttribute('data-sl-pres-mode') === 'miss') setBadge(root.getAttribute('data-sl-pres-store'), 'success');
             };
+            // Under still motion the switch shows the last beat at once instead of walking the path
+            if (window.isMotionStill()) {
+                i = seq.length - 1;
+                light();
+                return;
+            }
             light();
             timer = window.setInterval(function () {
                 i++;
@@ -864,7 +926,103 @@
                 light();
             }, STEP * 0.12);
         };
+        root.addEventListener('sl-pres-toggle', function () {
+            if (mode) mode.textContent = root.getAttribute('data-sl-pres-cache') === '0' ? 'cache = 0' : (level === 'cache = 0' ? 'cache = 1' : level);
+            hits = 0;
+            parses = 0;
+            at = 0;
+            pace();
+            run();
+        });
         setAutoplay(scene, run);
+    }
+
+    // A block card, on the stage or in the list, lights its wire and the place of the page it stands in while the pointer is on it
+    function setBlockLinks(root) {
+        if (root.getAttribute('data-sl-pres-ready') === '1') return;
+        root.setAttribute('data-sl-pres-ready', '1');
+        var stage = root.querySelectorAll('.sl-pres-blocks-stage > .sl-pres-node');
+        var list = root.querySelectorAll('.sl-pres-bcard');
+        var wires = root.querySelectorAll('.sl-pres-wires path');
+        var slots = root.querySelectorAll('.sl-pres-page [data-sl-pres-slot]');
+        var mark = function (at) {
+            var slot = at >= 0 && stage[at] ? stage[at].getAttribute('data-sl-pres-slot') : '';
+            for (var i = 0; i < stage.length; i++) {
+                stage[i].classList.toggle('sl-is-hot', i === at);
+                if (list[i]) list[i].classList.toggle('sl-is-hot', i === at);
+                if (wires[i]) wires[i].classList.toggle('sl-is-hot', i === at);
+            }
+            for (var s = 0; s < slots.length; s++) slots[s].classList.toggle('sl-is-hot', slot !== '' && slots[s].getAttribute('data-sl-pres-slot') === slot);
+        };
+        var bind = function (cards) {
+            for (var c = 0; c < cards.length; c++) {
+                (function (at) {
+                    cards[at].addEventListener('pointerenter', function () { mark(at); });
+                    cards[at].addEventListener('pointerleave', function () { mark(-1); });
+                })(c);
+            }
+        };
+        bind(stage);
+        bind(list);
+    }
+
+    // The figures of the facts and of the statistics board count up once from zero as they first come into view; still motion leaves them as written
+    function setCount() {
+        if (window.isMotionStill() || !window.IntersectionObserver) return;
+        var list = document.querySelectorAll('.sl-pres-facts .sl-pres-stat > b, .sl-pres-stats-grid .sl-pres-stat > b');
+        // A figure is written back in its own shape: the same decimals, and the thousands grouped by a space where the module grouped them
+        var write = function (text, share) {
+            var raw = text.trim();
+            var clean = raw.replace(/\s/g, '');
+            var dot = clean.indexOf('.');
+            var value = (parseFloat(clean) * share).toFixed(dot < 0 ? 0 : clean.length - dot - 1);
+            if (/\s/.test(raw)) value = value.replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+            return text.replace(raw, value);
+        };
+        var run = function (el) {
+            var node = el.firstChild;
+            var text = el.getAttribute('data-sl-pres-goal');
+            var start = window.performance.now();
+            var step = function (now) {
+                var t = Math.min(1, (now - start) / 900);
+                node.nodeValue = t < 1 ? write(text, 1 - Math.pow(1 - t, 3)) : text;
+                if (t < 1) window.requestAnimationFrame(step);
+            };
+            window.requestAnimationFrame(step);
+        };
+        var seen = new IntersectionObserver(function (rows) {
+            for (var r = 0; r < rows.length; r++) {
+                if (!rows[r].isIntersecting) continue;
+                seen.unobserve(rows[r].target);
+                run(rows[r].target);
+            }
+        }, { threshold: 0.6 });
+        for (var i = 0; i < list.length; i++) {
+            var node = list[i].firstChild;
+            if (list[i].hasAttribute('data-sl-pres-goal') || !node || node.nodeType !== 3 || !/^\s*\d[\d\s]*(\.\d+)?\s*$/.test(node.nodeValue)) continue;
+            list[i].setAttribute('data-sl-pres-goal', node.nodeValue);
+            node.nodeValue = write(node.nodeValue, 0);
+            seen.observe(list[i]);
+        }
+    }
+
+    // The switch in the head of a section plays its scene with a feature on or off: the value lands on the scene as data-sl-pres-<name>, the site keeps its settings
+    function setToggle(group) {
+        var section = group.closest('.sl-pres-section');
+        var scene = section ? section.querySelector('[data-sl-pres]') : null;
+        if (!scene || group.getAttribute('data-sl-pres-ready') === '1') return;
+        group.setAttribute('data-sl-pres-ready', '1');
+        var name = 'data-sl-pres-' + group.getAttribute('data-sl-pres-toggle');
+        var picked = group.querySelector('input:checked');
+        var swaps = scene.querySelectorAll('[data-sl-pres-off-text]');
+        for (var s = 0; s < swaps.length; s++) swaps[s].setAttribute('data-sl-pres-on-text', swaps[s].textContent);
+        scene.setAttribute(name, picked ? picked.value : '1');
+        group.addEventListener('change', function (event) {
+            var off = event.target.value === '0';
+            scene.setAttribute(name, event.target.value);
+            for (var w = 0; w < swaps.length; w++) swaps[w].textContent = swaps[w].getAttribute(off ? 'data-sl-pres-off-text' : 'data-sl-pres-on-text');
+            scene.dispatchEvent(new CustomEvent('sl-pres-toggle'));
+        });
     }
 
     // A part off screen costs no frame: the CSS pauses what data-sl-pres-off marks, and SMIL, which no CSS reaches, is paused here and under still motion too
@@ -898,6 +1056,11 @@
 
     function setPresentation() {
         setOffScreen();
+        var toggles = document.querySelectorAll('[data-sl-pres-toggle]');
+        for (var t = 0; t < toggles.length; t++) setToggle(toggles[t]);
+        var blocks = document.querySelectorAll('.sl-pres-blocks');
+        for (var k = 0; k < blocks.length; k++) setBlockLinks(blocks[k]);
+        setCount();
         var list = document.querySelectorAll('[data-sl-pres]');
         for (var i = 0; i < list.length; i++) {
             var kind = list[i].getAttribute('data-sl-pres');

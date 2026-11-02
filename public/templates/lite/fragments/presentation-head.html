@@ -3,7 +3,15 @@
   <i class="bi bi-{{ icon }} sl-pres-icon" aria-hidden="true"></i>
   <h2{% if is_build %} data-sl-text="title"{% endif %}>{{ title }}</h2>
   <p{% if is_build %} data-sl-text="lead"{% endif %}>{{ lead }}</p>
-  {% if state %}
+  {% if toggle %}
+  <div class="sl-pres-toggle">
+    <span id="pres-toggle-{{ toggle.name }}">{{ toggle.label }}</span>
+    <div class="sl-radio-group sl-radio-switch" role="radiogroup" aria-labelledby="pres-toggle-{{ toggle.name }}" data-sl-pres-toggle="{{ toggle.name }}">
+      <label class="sl-radio"><input type="radio" name="pres-{{ toggle.name }}" value="1"{% if toggle.is_on %} checked{% endif %}> {{ toggle.yes }}</label>
+      <label class="sl-radio"><input type="radio" name="pres-{{ toggle.name }}" value="0"{% if not toggle.is_on %} checked{% endif %}> {{ toggle.no }}</label>
+    </div>
+  </div>
+  {% elseif state %}
   <span class="sl-pres-pill"{% if tone %} data-sl-tone="{{ tone }}"{% endif %}>{{ state }}</span>
   {% endif %}
 </div>

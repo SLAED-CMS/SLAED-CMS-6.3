@@ -20,26 +20,6 @@
         <div class="sl-pres-pulse-foot"><i class="sl-pres-dot sl-is-live"></i><a href="{{ item.href }}"><span>{{ item.link }}</span> <i class="bi bi-arrow-up-right" aria-hidden="true"></i></a></div>
       </article>
       {% endfor %}
-      <div class="sl-pres-monitor">
-        <div class="sl-pres-monitor-title">
-          <span class="sl-pres-over">{{ monitor.over }}</span>
-          <h3>{{ monitor.title }}</h3>
-          <p>{{ monitor.text }}</p>
-        </div>
-        {% if monitor.has_monitor %}
-        {% for item in monitor.minis %}
-        <div class="sl-pres-mini">
-          {% include 'fragments/presentation-ring.html' with item %}
-          <div><span>{{ item.label }}</span><b>{{ item.text }}</b></div>
-        </div>
-        {% endfor %}
-        <div class="sl-pres-soft">
-          {% for item in monitor.soft %}<span><i class="bi bi-{{ item.icon }}" aria-hidden="true"></i>{{ item.text }}</span>{% endfor %}
-        </div>
-        {% else %}
-        <p class="sl-pres-note"><i class="bi bi-info-circle" aria-hidden="true"></i>{{ monitor.off }}</p>
-        {% endif %}
-      </div>
     </div>
   </div>
 </section>

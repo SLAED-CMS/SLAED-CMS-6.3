@@ -4627,17 +4627,42 @@ dialog.sl-editor-emoji-panel {
   box-sizing: border-box;
 }
 
+/* A lit LED: its ring at its widest is a still disc under the fill, which the pulse widens from the edge of the fill by a transform */
 .sl-led-ok {
+  border-color: transparent;
+  background: none;
+}
+
+.sl-led-ok::before,
+.sl-led-ok::after {
+  content: "";
+  position: absolute;
+  border-radius: var(--sl-radius-circle);
+}
+
+.sl-led-ok::before {
+  inset: calc((var(--sl-led-border) + var(--sl-led-ring)) * -1);
+  background: color-mix(in srgb, var(--sl-success) var(--sl-ring-mix), transparent);
+  opacity: 0;
   animation: sl-led-pulse var(--sl-led-dur) var(--sl-ease-in-out) infinite;
 }
 
+.sl-led-ok::after {
+  inset: calc(var(--sl-led-border) * -1);
+  border: var(--sl-led-border) solid var(--sl-bg);
+  background: var(--sl-success);
+}
+
+/* Half the scale puts the edge of the ring on the edge of the fill, since the ring is as wide as the LED is round */
 @keyframes sl-led-pulse {
   0%,
   100% {
-    box-shadow: 0 0 0 0 color-mix(in srgb, var(--sl-success) var(--sl-ring-mix), transparent);
+    opacity: 1;
+    transform: scale(0.5);
   }
   60% {
-    box-shadow: var(--sl-led-shadow);
+    opacity: 0;
+    transform: scale(1);
   }
 }
 
@@ -8389,7 +8414,18 @@ button.sl-but-mini {
   color: var(--sl-success);
   font-size: var(--sl-size-icon-xs);
   line-height: 1;
-  animation: sl-led-pulse var(--sl-led-dur) var(--sl-ease-in-out) infinite;
+  animation: sl-live-pulse var(--sl-led-dur) var(--sl-ease-in-out) infinite;
+}
+
+/* The ring of the live icon stays a shadow: the chip is translucent, so a ring under it would show through, and a transform would widen a mask with the ring */
+@keyframes sl-live-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--sl-success) var(--sl-ring-mix), transparent);
+  }
+  60% {
+    box-shadow: var(--sl-led-shadow);
+  }
 }
 
 .sl-live-chip.sl-is-paused .sl-live-icon {
@@ -8630,7 +8666,7 @@ button.sl-but-mini {
   mask: radial-gradient(circle closest-side, transparent calc(100% - var(--sl-space-2)), var(--sl-text) calc(100% - var(--sl-space-2) + 1px));
 }
 
-/* The pulse ring: invisible at rest, so a still panel shows none */
+/* The pulse ring: invisible at rest, so a still panel shows none; its glow stands still and fades with it, on a layer of a filter, which rasters the line as the moving glow did */
 .sl-cockpit-plate::after {
   background: radial-gradient(
     circle closest-side,
@@ -8639,6 +8675,8 @@ button.sl-but-mini {
     transparent 100%
   );
   opacity: 0;
+  filter: drop-shadow(0 0 var(--sl-space-3) currentColor);
+  will-change: filter;
 }
 
 /* The glass is a layer of its own under the rows: the rows read against the middle of the disc, never against its shaded rim or its line */
@@ -8900,18 +8938,16 @@ button.sl-but-mini {
   }
 }
 
-/* The ring leaves the lamp at full strength with its own glow and fades as it widens */
+/* The ring leaves the lamp at full strength with its glow and fades as it widens */
 @keyframes sl-cockpit-ring {
   from {
     opacity: 1;
     transform: scale(0.94);
-    filter: drop-shadow(0 0 var(--sl-space-3) currentColor);
   }
 
   to {
     opacity: 0;
     transform: scale(1.3);
-    filter: drop-shadow(0 0 var(--sl-space-3) transparent);
   }
 }
 

@@ -17,7 +17,7 @@
         </div>
       </div>
       <div class="sl-pres-eyebrow">{{ eyebrow }}</div>
-      <h1>{{ head_a }} <span>{{ head_b }}</span><br>{{ head_c }}</h1>
+      <h1>{{ head_a }}{% if head_b %}<span>{{ head_b }}</span>{{ head_c }}{% endif %}</h1>
       <p class="sl-pres-lead">{{ lead }}</p>
     </div>
     <div class="sl-pres-core" data-sl-pres="core">
@@ -37,7 +37,7 @@
           <div class="sl-pres-core-stack">
             {% for item in core.stack %}<span><i class="bi bi-{{ item.icon }}" aria-hidden="true"></i><b>{{ item.name }}</b><em{% if item.is_ok %} class="sl-is-ok"{% endif %}>{{ item.note }}</em></span>{% endfor %}
           </div>
-          <div class="sl-pres-core-flow">{% for item in core.flow %}<span><i></i>{{ item }}</span><b>→</b>{% endfor %}<span><i></i>200</span></div>
+          <div class="sl-pres-core-flow">{% for item in core.flow %}<span>{{ item }}</span><b>→</b>{% endfor %}<span>200</span></div>
           <div class="sl-pres-log">
             {% for item in core.trace %}
             <div><time>{{ item.time }}</time><span>{{ item.name }}</span><em data-sl-tone="success">{{ item.value }}</em></div>

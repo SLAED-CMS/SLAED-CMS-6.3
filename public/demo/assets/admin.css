@@ -174,7 +174,7 @@ html:has(.a-page) {
 }
 
 .a-dot-live {
-  animation: sl-led-pulse var(--sl-led-dur) var(--sl-ease-in-out) infinite;
+  animation: sl-live-pulse var(--sl-led-dur) var(--sl-ease-in-out) infinite;
 }
 
 .a-kbd {

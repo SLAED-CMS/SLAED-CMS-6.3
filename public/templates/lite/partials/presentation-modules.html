@@ -44,29 +44,29 @@
               {% endfor %}
             </svg>
             <div class="sl-pres-page">
-              <div class="sl-pres-slot{% if blocks.fill.banner %} sl-is-on{% endif %}">{{ blocks.slots.banner }}</div>
+              <div class="sl-pres-slot{% if blocks.fill.banner %} sl-is-on{% endif %}" data-sl-pres-slot="b">{{ blocks.slots.banner }}</div>
               <div class="sl-pres-page-grid">
-                <aside class="sl-pres-slot{% if blocks.fill.left %} sl-is-on{% endif %}"><span>{{ blocks.slots.left }}</span></aside>
+                <aside class="sl-pres-slot{% if blocks.fill.left %} sl-is-on{% endif %}" data-sl-pres-slot="l"><span>{{ blocks.slots.left }}</span></aside>
                 <div>
-                  <div class="sl-pres-slot{% if blocks.fill.top %} sl-is-on{% endif %}">{{ blocks.slots.top }}</div>
+                  <div class="sl-pres-slot{% if blocks.fill.top %} sl-is-on{% endif %}" data-sl-pres-slot="c">{{ blocks.slots.top }}</div>
                   <div class="sl-pres-page-content">
                     <div class="sl-pres-router"><i class="bi bi-arrows-move" aria-hidden="true"></i><b>{{ blocks.router }}</b><span>{{ blocks.router_note }}</span></div>
                   </div>
-                  <div class="sl-pres-slot{% if blocks.fill.bottom %} sl-is-on{% endif %}">{{ blocks.slots.bottom }}</div>
+                  <div class="sl-pres-slot{% if blocks.fill.bottom %} sl-is-on{% endif %}" data-sl-pres-slot="d">{{ blocks.slots.bottom }}</div>
                 </div>
-                <aside class="sl-pres-slot{% if blocks.fill.right %} sl-is-on{% endif %}"><span>{{ blocks.slots.right }}</span></aside>
+                <aside class="sl-pres-slot{% if blocks.fill.right %} sl-is-on{% endif %}" data-sl-pres-slot="r"><span>{{ blocks.slots.right }}</span></aside>
               </div>
-              <div class="sl-pres-slot{% if blocks.fill.footer %} sl-is-on{% endif %}">{{ blocks.slots.footer }}</div>
+              <div class="sl-pres-slot{% if blocks.fill.footer %} sl-is-on{% endif %}" data-sl-pres-slot="f">{{ blocks.slots.footer }}</div>
             </div>
             {% for item in blocks.nodes %}
-            <div class="sl-pres-node{% if item.is_on %} sl-is-on{% else %} sl-is-off{% endif %}" title="{{ item.title }}"><i class="bi bi-{{ item.icon }}" aria-hidden="true"></i><span>{{ item.pos }}</span><b>{{ item.title }}</b><small><span>{% if item.is_file %}FILE{% else %}HTML{% endif %}</span><span>{% if item.is_on %}ON{% else %}OFF{% endif %}</span></small></div>
+            <div class="sl-pres-node{% if item.is_on %} sl-is-on{% else %} sl-is-off{% endif %}" title="{{ item.title }}" data-sl-pres-slot="{{ item.slot }}"><i class="bi bi-{{ item.icon }}" aria-hidden="true"></i><span>{{ item.pos }}</span><b>{{ item.title }}</b><small><span>{% if item.is_file %}FILE{% else %}HTML{% endif %}</span><span>{% if item.is_on %}ON{% else %}OFF{% endif %}</span></small></div>
             {% endfor %}
           </div>
           <aside class="sl-pres-blocks-panel">
             <div class="sl-pres-panel-head"><span>{{ blocks.layout }}</span><b>{{ blocks.current }}</b></div>
             <div class="sl-pres-blocks-list">
               {% for item in blocks.nodes %}
-              <div class="sl-pres-bcard" title="{{ item.title }}"><b>{{ item.title }}</b><span>{{ item.pos }}</span><small>{% if item.is_file %}FILE{% else %}HTML{% endif %} · {% if item.is_on %}ON{% else %}OFF{% endif %}</small></div>
+              <div class="sl-pres-bcard" title="{{ item.title }}" data-sl-pres-slot="{{ item.slot }}"><b>{{ item.title }}</b><span>{{ item.pos }}</span><small>{% if item.is_file %}FILE{% else %}HTML{% endif %} · {% if item.is_on %}ON{% else %}OFF{% endif %}</small></div>
               {% endfor %}
             </div>
             <div class="sl-pres-rules">

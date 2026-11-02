@@ -1307,7 +1307,7 @@ input[type="checkbox"]:disabled {
 }
 
 .sl-radio-group.sl-radio-switch:has(input[value="1"]:checked) {
-  background: var(--sl-success);
+  background: var(--sl-switch-on-bg);
 }
 
 .sl-radio-group.sl-radio-switch::after {
@@ -1358,7 +1358,7 @@ input[type="checkbox"]:disabled {
 
 .sl-radio-group.sl-radio-switch:has(input[value="1"]:checked)
   .sl-radio:has(input:checked) {
-  color: var(--sl-success);
+  color: var(--sl-switch-on-text);
 }
 
 /* The same disappearance serves the preset gallery of the settings page, where each option is its picture and nothing else */
