@@ -1,5 +1,5 @@
 {
-    "generated": "2026-11-01T19:36:21Z",
+    "generated": "2026-11-02T16:56:49Z",
     "themes": {
         "admin": {
             "count": 0,
@@ -7,7 +7,7 @@
             "dup": 0,
             "names": 0,
             "dead": 0,
-            "single": 169,
+            "single": 168,
             "alias": 0,
             "unsat": 0,
             "unmet": 0,
@@ -15,7 +15,7 @@
             "clash": 0,
             "classes": 0,
             "important": 14,
-            "tokens": 385,
+            "tokens": 386,
             "contrast": 0
         },
         "lite": {
@@ -24,7 +24,7 @@
             "dup": 0,
             "names": 0,
             "dead": 0,
-            "single": 203,
+            "single": 205,
             "alias": 0,
             "unsat": 0,
             "unmet": 0,
@@ -32,7 +32,7 @@
             "clash": 0,
             "classes": 0,
             "important": 10,
-            "tokens": 459,
+            "tokens": 462,
             "contrast": 0
         }
     },
@@ -220,6 +220,7 @@
             "--sl-led-border",
             "--sl-led-dur",
             "--sl-led-height",
+            "--sl-led-ring",
             "--sl-led-shadow",
             "--sl-led-width",
             "--sl-line-loose",
@@ -719,6 +720,7 @@
             "--sl-pres-min-height",
             "--sl-pres-muted-text",
             "--sl-pres-panel-bg",
+            "--sl-pres-photo-bg",
             "--sl-pres-shadow",
             "--sl-pres-text",
             "--sl-pres-warn-text",
@@ -840,6 +842,8 @@
             "--sl-switch-gap",
             "--sl-switch-height",
             "--sl-switch-knob-shadow",
+            "--sl-switch-on-bg",
+            "--sl-switch-on-text",
             "--sl-switch-width",
             "--sl-table-border",
             "--sl-table-height",

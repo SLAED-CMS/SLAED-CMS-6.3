@@ -2,6 +2,25 @@
 
 ## 2026-11-02
 
+### Motion costs less, and the picture stays the same
+
+The home of the panel and the presentation kept a core busy while nobody touched them, and a moving pointer dropped
+them to 17–33 frames a second. The laws are `docs/TEMPLATES.md`, "The Cost Of A Frame"; the rig and every number are
+`docs/PERFORMANCE.md`, "Frame Cost".
+
+- **The rig.** `tools/frame-cost.mjs` with `npm run perf:frame` measures in interleaved pairs against a commit or a
+  patch, names the animations the compositor refuses and compares the pixels of a part on a frozen clock.
+- **The pointer.** The pointer light of both themes writes non-inherited coordinates, so a move restyles two elements
+  instead of every one: 120 frames a second under a moving pointer on both pages.
+- **Phoenix.** The scene draws only after a step and draws its still acts once, with every layer equal.
+- **The presentation.** The pulse sleeps off screen and reads no layout per frame; a part off screen pauses its
+  animations and its SVG. The gate of the guard moves by `transform` in whole device pixels, its parts as one, where
+  the layout snapped each on its own; the guard screen falls from 85 to 60 % of a core.
+- **The panel.** The LED and the ring of the cockpit pulse on `transform` and `opacity`.
+- **Kept.** The scans, the dots, the packets, the dashes and the bars that move by an offset stay on it, since on
+  `transform` a thin line spreads over two pixels; the alarm, the throb and the live icon of the cockpit stay as they
+  were.
+
 ### The counter picture and the random banner are gone
 
 - **Removed.** The blocks `blocks/stat.php` and `blocks/banner_random.php`, the counter picture `index.php?stat=1&img=N`

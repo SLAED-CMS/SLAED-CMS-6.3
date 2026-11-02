@@ -594,3 +594,61 @@ Recommended focused targets:
 - one heavy admin module page, such as `admin.php?name=node`
 - one changelog cache miss and one changelog cache hit
 - one page with active right/left blocks
+
+### Frame Cost
+
+What a moving page costs while nobody touches it, and what a moving pointer or a scroll adds, is measured by
+`tools/frame-cost.mjs` (`npm run perf:frame`); its header lists the jobs. The laws it proves are `docs/TEMPLATES.md`,
+"The Cost Of A Frame". `SLAED_UI_USER` and `SLAED_UI_PASS` are set for the command, as for the screenshot rig.
+
+- **Pairs only.** The absolute level moves between sessions (the top of the presentation read 59–113 % of a core on one
+  day), so a run interleaves two variants, three rounds at least, and reports the medians: `--before=<commit>` serves
+  the public `.css` and `.js` of that commit against the tree, `--patch=<address>=<file>` a form not yet in the tree;
+  without either a job compares the tree with itself, which is how the rig proves its own noise. The HTTP cache is off
+  for the whole context, since a patched file under the same `?v=` would come back from the cache, and a variant that
+  reached a page with none of its files stops the run.
+- **The window.** Headless Chromium of the repository (`channel: 'chromium'`, the real GPU), 1440×900, DPR 1; the panel
+  through the session of `tools/ui-probe.mjs`, the presentation as a guest, the cockpit held in the state warn
+  (`--tone=`). Per window of 4 s: CPU of every process (`SystemInfo.getProcessInfo`), script, style and layout time from
+  `Performance.getMetrics`, frames from a `requestAnimationFrame` counter.
+- **The states.** `home-idle`, `home-pointer`, `home-nudge` (a pointer in a circle at the edge, entering no element),
+  `home-scene` (one round of Phoenix in windows of 1.5 s by act), `pres-top`, `pres-quiet` (y 7200), `pres-pipeline`,
+  `pres-guard`, `pres-pointer`, `pres-nudge`, `pres-scroll` (a wheel of 40 px, 60 a second); `--states=a,b` limits a run.
+- **Causes.** `--trace=<state>` names every animation the compositor refuses with its reason (`blink.animations`, opened
+  before the load, since an animation names itself once at its start), the element counts of a restyle and the stack
+  that forced a layout; `--profile=<state>` gives the hot functions.
+- **Pixels.** `--pixels=<part>` loads both variants on a stopped clock with a seeded `Math.random`, answers the document
+  and every poll with their first answer, pauses every loop at seven moments of its cycle and finishes every run that
+  ends, and compares the crops per channel in both schemes, 16 of 255 at most; `--tones=` takes the cockpit through its
+  states, `--crops=<dir>` keeps the PNGs. The parts: `cockpit`, `cockpit-stat`, `cockpit-mon`, `led` and `live` (with a
+  margin of 8 px, their ring lies outside the box), `hero`, `pipeline`, `guard`, `runtime`, `development`. A part
+  against itself differs by at most 1 of 255, with the mark of the cockpit state stilled, as its glyph rasters
+  differently between two loads; `pipeline` differs by up to 26 of 255 in the light scheme between runs, the cause
+  not found, so a crop of it past the tolerance is run again. A motion a script drives stands at one position in all
+  seven crops, so the rig proves it at that position alone; its other positions need a run of the clock between the
+  crops, which the rig does not make.
+- **Phoenix.** `--phoenix` hashes every layer of one round on the same stopped clock, sampled every 0.5 s; a whole run
+  can stand one step off at every fourth moment, the original against itself too, so a difference on those moments
+  alone is run again.
+
+The measurements of 2026-11-01 and 2026-11-02, before → after, medians of the pairs:
+
+| Change | Page, state | Renderer % | GPU % | Style ms/s | Layout ms/s | Frames/s |
+|---|---|---|---|---|---|---|
+| The rig on the tree before the work | home idle / pointer | 57 / 119 | 94 / 76 | 96 / 848 | — | 120 / 33 |
+| The rig on the tree before the work | presentation top / quiet / pointer | 84 / 56 / 119 | 71 / 11 / 48 | 84 / 72 / 836 | — | 120 / 120 / 25 |
+| The pointer light on non-inherited coordinates | home, pointer | 119 → 83 | 78 → 112 | 841 → 167 | — | 33 → 120 |
+| The pointer light on non-inherited coordinates | presentation, pointer | 119 → 93 | 50 → 78 | 837 → 123 | — | 25 → 120 |
+| Phoenix draws only after a step, still acts once | home, scene, average of a round | 90 → 80 | 115 → 107 | — | — | 77 → 86 |
+| The presentation off screen | top / quiet / pipeline | 63 → 46 / 83 → 14 / 64 → 42 | 53 → 51 / 22 → 2 / 49 → 38 | 74 → 28 / 105 → 8 / 78 → 35 | 31 → 15 / 44 → 1 / 33 → 5 | 120 |
+| The LED and the ring on transform and opacity | home idle, warn / ok | 67 → 58 / 59 → 63 | 117 → 71 / 97 → 88 | 109 → 97 / 90 → 87 | 5 → 6 / 4 → 5 | 96 → 107 / 85 → 118 |
+| The gate of the guard on transform | presentation, guard | 85 → 60 | 70 → 62 | 256 → 42 | 33 → 21 | 118 → 120 |
+| The gate of the guard on transform | presentation, scroll | 63 → 62 | 51 → 54 | 96 → 64 | 20 → 20 | 103 → 105 |
+
+More frames drawn raise the GPU share, so a GPU figure that grows beside a frame rate that grows is no loss. The frame
+rate of the guard, 118 → 120, lies within the noise of a pair. Forms measured and not taken, as they change the
+picture: the dots, the packet, the dashes and the bars of the presentation on `transform` (47–94 of 255, no saving
+past the gate on the guard screen), the scan of the cockpit on `transform` (with the screensaver
+off, both it and the live icon moved: renderer 69 → 15 %, style 114 → 5 ms/s; the line between two rows of pixels, up
+to 36 of 255), and the scan lines of the presentation on `transform` (top: renderer 59 → 38 %, layout 16 → 1 ms/s; up
+to 68 of 255).

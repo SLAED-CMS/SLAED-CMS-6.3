@@ -75,6 +75,7 @@ const parts = {
   pipeline: { auth: '', url: '/presentation', sel: '#pipeline' },
   guard: { auth: '', url: '/presentation', sel: '#security' },
   runtime: { auth: '', url: '/presentation', sel: '#runtime' },
+  development: { auth: '', url: '/presentation', sel: '#development' },
 };
 
 // The median of a list of numbers

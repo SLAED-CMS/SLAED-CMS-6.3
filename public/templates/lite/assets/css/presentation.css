@@ -2542,10 +2542,17 @@
   transform: translateX(-50%);
 }
 
-/* The gate once the plugin drives it: its height arrives as --sl-d-gate-y, its state colours the shield and the word */
+/* The run of the gate does not inherit, so a frame of the patrol restyles the gate alone */
+@property --sl-d-gate-y {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+
+/* The gate once the plugin drives it: it stands on a whole pixel of the page by --sl-d-gate-top and patrols by whole pixels of --sl-d-gate-y on transform, so a frame lays out nothing; its state colours the shield and the word */
 .sl-pres-guard-scene[data-sl-pres-live] .sl-pres-gate {
-  top: var(--sl-d-gate-y);
-  transform: translateX(-50%);
+  top: var(--sl-d-gate-top);
+  transform: translate(-50%, var(--sl-d-gate-y));
 }
 
 .sl-pres-gate[data-sl-pres-state="check"] .sl-pres-shield {

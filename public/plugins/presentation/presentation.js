@@ -517,6 +517,7 @@
         if (!scene || !gate || !pool.length || !lanes.length || !box) return;
         root.setAttribute('data-sl-pres-ready', '1');
         var word = gate.querySelector('small');
+        var shield = gate.querySelector('.sl-pres-shield');
         var count = box.querySelector('b');
         var scan = word ? word.textContent : '';
         var at = 0;
@@ -538,22 +539,36 @@
         var release = function () {
             window.setTimeout(function () { aim = -1; setState('', ''); }, STEP * 0.03);
         };
+        // The run of the gate is measured when the scene changes size, never inside a frame. The gate stands on the first whole
+        // device pixel in its scene and moves by whole device pixels, rounded where its shield falls, so the parts move as one
+        var size = 0;
+        var low = 0;
+        var high = 0;
+        var base = 0;
+        var lead = 0;
+        var dpr = 1;
+        var measure = function () {
+            var first = rel(lanes[0]);
+            var end = rel(lanes[lanes.length - 1]);
+            dpr = window.devicePixelRatio || 1;
+            base = (scene.getBoundingClientRect().top + scene.clientTop) * dpr;
+            gate.style.setProperty('--sl-d-gate-top', ((Math.ceil(base) - base) / dpr).toFixed(3) + 'px');
+            size = gate.getBoundingClientRect().height;
+            lead = shield ? (shield.getBoundingClientRect().top - gate.getBoundingClientRect().top) * dpr : 0;
+            low = first.top;
+            high = end.top + end.height - size;
+        };
         var patrol = function (now) {
             if (!shown) return;
             var dt = Math.min(35, now - last || 16);
             last = now;
-            var g = rel(gate);
-            var first = rel(lanes[0]);
-            var end = rel(lanes[lanes.length - 1]);
-            var low = first.top;
-            var high = end.top + end.height - g.height;
-            if (aim >= 0) top += (Math.max(low, Math.min(high, aim - g.height / 2)) - top) * Math.min(1, dt * 0.014);
+            if (aim >= 0) top += (Math.max(low, Math.min(high, aim - size / 2)) - top) * Math.min(1, dt * 0.014);
             else {
                 top += dir * dt * 0.075;
                 if (top >= high) { top = high; dir = -1; }
                 if (top <= low) { top = low; dir = 1; }
             }
-            scene.style.setProperty('--sl-d-gate-y', top.toFixed(1) + 'px');
+            gate.style.setProperty('--sl-d-gate-y', ((Math.round(base + top * dpr + lead) - Math.round(lead) - Math.ceil(base)) / dpr).toFixed(3) + 'px');
             window.requestAnimationFrame(patrol);
         };
         var note = function (card) {
@@ -644,7 +659,9 @@
             if (!on) return;
             if (!scene.hasAttribute('data-sl-pres-live')) {
                 top = rel(gate).top;
+                measure();
                 scene.setAttribute('data-sl-pres-live', '');
+                if (window.ResizeObserver) new ResizeObserver(measure).observe(scene);
             }
             last = window.performance.now();
             window.requestAnimationFrame(patrol);

@@ -285,7 +285,9 @@ return [
         '--sl-d-part' => 'share of a measured figure as a percentage, templates/lite/fragments/presentation-stat.html, partials/presentation-stats.html'
             .' and partials/presentation-runtime.html, the shares of the watch window, templates/*/partials/session-stats.html,'
             .' and the fill of a meter, templates/admin/fragments/meter.html',
-        '--sl-d-gate-y' => 'height the request guard gate patrols at inside its scene, plugins/presentation/presentation.js',
+        '--sl-d-gate-top' => 'fraction of a pixel that sets the request guard gate on the first whole device pixel in its scene, plugins/presentation/presentation.js',
+        '--sl-d-gate-y' => 'whole device pixels the request guard gate stands below its place, registered without inheritance in presentation.css,'
+            .' plugins/presentation/presentation.js',
         '--sl-d-pointer-x' => 'pointer viewport horizontal position, registered without inheritance in theme.css, plugins/system/slaed.js and builder.js',
         '--sl-d-pointer-y' => 'pointer viewport vertical position, registered without inheritance in theme.css, plugins/system/slaed.js and builder.js',
         '--sl-d-run' => 'share of a whole-list job done, which the line along the foot of its alert fills, templates/admin/assets/js/admin-ui.js',

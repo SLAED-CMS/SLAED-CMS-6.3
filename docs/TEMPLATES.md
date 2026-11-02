@@ -757,6 +757,45 @@ The laws of a move:
 - **The ripple stays on the home and the menu.** The forms and the lists of the panel take none, nor do the tiles, the
   segments and the days of the parts below.
 
+### The Cost Of A Frame
+
+A moving page of either theme keeps a core busy while nobody touches it; these laws hold that cost down without
+changing what the reader sees. They bind the panel, the presentation of lite and every new effect; the rig that proves
+them is `tools/frame-cost.mjs`, `docs/PERFORMANCE.md`, "Frame Cost".
+
+- **The picture comes first.** A change of an effect for its cost keeps the picture: it is proven by the pixels of the
+  rig on a frozen clock (16 of 255 at most), never by the eye, and a form that fails is not taken, however much it
+  saves. A lower frame rate for any effect is such a change.
+- **Transform and opacity.** An endless animation moves by `transform` and fades by `opacity`, which the compositor runs
+  without the main thread. A property it refuses (`top`, `left`, `width`, `height`, `box-shadow`, `filter`,
+  `background-position`, `stroke-dashoffset`) makes the main thread draw a frame every frame, and then Chromium restyles
+  every element of a running animation each frame, the composited ones too, so one such loop on screen brings back the
+  restyle that moving all the others saved.
+- **A thin line keeps its offset.** Layout and a background snap a box to a whole pixel; a `transform` stands on a
+  fraction, so a line of 1 px or a dot of a few spreads over two pixels at half its strength. Such an effect stays on
+  its offset: the scan of the cockpit on `top`, the scan lines of the hero, the dots of the lanes, the packet of the
+  pipeline and the dashes of the guard of the presentation on `left` and `background-position`, its PDO bars on
+  `height`. A ring or a disc that only grows and fades moves by `transform` (`.sl-led-ok`, `sl-cockpit-ring`), and a
+  glow stands still under `will-change: filter` while its ring moves.
+- **A script moves by whole pixels.** A position a script writes every frame goes to `transform` on the moving element
+  and is rounded to a whole device pixel, measured from where the layout puts the element: the gate of the guard
+  (`setGuard()`, `--sl-d-gate-top`, `--sl-d-gate-y`) stands on the first whole pixel of its scene and moves led by its
+  shield. Its parts then move as one, where the layout snapped each on its own (owner, 2026-11-02).
+- **No layout inside a frame.** A frame loop reads no `getBoundingClientRect()`, `offsetWidth` or computed style: sizes
+  come from a `ResizeObserver` and are kept until the next change (`setPulse()`, `setGuard()`).
+- **A loop sleeps off screen.** A `requestAnimationFrame` loop runs only while an `IntersectionObserver` sees its part
+  and motion is not still; a part of the presentation off screen carries `data-sl-pres-off`, under which its animations
+  pause, and `setOffScreen()` pauses its SVG by `pauseAnimations()`. A canvas is cleared and drawn only after a step that
+  changed it (Phoenix, `setPhxPlay()`), and a picture that does not move is drawn once and kept (`setStill()`).
+- **Nothing inherited per move.** A value written on every pointer move or frame is registered by `@property` with
+  `inherits: false` and written on the element that reads it, never an inherited custom property on `body` or a scene:
+  `--sl-d-pointer-x`, `--sl-d-pointer-y` of the pointer light, `--sl-d-gate-y`. A rule that reads such a value from its
+  parent says `inherit`.
+- **What stays by decision.** `sl-cockpit-alarm` on `box-shadow` and `sl-cockpit-throb` on `filter` run only in the state
+  danger; the live icon pulses by `sl-live-pulse` on `box-shadow`, since a ring under the translucent chip darkens it;
+  the moving acts of Phoenix draw on the canvas, not through `ImageData`. The quiet ground of Phoenix asks for a frame
+  every frame while the screensaver is on, so the home then restyles about 120 times a second whatever the CSS does.
+
 ### Parts Of A Screen
 
 A screen that shows a state rather than rows — "Статистика", "Мониторинг", the summaries of the others — is built of these
