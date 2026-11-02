@@ -632,7 +632,8 @@ function profil(): void {
                 $ftitles = getNodeTitleMap(array_fill_keys($fids, $fmod));
             } elseif ($fmod === 'forum') {
                 $fres = $db->getSqlQuery('SELECT f.id, f.title, r.path FROM '.PREFIX_DB.'_forum AS f LEFT JOIN '.PREFIX_DB.'_routes AS r'
-                    .' ON r.kind = \'topic\' AND r.oid = f.id AND r.cur = 1 WHERE f.id IN ('.implode(', ', $fids).')');
+                    .' ON r.kind = \'topic\' AND r.oid = f.id AND r.cur = 1 WHERE f.id IN ('.implode(', ', $fids).') AND f.cid IN ('.implode(', ', getForumCats() ?: [0]).')'
+                    .(is_moder('forum') ? '' : " AND f.time <= NOW() AND f.status > '1'"));
                 while ($frow = $db->getSqlRow($fres)) [$ftitles[$frow[0]], $tops[$frow[0]]] = [$frow[1], $frow[2]];
             }
             foreach ($ftitles as $fid => $ftitle) {

@@ -244,6 +244,21 @@ final class AdminGuardTest extends TestCase
         $this->assertSame(2, substr_count($index, "case 'getSessionStats': getSessionStats(); exit;"));
     }
 
+    # The browser runs the sitemap stylesheet in the origin of the site, so only a super administrator reaches its editor and its save, and the tab is drawn for none else
+    #[Test]
+    public function theSitemapTemplateIsForTheSuperAdmin(): void
+    {
+        $file = 'modules/sitemap/admin/index.php';
+        foreach (['xsledit', 'xslsave'] as $name) {
+            $body = $this->getBody($file, $name);
+            $guard = strpos($body, "if (!isAdmin(true)) die('Illegal file access');");
+            $this->assertNotFalse($guard, $name.'() opens to an administrator of the sitemap alone');
+            $this->assertLessThan(strpos($body, 'SITEMAP_DIR'), $guard, $name.'() touches the stylesheet before it asks the right');
+        }
+        $this->assertStringContainsString('if (!isAdmin(true)) unset($ops[1], $tabs[1]);', $this->getBody($file, 'getSitemapTabs'));
+        $this->assertSame(0, substr_count($this->getFile($file), "'tabs' => [_HOME, _TEMPLATE"), 'A tab strip of the module is built past getSitemapTabs()');
+    }
+
     # The pins of the floating menu come from a cookie: the option stores only eight plain keys, and the menu draws only a section its administrator may open
     #[Test]
     public function thePinsOfTheMenuAreHeldAtBothEnds(): void

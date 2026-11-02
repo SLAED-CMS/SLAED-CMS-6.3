@@ -146,7 +146,7 @@ function forum(): void {
                     if (!$cnt) {
                         $h1 = $tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => $conf['name']]), 'title' => _FORUM, 'label' => _FORUM]);
                         $h2 = $tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => $mod, 'cat' => $rows[0][0]]), 'title' => $rows[0][1], 'label' => $rows[0][1]]);
-                        $heading = $h1.' '.urldecode($conf['forum']['defis']).' '.$h2;
+                        $heading = $h1.' '.htmlspecialchars(urldecode($conf['forum']['defis']), ENT_QUOTES, 'UTF-8').' '.$h2;
                         $cont = $tpl->getHtmlFrag('forum-category-table', [
                             'open' => true,
                             'heading' => $heading,
@@ -1015,6 +1015,11 @@ function add(): void {
         $qid = getVar('req', 'qid', 'num');
         $subh = (!empty($pid) || !empty($qpid)) ? 1 : 0;
         if ($pid) {
+            $qrow = $qid ? $db->getSqlRow($db->getSqlQuery(
+                'SELECT id FROM '.PREFIX_DB.'_forum WHERE id = :id AND (id = :tid OR pid = :pid)'.($ismod ? '' : " AND status != '0' AND time <= NOW()"),
+                ['id' => $qid, 'tid' => $pid, 'pid' => $pid]
+            )) : false;
+            $qid = $qrow ? $qid : 0;
             $id = ($qid) ? $qid : $pid;
             [$ftitle, $ftext, $status] = $db->getSqlRow($db->getSqlQuery('SELECT title, body, status FROM '.PREFIX_DB.'_forum WHERE id = :id', ['id' => $id]));
             $form = $isreply && (is_moder($conf['name']) || $fstatus > 2);

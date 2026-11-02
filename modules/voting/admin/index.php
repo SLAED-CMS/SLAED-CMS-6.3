@@ -271,7 +271,7 @@ function add(): void {
     $answ = '';
     for ($i = 0; $i < $conf['voting']['answ']; $i++) {
         $a = $i + 1;
-        $qval = filterText((string)($body[$i] ?? ''));
+        $qval = is_string($body[$i] ?? null) ? $body[$i] : '';
         $aval = filterText((string)($answer[$i] ?? '0'));
         $answ .= $tpl->getHtmlPart('toggle-form-block', [
             'block_id' => 'voting-answer-'.$i,
@@ -338,8 +338,9 @@ function save(): void {
     $quest = [];
     $answ = [];
     for ($q = 0; $q < count($body); $q++) {
-        if (($body[$q] ?? '') != '') {
-            $quest[] = $body[$q];
+        $item = is_string($body[$q] ?? null) ? str_replace(['|', "\n"], ['/', ' '], filterSourceText($body[$q])) : '';
+        if ($item !== '') {
+            $quest[] = $item;
             $answ[] = (is_numeric($answer[$q] ?? '')) ? (string)$answer[$q] : '0';
         }
     }

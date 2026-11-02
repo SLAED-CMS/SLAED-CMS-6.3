@@ -6,6 +6,14 @@
 
 if (!defined('ADMIN_FILE') || !is_admin_modul('sitemap')) die('Illegal file access');
 
+# The tabs of the module with their keys kept, so the active one keeps its number when the template tab drops for an admin below the superadmin
+function getSitemapTabs(int $tab): array {
+    $ops = ['name=sitemap', 'name=sitemap&op=xsledit', 'name=sitemap&op=config', 'name=sitemap&op=info'];
+    $tabs = [_HOME, _TEMPLATE, _PREFERENCES, _MANUAL];
+    if (!isAdmin(true)) unset($ops[1], $tabs[1]);
+    return ['ops' => $ops, 'tabs' => $tabs, 'tab' => $tab];
+}
+
 function getSitemapFreqSelect(string $name, string $value): string {
     global $tpl;
     $opts = '';
@@ -49,10 +57,7 @@ function sitemap(): void {
     global $afile, $conf, $tpl;
     setHead();
     $file = 'sitemap.xml';
-    $cont = getTplAdminTabs([
-        'ops' => ['name=sitemap', 'name=sitemap&op=xsledit', 'name=sitemap&op=config', 'name=sitemap&op=info'],
-        'tabs' => [_HOME, _TEMPLATE, _PREFERENCES, _MANUAL],
-    ]);
+    $cont = getTplAdminTabs(getSitemapTabs(0));
     $cont .= checkPerms(PUBLIC_DIR.'/'.$file);
     $conts = is_readable(PUBLIC_DIR.'/'.$file) ? file_get_contents(PUBLIC_DIR.'/'.$file) : '';
     $f = 0;
@@ -111,11 +116,7 @@ function add(): void {
 function getXslForm(string $text, string $ver, string $note = ''): string {
     global $afile, $tpl;
     $file = SITEMAP_DIR.'/sitemap.xsl';
-    $cont = getTplAdminTabs([
-        'ops' => ['name=sitemap', 'name=sitemap&op=xsledit', 'name=sitemap&op=config', 'name=sitemap&op=info'],
-        'tabs' => [_HOME, _TEMPLATE, _PREFERENCES, _MANUAL],
-        'tab' => 1,
-    ]);
+    $cont = getTplAdminTabs(getSitemapTabs(1));
     $cont .= checkPerms($file);
     if ($note !== '') $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $note]);
     $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => sprintf(_XSL_INFO, $file)])]);
@@ -140,6 +141,7 @@ function getXslForm(string $text, string $ver, string $note = ''): string {
 }
 
 function xsledit(): void {
+    if (!isAdmin(true)) die('Illegal file access');
     $file = SITEMAP_DIR.'/sitemap.xsl';
     setHead();
     echo getXslForm(is_readable($file) ? (string)file_get_contents($file) : '', is_file($file) ? (string)sha1_file($file) : '');
@@ -148,6 +150,7 @@ function xsledit(): void {
 
 function xslsave(): void {
     global $afile;
+    if (!isAdmin(true)) die('Illegal file access');
     $iswarn = !checkAdminPost('sitemap');
     $file = SITEMAP_DIR.'/sitemap.xsl';
     $template = getVar('post', 'template', 'raw', '');
@@ -172,11 +175,7 @@ function xslsave(): void {
 function config(): void {
     global $afile, $conf, $tpl;
     setHead();
-    $cont = getTplAdminTabs([
-        'ops' => ['name=sitemap', 'name=sitemap&op=xsledit', 'name=sitemap&op=config', 'name=sitemap&op=info'],
-        'tabs' => [_HOME, _TEMPLATE, _PREFERENCES, _MANUAL],
-        'tab' => 2,
-    ]);
+    $cont = getTplAdminTabs(getSitemapTabs(2));
     $cont .= checkPerms(CONFIG_DIR.'/sitemap.php');
     $yesno = static fn(string $name, int|string $value, string $lbl = ''): string => getTplRadioGroup([
         'name' => $name,
@@ -284,10 +283,7 @@ function configsave(): void {
 }
 
 function info(): void {
-    setTplAdminInfoPage([
-        'ops' => ['name=sitemap', 'name=sitemap&op=xsledit', 'name=sitemap&op=config', 'name=sitemap&op=info'],
-        'tabs' => [_HOME, _TEMPLATE, _PREFERENCES, _MANUAL],
-    ]);
+    setTplAdminInfoPage(getSitemapTabs(3));
 }
 
 switch ($op) {

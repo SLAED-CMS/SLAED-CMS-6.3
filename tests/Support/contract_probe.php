@@ -283,8 +283,8 @@ function getProbeCommentWrite(bool $guest): array {
 # Report the two rules every forum handler takes its right from: the stored place of a post and the one right over it
 # The place is compared with the columns of live rows, and the right is asked as a guest and then as a signed-in account; nothing is written
 function getProbeForumRight(): array {
-    global $db, $user;
-    $out = ['reply' => [], 'topic' => [], 'missing' => getForumPlace(999999999), 'guest' => [], 'user' => [], 'signed' => false];
+    global $db, $user, $conf;
+    $out = ['reply' => [], 'topic' => [], 'missing' => getForumPlace(999999999), 'guest' => [], 'cats' => [], 'user' => [], 'signed' => false];
     $sql = 'SELECT f.id, f.cid, f.uid, f.pid, t.status AS tstat FROM '.PREFIX_DB.'_forum AS f JOIN '.PREFIX_DB.'_forum AS t ON t.id = f.pid'
         .' WHERE f.pid > 0 ORDER BY f.id DESC LIMIT 1';
     $rep = $db->getSqlRow($db->getSqlQuery($sql));
@@ -302,6 +302,20 @@ function getProbeForumRight(): array {
         'anon' => checkForumRight(false, true, 0, 3),
         'author' => checkForumRight(false, true, 1, 3),
     ];
+    $open = static fn(string $ids): bool => $ids !== '' && intval(explode('|', $ids)[0]) <= 0 && empty(explode('|', $ids)[1] ?? '');
+    $live = !empty($conf['modules']['forum']['active']) && intval($conf['modules']['forum']['view'] ?? 0) === 0;
+    $want = [];
+    foreach ($db->getSqlRows($db->getSqlQuery('SELECT id, pview, pread FROM '.PREFIX_DB.'_categories WHERE modul = \'forum\'')) ?: [] as $row) {
+        if ($live && intval($row['id']) !== intval($conf['forum']['recycle'] ?? 0) && $open((string)$row['pview']) && $open((string)$row['pread'])) $want[] = intval($row['id']);
+    }
+    $seen = [];
+    $res = getForumTopics('cid, status', '', 1000);
+    while ($res && ($row = $db->getSqlRow($res))) $seen[] = [intval($row['cid']), intval($row['status'])];
+    $cats = getForumCats();
+    sort($cats);
+    sort($want);
+    $out['cats'] = ['have' => $cats, 'want' => $want, 'all' => intval($db->getSqlRow($db->getSqlQuery('SELECT COUNT(*) FROM '.PREFIX_DB.'_categories WHERE modul = \'forum\''))[0]),
+        'stray' => array_values(array_filter($seen, static fn(array $v): bool => !in_array($v[0], $want, true) || $v[1] <= 1))];
     $sql = 'SELECT id, name, password FROM '.PREFIX_DB.'_users WHERE access = 0 AND password != \'\' AND name REGEXP \'^[A-Za-z0-9_.-]+$\' ORDER BY id ASC LIMIT 1';
     $one = $db->getSqlRow($db->getSqlQuery($sql));
     if (!$one) return $out;
@@ -849,6 +863,24 @@ function getProbeFeedLegacy(int $uid): string {
     ]);
 }
 
+# Render one live poll whose answers carry markup, once as the form and once as the results, inside a transaction that is rolled back
+function getProbeVotingView(): array {
+    global $db;
+    $out = ['poll' => 0, 'form' => '', 'view' => ''];
+    $row = $db->getSqlRow($db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_voting WHERE modul = \'\' ORDER BY id DESC LIMIT 1'));
+    if (!$row) return $out;
+    $out['poll'] = intval($row['id']);
+    $db->setSqlBegin();
+    $sql = 'UPDATE '.PREFIX_DB.'_voting SET body = :body, answer = \'3|1\', time = DATE_SUB(NOW(), INTERVAL 1 DAY), enddate = DATE_ADD(NOW(), INTERVAL 1 DAY),'
+        .' status = 1, typ = 1, lang = \'\' WHERE id = :id';
+    $db->getSqlQuery($sql, ['body' => '<script>alert(1)</script>|<b onmouseover="x()">x</b> & y', 'id' => $out['poll']]);
+    $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_rating WHERE modul = \'voting\' AND mid = :id', ['id' => $out['poll']]);
+    $out['form'] = getVotingView($out['poll'], 'blockvoting');
+    $out['view'] = getVotingView($out['poll'], 'blockvoting', true);
+    $db->setSqlRollback();
+    return $out;
+}
+
 # Show the feed page of one address from a stored outcome, then again after that outcome aged past its 900 seconds, and once for an address outside the form of Feed
 # The host lies under .invalid, so a fetch that reaches the resolver fails: the entry can only come from the store, and the refusal that follows is stored in its place
 function getProbeRssView(): array {
@@ -1317,6 +1349,8 @@ if ($mode === 'statscookie') {
     $out = getProbeCommentFormat();
 } elseif ($mode === 'commentfeed') {
     $out = getProbeCommentFeed();
+} elseif ($mode === 'votingview') {
+    $out = getProbeVotingView();
 } elseif ($mode === 'rssview') {
     $out = getProbeRssView();
 } elseif ($mode === 'fieldpost') {

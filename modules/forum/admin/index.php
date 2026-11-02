@@ -248,7 +248,7 @@ function configsave(): void {
     $iswarn = !checkAdminPost('forum');
     if (!$iswarn) {
         $cont = [
-            'defis' => getVar('post', 'defis', 'defis', '%3E'),
+            'defis' => urlencode(getVar('post', 'defis', 'let', '>')),
             'listnum' => getVar('post', 'listnum', 'num', 10),
             'pop' => getVar('post', 'pop', 'num', 10),
             'letter' => getVar('post', 'letter', 'num', 0),

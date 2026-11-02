@@ -1428,7 +1428,7 @@ function getTplCategoryTrail(string $mod = '', int $id = 0, string $sep = '', st
     global $conf, $tpl;
     $mod = filterVar($mod);
     $name = $mod ?: $conf['name'];
-    $symbol = urldecode($sep ?: $conf['defis']);
+    $symbol = htmlspecialchars(urldecode($sep ?: $conf['defis']), ENT_QUOTES, 'UTF-8');
     static $cache = [];
     if (!isset($cache[$name])) {
         $mass = [];

@@ -197,7 +197,7 @@ $url = getVar('post', 'url', 'url', 'https://');
 $text = getVar('post', 'text', 'text', '');
 ```
 
-The type map in `getVar()` currently carries: `num`, `let`, `word`, `name`, `title`, `text`, `field`, `url`, `var`, `bool`, `defis`, `time`, `date`, `raw`.
+The type map in `getVar()` currently carries: `num`, `let`, `word`, `name`, `title`, `text`, `field`, `url`, `var`, `bool`, `time`, `date`, `raw`.
 
 ### Constants
 

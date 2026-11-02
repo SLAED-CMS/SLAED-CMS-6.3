@@ -118,24 +118,19 @@ function getSearchMap(): array {
 }
 
 function getSearchForum(array $state): array {
-    global $db, $conf;
+    global $db;
     $rows = [];
-    $rid = (int)($conf['forum']['recycle'] ?? 0);
+    $cats = getForumCats();
+    if (!$cats) return $rows;
     $like = '%'.str_replace(['!', '%', '_'], ['!!', '!%', '!_'], $state['word']).'%';
-    if (is_moder('forum') || !$rid) {
-        $cond = '';
-        $pars = ['worda' => $like, 'wordb' => $like];
-    } else {
-        $cond = 'f.cid != :rid AND';
-        $pars = ['rid' => $rid, 'worda' => $like, 'wordb' => $like];
-    }
-    $pars['lim'] = $state['lim'];
+    $cond = 'f.cid IN ('.implode(', ', $cats).') AND f.status '.(is_moder('forum') ? "!= '0'" : "> '1'").' AND';
+    $pars = ['worda' => $like, 'wordb' => $like, 'lim' => $state['lim']];
     $result = $db->getSqlQuery(
         'SELECT f.id, f.pid, f.name, f.title, f.time, f.cid, f.body, f.comments, f.counter, u.name, r.path, ur.path'
         .' FROM '.PREFIX_DB.'_forum AS f LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.id)'
         .' LEFT JOIN '.PREFIX_DB.'_routes AS ur ON ur.kind = \'user\' AND ur.oid = u.id AND ur.cur = 1'
         .' LEFT JOIN '.PREFIX_DB.'_routes AS r ON r.kind = \'topic\' AND r.oid = f.id AND r.cur = 1'
-        .' WHERE '.$cond.' f.pid = \'0\' AND f.time <= NOW() AND f.status != \'0\' AND (f.title LIKE :worda ESCAPE \'!\' OR f.body LIKE :wordb ESCAPE \'!\')'
+        .' WHERE '.$cond.' f.pid = \'0\' AND f.time <= NOW() AND (f.title LIKE :worda ESCAPE \'!\' OR f.body LIKE :wordb ESCAPE \'!\')'
         .' ORDER BY f.time DESC LIMIT :lim',
         $pars
     );

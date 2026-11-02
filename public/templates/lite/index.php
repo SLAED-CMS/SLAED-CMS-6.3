@@ -66,7 +66,7 @@ function getThemeHeadVars(): array {
     $sep = $conf[$conf['name']]['defis'] ?? $conf['defis'];
     $cname = ($band && $fcat && $conf['name']) ? getTplCategoryTrail($conf['name'], $fcat, $sep, $mname, false) : '';
     if ($cname !== '' && $ctitle !== '') {
-        $cname .= ' '.urldecode($sep).' '.htmlspecialchars(getDecodedText($ctitle), ENT_QUOTES, 'UTF-8');
+        $cname .= ' '.htmlspecialchars(urldecode($sep), ENT_QUOTES, 'UTF-8').' '.htmlspecialchars(getDecodedText($ctitle), ENT_QUOTES, 'UTF-8');
     }
     $head = '';
     if ($mname !== '' || $cname !== '') {

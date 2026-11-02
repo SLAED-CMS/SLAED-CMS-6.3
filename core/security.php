@@ -758,7 +758,6 @@ function getVar(string $var, string $key, string $type = '', mixed $default = ''
         'url' => fn($v) => is_string($v) ? filterWebUrl(trim($v)) : $v,
         'var' => fn($v) => is_string($v) ? filterVar($v) : $v,
         'bool' => fn($v) => filter_var($v, FILTER_VALIDATE_BOOLEAN),
-        'defis' => fn($v) => is_string($v) ? (($v = trim($v)) !== '' ? urlencode($v) : '') : $v,
         'time' => function($v) {
             $v = is_string($v) ? trim($v) : '';
             $ts = strtotime($v);
@@ -811,13 +810,6 @@ function getVar(string $var, string $key, string $type = '', mixed $default = ''
         'req' => ($p !== null && $p !== '') ? $p : $g,
         default => null,
     };
-    if (strtolower($type) === 'defis') {
-        if ($value === null || $value === '') {
-            return ($default !== '' && $default !== null) ? $default : false;
-        }
-        $value = $filters['defis']($value);
-        return ($value !== '' && $value !== null) ? $value : (($default !== '' && $default !== null) ? $default : false);
-    }
     $value = ($value !== null && $value !== '') ? $value : $default;
     if (is_array($value)) return $default;
     $lt = strtolower($type);

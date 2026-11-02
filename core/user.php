@@ -1403,7 +1403,8 @@ function addFavorite(): void {
             Logger::addSite('error', 'Node: a favorite could not be added', ['type' => $mod, 'nid' => $id, 'error' => $err->getMessage()]);
         }
     } elseif ($conf['favorites']['favact'] && $room && $mod === 'forum') {
-        $live = 'SELECT COUNT(id) FROM '.PREFIX_DB.'_forum WHERE id = :fid AND pid = 0 AND time <= NOW() AND status != \'0\'';
+        $live = 'SELECT COUNT(id) FROM '.PREFIX_DB.'_forum WHERE id = :fid AND pid = 0 AND cid IN ('.implode(', ', getForumCats() ?: [0]).') AND time <= NOW() AND status '
+            .(is_moder('forum') ? "!= '0'" : "> '1'");
         try {
             if (!$db->setSqlBegin()) throw new RuntimeException('the transaction of a favorite cannot be started');
             $lock = $db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_users WHERE id = :uid FOR UPDATE', ['uid' => $uid]);
@@ -1461,7 +1462,8 @@ function getFavoriteList(int $obj = 0): string {
                 $pm['f'.$idx] = $val;
             }
             $result = $db->getSqlQuery('SELECT t.id, t.title, r.path FROM '.PREFIX_DB.'_'.$tables[$modul].' AS t LEFT JOIN '.PREFIX_DB.'_routes AS r'
-                .' ON r.kind = \'topic\' AND r.oid = t.id AND r.cur = 1 WHERE t.id IN ('.implode(', ', $pp).')', $pm);
+                .' ON r.kind = \'topic\' AND r.oid = t.id AND r.cur = 1 WHERE t.id IN ('.implode(', ', $pp).') AND t.cid IN ('.implode(', ', getForumCats() ?: [0]).')'
+                .(is_moder('forum') ? '' : " AND t.time <= NOW() AND t.status > '1'"), $pm);
             while ($row = $db->getSqlRow($result)) [$titles[intval($row[0])], $tops[intval($row[0])]] = [(string)$row[1], $row[2]];
         } else {
             $titles = getNodeTitleMap(array_fill_keys(array_keys($fids), $modul));

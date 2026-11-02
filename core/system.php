@@ -3188,8 +3188,8 @@ function getVotingView(int $id = 0, string $votid = '', bool $force = false): st
 
         if ($rate) {
             $items .= $tpl->getHtmlFrag('voting-view', [
-                'text' => $text,
-                'text_safe' => filterText($text),
+                'text' => htmlspecialchars($text, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'),
+                'text_safe' => $text,
                 'n' => $ord,
                 'pn' => $pn,
                 'percent' => $perc,
@@ -3201,8 +3201,8 @@ function getVotingView(int $id = 0, string $votid = '', bool $force = false): st
         }
 
         $field = $multi
-            ? $tpl->getHtmlFrag('checkbox', ['name_attr' => 'body[]', 'value_attr' => (string)$ord, 'label_html' => $text, 'is_plain' => true])
-            : $tpl->getHtmlFrag('radio', ['name_attr' => 'body[]', 'value_attr' => (string)$ord, 'label_html' => $text]);
+            ? $tpl->getHtmlFrag('checkbox', ['name_attr' => 'body[]', 'value_attr' => (string)$ord, 'label_text' => $text, 'is_plain' => true])
+            : $tpl->getHtmlFrag('radio', ['name_attr' => 'body[]', 'value_attr' => (string)$ord, 'label_text' => $text]);
         $items .= $tpl->getHtmlFrag('list-item', ['content_html' => $field]);
     }
 
@@ -4552,10 +4552,31 @@ function getForumTopicState(int $status, string $time, string $ltime, int $comme
     return '';
 }
 
-# Recent root forum topics for the blocks and theme teasers; the asked columns end with the paths of the topic, its author and its last poster
+# Ids of the forum categories the visitor may list and read, the recycle one for the forum moderator only; empty when the module is closed to the visitor
+function getForumCats(): array {
+    global $db, $conf;
+    static $memo = null;
+    if ($memo !== null) return $memo;
+    $memo = [];
+    $mod = is_moder('forum');
+    $view = intval($conf['modules']['forum']['view'] ?? 0);
+    $open = !empty($conf['modules']['forum']['active']) && ($view === 0 || ($view === 1 && isModGroup('forum')));
+    if (!$mod && !$open) return $memo;
+    $rid = intval($conf['forum']['recycle'] ?? 0);
+    $rows = [];
+    $result = $db->getSqlQuery('SELECT id, pview, pread FROM '.PREFIX_DB.'_categories WHERE modul = :mod', ['mod' => 'forum']);
+    while ([$cid, $pview, $pread] = $db->getSqlRow($result)) $rows[] = [intval($cid), (string)$pview, (string)$pread];
+    foreach ($rows as [$cid, $pview, $pread]) if ($mod || ($cid !== $rid && is_acess($pview) && is_acess($pread))) $memo[] = $cid;
+    return $memo;
+}
+
+# Recent root forum topics of the categories the visitor may read, for the blocks and teasers; the columns end with the paths of the topic, its author and its last poster
 function getForumTopics(string $cols, string $bclos, int $limit): mixed {
     global $db;
-    $where = $bclos ? 'cid NOT IN ('.$bclos.') AND' : '';
+    $cols = preg_match('/^[a-z]+(?:, [a-z]+)*$/D', $cols) ? $cols : 'id';
+    $cats = array_diff(getForumCats(), array_map('intval', preg_split('/\s*,\s*/', trim($bclos), -1, PREG_SPLIT_NO_EMPTY) ?: []));
+    $where = 'cid IN ('.($cats ? implode(', ', $cats) : '0').') AND';
+    $limit = max(1, $limit);
     $vis = is_moder('forum') ? '' : "AND time <= now() AND status > '1'";
     $sub = static fn(string $kind, string $col, string $as): string => '(SELECT r.path FROM '.PREFIX_DB.'_routes AS r WHERE r.kind = \''.$kind.'\' AND r.oid = f.'.$col
         .' AND r.cur = 1) AS '.$as;

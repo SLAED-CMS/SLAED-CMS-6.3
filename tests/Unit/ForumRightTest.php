@@ -5,7 +5,7 @@ namespace Tests\Unit;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-# Every forum handler that names a post takes its category, topic and author from the stored row, never from the category the request names
+# Every forum handler that names a post takes its place from the stored row, and every reader of topics outside the forum asks the rights of their category
 final class ForumRightTest extends TestCase
 {
     # The raw answer of each probe run, kept before any assertion so a failed probe is not started again by the next test
@@ -56,6 +56,54 @@ final class ForumRightTest extends TestCase
     public function aGuestNeverMatchesAnAuthor(): void
     {
         $this->assertSame(['moder' => true, 'anon' => false, 'author' => false], $this->getProbe()['guest']);
+    }
+
+    # A guest reads only the categories whose list and read rights are open to a guest, never the recycle one, and the teasers carry no topic of another category
+    #[Test]
+    public function aGuestReadsOnlyTheOpenCategories(): void
+    {
+        $cats = $this->getProbe()['cats'];
+        if ($cats['all'] === 0) $this->markTestSkipped('This installation holds no forum category');
+        $this->assertSame($cats['want'], $cats['have'], 'getForumCats() answers a guest another set than the rights of the categories');
+        $this->assertSame([], $cats['stray'], 'getForumTopics() shows a guest a topic of a closed category or a hidden topic');
+    }
+
+    # Every path outside the forum that names its topics takes them from getForumCats(), so a closed category stays closed in search, teasers and favorites
+    #[Test]
+    public function everyReaderOfTopicsAsksTheOpenCategories(): void
+    {
+        $paths = [
+            ['core/system.php', 'getForumTopics'], ['modules/search/index.php', 'getSearchForum'], ['core/user.php', 'addFavorite'],
+            ['core/user.php', 'getFavoriteList'], ['modules/account/index.php', 'profil'],
+        ];
+        foreach ($paths as [$file, $name]) {
+            $this->assertStringContainsString('getForumCats()', $this->getSource($file, $name), $name.'() reads topics past the rights of their category');
+        }
+        $this->assertStringNotContainsString('cid NOT IN', $this->getSource('core/system.php', 'getForumTopics'));
+        $this->assertStringNotContainsString("f.status != '0' AND (f.title", $this->getSource('modules/search/index.php', 'getSearchForum'));
+    }
+
+    # A quote is taken only from the topic answered or one of its replies, and a pending or future reply only by a moderator
+    #[Test]
+    public function aQuoteComesOnlyFromItsTopic(): void
+    {
+        $code = $this->getSource('modules/forum/index.php', 'add');
+        $this->assertStringContainsString('WHERE id = :id AND (id = :tid OR pid = :pid)', $code);
+        $this->assertStringContainsString('$qid = $qrow ? $qid : 0;', $code);
+    }
+
+    # The separator of the forum is stored as one sign and printed as text wherever it is decoded, so a stored tag never runs
+    #[Test]
+    public function theSeparatorIsText(): void
+    {
+        $this->assertStringContainsString("urlencode(getVar('post', 'defis', 'let', '>'))", $this->getSource('modules/forum/admin/index.php', 'configsave'));
+        $uses = [
+            ['modules/forum/index.php', 'forum'], ['core/helpers.php', 'getTplCategoryTrail'], ['public/templates/lite/index.php', 'getThemeHeadVars'],
+        ];
+        foreach ($uses as [$file, $name]) {
+            $code = $this->getSource($file, $name);
+            $this->assertSame(substr_count($code, 'urldecode('), substr_count($code, 'htmlspecialchars(urldecode('), $name.'() prints a decoded separator as markup');
+        }
     }
 
     # A signed-in author holds the right over their own post with the category right while the topic is open, and over nothing else
