@@ -186,7 +186,7 @@ function getAdminLayoutVars(): array {
         'dock_html' => getAdminDock(),
         'menu' => getAdminTopMenu(),
         'bell_html' => $tpl->getHtmlFrag('bell', $bell),
-        'admin_blocks' => getAdminPanelBlocks().getAdminInfo().($panel ? adminblock() : ''),
+        'admin_blocks' => getAdminPanelBlocks().getAdminInfo().(($panel || isThemeFlag('dock-off')) ? adminblock() : ''),
         'help_url' => HOME_PATH.$afile.'.php?op=info',
         'sess_max' => getAdminIdle(),
         'sess_url' => $afile.'.php',

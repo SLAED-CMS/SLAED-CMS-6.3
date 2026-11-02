@@ -1356,9 +1356,10 @@ the requests behind it. The help of the panel is `admin/info/panel/ru.md`, opene
   not check the file of a section, so a row left behind is a menu item with an empty page. `setUpdateModules()` of
   `public/update.php` drops a record without a module on the move to 8.0; after it a step of the version does (`docs/UPDATE.md`).
 - **The admin block and the floating menu read one row.** `getAdminBlockLinks()` reads the row `bkey = 'admin'` of
-  `_blocks` once a request, for a super administrator only, and parses its links (`javascript:OpenWindow` read as its
-  address, a missing file inside the site marked). `adminblock()` draws the block — in the panel on the home only, on
-  the site first in its column whatever its weight. `getAdminDock()` draws the floating menu of the theme of the page
+  `_blocks` once a request, for a super administrator only, and parses its links: an `<a>` tag or a Markdown link of the
+  editor, `[homeurl]`, `[host]` and `[admin]` replaced by this site, its host and its panel file, `javascript:OpenWindow`
+  read as its address, a missing file inside the site marked. `adminblock()` draws the block — in the panel on the home,
+  and on every page while the floating menu is off (`dock-off`); on the site first in its column whatever its weight. `getAdminDock()` draws the floating menu of the theme of the page
   for a logged administrator: the panel always prints it and hides it under `data-sl-dock-off`, the site neither prints
   it nor loads `dock.js` while `dock-site-off` is set. `getAdminSectionList()` is the
   one check of the sections an administrator may open, read by the menu and the home of the panel, the pins and "Все

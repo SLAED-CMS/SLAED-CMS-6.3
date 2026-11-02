@@ -4307,9 +4307,9 @@ function adminblock(): string {
     return $tpl->getHtmlPart('block-sidebar', ['title' => $own['title'] ?: _ADMINS, 'icon_name' => 'person-gear', 'content_html' => $cont, 'id' => '7', 'close' => _OPCL]);
 }
 
-# Read the admin row of _blocks once a request for a super administrator: its title and its links, javascript:OpenWindow read as its address, a missing file marked
+# Read the admin row of _blocks once a request for a super administrator: its links, an a tag or a Markdown one, [homeurl], [host] and [admin] of this site, a missing file marked
 function getAdminBlockLinks(): array {
-    global $db, $conf;
+    global $db, $conf, $afile;
     static $out = null;
     if ($out !== null) return $out;
     $out = ['title' => '', 'links' => []];
@@ -4317,9 +4317,14 @@ function getAdminBlockLinks(): array {
     [$head, $html] = $db->getSqlRow($db->getSqlQuery('SELECT title, content FROM '.PREFIX_DB."_blocks WHERE bkey = 'admin'")) ?: ['', ''];
     $rows = [];
     $site = strtolower((string)parse_url((string)($conf['homeurl'] ?? ''), PHP_URL_HOST));
-    preg_match_all('#<a\b([^>]*)>(.*?)</a>#is', (string)$html, $hits, PREG_SET_ORDER);
-    foreach ($hits as [, $attr, $text]) {
-        $href = preg_match('#\bhref\s*=\s*(["\'])(.*?)\1#is', $attr, $one) ? trim(html_entity_decode($one[2], ENT_QUOTES | ENT_HTML5, 'UTF-8')) : '';
+    $html = str_replace(['[homeurl]', '[host]', '[admin]'], [rtrim((string)($conf['homeurl'] ?? ''), '/'), $site, HOME_PATH.$afile.'.php'], (string)$html);
+    $mask = '#<a\b([^>]*)>(.*?)</a>|(?<!!)\[([^\]\n]+)\]\(\s*<?([^\s<>()]+)>?(?:\s+(["\'])(.*?)\5)?\s*\)#is';
+    preg_match_all($mask, $html, $hits, PREG_SET_ORDER | PREG_UNMATCHED_AS_NULL);
+    foreach ($hits as $hit) {
+        $ismd = isset($hit[4]);
+        $text = $hit[2] ?? $hit[3];
+        $href = $ismd ? $hit[4] : (preg_match('#\bhref\s*=\s*(["\'])(.*?)\1#is', $hit[1], $one) ? $one[2] : '');
+        $href = trim(html_entity_decode($href, ENT_QUOTES | ENT_HTML5, 'UTF-8'));
         if (preg_match('#^javascript:#i', $href)) $href = preg_match('#\(\s*(["\'])(.*?)\1#s', $href, $one) ? trim($one[2]) : '';
         if ($href === '' || $href[0] === '#') continue;
         $host = strtolower((string)parse_url($href, PHP_URL_HOST));
@@ -4329,7 +4334,8 @@ function getAdminBlockLinks(): array {
         $rel = str_starts_with($path, HOME_PATH) ? substr($path, strlen(HOME_PATH)) : '';
         $dead = $rel !== '' && pathinfo($rel, PATHINFO_EXTENSION) !== '' && !is_file(PUBLIC_DIR.'/'.rawurldecode($rel));
         $label = trim(preg_replace('#\s+#u', ' ', html_entity_decode(strip_tags($text), ENT_QUOTES | ENT_HTML5, 'UTF-8')));
-        $title = preg_match('#\btitle\s*=\s*(["\'])(.*?)\1#is', $attr, $one) ? trim(html_entity_decode($one[2], ENT_QUOTES | ENT_HTML5, 'UTF-8')) : '';
+        $title = $ismd ? (string)$hit[6] : (preg_match('#\btitle\s*=\s*(["\'])(.*?)\1#is', $hit[1], $one) ? $one[2] : '');
+        $title = trim(html_entity_decode($title, ENT_QUOTES | ENT_HTML5, 'UTF-8'));
         $rows[] = ['href' => $href, 'label' => ($label !== '') ? $label : $href, 'title' => ($title !== '') ? $title : $label,
             'icon' => $local ? 'link-45deg' : 'box-arrow-up-right', 'dead_title' => $dead ? _ADM_NOFILE.': '.$rel : ''];
     }

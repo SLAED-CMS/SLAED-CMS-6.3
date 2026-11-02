@@ -2,6 +2,15 @@
 
 ## 2026-11-02
 
+### The admin block reads Markdown links and names this site
+
+- **Markdown.** The own links of the block "Администрация" are read from the Markdown the editor writes,
+  `[name](address "hint")`, as well as from an `<a>` tag; a list item per link, the hint optional.
+- **This site.** `[homeurl]`, `[host]` and `[admin]` in an address or a hint become the address of the site, its host
+  and its panel file, so a link to an outside check or to a section of the panel holds on any installation.
+- **Without the floating menu.** While the menu is off in "Опции", the block stands on every page of the panel, not
+  only on the home, so the own links and the watch stay at hand.
+
 ### Motion costs less, and the picture stays the same
 
 The home of the panel and the presentation kept a core busy while nobody touched them, and a moving pointer dropped
@@ -348,8 +357,8 @@ from Ctrl+K.
 - **The home.** The cockpit of a super administrator: four rings, a lamp of fourteen signals with the age of a backup
   against `dump_age`, the strip of the request and a live chip; the warnings about `setup.php`, the self-check and the
   PHP version are signals of the lamp.
-- **The block and the menu.** One block "Администрация" in both themes — in the panel on the home only, on the site
-  first in its column; the window "Наблюдение" with the present of the visitors; a floating menu in the panel and on
+- **The block and the menu.** One block "Администрация" in both themes — in the panel on the home, and on every page
+  while the floating menu is off, on the site first in its column; the window "Наблюдение" with the present of the visitors; a floating menu in the panel and on
   the site with the pins, the queue, "Все разделы", "Эта страница в панели", the card of the administrator, the own
   links and the window tools.
 - **Lists and forms.** Every list of the panel is drawn by one canon: the filter bar, the address with the page, four
