@@ -1024,7 +1024,9 @@ public part reads `PUBLIC_DIR`, a path into the project `BASE_DIR` or one of the
 runtime constants (`CONFIG_DIR`, `CACHE_DIR`, `LOGS_DIR`, `UPLOADS_DIR`, …);
 no path relies on the working directory, which is `public/` on the web and
 something else under the tests and the tools. Outside `public/` no folder
-carries a guard `.htaccess` or `index.html`, and no writer creates one.
+carries a guard `.htaccess` or `index.html`, and no writer creates one. Inside it the server closes the listing
+(`Options -Indexes` of `public/.htaccess`, `autoindex off` of `nginx.conf.example`), so no folder carries a guard page
+either: an `index.html` there is a real page, as `phoenix/` has. `PublicTreeTest` holds both sides.
 
 **Two modes.** The installer records the one it found as `webroot` in
 `config/global.php` (`getSetupRoot()` of `setup.php`):

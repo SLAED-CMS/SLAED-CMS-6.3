@@ -383,7 +383,8 @@ function edit(): void {
         'SELECT modul, title, intro, img, lang, parent, status, pview, pread, ppost, preply, pedit, pdelete, pmod FROM '.PREFIX_DB.'_categories WHERE id = :cid',
         ['cid' => $cid]
     );
-    [$modul, $title, $desc, $imgcat, $lang, $parent, $status, $pview, $pread, $ppost, $preply, $pedit, $pdelete, $pmod] = $db->getSqlRow($result);
+    $row = $db->getSqlRow($result) ?: setRedirect($afile.'.php?name=categories', false, 302, _NONE_FOUND, true);
+    [$modul, $title, $desc, $imgcat, $lang, $parent, $status, $pview, $pread, $ppost, $preply, $pedit, $pdelete, $pmod] = $row;
     $imgcat = preg_match('/^[a-z0-9-]+$/', (string)$imgcat) ? $imgcat : '';
     $modlink = '&modul='.$modul;
     $ops = ['name=categories'.$modlink, 'name=categories&op=add'.$modlink, 'name=categories&op=subadd'.$modlink, 'name=categories&op=addedit'.$modlink,

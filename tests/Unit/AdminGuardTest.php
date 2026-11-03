@@ -303,6 +303,48 @@ final class AdminGuardTest extends TestCase
         $this->assertStringContainsString("getVar('post', 'url', 'url', '')", $this->getBody('admin/modules/admins.php', 'save'), 'An empty address is stored as a bare scheme');
     }
 
+    # The edit of a category that is gone returns to the list with a warning: its empty row used to reach a typed helper and answer 500
+    #[Test]
+    public function theEditOfAGoneCategoryReturnsToTheList(): void
+    {
+        $edit = $this->getBody('admin/modules/categories.php', 'edit');
+        $this->assertStringContainsString("\$row = \$db->getSqlRow(\$result) ?: setRedirect(\$afile.'.php?name=categories', false, 302, _NONE_FOUND, true);", $edit,
+            'A gone category is read as a row of nulls');
+    }
+
+    # The right node is one box of the Node group: listed among the modules too, its second box sent the right again when the first was cleared
+    #[Test]
+    public function theRightNodeHasOneBox(): void
+    {
+        $add = $this->getBody('admin/modules/admins.php', 'add');
+        $this->assertStringContainsString("if ((int)(\$info['type'] ?? 1) !== 1 || \$mod === 'node') continue;", $add, 'The module node is listed beside the Node group');
+        $this->assertStringContainsString("\$nodes = ['node' => [_NODE_MANAGE, 'node']];", $add, 'The right to manage Node is gone from the form');
+    }
+
+    # A ban term of 0 or none lasts the 30 days its code meant: the 0 the form started with used to write a ban that ended the second it was saved
+    #[Test]
+    public function aBanWithoutTermLastsThirtyDays(): void
+    {
+        $save = $this->getBody('admin/modules/security.php', 'bansave');
+        $this->assertSame(2, substr_count($save, '$time = time() + (($time > 0) ? $time : 30) * 86400;'), 'A ban of the address or of the name ends at once without a term');
+        $this->assertStringNotContainsString('is_numeric($time)', $save, 'The fallback of the term hangs on a number that is always given');
+        $this->assertStringContainsString("\$time = getVar('req', 'time', 'num') ?: 30;", $this->getBody('admin/modules/security.php', 'banlist'), 'The form starts the term at 0');
+        $this->assertSame(2, substr_count($this->getFile('core/security.php'), "_BANN_INFO.' '._BANN_TERM"), 'The ban text puts a full stop after its exclamation mark');
+    }
+
+    # The url field of a user site starts empty and shows a stored bare scheme as empty; any other stored value stays as stored, never escaped twice
+    #[Test]
+    public function theUserFormShowsABareSchemeAsEmpty(): void
+    {
+        $add = $this->getBody('modules/account/admin/index.php', 'add');
+        $this->assertStringContainsString("getVar('post', 'site', 'url', '')", $add, 'A new user starts with a bare scheme in the site field');
+        $this->assertStringContainsString("\$site = preg_match('#^https?://\$#i', (string)\$site) ? '' : (string)\$site;", $add, 'The panel shows a stored bare scheme');
+        $home = $this->getBody('modules/account/index.php', 'edithome');
+        $this->assertStringContainsString("'value_attr' => preg_match('#^https?://\$#i', (string)\$info['website']) ? '' : \$info['website'],", $home,
+            'The cabinet shows a stored bare scheme');
+        $this->assertStringNotContainsString('filterWebUrl', $add.$home, 'A stored address passes filterText() a second time on its way to the form');
+    }
+
     # The menu on the site serves an administrator alone: its script, its sections behind the token, its link into the panel only where its moderator may go
     #[Test]
     public function theMenuOnTheSiteIsForTheAdministrator(): void

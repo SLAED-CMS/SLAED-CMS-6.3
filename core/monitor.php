@@ -6,7 +6,7 @@
 
 if (!defined('FUNC_FILE')) die('Illegal file access');
 
-# Every Windows figure from one PowerShell run per request, killed after ten seconds so a hung WMI query never holds the sampler lock; a run that gave nothing is failed
+# Every Windows figure from one PowerShell run, killed after ten seconds so a hung WMI query never holds the lock; a run with no figures or no file left by a cache clear is failed
 function getWindowsProbe(): array {
     static $data = null;
     if ($data !== null) return $data;
@@ -30,13 +30,16 @@ function getWindowsProbe(): array {
         if (proc_get_status($proc)['running']) proc_terminate($proc);
         proc_close($proc);
     }
-    foreach (file($file, FILE_IGNORE_NEW_LINES) ?: [] as $line) {
+    set_error_handler(static fn(): bool => true);
+    $lines = file($file, FILE_IGNORE_NEW_LINES) ?: [];
+    unlink($file);
+    restore_error_handler();
+    foreach ($lines as $line) {
         [$key, $val] = array_pad(explode('=', $line, 2), 2, '');
         $val = str_replace(',', '.', trim($val));
         if ($key === 'boot' && ($ts = strtotime($val)) !== false) $data['boot'] = $ts;
         elseif (is_numeric($val)) $data[trim($key)] = (float)$val;
     }
-    unlink($file);
     if ($data === []) $data = ['failed' => 1];
     return $data;
 }

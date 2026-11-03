@@ -413,7 +413,6 @@ define('_GENERATION','Generowanie');
 define('_GENERATION_DB','zapytań do bazy danych za');
 define('_PAGETIME','Czas generowania strony');
 define('_GERMAN','Niemiecki');
-define('_GOBACK','<input type="button" value="Wstecz" class="sl_but_blue" OnClick="javascript:window.history.go(-1);">');
 define('_GROUP','Grupa');
 define('_HACK','Próba włamania');
 define('_HASH','Hash przeglądarki');
@@ -800,8 +799,6 @@ define('_ERR_FILE','Źródło musi być plikiem dla gzip/bzip2');
 define('_ERR_OPEN','Nie można otworzyć pliku źródłowego');
 define('_ERR_GZIP','Nie można utworzyć archiwum gzip');
 define('_ERR_BZIP','Nie można utworzyć archiwum bzip2');
-
-# Captcha widget (ALTCHA)
 define('_CAPTCHA_LABEL','Nie jestem robotem');
 define('_CAPTCHA_VERIFYING','Weryfikacja…');
 define('_CAPTCHA_VERIFIED','Weryfikacja zakończona pomyślnie!');

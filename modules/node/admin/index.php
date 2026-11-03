@@ -217,7 +217,7 @@ function getNodeSupportFilter(string $key, ?int $def): ?int {
     $raw = getVar('get', $key, 'raw', '');
     if ($raw === '') return $def;
     if ($raw === 'all') return null;
-    if (!preg_match('/^(?:0|[1-9][0-9]{0,9})$/D', $raw)) setNodeAdminFault(400, _NODE_INVALID);
+    if (!preg_match('/^(?:0|[1-9][0-9]{0,9})$/D', $raw)) setNodeAdminFault(400, _NODE_BADFILTER);
     return $raw;
 }
 
@@ -307,7 +307,7 @@ function show(): void {
     }
     $raw = getVar('get', 'status', 'raw', '');
     $state = ($raw === '') ? NodeStatus::Published : (ctype_digit($raw) ? NodeStatus::tryFrom((int)$raw) : null);
-    if ($state === null) setNodeAdminFault(400, _NODE_INVALID);
+    if ($state === null) setNodeAdminFault(400, _NODE_BADFILTER);
     $num = max(1, getVar('get', 'num', 'num', 1));
     $topts = [['value_attr' => '', 'label_text' => _ALL, 'is_selected' => $name === '']];
     foreach ($types as $key => $one) $topts[] = ['value_attr' => $key, 'label_text' => getModuleName($key), 'is_selected' => $key === $name];
@@ -610,7 +610,7 @@ function getNodeTypeFault(NodeException $err, string $name): string {
     $label = ($name !== '') ? $name : '-';
     if ($err->getCode() === NodeException::CONFLICT) return sprintf(_NODE_STALE, $label);
     if ($err->getCode() === NodeException::INVALID) {
-        $path = preg_match('/^Invalid node input: (.+)$/D', $err->getMessage(), $hit) ? $hit[1] : '';
+        $path = preg_match('/^Invalid (?:node|support|sync) input: (.+)$/D', $err->getMessage(), $hit) ? $hit[1] : '';
         if ($path === 'directory') return sprintf(_NODE_TGUARD, $label);
         if ($path === 'remains') return sprintf(_NODE_BAD, $label).' '._NODE_REMHINT;
         return sprintf(_NODE_BAD, $label).(($path !== '') ? ' ('.$path.')' : '');
@@ -1168,7 +1168,7 @@ function config(): void {
         $held = '';
         $code = 422;
         if (in_array(-1, $new, true)) {
-            $note = _NODE_INVALID;
+            $note = _NODE_LIMITBAD;
         } else {
             $types = getNodeTypeMap();
             $done = setConfigFile(function (array $base, Closure $save) use ($new, $types, &$held): string {

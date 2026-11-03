@@ -10,6 +10,7 @@ define('_NODE_AEDIT','Seconds after creation in which the author may quick edit 
 define('_NODE_AGAIN','The material was changed in the meantime, nothing was done. Open the current record and confirm the action again.');
 define('_NODE_ALPHA','Letter index');
 define('_NODE_ASSIGN','Assignee');
+define('_NODE_BADFILTER','The filter of the list is not valid: choose its values in the form.');
 define('_NODE_CANLINK','External links');
 define('_NODE_CANREP','Reports');
 define('_NODE_CARD','Working card of the request');
@@ -55,6 +56,7 @@ define('_NODE_JSON','Definition file (JSON)');
 define('_NODE_KEEP','Continue with my data');
 define('_NODE_KINDS','Kinds');
 define('_NODE_LIMIT','Materials per page');
+define('_NODE_LIMITBAD','The limits were not saved: enter whole numbers, 0 or more for the periods and 1 or more for the rest.');
 define('_NODE_LIMITNO','The type %s would not fit into the new limits, nothing was saved.');
 define('_NODE_LIMITS','Limits');
 define('_NODE_MAILNO','Your material "%s" was not accepted.');

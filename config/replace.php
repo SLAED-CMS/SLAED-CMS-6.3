@@ -6,7 +6,7 @@
 
 return [
     'replace' => [
-        'content' => 'Open SLAED|<a href="//slaed.net/index.php?name=files&op=view&id=1103" title="Open SLAED">Open SLAED</a>||SLAED CMS|<a href="//slaed.net/index.php?name=files&op=view&id=1529" title="SLAED CMS">SLAED CMS</a>||0|0||0|0||0|0||0|0||0|0||0|0||0|0||0|0||0|0||0|0||0|0||0|0||0|0||0|0||0|0||0|0||0|0||0|0||0|0||0|0||0|0||0|0||0|0||0|0||0|0||0|0||0|0||0|0||0|0||0|0||0|0||0|0||0|0||0|0||0|0||0|0||0|0||0|0||0|0||0|0||0|0||0|0||0|0||0|0||0|0||0|0||0|0||0|0',
-        'news' => 'Open SLAED|<a href="//slaed.net/index.php?name=files&op=view&id=1103" title="Open SLAED">Open SLAED</a>||SLAED CMS|<a href="//slaed.net/index.php?name=files&op=view&id=1529" title="SLAED CMS">SLAED CMS</a>||0|0||0|0||0|0||0|0||0|0||0|0||0|0||0|0||0|0||0|0||0|0||0|0||0|0||0|0||0|0||0|0||0|0||0|0||0|0||0|0||0|0||0|0||0|0||0|0||0|0||0|0||0|0||0|0||0|0||0|0||0|0||0|0||0|0||0|0||0|0||0|0||0|0||0|0||0|0||0|0||0|0||0|0||0|0||0|0||0|0||0|0||0|0||0|0',
+        'content' => 'Open SLAED|<a href="//slaed.net/index.php?name=files&op=view&id=1103" title="Open SLAED">Open SLAED</a>||SLAED CMS|<a href="//slaed.net/index.php?name=files&op=view&id=1529" title="SLAED CMS">SLAED CMS</a>',
+        'news' => 'Open SLAED|<a href="//slaed.net/index.php?name=files&op=view&id=1103" title="Open SLAED">Open SLAED</a>||SLAED CMS|<a href="//slaed.net/index.php?name=files&op=view&id=1529" title="SLAED CMS">SLAED CMS</a>',
     ],
 ];

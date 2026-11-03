@@ -10,6 +10,7 @@ define('_NODE_AEDIT','Sekund od utworzenia, w których autor może szybko edytow
 define('_NODE_AGAIN','Materiał został w międzyczasie zmieniony, nic nie wykonano. Otwórz aktualny rekord i potwierdź akcję ponownie.');
 define('_NODE_ALPHA','Indeks alfabetyczny');
 define('_NODE_ASSIGN','Odpowiedzialny');
+define('_NODE_BADFILTER','Filtr listy jest nieprawidłowy: wybierz jego wartości w formularzu.');
 define('_NODE_CANLINK','Linki zewnętrzne');
 define('_NODE_CANREP','Zgłoszenia');
 define('_NODE_CARD','Karta robocza zgłoszenia');
@@ -55,6 +56,7 @@ define('_NODE_JSON','Plik definicji (JSON)');
 define('_NODE_KEEP','Kontynuuj z moimi danymi');
 define('_NODE_KINDS','Rodzaje');
 define('_NODE_LIMIT','Materiałów na stronie');
+define('_NODE_LIMITBAD','Limity nie zostały zapisane: podaj liczby całkowite, dla terminów od 0, dla pozostałych od 1.');
 define('_NODE_LIMITNO','Typ %s nie zmieściłby się w nowych limitach, nic nie zapisano.');
 define('_NODE_LIMITS','Limity');
 define('_NODE_MAILNO','Twój materiał „%s” nie przeszedł sprawdzenia.');

@@ -1142,8 +1142,11 @@ that holds the output of a module, belongs to the core and is never a descriptio
 
 A field is `key` (`Layout::FIELD`, no underscore, so a derived key never meets a field), `label` and `type`, and
 optionally `show`, `tab` (`look` for the tab "Вид"), `options` (key → label of a `select`), `min` and `max`, `when`
-(`[key, value]`: the field shows and is checked only while another field holds that value), and `for` on a field `url`:
-the key of the text of the button it leads from.
+(`[key, value]`: the field shows and is checked only while another field holds that value), `for` on a field `url`:
+the key of the text of the button it leads from, and `alt` on a picture: the key of the field that describes it. A
+`file` is a picture by itself and is described by a field `alt` when the item has one; a field of another type, as the
+`select` of a mark of lite, is a picture only by naming its `alt`. The check before a publication names a filled picture
+whose describing field is empty, once per describing field.
 
 A button of a fragment prints only with both its text and its address, so the pair is closed on both sides: a `make`
 carries no button text without its address, and the check before a publication names a filled text whose address is
@@ -1152,7 +1155,7 @@ empty ("Кнопка «…» никуда не ведёт"). Lite ties `href` to
 
 | `type` | Edited as | The fragment gets |
 |---|---|---|
-| `text`, `textarea`, `email`, `date`, `url`, `int`, `bool`, `select` | a type of `Field`, checked by `checkFieldValues()`; `show` draws a `select` as `seg`, a `bool` as `switch`, an `int` as `range` | the value made canonical by `Field`; a `select` also `<key>_<option>`, a `url` outside the site `<key>_ext` |
+| `text`, `textarea`, `email`, `date`, `url`, `int`, `bool`, `select` | a type of `Field`, checked by `checkFieldValues()`; `show` draws a `select` as `seg`, a `bool` as `switch`, an `int` as `range` | the value made canonical by `Field`; a `select` also `<key>_<option>`, a `url` outside the site `<key>_ext`. An option key follows the name of `Field` (`[a-z][a-z0-9_]`, no hyphen): one bad key empties the field on every value, with no error |
 | `markdown` | the content editor of the site in the editor window, with the file manager over `layout.attach` | `<key>_html` by `Parser::filterDoc()` with the module `layout` |
 | `code` | "Свой HTML" in the code editor, for the super administrator | `<key>_html`, printed as it is |
 | `file` | the file field over `layout.attach` | the address of a path below `uploads/`, in a public folder only |
@@ -1191,7 +1194,9 @@ by its fields, as the values of a section.
 - `parts`: each `title`, `note`, `icon`, `where` (the place the structure of the screen groups it by) and `fields` as
   in a description; optionally `items` with its `key`, the name of its list in `theme`, and `conf`, the keys of
   `config/global.php` the part edits as "Конфигурации" does. Lite declares `brand` (its `conf` is `sitename` and
-  `site_logo`, its field `tagline`), `pane`, `social`, `line`, `contacts`, `marks` and `tabs`.
+  `site_logo`, its field `tagline`), `pane`, `social`, `line`, `contacts`, `marks` and `tabs`. A mark of lite is a
+  link (`url`) around a picture: `logo` picks one of the theme's marks in `images/tech/`, `<logo>.svg` in mono with
+  `<logo>-color.svg` over it, shown on hover and keyboard focus; without a `logo` the uploaded `img` stands alone.
 - `menus`: each `title`, `where`, `depth` and `icons`; lite declares `main` two levels deep and `foot` one.
 - `zones`: the zones of blocks `l`, `r`, `c`, `d` with their `title` and `icon`, the Bootstrap icon of the zone in the
   tree of the screen (`layout-sidebar` without it); the tree sets them under one head "Блоки".

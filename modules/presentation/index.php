@@ -193,39 +193,44 @@ function getPresentationData(): array {
     $years = (int)date('Y') - 2005;
     $yidx = ($years % 10 === 1 && $years % 100 !== 11) ? 0 : (($years % 10 >= 2 && $years % 10 <= 4 && ($years % 100 < 12 || $years % 100 > 14)) ? 1 : 2);
     $yunit = explode('|', _PRES_UNIT_YEAR)[$yidx] ?? '';
-    $when = static fn(int $i): string => date('H:i', time() - 60 * (4 - $i));
+    $when = static fn(int $i): string => date('H:i', time() - 60 * (5 - $i));
     $ops = [
-        [getIconName('system'), _PRES_CO_SYSTEM, [['kernel.boot', 'ok'], ['config.load', 'ok'], ['route.match', 'ok'], ['module.resolve', $gen.' ms'], ['response.send', '200']]],
-        ...($news['type'] ? [[getIconName('news'), _NEWS, [['news.index', 'ok'], ['news.count', (string)$news['num']], ['categories.load', (string)$cats],
-            ['page.render', 'ok'], ['cache.store', 'ok']]]] : []),
-        [getIconName('groups'), _USERS, [['session.verify', 'ok'], ['group.rights', 'admin'], ['users.total', (string)$users], ['users.online', (string)$live],
-            ['login.attempt', 'ok']]],
-        [getIconName('modules'), _PRES_NAV_MODULES, [['modules.scan', (string)$mtot], ['module.enable', (string)($mods[0]['note'] ?? 'account')], ['hooks.bind', (string)$mon],
-            ['access.check', 'ok'], ['registry.save', 'ok']]],
-        ...($files['type'] ? [[getIconName('files'), _PRES_CO_FILES, [['files.index', (string)$files['num']], ['categories.load', (string)$files['cats']],
-            ['upload.check', 'clean'], ['download.count', '+1'], ['meta.write', 'ok']]]] : []),
-        [getIconName('search'), 'SEO', [['canonical.resolve', 'ok'], ['meta.compose', 'ok'], ['hreflang.map', (string)$langs], ['sitemap.queue', 'ready'], ['robots.check', 'ok']]],
-        [getIconName('privacy'), _SECURITY, [['request.filter', 'allow'], ['injection.scan', 'block'], ['login.failed', (string)$failed], ['log.append', (string)$events],
-            ['session.guard', 'ok']]],
-        ['layout-text-window-reverse', _PRES_CO_TPL, [['template.load', $theme], ['blocks.render', (string)$bcount], ['partials.merge', 'ok'], ['assets.link', 'ok'],
-            ['render.total', $gen.' ms']]],
+        'config' => [['kernel.boot', 'ok'], ['config.load', 'ok'], ['lang.load', getLang()], ['route.match', 'ok'], ['module.resolve', $gen.' ms'], ['response.send', '200']],
+        'fields' => [['fields.load', 'ok'], ['types.bind', (string)count($conf['node']['types'] ?? [])], ['input.validate', 'ok'], ['value.cast', 'ok'],
+            ['form.render', 'ok'], ['value.save', 'ok']],
+        'lang' => [['locales.scan', (string)$langs], ['lang.load', getLang()], ['constants.check', 'ok'], ['plural.rule', 'ok'], ['hreflang.map', (string)$langs],
+            ['file.write', 'ok']],
+        'layout' => [['layout.load', 'ok'], ['template.load', $theme], ['blocks.render', (string)$bcount], ['partials.merge', 'ok'], ['escape.auto', 'ok'],
+            ['render.total', $gen.' ms']],
+        'modules' => [['modules.scan', (string)$mtot], ['module.enable', (string)($mods[0]['note'] ?? 'account')], ['hooks.bind', (string)$mon], ['access.check', 'ok'],
+            ['registry.save', 'ok'], ['cache.clear', 'ok']],
+        'monitor' => [['load.sample', 'ok'], ['page.gen', $gsec.' s'], ['sql.count', (string)$load['qnum']], ['memory.peak', $memmb.' MB'], ['signals.check', 'ok'],
+            ['history.write', 'ok']],
+        'security' => [['request.filter', 'allow'], ['injection.scan', 'block'], ['csrf.verify', 'ok'], ['login.failed', (string)$failed], ['log.append', (string)$events],
+            ['session.guard', 'ok']],
+        'statistic' => [['visits.today', (string)$today['visits']], ['bots.split', 'ok'], ['session.track', 'ok'], ['depth.measure', 'ok'], ['hours.chart', 'ok'],
+            ['day.store', 'ok']],
+        'update' => [['version.check', $ver[0]], ['package.verify', 'ok'], ['backup.create', 'ok'], ['files.replace', 'ok'], ['db.migrate', 'ok'], ['cache.clear', 'ok']],
+        'account' => [['session.verify', 'ok'], ['group.rights', 'admin'], ['users.total', (string)$users], ['users.online', (string)$live], ['login.attempt', 'ok'],
+            ['password.verify', 'bcrypt']],
+        'forum' => [['forum.index', 'ok'], ['posts.count', (string)getTableCount('forum')], ['topic.last', $tid ? '#'.$tid : '0'], ['access.check', 'ok'],
+            ['unread.mark', 'ok'], ['page.render', 'ok']],
+        'node' => [['types.load', (string)count($conf['node']['types'] ?? [])], ['news.count', (string)$news['num']], ['files.count', (string)$files['num']],
+            ['categories.load', (string)$cats], ['pager.build', 'ok'], ['page.render', 'ok']],
+        'search' => [['form.load', 'ok'], ['query.escape', 'ok'], ['access.check', 'ok'], ['rows.match', 'ok'], ['snippet.build', 'ok'], ['stat.write', 'ok']],
+        'sitemap' => [['canonical.resolve', 'ok'], ['meta.compose', 'ok'], ['jsonld.build', 'ok'], ['hreflang.map', (string)$langs], ['sitemap.queue', 'ready'],
+            ['robots.check', 'ok']],
     ];
-    $extra = [
-        'forum' => [['forum.index', 'ok'], ['posts.count', (string)getTableCount('forum')], ['topic.last', $tid ? '#'.$tid : '0'], ['access.check', 'ok'], ['page.render', 'ok']],
-        'voting' => [['poll.load', 'ok'], ['polls.count', (string)getTableCount('voting')], ['vote.guard', 'ok'], ['result.render', 'ok'], ['cache.store', 'ok']],
-        'contact' => [['form.load', 'ok'], ['token.check', 'ok'], ['input.filter', 'ok'], ['mail.queue', 'ready'], ['flash.send', 'ok']],
-        'rss' => [['feed.build', 'ok'], ['items.collect', (string)$news['num']], ['categories.load', (string)$news['cats']], ['xml.write', 'ok'], ['cache.store', 'ok']],
-        'changelog' => [['log.source', (string)($chlog['source'] ?? 'git')], ['commits.read', (string)count($commits)], ['commits.parse', 'ok'], ['page.render', 'ok'],
-            ['cache.store', 'ok']],
-    ];
-    foreach ($extra as $key => $rows) {
-        if (empty($conf['modules'][$key]['active'])) continue;
-        $ops[] = [getIconName($key), getModuleName($key), $rows];
-    }
+    $seat = array_flip(array_keys($conf['modules']));
+    $site = static fn(string $mod): bool => ($conf['modules'][$mod]['type'] ?? 1) != 0;
+    $ops = array_filter($ops, static fn(string $mod): bool => isset($seat[$mod]) && (!$site($mod) || !empty($conf['modules'][$mod]['active'])), ARRAY_FILTER_USE_KEY);
+    uksort($ops, static fn(string $one, string $two): int => [$site($one), $seat[$one]] <=> [$site($two), $seat[$two]]);
     $menu = [];
-    foreach ($ops as $i => [$icon, $label, $rows]) {
+    foreach (array_keys($ops) as $i => $mod) {
         $lines = [];
-        foreach ($rows as $j => [$name, $val]) $lines[] = ['time' => $when($j), 'name' => $name, 'value' => $val];
+        foreach ($ops[$mod] as $j => [$name, $val]) $lines[] = ['time' => $when($j), 'name' => $name, 'value' => $val];
+        $label = getModuleLabel($mod);
+        $icon = preg_match('/^[a-z0-9-]+$/', $conf['modules'][$mod]['icon'] ?? '') ? $conf['modules'][$mod]['icon'] : 'puzzle';
         $menu[] = [
             'icon' => $icon, 'label' => $label, 'path' => 'admin · '.mb_strtolower($label, 'utf-8'), 'rows' => $lines,
             'trace' => json_encode($lines, JSON_UNESCAPED_UNICODE), 'is_on' => $i === 0,

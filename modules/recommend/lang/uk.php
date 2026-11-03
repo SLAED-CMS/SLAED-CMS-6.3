@@ -5,7 +5,7 @@
 # Website: slaed.net
 
 define('_FFRIENDEMAIL','E-Mail Вашого друга');
-define('_FFRIENDNAME',"Ім'я Вашого друга");
+define('_FFRIENDNAME','Ім\'я Вашого друга');
 define('_FREFERENCE','Інформація про сайті була відправлена Вашому другу');
 define('_INTSENT','порахував його цікавим і вирішив повідомити про нього Вас.');
 define('_INTSITE','Цікавий сайт');

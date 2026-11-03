@@ -6,9 +6,9 @@
 
 return [
     'lang' => [
-        'count'    => '5',
-        'key'      => '',
-        'lang'     => 'ru',
+        'count' => '5',
+        'key' => '',
+        'lang' => 'ru',
         'per_page' => '100',
     ],
 ];

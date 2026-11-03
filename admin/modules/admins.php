@@ -132,7 +132,7 @@ function add(): void {
     $mods = getAdminModuleNames((string)$mods);
     $allow = [];
     foreach ($conf['modules'] as $mod => $info) {
-        if ((int)($info['type'] ?? 1) !== 1) continue;
+        if ((int)($info['type'] ?? 1) !== 1 || $mod === 'node') continue;
         if (!file_exists(BASE_DIR.'/modules/'.$mod.'/admin/index.php')) continue;
         $allow[] = (string)$mod;
     }

@@ -291,6 +291,7 @@ function getTplAdminTabs(array $data = []): string {
             'title' => (string)($link['title'] ?? ($link['label'] ?? '')),
         ]);
     }
+    $index = array_key_exists('tabs_index', $data) ? (string)$data['tabs_index'] : (array_key_exists('tab', $data) ? (string)$data['tab'] : '');
     return $tpl->getHtmlPart('module-head', [
         'find' => (string)($data['find'] ?? ''),
         'flash_html' => getFlashHtml(),
@@ -298,7 +299,8 @@ function getTplAdminTabs(array $data = []): string {
         'is_runtime' => !empty($data['is_runtime']),
         'subtitle_html' => $subtitle,
         'tabs_id' => (string)($data['tabs_id'] ?? ($data['id'] ?? '')),
-        'tabs_index' => array_key_exists('tabs_index', $data) ? (string)$data['tabs_index'] : (array_key_exists('tab', $data) ? (string)$data['tab'] : ''),
+        'has_tabs_index' => $index !== '',
+        'tabs_index' => $index,
         'tabs_html' => $tabs,
         'tabs_sync_selector' => (string)($data['tabs_sync_selector'] ?? ''),
         'title' => $title,

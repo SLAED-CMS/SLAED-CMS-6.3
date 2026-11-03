@@ -202,4 +202,18 @@ final class PublicTreeTest extends TestCase
         foreach (['index.php', 'admin.php', 'setup.php', 'update.php'] as $one) $this->assertFileExists(PUBLIC_DIR.'/'.$one, 'The entry '.$one.' is missing');
         $this->assertDirectoryDoesNotExist(PUBLIC_DIR.'/uploads', 'An upload folder lies in the document root');
     }
+
+    # No guard page lies inside public/ either: the server closes the listing (Options -Indexes, autoindex off), so an index.html there is a real page
+    #[Test]
+    public function noGuardPageLiesInTheDocumentRoot(): void
+    {
+        $list = explode("\0", (string)shell_exec('git -C '.escapeshellarg(BASE_DIR).' ls-files -co --exclude-standard -z'));
+        $left = [];
+        foreach ($list as $one) {
+            if (!str_starts_with($one, 'public/') || basename($one) !== 'index.html' || !is_file(BASE_DIR.'/'.$one)) continue;
+            $text = (string)file_get_contents(BASE_DIR.'/'.$one);
+            if (trim(strip_tags($text)) === '' || preg_match('/http-equiv\s*=\s*["\']?refresh/i', $text) === 1) $left[] = $one;
+        }
+        $this->assertSame([], $left, 'A guard page lies in the document root');
+    }
 }

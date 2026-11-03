@@ -209,6 +209,7 @@ function save(): void {
     $page = getVar('post', 'page', 'num', 1);
     $rows = getVar('post', 'rows', 'num', 0);
     $path = getLangPath($mod, $typ);
+    $gone = [];
     if (!$warn && $rows) {
         foreach ($locs as $loc) {
             $file = $path.'/'.$loc.'.php';
@@ -216,6 +217,7 @@ function save(): void {
             for ($i = 0; $i < $rows; $i++) {
                 $cons = getVar('post', 'cnst['.$i.']', 'var', '');
                 $cont = getVar('post', 'lng['.$loc.']['.$i.']', '', '');
+                if ($cons !== '' && $cont === '' && ($keep[trim($cons)] ?? '') !== '') $gone[] = trim($cons).' ('.$loc.')';
                 if ($cons === '' || $cont === '') continue;
                 $keep[trim($cons)] = trim(str_replace(['<?php', '?>', "\r", "\n"], ['&lt;?php', '?&gt;', '', ''], $cont));
             }
@@ -230,7 +232,7 @@ function save(): void {
         }
     }
     $url = $afile.'.php?name=lang&op=fileedit&mod='.urlencode($mod).'&typ='.urlencode($typ).'&page='.$page;
-    setRedirect($url, false, 302, $warn ? _TOKENMISS : _SUCCSAVE, $warn);
+    setRedirect($url, false, 302, $warn ? _TOKENMISS : ($gone ? sprintf(_LANG_EMPTY, implode(', ', $gone)) : _SUCCSAVE), $warn || $gone);
 }
 
 function config(): void {
@@ -265,7 +267,7 @@ function config(): void {
         ],
         [
             'label_for' => 'f-per-page',
-            'label_html' => _PERPAGE,
+            'label_html' => _LANG_PERPAGE,
             'field_html' => $tpl->getHtmlFrag('input', [
                 'itype' => 'number',
                 'name_attr' => 'per_page',

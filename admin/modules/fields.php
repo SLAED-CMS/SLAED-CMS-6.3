@@ -159,7 +159,8 @@ function fields(array $sent = [], string $fail = ''): void {
         $k++;
     }
     $links[] = ['href' => $afile.'.php?name=fields&op=info&tab='.$ctab, 'label' => _MANUAL, 'link_attr' => 'data-sl-tab-info-link="fields-main"', 'title' => _MANUAL];
-    $cont = getTplAdminTabs(['is_runtime' => true, 'links' => $links, 'tabs_id' => 'fields-main', 'tabs_index' => $ctab, 'tabs_sync_selector' => 'input[name="tab"]']);
+    $index = (getVar('req', 'tab', 'raw', '') !== '') ? $ctab : '';
+    $cont = getTplAdminTabs(['is_runtime' => true, 'links' => $links, 'tabs_id' => 'fields-main', 'tabs_index' => $index, 'tabs_sync_selector' => 'input[name="tab"]']);
     $cont .= checkPerms(CONFIG_DIR.'/fields.php');
     if (!$mark) {
         echo $cont.$tpl->getHtmlFrag('alert', ['text' => _FIELDS_NOMARK, 'meta' => '', 'type' => 'warn', 'is_warn' => true]);

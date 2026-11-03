@@ -1120,7 +1120,8 @@ function getLayoutChanges(array $dft, array $live, array $types, array $places):
             $add('file-earmark-plus', sprintf(_LAYOUT_CH_PAGE, $title), _LAYOUT_PAGES, 'page:'.$key, $key);
             continue;
         }
-        $bare = static fn(array $v): array => array_diff_key($v, ['sections' => true]);
+        $keys = array_flip(array_column(getLayoutPageFields($now, $key), 'key'));
+        $bare = static fn(array $v): array => array_intersect_key($v, $keys);
         if ($bare($page) != $bare($was)) $add('file-earmark-richtext', _LAYOUT_CH_PAGESET, $title, 'page:'.$key, $key);
         $olds = [];
         foreach ($was['sections'] as $sec) if (is_array($sec)) $olds[intval($sec['id'] ?? 0)] = $sec;
@@ -1191,7 +1192,8 @@ function getLayoutIssues(array $dft, array $types, array $places, Closure $answe
         return ($path === '' || $answer($path)) ? '' : sprintf(_LAYOUT_IS_ADDR, $url);
     };
     $pics = static function (array $fields, array $vals, ?array $marks, Closure $put) use ($link, $weight): void {
-        $alt = in_array('alt', array_column($fields, 'key'), true) && trim((string)($vals['alt'] ?? '')) === '';
+        $keys = array_column($fields, 'key');
+        $told = [];
         foreach ($fields as $one) {
             $key = (string)($one['key'] ?? '');
             $val = $vals[$key] ?? '';
@@ -1201,11 +1203,13 @@ function getLayoutIssues(array $dft, array $types, array $places, Closure $answe
             if ($btn !== '' && trim((string)$val) === '') $put('link-45deg', sprintf(_LAYOUT_IS_NOLINK, $btn));
             if (($one['type'] ?? '') === 'video' && trim((string)$val) === '') $put('play-btn', _LAYOUT_IS_NOFILM);
             if (($one['type'] ?? '') === 'page' && preg_match('#^https://#i', trim((string)$val)) !== 1) $put('window-stack', _LAYOUT_IS_HTTPS);
-            if (($one['type'] ?? '') !== 'file' || !is_string($val) || $val === '') continue;
-            $name = basename($val);
-            if ($alt) $put('image', sprintf(_LAYOUT_IS_ALT, $name));
-            if (($size = $weight($val)) > LAYOUT_HEAVY) $put('file-earmark-image', sprintf(_LAYOUT_IS_HEAVY, $name, (int)ceil($size / 1024)));
-            $alt = false;
+            $file = ($one['type'] ?? '') === 'file';
+            if ((!$file && !isset($one['alt'])) || !is_string($val) || $val === '') continue;
+            $name = $file ? basename($val) : getConst((string)($one['options'][$val] ?? $val));
+            $akey = (string)($one['alt'] ?? 'alt');
+            if (!isset($told[$akey]) && in_array($akey, $keys, true) && trim((string)($vals[$akey] ?? '')) === '') $put('image', sprintf(_LAYOUT_IS_ALT, $name));
+            $told[$akey] = true;
+            if ($file && ($size = $weight($val)) > LAYOUT_HEAVY) $put('file-earmark-image', sprintf(_LAYOUT_IS_HEAVY, $name, (int)ceil($size / 1024)));
         }
         foreach ($fields as $one) {
             if (($one['type'] ?? '') !== 'markdown' || !is_string($vals[$one['key'] ?? ''] ?? null)) continue;
@@ -1602,6 +1606,7 @@ function layout(): void {
         'del' => _DELETE, 'add' => _LAYOUT_ADDSEC];
     setHead();
     $adminvars['is_full'] = true;
+    $adminvars['section'] = _LAYOUT_BUILDER;
     if (!$made) echo $tpl->getHtmlFrag('alert', ['text' => _LAYOUT_NOWRITE, 'meta' => '', 'type' => 'error', 'is_warn' => true]);
     echo $tpl->getHtmlPart('layout-screen', [
         'act_url' => getLayoutUrl(['op' => 'act']), 'pick_url' => getLayoutUrl(['op' => 'pick']), 'tree_url' => getLayoutUrl(['op' => 'tree']), 'token' => getSiteToken('layout'),

@@ -5,4 +5,4 @@
 # Website: slaed.net
 
 define('_CONTACTALL','Contact avec toutes les administrateurs?');
-define('_CONTACTINFO',"L'information de contact");
+define('_CONTACTINFO','L\'information de contact');

@@ -44,7 +44,7 @@ final class RouteParseTest extends TestCase
             'news?order=title' => [200, 'News', ''],
             'forum' => [200, 'Форум', 'forum'],
             'forum/topic-one' => [200, 'Topic one - Talk - Форум', 'forum/topic-one'],
-            'forum/talk' => [200, 'Форум Talk - Форум', 'forum/talk'],
+            'forum/talk' => [200, 'Talk - Форум', 'forum/talk'],
             'users' => [200, 'Топ пользователи', 'users'],
             'voting/poll-one' => [200, 'Poll one - Опросы', 'voting/poll-one'],
             'news/view/101' => [200, 'Alpha - Open - News', 'news/alpha'],

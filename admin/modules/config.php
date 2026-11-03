@@ -156,7 +156,7 @@ function config(): void {
         'is_runtime' => true,
         'links' => $links,
         'tabs_id' => 'config-main',
-        'tabs_index' => $ctab,
+        'tabs_index' => (getVar('get', 'tab', 'raw', '') !== '') ? $ctab : '',
         'tabs_sync_selector' => 'input[name="tab"]',
     ]);
     $cont .= checkPerms(CONFIG_DIR.'/global.php');
@@ -784,7 +784,7 @@ function save(): void {
                 $hascont = preg_match('#\bcontent\s*=\s*(["\']).*?\1#is', $meta);
                 if (!$hasprop || !$hascont) $valid = false;
             }
-            if (!$valid) setRedirect($afile.'.php?name=config&tab='.$ctab, false, 302, _SEO_TPL_INVALID.': '._OGRAPH, true);
+            if (!$valid) setRedirect($afile.'.php?name=config&tab='.$ctab, false, 302, _SEO_TPL_INVALID.': '._OGRAPHT, true);
         }
         if ($schema !== '') {
             try {

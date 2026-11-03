@@ -2,6 +2,27 @@
 
 ## 2026-11-03
 
+### No guard pages in the document root
+
+- **One standard.** The 23 `index.html` of `templates/` and `plugins/` that only sent a visitor to slaed.net are gone:
+  the server closes the listing, `Options -Indexes` on Apache and `autoindex off` on nginx, as outside `public/`.
+  `PublicTreeTest` now refuses a guard page inside `public/` too; a real page, as the two of `phoenix/`, stays.
+
+### The marks of the footer are the theme's own logos and lead somewhere
+
+- **Six marks of the theme.** Lite carries the logos of its stack in `images/tech/`: PHP, MySQL / MariaDB, HTML5, CSS3,
+  JavaScript and htmx, each an SVG in mono and in its brand colour. A mark of the builder picks one by "Знак темы";
+  the colour lies over the mono picture and shows on hover and keyboard focus. An uploaded picture still serves a mark
+  without one.
+- **A mark is a link.** The field "Адрес" turns a mark into a link with its caption as the text of the picture; a mark
+  without it stays a picture. The pictures load lazily, as the footer is below the fold.
+- **A mark without a caption is named.** A picture field of a description may name the field that describes it (`alt`),
+  so the check before a publication now names a mark of the footer whose caption is empty, once per mark, the theme's
+  logo and the uploaded picture alike.
+- **Out of the uploads.** The six PNG of `uploads/presentation/brand/tech/`, jQuery and jQuery UI among them, are gone:
+  the pictures of a theme belong to the theme, and an SVG below `uploads/` is never shown, as the stream of the uploads
+  sends it as `application/octet-stream`.
+
 ### The lamp of the home names every error journal and opens it
 
 - **Sixteen checks.** "Ошибки PHP" counts `error_php.log` alone; "Ошибки сайта" counts `error_site.log` and "Ошибки

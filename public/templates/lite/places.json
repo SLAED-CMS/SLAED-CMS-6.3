@@ -76,10 +76,13 @@
                 "max": 6,
                 "name": "title",
                 "fields": [
-                    {"key": "img", "label": "_IMG", "type": "file"},
-                    {"key": "title", "label": "_LAYOUT_CAPTION", "type": "text"}
+                    {"key": "logo", "label": "_LAYOUT_MARKLOGO", "type": "select", "alt": "title",
+                        "options": {"php": "PHP", "mysql": "MySQL / MariaDB", "html5": "HTML5", "css": "CSS3", "javascript": "JavaScript", "htmx": "htmx"}},
+                    {"key": "img", "label": "_IMG", "type": "file", "alt": "title"},
+                    {"key": "title", "label": "_LAYOUT_CAPTION", "type": "text"},
+                    {"key": "url", "label": "_LAYOUT_URL", "type": "url"}
                 ],
-                "make": {"img": "", "title": ""}
+                "make": {"logo": "", "img": "", "title": "", "url": ""}
             }
         },
         "tabs": {

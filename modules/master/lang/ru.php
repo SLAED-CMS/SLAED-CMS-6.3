@@ -4,4 +4,4 @@
 # License: MIT
 # Website: slaed.net
 
-define('_MASTER', 'Мастер');
+define('_MASTER','Мастер');

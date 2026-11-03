@@ -152,7 +152,10 @@
   box-shadow: var(--sl-shadow-raised);
   color: var(--sl-pres-muted-text);
   text-align: left;
-  transition: border-color var(--sl-time-slow) var(--sl-ease-in-out), background-color var(--sl-time-slow) var(--sl-ease-in-out), transform var(--sl-time-slow) var(--sl-ease-in-out);
+  transition:
+    border-color var(--sl-time-slow) var(--sl-ease-in-out),
+    background-color var(--sl-time-slow) var(--sl-ease-in-out),
+    transform var(--sl-time-slow) var(--sl-ease-in-out);
 }
 
 .sl-pres-node > .bi {
@@ -2549,7 +2552,7 @@
   initial-value: 0px;
 }
 
-/* The gate once the plugin drives it: it stands on a whole pixel of the page by --sl-d-gate-top and patrols by whole pixels of --sl-d-gate-y on transform, so a frame lays out nothing; its state colours the shield and the word */
+/* The gate the plugin drives: a whole pixel by --sl-d-gate-top, patrols in whole pixels of --sl-d-gate-y on transform, so no frame lays out; its state colours shield and word */
 .sl-pres-guard-scene[data-sl-pres-live] .sl-pres-gate {
   top: var(--sl-d-gate-top);
   transform: translate(-50%, var(--sl-d-gate-y));
@@ -3832,7 +3835,10 @@
   border-radius: var(--sl-radius-2);
   background: color-mix(in srgb, var(--sl-pres-panel-bg) var(--sl-modal-btn-mix), transparent);
   padding: var(--sl-space-3) var(--sl-space-4);
-  transition: transform var(--sl-time-slow) var(--sl-ease-in-out), border-color var(--sl-time-slow) var(--sl-ease-in-out), background-color var(--sl-time-slow) var(--sl-ease-in-out);
+  transition:
+    transform var(--sl-time-slow) var(--sl-ease-in-out),
+    border-color var(--sl-time-slow) var(--sl-ease-in-out),
+    background-color var(--sl-time-slow) var(--sl-ease-in-out);
 }
 
 .sl-pres-commit::before {
@@ -5744,7 +5750,7 @@
   }
 }
 
-/* A part off screen, marked by presentation.js, costs no frame; the rise of the section itself follows the scroll, not the clock, so it is left out, and these rules stand last to outweigh every animation above */
+/* A part off screen, marked by presentation.js, costs no frame; the rise of the section follows the scroll, not the clock, so it is left out; these rules stand last to win */
 :root .sl-pres [data-sl-pres-off] *,
 :root .sl-pres [data-sl-pres-off] *::before,
 :root .sl-pres [data-sl-pres-off] *::after,

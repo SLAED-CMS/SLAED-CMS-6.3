@@ -10,6 +10,7 @@ define('_NODE_AEDIT','Secondes après la création pendant lesquelles l\'auteur 
 define('_NODE_AGAIN','La publication a été modifiée entre-temps, rien n\'a été fait. Ouvrez l\'enregistrement actuel et confirmez l\'action à nouveau.');
 define('_NODE_ALPHA','Index alphabétique');
 define('_NODE_ASSIGN','Responsable');
+define('_NODE_BADFILTER','Le filtre de la liste n\'est pas valide : choisissez ses valeurs dans le formulaire.');
 define('_NODE_CANLINK','Liens externes');
 define('_NODE_CANREP','Signalements');
 define('_NODE_CARD','Fiche de travail de la demande');
@@ -55,6 +56,7 @@ define('_NODE_JSON','Fichier de définition (JSON)');
 define('_NODE_KEEP','Continuer avec mes données');
 define('_NODE_KINDS','Genres');
 define('_NODE_LIMIT','Publications par page');
+define('_NODE_LIMITBAD','Les limites n\'ont pas été enregistrées : saisissez des nombres entiers, à partir de 0 pour les délais et de 1 pour le reste.');
 define('_NODE_LIMITNO','Le type %s ne tiendrait pas dans les nouvelles limites, rien n\'a été enregistré.');
 define('_NODE_LIMITS','Limites');
 define('_NODE_MAILNO','Votre publication « %s » n\'a pas été acceptée.');

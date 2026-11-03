@@ -413,7 +413,6 @@ define('_GENERATION','Генерация');
 define('_GENERATION_DB','запросов к базе данных за');
 define('_PAGETIME','Время генерации страницы');
 define('_GERMAN','Немецкий');
-define('_GOBACK','<input type="button" value="Назад" class="sl_but_blue" OnClick="javascript:window.history.go(-1);">');
 define('_GROUP','Группа');
 define('_HACK','Попытка взлома');
 define('_HASH','Хэш браузера');
@@ -800,8 +799,6 @@ define('_ERR_FILE','Источник должен быть файлом для g
 define('_ERR_OPEN','Не удается открыть исходный файл');
 define('_ERR_GZIP','Не удается создать gzip-архив');
 define('_ERR_BZIP','Не удается создать bzip2-архив');
-
-# Captcha widget (ALTCHA)
 define('_CAPTCHA_LABEL','Я не робот');
 define('_CAPTCHA_VERIFYING','Проверка…');
 define('_CAPTCHA_VERIFIED','Проверка завершена успешно!');

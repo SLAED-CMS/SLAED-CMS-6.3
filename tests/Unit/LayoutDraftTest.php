@@ -136,17 +136,17 @@ final class LayoutDraftTest extends TestCase
         $this->assertSame(['id' => 'n1', 'title' => 'New', 'status' => true, 'new' => true], $data['new']);
     }
 
-    # The window before a publication lists the changes by the ids of the draft and the remarks a visitor would trip over, a picture behind its switch left out
+    # The window before a publication lists the changes and the remarks: a picture behind its switch left out, a mark described once by the field it names
     #[Test]
     public function theChecksListTheChangesAndTheRemarks(): void
     {
         $data = $this->getProbe('tools');
-        $changes = ['secnew Hero > sec:20', 'secnew Hero «Off» > sec:22', 'page Twin > page:12', 'part Contacts > part:contacts', 'itemset A2 > menu:main:4',
-            'itemnew E > menu:main:8', 'itemdel B > menu:main', 'blkset Poll > blk:13', 'blknew New > blk:n1', 'blkdel Old > '];
+        $changes = ['secnew Hero > sec:20', 'secnew Hero «Off» > sec:22', 'page Twin > page:12', 'part Contacts > part:contacts', 'part Marks > part:marks',
+            'itemset A2 > menu:main:4', 'itemnew E > menu:main:8', 'itemdel B > menu:main', 'blkset Poll > blk:13', 'blknew New > blk:n1', 'blkdel Old > '];
         $this->assertSame($changes, $data['changes']);
         $issues = ['notitle > sec:20', 'addr /nowhere > sec:20', 'nolink More > sec:20', 'alt big.png > sec:20', 'heavy big.png 586 > sec:20', 'mdalt big.png > sec:20',
             'heavy big.png 586 > sec:20', 'intext anchor #gone > sec:20', 'hidden > sec:22', 'nodesc > page:9', 'twinurl about About > page:12', 'addr https:// > part:contacts',
-            'nowhere A2 > menu:main:4', 'nowhere D > menu:main:7', 'nowhere E > menu:main:8', 'blknone New > blk:n1'];
+            'alt PHP > part:marks', 'alt PHP > part:marks', 'nowhere A2 > menu:main:4', 'nowhere D > menu:main:7', 'nowhere E > menu:main:8', 'blknone New > blk:n1'];
         $this->assertSame($issues, $data['issues']);
         $this->assertSame([true, true, true, true, false, false, false], $data['same']);
     }

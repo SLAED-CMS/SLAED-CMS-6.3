@@ -768,7 +768,7 @@ a.sl-crumb:hover + .sl-crumb-sep {
   text-decoration: underline;
 }
 
-/* Several messages stand one under another as lines of the alert, not as a bulleted list: the tone icon already marks the alert, and a single message arriving as a list must look like a single message */
+/* Several messages stand as lines of the alert, not as a bulleted list: the tone icon already marks the alert, and one message arriving as a list must look like one */
 .sl-alert-list {
   margin: 0;
   padding-left: 0;
@@ -5440,9 +5440,24 @@ dialog.sl-editor-emoji-panel {
   margin-right: calc(var(--sl-space-3) * -1);
 }
 
-.sl-partners span {
+.sl-partners > * {
+  position: relative;
   border: 1px solid var(--sl-border-inverse);
   margin: 0 var(--sl-space-3) var(--sl-space-3) 0;
+}
+
+/* The brand colouring of a theme mark lies over its mono picture and shows on hover and keyboard focus */
+.sl-partners img + img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  opacity: 0;
+  transition: opacity var(--sl-time-base) var(--sl-ease-out);
+}
+
+.sl-partners > :hover img + img,
+.sl-partners > :focus-visible img + img {
+  opacity: 1;
 }
 
 /* Contacts: footer address list with icons */
@@ -6406,7 +6421,7 @@ button.sl-seg-cell:hover {
 
 #topmenu > ul > li > a:hover,
 #topmenu > ul > li:hover > a {
-  color: var(--sl-bg-inverse);
+  color: var(--sl-btn-text);
   background-color: var(--sl-bg-subtle);
   background-image: var(--sl-grad-gloss);
   background-repeat: no-repeat;
@@ -10761,12 +10776,12 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   .sl-pmf-fold .sl-chip { margin-top: var(--sl-space-2); }
 }
 
-/* The private message page is one layout container: the shelves and the split both answer its width and not the width of the window, so the page keeps its shape inside any column it is put in */
+/* The private message page is one layout container: the shelves and the split answer its width, not the window's, so the page keeps its shape in any column it is put in */
 .sl-pmf-page {
   container-type: inline-size;
 }
 
-/* The toolbar is built once per visit and never redrawn: the search term, the sort and the pressed chips are what the reader is holding, and only the list underneath answers them */
+/* The toolbar is built once per visit and never redrawn: the search term, the sort and the pressed chips are what the reader holds, and only the list below answers them */
 .sl-pmf-bar {
   display: flex;
   flex-wrap: wrap;
@@ -10822,7 +10837,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   opacity: var(--sl-fade-muted);
 }
 
-/* The range the list shows stands at the right end of the filter bar, apart from the chips that set it; the reset is a chip like the rest, behind the dot the bar's own label style draws */
+/* The range the list shows stands at the right end of the filter bar, apart from its chips; the reset is a chip like the rest, behind the dot the bar's label style draws */
 .sl-pmf-shown {
   margin-left: auto;
   color: var(--sl-text-muted);
@@ -10977,7 +10992,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   font-size: var(--sl-font-micro);
 }
 
-/* The state flag is the round sl-chip-icon of the theme; the row only shrinks it to its own height, because the standard glyph fills a 19 px circle to the rim and hides the tone it is read by */
+/* The state flag is the round sl-chip-icon of the theme; the row only shrinks it to its height, as the standard glyph fills a 19 px circle to the rim and hides its tone */
 .sl-pmf-item .sl-chip-icon {
   flex: 0 0 auto;
   width: var(--sl-pmf-chip-width);
@@ -11296,7 +11311,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
 .sl-pmf-mate small span:empty { display: none; }
 .sl-pmf-mate small span + span::before { content: " · "; }
 
-/* The grade chip takes the tone the ring takes, because one grade told in two colours is two different answers; the interval chip beside it keeps the warning tone of the theme, whatever the mailbox says */
+/* The grade chip takes the tone of the ring, as one grade in two colours is two answers; the interval chip beside it keeps the warning tone, whatever the mailbox says */
 .sl-pmf-mate .sl-chip {
   margin-top: var(--sl-space-2);
 }
@@ -11306,7 +11321,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   color: var(--sl-mate-tone);
 }
 
-/* The grade chip carries the glyph of its grade the way an alert carries the glyph of its tone: an envelope checked while there is room, marked when the box is nearly full, crossed when it will refuse the message */
+/* The grade chip carries the glyph of its grade as an alert carries its tone: an envelope checked while there is room, marked when nearly full, crossed when it will refuse mail */
 .sl-pmf-mate .sl-chip[data-sl-user-slot="fill"]::before {
   content: "\f68c";
   margin-right: var(--sl-space-2);

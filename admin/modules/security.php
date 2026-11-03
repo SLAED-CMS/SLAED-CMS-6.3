@@ -13,7 +13,7 @@ $tabset = [
 
 function banlist(): void {
     global $conf, $afile, $tabset, $tpl;
-    $time = getVar('req', 'time', 'num');
+    $time = getVar('req', 'time', 'num') ?: 30;
     $info = getVar('req', 'info', 'text');
     $hash = getVar('req', 'hash', 'text');
     $cidr = getVar('req', 'cidr', 'text', getVar('get', 'new_ip', 'text', ''));
@@ -74,6 +74,7 @@ function banlist(): void {
                     'itype' => 'number',
                     'name_attr' => 'time',
                     'input_id' => 'f-time',
+                    'input_attr' => 'min="0"',
                     'placeholder_text' => _TIME,
                     'value_attr' => (string)$time,
                 ]),
@@ -137,6 +138,7 @@ function banlist(): void {
                     'itype' => 'number',
                     'name_attr' => 'time',
                     'input_id' => 'f-utime',
+                    'input_attr' => 'min="0"',
                     'placeholder_text' => _TIME,
                     'value_attr' => (string)$time,
                 ]),
@@ -236,7 +238,7 @@ function bansave(): void {
             $done = $new !== $cont['blocker_ip'];
             $cont['blocker_ip'] = $new;
         } elseif ($id == 2 && $cidr) {
-            $time = (is_numeric($time)) ? time() + ($time * 86400) : time() + 2592000;
+            $time = time() + (($time > 0) ? $time : 30) * 86400;
             $cont['blocker_ip'] .= $cidr.'|'.$hash.'|'.$time.'|'.$info.'||';
             $done = true;
         } elseif ($kind === 'user' && $keys) {
@@ -249,7 +251,7 @@ function bansave(): void {
             $done = $left !== $cont['blocker_user'];
             $cont['blocker_user'] = $left;
         } elseif ($id == 4 && $name) {
-            $time = (is_numeric($time)) ? time() + ($time * 86400) : time() + 2592000;
+            $time = time() + (($time > 0) ? $time : 30) * 86400;
             $cont['blocker_user'] .= $name.'|'.$time.'|'.$info.'||';
             $done = true;
             if ($mail) {

@@ -234,7 +234,10 @@ try {
         $hero = ['fields' => $fields, 'make' => ['title' => '_LAYOUT_PROBE', 'pic' => true]];
         $types = ['hero' => ['title' => 'Hero', 'one' => false, 'frag' => true, 'icon' => 'image', 'desc' => $hero],
             'module' => ['title' => 'Slot', 'one' => true, 'frag' => true, 'desc' => ['fields' => $slot, 'make' => ['module' => '']]]];
-        $places = ['parts' => ['contacts' => ['title' => 'Contacts', 'where' => 'Foot', 'fields' => [['key' => 'phone', 'type' => 'text'], ['key' => 'web', 'type' => 'url']]]],
+        $mfld = [['key' => 'logo', 'type' => 'select', 'alt' => 'title', 'options' => ['php' => 'PHP']], ['key' => 'img', 'type' => 'file', 'alt' => 'title'],
+            ['key' => 'title', 'type' => 'text']];
+        $places = ['parts' => ['contacts' => ['title' => 'Contacts', 'where' => 'Foot', 'fields' => [['key' => 'phone', 'type' => 'text'], ['key' => 'web', 'type' => 'url']]],
+            'marks' => ['title' => 'Marks', 'where' => 'Foot', 'fields' => [], 'items' => ['key' => 'marks', 'fields' => $mfld]]],
             'menus' => ['main' => ['title' => 'Main', 'depth' => 2]], 'zones' => []];
         $blks = ['13' => ['status' => false], 'n1' => ['new' => true, 'title' => 'New', 'kind' => 'html', 'content' => ''], '14' => ['del' => true]];
         $dft = ['layout' => $live, 'conf' => [], 'blocks' => $blks, 'bwas' => ['13' => ['title' => 'Poll', 'kind' => 'file'], '14' => ['title' => 'Old', 'kind' => 'file']]];
@@ -245,6 +248,8 @@ try {
         $dft['layout']['pages'][12] = ['title' => 'Twin', 'addr' => 'about', 'desc' => 'Said', 'sections' => []];
         $dft['layout']['theme']['phone'] = '+1';
         $dft['layout']['theme']['web'] = 'https://';
+        $dft['layout']['theme']['marks'] = [['logo' => 'php', 'img' => '', 'title' => ''], ['logo' => '', 'img' => 'x/m.png', 'title' => 'Mark'],
+            ['logo' => 'php', 'img' => 'x/m.png', 'title' => ' ']];
         $dft['layout']['menus']['main'][0]['title'] = 'A2';
         $dft['layout']['menus']['main'][] = ['id' => 8, 'title' => 'E', 'href' => '', 'kids' => []];
         unset($dft['layout']['menus']['main'][1]);

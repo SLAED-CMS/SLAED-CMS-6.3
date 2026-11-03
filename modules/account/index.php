@@ -1164,7 +1164,7 @@ function edithome(): void {
         $flds[] = ['label' => _SITEURL, 'label_for' => 'f-site', 'control_html' => $tpl->getHtmlFrag('input', [
             'name_attr' => 'site',
             'input_id' => 'f-site',
-            'value_attr' => $info['website'],
+            'value_attr' => preg_match('#^https?://$#i', (string)$info['website']) ? '' : $info['website'],
             'maxlength_num' => 100,
             'placeholder_text' => _SITEURL,
             'input_attr' => $mark('site'),

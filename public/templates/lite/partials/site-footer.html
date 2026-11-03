@@ -45,8 +45,23 @@
           {% endif %}
           <div class="sl-partners">
             {% for mark in parts.marks %}
-            {% if mark.img %}
-            <span title="{{ mark.title }}"><img src="{{ mark.img }}" alt="{{ mark.title }}" width="74" height="74"></span>
+            {% if mark.logo or mark.img %}
+            {% if mark.url %}
+            <a href="{{ mark.url }}" title="{{ mark.title }}"{% if mark.url_ext %} target="_blank" rel="noopener"{% endif %}>
+            {% else %}
+            <span title="{{ mark.title }}">
+            {% endif %}
+              {% if mark.logo %}
+              <img src="{{ root }}templates/{{ theme }}/images/tech/{{ mark.logo }}.svg" alt="{{ mark.title }}" width="74" height="74" loading="lazy" decoding="async">
+              <img src="{{ root }}templates/{{ theme }}/images/tech/{{ mark.logo }}-color.svg" alt="" width="74" height="74" loading="lazy" decoding="async">
+              {% else %}
+              <img src="{{ mark.img }}" alt="{{ mark.title }}" width="74" height="74" loading="lazy" decoding="async">
+              {% endif %}
+            {% if mark.url %}
+            </a>
+            {% else %}
+            </span>
+            {% endif %}
             {% endif %}
             {% endfor %}
           </div>

@@ -351,8 +351,8 @@ function addsave(): void {
     if ($room !== '' || (($content == '') && ($bfile == ''))) {
         setHead();
         $cont = getTplAdminTabs(['ops' => getBlockTabsOps(), 'tabs' => [_HOME, _ADDNEWBLOCK, _ADDNEWFILEBLOCK, _EDITBLOCK, _MANUAL], 'tab' => 1]);
-        echo $cont.$tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $room ?: _RSSFAIL]).$tpl->getHtmlPart('box', [
-            'content_html' => _GOBACK,
+        echo $cont.$tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $room ?: ($url ? _RSSFAIL : _BLOCKS_EMPTY)]).$tpl->getHtmlPart('box', [
+            'content_html' => $tpl->getHtmlFrag('span', ['back_text' => _BACK]),
         ]);
         setFoot();
     } else {
@@ -461,9 +461,15 @@ function filecodesave(): void {
     $btext = getVar('post', 'blocktext', 'raw', '');
     $bf = getVar('post', 'bf', 'text', '');
     $bf = preg_match('/^[a-z0-9_\-]+\.php$/i', $bf) ? $bf : '';
-    if ($warn || !$btext || !$bf) setRedirect($afile.'.php?name=blocks&op=fileedit', false, 302, $warn ? _TOKENMISS : '', $warn);
+    if ($warn || !$bf) setRedirect($afile.'.php?name=blocks&op=fileedit', false, 302, $warn ? _TOKENMISS : '', $warn);
     $flag = getVar('post', 'flag', 'var', '');
     $ver = getVar('post', 'ver', 'word', '');
+    if (trim($btext) === '') {
+        setHead();
+        echo getBlockCodeForm($bf, $flag, '', $ver, _BLOCKS_NOCODE);
+        setFoot();
+        return;
+    }
     $htmlb = ($flag == 'html') ? "\$content = <<<BLOCKHTML\n" : '';
     $htmle = ($flag == 'html') ? "\nBLOCKHTML;\n" : '';
     $body = '<?php'."\n".'# Author: Eduard Laas'."\n".'# 2005 - '.date('Y').' SLAED'."\n".'# License: MIT'."\n".'# Website: slaed.net'."\n\n"
@@ -724,10 +730,11 @@ function editsave(): void {
     }
     if (!in_array($bpos, ['l', 'r', 'c', 'd'], true)) setRedirect($afile.'.php?name=blocks&op=edit&id='.$bid, false, 302, _ERROR, true);
     $room = ($url || $bfile != '') ? '' : checkEditorTextRoom($content, 'blocks.content');
+    if ($room === '' && !$url && $bfile === '' && $content === '') $room = _BLOCKS_EMPTY;
     if ($room !== '') {
         setHead();
         $cont = getTplAdminTabs(['ops' => getBlockTabsOps(), 'tabs' => [_HOME, _ADDNEWBLOCK, _ADDNEWFILEBLOCK, _EDITBLOCK, _MANUAL], 'tab' => 3]);
-        echo $cont.$tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $room]).$tpl->getHtmlPart('box', ['content_html' => _GOBACK]);
+        echo $cont.$tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $room]).$tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('span', ['back_text' => _BACK])]);
         setFoot();
         return;
     }

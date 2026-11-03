@@ -44,9 +44,9 @@ const SB_ICONS = [
 const getSbFile = (path) => [path, new URL('../' + path, location.href).href, path.split('/').pop()];
 const SB_PHOTOS = [1, 2, 3, 4, 5, 6, 7].map((n) => 'uploads/presentation/brand/background-' + n + '.png')
   .concat(['simplicity', 'functionality', 'efficiency', 'security'].map((k) => 'uploads/presentation/dna/' + k + '.webp')).map(getSbFile);
-/* The pictures of the marks in the footer: the files of uploads/presentation/brand/tech/ the theme lite shows, with the caption each carries */
-const SB_MARKS = [['php.png', 'PHP'], ['mysql.png', 'MySQL'], ['html5.png', 'HTML 5'], ['css3.png', 'CSS 3'], ['jquery.png', 'jQuery'], ['jqueryui.png', 'jQuery UI']]
-  .map(([file, title]) => getSbFile('uploads/presentation/brand/tech/' + file).concat(title));
+/* The pictures of the marks in the footer: the mono marks of images/tech/ of the theme lite, with the caption each carries */
+const SB_MARKS = [['php.svg', 'PHP'], ['mysql.svg', 'MySQL / MariaDB'], ['html5.svg', 'HTML5'], ['css.svg', 'CSS3'], ['javascript.svg', 'JavaScript'],
+  ['htmx.svg', 'htmx']].map(([file, title]) => getSbFile('templates/lite/images/tech/' + file).concat(title));
 const SB_LOGOS = [
   ['slaed-logo-wordmark-gradient-blue.svg', 'Знак и имя, градиент'],
   ['slaed-logo-wordmark-solid-blue.svg', 'Знак и имя, синий'],

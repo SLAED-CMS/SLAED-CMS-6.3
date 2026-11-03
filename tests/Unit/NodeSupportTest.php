@@ -235,6 +235,8 @@ final class NodeSupportTest extends TestCase
         $from = strpos($admin, "\nfunction add(): void {");
         $this->assertStringContainsString("fn(NodeType \$v): bool => checkNodeModer(\$v) && \$v->ext !== 'support');", substr($admin, $from, 400),
             'The add of the panel offers a support type, whose request only a user of the site can make');
+        $this->assertStringContainsString("preg_match('/^Invalid (?:node|support|sync) input: (.+)\$/D', \$err->getMessage(), \$hit)", $admin,
+            'A type the extension refuses is answered without the setting that refused it');
         $com = (string)file_get_contents($root.'/core/classes/comment.php');
         foreach (['setStatus', 'deleteComment'] as $name) {
             $from = strpos($com, 'public function '.$name.'(');

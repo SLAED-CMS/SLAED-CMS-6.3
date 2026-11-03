@@ -6305,7 +6305,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   margin-top: var(--sl-space-3);
 }
 
-/* Several messages stand one under another as lines of the alert, not as a bulleted list: the tone icon already marks the alert, and a single message arriving as a list must look like a single message */
+/* Several messages stand as lines of the alert, not as a bulleted list: the tone icon already marks the alert, and one message arriving as a list must look like one */
 .sl-alert-list {
   margin: 0;
   padding-left: 0;
@@ -8756,7 +8756,7 @@ button.sl-but-mini {
   animation: none;
 }
 
-/* The pulse of the monitor in the same three rows: the heart beside the pages of the hour, the trace of a cardiograph for the bars, the mood; a flat line stills the heart and greys it */
+/* The pulse of the monitor in the same three rows: the heart by the pages of the hour, a cardiograph trace for the bars, the mood; a flat line stills and greys the heart */
 .sl-cockpit-rate > .bi {
   align-self: center;
   margin-inline-end: var(--sl-space-1);
@@ -11552,7 +11552,7 @@ button.sl-fm-thumb:hover .bi-zoom-in {
 }
 
 /* Mark and glass of a tile: both sit over the picture, so the tile itself stays one link and carries no control inside it */
-/* The mark of a tile sits on its own light plate, under the name the window of the editor gives the same plate: the thumbnail carries the tone of the kind and a bare box is lost on it */
+/* The mark of a tile sits on its own light plate, named as the editor window names it: the thumbnail carries the tone of the kind and a bare box is lost on it */
 .sl-fm-pick {
   position: absolute;
   top: 6px;

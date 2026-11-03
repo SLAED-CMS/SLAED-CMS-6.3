@@ -10,6 +10,7 @@ define('_NODE_AEDIT','Sekunden nach dem Anlegen, in denen der Autor sein Materia
 define('_NODE_AGAIN','Der Beitrag wurde inzwischen geändert, nichts wurde ausgeführt. Öffnen Sie den aktuellen Datensatz und bestätigen Sie die Aktion erneut.');
 define('_NODE_ALPHA','Buchstabenindex');
 define('_NODE_ASSIGN','Zuständig');
+define('_NODE_BADFILTER','Der Filter der Liste ist ungültig: wählen Sie seine Werte im Formular.');
 define('_NODE_CANLINK','Externe Links');
 define('_NODE_CANREP','Meldungen');
 define('_NODE_CARD','Arbeitskarte der Anfrage');
@@ -55,6 +56,7 @@ define('_NODE_JSON','Definitionsdatei (JSON)');
 define('_NODE_KEEP','Mit meinen Daten fortfahren');
 define('_NODE_KINDS','Arten');
 define('_NODE_LIMIT','Beiträge pro Seite');
+define('_NODE_LIMITBAD','Die Grenzen wurden nicht gespeichert: geben Sie ganze Zahlen ein, für die Fristen ab 0, für die übrigen ab 1.');
 define('_NODE_LIMITNO','Der Typ %s würde nicht in die neuen Grenzen passen, nichts wurde gespeichert.');
 define('_NODE_LIMITS','Grenzen');
 define('_NODE_MAILNO','Ihr Beitrag „%s“ wurde nicht angenommen.');

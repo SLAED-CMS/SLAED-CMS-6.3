@@ -136,7 +136,7 @@ if ($bcookie == 'block') {
                 if (time() <= (int)$binfo[2]) {
                     if ((!$binfo[1] && getIpMatch($iptbase, $cidr)) || ($binfo[1] && getIpMatch($iptbase, $cidr) && $uagt == $binfo[1])) {
                         setCookies($conf['security']['blocker_cookie'], $binfo[2], 'block');
-                        $btext = _BANN_INFO.'. '._BANN_TERM.': '.getTimeLeft($binfo[2]).'. '._BANN_REAS.': '.$binfo[3];
+                        $btext = _BANN_INFO.' '._BANN_TERM.': '.getTimeLeft($binfo[2]).'. '._BANN_REAS.': '.$binfo[3];
                         setExit($btext);
                     }
                 }
@@ -153,7 +153,7 @@ if ($bcookie == 'block') {
                 if (time() <= (int)$uinfo[1]) {
                     if ($tus == $uinfo[0]) {
                         setCookies($conf['security']['blocker_cookie'], $uinfo[1], 'block');
-                        $utext = _BANN_INFO.'. '._BANN_TERM.': '.getTimeLeft($uinfo[1]).'. '._BANN_REAS.': '.$uinfo[2];
+                        $utext = _BANN_INFO.' '._BANN_TERM.': '.getTimeLeft($uinfo[1]).'. '._BANN_REAS.': '.$uinfo[2];
                         setExit($utext);
                     }
                 }
