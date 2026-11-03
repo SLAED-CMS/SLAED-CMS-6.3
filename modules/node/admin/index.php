@@ -388,7 +388,7 @@ function show(): void {
 function add(): void {
     global $afile, $tpl;
     checkNodeMethod(['GET', 'HEAD', 'POST']);
-    $types = array_filter(getNodeTypeMap(), fn(NodeType $v): bool => checkNodeModer($v));
+    $types = array_filter(getNodeTypeMap(), fn(NodeType $v): bool => checkNodeModer($v) && $v->ext !== 'support');
     $name = getVar('req', 'type', 'var', '');
     if ($name === '') {
         setHead();

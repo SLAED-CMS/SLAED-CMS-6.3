@@ -399,7 +399,8 @@ function setAdminOption(): void {
     $val = getVar('post', 'value', 'var', '');
     $part = explode(':', base64_decode($_SESSION[$conf['admin_c']] ?? '', true), 4);
     $keys = in_array($key, ['pins', 'menu'], true) ? array_unique(array_filter(explode('-', $val))) : [];
-    if (!in_array($key, ['mode', 'still', 'rail', 'dock-off', 'dock-site-off', 'density', 'rows', 'pins', 'menu', 'editor'], true) || ($key === 'editor' && count($part) !== 4)
+    if (!in_array($key, ['mode', 'still', 'rail', 'dock-off', 'dock-site-off', 'density', 'rows', 'pins', 'menu', 'editor'], true)
+        || ($key === 'editor' && (count($part) !== 4 || !Editor::isValidEditor($val, 'admin')))
         || count($keys) > (($key === 'pins') ? 8 : count($conf['modules'])) || preg_grep('#[^a-z0-9_]#', $keys)) {
         setAdminLog(['result' => 'refused']);
         http_response_code(400);
@@ -420,7 +421,6 @@ function setAdminOption(): void {
         if ($val === '1') setCookies($key, time() + 31536000, '1');
         else setCookiesDelete($key);
     } else {
-        if (!Editor::isValidEditor($val, 'admin')) $val = Editor::isValidEditor($conf['editor']['admin'] ?? '', 'admin') ? $conf['editor']['admin'] : 'plain';
         $part[3] = $val;
         $_SESSION[$conf['admin_c']] = base64_encode(implode(':', $part));
         $db->getSqlQuery('UPDATE '.PREFIX_DB.'_admins SET editor = :editor WHERE id = :id', ['editor' => $val, 'id' => (int)($admin[0] ?? 0)]);

@@ -221,6 +221,15 @@ final class AdminGuardTest extends TestCase
         $this->assertStringContainsString("getTplPostAction(['name' => 'account', 'op' => 'delete', 'id[]' => \$uid]", $body);
     }
 
+    # The private rows of a profile and its admin menu are for an administrator of the accounts: one with another section reads the profile as a user does
+    #[Test]
+    public function theProfileOpensItsPrivateRowsToTheAccountRightAlone(): void
+    {
+        $body = $this->getBody('modules/account/index.php', 'view');
+        $this->assertStringContainsString("\$adm = is_moder(\$conf['name']) > 0;", $body, 'An administrator of any section reads the private rows of every user');
+        $this->assertStringNotContainsString('$adm = isAdmin();', $body, 'Any administrator is taken for the administrator of the accounts');
+    }
+
     # The forum list only reads; the repair of the counters is a posted op of its own behind the admin POST guard
     #[Test]
     public function theForumRepairIsAPostedOp(): void
@@ -274,6 +283,26 @@ final class AdminGuardTest extends TestCase
         $this->assertStringContainsString($open, $this->getBody('core/system.php', 'getAdminSectionList'), 'A section its administrator may not open is listed');
     }
 
+    # The editor of the options is refused when it is no editor of the panel, so a forged value writes nothing to the row of the administrator
+    #[Test]
+    public function theOptionRefusesAnUnknownEditor(): void
+    {
+        $option = $this->getBody('admin/index.php', 'setAdminOption');
+        $check = "(\$key === 'editor' && (count(\$part) !== 4 || !Editor::isValidEditor(\$val, 'admin')))";
+        $this->assertStringContainsString($check, $option, 'An unknown editor is stored instead of refused');
+        $this->assertStringNotContainsString('$val = Editor::isValidEditor', $option, 'An unknown editor is swapped for the default and stored');
+    }
+
+    # The form of an administrator shows the stored name and an empty address: no loop of the form reuses the name, and no bare scheme blocks the URL field
+    #[Test]
+    public function theAdministratorFormKeepsItsNameAndAddress(): void
+    {
+        $add = $this->getBody('admin/modules/admins.php', 'add');
+        $this->assertStringNotContainsString('as $name =>', $add, 'A loop of the form overwrites the name of the administrator');
+        $this->assertStringContainsString("getVar('post', 'url', 'url', '')", $add, 'The add form fills the URL field with a bare scheme');
+        $this->assertStringContainsString("getVar('post', 'url', 'url', '')", $this->getBody('admin/modules/admins.php', 'save'), 'An empty address is stored as a bare scheme');
+    }
+
     # The menu on the site serves an administrator alone: its script, its sections behind the token, its link into the panel only where its moderator may go
     #[Test]
     public function theMenuOnTheSiteIsForTheAdministrator(): void
@@ -282,7 +311,8 @@ final class AdminGuardTest extends TestCase
         $index = $this->getFile('public/index.php');
         $open = substr($index, (int)strpos($index, '$public = '), 400);
         $this->assertStringNotContainsString('getAdminSectionData', substr($open, 0, (int)strpos($open, ';')), 'All the sections answer without the token');
-        $this->assertStringContainsString("isAdmin() && in_array(\$op, ['getAdminQueueData', 'getAdminSectionData'], true)", $index);
+        $gate = "isAdmin() && in_array(\$op, ['getAdminQueueData', 'getAdminSectionData', 'getUserSessionAdminInfo'], true)";
+        $this->assertStringContainsString($gate, $index, 'The block of a delegated administrator cannot refresh its summary');
         $page = $this->getBody('core/system.php', 'getAdminPageLink');
         $this->assertStringContainsString("if (defined('ADMIN_FILE') || !isAdmin() || \$key === '') return [];", $page);
         $rule = 'if (!$ctx->super && !in_array($key, $ctx->mods, true)) return [];';

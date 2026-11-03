@@ -99,6 +99,14 @@ final class CommentTrustBoundaryTest extends TestCase
         $this->assertStringNotContainsString('&cid=', $code);
     }
 
+    # The form promises a check only to a writer whose comment waits for one: a moderator's comment is published at once, so a moderator gets no such note
+    #[Test]
+    public function commentFormSparesAModeratorTheNoteOfACheck(): void
+    {
+        $code = $this->getSource('core/user.php', 'setComShow');
+        $this->assertStringContainsString('$note = !is_moder($conf[\'name\']) && (', $code, 'A moderator is told his comment waits for a check');
+    }
+
     # Editing and moderating a comment take the module from the stored row, not from the request
     #[Test]
     public function updatePathsTakeModuleFromStoredRow(): void

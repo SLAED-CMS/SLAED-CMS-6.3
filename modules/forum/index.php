@@ -137,7 +137,7 @@ function forum(): void {
         $ismod = is_acess($rows[0][16]);
         $ulast = getUserLastVisit(is_user() ? intval($user[0]) : 0);
         $head = ($id) ? _FORUM.' '.$rows[0][1] : _FORUM;
-        setHead(['title' => $head, 'kind' => 'collection']);
+        setHead(['title' => ($id) ? $rows[0][1] : _FORUM, 'kind' => 'collection']);
         echo $tpl->getHtmlFrag('title', ['title' => $head, 'is_level_one' => true]);
         $cnt = 0;
         foreach ($rows as $val) {
@@ -1001,7 +1001,6 @@ function add(): void {
         if (checkForumRight($ismod, $isedit, (int)$uid, $fstatus)) {
             $subh = ($qpid) ? 1 : 0;
             $info = _EDITS.': '.$subject;
-            $head = $conf['defis'].' '._FORUM.' '.$conf['defis'].' '.$ctitle.' '.$conf['defis'].' '.$info;
             $form = true;
         }
         $subold = $subject;
@@ -1033,10 +1032,9 @@ function add(): void {
         $status = getVar('post', 'status', 'num', 3);
         $time = getVar('req', 'time', 'time');
         $info = (!empty($ftext)) ? _PUBLICIN.': '.$ftitle : _PUBLICIN.': '.$ctitle;
-        $head = _FORUM.' '.$ctitle.' '.$info;
     }
     if ($form) {
-        setHead(['title' => $head, 'kind' => 'utility', 'robots' => 'noindex, follow']);
+        setHead(['title' => $info, 'ctitle' => ($fid || $ftext) ? $ctitle : '', 'kind' => 'utility', 'robots' => 'noindex, follow']);
         $cont = ($stop) ? $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => (array)$stop]) : '';
         $psubject = (!$subh) ? $subject : '';
         if ($hometext) $cont .= getTplPreviewContent(['title' => $psubject, 'texta' => $hometext, 'textb' => '', 'mod' => $conf['name'], 'own' => ['forum', intval($fid)]]);
@@ -1118,8 +1116,7 @@ function add(): void {
         ]);
     } else {
         $info = ($conf['forum']['add']) ? _NOVIEW : _WARNPF;
-        $head = _FORUM.' '.$ctitle.' '.$ctitle;
-        setHead(['title' => $head, 'kind' => 'utility', 'robots' => 'noindex, follow']);
+        setHead(['title' => $ctitle, 'kind' => 'utility', 'robots' => 'noindex, follow']);
         $cont = $tpl->getHtmlFrag('title', ['title' => $ctitle, 'is_level_one' => true]);
         $meta = $tpl->getHtmlFrag('meta-refresh', ['url' => getSeoUrl(['name' => $conf['name']]), 'secs' => 5]);
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $info, 'meta' => $meta]);
@@ -1284,10 +1281,10 @@ function send(): void {
                         if ($postid && $status) $pnt->addEvent('comment', 'forum.topic', 'post:'.$lpid, (int)$postid, ['mid' => (int)$pid]);
                     } else {
                         if (strtotime($ltime) > time()) {
-                            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_categories SET topics = topics+1, posts = posts+1 WHERE id IN ('.$catids.')');
+                            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_categories SET topics = topics+1 WHERE id IN ('.$catids.')');
                         } else {
                             $db->getSqlQuery(
-                                'UPDATE '.PREFIX_DB.'_categories SET topics = topics+1, posts = posts+1, lpost = :lpost WHERE id IN ('.$catids.')',
+                                'UPDATE '.PREFIX_DB.'_categories SET topics = topics+1, lpost = :lpost WHERE id IN ('.$catids.')',
                                 ['lpost' => $lpid]
                             );
                         }
@@ -1375,6 +1372,13 @@ function delete(int|string|null $id = null): void {
                 $rid = $uid ? $pnt->getEventId($act, 'forum.topic', ($pid ? 'post:' : 'topic:').$id, (int)$uid) : 0;
                 if ($rid === 0 && !$pid && $uid && ($rid = $pnt->getEventId('comment', 'forum.topic', 'post:'.$id, (int)$uid))) $act = 'comment';
                 $kept = $rid !== false && (!$rid || $pnt->addEvent($act, 'forum.topic', 'reverse:'.$rid, (int)$uid, ['rid' => $rid, 'mid' => (int)($pid ?: $id)]));
+                $res = (!$pid && $kept) ? $db->getSqlQuery('SELECT id, uid FROM '.PREFIX_DB.'_forum WHERE pid = :id AND uid > 0 ORDER BY id', ['id' => $id]) : false;
+                $replies = $res ? ($db->getSqlRows($res) ?: []) : [];
+                foreach ($replies as [$rpid, $ruid]) {
+                    if (!$kept) break;
+                    $rrid = $pnt->getEventId('comment', 'forum.topic', 'post:'.$rpid, (int)$ruid);
+                    $kept = $rrid !== false && (!$rrid || $pnt->addEvent('comment', 'forum.topic', 'reverse:'.$rrid, (int)$ruid, ['rid' => $rrid, 'mid' => (int)$id]));
+                }
                 [$fid] = $db->getSqlRow($db->getSqlQuery('SELECT id FROM '.PREFIX_DB."_favorites WHERE fid = :id AND modul = 'forum'", ['id' => $id]));
                 if ($fid) $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_favorites WHERE id = :fid', ['fid' => $fid]);
                 $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_forum WHERE id = :id1 OR pid = :id2', ['id1' => $id, 'id2' => $id]);

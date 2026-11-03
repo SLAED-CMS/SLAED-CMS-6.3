@@ -447,7 +447,10 @@ class FeedTest extends TestCase
         }
         $this->assertSame([], $left, 'The old reader is still called');
         $this->assertSame(2, substr_count(self::getCode('admin/modules/blocks.php'), 'getRssBody($url)'), 'Both block forms fetch through Feed');
-        $this->assertStringContainsString('echo getRssView(getVar(', self::getCode('modules/account/index.php'));
+        $this->assertStringContainsString("\$url = getVar('req', 'url', 'url', '');", self::getCode('modules/account/index.php'));
+        $empty = "echo (\$url === '') ? \$tpl->getHtmlFrag('alert', ['text' => _RSS_PROBLEM,";
+        $this->assertStringContainsString($empty, self::getCode('modules/account/index.php'), 'An empty address of the cabinet is answered with nothing');
+        $this->assertStringContainsString(': getRssView($url);', self::getCode('modules/account/index.php'));
         $this->assertStringContainsString('$cont .= getRssView($url);', self::getCode('modules/rss/index.php'));
         $core = self::getCode('core/system.php');
         $this->assertStringContainsString('$content = getRssBody($url) ?? $content;', $core, 'A failed refresh keeps the stored body');

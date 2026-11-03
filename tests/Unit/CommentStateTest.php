@@ -171,6 +171,7 @@ final class CommentStateTest extends TestCase
             $this->assertTrue($saved, 'The author edit of a '.$fmt.' body was refused');
             $this->assertTrue($author, 'The author edit changed a '.$fmt.' body it was handed unchanged: '.$part);
         }
+        $this->assertSame([true, true], $data['empty'], 'The moderation save took an empty body or did not refuse it with the text of the rule');
     }
 
     # Rows sharing one timestamp keep their order, which is what the second sort column buys

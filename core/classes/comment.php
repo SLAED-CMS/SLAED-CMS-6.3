@@ -646,12 +646,13 @@ class Comment {
         return $this->setWriteDone($own);
     }
 
-    # Store the body a moderator typed as it arrived, without the author rules and window; trusted tags are stripped, the column room and new attachments refuse
+    # Store the body a moderator typed as it arrived, without the author rules and window; trusted tags are stripped, an empty body, the column room and new attachments refuse
     public function updateBody(int $id, string $body): string {
         if ($id < 1) return (string)_ERROR;
         $head = $this->getEditSource($id);
         $body = filterSourceText($body, false, false);
-        $room = checkEditorTextRoom($body, 'comment.body') ?: ($head ? $this->checkAttachNames($head['mod'], $head['cid'], $body, $head['body']) : '');
+        if ($body === '') return (string)_CERROR1;
+        $room = checkEditorTextRoom($body, 'comment.body') ?:($head ? $this->checkAttachNames($head['mod'], $head['cid'], $body, $head['body']) : '');
         if ($room !== '') return $room;
         $own = $this->setWriteBegin();
         if ($own !== null && $own !== '') return (string)_ERROR;

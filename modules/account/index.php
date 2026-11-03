@@ -370,7 +370,7 @@ function view(): void {
                 'img' => $seoimg,
                 'author' => $seoauthor,
             ]);
-            $adm = isAdmin();
+            $adm = is_moder($conf['name']) > 0;
             $mkrow = fn(string $icon, string $label, string $value, string $html = '', bool $priv = false): array => [
                 'icon' => $icon,
                 'label' => $label,
@@ -691,10 +691,12 @@ function profil(): void {
     setFoot();
 }
 
+# Answer the feed a member asked for in the cabinet; an empty or malformed address is refused as a feed that could not be read, never answered with nothing
 function rssfeed(): void {
-    global $conf;
+    global $conf, $tpl;
     if (!is_user() || ($conf['rss']['use'] ?? 0) != 1) exit;
-    echo getRssView(getVar('req', 'url', 'url', ''));
+    $url = getVar('req', 'url', 'url', '');
+    echo ($url === '') ? $tpl->getHtmlFrag('alert', ['text' => _RSS_PROBLEM, 'meta' => '', 'type' => 'warn', 'is_warn' => true]) : getRssView($url);
     exit;
 }
 
@@ -1577,7 +1579,7 @@ function savehome(): void {
                 edithome();
                 return;
             }
-            setRedirect(getSeoUrl(['name' => $conf['name'], 'op' => 'edithome']));
+            setRedirect(getSeoUrl(['name' => $conf['name'], 'op' => 'edithome']), false, 302, _SUCCSAVE);
         }
     } else {
         edithome();

@@ -325,7 +325,7 @@ if (empty($go)) {
             die('Illegal file access');
         }
     } elseif ($go == 5) {
-        if (isAdmin(true) || (isAdmin() && in_array($op, ['getAdminQueueData', 'getAdminSectionData'], true))) {
+        if (isAdmin(true) || (isAdmin() && in_array($op, ['getAdminQueueData', 'getAdminSectionData', 'getUserSessionAdminInfo'], true))) {
             define('ADMIN_FILE', true);
             getLang('admin');
             Cache::setHeaders();

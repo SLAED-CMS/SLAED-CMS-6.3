@@ -632,6 +632,11 @@ final class NodeServiceTest extends TestCase
         $this->assertSame(5, substr_count($code, '->checkTypeRegistry(['), 'The screen decides a Node category by something else than the registry');
         $this->assertStringNotContainsString('getNodeTypeMap()', $code, 'The screen decides a Node category by the type map, which skips a broken type');
         $this->assertStringNotContainsString('_nodes', $code, 'The category screen touches a Node table itself');
+        foreach (['addsave', 'save'] as $name) {
+            $body = self::getBody('admin/modules/categories.php', $name);
+            $this->assertStringContainsString("if (!\$warn && \$title === '') [\$warn, \$text] = [true, _CERROR];", $body, 'The '.$name.' of a category takes an empty title');
+            $this->assertLessThan(strpos($body, '$node = true;'), strpos($body, "\$title === ''"), 'The '.$name.' of a category writes before it refuses an empty title');
+        }
         $mods = self::getBody('core/helpers.php', 'getCategoryModules');
         $this->assertStringContainsString("array_filter(getNodeTypeMap(), fn(NodeType \$v): bool => \$v->settings['features']['categories'])", $mods,
             'The category modules miss the Node types');

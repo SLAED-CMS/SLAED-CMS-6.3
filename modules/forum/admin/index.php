@@ -93,7 +93,7 @@ function forum(): void {
 function config(): void {
     global $afile, $conf, $db, $tpl;
     setHead();
-    $cont = getTplAdminTabs(['ops' => ['name=forum', 'name=forum&op=config', 'name=forum&op=info'], 'tabs' => [_SYNCH, _PREFERENCES, _MANUAL], 'tab' => 1]);
+    $cont = getTplAdminTabs(['ops' => ['name=forum', 'name=forum&op=config', 'name=forum&op=info'], 'tabs' => [_HOME, _PREFERENCES, _MANUAL], 'tab' => 1]);
     $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _SYNCHINF]);
     $cont .= checkPerms(CONFIG_DIR.'/forum.php');
     $sortopts =
@@ -285,7 +285,7 @@ function sync(): void {
 function info(): void {
     setTplAdminInfoPage([
         'ops' => ['name=forum', 'name=forum&op=config', 'name=forum&op=info'],
-        'tabs' => [_SYNCH, _PREFERENCES, _MANUAL],
+        'tabs' => [_HOME, _PREFERENCES, _MANUAL],
     ]);
 }
 

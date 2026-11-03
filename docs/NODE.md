@@ -2373,8 +2373,9 @@ materials raises its `list.limit`.
 - `preview` checks the whole input through `NodeService::getNodePreview()` and renders the view template, writing
   nothing. `submit` calls `NodeService::addNode()` with the workflow state: `Published` redirects to the material
   (`_NODE_ADDED`), `Pending` to the list (`_NODE_PENDING`) and queues the admin notice with `notify.pending`.
-- A non-moderator sends no poll, home, pin or dates and gets `CommentMode::Open` where the type has comments. There
-  is no public editing of an existing material.
+- A non-moderator sends no poll, home, pin or dates and gets `CommentMode::Open` where the type has comments. The
+  form carries no comment mode, so a moderator who sends it gets `CommentMode::Open` too; the mode is chosen in the
+  panel alone. There is no public editing of an existing material.
 
 ### Resources and attachments
 

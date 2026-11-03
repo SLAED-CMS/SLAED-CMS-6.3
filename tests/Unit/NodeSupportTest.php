@@ -230,7 +230,11 @@ final class NodeSupportTest extends TestCase
         $node = (string)file_get_contents($root.'/modules/node/index.php');
         $this->assertStringContainsString("return (\$ext === 'support') ? \$ops + ['support' => ['POST']] : \$ops;", $node);
         $this->assertStringNotContainsString('getSqlQuery', $node, 'The public controller runs SQL');
-        $this->assertStringNotContainsString('getSqlQuery', (string)file_get_contents($root.'/modules/node/admin/index.php'), 'The administrative controller runs SQL');
+        $admin = (string)file_get_contents($root.'/modules/node/admin/index.php');
+        $this->assertStringNotContainsString('getSqlQuery', $admin, 'The administrative controller runs SQL');
+        $from = strpos($admin, "\nfunction add(): void {");
+        $this->assertStringContainsString("fn(NodeType \$v): bool => checkNodeModer(\$v) && \$v->ext !== 'support');", substr($admin, $from, 400),
+            'The add of the panel offers a support type, whose request only a user of the site can make');
         $com = (string)file_get_contents($root.'/core/classes/comment.php');
         foreach (['setStatus', 'deleteComment'] as $name) {
             $from = strpos($com, 'public function '.$name.'(');
@@ -243,5 +247,16 @@ final class NodeSupportTest extends TestCase
         $this->assertStringContainsString('LOCK IN SHARE MODE', $com, 'The live counter is not read with a locking read');
         $this->assertFileExists($root.'/public/templates/lite/partials/node/support/view.html');
         $this->assertFileExists($root.'/public/templates/lite/fragments/node/support/card.html');
+    }
+
+    # The public form carries no comment mode, so a moderator who sends a request on the site gets open comments as a member does, never a refusal of comon
+    #[Test]
+    public function thePublicFormOpensTheCommentsOfAModerator(): void
+    {
+        $node = (string)file_get_contents(self::getRoot().'/modules/node/index.php');
+        $from = strpos($node, 'function getNodeFormPost(');
+        $body = substr($node, $from, strpos($node, "\n}\n", $from) - $from);
+        $this->assertStringContainsString("CommentMode::tryFrom(getVar('post', 'comon', 'num', CommentMode::Open->value)) ?? CommentMode::Disabled", $body,
+            'A form without the comment mode stores the comments of a moderator closed');
     }
 }

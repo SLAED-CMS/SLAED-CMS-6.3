@@ -163,7 +163,7 @@ function getNodeFormPost(NodeType $type, bool $moder, ?Node $old, bool $upload =
     $pub = $moder ? getNodeFormDate(getVar('post', 'pubdate', 'raw', '')) : null;
     $end = ($moder && $feat['schedule']) ? getNodeFormDate(getVar('post', 'expires', 'raw', '')) : null;
     if ($pub === false || $end === false) $errs[] = _NODE_BADDATE;
-    $mode = CommentMode::tryFrom(getVar('post', 'comon', 'num', 0)) ?? CommentMode::Disabled;
+    $mode = CommentMode::tryFrom(getVar('post', 'comon', 'num', CommentMode::Open->value)) ?? CommentMode::Disabled;
     if (!$feat['comments']) $mode = CommentMode::Disabled;
     elseif (!$moder) $mode = CommentMode::Open;
     $vals = [

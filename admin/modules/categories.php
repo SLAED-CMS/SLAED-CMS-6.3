@@ -560,6 +560,7 @@ function addsave(): void {
     $status = getVar('post', 'status', 'num');
     $row = ['modul' => $modul, 'title' => $title, 'intro' => $description, 'img' => $imgcat, 'lang' => $lang, 'parent' => $cid, 'status' => $status] + getCategoryRights();
     $text = $warn ? _TOKENMISS : _SUCCSAVE;
+    if (!$warn && $title === '') [$warn, $text] = [true, _CERROR];
     $node = true;
     if (!$warn) {
         $label = htmlspecialchars($modul, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
@@ -609,6 +610,7 @@ function save(): void {
     $row = ['modul' => $modul, 'title' => $title, 'intro' => $description, 'img' => $imgcat, 'lang' => $lang, 'parent' => $parent, 'status' => $status] + getCategoryRights();
     $was = (string)$db->getSqlQuery('SELECT modul FROM '.PREFIX_DB.'_categories WHERE id = :id', ['id' => $id])->fetchColumn();
     $text = $warn ? _TOKENMISS : _SUCCSAVE;
+    if (!$warn && $title === '') [$warn, $text] = [true, _CERROR];
     $node = true;
     if (!$warn) {
         $label = htmlspecialchars($modul, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');

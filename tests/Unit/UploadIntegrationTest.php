@@ -510,4 +510,13 @@ final class UploadIntegrationTest extends TestCase
         $this->assertLessThan($tok, $user, 'The token is checked before the visitor, so a session with no member behind it reaches further than it should');
         $this->assertLessThan($tok, $post, 'The token is checked before the method, so a GET reaches further than it should');
     }
+
+    # A saved profile says so on the page it returns to, as the password form beside it does
+    #[Test]
+    public function theProfileWriteSaysItSaved(): void
+    {
+        $body = $this->getBody('modules/account/index.php', 'savehome');
+        $done = "setRedirect(getSeoUrl(['name' => \$conf['name'], 'op' => 'edithome']), false, 302, _SUCCSAVE);";
+        $this->assertStringContainsString($done, $body, 'A saved profile returns to its form with no word that it was saved');
+    }
 }

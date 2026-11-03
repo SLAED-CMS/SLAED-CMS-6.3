@@ -437,6 +437,7 @@ function getProbeCommentStage2(): array {
         $now = $com->getComment($one)['body'] ?? '';
         $edit = getProbeEdit($com, $one, $was);
         $out['round'][$fmt] = [$was === $now, $edit['saved'], $was === ($com->getComment($one)['body'] ?? ''), mb_substr($was, 0, 60)];
+        if ($key === 0) $out['empty'] = [$com->updateBody($one, " \n ") === _CERROR1, $was === ($com->getComment($one)['body'] ?? '')];
     }
     $out['sort'] = [];
     foreach (['stage two sort probe one', 'stage two sort probe two'] as $text) {

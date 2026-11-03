@@ -113,7 +113,7 @@ function add(): void {
     } else {
         $name = getVar('post', 'aname', 'name', '');
         $title = getVar('post', 'title', 'title', '');
-        $url = getVar('post', 'url', 'url', 'https://');
+        $url = getVar('post', 'url', 'url', '');
         $email = getVar('post', 'email', 'email', '');
         $super = getVar('post', 'super', 'bool', 0) ? 1 : 0;
         $editor = getVar('post', 'editor', 'var', (string)($conf['editor']['admin'] ?? 'plain'));
@@ -142,8 +142,8 @@ function add(): void {
             'label_html' => $tpl->getHtmlFrag('popover', ['label_text' => getModuleName($mod), 'title_text' => _MODUL.': '.$mod])];
     }
     $nodes = ['node' => [_NODE_MANAGE, 'node']];
-    foreach (getNodeTypeMap() as $name => $type) {
-        $nodes['node-'.$name] = [(str_starts_with($type->title, '_') && defined($type->title)) ? constant($type->title) : $type->title, $name];
+    foreach (getNodeTypeMap() as $tname => $type) {
+        $nodes['node-'.$tname] = [(str_starts_with($type->title, '_') && defined($type->title)) ? constant($type->title) : $type->title, $tname];
     }
     foreach ($nodes as $key => [$label, $hint]) {
         $items[] = ['is_checked' => in_array($key, $mods, true), 'name_attr' => 'modules[]', 'value_attr' => $key,
@@ -333,7 +333,7 @@ function save(): void {
     $warn = !checkAdminPost('admins');
     $name = getVar('post', 'aname', 'name', '');
     $title = filterCutText(getVar('post', 'title', 'title', ''), 50);
-    $url = filterCutText(getVar('post', 'url', 'url', 'https://'), 255);
+    $url = filterCutText(getVar('post', 'url', 'url', ''), 255);
     $email = getVar('post', 'email', 'email', '');
     $pwd = getVar('post', 'pwd', 'raw', '');
     $ptwo = getVar('post', 'pwdtwo', 'raw', '');
