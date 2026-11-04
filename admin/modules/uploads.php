@@ -57,7 +57,7 @@ function uploads(): void {
     setHead();
     $cont = getTplAdminTabs(getUploadsTabs() + ['subtitle_html' => getUploadsSearch($dir)]);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop]);
-    echo $cont.checkPerms(UPLOADS_DIR).getAdminFileShell(true);
+    echo $cont.checkPerms(UPLOADS_DIR).getAdminFileShell(true, ($walk === '') ? ['dir' => $dir] : []);
     setFoot();
 }
 
@@ -218,6 +218,7 @@ function getFileNote(array $res, string $op): string {
         'exists' => _UPLOADS_TAKEN,
         'filled' => _UPLOADS_FILLED,
         'loop' => _UPLOADS_BADDEST,
+        'name' => _UPLOADS_BADNAME,
         'closed' => _ACCESSDENIED,
         default => _ERROR_UP,
     };

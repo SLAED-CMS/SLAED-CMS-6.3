@@ -3,6 +3,7 @@
   <div class="sl-pres-body">
     <div class="sl-pres-guard" data-sl-pres="guard">
       <div class="sl-pres-guard-scene sl-pres-scene">
+        <i class="sl-pres-matrix" aria-hidden="true"></i>
         {% for item in zones %}<span class="sl-pres-zone">{{ item.num }} / {{ item.label }}</span>{% endfor %}
         <i class="sl-pres-radar" aria-hidden="true"></i>
         <div class="sl-pres-lanes" aria-hidden="true">
@@ -13,10 +14,10 @@
           <div><i></i></div>
         </div>
         <span class="sl-pres-ambient"><strong>{{ rate }}</strong>{{ rate_label }}</span>
-        <span class="sl-pres-ambient"><i class="bi bi-check2-circle" aria-hidden="true"></i><b>{{ policy }}</b> {{ policy_text }}</span>
         <span class="sl-pres-ambient"><i class="bi bi-house-check" aria-hidden="true"></i><b>{{ trusted }}</b> {{ trusted_text }}</span>
         <div class="sl-pres-traffic">
           {% for item in legend %}<span data-sl-tone="{{ item.tone }}"><i class="bi bi-{{ item.icon }}" aria-hidden="true"></i>{{ item.label }}</span>{% endfor %}
+          <span class="sl-pres-policy" data-sl-tone="success"><i class="bi bi-check2-circle" aria-hidden="true"></i><b>{{ policy }}</b>{{ policy_text }}</span>
         </div>
         <span class="sl-pres-badge" data-sl-pres-off-text="{{ badge_off }}">{{ badge }}</span>
         <div class="sl-pres-net"><i class="bi bi-globe2" aria-hidden="true"></i><span>{{ net }}</span></div>
@@ -51,6 +52,12 @@
           </div>
           <div class="sl-pres-ground"><i></i><i></i><i></i></div>
         </div>
+        <div class="sl-pres-queue" aria-hidden="true">
+          <span>{{ waiting_title }}</span>
+          <ol>
+            {% for item in waiting %}<li data-sl-tone="{{ item.tone }}"><i class="bi bi-{{ item.icon }}"></i><b>{{ item.label }}</b><small>{{ item.text }}</small></li>{% endfor %}
+          </ol>
+        </div>
         <div class="sl-pres-travelers" hidden>
           {% for item in travellers %}
           <div class="sl-pres-traveler" data-sl-tone="{{ item.tone }}" data-sl-pres-zone="{{ item.zone }}" data-sl-pres-result="{{ item.result }}" data-sl-pres-verdict="{{ item.verdict }}"{% if item.is_bad %} data-sl-pres-bad=""{% endif %}><i class="bi bi-{{ item.icon }}" aria-hidden="true"></i><span><b>{{ item.label }}</b><small>{{ item.text }}</small></span></div>
@@ -59,13 +66,8 @@
       </div>
       <div class="sl-pres-guard-console">
         <div class="sl-pres-card">
-          <div class="sl-pres-guard-row">
-            <div>
-              <h3><i class="bi bi-radar" aria-hidden="true"></i>{{ classifier.title }}</h3>
-              <p>{{ classifier.text }}</p>
-            </div>
-            <span class="sl-pres-pill" data-sl-tone="success">{{ classifier.state }}</span>
-          </div>
+          <div class="sl-pres-panel-head"><span>{{ classifier.title }}</span><b data-sl-tone="success">{{ classifier.state }}</b></div>
+          <p class="sl-pres-guard-text">{{ classifier.text }}</p>
           <div class="sl-pres-guard-stats">
             {% for item in classifier.stats %}
             {% include 'fragments/presentation-stat.html' with item %}
@@ -73,7 +75,7 @@
           </div>
         </div>
         <div class="sl-pres-card">
-          <h3><i class="bi bi-diagram-2" aria-hidden="true"></i>{{ types_title }}</h3>
+          <div class="sl-pres-panel-head"><span>{{ types_title }}</span></div>
           <div class="sl-pres-rows">
             {% for item in types %}
             <div class="sl-pres-row" data-sl-tone="{{ item.tone }}"><i class="bi bi-{{ item.icon }}" aria-hidden="true"></i><span>{{ item.label }}</span><b>{{ item.verdict }}</b></div>
@@ -81,7 +83,7 @@
           </div>
         </div>
         <div class="sl-pres-card">
-          <h3><i class="bi bi-list-check" aria-hidden="true"></i>{{ log_title }}</h3>
+          <div class="sl-pres-panel-head"><span>{{ log_title }}</span></div>
           <div class="sl-pres-log">
             {% for item in log %}
             <div><span>{{ item.label }}</span><em data-sl-tone="{{ item.tone }}">{{ item.result }}</em></div>

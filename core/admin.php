@@ -1208,7 +1208,8 @@ function getAdminFileShell(bool $full = false, array $edit = []): string {
     $pick = (string)($edit['path'] ?? '');
     $sent = getAdminFilePath('dir');
     if ($sent === '') $sent = getAdminFilePath('dir', 'post');
-    $dir = ($pick === '') ? $sent : (str_contains($pick, '/') ? substr($pick, 0, (int)strrpos($pick, '/')) : '');
+    if ($sent === '') $sent = (string)($edit['dir'] ?? '');
+    $dir = ($pick === '') ? $sent :(str_contains($pick, '/') ? substr($pick, 0, (int)strrpos($pick, '/')) : '');
     $find = ($pick === '') ? mb_substr(getAdminFilePath('find'), 0, 60) : '';
     $one = $man->getFileData($dir);
     if (($one['kind'] ?? '') !== 'dir') $dir = '';

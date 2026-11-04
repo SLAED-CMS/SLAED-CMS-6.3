@@ -175,11 +175,11 @@ function newsletter(): void {
 }
 
 function add(): void {
-    global $db, $afile, $conf, $stop, $tpl;
+    global $db, $afile, $stop, $tpl;
     $id = getVar('req', 'id', 'num');
     $nid = getVar('post', 'nid', 'num', 0);
     $title = getVar('post', 'title', 'title', '');
-    $body = filterSourceText(getVar('post', 'body', 'raw', $conf['mtemp']), isAdmin(true));
+    $body = filterSourceText(getVar('post', 'body', 'raw', ''), isAdmin(true));
     $pick = getVar('post', 'audit', 'var', 'subs-');
     $days = getVar('post', 'days', 'num', 365);
     $lock = false;

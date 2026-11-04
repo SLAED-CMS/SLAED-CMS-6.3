@@ -137,10 +137,10 @@ final class FileManagerOpsTest extends TestCase
         $this->assertSame('files/renamed.txt', $res['path'], 'The rename answered another path than the one it wrote');
         $this->assertFileExists(self::$root.'/files/renamed.txt');
         $this->assertFileDoesNotExist(self::$root.'/files/note.txt', 'The renamed file is still under its old name too');
-        $this->assertSame('closed', $man->updateFileName('files/renamed.txt', '../escaped.txt')['error'], 'A rename was allowed to carry a path');
-        $this->assertSame('closed', $man->updateFileName('files/renamed.txt', 'sub/deep.txt')['error'], 'A rename was allowed to move the object');
-        $this->assertSame('closed', $man->updateFileName('files/renamed.txt', 'sub\\deep.txt')['error'], 'A rename spelled with the other separator moved the object');
-        $this->assertSame('closed', $man->updateFileName('files/renamed.txt', '')['error'], 'A rename to an empty name was taken');
+        $this->assertSame('name', $man->updateFileName('files/renamed.txt', '../escaped.txt')['error'], 'A rename was allowed to carry a path');
+        $this->assertSame('name', $man->updateFileName('files/renamed.txt', 'sub/deep.txt')['error'], 'A rename was allowed to move the object');
+        $this->assertSame('name', $man->updateFileName('files/renamed.txt', 'sub\\deep.txt')['error'], 'A rename spelled with the other separator moved the object');
+        $this->assertSame('name', $man->updateFileName('files/renamed.txt', '')['error'], 'A rename to an empty name was taken');
         $same = 'A rename to the name the object already carries answered something other than a taken name';
         $this->assertSame('exists', $man->updateFileName('files/renamed.txt', 'renamed.txt')['error'], $same);
         $this->assertSame('closed', $man->updateFileName('', 'root.txt')['error'], 'The root of the context was renamed');

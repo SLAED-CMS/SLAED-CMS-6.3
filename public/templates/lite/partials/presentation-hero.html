@@ -21,7 +21,7 @@
       <p class="sl-pres-lead">{{ lead }}</p>
     </div>
     <div class="sl-pres-core" data-sl-pres="core">
-      <div class="sl-pres-core-bar"><span><i></i><i></i><i></i></span><span>{{ core.title }}</span><span>{{ core.route }}</span></div>
+      <div class="sl-pres-panel-head"><span>{{ core.title }}</span><b>{{ core.route }}</b></div>
       <div class="sl-pres-core-body">
         <div class="sl-pres-core-menu">
           {% for item in core.menu %}<button type="button" data-sl-pres-trace="{{ item.trace }}" data-sl-pres-path="{{ item.path }}"{% if item.is_on %} aria-pressed="true"{% endif %}><i class="bi bi-{{ item.icon }}" aria-hidden="true"></i>{{ item.label }}</button>{% endfor %}

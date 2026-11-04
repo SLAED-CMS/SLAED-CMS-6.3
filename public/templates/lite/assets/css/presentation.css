@@ -46,17 +46,16 @@
 
 /* The glyph standing before a caption, in the brand tone, and the two sizes it comes in */
 .sl-pres-cockpit-top .bi,
-.sl-pres-blocks-head b > .bi,
 .sl-pres-presets > span > .bi,
 .sl-pres-note > .bi,
-.sl-pres-vars header > .bi,
-.sl-pres-stats-board > .sl-pres-panel-head > span > .bi {
+.sl-pres-vars header > .bi {
   margin-right: var(--sl-space-2);
   color: var(--sl-pres-link-text);
 }
 
 .sl-pres-core-stack .bi,
-.sl-pres-rate > .bi {
+.sl-pres-rate > .bi,
+.sl-pres-rules .bi {
   color: var(--sl-pres-link-text);
   font-size: var(--sl-font-micro);
 }
@@ -79,7 +78,6 @@
 .sl-pres-since > span,
 .sl-pres-voice-person small,
 .sl-pres-pipe > div > span,
-.sl-pres-rings > div > span,
 .sl-pres-flow-core small {
   display: block;
   font-family: var(--sl-face-mono);
@@ -258,6 +256,11 @@
   to { opacity: var(--sl-fade-disabled); transform: scale(0.72); }
 }
 
+/* One turn: the orbit of the module map, the radar and the shield of the guard, the ring of the flow core, the plate of the cockpit */
+@keyframes sl-pres-spin {
+  to { transform: rotate(360deg); }
+}
+
 /* A small monospace pill: a version, a status, a count */
 .sl-pres-pill {
   display: inline-flex;
@@ -271,6 +274,37 @@
   font-size: var(--sl-font-micro);
   letter-spacing: var(--sl-track-wide);
   white-space: nowrap;
+}
+
+/* The labels the design sets in capitals: the language files hold them in sentence case, the capitals come from here */
+.sl-pres-allow > span,
+.sl-pres-badge,
+.sl-pres-bcard > span,
+.sl-pres-blocks-panel .sl-pres-panel-head > b,
+.sl-pres-console-head > span,
+.sl-pres-core-flow > span,
+.sl-pres-deny > span,
+.sl-pres-door > span,
+.sl-pres-evt > span,
+.sl-pres-flow-core > div > b,
+.sl-pres-guard-console .sl-pres-log > div > em,
+.sl-pres-guard-console .sl-pres-row > b,
+.sl-pres-net > span,
+.sl-pres-node > span,
+.sl-pres-note-row > b,
+.sl-pres-panel-head > span,
+.sl-pres-pdo-head > b,
+.sl-pres-pdo-head > em,
+.sl-pres-pipe > div > span,
+.sl-pres-pulse-head > div > span,
+.sl-pres-quarantine > div > span,
+.sl-pres-router > b,
+.sl-pres-shield > small,
+.sl-pres-slot,
+.sl-pres-track > span,
+.sl-pres-vitals-list > span > b,
+.sl-pres-zone {
+  text-transform: uppercase;
 }
 
 /* A segmented control: the chart period, the chart view. Static in CSS, the plugin moves aria-pressed */
@@ -296,7 +330,8 @@
   cursor: pointer;
 }
 
-.sl-pres-segment button[aria-pressed="true"] {
+.sl-pres-segment button[aria-pressed="true"],
+.sl-pres-segment button[aria-selected="true"] {
   background: var(--sl-pres-ground-bg);
   color: var(--sl-pres-link-text);
   box-shadow: var(--sl-shadow-xs);
@@ -552,20 +587,6 @@
   box-shadow: var(--sl-shadow-raised);
 }
 
-/* The rings of the corner: the arc every dashboard of the page repeats, drawn once behind the headline */
-.sl-pres-hero::before {
-  content: "";
-  position: absolute;
-  top: -210px;
-  right: -180px;
-  width: calc(var(--sl-pres-height) + var(--sl-space-7));
-  height: calc(var(--sl-pres-height) + var(--sl-space-7));
-  border: 1px solid var(--sl-tint);
-  border-radius: var(--sl-radius-circle);
-  box-shadow: 0 0 0 var(--sl-space-10) var(--sl-tint);
-  opacity: var(--sl-fade-disabled);
-  pointer-events: none;
-}
 
 .sl-pres-hero > :not(.sl-pres-ticker) {
   position: relative;
@@ -591,7 +612,8 @@
 
 /* The arc and, on the cockpit, the figure in its centre read one tone, so the number and its ring can never disagree */
 .sl-pres .sl-pres-ring .sl-knob-val,
-.sl-pres .sl-pres-gauges > .sl-pres-ring > div > b {
+.sl-pres .sl-pres-gauges > .sl-pres-ring > div > b,
+.sl-pres .sl-pres-dials > .sl-pres-ring > div > b {
   color: var(--sl-pres-link-text);
 }
 
@@ -605,17 +627,20 @@
 }
 
 .sl-pres .sl-knob-ok .sl-knob-val,
-.sl-pres .sl-pres-gauges > .sl-knob-ok > div > b {
+.sl-pres .sl-pres-gauges > .sl-knob-ok > div > b,
+.sl-pres .sl-pres-dials > .sl-knob-ok > div > b {
   color: var(--sl-pres-good-text);
 }
 
 .sl-pres .sl-knob-warn .sl-knob-val,
-.sl-pres .sl-pres-gauges > .sl-knob-warn > div > b {
+.sl-pres .sl-pres-gauges > .sl-knob-warn > div > b,
+.sl-pres .sl-pres-dials > .sl-knob-warn > div > b {
   color: var(--sl-pres-warn-text);
 }
 
 .sl-pres .sl-knob-danger .sl-knob-val,
-.sl-pres .sl-pres-gauges > .sl-knob-danger > div > b {
+.sl-pres .sl-pres-gauges > .sl-knob-danger > div > b,
+.sl-pres .sl-pres-dials > .sl-knob-danger > div > b {
   color: var(--sl-danger);
 }
 
@@ -630,7 +655,8 @@
   stroke-width: calc(var(--sl-space-1) / 10);
 }
 
-.sl-pres .sl-pres-gauges > .sl-pres-ring {
+.sl-pres .sl-pres-gauges > .sl-pres-ring,
+.sl-pres .sl-pres-dials > .sl-pres-ring {
   width: 100%;
   height: auto;
   aspect-ratio: 1;
@@ -825,13 +851,15 @@
 }
 
 /* The figure in the dial centre, the caption in the mouth of the arc, so the caption never crosses the scale */
-.sl-pres-gauges > .sl-pres-ring > div {
+.sl-pres-gauges > .sl-pres-ring > div,
+.sl-pres-dials > .sl-pres-ring > div {
   position: static;
   width: 100%;
   padding: 0 var(--sl-space-5);
 }
 
-.sl-pres-gauges > .sl-pres-ring > div > b {
+.sl-pres-gauges > .sl-pres-ring > div > b,
+.sl-pres-dials > .sl-pres-ring > div > b {
   position: relative;
   z-index: var(--sl-z-raised);
   font-size: var(--sl-font-hero);
@@ -842,15 +870,18 @@
 }
 
 /* An empty first column as wide as the unit keeps the digits, not the digits with their unit, on the dial centre */
-.sl-pres-gauges > .sl-pres-ring > div > b::before {
+.sl-pres-gauges > .sl-pres-ring > div > b::before,
+.sl-pres-dials > .sl-pres-ring > div > b::before {
   content: "";
 }
 
-.sl-pres-gauges > .sl-pres-ring > div > b > small {
+.sl-pres-gauges > .sl-pres-ring > div > b > small,
+.sl-pres-dials > .sl-pres-ring > div > b > small {
   justify-self: start;
 }
 
-.sl-pres-gauges > .sl-pres-ring > div > span {
+.sl-pres-gauges > .sl-pres-ring > div > span,
+.sl-pres-dials > .sl-pres-ring > div > span {
   position: absolute;
   inset-inline: 0;
   bottom: var(--sl-space-2);
@@ -906,37 +937,6 @@
   border-radius: var(--sl-radius-3);
   background: var(--sl-pres-ground-bg);
   box-shadow: var(--sl-shadow-float);
-}
-
-.sl-pres-core-bar {
-  display: flex;
-  align-items: center;
-  gap: var(--sl-space-2);
-  height: var(--sl-field-height);
-  border-bottom: 1px solid var(--sl-pres-border);
-  padding: 0 var(--sl-space-4);
-  font-size: var(--sl-font-micro);
-  letter-spacing: var(--sl-track-wide);
-  text-transform: uppercase;
-  color: var(--sl-pres-muted-text);
-}
-
-.sl-pres-core-bar > span:first-child {
-  display: flex;
-  gap: var(--sl-space-2);
-  margin-right: var(--sl-space-2);
-}
-
-.sl-pres-core-bar > span:first-child > i {
-  width: var(--sl-space-3);
-  height: var(--sl-space-3);
-  border-radius: var(--sl-radius-circle);
-  background: var(--sl-pres-frame-border);
-}
-
-.sl-pres-core-bar > span:last-child {
-  margin-left: auto;
-  text-transform: none;
 }
 
 .sl-pres-core-body {
@@ -1017,8 +1017,7 @@
   margin-bottom: var(--sl-space-3);
 }
 
-.sl-pres-core-title > b,
-.sl-pres-detail-head > b {
+.sl-pres-core-title > b {
   font-size: var(--sl-font-body);
   color: var(--sl-pres-text);
 }
@@ -1047,8 +1046,7 @@
 }
 
 .sl-pres-metric > small,
-.sl-pres-mod > small,
-.sl-pres-clean-row > small {
+.sl-pres-mod > small {
   font-size: var(--sl-font-micro);
   color: var(--sl-pres-muted-text);
 }
@@ -1312,7 +1310,8 @@
   align-items: center;
   gap: var(--sl-space-4);
   margin: var(--sl-space-3) 0;
-  border-radius: var(--sl-radius-2);
+  border: 1px solid var(--sl-pres-border);
+  border-radius: var(--sl-radius-3);
   background: color-mix(in srgb, var(--sl-pres-panel-bg) var(--sl-modal-btn-mix), transparent);
   padding: var(--sl-space-3) var(--sl-space-4);
   box-shadow: var(--sl-shadow-raised);
@@ -1563,19 +1562,6 @@
   text-align: center;
 }
 
-.sl-pres-vitals-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--sl-space-5);
-  text-align: left;
-}
-
-.sl-pres-vitals-head > .bi {
-  color: var(--sl-pres-good-text);
-  font-size: var(--sl-size-icon-sm);
-}
-
 .sl-pres-vitals > .sl-pres-ring {
   width: calc(var(--sl-gauge-width) + var(--sl-space-9));
   height: calc(var(--sl-gauge-height) + var(--sl-space-9));
@@ -1685,8 +1671,9 @@
   transform: translate(-50%, -50%);
 }
 
+/* The mark is taller than wide: its height is capped, as #content img keeps the height auto */
 .sl-pres-map-core img {
-  width: calc(var(--sl-pres-width) * 0.5);
+  max-height: calc(var(--sl-pres-width) * 0.75 - var(--sl-space-1) - var(--sl-space-3) * 2);
 }
 
 .sl-pres-orbit {
@@ -1698,8 +1685,17 @@
   box-shadow: var(--sl-pres-shadow);
 }
 
+/* Four marks on the orbit: two of its own at the top and the right, two of the inner half turn at the bottom and the left */
+.sl-pres-orbit > i {
+  position: absolute;
+  inset: 0;
+  transform: rotate(180deg);
+}
+
 .sl-pres-orbit::before,
-.sl-pres-orbit::after {
+.sl-pres-orbit::after,
+.sl-pres-orbit > i::before,
+.sl-pres-orbit > i::after {
   content: "";
   position: absolute;
   width: var(--sl-space-2);
@@ -1709,13 +1705,15 @@
   box-shadow: var(--sl-pres-shadow);
 }
 
-.sl-pres-orbit::before {
+.sl-pres-orbit::before,
+.sl-pres-orbit > i::before {
   top: -3px;
-  left: 50%;
+  left: calc(50% - var(--sl-space-1));
 }
 
-.sl-pres-orbit::after {
-  top: 50%;
+.sl-pres-orbit::after,
+.sl-pres-orbit > i::after {
+  top: calc(50% - var(--sl-space-1));
   right: -3px;
 }
 
@@ -1765,8 +1763,8 @@
 .sl-pres-mod:nth-child(4 of .sl-pres-mod) { right: 4%; bottom: 9%; }
 .sl-pres-mod:nth-child(5 of .sl-pres-mod) { top: 43%; left: 19%; }
 .sl-pres-mod:nth-child(6 of .sl-pres-mod) { top: 43%; right: 19%; }
-.sl-pres-mod:nth-child(7 of .sl-pres-mod) { top: 13%; left: 27%; }
-.sl-pres-mod:nth-child(8 of .sl-pres-mod) { right: 27%; bottom: 13%; }
+.sl-pres-mod:nth-child(7 of .sl-pres-mod) { top: 6%; left: 34%; }
+.sl-pres-mod:nth-child(8 of .sl-pres-mod) { right: 34%; bottom: 6%; }
 
 .sl-pres-detail,
 .sl-pres-guard-console,
@@ -1775,16 +1773,6 @@
   display: grid;
   gap: var(--sl-space-3);
   align-content: start;
-}
-
-.sl-pres-detail-head {
-  display: flex;
-  justify-content: space-between;
-  font-size: var(--sl-font-small);
-}
-
-.sl-pres-detail-head > span {
-  color: var(--sl-pres-good-text);
 }
 
 .sl-pres-tags {
@@ -1796,9 +1784,9 @@
 
 .sl-pres-tags > span {
   border: 1px solid var(--sl-pres-border);
-  border-radius: var(--sl-radius-1);
+  border-radius: var(--sl-radius-pill);
   background: var(--sl-pres-ground-bg);
-  padding: var(--sl-space-1) var(--sl-space-2);
+  padding: var(--sl-space-1) var(--sl-space-3);
   font-family: var(--sl-face-mono);
   font-size: var(--sl-font-micro);
   color: var(--sl-pres-link-text);
@@ -1814,39 +1802,9 @@
   background: var(--sl-pres-panel-bg);
 }
 
+/* High enough for a row of nodes over the page and one under it */
 .sl-pres-blocks-stage {
-  min-height: calc(var(--sl-pres-height) + var(--sl-space-11) * 2);
-}
-
-.sl-pres-blocks-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--sl-space-5);
-  border-bottom: 1px solid var(--sl-pres-border);
-  background: linear-gradient(90deg, var(--sl-pres-inset-bg), var(--sl-pres-panel-bg));
-  padding: var(--sl-space-4);
-}
-
-.sl-pres-blocks-head b {
-  display: block;
-  margin-top: var(--sl-space-2);
-  font-size: var(--sl-font-small);
-  color: var(--sl-pres-text);
-}
-
-.sl-pres-blocks-state {
-  display: flex;
-  align-items: center;
-  gap: var(--sl-space-3);
-  font-family: var(--sl-face-mono);
-  font-size: var(--sl-font-micro);
-  color: var(--sl-pres-muted-text);
-}
-
-.sl-pres-blocks-state > b {
-  margin: 0;
-  color: var(--sl-pres-good-text);
+  min-height: calc(var(--sl-pres-height) + var(--sl-space-11) * 4);
 }
 
 .sl-pres-blocks-layout {
@@ -1948,15 +1906,28 @@
   font-size: var(--sl-font-micro);
 }
 
-/* The block nodes: the first four down the left edge, the next four down the right */
-.sl-pres-blocks-stage > .sl-pres-node:nth-child(1 of .sl-pres-node) { top: 5%; left: 3%; }
-.sl-pres-blocks-stage > .sl-pres-node:nth-child(2 of .sl-pres-node) { top: 27%; left: 3%; }
-.sl-pres-blocks-stage > .sl-pres-node:nth-child(3 of .sl-pres-node) { top: 49%; left: 3%; }
-.sl-pres-blocks-stage > .sl-pres-node:nth-child(4 of .sl-pres-node) { top: 71%; left: 3%; }
-.sl-pres-blocks-stage > .sl-pres-node:nth-child(5 of .sl-pres-node) { top: 5%; right: 3%; }
-.sl-pres-blocks-stage > .sl-pres-node:nth-child(6 of .sl-pres-node) { top: 27%; right: 3%; }
-.sl-pres-blocks-stage > .sl-pres-node:nth-child(7 of .sl-pres-node) { top: 49%; right: 3%; }
-.sl-pres-blocks-stage > .sl-pres-node:nth-child(8 of .sl-pres-node) { top: 71%; right: 3%; }
+/* The block nodes are placed by their centre, so the sides and the rows stay symmetric at any scene height */
+.sl-pres-blocks-stage > [data-sl-pres-at] {
+  transform: translateY(-50%);
+}
+
+.sl-pres-blocks-stage > [data-sl-pres-at].sl-is-on,
+.sl-pres-blocks-stage > [data-sl-pres-at]:hover {
+  transform: translateY(calc(-50% - 2px));
+}
+
+.sl-pres-blocks-stage > [data-sl-pres-at="left1"] { top: 12.5%; left: 3%; }
+.sl-pres-blocks-stage > [data-sl-pres-at="left2"] { top: 37.5%; left: 3%; }
+.sl-pres-blocks-stage > [data-sl-pres-at="left3"] { top: 62.5%; left: 3%; }
+.sl-pres-blocks-stage > [data-sl-pres-at="left4"] { top: 87.5%; left: 3%; }
+.sl-pres-blocks-stage > [data-sl-pres-at="right1"] { top: 12.5%; right: 3%; }
+.sl-pres-blocks-stage > [data-sl-pres-at="right2"] { top: 37.5%; right: 3%; }
+.sl-pres-blocks-stage > [data-sl-pres-at="right3"] { top: 62.5%; right: 3%; }
+.sl-pres-blocks-stage > [data-sl-pres-at="right4"] { top: 87.5%; right: 3%; }
+.sl-pres-blocks-stage > [data-sl-pres-at="top1"] { top: calc(25% - var(--sl-pres-height) * 0.165); right: calc(50% + var(--sl-space-4)); }
+.sl-pres-blocks-stage > [data-sl-pres-at="top2"] { top: calc(25% - var(--sl-pres-height) * 0.165); left: calc(50% + var(--sl-space-4)); }
+.sl-pres-blocks-stage > [data-sl-pres-at="bottom1"] { top: calc(75% + var(--sl-pres-height) * 0.165); right: calc(50% + var(--sl-space-4)); }
+.sl-pres-blocks-stage > [data-sl-pres-at="bottom2"] { top: calc(75% + var(--sl-pres-height) * 0.165); left: calc(50% + var(--sl-space-4)); }
 
 .sl-pres-router {
   position: absolute;
@@ -2006,6 +1977,26 @@
 
 .sl-pres-panel-head em {
   font-style: normal;
+}
+
+.sl-pres-panel-head > b > .sl-pres-dot,
+.sl-pres-panel-head > span > .sl-pres-dot {
+  margin-right: var(--sl-space-2);
+}
+
+/* The one head of every inner block: as the first child of a padded box it reaches the box edges, so its line runs from frame to frame */
+.sl-pres-card > .sl-pres-panel-head:first-child,
+.sl-pres-claim > .sl-pres-panel-head:first-child {
+  margin: calc(var(--sl-space-5) * -1) calc(var(--sl-space-5) * -1) var(--sl-space-4);
+}
+
+.sl-pres-vitals > .sl-pres-panel-head:first-child {
+  align-self: stretch;
+  margin: calc(var(--sl-space-6) * -1) calc(var(--sl-space-6) * -1) var(--sl-space-4);
+}
+
+.sl-pres-hours > .sl-pres-panel-head:first-child {
+  margin: calc(var(--sl-space-4) * -1) calc(var(--sl-space-4) * -1) 0;
 }
 
 .sl-pres-panel-head > b,
@@ -2065,40 +2056,34 @@
   color: var(--sl-pres-muted-text);
 }
 
+/* A rule is one row like every row list: icon and caption left, its values right on the same line */
 .sl-pres-rules {
   display: grid;
-  grid-template-columns: 1fr 1fr;
   border-top: 1px solid var(--sl-pres-border);
 }
 
 .sl-pres-rules > span {
   display: grid;
-  grid-template-columns: var(--sl-size-icon-xs) 1fr;
-  gap: var(--sl-space-1) var(--sl-space-2);
-  border-right: 1px solid var(--sl-pres-border);
+  grid-template-columns: var(--sl-size-icon-xs) auto minmax(0, 1fr);
+  gap: var(--sl-space-2);
+  align-items: center;
   border-bottom: 1px solid var(--sl-pres-border);
-  padding: var(--sl-space-3);
+  padding: var(--sl-space-2) var(--sl-space-3);
 }
 
-.sl-pres-rules > span:nth-child(2n) {
-  border-right: 0;
-}
-
-.sl-pres-rules > span:nth-last-child(-n + 2) {
+.sl-pres-rules > span:last-child {
   border-bottom: 0;
 }
 
-.sl-pres-rules .bi {
-  grid-row: 1 / 3;
-  color: var(--sl-pres-link-text);
-  font-size: var(--sl-font-micro);
-}
-
 .sl-pres-rules em {
+  overflow: hidden;
   font-family: var(--sl-face-mono);
   font-size: var(--sl-font-micro);
   font-style: normal;
   color: var(--sl-pres-muted-text);
+  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* Guard: partials/presentation-guard.html; every figure is a share of the house width or the court height */
@@ -2112,6 +2097,24 @@
   min-height: calc(var(--sl-guard-height) * 1.5);
   background-image: radial-gradient(circle at 85% 28%, var(--sl-tint), transparent 40%), var(--sl-pres-bg);
   background-size: auto, 24px 24px, 24px 24px;
+}
+
+/* A faint rain of code under the whole scene: a mask tile in the tint, one tile taller than the scene, sliding on transform */
+.sl-pres-matrix {
+  position: absolute;
+  top: calc(var(--sl-guard-width) * -2.5);
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background: var(--sl-pres-rain-bg);
+  mask-image: url("../../images/effects/matrix.svg");
+  mask-size: calc(var(--sl-guard-width) * 1.25) calc(var(--sl-guard-width) * 2.5);
+  animation: sl-pres-matrix calc(var(--sl-pres-dur) * 5) linear infinite;
+  pointer-events: none;
+}
+
+@keyframes sl-pres-matrix {
+  to { transform: translateY(calc(var(--sl-guard-width) * 2.5)); }
 }
 
 /* The ground line the house stands on, and the paving under it */
@@ -2169,11 +2172,11 @@
   margin-left: auto;
 }
 
-/* The radar behind the ingress: two rings and a sweeping hand */
+/* The radar behind the ingress: two rings and a sweeping hand; it and the globe stand at the middle of the lanes, 0.25 + 0.44 / 2 */
 .sl-pres-radar {
   position: absolute;
-  top: 50%;
-  left: var(--sl-space-6);
+  top: calc(var(--sl-guard-height) * 0.47);
+  left: calc(var(--sl-space-6) + var(--sl-space-8));
   width: calc(var(--sl-guard-width) * 0.53);
   height: calc(var(--sl-guard-width) * 0.53);
   border: 1px solid var(--sl-tint);
@@ -2206,8 +2209,8 @@
 /* The ingress node: the globe the traffic comes from */
 .sl-pres-net {
   position: absolute;
-  top: 50%;
-  left: var(--sl-space-9);
+  top: calc(var(--sl-guard-height) * 0.47);
+  left: calc(var(--sl-space-9) + var(--sl-space-8));
   z-index: var(--sl-z-overlay);
   display: grid;
   place-items: center;
@@ -2223,6 +2226,28 @@
 .sl-pres-net > .bi {
   color: var(--sl-pres-link-text);
   font-size: var(--sl-font-h1);
+}
+
+/* Two waves leave the globe in turn, on transform and opacity only */
+.sl-pres-net::before,
+.sl-pres-net::after {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border: 1px solid var(--sl-pres-link-text);
+  border-radius: var(--sl-radius-circle);
+  opacity: 0;
+  animation: sl-pres-ping calc(var(--sl-pres-dur) * 0.75) var(--sl-ease-out) infinite;
+  pointer-events: none;
+}
+
+.sl-pres-net::after {
+  animation-delay: calc(var(--sl-pres-dur) * 0.375);
+}
+
+@keyframes sl-pres-ping {
+  from { opacity: var(--sl-fade-muted); transform: scale(1); }
+  to { opacity: 0; transform: scale(1.9); }
 }
 
 .sl-pres-net > span {
@@ -2294,7 +2319,7 @@
   position: absolute;
   z-index: var(--sl-z-overlay);
   border: 1px solid var(--sl-pres-border);
-  border-radius: var(--sl-radius-2);
+  border-radius: var(--sl-radius-pill);
   background: color-mix(in srgb, var(--sl-pres-panel-bg) var(--sl-modal-btn-mix), transparent);
   padding: var(--sl-space-2) var(--sl-space-3);
   font-family: var(--sl-face-mono);
@@ -2314,8 +2339,97 @@
 }
 
 .sl-pres-ambient:nth-child(1 of .sl-pres-ambient) { bottom: var(--sl-space-7); left: var(--sl-space-7); }
-.sl-pres-ambient:nth-child(2 of .sl-pres-ambient) { top: calc(var(--sl-guard-height) * 0.11); left: var(--sl-space-7); }
-.sl-pres-ambient:nth-child(3 of .sl-pres-ambient) { right: var(--sl-space-7); bottom: var(--sl-space-7); }
+.sl-pres-ambient:nth-child(2 of .sl-pres-ambient) { right: var(--sl-space-7); bottom: var(--sl-space-7); }
+
+/* The policy closes the top row of chips: its word in bold, then the rule */
+.sl-pres-traffic > .sl-pres-policy > b {
+  font-weight: var(--sl-weight-medium);
+}
+
+/* The ingress queue over the rate chip: the next requests the globe serves, the top one leaves on a throw, a new one enters below */
+.sl-pres-queue {
+  position: absolute;
+  bottom: calc(var(--sl-space-7) + var(--sl-space-10));
+  left: var(--sl-space-7);
+  z-index: var(--sl-z-overlay);
+  width: calc(var(--sl-guard-width) * 1.1);
+  border: 1px solid var(--sl-pres-border);
+  border-radius: var(--sl-radius-2);
+  background: color-mix(in srgb, var(--sl-pres-panel-bg) var(--sl-modal-btn-mix), transparent);
+  padding: var(--sl-space-3);
+  font-family: var(--sl-face-mono);
+  font-size: var(--sl-font-micro);
+  color: var(--sl-pres-muted-text);
+}
+
+.sl-pres-queue > span {
+  display: block;
+  margin-bottom: var(--sl-space-2);
+  letter-spacing: var(--sl-track-wide);
+  text-transform: uppercase;
+}
+
+.sl-pres-queue > ol {
+  display: grid;
+  gap: var(--sl-space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sl-pres-queue li {
+  display: grid;
+  grid-template-columns: var(--sl-size-icon-xs) auto minmax(0, 1fr);
+  gap: var(--sl-space-3);
+  align-items: center;
+  border: 1px solid color-mix(in srgb, currentColor var(--sl-tile-mix), var(--sl-pres-frame-border));
+  border-radius: var(--sl-radius-1);
+  background: var(--sl-pres-panel-bg);
+  padding: var(--sl-space-2) var(--sl-space-3);
+  transition: opacity var(--sl-time-slow) var(--sl-ease-out), transform var(--sl-time-slow) var(--sl-ease-out);
+}
+
+.sl-pres-queue li > b {
+  letter-spacing: var(--sl-track-wide);
+  text-transform: uppercase;
+}
+
+.sl-pres-queue li > small {
+  overflow: hidden;
+  color: var(--sl-pres-muted-text);
+  font-size: var(--sl-font-micro);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sl-pres-queue li:first-child {
+  box-shadow: 0 0 var(--sl-space-5) color-mix(in srgb, currentColor var(--sl-chip-tint-mix), transparent);
+}
+
+.sl-pres-queue li.sl-is-out {
+  opacity: 0;
+  transform: translateX(var(--sl-space-8));
+}
+
+.sl-pres-queue li:last-child {
+  animation: sl-pres-enter var(--sl-time-slow) var(--sl-ease-out);
+}
+
+@keyframes sl-pres-enter {
+  from { opacity: 0; transform: translateY(var(--sl-space-5)); }
+}
+
+/* The run of the globe does not inherit either: the plugin writes it on the globe and its radar alone, the two move as one */
+@property --sl-d-net-y {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+
+.sl-pres-guard-scene[data-sl-pres-live] .sl-pres-net,
+.sl-pres-guard-scene[data-sl-pres-live] .sl-pres-radar {
+  transform: translateY(calc(-50% + var(--sl-d-net-y)));
+}
 
 .sl-pres-traffic {
   position: absolute;
@@ -2500,6 +2614,7 @@
   border-radius: var(--sl-radius-pill);
   background: linear-gradient(transparent, var(--sl-primary) 30%, var(--sl-primary) 70%, transparent);
   opacity: var(--sl-fade-muted);
+  animation: sl-pres-breathe calc(var(--sl-pres-dur) / 4) var(--sl-ease-in-out) infinite alternate;
 }
 
 .sl-pres-shield {
@@ -2519,9 +2634,29 @@
   content: "";
   position: absolute;
   inset: -8px;
-  border: 1px dashed var(--sl-primary-subtle);
+  border: 1px dashed var(--sl-pres-link-text);
   border-radius: var(--sl-radius-3);
+  opacity: var(--sl-fade-muted);
   animation: sl-pres-spin calc(var(--sl-pres-dur) * 2) linear infinite;
+}
+
+/* The scan line: it runs down the shield and back in the colour of the state, so a pass sweeps green and a block red */
+.sl-pres-shield::after {
+  content: "";
+  position: absolute;
+  top: var(--sl-space-2);
+  right: var(--sl-space-2);
+  left: var(--sl-space-2);
+  height: var(--sl-space-1);
+  border-radius: var(--sl-radius-pill);
+  background: linear-gradient(90deg, transparent, currentColor, transparent);
+  box-shadow: 0 0 var(--sl-space-4) currentColor;
+  animation: sl-pres-sweep calc(var(--sl-pres-dur) / 2) var(--sl-ease-in-out) infinite alternate;
+  pointer-events: none;
+}
+
+@keyframes sl-pres-sweep {
+  to { transform: translateY(calc(var(--sl-guard-width) * 0.25 - var(--sl-space-2) * 2 - var(--sl-space-1))); }
 }
 
 .sl-pres-shield > .bi {
@@ -2583,8 +2718,13 @@
   opacity: var(--sl-fade-muted);
 }
 
-.sl-pres-guard[data-sl-pres-guard="0"] .sl-pres-shield::before {
+.sl-pres-guard[data-sl-pres-guard="0"] .sl-pres-shield::before,
+.sl-pres-guard[data-sl-pres-guard="0"] .sl-pres-beam {
   animation: none;
+}
+
+.sl-pres-guard[data-sl-pres-guard="0"] .sl-pres-shield::after {
+  display: none;
 }
 
 .sl-pres-guard[data-sl-pres-guard="0"] .sl-pres-badge {
@@ -3008,19 +3148,8 @@
 
 /* Guard console: the classifier with its counters, the traffic types and the legend */
 
-/* The title of the classifier takes the whole first line, the note and the state share the second: beside the state the title broke in two */
-.sl-pres-guard-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: start;
-  gap: 0 var(--sl-space-4);
-}
-
-.sl-pres-guard-row > div {
-  display: contents;
-}
-
-.sl-pres-guard-row p {
+/* The note of the classifier under its head */
+.sl-pres-guard-text {
   margin: 0;
   font-size: var(--sl-font-small);
   color: var(--sl-pres-muted-text);
@@ -3031,18 +3160,6 @@
   grid-template-columns: repeat(3, minmax(min-content, 1fr));
   gap: var(--sl-space-3);
   margin-top: var(--sl-space-4);
-}
-
-.sl-pres-guard-row h3 {
-  grid-column: 1 / -1;
-  margin: 0 0 var(--sl-space-3);
-  font-size: var(--sl-font-body);
-  white-space: nowrap;
-}
-
-.sl-pres-guard-row h3 > .bi {
-  margin-right: var(--sl-space-3);
-  color: var(--sl-pres-link-text);
 }
 
 /* The three figures stand on one line whatever the height of their captions */
@@ -3143,12 +3260,31 @@
   gap: var(--sl-space-3);
 }
 
+/* The three cards of the top row share one height: the line of the response grows into what its figure leaves, the dial stands in the middle */
 .sl-pres-speed > .sl-pres-card {
-  min-height: var(--sl-pres-min-height);
+  display: flex;
+  flex-direction: column;
+}
+
+.sl-pres-speed > .sl-pres-card > .sl-pres-spark {
+  position: relative;
+  flex: 1 1 auto;
+  height: auto;
+  min-height: calc(var(--sl-plot-min-height) / 2);
+}
+
+/* The canvas is sized from its box, so it stands out of the flow, or its own height would grow the box it is measured from */
+.sl-pres-speed > .sl-pres-card > .sl-pres-spark > canvas {
+  position: absolute;
+  inset: 0;
 }
 
 .sl-pres-speed > .sl-pres-card > .sl-pres-rows {
   gap: var(--sl-space-3);
+}
+
+.sl-pres-speed > .sl-pres-card > .sl-pres-online {
+  flex: 1 1 auto;
 }
 
 .sl-pres-big {
@@ -3192,8 +3328,9 @@
   color: var(--sl-pres-text);
 }
 
+/* The bar under a row of the database card, the bar of a debugger stat: one height, one track, one fill */
 .sl-pres-bar {
-  height: var(--sl-space-1);
+  height: var(--sl-space-2);
   overflow: hidden;
   border-radius: var(--sl-radius-pill);
   background: var(--sl-pres-inset-bg);
@@ -3203,7 +3340,9 @@
   display: block;
   width: var(--sl-d-part, 0%);
   height: 100%;
-  background: linear-gradient(90deg, var(--sl-pres-link-text), var(--sl-primary));
+  border-radius: var(--sl-radius-pill);
+  background: linear-gradient(90deg, var(--sl-pres-link-text), var(--sl-pres-good-text));
+  transition: width var(--sl-time-slow) var(--sl-ease-out);
 }
 
 /* PDO layer: the bus with its five stations, the console beside it */
@@ -3268,8 +3407,7 @@
   left: var(--sl-space-5);
   z-index: var(--sl-z-overlay);
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  grid-template-rows: auto auto;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   gap: var(--sl-space-2) var(--sl-space-3);
   align-items: center;
   border: 1px solid var(--sl-pres-frame-border);
@@ -3281,7 +3419,6 @@
 }
 
 .sl-pres-query > span:first-child {
-  grid-row: 1 / 3;
   border: 1px solid var(--sl-pres-frame-border);
   border-radius: var(--sl-radius-1);
   background: var(--sl-pres-inset-bg);
@@ -3301,11 +3438,13 @@
   gap: var(--sl-space-2);
 }
 
+/* The bound values stand at the end of the query line as pills, the chips of the page */
 .sl-pres-params > i {
   border: 1px solid var(--sl-pres-border);
-  border-radius: var(--sl-radius-1);
+  border-radius: var(--sl-radius-pill);
   background: var(--sl-pres-panel-bg);
-  padding: var(--sl-space-1) var(--sl-space-2);
+  padding: var(--sl-space-1) var(--sl-space-3);
+  white-space: nowrap;
   font-style: normal;
   color: var(--sl-pres-muted-text);
 }
@@ -3388,17 +3527,26 @@
   transform: translateX(-50%) translateY(-2px);
 }
 
+/* A station of the bus is a title and one line of caption, so the five stand at one height; a longer caption ends in an ellipsis */
+.sl-pres-pdo-stage > .sl-pres-node > small {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .sl-pres-pdo-stage > .sl-pres-node:nth-child(1 of .sl-pres-node) { left: 10%; }
 .sl-pres-pdo-stage > .sl-pres-node:nth-child(2 of .sl-pres-node) { left: 30%; }
 .sl-pres-pdo-stage > .sl-pres-node:nth-child(3 of .sl-pres-node) { left: 50%; }
 .sl-pres-pdo-stage > .sl-pres-node:nth-child(4 of .sl-pres-node) { left: 70%; }
 .sl-pres-pdo-stage > .sl-pres-node:nth-child(5 of .sl-pres-node) { left: 90%; }
 
+/* The result strip spans the row of stations, from the left edge of the first to the right edge of the last */
 .sl-pres-return {
   position: absolute;
   top: calc(var(--sl-pres-height) * 0.63);
-  right: var(--sl-space-5);
-  left: var(--sl-space-5);
+  right: calc(10% - var(--sl-pres-width) / 2);
+  left: calc(10% - var(--sl-pres-width) / 2);
   height: calc(var(--sl-pres-height) * 0.26);
   border-top: 1px dashed var(--sl-pres-frame-border);
   border-bottom: 1px dashed var(--sl-pres-frame-border);
@@ -3442,7 +3590,7 @@
   align-items: end;
   gap: var(--sl-space-2);
   height: var(--sl-space-10);
-  margin: var(--sl-space-4) 0 0 var(--sl-space-7);
+  margin: var(--sl-space-4) 0 0;
 }
 
 .sl-pres-bars > i {
@@ -3570,65 +3718,27 @@
   background: var(--sl-pres-panel-bg);
 }
 
-.sl-pres-devtools-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--sl-space-5);
-  border-bottom: 1px solid var(--sl-pres-border);
-  background: linear-gradient(90deg, var(--sl-pres-inset-bg), var(--sl-pres-panel-bg));
-  padding: var(--sl-space-3) var(--sl-space-4);
-}
-
-.sl-pres-devtools-bar b {
-  display: block;
-  margin-top: var(--sl-space-1);
-  font-size: var(--sl-font-small);
-  color: var(--sl-pres-text);
-}
-
-.sl-pres-devtools-bar b > .bi {
-  margin-right: var(--sl-space-2);
-  color: var(--sl-danger);
-}
-
-.sl-pres-tabs {
-  display: flex;
-  gap: var(--sl-space-2);
-}
-
+/* A tab keeps its word whole: on a narrow screen the segment scrolls instead of breaking a label in two */
 .sl-pres-tabs > button {
-  border: 1px solid var(--sl-pres-frame-border);
-  border-radius: var(--sl-radius-1);
-  background: var(--sl-pres-panel-bg);
-  padding: var(--sl-space-2) var(--sl-space-3);
-  color: var(--sl-pres-muted-text);
-  font-family: var(--sl-face-mono);
-  font-size: var(--sl-font-micro);
-  cursor: pointer;
-  transition: color var(--sl-time-base) var(--sl-ease-out), border-color var(--sl-time-base) var(--sl-ease-out);
-}
-
-.sl-pres-tabs > button:hover {
-  border-color: var(--sl-primary);
-  color: var(--sl-pres-text);
-}
-
-.sl-pres-tabs > button.sl-is-on {
-  border-color: var(--sl-primary);
-  background: var(--sl-pres-inset-bg);
-  color: var(--sl-pres-text);
-  box-shadow: inset 0 -1px var(--sl-primary);
+  flex: 0 0 auto;
+  white-space: nowrap;
 }
 
 .sl-pres-tab-pane {
   display: none;
   min-height: calc(var(--sl-pres-height) * 0.43);
-  padding: var(--sl-space-4);
+  padding: var(--sl-space-4) 0 0;
 }
 
+/* A shown tab lays its blocks with one gap, so no two rows of a pane touch */
 .sl-pres-tab-pane.sl-is-on {
-  display: block;
+  display: grid;
+  align-content: start;
+  gap: var(--sl-space-3);
+}
+
+.sl-pres-tab-pane > * {
+  margin: 0;
 }
 
 .sl-pres-perf,
@@ -3678,6 +3788,14 @@
 
 .sl-pres-errors .bi {
   color: var(--sl-danger);
+}
+
+.sl-pres-errors .bi[data-sl-tone="warning"] {
+  color: var(--sl-pres-warn-text);
+}
+
+.sl-pres-errors .bi[data-sl-tone="info"] {
+  color: var(--sl-pres-link-text);
 }
 
 .sl-pres-errors b {
@@ -3784,27 +3902,6 @@
   background-size: auto, 24px 24px, 24px 24px;
 }
 
-.sl-pres-dev-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--sl-space-3);
-}
-
-.sl-pres-dev-head .sl-pres-pill > .bi {
-  color: var(--sl-pres-good-text);
-}
-
-.sl-pres-live {
-  display: flex;
-  align-items: center;
-  gap: var(--sl-space-3);
-  font-family: var(--sl-face-mono);
-  font-size: var(--sl-font-micro);
-  letter-spacing: var(--sl-track-wide);
-  color: var(--sl-pres-good-text);
-}
-
 /* The commit list stands beside a rail: the line runs down the left, each row hangs on it by its own tick */
 .sl-pres-commits {
   position: relative;
@@ -3879,9 +3976,9 @@
 .sl-pres-sha {
   min-width: calc(var(--sl-size-avatar) + var(--sl-space-10));
   border: 1px solid var(--sl-pres-frame-border);
-  border-radius: var(--sl-radius-1);
+  border-radius: var(--sl-radius-pill);
   background: var(--sl-pres-panel-bg);
-  padding: var(--sl-space-2);
+  padding: var(--sl-space-1) var(--sl-space-3);
   font-family: var(--sl-face-mono);
   font-size: var(--sl-font-micro);
   color: var(--sl-pres-link-text);
@@ -3995,9 +4092,10 @@
   z-index: var(--sl-z-overlay);
   width: var(--sl-space-4);
   height: var(--sl-space-4);
+  border: var(--sl-ring-width) solid var(--sl-pres-panel-bg);
   border-radius: var(--sl-radius-circle);
-  background: var(--sl-pres-inset-bg);
-  box-shadow: var(--sl-pres-shadow);
+  background: var(--sl-pres-link-text);
+  box-shadow: 0 0 0 var(--sl-space-1) var(--sl-tint-strong), 0 0 var(--sl-space-5) var(--sl-pres-link-text);
   animation: sl-pres-pipe calc(var(--sl-pres-dur) * 1.5) var(--sl-ease-in-out) infinite;
 }
 
@@ -4052,17 +4150,12 @@
   padding: var(--sl-space-4);
 }
 
-.sl-pres-hours-head,
 .sl-pres-hours-axis {
   display: flex;
   justify-content: space-between;
   font-family: var(--sl-face-mono);
   font-size: var(--sl-font-micro);
   color: var(--sl-pres-muted-text);
-}
-
-.sl-pres-hours-head > b {
-  color: var(--sl-pres-link-text);
 }
 
 .sl-pres-hours-bars {
@@ -4102,25 +4195,11 @@
   padding: var(--sl-space-5);
 }
 
-.sl-pres-claim::after {
-  content: "";
-  position: absolute;
-  top: -85px;
-  right: -75px;
-  width: calc(var(--sl-pres-width) + var(--sl-space-8));
-  height: calc(var(--sl-pres-width) + var(--sl-space-8));
-  border: 1px solid var(--sl-tint-strong);
-  border-radius: var(--sl-radius-circle);
-  box-shadow: 0 0 0 var(--sl-space-8) var(--sl-tint), 0 0 0 var(--sl-space-11) var(--sl-tint);
-  pointer-events: none;
-}
-
 .sl-pres-claim > .sl-pres-over {
   color: var(--sl-pres-link-text);
 }
 
 .sl-pres-claim > h3 {
-  max-width: calc(var(--sl-pres-width) * 2);
   margin: var(--sl-space-2) 0 var(--sl-space-3);
   font-size: var(--sl-font-h3);
   line-height: var(--sl-line-tight);
@@ -4128,37 +4207,45 @@
 }
 
 .sl-pres-claim > p {
-  max-width: calc(var(--sl-pres-width) * 2);
   margin: 0;
   font-size: var(--sl-font-micro);
   line-height: var(--sl-line-loose);
   color: var(--sl-pres-muted-text);
 }
 
+/* Six dials under the claim, the faces of the cockpit at the width three of them share */
 .sl-pres-rings {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: var(--sl-space-3);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--sl-space-4) var(--sl-space-5);
   border: 1px solid var(--sl-pres-border);
   border-radius: var(--sl-radius-3);
   background: var(--sl-pres-panel-bg);
   padding: var(--sl-space-4);
 }
 
-.sl-pres-rings > div {
-  text-align: center;
+/* A dial smaller than the cockpit keeps its figure a step smaller, so a three-digit value stays inside the scale */
+.sl-pres-dials > .sl-pres-ring > div > b {
+  font-size: var(--sl-font-h1);
 }
 
-.sl-pres-rings > div > span {
-  margin-top: var(--sl-space-2);
+/* The online card of the telemetry: the dial of the cockpit on the left, the split by kind on the right */
+.sl-pres-online {
+  display: grid;
+  grid-template-columns: calc(var(--sl-gauge-width) * 0.85) minmax(0, 1fr);
+  gap: var(--sl-space-6);
+  align-items: center;
 }
 
+.sl-pres-vitals > .sl-pres-note,
 .sl-pres-stats-side > .sl-pres-note,
 .sl-pres-arch-side > .sl-pres-note {
+  align-self: stretch;
   margin: 0;
   border: 1px dashed var(--sl-pres-frame-border);
   border-radius: var(--sl-radius-2);
   padding: var(--sl-space-3) var(--sl-space-4);
+  text-align: left;
 }
 
 /* Pipeline: partials/presentation-pipeline.html */
@@ -4170,7 +4257,7 @@
 
 .sl-pres-flow {
   min-height: calc(var(--sl-pres-height) * 1.4);
-  background-image: radial-gradient(circle at 50% 48%, var(--sl-tint), transparent 31%), var(--sl-pres-bg);
+  background-image: radial-gradient(circle at 50% 51.7%, var(--sl-tint), transparent 31%), var(--sl-pres-bg);
   background-size: auto, 24px 24px, 24px 24px;
 }
 
@@ -4192,11 +4279,12 @@
   white-space: nowrap;
 }
 
+/* The ring covers the whole scene, so its drawing units and the percent places of the stations are one grid */
 #content .sl-pres-paths {
   position: absolute;
-  inset: var(--sl-space-11) var(--sl-space-3) var(--sl-space-5);
-  width: calc(100% - var(--sl-space-6));
-  height: calc(100% - var(--sl-space-11) - var(--sl-space-5));
+  inset: 0;
+  width: 100%;
+  height: 100%;
   overflow: visible;
 }
 
@@ -4224,7 +4312,7 @@
 
 .sl-pres-flow-core {
   position: absolute;
-  top: 50%;
+  top: 51.7%;
   left: 50%;
   z-index: var(--sl-z-overlay);
   display: grid;
@@ -4282,50 +4370,66 @@
   white-space: normal;
 }
 
+/* A station hint is one line, its two parts joined by a dot, and a longer translation ends in an ellipsis */
 .sl-pres-flow > .sl-pres-node small {
-  flex-wrap: wrap;
-  gap: 0 var(--sl-space-2);
-}
-
-.sl-pres-flow > .sl-pres-node small > span {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.sl-pres-flow-chip {
+.sl-pres-flow > .sl-pres-node small > span + span::before {
+  content: " · ";
+}
+
+/* The fork of the cache node: the outcome of each request rises over node 05 in its tone and fades, on transform and opacity alone */
+.sl-pres-flow-pop {
   position: absolute;
-  top: calc(var(--sl-pres-height) * 0.4);
+  bottom: 100%;
   left: 50%;
   z-index: var(--sl-z-overlay);
-  border: 1px solid var(--sl-pres-frame-border);
+  border: 1px solid currentColor;
   border-radius: var(--sl-radius-pill);
-  background: color-mix(in srgb, var(--sl-pres-panel-bg) var(--sl-modal-btn-mix), transparent);
-  padding: var(--sl-space-2) var(--sl-space-3);
+  background: var(--sl-pres-panel-bg);
+  padding: var(--sl-space-1) var(--sl-space-3);
   font-family: var(--sl-face-mono);
   font-size: var(--sl-font-micro);
-  color: var(--sl-pres-link-text);
-  opacity: var(--sl-fade-disabled);
+  font-style: normal;
+  letter-spacing: var(--sl-track-wide);
+  white-space: nowrap;
+  opacity: 0;
   transform: translateX(-50%);
-  transition: opacity var(--sl-time-slow) var(--sl-ease-out);
+  pointer-events: none;
 }
 
-.sl-pres-flow[data-sl-mode="hit"] .sl-pres-flow-chip {
-  color: var(--sl-pres-good-text);
-  opacity: 1;
+.sl-pres-flow-pop.sl-is-pop {
+  animation: sl-pres-rise calc(var(--sl-pres-dur) * 0.4) var(--sl-ease-out);
 }
 
-/* The seven stations of a request around the core, by their order */
-.sl-pres-flow > .sl-pres-node:nth-child(1 of .sl-pres-node) { top: calc(var(--sl-space-11) + var(--sl-space-3)); left: 50%; transform: translateX(-50%); }
-.sl-pres-flow > .sl-pres-node:nth-child(2 of .sl-pres-node) { top: calc(var(--sl-pres-height) * 0.3); right: 9%; }
-.sl-pres-flow > .sl-pres-node:nth-child(3 of .sl-pres-node) { top: calc(var(--sl-pres-height) * 0.63); right: 4%; }
-.sl-pres-flow > .sl-pres-node:nth-child(4 of .sl-pres-node) { right: 15%; bottom: calc(var(--sl-pres-height) * 0.17); }
-.sl-pres-flow > .sl-pres-node:nth-child(5 of .sl-pres-node) { bottom: var(--sl-space-8); left: 50%; transform: translateX(-50%); }
-.sl-pres-flow > .sl-pres-node:nth-child(6 of .sl-pres-node) { bottom: calc(var(--sl-pres-height) * 0.17); left: 15%; }
-.sl-pres-flow > .sl-pres-node:nth-child(7 of .sl-pres-node) { top: calc(var(--sl-pres-height) * 0.63); left: 4%; }
-
-.sl-pres-flow > .sl-pres-node:nth-child(1 of .sl-pres-node):hover,
-.sl-pres-flow > .sl-pres-node:nth-child(5 of .sl-pres-node):hover {
-  transform: translateX(-50%) translateY(-2px);
+@keyframes sl-pres-rise {
+  from { opacity: 0; transform: translate(-50%, var(--sl-space-3)); }
+  20% { opacity: 1; transform: translate(-50%, 0); }
+  70% { opacity: 1; }
+  to { opacity: 0; transform: translate(-50%, calc(var(--sl-space-8) * -1)); }
 }
+
+/* The seven stations sit as a heptagon on the ring, the request on the axis, the margin over it equal to the margin under the lowest pair */
+.sl-pres-flow > .sl-pres-node {
+  width: calc(var(--sl-pres-width) * 1.2);
+  transform: translate(-50%, -50%);
+}
+
+.sl-pres-flow > .sl-pres-node:is(.sl-is-on, :hover) {
+  transform: translate(-50%, calc(-50% - 2px));
+}
+
+.sl-pres-flow > .sl-pres-node:nth-child(1 of .sl-pres-node) { top: 17.7%; left: 50%; }
+.sl-pres-flow > .sl-pres-node:nth-child(2 of .sl-pres-node) { top: 30.5%; left: 81.3%; }
+.sl-pres-flow > .sl-pres-node:nth-child(3 of .sl-pres-node) { top: 59.3%; left: 89%; }
+.sl-pres-flow > .sl-pres-node:nth-child(4 of .sl-pres-node) { top: 82.3%; left: 67.4%; }
+.sl-pres-flow > .sl-pres-node:nth-child(5 of .sl-pres-node) { top: 82.3%; left: 32.6%; }
+.sl-pres-flow > .sl-pres-node:nth-child(6 of .sl-pres-node) { top: 59.3%; left: 11%; }
+.sl-pres-flow > .sl-pres-node:nth-child(7 of .sl-pres-node) { top: 30.5%; left: 18.7%; }
 
 .sl-pres-flow[data-sl-mode="off"] > .sl-pres-node:nth-child(5 of .sl-pres-node),
 .sl-pres-flow[data-sl-mode="bypass"] > .sl-pres-node:nth-child(5 of .sl-pres-node) {
@@ -4396,19 +4500,9 @@
   white-space: normal;
 }
 
-.sl-pres-clean-row {
+/* An odd last card of the store states spans the row, so the grid closes without a hole */
+.sl-pres-states > .sl-pres-stat:last-child:nth-child(odd) {
   grid-column: 1 / -1;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--sl-space-3);
-}
-
-.sl-pres-clean-row > small > .sl-pres-dot {
-  margin-right: var(--sl-space-2);
-  width: var(--sl-space-2);
-  height: var(--sl-space-2);
-  color: var(--sl-pres-good-text);
 }
 
 .sl-pres-arch-side > .sl-pres-note b {
@@ -4794,15 +4888,34 @@
   background-size: auto, 24px 24px, 24px 24px;
 }
 
-.sl-pres-voices > .sl-pres-panel-head {
-  padding: var(--sl-space-4) var(--sl-space-5);
-}
-
 .sl-pres-voices-track {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: var(--sl-space-3);
   padding: var(--sl-space-4);
+}
+
+/* Two frames at most: a board or a panel that only groups its cards draws no frame and no ground */
+.sl-pres-blocks,
+.sl-pres-devtools,
+.sl-pres-dev-board,
+.sl-pres-stats-board,
+.sl-pres-voices {
+  overflow: visible;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+}
+
+.sl-pres-dev-board,
+.sl-pres-stats-board {
+  padding: 0;
+}
+
+.sl-pres-voices-track {
+  padding-inline: 0;
+  padding-bottom: 0;
 }
 
 .sl-pres-voice {
@@ -4947,9 +5060,9 @@
 .sl-pres-voice-marks > span {
   overflow: hidden;
   border: 1px solid var(--sl-pres-border);
-  border-radius: var(--sl-radius-1);
+  border-radius: var(--sl-radius-pill);
   background: var(--sl-pres-ground-bg);
-  padding: var(--sl-space-2);
+  padding: var(--sl-space-1) var(--sl-space-3);
   font-family: var(--sl-face-mono);
   font-size: var(--sl-font-micro);
   color: var(--sl-pres-muted-text);
@@ -4961,27 +5074,6 @@
 .sl-pres-voice-marks .bi {
   margin-right: var(--sl-space-2);
   color: currentColor;
-}
-
-.sl-pres-voices-foot {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: var(--sl-space-4);
-  border-top: 1px solid var(--sl-pres-border);
-  background: color-mix(in srgb, var(--sl-pres-panel-bg) var(--sl-fav-mix), transparent);
-  padding: var(--sl-space-3) var(--sl-space-5);
-  font-family: var(--sl-face-mono);
-  font-size: var(--sl-font-micro);
-  color: var(--sl-pres-muted-text);
-}
-
-.sl-pres-voices-foot > a {
-  color: var(--sl-pres-link-text);
-}
-
-.sl-pres-voices-foot > a:hover {
-  color: var(--sl-pres-text);
 }
 
 /* Pulse: partials/presentation-pulse.html */
@@ -5151,18 +5243,9 @@
     grid-template-columns: repeat(3, 1fr);
   }
 
-  .sl-pres-blocks-panel {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .sl-pres-blocks-panel > .sl-pres-panel-head {
-    grid-column: 1 / -1;
-  }
-
-  .sl-pres-rules {
-    border-top: 0;
-    border-left: 1px solid var(--sl-pres-border);
+  /* Under the stage the layout list takes two columns and the rules close it at full width */
+  .sl-pres-blocks-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .sl-pres-guard {
@@ -5191,13 +5274,8 @@
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .sl-pres-devtools-bar {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
   .sl-pres-tabs {
-    width: 100%;
+    max-width: 100%;
     overflow: auto;
   }
 
@@ -5262,7 +5340,6 @@
   }
 
   .sl-pres-dna,
-  .sl-pres-blocks-panel,
   .sl-pres-dev-side,
   .sl-pres-stats-side,
   .sl-pres-pulse {
@@ -5271,11 +5348,6 @@
 
   .sl-pres-focus {
     grid-row: auto;
-  }
-
-  .sl-pres-rules {
-    border-top: 1px solid var(--sl-pres-border);
-    border-left: 0;
   }
 
   .sl-pres-principle-copy {
@@ -5321,10 +5393,6 @@
     padding-top: var(--sl-space-11);
   }
 
-  .sl-pres-pdo-stage {
-    padding-top: calc(var(--sl-space-11) * 2);
-  }
-
   #content .sl-pres-map > .sl-pres-mod,
   #content .sl-pres-blocks-stage > .sl-pres-node,
   #content .sl-pres-pdo-stage > .sl-pres-node,
@@ -5351,8 +5419,7 @@
   .sl-pres-wires,
   .sl-pres-paths,
   .sl-pres-bus,
-  .sl-pres-packet,
-  .sl-pres-flow-chip {
+  .sl-pres-packet {
     display: none;
   }
 
@@ -5363,15 +5430,25 @@
     height: auto;
   }
 
+  /* The head of the bus and the query line join the flow of the folded stage, first and full width, so no station slides under them */
   .sl-pres-pdo-head,
   .sl-pres-query {
-    right: var(--sl-space-4);
-    left: var(--sl-space-4);
+    position: relative;
+    inset: auto;
+    grid-column: 1 / -1;
+  }
+
+  .sl-pres-query {
+    grid-template-columns: auto minmax(0, 1fr);
   }
 
   .sl-pres-query > code {
     white-space: normal;
     overflow-wrap: anywhere;
+  }
+
+  .sl-pres-params {
+    grid-column: 1 / -1;
   }
 
   /* The modes of the driver leave the narrow head: the side panel spells them out, and the state keeps its place */
@@ -5393,11 +5470,11 @@
   }
 
   .sl-pres-net {
-    left: var(--sl-space-5);
+    left: calc(var(--sl-space-5) + var(--sl-space-8));
   }
 
   .sl-pres-radar {
-    left: 0;
+    left: var(--sl-space-8);
   }
 
   .sl-pres-house {
@@ -5407,8 +5484,9 @@
   }
 
   .sl-pres-zone,
-  .sl-pres-ambient:nth-child(2 of .sl-pres-ambient),
-  .sl-pres-ambient:nth-child(3 of .sl-pres-ambient) {
+  .sl-pres-queue,
+  .sl-pres-traffic > .sl-pres-policy,
+  .sl-pres-ambient:nth-child(2 of .sl-pres-ambient) {
     display: none;
   }
 
@@ -5418,6 +5496,10 @@
 }
 
 @media (max-width: 560px) {
+  .sl-pres-rings {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .sl-pres-facts,
   .sl-pres-events,
   .sl-pres-detail,
@@ -5429,6 +5511,7 @@
   .sl-pres-core-body,
   .sl-pres-map,
   .sl-pres-blocks-stage,
+  .sl-pres-blocks-list,
   .sl-pres-pdo-stage,
   .sl-pres-flow {
     grid-template-columns: minmax(0, 1fr);

@@ -225,7 +225,7 @@ return [
         'pager', 'pager-dot', 'pager-item', 'pane', 'panel', 'panel-feed', 'phx', 'phx-badge', 'phx-ground', 'phx-pop', 'phx-shine',
         'placeholder', 'plot', 'pointer', 'pmf-ava', 'pmf-blank', 'pmf-chip', 'pmf-day', 'pmf-filter',
         'pmf-head', 'pmf-mate', 'pmf-meta', 'pmf-pane', 'pmf-slot', 'pmf-text', 'pmf-who',
-        'popover', 'pres', 'pres-panel', 'pres-ground', 'pres-inset', 'pres-core', 'pres-frame', 'pres-muted', 'pres-link', 'pres-good', 'pres-warn', 'pres-photo',
+        'popover', 'pres', 'pres-panel', 'pres-ground', 'pres-inset', 'pres-core', 'pres-frame', 'pres-muted', 'pres-link', 'pres-good', 'pres-warn', 'pres-photo', 'pres-rain',
         'preview', 'profile-ava', 'profile-dot', 'progress', 'proof', 'pulse', 'qr', 'quote', 'radio',
         'rail', 'rank', 'ratings', 'ring', 'ripple', 'row', 'scroll', 'search', 'search-filter', 'search-order', 'search-sort', 'seg', 'seg-knob', 'select', 'set', 'sep',
         'session', 'setup', 'setup-seal', 'shot', 'shot-side', 'site', 'site-img', 'skel', 'stats', 'statx',
@@ -288,6 +288,8 @@ return [
         '--sl-d-gate-top' => 'fraction of a pixel that sets the request guard gate on the first whole device pixel in its scene, plugins/presentation/presentation.js',
         '--sl-d-gate-y' => 'whole device pixels the request guard gate stands below its place, registered without inheritance in presentation.css,'
             .' plugins/presentation/presentation.js',
+        '--sl-d-net-y' => 'whole device pixels the globe of the request guard and its radar stand off the middle of the lanes, registered without'
+            .' inheritance in presentation.css, plugins/presentation/presentation.js',
         '--sl-d-pointer-x' => 'pointer viewport horizontal position, registered without inheritance in theme.css, plugins/system/slaed.js and builder.js',
         '--sl-d-pointer-y' => 'pointer viewport vertical position, registered without inheritance in theme.css, plugins/system/slaed.js and builder.js',
         '--sl-d-run' => 'share of a whole-list job done, which the line along the foot of its alert fills, templates/admin/assets/js/admin-ui.js',

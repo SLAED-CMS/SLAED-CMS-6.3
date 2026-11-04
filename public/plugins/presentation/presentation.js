@@ -434,7 +434,7 @@
         if (root.getAttribute('data-sl-pres-ready') === '1') return;
         var keys = root.querySelectorAll('.sl-pres-core-menu > button');
         var log = root.querySelector('.sl-pres-log');
-        var path = root.querySelector('.sl-pres-core-bar > span:last-child');
+        var path = root.querySelector('.sl-pres-core > .sl-pres-panel-head > b');
         if (!keys.length || !log) return;
         root.setAttribute('data-sl-pres-ready', '1');
         var at = 0;
@@ -514,7 +514,10 @@
         var lanes = root.querySelectorAll('.sl-pres-lanes > div');
         var box = root.querySelector('.sl-pres-quarantine');
         var log = root.querySelector('.sl-pres-log');
-        if (!scene || !gate || !pool.length || !lanes.length || !box) return;
+        var net = root.querySelector('.sl-pres-net');
+        var radar = root.querySelector('.sl-pres-radar');
+        var queue = root.querySelector('.sl-pres-queue > ol');
+        if (!scene || !gate || !pool.length || !lanes.length || !box || !net) return;
         root.setAttribute('data-sl-pres-ready', '1');
         var word = gate.querySelector('small');
         var shield = gate.querySelector('.sl-pres-shield');
@@ -539,17 +542,29 @@
         var release = function () {
             window.setTimeout(function () { aim = -1; setState('', ''); }, STEP * 0.03);
         };
-        // The run of the gate is measured when the scene changes size, never inside a frame. The gate stands on the first whole
-        // device pixel in its scene and moves by whole device pixels, rounded where its shield falls, so the parts move as one
+        // The run of the gate is measured on resize, never in a frame, and moves by whole device pixels so its parts move as one
         var size = 0;
         var low = 0;
         var high = 0;
         var base = 0;
         var lead = 0;
         var dpr = 1;
+        // The globe serves from the left between the middles of the second and the last but one lane, clear of the zone captions
+        var mid = 0;
+        var nlow = 0;
+        var nhigh = 0;
+        var ntop = 0;
+        var want = null;
+        var shift = '';
         var measure = function () {
             var first = rel(lanes[0]);
             var end = rel(lanes[lanes.length - 1]);
+            var inner = lanes.length > 2 ? 1 : 0;
+            var upper = rel(lanes[inner]);
+            var lower = rel(lanes[lanes.length - 1 - inner]);
+            mid = (first.top + end.top + end.height) / 2;
+            nlow = upper.top + upper.height / 2 - mid;
+            nhigh = lower.top + lower.height / 2 - mid;
             dpr = window.devicePixelRatio || 1;
             base = (scene.getBoundingClientRect().top + scene.clientTop) * dpr;
             gate.style.setProperty('--sl-d-gate-top', ((Math.ceil(base) - base) / dpr).toFixed(3) + 'px');
@@ -569,6 +584,13 @@
                 if (top <= low) { top = low; dir = 1; }
             }
             gate.style.setProperty('--sl-d-gate-y', ((Math.round(base + top * dpr + lead) - Math.round(lead) - Math.ceil(base)) / dpr).toFixed(3) + 'px');
+            if (want !== null) ntop += (want - ntop) * Math.min(1, dt * 0.012);
+            var ny = (Math.round(ntop * dpr) / dpr).toFixed(3) + 'px';
+            if (ny !== shift) {
+                shift = ny;
+                net.style.setProperty('--sl-d-net-y', ny);
+                if (radar) radar.style.setProperty('--sl-d-net-y', ny);
+            }
             window.requestAnimationFrame(patrol);
         };
         var note = function (card) {
@@ -635,24 +657,47 @@
             }, STEP * 0.25);
             window.setTimeout(function () { card.remove(); }, STEP * 0.35);
         };
-        var fly = function () {
-            var card = pool[at % pool.length].cloneNode(true);
-            var lane = rel(lanes[at % lanes.length]);
-            var y = lane.top + lane.height / 2;
-            var off = root.getAttribute('data-sl-pres-guard') === '0';
-            at++;
-            card.style.setProperty('--sl-d-x', '-' + Math.round(lane.left) + 'px');
-            card.style.setProperty('--sl-d-y', Math.round(y) + 'px');
-            scene.appendChild(card);
-            var c = rel(card);
-            var g = rel(gate);
-            card.style.setProperty('--sl-d-y', Math.round(y - c.height / 2) + 'px');
-            card.style.setProperty('--sl-d-x', Math.round(g.left - c.width - 8) + 'px');
-            if (!off) window.setTimeout(function () { aim = y; setState('check', ''); }, STEP * 0.18);
+        // The queue gives up its top row as the globe serves it and takes the request three places later from the pool below
+        var serve = function (k) {
+            if (!queue || !queue.firstElementChild) return;
+            var head = queue.firstElementChild;
+            var row = head.cloneNode(true);
+            var src = pool[(k + queue.children.length) % pool.length];
+            row.setAttribute('data-sl-tone', src.getAttribute('data-sl-tone'));
+            row.querySelector('i').className = src.querySelector('.bi').className;
+            row.querySelector('b').textContent = src.querySelector('b').textContent;
+            row.querySelector('small').textContent = src.querySelector('small').textContent;
+            head.classList.add('sl-is-out');
             window.setTimeout(function () {
-                if (!off && card.hasAttribute('data-sl-pres-bad')) block(card);
-                else pass(card, off);
-            }, STEP * 0.43);
+                head.remove();
+                queue.appendChild(row);
+            }, STEP * 0.08);
+        };
+        // A rally: the globe moves onto the lane of the next request, serves it from its edge, and the gate meets it at the same lane
+        var fly = function () {
+            var k = at++;
+            var lane = rel(lanes[(k * 2) % lanes.length]);
+            var y = lane.top + lane.height / 2;
+            want = Math.max(nlow, Math.min(nhigh, y - mid));
+            window.setTimeout(function () {
+                var card = pool[k % pool.length].cloneNode(true);
+                var off = root.getAttribute('data-sl-pres-guard') === '0';
+                var n = rel(net);
+                card.style.setProperty('--sl-d-x', Math.round(n.left + n.width * 0.6) + 'px');
+                card.style.setProperty('--sl-d-y', Math.round(y) + 'px');
+                scene.appendChild(card);
+                var c = rel(card);
+                var g = rel(gate);
+                card.style.setProperty('--sl-d-y', Math.round(y - c.height / 2) + 'px');
+                card.style.setProperty('--sl-d-x', Math.round(g.left - c.width - 8) + 'px');
+                serve(k);
+                window.setTimeout(function () { want = null; }, STEP * 0.1);
+                if (!off) window.setTimeout(function () { aim = y; setState('check', ''); }, STEP * 0.18);
+                window.setTimeout(function () {
+                    if (!off && card.hasAttribute('data-sl-pres-bad')) block(card);
+                    else pass(card, off);
+                }, STEP * 0.43);
+            }, STEP * 0.1);
         };
         var wake = function (on) {
             shown = on;
@@ -839,12 +884,41 @@
         root.setAttribute('data-sl-pres-ready', '1');
         var mode = root.querySelector('.sl-pres-tree .sl-pres-panel-head > b');
         var level = mode ? mode.textContent : '';
-        // The packet round the ring runs fast while the cache serves the markup and slow while every visit is parsed again
+        // The packet and the lit station keep one clock: each request restarts the round, a station lights as the packet reaches it
         var motion = root.querySelector('.sl-pres-path-packet > animateMotion');
-        var pace = function () {
-            if (motion) motion.setAttribute('dur', root.getAttribute('data-sl-pres-cache') === '0' ? '11s' : '4s');
+        var ring = root.querySelector('.sl-pres-path-ring');
+        var dots = [];
+        var waits = [];
+        // A station lies where the ring passes closest to its card; the ring is sampled once, the cards are mapped on every request
+        var getMarks = function () {
+            var svg = ring ? ring.ownerSVGElement : null;
+            var ctm = svg && svg.getScreenCTM ? svg.getScreenCTM() : null;
+            var marks = [];
+            if (!ring || !ring.getTotalLength || !ctm) return marks;
+            if (!dots.length) {
+                var size = ring.getTotalLength();
+                for (var len = 0; len <= size; len += size / 240) dots.push(ring.getPointAtLength(len));
+            }
+            var inv = ctm.inverse();
+            for (var k = 0; k < nodes.length; k++) {
+                var box = nodes[k].getBoundingClientRect();
+                var spot = svg.createSVGPoint();
+                spot.x = box.left + box.width / 2;
+                spot.y = box.top + box.height / 2;
+                spot = spot.matrixTransform(inv);
+                var best = 0;
+                var gap = Infinity;
+                for (var d = 0; k > 0 && d < dots.length; d++) {
+                    var dist = (dots[d].x - spot.x) * (dots[d].x - spot.x) + (dots[d].y - spot.y) * (dots[d].y - spot.y);
+                    if (dist < gap) {
+                        gap = dist;
+                        best = d;
+                    }
+                }
+                marks.push(best / (dots.length - 1));
+            }
+            return marks;
         };
-        pace();
         var getPool = function () {
             var on = root.getAttribute('data-sl-pres-cache') === '0' ? '0' : '1';
             return Array.prototype.filter.call(pool, function (c) { return c.getAttribute('data-sl-pres-on') === on; });
@@ -856,27 +930,25 @@
         var gate = nodes[4].querySelectorAll('small > span');
         var mod = nodes[5].querySelectorAll('small > span');
         var cases = root.querySelectorAll('.sl-pres-case');
-        var stats = root.querySelectorAll('.sl-pres-states > .sl-pres-stat:not(.sl-pres-clean-row)');
-        var count = root.querySelector('[data-sl-pres-count]');
-        var tally = count ? count.querySelectorAll('b') : [];
         var work = nodes[3].querySelectorAll('small > span');
         var data = work.length > 1 ? work[1].textContent : '';
-        var hits = 0;
-        var parses = 0;
+        var pop = nodes[4].querySelector('.sl-pres-flow-pop');
         var at = 0;
-        var timer = 0;
-        // Every request of the scene is counted: one served from the stored markup, or one the parser had to read again; the tally shows with the first
+        // The module node shows the parser at work on every request the stored markup cannot serve
         var tick = function (c) {
             var parse = c.getAttribute('data-sl-pres-mode') !== 'hit';
-            if (count) count.hidden = false;
-            if (parse) parses++;
-            else hits++;
-            if (tally.length > 1) {
-                tally[0].textContent = String(hits);
-                tally[1].textContent = String(parses);
-            }
             if (work.length > 1) work[1].textContent = parse ? root.getAttribute('data-sl-pres-parsing') : data;
             nodes[3].classList.toggle('sl-is-busy', parse);
+        };
+        // The fork of the cache node: a read, a write of one more file, or a skip rises over it and fades
+        var fork = function (mode) {
+            if (!pop) return;
+            var mark = { hit: ['READ', 'success'], miss: ['+1 STORE', 'warning'], bypass: ['SKIP', 'info'], off: ['OFF', 'warning'] }[mode] || ['', ''];
+            pop.textContent = mark[0];
+            pop.setAttribute('data-sl-tone', mark[1]);
+            pop.classList.remove('sl-is-pop');
+            void pop.offsetWidth;
+            pop.classList.add('sl-is-pop');
         };
         var setTone = function (el, tone) {
             if (!el) return;
@@ -905,16 +977,8 @@
             if (mod.length > 1) mod[1].textContent = c.getAttribute('data-sl-pres-mod-b');
             var pick = mode === 'off' ? 'bypass' : mode;
             for (var k = 0; k < cases.length; k++) cases[k].classList.toggle('sl-is-on', cases[k].querySelector('strong').textContent.toLowerCase() === pick);
-            var texts = c.getAttribute('data-sl-pres-states').split('|');
-            var tones = c.getAttribute('data-sl-pres-tones').split('|');
-            for (var s = 0; s < stats.length && s < texts.length; s++) {
-                var b = stats[s].querySelector('b');
-                if (b) b.textContent = texts[s];
-                setTone(stats[s], tones[s] || '');
-            }
         };
         var run = function () {
-            window.clearInterval(timer);
             var set = getPool();
             var c = set[at++ % set.length];
             // The markup is stored once: past the first round a miss is not played again
@@ -926,6 +990,7 @@
             var light = function () {
                 for (var n = 0; n < nodes.length; n++) nodes[n].classList.toggle('sl-is-on', String(n + 1) === seq[i] || (i === seq.length - 1 && c.getAttribute('data-sl-pres-mode') === 'miss' && n === 4));
                 if (i === seq.length - 1 && c.getAttribute('data-sl-pres-mode') === 'miss') setBadge(root.getAttribute('data-sl-pres-store'), 'success');
+                if (seq[i] === '5' || (seq[i] === '6' && seq.indexOf('5') < 0)) fork(c.getAttribute('data-sl-pres-mode'));
             };
             // Under still motion the switch shows the last beat at once instead of walking the path
             if (window.isMotionStill()) {
@@ -933,24 +998,31 @@
                 light();
                 return;
             }
-            light();
-            timer = window.setInterval(function () {
-                i++;
-                if (i >= seq.length) {
-                    window.clearInterval(timer);
-                    return;
+            for (var w = 0; w < waits.length; w++) window.clearTimeout(waits[w]);
+            waits = [];
+            var share = getMarks();
+            // The round starts on the next frame, so the time the measure took is not counted on the clock of the packet
+            window.requestAnimationFrame(function () {
+                if (motion && motion.beginElement) {
+                    motion.setAttribute('dur', (STEP / 1000) + 's');
+                    motion.beginElement();
                 }
                 light();
-            }, STEP * 0.12);
+                seq.forEach(function (num, s) {
+                    if (s === 0) return;
+                    waits.push(window.setTimeout(function () {
+                        i = s;
+                        light();
+                    }, (share[Number(num) - 1] || s / nodes.length) * STEP));
+                });
+            });
         };
         root.addEventListener('sl-pres-toggle', function () {
             if (mode) mode.textContent = root.getAttribute('data-sl-pres-cache') === '0' ? 'cache = 0' : (level === 'cache = 0' ? 'cache = 1' : level);
-            hits = 0;
-            parses = 0;
             at = 0;
-            pace();
             run();
         });
+        getMarks();
         setAutoplay(scene, run);
     }
 

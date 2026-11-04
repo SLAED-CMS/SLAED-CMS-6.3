@@ -3,12 +3,12 @@
   <div class="sl-pres-body">
     <div class="sl-pres-speed">
       <div class="sl-pres-card">
-        <h3><i class="bi bi-speedometer2" aria-hidden="true"></i>{{ resp.title }}</h3>
+        <div class="sl-pres-panel-head"><span>{{ resp.title }}</span></div>
         <div class="sl-pres-big">{{ resp.value }}<small> {{ resp.unit }}</small></div>
         <div class="sl-pres-spark" data-sl-pres="spark" data-sl-pres-series="{{ resp.series }}"><canvas role="img" aria-label="{{ resp.chart }}"></canvas></div>
       </div>
       <div class="sl-pres-card">
-        <h3><i class="bi bi-database" aria-hidden="true"></i>{{ db.title }}</h3>
+        <div class="sl-pres-panel-head"><span>{{ db.title }}</span></div>
         <div class="sl-pres-rows">
           {% for item in db.rows %}
           <div class="sl-pres-row"><span>{{ item.label }}</span><b>{{ item.value }}</b></div>
@@ -19,12 +19,14 @@
         </div>
       </div>
       <div class="sl-pres-card">
-        <h3><i class="bi bi-people" aria-hidden="true"></i>{{ online.title }}</h3>
-        <div class="sl-pres-big">{{ online.value }}<small> {{ online.unit }}</small></div>
-        <div class="sl-pres-rows">
-          {% for item in online.rows %}
-          <div class="sl-pres-row"><span>{{ item.label }}</span><b>{{ item.value }}</b></div>
-          {% endfor %}
+        <div class="sl-pres-panel-head"><span>{{ online.title }}</span></div>
+        <div class="sl-pres-online">
+          <div class="sl-pres-dials">{% for item in online.dials %}{% include 'fragments/presentation-ring.html' with item %}{% endfor %}</div>
+          <div class="sl-pres-rows">
+            {% for item in online.rows %}
+            <div class="sl-pres-row"><span>{{ item.label }}</span><b>{{ item.value }}</b></div>
+            {% endfor %}
+          </div>
         </div>
       </div>
       <div class="sl-pres-pdo" data-sl-pres="pdo">
@@ -68,9 +70,9 @@
         </div>
       </div>
       <div class="sl-pres-devtools">
-        <div class="sl-pres-devtools-bar">
-          <div><span class="sl-pres-over">{{ devtools.over }}</span><b><i class="bi bi-bug" aria-hidden="true"></i>{{ devtools.title }}</b></div>
-          <nav class="sl-pres-tabs">
+        <div class="sl-pres-presets">
+          <span><i class="bi bi-bug" aria-hidden="true"></i>{{ devtools.over }}</span>
+          <nav class="sl-pres-segment sl-pres-tabs">
             {% for item in devtools.tabs %}<button type="button"{% if item.is_on %} class="sl-is-on"{% endif %}>{{ item.label }}</button>{% endfor %}
           </nav>
         </div>
@@ -85,7 +87,10 @@
         <div class="sl-pres-tab-pane">
           <div class="sl-pres-note-row"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i><span>{{ devtools.errhead }}</span><b>{{ devtools.captured }}</b></div>
           <div class="sl-pres-errors">
-            <div><span>—</span><i class="bi bi-bug-fill" aria-hidden="true"></i><b>{{ devtools.phperr }}</b><span>{{ devtools.demo }}</span><em>/ index.php</em></div>
+            <div><span>01</span><i class="bi bi-bug-fill" aria-hidden="true"></i><b>E_ERROR</b><span>Call to undefined function getNodeList()</span><em>modules/news/index.php:42</em></div>
+            <div><span>02</span><i class="bi bi-exclamation-triangle" data-sl-tone="warning" aria-hidden="true"></i><b>E_WARNING</b><span>Undefined array key "cid"</span><em>blocks/block-news.php:18</em></div>
+            <div><span>03</span><i class="bi bi-exclamation-circle" data-sl-tone="info" aria-hidden="true"></i><b>E_NOTICE</b><span>Only variables should be passed by reference</span><em>core/system.php:1180</em></div>
+            <div><span>04</span><i class="bi bi-hourglass-split" data-sl-tone="info" aria-hidden="true"></i><b>E_DEPRECATED</b><span>Implicit conversion from float to int</span><em>modules/forum/index.php:310</em></div>
           </div>
           <p class="sl-pres-note">{{ devtools.demo }}</p>
         </div>
@@ -111,6 +116,7 @@
             <div><span class="sl-pres-mono">[PDO]</span><b>:name</b><code>SELECT name, ip, super FROM …admins WHERE id = :id</code></div>
             <div><span class="sl-pres-mono">[PDO]</span><b>:name</b><code>SELECT password FROM …users WHERE id = :id AND name = :name</code></div>
             <div><span class="sl-pres-mono">[PDO]</span><b>—</b><code>SELECT id, bkey, title, bpos, weight, status FROM …blocks ORDER BY bpos, weight</code></div>
+            <div><span class="sl-pres-mono">[PDO]</span><b>:cid</b><code>SELECT id, title FROM …nodes WHERE cid = :cid LIMIT ?</code></div>
           </div>
         </div>
       </div>

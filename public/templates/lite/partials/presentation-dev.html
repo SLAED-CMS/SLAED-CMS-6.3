@@ -3,10 +3,7 @@
   <div class="sl-pres-body">
     <div class="sl-pres-dev" data-sl-pres="dev" data-sl-pres-recent="{{ focus_recent }}">
       <div class="sl-pres-dev-board sl-pres-scene">
-        <div class="sl-pres-dev-head">
-          <span class="sl-pres-pill"><i class="bi bi-git" aria-hidden="true"></i>{{ version }}</span>
-          <span class="sl-pres-live"><i class="sl-pres-dot sl-is-live"></i>{{ live }}</span>
-        </div>
+        <div class="sl-pres-panel-head"><span><i class="sl-pres-dot sl-is-live"></i>{{ live }}</span><b>{{ version }}</b></div>
         {% if has_commits %}
         <div class="sl-pres-commits">
           {% for item in commits %}

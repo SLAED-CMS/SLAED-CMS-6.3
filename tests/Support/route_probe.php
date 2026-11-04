@@ -1034,8 +1034,8 @@ function getRouteSync(PDO $pdo, string $work): array {
     $good = getRouteReply('root', 'POST', 'admin.php', $save + ['limit' => '20']);
     $cfg = require $work.'/config/scheduler.php';
     $out['scheduler'] = [$list['code'], str_contains($list['body'], 'Node sync'), str_contains($job['body'], 'name="limit"'), str_contains($job['body'], 'max="50"'),
-        str_contains($pub['body'], 'max="500"'), $high['code'], $keep, $good['code'], $cfg['scheduler']['jobs']['nodesync']['settings']['limit'] ?? '',
-        $cfg['scheduler']['jobs']['nodesync']['system'] ?? ''];
+        str_contains($pub['body'], 'max="500"'), $high['code'], str_contains($high['body'], 'value="51"'), $keep, $good['code'],
+        $cfg['scheduler']['jobs']['nodesync']['settings']['limit'] ?? '', $cfg['scheduler']['jobs']['nodesync']['system'] ?? ''];
     $rtok = getRouteToken($list['body'], 'run');
     $run = getRouteReply('root', 'POST', 'admin.php', ['name' => 'scheduler', 'op' => 'run', 'job' => 'nodesync', 'token' => $rtok]);
     $file = $work.'/logs/scheduler/nodesync.json';

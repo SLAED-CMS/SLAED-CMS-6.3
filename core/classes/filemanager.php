@@ -185,7 +185,8 @@ class FileManager {
     # Renames one object inside its own directory: the new name is a name and never a path, so a rename cannot turn into a move whose destination nobody asked the policy about
     public function updateFileName(string $path, string $name): array {
         $pair = $this->getPathPair($path);
-        if ($pair['rel'] === '' || !self::checkPathName($name)) return self::getPathFail('closed');
+        if ($pair['rel'] === '') return self::getPathFail('closed');
+        if (!self::checkPathName($name)) return self::getPathFail('name');
         $dir = str_contains($pair['rel'], '/') ? substr($pair['rel'], 0, (int)strrpos($pair['rel'], '/')).'/' : '';
         return $this->updatePathEntry($pair, $dir.$name, 'rename');
     }
@@ -240,7 +241,8 @@ class FileManager {
     public function addFilesArchive(array $paths, string $dest): array {
         $name = str_ends_with(strtolower(trim($dest)), '.zip') ? trim($dest) : trim($dest).'.zip';
         $new = $this->getMakePath($name);
-        if ($paths === [] || $new['rel'] === '' || empty($this->getCapabilities()['compress'])) return self::getPathFail('closed');
+        if ($paths === [] || empty($this->getCapabilities()['compress'])) return self::getPathFail('closed');
+        if ($new['rel'] === '') return self::getPathFail($new['why']);
         if (!$this->getPathRules($new['rel'])['write'] || !$this->getPathRules($new['dir'])['write']) return self::getPathFail('closed');
         $list = [];
         foreach ($paths as $path) {
@@ -365,16 +367,17 @@ class FileManager {
         return ['ok' => false, 'error' => $why, 'path' => ''];
     }
 
-    # Resolve a path that does not exist yet: the parent inside the root, the last segment a plain name, so a destination cannot climb out of its directory
+    # Resolve a path that does not exist yet: the parent inside the root, the last segment a plain name; why tells a bad name from a place the context closes
     private function getMakePath(string $path): array {
-        $fail = ['rel' => '', 'full' => '', 'dir' => ''];
+        $fail = ['rel' => '', 'full' => '', 'dir' => '', 'why' => 'closed'];
         $rel = trim(str_replace('\\', '/', $path));
         if ($rel === '' || str_ends_with($rel, '/')) return $fail;
         $cut = strrpos($rel, '/');
         $name = ($cut === false) ? $rel : substr($rel, $cut + 1);
         $base = $this->getPathPair(($cut === false) ? '' : substr($rel, 0, $cut));
-        if (!self::checkPathName($name) || $base['full'] === '' || !is_dir($base['full'])) return $fail;
-        return ['rel' => ($base['rel'] === '') ? $name : $base['rel'].'/'.$name, 'full' => $base['full'].'/'.$name, 'dir' => $base['rel']];
+        if (!self::checkPathName($name)) return ['why' => 'name'] + $fail;
+        if ($base['full'] === '' || !is_dir($base['full'])) return $fail;
+        return ['rel' => ($base['rel'] === '') ? $name : $base['rel'].'/'.$name, 'full' => $base['full'].'/'.$name, 'dir' => $base['rel'], 'why' => ''];
     }
 
     # Answers whether one segment is a plain file name: no separator, no drive or wrapper spelling, no walk of the tree and no trailing dot or space stored under a second name
@@ -388,7 +391,8 @@ class FileManager {
     private function addPathEntry(string $path, bool $isdir): array {
         $new = $this->getMakePath($path);
         $able = $this->getCapabilities();
-        if ($new['rel'] === '' || empty($able[$isdir ? 'mkdir' : 'create'])) return self::getPathFail('closed');
+        if (empty($able[$isdir ? 'mkdir' : 'create'])) return self::getPathFail('closed');
+        if ($new['rel'] === '') return self::getPathFail($new['why']);
         if (!$this->getPathRules($new['rel'])['write'] || !$this->getPathRules($new['dir'])['write']) return self::getPathFail('closed');
         $lock = self::getPathLock(dirname($new['full']));
         if ($lock === false) return self::getPathFail('lock');
@@ -403,7 +407,8 @@ class FileManager {
     private function updatePathEntry(array $pair, string $dest, string $flag): array {
         $new = $this->getMakePath($dest);
         $copy = $flag === 'copy';
-        if ($pair['rel'] === '' || $new['rel'] === '' || empty($this->getCapabilities()[$flag])) return self::getPathFail('closed');
+        if ($pair['rel'] === '' || empty($this->getCapabilities()[$flag])) return self::getPathFail('closed');
+        if ($new['rel'] === '') return self::getPathFail($new['why']);
         if ($copy && !is_file($pair['full'])) return self::getPathFail('closed');
         $rule = $this->getPathRules($pair['rel']);
         $okay = $copy ? $rule['read'] : ($rule['write'] && $rule['delete']);

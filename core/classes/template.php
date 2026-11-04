@@ -138,10 +138,11 @@ class Template {
         }
     }
 
-    # Compile when needed and render; the compiled file is renamed over the old one under compile.lock, so a parallel include never meets a half-written file
+    # Compile when needed and render; the compiled file is renamed over the old one under compile.lock, and one the cache job removed meanwhile is compiled again
     protected function getHtml(string $type, string $name, array $data = [], string $dir = ''): string {
         $file = $this->getFile($type, $name, $dir);
-        if ($file !== '' && isset($this->fresh[$file])) return $this->getView($this->fresh[$file], $data, false, $type, $name);
+        if ($file !== '' && isset($this->fresh[$file]) && is_file($this->fresh[$file])) return $this->getView($this->fresh[$file], $data, false, $type, $name);
+        if ($file !== '' && isset($this->fresh[$file])) unset($this->rpath[$this->fresh[$file]], $this->fresh[$file]);
         if (!$file || !$this->checkFile($file, $dir)) {
             $this->reportTemplateError($type, $name, 'Template file not found');
             return $this->getTemplateDebugComment($type, $name, 'template file not found');

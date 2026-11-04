@@ -413,7 +413,7 @@ class Mail {
         return Cache::getFile(['maildns', $host], 'json');
     }
 
-    # Resolve the shared body of a bulk message once per batch, because a mailing stores its text on its own row and its queue rows carry only the reference to it
+    # Resolve the shared body of a bulk message once per batch, framed by the site mail template like every other letter; the queue rows carry only the reference to it
     private function getRefBody(string $kind, int $ref): ?string {
         global $prs;
         if (isset($this->refs[$ref])) return $this->refs[$ref];
@@ -421,7 +421,7 @@ class Mail {
         $row = $this->db->getSqlRow($this->db->getSqlQuery('SELECT body FROM '.PREFIX_DB.'_newsletter WHERE id = :id', ['id' => $ref]));
         if (!$row) return null;
         $body = (string)$row['body'];
-        $this->refs[$ref] = ($prs instanceof Parser) ? $prs->filterContent($body, true, 'all', 0, '', [], true) : $body;
+        $this->refs[$ref] = getMailFrame(($prs instanceof Parser) ? $prs->filterContent($body, true, 'all', 0, '', [], true) : $body);
         return $this->refs[$ref];
     }
 

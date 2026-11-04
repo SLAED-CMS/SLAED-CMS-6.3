@@ -56,6 +56,7 @@ const states = {
   'pres-quiet': { auth: '', url: '/presentation', run: 'idle', top: 7200 },
   'pres-pipeline': { auth: '', url: '/presentation', run: 'idle', at: '#pipeline' },
   'pres-guard': { auth: '', url: '/presentation', run: 'idle', at: '#security' },
+  'pres-system': { auth: '', url: '/presentation', run: 'idle', at: '#system' },
   'pres-pointer': { auth: '', url: '/presentation', run: 'pointer' },
   'pres-nudge': { auth: '', url: '/presentation', run: 'nudge' },
   'pres-scroll': { auth: '', url: '/presentation', run: 'scroll' },
@@ -74,6 +75,7 @@ const parts = {
   hero: { auth: '', url: '/presentation', sel: '.sl-pres-hero' },
   pipeline: { auth: '', url: '/presentation', sel: '#pipeline' },
   guard: { auth: '', url: '/presentation', sel: '#security' },
+  system: { auth: '', url: '/presentation', sel: '.sl-pres-map' },
   runtime: { auth: '', url: '/presentation', sel: '#runtime' },
   development: { auth: '', url: '/presentation', sel: '#development' },
 };

@@ -6345,8 +6345,8 @@ function updateVotingResult(): void {
     echo $cont;
 }
 
-# Resample an image down to the requested width through GD and write it to the thumb path; returns the source path unchanged when GD, the format or the write is unavailable
-function getImageThumb(string $file, string $dest, int $width): string {
+# Resample an image to the width through GD into the thumb path, in its own format or the one asked, at the quality asked; the source path when GD, the format or the write fails
+function getImageThumb(string $file, string $dest, int $width, int $kind = 0, int $quality = -1): string {
     if (!function_exists('imagecreatetruecolor') || $width < 1) return $file;
     $info = getimagesize($file);
     if (!is_array($info) || $info[0] < 1 || $info[1] < 1) return $file;
@@ -6368,12 +6368,12 @@ function getImageThumb(string $file, string $dest, int $width): string {
     $back = imagecolorallocatealpha($dimg, 255, 255, 255, 127);
     imagefill($dimg, 0, 0, $back);
     imagecopyresampled($dimg, $simg, 0, 0, 0, 0, $width, $dhei, $swid, $shei);
-    $done = match ($type) {
+    $done = match ($kind ?: $type) {
         IMAGETYPE_GIF => imagegif($dimg, $dest),
-        IMAGETYPE_JPEG => imagejpeg($dimg, $dest),
+        IMAGETYPE_JPEG => imagejpeg($dimg, $dest, $quality),
         IMAGETYPE_PNG => imagepng($dimg, $dest),
-        IMAGETYPE_WEBP => function_exists('imagewebp') ? imagewebp($dimg, $dest) : false,
-        IMAGETYPE_AVIF => function_exists('imageavif') ? imageavif($dimg, $dest) : false,
+        IMAGETYPE_WEBP => function_exists('imagewebp') ? imagewebp($dimg, $dest, $quality) : false,
+        IMAGETYPE_AVIF => function_exists('imageavif') ? imageavif($dimg, $dest, $quality) : false,
         default => false,
     };
     return $done ? $dest : $file;

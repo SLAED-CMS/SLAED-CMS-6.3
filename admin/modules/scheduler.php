@@ -105,20 +105,22 @@ function scheduler(): void {
     setFoot();
 }
 
-function add(string $name = ''): void {
+# The form of one job, new or stored; a refused save hands back what was sent and why, so nothing typed is lost and the refusal names its field
+function add(string $name = '', array $sent = [], string $note = ''): void {
     global $conf, $afile, $tpl;
-    if ($name === '') $name = getVar('get', 'job', 'var', '');
+    if ($name === '' && $sent === []) $name = getVar('get', 'job', 'var', '');
     $name = preg_replace('#[^a-z]#', '', strtolower($name));
     $jobs = getSchedulerJobs();
-    $job = ($name !== '' && isset($jobs[$name])) ? $jobs[$name] : [
+    $isnew = ($sent === []) ? !isset($jobs[$name]) : !empty($sent['isnew']);
+    $job = (!$isnew && isset($jobs[$name])) ? $jobs[$name] : [
         'name' => '', 'title' => '', 'type' => 'custom', 'active' => '1',
         'system' => '', 'schedule' => '*/5 * * * *', 'priority' => '100',
         'lock_timeout' => (string)($conf['scheduler']['lock_timeout'] ?? '1800'),
         'manual' => '1', 'settings' => ['url' => ''],
     ];
-    $isnew = ($name === '');
+    $job = array_replace($job, array_diff_key($sent, ['isnew' => 1, 'key' => 1]));
     $iscustom = (($job['type'] ?? 'custom') === 'custom');
-    $key = $isnew ? '' : $job['name'];
+    $key = $isnew ? (string)($sent['key'] ?? '') : $job['name'];
     $url = $job['settings']['url'] ?? '';
     $schedule = (string)($job['schedule'] ?? '');
     $info = $iscustom ? _SCHEDULER_URLINFO : _SCHEDULER_SYSINFO;
@@ -126,6 +128,7 @@ function add(string $name = ''): void {
     $cont = getTplAdminTabs(['ops' => ['name=scheduler', 'name=scheduler&op=add', 'name=scheduler&op=info'], 'tabs' => [_HOME, _ADD, _MANUAL], 'tab' => 1]);
     $cont .= checkPerms(CONFIG_DIR.'/scheduler.php');
     if (!$iscustom && in_array($key, ['dbbackup', 'filescan'], true)) $cont .= checkPerms(CONFIG_DIR.'/security.php');
+    if ($note !== '') $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $note]);
     $cont .= $tpl->getHtmlFrag('alert', ['text' => $info]);
     $rows = [[
         'label_for' => 'f-job',
@@ -299,6 +302,7 @@ function add(string $name = ''): void {
             ['nameattr' => 'name', 'valueattr' => 'scheduler'],
             ['nameattr' => 'op', 'valueattr' => 'save'],
             ['nameattr' => 'type', 'valueattr' => (string)$job['type']],
+            ['nameattr' => 'isnew', 'valueattr' => $isnew ? '1' : '0'],
             ['nameattr' => 'token', 'valueattr' => getSiteToken('scheduler')],
         ],
         'rows' => $rows,
@@ -318,38 +322,42 @@ function save(): void {
     if (!$warn) {
         $type = getVar('post', 'type', 'var', 'custom');
         $title = trim(getVar('post', 'title', 'text', ''));
-        $url = trim(getVar('post', 'url', 'url', ''));
+        $link = trim((string)getVar('post', 'url', 'raw', ''));
+        $path = str_starts_with($link, '/') && !str_starts_with($link, '//');
+        $url = $path ? filterText($link) : filterWebUrl($link);
+        $isurl = $path ? !preg_match('#\s#', $link) : filter_var($url, FILTER_VALIDATE_URL) !== false;
         $sched = trim(getVar('post', 'schedule', 'raw', ''));
         $cfg = is_readable(CONFIG_DIR.'/scheduler.php') ? (require CONFIG_DIR.'/scheduler.php') : [];
         $schedcfg = is_array($cfg) && isset($cfg['scheduler']) && is_array($cfg['scheduler']) ? $cfg['scheduler'] : ($conf['scheduler'] ?? []);
         $jobs = $schedcfg['jobs'] ?? [];
         $curr = $jobs[$name] ?? [];
         $issys = (getSchedulerJob($name, $curr)['type'] ?? '') === 'system';
-        if ($name === '' || $title === '' || (!$issys && ($type !== 'custom' || $url === ''))) {
-            setRedirect($afile.'.php?name=scheduler&op=add&job='.$name);
-            return;
-        }
-        $sched = getSchedulerSchedule($sched);
-        if ($sched === '') {
-            setRedirect($afile.'.php?name=scheduler&op=add&job='.$name);
-            return;
-        }
+        $isnew = getVar('post', 'isnew', 'num', 0) === 1;
         $sett = $issys ? ((isset($curr['settings']) && is_array($curr['settings'])) ? $curr['settings'] : []) : ['url' => $url];
-        if ($issys && isset(SCHED_LIMITS[$name], $sett['limit'])) {
-            $lim = getVar('post', 'limit', 'num', 0);
-            if ($lim < 1 || $lim > SCHED_LIMITS[$name]) {
-                setRedirect($afile.'.php?name=scheduler&op=add&job='.$name);
-                return;
-            }
-            $sett['limit'] = (string)$lim;
-        }
+        $limit = ($issys && isset(SCHED_LIMITS[$name], $sett['limit'])) ? getVar('post', 'limit', 'num', 0) : null;
+        if ($limit !== null) $sett['limit'] = (string)$limit;
         $priority = (int)getVar('post', 'priority', 'num', 100);
-        foreach ($jobs as $jkey => $jval) {
-            if ($jkey !== $name && (int)($jval['priority'] ?? 100) === $priority) {
-                setRedirect($afile.'.php?name=scheduler&op=add&job='.$name);
-                return;
-            }
+        $owner = '';
+        foreach ($jobs as $jkey => $jval) if ($jkey !== $name && (int)($jval['priority'] ?? 100) === $priority) $owner = (string)($jval['title'] ?? $jkey);
+        $cron = getSchedulerSchedule($sched);
+        $note = match (true) {
+            $name === '' || $name !== $rawname => _SCHEDULER_BADKEY,
+            $isnew && (isset($jobs[$name]) || isset(getSchedulerJobs()[$name])) => sprintf(_SCHEDULER_KEYUSE, $name),
+            $title === '' => _CERROR,
+            !$issys && ($type !== 'custom' || !$isurl) => _SCHEDULER_NOURL,
+            $cron === '' => _SCHEDULER_BADCRON,
+            $limit !== null && ($limit < 1 || $limit > SCHED_LIMITS[$name]) => sprintf(_SCHEDULER_BADLIM, SCHED_LIMITS[$name] ?? 0),
+            $owner !== '' => sprintf(_SCHEDULER_PRIOUSE, $priority, htmlspecialchars($owner, ENT_QUOTES, 'UTF-8')),
+            default => '',
+        };
+        if ($note !== '') {
+            $sent = ['isnew' => $isnew, 'key' => $rawname, 'title' => $title, 'schedule' => $sched, 'priority' => (string)$priority,
+                'lock_timeout' => (string)getVar('post', 'lock_timeout', 'num', 1800), 'active' => (string)getVar('post', 'active', 'num', 0),
+                'manual' => (string)getVar('post', 'manual', 'num', 0), 'settings' => $issys ? $sett : ['url' => $link]];
+            add($name, $sent, $note);
+            return;
         }
+        $sched = $cron;
         $item = [
             'title' => $title,
             'type' => $issys ? 'system' : 'custom',
@@ -395,10 +403,7 @@ function run(): void {
     $text = $warn ? _TOKENMISS : _SUCCSAVE;
     if (!$warn) {
         $jobs = getSchedulerJobs();
-        if ($name === '' || !isset($jobs[$name]) || (int)($jobs[$name]['manual'] ?? 0) !== 1) {
-            setRedirect($afile.'.php?name=scheduler');
-            return;
-        }
+        if ($name === '' || !isset($jobs[$name]) || (int)($jobs[$name]['manual'] ?? 0) !== 1) setRedirect($afile.'.php?name=scheduler', false, 302, _ERROR, true);
         $result = addSchedulerRun($name, 'manual');
         if (($result['status'] ?? '') !== 'success') {
             $warn = true;
@@ -431,6 +436,7 @@ function unlock(): void {
     setRedirect($afile.'.php?name=scheduler', false, 302, $text, $warn);
 }
 
+# Remove custom jobs with the state of their runs, so a job added later under the same key starts without the history of the gone one; the lock file stays, as its rule says
 function delete(): void {
     global $conf, $afile;
     $warn = !checkAdminPost('scheduler');
@@ -446,7 +452,8 @@ function delete(): void {
             $jobs = array_diff_key($jobs, array_flip($drop));
             $data = $schedcfg;
             $data['jobs'] = $jobs;
-            setConfigFile('scheduler.php', $data);
+            $done = setConfigFile('scheduler.php', $data) && $done;
+            foreach ($done ? $drop : [] as $one) if (is_file(LOGS_DIR.'/scheduler/'.$one.'.json')) unlink(LOGS_DIR.'/scheduler/'.$one.'.json');
         }
     }
     setRedirect($afile.'.php?name=scheduler', false, 302, $warn ? _TOKENMISS : ($done ? _SUCCDELETE : _ERROR), !$done);

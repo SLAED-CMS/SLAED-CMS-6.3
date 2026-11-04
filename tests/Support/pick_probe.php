@@ -62,8 +62,9 @@ function setRedirect(string $url, bool $refer = false, int $code = 302, string $
 }
 
 # Record a written configuration instead of writing it
-function setConfigFile(string $name, array $cont): void {
+function setConfigFile(string $name, array $cont): bool {
     $GLOBALS['pdone']['data']['cfg'][$name] = $cont;
+    return true;
 }
 
 # Record the result a sweep sets on the journal record of its post

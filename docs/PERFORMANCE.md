@@ -644,6 +644,10 @@ The measurements of 2026-11-01 and 2026-11-02, before → after, medians of the 
 | The LED and the ring on transform and opacity | home idle, warn / ok | 67 → 58 / 59 → 63 | 117 → 71 / 97 → 88 | 109 → 97 / 90 → 87 | 5 → 6 / 4 → 5 | 96 → 107 / 85 → 118 |
 | The gate of the guard on transform | presentation, guard | 85 → 60 | 70 → 62 | 256 → 42 | 33 → 21 | 118 → 120 |
 | The gate of the guard on transform | presentation, scroll | 63 → 62 | 51 → 54 | 96 → 64 | 20 → 20 | 103 → 105 |
+| The fork of the cache node rises over node 05 (READ, +1 STORE, SKIP), the made-up tally gone | presentation, pipeline | 52 → 60 | 36 → 40 | 45 → 53 | 5 → 6 | 120 |
+| The globe serves the gate: it moves only onto the lane of a throw, the ingress queue under it (drifting each frame it was 88 → 110 / 93 → 125) | presentation, guard (5 rounds) | 85 → 94 | 94 → 104 | 102 → 109 | 38 → 39 | 120 |
+| The rain of code and the waves of the globe on transform | presentation, guard / system (5 rounds) / top | 85 → 75 / 51 → 51 / 60 → 61 | 100 → 81 / 130 → 129 / 62 → 72 | 83 → 84 / 38 → 38 / 43 → 40 | 39 → 33 / 2 → 2 / 21 → 19 | 116 → 120 / 84 → 84 / 120 |
+| The lost `sl-pres-spin` back: six rings turn again | presentation, system / guard / top | 42 → 54 / 99 → 104 / 77 → 76 | 114 → 127 / 119 → 123 / 83 → 84 | 29 → 40 / 82 → 91 / 45 → 46 | 1 → 1 / 39 → 39 / 23 → 22 | 111 → 109 / 119 → 118 / 120 |
 
 More frames drawn raise the GPU share, so a GPU figure that grows beside a frame rate that grows is no loss. The frame
 rate of the guard, 118 → 120, lies within the noise of a pair. Forms measured and not taken, as they change the

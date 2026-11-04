@@ -293,7 +293,8 @@ final class FileManagerCatalogTest extends TestCase
     public function theCatalogueScreenIsTheFileShell(): void
     {
         $body = $this->getBody('admin/modules/uploads.php', 'uploads');
-        $this->assertStringContainsString('getAdminFileShell(true)', $body, 'The catalogue screen shows no browser of its own');
+        $this->assertStringContainsString('getAdminFileShell(true, ', $body, 'The catalogue screen shows no browser of its own');
+        $this->assertStringContainsString('[\'dir\' => $dir]', $body,'The catalogue does not open at the default folder of its settings');
         $this->assertStringContainsString('getUploadsSearch(', $body, 'The directory selector the screen navigates by is gone');
     }
 

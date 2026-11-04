@@ -96,7 +96,8 @@ final class NodeSyncTest extends TestCase
     public function theSchedulerRunsTheQueueWithItsLimit(): void
     {
         $run = $this->getRun();
-        $this->assertSame([200, true, true, true, true, 303, '10', 303, '20', 'nodesync'], $run['scheduler']);
+        $this->assertSame([200, true, true, true, true, 200, true, '10', 303, '20', 'nodesync'], $run['scheduler'],
+            'A limit out of range was stored, or its refusal lost the typed value');
         [$code, $two, $one, $trash, $off, $manual, $state, $text] = $run['run'];
         $this->assertSame([303, 1, 'address', 300], [$code, $two['fails'], $two['error'], $two['gap']], 'The due source was not checked by the run');
         $this->assertSame([2, 0, 0, 0], [$one, $trash, $off, $manual], 'The run checked a source that was not due, in the trash, of a disabled type or manual');

@@ -4,15 +4,15 @@
     <div class="sl-pres-arch" data-sl-pres="flow" data-sl-pres-store="{{ store }}" data-sl-pres-parsing="{{ parsing }}">
       <div data-sl-pres-flows="" hidden>
         {% for item in flows %}
-        <div data-sl-pres-on="{{ item.on }}" data-sl-pres-mode="{{ item.mode }}"data-sl-pres-badge="{{ item.badge }}" data-sl-pres-btone="{{ item.btone }}" data-sl-pres-route="{{ item.route }}" data-sl-pres-sub="{{ item.sub }}" data-sl-pres-state="{{ item.state }}" data-sl-pres-gate-a="{{ item.gatea }}" data-sl-pres-gate-b="{{ item.gateb }}" data-sl-pres-mod-b="{{ item.modb }}" data-sl-pres-states="{{ item.states }}" data-sl-pres-tones="{{ item.tones }}" data-sl-pres-seq="{{ item.seq }}"></div>
+        <div data-sl-pres-on="{{ item.on }}" data-sl-pres-mode="{{ item.mode }}" data-sl-pres-badge="{{ item.badge }}" data-sl-pres-btone="{{ item.btone }}" data-sl-pres-route="{{ item.route }}" data-sl-pres-sub="{{ item.sub }}" data-sl-pres-state="{{ item.state }}" data-sl-pres-gate-a="{{ item.gatea }}" data-sl-pres-gate-b="{{ item.gateb }}" data-sl-pres-mod-b="{{ item.modb }}" data-sl-pres-seq="{{ item.seq }}"></div>
         {% endfor %}
       </div>
       <div class="sl-pres-flow sl-pres-scene" data-sl-mode="{{ mode }}">
-        <div class="sl-pres-flow-top"><span class="sl-pres-mono">{{ route }}</span><span class="sl-pres-flow-count" data-sl-pres-count hidden><b>0</b> {{ hits }} · <b>0</b> {{ parses }}</span><span class="sl-pres-pill"{% if is_on %} data-sl-tone="success"{% else %} data-sl-tone="warning"{% endif %}>{{ decision }}</span></div>
+        <div class="sl-pres-flow-top"><span class="sl-pres-mono">{{ route }}</span><span class="sl-pres-flow-count">{{ stored }}</span><span class="sl-pres-pill"{% if is_on %} data-sl-tone="success"{% else %} data-sl-tone="warning"{% endif %}>{{ decision }}</span></div>
         <svg class="sl-pres-paths" viewBox="0 0 700 460" preserveAspectRatio="none" aria-hidden="true">
-          <path class="sl-pres-path-ring" d="M350,33 Q475,38 570,96 Q648,151 642,226 Q640,330 560,382 Q460,446 350,433 Q240,446 140,382 Q60,330 58,226 Q52,145 145,88 Q248,28 350,33Z"></path>
-          <path class="sl-pres-path-live" d="M350,33 Q475,38 570,96 Q648,151 642,226 Q640,330 560,382 Q460,446 350,433 Q240,446 140,382 Q60,330 58,226 Q52,145 145,88 Q248,28 350,33"></path>
-          <circle class="sl-pres-path-packet" r="5"><animateMotion dur="7s" repeatCount="indefinite" path="M350,33 Q475,38 570,96 Q648,151 642,226 Q640,330 560,382 Q460,446 350,433 Q240,446 140,382 Q60,330 58,226 Q52,145 145,88 Q248,28 350,33Z"></animateMotion></circle>
+          <path class="sl-pres-path-ring" d="M350,82 A280,156 0 0,1 350,394 A280,156 0 0,1 350,82Z"></path>
+          <path class="sl-pres-path-live" d="M350,82 A280,156 0 0,1 350,394 A280,156 0 0,1 350,82"></path>
+          <circle class="sl-pres-path-packet" r="5"><animateMotion dur="7s" repeatCount="indefinite" path="M350,82 A280,156 0 0,1 350,394 A280,156 0 0,1 350,82Z"></animateMotion></circle>
         </svg>
         <div class="sl-pres-flow-core">
           <div>
@@ -22,9 +22,8 @@
             <span class="sl-pres-pill"{% if is_on %} data-sl-tone="success"{% else %} data-sl-tone="warning"{% endif %}>{{ cache_state }}</span>
           </div>
         </div>
-        <span class="sl-pres-flow-chip"><i class="bi bi-lightning-charge" aria-hidden="true"></i> {{ chip }}</span>
         {% for item in nodes %}
-        <div class="sl-pres-node"><i class="bi bi-{{ item.icon }}" aria-hidden="true"></i><span>{{ item.num }}</span><b>{{ item.title }}</b><small><span>{{ item.a }}</span><span>{{ item.b }}</span></small></div>
+        <div class="sl-pres-node"><i class="bi bi-{{ item.icon }}" aria-hidden="true"></i><span>{{ item.num }}</span><b>{{ item.title }}</b><small><span>{{ item.a }}</span><span>{{ item.b }}</span></small>{% if item.is_gate %}<em class="sl-pres-flow-pop" aria-hidden="true"></em>{% endif %}</div>
         {% endfor %}
       </div>
       <div class="sl-pres-arch-side">
@@ -38,7 +37,6 @@
           {% for item in states %}
           {% include 'fragments/presentation-stat.html' with item %}
           {% endfor %}
-          <div class="sl-pres-stat sl-pres-clean-row"><span>{{ clean }}</span><b>{{ clean_value }}</b><small><i class="sl-pres-dot"></i>{{ clean_note }}</small></div>
         </div>
         <p class="sl-pres-note"><i class="bi bi-info-circle" aria-hidden="true"></i>{{ note }}</p>
       </div>
